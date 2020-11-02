@@ -146,10 +146,6 @@ class PuavoMenu(Gtk.Window):
         # The current menu (None if on category top-level)
         self.current_menu = None
 
-        # The current menu/program buttons in the current
-        # category and menu
-        self.__buttons = []
-
         # Storage for 48x48 -pixel program and menu icons. Maintained
         # separately from the menu data.
         self.__icons = icons.IconCache(1024, 48)
@@ -573,10 +569,8 @@ class PuavoMenu(Gtk.Window):
         self.__programs_icons.hide()
         self.__programs_container.hide()
 
-        for button in self.__buttons:
-            button.destroy()
-
-        self.__buttons = []
+        for widget in self.__programs_icons.get_children():
+            widget.destroy()
 
         self.__frequent_sep.hide()
         self.__frequent_list.hide()
@@ -759,10 +753,8 @@ class PuavoMenu(Gtk.Window):
         self.__programs_container.hide()
 
         # Remove the old buttons first
-        for button in self.__buttons:
-            button.destroy()
-
-        self.__buttons = []
+        for widget in self.__programs_icons.get_children():
+            widget.destroy()
 
         # Insert the new buttons and arrange them in rows and columns
         xpos = 0
@@ -770,7 +762,6 @@ class PuavoMenu(Gtk.Window):
 
         for index, button in enumerate(new_buttons):
             self.__programs_icons.put(button, xpos, ypos)
-            self.__buttons.append(button)
 
             xpos += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
 
@@ -779,10 +770,8 @@ class PuavoMenu(Gtk.Window):
                 ypos += PROGRAM_BUTTON_HEIGHT + PROGRAM_ROW_PADDING
 
         self.__programs_icons.show_all()
-
-        if self.__buttons:
-            self.__programs_icons.show()
-            self.__programs_container.show()
+        self.__programs_icons.show()
+        self.__programs_container.show()
 
 
     def __update_menu_title(self):
@@ -1139,12 +1128,13 @@ class PuavoMenu(Gtk.Window):
                               'hiding the window')
                 self.autohide()
         elif key_event.keyval == Gdk.KEY_Return:
-            if self.__get_search_text() and len(self.__buttons) == 1:
-                # There's only one search match and the user pressed
-                # Enter, so launch it!
-                self.clicked_program_button(self.__buttons[0])
-                #self.__clear_search_field()
-                #self.__create_current_menu()
+            if self.__get_search_text():
+                buttons = self.__programs_icons.get_children()
+
+                if len(buttons) == 1:
+                    # Only one matching program found and the user pressed
+                    # Enter, so launch it!
+                    self.clicked_program_button(buttons[0])
 
         return False
 
