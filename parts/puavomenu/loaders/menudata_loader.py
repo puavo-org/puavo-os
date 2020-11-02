@@ -986,6 +986,7 @@ def load(menudata_files,        # data source
             description=src.get('description', None),
             icon=src.get('icon_handle', None))
 
+        dst.menudata_id = mid
         dst.program_ids = src.get('programs', [])
 
         if sort_contents:
@@ -1002,6 +1003,8 @@ def load(menudata_files,        # data source
             continue
 
         dst = menudata.Category(name=src.get('name', '<No name>'))
+        dst.menudata_id = cid
+
         dst.menu_ids = src.get('menus', [])
 
         if sort_contents:
