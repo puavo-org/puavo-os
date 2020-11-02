@@ -773,8 +773,10 @@ class PuavoMenu(Gtk.Window):
                 ypos += PROGRAM_BUTTON_HEIGHT + PROGRAM_ROW_PADDING
 
         self.__programs_icons.show_all()
-        self.__programs_icons.show()
-        self.__programs_container.show()
+
+        if self.__programs_icons.get_children():
+            self.__programs_icons.show()
+            self.__programs_container.show()
 
 
     def __update_menu_title(self):
