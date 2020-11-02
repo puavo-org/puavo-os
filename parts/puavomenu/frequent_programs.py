@@ -102,9 +102,6 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
         # Usage count tracking
         self.__prev_items = []
 
-        # The program buttons
-        self.__buttons = []
-
         # No scrollbars or borders
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
         self.set_shadow_type(Gtk.ShadowType.NONE)
@@ -115,10 +112,6 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
 
 
     def clear(self):
-        for btn in self.__buttons:
-            btn.destroy()
-
-        self.__buttons = []
         self.__prev_items = []
 
 
@@ -134,10 +127,8 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
 
         self.__prev_items = current_items
 
-        for btn in self.__buttons:
-            btn.destroy()
-
-        self.__buttons = []
+        for widget in self.__container.get_children():
+            widget.destroy()
 
         x = 0
 
@@ -157,7 +148,6 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
                     is_fave=True)
 
                 button.connect('clicked', self.__parent.clicked_program_button)
-                self.__buttons.append(button)
                 self.__container.put(button, x, 0)
                 x += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
             except Exception as ex:
