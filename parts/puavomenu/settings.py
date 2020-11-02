@@ -86,6 +86,10 @@ class Settings:
         # current view. Can be configured through the per-user config file.
         self.reset_view_after_start = True
 
+        # If true, the menus and programs will be sorted alphabetically at
+        # load-time, ignoring the original order.
+        self.sort_contents_alphabetically = False
+
 
     def detect_environment(self):
         """Detects the runtime-environment for this session. Call once
@@ -224,6 +228,12 @@ class Settings:
                         config.getboolean('puavomenu',
                                           'reset_view_after_start',
                                           fallback=True)
+
+                    self.sort_contents_alphabetically = \
+                        config.getboolean('puavomenu',
+                                          'sort_contents_alphabetically',
+                                          fallback=False)
+
                 except Exception as exception:
                     logging.error(
                         'detect_environment(): failed to load file "%s":', conf_file

@@ -435,13 +435,26 @@ def sort_categories(categories):
     return [i[1] for i in temp_index]
 
 
+# Sorts menus alphabetically by their name. Returns a sorted list of menu IDs.
+def sort_menus_by_name(menus, unsorted_menu_ids):
+    names = [(m, menus[m].name.lower()) for m in unsorted_menu_ids]
+    return [i[0] for i in sorted(names, key=lambda m: m[1])]
+
+
+# Sorts programs alphabetically by their name. Returns a sorted list of program IDs.
+def sort_programs_by_name(programs, unsorted_program_ids):
+    names = [(p, programs[p].name.lower()) for p in unsorted_program_ids]
+    return [i[0] for i in sorted(names, key=lambda p: p[1])]
+
+
 def load(menudata_files,        # data source
          language,              # what language to use
          desktop_dirs,          # directories for .desktop files
          tags, conditionals,    # visibility filtering
          puavopkg_states,       # current puavo-pkg program install states
          icon_locator,          # icon file locator
-         icon_cache):           # cache for icons
+         icon_cache,            # cache for icons
+         sort_contents=False):  # if True, sort the menus and programs
 
     programs = {}
     menus = {}
@@ -974,6 +987,10 @@ def load(menudata_files,        # data source
             icon=src.get('icon_handle', None))
 
         dst.program_ids = src.get('programs', [])
+
+        if sort_contents:
+            dst.program_ids = sort_programs_by_name(md.programs, dst.program_ids)
+
         md.menus[mid] = dst
 
     for cid, src in categories.items():
@@ -986,7 +1003,15 @@ def load(menudata_files,        # data source
 
         dst = menudata.Category(name=src.get('name', '<No name>'))
         dst.menu_ids = src.get('menus', [])
+
+        if sort_contents:
+            dst.menu_ids = sort_menus_by_name(md.menus, dst.menu_ids)
+
         dst.program_ids = src.get('programs', [])
+
+        if sort_contents:
+            dst.program_ids = sort_programs_by_name(md.programs, dst.program_ids)
+
         md.categories[cid] = dst
 
     md.category_index = category_index

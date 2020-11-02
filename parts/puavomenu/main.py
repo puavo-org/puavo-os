@@ -499,7 +499,8 @@ class PuavoMenu(Gtk.Window):
                 tags, conditionals,
                 puavopkg_states,
                 self.__icon_locator,
-                self.__icons)
+                self.__icons,
+                self.__settings.sort_contents_alphabetically)
 
             # (Re)load user programs
             if self.__settings.show_user_programs:
