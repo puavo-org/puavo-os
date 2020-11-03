@@ -116,17 +116,17 @@ all_printer_queues.each do |printer_queue|
                     "  Allow #{ network_cidr }\t\t# #{iface}" \
                       + " / #{ netif_schools.join(' ') }"
                   end.compact.join("\n")
-                end.join("\n")
+                end.uniq.join("\n")
   allow_wireless = (schools_by_wireless_pq[printer_queue] || []).map do |school|
-                      wireless_interfaces_by_school[school].sort.map do |iface|
-                        network_cidr = interface_network_cidrs[iface]
-                        next unless network_cidr
-                        netif_schools \
-                          = schools_by_network_interfaces[iface].sort
-                        "  Allow #{ network_cidr }\t\t# #{iface}" \
-                          + " / #{ netif_schools.join(' ') }"
-                      end.compact.join("\n")
-                   end.join("\n")
+                     wireless_interfaces_by_school[school].sort.map do |iface|
+                       network_cidr = interface_network_cidrs[iface]
+                       next unless network_cidr
+                       netif_schools \
+                         = schools_by_network_interfaces[iface].sort
+                       "  Allow #{ network_cidr }\t\t# #{iface}" \
+                         + " / #{ netif_schools.join(' ') }"
+                     end.compact.join("\n")
+                   end.uniq.join("\n")
 
   printer_conf = "<Location /printers/#{ printer_queue }>\n"                  \
                     + "  Order allow,deny\n"                                  \
