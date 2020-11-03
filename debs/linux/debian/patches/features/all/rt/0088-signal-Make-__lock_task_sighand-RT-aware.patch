@@ -1,7 +1,8 @@
+From 114e10c523c48776ee2bf7193b9424b144d29132 Mon Sep 17 00:00:00 2001
 From: Thomas Gleixner <tglx@linutronix.de>
 Date: Fri, 22 Jul 2011 08:07:08 +0200
-Subject: [PATCH 088/366] signal: Make __lock_task_sighand() RT aware
-Origin: https://git.kernel.org/cgit/linux/kernel/git/rt/linux-stable-rt.git/commit?id=2cb0c45b9db2ae4f239eb5fa5b723a5aae7558da
+Subject: [PATCH 088/365] signal: Make __lock_task_sighand() RT aware
+Origin: https://www.kernel.org/pub/linux/kernel/projects/rt/4.9/older/patches-4.9.240-rt155.tar.xz
 
 local_irq_save() + spin_lock(&sighand->siglock) does not work on
 -RT. Use the nort variants.
@@ -39,3 +40,6 @@ index 09c0f647ce17..77354d135ea9 100644
  	}
  
  	return sighand;
+-- 
+2.28.0
+
