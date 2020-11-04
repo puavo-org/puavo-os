@@ -3,12 +3,21 @@ class virtualbox::guest_additions {
   include ::packages
 
   exec {
-    '/usr/local/lib/install-virtualbox-guest-additions && /usr/bin/touch /var/opt/.virtuabox-guest-additions-installed':
+    'install virtualbox guest additions':
+      command => '/usr/local/lib/install-virtualbox-guest-additions && /usr/bin/touch /var/opt/.virtuabox-guest-additions-installed',
       creates => '/var/opt/.virtuabox-guest-additions-installed',
       require => [ File['/etc/login.defs'],
                    File['/usr/local/lib/install-virtualbox-guest-additions'],
                    Kernels::All_kernel_links['current'],
                    Kernels::All_kernel_links['default'] ];
+
+    # If a kernel update happens, we try to rebuild the virtualbox guest
+    # additions modules (not sure if it has be this complicated).
+    '/usr/bin/rm -f /var/opt/.virtuabox-guest-additions-installed':
+      before      => Exec['install virtualbox guest additions'],
+      refreshonly => true,
+      subscribe   => [ Kernels::All_kernel_links['current'],
+                       Kernels::All_kernel_links['default'] ];
   }
 
   file {
