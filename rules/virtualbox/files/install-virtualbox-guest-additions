@@ -47,11 +47,6 @@ if [ ! -e "/usr/lib/modules/${default_kernel_version}/kernel/drivers/virt/vboxgu
   exit 1
 fi
 
-if [ ! -e /lib/systemd/system/vboxadd.service ]; then
-  echo 'Could not find /lib/systemd/system/vboxadd.service' >&2
-  exit 1
-fi
-
 if [ ! -e /lib/systemd/system/vboxadd-service.service ]; then
   echo 'Could not find /lib/systemd/system/vboxadd-service.service' >&2
   exit 1

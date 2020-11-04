@@ -23,5 +23,17 @@ class virtualbox::guest_additions {
       source  => 'puppet:///modules/virtualbox/install-virtualbox-guest-additions';
   }
 
-  Package <| title == p7zip-full |>
+  # We do not need to rebuild kernel modules for virtualbox guest
+  # additions.  Do not try to use "service", we do not run
+  # systemd inside the container in image build, thus the service
+  # can not be disabled through the puppet "service"-type.
+  file {
+    '/etc/systemd/system/multi-user.target.wants/vboxadd.service':
+       ensure  => absent,
+       require => [ Exec['install virtualbox guest additions'],
+                    Package['systemd'] ];
+  }
+
+  Package <| title == p7zip-full
+          or title == systemd |>
 }

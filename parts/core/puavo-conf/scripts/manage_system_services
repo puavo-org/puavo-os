@@ -226,11 +226,6 @@ set services {
         -> /lib/systemd/system/ulogd2.service
     }}
 
-  { vboxadd {
-      /etc/systemd/system/multi-user.target.wants/vboxadd.service
-        -> /lib/systemd/system/vboxadd.service
-    }}
-
   { vboxadd-service {
       /etc/systemd/system/multi-user.target.wants/vboxadd-service.service
         -> /lib/systemd/system/vboxadd-service.service
