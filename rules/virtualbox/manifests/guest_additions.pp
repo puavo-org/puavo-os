@@ -7,6 +7,7 @@ class virtualbox::guest_additions {
       creates => '/var/opt/.virtuabox-guest-additions-installed',
       require => [ File['/etc/login.defs'],
                    File['/usr/local/lib/install-virtualbox-guest-additions'],
+                   Kernels::All_kernel_links['current'],
                    Kernels::All_kernel_links['default'] ];
   }
 

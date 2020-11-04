@@ -36,6 +36,9 @@ chmod 755 "${contents_dir}/VBoxLinuxAdditions.run"
 # so we let it fail and test some things afterwards.
 "${contents_dir}/VBoxLinuxAdditions.run" 2>/dev/null || true
 
+# compile virtualbox module for all kernels
+/sbin/rcvboxadd quicksetup all
+
 vmlinuz=$(readlink /boot/vmlinuz)
 default_kernel_version=${vmlinuz#vmlinuz-}
 
