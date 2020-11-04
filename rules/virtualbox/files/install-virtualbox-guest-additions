@@ -42,7 +42,7 @@ chmod 755 "${contents_dir}/VBoxLinuxAdditions.run"
 vmlinuz=$(readlink /boot/vmlinuz)
 default_kernel_version=${vmlinuz#vmlinuz-}
 
-if [ ! -e "/usr/lib/modules/${default_kernel_version}/kernel/drivers/virt/vboxguest/vboxguest.ko" ]; then
+if [ ! -e "/usr/lib/modules/${default_kernel_version}/misc/vboxguest.ko" ]; then
   echo 'could not find vboxguest.ko for the default kernel' >&2
   exit 1
 fi
