@@ -3,7 +3,7 @@ Description=Create configurations for gsm settings in NetworkManager
 After=ModemManager.service NetworkManager.service
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/usr/local/lib/puavo-generate-gsm-config-for-nm
 
 [Install]
