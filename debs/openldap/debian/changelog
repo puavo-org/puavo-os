@@ -1,8 +1,32 @@
-openldap (2.4.47+dfsg-3+puavo1+buster+buildonce) buster; urgency=medium
+openldap (2.4.47+dfsg-3+deb10u3+puavo1+buildonce) buster; urgency=medium
 
   * With some patches by Puavo Org.
 
  -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 12:54:06 +0200
+
+openldap (2.4.47+dfsg-3+deb10u3) buster-security; urgency=high
+
+  * Fix slapd normalization handling with modrdn (ITS#9370)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 29 Oct 2020 18:36:26 -0700
+
+openldap (2.4.47+dfsg-3+deb10u2) buster-security; urgency=high
+
+  * Fix slapd to limit depth of nested expressions in search filters
+    (ITS#9202) (CVE-2020-12243)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 20 Apr 2020 11:19:54 -0700
+
+openldap (2.4.47+dfsg-3+deb10u1) buster; urgency=medium
+
+  * Fix slapd to restrict rootDN proxyauthz to its own databases
+    (CVE-2019-13057) (ITS#9038) (Closes: #932997)
+  * Fix slapd to enforce sasl_ssf ACL statement on every connection
+    (CVE-2019-13565) (ITS#9052) (Closes: #932998)
+  * Fix slapo-rwm to not free original filter when rewritten filter is invalid
+    (ITS#8964) (Closes: #934277, LP: #1838370)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 10 Aug 2019 11:58:18 -0700
 
 openldap (2.4.47+dfsg-3) unstable; urgency=medium
 

@@ -1,0 +1,25 @@
+From 0832ec02f0679cf0862dca2cca5280be1e4fdb37 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ond=C5=99ej=20Kuzn=C3=ADk?= <ondra@mistotebe.net>
+Date: Thu, 27 Jun 2019 00:45:29 +0200
+Subject: [PATCH] ITS#9038 Another test028 typo
+
+---
+ tests/scripts/test028-idassert | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/scripts/test028-idassert b/tests/scripts/test028-idassert
+index 564a615d2..dacd68d8f 100755
+--- a/tests/scripts/test028-idassert
++++ b/tests/scripts/test028-idassert
+@@ -252,7 +252,7 @@ if test $USE_SASL != "no" ; then
+ 	if test $RC != 50 ; then
+ 		echo "ldapwhoami should have failed ($RC)!"
+ 		test $KILLSERVERS != no && kill -HUP $KILLPIDS
+-		exit $RC
++		exit 1
+ 	fi
+ 
+ 	echo "Filtering ldapsearch results..."
+-- 
+2.20.1
+

@@ -1,0 +1,102 @@
+From ce5869c89a0cf1a9ec23bde014cb4c11f4d0360c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ond=C5=99ej=20Kuzn=C3=ADk?= <ondra@mistotebe.net>
+Date: Wed, 19 Jun 2019 18:47:32 +0200
+Subject: [PATCH] ITS#9038 Update test028 to test this is enforced
+
+---
+ tests/data/idassert.out        |  5 +++++
+ tests/data/slapd-idassert.conf |  1 +
+ tests/data/test-idassert1.ldif |  6 ++++++
+ tests/scripts/test028-idassert | 24 ++++++++++++++++++++++++
+ 4 files changed, 36 insertions(+)
+
+diff --git a/tests/data/idassert.out b/tests/data/idassert.out
+index 53d76bb2e..fa51c25d6 100644
+--- a/tests/data/idassert.out
++++ b/tests/data/idassert.out
+@@ -4,6 +4,11 @@ objectClass: dcObject
+ o: Example, Inc.
+ dc: example
+ 
++dn: cn=Manager,o=Example,c=US
++objectClass: inetOrgPerson
++cn: Manager
++sn: Parson
++
+ dn: ou=People,o=Example,c=US
+ objectClass: organizationalUnit
+ ou: People
+diff --git a/tests/data/slapd-idassert.conf b/tests/data/slapd-idassert.conf
+index 88d66a36f..561c5ccc4 100644
+--- a/tests/data/slapd-idassert.conf
++++ b/tests/data/slapd-idassert.conf
+@@ -36,6 +36,7 @@ argsfile	@TESTDIR@/slapd.1.args
+ #######################################################################
+ 
+ authz-policy	both
++authz-regexp	"^uid=manager,.+" "cn=Manager,dc=example,dc=com"
+ authz-regexp	"^uid=admin/([^,]+),.+" "ldap:///ou=Admin,dc=example,dc=com??sub?(cn=$1)"
+ authz-regexp	"^uid=it/([^,]+),.+" "ldap:///ou=People,dc=example,dc=it??sub?(uid=$1)"
+ authz-regexp	"^uid=(us/)?([^,]+),.+" "ldap:///ou=People,dc=example,dc=com??sub?(uid=$2)"
+diff --git a/tests/data/test-idassert1.ldif b/tests/data/test-idassert1.ldif
+index 063d6ec45..3ccbd1a22 100644
+--- a/tests/data/test-idassert1.ldif
++++ b/tests/data/test-idassert1.ldif
+@@ -4,6 +4,12 @@ objectClass: dcObject
+ o: Example, Inc.
+ dc: example
+ 
++dn: cn=Manager,dc=example,dc=com
++objectClass: inetOrgPerson
++cn: Manager
++sn: Parson
++userPassword: secret
++
+ dn: ou=People,dc=example,dc=com
+ objectClass: organizationalUnit
+ ou: People
+diff --git a/tests/scripts/test028-idassert b/tests/scripts/test028-idassert
+index b1e16744a..9e5e10724 100755
+--- a/tests/scripts/test028-idassert
++++ b/tests/scripts/test028-idassert
+@@ -191,6 +191,17 @@ if test $RC != 0 ; then
+ 	exit $RC
+ fi
+ 
++AUTHZID="u:it/jaj"
++echo "Checking another DB's rootdn can't assert identity from another DB..."
++$LDAPWHOAMI -h $LOCALHOST -p $PORT1 -D "$MANAGERDN" -w $PASSWD -e\!"authzid=$AUTHZID"
++
++RC=$?
++if test $RC != 1 ; then
++    echo "ldapwhoami should have failed ($RC)!"
++    test $KILLSERVERS != no && kill -HUP $KILLPIDS
++    exit $RC
++fi
++
+ ID="uid=jaj,ou=People,dc=example,dc=it"
+ BASE="o=Example,c=US"
+ echo "Testing ldapsearch as $ID for \"$BASE\"..."
+@@ -231,6 +242,19 @@ if test $USE_SASL != "no" ; then
+ 		exit $RC
+ 	fi
+ 
++	ID="manager"
++	AUTHZID="u:it/jaj"
++	echo "Checking another DB's rootdn can't assert in another (with SASL bind this time)..."
++	$LDAPSASLWHOAMI -h $LOCALHOST -p $PORT1 \
++		-Q -U "$ID" -w $PASSWD -Y $MECH -X $AUTHZID
++
++	RC=$?
++	if test $RC != 50 ; then
++		echo "ldapwhoami should have failed ($RC)!"
++		test $KILLSERVERS != no && kill -HUP $KILLPIDS
++		exit $RC
++	fi
++
+ 	echo "Filtering ldapsearch results..."
+ 	$LDIFFILTER < $SEARCHOUT > $SEARCHFLT
+ 	echo "Filtering original ldif used to create database..."
+-- 
+2.20.1
+

@@ -1,0 +1,36 @@
+From f120d0e461178b5974694876ba2d2bdba4f7d122 Mon Sep 17 00:00:00 2001
+From: Howard Chu <hyc@openldap.org>
+Date: Wed, 19 Jun 2019 12:29:02 +0100
+Subject: [PATCH] ITS#9038 restrict rootDN proxyauthz to its own DBs.
+
+Treat as normal user for any other DB.
+---
+ servers/slapd/saslauthz.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/servers/slapd/saslauthz.c b/servers/slapd/saslauthz.c
+index 64c70537d..b3727eafe 100644
+--- a/servers/slapd/saslauthz.c
++++ b/servers/slapd/saslauthz.c
+@@ -2062,12 +2062,13 @@ int slap_sasl_authorized( Operation *op,
+ 		goto DONE;
+ 	}
+ 
+-	/* Allow the manager to authorize as any DN. */
+-	if( op->o_conn->c_authz_backend &&
+-		be_isroot_dn( op->o_conn->c_authz_backend, authcDN ))
++	/* Allow the manager to authorize as any DN in its own DBs. */
+ 	{
+-		rc = LDAP_SUCCESS;
+-		goto DONE;
++		Backend *zbe = select_backend( authzDN, 1 );
++		if ( zbe && be_isroot_dn( zbe, authcDN )) {
++			rc = LDAP_SUCCESS;
++			goto DONE;
++		}
+ 	}
+ 
+ 	/* Check source rules */
+-- 
+2.20.1
+

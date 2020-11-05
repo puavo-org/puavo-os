@@ -21,6 +21,14 @@ no-bdb-ABI-second-guessing
 ITS6035-olcauthzregex-needs-restart.patch
 set-maintainer-name
 no-gnutls_global_set_mutex
+ITS-9038-restrict-rootDN-proxyauthz-to-its-own-DBs.patch
+ITS-9038-Update-test028-to-test-this-is-enforced.patch
+ITS-9038-Fix-typo-in-test-script.patch
+ITS-9038-Another-test028-typo.patch
+ITS-9052-zero-out-sasl_ssf-in-connection_init.patch
+ITS-8964-Do-not-free-original-filter.patch
+ITS-9202-limit-depth-of-nested-filters.patch
+ITS-9370-check-for-equality-rule-on-old_rdn.patch
 puavo-increase-max-number-of-ldap-keys
 puavo-increase-max-rewrite-passes
 puavo-smbkrb5pwd
