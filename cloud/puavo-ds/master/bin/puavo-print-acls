@@ -275,6 +275,29 @@ rule {
   [dn subtree "ou=Kerberos Realms"]
       by [puavo_dn kadmin] write
       by [puavo_dn kdc]    read
+      by *                 none break
+}
+
+# Allow removing kerberos principals for those who can do user management.
+# Use filter so that only normal user kerberos principals may be removed,
+# not any service principals.
+
+rule {
+  [dn exact "cn=${kerberos_realm},ou=Kerberos Realms"]
+    filter="(!(krbPrincipalName=*/*@${kerberos_realm}))"
+    [attrs children]
+      by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
+}
+
+rule {
+  [dn children "cn=${kerberos_realm},ou=Kerberos Realms"]
+    filter="(!(krbPrincipalName=*/*@${kerberos_realm}))"
+    [attrs entry]
+      by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
 }
 
 # Samba-related rules under ou=People
