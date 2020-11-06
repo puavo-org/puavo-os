@@ -1,3 +1,6 @@
+# XXX This does not work, we do not use this, and this might be removed
+# XXX any day to prevent confusion.
+
 pipeline {
   agent {
     docker {
