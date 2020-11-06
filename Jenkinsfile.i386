@@ -43,7 +43,7 @@ EOF
     }
 
     stage('Build openldap') {
-      steps { sh 'make -C debs .dpkg-buildpackage-openldap' }
+      steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-openldap' }
     }
 
     stage('Upload deb-packages') {

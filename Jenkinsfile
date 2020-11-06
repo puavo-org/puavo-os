@@ -33,11 +33,6 @@ pipeline {
     }
 
     stage('Build puavo-os cloud deb-packages') {
-      // These are packages not needed by puavo-os image.
-      // DEB_BUILD_OPTIONS=nocheck is needed for the openldap-build in
-      // a docker environment (?).  It makes the build quite a bit faster as
-      // well, but this means that some openldap-regressions will not be caught
-      // by Jenkins builds.
       steps { sh 'make build-debs-cloud' }
     }
 
