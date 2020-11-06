@@ -50,8 +50,9 @@ class Database < ActiveLdap::Base
 
     # Database ACLs
     suffix = self.olcSuffix
+    kerberos_realm = self.kerberos_realm
     samba_domain = self.samba_domain
 
-    self.olcAccess = LdapAcl.generate_acls(suffix, samba_domain)
+    self.olcAccess = LdapAcl.generate_acls(suffix, kerberos_realm, samba_domain)
   end
 end

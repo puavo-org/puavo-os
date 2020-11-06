@@ -62,14 +62,14 @@ def update_acls(suffix)
   puts "Kerberos realm: #{kerberos_realm}"
   puts "Samba domain:   #{samba_domain}"
 
-  if samba_domain.empty? or kerberos_realm.empty? or domain.empty? then
+  if domain.empty? or kerberos_realm.empty? or samba_domain.empty? then
     puts "ERROR: Couldn't figure out domain information!"
     exit 1
   end
 
   Readline.readline('OK? (the only way out is CTRL-C) ', true)
 
-  acls = LdapAcl.generate_acls(suffix, samba_domain) \
+  acls = LdapAcl.generate_acls(suffix, kerberos_realm, samba_domain) \
                 .map { |s| "olcAccess: #{ s }\n" }.join('')
 
   Tempfile.create do |tmpfile|

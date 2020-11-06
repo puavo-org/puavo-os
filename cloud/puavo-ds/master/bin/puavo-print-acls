@@ -9,11 +9,13 @@
 # GLOBAL VARIABLES
 #
 
-set ldapsuffix   [lindex $argv 0]
-set samba_domain [lindex $argv 1]
+set ldapsuffix     [lindex $argv 0]
+set kerberos_realm [lindex $argv 1]
+set samba_domain   [lindex $argv 2]
 
-if {[llength $argv] != 2 || $ldapsuffix eq "" || $samba_domain eq ""} {
-  puts stderr "usage: puavo-print-acl ldapsuffix samba_domain"
+if {[llength $argv] != 3 || $ldapsuffix eq "" || $kerberos_realm eq ""
+      || $samba_domain eq ""} {
+  puts stderr "usage: puavo-print-acl ldapsuffix kerberos_realm samba_domain"
   exit 1
 }
 
