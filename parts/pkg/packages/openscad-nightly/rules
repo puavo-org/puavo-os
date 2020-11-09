@@ -24,25 +24,6 @@ case "$command" in
     done
     echo openscad-nightly >> /var/lib/puavo-pkg/.update_mime_database
     ;;
-  download)
-    upstream_pack=$1
-    baseurl="http://download.opensuse.org/repositories/home:/t-paul/Debian_9.0"
-    pkg_subpath="$(
-      wget -q -O - "${baseurl}/Packages" \
-        | awk '
-            $1 == "Filename:" && $2 ~ /\/amd64\/openscad-nightly_/ {
-              print $2
-            }')"
-    if [ -z "$pkg_subpath" ]; then
-      echo 'Could not determine package url' >&2
-      exit 1
-    fi
-
-    if ! wget -O "$upstream_pack" "${baseurl}/${pkg_subpath}"; then
-      [ $? -eq 4 ] && exit 2 ## Network failure.
-      exit 1
-    fi
-    ;;
   unconfigure)
     for symlink_target in $symlink_targets; do
       rm -f "$symlink_target"
