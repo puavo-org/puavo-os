@@ -31,7 +31,6 @@ class packages {
     , 'puavo-desktop-applet'
     , 'puavo-devscripts'
     , 'puavo-ers'
-    , 'puavo-hw-log'
     , 'puavo-hw-tools'
     , 'puavo-laptop-setup'
     , 'puavo-ltsp-client'
