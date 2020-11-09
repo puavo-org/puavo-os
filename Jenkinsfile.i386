@@ -37,7 +37,7 @@ deb [trusted=yes] file:///puavo-os/debs/.archive /
 EOF
           apt-get update
 
-          make -C debs .dpkg-buildpackage-wine
+          make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-wine
         '''
       }
     }
