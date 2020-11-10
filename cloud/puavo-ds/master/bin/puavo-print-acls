@@ -97,6 +97,12 @@ set teachers     [ldapset [person_affiliation teacher]]
 set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool"]
 
 # this means: target/what and actor/who must be in the same school
+# and actor/who must also be a staff member
+set this_school_staff [ldapset \
+  {([staff,] + this/puavoSchool)
+     & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}]
+
+# this means: target/what and actor/who must be in the same school
 # and actor/who must also be a teacher
 set this_school_teachers [ldapset \
   {([teacher,] + this/puavoSchool)
@@ -707,12 +713,11 @@ rule {
   # Allow organisation owners and admins in the same school to
   # change peoples' information.
   [dn subtree $People]
-      by $org_owners         write
-      by $this_school_admins write
-      by $admins             read	# /v3/my_school_users requires this
-      by $staff              read	# /v3/my_school_users requires this
-      by $teachers           read	# /v3/my_school_users requires this
-      by self                read
+      by $org_owners           write
+      by $this_school_admins   write
+      by $this_school_staff    read	# /v3/my_school_users requires this
+      by $this_school_teachers read	# /v3/my_school_users requires this
+      by self                  read
 }
 
 # rules for ou=Desktops
