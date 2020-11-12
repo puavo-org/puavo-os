@@ -140,6 +140,8 @@ puts "Using #{@rootdn} as rootdn"
 @puppetpw_hash=`slappasswd -h "{SSHA}" -s "#{@puppetpw}"`.gsub(/\n/,"")
 @kdcpw_hash=`slappasswd -h "{SSHA}" -s "#{@kdcpw}"`.gsub(/\n/,"")
 @kadminpw_hash=`slappasswd -h "{SSHA}" -s "#{@kadminpw}"`.gsub(/\n/,"")
+@monitorpw_hash=`slappasswd -h "{SSHA}" -s "#{@monitorpw}"`.gsub(/\n/,"")
+@slavepw_hash=`slappasswd -h "{SSHA}" -s "#{@slavepw}"`.gsub(/\n/,"")
 @puavo_ticket_pw_hash=`slappasswd -h "{SSHA}" -s "#{@puavo_ticket_pw}"`.gsub(/\n/,"")
 @pw_mgmt_pw_hash=`slappasswd -h "{SSHA}" -s "#{@pw_mgmt_pw}"`.gsub(/\n/,"")
 
