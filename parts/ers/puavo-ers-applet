@@ -620,8 +620,8 @@ class PuavoErsExamSorter (threading.Thread):
 
 
 class PuavoErsServerHelper (threading.Thread):
-  MGMT_INSTALL_SOURCE_PATH = '/opt/abitti-ktpapi/install'
-  MGMT_INSTALL_TARGET_PATH = os.path.join(KTP_JAKO_DIR, 'ktpapi-install')
+  MGMT_INSTALL_SOURCE_PATH = '/opt/abitti-ktpapi/ktpapu-asennin'
+  MGMT_INSTALL_TARGET_PATH = os.path.join(KTP_JAKO_DIR, 'ktpapu-asennin')
 
   def run(self):
     while True:
