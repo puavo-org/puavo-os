@@ -105,10 +105,8 @@ class PuavoErsApplet:
     self.exam_sorter = PuavoErsExamSorter()
     self.exam_sorter.start()
 
-    # XXX Disabled for now, this needs fixing, but the KTPAPI mechanism
-    # XXX running in exam server needs fixing first.
-    # self.exams_scheduler = PuavoErsExamScheduler()
-    # self.exams_scheduler.start()
+    self.exams_scheduler = PuavoErsExamScheduler()
+    self.exams_scheduler.start()
 
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
@@ -655,13 +653,14 @@ class PuavoErsServerHelper (threading.Thread):
 class PuavoErsExamScheduler (threading.Thread):
   COMM_DIR = os.path.join(KTP_JAKO_DIR, '.opinsys')
 
-  CMD_PATH          = os.path.join(COMM_DIR, 'cmd')
-  CMD_RESULT_PATH   = os.path.join(COMM_DIR, 'cmd-result')
-  CMD_STAMP_PATH    = os.path.join(COMM_DIR, 'cmd-stamp')
-  DEBUG_OUTPUT_PATH = os.path.join(COMM_DIR, 'debug-output')
-  EXAMS_PATH        = os.path.join(COMM_DIR, 'exams')
-  OUTPUT_PATH       = os.path.join(COMM_DIR, 'output')
-  STATS_PATH        = os.path.join(COMM_DIR, 'stats')
+  CMD_IN_PROGRESS_PATH = os.path.join(COMM_DIR, '.cmd-in-progress')
+  CMD_PATH             = os.path.join(COMM_DIR, 'cmd')
+  CMD_RESULT_PATH      = os.path.join(COMM_DIR, 'cmd-result')
+  CMD_STAMP_PATH       = os.path.join(COMM_DIR, 'cmd-stamp')
+  DEBUG_OUTPUT_PATH    = os.path.join(COMM_DIR, 'debug-output')
+  EXAMS_PATH           = os.path.join(COMM_DIR, 'exams')
+  OUTPUT_PATH          = os.path.join(COMM_DIR, 'output')
+  STATS_PATH           = os.path.join(COMM_DIR, 'stats')
 
   def __init__(self):
     threading.Thread.__init__(self)
@@ -669,6 +668,10 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def get_exams(self):
     return self.server_cmd('get-exam')
+
+
+  def get_status(self):
+    return self.server_cmd('get-status')
 
 
   def load_exams(self):
@@ -707,6 +710,7 @@ class PuavoErsExamScheduler (threading.Thread):
         old_comm_state = comm_ok
 
         if comm_ok:
+          # XXX should a version check be made?
           with exam_scheduler_lock:
             self.schedule_exams()
 
@@ -721,55 +725,72 @@ class PuavoErsExamScheduler (threading.Thread):
   def schedule_exams(self):
     global current_exams
 
-    get_exams_output = self.get_exams()
-    syslog.syslog(syslog.LOG_INFO, 'get-exam returned %s' % get_exams_output)
+    get_status_output = self.get_status()
+    status_response = json.loads(get_status_output)
 
-    # XXX This is currently broken, output is not valid json so can not check
-    # XXX the current exams.
-    parsed_response = json.loads(get_exams_output)
-    syslog.syslog(syslog.LOG_INFO, 'got response: %s' % parsed_response)
-
-    # XXX get currently loaded exams from parsed_response,
-    # XXX if some exam is missing, then load new exams
-
-    # XXX what if someone does something in the server?
-    # XXX what about manual control?  this should first actually check out
-    # XXX what is running, and add what is missing (not remove others)
+    if status_response['status']['hasStarted'] == True:
+      syslog.syslog(syslog.LOG_INFO,
+                    'examinations are in progress, not loading any exams')
+      return
 
     syslog.syslog(syslog.LOG_INFO,
-                  'must ensure that exams %s are running' % current_exams)
+                  'no examinations in progress, checking exams')
 
-    # XXX how to know if this is successful?  an exception should be raised
-    # XXX in case of failure?
+    get_exams_output = self.get_exams()
+    exams_response = json.loads(get_exams_output)
+    currently_loaded_exams = exams_response['exams']
+
+    load_exams = False
+    for exam in current_exams:
+      if not exam in currently_loaded_exams:
+        load_exams = True
+        break
+
+    if not load_exams:
+      syslog.syslog(syslog.LOG_INFO, 'all exams are loaded as expected')
+      return
+
     try:
       load_exams_output = self.load_exams()
-      syslog.syslog(syslog.LOG_INFO, 'load exams returned %s' % output)
+      syslog.syslog(syslog.LOG_INFO,
+                    'load exams returned %s' % load_exams_output)
     except CurrentZipNotReady as e:
       syslog.syslog(syslog.LOG_INFO,
                     'exam scheduler is waiting for zip file to be ready')
 
+    # XXX start loaded exams in case the timing is right
+
 
   def server_cmd(self, cmd):
     syslog.syslog(syslog.LOG_INFO, 'sending command to exam server: %s' % cmd)
-    output_paths = [ self.CMD_RESULT_PATH, self.DEBUG_OUTPUT_PATH,
-                     self.EXAMS_PATH, self.OUTPUT_PATH, self.STATS_PATH ]
+    output_paths = [ self.CMD_IN_PROGRESS_PATH, self.CMD_RESULT_PATH,
+                     self.DEBUG_OUTPUT_PATH, self.EXAMS_PATH, self.OUTPUT_PATH,
+                     self.STATS_PATH ]
     for path in output_paths:
       rm_f(path, False)
 
-    with open(self.CMD_PATH, 'w') as f:
-      f.write("%s\n" % cmd)
-
     output = None
-    for i in range(20):
-      try:
-        with open(self.OUTPUT_PATH) as f:
-          output = f.read()
-          break
-      except OSError as e:
-        if e.errno != errno.ENOENT:
-          raise e
 
-      time.sleep(1)
+    try:
+      with open(self.CMD_IN_PROGRESS_PATH, 'w') as f:
+        pass
+
+      with open(self.CMD_PATH, 'w') as f:
+        f.write("%s\n" % cmd)
+
+      for i in range(30):
+        try:
+          if not os.path.exists(self.CMD_IN_PROGRESS_PATH):
+            with open(self.OUTPUT_PATH) as f:
+              output = f.read()
+              break
+        except OSError as e:
+          if e.errno != errno.ENOENT:
+            raise e
+
+        time.sleep(1)
+    finally:
+      rm_f(self.CMD_IN_PROGRESS_PATH, False)
 
     return output
 
