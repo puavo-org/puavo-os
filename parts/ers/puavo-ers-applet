@@ -114,7 +114,7 @@ class PuavoErsApplet:
 
   def main(self):
     self.run_naksu()
-    GObject.timeout_add_seconds(1, self.update_decrypt_codes)
+    GLib.timeout_add_seconds(1, self.update_decrypt_codes)
     Gtk.main()
 
 
@@ -124,24 +124,24 @@ class PuavoErsApplet:
     cmd = [ '/usr/bin/terminator', '-T', 'naksu terminal',
             '--working-directory=' + self.PUAVO_ERS_DIR,
             '-x', './naksu', '--self-update=enabled' ]
-    (pid, stdin, stdout, stderr) = GObject.spawn_async(cmd,
-      flags=GLib.SPAWN_DO_NOT_REAP_CHILD|GLib.SPAWN_STDERR_TO_DEV_NULL,
+    (pid, stdin, stdout, stderr) = GLib.spawn_async(cmd,
+      flags=GLib.SpawnFlags.DO_NOT_REAP_CHILD|GLib.SpawnFlags.STDERR_TO_DEV_NULL,
       standard_input=True, standard_output=True)
 
     self.naksu_pid = pid
 
     fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
     fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-    GObject.io_add_watch(stdout, GObject.IO_HUP|GObject.IO_IN,
-                         self.handle_naksu, os.fdopen(stdout))
+    GLib.io_add_watch(stdout, GLib.IO_HUP|GLib.IO_IN,
+                      self.handle_naksu, os.fdopen(stdout))
 
 
   def handle_naksu(self, fd, condition, channel):
     try:
-      if condition & GObject.IO_IN:
+      if condition & GLib.IO_IN:
         channel.read()
 
-      if condition & GObject.IO_HUP:
+      if condition & GLib.IO_HUP:
         channel.close()
         (pid, status) = os.waitpid(self.naksu_pid, 0)
         if status != 0:
@@ -230,7 +230,7 @@ class PuavoErsApplet:
       self.menuitems.append(button)
     else:
       instructions = Gtk.MenuItem(
-                       _tr('Click passphrase below put it into clipboard'))
+        label=_tr('Click passphrase below put it into clipboard'))
       instructions.set_sensitive(False)
       instructions.show()
       self.menuitems.append(instructions)
@@ -242,7 +242,7 @@ class PuavoErsApplet:
       self.menu.append(separator)
 
       for le in labels_and_exams_list:
-        button = Gtk.MenuItem(le['label'])
+        button = Gtk.MenuItem(label=le['label'])
         self.exams_by_widgets[button] = le['exam']
         button.connect('activate', self.password_triggered)
         button.show()
