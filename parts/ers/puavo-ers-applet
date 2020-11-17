@@ -330,7 +330,7 @@ class PuavoErsExamSync (threading.Thread):
        try:
          self.sync_exams()
        except Exception as e:
-         syslog.syslog(syslog.LOG_ERR, 'some error when syncing exams: %s' % e)
+         syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
 
        time.sleep(60)
 
@@ -445,7 +445,7 @@ class PuavoErsExamSorter (threading.Thread):
         with exam_scheduler_lock:
           self.sort_exams_to_dirs()
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR, 'some error when sorting exams: %s' % e)
+        syslog.syslog(syslog.LOG_ERR, 'error when sorting exams: %s' % e)
 
       time.sleep(10)
 
@@ -645,7 +645,7 @@ class PuavoErsServerHelper (threading.Thread):
 
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR,
-                      'some error when managing exams dir: %s' % e)
+                      'error when managing exams dir: %s' % e)
 
       time.sleep(60)
 
@@ -696,7 +696,7 @@ class PuavoErsExamScheduler (threading.Thread):
       try:
         if not comm_ok:
           output = self.ping()
-          if output:
+          if output['error'] == False:
             comm_ok = True
             if old_comm_state != comm_ok:
               syslog.syslog(syslog.LOG_NOTICE,
@@ -717,7 +717,7 @@ class PuavoErsExamScheduler (threading.Thread):
       except Exception as e:
         comm_ok = False
         syslog.syslog(syslog.LOG_ERR,
-                      'some error when scheduling exams: %s' % e)
+                      'error when scheduling exams: %s' % e)
 
       time.sleep(20)
 
@@ -725,8 +725,7 @@ class PuavoErsExamScheduler (threading.Thread):
   def schedule_exams(self):
     global current_exams
 
-    get_status_output = self.get_status()
-    status_response = json.loads(get_status_output)
+    status_response = self.get_status()
 
     if status_response['status']['hasStarted'] == True:
       syslog.syslog(syslog.LOG_INFO,
@@ -736,8 +735,7 @@ class PuavoErsExamScheduler (threading.Thread):
     syslog.syslog(syslog.LOG_INFO,
                   'no examinations in progress, checking exams')
 
-    get_exams_output = self.get_exams()
-    exams_response = json.loads(get_exams_output)
+    exams_response = self.get_exams()
     currently_loaded_exams = exams_response['exams']
 
     load_exams = False
@@ -751,9 +749,7 @@ class PuavoErsExamScheduler (threading.Thread):
       return
 
     try:
-      load_exams_output = self.load_exams()
-      syslog.syslog(syslog.LOG_INFO,
-                    'load exams returned %s' % load_exams_output)
+      load_exams_response = self.load_exams()
     except CurrentZipNotReady as e:
       syslog.syslog(syslog.LOG_INFO,
                     'exam scheduler is waiting for zip file to be ready')
@@ -762,14 +758,19 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def server_cmd(self, cmd):
+    try:
+      return self.try_server_cmd(cmd)
+    except Exception as e:
+      raise Exception('error with "%s": %s' % (cmd, e))
+
+
+  def try_server_cmd(self, cmd):
     syslog.syslog(syslog.LOG_INFO, 'sending command to exam server: %s' % cmd)
     output_paths = [ self.CMD_IN_PROGRESS_PATH, self.CMD_RESULT_PATH,
                      self.DEBUG_OUTPUT_PATH, self.EXAMS_PATH, self.OUTPUT_PATH,
                      self.STATS_PATH ]
     for path in output_paths:
       rm_f(path, False)
-
-    output = None
 
     try:
       with open(self.CMD_IN_PROGRESS_PATH, 'w') as f:
@@ -783,7 +784,13 @@ class PuavoErsExamScheduler (threading.Thread):
           if not os.path.exists(self.CMD_IN_PROGRESS_PATH):
             with open(self.OUTPUT_PATH) as f:
               output = f.read()
-              break
+              parsed_output = json.loads(output)
+              if not 'error' in parsed_output:
+                raise Exception('server response did not contain an error key')
+              if parsed_output['error'] != False:
+                raise Exception('server returned error: %s' \
+                                  % parsed_output['error'])
+              return parsed_output
         except OSError as e:
           if e.errno != errno.ENOENT:
             raise e
@@ -792,7 +799,7 @@ class PuavoErsExamScheduler (threading.Thread):
     finally:
       rm_f(self.CMD_IN_PROGRESS_PATH, False)
 
-    return output
+    raise Exception('timeout when reading server response')
 
 
 syslog.openlog('puavo-ers-applet')
