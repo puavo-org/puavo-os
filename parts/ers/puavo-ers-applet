@@ -44,8 +44,13 @@ EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 
+# load new exams to server one hour before they are scheduled to start
+EXAM_PRELOAD_TIMEDELTA = datetime.timedelta(hours=1)
+earliest_exam_start_time = None
+
 exam_scheduler_lock = threading.Lock()
 current_exams = []
+current_exams_startup_time = None
 current_zip_name = None
 
 
@@ -451,7 +456,7 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def sort_exams_to_dirs(self):
-    global current_exams
+    global current_exams, earliest_exam_start_time
 
     self.current_day  = datetime.date.today()
     self.current_time = datetime.datetime.now()
@@ -471,6 +476,8 @@ class PuavoErsExamSorter (threading.Thread):
     upcoming_exams_filenames = []
 
     decrypt_codes_list = []
+
+    earliest_exam_start_time = None
 
     for exam in all_exams:
       try:
@@ -496,11 +503,15 @@ class PuavoErsExamSorter (threading.Thread):
         else:
           todays_exams_filenames.append(exam['file_name'])
 
-        if exam_start_time <= self.current_time \
+        if (exam_start_time - EXAM_PRELOAD_TIMEDELTA) <= self.current_time \
           and self.current_time < exam_end_time:
             current_exams.append(exam)
             current_exams_filenames.append(exam['file_name'])
             decrypt_codes_list.append(exam['decrypt_code'])
+
+            if not earliest_exam_start_time \
+              or exam_start_time < earliest_exam_start_time:
+                earliest_exam_start_time = exam_start_time
 
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
@@ -688,6 +699,10 @@ class PuavoErsExamScheduler (threading.Thread):
     return self.server_cmd(cmd)
 
 
+  def start_loaded_exams(self):
+    return self.server_cmd('start-loaded-exam')
+
+
   def ping(self):
     return self.server_cmd('ping')
 
@@ -727,7 +742,11 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def schedule_exams(self):
-    global current_exams
+    global current_exams, earliest_exam_start_time
+
+    if len(current_exams) == 0:
+      syslog.syslog(syslog.LOG_INFO, 'no exams to schedule')
+      return
 
     status_response = self.get_status()
     if status_response['status']['hasStarted'] == True:
@@ -750,20 +769,25 @@ class PuavoErsExamScheduler (threading.Thread):
                    % exam['file_name']
         raise Exception(errmsg)
       if not exam['uuid'] in currently_loaded_exam_uuids:
+        syslog.syslog(syslog.LOG_INFO,
+                      'exam %s is missing from server' % exam['file_name'])
         load_exams = True
-        break
 
     if not load_exams:
       syslog.syslog(syslog.LOG_INFO, 'all exams are loaded as expected')
       return
 
     try:
+      syslog.syslog(syslog.LOG_INFO, 'some exams were missing, loading exams')
       load_exams_response = self.load_exams()
     except CurrentZipNotReady as e:
       syslog.syslog(syslog.LOG_INFO,
                     'exam scheduler is waiting for zip file to be ready')
+      return
 
-    # XXX start loaded exams in case the timing is right
+    if earliest_exam_start_time <= datetime.datetime.now():
+      syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
+      self.start_loaded_exams()
 
 
   def server_cmd(self, cmd):
@@ -774,7 +798,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def try_server_cmd(self, cmd):
-    syslog.syslog(syslog.LOG_INFO, 'sending command to exam server: %s' % cmd)
+    syslog.syslog(syslog.LOG_INFO, 'sending command to exam server: "%s"' % cmd)
     output_paths = [ self.CMD_IN_PROGRESS_PATH, self.CMD_RESULT_PATH,
                      self.DEBUG_OUTPUT_PATH, self.EXAMS_PATH, self.OUTPUT_PATH,
                      self.STATS_PATH ]
