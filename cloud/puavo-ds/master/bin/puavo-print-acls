@@ -797,12 +797,18 @@ rule {
   # Allow organisation owners to change many organisation settings,
   # and most other entities to read them.
   [dn]
-      by $org_owners           write
-      by [dn children $People] read
-      by [dn children $Hosts]  read
-      by [systemgroup getent]  read
-      by [systemgroup orginfo] read
-      by *                     +dsx
+      by $org_owners             write
+      by [dn children $People]   read
+      by [dn children $Hosts]    read
+      by [puavo_dn kadmin]       read
+      by [puavo_dn kdc]          read
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo]        read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by [systemgroup getent]    read
+      by [systemgroup orginfo]   read
+      by *                       +dsx
 }
 
 #
