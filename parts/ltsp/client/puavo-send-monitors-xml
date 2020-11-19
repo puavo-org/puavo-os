@@ -99,10 +99,11 @@ if ! json=$(jq -n --arg monitors_xml "$monitors_xml" \
   exit 1
 fi
 
+
 if ! klist >/dev/null 2>&1; then
   ticket_cache=$(mktemp /tmp/puavo-send-monitors-xml.krb5cc.XXXXXX)
-  if [ -z "${SUDO_USER:-}" ] \
-       || ! env KRB5CCNAME="FILE:${ticket_cache}" kinit -f "$SUDO_USER"; then
+  export KRB5CCNAME="FILE:${ticket_cache}"
+  if [ -z "${SUDO_USER:-}" ] || ! kinit -f "$SUDO_USER"; then
     echo 'Could not get a kerberos ticket' >&2
     rm -f "$ticket_cache"
     exit 1
