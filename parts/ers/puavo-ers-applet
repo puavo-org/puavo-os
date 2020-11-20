@@ -19,6 +19,7 @@ import sys
 import syslog
 import threading
 import time
+import zipfile
 
 gi.require_version('AppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
@@ -611,11 +612,18 @@ class PuavoErsExamSorter (threading.Thread):
 
   def zip_an_exam_set(self, exams, zip_path):
     rm_f(zip_path)
-    if len(exams) > 0:
-      exam_paths = [ os.path.join(KTP_JAKO_DIR, p) for p in exams ]
-      syslog.syslog(syslog.LOG_INFO,
-                    'zipping exams %s into %s' % (exams, zip_path))
-      subprocess.check_output([ 'zip', '-j', zip_path ] + exam_paths)
+    if len(exams) == 0:
+      return
+
+    exam_paths = [ os.path.join(KTP_JAKO_DIR, p) for p in exams ]
+    syslog.syslog(syslog.LOG_INFO,
+                  'zipping exams %s into %s' % (exams, zip_path))
+    tmpfile = "%s.tmp" % zip_path
+    rm_f(tmpfile, False)
+    with zipfile.ZipFile(tmpfile, 'w') as zipObj:
+      for filename in exam_paths:
+        zipObj.write(filename, os.path.basename(filename))
+    os.rename(tmpfile, zip_path)
 
 
   def update_decrypt_codes_in_file(self, decrypt_codes_list):
