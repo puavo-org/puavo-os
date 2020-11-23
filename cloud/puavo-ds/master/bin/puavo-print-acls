@@ -507,10 +507,12 @@ rule {
 rule {
   [dn exact $Groups]
     [attrs children entry objectClass ou]
-      by $org_owners           read
-      by [dn children $People] read
-      by [dn children $Hosts]  read
-      by [systemgroup getent]  read
+      by $org_owners             read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by [dn children $People]   read
+      by [dn children $Hosts]    read
+      by [systemgroup getent]    read
 }
 
 # deny $admins and $staff write access to some school attributes
@@ -546,16 +548,24 @@ rule {
 }
 
 rule {
+  # allow statistics to read some group information
+  [dn subtree $Groups]
+    [attrs displayName entry objectClass puavoDeviceImage puavoId]
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by *                       none break
+}
+
+rule {
   # Write permissions for those who can manage users.
   [dn subtree $Groups]
-      by $org_owners           write
-      by $admins               write	# XXX maybe this_school_admins instead?
-      by $staff                write	# XXX maybe just remove this?
-      by [puavo_dn puavo]      read
-      by [puavo_dn statistics] read
-      by [dn children $People] read
-      by [dn children $Hosts]  read
-      by [systemgroup getent]  read
+      by $org_owners             write
+      by $admins                 write	# XXX maybe this_school_admins instead?
+      by $staff                  write	# XXX maybe just remove this?
+      by [puavo_dn puavo]        read
+      by [dn children $People]   read
+      by [dn children $Hosts]    read
+      by [systemgroup getent]    read
 }
 
 # rules for ou=People
@@ -574,7 +584,9 @@ rule {
   [dn exact $People]
     [attrs children entry objectClass ou]
       by [puavo_dn puavo]          read
+      by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [puavo_dn pw-mgmt]        read
+      by [puavo_dn statistics]     read
       by [systemgroup addressbook] read
       by [systemgroup auth]        read
       by [systemgroup getent]      read
@@ -592,6 +604,15 @@ rule {
 
       by anonymous auth
       by *         none break
+}
+
+rule {
+  # allow statistics to read user role
+  [dn subtree $People]
+    [attrs entry objectClass puavoEduPersonAffiliation]
+      by [puavo_dn puavo-ticket]   read  # XXX to be removed later
+      by [puavo_dn statistics]     read
+      by *                         none break
 }
 
 # some permissions to "addressbook"
