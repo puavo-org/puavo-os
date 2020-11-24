@@ -609,7 +609,7 @@ rule {
 rule {
   # allow statistics to read user role
   [dn subtree $People]
-    [attrs entry objectClass puavoEduPersonAffiliation]
+    [attrs entry objectClass puavoEduPersonAffiliation puavoSchool]
       by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [puavo_dn statistics]     read
       by *                         none break
