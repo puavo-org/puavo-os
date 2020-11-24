@@ -334,6 +334,7 @@ class packages {
     , 'nautilus-image-converter'
     , 'obs-studio'
     , 'okular'
+    , 'openscad'
     , 'openshot-qt'
     , 'pencil2d'
     , 'pinta'
