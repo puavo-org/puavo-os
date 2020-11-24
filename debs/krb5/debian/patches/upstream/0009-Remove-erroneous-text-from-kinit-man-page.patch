@@ -1,0 +1,63 @@
+From d7c778325a6f690dc16213e797dbdc3a84458ae8 Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Mon, 7 Jan 2019 21:09:34 +0200
+Subject: Remove erroneous text from kinit man page
+
+Commit 4c4859fa83295db5c26f47b96c719060cfd9e2b1 changed the kinit man
+page to state that kinit -E (enterprise) implies -C (canonicalize).
+The client does not automatically set the canonicalize option when
+getting tickets for an enterprise principal, and Windows KDCs can
+issue tickets for enterprise principals without canonicalizing the
+principal (contrary to the implication of RFC 6806 section 5).  Remove
+the misleading text.
+
+[ghudson@mit.edu: updated RST man page and regenerated nroff file;
+rewrote commit message]
+
+(cherry picked from commit 8e31335a7722a2f7f1722506befe4fd26d3e3f3f)
+
+ticket: 8779
+version_fixed: 1.17.1
+
+Patch-Category: upstream
+---
+ doc/user/user_commands/kinit.rst | 3 +--
+ src/man/kinit.man                | 5 ++---
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/doc/user/user_commands/kinit.rst b/doc/user/user_commands/kinit.rst
+index d692e2791a..e12e88a372 100644
+--- a/doc/user/user_commands/kinit.rst
++++ b/doc/user/user_commands/kinit.rst
+@@ -92,8 +92,7 @@ OPTIONS
+     requested.
+ 
+ **-E**
+-    treats the principal name as an enterprise name (implies the
+-    **-C** option).
++    treats the principal name as an enterprise name.
+ 
+ **-v**
+     requests that the ticket-granting ticket in the cache (with the
+diff --git a/src/man/kinit.man b/src/man/kinit.man
+index d121cff749..a3dcfe26cc 100644
+--- a/src/man/kinit.man
++++ b/src/man/kinit.man
+@@ -1,6 +1,6 @@
+ .\" Man page generated from reStructuredText.
+ .
+-.TH "KINIT" "1" " " "1.17" "MIT Kerberos"
++.TH "KINIT" "1" " " "1.18" "MIT Kerberos"
+ .SH NAME
+ kinit \- obtain and cache Kerberos ticket-granting ticket
+ .
+@@ -113,8 +113,7 @@ KDC to reply with a different client principal from the one
+ requested.
+ .TP
+ \fB\-E\fP
+-treats the principal name as an enterprise name (implies the
+-\fB\-C\fP option).
++treats the principal name as an enterprise name.
+ .TP
+ \fB\-v\fP
+ requests that the ticket\-granting ticket in the cache (with the

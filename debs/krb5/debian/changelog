@@ -1,8 +1,15 @@
-krb5 (1.17-2+puavo1) buster; urgency=medium
+krb5 (1.17-3+deb10u1) buster-security; urgency=medium
 
-  * Added a patch to increase maximum number of realms.
+  * CVE-2020-28196 (Closes: #973880)
 
- -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 10:51:10 +0200
+ -- Moritz Mühlenhoff <jmm@debian.org>  Thu, 19 Nov 2020 17:42:57 +0100
+
+krb5 (1.17-3) unstable; urgency=medium
+
+  * Fix memory leak in replay cache type none
+  * Merge in two upstream documentation changes
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 18 Jun 2019 08:00:29 -0400
 
 krb5 (1.17-2) unstable; urgency=medium
 

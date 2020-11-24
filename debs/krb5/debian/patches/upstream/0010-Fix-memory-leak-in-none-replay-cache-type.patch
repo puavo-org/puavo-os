@@ -1,0 +1,33 @@
+From c736896c4a0e6402e4876163647e320b1fc62d21 Mon Sep 17 00:00:00 2001
+From: Corene Casper <C.Casper@Dell.com>
+Date: Sat, 16 Feb 2019 00:49:26 -0500
+Subject: Fix memory leak in 'none' replay cache type
+
+Commit 0f06098e2ab419d02e89a1ca6bc9f2828f6bdb1e fixed part of a memory
+leak in the 'none' replay cache type by freeing the outer container,
+but we also need to free the mutex.
+
+[ghudson@mit.edu: wrote commit message]
+
+(cherry picked from commit af2a3115cb8feb5174151b4b40223ae45aa9db17)
+
+ticket: 8783
+version_fixed: 1.17.1
+
+Patch-Category: upstream
+---
+ src/lib/krb5/rcache/rc_none.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/lib/krb5/rcache/rc_none.c b/src/lib/krb5/rcache/rc_none.c
+index e30aed09f1..0b2274df7f 100644
+--- a/src/lib/krb5/rcache/rc_none.c
++++ b/src/lib/krb5/rcache/rc_none.c
+@@ -50,6 +50,7 @@ krb5_rc_none_noargs(krb5_context ctx, krb5_rcache rc)
+ static krb5_error_code KRB5_CALLCONV
+ krb5_rc_none_close(krb5_context ctx, krb5_rcache rc)
+ {
++    k5_mutex_destroy(&rc->lock);
+     free (rc);
+     return 0;
+ }

@@ -1,0 +1,33 @@
+From a243df875ff905d1c676bd726b19bafea07b628c Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Wed, 6 Mar 2019 18:01:50 -0500
+Subject: Document the double-colon behavior of DIR ccaches
+
+(cherry picked from commit 5ba6e02a7b96ddd15dde01db0f9aff3d65773a8e)
+
+ticket: 8789
+version_fixed: 1.17.1
+
+Patch-Category: upstream
+---
+ doc/basic/ccache_def.rst | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/doc/basic/ccache_def.rst b/doc/basic/ccache_def.rst
+index d147f0d7aa..53542adde9 100644
+--- a/doc/basic/ccache_def.rst
++++ b/doc/basic/ccache_def.rst
+@@ -51,6 +51,13 @@ library.
+    requirement is for parent directory to exist and the current
+    process must have permissions to create the directory if it does
+    not exist. See :ref:`col_ccache` for details.  New in release 1.10.
++   The following residual forms are supported:
++
++   * DIR:dirname
++   * DIR::dirpath/filename - a single cache within the directory
++
++   Switching to a ccache of the latter type causes it to become the
++   primary for the directory.
+ 
+ #. **FILE** caches are the simplest and most portable. A simple flat
+    file format is used to store one credential after another.  This is
