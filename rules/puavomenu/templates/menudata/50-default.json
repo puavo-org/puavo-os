@@ -691,12 +691,9 @@
             },
             "tags": "default, education"
         },
-        "openscad-nightly": {
+        "openscad": {
             "name": "OpenSCAD",
-            "tags": "default",
-            "puavopkg": {
-                "id": "openscad-nightly"
-            }
+            "tags": "default"
         },
         "openshot-qt": {
             "tags": "default"
@@ -1810,7 +1807,7 @@
                 "cura-appimage",
                 "sketchup",
                 "freecad",
-                "openscad-nightly",
+                "openscad",
                 "FlashPrint"
             ]
         },
