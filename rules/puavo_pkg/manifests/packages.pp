@@ -8,7 +8,8 @@ class puavo_pkg::packages {
   # versions).
   $stretch_specific_packages = [ 'aseba'
                                , 'musescore-appimage'
-                               , 'obsidian-icons' ]
+                               , 'obsidian-icons'
+                               , 'openscad-nightly' ]
   $buster_specific_packages  = [ 'celestia'
                                , 'eclipse'
                                , 'netbeans'
@@ -52,7 +53,6 @@ class puavo_pkg::packages {
 			, 'nightcode'
 			, 'novoconnect'
 			, 'ohjelmointi-opetuksessa'
-			, 'openscad-nightly'
 			, 'processing'
 			, 'pycharm'
 			, 'robboscratch2'
