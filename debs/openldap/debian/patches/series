@@ -29,6 +29,8 @@ ITS-9052-zero-out-sasl_ssf-in-connection_init.patch
 ITS-8964-Do-not-free-original-filter.patch
 ITS-9202-limit-depth-of-nested-filters.patch
 ITS-9370-check-for-equality-rule-on-old_rdn.patch
+ITS-9383-remove-assert-in-certificateListValidate.patch
+ITS-9384-remove-assert-in-obsolete-csnNormalize23.patch
 puavo-increase-max-number-of-ldap-keys
 puavo-increase-max-rewrite-passes
 puavo-smbkrb5pwd

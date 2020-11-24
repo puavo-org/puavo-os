@@ -1,12 +1,22 @@
-openldap (2.4.47+dfsg-3+deb10u3+puavo1+buildonce) buster; urgency=medium
+openldap (2.4.47+dfsg-3+deb10u4+puavo1+buildonce) buster; urgency=medium
 
   * With some patches by Puavo Org.
 
  -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 12:54:06 +0200
 
+openldap (2.4.47+dfsg-3+deb10u4) buster-security; urgency=high
+
+  * Fix slapd abort due to assertion failure in Certificate List syntax
+    validation (ITS#9383) (CVE-2020-25709)
+  * Fix slapd abort due to assertion failure in CSN normalization with invalid
+    input (ITS#9384) (CVE-2020-25710)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 16 Nov 2020 17:23:45 -0800
+
 openldap (2.4.47+dfsg-3+deb10u3) buster-security; urgency=high
 
-  * Fix slapd normalization handling with modrdn (ITS#9370)
+  * Fix slapd normalization handling with modrdn
+    (ITS#9370) (CVE-2020-25692)
 
  -- Ryan Tandy <ryan@nardis.ca>  Thu, 29 Oct 2020 18:36:26 -0700
 
