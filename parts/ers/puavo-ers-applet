@@ -781,17 +781,16 @@ class PuavoErsExamScheduler (threading.Thread):
                       'exam %s is missing from server' % exam['file_name'])
         load_exams = True
 
-    if not load_exams:
+    if load_exams:
+      try:
+        syslog.syslog(syslog.LOG_INFO, 'some exams were missing, loading exams')
+        load_exams_response = self.load_exams()
+      except CurrentZipNotReady as e:
+        syslog.syslog(syslog.LOG_INFO,
+                      'exam scheduler is waiting for zip file to be ready')
+        return
+    else:
       syslog.syslog(syslog.LOG_INFO, 'all exams are loaded as expected')
-      return
-
-    try:
-      syslog.syslog(syslog.LOG_INFO, 'some exams were missing, loading exams')
-      load_exams_response = self.load_exams()
-    except CurrentZipNotReady as e:
-      syslog.syslog(syslog.LOG_INFO,
-                    'exam scheduler is waiting for zip file to be ready')
-      return
 
     if earliest_exam_start_time <= datetime.datetime.now():
       syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
