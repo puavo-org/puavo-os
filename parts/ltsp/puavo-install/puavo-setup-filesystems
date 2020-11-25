@@ -213,7 +213,7 @@ module DiskHandler
                  *spare_args,
                  *(disks_for_mirroring.map do |dev|
                      partitioning_scheme == 'UEFI/GPT' \
-                       ? "/dev/#{ dev }2" \
+                       ? "/dev/#{ dev }3" \
                        : "/dev/#{ dev }1"
                    end))
 
@@ -262,14 +262,14 @@ module DiskHandler
   def self.raid_partition(device, partitioning_scheme)
     setup_partition(device, partitioning_scheme,
                     "n\np\n1\n\n\nt\nfd\na\np\nw\n",
-                    "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\nfd00\nw\ny\n")
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\nfd00\nw\ny\n")
   end
 
   def self.get_partition(device, partitioning_scheme, numstart)
     special_disk_regexp = %r{\A((loop|md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
     part_prefix = device.match(special_disk_regexp) ? 'p' : ''
     puavo_partnum = (partitioning_scheme == 'UEFI/GPT') \
-                       ? (numstart + 1) \
+                       ? (numstart + 2) \
                        : numstart
     [ device, part_prefix, puavo_partnum ].join
   end
@@ -312,7 +312,7 @@ module DiskHandler
   def self.create_partitions(fs_conf, partitioning_scheme)
     setup_partition(fs_conf['device'], partitioning_scheme,
                     "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n",
-                    "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\n8e00\nw\ny\n")
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n")
   end
 
   def self.non_swap_filesystems(hosttype)
