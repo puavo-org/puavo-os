@@ -22,7 +22,8 @@ puavo_locale=$(puavo-conf puavo.l10n.locale)
   # XXX is used.
   if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' \
        -a '(' -n "$(puavo-conf puavo.xrandr.args | jq -r '.[]')" \
-              -o -n "$(puavo-conf puavo.xrandr.apply_presets)" ')' ]; then
+              -o -n "$(puavo-conf puavo.xrandr.apply_presets)" ')' \
+       -a "$(jq '.monitors_xml != null' /etc/puavo/device.json)" != 'true' ]; then
     echo MUTTER_ALLOW_CONFIGURATION=temporary
   fi
 } > /etc/default/locale.tmp

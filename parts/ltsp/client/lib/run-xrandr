@@ -242,7 +242,10 @@ begin
       settings_to_apply = [ 'custom' ]
   end
 
-  apply_settings(settings_to_apply, xrandr_parsed_args_list)
+  deviceinfo = JSON.parse( File.read('/etc/puavo/device.json') )
+  unless deviceinfo['monitors_xml'] then
+    apply_settings(settings_to_apply, xrandr_parsed_args_list)
+  end
 
 rescue StandardError => e
   Syslog.log(Syslog::LOG_ERR, '%s', e.message)
