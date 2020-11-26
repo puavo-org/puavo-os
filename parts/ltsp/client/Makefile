@@ -32,6 +32,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
@@ -49,6 +50,9 @@ installdirs :
 
 .PHONY : install
 install : installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
+		gdm/greeter/autostart/puavo-run-xrandr.desktop
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
 		pam/configs/puavo-local-access
 
@@ -90,11 +94,15 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
 		etc/NetworkManager/dispatcher.d/dnssd-printers
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d \
+		etc/systemd/system/systemd-udevd.service.d/puavo-ltsp-client.conf
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		etc/xdg/autostart/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
-		udev/rules.d/80-puavo-printers.rules
+		udev/rules.d/80-puavo-printers.rules \
+		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-ltsp-client

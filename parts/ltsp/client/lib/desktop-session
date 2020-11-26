@@ -2,6 +2,11 @@
 
 set -eu
 
+# NOTE!  /usr/lib/puavo-ltsp-client/udev-hotplug-monitor may grep if this
+# script is running (to check if a desktop session is running on this host),
+# so if you change the interpreter or the script name, please make sure to
+# change that as well.  Thank you!
+
 if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' \
      -a -x ~/.xsession ]; then
   /etc/X11/Xsession

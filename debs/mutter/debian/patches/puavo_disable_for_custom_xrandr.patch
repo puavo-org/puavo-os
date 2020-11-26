@@ -1,0 +1,77 @@
+diff -ruN mutter.old/src/backends/meta-monitor-config-store.c mutter/src/backends/meta-monitor-config-store.c
+--- mutter.old/src/backends/meta-monitor-config-store.c	2020-11-26 10:52:07.000000000 +0200
++++ mutter/src/backends/meta-monitor-config-store.c	2020-11-26 10:55:25.850912873 +0200
+@@ -1489,6 +1489,16 @@
+   char *user_file_path;
+   GError *error = NULL;
+   char *monitors_file_path;
++  char *mutter_allow_configuration;
++  gboolean load_user_config = TRUE;
++
++  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "user",
++   * do not load user configuration file. */
++  mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
++  if (mutter_allow_configuration != NULL) {
++    if (strstr(mutter_allow_configuration, "user") == NULL)
++      load_user_config = FALSE;
++  }
+ 
+   monitors_file_path = getenv("MUTTER_MONITOR_FILENAME");
+   if (monitors_file_path == NULL)
+@@ -1499,7 +1509,7 @@
+                                      NULL);
+   config_store->user_file = g_file_new_for_path (user_file_path);
+ 
+-  if (g_file_test (user_file_path, G_FILE_TEST_EXISTS))
++  if (load_user_config && g_file_test (user_file_path, G_FILE_TEST_EXISTS))
+     {
+       if (!read_config_file (config_store, config_store->user_file, &error))
+         {
+diff -ruN mutter.old/src/backends/meta-monitor-manager.c mutter/src/backends/meta-monitor-manager.c
+--- mutter.old/src/backends/meta-monitor-manager.c	2020-11-26 10:52:07.000000000 +0200
++++ mutter/src/backends/meta-monitor-manager.c	2020-11-26 10:59:21.801101194 +0200
+@@ -490,6 +490,7 @@
+     META_MONITORS_CONFIG_METHOD_TEMPORARY;
+   MetaMonitorSwitchConfigType config_type;
+   char *display_setup;
++  char *mutter_allow_configuration;
+ 
+   use_stored_config = should_use_stored_config (manager);
+   if (use_stored_config)
+@@ -520,6 +521,16 @@
+         }
+     }
+ 
++  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "default",
++   * do nothing. */
++  mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
++  if (mutter_allow_configuration != NULL) {
++    if (strstr(mutter_allow_configuration, "default") == NULL) {
++      g_warning ("Not applying default configuration because of MUTTER_ALLOW_CONFIGURATION settings");
++      return NULL;
++    }
++  }
++
+   config = meta_monitor_config_manager_create_suggested (manager->config_manager);
+   if (config)
+     {
+@@ -1933,6 +1944,19 @@
+   MetaMonitorsConfig *config;
+   GList *logical_monitor_configs = NULL;
+   GError *error = NULL;
++  char *mutter_allow_configuration;
++
++  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "temporary",
++   * do nothing. */
++  mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
++  if (mutter_allow_configuration != NULL) {
++    if (strstr(mutter_allow_configuration, "temporary") == NULL) {
++      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
++                                             G_DBUS_ERROR_ACCESS_DENIED,
++                                             "Permission denied.");
++      return TRUE;
++    }
++  }
+ 
+   if (method == META_MONITORS_CONFIG_METHOD_STOREONLY) {
+     if (meta_monitor_manager_handle_current_state (skeleton, invocation, 0)) {

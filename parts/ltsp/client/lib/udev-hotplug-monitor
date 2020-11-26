@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -eu
+
+# This script is called from udev rules when udev detects a change in
+# monitor configuration. All xrandr commands are called to restore
+# the configuration. This is needed e.g. with document cameras that
+# cause displays to come and go on regular basis.
+#
+# udev rule example:
+#
+# ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/bin/udev-hotplug-monitor"
+
+lookup_env_for_pid() {
+  local envname pid result
+  envname=$1
+  pid=$2
+
+  result=$(
+    awk -v envname="$envname" '
+      BEGIN { FS = "="; RS = "\0" }
+      $1 == envname { print $2; exit(0) }
+    ' "/proc/${pid}/environ")
+
+  [ -n "$result" ] || return 1
+
+  printf %s "$result"
+}
+
+tty_number=$(fgconsole)
+
+current_session_pid=$(
+  ps --no-headers -C gnome-session-binary -o tty,pid \
+    | awk -v tty_number="$tty_number" '
+        ("tty" tty_number) == $1 { print $2; exit(0) }
+      ')
+
+if [ -z "$current_session_pid" ]; then
+  echo 'could not find gnome-session-binary for active display' >&2
+  exit 1
+fi
+
+MUTTER_ALLOW_CONFIGURATION=$(
+  lookup_env_for_pid MUTTER_ALLOW_CONFIGURATION "$current_session_pid") \
+    || true
+
+if echo "$MUTTER_ALLOW_CONFIGURATION" | grep -Eqw '(default|user)'; then
+  # mutter is taking care of monitors, or might be if user has configured
+  # it to do so... do not step on its tows.
+  exit 0
+fi
+
+DISPLAY=$(lookup_env_for_pid DISPLAY "$current_session_pid")
+XAUTHORITY=$(lookup_env_for_pid XAUTHORITY "$current_session_pid")
+
+export DISPLAY XAUTHORITY
+
+/usr/lib/puavo-ltsp-client/run-xrandr
