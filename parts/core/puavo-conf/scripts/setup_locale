@@ -16,9 +16,13 @@ puavo_locale=$(puavo-conf puavo.l10n.locale)
     fi
   fi
 
-  if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' ]; then
-    # XXX Find a better place for this... we do not want gnome-shell/mutter
-    # XXX to mess up xrandr-settings in login screen.
+  # XXX Remove this once we drop support for our old event/xrandr-based
+  # XXX display configuration system.  We do not want gnome-shell/mutter
+  # XXX to mess up xrandr-settings in login screen, when this old system
+  # XXX is used.
+  if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' \
+       -a '(' -n "$(puavo-conf puavo.xrandr.args | jq -r '.[]')" \
+              -o -n "$(puavo-conf puavo.xrandr.apply_presets)" ')' ]; then
     echo MUTTER_ALLOW_CONFIGURATION=temporary
   fi
 } > /etc/default/locale.tmp
