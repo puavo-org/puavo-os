@@ -26,6 +26,10 @@ pipeline {
       }
     }
 
+    stage('Build kerberos') {
+      steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-krb5' }
+    }
+
     stage('Build openldap') {
       steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-openldap' }
     }
