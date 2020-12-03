@@ -665,13 +665,15 @@ module UI
   WritePartitionsPrompt,
     = *(1..7)
 
-  @defaults = {}
-  @forced = {}
-  @hosttype = nil
+  @defaults      = {}
+  @forced        = {}
+  @hosttype      = nil
   @loopback_only = false
+  @make_efi      = false
 
   def self.hosttype     ; @hosttype      end
   def self.loopback_only; @loopback_only end
+  def self.make_efi     ; @make_efi      end
 
   def self.help_and_exit
     puts <<-EOF
@@ -695,6 +697,8 @@ puavo-setup-filesystems [OPTIONS]
     --force-write-partitions      force value for write partitions
 
     --loopback-only               use only loopback devices
+    --make-efi                    create EFI partition even if we have not
+                                  booted in UEFI mode
 
 EOF
   end
@@ -718,7 +722,8 @@ EOF
         [ '--force-wipe-partition'      , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-write-partitions'    , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--hosttype'                  , GetoptLong::REQUIRED_ARGUMENT ],
-        [ '--loopback-only'             , GetoptLong::NO_ARGUMENT       ]
+        [ '--loopback-only'             , GetoptLong::NO_ARGUMENT       ],
+        [ '--make-efi'                  , GetoptLong::NO_ARGUMENT       ],
       )
 
       opts.each do |opt, arg|
@@ -765,6 +770,8 @@ EOF
           @hosttype = arg
         when '--loopback-only'
           @loopback_only = true
+        when '--make-efi'
+          @make_efi = true
         end
       end
     rescue GetoptLong::InvalidOption => e
@@ -823,7 +830,8 @@ vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
-partitioning_scheme = Dir.exists?('/sys/firmware/efi') ? 'UEFI/GPT' : 'BIOS/MBR'
+partitioning_scheme =
+  (UI::make_efi || Dir.exists?('/sys/firmware/efi')) ? 'UEFI/GPT' : 'BIOS/MBR'
 
 raid_setup_done = false
 if hosttype == 'bootserver' then

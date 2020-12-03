@@ -107,7 +107,8 @@ if [ -n "$target_image" ]; then
                           --force-wipe-partition no \
                           --force-write-partitions yes \
                           --hosttype diskinstaller \
-                          --loopback-only
+                          --loopback-only \
+                          --make-efi
 else
   puavo-setup-filesystems --hosttype diskinstaller
 fi
