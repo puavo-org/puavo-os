@@ -351,13 +351,12 @@ handle_windows_partion_file() {
 }
 
 get_efi_devpath() {
-  if [ ! -d /sys/firmware/efi ]; then
-    # we have not booted in UEFI-mode, UEFI/Grub installation can not work
-    return 0
-  fi
-
   env LANG=C fdisk -l "$1" \
     | awk '$1 ~ "^/dev/" && /EFI System/ { print $1; exit(0) }'
+}
+
+has_bios_boot_partition() {
+  env LANG=C fdisk -l "$1" | grep -q '^/dev/.*BIOS boot'
 }
 
 lookup_windows_partition_number() {
@@ -493,6 +492,50 @@ mount_efi_partition() {
   mount "$efi_devpath" /boot/efi || return 1
 }
 
+install_legacy_grub() {
+  local boot_dir grubdev
+
+  boot_dir=$1
+  grubdev=$2
+
+  if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
+                    --target=i386-pc "$grubdev" 3>&- 4>&- 5>&- 2>&1); then
+    log err "Grub (MBR) installation to ${grubdev} failed: ${grub_msg}"
+    return 1
+  fi
+
+  log info "Grub (MBR) installation to ${grubdev} was OK."
+
+  return 0
+}
+
+install_efi_grub() {
+  local boot_dir efi_devpath grubdev grub_efi_arguments vgname
+
+  boot_dir=$1
+  efi_devpath=$2
+  grubdev=$3
+  vgname=$4
+
+  if ! mount_efi_partition "$efi_devpath"; then
+    log err "could not mount /boot/efi from ${efi_devpath}"
+    return 1
+  fi
+  grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
+  if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
+                    $grub_efi_arguments "$grubdev" \
+                    3>&- 4>&- 5>&- 2>&1); then
+    log err "Grub (UEFI) installation to ${grubdev} failed: ${grub_msg}"
+    umount /boot/efi || true
+    return 1
+  fi
+  umount /boot/efi || true
+
+  log info "Grub (UEFI) installation to ${grubdev} was OK."
+
+  return 0
+}
+
 grub_install_done=false
 
 if $only_update_config; then
@@ -501,29 +544,30 @@ else
   for grubdev in $grub_target_devices; do
     log info "installing grub to ${grubdev}"
 
-    # Install MBR boot first.  Even if we have booted as UEFI, even if
-    # legacy is not supported (on this host... our drive might be removable).
-    if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
-                      --target=i386-pc "$grubdev" 3>&- 4>&- 5>&- 2>&1); then
-      log err "Grub (MBR) installation to ${grubdev} failed: ${grub_msg}"
-      exit 1
+    grub_install_attempted=false
+
+    if has_bios_boot_partition "$grubdev"; then
+      grub_install_attempted=true
+      if ! install_legacy_grub "$boot_dir" "$grubdev"; then
+        exit 1
+      fi
     fi
 
     efi_devpath=$(get_efi_devpath "$grubdev")
     if [ -n "$efi_devpath" ]; then
-      if ! mount_efi_partition "$efi_devpath"; then
-        log err "could not mount /boot/efi from ${efi_devpath}"
+      grub_install_attempted=true
+      if ! install_efi_grub "$boot_dir" "$efi_devpath" "$grubdev" \
+                            "$vgname"; then
         exit 1
       fi
-      grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
-      if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
-                        $grub_efi_arguments "$grubdev" \
-                        3>&- 4>&- 5>&- 2>&1); then
-        log err "Grub (UEFI) installation to ${grubdev} failed: ${grub_msg}"
-        umount /boot/efi || true
+    fi
+
+    if ! $grub_install_attempted; then
+      # Must be a legacy Grub installation in case neither bios boot
+      # partition nor EFI-partition was found.  Thus, we must try this:
+      if ! install_legacy_grub "$boot_dir" "$grubdev"; then
         exit 1
       fi
-      umount /boot/efi || true
     fi
 
     log info "Grub installation to ${grubdev} was successful"
