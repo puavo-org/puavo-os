@@ -435,6 +435,7 @@ class packages {
     , 'idle-python2.7'
     , 'idle-python3.7'
     , 'kturtle'
+    , 'lazarus'
     , 'lokalize'
     , 'meld'
     , 'pyqt4-dev-tools'
