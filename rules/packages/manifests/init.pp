@@ -543,6 +543,7 @@ class packages {
     , 'gnome-keyring'
     , 'gnome-menus'
     , 'gnome-online-accounts'
+    , 'gnome-orca'
     , 'gnome-screenshot'
     , 'gnome-session'
     , 'gnome-settings-daemon'
