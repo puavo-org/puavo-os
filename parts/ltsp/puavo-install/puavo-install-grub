@@ -341,15 +341,19 @@ lookup_windows_root() {
   efi_devpath=$(get_efi_devpath "$diskdev")
   if [ -n "$efi_devpath" ]; then
     printf "%s\n", "$efi_devpath" \
-      | awk '{ if (match($1, /[0-9]+$/, _)) {
-                 printf "(hd0,gpt%d)\n" _[0]; exit
-               }'
+      | awk '{
+          if (match($1, /[0-9]+$/, _)) {
+            printf("(hd0,gpt%d)\n", _[0]); exit(0)
+          }
+        }'
   else
     # Presume that the first partition not containing "Linux"
     # is a Windows-partition.
     env LANG=C fdisk -l "$diskdev" \
       | awk '$1 ~ "^/dev/" && !/(BIOS boot|EFI System|Extended|Linux)/ {
-               if (match($1, /[0-9]+$/, _)) { print "(hd0,%d)\n", _[0]; exit }
+               if (match($1, /[0-9]+$/, _)) {
+                 print "(hd0,%d)\n", _[0]; exit(0)
+               }
              }'
   fi
 }
