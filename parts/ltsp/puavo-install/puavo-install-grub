@@ -325,31 +325,6 @@ find_grub_target_devices_on_raid() {
            }'
 }
 
-handle_windows_partion_file() {
-  local possible_windows_disk_dev windows_partition_number \
-        windows_partition_path
-
-  # set up this file so that UI tools can check if host has
-  # a Windows-partition
-
-  possible_windows_disk_dev=$1
-  windows_partition_number=$2
-  windows_partition_path=/images/boot/.puavo_windows_partition
-
-  if [ -n "$windows_partition_number" ]; then
-    printf "%s%s\n" "$possible_windows_disk_dev" "$windows_partition_number" \
-      > "${windows_partition_path}.tmp"
-    if ! cmp "${windows_partition_path}.tmp" \
-             "$windows_partition_path" 2>/dev/null; then
-      mv "${windows_partition_path}.tmp" "$windows_partition_path"
-    else
-      rm -f "${windows_partition_path}.tmp"
-    fi
-  else
-    rm -f "$windows_partition_path"
-  fi
-}
-
 get_efi_devpath() {
   env LANG=C fdisk -l "$1" \
     | awk '$1 ~ "^/dev/" && /EFI System/ { print $1; exit(0) }'
@@ -359,16 +334,36 @@ has_bios_boot_partition() {
   env LANG=C fdisk -l "$1" | grep -q '^/dev/.*BIOS boot'
 }
 
-lookup_windows_partition_number() {
-  # Presume that the first partition not containing "Linux"
-  # is a Windows-partition.
+lookup_windows_root() {
   local diskdev
-
   diskdev=$1
-  env LANG=C fdisk -l "$diskdev" \
-    | awk '$1 ~ "^/dev/" && !/(BIOS boot|EFI System|Extended|Linux)/ {
-	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
-           }'
+
+  efi_devpath=$(get_efi_devpath "$diskdev")
+  if [ -n "$efi_devpath" ]; then
+    printf "%s\n", "$efi_devpath" \
+      | awk '{ if (match($1, /[0-9]+$/, _)) {
+                 printf "(hd0,gpt%d)\n" _[0]; exit
+               }'
+  else
+    # Presume that the first partition not containing "Linux"
+    # is a Windows-partition.
+    env LANG=C fdisk -l "$diskdev" \
+      | awk '$1 ~ "^/dev/" && !/(BIOS boot|EFI System|Extended|Linux)/ {
+               if (match($1, /[0-9]+$/, _)) { print "(hd0,%d)\n", _[0]; exit }
+             }'
+  fi
+}
+
+lookup_windows_chainloader() {
+  local diskdev
+  diskdev=$1
+
+  efi_devpath=$(get_efi_devpath "$diskdev")
+  if [ -n "$efi_devpath" ]; then
+    echo '/EFI/Microsoft/Boot/bootmgfw.efi'
+  else
+    echo '+1'
+  fi
 }
 
 usage() {
@@ -600,26 +595,31 @@ grub_m4_template                                              \
   > "$tmp_grub_cfg_path"
 
 if [ -n "$possible_windows_disk_dev" ]; then
-  windows_partition_number=$(lookup_windows_partition_number \
-                               "$possible_windows_disk_dev")
+  windows_root=$(lookup_windows_root "$possible_windows_disk_dev")
+  windows_chainloader=$(lookup_windows_chainloader "$possible_windows_disk_dev")
 
-  handle_windows_partion_file "$possible_windows_disk_dev" \
-                              "$windows_partition_number"
+  windows_partition_path=/images/boot/.puavo_windows_partition
 
-  if [ -n "$windows_partition_number" ]; then
+  if [ -n "$windows_root" -a -n "$windows_chainloader" ]; then
+    printf "%s %s\n" "$windows_root" "$windows_chainloader" \
+      > "${windows_partition_path}.tmp"
+    mv "${windows_partition_path}.tmp" "$windows_partition_path"
+
     cat <<EOF >> "$tmp_grub_cfg_path"
 
 if test "\${puavo_grub_windows_enabled}" = "true"; then
   menuentry "Windows" {
     insmod ntfs
-    set root=(hd0,$windows_partition_number)
-    chainloader +1
+    set root=${windows_root}
+    chainloader ${windows_chainloader}
   }
   if test "\${puavo_grub_boot_default}" = "windows"; then
     set default="Windows"
   fi
 fi
 EOF
+  else
+    rm -f "$windows_partition_path"
   fi
 fi
 
