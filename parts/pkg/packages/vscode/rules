@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+vscode_links='
+   /usr/share/appdata/code.appdata.xml
+   /usr/share/applications/code.desktop
+   /usr/share/applications/code-url-handler.desktop
+   /usr/share/bash-completion/completions/code
+   /usr/share/code
+   /usr/share/mime/packages/code-workspace.xml
+   /usr/share/pixmaps/com.visualstudio.code.png
+   /usr/share/zsh/vendor-completions/_code
+'
+
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+        for f in $vscode_links; do
+          mkdir -p "$(dirname "$f")"
+          ln -fns -T "${upstream_dir}/${f}" "$f"
+        done
+        echo vscode >> /var/lib/puavo-pkg/.update_mime_database
+	;;
+    unconfigure)
+	rm -rf $vscode_links
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac

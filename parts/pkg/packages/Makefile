@@ -77,6 +77,7 @@ packagedirs += unityhub-appimage
 packagedirs += vagrant
 packagedirs += veracrypt
 packagedirs += vidyo-client
+packagedirs += vscode
 packagedirs += zoom
 
 packagefiles = $(patsubst %,%.tar.gz,${packagedirs})
