@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+gdevelop_dir='/opt/gdevelop'
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    ln -fns "$upstream_dir" "$gdevelop_dir"
+    ;;
+  unconfigure)
+    rm -f "$gdevelop_dir"
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    cp -p "$upstream_pack" "${upstream_dir}/GDevelop.AppImage"
+    chmod 755 "${upstream_dir}/GDevelop.AppImage"
+    ;;
+  *)
+    ;;
+esac

@@ -76,6 +76,7 @@ class puavo_pkg::packages {
   $other_available_packages = [ 'canon-cque'
                               , 'dragonbox_koulu1'
                               , 'dragonbox_koulu2'
+                              , 'gdevelop'
                               , 'hp-bios-utils'
                               , 'kdenlive-appimage'
                               , 'otto-blockly'
