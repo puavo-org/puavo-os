@@ -78,6 +78,7 @@ class puavo_pkg::packages {
                               , 'dragonbox_koulu1'
                               , 'dragonbox_koulu2'
                               , 'kdenlive-appimage'
+                              , 'otto-blockly'
                               , 'promethean'
                               , 'teamviewer' ]
 

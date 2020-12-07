@@ -53,6 +53,7 @@ packagedirs += obsidian-icons
 packagedirs += ohjelmointi-opetuksessa
 packagedirs += openscad-nightly
 packagedirs += openshot-appimage
+packagedirs += otto-blockly
 packagedirs += processing
 packagedirs += promethean
 packagedirs += pycharm
