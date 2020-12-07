@@ -31,6 +31,7 @@ packagedirs += enchanting
 packagedirs += extra-xkb-symbols
 packagedirs += firefox
 packagedirs += flashforge-flashprint
+packagedirs += gdevelop
 packagedirs += geogebra
 packagedirs += geogebra6
 packagedirs += globilab
