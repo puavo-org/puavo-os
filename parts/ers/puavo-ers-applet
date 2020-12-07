@@ -105,14 +105,16 @@ class PuavoErsApplet:
     self.exam_sync = PuavoErsExamSync()
     self.exam_sync.start()
 
-    self.exams_server_helper = PuavoErsServerHelper()
-    self.exams_server_helper.start()
-
     self.exam_sorter = PuavoErsExamSorter()
     self.exam_sorter.start()
 
-    self.exams_scheduler = PuavoErsExamScheduler()
-    self.exams_scheduler.start()
+    # XXX server helper sync disabled for now
+    # self.exams_server_helper = PuavoErsServerHelper()
+    # self.exams_server_helper.start()
+
+    # XXX exam scheduler disabled for now
+    # self.exams_scheduler = PuavoErsExamScheduler()
+    # self.exams_scheduler.start()
 
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
