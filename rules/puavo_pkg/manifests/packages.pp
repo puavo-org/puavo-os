@@ -89,10 +89,11 @@ class puavo_pkg::packages {
     'buster':  { @puavo_pkg::install { $buster_specific_packages:  ; } }
   }
 
-  # "arduino-tm1637", "arduino-radiohead" and "ohjelmointi-opetuksessa"
-  # require "arduino-ide" to be installed first.
+  # "arduino-ottodiylib", "arduino-tm1637", "arduino-radiohead" and
+  # "ohjelmointi-opetuksessa" require "arduino-ide" to be installed first.
   Puavo_pkg::Install['arduino-ide'] {
-    before +> [ Puavo_pkg::Install['arduino-radiohead']
+    before +> [ Puavo_pkg::Install['arduino-ottodiylib']
+              , Puavo_pkg::Install['arduino-radiohead']
               , Puavo_pkg::Install['arduino-tm1637']
               , Puavo_pkg::Install['ohjelmointi-opetuksessa'] ],
   }
