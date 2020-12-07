@@ -26,6 +26,7 @@ class puavo_pkg::packages {
 			, 'airtame'
 			, 'appinventor'
 			, 'arduino-ide'
+			, 'arduino-ottodiylib'
 			, 'arduino-radiohead'
 			, 'arduino-tm1637'
 			, 'bluegriffon'
