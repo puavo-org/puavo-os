@@ -38,6 +38,9 @@ case "${command}" in
       ln -fns -T "${upstream_dir}${f}" "$f"
     done
 
+    chown root:root "${upstream_dir}/usr/share/teams/chrome-sandbox"
+    chmod 4755      "${upstream_dir}/usr/share/teams/chrome-sandbox"
+
     add_disable_autostart
     ;;
   unconfigure)
