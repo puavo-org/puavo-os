@@ -4,6 +4,8 @@ set -eu
 
 logmsg() { logger -t puavo-send-sysinfo-to-puavo "$@"; }
 
+status=0
+
 background_mode=false
 if [ "${1:-}" = '--background-mode' ]; then
   background_mode=true
@@ -35,8 +37,10 @@ while true; do
       if ! puavo-rest-request "v3/devices/${my_hostname}/sysinfo" $prr_args \
                               -- -F "sysinfo=<$tmpfile" >/dev/null; then
         logmsg -p user.err 'sending sysinfo to puavo failed'
+        status=1
       else
         logmsg -p user.info 'sysinfo sent to puavo successfully'
+        status=0
       fi
     fi
     rm -f "$tmpfile"
@@ -48,3 +52,5 @@ while true; do
 
   sleep 86400
 done
+
+exit $status
