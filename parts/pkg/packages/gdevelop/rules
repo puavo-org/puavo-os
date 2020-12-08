@@ -11,6 +11,16 @@ case "$command" in
   configure)
     upstream_dir=$1
     ln -fns "$upstream_dir" "$gdevelop_dir"
+    cat <<EOF > /usr/share/applications/gdevelop.desktop
+[Desktop Entry]
+Name=GDevelop
+Exec=/opt/gdevelop/GDevelop.AppImage
+Type=Application
+Terminal=false
+Icon=default-application
+StartupNotify=true
+Categories=Education;
+EOF
     ;;
   unconfigure)
     rm -f "$gdevelop_dir"
