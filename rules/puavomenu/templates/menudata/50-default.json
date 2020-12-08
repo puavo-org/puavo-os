@@ -56,7 +56,7 @@
             }
         },
         "asebastudiothymio": {
-            "tags": "defult"
+            "tags": "default"
         },
         "audacity": {
             "name": {
@@ -145,6 +145,9 @@
             "puavopkg": {
                 "id": "cmaptools"
             }
+        },
+        "code": {
+            "tags": "default, development, education"
         },
         "com.rosegardenmusic.rosegarden": {
             "name": {
@@ -310,6 +313,9 @@
             "tags": "default"
         },
         "fritzing": {
+            "tags": "default"
+        },
+        "gdevelop": {
             "tags": "default"
         },
         "geany": {
@@ -491,6 +497,9 @@
             "puavopkg": {
                 "id": "kojo"
             }
+        },
+        "lazarus-2.0.0": {
+            "tags": "default, development, education"
         },
         "libreoffice-base": {
             "name": {
@@ -920,6 +929,9 @@
             "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
             "tags": "default, education"
         },
+        "otto-blockly": {
+            "tags": "default, development, education"
+        },
         "pavucontrol": {
             "tags": "default"
         },
@@ -979,6 +991,9 @@
             "puavopkg": {
                 "id": "processing"
             }
+        },
+        "prusaslicer": {
+            "tags": "default"
         },
         "puavo-user-registration": {
             "tags": "user_registration",
@@ -1804,6 +1819,7 @@
                 "xsane",
                 "blender",
                 "cura-appimage",
+                "prusaslicer",
                 "sketchup",
                 "freecad",
                 "openscad",
@@ -2026,6 +2042,7 @@
             "programs": [
                 "arduino",
                 "asebastudiothymio",
+                "otto-blockly",
                 "fritzing",
                 "teddybear",
                 "drracket",
@@ -2037,12 +2054,15 @@
                 "eclipse-javascript",
                 "eclipse-php",
                 "eric6",
+                "lazarus-2.0.0",
                 "pycharm",
                 "spe",
                 "idle-python2.7",
                 "idle-python3.7",
                 "geany",
+                "code",
                 "org.kde.kturtle",
+                "gdevelop",
                 "scratch",
                 "scratux",
                 "scratch3",
