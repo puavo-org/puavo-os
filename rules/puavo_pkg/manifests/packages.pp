@@ -81,7 +81,8 @@ class puavo_pkg::packages {
                               , 'kdenlive-appimage'
                               , 'otto-blockly'
                               , 'promethean'
-                              , 'teamviewer' ]
+                              , 'teamviewer'
+                              , 'vscode' ]
 
   @puavo_pkg::install { $available_packages: ; }
 
