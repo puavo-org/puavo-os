@@ -112,6 +112,8 @@ programs:
         tags: default
         puavopkg:
             id: cmaptools
+  - code:
+        tags: default, education, development
   - cura-appimage:
         name: Cura
         tags: default
@@ -269,6 +271,8 @@ programs:
             de: GCompris
         condition: "!personally_administered"
         tags: default, education
+  - gdevelop
+        tags: default, education, development
   - geany:
         name:
             en: Geany - text editor
@@ -717,6 +721,8 @@ programs:
         url: https://oppilas.otava.fi/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
         tags: default, education
+  - otto-blockly
+        tags: default, education
 
   #P
   - pahvi:
@@ -776,6 +782,8 @@ programs:
         tags: default
         puavopkg:
             id: processing
+  - prusaslicer:
+        tags: default
   - puavo-user-registration:
         condition: user_registration
         tags: user_registration
@@ -1222,6 +1230,7 @@ menus:
             - xsane
             - blender
             - cura-appimage
+            - prusaslicer
             - sketchup
             - freecad
             - openscad-nightly
@@ -1272,6 +1281,7 @@ menus:
         programs:
             - arduino
             - asebastudiothymio
+            - otto-blockly
             - fritzing
             - teddybear
             - drracket
@@ -1285,10 +1295,12 @@ menus:
             - idle-python2.7
             - idle-python3.5
             - geany
+            - code
             - org.kde.kturtle
             - scratch
             - scratux
             - scratch3
+            - gdevelop
             - bluefish
             - designer-qt4
             - processing
