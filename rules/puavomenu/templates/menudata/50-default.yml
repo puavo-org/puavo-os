@@ -271,7 +271,7 @@ programs:
             de: GCompris
         condition: "!personally_administered"
         tags: default, education
-  - gdevelop
+  - gdevelop:
         tags: default, education, development
   - geany:
         name:
@@ -721,7 +721,7 @@ programs:
         url: https://oppilas.otava.fi/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
         tags: default, education
-  - otto-blockly
+  - otto-blockly:
         tags: default, education
 
   #P
