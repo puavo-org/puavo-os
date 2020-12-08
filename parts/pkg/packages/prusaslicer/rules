@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}" /opt/prusaslicer
+        cat <<EOF > /usr/share/applications/prusaslicer.desktop
+[Desktop Entry]
+Name=PrusaSlicer
+Exec=/opt/prusaslicer/PrusaSlicer.AppImage
+Type=Application
+Terminal=false
+Icon=glade
+StartupNotify=true
+Categories=Education;
+EOF
+	;;
+    unconfigure)
+	rm -f /opt/prusaslicer \
+              /usr/share/applications/prusaslicer.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+        cp "${upstream_pack}" "${upstream_dir}/PrusaSlicer.AppImage"
+        chmod 755 "${upstream_dir}/PrusaSlicer.AppImage"
+	;;
+    *)
+	;;
+esac
