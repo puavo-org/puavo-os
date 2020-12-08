@@ -103,6 +103,23 @@ $(lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /')
 EOF
 }
 
+darkdm_send_sysinfo()
+{
+  if [ ! -x /usr/sbin/puavo-send-sysinfo-to-puavo ]; then
+    return 0
+  fi
+
+  echo -n 'Sending system information to Puavo... '
+  if timeout -k 3 30 /usr/sbin/puavo-send-sysinfo-to-puavo >/dev/null 2>&1; then
+    echo 'OK.'
+    return 0
+  fi
+
+  echo 'FAILED.'
+  echo 'Try /usr/sbin/puavo-send-sysinfo-to-puavo if you want to know why.'
+  return 1
+}
+
 darkdm_reboot()
 {
   reboot
@@ -114,8 +131,15 @@ darkdm_install()
     # give some time for users to read the error message, if there is any
     echo
     sleep 2
+
+    # Try sending sysinfo anyway, we may have a successful registration and
+    # partial installation done.
+    darkdm_send_sysinfo || true
+
     return 1
   fi
+
+  darkdm_send_sysinfo || true
 
   darkdm_reboot
 }
@@ -205,6 +229,8 @@ darkdm_update()
   else
     echo 'Configuration update OK.'
   fi
+
+  darkdm_send_sysinfo || true
 
   if [ "$update_status" -ne 0 ]; then
     return "$update_status"
