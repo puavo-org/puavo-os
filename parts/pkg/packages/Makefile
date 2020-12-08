@@ -57,6 +57,7 @@ packagedirs += openshot-appimage
 packagedirs += otto-blockly
 packagedirs += processing
 packagedirs += promethean
+packagedirs += prusaslicer
 packagedirs += pycharm
 packagedirs += robboscratch2
 packagedirs += robotmeshconnect

@@ -21,6 +21,16 @@ case "$command" in
   configure)
     upstream_dir=$1
     ln -fns "$upstream_dir" "$otto_blockly_dir"
+    cat <<EOF > /usr/share/applications/otto-blockly.desktop
+[Desktop Entry]
+Name=Otto
+Exec=/opt/otto-blockly/OttoBlockly.AppImage
+Type=Application
+Terminal=false
+Icon=applications-system
+StartupNotify=true
+Categories=Education;
+EOF
     ;;
   unconfigure)
     rm -f "$otto_blockly_dir"
