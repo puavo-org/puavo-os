@@ -82,7 +82,8 @@ class puavo_pkg::packages {
                               , 'otto-blockly'
                               , 'promethean'
                               , 'supertuxkart'
-                              , 'teamviewer' ]
+                              , 'teamviewer'
+                              , 'vscode' ]
 
   @puavo_pkg::install { $available_packages: ; }
 
