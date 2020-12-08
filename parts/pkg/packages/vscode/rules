@@ -19,22 +19,25 @@ vscode_links='
 
 case "${command}" in
     configure)
-	upstream_dir=$1
+        upstream_dir=$1
         for f in $vscode_links; do
           mkdir -p "$(dirname "$f")"
           ln -fns -T "${upstream_dir}/${f}" "$f"
         done
         echo vscode >> /var/lib/puavo-pkg/.update_mime_database
-	;;
+        ;;
     unconfigure)
-	rm -rf $vscode_links
-	;;
+        rm -rf $vscode_links
+        ;;
     unpack)
-	upstream_pack=$1
-	upstream_dir=$2
+        upstream_pack=$1
+        upstream_dir=$2
 
-	dpkg -x "${upstream_pack}" "${upstream_dir}"
-	;;
+        dpkg -x "$upstream_pack" "$upstream_dir"
+        # remove the setuid bit, this is run with --no-sandbox anyway
+        # (and owner is "puavo-pkg" so it does not help)
+        chmod 755 "${upstream_dir}/usr/share/code/chrome-sandbox"
+        ;;
     *)
-	;;
+        ;;
 esac
