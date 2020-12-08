@@ -81,6 +81,7 @@ class puavo_pkg::packages {
                               , 'kdenlive-appimage'
                               , 'otto-blockly'
                               , 'promethean'
+                              , 'prusaslicer'
                               , 'teamviewer'
                               , 'vscode' ]
 
