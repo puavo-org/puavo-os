@@ -32,6 +32,10 @@ puavo_dconf_profile_path="${puavo_session_dir}/dconf_profile"
     echo "system-db:nokeyboard"
   fi
 
+  if [ "$(puavo-conf puavo.xsessions.default)" = 'puavo-ers' ]; then
+    echo "system-db:puavo-ers"
+  fi
+
   echo "system-db:puavo-keyboard"
 
   if [ -r /etc/dconf/db/puavo-desktopbackground ]; then
