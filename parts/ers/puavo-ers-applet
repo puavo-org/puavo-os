@@ -815,6 +815,11 @@ class PuavoErsExamScheduler (threading.Thread):
       rm_f(path, False)
 
     try:
+      if not os.path.isdir(self.COMM_DIR):
+        errmsg = 'communication directory does not exist,' \
+                   + ' ktpapi is not installed in virtual server'
+        raise Exception(errmsg)
+
       with open(self.CMD_IN_PROGRESS_PATH, 'w') as f:
         pass
 
