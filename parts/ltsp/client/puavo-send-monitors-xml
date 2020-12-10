@@ -125,7 +125,7 @@ else
   # XXX and we yet do not know how.
   sudo -n puavo-change-host-state --monitors-xml "$monitors_xml" || true
   if mountpoint -q /state; then
-    puavo-update-client || true
+    puavo-update-client --auto || true
   fi
 fi
 
