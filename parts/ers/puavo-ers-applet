@@ -475,12 +475,14 @@ class PuavoErsExamSorter (threading.Thread):
     archived_exams_filenames = []
     current_exams            = []
     current_exams_filenames  = []
+    todays_exams             = []
     todays_exams_filenames   = []
     upcoming_exams_filenames = []
 
     decrypt_codes_list = []
 
     earliest_exam_start_time = None
+    latest_exam_end_time = None
 
     for exam in all_exams:
       try:
@@ -504,20 +506,24 @@ class PuavoErsExamSorter (threading.Thread):
         elif self.current_day < exam_start_day:
           upcoming_exams.append(exam['file_name'])
         else:
+          todays_exams.append(exam)
           todays_exams_filenames.append(exam['file_name'])
 
         if (exam_start_time - EXAM_PRELOAD_TIMEDELTA) <= self.current_time \
           and self.current_time < exam_end_time:
             current_exams.append(exam)
-            current_exams_filenames.append(exam['file_name'])
-            decrypt_codes_list.append(exam['decrypt_code'])
-
             if not earliest_exam_start_time \
               or exam_start_time < earliest_exam_start_time:
                 earliest_exam_start_time = exam_start_time
 
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
+
+
+    current_exams = self.find_overlapping_exams(current_exams, todays_exams)
+    for exam in current_exams:
+      current_exams_filenames.append(exam['file_name'])
+      decrypt_codes_list.append(exam['decrypt_code'])
 
     self.handle_archive(archived_exams_filenames)
 
@@ -529,6 +535,56 @@ class PuavoErsExamSorter (threading.Thread):
 
     self.zip_exams(current_exams_filenames, todays_exams_filenames,
         decrypt_codes_list)
+
+
+  def find_overlapping_exams(self, current_exams_list, todays_exams_list):
+    earliest_exam_start_time = None
+    latest_exam_end_time     = None
+
+    exams_in_this_set = current_exams_list.copy()
+    candidate_exams = todays_exams_list.copy()
+
+    if len(exams_in_this_set) == 0:
+      return []
+
+    for exam in exams_in_this_set:
+      exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+      exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
+
+      if not earliest_exam_start_time \
+        or exam_start_time < earliest_exam_start_time:
+          earliest_exam_start_time = exam_start_time
+      if not latest_exam_end_time \
+        or exam_end_time < latest_exam_end_time:
+          latest_exam_end_time = exam_end_time
+
+    while len(candidate_exams) > 0:
+      candidate_accepted = False
+      for exam in candidate_exams:
+        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+        exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
+
+        if exam_start_time < latest_exam_end_time:
+            candidate_accepted = True
+        if earliest_exam_start_time < exam_end_time:
+            candidate_accepted = True
+
+        if candidate_accepted:
+          candidate_exams.remove(exam)
+          if not exam in exams_in_this_set:
+            exams_in_this_set.append(exam)
+          if exam_start_time < earliest_exam_start_time:
+            earliest_exam_start_time = exam_start_time
+          if latest_exam_end_time < exam_end_time:
+            latest_exam_end_time = exam_end_time
+          break
+
+      # If we have not managed to remove any exam from the candidate list,
+      # there can no more exams to check.
+      if not candidate_accepted:
+        break
+
+    return exams_in_this_set
 
 
   def cleanup_exams(self, linkdir, exam_filenames):
