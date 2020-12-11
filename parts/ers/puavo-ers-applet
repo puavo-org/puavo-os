@@ -116,6 +116,9 @@ class PuavoErsApplet:
     # self.exams_scheduler = PuavoErsExamScheduler()
     # self.exams_scheduler.start()
 
+    # Copy "naksu" to NAKSU_BIN_PATH only if it does not exist yet.
+    # This is because "naksu" is self-updating and self.NAKSU_BIN_PATH
+    # likely has an updated version already.
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
 
