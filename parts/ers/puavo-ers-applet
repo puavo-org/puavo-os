@@ -504,7 +504,7 @@ class PuavoErsExamSorter (threading.Thread):
           if cur_time < (end_time + 60 * 60 * 24 * 14):
             archived_exams_filenames.append(exam['file_name'])
         elif self.current_day < exam_start_day:
-          upcoming_exams.append(exam['file_name'])
+          upcoming_exams_filenames.append(exam['file_name'])
         else:
           todays_exams.append(exam)
           todays_exams_filenames.append(exam['file_name'])
