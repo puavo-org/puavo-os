@@ -40,6 +40,7 @@ gettext.textdomain('puavo-ers-applet')
 _tr = gettext.gettext
 
 KTP_JAKO_DIR       = os.path.join(os.environ['HOME'], 'ktp-jako')
+ANSWERS_DIR        = os.path.join(KTP_JAKO_DIR, 'Vastaukset')
 EXAMS_ARCHIVE_DIR  = os.path.join(KTP_JAKO_DIR, 'Arkisto')
 EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
@@ -914,7 +915,9 @@ syslog.syslog(syslog.LOG_NOTICE, 'puavo-ers-applet starting up')
 
 applet = PuavoErsApplet()
 
-for dir in [ KTP_JAKO_DIR, EXAMS_DIR, EXAMS_ARCHIVE_DIR, EXAMS_UPCOMING_DIR ]:
+dirs_to_create = [ KTP_JAKO_DIR, ANSWERS_DIR, EXAMS_DIR, EXAMS_ARCHIVE_DIR,
+                   EXAMS_UPCOMING_DIR ]
+for dir in dirs_to_create:
   try:
     os.mkdir(dir)
   except OSError as e:
