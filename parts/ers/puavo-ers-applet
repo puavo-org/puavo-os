@@ -47,8 +47,9 @@ EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 
 # load new exams to server one hour before they are scheduled to start
-EXAM_PRELOAD_TIMEDELTA = datetime.timedelta(hours=1)
+EXAM_PRELOAD_TIMEDELTA   = datetime.timedelta(hours=1)
 earliest_exam_start_time = None
+latest_exam_end_time     = None
 
 exam_scheduler_lock = threading.Lock()
 current_exams = []
@@ -463,7 +464,7 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def sort_exams_to_dirs(self):
-    global current_exams, earliest_exam_start_time
+    global current_exams, earliest_exam_start_time, latest_exam_end_time
 
     self.current_day  = datetime.date.today()
     self.current_time = datetime.datetime.now()
@@ -484,9 +485,6 @@ class PuavoErsExamSorter (threading.Thread):
     upcoming_exams_filenames = []
 
     decrypt_codes_list = []
-
-    earliest_exam_start_time = None
-    latest_exam_end_time = None
 
     for exam in all_exams:
       try:
@@ -516,15 +514,13 @@ class PuavoErsExamSorter (threading.Thread):
         if (exam_start_time - EXAM_PRELOAD_TIMEDELTA) <= self.current_time \
           and self.current_time < exam_end_time:
             current_exams.append(exam)
-            if not earliest_exam_start_time \
-              or exam_start_time < earliest_exam_start_time:
-                earliest_exam_start_time = exam_start_time
 
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
 
-
+    # this also updates earliest_exam_start_time and latest_exam_end_time
     current_exams = self.find_overlapping_exams(current_exams, todays_exams)
+
     for exam in current_exams:
       current_exams_filenames.append(exam['file_name'])
       decrypt_codes_list.append(exam['decrypt_code'])
@@ -542,6 +538,8 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def find_overlapping_exams(self, current_exams_list, todays_exams_list):
+    global earliest_exam_start_time, latest_exam_end_time
+
     earliest_exam_start_time = None
     latest_exam_end_time     = None
 
@@ -743,12 +741,16 @@ class PuavoErsExamScheduler (threading.Thread):
   CMD_RESULT_PATH      = os.path.join(COMM_DIR, 'cmd-result')
   CMD_STAMP_PATH       = os.path.join(COMM_DIR, 'cmd-stamp')
   DEBUG_OUTPUT_PATH    = os.path.join(COMM_DIR, 'debug-output')
+  EXAM_ANSWERS_PATH    = os.path.join(COMM_DIR, 'answers.zip')
   EXAMS_PATH           = os.path.join(COMM_DIR, 'exams')
   OUTPUT_PATH          = os.path.join(COMM_DIR, 'output')
   STATS_PATH           = os.path.join(COMM_DIR, 'stats')
 
   def __init__(self):
     threading.Thread.__init__(self)
+
+    self.answers_stored_time = None
+    self.exams_finish_time = None
 
 
   def get_exams(self):
@@ -771,6 +773,11 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def start_loaded_exams(self):
     return self.server_cmd('start-loaded-exam')
+
+
+  def store_exam_results(self, results_filepath):
+    self.server_cmd('store-exam-results')
+    shutil.copy2(self.EXAM_ANSWERS_PATH, results_filepath)
 
 
   def ping(self):
@@ -811,27 +818,137 @@ class PuavoErsExamScheduler (threading.Thread):
       time.sleep(20)
 
 
+  def maybe_store_answers(self, currently_loaded_exams):
+    if not self.exams_finish_time:
+        return
+
+    now = datetime.datetime.now()
+    if now < self.exam_finish_time:
+      return
+
+    if not self.answers_stored_time \
+      or self.exam_finish_time > self.answers_stored_time:
+        self.store_answers(currently_loaded_exams)
+        self.answers_stored_time = now
+
+
+  def store_answers(self, currently_loaded_exams):
+
+    # XXX this could check if there are multiple exams and then use
+    # XXX a suitable filename ... perhaps should could get the
+    # XXX "currently running exams" as a parameter?
+    now_as_string = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+    answers_filename = 'answers_%s.meb' % now_as_string
+    answers_filename_fp = os.path.join(ANSWERS_DIR, answers_filename)
+    self.store_exam_results(answers_filename_fp)
+
+
+  def all_students_have_answered(self):
+    # RUNNING_EXAMS_STATE_FILE
+    # XXX should get exams state as a parameter
+    #
+    # XXX this should only check if all students have finished their work?
+    # XXX if there are any with startTime but not finishedTime, then
+    # XXX remove the exams finished marker!
+
+
+  def exams_are_finished(self):
+    if not self.exams_finish_time:
+        return True
+    return datetime.datetime.now() > self.exams_finish_time
+
+
+
+  def all_students_have_answered(self, currently_loaded_exams)
+      syslog.syslog(syslog.LOG_INFO,
+                    'considering if students have answered to %s' \
+                      % currently_loaded_exams)
+
+
+  def update_exams_finished(self, currently_loaded_exams, status)
+    global latest_exam_end_time
+
+    now = datetime.datetime.now()
+
+    start_of_today = datetime.datetime(now.year, now.month, now.day)
+    # XXX if exam starttime was yesterday (and over six hours ago), we mark
+    # XXX the exam finished time to be the end of yesterday, and that is
+    # XXX all we need to do here
+    # if exam_starttime < start_of_today \
+    #   and exam_starttime < now.minus(hours=6):
+    #     self.exams_finish_time = start_of_today
+    #     return
+
+    # Note that latest_exam_end_time might be None (in case we have no
+    # exams coming ... but there still might be an exam session ongoing,
+    # because it is possible to run them manually).
+    if not self.exams_finish_time:
+        self.exams_finish_time = latest_exam_end_time
+
+    if self.all_students_have_answered(currently_loaded_exams):
+        if not self.exams_finish_time or now < self.exams_finish_time:
+            syslog.syslog(syslog.LOG_INFO,
+                          'all students have answered, exam finished time now')
+            self.exams_finish_time = now
+    elif latest_exam_end_time:
+        if self.exams_finish_time < latest_exam_end_time:
+            syslog.syslog(syslog.LOG_INFO,
+                          'more student answers coming, exam not finished')
+            self.exams_finish_time = latest_exam_end_time
+
+    syslog.syslog(syslog.LOG_INFO, 'exam status is %s' % status)
+
+
   def schedule_exams(self):
     global current_exams, earliest_exam_start_time
+
+    # XXX is there a way to force the loading?  on the UI, of course, even
+    # XXX though it is manual work, it is possible
+
+    # XXX When should the exams finished marker be removed?  If there is
+    # XXX a new exams set running with a more recent startTime (that might
+    # XXX be started by us or someone manually).
+
+    # XXX latest_exam_end_time should affect check_answer_state()
+    # XXX latest_exam_end_time should be associated with a particular set of
+    # XXX exams, and is relevant only if the exam set currently running is
+    # XXX the same
+    #
+    # XXX BUT if clock is after latest_exam_end_time, is it even set properly?
+    # XXX or is it for the next set?
+
+    # XXX we could check here if exams are finished.  Some marker in the
+    # XXX filesystem?
+
+    exams_response = self.get_exams()
+    currently_loaded_exams = exams_response['exams']
+
+    status_response = self.get_status()
+    self.update_exams_finished(currently_loaded_exams, status_response)
+
+    exams_finished = self.exams_are_finished()
+
+    if status_response['status']['hasStarted'] == True:
+      if not exams_finished:
+          syslog.syslog(syslog.LOG_INFO,
+                        'examinations are in progress, not loading any exams')
+          return
+      else:
+          syslog.syslog(syslog.LOG_INFO,
+                        'we have determined that exams have finished')
 
     if len(current_exams) == 0:
       syslog.syslog(syslog.LOG_INFO, 'no exams to schedule')
       return
 
-    status_response = self.get_status()
-    if status_response['status']['hasStarted'] == True:
-      syslog.syslog(syslog.LOG_INFO,
-                    'examinations are in progress, not loading any exams')
-      return
+    if exams_finished:
+      self.maybe_store_answers(currently_loaded_exams)
 
     syslog.syslog(syslog.LOG_INFO,
                   'no examinations in progress, checking exams')
 
-    exams_response = self.get_exams()
-    currently_loaded_exams = exams_response['exams']
     currently_loaded_exam_uuids \
       = [ x['examUuid'] for x in currently_loaded_exams ]
-
     load_exams = False
     for exam in current_exams:
       if not 'uuid' in exam:
