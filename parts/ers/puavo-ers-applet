@@ -968,18 +968,6 @@ class PuavoErsExamScheduler (threading.Thread):
   def schedule_exams(self):
     global current_exams, earliest_exam_start_time
 
-    # XXX When should the exams finished marker be removed?  If there is
-    # XXX a new exams set running with a more recent startTime (that might
-    # XXX be started by us or someone manually).
-
-    # XXX latest_exam_end_time should affect check_answer_state()
-    # XXX latest_exam_end_time should be associated with a particular set of
-    # XXX exams, and is relevant only if the exam set currently running is
-    # XXX the same
-    #
-    # XXX BUT if clock is after latest_exam_end_time, is it even set properly?
-    # XXX or is it for the next set?
-
     status_response = self.get_status()
     status = status_response['status']
     has_started = (status['hasStarted'] == True)
