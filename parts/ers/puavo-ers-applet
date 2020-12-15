@@ -856,13 +856,14 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def store_answers(self, currently_loaded_exams):
+    now_as_string = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+
     if len(currently_loaded_exams) == 1:
       title = currently_loaded_exams[0]['examTitle']
       title_no_whitespace = title.replace(' ', '_')
       title_detox = re.sub(r'[^A-Za-z0-9_]+', '', title_no_whitespace)
-      answers_filename = 'answers_%s.meb' % title_detox
+      answers_filename = 'answers_%s_%s.meb' % (title_detox, now_as_string)
     else:
-      now_as_string = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
       answers_filename = 'multianswers_%s.meb' % now_as_string
 
     answers_filename_fp = os.path.join(ANSWERS_DIR, answers_filename)
@@ -924,6 +925,9 @@ class PuavoErsExamScheduler (threading.Thread):
     try:
       loaded_exams_latest_start_time = None
       for exam in currently_loaded_exams:
+        if not 'startTime' in exam:
+          raise Exception('exam has not been started yet')
+
         # Do we parse this date format correctly?  Could there be a simpler
         # way?  Is there a timezone related problem?
         exam_start_time = datetime.datetime.strptime(exam['startTime'],
@@ -978,6 +982,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
     status_response = self.get_status()
     status = status_response['status']
+    has_started = (status['hasStarted'] == True)
 
     exams_response = self.get_exams()
     currently_loaded_exams = exams_response['exams']
@@ -992,7 +997,7 @@ class PuavoErsExamScheduler (threading.Thread):
       syslog.syslog(syslog.LOG_INFO, 'no exams to schedule')
       return
 
-    if status['hasStarted'] == True and not exams_finished:
+    if has_started and not exams_finished:
       syslog.syslog(syslog.LOG_INFO,
                     'examinations are in progress, not loading any exams')
       return
@@ -1014,15 +1019,16 @@ class PuavoErsExamScheduler (threading.Thread):
       try:
         syslog.syslog(syslog.LOG_INFO, 'some exams were missing, loading exams')
         load_exams_response = self.load_exams()
+        has_started = False
       except CurrentZipNotReady as e:
         syslog.syslog(syslog.LOG_INFO,
                       'exam scheduler is waiting for zip file to be ready')
         return
 
-    if status['hasStarted'] != True \
-      and earliest_exam_start_time <= datetime.datetime.now():
-        syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
-        self.start_loaded_exams()
+    if not has_started and earliest_exam_start_time <= datetime.datetime.now():
+      syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
+      self.start_loaded_exams()
+      self.exams_finish_time = None
 
 
   def server_cmd(self, cmd):
