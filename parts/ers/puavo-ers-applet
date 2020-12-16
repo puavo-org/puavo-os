@@ -46,14 +46,8 @@ EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 
-# load new exams to server one hour before they are scheduled to start
-EXAM_PRELOAD_TIMEDELTA   = datetime.timedelta(hours=1)
-earliest_exam_start_time = None
-latest_exam_end_time     = None
-
 exam_scheduler_lock = threading.Lock()
-current_exams = []
-current_exams_startup_time = None
+current_exams_set = None
 current_zip_name = None
 
 
@@ -442,6 +436,74 @@ class PuavoErsExamSync (threading.Thread):
     syslog.syslog(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
 
 
+class ExamSet:
+  def __init__(self, exams):
+    self.exams = exams
+
+    self.earliest_start_time = None
+    self.latest_end_time     = None
+
+    self.update_earliest_and_latest()
+
+
+  def update_earliest_and_latest(self):
+    for exam in self.exams:
+      exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+      exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
+
+      if not self.earliest_start_time \
+        or exam_start_time < self.earliest_start_time:
+          self.earliest_start_time = exam_start_time
+      if not self.latest_end_time or (exam_end_time < self.latest_end_time):
+        self.latest_end_time = exam_end_time
+
+
+  def add_overlapping_exams(self, candidate_exams_to_be_added, now):
+    candidate_exams = candidate_exams_to_be_added.copy()
+
+    if len(self.exams) == 0:
+      return
+
+    while len(candidate_exams) > 0:
+      candidate_accepted = False
+      for exam in candidate_exams:
+        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+        exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
+
+        if exam_start_time < self.latest_end_time:
+          candidate_accepted = True
+        if self.earliest_start_time < exam_end_time:
+          candidate_accepted = True
+
+        if candidate_accepted:
+          candidate_exams.remove(exam)
+          if not exam in self.exams:
+            self.exams.append(exam)
+          if exam_start_time < self.earliest_start_time:
+            self.earliest_start_time = exam_start_time
+          if self.latest_end_time < exam_end_time:
+            self.latest_end_time = exam_end_time
+          break
+
+      # If we have not managed to remove any exam from the candidate list,
+      # there can no more exams to check.
+      if not candidate_accepted:
+        break
+
+    self.adjust_end_time(now)
+
+
+  def adjust_end_time(self, now):
+    # We do not allow exams that take on forever... a new session must be
+    # held for those.
+    end_of_today_plus_six_hours \
+      = datetime.datetime(now.year, now.month, now.day) \
+          + datetime.timedelta(days=1, hours=6)
+    if self.latest_end_time > end_of_today_plus_six_hours:
+      self.latest_end_time = end_of_today_plus_six_hours
+
+
+
 class PuavoErsExamSorter (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
@@ -462,7 +524,7 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def sort_exams_to_dirs(self):
-    global current_exams, earliest_exam_start_time, latest_exam_end_time
+    global current_exams_set
 
     self.current_day  = datetime.date.today()
     self.current_time = datetime.datetime.now()
@@ -509,17 +571,20 @@ class PuavoErsExamSorter (threading.Thread):
           todays_exams.append(exam)
           todays_exams_filenames.append(exam['file_name'])
 
-        if (exam_start_time - EXAM_PRELOAD_TIMEDELTA) <= self.current_time \
+        # load new exams to server 15 minutes before they are scheduled
+        # to start
+        preload_timedelta = datetime.timedelta(minutes=15)
+        if (exam_start_time - preload_timedelta) <= self.current_time \
           and self.current_time < exam_end_time:
             current_exams.append(exam)
 
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
 
-    # this also updates earliest_exam_start_time and latest_exam_end_time
-    current_exams = self.find_overlapping_exams(current_exams, todays_exams)
+    current_exams_set = ExamSet(current_exams)
+    current_exams_set.add_overlapping_exams(todays_exams, self.current_time)
 
-    for exam in current_exams:
+    for exam in current_exams_set.exams:
       current_exams_filenames.append(exam['file_name'])
       decrypt_codes_list.append(exam['decrypt_code'])
 
@@ -533,66 +598,6 @@ class PuavoErsExamSorter (threading.Thread):
 
     self.zip_exams(current_exams_filenames, todays_exams_filenames,
         decrypt_codes_list)
-
-
-  def find_overlapping_exams(self, current_exams_list, todays_exams_list):
-    global earliest_exam_start_time, latest_exam_end_time
-
-    earliest_exam_start_time = None
-    latest_exam_end_time     = None
-
-    exams_in_this_set = current_exams_list.copy()
-    candidate_exams = todays_exams_list.copy()
-
-    if len(exams_in_this_set) == 0:
-      return []
-
-    for exam in exams_in_this_set:
-      exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
-      exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
-
-      if not earliest_exam_start_time \
-        or exam_start_time < earliest_exam_start_time:
-          earliest_exam_start_time = exam_start_time
-      if not latest_exam_end_time or (exam_end_time < latest_exam_end_time):
-        latest_exam_end_time = exam_end_time
-
-    while len(candidate_exams) > 0:
-      candidate_accepted = False
-      for exam in candidate_exams:
-        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
-        exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
-
-        if exam_start_time < latest_exam_end_time:
-          candidate_accepted = True
-        if earliest_exam_start_time < exam_end_time:
-          candidate_accepted = True
-
-        if candidate_accepted:
-          candidate_exams.remove(exam)
-          if not exam in exams_in_this_set:
-            exams_in_this_set.append(exam)
-          if exam_start_time < earliest_exam_start_time:
-            earliest_exam_start_time = exam_start_time
-          if latest_exam_end_time < exam_end_time:
-            latest_exam_end_time = exam_end_time
-          break
-
-      # If we have not managed to remove any exam from the candidate list,
-      # there can no more exams to check.
-      if not candidate_accepted:
-        break
-
-    # We do not allow exams that take on forever... a new session must be
-    # held for those.
-    end_of_today_plus_six_hours \
-      = datetime.datetime(self.current_time.year, self.current_time.month,
-                          self.current_time.day) \
-          + datetime.timedelta(days=1, hours=6)
-    if latest_exam_end_time > end_of_today_plus_six_hours:
-      latest_exam_end_time = end_of_today_plus_six_hours
-
-    return exams_in_this_set
 
 
   def cleanup_exams(self, linkdir, exam_filenames):
@@ -682,12 +687,13 @@ class PuavoErsExamSorter (threading.Thread):
       return
 
     exam_paths = [ os.path.join(KTP_JAKO_DIR, p) for p in exams ]
+    unique_exam_paths = list( dict.fromkeys(exam_paths) )
     syslog.syslog(syslog.LOG_INFO,
                   'zipping exams %s into %s' % (exams, zip_path))
     tmpfile = "%s.tmp" % zip_path
     rm_f(tmpfile, False)
     with zipfile.ZipFile(tmpfile, 'w') as zipObj:
-      for filename in exam_paths:
+      for filename in unique_exam_paths:
         zipObj.write(filename, os.path.basename(filename))
     os.rename(tmpfile, zip_path)
 
@@ -758,6 +764,7 @@ class PuavoErsExamScheduler (threading.Thread):
     self.answers_stored_time = None
     self.exams_finish_time = None
     self.finished_and_students = None
+    self.prev_loaded_exams_set = None
 
 
   def get_exams(self):
@@ -850,6 +857,9 @@ class PuavoErsExamScheduler (threading.Thread):
     if there_should_be_answers:
       self.store_answers(currently_loaded_exams)
     else:
+      # Trying to store answers when there are none returns an error.
+      # Perhaps this logic could be such that it is left for abitti-ktpapi
+      # to check if there are answers? (that might be less error-prone)
       syslog.syslog(syslog.LOG_INFO, 'there are no answers, not storing them')
 
     self.answers_stored_time = now
@@ -911,10 +921,6 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def update_exams_finished_time(self, currently_loaded_exams, status):
-    # XXX This uses latest_exam_end_time that might be coming from the NEXT
-    # XXX exam set and not the ones currently in progress.  That is just wrong.
-    global latest_exam_end_time
-
     now = datetime.datetime.now()
     start_of_today = datetime.datetime(now.year, now.month, now.day)
 
@@ -947,26 +953,26 @@ class PuavoErsExamScheduler (threading.Thread):
       errmsg = 'could not check latest start time from currently loaded exams'
       syslog.syslog(syslog.LOG_ERR, '%s: %s' % (errmsg, e))
 
-    # Note that latest_exam_end_time might be None (in case we have no
-    # exams coming ... but there still might be an exam session ongoing,
-    # because it is possible to run them manually).
     if not self.exams_finish_time:
-      self.exams_finish_time = latest_exam_end_time
+      self.exams_finish_time = self.prev_loaded_exams_set.latest_end_time
 
     if self.all_students_have_answered(status):
       if not self.exams_finish_time or now < self.exams_finish_time:
         syslog.syslog(syslog.LOG_INFO,
                       'all students have answered, exams finished')
         self.exams_finish_time = now
-    elif latest_exam_end_time:
-      if self.exams_finish_time < latest_exam_end_time:
+    else:
+      if self.exams_finish_time < self.prev_loaded_exams_set.latest_end_time:
         syslog.syslog(syslog.LOG_INFO,
                       'more student answers coming, exams NOT finished')
-        self.exams_finish_time = latest_exam_end_time
+        self.exams_finish_time = self.prev_loaded_exams_set.latest_end_time
 
 
   def schedule_exams(self):
-    global current_exams, earliest_exam_start_time
+    global current_exams_set
+
+    if not self.prev_loaded_exams_set:
+      self.prev_loaded_exams_set = current_exams_set
 
     status_response = self.get_status()
     status = status_response['status']
@@ -977,11 +983,17 @@ class PuavoErsExamScheduler (threading.Thread):
 
     self.update_exams_finished_time(currently_loaded_exams, status)
 
+    load_exams = False
+
     exams_finished = self.exams_are_finished()
     if exams_finished:
       self.maybe_store_answers(currently_loaded_exams, status)
+      # XXX our problem is self.prev_loaded_exams_set.latest_end_time may be
+      # XXX None ... this information should not be used if it does not exist
+      if self.prev_loaded_exams_set.latest_end_time <= datetime.datetime.now():
+        load_exams = True
 
-    if len(current_exams) == 0:
+    if len(current_exams_set.exams) == 0:
       syslog.syslog(syslog.LOG_INFO, 'no exams to schedule')
       return
 
@@ -990,33 +1002,35 @@ class PuavoErsExamScheduler (threading.Thread):
                     'examinations are in progress, not loading any exams')
       return
 
-    currently_loaded_exam_uuids \
-      = [ x['examUuid'] for x in currently_loaded_exams ]
-    load_exams = False
-    for exam in current_exams:
-      if not 'uuid' in exam:
-        errmsg = 'no uuid set for exam "%s", can not check it is on server' \
-                   % exam['file_name']
-        raise Exception(errmsg)
-      if not exam['uuid'] in currently_loaded_exam_uuids:
-        syslog.syslog(syslog.LOG_INFO,
-                      'exam %s is missing from server' % exam['file_name'])
-        load_exams = True
+    if not load_exams:
+      currently_loaded_exam_uuids \
+        = [ x['examUuid'] for x in currently_loaded_exams ]
+      for exam in current_exams_set.exams:
+        if not 'uuid' in exam:
+          errmsg = 'no uuid set for exam "%s", can not check it is on server' \
+                     % exam['file_name']
+          raise Exception(errmsg)
+        if not exam['uuid'] in currently_loaded_exam_uuids:
+          syslog.syslog(syslog.LOG_INFO,
+                        'exam %s is missing from server' % exam['file_name'])
+          load_exams = True
 
     if load_exams:
       try:
-        syslog.syslog(syslog.LOG_INFO, 'some exams were missing, loading exams')
+        syslog.syslog(syslog.LOG_INFO, 'loading exams')
         load_exams_response = self.load_exams()
+        self.prev_loaded_exams_set = current_exams_set
         has_started = False
       except CurrentZipNotReady as e:
         syslog.syslog(syslog.LOG_INFO,
                       'exam scheduler is waiting for zip file to be ready')
         return
 
-    if not has_started and earliest_exam_start_time <= datetime.datetime.now():
-      syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
-      self.start_loaded_exams()
-      self.exams_finish_time = None
+    if not has_started \
+      and current_exams_set.earliest_start_time <= datetime.datetime.now():
+        syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
+        self.start_loaded_exams()
+        self.exams_finish_time = None
 
 
   def server_cmd(self, cmd):
