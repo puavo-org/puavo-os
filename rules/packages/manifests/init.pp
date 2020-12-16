@@ -690,7 +690,8 @@ class packages {
     , 'wmctrl' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
-    [ 'qemu-kvm' ]:
+    [ 'qemu-kvm'
+    , 'virt-manager' ]:
       tag => [ 'tag_virtualization', 'tag_debian_desktop', ];
 
     [ 'bluefish'
