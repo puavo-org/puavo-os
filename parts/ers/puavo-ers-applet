@@ -787,7 +787,7 @@ class PuavoErsExamScheduler (threading.Thread):
     return self.server_cmd(cmd)
 
 
-  def load_session(self, status, currently_loaded_exam_uuids):
+  def load_session(self, currently_loaded_exam_uuids):
     if not self.session:
       try:
         try:
@@ -795,10 +795,10 @@ class PuavoErsExamScheduler (threading.Thread):
             json_obj = json.loads( f.read() )
             self.session = {
               'start_time':  datetime.datetime.strptime(json_obj['start_time'],
-                                                        '%Y-%m-%d %H:%M:%S.%f'),
+                                                        '%Y-%m-%dT%H:%M:%S'),
               'finish_time': datetime.datetime.strptime(json_obj['finish_time'],
-                                                        '%Y-%m-%d %H:%M:%S.%f'),
-              'uuids':       serialized['uuids'],
+                                                        '%Y-%m-%dT%H:%M:%S'),
+              'uuids':       json_obj['uuids'],
             }
         except OSError as e:
           self.session = {}
@@ -809,10 +809,6 @@ class PuavoErsExamScheduler (threading.Thread):
                       'could not read session state: %s' % e)
         self.session = {}
 
-    ongoing_session_start_time \
-      = datetime.datetime.strptime(status['startTime'],
-                                   '%Y-%m-%dT%H:%M:%S.%fZ')
-
     # Sanity check our current session information.  If is not what we should
     # expect, someone may be running a new session and we should behave
     # accordingly.
@@ -820,14 +816,12 @@ class PuavoErsExamScheduler (threading.Thread):
       = 'start_time' in self.session \
           and 'finish_time' in self.session \
           and 'uuids' in self.session \
-          and self.session['start_time'] <= ongoing_session_start_time \
-          and ongoing_session_start_time <= self.session['finish_time'] \
           and set(self.session['uuids']) == set(currently_loaded_exam_uuids)
 
     if not session_is_good:
-      msg = 'our session is information was not good, resetting session' \
+      msg = 'our session information was not good (%s), resetting session' \
               + ' to safe values'
-      syslog.syslog(syslog.LOG_INFO, msg)
+      syslog.syslog(syslog.LOG_INFO, msg % self.session)
 
       now = datetime.datetime.now()
       start_of_today = datetime.datetime(now.year, now.month, now.day)
@@ -849,8 +843,8 @@ class PuavoErsExamScheduler (threading.Thread):
     tmpfile = '%s.tmp' % self.SESSION_PATH
     with open(tmpfile, 'w') as f:
       to_serialize = {
-        'start_time':  str(self.session['start_time'].utcnow()),
-        'finish_time': str(self.session['finish_time'].utcnow()),
+        'start_time':  str(self.session['start_time'].isoformat()),
+        'finish_time': str(self.session['finish_time'].isoformat()),
         'uuids':       self.session['uuids'],
       }
       f.write( json.dumps(to_serialize) )
@@ -1048,7 +1042,7 @@ class PuavoErsExamScheduler (threading.Thread):
     currently_loaded_exam_uuids \
       = [ x['examUuid'] for x in currently_loaded_exams ]
 
-    self.load_session(status, currently_loaded_exam_uuids)
+    self.load_session(currently_loaded_exam_uuids)
     self.update_exams_finished_time(current_exams_set, currently_loaded_exams,
                                     status)
 
