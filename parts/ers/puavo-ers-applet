@@ -883,8 +883,8 @@ class PuavoErsExamScheduler (threading.Thread):
   def exams_are_finished(self):
     if not self.exams_finish_time:
       syslog.syslog(syslog.LOG_INFO,
-                    'no exams finished time, deciding they are finished')
-      return True
+                    'no exams finished time, probably run manually')
+      return False
 
     if datetime.datetime.now() > self.exams_finish_time:
       syslog.syslog(syslog.LOG_INFO,
