@@ -758,13 +758,15 @@ class PuavoErsExamScheduler (threading.Thread):
   OUTPUT_PATH          = os.path.join(COMM_DIR, 'output')
   STATS_PATH           = os.path.join(COMM_DIR, 'stats')
 
+  SESSION_PATH = os.path.join(KTP_JAKO_DIR, '.session-state.json')
+
+
   def __init__(self):
     threading.Thread.__init__(self)
 
-    self.answers_stored_time = None
-    self.exams_finish_time = None
+    self.answers_stored_time   = None
     self.finished_and_students = None
-    self.prev_loaded_exams_set = None
+    self.session               = None
 
 
   def get_exams(self):
@@ -785,6 +787,82 @@ class PuavoErsExamScheduler (threading.Thread):
     return self.server_cmd(cmd)
 
 
+  def load_session(self, status, currently_loaded_exam_uuids):
+    if not self.session:
+      try:
+        try:
+          with open(self.SESSION_PATH) as f:
+            json_obj = json.loads( f.read() )
+            self.session = {
+              'start_time':  datetime.datetime.strptime(json_obj['start_time'],
+                                                        '%Y-%m-%d %H:%M:%S.%f'),
+              'finish_time': datetime.datetime.strptime(json_obj['finish_time'],
+                                                        '%Y-%m-%d %H:%M:%S.%f'),
+              'uuids':       serialized['uuids'],
+            }
+        except OSError as e:
+          self.session = {}
+          if e.errno != errno.ENOENT:
+            raise e
+      except Exception as e:
+        syslog.syslog(syslog.LOG_ERR,
+                      'could not read session state: %s' % e)
+        self.session = {}
+
+    ongoing_session_start_time \
+      = datetime.datetime.strptime(status['startTime'],
+                                   '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    # Sanity check our current session information.  If is not what we should
+    # expect, someone may be running a new session and we should behave
+    # accordingly.
+    session_is_good \
+      = 'start_time' in self.session \
+          and 'finish_time' in self.session \
+          and 'uuids' in self.session \
+          and self.session['start_time'] <= ongoing_session_start_time \
+          and ongoing_session_start_time <= self.session['finish_time'] \
+          and set(self.session['uuids']) == set(currently_loaded_exam_uuids)
+
+    if not session_is_good:
+      msg = 'our session is information was not good, resetting session' \
+              + ' to safe values'
+      syslog.syslog(syslog.LOG_INFO, msg)
+
+      now = datetime.datetime.now()
+      start_of_today = datetime.datetime(now.year, now.month, now.day)
+      end_of_today = start_of_today + datetime.timedelta(days=1)
+      self.session['start_time']  = start_of_today
+      self.session['finish_time'] = end_of_today
+      self.session['uuids']       = currently_loaded_exam_uuids
+      self.save_session()
+
+
+  def new_session(self, current_exams_set):
+    self.session['start_time']  = current_exams_set.earliest_start_time
+    self.session['finish_time'] = current_exams_set.latest_end_time
+    self.session['uuids'] = [ exam['uuid'] for x in current_exams_set.exams ]
+    self.save_session()
+
+
+  def save_session(self):
+    tmpfile = '%s.tmp' % self.SESSION_PATH
+    with open(tmpfile, 'w') as f:
+      to_serialize = {
+        'start_time':  str(self.session['start_time'].utcnow()),
+        'finish_time': str(self.session['finish_time'].utcnow()),
+        'uuids':       self.session['uuids'],
+      }
+      f.write( json.dumps(to_serialize) )
+    os.rename(tmpfile, self.SESSION_PATH)
+
+
+  def update_session_finish_time(self, finish_time):
+    if self.session['finish_time'] != finish_time:
+      self.session['finish_time'] = finish_time
+      self.save_session()
+
+
   def start_loaded_exams(self):
     return self.server_cmd('start-loaded-exam')
 
@@ -801,6 +879,8 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def run(self):
+    global current_exams_set
+
     comm_ok = False
     old_comm_state = None
 
@@ -824,7 +904,7 @@ class PuavoErsExamScheduler (threading.Thread):
         if comm_ok:
           # XXX should a version check be made?
           with exam_scheduler_lock:
-            self.schedule_exams()
+            self.schedule_exams(current_exams_set)
 
       except Exception as e:
         comm_ok = False
@@ -838,11 +918,8 @@ class PuavoErsExamScheduler (threading.Thread):
     if len(currently_loaded_exams) == 0:
       return
 
-    if not self.exams_finish_time:
-      return
-
     now = datetime.datetime.now()
-    if now < self.exams_finish_time:
+    if now < self.session['finish_time']:
       return
 
     there_should_be_answers = False
@@ -851,7 +928,7 @@ class PuavoErsExamScheduler (threading.Thread):
         there_should_be_answers = True
 
     if self.answers_stored_time \
-      and self.answers_stored_time >= self.exams_finish_time:
+      and self.answers_stored_time >= self.session['finish_time']:
         return
 
     if there_should_be_answers:
@@ -881,19 +958,14 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def exams_are_finished(self):
-    if not self.exams_finish_time:
-      syslog.syslog(syslog.LOG_INFO,
-                    'no exams finished time, probably run manually')
-      return False
-
-    if datetime.datetime.now() > self.exams_finish_time:
-      syslog.syslog(syslog.LOG_INFO,
-                    'exams finish time is past: %s' % self.exams_finish_time)
+    if datetime.datetime.now() > self.session['finish_time']:
+      syslog.syslog(syslog.LOG_INFO, 'exams finish time is past: %s' \
+                                       % self.session['finish_time'])
       return True
 
     syslog.syslog(syslog.LOG_INFO,
                   'we are waiting for exams to finish at: %s' \
-                    % self.exams_finish_time)
+                    % self.session['finish_time'])
     return False
 
 
@@ -920,7 +992,8 @@ class PuavoErsExamScheduler (threading.Thread):
     return (finished_count == student_count)
 
 
-  def update_exams_finished_time(self, currently_loaded_exams, status):
+  def update_exams_finished_time(self, current_exams_set,
+                                 currently_loaded_exams, status):
     now = datetime.datetime.now()
     start_of_today = datetime.datetime(now.year, now.month, now.day)
 
@@ -947,50 +1020,44 @@ class PuavoErsExamScheduler (threading.Thread):
         and loaded_exams_latest_start_time < six_hours_ago:
           syslog.syslog(syslog.LOG_INFO,
             'currently running exam is from yesterday, exams finished')
-          self.exams_finish_time = start_of_today
+          self.update_session_finish_time(start_of_today)
           return
     except Exception as e:
       errmsg = 'could not check latest start time from currently loaded exams'
       syslog.syslog(syslog.LOG_ERR, '%s: %s' % (errmsg, e))
 
-    if not self.exams_finish_time:
-      self.exams_finish_time = self.prev_loaded_exams_set.latest_end_time
-
     if self.all_students_have_answered(status):
-      if not self.exams_finish_time or now < self.exams_finish_time:
+      if now < self.session['finish_time']:
         syslog.syslog(syslog.LOG_INFO,
                       'all students have answered, exams finished')
-        self.exams_finish_time = now
+        self.update_session_finish_time(now)
     else:
-      if self.exams_finish_time < self.prev_loaded_exams_set.latest_end_time:
+      if self.session['finish_time'] < current_exams_set.latest_end_time:
         syslog.syslog(syslog.LOG_INFO,
                       'more student answers coming, exams NOT finished')
-        self.exams_finish_time = self.prev_loaded_exams_set.latest_end_time
+        self.update_session_finish_time(current_exams_set.latest_end_time)
 
 
-  def schedule_exams(self):
-    global current_exams_set
-
-    if not self.prev_loaded_exams_set:
-      self.prev_loaded_exams_set = current_exams_set
-
+  def schedule_exams(self, current_exams_set):
     status_response = self.get_status()
     status = status_response['status']
     has_started = (status['hasStarted'] == True)
 
     exams_response = self.get_exams()
     currently_loaded_exams = exams_response['exams']
+    currently_loaded_exam_uuids \
+      = [ x['examUuid'] for x in currently_loaded_exams ]
 
-    self.update_exams_finished_time(currently_loaded_exams, status)
+    self.load_session(status, currently_loaded_exam_uuids)
+    self.update_exams_finished_time(current_exams_set, currently_loaded_exams,
+                                    status)
 
     load_exams = False
 
     exams_finished = self.exams_are_finished()
     if exams_finished:
       self.maybe_store_answers(currently_loaded_exams, status)
-      # XXX our problem is self.prev_loaded_exams_set.latest_end_time may be
-      # XXX None ... this information should not be used if it does not exist
-      if self.prev_loaded_exams_set.latest_end_time <= datetime.datetime.now():
+      if self.session['finish_time'] <= datetime.datetime.now():
         load_exams = True
 
     if len(current_exams_set.exams) == 0:
@@ -1003,8 +1070,6 @@ class PuavoErsExamScheduler (threading.Thread):
       return
 
     if not load_exams:
-      currently_loaded_exam_uuids \
-        = [ x['examUuid'] for x in currently_loaded_exams ]
       for exam in current_exams_set.exams:
         if not 'uuid' in exam:
           errmsg = 'no uuid set for exam "%s", can not check it is on server' \
@@ -1018,8 +1083,8 @@ class PuavoErsExamScheduler (threading.Thread):
     if load_exams:
       try:
         syslog.syslog(syslog.LOG_INFO, 'loading exams')
-        load_exams_response = self.load_exams()
-        self.prev_loaded_exams_set = current_exams_set
+        self.load_exams()
+        self.new_session(current_exams_set)
         has_started = False
       except CurrentZipNotReady as e:
         syslog.syslog(syslog.LOG_INFO,
@@ -1027,10 +1092,9 @@ class PuavoErsExamScheduler (threading.Thread):
         return
 
     if not has_started \
-      and current_exams_set.earliest_start_time <= datetime.datetime.now():
+      and self.session['start_time'] <= datetime.datetime.now():
         syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
         self.start_loaded_exams()
-        self.exams_finish_time = None
 
 
   def server_cmd(self, cmd):
