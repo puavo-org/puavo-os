@@ -794,11 +794,12 @@ class PuavoErsExamScheduler (threading.Thread):
           with open(self.SESSION_PATH) as f:
             json_obj = json.loads( f.read() )
             self.session = {
-              'start_time':  datetime.datetime.strptime(json_obj['start_time'],
-                                                        '%Y-%m-%dT%H:%M:%S'),
-              'finish_time': datetime.datetime.strptime(json_obj['finish_time'],
-                                                        '%Y-%m-%dT%H:%M:%S'),
-              'uuids':       json_obj['uuids'],
+              'finish_time': self.string_to_time(json_obj['finish_time']),
+              'scheduled_finish_time':
+                self.string_to_time(json_obj['scheduled_finish_time']),
+              'scheduled_start_time':
+                self.string_to_time(json_obj['scheduled_start_time']),
+              'uuids': json_obj['uuids'],
             }
         except OSError as e:
           self.session = {}
@@ -813,8 +814,9 @@ class PuavoErsExamScheduler (threading.Thread):
     # expect, someone may be running a new session and we should behave
     # accordingly.
     session_is_good \
-      = 'start_time' in self.session \
-          and 'finish_time' in self.session \
+      = 'finish_time' in self.session \
+          and 'scheduled_finish_time' in self.session \
+          and 'scheduled_start_time' in self.session \
           and 'uuids' in self.session \
           and set(self.session['uuids']) == set(currently_loaded_exam_uuids)
 
@@ -826,26 +828,39 @@ class PuavoErsExamScheduler (threading.Thread):
       now = datetime.datetime.now()
       start_of_today = datetime.datetime(now.year, now.month, now.day)
       end_of_today = start_of_today + datetime.timedelta(days=1)
-      self.session['start_time']  = start_of_today
-      self.session['finish_time'] = end_of_today
-      self.session['uuids']       = currently_loaded_exam_uuids
+      self.session['finish_time']           = end_of_today
+      self.session['scheduled_finish_time'] = end_of_today
+      self.session['scheduled_start_time']  = start_of_today
+      self.session['uuids']                 = currently_loaded_exam_uuids
       self.save_session()
 
 
   def new_session(self, current_exams_set):
-    self.session['start_time']  = current_exams_set.earliest_start_time
     self.session['finish_time'] = current_exams_set.latest_end_time
-    self.session['uuids'] = [ exam['uuid'] for x in current_exams_set.exams ]
+    self.session['scheduled_finish_time'] = current_exams_set.latest_end_time
+    self.session['scheduled_start_time'] = current_exams_set.earliest_start_time
+    self.session['uuids'] = [ exam['uuid'] for exam in current_exams_set.exams ]
     self.save_session()
+
+
+  def string_to_time(self, string):
+    return datetime.datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
+
+
+  def time_to_string(self, time):
+    return time.strftime('%Y-%m-%d %H:%M:%S')
 
 
   def save_session(self):
     tmpfile = '%s.tmp' % self.SESSION_PATH
     with open(tmpfile, 'w') as f:
       to_serialize = {
-        'start_time':  str(self.session['start_time'].isoformat()),
-        'finish_time': str(self.session['finish_time'].isoformat()),
-        'uuids':       self.session['uuids'],
+        'finish_time': self.time_to_string(self.session['finish_time']),
+        'scheduled_finish_time':
+          self.time_to_string(self.session['scheduled_finish_time']),
+        'scheduled_start_time':
+          self.time_to_string(self.session['scheduled_start_time']),
+        'uuids': self.session['uuids'],
       }
       f.write( json.dumps(to_serialize) )
     os.rename(tmpfile, self.SESSION_PATH)
@@ -998,7 +1013,7 @@ class PuavoErsExamScheduler (threading.Thread):
     try:
       loaded_exams_latest_start_time = None
       for exam in currently_loaded_exams:
-        if not 'startTime' in exam:
+        if not 'startTime' in exam or exam['startTime'] == None:
           raise Exception('exam has not been started yet')
 
         # Do we parse this date format correctly?  Could there be a simpler
@@ -1019,17 +1034,21 @@ class PuavoErsExamScheduler (threading.Thread):
     except Exception as e:
       errmsg = 'could not check latest start time from currently loaded exams'
       syslog.syslog(syslog.LOG_ERR, '%s: %s' % (errmsg, e))
+      return
 
     if self.all_students_have_answered(status):
       if now < self.session['finish_time']:
         syslog.syslog(syslog.LOG_INFO,
                       'all students have answered, exams finished')
+        # XXX this is too exact, should drop microseconds
         self.update_session_finish_time(now)
+    elif self.session['finish_time'] < current_exams_set.latest_end_time:
+      syslog.syslog(syslog.LOG_INFO,
+                    'more student answers coming, exams NOT finished')
+      self.update_session_finish_time(current_exams_set.latest_end_time)
     else:
-      if self.session['finish_time'] < current_exams_set.latest_end_time:
-        syslog.syslog(syslog.LOG_INFO,
-                      'more student answers coming, exams NOT finished')
-        self.update_session_finish_time(current_exams_set.latest_end_time)
+      # no changes to finish time
+      pass
 
 
   def schedule_exams(self, current_exams_set):
@@ -1040,7 +1059,7 @@ class PuavoErsExamScheduler (threading.Thread):
     exams_response = self.get_exams()
     currently_loaded_exams = exams_response['exams']
     currently_loaded_exam_uuids \
-      = [ x['examUuid'] for x in currently_loaded_exams ]
+      = [ exam['examUuid'] for exam in currently_loaded_exams ]
 
     self.load_session(currently_loaded_exam_uuids)
     self.update_exams_finished_time(current_exams_set, currently_loaded_exams,
@@ -1051,7 +1070,7 @@ class PuavoErsExamScheduler (threading.Thread):
     exams_finished = self.exams_are_finished()
     if exams_finished:
       self.maybe_store_answers(currently_loaded_exams, status)
-      if self.session['finish_time'] <= datetime.datetime.now():
+      if self.session['scheduled_finish_time'] <= datetime.datetime.now():
         load_exams = True
 
     if len(current_exams_set.exams) == 0:
@@ -1086,7 +1105,7 @@ class PuavoErsExamScheduler (threading.Thread):
         return
 
     if not has_started \
-      and self.session['start_time'] <= datetime.datetime.now():
+      and self.session['scheduled_start_time'] <= datetime.datetime.now():
         syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
         self.start_loaded_exams()
 
