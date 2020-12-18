@@ -110,7 +110,7 @@ if [ -n "$target_image" ]; then
                           --loopback-only \
                           --make-efi
 else
-  puavo-setup-filesystems --hosttype diskinstaller
+  puavo-setup-filesystems --hosttype diskinstaller --make-efi
 fi
 
 puavo-install-grub --hosttype   diskinstaller  \
