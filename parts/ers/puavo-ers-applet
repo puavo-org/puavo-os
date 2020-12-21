@@ -1040,8 +1040,10 @@ class PuavoErsExamScheduler (threading.Thread):
       syslog.syslog(syslog.LOG_INFO, 'there are still active students')
       self.update_session_finish_time( self.end_of_today() )
     else:
-      syslog.syslog(syslog.LOG_INFO, 'no active students, exams finished')
-      self.update_session_finish_time( datetime.datetime.now() )
+      now = datetime.datetime.now()
+      if self.session['finish_time'] > now:
+        syslog.syslog(syslog.LOG_INFO, 'no active students, exams finished')
+        self.update_session_finish_time(now)
 
 
   def schedule_exams(self, current_exams_set):
