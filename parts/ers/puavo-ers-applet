@@ -789,6 +789,12 @@ class PuavoErsExamScheduler (threading.Thread):
     return self.server_cmd(cmd)
 
 
+  def end_of_today(self):
+    now = datetime.datetime.now()
+    start_of_today = datetime.datetime(now.year, now.month, now.day)
+    return start_of_today + datetime.timedelta(days=1)
+
+
   def load_session(self, current_exams_set, currently_loaded_exam_uuids):
     if not self.session:
       try:
@@ -829,10 +835,7 @@ class PuavoErsExamScheduler (threading.Thread):
               + ' to safe values'
       syslog.syslog(syslog.LOG_INFO, msg % self.session)
 
-      now = datetime.datetime.now()
-      start_of_today = datetime.datetime(now.year, now.month, now.day)
-      end_of_today = start_of_today + datetime.timedelta(days=1)
-      self.session['finish_time']           = end_of_today
+      self.session['finish_time']           = self.end_of_today()
       self.session['scheduled_finish_time'] = None
       self.session['scheduled_start_time']  = None
       self.session['uuids']                 = currently_loaded_exam_uuids
@@ -1028,59 +1031,52 @@ class PuavoErsExamScheduler (threading.Thread):
     return (finished_count == student_count)
 
 
+  def there_are_still_active_students(self, status):
+    now = datetime.datetime.now()
+
+    for student in status['students']:
+      if ('examFinished' in student) and (student['examFinished'] != None):
+        # this student has finished the exam, does not count
+        continue
+
+      if ('pingError' in student) and (student['pingError'] == False):
+        # someone still has a connection, we have at least one active student
+        return True
+
+      # this student has npt finished, yet has no active connection
+      if ('updateTime' in student) and (student['updateTime'] != None):
+        update_time = datetime.datetime.strptime(
+                        student['updateTime'], '%Y-%m-%dT%H:%M:%S.%f%z')\
+                          .astimezone()
+        five_minutes_before_now = now - datetime.timedelta(minutes=5)
+        if update_time >= five_minutes_before_now.astimezone():
+          # but he/she has updated in the last five minutes, so still counts
+          # as active
+          return True
+
+    # no student is active
+    return False
+
+
   def update_exams_finished_time(self, current_exams_set,
                                  currently_loaded_exams, status):
     now = datetime.datetime.now()
-
-    # If currently running exams were started yesterday and the latest start
-    # time was over six hours ago, we consider the exams to be finished
-    # (even if they were not started by us and some answers have not been
-    # returned.
-    try:
-      loaded_latest_start = None
-
-      for exam in currently_loaded_exams:
-        # If the exams were not started, then we are free to consider them
-        # finished.
-        if not 'startTime' in exam or exam['startTime'] == None:
-          syslog.syslog(syslog.LOG_INFO,
-                        'no exam start time, we can consider them finished')
-          self.update_session_finish_time(now)
-          return
-
-        exam_start_time \
-          = datetime.datetime.strptime(exam['startTime'],
-                                       '%Y-%m-%dT%H:%M:%S.%f%z').astimezone()
-
-        if not loaded_latest_start or exam_start_time < loaded_latest_start:
-          loaded_latest_start = exam_start_time
-
-      start_of_today = datetime.datetime(now.year, now.month, now.day)
-      six_hours_ago = (now - datetime.timedelta(hours=6))
-      if loaded_latest_start < start_of_today.astimezone() \
-        and loaded_latest_start < six_hours_ago.astimezone():
-          syslog.syslog(syslog.LOG_INFO,
-            'currently running exam is from yesterday, exams finished')
-          self.update_session_finish_time(start_of_today)
-          return
-    except Exception as e:
-      errmsg = 'could not check latest start time from currently loaded exams'
-      syslog.syslog(syslog.LOG_ERR, '%s: %s' % (errmsg, e))
-      return
 
     if self.all_students_have_answered(status):
       if now < self.session['finish_time']:
         syslog.syslog(syslog.LOG_INFO,
                       'all students have answered, exams finished')
         self.update_session_finish_time(now)
-    elif current_exams_set.latest_end_time \
-      and self.session['finish_time'] < current_exams_set.latest_end_time:
-        syslog.syslog(syslog.LOG_INFO,
-                      'more student answers coming, exams NOT finished')
-        self.update_session_finish_time(current_exams_set.latest_end_time)
+    elif self.there_are_still_active_students(status):
+      syslog.syslog(syslog.LOG_INFO, 'there are still active students')
+      self.update_session_finish_time( self.end_of_today() )
     else:
-      # no changes to finish time
-      pass
+      # no active students we can consider the exam to be finished now
+      syslog.syslog(syslog.LOG_INFO,
+                    'no active students, exams finished')
+      self.update_session_finish_time(now)
+
+
 
 
   def schedule_exams(self, current_exams_set):
