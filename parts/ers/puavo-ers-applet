@@ -820,6 +820,8 @@ class PuavoErsExamScheduler (threading.Thread):
           and 'uuids' in self.session \
           and set(self.session['uuids']) == set(currently_loaded_exam_uuids)
 
+    save_session = False
+
     if not session_is_good:
       msg = 'our session information was not good (%s), resetting session' \
               + ' to safe values'
@@ -829,9 +831,26 @@ class PuavoErsExamScheduler (threading.Thread):
       start_of_today = datetime.datetime(now.year, now.month, now.day)
       end_of_today = start_of_today + datetime.timedelta(days=1)
       self.session['finish_time']           = end_of_today
-      self.session['scheduled_finish_time'] = end_of_today
-      self.session['scheduled_start_time']  = start_of_today
+      self.session['scheduled_finish_time'] = None
+      self.session['scheduled_start_time']  = None
       self.session['uuids']                 = currently_loaded_exam_uuids
+      save_session = True
+
+    scheduled_exam_uuids = [ exam['uuid'] for exam in current_exams_set.exams ]
+
+    if self.session['scheduled_start_time'] == None \
+      and set(scheduled_exam_uuids) == set(currently_loaded_exam_uuids):
+        self.session['scheduled_start_time'] \
+          = current_exams_set.earliest_start_time
+        save_session = True
+
+    if self.session['scheduled_finish_time'] == None \
+      and set(scheduled_exam_uuids) == set(currently_loaded_exam_uuids):
+        self.session['scheduled_finish_time'] \
+          = current_exams_set.latest_end_time
+        save_session = True
+
+    if save_session:
       self.save_session()
 
 
