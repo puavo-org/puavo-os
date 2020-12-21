@@ -1008,29 +1008,6 @@ class PuavoErsExamScheduler (threading.Thread):
     return False
 
 
-  def all_students_have_answered(self, status):
-    student_count = 0
-    finished_count = 0
-
-    for student in status['students']:
-      student_count += 1
-      if ('examFinished' in student) and (student['examFinished'] != None):
-        finished_count += 1
-
-    new_finished_and_students = '%d/%d' % (finished_count, student_count)
-    if self.finished_and_students != new_finished_and_students:
-      self.finished_and_students = new_finished_and_students
-      syslog.syslog(syslog.LOG_INFO,
-                    'exams finished/students is %s' \
-                      % self.finished_and_students)
-
-    # Even if there are no students in the exam, we consider that all of them
-    # have answered and exam is finished (this is odd, because when the exam
-    # is started it is considered finished immediately, but this is okay:
-    # we mean "finished" to mean that new exams can be loaded and started.
-    return (finished_count == student_count)
-
-
   def there_are_still_active_students(self, status):
     now = datetime.datetime.now()
 
@@ -1058,25 +1035,13 @@ class PuavoErsExamScheduler (threading.Thread):
     return False
 
 
-  def update_exams_finished_time(self, current_exams_set,
-                                 currently_loaded_exams, status):
-    now = datetime.datetime.now()
-
-    if self.all_students_have_answered(status):
-      if now < self.session['finish_time']:
-        syslog.syslog(syslog.LOG_INFO,
-                      'all students have answered, exams finished')
-        self.update_session_finish_time(now)
-    elif self.there_are_still_active_students(status):
+  def update_exams_finished_time(self, status):
+    if self.there_are_still_active_students(status):
       syslog.syslog(syslog.LOG_INFO, 'there are still active students')
       self.update_session_finish_time( self.end_of_today() )
     else:
-      # no active students we can consider the exam to be finished now
-      syslog.syslog(syslog.LOG_INFO,
-                    'no active students, exams finished')
-      self.update_session_finish_time(now)
-
-
+      syslog.syslog(syslog.LOG_INFO, 'no active students, exams finished')
+      self.update_session_finish_time( datetime.datetime.now() )
 
 
   def schedule_exams(self, current_exams_set):
@@ -1090,8 +1055,7 @@ class PuavoErsExamScheduler (threading.Thread):
       = [ exam['examUuid'] for exam in currently_loaded_exams ]
 
     self.load_session(current_exams_set, currently_loaded_exam_uuids)
-    self.update_exams_finished_time(current_exams_set, currently_loaded_exams,
-                                    status)
+    self.update_exams_finished_time(status)
 
     load_exams = False
 
