@@ -863,10 +863,16 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def string_to_time(self, string):
+    if string == None:
+      return None
+
     return datetime.datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
 
 
   def time_to_string(self, time):
+    if time == None:
+      return None
+
     return time.strftime('%Y-%m-%d %H:%M:%S')
 
 
