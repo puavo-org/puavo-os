@@ -787,7 +787,7 @@ class PuavoErsExamScheduler (threading.Thread):
     return self.server_cmd(cmd)
 
 
-  def load_session(self, currently_loaded_exam_uuids):
+  def load_session(self, current_exams_set, currently_loaded_exam_uuids):
     if not self.session:
       try:
         try:
@@ -1070,12 +1070,12 @@ class PuavoErsExamScheduler (threading.Thread):
       if now < self.session['finish_time']:
         syslog.syslog(syslog.LOG_INFO,
                       'all students have answered, exams finished')
-        # XXX this is too exact, should drop microseconds
         self.update_session_finish_time(now)
-    elif self.session['finish_time'] < current_exams_set.latest_end_time:
-      syslog.syslog(syslog.LOG_INFO,
-                    'more student answers coming, exams NOT finished')
-      self.update_session_finish_time(current_exams_set.latest_end_time)
+    elif current_exams_set.latest_end_time \
+      and self.session['finish_time'] < current_exams_set.latest_end_time:
+        syslog.syslog(syslog.LOG_INFO,
+                      'more student answers coming, exams NOT finished')
+        self.update_session_finish_time(current_exams_set.latest_end_time)
     else:
       # no changes to finish time
       pass
@@ -1091,7 +1091,7 @@ class PuavoErsExamScheduler (threading.Thread):
     currently_loaded_exam_uuids \
       = [ exam['examUuid'] for exam in currently_loaded_exams ]
 
-    self.load_session(currently_loaded_exam_uuids)
+    self.load_session(current_exams_set, currently_loaded_exam_uuids)
     self.update_exams_finished_time(current_exams_set, currently_loaded_exams,
                                     status)
 
@@ -1100,8 +1100,9 @@ class PuavoErsExamScheduler (threading.Thread):
     exams_finished = self.exams_are_finished()
     if exams_finished:
       self.maybe_store_answers(currently_loaded_exams, status)
-      if self.session['scheduled_finish_time'] <= datetime.datetime.now():
-        load_exams = True
+      if self.session['scheduled_finish_time'] \
+        and self.session['scheduled_finish_time'] <= datetime.datetime.now():
+          load_exams = True
 
     if len(current_exams_set.exams) == 0:
       syslog.syslog(syslog.LOG_INFO, 'no exams to schedule')
@@ -1134,7 +1135,14 @@ class PuavoErsExamScheduler (threading.Thread):
                       'exam scheduler is waiting for zip file to be ready')
         return
 
+    # XXX should this actually confirm that self.session['uuids'] match
+    # XXX what is in?  before something is started?  is there a possibility
+    # XXX this could make a mistake (probably yes in case someone loads new
+    # XXX exams and those do not match what we think there is ... on the other
+    # XXX hand, load_session should catch that and then scheduled_start_time
+    # XXX not set...
     if not has_started \
+      and self.session['scheduled_start_time'] \
       and self.session['scheduled_start_time'] <= datetime.datetime.now():
         syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
         self.start_loaded_exams()
