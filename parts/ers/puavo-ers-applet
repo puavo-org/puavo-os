@@ -1066,6 +1066,8 @@ class PuavoErsExamScheduler (threading.Thread):
       self.maybe_store_answers(currently_loaded_exams, status)
       if self.session['scheduled_finish_time'] \
         and self.session['scheduled_finish_time'] <= datetime.datetime.now():
+          # Do this even if the exam set is the same, so we get a fresh exam
+          # session.
           load_exams = True
 
     if len(current_exams_set.exams) == 0:
@@ -1099,12 +1101,6 @@ class PuavoErsExamScheduler (threading.Thread):
                       'exam scheduler is waiting for zip file to be ready')
         return
 
-    # XXX should this actually confirm that self.session['uuids'] match
-    # XXX what is in?  before something is started?  is there a possibility
-    # XXX this could make a mistake (probably yes in case someone loads new
-    # XXX exams and those do not match what we think there is ... on the other
-    # XXX hand, load_session should catch that and then scheduled_start_time
-    # XXX not set...
     if not has_started \
       and self.session['scheduled_start_time'] \
       and self.session['scheduled_start_time'] <= datetime.datetime.now():
