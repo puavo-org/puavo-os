@@ -571,9 +571,11 @@ class PuavoErsExamSorter (threading.Thread):
           todays_exams.append(exam)
           todays_exams_filenames.append(exam['file_name'])
 
-        # load new exams to server 15 minutes before they are scheduled
-        # to start
-        preload_timedelta = datetime.timedelta(minutes=15)
+        # Load new exams to server 10 minutes before they are scheduled
+        # to start.  Note that if exams are scheduled to have less than
+        # 10 minutes between them, add_overlapping_exams() below will consider
+        # them to be part of the same exam set (session).
+        preload_timedelta = datetime.timedelta(minutes=10)
         if (exam_start_time - preload_timedelta) <= self.current_time \
           and self.current_time < exam_end_time:
             current_exams.append(exam)
