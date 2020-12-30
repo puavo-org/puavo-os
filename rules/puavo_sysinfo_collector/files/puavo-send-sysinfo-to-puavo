@@ -16,7 +16,7 @@ fi
 my_hostname=$(hostname)
 
 if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
-  prr_args='--user-etc'
+  prr_args='--user-etc --writable'
 else
   prr_args='--user-bootserver'
 fi
