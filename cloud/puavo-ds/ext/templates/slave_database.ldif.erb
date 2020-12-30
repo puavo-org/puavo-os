@@ -25,7 +25,7 @@ olcDbIndex: entryUUID eq
 olcDbIndex: entryCSN eq
 olcLastMod: TRUE
 olcDbCheckpoint: 512 30
-olcSyncRepl: rid=<%= "%03d" % @rid %> provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist interval=00:00:00:05 retry="15 +" timeout=30 starttls=critical schemachecking=off scope=sub
+olcSyncRepl: rid=<%= "%03d" % @rid %> provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist interval=00:00:00:05 retry="15 +" timeout=30 starttls=critical tls_cacert=/etc/ssl/certs/puavo-ca.crt schemachecking=off scope=sub
 olcUpdateRef: ldap://<%= @master_server %>
 olcDbNosync: TRUE
 olcDbDirectory: <%= @directory %>
