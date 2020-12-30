@@ -368,7 +368,12 @@ rule {
   # Allow servers to write "puavoDeviceHWInfo" to all netbooting devices.
   # This is because they can act as proxies for fatclients.
   [dn children $Devices]
-    filter="(objectClass=puavoNetbootDevice)"
+    # XXX This is only needed by puavoNetbootDevices.
+    # XXX Unfortunately laptops on old versions try to write through
+    # XXX bootservers instead of directly to cloud puavo-rest/ldapmaster,
+    # XXX thus we can not yet filter by "(objectClass=puavoNetbootDevice)".
+    # XXX Apply the filter again maybe on year 2022.
+    # filter="(objectClass=puavoNetbootDevice)"
     [attrs puavoDeviceHWInfo]
       by [dn children $Servers] write
       by *                      none break
