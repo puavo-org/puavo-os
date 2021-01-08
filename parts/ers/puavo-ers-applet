@@ -69,6 +69,9 @@ def rm_f(path, with_logging=True):
 class CurrentZipNotReady(Exception):
   pass
 
+class ExamSchedulerNotActive(Exception):
+  pass
+
 
 class PuavoErsApplet:
   NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
@@ -224,10 +227,12 @@ class PuavoErsApplet:
 
       labels_and_exams_list.append({ 'exam': exam, 'label': label })
 
+    self.make_automation_control_button()
+
     if len(labels_and_exams_list) > 24:
       # we can not fit too many labels on the applet menu,
       # so open a new window in case we have very many exams
-      button = Gtk.MenuItem( _tr('Open decrypt codes window') )
+      button = Gtk.MenuItem(label=_tr('Open decrypt codes window'))
       decrypt_codes_window = DecryptCodesWindow(self, labels_and_exams_list)
       button.connect('activate', decrypt_codes_window.open)
       button.show()
@@ -261,6 +266,44 @@ class PuavoErsApplet:
       instructions.show()
       self.menuitems.append(instructions)
       self.menu.append(instructions)
+
+
+  def make_automation_control_button(self):
+    if self.exams_scheduler.exam_scheduler_enabled:
+      auto_info_button = Gtk.MenuItem(
+        label=_tr('Exam session automation is active'))
+      auto_info_button.set_sensitive(False)
+      auto_control_button = Gtk.MenuItem(label=_tr('Disable automation'))
+      auto_control_button.connect('activate', self.disable_exam_scheduler)
+    else:
+      auto_info_button = Gtk.MenuItem(
+        label=_tr('Exam session automation is NOT active'))
+      auto_info_button.set_sensitive(False)
+      auto_control_button = Gtk.MenuItem(label=_tr('Enable automation'))
+      auto_control_button.connect('activate', self.enable_exam_scheduler)
+
+    auto_info_button.show()
+    self.menu.append(auto_info_button)
+    self.menuitems.append(auto_info_button)
+
+    auto_control_button.show()
+    self.menu.append(auto_control_button)
+    self.menuitems.append(auto_control_button)
+
+    separator = Gtk.SeparatorMenuItem()
+    separator.show()
+    self.menuitems.append(separator)
+    self.menu.append(separator)
+
+
+  def disable_exam_scheduler(self, widget):
+    self.exams_scheduler.exam_scheduler_enabled = False
+    self.update_decrypt_codes(True)
+
+
+  def enable_exam_scheduler(self, widget):
+    self.exams_scheduler.exam_scheduler_enabled = True
+    self.update_decrypt_codes(True)
 
 
   def password_triggered(self, widget):
@@ -759,9 +802,18 @@ class PuavoErsExamScheduler (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-    self.answers_stored_time   = None
-    self.finished_and_students = None
-    self.finish_time           = self.end_of_today()
+    self.answers_stored_time    = None
+    self.exam_scheduler_enabled = True
+    self.finished_and_students  = None
+    self.finish_time            = self.end_of_today()
+
+
+  def disable_exam_scheduler(self):
+    self.exam_scheduler_enabled = False
+
+
+  def enable_exam_scheduler(self):
+    self.exam_scheduler_enabled = True
 
 
   def get_exams(self):
@@ -805,6 +857,9 @@ class PuavoErsExamScheduler (threading.Thread):
 
     while True:
       try:
+        if not self.exam_scheduler_enabled:
+          raise ExamSchedulerNotActive
+
         if not comm_ok:
           output = self.ping()
           if output['error'] == False:
@@ -824,6 +879,9 @@ class PuavoErsExamScheduler (threading.Thread):
           # XXX should a version check be made?
           with exam_scheduler_lock:
             self.schedule_exams(current_exams_set)
+
+      except ExamSchedulerNotActive as e:
+        syslog.syslog(syslog.LOG_INFO, 'exam scheduler has been disabled')
 
       except Exception as e:
         comm_ok = False
