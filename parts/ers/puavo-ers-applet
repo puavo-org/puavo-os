@@ -298,11 +298,13 @@ class PuavoErsApplet:
 
   def disable_exam_scheduler(self, widget):
     self.exams_scheduler.exam_scheduler_enabled = False
+    syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now disabled from UI')
     self.update_decrypt_codes(True)
 
 
   def enable_exam_scheduler(self, widget):
     self.exams_scheduler.exam_scheduler_enabled = True
+    syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now enabled from UI')
     self.update_decrypt_codes(True)
 
 
