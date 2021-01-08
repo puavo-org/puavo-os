@@ -41,11 +41,13 @@ _tr = gettext.gettext
 
 KTP_JAKO_DIR            = os.path.join(os.environ['HOME'], 'ktp-jako')
 ANSWERS_DIR             = os.path.join(KTP_JAKO_DIR, 'Vastaukset')
+COMM_DIR                = os.path.join(KTP_JAKO_DIR, '.opinsys')
 EXAMS_ARCHIVE_DIR       = os.path.join(KTP_JAKO_DIR, 'Arkisto')
 EXAMS_DIR               = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE         = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR      = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 MGMT_UPDATE_MARKER_PATH = os.path.join(KTP_JAKO_DIR, '.update_ktpapu-asennin')
+
 
 exam_scheduler_lock = threading.Lock()
 current_exams_set = None
@@ -124,6 +126,7 @@ class PuavoErsApplet:
   def main(self):
     self.run_naksu()
     GLib.timeout_add_seconds(1, self.update_decrypt_codes)
+    self.enable_exam_scheduler()
     Gtk.main()
 
 
@@ -292,15 +295,31 @@ class PuavoErsApplet:
     self.menu.append(separator)
 
 
-  def disable_exam_scheduler(self, widget):
+  def disable_exam_scheduler(self, widget=None):
     self.exams_scheduler.exam_scheduler_enabled = False
-    syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now disabled from UI')
+    syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now disabled')
+    Notify.Notification.new(_tr('Exam session automation is NOT active')).show()
     self.update_decrypt_codes(True)
 
 
-  def enable_exam_scheduler(self, widget):
+  def enable_exam_scheduler(self, widget=None):
+    if not os.path.isdir(COMM_DIR):
+      errmsg = 'communication directory does not exist, will not enable' \
+                 + ' exam scheduler'
+      syslog.syslog(syslog.LOG_ERR, errmsg)
+
+      summary = _tr('Install automation helper')
+      body = _tr('No trace of exam automation helper could be found,' \
+                   + ' please install it into the virtual server' \
+                   + ' (execute /media/usb1/ktpapu-asennin in the virtual' \
+                   + ' server).')
+      Notify.Notification.new(summary, body).show()
+      return
+
+    Notify.Notification.new(_tr('Exam session automation is active')).show()
+
     self.exams_scheduler.exam_scheduler_enabled = True
-    syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now enabled from UI')
+    syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now enabled')
     self.update_decrypt_codes(True)
 
 
@@ -786,8 +805,6 @@ class PuavoErsServerHelper (threading.Thread):
 
 
 class PuavoErsExamScheduler (threading.Thread):
-  COMM_DIR = os.path.join(KTP_JAKO_DIR, '.opinsys')
-
   CMD_IN_PROGRESS_PATH = os.path.join(COMM_DIR, '.cmd-in-progress')
   CMD_PATH             = os.path.join(COMM_DIR, 'cmd')
   CMD_RESULT_PATH      = os.path.join(COMM_DIR, 'cmd-result')
@@ -803,17 +820,9 @@ class PuavoErsExamScheduler (threading.Thread):
     threading.Thread.__init__(self)
 
     self.answers_stored_time    = None
-    self.exam_scheduler_enabled = True
+    self.exam_scheduler_enabled = False
     self.finished_and_students  = None
     self.finish_time            = self.end_of_today()
-
-
-  def disable_exam_scheduler(self):
-    self.exam_scheduler_enabled = False
-
-
-  def enable_exam_scheduler(self):
-    self.exam_scheduler_enabled = True
 
 
   def get_exams(self):
@@ -1068,7 +1077,7 @@ class PuavoErsExamScheduler (threading.Thread):
       rm_f(path, False)
 
     try:
-      if not os.path.isdir(self.COMM_DIR):
+      if not os.path.isdir(COMM_DIR):
         errmsg = 'communication directory does not exist,' \
                    + ' ktpapi is not installed in virtual server'
         raise Exception(errmsg)
