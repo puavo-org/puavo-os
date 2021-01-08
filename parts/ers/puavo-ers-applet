@@ -90,7 +90,7 @@ class PuavoErsApplet:
     os.makedirs(self.PUAVO_ERS_DIR, exist_ok=True)
 
     self.menu = Gtk.Menu()
-    self.old_exams = []
+    self.old_exams = None
     self.menuitems = []
 
     self.indicator.set_menu(self.menu)
@@ -495,8 +495,8 @@ class PuavoErsExamSorter (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-    self.previous_current_exams = []
-    self.previous_todays_exams  = []
+    self.previous_current_exams = None
+    self.previous_todays_exams  = None
 
 
   def run(self):
