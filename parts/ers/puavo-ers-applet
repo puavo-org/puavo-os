@@ -518,10 +518,9 @@ class ExamSet:
         exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
 
-        if exam_start_time < self.latest_end_time:
-          candidate_accepted = True
-        if self.earliest_start_time < exam_end_time:
-          candidate_accepted = True
+        if exam_start_time < self.latest_end_time \
+          and self.earliest_start_time < exam_end_time:
+            candidate_accepted = True
 
         if candidate_accepted:
           candidate_exams.remove(exam)
