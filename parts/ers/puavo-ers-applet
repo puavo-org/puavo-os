@@ -247,11 +247,6 @@ class PuavoErsApplet:
       self.menuitems.append(instructions)
       self.menu.append(instructions)
 
-      separator = Gtk.SeparatorMenuItem()
-      separator.show()
-      self.menuitems.append(separator)
-      self.menu.append(separator)
-
       for le in labels_and_exams_list:
         button = Gtk.MenuItem(label=le['label'])
         self.exams_by_widgets[button] = le['exam']
