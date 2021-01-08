@@ -233,7 +233,8 @@ class PuavoErsApplet:
       button.show()
       self.menu.append(button)
       self.menuitems.append(button)
-    else:
+
+    elif len(labels_and_exams_list) > 0:
       instructions = Gtk.MenuItem(
         label=_tr('Click passphrase below put it into clipboard'))
       instructions.set_sensitive(False)
@@ -253,6 +254,13 @@ class PuavoErsApplet:
         button.show()
         self.menu.append(button)
         self.menuitems.append(button)
+
+    else:
+      instructions = Gtk.MenuItem(label=_tr('No current exams'))
+      instructions.set_sensitive(False)
+      instructions.show()
+      self.menuitems.append(instructions)
+      self.menu.append(instructions)
 
 
   def password_triggered(self, widget):
