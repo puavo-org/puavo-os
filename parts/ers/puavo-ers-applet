@@ -1027,27 +1027,24 @@ class PuavoErsExamScheduler (threading.Thread):
                     'examinations are in progress, not loading any exams')
       return
 
-    load_exams = False
+    current_exam_uuids = []
     for exam in current_exams_set.exams:
       if not 'uuid' in exam:
         errmsg = 'no uuid set for exam "%s", can not check it is on server' \
                    % exam['file_name']
         raise Exception(errmsg)
-      if not exam['uuid'] in currently_loaded_exam_uuids:
-        syslog.syslog(syslog.LOG_INFO,
-                      'exam %s is missing from server' % exam['file_name'])
-        load_exams = True
+      current_exam_uuids.append(exam['uuid'])
 
-    if load_exams:
-      try:
+    try:
+      if set(currently_loaded_exam_uuids) != set(current_exam_uuids):
         syslog.syslog(syslog.LOG_INFO, 'loading exams')
         self.load_exams()
         self.finish_time = self.latest_end_time
         has_started = False
-      except CurrentZipNotReady as e:
-        syslog.syslog(syslog.LOG_INFO,
-                      'exam scheduler is waiting for zip file to be ready')
-        return
+    except CurrentZipNotReady as e:
+      syslog.syslog(syslog.LOG_INFO,
+                    'exam scheduler is waiting for zip file to be ready')
+      return
 
     if not has_started \
       and current_exams_set.earliest_start_time <= datetime.datetime.now():
