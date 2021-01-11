@@ -1039,7 +1039,7 @@ class PuavoErsExamScheduler (threading.Thread):
       if set(currently_loaded_exam_uuids) != set(current_exam_uuids):
         syslog.syslog(syslog.LOG_INFO, 'loading exams')
         self.load_exams()
-        self.finish_time = self.latest_end_time
+        self.finish_time = current_exams_set.latest_end_time
         has_started = False
     except CurrentZipNotReady as e:
       syslog.syslog(syslog.LOG_INFO,
