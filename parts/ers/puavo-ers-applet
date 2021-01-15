@@ -991,14 +991,33 @@ class PuavoErsExamScheduler (threading.Thread):
     return False
 
 
+  def get_last_finished_time(self, status):
+    last_finished_time = None
+    for student in status['students']:
+      if ('examFinished' in student) and (student['examFinished'] != None):
+        finish_time = datetime.datetime.strptime(
+                        student['examFinished'], '%Y-%m-%dT%H:%M:%S.%f%z')\
+                          .astimezone()
+        if not last_finished_time or last_finished_time < finish_time:
+          last_finished_time = finish_time
+
+    return last_finished_time
+
+
   def update_exams_finished_time(self, status):
     if self.there_are_still_active_students(status):
       syslog.syslog(syslog.LOG_INFO, 'there are still active students')
       self.finish_time = self.end_of_today()
     else:
       now = datetime.datetime.now()
+
+      last_finished_time = self.get_last_finished_time(status)
+      if last_finished_time:
+        if self.finish_time.astimezone() < last_finished_time:
+          syslog.syslog(syslog.LOG_INFO, 'no active students, exams finished')
+          self.finish_time = now
+
       if self.finish_time > now:
-        syslog.syslog(syslog.LOG_INFO, 'no active students, exams finished')
         self.finish_time = now
 
 
