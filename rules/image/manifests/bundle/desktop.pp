@@ -40,7 +40,6 @@ class image::bundle::desktop {
   include ::tuxpaint
   include ::wacom
   include ::wine
-  include ::workaround_firefox_local_swf_bug
   include ::xorg
 
   Package <| tag == 'tag_debian_desktop'
