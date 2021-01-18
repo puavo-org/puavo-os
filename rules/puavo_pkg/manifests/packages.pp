@@ -1,6 +1,13 @@
 class puavo_pkg::packages {
+  include ::puavo_conf
   include ::puavo_pkg
   include ::trusty_libs
+
+  # list removed puavo-pkg packages here
+  ::puavo_conf::definition {
+    'puavo-pkg-removed.json':
+      source => 'puppet:///modules/puavo_pkg/puavo-pkg-removed.json';
+  }
 
   # Not all puavo-pkg packages have been tested with all distribution
   # release versions, so keep track of which packages are intended for
@@ -19,8 +26,6 @@ class puavo_pkg::packages {
                                , 'vagrant' ]
 
   $available_packages = [ 'abitti-naksu'
-                        , 'adobe-flashplugin'
-			, 'adobe-pepperflashplugin'
 			, 'adobe-reader'
 			, 'airtame'
 			, 'appinventor'
