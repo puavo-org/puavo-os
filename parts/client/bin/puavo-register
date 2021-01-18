@@ -294,7 +294,7 @@ class RegisterUserInterface
       'device type'  => 'devicetype',
       'school'       => 'school',
       'hostname'     => 'puavoHostname',
-      'primary user' => 'primary_user_uid',
+      'primary user' => 'puavoDevicePrimaryUser',
       'yes'          => 'yes',
     }
 
