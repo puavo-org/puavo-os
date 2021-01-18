@@ -75,12 +75,6 @@ if ! browser_running; then
   manage_preferences '.browser.custom_chrome_frame = false' || true
 fi
 
-pepperflash_path="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
-
-if [ -s "$pepperflash_path" ]; then
-  default_args="$default_args --ppapi-flash-path=$pepperflash_path --ppapi-flash-version="
-fi
-
 exec /usr/bin/google-chrome-stable.puavopkg $default_args \
        --simulate-outdated-no-au='Thu, 31 Dec 2099 23:59:59 GMT' "$@"
 EOF
