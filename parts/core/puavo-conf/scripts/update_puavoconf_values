@@ -2,22 +2,22 @@
 
 set -eu
 
-{
-  # XXX clean up old messes... may be removed "later"
-  if [ -e /state/etc/puavo/local/puavo_conf.json ]; then
-    if [ "$(jq -r '.["puavo.pkg.adobe-flashplugin-32bit"]' \
-                  /state/etc/puavo/local/puavo_conf.json)" = 'latest' ]; then
-      puavo-conf-local puavo.pkg.adobe-flashplugin-32bit remove \
-        && puavo-conf-local puavo.pkg.adobe-flashplugin latest
-    fi
-  fi
-} || true
+status=0
 
-puavo-conf-update
+# XXX clean up old messes... may be removed "later"
+if [ -e /state/etc/puavo/local/puavo_conf.json ]; then
+  puavo-conf-local puavo.pkg.adobe-flashplugin       remove || status=1
+  puavo-conf-local puavo.pkg.adobe-pepperflashplugin remove || status=1
+fi
+
+puavo-conf-update || status=1
 
 # XXX another hackish workaround for the primary_user.
 primary_user_override_path='/state/etc/puavo/primary_user_override'
 if [ -r "$primary_user_override_path" ]; then
   puavo-conf puavo.admin.primary_user \
-             "$(cat "$primary_user_override_path" 2>/dev/null || true)"
+             "$(cat "$primary_user_override_path" 2>/dev/null || true)" \
+    || status=1
 fi
+
+exit $status
