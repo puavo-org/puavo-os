@@ -775,9 +775,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-6-amd64';
 
-    '4.9.0-13-amd64':
+    '4.9.0-14-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-13-amd64';
+      package_name => 'linux-image-4.9.0-14-amd64';
 
     '4.19.0-0.bpo.13-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module, $virtualbox_module ],
