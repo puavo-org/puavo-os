@@ -3,10 +3,24 @@
 # we do not use systemctl here, because we want this script to be fast
 
 set services {
+  { atop {
+      /etc/systemd/system/multi-user.target.wants/atop.service
+        -> /lib/systemd/system/atop.service
+      /etc/systemd/system/multi-user.target.wants/atopacct.service
+        -> /lib/systemd/system/atopacct.service
+      /etc/rc2.d/S01atop -> /etc/init.d/atop
+      /etc/rc3.d/S01atop -> /etc/init.d/atop
+      /etc/rc4.d/S01atop -> /etc/init.d/atop
+      /etc/rc5.d/S01atop -> /etc/init.d/atop
+      /etc/rc2.d/S01atopacct -> /etc/init.d/atopacct
+      /etc/rc3.d/S01atopacct -> /etc/init.d/atopacct
+      /etc/rc4.d/S01atopacct -> /etc/init.d/atopacct
+      /etc/rc5.d/S01atopacct -> /etc/init.d/atopacct
+    }}
+
   { autofs {
       /etc/systemd/system/multi-user.target.wants/autofs.service
         -> /usr/lib/systemd/system/autofs.service
-    }}
 
   { avahi-daemon {
       /etc/systemd/system/dbus-org.freedesktop.Avahi.service
