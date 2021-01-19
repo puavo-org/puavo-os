@@ -283,9 +283,15 @@ darkdm_menu()
   initial_command=$1
   forced=$2
 
+  show_helpinfo=true
+
   while true; do
-    echo "$systeminfo"
-    darkdm_print_help || return 1
+    if $show_helpinfo; then
+      echo "$systeminfo"
+      darkdm_print_help \
+        | awk '$1 !~ /bios|expert|mount|reboot|preinstall|savedisk/'
+    fi
+    show_helpinfo=true
 
     if [ "$forced" = '--show-unforced-warning' ]; then
       cat <<-EOF >&2
@@ -321,6 +327,12 @@ darkdm_menu()
         ;;
       expert-preinstall)
         darkdm_install expert-preinstall || return 1
+        ;;
+      help)
+        show_helpinfo=false
+        darkdm_print_help | more
+        ;;
+      info)
         ;;
       install)
         darkdm_install || return 1
