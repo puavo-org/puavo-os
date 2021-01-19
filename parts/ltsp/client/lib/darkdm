@@ -86,6 +86,11 @@ darkdm_systeminfo()
   cpu_text="$(facter processors.count) CPUs / ${cpu}"
   colorized_cpu=$(colorize 1 2 3 "$(get_cpu_value "$cpu")" "$cpu_text")
 
+  sku_number=$(cat /sys/devices/virtual/dmi/id/product_sku 2>/dev/null || true)
+  if [ -z "$sku_number" ]; then
+    sku_number='?'
+  fi
+
   cat <<EOF
 image:   ${this_image}
 release: ${this_release}
@@ -96,7 +101,7 @@ $(list_disks)
 memory:          ${colorized_memory}
 $(list_networks)
 product:         $(facter dmi.manufacturer) / $(facter dmi.product.name)
-serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board)
+serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board) / ${sku_number} (SKU)
 Windows license: $(windows_license)
 some pci devices:
 $(lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /')
