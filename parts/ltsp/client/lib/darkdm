@@ -151,24 +151,25 @@ darkdm_print_help()
 Puavo OS Command Shell
 
 Commands:
-  bios                 - configure BIOS (only on some supported machines)
-  expert-install       - install Puavo OS with more detailed questions
-  expert-preinstall    - install without registering, expert mode
-  install              - install Puavo OS to this device and reboot
-  kbd [layout]         - set keyboard layout
-  live                 - switch to graphical mode
-  make-install-disk    - make a bootable usb flash drive or some such
-  mount                - mount puavo filesystems (if host is already installed)
-  nmtui                - configure network (not available on netboot devices)
-  poweroff             - poweroff the system in 5 seconds
-  preinstall           - install without registering
-  preseed-install (pi) - install with a preseed
-  preseed-preinstall   - install without registering but with a preseed
-  reboot               - reboot the system in 5 seconds
-  restoredisk          - restore from bootserver (only on netboot devices)
-  savedisk             - save to bootserver (only on netboot devices)
-  shell                - spawn a shell
-  update               - update the local Puavo OS installation and reboot
+  bios                   configure BIOS (only on some supported machines)
+  expert-install         install Puavo OS with more detailed questions
+  expert-preinstall      install without registering, expert mode
+  help                   show more detailed help
+  info                   show machine information
+  install                install Puavo OS to this device and reboot
+  kbd [layout]           set keyboard layout
+  make-install-disk      make a bootable usb flash drive or some such
+  mount                  mount puavo filesystems (if host is already installed)
+  nmtui                  configure network (not available on netboot devices)
+  poweroff               poweroff the system
+  preinstall             install without registering
+  preseed-install (pi)   install with a preseed
+  preseed-preinstall     install without registering but with a preseed
+  reboot                 reboot the system
+  restoredisk            restore from bootserver (only on netboot devices)
+  savedisk               save to bootserver (only on netboot devices)
+  shell                  spawn a shell
+  update                 update the local Puavo OS installation and reboot
 EOF
 }
 
