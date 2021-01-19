@@ -276,18 +276,6 @@ EOF
   echo
 }
 
-darkdm_live() {
-  echo -n 'switching to graphical mode'
-  # needed due to some bug in Buster:
-  service accounts-daemon start || true
-  echo -n .; sleep 1
-  echo -n .; sleep 1
-  echo -n .; sleep 1
-
-  # switch to GUI mode (should stop puavo-darkdm as a side effect)
-  systemctl isolate graphical.target
-}
-
 darkdm_menu()
 {
   local command forced initial_command prompt
@@ -339,9 +327,6 @@ darkdm_menu()
         ;;
       kbd)
         darkdm_kbd "$command_args" || return 1
-        ;;
-      live)
-        darkdm_live || return 1
         ;;
       make-install-disk)
         puavo-make-install-disk || return 1
