@@ -901,6 +901,11 @@ programs:
             sv: SimpleScreenRecorder
             de: SimpleScreenRecorder
         tags: default, video, audiovideo
+  - signal-desktop:
+        name: Signal
+        tags: default
+        puavopkg:
+            id: signal-desktop
   - sketchup:
         type: web
         name: SketchUp Free (Web)
@@ -1267,6 +1272,7 @@ menus:
             - net.sourceforge.liferea
             - vinagre
             - VidyoDesktop
+            - signal-desktop
 
   - menu-programming:
         name:

@@ -61,6 +61,7 @@ packagedirs += robboscratch2
 packagedirs += robotmeshconnect
 packagedirs += scratux
 packagedirs += shotcut
+packagedirs += signal-desktop
 packagedirs += skype
 packagedirs += smartboard
 packagedirs += spotify-client
