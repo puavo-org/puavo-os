@@ -1,6 +1,6 @@
 /*
 Login screen host information display
-Copyright (C) 2017-2018 Opinsys Oy
+Copyright (C) 2017-2021 Opinsys Oy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -296,6 +296,7 @@ const HostInfoButton = new Lang.Class(
                 jval(json, "bios_vendor") + ", " +
                 jval(json, "bios_version") + ", " +
                 jval(json, "bios_release_date"));
+            this.titleValue(c, "SKU", jval(json, "sku"));
 
             // CPU
             this.titleValue(c, "Processor",

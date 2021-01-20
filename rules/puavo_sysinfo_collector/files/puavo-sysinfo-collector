@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 # DBus service to collect some system information on-demand.
-# Version 0.99, (c) Opinsys Oy 2017-2018
+# Version 0.99, (c) Opinsys Oy 2017-2021
 # Author: Jarmo Pietiläinen (jarmo@opinsys.fi)
 
 # This program is free software: you can redistribute it and/or modify
@@ -331,6 +331,16 @@ class SystemInfoCollector < DBus::Object
         rescue StandardError => e
           warn "could not read the Windows license file: #{e}"
           data[:windows_license] = nil
+        end
+
+        # SKU number (not available on all machines)
+        data[:sku] = nil
+
+        begin
+          data[:sku] = File.read('/sys/devices/virtual/dmi/id/product_sku').strip
+        rescue StandardError => e
+          warn "could not read the SKU number: #{e}"
+          data[:sku] = nil
         end
 
         # use pretty_generate because humans might read the file out of curiosity
