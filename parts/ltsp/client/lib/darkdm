@@ -47,6 +47,38 @@ list_networks() {
   done
 }
 
+show_battery_status() {
+  local battery_capacity colorized_battery_capacity other_battery_info \
+        battery_status upower_output
+
+  upower_output=$(upower --show-info \
+                         /org/freedesktop/UPower/devices/battery_BAT0 \
+                    2>/dev/null || true)
+
+  battery_capacity=$(printf "%s" "$upower_output" \
+    | awk '$1 == "capacity:" { sub(/%$/, "", $2); print $2 }')
+
+  if [ -z "$battery_capacity" ]; then
+    status='NONE'
+  else
+    colorized_battery_capacity=$(colorize 70 80 90 "$battery_capacity" \
+                                   "${battery_capacity}% (capacity)")
+    other_battery_info=$(printf "%s\n" "hello $upower_output" \
+      | awk '
+          $1 == "energy:"             { energy             = $2 $3 }
+          $1 == "energy-full:"        { energy_full        = $2 $3 }
+          $1 == "energy-full-design:" { energy_full_design = $2 $3 }
+          END {
+            printf "%s/%s (design capacity: %s)", energy, energy_full,
+              energy_full_design
+          }
+        ')
+    battery_status="${colorized_battery_capacity} | ${other_battery_info}"
+  fi
+
+  printf "battery:         %s\n" "$battery_status"
+}
+
 windows_license() {
   local machine_build_id windows_product_key
 
@@ -100,6 +132,7 @@ cpu:             ${colorized_cpu}
 $(list_disks)
 memory:          ${colorized_memory}
 $(list_networks)
+$(show_battery_status)
 product:         $(facter dmi.manufacturer) / $(facter dmi.product.name)
 serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board) / ${sku_number} (SKU)
 Windows license: $(windows_license)
