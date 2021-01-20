@@ -296,7 +296,6 @@ const HostInfoButton = new Lang.Class(
                 jval(json, "bios_vendor") + ", " +
                 jval(json, "bios_version") + ", " +
                 jval(json, "bios_release_date"));
-            this.titleValue(c, "SKU", jval(json, "sku"));
 
             // CPU
             this.titleValue(c, "Processor",
@@ -380,6 +379,7 @@ const HostInfoButton = new Lang.Class(
             this.category(c, "Serial numbers");
             this.titleValue(c, "Machine", jval(json, "serialnumber"));
             this.titleValue(c, "Mainboard", jval(json, "boardserialnumber"));
+            this.titleValue(c, "SKU", jval(json, "sku"));
 
             // lspci values, if present
             if ("lspci_values" in json && json["lspci_values"].length > 0) {
