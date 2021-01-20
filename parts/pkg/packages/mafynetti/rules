@@ -5,43 +5,39 @@ set -eu
 command=$1
 shift
 
+mafynetti_links='
+  /opt/Mafynetti
+  /usr/share/applications/mafynetti.desktop
+  /usr/share/icons/hicolor/16x16/apps/mafynetti.png
+  /usr/share/icons/hicolor/32x32/apps/mafynetti.png
+  /usr/share/icons/hicolor/48x48/apps/mafynetti.png
+  /usr/share/icons/hicolor/64x64/apps/mafynetti.png
+  /usr/share/icons/hicolor/128x128/apps/mafynetti.png
+  /usr/share/icons/hicolor/256x256/apps/mafynetti.png
+  /usr/share/icons/hicolor/512x512/apps/mafynetti.png
+  /usr/share/icons/hicolor/1024x1024/apps/mafynetti.png
+'
+
 case "${command}" in
-    configure)
-	upstream_dir=$1
-cat <<'EOF' > /usr/share/applications/mafynetti.desktop
-[Desktop Entry]
-Exec=mafynetti --disable-update-notification
-Icon=mafynetti
-Type=Application
-Terminal=false
-Name=Mafynetti
-Categories=Education;Qt;
-EOF
-	ln -fns "${upstream_dir}/usr/bin/mafynetti" /usr/bin/mafynetti
-	ln -fns "${upstream_dir}/usr/share/mafynetti" /usr/share/mafynetti
-	ln -fns "${upstream_dir}/usr/share/icons/hicolor/scalable/apps/mafynetti.svg" /usr/share/pixmaps/mafynetti.svg
+  configure)
+    upstream_dir=$1
+    for f in $mafynetti_links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fns -T "${upstream_dir}/${f}" "$f"
+    done
 
-        # quick fix for Buster
-        if [  ! -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.62.0 \
-             -a -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.67.0 ]; then
-          ln -fns /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.67.0 \
-                  /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.62.0
-        fi
-        if [  ! -e /usr/lib/x86_64-linux-gnu/libboost_system.so.1.62.0 \
-             -a -e /usr/lib/x86_64-linux-gnu/libboost_system.so.1.67.0 ]; then
-          ln -fns /usr/lib/x86_64-linux-gnu/libboost_system.so.1.67.0 \
-                  /usr/lib/x86_64-linux-gnu/libboost_system.so.1.62.0
-        fi
-	;;
-    unconfigure)
-	rm -rf /usr/bin/mafynetti /usr/share/mafynetti /usr/share/pixmaps/mafynetti.svg /usr/share/applications/mafynetti.desktop
-	;;
-    unpack)
-	upstream_pack=$1
-	upstream_dir=$2
+    chown root:root "${upstream_dir}/opt/Mafynetti/chrome-sandbox"
+    chmod 4755 "${upstream_dir}/opt/Mafynetti/chrome-sandbox"
+    ;;
+  unconfigure)
+    rm -rf $mafynetti_links
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
 
-	dpkg -x "${upstream_pack}" "${upstream_dir}"
-	;;
-    *)
-	;;
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
 esac

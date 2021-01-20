@@ -88,6 +88,7 @@ class puavo_pkg::packages {
                               , 'promethean'
                               , 'prusaslicer'
                               , 'supertuxkart'
+                              , 'signal-desktop'
                               , 'teamviewer'
                               , 'vscode' ]
 

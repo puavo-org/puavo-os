@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+signal_links='
+  /opt/Signal
+  /usr/share/applications/signal-desktop.desktop
+  /usr/share/icons/hicolor/16x16/apps/signal-desktop.png
+  /usr/share/icons/hicolor/24x24/apps/signal-desktop.png
+  /usr/share/icons/hicolor/32x32/apps/signal-desktop.png
+  /usr/share/icons/hicolor/48x48/apps/signal-desktop.png
+  /usr/share/icons/hicolor/64x64/apps/signal-desktop.png
+  /usr/share/icons/hicolor/128x128/apps/signal-desktop.png
+  /usr/share/icons/hicolor/256x256/apps/signal-desktop.png
+  /usr/share/icons/hicolor/512x512/apps/signal-desktop.png
+  /usr/share/icons/hicolor/1024x1024/apps/signal-desktop.png
+'
+
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+
+    for f in $signal_links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fns -T "${upstream_dir}/${f}" "$f"
+    done
+
+    chown root:root "${upstream_dir}/opt/Signal/chrome-sandbox"
+    chmod 4755 "${upstream_dir}/opt/Signal/chrome-sandbox"
+    ;;
+  unconfigure)
+    rm -rf $signal_links
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac
