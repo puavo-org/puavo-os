@@ -21,6 +21,7 @@ set services {
   { autofs {
       /etc/systemd/system/multi-user.target.wants/autofs.service
         -> /usr/lib/systemd/system/autofs.service
+    }}
 
   { avahi-daemon {
       /etc/systemd/system/dbus-org.freedesktop.Avahi.service
