@@ -106,7 +106,7 @@ get_cpu_value() {
   esac
 }
 
-darkdm_systeminfo()
+darkdm_common_systeminfo()
 {
   this_image=$(cat /etc/puavo-image/name)
   this_release=$(cat /etc/puavo-image/release)
@@ -147,8 +147,28 @@ $(show_battery_status)
 product:         $(facter dmi.manufacturer) / $(facter dmi.product.name)
 serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board) / ${sku_number} (SKU)
 Windows license: $(windows_license)
-some pci devices:
+EOF
+}
+
+darkdm_short_systeminfo()
+{
+  printf "%s\n" "$common_systeminfo"
+  cat <<EOF
+some PCI devices:
 $(lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /')
+EOF
+}
+
+darkdm_long_systeminfo()
+{
+  printf "%s\n" "$common_systeminfo"
+  cat <<EOF
+
+PCI devices:
+$(lspci | sed 's/^/  /')
+
+USB devices:
+$(lsusb | sed 's/^/  /')
 EOF
 }
 
@@ -220,6 +240,11 @@ Commands:
   shell                  spawn a shell
   update                 update the local Puavo OS installation and reboot
 EOF
+}
+
+darkdm_print_short_help() {
+  darkdm_print_help \
+    | awk '$1 !~ /bios|expert|mount|reboot|preinstall|savedisk/'
 }
 
 darkdm_shell()
@@ -337,9 +362,8 @@ darkdm_menu()
 
   while true; do
     if $show_helpinfo; then
-      echo "$systeminfo"
-      darkdm_print_help \
-        | awk '$1 !~ /bios|expert|mount|reboot|preinstall|savedisk/'
+      printf "%s\n" "$short_systeminfo"
+      darkdm_print_short_help
     fi
     show_helpinfo=true
 
@@ -378,11 +402,16 @@ darkdm_menu()
       expert-preinstall)
         darkdm_install expert-preinstall || return 1
         ;;
-      help)
+      help|?)
         show_helpinfo=false
-        darkdm_print_help | more
+        darkdm_print_help
         ;;
       info)
+        if [ -z "$long_systeminfo" ]; then
+          long_systeminfo=$(darkdm_long_systeminfo)
+        fi
+        printf "%s\n" "$long_systeminfo"
+        show_helpinfo=false
         ;;
       install)
         darkdm_install || return 1
@@ -432,7 +461,9 @@ darkdm_menu()
         darkdm_update || return 1
         ;;
       *)
-        echo "Error: Invalid command '${command}'." >&2
+        echo "Error: invalid command '${command}'." >&2
+        echo
+        sleep 1
         ;;
     esac
   done
@@ -497,7 +528,9 @@ darkdm_main()
 
 echo 'Gathering system information...'
 echo
-systeminfo=$(darkdm_systeminfo 2>/dev/null || true)
+common_systeminfo=$(darkdm_common_systeminfo 2>/dev/null || true)
+short_systeminfo=$(darkdm_short_systeminfo 2>/dev/null || true)
+long_systeminfo=''
 
 while true; do
   if darkdm_main; then
