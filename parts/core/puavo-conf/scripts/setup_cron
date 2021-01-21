@@ -99,14 +99,6 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 13 06 * * * root /usr/local/sbin/puavo-fix-homedir-permissions >/dev/null 2>&1
 EOF
 
-# XXX Is this still necessary?
-cron_d_cond_enable fstrim <<'EOF'
-# Trim SSD-cached /home every night at 03:00
-SHELL=/bin/sh
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-00 03 * * * root grep -q '^/dev/mapper/cache-home /home ext4' && fstrim /home >/dev/null 2>&1
-EOF
-
 cron_infotv_display_control | cron_d_cond_enable infotv-display-control
 
 cron_d_cond_enable puavo-autopoweron <<'EOF'

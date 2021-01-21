@@ -11,7 +11,7 @@
   "puavo.networking.ddns.dhcpd_interfaces":         "ltsp*,wlan*",
   "puavo.pkg.mimio-studio":                         "do-nothing",
   "puavo.service.atop.enabled":                     "true",
-  "puavo.service.cron.cronjobs":                    "fix-homedir-permissions,fstrim,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-pkg-update,puavo-setup-bootserver-printer-restrictions,puavo-update-airprint-ddns,remove-cups-jobs",
+  "puavo.service.cron.cronjobs":                    "fix-homedir-permissions,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-pkg-update,puavo-setup-bootserver-printer-restrictions,puavo-update-airprint-ddns,remove-cups-jobs",
   "puavo.service.bind9.enabled":                    "true",
   "puavo.service.cups-watchdog.enabled":            "true",
   "puavo.service.incron.enabled":                   "true",
