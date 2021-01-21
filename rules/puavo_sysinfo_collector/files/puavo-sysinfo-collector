@@ -208,11 +208,11 @@ class SystemInfoCollector < DBus::Object
             data[:memory] = []
           end
 
-          # some lspci values
+          # lspci contents
           data[:lspci_values] = []
 
           begin
-            lspci_raw = `lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /'`
+            lspci_raw = %x(lspci)
             lspci_raw.strip.split("\n").each { |i| data[:lspci_values] << i.strip }
           rescue StandardError => e
             warn "could not get lspci output: #{e}"
@@ -223,7 +223,7 @@ class SystemInfoCollector < DBus::Object
           data[:lsusb_values] = []
 
           begin
-            lsusb_raw = `lsusb`
+            lsusb_raw = %x(lsusb)
             lsusb_raw.strip.split("\n").each { |i| data[:lsusb_values] << i.strip }
           rescue StandardError => e
             warn "could not get lsusb output: #{e}"
