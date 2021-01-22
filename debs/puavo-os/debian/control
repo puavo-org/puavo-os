@@ -126,6 +126,7 @@ Description: Puavo configuration
 Package: puavo-core
 Architecture: all
 Depends: ${misc:Depends},
+ coreutils,
  initramfs-tools,
  mawk,
  puavo-conf,

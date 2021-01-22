@@ -154,9 +154,10 @@ test -x /usr/local/sbin/puavo-cleanup-old-users || exit 0
 /usr/local/sbin/puavo-cleanup-old-users
 EOF
 
-cron_daily_cond_enable puavo-pkg-update <<'EOF'
-#!/bin/sh
-
-test -x /usr/sbin/puavo-pkg-update || exit 0
-/usr/sbin/puavo-pkg-update
+random_minute=$(shuf -i 0-59 -n 1)
+cron_d_cond_enable puavo-pkg-update <<EOF
+# Update puavo-pkg packages every hour
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+${random_minute} * * * * root /usr/sbin/puavo-pkg-update >/dev/null 2>&1
 EOF
