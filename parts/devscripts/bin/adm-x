@@ -7,7 +7,7 @@ if [ -z "${SUDO_USER:-}" ]; then
 fi
 
 default_path=
-declare -a choices
+declare -a choices user_ids
 
 xauthority_files=$(ls -rt /run/user/*/gdm/Xauthority)
 
@@ -31,6 +31,7 @@ for xauthority in $xauthority_files; do
     if [ -n "$display" ]; then
       i=$(($i + 1))
       choices[$i]="env DISPLAY=$display XAUTHORITY=$xauthority"
+      user_ids[$i]="$user_id"
       echo "    $i) $user_name ($user_id) on $tty DISPLAY=$display"
     fi
   fi
@@ -55,4 +56,13 @@ fi
 
 echo "${choices[$choice]} $@"
 
-exec ${choices[$choice]} "$@"
+case "${1:-}" in
+  x11vnc)
+    # "x11vnc" needs special treatment
+    # (must be wrapped through "sudo -u" to work)
+    exec sudo -u "#${user_ids[$choice]}" ${choices[$choice]} "$@"
+    ;;
+  *)
+    exec ${choices[$choice]} "$@"
+    ;;
+esac
