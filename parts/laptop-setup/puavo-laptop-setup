@@ -66,8 +66,6 @@ class PuavoLaptopSetup:
         self.abitti_version_any_button \
           = builder.get_object('abitti_version_any')
         self.abitti_version_entry = builder.get_object('abitti_version')
-        self.abitti_version_entry_error \
-          = builder.get_object('abitti_version_error')
 
         if self.abitti_latest_version:
             self.abitti_version_latest_button.set_label('%s (%s)' \
@@ -167,12 +165,10 @@ class PuavoLaptopSetup:
                       version_number = int(version)
                       version = 'abitti-v%d' % version_number
                   except ValueError:
-                      error_msg =  _tr('should be a number')
-                      self.abitti_version_entry_error.set_markup(
-                        '<span color="red"><b>%s</b></span>' % error_msg)
-                      return
+                      # if it is not a number, it is probably the new kind of
+                      # version string and we just let it pass
+                      pass
 
-        self.abitti_version_entry_error.set_text('')
         self.puavo_conf['puavo.abitti.version'] = version
         self.save_state_flag = True
 
