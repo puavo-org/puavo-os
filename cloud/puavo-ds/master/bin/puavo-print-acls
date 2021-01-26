@@ -121,11 +121,101 @@ set this_school_teachers [ldapset \
 # special wide rules
 
 rule {
-  # Give slave ldap servers and other servers read access to
-  # everything (in the same organisation of course) so that ldap
-  # synchronization works.
+  # Give slave ldap servers read access to everything
+  # (in the same organisation of course) so that ldap replication works.
   [dn subtree]
-      by [puavo_dn slave]       read
+      by [puavo_dn slave] read
+      by *                none break
+}
+
+#
+# We list all access rules for [dn children $Servers] first, because servers
+# need full read access to the database for ldap replication to work.
+# Now follows the write access rules to specific attributes.
+#
+
+# Samba-related rules
+
+# Servers need write to samba-related stuff for Samba to work correctly.
+
+rule {
+  [dn exact ou=Samba,ou=Hosts]
+    [attrs children]
+      by [dn children $Servers] write
+}
+
+rule {
+  [dn children ou=Samba,ou=Hosts]
+      by [dn children $Servers] write
+}
+
+rule {
+  # This is needed for all who need to create users,
+  # plus Samba in case of Windows compatibility.
+  [dn exact sambaDomainName=${samba_domain}]
+    [attrs sambaNextRid]
+      by [dn children $Servers] write
+      by *                      none break
+}
+
+rule {
+  # This is probably needed by Samba (?).
+  [dn exact ou=Idmap]
+      by [dn children $Servers] write
+}
+
+rule {
+  # Changes to "sambaNTPassword", "sambaPwdLastSet", "sambaPwdMustChange"
+  # and "sambaPwdCanChange" happen regardless of the ACLs, through
+  # smbkrb5pwd (and is thus controlled by ACLs to "userPassword").
+  [dn children $People]
+    [attrs sambaNTPassword]
+      by [dn children $Servers] write   # XXX why is this needed?
+
+      # be explicit that nobody should have permissions to this
+      by * none
+}
+
+# Samba-related rule under ou=People
+rule {
+  [dn children $People]
+    [attrs sambaAcctFlags]
+      by [dn children $Servers] write
+      by *                      none break
+}
+
+rule {
+  # Allow servers to write "puavoDeviceHWInfo" to all netbooting devices.
+  # This is because they can act as proxies for fatclients.
+  [dn children $Devices]
+    # XXX This is only needed by puavoNetbootDevices.
+    # XXX Unfortunately laptops on old versions try to write through
+    # XXX bootservers instead of directly to cloud puavo-rest/ldapmaster,
+    # XXX thus we can not yet filter by "(objectClass=puavoNetbootDevice)".
+    # XXX Apply the filter again maybe on year 2022.
+    # filter="(objectClass=puavoNetbootDevice)"
+    [attrs puavoDeviceHWInfo]
+      by [dn children $Servers] write
+      by *                      none break
+}
+
+rule {
+  [dn exact $Printers]
+    [attrs children]
+      by [dn children $Servers] write	# for puavo-sync-printers
+      by *                      none break
+}
+
+rule {
+  [dn children $Printers]
+      by [dn children $Servers] write	# for puavo-sync-printers
+      by *                      none break
+}
+
+rule {
+  # Give servers read access to everything (in the same organisation
+  # of course) so that ldap replication works.
+  [dn subtree]
       by [dn children $Servers] read
       by *                      none break
 }
@@ -196,51 +286,22 @@ rule {
       by anonymous   auth
 }
 
-# Samba-related rules
-
-# Servers need write to samba-related stuff for Samba to work correctly.
-
-rule {
-  [dn exact ou=Samba,ou=Hosts]
-    [attrs entry objectClass ou]
-      by [dn children $Servers] read
-}
-
-rule {
-  [dn exact ou=Samba,ou=Hosts]
-    [attrs children]
-      by [dn children $Servers] write
-}
-
-rule {
-  [dn children ou=Samba,ou=Hosts]
-      by [dn children $Servers] write
-}
-
 rule {
   # This is needed for all who need to create users,
   # plus Samba in case of Windows compatibility.
   [dn exact sambaDomainName=${samba_domain}]
     [attrs sambaNextRid]
-      by $org_owners            write
-      by $admins                write
-      by $staff                 write	# XXX maybe just remove this?
-      by [dn children $Servers] write
-      by *                      none break
+      by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
+      by *           none break
 }
 
 rule {
   [dn exact sambaDomainName=${samba_domain}]
-      by $org_owners            write
-      by $admins                read
-      by $staff                 read	# XXX maybe just remove this?
-      by [dn children $Servers] read
-}
-
-rule {
-  # This is probably needed by Samba (?).
-  [dn exact ou=Idmap]
-      by [dn children $Servers] write
+      by $org_owners write
+      by $admins     read
+      by $staff      read	# XXX maybe just remove this?
 }
 
 rule {
@@ -306,31 +367,10 @@ rule {
       by $staff      write	# XXX maybe just remove this?
 }
 
-# Samba-related rules under ou=People
-
-rule {
-  # Changes to "sambaNTPassword", "sambaPwdLastSet", "sambaPwdMustChange"
-  # and "sambaPwdCanChange" happen regardless of the ACLs, through
-  # smbkrb5pwd (and is thus controlled by ACLs to "userPassword").
-  [dn children $People]
-    [attrs sambaNTPassword]
-      by [dn children $Servers] write   # XXX why is this needed?
-
-      # be explicit that nobody should have permissions to this
-      by * none
-}
-
-rule {
-  [dn children $People]
-    [attrs sambaAcctFlags]
-      by [dn children $Servers] write
-      by *                      none break
-}
-
 # rules for ou=Hosts (and subtrees)
 
 # give wide read access to these device-related puavo DNs
-# (not that these can not look under ou=Samba,ou=Hosts)
+# (note that these can not look under ou=Samba,ou=Hosts)
 rule {
   [dn subtree $Hosts]
       by [puavo_dn monitor]      read
@@ -362,21 +402,6 @@ rule {
       by [dn children $People] read
       by [dn children $Hosts]  read
       by anonymous             auth
-}
-
-rule {
-  # Allow servers to write "puavoDeviceHWInfo" to all netbooting devices.
-  # This is because they can act as proxies for fatclients.
-  [dn children $Devices]
-    # XXX This is only needed by puavoNetbootDevices.
-    # XXX Unfortunately laptops on old versions try to write through
-    # XXX bootservers instead of directly to cloud puavo-rest/ldapmaster,
-    # XXX thus we can not yet filter by "(objectClass=puavoNetbootDevice)".
-    # XXX Apply the filter again maybe on year 2022.
-    # filter="(objectClass=puavoNetbootDevice)"
-    [attrs puavoDeviceHWInfo]
-      by [dn children $Servers] write
-      by *                      none break
 }
 
 rule {
@@ -475,7 +500,6 @@ rule {
   [dn exact $Printers]
     [attrs entry objectClass ou]
       by $org_owners                 read
-      by [dn children $Servers]      read
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
@@ -484,7 +508,6 @@ rule {
   [dn exact $Printers]
     [attrs children]
       by $org_owners                 write
-      by [dn children $Servers]      write	# for puavo-sync-printers
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
@@ -492,7 +515,6 @@ rule {
 rule {
   [dn children $Printers]
       by $org_owners                 write
-      by [dn children $Servers]      write	# for puavo-sync-printers
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
