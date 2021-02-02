@@ -2,7 +2,7 @@
 
 import os
 import logging
-import glob
+from pathlib import Path
 import time
 import utils
 
@@ -129,12 +129,12 @@ def update(base_dir,     # where user programs are located in
     seen = set()
 
     # Detect new and changed files
-    for name in glob.glob(os.path.join(base_dir, '*.desktop'), recursive=False):
+    for name in Path(base_dir).rglob('*.desktop'):
         # Need some kind of a unique ID for this program. Use the original
         # filename and prefix it with something that can be used only
         # internally. Assume the original .desktop file name contains
         # something that can be used to uniquely identify the program.
-        basename = os.path.splitext(os.path.basename(name))[0]
+        basename = os.path.splitext(name.name)[0]
         program_id = 'user-program-' + basename
 
         try:
