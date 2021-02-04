@@ -355,6 +355,15 @@ class PuavoMenu(Gtk.Window):
             else:
                 self.__show_empty_message(STRINGS['menu_no_data_at_all_dev'])
 
+        # Start monitoring the user programs directory
+        try:
+            self.__userprogs_thread = user_programs.UpdaterThread(self.__settings.socket)
+            self.__userprogs_thread.daemon = True
+            self.__userprogs_thread.start()
+        except Exception as exception:
+            logging.error('Could not create the user programs updater thread: %s',
+                          str(exception))
+
         # ----------------------------------------------------------------------
 
         end_time = time.perf_counter()

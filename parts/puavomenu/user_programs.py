@@ -4,8 +4,10 @@ import os
 import logging
 from pathlib import Path
 import time
-import utils
+import threading
+import socket
 
+import utils
 import menudata
 import loaders.menudata_loader as menudata_loader
 import loaders.dotdesktop_loader
@@ -35,7 +37,7 @@ def __load_user_program(program,            # a UserProgram instance
     # If the .desktop file was created by us, reject it, because
     # otherwise we'd end up creating loops
     if 'X-Puavomenu-Created' in desktop_data['Desktop Entry']:
-        logging.warning(
+        logging.info(
             '.desktop file "%s" was created by us, not adding it to the user programs list',
             filename
         )
@@ -137,6 +139,11 @@ def update(base_dir,     # where user programs are located in
         basename = os.path.splitext(name.name)[0]
         program_id = 'user-program-' + basename
 
+        if program_id in seen:
+            # If you want to duplicate programs, you have to rename
+            # their .desktop files
+            continue
+
         try:
             s = os.stat(name)
 
@@ -151,11 +158,11 @@ def update(base_dir,     # where user programs are located in
                                            icon_cache, language):
                         program.modified = s.st_mtime
                         program.size = s.st_size
+                        something_changed = True
                     else:
                         logging.error('Changed user program "%s" not updated', name)
 
                 seen.add(program_id)
-                something_changed = True
             else:
                 # A new .desktop file has been added
                 program = menudata.UserProgram()
@@ -211,3 +218,28 @@ def update(base_dir,     # where user programs are located in
                            start_time, end_time)
 
     return something_changed
+
+
+class UpdaterThread(threading.Thread):
+    # How long to wait between updates, in seconds
+    UPDATE_WAIT = 60 * 5
+
+    def __init__(self, socket_file):
+        super().__init__()
+        self.socket_file = socket_file
+        logging.info('User programs update thread started')
+
+
+    def run(self):
+        while True:
+            time.sleep(self.UPDATE_WAIT)
+
+            # Send the message through the socket instead of calling the update method
+            # directly. Avoids thread concurrency problems. Maybe. I hope.
+            try:
+                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                sock.connect(self.socket_file)
+                sock.send(b'reload-userprogs')
+                sock.close()
+            except Exception as exception:
+                logging.error('Failed to update user programs: %s', str(exception))
