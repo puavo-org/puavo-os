@@ -328,10 +328,17 @@ def get_user_icon_dirs():
 
     for dir_tuple in os.walk(user_icons_root):
         name = dir_tuple[0]
+        size = -1
 
         try:
             # extract SIZE from ".local/share/icons/SIZExSIZE/..."
-            size = int(number_extractor.search(name).group(0))
+            result = number_extractor.search(name)
+
+            if result:
+                group = result.group(0)
+
+                if group:
+                    size = int(group)
         except BaseException as e:
             logging.warning(
                 'list_user_icon_dirs(): could not extract icon size from "%s": %s',
