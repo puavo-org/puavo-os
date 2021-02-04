@@ -51,7 +51,4 @@ else
         --user_progs "${USER_PROGS}" \
         --socket "${XDG_RUNTIME_DIR}/puavomenu" \
         &
-
-    # Monitor the contents of the user programs directory
-    /opt/puavomenu/monitor-userprogs "${USER_PROGS}" "${XDG_RUNTIME_DIR}/puavomenu" &
 fi

@@ -1,17 +1,8 @@
-CC=gcc
-CFLAGS=-s -O2 -Wall -Wextra -pedantic -std=c99
-
-.PHONY: all
-all: monitor-userprogs
-
-monitor-userprogs: monitor-userprogs.c
-
 .PHONY: build
-build: monitor-userprogs
+build:
 
 .PHONY: clean
 clean:
-	rm -rf monitor-userprogs
 
 .PHONY: install-dirs
 install-dirs:
