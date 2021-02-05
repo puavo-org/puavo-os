@@ -1,0 +1,49 @@
+Source: aria2
+Section: net
+Priority: optional
+Maintainer: Patrick Ruckstuhl <patrick@ch.tario.org>
+Uploaders: Kartik Mistry <kartik@debian.org>
+Build-Depends: dpkg-dev (>= 1.16.1.1),
+               libc-ares-dev,
+               libgcrypt20-dev | libgcrypt-dev,
+               libgnutls28-dev,
+               libsqlite3-dev,
+               libssh2-1-dev,
+               libxml2-dev,
+               pkg-config,
+               zlib1g-dev | libz-dev
+Standards-Version: 4.5.1
+Homepage: https://aria2.github.io/
+Vcs-Git: https://salsa.debian.org/debian/aria2.git
+Vcs-Browser: https://salsa.debian.org/debian/aria2
+Rules-Requires-Root: no
+
+Package: aria2
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Recommends: ca-certificates
+Description: High speed download utility
+ Aria2 is a command line download client with resuming and
+ segmented downloading. Supported protocols are HTTP/HTTPS/
+ SFTP/FTP/BitTorrent and it also supports Metalink.
+
+Package: libaria2-0
+Section: libs
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: C++ library interface to aria2
+ This C++ library offers interface to the core functionality
+ of aria2 like networking and downloading.
+
+Package: libaria2-0-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: libaria2-0 (= ${binary:Version}), ${misc:Depends}
+Description: High speed download utility (Development files)
+ Aria2 is a command line download client with resuming and
+ segmented downloading. Supported protocols are HTTP/HTTPS/
+ SFTP/FTP/BitTorrent and it also supports Metalink.
+ .
+ This package provides development files for libaria2.
