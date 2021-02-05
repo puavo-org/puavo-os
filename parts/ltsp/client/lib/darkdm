@@ -56,7 +56,7 @@ show_battery_status() {
                     2>/dev/null || true)
 
   battery_capacity=$(printf "%s" "$upower_output" \
-    | awk '$1 == "capacity:" { sub(/%$/, "", $2); print $2 }')
+    | awk '$1 == "capacity:" { sub(/%$/, "", $2); printf "%d\n", $2 }')
 
   if [ -z "$battery_capacity" ]; then
     status='NONE'
