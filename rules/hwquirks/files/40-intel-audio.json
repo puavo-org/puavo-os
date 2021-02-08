@@ -1,0 +1,11 @@
+[
+  {
+    "key": "pci-id",
+    "matchmethod": "exact",
+    "pattern": "8086:02c8",
+    "parameters": {
+      "puavo.audio.pa.alsa.sink": "device=hw:0,0 channels=4",
+      "puavo.audio.pa.alsa.source": "device=hw:0,6 channels=4"
+    }
+  }
+]

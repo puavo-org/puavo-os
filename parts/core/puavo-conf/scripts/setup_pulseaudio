@@ -153,6 +153,20 @@ EOF
     echo '# no pulseaudio setup in puavo-conf, using module-switch-on-connect'
     echo 'load-module module-switch-on-connect'
   fi
+
+  alsa_sink="$(puavo-conf puavo.audio.pa.alsa.sink)"
+  if [ -n "$alsa_sink" ]; then
+    echo
+    echo '# alsa sink from puavo-conf'
+    echo "load-module module-alsa-sink ${alsa_sink}"
+  fi
+
+  alsa_source="$(puavo-conf puavo.audio.pa.alsa.source)"
+  if [ -n "$alsa_source" ]; then
+    echo
+    echo '# alsa source from puavo-conf'
+    echo "load-module module-alsa-source ${alsa_source}"
+  fi
 } > /etc/pulse/default.pa.tmp
 
 mv /etc/pulse/default.pa.tmp /etc/pulse/default.pa
