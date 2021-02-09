@@ -44,9 +44,9 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites
 	mkdir -p $(DESTDIR)$(datarootdir)/wayland-sessions
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
+	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
-	mkdir -p $(DESTDIR)/lib/systemd/system
 
 .PHONY : install
 install : installdirs
@@ -122,17 +122,17 @@ install : installdirs
 		pam/puavo-setup-primary-user \
 		pam/restrict-logins-if-personally-administered
 
-	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
+	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system \
 		systemd/*
 
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
-		/lib/systemd/system/puavo-darkdm.service
+		/usr/lib/systemd/system/puavo-darkdm.service
 
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
-		/lib/systemd/system/puavo-report-system-version.service
+		/usr/lib/systemd/system/puavo-report-system-version.service
 
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
-		/lib/systemd/system/puavo-update-mime-database.service
+		/usr/lib/systemd/system/puavo-update-mime-database.service
 
 
 .PHONY : clean

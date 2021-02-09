@@ -23,7 +23,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)/boot/efi    # needed by puavo-install-grub
 	mkdir -p $(DESTDIR)/images      # needed by puavo-image-preinst
-	mkdir -p $(DESTDIR)/lib/systemd/system
+	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
@@ -54,10 +54,10 @@ install : installdirs
 		lib/update-images \
 		lib/update-ltspimage-update-stats
 
-	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
+	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system \
 		dbus-1/puavo-update.service
 
-	ln -fs /lib/systemd/system/puavo-update.service \
+	ln -fs /usr/lib/systemd/system/puavo-update.service \
 		$(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants/puavo-update.service
 
 .PHONY : clean
