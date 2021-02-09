@@ -177,6 +177,13 @@ set services {
         -> /lib/systemd/system/puavo-tftpd.service
     }}
 
+  { puavo-torrent-updated {
+      /etc/systemd/system/multi-user.target.wants/puavo-torrent-updated.service
+        -> /lib/systemd/system/puavo-torrent-updated.service
+      /etc/systemd/system/sockets.target.wants/puavo-torrent-updated.socket
+        -> /lib/systemd/system/puavo-torrent-updated.socket
+    }}
+
   { puavo-vpn-client-dnsmasq {
       /etc/systemd/system/multi-user.target.wants/puavo-vpn-client-dnsmasq.service
         -> /lib/systemd/system/puavo-vpn-client-dnsmasq.service

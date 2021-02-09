@@ -8,6 +8,7 @@
   "puavo.service.cron.cronjobs"                   : "puavo-cleanup-old-users,puavo-nightly-updates,puavo-pkg-update",
   "puavo.service.ModemManager.enabled"            : "true",
   "puavo.service.NetworkManager.enabled"          : "true",
+  "puavo.service.puavo-torrent-updated.enabled"   : "true",
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": "true",
   "puavo.service.puavo-vpn-client-openvpn.enabled": "true",
   "puavo.service.tlp.enabled"                     : "true",
