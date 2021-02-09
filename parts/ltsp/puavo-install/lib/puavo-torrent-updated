@@ -1,20 +1,163 @@
 #!/usr/bin/ruby
 
+require 'fcntl'
+require 'open3'
 require 'socket'
 require 'syslog'
 
-server_socket = Socket.for_fd(3)
+Target_dir = '/images/rdiffs'
+Urlbase = 'https://cdn.opinsys.net'     # XXX this might be something different
+
+def start_torrent_download(filename)
+  url = "#{ Urlbase }/#{ filename }"
+
+  torrent_filename = "#{ filename }.torrent"
+  filename_fp = "#{ Target_dir }/#{ filename }"
+  tmpfile = "#{ filename_fp }.tmp"
+
+  aria2_args = [ '/usr/bin/env',
+                 'LANG=C',
+                 'aria2c',
+                 '--bt-enable-lpd=true',
+                 '--bt-stop-timeout=300',
+                 '--ca-certificate=/etc/puavo-conf/rootca.pem',
+                 '--check-integrity=true',
+                 '--enable-color=false',
+                 '--human-readable=false',
+                 '--no-conf=true',
+                 '--file-allocation=none',               # XXX is this good?
+                 '--follow-torrent=mem',
+                 "--index-out=1=#{ tmpfile }",
+                 '--max-overall-download-limit=10M',     # XXX use rate limit
+                 '--max-overall-upload-limit=10M',       # XXX use rate limit
+                 '--seed-ratio=0.0',
+                 '--summary-interval=1',
+                 url ]
+
+  # XXX we probably need --on-download-complete= as well so that we know
+  # XXX when we can proceed (rename file and such)
+
+  Syslog.log(Syslog::LOG_NOTICE,
+             'starting aria2c with args %s', aria2_args.join(' '))
+
+  Open3.popen3(*aria2_args)
+end
+
+def process_messages_from_aria_to_client(aria_msg, client_socket)
+  aria_msg.split("\n").each do |line|
+    fields = line.split
+    next unless fields[1] && fields[5] && fields[5].match(/^ETA/)
+
+    match = fields[1].match(/\((\d+)%\)$/)
+    if match then
+      new_progress = match[1]
+      if new_progress != $current_progress then
+        $current_progress = new_progress
+        Syslog.log(Syslog::LOG_NOTICE, 'progress is now %d', $current_progress)
+      end
+    end
+  end
+end
 
 Syslog.open( File.basename($0) )
 
-Socket.accept_loop(server_socket) do |client_socket, addr|
-  Syslog.log(Syslog::LOG_NOTICE,
-             "got a new connection from client=#{ client_socket.inspect } addr=#{ addr.inspect }")
-  # XXX this is a blocking read, is that okay?
-  filename = client_socket.read.chomp
+client_socket = nil
+read_filename = false
+server_socket = Socket.for_fd(3)
 
-  client_socket.print("hello there, we should get '#{ filename }' now\n")
-  client_socket.close()
+aria2_stdin    = nil
+aria2_stdout   = nil
+aria2_stderr   = nil
+aria2_wait_thr = nil
+
+$current_progress = nil
+
+while true do
+  readable = [ server_socket ]
+  writeable = []
+
+  if client_socket then
+    readable << client_socket if read_filename
+    # XXX this writeable should only be added if there is something to say
+    # writeable << client_socket
+  end
+
+  readable << aria2_stdout if aria2_stdout
+  readable << aria2_stderr if aria2_stderr
+
+  ios = IO.select(readable, writeable)
+
+  Syslog.log(Syslog::LOG_NOTICE, "got ios #{ ios.inspect }")
+
+  if ios[0].include?(server_socket) then
+    if client_socket then
+      # XXX should shutdown current aria2 instance and client_socket with error
+    end
+
+    client_socket, client_addr = server_socket.accept_nonblock
+    filename_to_download = ''
+    read_filename = true
+
+    Syslog.log(Syslog::LOG_NOTICE, "got client socket #{ client_socket.inspect }")
+  end
+
+  if ios[0].include?(client_socket) then
+    # XXX we should quit the previous aria2 process in case there is one
+    # XXX and a new request is coming
+
+    begin
+      filename_to_download += client_socket.read_nonblock(1024)
+    rescue EOFError
+      filename_to_download.chomp!
+      Syslog.log(Syslog::LOG_NOTICE,
+                 "got filename '%s' filename_to_download } from client",
+                 filename_to_download)
+      client_socket.shutdown(:RD)
+      read_filename = false
+
+      $current_progress = nil
+      aria2_stdin, aria2_stdout, aria2_stderr, aria2_wait_thr \
+        = start_torrent_download(filename_to_download)
+      aria2_stdin.fcntl(Fcntl::F_SETFL, Fcntl::O_NONBLOCK)
+      aria2_stdout.fcntl(Fcntl::F_SETFL, Fcntl::O_NONBLOCK)
+      aria2_stderr.fcntl(Fcntl::F_SETFL, Fcntl::O_NONBLOCK)
+    end
+  end
+
+  if ios[0].include?(aria2_stdout) then
+    begin
+      # XXX nonblocking read lengths?
+      outmsg_from_aria2 = aria2_stdout.read_nonblock(1024)
+      process_messages_from_aria_to_client(outmsg_from_aria2, client_socket)
+    rescue EOFError, IOError
+      Syslog.log(Syslog::LOG_NOTICE,
+                 'we got stdout messages from aria2: %s', outmsg_from_aria2)
+      aria2_stdout.close
+      aria2_stdout = nil
+    end
+  end
+
+  if ios[0].include?(aria2_stderr) then
+    begin
+      # XXX nonblocking read lengths?
+      errmsg_from_aria2 = aria2_stderr.read_nonblock(1024)
+    rescue EOFError, IOError
+      Syslog.log(Syslog::LOG_NOTICE,
+                 'we got stderr messages from aria2: %s', errmsg_from_aria2)
+      aria2_stderr.close
+      aria2_stderr = nil
+    end
+  end
+
+  if aria2_wait_thr && !aria2_stdout && !aria2_stderr then
+    Syslog.log(Syslog::LOG_NOTICE,
+               'we got status from aria: %s', aria2_wait_thr.value)
+    aria2_wait_thr = nil
+  end
+
+  # XXX this sleep should not be here (in case this works correctly) ...
+  # XXX but for development phase I want to avoid busy loops
+  sleep 1
 end
 
 Syslog.close()
