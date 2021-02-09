@@ -25,6 +25,7 @@ installdirs :
 	mkdir -p $(DESTDIR)/images      # needed by puavo-image-preinst
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/sockets.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
@@ -50,12 +51,22 @@ install : installdirs
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-image-preinst \
+		lib/puavo-torrent-updated \
 		lib/update-configuration \
 		lib/update-images \
 		lib/update-ltspimage-update-stats
 
 	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system \
 		dbus-1/puavo-update.service
+
+	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system \
+		systemd/*
+
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
+		/usr/lib/systemd/system/puavo-torrent-updated.service
+
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/sockets.target.wants \
+		/usr/lib/systemd/system/puavo-torrent-updated.socket
 
 	ln -fs /usr/lib/systemd/system/puavo-update.service \
 		$(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants/puavo-update.service
