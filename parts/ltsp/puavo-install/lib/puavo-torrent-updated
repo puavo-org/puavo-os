@@ -1,0 +1,20 @@
+#!/usr/bin/ruby
+
+require 'socket'
+require 'syslog'
+
+server_socket = Socket.for_fd(3)
+
+Syslog.open( File.basename($0) )
+
+Socket.accept_loop(server_socket) do |client_socket, addr|
+  Syslog.log(Syslog::LOG_NOTICE,
+             "got a new connection from client=#{ client_socket.inspect } addr=#{ addr.inspect }")
+  # XXX this is a blocking read, is that okay?
+  filename = client_socket.read.chomp
+
+  client_socket.print("hello there, we should get '#{ filename }' now\n")
+  client_socket.close()
+end
+
+Syslog.close()

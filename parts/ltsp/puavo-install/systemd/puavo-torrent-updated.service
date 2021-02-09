@@ -1,0 +1,9 @@
+[Unit]
+Description=Puavo Torrent Update Daemon
+Requires=puavo-torrent-updated.socket
+
+[Service]
+ExecStart=/usr/lib/puavo-ltsp-install/puavo-torrent-updated
+Type=simple
+User=puavo-update
+Group=puavo-update
