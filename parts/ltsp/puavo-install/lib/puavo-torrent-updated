@@ -9,13 +9,13 @@ Target_dir = '/images/rdiffs'
 Urlbase = 'https://cdn.opinsys.net'     # XXX this might be something different
 
 class Aria
-  attr_reader :filename, :stdout, :wait_thr
+  attr_reader :filename, :last_msgs, :progress, :stdout, :wait_thr
 
   def initialize(filename)
     @filename = filename
-
-    @outmsg = ''
-    @errmsg = ''
+    @last_msgs = []
+    @outmsg   = ''
+    @progress = nil
 
     start_download
   end
@@ -60,31 +60,31 @@ class Aria
 
   def read_stdout
     begin
+      new_outmsg = ''
       @outmsg += @stdout.read_nonblock(1024)
+      @outmsg.each_line do |line|
+        update_progress(line)
+        if line.match(/\n$/) then
+          @last_msgs = (@last_msgs + [ line ]).last(8)
+        else
+          new_outmsg = line
+        end
+      end
+      @outmsg = new_outmsg
     rescue EOFError, IOError
-      Syslog.log(Syslog::LOG_NOTICE,
-                 'we got stdout messages from aria2: %s', @outmsg)
       @stdout.close
       @stdout = nil
     end
   end
 
-  def get_progress
-    # XXX we can remove old messages from the queue, no need to go through
-    # XXX the old ones...
+  def update_progress(line)
+    fields = line.split
+    return unless fields[1] && fields[5] && fields[5].match(/^ETA/)
 
-    progress = nil
-    @outmsg.split("\n").each do |line|
-      fields = line.split
-      next unless fields[1] && fields[5] && fields[5].match(/^ETA/)
-
-      match = fields[1].match(/\((\d+)%\)$/)
-      if match then
-        progress = match[1]
-      end
+    match = fields[1].match(/\((\d+)%\)$/)
+    if match then
+      @progress = match[1]
     end
-
-    progress
   end
 
   def stop
@@ -174,7 +174,7 @@ class Server
     if @aria then
       @aria.read_stdout if @aria.stdout && ios[0].include?(@aria.stdout)
 
-      new_progress = @aria.get_progress
+      new_progress = @aria.progress
       if new_progress != @current_progress then
         @current_progress = new_progress
         @write_progress = true
@@ -183,8 +183,12 @@ class Server
 
       if @aria.wait_thr && !@aria.stdout then
         status = @aria.wait_thr.value
-        Syslog.log(Syslog::LOG_NOTICE, 'we got exit code from aria: %s',
-                                       status.exitstatus)
+        unless status.success? then
+          Syslog.log(Syslog::LOG_ERR,
+                     'we got FAILED status code from aria2c (%d): %s',
+                     status.exitstatus,
+                     @aria.last_msgs.join)
+        end
         @aria = nil
         @client_socket.write_nonblock(status.success? ? "OK\n" : "FAIL\n")
         @client_socket.close
