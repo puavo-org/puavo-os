@@ -21,7 +21,7 @@ class Aria
   end
 
   def start_download
-    url = "#{ Urlbase }/#{ @filename }"
+    url = "#{ Urlbase }/#{ @filename }.torrent"
 
     torrent_filename = "#{ @filename }.torrent"
     filename_fp = "#{ Target_dir }/#{ @filename }"
@@ -45,6 +45,8 @@ class Aria
                   '--max-overall-download-limit=10M',     # XXX use rate limit
                   '--max-overall-upload-limit=10M',       # XXX use rate limit
                   '--seed-ratio=0.0',
+                  '--seed-time=0',      # XXX this should go away once we
+                                        # XXX know how
                   '--summary-interval=1',
                   url ]
 
@@ -65,7 +67,7 @@ class Aria
       @outmsg.each_line do |line|
         update_progress(line)
         if line.match(/\n$/) then
-          @last_msgs = (@last_msgs + [ line ]).last(8)
+          @last_msgs = (@last_msgs + [ line ]).last(20)
         else
           new_outmsg = line
         end
@@ -143,7 +145,6 @@ class Server
     end
 
     if ios[1].include?(@client_socket) then
-      Syslog.log(Syslog::LOG_INFO, 'writing progress to client')
       @client_socket.write_nonblock("#{ @current_progress }\n")
       @write_progress = false
     end
@@ -178,12 +179,19 @@ class Server
       if new_progress != @current_progress then
         @current_progress = new_progress
         @write_progress = true
-        Syslog.log(Syslog::LOG_INFO, 'progress is now %s', @current_progress)
+        Syslog.log(Syslog::LOG_INFO,
+                   "download progress for '%s' is now %s%",
+                   @aria.filename,
+                   @current_progress)
       end
 
       if @aria.wait_thr && !@aria.stdout then
         status = @aria.wait_thr.value
-        unless status.success? then
+        if status.success? then
+          Syslog.log(Syslog::LOG_ERR,
+                     "we have downloaded '%s' successfully",
+                     @aria.filename)
+        else
           Syslog.log(Syslog::LOG_ERR,
                      'we got FAILED status code from aria2c (%d): %s',
                      status.exitstatus,
