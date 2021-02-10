@@ -9,7 +9,7 @@ Target_dir = '/images/rdiffs'
 Urlbase = 'https://cdn.opinsys.net'     # XXX this might be something different
 
 class Aria
-  attr_reader :stdout, :stderr, :wait_thr
+  attr_reader :stdout, :wait_thr
 
   def initialize(filename)
     @filename = filename
@@ -54,10 +54,8 @@ class Aria
     Syslog.log(Syslog::LOG_NOTICE,
                'starting aria2c with args %s', aria_args.join(' '))
 
-    @stdin, @stdout, @stderr, @wait_thr = Open3.popen3(*aria_args)
-    @stdin.fcntl(Fcntl::F_SETFL, Fcntl::O_NONBLOCK)
-    @stdout.fcntl(Fcntl::F_SETFL, Fcntl::O_NONBLOCK)
-    @stderr.fcntl(Fcntl::F_SETFL, Fcntl::O_NONBLOCK)
+    stdin, @stdout, stderr, @wait_thr \
+      = Open3.popen3(*aria_args, :err => '/dev/null', :in  => '/dev/null')
   end
 
   def read_stdout
@@ -68,17 +66,6 @@ class Aria
                  'we got stdout messages from aria2: %s', @outmsg)
       @stdout.close
       @stdout = nil
-    end
-  end
-
-  def read_stderr
-    begin
-      @errmsg += @stderr.read_nonblock(1024)
-    rescue EOFError, IOError
-      Syslog.log(Syslog::LOG_NOTICE,
-                 'we got stderr messages from aria2: %s', @errmsg)
-      @stderr.close
-      @stderr = nil
     end
   end
 
@@ -105,9 +92,7 @@ class Aria
     # XXX and then wait for status
     # use @wait_thr
 
-    @stdin.close  if @stdin
     @stdout.close if @stdout
-    @stderr.close if @stderr
   end
 end
 
@@ -136,7 +121,6 @@ class Server
 
     if @aria then
       readable << @aria.stdout if @aria.stdout
-      readable << @aria.stderr if @aria.stderr
     end
 
     ios = IO.select(readable, writeable)
@@ -179,7 +163,6 @@ class Server
 
     if @aria then
       @aria.read_stdout if @aria.stdout && ios[0].include?(@aria.stdout)
-      @aria.read_stderr if @aria.stderr && ios[0].include?(@aria.stderr)
 
       new_progress = @aria.get_progress
       if new_progress != @current_progress then
@@ -188,7 +171,7 @@ class Server
         Syslog.log(Syslog::LOG_NOTICE, 'progress is now %s', @current_progress)
       end
 
-      if @aria.wait_thr && !@aria.stdout && !@aria.stderr then
+      if @aria.wait_thr && !@aria.stdout then
         status = @aria.wait_thr.value
         Syslog.log(Syslog::LOG_NOTICE, 'we got status from aria: %s', status)
         @aria.stop
