@@ -9,7 +9,7 @@ Target_dir = '/images/rdiffs'
 Urlbase = 'https://cdn.opinsys.net'     # XXX this might be something different
 
 class Aria
-  attr_reader :stdout, :wait_thr
+  attr_reader :filename, :stdout, :wait_thr
 
   def initialize(filename)
     @filename = filename
@@ -88,11 +88,12 @@ class Aria
   end
 
   def stop
-    # XXX should send some term signal to pid if it still exists
-    # XXX and then wait for status
-    # use @wait_thr
+    if @wait_thr.alive? then
+      Process.kill('TERM', @wait_thr.pid)
+    end
 
     @stdout.close if @stdout
+    @stdout = nil
   end
 end
 
@@ -128,20 +129,22 @@ class Server
     if ios[0].include?(@server_socket) then
       Syslog.log(Syslog::LOG_INFO, 'new client connection')
       if @client_socket then
-        # XXX Should shutdown current aria2 instance and client_socket
-        # XXX with error.  At least the process should be killed.
-        @aria.stop
-        @aria = nil
+        Syslog.log(Syslog::LOG_INFO, 'breaking old client connection')
+        @client_socket.close()
+        @client_socket = nil
       end
 
       @client_socket, client_addr = @server_socket.accept_nonblock
       @filename_to_download = ''
       @read_filename = true
+
+      # @client_socket has been switched, must return
+      return
     end
 
     if ios[1].include?(@client_socket) then
       Syslog.log(Syslog::LOG_INFO, 'writing progress to client')
-      @client_socket.write("#{ @current_progress }\n")
+      @client_socket.write_nonblock("#{ @current_progress }\n")
       @write_progress = false
     end
 
@@ -157,7 +160,14 @@ class Server
         @read_filename = false
 
         @current_progress = nil
-        @aria = Aria.new(@filename_to_download)
+
+        if @aria && @aria.filename != @filename_to_download then
+          @aria.stop
+          @aria = nil
+        end
+        if !@aria then
+          @aria = Aria.new(@filename_to_download)
+        end
       end
     end
 
@@ -168,15 +178,15 @@ class Server
       if new_progress != @current_progress then
         @current_progress = new_progress
         @write_progress = true
-        Syslog.log(Syslog::LOG_NOTICE, 'progress is now %s', @current_progress)
+        Syslog.log(Syslog::LOG_INFO, 'progress is now %s', @current_progress)
       end
 
       if @aria.wait_thr && !@aria.stdout then
         status = @aria.wait_thr.value
-        Syslog.log(Syslog::LOG_NOTICE, 'we got status from aria: %s', status)
-        @aria.stop
+        Syslog.log(Syslog::LOG_NOTICE, 'we got exit code from aria: %s',
+                                       status.exitstatus)
         @aria = nil
-        @client_socket.write(status.success? ? "OK\n" : "FAIL\n")
+        @client_socket.write_nonblock(status.success? ? "OK\n" : "FAIL\n")
         @client_socket.close
       end
     end
