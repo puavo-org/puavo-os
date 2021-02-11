@@ -258,11 +258,6 @@ while true do
     Syslog.log(Syslog::LOG_ERR, 'we got some unexpected error: %s', e.message)
     exit(1)
   end
-
-  # XXX This sleep should not be here (in case this works correctly) ...
-  # XXX but for development phase I want to avoid busy possible loops.
-  # XXX Or should it just be kept? (it needlessly slows down operations)
-  sleep 1
 end
 
 Syslog.close()
