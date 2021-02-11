@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'open3'
+require 'puavo/conf'
 require 'socket'
 require 'syslog'
 
@@ -19,22 +20,36 @@ class Aria
     start_download
   end
 
+  def get_ratelimit
+    puavoconf = Puavo::Conf.new
+    rate_limit = puavoconf.get('puavo.image.download.ratelimit')
+    puavoconf.close
+
+    rate_limit = nil if rate_limit == ''
+
+    if rate_limit then
+      if !rate_limit.match(/^[0-9]+[km]$/) then
+        raise "the rate limit was not understood, got '#{ rate_limit }'"
+      end
+      rate_limit.upcase!        # aria2c(1) says uppercase letters must be used
+    end
+
+    rate_limit
+  end
+
   def start_download
     url = "#{ Urlbase }/#{ @filename }.torrent"
 
     torrent_filename = "#{ @filename }.torrent"
-    @filename_fp = "#{ Target_dir }/#{ @filename }"
-    @tmpfile = "#{ @filename_fp }.tmp"
+    filename_fp = "#{ Target_dir }/#{ @filename }"
+    tmpfile = "#{ filename_fp }.tmp"
 
-    # XXX we should maybe use rate limit from puavo-conf ?
-
-    torrent_update_pid = Process.pid
     download_complete_path \
       = '/usr/lib/puavo-ltsp-install/puavo-torrent-download-complete'
 
     aria_args = [ '/usr/bin/env',
                   'LANG=C',
-                  "PUAVO_TORRENT_UPDATE_PID=#{ torrent_update_pid }",
+                  "PUAVO_TORRENT_UPDATE_PID=#{ Process.pid }",
                   'aria2c',
                   '--bt-enable-lpd=true',
                   '--bt-stop-timeout=300',
@@ -43,17 +58,18 @@ class Aria
                   '--enable-color=false',
                   '--follow-torrent=mem',
                   '--human-readable=false',
-                  "--index-out=1=#{ @tmpfile }",
-                  '--max-overall-download-limit=10M',     # XXX use rate limit
-                  '--max-overall-upload-limit=10M',       # XXX use rate limit
+                  "--index-out=1=#{ tmpfile }",
                   '--no-conf=true',
                   "--on-bt-download-complete=#{ download_complete_path }",
                   '--seed-ratio=0.0',
-                  '--summary-interval=1',
-                  url ]
+                  '--summary-interval=1' ]
 
-    # XXX we probably need as well so that we know
-    # XXX when we can proceed (rename file and such)
+    rate_limit = get_ratelimit
+    if rate_limit then
+      aria_args << "--max-overall-download-limit=#{ rate_limit }"
+      aria_args << "--max-overall-upload-limit=#{ rate_limit }"
+    end
+    aria_args << url
 
     Syslog.log(Syslog::LOG_NOTICE,
                'starting aria2c with args %s', aria_args.join(' '))
