@@ -42,7 +42,6 @@ class Aria
                   '--ca-certificate=/etc/puavo-conf/rootca.pem',
                   '--check-integrity=true',
                   '--enable-color=false',
-                  '--file-allocation=none',               # XXX is this good?
                   '--follow-torrent=mem',
                   '--human-readable=false',
                   "--index-out=1=#{ @tmpfile }",
