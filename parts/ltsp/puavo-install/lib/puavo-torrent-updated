@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-require 'fcntl'
+require 'fileutils'
 require 'open3'
 require 'socket'
 require 'syslog'
@@ -24,33 +24,37 @@ class Aria
     url = "#{ Urlbase }/#{ @filename }.torrent"
 
     torrent_filename = "#{ @filename }.torrent"
-    filename_fp = "#{ Target_dir }/#{ @filename }"
-    tmpfile = "#{ filename_fp }.tmp"
+    @filename_fp = "#{ Target_dir }/#{ @filename }"
+    @tmpfile = "#{ @filename_fp }.tmp"
 
     # XXX we should maybe use rate limit from puavo-conf ?
 
+    torrent_update_pid = Process.pid
+    download_complete_path \
+      = '/usr/lib/puavo-ltsp-install/puavo-torrent-download-complete'
+
     aria_args = [ '/usr/bin/env',
                   'LANG=C',
+                  "PUAVO_TORRENT_UPDATE_PID=#{ torrent_update_pid }",
                   'aria2c',
                   '--bt-enable-lpd=true',
                   '--bt-stop-timeout=300',
                   '--ca-certificate=/etc/puavo-conf/rootca.pem',
                   '--check-integrity=true',
                   '--enable-color=false',
-                  '--human-readable=false',
-                  '--no-conf=true',
                   '--file-allocation=none',               # XXX is this good?
                   '--follow-torrent=mem',
-                  "--index-out=1=#{ tmpfile }",
+                  '--human-readable=false',
+                  "--index-out=1=#{ @tmpfile }",
                   '--max-overall-download-limit=10M',     # XXX use rate limit
                   '--max-overall-upload-limit=10M',       # XXX use rate limit
+                  '--no-conf=true',
+                  "--on-bt-download-complete=#{ download_complete_path }",
                   '--seed-ratio=0.0',
-                  '--seed-time=0',      # XXX this should go away once we
-                                        # XXX know how
                   '--summary-interval=1',
                   url ]
 
-    # XXX we probably need --on-download-complete= as well so that we know
+    # XXX we probably need as well so that we know
     # XXX when we can proceed (rename file and such)
 
     Syslog.log(Syslog::LOG_NOTICE,
@@ -89,6 +93,12 @@ class Aria
     end
   end
 
+  def rename_tmpfile_to_real
+    @filename_fp = "#{ Target_dir }/#{ @filename }"
+    @tmpfile = "#{ @filename_fp }.tmp"
+    FileUtils.mv(@tmpfile, @filename_fp)
+  end
+
   def stop
     if @wait_thr.alive? then
       Process.kill('TERM', @wait_thr.pid)
@@ -111,10 +121,12 @@ class Server
 
     @current_progress = nil
     @write_progress   = false
+
+    @selfpipe_r, @selfpipe_w = IO.pipe
   end
 
   def loop
-    readable = [ @server_socket ]
+    readable = [ @server_socket, @selfpipe_r ]
     writeable = []
 
     if @client_socket then
@@ -127,6 +139,28 @@ class Server
     end
 
     ios = IO.select(readable, writeable)
+
+    if ios[0].include?(@selfpipe_r) then
+      # we got "bt-download-complete" signal from aria2c, all is good and
+      # we can close the client connection
+      @selfpipe_r.read_nonblock(1)
+      begin
+        @aria.rename_tmpfile_to_real
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR, 'problem in renaming tmpfile to real')
+        @client_socket.write_nonblock("FAIL\n")
+        @client_socket.close
+        @client_socket = nil
+        @aria.stop
+        @aria = nil
+        return
+      end
+
+      @client_socket.write_nonblock("100\n")
+      @client_socket.close
+      @client_socket = nil
+      return
+    end
 
     if ios[0].include?(@server_socket) then
       Syslog.log(Syslog::LOG_INFO, 'new client connection')
@@ -180,7 +214,7 @@ class Server
         @current_progress = new_progress
         @write_progress = true
         Syslog.log(Syslog::LOG_INFO,
-                   "download progress for '%s' is now %s%",
+                   "download progress for '%s' is now %s%%",
                    @aria.filename,
                    @current_progress)
       end
@@ -188,9 +222,9 @@ class Server
       if @aria.wait_thr && !@aria.stdout then
         status = @aria.wait_thr.value
         if status.success? then
-          Syslog.log(Syslog::LOG_ERR,
-                     "we have downloaded '%s' successfully",
-                     @aria.filename)
+          errmsg = 'aria has exited with success, even though it should be' \
+                     + " seeding '%s', this is an error"
+          Syslog.log(Syslog::LOG_ERR, errmsg, @aria.filename)
         else
           Syslog.log(Syslog::LOG_ERR,
                      'we got FAILED status code from aria2c (%d): %s',
@@ -198,10 +232,16 @@ class Server
                      @aria.last_msgs.join)
         end
         @aria = nil
-        @client_socket.write_nonblock(status.success? ? "OK\n" : "FAIL\n")
+        @client_socket.write_nonblock("FAIL\n")
         @client_socket.close
+        @client_socket = nil
       end
     end
+  end
+
+  def download_complete
+    Syslog.log(Syslog::LOG_INFO, 'bittorrent download complete')
+    @selfpipe_w.write_nonblock('o')
   end
 end
 
@@ -209,12 +249,14 @@ Syslog.open( File.basename($0) )
 
 server = Server.new( Socket.for_fd(3) )
 
+Signal.trap('SIGUSR1', proc { server.download_complete })
+
 while true do
   begin
     server.loop
   rescue StandardError => e
-    Syslog.log(Syslog::LOG_ERR, 'we got some error: %s', e.message)
-    # Syslog.log(Syslog::LOG_ERR, 'we got some error: %s', e.backtrace)
+    Syslog.log(Syslog::LOG_ERR, 'we got some unexpected error: %s', e.message)
+    exit(1)
   end
 
   # XXX This sleep should not be here (in case this works correctly) ...

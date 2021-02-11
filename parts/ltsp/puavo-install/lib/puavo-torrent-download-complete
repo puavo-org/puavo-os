@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+if [ -n "${3:-}" ]; then
+  kill -USR1 "$PUAVO_TORRENT_UPDATE_PID"
+fi
+
+exit 0

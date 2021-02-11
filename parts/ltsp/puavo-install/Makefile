@@ -52,6 +52,7 @@ install : installdirs
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-image-preinst \
 		lib/puavo-torrent-updated \
+		lib/puavo-torrent-download-complete \
 		lib/update-configuration \
 		lib/update-images \
 		lib/update-ltspimage-update-stats
