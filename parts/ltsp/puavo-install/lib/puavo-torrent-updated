@@ -1,6 +1,5 @@
 #!/usr/bin/ruby
 
-require 'fileutils'
 require 'open3'
 require 'socket'
 require 'syslog'
@@ -92,12 +91,6 @@ class Aria
     end
   end
 
-  def rename_tmpfile_to_real
-    @filename_fp = "#{ Target_dir }/#{ @filename }"
-    @tmpfile = "#{ @filename_fp }.tmp"
-    FileUtils.mv(@tmpfile, @filename_fp)
-  end
-
   def stop
     if @wait_thr.alive? then
       Process.kill('TERM', @wait_thr.pid)
@@ -143,21 +136,11 @@ class Server
       # we got "bt-download-complete" signal from aria2c, all is good and
       # we can close the client connection
       @selfpipe_r.read_nonblock(1)
-      begin
-        @aria.rename_tmpfile_to_real
-      rescue StandardError => e
-        Syslog.log(Syslog::LOG_ERR, 'problem in renaming tmpfile to real')
-        @client_socket.write_nonblock("FAIL\n")
+      if @client_socket then
+        @client_socket.write_nonblock("100\n")
         @client_socket.close
         @client_socket = nil
-        @aria.stop
-        @aria = nil
-        return
       end
-
-      @client_socket.write_nonblock("100\n")
-      @client_socket.close
-      @client_socket = nil
       return
     end
 
