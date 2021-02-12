@@ -157,6 +157,8 @@ class Server
         begin
           @client_socket.write_nonblock("100\n")
         rescue Errno::EPIPE
+          Syslog.log(Syslog::LOG_INFO,
+                     'download finished, yet client has closed the connection')
         end
         @client_socket.close
         @client_socket = nil
@@ -184,6 +186,8 @@ class Server
       begin
         @client_socket.write_nonblock("#{ @current_progress }\n")
       rescue Errno::EPIPE
+        Syslog.log(Syslog::LOG_INFO,
+                   'client has unexpectedly closed the connection')
         @client_socket.close
         @client_socket = nil
         if @aria then
