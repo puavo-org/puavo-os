@@ -212,13 +212,8 @@ class Server
 
         @current_progress = nil
 
-        if @aria && @aria.filename != @filename_to_download then
-          @aria.stop
-          @aria = nil
-        end
-        if !@aria then
-          @aria = Aria.new(@filename_to_download)
-        end
+        @aria.stop if @aria
+        @aria = Aria.new(@filename_to_download)
       end
     end
 
@@ -239,7 +234,7 @@ class Server
         status = @aria.wait_thr.value
         if status.success? then
           errmsg = 'aria has exited with success, even though it should be' \
-                     + " seeding '%s', this is an error"
+                     + " seeding '%s'"
           Syslog.log(Syslog::LOG_ERR, errmsg, @aria.filename)
         else
           Syslog.log(Syslog::LOG_ERR,
