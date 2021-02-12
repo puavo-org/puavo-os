@@ -183,6 +183,7 @@ class Server
     end
 
     if ios[1].include?(@client_socket) then
+      # we should write progress information to client
       begin
         @client_socket.write_nonblock("#{ @current_progress }\n")
       rescue Errno::EPIPE
@@ -200,6 +201,7 @@ class Server
     end
 
     if ios[0].include?(@client_socket) then
+      # client is sending us a filename to download
       begin
         @filename_to_download += @client_socket.read_nonblock(1024)
       rescue EOFError
@@ -218,6 +220,7 @@ class Server
     end
 
     if @aria then
+      # aria is reporting us something, possibly new progress information
       @aria.read_stdout if @aria.stdout && ios[0].include?(@aria.stdout)
 
       new_progress = @aria.progress
