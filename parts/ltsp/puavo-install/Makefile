@@ -64,10 +64,10 @@ install : installdirs
 		systemd/*
 
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
-		/usr/lib/systemd/system/puavo-torrent-updated.service
+		/usr/lib/systemd/system/puavo-image-torrent-updated.service
 
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/sockets.target.wants \
-		/usr/lib/systemd/system/puavo-torrent-updated.socket
+		/usr/lib/systemd/system/puavo-image-torrent-updated.socket
 
 	ln -fs /usr/lib/systemd/system/puavo-update.service \
 		$(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants/puavo-update.service

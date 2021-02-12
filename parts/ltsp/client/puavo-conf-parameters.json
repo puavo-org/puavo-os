@@ -143,13 +143,13 @@
   "puavo.service.puavo-darkdm.enabled": {
     "default": "true"
   },
+  "puavo.service.puavo-image-torrent-updated.enabled": {
+    "default": "false"
+  },
   "puavo.service.puavo-rest.enabled": {
     "default": "false"
   },
   "puavo.service.puavo-tftpd.enabled": {
-    "default": "false"
-  },
-  "puavo.service.puavo-torrent-updated.enabled": {
     "default": "false"
   },
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": {

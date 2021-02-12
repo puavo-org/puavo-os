@@ -162,6 +162,13 @@ set services {
         -> /lib/systemd/system/puavo-darkdm.service
     }}
 
+  { puavo-image-torrent-updated {
+      /etc/systemd/system/multi-user.target.wants/puavo-image-torrent-updated.service
+        -> /lib/systemd/system/puavo-image-torrent-updated.service
+      /etc/systemd/system/sockets.target.wants/puavo-image-torrent-updated.socket
+        -> /lib/systemd/system/puavo-image-torrent-updated.socket
+    }}
+
   { puavo-rest {
       /etc/systemd/system/multi-user.target.wants/puavo-rest.service
         -> /lib/systemd/system/puavo-rest.service
@@ -175,13 +182,6 @@ set services {
   { puavo-tftpd {
       /etc/systemd/system/multi-user.target.wants/puavo-tftpd.service
         -> /lib/systemd/system/puavo-tftpd.service
-    }}
-
-  { puavo-torrent-updated {
-      /etc/systemd/system/multi-user.target.wants/puavo-torrent-updated.service
-        -> /lib/systemd/system/puavo-torrent-updated.service
-      /etc/systemd/system/sockets.target.wants/puavo-torrent-updated.socket
-        -> /lib/systemd/system/puavo-torrent-updated.socket
     }}
 
   { puavo-vpn-client-dnsmasq {
