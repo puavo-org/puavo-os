@@ -36,8 +36,7 @@ class Aria
   end
 
   def start_download
-    filename_fp = "#{ $target_dir }/#{ File.basename(@url) }"
-    tmpfile = "#{ filename_fp }.tmp"
+    output_file = "#{ File.basename(@url) }.tmp"
     torrent_url = "#{ @url }.torrent"
 
     download_complete_path \
@@ -51,10 +50,11 @@ class Aria
                   '--bt-stop-timeout=300',
                   '--ca-certificate=/etc/puavo-conf/rootca.pem',
                   '--check-integrity=true',
+                  "--dir=#{ $target_dir }",
                   '--enable-color=false',
                   '--follow-torrent=mem',
                   '--human-readable=false',
-                  "--index-out=1=#{ tmpfile }",
+                  "--index-out=1=#{ output_file }",
                   '--no-conf=true',
                   "--on-bt-download-complete=#{ download_complete_path }",
                   '--seed-ratio=0.0',
