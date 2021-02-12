@@ -6,13 +6,14 @@ require 'socket'
 require 'syslog'
 
 class Aria
-  attr_reader :filename, :last_msgs, :progress, :stdout, :wait_thr
+  attr_reader :last_msgs, :progress, :status, :stdout, :url
 
   def initialize(url)
     @url = url
     @last_msgs = []
     @outmsg = ''
     @progress = nil
+    @status = nil
 
     start_download
   end
@@ -107,6 +108,10 @@ class Aria
       Syslog.log(Syslog::LOG_INFO, 'killing the current aria2c process')
       Process.kill('TERM', @wait_thr.pid)
     end
+
+    # even though we may not need this (status code), we want to wait
+    # the current aria2c instance actually stops before we continue
+    @status = @wait_thr.value
 
     @stdout.close if @stdout
     @stdout = nil
@@ -249,20 +254,20 @@ class Server
         @write_progress = true
         Syslog.log(Syslog::LOG_INFO,
                    "download progress for '%s' is now %s%%",
-                   @aria.filename,
+                   @aria.url,
                    @current_progress)
       end
 
-      if @aria.wait_thr && !@aria.stdout then
-        status = @aria.wait_thr.value
-        if status.success? then
+      if !@aria.stdout then
+        @aria.stop
+        if @aria.status.success? then
           errmsg = 'aria has exited with success, even though it should be' \
                      + " seeding '%s'"
-          Syslog.log(Syslog::LOG_ERR, errmsg, @aria.filename)
+          Syslog.log(Syslog::LOG_ERR, errmsg, @aria.url)
         else
           Syslog.log(Syslog::LOG_ERR,
                      'we got FAILED status code from aria2c (%d): %s',
-                     status.exitstatus,
+                     @aria.status.exitstatus,
                      @aria.last_msgs.join)
         end
         @aria = nil
