@@ -5,16 +5,13 @@ require 'puavo/conf'
 require 'socket'
 require 'syslog'
 
-Target_dir = '/images/rdiffs'
-Urlbase = 'https://cdn.opinsys.net'     # XXX this might be something different
-
 class Aria
   attr_reader :filename, :last_msgs, :progress, :stdout, :wait_thr
 
-  def initialize(filename)
-    @filename = filename
+  def initialize(url)
+    @url = url
     @last_msgs = []
-    @outmsg   = ''
+    @outmsg = ''
     @progress = nil
 
     start_download
@@ -38,11 +35,9 @@ class Aria
   end
 
   def start_download
-    url = "#{ Urlbase }/#{ @filename }.torrent"
-
-    torrent_filename = "#{ @filename }.torrent"
-    filename_fp = "#{ Target_dir }/#{ @filename }"
+    filename_fp = "#{ $target_dir }/#{ File.basename(@url) }"
     tmpfile = "#{ filename_fp }.tmp"
+    torrent_url = "#{ @url }.torrent"
 
     download_complete_path \
       = '/usr/lib/puavo-ltsp-install/puavo-torrent-download-complete'
@@ -69,7 +64,7 @@ class Aria
       aria_args << "--max-overall-download-limit=#{ rate_limit }"
       aria_args << "--max-overall-upload-limit=#{ rate_limit }"
     end
-    aria_args << url
+    aria_args << torrent_url
 
     Syslog.log(Syslog::LOG_NOTICE,
                'starting aria2c with args %s', aria_args.join(' '))
@@ -123,8 +118,8 @@ class Server
     @server_socket = server_socket
 
     @client_socket = nil
-    @filename_to_download = nil
     @read_filename = false
+    @url_to_download = nil
 
     @aria = nil
 
@@ -175,7 +170,7 @@ class Server
       end
 
       @client_socket, client_addr = @server_socket.accept_nonblock
-      @filename_to_download = ''
+      @url_to_download = ''
       @read_filename = true
 
       # @client_socket has been switched, must return
@@ -201,21 +196,21 @@ class Server
     end
 
     if ios[0].include?(@client_socket) then
-      # client is sending us a filename to download
+      # client is sending us a url to download
       begin
-        @filename_to_download += @client_socket.read_nonblock(1024)
+        @url_to_download += @client_socket.read_nonblock(1024)
       rescue EOFError
-        @filename_to_download.chomp!
+        @url_to_download.chomp!
         Syslog.log(Syslog::LOG_NOTICE,
                    "client asks to download '%s'",
-                   @filename_to_download)
+                   @url_to_download)
         @client_socket.shutdown(:RD)
         @read_filename = false
 
         @current_progress = nil
 
         @aria.stop if @aria
-        @aria = Aria.new(@filename_to_download)
+        @aria = Aria.new(@url_to_download)
       end
     end
 
@@ -263,6 +258,14 @@ class Server
 end
 
 Syslog.open( File.basename($0) )
+
+$target_dir = ARGV[0]
+if !$target_dir || !File.directory?($target_dir) then
+  progname = File.basename($0)
+  Syslog.log(Syslog::LOG_ERR,
+             "#{ progname } was not given a target directory as an argument")
+  exit 1
+end
 
 server = Server.new( Socket.for_fd(3) )
 
