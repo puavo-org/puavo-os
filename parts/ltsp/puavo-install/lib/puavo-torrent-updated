@@ -109,6 +109,7 @@ class Aria
 
   def stop
     if @wait_thr.alive? then
+      Syslog.log(Syslog::LOG_INFO, 'killing the current aria2c process')
       Process.kill('TERM', @wait_thr.pid)
     end
 
@@ -153,7 +154,10 @@ class Server
       # we can close the client connection
       @selfpipe_r.read_nonblock(1)
       if @client_socket then
-        @client_socket.write_nonblock("100\n")
+        begin
+          @client_socket.write_nonblock("100\n")
+        rescue Errno::EPIPE
+        end
         @client_socket.close
         @client_socket = nil
       end
@@ -164,7 +168,7 @@ class Server
       Syslog.log(Syslog::LOG_INFO, 'new client connection')
       if @client_socket then
         Syslog.log(Syslog::LOG_INFO, 'breaking old client connection')
-        @client_socket.close()
+        @client_socket.close
         @client_socket = nil
       end
 
@@ -177,7 +181,17 @@ class Server
     end
 
     if ios[1].include?(@client_socket) then
-      @client_socket.write_nonblock("#{ @current_progress }\n")
+      begin
+        @client_socket.write_nonblock("#{ @current_progress }\n")
+      rescue Errno::EPIPE
+        @client_socket.close
+        @client_socket = nil
+        if @aria then
+          @aria.stop
+          @aria = nil
+        end
+        return
+      end
       @write_progress = false
     end
 
@@ -230,7 +244,10 @@ class Server
                      @aria.last_msgs.join)
         end
         @aria = nil
-        @client_socket.write_nonblock("FAIL\n")
+        begin
+          @client_socket.write_nonblock("FAIL\n")
+        rescue Errno::EPIPE
+        end
         @client_socket.close
         @client_socket = nil
       end
@@ -258,4 +275,4 @@ while true do
   end
 end
 
-Syslog.close()
+Syslog.close
