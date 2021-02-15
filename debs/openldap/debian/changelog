@@ -1,8 +1,27 @@
-openldap (2.4.47+dfsg-3+deb10u4+puavo1+buildonce) buster; urgency=medium
+openldap (2.4.47+dfsg-3+deb10u5+puavo1+buildonce) unstable; urgency=medium
 
   * With some patches by Puavo Org.
 
  -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 12:54:06 +0200
+
+openldap (2.4.47+dfsg-3+deb10u5) buster-security; urgency=high
+
+  * Fix slapd crashes in Certificate Exact Assertion processing
+    (ITS#9404, ITS#9424) (CVE-2020-36221)
+  * Fix slapd assertion failures in saslAuthzTo validation
+    (ITS#9406, ITS#9407) (CVE-2020-36222)
+  * Fix slapd crash in Values Return Filter control handling
+    (ITS#9408) (CVE-2020-36223)
+  * Fix slapd crashes in saslAuthzTo processing (ITS#9409, ITS#9412, ITS#9413)
+    (CVE-2020-36224, CVE-2020-36225, CVE-2020-36226)
+  * Fix slapd assertion failure in X.509 DN parsing
+    (ITS#9423) (CVE-2020-36230)
+  * Fix slapd crash in X.509 DN parsing (ITS#9425) (CVE-2020-36229)
+  * Fix slapd crash in Certificate List Exact Assertion processing
+    (ITS#9427) (CVE-2020-36228)
+  * Fix slapd infinite loop with Cancel operation (ITS#9428) (CVE-2020-36227)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 21 Jan 2021 19:54:40 -0800
 
 openldap (2.4.47+dfsg-3+deb10u4) buster-security; urgency=high
 

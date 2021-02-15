@@ -1,0 +1,69 @@
+From 6ed057b5b728b50746c869bcc9c1f85d0bbbf6ed Mon Sep 17 00:00:00 2001
+From: Howard Chu <hyc@openldap.org>
+Date: Fri, 27 Nov 2020 14:37:10 +0000
+Subject: [PATCH 1/2] ITS#9406, #9407 remove saslauthz asserts
+
+---
+ servers/slapd/saslauthz.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/servers/slapd/saslauthz.c b/servers/slapd/saslauthz.c
+index e05f3f9cf6..2e59eb5598 100644
+--- a/servers/slapd/saslauthz.c
++++ b/servers/slapd/saslauthz.c
+@@ -180,14 +180,16 @@ int slap_parse_user( struct berval *id, struct berval *user,
+ 	}
+ 
+ 	if ( !BER_BVISNULL( mech ) ) {
+-		assert( mech->bv_val == id->bv_val + 2 );
++		if ( mech->bv_val != id->bv_val + 2 )
++			return LDAP_PROTOCOL_ERROR;
+ 
+ 		AC_MEMCPY( mech->bv_val - 2, mech->bv_val, mech->bv_len + 1 );
+ 		mech->bv_val -= 2;
+ 	}
+ 
+ 	if ( !BER_BVISNULL( realm ) ) {
+-		assert( realm->bv_val >= id->bv_val + 2 );
++		if ( realm->bv_val < id->bv_val + 2 )
++			return LDAP_PROTOCOL_ERROR;
+ 
+ 		AC_MEMCPY( realm->bv_val - 2, realm->bv_val, realm->bv_len + 1 );
+ 		realm->bv_val -= 2;
+@@ -449,9 +451,12 @@ is_dn:		bv.bv_len = in->bv_len - ( bv.bv_val - in->bv_val );
+ 	}
+ 
+ 	/* Grab the searchbase */
+-	assert( ludp->lud_dn != NULL );
+-	ber_str2bv( ludp->lud_dn, 0, 0, &bv );
+-	rc = dnValidate( NULL, &bv );
++	if ( ludp->lud_dn != NULL ) {
++		ber_str2bv( ludp->lud_dn, 0, 0, &bv );
++		rc = dnValidate( NULL, &bv );
++	} else {
++		rc = LDAP_INVALID_SYNTAX;
++	}
+ 
+ done:
+ 	ldap_free_urldesc( ludp );
+@@ -813,7 +818,6 @@ is_dn:		bv.bv_len = val->bv_len - ( bv.bv_val - val->bv_val );
+ 	}
+ 
+ 	/* Grab the searchbase */
+-	assert( ludp->lud_dn != NULL );
+ 	if ( ludp->lud_dn ) {
+ 		struct berval	out = BER_BVNULL;
+ 
+@@ -831,6 +835,9 @@ is_dn:		bv.bv_len = val->bv_len - ( bv.bv_val - val->bv_val );
+ 		}
+ 
+ 		ludp->lud_dn = out.bv_val;
++	} else {
++		rc = LDAP_INVALID_SYNTAX;
++		goto done;
+ 	}
+ 
+ 	ludp->lud_port = 0;
+-- 
+2.20.1
+

@@ -1,0 +1,33 @@
+From 02dfc32d658fadc25e4040f78e36592f6e1e1ca0 Mon Sep 17 00:00:00 2001
+From: Howard Chu <hyc@openldap.org>
+Date: Fri, 27 Nov 2020 14:48:26 +0000
+Subject: [PATCH 2/2] ITS#9406 fix debug msg
+
+---
+ servers/slapd/saslauthz.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/servers/slapd/saslauthz.c b/servers/slapd/saslauthz.c
+index 2e59eb5598..982fe3120d 100644
+--- a/servers/slapd/saslauthz.c
++++ b/servers/slapd/saslauthz.c
+@@ -488,6 +488,7 @@ authzPrettyNormal(
+ 
+ 	assert( val != NULL );
+ 	assert( !BER_BVISNULL( val ) );
++	BER_BVZERO( normalized );
+ 
+ 	/*
+ 	 * 2) dn[.{exact|children|subtree|onelevel}]:{*|<DN>}
+@@ -906,7 +907,7 @@ authzPretty(
+ 	rc = authzPrettyNormal( val, out, ctx, 0 );
+ 
+ 	Debug( LDAP_DEBUG_TRACE, "<<< authzPretty: <%s> (%d)\n",
+-		out->bv_val, rc, 0 );
++		out->bv_val ? out->bv_val : "(null)" , rc, 0 );
+ 
+ 	return rc;
+ }
+-- 
+2.20.1
+
