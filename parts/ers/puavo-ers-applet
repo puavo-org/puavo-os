@@ -209,7 +209,7 @@ class PuavoErsApplet:
     labels_table = {}
 
     for exam in new_exams:
-      if not re.match('^exam_.*\.meb$', exam['file_name']):
+      if not re.match('^exam_.*\.me(b|x)$', exam['file_name']):
         syslog.syslog(syslog.LOG_WARNING,
           'not showing password for exam %s' % exam['file_name'])
         continue
@@ -440,7 +440,7 @@ class PuavoErsExamSync (threading.Thread):
           raise Exception('could not determine exam filename')
         if exam_file_name == '':
           raise Exception('could not determine exam filename')
-        if not re.match('^exam_.*\.meb$', exam_file_name):
+        if not re.match('^exam_.*\.me(b|x)$', exam_file_name):
           raise Exception('not syncing exam with a filename %s' \
                             % exam_file_name)
 
@@ -450,7 +450,7 @@ class PuavoErsExamSync (threading.Thread):
         syslog.syslog(syslog.LOG_ERR, 'error in syncing one exam: %s' % e)
 
     # clean up old exams that no longer belong to exams subdirectories
-    for exam_path in glob.glob( os.path.join(EXAMS_DIR, 'exam_*.meb') ):
+    for exam_path in glob.glob( os.path.join(EXAMS_DIR, 'exam_*.me[bx]') ):
       if not os.path.basename(exam_path) in exam_name_list:
         # We check that file hard link count must be over 1, in which case
         # it has already been archived and we can delete it here.
@@ -602,7 +602,7 @@ class PuavoErsExamSorter (threading.Thread):
 
     for exam in all_exams:
       try:
-        if not re.match('^exam_.*\.meb$', exam['file_name']):
+        if not re.match('^exam_.*\.me(b|x)$', exam['file_name']):
           raise Exception('ignoring exam with a file name %s' \
                             % exam['file_name'])
 
@@ -657,7 +657,7 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def cleanup_exams(self, linkdir, exam_filenames):
-    for path in glob.glob( os.path.join(linkdir, 'exam_*.meb') ):
+    for path in glob.glob( os.path.join(linkdir, 'exam_*.me[bx]') ):
       if not os.path.basename(path) in exam_filenames:
         rm_f(path)
 
@@ -665,7 +665,7 @@ class PuavoErsExamSorter (threading.Thread):
   def handle_archive(self, exam_filenames):
     self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, exam_filenames)
 
-    for path in glob.glob( os.path.join(EXAMS_ARCHIVE_DIR, 'exam_*.meb') ):
+    for path in glob.glob( os.path.join(EXAMS_ARCHIVE_DIR, 'exam_*.me[bx]') ):
       try:
         file_atime = os.stat(path).st_atime
         # keep archived files for two weeks
