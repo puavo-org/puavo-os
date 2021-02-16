@@ -4,12 +4,13 @@ require 'open3'
 require 'puavo/conf'
 require 'socket'
 require 'syslog'
+require 'uri'
 
 class Aria
   attr_reader :last_msgs, :progress, :status, :stdout, :url
 
   def initialize(url)
-    @url = url
+    @url = URI(url)
     @last_msgs = []
     @outmsg = ''
     @progress = nil
@@ -36,8 +37,10 @@ class Aria
   end
 
   def start_download
-    output_file = "#{ File.basename(@url) }.tmp"
-    torrent_url = "#{ @url }.torrent"
+    filename = File.basename(@url.to_s)
+    output_file = "#{ filename }.tmp"
+    torrent_url = @url.clone
+    torrent_url.path = "/torrents/#{ filename }.torrent"
 
     download_complete_path \
       = '/usr/lib/puavo-ltsp-install/puavo-torrent-download-complete'
@@ -65,7 +68,7 @@ class Aria
       aria_args << "--max-overall-download-limit=#{ rate_limit }"
       aria_args << "--max-overall-upload-limit=#{ rate_limit }"
     end
-    aria_args << torrent_url
+    aria_args << torrent_url.to_s
 
     Syslog.log(Syslog::LOG_NOTICE,
                'starting aria2c with args %s', aria_args.join(' '))
