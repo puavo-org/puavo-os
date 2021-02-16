@@ -916,7 +916,7 @@ class Torrents
 
     tmpfile = "#{ target_path }.tmp"
 
-    url = "#{ @@this_server_baseurl }/#{ torrent_filename }"
+    url = "#{ @@this_server_baseurl }/#{ syncfile.filename }"
     cmd_args = [ 'mktorrent', '-o', tmpfile, '-w', url, src_path ]
     fd_redirects = { :in  => '/dev/null',
                      :out => '/dev/null',
