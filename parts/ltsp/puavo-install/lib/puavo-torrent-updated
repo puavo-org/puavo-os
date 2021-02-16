@@ -1,0 +1,313 @@
+#!/usr/bin/ruby
+
+require 'open3'
+require 'puavo/conf'
+require 'socket'
+require 'syslog'
+
+class Aria
+  attr_reader :last_msgs, :progress, :status, :stdout, :url
+
+  def initialize(url)
+    @url = url
+    @last_msgs = []
+    @outmsg = ''
+    @progress = nil
+    @status = nil
+
+    start_download
+  end
+
+  def get_ratelimit
+    puavoconf = Puavo::Conf.new
+    rate_limit = puavoconf.get('puavo.image.download.ratelimit')
+    puavoconf.close
+
+    rate_limit = nil if rate_limit == ''
+
+    if rate_limit then
+      if !rate_limit.match(/^[0-9]+[km]$/) then
+        raise "the rate limit was not understood, got '#{ rate_limit }'"
+      end
+      rate_limit.upcase!        # aria2c(1) says uppercase letters must be used
+    end
+
+    rate_limit
+  end
+
+  def start_download
+    output_file = "#{ File.basename(@url) }.tmp"
+    torrent_url = "#{ @url }.torrent"
+
+    download_complete_path \
+      = '/usr/lib/puavo-ltsp-install/puavo-torrent-download-complete'
+
+    aria_args = [ '/usr/bin/env',
+                  'LANG=C',
+                  "PUAVO_TORRENT_UPDATE_PID=#{ Process.pid }",
+                  'aria2c',
+                  '--bt-enable-lpd=true',
+                  '--bt-stop-timeout=300',
+                  '--ca-certificate=/etc/puavo-conf/rootca.pem',
+                  '--check-integrity=true',
+                  "--dir=#{ $target_dir }",
+                  '--enable-color=false',
+                  '--follow-torrent=mem',
+                  '--human-readable=false',
+                  "--index-out=1=#{ output_file }",
+                  '--no-conf=true',
+                  "--on-bt-download-complete=#{ download_complete_path }",
+                  '--seed-ratio=0.0',
+                  '--summary-interval=1' ]
+
+    rate_limit = get_ratelimit
+    if rate_limit then
+      aria_args << "--max-overall-download-limit=#{ rate_limit }"
+      aria_args << "--max-overall-upload-limit=#{ rate_limit }"
+    end
+    aria_args << torrent_url
+
+    Syslog.log(Syslog::LOG_NOTICE,
+               'starting aria2c with args %s', aria_args.join(' '))
+
+    stdin, @stdout, stderr, @wait_thr \
+      = Open3.popen3(*aria_args, :err => '/dev/null', :in  => '/dev/null')
+  end
+
+  def read_stdout
+    begin
+      new_outmsg = ''
+      @outmsg += @stdout.read_nonblock(1024)
+      @outmsg.each_line do |line|
+        update_progress(line)
+        if line.match(/\n$/) then
+          @last_msgs = (@last_msgs + [ line ]).last(20)
+        else
+          new_outmsg = line
+        end
+      end
+      @outmsg = new_outmsg
+    rescue EOFError, IOError
+      @stdout.close
+      @stdout = nil
+    end
+  end
+
+  def update_progress(line)
+    fields = line.split
+    return unless fields[1] && fields[5] && fields[5].match(/^ETA/)
+
+    match = fields[1].match(/\((\d+)%\)$/)
+    if match then
+      @progress = match[1]
+    end
+  end
+
+  def stop
+    if @wait_thr.alive? then
+      Syslog.log(Syslog::LOG_INFO, 'killing the current aria2c process')
+      Process.kill('TERM', @wait_thr.pid)
+    end
+
+    # even though we may not need this (status code), we want to wait
+    # the current aria2c instance actually stops before we continue
+    @status = @wait_thr.value
+
+    @stdout.close if @stdout
+    @stdout = nil
+  end
+end
+
+class Server
+  def initialize(server_socket)
+    @server_socket = server_socket
+
+    @client_socket = nil
+    @read_filename = false
+    @url_to_download = nil
+
+    @aria = nil
+
+    @current_progress = nil
+    @write_progress   = false
+
+    @selfpipe_r, @selfpipe_w = IO.pipe
+  end
+
+  def loop
+    readable = [ @server_socket, @selfpipe_r ]
+    writeable = []
+
+    if @client_socket then
+      readable  << @client_socket if @read_filename
+      writeable << @client_socket if @write_progress
+    end
+
+    if @aria then
+      readable << @aria.stdout if @aria.stdout
+    end
+
+    ios = IO.select(readable, writeable)
+
+    if ios[0].include?(@selfpipe_r) then
+      # we got "bt-download-complete" signal from aria2c, all is good and
+      # we can close the client connection
+      @selfpipe_r.read_nonblock(1)
+      if @client_socket then
+        begin
+          @client_socket.write_nonblock("100\n")
+        rescue Errno::EPIPE
+          Syslog.log(Syslog::LOG_INFO,
+                     'download finished, yet client has closed the connection')
+        end
+        @client_socket.close
+        @client_socket = nil
+      end
+      return
+    end
+
+    if ios[0].include?(@server_socket) then
+      Syslog.log(Syslog::LOG_INFO, 'new client connection')
+      if @client_socket then
+        Syslog.log(Syslog::LOG_INFO, 'breaking old client connection')
+        @client_socket.close
+        @client_socket = nil
+      end
+
+      @client_socket, client_addr = @server_socket.accept_nonblock
+      @url_to_download = ''
+      @read_filename = true
+
+      # @client_socket has been switched, must return
+      return
+    end
+
+    if ios[1].include?(@client_socket) then
+      # we should write progress information to client
+      begin
+        @client_socket.write_nonblock("#{ @current_progress }\n")
+      rescue Errno::EPIPE
+        Syslog.log(Syslog::LOG_INFO,
+                   'client has unexpectedly closed the connection')
+        @client_socket.close
+        @client_socket = nil
+        if @aria then
+          @aria.stop
+          @aria = nil
+        end
+        return
+      end
+      @write_progress = false
+    end
+
+    if ios[0].include?(@client_socket) then
+      # client is sending us a url to download
+      begin
+        @url_to_download += @client_socket.read_nonblock(1024)
+      rescue EOFError
+        @url_to_download.chomp!
+        @client_socket.shutdown(:RD)
+        @read_filename = false
+        @current_progress = nil
+
+        # stop previous download, if any
+        @aria.stop if @aria
+
+        # provide a mechanism for client to make aria stop seeding previous
+        # downloads
+        if @url_to_download == 'stop' then
+          if @aria then
+            Syslog.log(Syslog::LOG_NOTICE,
+                       'stopping aria because of client request')
+          else
+            Syslog.log(Syslog::LOG_NOTICE,
+              'aria is not run (at least not by us),' \
+                + ' even though client requests it to stop')
+          end
+
+          @aria = nil
+          begin
+            @client_socket.write_nonblock("STOPPED\n")
+          rescue Errno::EPIPE
+          end
+          @client_socket.close
+          @client_socket = nil
+          return
+        end
+
+        Syslog.log(Syslog::LOG_NOTICE,
+                   "client asks to download '%s'",
+                   @url_to_download)
+
+        # start a new download
+        @aria = Aria.new(@url_to_download)
+      end
+    end
+
+    if @aria then
+      # aria is reporting us something, possibly new progress information
+      @aria.read_stdout if @aria.stdout && ios[0].include?(@aria.stdout)
+
+      new_progress = @aria.progress
+      if new_progress != @current_progress then
+        @current_progress = new_progress
+        @write_progress = true
+        Syslog.log(Syslog::LOG_INFO,
+                   "download progress for '%s' is now %s%%",
+                   @aria.url,
+                   @current_progress)
+      end
+
+      if !@aria.stdout then
+        @aria.stop
+        if @aria.status.success? then
+          errmsg = 'aria has exited with success, even though it should be' \
+                     + " seeding '%s'"
+          Syslog.log(Syslog::LOG_ERR, errmsg, @aria.url)
+        else
+          Syslog.log(Syslog::LOG_ERR,
+                     'we got FAILED status code from aria2c (%d): %s',
+                     @aria.status.exitstatus,
+                     @aria.last_msgs.join)
+        end
+        @aria = nil
+        begin
+          @client_socket.write_nonblock("FAIL\n")
+        rescue Errno::EPIPE
+        end
+        @client_socket.close
+        @client_socket = nil
+      end
+    end
+  end
+
+  def download_complete
+    Syslog.log(Syslog::LOG_INFO, 'bittorrent download complete')
+    @selfpipe_w.write_nonblock('o')
+  end
+end
+
+Syslog.open( File.basename($0) )
+
+$target_dir = ARGV[0]
+if !$target_dir || !File.directory?($target_dir) then
+  progname = File.basename($0)
+  Syslog.log(Syslog::LOG_ERR,
+             "#{ progname } was not given a target directory as an argument")
+  exit 1
+end
+
+server = Server.new( Socket.for_fd(3) )
+
+Signal.trap('SIGUSR1', proc { server.download_complete })
+
+while true do
+  begin
+    server.loop
+  rescue StandardError => e
+    Syslog.log(Syslog::LOG_ERR, 'we got some unexpected error: %s', e.message)
+    exit(1)
+  end
+end
+
+Syslog.close
