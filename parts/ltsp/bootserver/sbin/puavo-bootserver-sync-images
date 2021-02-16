@@ -290,6 +290,9 @@ class Series
 
     FileUtils.mkdir_p(Image.basedir)
     FileUtils.mkdir_p(Diff.basedir)
+    FileUtils.mkdir_p(Torrents.basedir)
+
+    torrents = Torrents.new
 
     all_syncs_ok = true
 
@@ -326,6 +329,14 @@ class Series
           all_syncs_ok = false
           warning(3, "Diff sync FAILED: #{ diff.statemsg }")
         end
+
+        begin
+          torrents.make(diff)
+        rescue StandardError => e
+          warning(3, "Could not make a torrent for #{ diff.filename }: " \
+                       + e.message)
+          all_syncs_ok = false
+        end
       end
     end
 
@@ -333,6 +344,8 @@ class Series
       warning(4, "Some image/diff sync failed for series #{ @series_name }")
       return false
     end
+
+    torrents.cleanup_unused
 
     return all_syncs_ok
   end
@@ -370,7 +383,7 @@ class SyncState
 end
 
 class SyncFile
-  attr_reader :filename
+  attr_reader :basedir, :filename
 
   def initialize(filename, dir=nil)
     raise 'filename is not set' \
@@ -860,6 +873,62 @@ class Diff < SyncFileWithMetadata
   def patch_from_old
     # Diffs can not be patched from old/anything, so just return failure.
     return false
+  end
+end
+
+class Torrents
+  Torrent_https_port = 873
+  @@this_server_baseurl = proc {
+    etc = PuavoEtc.new
+    "https://#{ etc.hostname }.#{ etc.domain }:#{ Torrent_https_port }/rdiffs"
+  }.call
+
+  def initialize
+    @torrent_paths = {}
+  end
+
+  def cleanup_unused
+    begin
+      # this takes care of both unused torrent files and tmpfiles
+      Dir.glob("#{ self.class.basedir }/*") do |filepath|
+        next if @torrent_paths[filepath]
+        begin
+          File.delete(filepath)
+          info(3, "Removed unused torrent file '#{ filepath }'")
+        rescue Errno::ENOENT
+        end
+      end
+    rescue StandardError => e
+      warning(4, 'Error in cleaning up unused torrent files')
+    end
+  end
+
+  def self.basedir; "#{ $options[:download_path] }/torrents"; end
+
+  def make(syncfile)
+    src_path = "#{ syncfile.basedir }/#{ syncfile.filename }"
+    torrent_filename = "#{ syncfile.filename }.torrent"
+    target_path = "#{ self.class.basedir }/#{ torrent_filename }"
+
+    @torrent_paths[target_path] = 1
+
+    return if File.exists?(target_path)
+
+    tmpfile = "#{ target_path }.tmp"
+
+    url = "#{ @@this_server_baseurl }/#{ torrent_filename }"
+    cmd_args = [ 'mktorrent', '-o', tmpfile, '-w', url, src_path ]
+    fd_redirects = { :in  => '/dev/null',
+                     :out => '/dev/null',
+                     :err => '/dev/null' }
+
+    if !system(*cmd_args, fd_redirects) then
+      raise "command '#{ cmd_args.join(' ') }' returned error"
+    end
+
+    File.rename(tmpfile, target_path)
+
+    info(3, "Made a new torrent file #{ target_path }", HighLine::GREEN)
   end
 end
 
