@@ -405,7 +405,7 @@ get_next_image() {
     return 1
   fi
 
-  mkdir -p "$rdiffs_dir"
+  install -d -D -o root -g puavo-update -m 775 "$rdiffs_dir"
 
   cleanup_previous_runs "${next_image}.tmp" "$rdiff_filename"
 
