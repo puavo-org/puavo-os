@@ -58,7 +58,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o +f:n:r:q \
-		   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook' \
+		   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook,use-torrents' \
 		   -- "$@"); then
   usage
 fi
@@ -73,6 +73,7 @@ image_from_nbd=""
 rate_limit=""
 quiet=false
 run_preinst_hook=true
+use_torrents_for_rdiff_updates=false
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -102,18 +103,16 @@ while [ $# -ne 0 ]; do
       fi
       ;;
     -q|--quiet)
-      quiet=true; shift;
+      quiet=true; shift
+      ;;
+    --use-torrents)
+      use_torrents_for_rdiff_updates=true; shift
       ;;
     --) shift; break;;
   esac
 done
 
-{
-  set +u
-  next_image=$1
-  set -u
-}
-
+next_image=${1:-}
 if [ -z "$next_image" ]; then
   usage
 fi
@@ -406,7 +405,7 @@ get_next_image() {
     return 1
   fi
 
-  mkdir -p "$rdiffs_dir"
+  install -d -D -o root -g puavo-update -m 775 "$rdiffs_dir"
 
   cleanup_previous_runs "${next_image}.tmp" "$rdiff_filename"
 
@@ -432,6 +431,29 @@ get_next_image() {
   return 1
 }
 
+download_url_with_torrent() {
+  url_to_download_with_torrent=$1
+
+  torrent_status=$(
+    printf "%s\n" "$url_to_download_with_torrent" \
+      | nc -N -U /run/puavo/puavo-image-torrent-updated.sock \
+      | while read progress; do
+          if [ "$progress" = 'OK' ]; then
+            echo OK
+          else
+            update_stats rdiff_fetch "$progress"
+          fi
+        done)
+  if [ "$torrent_status" != 'OK' ]; then
+    log err "could not download $url_to_download_with_torrent with torrent"
+    return 1
+  fi
+
+  log info "got $url_to_download_with_torrent with success"
+
+  return 0
+}
+
 get_rdiff() {
   rate_limit=$1
   rdiff_filename=$2
@@ -447,8 +469,14 @@ get_rdiff() {
   log info "we are missing the full rdiff $rdiff_filename, going to get it"
 
   rdiff_tmp="${rdiff_path}.tmp"
-  fetch_with_wget "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
-    || return 1
+
+  if $use_torrents_for_rdiff_updates; then
+    download_url_with_torrent "$rdiff_url" || return 1
+  else
+    fetch_with_wget "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
+      || return 1
+  fi
+
   check_with_cksum "$rdiff_filename" \
                    "$rdiff_tmp"      \
                    rdiff_checksum    \
@@ -784,6 +812,12 @@ try_rdiff_update_from_imageserver() {
   # it is not sensible to continue if the required checksums do not exist
   check_checksums_exist_for "$rdiff_filename" "$next_image" \
     || return 1
+
+  if $use_torrents_for_rdiff_updates; then
+    # Ask puavo-image-torrent-updated to stop seeding (if it is doing
+    # anything).  This is relevant here only for disk space calculations.
+    echo stop | nc -N -U /run/puavo/puavo-image-torrent-updated.sock || true
+  fi
 
   ensure_enough_available_diskspace "$next_image" "$rdiff_filename" || return 1
 

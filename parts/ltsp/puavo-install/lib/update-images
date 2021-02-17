@@ -5,24 +5,28 @@ set -eu
 use_rate_limit=$1
 
 update_ltsp_image() {
-    next_imagename=$(puavo-conf puavo.image.preferred) || return
+  next_imagename=$(puavo-conf puavo.image.preferred) || return
 
-    if [ "$use_rate_limit" = 'true' ]; then
-        rate_limit=$(puavo-conf puavo.image.download.ratelimit)
-    else
-        rate_limit=''
-    fi
+  if [ "$use_rate_limit" = 'true' ]; then
+    rate_limit=$(puavo-conf puavo.image.download.ratelimit)
+  else
+    rate_limit=''
+  fi
 
-    update_ltspimage_params=''
+  update_ltspimage_params=''
 
-    if [ -n "$rate_limit" ]; then
-        update_ltspimage_params="${update_ltspimage_params} --rate-limit $rate_limit"
-    fi
+  if [ -n "$rate_limit" ]; then
+    update_ltspimage_params="${update_ltspimage_params} --rate-limit $rate_limit"
+  fi
 
-    if [ -n "$next_imagename" ]; then
-        puavo-install-and-update-ltspimages $update_ltspimage_params \
-            "${next_imagename}.img"
-    fi
+  if [ "$(puavo-conf puavo.service.puavo-image-torrent-updated.enabled)" = 'true' ]; then
+    update_ltspimage_params="${update_ltspimage_params} --use-torrents"
+  fi
+
+  if [ -n "$next_imagename" ]; then
+    puavo-install-and-update-ltspimages $update_ltspimage_params \
+                                        "${next_imagename}.img"
+  fi
 }
 
 update_ltsp_image
