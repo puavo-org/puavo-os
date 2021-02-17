@@ -158,7 +158,7 @@ class Server
       @selfpipe_r.read_nonblock(1)
       if @client_socket then
         begin
-          @client_socket.write_nonblock("100\n")
+          @client_socket.write_nonblock("OK\n")
         rescue Errno::EPIPE
           Syslog.log(Syslog::LOG_INFO,
                      'download finished, yet client has closed the connection')
