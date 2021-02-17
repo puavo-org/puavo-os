@@ -268,10 +268,9 @@ class Server
                      + " seeding '%s'"
           Syslog.log(Syslog::LOG_ERR, errmsg, @aria.url)
         else
-          Syslog.log(Syslog::LOG_ERR,
-                     'we got FAILED status code from aria2c (%d): %s',
-                     @aria.status.exitstatus,
-                     @aria.last_msgs.join)
+          errmsg = 'aria2c has exited with failure or terminated' \
+                     + ' by signal with messages: %s'
+          Syslog.log(Syslog::LOG_ERR, errmsg, @aria.last_msgs.join)
         end
         @aria = nil
         begin
