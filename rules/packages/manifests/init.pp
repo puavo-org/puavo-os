@@ -351,7 +351,8 @@ class packages {
     [ 'irssi'
     , 'irssi-plugin-xmpp'
     , 'pidgin'
-    , 'pidgin-plugin-pack' ]:
+    , 'pidgin-plugin-pack'
+    , 'telegram-desktop' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
 
     # XXX enable if issues are fixed
