@@ -89,6 +89,10 @@ def get_sha256sum_path(filename)
   "#{ Checksums_dir }/#{ filename }.sha256sum"
 end
 
+def get_sha512sum_path(filename)
+  "#{ Checksums_dir }/#{ filename }.sha512sum"
+end
+
 def get_image_version(image_name)
   return get_version(image_name, /-(\d+)-(\d+)-(\d+)-(\d+).*\.img\z/)
 end
@@ -108,12 +112,14 @@ def make_metadata_file(series_name, series_metadata, series_metadata_file)
     imagename = image_metadata['filename']
     image_metadata['cksum'] = read_cksum(imagename)
     image_metadata['sha256'] = read_sha256sum(imagename)
+    image_metadata['sha512'] = read_sha512sum(imagename)
 
     image_metadata['diffs'].each do |rdiff_metadata|
       rdiff_file = rdiff_metadata['filename']
       rdiff_metadata['size'] = File.size("#{ Rdiffs_dir }/#{ rdiff_file }")
       rdiff_metadata['cksum'] = read_cksum(rdiff_file)
       rdiff_metadata['sha256'] = read_sha256sum(rdiff_file)
+      rdiff_metadata['sha512'] = read_sha512sum(rdiff_file)
     end
   end
 
@@ -157,6 +163,10 @@ def read_sha256sum(filename)
   read_checksum_from_file( get_sha256sum_path(filename) )
 end
 
+def read_sha512sum(filename)
+  read_checksum_from_file( get_sha512sum_path(filename) )
+end
+
 def setup_checksum_tasks(filename, absolute_source_path)
   cksum_file = get_cksum_path(filename)
   $all_cksum_files << cksum_file
@@ -167,13 +177,19 @@ def setup_checksum_tasks(filename, absolute_source_path)
   end
 
   sha256sum_file = get_sha256sum_path(filename)
+  sha512sum_file = get_sha512sum_path(filename)
 
   file sha256sum_file => [ Checksums_dir, absolute_source_path ]
   file sha256sum_file do |t|
     calc_checksum('sha256sum', absolute_source_path, t.name)
   end
 
-  return [ cksum_file, sha256sum_file ]
+  file sha512sum_file => [ Checksums_dir, absolute_source_path ]
+  file sha512sum_file do |t|
+    calc_checksum('sha512sum', absolute_source_path, t.name)
+  end
+
+  return [ cksum_file, sha256sum_file, sha512sum_file ]
 end
 
 def get_puavo_conf_defaults(target_image_file_fp)
