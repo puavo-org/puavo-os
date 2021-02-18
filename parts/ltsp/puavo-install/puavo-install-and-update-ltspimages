@@ -248,6 +248,12 @@ cleanup_previous_runs() {
       | fgrep -vx "${images_dir}/${preserve_rdifffile}.tmp" \
       | xargs -r -d'\n' -L1 rm -f
   fi
+
+  if $use_torrents_for_rdiff_updates; then
+    # Ask puavo-image-torrent-updated to stop seeding (if it is doing
+    # anything).  This is relevant here only for disk space calculations.
+    echo stop | nc -N -U /run/puavo/puavo-image-torrent-updated.sock || true
+  fi
 }
 
 ensure_enough_available_diskspace() {
@@ -812,12 +818,6 @@ try_rdiff_update_from_imageserver() {
   # it is not sensible to continue if the required checksums do not exist
   check_checksums_exist_for "$rdiff_filename" "$next_image" \
     || return 1
-
-  if $use_torrents_for_rdiff_updates; then
-    # Ask puavo-image-torrent-updated to stop seeding (if it is doing
-    # anything).  This is relevant here only for disk space calculations.
-    echo stop | nc -N -U /run/puavo/puavo-image-torrent-updated.sock || true
-  fi
 
   ensure_enough_available_diskspace "$next_image" "$rdiff_filename" || return 1
 
