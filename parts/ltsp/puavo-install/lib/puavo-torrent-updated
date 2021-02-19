@@ -112,14 +112,12 @@ class Aria
     if @wait_thr.alive? then
       Syslog.log(Syslog::LOG_INFO, 'killing the current aria2c process')
       Process.kill('TERM', @wait_thr.pid)
+      wait
     end
+  end
 
-    # even though we may not need this (status code), we want to wait
-    # the current aria2c instance actually stops before we continue
+  def wait
     @status = @wait_thr.value
-
-    @stdout.close if @stdout
-    @stdout = nil
   end
 end
 
@@ -272,7 +270,7 @@ class Server
       end
 
       if !@aria.stdout then
-        @aria.stop
+        @aria.wait
         if @aria.status.success? then
           errmsg = 'aria has exited with success, even though it should be' \
                      + " seeding '%s'"
