@@ -439,6 +439,8 @@ get_next_image() {
 
   cleanup_previous_runs "${next_image}.tmp" "$rdiff_filename"
 
+  get_meta_files "$rate_limit" || return 1
+
   for image_server in $image_server_list; do
     try_rdiff_update_from_imageserver "$image_server"   \
 				      "$rate_limit"     \
@@ -778,8 +780,6 @@ try_full_image_update_from_imageserver() {
   rate_limit=$2
   next_image=$3
 
-  get_meta_files "$rate_limit" || return 1
-
   # it is not sensible to continue if the required checksum does not exist
   check_checksums_exist_for "$next_image" || return 1
 
@@ -851,8 +851,6 @@ try_rdiff_update_from_imageserver() {
   rdiff_filename=$3
   previous_image=$4
   next_image=$5
-
-  get_meta_files "$rate_limit" || return 1
 
   # it is not sensible to continue if the required checksums do not exist
   check_checksums_exist_for "$rdiff_filename" "$next_image" \
