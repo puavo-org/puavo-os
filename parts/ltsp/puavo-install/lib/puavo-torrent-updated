@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'fileutils'
 require 'open3'
 require 'puavo/conf'
 require 'socket'
@@ -9,14 +10,14 @@ require 'uri'
 class Aria
   attr_reader :last_msgs, :progress, :status, :stdout, :url
 
-  def initialize(url)
+  def initialize(url, seed_filename=nil)
     @url = URI(url)
     @last_msgs = []
     @outmsg = ''
     @progress = nil
     @status = nil
 
-    start_download
+    start_download(seed_filename)
   end
 
   def get_ratelimit
@@ -36,9 +37,10 @@ class Aria
     rate_limit
   end
 
-  def start_download
+  def start_download(seed_filename)
     filename = File.basename(@url.to_s)
-    output_file = "#{ filename }.tmp"
+    output_filename = (seed_filename || "#{ filename }.tmp")
+
     torrent_url = @url.clone
     torrent_url.path = "/torrents/#{ filename }.torrent"
 
@@ -57,7 +59,7 @@ class Aria
                   '--enable-color=false',
                   '--follow-torrent=mem',
                   '--human-readable=false',
-                  "--index-out=1=#{ output_file }",
+                  "--index-out=1=#{ output_filename }",
                   '--no-conf=true',
                   "--on-bt-download-complete=#{ download_complete_path }",
                   '--seed-ratio=0.0',
@@ -110,26 +112,23 @@ class Aria
     if @wait_thr.alive? then
       Syslog.log(Syslog::LOG_INFO, 'killing the current aria2c process')
       Process.kill('TERM', @wait_thr.pid)
+      wait
     end
+  end
 
-    # even though we may not need this (status code), we want to wait
-    # the current aria2c instance actually stops before we continue
+  def wait
     @status = @wait_thr.value
-
-    @stdout.close if @stdout
-    @stdout = nil
   end
 end
 
 class Server
-  def initialize(server_socket)
+  def initialize(server_socket, aria)
     @server_socket = server_socket
+    @aria = aria
 
     @client_socket = nil
     @read_filename = false
     @url_to_download = nil
-
-    @aria = nil
 
     @current_progress = nil
     @write_progress   = false
@@ -159,6 +158,7 @@ class Server
       if @client_socket then
         begin
           @client_socket.write_nonblock("OK\n")
+          write_torrent_url
         rescue Errno::EPIPE
           Syslog.log(Syslog::LOG_INFO,
                      'download finished, yet client has closed the connection')
@@ -242,6 +242,14 @@ class Server
                    "client asks to download '%s'",
                    @url_to_download)
 
+        begin
+          # We put the url into this path only after the initial download
+          # has been successful.  How that we are starting to download
+          # something (to .tmp file), we should not seed anything old.
+          File.unlink($torrent_url_path)
+        rescue Errno::ENOENT
+        end
+
         # start a new download
         @aria = Aria.new(@url_to_download)
       end
@@ -262,7 +270,7 @@ class Server
       end
 
       if !@aria.stdout then
-        @aria.stop
+        @aria.wait
         if @aria.status.success? then
           errmsg = 'aria has exited with success, even though it should be' \
                      + " seeding '%s'"
@@ -287,6 +295,36 @@ class Server
     Syslog.log(Syslog::LOG_INFO, 'bittorrent download complete')
     @selfpipe_w.write_nonblock('o')
   end
+
+  def write_torrent_url
+    # This is a sign for subsequent startups of this tool that it should
+    # start seeding the url in this file.
+    tmpfile = "#{ $torrent_url_path }.tmp"
+    File.open(tmpfile, 'w') { |f| f.puts(@url_to_download) }
+    FileUtils.mv(tmpfile, $torrent_url_path)
+  end
+end
+
+def start_aria_seeding(torrent_url_path)
+  begin
+    torrent_url = IO.read(torrent_url_path).chomp
+  rescue Errno::ENOENT
+    # we have no torrent url, we are not going to seed
+    return nil
+  end
+
+  seed_filename = File.basename(torrent_url)
+  return nil if seed_filename == ''
+
+  seed_path = "#{ $target_dir }/#{ seed_filename }"
+  return nil unless File.exists?(seed_path)
+
+  # we have torrent url, we have rdiff on the right path, we can seed:
+
+  Syslog.log(Syslog::LOG_NOTICE,
+             "starting to seed #{ torrent_url } from #{ seed_path }")
+
+  Aria.new(torrent_url, seed_filename)
 end
 
 Syslog.open( File.basename($0) )
@@ -299,7 +337,20 @@ if !$target_dir || !File.directory?($target_dir) then
   exit 1
 end
 
-server = Server.new( Socket.for_fd(3) )
+$torrent_url_path = "#{ $target_dir }/.aria2_torrent_url"
+
+server_socket = Socket.for_fd(3)
+
+aria = nil
+begin
+  # this will return nil if there is nothing to seed
+  aria = start_aria_seeding($torrent_url_path)
+rescue StandardError => e
+  Syslog.log(Syslog::LOG_ERR,
+             'could not start aria2 for seeding: %s', e.message)
+end
+
+server = Server.new(server_socket, aria)
 
 Signal.trap('SIGUSR1', proc { server.download_complete })
 
