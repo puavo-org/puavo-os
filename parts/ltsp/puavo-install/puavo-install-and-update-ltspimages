@@ -412,7 +412,7 @@ get_meta_files() {
 
   # remove old cruft that is no longer used
   # (this "rm -f" may be removed after some years)
-  rm -f "${images_dir}/CKSUMS" || true
+  rm -f "${images_dir}/CKSUMS" "${images_dir}/CKSUMS.tmp" || true
 
   return 0
 }
