@@ -63,8 +63,8 @@ if ! args=$(getopt -n "$0" -o +f:n:r:q \
   usage
 fi
 
+metas_dir="${images_dir}/meta"
 rdiffs_dir="${images_dir}/rdiffs"
-checksums_file="${images_dir}/CKSUMS"
 puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 
 hosttype=""
@@ -172,8 +172,8 @@ trap interrupted INT TERM
 
 check_checksums_exist_for() {
   for file_to_check_checksum_for in "$@"; do
-    if ! lookup_size_from_cksums "$file_to_check_checksum_for" >/dev/null; then
-      log err "could not find checksum for '$file_to_check_checksum_for'"
+    if ! lookup_from_metas sha512 "$file_to_check_checksum_for" >/dev/null; then
+      log err "could not find sha512 for '$file_to_check_checksum_for'"
       return 1
     fi
   done
@@ -185,9 +185,7 @@ check_image_and_put_it_to_use() {
   next_image=$1
   next_image_tmppath=$2
 
-  check_with_cksum "$next_image"         \
-                   "$next_image_tmppath" \
-                   image_checksum        \
+  check_checksum "$next_image" "$next_image_tmppath" image_checksum \
     || return 1
 
   sync                                                   || return 1
@@ -197,7 +195,7 @@ check_image_and_put_it_to_use() {
   log notice "new ltsp image $next_image has been put into its place"
 }
 
-check_with_cksum() {
+check_checksum() {
   filename=$1
   actual_file_path=$2
   phase=$3
@@ -207,11 +205,19 @@ check_with_cksum() {
     return 1
   fi
 
-  calculated_checksum_line=$(
-    cksum_with_progress "$phase" "$actual_file_path" \
-      | awk -v filename="$filename" '{ $3 = filename; print }')
+  expected_checksum=$(lookup_from_metas sha512 "$filename")
+  if [ -z "$expected_checksum" ]; then
+    log err "could not determine expected checksum for $filename"
+    return 1
+  fi
 
-  if fgrep -qx "$calculated_checksum_line" "$checksums_file"; then
+  calculated_checksum=$(sha512sum_with_progress "$phase" "$actual_file_path")
+  if [ -z "$calculated_checksum" ]; then
+    log err "could not calculate checksum for $filename"
+    return 1
+  fi
+
+  if [ "$expected_checksum" = "$calculated_checksum" ]; then
     log info "checksum for file $filename is okay"
     return 0
   else
@@ -221,16 +227,15 @@ check_with_cksum() {
   fi
 }
 
-cksum_with_progress() {
+sha512sum_with_progress() {
   phase=$1
-  cksum_filepath=$2
+  sha512_filepath=$2
 
   # exchange stdout and stderr, redirect stderr to stdout after that
   {
-    pv -n "$cksum_filepath" 3>&1 1>&2 2>&3 3>&- \
+    pv -n "$sha512_filepath" 3>&1 1>&2 2>&3 3>&- \
       | update_stats_with_progress "$phase"
-  } 2>&1 \
-    | cksum
+  } 2>&1 | sha512sum | awk '{ print $1 }'
 }
 
 cleanup_previous_runs() {
@@ -260,7 +265,7 @@ ensure_enough_available_diskspace() {
   next_image=$1
   rdiff_filename=$2
 
-  if ! target_image_size=$(lookup_size_from_cksums "$next_image"); then
+  if ! target_image_size=$(lookup_from_metas size "$next_image"); then
     log err "could not look up target image size for $next_image"
     return 1
   fi
@@ -268,7 +273,7 @@ ensure_enough_available_diskspace() {
                                  2>/dev/null || echo 0)
 
   if [ -z "$rdiff_filename" ] \
-    || ! target_rdiff_size=$(lookup_size_from_cksums "$rdiff_filename"); then
+    || ! target_rdiff_size=$(lookup_from_metas size "$rdiff_filename"); then
       # We are not using rdiffs for updates.
       target_rdiff_size=0
       target_rdiff_size_on_fs=0
@@ -381,16 +386,35 @@ fetch_with_wget() {
   log info "fetched $url with success"
 }
 
-get_checksums_file() {
+get_meta_files() {
   rate_limit=$1
-  url=$2
 
-  fetch_with_wget "$rate_limit"           \
-		  "${checksums_file}.tmp" \
-		  "$url"                  \
-                  checksums_fetch         \
-    || return 1
-  mv "${checksums_file}.tmp" "${checksums_file}" || return 1
+  if ! series_urls=$(puavo-conf puavo.image.series.urls | jq -r '.[]'); then
+    log err 'could not determine series urls, is puavo.image.series.urls okay?'
+    return 1
+  fi
+  if [ -z "$series_urls" ]; then
+    log err 'no series urls have been set'
+    return 1
+  fi
+
+  mkdir -p "$metas_dir"
+  for series_url in $series_urls; do
+    meta_file="${metas_dir}/${series_url##*/}"
+    fetch_with_wget "$rate_limit"      \
+                    "${meta_file}.tmp" \
+                    "$series_url"      \
+                    checksums_fetch    \
+      || return 1
+
+    mv "${meta_file}.tmp" "$meta_file" || return 1
+  done
+
+  # remove old cruft that is no longer used
+  # (this "rm -f" may be removed after some years)
+  rm -f "${images_dir}/CKSUMS" || true
+
+  return 0
 }
 
 get_next_image() {
@@ -483,9 +507,7 @@ get_rdiff() {
       || return 1
   fi
 
-  check_with_cksum "$rdiff_filename" \
-                   "$rdiff_tmp"      \
-                   rdiff_checksum    \
+  check_checksum "$rdiff_filename" "$rdiff_tmp" rdiff_checksum \
     || return 1
 
   sync || return 1
@@ -582,14 +604,33 @@ install_image() {
   echo "is now installed and set as default."
 }
 
-lookup_size_from_cksums() {
-  file_to_look_filesize_for=$1
+lookup_from_metas() {
+  meta_field=$1
+  meta_filename=$2
 
-  awk -v filename="$file_to_look_filesize_for" '
-    BEGIN { status = 1 }
-    $3 == filename { if (status) { print $2 }; status = 0 }
-    END { exit(status) }
-  ' "$checksums_file"
+  meta_value=$(
+    case "$meta_filename" in
+      *.img)
+        jq -r --arg field "$meta_field" --arg filename "$meta_filename" \
+          '.[][][] | select(has("filename") and has($field)
+                              and .filename == $filename)
+                   | .[$field]' "$metas_dir"/*.json | head -1
+        ;;
+      *.rdiff)
+        jq -r --arg field "$meta_field" --arg filename "$meta_filename" \
+          '.[][][] | select(has("diffs")) | .diffs[]
+                   | select(has("filename") and has($field)
+                              and .filename == $filename)
+                   | .[$field]' "$metas_dir"/*.json | head -1
+        ;;
+    esac)
+
+  if [ -z "$meta_value" ]; then
+    log err "could not lookup field $meta_field for $meta_filename from metas"
+    return 1
+  fi
+
+  printf "%s\n" "$meta_value"
 }
 
 # this is mostly reimplemented in Ruby in puavo-pkg-updater
@@ -647,8 +688,8 @@ patch_with_rdiff() {
   next_image=$2
   rdiff_filename=$3
 
-  if ! next_image_filesize=$(lookup_size_from_cksums "$next_image"); then
-    log err "could not lookup image size from CKSUMS for '${next_image}'"
+  if ! next_image_filesize=$(lookup_from_metas size "$next_image"); then
+    log err "could not lookup image size from metas for '${next_image}'"
     return 1
   fi
 
@@ -737,8 +778,7 @@ try_full_image_update_from_imageserver() {
   rate_limit=$2
   next_image=$3
 
-  get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS" \
-    || return 1
+  get_meta_files "$rate_limit" || return 1
 
   # it is not sensible to continue if the required checksum does not exist
   check_checksums_exist_for "$next_image" || return 1
@@ -812,8 +852,7 @@ try_rdiff_update_from_imageserver() {
   previous_image=$4
   next_image=$5
 
-  get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS" \
-    || return 1
+  get_meta_files "$rate_limit" || return 1
 
   # it is not sensible to continue if the required checksums do not exist
   check_checksums_exist_for "$rdiff_filename" "$next_image" \
