@@ -75,6 +75,7 @@ selected_puavo_conf_arguments_as_kernel_args() {
   puavo_conf_to_kernel_args='
     puavo.admin.persistent_homedirs
     puavo.boot.plymouth.theme
+    puavo.graphics.driver
     puavo.image.overlay
   '
 
