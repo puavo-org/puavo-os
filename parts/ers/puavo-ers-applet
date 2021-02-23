@@ -833,6 +833,32 @@ class PuavoErsExamScheduler (threading.Thread):
     return self.server_cmd('get-status')
 
 
+  def load_empty_examset(self):
+    empty_zip_file_name = 'empty_exams_set.zip'
+    empty_zip_file      = os.path.join(KTP_JAKO_DIR, empty_zip_file_name)
+
+    tmpfile = '%s.tmp' % empty_zip_file
+    rm_f(tmpfile, False)
+    with zipfile.ZipFile(tmpfile, 'w') as zipObj:
+      zipObj.writestr('EMPTY', '')
+    os.rename(tmpfile, empty_zip_file)
+
+    codes_file_name = 'empty_decrypt_codes.txt'
+    codes_file      = os.path.join(KTP_JAKO_DIR, codes_file_name)
+    rm_f(codes_file, False)
+    with open(codes_file, 'w') as f:
+      pass
+
+    cmd = 'load-exam %s %s' % (empty_zip_file_name, codes_file_name)
+    status = self.server_cmd(cmd)
+
+    rm_f(empty_zip_file, False)
+    rm_f(codes_file, False)
+
+    return status
+
+
+
   def load_exams(self):
     global current_zip_name
 
@@ -1037,13 +1063,19 @@ class PuavoErsExamScheduler (threading.Thread):
     if exams_finished:
       self.maybe_store_answers(currently_loaded_exams, status)
 
-    if len(current_exams_set.exams) == 0:
-      syslog.syslog(syslog.LOG_INFO, 'no exams to schedule')
-      return
-
     if has_started and not exams_finished:
       syslog.syslog(syslog.LOG_INFO,
                     'examinations are in progress, not loading any exams')
+      return
+
+    if len(current_exams_set.exams) == 0:
+      if has_started:
+        msg = 'exams ongoing but should not be according to schedule,' \
+                 + ' resetting server state'
+        syslog.syslog(syslog.LOG_INFO, msg)
+        self.load_empty_examset()
+      else:
+        syslog.syslog(syslog.LOG_INFO, 'no exams to schedule')
       return
 
     current_exam_uuids = []
