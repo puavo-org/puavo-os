@@ -10,11 +10,6 @@ programs:
         tags: default
         puavopkg:
             id: adobe-reader
-  - airtame:
-        name: Airtame
-        tags: default, audiovideo
-        puavopkg:
-            id: airtame
   - amme:
         type: web
         name: Amme
@@ -1203,7 +1198,6 @@ menus:
             - pavucontrol
             - org.gnome.Screenshot
             - simplescreenrecorder
-            - airtame
             - novoconnect-software
             - novo-launcher
             - novo_desktop_streamer

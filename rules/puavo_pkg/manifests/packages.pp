@@ -28,7 +28,6 @@ class puavo_pkg::packages {
 
   $available_packages = [ 'abitti-naksu'
 			, 'adobe-reader'
-			, 'airtame'
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-ottodiylib'
