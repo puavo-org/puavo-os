@@ -1,8 +1,15 @@
-openldap (2.4.47+dfsg-3+deb10u5+puavo1+buildonce) unstable; urgency=medium
+openldap (2.4.47+dfsg-3+deb10u6+puavo1+buildonce) buster; urgency=medium
 
   * With some patches by Puavo Org.
 
  -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 12:54:06 +0200
+
+openldap (2.4.47+dfsg-3+deb10u6) buster-security; urgency=high
+
+  * Fix slapd assertion failure in Certificate List Exact Assertion validation
+    (ITS#9454) (CVE-2021-27212)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 14 Feb 2021 10:32:34 -0800
 
 openldap (2.4.47+dfsg-3+deb10u5) buster-security; urgency=high
 
