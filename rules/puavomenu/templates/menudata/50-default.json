@@ -693,6 +693,13 @@
             },
             "tags": "default, education"
         },
+        "openroberta": {
+            "type": "web",
+            "url": "https://lab.open-roberta.org",
+            "name": "Open Roberta Lab (web)",
+            "icon": "/usr/share/icons/oxygen/base/64x64/categories/applications-internet.png",
+            "tags": "default, education"
+        },
         "openscad": {
             "name": "OpenSCAD",
             "tags": "default"
@@ -2040,6 +2047,7 @@
                 "drracket",
                 "enchanting",
                 "makecode",
+                "openroberta",
                 "bluegriffon",
                 "eclipse-cpp",
                 "eclipse-java",
