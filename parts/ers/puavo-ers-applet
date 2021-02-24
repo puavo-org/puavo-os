@@ -80,6 +80,7 @@ class PuavoErsApplet:
   NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
   PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
   NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
+  SERVER_VERSION_PATH  = os.path.join(COMM_DIR, '.server_version')
 
   def __init__(self):
     self.indicator \
@@ -303,9 +304,40 @@ class PuavoErsApplet:
 
 
   def enable_exam_scheduler(self, widget=None):
-    if not os.path.isdir(COMM_DIR):
-      errmsg = 'communication directory does not exist, will not enable' \
-                 + ' exam scheduler'
+    current_automation_server_version = None
+    current_server_version = None
+
+    try:
+      with open(self.SERVER_VERSION_PATH) as f:
+        current_automation_server_version = f.read().rstrip()
+    except Exception as e:
+      pass
+
+    try:
+      cmd = [ 'VBoxManage', 'guestproperty', 'get', 'NaksuAbittiKTP',
+              'boxVersion' ]
+      vbox_output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL) \
+                              .rstrip().decode('utf-8')
+      match = re.match('^Value: (.*)$', vbox_output)
+      if match:
+        current_server_version = match.group(1)
+    except Exception as e:
+      pass
+
+    syslog.syslog(syslog.LOG_NOTICE,
+                  'current automation version (for server version): %s' \
+                    % current_automation_server_version)
+    syslog.syslog(syslog.LOG_NOTICE,
+                  'current exam server version: %s' \
+                    % current_server_version)
+
+    matching_versions \
+      = current_server_version and current_automation_server_version \
+          and current_server_version == current_automation_server_version
+    if not matching_versions:
+      errmsg = 'server automation version does not exist or does not' \
+                 + ' match the current server version, will not enable' \
+                 + ' the exam scheduler'
       syslog.syslog(syslog.LOG_ERR, errmsg)
 
       summary = _tr('Install automation helper')
