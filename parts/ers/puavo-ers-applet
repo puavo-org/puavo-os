@@ -644,13 +644,8 @@ class PuavoErsExamSorter (threading.Thread):
         exam_end_day    = datetime.date.fromtimestamp(exam['end_time'])
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
 
-        if exam_end_time < self.current_time:
-          # add to archive, but only if exam has been active in the last
-          # two weeks
-          end_time = exam_end_time.timestamp()
-          cur_time = self.current_time.timestamp()
-          if cur_time < (end_time + 60 * 60 * 24 * 14):
-            archived_exams_filenames.append(exam['file_name'])
+        if exam_end_day < self.current_day:
+          archived_exams_filenames.append(exam['file_name'])
         elif self.current_day < exam_start_day:
           upcoming_exams_filenames.append(exam['file_name'])
         else:
