@@ -210,7 +210,6 @@ Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 begin
   deviceinfo = JSON.parse( File.read('/etc/puavo/device.json') )
-  raise MonitorsXMLSet if deviceinfo['monitors_xml']
 
   puavoconf = Puavo::Conf.new
   puavo_xrandr_apply_presets = puavoconf.get('puavo.xrandr.apply_presets')
@@ -222,6 +221,13 @@ begin
   update_monitors_info()
 
   xrandr_parsed_args_list = []
+
+  if deviceinfo['monitors_xml'] then
+    # We do not look xrandr arguments (except for extra modes)
+    # when Monitors XML is set.
+    apply_extra_modes(puavo_xrandr_extra_modes, xrandr_parsed_args_list)
+    raise MonitorsXMLSet
+  end
 
   begin
     xrandr_args_list = JSON.parse(puavo_xrandr_args)
@@ -251,7 +257,7 @@ begin
 
 rescue MonitorsXMLSet => e
   Syslog.log(Syslog::LOG_INFO,
-             'not doing anything because monitors.xml is set in Puavo')
+             'not applying settings because monitors.xml is set in Puavo')
 rescue StandardError => e
   Syslog.log(Syslog::LOG_ERR, '%s', e.message)
   $status = 1
