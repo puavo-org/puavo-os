@@ -178,6 +178,7 @@ class packages {
     , 'grub-pc'
     , 'grub-pc-bin'
     , 'ksh'
+    , 'libc++1'        #needed by discord
     , 'libpam-ccreds'
     , 'libpam-krb5'
     , 'libpam-ldapd'
