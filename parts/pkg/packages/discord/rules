@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+discord_links='
+  /usr/bin/discord
+  /usr/share/applications/discord.desktop
+  /usr/share/discord
+  /usr/share/doc/discord
+  /usr/share/lintian/overrides/discord
+  /usr/share/pixmaps/discord.png'
+
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+        for f in $discord_links; do
+          mkdir -p "$(dirname "$f")"
+          ln -fns -T "${upstream_dir}/${f}" "$f"
+        done
+	;;
+    unconfigure)
+	rm -rf $discord_links
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac
