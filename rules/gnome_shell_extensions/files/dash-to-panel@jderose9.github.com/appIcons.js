@@ -1840,17 +1840,6 @@ var MyShowAppsIconMenu = Utils.defineClass({
             Me.settings.set_boolean('taskbar-locked', !Me.settings.get_boolean('taskbar-locked'));
         });
 
-        let settingsMenuItem = this._appendMenuItem(_('Dash to Panel Settings'));
-        settingsMenuItem.connect('activate', function () {
-            let command = ["gnome-shell-extension-prefs"];
-
-            if (Config.PACKAGE_VERSION > '3.36') {
-                command = ["gnome-extensions", "prefs"];
-            }
-
-            Util.spawn(command.concat([Me.metadata.uuid]));
-        });
-
         if(this._source._dtpPanel) {
             this._appendSeparator();
             let item = this._appendMenuItem(this._source._dtpPanel._restoreWindowList ? _('Restore Windows') : _('Show Desktop'));
