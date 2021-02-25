@@ -19,6 +19,7 @@ packagedirs += celestia
 packagedirs += cmaptools
 packagedirs += cnijfilter2
 packagedirs += cura-appimage
+packagedirs += discord
 packagedirs += dropbox
 packagedirs += dragonbox_koulu1
 packagedirs += dragonbox_koulu2
