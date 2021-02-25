@@ -174,6 +174,7 @@ class packages {
     , 'gdebi-core'
     , 'grub-pc'
     , 'ksh'
+    , 'libc++1'        #needed by discord
     , 'libpam-modules'
     , 'lvm2'
     , 'nfs-common'
