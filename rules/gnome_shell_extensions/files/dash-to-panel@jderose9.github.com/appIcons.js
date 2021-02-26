@@ -1905,11 +1905,6 @@ var MyShowAppsIconMenu = Utils.defineClass({
         });
 
         _appendItem(this, {
-            title: 'Extensions',
-            cmd: ['gnome-shell-extension-prefs']
-        });
-
-        _appendItem(this, {
             title: 'Settings',
             cmd: ['gnome-control-center', 'wifi']
         });
