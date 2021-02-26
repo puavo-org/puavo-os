@@ -214,6 +214,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
+	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update-mime-database
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\

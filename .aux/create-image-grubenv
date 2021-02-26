@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -eu
+
+rootfs=${1:-}
+release_name=${2:-}
+
+if [ -z "$rootfs" ]; then
+  echo "Usage: $(basename $0) rootfs [release_name]" >&2
+  exit 1
+fi
+
+if [ -z "$release_name" ]; then
+  release_name=$(cat "${rootfs}/etc/puavo-image/release" 2>/dev/null || true)
+  if [ -z "$release_name" ]; then
+    echo 'No release name' >&2
+    exit 1
+  fi
+fi
+
+grub-editenv "${rootfs}/boot/grub/puavoimage_grubenv" create
+grub-editenv "${rootfs}/boot/grub/puavoimage_grubenv" \
+             set "__puavoimage_release_name=${release_name}"
