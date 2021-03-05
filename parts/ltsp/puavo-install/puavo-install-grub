@@ -83,7 +83,6 @@ terminal_output gfxterm
 set timeout=5
 ### END /usr/local/etc/grub.d/00_header ###
 
-function get_kernelarch { regexp -s 2:"$2" '^(.*)-(i386|amd64)$' "$1"; }
 function get_pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }
 
 function get_kernelversion {
