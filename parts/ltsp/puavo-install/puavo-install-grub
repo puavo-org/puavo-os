@@ -85,6 +85,18 @@ set timeout=5
 
 function get_pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }
 
+function get_puavoimage_release_name {
+  set imagefile="$1"
+
+  set __puavoimage_release_name=""
+  set puavoimage_release_name=""
+
+  loopback image "$imagefile"
+  load_env --file (image)/boot/grub/puavoimage_grubenv --skip-sig __puavoimage_release_name
+  set puavoimage_release_name="${__puavoimage_release_name}"
+  loopback -d image
+}
+
 function ltsp_image_entry {
   set imagefile="$1"
   set description="$2"
@@ -100,12 +112,19 @@ function ltsp_image_entry {
     set kernelparameters="${kernelparameters} puavo.hosttype=laptop puavo.guestlogin.enabled=true"
   fi
 
-  if test "$imagepath" = "/${puavo_grub_puavo_os_default_image}" \
-       -a "$boottype" = "$puavo_grub_puavo_os_default_mode"; then
-    set default="${description} (${imagepath})"
+  get_puavoimage_release_name "$imagefile"
+  if test -n "$puavoimage_release_name"; then
+    set boot_label="${description} (${puavoimage_release_name})"
+  else
+    set boot_label="${description} (${imagepath})"
   fi
 
-  menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
+  if test "$imagepath" = "/${puavo_grub_puavo_os_default_image}" \
+       -a "$boottype" = "$puavo_grub_puavo_os_default_mode"; then
+    set default="${boot_label}"
+  fi
+
+  menuentry "${boot_label}" "$imagefile" "$imagepath" "$kernelparameters" {
     set kernel_version=''
     # --- remove "#" from the following if you need another kernel ---
     # set kernel_version='default'
@@ -268,11 +287,11 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   fi
 
   if test -f "${default_image}"; then
-    ltsp_image_entry "${default_image}" "${text_normal_startup} - ${default_image_alias}" "" "normal"
+    ltsp_image_entry "${default_image}" "${text_normal_startup}" "" "normal"
     if test "__PUAVO_LIVEBOOT_OPTION__" = "true"; then
-      ltsp_image_entry "${default_image}" "${text_liveboot_startup} - ${default_image_alias}" "" "liveboot"
+      ltsp_image_entry "${default_image}" "${text_liveboot_startup}" "" "liveboot"
     fi
-    ltsp_image_entry_superlaptop "${default_image}" "${text_developer_mode} - ${default_image_alias}"
+    ltsp_image_entry_superlaptop "${default_image}" "${text_developer_mode}"
 
     loopback default_image_loop "${default_image}"
     set possible_puavo_grub_theme_path="(default_image_loop)/boot/grub/themes/${puavo_grub_theme}/theme.txt"
@@ -281,8 +300,8 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     fi
   fi
   if test -f "${backup_image}"; then
-    ltsp_image_entry "${backup_image}" "${text_backup_normal_startup} - ${backup_image_alias}" "" "normal"
-    ltsp_image_entry_superlaptop "${backup_image}" "${text_backup_developer_mode} - ${backup_image_alias}"
+    ltsp_image_entry "${backup_image}" "${text_backup_normal_startup}" "" "normal"
+    ltsp_image_entry_superlaptop "${backup_image}" "${text_backup_developer_mode}"
   fi
 
   for file in ${dev}/*.img; do
