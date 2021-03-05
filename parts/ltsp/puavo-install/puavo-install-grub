@@ -85,14 +85,6 @@ set timeout=5
 
 function get_pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }
 
-function get_kernelversion {
-  if regexp -s 1:"$2" '^(.*)-(i386|amd64)$' "$1"; then
-    :
-  else
-    set $2="$1"
-  fi
-}
-
 function ltsp_image_entry {
   set imagefile="$1"
   set description="$2"
