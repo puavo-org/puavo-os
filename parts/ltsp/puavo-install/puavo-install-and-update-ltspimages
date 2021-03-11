@@ -340,10 +340,23 @@ ensure_that_default_image_is_the_current_one() {
 }
 
 fetch_with_wget() {
-  rate_limit=$1
-  output_path=$2
-  url=$3
-  phase=$4
+  as_someone=$1
+  rate_limit=$2
+  output_path=$3
+  url=$4
+  phase=$5
+
+  # rdiffs may be fetched with torrents, running as "puavo-update".
+  # To avoid permission problems (and maybe even for security),
+  # fetch rdiffs always as "puavo-update" user.
+  case "$as_someone" in
+    as_puavo_update) wget='sudo -n -u puavo-update wget' ;;
+    as_root)         wget='wget'                         ;;
+    *)
+      log err 'Internal error, fetch_with_wget called with bad arguments' >&2
+      return 1
+      ;;
+  esac
 
   wgetopts=""
   if [ -n "$rate_limit" ]; then
@@ -353,12 +366,12 @@ fetch_with_wget() {
   wget_error_code=$(
     {
       {
-	wget --ca-certificate=/etc/puavo-conf/rootca.pem \
-	     --continue                                  \
-	     --output-document="${output_path}"          \
-	     --progress=dot:mega                         \
-	     $wgetopts                                   \
-	     "$url" >/dev/null                           \
+	$wget --ca-certificate=/etc/puavo-conf/rootca.pem \
+	      --continue                                  \
+	      --output-document="${output_path}"          \
+	      --progress=dot:mega                         \
+	      $wgetopts                                   \
+	      "$url" >/dev/null                           \
 	  || echo $?
       } 3>&1 1>&2 2>&3 3>&- \
 	| unbuffer -p awk '
@@ -401,10 +414,10 @@ get_meta_files() {
   mkdir -p "$metas_dir"
   for series_url in $series_urls; do
     meta_file="${metas_dir}/${series_url##*/}"
-    fetch_with_wget "$rate_limit"      \
-                    "${meta_file}.tmp" \
-                    "$series_url"      \
-                    checksums_fetch    \
+    fetch_with_wget as_root "$rate_limit"      \
+                            "${meta_file}.tmp" \
+                            "$series_url"      \
+                            checksums_fetch    \
       || return 1
 
     mv "${meta_file}.tmp" "$meta_file" || return 1
@@ -505,7 +518,7 @@ get_rdiff() {
   if $use_torrents_for_rdiff_updates; then
     download_url_with_torrent "$rdiff_url" || return 1
   else
-    fetch_with_wget "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
+    fetch_with_wget as_puavo_update "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
       || return 1
   fi
 
@@ -833,10 +846,10 @@ try_full_image_update_from_imageserver() {
     log err "rsyncing ${remote_rsyncpath}: rsync error code $rsync_error_code"
     httpurl="https://${image_server}/${next_image}"
     log info "falling back to fetching $httpurl"
-    fetch_with_wget "$rate_limit"         \
-		    "$next_image_tmppath" \
-		    "$httpurl"            \
-		    image_download        \
+    fetch_with_wget as_root "$rate_limit"         \
+		            "$next_image_tmppath" \
+		            "$httpurl"            \
+		            image_download        \
       || return 1
   fi
 
