@@ -15,7 +15,7 @@ if $background_mode; then
   sleep 300
 fi
 
-my_hostname=$(hostname)
+read my_hostname < /etc/puavo/hostname
 
 if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
   prr_args='--user-etc --writable'
