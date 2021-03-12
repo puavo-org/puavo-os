@@ -361,6 +361,19 @@ install_localbootdevice() {
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
     bootserver_setup_state
+  else
+    # Start openvpn connection.  For bootserver installation the vpn
+    # connection is mandatory, but this is handled in "bootserver_setup_state".
+    # For other cases, it is not serious if it does not come up.
+    # We will not wait for it, there is plenty of time for it to be
+    # established during the "install_image"-phase below.  But it is useful
+    # to update image (in case the installation image does not match the
+    # image version specified in Puavo) and the Abitti-image as well in case
+    # the installation does not happen on a network where the image server
+    # is available.
+    echo 'Starting vpn connection'
+    service puavo-vpn-client-dnsmasq start || true
+    service puavo-vpn-client-openvpn start || true
   fi
 
   install_image "$puavo_install_hosttype"
