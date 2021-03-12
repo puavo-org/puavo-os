@@ -17,6 +17,14 @@ fi
 
 read my_hostname < /etc/puavo/hostname
 
+# XXX get rid of hosttype handling
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+if [ "$puavo_hosttype" = 'bootserver' ]; then
+  url="v3/boot_servers/${my_hostname}/sysinfo"
+else
+  url="v3/devices/${my_hostname}/sysinfo"
+fi
+
 if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
   prr_args='--user-etc --writable'
 else
@@ -34,7 +42,7 @@ while true; do
     if ! printf %s "$sysinfo_json" | jq 'del(.network_interfaces)' > "$tmpfile"; then
       logmsg -p user.err 'could not filter out network interfaces info'
     else
-      if ! puavo-rest-request "v3/devices/${my_hostname}/sysinfo" $prr_args \
+      if ! puavo-rest-request "$url" $prr_args \
                               -- -F "sysinfo=<$tmpfile" >/dev/null; then
         logmsg -p user.err 'sending sysinfo to puavo failed'
         status=1
