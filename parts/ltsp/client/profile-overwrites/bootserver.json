@@ -14,6 +14,7 @@
   "puavo.service.cron.cronjobs":                    "fix-homedir-permissions,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-pkg-update,puavo-setup-bootserver-printer-restrictions,puavo-update-airprint-ddns,remove-cups-jobs",
   "puavo.service.bind9.enabled":                    "true",
   "puavo.service.cups-watchdog.enabled":            "true",
+  "puavo.service.dnsmasq.enabled":                  "true",
   "puavo.service.incron.enabled":                   "true",
   "puavo.service.inetd.enabled":                    "true",
   "puavo.service.isc-dhcp-server.enabled":          "true",
