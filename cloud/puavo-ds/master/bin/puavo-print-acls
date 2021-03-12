@@ -213,6 +213,13 @@ rule {
 }
 
 rule {
+  [dn children $Servers]
+    [attrs puavoDeviceCurrentImage puavoDeviceAvailableImage puavoDeviceHWInfo]
+      by self write
+      by *    none break
+}
+
+rule {
   # Give servers read access to everything (in the same organisation
   # of course) so that ldap replication works.
   [dn subtree]
@@ -452,13 +459,6 @@ rule {
       by $staff                read	# XXX maybe just remove this?
       by [systemgroup servers] read
       by anonymous             auth
-}
-
-rule {
-  [dn children $Servers]
-    [attrs puavoDeviceCurrentImage puavoDeviceAvailableImage puavoDeviceHWInfo]
-      by self write
-      by *    none break
 }
 
 rule {
