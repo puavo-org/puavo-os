@@ -256,13 +256,24 @@ update_functions = [
 
 exitcode = 0
 
+unsupported_update_functions = ARGV.select do |uf|
+                                 !update_functions.include?(uf.to_sym)
+                               end
+unless unsupported_update_functions.empty? then
+  errmsg = '>>> Trying to trigger unsupported update functions: ' \
+              + unsupported_update_functions.join(' ') + "\n"
+  logerr(Syslog::LOG_ERR, errmsg)
+end
+
 i = 0
 update_functions.each do |func|
-  begin
-    Object.send(func, restclient)
-  rescue StandardError => e
-    logerr(Syslog::LOG_ERR, "Problem in running %s: %s\n", func, e.message)
-    exitcode |= (1 << i)
+  if ARGV.empty? || ARGV.include?(func.to_s) then
+    begin
+      Object.send(func, restclient)
+    rescue StandardError => e
+      logerr(Syslog::LOG_ERR, "Problem in running %s: %s\n", func, e.message)
+      exitcode |= (1 << i)
+    end
   end
   i += 1
 end

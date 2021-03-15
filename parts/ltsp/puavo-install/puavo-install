@@ -148,20 +148,6 @@ ask_preseed() {
   done
 }
 
-bootserver_setup_ldapmaster_connection() {
-  echo 'Starting vpn connection'
-  service puavo-vpn-client-openvpn start || true
-  read ldapmaster < /etc/puavo/ldap/master
-  for i in $(seq 10); do
-    if host -W 5 "$ldapmaster" >/dev/null; then
-      return 0
-    fi
-    echo 'Waiting for ldapmaster to become available...'
-    sleep "$i"
-  done
-  return 1
-}
-
 bootserver_setup_state() {
   if ! puavo-set-root-password; then
     echo 'Could not setup root password for bootservers' >&2
@@ -193,12 +179,6 @@ bootserver_setup_state() {
 
   /etc/puavo-conf/scripts/setup_slapd
   /etc/puavo-conf/scripts/setup_krb5kdc
-
-  # puavo-init-ds-slave needs network connection to ldapmaster
-  if ! bootserver_setup_ldapmaster_connection; then
-    echo 'No connection to ldapmaster, can not initialize ldap' >&2
-    return 1
-  fi
 
   puavo-init-ds-slave
 }
@@ -327,6 +307,28 @@ install_image() {
   sync
 }
 
+start_vpn() {
+  puavo_hosttype=$1
+
+  # start openvpn connection
+  echo -n 'Starting vpn connection'
+  service puavo-vpn-client-dnsmasq start || true
+  service puavo-vpn-client-openvpn start || true
+
+  read ldapmaster < /etc/puavo/ldap/master
+  for i in $(seq 10); do
+    if host -W 5 "$ldapmaster" >/dev/null; then
+      echo ' OK.'
+      return 0
+    fi
+    echo -n .
+    sleep "$i"
+  done
+
+  echo ' FAILED.'
+  return 1
+}
+
 install_localbootdevice() {
   puavo_hosttype=$1
   puavo_install_hosttype=$2
@@ -359,25 +361,27 @@ install_localbootdevice() {
     install_grub
   fi
 
-  update_configuration || update_configuration_retstatus=1
+  # these must work, otherwise we have serious problems
+  # these are also required for VPN
+  update_configuration update_device_json update_certificate
   # fix this as update_configuration messes this up (from the kernel cmdline):
+  puavo-conf puavo.hosttype "$puavo_hosttype"
+
+  # VPN is mandatory only for bootserver installations,
+  # others will fail softly
+  if ! start_vpn "$puavo_hosttype"; then
+    if [ "$puavo_hosttype" = 'bootserver' ]; then
+      echo 'VPN connection is required for bootserver install, exiting.' >&2
+      return 1
+    fi
+  fi
+
+  # other configuration update
+  update_configuration || update_configuration_retstatus=1
   puavo-conf puavo.hosttype "$puavo_hosttype"
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
     bootserver_setup_state
-  else
-    # Start openvpn connection.  For bootserver installation the vpn
-    # connection is mandatory, but this is handled in "bootserver_setup_state".
-    # For other cases, it is not serious if it does not come up.
-    # We will not wait for it, there is plenty of time for it to be
-    # established during the "install_image"-phase below.  But it is useful
-    # to update image (in case the installation image does not match the
-    # image version specified in Puavo) and the Abitti-image as well in case
-    # the installation does not happen on a network where the image server
-    # is available.
-    echo 'Starting vpn connection'
-    service puavo-vpn-client-dnsmasq start || true
-    service puavo-vpn-client-openvpn start || true
   fi
 
   install_image "$puavo_install_hosttype"
@@ -412,7 +416,7 @@ setup_state() {
 
 update_configuration() {
   echo 'Updating configuration...'
-  if /usr/lib/puavo-ltsp-install/update-configuration; then
+  if /usr/lib/puavo-ltsp-install/update-configuration "$@"; then
     echo '  ... configuration updated.'
     echo
     return 0
