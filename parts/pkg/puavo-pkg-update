@@ -20,14 +20,13 @@ installed_links_dir='/var/lib/puavo-pkg/installed'
 installers_dir='/images/puavo-pkg/installers'
 topdomain=$(cat /etc/puavo/topdomain)
 
+reload_menudata=false
+
 puavo_pkg_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
 if [ -z "$puavo_pkg_server" ]; then
   read topdomain < /etc/puavo/topdomain
   puavo_pkg_server="cdn.${topdomain}"
 fi
-
-# XXX get rid of hosttype handling
-puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 mkdir -p "$installers_dir"
 
@@ -149,6 +148,7 @@ install_pkg() {
     || [ "$old_package_version" -lt "$new_package_version" ]; then
       logmsg user.notice "installing ${puavo_pkg} from ${installer_fullpath}"
       puavo-pkg install "$installer_fullpath"
+      reload_menudata=true
   fi
 }
 
@@ -188,6 +188,7 @@ maybe_remove_pkg() {
   if [ -z "$version_to_remove" ]; then
     logmsg user.notice "removing ${puavo_pkg}"
     puavo-pkg remove "$puavo_pkg"
+    reload_menudata=true
     return 0
   fi
 
@@ -203,6 +204,7 @@ maybe_remove_pkg() {
     if [ "$installed_version_number" -le "$version_to_remove" ]; then
       logmsg user.notice "removing ${puavo_pkg} due to version number match"
       puavo-pkg remove "$puavo_pkg"
+      reload_menudata=true
     fi
 
     return 0
@@ -218,6 +220,7 @@ maybe_remove_pkg() {
   if [ "$installed_pkg_id" = "$version_to_remove" ]; then
     logmsg user.notice "removing ${puavo_pkg} due to exact version match"
     puavo-pkg remove "$puavo_pkg"
+    reload_menudata=true
     return 0
   fi
 }
@@ -325,6 +328,13 @@ logmsg user.notice 'garbage collecting old puavo-pkg upstream packs'
 if ! puavo-pkg gc-upstream-packs; then
   logmsg user.err 'problem in garbage collecting puavo-pkg upstream packs'
   status=1
+fi
+
+if $reload_menudata; then
+  logmsg user.notice 'reloading puavomenu data'
+  for puavomenu_socket in /run/user/*/puavomenu; do
+    echo reload-menudata | nc -U -w 5 "$puavomenu_socket" || true
+  done
 fi
 
 logmsg user.notice "puavo-pkg-update finishing with status ${status}"
