@@ -310,6 +310,11 @@ install_image() {
 start_vpn() {
   puavo_hosttype=$1
 
+  # at installation time we use the "laptop"-style DNS/VPN configuration
+  # even for bootservers
+  puavo-conf puavo.service.dnsmasq.enabled false
+  puavo-conf puavo.service.puavo-vpn-client-dnsmasq.enabled true
+
   # start openvpn connection
   echo -n 'Starting vpn connection'
   service puavo-vpn-client-dnsmasq start || true
@@ -368,7 +373,8 @@ install_localbootdevice() {
   puavo-conf puavo.hosttype "$puavo_hosttype"
 
   # VPN is mandatory only for bootserver installations,
-  # others will fail softly
+  # others will fail softly (installation should succeed,
+  # possibly with some minor configuration issues)
   if ! start_vpn "$puavo_hosttype"; then
     if [ "$puavo_hosttype" = 'bootserver' ]; then
       echo 'VPN connection is required for bootserver install, exiting.' >&2

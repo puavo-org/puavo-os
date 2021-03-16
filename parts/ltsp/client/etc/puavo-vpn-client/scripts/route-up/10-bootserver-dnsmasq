@@ -17,8 +17,7 @@ set -eu
 
 conffile='/etc/dnsmasq.d/10-puavo-vpn.conf'
 
-# XXX get rid of hosttype handling
-if [ "$(puavo-conf puavo.hosttype)" != 'bootserver' ]; then
+if [ "$(puavo-conf puavo.service.dnsmasq.enabled)" != 'true' ]; then
   rm -f "$conffile"
   exit 0
 fi
