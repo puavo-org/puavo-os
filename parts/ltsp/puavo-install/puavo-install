@@ -310,6 +310,12 @@ install_image() {
 start_vpn() {
   puavo_hosttype=$1
 
+  if [ -e /run/puavo/nbd-server ]; then
+    # if we have booted from network, we can trust bootserver to handle
+    # our special networking needs, so vpn is not necessary
+    return 0
+  fi
+
   # at installation time we use the "laptop"-style DNS/VPN configuration
   # even for bootservers
   puavo-conf puavo.service.dnsmasq.enabled false
