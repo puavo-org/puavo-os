@@ -159,6 +159,14 @@ msgstr "Epäkelpoa tietoa"
 msgid "This registration program sent bad information to the server."
 msgstr "Tämä rekisteröintiohjelma lähetti epäkelpoa tietoa palvelimelle."
 
+#: page_account.py:449
+msgid "Invalid organisation"
+msgstr "Virheellinen organisaatio"
+
+#: page_account.py:450
+msgid "This machine has been registered to an invalid organisation."
+msgstr "Tämä laite on rekisteröity virheelliseen organisaatioon."
+
 #: page_account.py:424
 msgid "Missing information"
 msgstr "Puutteelliset tiedot"

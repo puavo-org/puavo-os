@@ -84,6 +84,7 @@ class NewUserRegistrationWindow:
         self.data_dir = settings['data_dir']
         self.prod_mode = settings['prod_mode']
         self.machine_password = settings['machine_password']
+        self.organisation_domain = settings['organisation_domain']
 
         self.page_definitions = [
             (PageWelcome),
@@ -415,19 +416,20 @@ class NewUserRegistrationWindow:
     # Returns the machine data needed on the accounts page, when sending
     # data to the server
     def get_machine_data(self):
+        data = {
+            'organisation_domain': self.organisation_domain,
+            'password': self.machine_password
+        }
+
         if self.prod_mode:
-            return {
-                'dn': open('/etc/puavo/ldap/dn', 'rb').read().decode('utf-8').strip(),
-                'password': self.machine_password,
-                'hostname': socket.gethostname(),
-            }
+            data['dn'] = open('/etc/puavo/ldap/dn', 'rb').read().decode('utf-8').strip()
+            data['hostname'] = socket.gethostname()
         else:
-            return {
-                # this machine does not exist anywhere, development purposes only
-                'dn': 'puavoId=37,ou=Devices,ou=Hosts,dc=edu,dc=hogwarts,dc=fi',
-                'password': self.machine_password,
-                'hostname': 'laptop1',
-            }
+            # This machine does not exist anywhere, development purposes only
+            data['dn'] = 'puavoId=37,ou=Devices,ou=Hosts,dc=edu,dc=hogwarts,dc=net'
+            data['hostname'] = 'laptop1'
+
+        return data
 
 
     def previous_page(self):
@@ -516,23 +518,24 @@ else:
     logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG)
 
+settings = {
+    'prod_mode': prod_mode,
+}
+
 try:
     if prod_mode:
         get_password_cmd = ['sudo', '-n', 'cat', '/etc/puavo/ldap/password']
-        host_ldap_password = subprocess.check_output(get_password_cmd).decode('utf-8').strip()
+        settings['machine_password'] = subprocess.check_output(get_password_cmd).decode('utf-8').strip()
+        settings['organisation_domain'] = open('/etc/puavo/domain', 'rb').read().decode('utf-8').strip()
     else:
-        # this password is a randomly generated string, the "machine"
+        # This password is a randomly generated string, the "machine"
         # does not actually exist
-        host_ldap_password = '7nj7am5d09kug3ed4g24z3zx3x6pek09ybrdbfrd'
+        settings['machine_password'] = '7nj7am5d09kug3ed4g24z3zx3x6pek09ybrdbfrd'
+        settings['organisation_domain'] = 'hogwarts.puavo.net'
 except subprocess.CalledProcessError:
     errmsg = _tr('You do not have the required permissions to use this tool.')
     utils.show_error_message(None, _tr('No permissions'), errmsg)
     exit(1)
-
-settings = {
-    'prod_mode': prod_mode,
-    'machine_password': host_ldap_password,
-}
 
 if prod_mode:
     settings['data_dir'] = '/usr/share/puavo-user-registration/data'

@@ -443,6 +443,15 @@ class PageAccount(PageDefinition):
                 _tr('Please contact support and give them this code:') + \
                 '\n\n<big>{0}</big>'.format(response['log_id']))
 
+        elif response['status'] == 'invalid_organisation_domain':
+            utils.show_error_message(
+                self.parent_window,
+                _tr('Invalid organisation'),
+                _tr('This machine has been registered to an invalid organisation.') + \
+                '  ' +
+                _tr('Please contact support and give them this code:') + \
+                '\n\n<big>{0}</big>'.format(response['log_id']))
+
         elif response['status'] == 'incomplete_data':
             # *We* sent incomplete/missing data :-(
             utils.show_error_message(
