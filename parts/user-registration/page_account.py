@@ -279,8 +279,8 @@ class PageAccount(PageDefinition):
         elif len(username) < 3:
             message = _tr('The login name must be at least three characters long')
             is_good = False
-        elif username[0] not in 'abcdefghijklmnopqrstuvwxyz0123456789':
-            message = _tr('The login name must start with a letter or a number')
+        elif username[0] not in 'abcdefghijklmnopqrstuvwxyz':
+            message = _tr('The login name must start with a letter')
             is_good = False
         else:
             message = ''
