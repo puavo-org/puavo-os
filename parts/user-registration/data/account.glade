@@ -268,8 +268,8 @@
             <property name="no_show_all">True</property>
             <property name="halign">start</property>
             <property name="valign">start</property>
-            <property name="label" translatable="yes">The phone number is optional.  It is used only for technical support.
-Please enter only digits (0-9).</property>
+            <property name="label" translatable="yes">The phone number is optional. It is used only for technical support.
+Please enter only digits, + and - -signs.</property>
             <property name="max_width_chars">50</property>
             <style>
               <class name="account_hint"/>
