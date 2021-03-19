@@ -164,7 +164,7 @@ def __program_installed(program, language, desktop_dirs, icon_locator, icon_cach
 
     # Try to load the icon file
     icon_name = new_menudata.get('icon', None)
-    icon_file, _ = icon_locator.locate(icon_name)
+    icon_file, _ = icon_locator.locate_icon(icon_name)
 
     # Update the program object
     program.name = new_menudata.get('name', '<No name>')
