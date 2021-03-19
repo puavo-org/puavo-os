@@ -58,10 +58,18 @@ class HoverIconButtonBase(Gtk.Button):
         self.disabled = False
 
         # For rendering the label
-        self.label_layout = self.create_pango_layout(label)
-        self.label_layout.set_alignment(Pango.Alignment.CENTER)
-        self.label_layout.set_wrap(Pango.WrapMode.WORD_CHAR)
-        self.label_layout.set_width((width - 20) * Pango.SCALE)
+        self.label_layout = None
+
+        try:
+            self.label_layout = self.create_pango_layout(label)
+            self.label_layout.set_alignment(Pango.Alignment.CENTER)
+            self.label_layout.set_wrap(Pango.WrapMode.WORD_CHAR)
+            self.label_layout.set_width((width - 20) * Pango.SCALE)
+        except BaseException as e:
+            logging.error('Unable to create a button text layout:')
+            logging.error(e, exc_info=True)
+            logging.error('The label was:')
+            logging.error(label)
 
         # Hover state
         self.hover = False
@@ -143,6 +151,9 @@ class HoverIconButtonBase(Gtk.Button):
 
     # Draw the label
     def draw_label(self, ctx):
+        if not self.label_layout:
+            return
+
         Gtk.render_layout(self.get_style_context(), ctx,
                           self.label_pos[0], self.label_pos[1],
                           self.label_layout)
