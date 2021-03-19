@@ -167,8 +167,11 @@ def __program_installed(program, language, desktop_dirs, icon_locator, icon_cach
     icon_file, _ = icon_locator.locate_icon(icon_name)
 
     # Update the program object
-    program.name = new_menudata.get('name', '<No name>')
+    program.name = utils.localize(new_menudata.get('name', '<No name>'), language)
     program.description = new_menudata.get('description', None)
+
+    if program.description is not None:
+        program.description = utils.localize(program.description, language)
 
     if icon_file:
         program.icon, usable = icon_cache.load_icon(icon_file)
