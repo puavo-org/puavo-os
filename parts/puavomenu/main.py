@@ -855,9 +855,12 @@ class PuavoMenu(Gtk.Window):
                     program.is_installer():
                     continue
 
-                button = self.__make_program_button(program)
-                button.connect('clicked', self.clicked_program_button)
-                new_buttons.append(button)
+                try:
+                    button = self.__make_program_button(program)
+                    button.connect('clicked', self.clicked_program_button)
+                    new_buttons.append(button)
+                except BaseException as e:
+                    logging.error(str(e))
 
             # Handle special situations
             if not self.current_menu.program_ids:
