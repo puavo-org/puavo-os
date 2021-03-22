@@ -81,6 +81,7 @@ rescue StandardError => e
 end
 
 auto_gsm = puavoconf.get('puavo.wireless.nm.gsm.automatic.enabled') == 'true'
+shared_wired = puavoconf.get('puavo.wired.nm.shared.enabled') == 'true'
 
 puavoconf.close
 
@@ -105,6 +106,10 @@ def read_network_specs(config_path)
     warn "Could not read and interpret #{ config_path }: #{ e.message }"
     raise e
   end
+end
+
+def shared_wired_specs
+  [ { 'id' => 'wired-share', 'type' => 'ethernet' } ]
 end
 
 class Network
@@ -163,6 +168,28 @@ class Network
 
   def uuidgen
     UUIDTools::UUID.random_create.to_s
+  end
+end
+
+class Ethernet < Network
+  def config
+    super(<<"EOF")
+[connection]
+id=#{ @id }
+uuid=#{ @uuid }
+type=ethernet
+autoconnect-priority=-999
+
+[ipv4]
+dns-search=
+method=shared
+
+[ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
+ip6-privacy=0
+method=auto
+EOF
   end
 end
 
@@ -435,6 +462,7 @@ config_path               = '/etc/puavo/wlan.json'
 
 networks_specs = []
 networks_specs += read_network_specs(automatic_gsm_config_path) if auto_gsm
+networks_specs += shared_wired_specs() if shared_wired
 networks_specs += read_network_specs(config_path)
 networks_specs += read_network_specs(local_config_path)
 
@@ -458,6 +486,8 @@ networks_specs.each do |network_spec|
             eap_network_fn.call(Wlan::Eap::Tls, network_spec)
           when 'eap-ttls'
             eap_network_fn.call(Wlan::Eap::Ttls, network_spec)
+          when 'ethernet'
+            Ethernet.new(network_spec['id'])
           when 'gsm'
             Gsm.new(network_spec['id'],
                     network_spec['apn'],
