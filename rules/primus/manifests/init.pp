@@ -9,10 +9,16 @@ class primus {
     '/opt/primus':
       ensure => directory;
 
+    '/opt/primus/libeay32.dll':
+      source => 'puppet:///modules/primus/libeay32.dll';
+
     '/opt/primus/primusclient.desktop':
       content => template('primus/primusclient.desktop'),
       require => [ File['/opt/primus/starsoft.png']
                  , File['/usr/local/bin/primusclient'] ];
+
+    '/opt/primus/ssleay32.dll':
+      source => 'puppet:///modules/primus/ssleay32.dll';
 
     '/opt/primus/starsoft.png':
       source => 'puppet:///modules/primus/starsoft.png';

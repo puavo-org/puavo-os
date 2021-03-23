@@ -73,4 +73,6 @@ option) any later version.
 The exceptions to that are most files under rules/gnome_shell_extensions,
 which are subject to copyright and license terms specified on the extension
 files themselves.  Also, the "jetpipe"-script is taken from The LTSP Project
-files, and is copyright by Canonical Ltd. (likewise GPLv2+).
+files, and is copyright by Canonical Ltd. (likewise GPLv2+).  The SSL
+libraries in rules/primus/files are from the OpenSSL Project and are under
+Apache License Version 2.0.
