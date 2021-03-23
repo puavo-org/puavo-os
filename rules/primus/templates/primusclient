@@ -1,6 +1,23 @@
 #!/bin/sh
 
-set -e
+set -eu
 
-cd /opt/primus
+# Move primus files under user home directory so that
+# primus can (at least in theory) update itself.
+
+puavo_primus_dir=~/.puavo/primus
+
+mkdir -p "$puavo_primus_dir"
+
+primus_files='
+  /opt/primus/libeay32.dll
+  /opt/primus/prclient.ini
+  /opt/primus/primuskurre.exe
+  /opt/primus/ssleay32.dll
+'
+
+cp -u $primus_files "$puavo_primus_dir"
+chmod 755 "${puavo_primus_dir}/primuskurre.exe"
+
+cd "$puavo_primus_dir"
 wine primuskurre.exe
