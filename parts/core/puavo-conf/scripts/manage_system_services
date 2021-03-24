@@ -47,6 +47,16 @@ set services {
         -> /lib/systemd/system/dnsmasq.service
     }}
 
+  { epoptes {
+      /etc/systemd/system/multi-user.target.wants/epoptes.service
+        -> /lib/systemd/system/epoptes.service
+    }}
+
+  { epoptes-client {
+      /etc/systemd/system/multi-user.target.wants/epoptes-client.service
+        -> /lib/systemd/system/epoptes-client.service
+    }}
+
   { google-cloud-print {
       /etc/systemd/system/multi-user.target.wants/google-cloud-print.service
         -> /etc/systemd/system/google-cloud-print.service

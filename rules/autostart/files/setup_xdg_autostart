@@ -23,6 +23,9 @@ enable_disable() {
 
 status=0
 
+enable_disable puavo.xdg.autostart.epoptes-client \
+               /etc/xdg/autostart                 \
+               epoptes-client.desktop || status=1
 enable_disable puavo.xdg.autostart.vboxclient \
                /etc/xdg/autostart             \
                vboxclient.desktop || status=1

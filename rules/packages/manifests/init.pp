@@ -460,7 +460,9 @@ class packages {
     , 'spe' ]:
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
-    [ 'filezilla'
+    [ 'epoptes'
+    , 'epoptes-client'
+    , 'filezilla'
     , 'gftp'
     , 'lftp'
     , 'remmina'
