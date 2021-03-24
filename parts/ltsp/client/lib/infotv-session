@@ -18,22 +18,6 @@ run_idid()
   done
 }
 
-run_iivari()
-{
-  # Clean up iivari's cache
-  rm -rf /home/infotv/.iivari >/dev/null 2>&1
-
-  # Start iivari and keep it running
-  while true; do
-    iivari_kiosk_domain="$(cat /etc/puavo/domain)"
-    iivari-kiosk --urlbase "https://${iivari_kiosk_domain}/infotv/conductor" \
-      || true
-    logger -p local0.err -t infotv \
-           'The iivari process has exited or crashed, restarting it...'
-    sleep 5
-  done
-}
-
 # Start mutter and keep it running
 (
   while true; do
@@ -53,10 +37,6 @@ xset -dpms
 
 # Run the specified software
 case "$(puavo-conf puavo.infotv.software)" in
-  iivari)
-    run_iivari
-    break
-    ;;
   idid)
     run_idid
     break

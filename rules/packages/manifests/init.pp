@@ -20,8 +20,7 @@ class packages {
   }
 
   @package {
-    [ # XXX 'iivari-client'
-      'puavo-autopilot'
+    [ 'puavo-autopilot'
     , 'puavo-autopoweroff'
     , 'puavo-bigtouch-shutdown'
     , 'puavo-blackboard'
