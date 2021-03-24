@@ -308,6 +308,9 @@
         "freeciv-gtk2": {
             "tags": "default"
         },
+        "freeplane": {
+            "tags": "default"
+        },
         "fritzing": {
             "tags": "default"
         },
@@ -1332,6 +1335,12 @@
         "veracrypt": {
             "tags": "default"
         },
+        "veyon-configurator": {
+            "tags": "veyon-configurator"
+        },
+        "veyon-master": {
+            "tags": "veyon-master"
+        },
         "VidyoDesktop": {
             "name": "VidyoDesktop",
             "tags": "default",
@@ -1483,6 +1492,8 @@
                 "pavucontrol",
                 "org.gnome.Screenshot",
                 "simplescreenrecorder",
+                "veyon-configurator",
+                "veyon-master",
                 "novoconnect-software",
                 "novo-launcher",
                 "novo_desktop_streamer"
@@ -2010,6 +2021,7 @@
                 "libreoffice-base",
                 "libreoffice-math",
                 "scribus",
+                "freeplane",
                 "vym",
                 "cmaptools",
                 "acroread",
