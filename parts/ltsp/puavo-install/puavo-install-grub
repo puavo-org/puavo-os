@@ -452,6 +452,7 @@ diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
                 /\/dev\/md/     { s|p[0-9]+$|| }
                 /\/dev\/nvme/   { s|p[0-9]+$|| }
                 /\/dev\/[sv]d/  { s|[0-9]+$||  }
+                /\/dev\/xvd/    { s|[0-9]+$||  }
               ')
 
 if [ -z "$diskdev" ]; then

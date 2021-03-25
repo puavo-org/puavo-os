@@ -391,7 +391,7 @@ module QueryDiskInfo
       return /\Aloop[0-9]+\z/
     else
       # possible choices here should sort so that "md0" is the first if it exists
-      return /\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z])\z/
+      return /\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z]|xvd[a-z])\z/
     end
   end
 

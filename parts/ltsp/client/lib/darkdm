@@ -24,9 +24,11 @@ colorize() {
 list_disks() {
   local colorized_disk_info disk disk_label disk_devices disk_size_in_gb
   disk_devices=$(facter --json disks | jq -r '.disks | keys | .[]' \
-                   | grep -E '^(mmcblk|nvme|sd|vd)')
+                   | grep -E '^(mmcblk|nvme|sd|vd|xvda)')
   for disk in $disk_devices; do
-    disk_label="$(facter "disks.${disk}.model") / $(facter disks.${disk}.size)"
+    disk_model="$(facter "disks.${disk}.model")"
+    if [ -z "$disk_model" ]; then disk_model='unknown model'; fi
+    disk_label="${disk_model} / $(facter disks.${disk}.size)"
     colorized_disk_info=$(colorize 128000000000 256000000000 512000000000 \
                                    "$(facter disks.${disk}.size_bytes)"   \
                                    "$disk_label")
