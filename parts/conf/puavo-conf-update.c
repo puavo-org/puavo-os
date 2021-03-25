@@ -634,8 +634,10 @@ apply_hwquirks(struct conf_cache **cache, int verbose)
 
 	if (verbose) {
 		for (i = 0; i < hw.dmi_itemcount; i++) {
-			(void) printf("puavo-conf-update: dmi id %s = %s\n",
-			    dmi_table[i].key, dmi_table[i].value);
+			if (hw.dmi_table[i].value) {
+			    (void) printf("puavo-conf-update: dmi id %s = %s\n",
+				hw.dmi_table[i].key, hw.dmi_table[i].value);
+			}
 		}
 		for (i = 0; i < hw.pci_id_count; i++) {
 			(void) printf("puavo-conf-update: found PCI device"
@@ -653,7 +655,8 @@ apply_hwquirks(struct conf_cache **cache, int verbose)
 
 	/* free tables */
 	for (i = 0; i < hw.dmi_itemcount; i++)
-		free(hw.dmi_table[i].value);
+		if (hw.dmi_table[i].value)
+			free(hw.dmi_table[i].value);
 	for (i = 0; i < hw.pci_id_count; i++)
 		free(hw.pci_ids[i]);
 	for (i = 0; i < hw.usb_id_count; i++)
@@ -821,6 +824,8 @@ check_match_for_hwquirk_rule(const char *key, const char *matchmethod,
 		}
 	} else {
 		for (i = 0; i < hw->dmi_itemcount; i++) {
+			if (hw->dmi_table[i].value == NULL)
+				continue;
 			if (strcmp(hw->dmi_table[i].key, key) == 0) {
 				match = match_pattern(matchmethod, pattern,
 				    regex_p, hw->dmi_table[i].value);
@@ -1012,12 +1017,10 @@ update_dmi_table(struct dmi *dmi_table, size_t tablesize)
 			continue;
 		}
 
-		if ((line = get_first_line(id_path)) == NULL) {
-			retvalue = 1;
-			continue;
-		}
-
-		dmi_table[i].value = line;
+		/* Note that .value may be NULL here.  Because some hardware
+		/* may lack the dmi values, a warning message is adequate and
+		/* we do not need to return an error. */
+		dmi_table[i].value = get_first_line(id_path);
 	}
 
 	return retvalue;
