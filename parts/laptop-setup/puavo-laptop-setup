@@ -53,10 +53,23 @@ class PuavoLaptopSetup:
         self.save_state_flag = True
 
 
+    def get_list_of_abitti_versions(self, abitti_info):
+        # XXX what if build_numbers do not exist? (hash has no key?)
+        versions = abitti_info['build_numbers'].keys()
+        student_versions = [ v for v in versions if v.startswith('ABITTI') ]
+
+        # pick the first eight versions
+        return (sorted(student_versions, reverse=True))[:8]
+
     def prepare(self):
         self.puavo_conf_grid = builder.get_object('puavo_conf_grid')
 
-        self.abitti_latest_version = self.get_abitti_latest_version()
+        abitti_info = self.get_abitti_info()
+        # XXX what if abitti_info == None ?
+        # XXX that should be handled somehow
+        # XXX should we just not show anything Abitti-related?
+
+        self.abitti_latest_version = self.get_abitti_latest_version(abitti_info)
         self.abitti_school_version = self.get_abitti_school_version()
 
         self.abitti_version_latest_button \
@@ -65,7 +78,11 @@ class PuavoLaptopSetup:
           = builder.get_object('abitti_version_school')
         self.abitti_version_any_button \
           = builder.get_object('abitti_version_any')
-        self.abitti_version_entry = builder.get_object('abitti_version')
+        self.abitti_version_box = builder.get_object('abitti_version')
+
+        # XXX but what if there is nothing to append?
+        for abitti_version in self.get_list_of_abitti_versions(abitti_info):
+          self.abitti_version_box.append(abitti_version, abitti_version)
 
         if self.abitti_latest_version:
             self.abitti_version_latest_button.set_label('%s (%s)' \
@@ -95,8 +112,6 @@ class PuavoLaptopSetup:
 
         self.abitti_version_any_button.connect('toggled',
                                                self.abitti_version_any_chosen)
-        self.abitti_version_entry.connect('changed',
-                                          self.abitti_version_entry_changed)
 
         self.boot_abitti_button.connect('toggled', self.boot_abitti_chosen)
         self.boot_puavo_os_button.connect('toggled', self.boot_puavo_os_chosen)
@@ -109,15 +124,24 @@ class PuavoLaptopSetup:
         self.remove_entries_without_puavoconf()
         self.update_gui_state_from_puavoconf()
 
+        self.abitti_version_box.connect('changed',
+                                        self.abitti_version_box_changed)
+
         GLib.timeout_add(500, self.save_state)
         self.initializing_ui = False
 
 
-    def get_abitti_latest_version(self):
+    def get_abitti_info(self):
         try:
             with open('/state/abitti/abitti.json') as file:
-                abitti = json.load(file)
-            latest_version = abitti['latest']
+                return json.load(file)
+        except:
+            return None
+
+
+    def get_abitti_latest_version(self, abitti_info):
+        try:
+            latest_version = abitti_info['latest']
             if type(latest_version) != str:
                 raise Exception('latest version is not a string')
             return strip_abitti_v(latest_version)
@@ -176,13 +200,13 @@ class PuavoLaptopSetup:
     def abitti_version_any_chosen(self, widget):
         if not widget.get_active():
             return
-        self.abitti_version_entry.grab_focus()
-        self.set_abitti_version( self.abitti_version_entry.get_text() )
+        self.abitti_version_box.grab_focus()
+        self.set_abitti_version( self.abitti_version_box.get_active_text() )
 
 
-    def abitti_version_entry_changed(self, widget):
-        if self.abitti_version_any_button.get_active():
-            self.set_abitti_version( self.abitti_version_entry.get_text() )
+    def abitti_version_box_changed(self, widget):
+        self.abitti_version_any_button.set_active(True)
+        self.set_abitti_version( self.abitti_version_box.get_active_text() )
 
 
     def boot_abitti_chosen(self, widget):
@@ -283,14 +307,14 @@ class PuavoLaptopSetup:
             if key == 'puavo.abitti.version':
                 if value == None:
                     self.abitti_version_school_button.set_active(True)
-                    self.abitti_version_entry.set_text('')
+                    self.abitti_version_box.set_active(0)
                 elif value == 'latest':
                     self.abitti_version_latest_button.set_active(True)
-                    self.abitti_version_entry.set_text('')
+                    self.abitti_version_box.set_active(0)
                 else:
-                    self.abitti_version_any_button.set_active(True)
                     value = strip_abitti_v(value)
-                    self.abitti_version_entry.set_text(value)
+                    self.abitti_version_box.set_active_id(value)
+                    self.abitti_version_any_button.set_active(True)
             elif key == 'puavo.grub.boot_default':
                 if value == 'windows' and self.boot_windows_button:
                     self.boot_windows_button.set_active(True)

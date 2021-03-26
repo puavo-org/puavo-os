@@ -103,10 +103,9 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="abitti_version">
+              <object class="GtkComboBoxText" id="abitti_version">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="input_purpose">number</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
