@@ -35,10 +35,6 @@ def strip_abitti_v(value):
     return value
 
 
-def we_have_windows():
-    return os.path.exists('/images/boot/.puavo_windows_partition')
-
-
 class PuavoLaptopSetup:
     def __init__(self, app_window, builder):
         self.app_window = app_window
@@ -49,27 +45,27 @@ class PuavoLaptopSetup:
             'puavo.grub.developer_mode.enabled':  None,
             'puavo.grub.windows.enabled':         None,
         }
+        self.abitti_info = None
         self.initializing_ui = True
         self.save_state_flag = True
 
 
-    def get_list_of_abitti_versions(self, abitti_info):
-        # XXX what if build_numbers do not exist? (hash has no key?)
-        versions = abitti_info['build_numbers'].keys()
-        student_versions = [ v for v in versions if v.startswith('ABITTI') ]
+    def get_list_of_abitti_versions(self):
+        try:
+            versions = self.abitti_info['build_numbers'].keys()
+            student_versions = [ v for v in versions if v.startswith('ABITTI') ]
+        except:
+            return []
 
         # pick the first eight versions
         return (sorted(student_versions, reverse=True))[:8]
 
+
     def prepare(self):
         self.puavo_conf_grid = builder.get_object('puavo_conf_grid')
 
-        abitti_info = self.get_abitti_info()
-        # XXX what if abitti_info == None ?
-        # XXX that should be handled somehow
-        # XXX should we just not show anything Abitti-related?
-
-        self.abitti_latest_version = self.get_abitti_latest_version(abitti_info)
+        self.abitti_info = self.get_abitti_info()
+        self.abitti_latest_version = self.get_abitti_latest_version()
         self.abitti_school_version = self.get_abitti_school_version()
 
         self.abitti_version_latest_button \
@@ -80,8 +76,7 @@ class PuavoLaptopSetup:
           = builder.get_object('abitti_version_any')
         self.abitti_version_box = builder.get_object('abitti_version')
 
-        # XXX but what if there is nothing to append?
-        for abitti_version in self.get_list_of_abitti_versions(abitti_info):
+        for abitti_version in self.get_list_of_abitti_versions():
           self.abitti_version_box.append(abitti_version, abitti_version)
 
         if self.abitti_latest_version:
@@ -139,9 +134,9 @@ class PuavoLaptopSetup:
             return None
 
 
-    def get_abitti_latest_version(self, abitti_info):
+    def get_abitti_latest_version(self):
         try:
-            latest_version = abitti_info['latest']
+            latest_version = self.abitti_info['latest']
             if type(latest_version) != str:
                 raise Exception('latest version is not a string')
             return strip_abitti_v(latest_version)
@@ -264,26 +259,28 @@ class PuavoLaptopSetup:
         self.save_state_flag = True
 
 
+    def we_have_abitti(self):
+        return self.abitti_info and 'build_numbers' in self.abitti_info \
+                 and type(self.abitti_info['build_numbers']) == dict
+
+
+    def we_have_windows(self):
+        return os.path.exists('/images/boot/.puavo_windows_partition')
+
+
     def remove_entries_without_puavoconf(self):
         remove_gui_elements = {}
 
-        if not we_have_windows():
-            self.boot_windows_button.destroy()
-            self.boot_windows_button = None
-            del self.puavo_conf['puavo.grub.windows.enabled']
-            remove_gui_elements['puavo.grub.windows.enabled'] = True
+        if not self.we_have_abitti():
+            del self.puavo_conf['puavo.abitti.version']
 
-        for puavo_conf_key in self.puavo_conf.copy():
-            try:
-                self.puavo_conf[puavo_conf_key] = puavoconf_get(puavo_conf_key)
-            except subprocess.CalledProcessError:
-                print("could not get puavo-conf key for %s" % puavo_conf_key,
-                      file=sys.stderr)
-                del self.puavo_conf[puavo_conf_key]
-                remove_gui_elements[puavo_conf_key] = True
-                if puavo_conf_key == 'puavo.abitti.version':
-                    self.boot_abitti_button.destroy()
-                    self.boot_abitti_button = None
+        if not self.we_have_windows():
+            del self.puavo_conf['puavo.grub.windows.enabled']
+
+        if not 'puavo.abitti.version' in self.puavo_conf:
+            self.boot_abitti_button.destroy()
+            self.boot_abitti_button = None
+            remove_gui_elements['puavo.abitti.version'] = True
 
         if 'puavo.abitti.version' in self.puavo_conf \
           and not self.abitti_school_version:
@@ -293,9 +290,23 @@ class PuavoLaptopSetup:
                 # have a GUI element for that, so change to the 'latest'
                 self.puavo_conf['puavo.abitti.version'] = 'latest'
 
+        if not 'puavo.grub.windows.enabled' in self.puavo_conf:
+            self.boot_windows_button.destroy()
+            self.boot_windows_button = None
+            remove_gui_elements['puavo.grub.windows.enabled'] = True
+
         if not self.boot_abitti_button and not self.boot_windows_button:
             del self.puavo_conf['puavo.grub.boot_default']
             remove_gui_elements['puavo.grub.boot_default'] = True
+
+        for puavo_conf_key in self.puavo_conf.copy():
+            try:
+                self.puavo_conf[puavo_conf_key] = puavoconf_get(puavo_conf_key)
+            except subprocess.CalledProcessError:
+                print("could not get puavo-conf key for %s" % puavo_conf_key,
+                      file=sys.stderr)
+                del self.puavo_conf[puavo_conf_key]
+                remove_gui_elements[puavo_conf_key] = True
 
         for puavo_conf_key in remove_gui_elements:
             self.remove_grid_entry(self.puavo_conf_grid,
@@ -307,10 +318,10 @@ class PuavoLaptopSetup:
             if key == 'puavo.abitti.version':
                 if value == None:
                     self.abitti_version_school_button.set_active(True)
-                    self.abitti_version_box.set_active(0)
+                    self.abitti_version_box.set_active(-1)
                 elif value == 'latest':
                     self.abitti_version_latest_button.set_active(True)
-                    self.abitti_version_box.set_active(0)
+                    self.abitti_version_box.set_active(-1)
                 else:
                     value = strip_abitti_v(value)
                     self.abitti_version_box.set_active_id(value)
