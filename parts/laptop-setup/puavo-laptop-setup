@@ -134,12 +134,20 @@ class PuavoLaptopSetup:
             return None
 
 
+    def get_version_from_bn(self, build_number):
+        for version, bn in self.abitti_info['build_numbers'].items():
+            if str(bn) == build_number:
+                return version
+        return build_number
+
+
     def get_abitti_latest_version(self):
         try:
             latest_version = self.abitti_info['latest']
             if type(latest_version) != str:
                 raise Exception('latest version is not a string')
-            return strip_abitti_v(latest_version)
+            stripped_latest = strip_abitti_v(latest_version)
+            return self.get_version_from_bn(stripped_latest)
         except:
             return None
 
@@ -153,7 +161,8 @@ class PuavoLaptopSetup:
             school_version = device['conf']['puavo.abitti.version']
             if type(school_version) != str:
                 raise Exception('school version is not a string')
-            return _tr( strip_abitti_v(school_version) )
+            stripped_school_version = strip_abitti_v(school_version)
+            return _tr( self.get_version_from_bn(stripped_school_version) )
         except:
             return None
 
