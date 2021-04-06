@@ -20,6 +20,10 @@ class UserProgramsManager:
         self.__file_cache = {}
 
 
+    def reset(self):
+        self.__file_cache = {}
+
+
     # Scans the user programs directory and creates, removes and updates
     # user programs. Returns True if something actually changed.
     def update(self, programs, category, icon_locator, icon_cache):

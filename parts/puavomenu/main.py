@@ -597,6 +597,7 @@ class PuavoMenu(Gtk.Window):
         self.current_category = -1
         self.current_menu = None
 
+        self.__user_programs.reset()
         self.__user_programs_loaded = False
         self.__dirs_config.clear()
         self.__icons.clear()
