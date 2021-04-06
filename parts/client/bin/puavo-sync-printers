@@ -7,6 +7,8 @@ require "socket"
 
 require "puavo/api-server"
 
+ENV['SSL_CERT_FILE'] = '/etc/puavo-conf/rootca.pem'
+
 # !!! Note that this script should not modify anything under /etc/cups in any
 # !!! way, because this might be run from incron (monitoring /etc/cups)
 # !!! that triggers this script when something changes there.
