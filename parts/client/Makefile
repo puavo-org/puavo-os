@@ -27,7 +27,6 @@ install-dirs:
 install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		bin/puavo-cert-tool \
-		bin/puavo-feed \
 		bin/puavo-register \
 		bin/puavo-resolve-api-server \
 		bin/puavo-rest-client \
