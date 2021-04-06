@@ -21,7 +21,11 @@ end
 
 # From https://github.com/opinsys/liitu-puppet/blob/25c92e5c85e8637cdbd04c390f98eca69d3cc68b/modules/service/templates/usr/local/sbin/send_printers_to_puavo#L18-L40
 def parse_cups_printers_conf(conf_path)
-  printers_conf = File.readlines(conf_path)
+  begin
+    printers_conf = File.readlines(conf_path)
+  rescue Errno::ENOENT
+    return {}
+  end
 
   printers = {}
   description  = nil
