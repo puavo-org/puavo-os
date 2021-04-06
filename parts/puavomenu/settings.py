@@ -32,7 +32,7 @@ class Settings:
 
         # The directory where user-defined programs are automatically loaded
         # and updated from. Not always specified.
-        self.user_progs = None
+        self.user_programs_dir = None
 
         # Language code (en/fi/de/sv/etc.)
         self.language = 'en'

@@ -157,6 +157,11 @@ class PuavoMenu(Gtk.Window):
         # Is the first update on user programs done?
         self.__user_programs_loaded = False
 
+        # Cached data for user .desktop files
+        self.__user_programs = \
+            user_programs.UserProgramsManager(self.__settings.user_programs_dir,
+                                              self.__settings.language)
+
         # Contents of dirs.json
         self.__dirs_config = menudata.DirsConfig()
 
@@ -660,12 +665,10 @@ class PuavoMenu(Gtk.Window):
 
         temp_category = menudata.Category()
 
-        if user_programs.update(self.__settings.user_progs,
-                                self.menudata.programs,
-                                temp_category,
-                                self.__icon_locator,
-                                self.__icons,
-                                self.__settings.language):
+        if self.__user_programs.update(self.menudata.programs,
+                                       temp_category,
+                                       self.__icon_locator,
+                                       self.__icons):
             # We got user programs! Manually create a new category for
             # them and tuck it at the end of the categories list
             self.__create_user_category(temp_category)
@@ -1422,12 +1425,10 @@ class PuavoMenu(Gtk.Window):
             temp_category = menudata.Category()
             create_new = True
 
-        if user_programs.update(self.__settings.user_progs,
-                                self.menudata.programs,
-                                temp_category,
-                                self.__icon_locator,
-                                self.__icons,
-                                self.__settings.language):
+        if self.__user_programs.update(self.menudata.programs,
+                                       temp_category,
+                                       self.__icon_locator,
+                                       self.__icons):
             if create_new:
                 # The user programs category does not exist yet, create it
                 self.__create_user_category(temp_category)

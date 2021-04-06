@@ -197,7 +197,7 @@ if settings.language not in LANGUAGES:
 
 # Set up the user programs directory, but only in certain sessions
 if args.user_progs and not (settings.is_guest or settings.is_webkiosk):
-    settings.user_progs = os.path.join(args.user_progs, '')
+    settings.user_programs_dir = os.path.join(args.user_progs, '')
 
 logging.info('Language...........: "%s"', settings.language)
 
@@ -208,8 +208,8 @@ logging.info('Resources..........: "%s"', settings.res_dir)
 logging.info('Menu data..........: "%s"', settings.menu_dir)
 logging.info('User config........: "%s"', settings.user_conf)
 
-if settings.user_progs:
-    logging.info('User programs......: "%s"', settings.user_progs)
+if settings.user_programs_dir:
+    logging.info('User programs......: "%s"', settings.user_programs_dir)
 
 logging.info('IPC socket.........: "%s"', settings.socket)
 logging.info('Desktop directory..: "%s"', settings.desktop_dir)
