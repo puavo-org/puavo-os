@@ -281,12 +281,15 @@ class Server
           Syslog.log(Syslog::LOG_ERR, errmsg, @aria.last_msgs.join)
         end
         @aria = nil
-        begin
-          @client_socket.write_nonblock("FAIL\n")
-        rescue Errno::EPIPE
+
+        if @client_socket then
+          begin
+            @client_socket.write_nonblock("FAIL\n")
+          rescue Errno::EPIPE
+          end
+          @client_socket.close
+          @client_socket = nil
         end
-        @client_socket.close
-        @client_socket = nil
       end
     end
   end
