@@ -21,9 +21,9 @@ class Aria
     start_download(seed_filename)
   end
 
-  def get_ratelimit
+  def ratelimit(puavo_conf_key)
     puavoconf = Puavo::Conf.new
-    rate_limit = puavoconf.get('puavo.image.download.ratelimit')
+    rate_limit = puavoconf.get(puavo_conf_key)
     puavoconf.close
 
     rate_limit = nil if rate_limit == ''
@@ -66,11 +66,13 @@ class Aria
                   '--seed-ratio=0.0',
                   '--summary-interval=1' ]
 
-    rate_limit = get_ratelimit
-    if rate_limit then
-      aria_args << "--max-overall-download-limit=#{ rate_limit }"
-      aria_args << "--max-overall-upload-limit=#{ rate_limit }"
-    end
+    download_rate_limit = ratelimit('puavo.image.torrent.download.ratelimit')
+    aria_args << "--max-overall-download-limit=#{ download_rate_limit }" \
+      if download_rate_limit
+    upload_rate_limit = ratelimit('puavo.image.torrent.upload.ratelimit')
+    aria_args << "--max-overall-upload-limit=#{ upload_rate_limit }" \
+      if upload_rate_limit
+
     aria_args << torrent_url.to_s
 
     Syslog.log(Syslog::LOG_NOTICE,

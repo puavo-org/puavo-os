@@ -19,5 +19,11 @@
   },
   "puavo.image.servers": {
     "default": ""
+  },
+  "puavo.image.torrent.download.ratelimit" : {
+    "default": "20m"
+  },
+  "puavo.image.torrent.upload.ratelimit" : {
+    "default": "20m"
   }
 }
