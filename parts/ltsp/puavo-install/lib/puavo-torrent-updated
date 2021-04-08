@@ -3,6 +3,7 @@
 require 'fileutils'
 require 'open3'
 require 'puavo/conf'
+require 'resolv'
 require 'socket'
 require 'syslog'
 require 'uri'
@@ -308,6 +309,28 @@ class Server
   end
 end
 
+def wait_for_dns(host)
+  Syslog.log(Syslog::LOG_NOTICE,
+             "checking that dns resolves for server #{ host }")
+
+  result = nil
+  Resolv::DNS.open do |dns|
+    dns.timeouts = 5
+    15.times do |i|
+      begin
+        result = dns.getaddress(host)
+        break if result
+      rescue StandardError => e
+      end
+      sleep(i)
+    end
+  end
+
+  unless result then
+    raise "Could not resolve #{ host }"
+  end
+end
+
 def start_aria_seeding(torrent_url_path)
   begin
     torrent_url = IO.read(torrent_url_path).chomp
@@ -322,7 +345,22 @@ def start_aria_seeding(torrent_url_path)
   seed_path = "#{ $target_dir }/#{ seed_filename }"
   return nil unless File.exists?(seed_path)
 
-  # we have torrent url, we have rdiff on the right path, we can seed:
+  host = URI(torrent_url).host
+
+  begin
+    # We wait for DNS when starting to seed, because seeding should start
+    # right after boot and we may not have a working DNS/VPN at that time.
+    # In other situations it is better to return an error right away.
+    # Note that server is listening for connections at this time, we will
+    # deal with those later.
+    wait_for_dns(host)
+  rescue StandardError => e
+    Syslog.log(Syslog::LOG_ERR, "could not resolve #{ host }, not seeding")
+    return nil
+  end
+
+  # we have torrent url, we have rdiff on the right path,
+  # we have a working DNS, we can seed:
 
   Syslog.log(Syslog::LOG_NOTICE,
              "starting to seed #{ torrent_url } from #{ seed_path }")
