@@ -11,14 +11,14 @@ require 'uri'
 class Aria
   attr_reader :last_msgs, :progress, :status, :stdout, :url
 
-  def initialize(url, seed_filename=nil)
+  def initialize(url, use_rate_limit, seed_filename=nil)
     @url = URI(url)
     @last_msgs = []
     @outmsg = ''
     @progress = nil
     @status = nil
 
-    start_download(seed_filename)
+    start_download(use_rate_limit, seed_filename)
   end
 
   def ratelimit(puavo_conf_key)
@@ -38,7 +38,7 @@ class Aria
     rate_limit
   end
 
-  def start_download(seed_filename)
+  def start_download(use_rate_limit, seed_filename)
     filename = File.basename(@url.to_s)
     output_filename = (seed_filename || "#{ filename }.tmp")
 
@@ -66,12 +66,14 @@ class Aria
                   '--seed-ratio=0.0',
                   '--summary-interval=1' ]
 
-    download_rate_limit = ratelimit('puavo.image.torrent.download.ratelimit')
-    aria_args << "--max-overall-download-limit=#{ download_rate_limit }" \
-      if download_rate_limit
-    upload_rate_limit = ratelimit('puavo.image.torrent.upload.ratelimit')
-    aria_args << "--max-overall-upload-limit=#{ upload_rate_limit }" \
-      if upload_rate_limit
+    if use_rate_limit then
+      download_rate_limit = ratelimit('puavo.image.torrent.download.ratelimit')
+      aria_args << "--max-overall-download-limit=#{ download_rate_limit }" \
+        if download_rate_limit
+      upload_rate_limit = ratelimit('puavo.image.torrent.upload.ratelimit')
+      aria_args << "--max-overall-upload-limit=#{ upload_rate_limit }" \
+        if upload_rate_limit
+    end
 
     aria_args << torrent_url.to_s
 
@@ -129,9 +131,9 @@ class Server
     @server_socket = server_socket
     @aria = aria
 
+    @client_message = nil
     @client_socket = nil
     @read_filename = false
-    @url_to_download = nil
 
     @current_progress = nil
     @write_progress   = false
@@ -181,7 +183,7 @@ class Server
       end
 
       @client_socket, client_addr = @server_socket.accept_nonblock
-      @url_to_download = ''
+      @client_message = ''
       @read_filename = true
 
       # @client_socket has been switched, must return
@@ -209,9 +211,10 @@ class Server
     if ios[0].include?(@client_socket) then
       # client is sending us a url to download
       begin
-        @url_to_download += @client_socket.read_nonblock(1024)
+        @client_message += @client_socket.read_nonblock(1024)
       rescue EOFError
-        @url_to_download.chomp!
+        @client_message.chomp!
+
         @client_socket.shutdown(:RD)
         @read_filename = false
         @current_progress = nil
@@ -221,7 +224,7 @@ class Server
 
         # provide a mechanism for client to make aria stop seeding previous
         # downloads
-        if @url_to_download == 'stop' then
+        if @client_message == 'stop' then
           if @aria then
             Syslog.log(Syslog::LOG_NOTICE,
                        'stopping aria because of client request')
@@ -241,6 +244,9 @@ class Server
           return
         end
 
+        rate_limit, @url_to_download = * @client_message.split("\n")
+        use_rate_limit = (rate_limit != '')
+
         Syslog.log(Syslog::LOG_NOTICE,
                    "client asks to download '%s'",
                    @url_to_download)
@@ -254,7 +260,7 @@ class Server
         end
 
         # start a new download
-        @aria = Aria.new(@url_to_download)
+        @aria = Aria.new(@url_to_download, use_rate_limit)
       end
     end
 
@@ -367,7 +373,7 @@ def start_aria_seeding(torrent_url_path)
   Syslog.log(Syslog::LOG_NOTICE,
              "starting to seed #{ torrent_url } from #{ seed_path }")
 
-  Aria.new(torrent_url, seed_filename)
+  Aria.new(torrent_url, true, seed_filename)
 end
 
 Syslog.open( File.basename($0) )

@@ -478,10 +478,11 @@ get_next_image() {
 }
 
 download_url_with_torrent() {
-  url_to_download_with_torrent=$1
+  rate_limit=$1
+  url_to_download_with_torrent=$2
 
   torrent_status=$(
-    printf "%s\n" "$url_to_download_with_torrent" \
+    printf "%s\n%s\n" "$rate_limit" "$url_to_download_with_torrent" \
       | nc -N -U /run/puavo/puavo-image-torrent-updated.sock \
       | while read progress; do
           if [ "$progress" = 'OK' ]; then
@@ -517,7 +518,7 @@ get_rdiff() {
   rdiff_tmp="${rdiff_path}.tmp"
 
   if $use_torrents_for_rdiff_updates; then
-    download_url_with_torrent "$rdiff_url" || return 1
+    download_url_with_torrent "$rate_limit" "$rdiff_url" || return 1
   else
     fetch_with_wget as_puavo_update "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
       || return 1
