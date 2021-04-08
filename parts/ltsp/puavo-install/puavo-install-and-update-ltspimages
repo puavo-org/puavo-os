@@ -257,7 +257,8 @@ cleanup_previous_runs() {
   if $use_torrents_for_rdiff_updates; then
     # Ask puavo-image-torrent-updated to stop seeding (if it is doing
     # anything).  This is relevant here only for disk space calculations.
-    echo stop | nc -N -U /run/puavo/puavo-image-torrent-updated.sock || true
+    echo stop | nc -N -U /run/puavo/puavo-image-torrent-updated.sock \
+      >/dev/null 2>&1 || true
   fi
 }
 
