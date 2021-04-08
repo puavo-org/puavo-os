@@ -687,7 +687,8 @@ class packages {
     , 'tlp'
     , 'unace'
     , 'unionfs-fuse'    # Ekapeli might need this.
-    , 'wmctrl' ]:
+    , 'wmctrl'
+    , 'xinput' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
     [ 'qemu-kvm' ]:
