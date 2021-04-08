@@ -58,6 +58,7 @@ class Aria
                   '--check-integrity=true',
                   "--dir=#{ $target_dir }",
                   '--enable-color=false',
+                  '--file-allocation=none',
                   '--follow-torrent=mem',
                   '--human-readable=false',
                   "--index-out=1=#{ output_filename }",
