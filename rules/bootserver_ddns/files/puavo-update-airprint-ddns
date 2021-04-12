@@ -10,6 +10,8 @@ require 'rest-client'
 require 'yaml'
 require 'dnsruby'
 
+ENV['SSL_CERT_FILE'] = '/etc/puavo-conf/rootca.pem'
+
 if File.exists?("/etc/dhcp/ddns-keys/nsupdate.key")
   tmp = File.read("/etc/dhcp/ddns-keys/nsupdate.key")
   if /key "(.*?)"/.match(tmp)
