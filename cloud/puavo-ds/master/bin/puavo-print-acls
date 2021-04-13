@@ -194,7 +194,7 @@ rule {
     # XXX thus we can not yet filter by "(objectClass=puavoNetbootDevice)".
     # XXX Apply the filter again maybe on year 2022.
     # filter="(objectClass=puavoNetbootDevice)"
-    [attrs puavoDeviceHWInfo]
+    [attrs puavoDeviceHWInfo puavoDeviceMonitorsXML]
       by [dn children $Servers] write
       by *                      none break
 }
