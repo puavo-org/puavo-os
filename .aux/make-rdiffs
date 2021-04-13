@@ -352,6 +352,7 @@ image_series.each do |series_name, image_list|
     if i >= (image_list.count - 3) then
       image_list.each_index do |j|
         source_image_file = image_list[j]
+        next if source_image_file == target_image_file
 
         rdiff_metadata = setup_rdiff_tasks(source_image_file, target_image_file,
           series_metadata_file)
