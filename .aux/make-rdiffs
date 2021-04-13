@@ -200,7 +200,8 @@ def get_puavo_conf_defaults(target_image_file_fp)
   puavo_conf = {}
 
   begin
-    system('mount', target_image_file_fp, mnt_path) \
+    system('mount', target_image_file_fp, mnt_path,
+           :out => File::NULL, :err => File::NULL) \
       or raise "could not mount #{ mnt_path }"
     mnt_done = true
 
@@ -327,17 +328,23 @@ image_series.each do |series_name, image_list|
       ln target_image_file_fp, t.name
     end
 
+    file series_metadata_file => [ target_image_file_copy ] + checksum_files
+
+    puavo_conf = nil
+    begin
+      puavo_conf = get_puavo_conf_defaults(target_image_file_fp)
+    rescue StandardError => e
+      next
+    end
     image_metadata = {
       'diffs'      => [],
       'filename'   => target_image_file,
       'id'         => File.basename(target_image_file, '.img'),
-      'puavo-conf' => get_puavo_conf_defaults(target_image_file_fp),
+      'puavo-conf' => puavo_conf,
       'size'       => File.size(target_image_file_fp),
       'urls'       => [ "#{ Images_urlbase }/#{ target_image_file }" ],
       'version'    => get_image_version(target_image_file),
      }
-
-    file series_metadata_file => [ target_image_file_copy ] + checksum_files
 
     # make rdiffs only to the last three images in image list
     # (perhaps make this adjustable with a command line option in case
