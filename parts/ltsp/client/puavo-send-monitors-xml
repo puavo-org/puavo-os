@@ -99,21 +99,21 @@ if ! json=$(jq -n --arg monitors_xml "$monitors_xml" \
   exit 1
 fi
 
-
-if ! klist >/dev/null 2>&1; then
-  ticket_cache=$(mktemp /tmp/puavo-send-monitors-xml.krb5cc.XXXXXX)
-  export KRB5CCNAME="FILE:${ticket_cache}"
-  if [ -z "${SUDO_USER:-}" ] || ! kinit -f "$SUDO_USER"; then
-    echo 'Could not get a kerberos ticket' >&2
-    rm -f "$ticket_cache"
-    exit 1
-  fi
+if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
+  prr_auth_args='--user-etc --writable'
+elif klist >/dev/null 2>&1; then
+  prr_auth_args='--user-krb --writable'
+elif [ -e /run/puavo/nbd-server ]; then
+  prr_auth_args='--user-bootserver'
+else
+  echo 'Could not figure out how to authenticate to Puavo' >&2
+  exit 1
 fi
 
 status=0
 
 url="/v3/devices/${this_hostname}/monitors"
-if ! puavo-rest-request "$url" --post --user-krb --writable -- \
+if ! puavo-rest-request "$url" --post $prr_auth_args -- \
        --data-binary "$json" -H 'Content-Type: application/json'; then
   echo 'Error in sending monitors data to Puavo' >&2
   status=1
@@ -125,10 +125,8 @@ else
   # XXX and we yet do not know how.
   sudo -n puavo-change-host-state --monitors-xml "$monitors_xml" || true
   if mountpoint -q /state; then
-    puavo-update-client --auto || true
+    puavo-update-client --auto >/dev/null 2>&1 || true
   fi
 fi
-
-[ -n "${ticket_cache:-}" ] && rm -f "$ticket_cache"
 
 exit $status
