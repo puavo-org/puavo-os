@@ -339,15 +339,11 @@ image_series.each do |series_name, image_list|
 
     file series_metadata_file => [ target_image_file_copy ] + checksum_files
 
-    # make rdiffs only to the last image in image list
+    # make rdiffs only to the last three images in image list
     # (perhaps make this adjustable with a command line option in case
     # anyone wants to build the whole set?)
-    if i == (image_list.count - 1) then
+    if i >= (image_list.count - 3) then
       image_list.each_index do |j|
-        # make rdiffs only to one direction (from earlier to later)
-        # (this could be made adjustable as well?)
-        next if i <= j
-
         source_image_file = image_list[j]
 
         rdiff_metadata = setup_rdiff_tasks(source_image_file, target_image_file,
