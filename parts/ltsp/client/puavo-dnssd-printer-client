@@ -177,7 +177,7 @@ def query_domain(domain, ipps)
 end
 
 def add_printer(printer)
-  `/usr/sbin/lpadmin -p "#{printer.name}" -E -v #{printer.path} -L "#{printer.location}" -D "#{printer.description}"`
+  `/usr/sbin/lpadmin -p "#{printer.name}" -E -v #{printer.path} -m everywhere -L "#{printer.location}" -D "#{printer.description}"`
 end
 
 def delete_printer(printer)

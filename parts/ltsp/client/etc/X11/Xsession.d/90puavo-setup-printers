@@ -27,7 +27,7 @@ add_remote_printers() {
         description=$(printf %s "${printer}" | jq -r -c .description)
         remote_uri="ipp://cups.${puavo_domain}:631/printers/${name}"
 
-        lpadmin -p "${name}" -v "${remote_uri}" -L "${location}" -D "${description}" -E
+        lpadmin -p "${name}" -v "${remote_uri}" -L "${location}" -D "${description}" -E -m everywhere
     done
 }
 
