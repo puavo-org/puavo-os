@@ -8,7 +8,7 @@ printers and configures them automatically on laptops.
 DNS-SD is refined in RFC 6763: http://www.ietf.org/rfc/rfc6763.txt
 
 
-First the script queries PTR record for b._dns-sd._udp 
+First the script queries PTR record for b._dns-sd._udp
 If the query returns a domain name, it is used to do a further query for
 
 PTR _universal._sub._ipp._tcp.<printer domain>
@@ -20,26 +20,26 @@ records:
 TXT printer.fqdn
 SRV printer.fqdn
 
-SRV record defines the server offering the printing service and 
+SRV record defines the server offering the printing service and
 TXT records define the print queue attributes.
 
-List of managed printers is written to file /var/lib/puavo-desktop/dnssd_printers 
-and this list is used on subsequent calls to define which printers are 
-managed by this script and which ones are defined elsewhere. Only printers 
+List of managed printers is written to file /var/lib/puavo-desktop/dnssd_printers
+and this list is used on subsequent calls to define which printers are
+managed by this script and which ones are defined elsewhere. Only printers
 that are listed in managed printers are deleted.
 
-When the script is run and no PTR record for b._dns-sd._udp is found, 
-printer information is not changed if --require-dns-records is defined. 
+When the script is run and no PTR record for b._dns-sd._udp is found,
+printer information is not changed if --require-dns-records is defined.
 This keeps printer lists stable e.g. when network connection is flaky.
 
-If the --delete-unmanaged option is specified, all unmanaged printers 
+If the --delete-unmanaged option is specified, all unmanaged printers
 are deleted always (even when --require-dns-records is defined).
 
-Normally DNS is queried once, but the number of retries can be set with 
---retries=X option. The delay between retries is by default 15 seconds, but 
+Normally DNS is queried once, but the number of retries can be set with
+--retries=X option. The delay between retries is by default 15 seconds, but
 it can be changed with --retry-delay=XX option.
 
-With --continuous and --continuous-delay, the script can be set to run 
+With --continuous and --continuous-delay, the script can be set to run
 in indefinite loop instead of running just once.
 
 =end
@@ -97,7 +97,7 @@ def log(message)
 end
 
 # Queries DNS SRV and TXT records for a single printer and
-# returns a Printer object containing the information if 
+# returns a Printer object containing the information if
 # the printer existed. Otherwise nil is returned.
 
 def query_printer(printer, ipps=false)
@@ -177,11 +177,12 @@ def query_domain(domain, ipps)
 end
 
 def add_printer(printer)
-  `/usr/sbin/lpadmin -p "#{printer.name}" -E -v #{printer.path} -L "#{printer.location}" -D "#{printer.description}"`
+  system('/usr/sbin/lpadmin', '-p', printer.name, '-E', '-v', printer.path,
+           '-L', printer.location, '-D', printer.description)
 end
 
 def delete_printer(printer)
-  `/usr/sbin/lpadmin -x #{printer.name}`
+  system('/usr/sbin/lpadmin', '-x', printer.name)
 end
 
 opts = Trollop::options do
@@ -299,7 +300,7 @@ begin
       new_printers = printers.select do |name, printer|
         if !current_printers.has_key?(name) or (!current_printers[name].equals?(printer))
           log "Add new printer entry #{printer.name} #{printer.path}"
- 
+
           add_printer(printer)
         end
       end
