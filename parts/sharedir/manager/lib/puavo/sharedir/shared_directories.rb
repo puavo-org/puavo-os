@@ -3,6 +3,13 @@
 class PuavoSharedDirectories
   def self.description(dirtype, lang, schoolname, groupname='')
     translations = {
+      'de' => {
+        'all'      => "Alle - #{ schoolname }",
+        'base'     => "Geteilt - #{ schoolname }",
+        'group'    => "#{ groupname } - #{ schoolname }",
+        'material' => "Material - #{ schoolname }",
+        'programs' => "Programme - #{ schoolname }",
+      },
       'en' => {
         'all'      => "All - #{ schoolname }",
         'base'     => "Share - #{ schoolname }",
@@ -35,6 +42,12 @@ class PuavoSharedDirectories
 
   def self.dirname(dirtype, lang)
     translations = {
+      'de' => {
+        'all'      => 'Alle',
+        'base'     => 'geteilt',
+        'material' => 'Material',
+        'programs' => 'Programme',
+      },
       'en' => {
         'all'      => 'All',
         'base'     => 'share',

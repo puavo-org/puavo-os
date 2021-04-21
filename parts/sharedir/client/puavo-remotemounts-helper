@@ -361,18 +361,21 @@ end
 
 def get_our_gvfsmounts
   sharenames = {
+    'de' => 'geteilt',
     'fi' => 'yhteiset',
     'sv' => 'delade_filer',
     'en' => 'share',
   }
 
   userdir_labels = {
+    'de' => 'Netzwerkordner',
     'fi' => 'Verkkokansio',
     'sv' => 'Nätverksmapp',
     'en' => 'Network folder',
   }
 
   schooldir_labels = {
+    'de' => 'Geteilte Dateien',
     'fi' => 'Yhteiset',
     'sv' => 'Delade filer',
     'en' => 'Share',

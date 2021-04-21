@@ -23,7 +23,7 @@ require 'puavo/sharedir/shared_directories'
 require 'rb-inotify'
 require 'syslog'
 
-Languages             = %w(en fi sv)
+Languages             = %w(de en fi sv)
 ShareDirBase          = '/home/share'
 ShareDirBaseFileStore = "#{ ShareDirBase }/.share"
 

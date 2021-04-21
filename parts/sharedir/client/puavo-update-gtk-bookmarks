@@ -67,6 +67,11 @@ update_bookmarks() {
 }
 
 case "$(echo $LANG | cut -c 1-2)" in
+  de)
+    schooldir_displayname='Geteilte Dateien'
+    sharename='geteilt'
+    userdir_displayname='Netzwerkordner'
+    ;;
   fi)
     schooldir_displayname='Yhteiset'
     sharename='yhteiset'
@@ -101,8 +106,8 @@ if [ "$mode" = '--with-cleanups' ]; then
   rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
 
   # remove stale links (maybe created later)
-  for linkname in 'Yhteiset'     'Delade filer' 'Share' \
-                  'Verkkokansio' 'Nätverksmapp' 'Network folder'; do
+  for linkname in 'Geteilte Dateien' 'Yhteiset'     'Delade filer' 'Share' \
+                  'Netzwerkordner'   'Verkkokansio' 'Nätverksmapp' 'Network folder'; do
     [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
   done
 fi
