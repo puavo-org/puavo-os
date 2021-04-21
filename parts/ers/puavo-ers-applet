@@ -454,7 +454,8 @@ class PuavoErsExamSync (threading.Thread):
                               'domain':   self.domain,
                               'hostname': self.hostname,
                               'id':       self.id,
-                            })
+                            },
+                            timeout=20)
     if not response:
       syslog.syslog(syslog.LOG_ERR,
         'error when getting exam index from %s: %s' \
@@ -523,7 +524,8 @@ class PuavoErsExamSync (threading.Thread):
                               'hash':     exam_hash,
                               'hostname': self.hostname,
                               'id':       self.id,
-                            })
+                            },
+                            timeout=20)
     if not response:
       raise Exception('error when getting an exam from %s: %s' \
               % (exam_uri, response.status_code))
