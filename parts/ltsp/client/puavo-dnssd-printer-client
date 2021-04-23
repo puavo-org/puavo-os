@@ -39,9 +39,6 @@ Normally DNS is queried once, but the number of retries can be set with
 --retries=X option. The delay between retries is by default 15 seconds, but
 it can be changed with --retry-delay=XX option.
 
-With --continuous and --continuous-delay, the script can be set to run
-in indefinite loop instead of running just once.
-
 =end
 
 require 'etc'
@@ -190,8 +187,6 @@ opts = Trollop::options do
   opt :require_dns_records, "Require DNS records to exist before doing updates"
   opt :retries, "Retry number of times if DNS query fails", :type => Integer
   opt :retry_delay, "Delay between retries (default 15 seconds)", :type => Integer
-  opt :continuous, "Run continuously instead of just running once"
-  opt :continuous_delay, "Delay between runs in continuous mode (default 300 seconds)", :type => Integer
 end
 
 if opts[:delay]
@@ -200,7 +195,6 @@ end
 
 retries = 1
 retry_delay = 15
-continuous_delay = 300
 
 if opts[:retries]
   retries = opts[:retries]
@@ -208,10 +202,6 @@ end
 
 if opts[:retry_delay]
   retry_delay = opts[:retry_delay]
-end
-
-if opts[:continuous_delay]
-  continuous_delay = opts[:continuous_delay]
 end
 
 dname = "b._dns-sd._udp"
@@ -327,11 +317,7 @@ begin
     end
   end
 
-  if opts[:continuous]
-    sleep(continuous_delay)
-  end
-
 rescue StandardError => e
   log "Error: #{e} - exiting"
   exit(1)
-end while opts[:continuous]
+end
