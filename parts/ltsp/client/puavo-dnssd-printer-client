@@ -55,9 +55,7 @@ ENV['LANG'] = "C"
 
 MANAGED_PRINTERS_LIST_FILEPATH = "/var/lib/puavo-desktop/dnssd_printers"
 
-class DNSException < RuntimeError
-
-end
+class DNSException < RuntimeError; end
 
 class Printer
   attr_reader :name
@@ -138,7 +136,7 @@ def query_printer(printer, ipps=false)
     if path and name and server and urf
       return Printer.new(name, "#{prefix}://#{server}/#{path}", "", "")
     end
-  rescue Exception => e
+  rescue StandardError => e
     log "querying printer #{printer} failed"
     return nil
   end
@@ -168,7 +166,7 @@ def query_domain(domain, ipps)
         printers[printer.name] = printer
       end
     }
-  rescue Exception => e
+  rescue StandardError => e
     log "querying domain _universal._sub._#{prefix}._tcp.#{domain} failed"
     raise DNSException.new("querying domain _universal._sub._#{prefix}._tcp.#{domain} failed")
   end
@@ -231,7 +229,7 @@ begin
       printer = Printer.json_create(o)
       managed_printers[printer.name] = printer
     end
-  rescue Exception => e
+  rescue StandardError => e
     log "Error: failed to read printers from #{MANAGED_PRINTERS_LIST_FILEPATH}: #{e}"
     managed_printers.clear
   end
@@ -274,7 +272,7 @@ begin
           rescue DNSException => e
           end
         }
-      rescue Exception => e
+      rescue StandardError => e
         print "Can't find PTR records for #{dname}: ", e, "\n"
       end
 
@@ -333,7 +331,7 @@ begin
     sleep(continuous_delay)
   end
 
-rescue Exception => e
+rescue StandardError => e
   log "Error: #{e} - exiting"
   exit(1)
 end while opts[:continuous]
