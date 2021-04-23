@@ -49,9 +49,9 @@ require 'syslog'
 require 'trollop'
 
 Encoding.default_external = 'utf-8'
-ENV['LANG'] = "C"
+ENV['LANG'] = 'C'
 
-MANAGED_PRINTERS_LIST_FILEPATH = "/var/lib/puavo-desktop/dnssd_printers"
+MANAGED_PRINTERS_LIST_FILEPATH = '/var/lib/puavo-desktop/dnssd_printers'
 
 class DNSException < RuntimeError; end
 
@@ -62,18 +62,18 @@ class Printer
   attr_reader :location
 
   def initialize(name, path, description, location)
-    @name = name
-    @path = path
+    @name        = name
+    @path        = path
     @description = description
-    @location = location
+    @location    = location
   end
 
   def to_json(*a)
     {
-      'name' => @name,
-      'path' => @path,
       'description' => @description,
-      'location' => @location
+      'location'    => @location,
+      'name'        => @name,
+      'path'        => @path,
     }.to_json(*a)
   end
 
@@ -87,7 +87,7 @@ class Printer
 end
 
 def log(message)
-  Syslog.open("puavo-dnssd-printer-client", Syslog::LOG_CONS) do |s|
+  Syslog.open('puavo-dnssd-printer-client', Syslog::LOG_CONS) do |s|
     s.warning('%s', message)
   end
 end
@@ -105,7 +105,7 @@ def query_printer(printer, ipps=false)
     server = nil
     urf = nil
 
-    res.each_resource(printer, 'TXT') { |rr|
+    res.each_resource(printer, 'TXT') do |rr|
       rr.rdata.each do |data|
         if /rp=(.*)/.match(data) then
           path = $1.tr('^A-Za-z0-9\-_/', '')
@@ -119,20 +119,20 @@ def query_printer(printer, ipps=false)
           urf = $1.tr('^A-Za-z0-9\-_', '')
         end
       end
-    }
+    end
 
-    res.each_resource(printer, 'SRV') { |rr|
+    res.each_resource(printer, 'SRV') do |rr|
       server = rr.target.to_s.tr('^A-Za-z0-9\-_.', '')
-    }
+    end
 
     if ipps then
-      prefix = "ipps"
+      prefix = 'ipps'
     else
-      prefix = "ipp"
+      prefix = 'ipp'
     end
 
     if path && name && server && urf then
-      return Printer.new(name, "#{prefix}://#{server}/#{path}", "", "")
+      return Printer.new(name, "#{prefix}://#{server}/#{path}", '', '')
     end
   rescue StandardError => e
     log "querying printer #{printer} failed"
@@ -149,9 +149,9 @@ def query_domain(domain, ipps)
   printers = Hash.new
 
   if ipps then
-    prefix = "ipps"
+    prefix = 'ipps'
   else
-    prefix = "ipp"
+    prefix = 'ipp'
   end
 
   begin
@@ -184,12 +184,12 @@ def delete_printer(printer)
 end
 
 opts = Trollop::options do
-  opt :delay, "Delay execution for number of seconds", :type => Integer
-  opt :delete_unmanaged, "Delete unmanaged printers"
-  opt :no_dns_query, "Do not query DNS records"
-  opt :require_dns_records, "Require DNS records to exist before doing updates"
-  opt :retries, "Retry number of times if DNS query fails", :type => Integer
-  opt :retry_delay, "Delay between retries (default 15 seconds)",
+  opt :delay, 'Delay execution for number of seconds', :type => Integer
+  opt :delete_unmanaged, 'Delete unmanaged printers'
+  opt :no_dns_query, 'Do not query DNS records'
+  opt :require_dns_records, 'Require DNS records to exist before doing updates'
+  opt :retries, 'Retry number of times if DNS query fails', :type => Integer
+  opt :retry_delay, 'Delay between retries (default 15 seconds)',
                     :type => Integer
 end
 
@@ -208,7 +208,7 @@ if opts[:retry_delay] then
   retry_delay = opts[:retry_delay]
 end
 
-dname = "b._dns-sd._udp"
+dname = 'b._dns-sd._udp'
 
 begin
   # First read old printer list
@@ -237,7 +237,7 @@ begin
       name = $1
       ipp = $2
 
-      current_printers[$1] = Printer.new(name, ipp, "", "")
+      current_printers[$1] = Printer.new(name, ipp, '', '')
     end
   end
 
@@ -251,9 +251,8 @@ begin
       retry_counter += 1
 
       begin
-        res   = Dnsruby::DNS.new
-
-        res.each_resource(dname, 'PTR') { |rr|
+        res = Dnsruby::DNS.new
+        res.each_resource(dname, 'PTR') do |rr|
           begin
             printers.merge! query_domain(rr.rdata, false)
             ptr_records_ok = true
@@ -265,9 +264,9 @@ begin
             ptr_records_ok = true
           rescue DNSException => e
           end
-        }
+        end
       rescue StandardError => e
-        print "Can't find PTR records for #{dname}: ", e, "\n"
+        puts "Can't find PTR records for #{ dname }: #{ e.message }"
       end
 
       if retry_counter < retries && !ptr_records_ok then
@@ -283,7 +282,7 @@ begin
 
       managed_printers.each do |name, printer|
         if !printers.has_key?(name) || !printers[name].equals?(printer) then
-          log "Delete old printer entry #{printer.name} #{printer.path}"
+          log "Delete old printer entry #{ printer.name } #{ printer.path }"
           delete_printer(printer)
         end
       end
@@ -293,7 +292,7 @@ begin
       printers.each do |name, printer|
         if !current_printers.has_key?(name) \
           || (!current_printers[name].equals?(printer)) then
-            log "Add new printer entry #{printer.name} #{printer.path}"
+            log "Add new printer entry #{ printer.name } #{ printer.path }"
 
             add_printer(printer)
         end
@@ -301,7 +300,7 @@ begin
 
       # Write new list of managed entries to the disk
 
-      File.open(MANAGED_PRINTERS_LIST_FILEPATH, "w") do |file|
+      File.open(MANAGED_PRINTERS_LIST_FILEPATH, 'w') do |file|
         file.puts printers.values.to_json
       end
 
@@ -313,17 +312,17 @@ begin
 
   if opts[:delete_unmanaged] then
     `lpstat -a 2>/dev/null`.split("\n").each do |line|
-      name = line.split(" ")[0]
+      name = line.split(' ').first
 
       if !managed_printers.has_key?(name) then
-        log "Deleting unmanaged printer #{name}"
+        log "Deleting unmanaged printer #{ name }"
 
-        delete_printer(Printer.new(name, "", "", ""))
+        delete_printer(Printer.new(name, '', '', ''))
       end
     end
   end
 
 rescue StandardError => e
-  log "Error: #{e} - exiting"
+  log "Error: #{ e.message } - exiting"
   exit(1)
 end
