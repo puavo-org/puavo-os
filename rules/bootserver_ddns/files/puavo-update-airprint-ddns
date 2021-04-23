@@ -64,7 +64,7 @@ end
 dns_update_packet = Dnsruby::Update.new(PUAVO_ETC.domain)
 
 # Update PTR record only if detect new printer queues
-if current_ipp_record_strings.sort != new_ipp_record_strings.sort
+if current_ipp_record_strings.sort != new_ipp_record_strings.sort then
   puts "Update PTR Records (_universal._sub._ipp._tcp.<doamin>)"
   # Remove current _universal._sub._ipp._tcp.<domain> record
   dns_update_packet.delete("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }")
@@ -77,13 +77,18 @@ end
 printer_queues.each do |printer_queue|
   # Add srv-host record
   puts "Add SRV records (<printer queue name>._ipp._tcp.<domain>)"
+
   srv_resource_record = Dnsruby::RR.create(
     "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain } IN SRV 0 0 631 cups.#{ PUAVO_ETC.domain }"
   )
   dns_update_packet.add(srv_resource_record)
+
   # Add txt record
   puts "Add TXT records (<printer queue name>._ipp._tcp.<domain>)"
-  dns_update_packet.add( "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }",
+
+  printer_queue_txt = "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }"
+  dns_update_packet.delete(printer_queue_txt, 'TXT')
+  dns_update_packet.add(printer_queue_txt,
     'TXT',
     60,
     [ "txtvers=1",
@@ -105,6 +110,6 @@ begin
     puts "Send update packet to DNS server"
     dns_server.send_message(dns_update_packet)
   end
-rescue Exception => e
-  puts "DNS server (#{ dns_server_host }) update failed (new universal ipp records): #{e.inspect}"
+rescue StandardError => e
+  puts "DNS server (#{ dns_server_host }) update failed (new universal ipp records): #{ e.message }"
 end
