@@ -23,10 +23,11 @@ SRV printer.fqdn
 SRV record defines the server offering the printing service and
 TXT records define the print queue attributes.
 
-List of managed printers is written to file /var/lib/puavo-desktop/dnssd_printers
-and this list is used on subsequent calls to define which printers are
-managed by this script and which ones are defined elsewhere. Only printers
-that are listed in managed printers are deleted.
+List of managed printers is written to file
+/var/lib/puavo-desktop/dnssd_printers and this list is used on subsequent
+calls to define which printers are managed by this script and which ones
+are defined elsewhere. Only printers that are listed in managed printers
+are deleted.
 
 When the script is run and no PTR record for b._dns-sd._udp is found,
 printer information is not changed if --require-dns-records is defined.
@@ -81,7 +82,7 @@ class Printer
   end
 
   def equals?(other)
-    @name.eql?(other.name) and @path.eql?(other.path)
+    @name.eql?(other.name) && @path.eql?(other.path)
   end
 end
 
@@ -106,15 +107,15 @@ def query_printer(printer, ipps=false)
 
     res.each_resource(printer, 'TXT') { |rr|
       rr.rdata.each do |data|
-        if /rp=(.*)/.match(data)
+        if /rp=(.*)/.match(data) then
           path = $1.tr('^A-Za-z0-9\-_/', '')
         end
 
-        if /note=(.*)/.match(data)
+        if /note=(.*)/.match(data) then
           name = $1.tr('^A-Za-z0-9\-_\.', '')
         end
 
-        if /URF=(.*)/.match(data)
+        if /URF=(.*)/.match(data) then
           urf = $1.tr('^A-Za-z0-9\-_', '')
         end
       end
@@ -124,13 +125,13 @@ def query_printer(printer, ipps=false)
       server = rr.target.to_s.tr('^A-Za-z0-9\-_.', '')
     }
 
-    if ipps
+    if ipps then
       prefix = "ipps"
     else
       prefix = "ipp"
     end
 
-    if path and name and server and urf
+    if path && name && server && urf then
       return Printer.new(name, "#{prefix}://#{server}/#{path}", "", "")
     end
   rescue StandardError => e
@@ -147,25 +148,26 @@ def query_domain(domain, ipps)
 
   printers = Hash.new
 
-  if ipps
+  if ipps then
     prefix = "ipps"
   else
     prefix = "ipp"
   end
 
   begin
-    log "querying domain _universal._sub._#{prefix}._tcp.#{domain}"
+    universal_sub = "_universal._sub._#{ prefix }._tcp.#{ domain }"
+    log "querying domain #{ universal_sub }"
 
-    res.each_resource("_universal._sub._#{prefix}._tcp.#{domain}", 'PTR') { |rr|
+    res.each_resource(universe_sub, 'PTR') do |rr|
       printer = query_printer(rr.rdata, ipps)
 
-      if printer
+      if printer then
         printers[printer.name] = printer
       end
-    }
+    end
   rescue StandardError => e
     log "querying domain _universal._sub._#{prefix}._tcp.#{domain} failed"
-    raise DNSException.new("querying domain _universal._sub._#{prefix}._tcp.#{domain} failed")
+    raise DNSException.new("querying domain #{ universal_sub } failed")
   end
 
   return printers
@@ -173,7 +175,8 @@ end
 
 def add_printer(printer)
   system('/usr/sbin/lpadmin', '-p', printer.name, '-E', '-v', printer.path,
-           '-L', printer.location, '-D', printer.description, '-m', 'everywhere')
+           '-L', printer.location, '-D', printer.description,
+           '-m', 'everywhere')
 end
 
 def delete_printer(printer)
@@ -186,28 +189,28 @@ opts = Trollop::options do
   opt :no_dns_query, "Do not query DNS records"
   opt :require_dns_records, "Require DNS records to exist before doing updates"
   opt :retries, "Retry number of times if DNS query fails", :type => Integer
-  opt :retry_delay, "Delay between retries (default 15 seconds)", :type => Integer
+  opt :retry_delay, "Delay between retries (default 15 seconds)",
+                    :type => Integer
 end
 
-if opts[:delay]
+if opts[:delay] then
   sleep(opts[:delay])
 end
 
 retries = 1
 retry_delay = 15
 
-if opts[:retries]
+if opts[:retries] then
   retries = opts[:retries]
 end
 
-if opts[:retry_delay]
+if opts[:retry_delay] then
   retry_delay = opts[:retry_delay]
 end
 
 dname = "b._dns-sd._udp"
 
 begin
-
   # First read old printer list
 
   managed_printers = Hash.new
@@ -220,7 +223,8 @@ begin
       managed_printers[printer.name] = printer
     end
   rescue StandardError => e
-    log "Error: failed to read printers from #{MANAGED_PRINTERS_LIST_FILEPATH}: #{e}"
+    log('Error: failed to read printers from' \
+          + " #{ MANAGED_PRINTERS_LIST_FILEPATH }: #{ e.message }")
     managed_printers.clear
   end
 
@@ -229,7 +233,7 @@ begin
   current_printers = Hash.new
 
   `lpstat -v 2>/dev/null`.split("\n").each do |line|
-    if /device for (.*?): (.*)/.match(line)
+    if /device for (.*?): (.*)/.match(line) then
       name = $1
       ipp = $2
 
@@ -240,10 +244,10 @@ begin
   printers = Hash.new
   ptr_records_ok = false
 
-  if !opts[:no_dns_query]
+  if !opts[:no_dns_query] then
     retry_counter = 0
 
-    while retry_counter < retries and !ptr_records_ok
+    while retry_counter < retries && !ptr_records_ok do
       retry_counter += 1
 
       begin
@@ -266,18 +270,19 @@ begin
         print "Can't find PTR records for #{dname}: ", e, "\n"
       end
 
-      if retry_counter < retries and !ptr_records_ok
+      if retry_counter < retries && !ptr_records_ok then
         sleep(retry_delay)
       end
     end
 
-    if opts[:require_dns_records] and !ptr_records_ok
-      log "--require-dns-records defined and DNS entries were not found, not updating records"
+    if opts[:require_dns_records] && !ptr_records_ok then
+      log('--require-dns-records defined and DNS entries were not found,' \
+            + ' not updating records')
     else
       # Delete printers that are not available anymore
 
-      old_printers = managed_printers.select do |name, printer|
-        if !printers.has_key?(name) or !printers[name].equals?(printer)
+      managed_printers.each do |name, printer|
+        if !printers.has_key?(name) || !printers[name].equals?(printer) then
           log "Delete old printer entry #{printer.name} #{printer.path}"
           delete_printer(printer)
         end
@@ -285,11 +290,12 @@ begin
 
       # Add new entries
 
-      new_printers = printers.select do |name, printer|
-        if !current_printers.has_key?(name) or (!current_printers[name].equals?(printer))
-          log "Add new printer entry #{printer.name} #{printer.path}"
+      printers.each do |name, printer|
+        if !current_printers.has_key?(name) \
+          || (!current_printers[name].equals?(printer)) then
+            log "Add new printer entry #{printer.name} #{printer.path}"
 
-          add_printer(printer)
+            add_printer(printer)
         end
       end
 
@@ -305,11 +311,11 @@ begin
 
   # Finally delete all unmanaged entries if that was requested
 
-  if opts[:delete_unmanaged]
+  if opts[:delete_unmanaged] then
     `lpstat -a 2>/dev/null`.split("\n").each do |line|
       name = line.split(" ")[0]
 
-      if !managed_printers.has_key?(name)
+      if !managed_printers.has_key?(name) then
         log "Deleting unmanaged printer #{name}"
 
         delete_printer(Printer.new(name, "", "", ""))
