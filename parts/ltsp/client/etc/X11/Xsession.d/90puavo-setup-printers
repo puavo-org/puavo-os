@@ -3,15 +3,11 @@
 #
 # This file is sourced by Xsession(5), not executed.
 
-if [ "$(puavo-conf puavo.printing.use_puavo_permissions)" != 'true' ]; then
-  return 0
-fi
-
 remove_remote_printers() {
     LANG=C lpstat -v | while read line; do
-        name=$(printf %s "${line}" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
-        [ -n "${name}" ] || continue
-        lpadmin -x "${name}"
+        name=$(printf %s "$line" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
+        [ -n "$name" ] || continue
+        lpadmin -x "$name"
     done
 }
 
@@ -19,44 +15,50 @@ add_remote_printers() {
     local puavo_domain=$(cat /etc/puavo/domain)
     readonly puavo_domain
 
-    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
+    [ -e "$PUAVO_SESSION_PATH" ] || return 1
 
-    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | while read printer; do
-        name=$(printf %s "${printer}" | jq -r -c .name)
-        location=$(printf %s "${printer}" | jq -r -c .location)
-        description=$(printf %s "${printer}" | jq -r -c .description)
+    jq -r -c '.printer_queues[]' "$PUAVO_SESSION_PATH" | while read printer; do
+        name=$(printf %s "$printer" | jq -r -c .name)
+        location=$(printf %s "$printer" | jq -r -c .location)
+        description=$(printf %s "$printer" | jq -r -c .description)
         remote_uri="ipp://cups.${puavo_domain}:631/printers/${name}"
 
-        lpadmin -p "${name}" -v "${remote_uri}" -L "${location}" -D "${description}" -E -m everywhere
+        lpadmin -p "$name" -v "$remote_uri" -L "$location" -D "$description" -E -m everywhere
     done
 }
 
 get_printer_list() {
-    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
+    [ -e "$PUAVO_SESSION_PATH" ] || return 1
 
-    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | {
+    jq -r -c '.printer_queues[]' "$PUAVO_SESSION_PATH" | {
         PRINTER_LIST=''
         while read printer; do
-            name=$(printf %s "${printer}" | jq -r -c .name)
-            if [ -z "${PRINTER_LIST}" ]; then
-                PRINTER_LIST="${name}"
+            name=$(printf %s "$printer" | jq -r -c .name)
+            if [ -z "$PRINTER_LIST" ]; then
+                PRINTER_LIST="$name"
             else
                 PRINTER_LIST="${PRINTER_LIST},${name}"
             fi
         done
-        printf %s "${PRINTER_LIST}"
+        printf %s "$PRINTER_LIST"
     }
 }
 
 set_default_printer() {
     local default_printer_name
 
-    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
+    [ -e "$PUAVO_SESSION_PATH" ] || return 1
 
-    default_printer_name=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
-    [ "${default_printer_name}" != null ] && lpadmin -d "${default_printer_name}"
+    default_printer_name=$(jq -r .device.default_printer_name "$PUAVO_SESSION_PATH")
+    [ "$default_printer_name" != null ] && lpadmin -d "$default_printer_name"
 }
 
-remove_remote_printers
-add_remote_printers
-set_default_printer
+if [ -e /run/puavo/nbd-server ]; then
+  remove_remote_printers
+  add_remote_printers
+  set_default_printer
+fi
+
+if [ "$(puavo-conf puavo.printing.use_puavo_permissions)" = 'true' ]; then
+  export PRINTER_LIST=$(get_printer_list)
+fi
