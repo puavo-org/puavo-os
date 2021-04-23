@@ -44,7 +44,6 @@ it can be changed with --retry-delay=XX option.
 
 require 'etc'
 require 'dnsruby'
-require 'puavo/conf'
 require 'json'
 require 'open3'
 require 'syslog'
@@ -201,17 +200,6 @@ end
 exitstatus = 0
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
-
-puavoconf = Puavo::Conf.new
-if puavoconf.get('puavo.printing.use_puavo_permissions') == 'true' then
-  # printer management should now happen in
-  # /etc/X11/Xsession.d/90puavo-setup-printers
-  log('doing nothing because puavo.printing.use_puavo_permissions is true')
-  Syslog.close()
-  puavoconf.close
-  exit(0)
-end
-puavoconf.close
 
 opts = Trollop::options do
   opt :delay, 'Delay execution for number of seconds', :type => Integer
