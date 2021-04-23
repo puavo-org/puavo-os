@@ -407,6 +407,7 @@ class packages {
     , 'scribus'
     , 'sent'
     , 'tellico'
+    , 'texmaker'
     , 'thunderbird'
     , 'vym' ]:
       tag => [ 'tag_office', 'tag_debian_desktop', ];
