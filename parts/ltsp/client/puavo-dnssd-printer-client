@@ -45,6 +45,7 @@ it can be changed with --retry-delay=XX option.
 require 'etc'
 require 'dnsruby'
 require 'json'
+require 'open3'
 require 'syslog'
 require 'trollop'
 
@@ -87,9 +88,13 @@ class Printer
 end
 
 def log(message)
-  Syslog.open('puavo-dnssd-printer-client', Syslog::LOG_CONS) do |s|
-    s.warning('%s', message)
-  end
+  puts(message)
+  Syslog.log(Syslog::LOG_INFO, '%s', message)
+end
+
+def logerr(message)
+  warn(message)
+  Syslog.log(Syslog::LOG_WARNING, '%s', message)
 end
 
 # Queries DNS SRV and TXT records for a single printer and
@@ -98,7 +103,7 @@ end
 
 def query_printer(printer, ipps=false)
   begin
-    res   = Dnsruby::DNS.new
+    res = Dnsruby::DNS.new
 
     path = nil
     name = nil
@@ -135,7 +140,7 @@ def query_printer(printer, ipps=false)
       return Printer.new(name, "#{prefix}://#{server}/#{path}", '', '')
     end
   rescue StandardError => e
-    log "querying printer #{printer} failed"
+    logerr "querying printer #{ printer } failed"
     return nil
   end
 end
@@ -166,7 +171,7 @@ def query_domain(domain, ipps)
       end
     end
   rescue StandardError => e
-    log "querying domain _universal._sub._#{prefix}._tcp.#{domain} failed"
+    logerr "querying domain _universal._sub._#{prefix}._tcp.#{domain} failed"
     raise DNSException.new("querying domain #{ universal_sub } failed")
   end
 
@@ -174,14 +179,25 @@ def query_domain(domain, ipps)
 end
 
 def add_printer(printer)
-  system('/usr/sbin/lpadmin', '-p', printer.name, '-E', '-v', printer.path,
-           '-L', printer.location, '-D', printer.description,
-           '-m', 'everywhere')
+  cmd = [ '/usr/sbin/lpadmin', '-p', printer.name, '-E', '-v', printer.path,
+            '-L', printer.location, '-D', printer.description,
+            '-m', 'everywhere' ]
+  output, status = Open3.capture2e(*cmd)
+  if not status.success? then
+    logerr("could not add printer #{ printer.name }: #{ output }")
+  end
 end
 
 def delete_printer(printer)
-  system('/usr/sbin/lpadmin', '-x', printer.name)
+  output, status = Open3.capture2e('/usr/sbin/lpadmin', '-x', printer.name)
+  if not status.success? then
+    logerr("could not delete printer #{ printer.name }: #{ output }")
+  end
 end
+
+exitstatus = 0
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 opts = Trollop::options do
   opt :delay, 'Delay execution for number of seconds', :type => Integer
@@ -244,7 +260,7 @@ begin
   printers = Hash.new
   ptr_records_ok = false
 
-  if !opts[:no_dns_query] then
+  unless opts[:no_dns_query] then
     retry_counter = 0
 
     while retry_counter < retries && !ptr_records_ok do
@@ -281,7 +297,7 @@ begin
       # Delete printers that are not available anymore
 
       managed_printers.each do |name, printer|
-        if !printers.has_key?(name) || !printers[name].equals?(printer) then
+        unless printers.has_key?(name) && printers[name].equals?(printer) then
           log "Delete old printer entry #{ printer.name } #{ printer.path }"
           delete_printer(printer)
         end
@@ -290,8 +306,8 @@ begin
       # Add new entries
 
       printers.each do |name, printer|
-        if !current_printers.has_key?(name) \
-          || (!current_printers[name].equals?(printer)) then
+        unless current_printers.has_key?(name) \
+          && current_printers[name].equals?(printer) then
             log "Add new printer entry #{ printer.name } #{ printer.path }"
 
             add_printer(printer)
@@ -314,7 +330,7 @@ begin
     `lpstat -a 2>/dev/null`.split("\n").each do |line|
       name = line.split(' ').first
 
-      if !managed_printers.has_key?(name) then
+      unless managed_printers.has_key?(name) then
         log "Deleting unmanaged printer #{ name }"
 
         delete_printer(Printer.new(name, '', '', ''))
@@ -323,6 +339,10 @@ begin
   end
 
 rescue StandardError => e
-  log "Error: #{ e.message } - exiting"
-  exit(1)
+  logerr "Error: #{ e.message } - exiting"
+  exitstatus = 1
 end
+
+Syslog.close()
+
+exit(exitstatus)
