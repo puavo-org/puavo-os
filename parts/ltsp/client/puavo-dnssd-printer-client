@@ -137,10 +137,10 @@ def query_printer(printer, ipps=false)
     end
 
     if path && name && server && urf then
-      return Printer.new(name, "#{prefix}://#{server}/#{path}", '', '')
+      return Printer.new(name, "#{ prefix }://#{ server }/#{ path }", '', '')
     end
   rescue StandardError => e
-    logerr "querying printer #{ printer } failed"
+    logerr "querying printer #{ printer } failed : #{ e.message }"
     return nil
   end
 end
@@ -149,7 +149,7 @@ end
 # ipps entries override ipp entries if both exist.
 
 def query_domain(domain, ipps)
-  res   = Dnsruby::DNS.new
+  res = Dnsruby::DNS.new
 
   printers = Hash.new
 
@@ -159,20 +159,22 @@ def query_domain(domain, ipps)
     prefix = 'ipp'
   end
 
-  begin
-    universal_sub = "_universal._sub._#{ prefix }._tcp.#{ domain }"
-    log "querying domain #{ universal_sub }"
+  universal_sub = "_universal._sub._#{ prefix }._tcp.#{ domain }"
 
-    res.each_resource(universe_sub, 'PTR') do |rr|
+  begin
+    res.each_resource(universal_sub, 'PTR') do |rr|
       printer = query_printer(rr.rdata, ipps)
 
       if printer then
         printers[printer.name] = printer
       end
     end
+
+    log "found #{ printers.count } printers by querying #{ universal_sub }"
   rescue StandardError => e
-    logerr "querying domain _universal._sub._#{prefix}._tcp.#{domain} failed"
-    raise DNSException.new("querying domain #{ universal_sub } failed")
+    errmsg = "querying #{ universal_sub } failed: #{ e.message }"
+    logerr(errmsg)
+    raise DNSException.new(errmsg)
   end
 
   return printers
@@ -309,7 +311,6 @@ begin
         unless current_printers.has_key?(name) \
           && current_printers[name].equals?(printer) then
             log "Add new printer entry #{ printer.name } #{ printer.path }"
-
             add_printer(printer)
         end
       end
