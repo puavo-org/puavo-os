@@ -299,8 +299,18 @@ begin
       # Delete printers that are not available anymore
 
       managed_printers.each do |name, printer|
-        unless printers.has_key?(name) && printers[name].equals?(printer) then
-          log "Delete old printer entry #{ printer.name } #{ printer.path }"
+        # In Buster we should ensure that ppd-files exist for all printers,
+        # otherwise some UI elements do not show all printer features.
+        force_printer_delete = current_printers.has_key?(name) \
+                                 && current_printers[name].equals?(printer) \
+                                 && !File.exists?("/etc/cups/ppd/#{ name }.ppd")
+
+        # Add a printer if there are DNS records for it.
+        printer_should_exist = printers.has_key?(name) \
+                                 && printers[name].equals?(printer)
+        if force_printer_delete || !printer_should_exist then
+          log "Delete old printer #{ printer.name } #{ printer.path }"
+          current_printers.delete(name)
           delete_printer(printer)
         end
       end
@@ -308,10 +318,11 @@ begin
       # Add new entries
 
       printers.each do |name, printer|
-        unless current_printers.has_key?(name) \
-          && current_printers[name].equals?(printer) then
-            log "Add new printer entry #{ printer.name } #{ printer.path }"
-            add_printer(printer)
+        printer_exists = current_printers.has_key?(name) \
+                           && current_printers[name].equals?(printer)
+        unless printer_exists then
+          log "Add new printer #{ printer.name } #{ printer.path }"
+          add_printer(printer)
         end
       end
 
