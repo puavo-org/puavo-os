@@ -44,6 +44,7 @@ it can be changed with --retry-delay=XX option.
 
 require 'etc'
 require 'dnsruby'
+require 'fileutils'
 require 'json'
 require 'open3'
 require 'syslog'
@@ -328,9 +329,11 @@ begin
 
       # Write new list of managed entries to the disk
 
-      File.open(MANAGED_PRINTERS_LIST_FILEPATH, 'w') do |file|
+      tmpfile = "#{ MANAGED_PRINTERS_LIST_FILEPATH }.tmp"
+      File.open(tmpfile, 'w') do |file|
         file.puts printers.values.to_json
       end
+      FileUtils.mv(tmpfile, MANAGED_PRINTERS_LIST_FILEPATH)
 
       managed_printers = printers
     end
