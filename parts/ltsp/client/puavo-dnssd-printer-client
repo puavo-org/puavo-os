@@ -24,10 +24,10 @@ SRV record defines the server offering the printing service and
 TXT records define the print queue attributes.
 
 List of managed printers is written to file
-/var/lib/puavo-desktop/dnssd_printers and this list is used on subsequent
-calls to define which printers are managed by this script and which ones
-are defined elsewhere. Only printers that are listed in managed printers
-are deleted.
+/var/lib/puavo-desktop/shared/dnssd_printers.json and this list is used
+on subsequent calls to define which printers are managed by this script
+and which ones are defined elsewhere. Only printers that are listed in
+managed printers are deleted.
 
 When the script is run and no PTR record for b._dns-sd._udp is found,
 printer information is not changed if --require-dns-records is defined.
@@ -53,7 +53,7 @@ require 'trollop'
 Encoding.default_external = 'utf-8'
 ENV['LANG'] = 'C'
 
-MANAGED_PRINTERS_LIST_FILEPATH = '/var/lib/puavo-desktop/dnssd_printers'
+MANAGED_PRINTERS_LIST_PATH = '/var/lib/puavo-desktop/shared/dnssd_printers.json'
 
 class DNSException < RuntimeError; end
 
@@ -235,7 +235,7 @@ begin
   managed_printers = Hash.new
 
   begin
-    json = JSON.parse(File.read(MANAGED_PRINTERS_LIST_FILEPATH))
+    json = JSON.parse( File.read(MANAGED_PRINTERS_LIST_PATH) )
 
     json.each do |o|
       printer = Printer.json_create(o)
@@ -243,7 +243,7 @@ begin
     end
   rescue StandardError => e
     log('Error: failed to read printers from' \
-          + " #{ MANAGED_PRINTERS_LIST_FILEPATH }: #{ e.message }")
+          + " #{ MANAGED_PRINTERS_LIST_PATH }: #{ e.message }")
     managed_printers.clear
   end
 
@@ -329,11 +329,11 @@ begin
 
       # Write new list of managed entries to the disk
 
-      tmpfile = "#{ MANAGED_PRINTERS_LIST_FILEPATH }.tmp"
+      tmpfile = "#{ MANAGED_PRINTERS_LIST_PATH }.tmp"
       File.open(tmpfile, 'w') do |file|
         file.puts printers.values.to_json
       end
-      FileUtils.mv(tmpfile, MANAGED_PRINTERS_LIST_FILEPATH)
+      FileUtils.mv(tmpfile, MANAGED_PRINTERS_LIST_PATH)
 
       managed_printers = printers
     end
