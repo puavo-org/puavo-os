@@ -205,6 +205,11 @@ do_preinstall() {
   # configuration is updated during image installation by
   # puavo-image-preinst.
   install_grub --hosttype preinstalled
+
+  # Setup Grub environment for preinstalled so that Windows can be booted
+  # even when we have Puavo OS only preinstalled.
+  /etc/puavo-conf/scripts/setup_grub_environment
+
   install_image "$puavo_install_hosttype" --hosttype preinstalled
 
   echo "$puavo_install_target_hosttype" > /images/puavo_preinstalled
