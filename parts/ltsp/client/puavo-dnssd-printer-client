@@ -53,6 +53,7 @@ require 'trollop'
 Encoding.default_external = 'utf-8'
 ENV['LANG'] = 'C'
 
+OLD_MANAGED_PRINTERS_LIST_PATH = '/var/lib/puavo-desktop/dnssd_printers'
 MANAGED_PRINTERS_LIST_PATH = '/var/lib/puavo-desktop/shared/dnssd_printers.json'
 
 class DNSException < RuntimeError; end
@@ -235,6 +236,11 @@ begin
   managed_printers = Hash.new
 
   begin
+    # XXX this may be removed once hosts have moved on to the new path
+    if File.exists?(OLD_MANAGED_PRINTERS_LIST_PATH) then
+      FileUtils.mv(OLD_MANAGED_PRINTERS_LIST_PATH, MANAGED_PRINTERS_LIST_PATH)
+    end
+
     json = JSON.parse( File.read(MANAGED_PRINTERS_LIST_PATH) )
 
     json.each do |o|
