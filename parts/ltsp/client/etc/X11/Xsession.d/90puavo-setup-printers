@@ -3,96 +3,60 @@
 #
 # This file is sourced by Xsession(5), not executed.
 
-puavo_lpadmin() {
-  # use timeout for all lpadmin calls... these should go to local cups server
-  # only, but in there are some hangs we do not want to wait indefinitely
-  # here, because otherwise logins are simply broken
-  timeout -k 2 5 lpadmin "$@"
+if [ "$(puavo-conf puavo.printing.use_puavo_permissions)" != 'true' ]; then
+  return 0
+fi
+
+remove_remote_printers() {
+    LANG=C lpstat -v | while read line; do
+        name=$(printf %s "${line}" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
+        [ -n "${name}" ] || continue
+        lpadmin -x "${name}"
+    done
 }
 
-puavo_pslog() {
-  logger -t 90puavo-setup-printers "$@"
+add_remote_printers() {
+    local puavo_domain=$(cat /etc/puavo/domain)
+    readonly puavo_domain
+
+    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
+
+    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | while read printer; do
+        name=$(printf %s "${printer}" | jq -r -c .name)
+        location=$(printf %s "${printer}" | jq -r -c .location)
+        description=$(printf %s "${printer}" | jq -r -c .description)
+        remote_uri="ipp://cups.${puavo_domain}:631/printers/${name}"
+
+        lpadmin -p "${name}" -v "${remote_uri}" -L "${location}" -D "${description}" -E -m everywhere
+    done
 }
 
-limit_printer_visibility() {
-  local managed_printer_list managed_printer puavo_printers_list OLDIFS \
-        use_puavo_permissions
+get_printer_list() {
+    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
 
-  if [ "$(puavo-conf puavo.printing.use_puavo_permissions)" = 'true' ]; then
-    puavo_pslog -p user.notice \
-      'puavo.printing.use_puavo_permission is true, limiting printer visibility'
-    use_puavo_permissions=true
-  else
-    puavo_pslog -p user.err \
-      'puavo.printing.use_puavo_permission is not true, all printers shown'
-    use_puavo_permissions=false
-  fi
-
-  if ! managed_printer_list=$(
-    jq -r '.[] | .name' /var/lib/puavo-desktop/shared/dnssd_printers.json); then
-      puavo_pslog -p user.err 'could not find a list of managed printers'
-      return 1
-  fi
-  if ! puavo_printers_list=$(jq -r '.printer_queues[] | .name' \
-                               "$PUAVO_SESSION_PATH"); then
-    puavo_pslog -p user.err 'could not find a list of printers in puavo'
-    return 1
-  fi
-
-  OLDIFS="$IFS"
-  IFS='
-'
-  for managed_printer in $managed_printer_list; do
-    if ! $use_puavo_permissions \
-      || { printf "%s\n" "$puavo_printers_list" | grep -qx "$managed_printer"; }; then
-        # this printer is listed as visible in Puavo
-        if $use_puavo_permissions; then
-          puavo_pslog -p user.info \
-                      "making printer ${managed_printer} visible to user ${USER}"
-        fi
-        if ! puavo_lpadmin -p "$managed_printer" -u "allow:${USER}"; then
-          puavo_pslog -p user.err "error when making $managed_printer visible"
-        fi
-    else
-      # this printer should not be shown
-      puavo_pslog -p user.info \
-                  "hiding printer ${managed_printer} from user ${USER}"
-      if ! puavo_lpadmin -p "$managed_printer" -u "deny:${USER}"; then
-        puavo_pslog -p user.err "error when hiding $managed_printer"
-      fi
-    fi
-  done
-  IFS="$OLDIFS"
+    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | {
+        PRINTER_LIST=''
+        while read printer; do
+            name=$(printf %s "${printer}" | jq -r -c .name)
+            if [ -z "${PRINTER_LIST}" ]; then
+                PRINTER_LIST="${name}"
+            else
+                PRINTER_LIST="${PRINTER_LIST},${name}"
+            fi
+        done
+        printf %s "${PRINTER_LIST}"
+    }
 }
 
 set_default_printer() {
-  local default_printer_name
+    local default_printer_name
 
-  default_printer_name=$(jq -r '.device.default_printer_name' \
-                           "$PUAVO_SESSION_PATH")
-  if [ "$default_printer_name" != 'null' ]; then
-    puavo_lpadmin -d "$default_printer_name"
-  fi
+    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
+
+    default_printer_name=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
+    [ "${default_printer_name}" != null ] && lpadmin -d "${default_printer_name}"
 }
 
-# Run puavo-dnssd-printer-client on fatclients so we get to see printers.
-# On laptops we can not presume a network at this stage, therefore we run
-# puavo-dnssd-printer-client from
-# /etc/NetworkManager/dispatcher.d/dnssd-printers when connecting to a network.
-if [ -e /run/puavo/nbd-server ]; then
-  if ! timeout -k 2 15 puavo-dnssd-printer-client; then
-    puavo_pslog -p user.err 'error running puavo-dnssd-printer-client'
-  fi
-fi
-
-if [ ! -e "$PUAVO_SESSION_PATH" ]; then
-  puavo_pslog -p user.err \
-              'no puavo session data, can not limit printer visibility'
-  return 1
-fi
-
-if ! limit_printer_visibility; then
-  puavo_pslog -p user.notice 'some error in limiting printer visibility'
-fi
-
+remove_remote_printers
+add_remote_printers
 set_default_printer

@@ -70,7 +70,6 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-change-host-state \
-		puavo-dnssd-printer-client \
 		puavo-pulseaudio-get-puavoconf \
 		puavo-pulseaudio-list \
 		puavo-pulseaudio-setup \
@@ -80,6 +79,7 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-conf-local \
+		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
 		puavo-netboot-init-nfs \
 		puavo-report-system-version \
