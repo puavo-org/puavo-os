@@ -3,6 +3,13 @@
 #
 # This file is sourced by Xsession(5), not executed.
 
+puavo_lpadmin() {
+  # use timeout for all lpadmin calls... these should go to local cups server
+  # only, but in there are some hangs we do not want to wait indefinitely
+  # here, because otherwise logins are simply broken
+  timeout -k 2 5 lpadmin "$@"
+}
+
 puavo_pslog() {
   logger -t 90puavo-setup-printers "$@"
 }
@@ -43,14 +50,14 @@ limit_printer_visibility() {
           puavo_pslog -p user.info \
                       "making printer ${managed_printer} visible to user ${USER}"
         fi
-        if ! lpadmin -p "$managed_printer" -u "allow:${USER}"; then
+        if ! puavo_lpadmin -p "$managed_printer" -u "allow:${USER}"; then
           puavo_pslog -p user.err "error when making $managed_printer visible"
         fi
     else
       # this printer should not be shown
       puavo_pslog -p user.info \
                   "hiding printer ${managed_printer} from user ${USER}"
-      if ! lpadmin -p "$managed_printer" -u "deny:${USER}"; then
+      if ! puavo_lpadmin -p "$managed_printer" -u "deny:${USER}"; then
         puavo_pslog -p user.err "error when hiding $managed_printer"
       fi
     fi
@@ -64,7 +71,7 @@ set_default_printer() {
   default_printer_name=$(jq -r '.device.default_printer_name' \
                            "$PUAVO_SESSION_PATH")
   if [ "$default_printer_name" != 'null' ]; then
-    lpadmin -d "$default_printer_name"
+    puavo_lpadmin -d "$default_printer_name"
   fi
 }
 
@@ -73,7 +80,7 @@ set_default_printer() {
 # puavo-dnssd-printer-client from
 # /etc/NetworkManager/dispatcher.d/dnssd-printers when connecting to a network.
 if [ -e /run/puavo/nbd-server ]; then
-  if ! puavo-dnssd-printer-client; then
+  if ! timeout -k 2 15 puavo-dnssd-printer-client; then
     puavo_pslog -p user.err 'error running puavo-dnssd-printer-client'
   fi
 fi
