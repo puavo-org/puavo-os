@@ -8,11 +8,7 @@ lockPref("browser.shell.checkDefaultBrowser", false);
 lockPref("extensions.blocklist.enabled", false);
 lockPref("network.dns.disableIPv6", true);
 lockPref("network.seer.enabled", false);
-
-// try to fix the default paper size to A4
-lockPref("print.print_paper_name", "iso_a4");
-// paper size is wrong by default on the default printing dialog
-lockPref("print.tab_modal.enabled", false);
+lockPref("print.postscript.paper_size", "iso_a4");
 
 homepage=getenv("HOMEPAGE");
 
