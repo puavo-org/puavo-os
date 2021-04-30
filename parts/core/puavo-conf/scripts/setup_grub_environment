@@ -55,6 +55,15 @@ setup_locale() {
   fi
 }
 
+setup_optional_grub_config() {
+  puavo_optional_grub_conf=$(puavo-conf puavo.grub.config)
+  if [ -n "$puavo_optional_grub_conf" ]; then
+    grubedit set "puavo_optional_grub_conf=${puavo_optional_grub_conf}"
+  else
+    grubedit unset puavo_optional_grub_conf
+  fi
+}
+
 setup_windows_enabled() {
   if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
     grubedit set "puavo_grub_windows_enabled=true"
@@ -90,11 +99,12 @@ selected_puavo_conf_arguments_as_kernel_args() {
 
 status=0
 
-setup_developer_mode   || status=1
-setup_grub_theme       || status=1
-setup_kernel_arguments || status=1
-setup_kernel_version   || status=1
-setup_locale           || status=1
-setup_windows_enabled  || status=1
+setup_developer_mode       || status=1
+setup_grub_theme           || status=1
+setup_kernel_arguments     || status=1
+setup_kernel_version       || status=1
+setup_locale               || status=1
+setup_optional_grub_config || status=1
+setup_windows_enabled      || status=1
 
 exit $status

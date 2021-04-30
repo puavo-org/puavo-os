@@ -6,7 +6,7 @@ class grub::themes {
     'puppet:///modules/art/puavo-art/puavo-os_logo-gray-300px.png'
 
   file {
-    [ '/boot', '/boot/grub', '/boot/grub/themes' ]:
+    '/boot/grub/themes':
       ensure => directory;
 
     '/boot/grub/themes/StylishDark':
