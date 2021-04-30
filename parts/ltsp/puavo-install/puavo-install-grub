@@ -307,6 +307,10 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     fi
   fi
 
+  if test -z "$windows_boot_label"; then
+    set windows_boot_label="Windows"
+  fi
+
   if test -f "${default_image}"; then
     ltsp_image_entry "${default_image}" "${text_normal_startup}" "" "normal" "${default_image_alias}"
     if test "__PUAVO_LIVEBOOT_OPTION__" = "true"; then
@@ -648,13 +652,13 @@ if [ -n "$possible_windows_disk_dev" ]; then
     cat <<EOF >> "$tmp_grub_cfg_path"
 
 if test "\${puavo_grub_windows_enabled}" = "true"; then
-  menuentry "Windows" {
+  menuentry "\${windows_boot_label}" {
     insmod ntfs
     set root=${windows_root}
     chainloader ${windows_chainloader}
   }
   if test "\${puavo_grub_boot_default}" = "windows"; then
-    set default="Windows"
+    set default="\${windows_boot_label}"
   fi
 fi
 EOF
