@@ -315,20 +315,16 @@ image_series.each do |series_name, image_list|
     target_image_file_copy = "#{ Mirror_dir }/#{ target_image_file }"
     target_image_file_fp   = "#{ Image_dir }/#{ target_image_file }"
 
-    checksum_files = setup_checksum_tasks(target_image_file,
-      target_image_file_copy)
-
     task target_image_rdiff_target
     task series_name => target_image_rdiff_target
     task series_name => target_image_file_copy
+    task series_name => Cksums_file
 
     file target_image_file_copy => target_image_file_fp do |t|
       # This presumes that source and target are in the same filesystem.
       # If this is not the case, fix your configuration.
       ln target_image_file_fp, t.name
     end
-
-    file series_metadata_file => [ target_image_file_copy ] + checksum_files
 
     puavo_conf = nil
     begin
@@ -345,6 +341,11 @@ image_series.each do |series_name, image_list|
       'urls'       => [ "#{ Images_urlbase }/#{ target_image_file }" ],
       'version'    => get_image_version(target_image_file),
      }
+
+    checksum_files = setup_checksum_tasks(target_image_file,
+      target_image_file_copy)
+
+    file series_metadata_file => [ target_image_file_copy ] + checksum_files
 
     # make rdiffs only to the last three images in image list
     # (perhaps make this adjustable with a command line option in case
