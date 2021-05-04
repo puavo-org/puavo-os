@@ -6,8 +6,6 @@ _pkgs_builddeps :=
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
-# XXX gvfs not added to build, because it is unclear
-# XXX if there is any benefit to do so
 _pkgs_ports := aria2                \
                gnome-control-center \
                gnome-shell          \
