@@ -1,4 +1,6 @@
-subdirs = ap controller gw mapper ruby-puavowlan
+# XXX mapper does not compile on Bullseye
+# subdirs = ap controller gw mapper ruby-puavowlan
+subdirs = ap controller gw ruby-puavowlan
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
 

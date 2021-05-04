@@ -139,9 +139,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-wlangw
 
-	$(MAKE) -C wlan/mapper				\
-		install prefix=/usr sysconfdir=/etc		\
-		DESTDIR=$(CURDIR)/debian/puavo-wlanmapper
+# XXX does not compile on Bullseye
+#	$(MAKE) -C wlan/mapper				\
+#		install prefix=/usr sysconfdir=/etc		\
+#		DESTDIR=$(CURDIR)/debian/puavo-wlanmapper
 
 	$(MAKE) -C wlan/controller			\
 		install prefix=/usr sysconfdir=/etc		\
