@@ -1,5 +1,7 @@
+# XXX openwsman does not build on Bullseye
 # sblim-sfcc openwsman are dependencies for wsmancli
-_pkgs_builddeps := sblim-sfcc openwsman
+# _pkgs_builddeps := sblim-sfcc openwsman
+_pkgs_builddeps :=
 
 # parts, ports and some cloud packages go into puavo-os images
 
@@ -20,8 +22,9 @@ _pkgs_ports := aria2                \
                openboard            \
                openldap             \
                pinta                \
-               vtun                 \
-               wsmancli
+               vtun
+# XXX dependency does not build on Bullseye: wsmancli
+
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 _pkgs_cloud     := krb5 openldap puavo-ds puavo-os
 
