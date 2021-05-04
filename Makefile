@@ -1,7 +1,7 @@
 # Public, configurable variables
 all_image_classes       := allinone
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
-debootstrap_suite	:= buster
+debootstrap_suite	:= bullseye
 default_image_class	:= allinone
 image_dir		:= /srv/puavo-os-images
 mirror_dir		:= $(image_dir)/mirror
