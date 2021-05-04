@@ -42,7 +42,7 @@ class packages {
     , 'puavo-vpn-client'
     , 'puavo-webwindow'
     , 'puavo-wlanap'
-    , 'puavo-wlanmapper'
+    # , 'puavo-wlanmapper'      # XXX missing from Bullseye
     , 'puavo-wlangw'
     , 'puavomenu'
     , 'ruby-puavowlan'
@@ -74,8 +74,8 @@ class packages {
     , 'nginx'
     , 'openbsd-inetd'
     , 'policykit-1'
-    , 'python-numpy'
-    , 'python-redis'
+    , 'python3-numpy'
+    , 'python3-redis'
     , 'pxelinux'
     , 'redis-server'
     , 'ruby-ipaddress'
@@ -209,8 +209,8 @@ class packages {
     , 'notify-osd'
     , 'onboard'
     , 'onboard-data'
-    , 'python-gtk2'
-    , 'python-notify'
+    # , 'python-gtk2'           # XXX missing from Bullseye
+    , 'python3-notify2'
     , 'shared-mime-info'
     , 'suckless-tools'
     , 'unclutter'
@@ -442,17 +442,16 @@ class packages {
     , 'lazarus'
     , 'lokalize'
     , 'meld'
-    , 'pyqt4-dev-tools'
-    , 'python-doc'
-    , 'python-jsonpickle' # a dependency for
-                          # http://meetedison.com/robot-programming-software/
-    , 'python3-pip'
     , 'pylint3'
-    , 'python-pip'
-    , 'python-pygame'
+    , 'pyqt4-dev-tools'
+    , 'python3-doc'
+    , 'python3-jsonpickle' # a dependency for
+                           # http://meetedison.com/robot-programming-software/
+    , 'python3-pip'
+    , 'python3-pygame'
     , 'pythontracer'
-    , 'qt4-designer'
-    , 'qt4-doc'
+    # , 'qt4-designer'  # XXX missing from Bullseye
+    # , 'qt4-doc'       # XXX missing from Bullseye
     , 'racket'
     # , 'renpy'         # XXX missing from Bullseye
     , 'sbcl'
@@ -599,8 +598,8 @@ class packages {
     , 'libreoffice-impress'
     , 'libreoffice-math'
     , 'libreoffice-ogltrans'
-    , 'libreoffice-pdfimport'
-    , 'libreoffice-style-tango'
+    # , 'libreoffice-pdfimport'                 # XXX missing from Bullseye
+    # , 'libreoffice-style-tango'               # XXX missing from Bullseye
     , 'libreoffice-writer'
     , 'libsasl2-modules'
     , 'libxcb-xtest0' #dependency for Zoom
@@ -669,8 +668,8 @@ class packages {
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
-    # XXX buster , 'libwebkitgtk-1.0-0'                # citrix client
-    , 'libqwt5-qt4'                       # aseba
+    # XXX buster , 'libwebkitgtk-1.0-0'   # citrix client
+    # XXX bullseye , 'libqwt5-qt4'        # aseba
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
     ]:

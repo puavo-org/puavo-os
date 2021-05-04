@@ -37,12 +37,12 @@ class packages::compat_32bit {
       , 'libpangomm-1.4-1v5:i386'       # needed by mimio-studio
       # XXX buster , 'libpng12-0:i386'               # needed by GlobiLab
       , 'libpulse0:i386'
-      , 'libqt4-dbus:i386'
-      , 'libqt4-network:i386'
-      , 'libqt4-xml:i386'
-      , 'libqtcore4:i386'
-      , 'libqtgui4:i386'
-      , 'libqtwebkit4:i386'
+      # , 'libqt4-dbus:i386'            # XXX missing from Bullseye
+      # , 'libqt4-network:i386'
+      # , 'libqt4-xml:i386'
+      # , 'libqtcore4:i386'
+      # , 'libqtgui4:i386'
+      # , 'libqtwebkit4:i386'
       , 'libselinux1:i386'
       , 'libsm6:i386'
       , 'libssl1.1:i386'

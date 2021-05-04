@@ -55,7 +55,7 @@ class bootserver_munin {
       ;
 
     'puavo-wlan':
-      require => [ Package['python-numpy'], Package['python-redis'] ];
+      require => [ Package['python3-numpy'], Package['python3-redis'] ];
   }
 
   ::bootserver_nginx::enable { 'munin': ; }
