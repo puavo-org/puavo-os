@@ -6,8 +6,7 @@ _pkgs_builddeps :=
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := aria2                \
-               gnome-control-center \
+_pkgs_ports := gnome-control-center \
                gnome-shell          \
                grub2                \
                incron               \
