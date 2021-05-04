@@ -2,7 +2,7 @@ class packages::languages::fr {
   @package {
     [ 'hunspell-fr'
     , 'hyphen-fr'
-    , 'kde-l10n-fr'
+    # , 'kde-l10n-fr'           # XXX missing from Bullseye
     , 'libreoffice-help-fr'
     , 'libreoffice-l10n-fr'
     , 'mythes-fr'

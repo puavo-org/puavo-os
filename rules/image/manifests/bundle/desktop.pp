@@ -41,7 +41,7 @@ class image::bundle::desktop {
   # include ::virtualbox::guest_additions       # XXX bullseye
   include ::vym
   include ::wacom
-  include ::wine
+  # include ::wine                              # XXX bullseye
   include ::xorg
 
   Package <| tag == 'tag_debian_desktop'

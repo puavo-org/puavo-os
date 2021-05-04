@@ -3,7 +3,7 @@ class packages::languages::de {
     [ 'hunspell-de-ch'
     , 'hunspell-de-de'
     , 'hyphen-de'
-    , 'kde-l10n-de'
+    # , 'kde-l10n-de'           # XXX missing from Bullseye
     , 'libreoffice-help-de'
     , 'libreoffice-l10n-de'
     , 'mythes-de'

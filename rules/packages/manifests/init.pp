@@ -60,7 +60,7 @@ class packages {
     , 'bind9utils'
     , 'cifs-utils'
     , 'dnsmasq'
-    , 'incron'
+    # , 'incron'                # XXX missing from Bullseye
     , 'isc-dhcp-server'
     , 'krb5-kdc'
     , 'libudev1'
@@ -150,7 +150,7 @@ class packages {
     , 'wakeonlan'
     , 'wavemon'
     , 'whois'
-    , 'wsmancli'
+    # , 'wsmancli'              # XXX missing from Bullseye
     , 'x11vnc'
     , 'xbacklight'
     , 'xinput-calibrator' ]:
@@ -263,9 +263,9 @@ class packages {
     # [ 'virtualbox-6.1'
     [ 'wine'
     , 'wine32'
-    , 'wine-development'
-    , 'wine32-development'
-    , 'wine64-development'
+    # , 'wine-development'      # XXX missing from Bullseye
+    # , 'wine32-development'    # XXX missing from Bullseye
+    # , 'wine64-development'    # XXX missing from Bullseye
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
@@ -321,11 +321,11 @@ class packages {
     , 'gimp-data-extras'
     , 'gimp-gap'
     , 'gimp-plugin-registry'
-    , 'gimp-ufraw'
+    # , 'gimp-ufraw'            # XXX missing from Bullseye
     , 'gthumb'
     , 'inkscape'
     , 'kdenlive'
-    , 'kino'
+    # , 'kino'                  # XXX missing from Bullseye
     , 'kolourpaint4'
     , 'krita'
     , 'krita-l10n'
@@ -338,7 +338,7 @@ class packages {
     , 'openscad'
     , 'openshot-qt'
     , 'pencil2d'
-    , 'pinta'
+    # , 'pinta'                 # XXX missing from Bullseye
     , 'pitivi'
     , 'python-lxml'
     , 'sane-utils'
@@ -368,11 +368,11 @@ class packages {
     , 'gstreamer1.0-plugins-good'
     , 'gstreamer1.0-plugins-ugly'
     , 'gstreamer1.0-tools'
-    , 'gtk-recordmydesktop'
     , 'kaffeine'
     , 'libdvd-pkg'
-    , 'libdvdread4'
+    , 'libdvdread8'
     , 'ogmrip'
+    , 'recordmydesktop'
     , 'regionset'
     , 'smplayer'
     , 'vlc'
@@ -421,7 +421,7 @@ class packages {
     [ 'cups-browsed'
     , 'cups-daemon'
     , 'cups-pk-helper'
-    , 'google-cloud-print-connector'
+    # , 'google-cloud-print-connector'  # XXX missing from Bullseye
     , 'gtklp' ]:
       tag => [ 'tag_printing', 'tag_debian_desktop', ];
 
@@ -437,7 +437,7 @@ class packages {
     , 'geany'
     , 'idle'
     , 'idle-python2.7'
-    , 'idle-python3.7'
+    , 'idle-python3.9'
     , 'kturtle'
     , 'lazarus'
     , 'lokalize'
@@ -454,12 +454,12 @@ class packages {
     , 'qt4-designer'
     , 'qt4-doc'
     , 'racket'
-    , 'renpy'
+    # , 'renpy'         # XXX missing from Bullseye
     , 'sbcl'
     , 'scite'
     , 'scratch'
-    , 'sonic-pi'
-    , 'spe' ]:
+    , 'sonic-pi' ]:
+    # , 'spe' ]:        # XXX missing from Bullseye
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
     [ 'epoptes'
@@ -686,8 +686,8 @@ class packages {
     , 'exfat-fuse'
     , 'exfat-utils'
     , 'fuse'
-    , 'gconf-editor'
-    , 'kamerka'
+    # , 'gconf-editor'    # XXX missing from Bullseye
+    # , 'kamerka'         # XXX missing from Bullseye
     , 'mc'
     , 'mousepad'
     , 'p7zip-full'

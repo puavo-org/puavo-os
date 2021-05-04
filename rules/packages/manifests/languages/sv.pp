@@ -1,7 +1,7 @@
 class packages::languages::sv {
   @package {
     [ 'hunspell-sv-se'
-    , 'kde-l10n-sv'
+    # , 'kde-l10n-sv'           # XXX missing from Bullseye
     , 'libreoffice-help-sv'
     , 'libreoffice-l10n-sv'
     , 'mythes-sv'
