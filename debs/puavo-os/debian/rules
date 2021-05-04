@@ -19,9 +19,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-autopoweroff
 
-	$(MAKE) -C bigtouch-shutdown \
-		install prefix=/usr sysconfdir=/etc \
-		DESTDIR=$(CURDIR)/debian/puavo-bigtouch-shutdown
+# XXX does not compile on Bullseye
+#	$(MAKE) -C bigtouch-shutdown \
+#		install prefix=/usr sysconfdir=/etc \
+#		DESTDIR=$(CURDIR)/debian/puavo-bigtouch-shutdown
 
 	$(MAKE) -C blackboard				\
 		install prefix=/usr sysconfdir=/etc		\
