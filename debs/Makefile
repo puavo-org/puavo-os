@@ -6,20 +6,23 @@ _pkgs_builddeps :=
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := gnome-control-center \
-               gnome-shell          \
-               grub2                \
-               incron               \
-               libmypaint           \
-               libpam-ccreds        \
-               mutter               \
-               mypaint              \
-               nbd                  \
-               openboard            \
-               openldap             \
-               pinta                \
-               vtun
-# XXX dependency does not build on Bullseye: wsmancli
+_pkgs_ports :=
+# XXX disable ports builds for Bullseye, these all most probably
+# XXX need some work
+# _pkgs_ports := gnome-control-center \
+#                gnome-shell          \
+#                grub2                \
+#                incron               \
+#                libmypaint           \
+#                libpam-ccreds        \
+#                mutter               \
+#                mypaint              \
+#                nbd                  \
+#                openboard            \
+#                openldap             \
+#                pinta                \
+#                vtun                 \
+#                wsmancli
 
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 _pkgs_cloud     := krb5 openldap puavo-ds puavo-os
