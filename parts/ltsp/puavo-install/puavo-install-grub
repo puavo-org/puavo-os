@@ -105,6 +105,8 @@ function ltsp_image_entry {
   set boottype="$4"
   set image_alias="$5"
 
+  set os_icon="puavo-os"
+
   get_imagename $image_alias image_alias_path
   get_pathname $imagefile imagepath
 
@@ -127,7 +129,7 @@ function ltsp_image_entry {
     set default="${boot_label}"
   fi
 
-  menuentry "${boot_label}" "$imagefile" "$imagepath" "$kernelparameters" {
+  menuentry "${boot_label}" --class="$os_icon" "$imagefile" "$imagepath" "$kernelparameters" {
     set kernel_version=''
     # --- remove "#" from the following if you need another kernel ---
     # set kernel_version='default'
@@ -652,7 +654,7 @@ if [ -n "$possible_windows_disk_dev" ]; then
     cat <<EOF >> "$tmp_grub_cfg_path"
 
 if test "\${puavo_grub_windows_enabled}" = "true"; then
-  menuentry "\${windows_boot_label}" {
+  menuentry --class="windows" "\${windows_boot_label}" {
     insmod ntfs
     set root=${windows_root}
     chainloader ${windows_chainloader}
