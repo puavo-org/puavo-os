@@ -64,7 +64,9 @@ endif
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
 
-_debootstrap_packages := git,jq,locales,lsb-release,make,puppet-common,sudo,wget
+# XXX puppet has to be installed separately with apt instead of as part
+# XXX of debootstrap (in Bullseye)
+_debootstrap_packages := git,jq,locales,lsb-release,make,sudo,wget
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid/squid.conf \
 			 && echo true || echo false)
