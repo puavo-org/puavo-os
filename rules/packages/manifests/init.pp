@@ -1,6 +1,6 @@
 class packages {
   require ::apt::multiarch
-  require ::apt::virtualbox
+  # require ::apt::virtualbox   # XXX Bullseye
   include ::packages::backports
   include ::packages::compat_32bit
   include ::packages::pinned
@@ -259,8 +259,9 @@ class packages {
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
-    [ 'virtualbox-6.1'
-    , 'wine'
+    # XXX virtualbox - Bullseye
+    # [ 'virtualbox-6.1'
+    [ 'wine'
     , 'wine32'
     , 'wine-development'
     , 'wine32-development'
@@ -746,13 +747,10 @@ class packages {
 		      , $r8168_module ]
 
   packages::kernels::kernel_package {
-    '4.19.0-16-amd64':
-      dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.19.0-16-amd64';
-
-    '5.10.0-0.bpo.5-amd64':
-      dkms_modules => [ $broadcom_sta_dkms_module ],
-      package_name => 'linux-image-5.10.0-0.bpo.5-amd64';
+    '5.10.0-6-amd64':
+      # XXX fix dkms_modules for Bullseye
+      dkms_modules => [],
+      package_name => 'linux-image-5.10.0-6-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by

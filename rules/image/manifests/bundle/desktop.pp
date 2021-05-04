@@ -37,8 +37,8 @@ class image::bundle::desktop {
   include ::run_once_on_desktop_session
   include ::supplementary_groups
   include ::tuxpaint
-  include ::virtualbox
-  include ::virtualbox::guest_additions
+  # include ::virtualbox                        # XXX bullseye
+  # include ::virtualbox::guest_additions       # XXX bullseye
   include ::vym
   include ::wacom
   include ::wine
