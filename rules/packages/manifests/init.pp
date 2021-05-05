@@ -443,7 +443,7 @@ class packages {
     , 'lazarus'
     , 'lokalize'
     , 'meld'
-    , 'pylint3'
+    , 'pylint'
     # , 'pyqt4-dev-tools'       # XXX missing from Bullseye
     , 'python3-doc'
     , 'python3-jsonpickle' # a dependency for
@@ -598,7 +598,6 @@ class packages {
     , 'libreoffice-gnome'
     , 'libreoffice-impress'
     , 'libreoffice-math'
-    , 'libreoffice-ogltrans'
     # , 'libreoffice-pdfimport'                 # XXX missing from Bullseye
     # , 'libreoffice-style-tango'               # XXX missing from Bullseye
     , 'libreoffice-writer'
@@ -701,7 +700,7 @@ class packages {
     , 'xinput' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
-    [ 'qemu-kvm'
+    [ 'qemu-system-x86'
     , 'virt-manager' ]:
       tag => [ 'tag_virtualization', 'tag_debian_desktop', ];
 

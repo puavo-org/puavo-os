@@ -21,7 +21,7 @@ class packages::compat_32bit {
       , 'libfakekey0:i386'              # needed by mimio-studio
       , 'libfontconfig1:i386'
       , 'libfreetype6:i386'
-      , 'libgcc1:i386'
+      , 'libgcc-s1:i386'
       , 'libgif7:i386'                  # needed by RobboScratch2
       , 'libgl1-mesa-glx:i386'
       , 'libglib2.0-0:i386'
