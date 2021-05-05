@@ -769,17 +769,18 @@ class packages {
     'nautilus-dropbox':
       tag => [ 'tag_debian_desktop', 'tag_debian_desktop_nonfree', ];
 
+    # XXX do not try to install nvidia yet on Bullseye
+    # , 'libgl1-nvidia-glx'
+    # , 'libgl1-nvidia-legacy-340xx-glx'
+    # , 'libgl1-nvidia-legacy-390xx-glx'
+    # , 'nvidia-kernel-dkms'
+    # , 'nvidia-legacy-340xx-kernel-dkms'
+    # , 'nvidia-legacy-390xx-kernel-dkms'
+    # , 'xserver-xorg-video-nvidia'
+    # , 'xserver-xorg-video-nvidia-legacy-340xx'
+    # , 'xserver-xorg-video-nvidia-legacy-390xx' ]:
     [ 'broadcom-sta-dkms'
-    , 'libgl1-nvidia-glx'
-    , 'libgl1-nvidia-legacy-340xx-glx'
-    , 'libgl1-nvidia-legacy-390xx-glx'
-    , 'nvidia-kernel-dkms'
-    , 'nvidia-legacy-340xx-kernel-dkms'
-    , 'nvidia-legacy-390xx-kernel-dkms'
-    , 'r8168-dkms'
-    , 'xserver-xorg-video-nvidia'
-    , 'xserver-xorg-video-nvidia-legacy-340xx'
-    , 'xserver-xorg-video-nvidia-legacy-390xx' ]:
+    , 'r8168-dkms' ]:
       tag => [ 'tag_drivers', 'tag_debian_desktop_nonfree', ];
 
     [ 'amd64-microcode'
