@@ -318,7 +318,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     if test "__PUAVO_LIVEBOOT_OPTION__" = "true"; then
       ltsp_image_entry "${default_image}" "${text_liveboot_startup}" "" "liveboot" "${default_image_alias}"
     fi
-    ltsp_image_entry_superlaptop "${default_image}" "${text_developer_mode}" "${default_image_alias}"
+    ltsp_image_entry_superlaptop "${default_image}" "${text_developer_mode}" "" "${default_image_alias}"
 
     loopback default_image_loop "${default_image}"
     set possible_puavo_grub_theme_path="(default_image_loop)/boot/grub/themes/${puavo_grub_theme}/theme.txt"
@@ -328,7 +328,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   fi
   if test -f "${backup_image}"; then
     ltsp_image_entry "${backup_image}" "${text_backup_normal_startup}" "" "normal" "${backup_image_alias}"
-    ltsp_image_entry_superlaptop "${backup_image}" "${text_backup_developer_mode}" "${backup_image_alias}"
+    ltsp_image_entry_superlaptop "${backup_image}" "${text_backup_developer_mode}" "" "${backup_image_alias}"
   fi
 
   for file in ${dev}/*.img; do
@@ -338,7 +338,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     if test "${file}" = "${backup_image_alias}";  then continue; fi
 
     ltsp_image_entry "${file}" "${text_other_system_normal_startup}" "" "normal" "${file}"
-    ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}" "${file}"
+    ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}" "" "${file}"
   done
 done
 EOF
