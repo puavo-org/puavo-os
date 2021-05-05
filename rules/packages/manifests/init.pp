@@ -685,7 +685,7 @@ class packages {
     , 'duplicity'
     , 'exfat-fuse'
     , 'exfat-utils'
-    , 'fuse'
+    , 'fuse3'
     # , 'gconf-editor'    # XXX missing from Bullseye
     # , 'kamerka'         # XXX missing from Bullseye
     , 'mc'
