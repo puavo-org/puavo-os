@@ -13,11 +13,12 @@ class packages {
   # Puavo OS packages
   #
 
-  @package {
-    [ 'puavo-ltsp-bootserver', 'puavo-rest', ]:
-      ensure => present,
-      tag    => [ 'tag_puavo_bootserver' ];
-  }
+# XXX missing from Bullseye
+# @package {
+#   [ 'puavo-ltsp-bootserver', 'puavo-rest', ]:
+#     ensure => present,
+#     tag    => [ 'tag_puavo_bootserver' ];
+# }
 
   @package {
     [ 'puavo-autopilot'
@@ -41,7 +42,7 @@ class packages {
     , 'puavo-user-registration'
     , 'puavo-vpn-client'
     , 'puavo-webwindow'
-    , 'puavo-wlanap'
+    # , 'puavo-wlanap'          # XXX missing from Bullseye
     # , 'puavo-wlanmapper'      # XXX missing from Bullseye
     , 'puavo-wlangw'
     , 'puavomenu'
