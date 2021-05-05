@@ -31,7 +31,6 @@ class packages::backports {
                   , 'firmware-qcom-media'
                   , 'firmware-qcom-soc'
                   , 'firmware-qlogic'
-                  , 'firmware-ralink'
                   , 'firmware-realtek'
                   , 'firmware-samsung'
                   , 'firmware-siano'
