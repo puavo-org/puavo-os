@@ -340,7 +340,7 @@ class packages {
     , 'pencil2d'
     # , 'pinta'                 # XXX missing from Bullseye
     , 'pitivi'
-    , 'python-lxml'
+    , 'python3-lxml'
     , 'sane-utils'
     , 'xsane' ]:
       tag => [ 'tag_graphics', 'tag_debian_desktop', ];
@@ -443,13 +443,13 @@ class packages {
     , 'lokalize'
     , 'meld'
     , 'pylint3'
-    , 'pyqt4-dev-tools'
+    # , 'pyqt4-dev-tools'       # XXX missing from Bullseye
     , 'python3-doc'
     , 'python3-jsonpickle' # a dependency for
                            # http://meetedison.com/robot-programming-software/
     , 'python3-pip'
     , 'python3-pygame'
-    , 'pythontracer'
+    # , 'pythontracer'  # XXX missing from Bullseye
     # , 'qt4-designer'  # XXX missing from Bullseye
     # , 'qt4-doc'       # XXX missing from Bullseye
     , 'racket'
