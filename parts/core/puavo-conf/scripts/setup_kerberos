@@ -22,12 +22,13 @@ krb5_config() {
                                 || true)
     puavo_topdomain=$(cat /etc/puavo/topdomain 2>/dev/null || true)
     if [ -n "$puavo_kerberos_toprealm" -a -n "$puavo_topdomain" ]; then
-      toprealm_config=$(cat <<EOF)
+      toprealm_config=$(cat <<EOF
         ${puavo_kerberos_toprealm} = {
                 kdc = ${puavo_kerberos_master}
                 default_domain = ${puavo_topdomain}
         }
 EOF
+)
     fi
 
     org_kdc_config=''
@@ -37,7 +38,7 @@ EOF
       org_kdc_config="kdc = kerberos.${puavo_domain}"
     fi
 
-    realms=$(cat <<EOF)
+    realms=$(cat <<EOF
 [realms]
         ${puavo_kerberos_realm} = {
                 kdc = ${puavo_kerberos_master}
@@ -46,6 +47,7 @@ EOF
         }
 ${toprealm_config}
 EOF
+)
   else
     dns_lookup_kdc=true
     dns_lookup_realm=true
