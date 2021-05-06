@@ -3,7 +3,7 @@ CFLAGS   = -DHAVE_CONFIG_H -I. -Wdate-time -D_FORTIFY_SOURCE=2 -g -O2 -fstack-pr
 
 DESTDIR   =
 LIBDIR    = /lib
-MODULEDIR = $(LIBDIR)/security
+MODULEDIR = $(LIBDIR)/$(shell arch)-linux-gnu/security
 
 all: pam_puavo.so
 
