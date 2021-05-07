@@ -117,6 +117,9 @@ class Sidebar:
 
     # Creates the user avatar button
     def __handle_avatar(self):
+        if not self.is_element_visible('avatar'):
+            return
+
         download_avatar = True
         default_avatar = os.path.join(self.__settings.res_dir, 'default_avatar.png')
         existing_avatar = os.path.join(self.__settings.user_conf, 'avatar.jpg')
@@ -181,47 +184,70 @@ class Sidebar:
 
     # Creates the sidebar "system" buttons
     def __create_system_buttons(self):
-        utils_gui.create_separator(
-            container=self.container,
-            x=0,
-            y=MAIN_PADDING + USER_AVATAR_SIZE,
-            w=SIDEBAR_WIDTH,
-            h=-1,
-            orientation=Gtk.Orientation.HORIZONTAL)
+        y = 0
 
-        y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING + SEPARATOR_SIZE
+        if self.is_element_visible('avatar'):
+            utils_gui.create_separator(
+                container=self.container,
+                x=0,
+                y=MAIN_PADDING + USER_AVATAR_SIZE,
+                w=SIDEBAR_WIDTH,
+                h=-1,
+                orientation=Gtk.Orientation.HORIZONTAL)
+
+            y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING + SEPARATOR_SIZE
+
+        something = False
 
         # Since Python won't let you modify arguments (no pass-by-reference),
         # each of these returns the next Y position. X coordinates are fixed.
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):
-            y = self.__create_button(y, SB_CHANGE_PASSWORD)
+            if self.is_element_visible('change_password'):
+                y = self.__create_button(y, SB_CHANGE_PASSWORD)
+                something = True
 
-        y = self.__create_button(y, SB_SUPPORT)
-        y = self.__create_button(y, SB_SYSTEM_SETTINGS)
+        if self.is_element_visible('support'):
+            y = self.__create_button(y, SB_SUPPORT)
+            something = True
+
+        if self.is_element_visible('system_settings'):
+            y = self.__create_button(y, SB_SYSTEM_SETTINGS)
+            something = True
 
         if self.__settings.is_user_primary_user:
-            y = self.__create_button(y, SB_LAPTOP_SETTINGS)
+            if self.is_element_visible('laptop_settings'):
+                y = self.__create_button(y, SB_LAPTOP_SETTINGS)
+                something = True
 
             # Hide the puavo-pkg package installer if there
             # are no packages to install
             if utils.puavo_conf('puavo.pkgs.ui.pkglist', '').strip():
-                y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+                if self.is_element_visible('puavopkg_installer'):
+                    y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+                    something = True
 
-        y = self.__create_separator(y)
+        if something:
+            y = self.__create_separator(y)
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):
-            y = self.__create_button(y, SB_LOCK_SCREEN)
+            if self.is_element_visible('lock_screen'):
+                y = self.__create_button(y, SB_LOCK_SCREEN)
 
         if not (self.__settings.is_fatclient or self.__settings.is_webkiosk):
-            y = self.__create_button(y, SB_SLEEP_MODE)
+            if self.is_element_visible('sleep_mode'):
+                y = self.__create_button(y, SB_SLEEP_MODE)
 
-        y = self.__create_button(y, SB_LOGOUT)
-        y = self.__create_separator(y)
-        y = self.__create_button(y, SB_RESTART)
+        if self.is_element_visible('logout'):
+            y = self.__create_button(y, SB_LOGOUT)
+            y = self.__create_separator(y)
+
+        if self.is_element_visible('restart'):
+            y = self.__create_button(y, SB_RESTART)
 
         if not self.__settings.is_webkiosk:
-            y = self.__create_button(y, SB_SHUTDOWN)
+            if self.is_element_visible('shutdown'):
+                y = self.__create_button(y, SB_SHUTDOWN)
 
         logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
 
@@ -229,6 +255,9 @@ class Sidebar:
     # Builds the label that contains hostname, host type, image name and
     # a link to the changelog.
     def __create_hostinfo(self):
+        if not self.is_element_visible('hostinfo'):
+            return
+
         label_top = SIDEBAR_HEIGHT - HOSTINFO_LABEL_HEIGHT
 
         utils_gui.create_separator(
