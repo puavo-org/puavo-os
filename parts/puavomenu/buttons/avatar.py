@@ -52,8 +52,6 @@ class AvatarButton(buttons.base.HoverIconButtonBase):
 
 
     def compute_elements(self):
-        self.corner_rounding = 0
-
         self.icon_size = self.ICON_SIZE
         self.icon_pos = [0, 0]
 

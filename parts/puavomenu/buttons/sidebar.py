@@ -44,7 +44,6 @@ class SidebarButton(buttons.base.HoverIconButtonBase):
 
 
     def compute_elements(self):
-        self.corner_rounding = 3
         self.icon_size = self.ICON_SIZE
         self.icon_pos = [self.PADDING, self.PADDING]
 

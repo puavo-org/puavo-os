@@ -34,8 +34,6 @@ class MenuButton(buttons.base.HoverIconButtonBase):
 
 
     def compute_elements(self):
-        self.corner_rounding = 5
-
         self.icon_size = PROGRAM_BUTTON_ICON_SIZE
 
         # Note the Y positions in icon_pos and label_pos, they must be

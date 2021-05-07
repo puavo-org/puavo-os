@@ -22,7 +22,6 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
     INDICATOR_WIDTH = 20
     INDICATOR_HEIGHT = 30
     INDICATOR_EDGE = 5
-    INDICATOR_ARROW_SIZE = 5
     INDICATOR_DOT_RADIUS = 2
     INDICATOR_DOT_SPACING = 5.0
 
@@ -108,8 +107,6 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
 
     def compute_elements(self):
-        self.corner_rounding = 5
-
         self.icon_size = PROGRAM_BUTTON_ICON_SIZE
 
         self.icon_pos = [
