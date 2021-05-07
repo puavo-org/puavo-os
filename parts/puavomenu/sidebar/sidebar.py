@@ -4,6 +4,7 @@ import logging
 import getpass
 import os.path
 import lsb_release
+import re
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -64,6 +65,10 @@ class Sidebar:
         # Storage for the command button icons
         self.__icons = icons.IconCache(128, 32)
 
+        # Which sidebar elements are *unconditionally* hidden through puavo-conf?
+        # These override EVERYTHING else!
+        self.__visibility_override = self.load_overrides()
+
         self.__get_variables()
 
         self.__handle_avatar()
@@ -71,6 +76,20 @@ class Sidebar:
         self.__create_hostinfo()
 
         self.container.show()
+
+
+    def load_overrides(self):
+        s = utils.puavo_conf('puavo.puavomenu.sidebar_hide_elements', '')
+
+        disabled = [t.strip() for t in re.split(r',|;|\ ', str(s) if s else '')]
+        disabled = filter(None, disabled)
+        disabled = [d.lower() for d in disabled]
+
+        return set(disabled)
+
+
+    def is_element_visible(self, name):
+        return name not in self.__visibility_override
 
 
     # Digs up values for expanding variables in button arguments
