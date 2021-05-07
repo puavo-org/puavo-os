@@ -65,29 +65,10 @@ class Sidebar:
         self.__icons = icons.IconCache(128, 32)
 
         self.__get_variables()
-        self.__create_avatar_button()
+
+        self.__handle_avatar()
         self.__create_system_buttons()
         self.__create_hostinfo()
-
-        # Download a new copy of the user avatar image
-        if self.__must_download_avatar:
-            logging.info(
-                'Sidebar::ctor(): launching a background thread for downloading '
-                'the avatar image')
-
-            try:
-                self.__avatar_thread = AvatarDownloaderThread(
-                    self.__settings.user_conf, self.__avatar)
-
-                # Daemonize the thread so that if we exit before
-                # the thread exists, it is also destroyed
-                self.__avatar_thread.daemon = True
-
-                self.__avatar_thread.start()
-            except Exception as exception:
-                logging.error(
-                    'Sidebar::ctor(): could not create a new thread: %s',
-                    str(exception))
 
         self.container.show()
 
@@ -116,9 +97,8 @@ class Sidebar:
 
 
     # Creates the user avatar button
-    def __create_avatar_button(self):
-        self.__must_download_avatar = True
-
+    def __handle_avatar(self):
+        download_avatar = True
         default_avatar = os.path.join(self.__settings.res_dir, 'default_avatar.png')
         existing_avatar = os.path.join(self.__settings.user_conf, 'avatar.jpg')
 
@@ -126,7 +106,7 @@ class Sidebar:
             # Always use the default avatar for guests and webkiosk sessions
             logging.info('Avatar downloader thread disabled in a guest/webkiosk session')
             avatar_image = default_avatar
-            self.__must_download_avatar = False
+            download_avatar = False
         elif os.path.exists(existing_avatar):
             logging.info('A previously-downloaded user avatar file exists, using it')
             avatar_image = existing_avatar
@@ -158,6 +138,26 @@ class Sidebar:
 
         self.container.put(self.__avatar, 0, 0)
         self.__avatar.show()
+
+        if download_avatar:
+            # Download a new copy of the user avatar image
+            logging.info(
+                'Sidebar::__handle_avatar(): launching a background thread for downloading '
+                'the avatar image')
+
+            try:
+                self.__avatar_thread = AvatarDownloaderThread(
+                    self.__settings.user_conf, self.__avatar)
+
+                # Daemonize the thread so that if we exit before
+                # the thread exists, it is also destroyed
+                self.__avatar_thread.daemon = True
+
+                self.__avatar_thread.start()
+            except Exception as exception:
+                logging.error(
+                    'Sidebar::ctor(): could not create a new thread: %s',
+                    str(exception))
 
 
     # Creates the sidebar "system" buttons
