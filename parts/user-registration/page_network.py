@@ -6,6 +6,7 @@ import os
 import gettext
 import logging
 import gi
+import re
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, GObject
@@ -32,6 +33,10 @@ class PageNetwork(PageDefinition):
         self.network_choice_widget = self.builder.get_object('networks_list')
         self.network_choice_widget.connect('row-activated', self.wifi_connection_chosen)
         self.searching_for_networks = True
+
+        self.username_label = self.builder.get_object('network_username_label')
+        self.username_entry = self.builder.get_object('network_username_entry')
+        self.username_entry.connect('changed', self.username_changed)
 
         self.password_label = self.builder.get_object('network_password_label')
         self.password_entry = self.builder.get_object('network_password_entry')
@@ -211,6 +216,16 @@ class PageNetwork(PageDefinition):
         return True
 
 
+    def username_changed(self, widget):
+        # XXX this depends on network security class
+        wifi_username = self.username_entry.get_text()
+
+        if wifi_username:
+            self.connect_button.set_sensitive(True)
+        else:
+            self.connect_button.set_sensitive(False)
+
+
     def password_changed(self, widget):
         wifi_password = self.password_entry.get_text()
 
@@ -320,16 +335,27 @@ class PageNetwork(PageDefinition):
         self.wifi_title.set_label(_tr('Connect to network') + '\n"' + network_ssid + '"')
 
         network_info = self.networks[self.network_ssid]
+        self.username_entry.set_text('')
         self.password_entry.set_text('')
 
         if network_info['security']:
             self.connect_button.set_sensitive(False)
-            self.password_entry.grab_focus()
+            if re.match('802\.1X$', network_info['security']):
+              self.username_entry.grab_focus()
+              self.username_label.set_sensitive(True)
+              self.username_entry.set_sensitive(True)
+            else:
+              self.username_label.set_sensitive(False)
+              self.username_entry.set_sensitive(False)
+              self.password_entry.grab_focus()
+
             self.password_entry.set_sensitive(True)
             self.password_label.set_sensitive(True)
         else:
             self.connect_button.grab_focus()
             self.connect_button.set_sensitive(True)
+            self.username_entry.set_sensitive(False)
+            self.username_label.set_sensitive(False)
             self.password_entry.set_sensitive(False)
             self.password_label.set_sensitive(False)
 
