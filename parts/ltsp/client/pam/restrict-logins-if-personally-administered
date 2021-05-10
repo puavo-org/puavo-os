@@ -34,6 +34,12 @@ fi
 # this host is personally administered so special rules apply
 #
 
+if [ "$(puavo-conf puavo.xsessions.user_registration.enabled)" = 'true' ]; then
+  # If user registration is enabled, we can let the admins in (this is a
+  # special mode meaning that this host is not properly set up quite yet).
+  exit 0
+fi
+
 if is_admin_user; then
   incoming_accepted=$(
     /usr/lib/puavo-ltsp-client/admin-remote-connections --is-incoming-accepted)
