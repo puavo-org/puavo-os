@@ -34,14 +34,16 @@ class PageNetwork(PageDefinition):
         self.network_choice_widget.connect('row-activated', self.wifi_connection_chosen)
         self.searching_for_networks = True
 
+        self.require_username = False
         self.username_label = self.builder.get_object('network_username_label')
         self.username_entry = self.builder.get_object('network_username_entry')
-        self.username_entry.connect('changed', self.username_changed)
+        self.username_entry.connect('activate', self.username_activated)
+        self.username_entry.connect('changed', self.username_or_password_changed)
 
         self.password_label = self.builder.get_object('network_password_label')
         self.password_entry = self.builder.get_object('network_password_entry')
         self.password_entry.connect('activate', self.connect_to_wifi)
-        self.password_entry.connect('changed', self.password_changed)
+        self.password_entry.connect('changed', self.username_or_password_changed)
 
         self.spinner = self.builder.get_object('network_connector_spinner')
         self.connection_status = self.builder.get_object('network_connection_status')
@@ -216,23 +218,22 @@ class PageNetwork(PageDefinition):
         return True
 
 
-    def username_changed(self, widget):
-        # XXX this depends on network security class
-        wifi_username = self.username_entry.get_text()
-
-        if wifi_username:
-            self.connect_button.set_sensitive(True)
-        else:
-            self.connect_button.set_sensitive(False)
+    def username_activated(self, widget):
+        self.password_entry.grab_focus()
 
 
-    def password_changed(self, widget):
+    def username_or_password_changed(self, widget):
+        sensitive = False
         wifi_password = self.password_entry.get_text()
 
-        if wifi_password:
-            self.connect_button.set_sensitive(True)
-        else:
-            self.connect_button.set_sensitive(False)
+        if self.require_username:
+            wifi_username = self.username_entry.get_text()
+            if wifi_username and wifi_password:
+                sensitive = True
+        elif wifi_password:
+            sensitive = True
+
+        self.connect_button.set_sensitive(sensitive)
 
 
     def remove_all_wireless_connections(self):
@@ -341,10 +342,12 @@ class PageNetwork(PageDefinition):
         if network_info['security']:
             self.connect_button.set_sensitive(False)
             if re.match('802\.1X$', network_info['security']):
+              self.require_username = True
               self.username_entry.grab_focus()
               self.username_label.set_sensitive(True)
               self.username_entry.set_sensitive(True)
             else:
+              self.require_username = False
               self.username_label.set_sensitive(False)
               self.username_entry.set_sensitive(False)
               self.password_entry.grab_focus()
@@ -352,6 +355,7 @@ class PageNetwork(PageDefinition):
             self.password_entry.set_sensitive(True)
             self.password_label.set_sensitive(True)
         else:
+            self.require_username = False
             self.connect_button.grab_focus()
             self.connect_button.set_sensitive(True)
             self.username_entry.set_sensitive(False)
