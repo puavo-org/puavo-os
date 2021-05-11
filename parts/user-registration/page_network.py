@@ -7,6 +7,7 @@ import gettext
 import logging
 import gi
 import re
+import subprocess
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, GObject
@@ -23,6 +24,8 @@ class PageNetwork(PageDefinition):
         super().__init__(application, parent_window, parent_container, data_dir, main_builder)
 
         self.load_file('network.glade', 'network_container')
+
+        self.ready_to_connect = False
 
         self.networks = {}
 
@@ -223,17 +226,17 @@ class PageNetwork(PageDefinition):
 
 
     def username_or_password_changed(self, widget):
-        sensitive = False
+        self.ready_to_connect = False
         wifi_password = self.password_entry.get_text()
 
         if self.require_username:
             wifi_username = self.username_entry.get_text()
             if wifi_username and wifi_password:
-                sensitive = True
+                self.ready_to_connect = True
         elif wifi_password:
-            sensitive = True
+            self.ready_to_connect = True
 
-        self.connect_button.set_sensitive(sensitive)
+        self.connect_button.set_sensitive(self.ready_to_connect)
 
 
     def remove_all_wireless_connections(self):
@@ -259,6 +262,9 @@ class PageNetwork(PageDefinition):
         if not self.network_ssid:
             return
 
+        if not self.ready_to_connect:
+            return
+
         if self.wifi_connect_pid:
             return
 
@@ -275,18 +281,39 @@ class PageNetwork(PageDefinition):
 
         wifi_password = self.password_entry.get_text()
 
-        cmd = ['/usr/bin/env', 'LANG=C', 'nmcli', 'device', 'wifi', 'connect',
-               self.network_ssid]
-
-        if wifi_password:
-            cmd += ['password', wifi_password]
+        if self.require_username:
+            wifi_username = self.username_entry.get_text()
+            # XXX this presumes a particular kind of EAP network
+            add_cmd = [ '/usr/bin/env', 'LANG=C', 'nmcli', 'connection',
+                          'add', 'save', 'yes',
+                          'type',                'wifi',
+                          'ifname',              'wlan0',
+                          'con-name',            self.network_ssid,
+                          'ssid',                self.network_ssid,
+                          '+ipv4.method',        'auto',
+                          '+802-1x.eap',         'peap',
+                          '+802-1x.phase2-auth', 'mschapv2',
+                          '+802-1x.identity',    wifi_username,
+                          '+802-1x.password',    wifi_password,
+                          '+wifi-sec.key-mgmt',  'wpa-eap' ]
+            # We first create the connection to NetworkManager, but we do not
+            # check if that worked or not.  If it did not work, activating the
+            # connection should fail in the next step.
+            subprocess.run(add_cmd)
+            conn_cmd = [ '/usr/bin/env', 'LANG=C', 'nmcli', 'connection',
+                           'up', self.network_ssid ]
+        else:
+            conn_cmd = [ '/usr/bin/env', 'LANG=C', 'nmcli', 'device', 'wifi',
+                           'connect', self.network_ssid ]
+            if wifi_password:
+                conn_cmd += [ 'password', wifi_password ]
 
         self.wifi_connect_output = ''
 
         flags = GLib.SPAWN_DO_NOT_REAP_CHILD | GObject.SPAWN_STDERR_TO_DEV_NULL
 
         (self.wifi_connect_pid, stdin, stdout, stderr) \
-            = GObject.spawn_async(cmd, flags=flags, standard_output=True)
+            = GObject.spawn_async(conn_cmd, flags=flags, standard_output=True)
 
         fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
         fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
@@ -328,6 +355,8 @@ class PageNetwork(PageDefinition):
 
 
     def wifi_connection_chosen(self, listbox, row):
+        self.ready_to_connect = False
+
         for network_ssid, network_info in self.networks.items():
             if network_info['widget'] == row:
                 self.network_ssid = network_ssid
@@ -342,19 +371,20 @@ class PageNetwork(PageDefinition):
         if network_info['security']:
             self.connect_button.set_sensitive(False)
             if re.match('802\.1X$', network_info['security']):
-              self.require_username = True
-              self.username_entry.grab_focus()
-              self.username_label.set_sensitive(True)
-              self.username_entry.set_sensitive(True)
+                self.require_username = True
+                self.username_entry.grab_focus()
+                self.username_label.set_sensitive(True)
+                self.username_entry.set_sensitive(True)
             else:
-              self.require_username = False
-              self.username_label.set_sensitive(False)
-              self.username_entry.set_sensitive(False)
-              self.password_entry.grab_focus()
+                self.require_username = False
+                self.username_label.set_sensitive(False)
+                self.username_entry.set_sensitive(False)
+                self.password_entry.grab_focus()
 
             self.password_entry.set_sensitive(True)
             self.password_label.set_sensitive(True)
         else:
+            self.ready_to_connect = True
             self.require_username = False
             self.connect_button.grab_focus()
             self.connect_button.set_sensitive(True)
