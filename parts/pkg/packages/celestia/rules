@@ -5,7 +5,7 @@ set -eu
 command=$1
 shift
 
-urlbase='https://dl.bintray.com/celestia/releases-deb/pool/c/celestia'
+urlbase='https://celestia.space/packages/pool/c/celestia'
 
 celestia_links='
   /etc/celestia.cfg
