@@ -16,21 +16,21 @@ terminal-border: "0"
 # Show the boot menu
 + boot_menu {
   left = 31%
-  top = 29%
+  top = 30%
   width = 65%
   height = 60%
   item_font = "Unifont Regular 16"
   item_color = "#cccccc"
   selected_item_color = "#ffffff"
-  item_height = 24
-  item_spacing = 12
+  item_height = 32
+  item_spacing = 15
   selected_item_pixmap_style = "select_*.png"
 }
 
 # Show a countdown message using the label component
 + label {
-  top = 82%
-  left = 65%
+  top = 10%
+  left = 35%
   width = 30%
   align = "center"
   id = "__timeout__"
@@ -39,9 +39,18 @@ terminal-border: "0"
   font = "Unifont Regular 16"
 }
 
+# Help
++ image {
+  top = 82%
+  left = 35%
+  align = "center"
+  id = "__help__"
+  file = icons/mode-selection-help.png
+}
+
 # Show logo
 + image {
-  top = 90%
+  top = 85%
   left = 80%
   align = "center"
   id = "__logo__"
