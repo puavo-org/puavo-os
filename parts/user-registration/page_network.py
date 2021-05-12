@@ -369,7 +369,7 @@ class PageNetwork(PageDefinition):
 
         if network_info['security']:
             self.connect_button.set_sensitive(False)
-            if re.match('802\.1X$', network_info['security']):
+            if re.match('^.*802\.1X$', network_info['security']):
                 self.require_username = True
                 self.username_entry.grab_focus()
                 self.username_label.set_sensitive(True)
