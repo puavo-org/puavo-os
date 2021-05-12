@@ -1,11 +1,10 @@
 # The network setup page
 
-import subprocess
 import fcntl
-import os
 import gettext
-import logging
 import gi
+import logging
+import os
 import re
 import subprocess
 
