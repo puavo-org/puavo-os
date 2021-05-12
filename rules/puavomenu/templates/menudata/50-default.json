@@ -1287,6 +1287,13 @@
                 "id": "ti-nspire-cx-cas-ss"
             }
         },
+        "ti5_nspire_cx_cas_ss": {
+            "name": "TI-Nspire CX Cas",
+            "tags": "default",
+            "puavopkg": {
+                "id": "ti5-nspire-cx-cas-ss"
+            }
+        },
         "tilitin": {
             "name": "Tilitin",
             "tags": "default",
@@ -1457,6 +1464,7 @@
                 "org.kde.kcalc",
                 "speedcrunch",
                 "ti_nspire_cx_cas_ss",
+                "ti5_nspire_cx_cas_ss",
                 "LoggerPro",
                 "dia",
                 "mousepad",
@@ -1685,6 +1693,7 @@
                 "GlobiLab",
                 "io.github.wxmaxima_developers.wxMaxima",
                 "ti_nspire_cx_cas_ss",
+                "ti5_nspire_cx_cas_ss",
                 "avogadro",
                 "org.kde.kalzium",
                 "MarvinSketch",
