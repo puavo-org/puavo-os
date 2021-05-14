@@ -7,5 +7,6 @@ deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodena
 deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-backports main contrib non-free
 deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-backports main contrib non-free
 
-deb http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
-deb-src http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
+# XXX not active as of 2021-05-14 in Bullseye ... should check this later
+# deb http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
+# deb-src http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
