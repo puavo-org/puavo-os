@@ -537,12 +537,19 @@ darkdm_main()
 }
 
 # get preseed, we might need it
+echo -n 'Getting preseed (if it can be found)... '
+preseed_json=''
 if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
   preseed_url="https://${image_server}/preseeds/index.json"
   if ! preseed_json=$(curl --cacert /etc/puavo-conf/rootca.pem --fail \
-                           --silent "$preseed_url"); then
+                           --max-time 5 --silent "$preseed_url"); then
     preseed_json=''
   fi
+fi
+if [ -n "$preseed_json" ]; then
+  echo 'OK.'
+else
+  echo 'failed.'
 fi
 
 echo 'Gathering system information...'
