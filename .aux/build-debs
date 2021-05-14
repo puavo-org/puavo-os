@@ -13,6 +13,8 @@ if [ -z "$srcpkgname" -o -z "$workdir" -o -z "$pooldir" ]; then
   exit 1
 fi
 
+export EMAIL='Puavo Org <dev@opinsys.fi>'
+
 pkgworkdir="${workdir}/${srcpkgname}"
 
 rm -rf "${pkgworkdir}"
