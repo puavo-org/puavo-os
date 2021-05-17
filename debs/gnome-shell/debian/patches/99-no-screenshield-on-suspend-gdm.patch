@@ -1,0 +1,15 @@
+diff -ruN gnome-shell/js/ui/screenShield.js gnome-shell/js/ui/screenShield.js
+--- gnome-shell/js/ui/screenShield.js	2021-03-15 23:28:45.033283700 +0200
++++ gnome-shell/js/ui/screenShield.js	2021-05-17 15:08:44.242286873 +0300
+@@ -214,6 +214,11 @@
+     }
+ 
+     _prepareForSleep(loginManager, aboutToSuspend) {
++        // do not activate screenShield on greeter when going to suspend
++        if (Main.sessionMode.isGreeter) {
++            return;
++        }
++
+         if (aboutToSuspend) {
+             if (this._settings.get_boolean(LOCK_ENABLED_KEY))
+                 this.lock(true);
