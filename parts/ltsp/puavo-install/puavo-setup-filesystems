@@ -487,6 +487,8 @@ module QueryDiskInfo
     wipe         = false
 
     until do_it do
+      UI::reset_questions()
+
       if raid_setup_done then
         device    = 'md0'
         partition = 'whole'
@@ -665,15 +667,20 @@ module UI
   WritePartitionsPrompt,
     = *(1..7)
 
-  @defaults      = {}
-  @forced        = {}
-  @hosttype      = nil
-  @loopback_only = false
-  @make_efi      = false
+  @ask_forced     = {}
+  @defaults       = {}
+  @force_defaults = {}
+  @hosttype       = nil
+  @loopback_only  = false
+  @make_efi       = false
 
   def self.hosttype     ; @hosttype      end
   def self.loopback_only; @loopback_only end
   def self.make_efi     ; @make_efi      end
+
+  def self.reset_questions
+    @ask_forced = @force_defaults.clone
+  end
 
   def self.help_and_exit
     puts <<-EOF
@@ -747,25 +754,25 @@ EOF
           @defaults[WritePartitionsPrompt] = arg
         when '--force-disk-device'
           @defaults[DiskDevicePrompt] = arg
-          @forced[DiskDevicePrompt] = true
+          @force_defaults[DiskDevicePrompt] = true
         when '--force-imageoverlay-size'
           @defaults[ImageoverlaySizePrompt] = arg
-          @forced[ImageoverlaySizePrompt] = true
+          @force_defaults[ImageoverlaySizePrompt] = true
         when '--force-install-without-raid'
           @defaults[InstallWithoutRaidPrompt] = arg
-          @forced[InstallWithoutRaidPrompt] = true
+          @force_defaults[InstallWithoutRaidPrompt] = true
         when '--force-partition'
           @defaults[PartitionPrompt] = arg
-          @forced[PartitionPrompt] = true
+          @force_defaults[PartitionPrompt] = true
         when '--force-unpartitioned-space'
           @defaults[UnpartitionedSpacePrompt] = arg
-          @forced[UnpartitionedSpacePrompt] = true
+          @force_defaults[UnpartitionedSpacePrompt] = true
         when '--force-wipe-partition'
           @defaults[WipePartitionPrompt] = arg
-          @forced[WipePartitionPrompt] = true
+          @force_defaults[WipePartitionPrompt] = true
         when '--force-write-partitions'
           @defaults[WritePartitionsPrompt] = arg
-          @forced[WritePartitionsPrompt] = true
+          @force_defaults[WritePartitionsPrompt] = true
         when '--hosttype'
           @hosttype = arg
         when '--loopback-only'
@@ -784,10 +791,10 @@ EOF
     if @defaults.has_key?(prompt_key) && @defaults[prompt_key] != 'default' then
       default = @defaults[prompt_key]
     end
-    if @forced.has_key?(prompt_key) then
+    if @ask_forced.has_key?(prompt_key) then
       # Do not return forced twice... in case it did not work,
       # we need user input.
-      @forced.delete(prompt_key)
+      @ask_forced.delete(prompt_key)
       return default
     end
     prompt = "#{ question } [#{ default }] "
