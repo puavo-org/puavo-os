@@ -1,0 +1,12 @@
+diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
+--- gnome-shell/js/gdm/loginDialog.js	2021-05-17 14:04:41.238333976 +0300
++++ gnome-shell/js/gdm/loginDialog.js	2021-05-17 14:47:54.169153839 +0300
+@@ -885,6 +885,8 @@
+         } else {
+             this._hideUserListAndBeginVerification();
+         }
++
++        GLib.spawn_command_line_async('/usr/bin/puavo-autopilot-login');
+     }
+ 
+     _onDefaultSessionChanged(client, sessionId) {
