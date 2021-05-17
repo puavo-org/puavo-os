@@ -1,0 +1,11 @@
+diff -ruN gnome-shell/js/ui/sessionMode.js gnome-shell/js/ui/sessionMode.js
+--- gnome-shell/js/ui/sessionMode.js	2021-03-15 23:28:45.034283600 +0200
++++ gnome-shell/js/ui/sessionMode.js	2021-05-17 14:26:29.636673263 +0300
+@@ -42,6 +42,7 @@
+     },
+ 
+     'gdm': {
++        allowExtensions: true,
+         hasNotifications: true,
+         isGreeter: true,
+         isPrimary: true,
