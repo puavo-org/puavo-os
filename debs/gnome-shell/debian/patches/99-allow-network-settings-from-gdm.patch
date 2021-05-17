@@ -1,0 +1,26 @@
+diff -ruN gnome-shell/js/ui/sessionMode.js gnome-shell/js/ui/sessionMode.js
+--- gnome-shell/js/ui/sessionMode.js	2021-05-17 14:26:29.636673263 +0300
++++ gnome-shell/js/ui/sessionMode.js	2021-05-17 14:35:03.265138417 +0300
+@@ -47,7 +47,9 @@
+         isGreeter: true,
+         isPrimary: true,
+         unlockDialog: imports.gdm.loginDialog.LoginDialog,
+-        components: ['polkitAgent'],
++        components: Config.HAVE_NETWORKMANAGER ?
++                    ['networkAgent', 'polkitAgent'] :
++                    ['polkitAgent'],
+         panel: {
+             left: [],
+             center: ['dateMenu'],
+diff -ruN gnome-shell.2/js/ui/status/network.js gnome-shell.3/js/ui/status/network.js
+--- gnome-shell.2/js/ui/status/network.js	2021-03-15 23:28:45.037283700 +0200
++++ gnome-shell.3/js/ui/status/network.js	2021-05-17 14:35:03.265138417 +0300
+@@ -1709,7 +1709,7 @@
+     }
+ 
+     _sessionUpdated() {
+-        let sensitive = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
++        let sensitive = !Main.sessionMode.isLocked;
+         this.menu.setSensitive(sensitive);
+     }
+ 
