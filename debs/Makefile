@@ -6,11 +6,11 @@ _pkgs_builddeps :=
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports :=
+_pkgs_ports := gnome-shell
+
 # XXX disable ports builds for Bullseye, these all most probably
 # XXX need some work
 # _pkgs_ports := gnome-control-center \
-#                gnome-shell          \
 #                grub2                \
 #                incron               \
 #                libmypaint           \
