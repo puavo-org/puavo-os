@@ -1,0 +1,346 @@
+diff -ruN gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss
+--- gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	1970-01-01 02:00:00.000000000 +0200
++++ gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	2021-05-18 09:53:53.360810585 +0300
+@@ -0,0 +1,12 @@
++/* Puavo */
++
++.destroy-user-session {
++  color: #cc8800;
++  font-size: 70%;
++  font-weight: bold;
++  margin-top: 3em;
++}
++
++.destroy-user-session:hover {
++  color: #ffaa00;
++}
+diff -ruN gnome-shell/data/theme/gnome-shell-sass/_widgets.scss gnome-shell/data/theme/gnome-shell-sass/_widgets.scss
+--- gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2021-03-15 23:28:44.996284700 +0200
++++ gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2021-05-18 09:52:00.752511357 +0300
+@@ -49,3 +49,5 @@
+ // Lock / login screens
+ @import 'widgets/login-dialog';
+ @import 'widgets/screen-shield';
++// Puavo customizations
++@import 'widgets/puavo';
+diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
+--- gnome-shell/js/gdm/authPrompt.js	2021-03-15 23:28:45.003284500 +0200
++++ gnome-shell/js/gdm/authPrompt.js	2021-05-18 10:48:13.180618438 +0300
+@@ -36,6 +36,12 @@
+     DONT_PROVIDE_USERNAME: 1,
+ };
+ 
++// will throw exceptions, remember to handle them
++function readTextFile(name)
++{
++    return Shell.get_file_contents_utf8_sync(name);
++}
++
+ var AuthPrompt = GObject.registerClass({
+     Signals: {
+         'cancelled': {},
+@@ -59,6 +65,14 @@
+         this._mode = mode;
+         this._defaultButtonWellActor = null;
+ 
++
++        gio_settings = new Gio.Settings({ schema_id: GdmUtil.LOGIN_SCREEN_SCHEMA });
++        if (gio_settings.get_boolean(GdmUtil.GUESTUSER_KEY)) {
++          this._guestuser_login = 'guest';
++        } else {
++          this._guestuser_login = '';
++        }
++
+         let reauthenticationOnly;
+         if (this._mode == AuthPromptMode.UNLOCK_ONLY)
+             reauthenticationOnly = true;
+@@ -76,6 +90,11 @@
+         this._userVerifier.connect('credential-manager-authenticated', this._onCredentialManagerAuthenticated.bind(this));
+         this.smartcardDetected = this._userVerifier.smartcardDetected;
+ 
++        this.connect('guest', () => {
++                         this._entry.text = this._guestuser_login;
++                         this._activateNext(true);
++                     });
++
+         this.connect('destroy', this._onDestroy.bind(this));
+ 
+         this._userWell = new St.Bin({
+@@ -84,10 +103,102 @@
+         });
+         this.add_child(this._userWell);
+ 
++        if (this._mode == AuthPromptMode.UNLOCK_OR_LOG_IN) {
++            // Display the username above the password prompt, but
++            // ONLY in the login screen, not in the unlocking screen.
++            // The label is always visible, it's just empty before
++            // the name has been entered.
++            this._userName = new St.Label({ style_class:
++                'login-dialog-username', text: ' ' });
++
++            this.actor.add(this._userName, {
++                expand: true,
++                x_fill: false,
++                y_fill: true,
++                x_align: St.Align.MIDDLE });
++                this._userName.show();
++        }
++        this._userNameEntered = false;
++
+         this._hasCancelButton = this._mode === AuthPromptMode.UNLOCK_OR_LOG_IN;
+ 
+         this._initEntryRow();
+ 
++        this.guestButton = new St.Button({ style_class: 'modal-dialog-button button login-dialog-guest-button',
++                                           button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
++                                           reactive: true,
++                                           can_focus: true,
++                                           label: _("Login as guest") });
++        this.guestButton.connect('clicked',
++                                 Lang.bind(this, function() { this.emit('guest'); }));
++        this.actor.add(this.guestButton,
++                       { expand: true,
++                         x_fill: false,
++                         y_fill: true,
++                         x_align: St.Align.MIDDLE });
++
++        if (reauthenticationOnly) {
++            // hide the guest login button on the unlock screen
++            this.guestButton.hide();
++        } else {
++            // initially the guest button is clickable
++            this._updateGuestButtonSensitivity(true);
++        }
++
++        if (reauthenticationOnly) {
++            // Show the machine hostname, host type and release name in the
++            // lock screen.  I tried to create a separate label element for
++            // this in loginDialog.js, but I just couldn't get it to work
++            // (the label never shows up). So we'll do it here. The font size
++            // has been set to small to make long hostnames visible (if the
++            // hostname is too long, it gets ellipsized). These things should
++            // be done using extensions, but I couldn't find a way to run
++            // extensions in the lock screen.
++            var hostType,
++                hostName,
++                releaseName;
++
++            try {
++              hostType = readTextFile('/etc/puavo/hosttype').trim();
++            } catch (e) { hostType = '?'; }
++            try {
++              hostName = readTextFile('/etc/puavo/hostname').trim();
++            } catch (e) { hostName = '?'; }
++            try {
++              releaseName = readTextFile('/etc/puavo-image/release').trim();
++            } catch (e) { releaseName = '?'; }
++
++            this._machineInfoText = new St.Label({
++                text: hostType + ' | ' + releaseName + ' | ' + hostName,
++                style: 'font-size: 80%; text-align: center; margin-top: 20px;'
++            });
++
++            this.actor.add_child(this._machineInfoText);
++            this._machineInfoText.show();
++            // This is a hack from start to end, but right now it does the job.
++        }
++
++        if (reauthenticationOnly) {
++            let button_opts = {
++              button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
++              can_focus:   false,
++              label:       _("End session"),
++              reactive:    true,
++              style_class: 'button destroy-user-session',
++            };
++
++            this._killUserSessionButton = new St.Button(button_opts);
++            this._killUserSessionButton.connect('clicked',
++                    Lang.bind(this, function() {
++                      Util.spawn(['/usr/bin/gnome-session-quit',
++                                  '--force',
++                                  '--logout',
++                                  '--no-prompt']);
++                    }));
++            this.actor.add_child(this._killUserSessionButton);
++            this._killUserSessionButton.show();
++        }
++
+         let capsLockPlaceholder = new St.Label();
+         this.add_child(capsLockPlaceholder);
+ 
+@@ -170,6 +281,7 @@
+             entry.clutter_text.connect('text-changed', () => {
+                 if (!this._userVerifier.hasPendingMessages)
+                     this._fadeOutMessage();
++                this._updateGuestButtonSensitivity(this._entry.text.length == 0 && !this._userNameEntered);
+             });
+ 
+             entry.clutter_text.connect('activate', () => {
+@@ -197,6 +309,13 @@
+     _activateNext(shouldSpin) {
+         this.updateSensitivity(false);
+ 
++        if (this._userName && !this._userNameEntered) {
++            if (!this._entry.menu.isPassword) {    // don't show passwords!
++                this._userName.text = this._entry.text;
++                this._userNameEntered = true;
++            }
++        }
++
+         if (shouldSpin)
+             this.startSpinning();
+ 
+@@ -425,6 +544,17 @@
+         }
+     }
+ 
++    _updateGuestButtonSensitivity(sensitive) {
++        if (this._guestuser_login !== 'guest') {
++            // forcibly hide the guest login button if guest logins are disabled
++            this.guestButton.hide();
++            return;
++        }
++
++        this.guestButton.reactive = sensitive;
++        this.guestButton.can_focus = sensitive;
++    }
++
+     updateSensitivity(sensitive) {
+         if (this._entry.reactive === sensitive)
+             return;
+@@ -467,6 +597,18 @@
+         this.cancelButton.can_focus = this._hasCancelButton;
+         this._preemptiveAnswer = null;
+ 
++        if (this._userName)
++            this._userName.text = " ";
++
++        this._userNameEntered = false;
++
++        // We're back at the start, so the guest button is usable again
++        // in case we are not reauthenticating.
++        if (this._mode != AuthPromptMode.UNLOCK_ONLY)
++            this.guestButton.show();
++        // this will also hide guest button if needed:
++        this._updateGuestButtonSensitivity(true);
++
+         if (this._userVerifier)
+             this._userVerifier.cancel();
+ 
+diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
+--- gnome-shell/js/gdm/loginDialog.js	2021-05-17 14:47:54.169153839 +0300
++++ gnome-shell/js/gdm/loginDialog.js	2021-05-18 10:49:40.324780301 +0300
+@@ -1154,6 +1154,7 @@
+     _showUserList() {
+         this._ensureUserListLoaded();
+         this._authPrompt.hide();
++        this._authPrompt._updateGuestButtonSensitivity(true);
+         this._hideBannerView();
+         this._sessionMenuButton.close();
+         this._sessionMenuButton.hide();
+@@ -1164,6 +1165,7 @@
+ 
+     _beginVerificationForItem(item) {
+         this._authPrompt.setUser(item.user);
++        this._authPrompt.guestButton.hide();
+ 
+         let userName = item.user.get_user_name();
+         let hold = new Batch.Hold();
+diff -ruN gnome-shell/js/gdm/util.js gnome-shell/js/gdm/util.js
+--- gnome-shell/js/gdm/util.js	2021-03-15 23:28:45.004284400 +0200
++++ gnome-shell/js/gdm/util.js	2021-05-18 10:51:21.276297511 +0300
+@@ -35,6 +35,7 @@
+ var BANNER_MESSAGE_KEY = 'banner-message-enable';
+ var BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
+ var ALLOWED_FAILURES_KEY = 'allowed-failures';
++var GUESTUSER_KEY = 'enable-guestuser';
+ 
+ var LOGO_KEY = 'logo';
+ var DISABLE_USER_LIST_KEY = 'disable-user-list';
+@@ -540,9 +541,10 @@
+         // After that, we go back to the welcome screen.
+ 
+         this._failCounter++;
+-        let canRetry = retry && this._userName &&
+-            (this._reauthOnly ||
+-             this._failCounter < this._settings.get_int(ALLOWED_FAILURES_KEY));
++        // let the user re-enter the password as
++        // many times as they want, they aren't
++        // going to brute-force it this way...
++        let canRetry = retry && this._userName;
+ 
+         if (canRetry) {
+             if (!this.hasPendingMessages) {
+diff -ruN gnome-shell/po/de.po gnome-shell/po/de.po
+--- gnome-shell/po/de.po	2021-03-15 23:28:45.104281700 +0200
++++ gnome-shell/po/de.po	2021-05-18 10:52:38.107524500 +0300
+@@ -3003,6 +3003,14 @@
+ msgid "System Sounds"
+ msgstr "Systemklänge"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Als Gast anmelden"
++
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Sitzung beenden"
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Häufig genutzte Anwendungen erscheinen hier"
+ 
+diff -ruN gnome-shell/po/fi.po gnome-shell/po/fi.po
+--- gnome-shell/po/fi.po	2021-03-15 23:28:45.118281400 +0200
++++ gnome-shell/po/fi.po	2021-05-18 10:53:14.351054101 +0300
+@@ -2982,6 +2982,14 @@
+ msgid "System Sounds"
+ msgstr "Järjestelmän äänet"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Kirjaudu vieraana"
++
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Lopeta istunto"
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Usein käytetyt sovellukset ilmestyvät tänne"
+ 
+diff -ruN gnome-shell/po/fr.po gnome-shell/po/fr.po
+--- gnome-shell/po/fr.po	2021-03-15 23:28:45.120281200 +0200
++++ gnome-shell/po/fr.po	2021-05-18 10:53:36.574735008 +0300
+@@ -3044,6 +3044,14 @@
+ msgid "System Sounds"
+ msgstr "Sons système"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Connectez-vous comme invité"
++
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Fin de session"
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Les applications fréquemment utilisées apparaîtront ici"
+ 
+diff -ruN gnome-shell/po/sv.po gnome-shell/po/sv.po
+--- gnome-shell/po/sv.po	2021-03-15 23:28:45.177279700 +0200
++++ gnome-shell/po/sv.po	2021-05-18 10:54:45.005617642 +0300
+@@ -2957,6 +2957,14 @@
+ msgid "System Sounds"
+ msgstr "Systemljud"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Logga in som gäst"
++
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Avsluta sessionen"
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Ofta använda program kommer visas här"
+ 
