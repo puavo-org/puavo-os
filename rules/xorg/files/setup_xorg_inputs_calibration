@@ -2,17 +2,22 @@
 
 set -eu
 
-if [ -z "$(puavo-conf puavo.xorg.inputs.hitachi.calibration)" ]; then
-  rm -f /usr/share/X11/xorg.conf.d/99-hitachicalib.conf
+hitachi_conf_path='/usr/share/X11/xorg.conf.d/99-hitachicalib.conf'
+
+puavo_xorg_inputs_hitachi_calibration=$(
+  puavo-conf puavo.xorg.inputs.hitachi.calibration)
+if [ -z "$puavo_xorg_inputs_hitachi_calibration" ]; then
+  rm -f "$hitachi_conf_path"
   exit 0
 fi
 
-puavo-template <<'EOF' /usr/share/X11/xorg.conf.d/99-hitachicalib.conf
+cat > "${hitachi_conf_path}.tmp" <<EOF
 Section "InputClass"
         Identifier   "calibration"
         MatchProduct "Hitachi PROJECTOR CDROM COMPOSITE"
         Driver       "evdev"
-        Option       "Calibration"                       "{puavo_xorg_inputs_hitachi_calibration}"
+        Option       "Calibration"                       "${puavo_xorg_inputs_hitachi_calibration}"
         Option       "SwapAxes"                          "0"
 EndSection
 EOF
+mv "${hitachi_conf_path}.tmp" "$hitachi_conf_path"
