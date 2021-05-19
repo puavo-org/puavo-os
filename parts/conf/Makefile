@@ -4,7 +4,7 @@ libdir           = $(prefix)/lib
 sbindir          = $(prefix)/sbin
 datarootdir      = $(prefix)/share
 
-libtool_binaries = libpuavoconf.la puavo-conf puavo-conf-update puavo-template
+libtool_binaries = libpuavoconf.la puavo-conf puavo-conf-update
 
 ifeq ($(prefix), /usr/local)
 rubylibdir = $(prefix)/lib/site_ruby
@@ -33,7 +33,6 @@ install: installdirs
 		install libpuavoconf.la $(DESTDIR)$(libdir)
 	libtool --mode=install install puavo-conf $(DESTDIR)$(bindir)
 	libtool --mode=install install puavo-conf-update $(DESTDIR)$(sbindir)
-	libtool --mode=install install puavo-template $(DESTDIR)$(sbindir)
 	install -t $(DESTDIR)$(sbindir) puavo-conf-daemon
 	install -m 644 -t $(DESTDIR)$(rubylibdir)/puavo conf.rb
 
@@ -66,14 +65,6 @@ puavo-conf: puavo-conf.o libpuavoconf.la
 
 puavo-conf-update: puavo-conf-update.o libpuavoconf.la
 	libtool --mode=link --tag=CC $(CC) $(LDFLAGS) -ljansson -o $@ $^
-
-puavo-template: puavo-template.o libpuavoconf.la
-	libtool --mode=link --tag=CC $(CC) $(LDFLAGS) -ldb \
-                $(shell pkg-config --libs gio-unix-2.0 glib-2.0) -lctpl -o $@ $^
-
-puavo-template.o: puavo-template.c
-	$(CC) -c $(DIAGNOSTICS) $(CFLAGS) $(LDFLAGS) -Wall -Wextra \
-                $(shell pkg-config --cflags gio-unix-2.0 glib-2.0) $^
 
 libpuavoconf.la: conf.lo common.lo db.lo dbus.lo
 	libtool --mode=link --tag=CC \
