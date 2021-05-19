@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2019 Sergio Costas (rastersoft@gmail.com)
  * Based on code original (C) Carlos Soriano
+ * SwitcherooControl code based on code original from Marsch84
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,15 +60,16 @@ var FileItem = class {
         this.actor.connect('destroy', () => this._onDestroy());
 
         this._eventBox = new Gtk.EventBox({visible: true});
-        this.actor.add(this._eventBox);
 
+        this._innerContainer = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
         this._container = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
-        this._styleContext = this._container.get_style_context();
-        this._eventBox.add(this._container);
+        this._styleContext = this._innerContainer.get_style_context();
+        this._eventBox.add(this._innerContainer);
+
 
         this._icon = new Gtk.Image();
         this._iconContainer = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
-        this._container.pack_start(this._iconContainer, false, false, 0);
+        this._innerContainer.pack_start(this._iconContainer, false, false, 0);
         this._iconContainer.set_size_request(Prefs.get_desired_width(), Prefs.get_icon_size());
         this._iconContainer.pack_start(this._icon, true, true, 0);
         this._iconContainer.set_baseline_position(Gtk.BaselinePosition.CENTER);
@@ -83,7 +85,9 @@ var FileItem = class {
         this._label.set_lines(2);
         this._setFileName(fileInfo.get_display_name());
 
-        this._container.pack_start(this._label, false, true, 0);
+        this._innerContainer.pack_start(this._label, false, true, 0);
+        this._container.pack_start(this._eventBox, false, false, 0);
+        this.actor.add(this._container);
 
         /* We need to allow the "button-press" event to pass through the callbacks, to allow the DnD to work
          * But we must avoid them to reach the main window.
@@ -136,6 +140,9 @@ var FileItem = class {
         }
         this.actor.show_all();
         this._updateName();
+        if (this._dropCoordinates) {
+            this.setSelected();
+        }
     }
 
     _setFileName(text) {
@@ -214,8 +221,13 @@ var FileItem = class {
                     if ((info == 1) || (info == 2)) {
                         let fileList = DesktopIconsUtil.getFilesFromNautilusDnD(selection, info);
                         if (fileList.length != 0) {
-                            if (this._desktopManager.dragItem && (this._desktopManager.dragItem.uri == this._file.get_uri())) {
-                                // Dragging a file/folder over itself will do nothing
+                            if (this._desktopManager.dragItem && ((this._desktopManager.dragItem.uri == this._file.get_uri()) || !(this._isValidDesktopFile || this.isDirectory))) {
+                                // Dragging a file/folder over itself or over another file will do nothing, allow drag to directory or validdesktop file
+                                return;
+                            }
+                            if ( this._isValidDesktopFile ) {
+                                // open the desktopfile with these dropped files as the arguments
+                                this.doOpen(fileList);
                                 return;
                             }
                             if (this._fileExtra != Enums.FileType.USER_DIRECTORY_TRASH) {
@@ -615,14 +627,24 @@ var FileItem = class {
         this._desktopManager.doRename(this);
     }
 
-    doOpen() {
+    doOpen(fileList) {
+        if (! fileList ) {
+            fileList = [] ;
+        }
+        this._doOpenContext(null, fileList);
+    }
+
+    _doOpenContext(context, fileList) {
+        if (! fileList ) {
+            fileList = [] ;
+        }
         if (this._isBrokenSymlink) {
             log(`Error: Can’t open ${this.file.get_uri()} because it is a broken symlink.`);
             return;
         }
 
         if (this.trustedDesktopFile) {
-            this._desktopFile.launch_uris_as_manager([], null, GLib.SpawnFlags.SEARCH_PATH, null, null);
+            this._desktopFile.launch_uris_as_manager(fileList, context, GLib.SpawnFlags.SEARCH_PATH, null, null);
             return;
         }
 
@@ -653,8 +675,8 @@ var FileItem = class {
     }
 
     _onShowInFilesClicked() {
-
-        DBusUtils.FreeDesktopFileManagerProxy.ShowItemsRemote([this.file.get_uri()], '',
+        let showInFilesList = this._desktopManager.getCurrentSelection(true);
+        DBusUtils.FreeDesktopFileManagerProxy.ShowItemsRemote(showInFilesList, '',
             (result, error) => {
                 if (error)
                     log('Error showing file on desktop: ' + error.message);
@@ -663,20 +685,13 @@ var FileItem = class {
     }
 
     _onPropertiesClicked() {
-
-        DBusUtils.FreeDesktopFileManagerProxy.ShowItemPropertiesRemote([this.file.get_uri()], '',
+        let propertiesFileList = this._desktopManager.getCurrentSelection(true);
+        DBusUtils.FreeDesktopFileManagerProxy.ShowItemPropertiesRemote(propertiesFileList, '',
             (result, error) => {
                 if (error)
                     log('Error showing properties: ' + error.message);
             }
         );
-    }
-
-    get _allowLaunchingText() {
-        if (this.trustedDesktopFile)
-            return _("Don’t Allow Launching");
-
-        return _("Allow Launching");
     }
 
     get metadataTrusted() {
@@ -734,23 +749,63 @@ var FileItem = class {
         return !this.trustedDesktopFile && this._fileExtra == Enums.FileType.NONE;
     }
 
+    _doDiscreteGpu() {
+        if (!DBusUtils.SwitcherooControlProxy) {
+            log('Could not apply discrete GPU environment, switcheroo-control not available');
+            return;
+        }
+        let gpus = DBusUtils.SwitcherooControlProxy.GPUs;
+        if (!gpus) {
+            log('Could not apply discrete GPU environment. No GPUs in list.');
+            return;
+        }
+
+        for(let gpu in gpus) {
+            if (!gpus[gpu])
+                continue;
+
+            let default_variant = gpus[gpu]['Default'];
+            if (!default_variant || default_variant.get_boolean())
+                continue;
+
+            let env = gpus[gpu]['Environment'];
+            if (!env)
+                continue;
+
+            let env_s = env.get_strv();
+            let context = new Gio.AppLaunchContext;
+            for (let i = 0; i < env_s.length; i=i+2) {
+                context.setenv(env_s[i], env_s[i+1]);
+            }
+            this._doOpenContext(context, null);
+            return;
+        }
+        log('Could not find discrete GPU data in switcheroo-control');
+    }
 
     _createMenu() {
+        this._selectedItemsNum = this._desktopManager.getNumberOfSelectedItems();
         this._menu = new Gtk.Menu();
         this._menuId = this._menu.connect('hide', () => {
             this._menu.disconnect(this._menuId);
             this._menu = null;
             this._menuId = null;
         });
-        let open = new Gtk.MenuItem({label:_('Open')});
-        open.connect('activate', () => this.doOpen());
+        let open = new Gtk.MenuItem({label: (this._selectedItemsNum > 1 ? _("Open All...") : _("Open"))});
+        open.connect('activate', () => {this._desktopManager.doMultiOpen();});
         this._menu.add(open);
+        this._desktopManager._createScriptsMenu(this._menu);
         switch (this._fileExtra) {
         case Enums.FileType.NONE:
             if (!this._isDirectory) {
-                this._actionOpenWith = new Gtk.MenuItem({label: _('Open With Other Application')});
+                this._actionOpenWith = new Gtk.MenuItem({label: this._selectedItemsNum > 1 ? _("Open All With Other Application...") : _("Open With Other Application")});
                 this._actionOpenWith.connect('activate', () => this._desktopManager.doOpenWith());
                 this._menu.add(this._actionOpenWith);
+                if (DBusUtils.discreteGpuAvailable && this.trustedDesktopFile) {
+                    this._actionDedicatedGPU = new Gtk.MenuItem({label:_('Launch using Dedicated Graphics Card')});
+                    this._actionDedicatedGPU.connect('activate', () => this._doDiscreteGpu());
+                    this._menu.add(this._actionDedicatedGPU);
+                }
             } else {
                 this._actionOpenWith = null;
             }
@@ -761,7 +816,7 @@ var FileItem = class {
             this._actionCopy = new Gtk.MenuItem({label:_('Copy')});
             this._actionCopy.connect('activate', () => {this._desktopManager.doCopy();});
             this._menu.add(this._actionCopy);
-            if (this.canRename()) {
+            if (this.canRename() && (this._selectedItemsNum == 1)) {
                 let rename = new Gtk.MenuItem({label:_('Rename…')});
                 rename.connect('activate', () => this.doRename());
                 this._menu.add(rename);
@@ -774,9 +829,9 @@ var FileItem = class {
                 this._actionDelete.connect('activate', () => {this._desktopManager.doDeletePermanently();});
                 this._menu.add(this._actionDelete);
             }
-            if (this._isValidDesktopFile && !this._desktopManager.writableByOthers && !this._writableByOthers) {
+            if (this._isValidDesktopFile && !this._desktopManager.writableByOthers && !this._writableByOthers && (this._selectedItemsNum == 1 )) {
                 this._menu.add(new Gtk.SeparatorMenuItem());
-                this._allowLaunchingMenuItem = new Gtk.MenuItem({label: this._allowLaunchingText});
+                this._allowLaunchingMenuItem = new Gtk.MenuItem({label: this.trustedDesktopFile ? _("Don't Allow Launching") : _("Allow Launching")});
                 this._allowLaunchingMenuItem.connect('activate', () => this._onAllowDisallowLaunchingClicked());
                 this._menu.add(this._allowLaunchingMenuItem);
             }
@@ -810,14 +865,29 @@ var FileItem = class {
             break;
         }
         this._menu.add(new Gtk.SeparatorMenuItem());
-        let properties = new Gtk.MenuItem({label: _('Properties')});
+        if ( (! this._desktopManager.checkIfSpecialFilesAreSelected()) && (this._selectedItemsNum >= 1 )) {
+            if (! this._isDirectory) {
+                let mailFilesFromSelection = new Gtk.MenuItem({label: _('Send to...')});
+                mailFilesFromSelection.connect('activate', () => {this._desktopManager.mailFilesFromSelection();});
+                this._menu.add(mailFilesFromSelection);
+            }
+            let compressFilesFromSelection = new Gtk.MenuItem({label: Gettext.ngettext('Compress {0} file', 'Compress {0} files', this._selectedItemsNum).replace('{0}', this._selectedItemsNum)});
+            compressFilesFromSelection.connect('activate', () => {this._desktopManager.doCompressFilesFromSelection();});
+            this._menu.add(compressFilesFromSelection);
+            let newFolderFromSelection = new Gtk.MenuItem({label:  Gettext.ngettext('New Folder with {0} item', 'New Folder with {0} items' , this._selectedItemsNum).replace('{0}', this._selectedItemsNum)});
+            newFolderFromSelection.connect('activate', () => {this._desktopManager.doNewFolderFromSelection(this._savedCoordinates);});
+            this._menu.add(newFolderFromSelection);
+            this._menu.add(new Gtk.SeparatorMenuItem());
+        }
+        this._menu.add(new Gtk.SeparatorMenuItem());
+        let properties = new Gtk.MenuItem({label: this._selectedItemsNum > 1 ? _('Common Properties') : _('Properties') });
         properties.connect('activate', () => this._onPropertiesClicked());
         this._menu.add(properties);
         this._menu.add(new Gtk.SeparatorMenuItem());
-        let showInFiles = new Gtk.MenuItem({label: _('Show in Files')});
+        let showInFiles = new Gtk.MenuItem({label: this._selectedItemsNum > 1 ? _('Show All in Files') : _('Show in Files')});
         showInFiles.connect('activate', () => this._onShowInFilesClicked());
         this._menu.add(showInFiles);
-        if (this._isDirectory && this.file.get_path() != null) {
+        if (this._isDirectory && this.file.get_path() != null && this._selectedItemsNum == 1) {
             let openInTerminal = new Gtk.MenuItem({label: _('Open in Terminal')});
             openInTerminal.connect('activate', () => this._onOpenTerminalClicked());
             this._menu.add(openInTerminal);
@@ -838,7 +908,7 @@ var FileItem = class {
             this._createMenu();
             this._menu.popup_at_pointer(event);
             if (this._actionOpenWith) {
-                let allowOpenWith = (this._desktopManager.getNumberOfSelectedItems() > 0);
+                let allowOpenWith = (this._selectedItemsNum > 0);
                 this._actionOpenWith.set_sensitive(allowOpenWith);
             }
             let allowCutCopyTrash = this._desktopManager.checkIfSpecialFilesAreSelected();
@@ -987,15 +1057,19 @@ var FileItem = class {
     }
 
     set savedCoordinates(pos) {
-        let info = new Gio.FileInfo();
-        if (pos != null) {
-            this._savedCoordinates = [pos[0], pos[1]];
-            info.set_attribute_string('metadata::nautilus-icon-position', `${pos[0]},${pos[1]}`);
-        } else {
-            this._savedCoordinates = null;
-            info.set_attribute_string('metadata::nautilus-icon-position', '');
+        try {
+            let info = new Gio.FileInfo();
+            if (pos != null) {
+                this._savedCoordinates = [pos[0], pos[1]];
+                info.set_attribute_string('metadata::nautilus-icon-position', `${pos[0]},${pos[1]}`);
+            } else {
+                this._savedCoordinates = null;
+                info.set_attribute_string('metadata::nautilus-icon-position', '');
+            }
+            this.file.set_attributes_from_info(info, Gio.FileQueryInfoFlags.NONE, null);
+        } catch(e) {
+            print(`Failed to store the desktop coordinates for ${this.uri}: ${e}`);
         }
-        this.file.set_attributes_from_info(info, Gio.FileQueryInfoFlags.NONE, null);
     }
 
     get dropCoordinates() {

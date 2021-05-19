@@ -176,6 +176,7 @@ var AppProgress = Utils.defineClass({
         this._countVisible = false;
         this._progress = 0.0;
         this._progressVisible = false;
+        this._urgent = false;
         this.update(properties);
     },
 
@@ -231,6 +232,17 @@ var AppProgress = Utils.defineClass({
         }
     },
 
+    urgent: function() {
+        return this._urgent;
+    },
+
+    setUrgent: function(urgent) {
+        if (this._urgent != urgent) {
+            this._urgent = urgent;
+            this.emit('urgent-changed', this._urgent);
+        }
+    },
+
     setDBusName: function(dbusName) {
         if (this._dbusName != dbusName) {
             let oldName = this._dbusName;
@@ -246,6 +258,7 @@ var AppProgress = Utils.defineClass({
             this.setCountVisible(other.countVisible());
             this.setProgress(other.progress());
             this.setProgressVisible(other.progressVisible())
+            this.setUrgent(other.urgent());
         } else {
             for (let property in other) {
                 if (other.hasOwnProperty(property)) {
@@ -257,6 +270,8 @@ var AppProgress = Utils.defineClass({
                         this.setProgress(other[property].get_double());
                     } else if (property == 'progress-visible') {
                         this.setProgressVisible(Me.settings.get_boolean('progress-show-bar') && other[property].get_boolean());
+                    } else if (property == 'urgent') {
+                        this.setUrgent(other[property].get_boolean());
                     } else {
                         // Not implemented yet
                     }
@@ -289,7 +304,7 @@ var ProgressIndicator = Utils.defineClass({
         this._notificationBadgeBin.hide();
 
         this._source._dtpIconContainer.add_child(this._notificationBadgeBin);
-        this._source._dtpIconContainer.connect('allocation-changed', this.updateNotificationBadge.bind(this));
+        this._source._dtpIconContainer.connect('notify::allocation', this.updateNotificationBadge.bind(this));
 
         this._progressManagerEntries = [];
         this._progressManager.lookupById(this._source.app.id).forEach(
@@ -419,7 +434,7 @@ var ProgressIndicator = Utils.defineClass({
     },
 
     _drawProgressOverlay: function(area) {
-        let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        let scaleFactor = Utils.getScaleFactor();
         let [surfaceWidth, surfaceHeight] = area.get_surface_size();
         let cr = area.get_context();
 
@@ -513,6 +528,7 @@ var ProgressIndicator = Utils.defineClass({
             this.toggleNotificationBadge(false);
             this.setProgress(0);
             this.toggleProgressOverlay(false);
+            this.setUrgent(false);
         }
     },
 
@@ -547,6 +563,12 @@ var ProgressIndicator = Utils.defineClass({
             (appProgress, value) => {
                 this.toggleProgressOverlay(value);
             }
+        ], [
+            appProgress,
+            'urgent-changed',
+            (appProgress, value) => {
+                this.setUrgent(value)
+            }
         ]);
 
         this.setNotificationBadge(appProgress.count());
@@ -554,5 +576,23 @@ var ProgressIndicator = Utils.defineClass({
         this.setProgress(appProgress.progress());
         this.toggleProgressOverlay(appProgress.progressVisible());
 
+        this._isUrgent = false;
+    },
+
+    setUrgent: function(urgent) {
+        const icon = this._source.icon._iconBin;
+        if (urgent) {
+            if (!this._isUrgent) {
+                icon.set_pivot_point(0.5, 0.5);
+                this._source.iconAnimator.addAnimation(icon, 'dance');
+                this._isUrgent = true;
+            }
+        } else {
+            if (this._isUrgent) {
+                this._source.iconAnimator.removeAnimation(icon, 'dance');
+                this._isUrgent = false;
+            }
+            icon.rotation_angle_z = 0;
+        }
     }
 });

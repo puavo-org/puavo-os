@@ -53,7 +53,9 @@ var AskRenamePopup = class {
             this._validate();
         });
         this._textArea.connect('activate', () => {
-            this._do_rename();
+            if (this._button.sensitive) {
+                this._do_rename();
+            }
         });
         this._textArea.set_can_default(true);
         this._popover.set_default_widget(this._textArea);

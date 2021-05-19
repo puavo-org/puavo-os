@@ -27,13 +27,15 @@
 }
 
 #dashtopanelScrollview .app-well-app .overview-icon,
-#dashtopanelTaskbar .show-apps .overview-icon {
+.dashtopanelMainPanel .show-apps .overview-icon {
+	background: none;
 	border: none;
 	margin: 0;
 	padding: 0;
 }
 
 #dashtopanelScrollview .app-well-app .overview-label {
+	/* must match TITLE_RIGHT_PADDING in apppicons.js */
 	padding-right: 8px;
 }
 
@@ -42,9 +44,14 @@
 	background: none;
 }
 
+.dashtopanelMainPanel .show-apps:hover .overview-icon,
 #dashtopanelScrollview .app-well-app:hover .dtp-container,
 #dashtopanelScrollview .app-well-app:focus .dtp-container {
 	background-color: rgba(238, 238, 236, 0.1);
+}
+
+#dashtopanelScrollview .app-well-app:hover .dtp-container.animate-appicon-hover {
+	background: none;
 }
 
 #dashtopanelScrollview .app-well-app:active .dtp-container {
@@ -111,15 +118,15 @@
 	spacing: 0px; 
 }
 
-.showdesktop-button {
-	border: 0 solid rgba(200, 200, 200, .2);
-}
-
-.showdesktop-button-hovered {
+.showdesktop-button-dark-hovered {
 	background-color: rgba(200, 200, 200, .4);
 }
 
-.panel-corner:active, .panel-corner:overview, .panel-corner:focus {
+.showdesktop-button-light-hovered {
+	background-color: rgba(55, 55, 55, .4);
+}
+
+.panel-corner.hidden:active, .panel-corner.hidden:overview, .panel-corner.hidden:focus {
     -panel-corner-border-color: rgba(0, 0, 0, .001);
 }
 #dashtopanelScrollview .badge {

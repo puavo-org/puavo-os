@@ -26,6 +26,7 @@ const Clutter = imports.gi.Clutter;
 const Config = imports.misc.config;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Signals = imports.signals;
 const Lang = imports.lang;
@@ -46,6 +47,9 @@ const Workspace = imports.ui.workspace;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const AppIcons = Me.imports.appIcons;
 const Panel = Me.imports.panel;
+const PanelManager = Me.imports.panelManager;
+const PanelSettings = Me.imports.panelSettings;
+const Pos = Me.imports.panelPositions;
 const Utils = Me.imports.utils;
 const WindowPreview = Me.imports.windowPreview;
 
@@ -66,6 +70,44 @@ function extendDashItemContainer(dashItemContainer) {
     dashItemContainer.showLabel = AppIcons.ItemShowLabel;
 };
 
+const iconAnimationSettings = {
+    _getDictValue: function(key) {
+        let type = Me.settings.get_string('animate-appicon-hover-animation-type');
+        return Me.settings.get_value(key).deep_unpack()[type] || 0;
+    },
+
+    get type() {
+        if (!Me.settings.get_boolean('animate-appicon-hover'))
+            return "";
+
+        return Me.settings.get_string('animate-appicon-hover-animation-type');
+    },
+
+    get convexity() {
+        return Math.max(0, this._getDictValue('animate-appicon-hover-animation-convexity'));
+    },
+
+    get duration() {
+        return this._getDictValue('animate-appicon-hover-animation-duration');
+    },
+
+    get extent() {
+        return Math.max(1, this._getDictValue('animate-appicon-hover-animation-extent'));
+    },
+
+    get rotation() {
+        return this._getDictValue('animate-appicon-hover-animation-rotation');
+    },
+
+    get travel() {
+        return Math.max(0, this._getDictValue('animate-appicon-hover-animation-travel'));
+    },
+
+    get zoom() {
+        return Math.max(1, this._getDictValue('animate-appicon-hover-animation-zoom'));
+    },
+};
+
 /* This class is a fork of the upstream DashActor class (ui.dash.js)
  *
  * Summary of changes:
@@ -80,38 +122,36 @@ var taskbarActor = Utils.defineClass({
         this._delegate = delegate;
         this._currentBackgroundColor = 0;
         this.callParent('_init', { name: 'dashtopanelTaskbar',
-                                   layout_manager: new Clutter.BoxLayout({ orientation: Clutter.Orientation[Panel.getOrientation().toUpperCase()] }),
+                                   layout_manager: new Clutter.BoxLayout({ orientation: Clutter.Orientation[delegate.dtpPanel.getOrientation().toUpperCase()] }),
                                    clip_to_allocation: true });
     },
 
     vfunc_allocate: function(box, flags)  {
-        this.set_allocation(box, flags);
+        Utils.setAllocation(this, box, flags);
 
-        let availFixedSize = box[Panel.fixedCoord.c2] - box[Panel.fixedCoord.c1];
-        let availVarSize = box[Panel.varCoord.c2] - box[Panel.varCoord.c1];
-        let [, showAppsButton, scrollview, leftFade, rightFade] = this.get_children();
-        let [, showAppsNatSize] = showAppsButton[Panel.sizeFunc](availFixedSize);
-        let [, natSize] = this[Panel.sizeFunc](availFixedSize);
+        let panel = this._delegate.dtpPanel;
+        let availFixedSize = box[panel.fixedCoord.c2] - box[panel.fixedCoord.c1];
+        let availVarSize = box[panel.varCoord.c2] - box[panel.varCoord.c1];
+        let [dummy, scrollview, leftFade, rightFade] = this.get_children();
+        let [, natSize] = this[panel.sizeFunc](availFixedSize);
         let childBox = new Clutter.ActorBox();
-        let orientation = Panel.getOrientation().toLowerCase();
+        let orientation = panel.getOrientation();
 
-        childBox[Panel.varCoord.c1] = box[Panel.varCoord.c1];
-        childBox[Panel.fixedCoord.c1] = box[Panel.fixedCoord.c1];
+        Utils.allocate(dummy, childBox, flags);
 
-        childBox[Panel.varCoord.c2] = box[Panel.varCoord.c1] + showAppsNatSize;
-        childBox[Panel.fixedCoord.c2] = box[Panel.fixedCoord.c2];
-        showAppsButton.allocate(childBox, flags);
+        childBox[panel.varCoord.c1] = box[panel.varCoord.c1];
+        childBox[panel.varCoord.c2] = Math.min(availVarSize, natSize);
+        childBox[panel.fixedCoord.c1] = box[panel.fixedCoord.c1];
+        childBox[panel.fixedCoord.c2] = box[panel.fixedCoord.c2];
 
-        childBox[Panel.varCoord.c1] = box[Panel.varCoord.c1] + showAppsNatSize;
-        childBox[Panel.varCoord.c2] = Math.min(availVarSize, natSize);
-        scrollview.allocate(childBox, flags);
+        Utils.allocate(scrollview, childBox, flags);
 
-        let [hvalue, , hupper, , , hpageSize] = scrollview[orientation[0] + 'scroll'].adjustment.get_values();
-        hupper = Math.floor(hupper);
-        scrollview._dtpFadeSize = hupper > hpageSize ? this._delegate.iconSize : 0;
+        let [value, , upper, , , pageSize] = scrollview[orientation[0] + 'scroll'].adjustment.get_values();
+        upper = Math.floor(upper);
+        scrollview._dtpFadeSize = upper > pageSize ? this._delegate.iconSize : 0;
 
-        if (this._currentBackgroundColor !== this._delegate.dtpPanel.dynamicTransparency.currentBackgroundColor) {
-            this._currentBackgroundColor = this._delegate.dtpPanel.dynamicTransparency.currentBackgroundColor;
+        if (this._currentBackgroundColor !== panel.dynamicTransparency.currentBackgroundColor) {
+            this._currentBackgroundColor = panel.dynamicTransparency.currentBackgroundColor;
             let gradientStyle = 'background-gradient-start: ' + this._currentBackgroundColor +
                                 'background-gradient-direction: ' + orientation;
 
@@ -119,13 +159,12 @@ var taskbarActor = Utils.defineClass({
             rightFade.set_style(gradientStyle);
         }
         
-        childBox[Panel.varCoord.c1] = box[Panel.varCoord.c1] + showAppsNatSize;
-        childBox[Panel.varCoord.c2] = childBox[Panel.varCoord.c1] + (hvalue > 0 ? scrollview._dtpFadeSize : 0);
-        leftFade.allocate(childBox, flags);
+        childBox[panel.varCoord.c2] = childBox[panel.varCoord.c1] + (value > 0 ? scrollview._dtpFadeSize : 0);
+        Utils.allocate(leftFade, childBox, flags);
 
-        childBox[Panel.varCoord.c1] = box[Panel.varCoord.c2] - (hvalue + hpageSize < hupper ? scrollview._dtpFadeSize : 0);
-        childBox[Panel.varCoord.c2] = box[Panel.varCoord.c2];
-        rightFade.allocate(childBox, flags);
+        childBox[panel.varCoord.c1] = box[panel.varCoord.c2] - (value + pageSize < upper ? scrollview._dtpFadeSize : 0);
+        childBox[panel.varCoord.c2] = box[panel.varCoord.c2];
+        Utils.allocate(rightFade, childBox, flags);
     },
 
     // We want to request the natural size of all our children
@@ -175,8 +214,9 @@ var taskbar = Utils.defineClass({
         this._resetHoverTimeoutId = 0;
         this._ensureAppIconVisibilityTimeoutId = 0;
         this._labelShowing = false;
+        this.fullScrollView = 0;
 
-        let isVertical = Panel.checkIfVertical();
+        let isVertical = panel.checkIfVertical();
 
         this._box = new St.BoxLayout({ vertical: isVertical,
                                        clip_to_allocation: false,
@@ -189,11 +229,12 @@ var taskbar = Utils.defineClass({
                                                vscrollbar_policy: Gtk.PolicyType.NEVER,
                                                enable_mouse_scrolling: true });
 
-        this._scrollView.connect('scroll-event', Lang.bind(this, this._onScrollEvent ));
+        this._scrollView.connect('leave-event', Lang.bind(this, this._onLeaveEvent));
+        this._scrollView.connect('motion-event', Lang.bind(this, this._onMotionEvent));
+        this._scrollView.connect('scroll-event', Lang.bind(this, this._onScrollEvent));
         this._scrollView.add_actor(this._box);
 
-        // Create a wrapper around the real showAppsIcon in order to add a popupMenu.
-        this._showAppsIconWrapper = new AppIcons.ShowAppsIconWrapper();
+        this._showAppsIconWrapper = panel.showAppsIconWrapper;
         this._showAppsIconWrapper.connect('menu-state-changed', Lang.bind(this, function(showAppsIconWrapper, opened) {
             this._itemMenuStateChanged(showAppsIconWrapper, opened);
         }));
@@ -214,10 +255,10 @@ var taskbar = Utils.defineClass({
         this._hookUpLabel(this._showAppsIcon, this._showAppsIconWrapper);
 
         this._container.add_child(new St.Widget({ width: 0, reactive: false }));
-        this._container.add_actor(this._showAppsIcon);
         this._container.add_actor(this._scrollView);
         
-        let fadeStyle = 'background-gradient-direction:' + Panel.getOrientation();
+        let orientation = panel.getOrientation();
+        let fadeStyle = 'background-gradient-direction:' + orientation;
         let fade1 = new St.Widget({ style_class: 'scrollview-fade', reactive: false });
         let fade2 = new St.Widget({ style_class: 'scrollview-fade', 
                                     reactive: false,  
@@ -233,25 +274,20 @@ var taskbar = Utils.defineClass({
         this.previewMenu = new WindowPreview.PreviewMenu(panel);
         this.previewMenu.enable();
 
-        if (!Me.settings.get_boolean('show-show-apps-button'))
-            this.hideShowAppsButton();
-
         let rtl = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL;
         this.actor = new St.Bin({ child: this._container,
             y_align: St.Align.START, x_align:rtl?St.Align.END:St.Align.START
         });
 
-        // Update minimization animation target position on allocation of the
-        // container and on scrollview change.
-        this._box.connect('notify::allocation', Lang.bind(this, this._updateAppIcons));
-        let scrollViewAdjustment = this._scrollView.hscroll.adjustment;
-        scrollViewAdjustment.connect('notify::value', Lang.bind(this, this._updateAppIcons));
-
+        let adjustment = this._scrollView[orientation[0] + 'scroll'].adjustment;
+        
         this._workId = Main.initializeDeferredWork(this._box, Lang.bind(this, this._redisplay));
 
         this._settings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
 
         this._appSystem = Shell.AppSystem.get_default();
+
+        this.iconAnimator = new PanelManager.IconAnimator(this.dtpPanel.panel.actor);
 
         this._signalsHandler.add(
             [
@@ -322,18 +358,6 @@ var taskbar = Utils.defineClass({
             ],
             [
                 Me.settings,
-                'changed::show-show-apps-button',
-                Lang.bind(this, function() {
-                    if (Me.settings.get_boolean('show-show-apps-button'))
-                        this.showShowAppsButton();
-                    else
-                        this.hideShowAppsButton();
-
-                    this.resetAppIcons();
-                })
-            ],
-            [
-                Me.settings,
                 [
                     'changed::dot-size',
                     'changed::show-favorites',
@@ -357,18 +381,28 @@ var taskbar = Utils.defineClass({
                     'changed::taskbar-locked'
                 ],
                 () => this.resetAppIcons()
+            ],
+            [
+                adjustment,
+                [
+                    'notify::upper',
+                    'notify::pageSize'
+                ],
+                () => this._onScrollSizeChange(adjustment)
             ]
         );
 
         this.isGroupApps = Me.settings.get_boolean('group-apps');
 
+        this._onScrollSizeChange(adjustment);
         this._connectWorkspaceSignals();
     },
 
     destroy: function() {
+        this.iconAnimator.destroy();
+
         this._signalsHandler.destroy();
         this._signalsHandler = 0;
-        this._showAppsIconWrapper.destroy();
 
         this._container.destroy();
         
@@ -378,14 +412,77 @@ var taskbar = Utils.defineClass({
         this._disconnectWorkspaceSignals();
     },
 
+    _dropIconAnimations: function() {
+        this._getTaskbarIcons().forEach(item => {
+            item.raise(0);
+            item.stretch(0);
+        });
+    },
+
+    _updateIconAnimations: function(pointerX, pointerY) {
+        this._iconAnimationTimestamp = Date.now();
+        let type = iconAnimationSettings.type;
+
+        if (!pointerX || !pointerY)
+            [pointerX, pointerY] = global.get_pointer();
+
+        this._getTaskbarIcons().forEach(item => {
+            let [x, y] = item.get_transformed_position();
+            let [width, height] = item.get_transformed_size();
+            let [centerX, centerY] = [x + width / 2, y + height / 2];
+            let size = this._box.vertical ? height : width;
+            let difference = this._box.vertical ? pointerY - centerY : pointerX - centerX;
+            let distance = Math.abs(difference);
+            let maxDistance = (iconAnimationSettings.extent / 2) * size;
+
+            if (type == 'PLANK') {
+                // Make the position stable for items that are far from the pointer.
+                let translation = distance <= maxDistance ?
+                                  distance / (2 + 8 * distance / maxDistance) :
+                                  // the previous expression with distance = maxDistance
+                                  maxDistance / 10;
+
+                if (difference > 0)
+                    translation *= -1;
+
+                item.stretch(translation);
+            }
+
+            if (distance <= maxDistance) {
+                let level = (maxDistance - distance) / maxDistance;
+                level = Math.pow(level, iconAnimationSettings.convexity);
+                item.raise(level);
+            } else {
+                item.raise(0);
+            }
+        });
+    },
+
+    _onLeaveEvent: function(actor) {
+        let [stageX, stageY] = global.get_pointer();
+        let [success, x, y] = actor.transform_stage_point(stageX, stageY);
+        if (success && !actor.allocation.contains(x, y) && (iconAnimationSettings.type == 'RIPPLE' || iconAnimationSettings.type == 'PLANK'))
+            this._dropIconAnimations();
+
+        return Clutter.EVENT_PROPAGATE;
+    },
+
+    _onMotionEvent: function(actor_, event) {
+        if (iconAnimationSettings.type == 'RIPPLE' || iconAnimationSettings.type == 'PLANK') {
+            let timestamp = Date.now();
+            if (!this._iconAnimationTimestamp ||
+                (timestamp - this._iconAnimationTimestamp >= iconAnimationSettings.duration / 2)) {
+                let [pointerX, pointerY] = event.get_coords();
+                this._updateIconAnimations(pointerX, pointerY);
+            }
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+    },
+
     _onScrollEvent: function(actor, event) {
 
-        // Event coordinates are relative to the stage but can be transformed
-        // as the actor will only receive events within his bounds.
-        let stage_x, stage_y, ok, event_x, event_y, actor_w, actor_h;
-        [stage_x, stage_y] = event.get_coords();
-        [ok, event_x, event_y] = actor.transform_stage_point(stage_x, stage_y);
-        [actor_w, actor_h] = actor.get_size();
+        let orientation = this.dtpPanel.getOrientation();
 
         // reset timeout to avid conflicts with the mousehover event
         if (this._ensureAppIconVisibilityTimeoutId>0) {
@@ -399,7 +496,7 @@ var taskbar = Utils.defineClass({
 
         let adjustment, delta;
 
-        adjustment = this._scrollView.get_hscroll_bar().get_adjustment();
+        adjustment = this._scrollView[orientation[0] + 'scroll'].get_adjustment();
 
         let increment = adjustment.step_increment;
 
@@ -424,6 +521,29 @@ var taskbar = Utils.defineClass({
 
         return Clutter.EVENT_STOP;
 
+    },
+
+    _onScrollSizeChange: function(adjustment) {
+        // Update minimization animation target position on scrollview change.
+        this._updateAppIcons();
+
+        // When applications are ungrouped and there is some empty space on the horizontal taskbar,
+        // force a fixed label width to prevent the icons from "wiggling" when an animation runs
+        // (adding or removing an icon). When the taskbar is full, revert to a dynamic label width
+        // to allow them to resize and make room for new icons.
+        if (!this.dtpPanel.checkIfVertical() && !this.isGroupApps) {
+            let initial = this.fullScrollView;
+
+            if (!this.fullScrollView && Math.floor(adjustment.upper) > adjustment.page_size) {
+                this.fullScrollView = adjustment.page_size;
+            } else if (adjustment.page_size < this.fullScrollView) {
+                this.fullScrollView = 0;
+            }
+
+            if (initial != this.fullScrollView) {
+                this._getAppIcons().forEach(a => a.updateTitleStyle());
+            }
+        }
     },
 
     _onDragBegin: function() {
@@ -479,7 +599,7 @@ var taskbar = Utils.defineClass({
         if (app == null)
             return DND.DragMotionResult.CONTINUE;
 
-         let showAppsHovered = this._showAppsIcon.contains(dragEvent.targetActor);
+        let showAppsHovered = this._showAppsIcon.contains(dragEvent.targetActor);
 
         if (showAppsHovered)
             this._showAppsIcon.setDragApp(app);
@@ -547,17 +667,22 @@ var taskbar = Utils.defineClass({
                 showLabel: false,
                 isDraggable: !Me.settings.get_boolean('taskbar-locked'),
             },
-            this.previewMenu
+            this.previewMenu,
+            this.iconAnimator
         );
 
         if (appIcon._draggable) {
             appIcon._draggable.connect('drag-begin',
                                        Lang.bind(this, function() {
-                                           appIcon.actor.opacity = 50;
+                                           appIcon.actor.opacity = 0;
+                                           appIcon.isDragged = 1;
+                                           this._dropIconAnimations();
                                        }));
             appIcon._draggable.connect('drag-end',
                                        Lang.bind(this, function() {
                                            appIcon.actor.opacity = 255;
+                                           delete appIcon.isDragged;
+                                           this._updateAppIcons();
                                        }));
         }
 
@@ -566,8 +691,9 @@ var taskbar = Utils.defineClass({
                             this._itemMenuStateChanged(item, opened);
                         }));
 
-        let item = new Dash.DashItemContainer();
+        let item = new TaskbarItemContainer();
 
+        item._dtpPanel = this.dtpPanel
         extendDashItemContainer(item);
 
         item.setChild(appIcon.actor);
@@ -580,11 +706,19 @@ var taskbar = Utils.defineClass({
                     this._ensureAppIconVisibilityTimeoutId = 0;
                     return GLib.SOURCE_REMOVE;
                 }));
+
+                if (!appIcon.isDragged && iconAnimationSettings.type == 'SIMPLE')
+                    appIcon.actor.get_parent().raise(1);
+                else if (!appIcon.isDragged && (iconAnimationSettings.type == 'RIPPLE' || iconAnimationSettings.type == 'PLANK'))
+                    this._updateIconAnimations();
             } else {
                 if (this._ensureAppIconVisibilityTimeoutId>0) {
                     Mainloop.source_remove(this._ensureAppIconVisibilityTimeoutId);
                     this._ensureAppIconVisibilityTimeoutId = 0;
                 }
+
+                if (!appIcon.isDragged && iconAnimationSettings.type == 'SIMPLE')
+                    appIcon.actor.get_parent().raise(0);
             }
         }));
 
@@ -657,6 +791,14 @@ var taskbar = Utils.defineClass({
             // add a custom signal to the appIcon, since gnome 3.8 the signal
             // calling this callback was added upstream.
             this.emit('menu-closed');
+
+            // The icon menu grabs the events and, once it is closed, the pointer is maybe
+            // no longer over the taskbar and the animations are not dropped.
+            if (iconAnimationSettings.type == 'RIPPLE' || iconAnimationSettings.type == 'PLANK') {
+                this._scrollView.sync_hover();
+                if (!this._scrollView.hover)
+                    this._dropIconAnimations();
+            }
         }
     },
 
@@ -697,7 +839,8 @@ var taskbar = Utils.defineClass({
     },
 
     _adjustIconSize: function() {
-        let panelSize = Me.settings.get_int('panel-size');
+        const thisMonitorIndex = this.dtpPanel.monitor.index;
+        let panelSize = PanelSettings.getPanelSize(Me.settings, thisMonitorIndex);
         let availSize = panelSize - Me.settings.get_int('appicon-padding') * 2;
         let minIconSize = MIN_ICON_SIZE + panelSize % 2;
 
@@ -835,7 +978,7 @@ var taskbar = Utils.defineClass({
         this._updateAppIcons();
 
         // This will update the size, and the corresponding number for each icon on the primary panel
-        if (!this.dtpPanel.isSecondary) {
+        if (this.dtpPanel.isPrimary) {
             this._updateNumberOverlay();
         }
 
@@ -848,7 +991,7 @@ var taskbar = Utils.defineClass({
     
     _checkIfShowingFavorites: function() {
         return Me.settings.get_boolean('show-favorites') && 
-               (!this.dtpPanel.isSecondary || Me.settings.get_boolean('show-favorites-all-monitors'));
+               (this.dtpPanel.isPrimary || Me.settings.get_boolean('show-favorites-all-monitors'));
     },
 
     _getRunningApps: function() {
@@ -877,7 +1020,7 @@ var taskbar = Utils.defineClass({
     },
 
     // Reset the displayed apps icon to mantain the correct order
-    resetAppIcons : function() {
+    resetAppIcons : function(geometryChange) {
         let children = this._getTaskbarIcons(true);
 
         for (let i = 0; i < children.length; i++) {
@@ -889,8 +1032,7 @@ var taskbar = Utils.defineClass({
         this._shownInitially = false;
         this._redisplay();
 
-        if (Panel.checkIfVertical()) {
-            this.showAppsButton.set_width(this.dtpPanel.geom.w);
+        if (geometryChange && this.dtpPanel.checkIfVertical()) {
             this.previewMenu._updateClip();
         }
     },
@@ -946,19 +1088,17 @@ var taskbar = Utils.defineClass({
             return DND.DragMotionResult.NO_DROP;
 
         let sourceActor = source instanceof St.Widget ? source : source.actor;
+        let isVertical = this.dtpPanel.checkIfVertical();
 
         if (!this._box.contains(sourceActor) && !source._dashItemContainer) {
             //not an appIcon of the taskbar, probably from the applications view
-            source._dashItemContainer = new DragPlaceholderItem(source, this.iconSize);
+            source._dashItemContainer = new DragPlaceholderItem(source, this.iconSize, isVertical);
             this._box.insert_child_above(source._dashItemContainer, null);
         }
-        
-        let isVertical = Panel.checkIfVertical();
+
         let sizeProp = isVertical ? 'height' : 'width';
         let posProp = isVertical ? 'y' : 'x';
         let pos = isVertical ? y : x;
-
-        pos -= this.showAppsButton[sizeProp];
 
         let currentAppIcons = this._getAppIcons();
         let sourceIndex = currentAppIcons.indexOf(source);
@@ -1081,7 +1221,7 @@ var taskbar = Utils.defineClass({
         if (selector._showAppsButton.checked !== this.showAppsButton.checked) {
             // find visible view
             let visibleView;
-            Main.overview.viewSelector.appDisplay._views.every(function(v, index) {
+            Utils.getAppDisplayViews().every(function(v, index) {
                 if (v.view.actor.visible) {
                     visibleView = index;
                     return false;
@@ -1091,14 +1231,28 @@ var taskbar = Utils.defineClass({
             });
 
             if (this.showAppsButton.checked) {
+                if (Me.settings.get_boolean('show-apps-override-escape')) {
+                    //override escape key to return to the desktop when entering the overview using the showapps button
+                    Main.overview.viewSelector._onStageKeyPress = function(actor, event) {
+                        if (Main.modalCount == 1 && event.get_key_symbol() === Clutter.KEY_Escape) {
+                            this._searchActive ? this.reset() : Main.overview.hide();
+    
+                            return Clutter.EVENT_STOP;
+                        }
+    
+                        return this.__proto__._onStageKeyPress.call(this, actor, event);
+                    };
+                }
+
                 // force spring animation triggering.By default the animation only
                 // runs if we are already inside the overview.
                 if (!Main.overview._shown) {
                     this.forcedOverview = true;
-                    let grid = Main.overview.viewSelector.appDisplay._views[visibleView].view._grid;
+                    let grid = Utils.getAppDisplayViews()[visibleView].view._grid;
                     let onShownCb;
-                    let overviewShownId = Main.overview.connect('shown', () => {
-                        Main.overview.disconnect(overviewShownId);
+                    let overviewSignal = Config.PACKAGE_VERSION > '3.38.1' ? 'showing' : 'shown';
+                    let overviewShowingId = Main.overview.connect(overviewSignal, () => {
+                        Main.overview.disconnect(overviewShowingId);
                         onShownCb();
                     });
 
@@ -1128,13 +1282,13 @@ var taskbar = Utils.defineClass({
                     }
                 }
 
-                //temporarily use as primary the monitor on which the showapps btn was clicked 
+                //temporarily use as primary the monitor on which the showapps btn was clicked, this is
+                //restored by the panel when exiting the overview
                 this.dtpPanel.panelManager.setFocusedMonitor(this.dtpPanel.monitor);
 
-                //reset the primary monitor when exiting the overview
                 let overviewHiddenId = Main.overview.connect('hidden', () => {
                     Main.overview.disconnect(overviewHiddenId);
-                    this.dtpPanel.panelManager.setFocusedMonitor(this.dtpPanel.panelManager.primaryPanel.monitor, true);
+                    delete Main.overview.viewSelector._onStageKeyPress;
                 });
 
                 // Finally show the overview
@@ -1149,7 +1303,7 @@ var taskbar = Utils.defineClass({
                         // Manually trigger springout animation without activating the
                         // workspaceView to avoid the zoomout animation. Hide the appPage
                         // onComplete to avoid ugly flashing of original icons.
-                        let view = Main.overview.viewSelector.appDisplay._views[visibleView].view;
+                        let view = Utils.getAppDisplayViews()[visibleView].view;
                         view.animate(IconGrid.AnimationDirection.OUT, Lang.bind(this, function() {
                             Main.overview.viewSelector._appsPage.hide();
                             Main.overview.hide();
@@ -1182,12 +1336,6 @@ var taskbar = Utils.defineClass({
         this.showAppsButton.set_height(-1);
     },
 
-    hideShowAppsButton: function() {
-        this.showAppsButton.hide();
-        this.showAppsButton.set_width(0);
-        this.showAppsButton.set_height(0);
-    },
-
     popupFocusedAppSecondaryMenu: function() {
         let appIcons = this._getAppIcons();
         let tracker = Shell.WindowTracker.get_default();
@@ -1209,12 +1357,216 @@ var taskbar = Utils.defineClass({
 
 Signals.addSignalMethods(taskbar.prototype);
 
+const CloneContainerConstraint = Utils.defineClass({
+    Name: 'DashToPanel-CloneContainerConstraint',
+    Extends: Clutter.BindConstraint,
+
+    vfunc_update_allocation: function(actor, actorBox) {
+        if (!this.source)
+            return;
+
+        let [stageX, stageY] = this.source.get_transformed_position();
+        let [width, height] = this.source.get_transformed_size();
+
+        actorBox.set_origin(stageX, stageY);
+        actorBox.set_size(width, height);
+    },
+});
+
+const TaskbarItemContainer = Utils.defineClass({
+    Name: 'DashToPanel-TaskbarItemContainer',
+    Extends: Dash.DashItemContainer,
+
+    vfunc_allocate: function(box, flags) {
+        if (this.child == null)
+            return;
+
+        Utils.setAllocation(this, box, flags);
+
+        let availWidth = box.x2 - box.x1;
+        let availHeight = box.y2 - box.y1;
+        let [minChildWidth, minChildHeight, natChildWidth, natChildHeight] = this.child.get_preferred_size();
+        let [childScaleX, childScaleY] = this.child.get_scale();
+
+        let childWidth = Math.min(natChildWidth * childScaleX, availWidth);
+        let childHeight = Math.min(natChildHeight * childScaleY, availHeight);
+        let childBox = new Clutter.ActorBox();
+
+        childBox.x1 = (availWidth - childWidth) / 2;
+        childBox.y1 = (availHeight - childHeight) / 2;
+        childBox.x2 = childBox.x1 + childWidth;
+        childBox.y2 = childBox.y1 + childHeight;
+
+        Utils.allocate(this.child, childBox, flags);
+    },
+
+    // In case appIcon is removed from the taskbar while it is hovered,
+    // restore opacity before dashItemContainer.animateOutAndDestroy does the destroy animation.
+    animateOutAndDestroy: function() {
+        if (this._raisedClone) {
+            this._raisedClone.source.opacity = 255;
+            this._raisedClone.destroy();
+        }
+
+        this.callParent('animateOutAndDestroy');
+    },
+
+    // For ItemShowLabel
+    _getIconAnimationOffset: function() {
+        if (!Me.settings.get_boolean('animate-appicon-hover'))
+            return 0;
+
+        let travel = iconAnimationSettings.travel;
+        let zoom = iconAnimationSettings.zoom;
+        return this._dtpPanel.dtpSize * (travel + (zoom - 1) / 2);
+    },
+
+    _updateCloneContainerPosition: function(cloneContainer) {
+        let [stageX, stageY] = this.get_transformed_position();
+
+        if (Config.PACKAGE_VERSION >= '3.36')
+            cloneContainer.set_position(stageX - this.translation_x, stageY - this.translation_y);
+        else
+            cloneContainer.set_position(stageX, stageY);
+    },
+
+    _createRaisedClone: function() {
+        let [width, height] = this.get_transformed_size();
+
+        // "clone" of this child (appIcon actor)
+        let cloneButton = this.child._delegate.getCloneButton();
+
+        // "clone" of this (taskbarItemContainer)
+        let cloneContainer = new St.Bin({
+            child: cloneButton,
+            width: width, height: height,
+            reactive: false,
+        });
+
+        this._updateCloneContainerPosition(cloneContainer);
+
+        // For the stretch animation
+        if (Config.PACKAGE_VERSION >= '3.36') {
+            let boundProperty = this._dtpPanel.checkIfVertical() ? 'translation_y' : 'translation_x';
+            this.bind_property(boundProperty, cloneContainer, boundProperty, GObject.BindingFlags.SYNC_CREATE);
+        } else {
+            let constraint = new CloneContainerConstraint({ source: this });
+            cloneContainer.add_constraint(constraint);
+        }
+
+        // The clone follows its source when the taskbar is scrolled.
+        let taskbarScrollView = this.get_parent().get_parent();
+        let adjustment = this._dtpPanel.checkIfVertical() ? taskbarScrollView.vscroll.get_adjustment() : taskbarScrollView.hscroll.get_adjustment();
+        let adjustmentChangedId = adjustment.connect('notify::value', () => this._updateCloneContainerPosition(cloneContainer));
+
+        // Update clone position when an item is added to / removed from the taskbar.
+        let taskbarBox = this.get_parent();
+        let taskbarBoxAllocationChangedId = taskbarBox.connect('notify::allocation', () => this._updateCloneContainerPosition(cloneContainer));
+
+        // The clone itself
+        this._raisedClone = cloneButton.child;
+        this._raisedClone.connect('destroy', () => {
+            adjustment.disconnect(adjustmentChangedId);
+            taskbarBox.disconnect(taskbarBoxAllocationChangedId);
+            Mainloop.idle_add(() => cloneContainer.destroy());
+            delete this._raisedClone;
+        });
+
+        this._raisedClone.source.opacity = 0;
+        Main.uiGroup.add_actor(cloneContainer);
+    },
+
+    // Animate the clone.
+    // AppIcon actors cannot go outside the taskbar so the animation is done with a clone.
+    // If level is zero, the clone is dropped and destroyed.
+    raise: function(level) {
+        if (this._raisedClone)
+            Utils.stopAnimations(this._raisedClone);
+        else if (level)
+            this._createRaisedClone();
+        else
+            return;
+
+        let panelPosition = this._dtpPanel.getPosition();
+        let panelElementPositions = this._dtpPanel.panelManager.panelsElementPositions[this._dtpPanel.monitor.index] || Pos.defaults;
+        let taskbarPosition = panelElementPositions.filter(pos => pos.element == 'taskbar')[0].position;
+
+        let vertical = panelPosition == St.Side.LEFT || panelPosition == St.Side.RIGHT;
+        let translationDirection = panelPosition == St.Side.TOP || panelPosition == St.Side.LEFT ? 1 : -1;
+        let rotationDirection;
+        if (panelPosition == St.Side.LEFT || taskbarPosition == Pos.STACKED_TL)
+            rotationDirection = -1;
+        else if (panelPosition == St.Side.RIGHT || taskbarPosition == Pos.STACKED_BR)
+            rotationDirection = 1;
+        else {
+            let items = this.get_parent().get_children();
+            let index = items.indexOf(this);
+            rotationDirection = (index - (items.length - 1) / 2) / ((items.length - 1) / 2);
+        }
+
+        let duration = iconAnimationSettings.duration / 1000;
+        let rotation = iconAnimationSettings.rotation;
+        let travel = iconAnimationSettings.travel;
+        let zoom = iconAnimationSettings.zoom;
+
+        // level is about 1 for the icon that is hovered, less for others.
+        // time depends on the translation to do.
+        let [width, height] = this._raisedClone.source.get_transformed_size();
+        let translationMax = (vertical ? width : height) * (travel + (zoom - 1) / 2);
+        let translationEnd = translationMax * level;
+        let translationDone = vertical ? this._raisedClone.translation_x : this._raisedClone.translation_y;
+        let translationTodo = Math.abs(translationEnd - translationDone);
+        let scale = 1 + (zoom - 1) * level;
+        let rotationAngleZ = rotationDirection * rotation * level;
+        let time = duration * translationTodo / translationMax;
+
+        let options = {
+            scale_x: scale, scale_y: scale,
+            rotation_angle_z: rotationAngleZ,
+            time: time,
+            transition: 'easeOutQuad',
+            onComplete: () => {
+                if (!level) {
+                    this._raisedClone.source.opacity = 255;
+                    this._raisedClone.destroy();
+                    delete this._raisedClone;
+                }
+            },
+        };
+        options[vertical ? 'translation_x' : 'translation_y'] = translationDirection * translationEnd;
+
+        Utils.animate(this._raisedClone, options);
+    },
+
+    // Animate this and cloneContainer, since cloneContainer translation is bound to this.
+    stretch: function(translation) {
+        let duration = iconAnimationSettings.duration / 1000;
+        let zoom = iconAnimationSettings.zoom;
+        let animatedProperty = this._dtpPanel.checkIfVertical() ? 'translation_y' : 'translation_x';
+        let isShowing = this.opacity != 255 || this.child.opacity != 255;
+
+        if (isShowing) {
+            // Do no stop the animation initiated in DashItemContainer.show.
+            this[animatedProperty] = zoom * translation;
+        } else {
+            let options = {
+                time: duration,
+                transition: 'easeOutQuad',
+            };
+            options[animatedProperty] = zoom * translation;
+
+            Utils.stopAnimations(this);
+            Utils.animate(this, options);
+        }
+    },
+});
+
 var DragPlaceholderItem = Utils.defineClass({
     Name: 'DashToPanel-DragPlaceholderItem',
     Extends: St.Widget,
 
-    _init: function(appIcon, iconSize) {
-        this.callParent('_init', { style: AppIcons.getIconContainerStyle(), layout_manager: new Clutter.BinLayout() });
+    _init: function(appIcon, iconSize, isVertical) {
+        this.callParent('_init', { style: AppIcons.getIconContainerStyle(isVertical), layout_manager: new Clutter.BinLayout() });
 
         this.child = { _delegate: appIcon };
 

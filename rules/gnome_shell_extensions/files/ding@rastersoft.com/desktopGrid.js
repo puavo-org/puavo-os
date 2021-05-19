@@ -161,6 +161,7 @@ var DesktopGrid = class {
         targets.add(Gdk.atom_intern('x-special/ding-icon-list', false), Gtk.TargetFlags.SAME_APP, 0);
         targets.add(Gdk.atom_intern('x-special/gnome-icon-list', false), 0, 1);
         targets.add(Gdk.atom_intern('text/uri-list', false), 0, 2);
+        targets.add(Gdk.atom_intern('text/plain', false), 0, 3);
         dropDestination.drag_dest_set_target_list(targets);
         dropDestination.connect('drag-motion', (widget, context, x, y, time) => {
             x = this._elementWidth * Math.floor(x / this._elementWidth);
@@ -217,10 +218,18 @@ var DesktopGrid = class {
 
     _doDrawRubberBand(cr) {
         if (this._desktopManager.rubberBand) {
-            let [xInit, yInit] = this._coordinatesGlobalToLocal(this._desktopManager.rubberBandInitX,
-                                                                this._desktopManager.rubberBandInitY);
-            let [xFin, yFin] = this._coordinatesGlobalToLocal(this._desktopManager.mouseX,
-                                                              this._desktopManager.mouseY);
+            let minX = Math.min(this._desktopManager.rubberBandInitX, this._desktopManager.mouseX);
+            let maxX = Math.max(this._desktopManager.rubberBandInitX, this._desktopManager.mouseX);
+            let minY = Math.min(this._desktopManager.rubberBandInitY, this._desktopManager.mouseY);
+            let maxY = Math.max(this._desktopManager.rubberBandInitY, this._desktopManager.mouseY);
+
+            if ((minX >= (this._x + this._width )) || (minY >= (this._y + this._height)) || (maxX < this._x) || (maxY < this._y)) {
+                return;
+            }
+
+            let [xInit, yInit] = this._coordinatesGlobalToLocal(minX, minY);
+            let [xFin, yFin] = this._coordinatesGlobalToLocal(maxX, maxY);
+
             cr.rectangle(xInit + 0.5, yInit + 0.5, xFin - xInit, yFin - yInit);
             Gdk.cairo_set_source_rgba(cr, new Gdk.RGBA({red: this._desktopManager.selectColor.red,
                                                         green: this._desktopManager.selectColor.green,

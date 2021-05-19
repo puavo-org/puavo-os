@@ -74,7 +74,7 @@ function _enable() {
         // Disable Ubuntu Dock
         let extensionOrder = (extensionSystem.extensionOrder || extensionSystem._extensionOrder);
 
-        St.ThemeContext.get_for_stage(global.stage).get_theme().unload_stylesheet(ubuntuDock.stylesheet);
+        Utils.getStageTheme().get_theme().unload_stylesheet(ubuntuDock.stylesheet);
         ubuntuDock.stateObj.disable();
         disabledUbuntuDock = true;
         ubuntuDock.state = 2; //ExtensionState.DISABLED
@@ -91,7 +91,6 @@ function _enable() {
     Me.settings = Convenience.getSettings('org.gnome.shell.extensions.dash-to-panel');
     Me.desktopSettings = Convenience.getSettings('org.gnome.desktop.interface');
 
-    Me.imports.update.init();
     panelManager = new PanelManager.dtpPanelManager();
 
     panelManager.enable();

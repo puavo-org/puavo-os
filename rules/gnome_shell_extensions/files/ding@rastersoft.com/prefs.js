@@ -34,11 +34,15 @@ function buildPrefsWidget() {
     if (localedir.query_exists(null))
         Gettext.bindtextdomain('ding', localedir.get_path());
 
-    let frame = new Gtk.Label({ label: _("To configure Desktop Icons NG, do right-click in the desktop and choose the last item: 'Settings'"),
+    let frame = new Gtk.Label({ label: _("To configure Desktop Icons NG, do right-click in the desktop and choose the last item: 'Desktop Icons settings'"),
                                 lines: 5,
                                 justify: Gtk.Justification.CENTER,
                                 wrap: true,
                                 wrap_mode: Pango.WrapMode.WORD});
-    frame.show_all();
+    if (frame.show_all) {
+        frame.show_all();
+    } else {
+        frame.show();
+    }
     return frame;
 }

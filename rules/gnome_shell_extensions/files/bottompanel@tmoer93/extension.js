@@ -6,12 +6,15 @@ let MonitorsChangedListener = null;
 let HeightNotifyListener = null;
 
 function _toTop() {
-    PanelBox.set_anchor_point(0,0);
+   let monitor = Main.layoutManager.primaryMonitor;  
+   PanelBox.set_pivot_point(0,0);
+   PanelBox.set_position(0,0);
 }
 
 function _toBottom() {
     let monitor = Main.layoutManager.primaryMonitor;
-    PanelBox.set_anchor_point(0,(-1)*(monitor.height-PanelBox.height));
+    PanelBox.set_pivot_point(0,(-1)*(monitor.height-PanelBox.height));
+    PanelBox.set_position(0,(monitor.height-PanelBox.height));
 }
 
 function init() { }

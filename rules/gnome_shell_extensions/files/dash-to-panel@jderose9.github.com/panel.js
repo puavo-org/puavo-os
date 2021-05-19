@@ -35,6 +35,8 @@ const Gi = imports._gi;
 const AppIcons = Me.imports.appIcons;
 const Utils = Me.imports.utils;
 const Taskbar = Me.imports.taskbar;
+const Pos = Me.imports.panelPositions;
+const PanelSettings = Me.imports.panelSettings;
 const PanelStyle = Me.imports.panelStyle;
 const Lang = imports.lang;
 const Main = imports.ui.main;
@@ -46,6 +48,7 @@ const PanelMenu = imports.ui.panelMenu;
 const St = imports.gi.St;
 const GLib = imports.gi.GLib;
 const Meta = imports.gi.Meta;
+const Pango = imports.gi.Pango;
 const DND = imports.ui.dnd;
 const Shell = imports.gi.Shell;
 const PopupMenu = imports.ui.popupMenu;
@@ -61,10 +64,6 @@ const _ = imports.gettext.domain(Me.imports.utils.TRANSLATION_DOMAIN).gettext;
 
 let tracker = Shell.WindowTracker.get_default();
 var panelBoxes = ['_leftBox', '_centerBox', '_rightBox'];
-var sizeFunc;
-var fixedCoord;
-var varCoord;
-var size;
 
 //timeout names
 const T1 = 'startDynamicTransparencyTimeout';
@@ -74,30 +73,6 @@ const T4 = 'showDesktopTimeout';
 const T5 = 'trackerFocusAppTimeout';
 const T6 = 'scrollPanelDelayTimeout';
 const T7 = 'waitPanelBoxAllocation';
-
-function getPosition() {
-    let position = Me.settings.get_string('panel-position');
-    
-    if (position == 'TOP') {
-        return St.Side.TOP;
-    } else if (position == 'RIGHT') {
-        return St.Side.RIGHT;
-    } else if (position == 'BOTTOM') {
-        return St.Side.BOTTOM;
-    }
-    
-    return St.Side.LEFT;
-}
-
-function checkIfVertical() {
-    let position = getPosition();
-
-    return (position == St.Side.LEFT || position == St.Side.RIGHT);
-}
-
-function getOrientation() {
-    return (checkIfVertical() ? 'vertical' : 'horizontal');
-}
 
 function setMenuArrow(arrowIcon, side) {
     let parent = arrowIcon.get_parent();
@@ -117,9 +92,7 @@ var dtpPanel = Utils.defineClass({
     Name: 'DashToPanel-Panel',
     Extends: St.Widget,
 
-    _init: function(panelManager, monitor, panelBox, isSecondary) {
-        let position = getPosition();
-        
+    _init: function(panelManager, monitor, panelBox, isStandalone) {
         this.callParent('_init', { layout_manager: new Clutter.BinLayout() });
 
         this._timeoutsHandler = new Utils.TimeoutsHandler();
@@ -130,12 +103,23 @@ var dtpPanel = Utils.defineClass({
 
         this.monitor = monitor;
         this.panelBox = panelBox;
-        this.isSecondary = isSecondary;
+
+        // when the original gnome-shell top panel is kept, all panels are "standalone",
+        // so in this case use isPrimary to get the panel on the primary dtp monitor, which
+        // might be different from the system's primary monitor.
+        this.isStandalone = isStandalone;
+        this.isPrimary = !isStandalone || (Me.settings.get_boolean('stockgs-keep-top-panel') && 
+                                           monitor == panelManager.dtpPrimaryMonitor);
+
         this._sessionStyle = null;
         this._unmappedButtons = [];
+        this._elementGroups = [];
+        this.cornerSize = 0;
 
-        if (isSecondary) {
-            this.panel = new St.Widget({ name: 'panel', reactive: true });
+        let position = this.getPosition();
+
+        if (isStandalone) {
+            this.panel = new dtpSecondaryPanel({ name: 'panel', reactive: true });
             this.statusArea = this.panel.statusArea = {};
 
             Utils.wrapActor(this.panel);
@@ -159,9 +143,13 @@ var dtpPanel = Utils.defineClass({
 
             this.menuManager = this.panel.menuManager = new PopupMenu.PopupMenuManager(this.panel);
 
-            //adding the clock to the centerbox will correctly position it according to dtp settings (event actor-added)
-            this._setPanelMenu('show-status-menu-all-monitors', 'aggregateMenu', dtpSecondaryAggregateMenu, this._rightBox, true);
-            this._setPanelMenu('show-clock-all-monitors', 'dateMenu', DateMenu.DateMenuButton, this._centerBox, true);
+            this._setPanelMenu('aggregateMenu', dtpSecondaryAggregateMenu, this.panel.actor);
+            this._setPanelMenu('dateMenu', DateMenu.DateMenuButton, this.panel.actor);
+            this._setPanelMenu('activities', Panel.ActivitiesButton, this.panel.actor);
+
+            if (this.statusArea.aggregateMenu) {
+                setMenuArrow(this.statusArea.aggregateMenu._indicators.get_last_child(), position);
+            }
 
             this.panel.add_child(this._leftBox);
             this.panel.add_child(this._centerBox);
@@ -174,22 +162,25 @@ var dtpPanel = Utils.defineClass({
             setMenuArrow(this.statusArea.aggregateMenu._indicators.get_last_child(), position);
 
             panelBoxes.forEach(p => this[p] = Main.panel[p]);
+
+            ['activities', 'aggregateMenu', 'dateMenu'].forEach(b => {
+                let container = this.statusArea[b].container;
+                let parent = container.get_parent();
+
+                container._dtpOriginalParent = parent;
+                parent ? parent.remove_child(container) : null;
+                this.panel.actor.add_child(container);
+            });
         }
+
+        // Create a wrapper around the real showAppsIcon in order to add a popupMenu. Most of 
+        // its behavior is handled by the taskbar, but its positioning is done at the panel level
+        this.showAppsIconWrapper = new AppIcons.ShowAppsIconWrapper(this);
+        this.panel.actor.add_child(this.showAppsIconWrapper.realShowAppsIcon);
 
         this.panel.actor._delegate = this;
         
-        if (position == St.Side.TOP) {
-            this.panel._leftCorner = this.panel._leftCorner || new Panel.PanelCorner(St.Side.LEFT);
-            this.panel._rightCorner = this.panel._rightCorner || new Panel.PanelCorner(St.Side.RIGHT);
-
-            Utils.wrapActor(this.panel._leftCorner);
-            Utils.wrapActor(this.panel._rightCorner);
-
-            if (isSecondary) {
-                this.panel.add_child(this.panel._leftCorner.actor);
-                this.panel.add_child(this.panel._rightCorner.actor);
-            }
-        }
+        Utils.wrapActor(this.statusArea.activities);
 
         this.add_child(this.panel.actor);
 
@@ -213,14 +204,7 @@ var dtpPanel = Utils.defineClass({
     },
 
     enable : function() {
-        let taskbarPosition = Me.settings.get_string('taskbar-position');
-        let position = getPosition();
-
-        if (taskbarPosition == 'CENTEREDCONTENT' || taskbarPosition == 'CENTEREDMONITOR') {
-            this.container = this._centerBox;
-        } else {
-            this.container = this._leftBox;
-        }
+        let position = this.getPosition();
 
         if (this.statusArea.aggregateMenu) {
             Utils.getIndicators(this.statusArea.aggregateMenu._volume)._dtpIgnoreScroll = 1;
@@ -238,7 +222,12 @@ var dtpPanel = Utils.defineClass({
             opacity: 0
         });
 
-        if (this.geom.position == St.Side.TOP) {
+        let isTop = this.geom.position == St.Side.TOP;
+
+        if (isTop) {
+            this.panel._leftCorner = this.panel._leftCorner || new Panel.PanelCorner(St.Side.LEFT);
+            this.panel._rightCorner = this.panel._rightCorner || new Panel.PanelCorner(St.Side.RIGHT);
+
             Main.overview._overview.insert_child_at_index(this._myPanelGhost, 0);
         } else {
             let overviewControls = Main.overview._overview._controls || Main.overview._controls;
@@ -252,9 +241,24 @@ var dtpPanel = Utils.defineClass({
             }
         }
 
+        if (this.panel._leftCorner) {
+            Utils.wrapActor(this.panel._leftCorner);
+            Utils.wrapActor(this.panel._rightCorner);
+
+            if (isTop) {
+                if (this.isStandalone) {
+                    this.panel.actor.add_child(this.panel._leftCorner.actor);
+                    this.panel.actor.add_child(this.panel._rightCorner.actor);
+                }
+            } else if (Config.PACKAGE_VERSION >= '3.32') {
+                this.panel.actor.remove_child(this.panel._leftCorner.actor);
+                this.panel.actor.remove_child(this.panel._rightCorner.actor);
+            }
+        }
+
         this._setPanelPosition();
 
-        if (!this.isSecondary) {
+        if (!this.isStandalone) {
             if (this.panel.vfunc_allocate) {
                 this._panelConnectId = 0;
                 Utils.hookVfunc(this.panel.__proto__, 'allocate', (box, flags) => this._mainPanelAllocate(0, box, flags));
@@ -284,7 +288,7 @@ var dtpPanel = Utils.defineClass({
         panelBoxes.forEach(b => {
             this[b].allocate = (box, flags, isFromDashToPanel) => {
                 if (isFromDashToPanel) {
-                    this[b].__proto__.allocate.call(this[b], box, flags);
+                    Utils.allocate(this[b], box, flags, true);
                 }
             }
         });
@@ -309,14 +313,14 @@ var dtpPanel = Utils.defineClass({
         
         this.taskbar = new Taskbar.taskbar(this);
 
-        this.container.insert_child_above(this.taskbar.actor, null);
-        
-        this._setActivitiesButtonVisible(Me.settings.get_boolean('show-activities-button'));
+        this.panel.actor.add_child(this.taskbar.actor);
+
         this._setAppmenuVisible(Me.settings.get_boolean('show-appmenu'));
-        this._setClockLocation(Me.settings.get_string('location-clock'));
-        this._displayShowDesktopButton(Me.settings.get_boolean('show-showdesktop-button'));
+        this._setShowDesktopButton(true);
         
-        this.panel.actor.add_style_class_name('dashtopanelMainPanel ' + getOrientation());
+        this._setAllocationMap();
+
+        this.panel.actor.add_style_class_name('dashtopanelMainPanel ' + this.getOrientation());
 
         // Since Gnome 3.8 dragging an app without having opened the overview before cause the attemp to
         //animate a null target since some variables are not initialized when the viewSelector is created
@@ -325,23 +329,20 @@ var dtpPanel = Utils.defineClass({
 
         this._setPanelGhostSize();
 
-        if(this.taskbar._showAppsIconWrapper)
-            this.taskbar._showAppsIconWrapper._dtpPanel = this;
-
         this._timeoutsHandler.add([T2, Me.settings.get_int('intellihide-enable-start-delay'), () => this.intellihide = new Intellihide.Intellihide(this)]);
 
         this._signalsHandler.add(
             // this is to catch changes to the theme or window scale factor
             [
-                St.ThemeContext.get_for_stage(global.stage), 
+                Utils.getStageTheme(), 
                 'changed', 
-                () => this._resetGeometry()
+                () => (this._resetGeometry(), this._setShowDesktopButtonStyle()),
             ],
             [
                 // sync hover after a popupmenu is closed
                 this.taskbar,
                 'menu-closed', 
-                Lang.bind(this, function(){this.container.sync_hover();})
+                Lang.bind(this, function(){this.panel.actor.sync_hover();})
             ],
             [
                 Main.overview,
@@ -350,6 +351,26 @@ var dtpPanel = Utils.defineClass({
                     'hiding'
                 ],
                 () => this._adjustForOverview()
+            ],
+            [
+                Main.overview,
+                'hidden',
+                () => {
+                    if (this.isPrimary) {
+                        //reset the primary monitor when exiting the overview
+                        this.panelManager.setFocusedMonitor(this.monitor, true);
+                    }
+                }
+            ],
+            [
+                this.statusArea.activities.actor,
+                'captured-event', 
+                (actor, e) => {
+                    if (e.type() == Clutter.EventType.BUTTON_PRESS || e.type() == Clutter.EventType.TOUCH_BEGIN) {
+                        //temporarily use as primary the monitor on which the activities btn was clicked 
+                        this.panelManager.setFocusedMonitor(this.monitor, true);
+                    }
+                }
             ],
             [
                 this._centerBox,
@@ -377,7 +398,7 @@ var dtpPanel = Utils.defineClass({
 
         this.panelStyle.enable(this);
 
-        if (checkIfVertical()) {
+        if (this.checkIfVertical()) {
             this._signalsHandler.add([
                 this.panelBox,
                 'notify::visible',
@@ -387,6 +408,8 @@ var dtpPanel = Utils.defineClass({
                     }
                 }
             ]);
+
+            this._setSearchEntryOffset(this.geom.w);
 
             if (this.statusArea.dateMenu) {
                 this._formatVerticalClock();
@@ -412,7 +435,9 @@ var dtpPanel = Utils.defineClass({
 
         this._timeoutsHandler.destroy();
         this._signalsHandler.destroy();
-        this.container.remove_child(this.taskbar.actor);
+        this._disablePanelCornerSignals();
+        
+        this.panel.actor.remove_child(this.taskbar.actor);
         this._setAppmenuVisible(false);
 
         if (this.intellihide) {
@@ -424,10 +449,12 @@ var dtpPanel = Utils.defineClass({
         this.progressManager.destroy();
 
         this.taskbar.destroy();
+        this.showAppsIconWrapper.destroy();
 
         this.menuManager._changeMenu = this.menuManager._oldChangeMenu;
 
         this._myPanelGhost.get_parent().remove_actor(this._myPanelGhost);
+        this._setSearchEntryOffset(0);
         
         panelBoxes.forEach(b => delete this[b].allocate);
         this._unmappedButtons.forEach(a => this._disconnectVisibleId(a));
@@ -438,17 +465,22 @@ var dtpPanel = Utils.defineClass({
             this._dateMenuIndicatorPadContraints.forEach(c => indicatorPad.add_constraint(c));
         }
 
-        if (!this.isSecondary) {
-            this.statusArea.dateMenu._clockDisplay.text = this.statusArea.dateMenu._clock.clock;
+        this._setVertical(this.panel.actor, false);
 
-            this._setVertical(this.panel.actor, false);
+        if (!this.isStandalone) {
+            this.statusArea.dateMenu._clockDisplay.text = this.statusArea.dateMenu._clock.clock;
 
             ['vertical', 'horizontal', 'dashtopanelMainPanel'].forEach(c => this.panel.actor.remove_style_class_name(c));
 
-
-            if(!Main.sessionMode.isLocked) {
-                this._setActivitiesButtonVisible(true);
-                this._setClockLocation("BUTTONSLEFT");
+            if (!Main.sessionMode.isLocked) {
+                [['activities', 0], ['aggregateMenu', -1], ['dateMenu', 0]].forEach(b => {
+                    let container = this.statusArea[b[0]].container;
+                    let originalParent = container._dtpOriginalParent;
+    
+                    this.panel.actor.remove_child(container);
+                    originalParent ? originalParent.insert_child_at_index(container, b[1]) : null;
+                    delete container._dtpOriginalParent;
+                });
 
                 if (this.statusArea.appMenu) {
                     setMenuArrow(this.statusArea.appMenu._arrow, St.Side.TOP);
@@ -460,7 +492,12 @@ var dtpPanel = Utils.defineClass({
                 }
             }
 
-            this._displayShowDesktopButton(false);
+            if (!this.panel._leftCorner.actor.mapped) {
+                this.panel.actor.add_child(this.panel._leftCorner.actor);
+                this.panel.actor.add_child(this.panel._rightCorner.actor);
+            }
+
+            this._setShowDesktopButton(false);
 
             delete Utils.getIndicators(this.statusArea.aggregateMenu._volume)._dtpIgnoreScroll;
             setMenuArrow(this.statusArea.aggregateMenu._indicators.get_last_child(), St.Side.TOP);
@@ -480,6 +517,7 @@ var dtpPanel = Utils.defineClass({
         } else {
             this._removePanelMenu('dateMenu');
             this._removePanelMenu('aggregateMenu');
+            this._removePanelMenu('activities');
         }
 
         Main.ctrlAltTabManager.removeGroup(this);
@@ -497,14 +535,129 @@ var dtpPanel = Utils.defineClass({
         return DND.DragMotionResult.CONTINUE;
     },
 
-    _bindSettingsChanges: function() {
-        let isVertical = checkIfVertical();
+    getPosition: function() {
+        let position = PanelSettings.getPanelPosition(Me.settings, this.monitor.index);
+
+        if (position == Pos.TOP) {
+            return St.Side.TOP;
+        } else if (position == Pos.RIGHT) {
+            return St.Side.RIGHT;
+        } else if (position == Pos.BOTTOM) {
+            return St.Side.BOTTOM;
+        }
         
+        return St.Side.LEFT;
+    },
+
+    checkIfVertical: function() {
+        let position = this.getPosition();
+    
+        return (position == St.Side.LEFT || position == St.Side.RIGHT);
+    },
+    
+    getOrientation: function() {
+        return (this.checkIfVertical() ? 'vertical' : 'horizontal');
+    },
+
+    updateElementPositions: function() {
+        let panelPositions = this.panelManager.panelsElementPositions[this.monitor.index] || Pos.defaults;
+
+        this._updateGroupedElements(panelPositions);
+        
+        this._disablePanelCornerSignals();
+
+        if (this.getPosition() == St.Side.TOP) {
+            let visibleElements = panelPositions.filter(pp => pp.visible);
+            let connectCorner = (corner, button) => {
+                corner._button = button;
+                corner._buttonStyleChangedSignalId = button.connect('style-changed', () => {
+                    corner.set_style_pseudo_class(button.get_style_pseudo_class());
+                });
+            }
+
+            if (visibleElements[0].element == Pos.ACTIVITIES_BTN) {
+                connectCorner(this.panel._leftCorner, this.statusArea.activities);
+            }
+
+            if (visibleElements[visibleElements.length - 1].element == Pos.SYSTEM_MENU) {
+                connectCorner(this.panel._rightCorner, this.statusArea.aggregateMenu);
+            }
+        }
+
+        this.panel.actor.hide();
+        this.panel.actor.show();
+    },
+
+    _updateGroupedElements: function(panelPositions) {
+        let previousPosition = 0;
+        let previousCenteredPosition = 0;
+        let currentGroup = -1;
+
+        this._elementGroups = [];
+
+        panelPositions.forEach(pos => {
+            let allocationMap = this.allocationMap[pos.element];
+
+            if (allocationMap.actor) {
+                allocationMap.actor.visible = pos.visible;
+
+                if (!pos.visible) {
+                    return;
+                }
+
+                let currentPosition = pos.position;
+                let isCentered = Pos.checkIfCentered(currentPosition);
+
+                if (currentPosition == Pos.STACKED_TL && previousPosition == Pos.STACKED_BR) {
+                    currentPosition = Pos.STACKED_BR;
+                }
+
+                if (!previousPosition || 
+                    (previousPosition == Pos.STACKED_TL && currentPosition != Pos.STACKED_TL) ||
+                    (previousPosition != Pos.STACKED_BR && currentPosition == Pos.STACKED_BR) ||
+                    (isCentered && previousPosition != currentPosition && previousPosition != Pos.STACKED_BR)) {
+                    this._elementGroups[++currentGroup] = { elements: [], index: this._elementGroups.length, expandableIndex: -1 };
+                    previousCenteredPosition = 0;
+                }
+
+                if (pos.element == Pos.TASKBAR) {
+                    this._elementGroups[currentGroup].expandableIndex = this._elementGroups[currentGroup].elements.length;
+                }
+
+                if (isCentered && !this._elementGroups[currentGroup].isCentered) {
+                    this._elementGroups[currentGroup].isCentered = 1;
+                    previousCenteredPosition = currentPosition;
+                }
+
+                this._elementGroups[currentGroup].position = previousCenteredPosition || currentPosition;
+                this._elementGroups[currentGroup].elements.push(allocationMap);
+
+                allocationMap.position = currentPosition;
+                previousPosition = currentPosition;
+            }
+        });
+    },
+
+    _disablePanelCornerSignals: function() {
+        if (this.panel._rightCorner && this.panel._rightCorner._buttonStyleChangedSignalId) {
+            this.panel._rightCorner._button.disconnect(this.panel._rightCorner._buttonStyleChangedSignalId);
+            delete this.panel._rightCorner._buttonStyleChangedSignalId;
+        }
+
+        if (this.panel._leftCorner && this.panel._leftCorner._buttonStyleChangedSignalId) {
+            this.panel._leftCorner._button.disconnect(this.panel._leftCorner._buttonStyleChangedSignalId);
+            delete this.panel._leftCorner._buttonStyleChangedSignalId;
+        }
+    },
+
+    _bindSettingsChanges: function() {
+        let isVertical = this.checkIfVertical();
+
         this._signalsHandler.add(
             [
                 Me.settings,
                 [
-                    'changed::panel-size',
+                    'changed::panel-sizes',
                     'changed::group-apps'
                 ],
                 () => this._resetGeometry()
@@ -519,28 +672,19 @@ var dtpPanel = Utils.defineClass({
             ],
             [
                 Me.settings,
-                'changed::show-activities-button',
-                () => this._setActivitiesButtonVisible(Me.settings.get_boolean('show-activities-button'))
-            ],
-            [
-                Me.settings,
                 'changed::show-appmenu',
                 () => this._setAppmenuVisible(Me.settings.get_boolean('show-appmenu'))
             ],
             [
                 Me.settings,
-                'changed::location-clock',
-                () => this._setClockLocation(Me.settings.get_string('location-clock'))
-            ],
-            [
-                Me.settings,
-                'changed::show-showdesktop-button',
-                () => this._displayShowDesktopButton(Me.settings.get_boolean('show-showdesktop-button'))
-            ],
-            [
-                Me.settings,
-                'changed::showdesktop-button-width',
-                () => this._setShowDesktopButtonSize()
+                [
+                    'changed::showdesktop-button-width',
+                    'changed::trans-use-custom-bg',
+                    'changed::desktop-line-use-custom-color',
+                    'changed::desktop-line-custom-color',
+                    'changed::trans-bg-color'
+                ],
+                () => this._setShowDesktopButtonStyle()
             ],
             [
                 Me.desktopSettings,
@@ -570,14 +714,8 @@ var dtpPanel = Utils.defineClass({
         }
     },
 
-    _setPanelMenu: function(settingName, propName, constr, container, isInit) {
-        if (isInit) {
-            this._signalsHandler.add([Me.settings, 'changed::' + settingName, () => this._setPanelMenu(settingName, propName, constr, container)]);
-        }
-        
-        if (!Me.settings.get_boolean(settingName)) {
-            this._removePanelMenu(propName);
-        } else if (!this.statusArea[propName]) {
+    _setPanelMenu: function(propName, constr, container) {
+        if (!this.statusArea[propName]) {
             this.statusArea[propName] = this._getPanelMenu(propName, constr);
             this.menuManager.addMenu(this.statusArea[propName].menu);
             container.insert_child_at_index(this.statusArea[propName].container, 0);
@@ -616,7 +754,22 @@ var dtpPanel = Utils.defineClass({
     },
 
     _setPanelGhostSize: function() {
-        this._myPanelGhost.set_size(this.width, checkIfVertical() ? 1 : this.height); 
+        this._myPanelGhost.set_size(this.width, this.checkIfVertical() ? 1 : this.height); 
+    },
+
+    _setSearchEntryOffset: function(offset) {
+        if (this.isPrimary) {
+            //In the overview, when the panel is vertical the search-entry is the only element
+            //that doesn't natively take into account the size of a side dock, as it is always
+            //centered relatively to the monitor. This looks misaligned, adjust it here so it 
+            //is centered like the rest of the overview elements.
+            let paddingSide = this.getPosition() == St.Side.LEFT ? 'left' : 'right';
+            let scaleFactor = Utils.getScaleFactor();
+            let style = offset ? 'padding-' + paddingSide + ':' + (offset / scaleFactor) + 'px;' : null;
+            let searchEntry = Main.overview._searchEntry || Main.overview._overview._searchEntry;
+            
+            searchEntry.get_parent().set_style(style);
+        }
     },
 
     _adjustForOverview: function() {
@@ -640,166 +793,289 @@ var dtpPanel = Utils.defineClass({
         this.geom = this.getGeometry();
         this._setPanelGhostSize();
         this._setPanelPosition();
-        this.taskbar.resetAppIcons();
+        this.taskbar.resetAppIcons(true);
         this.dynamicTransparency.updateExternalStyle();
 
         if (this.intellihide && this.intellihide.enabled) {
             this.intellihide.reset();
         }
 
-        if (checkIfVertical()) {
+        if (this.checkIfVertical()) {
+            this.showAppsIconWrapper.realShowAppsIcon.toggleButton.set_width(this.geom.w);
             this._refreshVerticalAlloc();
+            this._setSearchEntryOffset(this.geom.w);
         }
     },
 
     getGeometry: function() {
-        let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor || 1;
+        let scaleFactor = Utils.getScaleFactor();
         let panelBoxTheme = this.panelBox.get_theme_node();
         let lrPadding = panelBoxTheme.get_padding(St.Side.RIGHT) + panelBoxTheme.get_padding(St.Side.LEFT);
-        let tbPadding = panelBoxTheme.get_padding(St.Side.TOP) + panelBoxTheme.get_padding(St.Side.BOTTOM);
-        let position = getPosition();
+        let topPadding = panelBoxTheme.get_padding(St.Side.TOP);
+        let tbPadding = topPadding + panelBoxTheme.get_padding(St.Side.BOTTOM);
+        let position = this.getPosition();
+        let length = PanelSettings.getPanelLength(Me.settings, this.monitor.index) / 100;
+        let anchor = PanelSettings.getPanelAnchor(Me.settings, this.monitor.index);
+        let anchorPlaceOnMonitor = 0;
+        let gsTopPanelOffset = 0;
         let x = 0, y = 0;
         let w = 0, h = 0;
 
-        size = Me.settings.get_int('panel-size') * scaleFactor;
+        const panelSize = PanelSettings.getPanelSize(Me.settings, this.monitor.index);
+        this.dtpSize = panelSize * scaleFactor;
 
-        if (checkIfVertical()) {
+        if (Me.settings.get_boolean('stockgs-keep-top-panel') && Main.layoutManager.primaryMonitor == this.monitor) {
+            gsTopPanelOffset = Main.layoutManager.panelBox.height - topPadding;
+        }
+
+        if (this.checkIfVertical()) {
             if (!Me.settings.get_boolean('group-apps')) {
                 // add window title width and side padding of _dtpIconContainer when vertical
-                size += Me.settings.get_int('group-apps-label-max-width') + AppIcons.DEFAULT_PADDING_SIZE * 2 / scaleFactor;
+                this.dtpSize += Me.settings.get_int('group-apps-label-max-width') + AppIcons.DEFAULT_PADDING_SIZE * 2 / scaleFactor;
             }
 
-            sizeFunc = 'get_preferred_height',
-            fixedCoord = { c1: 'x1', c2: 'x2' },
-            varCoord = { c1: 'y1', c2: 'y2' };
+            this.sizeFunc = 'get_preferred_height',
+            this.fixedCoord = { c1: 'x1', c2: 'x2' },
+            this.varCoord = { c1: 'y1', c2: 'y2' };
 
-            w = size;
-            h = this.monitor.height - tbPadding;
+            w = this.dtpSize;
+            h = this.monitor.height * length - tbPadding - gsTopPanelOffset;
         } else {
-            sizeFunc = 'get_preferred_width';
-            fixedCoord = { c1: 'y1', c2: 'y2' };
-            varCoord = { c1: 'x1', c2: 'x2' };
+            this.sizeFunc = 'get_preferred_width';
+            this.fixedCoord = { c1: 'y1', c2: 'y2' };
+            this.varCoord = { c1: 'x1', c2: 'x2' };
 
-            w = this.monitor.width - lrPadding;
-            h = size;
+            w = this.monitor.width * length - lrPadding;
+            h = this.dtpSize;
         }
 
         if (position == St.Side.TOP || position == St.Side.LEFT) {
             x = this.monitor.x;
-            y = this.monitor.y;
+            y = this.monitor.y + gsTopPanelOffset;
         } else if (position == St.Side.RIGHT) {
-            x = this.monitor.x + this.monitor.width - size - lrPadding;
-            y = this.monitor.y;
+            x = this.monitor.x + this.monitor.width - this.dtpSize - lrPadding;
+            y = this.monitor.y + gsTopPanelOffset;
         } else { //BOTTOM
-            x = this.monitor.x; 
-            y = this.monitor.y + this.monitor.height - size - tbPadding;
+            x = this.monitor.x;
+            y = this.monitor.y + this.monitor.height - this.dtpSize - tbPadding;
+        }
+
+        if (this.checkIfVertical()) {
+            if (anchor === Pos.MIDDLE) {
+                anchorPlaceOnMonitor = (this.monitor.height - h) / 2;
+            } else if (anchor === Pos.END) {
+                anchorPlaceOnMonitor = this.monitor.height - h;
+            } else { // Pos.START
+                anchorPlaceOnMonitor = 0;
+            }
+            y = y + anchorPlaceOnMonitor;
+        } else {
+            if (anchor === Pos.MIDDLE) {
+                anchorPlaceOnMonitor = (this.monitor.width - w) / 2;
+            } else if (anchor === Pos.END) {
+                anchorPlaceOnMonitor = this.monitor.width - w;
+            } else { // Pos.START
+                anchorPlaceOnMonitor = 0;
+            }
+            x = x + anchorPlaceOnMonitor;
         }
 
         return {
             x: x, y: y, 
             w: w, h: h,
+            lrPadding: lrPadding,
+            tbPadding: tbPadding,
             position: position
         };
     },
 
+    _setAllocationMap: function() {
+        this.allocationMap = {};
+        let setMap = (name, actor, isBox) => this.allocationMap[name] = { 
+            actor: actor,
+            isBox: isBox || 0,
+            box: new Clutter.ActorBox() 
+        };
+        
+        setMap(Pos.SHOW_APPS_BTN, this.showAppsIconWrapper.realShowAppsIcon);
+        setMap(Pos.ACTIVITIES_BTN, this.statusArea.activities ? this.statusArea.activities.container : 0);
+        setMap(Pos.LEFT_BOX, this._leftBox, 1);
+        setMap(Pos.TASKBAR, this.taskbar.actor);
+        setMap(Pos.CENTER_BOX, this._centerBox, 1);
+        setMap(Pos.DATE_MENU, this.statusArea.dateMenu.container);
+        setMap(Pos.SYSTEM_MENU, this.statusArea.aggregateMenu.container);
+        setMap(Pos.RIGHT_BOX, this._rightBox, 1);
+        setMap(Pos.DESKTOP_BTN, this._showDesktopButton);
+    },
+
     _mainPanelAllocate: function(actor, box, flags) {
-        this.panel.actor.set_allocation(box, flags);
+        Utils.setAllocation(this.panel.actor, box, flags);
     },
 
     vfunc_allocate: function(box, flags) {
-        this.set_allocation(box, flags);
-        
-        let panelAllocVarSize = box[varCoord.c2] - box[varCoord.c1];
-        let panelAllocFixedSize = box[fixedCoord.c2] - box[fixedCoord.c1];
-        let [, leftNaturalSize] = this._leftBox[sizeFunc](-1);
-        let [, centerNaturalSize] = this._centerBox[sizeFunc](-1);
-        let [, rightNaturalSize] = this._rightBox[sizeFunc](-1);
-        let taskbarPosition = Me.settings.get_string('taskbar-position');
+        Utils.setAllocation(this, box, flags);
 
-        // The _rightBox is always allocated the same, regardless of taskbar position setting
-        let rightAllocSize = rightNaturalSize;
-        
-        // Now figure out how large the _leftBox and _centerBox should be.
-        // The box with the taskbar is always the one that is forced to be smaller as the other boxes grow
-        let leftAllocSize, centerStartPosition, centerEndPosition;
-        let childBoxLeft = new Clutter.ActorBox();
-        let childBoxCenter = new Clutter.ActorBox();
-        let childBoxRight = new Clutter.ActorBox();
+        let fixed = 0;
+        let centeredMonitorGroup;
+        let panelAlloc = new Clutter.ActorBox({ x1: 0, y1: 0, x2: this.geom.w, y2: this.geom.h });
+        let assignGroupSize = (group, update) => {
+            group.size = 0;
+            group.tlOffset = 0;
+            group.brOffset = 0;
 
-        if (taskbarPosition == 'CENTEREDMONITOR') {
-            leftAllocSize = leftNaturalSize;
+            group.elements.forEach(element => {
+                if (!update) {
+                    element.box[this.fixedCoord.c1] = panelAlloc[this.fixedCoord.c1];
+                    element.box[this.fixedCoord.c2] = panelAlloc[this.fixedCoord.c2];
+                    element.natSize = element.actor[this.sizeFunc](-1)[1];
+                }
 
-            centerStartPosition = Math.max(leftNaturalSize, Math.floor((panelAllocVarSize - centerNaturalSize)/2));
-            centerEndPosition = Math.min(panelAllocVarSize-rightNaturalSize, Math.ceil((panelAllocVarSize+centerNaturalSize))/2);
-        } else if (taskbarPosition == 'CENTEREDCONTENT') {
-            leftAllocSize = leftNaturalSize;
+                if (!group.isCentered || Pos.checkIfCentered(element.position)) {
+                    group.size += element.natSize;
+                } else if (element.position == Pos.STACKED_TL) { 
+                    group.tlOffset += element.natSize;
+                } else { // Pos.STACKED_BR
+                    group.brOffset += element.natSize;
+                }
+            });
 
-            centerStartPosition = Math.max(leftNaturalSize, Math.floor((panelAllocVarSize - centerNaturalSize + leftNaturalSize - rightNaturalSize) / 2));
-            centerEndPosition = Math.min(panelAllocVarSize-rightNaturalSize, Math.ceil((panelAllocVarSize + centerNaturalSize + leftNaturalSize - rightNaturalSize) / 2));
-        } else if (taskbarPosition == 'LEFTPANEL_FIXEDCENTER') {
-            leftAllocSize = Math.floor((panelAllocVarSize - centerNaturalSize) / 2);
-            centerStartPosition = leftAllocSize;
-            centerEndPosition = centerStartPosition + centerNaturalSize;
-        } else if (taskbarPosition == 'LEFTPANEL_FLOATCENTER') {
-            let leftAllocSizeMax = panelAllocVarSize - rightNaturalSize - centerNaturalSize;
-            leftAllocSize = Math.min(leftAllocSizeMax, leftNaturalSize);
+            if (group.isCentered) {
+                group.size += Math.max(group.tlOffset, group.brOffset) * 2;
+                group.tlOffset = Math.max(group.tlOffset - group.brOffset, 0);
+            }
+        };
+        let allocateGroup = (group, tlLimit, brLimit) => {
+            let startPosition = tlLimit;
+            let currentPosition = 0;
 
-            let freeSpace = panelAllocVarSize - leftAllocSize - rightAllocSize - centerNaturalSize;
+            if (group.expandableIndex >= 0) {
+                let availableSize = brLimit - tlLimit;
+                let expandable = group.elements[group.expandableIndex];
+                let i = 0;
+                let l = this._elementGroups.length;
+                let tlSize = 0;
+                let brSize = 0;
 
-            centerStartPosition = leftAllocSize + Math.floor(freeSpace / 2);
-            centerEndPosition = centerStartPosition + centerNaturalSize;
-        } else { // LEFTPANEL
-            leftAllocSize = panelAllocVarSize - rightNaturalSize - centerNaturalSize;
-            centerStartPosition = leftAllocSize;
-            centerEndPosition = centerStartPosition + centerNaturalSize;
+                if (centeredMonitorGroup && (centeredMonitorGroup != group || expandable.position != Pos.CENTERED_MONITOR)) {
+                    if (centeredMonitorGroup.index < group.index || (centeredMonitorGroup == group && expandable.position == Pos.STACKED_TL)) {
+                        i = centeredMonitorGroup.index;
+                    } else {
+                        l = centeredMonitorGroup.index;
+                    }
+                }
+
+                for (; i < l; ++i) {
+                    let refGroup = this._elementGroups[i];
+
+                    if (i < group.index && (!refGroup.fixed || refGroup[this.varCoord.c2] > tlLimit)) {
+                        tlSize += refGroup.size;
+                    } else if (i > group.index && (!refGroup.fixed || refGroup[this.varCoord.c1] < brLimit)) {
+                        brSize += refGroup.size;
+                    }
+                }
+                
+                if (group.isCentered) {
+                    availableSize -= Math.max(tlSize, brSize) * 2;
+                } else {
+                    availableSize -= tlSize + brSize;
+                }
+                
+                if (availableSize < group.size) {
+                    expandable.natSize -= (group.size - availableSize) * (group.isCentered && !Pos.checkIfCentered(expandable.position) ? .5 : 1);
+                    assignGroupSize(group, true);
+                }
+            }
+            
+            if (group.isCentered) {
+                startPosition = tlLimit + (brLimit - tlLimit - group.size) * .5;
+            } else if (group.position == Pos.STACKED_BR) {
+                startPosition = brLimit - group.size;
+            }
+
+            currentPosition = group.tlOffset + startPosition;
+
+            group.elements.forEach(element => {
+                element.box[this.varCoord.c1] = Math.round(currentPosition);
+                element.box[this.varCoord.c2] = Math.round((currentPosition += element.natSize));
+
+                if (element.isBox) {
+                    return element.actor.allocate(element.box, flags, true);
+                } 
+
+                Utils.allocate(element.actor, element.box, flags, false);
+            });
+
+            group[this.varCoord.c1] = startPosition;
+            group[this.varCoord.c2] = currentPosition;
+            group.fixed = 1;
+            ++fixed;
+        };
+
+        Utils.allocate(this.panel.actor, panelAlloc, flags);
+
+        this._elementGroups.forEach(group => {
+            group.fixed = 0;
+
+            assignGroupSize(group);
+
+            if (group.position == Pos.CENTERED_MONITOR) {
+                centeredMonitorGroup = group;
+            }
+        });
+
+        if (centeredMonitorGroup) {
+            allocateGroup(centeredMonitorGroup, panelAlloc[this.varCoord.c1], panelAlloc[this.varCoord.c2]);
         }
 
-        childBoxLeft[fixedCoord.c1] = childBoxCenter[fixedCoord.c1] = childBoxRight[fixedCoord.c1] = 0;
-        childBoxLeft[fixedCoord.c2] = childBoxCenter[fixedCoord.c2] = childBoxRight[fixedCoord.c2] = panelAllocFixedSize;
+        let iterations = 0; //failsafe
+        while (fixed < this._elementGroups.length && ++iterations < 10) {
+            for (let i = 0, l = this._elementGroups.length; i < l; ++i) {
+                let group = this._elementGroups[i];
 
-        // if it is a RTL language, the boxes are switched around, and we need to invert the coordinates
-        if (this.get_text_direction() == Clutter.TextDirection.RTL) {
-            childBoxLeft[varCoord.c1] = panelAllocVarSize - leftAllocSize;
-            childBoxLeft[varCoord.c2] = panelAllocVarSize;
+                if (group.fixed) {
+                    continue;
+                }
 
-            childBoxCenter[varCoord.c1] = panelAllocVarSize - centerEndPosition;
-            childBoxCenter[varCoord.c2] = panelAllocVarSize - centerStartPosition;
+                let prevGroup = this._elementGroups[i - 1];
+                let nextGroup = this._elementGroups[i + 1];
+                let prevLimit = prevGroup && prevGroup.fixed ? prevGroup[this.varCoord.c2] : 
+                                    centeredMonitorGroup && group.index > centeredMonitorGroup.index ? centeredMonitorGroup[this.varCoord.c2] : panelAlloc[this.varCoord.c1];
+                let nextLimit = nextGroup && nextGroup.fixed ? nextGroup[this.varCoord.c1] : 
+                                    centeredMonitorGroup && group.index < centeredMonitorGroup.index ? centeredMonitorGroup[this.varCoord.c1] : panelAlloc[this.varCoord.c2];
 
-            childBoxRight[varCoord.c1] = 0;
-            childBoxRight[varCoord.c2] = rightAllocSize;
-        } else {
-            childBoxLeft[varCoord.c1] = 0;
-            childBoxLeft[varCoord.c2] = leftAllocSize;
-
-            childBoxCenter[varCoord.c1] = centerStartPosition;
-            childBoxCenter[varCoord.c2] = centerEndPosition;
-
-            childBoxRight[varCoord.c1] = panelAllocVarSize - rightAllocSize;
-            childBoxRight[varCoord.c2] = panelAllocVarSize;            
+                if (group.position == Pos.STACKED_TL) {
+                    allocateGroup(group, panelAlloc[this.varCoord.c1], nextLimit);
+                } else if (group.position == Pos.STACKED_BR) {
+                    allocateGroup(group, prevLimit, panelAlloc[this.varCoord.c2]);
+                } else if ((!prevGroup || prevGroup.fixed) && (!nextGroup || nextGroup.fixed)) { // CENTERED
+                    allocateGroup(group, prevLimit, nextLimit);
+                }
+            }
         }
-
-        this.panel.actor.allocate(new Clutter.ActorBox({ x1: 0, y1: 0, x2: this.geom.w, y2: this.geom.h }), flags);
-        this._leftBox.allocate(childBoxLeft, flags, 1);
-        this._centerBox.allocate(childBoxCenter, flags, 1);
-        this._rightBox.allocate(childBoxRight, flags, 1);
 
         if (this.geom.position == St.Side.TOP) {
             let childBoxLeftCorner = new Clutter.ActorBox();
-            let [ , cornerSize] = this.panel._leftCorner.actor[sizeFunc](-1);
-            childBoxLeftCorner[varCoord.c1] = 0;
-            childBoxLeftCorner[varCoord.c2] = cornerSize;
-            childBoxLeftCorner[fixedCoord.c1] = panelAllocFixedSize;
-            childBoxLeftCorner[fixedCoord.c2] = panelAllocFixedSize + cornerSize;
-
             let childBoxRightCorner = new Clutter.ActorBox();
-            [ , cornerSize] = this.panel._rightCorner.actor[sizeFunc](-1);
-            childBoxRightCorner[varCoord.c1] = panelAllocVarSize - cornerSize;
-            childBoxRightCorner[varCoord.c2] = panelAllocVarSize;
-            childBoxRightCorner[fixedCoord.c1] = panelAllocFixedSize;
-            childBoxRightCorner[fixedCoord.c2] = panelAllocFixedSize + cornerSize;
+            let currentCornerSize = this.cornerSize;
+            let panelAllocFixedSize = box[this.fixedCoord.c2] - box[this.fixedCoord.c1];
+            
+            [ , this.cornerSize] = this.panel._leftCorner.actor[this.sizeFunc](-1);
+            childBoxLeftCorner[this.varCoord.c1] = 0;
+            childBoxLeftCorner[this.varCoord.c2] = this.cornerSize;
+            childBoxLeftCorner[this.fixedCoord.c1] = panelAllocFixedSize;
+            childBoxLeftCorner[this.fixedCoord.c2] = panelAllocFixedSize + this.cornerSize;
 
-            this.panel._leftCorner.actor.allocate(childBoxLeftCorner, flags);
-            this.panel._rightCorner.actor.allocate(childBoxRightCorner, flags);
+            childBoxRightCorner[this.varCoord.c1] = box[this.varCoord.c2] - this.cornerSize;
+            childBoxRightCorner[this.varCoord.c2] = box[this.varCoord.c2];
+            childBoxRightCorner[this.fixedCoord.c1] = panelAllocFixedSize;
+            childBoxRightCorner[this.fixedCoord.c2] = panelAllocFixedSize + this.cornerSize;
+
+            Utils.allocate(this.panel._leftCorner.actor, childBoxLeftCorner, flags);
+            Utils.allocate(this.panel._rightCorner.actor, childBoxRightCorner, flags);
+
+            if (this.cornerSize != currentCornerSize) {
+                this._setPanelClip();
+            }
         }
     },
 
@@ -809,7 +1085,7 @@ var dtpPanel = Utils.defineClass({
         this.set_size(this.geom.w, this.geom.h);
         clipContainer.set_position(this.geom.x, this.geom.y);
 
-        this._setVertical(this.panel.actor, checkIfVertical());
+        this._setVertical(this.panel.actor, this.checkIfVertical());
 
         // styles for theming
         Object.keys(St.Side).forEach(p => {
@@ -818,10 +1094,15 @@ var dtpPanel = Utils.defineClass({
             this.panel.actor[(St.Side[p] == this.geom.position ? 'add' : 'remove') + '_style_class_name'](cssName);
         });
 
-        this._timeoutsHandler.add([T7, 0, () => Utils.setClip(clipContainer, clipContainer.x, clipContainer.y, this.panelBox.width, this.panelBox.height)]);
+        this._setPanelClip(clipContainer);
 
         Main.layoutManager._updateHotCorners();
         Main.layoutManager._updatePanelBarrier(this);
+    },
+
+    _setPanelClip: function(clipContainer) {
+        clipContainer = clipContainer || this.panelBox.get_parent();
+        this._timeoutsHandler.add([T7, 0, () => Utils.setClip(clipContainer, clipContainer.x, clipContainer.y, this.panelBox.width, this.panelBox.height + this.cornerSize)]);
     },
 
     _onButtonPress: function(actor, event) {
@@ -834,9 +1115,9 @@ var dtpPanel = Utils.defineClass({
             //right click on an empty part of the panel, temporarily borrow and display the showapps context menu
             Main.layoutManager.setDummyCursorGeometry(stageX, stageY, 0, 0);
 
-            this.taskbar._showAppsIconWrapper.createMenu();
-            this.taskbar._showAppsIconWrapper._menu.sourceActor = Main.layoutManager.dummyCursor;
-            this.taskbar._showAppsIconWrapper.popupMenu();
+            this.showAppsIconWrapper.createMenu();
+            this.showAppsIconWrapper._menu.sourceActor = Main.layoutManager.dummyCursor;
+            this.showAppsIconWrapper.popupMenu();
 
             return Clutter.EVENT_STOP;
         } else if (Main.modalCount > 0 || event.get_source() != actor || 
@@ -845,8 +1126,8 @@ var dtpPanel = Utils.defineClass({
             return Clutter.EVENT_PROPAGATE;
         }
 
-        let params = checkIfVertical() ? [stageY, 'y', 'height'] : [stageX, 'x', 'width'];
-        let dragWindow = this._getDraggableWindowForPosition.apply(this, params.concat(['maximized_' + getOrientation() + 'ly']));
+        let params = this.checkIfVertical() ? [stageY, 'y', 'height'] : [stageX, 'x', 'width'];
+        let dragWindow = this._getDraggableWindowForPosition.apply(this, params.concat(['maximized_' + this.getOrientation() + 'ly']));
 
         if (!dragWindow)
             return Clutter.EVENT_PROPAGATE;
@@ -869,7 +1150,7 @@ var dtpPanel = Utils.defineClass({
             workspace.list_windows()
         ).reverse();
 
-        return allWindowsByStacking.find(metaWindow => {
+        return Utils.find(allWindowsByStacking, metaWindow => {
             let rect = metaWindow.get_frame_rect();
 
             return metaWindow.get_monitor() == this.monitor.index &&
@@ -881,9 +1162,7 @@ var dtpPanel = Utils.defineClass({
     },
 
     _onBoxActorAdded: function(box) {
-        this._setClockLocation(Me.settings.get_string('location-clock'));
-
-        if (checkIfVertical()) {
+        if (this.checkIfVertical()) {
             this._setVertical(box, true);
         }
     },
@@ -896,7 +1175,7 @@ var dtpPanel = Utils.defineClass({
 
     _setVertical: function(actor, isVertical) {
         let _set = (actor, isVertical) => {
-            if (!actor || actor instanceof Dash.DashItemContainer) {
+            if (!actor || actor instanceof Dash.DashItemContainer || actor instanceof Taskbar.TaskbarItemContainer) {
                 return;
             }
 
@@ -918,8 +1197,8 @@ var dtpPanel = Utils.defineClass({
                     let [, natWidth] = actor.get_preferred_width(-1);
 
                     child.x_align = Clutter.ActorAlign[isVertical ? 'CENTER' : 'START'];
-                    actor.set_width(isVertical ? size : -1);
-                    isVertical = isVertical && (natWidth > size);
+                    actor.set_width(isVertical ? this.dtpSize : -1);
+                    isVertical = isVertical && (natWidth > this.dtpSize);
                     actor[(isVertical ? 'add' : 'remove') + '_style_class_name']('vertical');
                 }
             }
@@ -941,12 +1220,6 @@ var dtpPanel = Utils.defineClass({
         this._unmappedButtons.splice(this._unmappedButtons.indexOf(actor), 1);
     },
 
-    _setActivitiesButtonVisible: function(isVisible) {
-        if(this.statusArea.activities)
-            isVisible ? this.statusArea.activities.container.show() :
-                this.statusArea.activities.container.hide();
-    },
-    
     _setAppmenuVisible: function(isVisible) {
         let parent;
         let appMenu = this.statusArea.appMenu;
@@ -959,104 +1232,75 @@ var dtpPanel = Utils.defineClass({
         }
 
         if (isVisible && appMenu) {
-            let taskbarPosition = Me.settings.get_string('taskbar-position');
-            if (taskbarPosition == 'CENTEREDCONTENT' || taskbarPosition == 'CENTEREDMONITOR') {
-                this._leftBox.insert_child_above(appMenu.container, null);
-            } else {
-                this._centerBox.insert_child_at_index(appMenu.container, 0);
-            }            
+            this._leftBox.insert_child_above(appMenu.container, null);
         }
     },
 
     _formatVerticalClock: function() {
         // https://github.com/GNOME/gnome-desktop/blob/master/libgnome-desktop/gnome-wall-clock.c#L310
-        let datetime = this.statusArea.dateMenu._clock.clock;
-        let datetimeParts = datetime.split(' ');
-        let time = datetimeParts[1];
-        let clockText = this.statusArea.dateMenu._clockDisplay.clutter_text;
-        let setClockText = text => {
-            let stacks = text instanceof Array;
-            let separator = '\n<span size="xx-small">‧‧</span>\n';
-    
-            clockText.set_text((stacks ? text.join(separator) : text).trim());
-            clockText.set_use_markup(stacks);
-            clockText.get_allocation_box();
-    
-            return !clockText.get_layout().is_ellipsized();
-        };
+        if (this.statusArea.dateMenu) {
+            let datetime = this.statusArea.dateMenu._clock.clock;
+            let datetimeParts = datetime.split(' ');
+            let time = datetimeParts[1];
+            let clockText = this.statusArea.dateMenu._clockDisplay.clutter_text;
+            let setClockText = text => {
+                let stacks = text instanceof Array;
+                let separator = '\n<span size="xx-small">‧‧</span>\n';
+        
+                clockText.set_text((stacks ? text.join(separator) : text).trim());
+                clockText.set_use_markup(stacks);
+                clockText.get_allocation_box();
+        
+                return !clockText.get_layout().is_ellipsized();
+            };
 
-        if (!time) {
-            datetimeParts = datetime.split(' ');
-            time = datetimeParts.pop();
-            datetimeParts = [datetimeParts.join(' '), time];
-        }
-
-        if (!setClockText(datetime) && 
-            !setClockText(datetimeParts) && 
-            !setClockText(time)) {
-            let timeParts = time.split('∶');
-
-            if (!this._clockFormat) {
-                this._clockFormat = Me.desktopSettings.get_string('clock-format');
+            if (clockText.ellipsize == Pango.EllipsizeMode.NONE) {
+                //on gnome-shell 3.36.4, the clockdisplay isn't ellipsize anymore, so set it back 
+                clockText.ellipsize = Pango.EllipsizeMode.END;
             }
 
-            if (this._clockFormat == '12h') {
-                timeParts.push.apply(timeParts, timeParts.pop().split(' '));
+            if (!time) {
+                datetimeParts = datetime.split(' ');
+                time = datetimeParts.pop();
+                datetimeParts = [datetimeParts.join(' '), time];
             }
 
-            setClockText(timeParts);
+            if (!setClockText(datetime) && 
+                !setClockText(datetimeParts) && 
+                !setClockText(time)) {
+                let timeParts = time.split('∶');
+
+                if (!this._clockFormat) {
+                    this._clockFormat = Me.desktopSettings.get_string('clock-format');
+                }
+
+                if (this._clockFormat == '12h') {
+                    timeParts.push.apply(timeParts, timeParts.pop().split(' '));
+                }
+
+                setClockText(timeParts);
+            }
         }
     },
 
-    _setClockLocation: function(loc) {
-        if(!this.statusArea.dateMenu)
-            return;
-
-        let dateMenuContainer = this.statusArea.dateMenu.container;
-        let parent = dateMenuContainer.get_parent();
-        let destination;
-        let refSibling = null;
-
-        if (!parent) {
-            return;
-        }
-
-        if (loc.indexOf('BUTTONS') == 0) {
-            destination = this._centerBox;
-        } else if (loc.indexOf('STATUS') == 0) {
-            refSibling = this.statusArea.aggregateMenu ? this.statusArea.aggregateMenu.container : null;
-            destination = this._rightBox;
-        } else { //TASKBAR
-            refSibling = this.taskbar.actor;
-            destination = refSibling.get_parent();
-        }
-
-        if (parent != destination) {
-            parent.remove_actor(dateMenuContainer);
-            destination.add_actor(dateMenuContainer);
-        }
-
-        destination['set_child_' + (loc.indexOf('RIGHT') > 0 ? 'above' : 'below') + '_sibling'](dateMenuContainer, refSibling);
-        destination.queue_relayout();
-    },
-
-    _displayShowDesktopButton: function (isVisible) {
-        if(isVisible) {
+    _setShowDesktopButton: function (add) {
+        if (add) {
             if(this._showDesktopButton)
                 return;
 
             this._showDesktopButton = new St.Bin({ style_class: 'showdesktop-button',
                             reactive: true,
                             can_focus: true,
-                            x_fill: true,
-                            y_fill: true,
+                            // x_fill: true,
+                            // y_fill: true,
                             track_hover: true });
 
-            this._setShowDesktopButtonSize();
+            this._setShowDesktopButtonStyle();
 
             this._showDesktopButton.connect('button-press-event', () => this._onShowDesktopButtonPress());
             this._showDesktopButton.connect('enter-event', () => {
-                this._showDesktopButton.add_style_class_name('showdesktop-button-hovered');
+                this._showDesktopButton.add_style_class_name(this._getBackgroundBrightness() ?
+                            'showdesktop-button-light-hovered' : 'showdesktop-button-dark-hovered');
 
                 if (Me.settings.get_boolean('show-showdesktop-hover')) {
                     this._timeoutsHandler.add([T4, Me.settings.get_int('show-showdesktop-delay'), () => {
@@ -1067,7 +1311,8 @@ var dtpPanel = Utils.defineClass({
             });
             
             this._showDesktopButton.connect('leave-event', () => {
-                this._showDesktopButton.remove_style_class_name('showdesktop-button-hovered');
+                this._showDesktopButton.remove_style_class_name(this._getBackgroundBrightness() ?
+                            'showdesktop-button-light-hovered' : 'showdesktop-button-dark-hovered');
 
                 if (Me.settings.get_boolean('show-showdesktop-hover')) {
                     if (this._timeoutsHandler.getId(T4)) {
@@ -1078,38 +1323,52 @@ var dtpPanel = Utils.defineClass({
                  }
             });
 
-            this._rightBox.insert_child_at_index(this._showDesktopButton, this._rightBox.get_children().length);
+            this.panel.actor.add_child(this._showDesktopButton);
         } else {
             if(!this._showDesktopButton)
                 return;
 
-            this._rightBox.remove_child(this._showDesktopButton);
+            this.panel.actor.remove_child(this._showDesktopButton);
             this._showDesktopButton.destroy();
             this._showDesktopButton = null;
         }
     },
 
-    _setShowDesktopButtonSize: function() {
+    _setShowDesktopButtonStyle: function() {
+        let rgb = this._getBackgroundBrightness() ? "rgba(55, 55, 55, .2)" : "rgba(200, 200, 200, .2)";
+
+        let isLineCustom = Me.settings.get_boolean('desktop-line-use-custom-color');
+        rgb = isLineCustom ? Me.settings.get_string('desktop-line-custom-color') : rgb;
+
         if (this._showDesktopButton) {
             let buttonSize = Me.settings.get_int('showdesktop-button-width') + 'px;';
-            let isVertical = checkIfVertical();
-            let sytle = isVertical ? 'border-top-width:1px;height:' + buttonSize : 'border-left-width:1px;width:' + buttonSize;
-            
+            let isVertical = this.checkIfVertical();
+
+            let sytle = "border: 0 solid " + rgb + ";";
+            sytle += isVertical ? 'border-top-width:1px;height:' + buttonSize : 'border-left-width:1px;width:' + buttonSize;
+
             this._showDesktopButton.set_style(sytle);
             this._showDesktopButton[(isVertical ? 'x' : 'y') + '_expand'] = true;
         }
     },
 
+    // _getBackgroundBrightness: return true if panel has a bright background color
+    _getBackgroundBrightness: function() {
+        return Utils.checkIfColorIsBright(this.dynamicTransparency.backgroundColorRgb);
+    },
+
     _toggleWorkspaceWindows: function(hide, workspace) {
-        let tweenOpts = {
-            opacity: hide ? 0 : 255,
-            time: Me.settings.get_int('show-showdesktop-time') * .001,
-            transition: 'easeOutQuad'
-        };
+        let time = Me.settings.get_int('show-showdesktop-time') * .001;
 
         workspace.list_windows().forEach(w => {
             if (!w.minimized) {
-                Utils.animateWindowOpacity(w.get_compositor_private(), tweenOpts)
+                let tweenOpts = {
+                    opacity: hide ? 0 : 255,
+                    time: time,
+                    transition: 'easeOutQuad'
+                };
+                
+                Utils.animateWindowOpacity(w.get_compositor_private(), tweenOpts);
             }
         });
     },
@@ -1164,10 +1423,18 @@ var dtpPanel = Utils.defineClass({
             if (direction && scrollAction === 'SWITCH_WORKSPACE') {
                 let args = [global.display];
 
+                //adjust for horizontal workspaces
+                if (Utils.DisplayWrapper.getWorkspaceManager().layout_rows === 1) {
+                    direction = direction == 'up' ? 'left' : 'right';
+                }
+
                 //gnome-shell < 3.30 needs an additional "screen" param
                 global.screen ? args.push(global.screen) : 0;
 
+                let showWsPopup = Me.settings.get_boolean('scroll-panel-show-ws-popup');
+                showWsPopup ? 0 : Main.wm._workspaceSwitcherPopup = { display: () => {} };
                 Main.wm._showWorkspaceSwitcher.apply(Main.wm, args.concat([0, { get_name: () => 'switch---' + direction }]));
+                showWsPopup ? 0 : Main.wm._workspaceSwitcherPopup = null;
             } else if (direction && scrollAction === 'CYCLE_WINDOWS') {
                 let windows = this.taskbar.getAppInfos().reduce((ws, appInfo) => ws.concat(appInfo.windows), []);
                 
@@ -1201,8 +1468,21 @@ var dtpPanel = Utils.defineClass({
     },
 });
 
+var dtpSecondaryPanel = Utils.defineClass({
+    Name: 'DashToPanel-SecondaryPanel',
+    Extends: St.Widget,
+
+    _init: function(params) {
+        this.callParent('_init', params);
+    },
+
+    vfunc_allocate: function(box, flags) {
+        Utils.setAllocation(this, box, flags);
+    }
+});
+
 var dtpSecondaryAggregateMenu = Utils.defineClass({
-    Name: 'dtpSecondaryAggregateMenu',
+    Name: 'DashToPanel-SecondaryAggregateMenu',
     Extends: PanelMenu.Button,
 
     _init: function() {
@@ -1218,44 +1498,36 @@ var dtpSecondaryAggregateMenu = Utils.defineClass({
         this._indicators = new St.BoxLayout({ style_class: 'panel-status-indicators-box' });
         this.actor.add_child(this._indicators);
 
-        if (Config.HAVE_NETWORKMANAGER && Config.PACKAGE_VERSION >= '3.24') {
-            this._network = new imports.ui.status.network.NMApplet();
-        } else {
-            this._network = null;
-        }
-        if (Config.HAVE_BLUETOOTH) {
-            this._bluetooth = new imports.ui.status.bluetooth.Indicator();
-        } else {
-            this._bluetooth = null;
-        }
-
         this._power = new imports.ui.status.power.Indicator();
         this._volume = new imports.ui.status.volume.Indicator();
         this._brightness = new imports.ui.status.brightness.Indicator();
         this._system = new imports.ui.status.system.Indicator();
-        this._screencast = new imports.ui.status.screencast.Indicator();
+        
+        if (Config.PACKAGE_VERSION >= '3.28') {
+            this._thunderbolt = new imports.ui.status.thunderbolt.Indicator();
+            this._indicators.add_child(Utils.getIndicators(this._thunderbolt));
+        }
+
+        if (Config.PACKAGE_VERSION < '3.37') {
+            this._screencast = new imports.ui.status.screencast.Indicator();
+            this._indicators.add_child(Utils.getIndicators(this._screencast));
+        }
         
         if (Config.PACKAGE_VERSION >= '3.24') {
             this._nightLight = new imports.ui.status.nightLight.Indicator();
-        }
-
-        if (Config.PACKAGE_VERSION >= '3.28') {
-            this._thunderbolt = new imports.ui.status.thunderbolt.Indicator();
-        }
-
-        if (this._thunderbolt) {
-            this._indicators.add_child(Utils.getIndicators(this._thunderbolt));
-        }
-        this._indicators.add_child(Utils.getIndicators(this._screencast));
-        if (this._nightLight) {
             this._indicators.add_child(Utils.getIndicators(this._nightLight));
         }
-        if (this._network) {
+
+        if (Config.HAVE_NETWORKMANAGER && Config.PACKAGE_VERSION >= '3.24') {
+            this._network = new imports.ui.status.network.NMApplet();
             this._indicators.add_child(Utils.getIndicators(this._network));
         }
-        if (this._bluetooth) {
+
+        if (Config.HAVE_BLUETOOTH) {
+            this._bluetooth = new imports.ui.status.bluetooth.Indicator();
             this._indicators.add_child(Utils.getIndicators(this._bluetooth));
         }
+
         this._indicators.add_child(Utils.getIndicators(this._volume));
         this._indicators.add_child(Utils.getIndicators(this._power));
         this._indicators.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
@@ -1266,23 +1538,26 @@ var dtpSecondaryAggregateMenu = Utils.defineClass({
         
         this.menu.addMenuItem(this._brightness.menu);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
         if (this._network) {
             this.menu.addMenuItem(this._network.menu);
         }
+
         if (this._bluetooth) {
             this.menu.addMenuItem(this._bluetooth.menu);
         }
+        
         this.menu.addMenuItem(this._power.menu);
         this._power._sync();
 
         if (this._nightLight) {
             this.menu.addMenuItem(this._nightLight.menu);
         }
+
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(this._system.menu);
 
         menuLayout.addSizeChild(this._power.menu.actor);
         menuLayout.addSizeChild(this._system.menu.actor);
-
-        setMenuArrow(this._indicators.get_last_child(), getPosition());
     },
 });

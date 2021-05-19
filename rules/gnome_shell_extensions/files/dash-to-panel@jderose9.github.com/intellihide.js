@@ -21,7 +21,7 @@ const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
-const GrabHelper = imports.ui.grabHelper;
+var GrabHelper = imports.ui.grabHelper;
 const Layout = imports.ui.layout;
 const Main = imports.ui.main;
 const OverviewControls = imports.ui.overviewControls;
@@ -79,7 +79,7 @@ var Intellihide = Utils.defineClass({
         this._pendingUpdate = false;
         this._hoveredOut = false;
         this._windowOverlap = false;
-        this._translationProp = 'translation_' + (Panel.checkIfVertical() ? 'x' : 'y');
+        this._translationProp = 'translation_' + (this._dtpPanel.checkIfVertical() ? 'x' : 'y');
 
         this._panelBox.translation_y = 0;
         this._panelBox.translation_x = 0;
@@ -157,7 +157,7 @@ var Intellihide = Utils.defineClass({
     _changeEnabledStatus: function() {
         let intellihide = Me.settings.get_boolean('intellihide');
         let onlySecondary = Me.settings.get_boolean('intellihide-only-secondary');
-        let enabled = intellihide && (this._dtpPanel.isSecondary || !onlySecondary);
+        let enabled = intellihide && !(this._dtpPanel.isPrimary && onlySecondary);
 
         if (this.enabled !== enabled) {
             this[enabled ? 'enable' : 'disable']();
@@ -176,7 +176,9 @@ var Intellihide = Utils.defineClass({
                 [
                     'changed::intellihide-use-pressure',
                     'changed::intellihide-hide-from-windows',
-                    'changed::intellihide-behaviour'
+                    'changed::intellihide-behaviour',
+                    'changed::intellihide-pressure-threshold',
+                    'changed::intellihide-pressure-time'
                 ],
                 () => this.reset()
             ],
@@ -251,7 +253,7 @@ var Intellihide = Utils.defineClass({
         let position = this._dtpPanel.geom.position;
         let opts = { display: global.display };
 
-        if (Panel.checkIfVertical()) {
+        if (this._dtpPanel.checkIfVertical()) {
             opts.y1 = this._monitor.y;
             opts.y2 = this._monitor.y + this._monitor.height;
             opts.x1 = opts.x2 = this._monitor.x;
@@ -342,8 +344,11 @@ var Intellihide = Utils.defineClass({
     },
 
     _revealPanel: function(immediate) {
-        this._panelBox.visible = true;
-        this._dtpPanel.taskbar._shownInitially = false;
+        if (!this._panelBox.visible) {
+            this._panelBox.visible = true;
+            this._dtpPanel.taskbar._shownInitially = false;
+        }
+
         this._animatePanel(0, immediate);
     },
 

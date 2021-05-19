@@ -37,7 +37,8 @@ class ManageWindow {
        without decorations.
     */
 
-    constructor(window) {
+    constructor(window, wayland_client) {
+        this._wayland_client = wayland_client;
         this._window = window;
         this._signalIDs = [];
         this._signalIDs.push(window.connect_after('raised', () => {
@@ -45,7 +46,7 @@ class ManageWindow {
                 this._window.lower();
             }
         }));
-        this._signalIDs.push(this._window.connect('position-changed', () => {
+        this._signalIDs.push(window.connect('position-changed', () => {
             if ((this._x !== null) && (this._y !== null)) {
                 this._window.move_frame(false, this._x, this._y);
             }
@@ -63,6 +64,12 @@ class ManageWindow {
         if (this._keepAtTop) {
             this._window.unmake_above();
         }
+        this._window = null;
+        this._wayland_client = null;
+    }
+
+    set_wayland_client(client) {
+        this._wayland_client = client;
     }
 
     _parseTitle() {
@@ -114,6 +121,13 @@ class ManageWindow {
                     print(`Exception ${e.message}`);
                 }
             }
+            if (this._wayland_client) {
+                if (this._hideFromWindowList) {
+                    this._wayland_client.hide_from_window_list(this._window);
+                } else {
+                    this._wayland_client.show_in_window_list(this._window);
+                }
+            }
             if (this._keepAtTop != keepAtTop) {
                 if (this._keepAtTop) {
                     this._window.make_above();
@@ -162,20 +176,36 @@ var EmulateX11WindowType = class {
         this._isX11 = !Meta.is_wayland_compositor();
         this._windowList = [];
         this._enableRefresh = true;
+        this._wayland_client = null;
+    }
+
+    set_wayland_client(client) {
+        this._wayland_client = client;
+        for(let window of this._windowList) {
+            if (window.customJS_ding) {
+                window.customJS_ding.set_wayland_client(this._wayland_client);
+            }
+        }
     }
 
     enable() {
         if (this._isX11) {
             return;
         }
-        replaceMethod(Meta.Display, 'get_tab_list', newGetTabList);
         replaceMethod(Shell.Global, 'get_window_actors', newGetWindowActors);
-        replaceMethod(Meta.Workspace, 'list_windows', newListWindows);
-        this._idMap = global.window_manager.connect_after('map', () => {
+        this._idMap = global.window_manager.connect_after('map', (obj, windowActor) => {
+            let window = windowActor.get_meta_window();
+            if (this._wayland_client && this._wayland_client.query_window_belongs_to(window)) {
+                this.addWindow(window);
+            }
             this._refreshWindows(false);
         });
-        this._idDestroy = global.window_manager.connect_after("destroy", (wm, window) => {
+        this._idDestroy = global.window_manager.connect_after("destroy", (wm, windowActor) => {
             // if a window is closed, ensure that the desktop doesn't receive the focus
+            let window = windowActor.get_meta_window();
+            if (window && (window.get_window_type() >= Meta.WindowType.DROPDOWN_MENU)) {
+                return;
+            }
             this._refreshWindows(true);
         });
         /* Something odd happens with "stick" when using popup submenus, so
@@ -210,32 +240,33 @@ var EmulateX11WindowType = class {
             this._clearWindow(window);
         }
         this._windowList = [];
+
         // restore external methods only if have been intercepted
-        if (replaceData.old_get_tab_list) {
-            Meta.Display.prototype['get_tab_list'] = replaceData.old_get_tab_list;
-        }
         if (replaceData.old_get_window_actors) {
             Shell.Global.prototype['get_window_actors'] = replaceData.old_get_window_actors;
         }
-        if (replaceData.old_list_windows) {
-            Meta.Workspace.prototype['list_windows'] = replaceData.old_list_windows;
-        }
         replaceData = {};
+
         // disconnect signals
         if (this._idMap) {
             global.window_manager.disconnect(this._idMap);
+            this._idMap = null;
         }
         if (this._idDestroy) {
             global.window_manager.disconnect(this._idDestroy);
+            this._idDestroy = null;
         }
         if (this._switchWorkspaceId) {
             global.window_manager.disconnect(this._switchWorkspaceId);
+            this._switchWorkspaceId = null;
         }
         if (this._showingId) {
             Main.overview.disconnect(this._showingId);
+            this._showingId = null;
         }
         if (this._hidingId) {
             Main.overview.disconnect(this._hidingId);
+            this._hidingId = null;
         }
     }
 
@@ -246,7 +277,7 @@ var EmulateX11WindowType = class {
         if (window.get_meta_window) { // it is a MetaWindowActor
             window = window.get_meta_window();
         }
-        window.customJS_ding = new ManageWindow(window);
+        window.customJS_ding = new ManageWindow(window, this._wayland_client);
         this._windowList.push(window);
         window.customJS_ding.unmanagedID = window.connect("unmanaged", (window) => {
             this._clearWindow(window);
@@ -262,7 +293,7 @@ var EmulateX11WindowType = class {
 
     _refreshWindows(checkWorkspace) {
         if (!this._activate_window_ID) {
-            this._activate_window_ID = GLib.idle_add(GLib.PRIORITY_LOW, function() {
+            this._activate_window_ID = GLib.idle_add(GLib.PRIORITY_LOW, () => {
                 if (this._enableRefresh) {
                     for (let window of this._windowList) {
                         window.customJS_ding.refreshState(checkWorkspace);
@@ -271,7 +302,7 @@ var EmulateX11WindowType = class {
                         // activate the top-most window
                         let windows = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace());
                         for (let window of windows) {
-                            if (!window.customJS_ding || !window.customJS_ding._keepAtBottom) {
+                            if ((!window.customJS_ding || !window.customJS_ding._keepAtBottom) && !window.minimized) {
                                 Main.activateWindow(window);
                                 break;
                             }
@@ -280,7 +311,7 @@ var EmulateX11WindowType = class {
                 }
                 this._activate_window_ID = null;
                 return GLib.SOURCE_REMOVE;
-            }.bind(this));
+            });
         }
     }
 }
@@ -337,18 +368,6 @@ function removeDesktopWindowFromList(windowList) {
 }
 
 /**
- * Method replacement for Meta.Display.get_tab_list
- * It removes the desktop window from the list of windows in the switcher
- *
- * @param {*} type
- * @param {*} workspace
- */
-function newGetTabList(type, workspace) {
-    let windowList = replaceData.old_get_tab_list.apply(this, [type, workspace]);
-    return removeDesktopWindowFromList(windowList);
-};
-
-/**
  * Method replacement for Shell.Global.get_window_actors
  * It removes the desktop window from the list of windows in the Activities mode
  */
@@ -356,11 +375,3 @@ function newGetWindowActors() {
     let windowList = replaceData.old_get_window_actors.apply(this, []);
     return removeDesktopWindowFromList(windowList);
 }
-
-/**
- * Method replacement for Meta.Workspace.list_windows
- */
-function newListWindows() {
-    let windowList = replaceData.old_list_windows.apply(this, []);
-    return removeDesktopWindowFromList(windowList);
-};

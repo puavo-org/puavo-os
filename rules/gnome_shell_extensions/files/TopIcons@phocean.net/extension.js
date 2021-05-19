@@ -31,6 +31,7 @@ const PanelMenu = imports.ui.panelMenu;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
+const Config = imports.misc.config;
 
 let settings = null;
 let tray = null;
@@ -81,10 +82,18 @@ function onTrayIconAdded(o, icon, role, delay=1000) {
     // loop through the array and hide the extension if extension X is enabled and corresponding application is running
     let iconWmClass = icon.wm_class ? icon.wm_class.toLowerCase() : '';
     for (let [wmClass, uuid] of blacklist) {
-        if (ExtensionUtils.extensions[uuid] !== undefined &&
-            ExtensionUtils.extensions[uuid].state === 1 &&
-            iconWmClass === wmClass)
-            return;
+        if (Main.extensionManager === undefined) {
+            // For gnome-shell < 3.33.90
+            if (ExtensionUtils.extensions[uuid] !== undefined &&
+                ExtensionUtils.extensions[uuid].state === 1 &&
+                iconWmClass === wmClass)
+                return;
+        } else {
+            // For gnome-shell >= 3.33.90
+            if (Main.extensionManager.lookup(uuid) &&
+                iconWmClass === wmClass)
+                return;
+        }
     }
 
     let iconContainer = new St.Button({child: icon, visible: false});
@@ -100,7 +109,7 @@ function onTrayIconAdded(o, icon, role, delay=1000) {
 
     GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, Lang.bind(this, function(){
         iconContainer.visible = true;
-        iconsContainer.actor.visible = true;
+        iconsContainer.show();
         return GLib.SOURCE_REMOVE;
     }));
 
@@ -118,11 +127,12 @@ function onTrayIconRemoved(o, icon) {
     let parent = icon.get_parent();
     if (parent)
          parent.destroy();
-    icon.destroy();
+    if (!parent || !versionAtLeast('3.30', Config.PACKAGE_VERSION))
+	icon.destroy();
     icons.splice(icons.indexOf(icon), 1);
 
     if (icons.length === 0)
-        iconsContainer.actor.visible = false;
+        iconsContainer.hide();
 
 }
 
@@ -168,7 +178,7 @@ function createIconsContainer() {
 
     // An empty ButtonBox will still display padding,therefore create it without visibility.
     iconsContainer = new PanelMenu.ButtonBox({visible: false});
-    iconsContainer.actor.add_actor(iconsBoxLayout);
+    iconsContainer.add_actor(iconsBoxLayout);
 }
 
 function createTray() {
@@ -182,13 +192,13 @@ function createTray() {
         tray.manage_screen(global.screen, Main.panel.actor);
     } else {
         // For GNOME 3.30+
-        tray.manage_screen(Main.panel.actor);
+        tray.manage_screen(Main.panel);
     }
     placeTray();
 }
 
 function destroyTray() {
-    iconsContainer.actor.destroy();
+    iconsContainer.destroy();
     iconsContainer = null;
     iconsBoxLayout = null;
     icons = [];
@@ -261,9 +271,9 @@ function moveToTray() {
         iconsBoxLayout = null;
     }
     if (iconsContainer) {
-        if (iconsContainer.actor) {
-            iconsContainer.actor.destroy();
-            iconsContainer.actor = null;
+        if (iconsContainer) {
+            iconsContainer.destroy();
+            iconsContainer = null;
         }
         iconsContainer = null;
     }
@@ -277,9 +287,9 @@ function placeTray() {
     let trayPosition = settings.get_string('tray-pos');
     let trayOrder = settings.get_int('tray-order');
 
-    let parent = iconsContainer.actor.get_parent();
+    let parent = iconsContainer.get_parent();
     if (parent)
-        parent.remove_actor(iconsContainer.actor);
+        parent.remove_actor(iconsContainer);
 
     // panel box
     let box;
@@ -291,7 +301,7 @@ function placeTray() {
     let length = box.get_n_children();
     let index = length - Math.min(trayOrder, length);
 
-    box.insert_child_at_index(iconsContainer.actor, index);
+    box.insert_child_at_index(iconsContainer, index);
 
 }
 
@@ -371,12 +381,16 @@ function setSize(icon) {
 
     if (arguments.length == 1) {
         icon.get_parent().set_size(iconSize * scaleFactor, iconSize * scaleFactor);
-        icon.set_size(iconSize * scaleFactor, iconSize * scaleFactor);
+        //icon.set_size(iconSize * scaleFactor, iconSize * scaleFactor);
+        icon.set_height(iconSize * scaleFactor);
+        icon.set_y_align(Clutter.ActorAlign.CENTER)
     } else {
         for (let i = 0; i < icons.length; i++) {
             let icon = icons[i];
             icon.get_parent().set_size(iconSize * scaleFactor, iconSize * scaleFactor);
-            icon.set_size(iconSize * scaleFactor, iconSize * scaleFactor);
+            //icon.set_size(iconSize * scaleFactor, iconSize * scaleFactor);
+            icon.set_height(iconSize * scaleFactor);
+            icon.set_y_align(Clutter.ActorAlign.CENTER)
         }
     }
 
@@ -388,4 +402,22 @@ function setSpacing() {
 
     iconsBoxLayout.set_style('spacing: ' + boxLayoutSpacing + 'px; margin_top: 2px; margin_bottom: 2px;');
 
+}
+
+// Code copied from PanelOSD extension (GPL 2.0)
+function versionAtLeast(atleast, current) {
+    let currentArray = current.split('.');
+    let major = currentArray[0];
+    let minor = currentArray[1];
+    let point = currentArray[2];
+    let atleastArray = atleast.split('.');
+    if ((atleastArray[0] < major) ||
+        (atleastArray[0] == major &&
+         atleastArray[1] < minor) ||
+        (atleastArray[0] == major &&
+         atleastArray[1] == minor) &&
+        (atleastArray[2] == undefined ||
+         atleastArray[2] <= point))
+        return true;
+    return false;
 }

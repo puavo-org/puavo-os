@@ -10,9 +10,9 @@ const OverviewButton = new Lang.Class({
     Extends: PanelMenu.Button,
     _init: function() {
         this.parent(0.0,'QuickOverview');
-        this.buttonIcon = new St.Icon({ style_class: 'system-status-icon', 'icon_size': 32 });
+        this.buttonIcon = new St.Icon({ style_class: 'system-status-icon' });
         this.actor.add_actor(this.buttonIcon);
-        this.buttonIcon.icon_name='puavo-multitasking-view';
+        this.buttonIcon.icon_name='quickoverview-symbolic';
         this.actor.connect('button-press-event', Lang.bind(this, this._refresh));
         this.original_speed = St.get_slow_down_factor();
         this.modified_speed = HIGHT_SPEED;
@@ -45,7 +45,7 @@ function enable() {
     QuickOverviewButton = new OverviewButton();
     global.log('DEBUG ShellVersion='+ShellVersion[1]);
     if (ShellVersion[1]>4) {
-        Main.panel.addToStatusArea('quickoverview-menu', QuickOverviewButton, 1, 'left');
+        Main.panel.addToStatusArea('quickoverview-menu', QuickOverviewButton, 0, 'left');
         let indicator = Main.panel.statusArea['activities'];
         if(indicator != null)
         indicator.container.hide();

@@ -15,18 +15,20 @@
 * along with LogOutButton.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
-const Gettext = imports.gettext;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Main = imports.ui.main;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
-const _ = Gettext.gettext;
+const _ = imports.gettext.gettext;
 const System = Main.panel.statusArea.aggregateMenu._system;
+const GnomeSession = imports.misc.gnomeSession;
+const LOGOUT_MODE_NORMAL = 0;
 
-let _logoutButton = null;
+var _logoutButton = null;
 
 /**
  * Initialises the extension
+ */
 function init() {
     Convenience.initTranslations();
 }
@@ -34,10 +36,12 @@ function init() {
 /*
  * Enables the extension
  */
-function enable () {
+function enable() {
     _logoutButton = System._createActionButton('application-exit-symbolic', _("Log Out"));
     _logoutButton.connect('button-press-event', _logout);
-    if (System._session === undefined) { // GNOME >=3.26
+    if (System._actionsItem === undefined) { // GNOME >= 3.33
+        System.buttonGroup.add(_logoutButton, { expand: true, x_fill: false });
+    } else if (System._session === undefined) { // GNOME >=3.26
         System._actionsItem.actor.add_child(_logoutButton);
     } else {
         System._actionsItem.actor.add_child(_logoutButton, { expand: true, x_fill: false });
@@ -47,18 +51,23 @@ function enable () {
 /*
  * Disables the extension
  */
-function disable () {
-    System._actionsItem.actor.remove_child(_logoutButton);
+function disable() {
+    if (System._actionsItem === undefined) { // GNOME >= 3.33
+        System.buttonGroup.remove_child(_logoutButton);
+    } else {
+        System._actionsItem.actor.remove_child(_logoutButton);
+    }
 }
 
 /*
  * Initiates a log out when the log out button is clicked
  */
-function _logout () {
+function _logout() {
     System.menu.itemActivated();
     Main.overview.hide();
     if (System._session === undefined) { // GNOME >=3.26
-        System._systemActions.activateLogout();
+        var sessionManager = new GnomeSession.SessionManager();
+        sessionManager.LogoutRemote(LOGOUT_MODE_NORMAL);
     } else {
         System._session.LogoutRemote(0)
     }

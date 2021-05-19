@@ -43,7 +43,9 @@ var AskNamePopup = class {
         }
         contentArea.pack_start(this._textArea, true, true, 5);
         this._textArea.connect('activate', () => {
-            this._window.response(Gtk.ResponseType.OK);
+            if (this._button.sensitive) {
+                this._window.response(Gtk.ResponseType.OK);
+            }
         });
         this._textArea.connect('changed', () => {
             this._validate();

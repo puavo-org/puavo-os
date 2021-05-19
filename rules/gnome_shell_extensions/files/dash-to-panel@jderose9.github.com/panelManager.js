@@ -30,6 +30,7 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Overview = Me.imports.overview;
 const Panel = Me.imports.panel;
+const PanelSettings = Me.imports.panelSettings;
 const Proximity = Me.imports.proximity;
 const Taskbar = Me.imports.taskbar;
 const Utils = Me.imports.utils;
@@ -37,6 +38,7 @@ const Utils = Me.imports.utils;
 const Config = imports.misc.config;
 const Lang = imports.lang;
 const Gi = imports._gi;
+const GLib = imports.gi.GLib;
 const Clutter = imports.gi.Clutter;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
@@ -58,8 +60,11 @@ var dtpPanelManager = Utils.defineClass({
 
     _init: function() {
         this.overview = new Overview.dtpOverview();
+        this.panelsElementPositions = {};
 
-        Main.overview.viewSelector.appDisplay._views.forEach(v => {
+        this._saveMonitors();
+
+        Utils.getAppDisplayViews().forEach(v => {
             Utils.wrapActor(v.view);
             Utils.wrapActor(v.view._grid);
         });
@@ -67,23 +72,20 @@ var dtpPanelManager = Utils.defineClass({
 
     enable: function(reset) {
         let dtpPrimaryIndex = Me.settings.get_int('primary-monitor');
-        if(dtpPrimaryIndex < 0 || dtpPrimaryIndex >= Main.layoutManager.monitors.length)
-            dtpPrimaryIndex = Main.layoutManager.primaryIndex;
-        
-        let dtpPrimaryMonitor = Main.layoutManager.monitors[dtpPrimaryIndex];
-        
+
+        this.dtpPrimaryMonitor = Main.layoutManager.monitors[dtpPrimaryIndex] || Main.layoutManager.primaryMonitor;
         this.proximityManager = new Proximity.ProximityManager();
 
         Utils.wrapActor(Main.panel);
         Utils.wrapActor(Main.overview.dash || 0);
 
-        this.primaryPanel = this._createPanel(dtpPrimaryMonitor);
+        this.primaryPanel = this._createPanel(this.dtpPrimaryMonitor, Me.settings.get_boolean('stockgs-keep-top-panel'));
         this.allPanels = [ this.primaryPanel ];
         
         this.overview.enable(this.primaryPanel);
 
         if (Me.settings.get_boolean('multi-monitors')) {
-            Main.layoutManager.monitors.filter(m => m != dtpPrimaryMonitor).forEach(m => {
+            Main.layoutManager.monitors.filter(m => m != this.dtpPrimaryMonitor).forEach(m => {
                 this.allPanels.push(this._createPanel(m, true));
             });
         }
@@ -91,16 +93,18 @@ var dtpPanelManager = Utils.defineClass({
         global.dashToPanel.panels = this.allPanels;
         global.dashToPanel.emit('panels-created');
 
-        let panelPosition = Panel.getPosition();
         this.allPanels.forEach(p => {
+            let panelPosition = p.getPosition();
             let leftOrRight = (panelPosition == St.Side.LEFT || panelPosition == St.Side.RIGHT);
             
             p.panelBox.set_size(
-                leftOrRight ? -1 : p.monitor.width, 
-                leftOrRight ? p.monitor.height : -1
+                leftOrRight ? -1 : p.geom.w + p.geom.lrPadding, 
+                leftOrRight ? p.geom.h + p.geom.tbPadding : -1
             );
 
             this._findPanelMenuButtons(p.panelBox).forEach(pmb => this._adjustPanelMenuButton(pmb, p.monitor, panelPosition));
+            
+            p.taskbar.iconAnimator.start();
         });
 
         //in 3.32, BoxPointer now inherits St.Widget
@@ -116,9 +120,10 @@ var dtpPanelManager = Utils.defineClass({
             });
         }
 
-        this.setFocusedMonitor(dtpPrimaryMonitor);
+        this._updatePanelElementPositions();
+        this.setFocusedMonitor(this.dtpPrimaryMonitor);
         
-        if (Panel.checkIfVertical()) {
+        if (this.primaryPanel.checkIfVertical()) {
             Main.wm._getPositionForDirection = newGetPositionForDirection;
         }
         
@@ -161,12 +166,7 @@ var dtpPanelManager = Utils.defineClass({
         this._oldGetShowAppsButton = Main.overview.getShowAppsButton;
         Main.overview.getShowAppsButton = this._newGetShowAppsButton.bind(this);
 
-        this._needsDashItemContainerAllocate = !Dash.DashItemContainer.prototype.hasOwnProperty('vfunc_allocate');
-
-        if (this._needsDashItemContainerAllocate) {
-            Utils.hookVfunc(Dash.DashItemContainer.prototype, 'allocate', this._newDashItemContainerAllocate);
-        }
-            
+        
         // Since Gnome 3.8 dragging an app without having opened the overview before cause the attemp to
         //animate a null target since some variables are not initialized when the viewSelector is created
         if(Main.overview.viewSelector._activePage == null)
@@ -194,20 +194,25 @@ var dtpPanelManager = Utils.defineClass({
                 ]
             );
 
-            Main.overview.viewSelector.appDisplay._views.forEach(v => {
-                if (v.control.has_style_pseudo_class('checked')) {
+            Utils.getAppDisplayViews().forEach(v => {
+                if (!v.control || v.control.has_style_pseudo_class('checked')) {
                     currentAppsView = v;
                 }
 
+                if (v.control) {
+                    this._signalsHandler.add(
+                        [
+                            v.control, 
+                            'clicked', 
+                            () => {
+                                this._needsIconAllocate = currentAppsView != v;
+                                currentAppsView = v;
+                            }
+                        ]
+                    );
+                }
+
                 this._signalsHandler.add(
-                    [
-                        v.control, 
-                        'clicked', 
-                        () => {
-                            this._needsIconAllocate = currentAppsView != v;
-                            currentAppsView = v;
-                        }
-                    ],
                     [
                         v.view, 
                         'notify::visible', 
@@ -230,10 +235,17 @@ var dtpPanelManager = Utils.defineClass({
                     'changed::primary-monitor',
                     'changed::multi-monitors',
                     'changed::isolate-monitors',
-                    'changed::taskbar-position',
-                    'changed::panel-position'
+                    'changed::panel-positions',
+                    'changed::panel-lengths',
+                    'changed::panel-anchors',
+                    'changed::stockgs-keep-top-panel'
                 ],
                 () => this._reset()
+            ],
+            [
+                Me.settings,
+                'changed::panel-element-positions',
+                () => this._updatePanelElementPositions()
             ],
             [
                 Me.settings,
@@ -245,6 +257,7 @@ var dtpPanelManager = Utils.defineClass({
                 'monitors-changed', 
                 () => {
                     if (Main.layoutManager.primaryMonitor) {
+                        this._saveMonitors();
                         this._reset();
                     }
                 }
@@ -252,7 +265,7 @@ var dtpPanelManager = Utils.defineClass({
         );
 
         Panel.panelBoxes.forEach(c => this._signalsHandler.add(
-            [Main.panel[c], 'actor-added', (parent, child) => this._adjustPanelMenuButton(this._getPanelMenuButton(child), this.primaryPanel.monitor, Panel.getPosition())]
+            [Main.panel[c], 'actor-added', (parent, child) => this._adjustPanelMenuButton(this._getPanelMenuButton(child), this.primaryPanel.monitor, this.primaryPanel.getPosition())]
         ));
 
         this._setKeyBindings(true);
@@ -263,6 +276,8 @@ var dtpPanelManager = Utils.defineClass({
         this.proximityManager.destroy();
 
         this.allPanels.forEach(p => {
+            p.taskbar.iconAnimator.pause();
+
             this._findPanelMenuButtons(p.panelBox).forEach(pmb => {
                 if (pmb.menu._boxPointer._dtpGetPreferredHeightId) {
                     pmb.menu._boxPointer._container.disconnect(pmb.menu._boxPointer._dtpGetPreferredHeightId);
@@ -282,7 +297,7 @@ var dtpPanelManager = Utils.defineClass({
             Main.layoutManager._untrackActor(p.panelBox);
             Main.layoutManager.removeChrome(clipContainer);
 
-            if (p.isSecondary) {
+            if (p.isStandalone) {
                 p.panelBox.destroy();
             } else {
                 p.panelBox.remove_child(p);
@@ -302,16 +317,16 @@ var dtpPanelManager = Utils.defineClass({
 
         delete Main.wm._getPositionForDirection;
 
+        if (Main.layoutManager.primaryMonitor) {
+            Main.layoutManager.panelBox.set_position(Main.layoutManager.primaryMonitor.x, Main.layoutManager.primaryMonitor.y);
+            Main.layoutManager.panelBox.set_size(Main.layoutManager.primaryMonitor.width, -1);
+        }
+
         if (reset) return;
         
         this._setKeyBindings(false);
 
         this._signalsHandler.destroy();
-
-        if (Main.layoutManager.primaryMonitor) {
-            Main.layoutManager.panelBox.set_position(Main.layoutManager.primaryMonitor.x, Main.layoutManager.primaryMonitor.y);
-            Main.layoutManager.panelBox.set_size(Main.layoutManager.primaryMonitor.width, -1);
-        }
 
         Main.layoutManager._updateHotCorners = this._oldUpdateHotCorners;
         Main.layoutManager._updateHotCorners();
@@ -335,10 +350,6 @@ var dtpPanelManager = Utils.defineClass({
 
         Utils.getPanelGhost().set_size(-1, -1);
 
-        if (this._needsDashItemContainerAllocate) {
-            Utils.hookVfunc(Dash.DashItemContainer.prototype, 'allocate', function(box, flags) { this.vfunc_allocate(box, flags); });
-        }
-
         if (this._oldDoSpringAnimation) {
             AppDisplay.BaseAppView.prototype._doSpringAnimation = this._oldDoSpringAnimation;
         }
@@ -355,8 +366,9 @@ var dtpPanelManager = Utils.defineClass({
     },
 
     setFocusedMonitor: function(monitor, ignoreRelayout) {
+        this._needsIconAllocate = 1;
+        
         if (!this.checkIfFocusedMonitor(monitor)) {
-            this._needsIconAllocate = 1;
             Main.overview.viewSelector._workspacesDisplay._primaryIndex = monitor.index;
             
             Main.overview._overview.clear_constraints();
@@ -368,16 +380,28 @@ var dtpPanelManager = Utils.defineClass({
         }
     },
 
+    _saveMonitors: function() {
+        //Mutter meta_monitor_manager_get_primary_monitor (global.display.get_primary_monitor()) doesn't return the same
+        //monitor as GDK gdk_screen_get_primary_monitor (imports.gi.Gdk.Screen.get_default().get_primary_monitor()).
+        //Since the Mutter function is what's used in gnome-shell and we can't access it from the settings dialog, store 
+        //the monitors information in a setting so we can use the same monitor indexes as the ones in gnome-shell
+        let primaryIndex = Main.layoutManager.primaryIndex;
+        let monitors = [primaryIndex];
+
+        Main.layoutManager.monitors.filter(m => m.index != primaryIndex).forEach(m => monitors.push(m.index));
+        Me.settings.set_value('available-monitors', new GLib.Variant('ai', monitors));
+    },
+
     checkIfFocusedMonitor: function(monitor) {
         return Main.overview.viewSelector._workspacesDisplay._primaryIndex == monitor.index;
     },
 
-    _createPanel: function(monitor, isSecondary) {
+    _createPanel: function(monitor, isStandalone) {
         let panelBox;
         let panel;
         let clipContainer = new Clutter.Actor();
         
-        if (isSecondary) {
+        if (isStandalone) {
             panelBox = new St.BoxLayout({ name: 'panelBox' });
         } else {
             panelBox = Main.layoutManager.panelBox;
@@ -390,7 +414,7 @@ var dtpPanelManager = Utils.defineClass({
         clipContainer.add_child(panelBox);
         Main.layoutManager.trackChrome(panelBox, { trackFullscreen: true, affectsStruts: true, affectsInputRegion: true });
         
-        panel = new Panel.dtpPanel(this, monitor, panelBox, isSecondary);
+        panel = new Panel.dtpPanel(this, monitor, panelBox, isStandalone);
         panelBox.add(panel);
         panel.enable();
 
@@ -404,6 +428,11 @@ var dtpPanelManager = Utils.defineClass({
         this.disable(true);
         this.allPanels = [];
         this.enable(true);
+    },
+
+    _updatePanelElementPositions: function() {
+        this.panelsElementPositions = PanelSettings.getSettingsJson(Me.settings, 'panel-element-positions');
+        this.allPanels.forEach(p => p.updateElementPositions());
     },
 
     _adjustPanelMenuButton: function(button, monitor, arrowSide) {
@@ -425,7 +454,8 @@ var dtpPanelManager = Utils.defineClass({
     _getBoxPointerPreferredHeight: function(boxPointer, alloc, monitor) {
         if (boxPointer._dtpInPanel && boxPointer.sourceActor && Me.settings.get_boolean('intellihide')) {
             monitor = monitor || Main.layoutManager.findMonitorForActor(boxPointer.sourceActor);
-            let excess = alloc.natural_size + Panel.size + 10 - monitor.height; // 10 is arbitrary
+            let panel = Utils.find(global.dashToPanel.panels, p => p.monitor == monitor);
+            let excess = alloc.natural_size + panel.dtpSize + 10 - monitor.height; // 10 is arbitrary
 
             if (excess > 0) {
                 alloc.natural_size -= excess;
@@ -453,7 +483,7 @@ var dtpPanelManager = Utils.defineClass({
     },
 
     _removePanelBarriers: function(panel) {
-        if (panel.isSecondary && panel._rightPanelBarrier) {
+        if (panel.isStandalone && panel._rightPanelBarrier) {
             panel._rightPanelBarrier.destroy();
         }
 
@@ -504,12 +534,16 @@ var dtpPanelManager = Utils.defineClass({
         let monitors = Main.layoutManager.monitors;
 
         for (let i = 0; i < monitors.length; i++) {
+            let workspaces;
             let view;
             if (this._workspacesOnlyOnPrimary && i != Main.layoutManager.primaryIndex) {
                 view = new WorkspacesView.ExtraWorkspaceView(i);
                 view.getActiveWorkspace = view.getActiveWorkspace || function() { return this._workspace; };
-            } else
+                workspaces = [view._workspace];
+            } else {
                 view = new WorkspacesView.WorkspacesView(i, this._scrollAdjustment || 0);
+                workspaces = view._workspaces;
+            }
 
             Utils.wrapActor(view);
             view.actor.connect('scroll-event', this._onScrollEvent.bind(this));
@@ -519,43 +553,112 @@ var dtpPanelManager = Utils.defineClass({
                                             this._scrollValueChanged.bind(this));
             }
 
+            workspaces.forEach(w => w.setFullGeometry = geom => w._fullGeometry = geom);
             this._workspacesViews.push(view);
         }
 
         this._workspacesViews.forEach(wv => Main.layoutManager.overviewGroup.add_actor(wv.actor));
 
-        this._updateWorkspacesFullGeometry();
-        this._updateWorkspacesActualGeometry();
+        if (this._syncWorkspacesFullGeometry) {
+            //gnome-shell 3.36.4
+            if (this._fullGeometry)
+                this._syncWorkspacesFullGeometry();
+            if (this._actualGeometry)
+                this._syncWorkspacesActualGeometry();
+        } else if (this._updateWorkspacesFullGeometry) {
+            this._updateWorkspacesFullGeometry();
+            this._updateWorkspacesActualGeometry();
+        }
     },
 
     _newGetShowAppsButton: function() {
         let focusedMonitorIndex = Utils.findIndex(this.allPanels, p => this.checkIfFocusedMonitor(p.monitor));
         
         return this.allPanels[focusedMonitorIndex].taskbar.showAppsButton;
+    }
+});
+
+// This class drives long-running icon animations, to keep them running in sync
+// with each other.
+var IconAnimator = Utils.defineClass({
+    Name: 'DashToPanel.IconAnimator',
+
+    _init: function(actor) {
+        this._count = 0;
+        this._started = false;
+        this._animations = {
+            dance: [],
+        };
+        this._timeline = new Clutter.Timeline({
+            duration: 3000,
+            repeat_count: -1,
+        });
+
+        /* Just use the construction property when no need to support 3.36 */
+        if (this._timeline.set_actor)
+            this._timeline.set_actor(actor);
+
+        this._timeline.connect('new-frame', () => {
+            const progress = this._timeline.get_progress();
+            const danceRotation = progress < 1/6 ? 15*Math.sin(progress*24*Math.PI) : 0;
+            const dancers = this._animations.dance;
+            for (let i = 0, iMax = dancers.length; i < iMax; i++) {
+                dancers[i].target.rotation_angle_z = danceRotation;
+            }
+        });
     },
 
-    _newDashItemContainerAllocate: function(box, flags) {
-        if (this.child == null)
-            return;
-
-        this.set_allocation(box, flags);
-
-        let availWidth = box.x2 - box.x1;
-        let availHeight = box.y2 - box.y1;
-        let [minChildWidth, minChildHeight, natChildWidth, natChildHeight] = this.child.get_preferred_size();
-        let [childScaleX, childScaleY] = this.child.get_scale();
-
-        let childWidth = Math.min(natChildWidth * childScaleX, availWidth);
-        let childHeight = Math.min(natChildHeight * childScaleY, availHeight);
-        let childBox = new Clutter.ActorBox();
-
-        childBox.x1 = (availWidth - childWidth) / 2;
-        childBox.y1 = (availHeight - childHeight) / 2;
-        childBox.x2 = childBox.x1 + childWidth;
-        childBox.y2 = childBox.y1 + childHeight;
-
-        this.child.allocate(childBox, flags);
+    destroy: function() {
+        this._timeline.stop();
+        this._timeline = null;
+        for (let name in this._animations) {
+            const pairs = this._animations[name];
+            for (let i = 0, iMax = pairs.length; i < iMax; i++) {
+                const pair = pairs[i];
+                pair.target.disconnect(pair.targetDestroyId);
+            }
+        }
+        this._animations = null;
     },
+
+    pause: function() {
+        if (this._started && this._count > 0) {
+            this._timeline.stop();
+        }
+        this._started = false;
+    },
+
+    start: function() {
+        if (!this._started && this._count > 0) {
+            this._timeline.start();
+        }
+        this._started = true;
+    },
+
+    addAnimation: function(target, name) {
+        const targetDestroyId = target.connect('destroy', () => this.removeAnimation(target, name));
+        this._animations[name].push({ target: target, targetDestroyId: targetDestroyId });
+        if (this._started && this._count === 0) {
+            this._timeline.start();
+        }
+        this._count++;
+    },
+
+    removeAnimation: function(target, name) {
+        const pairs = this._animations[name];
+        for (let i = 0, iMax = pairs.length; i < iMax; i++) {
+            const pair = pairs[i];
+            if (pair.target === target) {
+                target.disconnect(pair.targetDestroyId);
+                pairs.splice(i, 1);
+                this._count--;
+                if (this._started && this._count === 0) {
+                    this._timeline.stop();
+                }
+                return;
+            }
+        }
+    }
 });
 
 function newViewSelectorAnimateIn(oldPage) {
@@ -621,7 +724,7 @@ function newDoSpringAnimation(animationDirection) {
 
 function newAnimateIconPosition(icon, box, flags, nChangedIcons) {
     if (this._needsIconAllocate) {
-        icon.allocate(box, flags);
+        Utils.allocate(icon, box, flags);
         return;
     }
 
@@ -644,11 +747,11 @@ function newUpdateHotCorners() {
         return;
     }
 
-    let panelPosition = Panel.getPosition();
-    let panelTopLeft = panelPosition == St.Side.TOP || panelPosition == St.Side.LEFT;
-
     // build new hot corners
     for (let i = 0; i < this.monitors.length; i++) {
+        let panel = Utils.find(global.dashToPanel.panels, p => p.monitor.index == i);
+        let panelPosition = panel ? panel.getPosition() : St.Side.BOTTOM;
+        let panelTopLeft = panelPosition == St.Side.TOP || panelPosition == St.Side.LEFT;
         let monitor = this.monitors[i];
         let cornerX = this._rtl ? monitor.x + monitor.width : monitor.x;
         let cornerY = monitor.y;
@@ -692,7 +795,7 @@ function newUpdateHotCorners() {
             let corner = new Layout.HotCorner(this, monitor, cornerX, cornerY);
 
             corner.setBarrierSize = size => corner.__proto__.setBarrierSize.call(corner, Math.min(size, 32));
-            corner.setBarrierSize(Panel.size);
+            corner.setBarrierSize(panel ? panel.dtpSize : 32);
             this.hotCorners.push(corner);
         } else {
             this.hotCorners.push(null);
@@ -704,7 +807,7 @@ function newUpdateHotCorners() {
 
 function newUpdatePanelBarrier(panel) {
     let barriers = {
-        _rightPanelBarrier: [(panel.isSecondary ? panel : this)],
+        _rightPanelBarrier: [(panel.isStandalone ? panel : this)],
         _leftPanelBarrier: [panel]
     };
 
@@ -725,7 +828,7 @@ function newUpdatePanelBarrier(panel) {
     let fixed1 = panel.monitor.y;
     let fixed2 = panel.monitor.y + barrierSize;
     
-    if (Panel.checkIfVertical()) {
+    if (panel.checkIfVertical()) {
         barriers._rightPanelBarrier.push(panel.monitor.y + panel.monitor.height, Meta.BarrierDirection.POSITIVE_Y);
         barriers._leftPanelBarrier.push(panel.monitor.y, Meta.BarrierDirection.NEGATIVE_Y);
     } else {
@@ -733,7 +836,7 @@ function newUpdatePanelBarrier(panel) {
         barriers._leftPanelBarrier.push(panel.monitor.x, Meta.BarrierDirection.POSITIVE_X);
     }
 
-    switch (Panel.getPosition()) {
+    switch (panel.getPosition()) {
         //values are initialized as St.Side.TOP 
         case St.Side.BOTTOM:
             fixed1 = panel.monitor.y + panel.monitor.height - barrierSize;
@@ -766,16 +869,17 @@ function newUpdatePanelBarrier(panel) {
             directions: barriers[k][2]
         };
         
-        barrierOptions[Panel.varCoord.c1] = barrierOptions[Panel.varCoord.c2] = barriers[k][1];
-        barrierOptions[Panel.fixedCoord.c1] = fixed1;
-        barrierOptions[Panel.fixedCoord.c2] = fixed2;
+        barrierOptions[panel.varCoord.c1] = barrierOptions[panel.varCoord.c2] = barriers[k][1];
+        barrierOptions[panel.fixedCoord.c1] = fixed1;
+        barrierOptions[panel.fixedCoord.c2] = fixed2;
 
         barriers[k][0][k] = new Meta.Barrier(barrierOptions);
     });
 }
 
 function _newLookingGlassResize() {
-    let topOffset = Panel.getPosition() == St.Side.TOP ? Panel.size : 0;
+    let primaryMonitorPanel = Utils.find(global.dashToPanel.panels, p => p.monitor == Main.layoutManager.primaryMonitor);
+    let topOffset = primaryMonitorPanel.getPosition() == St.Side.TOP ? primaryMonitorPanel.dtpSize + 8 : 32;
 
     this._oldResize();
     Utils.wrapActor(this);

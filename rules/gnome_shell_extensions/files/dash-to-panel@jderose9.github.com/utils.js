@@ -23,7 +23,7 @@
 
 const Clutter = imports.gi.Clutter;
 const Config = imports.misc.config;
-const GdkPixbuf = imports.gi.GdkPixbuf
+const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gi = imports._gi;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -294,6 +294,19 @@ var getWorkspaceCount = function() {
     return DisplayWrapper.getWorkspaceManager().n_workspaces;
 };
 
+var getStageTheme = function() {
+    return St.ThemeContext.get_for_stage(global.stage);
+};
+
+var getScaleFactor = function() {
+    return getStageTheme().scale_factor || 1;
+};
+
+var getAppDisplayViews = function() {
+    //gnome-shell 3.38 only has one view and it is now the appDisplay
+    return Main.overview.viewSelector.appDisplay._views || [{ view: Main.overview.viewSelector.appDisplay }];
+};
+
 var findIndex = function(array, predicate) {
     if (Array.prototype.findIndex) {
         return array.findIndex(predicate);
@@ -306,6 +319,14 @@ var findIndex = function(array, predicate) {
     }
 
     return -1;
+};
+
+var find = function(array, predicate) {
+    let index = findIndex(array, predicate);
+
+    if (index > -1) {
+        return array[index];
+    }
 };
 
 var mergeObjects = function(main, bck) {
@@ -337,6 +358,38 @@ var wrapActor = function(actor) {
     }
 };
 
+var getTransformedAllocation = function(actor) {
+    if (Config.PACKAGE_VERSION < '3.37') {
+        return Shell.util_get_transformed_allocation(actor);
+    }
+
+    let extents = actor.get_transformed_extents();
+    let topLeft = extents.get_top_left();
+    let bottomRight = extents.get_bottom_right();
+
+    return { x1: topLeft.x, x2: bottomRight.x, y1: topLeft.y, y2: bottomRight.y };
+};
+
+var allocate = function(actor, box, flags, useParent) {
+    let allocateObj = useParent ? actor.__proto__ : actor;
+
+    allocateObj.allocate.apply(actor, getAllocationParams(box, flags));
+};
+
+var setAllocation = function(actor, box, flags) {
+    actor.set_allocation.apply(actor, getAllocationParams(box, flags));
+};
+
+var getAllocationParams = function(box, flags) {
+    let params = [box];
+
+    if (Config.PACKAGE_VERSION < '3.37') {
+        params.push(flags);
+    }
+
+    return params;
+};
+
 var setClip = function(actor, x, y, width, height) {
     actor.set_clip(0, 0, width, height);
     actor.set_position(x, y);
@@ -361,14 +414,18 @@ var removeKeybinding = function(key) {
     }
 };
 
+var getrgbColor = function(color) {
+    color = typeof color === 'string' ? Clutter.color_from_string(color)[1] : color;
+
+    return { red: color.red, green: color.green, blue: color.blue };
+};
+
 var getrgbaColor = function(color, alpha, offset) {
     if (alpha <= 0) {
         return 'transparent; ';
     }
 
-    color = typeof color === 'string' ? Clutter.color_from_string(color)[1] : color;
-
-    let rgb = { red: color.red, green: color.green, blue: color.blue };
+    let rgb = getrgbColor(color);
 
     if (offset) {
         ['red', 'green', 'blue'].forEach(k => {
@@ -381,6 +438,13 @@ var getrgbaColor = function(color, alpha, offset) {
     }
 
     return 'rgba(' + rgb.red + ',' + rgb.green + ',' + rgb.blue + ',' + (Math.floor(alpha * 100) * 0.01) + '); ' ;
+};
+
+var checkIfColorIsBright = function(color) {
+    let rgb = getrgbColor(color);
+    let brightness = 0.2126 * rgb.red + 0.7152 * rgb.green + 0.0722 * rgb.blue;
+
+    return brightness > 128;
 };
 
 var getMouseScrollDirection = function(event) {
@@ -436,12 +500,21 @@ var animateWindowOpacity = function(window, tweenOpts) {
         let visible = tweenOpts.opacity > 0;
         let windowActor = window;
 
-        if (!windowActor.visible && visible) {
-            windowActor.visible = visible;
-        } 
-
         window = windowActor.get_first_child() || windowActor;
-        tweenOpts.onComplete = () => windowActor.visible = visible;
+
+        if (!windowActor.visible && visible) {
+            window.opacity = 0;
+            windowActor.visible = visible;
+        }
+        
+        if (!visible) {
+            let initialOpacity = window.opacity;
+
+            tweenOpts.onComplete = () => { 
+                windowActor.visible = visible; 
+                window.opacity = initialOpacity; 
+            };
+        }
     } else if (Config.PACKAGE_VERSION > '3.33') {
         //the workaround only works on 3.35+, so on 3.34, let's just hide the 
         //window without animation

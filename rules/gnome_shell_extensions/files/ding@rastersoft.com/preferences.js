@@ -118,13 +118,17 @@ function showPreferences() {
     nautilusBox.add(buildSelector(nautilusSettings, 'click-policy', _("Click type for open files"), { 'single': _("Single click"), 'double': _("Double click"), }));
     nautilusBox.add(buildSwitcher(gtkSettings, 'show-hidden', _("Show hidden files")));
     nautilusBox.add(buildSwitcher(nautilusSettings, 'show-delete-permanently', _("Show a context menu item to delete permanently")));
-    nautilusBox.add(buildSelector(nautilusSettings,
-                                  'executable-text-activation',
-                                  _("Action to do when launching a program from the desktop"), {
-                                      'display': _("Display the content of the file"),
-                                      'launch': _("Launch the file"),
-                                      'ask': _("Ask what to do")
-                                   }));
+    // Gnome Shell 40 removed this option
+    try {
+        nautilusBox.add(buildSelector(nautilusSettings,
+                                      'executable-text-activation',
+                                      _("Action to do when launching a program from the desktop"), {
+                                          'display': _("Display the content of the file"),
+                                          'launch': _("Launch the file"),
+                                          'ask': _("Ask what to do")
+                                       }));
+    } catch(e) {
+    }
     nautilusBox.add(buildSelector(nautilusSettings,
                                   'show-image-thumbnails',
                                   _("Show image thumbnails"), {

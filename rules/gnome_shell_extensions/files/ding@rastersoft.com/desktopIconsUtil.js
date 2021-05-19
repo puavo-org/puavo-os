@@ -30,6 +30,11 @@ function getDesktopDir() {
     return Gio.File.new_for_commandline_arg(desktopPath);
 }
 
+function getScriptsDir() {
+    let scriptsDir =  GLib.build_filenamev([GLib.get_home_dir(), Enums.NAUTILUS_SCRIPTS_DIR]);
+    return Gio.File.new_for_commandline_arg(scriptsDir);
+}
+
 function clamp(value, min, max) {
     return Math.max(Math.min(value, max), min);
 };
@@ -122,9 +127,9 @@ function getMounts(volumeMonitor) {
     for (let mount of mounts) {
         try {
             let is_drive = (mount.get_drive() != null) || (mount.get_volume() != null);
-            let uri = mount.get_default_location().get_uri();
+            let uri = mount.get_root().get_uri();
             if (((is_drive && show_volumes) || (!is_drive && show_network)) && (!(uris.includes(uri)))) {
-                result.push([mount.get_default_location(), Enums.FileType.EXTERNAL_DRIVE, mount]);
+                result.push([mount.get_root(), Enums.FileType.EXTERNAL_DRIVE, mount]);
                 uris.push(uri);
             }
         } catch(e) {
@@ -180,7 +185,13 @@ function getFilesFromNautilusDnD(selection, type) {
 function isExecutable(mimetype, file_name) {
 
     if (Gio.content_type_can_be_executable(mimetype)) {
-        switch (Prefs.nautilusSettings.get_string('executable-text-activation')) {
+        // Gnome Shell 40 removed this option
+        try {
+            var action = Prefs.nautilusSettings.get_string('executable-text-activation');
+        } catch(e) {
+            var action = 'ask';
+        }
+        switch (action) {
             default: // display
                 return Enums.WhatToDoWithExecutable.DISPLAY;
             case 'launch':
@@ -215,5 +226,21 @@ function isExecutable(mimetype, file_name) {
         }
     } else {
         return Enums.WhatToDoWithExecutable.DISPLAY;
+    }
+}
+
+function writeTextFileToDesktop(text, filename, dropCoordinates) {
+    let path = GLib.build_filenamev([GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP),  filename]);
+    let file = Gio.File.new_for_path(path);
+    const PERMISSIONS_MODE = 0o744;
+    if (GLib.mkdir_with_parents(file.get_parent().get_path(), PERMISSIONS_MODE) === 0) {
+                let [success, tag] = file.replace_contents(text, null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
+    }
+    if (dropCoordinates != null) {
+        let info = new Gio.FileInfo();
+        info.set_attribute_string('metadata::nautilus-drop-position', `${dropCoordinates[0]},${dropCoordinates[1]}`);
+        try {
+            file.set_attributes_from_info(info, Gio.FileQueryInfoFlags.NONE, null);
+        } catch(e) {}
     }
 }

@@ -69,27 +69,6 @@ function innerEnable(removeId) {
     // under X11 we don't need to cheat, so only do all this under wayland
     if (Meta.is_wayland_compositor()) {
         data.x11Manager.enable();
-
-        data.idMap = global.window_manager.connect_after('map', (obj, windowActor) => {
-            if (!data.currentProcess) {
-                return false;
-            }
-            let window = windowActor.get_meta_window();
-            /*
-            * If the window title is the same than the UUID (which was passed through a secure
-            * channel), then this is the window of our process, so we manage it.
-            */
-            let belongs;
-            try {
-                belongs = data.currentProcess.query_window_belongs_to(window);
-            } catch(err) {
-                belongs = false;
-            }
-            if (belongs) {
-                data.x11Manager.addWindow(window);
-            }
-            return false;
-        });
     }
 
     /*
@@ -130,14 +109,12 @@ function innerEnable(removeId) {
 function disable() {
 
     data.isEnabled = false;
+    killCurrentProcess();
     data.x11Manager.disable();
 
     // disconnect signals only if connected
     if (data.startupPreparedId) {
         Main.layoutManager.disconnect(data.startupPreparedId);
-    }
-    if (data.idMap) {
-        global.window_manager.disconnect(data.idMap);
     }
     if (data.monitorsChangedId) {
         Main.layoutManager.disconnect(data.monitorsChangedId);
@@ -148,7 +125,6 @@ function disable() {
     if (data.sizeChangedId) {
         global.window_manager.disconnect(data.sizeChangedId);
     }
-    killCurrentProcess();
 }
 
 function reloadIfSizesChanged() {
@@ -160,12 +136,7 @@ function reloadIfSizesChanged() {
         let ws = global.workspace_manager.get_workspace_by_index(0);
         let area = ws.get_work_area_for_monitor(monitorIndex);
         let area2 = data.desktopCoordinates[monitorIndex];
-        let scale;
-        if (ExtensionUtils.versionCheck(['3.30'], Config.PACKAGE_VERSION)) {
-            scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        } else {
-            scale = Main.layoutManager.monitors[monitorIndex].geometry_scale;
-        }
+        let scale = Main.layoutManager.monitors[monitorIndex].geometry_scale;
         if ((area.x != area2.x) ||
             (area.y != area2.y) ||
             (area.width != area2.width) ||
@@ -195,9 +166,8 @@ function killCurrentProcess() {
     }
 
     // kill the desktop program. It will be reloaded automatically.
-    data.appUUID = null;
     if (data.currentProcess && data.currentProcess.subprocess) {
-        data.currentProcess.subprocess.force_exit();
+        data.currentProcess.subprocess.send_signal(15);
     }
 }
 
@@ -267,18 +237,15 @@ function launchDesktop() {
     let first = true;
 
     data.desktopCoordinates = [];
+    argv.push('-M');
+    argv.push(`${Main.layoutManager.primaryIndex}`);
 
-    let scale;
     for(let monitorIndex = 0; monitorIndex < Main.layoutManager.monitors.length; monitorIndex++) {
         let ws = global.workspace_manager.get_workspace_by_index(0);
         let area = ws.get_work_area_for_monitor(monitorIndex);
         // send the working area of each monitor in the desktop
         argv.push('-D');
-        if (ExtensionUtils.versionCheck(['3.30'], Config.PACKAGE_VERSION)) {
-            scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        } else {
-            scale = Main.layoutManager.monitors[monitorIndex].geometry_scale;
-        }
+        let scale = Main.layoutManager.monitors[monitorIndex].geometry_scale;
         argv.push(`${area.x}:${area.y}:${area.width}:${area.height}:${scale}`);
         data.desktopCoordinates.push({x: area.x, y: area.y, width: area.width, height: area.height, zoom: scale})
         if (first || (area.x < data.minx)) {
@@ -299,6 +266,7 @@ function launchDesktop() {
     data.currentProcess = new LaunchSubprocess(0, "DING", "-U");
     data.currentProcess.set_cwd(GLib.get_home_dir());
     data.currentProcess.spawnv(argv);
+    data.x11Manager.set_wayland_client(data.currentProcess);
 
     /*
      * If the desktop process dies, wait 100ms and relaunch it, unless the exit status is different than
@@ -307,7 +275,7 @@ function launchDesktop() {
      */
     data.currentProcess.subprocess.wait_async(null, (obj, res) => {
         let b = obj.wait_finish(res);
-        if (!data.isEnabled || !data.currentProcess || obj !== data.currentProcess.subprocess) {
+        if (!data.currentProcess || obj !== data.currentProcess.subprocess) {
             return;
         }
         if (obj.get_if_exited()) {
@@ -319,6 +287,7 @@ function launchDesktop() {
             data.reloadTime = 1000;
         }
         data.currentProcess = null;
+        data.x11Manager.set_wayland_client(null);
         if (data.isEnabled) {
             if (data.launchDesktopId) {
                 GLib.source_remove(data.launchDesktopId);
@@ -350,40 +319,36 @@ var LaunchSubprocess = class {
         this._cmd_parameter = cmd_parameter;
         this._UUID = null;
         this._flags = flags | Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_MERGE;
-        if (Meta.is_wayland_compositor()) {
-            this._flags |= Gio.SubprocessFlags.STDIN_PIPE;
-        }
         this._launcher = new Gio.SubprocessLauncher({flags: this._flags});
+        if (Meta.is_wayland_compositor()) {
+            this._waylandClient = Meta.WaylandClient.new(this._launcher);
+            if (Config.PACKAGE_VERSION == '3.38.0') {
+                // workaround for bug in 3.38.0
+                this._launcher.ref();
+            }
+        }
         this.subprocess = null;
         this.process_running = false;
     }
 
     spawnv(argv) {
-        let UUID_string = null;
         if (Meta.is_wayland_compositor()) {
-            /*
-             * Generate a random UUID to allow the extension to identify the window. It must be random
-             * to avoid other programs to cheat and pose themselves as the true process. This also means that
-             * launching the program from the command line won't give "superpowers" to it,
-             * but will work like any other program. Of course, under X11 it doesn't matter, but it does
-             * under Wayland.
-             */
-            this._UUID = GLib.uuid_string_random();
-            UUID_string = this._UUID + '\n';
-            argv.push(this._cmd_parameter);
+            this.subprocess = this._waylandClient.spawnv(global.display, argv);
+        } else {
+            this.subprocess = this._launcher.spawnv(argv);
         }
-        this.subprocess = this._launcher.spawnv(argv);
+        /* This is for GLib 2.68
+        if (this._launcher.close) {
+            this._launcher.close();
+        }*/
+        this._launcher = null;
         if (this.subprocess) {
                 /*
-                 * Send the UUID to the application using STDIN as a "secure channel". Sending it as a parameter
-                 * would be insecure, because another program could read it and create a window before our process,
-                 * and cheat the extension. This is done only in Wayland, because under X11 there is no need for it.
-                 *
-                 * It also reads STDOUT and STDERR and sends it to the journal using global.log(). This allows to
+                 * It reads STDOUT and STDERR and sends it to the journal using global.log(). This allows to
                  * have any error from the desktop app in the same journal than other extensions. Every line from
                  * the desktop program is prepended with the "process_id" parameter sent in the constructor.
                  */
-            this.subprocess.communicate_utf8_async(UUID_string, null, (object, res) => {
+            this.subprocess.communicate_utf8_async(null, null, (object, res) => {
                 try {
                     let [d, stdout, stderr] = object.communicate_utf8_finish(res);
                     if (stdout.length != 0) {
@@ -411,14 +376,27 @@ var LaunchSubprocess = class {
      */
     query_window_belongs_to (window) {
         if (!Meta.is_wayland_compositor()) {
-            throw new Error ("Not in wayland");
-        }
-        if (this._UUID == null) {
-            throw new Error ("No process running");
+            return false;
         }
         if (!this.process_running) {
-            throw new Error ("No process running");
+            return false;
         }
-        return (window.get_title().startsWith(this._UUID));
+        try {
+            return (this._waylandClient.owns_window(window));
+        } catch(e) {
+            return false;
+        }
+    }
+
+    show_in_window_list(window) {
+        if (Meta.is_wayland_compositor() && this.process_running) {
+            this._waylandClient.show_in_window_list(window);
+        }
+    }
+
+    hide_from_window_list(window) {
+        if (Meta.is_wayland_compositor() && this.process_running) {
+            this._waylandClient.hide_from_window_list(window);
+        }
     }
 }

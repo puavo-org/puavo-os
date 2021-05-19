@@ -1,10 +1,10 @@
 .file-label {
-    text-shadow: 1px 1px black;
+    text-shadow: 0px 0px 2px #000;
     color: white;
 }
 
 label.file-label:backdrop {
-    text-shadow: 1px 1px black;
+    text-shadow: 0px 0px 2px #000;
     color: white;
 }
 

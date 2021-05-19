@@ -13,46 +13,49 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-const Gio = imports.gi.Gio
-const GLib = imports.gi.GLib
 
-const Extension = imports.misc.extensionUtils.getCurrentExtension()
+/* exported init, enable, disable */
 
-const StatusNotifierWatcher = Extension.imports.statusNotifierWatcher
-const Util = Extension.imports.util
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+
+const StatusNotifierWatcher = Extension.imports.statusNotifierWatcher;
+const Util = Extension.imports.util;
 
 let statusNotifierWatcher = null;
 let isEnabled = false;
+let watchDog = null;
 
 function init() {
-    NameWatchdog.init();
-    NameWatchdog.onVanished = maybe_enable_after_name_available;
+    watchDog = new Util.NameWatcher(StatusNotifierWatcher.WATCHER_BUS_NAME);
+    watchDog.connect('vanished', () => maybeEnableAfterNameAvailable());
 
-    //HACK: we want to leave the watchdog alive when disabling the extension,
+    // HACK: we want to leave the watchdog alive when disabling the extension,
     // but if we are being reloaded, we destroy it since it could be considered
     // a leak and spams our log, too.
-    if (typeof global['--appindicator-extension-on-reload'] == 'function')
-        global['--appindicator-extension-on-reload']()
+    /* eslint-disable no-undef */
+    if (typeof global['--appindicator-extension-on-reload'] === 'function')
+        global['--appindicator-extension-on-reload']();
 
-    global['--appindicator-extension-on-reload'] = function() {
-        Util.Logger.debug("Reload detected, destroying old watchdog")
-        NameWatchdog.destroy()
-    }
+    global['--appindicator-extension-on-reload'] = () => {
+        Util.Logger.debug('Reload detected, destroying old watchdog');
+        watchDog.destroy();
+    };
+    /* eslint-enable no-undef */
 }
 
-//FIXME: when entering/leaving the lock screen, the extension might be enabled/disabled rapidly.
+// FIXME: when entering/leaving the lock screen, the extension might be enabled/disabled rapidly.
 // This will create very bad side effects in case we were not done unowning the name while trying
 // to own it again. Since g_bus_unown_name doesn't fire any callback when it's done, we need to
 // monitor the bus manually to find out when the name vanished so we can reclaim it again.
-function maybe_enable_after_name_available() {
+function maybeEnableAfterNameAvailable() {
     // by the time we get called whe might not be enabled
-    if (isEnabled && !NameWatchdog.isPresent && statusNotifierWatcher === null)
-        statusNotifierWatcher = new StatusNotifierWatcher.StatusNotifierWatcher();
+    if (isEnabled && (!watchDog.nameAcquired || !watchDog.nameOnBus) && statusNotifierWatcher === null)
+        statusNotifierWatcher = new StatusNotifierWatcher.StatusNotifierWatcher(watchDog);
 }
 
 function enable() {
     isEnabled = true;
-    maybe_enable_after_name_available();
+    maybeEnableAfterNameAvailable();
 }
 
 function disable() {
@@ -60,36 +63,5 @@ function disable() {
     if (statusNotifierWatcher !== null) {
         statusNotifierWatcher.destroy();
         statusNotifierWatcher = null;
-    }
-}
-
-/**
- * NameWatchdog will monitor the ork.kde.StatusNotifierWatcher bus name for us
- */
-const NameWatchdog = {
-    onAppeared: null,
-    onVanished: null,
-
-    _watcher_id: null,
-
-    isPresent: false, //will be set in the handlers which are guaranteed to be called at least once
-
-    init: function() {
-        this._watcher_id = Gio.DBus.session.watch_name("org.kde.StatusNotifierWatcher", 0,
-            this._appeared_handler.bind(this), this._vanished_handler.bind(this));
-    },
-
-    destroy: function() {
-        Gio.DBus.session.unwatch_name(this._watcher_id);
-    },
-
-    _appeared_handler: function() {
-        this.isPresent = true;
-        if (this.onAppeared) this.onAppeared();
-    },
-
-    _vanished_handler: function() {
-        this.isPresent = false;
-        if (this.onVanished) this.onVanished();
     }
 }

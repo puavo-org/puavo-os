@@ -23,13 +23,13 @@ const Gtk = imports.gi.Gtk;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
-let appUuid = null;
-
 let desktops = [];
 let lastCommand = null;
 let codePath = '.';
 let errorFound = false;
 let asDesktop = false;
+let primaryIndex = 0;
+
 for(let arg of ARGV) {
     if (lastCommand == null) {
         switch(arg) {
@@ -37,16 +37,9 @@ for(let arg of ARGV) {
             // run it as a true desktop (transparent window and so on)
             asDesktop = true;
             break;
-        case '-U':
-            // wait for an UUID from STDIN
-            let stdin = new Gio.DataInputStream({
-                base_stream: new Gio.UnixInputStream({ fd: 0 })
-            });
-            appUuid = String.fromCharCode.apply(null, stdin.read_line(null)[0]);
-            stdin.close(null);
-            break;
         case '-P':
         case '-D':
+        case '-M':
             lastCommand = arg;
             break;
         default:
@@ -66,6 +59,9 @@ for(let arg of ARGV) {
     case '-D':
         let data = arg.split(":");
         desktops.push({x:parseInt(data[0]), y:parseInt(data[1]), width:parseInt(data[2]), height:parseInt(data[3]), zoom:parseFloat(data[4])});
+        break;
+    case '-M':
+        primaryIndex = parseInt(arg);
         break;
     }
     lastCommand = null;
@@ -92,7 +88,7 @@ const DesktopManager = imports.desktopManager;
 if (!errorFound) {
     Gtk.init(null);
     Prefs.init(codePath);
-    var desktopManager = new DesktopManager.DesktopManager(appUuid, desktops, codePath, asDesktop);
+    var desktopManager = new DesktopManager.DesktopManager(desktops, codePath, asDesktop, primaryIndex);
     Gtk.main();
     // return value
     0;
