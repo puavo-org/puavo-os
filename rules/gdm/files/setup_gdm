@@ -4,19 +4,33 @@ set -eu
 
 status=0
 
-puavo-template /etc/gdm3/daemon.conf <<'EOF' || status=1
+if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' ]; then
+  WaylandEnable=false
+else
+  WaylandEnable=true
+fi
+
+puavo_guestlogin_enabled="$(puavo-conf puavo.guestlogin.enabled)"
+if [ "$puavo_guestlogin_enabled" = 'true' \
+     -a "$(puavo-conf puavo.guestlogin.mode)" = 'automatic' ]; then
+  gdm_automatic_conf='AutomaticLoginEnable = true
+AutomaticLogin = guest'
+else
+  gdm_automatic_conf='# AutomaticLoginEnable = true
+# AutomaticLogin = user1'
+fi
+
+
+cat > /etc/gdm3/daemon.conf.tmp <<EOF || status=1
 # GDM configuration storage
 #
 # See /usr/share/gdm/gdm.schemas for a list of available options.
 
 [daemon]
-{if (puavo_graphics_display_server == "xorg") }WaylandEnable=false{else}WaylandEnable=true{end}
+WaylandEnable=${WaylandEnable}
 
 # Enabling automatic login
-{if (puavo_guestlogin_enabled == "true")
-      && (puavo_guestlogin_mode == "automatic")}AutomaticLoginEnable = true
-AutomaticLogin = guest{else}#  AutomaticLoginEnable = true
-#  AutomaticLogin = user1{end}
+${gdm_automatic_conf}
 
 # Enabling timed login
 #  TimedLoginEnable = true
@@ -35,6 +49,7 @@ AutomaticLogin = guest{else}#  AutomaticLoginEnable = true
 # Additionally lets the X server dump core if it crashes
 #Enable=true
 EOF
+mv /etc/gdm3/daemon.conf.tmp /etc/gdm3/daemon.conf
 
 primary_user=$(puavo-conf puavo.admin.primary_user) || status=1
 if [ -n "$primary_user" ]; then
@@ -51,17 +66,36 @@ else
   disable_user_list=true
 fi
 
-puavo-template /etc/gdm3/greeter.dconf-defaults <<EOF || status=1
+puavo_greeter_userlist_accepted_users=$(
+  puavo-conf puavo.greeter.userlist.accepted_users)
+if [ -n "$puavo_greeter_userlist_accepted_users" ]; then
+  accepted_usernames_for_userlist="$puavo_greeter_userlist_accepted_users"
+else
+  puavo_admin_primary_user=$(puavo-conf puavo.admin.primary_user)
+  if [ -n "$puavo_admin_primary_user" ]; then
+    accepted_usernames_for_userlist="$puavo_admin_primary_user"
+  else
+    accepted_usernames_for_userlist='*'
+  fi
+fi
+
+if [ "$puavo_guestlogin_enabled" = 'true' ]; then
+  enable_guestuser=true
+else
+  enable_guestuser=false
+fi
+
+cat > /etc/gdm3/greeter.dconf-defaults.tmp <<EOF || status=1
 # These are dconf-settings for gdm.
 # Some that work in a desktop session might not work here.
 
 [org/gnome/login-screen]
-accepted-usernames-for-userlist='{if puavo_greeter_userlist_accepted_users != ""}{puavo_greeter_userlist_accepted_users}{else}{if puavo_admin_primary_user != ""}{puavo_admin_primary_user}{else}*{end}{end}'
+accepted-usernames-for-userlist='${accepted_usernames_for_userlist}'
 allowed-failures=1
 disable-user-list=${disable_user_list}
-enable-guestuser={if puavo_guestlogin_enabled == "true"}true{else}false{end}
+enable-guestuser=${enable_guestuser}
 fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
-logo='{puavo_greeter_logo}'
+logo='$(puavo-conf puavo.greeter.logo)'
 
 [org/gnome/desktop/interface]
 gtk-theme='Arc'
@@ -86,6 +120,7 @@ enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'bottompanel@tmoer
 [org/gnome/shell/extensions/user-theme]
 name='Arc'
 EOF
+mv /etc/gdm3/greeter.dconf-defaults.tmp /etc/gdm3/greeter.dconf-defaults
 
 dconf compile /var/lib/gdm3/greeter-dconf-defaults /usr/share/gdm/dconf || status=1
 
