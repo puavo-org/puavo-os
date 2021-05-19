@@ -34,7 +34,41 @@ ${primary_user_policy}
 EOF
 mv "${puavo_client_conf}.tmp" "$puavo_client_conf"
 
-puavo-template /etc/dbus-1/system.d/org.freedesktop.login1.conf <<'EOF'
+if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'true' ]; then
+
+  suspend_enabled_part_one='
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="Suspend"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="Hibernate"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="HybridSleep"/>
+'
+
+  suspend_enabled_part_two='
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanSuspend"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanHibernate"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanHybridSleep"/>
+'
+else
+  suspend_enabled_part_one=''
+  suspend_enabled_part_two=''
+fi
+
+cat > /etc/dbus-1/system.d/org.freedesktop.login1.conf.tmp <<EOF
 <?xml version="1.0"?> <!--*-nxml-*-->
 <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
         "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
@@ -168,21 +202,7 @@ puavo-template /etc/dbus-1/system.d/org.freedesktop.login1.conf <<'EOF'
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="Reboot"/>
-
-{if puavo_pm_suspend_enabled == "true"}
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="Suspend"/>
-
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="Hibernate"/>
-
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="HybridSleep"/>
-{end}
-
+${suspend_enabled_part_one}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanPowerOff"/>
@@ -190,21 +210,7 @@ puavo-template /etc/dbus-1/system.d/org.freedesktop.login1.conf <<'EOF'
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanReboot"/>
-
-{if puavo_pm_suspend_enabled == "true"}
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanSuspend"/>
-
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanHibernate"/>
-
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanHybridSleep"/>
-{end}
-
+${suspend_enabled_part_two}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="ScheduleShutdown"/>
@@ -314,3 +320,5 @@ puavo-template /etc/dbus-1/system.d/org.freedesktop.login1.conf <<'EOF'
 
 </busconfig>
 EOF
+mv /etc/dbus-1/system.d/org.freedesktop.login1.conf.tmp \
+   /etc/dbus-1/system.d/org.freedesktop.login1.conf
