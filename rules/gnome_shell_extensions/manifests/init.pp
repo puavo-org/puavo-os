@@ -26,7 +26,8 @@ class gnome_shell_extensions {
       require => ::Themes::Iconlink['scalable/apps/puavo-multitasking-view.svg'];
 
     [ 'appindicatorsupport@rgcjonas.gmail.com'
-    , 'audio-menu-modifier@puavo.org'
+    , 'audio-menu-modifier@puavo.org' # XXX can audio-switcher@AndresCidoncha replace this?
+    , 'audio-switcher@AndresCidoncha'
     , 'bottompanel@tmoer93'
     , 'dash-to-panel@jderose9.github.com'
     , 'ding@rastersoft.com'
