@@ -28,8 +28,8 @@ function make_button(icon_name, icon_size, spawn_command)
         reactive: true,
         style_class: 'panel-button-puavomenu',
         track_hover: true,
-        x_fill: true,
-        y_fill: false
+        x_expand: true,
+        y_expand: false
     });
 
     let icon = new St.Icon({
