@@ -14,13 +14,13 @@ const OverviewButton = new Lang.Class({
         this.actor.add_actor(this.buttonIcon);
         this.buttonIcon.icon_name='puavo-multitasking-view';
         this.actor.connect('button-press-event', Lang.bind(this, this._refresh));
-        this.original_speed = St.get_slow_down_factor();
+        this.original_speed = St.Settings.get().slow_down_factor;
         this.modified_speed = HIGHT_SPEED;
     },
 
     _refresh: function() {
 
-        this.original_speed = St.get_slow_down_factor();
+        this.original_speed = St.Settings.get().slow_down_factor;
         St.set_slow_down_factor(this.modified_speed);
         if (Main.overview._shown)
             Main.overview.hide();
