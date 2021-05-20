@@ -17,9 +17,9 @@
 const Main = imports.ui.main;
 
 function enable() {
-    Main.overview._searchEntry.hide();
+    Main.overview._overview._searchEntry.hide();
 }
 
 function disable() {
-    Main.overview._searchEntry.show();
+    Main.overview._overview._searchEntry.show();
 }
