@@ -17,11 +17,11 @@ import signal
 import subprocess
 import sys
 
-gi.require_version('AppIndicator3', '0.1')
+gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 
-from gi.repository import AppIndicator3
+from gi.repository import AyatanaAppIndicator3
 from gi.repository import GLib
 from gi.repository import Gtk
 from gi.repository import Notify
@@ -533,7 +533,8 @@ class ImageUpdater(PuavoWidget):
     self.stop_roll_progress()
     self.set_update_button_mode('update')
 
-    self.set_icon('update-available', AppIndicator3.IndicatorStatus.ATTENTION)
+    self.set_icon('update-available',
+                  AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
 
     # show only once after each login
     if not self.available_notice_shown:
@@ -578,7 +579,8 @@ class ImageUpdater(PuavoWidget):
   def on_update_failed(self):
     self.stop_roll_progress()
     self.set_update_button_mode('update')
-    self.set_icon('update-error', AppIndicator3.IndicatorStatus.ATTENTION)
+    self.set_icon('update-error',
+                  AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
 
     self.append_error_to_log( _tr('System update failed.') + "\n" )
 
@@ -590,10 +592,12 @@ class ImageUpdater(PuavoWidget):
 
     if reboot_required:
       self.on_update_progress_indicator('finished')
-      self.set_icon('update-installed', AppIndicator3.IndicatorStatus.ATTENTION)
+      self.set_icon('update-installed',
+                    AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
     else:
       self.on_update_progress_indicator('uptodate')
-      self.set_icon('update-idle', AppIndicator3.IndicatorStatus.ATTENTION)
+      self.set_icon('update-idle',
+                    AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
 
 
   def on_update_message(self, msgtype, content):
@@ -667,7 +671,8 @@ class ImageUpdater(PuavoWidget):
 
   def on_update_started(self):
     self.set_update_button_mode('updating')
-    self.set_icon('update-downloading', AppIndicator3.IndicatorStatus.ATTENTION)
+    self.set_icon('update-downloading',
+                  AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
 
     self.append_text_to_log( _tr('System update has been started.') \
                                + "\n" )
@@ -684,7 +689,7 @@ class ImageUpdater(PuavoWidget):
 
   def roll_progress_animation(self):
     self.set_icon(self.download_animation_icons[0],
-                  AppIndicator3.IndicatorStatus.ATTENTION)
+                  AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
 
     # cycle attention icons
     self.download_animation_icons         \
@@ -1277,11 +1282,11 @@ class PuavoDesktopApplet:
     # XXX this should be something else and maybe puavo-conf configurable?
 
     self.indicator \
-      = AppIndicator3.Indicator.new('puavo-desktop-applet',
+      = AyatanaAppIndicator3.Indicator.new('puavo-desktop-applet',
           puavoconf_get('puavo.support.remoteaccess.icons.denied'),
-          AppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+          AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
 
-    self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+    self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
 
     Notify.init('puavo-desktop-applet')
 
