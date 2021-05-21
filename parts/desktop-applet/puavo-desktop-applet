@@ -54,6 +54,11 @@ def puavoconf_get(puavoconf_key):
                    .decode('utf-8')
 
 
+def read_firstline(pathname):
+  with open(pathname) as file:
+    return (file.readlines())[0].rstrip("\n")
+
+
 class PuavoWidget:
   def connect_to_dbus(self, service, interface):
     self.bus = dbus.SystemBus()
@@ -70,6 +75,37 @@ class PuavoWidget:
       Notify.Notification.new(summary, body).show()
     else:
       Notify.Notification.new(summary).show()
+
+
+class HostnameInfo(PuavoWidget):
+  def __init__(self, applet):
+    self.applet = applet
+
+    self.enabled = False
+    self.fqdn = ''
+
+    try:
+      hostname = read_firstline('/etc/puavo/hostname')
+      domain   = read_firstline('/etc/puavo/domain')
+      self.fqdn = '%s.%s' % (hostname, domain)
+    except Exception:
+      return
+
+    self.enabled = True
+
+
+  def append_items_to_menu(self):
+    if not self.enabled:
+      return False
+
+    hostname_label = '%s: %s' % (_tr('Hostname'), self.fqdn)
+    menuitem = Gtk.MenuItem(label=hostname_label)
+    menuitem.show()
+    menuitem.set_sensitive(False)
+
+    self.applet.menu.append(menuitem)
+
+    return True
 
 
 class ChangelogNotifier(PuavoWidget):
@@ -183,27 +219,22 @@ class ChangelogNotifier(PuavoWidget):
     self.notify(version_subject, msg)
 
 
-  def read_firstline(self, pathname):
-    with open(pathname) as file:
-      return (file.readlines())[0].rstrip("\n")
-
-
   def read_imageseries_name(self):
-    series_name = self.read_firstline('/etc/puavo-image/class')
+    series_name = read_firstline('/etc/puavo-image/class')
     if series_name == '':
       raise Exception('Could not read image series name')
     return series_name
 
 
   def read_system_release_name(self):
-    release_name = self.read_firstline('/etc/puavo-image/release')
+    release_name = read_firstline('/etc/puavo-image/release')
     if release_name == '':
       raise Exception('Could not read system release name')
     return release_name
 
 
   def read_system_version(self):
-    version = self.read_firstline('/etc/puavo-image/name')
+    version = read_firstline('/etc/puavo-image/name')
     if version == '':
       raise Exception('Could not read system version')
     return version
@@ -1285,6 +1316,7 @@ class PuavoDesktopApplet:
 
     Notify.init('puavo-desktop-applet')
 
+    self.hostname_info      = HostnameInfo(self)
     self.changelog_notifier = ChangelogNotifier(self)
     self.content_updates    = ContentUpdates(self)
     self.image_updater      = ImageUpdater(self)
@@ -1303,6 +1335,9 @@ class PuavoDesktopApplet:
     self.menu = Gtk.Menu()
 
     something_in_menu = False
+
+    if self.hostname_info.append_items_to_menu():
+      something_in_menu = True
     if self.reset_dev_state.append_items_to_menu():
       something_in_menu = True
     if self.image_updater.append_items_to_menu():
