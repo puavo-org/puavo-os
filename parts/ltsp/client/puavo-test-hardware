@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -eu
+
+keyboard_test() {
+  remaining_characters='abcdefghijklmnopqrstuvwxyz'
+
+  echo 'Wipe out all the characters!'
+  echo
+
+  start_time=$(date +%s.%N)
+
+  printf "%s\n" "$remaining_characters"
+  while read -n 1 -s char; do
+    case "$char" in
+      [a-z])
+        remaining_characters=$(printf %s "$remaining_characters" \
+                                 | sed "s/${char}/ /")
+        printf "%s\n" "$remaining_characters"
+        ;;
+    esac
+
+    if [ "$(printf %s "$remaining_characters" | tr -d ' ')" = '' ]; then
+      end_time=$(date +%s.%N)
+      printf "YOUR TIME: %s seconds\n" \
+             "$(printf "%s %s" "$start_time" "$end_time" \
+                  | awk '{ print $2 - $1 }')"
+      return 0
+    fi
+  done
+}
+
+keyboard_test
