@@ -9,5 +9,10 @@
   },
   "puavo.puavomenu.show_my_school_users": {
     "default": "false"
+  },
+  "puavo.puavomenu.sidebar_hide_elements": {
+    "default": "",
+    "typehint": "string",
+    "description": "Allows you to forcibly hide certain Puavomenu sidebar elements. Takes a whitespace-separated list of element names."
   }
 }

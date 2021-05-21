@@ -4,6 +4,7 @@ import logging
 import getpass
 import os.path
 import lsb_release
+import re
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -64,32 +65,31 @@ class Sidebar:
         # Storage for the command button icons
         self.__icons = icons.IconCache(128, 32)
 
+        # Which sidebar elements are *unconditionally* hidden through puavo-conf?
+        # These override EVERYTHING else!
+        self.__visibility_override = self.load_overrides()
+
         self.__get_variables()
-        self.__create_avatar_button()
+
+        self.__handle_avatar()
         self.__create_system_buttons()
         self.__create_hostinfo()
 
-        # Download a new copy of the user avatar image
-        if self.__must_download_avatar:
-            logging.info(
-                'Sidebar::ctor(): launching a background thread for downloading '
-                'the avatar image')
-
-            try:
-                self.__avatar_thread = AvatarDownloaderThread(
-                    self.__settings.user_conf, self.__avatar)
-
-                # Daemonize the thread so that if we exit before
-                # the thread exists, it is also destroyed
-                self.__avatar_thread.daemon = True
-
-                self.__avatar_thread.start()
-            except Exception as exception:
-                logging.error(
-                    'Sidebar::ctor(): could not create a new thread: %s',
-                    str(exception))
-
         self.container.show()
+
+
+    def load_overrides(self):
+        s = utils.puavo_conf('puavo.puavomenu.sidebar_hide_elements', '')
+
+        disabled = [t.strip() for t in re.split(r',|;|\ ', str(s) if s else '')]
+        disabled = filter(None, disabled)
+        disabled = [d.lower() for d in disabled]
+
+        return set(disabled)
+
+
+    def is_element_visible(self, name):
+        return name not in self.__visibility_override
 
 
     # Digs up values for expanding variables in button arguments
@@ -116,9 +116,11 @@ class Sidebar:
 
 
     # Creates the user avatar button
-    def __create_avatar_button(self):
-        self.__must_download_avatar = True
+    def __handle_avatar(self):
+        if not self.is_element_visible('avatar'):
+            return
 
+        download_avatar = True
         default_avatar = os.path.join(self.__settings.res_dir, 'default_avatar.png')
         existing_avatar = os.path.join(self.__settings.user_conf, 'avatar.jpg')
 
@@ -126,7 +128,7 @@ class Sidebar:
             # Always use the default avatar for guests and webkiosk sessions
             logging.info('Avatar downloader thread disabled in a guest/webkiosk session')
             avatar_image = default_avatar
-            self.__must_download_avatar = False
+            download_avatar = False
         elif os.path.exists(existing_avatar):
             logging.info('A previously-downloaded user avatar file exists, using it')
             avatar_image = existing_avatar
@@ -159,50 +161,93 @@ class Sidebar:
         self.container.put(self.__avatar, 0, 0)
         self.__avatar.show()
 
+        if download_avatar:
+            # Download a new copy of the user avatar image
+            logging.info(
+                'Sidebar::__handle_avatar(): launching a background thread for downloading '
+                'the avatar image')
+
+            try:
+                self.__avatar_thread = AvatarDownloaderThread(
+                    self.__settings.user_conf, self.__avatar)
+
+                # Daemonize the thread so that if we exit before
+                # the thread exists, it is also destroyed
+                self.__avatar_thread.daemon = True
+
+                self.__avatar_thread.start()
+            except Exception as exception:
+                logging.error(
+                    'Sidebar::ctor(): could not create a new thread: %s',
+                    str(exception))
+
 
     # Creates the sidebar "system" buttons
     def __create_system_buttons(self):
-        utils_gui.create_separator(
-            container=self.container,
-            x=0,
-            y=MAIN_PADDING + USER_AVATAR_SIZE,
-            w=SIDEBAR_WIDTH,
-            h=-1,
-            orientation=Gtk.Orientation.HORIZONTAL)
+        y = 0
 
-        y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING + SEPARATOR_SIZE
+        if self.is_element_visible('avatar'):
+            utils_gui.create_separator(
+                container=self.container,
+                x=0,
+                y=MAIN_PADDING + USER_AVATAR_SIZE,
+                w=SIDEBAR_WIDTH,
+                h=-1,
+                orientation=Gtk.Orientation.HORIZONTAL)
+
+            y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING + SEPARATOR_SIZE
+
+        something = False
 
         # Since Python won't let you modify arguments (no pass-by-reference),
         # each of these returns the next Y position. X coordinates are fixed.
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):
-            y = self.__create_button(y, SB_CHANGE_PASSWORD)
+            if self.is_element_visible('change_password'):
+                y = self.__create_button(y, SB_CHANGE_PASSWORD)
+                something = True
 
-        y = self.__create_button(y, SB_SUPPORT)
-        y = self.__create_button(y, SB_SYSTEM_SETTINGS)
+        if self.is_element_visible('support'):
+            y = self.__create_button(y, SB_SUPPORT)
+            something = True
+
+        if self.is_element_visible('system_settings'):
+            y = self.__create_button(y, SB_SYSTEM_SETTINGS)
+            something = True
 
         if self.__settings.is_user_primary_user:
-            y = self.__create_button(y, SB_LAPTOP_SETTINGS)
+            if self.is_element_visible('laptop_settings'):
+                y = self.__create_button(y, SB_LAPTOP_SETTINGS)
+                something = True
 
             # Hide the puavo-pkg package installer if there
             # are no packages to install
             if utils.puavo_conf('puavo.pkgs.ui.pkglist', '').strip():
-                y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+                if self.is_element_visible('puavopkg_installer'):
+                    y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+                    something = True
 
-        y = self.__create_separator(y)
+        if something:
+            y = self.__create_separator(y)
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):
-            y = self.__create_button(y, SB_LOCK_SCREEN)
+            if self.is_element_visible('lock_screen'):
+                y = self.__create_button(y, SB_LOCK_SCREEN)
 
         if not (self.__settings.is_fatclient or self.__settings.is_webkiosk):
-            y = self.__create_button(y, SB_SLEEP_MODE)
+            if self.is_element_visible('sleep_mode'):
+                y = self.__create_button(y, SB_SLEEP_MODE)
 
-        y = self.__create_button(y, SB_LOGOUT)
-        y = self.__create_separator(y)
-        y = self.__create_button(y, SB_RESTART)
+        if self.is_element_visible('logout'):
+            y = self.__create_button(y, SB_LOGOUT)
+            y = self.__create_separator(y)
+
+        if self.is_element_visible('restart'):
+            y = self.__create_button(y, SB_RESTART)
 
         if not self.__settings.is_webkiosk:
-            y = self.__create_button(y, SB_SHUTDOWN)
+            if self.is_element_visible('shutdown'):
+                y = self.__create_button(y, SB_SHUTDOWN)
 
         logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
 
@@ -210,6 +255,9 @@ class Sidebar:
     # Builds the label that contains hostname, host type, image name and
     # a link to the changelog.
     def __create_hostinfo(self):
+        if not self.is_element_visible('hostinfo'):
+            return
+
         label_top = SIDEBAR_HEIGHT - HOSTINFO_LABEL_HEIGHT
 
         utils_gui.create_separator(

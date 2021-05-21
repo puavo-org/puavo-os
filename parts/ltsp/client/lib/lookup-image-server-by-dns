@@ -2,10 +2,12 @@
 
 set -eu
 
-read puavo_domain < /etc/puavo/domain
-cert_version=$(puavo-conf puavo.admin.certs.versions | awk '{ print $1 }')
+get_image_server() {
+  local cert_version puavo_domain
 
-image_server=$(
+  cert_version=$1
+  puavo_domain=$2
+
   host -t SRV -W 5 "_imageserver_${cert_version}._tcp.${puavo_domain}" \
     | awk -v puavo_domain="$puavo_domain" '
         $2 == "has" && $3 == "SRV" && $4 == "record" {
@@ -18,7 +20,38 @@ image_server=$(
             printf "%s:%s\n", $8, $7
             exit(0)
           }
-      }')
+      }'
+}
+
+get_puavo_domain_from_dns() {
+  host -t TXT -W 5 _puavo \
+    | awk '$2 == "descriptive" && $3 == "text" {
+             sub(/^"/, "", $4); sub(/"$/, "", $4); print $4
+           }'
+}
+
+image_server=''
+
+cert_version=$(puavo-conf puavo.admin.certs.versions | awk '{ print $1 }')
+
+puavo_domain=$(cat /etc/puavo/domain 2>/dev/null) || true
+if [ -n "$puavo_domain" ]; then
+  image_server=$(get_image_server "$cert_version" "$puavo_domain")
+fi
+
+if [ -z "$image_server" ]; then
+  # In case image server was not found from DNS (or this host does not have
+  # puavo domain set yet (which can be the case with preinstalled hosts)),
+  # we try to look up puavo domain from DNS.  This is because image updates
+  # could also work from bootservers that belong to other organisations.
+  # Preinstalled hosts could also use image servers for fetching an
+  # installation preseed and image updates.
+
+  puavo_domain=$(get_puavo_domain_from_dns)
+  if [ -n "$puavo_domain" ]; then
+    image_server=$(get_image_server "$cert_version" "$puavo_domain")
+  fi
+fi
 
 if [ -z "$image_server" ]; then
   exit 1

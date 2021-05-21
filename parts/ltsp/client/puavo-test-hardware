@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -eu
+
+test_echo() {
+  echo
+  echo ">>> THIS IS $@"
+  echo
+  sleep 1
+}
+
+test_camera() {
+  test_echo 'A CAMERA TEST'
+
+  env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
+}
+
+test_keyboard() {
+  test_echo 'A KEYBOARD TEST'
+
+  echo 'Wipe out all the characters!'
+  echo
+
+  remaining_characters='abcdefghijklmnopqrstuvwxyz'
+
+  start_time=$(date +%s.%N)
+
+  printf "%s\n" "$remaining_characters"
+  while read -n 1 -s char; do
+    case "$char" in
+      [a-z])
+        remaining_characters=$(printf %s "$remaining_characters" \
+                                 | sed "s/${char}/ /")
+        printf "%s\n" "$remaining_characters"
+        ;;
+    esac
+
+    if [ "$(printf %s "$remaining_characters" | tr -d ' ')" = '' ]; then
+      end_time=$(date +%s.%N)
+      printf "YOUR TIME: %s seconds\n" \
+             "$(printf "%s %s" "$start_time" "$end_time" \
+                  | awk '{ print $2 - $1 }')"
+      break
+    fi
+  done
+
+  return 0
+}
+
+status=0
+
+test_camera   || status=1
+test_keyboard || status=1
+
+exit $status

@@ -3,12 +3,25 @@
 set -eu
 
 colorize() {
-  local yellow_limit grey_limit green_limit value text
-  yellow_limit=$1
-  grey_limit=$2
-  green_limit=$3
-  value=$4
-  text=$5
+  local component yellow_limit grey_limit green_limit value text preseed_limits
+
+  component=$1
+  yellow_limit=$2
+  grey_limit=$3
+  green_limit=$4
+  value=$5
+  text=$6
+
+  if [ -n "$preseed_json" ]; then
+    preseed_limits=$(printf %s "$preseed_json" \
+                       | jq -r --arg component "$component" \
+                           '.colorize[$component]') || true
+    if [ -n "$preseed_limits" -a "$preseed_limits" != 'null' ]; then
+      yellow_limit="$(printf "%s\n" "$preseed_limits" | awk '{ print $1 }')"
+      grey_limit="$(  printf "%s\n" "$preseed_limits" | awk '{ print $2 }')"
+      green_limit="$( printf "%s\n" "$preseed_limits" | awk '{ print $3 }')"
+    fi
+  fi
 
   if [ "$value" -ge "$green_limit" ]; then
     echo -e "\e[1;32m${text}\e[0m" # green
@@ -29,7 +42,8 @@ list_disks() {
     disk_model="$(facter "disks.${disk}.model")"
     if [ -z "$disk_model" ]; then disk_model='unknown model'; fi
     disk_label="${disk_model} / $(facter disks.${disk}.size)"
-    colorized_disk_info=$(colorize 128000000000 256000000000 512000000000 \
+    colorized_disk_info=$(colorize disk \
+                                   128000000000 256000000000 512000000000 \
                                    "$(facter disks.${disk}.size_bytes)"   \
                                    "$disk_label")
 
@@ -63,7 +77,8 @@ show_battery_status() {
   if [ -z "$battery_capacity" ]; then
     status='NONE'
   else
-    colorized_battery_capacity=$(colorize 70 80 90 "$battery_capacity" \
+    colorized_battery_capacity=$(colorize battery 70 80 90 \
+                                   "$battery_capacity" \
                                    "${battery_capacity}% (capacity)")
     other_battery_info=$(printf "%s\n" "hello $upower_output" \
       | awk '
@@ -113,12 +128,12 @@ darkdm_common_systeminfo()
   this_image=$(cat /etc/puavo-image/name)
   this_release=$(cat /etc/puavo-image/release)
 
-  colorized_memory=$(colorize 4183116800 8366233600 16732467200     \
-                              "$(facter memory.system.total_bytes)" \
+  colorized_memory=$(colorize memory 4183116800 8366233600 16732467200 \
+                              "$(facter memory.system.total_bytes)"    \
                               "$(facter memory.system.total)")
   cpu=$(facter processors.models.1)
   cpu_text="$(facter processors.count) CPUs / ${cpu}"
-  colorized_cpu=$(colorize 1 2 3 "$(get_cpu_value "$cpu")" "$cpu_text")
+  colorized_cpu=$(colorize cpu 1 2 3 "$(get_cpu_value "$cpu")" "$cpu_text")
 
   display_resolution=''
   if [ -e /sys/class/graphics/fb0/virtual_size ]; then
@@ -472,15 +487,9 @@ darkdm_menu()
 }
 
 check_forced_operation() {
-  local forced_operation image_server preseed_json
+  local forced_operation image_server
 
-  if ! image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
-    return 1
-  fi
-
-  preseed_url="https://${image_server}/preseeds/index.json"
-  if ! preseed_json=$(curl --cacert /etc/puavo-conf/rootca.pem --fail \
-                        --show-error --silent "$preseed_url"); then
+  if [ -z "$preseed_json" ]; then
     return 1
   fi
 
@@ -527,6 +536,21 @@ darkdm_main()
   darkdm_menu "$initial_command" "$forced" || return 1
 }
 
+# get preseed, we might need it
+echo -n 'Getting preseed (if it can be found)... '
+preseed_json=''
+if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
+  preseed_url="https://${image_server}/preseeds/index.json"
+  if ! preseed_json=$(curl --cacert /etc/puavo-conf/rootca.pem --fail \
+                           --max-time 5 --silent "$preseed_url"); then
+    preseed_json=''
+  fi
+fi
+if [ -n "$preseed_json" ]; then
+  echo 'OK.'
+else
+  echo 'failed.'
+fi
 
 echo 'Gathering system information...'
 echo

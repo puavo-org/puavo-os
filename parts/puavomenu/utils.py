@@ -1,7 +1,6 @@
 # PuavoMenu miscellaneous utility functions
 
 import logging
-from collections import OrderedDict
 
 
 def localize(where, lang):
@@ -41,12 +40,6 @@ def is_empty(string):
     is needed because YAML."""
 
     return string is None or len(string) == 0
-
-
-def dedupe_list(seq):
-    """Deduplicates a list while retaining item order. Tested only with lists
-    of strings."""
-    return list(OrderedDict.fromkeys(seq))
 
 
 def get_file_contents(name, default=''):

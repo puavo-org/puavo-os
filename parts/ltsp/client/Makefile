@@ -75,6 +75,7 @@ install : installdirs
 		puavo-pulseaudio-setup \
 		puavo-rest-request \
 		puavo-send-monitors-xml \
+		puavo-test-hardware \
 		puavo-tv-display
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \

@@ -5,7 +5,9 @@ set -eu
 image_dir=/home/partimag
 
 ask_disk() {
-  disks=$(awk '$4 ~ /^sd/ && $4 !~ /[0-9]+$/ { print $4 }' /proc/partitions)
+  disks=$(awk '$4 ~ /^((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z]|xvd[a-z])$/ {
+                 print $4
+               }' /proc/partitions)
   [ -n "$disks" ] || return 1
   printf %s "$disks" | fzf -1 --height=1 --layout=reverse-list
 }

@@ -214,12 +214,26 @@ THE NETWORK CONNECTIONS PAGE
     padding-bottom: 25px;
 }
 
-.network_container .password_container .password_box {
+.network_container .password_container .network_credentials_grid {
     padding-bottom: 25px;
 }
 
-.network_container .password_container .network_password_label {
+.network_container .password_container .network_username_label {
     padding-right: 10px;
+    margin-bottom: 10px;
+}
+
+.network_container .password_container .network_username_entry {
+    padding: 2px 5px;
+    margin-bottom: 10px;
+    border: 2px solid #888;
+    outline: none;
+    font-weight: bold;
+    font-size: $(entry_font_size);
+}
+
+.network_container .password_container .network_username_entry:disabled {
+    background: #666;
 }
 
 .network_container .password_container .network_password_entry {
