@@ -92,6 +92,7 @@ class packages {
     [ 'acpitool'
     , 'arandr'
     , 'atop'
+    , 'avahi-utils'
     , 'clusterssh'
     , 'console-setup'
     , 'dconf-cli'
