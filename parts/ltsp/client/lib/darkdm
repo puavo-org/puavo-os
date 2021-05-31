@@ -300,7 +300,10 @@ darkdm_update()
 
   update_status=0
 
-  darkdm_mount
+  if ! darkdm_mount; then
+    echo 'Could not mount /images and /state, aborting update.' >&2
+    return 1
+  fi
 
   if grep -qw puavo.hosttype=unregistered /proc/cmdline; then
     # We have booted as unregistered, which means that we probably do
