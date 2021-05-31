@@ -273,6 +273,10 @@ darkdm_mount()
 {
   local old_puavo_hosttype puavo_hosttype
 
+  if mountpoint -q /images && mountpoint -q /state; then
+    return 0
+  fi
+
   old_puavo_hosttype=$(puavo-conf puavo.hosttype)
 
   if ! {
@@ -296,21 +300,31 @@ darkdm_update()
 
   update_status=0
 
-  if [ ! -e /run/puavo/nbd-server ]; then
-    # In case we are not on nbd, this should be either a diskinstaller
-    # or preinstalled and we should do some preparations before continuing.
-    darkdm_mount
-  fi
+  darkdm_mount
 
-  if image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
-    if [ -e /run/puavo/nbd-server ]; then
-      /usr/sbin/puavo-install-and-update-ltspimages \
-        --install-from-nbd /dev/nbd0 "$image_name" || update_status=1
-    else
+  if grep -qw puavo.hosttype=unregistered /proc/cmdline; then
+    # We have booted as unregistered, which means that we probably do
+    # not have booted the correct image (this can happen in case this
+    # is registered to a different organisation than the bootserver and
+    # the bootserver does not know about this host).
+    # Update in a "normal way".
+    if ! /usr/lib/puavo-ltsp-install/update-configuration; then
+      echo 'Configuration update errors, yet continuing...' >&2
+      update_status=1
+    fi
+    /usr/lib/puavo-ltsp-install/update-images false || update_status=1
+  elif image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
+    if mountpoint -q /installimages; then
       /usr/sbin/puavo-install-and-update-ltspimages \
         --install-from-file "/installimages/${image_name}" "$image_name" \
           || update_status=1
-   fi
+    elif [ -e /run/puavo/nbd-server ]; then
+      /usr/sbin/puavo-install-and-update-ltspimages \
+        --install-from-nbd /dev/nbd0 "$image_name" || update_status=1
+    else
+      echo 'Can not find an update image, FAILED.' >&2
+      update_status=1
+    fi
   else
     update_status=1
   fi
