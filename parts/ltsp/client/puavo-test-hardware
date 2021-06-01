@@ -2,22 +2,11 @@
 
 set -eu
 
-test_echo() {
-  echo
-  echo ">>> THIS IS $@"
-  echo
-  sleep 1
-}
-
 test_camera() {
-  test_echo 'A CAMERA TEST'
-
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
 }
 
 test_keyboard() {
-  test_echo 'A KEYBOARD TEST'
-
   if [ "$(id -u)" -ne 0 ]; then
     echo 'Keyboard test must be run as root!' >&2
     return 1
@@ -169,4 +158,22 @@ EOF
   unbuffer showkey | ruby -ln -e "$ruby_test_keyboard_script"
 }
 
-test_keyboard
+while true; do
+  response=$(dialog --stdout --menu 'Choose a test' 16 40 2 \
+                    camera 'Test webcam' \
+                    keyboard 'Test keyboard') || true
+
+  case "$response" in
+    camera)
+      test_camera || true
+      ;;
+    keyboard)
+      test_keyboard || true
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+exit 0
