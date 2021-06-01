@@ -255,6 +255,7 @@ Commands:
   restoredisk            restore from bootserver (only on netboot devices)
   savedisk               save to bootserver (only on netboot devices)
   shell                  spawn a shell
+  test                   run some hardware tests
   update                 update the local Puavo OS installation and reboot
 EOF
 }
@@ -490,6 +491,9 @@ darkdm_menu()
         ;;
       shell)
         darkdm_shell || return 1
+        ;;
+      test)
+        /usr/sbin/puavo-test-hardware || return 1
         ;;
       update)
         darkdm_update || return 1
