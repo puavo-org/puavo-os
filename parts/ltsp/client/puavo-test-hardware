@@ -7,10 +7,7 @@ test_camera() {
 }
 
 test_keyboard() {
-  if [ "$(id -u)" -ne 0 ]; then
-    echo 'Keyboard test must be run as root!' >&2
-    return 1
-  fi
+  local ruby_test_keyboard_script
 
 ruby_test_keyboard_script=$(cat <<'EOF'
   def show_state
@@ -158,10 +155,54 @@ EOF
   unbuffer showkey | ruby -ln -e "$ruby_test_keyboard_script"
 }
 
+test_wifi() {
+  local wifiscan_results
+
+  wifiscan_results=$(
+    iwlist scan 2>/dev/null \
+      | ruby -lne '
+          BEGIN { networks = {} }
+
+          if $_.match(/Signal level=(.*?) dBm/) then
+            signal_level = $1
+          end
+
+          if $_.match(/ESSID:"(.*?)"/) then
+            essid = $1
+            if signal_level then
+              networks[essid] = signal_level
+            end
+          end
+
+          END {
+            networks_list = networks.keys.sort_by do |i,j|
+                              networks[i].to_i <= networks[j].to_i
+                            end
+            networks_list.each do |essid|
+              printf("%-30s %s dBm\n", essid, networks[essid])
+            end
+          }
+        ')
+  if [ -z "$wifiscan_results" ]; then
+    wifiscan_results='No networks found.
+Maybe a problem with wireless interface?'
+    dialog --no-collapse --msgbox "$wifiscan_results" 6 48
+    return 1
+  fi
+
+  dialog --no-collapse --msgbox "$wifiscan_results" 20 48
+}
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'Tests must be run as root!' >&2
+  return 1
+fi
+
 while true; do
-  response=$(dialog --stdout --menu 'Choose a test' 16 40 2 \
-                    camera 'Test webcam' \
-                    keyboard 'Test keyboard') || true
+  response=$(dialog --stdout --menu 'Choose a test' 16 40 3 \
+                    camera   'Test webcam' \
+                    keyboard 'Test keyboard' \
+                    wifi     'Test wireless networking') || true
 
   case "$response" in
     camera)
@@ -169,6 +210,9 @@ while true; do
       ;;
     keyboard)
       test_keyboard || true
+      ;;
+    wifi)
+      test_wifi || true
       ;;
     *)
       break
