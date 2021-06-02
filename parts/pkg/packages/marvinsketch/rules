@@ -11,9 +11,9 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-        mkdir -p "$(dirname "$marvinsuite_dir")"
+	mkdir -p "$(dirname "$marvinsuite_dir")"
 	ln -fns "${upstream_dir}${marvinsuite_dir}" \
-                "$marvinsuite_dir"
+		"$marvinsuite_dir"
 
 	ln -fns "${marvinsuite_dir}/LicenseManager" \
 		/usr/local/bin/LicenseManager
@@ -28,6 +28,8 @@ case "${command}" in
 		/usr/local/bin/cxcalc
 	ln -fns "${marvinsuite_dir}/bin/cxtrain" \
 		/usr/local/bin/cxtrain
+	ln -fns "${marvinsuite_dir}/bin/evaluate" \
+		/usr/local/bin/evaluate
 	ln -fns "${marvinsuite_dir}/bin/mview" \
 		/usr/local/bin/mview
 	ln -fns "${marvinsuite_dir}/bin/msketch" \
@@ -64,11 +66,12 @@ EOF
 	;;
     unconfigure)
 	rm -f "$marvinsuite_dir"                             \
-              /usr/bin/molconvert                            \
+	      /usr/bin/molconvert                            \
 	      /usr/bin/msketch                               \
 	      /usr/bin/mview                                 \
 	      /usr/local/bin/cxcalc                          \
 	      /usr/local/bin/cxtrain                         \
+	      /usr/local/bin/evaluate                        \
 	      /usr/local/bin/LicenseManager                  \
 	      /usr/local/bin/MarvinSketch                    \
 	      /usr/local/bin/MarvinView                      \
@@ -78,13 +81,14 @@ EOF
 	      /usr/share/applications/LicenseManager.desktop \
 	      /usr/share/applications/MarvinSketch.desktop   \
 	      /usr/share/applications/MarvinView.desktop
-        rmdir --ignore-fail-on-non-empty "$(dirname "$marvinsuite_dir")"
+	rmdir --ignore-fail-on-non-empty "$(dirname "$marvinsuite_dir")"
 	;;
     unpack)
 	upstream_pack=$1
 	upstream_dir=$2
-	dpkg -x "${upstream_pack}" "${upstream_dir}"
-	chmod 0755 "${upstream_dir}"
+	dpkg -x "$upstream_pack" "$upstream_dir"
+	rm -rf "${upstream_dir}/opt/chemaxon/marvinsuite/jre"
+	chmod 0755 "$upstream_dir"
 	;;
     *)
 	;;
