@@ -179,16 +179,13 @@ test_speakers() {
 
   clear
 
-  speaker-test -t wav  -c 6 -l 1 || speaker_test_status=1
-  speaker-test -t sine -c 6 -l 1 || speaker_test_status=1
-  speaker-test -t pink -c 6 -l 1 || speaker_test_status=1
+  speaker-test -t wav  -c 2 -l 3 || speaker_test_status=1
+  speaker-test -t pink -c 2 -l 1 || speaker_test_status=1
 
   # XXX This uses wav files that might no longer exist after
   # XXX Scratch or Solfege is updated.
-  aplay /usr/share/scratch/Media/Sounds/Instruments/Chord.wav \
-        /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
+  aplay /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
         /usr/share/scratch/Media/Sounds/Electronic/ComputerBeeps1.wav \
-        /usr/share/scratch/Media/Sounds/Animal/Rooster.wav \
         /usr/share/scratch/Media/Sounds/Human/Laugh-female.wav \
         /usr/share/solfege/exercises/standard/lesson-files/share/fanfare.wav \
     || speaker_test_status=1
