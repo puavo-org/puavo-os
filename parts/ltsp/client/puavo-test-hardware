@@ -155,6 +155,23 @@ EOF
   unbuffer showkey | ruby -ln -e "$ruby_test_keyboard_script"
 }
 
+test_microphone() {
+  local alsadev
+
+  alsadev='hw:0,0'
+
+  clear
+  echo "Using ALSA device ${alsadev} for recording..."
+  echo
+
+  if arecord --vumeter=stereo -f cd -d 10 --device="${alsadev}" /dev/null; then
+    echo
+    echo 'Recording finished.'
+  fi
+
+  sleep 5
+}
+
 test_wifi() {
   local wifiscan_results
 
@@ -199,10 +216,11 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 while true; do
-  response=$(dialog --stdout --menu 'Choose a test' 16 40 3 \
-                    camera   'Test webcam' \
-                    keyboard 'Test keyboard' \
-                    wifi     'Test wireless networking') || true
+  response=$(dialog --stdout --menu 'Choose a test' 16 40 4 \
+                    camera     'Test webcam' \
+                    keyboard   'Test keyboard' \
+                    microphone 'Test microphone' \
+                    wifi       'Test wireless networking') || true
 
   case "$response" in
     camera)
@@ -210,6 +228,9 @@ while true; do
       ;;
     keyboard)
       test_keyboard || true
+      ;;
+    microphone)
+      test_microphone || true
       ;;
     wifi)
       test_wifi || true
