@@ -14,5 +14,10 @@
     "default": "",
     "typehint": "string",
     "description": "Allows you to forcibly hide certain Puavomenu sidebar elements. Takes a whitespace-separated list of element names."
+  },
+  "puavo.puavomenu.password_change.link": {
+    "default": "",
+    "typehint": "string",
+    "description": "User password change URL override. You can use variables like $(username) in the URL if necessary."
   }
 }
