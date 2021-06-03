@@ -2,6 +2,8 @@
 
 set -eu
 
+export LANG=C
+
 test_camera() {
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
 }
