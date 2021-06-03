@@ -248,6 +248,8 @@ test_speakers() {
 test_wifi() {
   local wifiscan_results
 
+  ifconfig wlan0 up || true
+
   wifiscan_results=$(
     iwlist scan 2>/dev/null \
       | ruby -lne '
