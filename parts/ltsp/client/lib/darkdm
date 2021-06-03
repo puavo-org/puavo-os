@@ -493,7 +493,12 @@ darkdm_menu()
         darkdm_shell || return 1
         ;;
       test)
-        /usr/sbin/puavo-test-hardware || return 1
+        # Keyboard test makes tmux exit prematurely in ttys (not under X)
+        # unless run outside tmux, this is why we run tests with openvt.
+        # Actually even with this tmux does exit without a warning, but
+        # it will be restarted after this has exited, thus it is not
+        # a big issue.
+        openvt -s -w /usr/sbin/puavo-test-hardware || return 1
         ;;
       update)
         darkdm_update || return 1
