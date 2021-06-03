@@ -160,15 +160,15 @@ run_mouse_test() {
   echo '>>>'
   echo ">>> Now running evtest ${1} for 10 seconds"
   echo '>>>'
-  sleep 2
+  sleep 1
   timeout -k 1 10 evtest "$1" || true
   sleep 1
 
 }
 
 test_mouse() {
-  local dialog_args i mouse_device_count mouse_event_devices \
-        mouse_event_devpaths
+  local dialog_args i mouse_choice mouse_device_count mouse_event_devices \
+        mouse_devpath
 
   mouse_event_devices=$(
     sed 's/=/ /' /proc/bus/input/devices \
@@ -188,17 +188,41 @@ test_mouse() {
     dialog_args=''
     i=1
     for mouse_event_dev in $mouse_event_devices; do
-      dialog_args="${dialog_args} /dev/input/${mouse_event_dev} mouse${i}"
+      dialog_args="${dialog_args} $i Mouse_${i}"
       i=$(($i + 1))
     done
+    dialog_args="${dialog_args} exit Exit"
 
+    default_mouse=1
     while true; do
-      mouse_event_dev=$(dialog --stdout --menu 'Choose a mouse device' \
-                          $(($mouse_device_count + 8)) 36 $mouse_device_count $dialog_args) || true
-      if [ -z "$mouse_event_dev" ]; then
+      mouse_choice=$(dialog --stdout \
+                            --default-item "$default_mouse" \
+                            --menu 'Choose a mouse device' \
+                      $(($mouse_device_count + 8)) 36 $(($mouse_device_count + 1)) \
+                      $dialog_args) || true
+      if [ -z "$mouse_choice" -o "$mouse_choice" = 'exit' ]; then
         break
       fi
-      run_mouse_test "$mouse_event_dev" || true
+
+      mouse_devpath=''
+      i=1
+      for mouse_event_dev in $mouse_event_devices; do
+        if [ "$i" = "$mouse_choice" ]; then
+          mouse_devpath="/dev/input/${mouse_event_dev}"
+          default_mouse="$(($i + 1))"
+          if [ "$default_mouse" -gt "$mouse_device_count" ]; then
+            default_mouse='exit'
+          fi
+        fi
+        i=$(($i + 1))
+      done
+
+      if [ -z "$mouse_devpath" ]; then
+        echo 'Odd error, could not find mouse event device path' >&2
+        return 1
+      fi
+
+      run_mouse_test "$mouse_devpath" || true
     done
   fi
 
@@ -288,23 +312,27 @@ if [ "$(id -u)" -ne 0 ]; then
   return 1
 fi
 
+mainmenu_default_item='camera'
 while true; do
-  response=$(dialog --stdout --menu 'Choose a test' 13 40 6 \
-                    camera     'Test webcam' \
-                    keyboard   'Test keyboard' \
-                    microphone 'Test microphone' \
-                    mouse      'Test mouse/mice' \
-                    speakers   'Test speakers' \
-                    wifi       'Test wireless networking') || true
+  response=$(dialog --stdout --default-item "$mainmenu_default_item" \
+                    --menu 'Choose a test' 14 44 7 \
+               camera     'Test webcam' \
+               keyboard   'Test keyboard' \
+               microphone 'Test microphone' \
+               mouse      'Test mouse/mice' \
+               speakers   'Test speakers' \
+               wifi       'Test wireless networking' \
+               quit       'Exit tests') || true
 
   case "$response" in
-    camera)     test_camera     || true ;;
-    keyboard)   test_keyboard   || true ;;
-    microphone) test_microphone || true ;;
-    mouse)      test_mouse      || true ;;
-    speakers)   test_speakers   || true ;;
-    wifi)       test_wifi       || true ;;
-    *) break ;;
+    camera)     mainmenu_default_item=keyboard;   test_camera     || true ;;
+    keyboard)   mainmenu_default_item=microphone; test_keyboard   || true ;;
+    microphone) mainmenu_default_item=mouse;      test_microphone || true ;;
+    mouse)      mainmenu_default_item=speakers;   test_mouse      || true ;;
+    speakers)   mainmenu_default_item=wifi;       test_speakers   || true ;;
+    wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
+    quit)       break ;;
+    *)          echo 'Unknown option' >&2 ;;
   esac
 done
 
