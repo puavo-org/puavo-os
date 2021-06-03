@@ -241,6 +241,8 @@ test_speakers() {
         /usr/share/scratch/Media/Sounds/Human/Laugh-female.wav \
         /usr/share/solfege/exercises/standard/lesson-files/share/fanfare.wav \
     || speaker_test_status=1
+
+  sleep 2
 }
 
 test_wifi() {
