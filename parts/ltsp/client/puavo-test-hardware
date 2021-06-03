@@ -2,7 +2,7 @@
 
 set -eu
 
-export LANG=C
+export LANG=en_US.UTF-8
 
 test_camera() {
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
