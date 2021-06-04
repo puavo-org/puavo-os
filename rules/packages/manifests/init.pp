@@ -60,6 +60,7 @@ class packages {
     , 'bind9utils'
     , 'cifs-utils'
     , 'dnsmasq'
+    , 'gpm'
     , 'incron'
     , 'isc-dhcp-server'
     , 'krb5-kdc'
