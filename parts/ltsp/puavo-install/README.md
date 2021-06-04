@@ -11,6 +11,7 @@ to the bootserver path ``/images/preseeds/index.json``:
     "battery": "70 80 90",
     "disk": "128000000000 256000000000 512000000000",
     "memory": "4183116800 8366233600 16732467200",
+    "product_name": "^VirtualBox$",
     "resolution": "1280 1440 1920"
   },
   "templates": {
@@ -68,7 +69,12 @@ rather destructive.
 These values represent limits between "red/yellow", "yellow/grey" and
 "grey/green" colors in Puavo OS console, for quick evaluation of machine
 characteristics.  There values have reasonable default values, but may be
-configured through the preseed mechanism.  The value for ``battery`` means
-capacity percentage, for ``disk`` is disk size in bytes, ``memory`` is
-memory size in bytes, and ``resolution`` is horizontal resolution
-in pixels.
+configured through the preseed mechanism.  The value for ``battery``
+means capacity percentage, for ``disk`` is disk size in bytes,
+``memory`` is memory size in bytes, and ``resolution`` is horizontal
+resolution in pixels.
+
+``colorize`` may also contain ``product_name``, which is interpreted
+as an extended regexp.  In case it is set, then matching product name
+is shown as green and non-matching as red.  If it is not set, then
+product name is shown as grey.
