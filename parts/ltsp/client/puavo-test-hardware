@@ -331,7 +331,7 @@ while true; do
     mouse)      mainmenu_default_item=speakers;   test_mouse      || true ;;
     speakers)   mainmenu_default_item=wifi;       test_speakers   || true ;;
     wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
-    quit)       break ;;
+    quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
 done
