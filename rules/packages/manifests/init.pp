@@ -323,6 +323,7 @@ class packages {
     , 'gimp-gap'
     , 'gimp-plugin-registry'
     , 'gimp-ufraw'
+    , 'godot3'
     , 'gthumb'
     , 'inkscape'
     , 'kdenlive'
