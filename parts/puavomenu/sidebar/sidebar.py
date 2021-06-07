@@ -206,7 +206,7 @@ class Sidebar:
             if self.is_element_visible('change_password'):
                 password_url = utils.puavo_conf('puavo.puavomenu.password_change.link', None)
 
-                if password_url is None:
+                if password_url is None or password_url.strip() == '':
                     y = self.__create_button(y, SB_CHANGE_PASSWORD)
                 else:
                     # Override the password change URL
