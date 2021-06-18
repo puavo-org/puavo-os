@@ -104,7 +104,7 @@ function ltsp_image_entry {
   set kernelparameters="$3"
   set boottype="$4"
   set image_alias="$5"
-  set os_icon="$6"
+  set entry_os_icon="$6"
 
   get_imagename $image_alias image_alias_path
   get_pathname $imagefile imagepath
@@ -128,7 +128,7 @@ function ltsp_image_entry {
     set default="${boot_label}"
   fi
 
-  menuentry "${boot_label}" --class="$os_icon" "$imagefile" "$imagepath" "$kernelparameters" {
+  menuentry "${boot_label}" --class="$entry_os_icon" "$imagefile" "$imagepath" "$kernelparameters" {
     set kernel_version=''
     # --- remove "#" from the following if you need another kernel ---
     # set kernel_version='default'
@@ -213,13 +213,13 @@ function ltsp_image_entry_superlaptop {
   set description="$2"
   set kernelparameters="$3"
   set image_alias="$4"
-  set os_icon="$5"
+  set entry_superlaptop_os_icon="$5"
 
   if test "${puavo_show_imageoverlays}" = "true" \
             -a -d (lvm/puavo-imageoverlays); then
     set kernelparameters="$kernelparameters puavo.image.overlay=personal"
 
-    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}" "developer" "${image_alias}" "${os_icon}"
+    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}" "developer" "${image_alias}" "${entry_superlaptop_os_icon}"
   fi
 }
 
@@ -339,8 +339,8 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     if test "${file}" = "${default_image_alias}"; then continue; fi
     if test "${file}" = "${backup_image_alias}";  then continue; fi
 
-    ltsp_image_entry "${file}" "${text_other_system_normal_startup}" "" "normal" "${file}" "${os_icon}"
-    ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}" "" "${file}" "${os_icon}"
+    ltsp_image_entry "${file}" "${text_other_system_normal_startup}" "" "normal" "${file}" "${os_icon}-backup"
+    ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}" "" "${file}" "${os_icon}-devel"
   done
 done
 EOF

@@ -62,6 +62,7 @@ class packages {
     , 'cifs-utils'
     , 'dnsmasq'
     # , 'incron'                # XXX missing from Bullseye
+    , 'gpm'
     , 'isc-dhcp-server'
     , 'krb5-kdc'
     , 'libudev1'
@@ -93,6 +94,7 @@ class packages {
     [ 'acpitool'
     , 'arandr'
     , 'atop'
+    , 'avahi-utils'
     , 'clusterssh'
     , 'console-setup'
     , 'dconf-cli'
@@ -111,6 +113,7 @@ class packages {
     , 'iotop'
     , 'iperf'
     , 'libstdc++5'
+    , 'linssid'
     , 'lm-sensors'
     , 'lshw'
     , 'lsof'
@@ -323,6 +326,8 @@ class packages {
     , 'gimp-gap'
     , 'gimp-plugin-registry'
     # , 'gimp-ufraw'            # XXX missing from Bullseye
+    , 'gimp-ufraw'
+    , 'godot3'
     , 'gthumb'
     , 'inkscape'
     , 'kdenlive'

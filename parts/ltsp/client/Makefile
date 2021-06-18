@@ -75,7 +75,6 @@ install : installdirs
 		puavo-pulseaudio-setup \
 		puavo-rest-request \
 		puavo-send-monitors-xml \
-		puavo-test-hardware \
 		puavo-tv-display
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
@@ -85,7 +84,8 @@ install : installdirs
 		puavo-netboot-init-nfs \
 		puavo-report-system-version \
 		puavo-sysmerge \
-		puavo-sysmerge-onedir
+		puavo-sysmerge-onedir \
+		puavo-test-hardware
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-bootserver-dnsmasq \

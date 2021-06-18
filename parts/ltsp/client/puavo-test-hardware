@@ -1,55 +1,339 @@
-#!/bin/bash
+#!/bin/sh
 
 set -eu
 
-test_echo() {
-  echo
-  echo ">>> THIS IS $@"
-  echo
-  sleep 1
-}
-
 test_camera() {
-  test_echo 'A CAMERA TEST'
-
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
 }
 
 test_keyboard() {
-  test_echo 'A KEYBOARD TEST'
+  local ruby_test_keyboard_script
 
-  echo 'Wipe out all the characters!'
-  echo
+ruby_test_keyboard_script=$(cat <<'EOF'
+  def show_state
+    system('clear')
+    puts "Press keys until all key labels disappear."
+    puts "You need to use the real keyboard, this does not work through ssh."
+    puts "This will quit in case no keyboard input happens in 10 seconds."
+    puts ""
 
-  remaining_characters='abcdefghijklmnopqrstuvwxyz'
+    $lines.each { |line| puts "    #{ line }" }
+  end
 
-  start_time=$(date +%s.%N)
+  BEGIN {
+    all_keys = {
+       1  => [ 0, 0,  3 ],    # ESC
+       59 => [ 0, 5,  2 ],    # F1
+       60 => [ 0, 8,  2 ],    # F2
+       61 => [ 0, 11, 2 ],    # F3
+       62 => [ 0, 14, 2 ],    # F4
+       63 => [ 0, 17, 2 ],    # F5
+       64 => [ 0, 20, 2 ],    # F6
+       65 => [ 0, 23, 2 ],    # F7
+       66 => [ 0, 26, 2 ],    # F8
+       67 => [ 0, 29, 2 ],    # F9
+       68 => [ 0, 32, 3 ],    # F10
+       87 => [ 0, 36, 3 ],    # F11
+       88 => [ 0, 40, 3 ],    # F12
+      110 => [ 0, 44, 6 ],    # INSERT
+       99 => [ 0, 51, 4 ],    # PSCR
+      111 => [ 0, 56, 6 ],    # DELETE
 
-  printf "%s\n" "$remaining_characters"
-  while read -n 1 -s char; do
-    case "$char" in
-      [a-z])
-        remaining_characters=$(printf %s "$remaining_characters" \
-                                 | sed "s/${char}/ /")
-        printf "%s\n" "$remaining_characters"
-        ;;
-    esac
+       41 => [ 1,  0, 1 ],    # §
+        2 => [ 1,  5, 1 ],    # 1
+        3 => [ 1,  8, 1 ],    # 2
+        4 => [ 1, 11, 1 ],    # 3
+        5 => [ 1, 14, 1 ],    # 4
+        6 => [ 1, 17, 1 ],    # 5
+        7 => [ 1, 20, 1 ],    # 6
+        8 => [ 1, 23, 1 ],    # 7
+        9 => [ 1, 26, 1 ],    # 8
+       10 => [ 1, 29, 1 ],    # 9
+       11 => [ 1, 33, 1 ],    # 0
+       12 => [ 1, 37, 1 ],    # +
+       13 => [ 1, 41, 1 ],    # ´
+       14 => [ 1, 45, 9 ],    # BACKSPACE
+      102 => [ 1, 57, 4 ],    # HOME
 
-    if [ "$(printf %s "$remaining_characters" | tr -d ' ')" = '' ]; then
-      end_time=$(date +%s.%N)
-      printf "YOUR TIME: %s seconds\n" \
-             "$(printf "%s %s" "$start_time" "$end_time" \
-                  | awk '{ print $2 - $1 }')"
-      break
-    fi
-  done
+       15 => [ 2, 0,  3 ],    # TAB
+       16 => [ 2, 6,  1 ],    # Q
+       17 => [ 2, 9,  1 ],    # W
+       18 => [ 2, 12, 1 ],    # E
+       19 => [ 2, 15, 1 ],    # R
+       20 => [ 2, 18, 1 ],    # T
+       21 => [ 2, 21, 1 ],    # Y
+       22 => [ 2, 24, 1 ],    # U
+       23 => [ 2, 27, 1 ],    # I
+       24 => [ 2, 30, 1 ],    # O
+       25 => [ 2, 34, 1 ],    # P
+       26 => [ 2, 38, 1 ],    # Å
+       27 => [ 2, 42, 1 ],    # ¨
+      104 => [ 2, 57, 4 ],    # PgUp
+
+       58 => [ 3,  0, 4 ],    # CAPS
+       30 => [ 3,  6, 1 ],    # A
+       31 => [ 3,  9, 1 ],    # S
+       32 => [ 3, 12, 1 ],    # D
+       33 => [ 3, 15, 1 ],    # F
+       34 => [ 3, 18, 1 ],    # G
+       35 => [ 3, 21, 1 ],    # H
+       36 => [ 3, 24, 1 ],    # J
+       37 => [ 3, 27, 1 ],    # K
+       38 => [ 3, 30, 1 ],    # L
+       39 => [ 3, 34, 1 ],    # Ö
+       40 => [ 3, 38, 1 ],    # Ä
+       43 => [ 3, 42, 1 ],    # '
+       28 => [ 3, 49, 5 ],    # ENTER
+      109 => [ 3, 57, 4 ],    # PgDn
+
+       42 => [ 4,  0, 4 ],    # LSFT
+       86 => [ 4,  5, 1 ],    # <
+       44 => [ 4,  7, 1 ],    # Z
+       45 => [ 4, 10, 1 ],    # X
+       46 => [ 4, 13, 1 ],    # C
+       47 => [ 4, 16, 1 ],    # V
+       48 => [ 4, 19, 1 ],    # B
+       49 => [ 4, 22, 1 ],    # N
+       50 => [ 4, 25, 1 ],    # M
+       51 => [ 4, 28, 1 ],    # ,
+       52 => [ 4, 31, 1 ],    # .
+       53 => [ 4, 35, 1 ],    # -
+       54 => [ 4, 48, 6 ],    # RSHIFT
+      107 => [ 4, 57, 3 ],    # END
+
+       29 => [ 5, 0,  4 ],    # CTRL
+      125 => [ 5, 8,  3 ],    # WIN
+       56 => [ 5, 12, 3 ],    # Alt
+       57 => [ 5, 18, 5 ],    # SPACE
+      100 => [ 5, 25, 5 ],    # AltGr
+      127 => [ 5, 31, 3 ],    # HAM
+       97 => [ 5, 35, 4 ],    # CTRL
+      105 => [ 5, 44, 4 ],    # Left
+      103 => [ 5, 49, 2 ],    # Up
+      108 => [ 5, 52, 4 ],    # Down
+      106 => [ 5, 57, 5 ],    # Right
+    }
+
+    $lines = [
+      "ESC  F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 INSERT PSCR DELETE",
+      "§    1  2  3  4  5  6  7  8  9   0   +   ´   BACKSPACE   HOME",
+      "TAB   Q  W  E  R  T  Y  U  I  O   P   Å   ¨              PgUp",
+      "CAPS  A  S  D  F  G  H  J  K  L   Ö   Ä   '      ENTER   PgDn",
+      "LSFT < Z  X  C  V  B  N  M  ,  .   -            RSHIFT   END",
+      "CTRL    WIN Alt   SPACE  AltGr HAM CTRL     Left Up Down Right" ]
+  }
+
+  if $_.match(/^keycode *(\d+) release/) then
+    if all_keys.has_key?($1.to_i) then
+      y, x, length = * all_keys[$1.to_i]
+      (0..(length-1)).each do |i|
+        $lines[y][x + i] = " "
+      end
+    end
+
+    all_keys.delete($1.to_i)
+  end
+
+  show_state()
+
+  exit(0) if all_keys.empty?
+
+  END {
+    if all_keys.empty? then
+      puts ""
+      puts "All keys were pressed, great!"
+      exit(0)
+    else
+      warn ""
+      warn "WARNING: some keys were not pressed!"
+      exit(1)
+    end
+  }
+EOF
+)
+
+  unbuffer showkey | ruby -ln -e "$ruby_test_keyboard_script"
+}
+
+run_mouse_test() {
+  clear
+  echo '>>>'
+  echo ">>> Now running evtest ${1} for 10 seconds"
+  echo '>>>'
+  sleep 1
+  timeout -k 1 10 evtest "$1" || true
+  sleep 1
+
+}
+
+test_mouse() {
+  local dialog_args i mouse_choice mouse_device_count mouse_event_devices \
+        mouse_devpath
+
+  mouse_event_devices=$(
+    sed 's/=/ /' /proc/bus/input/devices \
+      | awk '$1 == "H:" && $2 == "Handlers" && /mouse/ {
+               for (i = 3; i <= NF; i++) { if ($i ~ /^event/) { print $i } } }
+             ')
+
+  if [ -z "$mouse_event_devices" ]; then
+    dialog --msgbox 'No mouse devices could be found.' 5 36
+    return 1
+  fi
+
+  mouse_device_count="$(printf "%s\n" "$mouse_event_devices" | wc -l)"
+  if [ "$mouse_device_count" -eq 1 ]; then
+    run_mouse_test "/dev/input/${mouse_event_devices}" || true
+  else
+    dialog_args=''
+    i=1
+    for mouse_event_dev in $mouse_event_devices; do
+      dialog_args="${dialog_args} $i Mouse_${i}"
+      i=$(($i + 1))
+    done
+    dialog_args="${dialog_args} exit Exit"
+
+    default_mouse=1
+    while true; do
+      mouse_choice=$(dialog --stdout \
+                            --default-item "$default_mouse" \
+                            --menu 'Choose a mouse device' \
+                      $(($mouse_device_count + 8)) 36 $(($mouse_device_count + 1)) \
+                      $dialog_args) || true
+      if [ -z "$mouse_choice" -o "$mouse_choice" = 'exit' ]; then
+        break
+      fi
+
+      mouse_devpath=''
+      i=1
+      for mouse_event_dev in $mouse_event_devices; do
+        if [ "$i" = "$mouse_choice" ]; then
+          mouse_devpath="/dev/input/${mouse_event_dev}"
+          default_mouse="$(($i + 1))"
+          if [ "$default_mouse" -gt "$mouse_device_count" ]; then
+            default_mouse='exit'
+          fi
+        fi
+        i=$(($i + 1))
+      done
+
+      if [ -z "$mouse_devpath" ]; then
+        echo 'Odd error, could not find mouse event device path' >&2
+        return 1
+      fi
+
+      run_mouse_test "$mouse_devpath" || true
+    done
+  fi
 
   return 0
 }
 
-status=0
+test_microphone() {
+  local alsadev
 
-test_camera   || status=1
-test_keyboard || status=1
+  alsadev='hw:0,0'
 
-exit $status
+  clear
+  echo "Using ALSA device ${alsadev} for recording..."
+  echo
+
+  if arecord --vumeter=stereo -f cd -d 10 --device="${alsadev}" /dev/null; then
+    echo
+    echo 'Recording finished.'
+  fi
+
+  sleep 5
+}
+
+test_speakers() {
+  local speaker_test_status
+
+  speaker_test_status=0
+
+  clear
+
+  speaker-test -t wav  -c 2 -l 3 || speaker_test_status=1
+  speaker-test -t pink -c 2 -l 1 || speaker_test_status=1
+
+  # XXX This uses wav files that might no longer exist after
+  # XXX Scratch or Solfege is updated.
+  aplay /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
+        /usr/share/scratch/Media/Sounds/Electronic/ComputerBeeps1.wav \
+        /usr/share/scratch/Media/Sounds/Human/Laugh-female.wav \
+        /usr/share/solfege/exercises/standard/lesson-files/share/fanfare.wav \
+    || speaker_test_status=1
+
+  sleep 2
+}
+
+test_wifi() {
+  local wifiscan_results
+
+  ifconfig wlan0 up || true
+
+  wifiscan_results=$(
+    iwlist scan 2>/dev/null \
+      | ruby -lne '
+          BEGIN { networks = {} }
+
+          if $_.match(/Signal level=(.*?) dBm/) then
+            signal_level = $1
+          end
+
+          if $_.match(/ESSID:"(.*?)"/) then
+            essid = $1
+            if signal_level then
+              networks[essid] = signal_level
+            end
+          end
+
+          END {
+            networks_list = networks.keys.sort_by do |i,j|
+                              networks[i].to_i <= networks[j].to_i
+                            end
+            networks_list.each do |essid|
+              printf("%-30s %s dBm\n", essid, networks[essid])
+            end
+          }
+        ')
+  if [ -z "$wifiscan_results" ]; then
+    wifiscan_results='No networks found.
+Maybe a problem with wireless interface?'
+    dialog --no-collapse --msgbox "$wifiscan_results" 6 48
+    return 1
+  fi
+
+  dialog --no-collapse --msgbox "$wifiscan_results" 20 48
+}
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'Tests must be run as root!' >&2
+  return 1
+fi
+
+mainmenu_default_item='camera'
+while true; do
+  response=$(dialog --stdout --default-item "$mainmenu_default_item" \
+                    --menu 'Choose a test' 14 44 7 \
+               camera     'Test webcam' \
+               keyboard   'Test keyboard' \
+               microphone 'Test microphone' \
+               mouse      'Test mouse/mice' \
+               speakers   'Test speakers' \
+               wifi       'Test wireless networking' \
+               quit       'Exit tests') || true
+
+  case "$response" in
+    camera)     mainmenu_default_item=keyboard;   test_camera     || true ;;
+    keyboard)   mainmenu_default_item=microphone; test_keyboard   || true ;;
+    microphone) mainmenu_default_item=mouse;      test_microphone || true ;;
+    mouse)      mainmenu_default_item=speakers;   test_mouse      || true ;;
+    speakers)   mainmenu_default_item=wifi;       test_speakers   || true ;;
+    wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
+    quit|'')    break ;;
+    *)          echo 'Unknown option' >&2 ;;
+  esac
+done
+
+exit 0
