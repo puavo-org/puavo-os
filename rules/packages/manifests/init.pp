@@ -112,6 +112,7 @@ class packages {
     , 'iotop'
     , 'iperf'
     , 'libstdc++5'
+    , 'linssid'
     , 'lm-sensors'
     , 'lshw'
     , 'lsof'
