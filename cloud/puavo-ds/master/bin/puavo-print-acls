@@ -424,6 +424,18 @@ rule {
 }
 
 rule {
+  # We must allow all admins to read all hostnames in an organisation.
+  # This is so that registration can check if a hostname is already
+  # reserved, and give out a proper error message.
+  [dn children $Devices]
+    [attrs entry objectClass puavoHostname puavoId]
+      by $org_owners         write
+      by $this_school_admins write
+      by $admins             read
+      by *                   none break
+}
+
+rule {
   # Allow changing device settings for organisation owners and admins
   # who are in the same school as the device.
   [dn children $Devices]
@@ -464,8 +476,9 @@ rule {
 rule {
   [dn children $Servers]
     [attrs entry objectClass ou puavoExport puavoHostname puavoId puavoSchool]
-      by $this_school_admins read
-      by $staff              read	# XXX maybe just remove this?
+      by $org_owners write
+      by $admins     read
+      by $staff      read	# XXX maybe just remove this?
 
       # XXX This is needed by /v3/sessions printer queues server information.
       # XXX It is unclear if this is needed in the real world, but old ACLs
@@ -489,6 +502,8 @@ rule {
 rule {
   [dn exact $Hosts]
       by $org_owners           read
+      by $admins               read
+      by $staff                read	# XXX maybe just remove this?
       by [dn children $Hosts]  read
       by [systemgroup devices] read
       by [systemgroup servers] read
@@ -625,9 +640,11 @@ rule {
 rule {
   [dn subtree $People]
     [attrs entry objectClass uid]
-      # hosts should be able to read information on the user who is
-      # the puavoDevicePrimaryUser (at least to know their username)
-      by [ldapset "this & user/puavoDevicePrimaryUser"] read
+      # Laptops should be able to read usernames.  This is because laptops
+      # may decide who its primary user is, and they can not set this
+      # information unless they can read user dn, which is not possible
+      # unless both "username" and "dn" are readable by laptop.
+      by [devicetype_set laptop] read
 
       by anonymous auth
       by *         none break
