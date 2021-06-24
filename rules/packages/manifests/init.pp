@@ -326,7 +326,6 @@ class packages {
     , 'gimp-gap'
     , 'gimp-plugin-registry'
     # , 'gimp-ufraw'            # XXX missing from Bullseye
-    , 'gimp-ufraw'
     , 'godot3'
     , 'gthumb'
     , 'inkscape'
