@@ -625,9 +625,11 @@ rule {
 rule {
   [dn subtree $People]
     [attrs entry objectClass uid]
-      # hosts should be able to read information on the user who is
-      # the puavoDevicePrimaryUser (at least to know their username)
-      by [ldapset "this & user/puavoDevicePrimaryUser"] read
+      # Laptops should be able to read usernames.  This is because laptops
+      # may decide who its primary user is, and they can not set this
+      # information unless they can read user dn, which is not possible
+      # unless both "username" and "dn" are readable by laptop.
+      by [devicetype_set laptop] read
 
       by anonymous auth
       by *         none break
