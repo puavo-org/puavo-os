@@ -25,7 +25,9 @@ _pkgs_ports := gnome-shell
 #                wsmancli
 
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
-_pkgs_cloud     := krb5 openldap puavo-ds puavo-os
+# XXX do not try to build krb5 and openldap on Bullseye just yet
+# _pkgs_cloud     := krb5 openldap puavo-ds puavo-os
+_pkgs_cloud     := puavo-ds puavo-os
 
 _dpkg_buildpackage_builddeps := $(_pkgs_builddeps:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_cloud     := $(_pkgs_cloud:%=.dpkg-buildpackage-%)
