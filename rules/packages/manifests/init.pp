@@ -13,12 +13,11 @@ class packages {
   # Puavo OS packages
   #
 
-# XXX missing from Bullseye
-# @package {
-#   [ 'puavo-ltsp-bootserver', 'puavo-rest', ]:
-#     ensure => present,
-#     tag    => [ 'tag_puavo_bootserver' ];
-# }
+  @package {
+    [ 'puavo-ltsp-bootserver', 'puavo-rest', ]:
+      ensure => present,
+      tag    => [ 'tag_puavo_bootserver' ];
+  }
 
   @package {
     [ 'puavo-autopilot'
