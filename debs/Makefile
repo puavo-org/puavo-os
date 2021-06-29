@@ -1,14 +1,12 @@
-# XXX openwsman does not build on Bullseye
 # sblim-sfcc openwsman are dependencies for wsmancli
-# _pkgs_builddeps := sblim-sfcc openwsman
-_pkgs_builddeps :=
+_pkgs_builddeps := sblim-sfcc openwsman
 
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
 _pkgs_ports := gnome-shell
 
-# XXX disable ports builds for Bullseye, these all most probably
+# XXX disable most ports builds for Bullseye, these all most probably
 # XXX need some work
 # _pkgs_ports := gnome-control-center \
 #                grub2                \
@@ -21,8 +19,8 @@ _pkgs_ports := gnome-shell
 #                openboard            \
 #                openldap             \
 #                pinta                \
-#                vtun                 \
-#                wsmancli
+#                vtun
+_pkgs_ports := wsmancli
 
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 # XXX do not try to build krb5 and openldap on Bullseye just yet
