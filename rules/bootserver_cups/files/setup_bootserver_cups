@@ -149,6 +149,7 @@ Listen /var/run/cups/cups.sock
 # also adding them to Avahi.
 Browsing Yes
 BrowseLocalProtocols all
+HostNameLookups On
 
 # Default authentication type, when authentication is required...
 DefaultAuthType Basic
