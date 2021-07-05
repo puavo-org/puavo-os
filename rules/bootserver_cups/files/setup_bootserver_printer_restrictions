@@ -36,19 +36,53 @@ Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 client = PuavoRestClient.new :auth => :etc
 
+all_printer_queues \
+  = client.get('/v3/printer_queues',
+               :params => { :server_dn => PUAVO_ETC.ldap_dn }) \
+          .parse
+
+raise 'all printer queues is not in a valid format' \
+  unless all_printer_queues.kind_of?(Array) \
+           && all_printer_queues.all? { |pq| pq.kind_of?(Hash) }
+
 url = "/v3/boot_servers/#{ PUAVO_ETC.hostname }/printer_schools"
 all_schools_by_printers = client.get(url).parse
 
-schools_by_pq          = all_schools_by_printers['printer_queues']
-schools_by_wireless_pq = all_schools_by_printers['wireless_printer_queues']
+# "printer_queues" really means printers that are meant only for Puavo
+# devices (where internal puavo device printer restrictions may be applied)
+# "wireless_printer_queues" really means printers that can be used by
+# all devices (where printer restrictions may not be appled).
+puavo_only_printer_queues = all_schools_by_printers['printer_queues']
+open_printer_queues       = all_schools_by_printers['wireless_printer_queues']
 
 raise 'printer queues is not in a valid format' \
-  unless pq_structure_ok?(schools_by_pq)
+  unless pq_structure_ok?(puavo_only_printer_queues)
 raise 'printer wireless queues is not in a valid format' \
-  unless pq_structure_ok?(schools_by_wireless_pq)
+  unless pq_structure_ok?(open_printer_queues)
 
-all_schools = (schools_by_pq.values.flatten \
-                + schools_by_wireless_pq.values.flatten).uniq
+all_printers = Hash[
+  all_printer_queues.map do |printer|
+    permissions = :closed
+    printer_name = printer['name']
+    next unless printer_name
+
+    (puavo_only_printer_queues[printer_name] || []).each do |school|
+      permissions = {} if (permissions == :closed)
+      permissions[school] = :puavo_only
+    end
+
+    (open_printer_queues[printer_name] || []).each do |school|
+      permissions = {} if (permissions == :closed)
+      permissions[school] = :open
+    end
+
+    [ printer_name, permissions ]
+  end.compact
+]
+
+all_schools = all_printers.values.map do |s|
+                s.kind_of?(Hash) ? s.keys : nil
+              end.compact.flatten.sort.uniq
 
 puavoconf = Puavo::Conf.new
 network_interfaces_by_school_conf = puavoconf.get('puavo.networking.bootserver.interfaces.schools')
@@ -63,8 +97,7 @@ interface_network_cidrs = Hash[
   end.compact
 ]
 
-wired_interfaces_by_school = {}
-wireless_interfaces_by_school = {}
+interfaces_by_school = {}
 schools_by_network_interfaces = {}
 
 network_interfaces_by_school_conf.split.each do |mapping_string|
@@ -83,25 +116,16 @@ network_interfaces_by_school_conf.split.each do |mapping_string|
               end
             end
 
-  wireless_interfaces, wired_interfaces = interfaces.partition do |iface|
-                                            iface.match(/^wlan/)
-					  end
-
   interfaces.each do |iface|
     schools_by_network_interfaces[iface] ||= []
-    (schools_by_network_interfaces[iface] += schools).uniq!
+    (schools_by_network_interfaces[iface] += schools).sort!.uniq!
   end
 
   schools.each do |school|
-    wired_interfaces_by_school[school] ||= []
-    (wired_interfaces_by_school[school] += wired_interfaces).uniq!
-    wireless_interfaces_by_school[school] ||= []
-    (wireless_interfaces_by_school[school] += wireless_interfaces).uniq!
+    interfaces_by_school[school] ||= []
+    (interfaces_by_school[school] += interfaces).sort!.uniq!
   end
 end
-
-all_printer_queues = (schools_by_pq.keys + schools_by_wireless_pq.keys) \
-                       .sort_by(&:downcase).uniq
 
 cups_printer_restrictions = <<'EOF'
 
@@ -110,32 +134,38 @@ cups_printer_restrictions = <<'EOF'
 #
 EOF
 
-all_printer_queues.each do |printer_queue|
-  allow_wired = (schools_by_pq[printer_queue] || []).map do |school|
-                  wired_interfaces_by_school[school].sort.map do |iface|
-                    network_cidr = interface_network_cidrs[iface]
-                    next unless network_cidr
-                    netif_schools = schools_by_network_interfaces[iface].sort
-                    "  Allow #{ network_cidr }\t\t# #{iface}" \
-                      + " / #{ netif_schools.join(' ') }"
-                  end.compact.join("\n")
-                end.uniq.join("\n")
-  allow_wireless = (schools_by_wireless_pq[printer_queue] || []).map do |school|
-                     wireless_interfaces_by_school[school].sort.map do |iface|
-                       network_cidr = interface_network_cidrs[iface]
-                       next unless network_cidr
-                       netif_schools \
-                         = schools_by_network_interfaces[iface].sort
-                       "  Allow #{ network_cidr }\t\t# #{iface}" \
-                         + " / #{ netif_schools.join(' ') }"
-                     end.compact.join("\n")
-                   end.uniq.join("\n")
+Allow_by_domain_line = "  Allow *.#{ PUAVO_ETC.domain }"
 
-  printer_conf = "<Location /printers/#{ printer_queue }>\n"                  \
-                    + "  Order allow,deny\n"                                  \
-                    + (!allow_wired.empty?    ? (allow_wired    + "\n") : '') \
-                    + (!allow_wireless.empty? ? (allow_wireless + "\n") : '') \
-                    + "  Allow #{ admin_vpn_subnet }\t\t# admin network\n"    \
+all_printers.keys.sort_by(&:downcase).each do |printer_queue|
+  if all_printers[printer_queue] == :closed then
+    # In case we have a "closed printer", we only allow devices that
+    # have a the correct domain, and thus must be in Puavo.  In this case
+    # we can handle the printer restrictions on the client side (which can
+    # based on device name or user groups or some such).
+    allow_lines = Allow_by_domain_line
+  else
+    allow_lines \
+      = all_printers[printer_queue].map do |school_and_permissions|
+          school, permissions = * school_and_permissions
+
+          interfaces_by_school[school].map do |iface|
+            if permissions == :puavo_only then
+              Allow_by_domain_line
+            else
+              network_cidr = interface_network_cidrs[iface]
+              next unless network_cidr
+              netif_schools = schools_by_network_interfaces[iface].sort
+              "  Allow #{ network_cidr }\t\t# #{ iface }" \
+                + " / #{ netif_schools.join(' ') }"
+            end
+          end.compact.uniq.join("\n")
+        end.compact.uniq.join("\n")
+  end
+
+  printer_conf = "<Location /printers/#{ printer_queue }>\n"               \
+                    + "  Order allow,deny\n"                               \
+                    + (!allow_lines.empty? ? (allow_lines + "\n") : '')    \
+                    + "  Allow #{ admin_vpn_subnet }\t\t# admin network\n" \
                     + "</Location>\n"
 
   cups_printer_restrictions += printer_conf
