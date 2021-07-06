@@ -133,13 +133,6 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 */5 * * * * root /etc/puavo-conf/scripts/setup_bootserver_printer_restrictions >/dev/null 2>&1
 EOF
 
-cron_d_cond_enable puavo-update-airprint-ddns <<'EOF'
-# Update printers on DNS every fifteen minutes.
-SHELL=/bin/sh
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-*/15 * * * * root /usr/local/sbin/puavo-update-airprint-ddns >/dev/null 2>&1
-EOF
-
 cron_d_cond_enable remove-cups-jobs <<'EOF'
 # Remove all CUPS jobs every night at 03:00
 SHELL=/bin/sh
