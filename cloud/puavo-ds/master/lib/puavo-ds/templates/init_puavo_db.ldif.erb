@@ -66,6 +66,13 @@ uid: pw-mgmt
 description: Account for password management service
 userPassword: <%= @pw_mgmt_pw_hash %>
 
+dn: <%= @statistics_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: statistics
+description: Account for gathering statistics
+userPassword: <%= @statistics_pw_hash %>
+
 dn: ou=Services,o=puavo
 ou: Services
 objectClass: top
