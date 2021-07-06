@@ -31,13 +31,6 @@ uid: puavo
 description: Account for Puavo to search user DNs
 userPassword: <%= @puavopw_hash %>
 
-dn: uid=puppet,o=puavo
-objectClass: account
-objectClass: simpleSecurityObject
-uid: puppet
-description: Account for Puppet to find host information
-userPassword: <%= @puppetpw_hash %>
-
 dn: <%= @kdcdn %>
 objectClass: account
 objectClass: simpleSecurityObject
@@ -65,13 +58,6 @@ objectClass: simpleSecurityObject
 uid: slave
 description: Account for slave servers to read information from databases, no write access
 userPassword: <%= @slavepw_hash %>
-
-dn: <%= @puavo_ticket_dn %>
-objectClass: account
-objectClass: simpleSecurityObject
-uid: puavo-ticket
-description: Account for Puavo Ticket to get information of organisations
-userPassword: <%= @puavo_ticket_pw_hash %>
 
 dn: <%= @pw_mgmt_dn %>
 objectClass: account
