@@ -3,7 +3,6 @@
   "puavo.mounts.by_user_from_bootserver.enabled"     : "true",
   "puavo.pm.lidsuspend.enabled"                      : "true",
   "puavo.pm.suspend.enabled"                         : "true",
-  "puavo.printing.dnssd.enabled"                     : "true",
   "puavo.service.avahi-daemon.enabled"               : "true",
   "puavo.service.cron.cronjobs"                      : "puavo-cleanup-old-users,puavo-nightly-updates,puavo-pkg-update",
   "puavo.service.gpm.enabled"                        : "false",

@@ -27,7 +27,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
-	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
@@ -79,7 +78,6 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-conf-local \
-		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
 		puavo-netboot-init-nfs \
 		puavo-report-system-version \
@@ -91,9 +89,6 @@ install : installdirs
 		etc/puavo-vpn-client/scripts/route-up/10-bootserver-dnsmasq \
 		etc/puavo-vpn-client/scripts/route-up/10-puavo-vpn-client-dnsmasq \
 		etc/puavo-vpn-client/scripts/route-up/30-sntp
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
-		etc/NetworkManager/dispatcher.d/dnssd-printers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d \
 		etc/systemd/system/systemd-udevd.service.d/puavo-ltsp-client.conf
