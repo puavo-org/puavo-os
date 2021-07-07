@@ -135,28 +135,33 @@ cups_printer_restrictions = <<'EOF'
 EOF
 
 all_printers.keys.sort_by(&:downcase).each do |printer_queue|
-  # Always allow from Puavo-devices, we apply more detailed restrictions there.
-  allow_lines = "  Allow *.#{ PUAVO_ETC.domain }\n"
-
+  network_allow_lines = ''
   if all_printers[printer_queue] != :closed then
-    allow_lines \
-      += all_printers[printer_queue].map do |school_and_permissions|
-           school, permissions = * school_and_permissions
-           next if permissions == :puavo_only
+    network_allow_lines \
+      = all_printers[printer_queue].map do |school_and_permissions|
+          school, permissions = * school_and_permissions
+          next if permissions == :puavo_only
 
-           interfaces_by_school[school].map do |iface|
-             network_cidr = interface_network_cidrs[iface]
-             next unless network_cidr
-             netif_schools = schools_by_network_interfaces[iface].sort
-             "  Allow #{ network_cidr }\t\t# #{ iface }" \
-               + " / #{ netif_schools.join(' ') }"
-           end.compact.uniq.join("\n")
-         end.compact.uniq.join("\n") + "\n"
+          interfaces_by_school[school].map do |iface|
+            network_cidr = interface_network_cidrs[iface]
+            next unless network_cidr
+            netif_schools = schools_by_network_interfaces[iface].sort
+            "  Allow #{ network_cidr }\t\t# #{ iface }" \
+              + " / #{ netif_schools.join(' ') }"
+          end.compact.uniq.join("\n")
+        end.compact.uniq.join("\n")
+  end
+  if !network_allow_lines.empty? then
+    network_allow_lines += "\n"
   end
 
+  # We always allow from Puavo-devices, we apply more detailed restrictions
+  # there.  Allow from network depends on printer settings in Puavo.
+  # Also allow from admin network (not usually needed much).
   printer_conf = "<Location /printers/#{ printer_queue }>\n"               \
                     + "  Order allow,deny\n"                               \
-                    + (!allow_lines.empty? ? allow_lines : '')    \
+                    + "  Allow *.#{ PUAVO_ETC.domain }\n"                  \
+                    + network_allow_lines                                  \
                     + "  Allow #{ admin_vpn_subnet }\t\t# admin network\n" \
                     + "</Location>\n"
 
