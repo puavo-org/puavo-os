@@ -177,7 +177,7 @@ get_puavo_session() {
   session_status=0
   session_error_msg=$(
     timeout -k 1 "$session_fetch_timeout" \
-      puavo-rest-request v3/sessions $rest_request_args "$@" 2>&1 \
+      puavo-rest-request /v3/sessions $rest_request_args "$@" 2>&1 \
         > "${PUAVO_SESSION_FILE}.tmp") || session_status=$?
 
   if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
@@ -239,7 +239,7 @@ handle_external_login() {
   if extlogins=$(
     printf %s "$user_password" \
       | timeout -k 1 10 \
-          /usr/bin/puavo-rest-request v3/external_login/auth \
+          /usr/bin/puavo-rest-request /v3/external_login/auth \
             --post --send-device-school-dn --user "$PAM_USER" --writable); then
     external_login_status=$({ printf %s "$extlogins" | jq -r .status; } \
                               || echo NOSTATUS)

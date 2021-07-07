@@ -20,9 +20,9 @@ read my_hostname < /etc/puavo/hostname
 # XXX get rid of hosttype handling
 puavo_hosttype=$(puavo-conf puavo.hosttype)
 if [ "$puavo_hosttype" = 'bootserver' ]; then
-  url="v3/boot_servers/${my_hostname}/sysinfo"
+  url="/v3/boot_servers/${my_hostname}/sysinfo"
 else
-  url="v3/devices/${my_hostname}/sysinfo"
+  url="/v3/devices/${my_hostname}/sysinfo"
 fi
 
 if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
