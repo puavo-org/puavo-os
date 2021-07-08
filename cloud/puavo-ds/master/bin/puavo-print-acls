@@ -515,6 +515,7 @@ rule {
   [dn exact $Printers]
     [attrs entry objectClass ou]
       by $org_owners                 read
+      by [dn children $Hosts]        read
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
@@ -523,6 +524,7 @@ rule {
   [dn exact $Printers]
     [attrs children]
       by $org_owners                 write
+      by [dn children $Hosts]        read
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
@@ -530,6 +532,7 @@ rule {
 rule {
   [dn children $Printers]
       by $org_owners                 write
+      by [dn children $Hosts]        read
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
