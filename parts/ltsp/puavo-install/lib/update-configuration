@@ -177,6 +177,14 @@ def update_grub_environment(restclient)
   raise errors.first unless errors.empty?
 end
 
+def update_org_json(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating organisation json\n")
+
+  puavo_rest_request_and_replace(restclient,
+                                 '/v3/current_organisation',
+                                 '/state/etc/puavo/org.json')
+end
+
 def update_wlan_configurations(restclient)
   log(Syslog::LOG_INFO, ">>> Updating wlan configurations\n")
 
@@ -252,6 +260,7 @@ update_functions = [
                 :update_extra_boot_scripts,
                 :update_puavoadmins,
                 :update_puavopkg_installers,
+                :update_org_json,
 ]
 
 exitcode = 0

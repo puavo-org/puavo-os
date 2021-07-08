@@ -2,12 +2,17 @@
 
 set -eu
 
-# This script fetches device.json for netbooting devices.
+# This script fetches device.json and org.json for netbooting devices.
 
 # Do nothing unless we have booted with NBD.
 test -e /run/puavo/nbd-server || exit 0
 
-status=1
+if ! api_server=$(puavo-resolve-api-server); then
+  echo 'Could not determine the Puavo API server' >&2
+  exit 1
+fi
+
+status=0
 
 # Get device settings.
 # Set --max-time to 30 seconds to allow the boot to continue in case of
@@ -17,12 +22,28 @@ if curl --cacert /etc/puavo-conf/rootca.pem \
         --fail \
         --max-time 30 \
         --silent \
-        "$(puavo-resolve-api-server)/v3/devices/$(hostname -s)" \
+        "${api_server}/v3/devices/$(hostname -s)" \
         > /etc/puavo/device.json.tmp; then
-  mv /etc/puavo/device.json.tmp /etc/puavo/device.json
-  status=0
+  mv /etc/puavo/device.json.tmp /etc/puavo/device.json || status=1
 else
+  status=1
   rm -f /etc/puavo/device.json.tmp
+fi
+
+# Get organisation settings.
+# Set --max-time to 10 seconds to allow the boot to continue in case of
+# failure; so we can check out later (with ssh or some such) what went wrong.
+if curl --cacert /etc/puavo-conf/rootca.pem \
+        --header 'Authorization: Bootserver' \
+        --fail \
+        --max-time 10 \
+        --silent \
+        "${api_server}/v3/current_organisation" \
+        > /etc/puavo/org.json.tmp; then
+  mv /etc/puavo/org.json.tmp /etc/puavo/org.json || status=1
+else
+  status=1
+  rm -f /etc/puavo/org.json.tmp
 fi
 
 exit $status

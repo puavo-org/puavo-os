@@ -139,24 +139,6 @@ else
   org_json_path='/state/etc/puavo/org.json'
 fi
 
-if [ -e /etc/puavo/ldap/dn ]; then
-  prr_args='--user-etc'
-else
-  prr_args='--user-bootserver'
-fi
-
-# it is okay if this fails
-{
-  install -o root -g root -m 600 /dev/null "${org_json_path}.tmp"
-  if ! puavo-rest-request /v3/current_organisation "$prr_args" 2>/dev/null \
-         > "${org_json_path}.tmp"; then
-    rm -f "${org_json_path}.tmp"
-  else
-    mv "${org_json_path}.tmp" "$org_json_path"
-  fi
-} || true
-
-# but without org.json we can not continue
 if [ ! -e "$org_json_path" ]; then
   echo "No org.json in $org_json_path" >&2
   exit 1
