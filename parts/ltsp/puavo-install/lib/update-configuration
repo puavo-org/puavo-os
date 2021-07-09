@@ -185,6 +185,12 @@ def update_org_json(restclient)
                                  '/state/etc/puavo/org.json')
 end
 
+def update_printer_restrictions(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating printer restrictions\n")
+  run('/etc/puavo-conf/scripts/setup_desktop_printer_restrictions',
+      '--use-lpadmin')
+end
+
 def update_wlan_configurations(restclient)
   log(Syslog::LOG_INFO, ">>> Updating wlan configurations\n")
 
@@ -261,6 +267,7 @@ update_functions = [
                 :update_puavoadmins,
                 :update_puavopkg_installers,
                 :update_org_json,
+                :update_printer_restrictions,
 ]
 
 exitcode = 0

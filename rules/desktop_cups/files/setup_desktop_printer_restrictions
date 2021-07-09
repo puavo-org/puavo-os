@@ -1,0 +1,72 @@
+#!/bin/sh
+
+set -eu
+
+use_lpadmin=false
+verbose=false
+if [ "${1:-}" = '--use-lpadmin' ]; then
+  use_lpadmin=true
+  verbose=true
+fi
+
+if [ -e /run/puavo/nbd-server ]; then
+  device_json_path='/etc/puavo/device.json'
+else
+  if ! $use_lpadmin; then
+    exit 0
+  fi
+  device_json_path='/state/etc/puavo/device.json'
+fi
+
+lookup_printer_key() {
+  jq -r --arg key "$1" --arg printer "$2" '
+    if .printers.restrictions[$printer] | has($key) then
+      .printers.restrictions[$printer][$key]
+    else
+      ""
+    end
+  ' "$device_json_path"
+}
+
+if ! printer_list=$(jq -r '.printers.restrictions | keys | .[]' \
+                          /etc/puavo/device.json); then
+  echo 'Could not determine printer restrictions from device.json' >&2
+  exit 1
+fi
+
+status=0
+
+for printer in $printer_list; do
+  if ! allow=$(lookup_printer_key allow "$printer"); then
+    status=1
+    continue
+  fi
+
+  if [ "$allow" = '*' ]; then
+    allowed_users='all'
+    browsed_conf_line=''
+  else
+    if [ -n "$allow" ]; then
+      allowed_users="root,${allow}"
+    else
+      allowed_users='root'
+    fi
+    browsed_conf_line="requesting-user-name-allowed=${allowed_users}"
+  fi
+
+  if $verbose; then
+    rationale=$(lookup_printer_key rationale "$printer") || rationale='?'
+    echo "Allowed users for '${printer}' are '${allowed_users}': ${rationale}"
+  fi
+
+  if $use_lpadmin; then
+    lpadmin -p "$printer" -u "allow:${allowed_users}" || status=1
+  else
+    browsed_printer_path="/var/cache/cups/cups-browsed-options-${printer}"
+    printf "%s\n" "$browsed_conf_lines" > "${browsed_printer_path}.tmp" \
+      || status=1
+    mv "${browsed_printer_path}.tmp" "$browsed_printer_path" || status=1
+  fi
+done
+
+exit $status
