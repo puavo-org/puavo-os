@@ -120,6 +120,7 @@ case "$(puavo-conf puavo.hosttype)" in
     statedirlist='
       /etc/NetworkManager/system-connections
       /var/cache/ccreds
+      /var/cache/cups
       /var/lib/AccountsService
       /var/lib/bluetooth
       /var/lib/extrausers
