@@ -1,10 +1,12 @@
 [abi]
-abiname: 15
+abiname: 16
 ignore-changes:
  __cpuhp_*
  bpf_analyzer
  cpu_tlbstate
  cxl_*
+ inet6_register_icmp_sender
+ inet6_unregister_icmp_sender
  inet_frag_*
  inet_frags_*
  injectm
@@ -18,13 +20,19 @@ ignore-changes:
  tpm_*
  tpmm_chip_alloc
  unregister_cxl_calls
+ zs_*
  module:drivers/block/loop
  module:drivers/crypto/ccp/*
  module:drivers/edac/edac_mce_amd
  module:drivers/hv/*
  module:drivers/iio/common/hid-sensors/*
  module:drivers/iio/common/st_sensors/**
+ module:drivers/media/usb/dvb-usb/**
+ module:drivers/media/usb/gspca/**
+ module:drivers/misc/**
  module:drivers/net/ethernet/**
+ module:drivers/net/tun
+ module:drivers/net/usb/**
  module:drivers/net/wireless/**
  module:drivers/nfc/**
  module:drivers/nvdimm/*
@@ -37,15 +45,18 @@ ignore-changes:
  module:drivers/scsi/libiscs*
  module:drivers/scsi/qla2xxx/qla2xxx
  module:drivers/scsi/ufs/*
+ module:drivers/staging/**
  module:drivers/target/**
  module:drivers/usb/chipidea/**
  module:drivers/usb/gadget/**
  module:drivers/usb/host/**
  module:drivers/usb/musb/**
+ module:drivers/usb/usbip/**
  module:drivers/vhost/vhost
  module:fs/crypto/fscrypto
  module:fs/nfs/nfs
  module:net/ceph/libceph
+ module:net/netfilter/nft_reject
  module:net/nfc/hci/hci
  module:net/l2tp/**
  module:net/vmw_vsock/*

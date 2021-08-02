@@ -1,0 +1,17 @@
+From: "Luis Claudio R. Goncalves" <lgoncalv@redhat.com>
+Date: Tue, 8 Jun 2021 17:20:16 -0300
+Subject: [PATCH 347/347] Linux 4.9.271-rt182 REBASE
+Origin: https://git.kernel.org/cgit/linux/kernel/git/rt/linux-stable-rt.git/commit?id=0a9c2f82de85d6e3b2fec66b220f27b81e2a5787
+
+Signed-off-by: Luis Claudio R. Goncalves <lgoncalv@redhat.com>
+---
+ localversion-rt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-rt b/localversion-rt
+index 9a218ca23053..020c19d89870 100644
+--- a/localversion-rt
++++ b/localversion-rt
+@@ -1 +1 @@
+--rt23
++-rt182
