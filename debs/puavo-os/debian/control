@@ -40,22 +40,6 @@ Description: Generate new block for debian/changelog file
  VERSION_SUFFIX added
  .
 
-Package: puavoadmins
-Architecture: any
-Depends: ${misc:Depends},
- libjson-c2,
- ruby-puavobs (>= 0.1.1),
- ruby
-Description: Puavo admin intergration
-  This project provides following components for intergrating Puavo
-  organization admininstrators to the host:
-    - NSS module which provides group and passwd databases.
-      - Supports getpwnam(), getpwuid(), getpwent(), getgrnam(),
-        getgrgid(), getgrent() and their reentrant counterparts.
-  - Command for feeding public SSH keys of Puavo administrators to sshd
-    via AuthorizedKeysCommand (requires OpenSSH 6.1 or newer).
- .
-
 Package: puavo-autopoweroff
 Architecture: all
 Depends: ${misc:Depends},

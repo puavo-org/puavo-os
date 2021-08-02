@@ -1,8 +1,7 @@
 # XXX does not compile on Bullseye:
 #   bigtouch-shutdown
 
-subdirs         := admins                     \
-                   autopilot                  \
+subdirs         := autopilot                  \
                    autopoweroff               \
                    blackboard                 \
                    client                     \
