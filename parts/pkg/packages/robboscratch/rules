@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+
+    ln -fns "${upstream_dir}/opt/robboscratch3" /opt/robboscratch3
+    ln -fns "${upstream_dir}/opt/robboscratch3/robboscratch3" \
+            /usr/bin/robboscratch3
+    ln -fns "${upstream_dir}/usr/share/applications/robboscratch3.desktop" \
+            /usr/share/applications/robboscratch3.desktop
+    ln -fns "${upstream_dir}/usr/share/pixmaps/robboscratch3.png" \
+            /usr/share/pixmaps/robboscratch3.png
+
+    cat <<'EOF' > /usr/bin/robboscratch3
+#!/bin/sh
+exec /opt/robboscratch3/robboscratch3_bin --password-store=basic "$@"
+EOF
+    chmod 755 /usr/bin/robboscratch3
+    ;;
+  unconfigure)
+    rm -rf /opt/robboscratch3 \
+           /usr/bin/robboscratch3 \
+           /usr/share/applications/robboscratch3.desktop \
+           /usr/share/pixmaps/robboscratch3.png
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac

@@ -811,11 +811,11 @@ programs:
         tags: default
 
   #R
-  - robboscratch2:
+  - robboscratch3:
         name: RobboScratch
         tags: default
         puavopkg:
-            id: robboscratch2
+            id: robboscratch
   - rosegarden:
         name:
             en: Rosegarden-sequencer
@@ -1304,7 +1304,7 @@ menus:
             - bluefish
             - designer-qt4
             - processing
-            - robboscratch2
+            - robboscratch3
             - appinventor
             - kojo
             - Nightcode
