@@ -341,12 +341,12 @@ class Series
       end
     end
 
+    torrents.cleanup_unused
+
     if !all_syncs_ok then
       warning(4, "Some image/diff sync failed for series #{ @series_name }")
       return false
     end
-
-    torrents.cleanup_unused
 
     return all_syncs_ok
   end
@@ -1003,25 +1003,16 @@ class ManagedImages
   # images... for example some image might be in the middle of series "Ubuntu",
   # yet at the same time be at the beginning of a series "Gentoo", or
   # some production image series might contain a subset of development images).
-  def remove_unused(all_series, synced_series, force_delete_unmanaged)
+  def remove_unused(all_series, force_delete_unmanaged)
     info(5, "Removing all unused images/diffs from series")
-    failed_series_names \
-      = (all_series.map &:series_name) - (synced_series.map &:series_name)
 
-    failed_series_names.each do |series_name|
-      warning(4, "Not removing anything from series #{ series_name }" \
-                    + " because of failed sync")
-    end
-
-    deletable_series_names = @old_by_series.keys - failed_series_names
-
-    old_files = deletable_series_names.map { |name| @old_by_series[name] } \
-                  .flatten
+    old_files = all_series.map { |s| @old_by_series[s.series_name] }.flatten
     new_files = @new_by_series.values.flatten
 
     files_to_possibly_delete = (old_files - new_files).uniq
 
-    # do not delete images that we may actually need to boot ourself
+    # Do not delete images that we may actually need to boot ourself.
+    # This is also good to ensure that at least some image is always available.
     files_to_delete \
       = files_to_possibly_delete.reject { |filepath| system_image?(filepath) }
 
@@ -1035,7 +1026,7 @@ class ManagedImages
       end
     end
 
-    if !all_deleted_ok || !failed_series_names.empty? then
+    if !all_deleted_ok then
       # If we failed at deleting some stuff, do not remove any paths from
       # Filepath, we should try again some later time.
       warning(4, "Not updating #{ Filepath } due to sync/deletion errors")
@@ -1166,7 +1157,6 @@ module SeriesControl
       info(5, "Given --series option, not removing unused images/diffs")
     else
       if !managed_images.remove_unused(all_series,
-                                       synced_series,
                                        options[:force_delete_unmanaged]) then
         statuscode = 1
       end
