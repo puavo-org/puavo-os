@@ -251,43 +251,53 @@ class Series
   # Returns specified number of newest images in an array.  The images are
   # sorted oldest first so that when fetching the images, newer images can
   # be created using diffs from older images.
-  def newest_images(managed_images, options)
+  def get_newest_images(options)
     # We want to always download X number of newest images with Y number
     # of diffs from newest images.
     return @by_version.sort.map { |version, image| image } \
              .reverse.slice(0, options[:image_limit]).reverse
   end
 
-  def sync(bootserver_data, managed_images, options)
+  def prepare_for_sync(bootserver_data, managed_images, options)
     if options[:image] then
       image = get_by_id(options[:image])
       if !image then
         info(4, "Could not find image #{ options[:image] }" \
                   + " from series #{ @series_name }")
-        return false
+        @image_list = []
+      else
+        @image_list = [ image ]
       end
-
-      image_list = [ image ]
     else
       # Check latest images.
-      newest_images = newest_images(managed_images, options)
+      newest_images = get_newest_images(options)
 
       # Check which images (and diffs) are needed by devices in Puavo.
       used_images = get_images_used_by_puavo_devices(bootserver_data,
                                                      managed_images)
 
-      image_list = (newest_images + used_images) \
-                     .uniq.sort_by { |image| image.version }
+      @image_list = (newest_images + used_images) \
+                      .uniq.sort_by { |image| image.version }
 
-      if image_list.empty? then
+      if @image_list.empty? then
         warning(5, "Image list for series #{ @series_name } is empty," \
                      + " doing nothing")
-        return false
       end
     end
 
+    @image_list.each do |image|
+      image.mark_in_use(series_name, managed_images)
+      if !options[:image] then
+        image.get_newest_diffs(options[:diff_limit]).each do |diff|
+          diff.mark_in_use(series_name, managed_images)
+        end
+      end
+    end
+  end
+
+  def sync(options)
     info(5, "Syncing series #{ @series_name } with the following images:")
-    image_list.each { |image| info(5, "  #{ image.id }") }
+    @image_list.each { |image| info(5, "  #{ image.id }") }
 
     FileUtils.mkdir_p(Image.basedir)
     FileUtils.mkdir_p(Diff.basedir)
@@ -297,20 +307,14 @@ class Series
 
     all_syncs_ok = true
 
-    image_list.each do |image|
+    @image_list.each do |image|
       info(4, "Syncing #{ image.id }")
 
-      if image.materialize(@series_name, managed_images) then
+      if image.materialize(@series_name) then
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
       else
         all_syncs_ok = false
         warning(3, "Image sync FAILED: #{ image.statemsg }")
-      end
-
-      if !options[:image] then
-        image.download_newest_diffs(@series_name,
-                                    managed_images,
-                                    options[:diff_limit])
       end
     end
 
@@ -324,7 +328,7 @@ class Series
         # We want only diffs that have been marked are in use.
         next unless diff.in_use
 
-        if diff.materialize(@series_name, managed_images) then
+        if diff.materialize(@series_name) then
           info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
         else
           all_syncs_ok = false
@@ -633,7 +637,7 @@ class SyncFileWithMetadata < SyncFile
     return self
   end
 
-  def materialize(series_name, managed_images)
+  def materialize(series_name)
     verify         and return true
     patch_from_old and return true
     download       and return true
@@ -759,13 +763,9 @@ class Image < SyncFileWithMetadata
     @diffs_from_by_version.values
   end
 
-  def download_newest_diffs(series_name, managed_images, limit=0)
-    newest_diffs = @diffs_from_by_version.sort.map { |version, diff| diff } \
-                     .reverse.slice(0, limit).reverse
-
-    newest_diffs.each do |diff|
-      diff.materialize(series_name, managed_images)
-    end
+  def get_newest_diffs(limit=0)
+    @diffs_from_by_version.sort.map { |version, diff| diff } \
+                          .reverse.slice(0, limit).reverse
   end
 
   # Create the current image from an old image by using a patch.  First
@@ -1115,6 +1115,10 @@ module SeriesControl
       warning(5, "Could not write CKSUMS file for laptops: #{ e.message }")
     end
 
+    all_series.each do |series|
+      series.prepare_for_sync(bootserver_data, managed_images, options)
+    end
+
     if options[:image] then
       info(5, "Given --image option, not removing unused images/diffs")
     elsif options[:keep_unused] then
@@ -1137,7 +1141,7 @@ module SeriesControl
     end
 
     all_series.each do |series|
-      result = series.sync(bootserver_data, managed_images, options)
+      result = series.sync(options)
       if result then
         synced_series << series
       elsif !options[:image] then
