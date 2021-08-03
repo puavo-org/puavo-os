@@ -295,15 +295,13 @@ class Series
     end
   end
 
-  def sync(options)
+  def sync(options, torrents)
     info(5, "Syncing series #{ @series_name } with the following images:")
     @image_list.each { |image| info(5, "  #{ image.id }") }
 
     FileUtils.mkdir_p(Image.basedir)
     FileUtils.mkdir_p(Diff.basedir)
     FileUtils.mkdir_p(Torrents.basedir)
-
-    torrents = Torrents.new
 
     all_syncs_ok = true
 
@@ -330,22 +328,19 @@ class Series
 
         if diff.materialize(@series_name) then
           info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
+          begin
+            torrents.make(diff)
+          rescue StandardError => e
+            warning(3, "Could not make a torrent for #{ diff.filename }: " \
+                         + e.message)
+            all_syncs_ok = false
+          end
         else
           all_syncs_ok = false
           warning(3, "Diff sync FAILED: #{ diff.statemsg }")
         end
-
-        begin
-          torrents.make(diff)
-        rescue StandardError => e
-          warning(3, "Could not make a torrent for #{ diff.filename }: " \
-                       + e.message)
-          all_syncs_ok = false
-        end
       end
     end
-
-    torrents.remove_unused
 
     if !all_syncs_ok then
       warning(4, "Some image/diff sync failed for series #{ @series_name }")
@@ -503,7 +498,8 @@ class SyncFileWithMetadata < SyncFile
     # (we could also do some load balancing by first choosing one randomly?).
     @urls.each do |url|
       begin
-        download_from_url(url) and return true
+        download_from_url(url)
+        return true
       rescue StandardError => e
         warning(2, "error downloading #{ url }: #{ e.message }")
       end
@@ -592,7 +588,7 @@ class SyncFileWithMetadata < SyncFile
         self.class.run_syncfile_install_hooks(3)
 
         @state.state = :inplace
-        return
+        return true
       else
         raise "puavo-rest-client error, received response #{ response.code }"
       end
@@ -1140,14 +1136,18 @@ module SeriesControl
       series.cleanup_tempfiles
     end
 
+    torrents = Torrents.new
+
     all_series.each do |series|
-      result = series.sync(options)
+      result = series.sync(options, torrents)
       if result then
         synced_series << series
       elsif !options[:image] then
         warning(5, "Error occurred in syncing #{ series.series_name }")
       end
     end
+
+    torrents.remove_unused
 
     if options[:image] then
       if !synced_series.empty? then
