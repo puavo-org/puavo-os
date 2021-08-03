@@ -498,7 +498,11 @@ class SyncFileWithMetadata < SyncFile
     # Go through all @urls in order and try to download from each in turn
     # (we could also do some load balancing by first choosing one randomly?).
     @urls.each do |url|
-      download_from_url(url) and return true
+      begin
+        download_from_url(url) and return true
+      rescue StandardError => e
+        warning(2, "error downloading #{ url }: #{ e.message }")
+      end
     end
 
     return false
@@ -521,8 +525,7 @@ class SyncFileWithMetadata < SyncFile
     http.request_get(uri.path) do |response|
       case response
       when Net::HTTPNotFound
-        warning(2, "404 - Not Found (#{url})")
-        return false
+        raise '404 - Not Found'
 
       when Net::HTTPOK
         hash = Digest::SHA2.new
@@ -555,20 +558,24 @@ class SyncFileWithMetadata < SyncFile
         @state.state = :downloaded
 
         if received_size != @size then
-          warning(2, "Received size (#{ received_size }) did not match" \
-                       + " the expected size (#{ @size })")
-          File.delete(download_path)
-          info(2, "Deleted #{ download_path }")
-          return false
+          begin
+            File.delete(download_path)
+            info(2, "Deleted #{ download_path }")
+          rescue StandardError => e
+          end
+          raise "Received size (#{ received_size }) did not match" \
+                  + " the expected size (#{ @size })"
         end
 
         if hash.to_s != @sha256 then
-          warning(2, "Checksum mismatch for #{ download_path }" \
-                       + " (calculated while downloading)," \
-                       + " expected #{ @sha256 }, received #{ hash.to_s }")
-          File.delete(download_path)
-          info(2, "Deleted #{ download_path }")
-          return false
+          begin
+            File.delete(download_path)
+            info(2, "Deleted #{ download_path }")
+          rescue StandardError => e
+          end
+          raise "Checksum mismatch for #{ download_path }" \
+                  + " (calculated while downloading)," \
+                  + " expected #{ @sha256 }, received #{ hash.to_s }"
         end
 
         info(2, "Checksum verified for #{ download_path }" \
@@ -581,15 +588,13 @@ class SyncFileWithMetadata < SyncFile
         self.class.run_syncfile_install_hooks(3)
 
         @state.state = :inplace
-        return true
+        return
       else
-        warning(2, "puavo-rest-client error, received response" \
-                     + " #{response.code}")
-        return false
+        raise "puavo-rest-client error, received response #{ response.code }"
       end
     end
 
-    return false
+    raise 'unknown download error'
   end
 
   def ensure_enough_diskspace
