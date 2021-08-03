@@ -1115,6 +1115,22 @@ module SeriesControl
       warning(5, "Could not write CKSUMS file for laptops: #{ e.message }")
     end
 
+    if options[:image] then
+      info(5, "Given --image option, not removing unused images/diffs")
+    elsif options[:keep_unused] then
+      info(5, "Given --keep-unused option, not removing unused images/diffs")
+    elsif options[:no_puavo_series_url_lookup] then
+      info(5, "Given --no-puavo-series-url-lookup option," \
+                + " not removing unused images/diffs")
+    elsif options[:series] then
+      info(5, "Given --series option, not removing unused images/diffs")
+    else
+      if !managed_images.remove_unused(all_series,
+                                       options[:force_delete_unmanaged]) then
+        statuscode = 1
+      end
+    end
+
     info(5, "Cleaning up temporary files")
     all_series.each do |series|
       series.cleanup_tempfiles
@@ -1143,22 +1159,6 @@ module SeriesControl
     else
       warning(5, "Some series could not be synchronized fully")
       statuscode = 1
-    end
-
-    if options[:image] then
-      info(5, "Given --image option, not removing unused images/diffs")
-    elsif options[:keep_unused] then
-      info(5, "Given --keep-unused option, not removing unused images/diffs")
-    elsif options[:no_puavo_series_url_lookup] then
-      info(5, "Given --no-puavo-series-url-lookup option," \
-                + " not removing unused images/diffs")
-    elsif options[:series] then
-      info(5, "Given --series option, not removing unused images/diffs")
-    else
-      if !managed_images.remove_unused(all_series,
-                                       options[:force_delete_unmanaged]) then
-        statuscode = 1
-      end
     end
 
     return statuscode
