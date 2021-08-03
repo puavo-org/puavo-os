@@ -634,8 +634,6 @@ class SyncFileWithMetadata < SyncFile
   end
 
   def materialize(series_name, managed_images)
-    mark_in_use(series_name, managed_images)
-
     verify         and return true
     patch_from_old and return true
     download       and return true
