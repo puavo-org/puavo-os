@@ -341,7 +341,7 @@ class Series
       end
     end
 
-    torrents.cleanup_unused
+    torrents.remove_unused
 
     if !all_syncs_ok then
       warning(4, "Some image/diff sync failed for series #{ @series_name }")
@@ -893,7 +893,7 @@ class Torrents
     @torrent_paths = {}
   end
 
-  def cleanup_unused
+  def remove_unused
     begin
       # this takes care of both unused torrent files and tmpfiles
       Dir.glob("#{ self.class.basedir }/*") do |filepath|
