@@ -1006,7 +1006,8 @@ class ManagedImages
   def remove_unused(all_series, force_delete_unmanaged)
     info(5, "Removing all unused images/diffs from series")
 
-    old_files = all_series.map { |s| @old_by_series[s.series_name] }.flatten
+    old_files = all_series.map { |s| @old_by_series[s.series_name] || [] } \
+                          .flatten
     new_files = @new_by_series.values.flatten
 
     files_to_possibly_delete = (old_files - new_files).uniq
