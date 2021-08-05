@@ -64,9 +64,10 @@ endif
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
 
-# XXX puppet has to be installed separately with apt instead of as part
-# XXX of debootstrap (in Bullseye)
-_debootstrap_packages := git,jq,locales,lsb-release,make,sudo,wget
+# "puppet" has to be installed separately with apt instead of as part
+# of debootstrap (in Bullseye) due to some issue.
+_debootstrap_packages      := git,jq,locales,lsb-release,make,sudo,wget
+_post_debootstrap_packages := puppet
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid/squid.conf \
 			 && echo true || echo false)
@@ -185,10 +186,17 @@ rootfs-debootstrap:
 	$(_sudo) ln -s '/puavo-os/.aux/policy-rc.d' \
 		'$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
 
-	$(_sudo) mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
-	$(_sudo) mkdir -p '$(rootfs_dir)/etc/puavo-image'
+	$(_sudo) mkdir -p '$(rootfs_dir).tmp/etc/puavo-image'
 	$(_sudo) sh -c \
-	  'printf "%s\n" "$(image_class)" > $(rootfs_dir)/etc/puavo-image/class'
+	  'printf "%s\n" "$(image_class)" > $(rootfs_dir).tmp/etc/puavo-image/class'
+
+	$(_sudo) .aux/create-adm-user '$(rootfs_dir).tmp' '/puavo-os' \
+	    '$(_adm_user)' '$(_adm_group)' '$(_adm_uid)' '$(_adm_gid)'
+
+	$(_systemd_nspawn_cmd) -D '$(rootfs_dir).tmp' \
+	  sudo apt-get -y install $(_post_debootstrap_packages)
+
+	$(_sudo) mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 $(image_dir):
 	$(_sudo) mkdir -p '$(image_dir)'
@@ -245,8 +253,6 @@ rootfs-shell: $(rootfs_dir)
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
-	$(_sudo) .aux/create-adm-user '$(rootfs_dir)' '/puavo-os' \
-	    '$(_adm_user)' '$(_adm_group)' '$(_adm_uid)' '$(_adm_gid)'
 	$(_sudo) rsync "--chown=$(_adm_uid):$(_adm_gid)" --chmod=Dg+s,ug+w \
 	    -glopr --exclude debs/.archive --exclude debs/.workdir \
 	    . '$(rootfs_dir)/puavo-os/'
