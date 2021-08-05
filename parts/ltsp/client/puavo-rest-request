@@ -221,7 +221,7 @@ if {[catch {
     error {Could not resolve Puavo API server}
   }
 
-  set urls [lmap _ $urlpaths { format "%s/%s" $api_server $_ }]
+  set urls [lmap _ $urlpaths { format "%s%s" $api_server $_ }]
 
   switch -- $auth_mode {
     {} {

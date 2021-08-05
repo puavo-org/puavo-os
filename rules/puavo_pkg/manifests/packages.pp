@@ -61,7 +61,7 @@ class puavo_pkg::packages {
 			, 'ohjelmointi-opetuksessa'
 			, 'processing'
 			, 'pycharm'
-			, 'robboscratch2'
+			, 'robboscratch'
 			, 'robotmeshconnect'
 			, 'scratux'
 			, 'shotcut'

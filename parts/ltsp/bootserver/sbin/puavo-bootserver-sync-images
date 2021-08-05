@@ -133,7 +133,7 @@ class Series
     baseimage = get_by_version(from_version)
     targetimage = get_by_version(to_version)
 
-    if baseimage && targetimage
+    if baseimage && targetimage then
       diff = Diff.new(cksum, baseimage, targetimage, filename, sha256, size, urls)
       targetimage.add_diff(diff)
     end
@@ -156,10 +156,10 @@ class Series
 
     bootserver_school_dn_list = Array(bootserver_data["school_dns"])
 
-    if bootserver_data["preferred_image"]
+    if bootserver_data["preferred_image"] then
       image = mark_image_in_use(bootserver_data["preferred_image"],
                                 managed_images)
-      if image
+      if image then
         info(5, "  #{ image.filename } is wanted by this bootserver itself.")
         needed_images << image
       end
@@ -172,7 +172,7 @@ class Series
       preferred_image      = device["preferred_image"]
       school_dn            = device["school_dn"]
 
-      if !hostname || hostname.empty?
+      if !hostname || hostname.empty? then
         warning(3, "There is a device in Puavo that does not have a hostname")
         next
       end
@@ -182,7 +182,7 @@ class Series
       # XXX bugs in Puavo some localboot devices may be set to "netboot".
       # XXX Thus, check out object classes to figure out the correct bootmode.
       object_classes = device["object_classes"]
-      if !object_classes.kind_of?(Array)
+      if !object_classes.kind_of?(Array) then
         warning(3, "Could not determine object classes for #{ hostname }")
         next
       end
@@ -190,7 +190,7 @@ class Series
                    ? "netboot"                                           \
                    : "localboot"
 
-      if !school_dn || school_dn.empty?
+      if !school_dn || school_dn.empty? then
         warning(3, "Host #{ hostname } is not associated with any school," \
                      + " ignoring.")
         next
@@ -206,11 +206,11 @@ class Series
 
       # Netboot devices do not need diffs, but want preferred
       # boot/desktop images.
-      if bootmode == "netboot"
+      if bootmode == "netboot" then
         [ preferred_boot_image, preferred_image ].each do |image_id|
           next unless image_id
           image = mark_image_in_use(image_id, managed_images)
-          if image
+          if image then
             needed_images << image
             add_to_devices_for_syncfiles.call(image)
           end
@@ -219,11 +219,12 @@ class Series
       end
 
       # Other devices need diffs from current image to preferred.
-      if current_image && preferred_image && current_image != preferred_image
-        diff = mark_imagediff_in_use(current_image,
-                                     preferred_image,
-                                     managed_images)
-        add_to_devices_for_syncfiles.call(diff) if diff
+      if current_image && preferred_image \
+        && current_image != preferred_image then
+          diff = mark_imagediff_in_use(current_image,
+                                       preferred_image,
+                                       managed_images)
+          add_to_devices_for_syncfiles.call(diff) if diff
       end
     end
 
@@ -231,7 +232,7 @@ class Series
       hostnames = devices_for_syncfiles[syncfilename]
       hostcount = hostnames.keys.count
       first_hostnames = hostnames.keys.sort.slice(0,3)
-      if hostcount > 3
+      if hostcount > 3 then
         first_hostnames << "..."
       end
       hostnames_string = first_hostnames.join(", ")
@@ -250,66 +251,68 @@ class Series
   # Returns specified number of newest images in an array.  The images are
   # sorted oldest first so that when fetching the images, newer images can
   # be created using diffs from older images.
-  def newest_images(managed_images, options)
+  def get_newest_images(options)
     # We want to always download X number of newest images with Y number
     # of diffs from newest images.
     return @by_version.sort.map { |version, image| image } \
              .reverse.slice(0, options[:image_limit]).reverse
   end
 
-  def sync(bootserver_data, managed_images, options)
-    if options[:image]
+  def prepare_for_sync(bootserver_data, managed_images, options)
+    if options[:image] then
       image = get_by_id(options[:image])
-      if !image
+      if !image then
         info(4, "Could not find image #{ options[:image] }" \
                   + " from series #{ @series_name }")
-        return false
+        @image_list = []
+      else
+        @image_list = [ image ]
       end
-
-      image_list = [ image ]
     else
       # Check latest images.
-      newest_images = newest_images(managed_images, options)
+      newest_images = get_newest_images(options)
 
       # Check which images (and diffs) are needed by devices in Puavo.
       used_images = get_images_used_by_puavo_devices(bootserver_data,
                                                      managed_images)
 
-      image_list = (newest_images + used_images) \
-                     .uniq.sort_by { |image| image.version }
+      @image_list = (newest_images + used_images) \
+                      .uniq.sort_by { |image| image.version }
 
-      if image_list.empty?
+      if @image_list.empty? then
         warning(5, "Image list for series #{ @series_name } is empty," \
                      + " doing nothing")
-        return false
       end
     end
 
+    @image_list.each do |image|
+      image.mark_in_use(series_name, managed_images)
+      if !options[:image] then
+        image.get_newest_diffs(options[:diff_limit]).each do |diff|
+          diff.mark_in_use(series_name, managed_images)
+        end
+      end
+    end
+  end
+
+  def sync(options, torrents)
     info(5, "Syncing series #{ @series_name } with the following images:")
-    image_list.each { |image| info(5, "  #{ image.id }") }
+    @image_list.each { |image| info(5, "  #{ image.id }") }
 
     FileUtils.mkdir_p(Image.basedir)
     FileUtils.mkdir_p(Diff.basedir)
     FileUtils.mkdir_p(Torrents.basedir)
 
-    torrents = Torrents.new
-
     all_syncs_ok = true
 
-    image_list.each do |image|
+    @image_list.each do |image|
       info(4, "Syncing #{ image.id }")
 
-      if image.materialize(@series_name, managed_images)
+      if image.materialize(@series_name) then
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
       else
         all_syncs_ok = false
         warning(3, "Image sync FAILED: #{ image.statemsg }")
-      end
-
-      if !options[:image]
-        image.download_newest_diffs(@series_name,
-                                    managed_images,
-                                    options[:diff_limit])
       end
     end
 
@@ -323,29 +326,26 @@ class Series
         # We want only diffs that have been marked are in use.
         next unless diff.in_use
 
-        if diff.materialize(@series_name, managed_images)
+        if diff.materialize(@series_name) then
           info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
+          begin
+            torrents.make(diff)
+          rescue StandardError => e
+            warning(3, "Could not make a torrent for #{ diff.filename }: " \
+                         + e.message)
+            all_syncs_ok = false
+          end
         else
           all_syncs_ok = false
           warning(3, "Diff sync FAILED: #{ diff.statemsg }")
         end
-
-        begin
-          torrents.make(diff)
-        rescue StandardError => e
-          warning(3, "Could not make a torrent for #{ diff.filename }: " \
-                       + e.message)
-          all_syncs_ok = false
-        end
       end
     end
 
-    if !all_syncs_ok
+    if !all_syncs_ok then
       warning(4, "Some image/diff sync failed for series #{ @series_name }")
       return false
     end
-
-    torrents.cleanup_unused
 
     return all_syncs_ok
   end
@@ -432,7 +432,7 @@ class SyncFile
 
       infolevel = (path == final_path) ? 3 : 2
 
-      if File.exists?("#{ path }.lock")
+      if File.exists?("#{ path }.lock") then
         warning(infolevel, "Not deleting #{ path } because it has .lock")
         all_deleted_ok = false
         next
@@ -497,7 +497,12 @@ class SyncFileWithMetadata < SyncFile
     # Go through all @urls in order and try to download from each in turn
     # (we could also do some load balancing by first choosing one randomly?).
     @urls.each do |url|
-      download_from_url(url) and return true
+      begin
+        download_from_url(url)
+        return true
+      rescue StandardError => e
+        warning(2, "error downloading #{ url }: #{ e.message }")
+      end
     end
 
     return false
@@ -520,8 +525,7 @@ class SyncFileWithMetadata < SyncFile
     http.request_get(uri.path) do |response|
       case response
       when Net::HTTPNotFound
-        warning(2, "404 - Not Found (#{url})")
-        return false
+        raise '404 - Not Found'
 
       when Net::HTTPOK
         hash = Digest::SHA2.new
@@ -541,7 +545,7 @@ class SyncFileWithMetadata < SyncFile
 
             received_size += chunk.size
             new_progress = (received_size * 100) / total
-            if progress != new_progress
+            if progress != new_progress then
               progress = new_progress
               msg = "Download progress: %3d%%" % [progress]
               print("\r" + prefixed_logmsg(1, msg))
@@ -553,21 +557,25 @@ class SyncFileWithMetadata < SyncFile
 
         @state.state = :downloaded
 
-        if received_size != @size
-          warning(2, "Received size (#{ received_size }) did not match" \
-                       + " the expected size (#{ @size })")
-          File.delete(download_path)
-          info(2, "Deleted #{ download_path }")
-          return false
+        if received_size != @size then
+          begin
+            File.delete(download_path)
+            info(2, "Deleted #{ download_path }")
+          rescue StandardError => e
+          end
+          raise "Received size (#{ received_size }) did not match" \
+                  + " the expected size (#{ @size })"
         end
 
-        if hash.to_s != @sha256
-          warning(2, "Checksum mismatch for #{ download_path }" \
-                       + " (calculated while downloading)," \
-                       + " expected #{ @sha256 }, received #{ hash.to_s }")
-          File.delete(download_path)
-          info(2, "Deleted #{ download_path }")
-          return false
+        if hash.to_s != @sha256 then
+          begin
+            File.delete(download_path)
+            info(2, "Deleted #{ download_path }")
+          rescue StandardError => e
+          end
+          raise "Checksum mismatch for #{ download_path }" \
+                  + " (calculated while downloading)," \
+                  + " expected #{ @sha256 }, received #{ hash.to_s }"
         end
 
         info(2, "Checksum verified for #{ download_path }" \
@@ -582,13 +590,11 @@ class SyncFileWithMetadata < SyncFile
         @state.state = :inplace
         return true
       else
-        warning(2, "puavo-rest-client error, received response" \
-                     + " #{response.code}")
-        return false
+        raise "puavo-rest-client error, received response #{ response.code }"
       end
     end
 
-    return false
+    raise 'unknown download error'
   end
 
   def ensure_enough_diskspace
@@ -612,7 +618,7 @@ class SyncFileWithMetadata < SyncFile
       return false
     end
 
-    if @size > diskspace
+    if @size > diskspace then
       warning(2, "Not enough available disk space for #{ final_path }:" \
                    + " needing #{ @size } bytes, #{ diskspace } available")
       return false
@@ -627,9 +633,7 @@ class SyncFileWithMetadata < SyncFile
     return self
   end
 
-  def materialize(series_name, managed_images)
-    mark_in_use(series_name, managed_images)
-
+  def materialize(series_name)
     verify         and return true
     patch_from_old and return true
     download       and return true
@@ -653,7 +657,7 @@ class SyncFileWithMetadata < SyncFile
     # We can speed things up by assuming that all files in proper place have
     # been verified before (but if $options[:force_verify] is true we will
     # verify anyway).
-    if inplace?
+    if inplace? then
       @state.state = :inplace
       return true unless $options[:force_verify]
       path_to_verify = final_path
@@ -672,7 +676,7 @@ class SyncFileWithMetadata < SyncFile
       return @verified = @verify_result = false
     end
 
-    if @verified && @mtime && @mtime == current_mtime
+    if @verified && @mtime && @mtime == current_mtime then
       return @verify_result
     end
 
@@ -681,13 +685,13 @@ class SyncFileWithMetadata < SyncFile
     @verify_result = false
     @state.state = :unverified
 
-    if current_size == @size
+    if current_size == @size then
       @mtime = current_mtime
       digest = Digest::SHA2.file(path_to_verify).hexdigest
       @verify_result = (digest == @sha256)
-      if @verify_result
+      if @verify_result then
         info(2, "Checksum verified for #{ path_to_verify }")
-        if path_to_verify != final_path
+        if path_to_verify != final_path then
           File.rename(path_to_verify, final_path)
           info(1, "Moved #{ path_to_verify } to #{ final_path }")
 
@@ -699,7 +703,7 @@ class SyncFileWithMetadata < SyncFile
       else
         warning(2, "Checksum mismatch for #{ path_to_verify }, " \
                      + " expected #{ @sha256 }, received #{ digest }")
-        if path_to_verify == unverified_path
+        if path_to_verify == unverified_path then
           File.delete(path_to_verify)
           info(2, "Deleted #{ path_to_verify }")
         else
@@ -746,7 +750,7 @@ class Image < SyncFileWithMetadata
   def add_diff(diff)
     return unless diff.targetimage.version == @version
 
-    if diff.baseimage.version != @version
+    if diff.baseimage.version != @version then
       @diffs_from_by_version[diff.baseimage.version] = diff
     end
   end
@@ -755,13 +759,9 @@ class Image < SyncFileWithMetadata
     @diffs_from_by_version.values
   end
 
-  def download_newest_diffs(series_name, managed_images, limit=0)
-    newest_diffs = @diffs_from_by_version.sort.map { |version, diff| diff } \
-                     .reverse.slice(0, limit).reverse
-
-    newest_diffs.each do |diff|
-      diff.materialize(series_name, managed_images)
-    end
+  def get_newest_diffs(limit=0)
+    @diffs_from_by_version.sort.map { |version, diff| diff } \
+                          .reverse.slice(0, limit).reverse
   end
 
   # Create the current image from an old image by using a patch.  First
@@ -796,7 +796,7 @@ class Image < SyncFileWithMetadata
     all_ok = true
 
     run_command = lambda do |cmd|
-      if system(*cmd)
+      if system(*cmd) then
         info(level-1, %Q{#{ cmd } ran successfully}, HighLine::GREEN)
       else
         all_ok = false
@@ -855,7 +855,7 @@ class Diff < SyncFileWithMetadata
 
     info(2, "Patching from #{ source } to #{ temp_target }")
 
-    if !system("rdiff", "patch", source, final_path, temp_target)
+    if !system("rdiff", "patch", source, final_path, temp_target) then
       warning(2, "rdiff failed with exit code: #{ $?.exitstatus }" \
                    + " when using #{ final_path }")
       return false
@@ -887,7 +887,7 @@ class Torrents
     @torrent_paths = {}
   end
 
-  def cleanup_unused
+  def remove_unused
     begin
       # this takes care of both unused torrent files and tmpfiles
       Dir.glob("#{ self.class.basedir }/*") do |filepath|
@@ -983,7 +983,7 @@ class ManagedImages
       file = File.open(path)
     end
 
-    if !file.flock(File::LOCK_NB|File::LOCK_EX)
+    if !file.flock(File::LOCK_NB|File::LOCK_EX) then
       raise "Could not get a lock on #{ Filepath }"
     end
 
@@ -997,25 +997,17 @@ class ManagedImages
   # images... for example some image might be in the middle of series "Ubuntu",
   # yet at the same time be at the beginning of a series "Gentoo", or
   # some production image series might contain a subset of development images).
-  def remove_unused(all_series, synced_series, force_delete_unmanaged)
+  def remove_unused(all_series, force_delete_unmanaged)
     info(5, "Removing all unused images/diffs from series")
-    failed_series_names \
-      = (all_series.map &:series_name) - (synced_series.map &:series_name)
 
-    failed_series_names.each do |series_name|
-      warning(4, "Not removing anything from series #{ series_name }" \
-                    + " because of failed sync")
-    end
-
-    deletable_series_names = @old_by_series.keys - failed_series_names
-
-    old_files = deletable_series_names.map { |name| @old_by_series[name] } \
-                  .flatten
+    old_files = all_series.map { |s| @old_by_series[s.series_name] || [] } \
+                          .flatten
     new_files = @new_by_series.values.flatten
 
     files_to_possibly_delete = (old_files - new_files).uniq
 
-    # do not delete images that we may actually need to boot ourself
+    # Do not delete images that we may actually need to boot ourself.
+    # This is also good to ensure that at least some image is always available.
     files_to_delete \
       = files_to_possibly_delete.reject { |filepath| system_image?(filepath) }
 
@@ -1024,12 +1016,12 @@ class ManagedImages
     files_to_delete.each do |filepath|
       # these paths we trust, so we pass the dirname as well
       syncfile = SyncFile.new(File.basename(filepath), File.dirname(filepath))
-      if !syncfile.delete
+      if !syncfile.delete then
         all_deleted_ok = false
       end
     end
 
-    if !all_deleted_ok || !failed_series_names.empty?
+    if !all_deleted_ok then
       # If we failed at deleting some stuff, do not remove any paths from
       # Filepath, we should try again some later time.
       warning(4, "Not updating #{ Filepath } due to sync/deletion errors")
@@ -1039,7 +1031,7 @@ class ManagedImages
     info(4, "Removing old filepaths from #{ Filepath }")
     update(@new_by_series)
 
-    if force_delete_unmanaged && !delete_unmanaged(false)
+    if force_delete_unmanaged && !delete_unmanaged(false) then
       all_deleted_ok = false
     end
 
@@ -1056,17 +1048,17 @@ class ManagedImages
       return true if system_image?(path)
 
       answer = "yes"
-      if ask_interactively
+      if ask_interactively then
         answer = HighLine.ask("Delete #{ path }? [yes/no] ").strip
       end
 
-      if !answer.empty? && "yes".start_with?(answer)
+      if !answer.empty? && "yes".start_with?(answer) then
         syncfile = SyncFile.new(File.basename(path), File.dirname(path))
         if !syncfile.delete then
           error_occurred = true
         end
         return true
-      elsif !answer.empty? && "no".start_with?(answer)
+      elsif !answer.empty? && "no".start_with?(answer) then
         return true
       else
         puts "Please answer yes or no"
@@ -1119,22 +1111,46 @@ module SeriesControl
       warning(5, "Could not write CKSUMS file for laptops: #{ e.message }")
     end
 
+    all_series.each do |series|
+      series.prepare_for_sync(bootserver_data, managed_images, options)
+    end
+
+    if options[:image] then
+      info(5, "Given --image option, not removing unused images/diffs")
+    elsif options[:keep_unused] then
+      info(5, "Given --keep-unused option, not removing unused images/diffs")
+    elsif options[:no_puavo_series_url_lookup] then
+      info(5, "Given --no-puavo-series-url-lookup option," \
+                + " not removing unused images/diffs")
+    elsif options[:series] then
+      info(5, "Given --series option, not removing unused images/diffs")
+    else
+      if !managed_images.remove_unused(all_series,
+                                       options[:force_delete_unmanaged]) then
+        statuscode = 1
+      end
+    end
+
     info(5, "Cleaning up temporary files")
     all_series.each do |series|
       series.cleanup_tempfiles
     end
 
+    torrents = Torrents.new
+
     all_series.each do |series|
-      result = series.sync(bootserver_data, managed_images, options)
-      if result
+      result = series.sync(options, torrents)
+      if result then
         synced_series << series
-      elsif !options[:image]
+      elsif !options[:image] then
         warning(5, "Error occurred in syncing #{ series.series_name }")
       end
     end
 
-    if options[:image]
-      if !synced_series.empty?
+    torrents.remove_unused
+
+    if options[:image] then
+      if !synced_series.empty? then
         info(5,
              "Image #{ options[:image] } was synchronized successfully",
              HighLine::GREEN)
@@ -1142,28 +1158,11 @@ module SeriesControl
         warning(5, "Failed to synchronize image #{ options[:image] }")
         statuscode = 1
       end
-    elsif all_series.count == synced_series.count
+    elsif all_series.count == synced_series.count then
       info(5, "All series synchronized without a problem", HighLine::GREEN)
     else
       warning(5, "Some series could not be synchronized fully")
       statuscode = 1
-    end
-
-    if options[:image]
-      info(5, "Given --image option, not removing unused images/diffs")
-    elsif options[:keep_unused]
-      info(5, "Given --keep-unused option, not removing unused images/diffs")
-    elsif options[:no_puavo_series_url_lookup]
-      info(5, "Given --no-puavo-series-url-lookup option," \
-                + " not removing unused images/diffs")
-    elsif options[:series]
-      info(5, "Given --series option, not removing unused images/diffs")
-    else
-      if !managed_images.remove_unused(all_series,
-                                       synced_series,
-                                       options[:force_delete_unmanaged])
-        statuscode = 1
-      end
     end
 
     return statuscode
@@ -1177,7 +1176,7 @@ module SeriesControl
     all_series_list = []
 
     series_urls = options[:url]
-    if !options[:no_puavo_series_url_lookup]
+    if !options[:no_puavo_series_url_lookup] then
       bootserver_series_urls \
         = Array(bootserver_data["image_series_source_urls"])
       raise "Sources urls from Puavo has a bad type" \
@@ -1186,7 +1185,7 @@ module SeriesControl
       series_urls += bootserver_series_urls
     end
 
-    if series_urls.empty?
+    if series_urls.empty? then
       info(5, "No series urls were defined")
     else
       series_urls.each do |series_url|
@@ -1202,9 +1201,9 @@ module SeriesControl
 
     all_series = all_series_list.reduce(&:merge) || []
 
-    if options[:series]
+    if options[:series] then
       series_name = options[:series]
-      if all_series[series_name]
+      if all_series[series_name] then
         info(5, "Using only series #{series_name}")
         return [ all_series[series_name] ]
       end
@@ -1213,7 +1212,7 @@ module SeriesControl
               + " (given as --series parameter)"
     end
 
-    if all_series.empty?
+    if all_series.empty? then
       raise "No series information, can not do anything"
     end
 
@@ -1244,7 +1243,7 @@ module SeriesControl
 
     series_by_name = {}
     http.request_get(uri.path) do |response|
-      if !response.kind_of?(Net::HTTPOK)
+      if !response.kind_of?(Net::HTTPOK) then
         # Do not let a failed fetch slip out as empty series... otherwise
         # temporary download failure might result in removing all images/diffs
         # in this series.
@@ -1276,7 +1275,7 @@ module SeriesControl
       end
 
       data["images"].each do |image|
-        if image["diffs"]
+        if image["diffs"] then
           image["diffs"].each do |diffdata|
             series.add_diff(diffdata["cksum"],
                             diffdata["version"],
@@ -1486,11 +1485,11 @@ end
 parser.parse!
 
 at_exit do
-  if !$options[:delete_unmanaged_interactively]
+  if !$options[:delete_unmanaged_interactively] then
     status_stampfile \
       = "#{ $options[:download_path] }/.puavo-bootserver-sync-images-ok"
     all_okay = ($!.kind_of?(SystemExit) && $!.success?)
-    if all_okay
+    if all_okay then
       FileUtils.touch(status_stampfile)
     else
       begin
@@ -1517,15 +1516,15 @@ statuscode = 0
 begin
   managed_images = ManagedImages.new
 
-  if $options[:delete_unmanaged_interactively]
-    if !managed_images.delete_unmanaged(true)
+  if $options[:delete_unmanaged_interactively] then
+    if !managed_images.delete_unmanaged(true) then
       statuscode = 1
     end
   else
     statuscode = SeriesControl::sync_all_series(managed_images, $options)
   end
 
-  if !Image.run_syncfile_install_hooks(5, '43200')
+  if !Image.run_syncfile_install_hooks(5, '43200') then
     statuscode = 1
   end
 

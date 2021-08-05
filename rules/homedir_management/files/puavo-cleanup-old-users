@@ -39,10 +39,10 @@ get_current_system_uids() {
 }
 
 get_organisation_uids() {
-  if ! response=$(/usr/bin/puavo-rest-request v3/users --user-etc \
+  if ! response=$(/usr/bin/puavo-rest-request /v3/users --user-etc \
                     -- --get --data-urlencode attributes=uid_number); then
     logmsg -p user.err \
-           'puavo-rest-request v3/users to get UIDs in organisation failed'
+           'puavo-rest-request /v3/users to get UIDs in organisation failed'
     return 1
   fi
 

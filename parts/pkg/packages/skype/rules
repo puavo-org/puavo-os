@@ -45,23 +45,6 @@ case "${command}" in
         add_disable_autostart
         ;;
 
-    download)
-        upstream_pack=$1
-
-        wget \
-            --no-check-certificate \
-            --no-cookies \
-            --no-use-server-timestamps \
-            --output-document "$upstream_pack" \
-            --progress=dot:mega \
-            https://go.skype.com/skypeforlinux-64.deb || {
-            wget_err=$?
-            rm -f "${upstream_pack}" || true
-            [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
-            exit 1
-        }
-        ;;
-
     unconfigure)
         rm -f /etc/X11/Xsession.d/65skype-disable-autostart \
               /usr/bin/skype \

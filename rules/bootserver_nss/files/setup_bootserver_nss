@@ -70,7 +70,7 @@ passwd:         compat ldap
 group:          compat ldap
 shadow:         compat
 
-hosts:          files dns
+hosts:          files mdns4_minimal [NOTFOUND=return] dns myhostname
 networks:       files
 
 protocols:      db files
