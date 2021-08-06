@@ -31,8 +31,5 @@ if [ -n "$puavo_displays_setup" ]; then
   export MUTTER_DISPLAY_SETUP="$puavo_displays_setup"
 fi
 
-# Not using exec, because this "gnome-shell"
-# process must exist so that "adm-x" tool finds us.
-# XXX It pgreps the exact command-line arguments, so do not change shell
-# XXX or script name without considering.
-/usr/bin/gnome-shell.distrib "$@"
+# Note that "adm-x" tool matches this exactly for find us.
+exec /usr/bin/gnome-shell.distrib "$@"
