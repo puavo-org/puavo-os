@@ -749,10 +749,10 @@ class packages {
 		      , $r8168_module ]
 
   packages::kernels::kernel_package {
-    '5.10.0-6-amd64':
+    '5.10.0-8-amd64':
       # XXX fix dkms_modules for Bullseye
       dkms_modules => [],
-      package_name => 'linux-image-5.10.0-6-amd64';
+      package_name => 'linux-image-5.10.0-8-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by

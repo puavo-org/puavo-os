@@ -28,7 +28,7 @@ class kernels {
     }
   }
 
-  $default_kernel = '5.10.0-6-amd64'
+  $default_kernel = '5.10.0-8-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
