@@ -725,24 +725,25 @@ rule {
 # XXX most of these.
 rule {
   [dn subtree $People]
-    [attrs eduPersonPrincipalName    \
-           entry                     \
-           gidNumber                 \
-           givenName                 \
-           homeDirectory             \
-           jpegPhoto                 \
-           loginShell                \
-           mail                      \
-           objectClass               \
-           preferredLanguage         \
-           puavoAcceptedTerms        \
-           puavoEduPersonAffiliation \
-           puavoId                   \
-           puavoLocale               \
-           puavoSchool               \
-           sn                        \
-           telephoneNumber           \
-           uid                       \
+    [attrs eduPersonPrincipalName      \
+           entry                       \
+           gidNumber                   \
+           givenName                   \
+           homeDirectory               \
+           jpegPhoto                   \
+           loginShell                  \
+           mail                        \
+           objectClass                 \
+           preferredLanguage           \
+           puavoAcceptedTerms          \
+           puavoEduPersonAffiliation   \
+           puavoEduPersonPrimarySchool \
+           puavoId                     \
+           puavoLocale                 \
+           puavoSchool                 \
+           sn                          \
+           telephoneNumber             \
+           uid                         \
            uidNumber]
       by [puavo_dn puavo]   read
       by [puavo_dn pw-mgmt] read
