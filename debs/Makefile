@@ -11,10 +11,8 @@ _pkgs_ports := gnome-shell wsmancli
 # _pkgs_ports := gnome-control-center \
 #                grub2                \
 #                incron               \
-#                libmypaint           \
 #                libpam-ccreds        \
 #                mutter               \
-#                mypaint              \
 #                nbd                  \
 #                openboard            \
 #                openldap             \
