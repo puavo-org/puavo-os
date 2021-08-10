@@ -25,7 +25,6 @@ class virtualbox {
   }
 
   ::virtualbox::build_driver {
-    'current': kernel_version => $kernels::current_kernel;
     'default': kernel_version => $kernels::default_kernel;
   }
 
