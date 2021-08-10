@@ -342,7 +342,7 @@ class packages {
     , 'openscad'
     , 'openshot-qt'
     , 'pencil2d'
-    # , 'pinta'                 # XXX missing from Bullseye
+    , 'pinta'
     , 'pitivi'
     , 'python3-lxml'
     , 'sane-utils'
