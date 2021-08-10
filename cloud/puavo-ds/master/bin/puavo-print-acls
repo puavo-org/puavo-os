@@ -639,11 +639,15 @@ rule {
 
 rule {
   [dn subtree $People]
-    [attrs entry objectClass uid]
+    [attrs entry objectClass uid uidNumber]
       # Laptops should be able to read usernames.  This is because laptops
       # may decide who its primary user is, and they can not set this
       # information unless they can read user dn, which is not possible
       # unless both "username" and "dn" are readable by laptop.
+      # Laptops should be able to read user numeric ids.  This is because
+      # data owned by users that have been removed should be deleted (in time)
+      # from laptops, and laptops can determine this by getting a list of
+      # all current user uids in an organisation.
       by [devicetype_set laptop] read
 
       by anonymous auth
