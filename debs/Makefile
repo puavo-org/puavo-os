@@ -4,7 +4,7 @@ _pkgs_builddeps := sblim-sfcc openwsman
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := gnome-shell
+_pkgs_ports := gnome-shell wsmancli
 
 # XXX disable most ports builds for Bullseye, these all most probably
 # XXX need some work
@@ -20,7 +20,6 @@ _pkgs_ports := gnome-shell
 #                openldap             \
 #                pinta                \
 #                vtun
-_pkgs_ports := wsmancli
 
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 # XXX do not try to build krb5 and openldap on Bullseye just yet
