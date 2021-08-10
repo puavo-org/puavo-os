@@ -1,9 +1,10 @@
 #!/usr/bin/make -f
 
+include /usr/share/dpkg/architecture.mk
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 DEB_CONFIGURE_EXTRA_ARGS := \
-	--libdir=/lib/$(DEB_BUILD_GNU_TYPE) \
+	--libdir=/lib/$(DEB_HOST_GNU_TYPE) \
 	--sbindir=/sbin \
 	--enable-gcrypt \
 	$(NULL)

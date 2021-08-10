@@ -1,8 +1,15 @@
-libpam-ccreds (10-7+puavo1) bullseye; urgency=medium
+libpam-ccreds (10-8+puavo1) bullseye; urgency=medium
 
   * Suppress success message.
 
  -- Puavo Org <dev@opinsys.fi>  Thu, 14 May 2020 13:38:41 +0300
+
+libpam-ccreds (10-8) unstable; urgency=medium
+
+  [ Helmut Grohne ]
+  * [8b5fbf4] Fix build/host confusion in libdir (Closes: #923062)
+
+ -- Guido Günther <agx@sigxcpu.org>  Sat, 26 Oct 2019 00:28:29 +0200
 
 libpam-ccreds (10-7) unstable; urgency=medium
 
