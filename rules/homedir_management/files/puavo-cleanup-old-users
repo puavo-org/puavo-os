@@ -74,7 +74,7 @@ get_organisation_uids() {
     return 1
   fi
 
-  if ! echo "$unsorted_organisation_uids" | sort -nu; then
+  if ! printf "%s\n" "$unsorted_organisation_uids" | sort -nu; then
     logmsg -p user.err 'sorting and uniqueing of organisation uids failed'
     return 1
   fi
@@ -91,7 +91,7 @@ remove_uids_list=''
 remove_usernames_list=''
 
 for sys_uid in $current_system_uids; do
-  if echo "$organisation_uids" | grep -Fqx "$sys_uid"; then
+  if printf "%s\n" "$organisation_uids" | grep -Fqx "$sys_uid"; then
     # system uid found in organisation uids
     continue
   fi
@@ -117,7 +117,7 @@ for uid_to_remove in $remove_uids_list; do
     fi
 
     log_message="removed directories of user ${uid_to_remove}:"
-    log_message="${log_message} $(echo "$directories_to_remove" | tr '\n' ' ')"
+    log_message="${log_message} $(printf "%s\n" "$directories_to_remove" | tr '\n' ' ')"
     logmsg -p user.notice "$log_message"
   fi
 
