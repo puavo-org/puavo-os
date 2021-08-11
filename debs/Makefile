@@ -9,7 +9,6 @@ _pkgs_ports := gnome-shell libpam-ccreds pinta wsmancli
 # XXX disable most ports builds for Bullseye, these all most probably
 # XXX need some work
 # _pkgs_ports := gnome-control-center \
-#                grub2                \
 #                incron               \
 #                mutter               \
 #                nbd                  \
