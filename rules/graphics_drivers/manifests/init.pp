@@ -4,11 +4,8 @@ class graphics_drivers {
 
   $glx_packages = [ 'glx-alternative-mesa', 'libgl1-mesa-glx', 'update-glx' ]
 
-  $nvidia_packages = []
-# XXX Bullseye
-# $nvidia_packages = [ 'nvidia-legacy-340xx-kernel-dkms'
-#                    , 'nvidia-legacy-390xx-kernel-dkms'
-#                    , 'nvidia-kernel-dkms' ]
+  $nvidia_packages = [ 'nvidia-kernel-dkms'
+                     , 'nvidia-legacy-390xx-kernel-dkms' ]
 
   ::puavo_conf::script {
     'setup_graphics_drivers':

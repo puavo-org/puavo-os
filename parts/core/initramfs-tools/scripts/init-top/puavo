@@ -33,14 +33,8 @@ case "$(puavo-conf puavo.graphics.driver)" in
   nvidia)
     puavo_nvidia_driver=current
     ;;
-  nvidia-304)
-    puavo_nvidia_driver=legacy-304xx
-    ;;
-  nvidia-340)
-    puavo_nvidia_driver=legacy-340xx
-    ;;
-  nvidia-375)
-    puavo_nvidia_driver=legacy-375xx
+  nvidia-390)
+    puavo_nvidia_driver=legacy-390xx
     ;;
 esac
 
