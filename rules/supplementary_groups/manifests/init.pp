@@ -9,7 +9,7 @@ class supplementary_groups {
             , 'plugdev'
             , 'puavodesktop'
             , 'scanner'
-            , 'vboxusers'
+            # , 'vboxusers'     # XXX add back once we have VirtualBox
             , 'video' ]
 
   #
