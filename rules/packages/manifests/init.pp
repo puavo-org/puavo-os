@@ -700,7 +700,7 @@ class packages {
     , 'tlp'
     , 'unace'
     , 'unionfs-fuse'    # Ekapeli might need this.
-    , 'wimtools'        # woeusb needs this
+    , 'wimtools'
     , 'wmctrl'
     , 'xinput' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
