@@ -438,7 +438,7 @@
         },
         "io.github.wxmaxima_developers.wxMaxima": {
             "tags": "default",
-            "condition": "ti_nspire_cx_cas"
+            "keywords": "digabi"
         },
         "jitsi": {
             "type": "web",
@@ -1291,7 +1291,7 @@
             }
         },
         "ti5_nspire_cx_cas_ss": {
-            "name": "TI-Nspire CX Cas",
+            "name": "TI-Nspire CX Cas 5",
             "tags": "default",
             "puavopkg": {
                 "id": "ti5-nspire-cx-cas-ss"
@@ -1469,6 +1469,7 @@
                 "ti_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss",
                 "LoggerPro",
+                "MarvinSketch",
                 "dia",
                 "mousepad",
                 "libreoffice-writer",
