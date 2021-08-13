@@ -1,50 +1,291 @@
-gnome-control-center (1:3.30.3-2~deb10u1+puavo1) bullseye; urgency=medium
+gnome-control-center (1:3.38.4-1+puavo1) bullseye; urgency=medium
 
   * Add "appearance" plugin to gnome-control-center.
 
- -- Puavo Org <dev@opinsys.fi>  Fri, 22 May 2020 12:33:47 +0300
+ -- Puavo Org <dev@opinsys.fi>  Fri, 13 Aug 2021 13:22:39 +0300
 
-gnome-control-center (1:3.30.3-2~deb10u1) buster; urgency=medium
+gnome-control-center (1:3.38.4-1) unstable; urgency=medium
 
-  * Team upload
-  * Rebuild for Debian 10
-  * d/gbp.conf: Set packaging branch to debian/buster
-
- -- Simon McVittie <smcv@debian.org>  Wed, 21 Aug 2019 08:56:24 +0100
-
-gnome-control-center (1:3.30.3-2) unstable; urgency=medium
-
-  * Team upload
-  * d/patches: Mark more patches as forwarded upstream
-  * d/patches: Sort non-upstreamable patches to end of patch series
-  * d/patches: Update to upstream gnome-3-30 commit 3.30.3-7-gf41ae4269
-    - d/p/info-Fix-crashes-when-retrieving-disk-size.patch:
-      Fix crash when the Details -> Overview (info-overview) panel is
-      selected (Closes: #933529)
-    - d/p/universal-access-Fix-duplicate-settings-call.patch,
-      d/p/universal-access-Fix-leaks-checking-settings.patch:
-      Fix memory leaks in Universal Access panel
-    - d/p/universal-access-Don-t-use-widget-names-for-GSettings-key.patch:
-      Fix a regression that caused the Universal Access -> Zoom
-      mouse tracking options to have no effect
-    - Update translations: is, ja
-  * d/gbp.conf: Set branch to debian/unstable
-
- -- Simon McVittie <smcv@debian.org>  Wed, 31 Jul 2019 10:32:22 +0100
-
-gnome-control-center (1:3.30.3-1) unstable; urgency=medium
-
-  [ Jeremy Bicha ]
   * New upstream release
-  * Drop patches applied in new release:
-    - universal-access-Reverse-Repeat-Keys-Speed-direction.patch
-    - region-Autodisconnect-IBusBus-connected-handler.patch
-  * Refresh patch
 
-  [ Aurélien COUDERC ]
-  * Use original red color for debian swirl in about panel
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 19 Feb 2021 11:59:19 +0100
 
- -- Jeremy Bicha <jbicha@debian.org>  Sun, 10 Feb 2019 18:35:05 -0500
+gnome-control-center (1:3.38.3-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Use upstream/3.38.x branch for packaging
+  * Standards-Version: 4.5.1 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 15 Jan 2021 09:34:04 +0000
+
+gnome-control-center (1:3.38.2-2) unstable; urgency=medium
+
+  * debian/control.in: Explicitly add libgoa-backend-1.0-dev to the BD
+  * debian/control.in: Explicitly add libsoup2.4-dev to the BD
+
+ -- Laurent Bigonville <bigon@debian.org>  Fri, 25 Dec 2020 10:16:26 +0100
+
+gnome-control-center (1:3.38.2-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Applications: Fix a NULL pointer dereference
+    - Keyboard: Fix an assertion failure
+    - Network: Correctly detect when Ethernet devices are hotplugged
+    - Printers: Fix memory leaks
+    - Printers: Reduce panel's minimum width
+    - Sharing: When disabling Tracker, also disable Tracker 3
+    - Sound: Update libgvc to support UCM in recent ALSA and PulseAudio
+    - Users: Avoid freeing a const string
+    - Wacom: Fix a critical warning if loading a cursor fails
+  * Bump libpulse-dev dependency according to meson.build
+  * Preferentially build-depend on libgdk-pixbuf-2.0-dev.
+    We don't need the deprecated Xlib integration that is also pulled in
+    by the older libgdk-pixbuf2.0-dev package (see #974870).
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 23 Nov 2020 10:14:09 +0000
+
+gnome-control-center (1:3.38.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * debian/rules:
+    - remove deprecated -Dgnome_session_libexecdir
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Mon, 05 Oct 2020 15:07:48 +0200
+
+gnome-control-center (1:3.38.0-2) unstable; urgency=medium
+
+  * Team upload
+  * Revert "d/watch: Watch for development releases"
+  * Release to unstable
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 25 Sep 2020 10:27:01 +0100
+
+gnome-control-center (1:3.38.0-1) experimental; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 15 Sep 2020 15:01:27 +0200
+
+gnome-control-center (1:3.37.92-1) experimental; urgency=medium
+
+  * Team upload
+  * d/watch: Watch for development releases
+  * New upstream release
+    - Updated translations
+    - Show screen orientation setting even when accelerometer is present
+    - Wacom: group pad/stylus devices together with the group name
+  * Update libhandy dependency
+  * d/copyright: Update
+  * Add Breaks on gnome-shell (<< 3.37.92).
+    gnome-control-center now talks to the Mutter DisplayConfig interface
+    to get the screen orientation, and that's new in libmutter 3.37.92.
+    gnome-shell 3.37.92 is the first version to guarantee to be linked
+    to that version of libmutter.
+  * Depend on gnome-settings-daemon 3.37.x.
+    The core components of the GNOME desktop should be upgraded as a group,
+    and mismatched combinations will not have been tested in practice.
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 07 Sep 2020 18:24:55 +0100
+
+gnome-control-center (1:3.37.90-1) experimental; urgency=medium
+
+  * New upstream release
+  * debian/control.in:
+    - Build-Depends on libhandy-1-dev
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 18 Aug 2020 16:08:27 +0200
+
+gnome-control-center (1:3.37.3-1) experimental; urgency=medium
+
+  * New upstream release
+  * debian/control.in:
+    - updated gsettings-desktop-schemas requirement
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 07 Aug 2020 17:36:45 +0200
+
+gnome-control-center (1:3.36.4-1) unstable; urgency=medium
+
+  * New upstream release (lp: #1886495)
+
+ -- Sebastien Bacher <seb128@debian.org>  Mon, 06 Jul 2020 16:47:10 +0200
+
+gnome-control-center (1:3.36.3-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 18 Jun 2020 13:38:15 +0200
+
+gnome-control-center (1:3.36.2-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 01 May 2020 09:02:41 +0200
+
+gnome-control-center (1:3.36.1-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 27 Mar 2020 10:17:23 +0100
+
+gnome-control-center (1:3.36.0-1) unstable; urgency=medium
+
+  * New upstream release
+    - Bump the build-dependencies
+    - debian/patches/Revert-build-Bump-build-dependency-on-polkit.patch:
+      Revert the bump of the minimal polkit version, ITS files were backported
+      in earlier versions in debian
+
+ -- Laurent Bigonville <bigon@debian.org>  Tue, 10 Mar 2020 19:17:55 +0100
+
+gnome-control-center (1:3.35.92-1) experimental; urgency=medium
+
+  * New upstream version, update based on Ubuntu
+  * debian/control.in:
+    - updated the requirements
+  * debian/patches/01_menu_category.patch:
+    - removed, those issues are fixed in the new version
+  * debian/patches/07_polkit_wheel_sudo_group.patch:
+    - removed in favor of the new build option
+  * debian/rules:
+    - use -Dprivileged_group=sudo
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 04 Mar 2020 12:18:35 +0100
+
+gnome-control-center (1:3.34.4-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Bump Standards-Version to 4.5.0
+  * Wrap long lines in changelog entries: 1:2.4.0-7, 1:2.4.0-2,
+    1:2.2.2-2, 1:2.2.0-1, 1.0.51-1
+  * Set field Upstream-Name in debian/copyright
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse
+  * Move to debhelper-compat 12
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 29 Feb 2020 23:04:24 +0000
+
+gnome-control-center (1:3.34.2-1) unstable; urgency=medium
+
+  * Team upload
+
+  [ Will Thompson ]
+  * control: make -dev depend on -data, for the ITS files needed to tell
+    xgettext how to extract strings from keybinding and sound XML files
+
+  [ Simon McVittie ]
+  * d/watch: Only watch for stable-branch versions
+  * d/gbp.conf: Use upstream/3.34.x branch now that 3.35.x releases exist
+  * New upstream release
+    - Fix crash when selecting display on secondary GPU (Closes: #945375)
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 10 Dec 2019 12:24:48 +0000
+
+gnome-control-center (1:3.34.1-1) unstable; urgency=medium
+
+  * New upstream release
+    - Fix crash on clicking 'Search Locations' (lp: #1846210)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Mon, 07 Oct 2019 17:03:23 +0200
+
+gnome-control-center (1:3.34.0.1-2) unstable; urgency=medium
+
+  * Team upload.
+  * Upload to unstable
+
+ -- Andreas Henriksson <andreas@fatal.se>  Mon, 30 Sep 2019 17:48:50 +0200
+
+gnome-control-center (1:3.34.0.1-1) experimental; urgency=medium
+
+  * New upstream release
+    + Fix sliders not behaving properly (LP: #1841897)
+
+ -- Iain Lane <laney@debian.org>  Mon, 09 Sep 2019 17:11:55 +0100
+
+gnome-control-center (1:3.33.90-1) experimental; urgency=medium
+
+  [ Laurent Bigonville ]
+  * debian/control.in: Drop libgnomekbd-dev from the build-dependencies, this
+    is apparently not needed for quite some time already
+
+  [ Iain Lane ]
+  * New upstream release
+    + Search
+      - Introduce Drag n' Drop
+      - Visual polishment
+      - Various minor improvements from the Every Detail Matters session
+      - Add shadows to application icons
+    + Background
+     - Redesigned panel
+    + Display
+     - Move Night Light to a tab, instead of a dialog
+    + Keyboard Shortcuts
+     - Panel renamed from "Keyboard"
+    + Mouse & Touchpad
+     - Reinstate keyboard navitation
+    + Power:
+     - Don't treat all batteries as laptop batteries
+    + Sharing
+      - Use a HdyLeaflet
+    + User Accounts
+      - Present the default avatar in the avatar popover
+    + Wacom
+      - Ensure calibrator UI CSS only applies to its UI
+  * control: Bump BDs per upstream
+  * 06_handle_passwd_with_ldap.patch: Drop, merged upstream
+
+ -- Iain Lane <laney@debian.org>  Mon, 19 Aug 2019 15:21:34 +0100
+
+gnome-control-center (1:3.32.2-1) experimental; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 29 May 2019 12:27:36 +0200
+
+gnome-control-center (1:3.32.1-1) experimental; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 03 Apr 2019 18:25:00 +0200
+
+gnome-control-center (1:3.32.0.1-1) experimental; urgency=medium
+
+  * New upstream release
+  * Remove the patches included in the new version
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 12 Mar 2019 10:47:36 +0100
+
+gnome-control-center (1:3.31.92-3) experimental; urgency=medium
+
+  * Cherry-pick two patches from upstream libhandy to fix translations
+
+ -- Iain Lane <laney@debian.org>  Thu, 07 Mar 2019 15:51:05 +0000
+
+gnome-control-center (1:3.31.92-2) experimental; urgency=medium
+
+  * debian/control.in:
+    - Build-Depends on libudisks2-dev
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 06 Mar 2019 16:05:01 +0100
+
+gnome-control-center (1:3.31.92-1) experimental; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 06 Mar 2019 15:26:53 +0100
+
+gnome-control-center (1:3.31.90-1) experimental; urgency=medium
+
+  * New upstream development release
+  * Build-Depend on libgsound-dev
+  * Bump Build-Depends: meson 0.48.0, libupower-glib-dev 0.99.8 and
+    gsettings-desktop-schemas-dev 3.31.0
+  * Remove 10 patches applied in new release
+  * Refresh patches
+
+ -- Jeremy Bicha <jbicha@debian.org>  Thu, 07 Feb 2019 14:27:18 -0500
 
 gnome-control-center (1:3.30.2-5) unstable; urgency=medium
 
@@ -2410,7 +2651,8 @@ control-center (1:2.4.0-8) unstable; urgency=low
 
 control-center (1:2.4.0-7) unstable; urgency=low
 
-  * debian/control capplets package need to depends on capplets-data (Closes: #237311)
+  * debian/control capplets package need to depends on capplets-data
+    (Closes: #237311)
 
  -- Christian Marillat <marillat@debian.org>  Thu, 11 Mar 2004 09:07:06 +0100
 
@@ -2451,7 +2693,8 @@ control-center (1:2.4.0-2) unstable; urgency=low
   * Suggest xbase-clients for xrdb
   * Rebuild to remove liblinc dependency in the -dev package (Closes: #216722)
   * Don't package .la files for modules (Closes: #182873)
-  * Run libtoolize, I don't know but something is broken in the original tarball.
+  * Run libtoolize, I don't know but something is broken in the original
+    tarball.
 
  -- Christian Marillat <marillat@debian.org>  Tue, 21 Oct 2003 21:56:55 +0200
 
@@ -2475,7 +2718,8 @@ control-center (1:2.2.2-2) unstable; urgency=low
   * debian/rules fix DEB_BUILD_OPTIONS=noopt (Closes: #199189)
   * Don't need to depends on xbase-clients
   * Suggests esound-clients (Closes: #205700)
-  * Create /usr/share/themes/metacity-1 directory to remove warning (Closes: #211182)
+  * Create /usr/share/themes/metacity-1 directory to remove warning
+    (Closes: #211182)
   * Add hack to remove libtool rpath
   * Add libxrender-dev in Builde-Depends
 
@@ -2528,7 +2772,8 @@ control-center (1:2.2.0-1) unstable; urgency=low
   * Add a default theme. Thanks to Johannes Rohr
   * Drag and drop for theme work (Closes: #166980)
   * Themes aren't sorted case-sensitively (Closes: #166981)
-  * Should fix key gnome binding properties and metacity key bindings (Closes: #172380)
+  * Should fix key gnome binding properties and metacity key bindings
+    (Closes: #172380)
 
  -- Christian Marillat <marillat@debian.org>  Thu, 23 Jan 2003 16:32:09 +0100
 
@@ -3005,7 +3250,8 @@ control-center (1.0.51-1) unstable; urgency=low
   * We've updated... (closes: bug#44136)
   * Correct xworm definition for screensaver (closes: bug#51514)
   * The libc/libglib issues are resolved now (closes: bug#37535)
-  * control-center is much more stable, and should work with window-maker (closes: bug#38706)
+  * control-center is much more stable, and should work with window-maker
+    (closes: bug#38706)
   * gnomecc seems to respect current bg color better (closes: bug#38917)
   * Couldn't reproduce this error with current versions (closes: bug#38995)
   * Invoking individual capplets seems to work now (closes: bug#39135)
