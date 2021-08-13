@@ -1,0 +1,7 @@
+Package: grub-common grub-efi-amd64-bin grub-efi-ia32-bin grub-pc grub-pc-bin grub2-common
+Pin: version <%= scope.lookupvar('grub::grub_version') %>
+Pin-Priority: 1001
+
+Package: grub-efi-amd64-signed
+Pin: version <%= scope.lookupvar('grub::grub_version_signed') %>
+Pin-Priority: 1001
