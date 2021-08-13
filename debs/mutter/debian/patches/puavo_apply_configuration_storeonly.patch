@@ -1,7 +1,7 @@
-diff -ruN mutter-3.30.2.build.0/src/backends/meta-monitor-manager.c mutter-3.30.2.build.5/src/backends/meta-monitor-manager.c
---- mutter-3.30.2.build.0/src/backends/meta-monitor-manager.c	2020-05-29 12:22:53.915016508 +0300
-+++ mutter-3.30.2.build.5/src/backends/meta-monitor-manager.c	2020-06-04 14:43:16.618577072 +0300
-@@ -448,6 +448,7 @@
+diff -ruN mutter.orig/src/backends/meta-monitor-manager.c mutter/src/backends/meta-monitor-manager.c
+--- mutter.orig/src/backends/meta-monitor-manager.c	2021-03-15 21:33:09.378132800 +0200
++++ mutter/src/backends/meta-monitor-manager.c	2021-08-13 14:43:13.441713713 +0300
+@@ -509,6 +509,7 @@
      case META_MONITORS_CONFIG_METHOD_PERSISTENT:
        meta_monitor_config_manager_set_current (manager->config_manager, config);
        break;
@@ -9,19 +9,21 @@ diff -ruN mutter-3.30.2.build.0/src/backends/meta-monitor-manager.c mutter-3.30.
      case META_MONITORS_CONFIG_METHOD_VERIFY:
        break;
      }
-@@ -1253,8 +1254,9 @@
+@@ -1355,9 +1356,10 @@
  #define LOGICAL_MONITORS_FORMAT "a" LOGICAL_MONITOR_FORMAT
  
  static gboolean
 -meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
--                                               GDBusMethodInvocation *invocation)
+-                                               GDBusMethodInvocation *invocation,
+-                                               MetaMonitorManager    *manager)
 +meta_monitor_manager_handle_current_state (MetaDBusDisplayConfig *skeleton,
 +                                           GDBusMethodInvocation *invocation,
++                                           MetaMonitorManager    *manager,
 +                                           gboolean return_dbus_answer)
  {
-   MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
    MetaSettings *settings = meta_backend_get_settings (manager->backend);
-@@ -1469,17 +1471,26 @@
+   GVariantBuilder monitors_builder;
+@@ -1563,17 +1565,27 @@
                               g_variant_builder_end (&max_screen_size_builder));
      }
  
@@ -47,20 +49,21 @@ diff -ruN mutter-3.30.2.build.0/src/backends/meta-monitor-manager.c mutter-3.30.
  
 +static gboolean
 +meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
-+                                               GDBusMethodInvocation *invocation)
++                                               GDBusMethodInvocation *invocation,
++                                               MetaMonitorManager    *manager)
 +{
-+  return meta_monitor_manager_handle_current_state (skeleton, invocation, 1);
++  return meta_monitor_manager_handle_current_state (skeleton, invocation, manager, 1);
 +}
 +
  #undef MODE_FORMAT
  #undef MODES_FORMAT
  #undef MONITOR_SPEC_FORMAT
-@@ -1911,6 +1922,18 @@
+@@ -2017,6 +2029,18 @@
    GList *logical_monitor_configs = NULL;
    GError *error = NULL;
  
 +  if (method == META_MONITORS_CONFIG_METHOD_STOREONLY) {
-+    if (meta_monitor_manager_handle_current_state (skeleton, invocation, 0)) {
++    if (meta_monitor_manager_handle_current_state (skeleton, invocation, manager, 0)) {
 +      meta_monitor_config_manager_save_current (manager->config_manager);
 +      g_dbus_method_invocation_return_value (invocation, g_variant_new ("()"));
 +    } else {
@@ -74,10 +77,10 @@ diff -ruN mutter-3.30.2.build.0/src/backends/meta-monitor-manager.c mutter-3.30.
    if (serial != manager->serial)
      {
        g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-diff -ruN mutter-3.30.2.build.0/src/backends/meta-monitor-manager-private.h mutter-3.30.2.build.5/src/backends/meta-monitor-manager-private.h
---- mutter-3.30.2.build.0/src/backends/meta-monitor-manager-private.h	2018-11-09 15:28:20.000000000 +0200
-+++ mutter-3.30.2.build.5/src/backends/meta-monitor-manager-private.h	2020-06-04 14:26:39.334377675 +0300
-@@ -83,7 +83,8 @@
+diff -ruN mutter.orig/src/backends/meta-monitor-manager-private.h mutter/src/backends/meta-monitor-manager-private.h
+--- mutter.orig/src/backends/meta-monitor-manager-private.h	2021-03-15 21:33:09.377133000 +0200
++++ mutter/src/backends/meta-monitor-manager-private.h	2021-08-13 14:38:39.228063722 +0300
+@@ -52,7 +52,8 @@
  {
    META_MONITORS_CONFIG_METHOD_VERIFY = 0,
    META_MONITORS_CONFIG_METHOD_TEMPORARY = 1,

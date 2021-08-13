@@ -12,55 +12,15 @@ Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/37
 Applied-upstream: no, rejected as not long-term sustainable
 Last-Update: 2018-03-16
 ---
- clutter/clutter/x11/clutter-device-manager-xi2.c |  15 ++-
- src/backends/x11/meta-input-settings-x11.c       | 150 ++++++++++++++++++++---
- 2 files changed, 148 insertions(+), 17 deletions(-)
+ src/backends/x11/meta-input-settings-x11.c | 155 ++++++++++++++++++++++++++---
+ src/backends/x11/meta-seat-x11.c           |  12 ++-
+ 2 files changed, 151 insertions(+), 16 deletions(-)
 
-diff --git a/clutter/clutter/x11/clutter-device-manager-xi2.c b/clutter/clutter/x11/clutter-device-manager-xi2.c
-index 141f424..43f9a3e 100644
---- a/clutter/clutter/x11/clutter-device-manager-xi2.c
-+++ b/clutter/clutter/x11/clutter-device-manager-xi2.c
-@@ -267,8 +267,9 @@ is_touch_device (XIAnyClassInfo         **classes,
- }
- 
- static gboolean
--is_touchpad_device (ClutterBackendX11 *backend_x11,
--                    XIDeviceInfo      *info)
-+has_8bit_property (ClutterBackendX11 *backend_x11,
-+                   XIDeviceInfo      *info,
-+                   const char        *name)
- {
-   gulong nitems, bytes_after;
-   guint32 *data = NULL;
-@@ -276,7 +277,7 @@ is_touchpad_device (ClutterBackendX11 *backend_x11,
-   Atom type;
-   Atom prop;
- 
--  prop = XInternAtom (backend_x11->xdpy, "libinput Tapping Enabled", True);
-+  prop = XInternAtom (backend_x11->xdpy, name, True);
-   if (prop == None)
-     return FALSE;
- 
-@@ -297,6 +298,14 @@ is_touchpad_device (ClutterBackendX11 *backend_x11,
-   return TRUE;
- }
- 
-+static gboolean
-+is_touchpad_device (ClutterBackendX11 *backend_x11,
-+                    XIDeviceInfo      *info)
-+{
-+  return has_8bit_property (backend_x11, info, "libinput Tapping Enabled") ||
-+         has_8bit_property (backend_x11, info, "Synaptics Off");
-+}
-+
- static gboolean
- get_device_ids (ClutterBackendX11  *backend_x11,
-                 XIDeviceInfo       *info,
 diff --git a/src/backends/x11/meta-input-settings-x11.c b/src/backends/x11/meta-input-settings-x11.c
-index 7e1f035..55fcc52 100644
+index 5c22dff..a7a77d6 100644
 --- a/src/backends/x11/meta-input-settings-x11.c
 +++ b/src/backends/x11/meta-input-settings-x11.c
-@@ -169,8 +169,6 @@ meta_input_settings_x11_set_send_events (MetaInputSettings        *settings,
+@@ -175,8 +175,6 @@ meta_input_settings_x11_set_send_events (MetaInputSettings        *settings,
  
    available = get_property (device, "libinput Send Events Modes Available",
                              XA_INTEGER, 8, 2);
@@ -69,7 +29,7 @@ index 7e1f035..55fcc52 100644
  
    switch (mode)
      {
-@@ -184,6 +182,11 @@ meta_input_settings_x11_set_send_events (MetaInputSettings        *settings,
+@@ -190,6 +188,11 @@ meta_input_settings_x11_set_send_events (MetaInputSettings        *settings,
        break;
      }
  
@@ -81,7 +41,7 @@ index 7e1f035..55fcc52 100644
    if ((values[0] && !available[0]) || (values[1] && !available[1]))
      g_warning ("Device '%s' does not support sendevents mode %d\n",
                 clutter_input_device_get_device_name (device), mode);
-@@ -217,11 +220,23 @@ meta_input_settings_x11_set_speed (MetaInputSettings  *settings,
+@@ -223,11 +226,23 @@ meta_input_settings_x11_set_speed (MetaInputSettings  *settings,
  {
    MetaBackend *backend = meta_get_backend ();
    Display *xdisplay = meta_backend_x11_get_xdisplay (META_BACKEND_X11 (backend));
@@ -109,7 +69,7 @@ index 7e1f035..55fcc52 100644
  }
  
  static void
-@@ -259,6 +274,9 @@ meta_input_settings_x11_set_disable_while_typing (MetaInputSettings  *settings,
+@@ -265,6 +280,9 @@ meta_input_settings_x11_set_disable_while_typing (MetaInputSettings  *settings,
  
    change_property (device, "libinput Disable While Typing Enabled",
                     XA_INTEGER, 8, &value, 1);
@@ -119,7 +79,7 @@ index 7e1f035..55fcc52 100644
  }
  
  static void
-@@ -267,9 +285,13 @@ meta_input_settings_x11_set_tap_enabled (MetaInputSettings  *settings,
+@@ -273,9 +291,13 @@ meta_input_settings_x11_set_tap_enabled (MetaInputSettings  *settings,
                                           gboolean            enabled)
  {
    guchar value = (enabled) ? 1 : 0;
@@ -133,7 +93,7 @@ index 7e1f035..55fcc52 100644
  }
  
  static void
-@@ -281,6 +303,9 @@ meta_input_settings_x11_set_tap_and_drag_enabled (MetaInputSettings  *settings,
+@@ -287,6 +309,9 @@ meta_input_settings_x11_set_tap_and_drag_enabled (MetaInputSettings  *settings,
  
    change_property (device, "libinput Tapping Drag Enabled",
                     XA_INTEGER, 8, &value, 1);
@@ -143,7 +103,7 @@ index 7e1f035..55fcc52 100644
  }
  
  static void
-@@ -288,10 +313,22 @@ meta_input_settings_x11_set_invert_scroll (MetaInputSettings  *settings,
+@@ -305,10 +330,22 @@ meta_input_settings_x11_set_invert_scroll (MetaInputSettings  *settings,
                                             ClutterInputDevice *device,
                                             gboolean            inverted)
  {
@@ -169,41 +129,39 @@ index 7e1f035..55fcc52 100644
  }
  
  static void
-@@ -303,6 +340,16 @@ meta_input_settings_x11_set_edge_scroll (MetaInputSettings            *settings,
+@@ -320,6 +357,31 @@ change_scroll_method (ClutterInputDevice           *device,
    guchar *current = NULL;
    guchar *available = NULL;
  
-+  current = get_property (device, "Synaptics Edge Scrolling",
-+                          XA_INTEGER, 8, 3);
-+  if (current)
++  if (method == SCROLL_METHOD_FIELD_EDGE)
 +    {
-+      current[0] = current[1] = !!edge_scroll_enabled;
-+      change_property (device, "Synaptics Edge Scrolling",
-+                       XA_INTEGER, 8, current, 3);
-+      goto out;
++      current = get_property (device, "Synaptics Edge Scrolling",
++                              XA_INTEGER, 8, 3);
++      if (current)
++        {
++          current[0] = current[1] = !!enabled;
++          change_property (device, "Synaptics Edge Scrolling",
++                           XA_INTEGER, 8, current, 3);
++          goto out;
++        }
++    }
++  else if (method == SCROLL_METHOD_FIELD_2FG)
++    {
++      current = get_property (device, "Synaptics Two-Finger Scrolling",
++                              XA_INTEGER, 8, 2);
++      if (current)
++        {
++          current[0] = current[1] = !!enabled;
++          change_property (device, "Synaptics Two-Finger Scrolling",
++                          XA_INTEGER, 8, current, 2);
++          goto out;
++        }
 +    }
 +
    available = get_property (device, "libinput Scroll Methods Available",
                              XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
-   if (!available || !available[SCROLL_METHOD_FIELD_EDGE])
-@@ -332,6 +379,16 @@ meta_input_settings_x11_set_two_finger_scroll (MetaInputSettings            *set
-   guchar *current = NULL;
-   guchar *available = NULL;
- 
-+  current = get_property (device, "Synaptics Two-Finger Scrolling",
-+                          XA_INTEGER, 8, 2);
-+  if (current)
-+    {
-+      current[0] = current[1] = !!two_finger_scroll_enabled;
-+      change_property (device, "Synaptics Two-Finger Scrolling",
-+                       XA_INTEGER, 8, current, 2);
-+      goto out;
-+    }
-+
-   available = get_property (device, "libinput Scroll Methods Available",
-                             XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
-   if (!available || !available[SCROLL_METHOD_FIELD_2FG])
-@@ -359,10 +416,19 @@ meta_input_settings_x11_has_two_finger_scroll (MetaInputSettings  *settings,
+   if (!available || !available[method])
+@@ -363,10 +425,19 @@ meta_input_settings_x11_has_two_finger_scroll (MetaInputSettings  *settings,
    guchar *available = NULL;
    gboolean has_two_finger = TRUE;
  
@@ -227,8 +185,8 @@ index 7e1f035..55fcc52 100644
  
    meta_XFree (available);
    return has_two_finger;
-@@ -377,6 +443,58 @@ meta_input_settings_x11_set_scroll_button (MetaInputSettings  *settings,
-                    XA_INTEGER, 32, &button, 1);
+@@ -382,6 +453,58 @@ meta_input_settings_x11_set_scroll_button (MetaInputSettings  *settings,
+                    XA_CARDINAL, 32, &button, 1);
  }
  
 +static void
@@ -286,7 +244,7 @@ index 7e1f035..55fcc52 100644
  static void
  meta_input_settings_x11_set_click_method (MetaInputSettings           *settings,
                                            ClutterInputDevice          *device,
-@@ -388,7 +506,11 @@ meta_input_settings_x11_set_click_method (MetaInputSettings           *settings,
+@@ -393,7 +516,11 @@ meta_input_settings_x11_set_click_method (MetaInputSettings           *settings,
    available = get_property (device, "libinput Click Methods Available",
                              XA_INTEGER, 8, 2);
    if (!available)
@@ -299,3 +257,40 @@ index 7e1f035..55fcc52 100644
  
    switch (mode)
      {
+diff --git a/src/backends/x11/meta-seat-x11.c b/src/backends/x11/meta-seat-x11.c
+index cfea494..aea439d 100644
+--- a/src/backends/x11/meta-seat-x11.c
++++ b/src/backends/x11/meta-seat-x11.c
+@@ -248,7 +248,8 @@ is_touch_device (XIAnyClassInfo         **classes,
+ }
+ 
+ static gboolean
+-is_touchpad_device (XIDeviceInfo *info)
++has_8bit_property (XIDeviceInfo      *info,
++                   const char        *name)
+ {
+   gulong nitems, bytes_after;
+   uint32_t *data = NULL;
+@@ -256,7 +257,7 @@ is_touchpad_device (XIDeviceInfo *info)
+   Atom type;
+   Atom prop;
+ 
+-  prop = XInternAtom (clutter_x11_get_default_display (), "libinput Tapping Enabled", True);
++  prop = XInternAtom (clutter_x11_get_default_display (), name, True);
+   if (prop == None)
+     return FALSE;
+ 
+@@ -277,6 +278,13 @@ is_touchpad_device (XIDeviceInfo *info)
+   return TRUE;
+ }
+ 
++static gboolean
++is_touchpad_device (XIDeviceInfo *info)
++{
++  return has_8bit_property (info, "libinput Tapping Enabled") ||
++         has_8bit_property (info, "Synaptics Off");
++}
++
+ static gboolean
+ get_device_ids (XIDeviceInfo  *info,
+                 char         **vendor_id,

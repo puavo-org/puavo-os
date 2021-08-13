@@ -1,80 +1,83 @@
 #!/usr/bin/make -f
 
+include /usr/share/dpkg/default.mk
+
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-export DEB_LDFLAGS_MAINT_APPEND = -Wl,-O1 -Wl,--as-needed
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,-O1
+
+# Following upstream method to compute the API version
+MUTTER_MINOR_VERSION = $(shell echo $(DEB_VERSION_UPSTREAM) | cut -d. -f2)
+MUTTER_API_VERSION = $(shell echo $$(( ($(MUTTER_MINOR_VERSION) - 23)/2 )) )
+MUTTER_SONAME = 0
+
+export MUTTER_API_VERSION
+export MUTTER_SONAME
 
 %:
-	dh $@ --with gir,gnome
-
-override_dh_autoreconf:
-	dh_autoreconf --as-needed
+	dh $@
 
 ifeq ($(DEB_HOST_ARCH_OS),linux)
 CONFFLAGS = \
-	--enable-egl-device \
-	--enable-wayland \
-	--enable-native-backend
+	-Degl_device=true \
+	-Dremote_desktop=true \
+	-Dwayland_eglstream=true
 else
 CONFFLAGS += \
-	--disable-wayland-egl-platform \
-	--disable-wayland-egl-server \
-	--disable-kms-egl-platform \
-	--disable-wayland \
-	--disable-native-backend
+	-Dudev=false \
+	-Dlibwacom=false \
+	-Dwayland=false \
+	-Dcore_tests=false \
+	-Dnative_backend=false \
+	-Dremote_desktop=false
 endif
 
 ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH),armel armhf))
 CONFFLAGS += \
-	--with-default-driver=gles2
+	-Ddefault_driver=gles2
 else
 CONFFLAGS += \
-	--with-default-driver=gl
-endif
-
-# pipewire is not in Ubuntu main yet
-ifneq ($(shell dpkg-vendor --query vendor),Ubuntu)
-ifeq ($(DEB_HOST_ARCH_OS),linux)
-	CONFFLAGS += --enable-remote-desktop
-endif
+	-Ddefault_driver=gl
 endif
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
-		--libexecdir="\$${prefix}/lib/mutter" \
-		--enable-startup-notification \
-		--enable-compile-warnings \
-		--disable-cogl-gles2 \
-		--enable-gles2 \
-		--with-gles2-libname=libGLESv2.so.2 \
+		-Dinstalled_tests=false \
+		-Dprofiler=false \
 		$(CONFFLAGS)
 
-# Ignore test failures on hurd & kfreebsd. Although the test results
+# Use meson test directly as it allows us to use the timeout multiplier
+BUILDDIR=$(CURDIR)/obj-$(DEB_HOST_GNU_TYPE)
+TEST_COMMAND_BASE=env \
+	GSETTINGS_SCHEMA_DIR=$(BUILDDIR)/data \
+	dbus-run-session -- xvfb-run -s '+iglx -noreset' -a \
+	dh_auto_test -- -C $(BUILDDIR) --no-rebuild --verbose --timeout-multiplier 6 \
+	           --no-stdsplit --print-errorlogs
+TEST_COMMAND=$(TEST_COMMAND_BASE) --no-suite flaky
+TEST_COMMAND_FLAKY=$(TEST_COMMAND_BASE) --suite flaky
+
+# Ignore test failures on hurd and kfreebsd. Although the test results
 # indicate there may be a serious issue, the port maintainers may
 # prefer we do the build anyway. I plan to file a bug for this later.
-# Don't run the tests on mips since they either time out or fail too much,
-# blocking migration to testing
+# Don't run the tests on mips, riscv64 and other ports since they either
+# time out or fail too much, blocking migration to testing or ports
 override_dh_auto_test:
+ifeq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
+	glib-compile-schemas $(BUILDDIR)/data
 ifneq (,$(filter hurd-i386 kfreebsd-i386 kfreebsd-amd64,$(DEB_HOST_ARCH)))
-	-xvfb-run -a dh_auto_test
-else ifeq (,$(filter mips mipsel,$(DEB_HOST_ARCH)))
-	xvfb-run -a dh_auto_test
+	-$(TEST_COMMAND)
+	-$(TEST_COMMAND_FLAKY)
+else ifeq (,$(filter mips mips64el mipsel riscv64 alpha hppa powerpc sparc64 x32,$(DEB_HOST_ARCH)))
+	$(TEST_COMMAND)
+	-$(TEST_COMMAND_FLAKY)
+endif
 endif
 
-override_dh_install:
-	find debian/tmp -name '*.la' -print -delete
-	dh_install
-
-override_dh_missing:
-	dh_missing --fail-missing
-
 override_dh_girepository:
-	dh_girepository /usr/lib/$(DEB_HOST_MULTIARCH)/mutter
+	dh_girepository /usr/lib/$(DEB_HOST_MULTIARCH)/mutter-$(MUTTER_API_VERSION)
 
 override_dh_makeshlibs:
 	dh_makeshlibs -V
 
 override_dh_shlibdeps:
-	dh_shlibdeps -Llibmutter-3-0 -l/usr/lib/$(DEB_HOST_MULTIARCH)/mutter
-
-override_dh_strip:
-	dh_strip --dbgsym-migration='mutter-dbg (<< 3.18.3-2~)'
+	dh_shlibdeps -Llibmutter-$(MUTTER_API_VERSION)-$(MUTTER_SONAME) \
+		-l/usr/lib/$(DEB_HOST_MULTIARCH)/mutter-$(MUTTER_API_VERSION)
