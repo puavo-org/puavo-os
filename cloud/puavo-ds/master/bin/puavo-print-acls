@@ -606,6 +606,7 @@ rule {
       by $admins                 write	# XXX maybe this_school_admins instead?
       by $staff                  write	# XXX maybe just remove this?
       by [puavo_dn puavo]        read
+      by [puavo_dn pw-mgmt]      read
       by [dn children $People]   read
       by [dn children $Hosts]    read
       by [systemgroup getent]    read
