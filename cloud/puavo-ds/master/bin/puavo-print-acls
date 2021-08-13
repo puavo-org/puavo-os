@@ -475,7 +475,8 @@ rule {
 
 rule {
   [dn children $Servers]
-    [attrs entry objectClass ou puavoExport puavoHostname puavoId puavoSchool]
+    [attrs entry objectClass ou puavoEduPersonPrimarySchool puavoExport \
+                 puavoHostname puavoId puavoSchool]
       by $org_owners write
       by $admins     read
       by $staff      read	# XXX maybe just remove this?
@@ -657,7 +658,8 @@ rule {
 rule {
   # allow statistics to read user role
   [dn subtree $People]
-    [attrs entry objectClass puavoEduPersonAffiliation puavoSchool]
+    [attrs entry objectClass puavoEduPersonAffiliation \
+                 puavoEduPersonPrimarySchool puavoSchool]
       by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [puavo_dn statistics]     read
       by *                         none break
@@ -710,6 +712,7 @@ rule {
            loginShell                       \
            objectClass                      \
            puavoEduPersonAffiliation        \
+           puavoEduPersonPrimarySchool      \
            puavoEduPersonReverseDisplayName \
            puavoId                          \
            puavoLocked                      \
