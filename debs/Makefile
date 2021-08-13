@@ -11,7 +11,6 @@ _pkgs_ports := gnome-shell libpam-ccreds pinta wsmancli
 # _pkgs_ports := gnome-control-center \
 #                incron               \
 #                mutter               \
-#                nbd                  \
 #                openboard            \
 #                openldap             \
 #                vtun
