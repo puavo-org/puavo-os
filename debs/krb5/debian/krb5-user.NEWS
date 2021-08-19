@@ -1,0 +1,15 @@
+krb5 (1.17-4) unstable; urgency=medium
+    
+  This version of krb5 removes support for DES entirely.  DES has been turned off by default for a number of Debian stable releases.  Unless you explicitly set allow_weak_crypto to true in /etc/krb5.conf, you will not be affected by this change.  If you do use DES, you must migrate away from DES before upgrading.
+
+
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 08 Jul 2019 22:06:38 -0400
+
+krb5 (1.12.1+dfsg-11) unstable; urgency=medium
+
+  This version includes systemd unit files.  In previous versions of krb5-admin-server, debconf was used to determine whether to use kadmind.  With this version, update-rc.d  krb5-admin-server disable should be used to disable the Kerberos administration daemon.
+
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 20 Oct 2014 16:39:32 -0400
+

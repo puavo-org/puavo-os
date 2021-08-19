@@ -1,4 +1,3 @@
-From baeaf3b108107146437608f3fc14249e3cdaed99 Mon Sep 17 00:00:00 2001
 From: Jelmer Vernooij <jelmer@debian.org>
 Date: Wed, 27 Aug 2014 16:40:29 -0400
 Subject: Fix pkg-config library/include paths
@@ -17,7 +16,7 @@ Patch-Category: debian-local
  6 files changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/src/build-tools/gssrpc.pc.in b/src/build-tools/gssrpc.pc.in
-index ca909217eb..e08c2e840a 100644
+index ca90921..e08c2e8 100644
 --- a/src/build-tools/gssrpc.pc.in
 +++ b/src/build-tools/gssrpc.pc.in
 @@ -1,7 +1,7 @@
@@ -31,7 +30,7 @@ index ca909217eb..e08c2e840a 100644
  
  Name: gssrpc
 diff --git a/src/build-tools/kadm-client.pc.in b/src/build-tools/kadm-client.pc.in
-index c8d1cd1262..de56a75213 100644
+index c8d1cd1..de56a75 100644
 --- a/src/build-tools/kadm-client.pc.in
 +++ b/src/build-tools/kadm-client.pc.in
 @@ -1,7 +1,7 @@
@@ -45,7 +44,7 @@ index c8d1cd1262..de56a75213 100644
  Name: kadm-client
  Description: Kerberos administration client library
 diff --git a/src/build-tools/kadm-server.pc.in b/src/build-tools/kadm-server.pc.in
-index cd2f86c649..a73ff86cfe 100644
+index cd2f86c..a73ff86 100644
 --- a/src/build-tools/kadm-server.pc.in
 +++ b/src/build-tools/kadm-server.pc.in
 @@ -1,7 +1,7 @@
@@ -59,7 +58,7 @@ index cd2f86c649..a73ff86cfe 100644
  Name: kadm-server
  Description: Kerberos administration server library
 diff --git a/src/build-tools/kdb.pc.in b/src/build-tools/kdb.pc.in
-index 461a8d01d0..356501d38c 100644
+index 461a8d01d0..356501d 100644
 --- a/src/build-tools/kdb.pc.in
 +++ b/src/build-tools/kdb.pc.in
 @@ -1,7 +1,7 @@
@@ -73,7 +72,7 @@ index 461a8d01d0..356501d38c 100644
  KDB5_DB_LIB=@KDB5_DB_LIB@
  
 diff --git a/src/build-tools/mit-krb5-gssapi.pc.in b/src/build-tools/mit-krb5-gssapi.pc.in
-index 7b91b19f19..b2b243630c 100644
+index 7b91b19..b2b2436 100644
 --- a/src/build-tools/mit-krb5-gssapi.pc.in
 +++ b/src/build-tools/mit-krb5-gssapi.pc.in
 @@ -1,7 +1,7 @@
@@ -87,7 +86,7 @@ index 7b91b19f19..b2b243630c 100644
  Name: mit-krb5-gssapi
  Description: Kerberos implementation of the GSSAPI
 diff --git a/src/build-tools/mit-krb5.pc.in b/src/build-tools/mit-krb5.pc.in
-index 030881512f..058e75f24d 100644
+index 0308815..058e75f 100644
 --- a/src/build-tools/mit-krb5.pc.in
 +++ b/src/build-tools/mit-krb5.pc.in
 @@ -1,7 +1,7 @@

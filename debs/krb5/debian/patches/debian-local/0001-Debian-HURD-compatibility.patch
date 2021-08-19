@@ -1,24 +1,21 @@
-From 85fcf9fc43e0b10fd0f90e056200ed028e50d297 Mon Sep 17 00:00:00 2001
 From: Sam Hartman <hartmans@debian.org>
 Date: Mon, 26 Dec 2011 18:05:13 -0500
 Subject: Debian: HURD compatibility
 
-HURD has no MAXPATHLEN or MAXHOSTLEN.
+HURD has no MAXPATHLEN or MAXHOSTNAMELEN.
 
-Patch-Category: debian-local
+Thanks Pino Toscano for making the patch more robust.
 ---
  src/clients/ksu/ksu.h                       | 4 ++++
- src/include/k5-int.h                        | 3 +++
+ src/include/k5-int.h                        | 6 ++++++
  src/kadmin/ktutil/ktutil_funcs.c            | 4 ++++
  src/kprop/kprop_util.c                      | 4 ++++
- src/lib/gssapi/spnego/spnego_mech.c         | 3 +++
- src/lib/krb5/os/sn2princ.c                  | 4 ++++
  src/plugins/kdb/db2/libdb2/include/db-int.h | 4 ++++
  src/tests/resolve/resolve.c                 | 4 ++++
- 8 files changed, 30 insertions(+)
+ 6 files changed, 26 insertions(+)
 
 diff --git a/src/clients/ksu/ksu.h b/src/clients/ksu/ksu.h
-index 3bf0bd4384..f680b332c3 100644
+index 3bf0bd4..f680b33 100644
 --- a/src/clients/ksu/ksu.h
 +++ b/src/clients/ksu/ksu.h
 @@ -56,6 +56,10 @@
@@ -33,21 +30,24 @@ index 3bf0bd4384..f680b332c3 100644
  extern int optind;
  extern char * optarg;
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index 652242207a..e4f1678be6 100644
+index 9616b24..09ad057 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
-@@ -589,6 +589,9 @@ extern char *strdup (const char *);
+@@ -595,6 +595,12 @@ extern char *strdup (const char *);
  #ifdef HAVE_SYS_PARAM_H
  #include <sys/param.h>                  /* MAXPATHLEN */
  #endif
 +#ifndef MAXPATHLEN
 +# define MAXPATHLEN 4096
 +#endif
++#ifndef MAXHOSTNAMELEN
++# define MAXHOSTNAMELEN 256
++#endif
  
  #ifdef HAVE_SYS_FILE_H
  #include <sys/file.h>                   /* prototypes for file-related
 diff --git a/src/kadmin/ktutil/ktutil_funcs.c b/src/kadmin/ktutil/ktutil_funcs.c
-index 6d119a2b64..fb7fa22f54 100644
+index e2e005d..ed342b2 100644
 --- a/src/kadmin/ktutil/ktutil_funcs.c
 +++ b/src/kadmin/ktutil/ktutil_funcs.c
 @@ -34,6 +34,10 @@
@@ -62,7 +62,7 @@ index 6d119a2b64..fb7fa22f54 100644
   * Free a kt_list
   */
 diff --git a/src/kprop/kprop_util.c b/src/kprop/kprop_util.c
-index c32d174b95..d72ab18967 100644
+index c32d174..d72ab18 100644
 --- a/src/kprop/kprop_util.c
 +++ b/src/kprop/kprop_util.c
 @@ -32,6 +32,10 @@
@@ -76,37 +76,8 @@ index c32d174b95..d72ab18967 100644
  /*
   * Convert an IPv4 or IPv6 socket address to a newly allocated krb5_address.
   * There is similar code elsewhere in the tree, so this should possibly become
-diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
-index 9d6027ce80..585d8a6581 100644
---- a/src/lib/gssapi/spnego/spnego_mech.c
-+++ b/src/lib/gssapi/spnego/spnego_mech.c
-@@ -65,6 +65,9 @@
- #include	"gssapiP_spnego.h"
- #include	<gssapi_err_generic.h>
- 
-+#ifndef MAXHOSTNAMELEN
-+#define MAXHOSTNAMELEN 256
-+#endif
- 
- #undef g_token_size
- #undef g_verify_token_header
-diff --git a/src/lib/krb5/os/sn2princ.c b/src/lib/krb5/os/sn2princ.c
-index 5932fd9b3f..187daa84d6 100644
---- a/src/lib/krb5/os/sn2princ.c
-+++ b/src/lib/krb5/os/sn2princ.c
-@@ -126,6 +126,10 @@ find_trailer(const char *hostname)
-     return p;
- }
- 
-+#ifndef MAXHOSTNAMELEN
-+# define MAXHOSTNAMELEN 256
-+#endif
-+
- krb5_error_code KRB5_CALLCONV
- krb5_sname_to_principal(krb5_context context, const char *hostname,
-                         const char *sname, krb5_int32 type,
 diff --git a/src/plugins/kdb/db2/libdb2/include/db-int.h b/src/plugins/kdb/db2/libdb2/include/db-int.h
-index 7e981d4a5f..d83b3b6a6f 100644
+index 7e981d4..d83b3b6 100644
 --- a/src/plugins/kdb/db2/libdb2/include/db-int.h
 +++ b/src/plugins/kdb/db2/libdb2/include/db-int.h
 @@ -280,4 +280,8 @@ void	 __dbpanic __P((DB *dbp));
@@ -119,17 +90,17 @@ index 7e981d4a5f..d83b3b6a6f 100644
 +#endif
  #endif /* _DB_INT_H_ */
 diff --git a/src/tests/resolve/resolve.c b/src/tests/resolve/resolve.c
-index 7339d21bd9..38f725322b 100644
+index ea02391..9597695 100644
 --- a/src/tests/resolve/resolve.c
 +++ b/src/tests/resolve/resolve.c
-@@ -73,6 +73,10 @@ char *strchr();
- #include <netinet/in.h>
- #include <netdb.h>
+@@ -51,6 +51,10 @@
+ #include <sys/param.h>
+ #endif
  
 +#ifndef MAXHOSTNAMELEN
 +# define MAXHOSTNAMELEN 256
 +#endif
 +
  int
- main(argc, argv)
-     int argc;
+ main(int argc, char **argv)
+ {

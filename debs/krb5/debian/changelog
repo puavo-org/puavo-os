@@ -1,14 +1,117 @@
-krb5 (1.17-3+deb10u1+puavo1) bullseye; urgency=medium
+krb5 (1.18.3-6) unstable; urgency=high
 
-  * Added a patch to increase maximum number of realms.
+  * Pull in upstream patch to fix CVE-2021-36222 (KDC NULL dereference),
+    Closes: #991365
 
- -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 10:51:10 +0200
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 21 Jul 2021 11:07:07 -0700
 
-krb5 (1.17-3+deb10u1) buster-security; urgency=medium
+krb5 (1.18.3-5) unstable; urgency=medium
 
-  * CVE-2020-28196 (Closes: #973880)
+  * Update breaks on libk5crypto3 toward other internal libraries because
+    of removed internal symbols, Closes: #985739
 
- -- Moritz Mühlenhoff <jmm@debian.org>  Thu, 19 Nov 2020 17:42:57 +0100
+ -- Sam Hartman <hartmans@debian.org>  Sun, 28 Mar 2021 13:43:01 -0400
+
+krb5 (1.18.3-4) unstable; urgency=medium
+
+
+  * Sigh, either use <= with the old version in the
+    libapache-mod-auth-kerb constraint or << with the new version.  <=
+    with the new version is no good.  (used <= with the old version)
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 23 Nov 2020 11:53:02 -0500
+
+krb5 (1.18.3-3) unstable; urgency=medium
+
+  * Update breaks for libapache2-mod-auth-kerb now that we think we have a fix.
+  * Mark libkrad-dev as multi-arch: same
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 23 Nov 2020 10:07:02 -0500
+
+krb5 (1.18.3-2) unstable; urgency=medium
+
+  * Break libapache2-mod-auth-kerb; see #975344 .  Obviously this is not a stable situation, but I want to at least let users know that by installing this krb5 libapache2-mod-auth-kerb will not work until we fix it.
+
+ -- Sam Hartman <hartmans@debian.org>  Fri, 20 Nov 2020 14:46:00 -0500
+
+krb5 (1.18.3-1) unstable; urgency=medium
+
+  * New upstream version
+    - Fix error when DES disabled, Closes: #932298
+  * Fix typo in lintian overrides.
+  * Update hurd compat patch, thanks Pino Toscano, Closes: #933770
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 19 Nov 2020 11:08:16 -0500
+
+krb5 (1.18.2-1) experimental; urgency=medium
+
+  * New Upstream version
+  * Include several pre-release patches from 1.18.3:
+    - Unregister thread key in SPNEGO finalization
+    - Set pw_expiration during LDAP load
+  -  Avoid using LMDB environments across forks
+    - Allow gss_unwrap_iov() of unpadded RC4 tokens
+    - Fix input length checking in SPNEGO DER decoding
+    - Set lockdown attribute when creating LDAP KDB
+    - Add recursion limit for ASN.1 indefinite lengths (CVE-2020-28196,
+    Closes: #973880) 
+  * Release new upstream to experimental
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 09 Nov 2020 16:28:52 -0500
+
+krb5 (1.17-10) unstable; urgency=medium
+
+  * Also set localstatedir to be consistent with old builds, Closes: #962522
+  * Include journalctl dump from krb5kdc tests so we can figure out why ppc tests are breaking.
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 09 Nov 2020 16:28:25 -0500
+
+krb5 (1.17-9) unstable; urgency=low
+
+  * Fix build-indep, Closes: #962470
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 08 Jun 2020 10:02:57 -0400
+
+krb5 (1.17-8) unstable; urgency=low
+
+  * krb5-doc is multi-arch Foreign, Closes: #959984
+  * Convert to using dh sequencer, Closes: #930690
+  * Low urgency to give us a chance to shake out the DH changes
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 28 May 2020 10:31:24 -0400
+
+krb5 (1.17-7) unstable; urgency=medium
+
+  * Use python3 for building docs; pull patch from upstream, Closes: #939483
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 23 Mar 2020 10:46:41 -0400
+
+krb5 (1.17-6) unstable; urgency=medium
+
+  * Stop depending on texlive-generic-extra, which is no longer built,
+    Closes: #933286
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 01 Aug 2019 14:15:13 -0400
+
+krb5 (1.17-5) unstable; urgency=high
+
+  * Upstream patch to filter invalid enctypes when nfs calls  to indicate
+    which enctypes it supports, Closes: #932000
+  * Do not error out if a keytab includes a single-des enctype, Closes:
+    #932132
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 17 Jul 2019 09:20:27 -0400
+
+krb5 (1.17-4) unstable; urgency=low
+
+  * Remove single DES support entirely; it has been deprecated for a
+    number of years and is going away in 1.18.  We want to find out now
+    any debian problems.
+  * Migrate from git-dpm to git-debrebase; it truly is better.  Thanks Ian.
+  * Add a krb5-user.news for single DES going away
+  * Remove the old news file across all packages
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 08 Jul 2019 22:04:39 -0400
 
 krb5 (1.17-3) unstable; urgency=medium
 

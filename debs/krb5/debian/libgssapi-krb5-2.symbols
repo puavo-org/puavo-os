@@ -1,5 +1,7 @@
 libgssapi_krb5.so.2 libgssapi-krb5-2 #MINVER#
  GSS_C_ATTR_LOCAL_LOGIN_USER@gssapi_krb5_2_MIT 1.9.1+dfsg
+ GSS_C_INQ_NEGOEX_KEY@gssapi_krb5_2_MIT 1.18.2
+ GSS_C_INQ_NEGOEX_VERIFY_KEY@gssapi_krb5_2_MIT 1.18.2
  GSS_C_INQ_SSPI_SESSION_KEY@gssapi_krb5_2_MIT 1.7+dfsg
  GSS_C_MA_AUTH_INIT@gssapi_krb5_2_MIT 1.9+dfsg~beta1
  GSS_C_MA_AUTH_INIT_ANON@gssapi_krb5_2_MIT 1.9+dfsg~beta1
@@ -21,6 +23,7 @@ libgssapi_krb5.so.2 libgssapi-krb5-2 #MINVER#
  GSS_C_MA_MECH_NEGO@gssapi_krb5_2_MIT 1.9+dfsg~beta1
  GSS_C_MA_MECH_PSEUDO@gssapi_krb5_2_MIT 1.9+dfsg~beta1
  GSS_C_MA_MIC@gssapi_krb5_2_MIT 1.9+dfsg~beta1
+ GSS_C_MA_NEGOEX_AND_SPNEGO@gssapi_krb5_2_MIT 1.18.2
  GSS_C_MA_NOT_DFLT_MECH@gssapi_krb5_2_MIT 1.9+dfsg~beta1
  GSS_C_MA_NOT_MECH@gssapi_krb5_2_MIT 1.9+dfsg~beta1
  GSS_C_MA_OOS_DET@gssapi_krb5_2_MIT 1.9+dfsg~beta1

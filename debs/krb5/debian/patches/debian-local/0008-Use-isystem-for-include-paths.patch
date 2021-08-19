@@ -1,4 +1,3 @@
-From d2a401455564fa2a51c78a0856492dfe3329a68f Mon Sep 17 00:00:00 2001
 From: Jelmer Vernooij <jelmer@debian.org>
 Date: Wed, 3 Sep 2014 22:41:55 -0400
 Subject: Use -isystem for include paths
@@ -26,7 +25,7 @@ Patch-Category: debian-local
  7 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/src/build-tools/gssrpc.pc.in b/src/build-tools/gssrpc.pc.in
-index e08c2e840a..fb4f489f87 100644
+index e08c2e8..fb4f489 100644
 --- a/src/build-tools/gssrpc.pc.in
 +++ b/src/build-tools/gssrpc.pc.in
 @@ -7,6 +7,6 @@ vendor=MIT
@@ -38,7 +37,7 @@ index e08c2e840a..fb4f489f87 100644
  Libs: -L${libdir} -lgssrpc
  Requires.private: mit-krb5-gssapi
 diff --git a/src/build-tools/kadm-client.pc.in b/src/build-tools/kadm-client.pc.in
-index de56a75213..47541ac2af 100644
+index de56a75..47541ac 100644
 --- a/src/build-tools/kadm-client.pc.in
 +++ b/src/build-tools/kadm-client.pc.in
 @@ -7,5 +7,5 @@ Name: kadm-client
@@ -49,7 +48,7 @@ index de56a75213..47541ac2af 100644
 +Cflags: -isystem ${includedir}
  Libs: -L${libdir} -lkadm5clnt_mit
 diff --git a/src/build-tools/kadm-server.pc.in b/src/build-tools/kadm-server.pc.in
-index a73ff86cfe..5ce4b733c4 100644
+index a73ff86..5ce4b73 100644
 --- a/src/build-tools/kadm-server.pc.in
 +++ b/src/build-tools/kadm-server.pc.in
 @@ -7,5 +7,5 @@ Name: kadm-server
@@ -60,7 +59,7 @@ index a73ff86cfe..5ce4b733c4 100644
 +Cflags: -isystem ${includedir}
  Libs: -L${libdir} -lkadm5srv_mit
 diff --git a/src/build-tools/kdb.pc.in b/src/build-tools/kdb.pc.in
-index 356501d38c..d39eeef889 100644
+index 356501d..d39eeef 100644
 --- a/src/build-tools/kdb.pc.in
 +++ b/src/build-tools/kdb.pc.in
 @@ -9,6 +9,6 @@ Name: kdb
@@ -72,7 +71,7 @@ index 356501d38c..d39eeef889 100644
  Libs: -L${libdir} -lkdb5
  Libs.private: ${KDB5_DB_LIB}
 diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
-index ac2f5827d3..010457e153 100755
+index ac2f582..010457e 100755
 --- a/src/build-tools/krb5-config.in
 +++ b/src/build-tools/krb5-config.in
 @@ -208,7 +208,7 @@ fi
@@ -85,7 +84,7 @@ index ac2f5827d3..010457e153 100755
          echo ''
      fi
 diff --git a/src/build-tools/mit-krb5-gssapi.pc.in b/src/build-tools/mit-krb5-gssapi.pc.in
-index b2b243630c..f919222699 100644
+index b2b2436..f919222 100644
 --- a/src/build-tools/mit-krb5-gssapi.pc.in
 +++ b/src/build-tools/mit-krb5-gssapi.pc.in
 @@ -7,5 +7,5 @@ Name: mit-krb5-gssapi
@@ -96,7 +95,7 @@ index b2b243630c..f919222699 100644
 +Cflags: -isystem ${includedir}
  Libs: -L${libdir} -lgssapi_krb5
 diff --git a/src/build-tools/mit-krb5.pc.in b/src/build-tools/mit-krb5.pc.in
-index 058e75f24d..455427a42e 100644
+index 058e75f..455427a 100644
 --- a/src/build-tools/mit-krb5.pc.in
 +++ b/src/build-tools/mit-krb5.pc.in
 @@ -10,6 +10,6 @@ defcktname=@DEFCKTNAME@

@@ -1,7 +1,0 @@
-krb5 (1.12.1+dfsg-11) unstable; urgency=medium
-
-  This version includes systemd unit files.  In previous versions of krb5-admin-server, debconf was used to determine whether to use kadmind.  With this version, update-rc.d  krb5-admin-server disable should be used to disable the Kerberos administration daemon.
-
-
- -- Sam Hartman <hartmans@debian.org>  Mon, 20 Oct 2014 16:39:32 -0400
-

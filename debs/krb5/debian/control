@@ -1,13 +1,13 @@
 Source: krb5
 Section: net
 Priority: optional
-Build-Depends: debhelper (>= 10), byacc | bison,
+Build-Depends: debhelper-compat (= 13), byacc | bison,
  comerr-dev, docbook-to-man,
  libkeyutils-dev [linux-any], libldap2-dev <!stage1>, libsasl2-dev <!stage1>,
  libncurses5-dev, libssl-dev,  ss-dev,
  libverto-dev (>= 0.2.4), pkg-config
-Build-Depends-Indep: python, python-cheetah, python-lxml, python-sphinx, doxygen, doxygen-latex, texlive-generic-extra
-Standards-Version: 4.1.1
+Build-Depends-Indep: python3, python3-cheetah, python3-lxml, python3-sphinx, doxygen, doxygen-latex
+Standards-Version: 4.5.0
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@debian.org>, Benjamin Kaduk <kaduk@mit.edu>
 Homepage: http://web.mit.edu/kerberos/
@@ -36,9 +36,10 @@ Description: basic programs to authenticate using MIT Kerberos
 Package: krb5-kdc
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version}),
- libkadm5srv-mit11,
+ libkadm5srv-mit12,
  krb5-config, krb5-user, lsb-base (>= 3.0-6), libverto-libev1 | libverto-libevent1,
- libkdb5-9 (>= 1.13.1+dfsg-1)
+ libkdb5-10 (>= 1.13.1+dfsg-1)
+Pre-Depends: ${misc:Pre-Depends}
 Suggests: krb5-kpropd, krb5-admin-server,
  krb5-kdc-ldap (= ${binary:Version})
 Multi-Arch: foreign
@@ -77,6 +78,7 @@ Package: krb5-admin-server
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version}),
  krb5-kdc (>= 1.10+dfsg~), lsb-base (>= 3.0-6)
+Pre-Depends: ${misc:Pre-Depends}
 Multi-Arch: foreign
 Description: MIT Kerberos master server (kadmind)
  Kerberos is a system for authenticating users and services on a network.
@@ -96,6 +98,7 @@ Description: MIT Kerberos master server (kadmind)
 Package: krb5-kpropd
 Architecture: any
 Multi-Arch: foreign
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends},
  krb5-kdc (= ${binary:Version}),
  lsb-base
@@ -120,8 +123,8 @@ Architecture: any
 Depends: ${misc:Depends}, libkrb5-3 (= ${binary:Version}),
  libk5crypto3 (= ${binary:Version}), libgssapi-krb5-2 (= ${binary:Version}),
  libgssrpc4 (= ${binary:Version}),
- libkadm5srv-mit11  (= ${binary:Version}),
- libkadm5clnt-mit11 (= ${binary:Version}),
+ libkadm5srv-mit12  (= ${binary:Version}),
+ libkadm5clnt-mit12 (= ${binary:Version}),
  comerr-dev
 Pre-Depends: ${misc:Pre-Depends}
 Multi-Arch: same
@@ -235,6 +238,7 @@ Description: TLS plugin for MIT Kerberos
 
 Package: krb5-doc
 Architecture: all
+Multi-Arch: foreign
 Conflicts: heimdal-docs
 Section: doc
 Depends: ${misc:Depends}
@@ -252,7 +256,7 @@ Description: documentation for MIT Kerberos
 
 Package: libkrb5-3
 Section: libs
-Breaks:  sssd (<= 1.2.1-4.3), libsmbclient (<= 2:3.6.1-2)
+Breaks:  sssd (<= 1.2.1-4.3), libsmbclient (<= 2:3.6.1-2), libapache2-mod-auth-kerb (<= 5.4-2.4)
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends},
  libkrb5support0 (= ${binary:Version})
@@ -308,7 +312,7 @@ Description: MIT Kerberos runtime libraries - GSS enabled ONCRPC
  This package contains an RPC library used by the Kerberos administrative
  programs and potentially other applications.
 
-Package: libkadm5srv-mit11
+Package: libkadm5srv-mit12
 Conflicts: libkdb5-8
 Section: libs
 Architecture: any
@@ -327,7 +331,7 @@ Description: MIT Kerberos runtime libraries - KDC and Admin Server
  This package contains the runtime library used by Kerberos administrative
  servers.
 
-Package: libkadm5clnt-mit11
+Package: libkadm5clnt-mit12
 Section: libs
 Architecture: any
 Conflicts: libkdb5-8
@@ -348,7 +352,7 @@ Description: MIT Kerberos runtime libraries - Administration Clients
 
 Package: libk5crypto3
 Section: libs
-Breaks: libkrb5-3 (<= 1.8~aa), libgssapi-krb5-2 (<= 1.10+dfsg~alpha1)
+Breaks: libkrb5-3 (<= 1.18~), libgssapi-krb5-2 (<= 1.18~)
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: krb5-doc, krb5-user
@@ -365,7 +369,7 @@ Description: MIT Kerberos runtime libraries - Crypto Library
  This package contains the runtime cryptography libraries used by
  applications and Kerberos clients.
 
-Package: libkdb5-9
+Package: libkdb5-10
 Section: libs
 Breaks:  libkadm5srv-mit8 (<< 1.11+dfsg~), krb5-kdc (= 1.13~alpha1+dfsg-1)
 Architecture: any
@@ -457,6 +461,8 @@ Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},  libkrad0 (= ${binary:Version}),
  comerr-dev, libverto-dev (>= 0.2.4)
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
 Suggests: libkrb5-dev
 Replaces: libkrb5-dev (<< 1.12+dfsg-2)
 Breaks: krb5-multidev (<<1.12+dfsg-2), libkrb5-dev (<<1.12+dfsg-2)

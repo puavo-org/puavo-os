@@ -3,6 +3,7 @@
 set -ex
 
 . debian/tests/util
+journalctl -f -u krb5-kdc >&2 &
 
 TEST_REALM="EXAMPLE.INTERNAL"
 MYHOSTNAME="krb5-dep8.internal"
