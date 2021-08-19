@@ -332,9 +332,6 @@ def load_icons(programs, menus, icon_locator, icon_cache):
                             'it could not be loaded', icon_path, menudata_id)
             num_missing_icons += 1
 
-        if is_path:
-            program['flags'] |= menudata.ProgramFlags.ICON_NAME_IS_PATH
-
     # --------------------------------------------------------------------------
     # Load menu icons
 

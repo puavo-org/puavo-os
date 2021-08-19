@@ -14,15 +14,8 @@ class PuavoPkgState(IntEnum):
 
 class ProgramFlags(IntEnum):
     HIDDEN = 0x01
-
     BROKEN = 0x02
-
-    # the icon name is a full path to an image file, otherwise it's
-    # a "generic" name that must be searched for
-    ICON_NAME_IS_PATH = 0x04
-
-    # this program is actually referenced somewhere
-    USED = 0x08
+    USED = 0x04
 
 
 class MenuFlags(IntEnum):
