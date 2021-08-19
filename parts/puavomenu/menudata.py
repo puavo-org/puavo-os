@@ -295,28 +295,31 @@ class Menudata:
         matches = []
 
         for _, program in self.programs.items():
-            if re.search(key, program.menudata_id, re.IGNORECASE):
+            if key in program.name.casefold():
                 matches.append(program)
                 continue
 
-            if re.search(key, program.name, re.IGNORECASE):
+            found_keyword = False
+
+            for kwd in program.keywords:
+                if key in kwd:
+                    matches.append(program)
+                    found_keyword = True
+                    break
+
+            if found_keyword:
+                continue
+
+            # I don't remember who asked for menudata ID and .desktop file
+            # checks, but apparently there are programs that are hard to
+            # find without these
+            if key in program.menudata_id:
                 matches.append(program)
                 continue
 
-            # Check the .desktop file name if it's available
             if program.original_desktop_file is not None:
-                if re.search(
-                        key,
-                        program.original_desktop_file.replace('.desktop', ''),
-                        re.IGNORECASE):
+                if key in program.original_desktop_file.replace('.desktop', '').casefold():
                     matches.append(program)
                     continue
-
-            # Keyword search must be done last, otherwise a program
-            # can appear multiple times in the search results
-            for kwd in program.keywords:
-                if re.search(key, kwd, re.IGNORECASE):
-                    matches.append(program)
-                    break
 
         return sorted(matches, key=lambda program: program.name.lower())

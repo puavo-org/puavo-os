@@ -962,7 +962,7 @@ def load(menudata_files,        # data source
                 dst.description = dst.url
 
         dst.menudata_id = pid
-        dst.keywords = frozenset(src.get('keywords', ()))
+        dst.keywords = frozenset(map(lambda k: k.casefold(), src.get('keywords', ())))
 
         # Needed when creating desktop icons and panel links
         dst.original_desktop_file = src.get('original_desktop_file', None)

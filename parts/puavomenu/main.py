@@ -218,16 +218,6 @@ class PuavoMenu(Gtk.Window):
 
         self.menu_fixed.put(self.__search, PROGRAMS_WIDTH - (SEARCH_WIDTH + 10) - 9, 40)
 
-        # Filter unwanted characters from searches. Searching is done using
-        # regexps and these character cause problems. You can type these
-        # characters in the search box, but they're removed from the string
-        # before searching is done.
-        # TODO: Prevent, don't filter. Use some callback method to filter
-        # the characters the user is typing.
-        self.__translation_table = \
-            dict.fromkeys(map(ord, "*^?{[]}/\\_+=\"\'#%&()'`@$<>|~"),
-                          None)
-
         # The main programs list
         self.__programs_container = Gtk.ScrolledWindow(name='programs')
         self.__programs_container.set_size_request(PROGRAMS_WIDTH,
@@ -1103,7 +1093,7 @@ class PuavoMenu(Gtk.Window):
 
     # Returns the current search term, filtered and cleaned
     def __get_search_text(self):
-        return self.__search.get_text().strip().translate(self.__translation_table)
+        return self.__search.get_text().strip().casefold()
 
 
     # Searches the programs list using a string, then replaces the menu list
