@@ -48,10 +48,11 @@ ports: $(_dpkg_buildpackage_ports)
 clean:
 	rm -rf .archive $(_workdir)
 
-.dpkg-buildpackage-%: % apt_update
+.dpkg-buildpackage-%: %
 	@env PUAVOOS_SUDO='$(_sudo)' \
 	    ../.aux/build-debs "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
 	$(MAKE) update-repo
+	$(_sudo) apt-get update
 
 .PHONY: prepare
 prepare: $(_workdir) update-repo
@@ -81,7 +82,3 @@ $(_workdir):
 	cd .archive && apt-ftparchive \
 	    -o APT::FTPArchive::Release::Origin=puavo-os-local release . \
 	    > Release
-
-.PHONY: apt_update
-apt_update:
-	$(_sudo) apt-get update
