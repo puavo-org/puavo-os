@@ -99,7 +99,7 @@ class PuavoMenu(Gtk.Window):
 
         # Don't mess with the real menu when running in development mode
         if self.__settings.prod_mode:
-            self.set_title('PuavoMenuUniqueName')
+            self.set_title('ProdPuavomenu')
         else:
             self.set_title('DevPuavomenu')
 

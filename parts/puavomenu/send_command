@@ -19,7 +19,7 @@ echo "$@" | nc -U -w 1 "${socket}"
 # it fixes the keyboard focus problem. We can't use this
 # forever though...
 if [ "$cmd" = "show" -o "$cmd" = "toggle" ]; then
-    window=$(xdotool search --name PuavoMenuUniqueName) || return 1
+    window=$(xdotool search --name ProdPuavomenu) || return 1
 
     if [ -n "$window" ]; then
         sleep 0.2
