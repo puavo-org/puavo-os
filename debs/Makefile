@@ -8,6 +8,7 @@ _pkgs_ports := gnome-control-center \
                gnome-shell          \
                libpam-ccreds        \
                mutter               \
+               openldap             \
                pinta                \
                wsmancli
 
@@ -15,7 +16,6 @@ _pkgs_ports := gnome-control-center \
 # XXX need some work
 # _pkgs_ports := incron               \
 #                openboard            \
-#                openldap             \
 #                vtun
 
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
