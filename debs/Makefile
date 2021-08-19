@@ -4,12 +4,16 @@ _pkgs_builddeps := sblim-sfcc openwsman
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := gnome-control-center gnome-shell libpam-ccreds pinta wsmancli
+_pkgs_ports := gnome-control-center \
+               gnome-shell          \
+               libpam-ccreds        \
+               mutter               \
+               pinta                \
+               wsmancli
 
 # XXX disable most ports builds for Bullseye, these all most probably
 # XXX need some work
 # _pkgs_ports := incron               \
-#                mutter               \
 #                openboard            \
 #                openldap             \
 #                vtun
