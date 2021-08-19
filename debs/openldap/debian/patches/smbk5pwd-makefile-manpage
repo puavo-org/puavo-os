@@ -18,7 +18,7 @@ index 676d914..0042a49 100644
 --- a/contrib/slapd-modules/smbk5pwd/Makefile
 +++ b/contrib/slapd-modules/smbk5pwd/Makefile
 @@ -25,6 +25,7 @@
- HEIMDAL_LIB = $(shell krb5-config.heimdal --libs kadm-server)
+ HEIMDAL_LIB = $(shell krb5-config.heimdal --libs krb5 kadm-server)
  
  LIBTOOL = $(LDAP_BUILD)/libtool
 +INSTALL = /usr/bin/install

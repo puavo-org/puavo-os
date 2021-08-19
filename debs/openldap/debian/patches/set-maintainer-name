@@ -10,7 +10,7 @@
 -else
 -   WHOWHERE="$USER@$(uname -n):$(pwd)"
 -fi
-+WHOWHERE="Debian OpenLDAP Maintainers <pkg-openldap-devel@lists.alioth.debian.org>"
++WHOWHERE="${DEB_MAINTAINER:-openldap}"
  
  cat << __EOF__
  /* This work is part of OpenLDAP Software <http://www.openldap.org/>.

@@ -12,7 +12,7 @@ SLAPD_USER="openldap"
 SLAPD_GROUP="openldap"
 
 # Path to the pid file of the slapd server. If not set the init.d script
-# will try to figure it out from $SLAPD_CONF (/etc/ldap/slapd.conf by
+# will try to figure it out from $SLAPD_CONF (/etc/ldap/slapd.d by
 # default)
 SLAPD_PIDFILE=
 

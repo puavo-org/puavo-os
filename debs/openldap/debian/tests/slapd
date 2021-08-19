@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eux
+
+export DEBIAN_FRONTEND=noninteractive
+
+debconf-set-selections << eof
+slapd slapd/password1 password secret
+slapd slapd/password2 password secret
+slapd slapd/domain string example.com
+slapd slapd/organization string example.com
+eof
+
+apt-get -y install slapd
+
+test "$(ldapwhoami -x -D 'cn=admin,dc=example,dc=com' -w secret)" = 'dn:cn=admin,dc=example,dc=com'

@@ -11,15 +11,53 @@ Notes about Debian's slapd package
   the OpenLDAP Admin Guide for more information, including configuration
   examples for common use cases. <http://www.openldap.org/doc/admin24/>
 
-The OpenLDAP configuration
+Initial slapd configuration
 
-  Since version 2.4.23-3 the configuration of OpenLDAP has been changed to
-  /etc/ldap/slapd.d by default.  The OpenLDAP packages in Debian provide an
+  Upon installation the slapd package performs a number of tasks.  It
+  initializes the configuration database, stored in LDAP and rooted at
+  the DN "cn=config".  It creates an initial directory database with a
+  DN rooted at a suffix derived from the DNS domain configured in
+  debconf (e.g. "dc=example,dc=com").  The default backend for the
+  directory database is the MDB backend.  The root (administrative) DN
+  is set to "cn=admin,<suffix>". The root password is set to the
+  password configured in debconf, or a randomly generated password if
+  none was set.
+
+  If desired, a new configuration and directory database can be
+  created by running, as root:
+
+    dpkg-reconfigure slapd
+
+  Caution: this command completely resets the configuration and all
+  LDAP directory data (saving a backup in /var/backups), resetting
+  slapd to a new initial state.
+
+  The configuration database ("cn=config") and directory database
+  ("dc=<domain>,dc=<tld>") have different permissions. Upon
+  installation, the Unix root user has permission to manage the slapd
+  configuration ("cn=config") database.  The LDAP directory manager
+  ("cn=admin,<suffix>") has permission to manage the directory database
+  ("dc=<domain>,dc=<tld>"). This policy is specific to Debian.
+
+Maintaining the slapd configuration
+
+  Since version 2.4.23-3 the default configuration of OpenLDAP has
+  been changed to "/etc/ldap/slapd.d"; configuration is stored in an
+  LDAP directory.  The OpenLDAP packages in Debian provide an
   automatic migration to the new configuration style. With the new
-  configuration style it is possible to change values on the fly without
-  restarting slapd.  Changes are made through the use of ldif files and
-  ldap{add,modify}.  In Debian you can use the following command to search
-  the configuration:
+  configuration style it is possible to change values on the fly
+  without restarting slapd.  Changes are made through the use of ldif
+  files and ldap{add,modify}.
+
+  Debian defaults to granting the Unix root user, and only the Unix
+  root user, administrative privileges to the configuration database.
+  The configuration database is stored in LDAP.  Administrative
+  privileges to the configuration database are granted to root when
+  the special SASL mechanism "EXTERNAL" is used for authentication.
+  The OpenLDAP client command option for this is "-Y EXTERNAL".
+
+  You can use the following shell command, as root, to search the
+  configuration:
 
       ldapsearch -Y EXTERNAL -H ldapi:/// -b "cn=config"
 
@@ -29,6 +67,25 @@ The OpenLDAP configuration
 
   For configuration options see the several manpages that exist or the
   documentation provided upstream.
+
+  To change the directory administrator's password, the olcRootPW
+  attribute of the database configuration must be updated. The new
+  password should be hashed using the slappasswd(8) command. Then, the
+  root user should update the attribute using ldapmodify(1):
+
+    ldapmodify -H ldapi:// -Y EXTERNAL << EOF
+    dn: olcDatabase={1}mdb,cn=config
+    changetype: modify
+    replace: olcRootPW
+    olcRootPW: <new hashed password>
+
+    EOF
+
+  Versions of slapd before 2.4.51+dfsg-1 additionally created a database
+  entry named the same as the rootDN (cn=admin,<suffix>) and having the
+  same password. If this entry exists in your directory, its password
+  must also be updated using ldappasswd(1), otherwise the old password
+  can still be used.
 
 Using the MDB Backend
 
@@ -144,13 +201,12 @@ Running slapd under a Different UID/GID
 
   - Tell linux slapd can access configuration files -- usually:
 
-      chgrp <group> /etc/ldap/slapd.conf
-      chmod 0640 /etc/ldap/slapd.conf
+      chown -R <user>:<group> /etc/ldap/slapd.d
 
   - Tell linux slapd can access /var/run/slapd and write a PID file:
 
-       chgrp <group> /var/run/slapd
-       chmod 0770 /var/run/slapd
+      chgrp <group> /var/run/slapd
+      chmod 0770 /var/run/slapd
 
   - Start slapd -- /etc/init.d/slapd start
 
@@ -205,10 +261,6 @@ Modifications Compared to Upstream
 
   * slapd is configured to look in /etc/ldap/sasl2 in addition to
     /usr/lib/sasl2 for SASL configuration files.
-
-  * libldap has been patched to work around what may be a bug in GnuTLS in
-    calculating the length of subjectAltName in TLS certificates.  See
-    <http://bugs.debian.org/465197>.
 
   * The libldap library is patched to add two functions used by
     evolution-exchange for NTLM authentication to Active Directory.  See

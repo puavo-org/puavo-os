@@ -176,7 +176,7 @@ dump_databases() {							# {{{
 # If the user wants us to dump the databases they are dumped to the 
 # configured directory.
 
-	local db suffix file dir failed
+	local db suffix file dir failed slapcat_opts
 
 	database_dumping_enabled || return 0
 
@@ -231,7 +231,7 @@ load_databases() {							# {{{
 
 		# If there is an old DB_CONFIG file, restore it before
 		# running slapadd
-		backupdir="$(compute_backup_path -n "$dbdir" "$suffix")"
+		backupdir="$(compute_backup_path -n "$suffix")"
 		if [ -e "$backupdir"/DB_CONFIG ]; then
 			cp -a "$backupdir"/DB_CONFIG "$dbdir"/
 		fi
@@ -341,29 +341,31 @@ I==1 { I=0 }
 
 compute_backup_path() {							# {{{
 # Compute the path to backup a database directory
-# Usage: compute_backup_path [-n] <dir> <basedn>
+# This is used when backing up actual database files, either just before 
+# reloading a dump, or before generating a new configuration.
+# The directory used for dumping and reloading LDIF across upgrades, as 
+# well as for backing up the configuration before upgrading, is computed 
+# by database_dumping_destdir().
+# Usage: compute_backup_path [-n] <basedn>
 
 # XXX: should ask the user via debconf
+# or maybe just use database_dumping_destdir
 
-	local dirname basedn ok_exists
+	local basedn ok_exists
 	if [ "$1" = "-n" ]; then
 		ok_exists=yes
 		shift
 	fi
-	dirname="$1"
-	basedn="$2"
+	basedn="$1"
 
-	# Computing the name of the backup directory from the old version, 
-	# the suffix etc. all makes me feel worried. I'd rather have a 
-	# directory name which is not going to exist. So the simple 
-	# scheme we are using now is to compute the filename from the 
-	# directory name and appending date and time. And we check if it
-	# exists to be really sure...  -- Torsten
-
-	local target
-	local id
-	id="$OLD_VERSION"
-	[ -n "$id" ] || id=`date +%Y%m%d-%H%M%S`
+	local id target
+	if [ "$MODE" = reconfigure ] || [ "$DEBCONF_RECONFIGURE" ]; then
+		# reconfigure: use OLD_VERSION plus a timestamp.
+		id="${OLD_VERSION:+$OLD_VERSION-}$(date +%Y%m%d-%H%M%S)"
+	else
+		# install/upgrade: use OLD_VERSION or a timestamp, not both.
+		id="${OLD_VERSION:-$(date +%Y%m%d-%H%M%S)}"
+	fi
 	target="/var/backups/$basedn-$id.ldapdb"
 	if [ -e "$target" ] && [ -z "$ok_exists" ]; then
 		echo >&2
@@ -399,7 +401,7 @@ move_old_database_away() {						# {{{
 	# include mount points as well anyway, but it's much less likely.
 	db_get slapd/move_old_database
 	if [ "$RET" = true ]; then
-		backupdir="$(compute_backup_path "$databasedir" "$suffix")"
+		backupdir="$(compute_backup_path "$suffix")"
 		printf '  - directory %s... ' "$suffix" >&2
 		mkdir -p "$backupdir"
 		find -H "$databasedir" -mindepth 1 -maxdepth 1 -type f \
@@ -426,24 +428,10 @@ manual_configuration_wanted() {						# {{{
 	fi
 }
 # }}}
-copy_example_DB_CONFIG() {						# {{{
-# Copy an example DB_CONFIG file
-# copy_example_DB_CONFIG <directory>
-	local directory srcdir
-	
-	directory="$1"
-	srcdir="/usr/share/slapd"
-
-	if ! [ -f "${directory}/DB_CONFIG" ] && [ -d "$directory" ]; then
-		cp $srcdir/DB_CONFIG "${directory}/DB_CONFIG"
-	fi
-}
-
-# }}}
 create_new_configuration() {						# {{{
 # Create a new configuration and directory
 
-	local basedn dc backend
+	local basedn dc
 
 	# For the domain really.argh.org we create the basedn 
 	# dc=really,dc=argh,dc=org with the dc entry dc: really
@@ -451,16 +439,13 @@ create_new_configuration() {						# {{{
 	basedn="dc=`echo $RET | sed 's/^\.//; s/\.$//; s/\./,dc=/g'`"
 	dc="`echo $RET | sed 's/^\.//; s/\..*$//'`"
 
-	db_get slapd/backend
-	backend="`echo $RET|tr A-Z a-z`"
-
 	backup_config_once
 	if [ -e "/var/lib/ldap" ] && ! is_empty_dir /var/lib/ldap; then
 		echo >&2 "  Moving old database directory to /var/backups:"
 		move_old_database_away /var/lib/ldap
 	fi
 	create_ldap_directories
-	create_new_slapd_conf "$basedn" "$backend"
+	create_new_slapd_conf "$basedn"
 	create_new_directory "$basedn" "$dc"
 
 	# Put the right permissions on this directory.
@@ -473,24 +458,12 @@ create_new_configuration() {						# {{{
 # }}}
 create_new_slapd_conf() {						# {{{
 # Create the new slapd.d directory (configuration)
-# Usage: create_new_slapd_conf <basedn> <backend>
+# Usage: create_new_slapd_conf <basedn>
 
-	local initldif failed basedn backend backendobjectclass backendoptions adminpass
+	local initldif failed basedn adminpass
 
 	# Fetch configuration
 	basedn="$1"
-	backend="$2"
-	if [ "$backend" = "mdb" ]; then
-		backendoptions="olcDbMaxSize: 1073741824"
-		backendobjectclass="olcMdbConfig"
-	else
-		backendoptions="olcDbConfig: set_cachesize 0 2097152 0\nolcDbConfig: set_lk_max_objects 1500\nolcDbConfig: set_lk_max_locks 1500\nolcDbConfig: set_lk_max_lockers 1500"
-		if [ "$backend" = "hdb" ]; then
-			backendobjectclass="olcHdbConfig"
-		else
-			backendobjectclass="olcBdbConfig"
-		fi
-	fi
 	db_get slapd/internal/adminpw
 	adminpass="$RET"
 
@@ -503,9 +476,6 @@ create_new_slapd_conf() {						# {{{
 	cat /usr/share/slapd/slapd.init.ldif > ${initldif}
 
 	# Change some defaults
-	sed -i -e "s|@BACKEND@|$backend|g" ${initldif}
-	sed -i -e "s|@BACKENDOBJECTCLASS@|$backendobjectclass|g" ${initldif}
-	sed -i -e "s|@BACKENDOPTIONS@|$backendoptions|g" ${initldif}
 	sed -i -e "s|@SUFFIX@|$basedn|g" ${initldif}
 	sed -i -e "s|@PASSWORD@|$adminpass|g" ${initldif}
 
@@ -556,12 +526,6 @@ create_new_directory() {						# {{{
 		o: $organization
 		dc: $dc
 
-		dn: cn=admin,$basedn
-		objectClass: simpleSecurityObject
-		objectClass: organizationalRole
-		cn: admin
-		description: LDAP administrator
-		userPassword: $adminpass
 	EOF
 
 	capture_diagnostics slapadd -F "${SLAPD_CONF}" -b "${basedn}" \
@@ -630,13 +594,13 @@ crypt_admin_pass() {							# {{{
 
 	db_get slapd/password1
 	if [ ! -z "$RET" ]; then
-		db_set slapd/internal/adminpw `create_password_hash "$RET"`
+		db_set slapd/internal/adminpw "$(create_password_hash "$RET")"
 	else
 
 		# Set the password.
-		adminpw=`generate_admin_pass`
-		db_set slapd/internal/generated_adminpw $adminpw
-		db_set slapd/internal/adminpw `create_password_hash "$adminpw"`
+		adminpw="$(generate_admin_pass)"
+		db_set slapd/internal/generated_adminpw "$adminpw"
+		db_set slapd/internal/adminpw "$(create_password_hash "$adminpw")"
 	fi
 }
 
@@ -644,20 +608,9 @@ generate_admin_pass() {
 # Generate a password, if no password given then generate one.
 # Usage: generate_admin_pass
 
-	perl << 'EOF'
-# --------
-sub generatePassword {
-	$length = shift;
-	$possible = 'abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-	$password = '';
-	while(length($password) < $length) {
-		$password.= substr($possible, (int(rand(length($possible)))), 1);
-	}
-	return $password;
-}
-print generatePassword(15);
-EOF
-# --------
+	# 15 bytes of /dev/urandom provide 120 random bits, assuming the entropy pool is full enough.
+	# Coding these 15 bytes in base64 returns a 20 characters long password.
+	head -c 15 /dev/urandom | base64 | tr -d '[:space:]'
 }
 
 wipe_admin_pass() {

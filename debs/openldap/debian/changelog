@@ -1,68 +1,222 @@
-openldap (2.4.47+dfsg-3+deb10u6+puavo1+buildonce) bullseye; urgency=medium
+openldap (2.4.57+dfsg-3) unstable; urgency=medium
 
-  * With some patches by Puavo Org.
+  * Link smbk5pwd with -lkrb5. (Closes: #988565)
 
- -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 12:54:06 +0200
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 15 May 2021 16:03:34 -0700
 
-openldap (2.4.47+dfsg-3+deb10u6) buster-security; urgency=high
+openldap (2.4.57+dfsg-2) unstable; urgency=medium
 
   * Fix slapd assertion failure in Certificate List Exact Assertion validation
     (ITS#9454) (CVE-2021-27212)
 
- -- Ryan Tandy <ryan@nardis.ca>  Sun, 14 Feb 2021 10:32:34 -0800
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 14 Feb 2021 09:26:41 -0800
 
-openldap (2.4.47+dfsg-3+deb10u5) buster-security; urgency=high
+openldap (2.4.57+dfsg-1) unstable; urgency=medium
 
-  * Fix slapd crashes in Certificate Exact Assertion processing
-    (ITS#9404, ITS#9424) (CVE-2020-36221)
-  * Fix slapd assertion failures in saslAuthzTo validation
-    (ITS#9406, ITS#9407) (CVE-2020-36222)
-  * Fix slapd crash in Values Return Filter control handling
-    (ITS#9408) (CVE-2020-36223)
-  * Fix slapd crashes in saslAuthzTo processing (ITS#9409, ITS#9412, ITS#9413)
-    (CVE-2020-36224, CVE-2020-36225, CVE-2020-36226)
-  * Fix slapd assertion failure in X.509 DN parsing
-    (ITS#9423) (CVE-2020-36230)
-  * Fix slapd crash in X.509 DN parsing (ITS#9425) (CVE-2020-36229)
-  * Fix slapd crash in Certificate List Exact Assertion processing
-    (ITS#9427) (CVE-2020-36228)
-  * Fix slapd infinite loop with Cancel operation (ITS#9428) (CVE-2020-36227)
+  * New upstream release.
+    - Fixed slapd crashes in Certificate Exact Assertion processing
+      (ITS#9404, ITS#9424) (CVE-2020-36221)
+    - Fixed slapd assertion failures in saslAuthzTo validation
+      (ITS#9406, ITS#9407) (CVE-2020-36222)
+    - Fixed slapd crash in Values Return Filter control handling
+      (ITS#9408) (CVE-2020-36223)
+    - Fixed slapd crashes in saslAuthzTo processing
+      (ITS#9409, ITS#9412, ITS#9413)
+      (CVE-2020-36224, CVE-2020-36225, CVE-2020-36226)
+    - Fixed slapd assertion failure in X.509 DN parsing
+      (ITS#9423) (CVE-2020-36230)
+    - Fixed slapd crash in X.509 DN parsing (ITS#9425) (CVE-2020-36229)
+    - Fixed slapd crash in Certificate List Exact Assertion processing
+      (ITS#9427) (CVE-2020-36228)
+    - Fixed slapd infinite loop with Cancel operation
+      (ITS#9428) (CVE-2020-36227)
 
- -- Ryan Tandy <ryan@nardis.ca>  Thu, 21 Jan 2021 19:54:40 -0800
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 23 Jan 2021 08:57:07 -0800
 
-openldap (2.4.47+dfsg-3+deb10u4) buster-security; urgency=high
+openldap (2.4.56+dfsg-1) unstable; urgency=medium
 
-  * Fix slapd abort due to assertion failure in Certificate List syntax
-    validation (ITS#9383) (CVE-2020-25709)
-  * Fix slapd abort due to assertion failure in CSN normalization with invalid
-    input (ITS#9384) (CVE-2020-25710)
+  * New upstream release.
+    - Fixed slapd abort due to assertion failure in Certificate List syntax
+      validation (ITS#9383) (CVE-2020-25709)
+    - Fixed slapd abort due to assertion failure in CSN normalization with
+      invalid input (ITS#9384) (CVE-2020-25710)
 
- -- Ryan Tandy <ryan@nardis.ca>  Mon, 16 Nov 2020 17:23:45 -0800
+ -- Ryan Tandy <ryan@nardis.ca>  Wed, 11 Nov 2020 09:13:56 -0800
 
-openldap (2.4.47+dfsg-3+deb10u3) buster-security; urgency=high
+openldap (2.4.55+dfsg-1) unstable; urgency=medium
 
-  * Fix slapd normalization handling with modrdn
-    (ITS#9370) (CVE-2020-25692)
+  * New upstream release.
+    - Fixed slapd normalization handling with modrdn
+      (ITS#9370) (CVE-2020-25692)
 
- -- Ryan Tandy <ryan@nardis.ca>  Thu, 29 Oct 2020 18:36:26 -0700
+ -- Ryan Tandy <ryan@nardis.ca>  Tue, 27 Oct 2020 21:07:29 -0700
 
-openldap (2.4.47+dfsg-3+deb10u2) buster-security; urgency=high
+openldap (2.4.54+dfsg-1) unstable; urgency=medium
 
-  * Fix slapd to limit depth of nested expressions in search filters
-    (ITS#9202) (CVE-2020-12243)
+  * New upstream release.
+  * Change upstream Homepage and get-orig-source URLs to HTTPS.
+  * Create debian/gbp.conf.
 
- -- Ryan Tandy <ryan@nardis.ca>  Mon, 20 Apr 2020 11:19:54 -0700
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 18 Oct 2020 16:03:46 +0000
 
-openldap (2.4.47+dfsg-3+deb10u1) buster; urgency=medium
+openldap (2.4.53+dfsg-1) unstable; urgency=medium
 
-  * Fix slapd to restrict rootDN proxyauthz to its own databases
-    (CVE-2019-13057) (ITS#9038) (Closes: #932997)
-  * Fix slapd to enforce sasl_ssf ACL statement on every connection
-    (CVE-2019-13565) (ITS#9052) (Closes: #932998)
-  * Fix slapo-rwm to not free original filter when rewritten filter is invalid
-    (ITS#8964) (Closes: #934277, LP: #1838370)
+  * New upstream release.
 
- -- Ryan Tandy <ryan@nardis.ca>  Sat, 10 Aug 2019 11:58:18 -0700
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 07 Sep 2020 09:47:28 -0700
+
+openldap (2.4.51+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Add ldap_parse_password_expiring_control to libldap-2.4-2.symbols.
+  * Merge some changes from Ubuntu:
+    - slapd.default, slapd.README.Debian: update to refer to slapd.d instead
+      of slapd.conf.
+    - debian/slapd.scripts-common: dump_databases: make slapcat_opts a local
+      variable.
+  * Drop paragraph about patch gnutls-altname-nulterminated (#465197) from
+    slapd.README.Debian. The patch referred to was dropped in 2.4.7-6.
+  * debian/patches/set-maintainer-name: Extract maintainer address dynamically
+    from debian/control. (Closes: #960448)
+  * Fix Torsten's email address in a historic debian/changelog entry to
+    resolve a Lintian error (bogus-mail-host-in-debian-changelog).
+  * Rename debian/source.lintian-overrides to debian/source/lintian-overrides.
+    Fixes a Lintian pedantic tag (old-source-override-location).
+  * Override Lintian pedantic tag maintainer-manual-page for
+    slapo-pw-pbkdf2.5, which will be included upstream in a future release.
+  * Remove the trailing whitespaces from debian/changelog, debian/control, and
+    debian/rules. Fixes a Lintian pedantic tag (trailing-whitespace).
+  * Convert debian/po/de.po to UTF-8. Fixes a Lintian warning
+    (national-encoding).
+  * Relax libldap's dependency on libldap-common to Recommends.
+    This is intended to mitigate the impact of bug #915948 in the case where
+    the arch:all build is delayed for so long that the old libldap-common
+    disappears. Previously, a delayed arch:all build could become
+    BD-Uninstallable if new amd64 binaries were published before the arch:all
+    build starts, due to the transitive build-dependency on libldap.
+    Although libldap works fine without libldap-common, in normal
+    installations it is still recommended to install libldap-common.
+  * Append a timestamp to the backup directory created by dpkg-reconfigure.
+    (Closes: #599585, #960449)
+  * Remove the redundant cn=admin,<suffix> entry from the default DIT for new
+    installs. For new installs going forward, the root credentials will be
+    stored in olcRootDN/olcRootPW only. (Closes: #821331)
+  * Change slapd's Suggests: ldap-utils to Recommends. While any LDAP client
+    suffices, ldap-utils contains the standard tools recommended by upstream
+    for basic administration and management.
+  * Relax Recommends: libsasl2-modules to Suggests on slapd and ldap-utils.
+    Many deployments do not use SASL at all, and therefore SASL mechanisms are
+    not needed "in all but unusual installations".
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 23 Aug 2020 11:09:57 -0700
+
+openldap (2.4.50+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fixed slapd to limit depth of nested filters
+      (ITS#9202) (CVE-2020-12243)
+    - Drop patches included upstream: argon2.patch, ITS#9171, ITS#8650.
+  * Update Spanish debconf translation.
+    Thanks to Camaleón. (Closes: #958869)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Tue, 28 Apr 2020 10:18:12 -0700
+
+openldap (2.4.49+dfsg-4) unstable; urgency=medium
+
+  * Annotate libsodium-dev dependency with <!pkg.openldap.noslapd>.
+    Thanks to Helmut Grohne. (Closes: #955993)
+  * Add the man page for the Argon2 password module.
+    Thanks to Peter Marschall. (Closes: #955977)
+  * Build the Argon2 password module with libargon2-dev instead of
+    libsodium-dev. Rationale:
+    - libargon2 contains the specific functionality needed; libsodium is a
+      larger library and contains many features not used here
+    - libsodium does not support configuring the p= (parallelism) parameter
+  * Import upstream patch to properly retry gnutls_handshake() after it
+    returns GNUTLS_E_AGAIN. (ITS#8650) (Closes: #861838)
+  * Update the Argon2 password module to upstream commit feb6f21d2e.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Tue, 14 Apr 2020 21:33:16 -0700
+
+openldap (2.4.49+dfsg-3) unstable; urgency=medium
+
+  * Drop patch no-AM_INIT_AUTOMAKE. Instead, configure dh_autoreconf to skip
+    automake by setting AUTOMAKE=/bin/true. (Closes: #864637)
+  * debian/patches/debian-version: Show Debian version, instead of upstream
+    version, in version strings.
+  * Add ${perl:Depends} to slapd Depends to silence a dpkg-gencontrol warning.
+    This is practically a no-op since slapd explicitly Depends on perl because
+    of the maintainer scripts.
+  * Import the Argon2 password module from upstream git and install it in
+    slapd-contrib. New Build-Depends: libsodium-dev. (Closes: #920283)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 04 Apr 2020 10:43:56 -0700
+
+openldap (2.4.49+dfsg-2) unstable; urgency=medium
+
+  * slapd.README.Debian: Document the initial setup performed by slapd's
+    maintainer scripts in more detail. Thanks to Karl O. Pinc.
+    (Closes: #952501)
+  * Import upstream patch to fix slapd crashing in certain configurations when
+    a client attempts a login to a locked account.
+    (ITS#9171) (Closes: #953150)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 05 Mar 2020 12:59:46 -0800
+
+openldap (2.4.49+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Drop patch no-gnutls_global_set_mutex, applied upstream.
+  * When validating the DNS domain chosen for slapd's default suffix, set
+    LC_COLLATE explicitly for grep to ensure character ranges behave as
+    expected. Thanks to Fredrik Roubert. (Closes: #940908)
+  * Backport proposed upstream patch to emit detailed messages about errors in
+    the TLS configuration. (ITS#9086) (Closes: #837341)
+  * slapd.scripts-common: Delete unused copy_example_DB_CONFIG function.
+  * Remove debconf support for choosing a database backend. Always use the
+    LMDB backend for new installs, as recommended by upstream.
+  * Remove the empty olcBackend section from the default configuration.
+  * Remove the unused slapd.conf template from /usr/share/slapd. Continue
+    shipping it as an example in /usr/share/doc/slapd.
+  * Fix a typo in index-files-created-as-root patch.
+    Thanks to Quanah Gibson-Mount.
+  * Annotate slapd's Depends on perl with :any. Fixes installation of
+    foreign-arch slapd. Thanks to Andreas Hasenack.
+  * Rename 'stage1' build profile to 'pkg.openldap.noslapd'.
+    Thanks to Helmut Grohne. (Closes: #949722)
+  * Drop Build-Conflicts: libicu-dev as upstream's configure no longer tests
+    for or links with libicu.
+  * Note ITS#9126 recommendation in slapd.NEWS.
+  * Update Standards-Version to 4.5.0; no changes required.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 06 Feb 2020 10:08:12 -0800
+
+openldap (2.4.48+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+    - fixed slapd to restrict rootDN proxyauthz to its own databases
+      (CVE-2019-13057) (ITS#9038) (Closes: #932997)
+    - fixed slapd to enforce sasl_ssf ACL statement on every connection
+      (CVE-2019-13565) (ITS#9052) (Closes: #932998)
+    - added new openldap.h header with OpenLDAP specific libldap interfaces
+      (ITS#8671)
+    - updated lastbind overlay to support forwarding authTimestamp updates
+      (ITS#7721) (Closes: #880656)
+  * Update Standards-Version to 4.4.0.
+  * Add a systemd drop-in to set RemainAfterExit=no on the slapd service, so
+    that systemd marks the service as dead after it crashes or is killed.
+    Thanks to Heitor Alves de Siqueira. (Closes: #926657, LP: #1821343)
+  * Use more entropy for generating a random admin password, if none was set
+    during initial configuration. Thanks to Judicael Courant.
+    (Closes: #932270)
+  * Replace debian/rules calls to dpkg-architecture and dpkg-parsechangelog
+    with variables provided by dpkg-dev includes.
+  * Declare R³: no.
+  * Create a simple autopkgtest that tests installing slapd and connecting to
+    it with an ldap tool.
+  * Install the new openldap.h header in libldap2-dev.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 25 Jul 2019 08:32:00 -0700
 
 openldap (2.4.47+dfsg-3) unstable; urgency=medium
 
@@ -182,23 +336,23 @@ openldap (2.4.45+dfsg-1) unstable; urgency=medium
     - ITS-8655-paged-results-double-free.patch
   * Upgrade to debhelper compat level 10.
     - Depend on debhelper 10.
-    - Stop enabling parallel and autoreconf explicitly. They are now enabled 
+    - Stop enabling parallel and autoreconf explicitly. They are now enabled
       by default.
     - Drop dh-autoreconf from build-depends since debhelper requires it.
-  * Add -Wno-format-extra-args to CFLAGS to reduce the noise in the build 
+  * Add -Wno-format-extra-args to CFLAGS to reduce the noise in the build
     logs, as this warning is emitted on each use of the Debug() macro.
-  * Drop libldap-2.4-4-dbg and slapd-dbg binary packages in favour of 
+  * Drop libldap-2.4-4-dbg and slapd-dbg binary packages in favour of
     automatic dbgsym packages.
   * Update Standards-Version to 4.0.0; no changes required.
-  * Drop Priority and Section from binary package stanzas when they only 
+  * Drop Priority and Section from binary package stanzas when they only
     duplicate information from the source stanza.
-  * Update Priority of slapd-smbk5pwd and libldap2-dev to optional to match 
+  * Update Priority of slapd-smbk5pwd and libldap2-dev to optional to match
     the archive.
   * Remove retired developer, Roland Bauerschmidt, from Uploaders.
     (Closes: #856422)
   * Remove Timo Aaltonen from Uploaders, with his agreement.
-  * debian/patches/ITS8650-retry-gnutls_handshake-after-GNUTLS_E_AGAIN.patch: 
-    If gnutls_handshake() returns EAGAIN, call it again. Fixes TLS handshake 
+  * debian/patches/ITS8650-retry-gnutls_handshake-after-GNUTLS_E_AGAIN.patch:
+    If gnutls_handshake() returns EAGAIN, call it again. Fixes TLS handshake
     failures when the ServerHello message exceeds 16K.
     (ITS#8650) (Closes: #861838)
   * Drop time from Build-Depends. The upstream testsuite no longer calls it.
@@ -207,24 +361,24 @@ openldap (2.4.45+dfsg-1) unstable; urgency=medium
 
 openldap (2.4.44+dfsg-8) unstable; urgency=medium
 
-  * Disable test060-mt-hot on ppc64el temporarily to avoid failing tests until 
+  * Disable test060-mt-hot on ppc64el temporarily to avoid failing tests until
     the underlying kernel bug #866122 is fixed.
-  * Fix FTBFS with Heimdal 7.2.0: Drop patch heimdal-fix as the 
-    hdb_generate_key_set_password change was reverted in heimdal. Depend on an 
+  * Fix FTBFS with Heimdal 7.2.0: Drop patch heimdal-fix as the
+    hdb_generate_key_set_password change was reverted in heimdal. Depend on an
     appropriate minimum version of heimdal.
 
  -- Ryan Tandy <ryan@nardis.ca>  Sun, 16 Jul 2017 12:57:41 -0700
 
 openldap (2.4.44+dfsg-7) unstable; urgency=medium
 
-  * Relax the dependency of libldap-2.4-2 on libldap-common to also permit 
+  * Relax the dependency of libldap-2.4-2 on libldap-common to also permit
     later versions. (Closes: #860774)
 
  -- Ryan Tandy <ryan@nardis.ca>  Tue, 27 Jun 2017 18:53:12 -0700
 
 openldap (2.4.44+dfsg-6) unstable; urgency=medium
 
-  * Update the list of non-translatable strings for the 
+  * Update the list of non-translatable strings for the
     slapd/ppolicy_schema_needs_update template. Thanks Ferenc Wágner.
   * Fix upgrade failure when olcSuffix contains a backslash. (Closes: #864719)
 
@@ -232,18 +386,18 @@ openldap (2.4.44+dfsg-6) unstable; urgency=medium
 
 openldap (2.4.44+dfsg-5) unstable; urgency=medium
 
-  * debian/patches/ITS-8644-wait-for-slapd-to-start-in-test064.patch: Fix an 
-    intermittently failing test by waiting for slapd to start before running 
+  * debian/patches/ITS-8644-wait-for-slapd-to-start-in-test064.patch: Fix an
+    intermittently failing test by waiting for slapd to start before running
     tests. (ITS#8644) (Closes: #770890)
-  * debian/patches/ITS-8655-paged-results-double-free.patch: Fix a double free 
-    in the MDB backend on a search including the Paged Results control with a 
+  * debian/patches/ITS-8655-paged-results-double-free.patch: Fix a double free
+    in the MDB backend on a search including the Paged Results control with a
     page size of 0. (ITS#8655) (CVE-2017-9287) (Closes: #863563)
 
  -- Ryan Tandy <ryan@nardis.ca>  Sun, 28 May 2017 09:59:46 -0700
 
 openldap (2.4.44+dfsg-4) unstable; urgency=medium
 
-  * Improve the slapd/ppolicy_schema_needs_update debconf template. Thanks to 
+  * Improve the slapd/ppolicy_schema_needs_update debconf template. Thanks to
     Justin B Rye for the review.
   * Update Catalan debconf translation. (Closes: #851905)
     Thanks to Innocent De Marchi.
@@ -275,14 +429,14 @@ openldap (2.4.44+dfsg-4) unstable; urgency=medium
     Thanks to Atila KOÇ.
   * Update Vietnamese debconf translation.
     Thanks to Trần Ngọc Quân.
-  * Update Build-Depends on debhelper to ensure shlibs files are installed at 
+  * Update Build-Depends on debhelper to ensure shlibs files are installed at
     the expected time during build. (Closes: #854158)
   * Update Portuguese debconf translation. (Closes: #859943)
     Thanks to Rui Branco and DebianPT.
-  * Dump the configuration and databases to LDIF before removing slapd, so 
-    that they are available if a newer version requiring migration is 
+  * Dump the configuration and databases to LDIF before removing slapd, so
+    that they are available if a newer version requiring migration is
     installed later. (Closes: #665199)
-  * When creating a new configuration with dpkg-reconfigure, back up the old 
+  * When creating a new configuration with dpkg-reconfigure, back up the old
     configuration before overwriting it.
 
  -- Ryan Tandy <ryan@nardis.ca>  Sun, 16 Apr 2017 20:10:43 -0700
@@ -298,17 +452,17 @@ openldap (2.4.44+dfsg-2) unstable; urgency=medium
 
   [ Ryan Tandy ]
   * Update Standards-Version to 3.9.8; no changes required.
-  * Enable dh_makeshlibs for libldap-2.4-2. Remove libldap-2.4-2.postinst, now 
+  * Enable dh_makeshlibs for libldap-2.4-2. Remove libldap-2.4-2.postinst, now
     replaced by the automatic ldconfig trigger.
-  * Don't execute slapd's override_dh_install when building only 
+  * Don't execute slapd's override_dh_install when building only
     arch-independent packages. (Closes: #845506)
-  * Override lintian false positives on slapd.README.Debian, 
+  * Override lintian false positives on slapd.README.Debian,
     slapd-smbk5pwd.postinst, and slapd-smbk5pwd triggering ldconfig.
-  * Perform permissions changes in override_dh_fixperms instead of in 
+  * Perform permissions changes in override_dh_fixperms instead of in
     override_dh_install.
-  * Remove manual chmod of schema files since dh_fixperms sets correct 
+  * Remove manual chmod of schema files since dh_fixperms sets correct
     permissions automatically.
-  * Fix slapd-smbk5pwd failing to upgrade when there are no instances of the 
+  * Fix slapd-smbk5pwd failing to upgrade when there are no instances of the
     overlay configured.
 
   [ Helmut Grohne ]
@@ -320,37 +474,37 @@ openldap (2.4.44+dfsg-1) unstable; urgency=medium
 
   [ Ryan Tandy ]
   * New upstream release.
-    - Fixed ppolicy not unlocking policy entry after initialization failure 
+    - Fixed ppolicy not unlocking policy entry after initialization failure
       (ITS#7537) (Closes: #702414)
   * Drop ITS8240-remove-obsolete-assert.patch, included upstream.
-  * Update debian/schema/ppolicy.schema to add the pwdMaxRecordedFailure 
+  * Update debian/schema/ppolicy.schema to add the pwdMaxRecordedFailure
     attribute.
   * Update libldap-2.4-2.symbols with new ldap_build_*_req symbols.
-  * Mark the build target in debian/rules as phony, since the upstream source 
+  * Mark the build target in debian/rules as phony, since the upstream source
     includes a build/ directory.
   * Correct the list of files to be cleaned for the pw-sha2 contrib module.
   * Fix a typo (slpad -> slapd) in the Catalan debconf translation.
   * Disable OpenSLP support and remove libslp-dev from Build-Depends.
     (Closes: #815364)
-  * Ensure /var/run/slapd exists when starting slapd, even if the pid file is 
+  * Ensure /var/run/slapd exists when starting slapd, even if the pid file is
     somewhere else. Thanks to Dave Beach for the report. (Closes: #815571)
-  * Create the pidfile directory when starting slapd, but not when running the 
+  * Create the pidfile directory when starting slapd, but not when running the
     init script in other modes.
   * Remove support for enabling the obsolete LDAPv2 protocol via debconf.
   * debian/copyright: Update the OpenLDAP copyright and license.
   * debian/control: Update VCS URIs to the modern canonical form.
-  * Override Lintian errors about schema files derived from RFC documents. 
-    Copyrightable content has been removed from these files; however, the 
+  * Override Lintian errors about schema files derived from RFC documents.
+    Copyrightable content has been removed from these files; however, the
     copyright notices have been retained to preserve attribution.
-  * On upgrade, if the cn=config database contains the ppolicy schema, add the 
+  * On upgrade, if the cn=config database contains the ppolicy schema, add the
     new pwdMaxRecordedFailure attribute to it.
-  * Add debian/patches/set-maintainer-name to omit the builder's username and 
-    working directory from version strings and thereby make the build 
+  * Add debian/patches/set-maintainer-name to omit the builder's username and
+    working directory from version strings and thereby make the build
     reproducible. Thanks to Daniel Shahaf for the patch. (Closes: #833179)
-  * Build smbk5pwd without Kerberos support and drop the build-dependency on 
+  * Build smbk5pwd without Kerberos support and drop the build-dependency on
     heimdal. (Closes: #836885)
-  * On upgrade, comment the krb5 setting on any instances of the smbk5pwd 
-    overlay in slapd.conf. Require cn=config users to disable krb5 manually 
+  * On upgrade, comment the krb5 setting on any instances of the smbk5pwd
+    overlay in slapd.conf. Require cn=config users to disable krb5 manually
     before upgrading.
 
   [ Helmut Grohne ]
@@ -362,41 +516,41 @@ openldap (2.4.44+dfsg-1) unstable; urgency=medium
 openldap (2.4.42+dfsg-2) unstable; urgency=medium
 
   [ Ryan Tandy ]
-  * Change explicit Pre-Depends: multiarch-support to ${misc:Pre-Depends}, as 
+  * Change explicit Pre-Depends: multiarch-support to ${misc:Pre-Depends}, as
     recommended by lintian.
-  * Omit slapd, slapd-dbg, and slapd-smbk5pwd from the stage1 build profile. 
-    This allows the dependency loop with heimdal to be broken for 
-    bootstrapping, and the dependency on libperl-dev to be avoided for 
+  * Omit slapd, slapd-dbg, and slapd-smbk5pwd from the stage1 build profile.
+    This allows the dependency loop with heimdal to be broken for
+    bootstrapping, and the dependency on libperl-dev to be avoided for
     cross-building. Thanks Daniel Schepler and Helmut Grohne.
     (Closes: #724518)
   * Apply wrap-and-sort to the Build-Depends field.
-  * Drop libncurses5-dev from Build-Depends, no longer needed since the ud 
+  * Drop libncurses5-dev from Build-Depends, no longer needed since the ud
     tool was removed in OpenLDAP 2.1.4.
-  * Drop libltdl3-dev as an alternate Build-Depends, since that package was 
+  * Drop libltdl3-dev as an alternate Build-Depends, since that package was
     removed after lenny.
-  * Annotate Build-Depends on perl with :any to allow running the system perl 
+  * Annotate Build-Depends on perl with :any to allow running the system perl
     interpreter during cross builds.
   * Ensure CC is set correctly for cross builds. Thanks Helmut Grohne.
-  * Build-Depend on dpkg-dev (>= 1.17.14) and debhelper (>= 9.20141010) for 
+  * Build-Depend on dpkg-dev (>= 1.17.14) and debhelper (>= 9.20141010) for
     restriction formula support.
-  * Override the 'dev-pkg-without-shlib-symlink' lintian tag. The symlink is 
-    actually in the form libldap_r.so -> libldap_r-2.4.so.xyz and the tag is a 
+  * Override the 'dev-pkg-without-shlib-symlink' lintian tag. The symlink is
+    actually in the form libldap_r.so -> libldap_r-2.4.so.xyz and the tag is a
     false positive; see #687022.
   * Include the smbk5pwd man page in the slapd-smbk5pwd package.
-  * Allow anonymous read access to the shadowLastChange attribute by default, 
-    allowing nss-ldap/nss-ldapd to handle password expiry correctly even when 
-    bound anonymously. This was the only restricted shadow attribute, the 
+  * Allow anonymous read access to the shadowLastChange attribute by default,
+    allowing nss-ldap/nss-ldapd to handle password expiry correctly even when
+    bound anonymously. This was the only restricted shadow attribute, the
     others were already world-readable. (Closes: #669235)
-  * Drop the redundant default ACL for dn.base="" from the database entry. 
+  * Drop the redundant default ACL for dn.base="" from the database entry.
     It's already covered by the fallback case below.
-  * Copy more comments from the slapd.conf template to slapd.init.ldif. Also 
+  * Copy more comments from the slapd.conf template to slapd.init.ldif. Also
     comment the shadowLastChange access rule.
-  * Import upstream patch to remove an unnecessary assert(0) that could be 
-    triggered remotely by an unauthenticated user by sending a malformed BER 
+  * Import upstream patch to remove an unnecessary assert(0) that could be
+    triggered remotely by an unauthenticated user by sending a malformed BER
     element. (ITS#8240) (CVE-2015-6908) (Closes: #798622)
 
   [ Peter Marschall ]
-  * Add a manual page slapo-smbk5pwd.5 and update smbk5pwd's Makefile to 
+  * Add a manual page slapo-smbk5pwd.5 and update smbk5pwd's Makefile to
     install the new manual page. (Closes: #794998)
 
  -- Ryan Tandy <ryan@nardis.ca>  Thu, 10 Sep 2015 20:13:17 -0700
@@ -417,11 +571,11 @@ openldap (2.4.42+dfsg-1) unstable; urgency=medium
   [ Ryan Tandy ]
   * slapd.scripts-common: Delete an outdated comment.
   * New upstream release.
-  * Enable the MDB backend again on GNU/kFreeBSD. The new pthread library 
+  * Enable the MDB backend again on GNU/kFreeBSD. The new pthread library
     provides all the required interfaces, and the test suite now passes.
-    Leave it disabled on the Hurd. LMDB requires POSIX semaphores, which have 
+    Leave it disabled on the Hurd. LMDB requires POSIX semaphores, which have
     not yet been implemented.
-  * Disable the BDB/HDB backends on the Hurd. BDB requires record locks 
+  * Disable the BDB/HDB backends on the Hurd. BDB requires record locks
     (F_SETLK), which have not yet been implemented; see #693971.
 
  -- Ryan Tandy <ryan@nardis.ca>  Fri, 21 Aug 2015 13:07:51 -0700
@@ -458,11 +612,11 @@ openldap (2.4.40+dfsg-1) unstable; urgency=medium
 
 openldap (2.4.40-4) unstable; urgency=medium
 
-  * debian/patches/ITS8027-deref-reject-empty-attr-list.patch: Import upstream 
-    patch to fix a crash when a search includes the Deref control with an 
+  * debian/patches/ITS8027-deref-reject-empty-attr-list.patch: Import upstream
+    patch to fix a crash when a search includes the Deref control with an
     empty attribute list. (ITS#8027) (CVE-2015-1545, Closes: #776988)
-  * debian/patches/ITS8046-fix-vrFilter_free-crash.patch: Import upstream 
-    patch to fix a double free triggered by certain search queries using the 
+  * debian/patches/ITS8046-fix-vrFilter_free-crash.patch: Import upstream
+    patch to fix a double free triggered by certain search queries using the
     Matched Values control. (ITS#8046) (CVE-2015-1546, Closes: #776991)
 
  -- Ryan Tandy <ryan@nardis.ca>  Sun, 08 Feb 2015 20:19:11 +0000
@@ -520,7 +674,7 @@ openldap (2.4.40-2) unstable; urgency=medium
   * Recommend MDB for new installations, per upstream's recommendation.
   * Don't re-create the default DB_CONFIG if there wasn't one in the backup,
     for example if the active backend doesn't use it. Thanks Ferenc Wagner.
-  * On upgrade, if an access rule begins with "to * by self write", show a 
+  * On upgrade, if an access rule begins with "to * by self write", show a
     debconf note warning that it should be changed. (Closes: #761406)
   * Build and install the lastbind contrib module. (Closes: #701111)
   * Build and install the passwd/sha2 contrib module. (Closes: #746727)
@@ -538,12 +692,12 @@ openldap (2.4.40-1) unstable; urgency=low
       (Closes: #666515)
     - fixed slapacl causing unclean database (ITS#7827) (Closes: #741248)
   * slapd.scripts-common:
-    - Anchor grep patterns to avoid matching commented lines in ldif files 
+    - Anchor grep patterns to avoid matching commented lines in ldif files
       under cn=config. (Closes: #723957)
     - Don't silently ignore nonexistent directories that should be dumped.
-    - Invoke find, chown, and chgrp with -H in case /var/lib/ldap is a 
+    - Invoke find, chown, and chgrp with -H in case /var/lib/ldap is a
       symlink. (Closes: #742862)
-    - When upgrading a database, ignore extra nested directories as they might 
+    - When upgrading a database, ignore extra nested directories as they might
       contain other databases. Patch from Kenny Millington. (LP: #1003854)
     - Fix dumping and reloading when multiple databases hold the same suffix,
       thanks Peder Stray. (Closes: #759596, LP: #1362481)
@@ -552,11 +706,11 @@ openldap (2.4.40-1) unstable; urgency=low
     - Enable parallel building.
     - Copy libldap-2.4-2.shlibs into place manually, as a workaround for
       #676168. (Closes: #742841)
-  * debian/slapd.README.Debian: Add a note about database format upgrades and 
+  * debian/slapd.README.Debian: Add a note about database format upgrades and
     the consequences of missing one. (Closes: #594711)
   * Build with GnuTLS 3 (Closes: #745231, #760559).
   * Drop debian/patches/fix-ftbfs-binutils-gold, no longer needed.
-  * Drop debconf-utils from Build-Depends, no longer used (replaced by 
+  * Drop debconf-utils from Build-Depends, no longer used (replaced by
     po-debconf). Thanks Johannes Schauer.
   * Acknowledge NMU fixing #729367, thanks to Michael Gilbert.
   * Offer the MDB backend as a choice during initial configuration. (Closes:
@@ -576,13 +730,13 @@ openldap (2.4.40-1) unstable; urgency=low
   * debian/schema/ppolicy.schema: Update with ordering rules added in
     draft-behera-ldap-password-policy-11.
   * Suggest GSSAPI SASL modules. (Closes: #762424)
-  * debian/patches/ITS6035-olcauthzregex-needs-restart.patch: Document in 
-    slapd-config.5 the fact that changes to olcAuthzRegexp only take effect 
+  * debian/patches/ITS6035-olcauthzregex-needs-restart.patch: Document in
+    slapd-config.5 the fact that changes to olcAuthzRegexp only take effect
     after the server is restarted. (Closes: #761407)
   * Add myself to Uploaders.
 
   [ Jelmer Vernooij ]
-  * Depend on heimdal-multidev rather than heimdal-dev. (Closes: #745356, 
+  * Depend on heimdal-multidev rather than heimdal-dev. (Closes: #745356,
     #706123)
 
   [ Updated debconf translations ]
@@ -707,7 +861,7 @@ openldap (2.4.25-4) unstable; urgency=low
   * Drop debian/check_config.  The upstream configure script now enforces
     --with-cyrus-sasl, so there's no need for a second check.
   * debian/po/es.po: tweak an ambiguous string in the Spanish debconf
-    translation, noticed in response to a submitted Catalan translation    
+    translation, noticed in response to a submitted Catalan translation
   * debian/patches/switch-to-lt_dlopenadvise-to-get-RTLD_GLOBAL-set.diff:
     Switch to lt_dlopenadvise() so back_perl can be opened with RTLD_GLOBAL.
     Thanks to Jan-Marek Glogowski <jan-marek.glogowski@muenchen.de> for the
@@ -1186,7 +1340,7 @@ openldap2.3 (2.4.7-6) unstable; urgency=low
   * Drop patch gnutls-altname-nulterminated; it's been determined that the
     "length" discrepancy was a bug in gnutls, and fixed in that package.
   * debian/configure.options: explicitly pass --with-odbc=unixodbc, so
-    that we depend on the right ODBC implementation when both happen to 
+    that we depend on the right ODBC implementation when both happen to
     be installed at build time.
 
   [ Russ Allbery ]
@@ -1540,7 +1694,7 @@ openldap2.3 (2.3.30-5) unstable; urgency=low
 openldap2.3 (2.3.30-4) unstable; urgency=low
 
   * Ok, argh, it helps to check that the function being re-added to the
-    preinst hasn't been removed again from the common include.  Re-add 
+    preinst hasn't been removed again from the common include.  Re-add
     break_on_ldbm_to_bdb_migration_disagree, because by all appearances
     we /should/ be using this in the preinst.  Closes: #411474.
 
@@ -1649,7 +1803,7 @@ openldap2.3 (2.3.25-1) unstable; urgency=low
 
   [ Torsten Landschoff ]
   * debian/libldap-2.3-0.install: Ignore version information when installing
-    libraries. This way it does not need updating for each new upstream 
+    libraries. This way it does not need updating for each new upstream
     release.
 
  -- Matthijs Mohlmann <matthijs@cacholong.nl>  Wed, 26 Jul 2006 18:05:40 +0200
@@ -1777,14 +1931,14 @@ openldap2.2 (2.2.26-4) unstable; urgency=low
 
   * [l10n] Vietnamese translations by Clytie Siddall (closes: #316623).
   * debian/slapd.templates: Fix typos occured -> occurred (closes: #316624).
-  * libraries/libldap/url.c: Apply patch from upstream CVS to fix URI 
+  * libraries/libldap/url.c: Apply patch from upstream CVS to fix URI
     parsing (closes: #317100).
 
  -- Torsten Landschoff <torsten@debian.org>  Tue, 19 Jul 2005 20:52:17 +0200
 
 openldap2.2 (2.2.26-3) unstable; urgency=low
 
-  * [SECURITY] Applied the patch available at 
+  * [SECURITY] Applied the patch available at
       http://bugzilla.padl.com/show_bug.cgi?id=210
     to force libldap to really use TLS when requested in /etc/ldap/ldap.conf
     (cf. CAN-2005-2069). Clients still will use libldap2 from openldap2
@@ -1802,7 +1956,7 @@ openldap2.2 (2.2.26-2) unstable; urgency=low
     + debian/slapd.links: Remove symlinks from /usr/sbin to /usr/lib.
   | debian/rules: Don't install cron jobs needed for GnuTLS as long as we are
     using OpenSSL.
-  | debian/control: Remove build-dependencies needed for GnuTLS 
+  | debian/control: Remove build-dependencies needed for GnuTLS
     (closes: #316355).
     + Require libsasl >= 2.1.18 as recommended by OpenLDAP project.
   | Update quicktool patch from Quanah Gibson-Mount (closes: #316361).
@@ -1818,7 +1972,7 @@ openldap2.2 (2.2.26-2) unstable; urgency=low
 
 openldap2.2 (2.2.26-1) unstable; urgency=low
 
-  * New upstream release. 
+  * New upstream release.
   * debian/slapd.init: Run db_recover as the user configured for slapd
     (closes: #311331).
   * debian/po/cs.po: Add Czech translation by Miroslav Kure (closes: #312064).
@@ -1851,15 +2005,15 @@ openldap2.2 (2.2.23-6) unstable; urgency=low
   Torsten Landschoff <torsten@debian.org>:
   * debian/po/ja.po: Merge updates from Kenshi Muto (closes: #303505).
   * debian/po/fr.po: Merge updates from Christian Perrier (closes: #306229).
-  * debian/slapd.scripts-common: If the user enters the empty value for 
+  * debian/slapd.scripts-common: If the user enters the empty value for
     the database dumping directory use the default value. Seems like the
-    readline interface does not care about the default value 
+    readline interface does not care about the default value
     (closes: #308234).
-  * debian/slapd.postinst: Make sure the debhelper commands are executed 
+  * debian/slapd.postinst: Make sure the debhelper commands are executed
     in all cases (closes: #310422).
-  * Merged suggested changes by Eugene Konev to automatically run 
+  * Merged suggested changes by Eugene Konev to automatically run
     db_recover before starting slapd (closes: #255276).
-    + debian/slapd.init: Run db_recover if enabled and available and no 
+    + debian/slapd.init: Run db_recover if enabled and available and no
       slapd process running.
     + debian/slapd.default: Add configuration option to disable it.
   * Applied and improved patch by Matthijs Mohlmann to support migration
@@ -1868,7 +2022,7 @@ openldap2.2 (2.2.23-6) unstable; urgency=low
     + debian/slapd.postinst: Update configuration from ldbm to bdb if yes.
     + debian/slapd.scripts-common: Implemented some parts in their own
       functions.
-  * Add a README.DB_CONFIG.gz and reference it where referring to BDB 
+  * Add a README.DB_CONFIG.gz and reference it where referring to BDB
     configuration.
   * Update default DB_CONFIG with some senseful values.
 
@@ -1957,15 +2111,15 @@ openldap2.2 (2.2.23-3) unstable; urgency=low
 openldap2.2 (2.2.23-2) unstable; urgency=low
 
   * debian/configure.options: Change localstatedir to /var from /var/run
-    as the current upstream version adds /run to that during runtime for 
+    as the current upstream version adds /run to that during runtime for
     slapi sockets etc. Problem: The database location is specified relative
     to localstatedir/openldap-data. Another thing to fix...
     (closes: #298271, #304491).
-  * debian/slapd.scripts-common (load_databases): Reimplement automatic 
-    fixing of LDIF data via the fix_ldif script. Only tried if an 
+  * debian/slapd.scripts-common (load_databases): Reimplement automatic
+    fixing of LDIF data via the fix_ldif script. Only tried if an
     initial slapadd using the original LDIF data fails. With this change
     upgrading from woody for some simple cases does work again.
-  * Disabled the version check for Berkeley DB in upstream code. Any 
+  * Disabled the version check for Berkeley DB in upstream code. Any
     libdb4.2 package should work but of course using the latest will give
     you the best results (closes: #300851).
   * debian/slapd.scripts-common (import_database): Removed, no longer used.
@@ -1973,9 +2127,9 @@ openldap2.2 (2.2.23-2) unstable; urgency=low
     slapadd and output it before aborting if the command failed.
   * debian/po/fr.po: Use the translations provided by Christian Perrier
     (closes: #304141).
-  * debian/slapd.scripts-common: Use the -q option during slapadd to 
+  * debian/slapd.scripts-common: Use the -q option during slapadd to
     improve performance.
-  * debian/slapd.templates (slapd/dump_database_destdir): Apply rewording 
+  * debian/slapd.templates (slapd/dump_database_destdir): Apply rewording
     changes from Thomas Prokosch. Gives the user more information about
     the usage of that directory.
     + Run debconf-updatepo to update the translation templates.
@@ -1988,7 +2142,7 @@ openldap2.2 (2.2.23-2) unstable; urgency=low
     + Run debconf-updatepo and send new fr.po to Christian Perrier.
   * debian/slapd.postinst: Make a backup copy of slapd.conf before changing
     anything (closes: #304485).
-  * Trivial improvements: 
+  * Trivial improvements:
     + Don't ask to move contents of /var/lib/ldap if it does not even
       exist (but also is not an empty directory...) in initial config.
     + Move check for current installation status out of configure_dumping.
@@ -1997,14 +2151,14 @@ openldap2.2 (2.2.23-2) unstable; urgency=low
 
 openldap2.2 (2.2.23-1) unstable; urgency=low
 
-  * debian/slapd.scripts-common: Move all shell functions of the maintainer 
+  * debian/slapd.scripts-common: Move all shell functions of the maintainer
     scripts here to have it all in one place.
   * Another pass over the maintainer scripts to remove cruft and tidy up
     the code a bit. Fixed some bugs on the way.
   * Test upgrade and installation revealed some bugs, mostly typos:
     + return in shell actually is "return $?", not "return 0" as I though
     + Referenced $src where $srcdir was meant.
-    + Only load old directories on upgrade and not during initial 
+    + Only load old directories on upgrade and not during initial
       installation.
 
  -- Torsten Landschoff <torsten@debian.org>  Fri,  1 Apr 2005 18:50:21 +0200
@@ -2020,14 +2174,14 @@ openldap2.2 (2.2.23-0.pre6) experimental; urgency=low
     in case we don't know the old version or the suffix of the database.
     Converted the backup dir to a more simple scheme which should be save
     against accidental overwriting.
-  * Rewrote part of the maintainer scripts for correct handling of 
+  * Rewrote part of the maintainer scripts for correct handling of
     directory dumps in preinst. New debconf questions etc.
   * Move the manpage of slappasswd to ldap-utils where slappasswd itself
     is included (closes: #300212).
     + debian/control: Add Replaces: slapd << 2.2.23-0.pre6 to ldap-utils.
     + debian/move_files: Move slappasswd manpage into ldap-utils.
-  * debian/slapd.config: Don't fail if hostname is unset (pulled from 
-    Ubuntu, thanks to Jeff Bailey). 
+  * debian/slapd.config: Don't fail if hostname is unset (pulled from
+    Ubuntu, thanks to Jeff Bailey).
   * Applied patch by Quanah Gibson-Mount (directory administrator of Stanford)
     to add -q option to some tools for quick operation without updating
     logs. This is mostly for importing directories from LDIF backups.
@@ -2036,9 +2190,9 @@ openldap2.2 (2.2.23-0.pre6) experimental; urgency=low
     + debian/slapd.scripts-common: Mark all databases before this version
       as incompatible.
   * Fix some bashisms in maintainer scripts.
-  * debian/slapd.postinst: Include the version of the backup in the 
+  * debian/slapd.postinst: Include the version of the backup in the
     backup of a database directory.
-  
+
   Carlo Contavalli <ccontavalli@debian.org>:
   * debian/slapd.init: Print command line if starting a daemon failed.
   * debian/slapd.postinst: Handle hdb backend just as if it was bdb.
@@ -2049,11 +2203,11 @@ openldap2.2 (2.2.23-0.pre6) experimental; urgency=low
       create_new_configuration.
     + debian/DB_CONFIG: Example DB_CONFIG that is installed.
     + debian/slapd.examples: Mark DB_CONFIG as an example.
-  * servers/slapd/daemon.c: Actually change the permissions of the 
+  * servers/slapd/daemon.c: Actually change the permissions of the
     unix socket if requested using an ldapi url with x-mod.
   * debian/slapd.scripts-common: change privileges of upgraded databases
     as indicated by SLAPD_USER and SLAPD_GROUP variables.
-  * debian/slapd.scripts-common,slapd.postinst: corrected some minor 
+  * debian/slapd.scripts-common,slapd.postinst: corrected some minor
     typos.
 
  -- Torsten Landschoff <torsten@debian.org>  Fri,  1 Apr 2005 12:26:35 +0200
@@ -2078,11 +2232,11 @@ openldap2.2 (2.2.23-0.pre5) experimental; urgency=low
 
 openldap2.2 (2.2.23-0.pre4) experimental; urgency=low
 
-  * Rename libldap2.2 to libldap-2.2-7 to match soname. Updated 
+  * Rename libldap2.2 to libldap-2.2-7 to match soname. Updated
     debian/{control,rules,...}.
-  * Checked the usage of the ucdata files shipped with libldap2 before. 
-    Actually they stem from liblunicode which is only linked to slapd. 
-    Therefore those files are shipped with slapd now. This change is 
+  * Checked the usage of the ucdata files shipped with libldap2 before.
+    Actually they stem from liblunicode which is only linked to slapd.
+    Therefore those files are shipped with slapd now. This change is
     relevant so that multiple libldap-2.2-x packages can coexist later.
   * debian/control: Updated for slapd replacing files from libldap2.
   * debian/control: Recommend db4.3-util instead of db4.2-util as we are
@@ -2095,13 +2249,13 @@ openldap2.2 (2.2.23-0.pre4) experimental; urgency=low
 
 openldap2.2 (2.2.23-0.pre3) experimental; urgency=low
 
-  * debian/slapd.prerm: Reformat and fix double stopping of slapd. Find 
+  * debian/slapd.prerm: Reformat and fix double stopping of slapd. Find
     out which bug we are working around and document it.
   * debian/configure.options: Enable ACI support (closes: #101602).
-    Looked through the source code and it seems to be properly 
+    Looked through the source code and it seems to be properly
     insulated to not make a difference when not used.
   * .../Makefile.in: Remove -s option from install invocations and let
-    dh_strip handle stripping binaries (closes: #264448). 
+    dh_strip handle stripping binaries (closes: #264448).
   * debian/slapd.postinst: Code cleanup and reading, unused and duplicate
     code removed. Main body still needs fixing.
   * debian/slapd.postinst: Fixed chmod --reference calls to keep the
@@ -2109,34 +2263,34 @@ openldap2.2 (2.2.23-0.pre3) experimental; urgency=low
     redirection recreates the file with default umask and owner, killing
     the permissions we applied using chod --reference after creating the
     file. Instead we change the permissions directly before renaming the
-    file now. Wrapped it into a function and update the owner as well. 
+    file now. Wrapped it into a function and update the owner as well.
     How do we do this correctly for ACLs etc.!? Thanks to Carlo Contavalli
     for pointing this out.
   * servers/slapd/main.c: Log a warning if writing the pidfile or writing
     the arguments file fails (closes: #261696).
-  * debian/control: Add missing build dependency for perl development 
+  * debian/control: Add missing build dependency for perl development
     library (closes: #297123).
 
  -- Torsten Landschoff <torsten@debian.org>  Sun, 27 Feb 2005 17:44:03 +0100
 
 openldap2.2 (2.2.23-0.pre2) experimental; urgency=low
 
-  * servers/slurpd/slurp.h: Relocate the default spool directory to 
+  * servers/slurpd/slurp.h: Relocate the default spool directory to
     /var/spool/slurpd again.
-  * Merged some changes done by Fabio M. Di Nitto for the ubuntu 
+  * Merged some changes done by Fabio M. Di Nitto for the ubuntu
     distribution (thanks, Fabio!):
     + debian/slapd.{postinst,conf}: Checkpoint BDB databases every 512kb
       or 30 minutes by default.
     + debian/slapd.scripts-common: Make is_empty_dir less noisy on first
       install (cosmetic).
-  * Applied some changes suggested by Ondrej Sury: 
+  * Applied some changes suggested by Ondrej Sury:
     + debian/rules: Add MAKEVARS variable and set datadir =
-      /usr/share/libldap2.2/ucdata instead of changing build/top.mk as 
+      /usr/share/libldap2.2/ucdata instead of changing build/top.mk as
       suggested.
     + debian/move_files: Install /usr/share/libldap2.2 into libldap2.2
       and remove duplicate ldap.conf manpage.
     + debian/control: Let libldap2.2 dependon libldap2 for config files.
-  * Also in Ondrej's patch: 
+  * Also in Ondrej's patch:
     + doc/man/man8/slapd.8: Refer to slapd.conf instead of ldap.h for
       loglevel documentation. Changed by ubuntu? I don't know...
   * debian/slapd.README.Debian: Update TLS/SSL information.
@@ -2151,10 +2305,10 @@ openldap2.2 (2.2.23-0.pre1) experimental; urgency=low
   * Run libtoolize, aclocal-1.4 and autoconf2.50 to get a working
     configure script.
   * debian/slapd.init: Output failure reasons using "$failure" so that
-    no glob substitution is done. Had a hard time grokking why slapd 
-    would mention the contents of the current directory in its error 
+    no glob substitution is done. Had a hard time grokking why slapd
+    would mention the contents of the current directory in its error
     message...
-  * debian/rules: Disable building -dev packages as we don't want 
+  * debian/rules: Disable building -dev packages as we don't want
     other packages to link against the new libraries before sarge.
     Remove the binary-indep target from the binary dependends list.
   * debian/control: Move packages that are no longer build into control-dev.
@@ -2167,11 +2321,11 @@ openldap2.2 (2.2.23-0.pre1) experimental; urgency=low
 
 openldap2 (2.2.18-0.pre2) experimental; urgency=low
 
-  * debian/check_config: Make sasl2 check more robust against file 
+  * debian/check_config: Make sasl2 check more robust against file
     format changes in config.status.
   * debian/libldap2.shlibs: Remove.
   * Update configure script using libtoolize, aclocal-1.4 and autoconf2.50
-    to fix wrong shared library dependency in libldap2.2 (depended on 
+    to fix wrong shared library dependency in libldap2.2 (depended on
     libldap2 by linking against the system's liblber).
   * debian/libldap2.README.Debian: Move to libldap2.2.README.Debian.
   * Lintian cleanup:
@@ -2179,12 +2333,12 @@ openldap2 (2.2.18-0.pre2) experimental; urgency=low
       requested.
     + Update config.guess and config.sub in debian/rules clean as well.
       First update done.
-    + debian/rules (install): Fix the manpage section of the admin commands 
+    + debian/rules (install): Fix the manpage section of the admin commands
       from 8C to 8.
-    + debian/rules (binary-arch): Run dh_fixperms to fix the permissions 
+    + debian/rules (binary-arch): Run dh_fixperms to fix the permissions
       on shared libraries.
 
- -- Torsten Landschoff <torsten@pulsar.galaxy>  Thu, 13 Jan 2005 11:53:28 +0100
+ -- Torsten Landschoff <torsten@debian.org>  Thu, 13 Jan 2005 11:53:28 +0100
 
 openldap2 (2.2.18-0.pre1) experimental; urgency=low
 
@@ -2201,7 +2355,7 @@ openldap2 (2.2.18-0.pre1) experimental; urgency=low
     Seems like slapadd etc. are now all included in the slapd binary
     and all link to its binary.
   * debian/rules: Run dh_link for arch dependend packages.
-  * configure: Fix broken libdb checking which forced static building of 
+  * configure: Fix broken libdb checking which forced static building of
     back-bdb.
   * debian/slapd.conf: Fix access directive to use "attrs=" instead of
     "attribute=" which wasn't officially supported anyway.
@@ -2246,7 +2400,7 @@ openldap2 (2.1.30-2) unstable; urgency=low
   * Torsten Landschoff <torsten@debian.org>
     + Applied patch by Ralf Hack to support non-standard config file
       location in /etc/default/slapd (closes: #229195).
-    + Applied patch to fix handling of abandoned commands 
+    + Applied patch to fix handling of abandoned commands
       (closes: #254183). Thanks to Peter Marschall for submitting it.
     + Applied patch to fix memory leak after search (closes: #254184).
       Thanks again, Peter!
@@ -2270,7 +2424,7 @@ openldap2 (2.1.30-1) unstable; urgency=low
       which is little more specific
     + debian/slapd.config: check if the domain has a valid syntax to
       prevent slapadd from failing. Closes: #235749.
-    + New upstream version with fix for NS-MTA-MD5 hash length 
+    + New upstream version with fix for NS-MTA-MD5 hash length
       checking. Closes: #226583.
 
  -- Torsten Landschoff <torsten@debian.org>  Mon, 24 May 2004 23:33:21 +0200
@@ -2307,21 +2461,21 @@ openldap2 (2.1.26-1) unstable; urgency=low
 
   * Torsten Landschoff <torsten@debian.org>:
     + Merged new upstream release.
-    + debian/slapd.templates (slapd/purge_database): Set default value to 
+    + debian/slapd.templates (slapd/purge_database): Set default value to
       false.
     + debian/slapd.config (manual_configuration_wanted): Don't exit
-      from the script directly if the user wants to configure 
+      from the script directly if the user wants to configure
       slapd manually (exit 0 -> return 0).
-    + Build-depend on libgnutls10-dev instead of libgnutls7-dev and 
+    + Build-depend on libgnutls10-dev instead of libgnutls7-dev and
       rebuild (closes: #233833).
-    + Move previous content of /var/lib/ldap away during creation of 
+    + Move previous content of /var/lib/ldap away during creation of
       an initial directory (closes: #228886, #233512).
     + debian/slapd.postrm: Remove flag files in /var/lib/slapd on purge.
     + Removed functionality (verbose error messages) from gnutls.c until
       it compiled with libgnutls10-dev :-((
     + debian/slapd.postinst: Overwrite existing /etc/ldap/slapd.conf (only
       reached during initial installation/dpkg-reconfigure).
-    
+
  -- Torsten Landschoff <torsten@debian.org>  Mon, 23 Feb 2004 09:36:32 +0100
 
 openldap2 (2.1.25-1) unstable; urgency=low
@@ -2353,9 +2507,9 @@ openldap2 (2.1.25-1) unstable; urgency=low
       time ago. So don't claim it's included in the slapd package.
     + debian/slapd.docs: created with servers/slapd/back-sql/
       rdbms_depends. Closes: #225807.
-  
+
   * Torsten Landschoff <torsten@debian.org>:
-    + debian/move_files: Install slappasswd into ldap-utils instead 
+    + debian/move_files: Install slappasswd into ldap-utils instead
       of slapd as it's useful without slapd as well (closes: #228705).
     + debian/control: Make ldap-utils Replaces: slapd < 2.1.25 because
       of that change.
@@ -2373,7 +2527,7 @@ openldap2 (2.1.23-1) unstable; urgency=low
     + Added Dutch Debconf template translation by cobaco@linux.be.
       Closes: #215373.
     + Bumped Standards-Version (no changes needed).
-  
+
   * Torsten Landschoff <torsten@debian.org>:
     + debian/move_files: Install slappasswd into ldap-utils instead
       of slapd (closes: #228705).
@@ -2473,14 +2627,14 @@ openldap2 (2.1.21-2) unstable; urgency=low
       function.
     + debian/slapd.postinst: Check if slapcat in preinst worked and use
       those results in preference.  Also moved to using /var/backups/ldap.
-    + servers/slapd/daemon.c: Provide more information on socket/bind 
+    + servers/slapd/daemon.c: Provide more information on socket/bind
       failures. Patch submitted upstream. Closes: #94967.
     + ./configure, ./configure.in: Fix check for back_ldap in back_meta.
       back_ldap now included as module.  back_ldap and back_meta appear
       to load fine, though order may matter.  Closes: #196995.
     + debian/control: Add versioned Depends on perl, need recent version
       for migration script.
-    + debian/slapd.{pre,post}inst: Allow for whitespace in postinst 
+    + debian/slapd.{pre,post}inst: Allow for whitespace in postinst
       before database definitions
     + debian/control: Drop the libldap2-dev Depends that aren't actually
       necessary.
@@ -2499,7 +2653,7 @@ openldap2 (2.1.21-2) unstable; urgency=low
     + debian/slapd.preinst: Changed to use mktemp for sed script.
     + debian/slapd.postinst: Changed to use mktemp for sed script.
     + debian/slapd.config: If no hostname set just use debian.org.
-    + contrib/ldapc++/config.{sub,guess}: Resync back to upstream, no 
+    + contrib/ldapc++/config.{sub,guess}: Resync back to upstream, no
       reason not to, we don't even build this stuff...
     + debian/control: Change build-depends to libgnutls7-dev instead of
       libssl-dev.
@@ -2513,7 +2667,7 @@ openldap2 (2.1.21-2) unstable; urgency=low
       removed because GNU TLS layer does not support them yet.
     | build/install-sh: Added for new autoconf.
     | libraries/libldap/Makefile.in: Changed to compile GNU TLS portions.
-    | libraries/libldap/getdn.c: Stub function added, GNU TLS layer does 
+    | libraries/libldap/getdn.c: Stub function added, GNU TLS layer does
       not support TLS certificates for authentication yet.
     | libraries/libldap/tls.c: Now calls GNU TLS functions instead of
       OpenSSL.
@@ -2565,9 +2719,9 @@ openldap2 (2.1.21-2) unstable; urgency=low
     + debian/slapd.postinst: Only stop slapd on reconfigure.
 
   * Torsten Landschoff <torsten@debian.org>:
-    + doc/man/man8/slapd.8: Refer to slapd.conf(5) for a description of 
+    + doc/man/man8/slapd.8: Refer to slapd.conf(5) for a description of
       the debugging level (closes: #176980).
-    + debian/move_files: Kill of the static archives of our backend 
+    + debian/move_files: Kill of the static archives of our backend
       modules as they are of absolutely no use.
 
   * Steve Langasek <vorlon@debian.org>:
@@ -2599,21 +2753,21 @@ openldap2 (2.1.21-1) unstable; urgency=low
 
   * Torsten Landschoff <torsten@debian.org>:
     + Merged new upstream release.
-  
+
   * Stephen Frost <sfrost@debian.org>:
-    + debian/control: Add libbind-dev and bind-dev to the conflicts for 
-      slapd, the libs in them can end up being used even when not 
+    + debian/control: Add libbind-dev and bind-dev to the conflicts for
+      slapd, the libs in them can end up being used even when not
       compiled against causing getaddrinfo() to fail. Closes: #166777
-    + debian/copyright: Flush out the copyright file to include all found 
+    + debian/copyright: Flush out the copyright file to include all found
       copyrights and updates to those.
     + debian/copyright: Add clarification of MA license
     + debian/copyright: Add clarification of JC license
-    + debian/slapd.templates: More clearly inform users of important 
+    + debian/slapd.templates: More clearly inform users of important
       config change.  Closes: #194192.
     + debian/control: Remove patch from build-depends (dpkg-dev depends on it)
     + debian/fix_ldif: Correctly handle base64-encoded DNs.  Closes: #197014.
-    + debian/slapd.templates: Added templates for asking about LDAPv2 support 
-      and telling the user of slapcat/slapadd failures during upgrade. 
+    + debian/slapd.templates: Added templates for asking about LDAPv2 support
+      and telling the user of slapcat/slapadd failures during upgrade.
     + debian/slapd.postinst: Added support for adding LDAPv2 support
     + debian/slapd.postinst: Modified to handle slapcat/slapadd failure.
       In the event of an upgrade failure the database will be left untouched
@@ -2632,7 +2786,7 @@ openldap2 (2.1.21-1) unstable; urgency=low
       stop slapd).  Closes: #189777.
     + debian/slapd.postinst: Check if directories exist before attempting
       to mkdir them.  Closes: #189947
-    + debian/slapd.README.debian: Add note about runlevel issue. 
+    + debian/slapd.README.debian: Add note about runlevel issue.
       Closes: #175736
     + debian/move_files: Copy ldiftopasswd into /usr/share/slapd for users
       to use, if they find it useful.  Closes: #94963.
@@ -2719,17 +2873,17 @@ openldap2 (2.1.17-2) unstable; urgency=low
       atomically.
     + debian/slapd.postrm: If removing databases on package purge,
       remove any database backups as well.
-  
+
   * Torsten Landschoff <torsten@debian.org>:
-    + debian/configure.options: Disable ACIs because they are still 
+    + debian/configure.options: Disable ACIs because they are still
       experimental.
     + debian/control: Change section and priority of libldap2-dev to
       libdevel and extra respectively (dinstall message).
     + debian/slapd.preinst: Only query the object classes of the root
       dn if there was no error parsing the config.
-    + Update templates for po-debconf using the patch submitted by 
+    + Update templates for po-debconf using the patch submitted by
       Andre Luis Lopes (closes: #189933).
-    + Use [[:space:]] instead of [\t ] in sed invocations since the 
+    + Use [[:space:]] instead of [\t ] in sed invocations since the
       latter does not seem to work (reported by Daniel Lutz).
     + debian/control: Add Replaces: entry for openldapd since ldif.5.gz
       was included in the potato package of that name (closes: #190660).
@@ -2749,8 +2903,8 @@ openldap2 (2.1.17-1) unstable; urgency=low
     + debian/control: Require at least version 2.1.3 of libsasl2-dev
       as this is what the configure script checks for. Pointed out by
       Norbert Tretkowski.
-    + debian/slapd.{pre,post}inst: Small cleanups, added some comments, 
-      adapted for the removal of the .la files in slapd package. 
+    + debian/slapd.{pre,post}inst: Small cleanups, added some comments,
+      adapted for the removal of the .la files in slapd package.
 
  -- Torsten Landschoff <torsten@debian.org>  Sat, 19 Apr 2003 01:59:26 +0200
 
@@ -2761,20 +2915,20 @@ openldap2.1 (2.1.16-1) unstable; urgency=low
       now respects the --enable-shared flag used at configuration time.
     + debian/slapd.postinst: Automagically add the module load directives
       after upgrade as needed.
-    + debian/slapd.config: 
+    + debian/slapd.config:
       - Only ask questions to create a new directory on fresh install.
-      - Ask wether the right modules should automatically be loaded in 
+      - Ask wether the right modules should automatically be loaded in
         slapd.conf.
     + debian/slapd.templates: Add the templates for autoloading modules
       and fixing the directory.
-    + debian/slapd.preinst: New script to support upgrading from 2.0. 
-      The old prerm did not stop the daemon so we have to do it here. 
+    + debian/slapd.preinst: New script to support upgrading from 2.0.
+      The old prerm did not stop the daemon so we have to do it here.
       Also a first attempt to fix broken LDAP directories not acceptable
       to 2.1.
-      - Conditionally load debconf when upgrading as it only has to 
+      - Conditionally load debconf when upgrading as it only has to
         be available in that case.
     + debian/slapd.preinst: Dump database before upgrade.
-    + debian/slapd.postinst: Recreate database from dump after upgrade. 
+    + debian/slapd.postinst: Recreate database from dump after upgrade.
       Move old database out of the way.
 
   * Roland Bauerschmidt <rb@debian.org>
@@ -2787,7 +2941,7 @@ openldap2.1 (2.1.16-1) unstable; urgency=low
     + debian/slapd.README.Debian: Dropped the .la from the module_load line.
     + servers/slapd/daemon.c: check slapd_srvurls is not NULL before
       deref; included in upstream CVS.
-    + servers/slapd/back-*/init.c: Change the munged symbol names to 
+    + servers/slapd/back-*/init.c: Change the munged symbol names to
       init_module, they do not need to be munged, and cause problems when
       they are and not using .la files (which cause other problems)
     + servers/slapd/module.c: Change to use lt_dlopenext() so we don't
@@ -2898,11 +3052,11 @@ openldap2 (2.0.27-3) unstable; urgency=high
 
 openldap2 (2.0.27-2) unstable; urgency=low
 
-  * debian/control: Make libldap2-dev depend on libssl-dev and 
+  * debian/control: Make libldap2-dev depend on libssl-dev and
     libsasl-dev, since those libs are pulled via the libldap.la file
     (closes: #164791).
-  * debian/control: Add shlibs:Depends to libldap2-tls as well. Most 
-    of those depends are pulled via libldap2 but of course libssl 
+  * debian/control: Add shlibs:Depends to libldap2-tls as well. Most
+    of those depends are pulled via libldap2 but of course libssl
     is not among those. (closes: #169950).
   * debian/libldap2-tls: Remove old divertions on "configure" and not
     on "upgrade" - the latter is not really called.
@@ -2917,13 +3071,13 @@ openldap2 (2.0.27-1) unstable; urgency=low
 
 openldap2 (2.0.23-14) unstable; urgency=low
 
-  * debian/rules: Remove search paths from .la files using some perl 
+  * debian/rules: Remove search paths from .la files using some perl
     trickery (closes: #110479).
   * debian/libldap2.README.debian: Document the NSS problem which stops /usr
     from being unmounted cleanly when using libnss-ldap (for more info
     see bug#159771).
-  
-  * Started cleaning up the maintainer scripts: 
+
+  * Started cleaning up the maintainer scripts:
     - Remove creation of the /usr/doc symlinks (lintian).
     - Don't run ldconfig in prerm scripts (lintian).
 
@@ -2934,8 +3088,8 @@ openldap2 (2.0.23-13) unstable; urgency=low
   * As Ashley Clark found out the preinst of libldap-tls fails for a new
     install. My fault - I did not check that (removing ldap is cumbersome
     if you are using it... :) and the scripts were only checked without
-    "set -e" in effect. 
-    + debian/libldap2-tls.preinst: Apply Ashley's patch (thanks a lot, 
+    "set -e" in effect.
+    + debian/libldap2-tls.preinst: Apply Ashley's patch (thanks a lot,
       Ashley. closes: #162123).
     + Coincidently the other installation scripts seem to be okay, the
       failing command is in the middle of a pipe and therefore ignored.
@@ -2946,7 +3100,7 @@ openldap2 (2.0.23-12) unstable; urgency=low
 
   * Apply the patch from upstream ITS#2012 to support MD5 hashes. Problem
     is that OpenSSL comes with its own version of the crypt() function
-    which is linked in instead of the system's version from libcrypt. 
+    which is linked in instead of the system's version from libcrypt.
     The patch changes the link order so that slapd takes the system's
     implementation.
   * debian/rules: Pass --enable-crypt-first to configure to enable the
@@ -2956,7 +3110,7 @@ openldap2 (2.0.23-12) unstable; urgency=low
     - postrm:   Remove this package's diversions.
     - postinst: Remove obsolete diversions after upgrade.
     - Removal of diversions is done in reverted order of the installation.
-  
+
   * Enable DNSSRV support as requested by Turbo. No Kerberos for now, sorry.
   * debian/control: Updates Standards-Version to 3.5.7 and fix running
     of ldconfig in maintainer scripts.
@@ -2966,17 +3120,17 @@ openldap2 (2.0.23-12) unstable; urgency=low
 openldap2 (2.0.23-11) unstable; urgency=low
 
   * debian/rules: Build with --with-tls (closes: #80591, #155937).
-  * debian/control: 
+  * debian/control:
     + Add build dependency on libssl-dev.
     + Specify Roland Bauerschmidt as co maintainer.
   * Added the trickery to have libldap2 without TLS and libldap2-tls
-    with the TLS stuff. Otherwise we have to change the base system, 
-    and god knows how long that would take. 
-  
-    Most of the changes done by Roland Bauerschmidt. We now build the 
+    with the TLS stuff. Otherwise we have to change the base system,
+    and god knows how long that would take.
+
+    Most of the changes done by Roland Bauerschmidt. We now build the
     source two times - with and without ssl. We mostly use the ssl enabled
-    stuff with the exception of a libldap2 package which does not have 
-    support for that. If you need TLS support you have to install 
+    stuff with the exception of a libldap2 package which does not have
+    support for that. If you need TLS support you have to install
     libldap2-tls, which diverts the libraries from libldap2 out of the
     way and replaces them with the TLS enabled version.
 
@@ -2992,12 +3146,12 @@ openldap2 (2.0.23-10) unstable; urgency=low
 openldap2 (2.0.23-9) unstable; urgency=low
 
   * debian/slapd.init: Wait for the daemons to actually terminate for
-    the stop action (which is used for restart) and trap all errors 
+    the stop action (which is used for restart) and trap all errors
     (closes: #148033).
   * debian/rules: Build with -D_FILE_OFFSET_BITS=64 to support files
     bigger than 2GB on all architectures (closes: #155197). As off_t is
     about never used in the source that should not create any problems.
-  * debian/control: Make libldap2-dev depend on libsasl-dev 
+  * debian/control: Make libldap2-dev depend on libsasl-dev
     (closes: #135223, #96957).
   * doc/man/man1/ldapmodify.1: Fix typo (closes: #105905).
   * debian/rules: Create symlinks for some manpages (closes: #99547).
@@ -3011,7 +3165,7 @@ openldap2 (2.0.23-8) unstable; urgency=low
 
   * New maintainer.
   * debian/control: Build-Conflict with libbind-dev to use the right
-    resolver library everywhere (closes: #112459). Of course, the 
+    resolver library everywhere (closes: #112459). Of course, the
     real solution must be to fix the configure script to not detect
     libbind-dev and use the right resolver all the time. But a work around
     is better than nothing I would say...
@@ -3174,7 +3328,7 @@ openldap2 (2.0.10-1) unstable; urgency=low
   * New maintainer
   * Remove useless LINE_WIDTH bit from patch 000_clients
   * Patch 004_ssl_fix has been merged upstream, removed
-  * Redo 005_db3_upgrade 
+  * Redo 005_db3_upgrade
   * Rediff all other patches
 
  -- Wichert Akkerman <wakkerma@debian.org>  Thu, 24 May 2001 14:56:02 +0200

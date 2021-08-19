@@ -1,0 +1,3 @@
+Tests: slapd
+Depends: ldap-utils
+Restrictions: allow-stderr, isolation-container, needs-root, superficial

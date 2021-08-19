@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap 2.4.44+dfsg-4\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-06-25 02:57+0000\n"
+"POT-Creation-Date: 2019-10-03 23:01+0000\n"
 "PO-Revision-Date: 2017-01-10 19:00+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
@@ -292,53 +292,15 @@ msgstr ""
 "Переместите файлы базы данных обратно в место хранения резервной копии и "
 "затем попытайтесь запустить slapadd из ${location}."
 
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid "Database backend to use:"
-msgstr "Используемые серверы баз данных:"
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"HDB and BDB use similar storage formats, but HDB adds support for subtree "
-"renames. Both support the same configuration options."
-msgstr ""
-"HDB и BDB используют схожие форматы хранения, но в HDB добавлена поддержка "
-"переименования поддеревьев. Оба типа сервера поддерживают одинаковые "
-"параметры настройки."
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"The MDB backend is recommended. MDB uses a new storage format and requires "
-"less configuration than BDB or HDB."
-msgstr ""
-"Рекомендуется использовать сервер MDB. MDB использует новый формат хранения "
-"и требует меньше настроек чем BDB или HDB."
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"In any case, you should review the resulting database configuration for your "
-"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr ""
-"В любом случае, убедитесь в соответствии получившихся настроек базы данных "
-"вашим требованиям. Подробней о настройке смотрите в файле /usr/share/doc/"
-"slapd/README.Debian.gz."
-
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "Potentially unsafe slapd access control configuration"
 msgstr "Потенциально небезопасная настройка управления доступом slapd"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "One or more of the configured databases has an access control rule that "
 "allows users to modify most of their own attributes. This may be unsafe, "
@@ -352,7 +314,7 @@ msgstr ""
 #. Description
 #. Translators: keep "by self write" and "to *" unchanged. These are part
 #. of the slapd configuration and are not translatable.
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "In the case of slapd access rules that begin with \"to *\", it is "
 "recommended to remove any instances of \"by self write\", so that users are "
@@ -364,32 +326,32 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr "Смотрите подробности в файле /usr/share/doc/slapd/README.Debian.gz."
 
 #. Type: select
 #. Choices
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "abort installation"
 msgstr "прервать установку"
 
 #. Type: select
 #. Choices
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "continue regardless"
 msgstr "продолжить"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid "Manual ppolicy schema update recommended"
 msgstr "Рекомендуется обновление схемы ppolicy вручную"
 
 #. Type: select
 #. Description
 #. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
 "to define the pwdMaxRecordedFailure attribute type, which is not present in "
@@ -409,7 +371,7 @@ msgstr ""
 #. Description
 #. This paragraph is followed by the path to the generated file (not
 #. translatable). The sentence continues in the following paragraph.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "An LDIF file has been generated with the changes required for the upgrade:"
 msgstr "Был создан файл LDIF с изменениями, требующимися для обновления:"
@@ -418,7 +380,7 @@ msgstr "Был создан файл LDIF с изменениями, требу�
 #. Description
 #. This paragraph continues the sentence started in the previous
 #. paragraph. It is followed by a command line.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "so if slapd is using the default access control rules, these changes can be "
 "applied (after starting slapd) by using the command:"
@@ -428,7 +390,7 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "If instead you choose to continue the installation, the new attribute type "
 "will be added automatically, but the change will not be acted on by slapd "
@@ -437,6 +399,32 @@ msgstr ""
 "Если вы выберете продолжение установки, то новый тип атрибута будет добавлен "
 "автоматически, но изменение не будет применено в оверлеях slapd, и это может "
 "повлиять на другие серверы при репликации."
+
+#~ msgid "Database backend to use:"
+#~ msgstr "Используемые серверы баз данных:"
+
+#~ msgid ""
+#~ "HDB and BDB use similar storage formats, but HDB adds support for subtree "
+#~ "renames. Both support the same configuration options."
+#~ msgstr ""
+#~ "HDB и BDB используют схожие форматы хранения, но в HDB добавлена "
+#~ "поддержка переименования поддеревьев. Оба типа сервера поддерживают "
+#~ "одинаковые параметры настройки."
+
+#~ msgid ""
+#~ "The MDB backend is recommended. MDB uses a new storage format and "
+#~ "requires less configuration than BDB or HDB."
+#~ msgstr ""
+#~ "Рекомендуется использовать сервер MDB. MDB использует новый формат "
+#~ "хранения и требует меньше настроек чем BDB или HDB."
+
+#~ msgid ""
+#~ "In any case, you should review the resulting database configuration for "
+#~ "your needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+#~ msgstr ""
+#~ "В любом случае, убедитесь в соответствии получившихся настроек базы "
+#~ "данных вашим требованиям. Подробней о настройке смотрите в файле /usr/"
+#~ "share/doc/slapd/README.Debian.gz."
 
 #~ msgid "Allow LDAPv2 protocol?"
 #~ msgstr "Включить протокол LDAPv2?"

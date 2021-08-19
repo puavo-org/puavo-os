@@ -6,13 +6,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap 2.4.44+dfsg-4\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-06-25 02:57+0000\n"
+"POT-Creation-Date: 2019-10-03 23:01+0000\n"
 "PO-Revision-Date: 2017-01-15 14:12+0100\n"
 "Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: de <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-15\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Type: boolean
@@ -29,7 +29,7 @@ msgid ""
 "created for you."
 msgstr ""
 "Falls Sie diese Option aktivieren, wird keine Startkonfiguration oder "
-"Datenbank für Sie erstellt."
+"Datenbank fÃ¼r Sie erstellt."
 
 #. Type: select
 #. Choices
@@ -41,7 +41,7 @@ msgstr "immer"
 #. Choices
 #: ../slapd.templates:2001
 msgid "when needed"
-msgstr "wenn benötigt"
+msgstr "wenn benÃ¶tigt"
 
 #. Type: select
 #. Choices
@@ -53,7 +53,7 @@ msgstr "nie"
 #. Description
 #: ../slapd.templates:2002
 msgid "Dump databases to file on upgrade:"
-msgstr "Datenbank beim Upgrade in Datei ausgeben (»dump«):"
+msgstr "Datenbank beim Upgrade in Datei ausgeben (Â»dumpÂ«):"
 
 #. Type: select
 #. Description
@@ -64,8 +64,8 @@ msgid ""
 "Data Interchange Format."
 msgstr ""
 "Bevor Sie ein Upgrade auf eine neue Version des OpenLDAP-Servers "
-"durchführen, können die Daten Ihres LDAP-Verzeichnisses in reine Text-"
-"Dateien im standardisierten »LDAP Data Interchange Format« ausgegeben werden."
+"durchfÃ¼hren, kÃ¶nnen die Daten Ihres LDAP-Verzeichnisses in reine Text-"
+"Dateien im standardisierten Â»LDAP Data Interchange FormatÂ« ausgegeben werden."
 
 #. Type: select
 #. Description
@@ -76,17 +76,17 @@ msgid ""
 "the new version is incompatible with the old database format and it needs to "
 "be reimported. If you select \"never\", no dump will be done."
 msgstr ""
-"Die Auswahl von »immer« führt dazu, dass die Datenbanken bedingungslos vor "
-"Upgrades ausgegeben werden. Die Auswahl von »wenn benötigt« führt dazu, dass "
+"Die Auswahl von Â»immerÂ« fÃ¼hrt dazu, dass die Datenbanken bedingungslos vor "
+"Upgrades ausgegeben werden. Die Auswahl von Â»wenn benÃ¶tigtÂ« fÃ¼hrt dazu, dass "
 "die Datenbank nur ausgegeben wird, falls die neue Version nicht mit dem "
 "alten Datenbankformat kompatibel ist und die Datenbank re-importiert werden "
-"muss. Die »nie«-Auswahl führt dazu, dass keine Ausgabe der Daten erfolgt."
+"muss. Die Â»nieÂ«-Auswahl fÃ¼hrt dazu, dass keine Ausgabe der Daten erfolgt."
 
 #. Type: string
 #. Description
 #: ../slapd.templates:3001
 msgid "Directory to use for dumped databases:"
-msgstr "Verzeichnis für Datenbank-Ausgaben (»dumps«):"
+msgstr "Verzeichnis fÃ¼r Datenbank-Ausgaben (Â»dumpsÂ«):"
 
 #. Type: string
 #. Description
@@ -104,8 +104,8 @@ msgstr ""
 "erstellt, die zu den im Server befindlichen Suchbasen korrespondieren. "
 "Stellen Sie sicher, dass Sie genug freien Platz auf der Partition haben, auf "
 "der sich das Verzeichnis befindet. Das erste Auftreten der Zeichenkette "
-"»VERSION« wird durch die Server-Version ersetzt, von der aus Sie das Upgrade "
-"durchführen."
+"Â»VERSIONÂ« wird durch die Server-Version ersetzt, von der aus Sie das Upgrade "
+"durchfÃ¼hren."
 
 #. Type: boolean
 #. Description
@@ -143,12 +143,12 @@ msgid ""
 "LDAP server will not be set up. Run 'dpkg-reconfigure slapd' if you want to "
 "retry later."
 msgstr ""
-"Die von Ihnen eingegebene Konfiguration ist ungültig. Stellen Sie sicher, "
-"dass der DNS-Domainname einer gültigen Syntax folgt, das Feld für die "
-"Organisation nicht leer geblieben ist und dass die Administratorpasswörter "
-"übereinstimmen. Falls Sie sich entscheiden, die Konfiguration nicht erneut "
-"zu versuchen, wird der LDAP-Server nicht eingerichtet. Führen Sie »dpkg-"
-"reconfigure slapd« aus, falls Sie die Konfiguration später erneut versuchen "
+"Die von Ihnen eingegebene Konfiguration ist ungÃ¼ltig. Stellen Sie sicher, "
+"dass der DNS-Domainname einer gÃ¼ltigen Syntax folgt, das Feld fÃ¼r die "
+"Organisation nicht leer geblieben ist und dass die AdministratorpasswÃ¶rter "
+"Ã¼bereinstimmen. Falls Sie sich entscheiden, die Konfiguration nicht erneut "
+"zu versuchen, wird der LDAP-Server nicht eingerichtet. FÃ¼hren Sie Â»dpkg-"
+"reconfigure slapdÂ« aus, falls Sie die Konfiguration spÃ¤ter erneut versuchen "
 "wollen."
 
 #. Type: string
@@ -166,8 +166,8 @@ msgid ""
 "dc=example, dc=org' as base DN."
 msgstr ""
 "Der DNS-Domainname wird zur Erzeugung des Basis-DN Ihres LDAP-Verzeichnisses "
-"verwendet. Zum Beispiel erstellt »foo.example.org« das Verzeichnis mit der "
-"Basis-DN »dc=foo, dc=example, dc=org«."
+"verwendet. Zum Beispiel erstellt Â»foo.example.orgÂ« das Verzeichnis mit der "
+"Basis-DN Â»dc=foo, dc=example, dc=orgÂ«."
 
 #. Type: string
 #. Description
@@ -196,14 +196,14 @@ msgstr "Administrator-Passwort:"
 #: ../slapd.templates:8001
 msgid "Please enter the password for the admin entry in your LDAP directory."
 msgstr ""
-"Bitte geben Sie das Passwort für den Administrator-Eintrag in Ihrem LDAP-"
+"Bitte geben Sie das Passwort fÃ¼r den Administrator-Eintrag in Ihrem LDAP-"
 "Verzeichnis ein."
 
 #. Type: password
 #. Description
 #: ../slapd.templates:9001
 msgid "Confirm password:"
-msgstr "Passwort bestätigen:"
+msgstr "Passwort bestÃ¤tigen:"
 
 #. Type: password
 #. Description
@@ -212,7 +212,7 @@ msgid ""
 "Please enter the admin password for your LDAP directory again to verify that "
 "you have typed it correctly."
 msgstr ""
-"Bitte geben Sie das Passwort für den Administrator-Eintrag Ihres LDAP-"
+"Bitte geben Sie das Passwort fÃ¼r den Administrator-Eintrag Ihres LDAP-"
 "Verzeichnisses nochmal ein, um sicher zu gehen, dass Sie es richtig "
 "eingegeben haben."
 
@@ -220,14 +220,14 @@ msgstr ""
 #. Description
 #: ../slapd.templates:10001
 msgid "Password mismatch"
-msgstr "Passwörter stimmen nicht überein"
+msgstr "PasswÃ¶rter stimmen nicht Ã¼berein"
 
 #. Type: note
 #. Description
 #: ../slapd.templates:10001
 msgid "The two passwords you entered were not the same. Please try again."
 msgstr ""
-"Die beiden eingegebenen Passwörter sind nicht gleich. Bitte versuchen Sie es "
+"Die beiden eingegebenen PasswÃ¶rter sind nicht gleich. Bitte versuchen Sie es "
 "noch einmal."
 
 #. Type: boolean
@@ -235,7 +235,7 @@ msgstr ""
 #: ../slapd.templates:11001
 msgid "Do you want the database to be removed when slapd is purged?"
 msgstr ""
-"Soll die Datenbank entfernt werden, wenn slapd vollständig gelöscht wird?"
+"Soll die Datenbank entfernt werden, wenn slapd vollstÃ¤ndig gelÃ¶scht wird?"
 
 #. Type: error
 #. Description
@@ -248,7 +248,7 @@ msgstr "slapcat-Fehlschlag beim Upgrade"
 #: ../slapd.templates:14001
 msgid "An error occurred while upgrading the LDAP directory."
 msgstr ""
-"Während des Versuchs, ein Upgrade des LDAP-Verzeichnisses durchzuführen, "
+"WÃ¤hrend des Versuchs, ein Upgrade des LDAP-Verzeichnisses durchzufÃ¼hren, "
 "trat ein Fehler auf."
 
 #. Type: error
@@ -259,10 +259,10 @@ msgid ""
 "be caused by an incorrect configuration file (for example, missing "
 "'moduleload' lines to support the backend database)."
 msgstr ""
-"Das Programm »slapcat« schlug beim Versuch, das LDAP-Verzeichnis zu "
-"extrahieren, fehl. Dies könnte durch eine inkorrekte Konfigurationsdatei "
-"verursacht worden sein (beispielsweise fehlende »moduleload«-Zeilen, um die "
-"Backend-Datenbank zu unterstützen)."
+"Das Programm Â»slapcatÂ« schlug beim Versuch, das LDAP-Verzeichnis zu "
+"extrahieren, fehl. Dies kÃ¶nnte durch eine inkorrekte Konfigurationsdatei "
+"verursacht worden sein (beispielsweise fehlende Â»moduleloadÂ«-Zeilen, um die "
+"Backend-Datenbank zu unterstÃ¼tzen)."
 
 #. Type: error
 #. Description
@@ -275,11 +275,11 @@ msgid ""
 "you should move the old database files back into place, fix whatever caused "
 "slapcat to fail, and run:"
 msgstr ""
-"Dieser Fehlschlag wird später dazu führen, dass auch »slapadd« fehlschlägt. "
+"Dieser Fehlschlag wird spÃ¤ter dazu fÃ¼hren, dass auch Â»slapaddÂ« fehlschlÃ¤gt. "
 "Die alten Datenbankdateien werden jetzt nach /var/backups verschoben. Falls "
 "Sie dieses Upgrade erneut versuchen wollen, sollten Sie die alten "
-"Datenbankdateien wieder zurück an ihren Platz verschieben, den Grund für den "
-"Fehlschlag von slapcat beheben und folgendes ausführen:"
+"Datenbankdateien wieder zurÃ¼ck an ihren Platz verschieben, den Grund fÃ¼r den "
+"Fehlschlag von slapcat beheben und folgendes ausfÃ¼hren:"
 
 #. Type: error
 #. Description
@@ -290,56 +290,18 @@ msgid ""
 "Then move the database files back to a backup area and then try running "
 "slapadd from ${location}."
 msgstr ""
-"Verschieben Sie dann die Datenbankdateien zurück in den Sicherungsbereich "
-"und versuchen Sie, Slapadd von ${location} auszuführen."
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid "Database backend to use:"
-msgstr "Zu verwendendes Datenbank-Backend:"
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"HDB and BDB use similar storage formats, but HDB adds support for subtree "
-"renames. Both support the same configuration options."
-msgstr ""
-"HDB und BDB verwenden ähnliche Speicherformate, aber HDB enthält zusätzlich "
-"Unterstützung für Teilbaum-Umbenennungen. Beide unterstützen die gleichen "
-"Konfigurationsoptionen."
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"The MDB backend is recommended. MDB uses a new storage format and requires "
-"less configuration than BDB or HDB."
-msgstr ""
-"Das MDB-Backend wird empfohlen. MDB verwendet ein neues Speicherformat und "
-"benötigt weniger Konfiguration als BDB oder HDB."
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"In any case, you should review the resulting database configuration for your "
-"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr ""
-"In jedem Fall sollten Sie die erstellte Datenbankkonfiguration im Hinblick "
-"auf Ihre Anforderungen prüfen. Lesen Sie /usr/share/doc/slapd/README.Debian."
-"gz für weitere Details."
+"Verschieben Sie dann die Datenbankdateien zurÃ¼ck in den Sicherungsbereich "
+"und versuchen Sie, Slapadd von ${location} auszufÃ¼hren."
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "Potentially unsafe slapd access control configuration"
-msgstr "Möglicherweise unsichere Slapd-Zugriffssteuerkonfiguration"
+msgstr "MÃ¶glicherweise unsichere Slapd-Zugriffssteuerkonfiguration"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "One or more of the configured databases has an access control rule that "
 "allows users to modify most of their own attributes. This may be unsafe, "
@@ -347,51 +309,51 @@ msgid ""
 msgstr ""
 "Eine oder mehrere der konfigurierten Datenbanken hat eine "
 "Zugriffssteuerregel, die Benutzern erlaubt, die meisten ihrer eigenen "
-"Konfigurationsoptionen zu verändern. Dies kann unsicher sein, abhängig "
+"Konfigurationsoptionen zu verÃ¤ndern. Dies kann unsicher sein, abhÃ¤ngig "
 "davon, wie die Datenbank verwandt wird."
 
 #. Type: note
 #. Description
 #. Translators: keep "by self write" and "to *" unchanged. These are part
 #. of the slapd configuration and are not translatable.
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "In the case of slapd access rules that begin with \"to *\", it is "
 "recommended to remove any instances of \"by self write\", so that users are "
 "only able to modify specifically allowed attributes."
 msgstr ""
-"Im Falle der mit »to *« beginnenden Slapd-Zugriffsregeln, wird empfohlen, "
-"alle Instanzen von »by self write« zu entfernen, so dass Benutzer nur in der "
-"Lage sind, speziell erlaubte Attribute zu ändern."
+"Im Falle der mit Â»to *Â« beginnenden Slapd-Zugriffsregeln, wird empfohlen, "
+"alle Instanzen von Â»by self writeÂ« zu entfernen, so dass Benutzer nur in der "
+"Lage sind, speziell erlaubte Attribute zu Ã¤ndern."
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr "Lesen Sie /usr/share/doc/slapd/README.Debian.gz für weitere Details."
+msgstr "Lesen Sie /usr/share/doc/slapd/README.Debian.gz fÃ¼r weitere Details."
 
 #. Type: select
 #. Choices
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "abort installation"
 msgstr "Installation abbrechen"
 
 #. Type: select
 #. Choices
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "continue regardless"
 msgstr "Trotzdem fortfahren"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid "Manual ppolicy schema update recommended"
 msgstr "Manuelle Aktualisierung des Ppolicy-Schematas empfohlen"
 
 #. Type: select
 #. Description
 #. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
 "to define the pwdMaxRecordedFailure attribute type, which is not present in "
@@ -404,7 +366,7 @@ msgstr ""
 "dass im Schema der Attributstyp pwdMaxRecordedFailure definiert wird, der im "
 "aktuell benutzten Schema nicht vorhanden ist. Es wird empfohlen, die "
 "Aktualisierung jetzt abzubrechen und das Ppolicy-Schema zu aktualisieren, "
-"bevor das Upgrade von Slapd durchgeführt wird. Falls Replizierung verwandt "
+"bevor das Upgrade von Slapd durchgefÃ¼hrt wird. Falls Replizierung verwandt "
 "wird, sollte die Schema-Aktualisierung auf jedem Server angewandt werden, "
 "bevor mit dem Upgrade fortgefahren wird."
 
@@ -412,37 +374,63 @@ msgstr ""
 #. Description
 #. This paragraph is followed by the path to the generated file (not
 #. translatable). The sentence continues in the following paragraph.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "An LDIF file has been generated with the changes required for the upgrade:"
 msgstr ""
-"Eine LDIF-Datei wurde mit den für das Upgrade benötigten Änderungen erstellt:"
+"Eine LDIF-Datei wurde mit den fÃ¼r das Upgrade benÃ¶tigten Ã„nderungen erstellt:"
 
 #. Type: select
 #. Description
 #. This paragraph continues the sentence started in the previous
 #. paragraph. It is followed by a command line.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "so if slapd is using the default access control rules, these changes can be "
 "applied (after starting slapd) by using the command:"
 msgstr ""
-"Falls Slapd daher die Standardzugriffssteuerungsregeln verwendet, können "
-"diese Änderungen (nach dem Start von Slapd) mittels des folgenden Befehls "
+"Falls Slapd daher die Standardzugriffssteuerungsregeln verwendet, kÃ¶nnen "
+"diese Ã„nderungen (nach dem Start von Slapd) mittels des folgenden Befehls "
 "angewandt werden:"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "If instead you choose to continue the installation, the new attribute type "
 "will be added automatically, but the change will not be acted on by slapd "
 "overlays, and replication with other servers may be affected."
 msgstr ""
 "Falls Sie sich stattdessen entscheiden, mit der Installation fortzufahren, "
-"wird der neue Attributstyp automatisch hinzugefügt, aber auf die Änderung "
-"wird nicht durch die Slapd-Überblendungen reagiert und die Replizierung mit "
-"anderen Servern könnte betroffen sein."
+"wird der neue Attributstyp automatisch hinzugefÃ¼gt, aber auf die Ã„nderung "
+"wird nicht durch die Slapd-Ãœberblendungen reagiert und die Replizierung mit "
+"anderen Servern kÃ¶nnte betroffen sein."
+
+#~ msgid "Database backend to use:"
+#~ msgstr "Zu verwendendes Datenbank-Backend:"
+
+#~ msgid ""
+#~ "HDB and BDB use similar storage formats, but HDB adds support for subtree "
+#~ "renames. Both support the same configuration options."
+#~ msgstr ""
+#~ "HDB und BDB verwenden Ã¤hnliche Speicherformate, aber HDB enthÃ¤lt "
+#~ "zusÃ¤tzlich UnterstÃ¼tzung fÃ¼r Teilbaum-Umbenennungen. Beide unterstÃ¼tzen "
+#~ "die gleichen Konfigurationsoptionen."
+
+#~ msgid ""
+#~ "The MDB backend is recommended. MDB uses a new storage format and "
+#~ "requires less configuration than BDB or HDB."
+#~ msgstr ""
+#~ "Das MDB-Backend wird empfohlen. MDB verwendet ein neues Speicherformat "
+#~ "und benÃ¶tigt weniger Konfiguration als BDB oder HDB."
+
+#~ msgid ""
+#~ "In any case, you should review the resulting database configuration for "
+#~ "your needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+#~ msgstr ""
+#~ "In jedem Fall sollten Sie die erstellte Datenbankkonfiguration im "
+#~ "Hinblick auf Ihre Anforderungen prÃ¼fen. Lesen Sie /usr/share/doc/slapd/"
+#~ "README.Debian.gz fÃ¼r weitere Details."
 
 #~ msgid "Allow LDAPv2 protocol?"
 #~ msgstr "LDAPv2-Protokoll erlauben?"
@@ -453,14 +441,14 @@ msgstr ""
 #~ "use LDAPv3, you should select this option and 'allow bind_v2' will be "
 #~ "added to your slapd.conf file."
 #~ msgstr ""
-#~ "Das veraltete LDAPv2-Protokoll ist standardmäßig in slapd deaktiviert. "
-#~ "Programme und Benutzer sollten ein Upgrade auf LDAPv3 durchführen. Falls "
-#~ "Sie alte Programme haben, die LDAPv3 nicht benutzen können, sollten Sie "
-#~ "diese Option wählen und »allow bind_v2« wird zu der Datei slapd.conf "
-#~ "hinzugefügt."
+#~ "Das veraltete LDAPv2-Protokoll ist standardmÃ¤ÃŸig in slapd deaktiviert. "
+#~ "Programme und Benutzer sollten ein Upgrade auf LDAPv3 durchfÃ¼hren. Falls "
+#~ "Sie alte Programme haben, die LDAPv3 nicht benutzen kÃ¶nnen, sollten Sie "
+#~ "diese Option wÃ¤hlen und Â»allow bind_v2Â« wird zu der Datei slapd.conf "
+#~ "hinzugefÃ¼gt."
 
 #~ msgid "slurpd is obsolete; replicas must be reconfigured by hand"
-#~ msgstr "Slurpd ist veraltet; Replikas müssen von Hand rekonfiguriert werden"
+#~ msgstr "Slurpd ist veraltet; Replikas mÃ¼ssen von Hand rekonfiguriert werden"
 
 #~ msgid ""
 #~ "One or more slurpd \"replica\" options were found in your slapd config "
@@ -468,9 +456,9 @@ msgstr ""
 #~ "you will need to migrate your replicas to use the syncrepl protocol "
 #~ "instead."
 #~ msgstr ""
-#~ "In Ihrer Konfiguration wurde beim Upgrade eine oder mehrere »replica«-"
+#~ "In Ihrer Konfiguration wurde beim Upgrade eine oder mehrere Â»replicaÂ«-"
 #~ "Optionen gefunden. Da slurpd beginnend mit OpenLDAP 2.4 veraltet ist, "
-#~ "müssen Sie Ihre Repliken auf die Verwendung des Syncrepl-Protokolls "
+#~ "mÃ¼ssen Sie Ihre Repliken auf die Verwendung des Syncrepl-Protokolls "
 #~ "migrieren."
 
 #~ msgid ""
@@ -479,13 +467,13 @@ msgstr ""
 #~ "hand.  Please see http://www.openldap.org/doc/admin24/syncrepl.html for "
 #~ "details."
 #~ msgstr ""
-#~ "Die Umstellung von slurpd auf das »pull«-basierte Syncrepl-Protokoll kann "
-#~ "nicht automatisch geschehen und Sie müssen Ihre Repliken-Server von Hand "
+#~ "Die Umstellung von slurpd auf das Â»pullÂ«-basierte Syncrepl-Protokoll kann "
+#~ "nicht automatisch geschehen und Sie mÃ¼ssen Ihre Repliken-Server von Hand "
 #~ "konfigurieren. Bitte lesen Sie http://www.openldap.org/doc/admin24/"
-#~ "syncrepl.html für Details."
+#~ "syncrepl.html fÃ¼r Details."
 
 #~ msgid "TLSCipherSuite values have changed"
-#~ msgstr "TLSCipherSuite-Werte haben sich geändert"
+#~ msgstr "TLSCipherSuite-Werte haben sich geÃ¤ndert"
 
 #~ msgid ""
 #~ "A \"TLSCipherSuite\" option was found in your slapd config when "
@@ -494,9 +482,9 @@ msgstr ""
 #~ "result, your existing TLSCipherSuite setting will not work with this "
 #~ "package."
 #~ msgstr ""
-#~ "Eine Option »TLSCipherSuite« wurde beim Upgrade in Ihrer Slapd-"
-#~ "Konfiguration gefunden. Die erlaubten Werte hierfür hängen von der "
-#~ "verwendeten SSL-Implementation ab, die von OpenSSL auf GnuTLS geändert "
+#~ "Eine Option Â»TLSCipherSuiteÂ« wurde beim Upgrade in Ihrer Slapd-"
+#~ "Konfiguration gefunden. Die erlaubten Werte hierfÃ¼r hÃ¤ngen von der "
+#~ "verwendeten SSL-Implementation ab, die von OpenSSL auf GnuTLS geÃ¤ndert "
 #~ "wurde. Im Ergebnis werden Ihre existierenden TLSCipherSuite-Einstellungen "
 #~ "nicht mit diesem Paket funktionieren."
 
@@ -506,11 +494,11 @@ msgstr ""
 #~ "the output of 'gnutls-cli -l' in the gnutls-bin package for the list of "
 #~ "ciphers supported by GnuTLS."
 #~ msgstr ""
-#~ "Diese Einstellung wurde für Sie automatisch auskommentiert. Falls Sie "
-#~ "spezielle Anforderung an die Verschlüsselung haben, bei denen diese "
-#~ "Option wieder aktiviert werden muss, lesen Sie die Ausgabe von »gnutls-"
-#~ "cli -l« aus dem Paket Gnutls-bin für die Liste der von GnuTLS "
-#~ "unterstützen Chiffren."
+#~ "Diese Einstellung wurde fÃ¼r Sie automatisch auskommentiert. Falls Sie "
+#~ "spezielle Anforderung an die VerschlÃ¼sselung haben, bei denen diese "
+#~ "Option wieder aktiviert werden muss, lesen Sie die Ausgabe von Â»gnutls-"
+#~ "cli -lÂ« aus dem Paket Gnutls-bin fÃ¼r die Liste der von GnuTLS "
+#~ "unterstÃ¼tzen Chiffren."
 
 #~ msgid "Back up current database and create a new one?"
 #~ msgstr "Die aktuelle Datenbank sichern und eine neue erstellen?"
@@ -522,7 +510,7 @@ msgstr ""
 #~ "confirm whether you want to back up and abandon the current database."
 #~ msgstr ""
 #~ "Die von Ihnen angegebene Verzeichnisendung (Domain) passt nicht zu der "
-#~ "aktuell in /etc/ldap/slapd.conf eingetragenen. Eine Änderung der "
+#~ "aktuell in /etc/ldap/slapd.conf eingetragenen. Eine Ã„nderung der "
 #~ "Verzeichnisendung verlangt, dass die aktuelle LDAP-Datenbank beiseite "
-#~ "geschoben und eine neue erstellt wird. Bitte bestätigen Sie, ob Sie die "
+#~ "geschoben und eine neue erstellt wird. Bitte bestÃ¤tigen Sie, ob Sie die "
 #~ "aktuelle Datenbank sichern und aufgeben wollen."

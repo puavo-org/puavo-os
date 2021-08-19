@@ -1,0 +1,14 @@
+Description: Replace upstream version with Debian version in version strings
+Forwarded: not-needed
+Author: Ryan Tandy <ryan@nardis.ca>
+--- a/build/version.sh
++++ b/build/version.sh
+@@ -40,7 +40,7 @@
+ echo OL_API_INC=$ol_api_inc
+ echo OL_API_LIB_RELEASE=$ol_api_lib_release
+ echo OL_API_LIB_VERSION=$ol_api_lib_version
+-echo OL_VERSION=$ol_version
++echo OL_VERSION=\"${DEB_VERSION:-$ol_version}\"
+ echo OL_TYPE=$ol_type
+ echo OL_STRING=\"${ol_string}\"
+ echo OL_RELEASE_DATE=\"${ol_release_date}\"

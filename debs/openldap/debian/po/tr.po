@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-06-25 02:57+0000\n"
+"POT-Creation-Date: 2019-10-03 23:01+0000\n"
 "PO-Revision-Date: 2017-01-13 18:42+0300\n"
 "Last-Translator: Atila KOÇ <koc@artielektronik.com.tr>\n"
 "Language-Team: Turkish <debian-l10n-turkish@lists.debian.org>\n"
@@ -281,53 +281,15 @@ msgstr ""
 "Daha sonra veritabanı dosyalarını bir yedekleme alanına geri taşıyın ve "
 "${location} konumundan 'slapadd' komutunu çalıştırınız."
 
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid "Database backend to use:"
-msgstr "Kullanılacak veritabanı arka ucu:"
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"HDB and BDB use similar storage formats, but HDB adds support for subtree "
-"renames. Both support the same configuration options."
-msgstr ""
-"HDB ve BDB benzer depolama biçimleri kullanırlar, fakat HDB alt ağaç yeniden "
-"adlandırmalarına olanak tanır. Her ikisi de aynı yapılandırma seçeneklerini "
-"desteklerler."
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"The MDB backend is recommended. MDB uses a new storage format and requires "
-"less configuration than BDB or HDB."
-msgstr ""
-"MDB arka ucu önerilir. MDB yeni bir depolama biçimi kullanır ve BDB ya da "
-"HDB'ye göre daha az yapılandırma gerektirir."
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"In any case, you should review the resulting database configuration for your "
-"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr ""
-"Her durumda sonuçlanan veritabanı yapılandırmasının gereksinimlerinize "
-"uyduğundan emin olmalısınız. Daha fazla bilgi için /usr/share/doc/slapd/"
-"README.Debian.gz dosyasını okuyunuz."
-
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "Potentially unsafe slapd access control configuration"
 msgstr "Olası güvensiz slapd erişim denetimi yapılandırması"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "One or more of the configured databases has an access control rule that "
 "allows users to modify most of their own attributes. This may be unsafe, "
@@ -342,7 +304,7 @@ msgstr ""
 #. Description
 #. Translators: keep "by self write" and "to *" unchanged. These are part
 #. of the slapd configuration and are not translatable.
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "In the case of slapd access rules that begin with \"to *\", it is "
 "recommended to remove any instances of \"by self write\", so that users are "
@@ -354,7 +316,7 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr ""
 "Daha fazla bilgi için /usr/share/doc/slapd/README.Debian.gz dosyasını "
@@ -362,26 +324,26 @@ msgstr ""
 
 #. Type: select
 #. Choices
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "abort installation"
 msgstr "kurulumdan çık"
 
 #. Type: select
 #. Choices
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "continue regardless"
 msgstr "yine de sürdür"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid "Manual ppolicy schema update recommended"
 msgstr "ppolicy şemasının elle yükseltilmesi öneriliyor"
 
 #. Type: select
 #. Description
 #. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
 "to define the pwdMaxRecordedFailure attribute type, which is not present in "
@@ -401,7 +363,7 @@ msgstr ""
 #. Description
 #. This paragraph is followed by the path to the generated file (not
 #. translatable). The sentence continues in the following paragraph.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "An LDIF file has been generated with the changes required for the upgrade:"
 msgstr ""
@@ -411,7 +373,7 @@ msgstr ""
 #. Description
 #. This paragraph continues the sentence started in the previous
 #. paragraph. It is followed by a command line.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "so if slapd is using the default access control rules, these changes can be "
 "applied (after starting slapd) by using the command:"
@@ -422,7 +384,7 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "If instead you choose to continue the installation, the new attribute type "
 "will be added automatically, but the change will not be acted on by slapd "
@@ -431,6 +393,32 @@ msgstr ""
 "Eğer kurulumu sürdürmeyi yeğlerseniz, yeni öznitelik kendiliğinden eklenecek "
 "fakat bu değişim slapd katmanlarında hayata geçmeyecek ve dizinleri "
 "kopyalayan sunucular varsa bu durumdan etkilenebileceklerdir."
+
+#~ msgid "Database backend to use:"
+#~ msgstr "Kullanılacak veritabanı arka ucu:"
+
+#~ msgid ""
+#~ "HDB and BDB use similar storage formats, but HDB adds support for subtree "
+#~ "renames. Both support the same configuration options."
+#~ msgstr ""
+#~ "HDB ve BDB benzer depolama biçimleri kullanırlar, fakat HDB alt ağaç "
+#~ "yeniden adlandırmalarına olanak tanır. Her ikisi de aynı yapılandırma "
+#~ "seçeneklerini desteklerler."
+
+#~ msgid ""
+#~ "The MDB backend is recommended. MDB uses a new storage format and "
+#~ "requires less configuration than BDB or HDB."
+#~ msgstr ""
+#~ "MDB arka ucu önerilir. MDB yeni bir depolama biçimi kullanır ve BDB ya da "
+#~ "HDB'ye göre daha az yapılandırma gerektirir."
+
+#~ msgid ""
+#~ "In any case, you should review the resulting database configuration for "
+#~ "your needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+#~ msgstr ""
+#~ "Her durumda sonuçlanan veritabanı yapılandırmasının gereksinimlerinize "
+#~ "uyduğundan emin olmalısınız. Daha fazla bilgi için /usr/share/doc/slapd/"
+#~ "README.Debian.gz dosyasını okuyunuz."
 
 #~ msgid "Allow LDAPv2 protocol?"
 #~ msgstr "LDAPv2 iletişim kuralına izin verilsin mi?"

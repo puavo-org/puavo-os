@@ -120,20 +120,6 @@ _Description: slapcat failure during upgrade
  Then move the database files back to a backup area and then try running
  slapadd from ${location}.
 
-Template: slapd/backend
-Type: select
-Choices: BDB, HDB, MDB
-Default: MDB
-_Description: Database backend to use:
- HDB and BDB use similar storage formats, but HDB adds support for
- subtree renames. Both support the same configuration options.
- .
- The MDB backend is recommended. MDB uses a new storage format and
- requires less configuration than BDB or HDB.
- .
- In any case, you should review the resulting database configuration for
- your needs. See /usr/share/doc/slapd/README.Debian.gz for more details.
-
 Template: slapd/unsafe_selfwrite_acl
 Type: note
 #flag:comment:3

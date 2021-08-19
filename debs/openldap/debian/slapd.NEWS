@@ -1,3 +1,18 @@
+openldap (2.4.49+dfsg-1) unstable; urgency=medium
+
+   This release fixes an issue with how the slapo-ppolicy(5) overlay
+   stores the pwdChangedTime attribute in the database. Existing
+   incorrect records could cause slapd to crash if a database
+   administrator uses the Relax control to modify pwdChangedTime.
+
+   Users of the ppolicy overlay are recommended to reload (slapcat and
+   slapadd) their database in order to fix existing data.
+
+   Please see <https://www.openldap.org/its/?findid=9126> for more
+   information.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 03 Feb 2020 09:58:29 -0800
+
 openldap (2.4.44+dfsg-1) unstable; urgency=medium
 
    The slapd package no longer includes OpenSLP support. The

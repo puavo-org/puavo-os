@@ -2,9 +2,8 @@ etc/ldap/schema
 usr/lib/slapd usr/sbin
 usr/lib/*/libslapi-*.so.*
 debian/ldiftopasswd usr/share/slapd
-debian/DB_CONFIG usr/share/slapd
-debian/slapd.conf usr/share/slapd
 debian/slapd.init.ldif usr/share/slapd
+debian/slapd-remain-after-exit.conf lib/systemd/system/slapd.service.d
 
 usr/lib/ldap/back_*.so*
 usr/lib/ldap/back_*.la

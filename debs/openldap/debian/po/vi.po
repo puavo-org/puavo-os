@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap 2.4.44+dfsg-4\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-06-25 02:57+0000\n"
+"POT-Creation-Date: 2019-10-03 23:01+0000\n"
 "PO-Revision-Date: 2017-02-09 13:57+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <debian-l10n-vietnamese@lists.debian.org>\n"
@@ -282,56 +282,15 @@ msgstr ""
 "Sau đó, hãy di chuyển các tập tin cơ sở dữ liệu sang một vùng sao lưu, và "
 "thử chạy trình slapadd từ vị trí “${location}”."
 
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid "Database backend to use:"
-msgstr "Ứng dụng chạy cơ sở dữ liệu cần dùng:"
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"HDB and BDB use similar storage formats, but HDB adds support for subtree "
-"renames. Both support the same configuration options."
-msgstr ""
-"HDB và BDB dùng định dạng lưu trữ tương tự nhau, nhưng HDB thêm hỗ trợ để "
-"thay đổi tên của cây con. Cả hai hỗ trợ cùng những tùy chọn cấu hình."
-
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"The MDB backend is recommended. MDB uses a new storage format and requires "
-"less configuration than BDB or HDB."
-msgstr ""
-"Khuyên bạn dùng ứng dụng chạy phía sau MDB. MDB dùng định dạng lưu trữ mới "
-"và phần cấu hình cũng ít hơn là BDB hay HDB."
-
-# The BDB backend is the recommended choice of the OpenLDAP developers.
-# When using the BDB backend make sure that you configure the underlying
-# database for your requirements. Look into /usr/share/doc/slapd/README.
-# DB_CONFIG.gz
-#. Type: select
-#. Description
-#: ../slapd.templates:15001
-msgid ""
-"In any case, you should review the resulting database configuration for your "
-"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr ""
-"Trong mỗi trường hợp, bạn nên xem lại cấu hình cơ sở dữ liệu kết quả có "
-"thích hợp với nhu cầu của bạn. Xem tài liệu Đọc Đi “/usr/share/doc/slapd/"
-"README.DB_CONFIG.gz” để tìm chi tiết."
-
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "Potentially unsafe slapd access control configuration"
 msgstr "Cấu hình điều khiển truy cập slapd tiềm ẩn sự thiếu an toàn"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "One or more of the configured databases has an access control rule that "
 "allows users to modify most of their own attributes. This may be unsafe, "
@@ -345,7 +304,7 @@ msgstr ""
 #. Description
 #. Translators: keep "by self write" and "to *" unchanged. These are part
 #. of the slapd configuration and are not translatable.
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "In the case of slapd access rules that begin with \"to *\", it is "
 "recommended to remove any instances of \"by self write\", so that users are "
@@ -357,32 +316,32 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr "Đọc /usr/share/doc/slapd/README.Debian.gz để biết thêm chi tiết."
 
 #. Type: select
 #. Choices
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "abort installation"
 msgstr "hủy bỏ cài đặt"
 
 #. Type: select
 #. Choices
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "continue regardless"
 msgstr "vẫn tiếp tục"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid "Manual ppolicy schema update recommended"
 msgstr "Khuyến khích cập nhật lược đồ ppolicy"
 
 #. Type: select
 #. Description
 #. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
 "to define the pwdMaxRecordedFailure attribute type, which is not present in "
@@ -401,7 +360,7 @@ msgstr ""
 #. Description
 #. This paragraph is followed by the path to the generated file (not
 #. translatable). The sentence continues in the following paragraph.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "An LDIF file has been generated with the changes required for the upgrade:"
 msgstr "Một tập tin LDIF đã được tạo với các thay đổi theo yêu cầu cập nhật:"
@@ -410,7 +369,7 @@ msgstr "Một tập tin LDIF đã được tạo với các thay đổi theo yê
 #. Description
 #. This paragraph continues the sentence started in the previous
 #. paragraph. It is followed by a command line.
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "so if slapd is using the default access control rules, these changes can be "
 "applied (after starting slapd) by using the command:"
@@ -421,7 +380,7 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../slapd.templates:17002
+#: ../slapd.templates:16002
 msgid ""
 "If instead you choose to continue the installation, the new attribute type "
 "will be added automatically, but the change will not be acted on by slapd "
@@ -430,6 +389,35 @@ msgstr ""
 "Nếu thay vào đó bạn chọn tiếp tục cài đặt, kiểu thuộc tính mới sẽ được thêm "
 "một cách tự động, nhưng thay đổi sẽ không được thực hiện trên các overlay "
 "slapd, và bản sao với các máy phục vụ khác có thể chịu tác động."
+
+#~ msgid "Database backend to use:"
+#~ msgstr "Ứng dụng chạy cơ sở dữ liệu cần dùng:"
+
+#~ msgid ""
+#~ "HDB and BDB use similar storage formats, but HDB adds support for subtree "
+#~ "renames. Both support the same configuration options."
+#~ msgstr ""
+#~ "HDB và BDB dùng định dạng lưu trữ tương tự nhau, nhưng HDB thêm hỗ trợ để "
+#~ "thay đổi tên của cây con. Cả hai hỗ trợ cùng những tùy chọn cấu hình."
+
+#~ msgid ""
+#~ "The MDB backend is recommended. MDB uses a new storage format and "
+#~ "requires less configuration than BDB or HDB."
+#~ msgstr ""
+#~ "Khuyên bạn dùng ứng dụng chạy phía sau MDB. MDB dùng định dạng lưu trữ "
+#~ "mới và phần cấu hình cũng ít hơn là BDB hay HDB."
+
+# The BDB backend is the recommended choice of the OpenLDAP developers.
+# When using the BDB backend make sure that you configure the underlying
+# database for your requirements. Look into /usr/share/doc/slapd/README.
+# DB_CONFIG.gz
+#~ msgid ""
+#~ "In any case, you should review the resulting database configuration for "
+#~ "your needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+#~ msgstr ""
+#~ "Trong mỗi trường hợp, bạn nên xem lại cấu hình cơ sở dữ liệu kết quả có "
+#~ "thích hợp với nhu cầu của bạn. Xem tài liệu Đọc Đi “/usr/share/doc/slapd/"
+#~ "README.DB_CONFIG.gz” để tìm chi tiết."
 
 #~ msgid "Allow LDAPv2 protocol?"
 #~ msgstr "Cho phép giao thức LDAPv2?"
