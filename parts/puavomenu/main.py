@@ -128,11 +128,12 @@ class PuavoMenu(Gtk.Window):
                 logging.error('CSS loading failed: %s', str(e))
                 logging.error('Custom styles disabled!')
 
-        # Create the devtools popup menu
-        if not self.__settings.prod_mode:
-            self.menu_signal = self.connect('button-press-event', self.__devtools_menu)
-
+        # Setup some window-level events
         self.connect('delete-event', self.__try_exit)
+        self.connect('key-press-event', self.__on_keypress)
+        self.connect('button-press-event', self.__on_mouse_click)
+
+        self.__focus_signal = None
 
         # ----------------------------------------------------------------------
         # Menu data
@@ -289,14 +290,6 @@ class PuavoMenu(Gtk.Window):
         self.sidebar_box = Gtk.Box(name='sidebar')
         self.sidebar_box.pack_start(self.__sidebar.container, False, False, 0)
         self.sidebar_box.show()
-
-        # ----------------------------------------------------------------------
-        # Setup GTK signal handlers
-
-        # Listen for Esc keypresses for manually hiding the window
-        self.connect('key-press-event', self.__on_keypress)
-
-        self.__focus_signal = None
 
         if not self.__settings.autohide:
             # Keep the window on top of everything and show it
@@ -912,6 +905,28 @@ class PuavoMenu(Gtk.Window):
         self.__category_buttons.set_current_page(0)
 
 
+    # Mouse click handler. React to mouse "back" button presses
+    # and open the development menu in development mode.
+    def __on_mouse_click(self, widget, event):
+        # I'm not sure where that 8 comes from. Only the first three mouse
+        # buttons have standardized values. I tested this with two "multimedia"
+        # mice that have forward/backward side buttons and on both mice,
+        # pressing the "back" button produces 8 and "forward" produces 9.
+        # They don't seem to produce keypresses, so I can't handle them
+        # in the keypress handler.
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 8:
+            if self.__in_search:
+                return True
+
+            if self.current_menu is None:
+                return True
+
+            self.__clicked_back_button(None)
+            return True
+
+        return self.__devtools_menu(widget, event)
+
+
     # --------------------------------------------------------------------------
     # Program and menu button click handlers
 
@@ -1175,6 +1190,11 @@ class PuavoMenu(Gtk.Window):
             # Esc -> hide the menu
             if self.get_focus() != self.__search:
                 self.autohide()
+        elif key_event.keyval == Gdk.KEY_Left and \
+             (key_event.state & Gdk.ModifierType.MOD1_MASK) == Gdk.ModifierType.MOD1_MASK:
+            if not self.__in_search and self.current_menu:
+                # Alt+Left -> exit submenu and go back to the main level
+                self.__clicked_back_button(None)
         elif key_event.keyval != Gdk.KEY_Return:
             # If the user starts typing, focus the search box. This only reacts
             # to letters, numbers and punctuation, and ignores arrows, function
@@ -1547,10 +1567,10 @@ class PuavoMenu(Gtk.Window):
     # The devtools menu and its commands
     def __devtools_menu(self, widget, event):
         if self.__settings.prod_mode:
-            return
+            return True
 
         if event.button != 3:
-            return
+            return True
 
         def purge(menuitem):
             if self.menudata:
@@ -1680,6 +1700,8 @@ class PuavoMenu(Gtk.Window):
             data=None,
             button=1,
             activate_time=0)
+
+        return False
 
 
 # ==============================================================================
