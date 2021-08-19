@@ -146,6 +146,8 @@ class PuavoMenu(Gtk.Window):
         # The current menu (None if on category top-level)
         self.current_menu = None
 
+        self.__in_search = False
+
         # Storage for 48x48 -pixel program and menu icons. Maintained
         # separately from the menu data.
         self.__icons = icons.IconCache(1024, 48)
@@ -170,8 +172,6 @@ class PuavoMenu(Gtk.Window):
 
         # Main menu container
         self.menu_fixed = Gtk.Fixed()
-
-        # TODO: Gtk.Notebook isn't the best choice for this
 
         # Category tabs
         self.__category_buttons = Gtk.Notebook(name='category')
@@ -210,7 +210,7 @@ class PuavoMenu(Gtk.Window):
             self.__search.connect('changed', self.__do_search)
 
         self.__search_keypress_signal = \
-            self.__search.connect('key-press-event', self.__search_keypress)
+            self.__search.connect('key-press-event', self.__on_search_keypress)
 
         self.__search.set_placeholder_text(
             utils.localize(STRINGS['search_placeholder'], self.__settings.language))
@@ -294,8 +294,7 @@ class PuavoMenu(Gtk.Window):
         # Setup GTK signal handlers
 
         # Listen for Esc keypresses for manually hiding the window
-        self.__main_keypress_signal = \
-            self.connect('key-press-event', self.__check_for_esc)
+        self.connect('key-press-event', self.__on_keypress)
 
         self.__focus_signal = None
 
@@ -306,8 +305,6 @@ class PuavoMenu(Gtk.Window):
         else:
             # In auto-hide mode, hide the window when it loses focus
             self.enable_out_of_focus_hide()
-
-        self.__search.connect('focus-out-event', self.__search_out)
 
         # ----------------------------------------------------------------------
         # Final UI assembly
@@ -539,6 +536,8 @@ class PuavoMenu(Gtk.Window):
 
             self.menudata = None
             return False
+
+        self.__in_search = False
 
         # We got this far, so we have at least some menu data.
         # Prepare the user interface.
@@ -793,7 +792,7 @@ class PuavoMenu(Gtk.Window):
 
 
     def __update_menu_title(self):
-        if self.current_menu:
+        if self.current_menu and not self.__in_search:
             self.__menu_title.set_markup(
                 '<big>{0}</big>'.format(self.current_menu.name))
             self.__menu_title.show()
@@ -880,35 +879,35 @@ class PuavoMenu(Gtk.Window):
 
     # Change the category
     def __clicked_category(self, widget, frame, num):
-        self.__clear_search_field()
-        self.__back_button.hide()
         self.current_category = num
         self.current_menu = None
+        self.__in_search = False
+        self.__clear_search_field()
         self.__create_current_menu()
 
 
     # Go back to top level
     def __clicked_back_button(self, button):
-        self.__clear_search_field()
-        self.__back_button.hide()
+        self.__in_search = False
         self.current_menu = None
+        self.__clear_search_field()
         self.__create_current_menu()
 
 
     # Enter a menu
     def __clicked_menu_button(self, button):
-        self.__clear_search_field()
-        self.__back_button.show()
+        self.__in_search = False
         self.current_menu = button.data
+        self.__clear_search_field()
         self.__create_current_menu()
 
 
     # Resets the menu back to the default view
     def reset_view(self):
-        self.__clear_search_field()
-        self.__back_button.hide()
         self.current_category = 0
         self.current_menu = None
+        self.__in_search = False
+        self.__clear_search_field()
         self.__create_current_menu()
         self.__category_buttons.set_current_page(0)
 
@@ -920,6 +919,8 @@ class PuavoMenu(Gtk.Window):
     # Launch a normal program
     def __launch_program(self, program):
         logging.info('Clicked program button "%s"', program.menudata_id)
+
+        self.__in_search = False
 
         # Run a command or open a website?
         if isinstance(program, menudata.Program):
@@ -1096,9 +1097,12 @@ class PuavoMenu(Gtk.Window):
         if self.menudata is None:
             return
 
+        self.__in_search = True
+
         key = self.__get_search_text()
 
         if not key:
+            self.__in_search = False
             self.__create_current_menu()
             return
 
@@ -1118,38 +1122,44 @@ class PuavoMenu(Gtk.Window):
             new_buttons.append(b)
 
         self.__place_buttons_in_container(new_buttons)
+        self.__update_menu_title()
 
 
     # Clear the search box without triggering another search
+    # TODO: The usefulness of this method is questionable. After commenting
+    # out everything but set_text()... everything still works just fine.
+    # Perhaps this method isn't needed anymore? It's very old code, older
+    # than Puavomenu's first commit. Probably dates back to the original
+    # GTK2-based "WebmenuNG" prototypes in mid-2017.
     def __clear_search_field(self):
         self.__search.disconnect(self.__search_keypress_signal)
         self.__search.disconnect(self.__search_changed_signal)
         self.__search.set_text('')
         self.__search_keypress_signal = \
-            self.__search.connect('key-press-event', self.__search_keypress)
+            self.__search.connect('key-press-event', self.__on_search_keypress)
         self.__search_changed_signal = \
             self.__search.connect('changed', self.__do_search)
 
 
-    # Responds to Esc and Enter keypresses in the search field
-    def __search_keypress(self, widget, key_event):
-        self.__back_button.hide()
-        self.__menu_title.hide()
+    def __on_search_keypress(self, widget, key_event):
+        text = self.__get_search_text()
 
         if key_event.keyval == Gdk.KEY_Escape:
-            if not self.__get_search_text():
+            self.__in_search = False
+
+            if text:
                 # Cancel an ongoing search (go back to previous view)
                 self.__clear_search_field()
                 self.__create_current_menu()
             else:
-                # The search field is empty, hide the window (we have
-                # another Esc handler elsewhere that's used when the
-                # search box has no focus)
+                # The search field is empty, hide the window
                 logging.debug('Search field is empty and Esc pressed, '
                               'hiding the window')
                 self.autohide()
         elif key_event.keyval == Gdk.KEY_Return:
-            if self.__get_search_text():
+            self.__in_search = False
+
+            if text:
                 buttons = self.__programs_icons.get_children()
 
                 if len(buttons) == 1:
@@ -1160,26 +1170,34 @@ class PuavoMenu(Gtk.Window):
         return False
 
 
-    # Handler for the GTK focus-out-event in the search box.
-    # Put the focus back in the search box.
-    def __search_out(self, *unused):
-        self.__search.grab_focus()
+    def __on_keypress(self, widget, key_event):
+        if key_event.keyval == Gdk.KEY_Escape:
+            # Esc -> hide the menu
+            if self.get_focus() != self.__search:
+                self.autohide()
+        elif key_event.keyval != Gdk.KEY_Return:
+            # If the user starts typing, focus the search box. This only reacts
+            # to letters, numbers and punctuation, and ignores arrows, function
+            # keys, etc. I spent a while wondering how to distinguish between
+            # these keys. Looking at the documentation about Gdk.EventKey
+            # (which key_event is), there is a member called "string" which
+            # contains a textual representation of the pressed key and it's
+            # empty unless the key is a "character" (so to speak). However,
+            # that member is deprecated and should not be used. But there's
+            # another member, length, that tells the length of the string field
+            # in bytes. We don't need to know what letter/number/etc. was
+            # actually pressed, we just need to know that something was pressed
+            # and let the search box deal with it. I don't know how reliable
+            # this is, but it seems to work for now.
+            if key_event.length and self.get_focus() != self.__search:
+                self.__in_search = True
+                self.__search.grab_focus()
+
+        return False
 
 
     # --------------------------------------------------------------------------
     # Window visibility management
-
-
-    # Hides the window if Esc is pressed when the keyboard focus
-    # is not in the search box (the search box has its own Esc
-    # handler).
-    def __check_for_esc(self, widget, key_event):
-        if key_event.keyval != Gdk.KEY_Escape:
-            return
-
-        if self.__settings.prod_mode:
-            self.set_keep_above(False)
-            self.set_visible(False)
 
 
     # Enables window out-of-focus autohiding. You need to call this
@@ -1219,6 +1237,17 @@ class PuavoMenu(Gtk.Window):
         if self.__settings.autohide:
             self.set_keep_above(False)
             self.set_visible(False)
+        else:
+            logging.debug('Not hiding the menu window in development mode')
+
+
+    # Something was clicked in the sidebar. We don't know what it is, and we
+    # don't even care. We just need to do some state management.
+    def clicked_sidebar_button(self):
+        self.autohide()
+        self.__in_search = False
+        self.__clear_search_field()
+        self.__create_current_menu()
 
 
     # Quits the program, if permitted. The signal handlers always call

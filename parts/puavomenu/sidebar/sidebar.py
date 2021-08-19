@@ -323,7 +323,7 @@ class Sidebar:
                 utils.localize(STRINGS['sb_avatar_link_failed'], self.__settings.language),
                 str(exception))
 
-        self.__parent.autohide()
+        self.__parent.clicked_sidebar_button()
 
 
     # Open the changelog
@@ -344,7 +344,7 @@ class Sidebar:
                 utils.localize(STRINGS['sb_changelog_link_failed'], self.__settings.language),
                 str(exception))
 
-        self.__parent.autohide()
+        self.__parent.clicked_sidebar_button()
 
 
     # Generic sidebar button command handler
@@ -364,7 +364,7 @@ class Sidebar:
                     'This button has no commands associated with it.')
                 return
 
-            self.__parent.autohide()
+            self.__parent.clicked_sidebar_button()
 
             # Expand variables
             if command.get('have_vars', False):
@@ -404,8 +404,6 @@ class Sidebar:
                     width=width,
                     height=height,
                     enable_js=enable_js)
-
-                self.__parent.autohide()
         except Exception as exception:
             logging.error('Could not process a sidebar button click!')
             logging.error(str(exception))
