@@ -10,6 +10,8 @@ import time
 
 import utils
 
+from strings import _tr
+
 import filters.tags
 import filters.conditionals
 
@@ -372,33 +374,33 @@ def load_icons(programs, menus, icon_locator, icon_cache):
 
 # Finds the best translated string for the current language in progams,
 # menus and categrories
-def localize_entries(programs, menus, categories, language):
+def localize_entries(programs, menus, categories):
     for _, prog in programs.items():
         if not prog['flags'] & menudata.ProgramFlags.USED:
             continue
 
         if 'name' in prog:
-            prog['name'] = utils.localize(prog['name'], language)
+            prog['name'] = _tr.localize(prog['name'])
 
         if 'description' in prog:
-            prog['description'] = utils.localize(prog['description'], language)
+            prog['description'] = _tr.localize(prog['description'])
 
     for _, menu in menus.items():
         if not menu['flags'] & menudata.MenuFlags.USED:
             continue
 
         if 'name' in menu:
-            menu['name'] = utils.localize(menu['name'], language)
+            menu['name'] = _tr.localize(menu['name'])
 
         if 'description' in menu:
-            menu['description'] = utils.localize(menu['description'], language)
+            menu['description'] = _tr.localize(menu['description'])
 
     for _, category in categories.items():
         if not category['flags'] & menudata.CategoryFlags.USED:
             continue
 
         if 'name' in category:
-            category['name'] = utils.localize(category['name'], language)
+            category['name'] = _tr.localize(category['name'])
 
 
 # Sort the categories by position, but if the positions are identical,
@@ -536,7 +538,7 @@ def load(menudata_files,        # data source
     # Must be done before .desktop files are loaded, as the dict merge
     # algorithm cannot merge dicts with strings
 
-    localize_entries(programs, menus, categories, language)
+    localize_entries(programs, menus, categories)
 
     # --------------------------------------------------------------------------
     # Locate and load .desktop files for desktop programs

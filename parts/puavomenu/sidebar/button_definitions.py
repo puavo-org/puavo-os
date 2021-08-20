@@ -1,13 +1,12 @@
 # Button definitions
 
-from strings import STRINGS
 import utils
 
 
 SB_CHANGE_PASSWORD = {
     'name': 'change_password',
 
-    'title': STRINGS['sb_change_password'],
+    'title': 'sb_change_password',
 
     'icon': '/usr/share/icons/Tela/22/emblems/emblem-readonly.svg',
 
@@ -16,7 +15,7 @@ SB_CHANGE_PASSWORD = {
         'args': 'http://$(puavo_domain)/users/password/own?changing=$(user_name)&lang=$(user_language)&theme=$(user_theme)$(password_tabs)',
         'have_vars': True,
         'webwindow': {
-            'title': STRINGS['sb_change_password_window_title'],
+            'title': 'sb_change_password_window_title',
             'width': 1000,
             'height': 650,
             'enable_js': True,
@@ -27,7 +26,7 @@ SB_CHANGE_PASSWORD = {
 SB_SUPPORT = {
     'name': 'support',
 
-    'title': STRINGS['sb_support'],
+    'title': 'sb_support',
 
     'icon': '/usr/share/icons/Tela/22/emblems/emblem-question.svg',
 
@@ -41,7 +40,7 @@ SB_SUPPORT = {
 SB_LAPTOP_SETTINGS = {
     'name': 'laptop-settings',
 
-    'title': STRINGS['sb_laptop_setup'],
+    'title': 'sb_laptop_setup',
 
     'icon': '/usr/share/icons/Tela/32/devices/computer-laptop.svg',
 
@@ -54,7 +53,7 @@ SB_LAPTOP_SETTINGS = {
 SB_PUAVOPKG_INSTALLER = {
     'name': 'puavopkg-installer',
 
-    'title': STRINGS['sb_puavopkg_installer'],
+    'title': 'sb_puavopkg_installer',
 
     'icon': '/usr/share/icons/Tela/scalable/apps/system-software-install.svg',
 
@@ -67,7 +66,7 @@ SB_PUAVOPKG_INSTALLER = {
 SB_SYSTEM_SETTINGS = {
     'name': 'system-settings',
 
-    'title': STRINGS['sb_system_settings'],
+    'title': 'sb_system_settings',
 
     'icon': '/usr/share/icons/Tela/scalable/apps/systemsettings.svg',
 
@@ -80,7 +79,7 @@ SB_SYSTEM_SETTINGS = {
 SB_LOCK_SCREEN = {
     'name': 'lock-screen',
 
-    'title': STRINGS['sb_lock_screen'],
+    'title': 'sb_lock_screen',
 
     'icon': '/usr/share/icons/Tela/scalable/apps/system-lock-screen.svg',
 
@@ -99,7 +98,7 @@ SB_LOCK_SCREEN = {
 SB_SLEEP_MODE = {
     'name': 'sleep-mode',
 
-    'title': STRINGS['sb_hibernate'],
+    'title': 'sb_hibernate',
 
     'icon': '/usr/share/icons/Tela/scalable/apps/system-suspend-hibernate.svg',
 
@@ -120,7 +119,7 @@ SB_SLEEP_MODE = {
 SB_LOGOUT = {
     'name': 'logout',
 
-    'title': STRINGS['sb_logout'],
+    'title': 'sb_logout',
 
     'icon': '/usr/share/icons/Papirus/64x64/apps/gnome-logout.svg',
 
@@ -133,7 +132,7 @@ SB_LOGOUT = {
 SB_RESTART = {
     'name': 'restart',
 
-    'title': STRINGS['sb_restart'],
+    'title': 'sb_restart',
 
     'icon': '/usr/share/icons/Tela/scalable/apps/system-restart.svg',
 
@@ -146,7 +145,7 @@ SB_RESTART = {
 SB_SHUTDOWN = {
     'name': 'shutdown',
 
-    'title': STRINGS['sb_shutdown'],
+    'title': 'sb_shutdown',
 
     'icon': '/usr/share/icons/Tela/scalable/apps/system-shutdown.svg',
 

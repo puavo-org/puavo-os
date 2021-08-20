@@ -3,38 +3,6 @@
 import logging
 
 
-def localize(where, lang):
-    """Given a string/list/dict, looks up a localized string using the
-    current language."""
-
-    if where is None:
-        logging.error('localize(): "where" is None, nothing to localize!')
-        return '[ERROR]'
-
-    if isinstance(where, str):
-        # just one string, nothing to localize, use it as-is
-        return where
-
-    if isinstance(where, list):
-        # a list of dicts, merge them
-        where = {k: v for p in where for k, v in p.items()}
-
-    if lang in where:
-        # have a localized string, use it
-        return str(where[lang])
-
-    if 'en' in where:
-        # no localized string available; try English, it's the default
-        return str(where['en'])
-
-    # it's a list with only one entry and it's not the language
-    # we want, but we have to use it anyway
-    logging.warning('localize(): missing localization for "%s" in "%s"',
-                    lang, where)
-
-    return str(where[list(where)[0]])
-
-
 def is_empty(string):
     """Returns true if 's' is completely empty. This ugly hacky function
     is needed because YAML."""

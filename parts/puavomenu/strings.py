@@ -1,6 +1,9 @@
 # All strings in one file for easy translation. No need to slowly parse
 # configuration files for something that practically never changes.
 
+import logging
+
+
 STRINGS = {
     # --------------------------------------------------------------------------
     # Main window
@@ -242,3 +245,66 @@ STRINGS = {
         'de': 'Entferne Lesezeichen',
     },
 }
+
+
+class Translate:
+    def __init__(self):
+        self.language = 'en'
+
+
+    def set_language(self, language):
+        # This assumes the language code has been validated elsewhere
+        self.language = language
+
+
+    # Call the instance like a function ("_tr('id')") to translate a string
+    def __call__(self, key):
+        if key is None:
+            return None
+
+        if key not in STRINGS:
+            # Make these loud
+            raise RuntimeError(f'Translate::__call__(): invalid string key "{key}"')
+
+        if self.language not in STRINGS[key]:
+            print(f'ERROR: Translation key "{key}" has no string for language "{self.language}"')
+            return f"({key})"
+
+        return STRINGS[key][self.language]
+
+
+    # Translates program names, descriptions, hover texts, etc.
+    def localize(self, where):
+        """Given a string/list/dict, looks up a localized string using the
+        current language."""
+
+        if where is None:
+            logging.error('localize(): "where" is None, nothing to localize!')
+            return '[ERROR]'
+
+        if isinstance(where, str):
+            # just one string, nothing to localize, use it as-is
+            return where
+
+        if isinstance(where, list):
+            # a list of dicts, merge them
+            where = {k: v for p in where for k, v in p.items()}
+
+        if self.language in where:
+            # have a localized string, use it
+            return str(where[self.language])
+
+        if 'en' in where:
+            # no localized string available; try English, it's the default
+            return str(where['en'])
+
+        # it's a list with only one entry and it's not the language
+        # we want, but we have to use it anyway
+        logging.warning('localize(): missing localization for "%s" in "%s"',
+                        self.language, where)
+
+        return str(where[list(where)[0]])
+
+
+# A global instance
+_tr = Translate()

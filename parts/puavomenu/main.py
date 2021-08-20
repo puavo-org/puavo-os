@@ -38,7 +38,7 @@ import buttons.program, buttons.menu
 import frequent_programs
 from sidebar import sidebar
 
-from strings import STRINGS
+from strings import _tr
 
 
 class PuavoMenu(Gtk.Window):
@@ -213,8 +213,7 @@ class PuavoMenu(Gtk.Window):
         self.__search_keypress_signal = \
             self.__search.connect('key-press-event', self.__on_search_keypress)
 
-        self.__search.set_placeholder_text(
-            utils.localize(STRINGS['search_placeholder'], self.__settings.language))
+        self.__search.set_placeholder_text(_tr('search_placeholder'))
 
         self.menu_fixed.put(self.__search, PROGRAMS_WIDTH - (SEARCH_WIDTH + 10) - 9, 40)
 
@@ -336,9 +335,9 @@ class PuavoMenu(Gtk.Window):
         # It will happen one day.
         if not self.menudata or not self.menudata.programs:
             if self.__settings.prod_mode:
-                self.__show_empty_message(STRINGS['menu_no_data_at_all_prod'])
+                self.__show_empty_message(_tr('menu_no_data_at_all_prod'))
             else:
-                self.__show_empty_message(STRINGS['menu_no_data_at_all_dev'])
+                self.__show_empty_message(_tr('menu_no_data_at_all_dev'))
 
         # Start monitoring the user programs directory
         try:
@@ -634,7 +633,7 @@ class PuavoMenu(Gtk.Window):
     # Creates and appends the user category at the end of the categories list
     def __create_user_category(self, category):
         category.menudata_id = 'category-user-programs'
-        category.name = utils.localize(STRINGS['user_category'], self.__settings.language)
+        category.name = _tr('user_category')
         category.position = 999999
         category.flags |= menudata.CategoryFlags.USER_CATEGORY
         self.menudata.categories[category.menudata_id] = category
@@ -738,7 +737,7 @@ class PuavoMenu(Gtk.Window):
     # menu/category is empty, or there are no search results.
     def __show_empty_message(self, msg):
         if isinstance(msg, dict):
-            msg = utils.localize(msg, self.__settings.language)
+            msg = _tr.localize(msg)
 
         self.__empty.set_label(msg)
         self.__empty.show()
@@ -829,7 +828,7 @@ class PuavoMenu(Gtk.Window):
 
             # Handle special situations
             if not new_buttons:
-                self.__show_empty_message(STRINGS['menu_empty_category'])
+                self.__show_empty_message(_tr('menu_empty_category'))
 
         else:
             # Submenu view, have only programs (submenus not needed yet)
@@ -850,7 +849,7 @@ class PuavoMenu(Gtk.Window):
 
             # Handle special situations
             if not self.current_menu.program_ids:
-                self.__show_empty_message(STRINGS['menu_empty_menu'])
+                self.__show_empty_message(_tr('menu_empty_menu'))
 
         self.__place_buttons_in_container(new_buttons)
         self.__update_menu_title()
@@ -983,10 +982,7 @@ class PuavoMenu(Gtk.Window):
         except Exception as exception:
             logging.error('Could not launch program "%s":', program.command)
             logging.error(exception, exc_info=True)
-
-            self.error_message(
-                utils.localize(STRINGS['program_launching_failed'], self.__settings.language),
-                str(exception))
+            self.error_message(_tr('program_launching_failed'), str(exception))
             return False
 
         return True
@@ -1055,9 +1051,7 @@ class PuavoMenu(Gtk.Window):
             logging.error('Desktop link creation failed:')
             logging.error(str(exception))
 
-            self.error_message(
-                utils.localize(STRINGS['desktop_link_failed'], self.__settings.language),
-                str(exception))
+            self.error_message(_tr('desktop_link_failed'), str(exception))
 
 
     # Called directly from ProgramButton
@@ -1075,9 +1069,7 @@ class PuavoMenu(Gtk.Window):
             logging.error('Panel icon creation failed')
             logging.error(str(exception))
 
-            self.error_message(
-                utils.localize(STRINGS['panel_link_failed'], self.__settings.language),
-                str(exception))
+            self.error_message(_tr('panel_link_failed'), str(exception))
 
 
     # Called directly from ProgramButton
@@ -1116,7 +1108,7 @@ class PuavoMenu(Gtk.Window):
         if matches:
             self.__empty.hide()
         else:
-            self.__show_empty_message(STRINGS['search_no_results'])
+            self.__show_empty_message(_tr('search_no_results'))
 
         # create new buttons for results and show them
         new_buttons = []

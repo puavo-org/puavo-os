@@ -20,7 +20,7 @@ import utils_gui
 import icons
 import buttons.sidebar, buttons.avatar
 
-from strings import STRINGS
+from strings import _tr
 
 from sidebar.button_definitions import *
 
@@ -142,8 +142,7 @@ class Sidebar:
         if self.__settings.is_guest or self.__settings.is_webkiosk:
             avatar_tooltip = None
         else:
-            avatar_tooltip = \
-                utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language)
+            avatar_tooltip = _tr('sb_avatar_hover')
 
         self.__avatar = buttons.avatar.AvatarButton(self,
                                                     self.__settings,
@@ -292,7 +291,7 @@ class Sidebar:
                    release=utils.get_file_contents('/etc/puavo-image/release'),
                    hosttype=utils.get_file_contents('/etc/puavo/hosttype'),
                    url='',
-                   title=utils.localize(STRINGS['sb_changelog_title'], self.__settings.language)))
+                   title=_tr('sb_changelog_title')))
 
         hostname_label.connect('activate-link', self.__clicked_changelog)
         hostname_label.show()
@@ -313,15 +312,13 @@ class Sidebar:
                 url=utils.expand_variables(
                     'https://$(puavo_domain)/users/profile/edit?lang=$(user_language)&theme=$(user_theme)',
                     self.__variables),
-                title=utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language),
+                title=_tr('sb_avatar_hover'),
                 width=1000,
                 height=650,
                 enable_js=True)     # The profile editor needs JavaScript
         except Exception as exception:
             logging.error(str(exception))
-            self.__parent.error_message(
-                utils.localize(STRINGS['sb_avatar_link_failed'], self.__settings.language),
-                str(exception))
+            self.__parent.error_message(_tr('sb_avatar_link_failed'), str(exception))
 
         self.__parent.clicked_sidebar_button()
 
@@ -334,15 +331,13 @@ class Sidebar:
                                                        self.__variables)
             utils.open_webwindow(
                 url=utils.expand_variables(changelog_url),
-                title=utils.localize(STRINGS['sb_changelog_window_title'], self.__settings.language),
+                title=_tr('sb_changelog_window_title'),
                 width=1000,
                 height=650,
                 enable_js=True)     # Markdown is used on the page, need JS
         except Exception as exception:
             logging.error(str(exception))
-            self.__parent.error_message(
-                utils.localize(STRINGS['sb_changelog_link_failed'], self.__settings.language),
-                str(exception))
+            self.__parent.error_message(_tr('sb_changelog_link_failed'), str(exception))
 
         self.__parent.clicked_sidebar_button()
 
@@ -396,7 +391,7 @@ class Sidebar:
                     enable_js = settings.get('enable_js', False)
 
                     if title:
-                        title = utils.localize(title, self.__settings.language)
+                        title = _tr(title)
 
                 utils.open_webwindow(
                     url=arguments,
@@ -407,9 +402,7 @@ class Sidebar:
         except Exception as exception:
             logging.error('Could not process a sidebar button click!')
             logging.error(str(exception))
-            self.__parent.error_message(
-                utils.localize(STRINGS['sb_button_failed'], self.__settings.language),
-                str(exception))
+            self.__parent.error_message(_tr('sb_button_failed'), str(exception))
 
 
     # --------------------------------------------------------------------------
@@ -432,9 +425,9 @@ class Sidebar:
             button = buttons.sidebar.SidebarButton(
                 self,
                 self.__settings,
-                utils.localize(data['title'], self.__settings.language),
+                _tr(data['title']),
                 icons,
-                utils.localize(data.get('description', ''), self.__settings.language),
+                _tr(data.get('description', None)),
                 data['command'])
 
             button.connect('clicked', self.__clicked_sidebar_button)
