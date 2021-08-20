@@ -4,5 +4,7 @@ set -eu
 
 debconf-set-selections <<'EOF'
 # add your own debconf settings here
-resolvconf	resolvconf/linkify-resolvconf	boolean	false
+nvidia-legacy-check     nvidia-driver/check-for-unsupported-gpu                 boolean false
+nvidia-legacy-check     nvidia-driver/install-even-if-unsupported-gpu-exists    boolean true
+resolvconf              resolvconf/linkify-resolvconf                           boolean false
 EOF
