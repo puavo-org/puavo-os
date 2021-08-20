@@ -67,24 +67,32 @@ STRINGS = {
               'Versuche dich abzumelden und wieder anzumelden.\n' \
               'Wenn das nicht hilft, starte den Computer neu.\n' \
               'Wenn das nicht hilft, wende dich an den Support.',
+
+        'sv': 'Menyn kunde inte laddas :-(\n\n' \
+              'Försök att logga dig in igen.\n' \
+              'Om det inte fungerar, starta om datorn.\n' \
+              'Om det inte fungerar, ta kontakt med stödet.'
     },
 
     'desktop_link_failed': {
         'en': 'Desktop link could not be created',
         'fi': 'Työpöytäkuvaketta ei voitu luoda',
         'de': 'Desktoplink konnte nicht erstellt werden',
+        'sv': 'Det gick inte att skapa skrivbordsikonen',
     },
 
     'panel_link_failed': {
         'en': 'Panel icon could not be created',
         'fi': 'Paneelin kuvaketta ei voitu luoda',
         'de': 'Panelicon konnte nicht erstellt werden',
+        'sv': 'Det gick inte att skapa panelikonen',
     },
 
     'program_launching_failed': {
-        'en': 'Could not launch a program',
+        'en': 'Could not launch the program',
         'fi': 'Ohjelmaa ei voitu käynnistää',
         'de': 'Programm konnte nicht geöffnet werden',
+        'sv': 'Programmet kunde inte startas',
     },
 
     # --------------------------------------------------------------------------
@@ -111,19 +119,22 @@ STRINGS = {
     'sb_avatar_hover': {
         'en': 'Edit your user profile',
         'fi': 'Muokkaa käyttäjäprofiiliasi',
-        'de': 'Ediere Benutzerprofil'
+        'de': 'Ediere Benutzerprofil',
+        'sv': 'Redigera din användarprofil',
     },
 
     'sb_avatar_link_failed': {
         'en': 'Could not open the user preferences editor',
         'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
         'de': 'Konnte den Benutzerprofil-Editor nicht öffnen',
+        'sv': 'Det gick inte att redigera användardata',
     },
 
     'sb_button_failed': {
         'en': 'Sidebar button action failed',
         'fi': 'Sivupaneelin napin toiminnon suoritus ei onnistunut',
         'de': 'Seitenleisten-Aktion konnte nicht ausgeführt werden',
+        'sv': 'Knappfunktionen för sidofältet misslyckades',
     },
 
     'sb_change_password': {
@@ -207,18 +218,21 @@ STRINGS = {
         'en': 'Show changes in this version',
         'fi': 'Näytä muutokset tässä versiossa',
         'de': 'Zeige Änderungen dieser Version',
+        'sv': 'Visa ändringar i den här versionen',
     },
 
     'sb_changelog_window_title': {
         'en': 'Changelog',
         'fi': 'Muutosloki',
         'de': 'Changelog',
+        'sv': 'Ändringslogg',
     },
 
     'sb_changelog_link_failed': {
         'en': 'Could not show the changelog',
         'fi': 'Muutoslokin näyttäminen ei onnistunut',
         'de': 'Changelog kann nicht angezeigt werden',
+        'sv': 'Det gick inte att visa ändringsloggen',
     },
 
     # --------------------------------------------------------------------------
