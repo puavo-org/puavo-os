@@ -22,7 +22,7 @@ import buttons.sidebar, buttons.avatar
 
 from strings import _tr
 
-from sidebar.button_definitions import *
+from sidebar.button_definitions import SB_BUTTONS
 
 from sidebar.avatar_downloader import AvatarDownloaderThread
 
@@ -99,6 +99,8 @@ class Sidebar:
             utils.get_file_contents('/etc/puavo/domain')
         self.__variables['user_name'] = getpass.getuser()
         self.__variables['user_language'] = self.__settings.language
+        self.__variables['support_url'] = \
+            utils.puavo_conf('puavo.support.new_bugreport_url', 'https://tuki.opinsys.fi')
 
         if self.__settings.dark_theme:
             self.__variables['user_theme'] = 'dark'
@@ -206,33 +208,33 @@ class Sidebar:
                 password_url = utils.puavo_conf('puavo.puavomenu.password_change.link', None)
 
                 if password_url is None or password_url.strip() == '':
-                    y = self.__create_button(y, SB_CHANGE_PASSWORD)
+                    y = self.__create_button(y, SB_BUTTONS['change_password'])
                 else:
                     # Override the password change URL
-                    params = SB_CHANGE_PASSWORD
+                    params = SB_BUTTONS['change_password']
                     params['command']['args'] = password_url
                     y = self.__create_button(y, params)
 
                 something = True
 
         if self.is_element_visible('support'):
-            y = self.__create_button(y, SB_SUPPORT)
+            y = self.__create_button(y, SB_BUTTONS['support'])
             something = True
 
         if self.is_element_visible('system_settings'):
-            y = self.__create_button(y, SB_SYSTEM_SETTINGS)
+            y = self.__create_button(y, SB_BUTTONS['system_settings'])
             something = True
 
         if self.__settings.is_user_primary_user:
             if self.is_element_visible('laptop_settings'):
-                y = self.__create_button(y, SB_LAPTOP_SETTINGS)
+                y = self.__create_button(y, SB_BUTTONS['laptop_settings'])
                 something = True
 
             # Hide the puavo-pkg package installer if there
             # are no packages to install
             if utils.puavo_conf('puavo.pkgs.ui.pkglist', '').strip():
                 if self.is_element_visible('puavopkg_installer'):
-                    y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+                    y = self.__create_button(y, SB_BUTTONS['puavopkg_installer'])
                     something = True
 
         if something:
@@ -240,24 +242,22 @@ class Sidebar:
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):
             if self.is_element_visible('lock_screen'):
-                y = self.__create_button(y, SB_LOCK_SCREEN)
+                y = self.__create_button(y, SB_BUTTONS['lock_screen'])
 
         if not (self.__settings.is_fatclient or self.__settings.is_webkiosk):
             if self.is_element_visible('sleep_mode'):
-                y = self.__create_button(y, SB_SLEEP_MODE)
+                y = self.__create_button(y, SB_BUTTONS['sleep_mode'])
 
         if self.is_element_visible('logout'):
-            y = self.__create_button(y, SB_LOGOUT)
+            y = self.__create_button(y, SB_BUTTONS['logout'])
             y = self.__create_separator(y)
 
         if self.is_element_visible('restart'):
-            y = self.__create_button(y, SB_RESTART)
+            y = self.__create_button(y, SB_BUTTONS['restart'])
 
         if not self.__settings.is_webkiosk:
             if self.is_element_visible('shutdown'):
-                y = self.__create_button(y, SB_SHUTDOWN)
-
-        logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
+                y = self.__create_button(y, SB_BUTTONS['shutdown'])
 
 
     # Builds the label that contains hostname, host type, image name and
