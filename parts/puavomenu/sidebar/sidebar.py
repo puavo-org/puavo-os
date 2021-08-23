@@ -1,10 +1,10 @@
 # The Sidebar: the user avatar, "system" buttons and the host info
 
+import re
 import logging
 import getpass
 import os.path
 import lsb_release
-import re
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -20,9 +20,9 @@ import utils_gui
 import icons
 import buttons.sidebar, buttons.avatar
 
-from strings import STRINGS
+from strings import _tr
 
-from sidebar.button_definitions import *
+from sidebar.button_definitions import SB_BUTTONS
 
 from sidebar.avatar_downloader import AvatarDownloaderThread
 
@@ -79,9 +79,8 @@ class Sidebar:
 
 
     def load_overrides(self):
-        s = utils.puavo_conf('puavo.puavomenu.sidebar_hide_elements', '')
-
-        disabled = [t.strip() for t in re.split(r',|;|\ ', str(s) if s else '')]
+        disabled = utils.puavo_conf('puavo.puavomenu.sidebar_hide_elements', '')
+        disabled = [t.strip() for t in re.split(r',|;|\ ', str(disabled) if disabled else '')]
         disabled = filter(None, disabled)
         disabled = [d.lower() for d in disabled]
 
@@ -99,6 +98,8 @@ class Sidebar:
             utils.get_file_contents('/etc/puavo/domain')
         self.__variables['user_name'] = getpass.getuser()
         self.__variables['user_language'] = self.__settings.language
+        self.__variables['support_url'] = \
+            utils.puavo_conf('puavo.support.new_bugreport_url', 'https://tuki.opinsys.fi')
 
         if self.__settings.dark_theme:
             self.__variables['user_theme'] = 'dark'
@@ -142,8 +143,7 @@ class Sidebar:
         if self.__settings.is_guest or self.__settings.is_webkiosk:
             avatar_tooltip = None
         else:
-            avatar_tooltip = \
-                utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language)
+            avatar_tooltip = _tr('sb_avatar_hover')
 
         self.__avatar = buttons.avatar.AvatarButton(self,
                                                     self.__settings,
@@ -184,7 +184,7 @@ class Sidebar:
 
     # Creates the sidebar "system" buttons
     def __create_system_buttons(self):
-        y = 0
+        ypos = 0
 
         if self.is_element_visible('avatar'):
             utils_gui.create_separator(
@@ -195,7 +195,7 @@ class Sidebar:
                 h=-1,
                 orientation=Gtk.Orientation.HORIZONTAL)
 
-            y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING + SEPARATOR_SIZE
+            ypos = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING + SEPARATOR_SIZE
 
         something = False
 
@@ -207,58 +207,56 @@ class Sidebar:
                 password_url = utils.puavo_conf('puavo.puavomenu.password_change.link', None)
 
                 if password_url is None or password_url.strip() == '':
-                    y = self.__create_button(y, SB_CHANGE_PASSWORD)
+                    ypos = self.__create_button(ypos, SB_BUTTONS['change_password'])
                 else:
                     # Override the password change URL
-                    params = SB_CHANGE_PASSWORD
+                    params = SB_BUTTONS['change_password']
                     params['command']['args'] = password_url
-                    y = self.__create_button(y, params)
+                    ypos = self.__create_button(ypos, params)
 
                 something = True
 
         if self.is_element_visible('support'):
-            y = self.__create_button(y, SB_SUPPORT)
+            ypos = self.__create_button(ypos, SB_BUTTONS['support'])
             something = True
 
         if self.is_element_visible('system_settings'):
-            y = self.__create_button(y, SB_SYSTEM_SETTINGS)
+            ypos = self.__create_button(ypos, SB_BUTTONS['system_settings'])
             something = True
 
         if self.__settings.is_user_primary_user:
             if self.is_element_visible('laptop_settings'):
-                y = self.__create_button(y, SB_LAPTOP_SETTINGS)
+                ypos = self.__create_button(ypos, SB_BUTTONS['laptop_settings'])
                 something = True
 
             # Hide the puavo-pkg package installer if there
             # are no packages to install
             if utils.puavo_conf('puavo.pkgs.ui.pkglist', '').strip():
                 if self.is_element_visible('puavopkg_installer'):
-                    y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+                    ypos = self.__create_button(ypos, SB_BUTTONS['puavopkg_installer'])
                     something = True
 
         if something:
-            y = self.__create_separator(y)
+            ypos = self.__create_separator(ypos)
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):
             if self.is_element_visible('lock_screen'):
-                y = self.__create_button(y, SB_LOCK_SCREEN)
+                ypos = self.__create_button(ypos, SB_BUTTONS['lock_screen'])
 
         if not (self.__settings.is_fatclient or self.__settings.is_webkiosk):
             if self.is_element_visible('sleep_mode'):
-                y = self.__create_button(y, SB_SLEEP_MODE)
+                ypos = self.__create_button(ypos, SB_BUTTONS['sleep_mode'])
 
         if self.is_element_visible('logout'):
-            y = self.__create_button(y, SB_LOGOUT)
-            y = self.__create_separator(y)
+            ypos = self.__create_button(ypos, SB_BUTTONS['logout'])
+            ypos = self.__create_separator(ypos)
 
         if self.is_element_visible('restart'):
-            y = self.__create_button(y, SB_RESTART)
+            ypos = self.__create_button(ypos, SB_BUTTONS['restart'])
 
         if not self.__settings.is_webkiosk:
             if self.is_element_visible('shutdown'):
-                y = self.__create_button(y, SB_SHUTDOWN)
-
-        logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
+                ypos = self.__create_button(ypos, SB_BUTTONS['shutdown'])
 
 
     # Builds the label that contains hostname, host type, image name and
@@ -287,12 +285,12 @@ class Sidebar:
 
         # FIXME: "big" and "small" are not good sizes, we need to be explicit
         hostname_label.set_markup(
-            '<big>{hostname}</big>\n<small><a href="{url}" title="{title}">{release}</a> ({hosttype})</small>'.
+            '<big>{hostname}</big><small>\n' \
+            '<a href="" title="{title}">{release}</a> ({hosttype})</small>'.
             format(hostname=utils.get_file_contents('/etc/puavo/hostname'),
                    release=utils.get_file_contents('/etc/puavo-image/release'),
                    hosttype=utils.get_file_contents('/etc/puavo/hosttype'),
-                   url='',
-                   title=utils.localize(STRINGS['sb_changelog_title'], self.__settings.language)))
+                   title=_tr('sb_changelog_title')))
 
         hostname_label.connect('activate-link', self.__clicked_changelog)
         hostname_label.show()
@@ -309,42 +307,39 @@ class Sidebar:
         logging.info('Clicked the user avatar button')
 
         try:
+            url = 'https://$(puavo_domain)/users/profile/edit?' \
+                  'lang=$(user_language)&theme=$(user_theme)'
+
             utils.open_webwindow(
-                url=utils.expand_variables(
-                    'https://$(puavo_domain)/users/profile/edit?lang=$(user_language)&theme=$(user_theme)',
-                    self.__variables),
-                title=utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language),
+                url=utils.expand_variables(url, self.__variables),
+                title=_tr('sb_avatar_hover'),
                 width=1000,
                 height=650,
                 enable_js=True)     # The profile editor needs JavaScript
         except Exception as exception:
             logging.error(str(exception))
-            self.__parent.error_message(
-                utils.localize(STRINGS['sb_avatar_link_failed'], self.__settings.language),
-                str(exception))
+            self.__parent.error_message(_tr('sb_avatar_link_failed'), str(exception))
 
-        self.__parent.autohide()
+        self.__parent.clicked_sidebar_button()
 
 
     # Open the changelog
-    def __clicked_changelog(self, *unused):
+    def __clicked_changelog(self, *_):
         try:
             changelog_url = get_changelog_url(self.__settings.language) \
                               + utils.expand_variables('&theme=$(user_theme)',
                                                        self.__variables)
             utils.open_webwindow(
                 url=utils.expand_variables(changelog_url),
-                title=utils.localize(STRINGS['sb_changelog_window_title'], self.__settings.language),
+                title=_tr('sb_changelog_window_title'),
                 width=1000,
                 height=650,
                 enable_js=True)     # Markdown is used on the page, need JS
         except Exception as exception:
             logging.error(str(exception))
-            self.__parent.error_message(
-                utils.localize(STRINGS['sb_changelog_link_failed'], self.__settings.language),
-                str(exception))
+            self.__parent.error_message(_tr('sb_changelog_link_failed'), str(exception))
 
-        self.__parent.autohide()
+        self.__parent.clicked_sidebar_button()
 
 
     # Generic sidebar button command handler
@@ -364,7 +359,7 @@ class Sidebar:
                     'This button has no commands associated with it.')
                 return
 
-            self.__parent.autohide()
+            self.__parent.clicked_sidebar_button()
 
             # Expand variables
             if command.get('have_vars', False):
@@ -396,7 +391,7 @@ class Sidebar:
                     enable_js = settings.get('enable_js', False)
 
                     if title:
-                        title = utils.localize(title, self.__settings.language)
+                        title = _tr(title)
 
                 utils.open_webwindow(
                     url=arguments,
@@ -404,64 +399,60 @@ class Sidebar:
                     width=width,
                     height=height,
                     enable_js=enable_js)
-
-                self.__parent.autohide()
         except Exception as exception:
             logging.error('Could not process a sidebar button click!')
             logging.error(str(exception))
-            self.__parent.error_message(
-                utils.localize(STRINGS['sb_button_failed'], self.__settings.language),
-                str(exception))
+            self.__parent.error_message(_tr('sb_button_failed'), str(exception))
 
 
     # --------------------------------------------------------------------------
     # Utility
 
     # Creates a sidebar button
-    def __create_button(self, y, data):
+    def __create_button(self, ypos, data):
         if not 'title' in data or not 'command' in data:
             logging.error('Cannot create a sidebar button (missing title/command):')
             logging.error(data)
-            return y
+            return ypos
 
         try:
-            icons = (self.__icons, self.__icons[data['icon']][0])
-        except BaseException as e:
-            logging.error('Unable to load a sidebar button icon: %s', str(e))
-            icons = None
+            icon = (self.__icons, self.__icons[data['icon']][0])
+        except BaseException as exc:
+            logging.error('Unable to load a sidebar button icon: %s', str(exc))
+            icon = None
 
         try:
             button = buttons.sidebar.SidebarButton(
                 self,
                 self.__settings,
-                utils.localize(data['title'], self.__settings.language),
-                icons,
-                utils.localize(data.get('description', ''), self.__settings.language),
+                _tr(data['title']),
+                icon,
+                _tr(data.get('description', None)),
                 data['command'])
 
             button.connect('clicked', self.__clicked_sidebar_button)
             button.show()
-            self.container.put(button, 0, y)
+            self.container.put(button, 0, ypos)
 
             # the next available Y coordinate
-            return y + button.get_preferred_button_size()[1]
-        except BaseException as e:
+            return ypos + button.get_preferred_button_size()[1]
+        except BaseException as exc:
             logging.error('Cannot create a sidebar button!')
-            logging.error(e, exc_info=True)
-            return y
+            logging.error(exc, exc_info=True)
+            return ypos
 
 
     # Creates a special sidebar separator
-    def __create_separator(self, y):
+    def __create_separator(self, ypos):
         padding = 20
 
         utils_gui.create_separator(
             container=self.container,
             x=padding,
-            y=y + MAIN_PADDING,
+            y=ypos + MAIN_PADDING,
             w=SIDEBAR_WIDTH - padding * 2,
             h=-1,
             orientation=Gtk.Orientation.HORIZONTAL)
 
         # the next available Y coordinate
-        return y + MAIN_PADDING * 2 + SEPARATOR_SIZE
+        return ypos + MAIN_PADDING * 2 + SEPARATOR_SIZE

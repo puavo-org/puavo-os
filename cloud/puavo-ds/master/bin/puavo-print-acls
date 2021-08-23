@@ -475,7 +475,8 @@ rule {
 
 rule {
   [dn children $Servers]
-    [attrs entry objectClass ou puavoExport puavoHostname puavoId puavoSchool]
+    [attrs entry objectClass ou puavoEduPersonPrimarySchool puavoExport \
+                 puavoHostname puavoId puavoSchool]
       by $org_owners write
       by $admins     read
       by $staff      read	# XXX maybe just remove this?
@@ -605,6 +606,7 @@ rule {
       by $admins                 write	# XXX maybe this_school_admins instead?
       by $staff                  write	# XXX maybe just remove this?
       by [puavo_dn puavo]        read
+      by [puavo_dn pw-mgmt]      read
       by [dn children $People]   read
       by [dn children $Hosts]    read
       by [systemgroup getent]    read
@@ -639,11 +641,15 @@ rule {
 
 rule {
   [dn subtree $People]
-    [attrs entry objectClass uid]
+    [attrs entry objectClass uid uidNumber]
       # Laptops should be able to read usernames.  This is because laptops
       # may decide who its primary user is, and they can not set this
       # information unless they can read user dn, which is not possible
       # unless both "username" and "dn" are readable by laptop.
+      # Laptops should be able to read user numeric ids.  This is because
+      # data owned by users that have been removed should be deleted (in time)
+      # from laptops, and laptops can determine this by getting a list of
+      # all current user uids in an organisation.
       by [devicetype_set laptop] read
 
       by anonymous auth
@@ -653,7 +659,8 @@ rule {
 rule {
   # allow statistics to read user role
   [dn subtree $People]
-    [attrs entry objectClass puavoEduPersonAffiliation puavoSchool]
+    [attrs entry objectClass puavoEduPersonAffiliation \
+                 puavoEduPersonPrimarySchool puavoSchool]
       by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [puavo_dn statistics]     read
       by *                         none break
@@ -706,6 +713,7 @@ rule {
            loginShell                       \
            objectClass                      \
            puavoEduPersonAffiliation        \
+           puavoEduPersonPrimarySchool      \
            puavoEduPersonReverseDisplayName \
            puavoId                          \
            puavoLocked                      \
@@ -725,24 +733,25 @@ rule {
 # XXX most of these.
 rule {
   [dn subtree $People]
-    [attrs eduPersonPrincipalName    \
-           entry                     \
-           gidNumber                 \
-           givenName                 \
-           homeDirectory             \
-           jpegPhoto                 \
-           loginShell                \
-           mail                      \
-           objectClass               \
-           preferredLanguage         \
-           puavoAcceptedTerms        \
-           puavoEduPersonAffiliation \
-           puavoId                   \
-           puavoLocale               \
-           puavoSchool               \
-           sn                        \
-           telephoneNumber           \
-           uid                       \
+    [attrs eduPersonPrincipalName      \
+           entry                       \
+           gidNumber                   \
+           givenName                   \
+           homeDirectory               \
+           jpegPhoto                   \
+           loginShell                  \
+           mail                        \
+           objectClass                 \
+           preferredLanguage           \
+           puavoAcceptedTerms          \
+           puavoEduPersonAffiliation   \
+           puavoEduPersonPrimarySchool \
+           puavoId                     \
+           puavoLocale                 \
+           puavoSchool                 \
+           sn                          \
+           telephoneNumber             \
+           uid                         \
            uidNumber]
       by [puavo_dn puavo]   read
       by [puavo_dn pw-mgmt] read

@@ -108,7 +108,7 @@ entry {
     text-shadow: none;
 }
 
-.pm_button:hover {
+.pm_button:hover, .pm_button:focus {
     background: @theme_selected_bg_color;
     color: @theme_selected_fg_color;
 }
@@ -120,7 +120,7 @@ entry {
 /* Program buttons */
 .button_program { }
 
-.button_program:hover {
+.button_program:hover, .button_program:focus {
     border-radius: 5px;
 }
 
@@ -130,8 +130,7 @@ entry {
     border-radius: 20px;
 }
 
-.button_menu:hover {
-    border: none;
+.button_menu:hover, .button_menu:focus {
     background: @theme_selected_bg_color;
 }
 
@@ -145,7 +144,8 @@ entry {
 
 /* Sidebar buttons */
 .button_sidebar { }
-.button_sidebar:hover { }
+
+.button_sidebar:hover, .button_sidebar:focus { }
 
 /* User avatar button */
 .button_avatar {
@@ -154,4 +154,4 @@ entry {
     border-radius: 0 5px 0 0;
 }
 
-.button_avatar:hover {}
+.button_avatar:hover, .button_avatar:focus { }

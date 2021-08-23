@@ -1,6 +1,9 @@
 # All strings in one file for easy translation. No need to slowly parse
 # configuration files for something that practically never changes.
 
+import logging
+
+
 STRINGS = {
     # --------------------------------------------------------------------------
     # Main window
@@ -64,24 +67,32 @@ STRINGS = {
               'Versuche dich abzumelden und wieder anzumelden.\n' \
               'Wenn das nicht hilft, starte den Computer neu.\n' \
               'Wenn das nicht hilft, wende dich an den Support.',
+
+        'sv': 'Menyn kunde inte laddas :-(\n\n' \
+              'Försök att logga dig in igen.\n' \
+              'Om det inte fungerar, starta om datorn.\n' \
+              'Om det inte fungerar, ta kontakt med stödet.'
     },
 
     'desktop_link_failed': {
         'en': 'Desktop link could not be created',
         'fi': 'Työpöytäkuvaketta ei voitu luoda',
         'de': 'Desktoplink konnte nicht erstellt werden',
+        'sv': 'Det gick inte att skapa skrivbordsikonen',
     },
 
     'panel_link_failed': {
         'en': 'Panel icon could not be created',
         'fi': 'Paneelin kuvaketta ei voitu luoda',
         'de': 'Panelicon konnte nicht erstellt werden',
+        'sv': 'Det gick inte att skapa panelikonen',
     },
 
     'program_launching_failed': {
-        'en': 'Could not launch a program',
+        'en': 'Could not launch the program',
         'fi': 'Ohjelmaa ei voitu käynnistää',
         'de': 'Programm konnte nicht geöffnet werden',
+        'sv': 'Programmet kunde inte startas',
     },
 
     # --------------------------------------------------------------------------
@@ -108,19 +119,22 @@ STRINGS = {
     'sb_avatar_hover': {
         'en': 'Edit your user profile',
         'fi': 'Muokkaa käyttäjäprofiiliasi',
-        'de': 'Ediere Benutzerprofil'
+        'de': 'Ediere Benutzerprofil',
+        'sv': 'Redigera din användarprofil',
     },
 
     'sb_avatar_link_failed': {
         'en': 'Could not open the user preferences editor',
         'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
         'de': 'Konnte den Benutzerprofil-Editor nicht öffnen',
+        'sv': 'Det gick inte att redigera användardata',
     },
 
     'sb_button_failed': {
         'en': 'Sidebar button action failed',
         'fi': 'Sivupaneelin napin toiminnon suoritus ei onnistunut',
         'de': 'Seitenleisten-Aktion konnte nicht ausgeführt werden',
+        'sv': 'Knappfunktionen för sidofältet misslyckades',
     },
 
     'sb_change_password': {
@@ -204,18 +218,21 @@ STRINGS = {
         'en': 'Show changes in this version',
         'fi': 'Näytä muutokset tässä versiossa',
         'de': 'Zeige Änderungen dieser Version',
+        'sv': 'Visa ändringar i den här versionen',
     },
 
     'sb_changelog_window_title': {
         'en': 'Changelog',
         'fi': 'Muutosloki',
         'de': 'Changelog',
+        'sv': 'Ändringslogg',
     },
 
     'sb_changelog_link_failed': {
         'en': 'Could not show the changelog',
         'fi': 'Muutoslokin näyttäminen ei onnistunut',
         'de': 'Changelog kann nicht angezeigt werden',
+        'sv': 'Det gick inte att visa ändringsloggen',
     },
 
     # --------------------------------------------------------------------------
@@ -242,3 +259,66 @@ STRINGS = {
         'de': 'Entferne Lesezeichen',
     },
 }
+
+
+class Translate:
+    def __init__(self):
+        self.language = 'en'
+
+
+    def set_language(self, language):
+        # This assumes the language code has been validated elsewhere
+        self.language = language
+
+
+    # Call the instance like a function ("_tr('id')") to translate a string
+    def __call__(self, key):
+        if key is None:
+            return None
+
+        if key not in STRINGS:
+            # Make these loud
+            raise RuntimeError(f'Translate::__call__(): invalid string key "{key}"')
+
+        if self.language not in STRINGS[key]:
+            print(f'ERROR: Translation key "{key}" has no string for language "{self.language}"')
+            return f"({key})"
+
+        return STRINGS[key][self.language]
+
+
+    # Translates program names, descriptions, hover texts, etc.
+    def localize(self, where):
+        """Given a string/list/dict, looks up a localized string using the
+        current language."""
+
+        if where is None:
+            logging.error('localize(): "where" is None, nothing to localize!')
+            return '[ERROR]'
+
+        if isinstance(where, str):
+            # just one string, nothing to localize, use it as-is
+            return where
+
+        if isinstance(where, list):
+            # a list of dicts, merge them
+            where = {k: v for p in where for k, v in p.items()}
+
+        if self.language in where:
+            # have a localized string, use it
+            return str(where[self.language])
+
+        if 'en' in where:
+            # no localized string available; try English, it's the default
+            return str(where['en'])
+
+        # it's a list with only one entry and it's not the language
+        # we want, but we have to use it anyway
+        logging.warning('localize(): missing localization for "%s" in "%s"',
+                        self.language, where)
+
+        return str(where[list(where)[0]])
+
+
+# A global instance
+_tr = Translate()

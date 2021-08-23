@@ -11,7 +11,7 @@ from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE
 import utils
 import utils_gui
-from strings import STRINGS
+from strings import _tr
 
 import buttons.base
 import menudata
@@ -51,9 +51,6 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
             # permit additional styles
             self.add_style_class('frequent_button')
 
-        # Need this for localize()
-        self.__language = settings.language
-
         if settings.desktop_dir is None:
             self.__have_desktop_dir = False
         else:
@@ -79,18 +76,14 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
             self.__enable_popup = False
 
             # Append an installer identifier to the name
-            title = utils.localize(STRINGS['button_puavopkg_installer_suffix'],
-                                   settings.language)
+            title = _tr('button_puavopkg_installer_suffix')
             markup = '%s\n<small><i>[%s]</i></small>' % (label, title)
             self.label_layout.set_markup(markup)
 
-            self.set_property('tooltip-text',
-                              utils.localize(STRINGS['button_puavopkg_installer_tooltip'],
-                                             settings.language))
+            self.set_property('tooltip-text', _tr('button_puavopkg_installer_tooltip'))
 
         self.__menu = None
-        self.__menu_signal = self.connect('button-press-event',
-                                          self.open_menu)
+        self.__menu_signal = self.connect('button-press-event', self.open_menu)
 
         # We want mouse motion events
         self.set_events(self.get_events() | Gdk.EventMask.POINTER_MOTION_MASK)
@@ -254,16 +247,14 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
             if self.__have_desktop_dir:
                 # Can't do this without the desktop directory
-                desktop_item = Gtk.MenuItem(
-                    utils.localize(STRINGS['popup_add_to_desktop'], self.__language))
+                desktop_item = Gtk.MenuItem(_tr('popup_add_to_desktop'))
                 desktop_item.connect('activate',
                                      lambda x: self.__special_operation(
                                          self.parent.add_program_to_desktop))
                 desktop_item.show()
                 self.__menu.append(desktop_item)
 
-            panel_item = Gtk.MenuItem(
-                utils.localize(STRINGS['popup_add_to_panel'], self.__language))
+            panel_item = Gtk.MenuItem(_tr('popup_add_to_panel'))
             panel_item.connect('activate',
                                lambda x: self.__special_operation(
                                    self.parent.add_program_to_panel))
@@ -272,8 +263,7 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
             if self.is_fave:
                 # special entry for fave buttons
-                remove_fave = Gtk.MenuItem(
-                    utils.localize(STRINGS['popup_remove_from_faves'], self.__language))
+                remove_fave = Gtk.MenuItem(_tr('popup_remove_from_faves'))
                 remove_fave.connect('activate',
                                     lambda x: self.__special_operation(
                                         self.parent.remove_program_from_faves))

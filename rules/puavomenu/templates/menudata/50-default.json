@@ -127,6 +127,9 @@
             "icon": "/usr/share/icons/hicolor/64x64/apps/chromium.png",
             "tags": "default"
         },
+        "ClassPadManagerforClassPadII": {
+            "tags": "default"
+        },
         "cmaptools": {
             "name": {
                 "fi": "CmapTools-miellekartta",
@@ -438,7 +441,7 @@
         },
         "io.github.wxmaxima_developers.wxMaxima": {
             "tags": "default",
-            "condition": "ti_nspire_cx_cas"
+            "keywords": "digabi"
         },
         "jitsi": {
             "type": "web",
@@ -1291,7 +1294,7 @@
             }
         },
         "ti5_nspire_cx_cas_ss": {
-            "name": "TI-Nspire CX Cas",
+            "name": "TI-Nspire CX Cas 5",
             "tags": "default",
             "puavopkg": {
                 "id": "ti5-nspire-cx-cas-ss"
@@ -1468,7 +1471,9 @@
                 "speedcrunch",
                 "ti_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss",
+                "ClassPadManagerforClassPadII",
                 "LoggerPro",
+                "MarvinSketch",
                 "dia",
                 "mousepad",
                 "libreoffice-writer",
@@ -1697,6 +1702,7 @@
                 "io.github.wxmaxima_developers.wxMaxima",
                 "ti_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss",
+                "ClassPadManagerforClassPadII",
                 "avogadro",
                 "org.kde.kalzium",
                 "MarvinSketch",

@@ -8,6 +8,7 @@ import argparse
 import time
 
 from constants import LANGUAGES
+from strings import _tr
 
 program_start = time.perf_counter()
 
@@ -194,6 +195,8 @@ if settings.language not in LANGUAGES:
     logging.error('Invalid language code "%s", defaulting to "en"',
                   settings.language)
     settings.language = 'en'
+
+_tr.set_language(settings.language)
 
 # Set up the user programs directory, but only in certain sessions
 if args.user_progs and not (settings.is_guest or settings.is_webkiosk):
