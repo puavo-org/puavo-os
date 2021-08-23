@@ -1,7 +1,0 @@
-Package: *
-Pin: release n=<%= @distrib_version %>
-Pin-Priority: <%= @pin_priority %>
-
-Package: *
-Pin: release n=<%= @distrib_version %>-updates
-Pin-Priority: <%= @pin_priority %>
