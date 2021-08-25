@@ -98,6 +98,9 @@
   "puavo.service.cron.cronjobs": {
     "default": "puavo-cleanup-old-users"
   },
+  "puavo.service.cups-browsed.enabled": {
+    "default": "true"
+  },
   "puavo.service.cups-watchdog.enabled": {
     "default": "false"
   },
