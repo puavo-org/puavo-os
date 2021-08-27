@@ -32,6 +32,32 @@ else
   device_json_path='/state/etc/puavo/device.json'
 fi
 
+explain_rationale() {
+  local id rationale
+
+  id=$1
+  case "$id" in
+    OPENINTHISSCHOOL)
+      rationale='printer is open in the school this device belongs to' ;;
+    OPENINSOMESCHOOL)
+      rationale='printer is open in some school' ;;
+    PRINTERINSAMESCHOOL)
+      rationale='printer is restricted to school this device belongs to' ;;
+    DEVICESPECIFIC)
+      rationale='this specific device is allowed access to this printer' ;;
+    GROUPSPECIFIC)
+      rationale='access to printer is allowed for these groups' ;;
+    NOPERMISSION)
+      rationale='no suitable permissions could be found' ;;
+    ERROR)
+      rationale='error in looking up rationale' ;;
+    *)
+      rationale="rationale id not understood: ${id}" ;;
+  esac
+
+  echo "$rationale"
+}
+
 lookup_printer_key() {
   jq -r --arg key "$1" --arg printer "$2" '
     if .printers.restrictions[$printer] | has($key) then
@@ -106,8 +132,9 @@ for printer in $(printf "%s" "$printer_list" | sort -f); do
   fi
 
   if $verbose; then
-    rationale=$(lookup_printer_key rationale "$printer") || rationale='?'
-    echo "Allowed users for '${printer}' are '${allowed_users}': ${rationale}."
+    rationale=$(lookup_printer_key rationale "$printer") || rationale='ERROR'
+    explained=$(explain_rationale "$rationale")
+    echo "Allowed users for '${printer}' are '${allowed_users}': ${explained}."
   fi
 
   if $dry_run; then
