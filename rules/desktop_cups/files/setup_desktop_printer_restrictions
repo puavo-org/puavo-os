@@ -42,6 +42,39 @@ lookup_printer_key() {
   ' "$device_json_path"
 }
 
+# XXX cleanup old stuff ... this may be removed after some years
+cleanup_old_managed_printers() {
+  local cleanup_ok dnssd_printers_path
+
+  dnssd_printers_path='/var/lib/puavo-desktop/dnssd_printers'
+
+  if [ ! -e "$dnssd_printers_path" ]; then
+    # no cleanup to do
+    return 0
+  fi
+
+  if lpstat -r | grep -q 'is not running'; then
+    # cups is not running, this is not the right time to do cleanup
+    return 0
+  fi
+
+  cleanup_ok=true
+
+  for old_printer in $(jq -r '.[] | .name' "$dnssd_printers_path"); do
+    if lpstat -v "$old_printer" > /dev/null 2>&1; then
+      if ! lpadmin -x "$old_printer"; then
+        cleanup_ok=false
+      fi
+    fi
+  done
+
+  if $cleanup_ok; then
+    rm -f "$dnssd_printers_path"
+  fi
+
+  return 0
+}
+
 if ! printer_list=$(jq -r '.printers.restrictions | keys | .[]' \
                           /etc/puavo/device.json); then
   echo 'Could not determine printer restrictions from device.json' >&2
@@ -49,6 +82,10 @@ if ! printer_list=$(jq -r '.printers.restrictions | keys | .[]' \
 fi
 
 status=0
+
+if $use_lpadmin && ! $dry_run; then
+  cleanup_old_managed_printers || status=1
+fi
 
 for printer in $(printf "%s" "$printer_list" | sort -f); do
   if ! allow=$(lookup_printer_key allow "$printer"); then
