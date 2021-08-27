@@ -2,17 +2,31 @@
 
 set -eu
 
+dry_run=false
 use_lpadmin=false
 verbose=false
-if [ "${1:-}" = '--use-lpadmin' ]; then
-  use_lpadmin=true
-  verbose=true
-fi
+
+opt="${1:-}"
+case "$opt" in
+  --dry-run)
+    dry_run=true
+    verbose=true
+    ;;
+  --use-lpadmin)
+    use_lpadmin=true
+    verbose=true
+    ;;
+  '')
+    ;;
+  *)
+    echo "Unknown argument ${opt}" >&2
+    ;;
+esac
 
 if [ -e /run/puavo/nbd-server ]; then
   device_json_path='/etc/puavo/device.json'
 else
-  if ! $use_lpadmin; then
+  if ! { $dry_run || $use_lpadmin; } then
     exit 0
   fi
   device_json_path='/state/etc/puavo/device.json'
@@ -36,7 +50,7 @@ fi
 
 status=0
 
-for printer in $printer_list; do
+for printer in $(printf "%s" "$printer_list" | sort -f); do
   if ! allow=$(lookup_printer_key allow "$printer"); then
     status=1
     continue
@@ -56,10 +70,12 @@ for printer in $printer_list; do
 
   if $verbose; then
     rationale=$(lookup_printer_key rationale "$printer") || rationale='?'
-    echo "Allowed users for '${printer}' are '${allowed_users}': ${rationale}"
+    echo "Allowed users for '${printer}' are '${allowed_users}': ${rationale}."
   fi
 
-  if $use_lpadmin; then
+  if $dry_run; then
+    :
+  elif $use_lpadmin; then
     lpadmin -p "$printer" -u "allow:${allowed_users}" || status=1
   else
     browsed_printer_path="/var/cache/cups/cups-browsed-options-${printer}"
