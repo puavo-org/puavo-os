@@ -113,6 +113,13 @@ if $use_lpadmin && ! $dry_run; then
   cleanup_old_managed_printers || status=1
 fi
 
+if ! default_printer=$(jq -r .default_printer_name "$device_json_path"); then
+  default_printer=''
+fi
+if [ "$default_printer" = 'null' ]; then
+  default_printer=''
+fi
+
 for printer in $(printf "%s" "$printer_list" | sort -f); do
   if ! allow=$(lookup_printer_key allow "$printer"); then
     status=1
@@ -141,6 +148,9 @@ for printer in $(printf "%s" "$printer_list" | sort -f); do
     :
   elif $use_lpadmin; then
     lpadmin -p "$printer" -u "allow:${allowed_users}" || status=1
+    if [ -n "$default_printer" -a "$printer" = "$default_printer" ]; then
+      lpadmin -d "$printer" || status=1
+    fi
   else
     browsed_printer_path="/var/cache/cups/cups-browsed-options-${printer}"
     printf "%s" "$browsed_conf_lines" > "${browsed_printer_path}.tmp" \
