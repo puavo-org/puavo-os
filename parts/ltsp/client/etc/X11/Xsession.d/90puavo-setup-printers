@@ -1,0 +1,7 @@
+# Setup the default printer, if set in Puavo.  This is intentionally done
+# this way so that it works for both fatclients and laptops and does not
+# permanently change Cups configurations.
+if puavo_default_printer=$(puavo-conf puavo.printing.default_printer) \
+  && [ -n "$puavo_default_printer" ]; then
+    export PRINTER="$puavo_default_printer"
+fi
