@@ -251,14 +251,14 @@ is_a_device = ($puavo_hosttype != 'bootserver')
 # because others may depend on it.
 update_functions = [
                 :update_device_json,
-  is_a_device ? :update_external_files      : :do_nothing,
-  is_a_device ? :update_wlan_configurations : :do_nothing,
+  is_a_device ? :update_external_files       : :do_nothing,
+  is_a_device ? :update_wlan_configurations  : :do_nothing,
                 :update_grub_environment,
                 :update_certificate,
                 :update_extra_boot_scripts,
                 :update_puavoadmins,
                 :update_puavopkg_installers,
-                :update_printer_restrictions,
+  is_a_device ? :update_printer_restrictions : :do_nothing,
 ]
 
 exitcode = 0
