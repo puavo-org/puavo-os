@@ -121,14 +121,14 @@ for printer in $(printf "%s" "$printer_list" | sort -f); do
 
   if [ "$allow" = '*' ]; then
     allowed_users='all'
-    browsed_conf_lines=''
+    browsed_conf_line=''
   else
     if [ -n "$allow" ]; then
       allowed_users="root,${allow}"
     else
       allowed_users='root'
     fi
-    browsed_conf_lines="requesting-user-name-allowed=${allowed_users}\n"
+    browsed_conf_line="requesting-user-name-allowed=${allowed_users}"
   fi
 
   if $verbose; then
@@ -143,8 +143,11 @@ for printer in $(printf "%s" "$printer_list" | sort -f); do
     lpadmin -p "$printer" -u "allow:${allowed_users}" || status=1
   else
     browsed_printer_path="/var/cache/cups/cups-browsed-options-${printer}"
-    printf "%s" "$browsed_conf_lines" > "${browsed_printer_path}.tmp" \
-      || status=1
+    if [ -n "$browsed_conf_line" ]; then
+      printf "%s\n" "$browsed_conf_line"
+    else
+      printf ""
+    fi > "${browsed_printer_path}.tmp" || status=1
     mv "${browsed_printer_path}.tmp" "$browsed_printer_path" || status=1
   fi
 done
