@@ -11,6 +11,7 @@ _pkgs_ports := aria2                \
                gnome-control-center \
                gnome-shell          \
                grub2                \
+               gtk+3.0              \
                incron               \
                libmypaint           \
                libpam-ccreds        \
