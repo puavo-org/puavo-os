@@ -15,7 +15,7 @@ diff -ruN gtk+3.0-3.24.5.orig/modules/printbackends/cups/gtkprintbackendcups.c g
  #ifdef HAVE_CUPS_API_1_6
 -      avahi_request_printer_list (cups_backend);
 +      show_avahi_printers = g_getenv("GTK_SHOW_AVAHI_PRINTERS");
-+      if !(show_avahi_printers && strcmp(show_avahi_printers, "false")) {
++      if (!(show_avahi_printers != NULL && strcmp(show_avahi_printers, "false") == 0)) {
 +        avahi_request_printer_list (cups_backend);
 +      }
  #endif
