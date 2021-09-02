@@ -1,0 +1,231 @@
+Conventions used in this document
+================================
+
+In this README we will use 'cups' to refer to versions 1.6.x (and newer)
+of the Debian package. When necessary, other versions will be specified
+explicitly.  This is because there is a very important difference in the
+behaviour of cups and cups 1.5.x (or older versions) regarding advertising
+print queues. In almost every other regard, the behaviour of cups is
+identical to its preceding versions.
+
+We will we also use 'standard' to mean a Debian cups installation which
+pulls in all recommended packages. This will set you up with a complete
+filtering system and an extensive selection of printer drivers and PPD
+files.
+
+
+Print queues, drivers and printers
+==================================
+
+Below is an outline view of the progress of a job through the printing
+system:
+
+Submitted    cups scheduler    Filtering system	   Transport mechanism
+  print	  ->      and	    ->       plus       ->    USB, network,    -> Printer
+  job	      print queue	    drivers               etc
+
+For this to take place successfully the scheduler must be told:
+
+   * Which driver the job is to use (a PPD file)
+   * The transport mechanism (the device-uri)
+
+Given these two things, it will then have a print queue set up to submit
+the job to. Reading lpinfo(8) and lpadmin(8) will give you more on the
+fundamental way of establishing a queue. 
+
+Debian supports printers via printer driver executables and PPD files in
+the cups, ghostscript. foomatic and printer-driver-* packages. It is more
+than likely you will find something to suit you from this collection of
+free software. If needs be, a manufacturer supplied PPD can be provided
+using lpadmin or the web interface.
+
+Prior to setting up a queue it is a good idea to visit
+
+   http://www.openprinting.org
+
+to get some idea from its extensive database as to which drivers are
+suitable for your printer.
+
+
+Setting up a local print queue
+==============================
+
+The command line tools, lpadmin and lpinfo, can be used for this. Also,
+depending on what is installed on your system, a queue may be set up in an
+automated way. However, cups provides a web interface to accomplish the
+same task. It is accessed from a browser with
+
+   http://localhost:631
+
+There is copious documentation under 'Online Help' and 'Printers' will
+display a list of local and remote print queues.
+
+'Administration' is where you need to be to set up a local print queue.
+At some point you will be required to authenticate. A User Name of 'root'
+and root's password is always acceptable. Any other user must be a member
+of the lpadmin group.
+
+By default cups is configured only to allow connections to local queues
+from localhost, effectively disabling printing to them from other
+machines on the network. The web interface or cupsd.conf and printers.conf
+in /etc/cups can be used to alter this behaviour.
+
+
+Printing to advertised, shared print queues
+===========================================
+
+Suppose you are on a network which has a server using the
+Bonjour/DNS-SD/mDNS protocol to advertise its local print queues as being
+shared. Your machine will have a list of the advertised queues if you have
+avahi-daemon installed and running. But your cups needs a little help to
+access this list. It can get assistance from cups-browsed.
+
+In its default setup cups-browsed will see exactly what avahi-daemon sees.
+From this information it creates local queues which, just like the local
+queues you may have created yourself, are capable of being used by your
+applications. The difference is that the discovered queues are raw queues:
+any job sent to them is processed on the remote machine, not on your
+machine.
+
+A standard cups installation includes avahi-daemon and cups-browsed. This
+means your machine will pick up the Bonjour broadcasts of remote servers
+and, without any further configuration, you will have its queues listed in
+/etc/cups/printers.conf and displayed with 'lpstat -a'.
+
+Now for the bad news! The remote server may not be broadcasting with the
+Bonjour protocol but using the CUPS/IPP browsing protocol. cups knows
+nothing whatsoever about this protocol so forget about it being able to
+use or process information from the remote print queues. But, good news;
+cups-browsed can come to the rescue. Please read its documentation and
+check the setting for 'BrowseRemoteProtocols' in its configuration file,
+/etc/cups/cups-browsed.conf. If it is 'CUPS dnssd' you have nothing to do.
+
+
+Advertising your local queues
+=============================
+
+Your cups install (standard or not) automatically uses only the Bonjour
+protocol to advertise any print queues you choose to share. Sharing
+print queues may be done either by
+
+   * setting 'Browsing' to 'On' or 'Off' in /etc/cups/cusd.conf
+or
+   * Using the Administration section of the web interface
+
+Having done this, finer control over individual print queues can be
+achieved in /etc/cups/printers.conf with 'Shared' as 'On' or 'Off' for
+chosen printers. Alternatively, a print queue can be modified from the
+Printers section of the web interface.
+
+Ok, you have chosen to share; everything is now alright? Not quite! A
+1.6.x machine listening to your Bonjour broadcasts will be capable of
+processing them with the aid of cups-browsed but a 1.5.x (or older)
+machine will not be. This is because it usually does not have
+cups-browsed available to install so can only process CUPS/IPP protocol
+broadcasts. But, once again, cups-browsed on your machine can help your
+cups daemon out. Please read its documentation.
+
+Socket-activation under systemd
+========================================
+
+Since 1.7.1-7, when systemd is the active init system, CUPS can be
+configured to be socket-activated; it will then only be launched on accesses to
+its sockets. The socket definition in /lib/systemd/system/cups.socket gets
+configured through files in /etc/systemd/system/cups.socket.d/; see
+systemd.unit(5) and the examples files in /usr/share/doc/cups-daemon/examples .
+ 
+CUPS opens its listening ports based on 'Port' and 'Listen' stanzas in
+/etc/cups/cupsd.conf. For systemd's socket activation to working, cups.socket
+needs to be configured to listen to the correct IPs and aports by dropping
+configuration files in the /etc/systemd/system/cups.socket.d/ directory.
+
+When launched by socket-activation, CUPS can additionally exit itself after
+being idle for some time (30 seconds by default) by using 'SystemdIdleExit on'
+in /etc/cups/cupsd.conf'. The delay before exiting on idle can be configured
+using 'IdleExitTimeout' in that same file.
+
+Printing without using a local cups daemon
+==========================================
+
+For this to be possible you need to have permission to access a remote
+server and to have at least cups-client installed. The cups and
+cups-daemon packages are not required. The documentation for cups and
+client.conf(5) should be sufficient to guide you further.
+
+
+LPD support.
+============
+
+The BSD commands are separated into their own package, cups-bsd, whereas
+the cups-lpd daemon is in the cups package. The hope is to make it
+possible to have cups and some other BSD-style printing system (such as
+lpr) side-by-side for testing purposes. However, it's known that cups
+conflicts with LPRng, since LPRng provides some System V printing commands
+as well; this problem will (hopefully) be dealt with in time.
+
+The cups-lpd daemon is disabled by default. To enable it install cups-bsd
+and update-inetd; then run:
+
+   dpkg-reconfigure cups-bsd
+
+and follow the prompts. You will need a compatible inetd daemon installed
+(not xinetd).
+
+When using the LPD support provided by cups-bsd you need to ensure
+debconf knows that you want LPD support enabled, otherwise LPD support
+will be disabled when you upgrade cups-bsd. To check, install
+debconf-utils and execute:
+
+   debconf-get-selections | grep setuplpd
+
+The command should return:
+
+   cups-bsd        cups-bsd/setuplpd       boolean true
+
+
+Integration with Samba
+======================
+
+It is possible to configure Samba to share cups' print queues with
+Microsoft clients. There are two ways to do this:
+
+1. Recent versions of Samba, including Debian's, have direct cups
+   support. You can configure Samba as follows:
+
+   [global]
+   printing = cups
+   printcap name = cups
+
+2. If, for some reason, you don't want to use Samba's native cups support
+   you can configure Samba to use System V printing. This can be done by
+   adding the following information to /etc/samba/smb.conf.
+
+   [global]
+   printing = sysv
+   printcap name = lpstat
+
+   [printers]
+   lpq command = /usr/bin/lpstat %p
+   lprm command = /usr/bin/cancel %p-%j
+   print command = /usr/bin/lp -d%p -oraw %s ; /bin/rm -f %s
+
+This method will require installation of the cups-client package.
+
+For more tips on integration with Samba check out the man page for
+cupsaddsmb, which is part of the cups-client package.
+
+
+Reporting bugs
+==============
+
+Please see /usr/share/doc/cups/HOWTO_BUGREPORT.txt.
+
+
+
+
+This document is based on the one originally written by
+
+Jeff Licquia <licquia@debian.org> and Kenshi Muto <kmuto@debian.org>
+
+and has been updated by Brian Potkin to reflect changes in the Debian
+printing system during the intervening period.

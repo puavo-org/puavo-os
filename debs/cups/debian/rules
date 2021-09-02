@@ -1,0 +1,240 @@
+#!/usr/bin/make -f
+
+derives_from_ubuntu := $(shell (dpkg-vendor --derives-from Ubuntu && echo "yes") || echo "no")
+
+# Enabling PIE globally doesn't work, but ./configure already enables PIE
+# where necessary.
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all,-pie
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+# The build system uses only DSOFLAGS but not LDFLAGS to build some libraries.
+# Add LDFLAGS to enable (hardening) build flags.
+export DSOFLAGS = $(shell dpkg-buildflags --get LDFLAGS)
+
+DEB_HOST_ARCH_OS ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+
+%:
+	dh $@ --without autoreconf
+
+ifeq ($(DEB_HOST_ARCH_OS),hurd)
+CONFIG_LIBUSB=--disable-libusb
+else
+CONFIG_LIBUSB=--enable-libusb
+endif
+
+override_dh_auto_configure:
+ifeq ($(derives_from_ubuntu),yes)
+	set -e; if ! [ -e debian/patches-ubuntu/stamp-applied ]; then \
+	    echo '---- Applying Ubuntu specific patches'; \
+	    for p in debian/patches-ubuntu/*; do \
+	        patch -p1 --no-backup-if-mismatch < $$p; \
+	    done; \
+	    touch debian/patches-ubuntu/stamp-applied; \
+	fi
+endif
+	# Rebuild ./configure to get build system patches working
+	aclocal
+	autoconf
+	dh_auto_configure -- \
+		--with-docdir=/usr/share/cups/doc-root \
+		--localedir=/usr/share/cups/locale \
+		--enable-libpaper \
+		--enable-ssl \
+		--enable-gnutls \
+		--enable-threads \
+		--enable-static \
+		--enable-debug \
+		--enable-dbus \
+		--with-dbusdir=/etc/dbus-1 \
+		--enable-gssapi \
+		--enable-avahi \
+		--disable-launchd \
+		--with-cups-group=lp \
+		--with-system-groups=lpadmin \
+		--with-rundir=/run/cups \
+		--with-printcap=/run/cups/printcap \
+		--with-log-file-perm=0640 \
+		--with-local_protocols='dnssd' \
+		--with-systemd=/lib/systemd/system \
+		$(CONFIG_LIBUSB)
+
+override_dh_auto_install:
+	dh_auto_install -- install BUILDROOT=$(shell pwd)/debian/tmp
+
+MANPAGES_L10N_CUPS=man1/cups.1 man5/subscriptions.conf.5 man5/mime.convs.5 man7/filter.7 man8/cupsfilter.8 man8/cups-exec.8 man8/cups-deviced.8 man8/cups-driverd.8 man8/cupsd-helper.8 man8/cupsd-lpd.8
+MANPAGES_L10N_CUPS_SERVER_COMMON=man5/cupsd-logs.conf.5
+MANPAGES_L10N_CUPS_DAEMON=man5/classes.conf.5 man5/cupsd.conf.5 man5/cups-files.conf.5 man5/cups-snmp.conf.5 man5/mailto.conf.5 man5/mime.types.5 man5/printers.conf.5 man7/backend.7 man7/notifier.7 man8/cupsd.8 man8/cups-snmp.8
+MANPAGES_L10N_CUPS_CLIENT=man1/cupstestppd.1 man1/cupstestdsc.1 man1/lp.1 man1/lpoptions.1 man1/lppasswd.1 man1/lpstat.1 man1/cancel.1 man5/client.conf.5 man8/cupsaddsmb.8 man8/cupsenable.8 man8/lpadmin.8 man8/lpinfo.8 man8/lpmove.8 man8/cupsreject.8 man8/cupsdisable.8 man8/cupsaccept.8 man8/cupsctl.8
+MANPAGES_L10N_CUPS_BSD=man1/lpr.1 man1/lprm.1 man1/lpq.1 man8/lpc.8
+MANPAGES_L10N_CUPS_IPP_UTILS=man1/ippfind.1 man1/ippserver.1 man1/ipptool.1 man5/ipptoolfile.5
+
+override_dh_install:
+	dh_install
+
+ifneq (,$(filter cups-server-common,$(shell dh_listpackages)))
+	# Remove all files which get replaced by the ones in the cups-filters
+	# package
+	rm -f debian/cups-server-common/usr/share/cups/data/testprint
+	# Try to install the translated manpages to cups-server-common
+	set -e; for m in $(MANPAGES_L10N_CUPS_SERVER_COMMON); do \
+	    for manp in $$(ls debian/tmp/usr/share/man/*/$$m.gz); do \
+	        if [ -r $$manp ]; then \
+	            if [ -L $$manp ]; then \
+	                ln -sf $$(readlink $$manp) $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-server-common#');\
+	            else \
+	                install -D -m 644 $$manp $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-server-common#');\
+	            fi; \
+	        fi; \
+	    done; \
+	done
+endif
+
+	# Ensure that we don't ship anything in /var/run or /run
+	rm -rf debian/cups*/var/run
+	rm -rf debian/cups*/run
+
+ifneq (,$(filter cups,$(shell dh_listpackages)))
+	# Make the usb backend run as root, since /dev/bus/usb/* are
+	# root:root in udev < 147, and cups does not use the usblp kernel
+	# module any more; udev 147 makes most of those printers accessible to
+	# lp, but apparently not all of them
+	chmod go-x debian/cups/usr/lib/cups/backend-available/usb
+
+	# Try to install the translated manpages to cups
+	set -e; for m in $(MANPAGES_L10N_CUPS); do \
+	    for manp in $$(ls debian/tmp/usr/share/man/*/$$m.gz); do \
+	        if [ -r $$manp ]; then \
+	            if [ -L $$manp ]; then \
+	                ln -sf $$(readlink $$manp) $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups#');\
+	            else \
+	                install -D -m 644 $$manp $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups#');\
+	            fi; \
+	        fi; \
+	    done; \
+	done
+endif
+
+ifneq (,$(filter libcups2-dev,$(shell dh_listpackages)))
+	# debian/libcups2-dev.install entry cannot rename files on-the-fly
+	cp cups/language-private.h debian/libcups2-dev/usr/include/cups/i18n.h
+endif
+
+ifneq (,$(filter cups-daemon,$(shell dh_listpackages)))
+	# Install AppArmor, ufw profile, and Apport hook
+	install -D -m 644 debian/local/apparmor-profile debian/cups-daemon/etc/apparmor.d/usr.sbin.cupsd
+	dh_apparmor --profile-name=usr.sbin.cupsd -p cups-daemon
+	install -D -m 644 debian/local/cups.ufw.profile debian/cups-daemon/etc/ufw/applications.d/cups
+	install -D -m 644 debian/local/apport-hook.py debian/cups-daemon/usr/share/apport/package-hooks/source_cups.py
+
+	# Try to install the translated manpages to cups-daemon
+	set -e; for m in $(MANPAGES_L10N_CUPS_DAEMON); do \
+	    for manp in $$(ls debian/tmp/usr/share/man/*/$$m.gz); do \
+	        if [ -r $$manp ]; then \
+	            if [ -L $$manp ]; then \
+	                ln -sf $$(readlink $$manp) $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-daemon#');\
+	            else \
+	                install -D -m 644 $$manp $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-daemon#');\
+	            fi; \
+	        fi; \
+	    done; \
+	done
+endif
+
+ifneq (,$(filter cups-client,$(shell dh_listpackages)))
+	# Try to install the translated manpages to cups-client
+	set -e; for m in $(MANPAGES_L10N_CUPS_CLIENT); do \
+	    for manp in $$(ls debian/tmp/usr/share/man/*/$$m.gz); do \
+	        if [ -r $$manp ]; then \
+	            if [ -L $$manp ]; then \
+	                ln -sf $$(readlink $$manp) $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-client#');\
+	            else \
+	                install -D -m 644 $$manp $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-client#');\
+	            fi; \
+	        fi; \
+	    done; \
+	done
+endif
+
+ifneq (,$(filter cups-bsd,$(shell dh_listpackages)))
+	# Try to install the translated manpages to cups-bsd
+	set -e; for m in $(MANPAGES_L10N_CUPS_BSD); do \
+	    for manp in $$(ls debian/tmp/usr/share/man/*/$$m.gz); do \
+	        if [ -r $$manp ]; then \
+	            if [ -L $$manp ]; then \
+	                ln -sf $$(readlink $$manp) $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-bsd#');\
+	            else \
+	                install -D -m 644 $$manp $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-bsd#');\
+	            fi; \
+	        fi; \
+	    done; \
+	done
+endif
+
+ifneq (,$(filter cups-ipp-utils,$(shell dh_listpackages)))
+	# gzip and install english manpage for ippserver
+	cat test/ippserver.man | gzip -9 > debian/cups-ipp-utils/usr/share/man/man1/ippserver.1.gz
+	# Try to install the translated manpages to cups-ipp-utils
+	set -e; for m in $(MANPAGES_L10N_CUPS_IPP_UTILS); do \
+	    for manp in $$(ls debian/tmp/usr/share/man/*/$$m.gz); do \
+	        if [ -r $$manp ]; then \
+	            if [ -L $$manp ]; then \
+	                ln -sf $$(readlink $$manp) $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-ipp-utils#');\
+	            else \
+	                install -D -m 644 $$manp $$(echo $$manp | sed -e 's#^debian/tmp#debian/cups-ipp-utils#');\
+	            fi; \
+	        fi; \
+	    done; \
+	done
+endif
+
+override_dh_installchangelogs:
+	dh_installchangelogs CHANGES.md
+
+override_dh_installinit:
+	dh_installinit --name=cups
+
+override_dh_fixperms:
+	dh_fixperms -Xusr/lib/cups/backend-available
+
+override_dh_auto_test:
+ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
+	CUPS_TESTBASE=$(shell mktemp -d /tmp/cups.XXXXXX) make check
+	# Check that cups-config is not architecture-specific
+	[ -r cups-config ] && grep -vq $(shell dpkg-architecture -qDEB_HOST_MULTIARCH) cups-config
+endif
+
+ifeq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+override_dh_makeshlibs:
+	dh_makeshlibs -- -c4
+endif
+
+override_dh_clean:
+	dh_clean
+	if [ -e debian/patches-ubuntu/stamp-applied ]; then \
+	    echo '---- Unapplying Ubuntu specific patches'; \
+	    for p in debian/patches-ubuntu/*; do \
+	        patch -Rp1 --no-backup-if-mismatch < $$p; \
+	    done; \
+	    rm debian/patches-ubuntu/stamp-applied; \
+	fi
+
+override_dh_auto_clean:
+	[ ! -f Makedefs ] || dh_auto_clean
+	rm -f man/client.conf.man packaging/cups.list
+	rm -f conf/mime.convs conf/snmp.conf init/org.cups.cups-lpd.plist
+	[ ! -f Makedefs ] || make distclean
+
+override_dh_installdocs:
+	dh_installdocs -plibcupsimage2-dev --link-doc=libcupsimage2
+	dh_installdocs -pcups-bsd --link-doc=libcups2
+	dh_installdocs --remaining-packages
+
+	rm -f debian/libcups2-dev/usr/share/doc/libcups2-dev/examples/scripting/php/*.o
+	rm -f debian/libcups2-dev/usr/share/doc/libcups2-dev/examples/scripting/php/*.so
+
+override_dh_installpam:
+	dh_installpam -pcups-daemon --name=cups
+	dh_installpam --remaining-packages
+
+override_dh_strip:
+	dh_strip --dbgsym-migration='cups-dbg (<< 2.1.3-5~)'

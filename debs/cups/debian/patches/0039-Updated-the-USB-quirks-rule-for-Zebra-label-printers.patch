@@ -1,0 +1,34 @@
+From d218d3e75bea23c39ab48cb44799db13267b9c94 Mon Sep 17 00:00:00 2001
+From: Michael R Sweet <michael.r.sweet@gmail.com>
+Date: Wed, 23 Jan 2019 11:15:29 -0500
+Subject: Updated the USB quirks rule for Zebra label printers (Issue #5395)
+
+Now all Zebra label printers use unidir and no-reattach.
+---
+ backend/org.cups.usb-quirks | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/backend/org.cups.usb-quirks b/backend/org.cups.usb-quirks
+index 00d3b2545..0586602ab 100644
+--- a/backend/org.cups.usb-quirks
++++ b/backend/org.cups.usb-quirks
+@@ -140,8 +140,8 @@
+ # Samsung ML-2160 Series (https://bugzilla.redhat.com/show_bug.cgi?id=873123)
+ 0x04e8 0x330f unidir
+ 
+-# All Zebra devices (https://bugs.launchpad.net/bugs/1001028)
+-0x0a5f unidir
++# All Zebra devices (https://bugs.launchpad.net/bugs/1001028) (Issue #5395)
++0x0a5f unidir no-reattach
+ 
+ # Canon CP-10
+ 0x04a9 0x304a blacklist
+@@ -291,8 +291,5 @@
+ # Star TSP743 (Issue #5443)
+ 0x0519 0x0001 delay-close
+ 
+-# Zebra ZD420 (Issue #5395)
+-0x0a5f 0x0120 unidir no-reattach
+-
+ # Lexmark E120n (Issue #5478)
+ 0x043d 0x00cc no-reattach

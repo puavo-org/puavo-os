@@ -1,0 +1,31 @@
+From 44d082e3a3d2f673801d8e78d66ce08a2cb2236d Mon Sep 17 00:00:00 2001
+From: Martin Pitt <mpitt@debian.org>
+Date: Tue, 9 Aug 2016 18:11:09 +0200
+Subject: Tests: Ignore warnings from colord and Avahi
+
+These warnings change the expected number of warnings
+
+Last-Update: 2015-08-05
+
+Patch-Name: tests-ignore-warnings.patch
+---
+ test/run-stp-tests.sh | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/test/run-stp-tests.sh b/test/run-stp-tests.sh
+index fc7e2525c..c7de337ae 100755
+--- a/test/run-stp-tests.sh
++++ b/test/run-stp-tests.sh
+@@ -982,7 +982,11 @@ else
+ fi
+ 
+ # Warning log messages
+-count=`$GREP '^W ' $BASE/log/error_log | $GREP -v CreateProfile | wc -l | awk '{print $1}'`
++count=`$GREP '^W ' $BASE/log/error_log | $GREP -v CreateProfile | \
++       $GREP -v 'Unable to initialize USB access via libusb, libusb error' | \
++       $GREP -v 'org.freedesktop.ColorManager' | \
++       $GREP -v -E 'Avahi client failed: -(1|26)' | \
++       wc -l | awk '{print $1}'`
+ if test $count != 8; then
+ 	echo "FAIL: $count warning messages, expected 8."
+ 	$GREP '^W ' $BASE/log/error_log

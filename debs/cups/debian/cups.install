@@ -1,0 +1,25 @@
+etc/cups/snmp.conf
+usr/lib/cups/backend/lpd usr/lib/cups/backend-available
+usr/lib/cups/backend/socket usr/lib/cups/backend-available
+usr/lib/cups/backend/usb usr/lib/cups/backend-available
+usr/lib/cups/backend/dnssd usr/lib/cups/backend-available
+usr/lib/cups/backend/snmp usr/lib/cups/backend-available
+usr/lib/cups/cgi-bin
+usr/lib/cups/monitor
+usr/lib/cups/daemon/cups-deviced
+usr/lib/cups/daemon/cups-driverd
+usr/lib/cups/daemon/cups-lpd
+usr/lib/cups/filter/rasterto*
+usr/lib/cups/driver/
+usr/sbin/cupsfilter
+usr/share/man/man1/cups.1.gz
+usr/share/man/man7/filter.7.gz
+usr/share/man/man5/subscriptions.conf.5.gz
+usr/share/man/man5/mime.convs.5.gz
+usr/share/man/man8/cupsd-helper.8.gz
+usr/share/man/man8/cups-deviced.8.gz
+usr/share/man/man8/cups-driverd.8.gz
+usr/share/man/man8/cups-exec.8.gz
+usr/share/man/man8/cupsfilter.8.gz
+usr/share/man/man8/cups-lpd.8.gz
+../presubj usr/share/bug/cups/

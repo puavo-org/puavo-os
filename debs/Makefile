@@ -7,6 +7,7 @@ _pkgs_parts := puavo-ds puavo-os
 # XXX gvfs not added to build, because it is unclear
 # XXX if there is any benefit to do so
 _pkgs_ports := aria2                \
+               cups                 \
                fmit                 \
                gnome-control-center \
                gnome-shell          \

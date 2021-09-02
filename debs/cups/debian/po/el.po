@@ -1,0 +1,140 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the cups package.
+# FIRST AUTHOR Vangelis Skarmoutsos <skarmoutsosv@gmail.com>, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: cups\n"
+"Report-Msgid-Bugs-To: cups@packages.debian.org\n"
+"POT-Creation-Date: 2016-12-20 08:55+0100\n"
+"PO-Revision-Date: 2017-07-06 00:45+0300\n"
+"Last-Translator: Vangelis Skarmoutsos <skarmoutsosv@gmail.com>\n"
+"Language-Team: \n"
+"Language: el\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.0.2\n"
+
+#. Type: boolean
+#. Description
+#: ../cups-bsd.templates:2001
+msgid "Do you want to set up the BSD lpd compatibility server?"
+msgstr "Θέλετε να ρυθμίσετε τον BSD lpd  εξυπηρετητή συμβατότητας;"
+
+#. Type: boolean
+#. Description
+#: ../cups-bsd.templates:2001
+msgid ""
+"The CUPS package contains a server that can accept BSD-style print jobs and "
+"submit them to CUPS. It should only be set up if other computers are likely "
+"to submit jobs over the network via the \"BSD\" or \"LPR\" services, and "
+"these computers cannot be converted to use the IPP protocol that CUPS uses."
+msgstr ""
+"Το πακέτο CUPS περιέχει έναν εξυπηρετητή που μπορεί να δεχτεί εργασίες "
+"εκτύπωσης BSD-στυλ και να τις υποβάλλει στο CUPS. Πρέπει να ρυθμιστεί μόνο "
+"αν άλλοι υπολογιστές είναι πιθανό να υποβάλουν εργασίες μέσω δικτύου με τις "
+"υπηρεσίες \"BSD\" ή \"LPR\", και αυτοί οι υπολογιστές δεν μπορούν να "
+"μετατραπούν ώστε να χρησιμοποιούν το πρωτόκολλο IPP, που χρησιμοποιείται από "
+"το CUPS."
+
+#. Type: boolean
+#. Description
+#: ../cups.templates:2001
+msgid "Do you want CUPS to print unknown jobs as raw jobs?"
+msgstr ""
+"Θέλετε το CUPS να εκτυπώνει άγνωστες εργασίες ως ανεπεξέργαστες εργασίες;"
+
+#. Type: boolean
+#. Description
+#: ../cups.templates:2001
+#, fuzzy
+msgid ""
+"The Internet Printing Protocol (IPP) enforces a MIME type for all print "
+"jobs. Since not all sources of print jobs can attach an appropriate type, "
+"many jobs get submitted as the MIME type application/octet-stream and could "
+"be rejected if CUPS cannot guess the job's format."
+msgstr ""
+"Το Διαδικτυακό Πρωτόκολλο Εκτύπωσης (IPP) εφαρμόζει ένα τύπο MIME για όλες "
+"τις εργασίες εκτύπωσης. Καθώς δεν μπορούν όλες οι πηγές εργασιών εκτύπωσης "
+"να προσαρτήσουν τον κατάλληλο τύπο, πολλές εργασίες υποβάλλονται ως MIME "
+"type application/octet-stream και μπορεί να απορριφθούν αν το CUPS δεν "
+"μπορέσει να μαντέψει την μορφή της εργασίας."
+
+#. Type: boolean
+#. Description
+#: ../cups.templates:2001
+msgid ""
+"CUPS can handle all such jobs as \"raw\" jobs, which causes them to be sent "
+"directly to the printer without processing."
+msgstr ""
+"Το CUPS μπορεί να χειριστεί όλες τις παρεμφερείς εργασίες ως \"ανεπεξέργαστες"
+"\" εργασίες, το οποίο τις αναγκάζει να αποσταλούν απ' ευθείας στον εκτυπωτή "
+"χωρίς επεξεργασία."
+
+#. Type: boolean
+#. Description
+#: ../cups.templates:2001
+msgid ""
+"It is recommended to choose this option if the server will be accepting "
+"print jobs from Windows computers or Samba servers."
+msgstr ""
+"Συνίσταται να επιλέξετε αυτή την επιλογή αν ο εξυπηρετητής θα δέχεται "
+"εργασίες εκτύπωσης από υπολογιστές Windows ή από εξυπηρετητές Samba."
+
+#. Type: multiselect
+#. Choices
+#: ../cups.templates:3001
+msgid "lpd"
+msgstr "lpd"
+
+#. Type: multiselect
+#. Choices
+#: ../cups.templates:3001
+msgid "socket"
+msgstr "socket"
+
+#. Type: multiselect
+#. Choices
+#: ../cups.templates:3001
+msgid "usb"
+msgstr "usb"
+
+#. Type: multiselect
+#. Choices
+#: ../cups.templates:3001
+msgid "snmp"
+msgstr "snmp"
+
+#. Type: multiselect
+#. Choices
+#: ../cups.templates:3001
+msgid "dnssd"
+msgstr "dnssd"
+
+#. Type: multiselect
+#. Description
+#: ../cups.templates:3002
+msgid "Printer communication backends:"
+msgstr "Συστήματα υποστήριξης επικοινωνίας εκτυπωτή:"
+
+#. Type: multiselect
+#. Description
+#: ../cups.templates:3002
+msgid ""
+"CUPS uses backend programs to communicate with the printer device or port."
+msgstr ""
+"Το CUPS χρησιμοποιεί προγράμματα συστήματος υποστήριξης, για επικοινωνία με "
+"την συσκευή ή θύρα εκτυπωτή."
+
+#. Type: multiselect
+#. Description
+#: ../cups.templates:3002
+msgid ""
+"Please choose the backend program to be used by CUPS. The default choice "
+"should fit the most common environments."
+msgstr ""
+"Παρακαλώ επιλέξτε το πρόγραμμα συστήματος υποστήριξης που θα χρησιμοποιηθεί "
+"από το CUPS. Η προκαθορισμένη επιλογή ταιριάζει με τα πιο συνηθισμένα "
+"περιβάλλοντα."

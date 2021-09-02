@@ -1,0 +1,17 @@
+cups packaging for Debian
+-------------------------
+
+cups is maintained with gbp-buildpackage on git.debian.org (see Vcs-Git: control
+field). gbp-buildpackage is documented at /usr/share/doc/git-buildpackage/ (in
+particular the comprehensive manual-html/).
+
+It uses a standard 3.0 (quilt) patch system.
+
+The really short path to get a buildable source tree is:
+
+  debcheckout cups
+  cd cups
+  QUILT_PATCHES=debian/patches quilt push -af
+
+The branches are named after DEP-14, so this means that debian/master should
+always point to the latest development branch

@@ -1,0 +1,38 @@
+#! /bin/sh
+
+set -e
+
+#DEBHELPER#
+
+case "$1" in
+    purge)
+	rm -rf /var/lib/cups
+	rm -rf /var/log/cups
+	rm -rf /run/cups
+	rm -rf /var/cache/cups
+	rm -rf /var/spool/cups
+	rm -f /etc/cups/ssl/server.crt
+	rm -f /etc/cups/ssl/server.key
+	rm -rf /etc/cups/ssl
+	rm -rf /etc/cups/passwd.md5
+	rm -rf /etc/cups/cups.d
+	rm -f /etc/cups/cupsd.conf
+	rm -f /etc/cups/cupsd-systemd-listen.conf
+	rm -f /etc/cups/cupsd.conf.pre16-bak
+	rm -f /etc/cups/printers.conf* /etc/cups/classes.conf*
+	rmdir /etc/cups 2>/dev/null || true
+	;;
+    abort-upgrade)
+        if [ -e /etc/cups/cupsd.conf.conffile-bak ]; then
+            # Move cupsd.conf back
+            mv /etc/cups/cupsd.conf.conffile-bak /etc/cups/cupsd.conf
+        fi
+        ;;
+    remove|upgrade|failed-upgrade|abort-install|disappear)
+        ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 0
+
+esac
