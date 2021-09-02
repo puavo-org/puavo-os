@@ -7,5 +7,6 @@ if puavo_default_printer=$(puavo-conf puavo.printing.default_printer) \
 fi
 
 if [ "$(puavo-conf puavo.printing.ui.show_avahi_printers)" = 'false' ]; then
+  export CUPS_SHOW_AVAHI_PRINTERS=false
   export GTK_SHOW_AVAHI_PRINTERS=false
 fi

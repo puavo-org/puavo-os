@@ -1,0 +1,22 @@
+diff -ruN cups.orig/cups/dest.c cups/cups/dest.c
+--- cups.orig/cups/dest.c	2021-09-02 10:55:27.000000000 +0300
++++ cups/cups/dest.c	2021-09-02 11:04:37.341668734 +0300
+@@ -1641,7 +1641,7 @@
+   int		num_reals;		/* Number of real queues */
+   cups_dest_t	*reals;			/* Real queues */
+   _cups_globals_t *cg = _cupsGlobals();	/* Pointer to library globals */
+-
++  char		*show_avahi_printers;
+ 
+   DEBUG_printf(("cupsGetDests2(http=%p, dests=%p)", (void *)http, (void *)dests));
+ 
+@@ -1677,7 +1677,8 @@
+   data.num_dests = 0;
+   data.dests     = NULL;
+ 
+-  if (!httpAddrLocalhost(httpGetAddress(http)))
++  show_avahi_printers = getenv("CUPS_SHOW_AVAHI_PRINTERS");
++  if ((show_avahi_printers != NULL && strcmp(show_avahi_printers, "false") == 0) || !httpAddrLocalhost(httpGetAddress(http)))
+   {
+    /*
+     * When talking to a remote cupsd, just enumerate printers on the remote
