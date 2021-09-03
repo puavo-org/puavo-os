@@ -1,0 +1,13 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=/usr/lib/x86_64-linux-gnu
+includedir=${prefix}/include
+targets=x11
+
+Name: GDK
+Description: GTK+ Drawing Kit
+Version: 3.24.5
+Requires: pango pangocairo gdk-pixbuf-2.0 >= 2.30.0 cairo >= 1.14.0 cairo-gobject >= 1.14.0
+Requires.private: gio-unix-2.0 >= 2.53.4 fontconfig x11 xext xinerama xi xcursor    cairo-xlib epoxy >= 1.4 
+Libs: -L${libdir} -lgdk-3 
+Cflags: -I${includedir}/gtk-3.0 

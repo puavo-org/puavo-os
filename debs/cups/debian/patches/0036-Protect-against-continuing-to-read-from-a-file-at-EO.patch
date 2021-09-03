@@ -1,0 +1,40 @@
+From 5b2890774c0879bd62ee4abb6c8d87e5c6abcb36 Mon Sep 17 00:00:00 2001
+From: Michael R Sweet <michael.r.sweet@gmail.com>
+Date: Wed, 9 Jan 2019 13:26:37 -0500
+Subject: Protect against continuing to read from a file at EOF (Issue #5473)
+
+Fixed a potential memory leak when reading at the end of a file
+---
+ cups/file.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/cups/file.c b/cups/file.c
+index 5c9ddf8fe..f67a6668e 100644
+--- a/cups/file.c
++++ b/cups/file.c
+@@ -679,6 +679,12 @@ cupsFileGetChar(cups_file_t *fp)	/* I - CUPS file */
+     return (-1);
+   }
+ 
++  if (fp->eof)
++  {
++    DEBUG_puts("5cupsFileGetChar: End-of-file!");
++    return (-1);
++  }
++
+  /*
+   * If the input buffer is empty, try to read more data...
+   */
+@@ -1651,6 +1657,12 @@ cupsFileRead(cups_file_t *fp,		/* I - CUPS file */
+   if (bytes == 0)
+     return (0);
+ 
++  if (fp->eof)
++  {
++    DEBUG_puts("5cupsFileRead: End-of-file!");
++    return (-1);
++  }
++
+  /*
+   * Loop until all bytes are read...
+   */

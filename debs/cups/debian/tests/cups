@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e -u
+
+/usr/share/cups/test-drivers
+
+echo "Check that the default hostname is the socket"
+test "`lpstat -H`" = "/run/cups/cups.sock"

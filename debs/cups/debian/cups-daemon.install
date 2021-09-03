@@ -1,0 +1,28 @@
+#! /usr/bin/dh-exec --with=install
+var/
+etc/cups/cups-files.conf
+usr/lib/cups/backend/ipp
+usr/lib/cups/backend/ipps
+usr/lib/cups/backend/http
+usr/lib/cups/backend/https
+usr/lib/cups/daemon/cups-exec
+usr/lib/cups/notifier
+usr/share/cups/mime/mime.types
+usr/share/cups/cupsd.conf.default
+usr/share/cups/cups-files.conf.default
+usr/share/cups/snmp.conf.default
+usr/sbin/cupsd
+usr/share/man/man5/classes.conf.5.gz
+usr/share/man/man5/cupsd.conf.5.gz
+usr/share/man/man5/cups-files.conf.5.gz
+usr/share/man/man5/cups-snmp.conf.5.gz
+usr/share/man/man5/mailto.conf.5.gz
+usr/share/man/man5/mime.types.5.gz
+usr/share/man/man5/printers.conf.5.gz
+usr/share/man/man7/backend.7.gz
+usr/share/man/man7/notifier.7.gz
+usr/share/man/man8/cupsd.8.gz
+usr/share/man/man8/cups-snmp.8.gz
+lib/systemd/system/org.cups.cupsd.socket  => lib/systemd/system/cups.socket
+lib/systemd/system/org.cups.cupsd.path    => lib/systemd/system/cups.path
+lib/systemd/system/org.cups.cupsd.service => lib/systemd/system/cups.service

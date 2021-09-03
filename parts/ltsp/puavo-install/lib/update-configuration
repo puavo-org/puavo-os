@@ -177,6 +177,12 @@ def update_grub_environment(restclient)
   raise errors.first unless errors.empty?
 end
 
+def update_printer_restrictions(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating printer restrictions\n")
+  run('/etc/puavo-conf/scripts/setup_desktop_printer_restrictions',
+      '--use-lpadmin')
+end
+
 def update_wlan_configurations(restclient)
   log(Syslog::LOG_INFO, ">>> Updating wlan configurations\n")
 
@@ -245,13 +251,14 @@ is_a_device = ($puavo_hosttype != 'bootserver')
 # because others may depend on it.
 update_functions = [
                 :update_device_json,
-  is_a_device ? :update_external_files      : :do_nothing,
-  is_a_device ? :update_wlan_configurations : :do_nothing,
+  is_a_device ? :update_external_files       : :do_nothing,
+  is_a_device ? :update_wlan_configurations  : :do_nothing,
                 :update_grub_environment,
                 :update_certificate,
                 :update_extra_boot_scripts,
                 :update_puavoadmins,
                 :update_puavopkg_installers,
+  is_a_device ? :update_printer_restrictions : :do_nothing,
 ]
 
 exitcode = 0

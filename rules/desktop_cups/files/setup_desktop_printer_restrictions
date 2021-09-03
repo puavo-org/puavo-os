@@ -1,0 +1,166 @@
+#!/bin/sh
+
+set -eu
+
+dry_run=false
+use_lpadmin=false
+verbose=false
+
+opt="${1:-}"
+case "$opt" in
+  --dry-run)
+    dry_run=true
+    verbose=true
+    ;;
+  --use-lpadmin)
+    use_lpadmin=true
+    verbose=true
+    ;;
+  '')
+    ;;
+  *)
+    echo "Unknown argument ${opt}" >&2
+    ;;
+esac
+
+if [ -e /run/puavo/nbd-server ]; then
+  device_json_path='/etc/puavo/device.json'
+else
+  if ! { $dry_run || $use_lpadmin; } then
+    exit 0
+  fi
+  device_json_path='/state/etc/puavo/device.json'
+fi
+
+explain_rationale() {
+  local id rationale
+
+  id=$1
+  case "$id" in
+    OPENINTHISSCHOOL)
+      rationale='printer is open in the school this device belongs to' ;;
+    OPENINSOMESCHOOL)
+      rationale='printer is open in some school' ;;
+    PRINTERINSAMESCHOOL)
+      rationale='printer is restricted to school this device belongs to' ;;
+    DEVICESPECIFIC)
+      rationale='this specific device is allowed access to this printer' ;;
+    GROUPSPECIFIC)
+      rationale='access to printer is allowed for these groups' ;;
+    NOPERMISSION)
+      rationale='no suitable permissions could be found' ;;
+    ERROR)
+      rationale='error in looking up rationale' ;;
+    *)
+      rationale="rationale id not understood: ${id}" ;;
+  esac
+
+  echo "$rationale"
+}
+
+lookup_printer_key() {
+  jq -r --arg key "$1" --arg printer "$2" '
+    if .printers.restrictions[$printer] | has($key) then
+      .printers.restrictions[$printer][$key]
+    else
+      ""
+    end
+  ' "$device_json_path"
+}
+
+# XXX cleanup old stuff ... this may be removed after some years
+cleanup_old_managed_printers() {
+  local cleanup_ok dnssd_printers_path
+
+  dnssd_printers_path='/var/lib/puavo-desktop/dnssd_printers'
+
+  if [ ! -e "$dnssd_printers_path" ]; then
+    # no cleanup to do
+    return 0
+  fi
+
+  if lpstat -r | grep -q 'is not running'; then
+    # cups is not running, this is not the right time to do cleanup
+    return 0
+  fi
+
+  cleanup_ok=true
+
+  for old_printer in $(jq -r '.[] | .name' "$dnssd_printers_path"); do
+    if lpstat -v "$old_printer" > /dev/null 2>&1; then
+      if ! lpadmin -x "$old_printer"; then
+        cleanup_ok=false
+      fi
+    fi
+  done
+
+  if $cleanup_ok; then
+    rm -f "$dnssd_printers_path"
+  fi
+
+  return 0
+}
+
+if ! printer_list=$(jq -r '.printers.restrictions | keys | .[]' \
+                          /etc/puavo/device.json); then
+  echo 'Could not determine printer restrictions from device.json' >&2
+  exit 1
+fi
+
+status=0
+
+if $use_lpadmin && ! $dry_run; then
+  cleanup_old_managed_printers || status=1
+fi
+
+use_puavo_permissions=false
+if [ "$(puavo-conf puavo.printing.use_puavo_permissions)" = 'true' ]; then
+  use_puavo_permissions=true
+fi
+
+for printer in $(printf "%s" "$printer_list" | sort -f); do
+  if ! allow=$(lookup_printer_key allow "$printer"); then
+    status=1
+    continue
+  fi
+
+  if ! $use_puavo_permissions || [ "$allow" = '*' ]; then
+    allowed_users='all'
+    browsed_conf_line=''
+  else
+    if [ -n "$allow" ]; then
+      allowed_users="root,${allow}"
+    else
+      allowed_users='root'
+    fi
+    browsed_conf_line="requesting-user-name-allowed=${allowed_users}"
+  fi
+
+  if $verbose; then
+    if $use_puavo_permissions; then
+      rationale=$(lookup_printer_key rationale "$printer") || rationale='ERROR'
+      explained=$(explain_rationale "$rationale")
+    else
+      explained='puavo.printing.use_puavo_permissions is false'
+    fi
+    echo "Allowed users for '${printer}' are '${allowed_users}': ${explained}."
+  fi
+
+  if $dry_run; then
+    :
+  elif $use_lpadmin; then
+    if lpstat -v "$printer" > /dev/null 2>&1; then
+      lpadmin -p "$printer" -u "allow:${allowed_users}" || status=1
+    fi
+  else
+    browsed_printer_path="/var/cache/cups/cups-browsed-options-${printer}"
+    if [ -n "$browsed_conf_line" ]; then
+      printf "%s\n" "$browsed_conf_line"
+    else
+      printf ""
+    fi > "${browsed_printer_path}.tmp" || status=1
+    mv "${browsed_printer_path}.tmp" "$browsed_printer_path" || status=1
+  fi
+done
+
+exit $status

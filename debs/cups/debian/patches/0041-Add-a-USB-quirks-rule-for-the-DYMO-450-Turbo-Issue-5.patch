@@ -1,0 +1,20 @@
+From d4d7ff4dad47ad4d278ca2c84efd602354a4e627 Mon Sep 17 00:00:00 2001
+From: Michael R Sweet <michael.r.sweet@gmail.com>
+Date: Thu, 21 Feb 2019 09:54:59 -0500
+Subject: Add a USB quirks rule for the DYMO 450 Turbo (Issue #5521)
+
+---
+ backend/org.cups.usb-quirks | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/backend/org.cups.usb-quirks b/backend/org.cups.usb-quirks
+index 77233ea18..44d6bb8cb 100644
+--- a/backend/org.cups.usb-quirks
++++ b/backend/org.cups.usb-quirks
+@@ -296,3 +296,6 @@
+ 
+ # All Xerox printers (Issue #5523)
+ 0x0924 no-reattach
++
++# Dymo 450 Turbo (Issue #5521)
++0x0922 0x0021 unidir

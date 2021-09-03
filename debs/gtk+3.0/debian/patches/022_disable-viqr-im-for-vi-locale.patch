@@ -1,0 +1,44 @@
+From: Ming Hua <minghua@ubuntu.com>
+Date: Thu, 13 Mar 2008 18:09:25 -0500
+Subject: Do not use VIQR input method for vi locale by default
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+In the Vietnamese Quoted-Readable input method, punctuation following a
+base letter is converted into diacritical marks, for example a( → ă.
+(See <https://en.wikipedia.org/wiki/Vietnamese_Quoted-Readable>.)
+A 2008 bug report in Ubuntu argued that this is a problematic default,
+particularly when typing passwords, where the effect of the punctuation
+is non-obvious.
+
+According to the bug reporter, VIQR is popular with Vietnamese users
+living elsewhere in the world, where Vietnamese keyboards are unlikely
+to be readily available, but is not a popular choice within Vietnam,
+where the Telex or VNI input modes are preferred.
+
+[smcv: Add a summary of the Ubuntu bug]
+Bug-Debian: https://bugs.debian.org/895043
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/gtk+2.0/+bug/191451
+Forwarded: no
+---
+ modules/input/imviqr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/modules/input/imviqr.c b/modules/input/imviqr.c
+index d9572f5..bfa4462 100644
+--- a/modules/input/imviqr.c
++++ b/modules/input/imviqr.c
+@@ -242,7 +242,7 @@ static const GtkIMContextInfo viqr_info = {
+   NC_("input method menu", "Vietnamese (VIQR)"), /* Human readable name */
+   GETTEXT_PACKAGE,	   /* Translation domain */
+    GTK_LOCALEDIR,	   /* Dir for bindtextdomain (not strictly needed for "gtk+") */
+-  "vi"			   /* Languages for which this module is the default */
++  ""			   /* Languages for which this module is the default */
+ };
+ 
+ static const GtkIMContextInfo *info_list[] = {

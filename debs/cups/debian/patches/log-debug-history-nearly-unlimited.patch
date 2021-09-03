@@ -1,0 +1,38 @@
+From 833d317f0520b037c79ad4b1ceeca31529797641 Mon Sep 17 00:00:00 2001
+From: Till Kampetter <till.kampetter@gmail.com>
+Date: Tue, 9 Aug 2016 18:11:45 +0200
+Subject: Make log debug history nearly unlimited
+
+Last-Update: 2015-02-10
+Patch-Name: log-debug-history-nearly-unlimited.patch
+---
+ scheduler/conf.c | 2 +-
+ scheduler/conf.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/scheduler/conf.c b/scheduler/conf.c
+index 86e37582b..b12bda1f6 100644
+--- a/scheduler/conf.c
++++ b/scheduler/conf.c
+@@ -721,7 +721,7 @@ cupsdReadConfiguration(void)
+   KeepAlive                = TRUE;
+   KeepAliveTimeout         = DEFAULT_KEEPALIVE;
+   ListenBackLog            = SOMAXCONN;
+-  LogDebugHistory          = 200;
++  LogDebugHistory          = 99999;
+   LogFilePerm              = CUPS_DEFAULT_LOG_FILE_PERM;
+   LogLevel                 = CUPSD_LOG_WARN;
+   LogTimeFormat            = CUPSD_TIME_STANDARD;
+diff --git a/scheduler/conf.h b/scheduler/conf.h
+index b608367ad..3f2cc8ba1 100644
+--- a/scheduler/conf.h
++++ b/scheduler/conf.h
+@@ -164,7 +164,7 @@ VAR cupsd_accesslog_t	AccessLogLevel		VALUE(CUPSD_ACCESSLOG_ACTIONS);
+ 					/* Access log level */
+ VAR int			ClassifyOverride	VALUE(0),
+ 					/* Allow overrides? */
+-			LogDebugHistory		VALUE(200),
++			LogDebugHistory		VALUE(99999),
+ 					/* Amount of automatic debug history */
+ 			FatalErrors		VALUE(CUPSD_FATAL_CONFIG),
+ 					/* Which errors are fatal? */

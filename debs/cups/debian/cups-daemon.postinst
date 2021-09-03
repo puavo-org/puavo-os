@@ -1,0 +1,61 @@
+#! /bin/sh
+
+set -e
+
+if [ "$1" = configure ]; then
+    # Set up lpadmin group.
+    if [ -z "`getent group lpadmin`" ]; then 
+	addgroup --system lpadmin
+    fi
+
+    for i in /etc/cups/classes.conf /etc/cups/printers.conf
+    do
+        if [ -f $i ] && ! dpkg-statoverride --list $i > /dev/null; then
+            chown root:lp $i; chmod 600 $i
+        fi
+    done
+
+    # Enforce the ConfigFilePerm on ppd file if we upgrade to 2.1.x
+    if dpkg --compare-versions "$2" lt-nl "2.1.0-2~"; then
+        configfileperm=`egrep '^ConfigFilePerm ' /etc/cups/cupsd.conf | awk '{print $2}' | tail -n 1`
+        if [ -z "$configfileperm" ]; then
+            configfileperm=0640
+        fi
+	if [ -d /etc/cups/ppd ]; then
+            for i in /etc/cups/ppd/*
+            do
+		if [ -f $i ]; then
+                    chown root:lp $i
+                    chmod $configfileperm $i
+		fi
+            done
+	fi
+    fi
+
+    # Manage printcap file and associated symlinks
+    if [ -e /etc/cups/cupsd.conf ]; then
+	if [ -e /etc/printcap.cups ]; then
+	    rm -f /etc/printcap.cups
+	fi
+	if [ -L /etc/printcap -a ! -e /etc/printcap ]; then
+	    rm -f /etc/printcap
+	fi
+
+	printcap_file=`egrep '^Printcap ' /etc/cups/cupsd.conf | awk '{print $2}' | tail -n 1`
+	if [ -z "$printcap_file" ]; then
+	    printcap_file=/run/cups/printcap
+	fi
+	if [ ! -e /etc/printcap -a -e $printcap_file ]; then
+	    ln -s $printcap_file /etc/printcap
+	fi
+    fi
+
+    # Create default cupsd.conf if it doesn't exist
+    if [ ! -r /etc/cups/cupsd.conf ]; then
+        cp /usr/share/cups/cupsd.conf.default /etc/cups/cupsd.conf
+    fi
+fi
+
+#DEBHELPER#
+
+exit 0
