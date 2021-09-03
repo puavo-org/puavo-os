@@ -149,7 +149,9 @@ for printer in $(printf "%s" "$printer_list" | sort -f); do
   if $dry_run; then
     :
   elif $use_lpadmin; then
-    lpadmin -p "$printer" -u "allow:${allowed_users}" || status=1
+    if lpstat -v "$printer" > /dev/null 2>&1; then
+      lpadmin -p "$printer" -u "allow:${allowed_users}" || status=1
+    fi
   else
     browsed_printer_path="/var/cache/cups/cups-browsed-options-${printer}"
     if [ -n "$browsed_conf_line" ]; then
