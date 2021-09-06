@@ -94,6 +94,7 @@ class packages {
     , 'arandr'
     , 'atop'
     , 'avahi-utils'
+    , 'chntpw'
     , 'clusterssh'
     , 'console-setup'
     , 'dconf-cli'
