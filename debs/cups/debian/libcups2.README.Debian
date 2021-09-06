@@ -140,9 +140,8 @@ needs to be configured to listen to the correct IPs and aports by dropping
 configuration files in the /etc/systemd/system/cups.socket.d/ directory.
 
 When launched by socket-activation, CUPS can additionally exit itself after
-being idle for some time (30 seconds by default) by using 'SystemdIdleExit on'
-in /etc/cups/cupsd.conf'. The delay before exiting on idle can be configured
-using 'IdleExitTimeout' in that same file.
+being idle for some time (60 seconds by default) by setting 'IdleExitTimeout'
+in /etc/cups/cupsd.conf'.
 
 Printing without using a local cups daemon
 ==========================================
@@ -181,38 +180,6 @@ debconf-utils and execute:
 The command should return:
 
    cups-bsd        cups-bsd/setuplpd       boolean true
-
-
-Integration with Samba
-======================
-
-It is possible to configure Samba to share cups' print queues with
-Microsoft clients. There are two ways to do this:
-
-1. Recent versions of Samba, including Debian's, have direct cups
-   support. You can configure Samba as follows:
-
-   [global]
-   printing = cups
-   printcap name = cups
-
-2. If, for some reason, you don't want to use Samba's native cups support
-   you can configure Samba to use System V printing. This can be done by
-   adding the following information to /etc/samba/smb.conf.
-
-   [global]
-   printing = sysv
-   printcap name = lpstat
-
-   [printers]
-   lpq command = /usr/bin/lpstat %p
-   lprm command = /usr/bin/cancel %p-%j
-   print command = /usr/bin/lp -d%p -oraw %s ; /bin/rm -f %s
-
-This method will require installation of the cups-client package.
-
-For more tips on integration with Samba check out the man page for
-cupsaddsmb, which is part of the cups-client package.
 
 
 Reporting bugs

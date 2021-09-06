@@ -1,0 +1,23 @@
+From: Didier Raboud <odyx@debian.org>
+Date: Wed, 3 Feb 2021 16:30:08 +0100
+Subject: Debian: Reproducibility: Do not run stp tests as root
+
+Reprotest insist in running these tests as root; skip them there.
+---
+ test/run-stp-tests.sh | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/test/run-stp-tests.sh b/test/run-stp-tests.sh
+index 4498a8c..ce868ea 100755
+--- a/test/run-stp-tests.sh
++++ b/test/run-stp-tests.sh
+@@ -19,7 +19,8 @@ argcount=$#
+ 
+ if test "x`id -u`" = x0; then
+ 	echo Please run this as a normal user. Not supported when run as root.
+-	exit 1
++	echo "Debian Reproducibility: Skipping allowed, as this is known to break under reprotest. This message MUST NOT be visible in normal Debian buildd logs."
++	exit 0
+ fi
+ 
+ #

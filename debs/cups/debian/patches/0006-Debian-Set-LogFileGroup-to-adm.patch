@@ -1,0 +1,23 @@
+From: Martin Pitt <mpitt@debian.org>
+Date: Tue, 9 Aug 2016 18:11:38 +0200
+Subject: Debian: Set LogFileGroup to adm
+
+---
+ conf/cups-files.conf.in | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/conf/cups-files.conf.in b/conf/cups-files.conf.in
+index af11fcc..80ca351 100644
+--- a/conf/cups-files.conf.in
++++ b/conf/cups-files.conf.in
+@@ -29,6 +29,10 @@ SystemGroup @CUPS_SYSTEM_GROUPS@
+ #ConfigFilePerm 0@CUPS_CONFIG_FILE_PERM@
+ #LogFilePerm 0@CUPS_LOG_FILE_PERM@
+ 
++# Specifies the group name or ID that will be used for log files.
++# The default group in Debian is "adm".
++LogFileGroup adm
++
+ # Location of the file logging all access to the scheduler; may be the name
+ # "syslog". If not an absolute path, the value of ServerRoot is used as the
+ # root directory.  Also see the "AccessLogLevel" directive in cupsd.conf.

@@ -1,0 +1,20 @@
+From: Till Kampetter <till.kampetter@gmail.com>
+Date: Tue, 9 Aug 2016 18:11:43 +0200
+Subject: Debian: Show compile command lines
+
+---
+ Makedefs.in | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Makedefs.in b/Makedefs.in
+index 9ee7585..038bb94 100644
+--- a/Makedefs.in
++++ b/Makedefs.in
+@@ -263,7 +263,6 @@ USBQUIRKS	=	@USBQUIRKS@
+ # Rules...
+ #
+ 
+-.SILENT:
+ .SUFFIXES:	.a .c .cxx .h .o
+ 
+ .c.o:

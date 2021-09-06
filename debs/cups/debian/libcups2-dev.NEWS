@@ -1,0 +1,8 @@
+libcups2-dev (2.3~b3-1) experimental; urgency=low
+
+  CUPS has changed its license to Apache-2.0 which is incompatible with GPL-2
+  (only). Maintainers of GPL-2 software linking against libcups2 or
+  libcupsimage2 must either get its license changed or stop shipping said
+  software.
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 22 Feb 2018 20:05:28 +0100

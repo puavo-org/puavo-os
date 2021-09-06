@@ -1,4 +1,5 @@
 libcupsimage.so.2 libcupsimage2 #MINVER#
+* Build-Depends-Package: libcupsimage2-dev
 # Keep this one at the latest upstream release
  (optional|regex)|^_cups.*@Base$" 1.6.2
  cupsRasterClose@Base 1.4.0

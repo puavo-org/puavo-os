@@ -1,46 +1,494 @@
-cups (2.2.10-6+deb10u4+puavo1+buildonce) buster; urgency=medium
+cups (2.3.3op2-3+deb11u1+puavo1+buildonce) bullseye; urgency=medium
 
   * Add puavo-no-avahi-printers.patch to potentially suppress
     printers appearing in UI dialogs.
 
  -- Puavo Org <dev@opinsys.fi>  Thu, 02 Sep 2021 11:06:26 +0300
 
-cups (2.2.10-6+deb10u4) buster; urgency=medium
+cups (2.3.3op2-3+deb11u1) unstable; urgency=medium
 
-  * Backport upstream fix:
-    - backend,scheduler/ipp.c: Fix 'printer-alert' invalid free
-      (Closes: #961345)
+  * Backport 2 upstream USB backend fixes:
+    - Revert enforcing read limits (caused a regression with Lexmark filters)
+    - Use 60s timeout (instead of 250ms) for reading at backchannel, as some
+      older models malfunction if timeout is too short (Closes: #989073)
 
- -- Didier Raboud <odyx@debian.org>  Sat, 28 Nov 2020 12:09:48 +0100
+ -- Didier Raboud <odyx@debian.org>  Thu, 27 May 2021 08:49:36 +0200
 
-cups (2.2.10-6+deb10u3) buster; urgency=medium
+cups (2.3.3op2-3) unstable; urgency=medium
 
-  * Backport upstream security fixes:
+  [ Helge Kreutzmann ]
+  * Update German man page (2212t)
+
+  [ Didier Raboud ]
+  * Wrap-and-sort -baskt, keep comments
+  * Let cups.1 point to client.conf.5, not client.conf.7 (Closes: #982303)
+  * Make CUPS reproducible by patching it to;
+    - skip the httpAddrGetHostname() test (that fails under reprotest)
+    - skip the stp tests if ran as root, without aborting
+    - run testlang for each provided CUPS locale only
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 12 Feb 2021 14:09:29 +0100
+
+cups (2.3.3op2-2) unstable; urgency=medium
+
+  * Bump debhelper compat to 13, document not-installed files
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 03 Feb 2021 13:13:18 +0100
+
+cups (2.3.3op2-1) unstable; urgency=medium
+
+  * New OpenPrinting 2.3.3op2 release
+    - CVE-2020-10001: Fixed a buffer (read) overflow in the `ippReadIO`
+      function
+    - Drop 4 patches merged upstream
+  * Update d/copyright authors and years
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 02 Feb 2021 21:20:06 +0100
+
+cups (2.3.3op1-7) unstable; urgency=medium
+
+  [ Helmut Grohne ]
+  * Reduce Build-Depends, move dh_apparmor to B-D-A (Closes: #980104)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 15 Jan 2021 12:11:30 +0100
+
+cups (2.3.3op1-6) unstable; urgency=medium
+
+  [ Till Kamppeter ]
+  * In the AppArmor profile, allow cupsd to write to /run/systemd/notify to
+    notify that it is up and running (systemd service type "notify")
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 11 Jan 2021 08:31:58 +0100
+
+cups (2.3.3op1-5) unstable; urgency=medium
+
+  * Update Homepage and Source fields to point
+    https://github.com/OpenPrinting/cups/ as Debian's using the OpenPrinting
+    (friendly) fork (Closes: #979461)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 08 Jan 2021 11:35:18 +0100
+
+cups (2.3.3op1-4) unstable; urgency=medium
+
+  * Drop ancient manual link-doc setting in cups-bsd.postinst
+  * Let cups.service start after nslcd.service (Closes: #977198)
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 23 Dec 2020 14:53:09 +0100
+
+cups (2.3.3op1-3) unstable; urgency=medium
+
+  [ Helge Kreutzmann ]
+  * Update German man page (2211t)
+
+  [ Didier Raboud ]
+  * Patch configure scripts to fix FTBFS on freebsd-gnu systems
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 04 Dec 2020 10:32:55 +0100
+
+cups (2.3.3op1-2) unstable; urgency=medium
+
+  * Backport upstream "Force a 5 second sleep to wait for the job control file
+    to be written" patch, to address s390x test suite timing issue
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 28 Nov 2020 16:50:59 +0100
+
+cups (2.3.3op1-1) unstable; urgency=medium
+
+  * Use OpenPrinting CUPS fork instead of Apple's codebase
+    - Update d/upstream/metadata, d/watch
+    - d/upstream/signing-key.asc: Swap Apple's with Michael R Sweet's
+  * Large patch-suite cleanup thanks to lots of Debian proposals merged
+    upstream; from 40 to 9;
+    - Reorder (upstream-mergeable first, Debian-specific later)
+    - Reword and refresh metadata for the last patches
+  * Set Debian customizations in d/rules instead of patches;
+    - Set --with-max-log-size=0
+    - Set --enable-sync-on-close
+    - Set --with-error-policy=retry-job
+  * Packaging cleanup;
+    - Drop the Debian-specific systemd units' renaming, now upstream
+    - Drop pre-oldstable postinst ConfigFilePerm handling
+    - Add missing BSD-2-Clause block in debian/copyright
+    - Convert debian/po files to UTF-8
+    - Drop --as-needed as it's now default in Debian
+    - Drop Ubuntu-specific patch handling, in favour of compile-time option
+      for --disable-browsing
+    - Bump S-V to 4.5.1 without changes needed
+    - Use debian/main as head branch; update d/gbp.conf accordingly
+    - Drop outdated d/source/options
+   * Refresh manpage translation pofiles for 2.3.3op1
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 27 Nov 2020 17:27:21 +0100
+
+cups (2.3.3-4) unstable; urgency=medium
+
+  * Drop Ubuntu "Make lpoptions list a printer's options correctly also when
+    CUPS is running on an alternative port" patch, refused upstream
+    (Closes: #970725)
+  * Use upstream-merged patches for fax numbers' fix and rastertopwg rounding
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 24 Nov 2020 08:49:46 +0100
+
+cups (2.3.3-3) unstable; urgency=medium
+
+  [ Didier Raboud ]
+  * Set lintian overrides for non-changeable upstream choices
+  * Add missing Build-Depends-Package in symbols' files
+
+  [ Till Kamppeter ]
+  * Resolve DNS-SD-service-name-based URIs correctly also if they are
+    from a service from localhost (like IPP-over-USB, Printer
+    Application, ...)
+  * Make lpoptions list a printer's options correctly also when CUPS is
+    running on an alternative port
+  * Fix fax numbers supplied via GTK print dialog, removing a "Custom."
+    prefix; do not choke if the GTK dialog sends "None" as phone number
+    or pre-dial prefix
+  * Let the rastertopwg filter check rounding errors when calculating
+    the page geometry
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 03 Sep 2020 09:27:04 +0200
+
+cups (2.3.3-2) unstable; urgency=medium
+
+  * Add missing dh-strip-nondeterminism B-D
+  * cups-daemon: Add ipp-usb Recommends
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 03 Sep 2020 08:54:55 +0200
+
+cups (2.3.3-1) unstable; urgency=medium
+
+  * New 2.3.3 upstream release, with the two -12 security patches
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 01 May 2020 15:28:22 +0200
+
+cups (2.3.1-12) unstable; urgency=medium
+
+  * Backport two security patches
     - CVE-2020-3898: heap-buffer-overflow in libcups’s ppdFindOption()
       function in ppd-mark.c
     - CVE-2019-8842: The `ippReadIO` function may under-read an extension
       field
 
- -- Didier Raboud <odyx@debian.org>  Sat, 25 Apr 2020 16:27:21 +0200
+ -- Didier Raboud <odyx@debian.org>  Sat, 25 Apr 2020 16:13:13 +0200
 
-cups (2.2.10-6+deb10u2) buster; urgency=medium
+cups (2.3.1-11) unstable; urgency=medium
 
-  * Backport upstream security fixes:
-    - Fix memory leak in ppdOpen (Closes: #946941)
+  * CI Tests: fix cups-basiccommands:
+    - swap awk with sed;
+    - filter stderr away from known errors
+    - add missing cups-bsd depends to test lpr commands
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 24 Feb 2020 19:40:39 +0100
+
+cups (2.3.1-10) unstable; urgency=medium
+
+  * Add Requires=cups.socket to cups.service, to make sure they start in
+    the right order
+  * CI Tests: Add a test for all CUPS' basic commands, thanks to RedHat
+  * Add Pre-Depends: ${misc:Pre-Depends} to cups-daemon to fix
+    skip-systemd-native-flag-missing-pre-depends lintian flag
+  * Add patch proposal from RedHat to fix leakage of ppd (Issue: #5738)
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 24 Feb 2020 12:25:39 +0100
+
+cups (2.3.1-9) unstable; urgency=medium
+
+  * CI Tests: Ensure the job files are non-empty; should detect more
+    regressions
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 22 Feb 2020 17:19:46 +0100
+
+cups (2.3.1-8) unstable; urgency=medium
+
+  * Add patch to fix cupsctl when loading cupsd.conf (Issue: #5744)
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 22 Feb 2020 14:34:48 +0100
+
+cups (2.3.1-7) unstable; urgency=medium
+
+  * Add patch to fix conversion of PPD InputSlot choice names; this should fix
+    printers ignoring the paper tray selection (Issue: #5740, Closes: #949315)
+  * lintian-brush:
+    - Set upstream metadata fields: Bug-Database, Repository, Repository-Browse
+    - Rewrap some d/changelog entries
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 17 Feb 2020 09:19:56 +0100
+
+cups (2.3.1-6) unstable; urgency=medium
+
+  * Patch test suite to also ignore 'Job held' lines in error_log line
+    counting
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 08 Feb 2020 11:52:44 +0100
+
+cups (2.3.1-5) unstable; urgency=medium
+
+  * Move towards driverless-centered installation:
+    - Drop all printer-driver-* and hplip recommends/suggests
+  * Cleanup all versions from pre- Debian stable
+  * Bump S-V to 4.5.0 without changes needed
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 07 Feb 2020 17:08:48 +0100
+
+cups (2.3.1-4) unstable; urgency=medium
+
+  * Cleanup patch queue for cups' bts URLs and patch names
+  * Update README.Debian to remove leftover SystemdIdleExit references
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 30 Jan 2020 20:35:47 +0100
+
+cups (2.3.1-2) unstable; urgency=medium
+
+  * Drop pwg-raster-attributes.patch
+  * Amend 2.3.1-1 changelog entry to add missing Ubuntu package drop and CVE
+    bug closure
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 26 Jan 2020 15:23:24 +0100
+
+cups (2.3.1-1) unstable; urgency=medium
+
+  [ Didier Raboud ]
+  * New 2.3.1 upstream release:
     - CVE-2019-2228: The `ippSetValuetag` function did not validate the
       default language value (Closes: #946782)
 
- -- Didier Raboud <odyx@debian.org>  Sun, 19 Jan 2020 09:36:31 +0100
+  [ Steve Langasek ]
+  * On Ubuntu i386, drop cups and cups-core-drivers (Closes: #947185)
 
-cups (2.2.10-6+deb10u1) buster; urgency=medium
+  [ Helge Kreutzmann ]
+  * Update German man page (2207t)
 
-  * Fix multiple security/disclosure issues (Closes: #934957)
+ -- Didier Raboud <odyx@debian.org>  Tue, 24 Dec 2019 13:02:06 +0100
+
+cups (2.3.0-7) unstable; urgency=medium
+
+  * Packaging cleanup:
+    - Set upstream metadata fields: Repository
+    - Rely on pre-initialized dpkg-architecture variables
+    - Fix day-of-week for changelog entries 1.0.1-1
+    - Bump Standards-Version to 4.4.1 without changes needed
+    - Replace dh-exec usage with manual renaming in debian/rules
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 06 Nov 2019 08:57:40 +0100
+
+cups (2.3.0-6) unstable; urgency=medium
+
+  [ Didier Raboud ]
+  * Tests-drivers: Cleanup output
+
+  [ intrigeri ]
+  * AppArmor: support cups-pdf "Out" directory pointing to almost anywhere
+    below $HOME (Closes: #940578)
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 31 Oct 2019 08:44:29 +0100
+
+cups (2.3.0-5) unstable; urgency=medium
+
+  * Let the test-drivers script stop waiting when a filter is allegedly
+    failed, and give context
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 21 Sep 2019 09:41:44 +0200
+
+cups (2.3.0-4) unstable; urgency=medium
+
+  [ Helge Kreutzmann ]
+  * Update German man page (2197t)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 20 Sep 2019 15:03:47 +0200
+
+cups (2.3.0-3) unstable; urgency=low
+
+  * Fix autopkgtests for real; refactor lpadmin stderr filtering
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 06 Sep 2019 09:32:07 +0200
+
+cups (2.3.0-2) unstable; urgency=low
+
+  [ Helge Kreutzmann ]
+  * Update German man page (2100t58f39u)
+
+  [ Didier Raboud ]
+  * Fix autopkgtest by filtering away known stderr messages
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 05 Sep 2019 09:33:20 +0200
+
+cups (2.3.0-1) unstable; urgency=low
+
+  * New 2.3.0 upstream release, to unstable
     - CVE-2019-8696 and CVE-2019-8675: Fixed SNMP buffer overflows
     - Fixed IPP buffer overflow
-    - Fixed memory disclosure issue in the scheduler
-    - Fixed DoS issues in the scheduler
+    - Fixed memory disclosure and DoS issues in the scheduler
+    - CUPS is now provided under the Apache License, Version 2.0, with a
+      GPL2/LGPL2 exception
+  * Rewrite debian/copyright with the above license change, install the
+    NOTICE file
+  * Refresh manpage translations
+  * Refresh upstream metadata
+  * Bump S-V to 4.4 without changes needed
 
- -- Didier Raboud <odyx@debian.org>  Wed, 21 Aug 2019 09:43:13 +0200
+ -- Didier Raboud <odyx@debian.org>  Mon, 02 Sep 2019 13:19:18 +0200
+
+cups (2.3~rc1-2) experimental; urgency=medium
+
+  * Merge 2.2.12-1 from unstable
+  * Add missing colon in closes line.
+  * Set upstream metadata fields: Contact, Name.
+  * Bump debhelper from old 11 to 12.
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 18 Aug 2019 16:58:09 +0200
+
+cups (2.3~rc1-1) experimental; urgency=medium
+
+  * New 2.3~rc1 upstream release:
+    - Refresh patch queue
+    - Refresh manpage translation files
+    - Remove /usr/sbin/accept and /usr/sbin/reject symlinks
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 04 Jun 2019 06:41:04 +0200
+
+cups (2.3~b8-4) experimental; urgency=medium
+
+  * Reset the LogDebugHistory setting to upstream default (LP: #1831021)
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 02 Jun 2019 10:51:31 +0200
+
+cups (2.3~b8-3) experimental; urgency=medium
+
+  * Migrate to dgit-maint-debrebase workflow
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 17 May 2019 12:53:24 +0200
+
+cups (2.3~b8-2) experimental; urgency=medium
+
+  * Backport upstream patch:
+    - Block cups-files.conf directives (Issue #5530, Closes: #923115)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 17 May 2019 10:42:54 +0200
+
+cups (2.3~b8-1) experimental; urgency=medium
+
+  * New 2.3~b8 upstream release
+    - Add patch to fix tests' failure
+
+  * Redo manpage po4a translation infrastructure and installation
+  * Merge 2.2.10-6 from unstable
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 08 May 2019 15:26:40 +0200
+
+cups (2.3~b7-1) experimental; urgency=medium
+
+  * New 2.3~b7 upstream release
+    - Drop two patches now included upstream
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 14 Dec 2018 17:08:55 +0100
+
+cups (2.3~b6-2) experimental; urgency=medium
+
+  * Merge 2.2.10-3
+  * Add patch to allow building with -Werror=maybe-uninitialized
+  * Drop now-superflous --dbgsym-migration dh_strip argument
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 14 Dec 2018 16:02:37 +0100
+
+cups (2.3~b6-1) experimental; urgency=medium
+
+  * New 2.3~b6 upstream pre-release
+    - CVE-2018-4700: Linux session cookies used a predictable random number
+      seed (Closes: #915909)
+    - The `cupsaddsmb` program has been removed (Issue #5449)
+    - The `cupstestdsc` program has been removed (Issue #5450)
+    - Rebase patches
+
+  * Merge 2.2.10-1
+  * Manpage translations update
+  * Add patch to fix FTBFS due to wrong `usage(int)` usage
+  * Update libcups2 symbols: +12 cupsRaster*
+  * Cope with cupsaddsmb and cupstestdsc removals:
+    - Remove from cups-client installed files
+    - Remove from manpage translation infrastructure
+    - Remove from libcups2's README.Debian
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 10 Dec 2018 10:18:41 +0100
+
+cups (2.3~b5-2) experimental; urgency=medium
+
+  * Merge 2.2.8-5, rebase patches
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 13 Jul 2018 10:54:59 +0200
+
+cups (2.3~b5-1) experimental; urgency=medium
+
+  * New 2.3~b5 upstream release
+  * Merge 2.2.8-2
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 08 Jun 2018 16:25:15 +0200
+
+cups (2.3~b4-3) experimental; urgency=medium
+
+  * Merge 2.2.7-4, rebase patches
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 16 May 2018 21:38:01 +0200
+
+cups (2.3~b4-2) experimental; urgency=medium
+
+  * Merge 2.2.7-2
+  * Name source lintian override file correctly
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 05 Apr 2018 20:41:08 +0200
+
+cups (2.3~b4-1) experimental; urgency=medium
+
+  * New 2.3~b4 upstream pre-release
+    - NOTICE: Printer drivers are now deprecated (Issue #5270)
+
+  * Add cupsEncodeOption@Base 2.3~b4 symbol in libcups2
+  * Refresh manpage translations
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 28 Mar 2018 09:14:49 +0200
+
+cups (2.3~b3-1) experimental; urgency=medium
+
+  * New 2.3~b3 upstream pre-release
+   - The `lp` and `lpr` commands now provide better error messages when the
+     default printer cannot be found (Issue #5096, Closes: #870463)
+   - CUPS is now provided under the Apache License, Version 2.0
+
+  * 2.3~b3 updates:
+    - Update manpage translation files
+    - Add 2 libcups2 symbols introduced in 2.3~b1
+    - Backport patch from upstream to fix filter's installation (Issue #5247)
+
+  * CUPS license change:
+    - Add NEWS file to libcups2-dev
+    - Rewrite debian/copyright
+
+  * Add cups-daemon lintian override for WantedBy=printer.target systemd
+    service file
+  * Bump debhelper compat to 11
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 23 Feb 2018 20:49:53 +0100
+
+cups (2.2.12-2) unstable; urgency=medium
+
+  [ Helge Kreutzmann ]
+  * Update German man page (2193t)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 30 Aug 2019 18:19:57 +0200
+
+cups (2.2.12-1) unstable; urgency=medium
+
+  * New 2.2.12 upstream release
+    - CVE-2019-8696 and CVE-2019-8675: Fixed SNMP buffer overflows
+      (Closes: #934957)
+
+  * Remove 11 backported patches
+  * Fix CVE-2018-4{7,8}00 typo retrospectively in d/changelog
+    (Closes: #933985)
+  * Refresh debian/gitlab-ci.yml
+  * Refresh manpage translations
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 17 Aug 2019 15:51:30 +0200
 
 cups (2.2.10-6) unstable; urgency=medium
 
@@ -2787,8 +3235,7 @@ cups (1.5.3-1) unstable; urgency=low
   * debian/patches/cups-avahi.patch: Manually regenerated to adapt to upstream
     changes.
   * debian/patches/ppd-poll-with-client-conf.patch,
-    debian/patches/colord-support.patch,
-    debian/patches/airprint-support.patch,
+    debian/patches/colord-support.patch, debian/patches/airprint-support.patch,
     debian/patches/no-conffile-timestamp.patch,
     debian/patches/drop_unnecessary_dependencies.patch,
     debian/patches/read-embedded-options-from-incoming-postscript-and-add-to-ipp-attrs.patch,
@@ -3020,8 +3467,7 @@ cups (1.5.2-1) unstable; urgency=low
     Manually regenerated to adapt to upstream changes.
   * debian/patches/pidfile.patch,
     debian/patches/rootbackends-worldreadable.patch,
-    debian/patches/colord-support.patch,
-    debian/patches/airprint-support.patch,
+    debian/patches/colord-support.patch, debian/patches/airprint-support.patch,
     debian/patches/no-conffile-timestamp.patch,
     debian/patches/read-embedded-options-from-incoming-postscript-and-add-to-ipp-attrs.patch,
     debian/patches/do-not-broadcast-with-hostnames.patch,
@@ -3029,14 +3475,13 @@ cups (1.5.2-1) unstable; urgency=low
     debian/patches/confdirperms.patch,
     debian/patches/show-compile-command-lines.patch,
     debian/patches/log-debug-history-nearly-unlimited.patch,
-    debian/patches/dnssd-reg-array-linear-search.patch:
-    Refreshed using quilt.
+    debian/patches/dnssd-reg-array-linear-search.patch: Refreshed using quilt.
   * debian/patches/fix-supply-level-computation-for-percent-supply-unit.patch,
     debian/patches/fix-supply-levels-for-enumerated-prtmarkersupplieslevel.patch,
-    debian/patches/fix-status-reports-when-supply-levels-grow.patch:
-    The printer supply levels reported via SNMP, according to the printer MIB
-    were not correctly interpreted (LP: #925086, CUPS STR #4016, thanks to
-    Peter Hurley, peter at hurleysoftware dot com, for the patches).
+    debian/patches/fix-status-reports-when-supply-levels-grow.patch: The printer
+    supply levels reported via SNMP, according to the printer MIB were not
+    correctly interpreted (LP: #925086, CUPS STR #4016, thanks to Peter Hurley,
+    peter at hurleysoftware dot com, for the patches).
   * debian/patches/add-status-reports-for-full-waste-trays-and-cleaner-unit-eol.patch:
     Added status reports for waste tray status and cleaner unit end-of-life
     (LP: #925086, CUPS STR #4017, thanks to Peter Hurley, peter at
@@ -3122,10 +3567,10 @@ cups (1.5.0-15) unstable; urgency=low
   * debian/patches/series,
     debian/patches/usb-backend-gracefully-fail-on-more-cases-of-bad-device-id.patch,
     debian/patches/usb-backend-libusb-1.0.patch,
-    debian/patches/usb-backend-skip-set-configuration-set-interface.patch:
-    Added references to the upstream bugs under which these patches got
-    submitted upstream as header comments. Also moved the entries in the series
-    file to the section of patches submitted upstream.
+    debian/patches/usb-backend-skip-set-configuration-set-interface.patch: Added
+    references to the upstream bugs under which these patches got submitted
+    upstream as header comments. Also moved the entries in the series file to
+    the section of patches submitted upstream.
   * debian/patches/usb-backend-libusb-1.0.patch: Updated the patch to correctly
     generate the make/model string if no device ID could be found. Before,
     arbitrary memory content was picked up, not only giving an ugly listing
@@ -3252,8 +3697,8 @@ cups (1.5.0-9) unstable; urgency=low
   * debian/patches/do-not-suppress-inputslot-setting-with-empty-ap-d-inputslot.patch:
     CUPS adds the option setting "AP_D_InputSlot=" to every job. This overrides
     the InputSlot option and so the InputSlot setting and even the default
-    setting for InputSlot in the PPD get never used, rendering InputSlot
-    useless (LP: #872527).
+    setting for InputSlot in the PPD get never used, rendering InputSlot useless
+    (LP: #872527).
   * debian/patches/cups-avahi.patch: Updated patch from upstream (Red Hat)
     to fix crashes of the CUPS daemon when using the timeout function call
     functionality (LP: #860691, LP: #860498).
@@ -3429,11 +3874,10 @@ cups (1.5.0-1) experimental; urgency=low
     debian/patches/cups-snmp-oids-device-id-hp-ricoh.patch,
     debian/patches/configure-default-browse-protocols.patch,
     debian/patches/logfiles_adm_readable.patch,
-    debian/patches/confdirperms.patch,
-    debian/patches/printer-filtering.patch,
+    debian/patches/confdirperms.patch, debian/patches/printer-filtering.patch,
     debian/patches/show-compile-command-lines.patch,
-    debian/patches/log-debug-history-nearly-unlimited.patch:
-    Refreshed using quilt.
+    debian/patches/log-debug-history-nearly-unlimited.patch: Refreshed using
+    quilt.
   * debian/patches/default-ripcache-size-auto.patch: Dropped, as once,
     Ghostscript 9.04 is ignoring the cache size value as it crashes easily
     otherwise (Ghostscript upstream bug #691586) and second, CUPS defaults to
@@ -3799,12 +4243,11 @@ cups (1.4.5-3) unstable; urgency=low
     debian/local/filters/pdf-filters/addtocups
     debian/local/filters/pdf-filters/conf/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd,
     debian/local/filters/pdf-filters/config-scripts/cups-pdf-filters.m4,
-    debian/local/filters/pdf-filters/removefromcups: Upstream changes of
-    the PDF filter add-on package:
-     o Added the Poppler-based pdftoraster filter. This filter is much faster
-       than the Ghostscript-based filter (LP: #668800).
-     o Cleaned up the sample PPD file for pdftoijs (does not go into the
-       Debian/Ubuntu package of CUPS).
+    debian/local/filters/pdf-filters/removefromcups: Upstream changes of the PDF
+    filter add-on package:  o Added the Poppler-based pdftoraster filter. This
+    filter is much faster    than the Ghostscript-based filter (LP: #668800).  o
+    Cleaned up the sample PPD file for pdftoijs (does not go into the
+    Debian/Ubuntu package of CUPS).
   * debian/rules: Rename the newly added Poppler-based pdftoraster filter
     to pdftoraster-poppler to not conflict with Ghostscript's pdftoraster
     and lower its cost factor so that it is prioritized against Ghostscript's
@@ -4810,9 +5253,9 @@ cups (1.3.11-1) unstable; urgency=low
     the PDF output with a blank line. This made some filters misbehave.
   * debian/patches/read-embedded-options-from-incoming-postscript-and-add-to-ipp-attrs.dpatch:
     Make CUPS read the number of copies out of Windows print jobs reliably by
-    also considering lines like "%%BeginNonPPDFeature: NumCopies 2". Thanks
-    to Dan Sheridan from Adelard (djs at adelard dot com) for this improvement
-    of the patch.
+    also considering lines like "%%BeginNonPPDFeature: NumCopies 2". Thanks to
+    Dan Sheridan from Adelard (djs at adelard dot com) for this improvement of
+    the patch.
 
   [ Stéphane Graber ]
   * Add printer-filtering.dpatch: Add support for printer filtering.
@@ -4831,12 +5274,12 @@ cups (1.3.11-1) unstable; urgency=low
 cups (1.3.10-5) unstable; urgency=low
 
   * debian/patches/read-embedded-options-from-incoming-postscript-and-add-to-ipp-attrs.dpatch:
-    Make CUPS reading all option settings in PostScript print jobs and add
-    the option settings to the filter command line before starting the filter
-    chain. This fixes the problem that in the PDF printing workflow (where
-    incoming PostScript gets converted to PDF by pstopdf) option settings
-    embedded in the incoming PostScript code do not get obeyed. Especially
-    the options of jobs from Windows clients get ignored.
+    Make CUPS reading all option settings in PostScript print jobs and add the
+    option settings to the filter command line before starting the filter chain.
+    This fixes the problem that in the PDF printing workflow (where incoming
+    PostScript gets converted to PDF by pstopdf) option settings embedded in the
+    incoming PostScript code do not get obeyed. Especially the options of jobs
+    from Windows clients get ignored.
   * debian/filters/pstopdf: Do not let Ghostscript generate multiple copies
     of the job if the filter command line from CUPS already supplies the
     correct number of copies.
@@ -5433,8 +5876,8 @@ cups (1.3.8-6) experimental; urgency=low
     debian/local/filters/pdf-filters/addtocups,
     debian/local/filters/pdf-filters/config-scripts/cups-pdf-filters.m4,
     debian/local/filters/pdf-filters/removefromcups,
-    debian/local/filters/pdf-filters/README,
-    debian/control, debian/rules: Added pdftoijs filter.
+    debian/local/filters/pdf-filters/README, debian/control, debian/rules: Added
+    pdftoijs filter.
 
   [ Johan Kiviniemi ]
   * debian/filters/pstopdf:
@@ -5873,10 +6316,10 @@ cupsys (1.3.5-1) unstable; urgency=high
     via symlink attack. (CVE-2007-6358, closes: #456960)
 
   [ Till Kamppeter ]
-  * debian/patches/fix_regression_reactivate_net_ifaces_changes_detection.dpatch :
-    Fix a regression in upstream code that has removed the network interface
-    update poll (CUPS STR #2631, LP: #177075). Thanks to Hugues Fournier
-    (hugues dot fournier at gmail dot com) for the patch.
+  * debian/patches/fix_regression_reactivate_net_ifaces_changes_detection.dpatch
+    : Fix a regression in upstream code that has removed the network interface
+    update poll (CUPS STR #2631, LP: #177075). Thanks to Hugues Fournier (hugues
+    dot fournier at gmail dot com) for the patch.
 
  -- Kenshi Muto <kmuto@debian.org>  Wed, 19 Dec 2007 17:07:05 +0900
 
@@ -5896,8 +6339,8 @@ cupsys (1.3.4-3) unstable; urgency=high
 
   [ Till Kamppeter ]
   * debian/patches/cups-stops-broadcasting-on-HUP-with-explicit-BrowseAddress.dpatch:
-    CUPS stopped broadcasting on a HUP signal when using a fixed
-    BrowseAddress (CUPS STR #2618, Ubuntu LP: #173470).
+    CUPS stopped broadcasting on a HUP signal when using a fixed BrowseAddress
+    (CUPS STR #2618, Ubuntu LP: #173470).
   * debian/local/backends/dnssd: Updated dnssd to support Mac OS X servers
     which broadcast their print queues only via DNS-SD and require clients
     to create raw IPP queues pointing to the server's queues manually.
@@ -6991,17 +7434,19 @@ cupsys (1.1.23-8) unstable; urgency=medium
   * Included Spanish man pages.
   * 43_filtercost: Applied a patch for wrong computation of cost
     (closes: #304205)
-  * Applied many part of ubuntu patch, http://people.ubuntu.com/~scott/patches/cupsys/cupsys_1.1.23-7ubuntu1.patch.
+  * Applied many part of ubuntu patch,
+    http://people.ubuntu.com/~scott/patches/cupsys/cupsys_1.1.23-7ubuntu1.patch.
     (User 'cupsys' feature and Browsing feature aren't applied at this time.
-     They are post-Sarge things)
+    They are post-Sarge things)
   * Applied improved dvifilter patch. (Although you need to modify
     /etc/cups/mime.convs and some other files to use it) (closes: #198100)
   * Provides /var/run/cups/cupsd.pid. (closes: #301804)
   * Added cupsys documentation to doc-base structure. (closes: #171396, #304333)
   * Included filter for PostScript from Windows PostScript driver, created by
-    Matt Swift <swift@alum.mit.edu>.
-    If you want to use, put /usr/share/doc/cupsys/examples/filters/samba-postscript.* to /etc/cups,
-    and put /usr/share/doc/cupsys/examples/filters/samba-ps-to-ps to /usr/lib/cups/filter. (closes: #246577)
+    Matt Swift <swift@alum.mit.edu>. If you want to use, put
+    /usr/share/doc/cupsys/examples/filters/samba-postscript.* to /etc/cups, and
+    put /usr/share/doc/cupsys/examples/filters/samba-ps-to-ps to
+    /usr/lib/cups/filter. (closes: #246577)
 
  -- Kenshi Muto <kmuto@debian.org>  Wed, 16 Mar 2005 10:01:57 +0900
 
@@ -7491,7 +7936,8 @@ cupsys (1.1.20candidate6-6) unstable; urgency=low
 
 cupsys (1.1.20candidate6-5) unstable; urgency=high
 
-  * I'm sorry but openssl license conflicts. I use libgnutls (closes: Bug#220902).
+  * I'm sorry but openssl license conflicts. I use libgnutls (closes:
+    Bug#220902).
   * Add euc-jp text.
 
  -- Kenshi Muto <kmuto@debian.org>  Sat, 15 Nov 2003 23:55:06 +0900
@@ -8046,7 +8492,8 @@ cupsys (1.1.6-0.1) unstable; urgency=low
 
   * Non-maintainer upload
   * New upstream release, fixing multiple vulnerabilities (Closes: Bug#88932)
-  * cupsys removes only its own configuration files upon purge (Closes: Bug#84341)
+  * cupsys removes only its own configuration files upon purge (Closes:
+    Bug#84341)
   * fixed postinst, so it does not fail when the lpadmin group
   already exists (Closes: Bug#84443)
   * added a helpful URL to README.Debian (Closes: Bug#63590)
@@ -8244,7 +8691,7 @@ cupsys (1.0.1-3) unstable; urgency=low
 cupsys (1.0.1-2) unstable; urgency=low
 
   * cupsys-bsd should conflict with lpr, not "lpd" (whatever that is)
-  (closes #50047)
+  (closes: #50047)
 
   * Changed priority to "extra".
 
@@ -8254,4 +8701,4 @@ cupsys (1.0.1-1) unstable; urgency=low
 
   * Initial Release.
 
- -- Jeff Licquia <licquia@debian.org>  Sun,  6 Nov 1999 20:58:02 -0500
+ -- Jeff Licquia <licquia@debian.org>  Sat, 06 Nov 1999 20:58:02 -0500

@@ -1,0 +1,30 @@
+From: Didier Raboud <odyx@debian.org>
+Date: Wed, 3 Feb 2021 16:20:20 +0100
+Subject: Debian: Reproducibility: Run testlang for each provided CUPS locale
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+… and only for these.
+
+Of the build environment forces LC_ALL to a non-provided locale, the build will fail.
+---
+ cups/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/cups/Makefile b/cups/Makefile
+index 4e2aa6d..2068349 100644
+--- a/cups/Makefile
++++ b/cups/Makefile
+@@ -639,9 +639,9 @@ testlang:	testlang.o $(LIBCUPSSTATIC)
+ 		lang=`basename $$po .po | sed -e '1,$$s/^cups_//'`; \
+ 		$(MKDIR) locale/$$lang; \
+ 		$(LN) ../../$$po locale/$$lang; \
++		echo Running language API tests for $$lang...; \
++		LOCALEDIR=locale ./testlang -l $$lang; \
+ 	done
+-	echo Running language API tests...
+-	LOCALEDIR=locale ./testlang
+ 
+ 
+ #

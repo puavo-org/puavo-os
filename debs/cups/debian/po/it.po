@@ -13,14 +13,14 @@ msgstr ""
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Type: boolean
 #. Description
 #: ../cups-bsd.templates:2001
 msgid "Do you want to set up the BSD lpd compatibility server?"
-msgstr "Si vuole configurare il server di compatibilit‡ con lpd di BSD?"
+msgstr "Si vuole configurare il server di compatibilit√† con lpd di BSD?"
 
 #. Type: boolean
 #. Description
@@ -31,11 +31,11 @@ msgid ""
 "to submit jobs over the network via the \"BSD\" or \"LPR\" services, and "
 "these computers cannot be converted to use the IPP protocol that CUPS uses."
 msgstr ""
-"Il pacchetto CUPS contiene un server che puÚ accettare job di stampa in "
+"Il pacchetto CUPS contiene un server che pu√≤ accettare job di stampa in "
 "formato BSD per poi girarli a CUPS. Questo server dovrebbe essere attivato "
 "solo se in rete ci sono altri computer che potrebbero inviare job tramite i "
 "servizi \"BSD\" o \"LPR\" e che non possono essere configurati per usare il "
-"protocollo IPP, cioË quello usato da CUPS."
+"protocollo IPP, cio√® quello usato da CUPS."
 
 #. Type: boolean
 #. Description
@@ -64,7 +64,7 @@ msgid ""
 "CUPS can handle all such jobs as \"raw\" jobs, which causes them to be sent "
 "directly to the printer without processing."
 msgstr ""
-"CUPS puÚ trattare tutti questi job come job \"raw\", ciÚ comporta l'invio "
+"CUPS pu√≤ trattare tutti questi job come job \"raw\", ci√≤ comporta l'invio "
 "diretto alla stampante, senza ulteriori elaborazioni."
 
 #. Type: boolean

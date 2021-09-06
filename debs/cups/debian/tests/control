@@ -1,7 +1,18 @@
 Tests: cups-core-drivers
 Restrictions: needs-root
-Depends: cups-core-drivers, cups-client
+Depends:
+ cups-client,
+ cups-core-drivers,
 
 Tests: cups
 Restrictions: needs-root
-Depends: cups, cups-client
+Depends:
+ cups,
+ cups-client,
+
+Tests: cups-basiccommands
+Restrictions: needs-root
+Depends:
+ cups,
+ cups-bsd,
+ cups-client,
