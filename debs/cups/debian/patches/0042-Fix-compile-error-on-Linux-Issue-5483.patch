@@ -1,0 +1,31 @@
+From 6f2402e51d47e9cebe27eec5bfdb0e5543127e2a Mon Sep 17 00:00:00 2001
+From: Michael R Sweet <michael.r.sweet@gmail.com>
+Date: Mon, 21 Jan 2019 11:54:58 -0500
+Subject: Fix compile error on Linux (Issue #5483)
+
+---
+ cups/hash.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/cups/hash.c b/cups/hash.c
+index 50dc5fb30..a31372595 100644
+--- a/cups/hash.c
++++ b/cups/hash.c
+@@ -1,7 +1,7 @@
+ /*
+  * Hashing function for CUPS.
+  *
+- * Copyright © 2015-2018 by Apple Inc.
++ * Copyright © 2015-2019 by Apple Inc.
+  *
+  * These coded instructions, statements, and computer programs are the
+  * property of Apple Inc. and are protected by Federal copyright
+@@ -235,7 +235,7 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
+ 
+     gnutls_hash_fast(alg, data, datalen, hash);
+ 
+-    return (gnutls_hash_get_len(alg));
++    return ((ssize_t)gnutls_hash_get_len(alg));
+   }
+ 
+ #else

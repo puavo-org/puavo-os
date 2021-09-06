@@ -1,0 +1,19 @@
+cups (2.1.4-3) unstable; urgency=low
+
+  The default ErrorPolicy is changed from 'stop-printer' to 'retry-job',
+  as this is a much less confusing default in most use-cases.
+
+  The ErrorPolicy can be set globally in /etc/cups/cupsd.conf or
+  per-printer, using the following command:
+      lpadmin -p printername -o printer-error-policy=stop-printer
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 07 Jul 2016 16:43:34 +0200
+
+cups (1.7.5-7) unstable; urgency=medium
+
+  CUPS can now be socket-activated when running under systemd as init, but
+  isn't by default; if configured to do so, it can automatically exit itself
+  after being idle for some time (30 seconds by default) by using the
+  'SystemdIdleExit on' stanza in /etc/cups/cupsd.conf.
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 23 Oct 2014 22:06:18 +0200

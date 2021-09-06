@@ -77,14 +77,14 @@
   "puavo.printing.default_uri": {
     "default": ""
   },
-  "puavo.printing.dnssd.enabled": {
-    "default": "false"
-  },
   "puavo.printing.jetpipe.enabled": {
     "default": "false"
   },
-  "puavo.printing.use_puavo_permissions": {
+  "puavo.printing.ui.show_avahi_printers": {
     "default": "false"
+  },
+  "puavo.printing.use_puavo_permissions": {
+    "default": "true"
   },
   "puavo.service.atop.enabled": {
     "default": "false"
@@ -93,13 +93,16 @@
     "default": "false"
   },
   "puavo.service.avahi-daemon.enabled": {
-    "default": "false"
+    "default": "true"
   },
   "puavo.service.bind9.enabled": {
     "default": "false"
   },
   "puavo.service.cron.cronjobs": {
     "default": "puavo-cleanup-old-users"
+  },
+  "puavo.service.cups-browsed.enabled": {
+    "default": "true"
   },
   "puavo.service.cups-watchdog.enabled": {
     "default": "false"

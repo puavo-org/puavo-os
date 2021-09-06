@@ -1,62 +1,12 @@
-# -*- sh -*-
-# Xsession.d script to set the printers according to Puavo settings
-#
-# This file is sourced by Xsession(5), not executed.
-
-if [ "$(puavo-conf puavo.printing.use_puavo_permissions)" != 'true' ]; then
-  return 0
+# Setup the default printer, if set in Puavo.  This is intentionally done
+# this way so that it works for both fatclients and laptops and does not
+# permanently change Cups configurations.
+if puavo_default_printer=$(puavo-conf puavo.printing.default_printer) \
+  && [ -n "$puavo_default_printer" ]; then
+    export PRINTER="$puavo_default_printer"
 fi
 
-remove_remote_printers() {
-    LANG=C lpstat -v | while read line; do
-        name=$(printf %s "${line}" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
-        [ -n "${name}" ] || continue
-        lpadmin -x "${name}"
-    done
-}
-
-add_remote_printers() {
-    local puavo_domain=$(cat /etc/puavo/domain)
-    readonly puavo_domain
-
-    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
-
-    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | while read printer; do
-        name=$(printf %s "${printer}" | jq -r -c .name)
-        location=$(printf %s "${printer}" | jq -r -c .location)
-        description=$(printf %s "${printer}" | jq -r -c .description)
-        remote_uri="ipp://cups.${puavo_domain}:631/printers/${name}"
-
-        lpadmin -p "${name}" -v "${remote_uri}" -L "${location}" -D "${description}" -E -m everywhere
-    done
-}
-
-get_printer_list() {
-    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
-
-    cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | {
-        PRINTER_LIST=''
-        while read printer; do
-            name=$(printf %s "${printer}" | jq -r -c .name)
-            if [ -z "${PRINTER_LIST}" ]; then
-                PRINTER_LIST="${name}"
-            else
-                PRINTER_LIST="${PRINTER_LIST},${name}"
-            fi
-        done
-        printf %s "${PRINTER_LIST}"
-    }
-}
-
-set_default_printer() {
-    local default_printer_name
-
-    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
-
-    default_printer_name=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
-    [ "${default_printer_name}" != null ] && lpadmin -d "${default_printer_name}"
-}
-
-remove_remote_printers
-add_remote_printers
-set_default_printer
+if [ "$(puavo-conf puavo.printing.ui.show_avahi_printers)" = 'false' ]; then
+  export CUPS_SHOW_AVAHI_PRINTERS=false
+  export GTK_SHOW_AVAHI_PRINTERS=false
+fi

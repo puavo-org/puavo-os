@@ -1,0 +1,13 @@
+libcupsimage.so.2 libcupsimage2 #MINVER#
+# Keep this one at the latest upstream release
+ (optional|regex)|^_cups.*@Base$" 1.6.2
+ cupsRasterClose@Base 1.4.0
+ cupsRasterErrorString@Base 1.4.0
+ cupsRasterInterpretPPD@Base 1.4.0
+ cupsRasterOpen@Base 1.4.0
+ cupsRasterReadHeader2@Base 1.4.0
+ cupsRasterReadHeader@Base 1.4.0
+ cupsRasterReadPixels@Base 1.4.0
+ cupsRasterWriteHeader2@Base 1.4.0
+ cupsRasterWriteHeader@Base 1.4.0
+ cupsRasterWritePixels@Base 1.4.0

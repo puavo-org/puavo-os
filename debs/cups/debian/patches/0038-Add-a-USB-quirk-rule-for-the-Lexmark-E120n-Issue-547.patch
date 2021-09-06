@@ -1,0 +1,20 @@
+From 62283fab59e63c2be87171bc36c00717a91b7663 Mon Sep 17 00:00:00 2001
+From: Michael R Sweet <michael.r.sweet@gmail.com>
+Date: Mon, 21 Jan 2019 11:32:42 -0500
+Subject: Add a USB quirk rule for the Lexmark E120n (Issue #5478)
+
+---
+ backend/org.cups.usb-quirks | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/backend/org.cups.usb-quirks b/backend/org.cups.usb-quirks
+index 3f99f60de..00d3b2545 100644
+--- a/backend/org.cups.usb-quirks
++++ b/backend/org.cups.usb-quirks
+@@ -293,3 +293,6 @@
+ 
+ # Zebra ZD420 (Issue #5395)
+ 0x0a5f 0x0120 unidir no-reattach
++
++# Lexmark E120n (Issue #5478)
++0x043d 0x00cc no-reattach

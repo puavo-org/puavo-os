@@ -1,0 +1,27 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Mon, 10 Sep 2018 01:09:35 +0100
+Subject: Don't test default-constructed GdkPixbuf properties
+
+Workaround for https://gitlab.gnome.org/GNOME/gdk-pixbuf/issues/91
+
+Bug: https://bugs.debian.org/908439
+Forwarded: no
+---
+ testsuite/gtk/defaultvalue.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/testsuite/gtk/defaultvalue.c b/testsuite/gtk/defaultvalue.c
+index 0cb3073..74a51ff 100644
+--- a/testsuite/gtk/defaultvalue.c
++++ b/testsuite/gtk/defaultvalue.c
+@@ -488,6 +488,10 @@ main (int argc, char **argv)
+       if (otypes[i] == GTK_TYPE_FILE_CHOOSER_NATIVE)
+         continue;
+ 
++      /* https://gitlab.gnome.org/GNOME/gdk-pixbuf/issues/91 */
++      if (otypes[i] == GDK_TYPE_PIXBUF)
++        continue;
++
+       testname = g_strdup_printf ("/Default Values/%s",
+ 				  g_type_name (otypes[i]));
+       g_test_add_data_func (testname,

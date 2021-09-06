@@ -1,0 +1,20 @@
+From f8eac850dfbdb4a8d6a02f4d5eb2a473e7b088b4 Mon Sep 17 00:00:00 2001
+From: Michael R Sweet <michael.r.sweet@gmail.com>
+Date: Tue, 19 Feb 2019 11:11:54 -0500
+Subject: Add USB quirks rule for Xerox printers (Issue #5523)
+
+---
+ backend/org.cups.usb-quirks | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/backend/org.cups.usb-quirks b/backend/org.cups.usb-quirks
+index 0586602ab..77233ea18 100644
+--- a/backend/org.cups.usb-quirks
++++ b/backend/org.cups.usb-quirks
+@@ -293,3 +293,6 @@
+ 
+ # Lexmark E120n (Issue #5478)
+ 0x043d 0x00cc no-reattach
++
++# All Xerox printers (Issue #5523)
++0x0924 no-reattach

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -eu
+
+/etc/puavo-conf/scripts/setup_desktop_printer_restrictions --dry-run

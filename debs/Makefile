@@ -4,8 +4,10 @@ _pkgs_builddeps := sblim-sfcc openwsman
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := gnome-control-center \
+_pkgs_ports := cups                 \
+               gnome-control-center \
                gnome-shell          \
+               gtk+3.0              \
                libpam-ccreds        \
                mutter               \
                openboard            \

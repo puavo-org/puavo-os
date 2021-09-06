@@ -1,0 +1,16 @@
+Description: Disable Browsing by default on Ubuntu (not sanctioned yet by https://wiki.ubuntu.com/DefaultNetworkServices). This is only applied when building on Ubuntu.
+Author: Martin Pitt <martin.pitt@ubuntu.com>
+
+diff --git a/conf/cupsd.conf.in b/conf/cupsd.conf.in
+index 42e24a2..4282368 100644
+--- a/conf/cupsd.conf.in
++++ b/conf/cupsd.conf.in
+@@ -17,7 +17,7 @@ Listen localhost:@DEFAULT_IPP_PORT@
+ @CUPS_LISTEN_DOMAINSOCKET@
+ 
+ # Show shared printers on the local network.
+-Browsing On
++Browsing Off
+ BrowseLocalProtocols @CUPS_BROWSE_LOCAL_PROTOCOLS@
+ 
+ # Default authentication type, when authentication is required...

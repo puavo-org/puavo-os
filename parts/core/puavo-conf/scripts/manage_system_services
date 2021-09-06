@@ -37,6 +37,11 @@ set services {
         -> /lib/systemd/system/bind9.service
     }}
 
+  { cups-browsed {
+      /etc/systemd/system/multi-user.target.wants/cups-browsed.service
+        -> /lib/systemd/system/cups-browsed.service
+    }}
+
   { cups-watchdog {
       /etc/systemd/system/multi-user.target.wants/cups-watchdog.service
         -> /etc/systemd/system/cups-watchdog.service

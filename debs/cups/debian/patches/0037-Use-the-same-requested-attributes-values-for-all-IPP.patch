@@ -1,0 +1,111 @@
+From 2f25fc8b426f4b97f549d8ad2b84be9850aa709a Mon Sep 17 00:00:00 2001
+From: Michael R Sweet <michael.r.sweet@gmail.com>
+Date: Mon, 21 Jan 2019 11:28:24 -0500
+Subject: Use the same requested-attributes values for all IPP Everywhere setup
+ requests (Issue #5484)
+
+The lpadmin command, web interface, and scheduler all queried an IPP
+Everywhere printer differently, resulting in different PPDs for the same
+printer
+
+Switch to using "all" and "media-col-database" because some vendors apparently
+do not know how to read
+---
+ cgi-bin/admin.c   | 10 ++++++++--
+ scheduler/ipp.c   |  9 +++++++--
+ systemv/lpadmin.c |  6 ++----
+ 3 files changed, 17 insertions(+), 8 deletions(-)
+
+diff --git a/cgi-bin/admin.c b/cgi-bin/admin.c
+index 00830e486..690fbbc73 100644
+--- a/cgi-bin/admin.c
++++ b/cgi-bin/admin.c
+@@ -1,8 +1,8 @@
+ /*
+  * Administration CGI for CUPS.
+  *
+- * Copyright 2007-2018 by Apple Inc.
+- * Copyright 1997-2007 by Easy Software Products.
++ * Copyright © 2007-2019 by Apple Inc.
++ * Copyright © 1997-2007 by Easy Software Products.
+  *
+  * These coded instructions, statements, and computer programs are the
+  * property of Apple Inc. and are protected by Federal copyright
+@@ -4224,6 +4224,11 @@ get_printer_ppd(const char *uri,	/* I - Printer URI */
+ 		host[256],		/* Hostname */
+ 		resource[256];		/* Resource path */
+   int		port;			/* Port number */
++  static const char * const pattrs[] =	/* Printer attributes we need */
++  {
++    "all",
++    "media-col-database"
++  };
+ 
+ 
+  /*
+@@ -4264,6 +4269,7 @@ get_printer_ppd(const char *uri,	/* I - Printer URI */
+ 
+   request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
++  ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes",  (int)(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
+   response = cupsDoRequest(http, request, resource);
+ 
+   if (!_ppdCreateFromIPP(buffer, bufsize, response))
+diff --git a/scheduler/ipp.c b/scheduler/ipp.c
+index 6ea3e37f2..e00275b09 100644
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
+@@ -1,7 +1,7 @@
+ /*
+  * IPP routines for the CUPS scheduler.
+  *
+- * Copyright © 2007-2018 by Apple Inc.
++ * Copyright © 2007-2019 by Apple Inc.
+  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+  *
+  * This file contains Kerberos support code, copyright 2006 by
+@@ -5279,6 +5279,11 @@ create_local_bg_thread(
+ 		*response;		/* Response from printer */
+   ipp_attribute_t *attr;		/* Attribute in response */
+   ipp_status_t	status;			/* Status code */
++  static const char * const pattrs[] =	/* Printer attributes we need */
++  {
++    "all",
++    "media-col-database"
++  };
+ 
+ 
+  /*
+@@ -5313,7 +5318,7 @@ create_local_bg_thread(
+   request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+   ippSetVersion(request, 2, 0);
+   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printer->device_uri);
+-  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", NULL, "all");
++  ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", (int)(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
+ 
+   response = cupsDoRequest(http, request, resource);
+   status   = cupsLastError();
+diff --git a/systemv/lpadmin.c b/systemv/lpadmin.c
+index ee2438c1d..e979e56c4 100644
+--- a/systemv/lpadmin.c
++++ b/systemv/lpadmin.c
+@@ -1,7 +1,7 @@
+ /*
+  * "lpadmin" command for CUPS.
+  *
+- * Copyright © 2007-2018 by Apple Inc.
++ * Copyright © 2007-2019 by Apple Inc.
+  * Copyright © 1997-2006 by Easy Software Products.
+  *
+  * These coded instructions, statements, and computer programs are the
+@@ -1194,9 +1194,7 @@ get_printer_ppd(
+   int		port;			/* Port number */
+   static const char * const pattrs[] =	/* Attributes to use */
+   {
+-    "job-template",
+-    "printer-defaults",
+-    "printer-description",
++    "all",
+     "media-col-database"
+   };
+ 

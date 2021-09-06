@@ -1,0 +1,29 @@
+From 958625d59f2ff723fbf4a535cee7e6ea251b8732 Mon Sep 17 00:00:00 2001
+From: Tim Waugh <twaugh@redhat.com>
+Date: Tue, 9 Aug 2016 18:11:07 +0200
+Subject: Fix jobs with multiple files or multiple formats
+
+Bug-Redhat: https://bugzilla.redhat.com/show_bug.cgi?id=972242
+Bug: https://www.cups.org/str.php?L4348
+Last-Updated: 2015-02-10
+Patch-Name: fixes-for-jobs-with-multiple-files-and-multiple-formats.patch
+---
+ backend/ipp.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/backend/ipp.c b/backend/ipp.c
+index f14a44e66..bc678f50a 100644
+--- a/backend/ipp.c
++++ b/backend/ipp.c
+@@ -1788,7 +1788,10 @@ main(int  argc,				/* I - Number of command-line args */
+ 	ippAddBoolean(request, IPP_TAG_OPERATION, "last-document",
+         	      (i + 1) >= num_files);
+ 
+-	if (document_format)
++	if (num_files > 1)
++	  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_MIMETYPE,
++		       "document-format", NULL, "application/octet-stream");
++	else if (document_format)
+ 	  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_MIMETYPE,
+ 		       "document-format", NULL, document_format);
+ 
