@@ -1,6 +1,6 @@
 class packages {
   require ::apt::multiarch
-  # require ::apt::virtualbox   # XXX Bullseye
+  require ::apt::virtualbox
   include ::packages::backports
   include ::packages::compat_32bit
   include ::packages::pinned
@@ -263,9 +263,8 @@ class packages {
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
-    # XXX virtualbox - Bullseye
-    # [ 'virtualbox-6.1'
-    [ 'wine'
+    [ 'virtualbox-6.1'
+    , 'wine'
     , 'wine32'
     # , 'wine-development'      # XXX missing from Bullseye
     # , 'wine32-development'    # XXX missing from Bullseye

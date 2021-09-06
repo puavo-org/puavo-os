@@ -3,7 +3,7 @@
 # Linux kernel module init script
 
 #
-# Copyright (C) 2006-2019 Oracle Corporation
+# Copyright (C) 2006-2020 Oracle Corporation
 #
 # This file is part of VirtualBox Open Source Edition (OSE), as
 # available from http://www.virtualbox.org. This file is free software;
@@ -156,6 +156,12 @@ module_build_log()
         >> "${LOG}"
 }
 
+# Detect VirtualBox version info or report error.
+VBOX_VERSION="`"$VBOXMANAGE" -v | cut -d r -f1`"
+[ -n "$VBOX_VERSION" ] || failure 'Cannot detect VirtualBox version number'
+VBOX_REVISION="r`"$VBOXMANAGE" -v | cut -d r -f2`"
+[ "$VBOX_REVISION" != "r" ] || failure 'Cannot detect VirtualBox revision number'
+
 ## Output the vboxdrv part of our udev rule.  This is redirected to the right file.
 udev_write_vboxdrv() {
     VBOXDRV_GRP="$1"
@@ -267,6 +273,76 @@ cleanup_usb()
     rm -rf /dev/vboxusb
 }
 
+# Returns path to module file as seen by modinfo(8) or empty string.
+module_path()
+{
+    mod="$1"
+    [ -n "$mod" ] || return
+
+    modinfo "$mod" 2>/dev/null | grep -e "^filename:" | tr -s ' ' | cut -d " " -f2
+}
+
+# Returns module version if module is available or empty string.
+module_version()
+{
+    mod="$1"
+    [ -n "$mod" ] || return
+
+    modinfo "$mod" 2>/dev/null | grep -e "^version:" | tr -s ' ' | cut -d " " -f2
+}
+
+# Returns module revision if module is available in the system or empty string.
+module_revision()
+{
+    mod="$1"
+    [ -n "$mod" ] || return
+
+    modinfo "$mod" 2>/dev/null | grep -e "^version:" | tr -s ' ' | cut -d " " -f3
+}
+
+# Returns "1" if externally built module is available in the system and its
+# version and revision number do match to current VirtualBox installation.
+# Or empty string otherwise.
+module_available()
+{
+    mod="$1"
+    [ -n "$mod" ] || return
+
+    [ "$VBOX_VERSION" = "$(module_version "$mod")" ] || return
+    [ "$VBOX_REVISION" = "$(module_revision "$mod")" ] || return
+
+    # Check if module belongs to VirtualBox installation.
+    #
+    # We have a convention that only modules from /lib/modules/*/misc
+    # belong to us. Modules from other locations are treated as
+    # externally built.
+    mod_path="$(module_path "$mod")"
+
+    # If module path points to a symbolic link, resolve actual file location.
+    [ -L "$mod_path" ] && mod_path="$(readlink -e -- "$mod_path")"
+
+    # File exists?
+    [ -f "$mod_path" ] || return
+
+    # Extract last component of module path and check whether it is located
+    # outside of /lib/modules/*/misc.
+    mod_dir="$(dirname "$mod_path" | sed 's;^.*/;;')"
+    [ "$mod_dir" != "misc" ] || return
+
+    echo "1"
+}
+
+# Check if required modules are installed in the system and versions match.
+setup_complete()
+{
+    [ "$(module_available vboxdrv)"    = "1" ] || return
+    [ "$(module_available vboxnetflt)" = "1" ] || return
+    [ "$(module_available vboxnetadp)" = "1" ] || return
+
+    # All modules are in place.
+    echo "1"
+}
+
 start()
 {
     begin_msg "Starting VirtualBox services" console
@@ -279,18 +355,20 @@ start()
         else
             begin_msg "You must sign these kernel modules before using VirtualBox:
   $MODULE_LIST
-See the documenatation for your Linux distribution." console
+See the documentation for your Linux distribution." console
         fi
     fi
+
     if ! running vboxdrv; then
+
+        # Check if system already has matching modules installed.
+        [ "$(setup_complete)" = "1" ] || setup
+
         if ! rm -f $DEVICE; then
             failure "Cannot remove $DEVICE"
         fi
         if ! $MODPROBE vboxdrv > /dev/null 2>&1; then
-            setup
-            if ! $MODPROBE vboxdrv > /dev/null 2>&1; then
-                failure "modprobe vboxdrv failed. Please use 'dmesg' to find out why"
-            fi
+            failure "modprobe vboxdrv failed. Please use 'dmesg' to find out why"
         fi
         sleep .2
     fi
@@ -592,7 +670,7 @@ puavo_build_modules)
     setup
     ;;
 *)
-    echo "Usage: $0 {start|stop|stop_vms|restart|force-reload|status}"
+    echo "Usage: $0 {start|stop|stop_vms|restart|setup|cleanup|force-reload|status}"
     exit 1
 esac
 

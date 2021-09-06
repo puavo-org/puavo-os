@@ -2,7 +2,7 @@
 
 set -eu
 
-version='6.1.16'
+version='6.1.26'
 
 mntpoint='/mnt'
 tmpdir=$(mktemp -d /tmp/VBoxGuestAdditions_${version}.iso.XXXXXX)
@@ -16,7 +16,7 @@ trap cleanup 0 INT TERM
 isofile="VBoxGuestAdditions_${version}.iso"
 urlbase="https://download.virtualbox.org/virtualbox/${version}"
 
-sha384_checksum='3c2c39885aca228beaa52f3dcf1073ad4a9d4c1521c7c09642f4b945c852d42c5aa7dae6e281acd3ac79f8ed5408cdef'
+sha384_checksum='f0de4fe26d43d3502a452fac445d028c2be1c01e520d58e482724997f14741eaec61f3d01be2959a3a44786eb6f0f353'
 
 wget -O "${tmpdir}/${isofile}" "${urlbase}/${isofile}"
 contents_dir="${tmpdir}/contents"
