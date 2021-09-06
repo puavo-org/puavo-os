@@ -229,6 +229,7 @@ libgdk-3.so.0 libgtk-3-0 #MINVER#
  gdk_event_get_type@Base 3.0.0
  gdk_event_get_window@Base 3.10.0
  gdk_event_handler_set@Base 3.0.0
+ gdk_event_is_allocated@Base 3.24.22
  gdk_event_is_scroll_stop_event@Base 3.19.12
  gdk_event_mask_get_type@Base 3.0.0
  gdk_event_new@Base 3.0.0
@@ -502,6 +503,7 @@ libgdk-3.so.0 libgtk-3-0 #MINVER#
  (arch=linux-any)gdk_wayland_window_export_handle@Base 3.21.5
  (arch=linux-any)gdk_wayland_window_get_type@Base 3.9.10
  (arch=linux-any)gdk_wayland_window_get_wl_surface@Base 3.9.10
+ (arch=linux-any)gdk_wayland_window_set_application_id@Base 3.24.22
  (arch=linux-any)gdk_wayland_window_set_dbus_properties_libgtk_only@Base 3.10.0
  (arch=linux-any)gdk_wayland_window_set_transient_for_exported@Base 3.21.5
  (arch=linux-any)gdk_wayland_window_set_use_custom_surface@Base 3.9.10
@@ -1207,7 +1209,9 @@ libgtk-3.so.0 libgtk-3-0 #MINVER#
  gtk_cell_accessible_parent_get_cell_extents@Base 3.7.10
  gtk_cell_accessible_parent_get_cell_position@Base 3.24.3
  gtk_cell_accessible_parent_get_child_index@Base 3.7.10
+ gtk_cell_accessible_parent_get_column_header_cells@Base 3.24.7
  gtk_cell_accessible_parent_get_renderer_state@Base 3.7.10
+ gtk_cell_accessible_parent_get_row_header_cells@Base 3.24.7
  gtk_cell_accessible_parent_get_type@Base 3.7.10
  gtk_cell_accessible_parent_grab_focus@Base 3.7.10
  gtk_cell_accessible_parent_update_relationset@Base 3.12.0
@@ -2198,6 +2202,7 @@ libgtk-3.so.0 libgtk-3-0 #MINVER#
  gtk_hbox_new@Base 3.0.0
  gtk_hbutton_box_get_type@Base 3.0.0
  gtk_hbutton_box_new@Base 3.0.0
+ gtk_header_bar_accessible_get_type@Base 3.24.11
  gtk_header_bar_get_custom_title@Base 3.9.10
  gtk_header_bar_get_decoration_layout@Base 3.11.5
  gtk_header_bar_get_has_subtitle@Base 3.11.5
@@ -3017,6 +3022,8 @@ libgtk-3.so.0 libgtk-3-0 #MINVER#
  gtk_places_sidebar_set_show_recent@Base 3.17.9
  gtk_places_sidebar_set_show_starred_location@Base 3.22.26
  gtk_places_sidebar_set_show_trash@Base 3.17.9
+ gtk_plug_accessible_get_id@Base 3.24.24
+ gtk_plug_accessible_get_type@Base 3.24.24
  gtk_plug_construct@Base 3.0.0
  gtk_plug_construct_for_display@Base 3.0.0
  gtk_plug_get_embedded@Base 3.0.0
@@ -3738,6 +3745,8 @@ libgtk-3.so.0 libgtk-3-0 #MINVER#
  gtk_size_group_set_ignore_hidden@Base 3.0.0
  gtk_size_group_set_mode@Base 3.0.0
  gtk_size_request_mode_get_type@Base 3.0.0
+ gtk_socket_accessible_embed@Base 3.24.24
+ gtk_socket_accessible_get_type@Base 3.24.24
  gtk_socket_add_id@Base 3.0.0
  gtk_socket_get_id@Base 3.0.0
  gtk_socket_get_plug_window@Base 3.0.0

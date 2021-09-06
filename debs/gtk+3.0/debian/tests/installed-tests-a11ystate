@@ -1,5 +1,5 @@
 #!/bin/sh
-# autopkgtest check: Run the installed-tests to verify GTK+ works correctly
+# autopkgtest check: Run the installed-tests to verify GTK works correctly
 # Based on glib2.0's d/tests/installed-tests, (C) 2013 Canonical Ltd.
 
 set -e

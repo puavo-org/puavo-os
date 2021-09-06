@@ -4,6 +4,7 @@ Subject: Don't let offscreen widget do grabbing
 
 Bug: https://bugzilla.gnome.org/show_bug.cgi?id=607668
 Bug: https://bugzilla.gnome.org/show_bug.cgi?id=658563
+Bug: https://gitlab.gnome.org/GNOME/gtk/issues/368
 Bug-Ubuntu: https://bugs.launchpad.net/bugs/512427
 Forwarded: yes
 ---
@@ -11,10 +12,10 @@ Forwarded: yes
  1 file changed, 5 insertions(+)
 
 diff --git a/gtk/gtkmain.c b/gtk/gtkmain.c
-index 12b5d66..61d15e8 100644
+index f7cbb34..de0abbb 100644
 --- a/gtk/gtkmain.c
 +++ b/gtk/gtkmain.c
-@@ -2228,9 +2228,14 @@ gtk_grab_add (GtkWidget *widget)
+@@ -2233,9 +2233,14 @@ gtk_grab_add (GtkWidget *widget)
  {
    GtkWindowGroup *group;
    GtkWidget *old_grab_widget;

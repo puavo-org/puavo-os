@@ -8,10 +8,10 @@ Forwarded: no
  1 file changed, 21 insertions(+), 1 deletion(-)
 
 diff --git a/testsuite/reftests/gtk-reftest.c b/testsuite/reftests/gtk-reftest.c
-index 4930af8..69f906c 100644
+index 585e1c3..497c979 100644
 --- a/testsuite/reftests/gtk-reftest.c
 +++ b/testsuite/reftests/gtk-reftest.c
-@@ -253,6 +253,20 @@ save_image (cairo_surface_t *surface,
+@@ -260,6 +260,20 @@ save_image (cairo_surface_t *surface,
    g_free (filename);
  }
  
@@ -32,7 +32,7 @@ index 4930af8..69f906c 100644
  static void
  test_ui_file (GFile *file)
  {
-@@ -285,7 +299,13 @@ test_ui_file (GFile *file)
+@@ -292,7 +306,13 @@ test_ui_file (GFile *file)
    if (diff_image)
      {
        save_image (diff_image, ui_file, ".diff.png");

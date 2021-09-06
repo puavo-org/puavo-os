@@ -1,8 +1,418 @@
-gtk+3.0 (3.24.5-1+puavo1) buster; urgency=medium
+gtk+3.0 (3.24.24-4+puavo1) bullseye; urgency=medium
 
   * Build gtk+3.0 with our Avahi-printing patch.
 
  -- Puavo Org <dev@opinsys.fi>  Wed, 01 Sep 2021 13:45:54 +0300
+
+gtk+3.0 (3.24.24-4) unstable; urgency=medium
+
+  * Add various patches from upstream 3.24.25 to 3.24.29, mostly
+    crash fixes:
+    - d/p/gdkpixbuf-drawable-Free-the-pixbuf-on-Cairo-error.patch:
+      Fix a memory leak when a Cairo error occurs
+    - d/p/Wayland-ignore-touch-tablet-events-on-destroyed-surfaces.patch:
+      Fix crashes if input events are received on a recently-closed window
+      or menu
+    - d/p/label-Skip-updating-link-state-if-we-have-no-layout.patch:
+      Fix crash if a GtkLabel's activate-link handler changes the
+      label's markup
+    - d/p/x11-dnd-Ignore-XErrors-from-the-COW.patch:
+      Adds a missing error trap to prevent crashes in X11 drag & drop.
+      The X11 functions called here cannot normally fail, but it seems
+      they can fail in certain configurations of the NVIDIA proprietary
+      driver. (LP: #1911036)
+    - d/p/cssshadowvalue-Apply-device-scale-to-the-offset-when-blur.patch:
+      Apply scale factor to blurred shadows.
+      In particular this makes the desktop-icons-ng GNOME Shell extension,
+      as used in Ubuntu 21.04, display correctly on HiDPI displays.
+      (LP: #1919404)
+    - d/p/scale-Fix-sporadic-criticals.patch:
+      Fix a possible crash due to use-after-free
+    - d/p/fontchooser-Fix-some-since-annotations.patch:
+      Correct documentation
+    - d/p/x11-Be-quiet-on-exit-by-default.patch:
+      Don't spam the system log when disconnected from the X11 display
+    - d/p/Fix-a-possible-crash-in-gtk_show_uri.patch:
+      Don't crash if asked to display a URI that doesn't have a useful
+      basename
+    - d/p/x11-Don-t-beep-on-untrusted-displays.patch:
+      Don't beep if connected to an X11 display that distrusts the
+      application (ssh -X -oForwardX11Trusted=no), which can result in a
+      fatal error
+    - d/p/placesview-Open-location-even-if-mount-was-not-found.patch:
+      Fix inability to display SMB server's list of shares
+      (e.g. smb://192.168.1.1/) in Nautilus
+  * d/p/updateiconcache-Sort-list-of-entries.patch:
+    Mark as applied upstream to GTK 3 as well as to GTK 4
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 02 May 2021 12:34:12 +0100
+
+gtk+3.0 (3.24.24-3) unstable; urgency=medium
+
+  * d/patches: Backport font settings bug fixes recommended by upstream
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 22 Feb 2021 17:51:13 +0000
+
+gtk+3.0 (3.24.24-2) unstable; urgency=medium
+
+  * d/watch: Cope with "+" being escaped to "%2B" in links to tarballs
+  * Increase dependency on librsvg2-common from Suggests to Recommends.
+    This is not a hard dependency, but should be installed in nearly all
+    cases. Increasingly many icons are provided in SVG format, so
+    applications will appear broken if the SVG pixbuf loader is not
+    installed. See #980396 for more information.
+    adwaita-icon-theme already Recommends librsvg2-common, but people who
+    routinely do not install recommended packages will get a better hint
+    about how much will be broken by its removal if GTK also recommends it.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 18 Feb 2021 13:49:58 +0000
+
+gtk+3.0 (3.24.24-1) unstable; urgency=medium
+
+  * New upstream release
+    - Update the default color palette
+    - Fix font chooser in family-only mode to return regular style
+    - Don't set focus-on-click for tree view header buttons
+    - Add a11y support to GtkPlug/GtkSocket
+    - Implement scrollSubstringTo for a11y
+    - Allow the lpr backend to print pdf and ps files
+    - Update gesture graphics
+    - Update HighContrast css
+    - Support the primary-selection-unstable-v1 Wayland protocol
+    - On X11, fix a crash with parent-relative backgrounds
+    - On Broadway, set modifier state of scroll events
+    - Translation updates
+  * Update versions of (build-)dependencies
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 11 Dec 2020 11:07:01 +0000
+
+gtk+3.0 (3.24.23-3) unstable; urgency=medium
+
+  * Preferentially build-depend on libgdk-pixbuf-2.0-dev.
+    We don't need the deprecated Xlib integration that is also pulled in
+    by the older libgdk-pixbuf2.0-dev package (see #974870).
+  * Standards-Version: 4.5.1 (no changes required)
+  * d/copyright: Consolidate similar licenses into one Files stanza
+  * d/gtk-update-icon-cache.preinst: Remove.
+    This was here for upgrades from versions older than oldstable, but we
+    do not support skipping a stable release.
+  * Silence some Lintian false positives
+  * Add myself to Uploaders
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 27 Nov 2020 12:43:57 +0000
+
+gtk+3.0 (3.24.23-2) unstable; urgency=medium
+
+  * Regenerate CSS themes with sassc during the build.
+    This ensures that they are updated even if upstream forgot to do so,
+    as happened in HighContrast for the GTK 3.4.22 release (#970664).
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 05 Oct 2020 14:36:07 +0100
+
+gtk+3.0 (3.24.23-1) unstable; urgency=medium
+
+  * New upstream release
+    + Adwaita:
+     - Support error states for labels and entries
+    + Printing:
+     - Use the correct names for remote printers
+    + File choser:
+     - Default to tracker2 for search to prevent
+       symbol clashes in tracker-using applications
+    + Wayland:
+     - Support newer schemas for settings
+     - Fix DND hotspot handling
+     - Disconnect on display close
+    + X11:
+     - Fix a possible crash with disabled devices
+
+ -- Iain Lane <iain.lane@canonical.com>  Fri, 11 Sep 2020 13:34:50 +0100
+
+gtk+3.0 (3.24.22-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Update symbols file
+    - Drop patch for #964679, applied upstream
+    - d/copyright: Update
+  * Upload to unstable
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 12 Aug 2020 12:09:01 +0100
+
+gtk+3.0 (3.24.21-1) experimental; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Fix ability to use BSD-3-clause, Apache 2.0 and MPL 2.0 in
+      GtkAboutDialog (Closes: #960303)
+  * Add patch to fix FTBFS with newer GLib versions (Closes: #964679)
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 05 Aug 2020 15:33:48 +0100
+
+gtk+3.0 (3.24.20-1) unstable; urgency=medium
+
+  * Upload to unstable
+
+  [ Simon McVittie ]
+  * New upstream release
+  * Depend on librsvg2-common for tests.
+    The unit tests expect that gdk-pixbuf can load SVG files. This is
+    provided by librsvg2-common, which used to be pulled in by
+    adwaita-icon-theme. (Closes: #959390)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 08 May 2020 16:32:53 +0200
+
+gtk+3.0 (3.24.18-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Fix remaining XInclude failure in documentation (Closes: #672369)
+  * d/copyright: Update
+  * d/patches: Drop patches that came from upstream
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 10 Apr 2020 15:47:07 +0100
+
+gtk+3.0 (3.24.17-3) unstable; urgency=medium
+
+  * Team upload
+  * Update to upstream gtk-3-24 branch, commit 3.24.17-22-g99bae0fb5f
+    (effectively a release-candidate for 3.24.18)
+    - Fix even more Wayland window-sizing regressions
+      (Closes: #955820, we hope)
+  * d/p/wayland-don-t-call-gdk_wayland_window_configure-without-v.patch:
+    Drop patch, superseded by other upstream fixes.
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 07 Apr 2020 13:54:03 +0100
+
+gtk+3.0 (3.24.17-2) unstable; urgency=medium
+
+  * Team upload
+  * d/p/Do-not-require-an-initial-configure-for-custom-Wayland-su.patch,
+    d/p/Do-not-require-an-initial-configure-for-DnD-windows.patch:
+    Apply patches from upstream gtk-3-24 branch to fix some Wayland
+    window-sizing regressions (partially resolves: #955820)
+  * d/p/wayland-don-t-call-gdk_wayland_window_configure-without-v.patch:
+    Apply a patch proposed upstream to fix additional Wayland window-sizing
+    regressions (hopefully resolves the rest of #955820)
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 05 Apr 2020 20:17:59 +0100
+
+gtk+3.0 (3.24.17-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Fix some regressions in 3.24.16
+    - When using the "simple" input method context, load the same compose
+      sequences for Wayland as for X11 (in order of preference:
+      $XDG_CONFIG_HOME/gtk-3.0/Compose, ~/.XCompose, or a language-specific
+      system-wide compose file for el_GR, fi_FI or pt_BR)
+  * d/p/supp-Use-a-single-suppressions-file-for-lib-lib64-and-mul.patch:
+    Drop, applied upstream
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 03 Apr 2020 19:00:28 +0100
+
+gtk+3.0 (3.24.16-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Drop patches that came from upstream
+  * d/p/supp-Use-a-single-suppressions-file-for-lib-lib64-and-mul.patch:
+    Add patch to make valgrind suppressions match Debian libraries
+  * Update forwarding status for some patches that were sent upstream
+  * d/p/Don-t-test-default-constructed-GdkPixbuf-properties.patch:
+    Drop patch. Build-depend on gdk-pixbuf 2.40 instead of working around
+    a bug in older versions.
+  * d/rules: Mark some reftests as allowed to fail.
+    These reftests are sensitive to the build environment (exact versions
+    of Pango, fonts etc.) and are disabled in upstream's CI.
+    (Closes: #954584)
+  * d/p/updateiconcache-Sort-list-of-entries.patch:
+    Backport patch from GTK 4 to make the icon cache reproducible
+    (Closes: #953105)
+  * d/p/build-Generate-gdk.gresource.xml-in-sorted-order.patch:
+    Sort GDK resources to improve reproducibility.
+    The combination of this and fixing #953105 should hopefully make the
+    package reliably reproducible.
+  * d/README.source: Write down how to inspect reftest failures
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 02 Apr 2020 13:15:25 +0100
+
+gtk+3.0 (3.24.14-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Update Wayland dependency version
+  * d/patches: Apply upstream bug fixes from gtk-3-24 branch up to
+    3.24.14-20-g4c027d458b
+  * d/tests/build: Use correct compiler for proposed autopkgtest
+    cross-architecture testing support, based on a patch for clutter-1.0
+    by Steve Langasek
+  * d/tests/build: Fix shellcheck warnings
+  * d/tests/build: Remove trailing whitespace
+  * d/tests/build: Show commands before they are executed
+  * d/tests/build: Fail if using an undefined variable ("unofficial strict
+    mode")
+  * d/upstream/metadata: Add upstream URLs
+  * Standards-Version: 4.5.0 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 29 Feb 2020 20:34:56 +0000
+
+gtk+3.0 (3.24.13-1) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * Move gtk-encode-symbolic-svg from gtk-3-examples to libgtk-3-bin.
+    It's more of a development tool than an example.
+
+  [ Iain Lane ]
+  * New upstream release
+    + listbox: Fix header row reuse
+    + wayland: Fix handling of tablets
+    + theme:
+      - Adwaita: Fix menu rounding
+      - Adwaita: Various improvements for the Emoji chooser
+      - Adwaita: Refresh check and radio buttons
+      - HighContrast: Fix entry colors
+    + input:
+      - Properly handle bubbling of scroll events
+      - Handle modifier key events properly
+      - Run key controllers in the bubble phase
+      - Do not use VIQR for Vietnamese by default
+    + statusicons: Render sharply on hi-dpi
+    + wayland: Fix handling of selection ownership
+    + broadway: Fix (lack of) clipboard handling
+  * Rebase patches
+    - Drop 022_disable-viqr-im-for-vi-locale.patch, upstream
+
+ -- Iain Lane <laney@debian.org>  Thu, 28 Nov 2019 14:09:42 +0000
+
+gtk+3.0 (3.24.12-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Jeremy Bicha <jbicha@debian.org>  Sat, 05 Oct 2019 09:49:40 -0400
+
+gtk+3.0 (3.24.11-1) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * d/p/018_gdkenumtypes.c_location.patch:
+    Drop patch that was rejected upstream
+  * d/p/gdk-Generate-gdkenumtypes.-ch-in-the-builddir.patch:
+    Drop patch that partially reverted the one described above
+  * d/p/gdk-Don-t-distribute-generated-files-in-tarballs.patch,
+    d/p/gtk-Really-don-t-distribute-built-files.patch,
+    d/p/demos-examples-tests-Don-t-distribute-built-files.patch:
+    Replace patches above with an upstreamable version
+  * Use debhelper-compat 12
+    - Don't explicitly use dh_makeshlibs -V, it is now the default
+    - Don't explicitly use --libexecdir=/usr/libexec, it is now the default
+    - Don't try to use dh_missing on debian/install/udeb if we didn't do
+      the udeb build
+  * API documentation:
+    - Install documentation in /usr/share/gtk-doc, with symlinks in /u/s/doc.
+      gtk-doc documentation is technically a functional interface
+      (Policy §12.3), because other packages can build-depend on it and
+      use it to fix cross-references.
+    - Install symlinks to gtk-doc in both /usr/share/doc/libgtk-3-doc
+      (traditional location) and /usr/share/doc/libgtk-3-dev ("main package"
+      for developer documentation, as recommended in Policy §12.3)
+  * Refer to GTK rather than GTK+ in packaging files.
+    The library was renamed in February 2019.
+
+  [ Iain Lane ]
+  * New upstream release
+    + Adwaita:
+      - Add drop shadow to icons
+      - Small color fixes
+      - Make title buttons round
+    + Wayland:
+      - Support xdg-output v3
+      - Fix clipboard ownership handling
+    + X11: Improve monitor metadata
+    + Build: Require GLib 2.57.2
+  * d/control: Bump Build-Depends and -dev Depends according to configure.ac
+    - libglib2.0-dev → 2.57.4
+    - wayland-protocols → 1.14
+  * d/p/Fix-a-string-leak.patch,
+    d/p/docs-Add-gtk_file_chooser_add_choice-and-related-function.patch: Drop
+    patches which have been applied upstream
+  * debian/libgtk-3-0.symbols: Add gtk_header_bar_accessible_get_type
+
+ -- Iain Lane <laney@debian.org>  Wed, 04 Sep 2019 17:32:22 +0100
+
+gtk+3.0 (3.24.10-1) unstable; urgency=medium
+
+  * Team upload
+  * Upload to unstable
+  * New upstream release
+    - Bump required CUPS version to 1.7
+    - d/copyright: Update
+    - d/rules: Explicitly select Autotools build system.
+      Upstream now partially supports Meson, but it doesn't have all the
+      features we want yet (in particular no installed-tests).
+  * d/rules: Delete more generated files in clean to force them to be
+    regenerated
+    - d/p/gdk-Generate-gdkenumtypes.-ch-in-the-builddir.patch,
+      d/p/gdk-Don-t-distribute-generated-files-in-tarballs.patch:
+      Fix regeneration of some generated files
+  * d/tests/python3-gi: Don't fail if gir1.2-gtk-4.0 is installed
+  * d/p/Revert-Update-some-a11y-test-results.patch:
+    Drop patch, no longer needed (and indeed it now makes the tests fail)
+  * d/p/docs-Add-gtk_file_chooser_add_choice-and-related-function.patch,
+    d/p/Fix-a-string-leak.patch:
+    Add post-release fixes from upstream gtk-3-24 branch
+  * d/p/Disable-accessibility-dump-aka-a11ytests-test.patch:
+    Disable accessibility-dump test (aka a11ytests).
+    It works by comparing a dump of the a11y widget tree with a known-good
+    version, but that seems to vary unpredictably according to some unknown
+    factor. Upstream's CI currently disables all the a11y tests, so we can't
+    expect this to be reliable.
+  * Remove another generated file
+  * d/libgail-3-0.symbols: Add Build-Depends-Package
+  * d/libgail-3-doc.doc-base.gail-reference: Use /usr/share/doc paths
+  * Standards-Version: 4.4.0 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 17 Jul 2019 17:54:17 +0100
+
+gtk+3.0 (3.24.8-1) experimental; urgency=medium
+
+  * New upstream release
+    + Color editor: don't warn if editing is cancelled
+    + Always redraw on allocate - not doing so is not safe when any widget can
+      have a background
+    + Use GLSL 3.30 for shaders
+    + Wayland: properly place window menus
+    + GtkApplication: support session state changes in sandboxes, using the
+      inhibit portal
+    + Fix a problem with autostart notification
+    + Places: Show loop devices as reported by gvfs
+    + Print dialog, CUPS: Check unknown option values whether they are
+      actually custom settings (LP: #1763520)
+  * Refresh patches. debian/patches/018_gdkenumtypes.c_location.patch needed
+    slight rebasing
+
+ -- Iain Lane <laney@debian.org>  Thu, 11 Apr 2019 11:08:50 +0100
+
+gtk+3.0 (3.24.7-1) experimental; urgency=medium
+
+  * New upstream release
+    + Broadway: Ensure focus on click
+    + Fix some compiler warnings
+    + Improve activation of the onscreen keyboard
+    + Improve menu positioning with move-to-rect
+    + Link against fribidi
+    + Treeview: Make sure separator nodes have height > 0
+    + Use C locale when generating code
+    + theme
+      - Fix some inconsistences for radii
+  * control: BD and D (from libgtk-3-dev) on fribidi as required now
+  * Refresh patches & drop upstream ones.
+     debian/patches/Revert-Update-a11y-test-output.patch,
+     debian/patches/Update-css-node-tests.patch: Dropped, now upstream.
+  * control: BD on fonts-cantarell and fonts-dejavu. These are required for
+    the reftests. Liberation doesn't work (label-shadows fails).
+  * debian/libgtk-3-0.symbols: Update
+
+ -- Iain Lane <laney@debian.org>  Wed, 13 Mar 2019 16:39:58 +0000
 
 gtk+3.0 (3.24.5-1) unstable; urgency=medium
 
@@ -864,7 +1274,8 @@ gtk+3.0 (3.20.1-1) experimental; urgency=medium
   * New upstream release.
   * Drop debian/patches/git_a11y_GTK_CSD_distcheck.patch, included in release.
   * Add debian/patches/git_fix_emacs.patch, cherry-picked from upstream git.
-    Thanks to Matteo F. Vescovi for verifying the commit fixed the emacs problem.
+    Thanks to Matteo F. Vescovi for verifying the commit fixed the emacs
+    problem.
 
  -- Andreas Henriksson <andreas@fatal.se>  Wed, 30 Mar 2016 11:08:26 +0200
 

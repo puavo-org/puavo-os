@@ -5,7 +5,7 @@ Source: https://download.gnome.org/sources/gtk+/
 Files: *
 Copyright: Copyright (C) 1986, 1987, 1998  The Open Group
            Copyright (C) 1993 Robert Nation
-           Copyright (C) 1997-2010 The GTK+ Team
+           Copyright (C) 1997-2010 The GTK Team
            Copyright (C) 1991-1993, 1995, 1999-2010 Free Software Foundation, Inc.
            Copyright (C) 1995, 1996, 1997, 1998 Steffen Beyer
            Copyright (C) 1996-2007, 2009 Sun Microsystems, Inc.
@@ -19,7 +19,7 @@ Copyright: Copyright (C) 1986, 1987, 1998  The Open Group
            Copyright (C) 1998 Shawn T. Amundson
            Copyright (C) 1998-2004 Tor Lillqvist
            Copyright (C) 1998-2001, 2005, 2006 Tim Janik
-           Copyright (C) 1998-2007, 2010 Red Hat, Inc.
+           Copyright (C) 1998-2020 Red Hat, Inc.
            Copyright (C) 1998 Stanislav Brabec <utx@k332.feld.cvut.cz>
            Copyright (C) 1998 Jiří Pavlovský <pavlovsk@ff.cuni.cz>
            Copyright (C) 1999 Mark Crichton, Larry Ewing
@@ -46,7 +46,7 @@ Copyright: Copyright (C) 1986, 1987, 1998  The Open Group
            Copyright (C) 2003 Ricardo Fernandez Pascual
            Copyright (C) 2003 Alex Graveley
            Copyright (C) 2004 Paolo Borelli
-           Copyright (C) 2004, 2009, 2010 Nokia Corporation
+           Copyright (C) 2004-2011 Nokia Corporation
            Copyright (C) 2004-2006 Christian Hammond
            Copyright (C) 2004 Lorenzo Gil Sanchez
            Copyright (c) 2004 James M. Cape <jcape@ignore-your.tv>
@@ -85,7 +85,7 @@ Copyright: Copyright (C) 1986, 1987, 1998  The Open Group
            Copyright (C) Christian Kellner <gicmo@gnome.org>
            Copyright (C) David Zeuthen <davidz@redhat.com>
            Copyright (C) Javier Jardón <jjardon@gnome.org>
-License: LGPL-2+
+License: LGPL-2+ and LGPL-2.1+
 
 License: LGPL-2+
  This library is free software; you can redistribute it and/or modify it
@@ -104,21 +104,6 @@ License: LGPL-2+
  02110-1301  USA.
  .
  See /usr/share/common-licenses/LGPL-2 on your debian system.
-
-Files: gtk/gtkcomboboxtext.h
-       gtk/gtktoolpaletteprivate.h
-       gtk/gtktoolitemgroup.*
-       gtk/gtktoolpalette.c
-       gtk/gtkaboutdialog.h
-       gtk/gtktoolpaletteprivate.h
-       gtk/org.gtk.Settings.FileChooser.gschema.xml
-Copyright: Copyright (C) 2010 Christian Dywan
-           Copyright (C) 2008 Openismus GmbH
-           Copyright (C) 2001 CodeFactory AB
-           Copyright (C) 2001 Anders Carlsson <andersca@codefactory.se>
-           Copyright (C) 2003, 2004 Matthias Clasen <mclasen@redhat.com>
-           Copyright (C) 2010 Christian Persch
-License: LGPL-2.1+
 
 License: LGPL-2.1+
  This library is free software; you can redistribute it and/or modify it
@@ -140,8 +125,8 @@ License: LGPL-2.1+
 
 Files: po/*
        po-properties/*
-Copyright: Copyright (C) 1998-2010 The Free Software Foundation, Inc.
-           Copyright (C) 1999, 2003-2010 The GTK+ Team
+Copyright: Copyright (C) 1998-2019 Free Software Foundation, Inc.
+           Copyright (C) 1999, 2003-2010 The GTK Team
            Copyright (C) 2004 Zuza Software Foundation <info@translate.org.za>
            Copyright (C) 2008-2010 F Wolff <friedel@translate.org.za>
            Copyright (C) 2002 Ge'ez Frontier Foundation <locales@geez.org>
@@ -536,6 +521,16 @@ Copyright: Copyright (C) 1992-1994 The Regents of the University of California.
 License: LGPL-2+ or SWL
 
 Files:
+ modules/input/gtk-text-input.xml
+ modules/input/text-input-unstable-v3.xml
+Copyright:
+ 2012-2013 Intel Corporation
+ 2015-2016 Jan Arne Petersen
+ 2017-2018 Red Hat, Inc.
+ 2018 Purism SPC
+License: X11R5-permissive
+
+Files:
  gdk/broadway/rawinflate.min.js
  debian/missing-sources/zlib.js-0.1.6/*
 Copyright: © 2012 imaya
@@ -576,3 +571,46 @@ License: Apache-2.0
 Comment:
  On Debian systems a copy of the Apache License, Version 2.0 can be
  found in /usr/share/common-licenses/Apache-2.0
+
+Files:
+ testsuite/gdk/check-gdk-cairo.c
+Copyright: 2008 Sven Herzberg
+License: check-gdk-cairo-permissive
+ This work is provided "as is"; redistribution and modification
+ in whole or in part, in any medium, physical or electronic is
+ permitted without restriction.
+ .
+ This work is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ .
+ In no event shall the authors or contributors be liable for any
+ direct, indirect, incidental, special, exemplary, or consequential
+ damages (including, but not limited to, procurement of substitute
+ goods or services; loss of use, data, or profits; or business
+ interruption) however caused and on any theory of liability, whether
+ in contract, strict liability, or tort (including negligence or
+ otherwise) arising in any way out of the use of this software, even
+ if advised of the possibility of such damage.
+
+License: X11R5-permissive
+ Permission to use, copy, modify, distribute, and sell this
+ software and its documentation for any purpose is hereby granted
+ without fee, provided that the above copyright notice appear in
+ all copies and that both that copyright notice and this permission
+ notice appear in supporting documentation, and that the name of
+ the copyright holders not be used in advertising or publicity
+ pertaining to distribution of the software without specific,
+ written prior permission.  The copyright holders make no
+ representations about the suitability of this software for any
+ purpose.  It is provided "as is" without express or implied
+ warranty.
+ .
+ THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+ AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+ THIS SOFTWARE.
