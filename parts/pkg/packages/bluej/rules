@@ -1,0 +1,44 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+links='
+  /usr/share/applications/bluej.desktop
+  /usr/share/bluej
+  /usr/share/doc/BlueJ
+  /usr/share/icons/hicolor/256x256/apps/bluej.png
+  /usr/share/icons/hicolor/48x48/apps/bluej.png
+  /usr/share/pixmaps/bluej.xpm
+'
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+
+    for f in $links; do
+      dir=$(dirname "$f")
+      mkdir -p "$dir"
+      ln -fns -T "${upstream_dir}${f}" "$f"
+    done
+
+    # use system openjdk for Java
+    sed '/^JAVAPATH/s|/usr/share/bluej/jdk|/usr/lib/jvm/java-11-openjdk-amd64|' \
+      "${upstream_dir}/usr/bin/bluej" > /usr/local/bin/bluej.tmp
+    chmod 755 /usr/local/bin/bluej.tmp
+    mv /usr/local/bin/bluej.tmp /usr/local/bin/bluej
+    ;;
+  unconfigure)
+    rm -f /usr/local/bin/bluej $links
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    dpkg-deb --fsys-tarfile "$upstream_pack" \
+      | tar -C "$upstream_dir" --exclude=usr/share/bluej/jdk -x
+    ;;
+  *)
+    ;;
+esac
