@@ -1,0 +1,69 @@
+Author: Jonah Brüchert <jbb.prv@gmx.de>
+Description: Use 3rd-party bundled libs only on non-Linux systems.
+
+--- /dev/null
++++ b/libs.pri
+@@ -0,0 +1,31 @@
++THIRD_PARTY_PATH="../OpenBoard-ThirdParty"
++
++linux {
++    CONFIG += link_pkgconfig
++    PKGCONFIG += freetype2
++
++    # Find different versions of quazip
++    packagesExist(quazip) {
++        PKGCONFIG += quazip
++        message("using quazip >= 0.7.4 with pkgconfig support")
++    } else {
++
++        # Debian stretch
++        exists(/usr/include/quazip/quazip.h) {
++            INCLUDEPATH += "/usr/include/quazip"
++            LIBS        += "-lquazip5"
++            message("using quazip =< 0.7.4 without pkgconfig support, headers in /usr/include/quazip")
++        }
++
++        # Debian buster and beyond
++        exists(/usr/include/quazip5/quazip.h) {
++            INCLUDEPATH += "/usr/include/quazip5"
++            LIBS        += "-lquazip5"
++            message("using quazip =< 0.7.4 without pkgconfig support, headers in /usr/include/quazip5")
++        }
++    }
++}
++
++!linux {
++    include($$THIRD_PARTY_PATH/libs.pri)
++}
+--- a/OpenBoard.pro
++++ b/OpenBoard.pro
+@@ -1,8 +1,6 @@
+ TARGET = "OpenBoard"
+ TEMPLATE = app
+ 
+-THIRD_PARTY_PATH=../OpenBoard-ThirdParty
+-
+ CONFIG -= flat
+ CONFIG += debug_and_release \
+           no_include_pwd
+@@ -45,7 +43,7 @@
+ 
+ INCLUDEPATH += src
+ 
+-include($$THIRD_PARTY_PATH/libs.pri)
++include(libs.pri)
+ include(src/adaptors/adaptors.pri)
+ include(src/api/api.pri)
+ include(src/board/board.pri)
+@@ -70,11 +68,6 @@
+ include(plugins/plugins.pri)
+ INCLUDEPATH += plugins/cffadaptor/src
+ 
+-#ThirdParty
+-DEPENDPATH += $$THIRD_PARTY_PATH/quazip/
+-INCLUDEPATH += $$THIRD_PARTY_PATH/quazip/
+-include($$THIRD_PARTY_PATH/quazip/quazip.pri)
+-
+ FORMS += resources/forms/mainWindow.ui \
+    resources/forms/preferences.ui \
+    resources/forms/brushProperties.ui \

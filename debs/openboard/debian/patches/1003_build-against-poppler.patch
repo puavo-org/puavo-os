@@ -1,0 +1,260 @@
+Description: Build against the system's libpoppler instead of a bundled XPDF copy of code.
+Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+
+--- a/src/pdf/XPDFRenderer.h
++++ b/src/pdf/XPDFRenderer.h
+@@ -27,30 +27,25 @@
+ 
+ 
+ 
+-#ifndef XPDFRENDERER_H
+-#define XPDFRENDERER_H
++#ifndef POPPLERPDFRENDERER_H
++#define POPPLERPDFRENDERER_H
+ #include <QImage>
+ #include "PDFRenderer.h"
+-#include <splash/SplashBitmap.h>
++#include <poppler/splash/SplashBitmap.h>
++#include <poppler/SplashOutputDev.h>
++#include <poppler/PDFDoc.h>
++#include <poppler/Object.h>
++#include <poppler/cpp/poppler-version.h>
+ 
+ #include "globals/UBGlobals.h"
+ 
+-THIRD_PARTY_WARNINGS_DISABLE
+-#include <xpdf/Object.h>
+-#include <xpdf/GlobalParams.h>
+-#include <xpdf/SplashOutputDev.h>
+-#include <xpdf/PDFDoc.h>
+-THIRD_PARTY_WARNINGS_ENABLE
+-
+-class PDFDoc;
+-
+-class XPDFRenderer : public PDFRenderer
++class PopplerPDFRenderer : public PDFRenderer
+ {
+     Q_OBJECT
+ 
+     public:
+-        XPDFRenderer(const QString &filename, bool importingFile = false);
+-        virtual ~XPDFRenderer();
++        PopplerPDFRenderer(const QString &filename, bool importingFile = false);
++        virtual ~PopplerPDFRenderer();
+ 
+         bool isValid() const;
+ 
+@@ -78,4 +73,4 @@
+         SplashOutputDev* mSplash;
+ };
+ 
+-#endif // XPDFRENDERER_H
++#endif // POPPLERPDFRENDERER_H
+--- a/OpenBoard.pro
++++ b/OpenBoard.pro
+@@ -5,7 +5,6 @@
+ CONFIG += debug_and_release \
+           no_include_pwd
+ 
+-
+ VERSION_MAJ = 1
+ VERSION_MIN = 5
+ VERSION_PATCH = 4
+--- a/src/pdf/PDFRenderer.cpp
++++ b/src/pdf/PDFRenderer.cpp
+@@ -57,7 +57,7 @@
+     }
+     else
+     {
+-        PDFRenderer *newRenderer = new XPDFRenderer(filename,importingFile);
++        PDFRenderer *newRenderer = new PopplerPDFRenderer(filename,importingFile);
+ 
+         newRenderer->setRefCount(0);
+         newRenderer->setFileUuid(uuid);
+--- a/src/pdf/UBWebPluginPDFWidget.cpp
++++ b/src/pdf/UBWebPluginPDFWidget.cpp
+@@ -74,7 +74,7 @@
+ 
+ void UBWebPluginPDFWidget::handleFile(const QString &filePath)
+ {
+-    mRenderer = new XPDFRenderer(filePath);
++    mRenderer = new PopplerPDFRenderer(filePath);
+ }
+ 
+ void UBWebPluginPDFWidget::keyReleaseEvent(QKeyEvent *keyEvent)
+--- a/src/pdf/XPDFRenderer.cpp
++++ b/src/pdf/XPDFRenderer.cpp
+@@ -26,7 +26,6 @@
+ 
+ 
+ 
+-
+ #include "XPDFRenderer.h"
+ 
+ #include <QtGui>
+@@ -35,9 +34,15 @@
+ 
+ #include "core/memcheck.h"
+ 
+-QAtomicInt XPDFRenderer::sInstancesCount = 0;
++#if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 71
++#define GBool bool
++#define gTrue true
++#define gFalse false
++#endif
++
++QAtomicInt PopplerPDFRenderer::sInstancesCount = 0;
+ 
+-XPDFRenderer::XPDFRenderer(const QString &filename, bool importingFile)
++PopplerPDFRenderer::PopplerPDFRenderer(const QString &filename, bool importingFile)
+     : mDocument(0)
+     , mpSplashBitmap(0)
+     , mSplash(0)
+@@ -46,16 +51,20 @@
+     if (!globalParams)
+     {
+         // globalParams must be allocated once and never be deleted
+-        // note that this is *not* an instance variable of this XPDFRenderer class
++        // note that this is *not* an instance variable of this PopplerPDFRenderer class
++#if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 83
++        globalParams.reset(new GlobalParams());
++#else
+         globalParams = new GlobalParams(0);
++#endif
+         globalParams->setupBaseFonts(QFile::encodeName(UBPlatformUtils::applicationResourcesDirectory() + "/" + "fonts").data());
+     }
+ 
+-    mDocument = new PDFDoc(new GString(filename.toLocal8Bit()), 0, 0, 0); // the filename GString is deleted on PDFDoc desctruction
++    mDocument = new PDFDoc(new GooString(filename.toLocal8Bit()), NULL, NULL, NULL);
+     sInstancesCount.ref();
+ }
+ 
+-XPDFRenderer::~XPDFRenderer()
++PopplerPDFRenderer::~PopplerPDFRenderer()
+ {
+     if(mSplash){
+         delete mSplash;
+@@ -70,12 +79,16 @@
+ 
+     if (sInstancesCount.loadAcquire() == 0 && globalParams)
+     {
++#if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 83
++        /* nothing to do with globalParams, then... */
++#else
+         delete globalParams;
+         globalParams = 0;
++#endif
+     }
+ }
+ 
+-bool XPDFRenderer::isValid() const
++bool PopplerPDFRenderer::isValid() const
+ {
+     if (mDocument)
+     {
+@@ -87,7 +100,7 @@
+     }
+ }
+ 
+-int XPDFRenderer::pageCount() const
++int PopplerPDFRenderer::pageCount() const
+ {
+     if (isValid())
+         return mDocument->getNumPages();
+@@ -95,20 +108,38 @@
+         return 0;
+ }
+ 
+-QString XPDFRenderer::title() const
++QString PopplerPDFRenderer::title() const
+ {
+     if (isValid())
+     {
+         Object pdfInfo;
++#if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 55
++        pdfInfo = mDocument->getDocInfo();
++#else
+         mDocument->getDocInfo(&pdfInfo);
++#endif
+         if (pdfInfo.isDict())
+         {
+             Object title;
+             Dict *infoDict = pdfInfo.getDict();
++#if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 55
++            title = infoDict->lookup((char*)"Title");
++            if (title.isString())
++#else
+             if (infoDict->lookup((char*)"Title", &title)->isString())
++#endif
+             {
+-                GString *gstring = title.getString();
++#if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 64
++                const GooString *gstring = title.getString();
++#else
++                GooString *gstring = title.getString();
++#endif
++
++#if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 72
++                return QString(gstring->c_str());
++#else
+                 return QString(gstring->getCString());
++#endif
+             }
+         }
+     }
+@@ -117,7 +148,7 @@
+ }
+ 
+ 
+-QSizeF XPDFRenderer::pageSizeF(int pageNumber) const
++QSizeF PopplerPDFRenderer::pageSizeF(int pageNumber) const
+ {
+     qreal cropWidth = 0;
+     qreal cropHeight = 0;
+@@ -141,7 +172,7 @@
+ }
+ 
+ 
+-int XPDFRenderer::pageRotation(int pageNumber) const
++int PopplerPDFRenderer::pageRotation(int pageNumber) const
+ {
+     if (mDocument)
+         return  mDocument->getPageRotate(pageNumber);
+@@ -149,7 +180,7 @@
+         return 0;
+ }
+ 
+-void XPDFRenderer::render(QPainter *p, int pageNumber, const QRectF &bounds)
++void PopplerPDFRenderer::render(QPainter *p, int pageNumber, const QRectF &bounds)
+ {
+     if (isValid())
+     {
+@@ -165,7 +196,7 @@
+     }
+ }
+ 
+-QImage* XPDFRenderer::createPDFImage(int pageNumber, qreal xscale, qreal yscale, const QRectF &bounds)
++QImage* PopplerPDFRenderer::createPDFImage(int pageNumber, qreal xscale, qreal yscale, const QRectF &bounds)
+ {
+     if (isValid())
+     {
+@@ -173,7 +204,7 @@
+         if(mSplash)
+             delete mSplash;
+         mSplash = new SplashOutputDev(splashModeRGB8, 1, gFalse, paperColor);
+-        mSplash->startDoc(mDocument->getXRef());
++        mSplash->startDoc(mDocument);
+         int rotation = 0; // in degrees (get it from the worldTransform if we want to support rotation)
+         GBool useMediaBox = gFalse;
+         GBool crop = gTrue;
+--- a/libs.pri
++++ b/libs.pri
+@@ -2,6 +2,8 @@
+ 
+ linux {
+     CONFIG += link_pkgconfig
++    PKGCONFIG += poppler
++    PKGCONFIG += poppler-splash
+     PKGCONFIG += freetype2
+ 
+     # Find different versions of quazip

@@ -1,0 +1,52 @@
+### fonts
+usr/share/fonts/truetype/andika/Andika-R.ttf					usr/share/openboard/customizations/fonts/AndBasR.ttf
+usr/share/fonts/truetype/ecolier-court/Ecolier-court.ttf			usr/share/openboard/customizations/fonts/ec_cour.ttf
+usr/share/fonts/truetype/ecolier-lignes-court/Ecolier-lignes-court.ttf		usr/share/openboard/customizations/fonts/ecl_cour.ttf
+
+### JQuery
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/search/Data_AbulEdu.wgs/scripts/jquery-1.6.2.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/interactivities/Tables.wgt/js/lib/jquery-1.7.1.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/interactivities/Dice.wgt/js/lib/jquery-1.7.1.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/applications/AnyEmbed.wgt/js/jquery-1.3.2.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/applications/Wiktionnairy.wgt/script/jquery.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/applications/WebBrowser.wgt/scripts/jquery-1.3.2.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/applications/VideoPicker.wgt/scripts/jquery-1.3.2.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/applications/Wikipedia.wgt/script/jquery.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/applications/GraphMe.wgt/JavaScript/jquery-1.3.2.min.js
+usr/share/javascript/jquery/jquery.min.js					usr/share/openboard/library/applications/Html.wgt/jquery.pack.js
+
+### JQuery UI
+usr/share/javascript/jquery-ui/jquery-ui.min.js					usr/share/openboard/library/interactivities/Dice.wgt/js/lib/jquery-ui-1.8.17.custom.min.js
+usr/share/javascript/jquery-ui/jquery-ui.min.js					usr/share/openboard/library/applications/Notes.wgt/js/jquery-ui-1.7.2.custom.min.js
+
+### JQuery i18n.properties
+usr/share/javascript/jquery-i18n-properties/jquery.i18n.properties-min.js	usr/share/openboard/library/interactivities/Tables.wgt/js/lib/jquery.i18n.properties-min-1.0.9.js
+usr/share/javascript/jquery-i18n-properties/jquery.i18n.properties-min.js	usr/share/openboard/library/interactivities/Dice.wgt/js/lib/jquery.i18n.properties-min-1.0.9.js
+
+### Modernzr
+usr/share/javascript/modernizr/modernizr.js					usr/share/openboard/library/interactivities/Tables.wgt/js/lib/modernizr.js
+usr/share/javascript/modernizr/modernizr.js					usr/share/openboard/library/interactivities/Dice.wgt/js/lib/modernizr.js
+usr/share/javascript/modernizr/modernizr.js					usr/share/openboard/library/interactivities/Magic_Box.wgt/js/lib/modernizr.js
+
+### Mustache
+usr/share/javascript/mustache/mustache.js					usr/share/openboard/library/interactivities/Magic_Box.wgt/js/lib/mustache.js
+usr/share/javascript/mustache/mustache.js					usr/share/openboard/library/interactivities/Tables.wgt/js/lib/mustache.js
+usr/share/javascript/mustache/mustache.js					usr/share/openboard/library/interactivities/Dice.wgt/js/lib/mustache.js
+
+
+####  These are OpenBoard specific...
+
+##### These need to be packaged for Debian, however, their upstreams seem to be dead.
+##### Thus, leaving the currently bundled js libs in the openboard src:pkg.
+##### Further discussion with upstream required / in process.
+
+# needs packaging: http://www.javascriptplugins.com/framework/jquery/jquery-disable-text-select/ (dead link since at least 12/2020)
+#usr/share/openboard/library/applications/AnyEmbed.wgt/js/jquery.disable.text.select.js
+#usr/share/openboard/library/applications/GraphMe.wgt/JavaScript/jquery.disable.text.select.js
+
+# needs packaging: https://github.com/zachstronaut/jquery-css-transform
+# better alternative: https://github.com/rstacruz/jquery.transit
+#usr/share/openboard/library/interactivities/Dice.wgt/js/lib/jquery-css-transform.js
+
+# needs packaging: https://github.com/starfishmod/jquery-oembed-all
+#usr/share/openboard/library/applications/VideoPicker.wgt/scripts/jquery.oembed.js

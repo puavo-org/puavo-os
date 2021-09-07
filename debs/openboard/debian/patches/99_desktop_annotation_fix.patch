@@ -1,6 +1,6 @@
-diff -ruN OpenBoard.orig/src/desktop/UBDesktopAnnotationController.cpp OpenBoard/src/desktop/UBDesktopAnnotationController.cpp
---- a/OpenBoard/src/desktop/UBDesktopAnnotationController.cpp	2019-04-10 10:04:25.000000000 +0300
-+++ b/OpenBoard/src/desktop/UBDesktopAnnotationController.cpp	2019-11-19 13:53:44.988528636 +0200
+diff -ruN openboard.orig/src/desktop/UBDesktopAnnotationController.cpp openboard/src/desktop/UBDesktopAnnotationController.cpp
+--- openboard.orig/src/desktop/UBDesktopAnnotationController.cpp	2020-01-23 12:29:35.000000000 +0200
++++ openboard/src/desktop/UBDesktopAnnotationController.cpp	2021-09-07 14:30:00.734900640 +0300
 @@ -102,7 +102,7 @@
      mTransparentDrawingView->setScene(mTransparentDrawingScene);
      mTransparentDrawingScene->setDrawingMode(true);

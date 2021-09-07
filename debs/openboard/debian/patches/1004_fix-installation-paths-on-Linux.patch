@@ -1,0 +1,54 @@
+Description: Fix installation paths on Linux.
+Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+
+--- a/OpenBoard.pro
++++ b/OpenBoard.pro
+@@ -79,11 +79,9 @@
+    resources/forms/capturePublishing.ui \
+    resources/forms/intranetPodcastPublishingDialog.ui
+ 
+-UB_ETC.files = resources/etc
++UB_ETC.files = resources/etc/*
+ UB_I18N.files = resources/i18n/*.qm
+-UB_LIBRARY.files = resources/library
+-UB_FONTS.files = resources/fonts
+-UB_THIRDPARTY_INTERACTIVE.files = thirdparty/interactive
++UB_LIBRARY.files = resources/library/*
+ 
+ DEFINES += NO_THIRD_PARTY_WARNINGS
+ DEFINES += UBVERSION=\"\\\"$${LONG_VERSION}\"\\\" \
+@@ -102,7 +100,7 @@
+    CONFIG += warn_off
+ }
+ 
+-DESTDIR = $$BUILD_DIR/product
++DESTDIR =
+ OBJECTS_DIR = $$BUILD_DIR/objects
+ MOC_DIR = $$BUILD_DIR/moc
+ RCC_DIR = $$BUILD_DIR/rcc
+@@ -426,10 +424,10 @@
+     QMAKE_CFLAGS += -fopenmp
+     QMAKE_CXXFLAGS += -fopenmp
+     QMAKE_LFLAGS += -fopenmp
+-    UB_LIBRARY.path = $$DESTDIR
+-    UB_I18N.path = $$DESTDIR/i18n
+-    UB_ETC.path = $$DESTDIR
+-    UB_THIRDPARTY_INTERACTIVE.path = $$DESTDIR/library
++    UB_LIBRARY.path = $$DESTDIR/usr/share/openboard/library
++    UB_I18N.path = $$DESTDIR/usr/share/openboard/i18n
++    UB_ETC.path = $$DESTDIR/etc/openboard
++    UB_THIRDPARTY_INTERACTIVE.path = $$DESTDIR/usr/share/openboard/library
+     system(mkdir -p $$BUILD_DIR)
+     system(echo "$$VERSION" > $$BUILD_DIR/version)
+     system(echo "$$LONG_VERSION" > $$BUILD_DIR/longversion)
+--- a/src/frameworks/UBPlatformUtils_linux.cpp
++++ b/src/frameworks/UBPlatformUtils_linux.cpp
+@@ -45,7 +45,7 @@
+ 
+ QString UBPlatformUtils::applicationResourcesDirectory()
+ {
+-    return QApplication::applicationDirPath();
++    return QString("/usr/share/openboard");
+ }
+ 
+ void UBPlatformUtils::hideFile(const QString &filePath)

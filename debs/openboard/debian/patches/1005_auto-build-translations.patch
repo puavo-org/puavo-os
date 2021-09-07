@@ -1,0 +1,77 @@
+Description: Auto-build translation files during application build.
+Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+
+#--- a/OpenBoard.pro
+#+++ b/OpenBoard.pro
+#@@ -424,8 +424,6 @@
+#     system(echo "$$#SVN_VERSION" > $$BUILD_DIR/svnversion)
+# }
+# 
+#-RESOURCES += resources/OpenBoard.qrc
+#-
+# # When adding a translation here, also add it in the macx part
+# TRANSLATIONS = resources/i18n/OpenBoard_en.ts \
+#    resources/i18n/OpenBoard_en_UK.ts \
+#@@ -457,6 +455,25 @@
+#    resources/i18n/OpenBoard_cs.ts \
+#    resources/i18n/OpenBoard_mg.ts
+# 
+#+!isEmpty(TRANSLATIONS) {
+#+    isEmpty(QMAKE_LRELEASE) {
+#+        qtPrepareTool(QMAKE_LRELEASE, lrelease)
+#+    }
+#+
+#+    isEmpty(TS_DIR) TS_DIR = .
+#+
+#+    TSQM.name = lrelease ${QMAKE_FILE_IN}
+#+    TSQM.input = TRANSLATIONS
+#+    TSQM.output = $$TS_DIR/${QMAKE_FILE_BASE}.qm
+#+    TSQM.commands = $$QMAKE_LRELEASE ${QMAKE_FILE_IN}
+#+    TSQM.CONFIG = no_link
+#+    QMAKE_EXTRA_COMPILERS += TSQM
+#+    PRE_TARGETDEPS += compiler_TSQM_make_all
+#+}
+#+else:message("No translation files in project")
+#+
+#+RESOURCES += resources/OpenBoard.qrc
+#+
+# INSTALLS = UB_ETC \
+#    UB_I18N \
+#    UB_LIBRARY \
+--- a/resources/OpenBoard.qrc
++++ b/resources/OpenBoard.qrc
+@@ -1,5 +1,34 @@
+ <RCC>
+     <qresource prefix="/">
++        <file>i18n/OpenBoard_ar.qm</file>
++        <file>i18n/OpenBoard_bg.qm</file>
++        <file>i18n/OpenBoard_ca.qm</file>
++        <file>i18n/OpenBoard_cs.qm</file>
++        <file>i18n/OpenBoard_da.qm</file>
++        <file>i18n/OpenBoard_de.qm</file>
++        <file>i18n/OpenBoard_el.qm</file>
++        <file>i18n/OpenBoard_en.qm</file>
++        <file>i18n/OpenBoard_en_UK.qm</file>
++        <file>i18n/OpenBoard_es.qm</file>
++        <file>i18n/OpenBoard_fr_CH.qm</file>
++        <file>i18n/OpenBoard_fr.qm</file>
++        <file>i18n/OpenBoard_it.qm</file>
++        <file>i18n/OpenBoard_iw.qm</file>
++        <file>i18n/OpenBoard_ja.qm</file>
++        <file>i18n/OpenBoard_ko.qm</file>
++        <file>i18n/OpenBoard_mg.qm</file>
++        <file>i18n/OpenBoard_nb.qm</file>
++        <file>i18n/OpenBoard_nl.qm</file>
++        <file>i18n/OpenBoard_pl.qm</file>
++        <file>i18n/OpenBoard_pt.qm</file>
++        <file>i18n/OpenBoard_ro.qm</file>
++        <file>i18n/OpenBoard_ru.qm</file>
++        <file>i18n/OpenBoard_sk.qm</file>
++        <file>i18n/OpenBoard_sv.qm</file>
++        <file>i18n/OpenBoard_tr.qm</file>
++        <file>i18n/OpenBoard_zh_CN.qm</file>
++        <file>i18n/OpenBoard_zh.qm</file>
++        <file>i18n/OpenBoard_zh_TW.qm</file>
+         <file>images/OpenBoard.png</file>
+         <file>images/bigOpenBoard.png</file>
+         <file>images/close.svg</file>

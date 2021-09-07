@@ -1,4 +1,176 @@
 #!/usr/bin/make -f
+# -*- makefile -*-
 
-%:
-	dh $@
+SHELL:=/bin/bash
+
+include /usr/share/dpkg/pkg-info.mk
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+NULL =
+PKD   = $(word 1,$(abspath $(dir $(MAKEFILE_LIST))))
+PKG   = $(DEB_SOURCE)
+UVER  = $(shell echo $(DEB_VERSION) | cut -d "-" -f1)
+DTYPE = +dfsg1
+VER  ?= $(subst $(DTYPE),,$(UVER))
+
+include /usr/share/dpkg/architecture.mk
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/qmake.mk
+
+QMAKE=/usr/lib/$(DEB_BUILD_MULTIARCH)/qt5/bin/qmake
+
+post-patches::
+	/usr/lib/$(DEB_BUILD_MULTIARCH)/qt5/bin/lrelease OpenBoard.pro
+
+install/openboard-common::
+	# generate desktop icons of different sizes
+	for dim in 16 22 32 48 64; do mkdir -p "debian/tmp/usr/share/icons/hicolor/$${dim}x$${dim}/apps/"; convert -scale "$${dim}x$${dim}" "$(CURDIR)/resources/images/OpenBoard.png" "debian/tmp/usr/share/icons/hicolor/$${dim}x$${dim}/apps/openboard.png"; done
+
+	# fix file permissions
+	chmod a-x $(CURDIR)/debian/tmp/usr/share/openboard/library/applications/GraphMe.wgt/config.xml
+
+	# install customizations directory
+	cp  -av resources/customizations/ $(CURDIR)/debian/tmp/usr/share/openboard/
+
+clean::
+	-rm .qmake.stash
+	-rm -R build/
+	-rm -R debug/
+	-rm -R release/
+	-rm resources/i18n/*.qm
+
+binary-predeb/openboard-common:: fix-library-foldernames-with-blanks
+
+fix-library-foldernames-with-blanks::
+	cd debian/openboard-common/usr/share/openboard/library && $(CURDIR)/fix-library-foldernames-with-blanks.sh
+
+get-orig-source: $(PKG)_$(VER)$(DTYPE).orig.tar.xz $(info I: $(PKG)_$(VER)$(DTYPE))
+	@
+
+$(PKG)_$(VER)$(DTYPE).orig.tar.xz:
+	@echo "# Downloading..."
+	uscan --noconf --verbose --rename --destdir=$(CURDIR) --check-dirname-level=0 --force-download --download-version $(VER) $(PKD)
+	$(if $(wildcard $(PKG)-$(VER)),$(error $(PKG)-$(VER) exist, aborting..))
+	@echo "# Extracting..."
+	mkdir $(PKG)-$(VER) \
+	    && tar -xf $(PKG)_$(VER).orig.tar.* --directory $(PKG)-$(VER) --strip-components 1 \
+	    || $(RM) -r $(PKG)-$(VER)
+	@echo "# Cleaning-up..."
+	cd $(PKG)-$(VER) \
+	    && $(RM) -r -v \
+	    plugins/cffadaptor/postScript_mac.sh \
+	    resources/macx/ \
+	    resources/fonts/ \
+	    resources/linux/ \
+	    resources/win/ \
+	    resources/windows/ \
+	    release_scripts/ \
+	    \
+	    resources/customizations/fonts/AndBasR.ttf \
+	    resources/customizations/fonts/ec_cour.ttf \
+	    resources/customizations/fonts/ecl_cour.ttf \
+	    resources/customizations/fonts/EcritureA-Italique-Ligne.otf \
+	    resources/customizations/fonts/EcritureA-Italique-Orne-Ligne.otf \
+	    resources/customizations/fonts/EcritureA-Italique-Orne.otf \
+	    resources/customizations/fonts/EcritureA-Italique.otf \
+	    resources/customizations/fonts/EcritureA-Romain-Ligne.otf \
+	    resources/customizations/fonts/EcritureA-Romain-Orne-Ligne.otf \
+	    resources/customizations/fonts/EcritureA-Romain-Orne.otf \
+	    resources/customizations/fonts/EcritureA-Romain.otf \
+	    resources/customizations/fonts/EcritureB-Italique-Ligne.otf \
+	    resources/customizations/fonts/EcritureB-Italique-Orne-Ligne.otf \
+	    resources/customizations/fonts/EcritureB-Italique-Orne.otf \
+	    resources/customizations/fonts/EcritureB-Italique.otf \
+	    resources/customizations/fonts/EcritureB-Romain-Ligne.otf \
+	    resources/customizations/fonts/EcritureB-Romain-Orne-Ligne.otf \
+	    resources/customizations/fonts/EcritureB-Romain-Orne.otf \
+	    resources/customizations/fonts/EcritureB-Romain.otf \
+	    resources/customizations/fonts/Bstgreek.ttf \
+	    resources/customizations/fonts/GETypoLibre.otf \
+	    \
+	    resources/library/animations/*.swf \
+	    \
+	    resources/library/applications/ColorPicker.wgt/ \
+	    resources/library/applications/Calculator.wgt/ \
+	    resources/library/applications/GeoInfo.wgt/ \
+	    resources/library/applications/Notes.wgt/ \
+	    resources/library/applications/OpenStreetMap.wgt/ \
+	    resources/library/applications/QR-Code.wgt/ \
+	    resources/library/applications/Stopwatch.wgt/ \
+	    resources/library/applications/iCell.wgt/ \
+	    \
+	    resources/library/applications/Html.wgt/jquery.pack.js \
+	    resources/library/applications/Html.wgt/markitup/ \
+	    resources/library/applications/AnyEmbed.wgt/js/jquery-1.3.2.min.js \
+	    resources/library/applications/VideoPicker.wgt/scripts/jquery-1.3.2.min.js \
+	    resources/library/applications/WebBrowser.wgt/scripts/jquery-1.3.2.min.js \
+	    resources/library/applications/Wikipedia.wgt/script/jquery.min.js \
+	    resources/library/applications/Wiktionnairy.wgt/script/jquery.min.js \
+	    \
+	    resources/library/interactivities/Ass\ audio.wgt/ \
+	    resources/library/interactivities/Ass\ images.wgt/ \
+	    resources/library/interactivities/Calculation.wgt/ \
+	    resources/library/interactivities/Cat\ pict.wgt/ \
+	    resources/library/interactivities/Cat\ text.wgt/ \
+	    resources/library/interactivities/Choose.wgt/ \
+	    resources/library/interactivities/Constrast.wgt/ \
+	    resources/library/interactivities/Dial.wgt/ \
+	    resources/library/interactivities/Envelope.wgt/ \
+	    resources/library/interactivities/Memory.wgt/ \
+	    resources/library/interactivities/Order\ Letters.wgt/ \
+	    resources/library/interactivities/Order\ Pictures.wgt/ \
+	    resources/library/interactivities/Order\ Sentence.wgt/ \
+	    resources/library/interactivities/Order\ Words.wgt/ \
+	    resources/library/interactivities/Select.wgt/ \
+	    resources/library/interactivities/Slider.wgt/ \
+	    resources/library/interactivities/Split\ Sentence.wgt/ \
+	    resources/library/interactivities/Split\ Text.wgt/ \
+	    resources/library/interactivities/Syllables.wgt/ \
+	    resources/library/interactivities/Scale.wgt/ \
+	    resources/library/interactivities/Tic\ Tac\ Toe.wgt/ \
+	    resources/library/interactivities/Train.wgt/ \
+	    \
+	    resources/library/interactivities/Dice.wgt/js/lib/jquery-1.7.1.min.js \
+	    resources/library/interactivities/Dice.wgt/js/lib/jquery-ui-1.8.17.custom.min.js \
+	    resources/library/interactivities/Dice.wgt/js/lib/jquery.i18n.properties-min-1.0.9.js \
+	    resources/library/interactivities/Dice.wgt/js/lib/modernizr.js \
+	    resources/library/interactivities/Dice.wgt/js/lib/mustache.js \
+	    resources/library/interactivities/Magic\ Box.wgt/js/lib/jquery-1.7.1.min.js \
+	    resources/library/interactivities/Magic\ Box.wgt/js/lib/jquery.i18n.properties-min-1.0.9.js \
+	    resources/library/interactivities/Magic\ Box.wgt/js/lib/modernizr.js \
+	    resources/library/interactivities/Magic\ Box.wgt/js/lib/mustache.js \
+	    resources/library/interactivities/Tables.wgt/js/lib/jquery-1.7.1.min.js \
+	    resources/library/interactivities/Tables.wgt/js/lib/jquery.i18n.properties-min-1.0.9.js \
+	    resources/library/interactivities/Tables.wgt/js/lib/modernizr.js \
+	    resources/library/interactivities/Tables.wgt/js/lib/mustache.js \
+	    \
+	    resources/library/search/Pixabay.wgs/ \
+	    \
+	    resources/library/search/Data\ AbulEdu.wgs/scripts/jquery-1.6.2.min.js \
+	    \
+	    src/qtsingleapplication/configure \
+	    src/qtsingleapplication/configure.bat \
+	    src/qtsingleapplication/INSTALL.txt \
+	    src/qtsingleapplication/README.txt \
+	    src/qtsingleapplication/doc/ \
+	    src/qtsingleapplication/examples/ \
+	    \
+	    $(NULL)
+	cd $(PKG)-$(VER) \
+	    && mkdir -p resources/customizations/fonts/ \
+	    && touch resources/customizations/fonts/.placeholder
+	cd $(PKG)-$(VER)/resources/library && \
+	    echo -e "#!/bin/bash\n" > ../../fix-library-foldernames-with-blanks.sh && \
+	    find . -type d -name "* *" | while read dir; do \
+	        mv "$$dir" "$${dir//\ /_}"; \
+	        echo "mv \"$${dir//\ /_}\" \"$$dir\"" >> ../../fix-library-foldernames-with-blanks.sh; \
+	        chmod a+x ../../fix-library-foldernames-with-blanks.sh; \
+	    done
+	$(RM) -v $(PKG)_$(VER).orig.tar.*
+	@echo "# Packing..."
+	find -L "$(PKG)-$(VER)" -xdev -type f -print | sort \
+	    | XZ_OPT="-6v" tar -caf "../$(PKG)_$(VER)$(DTYPE).orig.tar.xz" -T- --owner=root --group=root --mode=a+rX \
+	    && $(RM) -r "$(PKG)-$(VER)"
