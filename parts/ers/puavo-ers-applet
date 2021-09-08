@@ -744,18 +744,20 @@ class PuavoErsExamSorter (threading.Thread):
     todays_zip_path  = os.path.join(KTP_JAKO_DIR, todays_zip_name)
 
     try:
-      if current_exams_filenames != self.previous_current_exams:
-        self.zip_an_exam_set(current_exams_filenames, current_zip_path)
-        self.update_decrypt_codes_in_file(decrypt_codes_list)
-        self.previous_current_exams = current_exams_filenames
+      if not os.path.exists(current_zip_path) \
+        or current_exams_filenames != self.previous_current_exams:
+          self.zip_an_exam_set(current_exams_filenames, current_zip_path)
+          self.update_decrypt_codes_in_file(decrypt_codes_list)
+          self.previous_current_exams = current_exams_filenames
     except Exception as e:
       syslog.syslog(syslog.LOG_ERR,
         'error when zipping current exams (or updating decrypt codes): %s' % e)
 
     try:
-      if todays_exams_filenames != self.previous_todays_exams:
-        self.zip_an_exam_set(todays_exams_filenames, todays_zip_path)
-        self.previous_todays_exams = todays_exams_filenames
+      if not os.path.exists(todays_zip_path) \
+        or todays_exams_filenames != self.previous_todays_exams:
+          self.zip_an_exam_set(todays_exams_filenames, todays_zip_path)
+          self.previous_todays_exams = todays_exams_filenames
     except Exception as e:
       syslog.syslog(syslog.LOG_ERR, 'error when zipping todays exams: %s' % e)
 
