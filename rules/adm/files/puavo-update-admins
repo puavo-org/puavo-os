@@ -108,7 +108,7 @@ update_passwd_file() {
 }
 
 update_group_file() {
-  awk -F: -v puavoadmins_string="$1" '
+  gawk -F: -v puavoadmins_string="$1" '
     BEGIN {
       split(puavoadmins_string, puavoadmins_a, "\n")
       for (u in puavoadmins_a) { puavoadmins[ puavoadmins_a[u] ] = 1 }
@@ -120,10 +120,12 @@ update_group_file() {
       split($4, group_members_a, ",")
       for (u in group_members_a) { group_members[ group_members_a[u] ] = 1 }
 
+      member_count = asorti(group_members)
+
       printf "%s:%s:%s:", $1, $2, $3
       first_put = 0
-      for (u in group_members) {
-        printf "%s%s", (first_put ? "," : ""), u
+      for (i = 1; i <= member_count; i++) {
+        printf "%s%s", (first_put ? "," : ""), group_members[i]
         first_put = 1
       }
       printf "\n"
