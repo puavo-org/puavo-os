@@ -198,14 +198,22 @@ for adm_user in $(printf "%s\n" "$ssh_keys" | awk '{ print $1 }') ; do
                   { next }
                 ')
 
-  if [ -n "$ssh_key" -a "$ssh_key" != 'null' \
-       -a ! -d "/adm-home/${adm_user}" ]; then
-    logmsg -p user.info \
-           "setting up home and ssh key for ${adm_user} from org.json"
-    mkdir -p /adm-home
-    cp -R /etc/skel "/adm-home/${adm_user}"
-    install -d -o "$adm_user" -g puavo-os -m 700 "/adm-home/${adm_user}/.ssh"
-    printf "%s\n" "$ssh_key" > "/adm-home/${adm_user}/.ssh/authorized_keys"
+  if [ -n "$ssh_key" -a "$ssh_key" != 'null' ]; then
+    if [ ! -d "/adm-home/${adm_user}" ]; then
+      logmsg -p user.info \
+             "setting up home directory for ${adm_user} from org.json"
+      mkdir -p /adm-home
+      cp -R /etc/skel "/adm-home/${adm_user}"
+    fi
+
+    ssh_dir="/adm-home/${adm_user}/.ssh"
+    ssh_key_path="${ssh_dir}/authorized_keys"
+
+    install -d -o "$adm_user" -g puavo-os -m 700 "$ssh_dir"
+    printf "%s\n" "$ssh_key" > "${ssh_key_path}.tmp"
+    replace_if_changed "$ssh_key_path" "${ssh_key_path}.tmp"
+
+    # do these always, especially chown is needed in case UID has changed
     chmod 600 "/adm-home/${adm_user}/.ssh/authorized_keys"
     chown -R "${adm_user}:puavo-os" "/adm-home/${adm_user}"
     chmod 750 "/adm-home/${adm_user}"
