@@ -758,7 +758,7 @@ class packages {
 
     '5.10.0-0.bpo.8-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module ],
-      package_name => 'linux-image-5.10.0-0.bpo.8-amd64-unsigned';
+      package_name => 'linux-image-5.10.0-0.bpo.8-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by
