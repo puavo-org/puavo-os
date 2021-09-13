@@ -22,7 +22,7 @@ class xorg::keyboard_layouts {
       source  => 'puppet:///modules/xorg/xkb/symbols/fi';
 
     "${xkb_dir}/symbols/ru":
-      require => [ Dpkg::Simpledivert["${xkb_dir}/symbols/fi"]
+      require => [ Dpkg::Simpledivert["${xkb_dir}/symbols/ru"]
                  , Package['xkb-data'] ],
       source  => 'puppet:///modules/xorg/xkb/symbols/ru';
   }
