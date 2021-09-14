@@ -1,0 +1,4 @@
+# Add all hidraw devices as root:plugdev 0660.
+# There are some Chrome extensions such as Vernier Data Analysis
+# that need this.
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", GROUP="plugdev", MODE="0660"
