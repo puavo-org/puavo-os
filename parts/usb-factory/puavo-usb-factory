@@ -1282,12 +1282,9 @@ proc setup_content_dir_version_ui {content_dir content_id} {
   }
   write_file $requested_version_path $requested_version
 
-  # ...
-  # XXX what about this puavo_conf_key ?  Just one for all?
-  # XXX should this key be read from the content directory ?
-  set puavo_conf_key [ui_msg __version_puavo_conf_key]
   set puavo_conf_requested_version ""
   catch {
+    set puavo_conf_key [string trim [read_file "${content_dir}/PUAVOCONF_KEY"]]
     set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key]
   }
 
@@ -1431,9 +1428,14 @@ font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
 
 # ui messages and background image
 
-# start download image
-download_images
-after 3000      ;# wait a bit so that download_images sets up UI.json
+# setup downloader and content dirs
+try {
+  exec puavo-download-usb-factory-images --setup
+} on error {errmsg} {
+  logger -p user.err \
+         "error in running :: puavo-download-usb-factory-images --setup"
+  exit 1
+}
 
 set content_dir_paths ""
 try {
@@ -1578,5 +1580,7 @@ if {$calibration_in_progress} {
 } else {
   switch_ui_mode normal
 }
+
+download_images
 
 logger -p user.info "gui done, processing events"
