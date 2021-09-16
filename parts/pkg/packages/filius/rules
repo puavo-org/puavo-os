@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+links='
+  /usr/bin/filius
+  /usr/share/applications/filius.desktop
+  /usr/share/doc/filius
+  /usr/share/filius
+  /usr/share/mime/packages/application-filius-project.xml
+  /usr/share/pixmaps/filius32.png
+  /etc/filius
+'
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+    for f in $links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fns -T "${upstream_dir}${f}" "$f"
+    done
+    ;;
+  unconfigure)
+    rm -f $links
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac

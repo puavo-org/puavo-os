@@ -27,6 +27,7 @@ packagedirs += eclipse
 packagedirs += ekapeli-alku
 packagedirs += enchanting
 packagedirs += extra-xkb-symbols
+packagedirs += filius
 packagedirs += firefox
 packagedirs += flashforge-flashprint
 packagedirs += gdevelop
