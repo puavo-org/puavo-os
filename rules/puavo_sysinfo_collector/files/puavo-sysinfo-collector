@@ -119,41 +119,52 @@ class SystemInfoCollector < DBus::Object
           # named predictably, like "sda", or "nvme0n1" or even
           # "mmcblk-something".
           begin
-            partitions = Facter.value(:blockdevices)
-            partitions = '' if partitions.nil?
+            block_devices = Facter.value(:blockdevices)
+            block_devices = '' if block_devices.nil?
           rescue StandardError => e
-            warn "could not list partitions: #{e}"
-            partitions = ''
+            warn "could not list block_devices: #{e}"
+            block_devices = ''
           end
 
-          size = -1
+          main_disk_drive = nil
           model = nil
+          size = -1
 
           begin
-            partitions.split(',').each do |part|
-              next unless part.include?('sda') || part.include?('nvme') || part.include?('mmcblk')
+            block_devices.split(',').each do |this_device|
+              next unless this_device.include?('mmcblk')    \
+                            || this_device.include?('nvme') \
+                            || this_device.include?('sda')
 
-              this_size = Facter.value("blockdevice_#{part}_size").to_i
-              this_model = Facter.value("blockdevice_#{part}_model")
+              this_size  = Facter.value("blockdevice_#{this_device}_size").to_i
+              this_model = Facter.value("blockdevice_#{this_device}_model")
 
               if this_size > size
-                size = this_size
+                main_disk_drive = this_device
                 model = this_model
+                size  = this_size
               end
             end
           rescue StandardError => e
-            warn "could not parse partition info: #{e}"
-            size = -1
+            warn "could not parse device info: #{e}"
             model = nil
+            size  = -1
           end
 
-          if size == -1 && model.nil?
-            # no disks at all?
-            data[:blockdevice_sda_size] = 0
-            data[:blockdevice_sda_model] = ''
-          else
-            data[:blockdevice_sda_size] = size
-            data[:blockdevice_sda_model] = model
+          data[:blockdevice_sda_model] = model || ''
+          data[:blockdevice_sda_size]  = (size != -1) ? size : 0
+
+          data[:blockdevice_sda_smart] = nil
+          if main_disk_drive then
+            begin
+              cmd = [ '/usr/sbin/smartctl', '-a', '--json',
+                        "/dev/#{ main_disk_drive }" ]
+              smartctl_output, status = Open3.capture2(*cmd)
+              raise "error running #{ cmd.join(' ') }" unless status.success?
+              data[:blockdevice_sda_smart] = JSON.parse(smartctl_output)
+            rescue StandardError => e
+              warn "could not determine smartctl data: #{e}"
+            end
           end
 
           # SSD or spinning platters?
