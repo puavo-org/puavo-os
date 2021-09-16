@@ -1359,6 +1359,15 @@ proc update_content_dirs_ui {visible} {
     }
   }
 
+  foreach content_id [dict values $content_ids] {
+    .f.content_dirs.$content_id.number.by_puavo_conf  \
+      configure -background $bg_color
+    .f.content_dirs.$content_id.number.latest \
+      configure -background $bg_color
+    .f.content_dirs.$content_id.number.version.button \
+      configure -background $bg_color
+  }
+
   pack .f.content_dirs.series -anchor w -pady 10
   pack .f.content_dirs -after .f.disks -side right -anchor w -padx 10
 }
