@@ -1203,52 +1203,16 @@ proc setup_styles {} {
   ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 }
 
-proc setup_content_dir_version_ui {content_dir content_id} {
+proc update_requested_versions {content_dir content_id} {
   global bg_image requested_versions requested_version_types \
          requested_version_values
 
-  set bg_color [dict get $bg_image bg_color]
-  set button_opts [list -background         $bg_color     \
-                        -font               smallInfoFont \
-                        -highlightthickness 0]
-
+  # XXX this should not presume the user interface elements
   set ui_frame .f.content_dirs.$content_id
 
-  ttk::frame $ui_frame -style Changes.TFrame
-
-  ttk::label $ui_frame.label -text [file tail $content_dir] \
-                             -font infoFont
-
-  ttk::frame $ui_frame.number -style Changes.TFrame
-  ttk::frame $ui_frame.number.version
-
-  radiobutton $ui_frame.number.by_puavo_conf \
-              {*}$button_opts -value "by puavo-conf" \
-              -variable requested_version_types($content_id)
-  radiobutton $ui_frame.number.latest {*}$button_opts \
-              -text [ui_msg version latest] -value "latest" \
-              -variable requested_version_types($content_id)
-  radiobutton $ui_frame.number.version.button \
-              {*}$button_opts \
-              -text "[ui_msg version {this version}]:" \
-              -value "this version" \
-              -variable requested_version_types($content_id)
-  ttk::entry $ui_frame.number.version.number \
-             -justify center -textvariable requested_version_any \
-             -font smallInfoFont -width 6 \
-             -textvariable requested_version_values($content_id)
-  pack $ui_frame.label -anchor w
-  pack $ui_frame.number -anchor w
-  pack $ui_frame.number.by_puavo_conf \
-       $ui_frame.number.latest \
-       $ui_frame.number.version \
-       -anchor w
-  pack $ui_frame.number.version.button -anchor w -side left
-  pack $ui_frame.number.version.number -anchor w -side left
-
-  # XXX does everything that is done here make sense?
   set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
+  # XXX this is probably only in setup phase?
   if {$requested_version_types($content_id) eq ""} {
     set requested_version ""
     catch { set requested_version [read_file $requested_version_path] }
@@ -1280,6 +1244,7 @@ proc setup_content_dir_version_ui {content_dir content_id} {
       set requested_version_value ""
     }
   }
+
   write_file $requested_version_path $requested_version
 
   set puavo_conf_requested_version ""
@@ -1301,23 +1266,60 @@ proc setup_content_dir_version_ui {content_dir content_id} {
       set requested_version_values($content_dir) $requested_version
     }
   }
+}
+
+proc setup_content_dir_version_ui {content_dir content_id} {
+  global bg_image requested_version_types requested_version_values
+
+  set bg_color [dict get $bg_image bg_color]
+  set button_opts [list -background         $bg_color     \
+                        -font               smallInfoFont \
+                        -highlightthickness 0]
+
+  set ui_frame .f.content_dirs.$content_id
+
+  ttk::frame $ui_frame -style Changes.TFrame
+
+  ttk::label $ui_frame.label -text [file tail $content_dir] \
+                             -font infoFont
+
+  ttk::frame $ui_frame.number -style Changes.TFrame
+  ttk::frame $ui_frame.number.version
+
+  radiobutton $ui_frame.number.by_puavo_conf \
+              {*}$button_opts -value "by puavo-conf" \
+              -variable requested_version_types($content_id)
+  radiobutton $ui_frame.number.latest {*}$button_opts \
+              -text [ui_msg version latest] -value "latest" \
+              -variable requested_version_types($content_id)
+  radiobutton $ui_frame.number.version.button \
+              {*}$button_opts \
+              -text "[ui_msg version {this version}]:" \
+              -value "this version" \
+              -variable requested_version_types($content_id)
+  ttk::entry $ui_frame.number.version.number \
+             -justify center -font smallInfoFont -width 6 \
+             -textvariable requested_version_values($content_id)
+  pack $ui_frame.label -anchor w
+  pack $ui_frame.number -anchor w
+  pack $ui_frame.number.by_puavo_conf \
+       $ui_frame.number.latest \
+       $ui_frame.number.version \
+       -anchor w
+  pack $ui_frame.number.version.button -anchor w -side left
+  pack $ui_frame.number.version.number -anchor w -side left
 
   $ui_frame.number.by_puavo_conf  configure -background $bg_color
   $ui_frame.number.latest         configure -background $bg_color
   $ui_frame.number.version.button configure -background $bg_color
 
   pack $ui_frame -anchor w -pady 10
+
+  update_requested_versions $content_dir $content_id
 }
 
 proc update_content_dirs_ui {visible} {
   global bg_image content_dir_paths
-
-  if {!$visible} {
-    pack forget .f.content_dirs
-    return
-  }
-
-  set bg_color [dict get $bg_image bg_color]
 
   set new_content_dir_paths [get_available_content_dirs]
 
@@ -1330,6 +1332,8 @@ proc update_content_dirs_ui {visible} {
     ]
     dict set content_ids $content_dir $content_id
   }
+
+  set bg_color [dict get $bg_image bg_color]
 
   if {$content_dir_paths ne $new_content_dir_paths} {
     catch { destroy .f.content_dirs }
@@ -1359,13 +1363,26 @@ proc update_content_dirs_ui {visible} {
     }
   }
 
-  foreach content_id [dict values $content_ids] {
+  dict for {content_dir content_id} $content_ids {
     .f.content_dirs.$content_id.number.by_puavo_conf  \
       configure -background $bg_color
     .f.content_dirs.$content_id.number.latest \
       configure -background $bg_color
     .f.content_dirs.$content_id.number.version.button \
       configure -background $bg_color
+  }
+
+  dict for {content_dir content_id} $content_ids {
+    update_requested_versions $content_dir $content_id
+  }
+
+  # XXX it is probably not very optimal to build UI and then just hide it
+  # XXX when we can know in the first place we should hide it
+  # XXX but this is for update_requested_versions to happen and that can
+  # XXX happen only after setup_content_dir_version_ui has happened
+  if {!$visible} {
+    pack forget .f.content_dirs
+    return
   }
 
   pack .f.content_dirs.series -anchor w -pady 10
