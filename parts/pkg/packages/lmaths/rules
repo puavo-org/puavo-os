@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+
+    ln -fns "$upstream_dir" /opt/lmaths
+    ln -fns "${upstream_dir}/lmaths.png" /usr/share/icons/lmaths.png
+    cat <<EOF > /usr/share/applications/lmaths.desktop
+[Desktop Entry]
+Name=LMathS
+Exec=/opt/lmaths/LMathS.AppImage
+Type=Application
+Terminal=false
+Icon=lmaths
+StartupNotify=true
+Categories=Education;
+EOF
+    ;;
+  unconfigure)
+    rm -f /opt/lmaths \
+          /usr/share/applications/lmaths.desktop \
+          /usr/share/icons/lmaths.png
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    cp -p "$upstream_pack" "${upstream_dir}/LMathS.AppImage"
+    chmod 755 "${upstream_dir}/LMathS.AppImage"
+    cp -p lmaths.png "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac
