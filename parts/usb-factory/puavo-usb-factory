@@ -112,7 +112,7 @@ proc handle_image_download {content_id} {
     } else {
       after 3600000 download_images; # success, try again after 1 hour
     }
-    dict set images_downloader_fhs $content_id ""
+    dict unset images_downloader_fhs $content_id
   }
 }
 
@@ -1207,19 +1207,16 @@ proc update_requested_versions {content_dir content_id} {
   global bg_image requested_versions requested_version_types \
          requested_version_values
 
-  # XXX this should not presume the user interface elements
-  set ui_frame .f.content_dirs.$content_id
-
   set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
-  # XXX this is probably only in setup phase?
-  if {$requested_version_types($content_id) eq ""} {
+  if {[array names requested_version_types -exact $content_id] eq ""} {
+    # values for $content_id is not yet set, initialize
     set requested_version ""
     catch { set requested_version [read_file $requested_version_path] }
     set requested_versions($content_id) $requested_version
     set requested_version_values($content_id) ""
 
-    switch -- $requested_versions($content_id) {
+    switch -- $requested_version {
       {by puavo-conf} {
         set requested_version_types($content_id) "by puavo-conf"
       }
@@ -1233,39 +1230,19 @@ proc update_requested_versions {content_dir content_id} {
     }
   }
 
-  set requested_version $requested_version_types($content_id)
-  if {$requested_version eq "this version"} {
+  set requested_versions($content_id) $requested_version_types($content_id)
+  if {$requested_versions($content_id) eq "this version"} {
     set trimmed_value [string trim $requested_version_values($content_id)]
     if {$trimmed_value ne ""} {
-      set requested_version       $trimmed_value
-      set requested_version_value $trimmed_value
+      set requested_versions($content_id)      $trimmed_value
+      set requested_version_value($content_id) $trimmed_value
     } else {
-      set requested_version "by puavo-conf"
-      set requested_version_value ""
+      set requested_versions($content_id) "by puavo-conf"
+      set requested_versions_value($content_id) ""
     }
   }
 
-  write_file $requested_version_path $requested_version
-
-  set puavo_conf_requested_version ""
-  catch {
-    set puavo_conf_key [string trim [read_file "${content_dir}/PUAVOCONF_KEY"]]
-    set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key]
-  }
-
-  set by_puavo_conf_msg \
-      "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
-  $ui_frame.number.by_puavo_conf configure -text $by_puavo_conf_msg
-
-  switch -- $requested_version {
-    ""              -
-    {by puavo-conf} { $ui_frame.number.by_puavo_conf invoke }
-    latest { $ui_frame.number.latest invoke }
-    default {
-      $ui_frame.number.version.button invoke
-      set requested_version_values($content_dir) $requested_version
-    }
-  }
+  write_file $requested_version_path $requested_versions($content_id)
 }
 
 proc setup_content_dir_version_ui {content_dir content_id} {
@@ -1314,12 +1291,10 @@ proc setup_content_dir_version_ui {content_dir content_id} {
   $ui_frame.number.version.button configure -background $bg_color
 
   pack $ui_frame -anchor w -pady 10
-
-  update_requested_versions $content_dir $content_id
 }
 
 proc update_content_dirs_ui {visible} {
-  global bg_image content_dir_paths
+  global bg_image content_dir_paths requested_versions requested_version_values
 
   set new_content_dir_paths [get_available_content_dirs]
 
@@ -1331,6 +1306,15 @@ proc update_content_dirs_ui {visible} {
       ]
     ]
     dict set content_ids $content_dir $content_id
+  }
+
+  dict for {content_dir content_id} $content_ids {
+    update_requested_versions $content_dir $content_id
+  }
+
+  if {!$visible} {
+    pack forget .f.content_dirs
+    return
   }
 
   set bg_color [dict get $bg_image bg_color]
@@ -1356,11 +1340,6 @@ proc update_content_dirs_ui {visible} {
       pack .f.content_dirs.series.$content_id -anchor w
     }
     set content_dir_paths $new_content_dir_paths
-  } else {
-    foreach content_id [dict values $content_ids] {
-      .f.content_dirs.series.$content_id \
-        configure -background $bg_color
-    }
   }
 
   dict for {content_dir content_id} $content_ids {
@@ -1370,19 +1349,32 @@ proc update_content_dirs_ui {visible} {
       configure -background $bg_color
     .f.content_dirs.$content_id.number.version.button \
       configure -background $bg_color
-  }
+    .f.content_dirs.series.$content_id configure -background $bg_color
 
-  dict for {content_dir content_id} $content_ids {
-    update_requested_versions $content_dir $content_id
-  }
+    set puavo_conf_requested_version ""
+    catch {
+      set puavo_conf_key [
+        string trim [read_file "${content_dir}/PUAVOCONF_KEY"]
+      ]
+      set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key]
+    }
 
-  # XXX it is probably not very optimal to build UI and then just hide it
-  # XXX when we can know in the first place we should hide it
-  # XXX but this is for update_requested_versions to happen and that can
-  # XXX happen only after setup_content_dir_version_ui has happened
-  if {!$visible} {
-    pack forget .f.content_dirs
-    return
+    set ui_frame .f.content_dirs.$content_id
+
+    set by_puavo_conf_msg \
+        "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
+    $ui_frame.number.by_puavo_conf configure -text $by_puavo_conf_msg
+
+    switch -- $requested_versions($content_id) {
+      ""              -
+      {by puavo-conf} { $ui_frame.number.by_puavo_conf invoke }
+      latest { $ui_frame.number.latest invoke }
+      default {
+        $ui_frame.number.version.button invoke
+        set requested_version_values($content_dir) \
+            $requested_versions($content_id)
+      }
+    }
   }
 
   pack .f.content_dirs.series -anchor w -pady 10
