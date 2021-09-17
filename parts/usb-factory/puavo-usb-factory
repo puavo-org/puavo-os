@@ -1275,7 +1275,7 @@ proc setup_content_dir_version_ui {content_dir content_id} {
               -value "this version" \
               -variable requested_version_types($content_id)
   ttk::entry $ui_frame.number.version.number \
-             -justify center -font smallInfoFont -width 6 \
+             -justify center -font smallInfoFont -width 16 \
              -textvariable requested_version_values($content_id)
   pack $ui_frame.label -anchor w
   pack $ui_frame.number -anchor w
