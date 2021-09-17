@@ -6,13 +6,13 @@ command=$1
 shift
 
 links='
+  /etc/filius
   /usr/bin/filius
   /usr/share/applications/filius.desktop
   /usr/share/doc/filius
   /usr/share/filius
   /usr/share/mime/packages/application-filius-project.xml
   /usr/share/pixmaps/filius32.png
-  /etc/filius
 '
 
 case "${command}" in
