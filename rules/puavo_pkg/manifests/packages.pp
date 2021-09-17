@@ -19,6 +19,7 @@ class puavo_pkg::packages {
                                , 'openscad-nightly' ]
   $buster_specific_packages  = [ 'celestia'
                                , 'eclipse'
+                               , 'filius'
                                , 'netbeans'
                                , 'supertuxkart'
                                , 'tela-icon-theme'
@@ -51,6 +52,7 @@ class puavo_pkg::packages {
 			, 'idid'
 			, 'kojo'
 			, 'launcherone'
+			, 'lmaths'
 			, 'mafynetti'
 			, 'marvinsketch'
 			, 'mattermost-desktop'
