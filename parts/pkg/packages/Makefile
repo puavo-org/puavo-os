@@ -41,6 +41,7 @@ packagedirs += idid
 packagedirs += kdenlive-appimage
 packagedirs += kojo
 packagedirs += launcherone
+packagedirs += lmaths
 packagedirs += mafynetti
 packagedirs += marvinsketch
 packagedirs += mattermost-desktop
