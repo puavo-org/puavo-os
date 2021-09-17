@@ -31,6 +31,7 @@ set content_ids [dict create]
 
 set images_downloader_fhs       [dict create]
 set images_downloading_versions [dict create]
+set upcoming_download_event ""
 
 array set requested_versions       [list]
 array set requested_version_types  [list]
@@ -72,7 +73,12 @@ proc read_file {path} {
 
 proc download_images {} {
   global content_ids images_downloader_fhs images_downloading_versions \
-         requested_versions
+         requested_versions upcoming_download_event
+
+  if {$upcoming_download_event ne ""} {
+    after cancel $upcoming_download_event
+    set upcoming_download_event ""
+  }
 
   dict for {content_dir content_id} $content_ids {
     set requested_version $requested_versions($content_id)
@@ -104,16 +110,20 @@ proc download_images {} {
 }
 
 proc handle_image_download {content_id} {
-  global images_downloader_fhs
+  global images_downloader_fhs upcoming_download_event
 
   set fh [dict get $images_downloader_fhs $content_id]
   catch { read $fh }
   if {[eof $fh]} {
     fconfigure $fh -blocking 1
     if {[catch { close $fh }]} {
-      after 30000 download_images;   # failed, try again after 30 seconds
+      set upcoming_download_event [
+        after 30000 download_images;   # failed, try again after 30 seconds
+      ]
     } else {
-      after 3600000 download_images; # success, try again after 1 hour
+      set upcoming_download_event [
+        after 3600000 download_images; # success, try again after 1 hour
+      ]
     }
     dict unset images_downloader_fhs $content_id
   }
