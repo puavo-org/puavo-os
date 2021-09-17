@@ -1448,7 +1448,7 @@ font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
 
 # setup downloader and content dirs
 try {
-  exec puavo-download-usb-factory-images --setup
+  exec -ignorestderr puavo-download-usb-factory-images --setup
 } on error {errmsg} {
   logger -p user.err \
          "error in running :: puavo-download-usb-factory-images --setup"
