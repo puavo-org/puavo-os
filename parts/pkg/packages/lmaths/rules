@@ -10,7 +10,7 @@ case "$command" in
     upstream_dir=$1
 
     ln -fns "$upstream_dir" /opt/lmaths
-    ln -fns "${upstream_dir}/lmaths.png" /usr/share/icons/lmaths.png
+    ln -fns "${upstream_dir}/lmath.png" /usr/share/icons/lmath.png
     cat <<EOF > /usr/share/applications/lmaths.desktop
 [Desktop Entry]
 Name=LMathS
@@ -25,7 +25,7 @@ EOF
   unconfigure)
     rm -f /opt/lmaths \
           /usr/share/applications/lmaths.desktop \
-          /usr/share/icons/lmaths.png
+          /usr/share/icons/lmath.png
     ;;
   unpack)
     upstream_pack=$1
@@ -33,7 +33,7 @@ EOF
 
     cp -p "$upstream_pack" "${upstream_dir}/LMathS.AppImage"
     chmod 755 "${upstream_dir}/LMathS.AppImage"
-    cp -p lmaths.png "$upstream_dir"
+    cp -p lmath.png "$upstream_dir"
     ;;
   *)
     ;;
