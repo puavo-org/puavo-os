@@ -45,5 +45,8 @@ class packages::backports {
 
                   , 'musescore3'
                   , 'musescore3-common'
-                  , 'musescore-general-soundfont' ]
+                  , 'musescore-general-soundfont'
+
+                    # needed by puavo-sysinfo-collector (in Buster)
+                  , 'smartmontools' ]
 }
