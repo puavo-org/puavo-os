@@ -848,14 +848,14 @@ proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
   } else {
     set bg_color [dict get $bg_image bg_color]
     canvas $port_ui -background $bg_color -height 42 -highlightthickness 0 \
-                    -width 215
+                    -width 240
     $port_ui create image 0 22 -image flash_drive_white -anchor w
 
     if {$port_state eq ""} { set port_state nomedia }
     set_usbicon_state $devpath $port_state
 
     $port_ui create image 0 22 -image "${port_ui}_overlay_image" -anchor w
-    $port_ui create text  120 18 -font smallInfoFont -tags port_label \
+    $port_ui create text  132 18 -font smallInfoFont -tags port_label \
              -text $port_labels($port_id)
   }
 
