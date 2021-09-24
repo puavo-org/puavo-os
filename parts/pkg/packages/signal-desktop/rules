@@ -28,9 +28,6 @@ case "$command" in
       mkdir -p "$(dirname "$f")"
       ln -fns -T "${upstream_dir}/${f}" "$f"
     done
-
-    chown root:root "${upstream_dir}/opt/Signal/chrome-sandbox"
-    chmod 4755 "${upstream_dir}/opt/Signal/chrome-sandbox"
     ;;
   unconfigure)
     rm -rf $signal_links
