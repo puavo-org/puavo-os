@@ -19,6 +19,7 @@ class puavo_pkg::packages {
                                , 'openscad-nightly' ]
   $buster_specific_packages  = [ 'celestia'
                                , 'eclipse'
+                               , 'filius'
                                , 'netbeans'
                                , 'tela-icon-theme'
                                , 'ubuntu-firmware'
@@ -86,6 +87,7 @@ class puavo_pkg::packages {
                               , 'gdevelop'
                               , 'hp-bios-utils'
                               , 'kdenlive-appimage'
+			      , 'lmaths'
                               , 'otto-blockly'
                               , 'promethean'
                               , 'prusaslicer'

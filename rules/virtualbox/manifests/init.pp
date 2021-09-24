@@ -1,4 +1,5 @@
 class virtualbox {
+  include ::dpkg
   include ::packages
 
   define build_driver ($kernel_version) {
@@ -8,20 +9,25 @@ class virtualbox {
 
     exec {
       "create virtualbox driver modules for kernel $kernel_version":
-        command => "/usr/lib/virtualbox/puavo-vboxdrv.sh puavo_build_modules ${kernel_version} && /usr/bin/touch ${sentinel_path}",
+        command => "/usr/lib/virtualbox/vboxdrv.sh puavo_build_modules ${kernel_version} && /usr/bin/touch ${sentinel_path}",
         creates => $sentinel_path,
-        require => [ File['/usr/lib/virtualbox/puavo-vboxdrv.sh']
+        require => [ File['/usr/lib/virtualbox/vboxdrv.sh']
                    , Kernels::All_kernel_links[$label]
                    , Package['virtualbox-6.1'] ];
     }
 
   }
 
+  ::dpkg::simpledivert {
+    '/usr/lib/virtualbox/vboxdrv.sh':
+      require => Package['virtualbox-6.1'];
+  }
+
   file {
-    '/usr/lib/virtualbox/puavo-vboxdrv.sh':
+    '/usr/lib/virtualbox/vboxdrv.sh':
       mode    => '0755',
-      require => Package['virtualbox-6.1'],
-      source  => 'puppet:///modules/virtualbox/puavo-vboxdrv.sh';
+      require => ::Dpkg::Simpledivert['/usr/lib/virtualbox/vboxdrv.sh'],
+      source  => 'puppet:///modules/virtualbox/vboxdrv.sh';
   }
 
   ::virtualbox::build_driver {

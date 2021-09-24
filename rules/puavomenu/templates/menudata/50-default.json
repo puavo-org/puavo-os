@@ -94,6 +94,9 @@
                 "id": "bluegriffon"
             }
         },
+        "bluej": {
+            "tags": "default"
+        },
         "brasero": {
             "name": {
                 "fi": "Brasero - CD/DVD -kirjoitus",
@@ -278,6 +281,9 @@
             "tags": "default"
         },
         "filezilla": {
+            "tags": "default"
+        },
+        "filius": {
             "tags": "default"
         },
         "firefox": {
@@ -567,6 +573,9 @@
                 "de": "LMMS - Software zur Musik-Produktion"
             },
             "tags": "default, audio"
+        },
+        "lmaths": {
+            "tags": "default"
         },
         "LoggerPro": {
             "name": "LoggerPro",
@@ -934,10 +943,17 @@
         "org.pitivi.Pitivi": {
             "tags": "default"
         },
-        "otava": {
+        "otava-oppilas": {
             "type": "web",
             "url": "https://oppilas.otava.fi/",
             "name": "Otava - Oppilaan maailma",
+            "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
+            "tags": "default, education"
+        },
+        "otava-opiskelija": {
+            "type": "web",
+            "url": "https://opiskelija.otava.fi/",
+            "name": "Otava - Opiskelijan maailma",
             "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
             "tags": "default, education"
         },
@@ -1699,6 +1715,8 @@
                 "tracker",
                 "LoggerPro",
                 "GlobiLab",
+                "filius",
+                "lmaths",
                 "io.github.wxmaxima_developers.wxMaxima",
                 "ti_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss",
@@ -2097,6 +2115,7 @@
                 "makecode",
                 "openroberta",
                 "bluegriffon",
+                "bluej",
                 "eclipse-cpp",
                 "eclipse-java",
                 "eclipse-javascript",
@@ -2190,7 +2209,8 @@
                 "makecode",
                 "kahoot",
                 "sanomapro",
-                "otava",
+                "otava-oppilas",
+                "otava-opiskelija",
                 "edison",
                 "unelmakoulu",
                 "pedanet",

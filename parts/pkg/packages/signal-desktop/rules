@@ -28,9 +28,6 @@ case "$command" in
       mkdir -p "$(dirname "$f")"
       ln -fns -T "${upstream_dir}/${f}" "$f"
     done
-
-    chown root:root "${upstream_dir}/opt/Signal/chrome-sandbox"
-    chmod 4755 "${upstream_dir}/opt/Signal/chrome-sandbox"
     ;;
   unconfigure)
     rm -rf $signal_links
@@ -40,6 +37,33 @@ case "$command" in
     upstream_dir=$2
 
     dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  download)
+    upstream_pack=$1
+    baseurl="https://updates.signal.org/desktop/apt"
+    tmpfile=$(mktemp)
+
+    wget \
+      --no-use-server-timestamps \
+      --no-cookies \
+      --output-document "$tmpfile" \
+      --progress=dot:mega \
+      "${baseurl}/dists/xenial/main/binary-amd64/Packages" || {
+      wget_err=$?
+      rm -f "$tmpfile" || true
+      [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
+      exit 1
+    }
+    poolpath=$(sed -r '0,/^Package: signal-desktop$/ d' "$tmpfile" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
+    rm -f "$tmpfile"
+    wget \
+      --no-use-server-timestamps \
+      --no-cookies \
+      --output-document "$upstream_pack" \
+      "${baseurl}/${poolpath}" || {
+      [ $? -eq 4 ] && exit 2 ## Network failure.
+      exit 1
+    }
     ;;
   *)
     ;;

@@ -6,12 +6,18 @@ request_confirmation=true
 use_secure_delete=false
 
 destroy_in_dir() {
-  local delete_cmd directory message
+  local delete_cmd directory force_insecure message
+
+  force_insecure=false
+  if [ "$1" = '--force-insecure' ]; then
+    force_insecure=true
+    shift
+  fi
 
   directory=$1
   message=$2
 
-  if $use_secure_delete; then
+  if ! $force_insecure && $use_secure_delete; then
     delete_cmd='srm -llrv'
   else
     delete_cmd='rm -vrf'
@@ -113,7 +119,9 @@ cd /
 # to Puavo through update-configuration).
 cat /dev/null > /state/etc/puavo/primary_user_override
 
-destroy_in_dir /images/puavo-pkg/      'Removing all puavo-pkgs'
+# we can speed up secure delete by not applying it to puavo-pkgs
+destroy_in_dir --force-insecure /images/puavo-pkg/ 'Removing all puavo-pkgs'
+
 destroy_in_dir /home/                  'Cleaning up /home'
 destroy_in_dir /state/etc/puavo/local/ 'Removing local configurations (made by user)'
 destroy_in_dir /state/var/cache/       'Cleaning up caches'

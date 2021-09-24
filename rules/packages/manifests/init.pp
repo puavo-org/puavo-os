@@ -504,7 +504,8 @@ class packages {
     [ 'gnome-icon-theme'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
-    , 'openclipart'
+    , 'openclipart-png'
+    , 'openclipart-svg'
     , 'oxygen-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
@@ -601,8 +602,6 @@ class packages {
     , 'libreoffice-gnome'
     , 'libreoffice-impress'
     , 'libreoffice-math'
-    # , 'libreoffice-pdfimport'                 # XXX missing from Bullseye
-    # , 'libreoffice-style-tango'               # XXX missing from Bullseye
     , 'libreoffice-writer'
     , 'libsasl2-modules'
     , 'libxcb-xtest0' #dependency for Zoom

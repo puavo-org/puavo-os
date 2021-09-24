@@ -26,11 +26,16 @@ set ui_messages {}
 array set rotating_port_labels ""
 array set port_labels ""
 set writable_labels false
-set images_downloading_version ""
-set requested_version ""
-set requested_version_type ""
-set requested_version_value ""
-set images_downloader_fh ""
+
+set content_ids [dict create]
+
+set images_downloader_fhs       [dict create]
+set images_downloading_versions [dict create]
+set upcoming_download_events    [dict create]
+
+array set requested_versions       [list]
+array set requested_version_types  [list]
+array set requested_version_values [list]
 
 array set paths [list \
   flash_drive_blue      /usr/share/puavo-usb-factory/flash-drive-blue.png    \
@@ -67,35 +72,62 @@ proc read_file {path} {
 }
 
 proc download_images {} {
-  global images_downloader_fh images_downloading_version requested_version
+  global content_ids images_downloader_fhs images_downloading_versions \
+         requested_versions upcoming_download_events
 
-  logger -p user.warning "starting download"
-
-  if {$images_downloader_fh ne ""} {
-    if {$requested_version eq $images_downloading_version} { return }
-
-    set pid [pid $images_downloader_fh]
-    catch { exec pkill -s $pid }
-    catch { close $images_downloader_fh }
-  }
-
-  set images_downloading_version $requested_version
-
-  set images_downloader_fh [
-    open "| setsid -w puavo-download-usb-factory-images"
-  ]
-  fconfigure $images_downloader_fh -blocking 0
-  fileevent $images_downloader_fh readable {
-    catch { read $images_downloader_fh }
-    if {[eof $images_downloader_fh]} {
-      fconfigure $images_downloader_fh -blocking 1
-      if {[catch { close $images_downloader_fh }]} {
-        after 30000 download_images      ; # failed, try again after 30 seconds
-      } else {
-        after 3600000 download_images    ; # success, try again after 1 hour
-      }
-      set images_downloader_fh ""
+  dict for {content_dir content_id} $content_ids {
+    if {[dict exists $upcoming_download_events $content_id]} {
+      after cancel [dict get $upcoming_download_events $content_id]
+      dict unset upcoming_download_events $content_id
     }
+
+    set requested_version $requested_versions($content_id)
+
+    if {[dict exists $images_downloader_fhs $content_id]} {
+      set images_downloading_version [
+        dict get $images_downloading_versions $content_id
+      ]
+      if {$images_downloading_version eq $requested_version} { return }
+
+      set fh [dict get $images_downloader_fhs $content_id]
+      set pid [pid $fh]
+      catch { exec pkill -s $pid }
+      catch { close $fh }
+    }
+
+    dict set images_downloading_versions $content_id $requested_version
+
+    logger -p user.warning "starting download for $content_dir"
+
+    set fh [
+      open "|[list setsid -w puavo-download-usb-factory-images $content_dir]"
+    ]
+    dict set images_downloader_fhs $content_id $fh
+
+    fconfigure $fh -blocking 0
+    fileevent $fh readable [list handle_image_download $content_id]
+  }
+}
+
+proc handle_image_download {content_id} {
+  global images_downloader_fhs upcoming_download_events
+
+  set fh [dict get $images_downloader_fhs $content_id]
+  catch { read $fh }
+  if {[eof $fh]} {
+    if {[dict exists $upcoming_download_events $content_id]} {
+      after cancel [dict get $upcoming_download_events $content_id]
+    }
+    fconfigure $fh -blocking 1
+    if {[catch { close $fh }]} {
+      set wait_ms 30000         ; # failed, try again after 30 seconds
+    } else {
+      set wait_ms 3600000       ; # success, try again after 1 hour
+    }
+    dict set upcoming_download_events $content_id [
+      after $wait_ms download_images
+    ]
+    dict unset images_downloader_fhs $content_id
   }
 }
 
@@ -818,14 +850,14 @@ proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
   } else {
     set bg_color [dict get $bg_image bg_color]
     canvas $port_ui -background $bg_color -height 42 -highlightthickness 0 \
-                    -width 215
+                    -width 240
     $port_ui create image 0 22 -image flash_drive_white -anchor w
 
     if {$port_state eq ""} { set port_state nomedia }
     set_usbicon_state $devpath $port_state
 
     $port_ui create image 0 22 -image "${port_ui}_overlay_image" -anchor w
-    $port_ui create text  120 18 -font smallInfoFont -tags port_label \
+    $port_ui create text  132 18 -font smallInfoFont -tags port_label \
              -text $port_labels($port_id)
   }
 
@@ -1170,45 +1202,8 @@ proc update_content_dir {} {
   }
 
   update_image_info
-  update_requested_version_ui true
+  update_content_dirs_ui true
   queue_background_resizing 0
-}
-
-proc setup_requested_version_ui {} {
-  global bg_image content_dir requested_version_type requested_version_value
-
-  set button_opts [list -background         [dict get $bg_image bg_color] \
-                        -font               smallInfoFont \
-                        -highlightthickness 0]
-
-  ttk::frame .f.requested_version -style Changes.TFrame
-  ttk::frame .f.requested_version.number -style Changes.TFrame
-
-  ttk::frame .f.requested_version.number.version
-  radiobutton .f.requested_version.number.by_puavo_conf {*}$button_opts \
-    -value "by puavo-conf" -variable requested_version_type
-  radiobutton .f.requested_version.number.latest {*}$button_opts \
-    -text [ui_msg version latest] -value "latest" \
-    -variable requested_version_type
-  radiobutton .f.requested_version.number.version.button {*}$button_opts \
-    -text "[ui_msg version {this version}]:" -value "this version" \
-    -variable requested_version_type
-  ttk::entry .f.requested_version.number.version.number \
-    -justify center -textvariable requested_version_any -font smallInfoFont \
-    -width 6 -textvariable requested_version_value
-
-  ttk::frame .f.requested_version.series -style Changes.TFrame
-
-  update_requested_version_ui false
-
-  pack .f.requested_version.number -anchor w
-  pack .f.requested_version.series -anchor w -pady 30 -padx 10
-  pack .f.requested_version.number.by_puavo_conf \
-       .f.requested_version.number.latest \
-       .f.requested_version.number.version \
-       -anchor w -padx 10 -pady 2
-  pack .f.requested_version.number.version.button -anchor w -side left
-  pack .f.requested_version.number.version.number -anchor w -side left -padx 3
 }
 
 proc setup_styles {} {
@@ -1223,106 +1218,183 @@ proc setup_styles {} {
   ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 }
 
-proc update_requested_version_ui {visible} {
-  global bg_image content_dir_paths requested_version \
-         requested_version_type requested_version_value
+proc update_requested_versions {content_dir content_id} {
+  global bg_image requested_versions requested_version_types \
+         requested_version_values
 
-  set new_content_dir_paths [get_available_content_dirs]
-  set requested_version_path_list [
-    lmap p $new_content_dir_paths { format "%s/REQUESTED_VERSION" $p }
-  ]
+  set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
-  # initial setup
-  if {$requested_version_type eq ""} {
-    catch {
-      set requested_version [read_file [lindex $requested_version_path_list 0]]
-    }
-    set requested_version_value ""
+  if {[array names requested_version_types -exact $content_id] eq ""} {
+    # values for $content_id is not yet set, initialize
+    set requested_version ""
+    catch { set requested_version [read_file $requested_version_path] }
+    set requested_versions($content_id) $requested_version
+    set requested_version_values($content_id) ""
+
     switch -- $requested_version {
       {by puavo-conf} {
-        set requested_version_type "by puavo-conf"
+        set requested_version_types($content_id) "by puavo-conf"
       }
       latest {
-        set requested_version_type "latest"
+        set requested_version_types($content_id) "latest"
       }
       default {
-        set requested_version_type "this version"
-        set requested_version_value $requested_version
+        set requested_version_types($content_id) "this version"
+        set requested_version_values($content_id) $requested_version
       }
     }
+  }
+
+  set requested_versions($content_id) $requested_version_types($content_id)
+  if {$requested_versions($content_id) eq "this version"} {
+    set trimmed_value [string trim $requested_version_values($content_id)]
+    if {$trimmed_value ne ""} {
+      set requested_versions($content_id)      $trimmed_value
+      set requested_version_value($content_id) $trimmed_value
+    } else {
+      set requested_versions($content_id) "by puavo-conf"
+      set requested_versions_value($content_id) ""
+    }
+  }
+
+  write_file $requested_version_path $requested_versions($content_id)
+}
+
+proc setup_content_dir_version_ui {content_dir content_id} {
+  global bg_image requested_version_types requested_version_values
+
+  set bg_color [dict get $bg_image bg_color]
+  set button_opts [list -background         $bg_color     \
+                        -font               smallInfoFont \
+                        -highlightthickness 0]
+
+  set ui_frame .f.content_dirs.$content_id
+
+  ttk::frame $ui_frame -style Changes.TFrame
+
+  ttk::label $ui_frame.label -text [file tail $content_dir] \
+                             -font infoFont
+
+  ttk::frame $ui_frame.number -style Changes.TFrame
+  ttk::frame $ui_frame.number.version
+
+  radiobutton $ui_frame.number.by_puavo_conf \
+              {*}$button_opts -value "by puavo-conf" \
+              -variable requested_version_types($content_id)
+  radiobutton $ui_frame.number.latest {*}$button_opts \
+              -text [ui_msg version latest] -value "latest" \
+              -variable requested_version_types($content_id)
+  radiobutton $ui_frame.number.version.button \
+              {*}$button_opts \
+              -text "[ui_msg version {this version}]:" \
+              -value "this version" \
+              -variable requested_version_types($content_id)
+  ttk::entry $ui_frame.number.version.number \
+             -justify center -font smallInfoFont -width 16 \
+             -textvariable requested_version_values($content_id)
+  pack $ui_frame.label -anchor w
+  pack $ui_frame.number -anchor w
+  pack $ui_frame.number.by_puavo_conf \
+       $ui_frame.number.latest \
+       $ui_frame.number.version \
+       -anchor w
+  pack $ui_frame.number.version.button -anchor w -side left
+  pack $ui_frame.number.version.number -anchor w -side left
+
+  $ui_frame.number.by_puavo_conf  configure -background $bg_color
+  $ui_frame.number.latest         configure -background $bg_color
+  $ui_frame.number.version.button configure -background $bg_color
+
+  pack $ui_frame -anchor w -pady 10
+}
+
+proc update_content_dirs_ui {visible} {
+  global bg_image content_dir_paths content_ids requested_versions \
+         requested_version_values
+
+  set new_content_dir_paths [get_available_content_dirs]
+
+  set content_ids [dict create]
+  foreach content_dir $new_content_dir_paths {
+    set content_id [
+      string tolower [
+        regsub -all {[^[:alpha:]]+} [file tail $content_dir] ""
+      ]
+    ]
+    dict set content_ids $content_dir $content_id
+  }
+
+  dict for {content_dir content_id} $content_ids {
+    update_requested_versions $content_dir $content_id
   }
 
   if {!$visible} {
-    pack forget .f.requested_version
-
-    set requested_version $requested_version_type
-    if {$requested_version_type eq "this version"} {
-      set trimmed_value [string trim $requested_version_value]
-      if {$trimmed_value ne ""} {
-        set requested_version       $trimmed_value
-        set requested_version_value $trimmed_value
-      } else {
-        set requested_version "by puavo-conf"
-        set requested_version_value ""
-      }
-    }
-
-    foreach requested_version_path $requested_version_path_list {
-      write_file $requested_version_path $requested_version
-    }
+    pack forget .f.content_dirs
     return
   }
 
-  set puavo_conf_key [ui_msg __version_puavo_conf_key]
-  set puavo_conf_requested_version ""
-  catch { set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key] }
-
-  set by_puavo_conf_msg \
-      "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
-
-  .f.requested_version.number.by_puavo_conf configure \
-    -text $by_puavo_conf_msg
-
-  switch -- $requested_version {
-    ""              -
-    {by puavo-conf} { .f.requested_version.number.by_puavo_conf invoke }
-    {latest}        { .f.requested_version.number.latest        invoke }
-    default {
-      .f.requested_version.number.version.button invoke
-      set requested_version_value $requested_version
-    }
-  }
-
   set bg_color [dict get $bg_image bg_color]
-  .f.requested_version.number.by_puavo_conf  configure -background $bg_color
-  .f.requested_version.number.latest         configure -background $bg_color
-  .f.requested_version.number.version.button configure -background $bg_color
 
-  set new_content_dir_paths [get_available_content_dirs]
   if {$content_dir_paths ne $new_content_dir_paths} {
-    catch { destroy .f.requested_version.series.choices }
-    ttk::frame .f.requested_version.series.choices -style Changes.TFrame
+    catch { destroy .f.content_dirs }
+    ttk::frame .f.content_dirs -style Changes.TFrame
 
-    set i 1
-    foreach content_dir_choice $new_content_dir_paths {
-      radiobutton .f.requested_version.series.choices.$i \
+    dict for {content_dir content_id} $content_ids {
+      setup_content_dir_version_ui $content_dir $content_id
+    }
+
+    ttk::frame .f.content_dirs.series -style Changes.TFrame
+    ttk::label .f.content_dirs.series.label -text [ui_msg "Current choice:"] \
+                                            -font infoFont
+    pack .f.content_dirs.series.label
+
+    dict for {content_dir content_id} $content_ids {
+      radiobutton .f.content_dirs.series.$content_id \
         -background $bg_color -font smallInfoFont -highlightthickness 0 \
-        -text [file tail $content_dir_choice] -value $content_dir_choice \
+        -text [file tail $content_dir] -value $content_dir \
         -variable content_dir -command update_content_dir
-      pack .f.requested_version.series.choices.$i -anchor w
-      incr i
+      pack .f.content_dirs.series.$content_id -anchor w
     }
     set content_dir_paths $new_content_dir_paths
-  } else {
-    for {set i 1} \
-        {[winfo exists .f.requested_version.series.choices.$i]} \
-        {incr i} {
-      .f.requested_version.series.choices.$i configure -background $bg_color
+  }
+
+  dict for {content_dir content_id} $content_ids {
+    .f.content_dirs.$content_id.number.by_puavo_conf  \
+      configure -background $bg_color
+    .f.content_dirs.$content_id.number.latest \
+      configure -background $bg_color
+    .f.content_dirs.$content_id.number.version.button \
+      configure -background $bg_color
+    .f.content_dirs.series.$content_id configure -background $bg_color
+
+    set puavo_conf_requested_version ""
+    catch {
+      set puavo_conf_key [
+        string trim [read_file "${content_dir}/PUAVOCONF_KEY"]
+      ]
+      set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key]
+    }
+
+    set ui_frame .f.content_dirs.$content_id
+
+    set by_puavo_conf_msg \
+        "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
+    $ui_frame.number.by_puavo_conf configure -text $by_puavo_conf_msg
+
+    switch -- $requested_versions($content_id) {
+      ""              -
+      {by puavo-conf} { $ui_frame.number.by_puavo_conf invoke }
+      latest { $ui_frame.number.latest invoke }
+      default {
+        $ui_frame.number.version.button invoke
+        set requested_version_values($content_dir) \
+            $requested_versions($content_id)
+      }
     }
   }
 
-  pack .f.requested_version.series.choices
-  pack .f.requested_version -after .f.disks -side right -anchor w
+  pack .f.content_dirs.series -anchor w -pady 10
+  pack .f.content_dirs -after .f.disks -side right -anchor w -padx 10
 }
 
 proc switch_ui_mode {{uimode ""}} {
@@ -1346,11 +1418,11 @@ proc switch_ui_mode {{uimode ""}} {
   if {!$writable_labels} {
     wm attributes . -fullscreen 1
     update_calibration_ui true
-    update_requested_version_ui false
+    update_content_dirs_ui false
     update_port_labels_on_disk
     download_images
   } else {
-    update_requested_version_ui true
+    update_content_dirs_ui true
     update_calibration_ui false
     wm attributes . -fullscreen 0
   }
@@ -1390,9 +1462,14 @@ font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
 
 # ui messages and background image
 
-# start download image
-download_images
-after 3000      ;# wait a bit so that download_images sets up UI.json
+# setup downloader and content dirs
+try {
+  exec -ignorestderr puavo-download-usb-factory-images --setup
+} on error {errmsg} {
+  logger -p user.err \
+         "error in running :: puavo-download-usb-factory-images --setup"
+  exit 1
+}
 
 set content_dir_paths ""
 try {
@@ -1498,8 +1575,6 @@ pack .f.version_status.version.label .f.version_status.version.number \
 pack .f.version_status.download.label .f.version_status.download.status \
      -side left -padx 5
 
-setup_requested_version_ui
-
 pack .f.oper -side bottom -fill x
 pack .f.oper.calibration -padx {100 0}
 pack .f.oper.calibration .f.oper.support -side left -expand 1 -fill x
@@ -1539,5 +1614,7 @@ if {$calibration_in_progress} {
 } else {
   switch_ui_mode normal
 }
+
+download_images
 
 logger -p user.info "gui done, processing events"
