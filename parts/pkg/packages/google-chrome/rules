@@ -151,13 +151,13 @@ StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.deskto
         chmod 0755 "$upstream_dir"
         ;;
     download)
+        # tested with google-chrome-stable_94.0.4606.61-1_amd64.deb
         upstream_pack=$1
         baseurl="https://dl.google.com/linux/chrome/deb"
         tmpfile=$(mktemp)
 
         wget \
             --no-use-server-timestamps \
-            --no-check-certificate \
             --no-cookies \
             --output-document "${tmpfile}" \
             --progress=dot:mega \
@@ -171,7 +171,6 @@ StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.deskto
         rm -f "$tmpfile"
         wget \
             --no-use-server-timestamps \
-            --no-check-certificate \
             --no-cookies \
             --output-document "$upstream_pack" \
             "${baseurl}/${poolpath}" || {
