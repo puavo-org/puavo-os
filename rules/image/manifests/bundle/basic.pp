@@ -11,7 +11,6 @@ class image::bundle::basic {
   include ::initramfs
   include ::infotv
   include ::kernels
-  # include ::keyboard_hw_quirks        # XXX do we need this for Debian?
   include ::locales
   include ::motd
   include ::nightly_updates

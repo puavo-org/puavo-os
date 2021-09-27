@@ -1,8 +1,0 @@
-keys=$(puavo-conf puavo.kbd.force_release_keys)
-if [ -n "${keys}" ]; then
-    echo "${keys}" | awk -F, '{
-            print "keyboard:dmi:bvn*:bvr*:bd*:svn*:pn*:pvr*"
-            for (i = 1; i <= NF; i++) { printf " KEYBOARD_KEY_%s=!\n", $i }
-          }' > /lib/udev/hwdb.d/60-puavo-keyboard-from-tags.hwdb
-    udevadm hwdb --update
-fi
