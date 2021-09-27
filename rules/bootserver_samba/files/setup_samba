@@ -23,24 +23,7 @@ if [ "${PUAVO_BOOTSERVER_INSTALLATION:-}" = 'true' ]; then
   printf "%s\n" "$puavo_samba_domain" > /etc/puavo/sambadomainname
 fi
 
-# XXX This if-else-statement can be removed later when all bootservers
-# XXX have /etc/puavo/sambadomainname set up properly
-# XXX (then we can just read puavo_samba_domain from /etc/puavo/sambadomainname)
-if [ -r /etc/puavo/sambadomainname ]; then
-  read puavo_samba_domain < /etc/puavo/sambadomainname
-else
-  # XXX this is an ugly hack
-  puavo_samba_domain=$(awk -F= '
-    /^olcAccess:.*sambaDomainName/ { sub(/,.*$/, "", $3); print $3; exit 0 }' \
-    '/state/etc/ldap/slapd.d/cn=config/olcDatabase={1}hdb.ldif')
-  if [ -z "$puavo_samba_domain" ]; then
-    echo 'could not determine sambaDomainName from slapd config, exiting' >&2
-    exit 1
-  fi
-  printf "%s\n" "$puavo_samba_domain" > /state/etc/puavo/sambadomainname
-  printf "%s\n" "$puavo_samba_domain" > /etc/puavo/sambadomainname
-fi
-
+puavo_samba_domain=$(cat /etc/puavo/sambadomainname 2>/dev/null) || true
 if [ -z "$puavo_samba_domain" ]; then
   echo 'could not determine Samba domain name' >&2
   exit 1
