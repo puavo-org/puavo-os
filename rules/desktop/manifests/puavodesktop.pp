@@ -6,7 +6,6 @@ class desktop::puavodesktop {
   include ::desktop::dconf::nokeyboard
   include ::desktop::dconf::puavodesktop
   include ::desktop::dconf::puavo_ers
-  # include ::desktop::enable_indicator_power_service	# XXX needs fixing
   include ::desktop::mimedefaults
   include ::gnome_shell_extensions
   include ::gnome_shell_helper
