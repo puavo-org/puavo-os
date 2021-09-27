@@ -17,7 +17,6 @@ class image::bundle::desktop {
   include ::homedir_management
   include ::ibus
   include ::image::bundle::basic
-  # include ::kaffeine                  # XXX bullseye
   include ::keyutils
   # include ::ktouch                    # XXX buster
   include ::libdvdcss
