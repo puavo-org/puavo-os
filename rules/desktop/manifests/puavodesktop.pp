@@ -26,7 +26,6 @@ class desktop::puavodesktop {
       require => [ File['/usr/share/puavo-art']
                  , Package['faenza-icon-theme']
 		 , Package['puavomenu'] ];
-                 # , Package['light-themes'] ];	# XXX needs packaging
   }
 
   # overwrite /etc/profile with our custom version
