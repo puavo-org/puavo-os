@@ -404,7 +404,8 @@ Depends: ${misc:Depends},
  tar,
  unzip,
  wget,
- zenity
+ zenity,
+ zstd
 Description: Package manager for Puavo packages
  Scripts to make the life of a Opinsys developer easier
  .
