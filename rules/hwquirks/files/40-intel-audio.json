@@ -7,5 +7,14 @@
       "puavo.audio.pa.alsa.sink": "device=hw:0,0 channels=4",
       "puavo.audio.pa.alsa.source": "device=hw:0,6 channels=4"
     }
+  },
+  {
+    "key": "pci-id",
+    "matchmethod": "exact",
+    "pattern": "8086:a0c8",
+    "parameters": {
+      "puavo.audio.pa.alsa.sink": "device=hw:0,0 channels=4",
+      "puavo.audio.pa.alsa.source": "device=hw:0,6 channels=4"
+    }
   }
 ]
