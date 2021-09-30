@@ -13,6 +13,8 @@ class packages::purged {
     , 'ghc'                     # takes too much space
     , 'gnome-screensaver'       # not using this for anything
 
+    , 'grub-efi-amd64-signed'   # breaks UEFI Grub
+
     # slows down login considerably
     # (runs dpkg-query without speed considerations)
     , 'im-config'
