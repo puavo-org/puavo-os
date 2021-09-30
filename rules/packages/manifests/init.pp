@@ -272,7 +272,18 @@ class packages {
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
-    'firmware-linux-free':
+    [ 'b43-fwcutter'
+    , 'firmware-ath9k-htc'
+    , 'firmware-b43-installer'
+    , 'firmware-b43legacy-installer'
+    , 'firmware-linux-free'
+    , 'firmware-microbit-micropython'
+    , 'firmware-tomu'
+    , 'hdmi2usb-fx2-firmware'
+    , 'isight-firmware-tools'
+    , 'iucode-tool'
+    , 'sigrok-firmware-fx2lafw'
+    , 'ubertooth-firmware' ]:
       tag => [ 'tag_firmware', 'tag_debian_desktop', ];
 
     [ 'fontconfig'
@@ -779,11 +790,8 @@ class packages {
       tag => [ 'tag_drivers', 'tag_debian_desktop_nonfree', ];
 
     [ 'amd64-microcode'
-    , 'b43-fwcutter'
     , 'firmware-amd-graphics'
     , 'firmware-atheros'
-    , 'firmware-b43-installer'
-    , 'firmware-b43legacy-installer'
     , 'firmware-bnx2'
     , 'firmware-bnx2x'
     , 'firmware-brcm80211'
@@ -798,15 +806,19 @@ class packages {
     , 'firmware-linux-nonfree'
     , 'firmware-misc-nonfree'
     , 'firmware-myricom'
+    , 'firmware-netronome'
     , 'firmware-netxen'
+    , 'firmware-qcom-media'
+    , 'firmware-qcom-soc'
     , 'firmware-qlogic'
     , 'firmware-realtek'
     , 'firmware-samsung'
     , 'firmware-siano'
+    , 'firmware-sof-signed'
     , 'firmware-ti-connectivity'
     , 'firmware-zd1211'
     , 'intel-microcode'
-    , 'iucode-tool' ]:
+    , 'midisport-firmware' ]:
       ensure => present,
       tag    => [ 'tag_firmware', 'tag_debian_nonfree', ];
 
