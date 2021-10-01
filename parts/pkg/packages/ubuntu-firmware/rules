@@ -28,8 +28,8 @@ case "$command" in
   unpack)
     upstream_pack=$1
     upstream_dir=$2
-    dpkg-deb --fsys-tarfile "$upstream_pack" \
-      | tar -C "$upstream_dir" -x $ubuntu_firmware_files
+    ar p "$upstream_pack" data.tar.zst \
+      | tar --zstd -C "$upstream_dir" -x $ubuntu_firmware_files
     ;;
 
   *)

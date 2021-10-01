@@ -85,14 +85,14 @@ class puavo_pkg::packages {
                               , 'dragonbox_koulu1'
                               , 'dragonbox_koulu2'
                               , 'gdevelop'
-                              , 'hp-bios-utils'
+                              , 'hp-bios-utils' # for Buster/Bullseye only
                               , 'kdenlive-appimage'
-			      , 'lmaths'
+                              , 'lmaths'
                               , 'otto-blockly'
                               , 'promethean'
                               , 'prusaslicer'
-                              , 'supertuxkart'
                               , 'signal-desktop'
+                              , 'supertuxkart'  # for Buster/Bullseye only
                               , 'teamviewer'
                               , 'vscode' ]
 
