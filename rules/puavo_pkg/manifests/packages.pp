@@ -25,6 +25,8 @@ class puavo_pkg::packages {
                                , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
+  $bullseye_specific_packages = [ 'tela-icon-theme'
+                                , 'ubuntu-wallpapers' ]
 
   $available_packages = [ 'abitti-naksu'
 			, 'adobe-reader'
@@ -83,22 +85,23 @@ class puavo_pkg::packages {
                               , 'dragonbox_koulu1'
                               , 'dragonbox_koulu2'
                               , 'gdevelop'
-                              , 'hp-bios-utils'
+                              , 'hp-bios-utils' # for Buster/Bullseye only
                               , 'kdenlive-appimage'
-			      , 'lmaths'
+                              , 'lmaths'
                               , 'otto-blockly'
                               , 'promethean'
                               , 'prusaslicer'
-                              , 'supertuxkart'
                               , 'signal-desktop'
+                              , 'supertuxkart'  # for Buster/Bullseye only
                               , 'teamviewer'
                               , 'vscode' ]
 
   @puavo_pkg::install { $available_packages: ; }
 
   case $debianversioncodename {
-    'stretch': { @puavo_pkg::install { $stretch_specific_packages: ; } }
-    'buster':  { @puavo_pkg::install { $buster_specific_packages:  ; } }
+    'stretch':  { @puavo_pkg::install { $stretch_specific_packages:  ; } }
+    'buster':   { @puavo_pkg::install { $buster_specific_packages:   ; } }
+    'bullseye': { @puavo_pkg::install { $bullseye_specific_packages: ; } }
   }
 
   # "arduino-ottodiylib", "arduino-tm1637", "arduino-radiohead" and
