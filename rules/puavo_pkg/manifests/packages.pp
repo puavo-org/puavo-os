@@ -21,11 +21,12 @@ class puavo_pkg::packages {
                                , 'eclipse'
                                , 'filius'
                                , 'netbeans'
-                               , 'supertuxkart'
                                , 'tela-icon-theme'
                                , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
+  $bullseye_specific_packages = [ 'tela-icon-theme'
+                                , 'ubuntu-wallpapers' ]
 
   $available_packages = [ 'abitti-naksu'
 			, 'adobe-reader'
@@ -79,24 +80,28 @@ class puavo_pkg::packages {
   # List some packages here which are available, but probably should be
   # installed only for a very few, and this is why they are not on the above
   # list.
-  $other_available_packages = [ 'canon-cque'
+  $other_available_packages = [ 'bluej'
+                              , 'canon-cque'
                               , 'dragonbox_koulu1'
                               , 'dragonbox_koulu2'
                               , 'gdevelop'
+                              , 'hp-bios-utils' # for Buster/Bullseye only
                               , 'kdenlive-appimage'
-			      , 'lmaths'
+                              , 'lmaths'
                               , 'otto-blockly'
                               , 'promethean'
                               , 'prusaslicer'
                               , 'signal-desktop'
+                              , 'supertuxkart'  # for Buster/Bullseye only
                               , 'teamviewer'
                               , 'vscode' ]
 
   @puavo_pkg::install { $available_packages: ; }
 
   case $debianversioncodename {
-    'stretch': { @puavo_pkg::install { $stretch_specific_packages: ; } }
-    'buster':  { @puavo_pkg::install { $buster_specific_packages:  ; } }
+    'stretch':  { @puavo_pkg::install { $stretch_specific_packages:  ; } }
+    'buster':   { @puavo_pkg::install { $buster_specific_packages:   ; } }
+    'bullseye': { @puavo_pkg::install { $bullseye_specific_packages: ; } }
   }
 
   # "arduino-ottodiylib", "arduino-tm1637", "arduino-radiohead" and
