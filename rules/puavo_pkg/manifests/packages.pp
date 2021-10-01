@@ -13,11 +13,13 @@ class puavo_pkg::packages {
   # release versions, so keep track of which packages are intended for
   # which versions (all others should be compatible with all supported
   # versions).
-  $stretch_specific_packages = [ 'aseba'
+  $stretch_specific_packages = [ 'adobe-reader'
+                               , 'aseba'
                                , 'musescore-appimage'
                                , 'obsidian-icons'
                                , 'openscad-nightly' ]
-  $buster_specific_packages  = [ 'celestia'
+  $buster_specific_packages  = [ 'adobe-reader'
+                               , 'celestia'
                                , 'eclipse'
                                , 'filius'
                                , 'netbeans'
@@ -29,7 +31,6 @@ class puavo_pkg::packages {
                                 , 'ubuntu-wallpapers' ]
 
   $available_packages = [ 'abitti-naksu'
-			, 'adobe-reader'
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-ottodiylib'
@@ -85,16 +86,19 @@ class puavo_pkg::packages {
                               , 'dragonbox_koulu1'
                               , 'dragonbox_koulu2'
                               , 'gdevelop'
-                              , 'hp-bios-utils' # for Buster/Bullseye only
                               , 'kdenlive-appimage'
                               , 'lmaths'
                               , 'otto-blockly'
                               , 'promethean'
                               , 'prusaslicer'
                               , 'signal-desktop'
-                              , 'supertuxkart'  # for Buster/Bullseye only
                               , 'teamviewer'
                               , 'vscode' ]
+  $other_available_buster_packages = [ 'hp-bios-utils'
+                                     , 'supertuxkart' ]
+  $other_available_bullseye_packages = [ 'adobe-reader'
+                                       , 'hp-bios-utils'
+                                       , 'supertuxkart' ]
 
   @puavo_pkg::install { $available_packages: ; }
 
