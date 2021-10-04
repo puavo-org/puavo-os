@@ -20,8 +20,17 @@ To build Puavo OS image, run:
     make rootfs-update
     make rootfs-image
 
+After successful build, the built image can be found by
+default from /srv/puavo-os-images
+
 Run `make help` to get help.
 
+Note: As the build process scouts some parameters from the runtime
+environment, building it under a puavo-os session might require
+some manual steps not yet documented here. Building in e.g. a
+fresh Debian Bullseye virtual machine works with the steps listed
+above. Due to build process using a ramdisk /tmp, the virtual
+machine should have at least 16 GB of RAM for successful build.
 
 ## Using Puavo OS images
 
