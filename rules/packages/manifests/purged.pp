@@ -44,7 +44,16 @@ class packages::purged {
                                 # we do not actually use tftpd on ltsp-server
                                 # (we use a separate boot server)
 
-    , 'wx3.0-doc' ]:
+    , 'wx3.0-doc'
+
+    # Do not include "xbrlapi", we probably do not need it.
+    # In /etc/X11/Xsession.d/90xbrlapi it tries to connect to
+    # brltty, but if it not installed (installing "brltty" package
+    # is sufficient), it tries to connect to it (port 4101) through
+    # IPv4 and IPv6.  The first returns ECONNREFUSED and the latter
+    # returns ETIMEDOUT after some 160 seconds (which may depend on
+    # other network-related factors).
+    , 'xbrlapi' ]:
       tag => [ 'tag_debian_desktop' ];
   }
 }
