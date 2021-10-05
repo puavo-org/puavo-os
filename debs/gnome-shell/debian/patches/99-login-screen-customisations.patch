@@ -1,6 +1,6 @@
 diff -ruN gnome-shell.0/data/theme/gnome-shell-sass/widgets/_puavo.scss gnome-shell.1/data/theme/gnome-shell-sass/widgets/_puavo.scss
 --- gnome-shell.0/data/theme/gnome-shell-sass/widgets/_puavo.scss	1970-01-01 02:00:00.000000000 +0200
-+++ gnome-shell.1/data/theme/gnome-shell-sass/widgets/_puavo.scss	2021-10-05 09:03:12.262843549 +0300
++++ gnome-shell.1/data/theme/gnome-shell-sass/widgets/_puavo.scss	2021-10-05 10:41:09.419359834 +0300
 @@ -0,0 +1,12 @@
 +/* Puavo */
 +
@@ -16,7 +16,7 @@ diff -ruN gnome-shell.0/data/theme/gnome-shell-sass/widgets/_puavo.scss gnome-sh
 +}
 diff -ruN gnome-shell.0/data/theme/gnome-shell-sass/_widgets.scss gnome-shell.1/data/theme/gnome-shell-sass/_widgets.scss
 --- gnome-shell.0/data/theme/gnome-shell-sass/_widgets.scss	2021-03-15 23:28:44.996284700 +0200
-+++ gnome-shell.1/data/theme/gnome-shell-sass/_widgets.scss	2021-10-05 09:03:12.262843549 +0300
++++ gnome-shell.1/data/theme/gnome-shell-sass/_widgets.scss	2021-10-05 10:41:09.419359834 +0300
 @@ -49,3 +49,5 @@
  // Lock / login screens
  @import 'widgets/login-dialog';
@@ -24,8 +24,8 @@ diff -ruN gnome-shell.0/data/theme/gnome-shell-sass/_widgets.scss gnome-shell.1/
 +// Puavo customizations
 +@import 'widgets/puavo';
 diff -ruN gnome-shell.0/js/gdm/authPrompt.js gnome-shell.1/js/gdm/authPrompt.js
---- gnome-shell.0/js/gdm/authPrompt.js	2021-10-05 09:02:32.000000000 +0300
-+++ gnome-shell.1/js/gdm/authPrompt.js	2021-10-05 09:05:06.092972561 +0300
+--- gnome-shell.0/js/gdm/authPrompt.js	2021-10-05 10:38:40.000000000 +0300
++++ gnome-shell.1/js/gdm/authPrompt.js	2021-10-05 12:53:28.667432879 +0300
 @@ -6,6 +6,7 @@
  const Animation = imports.ui.animation;
  const Batch = imports.gdm.batch;
@@ -52,11 +52,10 @@ diff -ruN gnome-shell.0/js/gdm/authPrompt.js gnome-shell.1/js/gdm/authPrompt.js
          'next': {},
          'prompted': {},
          'reset': { param_types: [GObject.TYPE_UINT] },
-@@ -59,6 +67,14 @@
+@@ -59,6 +67,13 @@
          this._mode = mode;
          this._defaultButtonWellActor = null;
  
-+
 +        let gio_settings = new Gio.Settings({ schema_id: GdmUtil.LOGIN_SCREEN_SCHEMA });
 +        if (gio_settings.get_boolean(GdmUtil.GUESTUSER_KEY)) {
 +          this._guestuser_login = 'guest';
@@ -67,7 +66,7 @@ diff -ruN gnome-shell.0/js/gdm/authPrompt.js gnome-shell.1/js/gdm/authPrompt.js
          let reauthenticationOnly;
          if (this._mode == AuthPromptMode.UNLOCK_ONLY)
              reauthenticationOnly = true;
-@@ -76,6 +92,11 @@
+@@ -76,6 +91,11 @@
          this._userVerifier.connect('credential-manager-authenticated', this._onCredentialManagerAuthenticated.bind(this));
          this.smartcardDetected = this._userVerifier.smartcardDetected;
  
@@ -79,7 +78,7 @@ diff -ruN gnome-shell.0/js/gdm/authPrompt.js gnome-shell.1/js/gdm/authPrompt.js
          this.connect('destroy', this._onDestroy.bind(this));
  
          this._userWell = new St.Bin({
-@@ -84,10 +105,99 @@
+@@ -84,10 +104,99 @@
          });
          this.add_child(this._userWell);
  
@@ -179,7 +178,7 @@ diff -ruN gnome-shell.0/js/gdm/authPrompt.js gnome-shell.1/js/gdm/authPrompt.js
          let capsLockPlaceholder = new St.Label();
          this.add_child(capsLockPlaceholder);
  
-@@ -172,6 +282,7 @@
+@@ -172,6 +281,7 @@
              entry.clutter_text.connect('text-changed', () => {
                  if (!this._userVerifier.hasPendingMessages)
                      this._fadeOutMessage();
@@ -187,21 +186,21 @@ diff -ruN gnome-shell.0/js/gdm/authPrompt.js gnome-shell.1/js/gdm/authPrompt.js
              });
  
              entry.clutter_text.connect('activate', () => {
-@@ -199,6 +310,13 @@
+@@ -199,6 +309,13 @@
      _activateNext(shouldSpin) {
          this.updateSensitivity(false);
  
-+        if (this._userName && !this._userNameEntered) {
-+            if (!this._entry.menu.isPassword) {    // don't show passwords!
-+                this._userName.text = this._entry.text;
-+                this._userNameEntered = true;
-+            }
++        // Test for _textEntry so that we do not accidentally
++        // put passwords here!
++        if (this._userName && !this._userNameEntered && this._entry === this._textEntry) {
++            this._userName.text = this._entry.text;
++            this._userNameEntered = true;
 +        }
 +
          if (shouldSpin)
              this.startSpinning();
  
-@@ -427,6 +545,17 @@
+@@ -427,6 +544,17 @@
          }
      }
  
@@ -219,7 +218,7 @@ diff -ruN gnome-shell.0/js/gdm/authPrompt.js gnome-shell.1/js/gdm/authPrompt.js
      updateSensitivity(sensitive) {
          if (this._entry.reactive === sensitive)
              return;
-@@ -469,6 +598,18 @@
+@@ -469,6 +597,18 @@
          this.cancelButton.can_focus = this._hasCancelButton;
          this._preemptiveAnswer = null;
  
@@ -239,8 +238,8 @@ diff -ruN gnome-shell.0/js/gdm/authPrompt.js gnome-shell.1/js/gdm/authPrompt.js
              this._userVerifier.cancel();
  
 diff -ruN gnome-shell.0/js/gdm/loginDialog.js gnome-shell.1/js/gdm/loginDialog.js
---- gnome-shell.0/js/gdm/loginDialog.js	2021-10-05 09:02:32.000000000 +0300
-+++ gnome-shell.1/js/gdm/loginDialog.js	2021-10-05 09:03:12.266843622 +0300
+--- gnome-shell.0/js/gdm/loginDialog.js	2021-10-05 10:38:40.000000000 +0300
++++ gnome-shell.1/js/gdm/loginDialog.js	2021-10-05 10:41:09.423359622 +0300
 @@ -1155,6 +1155,7 @@
      _showUserList() {
          this._ensureUserListLoaded();
@@ -259,7 +258,7 @@ diff -ruN gnome-shell.0/js/gdm/loginDialog.js gnome-shell.1/js/gdm/loginDialog.j
          let hold = new Batch.Hold();
 diff -ruN gnome-shell.0/js/gdm/util.js gnome-shell.1/js/gdm/util.js
 --- gnome-shell.0/js/gdm/util.js	2021-03-15 23:28:45.004284400 +0200
-+++ gnome-shell.1/js/gdm/util.js	2021-10-05 09:03:12.266843622 +0300
++++ gnome-shell.1/js/gdm/util.js	2021-10-05 10:41:09.423359622 +0300
 @@ -35,6 +35,7 @@
  var BANNER_MESSAGE_KEY = 'banner-message-enable';
  var BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
@@ -284,7 +283,7 @@ diff -ruN gnome-shell.0/js/gdm/util.js gnome-shell.1/js/gdm/util.js
              if (!this.hasPendingMessages) {
 diff -ruN gnome-shell.0/po/de.po gnome-shell.1/po/de.po
 --- gnome-shell.0/po/de.po	2021-03-15 23:28:45.104281700 +0200
-+++ gnome-shell.1/po/de.po	2021-10-05 09:03:12.266843622 +0300
++++ gnome-shell.1/po/de.po	2021-10-05 10:41:09.423359622 +0300
 @@ -3003,6 +3003,14 @@
  msgid "System Sounds"
  msgstr "Systemklänge"
@@ -302,7 +301,7 @@ diff -ruN gnome-shell.0/po/de.po gnome-shell.1/po/de.po
  
 diff -ruN gnome-shell.0/po/fi.po gnome-shell.1/po/fi.po
 --- gnome-shell.0/po/fi.po	2021-03-15 23:28:45.118281400 +0200
-+++ gnome-shell.1/po/fi.po	2021-10-05 09:03:12.266843622 +0300
++++ gnome-shell.1/po/fi.po	2021-10-05 10:41:09.427359411 +0300
 @@ -2982,6 +2982,14 @@
  msgid "System Sounds"
  msgstr "Järjestelmän äänet"
@@ -320,7 +319,7 @@ diff -ruN gnome-shell.0/po/fi.po gnome-shell.1/po/fi.po
  
 diff -ruN gnome-shell.0/po/fr.po gnome-shell.1/po/fr.po
 --- gnome-shell.0/po/fr.po	2021-03-15 23:28:45.120281200 +0200
-+++ gnome-shell.1/po/fr.po	2021-10-05 09:03:12.266843622 +0300
++++ gnome-shell.1/po/fr.po	2021-10-05 10:41:09.431359200 +0300
 @@ -3044,6 +3044,14 @@
  msgid "System Sounds"
  msgstr "Sons système"
@@ -338,7 +337,7 @@ diff -ruN gnome-shell.0/po/fr.po gnome-shell.1/po/fr.po
  
 diff -ruN gnome-shell.0/po/sv.po gnome-shell.1/po/sv.po
 --- gnome-shell.0/po/sv.po	2021-03-15 23:28:45.177279700 +0200
-+++ gnome-shell.1/po/sv.po	2021-10-05 09:03:12.266843622 +0300
++++ gnome-shell.1/po/sv.po	2021-10-05 10:41:09.431359200 +0300
 @@ -2957,6 +2957,14 @@
  msgid "System Sounds"
  msgstr "Systemljud"
