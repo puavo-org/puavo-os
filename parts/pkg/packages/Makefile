@@ -45,6 +45,7 @@ packagedirs += lmaths
 packagedirs += mafynetti
 packagedirs += marvinsketch
 packagedirs += mattermost-desktop
+packagedirs += mindplus
 packagedirs += msttcorefonts
 packagedirs += musescore-appimage
 packagedirs += netbeans
