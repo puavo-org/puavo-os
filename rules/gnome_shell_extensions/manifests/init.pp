@@ -29,6 +29,7 @@ class gnome_shell_extensions {
     , 'audio-menu-modifier@puavo.org' # XXX can audio-switcher@AndresCidoncha replace this?
     , 'audio-switcher@AndresCidoncha'
     , 'bottompanel@tmoer93'
+    , 'BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm'
     , 'dash-to-panel@jderose9.github.com'
     , 'ding@rastersoft.com'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
