@@ -60,7 +60,7 @@ class packages {
     , 'bind9utils'
     , 'cifs-utils'
     , 'dnsmasq'
-    # , 'incron'                # XXX missing from Bullseye
+    , 'incron'
     , 'gpm'
     , 'isc-dhcp-server'
     , 'krb5-kdc'

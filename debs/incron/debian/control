@@ -4,8 +4,7 @@ Priority: extra
 Maintainer: Emmanuel Bouthenot <kolter@debian.org>
 Uploaders: Michael Prokop <mika@grml.org>
 Build-Depends:
-    debhelper (>= 9),
-    dh-systemd (>= 1.5)
+    debhelper (>= 9)
 Standards-Version: 3.9.5
 Homepage: http://inotify.aiken.cz/
 Vcs-Git: git://anonscm.debian.org/users/kolter/incron.git
