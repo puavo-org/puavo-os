@@ -14,7 +14,7 @@ class packages {
   #
 
   @package {
-    [ 'puavo-ltsp-bootserver', 'puavo-rest', ]:
+    [ 'hooktftp', 'puavo-ltsp-bootserver', 'puavo-rest', ]:
       ensure => present,
       tag    => [ 'tag_puavo_bootserver' ];
   }
