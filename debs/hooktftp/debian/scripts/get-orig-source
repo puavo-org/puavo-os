@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -eu
+
+commit_id='ef8a2c8545e8718c9e621c8abbc79464389c00a8'
+expected_checksum='33fdeed4f167367a1844e277e76b892b435d937b186fbe516488aa04851157fcdd7512abc30d6a03c42deb62331740ff'
+
+upstream_version=$(dpkg-parsechangelog -S Version \
+                     | sed -r -n 's/^(.*)-.*$/\1/p')
+orig_tarball="../hooktftp_${upstream_version}.orig.tar.gz"
+
+if [ ! -e "${orig_tarball}" ]; then
+  wget -O "${orig_tarball}.tmp" \
+       "https://github.com/tftp-go-team/hooktftp/tarball/${commit_id}"
+  upstream_checksum=$(sha384sum "${orig_tarball}.tmp" | awk '{ print $1 }')
+  if [ "$upstream_checksum" != "$expected_checksum" ]; then
+    echo 'Bad checksum for hooktftp tarball' >&2
+    exit 1
+  fi
+
+  tar -zxf "${orig_tarball}.tmp" --exclude=debian --strip-components=1
+  mv "${orig_tarball}.tmp" "${orig_tarball}"
+fi

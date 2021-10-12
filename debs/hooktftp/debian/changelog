@@ -1,0 +1,38 @@
+hooktftp (1.1.2-1+puavo1) bullseye; urgency=medium
+
+  * Build for Puavo.
+
+ -- Puavo Org <dev@opinsys.fi>  Tue, 12 Oct 2021 09:38:55 +0300
+
+hooktftp (1.1.1) testing; urgency=low
+
+  * Set non-zero exit codes on failure.
+
+ -- Julien Castets <castets.j@gmail.com>  Fri, 19 Mar 2021 09:51:22 +0000
+
+hooktftp (1.1.0) testing; urgency=low
+
+  * Add tsize support.
+  * Shell hook: set CLIENT_IP environment variable.
+  * Hooks: add callback when transfer is done.
+  * Hooks: add whitelist feature.
+  * Rework packaging.
+
+ -- Julien Castets <castets.j@gmail.com>  Mon, 27 Apr 2020 10:42:12 +0200
+
+hooktftp (1.0.0) testing; urgency=low
+
+  * Improvement: Sources tree refactoring
+  * Improvement: Fix GO path and packages
+  * Feature: Logging with native syslog
+  * Improvement: Reorganize/rewrite unit and end-to-end tests
+  * Bugfix: Buffering shell hook output
+  * Bugfix: Fix io.reader EOF in hook unit tests
+
+ -- Raphael Medaer <raphael.medaer@straightforward.me>  Tue, 28 Apr 2015 12:55:44 +0200
+
+hooktftp (0.9.1) unstable; urgency=low
+
+  * Initial release based on hooktftp version 0.9.1
+
+ -- Raphael Medaer <raphael.medaer@straightforward.me>  Thu, 23 Apr 2015 13:03:10 +0200
