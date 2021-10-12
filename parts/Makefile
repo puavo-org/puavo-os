@@ -17,7 +17,6 @@ subdirs         := autopilot                  \
                    pkg                        \
                    puavomenu                  \
                    sharedir                   \
-                   tftp                       \
                    usb-factory                \
                    user-registration          \
                    vpn                        \

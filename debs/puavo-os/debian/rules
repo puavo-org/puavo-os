@@ -100,14 +100,6 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-sharedir-manager
 
-	$(MAKE) -C tftp				                \
-		install prefix=/usr sysconfdir=/etc		\
-		DESTDIR=$(CURDIR)/debian/puavo-tftpd
-
-	$(MAKE) -C tftp/hooks					\
-		install prefix=/usr sysconfdir=/etc		\
-		DESTDIR=$(CURDIR)/debian/puavo-tftpd-hooks
-
 	$(MAKE) -C usb-factory				        \
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-usb-factory
