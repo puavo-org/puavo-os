@@ -289,6 +289,11 @@ if (\$hostname == "${hostname}") then {
     stop
   }
 
+  if \$programname == "hooktftp" then {
+    action(type="omfile" file="/var/log/puavo/hooktftp.log")
+    stop
+  }
+
   if \$programname == "puavo-bootserver-make-homedir" then {
     action(type="omfile" file="/var/log/puavo/puavo-bootserver-make-homedir.log")
     stop
@@ -306,11 +311,6 @@ if (\$hostname == "${hostname}") then {
 
   if \$programname == "puavo-sharedir-manager" then {
     action(type="omfile" file="/var/log/puavo/puavo-sharedir-manager.log")
-    stop
-  }
-
-  if \$programname == "puavo-tftpd" then {
-    action(type="omfile" file="/var/log/puavo/puavo-tftpd.log")
     stop
   }
 

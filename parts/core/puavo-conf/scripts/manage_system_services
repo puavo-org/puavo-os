@@ -233,11 +233,6 @@ set services {
         -> /lib/systemd/system/puavo-sharedir-manager.service
     }}
 
-  { puavo-tftpd {
-      /etc/systemd/system/multi-user.target.wants/puavo-tftpd.service
-        -> /lib/systemd/system/puavo-tftpd.service
-    }}
-
   { puavo-vpn-client-dnsmasq {
       /etc/systemd/system/multi-user.target.wants/puavo-vpn-client-dnsmasq.service
         -> /lib/systemd/system/puavo-vpn-client-dnsmasq.service
