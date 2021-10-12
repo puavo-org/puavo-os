@@ -1,0 +1,10 @@
+port: 69
+user: puavo
+hooks:
+  - type: shell
+    regexp: pxelinux.cfg\/01-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})
+    template: /usr/local/sbin/puavo-ltspboot-config $0
+
+  - type: file
+    regexp: ^.*$
+    template: /var/lib/tftpboot/$0

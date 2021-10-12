@@ -119,6 +119,9 @@
   "puavo.service.gpm.enabled": {
     "default": "true"
   },
+  "puavo.service.hooktftp.enabled": {
+    "default": "false"
+  },
   "puavo.service.incron.enabled": {
     "default": "false"
   },
@@ -168,9 +171,6 @@
     "default": "false"
   },
   "puavo.service.puavo-rest.enabled": {
-    "default": "false"
-  },
-  "puavo.service.puavo-tftpd.enabled": {
     "default": "false"
   },
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": {

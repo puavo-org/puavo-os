@@ -8,6 +8,7 @@ _pkgs_ports := cups                 \
                gnome-control-center \
                gnome-shell          \
                gtk+3.0              \
+               hooktftp             \
                incron               \
                libpam-ccreds        \
                mutter               \
