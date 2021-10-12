@@ -247,8 +247,6 @@ Depends: ${misc:Depends},
  puavo-ds-slave,
  puavo-register,
  puavo-sharedir-manager,
- puavo-tftpd,
- puavo-tftpd-hooks,
  puavo-wlangw,
  qemu-kvm,
  rdiff,
@@ -424,27 +422,6 @@ Architecture: all
 Depends: ${misc:Depends}, ruby, acl, ruby-rb-inotify
 Description: Puavo shared directory manager
  Puavo shared directory manager
- .
-
-Package: puavo-tftpd
-Architecture: all
-Depends: ${misc:Depends}, adduser, ruby, ruby-eventmachine, ruby-ldap
-Recommends: ruby-minitest
-Description: TFTP server for LTSP environments
- puavo-tftp provides a TFTP server which dynamically queries ldap
- server for pxelinux boot configuration.
- .
- This package provides generic TFTP server.
- .
-
-Package: puavo-tftpd-hooks
-Architecture: all
-Depends: ${misc:Depends}, curl, puavo-client, puavo-rest, puavo-tftpd
-Description: Puavo-service hooks for Puavo TFTP server
- puavo-tftp provides a TFTP server which dynamically queries ldap server
- for pxelinux boot configuration.
- .
- This package provides hook files desinged for Puavo-service.
  .
 
 Package: puavo-user-registration
