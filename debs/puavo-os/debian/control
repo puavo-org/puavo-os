@@ -259,8 +259,7 @@ Recommends:
  puavo-wlancontroller,
  smartmontools
 Conflicts:
- ltsp-server,
- tftpd-hpa
+ ltsp-server
 Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
  clients and LTSP servers. No user sessions are run on the server itself.
  .
