@@ -52,6 +52,7 @@ packagedirs += nightcode
 packagedirs += novoconnect
 packagedirs += obsidian-icons
 packagedirs += ohjelmointi-opetuksessa
+packagedirs += openclipart
 packagedirs += openscad-nightly
 packagedirs += openshot-appimage
 packagedirs += otto-blockly
