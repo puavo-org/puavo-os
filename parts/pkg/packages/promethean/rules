@@ -184,9 +184,9 @@ EOF
         echo "${sha384} ${deb}" | sha384sum --check >/dev/null || exit 1
         dpkg-deb -x "$deb" promethean || exit 1
       done <<EOF
-5bed0af13eaeefd802f85e0eb06aca86294b702632401323afc5427b128d543d3a8af59d8ee2aeff74299bd5daab18c0 oss/a/activdriver/activdriver_5.17.14-0~Ubuntu~1604_amd64.deb
-a2756c8ea06b7d5fa93a6b6d5c67b39a600ffe43a9934ab10ad3d730428013f879a8aee2ec9a3c15c5ca577bc5f311fc non-oss/a/activaid/activaid_2.0.1~Ubuntu~1604_amd64.deb
-5f896d2ab9adb11bfab2ac45a568ea2631edfcb99cf2c345a1b0d3744a6dc51f4d6841c33cba022db7c87e30437cd1a7 non-oss/a/activtools/activtools_5.17.14-0~Ubuntu~1604_amd64.deb
+83effb26da80162679fc67d71693731e896041382fc77ced089e60d4e21cdad2b5023036d675e535853c77ff6f9417dc oss/a/activdriver/activdriver_5.18.19-0~Ubuntu~1804_amd64.deb
+f84e72d2267c9131c8b8cb1180b12aff170882d45048dcf52bb6fdebf6f0f7d25df86178143e5f067ae4483641ff1fda non-oss/a/activaid/activaid_2.0.1~Ubuntu~1804_amd64.deb
+1d79a843a9ce5d25f6a0fd743b664335a520e5ba9af5f2b1e4a099433e43a0141533d0939c2f809ce03794a65629bdc8 non-oss/a/activtools/activtools_5.18.19-0~Ubuntu~1804_amd64.deb
 EOF
       # these take space and do not work on Debian Stretch
       rm -rf promethean/usr/share/promethean/lib
