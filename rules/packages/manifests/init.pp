@@ -505,8 +505,6 @@ class packages {
     [ 'gnome-icon-theme'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
-    , 'openclipart-png'
-    , 'openclipart-svg'
     , 'oxygen-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
