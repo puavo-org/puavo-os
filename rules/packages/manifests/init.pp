@@ -750,9 +750,9 @@ class packages {
 		      , $r8168_module ]
 
   packages::kernels::kernel_package {
-    '4.19.0-17-amd64':
+    '4.19.0-18-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.19.0-17-amd64';
+      package_name => 'linux-image-4.19.0-18-amd64';
 
     '5.10.0-0.bpo.8-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module ],
