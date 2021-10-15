@@ -62,6 +62,7 @@ packagedirs += prusaslicer
 packagedirs += pycharm
 packagedirs += robboscratch
 packagedirs += robotmeshconnect
+packagedirs += schoolstore-ti-widgets
 packagedirs += scratux
 packagedirs += shotcut
 packagedirs += signal-desktop
