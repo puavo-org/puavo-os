@@ -37,6 +37,15 @@ set services {
         -> /lib/systemd/system/bind9.service
     }}
 
+  { collectd {
+      /etc/systemd/system/multi-user.target.wants/collectd.service
+        -> /lib/systemd/system/collectd.service
+      /etc/rc2.d/S01collectd -> /etc/init.d/collectd
+      /etc/rc3.d/S01collectd -> /etc/init.d/collectd
+      /etc/rc4.d/S01collectd -> /etc/init.d/collectd
+      /etc/rc5.d/S01collectd -> /etc/init.d/collectd
+    }}
+
   { cups-browsed {
       /etc/systemd/system/multi-user.target.wants/cups-browsed.service
         -> /lib/systemd/system/cups-browsed.service
@@ -60,6 +69,13 @@ set services {
   { epoptes-client {
       /etc/systemd/system/multi-user.target.wants/epoptes-client.service
         -> /lib/systemd/system/epoptes-client.service
+    }}
+
+  { freeradius {
+      /etc/rc2.d/S01freeradius -> /etc/init.d/freeradius
+      /etc/rc3.d/S01freeradius -> /etc/init.d/freeradius
+      /etc/rc4.d/S01freeradius -> /etc/init.d/freeradius
+      /etc/rc5.d/S01freeradius -> /etc/init.d/freeradius
     }}
 
   { google-cloud-print {

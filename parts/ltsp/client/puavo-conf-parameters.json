@@ -98,6 +98,9 @@
   "puavo.service.bind9.enabled": {
     "default": "false"
   },
+  "puavo.service.collectd.enabled": {
+    "default": "false"
+  },
   "puavo.service.cron.cronjobs": {
     "default": "puavo-cleanup-old-users"
   },
@@ -114,6 +117,9 @@
     "default": "false"
   },
   "puavo.service.epoptes-client.enabled": {
+    "default": "false"
+  },
+  "puavo.service.freeradius.enabled": {
     "default": "false"
   },
   "puavo.service.gpm.enabled": {
