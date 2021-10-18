@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -eux
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+        mkdir -p /opt/schoolstore/ 
+	ln -fns "${upstream_dir}/ti-widgets" \
+		/opt/schoolstore/ti-widgets
+	;;
+    unconfigure)
+	rm -rf /opt/schoolstore/ti-widgets
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+        mkdir "${upstream_dir}/ti-widgets" 
+        unzip -q -d "${upstream_dir}/ti-widgets/" "${upstream_pack}"
+        cd "${upstream_dir}/ti-widgets/"
+        for f in * ; do mv "$f" "opinsys_$f" ; done
+	;;
+    *)
+	;;
+esac
