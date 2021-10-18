@@ -138,6 +138,7 @@ class packages {
     , 'smartmontools'
     , 'sshfs'
     , 'strace'
+    , 'stress'
     , 'sudo'
     , 'sysbench'
     , 'sysfsutils'
