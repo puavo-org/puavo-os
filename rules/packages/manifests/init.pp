@@ -663,13 +663,11 @@ class packages {
     , 'zip' ]:
       tag => [ 'tag_gnome_desktop', 'tag_debian_desktop', ];
 
-    # some dependencies from puavopkg packages
-    [ # XXX buster 'libjavascriptcoregtk-1.0-0'        # citrix client
-      'libopencsg1'                       # openscad-nightly
+    # some dependencies from puavo-pkg packages
+    [ 'libopencsg1'                       # openscad-nightly
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
-    # XXX buster , 'libwebkitgtk-1.0-0'                # citrix client
     , 'libqwt5-qt4'                       # aseba
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
