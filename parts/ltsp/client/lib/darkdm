@@ -58,19 +58,44 @@ colorize() {
 }
 
 list_disks() {
-  local colorized_disk_info disk disk_label disk_devices disk_size_in_gb
+  local colorized_disk_info disk disk_label disk_devices disk_size_in_gb \
+        smartctl_data smartctl_json smartctl_ok
+
   disk_devices=$(facter --json disks | jq -r '.disks | keys | .[]' \
                    | grep -E '^(mmcblk|nvme|sd|vd|xvda)')
   for disk in $disk_devices; do
-    disk_model="$(facter "disks.${disk}.model")"
+    smartctl_ok=false
+    if smartctl_json=$(smartctl -a --json=c "/dev/${disk}"); then
+      if smartctl_data=$(
+        printf "%s" "$smartctl_json" | jq -r '
+          if has("firmware_version") then
+            "firmare:" + .firmware_version + " " else "" end
+          + if has("power_on_time") and (.power_on_time|has("hours")) then
+              "power_on_hours:" + (.power_on_time.hours|tostring) + " "
+            else "" end
+          + ([.ata_smart_attributes.table[]
+               | select(.name == "Host_Writes_GiB"
+                          or .name == "TLC_NAND_GB_Writes")
+               | .name + ":" + .raw.string] | join(" "))'); then
+          smartctl_ok=true
+          disk_model=$(printf "%s" "$smartctl_json" | jq -r .model_name) \
+                         || true
+      fi
+    fi
+    if ! $smartctl_ok; then
+      disk_model=$(facter "disks.${disk}.model") || true
+      smartctl_data='NO SMART DATA'
+    fi
     if [ -z "$disk_model" ]; then disk_model='unknown model'; fi
+
     disk_label="${disk_model} / $(facter disks.${disk}.size)"
     colorized_disk_info=$(colorize disk \
                                    128000000000 256000000000 512000000000 \
                                    "$(facter disks.${disk}.size_bytes)"   \
                                    "$disk_label")
 
-    printf "disk %-12s%s\n" "${disk}:" "$colorized_disk_info"
+    printf "disk %-12s%s\n"  "${disk}:" "$colorized_disk_info"
+    printf "SMART %-11s%s\n" "${disk}:" "$smartctl_data"
   done
 }
 
