@@ -664,11 +664,14 @@ class packages {
       tag => [ 'tag_gnome_desktop', 'tag_debian_desktop', ];
 
     # some dependencies from puavo-pkg packages
-    [ 'libopencsg1'                       # openscad-nightly
+    [ 'libftdi1'                          # mindplus
+    , 'libhidapi-hidraw0'                 # mindplus
+    , 'libopencsg1'                       # openscad-nightly
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
     , 'libqwt5-qt4'                       # aseba
+    , 'libusb-0.1'                        # mindplus
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
     ]:
