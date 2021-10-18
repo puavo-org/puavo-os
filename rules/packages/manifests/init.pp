@@ -371,10 +371,6 @@ class packages {
     , 'telegram-desktop' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
 
-    # XXX enable if issues are fixed
-    # [ 'laptop-mode-tools' ]:
-    #   tag => [ 'tag_laptop', 'tag_debian_desktop', ];
-
     [ 'goobox'
     , 'gstreamer1.0-clutter-3.0'
     , 'gstreamer1.0-libav'
