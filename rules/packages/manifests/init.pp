@@ -681,7 +681,6 @@ class packages {
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
     # XXX bullseye , 'libqwt5-qt4'        # aseba
-    , 'libqwt5-qt4'                       # aseba
     , 'libusb-0.1-4'                      # mindplus
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
