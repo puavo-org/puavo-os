@@ -1,0 +1,136 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+urlbase='http://ftp.de.debian.org/debian/pool/main/o/openclipart'
+
+openclipart_links='
+/usr/lib/libreoffice/share/gallery/animals.sdg
+/usr/lib/libreoffice/share/gallery/animals.sdv
+/usr/lib/libreoffice/share/gallery/animals.thm
+/usr/lib/libreoffice/share/gallery/buildings.sdg
+/usr/lib/libreoffice/share/gallery/buildings.sdv
+/usr/lib/libreoffice/share/gallery/buildings.thm
+/usr/lib/libreoffice/share/gallery/buttons.sdg
+/usr/lib/libreoffice/share/gallery/buttons.sdv
+/usr/lib/libreoffice/share/gallery/buttons.thm
+/usr/lib/libreoffice/share/gallery/computer.sdg
+/usr/lib/libreoffice/share/gallery/computer.sdv
+/usr/lib/libreoffice/share/gallery/computer.thm
+/usr/lib/libreoffice/share/gallery/containers.sdg
+/usr/lib/libreoffice/share/gallery/containers.sdv
+/usr/lib/libreoffice/share/gallery/containers.thm
+/usr/lib/libreoffice/share/gallery/decorations.sdg
+/usr/lib/libreoffice/share/gallery/decorations.sdv
+/usr/lib/libreoffice/share/gallery/decorations.thm
+/usr/lib/libreoffice/share/gallery/education2.sdg
+/usr/lib/libreoffice/share/gallery/education2.sdv
+/usr/lib/libreoffice/share/gallery/education2.thm
+/usr/lib/libreoffice/share/gallery/electronics.sdg
+/usr/lib/libreoffice/share/gallery/electronics.sdv
+/usr/lib/libreoffice/share/gallery/electronics.thm
+/usr/lib/libreoffice/share/gallery/food.sdg
+/usr/lib/libreoffice/share/gallery/food.sdv
+/usr/lib/libreoffice/share/gallery/food.thm
+/usr/lib/libreoffice/share/gallery/geography.sdg
+/usr/lib/libreoffice/share/gallery/geography.sdv
+/usr/lib/libreoffice/share/gallery/geography.thm
+/usr/lib/libreoffice/share/gallery/logos.sdg
+/usr/lib/libreoffice/share/gallery/logos.sdv
+/usr/lib/libreoffice/share/gallery/logos.thm
+/usr/lib/libreoffice/share/gallery/office.sdg
+/usr/lib/libreoffice/share/gallery/office.sdv
+/usr/lib/libreoffice/share/gallery/office.thm
+/usr/lib/libreoffice/share/gallery/people2.sdg
+/usr/lib/libreoffice/share/gallery/people2.sdv
+/usr/lib/libreoffice/share/gallery/people2.thm
+/usr/lib/libreoffice/share/gallery/plants.sdg
+/usr/lib/libreoffice/share/gallery/plants.sdv
+/usr/lib/libreoffice/share/gallery/plants.thm
+/usr/lib/libreoffice/share/gallery/recreation.sdg
+/usr/lib/libreoffice/share/gallery/recreation.sdv
+/usr/lib/libreoffice/share/gallery/recreation.thm
+/usr/lib/libreoffice/share/gallery/science.sdg
+/usr/lib/libreoffice/share/gallery/science.sdv
+/usr/lib/libreoffice/share/gallery/science.thm
+/usr/lib/libreoffice/share/gallery/shapes-openclipart.sdg
+/usr/lib/libreoffice/share/gallery/shapes-openclipart.sdv
+/usr/lib/libreoffice/share/gallery/shapes-openclipart.thm
+/usr/lib/libreoffice/share/gallery/signs and symbols.sdg
+/usr/lib/libreoffice/share/gallery/signs and symbols.sdv
+/usr/lib/libreoffice/share/gallery/signs and symbols.thm
+/usr/lib/libreoffice/share/gallery/special.sdg
+/usr/lib/libreoffice/share/gallery/special.sdv
+/usr/lib/libreoffice/share/gallery/special.thm
+/usr/lib/libreoffice/share/gallery/tools.sdg
+/usr/lib/libreoffice/share/gallery/tools.sdv
+/usr/lib/libreoffice/share/gallery/tools.thm
+/usr/lib/libreoffice/share/gallery/transportation2.sdg
+/usr/lib/libreoffice/share/gallery/transportation2.sdv
+/usr/lib/libreoffice/share/gallery/transportation2.thm
+/usr/lib/libreoffice/share/gallery/unsorted.sdg
+/usr/lib/libreoffice/share/gallery/unsorted.sdv
+/usr/lib/libreoffice/share/gallery/unsorted.thm
+/usr/share/openclipart
+'
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    IFS='
+'
+    for f in $openclipart_links; do
+      ln -fns -T "${upstream_dir}${f}" "$f"
+    done
+    ;;
+
+  unconfigure)
+    IFS='
+'
+    rm -f $openclipart_links
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    tar -x -f "$upstream_pack" -C "$upstream_dir"
+    ;;
+
+  download)
+    upstream_pack=$(readlink -f "$1")
+    tmpdir=
+    trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' 0 INT TERM
+    tmpdir=$(mktemp -d)
+
+    (
+      cd "$tmpdir"
+      while read sha384 debpath; do
+        deb=$(basename "$debpath")
+        wget \
+            --no-use-server-timestamps \
+            --no-cookies \
+            --output-document "$deb" \
+            --progress=dot:mega \
+            "${urlbase}/${debpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        echo "${sha384} ${deb}" | sha384sum --check >/dev/null || exit 1
+        dpkg-deb -x "$deb" openclipart || exit 1
+      done <<EOF
+3b3c3d36551c35557f1a964d79b570e234b4c1cfc102f7264441f5f3c592f6e59da233eafea9e632c85074b990dd4a57  openclipart_0.18+dfsg-19_all.deb
+9fdd50d7ad5a33d0eeed6dcbbdf1a3ef08615a1eb91cd405f494402cceb8eed9ba1f080e56dcb6944bbc05a603747c60  openclipart-libreoffice_0.18+dfsg-19_all.deb
+dfab9561e03884a6d14175bba42dba4d4fbfade17feedf52e2807654ddd7413e72aed01990476954f5f11cd7f9bbe694  openclipart-png_0.18+dfsg-19_all.deb
+b6349154870c61c78b954d40484aefd959ca4b37fe4a8972d0f59f12542f442eaa8db7db220bd67b7091754079f0d680  openclipart-svg_0.18+dfsg-19_all.deb
+EOF
+      # Set LC_COLLATE=C so that files always sort in the same
+      # way (so we get the same tar-archive independent of locales).
+      env LC_COLLATE=C \
+        tar -C openclipart --mtime='2000-01-01 00:00:00 +00:00' --sort=name -c \
+          -f "$upstream_pack" .
+    )
+    ;;
+esac

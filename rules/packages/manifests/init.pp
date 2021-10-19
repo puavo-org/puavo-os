@@ -60,8 +60,11 @@ class packages {
     , 'bind9utils'
     , 'cifs-utils'
     , 'dnsmasq'
-    , 'incron'
+    , 'freeradius'
+    , 'freeradius-krb5'
+    , 'freeradius-ldap'
     , 'gpm'
+    , 'incron'
     , 'isc-dhcp-server'
     , 'krb5-kdc'
     , 'libudev1'
@@ -138,6 +141,7 @@ class packages {
     , 'smartmontools'
     , 'sshfs'
     , 'strace'
+    , 'stress'
     , 'sudo'
     , 'sysbench'
     , 'sysfsutils'
@@ -511,8 +515,6 @@ class packages {
     [ 'gnome-icon-theme'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
-    , 'openclipart-png'
-    , 'openclipart-svg'
     , 'oxygen-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
@@ -671,14 +673,16 @@ class packages {
     , 'zip' ]:
       tag => [ 'tag_gnome_desktop', 'tag_debian_desktop', ];
 
-    # some dependencies from puavopkg packages
-    [ # XXX buster 'libjavascriptcoregtk-1.0-0'        # citrix client
-      'libopencsg1'                       # openscad-nightly
+    # some dependencies from puavo-pkg packages
+    [ 'libftdi1'                          # mindplus
+    , 'libhidapi-hidraw0'                 # mindplus
+    , 'libopencsg1'                       # openscad-nightly
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
-    # XXX buster , 'libwebkitgtk-1.0-0'   # citrix client
     # XXX bullseye , 'libqwt5-qt4'        # aseba
+    , 'libqwt5-qt4'                       # aseba
+    , 'libusb-0.1-4'                      # mindplus
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
     ]:
