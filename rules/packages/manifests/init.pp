@@ -760,6 +760,10 @@ class packages {
     '5.10.0-8-amd64':
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-5.10.0-8-amd64';
+
+    '5.14.0-0.bpo.2-amd64':
+      dkms_modules => $all_dkms_modules,
+      package_name => 'linux-image-5.14.0-0.bpo.2-amd64-unsigned';
   }
 
   # Packages which are not restricted per se, but which are required by
