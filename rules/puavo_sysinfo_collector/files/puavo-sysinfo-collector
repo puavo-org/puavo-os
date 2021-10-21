@@ -160,7 +160,8 @@ class SystemInfoCollector < DBus::Object
               cmd = [ '/usr/sbin/smartctl', '-a', '--json',
                         "/dev/#{ main_disk_drive }" ]
               smartctl_output, status = Open3.capture2(*cmd)
-              raise "error running #{ cmd.join(' ') }" unless status.success?
+              warn "smartctl returned error code: #{ status.exitstatus }" \
+                unless status.success?
               data[:blockdevice_sda_smart] = JSON.parse(smartctl_output)
             rescue StandardError => e
               warn "could not determine smartctl data: #{e}"
