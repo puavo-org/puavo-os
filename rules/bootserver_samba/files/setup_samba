@@ -63,6 +63,8 @@ cat <<EOF > /etc/samba/smb.conf.tmp
   os level = 99
   preferred master = yes
   dns proxy = yes
+  bind interfaces only = yes
+  interfaces = lo ltsp* wlan*
 
   client use spnego = yes
   client signing = yes
