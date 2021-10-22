@@ -627,6 +627,12 @@
         "mimio-notebook": {
             "tags": "default"
         },
+        "mindplus": {
+            "tags": "default",
+            "puavopkg": {
+                "id": "mindplus"
+            }
+        },
         "minetest": {
             "tags": "default"
         },
@@ -2142,7 +2148,8 @@
                 "appinventor",
                 "kojo",
                 "Nightcode",
-                "netbeans"
+                "netbeans",
+                "mindplus"
             ]
         },
         "menu-religion": {
