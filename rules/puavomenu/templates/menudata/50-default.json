@@ -584,6 +584,13 @@
                 "id": "vstloggerpro"
             }
         },
+        "LoggerPro3": {
+            "name": "LoggerPro3",
+            "tags": "default",
+            "puavopkg": {
+                "id": "loggerpro"
+            }
+        },
         "luola": {
             "tags": "default, game"
         },
@@ -626,6 +633,12 @@
         },
         "mimio-notebook": {
             "tags": "default"
+        },
+        "mindplus": {
+            "tags": "default",
+            "puavopkg": {
+                "id": "mindplus"
+            }
         },
         "minetest": {
             "tags": "default"
@@ -1489,6 +1502,7 @@
                 "ti5_nspire_cx_cas_ss",
                 "ClassPadManagerforClassPadII",
                 "LoggerPro",
+                "LoggerPro3",
                 "MarvinSketch",
                 "dia",
                 "mousepad",
@@ -1621,6 +1635,7 @@
                 "MarvinView",
                 "org.kde.kalzium",
                 "LoggerPro",
+                "LoggerPro3",
                 "libreoffice-writer",
                 "kahoot",
                 "youtube"
@@ -1714,6 +1729,7 @@
                 "org.kde.step",
                 "tracker",
                 "LoggerPro",
+                "LoggerPro3",
                 "GlobiLab",
                 "filius",
                 "lmaths",
@@ -2087,6 +2103,7 @@
                 "org.kde.step",
                 "tracker",
                 "LoggerPro",
+                "LoggerPro3",
                 "libreoffice-writer",
                 "phet",
                 "youtube"
@@ -2142,7 +2159,8 @@
                 "appinventor",
                 "kojo",
                 "Nightcode",
-                "netbeans"
+                "netbeans",
+                "mindplus"
             ]
         },
         "menu-religion": {

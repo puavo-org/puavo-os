@@ -57,32 +57,57 @@ colorize() {
   esac
 }
 
+get_smart_lettercode() {
+  local i letter mask val
+
+  val=$1
+  mask=1
+
+  for i in 0 1 2 3 4 5 6 7; do
+    if [ "$((($val & $mask) && 1))" -eq 1 ]; then
+      case "$i" in
+        0) letter='P';;
+        1) letter='O';;
+        2) letter='B';;
+        3) letter='F';;
+        4) letter='A';;
+        5) letter='T';;
+        6) letter='E';;
+        7) letter='S';;
+      esac
+    else
+      letter='-'
+    fi
+    echo -n "$letter"
+    mask=$(($mask << 1))
+  done
+}
+
 list_disks() {
-  local colorized_disk_info disk disk_label disk_devices disk_size_in_gb \
-        smartctl_data smartctl_json smartctl_ok
+  local colorized_disk_info colorized_smart_status disk disk_devices \
+        disk_label disk_model disk_size_in_gb smartctl_code smartctl_data \
+        smartctl_json smart_color_status smart_lettercodes smart_status
 
   disk_devices=$(facter --json disks | jq -r '.disks | keys | .[]' \
                    | grep -E '^(mmcblk|nvme|sd|vd|xvda)')
   for disk in $disk_devices; do
-    smartctl_ok=false
-    if smartctl_json=$(smartctl -a --json=c "/dev/${disk}"); then
-      if smartctl_data=$(
-        printf "%s" "$smartctl_json" | jq -r '
-          if has("firmware_version") then
-            "firmare:" + .firmware_version + " " else "" end
-          + if has("power_on_time") and (.power_on_time|has("hours")) then
-              "power_on_hours:" + (.power_on_time.hours|tostring) + " "
-            else "" end
-          + ([.ata_smart_attributes.table[]
-               | select(.name == "Host_Writes_GiB"
-                          or .name == "TLC_NAND_GB_Writes")
-               | .name + ":" + .raw.string] | join(" "))'); then
-          smartctl_ok=true
-          disk_model=$(printf "%s" "$smartctl_json" | jq -r .model_name) \
-                         || true
-      fi
-    fi
-    if ! $smartctl_ok; then
+    smartctl_code=0
+    smartctl_json=$(smartctl -a --json=c "/dev/${disk}") || smartctl_code=$?
+    smart_lettercode=$(get_smart_lettercode "$smartctl_code")
+    if smartctl_data=$(
+      printf "%s" "$smartctl_json" | jq -r '
+        if has("firmware_version") then
+          "firmare:" + .firmware_version + " " else "" end
+        + if has("power_on_time") and (.power_on_time|has("hours")) then
+            "power_on_hours:" + (.power_on_time.hours|tostring) + " "
+          else "" end
+        + ([.ata_smart_attributes.table[]
+             | select(.name == "Host_Writes_GiB"
+                        or .name == "TLC_NAND_GB_Writes")
+             | .name + ":" + .raw.string] | join(" "))'); then
+      disk_model=$(printf "%s" "$smartctl_json" | jq -r .model_name) \
+                     || true
+    else
       disk_model=$(facter "disks.${disk}.model") || true
       smartctl_data='NO SMART DATA'
     fi
@@ -94,8 +119,18 @@ list_disks() {
                                    "$(facter disks.${disk}.size_bytes)"   \
                                    "$disk_label")
 
+    if [ "$smartctl_code" -eq 0 ]; then
+      smart_color_status=2
+    else
+      smart_color_status=0
+    fi
+
+    smart_status="$smart_lettercode : $smartctl_data"
+    colorized_smart_status=$(
+      colorize smart 1 1 2 "$smart_color_status" "$smart_status")
+
     printf "disk %-12s%s\n"  "${disk}:" "$colorized_disk_info"
-    printf "SMART %-11s%s\n" "${disk}:" "$smartctl_data"
+    printf "SMART %-11s%s\n" "${disk}:" "$colorized_smart_status"
   done
 }
 

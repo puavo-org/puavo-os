@@ -46,6 +46,8 @@ cat <<EOF > /etc/samba/smb.conf.tmp
   os level = 99
   preferred master = yes
   dns proxy = yes
+  bind interfaces only = yes
+  interfaces = lo ltsp* wlan*
 
   client use spnego = yes
   client signing = yes
@@ -123,7 +125,6 @@ cat <<EOF > /etc/samba/smb.conf.tmp
   directory mask = 0700
   browseable = No
   guest ok = Yes
-  profile acls = Yes
   csc policy = disable
   force user = %U
   valid users = %U @"Domain Admins"

@@ -37,7 +37,6 @@ class gnome_shell_extensions {
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
     , 'nohotcorner@azuri.free.fr'
-    , 'printers@linux-man.org'
     , 'puavomenu@puavo.org'
     , 'TopIcons@phocean.net'
     , 'uparrows@puavo.org'
