@@ -3,10 +3,6 @@ class desktop_cups {
   include ::puavo_conf
 
   file {
-    '/etc/cups/cups-browsed.conf':
-      require => Package['cups-browsed'],
-      source  => 'puppet:///modules/desktop_cups/cups-browsed.conf';
-
     '/etc/cups/cupsd.conf':
       require => Package['cups-daemon'],
       source  => 'puppet:///modules/desktop_cups/cupsd.conf';
@@ -18,6 +14,9 @@ class desktop_cups {
   }
 
   ::puavo_conf::script {
+    'setup_cups_browsed':
+      source => 'puppet:///modules/desktop_cups/setup_cups_browsed';
+
     'setup_desktop_printer_restrictions':
       source => 'puppet:///modules/desktop_cups/setup_desktop_printer_restrictions';
   }

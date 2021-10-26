@@ -6,6 +6,62 @@ test_camera() {
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
 }
 
+test_disks() {
+  local all_output disk_devices error_output letter mask smartctl_code \
+        smartctl_output
+
+  disk_devices=$(facter --json disks \
+                   | jq -r '.disks | keys | .[]' \
+                   | grep -E '^(mmcblk|nvme|sd|vd|xvda)')
+
+  all_output=''
+  error_output=''
+
+  for disk in $disk_devices; do
+    smartctl_code=0
+    smartctl_output=$(smartctl -a "/dev/${disk}" 2>/dev/null) || smartctl_code=$?
+
+    all_output="${all_output}${smartctl_output}
+
+"
+
+    if [ "$smartctl_code" -eq 0 ]; then
+      error_output="${error_output}No errors on /dev/${disk} ::
+
+"
+    else
+      error_output="${error_output}Some errors on /dev/${disk} ::
+"
+      mask=1
+      for i in 0 1 2 3 4 5 6 7; do
+        case "$i" in
+
+          0) letter='P'; errormsg='Command line did not parse.';;
+          1) letter='O'; errormsg='Device open failed.';;
+          2) letter='B'; errormsg='Some SMART or other ATA command to the disk failed.';;
+          3) letter='F'; errormsg='SMART status check returned "DISK FAILING".';;
+          4) letter='A'; errormsg='We found prefail Attributes <= threshold.';;
+          5) letter='T'; errormsg='Some Attributes have been <= threshold in the past.';;
+          6) letter='E'; errormsg='The device error log contains records of errors.';;
+          7) letter='S'; errormsg='The device self-test log contains records of errors.';;
+        esac
+        if [ "$((($smartctl_code & $mask) && 1))" -eq 1 ]; then
+          error_output="${error_output}   ${letter}  :: ${errormsg}
+"
+        else
+          error_output="${error_output}  (${letter}) :: -
+"
+        fi
+        mask=$(($mask << 1))
+      done
+      error_output="${error_output}
+"
+    fi
+  done
+
+  dialog --no-collapse --msgbox "${error_output}${all_output}" -1 -1
+}
+
 test_keyboard() {
   local ruby_test_keyboard_script
 
@@ -315,8 +371,9 @@ fi
 mainmenu_default_item='camera'
 while true; do
   response=$(dialog --stdout --default-item "$mainmenu_default_item" \
-                    --menu 'Choose a test' 14 44 7 \
+                    --menu 'Choose a test' 15 44 8 \
                camera     'Test webcam' \
+               disks      'Test disks' \
                keyboard   'Test keyboard' \
                microphone 'Test microphone' \
                mouse      'Test mouse/mice' \
@@ -326,6 +383,7 @@ while true; do
 
   case "$response" in
     camera)     mainmenu_default_item=keyboard;   test_camera     || true ;;
+    disks)      mainmenu_default_item=disks;      test_disks      || true ;;
     keyboard)   mainmenu_default_item=microphone; test_keyboard   || true ;;
     microphone) mainmenu_default_item=mouse;      test_microphone || true ;;
     mouse)      mainmenu_default_item=speakers;   test_mouse      || true ;;
