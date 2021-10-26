@@ -24,11 +24,13 @@ class puavo_pkg::packages {
                                , 'filius'
                                , 'netbeans'
                                , 'openclipart'
+                               , 'schoolstore-ti-widgets'
                                , 'tela-icon-theme'
                                , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
-  $bullseye_specific_packages = [ 'tela-icon-theme'
+  $bullseye_specific_packages = [ 'schoolstore-ti-widgets'
+                                , 'tela-icon-theme'
                                 , 'ubuntu-wallpapers' ]
 
   $available_packages = [ 'abitti-naksu'
