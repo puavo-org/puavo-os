@@ -152,50 +152,25 @@ function ltsp_image_entry {
       set kernel_version=""
     fi
 
-    set use_if64cpu='false'
-
     set kernel_version_suffix=''
     if test -n "${kernel_version}"; then
-      if regexp -- '-(amd64|i386)$' "${kernel_version}"; then
-        # kernel_version set to particular arch
-        if test -e "(loop)/boot/vmlinuz-${kernel_version}"; then
-          set kernel_version_suffix="-${kernel_version}"
-        else
-          true  # ... but kernel not available, so just use default
-        fi
-      elif test -e "(loop)/boot/vmlinuz-${kernel_version}-amd64" \
-             -a -e "(loop)/boot/vmlinuz-${kernel_version}-i386"; then
-        set use_if64cpu='true'
-        set kernel_version_suffix="-${kernel_version}"
+      if test -e "(loop)/boot/vmlinuz-${kernel_version}-amd64"; then
+        set kernel_version_suffix="-${kernel_version}-amd64"
       elif test -e "(loop)/boot/vmlinuz-${kernel_version}"; then
-        # no kernels for both archs, but some kernel exists, so use that
         set kernel_version_suffix="-${kernel_version}"
       else
         # requested kernel not found, use default
         true
       fi
-    elif test -e '(loop)/boot/vmlinuz-amd64' \
-           -a -e '(loop)/boot/vmlinuz-i386'; then
-      set use_if64cpu='true'
-    else
-      true              # okay, just use default kernel
-    fi
 
-    if test "${use_if64cpu}" = 'true'; then
-      if cpuid -l; then
-        set kernel_version_suffix="${kernel_version_suffix}-amd64"
+      # one more sanity test (also checks the corresponding initrd.img)
+      if test -e "(loop)/boot/initrd.img${kernel_version_suffix}" \
+           -a -e "(loop)/boot/vmlinuz${kernel_version_suffix}"; then
+        true      # all is okay
       else
-        set kernel_version_suffix="${kernel_version_suffix}-i386"
+        # something is wrong, use the default kernel
+        set kernel_version_suffix=''
       fi
-    fi
-
-    # one more sanity test (also checks the corresponding initrd.img)
-    if test -e "(loop)/boot/initrd.img${kernel_version_suffix}" \
-         -a -e "(loop)/boot/vmlinuz${kernel_version_suffix}"; then
-      true      # all is okay
-    else
-      # something is wrong, use the default kernel
-      set kernel_version_suffix=''
     fi
 
     set kernelparameters="$4"
