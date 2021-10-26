@@ -1,3 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+read puavo_domain < /etc/puavo/domain
+
+browsepoll_lines=''
+cups_servers=$(puavo-conf puavo.printing.servers)
+for server in $cups_servers; do
+  srvname=$(printf "%s" "$server" \
+              | awk -v puavo_domain="$puavo_domain" '
+                  { gsub(/%%DOMAIN%%/, puavo_domain); print }')
+  browsepoll_lines="${browsepoll_lines}BrowsePoll $srvname
+"
+done
+
+cat > /etc/cups/cups-browsed.conf.tmp <<EOF
 # All configuration options described here can also be supplied on the
 # command line of cups-browsed via the "-o" option. In case of
 # contradicting settings the setting defined in the configuration file
@@ -279,7 +296,7 @@ BrowseRemoteProtocols dnssd cups
 # BrowsePoll cups.example.com
 # BrowsePoll cups.example.com:631
 # BrowsePoll cups.example.com:631/version=1.1
-
+${browsepoll_lines}
 
 # LDAP browsing configuration
 # The default value for all options is an empty string. Example configuration:
@@ -699,3 +716,7 @@ AutoClustering Yes
 # shutdown.
 
 # AutoShutdownTimeout 30
+EOF
+
+mv /etc/cups/cups-browsed.conf.tmp \
+   /etc/cups/cups-browsed.conf
