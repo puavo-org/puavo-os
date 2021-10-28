@@ -146,10 +146,10 @@ Description: Puavo lxc developer tools
 Package: puavo-ers
 Architecture: all
 Depends: ${misc:Depends},
- tcl8.6,
- tcllib,
- tcl-tls,
- tk8.6
+ gir1.2-ayatanaappindicator3-0.1,
+ python3,
+ python3-dbus,
+ python3-gi
 Description: Puavo Examination Room Server
  A script for managing virtual machines for examination room servers
  (currently Abitti KTP).

@@ -21,11 +21,11 @@ import threading
 import time
 import zipfile
 
-gi.require_version('AppIndicator3', '0.1')
+gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 
-from gi.repository import AppIndicator3
+from gi.repository import AyatanaAppIndicator3
 from gi.repository import Gdk
 from gi.repository import Gio
 from gi.repository import GLib
@@ -83,10 +83,10 @@ class PuavoErsApplet:
 
   def __init__(self):
     self.indicator \
-      = AppIndicator3.Indicator.new('puavo-ers-applet',
+      = AyatanaAppIndicator3.Indicator.new('puavo-ers-applet',
           '/usr/share/icons/Faenza/emblems/64/emblem-default.png',
-          AppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
-    self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+          AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+    self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
 
     self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
