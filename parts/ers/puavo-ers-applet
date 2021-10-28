@@ -46,7 +46,6 @@ EXAMS_ARCHIVE_DIR       = os.path.join(KTP_JAKO_DIR, 'Arkisto')
 EXAMS_DIR               = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE         = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR      = os.path.join(KTP_JAKO_DIR, 'Tulevat')
-MGMT_UPDATE_MARKER_PATH = os.path.join(KTP_JAKO_DIR, '.update_ktpapu-asennin')
 
 
 exam_scheduler_lock = threading.Lock()
@@ -818,9 +817,6 @@ class PuavoErsServerHelper (threading.Thread):
           update = True
 
         if update:
-          with open(MGMT_UPDATE_MARKER_PATH, 'w') as f:
-            pass
-
           syslog.syslog(syslog.LOG_NOTICE,
                         'copying/updating %s to %s' \
                           % (self.MGMT_INSTALL_SOURCE_PATH,
@@ -911,11 +907,6 @@ class PuavoErsExamScheduler (threading.Thread):
     shutil.copy2(self.EXAM_ANSWERS_PATH, results_filepath)
 
 
-  def update_mgmt(self):
-    syslog.syslog(syslog.LOG_NOTICE, 'sending update command to ktpapu-asennin')
-    return self.server_cmd('update')
-
-
   def ping(self):
     return self.server_cmd('ping')
 
@@ -947,13 +938,8 @@ class PuavoErsExamScheduler (threading.Thread):
         old_comm_state = comm_ok
 
         if comm_ok:
-          if os.path.exists(MGMT_UPDATE_MARKER_PATH):
-            self.update_mgmt()
-            rm_f(MGMT_UPDATE_MARKER_PATH, False)
-            comm_ok = False
-          else:
-            with exam_scheduler_lock:
-              self.schedule_exams(current_exams_set)
+          with exam_scheduler_lock:
+            self.schedule_exams(current_exams_set)
 
       except ExamSchedulerNotActive as e:
         syslog.syslog(syslog.LOG_INFO, 'exam scheduler has been disabled')
