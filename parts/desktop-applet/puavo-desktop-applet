@@ -833,8 +833,18 @@ class MonitorsUpdater(PuavoWidget):
     self.send_button.show()
     self.applet.menu.append(self.send_button)
 
+    self.reset_button = Gtk.MenuItem(label=_tr('Re-run display settings'))
+    self.reset_button.connect('activate', self.reset_displays)
+    self.reset_button.show()
+    self.applet.menu.append(self.reset_button)
+
+
     return True
 
+  def reset_displays(self, widget):
+    cmd = [ '/usr/lib/puavo-ltsp-client/run-xrandr' ]
+    subprocess.Popen(cmd, close_fds=True)
+    return
 
   def send_display_configuration(self, widget):
     cmd = [ '/usr/bin/puavo-send-monitors-xml' ]
