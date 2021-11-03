@@ -1,5 +1,6 @@
 class wine {
   include ::packages
+  include ::wine::setup
   include ::wine::use_wine_devel_as_default
 
   file {

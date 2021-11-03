@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+setup_d_drive() {
+  ln -fns "$HOME" "${WINEPREFIX}/dosdevices/d:"
+}
+
+if [ -z "${WINEPREFIX:-}" ]; then
+  echo 'WINEPREFIX is not set, doing nothing' >&2
+  exit 1
+fi
+
+status=0
+
+setup_d_drive || status=1
+
+exit $status
