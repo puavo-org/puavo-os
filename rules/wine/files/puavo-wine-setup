@@ -6,6 +6,85 @@ setup_d_drive() {
   ln -fns "$HOME" "${WINEPREFIX}/dosdevices/d:"
 }
 
+setup_links() {
+  link_setup_status=0
+
+  wine_userdir_path="${WINEPREFIX}/drive_c/users/${USER}"
+
+  for dir in DESKTOP DOCUMENTS DOWNLOAD MUSIC PICTURES TEMPLATES VIDEOS; do
+    case "$LANGUAGE" in
+      fi)
+        case "$dir" in
+          DESKTOP)   link_name='Työpöytä'               ;;
+          DOCUMENTS) link_name='Omat tiedostot'         ;;
+          DOWNLOAD)  link_name='Downloads'              ;;
+          MUSIC)     link_name='Omat musiikkitiedostot' ;;
+          PICTURES)  link_name='Omat kuvatiedostot'     ;;
+          TEMPLATES) link_name='Templates'              ;;
+          VIDEOS)    link_name='Omat videotiedostot'    ;;
+        esac
+        ;;
+      sv)
+        case "$dir" in
+          DESKTOP)   link_name='Skrivbord'       ;;
+          DOCUMENTS) link_name='Mina dokument'   ;;
+          DOWNLOAD)  link_name='Downloads'       ;;
+          MUSIC)     link_name='Min musik'       ;;
+          PICTURES)  link_name='Mina bilder'     ;;
+          TEMPLATES) link_name='Templates'       ;;
+          VIDEOS)    link_name='Mina videoklipp' ;;
+        esac
+        ;;
+      *)
+        case "$dir" in
+          DESKTOP)   link_name='Desktop'      ;;
+          DOCUMENTS) link_name='My Documents' ;;
+          DOWNLOAD)  link_name='Downloads'    ;;
+          MUSIC)     link_name='My Music'     ;;
+          PICTURES)  link_name='My Pictures'  ;;
+          TEMPLATES) link_name='Templates'    ;;
+          VIDEOS)    link_name='My Videos'    ;;
+        esac
+        ;;
+    esac
+
+    if ! link_target=$(xdg-user-dir "$dir"); then
+      echo "Could not lookup XDG dir for $dir" >&2
+      link_setup_status=1
+      continue
+    fi
+
+    link_src="${WINEPREFIX}/drive_c/users/${USER}/${link_name}"
+
+    if [ ! -d "$link_target" ]; then
+      continue
+    fi
+
+    if [ -h "$link_src" ] \
+      && [ "$(readlink "$link_src")" = "$link_target" ]; then
+        continue
+    fi
+
+    # Must update link in user Wine home directory.
+
+    # If there is a directory that is not a link,
+    # make a backup in case it is non-empty.
+    if [ -d "$link_src" -a ! -h "$link_src" ]; then
+      backup_dir="${link_src}.$(date +%s)"
+      if ! mv -T "$link_src" "$backup_dir"; then
+        link_setup_status=1; continue
+      fi
+      if ! rmdir --ignore-fail-on-non-empty "$backup_dir"; then
+        link_setup_status=1; continue
+      fi
+    fi
+
+    ln -fns "$link_target" "$link_src" || link_setup_status=1
+  done
+
+  return $link_setup_status
+}
+
 if [ -z "${WINEPREFIX:-}" ]; then
   echo 'WINEPREFIX is not set, doing nothing' >&2
   exit 1
@@ -13,6 +92,14 @@ fi
 
 status=0
 
-setup_d_drive || status=1
+if ! setup_d_drive; then
+  echo 'Problem occurred when setting the up D drive.' >&2
+  status=1
+fi
+
+if ! setup_links; then
+  echo 'Problem occurred when setting up links.' >&2
+  status=1
+fi
 
 exit $status
