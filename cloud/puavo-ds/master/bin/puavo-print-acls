@@ -672,7 +672,8 @@ rule {
 # some permissions to "addressbook"
 rule {
   [dn subtree $People]
-    [attrs displayName                      \
+    [attrs cn                               \
+           displayName                      \
            entry                            \
            givenName                        \
            jpegPhoto                        \
@@ -681,6 +682,7 @@ rule {
            preferredLanguage                \
            puavoEduPersonPersonnelNumber    \
            puavoEduPersonReverseDisplayName \
+           puavoExternalData                \
            puavoExternalId                  \
            puavoLocale                      \
            sn                               \
