@@ -114,7 +114,7 @@ end
 puavoconf = Puavo::Conf.new
 network_interfaces_filter = puavoconf.get('puavo.networking.ddns.dhcpd_interfaces') \
                                      .split(',')
-ubnt_unifi_address = puavoconf.get('puavo.networking.ubnt.unify.address')
+ubnt_unifi_address = puavoconf.get('puavo.networking.ubnt.unifi.address')
 puavoconf.close
 
 # XXX duplicate code with setup_bootserver_cups_restrictions
