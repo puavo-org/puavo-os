@@ -7,16 +7,23 @@ setup_d_drive() {
 }
 
 setup_link() {
-  local backup_dir lang link_name link_src link_target my_language xdg_user_dir
+  local backup_dir lang link_name link_src link_target my_language remove \
+        user_dirs xdg_user_dir
 
-  xdg_user_dir=$1
-  link_name=$2
-  lang=$3
-  my_language=$4
+  user_dirs=$1
+  xdg_user_dir=$2
+  link_name=$3
+  lang=$4
+  my_language=$5
 
   link_src="${WINEPREFIX}/drive_c/users/${USER}/${link_name}"
 
-  if [ -n "$lang" -a "$my_language" != "$lang" ]; then
+  remove=false
+  if ! printf "%s" "$user_dirs" | grep -qw "$xdg_user_dir"; then
+    remove=true
+  fi
+
+  if $remove || [ -n "$lang" -a "$my_language" != "$lang" ]; then
     rm -f "$link_src" || return 1
     return 0
   fi
@@ -51,7 +58,15 @@ setup_link() {
 }
 
 setup_wine_links() {
-  local languages
+  local dir lang languages link_name link_setup_status my_language user_dirs \
+        user_dirs_arg
+
+  user_dirs_arg=$1
+  if [ "$user_dirs" = 'ALL' ]; then
+    user_dirs='DESKTOP DOWNLOAD DOCUMENTS MUSIC PICTURES TEMPLATES VIDEOS'
+  else
+    user_dirs=$(printf "%s" "$user_dirs" | tr , ' ')
+  fi
 
   link_setup_status=0
 
@@ -60,14 +75,19 @@ setup_wine_links() {
     *)        my_language='en'        ;;
   esac
 
-  setup_link DOWNLOAD  Downloads '' "$my_language" || link_setup_status=1
-  setup_link TEMPLATES Templates '' "$my_language" || link_setup_status=1
+  setup_link "$user_dirs" DOWNLOAD Downloads '' "$my_language" \
+    || link_setup_status=1
+
+  setup_link "$user_dirs" TEMPLATES Templates '' "$my_language" \
+    || link_setup_status=1
 
   for dir in DESKTOP DOCUMENTS MUSIC PICTURES VIDEOS; do
     # We iterate through all languages so that we will remove links that
     # are no longer needed.
     languages=$(echo "en\nfi\nsv" | grep -vx "$my_language";
                 echo "$my_language")
+
+    link_name=''
     for lang in $languages; do
       case "$lang" in
         fi)
@@ -99,7 +119,13 @@ setup_wine_links() {
           ;;
       esac
 
-      setup_link "$dir" "$link_name" "$lang" "$my_language" \
+      if [ "$link_name" = '' ]; then
+        echo "No such user dir: '${dir}'" >&2
+        link_setup_status=1
+        continue
+      fi
+
+      setup_link "$user_dirs" "$dir" "$link_name" "$lang" "$my_language" \
         || link_setup_status=1
     done
   done
@@ -119,14 +145,36 @@ fi
 
 status=0
 
-if ! setup_d_drive; then
-  echo 'Problem occurred when setting the up D drive.' >&2
-  status=1
+if ! args=$(getopt -n "$0" -o + -l 'setup-d-drive,user-dirs:' -- "$@"); then
+  echo 'Could not parse command line arguments' >&2
+  exit 1
 fi
 
-if ! setup_wine_links; then
-  echo 'Problem occurred when setting up links.' >&2
-  status=1
+setup_d_drive=false
+user_dirs=''
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --setup-d-drive) setup_d_drive=true; shift  ;;
+    --user-dirs)     user_dirs=$2; shift; shift ;;
+    --) shift; break ;;
+    *) echo 'Usage: puavo-wine-setup [--setup-d-drive] [--user-dirs opts]' >&2; status=2; break ;;
+  esac
+done
+
+if $setup_d_drive; then
+  if ! setup_d_drive; then
+    echo 'Problem occurred when setting the up D drive.' >&2
+    status=1
+  fi
+fi
+
+if [ -n "$user_dirs" ]; then
+  if ! setup_wine_links "$user_dirs"; then
+    echo 'Problem occurred when setting up links.' >&2
+    status=1
+  fi
 fi
 
 exit $status
