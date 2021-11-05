@@ -6,80 +6,102 @@ setup_d_drive() {
   ln -fns "$HOME" "${WINEPREFIX}/dosdevices/d:"
 }
 
-setup_links() {
+setup_link() {
+  local backup_dir lang link_name link_src link_target my_language xdg_user_dir
+
+  xdg_user_dir=$1
+  link_name=$2
+  lang=$3
+  my_language=$4
+
+  link_src="${WINEPREFIX}/drive_c/users/${USER}/${link_name}"
+
+  if [ -n "$lang" -a "$my_language" != "$lang" ]; then
+    rm -f "$link_src" || return 1
+    return 0
+  fi
+
+  if ! link_target=$(xdg-user-dir "$xdg_user_dir"); then
+    echo "Could not lookup XDG dir for $xdg_user_dir" >&2
+    return 1
+  fi
+
+  if [ ! -d "$link_target" ]; then
+    return 0
+  fi
+
+  if [ -h "$link_src" ] \
+    && [ "$(readlink "$link_src")" = "$link_target" ]; then
+      return 0
+  fi
+
+  # Must update link in user Wine home directory.
+
+  # If there is a directory that is not a link,
+  # make a backup in case it is non-empty.
+  if [ -d "$link_src" -a ! -h "$link_src" ]; then
+    backup_dir="${link_src}.$(date +%s)"
+    mv -T "$link_src" "$backup_dir" || return 1
+    rmdir --ignore-fail-on-non-empty "$backup_dir" || true
+  fi
+
+  ln -fns "$link_target" "$link_src" || return 1
+
+  return 0
+}
+
+setup_wine_links() {
+  local languages
+
   link_setup_status=0
 
-  wine_userdir_path="${WINEPREFIX}/drive_c/users/${USER}"
+  case "$LANGUAGE" in
+    en|fi|sv) my_language="$LANGUAGE" ;;
+    *)        my_language='en'        ;;
+  esac
 
-  for dir in DESKTOP DOCUMENTS DOWNLOAD MUSIC PICTURES TEMPLATES VIDEOS; do
-    case "$LANGUAGE" in
-      fi)
-        case "$dir" in
-          DESKTOP)   link_name='Työpöytä'               ;;
-          DOCUMENTS) link_name='Omat tiedostot'         ;;
-          DOWNLOAD)  link_name='Downloads'              ;;
-          MUSIC)     link_name='Omat musiikkitiedostot' ;;
-          PICTURES)  link_name='Omat kuvatiedostot'     ;;
-          TEMPLATES) link_name='Templates'              ;;
-          VIDEOS)    link_name='Omat videotiedostot'    ;;
-        esac
-        ;;
-      sv)
-        case "$dir" in
-          DESKTOP)   link_name='Skrivbord'       ;;
-          DOCUMENTS) link_name='Mina dokument'   ;;
-          DOWNLOAD)  link_name='Downloads'       ;;
-          MUSIC)     link_name='Min musik'       ;;
-          PICTURES)  link_name='Mina bilder'     ;;
-          TEMPLATES) link_name='Templates'       ;;
-          VIDEOS)    link_name='Mina videoklipp' ;;
-        esac
-        ;;
-      *)
-        case "$dir" in
-          DESKTOP)   link_name='Desktop'      ;;
-          DOCUMENTS) link_name='My Documents' ;;
-          DOWNLOAD)  link_name='Downloads'    ;;
-          MUSIC)     link_name='My Music'     ;;
-          PICTURES)  link_name='My Pictures'  ;;
-          TEMPLATES) link_name='Templates'    ;;
-          VIDEOS)    link_name='My Videos'    ;;
-        esac
-        ;;
-    esac
+  setup_link DOWNLOAD  Downloads '' "$my_language" || link_setup_status=1
+  setup_link TEMPLATES Templates '' "$my_language" || link_setup_status=1
 
-    if ! link_target=$(xdg-user-dir "$dir"); then
-      echo "Could not lookup XDG dir for $dir" >&2
-      link_setup_status=1
-      continue
-    fi
+  for dir in DESKTOP DOCUMENTS MUSIC PICTURES VIDEOS; do
+    # We iterate through all languages so that we will remove links that
+    # are no longer needed.
+    languages=$(echo "en\nfi\nsv" | grep -vx "$my_language";
+                echo "$my_language")
+    for lang in $languages; do
+      case "$lang" in
+        fi)
+          case "$dir" in
+            DESKTOP)   link_name='Työpöytä'               ;;
+            DOCUMENTS) link_name='Omat tiedostot'         ;;
+            MUSIC)     link_name='Omat musiikkitiedostot' ;;
+            PICTURES)  link_name='Omat kuvatiedostot'     ;;
+            VIDEOS)    link_name='Omat videotiedostot'    ;;
+          esac
+          ;;
+        sv)
+          case "$dir" in
+            DESKTOP)   link_name='Skrivbord'       ;;
+            DOCUMENTS) link_name='Mina dokument'   ;;
+            MUSIC)     link_name='Min musik'       ;;
+            PICTURES)  link_name='Mina bilder'     ;;
+            VIDEOS)    link_name='Mina videoklipp' ;;
+          esac
+          ;;
+        *)
+          case "$dir" in
+            DESKTOP)   link_name='Desktop'      ;;
+            DOCUMENTS) link_name='My Documents' ;;
+            MUSIC)     link_name='My Music'     ;;
+            PICTURES)  link_name='My Pictures'  ;;
+            VIDEOS)    link_name='My Videos'    ;;
+          esac
+          ;;
+      esac
 
-    link_src="${WINEPREFIX}/drive_c/users/${USER}/${link_name}"
-
-    if [ ! -d "$link_target" ]; then
-      continue
-    fi
-
-    if [ -h "$link_src" ] \
-      && [ "$(readlink "$link_src")" = "$link_target" ]; then
-        continue
-    fi
-
-    # Must update link in user Wine home directory.
-
-    # If there is a directory that is not a link,
-    # make a backup in case it is non-empty.
-    if [ -d "$link_src" -a ! -h "$link_src" ]; then
-      backup_dir="${link_src}.$(date +%s)"
-      if ! mv -T "$link_src" "$backup_dir"; then
-        link_setup_status=1; continue
-      fi
-      if ! rmdir --ignore-fail-on-non-empty "$backup_dir"; then
-        link_setup_status=1; continue
-      fi
-    fi
-
-    ln -fns "$link_target" "$link_src" || link_setup_status=1
+      setup_link "$dir" "$link_name" "$lang" "$my_language" \
+        || link_setup_status=1
+    done
   done
 
   return $link_setup_status
@@ -90,6 +112,11 @@ if [ -z "${WINEPREFIX:-}" ]; then
   exit 1
 fi
 
+if [ -z "${HOME:-}" -o -z "${LANGUAGE:-}" -o -z "${USER:-}" ]; then
+  echo 'Either HOME or LANGUAGE or USER is not set, doing nothing' >&2
+  exit 1
+fi
+
 status=0
 
 if ! setup_d_drive; then
@@ -97,7 +124,7 @@ if ! setup_d_drive; then
   status=1
 fi
 
-if ! setup_links; then
+if ! setup_wine_links; then
   echo 'Problem occurred when setting up links.' >&2
   status=1
 fi
