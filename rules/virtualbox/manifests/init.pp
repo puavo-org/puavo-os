@@ -10,7 +10,7 @@ class virtualbox {
     exec {
       "create virtualbox driver modules for kernel $kernel_version":
         command => "/usr/lib/virtualbox/vboxdrv.sh puavo_build_modules ${kernel_version} && /usr/bin/touch ${sentinel_path}",
-        creates => $sentinel_path,
+        onlyif  => "/usr/bin/test ! -e '$sentinel_path' -o '$sentinel_path' -ot /var/lib/dpkg/info/virtualbox-6.1.list",
         require => [ File['/usr/lib/virtualbox/vboxdrv.sh']
                    , Kernels::All_kernel_links[$label]
                    , Package['virtualbox-6.1'] ];
