@@ -57,6 +57,56 @@ setup_link() {
   return 0
 }
 
+update_shell_folders() {
+  regfile=$(mktemp /tmp/puavo-wine-setup-regedit.XXXXXX) || return 1
+
+  case "$LANGUAGE" in
+    fi)
+      cat <<EOF > "$regfile"
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"="C:\\\\users\\\\${USER}\\\\Downloads"
+"Desktop"="C:\\\\users\\\\${USER}\\\\Ty\\xf6p\\xf6yt\\xe4"
+"Personal"="C:\\\\users\\\\${USER}\\\\Omat tiedostot"
+"My Music"="C:\\\\users\\\\${USER}\\\\Omat musiikkitiedostot"
+"My Pictures"="C:\\\\users\\\\${USER}\\\\Omat kuvatiedostot"
+"My Videos"="C:\\\\users\\\\${USER}\\\\Omat videotiedostot"
+"Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+EOF
+      ;;
+    sv)
+      cat <<EOF > "$regfile"
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
+"Desktop"="C:\\\\users\\\\${USER}\\\\Skrivbord"
+"Personal"="C:\\\\users\\\\${USER}\\\\Mina dokument"
+"My Music"="C:\\\\users\\\\${USER}\\\\Min musik"
+"My Pictures"="C:\\\\users\\\\${USER}\\\\Mina bilder"
+"My Videos"="C:\\\\users\\\\${USER}\\\\Mina videoklipp"
+"Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+EOF
+      ;;
+    *)
+      cat <<EOF > "$regfile"
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"="C:\\\\users\\\\${USER}\\\\Downloads"
+"Desktop"="C:\\\\users\\\\${USER}\\\\Desktop"
+"Personal"="C:\\\\users\\\\${USER}\\\\My Documents"
+"My Music"="C:\\\\users\\\\${USER}\\\\My Music"
+"My Pictures"="C:\\\\users\\\\${USER}\\\\My Pictures"
+"My Videos"="C:\\\\users\\\\${USER}\\\\My Videos"
+"Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+EOF
+      ;;
+  esac
+
+  regedit "$regfile" || return 1
+  rm -f "$regfile" || true
+
+  return 0
+}
+
 setup_wine_links() {
   local dir lang languages link_name link_setup_status my_language user_dirs \
         user_dirs_arg
@@ -145,27 +195,38 @@ fi
 
 status=0
 
-if ! args=$(getopt -n "$0" -o + -l 'setup-d-drive,user-dirs:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'setup-d-drive,update-shell-folders,user-dirs:' -- "$@"); then
   echo 'Could not parse command line arguments' >&2
   exit 1
 fi
 
 setup_d_drive=false
+update_shell_folders=false
 user_dirs=''
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --setup-d-drive) setup_d_drive=true; shift  ;;
-    --user-dirs)     user_dirs=$2; shift; shift ;;
+    --setup-d-drive)        setup_d_drive=true;        shift ;;
+    --update-shell-folders) update_shell_folders=true; shift ;;
+    --user-dirs)            user_dirs=$2; shift;       shift ;;
     --) shift; break ;;
-    *) echo 'Usage: puavo-wine-setup [--setup-d-drive] [--user-dirs opts]' >&2; status=2; break ;;
+    *) echo 'Usage: puavo-wine-setup [--setup-d-drive] [--update-shell-folders] [--user-dirs opts]' >&2
+       exit 1
+       ;;
   esac
 done
 
 if $setup_d_drive; then
   if ! setup_d_drive; then
     echo 'Problem occurred when setting the up D drive.' >&2
+    status=1
+  fi
+fi
+
+if $update_shell_folders; then
+  if ! update_shell_folders; then
+    echo 'Problem occurred when updating shell folders.' >&2
     status=1
   fi
 fi
