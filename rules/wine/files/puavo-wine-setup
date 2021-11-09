@@ -24,7 +24,10 @@ setup_link() {
   fi
 
   if $remove || [ -n "$lang" -a "$my_language" != "$lang" ]; then
-    rm -f "$link_src" || return 1
+    # remove links which are for other languages
+    if [ -h "$link_src" ]; then
+      rm -f "$link_src" || return 1
+    fi
     return 0
   fi
 
