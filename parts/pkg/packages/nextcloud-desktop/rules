@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}" /opt/nextcloud-desktop
+        ln -fns "${upstream_dir}/nextcloud-desktop.png" /usr/share/icons/nextcloud-desktop.png
+        cat <<EOF > /usr/share/applications/nextclound-desktop.desktop
+[Desktop Entry]
+Name=Nextcloud Desktop
+Exec=/opt/nextcloud-desktop/nextcloud-desktop.AppImage
+Type=Application
+Terminal=false
+Icon=nextcloud-desktop
+StartupNotify=true
+Categories=Internet;
+EOF
+	;;
+    unconfigure)
+	rm -f /opt/nextcloud \
+              /usr/share/applications/nextcloud-desktop.desktop \
+              /usr/share/icons/nextcloud-desktop.png
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+        cp "${upstream_pack}" "${upstream_dir}/nextcloud-desktop.AppImage"
+        chmod 755 "${upstream_dir}/nextcloud-desktop.AppImage"
+        cp -p nextcloud-desktop.png "$upstream_dir"
+	;;
+    *)
+	;;
+esac

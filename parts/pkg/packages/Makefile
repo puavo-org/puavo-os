@@ -48,6 +48,7 @@ packagedirs += mindplus
 packagedirs += msttcorefonts
 packagedirs += musescore-appimage
 packagedirs += netbeans
+packagedirs += nextcloud-desktop
 packagedirs += nightcode
 packagedirs += novoconnect
 packagedirs += obsidian-icons
