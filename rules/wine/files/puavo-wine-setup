@@ -60,12 +60,30 @@ setup_link() {
   return 0
 }
 
-update_shell_folders() {
+run_regedit() {
+  local regfile status
+
+  status=0
+
   regfile=$(mktemp /tmp/puavo-wine-setup-regedit.XXXXXX) || return 1
 
+  if ! cat > "$regfile" || ! regedit "$regfile"; then
+    status=1
+  fi
+
+  rm -f "$regfile"
+
+  return $status
+}
+
+hexconv() {
+  echo -n "$1" | od -A n -t x1 | xargs | tr ' ' ,
+}
+
+update_shell_folders() {
   case "$LANGUAGE" in
     fi)
-      cat <<EOF > "$regfile"
+      run_regedit <<EOF
 Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
 "{374DE290-123F-4565-9164-39C4925E467B}"="C:\\\\users\\\\${USER}\\\\Downloads"
@@ -75,10 +93,19 @@ Windows Registry Editor Version 5.00
 "My Pictures"="C:\\\\users\\\\${USER}\\\\Omat kuvatiedostot"
 "My Videos"="C:\\\\users\\\\${USER}\\\\Omat videotiedostot"
 "Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"=hex(2):$(hexconv '%USERPROFILE%\Downloads')
+"Desktop"=hex(2):$(hexconv '%USERPROFILE%\Työpöytä')
+"Personal"=hex(2):$(hexconv '%USERPROFILE%\Omat tiedostot')
+"My Music"=hex(2):$(hexconv '%USERPROFILE%\Omat musiikkitiedostot')
+"My Pictures"=hex(2):$(hexconv '%USERPROFILE%\Omat kuvatiedostot')
+"My Videos"=hex(2):$(hexconv '%USERPROFILE%\Omat videotiedostot')
+"Templates"=hex(2):$(hexconv '%USERPROFILE%\Templates')
 EOF
       ;;
     sv)
-      cat <<EOF > "$regfile"
+      run_regedit <<EOF
 Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
 "Desktop"="C:\\\\users\\\\${USER}\\\\Skrivbord"
@@ -87,10 +114,19 @@ Windows Registry Editor Version 5.00
 "My Pictures"="C:\\\\users\\\\${USER}\\\\Mina bilder"
 "My Videos"="C:\\\\users\\\\${USER}\\\\Mina videoklipp"
 "Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"=hex(2):$(hexconv '%USERPROFILE%\Downloads')
+"Desktop"=hex(2):$(hexconv '%USERPROFILE%\Skrivbord')
+"Personal"=hex(2):$(hexconv '%USERPROFILE%\Mina dokument')
+"My Music"=hex(2):$(hexconv '%USERPROFILE%\Min musik')
+"My Pictures"=hex(2):$(hexconv '%USERPROFILE%\Mina bilder')
+"My Videos"=hex(2):$(hexconv '%USERPROFILE%\Mina videoklip')
+"Templates"=hex(2):$(hexconv '%USERPROFILE%\Templates')
 EOF
       ;;
     *)
-      cat <<EOF > "$regfile"
+      run_regedit <<EOF
 Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
 "{374DE290-123F-4565-9164-39C4925E467B}"="C:\\\\users\\\\${USER}\\\\Downloads"
@@ -100,14 +136,19 @@ Windows Registry Editor Version 5.00
 "My Pictures"="C:\\\\users\\\\${USER}\\\\My Pictures"
 "My Videos"="C:\\\\users\\\\${USER}\\\\My Videos"
 "Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"=hex(2):$(hexconv '%USERPROFILE%\Downloads')
+"Desktop"=hex(2):$(hexconv '%USERPROFILE%\Desktop')
+"Personal"=hex(2):$(hexconv '%USERPROFILE%\My Documents')
+"My Music"=hex(2):$(hexconv '%USERPROFILE%\My Music')
+"My Pictures"=hex(2):$(hexconv '%USERPROFILE%\My Pictures')
+"My Videos"=hex(2):$(hexconv '%USERPROFILE%\My Videos')
+"Templates"=hex(2):$(hexconv '%USERPROFILE%\Templates')
 EOF
       ;;
   esac
-
-  regedit "$regfile" || return 1
-  rm -f "$regfile" || true
-
-  return 0
 }
 
 setup_wine_links() {
