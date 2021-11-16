@@ -33,8 +33,12 @@ set services {
     }}
 
   { bind9 {
-      /etc/system/multi-user.target.wants/bind9.service
+      /etc/systemd/system/multi-user.target.wants/bind9.service
         -> /lib/systemd/system/bind9.service
+      /etc/rc2.d/S01bind9 -> /etc/init.d/bind9
+      /etc/rc3.d/S01bind9 -> /etc/init.d/bind9
+      /etc/rc4.d/S01bind9 -> /etc/init.d/bind9
+      /etc/rc5.d/S01bind9 -> /etc/init.d/bind9
     }}
 
   { collectd {
