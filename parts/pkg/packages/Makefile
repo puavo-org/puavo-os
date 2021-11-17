@@ -61,6 +61,7 @@ packagedirs += processing
 packagedirs += promethean
 packagedirs += prusaslicer
 packagedirs += pycharm
+packagedirs += qcad-cam
 packagedirs += robboscratch
 packagedirs += robotmeshconnect
 packagedirs += schoolstore-ti-widgets
