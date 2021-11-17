@@ -11,10 +11,9 @@ case "$command" in
     configure)
         upstream_dir=$1
 
-        ln -fns "${upstream_dir}" "$qcad_dir"
+        ln -fns "$upstream_dir" "$qcad_dir"
         ln -fns "${upstream_dir}/qcad_icon.png" /usr/share/icons/qcad_icon.png
-# Remove some plugins to make the qcad act as community/open source edition
-# explained at qcad site https://qcad.org/en/qcad-downloads-trial 
+
         cat <<EOF > /usr/share/applications/qcad-cam.desktop
 [Desktop Entry]
 Name=QCAD/CAM
@@ -34,12 +33,20 @@ EOF
     unpack)
         upstream_pack=$1
         upstream_dir=$2
-        tar -x -f "$upstream_pack" -C "$upstream_dir"  --strip-components=1\
-            --exclude 'libqcadcamscripts.so' --exclude 'libqcadcsg.so' --exclude \
-            'libqcaddwg.so' --exclude 'libqcadgles3d.so' --exclude 'libqcadnest.so'\
-             --exclude 'libqcadpolygon.so' --exclude 'libqcadproj.so' --exclude \
-             'libqcadproscripts.so' --exclude 'libqcadspatialindexpro.so' --exclude \
-             'libqcadtriangulation.so'
+
+        # Remove some plugins to make the qcad act as community/open source edition.
+        # Explained at qcad site https://qcad.org/en/qcad-downloads-trial
+        tar -x -f "$upstream_pack" -C "$upstream_dir" --strip-components=1 \
+            --exclude 'libqcadcamscripts.so' \
+            --exclude 'libqcadcsg.so' \
+            --exclude 'libqcaddwg.so' \
+            --exclude 'libqcadgles3d.so' \
+            --exclude 'libqcadnest.so' \
+            --exclude 'libqcadpolygon.so' \
+            --exclude 'libqcadproj.so' \
+            --exclude 'libqcadproscripts.so' \
+            --exclude 'libqcadspatialindexpro.so' \
+            --exclude 'libqcadtriangulation.so'
         ;;
     *)
         ;;
