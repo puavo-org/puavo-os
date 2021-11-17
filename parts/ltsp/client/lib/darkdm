@@ -97,7 +97,7 @@ list_disks() {
     if smartctl_data=$(
       printf "%s" "$smartctl_json" | jq -r '
         if has("firmware_version") then
-          "firmare:" + .firmware_version + " " else "" end
+          "firmware:" + .firmware_version + " " else "" end
         + if has("power_on_time") and (.power_on_time|has("hours")) then
             "power_on_hours:" + (.power_on_time.hours|tostring) + " "
           else "" end
