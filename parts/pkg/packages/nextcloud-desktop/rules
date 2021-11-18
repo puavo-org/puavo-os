@@ -11,7 +11,7 @@ case "${command}" in
 
         ln -fns "$upstream_dir" /opt/nextcloud-desktop
         ln -fns "${upstream_dir}/nextcloud-desktop.png" /usr/share/icons/nextcloud-desktop.png
-        cat <<EOF > /usr/share/applications/nextclound-desktop.desktop
+        cat <<EOF > /usr/share/applications/nextcloud-desktop.desktop
 [Desktop Entry]
 Name=Nextcloud Desktop
 Exec=/opt/nextcloud-desktop/nextcloud-desktop.AppImage
