@@ -83,11 +83,12 @@ hexconv() {
 update_shell_folders() {
   case "$LANGUAGE" in
     fi)
+      fi_desktop_string=$(/usr/bin/echo -e "\x54\x79\xf6\x70\xf6\x79\x74\xe4")
       run_regedit <<EOF
 Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
 "{374DE290-123F-4565-9164-39C4925E467B}"="C:\\\\users\\\\${USER}\\\\Downloads"
-"Desktop"="C:\\\\users\\\\${USER}\\\\Ty\\xf6p\\xf6yt\\xe4"
+"Desktop"="C:\\\\users\\\\${USER}\\\\${fi_desktop_string}"
 "Personal"="C:\\\\users\\\\${USER}\\\\Omat tiedostot"
 "My Music"="C:\\\\users\\\\${USER}\\\\Omat musiikkitiedostot"
 "My Pictures"="C:\\\\users\\\\${USER}\\\\Omat kuvatiedostot"
@@ -96,7 +97,7 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders]
 "{374DE290-123F-4565-9164-39C4925E467B}"=hex(2):$(hexconv '%USERPROFILE%\Downloads')
-"Desktop"=hex(2):$(hexconv '%USERPROFILE%\Työpöytä')
+"Desktop"=hex(2):$(hexconv "%USERPROFILE%${fi_desktop_string}")
 "Personal"=hex(2):$(hexconv '%USERPROFILE%\Omat tiedostot')
 "My Music"=hex(2):$(hexconv '%USERPROFILE%\Omat musiikkitiedostot')
 "My Pictures"=hex(2):$(hexconv '%USERPROFILE%\Omat kuvatiedostot')
