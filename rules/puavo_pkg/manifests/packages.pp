@@ -23,6 +23,7 @@ class puavo_pkg::packages {
                                , 'eclipse'
                                , 'filius'
                                , 'netbeans'
+                               , 'nextcloud-desktop'
                                , 'openclipart'
                                , 'schoolstore-ti-widgets'
                                , 'tela-icon-theme'
@@ -94,6 +95,7 @@ class puavo_pkg::packages {
                               , 'otto-blockly'
                               , 'promethean'
                               , 'prusaslicer'
+                              , 'qcad-cam'
                               , 'signal-desktop'
                               , 'teamviewer'
                               , 'vscode' ]
