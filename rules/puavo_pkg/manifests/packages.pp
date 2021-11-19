@@ -23,6 +23,7 @@ class puavo_pkg::packages {
                                , 'eclipse'
                                , 'filius'
                                , 'netbeans'
+                               , 'nextcloud-desktop'
                                , 'openclipart'
                                , 'tela-icon-theme'
                                , 'ubuntu-firmware'
