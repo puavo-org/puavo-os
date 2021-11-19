@@ -45,3 +45,5 @@ case "$mode" in
              --user-data-dir="$data_dir"
     ;;
 esac
+
+rm -rf "$data_dir"
