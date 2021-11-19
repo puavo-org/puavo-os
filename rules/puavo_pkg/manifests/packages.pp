@@ -92,6 +92,7 @@ class puavo_pkg::packages {
                               , 'otto-blockly'
                               , 'promethean'
                               , 'prusaslicer'
+                              , 'qcad-cam'
                               , 'signal-desktop'
                               , 'teamviewer'
                               , 'vscode' ]
