@@ -43,6 +43,8 @@ class packages::backports {
                   , 'wireless-regdb'    # needed by current kernel,
                                         # and this is needed by puavo-wlanap
 
+                  , 'inkscape'
+
                   , 'musescore3'
                   , 'musescore3-common'
                   , 'musescore-general-soundfont'
