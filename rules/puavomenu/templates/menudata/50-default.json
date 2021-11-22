@@ -803,7 +803,7 @@
             "tags": "default",
             "keywords": "terminal, utility"
         },
-        "org.inkscape.Inkscape.desktop": {
+        "org.inkscape.Inkscape": {
             "name": {
                 "fi": "Inkscape-vektorigrafiikka",
                 "en": "Inkscape-vector graphics editor",
@@ -1498,7 +1498,7 @@
             "programs": [
                 "gimp",
                 "pinta",
-                "inkscape",
+                "",
                 "geogebra",
                 "geogebra6",
                 "io.github.wxmaxima_developers.wxMaxima",
@@ -1568,7 +1568,7 @@
                 "mypaint",
                 "pinta",
                 "gimp",
-                "inkscape",
+                "org.inkscape.Inkscape",
                 "sumopaint",
                 "simple-scan",
                 "libreoffice-writer",
@@ -1670,7 +1670,7 @@
             "programs": [
                 "pinta",
                 "gimp",
-                "org.inkscape.Inkscape.desktop",
+                "org.inkscape.Inkscape",
                 "sumopaint",
                 "fritzing",
                 "arduino",
@@ -1895,7 +1895,7 @@
                 "org.gnome.gThumb",
                 "eog",
                 "shotwell",
-                "org.inkscape.Inkscape.desktop",
+                "org.inkscape.Inkscape",
                 "scribus",
                 "simple-scan",
                 "xsane",
