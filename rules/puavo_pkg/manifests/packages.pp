@@ -25,11 +25,13 @@ class puavo_pkg::packages {
                                , 'netbeans'
                                , 'nextcloud-desktop'
                                , 'openclipart'
+                               , 'schoolstore-ti-widgets'
                                , 'tela-icon-theme'
                                , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
   $bullseye_specific_packages = [ 'nextcloud-desktop'
+                                , 'schoolstore-ti-widgets'
                                 , 'tela-icon-theme'
                                 , 'ubuntu-wallpapers' ]
 
