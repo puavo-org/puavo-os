@@ -23,12 +23,15 @@ class puavo_pkg::packages {
                                , 'eclipse'
                                , 'filius'
                                , 'netbeans'
+                               , 'nextcloud-desktop'
                                , 'openclipart'
+                               , 'schoolstore-ti-widgets'
                                , 'tela-icon-theme'
                                , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
-  $bullseye_specific_packages = [ 'tela-icon-theme'
+  $bullseye_specific_packages = [ 'schoolstore-ti-widgets'
+                                , 'tela-icon-theme'
                                 , 'ubuntu-wallpapers' ]
 
   $available_packages = [ 'abitti-naksu'
@@ -92,6 +95,7 @@ class puavo_pkg::packages {
                               , 'otto-blockly'
                               , 'promethean'
                               , 'prusaslicer'
+                              , 'qcad-cam'
                               , 'signal-desktop'
                               , 'teamviewer'
                               , 'vscode' ]

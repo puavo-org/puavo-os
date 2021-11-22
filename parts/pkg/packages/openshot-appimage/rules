@@ -22,7 +22,7 @@ Categories=Education;
 EOF
 	;;
     unconfigure)
-	rm -f /opt/cura \
+	rm -f /opt/openshot \
               /usr/share/applications/openshot-appimage.desktop
 	;;
     unpack)

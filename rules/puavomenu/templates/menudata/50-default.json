@@ -682,6 +682,9 @@
         "nextcloud": {
             "tags": "default"
         },
+        "nextcloud-desktop": {
+            "tags": "default"
+        },
         "Nightcode": {
             "name": "Nightcode",
             "tags": "default",
@@ -1058,6 +1061,9 @@
             "tags": "default, education, development"
         },
         "qgis": {
+            "tags": "default"
+        },
+        "qcad-cam": {
             "tags": "default"
         },
         "qjackctl": {
@@ -1898,6 +1904,7 @@
                 "prusaslicer",
                 "sketchup",
                 "freecad",
+                "qcad-cam",
                 "openscad",
                 "FlashPrint"
             ]
@@ -1960,6 +1967,7 @@
                 "google-meet",
                 "dropbox",
                 "nextcloud",
+                "nextcloud-desktop",
                 "empathy",
                 "pidgin",
                 "gftp",

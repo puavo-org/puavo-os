@@ -22,7 +22,7 @@ Categories=Education;
 EOF
 	;;
     unconfigure)
-	rm -f /opt/cura \
+	rm -f /opt/kdenlive \
               /usr/share/applications/kdenlive-appimage.desktop
 	;;
     unpack)

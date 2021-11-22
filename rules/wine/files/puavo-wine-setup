@@ -1,0 +1,286 @@
+#!/bin/sh
+
+set -eu
+
+setup_d_drive() {
+  ln -fns "$HOME" "${WINEPREFIX}/dosdevices/d:"
+}
+
+setup_link() {
+  local backup_dir lang link_name link_src link_target my_language remove \
+        user_dirs xdg_user_dir
+
+  user_dirs=$1
+  xdg_user_dir=$2
+  link_name=$3
+  lang=$4
+  my_language=$5
+
+  link_src="${WINEPREFIX}/drive_c/users/${USER}/${link_name}"
+
+  remove=false
+  if ! printf "%s" "$user_dirs" | grep -qw "$xdg_user_dir"; then
+    remove=true
+  fi
+
+  if $remove || [ -n "$lang" -a "$my_language" != "$lang" ]; then
+    # remove links which are for other languages
+    if [ -h "$link_src" ]; then
+      rm -f "$link_src" || return 1
+    fi
+    return 0
+  fi
+
+  if ! link_target=$(xdg-user-dir "$xdg_user_dir"); then
+    echo "Could not lookup XDG dir for $xdg_user_dir" >&2
+    return 1
+  fi
+
+  if [ ! -d "$link_target" ]; then
+    return 0
+  fi
+
+  if [ -h "$link_src" ] \
+    && [ "$(readlink "$link_src")" = "$link_target" ]; then
+      return 0
+  fi
+
+  # Must update link in user Wine home directory.
+
+  # If there is a directory that is not a link,
+  # make a backup in case it is non-empty.
+  if [ -d "$link_src" -a ! -h "$link_src" ]; then
+    backup_dir="${link_src}.$(date +%s)"
+    mv -T "$link_src" "$backup_dir" || return 1
+    rmdir --ignore-fail-on-non-empty "$backup_dir" || true
+  fi
+
+  ln -fns "$link_target" "$link_src" || return 1
+
+  return 0
+}
+
+run_regedit() {
+  local regfile status
+
+  status=0
+
+  regfile=$(mktemp /tmp/puavo-wine-setup-regedit.XXXXXX) || return 1
+
+  if ! cat > "$regfile" || ! regedit "$regfile"; then
+    status=1
+  fi
+
+  rm -f "$regfile"
+
+  return $status
+}
+
+hexconv() {
+  echo -n "$1" | od -A n -t x1 | xargs | tr ' ' ,
+}
+
+update_shell_folders() {
+  case "$LANGUAGE" in
+    fi)
+      fi_desktop_string=$(/usr/bin/echo -e "\x54\x79\xf6\x70\xf6\x79\x74\xe4")
+      run_regedit <<EOF
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"="C:\\\\users\\\\${USER}\\\\Downloads"
+"Desktop"="C:\\\\users\\\\${USER}\\\\${fi_desktop_string}"
+"Personal"="C:\\\\users\\\\${USER}\\\\Omat tiedostot"
+"My Music"="C:\\\\users\\\\${USER}\\\\Omat musiikkitiedostot"
+"My Pictures"="C:\\\\users\\\\${USER}\\\\Omat kuvatiedostot"
+"My Videos"="C:\\\\users\\\\${USER}\\\\Omat videotiedostot"
+"Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"=hex(2):$(hexconv '%USERPROFILE%\Downloads')
+"Desktop"=hex(2):$(hexconv "%USERPROFILE%${fi_desktop_string}")
+"Personal"=hex(2):$(hexconv '%USERPROFILE%\Omat tiedostot')
+"My Music"=hex(2):$(hexconv '%USERPROFILE%\Omat musiikkitiedostot')
+"My Pictures"=hex(2):$(hexconv '%USERPROFILE%\Omat kuvatiedostot')
+"My Videos"=hex(2):$(hexconv '%USERPROFILE%\Omat videotiedostot')
+"Templates"=hex(2):$(hexconv '%USERPROFILE%\Templates')
+EOF
+      ;;
+    sv)
+      run_regedit <<EOF
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
+"Desktop"="C:\\\\users\\\\${USER}\\\\Skrivbord"
+"Personal"="C:\\\\users\\\\${USER}\\\\Mina dokument"
+"My Music"="C:\\\\users\\\\${USER}\\\\Min musik"
+"My Pictures"="C:\\\\users\\\\${USER}\\\\Mina bilder"
+"My Videos"="C:\\\\users\\\\${USER}\\\\Mina videoklipp"
+"Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"=hex(2):$(hexconv '%USERPROFILE%\Downloads')
+"Desktop"=hex(2):$(hexconv '%USERPROFILE%\Skrivbord')
+"Personal"=hex(2):$(hexconv '%USERPROFILE%\Mina dokument')
+"My Music"=hex(2):$(hexconv '%USERPROFILE%\Min musik')
+"My Pictures"=hex(2):$(hexconv '%USERPROFILE%\Mina bilder')
+"My Videos"=hex(2):$(hexconv '%USERPROFILE%\Mina videoklip')
+"Templates"=hex(2):$(hexconv '%USERPROFILE%\Templates')
+EOF
+      ;;
+    *)
+      run_regedit <<EOF
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"="C:\\\\users\\\\${USER}\\\\Downloads"
+"Desktop"="C:\\\\users\\\\${USER}\\\\Desktop"
+"Personal"="C:\\\\users\\\\${USER}\\\\My Documents"
+"My Music"="C:\\\\users\\\\${USER}\\\\My Music"
+"My Pictures"="C:\\\\users\\\\${USER}\\\\My Pictures"
+"My Videos"="C:\\\\users\\\\${USER}\\\\My Videos"
+"Templates"="C:\\\\users\\\\${USER}\\\\Templates"
+
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders]
+"{374DE290-123F-4565-9164-39C4925E467B}"=hex(2):$(hexconv '%USERPROFILE%\Downloads')
+"Desktop"=hex(2):$(hexconv '%USERPROFILE%\Desktop')
+"Personal"=hex(2):$(hexconv '%USERPROFILE%\My Documents')
+"My Music"=hex(2):$(hexconv '%USERPROFILE%\My Music')
+"My Pictures"=hex(2):$(hexconv '%USERPROFILE%\My Pictures')
+"My Videos"=hex(2):$(hexconv '%USERPROFILE%\My Videos')
+"Templates"=hex(2):$(hexconv '%USERPROFILE%\Templates')
+EOF
+      ;;
+  esac
+}
+
+setup_wine_links() {
+  local dir lang languages link_name link_setup_status my_language user_dirs \
+        user_dirs_arg
+
+  user_dirs_arg=$1
+  if [ "$user_dirs" = 'ALL' ]; then
+    user_dirs='DESKTOP DOWNLOAD DOCUMENTS MUSIC PICTURES TEMPLATES VIDEOS'
+  else
+    user_dirs=$(printf "%s" "$user_dirs" | tr , ' ')
+  fi
+
+  link_setup_status=0
+
+  case "$LANGUAGE" in
+    en|fi|sv) my_language="$LANGUAGE" ;;
+    *)        my_language='en'        ;;
+  esac
+
+  setup_link "$user_dirs" DOWNLOAD Downloads '' "$my_language" \
+    || link_setup_status=1
+
+  setup_link "$user_dirs" TEMPLATES Templates '' "$my_language" \
+    || link_setup_status=1
+
+  for dir in DESKTOP DOCUMENTS MUSIC PICTURES VIDEOS; do
+    # We iterate through all languages so that we will remove links that
+    # are no longer needed.
+    languages=$(echo "en\nfi\nsv" | grep -vx "$my_language";
+                echo "$my_language")
+
+    link_name=''
+    for lang in $languages; do
+      case "$lang" in
+        fi)
+          case "$dir" in
+            DESKTOP)   link_name='Työpöytä'               ;;
+            DOCUMENTS) link_name='Omat tiedostot'         ;;
+            MUSIC)     link_name='Omat musiikkitiedostot' ;;
+            PICTURES)  link_name='Omat kuvatiedostot'     ;;
+            VIDEOS)    link_name='Omat videotiedostot'    ;;
+          esac
+          ;;
+        sv)
+          case "$dir" in
+            DESKTOP)   link_name='Skrivbord'       ;;
+            DOCUMENTS) link_name='Mina dokument'   ;;
+            MUSIC)     link_name='Min musik'       ;;
+            PICTURES)  link_name='Mina bilder'     ;;
+            VIDEOS)    link_name='Mina videoklipp' ;;
+          esac
+          ;;
+        *)
+          case "$dir" in
+            DESKTOP)   link_name='Desktop'      ;;
+            DOCUMENTS) link_name='My Documents' ;;
+            MUSIC)     link_name='My Music'     ;;
+            PICTURES)  link_name='My Pictures'  ;;
+            VIDEOS)    link_name='My Videos'    ;;
+          esac
+          ;;
+      esac
+
+      if [ "$link_name" = '' ]; then
+        echo "No such user dir: '${dir}'" >&2
+        link_setup_status=1
+        continue
+      fi
+
+      setup_link "$user_dirs" "$dir" "$link_name" "$lang" "$my_language" \
+        || link_setup_status=1
+    done
+  done
+
+  return $link_setup_status
+}
+
+if [ -z "${WINEPREFIX:-}" ]; then
+  echo 'WINEPREFIX is not set, doing nothing' >&2
+  exit 1
+fi
+
+if [ -z "${HOME:-}" -o -z "${LANGUAGE:-}" -o -z "${USER:-}" ]; then
+  echo 'Either HOME or LANGUAGE or USER is not set, doing nothing' >&2
+  exit 1
+fi
+
+status=0
+
+if ! args=$(getopt -n "$0" -o + -l 'setup-d-drive,update-shell-folders,user-dirs:' -- "$@"); then
+  echo 'Could not parse command line arguments' >&2
+  exit 1
+fi
+
+setup_d_drive=false
+update_shell_folders=false
+user_dirs=''
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --setup-d-drive)        setup_d_drive=true;        shift ;;
+    --update-shell-folders) update_shell_folders=true; shift ;;
+    --user-dirs)            user_dirs=$2; shift;       shift ;;
+    --) shift; break ;;
+    *) echo 'Usage: puavo-wine-setup [--setup-d-drive] [--update-shell-folders] [--user-dirs opts]' >&2
+       exit 1
+       ;;
+  esac
+done
+
+if $setup_d_drive; then
+  if ! setup_d_drive; then
+    echo 'Problem occurred when setting the up D drive.' >&2
+    status=1
+  fi
+fi
+
+if $update_shell_folders; then
+  if ! update_shell_folders; then
+    echo 'Problem occurred when updating shell folders.' >&2
+    status=1
+  fi
+fi
+
+if [ -n "$user_dirs" ]; then
+  if ! setup_wine_links "$user_dirs"; then
+    echo 'Problem occurred when setting up links.' >&2
+    status=1
+  fi
+fi
+
+exit $status

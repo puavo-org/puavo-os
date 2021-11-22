@@ -212,8 +212,6 @@ class packages {
     , 'nautilus-nextcloud'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
-    , 'nextcloud-desktop'
-    , 'nextcloud-desktop-cmd'
     , 'notify-osd'
     , 'onboard'
     , 'onboard-data'
@@ -468,6 +466,7 @@ class packages {
     # , 'qt4-designer'  # XXX missing from Bullseye
     # , 'qt4-doc'       # XXX missing from Bullseye
     , 'racket'
+    , 'racket-doc'
     # , 'renpy'         # XXX missing from Bullseye
     , 'sbcl'
     , 'scite'

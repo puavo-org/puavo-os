@@ -148,7 +148,10 @@ class Series
 
     client = PuavoRestClient.new :auth => :etc
 
-    res = client.get("/v3/devices")
+    device_attributes = %w(current_image hostname object_classes
+                           preferred_boot_image preferred_image school_dn)
+    res = client.get("/v3/devices",
+                     :params => { :attributes => device_attributes.join(',') })
     devices = res.parse()
 
     # devices_for_syncfiles this is for logging purposes only

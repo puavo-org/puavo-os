@@ -74,11 +74,6 @@ cleanup_old_managed_printers() {
 
   dnssd_printers_path='/var/lib/puavo-desktop/dnssd_printers'
 
-  if [ ! -e "$dnssd_printers_path" ]; then
-    # no cleanup to do
-    return 0
-  fi
-
   if lpstat -r | grep -q 'is not running'; then
     # cups is not running, this is not the right time to do cleanup
     return 0
@@ -86,16 +81,64 @@ cleanup_old_managed_printers() {
 
   cleanup_ok=true
 
-  for old_printer in $(jq -r '.[] | .name' "$dnssd_printers_path"); do
-    if lpstat -v "$old_printer" > /dev/null 2>&1; then
-      if ! lpadmin -x "$old_printer"; then
-        cleanup_ok=false
+  if [ -e "$dnssd_printers_path" ]; then
+    for old_printer in $(jq -r '.[] | .name' "$dnssd_printers_path"); do
+      if lpstat -v "$old_printer" > /dev/null 2>&1; then
+        if ! lpadmin -x "$old_printer"; then
+          cleanup_ok=false
+        fi
       fi
-    fi
-  done
+    done
 
-  if $cleanup_ok; then
-    rm -f "$dnssd_printers_path"
+    if $cleanup_ok; then
+      rm -f "$dnssd_printers_path"
+    fi
+  fi
+
+  # Because the above cleanup has occasionally failed, we do a bit more
+  # extensive cleanup.  Remove all unmanaged printers that have conflicting
+  # names with those managed by cups-browsed.  Those are very likely remnants
+  # of the old mechanism.
+  if [ -e /etc/cups/printers.conf ]; then
+    {
+      awk '
+        BEGIN { ORS = "\000" }
+        $1 == "<Printer" || $1 == "<DefaultPrinter" {
+          sub(/>$/, "", $2)
+          printer = $2
+          option_cups_browsed = 0
+        }
+
+        /^Option cups-browsed true$/ {
+          option_cups_browsed = 1
+        }
+
+        $1 == "</Printer>" || $1 == "</DefaultPrinter>" {
+          if (printer == "") { next }
+
+          if (option_cups_browsed) {
+            managed_printers[printer] = printer
+          } else {
+            unmanaged_printers[printer] = printer
+          }
+
+          printer = ""
+        }
+
+        END {
+          for (managed in managed_printers) {
+            printer_no_at = managed
+            sub(/@.*$/, "", printer_no_at)
+            if (printer_no_at in unmanaged_printers) {
+              if (!(printer_no_at in already_printed)) {
+                print printer_no_at
+                already_printed[printer_no_at] = 1
+              }
+            }
+          }
+        }
+      ' /etc/cups/printers.conf | xargs -0 -n 1 -r lpadmin -x
+    } || return 1
   fi
 
   return 0
