@@ -1,8 +1,49 @@
-mutter (3.38.4-1+puavo1) bullseye; urgency=medium
+mutter (3.38.6-2~deb11u1+puavo1) bullseye; urgency=medium
 
   * Add our own patches to Mutter.
 
  -- Puavo Org <dev@opinsys.fi>  Fri, 13 Aug 2021 14:18:32 +0300
+
+mutter (3.38.6-2~deb11u1) bullseye; urgency=medium
+
+  * Rebuild for bullseye
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 01 Sep 2021 21:25:34 +0100
+
+mutter (3.38.6-2) unstable; urgency=medium
+
+  * Team upload
+  * d/p/monitor-manager-Don-t-include-generated-code-in-header-fi.patch:
+    Add patch from upstream 40.1 to fix FTBFS seen on s390x.
+    Thanks to Adrian Bunk.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 26 Aug 2021 16:12:19 +0100
+
+mutter (3.38.6-1) unstable; urgency=medium
+
+  [ Marco Trevisan ]
+  * d/gbp.conf, d/control.in: Update VCS details for debian/unstable branch
+
+  [ Simon McVittie ]
+  * New upstream release
+    - xwayland: Check permissions on /tmp/.X11-unix
+    - Ensure valid window texture size after viewport changes
+    - kms: Improve handling of common video modes that might exceed the
+      possible bandwidth
+    - Fix damage propagation for rotated transforms with viewport
+    - Improve Wayland subsurface reordering
+  * Update GLib build-dependency (no practical effect, the new dependency
+    is already in bullseye)
+
+  [ Laurent Bigonville ]
+  * Fixes for non-Linux ports:
+    - Build-depend on libegl1-mesa-dev on all architectures (not just Linux).
+      It is required for EGL support.
+    - Only build-depend on udev on Linux architectures
+    - Only depend on libwayland on Linux architectures
+    - Drop unnecessary -dev dependency on libudev-dev
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 26 Aug 2021 08:54:46 +0100
 
 mutter (3.38.4-1) unstable; urgency=medium
 
