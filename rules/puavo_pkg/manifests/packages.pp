@@ -30,7 +30,8 @@ class puavo_pkg::packages {
                                , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
-  $bullseye_specific_packages = [ 'schoolstore-ti-widgets'
+  $bullseye_specific_packages = [ 'nextcloud-desktop'
+                                , 'schoolstore-ti-widgets'
                                 , 'tela-icon-theme'
                                 , 'ubuntu-wallpapers' ]
 
