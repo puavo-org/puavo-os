@@ -29,7 +29,8 @@ class puavo_pkg::packages {
                                , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
-  $bullseye_specific_packages = [ 'tela-icon-theme'
+  $bullseye_specific_packages = [ 'nextcloud-desktop'
+                                , 'tela-icon-theme'
                                 , 'ubuntu-wallpapers' ]
 
   $available_packages = [ 'abitti-naksu'
