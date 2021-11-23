@@ -435,16 +435,6 @@
         "idle-python3.7": {
             "tags": "default"
         },
-        "inkscape": {
-            "name": {
-                "fi": "Inkscape-vektorigrafiikka",
-                "en": "Inkscape-vector graphics editor",
-                "sv": "Inkscape-vektorgrafik",
-                "de": "Inkscape-Vektorgrafik"
-            },
-            "tags": "default, graphics",
-            "keywords": "digabi"
-        },
         "io.github.wxmaxima_developers.wxMaxima": {
             "tags": "default",
             "keywords": "digabi"
@@ -812,6 +802,16 @@
         "org.gnome.Terminal": {
             "tags": "default",
             "keywords": "terminal, utility"
+        },
+        "org.inkscape.Inkscape": {
+            "name": {
+                "fi": "Inkscape-vektorigrafiikka",
+                "en": "Inkscape-vector graphics editor",
+                "sv": "Inkscape-vektorgrafik",
+                "de": "Inkscape-Vektorgrafik"
+            },
+            "tags": "default, graphics",
+            "keywords": "digabi"
         },
         "org.kde.gcompris": {
             "name": {
@@ -1498,7 +1498,7 @@
             "programs": [
                 "gimp",
                 "pinta",
-                "inkscape",
+                "org.inkscape.Inkscape",
                 "geogebra",
                 "geogebra6",
                 "io.github.wxmaxima_developers.wxMaxima",
@@ -1568,7 +1568,7 @@
                 "mypaint",
                 "pinta",
                 "gimp",
-                "inkscape",
+                "org.inkscape.Inkscape",
                 "sumopaint",
                 "simple-scan",
                 "libreoffice-writer",
@@ -1670,7 +1670,7 @@
             "programs": [
                 "pinta",
                 "gimp",
-                "inkscape",
+                "org.inkscape.Inkscape",
                 "sumopaint",
                 "fritzing",
                 "arduino",
@@ -1895,7 +1895,7 @@
                 "org.gnome.gThumb",
                 "eog",
                 "shotwell",
-                "inkscape",
+                "org.inkscape.Inkscape",
                 "scribus",
                 "simple-scan",
                 "xsane",

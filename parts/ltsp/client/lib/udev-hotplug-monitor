@@ -30,7 +30,7 @@ lookup_env_for_pid() {
 tty_number=$(fgconsole)
 
 current_session_pid=$(
-  ps --no-headers -C gnome-session-binary -o tty,pid \
+  ps --no-headers -C gnome-session-b -o tty,pid \
     | awk -v tty_number="$tty_number" '
         ("tty" tty_number) == $1 { print $2; exit(0) }
       ')
