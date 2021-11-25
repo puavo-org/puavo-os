@@ -172,7 +172,11 @@ EOF
 #### MODULES ####
 #################
 
-module(load="imuxsock") # provides support for local system logging
+# Provides support for local system logging.
+# Use rate limiting so that we do not fill up our /var
+# or overwhelm others.
+module(load="imuxsock" SysSock.RateLimit.Interval="5")
+
 module(load="imklog")   # provides kernel logging support
 #module(load="immark")  # provides --MARK-- message capability
 
@@ -214,10 +218,6 @@ module(load="omprog")
 # Where to place spool and state files
 #
 \$WorkDirectory /var/spool/rsyslog
-
-# Slow things down a bit so that we do not spam bootserver syslog
-# and do not fill up our local /var.
-\$MainMsgQueueDequeueSlowdown 100000
 
 \$template HostFile,"/var/log/hosts/%HOSTNAME%.log"
 \$template PuavoBootserverForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME% [${puavo_hostprofile}] %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
