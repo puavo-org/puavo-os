@@ -200,9 +200,10 @@ def get_puavo_conf_defaults(target_image_file_fp)
   puavo_conf = {}
 
   begin
+    system('umount', mnt_path, :err => File::NULL)
     system('mount', target_image_file_fp, mnt_path,
            :out => File::NULL, :err => File::NULL) \
-      or raise "could not mount #{ mnt_path }"
+      or raise "could not mount #{ target_image_file_fp } to #{ mnt_path }"
     mnt_done = true
 
     Dir.glob("#{ mnt_path }#{ definitions_path }/*.json").each do |json_path|
@@ -330,7 +331,9 @@ image_series.each do |series_name, image_list|
     begin
       puavo_conf = get_puavo_conf_defaults(target_image_file_fp)
     rescue StandardError => e
-      next
+      warn ">>> did not get puavo-conf for #{ target_image_file_fp }: " \
+              + e.message
+      exit(1)
     end
     image_metadata = {
       'diffs'      => [],
