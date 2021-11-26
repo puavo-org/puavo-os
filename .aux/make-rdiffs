@@ -2,10 +2,11 @@
 
 require 'json'
 
-Image_dir      = ENV['image_dir']
-Images_urlbase = ENV['images_urlbase']
-Mirror_dir     = ENV['mirror_dir']
-Mode           = ENV['mode']
+Image_dir        = ENV['image_dir']
+Images_json_path = ENV['images_json_path']
+Images_urlbase   = ENV['images_urlbase']
+Mirror_dir       = ENV['mirror_dir']
+Mode             = ENV['mode']
 
 raise '"image_dir" environment variable not defined' \
   if Image_dir.nil? || Image_dir.empty?
@@ -27,8 +28,6 @@ directory Checksums_dir
 directory Metadata_dir
 directory Rdiffs_dir
 directory Signatures_dir
-
-Image_series_json_path = 'images.json'
 
 $all_cksum_files = []
 
@@ -200,9 +199,10 @@ def get_puavo_conf_defaults(target_image_file_fp)
   puavo_conf = {}
 
   begin
+    system('umount', mnt_path, :err => File::NULL)
     system('mount', target_image_file_fp, mnt_path,
            :out => File::NULL, :err => File::NULL) \
-      or raise "could not mount #{ mnt_path }"
+      or raise "could not mount #{ target_image_file_fp } to #{ mnt_path }"
     mnt_done = true
 
     Dir.glob("#{ mnt_path }#{ definitions_path }/*.json").each do |json_path|
@@ -276,9 +276,9 @@ case Mode
     image_series = generate_development_image_series()
   when 'production'
     begin
-      image_series = parse_image_series(Image_series_json_path)
+      image_series = parse_image_series(Images_json_path)
     rescue StandardError => err
-      warn "Error in parsing #{ Image_series_json_path }: #{ err.message }"
+      warn "Error in parsing #{ Images_json_path }: #{ err.message }"
       exit 1
     end
   else
@@ -330,7 +330,9 @@ image_series.each do |series_name, image_list|
     begin
       puavo_conf = get_puavo_conf_defaults(target_image_file_fp)
     rescue StandardError => e
-      next
+      warn ">>> did not get puavo-conf for #{ target_image_file_fp }: " \
+              + e.message
+      exit(1)
     end
     image_metadata = {
       'diffs'      => [],
