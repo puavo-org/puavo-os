@@ -9,38 +9,16 @@ class puavo_pkg::packages {
       source => 'puppet:///modules/puavo_pkg/puavo-pkg-removed.json';
   }
 
-  # Not all puavo-pkg packages have been tested with all distribution
-  # release versions, so keep track of which packages are intended for
-  # which versions (all others should be compatible with all supported
-  # versions).
-  $stretch_specific_packages = [ 'adobe-reader'
-                               , 'aseba'
-                               , 'musescore-appimage'
-                               , 'obsidian-icons'
-                               , 'openscad-nightly' ]
-  $buster_specific_packages  = [ 'adobe-reader'
-                               , 'celestia'
-                               , 'eclipse'
-                               , 'filius'
-                               , 'netbeans'
-                               , 'nextcloud-desktop'
-                               , 'openclipart'
-                               , 'schoolstore-ti-widgets'
-                               , 'tela-icon-theme'
-                               , 'ubuntu-firmware'
-                               , 'ubuntu-wallpapers'
-                               , 'vagrant' ]
-  $bullseye_specific_packages = [ 'nextcloud-desktop'
-                                , 'schoolstore-ti-widgets'
-                                , 'tela-icon-theme'
-                                , 'ubuntu-wallpapers' ]
-
+  # List some of the available puavo-pkg packages that we want to
+  # install by default.  There may be other puavo-pkg packages available.
   $available_packages = [ 'abitti-naksu'
+                        , 'adobe-reader'
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-ottodiylib'
 			, 'arduino-radiohead'
 			, 'arduino-tm1637'
+                        , 'aseba'
 			, 'bluegriffon'
 			, 'cmaptools'
 			, 'cnijfilter2'
@@ -63,9 +41,12 @@ class puavo_pkg::packages {
 			, 'marvinsketch'
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
+                        , 'musescore-appimage'
 			, 'nightcode'
 			, 'novoconnect'
+                        , 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
+                        , 'openscad-nightly'
 			, 'processing'
 			, 'pycharm'
 			, 'robboscratch'
@@ -83,36 +64,7 @@ class puavo_pkg::packages {
 			, 'vidyo-client'
 			, 'zoom' ]
 
-  # List some packages here which are available, but probably should be
-  # installed only for a very few, and this is why they are not on the above
-  # list.
-  $other_available_packages = [ 'bluej'
-                              , 'canon-cque'
-                              , 'dragonbox_koulu1'
-                              , 'dragonbox_koulu2'
-                              , 'gdevelop'
-                              , 'kdenlive-appimage'
-                              , 'lmaths'
-                              , 'otto-blockly'
-                              , 'promethean'
-                              , 'prusaslicer'
-                              , 'qcad-cam'
-                              , 'signal-desktop'
-                              , 'teamviewer'
-                              , 'vscode' ]
-  $other_available_buster_packages = [ 'hp-bios-utils'
-                                     , 'supertuxkart' ]
-  $other_available_bullseye_packages = [ 'adobe-reader'
-                                       , 'hp-bios-utils'
-                                       , 'supertuxkart' ]
-
   @puavo_pkg::install { $available_packages: ; }
-
-  case $debianversioncodename {
-    'stretch':  { @puavo_pkg::install { $stretch_specific_packages:  ; } }
-    'buster':   { @puavo_pkg::install { $buster_specific_packages:   ; } }
-    'bullseye': { @puavo_pkg::install { $bullseye_specific_packages: ; } }
-  }
 
   # "arduino-ottodiylib", "arduino-tm1637", "arduino-radiohead" and
   # "ohjelmointi-opetuksessa" require "arduino-ide" to be installed first.
