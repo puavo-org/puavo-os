@@ -29,20 +29,20 @@ ShareDirBaseFileStore = "#{ ShareDirBase }/.share"
 
 class PuavoShareSpec
   attr_accessor :automatic_acls,
-	        :group,
-	        :readgroups,
-	        :school,
-	        :sharepath,
-	        :writegroups,
-	        :writeonlygroups
+                :group,
+                :readgroups,
+                :school,
+                :sharepath,
+                :writegroups,
+                :writeonlygroups
 
   def initialize(kwargs = {})
-    @automatic_acls = kwargs[:automatic_acls]
-    @group          = kwargs[:group]
-    @readgroups     = kwargs[:readgroups]
-    @school         = kwargs[:school]
-    @sharepath      = kwargs[:sharepath]
-    @writegroups    = kwargs[:writegroups]
+    @automatic_acls  = kwargs[:automatic_acls]
+    @group           = kwargs[:group]
+    @readgroups      = kwargs[:readgroups]
+    @school          = kwargs[:school]
+    @sharepath       = kwargs[:sharepath]
+    @writegroups     = kwargs[:writegroups]
     @writeonlygroups = kwargs[:writeonlygroups]
   end
 
@@ -79,13 +79,13 @@ class PuavoShare
         PuavoShare.mkdir(File.dirname(link_path), 0755)
 
         prev_linktarget = File.readlink(link_path) rescue ''
-	if @spec.sharepath != prev_linktarget then
-	  self.class.delete(link_path)
-	  link_dir = Pathname(link_path).dirname()
-	  link_dest = Pathname(@spec.sharepath).relative_path_from(link_dir)
-	  File.symlink(link_dest, link_path)
+        if @spec.sharepath != prev_linktarget then
+          self.class.delete(link_path)
+          link_dir = Pathname(link_path).dirname()
+          link_dest = Pathname(@spec.sharepath).relative_path_from(link_dir)
+          File.symlink(link_dest, link_path)
           Syslog.notice('%s',
-	    "Made link from '#{ link_path }' to '#{ @spec.sharepath }'.")
+            "Made link from '#{ link_path }' to '#{ @spec.sharepath }'.")
         end
       end 
     end
@@ -119,10 +119,10 @@ class PuavoShare
     if actual_acls.empty?
       begin
         if File.symlink?(path)
-	  lstat = File.lstat(path)
-	  if lstat.uid != 0 or lstat.gid != 0
-	    File.lchown(0, 0, path)
-	  end
+          lstat = File.lstat(path)
+          if lstat.uid != 0 or lstat.gid != 0
+            File.lchown(0, 0, path)
+          end
         end
       rescue
       end
@@ -148,7 +148,7 @@ class PuavoShare
       acls = stdout.readlines.select { |l| not l =~ /^# file:/ }.join('')
       errormsg = stderr.read
       if not errormsg.empty?
-	raise "Could not get ACLs for #{ path }: #{ errormsg }"
+        raise "Could not get ACLs for #{ path }: #{ errormsg }"
       end
     end
     normalize_acl(acls)
@@ -165,8 +165,8 @@ class PuavoShare
   def make_wanted_acls(rwmode, romode, womode, add_defaults)
     return unless @spec.automatic_acls
 
-    wgids = @spec.writegroups.map { |g| Etc.getgrnam(g).gid }
-    rgids = @spec.readgroups .map { |g| Etc.getgrnam(g).gid }
+    wgids  = @spec.writegroups.map     { |g| Etc.getgrnam(g).gid }
+    rgids  = @spec.readgroups.map      { |g| Etc.getgrnam(g).gid }
     wogids = @spec.writeonlygroups.map { |g| Etc.getgrnam(g).gid }
 
     acl_array = [
@@ -174,8 +174,8 @@ class PuavoShare
       "# group: 0",
       "user::#{ rwmode }",
       'group::---',
-      wgids.map { |group| "group:#{ group }:#{ rwmode }" },
-      rgids.map { |group| "group:#{ group }:#{ romode }" },
+      wgids.map  { |group| "group:#{ group }:#{ rwmode }" },
+      rgids.map  { |group| "group:#{ group }:#{ romode }" },
       wogids.map { |group| "group:#{ group }:#{ womode }" },
       "mask::#{ rwmode }",
       'other::---',
@@ -183,11 +183,11 @@ class PuavoShare
       add_defaults ? [
         'default:user::rwx',
         'default:group::---',
-        wgids.map { |group| "default:group:#{ group }:#{ rwmode }" },
-        rgids.map { |group| "default:group:#{ group }:#{ romode }" },
-        wogids.map { |group| "default:group:#{ group }:---" },
-	"default:mask::#{ rwmode }",
-	'default:other::---',
+        wgids.map  { |group| "default:group:#{ group }:#{ rwmode }" },
+        rgids.map  { |group| "default:group:#{ group }:#{ romode }" },
+        wogids.map { |group| "default:group:#{ group }:---"         },
+        "default:mask::#{ rwmode }",
+        'default:other::---',
       ] : nil,
     ].compact.flatten
 
@@ -216,24 +216,24 @@ class PuavoShare
 
     if parent_of?(filename)
       begin
-	uid = File.stat(filename).uid
-	Syslog.info('%s', "Reset ACLs for #{ filename } (uid=#{ uid }).")
+        uid = File.stat(filename).uid
+        Syslog.info('%s', "Reset ACLs for #{ filename } (uid=#{ uid }).")
 
         # First set ACLs and then change owner to root.  This is to allow
         # "cp -R $src $target" and similar to work, so that at every moment
         # a user has a write permission to directories.
-	setfacl(filename, wanted_acls)
-	File.chown(0, 0, filename)
+        setfacl(filename, wanted_acls)
+        File.chown(0, 0, filename)
 
       rescue Errno::ENOENT
       rescue StandardError => e
-	msg = "Error in resetting permissions for #{ filename }: " \
-	      + "#{ e.message }: #{ e.backtrace.inspect }."
+        msg = "Error in resetting permissions for #{ filename }: " \
+              + "#{ e.message }: #{ e.backtrace.inspect }."
         Syslog.err('%s', msg)
       end
     else
       msg = "Internal error: called reset_acls() with path " \
-	    + "#{ filename } that is not under #{ @spec.sharepath }."
+            + "#{ filename } that is not under #{ @spec.sharepath }."
       Syslog.warning('%s', msg)
     end
   end
@@ -248,7 +248,7 @@ class PuavoShare
       stdin.close
       errormsg = stderr.read
       if not errormsg.empty?
-	raise "Could not set ACLs for #{ path }: #{ errormsg }"
+        raise "Could not set ACLs for #{ path }: #{ errormsg }"
       end
     end
   end
@@ -281,7 +281,7 @@ class ShareBox
     @shares.values.each do |share|
       if share.parent_of?(path)
         # in case of a directory, it might have been moved from another
-	# directory, in which case we need to traverse it
+        # directory, in which case we need to traverse it
         if File.directory?(path)
           share.fix_acls_recursively(path)
         else
@@ -408,51 +408,48 @@ class Control
     Syslog.notice('%s',
       "Managing directory for school '#{ school.cn }' (#{ school_sharedir }).")
 
-    ss_tmpl = PuavoShareSpec.new(:automatic_acls => true,
-				 :group          => nil,
-				 :readgroups     => [],
-				 :school         => school,
-				 :sharepath      => nil,
-				 :writegroups    => [],
-				 :writeonlygroups => [])
+    ss_tmpl = PuavoShareSpec.new(:automatic_acls  => true,
+                                 :group           => nil,
+                                 :readgroups      => [],
+                                 :school          => school,
+                                 :sharepath       => nil,
+                                 :writegroups     => [],
+                                 :writeonlygroups => [])
 
 
-      ss                = ss_tmpl.clone
-      ss.automatic_acls = false
-      ss.sharepath      = "#{ school_sharedir }/programs"
+    ss                = ss_tmpl.clone
+    ss.automatic_acls = false
+    ss.sharepath      = "#{ school_sharedir }/programs"
     @box.add_dir(ss)
 
-      ss            = ss_tmpl.clone
-      ss.readgroups = [ school.cn ]
-      ss.sharepath  = "#{ school_sharedir }/material"
+    ss            = ss_tmpl.clone
+    ss.readgroups = [ school.cn ]
+    ss.sharepath  = "#{ school_sharedir }/material"
     @box.add_dir(ss)
 
-      ss             = ss_tmpl.clone
-      ss.sharepath   = "#{ school_sharedir }/all"
-      ss.writegroups = [ school.cn ]
+    ss             = ss_tmpl.clone
+    ss.sharepath   = "#{ school_sharedir }/all"
+    ss.writegroups = [ school.cn ]
     @box.add_dir(ss)
 
     school_groups = shareldap.find_groups_by_school(school)
 
-    writeonlygroups = []
-    school_groups.each do |group|
-      writeonlygroups += [ group.cn ]
-    end
+    writeonlygroups = school_groups.map { |group| group.cn }
 
-      ss             = ss_tmpl.clone
-      ss.sharepath   = "#{ school_sharedir }/returnbox"
-      ss.writeonlygroups = writeonlygroups
+    ss             = ss_tmpl.clone
+    ss.sharepath   = "#{ school_sharedir }/returnbox"
+    ss.writeonlygroups = writeonlygroups
     @box.add_dir(ss)
 
     school_groups.each do |group|
       group_sharedir \
-	= "#{ ShareDirBaseFileStore }/#{ school.puavoId }/#{ group.puavoId }"
+        = "#{ ShareDirBaseFileStore }/#{ school.puavoId }/#{ group.puavoId }"
 
       ss             = ss_tmpl.clone
       ss.group       = group
       ss.sharepath   = group_sharedir
       ss.writegroups = [ group.cn ]
-            
+
       @box.add_dir(ss)
     end
   end
@@ -468,43 +465,43 @@ class Control
     begin
       notifier = INotify::Notifier.new
       begin
-	@box.paths_with_automatic_acls.each do |monitor_path|
-	  events = [
-	    :create,
-	    :dont_follow,
-	    :modify,
-	    :moved_to,
-	    :move_self,
-	    :recursive,
-	  ]
+        @box.paths_with_automatic_acls.each do |monitor_path|
+          events = [
+            :create,
+            :dont_follow,
+            :modify,
+            :moved_to,
+            :move_self,
+            :recursive,
+          ]
 
-	  notifier.watch(monitor_path, *events) do |event|
-	    path = event.absolute_name
+          notifier.watch(monitor_path, *events) do |event|
+            path = event.absolute_name
 
-	    # :recursive does not work reliably due to some race condition,
-	    # so we must help it a bit for freshly created directories
-	    if File.directory?(path)
-	      notifier.watch(path, *events)
-	    end
+            # :recursive does not work reliably due to some race condition,
+            # so we must help it a bit for freshly created directories
+            if File.directory?(path)
+              notifier.watch(path, *events)
+            end
 
-	    Syslog.info('%s', "An event occurred on #{ path }, checking ACLs.")
-	    @box.fix_acls(path)
-	  end
-	end
+            Syslog.info('%s', "An event occurred on #{ path }, checking ACLs.")
+            @box.fix_acls(path)
+          end
+        end
 
-	while IO.select([ notifier.to_io ], [], [], seconds_left)
-	  notifier.process
-	  seconds_left = [ max_time - Time.new.to_i, 0 ].max
-	  break if seconds_left == 0
-	end
+        while IO.select([ notifier.to_io ], [], [], seconds_left)
+          notifier.process
+          seconds_left = [ max_time - Time.new.to_i, 0 ].max
+          break if seconds_left == 0
+        end
       ensure
-	# XXX notifier.close did not work in version 0.7.0-3,
-	# XXX hopefully this does the same
-	notifier.to_io.close
+        # XXX notifier.close did not work in version 0.7.0-3,
+        # XXX hopefully this does the same
+        notifier.to_io.close
       end
     rescue StandardError => e
       msg = "Error with inotifier: #{ e.message }: #{ e.backtrace.inspect }." \
-	    + '  Check out the limit in /proc/sys/fs/inotify/max_user_watches.'
+            + '  Check out the limit in /proc/sys/fs/inotify/max_user_watches.'
       Syslog.err('%s', msg)
     end
   end
@@ -521,9 +518,9 @@ end
 
 loop do
   Syslog.open(File.basename($0), Syslog::LOG_DAEMON \
-				 | Syslog::LOG_CONS \
-				 | Syslog::LOG_PERROR \
-				 | Syslog::LOG_PID)
+                                 | Syslog::LOG_CONS \
+                                 | Syslog::LOG_PERROR \
+                                 | Syslog::LOG_PID)
 
   exception_msg = nil
   begin
@@ -544,7 +541,7 @@ loop do
 
   if exception_msg
     Syslog.err('%s', exception_msg)
-    sleep 60	# wait a while in case errors just repeat and repeat...
+    sleep 60    # wait a while in case errors just repeat and repeat...
   end
 
   Syslog.close
