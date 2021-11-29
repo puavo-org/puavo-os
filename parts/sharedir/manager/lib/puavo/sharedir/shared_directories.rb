@@ -9,6 +9,7 @@ class PuavoSharedDirectories
         'group'    => "#{ groupname } - #{ schoolname }",
         'material' => "Material - #{ schoolname }",
         'programs' => "Programme - #{ schoolname }",
+        'returnbox'=> "Rückgabeordner - #{ schoolname }",
       },
       'en' => {
         'all'      => "All - #{ schoolname }",
@@ -16,6 +17,7 @@ class PuavoSharedDirectories
         'group'    => "#{ groupname } - #{ schoolname }",
         'material' => "Material - #{ schoolname }",
         'programs' => "Programs - #{ schoolname }",
+        'returnbox'=> "Return Box - #{ schoolname }",
       },
       'fi' => {
         'all'      => "Kaikki - #{ schoolname }",
@@ -23,6 +25,7 @@ class PuavoSharedDirectories
         'group'    => "#{ groupname } - #{ schoolname }",
         'material' => "Materiaali - #{ schoolname }",
         'programs' => "Ohjelmat - #{ schoolname }",
+        'returnbox'=> "Palautuslaatikko - #{ schoolname }",
       },
       'sv' => {
         'all'      => "Allmän - #{ schoolname }",
@@ -30,6 +33,7 @@ class PuavoSharedDirectories
         'group'    => "#{ groupname } - #{ schoolname }",
         'material' => "Material - #{ schoolname }",
         'programs' => "Program - #{ schoolname }",
+        'returnbox'=> "Återlämningslåda - #{ schoolname }",
       },
     }
 
@@ -47,24 +51,28 @@ class PuavoSharedDirectories
         'base'     => 'geteilt',
         'material' => 'Material',
         'programs' => 'Programme',
+        'returnbox'=> 'Rückgabeordner',
       },
       'en' => {
         'all'      => 'All',
         'base'     => 'share',
         'material' => 'Material',
         'programs' => 'Programs',
+        'returnbox'=> 'Return Box',
       },
       'fi' => {
         'all'      => 'Kaikki',
         'base'     => 'yhteiset',
         'material' => 'Materiaali',
         'programs' => 'Ohjelmat',
+        'returnbox'=> 'Palautuslaatikko',
       },
       'sv' => {
         'all'      => 'Allmän',
         'base'     => 'delade_filer',
         'material' => 'Material',
         'programs' => 'Program',
+        'returnbox'=> 'Återlämningslåda',
       },
     }
 

@@ -33,7 +33,8 @@ class PuavoShareSpec
 	        :readgroups,
 	        :school,
 	        :sharepath,
-	        :writegroups
+	        :writegroups,
+	        :writeonlygroups
 
   def initialize(kwargs = {})
     @automatic_acls = kwargs[:automatic_acls]
@@ -42,6 +43,7 @@ class PuavoShareSpec
     @school         = kwargs[:school]
     @sharepath      = kwargs[:sharepath]
     @writegroups    = kwargs[:writegroups]
+    @writeonlygroups = kwargs[:writeonlygroups]
   end
 
   def linkpath(lang)
@@ -59,8 +61,8 @@ class PuavoShare
   def initialize(sharedirspec)
     @spec = sharedirspec
 
-    @wanted_directory_acls = make_wanted_acls('rwx', 'r-x', true)
-    @wanted_file_acls      = make_wanted_acls('rw-', 'r--', false)
+    @wanted_directory_acls = make_wanted_acls('rwx', 'r-x', 'rwx', true)
+    @wanted_file_acls      = make_wanted_acls('rw-', 'r--', '---', false)
   end
 
   def automatic_acls
@@ -160,11 +162,12 @@ class PuavoShare
     end
   end
 
-  def make_wanted_acls(rwmode, romode, add_defaults)
+  def make_wanted_acls(rwmode, romode, womode, add_defaults)
     return unless @spec.automatic_acls
 
     wgids = @spec.writegroups.map { |g| Etc.getgrnam(g).gid }
     rgids = @spec.readgroups .map { |g| Etc.getgrnam(g).gid }
+    wogids = @spec.writeonlygroups.map { |g| Etc.getgrnam(g).gid }
 
     acl_array = [
       "# owner: 0",
@@ -173,6 +176,7 @@ class PuavoShare
       'group::---',
       wgids.map { |group| "group:#{ group }:#{ rwmode }" },
       rgids.map { |group| "group:#{ group }:#{ romode }" },
+      wogids.map { |group| "group:#{ group }:#{ womode }" },
       "mask::#{ rwmode }",
       'other::---',
 
@@ -181,6 +185,7 @@ class PuavoShare
         'default:group::---',
         wgids.map { |group| "default:group:#{ group }:#{ rwmode }" },
         rgids.map { |group| "default:group:#{ group }:#{ romode }" },
+        wogids.map { |group| "default:group:#{ group }:---" },
 	"default:mask::#{ rwmode }",
 	'default:other::---',
       ] : nil,
@@ -408,7 +413,8 @@ class Control
 				 :readgroups     => [],
 				 :school         => school,
 				 :sharepath      => nil,
-				 :writegroups    => [])
+				 :writegroups    => [],
+				 :writeonlygroups => [])
 
 
       ss                = ss_tmpl.clone
@@ -427,6 +433,16 @@ class Control
     @box.add_dir(ss)
 
     school_groups = shareldap.find_groups_by_school(school)
+
+    writeonlygroups = []
+    school_groups.each do |group|
+      writeonlygroups += [ group.cn ]
+    end
+
+      ss             = ss_tmpl.clone
+      ss.sharepath   = "#{ school_sharedir }/returnbox"
+      ss.writeonlygroups = writeonlygroups
+    @box.add_dir(ss)
 
     school_groups.each do |group|
       group_sharedir \
