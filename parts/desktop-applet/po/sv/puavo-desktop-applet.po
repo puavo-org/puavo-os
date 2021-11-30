@@ -9,118 +9,252 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Remote access allowed"
-msgstr "Fjärråtkomst tillåtet"
+#: puavo-desktop-applet:101
+msgid "Hostname"
+msgstr "Värdnamn"
 
-msgid "Remote access denied"
-msgstr "Fjärråtkomst förbjuden"
+#: puavo-desktop-applet:150
+msgid "Information on the latest system update"
+msgstr "Information om systemets senaste uppdatering"
 
-msgid "Enable remote access"
-msgstr "Tillåt fjärråtkomst"
+#: puavo-desktop-applet:213
+msgid "New system version"
+msgstr "Ny systemversion"
 
-msgid "Disable remote access"
-msgstr "Inaktivera fjärråtkomst"
+#: puavo-desktop-applet:216
+msgid ""
+"The system has been updated to a new version. Click the info-button in the "
+"panel for more information."
+msgstr ""
+"Systemet har uppdaterats till en ny version. Klicka på infoknappen i nedre "
+"panelen för mer information."
 
-msgid "New support request"
-msgstr "Ny stödbegäran"
+#: puavo-desktop-applet:370
+msgid "eExam-system (Abitti-compatible)"
+msgstr ""
 
-msgid "Updates are disabled in developer mode, boot to normal mode to update."
-msgstr "Uppdateringen är inte möjlig i utvecklingsutrymme i normalt utrymme för att."
+#: puavo-desktop-applet:377 puavo-desktop-applet:400 puavo-desktop-applet:414
+msgid "Update to version"
+msgstr ""
 
-msgid "Reset development state"
-msgstr "Återställ utvecklingsutrymme"
+#: puavo-desktop-applet:377
+msgid "has started."
+msgstr ""
 
-msgid "(No update progress.)"
-msgstr "(Inga uppdateringsframsteg)"
+#: puavo-desktop-applet:391
+msgid "is updating"
+msgstr ""
 
-msgid "View log..."
-msgstr "Visa logg..."
+#: puavo-desktop-applet:402
+msgid "has completed successfully."
+msgstr ""
 
-msgid "Reset development state is now done, rebooting the system."
-msgstr "Utvecklingsutrymmets återställning gjort, systemet startar om."
+#: puavo-desktop-applet:416
+msgid "has failed."
+msgstr ""
 
-msgid "An error occurred when resetting development state"
-msgstr "Ett fel uppstod när utvecklingsläget återställdes"
+#: puavo-desktop-applet:471
+msgid "(No system update progress.)"
+msgstr ""
 
+#: puavo-desktop-applet:489
+msgid "View system update log..."
+msgstr ""
+
+#: puavo-desktop-applet:571 puavo-desktop-applet:573
 msgid "A new system update is available."
 msgstr "En ny systemuppdatering är tillgänglig."
 
-msgid "Update cancelled."
-msgstr "Uppdateringen avbruten."
+#: puavo-desktop-applet:582
+msgid "System update cancelled."
+msgstr ""
 
+#: puavo-desktop-applet:584
 msgid "System update has been cancelled."
 msgstr "Systemuppdatering har avbrutits."
 
-msgid "Update completed, reboot required to finish the update."
-msgstr "Uppdateringen är klar, omstart krävs för att slutföra uppdateringen."
+#: puavo-desktop-applet:597
+msgid "System update completed, reboot required to finish the update."
+msgstr ""
 
+#: puavo-desktop-applet:598
 msgid "System update is finished, reboot the computer."
 msgstr "Systemuppdatering är klar, starta om datorn."
 
-msgid "Update completed."
-msgstr "Uppdateringen är klar."
+#: puavo-desktop-applet:600
+msgid "System update completed."
+msgstr ""
 
+#: puavo-desktop-applet:601
 msgid "System update is finished."
 msgstr "Systemuppdateringen är klar."
 
-msgid "Update failed."
-msgstr "Uppdateringen misslyckades."
+#: puavo-desktop-applet:614 puavo-desktop-applet:643
+msgid "System update failed."
+msgstr ""
 
+#: puavo-desktop-applet:616
 msgid "An error occurred when updating the system."
 msgstr "Ett fel uppstod när systemet uppdaterades."
 
-msgid "Update done, reboot required to finish the update."
-msgstr "Uppdatering klar, omstart krävs för att slutföra uppdateringen."
+#: puavo-desktop-applet:646
+msgid "System update done, reboot required to finish the update."
+msgstr ""
 
-msgid "Update interrupted."
-msgstr "Uppdatering avbruten."
+#: puavo-desktop-applet:649
+msgid "System update interrupted."
+msgstr ""
 
-msgid "Up to date."
-msgstr "Uppdaterad."
+#: puavo-desktop-applet:652
+msgid "System is up-to-date."
+msgstr ""
 
-msgid "Update progress:"
-msgstr "Uppdateringsprocessen:"
+#: puavo-desktop-applet:689
+msgid "System update progress:"
+msgstr ""
 
+#: puavo-desktop-applet:703 puavo-desktop-applet:705
 msgid "System update has been started."
 msgstr "Systmuppdatering har startats."
 
+#: puavo-desktop-applet:738
+msgid "Check for system updates"
+msgstr ""
+
+#: puavo-desktop-applet:741
+msgid "(Checking for system updates.)"
+msgstr ""
+
+#: puavo-desktop-applet:745
+msgid "Update system"
+msgstr ""
+
+#: puavo-desktop-applet:748
+msgid "Cancel system update"
+msgstr ""
+
+#: puavo-desktop-applet:767
+msgid "System update log"
+msgstr ""
+
+#: puavo-desktop-applet:831
+msgid "Send display configuration"
+msgstr ""
+
+#: puavo-desktop-applet:864
+msgid "ERROR"
+msgstr ""
+
+#: puavo-desktop-applet:865
+msgid "Could not send display configuration."
+msgstr ""
+
+#: puavo-desktop-applet:867
+msgid "Success"
+msgstr ""
+
+#: puavo-desktop-applet:868
+msgid "Display configuration sent successfully."
+msgstr ""
+
+#: puavo-desktop-applet:1104
+msgid "Remote access allowed"
+msgstr "Fjärråtkomst tillåtet"
+
+#: puavo-desktop-applet:1108
+msgid "Remote access denied"
+msgstr "Fjärråtkomst förbjuden"
+
+#: puavo-desktop-applet:1120
+msgid "Enable remote access"
+msgstr "Tillåt fjärråtkomst"
+
+#: puavo-desktop-applet:1127
+msgid "Disable remote access"
+msgstr "Inaktivera fjärråtkomst"
+
+#: puavo-desktop-applet:1192
+msgid "New support request"
+msgstr "Ny stödbegäran"
+
+#: puavo-desktop-applet:1232
+msgid "Reset development state is now done, rebooting the system."
+msgstr "Utvecklingsutrymmets återställning gjort, systemet startar om."
+
+#: puavo-desktop-applet:1238
+msgid "An error occurred when resetting development state"
+msgstr "Ett fel uppstod när utvecklingsläget återställdes"
+
+#: puavo-desktop-applet:1249
 msgid "Development state space utilization is"
 msgstr "Uttvecklingsutrymmets rymdutnyttjande är"
 
+#: puavo-desktop-applet:1251
 msgid ""
 "Do you want to reset the development state? All your custom system changes "
 "will be lost. System will also reboot itself after this operation."
 msgstr ""
-"Vill du återställa utvecklingsläget? Alla dina anpassade systemändringar kommer att "
-"förloras.  Systemet kommer också att starta om sig själv efter den här operationen."
+"Vill du återställa utvecklingsläget? Alla dina anpassade systemändringar "
+"kommer att förloras.  Systemet kommer också att starta om sig själv efter "
+"den här operationen."
 
-msgid "Check for updates"
-msgstr "Sök efter uppdateringar"
+#: puavo-desktop-applet:1262 puavo-desktop-applet:1297
+msgid "Reset development state"
+msgstr "Återställ utvecklingsutrymme"
 
-msgid "(Checking for updates.)"
-msgstr "(Söker uppdateringar.)"
-
-msgid "Update"
-msgstr "Uppdatera"
-
-msgid "Cancel update"
-msgstr "Avbryt uppdateringen"
-
-msgid "Update log"
-msgstr "Uppdateringslogg"
-
-msgid "Information on the latest system update"
-msgstr "Information om systemets senaste uppdatering"
-
+#: puavo-desktop-applet:1289
 msgid ""
-"The system has been updated to a new version."
-" Click the info-button in the panel for more information."
+"System updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
-"Systemet har uppdaterats till en ny version."
-" Klicka på infoknappen i nedre panelen för mer information."
 
-msgid "New system version"
-msgstr "Ny systemversion"
+#~ msgid ""
+#~ "Updates are disabled in developer mode, boot to normal mode to update."
+#~ msgstr ""
+#~ "Uppdateringen är inte möjlig i utvecklingsutrymme i normalt utrymme för "
+#~ "att."
 
-msgid "Hostname"
-msgstr "Värdnamn"
+#~ msgid "(No update progress.)"
+#~ msgstr "(Inga uppdateringsframsteg)"
+
+#~ msgid "View log..."
+#~ msgstr "Visa logg..."
+
+#~ msgid "Update cancelled."
+#~ msgstr "Uppdateringen avbruten."
+
+#~ msgid "Update completed, reboot required to finish the update."
+#~ msgstr ""
+#~ "Uppdateringen är klar, omstart krävs för att slutföra uppdateringen."
+
+#~ msgid "Update completed."
+#~ msgstr "Uppdateringen är klar."
+
+#~ msgid "Update failed."
+#~ msgstr "Uppdateringen misslyckades."
+
+#~ msgid "Update done, reboot required to finish the update."
+#~ msgstr "Uppdatering klar, omstart krävs för att slutföra uppdateringen."
+
+#~ msgid "Update interrupted."
+#~ msgstr "Uppdatering avbruten."
+
+#~ msgid "Up to date."
+#~ msgstr "Uppdaterad."
+
+#~ msgid "Update progress:"
+#~ msgstr "Uppdateringsprocessen:"
+
+#~ msgid "Check for updates"
+#~ msgstr "Sök efter uppdateringar"
+
+#~ msgid "(Checking for updates.)"
+#~ msgstr "(Söker uppdateringar.)"
+
+#~ msgid "Update"
+#~ msgstr "Uppdatera"
+
+#~ msgid "Cancel update"
+#~ msgstr "Avbryt uppdateringen"
+
+#~ msgid "Update log"
+#~ msgstr "Uppdateringslogg"
