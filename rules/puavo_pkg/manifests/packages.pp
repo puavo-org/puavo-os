@@ -12,14 +12,12 @@ class puavo_pkg::packages {
   # List some of the available puavo-pkg packages that we want to
   # install by default.  There may be other puavo-pkg packages available.
   $available_packages = [ 'abitti-naksu'
-                        , 'adobe-reader'
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-ottodiylib'
 			, 'arduino-radiohead'
 			, 'arduino-tm1637'
 			, 'bluegriffon'
-			, 'celestia'
 			, 'cmaptools'
 			, 'cnijfilter2'
 			, 'cura-appimage'
@@ -28,7 +26,6 @@ class puavo_pkg::packages {
 			, 'ekapeli-alku'
 			, 'enchanting'
 			, 'extra-xkb-symbols'
-			, 'filius'
 			, 'firefox'
 			, 'flashforge-flashprint'
 			, 'geogebra'
@@ -48,7 +45,6 @@ class puavo_pkg::packages {
 			, 'nightcode'
 			, 'novoconnect'
 			, 'ohjelmointi-opetuksessa'
-                        , 'openclipart'
 			, 'processing'
 			, 'pycharm'
 			, 'robboscratch'
@@ -63,12 +59,11 @@ class puavo_pkg::packages {
 			, 'tela-icon-theme'
 			, 'tilitin'
 			, 't-lasku'
-			, 'ubuntu-firmware'
 			, 'ubuntu-wallpapers'
 			, 'unityhub-appimage'
-			, 'vagrant'
 			, 'veracrypt'
 			, 'vidyo-client'
+			, 'vstloggerpro'
 			, 'zoom' ]
 
   @puavo_pkg::install { $available_packages: ; }
