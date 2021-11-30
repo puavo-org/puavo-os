@@ -441,6 +441,10 @@ class Control
     ss.writeonlygroups = writeonlygroups
     @box.add_dir(ss)
 
+    ss             = ss_tmpl.clone
+    ss.sharepath   = "#{ school_sharedir }/returns"
+    @box.add_dir(ss)
+
     school_groups.each do |group|
       group_sharedir \
         = "#{ ShareDirBaseFileStore }/#{ school.puavoId }/#{ group.puavoId }"

@@ -10,6 +10,7 @@ class PuavoSharedDirectories
         'material'  => "Material - #{ schoolname }",
         'programs'  => "Programme - #{ schoolname }",
         'returnbox' => "Rückgabeordner - #{ schoolname }",
+        'returns'   => "Rückgaben - #{ schoolname }",
       },
       'en' => {
         'all'       => "All - #{ schoolname }",
@@ -18,6 +19,7 @@ class PuavoSharedDirectories
         'material'  => "Material - #{ schoolname }",
         'programs'  => "Programs - #{ schoolname }",
         'returnbox' => "Return Box - #{ schoolname }",
+        'returns'   => "Returns - #{ schoolname }",
       },
       'fi' => {
         'all'       => "Kaikki - #{ schoolname }",
@@ -26,6 +28,7 @@ class PuavoSharedDirectories
         'material'  => "Materiaali - #{ schoolname }",
         'programs'  => "Ohjelmat - #{ schoolname }",
         'returnbox' => "Palautuslaatikko - #{ schoolname }",
+        'returns'   => "Palautukset - #{ schoolname }",
       },
       'sv' => {
         'all'       => "Allmän - #{ schoolname }",
@@ -34,6 +37,7 @@ class PuavoSharedDirectories
         'material'  => "Material - #{ schoolname }",
         'programs'  => "Program - #{ schoolname }",
         'returnbox' => "Återlämningslåda - #{ schoolname }",
+        'returns'   => "Återlämningsar - #{ schoolname }",
       },
     }
 
@@ -52,6 +56,7 @@ class PuavoSharedDirectories
         'material'  => 'Material',
         'programs'  => 'Programme',
         'returnbox' => 'Rückgabeordner',
+        'returns'   => 'Rückgaben',
       },
       'en' => {
         'all'       => 'All',
@@ -59,6 +64,7 @@ class PuavoSharedDirectories
         'material'  => 'Material',
         'programs'  => 'Programs',
         'returnbox' => 'Return Box',
+        'returns'   => 'Returns',
       },
       'fi' => {
         'all'       => 'Kaikki',
@@ -66,6 +72,7 @@ class PuavoSharedDirectories
         'material'  => 'Materiaali',
         'programs'  => 'Ohjelmat',
         'returnbox' => 'Palautuslaatikko',
+        'returns'   => 'Palautukset',
       },
       'sv' => {
         'all'       => 'Allmän',
@@ -73,6 +80,7 @@ class PuavoSharedDirectories
         'material'  => 'Material',
         'programs'  => 'Program',
         'returnbox' => 'Återlämningslåda',
+        'returns'   => 'Återlämningar',
       },
     }
 
