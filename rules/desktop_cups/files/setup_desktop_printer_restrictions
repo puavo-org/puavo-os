@@ -106,17 +106,25 @@ cleanup_old_managed_printers() {
         $1 == "<Printer" || $1 == "<DefaultPrinter" {
           sub(/>$/, "", $2)
           printer = $2
-          option_cups_browsed = 0
+          managed_by_cups_browsed = 0
+          stopped = 0
         }
 
-        /^Option cups-browsed true$/ {
-          option_cups_browsed = 1
+        $1 == "Option" && ( \
+          ($2 == "cups-browsed" && $3 == "true") \
+            || $2 == "cups-browsed-dest-printer") {
+          managed_by_cups_browsed = 1
         }
+
+        $1 == "State" && $2 == "Stopped" { stopped = 1 }
 
         $1 == "</Printer>" || $1 == "</DefaultPrinter>" {
           if (printer == "") { next }
 
-          if (option_cups_browsed) {
+          if (managed_by_cups_browsed) {
+            if (stopped) {
+              managed_and_stopped_printers[printer] = printer
+            }
             managed_printers[printer] = printer
           } else {
             unmanaged_printers[printer] = printer
@@ -126,6 +134,11 @@ cleanup_old_managed_printers() {
         }
 
         END {
+          for (printer in managed_and_stopped_printers) {
+            print printer
+            already_printed[printer] = 1
+          }
+
           for (managed in managed_printers) {
             printer_no_at = managed
             sub(/@.*$/, "", printer_no_at)
