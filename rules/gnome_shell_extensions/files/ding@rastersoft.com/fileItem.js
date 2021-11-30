@@ -987,15 +987,19 @@ var FileItem = class {
     }
 
     set savedCoordinates(pos) {
-        let info = new Gio.FileInfo();
-        if (pos != null) {
-            this._savedCoordinates = [pos[0], pos[1]];
-            info.set_attribute_string('metadata::nautilus-icon-position', `${pos[0]},${pos[1]}`);
-        } else {
-            this._savedCoordinates = null;
-            info.set_attribute_string('metadata::nautilus-icon-position', '');
+        try {
+            let info = new Gio.FileInfo();
+            if (pos != null) {
+                this._savedCoordinates = [pos[0], pos[1]];
+                info.set_attribute_string('metadata::nautilus-icon-position', `${pos[0]},${pos[1]}`);
+            } else {
+                this._savedCoordinates = null;
+                info.set_attribute_string('metadata::nautilus-icon-position', '');
+            }
+            this.file.set_attributes_from_info(info, Gio.FileQueryInfoFlags.NONE, null);
+        } catch(e) {
+            print(`Failed to store the desktop coordinates for ${this.uri}: ${e}`);
         }
-        this.file.set_attributes_from_info(info, Gio.FileQueryInfoFlags.NONE, null);
     }
 
     get dropCoordinates() {
