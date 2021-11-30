@@ -68,9 +68,12 @@ lookup_printer_key() {
   ' "$device_json_path"
 }
 
-# XXX cleanup old stuff ... this may be removed after some years
+# XXX Cleanup old stuff ... this may be removed after some years
+# XXX except that the puavo.printing.cleanup_printers related
+# XXX functionality is good to keep.
 cleanup_old_managed_printers() {
-  local cleanup_ok dnssd_printers_path
+  local cleanup_ok current_seconds dnssd_printers_path \
+        printer_cleanup_rules_str
 
   dnssd_printers_path='/var/lib/puavo-desktop/dnssd_printers'
 
@@ -100,54 +103,76 @@ cleanup_old_managed_printers() {
   # names with those managed by cups-browsed.  Those are very likely remnants
   # of the old mechanism.
   if [ -e /etc/cups/printers.conf ]; then
+    current_seconds=$(date +%s) || return 1
+    printer_cleanup_rules_str=$(puavo-conf puavo.printing.cleanup_printers) \
+      || return 1
     {
-      awk '
-        BEGIN { ORS = "\000" }
+      awk -v current_seconds="$current_seconds" \
+          -v printer_cleanup_rules_str="$printer_cleanup_rules_str" '
+        BEGIN {
+          ORS = "\000"
+
+          split(printer_cleanup_rules_str, _printer_cleanup_rules)
+          for (rule_i in _printer_cleanup_rules) {
+            split(_printer_cleanup_rules[rule_i], a, ":")
+            printer_cleanup_rules[ a[1] ] = a[2]
+          }
+        }
+
         $1 == "<Printer" || $1 == "<DefaultPrinter" {
           sub(/>$/, "", $2)
           printer = $2
           managed_by_cups_browsed = 0
-          stopped = 0
+          state = ""
+          state_time = ""
         }
+
+        $1 == "State" { state = $2; next }
+        $1 == "StateTime" { state_time = $2; next }
 
         $1 == "Option" && ( \
           ($2 == "cups-browsed" && $3 == "true") \
             || $2 == "cups-browsed-dest-printer") {
           managed_by_cups_browsed = 1
+          next
         }
-
-        $1 == "State" && $2 == "Stopped" { stopped = 1 }
 
         $1 == "</Printer>" || $1 == "</DefaultPrinter>" {
           if (printer == "") { next }
 
           if (managed_by_cups_browsed) {
-            if (stopped) {
-              managed_and_stopped_printers[printer] = printer
+            if (state == "Stopped") {
+              printers_to_delete[printer] = printer
             }
             managed_printers[printer] = printer
           } else {
             unmanaged_printers[printer] = printer
+
+            for (rule_state in printer_cleanup_rules) {
+              if (rule_state == "*" || rule_state == state) {
+                rule_state_time = printer_cleanup_rules[rule_state]
+                if (rule_state_time == "*" \
+                  || rule_state_time < (current_seconds - state_time)) {
+                    printers_to_delete[printer] = printer
+                }
+              }
+            }
           }
 
           printer = ""
         }
 
         END {
-          for (printer in managed_and_stopped_printers) {
-            print printer
-            already_printed[printer] = 1
-          }
-
           for (managed in managed_printers) {
             printer_no_at = managed
             sub(/@.*$/, "", printer_no_at)
             if (printer_no_at in unmanaged_printers) {
-              if (!(printer_no_at in already_printed)) {
-                print printer_no_at
-                already_printed[printer_no_at] = 1
-              }
+              printers_to_delete[printer_no_at] = printer_no_at
             }
+          }
+
+          for (printer in printers_to_delete) {
+            print printer
           }
         }
       ' /etc/cups/printers.conf | xargs -0 -n 1 -r lpadmin -x
