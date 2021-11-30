@@ -833,10 +833,11 @@ class MonitorsUpdater(PuavoWidget):
     self.send_button.show()
     self.applet.menu.append(self.send_button)
 
-    self.reset_button = Gtk.MenuItem(label=_tr('Re-run display settings'))
-    self.reset_button.connect('activate', self.reset_displays)
-    self.reset_button.show()
-    self.applet.menu.append(self.reset_button)
+    if (len(puavoconf_get('puavo.xrandr.args'))>2): #xrandr args other than [] exist
+      self.reset_button = Gtk.MenuItem(label=_tr('Re-initialize display settings'))
+      self.reset_button.connect('activate', self.reset_displays)
+      self.reset_button.show()
+      self.applet.menu.append(self.reset_button)
 
 
     return True
