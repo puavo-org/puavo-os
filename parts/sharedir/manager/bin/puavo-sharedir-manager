@@ -486,6 +486,10 @@ class Control
             # so we must help it a bit for freshly created directories
             if File.directory?(path)
               notifier.watch(path, *events)
+            elsif File.dirname(path).end_with?('/returnbox')
+              targetpath="#{File.dirname(File.dirname(path))}/returns/#{File.basename(path)}"
+              targetpath+='-1' while File.exists?(targetpath)
+              File.rename(path, targetpath)
             end
 
             Syslog.info('%s', "An event occurred on #{ path }, checking ACLs.")
