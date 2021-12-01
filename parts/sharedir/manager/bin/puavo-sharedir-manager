@@ -491,7 +491,7 @@ class Control
               targetpath=path
               i=0
               targetpath=targetpathbase+"-#{i+=1}" while File.exists?(targetpath)
-              File.rename(path, targetpath)
+              File.link(path, targetpath)
             end
 
             Syslog.info('%s', "An event occurred on #{ path }, checking ACLs.")
