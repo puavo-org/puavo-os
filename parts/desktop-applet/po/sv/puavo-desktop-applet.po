@@ -2,6 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
+"PO-Revision-Date: 2021-11-30 15:50+0200\n"
 "Last-Translator: tnurmi <tuomas.nurmi@opinsys.fi>\n"
 "Language-Team: none\n"
 "Language: sv\n"
@@ -9,7 +10,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"PO-Revision-Date: 2021-11-30 15:50+0200\n"
 "X-Generator: Lokalize 2.0\n"
 
 #: puavo-desktop-applet:101
@@ -19,6 +19,10 @@ msgstr "Värdnamn"
 #: puavo-desktop-applet:150
 msgid "Information on the latest system update"
 msgstr "Information om systemets senaste uppdatering"
+
+#: puavo-desktop-applet:173
+msgid "Changelog"
+msgstr ""
 
 #: puavo-desktop-applet:213
 msgid "New system version"
@@ -209,8 +213,8 @@ msgstr "Återställ utvecklingsutrymme"
 msgid ""
 "System updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
-"Uppdateringen är inte möjlig i utvecklingsutrymme, starta i normalt utrymme"
-" för att uppdatera."
+"Uppdateringen är inte möjlig i utvecklingsutrymme, starta i normalt utrymme "
+"för att uppdatera."
 
 #~ msgid ""
 #~ "Updates are disabled in developer mode, boot to normal mode to update."
