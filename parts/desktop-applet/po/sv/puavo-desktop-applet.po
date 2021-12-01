@@ -1,13 +1,16 @@
+# tnurmi <tuomas.nurmi@opinsys.fi>, 2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Last-Translator: Automatically generated\n"
+"Project-Id-Version: \n"
+"Last-Translator: tnurmi <tuomas.nurmi@opinsys.fi>\n"
 "Language-Team: none\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"PO-Revision-Date: 2021-11-30 15:50+0200\n"
+"X-Generator: Lokalize 2.0\n"
 
 #: puavo-desktop-applet:101
 msgid "Hostname"
@@ -55,11 +58,11 @@ msgstr ""
 
 #: puavo-desktop-applet:471
 msgid "(No system update progress.)"
-msgstr ""
+msgstr "(Inga uppdateringsframsteg)"
 
 #: puavo-desktop-applet:489
 msgid "View system update log..."
-msgstr ""
+msgstr "Visa logg..."
 
 #: puavo-desktop-applet:571 puavo-desktop-applet:573
 msgid "A new system update is available."
@@ -67,7 +70,7 @@ msgstr "En ny systemuppdatering är tillgänglig."
 
 #: puavo-desktop-applet:582
 msgid "System update cancelled."
-msgstr ""
+msgstr "Uppdateringen avbruten."
 
 #: puavo-desktop-applet:584
 msgid "System update has been cancelled."
@@ -75,7 +78,7 @@ msgstr "Systemuppdatering har avbrutits."
 
 #: puavo-desktop-applet:597
 msgid "System update completed, reboot required to finish the update."
-msgstr ""
+msgstr "Uppdateringen är klar, omstart krävs för att slutföra uppdateringen."
 
 #: puavo-desktop-applet:598
 msgid "System update is finished, reboot the computer."
@@ -83,7 +86,7 @@ msgstr "Systemuppdatering är klar, starta om datorn."
 
 #: puavo-desktop-applet:600
 msgid "System update completed."
-msgstr ""
+msgstr "Uppdateringen är klar."
 
 #: puavo-desktop-applet:601
 msgid "System update is finished."
@@ -91,7 +94,7 @@ msgstr "Systemuppdateringen är klar."
 
 #: puavo-desktop-applet:614 puavo-desktop-applet:643
 msgid "System update failed."
-msgstr ""
+msgstr "Uppdateringen misslyckades."
 
 #: puavo-desktop-applet:616
 msgid "An error occurred when updating the system."
@@ -99,15 +102,15 @@ msgstr "Ett fel uppstod när systemet uppdaterades."
 
 #: puavo-desktop-applet:646
 msgid "System update done, reboot required to finish the update."
-msgstr ""
+msgstr "Uppdateringen är klar, omstart krävs för att slutföra uppdateringen."
 
 #: puavo-desktop-applet:649
 msgid "System update interrupted."
-msgstr ""
+msgstr "Uppdatering avbruten."
 
 #: puavo-desktop-applet:652
 msgid "System is up-to-date."
-msgstr ""
+msgstr "System är uppdaterad."
 
 #: puavo-desktop-applet:689
 msgid "System update progress:"
@@ -115,27 +118,27 @@ msgstr ""
 
 #: puavo-desktop-applet:703 puavo-desktop-applet:705
 msgid "System update has been started."
-msgstr "Systmuppdatering har startats."
+msgstr "Systemuppdatering har startats."
 
 #: puavo-desktop-applet:738
 msgid "Check for system updates"
-msgstr ""
+msgstr "Sök efter uppdateringar"
 
 #: puavo-desktop-applet:741
 msgid "(Checking for system updates.)"
-msgstr ""
+msgstr "(Söker uppdateringar.)"
 
 #: puavo-desktop-applet:745
 msgid "Update system"
-msgstr ""
+msgstr "Uppdatera systemet"
 
 #: puavo-desktop-applet:748
 msgid "Cancel system update"
-msgstr ""
+msgstr "Avbryt uppdateringen"
 
 #: puavo-desktop-applet:767
 msgid "System update log"
-msgstr ""
+msgstr "Uppdateringslogg"
 
 #: puavo-desktop-applet:831
 msgid "Send display configuration"
@@ -206,6 +209,8 @@ msgstr "Återställ utvecklingsutrymme"
 msgid ""
 "System updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
+"Uppdateringen är inte möjlig i utvecklingsutrymme, starta i normalt utrymme"
+" för att uppdatera."
 
 #~ msgid ""
 #~ "Updates are disabled in developer mode, boot to normal mode to update."
