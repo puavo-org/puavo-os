@@ -175,7 +175,7 @@ EOF
 # Provides support for local system logging.
 # Use rate limiting so that we do not fill up our /var
 # or overwhelm others.
-module(load="imuxsock" SysSock.RateLimit.Interval="5")
+module(load="imuxsock" SysSock.RateLimit.Interval="5" SysSock.UseSpecialParser="off")
 
 module(load="imklog")   # provides kernel logging support
 #module(load="immark")  # provides --MARK-- message capability
