@@ -487,8 +487,10 @@ class Control
             if File.directory?(path)
               notifier.watch(path, *events)
             elsif File.dirname(path).end_with?('/returnbox')
-              targetpath="#{File.dirname(File.dirname(path))}/returns/#{File.basename(path)}"
-              targetpath+='-1' while File.exists?(targetpath)
+              targetpathbase="#{File.dirname(File.dirname(path))}/returns/#{File.basename(path)}"
+              targetpath=path
+              i=0
+              targetpath=targetpathbase+"-#{i+=1}" while File.exists?(targetpath)
               File.rename(path, targetpath)
             end
 
