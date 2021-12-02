@@ -667,16 +667,16 @@ module UI
   WritePartitionsPrompt,
     = *(1..7)
 
-  @ask_forced     = {}
-  @defaults       = {}
-  @force_defaults = {}
-  @hosttype       = nil
-  @loopback_only  = false
-  @make_efi       = false
+  @ask_forced      = {}
+  @defaults        = {}
+  @force_defaults  = {}
+  @hosttype        = nil
+  @loopback_only   = false
+  @partition_label = nil
 
-  def self.hosttype     ; @hosttype      end
-  def self.loopback_only; @loopback_only end
-  def self.make_efi     ; @make_efi      end
+  def self.hosttype       ; @hosttype        end
+  def self.loopback_only  ; @loopback_only   end
+  def self.partition_label; @partition_label end
 
   def self.reset_questions
     @ask_forced = @force_defaults.clone
@@ -704,8 +704,7 @@ puavo-setup-filesystems [OPTIONS]
     --force-write-partitions      force value for write partitions
 
     --loopback-only               use only loopback devices
-    --make-efi                    create EFI partition even if we have not
-                                  booted in UEFI mode
+    --partition-label             use partition label "BIOS/MBR" or "UEFI/GPT"
 
 EOF
   end
@@ -730,7 +729,7 @@ EOF
         [ '--force-write-partitions'    , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--hosttype'                  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--loopback-only'             , GetoptLong::NO_ARGUMENT       ],
-        [ '--make-efi'                  , GetoptLong::NO_ARGUMENT       ],
+        [ '--partition-label'           , GetoptLong::REQUIRED_ARGUMENT ],
       )
 
       opts.each do |opt, arg|
@@ -777,8 +776,15 @@ EOF
           @hosttype = arg
         when '--loopback-only'
           @loopback_only = true
-        when '--make-efi'
-          @make_efi = true
+        when '--partition-label'
+          case arg
+            when 'BIOS/MBR', 'UEFI/GPT'
+              @partition_label = arg
+            else
+              warn "Unsupported partition label #{ arg }"
+              help_and_exit
+              exit(1)
+          end
         end
       end
     rescue GetoptLong::InvalidOption => e
@@ -837,8 +843,8 @@ vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
-partitioning_scheme =
-  (UI::make_efi || Dir.exists?('/sys/firmware/efi')) ? 'UEFI/GPT' : 'BIOS/MBR'
+partitioning_scheme = UI::partition_label \
+  || (Dir.exists?('/sys/firmware/efi') ? 'UEFI/GPT' : 'BIOS/MBR')
 
 raid_setup_done = false
 if hosttype == 'bootserver' then
