@@ -212,7 +212,7 @@ module DiskHandler
                  '--raid-devices=2',
                  *spare_args,
                  *(disks_for_mirroring.map do |dev|
-                     partitioning_scheme == 'UEFI/GPT' \
+                     %w(UEFI/GPT UEFI/MBR+GPT).include?(partitioning_scheme) \
                        ? "/dev/#{ dev }3" \
                        : "/dev/#{ dev }1"
                    end))
@@ -222,12 +222,13 @@ module DiskHandler
     return true
   end
 
-  def self.setup_partition(device, partitioning_scheme, mbr_format, gpt_format)
+  def self.setup_partition(device, partitioning_scheme, mbr_format,
+                           gpt_format, hybrid_format)
     # clean up possible confusing mess from the device
     run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
         { :err => '/dev/null' })
 
-    if partitioning_scheme == 'UEFI/GPT' then
+    if %w(UEFI/GPT UEFI/MBR+GPT).include?(partitioning_scheme) then
       # (we also create an EFI partition on a RAID device
       # even though it is pointless in that case)
       IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
@@ -254,21 +255,28 @@ module DiskHandler
       end
     end
 
-    if partitioning_scheme == 'UEFI/GPT' then
+    if %w(UEFI/GPT UEFI/MBR+GPT).include?(partitioning_scheme) then
       create_efi_filesystem(device)
+    end
+
+    if partitioning_scheme == 'UEFI/MBR+GPT' then
+      IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
+        f.print(hybrid_format)
+      end
     end
   end
 
   def self.raid_partition(device, partitioning_scheme)
     setup_partition(device, partitioning_scheme,
                     "n\np\n1\n\n\nt\nfd\na\np\nw\n",
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\nfd00\nw\ny\n")
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\nfd00\nw\ny\n",
+                    "r\nh\n1 2 3\ny\n\ny\n\nn\n\nn\nw\ny\n")
   end
 
   def self.get_partition(device, partitioning_scheme, numstart)
     special_disk_regexp = %r{\A((loop|md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
     part_prefix = device.match(special_disk_regexp) ? 'p' : ''
-    puavo_partnum = (partitioning_scheme == 'UEFI/GPT') \
+    puavo_partnum = %w(UEFI/GPT UEFI/MBR+GPT).include?(partitioning_scheme) \
                        ? (numstart + 2) \
                        : numstart
     [ device, part_prefix, puavo_partnum ].join
@@ -312,7 +320,8 @@ module DiskHandler
   def self.create_partitions(fs_conf, partitioning_scheme)
     setup_partition(fs_conf['device'], partitioning_scheme,
                     "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n",
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n")
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n",
+                    "r\nh\n1 2 3\ny\n\ny\n\nn\n\nn\nw\ny\n")
   end
 
   def self.non_swap_filesystems(hosttype)
@@ -567,7 +576,9 @@ module QueryDiskInfo
               .compact \
               .select { |part| part.match(partition_regexp) }
 
-      partedit_program = (partitioning_scheme == 'UEFI/GPT' ? 'gdisk' : 'fdisk')
+      partedit_program = \
+        %w(UEFI/GPT UEFI/MBR+GPT).include?(partitioning_scheme) \
+          ? 'gdisk' : 'fdisk'
 
       puts "\nPossible partitions are: #{ partitions.join(' ') }"
       puts "\nYou may choose '#{ partedit_program }' to partition this disk,"
@@ -704,7 +715,8 @@ puavo-setup-filesystems [OPTIONS]
     --force-write-partitions      force value for write partitions
 
     --loopback-only               use only loopback devices
-    --partition-label             use partition label "BIOS/MBR" or "UEFI/GPT"
+    --partition-label             use partition label "BIOS/MBR", "UEFI/GPT"
+                                    or "UEFI/MBR+GPT"
 
 EOF
   end
@@ -778,7 +790,7 @@ EOF
           @loopback_only = true
         when '--partition-label'
           case arg
-            when 'BIOS/MBR', 'UEFI/GPT'
+            when 'BIOS/MBR', 'UEFI/GPT', 'UEFI/MBR+GPT'
               @partition_label = arg
             else
               warn "Unsupported partition label #{ arg }"
