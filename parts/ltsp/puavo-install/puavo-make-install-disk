@@ -55,7 +55,7 @@ Usage: $(basename $0) [--only-legacy-boot]
 EOF
 }
 
-if ! args=$(getopt -n "$0" -o +hs:t:v \
+if ! args=$(getopt -n "$0" -o +hos:t:v \
               -l help,only-legacy-boot,source-image:,target-image:,with-vdi \
               -- "$@"); then
   usage
@@ -70,11 +70,11 @@ with_vdi=false
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --help) usage; exit 0                                 ;;
-    --only-legacy-boot) partition_label='BIOS/MBR'; shift ;;
-    --source-image)     source_image="$2"; shift;   shift ;;
-    --target-image)     target_image="$2"; shift;   shift ;;
-    --with-vdi)         with_vdi=true;     shift          ;;
+    -h|--help) usage; exit 0                                 ;;
+    -o|--only-legacy-boot) partition_label='BIOS/MBR'; shift ;;
+    -s|--source-image)     source_image="$2"; shift;   shift ;;
+    -t|--target-image)     target_image="$2"; shift;   shift ;;
+    -v|--with-vdi)         with_vdi=true;     shift          ;;
     --) shift; break;;
    esac
 done
