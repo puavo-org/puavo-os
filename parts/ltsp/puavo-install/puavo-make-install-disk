@@ -48,7 +48,8 @@ trap cleanup 0 INT TERM
 
 usage() {
   cat <<EOF
-Usage: $(basename $0) [--only-legacy-boot]
+Usage: $(basename $0) [--create-hybrid-mbr]
+                      [--only-legacy-boot]
                       [--source-image source]
                       [--target-image target]
                       [--with-vdi] (only when using --target-image)
@@ -56,12 +57,13 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o +hos:t:v \
-              -l help,only-legacy-boot,source-image:,target-image:,with-vdi \
+              -l 'help,create-hybrid-mbr,only-legacy-boot,source-image:,target-image:,with-vdi' \
               -- "$@"); then
   usage
   exit 1
 fi
 
+create_hybrid_mbr=false
 partition_label='UEFI/GPT'
 source_image=''
 target_image=''
@@ -70,14 +72,25 @@ with_vdi=false
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    -h|--help) usage; exit 0                                 ;;
+    -h|--help) usage;      exit 0                            ;;
+    --create-hybrid-mbr)   create_hybrid_mbr=true;     shift ;;
     -o|--only-legacy-boot) partition_label='BIOS/MBR'; shift ;;
     -s|--source-image)     source_image="$2"; shift;   shift ;;
     -t|--target-image)     target_image="$2"; shift;   shift ;;
-    -v|--with-vdi)         with_vdi=true;     shift          ;;
+    -v|--with-vdi)         with_vdi=true;              shift ;;
     --) shift; break;;
    esac
 done
+
+if $create_hybrid_mbr; then
+  if [ "$partition_label" = 'BIOS/MBR' ]; then
+    echo '--create-hybrid-mbr and --only-legacy-boot are mutually exclusive' \
+      >&2
+    exit 1
+  fi
+  partition_label='UEFI/MBR+GPT'
+fi
+
 
 if [ -n "$source_image" -a ! -e "$source_image" ]; then
   echo "source image $source_image does not exist!" >&2
