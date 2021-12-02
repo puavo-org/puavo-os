@@ -68,6 +68,11 @@ case "$mode" in
       image_name="${product_name}-$(date -u +%Y-%m-%d-%H%M%S)"
     fi
 
+    read -p "Use the following disk image name: [${image_name}] " answer
+    if [ -n "$answer" ]; then
+      image_name="$answer"
+    fi
+
     ocs-sr -q2 -j2 -z1p -i 4096 -fsck-src-part -scs -p true \
            savedisk "$image_name" "$source_disk"
     ;;
