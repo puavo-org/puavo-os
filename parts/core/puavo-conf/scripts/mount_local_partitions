@@ -86,7 +86,25 @@ if [ "$puavo_hosttype" = 'diskinstaller' ]; then
 fi
 
 if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
-  puavo_mount_partition puavo-home /home || status=1
+  while true; do
+    # XXX this does not work with nosplash (when plymouthd is not running)
+    luksPassword=$(plymouth ask-for-password --prompt='Provide a password for unlocking home') || true
+    if printf %s "$luksPassword" | cryptsetup --key-file - --test-passphrase \
+                                     luksOpen /dev/mapper/puavo-home puavo-crypthome; then
+      break
+    fi
+  done
+  # XXX this ugliness is because cryptsetup needs udev to be active
+  # XXX (putting this into background does not work,
+  # XXX we do not get into the systemd stage with this)
+  printf %s "$luksPassword" \
+    | cryptsetup --key-file - luksOpen /dev/mapper/puavo-home puavo-crypthome \
+        & cryptsetup_pid=$!
+  until [ -e /dev/dm-6 ]; do sleep 1; done
+  sleep 3
+  kill -9 $cryptsetup_pid || true
+  ln -fns ../dm-6 /dev/mapper/puavo-crypthome || status=1
+  puavo_mount_partition puavo-crypthome /home || status=1
 fi
 
 # These are needed for system updates when on NBD.
