@@ -30,7 +30,7 @@ install: install-dirs
 		puavo-sharedir-manager.json
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*
-	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants\
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
 		/lib/systemd/system/puavo-sharedir-manager.service
 
 clean:
