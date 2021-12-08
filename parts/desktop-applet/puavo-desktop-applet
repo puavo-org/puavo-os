@@ -767,8 +767,8 @@ class ImageUpdater(PuavoWidget):
       raise Exception('Wrong arguments for set_update_button_mode')
 
     if self.button_action_handler:
-        self.update_button.disconnect(self.button_action_handler)
-        self.button_action_handler = None
+      self.update_button.disconnect(self.button_action_handler)
+      self.button_action_handler = None
     if action:
       self.button_action_handler \
         = self.update_button.connect('activate', action)
