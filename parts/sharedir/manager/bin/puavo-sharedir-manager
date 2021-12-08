@@ -186,6 +186,7 @@ class PuavoShare
         wgids.map  { |group| "default:group:#{ group }:#{ rwmode }" },
         rgids.map  { |group| "default:group:#{ group }:#{ romode }" },
         wogids.map { |group| "default:group:#{ group }:---"         },
+            #^ any subdirectories should be created with max restrictions, hence ---
         "default:mask::#{ rwmode }",
         'default:other::---',
       ] : nil,
@@ -486,9 +487,9 @@ class Control
             # so we must help it a bit for freshly created directories
             if File.directory?(path)
               notifier.watch(path, *events)
-            elsif File.dirname(path).end_with?('/returnbox')
+            elsif File.dirname(path).end_with?('/returnbox') && event.flags.include?(:create)
               targetpathbase="#{File.dirname(File.dirname(path))}/returns/#{File.basename(path)}"
-              targetpath=path
+              targetpath=targetpathbase
               i=0
               targetpath=targetpathbase+"-#{i+=1}" while File.exists?(targetpath)
               File.link(path, targetpath)
