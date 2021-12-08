@@ -42,6 +42,7 @@ class PuavoLdap
   end
 
   def unbind
-    @conn.unbind unless @conn
+    @conn.unbind if @conn
+    @conn = nil
   end
 end
