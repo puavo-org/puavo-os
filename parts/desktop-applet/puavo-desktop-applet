@@ -739,6 +739,11 @@ class ImageUpdater(PuavoWidget):
   def set_update_button_mode(self, mode):
     action = None
 
+    # 'update' and 'updating' button modes are only for primary users
+    # on personally administered hosts
+    if not administered_by_user() and (mode == 'update' or mode == 'updating'):
+      mode = 'check'
+
     if mode == 'check':
       action      = self.check_for_updates
       message     = _tr('Check for system updates')
@@ -748,21 +753,12 @@ class ImageUpdater(PuavoWidget):
       sensitivity = False
     elif mode == 'update':
       action      = self.update_image
-      if administered_by_user():
-        sensitivity = True
-        message     = _tr('Update system')
-      else:
-        sensitivity = False
-        message     = _tr('System will update itself later')
+      sensitivity = True
+      message     = _tr('Update system')
     elif mode == 'updating':
       action      = self.cancel_image_update
-      sensitivity = False
-      if administered_by_user():
-        sensitivity = True
-        message     = _tr('Cancel system update')
-      else:
-        sensitivity = False
-        message     = _tr('System update in progress')
+      sensitivity = True
+      message     = _tr('Cancel system update')
     else:
       raise Exception('Wrong arguments for set_update_button_mode')
 
