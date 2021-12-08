@@ -5,5 +5,4 @@ auth    required        pam_env.so readenv=1 envfile=/etc/environment.puavo user
 auth    [success=2 default=ignore]      pam_unix.so nullok_secure
 auth    [success=1 default=ignore]      pam_ccreds.so action=validate ccredsfile=/var/cache/ccreds/ccreds.db use_first_pass
 auth    requisite                       pam_deny.so
-auth    optional                        pam_cap.so
 auth    sufficient                      pam_permit.so
