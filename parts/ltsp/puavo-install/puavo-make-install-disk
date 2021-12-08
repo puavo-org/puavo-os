@@ -48,23 +48,24 @@ trap cleanup 0 INT TERM
 
 usage() {
   cat <<EOF
-Usage: $(basename $0) [--create-hybrid-mbr]
-                      [--only-legacy-boot]
-                      [--source-image source]
-                      [--target-image target]
-                      [--with-vdi] (only when using --target-image)
+Usage: puavo-make-install-disk [--only-legacy-boot]
+                               [--only-uefi-boot]
+                               [--source-image source]
+                               [--target-image target]
+                               [--with-vdi] (only when using --target-image)
 EOF
 }
 
 if ! args=$(getopt -n "$0" -o +hos:t:v \
-              -l 'help,create-hybrid-mbr,only-legacy-boot,source-image:,target-image:,with-vdi' \
+              -l 'help,only-legacy-boot,only-uefi-boot,source-image:,target-image:,with-vdi' \
               -- "$@"); then
   usage
   exit 1
 fi
 
-create_hybrid_mbr=false
-partition_label='UEFI/GPT'
+only_legacy_boot=false
+only_uefi_boot=false
+partition_label='UEFI/MBR+GPT'
 source_image=''
 target_image=''
 with_vdi=false
@@ -72,25 +73,31 @@ with_vdi=false
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    -h|--help) usage;      exit 0                            ;;
-    --create-hybrid-mbr)   create_hybrid_mbr=true;     shift ;;
-    -o|--only-legacy-boot) partition_label='BIOS/MBR'; shift ;;
-    -s|--source-image)     source_image="$2"; shift;   shift ;;
-    -t|--target-image)     target_image="$2"; shift;   shift ;;
-    -v|--with-vdi)         with_vdi=true;              shift ;;
+    -h|--help) usage; exit 0;;
+    --only-legacy-boot)
+      only_legacy_boot=true
+      partition_label='BIOS/MBR'
+      shift
+      ;;
+    --only-uefi-boot)
+      # depending on hardware, legacy boot might work anyway, but as we create
+      # GPT only partitioning, there are no guarantees
+      only_uefi_boot=true
+      partition_label='UEFI/GPT'
+      shift
+      ;;
+    -s|--source-image) source_image="$2"; shift; shift ;;
+    -t|--target-image) target_image="$2"; shift; shift ;;
+    -v|--with-vdi)     with_vdi=true;            shift ;;
     --) shift; break;;
+    *)  usage; exit 1;;
    esac
 done
 
-if $create_hybrid_mbr; then
-  if [ "$partition_label" = 'BIOS/MBR' ]; then
-    echo '--create-hybrid-mbr and --only-legacy-boot are mutually exclusive' \
-      >&2
-    exit 1
-  fi
-  partition_label='UEFI/MBR+GPT'
+if $only_legacy_boot && $only_uefi_boot; then
+  echo '--only-legacy-boot and --only-uefi-boot are mutually exclusive' >&2
+  exit 1
 fi
-
 
 if [ -n "$source_image" -a ! -e "$source_image" ]; then
   echo "source image $source_image does not exist!" >&2
