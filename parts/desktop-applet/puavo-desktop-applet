@@ -781,9 +781,9 @@ class ImageUpdater(PuavoWidget):
     self.log_dialog \
       = Gtk.Dialog(title=_tr('System update log'),
                    parent=None,
-                   flags=Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                   buttons=(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-
+                   modal=True,
+                   destroy_with_parent=True)
+    self.log_dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
     self.log_dialog.set_default_size(600, 300)
 
     self.log_view = Gtk.TextView()
