@@ -94,6 +94,13 @@ set services {
       /etc/rc5.d/S01gpm -> /etc/init.d/gpm
     }}
 
+  { hooktftp {
+      /etc/rc2.d/S01hooktftp -> /etc/init.d/hooktftp
+      /etc/rc3.d/S01hooktftp -> /etc/init.d/hooktftp
+      /etc/rc4.d/S01hooktftp -> /etc/init.d/hooktftp
+      /etc/rc5.d/S01hooktftp -> /etc/init.d/hooktftp
+    }}
+
   { incron {
       /etc/systemd/system/multi-user.target.wants/incron.service
         -> /lib/systemd/system/incron.service
