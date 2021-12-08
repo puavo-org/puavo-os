@@ -13,6 +13,7 @@ _pkgs_ports := aria2                \
                gnome-shell          \
                grub2                \
                gtk+3.0              \
+               hooktftp             \
                incron               \
                libmypaint           \
                libpam-ccreds        \

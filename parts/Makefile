@@ -16,7 +16,6 @@ subdirs         := admins                     \
                    pkg                        \
                    puavomenu                  \
                    sharedir                   \
-                   tftp                       \
                    usb-factory                \
                    user-registration          \
                    vpn                        \

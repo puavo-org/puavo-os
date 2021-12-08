@@ -141,7 +141,7 @@ function ltsp_image_entry {
     set root='(loop)'
 
     #
-    # this mirrors code in puavo-ltspboot-config (puavo-tftpd hook)
+    # this mirrors code in puavo-ltspboot-config
     #
 
     if test "$kernel_version" = ""; then
