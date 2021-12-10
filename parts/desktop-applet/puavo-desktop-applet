@@ -170,7 +170,7 @@ class ChangelogNotifier(PuavoWidget):
         url = url[:-4]
 
     cmd = [ '/usr/bin/puavo-webwindow', '--width', '1000', '--height', '650',
-            '--url', url, '--title', 'Changelog', '--enable-js' ]
+            '--url', url, '--title', _tr('Changelog'), '--enable-js' ]
 
     (pid, stdin, stdout, stderr) \
        = GLib.spawn_async(cmd,
@@ -373,8 +373,9 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_started(self, contentname, version):
-    self.notify(self.translate_contentname(contentname),
-                '%s %s %s' % (_tr('Update to version'), version, _tr('has started.')))
+    if administered_by_user():
+      self.notify(self.translate_contentname(contentname),
+                  '%s %s %s' % (_tr('Update to version'), version, _tr('has started.')))
     self.update_progress(contentname, version, 0)
 
 
@@ -396,10 +397,11 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_completed(self, contentname, version):
-    self.notify(self.translate_contentname(contentname),
-                '%s %s %s' % (_tr('Update to version'),
-                              version,
-                              _tr('has completed successfully.')))
+    if administered_by_user():
+      self.notify(self.translate_contentname(contentname),
+                  '%s %s %s' % (_tr('Update to version'),
+                                version,
+                                _tr('has completed successfully.')))
 
     try:
       self.content_elements[contentname]['refresh'] = True
@@ -410,10 +412,11 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_failed(self, contentname, version, errmsg):
-    self.notify(self.translate_contentname(contentname),
-                '%s %s %s' % (_tr('Update to version'),
-                              version,
-                              _tr('has failed.')))
+    if administered_by_user():
+      self.notify(self.translate_contentname(contentname),
+                  '%s %s %s' % (_tr('Update to version'),
+                                version,
+                                _tr('has failed.')))
 
     try:
       self.content_elements[contentname]['refresh'] = True
@@ -436,8 +439,6 @@ class ImageUpdater(PuavoWidget):
     if os.path.exists('/run/puavo/nbd-server'):
       return
     if on_persistent_overlay():
-      return
-    if getpass.getuser() != 'Debian-gdm' and not administered_by_user():
       return
 
     self.available_notice_shown = False
@@ -571,7 +572,8 @@ class ImageUpdater(PuavoWidget):
     if not self.available_notice_shown:
       self.append_text_to_log( _tr('A new system update is available.') \
                                  + "\n" )
-      self.notify( _tr('A new system update is available.') )
+      if administered_by_user():
+        self.notify( _tr('A new system update is available.') )
       self.available_notice_shown = True
 
 
@@ -582,7 +584,8 @@ class ImageUpdater(PuavoWidget):
 
     self.append_error_to_log( _tr('System update cancelled.') + "\n" )
 
-    self.notify( _tr('System update has been cancelled.') )
+    if administered_by_user():
+      self.notify( _tr('System update has been cancelled.') )
 
 
   def on_update_completed(self, image_update_done, reboot_required):
@@ -604,7 +607,8 @@ class ImageUpdater(PuavoWidget):
     self.append_text_to_log( log_msg + "\n" )
 
     self.available_notice_shown = False
-    self.notify(notify_msg)
+    if administered_by_user():
+      self.notify(notify_msg)
 
 
   def on_update_failed(self):
@@ -615,7 +619,8 @@ class ImageUpdater(PuavoWidget):
 
     self.append_error_to_log( _tr('System update failed.') + "\n" )
 
-    self.notify( _tr('An error occurred when updating the system.') )
+    if administered_by_user():
+      self.notify( _tr('An error occurred when updating the system.') )
 
 
   def on_update_isuptodate(self, reboot_required):
@@ -707,7 +712,8 @@ class ImageUpdater(PuavoWidget):
 
     self.append_text_to_log( _tr('System update has been started.') \
                                + "\n" )
-    self.notify( _tr('System update has been started.') )
+    if administered_by_user():
+      self.notify( _tr('System update has been started.') )
 
 
   def set_icon(self, icon, status):
@@ -738,6 +744,11 @@ class ImageUpdater(PuavoWidget):
   def set_update_button_mode(self, mode):
     action = None
 
+    # 'update' and 'updating' button modes are only for primary users
+    # on personally administered hosts
+    if not administered_by_user() and (mode == 'update' or mode == 'updating'):
+      mode = 'check'
+
     if mode == 'check':
       action      = self.check_for_updates
       message     = _tr('Check for system updates')
@@ -747,18 +758,18 @@ class ImageUpdater(PuavoWidget):
       sensitivity = False
     elif mode == 'update':
       action      = self.update_image
-      message     = _tr('Update system')
       sensitivity = True
+      message     = _tr('Update system')
     elif mode == 'updating':
-      message     =_tr('Cancel system update')
       action      = self.cancel_image_update
       sensitivity = True
+      message     = _tr('Cancel system update')
     else:
       raise Exception('Wrong arguments for set_update_button_mode')
 
     if self.button_action_handler:
-        self.update_button.disconnect(self.button_action_handler)
-        self.button_action_handler = None
+      self.update_button.disconnect(self.button_action_handler)
+      self.button_action_handler = None
     if action:
       self.button_action_handler \
         = self.update_button.connect('activate', action)
@@ -771,9 +782,9 @@ class ImageUpdater(PuavoWidget):
     self.log_dialog \
       = Gtk.Dialog(title=_tr('System update log'),
                    parent=None,
-                   flags=Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                   buttons=(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-
+                   modal=True,
+                   destroy_with_parent=True)
+    self.log_dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
     self.log_dialog.set_default_size(600, 300)
 
     self.log_view = Gtk.TextView()

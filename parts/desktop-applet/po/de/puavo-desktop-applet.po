@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2021-11-30 15:31+0200\n"
+"PO-Revision-Date: 2021-12-01 10:54+0200\n"
 "Last-Translator: tnurmi <tuomas.nurmi@opinsys.fi>\n"
 "Language-Team: none\n"
 "Language: de\n"
@@ -19,6 +19,10 @@ msgstr "Hostname"
 #: puavo-desktop-applet:150
 msgid "Information on the latest system update"
 msgstr "Informationen zur Systemaktualisierung"
+
+#: puavo-desktop-applet:173
+msgid "Changelog"
+msgstr "Änderungen im Opinsys OS"
 
 #: puavo-desktop-applet:213
 msgid "New system version"
@@ -84,8 +88,8 @@ msgstr ""
 #: puavo-desktop-applet:598
 msgid "System update is finished, reboot the computer."
 msgstr ""
-"Die Systemaktualisierung ist fertig. Der Computer muss nun neu gestartet"
-" werden."
+"Die Systemaktualisierung ist fertig. Der Computer muss nun neu gestartet "
+"werden."
 
 #: puavo-desktop-applet:600
 msgid "System update completed."
@@ -106,8 +110,8 @@ msgstr "Bei der Aktualisierung des Systems ist ein Fehler aufgetreten."
 #: puavo-desktop-applet:646
 msgid "System update done, reboot required to finish the update."
 msgstr ""
-"Eine Systemaktualisierung ist fertig, der Computer muss nun neu gestartet"
-" werden."
+"Eine Systemaktualisierung ist fertig, der Computer muss nun neu gestartet "
+"werden."
 
 #: puavo-desktop-applet:649
 msgid "System update interrupted."
@@ -213,8 +217,8 @@ msgstr "Setze Entwicklermodus zurück"
 msgid ""
 "System updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
-"Im Entwicklermodus sind Systemaktualisierungen nicht möglich, starte neu in"
-" der normalen Modus um Aktualisierung durchzuführen."
+"Im Entwicklermodus sind Systemaktualisierungen nicht möglich, starte neu in "
+"der normalen Modus um Aktualisierung durchzuführen."
 
 #~ msgid ""
 #~ "Updates are disabled in developer mode, boot to normal mode to update."

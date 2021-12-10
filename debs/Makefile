@@ -10,6 +10,7 @@ _pkgs_ports := cups                 \
                gtk+3.0              \
                hooktftp             \
                incron               \
+               libmypaint           \
                libpam-ccreds        \
                mutter               \
                openboard            \

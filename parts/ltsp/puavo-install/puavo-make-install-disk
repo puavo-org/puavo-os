@@ -48,19 +48,24 @@ trap cleanup 0 INT TERM
 
 usage() {
   cat <<EOF
-Usage: $(basename $0) [--source-image source]
-                      [--target-image target]
-                      [--with-vdi] (only when using --target-image)
+Usage: puavo-make-install-disk [--only-legacy-boot]
+                               [--only-uefi-boot]
+                               [--source-image source]
+                               [--target-image target]
+                               [--with-vdi] (only when using --target-image)
 EOF
 }
 
-if ! args=$(getopt -n "$0" -o +hs:t:v \
-              -l help,source-image:,target-image:,with-vdi \
+if ! args=$(getopt -n "$0" -o +hos:t:v \
+              -l 'help,only-legacy-boot,only-uefi-boot,source-image:,target-image:,with-vdi' \
               -- "$@"); then
   usage
   exit 1
 fi
 
+only_legacy_boot=false
+only_uefi_boot=false
+partition_label='UEFI/MBR+GPT'
 source_image=''
 target_image=''
 with_vdi=false
@@ -68,13 +73,31 @@ with_vdi=false
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --help) usage; exit 0                           ;;
-    --source-image) source_image="$2"; shift; shift ;;
-    --target-image) target_image="$2"; shift; shift ;;
-    --with-vdi)     with_vdi=true;     shift        ;;
+    -h|--help) usage; exit 0;;
+    --only-legacy-boot)
+      only_legacy_boot=true
+      partition_label='BIOS/MBR'
+      shift
+      ;;
+    --only-uefi-boot)
+      # depending on hardware, legacy boot might work anyway, but as we create
+      # GPT only partitioning, there are no guarantees
+      only_uefi_boot=true
+      partition_label='UEFI/GPT'
+      shift
+      ;;
+    -s|--source-image) source_image="$2"; shift; shift ;;
+    -t|--target-image) target_image="$2"; shift; shift ;;
+    -v|--with-vdi)     with_vdi=true;            shift ;;
     --) shift; break;;
+    *)  usage; exit 1;;
    esac
 done
+
+if $only_legacy_boot && $only_uefi_boot; then
+  echo '--only-legacy-boot and --only-uefi-boot are mutually exclusive' >&2
+  exit 1
+fi
 
 if [ -n "$source_image" -a ! -e "$source_image" ]; then
   echo "source image $source_image does not exist!" >&2
@@ -108,9 +131,10 @@ if [ -n "$target_image" ]; then
                           --force-write-partitions yes \
                           --hosttype diskinstaller \
                           --loopback-only \
-                          --make-efi
+                          --partition-label "$partition_label"
 else
-  puavo-setup-filesystems --hosttype diskinstaller --make-efi
+  puavo-setup-filesystems --hosttype diskinstaller \
+                          --partition-label "$partition_label"
 fi
 
 puavo-install-grub --hosttype   diskinstaller  \
