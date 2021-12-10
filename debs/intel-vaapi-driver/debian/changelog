@@ -1,0 +1,472 @@
+intel-vaapi-driver (2.3.0+dfsg1-1+puavo1) buster; urgency=medium
+
+  * Add a patch for newest Intel CPUs.
+
+ -- Puavo Org <dev@opinsys.fi>  Fri, 10 Dec 2021 09:04:33 +0200
+
+intel-vaapi-driver (2.3.0+dfsg1-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #918757)
+  * debian/patches:
+    - Remove obsolete patch.
+    - Apply upstream patch to handle wayland issues. (Closes: #920949) (LP:
+      #1813131)
+  * debian/control: Bump Standards-Version.
+  * debian/: Bump debhelper compat to 12.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 02 Feb 2019 14:32:03 +0100
+
+intel-vaapi-driver (2.2.0+dfsg1-2) unstable; urgency=medium
+
+  * debian/patches: Re-enable VPP on Haswell. (Closes: #909832)
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sun, 30 Sep 2018 22:05:18 +0200
+
+intel-vaapi-driver (2.2.0+dfsg1-1) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * d/copyright: Use https protocol in Format field
+  * d/control: Set Vcs-* to salsa.debian.org
+
+  [ Felipe Sateler ]
+  * Change maintainer address to debian-multimedia@lists.debian.org
+
+  [ Matteo F. Vescovi ]
+  * debian/control: drop myself from Uploaders
+
+  [ Sebastian Ramacher ]
+  * New upstream version. (Closes: #904938)
+  * debian/copyright:
+    - Update list of non-free files
+    - Update copyright years
+  * debian/:
+    - Bump debhelper compat to 11.
+    - Disable hardware encoding if shaders are not available and do not try to
+      load them from the non-free version. (Closes: #893597)
+  * debian/control:
+    - Bump libva-dev B-D to 2.2.0.
+    - Bump Standards-Version.
+    - Set Rules-Requires-Root: no.
+    - Update description.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Thu, 30 Aug 2018 21:41:06 +0200
+
+intel-vaapi-driver (2.0.0+dfsg1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Upload to unstable.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Fri, 03 Nov 2017 17:00:36 -0500
+
+intel-vaapi-driver (2.0.0~pre3+dfsg1-1) experimental; urgency=medium
+
+  * New upstream release.
+  * debian/: Exclude shaders without source. (Closes: #867340)
+  * debian/control:
+    - Bump Standards-Version.
+    - Bump libva-dev B-D.
+    - Update Enhances.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Wed, 18 Oct 2017 22:55:57 +0200
+
+intel-vaapi-driver (1.8.3-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: Bump Standards-Version.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Thu, 29 Jun 2017 20:43:05 +0200
+
+intel-vaapi-driver (1.8.2-2) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sun, 18 Jun 2017 11:00:53 +0200
+
+intel-vaapi-driver (1.8.2-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Mon, 12 Jun 2017 21:44:53 +0200
+
+intel-vaapi-driver (1.8.1-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 15 Apr 2017 20:03:20 +0200
+
+intel-vaapi-driver (1.8.0-1) experimental; urgency=medium
+
+  * New upstream release.
+  * debian/{control,copyright,watch}: Update upstream location. (Closes:
+    #853271) (LP: #1660497)
+  * debian/control:
+    - Bump libva-dev B-D to 1.8.0.
+    - Add libxext-dev and libxfixes-dev to B-D.
+  * debian/copyright: Update copyright years.
+  * debian/patches: Removed, no longer needed.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 01 Apr 2017 20:31:45 +0200
+
+intel-vaapi-driver (1.7.3-1) unstable; urgency=medium
+
+  * New upstrem release.
+  * debian/control: Bump libva-dev B-D according to configure.ac.
+  * debian/{control,compat,rules}: Bump to debhelper compat 10.
+  * debian/patches: Refresh.
+  * debian/copyright: Update copyright years.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Thu, 10 Nov 2016 20:34:52 +0100
+
+intel-vaapi-driver (1.7.2-1) unstable; urgency=medium
+
+  [ Nicholas D Steeves ]
+  * debian/patches/ignore-debian.upstream.patch: replicate patch from libva.
+  * debian/clean: replicate change from libva; remove empty file.
+
+  [ Sebastian Ramacher ]
+  * New upstream release.
+  * debian/control:
+    - Change Architecture to any-amd64 and any-i386.
+    - Bump libva-dev B-D according to configure.ac.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Mon, 05 Sep 2016 17:55:47 +0200
+
+intel-vaapi-driver (1.7.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control:
+    - Bump Standards-Version.
+    - Build-Depends: Bump libdrm-dev and libva-dev according to configure.ac.
+    - Description: Mention Skylake.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Wed, 22 Jun 2016 19:08:16 +0200
+
+intel-vaapi-driver (1.7.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Move to automatic debug symbol packages.
+  * debian/control:
+    - Bump Standards-Version.
+    - Update Vcs-*.
+    - Bump B-D on libva-dev to 1.7.0.
+    - Remove obsolete Breaks, Replaces and Provides.
+  * debian/{rules,i965-va-driver.install}: Update for change to a single
+    binary package.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Wed, 16 Mar 2016 01:52:03 +0100
+
+intel-vaapi-driver (1.6.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Thu, 17 Dec 2015 11:47:20 +0100
+
+intel-vaapi-driver (1.6.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Thu, 10 Sep 2015 22:45:53 +0200
+
+intel-vaapi-driver (1.6.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Upload to unstable.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Wed, 01 Jul 2015 21:28:43 +0200
+
+intel-vaapi-driver (1.6.0~pre1-1) experimental; urgency=medium
+
+  * New upstream release.
+  * debian/copyright: Update copyright years.
+  * debian/control: Bump Build-Depends on libva-dev and intel-gpu-tools.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Thu, 04 Jun 2015 12:32:31 +0200
+
+intel-vaapi-driver (1.5.1-2) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sun, 26 Apr 2015 19:24:51 +0200
+
+intel-vaapi-driver (1.5.1-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Fri, 20 Mar 2015 17:25:52 +0100
+
+intel-vaapi-driver (1.5.0-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Mon, 29 Dec 2014 22:08:51 +0100
+
+intel-vaapi-driver (1.5.0~pre1-1) experimental; urgency=medium
+
+  [ Matteo F. Vescovi ]
+  * debian/control: Uploader e-mail address updated
+
+  [ Sebastian Ramacher ]
+  * New upstream release.
+  * debian/patches/0002-avoid_segfault_on_unsupported_platforms.patch:
+    Removed, no longer needed.
+  * Track supported libva driver ABI version. (LP: #1384100)
+    - debian/rules: Add libva dh sequence.
+    - debian/control: Build-Depend on libva-dev (>= 1.5~pre1)
+  * debian/copyright: Update copyright information.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Mon, 15 Dec 2014 20:37:45 +0100
+
+intel-vaapi-driver (1.4.1-2) unstable; urgency=medium
+
+  * debian/patches/0002-avoid_segfault_on_unsupported_platforms.patch: Apply
+    upstream patch to avoid segmentation faults on unsupported platforms.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Mon, 10 Nov 2014 13:59:29 +0100
+
+intel-vaapi-driver (1.4.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Fri, 24 Oct 2014 13:49:03 +0200
+
+intel-vaapi-driver (1.4.0-2) unstable; urgency=medium
+
+  * Upload to unstable.
+  * debian/control: Restrict intel-gpu-tools and python in Build-Depends to
+    amd64 and i386.
+  * debian/rules: Remove unused get-orig-source target.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Wed, 01 Oct 2014 13:59:16 +0200
+
+intel-vaapi-driver (1.4.0-1) experimental; urgency=medium
+
+  [ Matteo F. Vescovi ]
+  * debian/control: i965-va-driver long description updated. (Closes: #752043)
+
+  [ Sebastian Ramacher ]
+  * New upstream release.
+  * debian/watch: Update watch file for new download location.
+  * debian/control:
+    - Build-Depends:
+      + Bump libva-dev to >= 1.4.
+      + Add intel-gpu-tools and python to run intel-gen4asm during build.
+      + Add libwayland-dev on linux to build with wayland support.
+    - Bump Standards-Version. No changes required.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Tue, 30 Sep 2014 16:42:27 +0200
+
+intel-vaapi-driver (1.3.2-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: Fix typos in Description and replace a list of technical
+    definitions with a list of supported hardware. (Closes: #751204)
+  * debian/patches/0002-Define_i965_proc_picture_in_header.patch: Removed
+    since it has been applied upstream.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Mon, 16 Jun 2014 10:33:15 +0200
+
+intel-vaapi-driver (1.3.1-2) unstable; urgency=medium
+
+  * debian/control:
+    - Change Section to video to align with the override.
+    - Add Provides: va-driver to i965-va-driver.
+  * debian/patches/0002-Define_i965_proc_picture_in_header.patch: Fix
+    conflicting return types of i965_proc_picture. (Closes: #748555)
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 31 May 2014 16:09:47 +0200
+
+intel-vaapi-driver (1.3.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: Add Enhances: libva1.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 10 May 2014 16:22:23 +0200
+
+intel-vaapi-driver (1.3.0-1) unstable; urgency=medium
+
+  [ Matteo F. Vescovi ]
+  * New upstream release
+    - debian/patches/: patchset refreshed
+      - 0002-Adjust_default_contrast-saturation.patch dropped
+        (applied upstream)
+    - debian/control: libva-dev b-dep version bump 1.2 => 1.3
+
+  [ Sebastian Ramacher ]
+  * debian/copyright:
+    - Add license information for new files.
+    - Update copyright years.
+  * debian/control:
+    - Remove Andres Mejia from Uploaders. Thank you for maintaining
+      intel-vaapi-driver, Andres. (Closes: #743530)
+    - Remove transitional packages which are no longer in the archive.
+    - Add myself to Uploaders.
+    - Remove explicit dependency on libva1. A stricter dependency on libva1
+      will be generated by dh_shlibdeps anyway.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 05 Apr 2014 15:36:28 +0200
+
+intel-vaapi-driver (1.2.2-2) unstable; urgency=medium
+
+  * debian/patches/: patchset updated
+    - 0001-Fix_FTBFS_on_kFreeBSD.patch refreshed
+    - 0002-Adjust_default_contrast-saturation.patch added (Closes: #734246)
+
+ -- Matteo F. Vescovi <mfvescovi@gmail.com>  Wed, 15 Jan 2014 18:25:37 +0100
+
+intel-vaapi-driver (1.2.2-1) unstable; urgency=low
+
+  [ Reinhard Tartler ]
+  * Tighten dependency on libdrm (Closes: #732162)
+
+  [ Matteo F. Vescovi ]
+  * New upstream release
+  * debian/control: S-V bump 3.9.4 => 3.9.5 (no changes needed)
+
+ -- Matteo F. Vescovi <mfvescovi@gmail.com>  Fri, 03 Jan 2014 15:06:13 +0100
+
+intel-vaapi-driver (1.2.1-2) unstable; urgency=low
+
+  * Upload to unstable.
+
+ -- Matteo F. Vescovi <mfv.debian@gmail.com>  Thu, 07 Nov 2013 18:00:34 +0100
+
+intel-vaapi-driver (1.2.1-1) experimental; urgency=low
+
+  * New upstream release
+  * debian/patches/: patchset created
+    - 0001-Fix_FTBFS_on_kFreeBSD.patch added (Closes: #722354)
+
+ -- Matteo F. Vescovi <mfv.debian@gmail.com>  Tue, 15 Oct 2013 19:49:05 +0200
+
+intel-vaapi-driver (1.2.0-1) experimental; urgency=low
+
+  [ Matteo F. Vescovi ]
+  * New upstream release
+
+  [ Sebastian Ramacher ]
+  * debian/control: Bump libva-dev in Build-Depends to >= 1.2.
+  * debian/copyright: Complete copyright information. (Closes: #719603)
+    - Update Format URL.
+    - Add missing license for src/shaders/post_processing/gen7/*.g4a.
+    - Add full text of EPL-1.0.
+    - Update copyright years.
+
+ -- Matteo F. Vescovi <mfv.debian@gmail.com>  Sun, 08 Sep 2013 02:04:00 +0200
+
+intel-vaapi-driver (1.0.20-2) unstable; urgency=low
+
+  * Upload to unstable
+  * Enable verbose builds
+
+ -- Reinhard Tartler <siretart@tauware.de>  Thu, 23 May 2013 07:28:04 +0200
+
+intel-vaapi-driver (1.0.20-1) experimental; urgency=low
+
+  [ Matteo F. Vescovi ]
+  * New upstream release
+    - Supports more decoding profiles for older hardware, closes: #670921
+
+  [ Reinhard Tartler ]
+  * Clarify changelog
+
+ -- Reinhard Tartler <siretart@tauware.de>  Fri, 29 Mar 2013 10:12:26 +0100
+
+intel-vaapi-driver (1.0.19-1) experimental; urgency=low
+
+  [ Matteo F. Vescovi ]
+  * New upstream release
+  * debian/control: S-V 3.9.3 => 3.9.4 (no changes needed)
+  * debian/control: Vcs-Git URL updated
+
+  [ Reinhard Tartler ]
+  * bump library dependency on libav-dev (>> 1.0.16)
+    this is stated as such in the upstream's README
+
+ -- Matteo F. Vescovi <mfv.debian@gmail.com>  Tue, 15 Jan 2013 16:23:59 +0100
+
+intel-vaapi-driver (1.0.17-1) unstable; urgency=low
+
+  [ Matteo F. Vescovi ]
+  * New upstream release
+
+ -- Andres Mejia <amejia@debian.org>  Tue, 01 May 2012 22:23:31 -0400
+
+intel-vaapi-driver (1.0.16-4) unstable; urgency=low
+
+  * Rename libva-intel-vaapi-driver package back to i965-va-driver.
+    This is done to match naming sceme picked for other VAAPI modules.
+    The name is picked by looking at the name of the *.so file installed
+    under /usr/lib/<triplet>/dri, and using the first part of the name.
+    In this case, the driver file is named "i965_drv_video.so" and so the
+    package to install the driver is named i965-va-driver.
+
+ -- Andres Mejia <amejia@debian.org>  Tue, 20 Mar 2012 11:16:29 -0400
+
+intel-vaapi-driver (1.0.16-3) unstable; urgency=low
+
+  * Set Architecture field to specific supported architecture fields.
+
+ -- Andres Mejia <amejia@debian.org>  Sat, 17 Mar 2012 10:01:45 -0400
+
+intel-vaapi-driver (1.0.16-2) unstable; urgency=low
+
+  * Make driver build only on i386 and amd64 architectures.
+
+ -- Andres Mejia <amejia@debian.org>  Fri, 16 Mar 2012 23:20:26 -0400
+
+intel-vaapi-driver (1.0.16-1) unstable; urgency=low
+
+  [ Matteo F. Vescovi ]
+  * debian/README.Debian: list of supported hardware (Closes: #623045)
+  * debian/control: list of platform definitions added
+  * debian/control: Standards-Version bumped to 3.9.3
+  * debian/: Multi-Arch support added
+
+  [ Andres Mejia ]
+  * Add options to unapply patches and abort on upstream changes.
+  * Fix Priority fields in packages.
+  * Don't include version depends in Replaces field.
+  * Add Provides on i965-va-driver for libva-intel-vaapi-driver package.
+  * Remove compression option, it is now gz.
+  * Remove some unneeded lines from debian/rules.
+  * Support parallel builds.
+  * Install NEWS file as changelog and don't install README. README is repition
+    of package description.
+  * Fix watch file.
+  * Add myself to uploaders field.
+
+ -- Andres Mejia <amejia@debian.org>  Fri, 16 Mar 2012 12:37:33 -0400
+
+intel-vaapi-driver (1.0.15-1) experimental; urgency=low
+
+  [ Brandon Snider ]
+  * Initial release (Closes: #654567)
+
+  [ Matteo F. Vescovi ]
+  * debian/gbp.conf: config file added
+  * debian/control: massive change
+  * debian/copyright: little re-work
+  * debian/*.install: renaming due to package's new name
+  * debian/README.*: useless (for now) files removed
+  * debian/clean: clean upstream after build
+  * debian/changelog: ITP bug added
+  * debian/control: "Section:" fields updated/removed
+  * debian/*.install: install path corrected
+  * debian/rules: paths corrected
+  * debian/rules: purging useless commented stuff
+
+  [ Reinhard Tartler ]
+  * document that shades are licensed under EPL
+  * build-depend on pkg-config
+  * add myself to uploaders
+  * build-depend on libx11-dev
+  * provide a transition path for the i965-va-driver package
+  * tighten build dependency on libva-dev (Closes: #645359)
+  * normalize fields with wrap-and-sort(1)
+  * add ${misc:Depends} to i965-va-driver
+  * i965-va-driver: Add Priority and Section fields.
+    (Found by lintian)
+  * improve package descriptions
+  * i965-va-driver: Correct Breaks/Replaces field
+
+ -- Reinhard Tartler <siretart@tauware.de>  Thu, 05 Jan 2012 12:59:27 +0100

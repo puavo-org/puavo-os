@@ -1,0 +1,303 @@
+From: Sebastian Ramacher <sebastian@ramacher.at>
+Date: Thu, 30 Aug 2018 20:30:55 +0200
+Subject: Disable decoding
+
+---
+ src/Makefile.sources   | 13 -------------
+ src/gen8_mfc.c         |  8 ++++++++
+ src/gen8_vme.c         |  8 ++++++++
+ src/gen9_mfc.c         | 14 ++++++++++++--
+ src/gen9_vme.c         | 17 +++++++++++++++++
+ src/i965_device_info.c | 28 ----------------------------
+ 6 files changed, 45 insertions(+), 43 deletions(-)
+
+diff --git a/src/Makefile.sources b/src/Makefile.sources
+index 99edfba..70505d8 100644
+--- a/src/Makefile.sources
++++ b/src/Makefile.sources
+@@ -9,16 +9,13 @@ source_c = \
+ 	gen7_mfd.c \
+ 	gen75_mfd.c \
+ 	gen75_mfc.c \
+-	gen8_encoder_vp8.c \
+ 	gen8_mfc.c \
+ 	gen8_mfd.c \
+ 	gen8_vme.c \
+-	gen9_encoder_vp8.c \
+ 	gen9_vme.c \
+ 	gen9_mfc.c \
+ 	gen9_mfc_hevc.c \
+ 	gen9_mfd.c \
+-	gen9_vdenc.c \
+ 	gen75_picture_process.c \
+ 	gen75_vme.c \
+ 	gen75_vpp_gpe.c \
+@@ -32,7 +29,6 @@ source_c = \
+ 	i965_drv_video.c \
+ 	i965_encoder.c \
+ 	i965_encoder_utils.c \
+-	i965_encoder_vp8.c \
+ 	i965_media.c \
+ 	i965_media_h264.c \
+ 	i965_media_mpeg2.c \
+@@ -53,21 +49,12 @@ source_c = \
+ 	vp8_probs.c \
+ 	vp9_probs.c \
+ 	vpx_quant.c \
+-	gen9_vp9_encoder.c \
+ 	intel_common_vpp_internal.c \
+ 	i965_encoder_const_def.c \
+-	i965_avc_const_def.c \
+ 	i965_avc_encoder_common.c \
+-	i965_avc_encoder.c \
+-	gen9_hevc_encoder.c \
+ 	gen9_hevc_enc_utils.c \
+-	gen10_encoder_vp8.c \
+ 	gen10_hcp_common.c \
+-	gen10_hevc_enc_common.c \
+-	gen10_hevc_encoder.c \
+ 	gen10_huc_common.c \
+-	gen10_vdenc_common.c \
+-	gen10_vdenc_vp9.c \
+ 	$(NULL)
+ 
+ source_h = \
+diff --git a/src/gen8_mfc.c b/src/gen8_mfc.c
+index 5acdbf0..57bd886 100644
+--- a/src/gen8_mfc.c
++++ b/src/gen8_mfc.c
+@@ -4711,10 +4711,18 @@ Bool gen8_mfc_context_init(VADriverContextP ctx, struct intel_encoder_context *e
+     struct gen6_mfc_context *mfc_context;
+ 
+     if (IS_CHERRYVIEW(i965->intel.device_info) && encoder_context->codec == CODEC_VP8)
++#if 0
+         return i965_encoder_vp8_pak_context_init(ctx, encoder_context);
++#else
++        return False;
++#endif
+     if (IS_GEN8(i965->intel.device_info) && (encoder_context->codec == CODEC_H264 ||
+                                              encoder_context->codec == CODEC_H264_MVC)) {
++#if 0
+         return gen9_avc_pak_context_init(ctx, encoder_context);
++#else
++        return False;
++#endif
+     }
+     mfc_context = calloc(1, sizeof(struct gen6_mfc_context));
+     assert(mfc_context);
+diff --git a/src/gen8_vme.c b/src/gen8_vme.c
+index 6fc27e6..194bd43 100644
+--- a/src/gen8_vme.c
++++ b/src/gen8_vme.c
+@@ -1339,11 +1339,19 @@ Bool gen8_vme_context_init(VADriverContextP ctx, struct intel_encoder_context *e
+     int i965_kernel_num;
+ 
+     if (IS_CHERRYVIEW(i965->intel.device_info) && encoder_context->codec == CODEC_VP8) {
++#if 0
+         return i965_encoder_vp8_vme_context_init(ctx, encoder_context);
++#else
++        return False;
++#endif
+     } else if (IS_GEN8(i965->intel.device_info) && (
+                    encoder_context->codec == CODEC_H264 ||
+                    encoder_context->codec == CODEC_H264_MVC)) {
++#if 0
+         return gen9_avc_vme_context_init(ctx, encoder_context);
++#else
++        return False;
++#endif
+     }
+     switch (encoder_context->codec) {
+     case CODEC_H264:
+diff --git a/src/gen9_mfc.c b/src/gen9_mfc.c
+index 8a5e090..905c8e0 100644
+--- a/src/gen9_mfc.c
++++ b/src/gen9_mfc.c
+@@ -53,7 +53,11 @@ Bool gen9_mfc_context_init(VADriverContextP ctx, struct intel_encoder_context *e
+ 
+     switch (encoder_context->codec) {
+     case CODEC_VP8:
++#if 0
+         return i965_encoder_vp8_pak_context_init(ctx, encoder_context);
++#else
++        return False;
++#endif
+ 
+     case CODEC_MPEG2:
+     case CODEC_JPEG:
+@@ -61,23 +65,29 @@ Bool gen9_mfc_context_init(VADriverContextP ctx, struct intel_encoder_context *e
+ 
+     case CODEC_H264:
+     case CODEC_H264_MVC:
++#if 0
+         if (encoder_context->low_power_mode)
+             return gen9_vdenc_context_init(ctx, encoder_context);
+         else
+             return gen9_avc_pak_context_init(ctx, encoder_context);
+-
++#endif
+     case CODEC_HEVC:
++#if 0
+         if (IS_GEN10(i965->intel.device_info))
+             return gen10_hevc_pak_context_init(ctx, encoder_context);
+         else
+             return gen9_hevc_pak_context_init(ctx, encoder_context);
+-
++#endif
+     case CODEC_VP9:
++#if 0
+         if (encoder_context->low_power_mode) {
+             assert(IS_GEN10(i965->intel.device_info));
+             return gen10_vdenc_vp9_context_init(ctx, encoder_context);
+         } else
+             return gen9_vp9_pak_context_init(ctx, encoder_context);
++#else
++            return False;
++#endif
+     }
+ 
+     /* Other profile/entrypoint pairs never get here, see gen9_enc_hw_context_init() */
+diff --git a/src/gen9_vme.c b/src/gen9_vme.c
+index 19a9097..e78113b 100644
+--- a/src/gen9_vme.c
++++ b/src/gen9_vme.c
+@@ -1992,17 +1992,34 @@ Bool gen9_vme_context_init(VADriverContextP ctx, struct intel_encoder_context *e
+     }
+ 
+     if (encoder_context->codec == CODEC_VP9) {
++#if 0
+         return gen9_vp9_vme_context_init(ctx, encoder_context);
++#else
++        return False;
++#endif
+     } else if (encoder_context->codec == CODEC_VP8) {
++#if 0
+         return i965_encoder_vp8_vme_context_init(ctx, encoder_context);
++#else
++        return False;
++#endif
+     } else if (encoder_context->codec == CODEC_H264 ||
+                encoder_context->codec == CODEC_H264_MVC) {
++#if 0
+         return gen9_avc_vme_context_init(ctx, encoder_context);
++#else
++        return False;
++#endif
+     } else if (encoder_context->codec == CODEC_HEVC) {
++#if 0
+         if (IS_GEN10(i965->intel.device_info))
++            // requires gen10_media_hevc_kenerls
+             return gen10_hevc_vme_context_init(ctx, encoder_context);
+         else
+             return gen9_hevc_vme_context_init(ctx, encoder_context);
++#else
++            return False;
++#endif
+     }
+ 
+     vme_context = calloc(1, sizeof(struct gen6_vme_context));
+diff --git a/src/i965_device_info.c b/src/i965_device_info.c
+index f4dfd4c..f523c4f 100644
+--- a/src/i965_device_info.c
++++ b/src/i965_device_info.c
+@@ -264,7 +264,6 @@ static struct hw_codec_info bdw_hw_codec_info = {
+     .has_di_motion_adptive = 1,
+     .has_di_motion_compensated = 1,
+     .has_vp8_decoding = 1,
+-    .has_h264_mvc_encoding = 1,
+ 
+     .h264_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR,
+ 
+@@ -309,8 +308,6 @@ static struct hw_codec_info chv_hw_codec_info = {
+     .has_di_motion_adptive = 1,
+     .has_di_motion_compensated = 1,
+     .has_vp8_decoding = 1,
+-    .has_vp8_encoding = 1,
+-    .has_h264_mvc_encoding = 1,
+     .has_hevc_decoding = 1,
+ 
+     .h264_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR,
+@@ -362,10 +359,7 @@ static struct hw_codec_info skl_hw_codec_info = {
+     .has_di_motion_adptive = 1,
+     .has_di_motion_compensated = 1,
+     .has_vp8_decoding = 1,
+-    .has_vp8_encoding = 1,
+-    .has_h264_mvc_encoding = 1,
+     .has_hevc_decoding = 1,
+-    .has_hevc_encoding = 1,
+     .has_lp_h264_encoding = 1,
+     .has_fei_h264_encoding = 1,
+     .has_h264_preenc = 1,
+@@ -419,10 +413,7 @@ static struct hw_codec_info bxt_hw_codec_info = {
+     .has_di_motion_adptive = 1,
+     .has_di_motion_compensated = 1,
+     .has_vp8_decoding = 1,
+-    .has_vp8_encoding = 1,
+-    .has_h264_mvc_encoding = 1,
+     .has_hevc_decoding = 1,
+-    .has_hevc_encoding = 1,
+     .has_hevc10_decoding = 1,
+     .has_vp9_decoding = 1,
+     .has_lp_h264_encoding = 1,
+@@ -479,14 +470,10 @@ static struct hw_codec_info kbl_hw_codec_info = {
+     .has_di_motion_adptive = 1,
+     .has_di_motion_compensated = 1,
+     .has_vp8_decoding = 1,
+-    .has_vp8_encoding = 1,
+     .has_h264_mvc_encoding = 1,
+     .has_hevc_decoding = 1,
+-    .has_hevc_encoding = 1,
+-    .has_hevc10_encoding = 1,
+     .has_hevc10_decoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vp9_encoding = 1,
+     .has_lp_h264_encoding = 1,
+ 
+     .lp_h264_brc_mode = VA_RC_CQP,
+@@ -545,14 +532,9 @@ static struct hw_codec_info glk_hw_codec_info = {
+     .has_di_motion_adptive = 1,
+     .has_di_motion_compensated = 1,
+     .has_vp8_decoding = 1,
+-    .has_vp8_encoding = 1,
+-    .has_h264_mvc_encoding = 1,
+     .has_hevc_decoding = 1,
+-    .has_hevc_encoding = 1,
+     .has_hevc10_decoding = 1,
+-    .has_hevc10_encoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vp9_encoding = 1,
+     .has_lp_h264_encoding = 1,
+ 
+     .lp_h264_brc_mode = VA_RC_CQP,
+@@ -610,14 +592,9 @@ static struct hw_codec_info cfl_hw_codec_info = {
+     .has_di_motion_adptive = 1,
+     .has_di_motion_compensated = 1,
+     .has_vp8_decoding = 1,
+-    .has_vp8_encoding = 1,
+-    .has_h264_mvc_encoding = 1,
+     .has_hevc_decoding = 1,
+-    .has_hevc_encoding = 1,
+-    .has_hevc10_encoding = 1,
+     .has_hevc10_decoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vp9_encoding = 1,
+     .has_lp_h264_encoding = 1,
+ 
+     .lp_h264_brc_mode = VA_RC_CQP,
+@@ -672,16 +649,11 @@ static struct hw_codec_info cnl_hw_codec_info = {
+     .has_di_motion_adptive = 1,
+     .has_di_motion_compensated = 1,
+     .has_vp8_decoding = 1,
+-    .has_vp8_encoding = 1,
+     .has_h264_mvc_encoding = 1,
+     .has_hevc_decoding = 1,
+-    .has_hevc_encoding = 1,
+     .has_hevc10_decoding = 1,
+-    .has_hevc10_encoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vp9_encoding = 1,
+     .has_lp_h264_encoding = 1,
+-    .has_lp_vp9_encoding = 1,
+ 
+     .lp_h264_brc_mode = VA_RC_CQP,
+     .h264_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR | VA_RC_MB,
