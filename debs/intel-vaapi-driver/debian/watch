@@ -1,0 +1,6 @@
+version=4
+opts="uversionmangle=s/\.pre/~pre/,\
+      repacksuffix=+dfsg1,dversionmangle=s/\+dfsg\d*$//,\
+      filenamemangle=s%(?:.*)(\d+.*)\.tar\.gz%intel-vaapi-driver-$1.tar.gz%" \
+  https://github.com/01org/intel-vaapi-driver/releases \
+  .*/(\d+.*)\.tar\.gz

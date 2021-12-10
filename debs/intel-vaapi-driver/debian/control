@@ -1,0 +1,57 @@
+Source: intel-vaapi-driver
+Section: video
+Priority: optional
+Maintainer: Debian Multimedia Maintainers <debian-multimedia@lists.debian.org>
+Uploaders:
+ Brandon Snider <brandonjsnider@gmail.com>,
+ Reinhard Tartler <siretart@tauware.de>,
+ Sebastian Ramacher <sramacher@debian.org>
+Build-Depends:
+ debhelper (>= 12),
+ intel-gpu-tools (>= 1.9),
+ libdrm-dev (>= 2.4.52),
+ libva-dev (>= 2.4),
+ libwayland-dev (>= 1.0.0) [amd64 i386],
+ libx11-dev,
+ libxext-dev,
+ libxfixes-dev,
+ pkg-config,
+ python
+Standards-Version: 4.3.0
+Homepage: https://01.org/linuxmedia/vaapi
+Vcs-Git: https://salsa.debian.org/multimedia-team/intel-vaapi-driver.git
+Vcs-Browser: https://salsa.debian.org/multimedia-team/intel-vaapi-driver
+Rules-Requires-Root: no
+
+Package: i965-va-driver
+Architecture: any-amd64 any-i386
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends}
+Provides:
+ va-driver
+Suggests:
+ i965-va-driver-shaders
+Enhances:
+ libva2
+Description: VAAPI driver for Intel G45 & HD Graphics family
+ The VA-API (Video Acceleration API) enables hardware accelerated video
+ decode/encode at various entry-points (VLD, IDCT, Motion Compensation
+ etc.) for the prevailing coding standards today (MPEG-2, MPEG-4
+ ASP/H.263, MPEG-4 AVC/H.264, and VC-1/WMV3). It provides an interface
+ to fully expose the video decode capabilities in today's GPUs.
+ .
+ This package contains the video decode and encode driver backend for the
+ Intel G45 chipsets and Intel HD Graphics for the Intel Core processor family.
+ The supported platforms include:
+  * Cantiga, Intel GMA 4500MHD (GM45)
+  * Ironlake, Intel HD Graphics for 2010 Intel Core processor family
+  * Sandy Bridge, Intel HD Graphics for 2011 Intel Core processor family
+  * Ivy Bridge
+  * Haswell
+  * Broadwell
+  * Skylake
+  * Kaby Lake
+  * Coffee Lake
+  * Cannon Lake

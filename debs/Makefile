@@ -15,6 +15,7 @@ _pkgs_ports := aria2                \
                gtk+3.0              \
                hooktftp             \
                incron               \
+               intel-vaapi-driver   \
                libmypaint           \
                libpam-ccreds        \
                mutter               \

@@ -1,0 +1,34 @@
+From: Sebastian Ramacher <sebastian@ramacher.at>
+Date: Thu, 30 Aug 2018 20:33:37 +0200
+Subject: Don't build non-free files
+
+---
+ src/Makefile.sources | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/src/Makefile.sources b/src/Makefile.sources
+index e08770f..99edfba 100644
+--- a/src/Makefile.sources
++++ b/src/Makefile.sources
+@@ -53,21 +53,16 @@ source_c = \
+ 	vp8_probs.c \
+ 	vp9_probs.c \
+ 	vpx_quant.c \
+-	gen9_vp9_encoder_kernels.c \
+-	gen9_vp9_const_def.c \
+ 	gen9_vp9_encoder.c \
+ 	intel_common_vpp_internal.c \
+ 	i965_encoder_const_def.c \
+ 	i965_avc_const_def.c \
+-	i965_avc_encoder_kernels.c \
+ 	i965_avc_encoder_common.c \
+ 	i965_avc_encoder.c \
+-	gen9_hevc_enc_kernels_binary.c \
+ 	gen9_hevc_encoder.c \
+ 	gen9_hevc_enc_utils.c \
+ 	gen10_encoder_vp8.c \
+ 	gen10_hcp_common.c \
+-	gen10_hevc_enc_kernels_binary.c \
+ 	gen10_hevc_enc_common.c \
+ 	gen10_hevc_encoder.c \
+ 	gen10_huc_common.c \

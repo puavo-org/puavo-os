@@ -1,0 +1,289 @@
+From: Sebastian Ramacher <sebastian@ramacher.at>
+Date: Thu, 30 Aug 2018 20:14:25 +0200
+Subject: Disable post-processing shaders
+
+---
+ src/gen75_vpp_gpe.c        |  4 ++++
+ src/gen8_post_processing.c |  4 ++++
+ src/gen9_post_processing.c |  6 ++++++
+ src/i965_device_info.c     | 27 ++++++---------------------
+ 4 files changed, 20 insertions(+), 21 deletions(-)
+
+diff --git a/src/gen75_vpp_gpe.c b/src/gen75_vpp_gpe.c
+index 02dc576..b08ead0 100644
+--- a/src/gen75_vpp_gpe.c
++++ b/src/gen75_vpp_gpe.c
+@@ -51,6 +51,7 @@
+ #define CURBE_TOTAL_DATA_LENGTH (4 * 32)
+ #define CURBE_URB_ENTRY_LENGTH  4
+ 
++#if 0
+ /* Shaders information for sharpening */
+ static const unsigned int gen75_gpe_sharpening_h_blur[][4] = {
+ #include "shaders/post_processing/gen75/sharpening_h_blur.g75b"
+@@ -119,6 +120,7 @@ static struct i965_kernel gen8_vpp_sharpening_kernels[] = {
+         NULL
+     },
+ };
++#endif
+ 
+ static VAStatus
+ gen75_gpe_process_surfaces_setup(VADriverContextP ctx,
+@@ -625,6 +627,7 @@ vpp_gpe_process_sharpening(VADriverContextP ctx,
+     if (vpp_gpe_ctx->is_first_frame) {
+         vpp_gpe_ctx->sub_shader_sum = 3;
+         struct i965_kernel * vpp_kernels;
++#if 0
+         if (IS_HASWELL(i965->intel.device_info))
+             vpp_kernels = gen75_vpp_sharpening_kernels;
+         else if (IS_GEN8(i965->intel.device_info) ||
+@@ -632,6 +635,7 @@ vpp_gpe_process_sharpening(VADriverContextP ctx,
+                  IS_GEN10(i965->intel.device_info))
+             vpp_kernels = gen8_vpp_sharpening_kernels;
+         else
++#endif
+             return VA_STATUS_ERROR_UNIMPLEMENTED;
+ 
+         vpp_gpe_ctx->gpe_load_kernels(ctx,
+diff --git a/src/gen8_post_processing.c b/src/gen8_post_processing.c
+index c3a911b..888ee0d 100644
+--- a/src/gen8_post_processing.c
++++ b/src/gen8_post_processing.c
+@@ -324,6 +324,7 @@ static struct pp_module pp_modules_gen8[] = {
+ 
+ #define DEFAULT_MOCS    0
+ 
++#if 0
+ static const uint32_t pp_yuv420p8_scaling_gen8[][4] = {
+ #include "shaders/post_processing/gen8/conv_nv12.g8b"
+ };
+@@ -349,6 +350,7 @@ struct i965_kernel pp_common_scaling_gen8[] = {
+         NULL,
+     },
+ };
++#endif
+ 
+ static const uint32_t pp_clear_yuy2_gen8[][4] = {
+ #include "shaders/post_processing/gen8/clear_yuy2.g8b"
+@@ -1759,6 +1761,7 @@ gen8_post_processing_context_init(VADriverContextP ctx,
+     gen8_post_processing_context_common_init(ctx, data, pp_modules_gen8, ARRAY_ELEMS(pp_modules_gen8), batch);
+     avs_init_state(&pp_context->pp_avs_context.state, &gen8_avs_config);
+ 
++#if 0
+     /* initialize the YUV420 8-Bit scaling context. The below is supported.
+      * NV12 ->NV12
+      * NV12 ->I420
+@@ -1798,6 +1801,7 @@ gen8_post_processing_context_init(VADriverContextP ctx,
+ 
+     gen8_gpe_context_init(ctx, gpe_context);
+     pp_context->scaling_gpe_context_initialized |= (VPPGPE_8BIT_8BIT | VPPGPE_8BIT_420_RGB32);
++#endif
+ 
+     gpe_context = &pp_context->clear_gpe_context;
+     gen8_gpe_load_kernels(ctx, gpe_context, pp_clear_gen8, ARRAY_ELEMS(pp_clear_gen8));
+diff --git a/src/gen9_post_processing.c b/src/gen9_post_processing.c
+index 7e1ccd3..9a054c6 100644
+--- a/src/gen9_post_processing.c
++++ b/src/gen9_post_processing.c
+@@ -108,6 +108,7 @@ static const uint32_t pp_nv12_load_save_rgbx_gen9[][4] = {
+ 
+ #define DEFAULT_MOCS    0x02
+ 
++#if 0
+ static const uint32_t pp_10bit_scaling_gen9[][4] = {
+ #include "shaders/post_processing/gen9/conv_p010.g9b"
+ };
+@@ -123,6 +124,7 @@ static const uint32_t pp_10bit_8bit_scaling_gen9[][4] = {
+ static const uint32_t pp_8bit_420_rgb32_scaling_gen9[][4] = {
+ #include "shaders/post_processing/gen9/conv_8bit_420_rgb32.g9b"
+ };
++#endif
+ 
+ static const uint32_t pp_clear_yuy2_gen9[][4] = {
+ #include "shaders/post_processing/gen9/clear_yuy2.g9b"
+@@ -148,6 +150,7 @@ static const uint32_t pp_clear_bgrx_gen9[][4] = {
+ #include "shaders/post_processing/gen9/clear_bgrx.g9b"
+ };
+ 
++#if 0
+ struct i965_kernel pp_common_scaling_gen9[] = {
+     {
+         "10bit to 10bit",
+@@ -181,6 +184,7 @@ struct i965_kernel pp_common_scaling_gen9[] = {
+         NULL,
+     },
+ };
++#endif
+ 
+ struct i965_kernel pp_clear_gen9[] = {
+     {
+@@ -619,6 +623,7 @@ gen9_post_processing_context_init(VADriverContextP ctx,
+ 
+     pp_context->intel_post_processing = gen9_post_processing;
+ 
++#if 0
+     gpe_context = &pp_context->scaling_gpe_context;
+     gen8_gpe_load_kernels(ctx, gpe_context, pp_common_scaling_gen9, ARRAY_ELEMS(pp_common_scaling_gen9));
+     gpe_context->idrt.entry_size = ALIGN(sizeof(struct gen8_interface_descriptor_data), 64);
+@@ -648,6 +653,7 @@ gen9_post_processing_context_init(VADriverContextP ctx,
+ 
+     gen8_gpe_context_init(ctx, gpe_context);
+     pp_context->scaling_gpe_context_initialized |= (VPPGPE_8BIT_8BIT | VPPGPE_10BIT_10BIT | VPPGPE_10BIT_8BIT | VPPGPE_8BIT_420_RGB32);
++#endif
+ 
+     gpe_context = &pp_context->clear_gpe_context;
+     gen8_gpe_load_kernels(ctx, gpe_context, pp_clear_gen9, ARRAY_ELEMS(pp_clear_gen9));
+diff --git a/src/i965_device_info.c b/src/i965_device_info.c
+index a6adcf5..f4dfd4c 100644
+--- a/src/i965_device_info.c
++++ b/src/i965_device_info.c
+@@ -223,11 +223,10 @@ static struct hw_codec_info hsw_hw_codec_info = {
+ 
+     .h264_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR,
+ 
+-    .num_filters = 5,
++    .num_filters = 4,
+     .filters = {
+         { VAProcFilterNoiseReduction, I965_RING_VEBOX },
+         { VAProcFilterDeinterlacing, I965_RING_VEBOX },
+-        { VAProcFilterSharpening, I965_RING_NULL },
+         { VAProcFilterColorBalance, I965_RING_VEBOX},
+         { VAProcFilterSkinToneEnhancement, I965_RING_VEBOX},
+     },
+@@ -259,7 +258,6 @@ static struct hw_codec_info bdw_hw_codec_info = {
+     .has_h264_encoding = 1,
+     .has_vc1_decoding = 1,
+     .has_jpeg_decoding = 1,
+-    .has_vpp = 1,
+     .has_accelerated_getimage = 1,
+     .has_accelerated_putimage = 1,
+     .has_tiled_surface = 1,
+@@ -270,11 +268,10 @@ static struct hw_codec_info bdw_hw_codec_info = {
+ 
+     .h264_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR,
+ 
+-    .num_filters = 5,
++    .num_filters = 4,
+     .filters = {
+         { VAProcFilterNoiseReduction, I965_RING_VEBOX },
+         { VAProcFilterDeinterlacing, I965_RING_VEBOX },
+-        { VAProcFilterSharpening, I965_RING_NULL }, /* need to rebuild the shader for BDW */
+         { VAProcFilterColorBalance, I965_RING_VEBOX},
+         { VAProcFilterSkinToneEnhancement, I965_RING_VEBOX},
+     },
+@@ -306,7 +303,6 @@ static struct hw_codec_info chv_hw_codec_info = {
+     .has_vc1_decoding = 1,
+     .has_jpeg_decoding = 1,
+     .has_jpeg_encoding = 1,
+-    .has_vpp = 1,
+     .has_accelerated_getimage = 1,
+     .has_accelerated_putimage = 1,
+     .has_tiled_surface = 1,
+@@ -319,11 +315,10 @@ static struct hw_codec_info chv_hw_codec_info = {
+ 
+     .h264_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR,
+ 
+-    .num_filters = 5,
++    .num_filters = 4,
+     .filters = {
+         { VAProcFilterNoiseReduction, I965_RING_VEBOX },
+         { VAProcFilterDeinterlacing, I965_RING_VEBOX },
+-        { VAProcFilterSharpening, I965_RING_NULL }, /* need to rebuild the shader for BDW */
+         { VAProcFilterColorBalance, I965_RING_VEBOX},
+         { VAProcFilterSkinToneEnhancement, I965_RING_VEBOX},
+     },
+@@ -361,7 +356,6 @@ static struct hw_codec_info skl_hw_codec_info = {
+     .has_vc1_decoding = 1,
+     .has_jpeg_decoding = 1,
+     .has_jpeg_encoding = 1,
+-    .has_vpp = 1,
+     .has_accelerated_getimage = 1,
+     .has_accelerated_putimage = 1,
+     .has_tiled_surface = 1,
+@@ -379,11 +373,10 @@ static struct hw_codec_info skl_hw_codec_info = {
+     .lp_h264_brc_mode = VA_RC_CQP,
+     .h264_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR | VA_RC_MB,
+ 
+-    .num_filters = 5,
++    .num_filters = 4,
+     .filters = {
+         { VAProcFilterNoiseReduction, I965_RING_VEBOX },
+         { VAProcFilterDeinterlacing, I965_RING_VEBOX },
+-        { VAProcFilterSharpening, I965_RING_NULL }, /* need to rebuild the shader for BDW */
+         { VAProcFilterColorBalance, I965_RING_VEBOX},
+         { VAProcFilterSkinToneEnhancement, I965_RING_VEBOX},
+     },
+@@ -432,7 +425,6 @@ static struct hw_codec_info bxt_hw_codec_info = {
+     .has_hevc_encoding = 1,
+     .has_hevc10_decoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vpp_p010 = 1,
+     .has_lp_h264_encoding = 1,
+ 
+     .lp_h264_brc_mode = VA_RC_CQP,
+@@ -442,7 +434,6 @@ static struct hw_codec_info bxt_hw_codec_info = {
+     .filters = {
+         { VAProcFilterNoiseReduction, I965_RING_VEBOX },
+         { VAProcFilterDeinterlacing, I965_RING_VEBOX },
+-        { VAProcFilterSharpening, I965_RING_NULL },
+         { VAProcFilterColorBalance, I965_RING_VEBOX},
+         { VAProcFilterSkinToneEnhancement, I965_RING_VEBOX},
+     },
+@@ -495,7 +486,6 @@ static struct hw_codec_info kbl_hw_codec_info = {
+     .has_hevc10_encoding = 1,
+     .has_hevc10_decoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vpp_p010 = 1,
+     .has_vp9_encoding = 1,
+     .has_lp_h264_encoding = 1,
+ 
+@@ -562,7 +552,6 @@ static struct hw_codec_info glk_hw_codec_info = {
+     .has_hevc10_decoding = 1,
+     .has_hevc10_encoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vpp_p010 = 1,
+     .has_vp9_encoding = 1,
+     .has_lp_h264_encoding = 1,
+ 
+@@ -628,7 +617,6 @@ static struct hw_codec_info cfl_hw_codec_info = {
+     .has_hevc10_encoding = 1,
+     .has_hevc10_decoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vpp_p010 = 1,
+     .has_vp9_encoding = 1,
+     .has_lp_h264_encoding = 1,
+ 
+@@ -637,11 +625,10 @@ static struct hw_codec_info cfl_hw_codec_info = {
+ 
+     .vp9_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR,
+ 
+-    .num_filters = 5,
++    .num_filters = 4,
+     .filters = {
+         { VAProcFilterNoiseReduction, I965_RING_VEBOX },
+         { VAProcFilterDeinterlacing, I965_RING_VEBOX },
+-        { VAProcFilterSharpening, I965_RING_NULL },
+         { VAProcFilterColorBalance, I965_RING_VEBOX},
+         { VAProcFilterSkinToneEnhancement, I965_RING_VEBOX},
+     },
+@@ -692,7 +679,6 @@ static struct hw_codec_info cnl_hw_codec_info = {
+     .has_hevc10_decoding = 1,
+     .has_hevc10_encoding = 1,
+     .has_vp9_decoding = 1,
+-    .has_vpp_p010 = 1,
+     .has_vp9_encoding = 1,
+     .has_lp_h264_encoding = 1,
+     .has_lp_vp9_encoding = 1,
+@@ -702,11 +688,10 @@ static struct hw_codec_info cnl_hw_codec_info = {
+ 
+     .vp9_brc_mode = VA_RC_CQP | VA_RC_CBR | VA_RC_VBR,
+ 
+-    .num_filters = 5,
++    .num_filters = 4,
+     .filters = {
+         { VAProcFilterNoiseReduction, I965_RING_VEBOX },
+         { VAProcFilterDeinterlacing, I965_RING_VEBOX },
+-        { VAProcFilterSharpening, I965_RING_NULL },
+         { VAProcFilterColorBalance, I965_RING_VEBOX},
+         { VAProcFilterSkinToneEnhancement, I965_RING_VEBOX},
+     },

@@ -1,0 +1,54 @@
+Add patch
+https://github.com/intel/intel-vaapi-driver/commit/329975c63123610fc750241654a3bd18add75beb
+to fix issues with Geogebra 6 on recent Intel CPUs.
+
+commit 329975c63123610fc750241654a3bd18add75beb
+Author: Haihao Xiang <haihao.xiang@intel.com>
+Date:   Tue Feb 12 12:37:39 2019 +0800
+
+    Return false instead of assertion failure
+    
+    If so, the upper-layer application or library may handle the error.
+    
+    Signed-off-by: Haihao Xiang <haihao.xiang@intel.com>
+
+diff --git a/src/intel_driver.c b/src/intel_driver.c
+index 8e8c9af..37e2fc6 100644
+--- a/src/intel_driver.c
++++ b/src/intel_driver.c
+@@ -123,7 +123,9 @@ intel_driver_init(VADriverContextP ctx)
+     intel->locked = 0;
+     pthread_mutex_init(&intel->ctxmutex, NULL);
+ 
+-    intel_memman_init(intel);
++    if (!intel_memman_init(intel))
++        return false;
++
+     intel->device_id = drm_intel_bufmgr_gem_get_devid(intel->bufmgr);
+     intel->device_info = i965_get_device_info(intel->device_id);
+ 
+diff --git a/src/intel_memman.c b/src/intel_memman.c
+index ca86991..c5c805c 100644
+--- a/src/intel_memman.c
++++ b/src/intel_memman.c
+@@ -35,7 +35,10 @@ Bool
+ intel_memman_init(struct intel_driver_data *intel)
+ {
+     intel->bufmgr = intel_bufmgr_gem_init(intel->fd, BATCH_SIZE);
+-    assert(intel->bufmgr);
++
++    if (!intel->bufmgr)
++        return False;
++
+     intel_bufmgr_gem_enable_reuse(intel->bufmgr);
+ 
+     if (g_intel_debug_option_flags & VA_INTEL_DEBUG_OPTION_DUMP_AUB) {
+@@ -50,6 +53,7 @@ intel_memman_init(struct intel_driver_data *intel)
+ Bool
+ intel_memman_terminate(struct intel_driver_data *intel)
+ {
+-    drm_intel_bufmgr_destroy(intel->bufmgr);
++    if (intel->bufmgr)
++        drm_intel_bufmgr_destroy(intel->bufmgr);
+     return True;
+ }
