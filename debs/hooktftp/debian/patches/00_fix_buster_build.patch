@@ -1,0 +1,12 @@
+diff -ruN hooktftp.0/Makefile hooktftp.1/Makefile
+--- hooktftp.0/Makefile	2021-03-19 12:01:55.000000000 +0200
++++ hooktftp.1/Makefile	2021-12-10 13:56:40.215673236 +0200
+@@ -21,7 +21,7 @@
+ 
+ .PHONY: clean
+ clean:
+-	go clean
++	go clean || true
+ 	$(MAKE) -C test clean
+ 
+ .PHONY: gox
