@@ -304,9 +304,9 @@ set services {
         -> /lib/systemd/system/vboxadd-service.service
     }}
 
-  { veyon-service {
-      /etc/systemd/system/multi-user.target.wants/veyon-service.service
-        -> /lib/systemd/system/veyon-service.service
+  { veyon {
+      /etc/systemd/system/multi-user.target.wants/veyon.service
+        -> /lib/systemd/system/veyon.service
     }}
 
   { winbind {
