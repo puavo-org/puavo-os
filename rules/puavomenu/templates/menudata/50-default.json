@@ -1276,6 +1276,14 @@
                 "id": "supertuxkart"
             }
         },
+        "sweethome3d": {
+            "type": "web",
+            "url": "https://www.sweethome3d.com/SweetHome3D.jnlp",
+            "name": "Sweet Home 3D",
+            "description": "Sweet Home 3D Interior Design Application",
+            "icon": "/usr/share/icons/Papirus/64x64/apps/sweethome3d.svg",
+            "tags": "graphics, education"
+        },
         "system-config-printer": {
             "tags": "default, utility"
         },
@@ -1900,6 +1908,7 @@
                 "simple-scan",
                 "xsane",
                 "blender",
+                "sweethome3d",
                 "cura-appimage",
                 "prusaslicer",
                 "sketchup",
