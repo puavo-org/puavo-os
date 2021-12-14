@@ -30,10 +30,6 @@ pipeline {
       steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-cups' }
     }
 
-    stage('Build i965-va-driver') {
-      steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-intel-vaapi-driver' }
-    }
-
     stage('Build kerberos') {
       steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-krb5' }
     }
