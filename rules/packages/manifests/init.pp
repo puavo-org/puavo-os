@@ -698,7 +698,7 @@ class packages {
     , 'exfat-utils'
     , 'fuse3'
     # , 'gconf-editor'    # XXX missing from Bullseye
-    # , 'kamerka'         # XXX missing from Bullseye
+    , 'kamoso'
     , 'mc'
     , 'mousepad'
     , 'p7zip-full'
