@@ -36,6 +36,7 @@ class image::bundle::desktop {
   include ::run_once_on_desktop_session
   include ::supplementary_groups
   include ::tuxpaint
+  include ::udisks2
   include ::virtualbox
   include ::virtualbox::guest_additions
   include ::vym

@@ -1,0 +1,8 @@
+#Mindstorms EV3 with Makecode firmware shows some errors with a directory on the FAT system when connected.
+#However, since the filesystem seems to be fully virtual and regenerated with every connection, we can
+#safely ignore the errors and just keep going.
+[/dev/disk/by-uuid/0042-0042]
+vfat_defaults=shortname=mixed,utf8=1,showexec,flush,errors=continue,uid=$UID,gid=$GID,fmask=0022,dmask=0022
+vfat_allow=uid=$UID,gid=$GID,flush,utf8,shortname,umask,dmask,fmask,codepage,iocharset,usefree,showexec,errors=continue,uid=$UID,gid=$GID,fmask=0022,dmask=0022
+
+

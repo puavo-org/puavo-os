@@ -199,6 +199,7 @@ class packages {
     , 'rng-tools'
     , 'systemd'
     , 'udev'
+    , 'udisks2'
     , 'vlan' ]:
       tag => [ 'tag_basic', 'tag_debian_desktop', ];
 
