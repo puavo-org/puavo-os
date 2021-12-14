@@ -60,7 +60,7 @@
             },
             "tags": "default, audio"
         },
-        "avogadro": {
+        "avogadro2": {
             "name": {
                 "fi": "Avogadro-molekyylimuokkain",
                 "en": "Avogadro",
@@ -171,7 +171,7 @@
         "db_koulu2": {
             "tags": "default"
         },
-        "designer-qt4": {
+        "designer-qt5": {
             "tags": "default"
         },
         "dia": {
@@ -274,7 +274,7 @@
                 "id": "enchanting"
             }
         },
-        "eog": {
+        "org.gnome.eog": {
             "tags": "default"
         },
         "eric6": {
@@ -314,7 +314,7 @@
         "freecad": {
             "tags": "default"
         },
-        "freeciv-gtk2": {
+        "org.freeciv.gtk2": {
             "tags": "default"
         },
         "freeplane": {
@@ -370,16 +370,16 @@
                 "id": "globilab"
             }
         },
-        "gnome-klotski": {
+        "org.gnome.Klotski": {
             "tags": "default"
         },
-        "gnome-mahjongg": {
+        "org.gnome.Mahjongg": {
             "tags": "default"
         },
-        "gnome-mines": {
+        "org.gnome.Mines": {
             "tags": "default"
         },
-        "gnome-sudoku": {
+        "org.gnome.Sudoku": {
             "tags": "default"
         },
         "gnubg": {
@@ -420,7 +420,7 @@
         "gucharmap": {
             "tags": "default"
         },
-        "hydrogen": {
+        "org.hydrogenmusic.Hydrogen": {
             "name": {
                 "fi": "Hydrogen-rumpukone",
                 "en": "Hydrogen-drum machine",
@@ -432,7 +432,7 @@
         "idle-python2.7": {
             "tags": "default"
         },
-        "idle-python3.7": {
+        "idle-python3.9": {
             "tags": "default"
         },
         "io.github.wxmaxima_developers.wxMaxima": {
@@ -461,7 +461,7 @@
             "icon": "x-office-presentation",
             "tags": "default, education"
         },
-        "kamerka": {
+        "org.kde.kamoso": {
             "tags": "default"
         },
         "kenavision": {
@@ -499,7 +499,7 @@
                 "id": "kojo"
             }
         },
-        "lazarus-2.0.0": {
+        "lazarus-2.0.10": {
             "tags": "default, development, education"
         },
         "libreoffice-base": {
@@ -669,9 +669,6 @@
         "neverputt": {
             "tags": "default"
         },
-        "nextcloud": {
-            "tags": "internet"
-        },
         "nextcloud-desktop": {
             "tags": "default"
         },
@@ -704,7 +701,7 @@
             "icon": "/opt/puavo-chromium-apps/novo_desktop_streamer/logo.png",
             "tags": "default"
         },
-        "obs": {
+        "com.obsproject.Studio": {
             "icon": "obs",
             "tags": "default"
         },
@@ -731,7 +728,7 @@
             "name": "OpenSCAD",
             "tags": "default"
         },
-        "openshot-qt": {
+        "org.openshot.OpenShot": {
             "tags": "default"
         },
         "openttd": {
@@ -1060,7 +1057,7 @@
             "icon": "/usr/share/icons/oxygen/base/64x64/categories/applications-internet.png",
             "tags": "default, education, development"
         },
-        "qgis": {
+        "org.qgis.qgis": {
             "tags": "default"
         },
         "qcad-cam": {
@@ -1138,7 +1135,7 @@
             },
             "tags": "default, office"
         },
-        "seahorse": {
+        "org.gnome.seahorse.Application": {
             "tags": "default"
         },
         "shotcut": {
@@ -1247,7 +1244,7 @@
         "steam": {
             "tags": "steam"
         },
-        "stellarium": {
+        "org.stellarium.Stellarium": {
             "name": {
                 "fi": "Stellarium-planetaario",
                 "en": "Stellarium-planetarium",
@@ -1549,7 +1546,7 @@
                 "org.gnome.Terminal",
                 "gftp",
                 "filezilla",
-                "seahorse",
+                "org.gnome.seahorse.Application",
                 "veracrypt",
                 "system-config-printer",
                 "pavucontrol",
@@ -1600,18 +1597,18 @@
                 "spotify",
                 "org.gnome.Cheese",
                 "kenavision",
-                "kamerka",
+                "org.kde.kamoso",
                 "elmo-imagemate",
                 "sphere_lite",
-                "obs",
-                "openshot-qt",
+                "com.obsproject.Studio",
+                "org.openshot.OpenShot",
                 "org.kde.kdenlive",
                 "kino",
                 "org.pitivi.Pitivi",
                 "shotcut",
                 "solfege",
                 "mscore3",
-                "hydrogen",
+                "org.hydrogenmusic.Hydrogen",
                 "lmms",
                 "com.rosegardenmusic.rosegarden",
                 "tuxguitar",
@@ -1644,7 +1641,7 @@
             },
             "icon": "/usr/share/icons/hicolor/48x48/apps/kalzium.png",
             "programs": [
-                "avogadro",
+                "avogadro2",
                 "MarvinSketch",
                 "MarvinView",
                 "org.kde.kalzium",
@@ -1738,7 +1735,7 @@
                 "org.kde.khangman",
                 "org.kde.ktouch",
                 "celestia",
-                "stellarium",
+                "org.stellarium.Stellarium",
                 "org.kde.kstars",
                 "org.kde.step",
                 "tracker",
@@ -1751,12 +1748,12 @@
                 "ti_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss",
                 "ClassPadManagerforClassPadII",
-                "avogadro",
+                "avogadro2",
                 "org.kde.kalzium",
                 "MarvinSketch",
                 "MarvinView",
                 "mandelbulber2",
-                "qgis",
+                "org.qgis.qgis",
                 "anki"
             ]
         },
@@ -1772,7 +1769,7 @@
                 "google-earth",
                 "org.kde.kgeography",
                 "celestia",
-                "stellarium",
+                "org.stellarium.Stellarium",
                 "org.kde.kstars",
                 "libreoffice-writer",
                 "kahoot",
@@ -1820,15 +1817,15 @@
             "icon": "/usr/share/puavo-art/puavomenu-icons/games.svg",
             "condition": "!personally_administered",
             "programs": [
-                "gnome-klotski",
-                "gnome-mines",
-                "gnome-mahjongg",
+                "org.gnome.Klotski",
+                "org.gnome.Mines",
+                "org.gnome.Mahjongg",
                 "sol",
-                "gnome-sudoku",
+                "org.gnome.Sudoku",
                 "luola",
                 "openttd",
                 "gnubg",
-                "freeciv-gtk2",
+                "org.freeciv.gtk2",
                 "net.minetest.minetest"
             ]
         },
@@ -1842,11 +1839,11 @@
             "icon": "/usr/share/puavo-art/puavomenu-icons/games.svg",
             "condition": "personally_administered",
             "programs": [
-                "gnome-klotski",
-                "gnome-mines",
-                "gnome-mahjongg",
+                "org.gnome.Klotski",
+                "org.gnome.Mines",
+                "org.gnome.Mahjongg",
                 "sol",
-                "gnome-sudoku",
+                "org.gnome.Sudoku",
                 "supertuxkart",
                 "neverball",
                 "neverputt",
@@ -1855,7 +1852,7 @@
                 "xmoto",
                 "steam",
                 "gnubg",
-                "freeciv-gtk2",
+                "org.freeciv.gtk2",
                 "net.minetest.minetest"
             ]
         },
@@ -1871,9 +1868,9 @@
                 "google-earth",
                 "org.kde.kgeography",
                 "celestia",
-                "stellarium",
+                "org.stellarium.Stellarium",
                 "org.kde.kstars",
-                "qgis",
+                "org.qgis.qgis",
                 "libreoffice-writer",
                 "kahoot",
                 "youtube"
@@ -1901,7 +1898,7 @@
                 "gimp",
                 "pinta",
                 "org.gnome.gThumb",
-                "eog",
+                "org.gnome.eog",
                 "shotwell",
                 "org.inkscape.Inkscape",
                 "scribus",
@@ -1975,7 +1972,6 @@
                 "Zoom",
                 "google-meet",
                 "dropbox",
-                "nextcloud",
                 "nextcloud-desktop",
                 "empathy",
                 "pidgin",
@@ -2062,7 +2058,7 @@
             "programs": [
                 "audacity",
                 "solfege",
-                "hydrogen",
+                "org.hydrogenmusic.Hydrogen",
                 "lmms",
                 "mscore3",
                 "spotify",
@@ -2155,11 +2151,11 @@
                 "eclipse-javascript",
                 "eclipse-php",
                 "eric6",
-                "lazarus-2.0.0",
+                "lazarus-2.0.10",
                 "pycharm",
                 "spe",
                 "idle-python2.7",
-                "idle-python3.7",
+                "idle-python3.9",
                 "geany",
                 "code",
                 "org.kde.kturtle",
@@ -2168,7 +2164,7 @@
                 "scratux",
                 "scratch3",
                 "bluefish",
-                "designer-qt4",
+                "designer-qt5",
                 "processing",
                 "godot3",
                 "unityhub",
