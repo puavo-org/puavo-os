@@ -21,6 +21,7 @@ class image::bundle::bootserver {
   include ::bootserver_slapd
   # include ::google_cloud_print                # XXX missing from Bullseye
   include ::packages
+  include ::veyon::create_keys
 
   # include ::bootserver_dummywlan              # XXX needs work
 
