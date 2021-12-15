@@ -10,6 +10,12 @@ your target image is.  Currently, you should really build
 Buster images and not bother with Stretch, yet they are
 both maintained.
 
+After cloning the repository, you should also update
+submodules:
+
+    git submodule init
+    git submodule update
+
 To setup build host, run (with sudo or as root):
 
     sudo make setup-buildhost
