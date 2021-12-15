@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.service.veyon.enabled)" != 'true' ]; then
+  exit 0
+fi
+
+mkdir -p /etc/veyon/keys/private/veyonkey \
+         /etc/veyon/keys/public/veyonkey
+
+if [ -e /run/puavo/nbd-server ]; then
+  image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns)
+  mkdir -p /etc/veyon/.tmp
+  (
+    cd /etc/veyon/.tmp
+    timeout 10 -k 2 wget --ca-cert /etc/puavo-conf/rootca.pem \
+                         https://${image_server}/veyon/keys/private.pem \
+                         https://${image_server}/veyon/keys/public.pem
+    install -o root -g root -m 755 private.pem \
+            /etc/veyon/keys/private/veyonkey/key
+    install -o root -g root -m 755 public.pem \
+            /etc/veyon/keys/public/veyonkey/key
+  )
+  exit 0
+fi
+
+if ! [ -e /state/veyon/private.pem -a -e /state/veyon/public.pem ]; then
+  echo 'no veyon keys to setup' >&2
+  exit 1
+fi
+
+install -o root -g root -m 755 /state/veyon/private.pem \
+                               /etc/veyon/keys/private/veyonkey/key
+install -o root -g root -m 755 /state/veyon/public.pem \
+                               /etc/veyon/keys/public/veyonkey/key
