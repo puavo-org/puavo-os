@@ -18,9 +18,9 @@ if [ -e /run/puavo/nbd-server ]; then
                          https://${image_server}/veyon/keys/private.pem \
                          https://${image_server}/veyon/keys/public.pem \
                          https://${image_server}/veyon/veyon-configuration.json
-    install -o root -g root -m 755 private.pem \
+    install -o root -g root -m 644 private.pem \
             /etc/veyon/keys/private/veyonkey/key
-    install -o root -g root -m 755 public.pem \
+    install -o root -g root -m 644 public.pem \
             /etc/veyon/keys/public/veyonkey/key
     rm -f '/etc/xdg/Veyon Solutions/Veyon.conf'
     veyon-cli config import veyon-configuration.json
@@ -36,9 +36,9 @@ if ! [ -e /state/veyon/private.pem \
   exit 1
 fi
 
-install -o root -g root -m 755 /state/veyon/private.pem \
+install -o root -g root -m 644 /state/veyon/private.pem \
                                /etc/veyon/keys/private/veyonkey/key
-install -o root -g root -m 755 /state/veyon/public.pem \
+install -o root -g root -m 644 /state/veyon/public.pem \
                                /etc/veyon/keys/public/veyonkey/key
 rm -f '/etc/xdg/Veyon Solutions/Veyon.conf'
 veyon-cli config import /state/veyon/veyon-configuration.json
