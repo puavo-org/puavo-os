@@ -48,7 +48,6 @@ install: installdirs
 		puavo-pkgs-ui \
 		puavo-pkg-update \
 		puavo-pkg-update-from-gui \
-		puavo-pkg-update-repository \
 		puavo-test-puavo-pkg-installers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-pkg \
