@@ -2,7 +2,7 @@
 
 set -eu
 
-veyon_keys_dir=/state/veyon/keys
+veyon_keys_dir=/images/veyon/keys
 
 if [ -e "${veyon_keys_dir}/private" -a -e "${veyon_keys_dir}/public" ]; then
   exit 0
