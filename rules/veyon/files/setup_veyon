@@ -16,17 +16,23 @@ if [ -e /run/puavo/nbd-server ]; then
     cd /etc/veyon/.tmp
     timeout 10 -k 2 wget --ca-cert /etc/puavo-conf/rootca.pem \
                          https://${image_server}/veyon/keys/private.pem \
-                         https://${image_server}/veyon/keys/public.pem
+                         https://${image_server}/veyon/keys/public.pem \
+                         https://${image_server}/veyon/veyon-configuration.json
     install -o root -g root -m 755 private.pem \
             /etc/veyon/keys/private/veyonkey/key
     install -o root -g root -m 755 public.pem \
             /etc/veyon/keys/public/veyonkey/key
+    rm -f '/etc/xdg/Veyon Solutions/Veyon.conf'
+    veyon-cli config import veyon-configuration.json
   )
   exit 0
 fi
 
-if ! [ -e /state/veyon/private.pem -a -e /state/veyon/public.pem ]; then
-  echo 'no veyon keys to setup' >&2
+if ! [ -e /state/veyon/private.pem \
+       -a -e /state/veyon/public.pem \
+       -a -e /state/veyon/veyon-configuration.json ]; then
+  echo 'no veyon configuration/keys to setup' >&2
+  rm -f '/etc/xdg/Veyon Solutions/Veyon.conf'
   exit 1
 fi
 
@@ -34,3 +40,5 @@ install -o root -g root -m 755 /state/veyon/private.pem \
                                /etc/veyon/keys/private/veyonkey/key
 install -o root -g root -m 755 /state/veyon/public.pem \
                                /etc/veyon/keys/public/veyonkey/key
+rm -f '/etc/xdg/Veyon Solutions/Veyon.conf'
+veyon-cli config import /state/veyon/veyon-configuration.json
