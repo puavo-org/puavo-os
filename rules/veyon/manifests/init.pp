@@ -1,12 +1,26 @@
 class veyon {
+  include ::dpkg
   include ::packages
   include ::puavo_conf
 
+  ::dpkg::simpledivert {
+    '/usr/bin/veyon-server':
+      require => Package['veyon-service'];
+  }
+
   file {
-    '/usr/local/bin/veyon-vnc':
+    '/usr/bin/veyon-server':
+      mode    => '0755',
+      require => ::Dpkg::Simpledivert['/usr/bin/veyon-server'],
+      source  => 'puppet:///modules/veyon/veyon-server';
+
+    '/usr/local/lib/puavo-veyon':
+      ensure => directory;
+
+    '/usr/local/lib/puavo-veyon/x11vnc':
       mode    => '0755',
       require => Package['x11vnc'],
-      source  => 'puppet:///modules/veyon/veyon-vnc';
+      source  => 'puppet:///modules/veyon/x11vnc';
   }
 
   ::puavo_conf::script {
@@ -14,5 +28,8 @@ class veyon {
       source => 'puppet:///modules/veyon/setup_veyon';
   }
 
-  Package <| title == "x11vnc" |>
+  Package <|
+       title == "veyon-service"
+    or title == "x11vnc"
+  |>
 }
