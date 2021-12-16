@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -eu
+
+if [ -n "${DISPLAY:-}" ]; then
+  display="$DISPLAY"
+else
+  # XXX surprising dependency on exact command-line characteristics
+  gnome_shell_pid=$(pgrep -U "$USER" -fnx '/usr/bin/gnome-shell.distrib' \
+                                          2>/dev/null || true)
+  if [ -z "$gnome_shell_pid" ]; then
+    echo 'could not determine the gnome shell pid' >&2
+    exit 1
+  fi
+
+  display=$(awk 'BEGIN { FS = "="; RS = "\0" } /^DISPLAY=/ { print $2 }' \
+                "/proc/${gnome_shell_pid}/environ" 2>/dev/null || true)
+  if [ -z "$display" ]; then
+    echo 'could not find user display' >&2
+    exit 1
+  fi
+fi
+
+xauthority="${XDG_RUNTIME_DIR}/gdm/Xauthority"
+
+pw_file=$(printf %s "$*" | awk '{
+  for (i = 1; i <= NF; i++) {
+    if ($i == "-passwdfile") {
+      i += 1
+      sub(/^rm:/, "", $i)
+      print $i
+      exit 0
+    }
+  }
+}')
+
+if [ -z "$pw_file" ]; then
+  echo 'Could not determine password file' >&2
+  exit 1
+fi
+
+chown "$USER:" "$pw_file"
+
+exec sudo -n -u "$USER" \
+     env "DISPLAY=${display}" "XAUTHORITY=${xauthority}" \
+     /usr/bin/x11vnc "$@"
