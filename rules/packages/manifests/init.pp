@@ -701,7 +701,6 @@ class packages {
     , 'tlp'
     , 'unace'
     , 'unionfs-fuse'    # Ekapeli might need this.
-    , 'unshield'
     , 'wimtools'
     , 'wmctrl'
     , 'xinput' ]:
