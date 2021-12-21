@@ -23,6 +23,11 @@ class veyon {
       source  => 'puppet:///modules/veyon/x11vnc';
   }
 
+  ::puavo_conf::definition {
+    'puavo-veyon.json':
+      source => 'puppet:///modules/veyon/puavo-veyon.json';
+  }
+
   ::puavo_conf::script {
     'setup_veyon':
       source => 'puppet:///modules/veyon/setup_veyon';

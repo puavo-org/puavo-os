@@ -1369,10 +1369,11 @@ class VeyonSlave(PuavoWidget):
   def __init__(self, applet):
     self.zeroconf = zeroconf.Zeroconf()
 
-    service = self.zeroconf.get_service_info(service_type, service_name)
+    service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
+                                             Veyon.SERVICE_NAME)
     self.set_veyon_master(service)
     self.browser = zeroconf.ServiceBrowser(self.zeroconf,
-                                           service_name,
+                                           Veyon.SERVICE_NAME,
                                            VeyonListener(self))
 
 
@@ -1415,12 +1416,31 @@ class PuavoDesktopApplet:
     self.remote_assistance  = RemoteAssistance(self)
     self.reset_dev_state    = ResetDevState(self)
 
-    # XXX should be one or the other
-    # self.veyon_master = VeyonMaster(self)
-    self.veyon_slave = VeyonSlave(self)
+    self.setup_veyon()
 
     self.menu = False
     self.create_menu()
+
+
+  def setup_veyon(self):
+    veyon_role = None
+    try:
+      veyon_role = puavoconf_get('puavo.veyon.role')
+    except Exception as e:
+      print('veyon is not configured as puavo.veyon.role is missing',
+            file=sys.stderr)
+
+    self.veyon_master = None
+    self.veyon_slave  = None
+
+    if veyon_role == None:
+      pass
+    elif veyon_role == 'master':
+      self.veyon_master = VeyonMaster(self)
+    elif veyon_role == 'slave':
+      self.veyon_slave = VeyonSlave(self)
+    else:
+      print('unknown veyon role', file=sys.stderr)
 
 
   def create_menu(self):
