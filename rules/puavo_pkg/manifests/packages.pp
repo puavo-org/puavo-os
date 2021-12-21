@@ -17,7 +17,6 @@ class puavo_pkg::packages {
 			, 'arduino-ottodiylib'
 			, 'arduino-radiohead'
 			, 'arduino-tm1637'
-                        , 'aseba'
 			, 'bluegriffon'
 			, 'cmaptools'
 			, 'cnijfilter2'
