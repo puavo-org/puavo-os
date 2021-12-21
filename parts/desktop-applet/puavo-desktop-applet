@@ -11,11 +11,13 @@ import gettext
 import gi
 import json
 import lsb_release
+import netifaces
 import os
 import re
 import signal
 import subprocess
 import sys
+import zeroconf
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
@@ -1319,6 +1321,31 @@ class ResetDevState(PuavoWidget):
     self.applet.menu.append(self.reset_devstate_button)
 
 
+class VeyonMaster(PuavoWidget):
+  def __init__(self, applet):
+    host_ip_addresses = []
+    for intf in netifaces.interfaces():
+      if re.match('^(lo|tun|vpn)', intf):
+        continue
+      for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
+        if 'addr' in ip_addr:
+          host_ip_addresses.append(ip_addr['addr'])
+
+    if len(host_ip_addresses) == 0:
+      # XXX should we give some error if host has no ip addresses?
+      self.zeroconf = None
+      return
+
+    self.zeroconf = zeroconf.Zeroconf()
+
+    host_port = 6789
+    serviceinfo = zeroconf.ServiceInfo('_http._tcp.local.',
+                                       'VeyonMaster._http._tcp.local.',
+                                       addresses=host_ip_addresses,
+                                       port=host_port)
+    self.zeroconf.register_service(serviceinfo)
+
+
 class PuavoDesktopApplet:
   def __init__(self):
     # XXX this should be something else and maybe puavo-conf configurable?
@@ -1339,6 +1366,7 @@ class PuavoDesktopApplet:
     self.monitors_updater   = MonitorsUpdater(self)
     self.remote_assistance  = RemoteAssistance(self)
     self.reset_dev_state    = ResetDevState(self)
+    self.veyon_master       = VeyonMaster(self)
 
     self.menu = False
     self.create_menu()
