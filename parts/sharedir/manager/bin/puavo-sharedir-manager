@@ -488,7 +488,8 @@ class Control
             if File.directory?(path)
               notifier.watch(path, *events)
             elsif File.dirname(path).end_with?('/returnbox') && event.flags.include?(:create)
-              targetpathbase="#{File.dirname(File.dirname(path))}/returns/#{File.basename(path)}"
+              targetpathbase="#{File.dirname(File.dirname(path))}/returns/#{Etc.getpwuid(
+                File.stat(path).uid).name}-#{File.basename(path)}"
               targetpath=targetpathbase
               i=0
               targetpath=targetpathbase+"-#{i+=1}" while File.exists?(targetpath)
