@@ -1333,14 +1333,17 @@ class Veyon():
     size = socket.recv(4)
     # XXX what if all of the message can not be read at once?
     msgsize = struct.unpack('!i', size)[0]
-    return json.loads( socket.recv(msgsize) )
+    message = json.loads( socket.recv(msgsize) )
+    print('received message %s' % message)
+    return message
 
 
   def send_msg(socket, message):
-    jsonmsg = bytes(json.dumps(message), encoding='utf-8')
-    msgsize = len(jsonmsg)
+    message = bytes(json.dumps(message), encoding='utf-8')
+    msgsize = len(message)
     socket.send(struct.pack('!i', msgsize))
-    socket.send(jsonmsg)
+    socket.send(message)
+    print('sent message %s' % message)
 
 
 
@@ -1376,6 +1379,8 @@ class VeyonClient(PuavoWidget):
         return
       if message['pin'] == self.master.pin:
         self.send_public_key()
+
+    return True
 
 
   def send_pin_request(self):
@@ -1494,21 +1499,37 @@ class VeyonSlave(PuavoWidget):
                         self.master_socket)
 
 
-  def incoming_master_data(self, io, cond, master_socket):
-    print("receiving some data from master")
+  def send_public_key_request(self, pin):
+    msg = { 'type': 'public_key_request', 'pin': pin }
+    Veyon.send_msg(self.master_socket, msg)
 
-    # XXX we should probably send:
-    # XXX     hostname location user maybe group?
-    # XXX   information to all veyon masters?
-    # XXX   or not?
-    # XXX   and keep all connections open?
-    # XXX   then IF we get a PIN request
-    # XXX   we could show user a dialog for a PIN code
-    # XXX   then send it through socket
-    # XXX   and if veyon-master accepts it
-    # XXX   we should also receive a veyon public key
-    # XXX we do not need to advertise any service, because with only
-    # XXX veyon master information we can setup connections with each of those?
+
+  def incoming_master_data(self, io, cond, master_socket):
+    message = Veyon.receive_msg(master_socket)
+
+    if not 'type' in message:
+      # XXX error handling
+      return
+
+    if message['type'] == 'pin_request':
+      # XXX show pin request instead of sending directly:
+      self.send_public_key_request('1234')
+    elif message['type'] == 'public_key':
+      if not 'public_key' in message:
+        # XXX error handling
+        return
+      self.set_veyon_public_key(message['public_key'])
+    elif message['type'] == 'wrong_pin':
+      # XXX error handling
+      return
+
+    return True
+
+
+  def set_veyon_public_key(self, public_key):
+    print('should set public key now to %s' % public_key)
+    # XXX
+    pass
 
 
 class PuavoDesktopApplet:
