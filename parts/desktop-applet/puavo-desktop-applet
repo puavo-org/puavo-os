@@ -1345,8 +1345,9 @@ class Veyon():
 
 
 class VeyonClient(PuavoWidget):
-  def __init__(self, client_socket):
+  def __init__(self, master, client_socket):
     self.client_socket = client_socket
+    self.master = master
     GLib.io_add_watch(GLib.IOChannel(self.client_socket.fileno()),
                       0,
                       GLib.IOCondition.IN,
@@ -1356,11 +1357,45 @@ class VeyonClient(PuavoWidget):
 
   def incoming_client_data(self, io, cond, client_socket):
     message = Veyon.receive_msg(client_socket)
-    print('got message %s' % message)
+
+    if not 'type' in message:
+      # XXX error handling?
+      return
+
+    # XXX we should also check value types in each case
+
+    if message['type'] == 'new_client':
+      if not 'hostname' in message:
+        # XXX error handling?
+        return
+      self.hostname = message['hostname']
+      self.send_pin_request()
+    elif message['type'] == 'public_key_request':
+      if not 'pin' in message:
+        # XXX error handling?
+        return
+      if message['pin'] == self.master.pin:
+        self.send_public_key()
+
+
+  def send_pin_request(self):
+    Veyon.send_msg(self.client_socket, { 'type': 'pin_request' })
+
+
+  def send_public_key(self):
+    msg = { 'type': 'veyon_public_key', 'public_key': self.master.public_key }
+    Veyon.send_msg(self.client_socket, msg)
+
 
 
 class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
+    # XXX where to get this pin?
+    # XXX also we need to create the Veyon keys somewhere and should have the
+    # XXX public key handy
+    self.pin = '1234'
+    self.public_key = 'XXX'
+
     host_ip_addresses = []
     for intf in netifaces.interfaces():
       if re.match('^(lo|tun|vpn)', intf):
@@ -1397,7 +1432,7 @@ class VeyonMaster(PuavoWidget):
   def handle_incoming(self, io, cond, sock):
     conn = sock.accept()[0]
     # XXX there could be many clients, this supports only one
-    self.veyon_client = VeyonClient(conn)
+    self.veyon_client = VeyonClient(self, conn)
 
 
 class VeyonListener():
