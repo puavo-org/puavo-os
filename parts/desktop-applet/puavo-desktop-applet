@@ -1346,7 +1346,6 @@ class Veyon():
     print('sent message %s' % message)
 
 
-
 class VeyonClient(PuavoWidget):
   def __init__(self, master, client_socket):
     self.client_socket = client_socket
@@ -1379,6 +1378,10 @@ class VeyonClient(PuavoWidget):
         return
       if message['pin'] == self.master.pin:
         self.send_public_key()
+      else:
+        Veyon.send_msg(self.client_socket, { 'type': 'wrong_pin' })
+
+    return True
 
     return True
 
@@ -1438,6 +1441,8 @@ class VeyonMaster(PuavoWidget):
     conn = sock.accept()[0]
     # XXX there could be many clients, this supports only one
     self.veyon_client = VeyonClient(self, conn)
+
+    return True
 
 
 class VeyonListener():
