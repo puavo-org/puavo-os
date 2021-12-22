@@ -1328,12 +1328,35 @@ class Veyon():
   SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
   SERVICE_PORT = 2991   # XXX why this one?
 
+  def receive_msg(socket):
+    # XXX what if we do not receive four bytes?
+    size = socket.recv(4)
+    # XXX what if all of the message can not be read at once?
+    msgsize = struct.unpack('!i', size)[0]
+    return json.loads( socket.recv(msgsize) )
+
+
   def send_msg(socket, message):
     jsonmsg = bytes(json.dumps(message), encoding='utf-8')
     msgsize = len(jsonmsg)
     socket.send(struct.pack('!i', msgsize))
     socket.send(jsonmsg)
 
+
+
+class VeyonClient(PuavoWidget):
+  def __init__(self, client_socket):
+    self.client_socket = client_socket
+    GLib.io_add_watch(GLib.IOChannel(self.client_socket.fileno()),
+                      0,
+                      GLib.IOCondition.IN,
+                      self.incoming_client_data,
+                      self.client_socket)
+
+
+  def incoming_client_data(self, io, cond, client_socket):
+    message = Veyon.receive_msg(client_socket)
+    print('got message %s' % message)
 
 
 class VeyonMaster(PuavoWidget):
@@ -1344,7 +1367,8 @@ class VeyonMaster(PuavoWidget):
         continue
       for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
         if 'addr' in ip_addr:
-          host_ip_addresses.append(ip_addr['addr'])
+          host_ip_addresses.append(
+            socket.inet_pton(socket.AF_INET, ip_addr['addr']))
 
     if len(host_ip_addresses) == 0:
       # XXX should we give some error if host has no ip addresses?
@@ -1358,6 +1382,22 @@ class VeyonMaster(PuavoWidget):
                                        addresses=host_ip_addresses,
                                        port=Veyon.SERVICE_PORT)
     self.zeroconf.register_service(serviceinfo)
+
+    self.socket = socket.socket()
+    self.socket.bind(('0.0.0.0', Veyon.SERVICE_PORT))
+    self.socket.listen()
+
+    GLib.io_add_watch(GLib.IOChannel(self.socket.fileno()),
+                      0,
+                      GLib.IOCondition.IN,
+                      self.handle_incoming,
+                      self.socket)
+
+
+  def handle_incoming(self, io, cond, sock):
+    conn = sock.accept()[0]
+    # XXX there could be many clients, this supports only one
+    self.veyon_client = VeyonClient(conn)
 
 
 class VeyonListener():
