@@ -15,6 +15,8 @@ import netifaces
 import os
 import re
 import signal
+import socket
+import struct
 import subprocess
 import sys
 import zeroconf
@@ -1326,6 +1328,13 @@ class Veyon():
   SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
   SERVICE_PORT = 2991   # XXX why this one?
 
+  def send_msg(socket, message):
+    jsonmsg = bytes(json.dumps(message), encoding='utf-8')
+    msgsize = len(jsonmsg)
+    socket.send(struct.pack('!i', msgsize))
+    socket.send(jsonmsg)
+
+
 
 class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
@@ -1355,10 +1364,13 @@ class VeyonListener():
   def __init__(self, veyon_slave):
     self.veyon_slave = veyon_slave
 
+
   def add_service(self, zeroconf, type, name):
     if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
       service = zeroconf.get_service_info(type, name)
       self.veyon_slave.set_veyon_master(service)
+      self.veyon_slave.open_connection()
+
 
   def remove_service(self, zeroconf, type, name):
     if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
@@ -1368,18 +1380,47 @@ class VeyonListener():
 class VeyonSlave(PuavoWidget):
   def __init__(self, applet):
     self.zeroconf = zeroconf.Zeroconf()
+    self.hostname = read_firstline('/etc/puavo/hostname')
 
     service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
                                              Veyon.SERVICE_NAME)
     self.set_veyon_master(service)
+    self.open_connection()
     self.browser = zeroconf.ServiceBrowser(self.zeroconf,
                                            Veyon.SERVICE_NAME,
                                            VeyonListener(self))
 
 
   def set_veyon_master(self, service_info):
-    print('setting veyon master to %s' % service_info)
     self.veyon_master = service_info
+
+
+  def open_connection(self):
+    if not self.veyon_master:
+      return
+
+    # XXX if there is a new master, we should close the old socket connection
+
+    self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # XXX this picks the first one, but what if we do not have any?
+    host_ip = socket.inet_ntop(socket.AF_INET,
+                               self.veyon_master.addresses[0])
+    host_port = self.veyon_master.port
+
+    if host_ip and host_port:
+      self.master_socket.connect((host_ip, host_port))
+      message = { 'type': 'new_client', 'hostname' : self.hostname }
+      Veyon.send_msg(self.master_socket, message)
+
+      GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
+                        0,
+                        GLib.IOCondition.IN,
+                        self.incoming_master_data,
+                        self.master_socket)
+
+
+  def incoming_master_data(self, io, cond, master_socket):
+    print("receiving some data from master")
 
     # XXX we should probably send:
     # XXX     hostname location user maybe group?
