@@ -156,14 +156,14 @@ class GvfsMount
   def check_mount_state()
     # returns 'not connected', 'ok' or 'timeout'
 
-    # wait for 10 seconds for gvfs-info operation to a remote url
-    system('timeout', '-s', 'KILL', '10', 'gvfs-info', @mntinfo.url,
+    # wait for 10 seconds for gio info operation to a remote url
+    system('timeout', '-s', 'KILL', '10', 'gio', 'info', @mntinfo.url,
            { :out => '/dev/null', :err => '/dev/null' })
 
     return 'timeout' if $?.termsig == 9
     return 'ok'      if $?.exitstatus == 0
 
-    # if gvfs-info fails, check if mount exists
+    # if gio info fails, check if mount exists
     if is_mounted() then
       return 'ok'
     end
@@ -172,8 +172,8 @@ class GvfsMount
   end
 
   def is_mounted()
-    output, s = Open3.capture2e('gvfs-mount', '-il')
-    raise "gvfs-mount -il returned error code #{ s.exitstatus }" \
+    output, s = Open3.capture2e('gio', 'mount', '-il')
+    raise "gio mount -il returned error code #{ s.exitstatus }" \
       unless s.exitstatus == 0
 
     re = /^\s+default_location=#{ Regexp.quote(@mntinfo.url) }$/
@@ -233,7 +233,7 @@ class GvfsMount
 
     case mount_state
       when 'not connected'
-        if system('timeout', '-k', '10', '20', 'gvfs-mount', @mntinfo.url) then
+        if system('timeout', '-k', '10', '20', 'gio', 'mount', @mntinfo.url) then
           gvfslog('mounted')
           ensure_link(true) rescue true
         else
@@ -284,7 +284,7 @@ class GvfsMount
     return unless is_mounted()
 
     gvfslog('unmounting')
-    system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @mntinfo.url) \
+    system('timeout', '-k', '5', '10', 'gio', 'mount', '-u', @mntinfo.url) \
       or gvfslog('problem in unmounting')
   end
 
