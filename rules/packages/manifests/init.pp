@@ -216,7 +216,6 @@ class packages {
     , 'notify-osd'
     , 'onboard'
     , 'onboard-data'
-    # , 'python-gtk2'           # XXX missing from Bullseye
     , 'python3-notify2'
     , 'shared-mime-info'
     , 'suckless-tools'
@@ -269,9 +268,6 @@ class packages {
     [ 'virtualbox-6.1'
     , 'wine'
     , 'wine32'
-    # , 'wine-development'      # XXX missing from Bullseye
-    # , 'wine32-development'    # XXX missing from Bullseye
-    # , 'wine64-development'    # XXX missing from Bullseye
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
@@ -457,15 +453,12 @@ class packages {
     , 'lokalize'
     , 'meld'
     , 'pylint'
-    # , 'pyqt4-dev-tools'       # XXX missing from Bullseye
     , 'python3-doc'
     , 'python3-jsonpickle' # a dependency for
                            # http://meetedison.com/robot-programming-software/
     , 'python3-pip'
     , 'python3-pygame'
     # , 'pythontracer'  # XXX missing from Bullseye
-    # , 'qt4-designer'  # XXX missing from Bullseye
-    # , 'qt4-doc'       # XXX missing from Bullseye
     , 'racket'
     , 'racket-doc'
     # , 'renpy'         # XXX missing from Bullseye
@@ -473,7 +466,6 @@ class packages {
     , 'scite'
     , 'scratch'
     , 'sonic-pi' ]:
-    # , 'spe' ]:        # XXX missing from Bullseye
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
     [ 'epoptes'
@@ -697,7 +689,6 @@ class packages {
     , 'exfat-fuse'
     , 'exfat-utils'
     , 'fuse3'
-    # , 'gconf-editor'    # XXX missing from Bullseye
     , 'kamoso'
     , 'mc'
     , 'mousepad'
