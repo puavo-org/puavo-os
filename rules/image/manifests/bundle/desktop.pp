@@ -23,6 +23,7 @@ class image::bundle::desktop {
   include ::libdvdcss
   include ::libreoffice
   include ::network_manager
+  include ::nextcloud
   include ::password_expiration
   include ::packages::languages::de
   include ::packages::languages::en
