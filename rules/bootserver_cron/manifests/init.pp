@@ -4,4 +4,9 @@ class bootserver_cron {
       mode   => '0755',
       source => 'puppet:///modules/bootserver_cron/puavo-fix-homedir-permissions';
   }
+  file {
+    '/usr/local/sbin/puavo-gather-printing-statistics':
+      mode   => '0755',
+      source => 'puppet:///modules/bootserver_cron/puavo-gather-printing-statistics';
+  }
 }
