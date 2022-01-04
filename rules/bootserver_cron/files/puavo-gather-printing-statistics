@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$1" = '-d' ]; then
+  awk -F' ' '{pagesum[$2]+=$3;} END{ for (username in pagesum) { print username " " pagesum[username] } ;}' \
+    /var/log/cups/page_log > /var/log/cups/sumtoday
+  if [ -f "/var/log/cups/monthlysum" ]; then
+    awk -F' ' '{pagesum[$1]+=$2;} END{ for (username in pagesum) { print username " " pagesum[username] } ;}' \
+      /var/log/cups/sumtoday /var/log/cups/monthlysum > /var/log/cups/tmpmonthlysum
+    mv /var/log/cups/tmpmonthlysum /var/log/cups/monthlysum
+  else
+    awk -F' ' '{pagesum[$1]+=$2;} END{ for (username in pagesum) { print username " " pagesum[username] } ;}' \
+      /var/log/cups/sumtoday > /var/log/cups/monthlysum
+  fi
+
+elif [ "$1" = '-m' ]; then
+  time="`date +%Y-%m`-monthly-print"
+  mkdir --parents /var/log/cups/monthly-statistics/
+  mv /var/log/cups/monthlysum /var/log/cups/monthly-statistics/$time
+
+else
+  echo "$0 - call with -d to update daily and -m monthly printing statistics"
+fi
