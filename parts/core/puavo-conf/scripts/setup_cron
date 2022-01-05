@@ -99,6 +99,15 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 13 06 * * * root /usr/local/sbin/puavo-fix-homedir-permissions >/dev/null 2>&1
 EOF
 
+cron_d_cond_enable gather-printing-statistics <<'EOF'
+# Collect daily (at 23.58 before logrotate kicks in) and monthly print statistics
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+58 23 * * * root /usr/local/sbin/puavo-gather-printing-statistics -d >/dev/null 2>&1
+01 00 1 * * root /usr/local/sbin/puavo-gather-printing-statistics -m >/dev/null 2>&1
+EOF
+
+
 cron_infotv_display_control | cron_d_cond_enable infotv-display-control
 
 cron_d_cond_enable puavo-autopoweron <<'EOF'

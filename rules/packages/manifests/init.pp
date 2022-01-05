@@ -366,8 +366,7 @@ class packages {
     [ 'irssi'
     , 'irssi-plugin-xmpp'
     , 'pidgin'
-    , 'pidgin-plugin-pack'
-    , 'telegram-desktop' ]:
+    , 'pidgin-plugin-pack' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
 
     [ 'goobox'
