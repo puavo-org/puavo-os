@@ -1,11 +1,14 @@
 class nextcloud {
-  ::puavo_pkg::packages
+  include ::puavo_pkg::packages
 
-  file { '/etc/Nextcloud': ensure => directory; }
   file {
+    '/etc/Nextcloud':
+      ensure => directory;
+
     '/etc/Nextcloud/Nextcloud.conf':
-       source  => 'puppet:///modules/desktop/Nextcloud.conf';
+      require => Puavo_pkg::Install['nextcloud-desktop'],
+      source  => 'puppet:///modules/nextcloud/Nextcloud.conf';
   }
 
-  Puavo_pkg::Install <| title == nextcloud-desktop |>
+  Puavo_pkg::Install <| title == 'nextcloud-desktop' |>
 }
