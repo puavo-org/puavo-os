@@ -21,7 +21,6 @@ class image::bundle::desktop {
   include ::keyutils
   # include ::ktouch                    # XXX buster
   include ::libdvdcss
-  include ::libreoffice
   include ::network_manager
   include ::nextcloud
   include ::password_expiration
