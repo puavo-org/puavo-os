@@ -626,7 +626,6 @@ download_upstream_pack_from_multiple_urls()
 
   for distfile_url in $distfile_url_list; do
     if wget --no-use-server-timestamps            \
-            --no-check-certificate                \
             --no-cookies                          \
             --output-document "$upstream_tmppack" \
             --progress=dot:mega "$distfile_url"; then
