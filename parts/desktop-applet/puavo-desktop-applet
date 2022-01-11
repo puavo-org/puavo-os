@@ -13,9 +13,11 @@ import json
 import lsb_release
 import netifaces
 import os
+import random
 import re
 import signal
 import socket
+import string
 import struct
 import subprocess
 import sys
@@ -1405,13 +1407,27 @@ class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
     self.public_key = None
 
-    # XXX pin should be randomly chosen
-    self.pin = '1234'
+    self.create_new_pin()
 
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
                                            '/master',
                                            'org.puavo.Veyon.master')
+    self.dbus_iface \
+        .GetPublicKey(reply_handler=self.get_public_key,
+                      error_handler=self.get_public_key_error)
 
+
+  def create_new_pin(self):
+    self.pin = ''.join(random.choices(string.digits, k=4))
+    print('new pin is %s' % self.pin)
+
+
+  def get_public_key(self, public_key):
+    self.public_key = public_key
+    self.setup_master_service()
+
+
+  def setup_master_service(self):
     host_ip_addresses = []
     for intf in netifaces.interfaces():
       if re.match('^(lo|tun|vpn)', intf):
@@ -1445,17 +1461,9 @@ class VeyonMaster(PuavoWidget):
                       self.handle_incoming,
                       self.socket)
 
-    self.dbus_iface \
-        .GetPublicKey(reply_handler=self.get_public_key,
-                      error_handler=self.get_public_key_error)
-
-
-  def get_public_key(self, public_key):
-    print('we have a public key %s' % public_key)
-    self.public_key = public_key
-
 
   def get_public_key_error(self, dbusexception):
+    # XXX
     print("oh no public key dbus error")
 
 
