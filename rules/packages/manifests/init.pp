@@ -634,6 +634,7 @@ class packages {
     , 'printer-driver-splix'
     , 'pulseaudio'
     , 'pulseaudio-module-bluetooth'
+    , 'qt5-style-kvantum'
     , 'rfkill'
     , 'rtmpdump'
     , 'rxvt-unicode'

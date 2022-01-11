@@ -34,6 +34,15 @@ class themes {
       source  => 'puppet:///modules/themes/Arc/gnome-shell/gnome-shell.css';
   }
 
+  file {
+    '/etc/xdg/Kvantum':
+      ensure => directory;
+
+    '/etc/xdg/Kvantum/kvantum.kvconfig':
+      require => Package['qt5-style-kvantum'];
+      source  => 'puppet:///modules/themes/kvantum.kvconfig';
+  }
+
   ::themes::iconlink {
     'scalable/apps/puavo-multitasking-view.svg':
       target => 'Tela/scalable/apps/deepin-multitasking-view.svg';
@@ -50,7 +59,7 @@ class themes {
       source => 'puppet:///modules/themes/puavo-themes.json';
   }
 
-  Package <| title == arc-theme |>
+  Package <| title == arc-theme and title == qt5-style-kvantum |>
 
   Puavo_pkg::Install <| title == tela-icon-theme |>
 }
