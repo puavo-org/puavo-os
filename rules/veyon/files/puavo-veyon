@@ -1,23 +1,57 @@
 #!/usr/bin/ruby
 
 require 'dbus'
+require 'open3'
+require 'puavo/conf'
 
-class VeyonMaster < DBus::Object
-  dbus_interface 'org.puavo.Veyon.master' do
-    dbus_method :GetPublicKey, 'out ret:s' do
-      puts "hello great STDOUT"
-      warn "hello great STDERR"
-      return 'THISISAPUBLICKEY'
+class VeyonSlave < DBus::Object
+  dbus_interface 'org.puavo.Veyon.client' do
+    # XXX return value or anything?
+    dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
+      cmd = [ 'veyon-cli', 'authkeys', 'import', 'puavo_veyon_key/public',
+              '/dev/stdin' ]
+      # XXX check out and status
+      output, status = Open3.capture2(cmd, :stdin_data => public_key)
+      return
     end
   end
 end
 
+class VeyonMaster < DBus::Object
+  dbus_interface 'org.puavo.Veyon.master' do
+    dbus_method :GetPublicKey, 'out ret:s' do
+      public_key_path = '/etc/veyon/keys/public/puavo_veyon_key/key'
+      # XXX providing some decent error message in case of errors or at least
+      # XXX logging it would be very nice
+      begin
+        return IO.read(public_key_path)
+      rescue StandardError => e
+        # XXX stdout/stderr to /dev/null?  or where?
+        system('veyon-cli', 'authkeys', 'create', 'puavo_veyon_key')
+        # XXX should the veyon-service be restarted?
+      end
+
+      public_key = IO.read(public_key_path) rescue ''
+      return public_key
+    end
+  end
+end
+
+puavoconf = Puavo::Conf.new
+veyon_role = puavoconf.get('puavo.veyon.role')
+puavoconf.close
+
 bus = DBus::SystemBus.instance
 service = bus.request_service('org.puavo.Veyon')
 
-# XXX we could make only one service based on puavo.veyon.role
-service.export( VeyonMaster.new('/master') )
-# service.export( VeyonSlave.new('/slave') )
+case veyon_role
+  when 'master'
+    service.export( VeyonMaster.new('/master') )
+  when 'slave'
+    service.export( VeyonSlave.new('/slave') )
+  else
+    exit(0)
+end
 
 # ...and start it
 mainloop = DBus::Main.new
