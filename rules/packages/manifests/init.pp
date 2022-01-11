@@ -635,6 +635,7 @@ class packages {
     , 'pulseaudio'
     , 'pulseaudio-module-bluetooth'
     , 'qt5-style-kvantum'
+    , 'qt5ct'
     , 'rfkill'
     , 'rtmpdump'
     , 'rxvt-unicode'

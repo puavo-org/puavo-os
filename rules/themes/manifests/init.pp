@@ -35,6 +35,15 @@ class themes {
   }
 
   file {
+    '/etc/xdg/qt5ct':
+      ensure => directory;
+
+    '/etc/xdg/qt5ct/qt5ct.conf':
+      require => Package['qt5ct'];
+      source  => 'puppet:///modules/themes/qt5ct.conf';
+  }
+
+  file {
     '/etc/xdg/Kvantum':
       ensure => directory;
 
@@ -59,7 +68,7 @@ class themes {
       source => 'puppet:///modules/themes/puavo-themes.json';
   }
 
-  Package <| title == arc-theme and title == qt5-style-kvantum |>
+  Package <| title == arc-theme and title == qt5ct and title == qt5-style-kvantum |>
 
   Puavo_pkg::Install <| title == tela-icon-theme |>
 }
