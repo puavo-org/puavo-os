@@ -59,6 +59,7 @@ class packages {
     [ 'bind9'
     , 'bind9utils'
     , 'cifs-utils'
+    , 'dbus'
     , 'dnsmasq'
     , 'freeradius'
     , 'freeradius-krb5'

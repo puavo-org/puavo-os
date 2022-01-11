@@ -1,0 +1,10 @@
+[Unit]
+Description=Puavo Veyon integration service
+
+[Service]
+Type=dbus
+BusName=org.puavo.Veyon
+ExecStart=/usr/local/sbin/puavo-veyon
+
+[Install]
+WantedBy=multi-user.target

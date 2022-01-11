@@ -1,0 +1,25 @@
+#!/usr/bin/ruby
+
+require 'dbus'
+
+class VeyonMaster < DBus::Object
+  dbus_interface 'org.puavo.Veyon.master' do
+    dbus_method :GetPublicKey, 'out ret:s' do
+      puts "hello great STDOUT"
+      warn "hello great STDERR"
+      return 'THISISAPUBLICKEY'
+    end
+  end
+end
+
+bus = DBus::SystemBus.instance
+service = bus.request_service('org.puavo.Veyon')
+
+# XXX we could make only one service based on puavo.veyon.role
+service.export( VeyonMaster.new('/master') )
+# service.export( VeyonSlave.new('/slave') )
+
+# ...and start it
+mainloop = DBus::Main.new
+mainloop << bus
+mainloop.run

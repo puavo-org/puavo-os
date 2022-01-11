@@ -64,9 +64,9 @@ def read_firstline(pathname):
 
 
 class PuavoWidget:
-  def connect_to_dbus(self, service, interface):
+  def connect_to_dbus(self, bus_name, service, interface):
     self.bus = dbus.SystemBus()
-    dbusobj = self.bus.get_object('org.puavo.client.Daemon', service)
+    dbusobj = self.bus.get_object(bus_name, service)
     return dbus.Interface(dbusobj, dbus_interface=interface)
 
 
@@ -301,17 +301,18 @@ class ContentUpdates(PuavoWidget):
 
     self.content_elements = {}
 
-    self.dbus_iface = self.connect_to_dbus('/contentupdates',
+    self.dbus_iface = self.connect_to_dbus('org.puavo.client.Daemon',
+                                           '/contentupdates',
                                            'org.puavo.client.contentupdates')
 
     self.dbus_iface.connect_to_signal('UpdateStarted',
-                                        self.update_started)
+                                      self.update_started)
     self.dbus_iface.connect_to_signal('UpdateProgress',
-                                        self.update_progress)
+                                      self.update_progress)
     self.dbus_iface.connect_to_signal('UpdateCompleted',
-                                        self.update_completed)
+                                      self.update_completed)
     self.dbus_iface.connect_to_signal('UpdateFailed',
-                                        self.update_failed)
+                                      self.update_failed)
     self.get_contents()
 
 
@@ -539,8 +540,9 @@ class ImageUpdater(PuavoWidget):
 
 
   def setup_dbus_iface(self):
-    self.dbus_iface = self.connect_to_dbus('/updater',
-                                             'org.puavo.client.update')
+    self.dbus_iface = self.connect_to_dbus('org.puavo.client.Daemon',
+                                           '/updater',
+                                           'org.puavo.client.update')
 
     self.dbus_iface.connect_to_signal('UpdateIsUpToDate',
                                         self.on_update_isuptodate)
@@ -1236,7 +1238,8 @@ class ResetDevState(PuavoWidget):
 
   def setup_dbus_iface(self):
     self.dbus_iface \
-      = self.connect_to_dbus('/overlayhandler',
+      = self.connect_to_dbus('org.puavo.client.Daemon',
+                             '/overlayhandler',
                              'org.puavo.client.overlayhandler')
 
     self.dbus_iface \
@@ -1330,6 +1333,7 @@ class Veyon():
 
   def receive_msg(socket):
     # XXX what if we do not receive four bytes?
+    # XXX how do we know that connection is closed?
     size = socket.recv(4)
     # XXX what if all of the message can not be read at once?
     msgsize = struct.unpack('!i', size)[0]
@@ -1350,6 +1354,7 @@ class VeyonClient(PuavoWidget):
   def __init__(self, master, client_socket):
     self.client_socket = client_socket
     self.master = master
+    # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.client_socket.fileno()),
                       0,
                       GLib.IOCondition.IN,
@@ -1398,11 +1403,14 @@ class VeyonClient(PuavoWidget):
 
 class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
-    # XXX where to get this pin?
-    # XXX also we need to create the Veyon keys somewhere and should have the
-    # XXX public key handy
+    self.public_key = None
+
+    # XXX pin should be randomly chosen
     self.pin = '1234'
-    self.public_key = 'XXX'
+
+    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
+                                           '/master',
+                                           'org.puavo.Veyon.master')
 
     host_ip_addresses = []
     for intf in netifaces.interfaces():
@@ -1430,11 +1438,25 @@ class VeyonMaster(PuavoWidget):
     self.socket.bind(('0.0.0.0', Veyon.SERVICE_PORT))
     self.socket.listen()
 
+    # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.socket.fileno()),
                       0,
                       GLib.IOCondition.IN,
                       self.handle_incoming,
                       self.socket)
+
+    self.dbus_iface \
+        .GetPublicKey(reply_handler=self.get_public_key,
+                      error_handler=self.get_public_key_error)
+
+
+  def get_public_key(self, public_key):
+    print('we have a public key %s' % public_key)
+    self.public_key = public_key
+
+
+  def get_public_key_error(self, dbusexception):
+    print("oh no public key dbus error")
 
 
   def handle_incoming(self, io, cond, sock):
@@ -1497,6 +1519,7 @@ class VeyonSlave(PuavoWidget):
       message = { 'type': 'new_client', 'hostname' : self.hostname }
       Veyon.send_msg(self.master_socket, message)
 
+      # XXX should this be asynchronous?
       GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
                         0,
                         GLib.IOCondition.IN,
