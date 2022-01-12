@@ -11,17 +11,11 @@ import gettext
 import gi
 import json
 import lsb_release
-import netifaces
 import os
-import random
 import re
 import signal
-import socket
-import string
-import struct
 import subprocess
 import sys
-import zeroconf
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
@@ -66,9 +60,9 @@ def read_firstline(pathname):
 
 
 class PuavoWidget:
-  def connect_to_dbus(self, bus_name, service, interface):
+  def connect_to_dbus(self, service, interface):
     self.bus = dbus.SystemBus()
-    dbusobj = self.bus.get_object(bus_name, service)
+    dbusobj = self.bus.get_object('org.puavo.client.Daemon', service)
     return dbus.Interface(dbusobj, dbus_interface=interface)
 
 
@@ -303,18 +297,17 @@ class ContentUpdates(PuavoWidget):
 
     self.content_elements = {}
 
-    self.dbus_iface = self.connect_to_dbus('org.puavo.client.Daemon',
-                                           '/contentupdates',
+    self.dbus_iface = self.connect_to_dbus('/contentupdates',
                                            'org.puavo.client.contentupdates')
 
     self.dbus_iface.connect_to_signal('UpdateStarted',
-                                      self.update_started)
+                                        self.update_started)
     self.dbus_iface.connect_to_signal('UpdateProgress',
-                                      self.update_progress)
+                                        self.update_progress)
     self.dbus_iface.connect_to_signal('UpdateCompleted',
-                                      self.update_completed)
+                                        self.update_completed)
     self.dbus_iface.connect_to_signal('UpdateFailed',
-                                      self.update_failed)
+                                        self.update_failed)
     self.get_contents()
 
 
@@ -542,9 +535,8 @@ class ImageUpdater(PuavoWidget):
 
 
   def setup_dbus_iface(self):
-    self.dbus_iface = self.connect_to_dbus('org.puavo.client.Daemon',
-                                           '/updater',
-                                           'org.puavo.client.update')
+    self.dbus_iface = self.connect_to_dbus('/updater',
+                                             'org.puavo.client.update')
 
     self.dbus_iface.connect_to_signal('UpdateIsUpToDate',
                                         self.on_update_isuptodate)
@@ -1240,8 +1232,7 @@ class ResetDevState(PuavoWidget):
 
   def setup_dbus_iface(self):
     self.dbus_iface \
-      = self.connect_to_dbus('org.puavo.client.Daemon',
-                             '/overlayhandler',
+      = self.connect_to_dbus('/overlayhandler',
                              'org.puavo.client.overlayhandler')
 
     self.dbus_iface \
@@ -1328,246 +1319,6 @@ class ResetDevState(PuavoWidget):
     self.applet.menu.append(self.reset_devstate_button)
 
 
-class Veyon():
-  SERVICE_TYPE = '_http._tcp.local.'
-  SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
-  SERVICE_PORT = 2991   # XXX why this one?
-
-  def receive_msg(socket):
-    # XXX what if we do not receive four bytes?
-    # XXX how do we know that connection is closed?
-    size = socket.recv(4)
-    # XXX what if all of the message can not be read at once?
-    msgsize = struct.unpack('!i', size)[0]
-    message = json.loads( socket.recv(msgsize) )
-    print('received message %s' % message)
-    return message
-
-
-  def send_msg(socket, message):
-    message = bytes(json.dumps(message), encoding='utf-8')
-    msgsize = len(message)
-    socket.send(struct.pack('!i', msgsize))
-    socket.send(message)
-    print('sent message %s' % message)
-
-
-class VeyonClient(PuavoWidget):
-  def __init__(self, master, client_socket):
-    self.client_socket = client_socket
-    self.master = master
-    # XXX should this be asynchronous?
-    GLib.io_add_watch(GLib.IOChannel(self.client_socket.fileno()),
-                      0,
-                      GLib.IOCondition.IN,
-                      self.incoming_client_data,
-                      self.client_socket)
-
-
-  def incoming_client_data(self, io, cond, client_socket):
-    message = Veyon.receive_msg(client_socket)
-
-    if not 'type' in message:
-      # XXX error handling?
-      return
-
-    # XXX we should also check value types in each case
-
-    if message['type'] == 'new_client':
-      if not 'hostname' in message:
-        # XXX error handling?
-        return
-      self.hostname = message['hostname']
-      self.send_pin_request()
-    elif message['type'] == 'public_key_request':
-      if not 'pin' in message:
-        # XXX error handling?
-        return
-      if message['pin'] == self.master.pin:
-        self.send_public_key()
-      else:
-        Veyon.send_msg(self.client_socket, { 'type': 'wrong_pin' })
-
-    return True
-
-    return True
-
-
-  def send_pin_request(self):
-    Veyon.send_msg(self.client_socket, { 'type': 'pin_request' })
-
-
-  def send_public_key(self):
-    msg = { 'type': 'veyon_public_key', 'public_key': self.master.public_key }
-    Veyon.send_msg(self.client_socket, msg)
-
-
-
-class VeyonMaster(PuavoWidget):
-  def __init__(self, applet):
-    self.public_key = None
-
-    self.create_new_pin()
-
-    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
-                                           '/master',
-                                           'org.puavo.Veyon.master')
-    self.dbus_iface \
-        .GetPublicKey(reply_handler=self.get_public_key,
-                      error_handler=self.get_public_key_error)
-
-
-  def create_new_pin(self):
-    self.pin = ''.join(random.choices(string.digits, k=4))
-    print('new pin is %s' % self.pin)
-
-
-  def get_public_key(self, public_key):
-    self.public_key = public_key
-    self.setup_master_service()
-
-
-  def setup_master_service(self):
-    host_ip_addresses = []
-    for intf in netifaces.interfaces():
-      if re.match('^(lo|tun|vpn)', intf):
-        continue
-      for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
-        if 'addr' in ip_addr:
-          host_ip_addresses.append(
-            socket.inet_pton(socket.AF_INET, ip_addr['addr']))
-
-    if len(host_ip_addresses) == 0:
-      # XXX should we give some error if host has no ip addresses?
-      self.zeroconf = None
-      return
-
-    self.zeroconf = zeroconf.Zeroconf()
-
-    serviceinfo = zeroconf.ServiceInfo(Veyon.SERVICE_TYPE,
-                                       Veyon.SERVICE_NAME,
-                                       addresses=host_ip_addresses,
-                                       port=Veyon.SERVICE_PORT)
-    self.zeroconf.register_service(serviceinfo)
-
-    self.socket = socket.socket()
-    self.socket.bind(('0.0.0.0', Veyon.SERVICE_PORT))
-    self.socket.listen()
-
-    # XXX should this be asynchronous?
-    GLib.io_add_watch(GLib.IOChannel(self.socket.fileno()),
-                      0,
-                      GLib.IOCondition.IN,
-                      self.handle_incoming,
-                      self.socket)
-
-
-  def get_public_key_error(self, dbusexception):
-    # XXX
-    print("oh no public key dbus error")
-
-
-  def handle_incoming(self, io, cond, sock):
-    conn = sock.accept()[0]
-    # XXX there could be many clients, this supports only one
-    self.veyon_client = VeyonClient(self, conn)
-
-    return True
-
-
-class VeyonListener():
-  def __init__(self, veyon_slave):
-    self.veyon_slave = veyon_slave
-
-
-  def add_service(self, zeroconf, type, name):
-    if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
-      service = zeroconf.get_service_info(type, name)
-      self.veyon_slave.set_veyon_master(service)
-      self.veyon_slave.open_connection()
-
-
-  def remove_service(self, zeroconf, type, name):
-    if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
-      self.veyon_slave.set_veyon_master(None)
-
-
-class VeyonSlave(PuavoWidget):
-  def __init__(self, applet):
-    self.zeroconf = zeroconf.Zeroconf()
-    self.hostname = read_firstline('/etc/puavo/hostname')
-
-    service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
-                                             Veyon.SERVICE_NAME)
-    self.set_veyon_master(service)
-    self.open_connection()
-    self.browser = zeroconf.ServiceBrowser(self.zeroconf,
-                                           Veyon.SERVICE_NAME,
-                                           VeyonListener(self))
-
-
-  def set_veyon_master(self, service_info):
-    self.veyon_master = service_info
-
-
-  def open_connection(self):
-    if not self.veyon_master:
-      return
-
-    # XXX if there is a new master, we should close the old socket connection
-
-    self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # XXX this picks the first one, but what if we do not have any?
-    host_ip = socket.inet_ntop(socket.AF_INET,
-                               self.veyon_master.addresses[0])
-    host_port = self.veyon_master.port
-
-    if host_ip and host_port:
-      self.master_socket.connect((host_ip, host_port))
-      message = { 'type': 'new_client', 'hostname' : self.hostname }
-      Veyon.send_msg(self.master_socket, message)
-
-      # XXX should this be asynchronous?
-      GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
-                        0,
-                        GLib.IOCondition.IN,
-                        self.incoming_master_data,
-                        self.master_socket)
-
-
-  def send_public_key_request(self, pin):
-    msg = { 'type': 'public_key_request', 'pin': pin }
-    Veyon.send_msg(self.master_socket, msg)
-
-
-  def incoming_master_data(self, io, cond, master_socket):
-    message = Veyon.receive_msg(master_socket)
-
-    if not 'type' in message:
-      # XXX error handling
-      return
-
-    if message['type'] == 'pin_request':
-      # XXX show pin request instead of sending directly:
-      self.send_public_key_request('1234')
-    elif message['type'] == 'public_key':
-      if not 'public_key' in message:
-        # XXX error handling
-        return
-      self.set_veyon_public_key(message['public_key'])
-    elif message['type'] == 'wrong_pin':
-      # XXX error handling
-      return
-
-    return True
-
-
-  def set_veyon_public_key(self, public_key):
-    print('should set public key now to %s' % public_key)
-    # XXX
-    pass
-
-
 class PuavoDesktopApplet:
   def __init__(self):
     # XXX this should be something else and maybe puavo-conf configurable?
@@ -1589,31 +1340,8 @@ class PuavoDesktopApplet:
     self.remote_assistance  = RemoteAssistance(self)
     self.reset_dev_state    = ResetDevState(self)
 
-    self.setup_veyon()
-
     self.menu = False
     self.create_menu()
-
-
-  def setup_veyon(self):
-    veyon_role = None
-    try:
-      veyon_role = puavoconf_get('puavo.veyon.role')
-    except Exception as e:
-      print('veyon is not configured as puavo.veyon.role is missing',
-            file=sys.stderr)
-
-    self.veyon_master = None
-    self.veyon_slave  = None
-
-    if veyon_role == None:
-      pass
-    elif veyon_role == 'master':
-      self.veyon_master = VeyonMaster(self)
-    elif veyon_role == 'slave':
-      self.veyon_slave = VeyonSlave(self)
-    else:
-      print('unknown veyon role', file=sys.stderr)
 
 
   def create_menu(self):
