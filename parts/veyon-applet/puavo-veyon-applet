@@ -138,11 +138,14 @@ class VeyonClient(PuavoWidget):
 
 
 class VeyonMaster(PuavoWidget):
-  def __init__(self, applet):
-    self.applet = applet
+  def __init__(self, menu):
     self.public_key = None
 
+    self.pin_label = Gtk.MenuItem()
     self.create_new_pin()
+    self.pin_label.show()
+    self.pin_label.set_sensitive(False)
+    menu.append(self.pin_label)
 
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
                                            '/master',
@@ -152,9 +155,14 @@ class VeyonMaster(PuavoWidget):
                       error_handler=self.handle_get_public_key_error)
 
 
+  def set_pin(self, new_pin):
+    self.pin = new_pin
+    self.pin_label.set_label('PIN: %s' % new_pin)
+
+
   def create_new_pin(self):
-    self.pin = ''.join(random.choices(string.digits, k=4))
-    self.applet.set_pin(self.pin)
+    random_pin = ''.join(random.choices(string.digits, k=4))
+    self.set_pin(random_pin)
 
 
   def handle_get_public_key(self, public_key):
@@ -228,7 +236,7 @@ class VeyonListener():
 
 
 class VeyonSlave(PuavoWidget):
-  def __init__(self, applet):
+  def __init__(self, menu):
     self.zeroconf = zeroconf.Zeroconf()
     self.hostname = read_firstline('/etc/puavo/hostname')
 
@@ -337,34 +345,26 @@ class PuavoVeyonApplet:
             file=sys.stderr)
       sys.exit(1)
 
-    self.veyon_master = None
-    self.veyon_slave  = None
-
-    self.pin_label = Gtk.MenuItem()
-    self.set_pin('?')
-
     if veyon_role == '':
       sys.exit(0)
-    elif veyon_role == 'master':
-      self.veyon_master = VeyonMaster(self)
-    elif veyon_role == 'slave':
-      self.veyon_slave = VeyonSlave(self)
-    else:
+    elif veyon_role != 'master' and veyon_role != 'slave':
       print('unknown veyon role %s' % veyon_role, file=sys.stderr)
       sys.exit(1)
 
-    self.pin_label.show()
-    self.pin_label.set_sensitive(False)
+    menu = Gtk.Menu()
+    role_label = Gtk.MenuItem(label='Veyon role: %s' % veyon_role)
+    role_label.show()
+    role_label.set_sensitive(False)
+    menu.append(role_label)
 
-    self.menu = Gtk.Menu()
-    self.menu.append(self.pin_label)
-    self.menu.show_all()
+    if veyon_role == 'master':
+      VeyonMaster(menu)
+    else:
+      VeyonSlave(menu)
 
-    self.indicator.set_menu(self.menu)
+    menu.show_all()
 
-
-  def set_pin(self, new_pin):
-    self.pin_label.set_label('PIN: %s' % new_pin)
+    self.indicator.set_menu(menu)
 
 
   def main(self):
