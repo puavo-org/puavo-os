@@ -172,8 +172,8 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_get_public_key_error(self, dbusexception):
-    # XXX
-    print("oh no public key dbus error")
+    # XXX response handling?
+    print('oh no public key dbus error: %s' % dbusexception)
 
 
   def setup_master_service(self):
@@ -361,12 +361,13 @@ class VeyonSlave(PuavoWidget):
 
   def handle_add_public_key(self):
     # XXX response handling?
+    # XXX perhaps notification that communication has been established?
     pass
 
 
-  def handle_add_public_key_error(dbusexception):
+  def handle_add_public_key_error(self, dbusexception):
     # XXX response handling?
-    pass
+    print('oh no add public key dbus error: %s' % str(dbusexception))
 
 
 class PuavoVeyonApplet:

@@ -5,14 +5,18 @@ require 'open3'
 require 'puavo/conf'
 
 class VeyonSlave < DBus::Object
-  dbus_interface 'org.puavo.Veyon.client' do
-    # XXX return value or anything?
+  dbus_interface 'org.puavo.Veyon.slave' do
     dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
+      # XXX handle errors?
+      # XXX handle command status?
+      # XXX handle output?
       cmd = [ 'veyon-cli', 'authkeys', 'import', 'puavo_veyon_key/public',
               '/dev/stdin' ]
-      # XXX check out and status
-      output, status = Open3.capture2(cmd, :stdin_data => public_key)
-      return
+      output, status = Open3.capture2(*cmd, :stdin_data => public_key)
+      if status.success? then
+        # XXX handle command status?
+        system('service', 'veyon', 'restart')
+      end
     end
   end
 end
