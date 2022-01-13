@@ -66,7 +66,7 @@ class PuavoWidget:
 class Veyon():
   SERVICE_TYPE = '_http._tcp.local.'
   SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
-  SERVICE_PORT = 2991   # XXX why this one?
+  SERVICE_PORT = 2991   # XXX why this one?  it might be in use!
 
   def receive_msg(socket):
     # XXX what if we do not receive four bytes?
@@ -133,7 +133,7 @@ class VeyonClient(PuavoWidget):
 
 
   def send_public_key(self):
-    msg = { 'type': 'veyon_public_key', 'public_key': self.master.public_key }
+    msg = { 'type': 'public_key', 'public_key': self.master.public_key }
     Veyon.send_msg(self.client_socket, msg)
 
 
