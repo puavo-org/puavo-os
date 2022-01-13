@@ -253,6 +253,12 @@ class VeyonSlave(PuavoWidget):
                                            Veyon.SERVICE_NAME,
                                            VeyonListener(self))
 
+    self.pin_entry_button = Gtk.MenuItem(label='Join a Veyon session')
+    self.pin_entry_button.show()
+    self.pin_entry_button.set_sensitive(True)
+    self.pin_entry_button.connect('activate', self.activate_pin_entry)
+    menu.append(self.pin_entry_button)
+
 
   def set_veyon_master(self, service_info):
     self.veyon_master = service_info
@@ -281,6 +287,42 @@ class VeyonSlave(PuavoWidget):
                         GLib.IOCondition.IN,
                         self.incoming_master_data,
                         self.master_socket)
+
+
+  def activate_pin_entry(self, widget):
+    self.label = Gtk.Label(label='Provide a PIN for Veyon session:')
+
+    self.pin_entry = Gtk.Entry()
+    self.pin_entry.set_input_purpose(Gtk.InputPurpose.DIGITS)
+    self.pin_entry.set_max_length(4)
+    self.pin_entry.set_width_chars(4)
+    self.pin_entry.connect('changed', self.pin_entry_changed)
+
+    self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+    self.box.pack_start(self.label, True, True, 3)
+    self.box.pack_start(self.pin_entry, True, True, 3)
+
+    self.alignment = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
+    self.alignment.add(self.box)
+
+    self.pin_window = Gtk.Window()
+    self.pin_window.set_opacity(0.5)
+    self.pin_window.fullscreen()
+
+    self.pin_window.add(self.alignment)
+    self.pin_window.show_all()
+
+
+  def pin_entry_changed(self, entry):
+    entry.handler_block_by_func(self.pin_entry_changed)
+    new_text = ''.join([c for c in entry.get_text() if c in string.digits])
+    entry.set_text(new_text)
+    entry.handler_unblock_by_func(self.pin_entry_changed)
+    if len(new_text) == 4:
+      # XXX we probably need some connect buttons and exit buttons instead
+      # XXX of this, but this can be used for testing
+      self.send_public_key_request(new_text)
+      self.pin_window.destroy()
 
 
   def send_public_key_request(self, pin):
