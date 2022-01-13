@@ -289,7 +289,7 @@ class VeyonSlave(PuavoWidget):
                         self.master_socket)
 
 
-  def activate_pin_entry(self, widget):
+  def activate_pin_entry(self, widget=None):
     self.label = Gtk.Label(label='Provide a PIN for Veyon session:')
 
     self.pin_entry = Gtk.Entry()
@@ -338,9 +338,9 @@ class VeyonSlave(PuavoWidget):
       return
 
     if message['type'] == 'pin_request':
-      # XXX show pin request instead of sending directly
-      # XXX the pin given by user should be sent instead of 1234
-      self.send_public_key_request('1234')
+      # XXX perhaps we should not active pin entry here, but we could at least
+      # XXX make it possible to do that on some condition?
+      self.activate_pin_entry()
     elif message['type'] == 'public_key':
       if not 'public_key' in message:
         # XXX error handling
