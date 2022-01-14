@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'dbus'
+require 'fileutils'
 require 'open3'
 require 'puavo/conf'
 require 'tempfile'
@@ -42,8 +43,12 @@ class VeyonMaster < DBus::Object
       begin
         return IO.read(public_key_path)
       rescue StandardError => e
-        # XXX stdout/stderr to /dev/null?  or where?
+        # XXX stdout/stderr to /dev/null?  or where?  check status
         system('veyon-cli', 'authkeys', 'create', 'puavo_veyon_key')
+        # XXX error handling?
+        private_key_path = '/etc/veyon/keys/private/puavo_veyon_key/key'
+        FileUtils.chown('root', 'puavodesktop', private_key_path)
+        FileUtils.chmod(0640, private_key_path)
         # XXX should the veyon-service be restarted?
       end
 
