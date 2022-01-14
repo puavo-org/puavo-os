@@ -112,6 +112,9 @@ class VeyonClient(PuavoWidget):
       if not 'hostname' in message:
         # XXX error handling?
         return
+      # XXX we would also like 'location' and 'address' ...
+      # XXX we probably already have the address through socket but not
+      # XXX location
       self.hostname = message['hostname']
       self.send_pin_request()
     elif message['type'] == 'public_key_request':
@@ -120,6 +123,7 @@ class VeyonClient(PuavoWidget):
         return
       if message['pin'] == self.master.pin:
         self.send_public_key()
+        self.master.update_config()
       else:
         Veyon.send_msg(self.client_socket, { 'type': 'wrong_pin' })
 
@@ -217,6 +221,32 @@ class VeyonMaster(PuavoWidget):
     self.veyon_client = VeyonClient(self, conn)
 
     return True
+
+
+  def update_config(self):
+    # XXX self.veyon_clinet
+    hosts = [
+      {
+        'address':  self.veyon_client.hostname, # XXX use ip address
+        'hostname': self.veyon_client.hostname,
+        'location': 'Classroom',
+      }
+    ]
+    hosts_json = json.dumps(hosts)
+    self.dbus_iface \
+        .UpdateConfig(hosts_json,
+                      reply_handler=self.handle_update_config,
+                      error_handler=self.handle_update_config_error)
+
+
+  def handle_update_config(self):
+    # XXX ?
+    pass
+
+
+  def handle_update_config_error(self):
+    # XXX ?
+    pass
 
 
 class VeyonListener():
