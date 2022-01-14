@@ -39,6 +39,7 @@ class packages {
     , 'puavo-sharedir-client'
     , 'puavo-usb-factory'
     , 'puavo-user-registration'
+    , 'puavo-veyon-applet'
     , 'puavo-vpn-client'
     , 'puavo-webwindow'
     # , 'puavo-wlanap'          # XXX missing from Bullseye
