@@ -3,6 +3,7 @@
 require 'dbus'
 require 'open3'
 require 'puavo/conf'
+require 'tempfile'
 
 class VeyonSlave < DBus::Object
   dbus_interface 'org.puavo.Veyon.slave' do
@@ -10,12 +11,23 @@ class VeyonSlave < DBus::Object
       # XXX handle errors?
       # XXX handle command status?
       # XXX handle output?
-      cmd = [ 'veyon-cli', 'authkeys', 'import', 'puavo_veyon_key/public',
-              '/dev/stdin' ]
-      output, status = Open3.capture2(*cmd, :stdin_data => public_key)
-      if status.success? then
-        # XXX handle command status?
-        system('service', 'veyon', 'restart')
+
+      # delete old key first
+      # XXX handle command status or not?
+      cmd = [ 'veyon-cli', 'authkeys', 'delete', 'puavo_veyon_key/public' ]
+      output, status = Open3.capture2e(*cmd)
+
+      Tempfile.create('puavo_veyon_key') do |tmpfile|
+        tmpfile.write(public_key)
+        tmpfile.close
+        cmd = [ 'veyon-cli', 'authkeys', 'import', 'puavo_veyon_key/public',
+                tmpfile.path ]
+        output, status = Open3.capture2e(*cmd)
+        puts "status is #{ status } output is #{ output }"
+        if status.success? then
+          # XXX handle command status?
+          system('service', 'veyon', 'restart')
+        end
       end
     end
   end
