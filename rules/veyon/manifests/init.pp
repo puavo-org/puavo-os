@@ -47,11 +47,6 @@ class veyon {
       source => 'puppet:///modules/veyon/puavo-veyon.json';
   }
 
-  ::puavo_conf::script {
-    'setup_veyon':
-      source => 'puppet:///modules/veyon/setup_veyon';
-  }
-
   Package <|
        title == "dbus"
     or title == "veyon-service"
