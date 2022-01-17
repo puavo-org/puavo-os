@@ -67,6 +67,8 @@ class Veyon():
   SERVICE_TYPE = '_http._tcp.local.'
   SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
   SERVICE_PORT = 2991   # XXX why this one?  it might be in use!
+                        # XXX this can actually be dynamically chosen
+                        # XXX as client uses the port obtained with zeroconf
 
   def receive_msg(socket):
     # XXX what if we do not receive four bytes?
