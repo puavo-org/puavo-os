@@ -88,8 +88,9 @@ class Veyon():
 
 
 class VeyonClient(PuavoWidget):
-  def __init__(self, master, client_socket):
+  def __init__(self, master, client_socket, client_address):
     self.client_socket = client_socket
+    self.address = client_address[0]    # take only the IP address
     self.master = master
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.client_socket.fileno()),
@@ -216,18 +217,18 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_incoming(self, io, cond, sock):
-    conn = sock.accept()[0]
+    (conn, client_address) = sock.accept()
     # XXX there could be many clients, this supports only one
-    self.veyon_client = VeyonClient(self, conn)
+    self.veyon_client = VeyonClient(self, conn, client_address)
 
     return True
 
 
   def update_config(self):
-    # XXX self.veyon_clinet
+    # XXX self.veyon_client
     hosts = [
       {
-        'address':  self.veyon_client.hostname, # XXX use ip address
+        'address':  self.veyon_client.address,
         'hostname': self.veyon_client.hostname,
         'location': 'Classroom',
       }
@@ -244,8 +245,9 @@ class VeyonMaster(PuavoWidget):
     pass
 
 
-  def handle_update_config_error(self):
+  def handle_update_config_error(self, dbusexception):
     # XXX ?
+    print('oh no update config dbus error: %s' % str(dbusexception))
     pass
 
 

@@ -8,6 +8,8 @@ require 'puavo/conf'
 require 'tempfile'
 require 'uuidtools'
 
+# XXX we could use some begin/rescue/end here with logging
+
 class VeyonSlave < DBus::Object
   dbus_interface 'org.puavo.Veyon.slave' do
     dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
@@ -130,8 +132,8 @@ class VeyonMaster < DBus::Object
     dbus_method :UpdateConfig, 'in hosts_json:s' do |hosts_json|
       # XXX should check that hosts in in proper format
       hostlist = JSON.parse(hosts_json)
-      veyon_hosts = []
-      veyon_host_locations = []
+      veyon_hosts = {}
+      veyon_host_locations = {}
       hostlist.each do |host|
         address  = host['address']
         hostname = host['hostname']
@@ -157,7 +159,7 @@ class VeyonMaster < DBus::Object
 
 
       config = VEYON_MASTER_CONFIG.clone
-      config['BuiltinDirectory']['NetworkObjects']['JsonStoreArray'] \
+      config[:BuiltinDirectory][:NetworkObjects][:JsonStoreArray] \
         = veyon_host_locations.values + veyon_hosts.values
 
       # XXX we could also put these config changes to some queue
