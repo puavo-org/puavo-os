@@ -10,6 +10,88 @@ require 'uuidtools'
 
 # XXX we could use some begin/rescue/end here with logging
 
+def update_veyon_config(config)
+  Tempfile.create('veyon_config') do |tmpfile|
+    tmpfile.write(config.to_json)
+    tmpfile.close
+    cmd = [ 'veyon-cli', 'config', 'import', tmpfile.path ]
+    output, status = Open3.capture2e(*cmd)
+    if status.success? then
+      # XXX handle command status?
+      system('service', 'veyon', 'restart')
+    end
+  end
+end
+
+VEYON_BASE_CONFIG = {
+  'AccessControl': {
+      'UserGroupsBackend': '2917cdeb-ac13-4099-8715-20368254a367'
+  },
+  'Authentication': {
+      'Method': 1
+  },
+  'BuiltinDirectory': {
+      'NetworkObjects': {
+          'JsonStoreArray': []
+      }
+  },
+  'Core': {
+      'ApplicationVersion': 2,
+      'InstallationID': 'a5cfd50c-eeca-4b39-bfb8-823f42ee2f2f',
+      'PluginVersions': {
+          'JsonStoreObject': {
+              '{14bacaaa-ebe5-449c-b881-5b382f952571}': '1.1',
+              '{1b08265b-348f-4978-acaa-45d4f6b90bd9}': '1.1',
+              '{1bdb0d1c-f8eb-4d21-a093-d555a10f3975}': '1.1',
+              '{2917cdeb-ac13-4099-8715-20368254a367}': '1.1',
+              '{2ad98ccb-e9a5-43ef-8c4c-876ac5efbcb1}': '1.1',
+              '{387a0c43-1355-4ff6-9e1f-d098e9ce5127}': '1.1',
+              '{39d7a07f-94db-4912-aa1a-c4df8aee3879}': '1.1',
+              '{4122e8ca-b617-4e36-b851-8e050ed2d82e}': '1.2',
+              '{4790bad8-4c56-40d5-8361-099a68f0c24b}': '1.1',
+              '{63928a8a-4c51-4bfd-888e-9e13c6f3907a}': '1.1',
+              '{67dfc1c1-8f37-4539-a298-16e74e34fd8b}': '1.1',
+              '{6f0a491e-c1c6-4338-8244-f823b0bf8670}': '1.2',
+              '{85f6c631-e75a-4c78-8cb2-a7f3f502015a}': '1.1',
+              '{8ae6668b-9c12-4b29-9bfc-ff89f6604164}': '1.1',
+              '{a54ee018-42bf-4569-90c7-0d8470125ccf}': '1.1',
+              '{b47bcae0-24ff-4bf5-869c-484d64af5c4c}': '1.1',
+              '{d4bb9c42-9eef-4ecb-8dd5-dfd84b355481}': '1.0',
+              '{ee322521-f4fb-482d-b082-82a79003afa7}': '1.1'
+          }
+      }
+  },
+  'Features': {
+      'DisabledFeatures': [
+          '{f483c659-b5e7-4dbc-bd91-2c9403e70ebd}'
+      ]
+  },
+  'LDAP': {
+      'ComputerLocationAttribute': '',
+      'ComputerLocationsByAttribute': false,
+      'ComputerLocationsByContainer': false,
+      'LocationNameAttribute': '',
+      'UserLoginNameAttribute': ''
+  },
+  'Master': {
+      'AllowAddingHiddenLocations': false,
+      'AutoOpenComputerSelectPanel': false,
+      'AutoSelectCurrentLocation': false,
+      'ConfirmUnsafeActions': false,
+      'HideEmptyLocations': false,
+      'ShowCurrentLocationOnly': false
+  },
+  'NetworkObjectDirectory': {
+      'Plugin': '14bacaaa-ebe5-449c-b881-5b382f952571'
+  },
+  'Service': {
+      'RemoteConnectionNotifications': true
+  },
+  'VncServer': {
+      'Plugin': '39d7a07f-94db-4912-aa1a-c4df8aee3879'
+  }
+}
+
 class VeyonSlave < DBus::Object
   dbus_interface 'org.puavo.Veyon.slave' do
     dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
@@ -28,86 +110,18 @@ class VeyonSlave < DBus::Object
         cmd = [ 'veyon-cli', 'authkeys', 'import', 'puavo_veyon_key/public',
                 tmpfile.path ]
         output, status = Open3.capture2e(*cmd)
-        puts "status is #{ status } output is #{ output }"
-        if status.success? then
-          # XXX handle command status?
-          system('service', 'veyon', 'restart')
+
+        unless status.success? then
+          raise 'error' # XXX what to do if not success?
         end
       end
+
+      update_veyon_config(VEYON_BASE_CONFIG)
     end
   end
 end
 
 class VeyonMaster < DBus::Object
-  VEYON_MASTER_CONFIG = {
-    'AccessControl': {
-        'UserGroupsBackend': '2917cdeb-ac13-4099-8715-20368254a367'
-    },
-    'Authentication': {
-        'Method': 1
-    },
-    'BuiltinDirectory': {
-        'NetworkObjects': {
-            'JsonStoreArray': []
-        }
-    },
-    'Core': {
-        'ApplicationVersion': 2,
-        'InstallationID': 'a5cfd50c-eeca-4b39-bfb8-823f42ee2f2f',
-        'PluginVersions': {
-            'JsonStoreObject': {
-                '{14bacaaa-ebe5-449c-b881-5b382f952571}': '1.1',
-                '{1b08265b-348f-4978-acaa-45d4f6b90bd9}': '1.1',
-                '{1bdb0d1c-f8eb-4d21-a093-d555a10f3975}': '1.1',
-                '{2917cdeb-ac13-4099-8715-20368254a367}': '1.1',
-                '{2ad98ccb-e9a5-43ef-8c4c-876ac5efbcb1}': '1.1',
-                '{387a0c43-1355-4ff6-9e1f-d098e9ce5127}': '1.1',
-                '{39d7a07f-94db-4912-aa1a-c4df8aee3879}': '1.1',
-                '{4122e8ca-b617-4e36-b851-8e050ed2d82e}': '1.2',
-                '{4790bad8-4c56-40d5-8361-099a68f0c24b}': '1.1',
-                '{63928a8a-4c51-4bfd-888e-9e13c6f3907a}': '1.1',
-                '{67dfc1c1-8f37-4539-a298-16e74e34fd8b}': '1.1',
-                '{6f0a491e-c1c6-4338-8244-f823b0bf8670}': '1.2',
-                '{85f6c631-e75a-4c78-8cb2-a7f3f502015a}': '1.1',
-                '{8ae6668b-9c12-4b29-9bfc-ff89f6604164}': '1.1',
-                '{a54ee018-42bf-4569-90c7-0d8470125ccf}': '1.1',
-                '{b47bcae0-24ff-4bf5-869c-484d64af5c4c}': '1.1',
-                '{d4bb9c42-9eef-4ecb-8dd5-dfd84b355481}': '1.0',
-                '{ee322521-f4fb-482d-b082-82a79003afa7}': '1.1'
-            }
-        }
-    },
-    'Features': {
-        'DisabledFeatures': [
-            '{f483c659-b5e7-4dbc-bd91-2c9403e70ebd}'
-        ]
-    },
-    'LDAP': {
-        'ComputerLocationAttribute': '',
-        'ComputerLocationsByAttribute': false,
-        'ComputerLocationsByContainer': false,
-        'LocationNameAttribute': '',
-        'UserLoginNameAttribute': ''
-    },
-    'Master': {
-        'AllowAddingHiddenLocations': false,
-        'AutoOpenComputerSelectPanel': false,
-        'AutoSelectCurrentLocation': false,
-        'ConfirmUnsafeActions': false,
-        'HideEmptyLocations': false,
-        'ShowCurrentLocationOnly': false
-    },
-    'NetworkObjectDirectory': {
-        'Plugin': '14bacaaa-ebe5-449c-b881-5b382f952571'
-    },
-    'Service': {
-        'RemoteConnectionNotifications': true
-    },
-    'VncServer': {
-        'Plugin': '39d7a07f-94db-4912-aa1a-c4df8aee3879'
-    }
-  }
-
   dbus_interface 'org.puavo.Veyon.master' do
     dbus_method :GetPublicKey, 'out public_key:s' do
       public_key_path = '/etc/veyon/keys/public/puavo_veyon_key/key'
@@ -158,7 +172,7 @@ class VeyonMaster < DBus::Object
       end
 
 
-      config = VEYON_MASTER_CONFIG.clone
+      config = VEYON_BASE_CONFIG.clone
       config[:BuiltinDirectory][:NetworkObjects][:JsonStoreArray] \
         = veyon_host_locations.values + veyon_hosts.values
 
@@ -166,17 +180,7 @@ class VeyonMaster < DBus::Object
       # XXX and update them only on two second intervals or such... ?
       # XXX (in case there are many coming in at once)
 
-      Tempfile.create('veyon_master_config') do |tmpfile|
-        tmpfile.write(config.to_json)
-        tmpfile.close
-        cmd = [ 'veyon-cli', 'config', 'import', tmpfile.path ]
-        output, status = Open3.capture2e(*cmd)
-        puts "config import status is #{ status } output is #{ output }"
-        if status.success? then
-          # XXX handle command status?
-          system('service', 'veyon', 'restart')
-        end
-      end
+      update_veyon_config(config)
     end
   end
 end
