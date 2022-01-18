@@ -287,6 +287,12 @@ class VeyonSlave(PuavoWidget):
                                            '/slave',
                                            'org.puavo.Veyon.slave')
 
+    self.pin_entry_button = Gtk.MenuItem(label='Join a Veyon session')
+    self.pin_entry_button.show()
+    self.pin_entry_button.set_sensitive(False)
+    self.pin_entry_button.connect('activate', self.activate_pin_entry)
+    menu.append(self.pin_entry_button)
+
     service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
                                              Veyon.SERVICE_NAME)
     self.set_veyon_master(service)
@@ -294,12 +300,6 @@ class VeyonSlave(PuavoWidget):
     self.browser = zeroconf.ServiceBrowser(self.zeroconf,
                                            Veyon.SERVICE_NAME,
                                            VeyonListener(self))
-
-    self.pin_entry_button = Gtk.MenuItem(label='Join a Veyon session')
-    self.pin_entry_button.show()
-    self.pin_entry_button.set_sensitive(False)
-    self.pin_entry_button.connect('activate', self.activate_pin_entry)
-    menu.append(self.pin_entry_button)
 
 
   def set_veyon_master(self, service_info):
