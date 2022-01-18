@@ -297,7 +297,7 @@ class VeyonSlave(PuavoWidget):
 
     self.pin_entry_button = Gtk.MenuItem(label='Join a Veyon session')
     self.pin_entry_button.show()
-    self.pin_entry_button.set_sensitive(True)
+    self.pin_entry_button.set_sensitive(False)
     self.pin_entry_button.connect('activate', self.activate_pin_entry)
     menu.append(self.pin_entry_button)
 
@@ -322,6 +322,8 @@ class VeyonSlave(PuavoWidget):
       self.master_socket.connect((host_ip, host_port))
       message = { 'type': 'new_client', 'hostname' : self.hostname }
       Veyon.send_msg(self.master_socket, message)
+
+      self.pin_entry_button.set_sensitive(True)
 
       # XXX should this be asynchronous?
       GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
