@@ -607,6 +607,7 @@ class packages {
     , 'libreoffice-math'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
+    , 'libttspico-utils' #German and English TTS
     , 'libxcb-xtest0' #dependency for Zoom
     , 'make'
     , 'memtest86+'
