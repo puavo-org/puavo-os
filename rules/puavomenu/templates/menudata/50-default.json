@@ -477,24 +477,6 @@
                 "id": "av4kav"
             }
         },
-        "kino": {
-            "type": "custom",
-            "command": "kino",
-            "name": {
-                "fi": "Kino-videoeditori",
-                "en": "Kino-non-linear DV editor",
-                "sv": "Kino-videoredigerare",
-                "de": "Kino Filme bearbeiten"
-            },
-            "description": {
-                "fi": "Muokkaa videoita",
-                "en": "Edit videos",
-                "sv": "Redigera videon",
-                "de": "Video bearbeiten"
-            },
-            "icon": "kino",
-            "tags": "default, audiovideo"
-        },
         "kojo": {
             "name": "Kojo",
             "tags": "default",
@@ -1602,7 +1584,6 @@
                 "com.obsproject.Studio",
                 "org.openshot.OpenShot",
                 "org.kde.kdenlive",
-                "kino",
                 "org.pitivi.Pitivi",
                 "shotcut",
                 "solfege",
