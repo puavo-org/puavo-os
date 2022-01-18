@@ -66,9 +66,6 @@ class PuavoWidget:
 class Veyon():
   SERVICE_TYPE = '_http._tcp.local.'
   SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
-  SERVICE_PORT = 2991   # XXX why this one?  it might be in use!
-                        # XXX this can actually be dynamically chosen
-                        # XXX as client uses the port obtained with zeroconf
 
   def receive_msg(socket):
     # XXX what if we do not receive four bytes?
@@ -199,17 +196,17 @@ class VeyonMaster(PuavoWidget):
       self.zeroconf = None
       return
 
+    self.socket = socket.socket()
+    self.socket.bind(('0.0.0.0', 0))
+    self.socket.listen()
+
     self.zeroconf = zeroconf.Zeroconf()
 
     serviceinfo = zeroconf.ServiceInfo(Veyon.SERVICE_TYPE,
                                        Veyon.SERVICE_NAME,
                                        addresses=host_ip_addresses,
-                                       port=Veyon.SERVICE_PORT)
+                                       port=self.socket.getsockname()[1])
     self.zeroconf.register_service(serviceinfo)
-
-    self.socket = socket.socket()
-    self.socket.bind(('0.0.0.0', Veyon.SERVICE_PORT))
-    self.socket.listen()
 
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.socket.fileno()),
