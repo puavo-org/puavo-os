@@ -9,6 +9,8 @@ require 'syslog'
 require 'tempfile'
 require 'uuidtools'
 
+KEY_CREATED_PATH = '/etc/veyon/.puavo_key_created'
+
 VEYON_BASE_CONFIG = {
   'AccessControl': {
       'UserGroupsBackend': '2917cdeb-ac13-4099-8715-20368254a367'
@@ -78,6 +80,17 @@ VEYON_BASE_CONFIG = {
   }
 }
 
+def delete_puavo_veyon_key()
+  begin
+    File.unlink(KEY_CREATED_PATH)
+  rescue Errno::ENOENT
+  end
+  system('veyon-cli', 'authkeys', 'delete', 'puavo_veyon_key/private',
+         :out => File::NULL, :err => File::NULL)
+  system('veyon-cli', 'authkeys', 'delete', 'puavo_veyon_key/public',
+         :out => File::NULL, :err => File::NULL)
+end
+
 def update_veyon_config(config)
   Tempfile.create('veyon_config') do |tmpfile|
     tmpfile.write(config.to_json)
@@ -99,7 +112,7 @@ class VeyonSlave < DBus::Object
       begin
         # here we do not case about errors,
         # on the first time a missing key is normal
-        system('veyon-cli', 'authkeys', 'delete', 'puavo_veyon_key/public')
+        delete_puavo_veyon_key()
 
         Tempfile.create('puavo_veyon_key') do |tmpfile|
           tmpfile.write(public_key)
@@ -128,11 +141,18 @@ class VeyonMaster < DBus::Object
   dbus_interface 'org.puavo.Veyon.master' do
     dbus_method :GetPublicKey, 'out public_key:s' do
       begin
-        public_key_path = '/etc/veyon/keys/public/puavo_veyon_key/key'
+        private_key_path = '/etc/veyon/keys/private/puavo_veyon_key/key'
+        public_key_path  = '/etc/veyon/keys/public/puavo_veyon_key/key'
+
         begin
-          return IO.read(public_key_path)
-        rescue StandardError => e
+          if File.exists?(KEY_CREATED_PATH) then
+            return IO.read(public_key_path)
+          end
+        rescue Errno::ENOENT => e
         end
+
+        # just to make sure (in case only either of these exist)
+        delete_puavo_veyon_key()
 
         cmd = [ 'veyon-cli', 'authkeys', 'create', 'puavo_veyon_key' ]
         output, status = Open3.capture2e(*cmd)
@@ -140,9 +160,9 @@ class VeyonMaster < DBus::Object
           raise 'error in creating a new auth key: %s' % output
         end
 
-        private_key_path = '/etc/veyon/keys/private/puavo_veyon_key/key'
         FileUtils.chown('root', 'puavodesktop', private_key_path)
         FileUtils.chmod(0640, private_key_path)
+        FileUtils.touch(KEY_CREATED_PATH)
 
         return IO.read(public_key_path)
       rescue StandardError => e
