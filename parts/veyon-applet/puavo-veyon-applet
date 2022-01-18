@@ -148,6 +148,7 @@ class VeyonClient(PuavoWidget):
 class VeyonMaster(PuavoWidget):
   def __init__(self, menu):
     self.public_key = None
+    self.update_config_call_pending = False
 
     self.pin_label = Gtk.MenuItem()
     self.create_new_pin()
@@ -227,17 +228,27 @@ class VeyonMaster(PuavoWidget):
 
 
   def update_config(self):
-    # XXX self.veyon_client
-    hosts = [
+    # XXX there can be many clients
+    self.update_config_hosts = [
       {
         'address':  self.veyon_client.address,
         'hostname': self.veyon_client.hostname,
         'location': 'Classroom',
       }
     ]
-    hosts_json = json.dumps(hosts)
+
+    if self.update_config_call_pending:
+      return
+
+    # UpdateConfig must not be called more than 10 times in a minute
+    GLib.timeout_add_seconds(6, self.dbus_update_config)
+    self.update_config_call_pending = True
+
+
+  def dbus_update_config(self):
+    self.update_config_call_pending = False
     self.dbus_iface \
-        .UpdateConfig(hosts_json,
+        .UpdateConfig(json.dumps(self.update_config_hosts),
                       reply_handler=self.handle_update_config,
                       error_handler=self.handle_update_config_error)
 

@@ -5,23 +5,9 @@ require 'fileutils'
 require 'json'
 require 'open3'
 require 'puavo/conf'
+require 'syslog'
 require 'tempfile'
 require 'uuidtools'
-
-# XXX we could use some begin/rescue/end here with logging
-
-def update_veyon_config(config)
-  Tempfile.create('veyon_config') do |tmpfile|
-    tmpfile.write(config.to_json)
-    tmpfile.close
-    cmd = [ 'veyon-cli', 'config', 'import', tmpfile.path ]
-    output, status = Open3.capture2e(*cmd)
-    if status.success? then
-      # XXX handle command status?
-      system('service', 'veyon', 'restart')
-    end
-  end
-end
 
 VEYON_BASE_CONFIG = {
   'AccessControl': {
@@ -92,31 +78,48 @@ VEYON_BASE_CONFIG = {
   }
 }
 
+def update_veyon_config(config)
+  Tempfile.create('veyon_config') do |tmpfile|
+    tmpfile.write(config.to_json)
+    tmpfile.close
+    cmd = [ 'veyon-cli', 'config', 'import', tmpfile.path ]
+    output, status = Open3.capture2e(*cmd)
+    unless status.success? then
+      raise 'error when importing new veyon configuration'
+    end
+
+    system('service', 'veyon', 'restart') \
+      or raise 'error in restarting veyon after configuration import'
+  end
+end
+
 class VeyonSlave < DBus::Object
   dbus_interface 'org.puavo.Veyon.slave' do
     dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
-      # XXX handle errors?
-      # XXX handle command status?
-      # XXX handle output?
+      begin
+        # here we do not case about errors,
+        # on the first time a missing key is normal
+        system('veyon-cli', 'authkeys', 'delete', 'puavo_veyon_key/public')
 
-      # delete old key first
-      # XXX handle command status or not?
-      cmd = [ 'veyon-cli', 'authkeys', 'delete', 'puavo_veyon_key/public' ]
-      output, status = Open3.capture2e(*cmd)
+        Tempfile.create('puavo_veyon_key') do |tmpfile|
+          tmpfile.write(public_key)
+          tmpfile.close
+          cmd = [ 'veyon-cli', 'authkeys', 'import', 'puavo_veyon_key/public',
+                  tmpfile.path ]
+          output, status = Open3.capture2e(*cmd)
 
-      Tempfile.create('puavo_veyon_key') do |tmpfile|
-        tmpfile.write(public_key)
-        tmpfile.close
-        cmd = [ 'veyon-cli', 'authkeys', 'import', 'puavo_veyon_key/public',
-                tmpfile.path ]
-        output, status = Open3.capture2e(*cmd)
-
-        unless status.success? then
-          raise 'error' # XXX what to do if not success?
+          unless status.success? then
+            raise 'error in importing a new auth key: %s' % output
+          end
         end
-      end
 
-      update_veyon_config(VEYON_BASE_CONFIG)
+        update_veyon_config(VEYON_BASE_CONFIG)
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR,
+                   'Error in org.puavo.Veyon.slave AddPublicKey method: %s',
+                   e.message)
+        raise e
+      end
     end
   end
 end
@@ -124,84 +127,115 @@ end
 class VeyonMaster < DBus::Object
   dbus_interface 'org.puavo.Veyon.master' do
     dbus_method :GetPublicKey, 'out public_key:s' do
-      public_key_path = '/etc/veyon/keys/public/puavo_veyon_key/key'
-      # XXX providing some decent error message in case of errors or at least
-      # XXX logging it would be very nice
       begin
-        return IO.read(public_key_path)
-      rescue StandardError => e
-        # XXX stdout/stderr to /dev/null?  or where?  check status
-        system('veyon-cli', 'authkeys', 'create', 'puavo_veyon_key')
-        # XXX error handling?
+        public_key_path = '/etc/veyon/keys/public/puavo_veyon_key/key'
+        begin
+          return IO.read(public_key_path)
+        rescue StandardError => e
+        end
+
+        cmd = [ 'veyon-cli', 'authkeys', 'create', 'puavo_veyon_key' ]
+        output, status = Open3.capture2e(*cmd)
+        unless status.success? then
+          raise 'error in creating a new auth key: %s' % output
+        end
+
         private_key_path = '/etc/veyon/keys/private/puavo_veyon_key/key'
         FileUtils.chown('root', 'puavodesktop', private_key_path)
         FileUtils.chmod(0640, private_key_path)
-        # XXX should the veyon-service be restarted?
-      end
 
-      public_key = IO.read(public_key_path) rescue ''
-      return public_key
+        return IO.read(public_key_path)
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR,
+                   'Error in org.puavo.Veyon.master GetPublicKey method: %s',
+                   e.message)
+        raise e
+      end
     end
 
     dbus_method :UpdateConfig, 'in hosts_json:s' do |hosts_json|
-      # XXX should check that hosts in in proper format
-      hostlist = JSON.parse(hosts_json)
-      veyon_hosts = {}
-      veyon_host_locations = {}
-      hostlist.each do |host|
-        address  = host['address']
-        hostname = host['hostname']
-        location = host['location']
+      # This method must not be called too frequently, because this restarts
+      # veyon service and that can be done only 10 times in a minute
+      # before systemd interferes.  It is caller's responsibility
+      # to know this.
+      begin
+        hostlist = JSON.parse(hosts_json)
 
-        unless veyon_host_locations.has_key?(location) then
-          veyon_host_locations[location] = {
-            'Name' => location,
-            'Type' => 2,
-            'Uid'  => UUIDTools::UUID.random_create.to_s,
+        raise 'hostlist is not an array' unless hostlist.kind_of?(Array)
+
+        veyon_hosts = {}
+        veyon_host_locations = {}
+
+        hostlist.each do |host|
+          raise 'host is not a hash' unless host.kind_of?(Hash)
+
+          address  = host['address']
+          hostname = host['hostname']
+          location = host['location']
+
+          raise 'host is not in an expected format' \
+            unless address.kind_of?(String) \
+                     && hostname.kind_of?(String) \
+                     && location.kind_of?(String)
+
+          unless veyon_host_locations.has_key?(location) then
+            veyon_host_locations[location] = {
+              'Name' => location,
+              'Type' => 2,
+              'Uid'  => UUIDTools::UUID.random_create.to_s,
+            }
+          end
+
+          veyon_hosts[hostname] = {
+            'HostAddress' => address,
+            'Name'        => hostname,
+            'ParentUid'   => veyon_host_locations[location]['Uid'],
+            'Type'        => 3,
+            'Uid'         => UUIDTools::UUID.random_create.to_s,
           }
         end
 
-        veyon_hosts[hostname] = {
-          # XXX 'MacAddress' => nil, # might be nice
-          'HostAddress' => address,
-          'Name'        => hostname,
-          'ParentUid'   => veyon_host_locations[location]['Uid'],
-          'Type'        => 3,
-          'Uid'         => UUIDTools::UUID.random_create.to_s,
-        }
+        config = VEYON_BASE_CONFIG.clone
+        config[:BuiltinDirectory][:NetworkObjects][:JsonStoreArray] \
+          = veyon_host_locations.values + veyon_hosts.values
+        update_veyon_config(config)
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR,
+                   'Error in org.puavo.Veyon.master UpdateConfig method: %s',
+                   e.message)
+        raise e
       end
-
-
-      config = VEYON_BASE_CONFIG.clone
-      config[:BuiltinDirectory][:NetworkObjects][:JsonStoreArray] \
-        = veyon_host_locations.values + veyon_hosts.values
-
-      # XXX we could also put these config changes to some queue
-      # XXX and update them only on two second intervals or such... ?
-      # XXX (in case there are many coming in at once)
-
-      update_veyon_config(config)
     end
   end
 end
 
-puavoconf = Puavo::Conf.new
-veyon_role = puavoconf.get('puavo.veyon.role')
-puavoconf.close
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
-bus = DBus::SystemBus.instance
-service = bus.request_service('org.puavo.Veyon')
+begin
+  puavoconf = Puavo::Conf.new
+  veyon_role = puavoconf.get('puavo.veyon.role')
+  puavoconf.close
 
-case veyon_role
-  when 'master'
-    service.export( VeyonMaster.new('/master') )
-  when 'slave'
-    service.export( VeyonSlave.new('/slave') )
-  else
-    exit(0)
+  bus = DBus::SystemBus.instance
+  service = bus.request_service('org.puavo.Veyon')
+
+  case veyon_role
+    when 'master'
+      service.export( VeyonMaster.new('/master') )
+    when 'slave'
+      service.export( VeyonSlave.new('/slave') )
+    else
+      exit(0)
+  end
+
+  # ...and start it
+  mainloop = DBus::Main.new
+  mainloop << bus
+  mainloop.run
+rescue StandardError => e
+  Syslog.log(Syslog::LOG_ERR,
+             'Error when running puavo-veyon dbus service: %s',
+             e.message)
 end
 
-# ...and start it
-mainloop = DBus::Main.new
-mainloop << bus
-mainloop.run
+Syslog.close()
