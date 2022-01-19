@@ -68,13 +68,17 @@ class Veyon():
   SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
 
   def receive_msg(socket):
-    # XXX what if we do not receive four bytes?
-    # XXX how do we know that connection is closed?
     size = socket.recv(4)
-    # XXX what if all of the message can not be read at once?
+    if len(size) != 4:
+      raise Exception('no message size, connection closed')
+
     msgsize = struct.unpack('!i', size)[0]
-    message = json.loads( socket.recv(msgsize) )
-    print('received message %s' % message)
+    message_json = socket.recv(msgsize)
+    if len(message_json) != msgsize:
+      raise Exception('no message, connection closed')
+
+    message = json.loads(message_json)
+    print('received message %s' % message)      # XXX
     return message
 
 
@@ -83,24 +87,28 @@ class Veyon():
     msgsize = len(message)
     socket.send(struct.pack('!i', msgsize))
     socket.send(message)
-    print('sent message %s' % message)
+    print('sent message %s' % message)          # XXX
 
 
-class VeyonClient(PuavoWidget):
-  def __init__(self, master, client_socket, client_address):
-    self.client_socket = client_socket
-    self.address = client_address[0]    # take only the IP address
+class VeyonSlaveConnection(PuavoWidget):
+  def __init__(self, master, slave_socket, slave_address):
+    self.slave_socket = slave_socket
+    self.address = slave_address[0]    # take only the IP address
     self.master = master
     # XXX should this be asynchronous?
-    GLib.io_add_watch(GLib.IOChannel(self.client_socket.fileno()),
+    GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
                       0,
                       GLib.IOCondition.IN,
-                      self.incoming_client_data,
-                      self.client_socket)
+                      self.incoming_slave_data,
+                      self.slave_socket)
 
 
-  def incoming_client_data(self, io, cond, client_socket):
-    message = Veyon.receive_msg(client_socket)
+  def incoming_slave_data(self, io, cond, slave_socket):
+    try:
+      message = Veyon.receive_msg(slave_socket)
+    except Exception as e:
+      self.master.remove_slave(self.address)
+      return
 
     if not 'type' in message:
       # XXX error handling?
@@ -125,7 +133,7 @@ class VeyonClient(PuavoWidget):
         self.send_public_key()
         self.master.update_config()
       else:
-        Veyon.send_msg(self.client_socket, { 'type': 'wrong_pin' })
+        Veyon.send_msg(self.slave_socket, { 'type': 'wrong_pin' })
 
     return True
 
@@ -133,13 +141,17 @@ class VeyonClient(PuavoWidget):
 
 
   def send_pin_request(self):
-    Veyon.send_msg(self.client_socket, { 'type': 'pin_request' })
+    Veyon.send_msg(self.slave_socket, { 'type': 'pin_request' })
 
 
   def send_public_key(self):
     msg = { 'type': 'public_key', 'public_key': self.master.public_key }
-    Veyon.send_msg(self.client_socket, msg)
+    Veyon.send_msg(self.slave_socket, msg)
 
+
+  def disconnect_slave(self):
+    self.slave_socket.shutdown(socket.SHUT_RDWR)
+    self.slave_socket.close()
 
 
 class VeyonMaster(PuavoWidget):
@@ -212,27 +224,29 @@ class VeyonMaster(PuavoWidget):
     GLib.io_add_watch(GLib.IOChannel(self.socket.fileno()),
                       0,
                       GLib.IOCondition.IN,
-                      self.handle_incoming,
+                      self.handle_new_slave,
                       self.socket)
 
 
-  def handle_incoming(self, io, cond, sock):
-    (conn, client_address) = sock.accept()
-    # XXX there could be many clients, this supports only one
-    self.veyon_client = VeyonClient(self, conn, client_address)
+  def handle_new_slave(self, io, cond, sock):
+    (conn, slave_address) = sock.accept()
+    if slave_address in self.veyon_slaves:
+      self.remove_slave(slave_address)
+    slave = VeyonSlaveConnection(self, conn, slave_address)
+    self.veyon_slaves[slave.address] = slave
 
     return True
 
 
   def update_config(self):
-    # XXX there can be many clients
-    self.update_config_hosts = [
-      {
-        'address':  self.veyon_client.address,
-        'hostname': self.veyon_client.hostname,
+    self.update_config_hosts = []
+    for slave in self.veyon_slaves.items():
+      host = {
+        'address':  slave.address,
+        'hostname': slave.hostname,
         'location': 'Classroom',
       }
-    ]
+      self.update_config_hosts.append(host)
 
     if self.update_config_call_pending:
       return
@@ -261,27 +275,82 @@ class VeyonMaster(PuavoWidget):
     pass
 
 
-class VeyonListener():
-  def __init__(self, veyon_slave):
-    self.veyon_slave = veyon_slave
+  def remove_slave(self, address):
+    self.veyon_slaves[address].disconnect_slave()
+    del(self.veyon_slaves[address])
 
 
-  def add_service(self, zeroconf, type, name):
-    if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
-      service = zeroconf.get_service_info(type, name)
-      self.veyon_slave.set_veyon_master(service)
-      self.veyon_slave.open_connection()
+
+class VeyonMasterConnection():
+  def __init__(self, service_info, slave):
+    self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.slave = slave
+
+    # XXX this picks the first one, but what if we do not have any?
+    self.address = service_info.addresses[0]
+
+    master_ip = socket.inet_ntop(socket.AF_INET, self.address)
+    master_port = service_info.port
+
+    if not master_ip:
+      raise Exception('no master IP address')
+
+    if not master_port:
+      raise Exception('no master port')
+
+    self.master_socket.connect((master_ip, master_port))
+
+    message = { 'type': 'new_client', 'hostname' : self.hostname }
+    Veyon.send_msg(self.master_socket, message)
+
+    self.pin_entry_button.set_sensitive(True)
+
+    # XXX should this be asynchronous?
+    GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
+                      0,
+                      GLib.IOCondition.IN,
+                      self.incoming_master_data,
+                      self.master_socket)
 
 
-  def remove_service(self, zeroconf, type, name):
-    if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
-      self.veyon_slave.set_veyon_master(None)
+  def incoming_master_data(self, io, cond, master_socket):
+    try:
+      message = Veyon.receive_msg(master_socket)
+    except Exception as e:
+      self.slave.remove_master(self.address)
+      return
+
+    if not 'type' in message:
+      # XXX error handling
+      return
+
+    if message['type'] == 'pin_request':
+      # XXX perhaps we should not active pin entry here, but we could at least
+      # XXX make it possible to do that on some condition?
+      self.slave.activate_pin_entry()
+    elif message['type'] == 'public_key':
+      if not 'public_key' in message:
+        # XXX error handling
+        return
+      self.slave.set_veyon_public_key(message['public_key'])
+    elif message['type'] == 'wrong_pin':
+      # XXX error handling
+      return
+
+    return True
+
+
+  def disconnect_master(self):
+    self.master_socket.shutdown(socket.SHUT_RDWR)
+    self.master_socket.close()
 
 
 class VeyonSlave(PuavoWidget):
   def __init__(self, menu):
     self.zeroconf = zeroconf.Zeroconf()
     self.hostname = read_firstline('/etc/puavo/hostname')
+
+    self.veyon_masters = {}
 
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
                                            '/slave',
@@ -295,42 +364,26 @@ class VeyonSlave(PuavoWidget):
 
     service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
                                              Veyon.SERVICE_NAME)
-    self.set_veyon_master(service)
-    self.open_connection()
+    self.add_master(service)
     self.browser = zeroconf.ServiceBrowser(self.zeroconf,
                                            Veyon.SERVICE_NAME,
-                                           VeyonListener(self))
+                                           VeyonSlaveListener(self))
 
 
-  def set_veyon_master(self, service_info):
-    self.veyon_master = service_info
+  def add_master(self, service_info):
+    # XXX what if this raises an expection?
+    # XXX should we only use the first one?  what if there are no addresses?
+    # XXX could there be several immediately?
+    # XXX we should add all addresses!
+    address = service_info.addresses[0]
+    self.veyon_masters[address] = VeyonMasterConnection(service_info, self)
 
 
-  def open_connection(self):
-    if not self.veyon_master:
-      return
-
-    # XXX if there is a new master, we should close the old socket connection
-
-    self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # XXX this picks the first one, but what if we do not have any?
-    host_ip = socket.inet_ntop(socket.AF_INET,
-                               self.veyon_master.addresses[0])
-    host_port = self.veyon_master.port
-
-    if host_ip and host_port:
-      self.master_socket.connect((host_ip, host_port))
-      message = { 'type': 'new_client', 'hostname' : self.hostname }
-      Veyon.send_msg(self.master_socket, message)
-
-      self.pin_entry_button.set_sensitive(True)
-
-      # XXX should this be asynchronous?
-      GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
-                        0,
-                        GLib.IOCondition.IN,
-                        self.incoming_master_data,
-                        self.master_socket)
+  def remove_master(self, address):
+    # XXX what if veyon_masters[address] does not exist?
+    # XXX can we trust that?
+    self.veyon_masters[address].disconnect_master()
+    del(self.veyon_masters[address])
 
 
   def activate_pin_entry(self, widget=None):
@@ -374,29 +427,6 @@ class VeyonSlave(PuavoWidget):
     Veyon.send_msg(self.master_socket, msg)
 
 
-  def incoming_master_data(self, io, cond, master_socket):
-    message = Veyon.receive_msg(master_socket)
-
-    if not 'type' in message:
-      # XXX error handling
-      return
-
-    if message['type'] == 'pin_request':
-      # XXX perhaps we should not active pin entry here, but we could at least
-      # XXX make it possible to do that on some condition?
-      self.activate_pin_entry()
-    elif message['type'] == 'public_key':
-      if not 'public_key' in message:
-        # XXX error handling
-        return
-      self.set_veyon_public_key(message['public_key'])
-    elif message['type'] == 'wrong_pin':
-      # XXX error handling
-      return
-
-    return True
-
-
   def set_veyon_public_key(self, public_key):
     self.dbus_iface.AddPublicKey(public_key,
                                  reply_handler=self.handle_add_public_key,
@@ -412,6 +442,26 @@ class VeyonSlave(PuavoWidget):
   def handle_add_public_key_error(self, dbusexception):
     # XXX response handling?
     print('oh no add public key dbus error: %s' % str(dbusexception))
+
+
+class VeyonSlaveListener():
+  def __init__(self, slave):
+    self.slave = slave
+
+
+  def add_service(self, zeroconf, type, name):
+    if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
+      service = zeroconf.get_service_info(type, name)
+      self.slave.add_master(service)
+
+
+  def remove_service(self, zeroconf, type, name):
+    if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
+      service = zeroconf.get_service_info(type, name)
+      # XXX what if there is no address?
+      # XXX what if there are several?
+      address = service_info.addresses[0]
+      self.slave.remove_master(address)
 
 
 class PuavoVeyonApplet:
