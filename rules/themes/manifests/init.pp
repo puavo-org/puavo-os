@@ -39,7 +39,7 @@ class themes {
       ensure => directory;
 
     '/etc/xdg/qt5ct/qt5ct.conf':
-      require => Package['qt5ct'];
+      require => Package['qt5ct'],
       source  => 'puppet:///modules/themes/qt5ct.conf';
   }
 
@@ -48,7 +48,7 @@ class themes {
       ensure => directory;
 
     '/etc/xdg/Kvantum/kvantum.kvconfig':
-      require => Package['qt5-style-kvantum'];
+      require => Package['qt5-style-kvantum'],
       source  => 'puppet:///modules/themes/kvantum.kvconfig';
   }
 
