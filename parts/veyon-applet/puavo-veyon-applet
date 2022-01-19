@@ -158,6 +158,7 @@ class VeyonMaster(PuavoWidget):
   def __init__(self, menu):
     self.public_key = None
     self.update_config_call_pending = False
+    self.veyon_slaves = {}
 
     self.pin_label = Gtk.MenuItem()
     self.create_new_pin()
@@ -240,7 +241,7 @@ class VeyonMaster(PuavoWidget):
 
   def update_config(self):
     self.update_config_hosts = []
-    for slave in self.veyon_slaves.items():
+    for slave in self.veyon_slaves.values():
       host = {
         'address':  slave.address,
         'hostname': slave.hostname,
@@ -300,10 +301,10 @@ class VeyonMasterConnection():
 
     self.master_socket.connect((master_ip, master_port))
 
-    message = { 'type': 'new_client', 'hostname' : self.hostname }
+    message = { 'type': 'new_client', 'hostname' : self.slave.hostname }
     Veyon.send_msg(self.master_socket, message)
 
-    self.pin_entry_button.set_sensitive(True)
+    self.slave.pin_entry_button.set_sensitive(True)
 
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
@@ -338,6 +339,11 @@ class VeyonMasterConnection():
       return
 
     return True
+
+
+  def send_public_key_request(self, pin):
+    msg = { 'type': 'public_key_request', 'pin': pin }
+    Veyon.send_msg(self.master_socket, msg)
 
 
   def disconnect_master(self):
@@ -418,13 +424,9 @@ class VeyonSlave(PuavoWidget):
     if len(new_text) == 4:
       # XXX we probably need some connect buttons and exit buttons instead
       # XXX of this, but this can be used for testing
-      self.send_public_key_request(new_text)
+      for master_connection in self.veyon_masters.values():
+        master_connection.send_public_key_request(new_text)
       self.pin_window.destroy()
-
-
-  def send_public_key_request(self, pin):
-    msg = { 'type': 'public_key_request', 'pin': pin }
-    Veyon.send_msg(self.master_socket, msg)
 
 
   def set_veyon_public_key(self, public_key):
