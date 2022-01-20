@@ -200,18 +200,21 @@ class VeyonMaster(PuavoWidget):
 
   def setup_master_service(self):
     host_ip_address = None
-    for intf in netifaces.interfaces():
-      if re.match('^(lo|tun|vpn)', intf):
+    for intf in sorted(netifaces.interfaces()):
+      if not re.match('^(eth|wlan)', intf):
         continue
       for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
         if 'addr' in ip_addr:
           # pick the first IP address we got that is not localhost or tun*/vpn*
           # (if we would use several on the same host, that might get tricky)
-          host_ip_address = socket.inet_pton(socket.AF_INET, ip_addr['addr'])
+          host_ip_address = ip_addr['addr']
           break
 
     if not host_ip_address:
-      # XXX should we give some error if host has no usable ip address?
+      # XXX we should give some error if host has no usable ip address?
+      # XXX or perhaps we could wait for it to come?
+      # XXX or perhaps we should setup master service only after user wants to
+      # XXX setup one, so this could be triggered many times?
       self.zeroconf = None
       return
 
@@ -222,9 +225,10 @@ class VeyonMaster(PuavoWidget):
 
     self.zeroconf = zeroconf.Zeroconf()
 
+    host_ip_addresses = [ socket.inet_pton(socket.AF_INET, host_ip_address) ]
     serviceinfo = zeroconf.ServiceInfo(Veyon.SERVICE_TYPE,
                                        Veyon.SERVICE_NAME,
-                                       addresses=[host_ip_address],
+                                       addresses=host_ip_addresses,
                                        port=Veyon.SERVICE_PORT)
     self.zeroconf.register_service(serviceinfo)
 
