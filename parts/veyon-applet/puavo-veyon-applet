@@ -15,6 +15,7 @@ import string
 import struct
 import subprocess
 import sys
+import time
 import zeroconf
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
@@ -65,7 +66,7 @@ class PuavoWidget:
 
 class Veyon():
   SERVICE_TYPE = '_http._tcp.local.'
-  SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
+  SERVICE_BASE = 'VeyonMaster._http._tcp.local.'
   SERVICE_PORT = 2991
 
   def receive_msg(socket):
@@ -226,8 +227,9 @@ class VeyonMaster(PuavoWidget):
     self.zeroconf = zeroconf.Zeroconf()
 
     host_ip_addresses = [ socket.inet_pton(socket.AF_INET, host_ip_address) ]
+    my_service_name = self.make_service_name()
     serviceinfo = zeroconf.ServiceInfo(Veyon.SERVICE_TYPE,
-                                       Veyon.SERVICE_NAME,
+                                       my_service_name,
                                        addresses=host_ip_addresses,
                                        port=Veyon.SERVICE_PORT)
     self.zeroconf.register_service(serviceinfo)
@@ -238,6 +240,12 @@ class VeyonMaster(PuavoWidget):
                       GLib.IOCondition.IN,
                       self.handle_new_slave,
                       self.socket)
+
+
+  def make_service_name(self):
+    hostname = read_firstline('/etc/puavo/hostname')
+    time_seconds = str(int(time.time()))
+    return (hostname + '_' + time_seconds + '.' + Veyon.SERVICE_BASE)
 
 
   def handle_new_slave(self, io, cond, sock):
