@@ -219,7 +219,7 @@ class VeyonMaster(PuavoWidget):
       return
 
     self.socket = socket.socket()
-    # XXX ? self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.socket.bind((host_ip_address, Veyon.SERVICE_PORT))
     self.socket.listen()
 
