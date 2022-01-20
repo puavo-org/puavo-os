@@ -80,6 +80,14 @@ class Veyon():
       raise Exception('no message, connection closed')
 
     message = json.loads(message_json)
+
+    if type(message) != dict:
+      raise 'message is not a dict'
+    if not 'type' in message:
+      raise 'no type in message'
+    if type(message['type']) != str:
+      raise 'message type is not a string'
+
     return message
 
 
@@ -106,36 +114,37 @@ class VeyonSlaveConnection(PuavoWidget):
   def incoming_slave_data(self, io, cond, slave_socket):
     try:
       message = Veyon.receive_msg(slave_socket)
+
+      if message['type'] == 'new_client':
+        if not 'hostname' in message:
+          raise 'no hostname in new_client message'
+        if type(message['hostname']) != str:
+          raise 'hostname is not a string'
+
+        # XXX we would also like 'location' probably
+        self.hostname = message['hostname']
+        self.send_pin_request()
+
+      elif message['type'] == 'public_key_request':
+        if not 'pin' in message:
+          raise 'public key request without a PIN'
+        if type(message['pin']) != str:
+          raise 'PIN is not a string'
+
+        if message['pin'] == self.master.pin:
+          self.send_public_key()
+          self.master.update_config()
+        else:
+          Veyon.send_msg(self.slave_socket, { 'type': 'wrong_pin' })
+      else:
+        pass
+        # XXX should we log messages we do not understand?
+        # XXX should we define a protocol version and pass it on at some point?
+
     except Exception as e:
+      # XXX could log an error message, maybe?
       self.master.remove_slave(self.address)
       return
-
-    if not 'type' in message:
-      # XXX error handling?
-      return
-
-    # XXX we should also check value types in each case
-
-    if message['type'] == 'new_client':
-      if not 'hostname' in message:
-        # XXX error handling?
-        return
-      # XXX we would also like 'location' and 'address' ...
-      # XXX we probably already have the address through socket but not
-      # XXX location
-      self.hostname = message['hostname']
-      self.send_pin_request()
-    elif message['type'] == 'public_key_request':
-      if not 'pin' in message:
-        # XXX error handling?
-        return
-      if message['pin'] == self.master.pin:
-        self.send_public_key()
-        self.master.update_config()
-      else:
-        Veyon.send_msg(self.slave_socket, { 'type': 'wrong_pin' })
-
-    return True
 
     return True
 
@@ -326,25 +335,26 @@ class VeyonMasterConnection():
   def incoming_master_data(self, io, cond, master_socket):
     try:
       message = Veyon.receive_msg(master_socket)
-    except Exception as e:
-      self.slave.remove_master(self.address)
-      return
 
-    if not 'type' in message:
-      # XXX error handling
-      return
+      if message['type'] == 'pin_request':
+        # XXX perhaps we should not active pin entry here, but we could at least
+        # XXX make it possible to do that on some condition?
+        self.slave.activate_pin_entry()
 
-    if message['type'] == 'pin_request':
-      # XXX perhaps we should not active pin entry here, but we could at least
-      # XXX make it possible to do that on some condition?
-      self.slave.activate_pin_entry()
-    elif message['type'] == 'public_key':
-      if not 'public_key' in message:
+      elif message['type'] == 'public_key':
+        if not 'public_key' in message:
+          raise 'no public key in public_key message'
+        if type(message['public_key']) != str:
+          raise 'public_key is not a string'
+
+        self.slave.set_veyon_public_key(message['public_key'])
+
+      elif message['type'] == 'wrong_pin':
         # XXX error handling
         return
-      self.slave.set_veyon_public_key(message['public_key'])
-    elif message['type'] == 'wrong_pin':
-      # XXX error handling
+
+    except Exception as e:
+      self.slave.remove_master(self.address)
       return
 
     return True
