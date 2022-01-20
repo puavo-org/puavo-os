@@ -387,6 +387,8 @@ class VeyonSlave(PuavoWidget):
     self.pin_entry_button.connect('activate', self.activate_pin_entry)
     menu.append(self.pin_entry_button)
 
+    self.pin_window = None
+
     service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
                                              Veyon.SERVICE_BASE)
     if service:
@@ -411,7 +413,10 @@ class VeyonSlave(PuavoWidget):
 
 
   def activate_pin_entry(self, widget=None):
-    # XXX do nothing if PIN entry window is already active
+    if self.pin_window:
+      self.pin_window.present()
+      return
+
     self.label = Gtk.Label(label='Provide a PIN for Veyon session:')
 
     self.pin_entry = Gtk.Entry()
@@ -428,6 +433,7 @@ class VeyonSlave(PuavoWidget):
     self.alignment.add(self.box)
 
     self.pin_window = Gtk.Window()
+    self.pin_window.connect('destroy', self.pin_window_closed)
     self.pin_window.set_opacity(0.5)
     self.pin_window.fullscreen()
 
@@ -446,6 +452,10 @@ class VeyonSlave(PuavoWidget):
       for master_connection in self.veyon_masters.values():
         master_connection.send_public_key_request(new_text)
       self.pin_window.destroy()
+
+
+  def pin_window_closed(self, widget):
+    self.pin_window = None
 
 
   def set_veyon_public_key(self, public_key):
