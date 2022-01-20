@@ -160,6 +160,8 @@ class VeyonMaster(PuavoWidget):
     self.update_config_call_pending = False
     self.veyon_slaves = {}
 
+    self.host_ip_address = self.get_host_ip_address()
+
     self.pin_label = Gtk.MenuItem()
     self.create_new_pin()
     self.pin_label.show()
@@ -174,16 +176,34 @@ class VeyonMaster(PuavoWidget):
                       error_handler=self.handle_get_public_key_error)
 
 
+  def get_host_ip_address(self):
+    for intf in sorted(netifaces.interfaces()):
+      if not re.match('^(eth|wlan)', intf):
+        continue
+      for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
+        if 'addr' in ip_addr:
+          # pick the first IP address we got that is not localhost or tun*/vpn*
+          # (if we would use several on the same host, that might get tricky)
+          return ip_addr['addr']
+
+    # XXX we should probably handle missing network connection a bit better?
+    raise 'could not find IP address for this host'
+
+
   def set_pin(self, new_pin):
     self.pin = new_pin
     self.pin_label.set_label('PIN: %s' % new_pin)
 
 
   def create_new_pin(self):
-    # XXX we should try to make sure this PIN is unique on the network
-    # XXX perhaps deriving it from host IP address will help with that?
-    random_pin = ''.join(random.choices(string.digits, k=4))
-    self.set_pin(random_pin)
+    # We try to make a random PIN that is unique on a network with
+    # maximum of 4096 hosts (netmask 255.255.240.0), on bigger networks
+    # this might sometimes fail.
+    random_number = random.randint(0, 23)
+    split_ip = self.host_ip_address.split('.')
+    ip_based_number = 256 * (int(split_ip[2]) % 16) + int(split_ip[3])
+    nice_pin = '%05d' % (4096 * random_number + ip_based_number)
+    self.set_pin(nice_pin)
 
 
   def handle_get_public_key(self, public_key):
@@ -197,33 +217,16 @@ class VeyonMaster(PuavoWidget):
 
 
   def setup_master_service(self):
-    host_ip_address = None
-    for intf in sorted(netifaces.interfaces()):
-      if not re.match('^(eth|wlan)', intf):
-        continue
-      for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
-        if 'addr' in ip_addr:
-          # pick the first IP address we got that is not localhost or tun*/vpn*
-          # (if we would use several on the same host, that might get tricky)
-          host_ip_address = ip_addr['addr']
-          break
-
-    if not host_ip_address:
-      # XXX we should give some error if host has no usable ip address?
-      # XXX or perhaps we could wait for it to come?
-      # XXX or perhaps we should setup master service only after user wants to
-      # XXX setup one, so this could be triggered many times?
-      self.zeroconf = None
-      return
-
     self.socket = socket.socket()
     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    self.socket.bind((host_ip_address, Veyon.SERVICE_PORT))
+    self.socket.bind((self.host_ip_address, Veyon.SERVICE_PORT))
     self.socket.listen()
 
     self.zeroconf = zeroconf.Zeroconf()
 
-    host_ip_addresses = [ socket.inet_pton(socket.AF_INET, host_ip_address) ]
+    host_ip_addresses = [
+      socket.inet_pton(socket.AF_INET, self.host_ip_address)
+    ]
     my_service_name = self.make_service_name()
     serviceinfo = zeroconf.ServiceInfo(Veyon.SERVICE_TYPE,
                                        my_service_name,
@@ -403,8 +406,8 @@ class VeyonSlave(PuavoWidget):
 
     self.pin_entry = Gtk.Entry()
     self.pin_entry.set_input_purpose(Gtk.InputPurpose.DIGITS)
-    self.pin_entry.set_max_length(4)
-    self.pin_entry.set_width_chars(4)
+    self.pin_entry.set_max_length(5)
+    self.pin_entry.set_width_chars(5)
     self.pin_entry.connect('changed', self.pin_entry_changed)
 
     self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -427,7 +430,7 @@ class VeyonSlave(PuavoWidget):
     new_text = ''.join([c for c in entry.get_text() if c in string.digits])
     entry.set_text(new_text)
     entry.handler_unblock_by_func(self.pin_entry_changed)
-    if len(new_text) == 4:
+    if len(new_text) == 5:
       # XXX we probably need some connect buttons and exit buttons instead
       # XXX of this, but this can be used for testing
       for master_connection in self.veyon_masters.values():
