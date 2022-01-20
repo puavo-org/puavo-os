@@ -80,7 +80,6 @@ class Veyon():
       raise Exception('no message, connection closed')
 
     message = json.loads(message_json)
-    print('received message %s' % message)      # XXX
     return message
 
 
@@ -89,14 +88,12 @@ class Veyon():
     msgsize = len(message)
     socket.send(struct.pack('!i', msgsize))
     socket.send(message)
-    print('sent message %s' % message)          # XXX
 
 
 class VeyonSlaveConnection(PuavoWidget):
   def __init__(self, master, slave_socket, slave_address):
     self.slave_socket = slave_socket
     self.address = slave_address[0]    # take only the IP address
-    print('VeyonSlaveConnection() = %s' % self.address)
     self.master = master
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
@@ -376,38 +373,31 @@ class VeyonSlave(PuavoWidget):
     self.pin_entry_button.connect('activate', self.activate_pin_entry)
     menu.append(self.pin_entry_button)
 
-    # XXX does this pick up many or only one?
     service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
-                                             Veyon.SERVICE_NAME)
-    self.add_master(service)
+                                             Veyon.SERVICE_BASE)
+    if service:
+      self.add_masters(service)
+
     self.browser = zeroconf.ServiceBrowser(self.zeroconf,
-                                           Veyon.SERVICE_NAME,
-                                           VeyonSlaveListener(self))
+                                           Veyon.SERVICE_TYPE,
+                                           VeyonListenForMasters(self))
 
 
-  def add_master(self, service):
-    # XXX what if this raises an expection?
-    # XXX should we only use the first one?  what if there are no addresses?
-    # XXX could there be several immediately?
-    print('service = %s' % service)
+  def add_masters(self, service):
     for srv_address in service.addresses:
       address = str(socket.inet_ntop(socket.AF_INET, srv_address))
-      print('add master address=%s port=%s' % (address, service.port))
-
-    # sys.exit(0)
-
-    # self.veyon_masters[address] = VeyonMasterConnection(address, port, self)
+      if not address in self.veyon_masters:
+        self.veyon_masters[address] \
+          = VeyonMasterConnection(address, service.port, self)
 
 
   def remove_master(self, address):
-    if not address in self.veyon_masters:
-      return
-
     self.veyon_masters[address].disconnect_master()
     del(self.veyon_masters[address])
 
 
   def activate_pin_entry(self, widget=None):
+    # XXX do nothing if PIN entry window is already active
     self.label = Gtk.Label(label='Provide a PIN for Veyon session:')
 
     self.pin_entry = Gtk.Entry()
@@ -461,25 +451,17 @@ class VeyonSlave(PuavoWidget):
     print('oh no add public key dbus error: %s' % str(dbusexception))
 
 
-class VeyonSlaveListener():
+class VeyonListenForMasters():
   def __init__(self, slave):
     self.slave = slave
 
 
-  def add_service(self, zeroconf, type, name):
-    if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
-      service = zeroconf.get_service_info(type, name)
-      print('add service %s' % service)
-      self.slave.add_master(service)
-
-
-  def remove_service(self, zeroconf, type, name):
-    if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
-      service = zeroconf.get_service_info(type, name)
-      for srv_address in service.addresses:
-        address = socket.inet_ntop(socket.AF_INET, srv_address)
-        print('removing address %s' % address)
-        self.slave.remove_master(address)
+  def add_service(self, zeroconf, service_type, name):
+    name_base = '.'.join(name.split('.')[1:])
+    if service_type == Veyon.SERVICE_TYPE \
+      and name_base == Veyon.SERVICE_BASE:
+        service = zeroconf.get_service_info(service_type, name)
+        self.slave.add_masters(service)
 
 
 class PuavoVeyonApplet:
