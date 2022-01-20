@@ -101,7 +101,12 @@ orientation-lock=true
 
 [org/gnome/settings-daemon/plugins/media-keys]
 custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']
-screenshot='<Primary><Alt><Super>Print'
+screenshot=['']
+area-screenshot=['']
+area-schreenshot-clip=['']
+screenshot-clip=['']
+window-screenshot=['']
+window-screenshot-clip=['']
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
 binding='<Super>space'
@@ -130,8 +135,38 @@ name='Lock screen'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5]
 binding='Print'
-command='gnome-screenshot --interactive'
-name='Gnome screenshot'
+command='spectacle'
+name='Screenshot'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6]
+binding='<Ctrl>Print'
+command='spectacle -c -b'
+name='Screenshot Clip'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7]
+binding='<Alt>Print'
+command='spectacle -a'
+name='Window Screenshot'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom8]
+binding='<Ctrl><Alt>Print'
+command='spectacle -a -c -b'
+name='Window Screenshot Clip'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom9]
+binding='<Shift>Print'
+command='spectacle -r'
+name='Area Screenshot'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10]
+binding='<Ctrl><Shift>Print'
+command='spectacle -r -c -b'
+name='Area Screenshot Clip'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom11]
+binding='<Meta>Print'
+command='spectacle -b'
+name='Screenshot and Save'
 
 [org/gnome/settings-daemon/plugins/power]
 ambient-enabled=false

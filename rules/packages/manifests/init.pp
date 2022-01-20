@@ -691,6 +691,7 @@ class packages {
     , 'exfat-utils'
     , 'fuse3'
     , 'kamoso'
+    , 'kde-spectacle'
     , 'mc'
     , 'mousepad'
     , 'p7zip-full'
