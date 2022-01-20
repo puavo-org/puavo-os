@@ -537,6 +537,7 @@ class packages {
     , 'eog'
     , 'evince'
     , 'evolution'
+    , 'festival'
     , 'festlex-poslex'
     , 'festvox-suopuhe-mv'			#Finnish TTS
     , 'file-roller'
