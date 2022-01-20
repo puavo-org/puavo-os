@@ -66,6 +66,7 @@ class PuavoWidget:
 class Veyon():
   SERVICE_TYPE = '_http._tcp.local.'
   SERVICE_NAME = 'VeyonMaster._http._tcp.local.'
+  SERVICE_PORT = 2991
 
   def receive_msg(socket):
     size = socket.recv(4)
@@ -94,6 +95,7 @@ class VeyonSlaveConnection(PuavoWidget):
   def __init__(self, master, slave_socket, slave_address):
     self.slave_socket = slave_socket
     self.address = slave_address[0]    # take only the IP address
+    print('VeyonSlaveConnection() = %s' % self.address)
     self.master = master
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
@@ -180,6 +182,8 @@ class VeyonMaster(PuavoWidget):
 
 
   def create_new_pin(self):
+    # XXX we should try to make sure this PIN is unique on the network
+    # XXX perhaps deriving it from host IP address will help with that?
     random_pin = ''.join(random.choices(string.digits, k=4))
     self.set_pin(random_pin)
 
@@ -195,30 +199,33 @@ class VeyonMaster(PuavoWidget):
 
 
   def setup_master_service(self):
-    host_ip_addresses = []
+    host_ip_address = None
     for intf in netifaces.interfaces():
       if re.match('^(lo|tun|vpn)', intf):
         continue
       for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
         if 'addr' in ip_addr:
-          host_ip_addresses.append(
-            socket.inet_pton(socket.AF_INET, ip_addr['addr']))
+          # pick the first IP address we got that is not localhost or tun*/vpn*
+          # (if we would use several on the same host, that might get tricky)
+          host_ip_address = socket.inet_pton(socket.AF_INET, ip_addr['addr'])
+          break
 
-    if len(host_ip_addresses) == 0:
-      # XXX should we give some error if host has no ip addresses?
+    if not host_ip_address:
+      # XXX should we give some error if host has no usable ip address?
       self.zeroconf = None
       return
 
     self.socket = socket.socket()
-    self.socket.bind(('0.0.0.0', 0))
+    # XXX ? self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    self.socket.bind((host_ip_address, Veyon.SERVICE_PORT))
     self.socket.listen()
 
     self.zeroconf = zeroconf.Zeroconf()
 
     serviceinfo = zeroconf.ServiceInfo(Veyon.SERVICE_TYPE,
                                        Veyon.SERVICE_NAME,
-                                       addresses=host_ip_addresses,
-                                       port=self.socket.getsockname()[1])
+                                       addresses=[host_ip_address],
+                                       port=Veyon.SERVICE_PORT)
     self.zeroconf.register_service(serviceinfo)
 
     # XXX should this be asynchronous?
@@ -283,23 +290,12 @@ class VeyonMaster(PuavoWidget):
 
 
 class VeyonMasterConnection():
-  def __init__(self, service_info, slave):
+  def __init__(self, address, port, slave):
     self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.slave = slave
 
-    # XXX this picks the first one, but what if we do not have any?
-    self.address = service_info.addresses[0]
-
-    master_ip = socket.inet_ntop(socket.AF_INET, self.address)
-    master_port = service_info.port
-
-    if not master_ip:
-      raise Exception('no master IP address')
-
-    if not master_port:
-      raise Exception('no master port')
-
-    self.master_socket.connect((master_ip, master_port))
+    self.address = address
+    self.master_socket.connect((self.address, port))
 
     message = { 'type': 'new_client', 'hostname' : self.slave.hostname }
     Veyon.send_msg(self.master_socket, message)
@@ -368,6 +364,7 @@ class VeyonSlave(PuavoWidget):
     self.pin_entry_button.connect('activate', self.activate_pin_entry)
     menu.append(self.pin_entry_button)
 
+    # XXX does this pick up many or only one?
     service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
                                              Veyon.SERVICE_NAME)
     self.add_master(service)
@@ -376,18 +373,24 @@ class VeyonSlave(PuavoWidget):
                                            VeyonSlaveListener(self))
 
 
-  def add_master(self, service_info):
+  def add_master(self, service):
     # XXX what if this raises an expection?
     # XXX should we only use the first one?  what if there are no addresses?
     # XXX could there be several immediately?
-    # XXX we should add all addresses!
-    address = service_info.addresses[0]
-    self.veyon_masters[address] = VeyonMasterConnection(service_info, self)
+    print('service = %s' % service)
+    for srv_address in service.addresses:
+      address = str(socket.inet_ntop(socket.AF_INET, srv_address))
+      print('add master address=%s port=%s' % (address, service.port))
+
+    # sys.exit(0)
+
+    # self.veyon_masters[address] = VeyonMasterConnection(address, port, self)
 
 
   def remove_master(self, address):
-    # XXX what if veyon_masters[address] does not exist?
-    # XXX can we trust that?
+    if not address in self.veyon_masters:
+      return
+
     self.veyon_masters[address].disconnect_master()
     del(self.veyon_masters[address])
 
@@ -454,16 +457,17 @@ class VeyonSlaveListener():
   def add_service(self, zeroconf, type, name):
     if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
       service = zeroconf.get_service_info(type, name)
+      print('add service %s' % service)
       self.slave.add_master(service)
 
 
   def remove_service(self, zeroconf, type, name):
     if type == Veyon.SERVICE_TYPE and name == Veyon.SERVICE_NAME:
       service = zeroconf.get_service_info(type, name)
-      # XXX what if there is no address?
-      # XXX what if there are several?
-      address = service_info.addresses[0]
-      self.slave.remove_master(address)
+      for srv_address in service.addresses:
+        address = socket.inet_ntop(socket.AF_INET, srv_address)
+        print('removing address %s' % address)
+        self.slave.remove_master(address)
 
 
 class PuavoVeyonApplet:
