@@ -63,7 +63,6 @@ class puavo_pkg::packages {
 			, 'ubuntu-wallpapers'
 			, 'unityhub-appimage'
 			, 'veracrypt'
-			, 'vidyo-client'
 			, 'vstloggerpro'
 			, 'zoom' ]
 
