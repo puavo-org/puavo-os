@@ -93,7 +93,7 @@ class Veyon():
 class VeyonSlaveConnection(PuavoWidget):
   def __init__(self, master, slave_socket, slave_address):
     self.slave_socket = slave_socket
-    self.address = slave_address[0]    # take only the IP address
+    self.address = slave_address
     self.master = master
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
@@ -246,7 +246,8 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_new_slave(self, io, cond, sock):
-    (conn, slave_address) = sock.accept()
+    (conn, sock_slave_address) = sock.accept()
+    slave_address = sock_slave_address[0]
     if slave_address in self.veyon_slaves:
       self.remove_slave(slave_address)
     slave = VeyonSlaveConnection(self, conn, slave_address)
