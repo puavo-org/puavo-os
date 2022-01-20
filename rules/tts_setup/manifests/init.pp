@@ -20,6 +20,11 @@ class tts_setup {
     '/etc/festival.scm':
       require => Package['festival'],
       source  => 'puppet:///modules/tts_setup/festival.scm';
+
+    '/usr/bin/puavo-festival-read':
+      mode    => '0755',
+      require => Package['festvox-suopuhe-mv'],
+      source  => 'puppet:///modules/tts_setup/puavo-festival-read';
   }
 
   Package <| title == festvox-suopuhe-mv and title == speech-dispatcher-pico |>
