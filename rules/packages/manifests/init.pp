@@ -756,13 +756,13 @@ class packages {
 		      , $r8168_module ]
 
   packages::kernels::kernel_package {
-    '5.10.0-9-amd64':
+    '5.10.0-11-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-5.10.0-9-amd64';
+      package_name => 'linux-image-5.10.0-11-amd64';
 
-    '5.14.0-0.bpo.2-amd64':
+    '5.15.0-0.bpo.2-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module, $r8168_module ],
-      package_name => 'linux-image-5.14.0-0.bpo.2-amd64-unsigned';
+      package_name => 'linux-image-5.15.0-0.bpo.2-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by
