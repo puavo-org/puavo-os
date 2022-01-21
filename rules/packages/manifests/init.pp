@@ -539,7 +539,7 @@ class packages {
     , 'evolution'
     , 'festival'
     , 'festlex-poslex'
-    , 'festvox-suopuhe-mv'			#Finnish TTS
+    , 'festvox-suopuhe-mv'			# Finnish TTS
     , 'file-roller'
     , 'fonts-cantarell'
     , 'fonts-dejavu-core'
@@ -646,8 +646,8 @@ class packages {
     , 'shotwell'
     , 'simple-scan'
     , 'speech-dispatcher'
-    , 'speech-dispatcher-festival'		#for Finnish TTS
-    , 'speech-dispatcher-pico'			#for English and German TTS
+    , 'speech-dispatcher-festival'		# for Finnish TTS
+    , 'speech-dispatcher-pico'			# for English and German TTS
     , 'speedcrunch'
     , 'ssh-askpass-gnome'
     , 'telepathy-idle'

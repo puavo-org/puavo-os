@@ -10,7 +10,7 @@ class tts_setup {
       source  => 'puppet:///modules/tts_setup/speechd.conf';
 
     '/etc/speech-dispatcher/modules/pico-generic.conf':
-      require => Package['speech-dispatcher-pico'],       
+      require => Package['speech-dispatcher-pico'],
       source  => 'puppet:///modules/tts_setup/pico-generic.conf';
 
     '/etc/speech-dispatcher/modules/festival-generic.conf':
