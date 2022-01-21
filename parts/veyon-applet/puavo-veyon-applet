@@ -15,6 +15,7 @@ import string
 import struct
 import subprocess
 import sys
+import syslog
 import time
 import zeroconf
 
@@ -32,6 +33,11 @@ gettext.textdomain('puavo-veyon-applet')
 _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+
+def logmsg(priority, message):
+  print(message, file=sys.stderr)
+  syslog.syslog(priority, message)
 
 
 def puavoconf_get(puavoconf_key):
@@ -102,6 +108,7 @@ class VeyonSlaveConnection(PuavoWidget):
   def __init__(self, master, slave_socket, slave_address):
     self.slave_socket = slave_socket
     self.address = slave_address
+    self.hostname = None
     self.master = master
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
@@ -123,7 +130,8 @@ class VeyonSlaveConnection(PuavoWidget):
 
         # XXX we would also like 'location' probably
         self.hostname = message['hostname']
-        self.send_pin_request()
+        logmsg(syslog.LOG_INFO,
+               'new slave %s at %s' % (self.hostname, self.address))
 
       elif message['type'] == 'public_key_request':
         if not 'pin' in message:
@@ -132,33 +140,45 @@ class VeyonSlaveConnection(PuavoWidget):
           raise 'PIN is not a string'
 
         if message['pin'] == self.master.pin:
+          logmsg(syslog.LOG_INFO,
+                 'slave %s sent correct PIN' % self.hostname)
           self.send_public_key()
           self.master.update_config()
         else:
+          logmsg(syslog.LOG_INFO,
+                 'slave %s sent wrong PIN' % self.hostname)
           Veyon.send_msg(self.slave_socket, { 'type': 'wrong_pin' })
       else:
-        pass
-        # XXX should we log messages we do not understand?
-        # XXX should we define a protocol version and pass it on at some point?
+        # XXX should we define a protocol version
+        # XXX and pass it on at some point?
+        logmsg(syslog.LOG_INFO,
+               'slave %s sent message %s that we do not understand' \
+                 % (self.hostname, message['type']))
 
     except Exception as e:
-      # XXX could log an error message, maybe?
+      # XXX not everything here should be errors
+      logmsg(syslog.LOG_ERR, 'error with slave %s: %s' % (self.address, e))
       self.master.remove_slave(self.address)
       return
 
     return True
 
 
+  # XXX this should be useful but is not yet used in any situation
   def send_pin_request(self):
+    logmsg(syslog.LOG_INFO, 'sending PIN request to %s' % self.hostname)
     Veyon.send_msg(self.slave_socket, { 'type': 'pin_request' })
 
 
   def send_public_key(self):
+    logmsg(syslog.LOG_INFO, 'sending public key to %s' % self.hostname)
     msg = { 'type': 'public_key', 'public_key': self.master.public_key }
     Veyon.send_msg(self.slave_socket, msg)
 
 
   def disconnect_slave(self):
+    logmsg(syslog.LOG_INFO,
+           'disconnecting %s / %s' % (self.hostname, self.address))
     self.slave_socket.shutdown(socket.SHUT_RDWR)
     self.slave_socket.close()
 
@@ -193,7 +213,10 @@ class VeyonMaster(PuavoWidget):
         if 'addr' in ip_addr:
           # pick the first IP address we got that is not localhost or tun*/vpn*
           # (if we would use several on the same host, that might get tricky)
-          return ip_addr['addr']
+          ip = ip_addr['addr']
+          logmsg(syslog.LOG_INFO,
+                 'using IP address %s on interface %s' % (ip, intf))
+          return ip
 
     # XXX we should probably handle missing network connection a bit better?
     raise 'could not find IP address for this host'
@@ -306,6 +329,7 @@ class VeyonMaster(PuavoWidget):
 
 
   def remove_slave(self, address):
+    logmsg(syslog.LOG_INFO, 'disconnecting %s' % address)
     self.veyon_slaves[address].disconnect_slave()
     del(self.veyon_slaves[address])
 
@@ -337,8 +361,6 @@ class VeyonMasterConnection():
       message = Veyon.receive_msg(master_socket)
 
       if message['type'] == 'pin_request':
-        # XXX perhaps we should not active pin entry here, but we could at least
-        # XXX make it possible to do that on some condition?
         self.slave.activate_pin_entry()
 
       elif message['type'] == 'public_key':
@@ -410,6 +432,7 @@ class VeyonSlave(PuavoWidget):
   def remove_master(self, address):
     self.veyon_masters[address].disconnect_master()
     del(self.veyon_masters[address])
+    # XXX if there are no masters, close pin window ?
 
 
   def activate_pin_entry(self, widget=None):
@@ -503,15 +526,18 @@ class PuavoVeyonApplet:
     try:
       veyon_role = puavoconf_get('puavo.veyon.role')
     except Exception as e:
-      print('puavo.veyon.role could not be determined: %s' % e,
-            file=sys.stderr)
+      logmsg(syslog.LOG_ERR,
+             'puavo.veyon.role could not be determined: %s' % e)
       sys.exit(1)
 
     if veyon_role == '':
+      logmsg(syslog.LOG_NOTICE, 'no veyon role, exiting')
       sys.exit(0)
     elif veyon_role != 'master' and veyon_role != 'slave':
-      print('unknown veyon role %s' % veyon_role, file=sys.stderr)
+      logmsg(syslog.LOG_ERR, 'unknown veyon role: %s' % veyon_role)
       sys.exit(1)
+
+    logmsg(syslog.LOG_NOTICE, 'operating in veyon %s role' % veyon_role)
 
     menu = Gtk.Menu()
     role_label = Gtk.MenuItem(label='Veyon role: %s' % veyon_role)
@@ -533,8 +559,19 @@ class PuavoVeyonApplet:
     Gtk.main()
 
 
-applet = PuavoVeyonApplet()
+exitstatus = 0
 
-if __name__ == '__main__':
+syslog.openlog('puavo-veyon-applet')
+logmsg(syslog.LOG_NOTICE, 'puavo-veyon-applet starting up')
+
+try:
   signal.signal(signal.SIGINT, signal.SIG_DFL)
+  applet = PuavoVeyonApplet()
   applet.main()
+except Exception as e:
+  logmsg(syslog.LOG_ERR, 'unexpected error: %s' % e)
+  exitstatus = 1
+
+syslog.closelog()
+
+sys.exit(exitstatus)
