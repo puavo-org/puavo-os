@@ -536,6 +536,9 @@ class packages {
     , 'eog'
     , 'evince'
     , 'evolution'
+    , 'festival'
+    , 'festlex-poslex'
+    , 'festvox-suopuhe-mv'			# Finnish TTS
     , 'file-roller'
     , 'fonts-cantarell'
     , 'fonts-dejavu-core'
@@ -604,6 +607,7 @@ class packages {
     , 'libreoffice-math'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
+    , 'libttspico-utils' #German and English TTS
     , 'libxcb-xtest0' #dependency for Zoom
     , 'make'
     , 'memtest86+'
@@ -643,6 +647,8 @@ class packages {
     , 'shotwell'
     , 'simple-scan'
     , 'speech-dispatcher'
+    , 'speech-dispatcher-festival'		# for Finnish TTS
+    , 'speech-dispatcher-pico'			# for English and German TTS
     , 'speedcrunch'
     , 'ssh-askpass-gnome'
     , 'telepathy-idle'

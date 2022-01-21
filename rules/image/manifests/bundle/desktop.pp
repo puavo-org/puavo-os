@@ -35,6 +35,7 @@ class image::bundle::desktop {
   # include ::pycharm	                # XXX pycharm needs to be packaged
   include ::run_once_on_desktop_session
   include ::supplementary_groups
+  include ::tts_setup
   include ::tuxpaint
   include ::udisks2
   include ::virtualbox

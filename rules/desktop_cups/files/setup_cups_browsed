@@ -14,6 +14,11 @@ for server in $cups_servers; do
 "
 done
 
+remote_protocols='dnssd cups'
+if [ "$(puavo-conf puavo.printing.airprint.enabled)" = 'false' ]; then
+  remote_protocols='cups'
+fi
+
 cat > /etc/cups/cups-browsed.conf.tmp <<EOF
 # All configuration options described here can also be supplied on the
 # command line of cups-browsed via the "-o" option. In case of
@@ -49,7 +54,7 @@ cat > /etc/cups/cups-browsed.conf.tmp <<EOF
 # Which protocols will we use to discover printers on the network?
 # Can use DNSSD and/or CUPS and/or LDAP, or 'none' for neither.
 
-BrowseRemoteProtocols dnssd cups
+BrowseRemoteProtocols ${remote_protocols}
 
 
 # Which protocols will we use to broadcast shared local printers to the network?

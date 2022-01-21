@@ -965,7 +965,7 @@ class PuavoMenu(Gtk.Window):
                 # testing I noticed that if we leave it empty (*NOT* None
                 # because that triggers the unwanted behavior!) then these
                 # programs will use their own default titles.
-                Gio.AppInfo.create_from_commandline(command, '', 0).launch()
+                Gio.AppInfo.create_from_commandline(command.replace('\\\\','\\'), '', 0).launch()
             else:
                 # The "command" is a URL for weblinks
                 Gio.AppInfo.launch_default_for_uri(command, None)

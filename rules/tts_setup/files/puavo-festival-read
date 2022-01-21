@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+if [ -n "${1:-}" ]; then
+  printf "%s" "$1" | festival --tts
+fi

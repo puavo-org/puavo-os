@@ -37,7 +37,12 @@ config_file_path="/var/lib/puavo-desktop/shared/admin-remote-connections.conf"
 
 case "$action" in
   --accept-incoming)
-    touch "$config_file_path"
+    if [ -e "$config_file_path" ]; then
+      touch "$config_file_path"
+    else
+      touch "$config_file_path"
+      chmod 666 "$config_file_path"
+    fi
     ;;
   -h|--help)
     usage

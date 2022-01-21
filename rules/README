@@ -125,6 +125,9 @@ network_manager
     Allow users to modify network manager connections, but clean them
     up so that those modifications are (normally) only temporary.
 
+nextcloud
+    Disable automatic update check in Nextcloud Desktop client.
+
 nss
     Setup /etc/nsswitch.conf.
 
@@ -166,6 +169,9 @@ themes
 
 ti_nspire_cx_cas
     Module for installing TI-Nspire CX CAS and setting it up.
+
+tts_setup
+    Provide per-language settings for text-to-speech system.
 
 tuxpaint
     Tuxpaint related configurations.
