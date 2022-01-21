@@ -200,6 +200,13 @@ class UserProgramsManager:
             )
             return False
 
+        # Honor "NoDisplay=true"
+        if 'NoDisplay' in desktop_data['Desktop Entry'] and \
+                desktop_data['Desktop Entry']['NoDisplay'] == 'true':
+            logging.info('.desktop file "%s" contains "NoDisplay=true", skipping it',
+                         filename)
+            return False
+
         # Normally this would contain all the data loaded from menudata JSON
         # file(s), but those don't exist here
         final_data = {}

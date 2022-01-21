@@ -250,6 +250,13 @@ def load_desktop_files(programs, desktop_dirs, language):
             program['flags'] |= menudata.ProgramFlags.BROKEN
             continue
 
+        # Honor "NoDisplay=true"
+        if 'NoDisplay' in desktop_data['Desktop Entry'] and \
+                desktop_data['Desktop Entry']['NoDisplay'] == 'true':
+            logging.info('.desktop file "%s" contains "NoDisplay=true", skipping it',
+                         desktop_file)
+            continue
+
         # Load the parts we don't have yet from the .desktop file
         merge_json_and_desktop_data(program, desktop_data['Desktop Entry'], language)
 
