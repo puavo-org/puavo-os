@@ -1,5 +1,7 @@
 #!/bin/sh
+
 set -eu
-if ! [ -z "$1" ]; then
-    echo \"$1\" | festival --tts
+
+if [ -n "${1:-}" ]; then
+  printf "%s" "$1" | festival --tts
 fi
