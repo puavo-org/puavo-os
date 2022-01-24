@@ -77,6 +77,10 @@ class Veyon():
 
   def receive_msg(socket):
     size = socket.recv(4)
+
+    if len(size) == 0:
+      return None
+
     if len(size) != 4:
       raise Exception('no message size, connection closed')
 
@@ -108,7 +112,7 @@ class VeyonSlaveConnection(PuavoWidget):
   def __init__(self, master, slave_socket, slave_address):
     self.slave_socket = slave_socket
     self.address = slave_address
-    self.hostname = None
+    self.hostname = '?'
     self.master = master
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
@@ -121,6 +125,11 @@ class VeyonSlaveConnection(PuavoWidget):
   def incoming_slave_data(self, io, cond, slave_socket):
     try:
       message = Veyon.receive_msg(slave_socket)
+      if message == None:
+        logmsg(syslog.LOG_INFO, 'slave %s at %s has disconnected' \
+                                  % (self.hostname, self.address))
+        self.master.remove_slave(self.address)
+        return
 
       if message['type'] == 'new_client':
         if not 'hostname' in message:
@@ -156,7 +165,6 @@ class VeyonSlaveConnection(PuavoWidget):
                  % (self.hostname, message['type']))
 
     except Exception as e:
-      # XXX not everything here should be errors
       logmsg(syslog.LOG_ERR, 'error with slave %s: %s' % (self.address, e))
       self.master.remove_slave(self.address)
       return
@@ -178,9 +186,10 @@ class VeyonSlaveConnection(PuavoWidget):
 
   def disconnect_slave(self):
     logmsg(syslog.LOG_INFO,
-           'disconnecting %s / %s' % (self.hostname, self.address))
+           'disconnecting slave %s at %s' % (self.hostname, self.address))
     self.slave_socket.shutdown(socket.SHUT_RDWR)
     self.slave_socket.close()
+    self.slave_socket = None
 
 
 class VeyonMaster(PuavoWidget):
@@ -329,7 +338,6 @@ class VeyonMaster(PuavoWidget):
 
 
   def remove_slave(self, address):
-    logmsg(syslog.LOG_INFO, 'disconnecting %s' % address)
     self.veyon_slaves[address].disconnect_slave()
     del(self.veyon_slaves[address])
 
@@ -359,6 +367,10 @@ class VeyonMasterConnection():
   def incoming_master_data(self, io, cond, master_socket):
     try:
       message = Veyon.receive_msg(master_socket)
+      if message == None:
+        logmsg(syslog.LOG_INFO, 'master %s has disconnected' % self.address)
+        self.slave.remove_master(self.address)
+        return
 
       if message['type'] == 'pin_request':
         self.slave.activate_pin_entry()
@@ -376,6 +388,7 @@ class VeyonMasterConnection():
         return
 
     except Exception as e:
+      logmsg(syslog.LOG_ERR, 'error with master %s: %s' % (self.address, e))
       self.slave.remove_master(self.address)
       return
 
@@ -388,8 +401,10 @@ class VeyonMasterConnection():
 
 
   def disconnect_master(self):
+    logmsg(syslog.LOG_INFO, 'disconnecting master %s' % self.address)
     self.master_socket.shutdown(socket.SHUT_RDWR)
     self.master_socket.close()
+    self.master_socket = None
 
 
 class VeyonSlave(PuavoWidget):
@@ -425,6 +440,8 @@ class VeyonSlave(PuavoWidget):
     for srv_address in service.addresses:
       address = str(socket.inet_ntop(socket.AF_INET, srv_address))
       if not address in self.veyon_masters:
+        logmsg(syslog.LOG_INFO,
+               'connecting to a veyon master %s' % address)
         self.veyon_masters[address] \
           = VeyonMasterConnection(address, service.port, self)
 
@@ -432,7 +449,8 @@ class VeyonSlave(PuavoWidget):
   def remove_master(self, address):
     self.veyon_masters[address].disconnect_master()
     del(self.veyon_masters[address])
-    # XXX if there are no masters, close pin window ?
+    if not self.veyon_masters and self.pin_window:
+      self.pin_window.destroy()
 
 
   def activate_pin_entry(self, widget=None):
@@ -490,12 +508,14 @@ class VeyonSlave(PuavoWidget):
   def handle_add_public_key(self):
     # XXX response handling?
     # XXX perhaps notification that communication has been established?
-    pass
+    logmsg(syslog.LOG_INFO,
+           'set a new public key received from master')
 
 
   def handle_add_public_key_error(self, dbusexception):
     # XXX response handling?
-    print('oh no add public key dbus error: %s' % str(dbusexception))
+    logmsg(syslog.LOG_ERR,
+           'error when trying to add a new public key %s' % dbusexception)
 
 
 class VeyonListenForMasters():
