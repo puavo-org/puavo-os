@@ -112,8 +112,10 @@ class VeyonSlaveConnection(PuavoWidget):
   def __init__(self, master, slave_socket, slave_address):
     self.slave_socket = slave_socket
     self.address = slave_address
+    self.has_session = False
     self.hostname = '?'
     self.master = master
+
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
                       0,
@@ -152,6 +154,7 @@ class VeyonSlaveConnection(PuavoWidget):
           logmsg(syslog.LOG_INFO,
                  'slave %s sent correct PIN' % self.hostname)
           self.send_public_key()
+          self.has_session = True
           self.master.update_config()
         else:
           logmsg(syslog.LOG_INFO,
@@ -213,6 +216,8 @@ class VeyonMaster(PuavoWidget):
         .GetPublicKey(reply_handler=self.handle_get_public_key,
                       error_handler=self.handle_get_public_key_error)
 
+    self.update_config()
+
 
   def get_host_ip_address(self):
     for intf in sorted(netifaces.interfaces()):
@@ -248,13 +253,15 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_get_public_key(self, public_key):
+    logmsg(syslog.LOG_INFO, 'got public key through dbus')
     self.public_key = public_key
     self.setup_master_service()
 
 
   def handle_get_public_key_error(self, dbusexception):
-    # XXX response handling?
-    print('oh no public key dbus error: %s' % dbusexception)
+    # XXX should issues here be shown to user?
+    logmsg(syslog.LOG_ERR,
+           'error occurred when getting public key: %s' % dbusexception)
 
 
   def setup_master_service(self):
@@ -303,6 +310,9 @@ class VeyonMaster(PuavoWidget):
   def update_config(self):
     self.update_config_hosts = []
     for slave in self.veyon_slaves.values():
+      if not slave.has_session:
+        continue
+
       host = {
         'address':  slave.address,
         'hostname': slave.hostname,
@@ -320,6 +330,7 @@ class VeyonMaster(PuavoWidget):
 
   def dbus_update_config(self):
     self.update_config_call_pending = False
+    logmsg(syslog.LOG_INFO, 'updating veyon configuration')
     self.dbus_iface \
         .UpdateConfig(json.dumps(self.update_config_hosts),
                       reply_handler=self.handle_update_config,
@@ -327,20 +338,22 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_update_config(self):
-    # XXX ?
-    pass
+    logmsg(syslog.LOG_INFO, 'veyon configuration update ok')
 
 
   def handle_update_config_error(self, dbusexception):
-    # XXX ?
-    print('oh no update config dbus error: %s' % str(dbusexception))
-    pass
+    # XXX should issues here be shown to user?
+    logmsg(syslog.LOG_ERR,
+           'error occurred when updating configuration: %s' % dbusexception)
 
 
   def remove_slave(self, address):
-    self.veyon_slaves[address].disconnect_slave()
+    slave = self.veyon_slaves[address]
+    has_session = slave.has_session
+    slave.disconnect_slave()
     del(self.veyon_slaves[address])
-
+    if has_session:
+       self.update_config()
 
 
 class VeyonMasterConnection():
