@@ -423,6 +423,7 @@ class VeyonMasterConnection():
 class VeyonSlave(PuavoWidget):
   def __init__(self, menu):
     self.zeroconf = zeroconf.Zeroconf()
+    self.browser = None
     self.hostname = read_firstline('/etc/puavo/hostname')
 
     self.veyon_masters = {}
@@ -439,6 +440,24 @@ class VeyonSlave(PuavoWidget):
 
     self.pin_window = None
 
+    self.cleanup_config(self.handle_startup_cleanup)
+
+
+  def cleanup_config(self, reply_handler):
+    self.dbus_iface.CleanupConfig(reply_handler=reply_handler,
+                                  error_handler=self.handle_cleanup_error)
+
+
+  def handle_startup_cleanup(self):
+    logmsg(syslog.LOG_INFO, 'veyon slave config cleanup done')
+    self.checkout_masters()
+
+
+  def handle_cleanup_error(self, dbusexception):
+    raise 'error in cleaning up veyon configuration: %s' % dbusexception
+
+
+  def checkout_masters(self):
     service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
                                              Veyon.SERVICE_BASE)
     if service:
@@ -546,6 +565,9 @@ class VeyonListenForMasters():
 
 class PuavoVeyonApplet:
   def __init__(self):
+    self.exit_done = False
+    self.slave     = None
+
     # XXX the icon should be something else and maybe puavo-conf configurable?
     self.indicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-veyon-applet',
@@ -581,7 +603,7 @@ class PuavoVeyonApplet:
     if veyon_role == 'master':
       VeyonMaster(menu)
     else:
-      VeyonSlave(menu)
+      self.slave = VeyonSlave(menu)
 
     menu.show_all()
 
@@ -592,18 +614,37 @@ class PuavoVeyonApplet:
     Gtk.main()
 
 
+  def quit(self):
+    logmsg(syslog.LOG_INFO, 'veyon slave config cleanup done at exit, quitting')
+    Gtk.main_quit()
+
+
+  def signal_exit(self, signum, frame):
+    self.exit()
+
+
+  def exit(self):
+    if self.slave and not self.exit_done:
+      self.exit_done = True
+      self.slave.cleanup_config(self.quit)
+
+
 exitstatus = 0
 
 syslog.openlog('puavo-veyon-applet')
 logmsg(syslog.LOG_NOTICE, 'puavo-veyon-applet starting up')
 
 try:
-  signal.signal(signal.SIGINT, signal.SIG_DFL)
   applet = PuavoVeyonApplet()
+  signal.signal(signal.SIGINT,  applet.signal_exit)
+  signal.signal(signal.SIGTERM, applet.signal_exit)
   applet.main()
 except Exception as e:
   logmsg(syslog.LOG_ERR, 'unexpected error: %s' % e)
   exitstatus = 1
+
+if applet:
+  applet.exit()
 
 syslog.closelog()
 
