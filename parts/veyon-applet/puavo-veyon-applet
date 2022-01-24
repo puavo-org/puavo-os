@@ -112,7 +112,7 @@ class VeyonSlaveConnection(PuavoWidget):
   def __init__(self, master, slave_socket, slave_address):
     self.slave_socket = slave_socket
     self.address = slave_address
-    self.has_session = False
+    self.in_session = False
     self.hostname = '?'
     self.master = master
 
@@ -154,7 +154,7 @@ class VeyonSlaveConnection(PuavoWidget):
           logmsg(syslog.LOG_INFO,
                  'slave %s sent correct PIN' % self.hostname)
           self.send_public_key()
-          self.has_session = True
+          self.in_session = True
           self.master.update_config()
         else:
           logmsg(syslog.LOG_INFO,
@@ -310,7 +310,7 @@ class VeyonMaster(PuavoWidget):
   def update_config(self):
     self.update_config_hosts = []
     for slave in self.veyon_slaves.values():
-      if not slave.has_session:
+      if not slave.in_session:
         continue
 
       host = {
@@ -349,10 +349,10 @@ class VeyonMaster(PuavoWidget):
 
   def remove_slave(self, address):
     slave = self.veyon_slaves[address]
-    has_session = slave.has_session
+    in_session = slave.in_session
     slave.disconnect_slave()
     del(self.veyon_slaves[address])
-    if has_session:
+    if in_session:
        self.update_config()
 
 
@@ -360,6 +360,7 @@ class VeyonMasterConnection():
   def __init__(self, address, port, slave):
     self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.slave = slave
+    self.in_session = False
 
     self.address = address
     self.master_socket.connect((self.address, port))
@@ -394,10 +395,12 @@ class VeyonMasterConnection():
         if type(message['public_key']) != str:
           raise 'public_key is not a string'
 
+        self.in_session = True
         self.slave.set_veyon_public_key(message['public_key'])
 
       elif message['type'] == 'wrong_pin':
-        # XXX error handling
+        # XXX error handling... in case all masters return wrong_pin,
+        # XXX we should show an error message
         return
 
     except Exception as e:
@@ -440,7 +443,7 @@ class VeyonSlave(PuavoWidget):
 
     self.pin_window = None
 
-    self.cleanup_config(self.handle_startup_cleanup)
+    self.cleanup_config(self.handle_cleanup)
 
 
   def cleanup_config(self, reply_handler):
@@ -448,7 +451,7 @@ class VeyonSlave(PuavoWidget):
                                   error_handler=self.handle_cleanup_error)
 
 
-  def handle_startup_cleanup(self):
+  def handle_cleanup(self):
     logmsg(syslog.LOG_INFO, 'veyon slave config cleanup done')
     self.checkout_masters()
 
@@ -479,8 +482,15 @@ class VeyonSlave(PuavoWidget):
 
 
   def remove_master(self, address):
-    self.veyon_masters[address].disconnect_master()
+    veyon_master = self.veyon_masters[address]
+    in_session = veyon_master.in_session
+
+    veyon_master.disconnect_master()
     del(self.veyon_masters[address])
+
+    if in_session:
+      self.cleanup_config(self.handle_cleanup)
+
     if not self.veyon_masters and self.pin_window:
       self.pin_window.destroy()
 
