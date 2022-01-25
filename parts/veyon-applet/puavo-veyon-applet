@@ -461,19 +461,11 @@ class VeyonSlave(PuavoWidget):
                                            '/slave',
                                            'org.puavo.Veyon.slave')
 
-    # XXX maybe use just one combined join/close button?
-    self.join_button = Gtk.MenuItem(label='Join a Veyon session')
-    self.join_button.connect('activate', self.activate_pin_entry)
-
-    self.close_button = Gtk.MenuItem(label='Close a Veyon Session')
-    self.close_button.connect('activate', self.close_session)
-
-    self.update_action_buttons()
-
-    self.join_button.show()
-    self.close_button.show()
-    self.applet.menu.append(self.join_button)
-    self.applet.menu.append(self.close_button)
+    self.action_button = Gtk.MenuItem(label='Join a Veyon session')
+    self.action_button_handler \
+      = self.action_button.connect('activate', self.activate_pin_entry)
+    self.update_action_button()
+    self.applet.menu.append(self.action_button)
 
     self.pin_window = None
 
@@ -492,7 +484,7 @@ class VeyonSlave(PuavoWidget):
 
   def handle_session_cleanup(self):
     logmsg(syslog.LOG_INFO, 'veyon slave config cleanup done')
-    self.update_action_buttons()
+    self.update_action_button()
     self.notify('Veyon session closed')
 
 
@@ -521,7 +513,7 @@ class VeyonSlave(PuavoWidget):
                'connecting to a veyon master %s' % address)
         self.veyon_masters[address] \
           = VeyonMasterConnection(address, service.port, self)
-        self.update_action_buttons()
+        self.update_action_button()
 
 
 
@@ -567,21 +559,35 @@ class VeyonSlave(PuavoWidget):
     self.pin_window.show_all()
 
 
-  def update_action_buttons(self):
+  def update_action_button(self):
+    # XXX GLib.timeout is used here due to some odd bug in underlying
+    # XXX libraries (otherwise only the first action happens)
+
     for master_conn in self.veyon_masters.values():
       if master_conn.in_session:
-        self.join_button.set_sensitive(False)
-        self.close_button.set_sensitive(True)
+        self.action_button.disconnect(self.action_button_handler)
+        self.action_button_handler \
+          = self.action_button.connect('activate', self.close_session)
+        GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
+        label = 'Close a Veyon session'
+        GLib.timeout_add(0,
+                         lambda: self.action_button.get_child().set_text(label))
         self.applet.set_icon('OPEN')
         return
 
     self.applet.set_icon('CLOSED')
-    self.close_button.set_sensitive(False)
+
+    self.action_button.disconnect(self.action_button_handler)
+    self.action_button_handler \
+      = self.action_button.connect('activate', self.activate_pin_entry)
 
     if self.veyon_masters:
-      self.join_button.set_sensitive(True)
+      GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
+      label = 'Join a Veyon session'
+      GLib.timeout_add(0,
+                       lambda: self.action_button.get_child().set_text(label))
     else:
-      self.join_button.set_sensitive(False)
+      self.action_button.set_sensitive(False)
 
 
   def pin_entry_changed(self, entry):
@@ -607,7 +613,7 @@ class VeyonSlave(PuavoWidget):
                                  error_handler=self.handle_add_public_key_error)
 
 
-  def close_session(self):
+  def close_session(self, widget=None):
     self.master_conn.close_session()
     self.cleanup_config(self.handle_session_cleanup)
 
@@ -620,7 +626,7 @@ class VeyonSlave(PuavoWidget):
     if self.pin_window:
       self.pin_window.destroy()
 
-    self.update_action_buttons()
+    self.update_action_button()
 
     self.applet.set_icon('OPEN')
     self.notify('Veyon session opened',
