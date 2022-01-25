@@ -155,7 +155,7 @@ class VeyonSlaveConnection(PuavoWidget):
                  'slave %s sent wrong PIN' % self.slave_hostname)
           Veyon.send_msg(self.slave_socket, { 'type': 'wrong_pin' })
 
-      elif message['public_key_accepted']:
+      elif message['type'] == 'public_key_accepted':
         logmsg(syslog.LOG_INFO,
                'slave %s accepted our public key, session open' \
                  % self.slave_hostname)
@@ -322,7 +322,7 @@ class VeyonMaster(PuavoWidget):
 
       host = {
         'address':  slave.address,
-        'hostname': slave.hostname,
+        'hostname': slave.slave_hostname,
         'location': 'Classroom',
       }
       self.update_config_hosts.append(host)
@@ -734,9 +734,12 @@ class PuavoVeyonApplet:
 
 
   def exit(self):
-    if self.slave and not self.exit_done:
+    if not self.exit_done:
       self.exit_done = True
-      self.slave.cleanup_config(self.quit)
+      if self.slave:
+        self.slave.cleanup_config(self.quit)
+      else:
+        Gtk.main_quit()
 
 
 exitstatus = 0
