@@ -569,7 +569,8 @@ class VeyonSlave(PuavoWidget):
         self.action_button_handler \
           = self.action_button.connect('activate', self.close_session)
         GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
-        label = 'Close a Veyon session'
+        # XXX probably the user name of veyon master would be more useful?
+        label = 'Close a Veyon session from %s' % master_conn.master_hostname
         GLib.timeout_add(0,
                          lambda: self.action_button.get_child().set_text(label))
         self.applet.set_icon('OPEN')
