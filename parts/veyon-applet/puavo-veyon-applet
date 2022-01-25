@@ -573,6 +573,10 @@ class VeyonListenForMasters():
         self.slave.add_masters(service)
 
 
+  def remove_service(self, zeroconf, type, name):
+    pass
+
+
 class PuavoVeyonApplet:
   def __init__(self):
     self.exit_done = False
