@@ -50,7 +50,6 @@ def read_firstline(pathname):
     return (file.readlines())[0].rstrip("\n")
 
 
-# XXX is this needed?
 class PuavoWidget:
   def connect_to_dbus(self, bus_name, service, interface):
     self.bus = dbus.SystemBus()
@@ -58,12 +57,7 @@ class PuavoWidget:
     return dbus.Interface(dbusobj, dbus_interface=interface)
 
 
-  # XXX is this needed?
   def notify(self, summary, body=None):
-    # no notifications if running on login screen
-    if getpass.getuser() == 'Debian-gdm':
-      return
-
     if body:
       Notify.Notification.new(summary, body).show()
     else:
@@ -101,6 +95,7 @@ class Veyon():
     return message
 
 
+  # XXX what if this raises an Exception?  how is that handled in places?
   def send_msg(socket, message):
     message = bytes(json.dumps(message), encoding='utf-8')
     msgsize = len(message)
@@ -110,11 +105,11 @@ class Veyon():
 
 class VeyonSlaveConnection(PuavoWidget):
   def __init__(self, master, slave_socket, slave_address):
-    self.slave_socket = slave_socket
-    self.address = slave_address
-    self.in_session = False
-    self.hostname = '?'
-    self.master = master
+    self.address        = slave_address
+    self.in_session     = False
+    self.master         = master
+    self.slave_hostname = '?'
+    self.slave_socket   = slave_socket
 
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
@@ -129,7 +124,7 @@ class VeyonSlaveConnection(PuavoWidget):
       message = Veyon.receive_msg(slave_socket)
       if message == None:
         logmsg(syslog.LOG_INFO, 'slave %s at %s has disconnected' \
-                                  % (self.hostname, self.address))
+                                  % (self.slave_hostname, self.address))
         self.master.remove_slave(self.address)
         return
 
@@ -140,9 +135,9 @@ class VeyonSlaveConnection(PuavoWidget):
           raise 'hostname is not a string'
 
         # XXX we would also like 'location' probably
-        self.hostname = message['hostname']
+        self.slave_hostname = message['hostname']
         logmsg(syslog.LOG_INFO,
-               'new slave %s at %s' % (self.hostname, self.address))
+               'new slave %s at %s' % (self.slave_hostname, self.address))
 
       elif message['type'] == 'public_key_request':
         if not 'pin' in message:
@@ -152,20 +147,26 @@ class VeyonSlaveConnection(PuavoWidget):
 
         if message['pin'] == self.master.pin:
           logmsg(syslog.LOG_INFO,
-                 'slave %s sent correct PIN' % self.hostname)
+                 'slave %s sent correct PIN' % self.slave_hostname)
           self.send_public_key()
-          self.in_session = True
-          self.master.update_config()
         else:
           logmsg(syslog.LOG_INFO,
-                 'slave %s sent wrong PIN' % self.hostname)
+                 'slave %s sent wrong PIN' % self.slave_hostname)
           Veyon.send_msg(self.slave_socket, { 'type': 'wrong_pin' })
+
+      elif message['public_key_accepted']:
+        logmsg(syslog.LOG_INFO,
+               'slave %s accepted our public key, session open' \
+                 % self.slave_hostname)
+        self.in_session = True
+        self.master.update_config()
+
       else:
         # XXX should we define a protocol version
         # XXX and pass it on at some point?
         logmsg(syslog.LOG_INFO,
                'slave %s sent message %s that we do not understand' \
-                 % (self.hostname, message['type']))
+                 % (self.slave_hostname, message['type']))
 
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error with slave %s: %s' % (self.address, e))
@@ -177,19 +178,19 @@ class VeyonSlaveConnection(PuavoWidget):
 
   # XXX this should be useful but is not yet used in any situation
   def send_pin_request(self):
-    logmsg(syslog.LOG_INFO, 'sending PIN request to %s' % self.hostname)
+    logmsg(syslog.LOG_INFO, 'sending PIN request to %s' % self.slave_hostname)
     Veyon.send_msg(self.slave_socket, { 'type': 'pin_request' })
 
 
   def send_public_key(self):
-    logmsg(syslog.LOG_INFO, 'sending public key to %s' % self.hostname)
+    logmsg(syslog.LOG_INFO, 'sending public key to %s' % self.slave_hostname)
     msg = { 'type': 'public_key', 'public_key': self.master.public_key }
     Veyon.send_msg(self.slave_socket, msg)
 
 
   def disconnect_slave(self):
     logmsg(syslog.LOG_INFO,
-           'disconnecting slave %s at %s' % (self.hostname, self.address))
+           'disconnecting slave %s at %s' % (self.slave_hostname, self.address))
     self.slave_socket.shutdown(socket.SHUT_RDWR)
     self.slave_socket.close()
     self.slave_socket = None
@@ -358,11 +359,12 @@ class VeyonMaster(PuavoWidget):
 
 class VeyonMasterConnection():
   def __init__(self, address, port, slave):
-    self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.slave = slave
-    self.in_session = False
+    self.address         = address
+    self.master_hostname = '?'
+    self.in_session      = False
+    self.slave           = slave
 
-    self.address = address
+    self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.master_socket.connect((self.address, port))
 
     message = { 'type': 'new_client', 'hostname' : self.slave.hostname }
@@ -386,7 +388,14 @@ class VeyonMasterConnection():
         self.slave.remove_master(self.address)
         return
 
-      if message['type'] == 'pin_request':
+      if message['type'] == 'master_info':
+        if not 'hostname' in message:
+          raise 'no hostname in master info'
+        if type(message['hostname']) != str:
+          raise 'master hostname is not a string'
+        self.master_hostname = message['hostname']
+
+      elif message['type'] == 'pin_request':
         self.slave.activate_pin_entry()
 
       elif message['type'] == 'public_key':
@@ -396,11 +405,12 @@ class VeyonMasterConnection():
           raise 'public_key is not a string'
 
         self.in_session = True
-        self.slave.set_veyon_public_key(message['public_key'])
+        self.slave.open_session(self, message['public_key'])
 
       elif message['type'] == 'wrong_pin':
         # XXX error handling... in case all masters return wrong_pin,
-        # XXX we should show an error message
+        # XXX we should show an error message... there should probably also
+        # XXX some kind of a timeout
         return
 
     except Exception as e:
@@ -409,6 +419,10 @@ class VeyonMasterConnection():
       return
 
     return True
+
+
+  def ack_session(self):
+    Veyon.send_msg(self.master_socket, { 'type': 'public_key_accepted' })
 
 
   def send_public_key_request(self, pin):
@@ -425,9 +439,10 @@ class VeyonMasterConnection():
 
 class VeyonSlave(PuavoWidget):
   def __init__(self, menu):
-    self.zeroconf = zeroconf.Zeroconf()
-    self.browser = None
-    self.hostname = read_firstline('/etc/puavo/hostname')
+    self.browser     = None
+    self.hostname    = read_firstline('/etc/puavo/hostname')
+    self.master_conn = None
+    self.zeroconf    = zeroconf.Zeroconf()
 
     self.veyon_masters = {}
 
@@ -541,17 +556,24 @@ class VeyonSlave(PuavoWidget):
     self.pin_window = None
 
 
-  def set_veyon_public_key(self, public_key):
+  def open_session(self, master_conn, public_key):
+    self.master_conn = master_conn
     self.dbus_iface.AddPublicKey(public_key,
                                  reply_handler=self.handle_add_public_key,
                                  error_handler=self.handle_add_public_key_error)
 
 
   def handle_add_public_key(self):
-    # XXX response handling?
-    # XXX perhaps notification that communication has been established?
+    # XXX there could be some 'veyon session' button on the client
+    # XXX that could have the master hostname
+    # XXX we could also change the panel icon to indicate a session is open
+
     logmsg(syslog.LOG_INFO,
            'set a new public key received from master')
+    self.notify('Veyon session opened',
+                'This host may now be viewed and controlled by %s' \
+                  % self.master_conn.master_hostname)
+    self.master_conn.ack_session()
 
 
   def handle_add_public_key_error(self, dbusexception):
