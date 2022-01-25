@@ -135,10 +135,12 @@ class VeyonSlaveConnection(PuavoWidget):
         if type(message['hostname']) != str:
           raise 'hostname is not a string'
 
-        # XXX we would also like 'location' probably
+        # XXX we would also like a list of groups user belongs to, probably?
         self.slave_hostname = message['hostname']
         logmsg(syslog.LOG_INFO,
                'new slave %s at %s' % (self.slave_hostname, self.address))
+        msg = { 'type': 'master_info', 'hostname': self.master.hostname }
+        Veyon.send_msg(self.slave_socket, msg)
 
       elif message['type'] == 'public_key_request':
         if not 'pin' in message:
@@ -208,6 +210,7 @@ class VeyonMaster(PuavoWidget):
     self.update_config_call_pending = False
     self.veyon_slaves = {}
 
+    self.hostname = read_firstline('/etc/puavo/hostname')
     self.host_ip_address = self.get_host_ip_address()
 
     self.pin_label = Gtk.MenuItem()
@@ -298,9 +301,8 @@ class VeyonMaster(PuavoWidget):
 
 
   def make_service_name(self):
-    hostname = read_firstline('/etc/puavo/hostname')
     time_seconds = str(int(time.time()))
-    return (hostname + '_' + time_seconds + '.' + Veyon.SERVICE_BASE)
+    return (self.hostname + '_' + time_seconds + '.' + Veyon.SERVICE_BASE)
 
 
   def handle_new_slave(self, io, cond, sock):
@@ -373,7 +375,7 @@ class VeyonMasterConnection():
     self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.master_socket.connect((self.address, port))
 
-    message = { 'type': 'new_client', 'hostname' : self.slave.hostname }
+    message = { 'type': 'new_client', 'hostname': self.slave.hostname }
     Veyon.send_msg(self.master_socket, message)
 
     # XXX should this be asynchronous?
