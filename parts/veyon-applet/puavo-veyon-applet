@@ -8,6 +8,7 @@ import gi
 import json
 import netifaces
 import os
+import pwd
 import random
 import re
 import signal
@@ -139,7 +140,11 @@ class VeyonSlaveConnection(PuavoWidget):
         self.slave_hostname = message['hostname']
         logmsg(syslog.LOG_INFO,
                'new slave %s at %s' % (self.slave_hostname, self.address))
-        msg = { 'type': 'master_info', 'hostname': self.master.hostname }
+        msg = {
+          'type': 'master_info',
+          'hostname': self.master.hostname,
+          'username': self.master.username,
+        }
         Veyon.send_msg(self.slave_socket, msg)
 
       elif message['type'] == 'public_key_request':
@@ -208,6 +213,7 @@ class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
     self.public_key = None
     self.update_config_call_pending = False
+    self.username = self.lookup_username()
     self.veyon_slaves = {}
 
     self.hostname = read_firstline('/etc/puavo/hostname')
@@ -227,6 +233,13 @@ class VeyonMaster(PuavoWidget):
                       error_handler=self.handle_get_public_key_error)
 
     self.update_config()
+
+
+  def lookup_username(self):
+    userinfo = pwd.getpwuid( os.getuid() )
+    if userinfo.pw_gecos != '':
+      return userinfo.pw_gecos
+    return userinfo.pw_name
 
 
   def get_host_ip_address(self):
@@ -367,10 +380,10 @@ class VeyonMaster(PuavoWidget):
 
 class VeyonMasterConnection():
   def __init__(self, address, port, slave):
-    self.address         = address
-    self.master_hostname = '?'
-    self.in_session      = False
-    self.slave           = slave
+    self.address     = address
+    self.in_session  = False
+    self.master_info = { 'hostname': '?', 'username': '?' }
+    self.slave       = slave
 
     self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.master_socket.connect((self.address, port))
@@ -399,7 +412,15 @@ class VeyonMasterConnection():
           raise 'no hostname in master info'
         if type(message['hostname']) != str:
           raise 'master hostname is not a string'
-        self.master_hostname = message['hostname']
+        if not 'username' in message:
+          raise 'no username in master info'
+        if type(message['username']) != str:
+          raise 'master username is not a string'
+
+        self.master_info = {
+          'hostname': message['hostname'],
+          'username': message['username'],
+        }
 
       elif message['type'] == 'pin_request':
         self.slave.activate_pin_entry()
@@ -571,8 +592,9 @@ class VeyonSlave(PuavoWidget):
         self.action_button_handler \
           = self.action_button.connect('activate', self.close_session)
         GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
-        # XXX probably the user name of veyon master would be more useful?
-        label = 'Close a Veyon session from %s' % master_conn.master_hostname
+        label = 'Close a Veyon session from %s (%s)' \
+                  % (master_conn.master_info['username'],
+                     master_conn.master_info['hostname'])
         GLib.timeout_add(0,
                          lambda: self.action_button.get_child().set_text(label))
         self.applet.set_icon('OPEN')
@@ -633,8 +655,9 @@ class VeyonSlave(PuavoWidget):
 
     self.applet.set_icon('OPEN')
     self.notify('Veyon session opened',
-                'This host may now be viewed and controlled by %s' \
-                  % self.master_conn.master_hostname)
+                'This host may now be viewed and controlled by %s (%s)' \
+                  % (self.master_conn.master_info['username'],
+                     self.master_conn.master_info['hostname']))
 
 
   def handle_add_public_key_error(self, dbusexception):
