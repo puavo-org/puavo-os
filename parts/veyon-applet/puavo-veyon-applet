@@ -210,6 +210,8 @@ class VeyonSlaveConnection(PuavoWidget):
 
 class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
+    self.applet = applet
+
     self.public_key = None
     self.update_config_call_pending = False
     self.username = self.lookup_username()
@@ -218,12 +220,7 @@ class VeyonMaster(PuavoWidget):
     self.hostname = read_firstline('/etc/puavo/hostname')
     self.host_ip_address = self.get_host_ip_address()
 
-    self.pin_label = Gtk.MenuItem()
     self.create_new_pin()
-    self.pin_label.show()
-    self.pin_label.set_sensitive(False)
-    applet.menu.append(self.pin_label)
-
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
                                            '/master',
                                            'org.puavo.Veyon.master')
@@ -260,7 +257,7 @@ class VeyonMaster(PuavoWidget):
 
   def set_pin(self, new_pin):
     self.pin = new_pin
-    self.pin_label.set_label('PIN: %s' % new_pin)
+    self.applet.indicator.set_label('PIN: %s' % new_pin, '')
 
 
   def create_new_pin(self):
