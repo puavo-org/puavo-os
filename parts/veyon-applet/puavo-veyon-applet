@@ -8,6 +8,7 @@ import gi
 import json
 import netifaces
 import os
+import psutil
 import pwd
 import random
 import re
@@ -218,17 +219,32 @@ class VeyonMaster(PuavoWidget):
     self.veyon_slaves = {}
 
     self.hostname = read_firstline('/etc/puavo/hostname')
-    self.host_ip_address = self.get_host_ip_address()
-
-    self.create_new_pin()
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
                                            '/master',
                                            'org.puavo.Veyon.master')
+
+    self.open_master_button = Gtk.MenuItem(label='Open Veyon master')
+    self.open_master_button.set_sensitive(True)
+    self.open_master_button.connect('activate', self.open_veyon_master)
+    self.applet.menu.append(self.open_master_button)
+
+    self.session_button = Gtk.MenuItem(label='Setup a Veyon session')
+    self.session_button.set_sensitive(True)
+    self.session_button.connect('activate', self.setup_session)
+    self.applet.menu.append(self.session_button)
+
+
+
+  def setup_session(self, widget=None):
+    self.host_ip_address = self.get_host_ip_address()
+    self.create_new_pin()
     self.dbus_iface \
         .GetPublicKey(reply_handler=self.handle_get_public_key,
                       error_handler=self.handle_get_public_key_error)
-
     self.update_config()
+
+    # XXX for now, we can not de-setup a session
+    self.session_button.set_sensitive(False)
 
 
   def lookup_username(self):
@@ -255,11 +271,6 @@ class VeyonMaster(PuavoWidget):
     raise 'could not find IP address for this host'
 
 
-  def set_pin(self, new_pin):
-    self.pin = new_pin
-    self.applet.indicator.set_label('PIN: %s' % new_pin, '')
-
-
   def create_new_pin(self):
     # We try to make a random PIN that is unique on a network with
     # maximum of 4096 hosts (netmask 255.255.240.0), on bigger networks
@@ -267,8 +278,9 @@ class VeyonMaster(PuavoWidget):
     random_number = random.randint(0, 23)
     split_ip = self.host_ip_address.split('.')
     ip_based_number = 256 * (int(split_ip[2]) % 16) + int(split_ip[3])
-    nice_pin = '%05d' % (4096 * random_number + ip_based_number)
-    self.set_pin(nice_pin)
+    new_pin = '%05d' % (4096 * random_number + ip_based_number)
+    self.pin = new_pin
+    self.applet.indicator.set_label('PIN: %s' % new_pin, '')
 
 
   def handle_get_public_key(self, public_key):
@@ -281,6 +293,19 @@ class VeyonMaster(PuavoWidget):
     # XXX should issues here be shown to user?
     logmsg(syslog.LOG_ERR,
            'error occurred when getting public key: %s' % dbusexception)
+
+
+  def open_veyon_master(self, widget=None):
+    uid = os.getuid()
+    procs = [
+      p for p in psutil.process_iter() \
+        if 'veyon-master' in p.name().lower() and p.uids().real == uid
+    ]
+
+    if len(procs) == 0:
+      subprocess.Popen([ '/usr/bin/veyon-master' ], close_fds=True)
+
+    subprocess.Popen([ 'wmctrl', '-a', 'Veyon Master' ], close_fds=True)
 
 
   def setup_master_service(self):
