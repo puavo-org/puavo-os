@@ -175,8 +175,7 @@ class VeyonSlaveConnection(PuavoWidget):
         self.master.update_config()
 
       else:
-        # XXX should we define a protocol version
-        # XXX and pass it on at some point?
+        # XXX should we define a protocol version and pass it on at some point?
         logmsg(syslog.LOG_INFO,
                'slave %s sent message %s that we do not understand' \
                  % (self.slave_hostname, message['type']))
@@ -184,7 +183,7 @@ class VeyonSlaveConnection(PuavoWidget):
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error with slave %s: %s' % (self.address, e))
       self.master.remove_slave(self.address)
-      return
+      return False
 
     return True
 
@@ -438,12 +437,18 @@ class VeyonMasterConnection():
         # XXX error handling... in case all masters return wrong_pin,
         # XXX we should show an error message... there should probably also
         # XXX some kind of a timeout
-        return
+        pass
+      else:
+        # XXX should we define a protocol version and pass it on at some point?
+        logmsg(syslog.LOG_INFO,
+               'master %s sent message %s that we do not understand' \
+                 % (self.address, message['type']))
+
 
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error with master %s: %s' % (self.address, e))
       self.slave.remove_master(self.address)
-      return
+      return False
 
     return True
 
@@ -592,7 +597,7 @@ class VeyonSlave(PuavoWidget):
         self.action_button_handler \
           = self.action_button.connect('activate', self.close_session)
         GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
-        label = 'Close a Veyon session from %s (%s)' \
+        label = 'Close a Veyon session from %s using %s' \
                   % (master_conn.master_info['username'],
                      master_conn.master_info['hostname'])
         GLib.timeout_add(0,
@@ -606,13 +611,13 @@ class VeyonSlave(PuavoWidget):
     self.action_button_handler \
       = self.action_button.connect('activate', self.activate_pin_entry)
 
+    label = 'Join a Veyon session'
+    GLib.timeout_add(0, lambda: self.action_button.get_child().set_text(label))
+
     if self.veyon_masters:
       GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
-      label = 'Join a Veyon session'
-      GLib.timeout_add(0,
-                       lambda: self.action_button.get_child().set_text(label))
     else:
-      self.action_button.set_sensitive(False)
+      GLib.timeout_add(0, lambda: self.action_button.set_sensitive(False))
 
 
   def pin_entry_changed(self, entry):
@@ -655,7 +660,7 @@ class VeyonSlave(PuavoWidget):
 
     self.applet.set_icon('OPEN')
     self.notify('Veyon session opened',
-                'This host may now be viewed and controlled by %s (%s)' \
+                'This host may now be viewed and controlled by %s from %s' \
                   % (self.master_conn.master_info['username'],
                      self.master_conn.master_info['hostname']))
 
