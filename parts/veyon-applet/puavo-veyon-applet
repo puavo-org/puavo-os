@@ -213,6 +213,7 @@ class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
     self.applet = applet
 
+    self.pin = None
     self.public_key = None
     self.update_config_call_pending = False
     self.username = self.lookup_username()
@@ -223,6 +224,11 @@ class VeyonMaster(PuavoWidget):
                                            '/master',
                                            'org.puavo.Veyon.master')
 
+    self.change_pin_button = Gtk.MenuItem(label='Change PIN')
+    self.change_pin_button.set_sensitive(False)
+    self.change_pin_button.connect('activate', self.create_new_pin)
+    self.applet.menu.append(self.change_pin_button)
+
     self.open_master_button = Gtk.MenuItem(label='Open Veyon master')
     self.open_master_button.set_sensitive(True)
     self.open_master_button.connect('activate', self.open_veyon_master)
@@ -230,7 +236,8 @@ class VeyonMaster(PuavoWidget):
 
     self.session_button = Gtk.MenuItem(label='Setup a Veyon session')
     self.session_button.set_sensitive(True)
-    self.session_button.connect('activate', self.setup_session)
+    self.session_button_handler \
+      = self.session_button.connect('activate', self.setup_session)
     self.applet.menu.append(self.session_button)
 
 
@@ -243,8 +250,18 @@ class VeyonMaster(PuavoWidget):
                       error_handler=self.handle_get_public_key_error)
     self.update_config()
 
-    # XXX for now, we can not de-setup a session
-    self.session_button.set_sensitive(False)
+    self.change_pin_button.set_sensitive(True)
+
+    self.session_button.get_child().set_text('Close a Veyon session')
+    self.session_button.disconnect(self.session_button_handler)
+    self.session_button.connect('activate', self.close_session)
+
+
+  def close_session(self, widget=None):
+    # XXX session closing not implemented yet
+    # XXX PIN should be set to None ?
+    # XXX all slaves should receive 'close_session' message
+    self.change_pin_button.set_sensitive(False)
 
 
   def lookup_username(self):
@@ -271,14 +288,20 @@ class VeyonMaster(PuavoWidget):
     raise 'could not find IP address for this host'
 
 
-  def create_new_pin(self):
+  def create_new_pin(self, widget=None):
     # We try to make a random PIN that is unique on a network with
     # maximum of 4096 hosts (netmask 255.255.240.0), on bigger networks
     # this might sometimes fail.
-    random_number = random.randint(0, 23)
     split_ip = self.host_ip_address.split('.')
     ip_based_number = 256 * (int(split_ip[2]) % 16) + int(split_ip[3])
-    new_pin = '%05d' % (4096 * random_number + ip_based_number)
+
+    create_new = True
+    while create_new:
+      random_number = random.randint(0, 23)
+      new_pin = '%05d' % (4096 * random_number + ip_based_number)
+      if new_pin != self.pin:
+        create_new = False
+
     self.pin = new_pin
     self.applet.indicator.set_label('PIN: %s' % new_pin, '')
 
