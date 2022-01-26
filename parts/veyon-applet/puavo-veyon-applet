@@ -170,10 +170,12 @@ class VeyonSlaveConnection(PuavoWidget):
         self.in_session = True
         self.master.update_config()
 
-      elif message['close_session']:
-        logmsg(syslog.LOG_INFO, 'slave %s closed session' % self.slave_hostname)
-        self.in_session = False
-        self.master.update_config()
+      elif message['type'] == 'close_session':
+        if self.in_session:
+          logmsg(syslog.LOG_INFO,
+                 'slave %s closed session' % self.slave_hostname)
+          self.in_session = False
+          self.master.update_config()
 
       else:
         # XXX should we define a protocol version and pass it on at some point?
@@ -187,6 +189,10 @@ class VeyonSlaveConnection(PuavoWidget):
       return False
 
     return True
+
+
+  def request_close_session(self):
+    Veyon.send_msg(self.slave_socket, { 'type': 'request_close_session' })
 
 
   # XXX this should be useful but is not yet used in any situation
@@ -258,10 +264,21 @@ class VeyonMaster(PuavoWidget):
 
 
   def close_session(self, widget=None):
-    # XXX session closing not implemented yet
-    # XXX PIN should be set to None ?
-    # XXX all slaves should receive 'close_session' message
+    self.applet.indicator.set_label('', '')
+    self.pin = None
+
     self.change_pin_button.set_sensitive(False)
+
+    for slave_conn in self.veyon_slaves.values():
+      if slave_conn.in_session:
+        slave_conn.request_close_session()
+
+    label = 'Setup a Veyon session'
+    self.session_button.get_child().set_text(label)
+    self.session_button.set_sensitive(True)
+    self.session_button.disconnect(self.session_button_handler)
+    self.session_button_handler \
+      = self.session_button.connect('activate', self.setup_session)
 
 
   def lookup_username(self):
@@ -452,7 +469,11 @@ class VeyonMasterConnection():
         self.slave.remove_master(self.address)
         return
 
-      if message['type'] == 'master_info':
+      if message['type'] == 'request_close_session':
+        if self.in_session:
+          self.close_session()
+
+      elif message['type'] == 'master_info':
         if not 'hostname' in message:
           raise 'no hostname in master info'
         if type(message['hostname']) != str:
