@@ -382,6 +382,7 @@ class VeyonMasterConnection():
     self.address     = address
     self.in_session  = False
     self.master_info = { 'hostname': '?', 'username': '?' }
+    self.pin_sent    = False
     self.slave       = slave
 
     self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -430,14 +431,18 @@ class VeyonMasterConnection():
         if type(message['public_key']) != str:
           raise 'public_key is not a string'
 
-        self.in_session = True
-        self.slave.open_session(self, message['public_key'])
+        if self.pin_sent:
+          self.in_session = True
+          self.slave.open_session(self, message['public_key'])
+        else:
+          logmsg(syslog.LOG_INFO,
+                 'master %s sent public key even if we have not sent a PIN' \
+                   ' (maybe it came back too late?)' % self.address)
 
       elif message['type'] == 'wrong_pin':
-        # XXX error handling... in case all masters return wrong_pin,
-        # XXX we should show an error message... there should probably also
-        # XXX some kind of a timeout
-        pass
+        if self.pin_sent:
+          self.pin_sent = False
+          self.slave.handle_wrong_pin()
       else:
         # XXX should we define a protocol version and pass it on at some point?
         logmsg(syslog.LOG_INFO,
@@ -465,6 +470,7 @@ class VeyonMasterConnection():
   def send_public_key_request(self, pin):
     msg = { 'type': 'public_key_request', 'pin': pin }
     Veyon.send_msg(self.master_socket, msg)
+    self.pin_sent = True
 
 
   def disconnect_master(self):
@@ -482,6 +488,8 @@ class VeyonSlave(PuavoWidget):
     self.hostname    = read_firstline('/etc/puavo/hostname')
     self.master_conn = None
     self.zeroconf    = zeroconf.Zeroconf()
+
+    self.public_key_request_timer_id = None
 
     self.veyon_masters = {}
 
@@ -620,6 +628,15 @@ class VeyonSlave(PuavoWidget):
       GLib.timeout_add(0, lambda: self.action_button.set_sensitive(False))
 
 
+  def handle_wrong_pin(self):
+    for master_conn in self.veyon_masters.values():
+      if master_conn.pin_sent:
+        # still waiting for some answer
+        return
+
+    logmsg(syslog.LOG_INFO, 'wrong pin sent to all masters')
+
+
   def pin_entry_changed(self, entry):
     entry.handler_block_by_func(self.pin_entry_changed)
     new_text = ''.join([c for c in entry.get_text() if c in string.digits])
@@ -630,6 +647,25 @@ class VeyonSlave(PuavoWidget):
       # XXX of this, but this can be used for testing
       for master_conn in self.veyon_masters.values():
         master_conn.send_public_key_request(new_text)
+      if self.public_key_request_timer_id:
+        GLib.source_remove(self.public_key_request_timer_id)
+      self.public_key_request_timer_id \
+        = GLib.timeout_add_seconds(10, self.public_key_request_timeout)
+
+
+  def public_key_request_timeout(self):
+    there_was_a_timeout = False
+    for master_conn in self.veyon_masters.values():
+      if master_conn.pin_sent:
+        there_was_a_timeout = True
+        logmsg(syslog.LOG_INFO,
+               'master %s did not answer in time' % master_conn.address)
+      master_conn.pin_sent = False
+
+    self.public_key_request_timer_id = None
+    if there_was_a_timeout:
+      # XXX react to this in UI somehow
+      pass
 
 
   def pin_window_closed(self, widget):
@@ -637,6 +673,8 @@ class VeyonSlave(PuavoWidget):
 
 
   def open_session(self, master_conn, public_key):
+    for master_conn in self.veyon_masters.values():
+      master_conn.pin_sent = False
     self.master_conn = master_conn
     self.dbus_iface.AddPublicKey(public_key,
                                  reply_handler=self.handle_add_public_key,
