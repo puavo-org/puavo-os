@@ -210,8 +210,14 @@ class VeyonSlaveConnection(PuavoWidget):
   def disconnect_slave(self):
     logmsg(syslog.LOG_INFO,
            'disconnecting slave %s at %s' % (self.slave_hostname, self.address))
-    self.slave_socket.shutdown(socket.SHUT_RDWR)
-    self.slave_socket.close()
+    try:
+      self.slave_socket.shutdown(socket.SHUT_RDWR)
+    except Exception:
+      pass
+    try:
+      self.slave_socket.close()
+    except Exception:
+      pass
     self.slave_socket = None
 
 
@@ -560,8 +566,14 @@ class VeyonMasterConnection():
 
   def disconnect_master(self):
     logmsg(syslog.LOG_INFO, 'disconnecting master %s' % self.address)
-    self.master_socket.shutdown(socket.SHUT_RDWR)
-    self.master_socket.close()
+    try:
+      self.master_socket.shutdown(socket.SHUT_RDWR)
+    except Exception:
+      pass
+    try:
+      self.master_socket.close()
+    except Exception:
+      pass
     self.master_socket = None
 
 
@@ -626,14 +638,13 @@ class VeyonSlave(PuavoWidget):
                                            VeyonListenForMasters(self))
 
 
-  def add_masters(self, service):
-    for srv_address in service.addresses:
-      address = str(socket.inet_ntop(socket.AF_INET, srv_address))
+  def add_masters(self, address_list, port):
+    for address in address_list:
       if not address in self.veyon_masters:
         logmsg(syslog.LOG_INFO,
                'connecting to a veyon master %s' % address)
         self.veyon_masters[address] \
-          = VeyonMasterConnection(address, service.port, self)
+          = VeyonMasterConnection(address, port, self)
         self.update_action_button()
 
 
@@ -653,6 +664,8 @@ class VeyonSlave(PuavoWidget):
 
     if not self.veyon_masters and self.pin_window:
       self.pin_window.destroy()
+
+    self.update_action_button()
 
 
   def activate_pin_entry(self, widget=None):
@@ -799,6 +812,7 @@ class VeyonSlave(PuavoWidget):
 
 class VeyonListenForMasters():
   def __init__(self, slave):
+    self.master_services = {}
     self.slave = slave
 
 
@@ -810,17 +824,20 @@ class VeyonListenForMasters():
 
 
   def add_service(self, zeroconf, service_type, name):
-    if check_if_ours(service_type, name):
+    if self.check_if_ours(service_type, name):
       service = zeroconf.get_service_info(service_type, name)
-      self.slave.add_masters(service)
+      address_list = [
+        str(socket.inet_ntop(socket.AF_INET, a)) for a in service.addresses
+      ]
+      self.master_services[name] = address_list
+      self.slave.add_masters(address_list, service.port)
 
 
   def remove_service(self, zeroconf, service_type, name):
-    if check_if_ours(service_type, name):
-      service = zeroconf.get_service_info(service_type, name)
-      for srv_address in service.addresses:
-        address = str(socket.inet_ntop(socket.AF_INET, srv_address))
-        self.slave.remove_master(address)
+    if self.check_if_ours(service_type, name):
+      if name in self.master_services:
+        for address in self.master_services[name]:
+          self.slave.remove_master(address)
 
 
 class PuavoVeyonApplet:
