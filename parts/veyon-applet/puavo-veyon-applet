@@ -122,6 +122,14 @@ class VeyonSlaveConnection(PuavoWidget):
                           self.slave_socket)
 
 
+  def send_to_slave(self, msg):
+    try:
+      Veyon.send_msg(self.slave_socket, msg)
+    except Exception as e:
+      logmsg(syslog.LOG_ERR, 'error sending a message to slave: %s' % e)
+      self.master.remove_slave(self.address)
+
+
   def incoming_slave_data(self, io, cond, slave_socket):
     try:
       message = Veyon.receive_msg(slave_socket)
@@ -129,7 +137,7 @@ class VeyonSlaveConnection(PuavoWidget):
         logmsg(syslog.LOG_INFO, 'slave %s at %s has disconnected' \
                                   % (self.slave_hostname, self.address))
         self.master.remove_slave(self.address)
-        return
+        return False
 
       if message['type'] == 'new_client':
         if not 'hostname' in message:
@@ -146,7 +154,7 @@ class VeyonSlaveConnection(PuavoWidget):
           'hostname': self.master.hostname,
           'username': self.master.username,
         }
-        Veyon.send_msg(self.slave_socket, msg)
+        self.send_to_slave(msg)
 
       elif message['type'] == 'public_key_request':
         if not 'pin' in message:
@@ -161,7 +169,7 @@ class VeyonSlaveConnection(PuavoWidget):
         else:
           logmsg(syslog.LOG_INFO,
                  'slave %s sent wrong PIN' % self.slave_hostname)
-          Veyon.send_msg(self.slave_socket, { 'type': 'wrong_pin' })
+          self.send_to_slave({ 'type': 'wrong_pin' })
 
       elif message['type'] == 'public_key_accepted':
         logmsg(syslog.LOG_INFO,
@@ -192,19 +200,19 @@ class VeyonSlaveConnection(PuavoWidget):
 
 
   def request_close_session(self):
-    Veyon.send_msg(self.slave_socket, { 'type': 'request_close_session' })
+    self.send_to_slave({ 'type': 'request_close_session' })
 
 
   # XXX this should be useful but is not yet used in any situation
   def send_pin_request(self):
     logmsg(syslog.LOG_INFO, 'sending PIN request to %s' % self.slave_hostname)
-    Veyon.send_msg(self.slave_socket, { 'type': 'pin_request' })
+    self.send_to_slave({ 'type': 'pin_request' })
 
 
   def send_public_key(self):
     logmsg(syslog.LOG_INFO, 'sending public key to %s' % self.slave_hostname)
     msg = { 'type': 'public_key', 'public_key': self.master.public_key }
-    Veyon.send_msg(self.slave_socket, msg)
+    self.send_to_slave(msg)
 
 
   def disconnect_slave(self):
