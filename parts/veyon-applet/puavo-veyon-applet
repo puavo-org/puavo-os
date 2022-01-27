@@ -244,6 +244,10 @@ class VeyonMaster(PuavoWidget):
                                            '/master',
                                            'org.puavo.Veyon.master')
 
+    self.client_count_label = Gtk.MenuItem(label='Clients: 0')
+    self.client_count_label.set_sensitive(False)
+    self.applet.menu.append(self.client_count_label)
+
     self.change_pin_button = Gtk.MenuItem(label='Change PIN')
     self.change_pin_button.set_sensitive(False)
     self.change_pin_button.connect('activate', self.create_new_pin)
@@ -430,6 +434,9 @@ class VeyonMaster(PuavoWidget):
         'location': 'Classroom',
       }
       self.update_config_hosts.append(host)
+
+    client_count = len(self.update_config_hosts)
+    self.client_count_label.get_child().set_text('Clients: %d' % client_count)
 
     if self.update_config_call_pending:
       return
