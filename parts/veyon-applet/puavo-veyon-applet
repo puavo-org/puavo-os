@@ -792,7 +792,7 @@ class VeyonSlave(PuavoWidget):
   def handle_add_public_key(self):
     logmsg(syslog.LOG_INFO,
            'set a new public key received from master')
-    self.send_to_master({ 'type': 'public_key_accepted' })
+    self.master_conn.send_to_master({ 'type': 'public_key_accepted' })
 
     if self.pin_window:
       self.pin_window.destroy()
