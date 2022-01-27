@@ -883,10 +883,6 @@ class PuavoVeyonApplet:
     logmsg(syslog.LOG_NOTICE, 'operating in veyon %s role' % veyon_role)
 
     self.menu = Gtk.Menu()
-    role_label = Gtk.MenuItem(label='Veyon role: %s' % veyon_role)
-    role_label.show()
-    role_label.set_sensitive(False)
-    self.menu.append(role_label)
 
     if veyon_role == 'master':
       VeyonMaster(self)
