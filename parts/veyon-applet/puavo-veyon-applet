@@ -127,7 +127,7 @@ class VeyonSlaveConnection(PuavoWidget):
       Veyon.send_msg(self.slave_socket, msg)
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error sending a message to slave: %s' % e)
-      self.master.remove_slave(self.address)
+      self.master.remove_slave(self.address, True)
 
 
   def incoming_slave_data(self, io, cond, slave_socket):
@@ -136,7 +136,7 @@ class VeyonSlaveConnection(PuavoWidget):
       if message == None:
         logmsg(syslog.LOG_INFO, 'slave %s at %s has disconnected' \
                                   % (self.slave_hostname, self.address))
-        self.master.remove_slave(self.address)
+        self.master.remove_slave(self.address, False)
         return False
 
       if message['type'] == 'new_client':
@@ -193,7 +193,7 @@ class VeyonSlaveConnection(PuavoWidget):
 
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error with slave %s: %s' % (self.address, e))
-      self.master.remove_slave(self.address)
+      self.master.remove_slave(self.address, True)
       return False
 
     return True
@@ -215,10 +215,11 @@ class VeyonSlaveConnection(PuavoWidget):
     self.send_to_slave(msg)
 
 
-  def disconnect_slave(self):
+  def disconnect_slave(self, do_shutdown):
     logmsg(syslog.LOG_INFO,
            'disconnecting slave %s at %s' % (self.slave_hostname, self.address))
-    self.slave_socket.shutdown(socket.SHUT_RDWR)
+    if do_shutdown:
+      self.slave_socket.shutdown(socket.SHUT_RDWR)
     self.slave_socket.close()
     self.slave_socket = None
     GLib.source_remove(self.slave_socket_watch)
@@ -415,7 +416,7 @@ class VeyonMaster(PuavoWidget):
     (conn, sock_slave_address) = sock.accept()
     slave_address = sock_slave_address[0]
     if slave_address in self.veyon_slaves:
-      self.remove_slave(slave_address)
+      self.remove_slave(slave_address, True)
     slave = VeyonSlaveConnection(self, conn, slave_address)
     self.veyon_slaves[slave.address] = slave
 
@@ -465,10 +466,10 @@ class VeyonMaster(PuavoWidget):
            'error occurred when updating configuration: %s' % dbusexception)
 
 
-  def remove_slave(self, address):
+  def remove_slave(self, address, do_shutdown):
     slave = self.veyon_slaves[address]
     in_session = slave.in_session
-    slave.disconnect_slave()
+    slave.disconnect_slave(do_shutdown)
     del(self.veyon_slaves[address])
     if in_session:
        self.update_config()
