@@ -253,7 +253,7 @@ diff -ruN gnome-control-center.orig/panels/appearance/appearance.ui gnome-contro
 diff -ruN gnome-control-center.orig/panels/appearance/cc-appearance-panel.c gnome-control-center/panels/appearance/cc-appearance-panel.c
 --- gnome-control-center.orig/panels/appearance/cc-appearance-panel.c	1970-01-01 02:00:00.000000000 +0200
 +++ gnome-control-center/panels/appearance/cc-appearance-panel.c	2021-08-13 13:47:19.835018374 +0300
-@@ -0,0 +1,515 @@
+@@ -0,0 +1,558 @@
 +/*
 +Custom "Appearance" gnome-control-center panel
 +Probably completely incorrectly done, but there's no documentation
@@ -409,6 +409,49 @@ diff -ruN gnome-control-center.orig/panels/appearance/cc-appearance-panel.c gnom
 +
 +    g_settings_set_string(shell_scheme, SHELL_THEME_KEY,
 +                          *(enabled ? self->dark_theme_names + 1 : self->light_theme_names + 1));
++
++    char kvantumpath[100];
++    char kvantumsetting[]="[General]\ntheme=KvArcDark\n";
++    sprintf(kvantumpath, "%s/.config/Kvantum", g_get_home_dir());
++    if(enabled) {
++        int ret = g_mkdir_with_parents(kvantumpath, 0755);
++        if(ret {
++            //here be problems
++        }
++        else
++        {
++            strcat(kvantumpath, "/kvantum.kvconfig");
++            if(!exists(kvantumpath)) {
++                FILE *f=fopen(kvantumpath, "w");
++                fprintf(f, "%s", kvantumsetting);
++                fclose(f);
++            }
++        }
++    }
++    else {
++        strcat(kvantumpath, "/kvantum.kvconfig");
++        if(exists(kvantumpath)) {
++            FILE *f=fopen(kvantumpath, "r");
++            if(f != NULL)
++            {
++                gboolean our_file=TRUE;
++                for(int i=0;i<strlen(kvantumsetting-5) && !feof(f);i++)
++                {
++                    if(kvantumsetting[i]!=fgetc(f))
++                    {
++                        our_file=FALSE;
++                        break;
++                    }
++                }
++                fseek(f, 0, SEEK_END);
++                if(ftell(f)>strlen(kvantumsetting))
++                    our_file=FALSE;
++                fclose(f);
++                if(our_file)
++                    remove(kvantumpath);
++            }
++        }
++    }
 +
 +    g_settings_sync();
 +
