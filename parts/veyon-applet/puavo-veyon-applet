@@ -98,7 +98,6 @@ class Veyon():
     return message
 
 
-  # XXX what if this raises an Exception?  how is that handled in places?
   def send_msg(socket, message):
     message = bytes(json.dumps(message), encoding='utf-8')
     msgsize = len(message)
@@ -115,11 +114,12 @@ class VeyonSlaveConnection(PuavoWidget):
     self.slave_socket   = slave_socket
 
     # XXX should this be asynchronous?
-    GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
-                      0,
-                      GLib.IOCondition.IN,
-                      self.incoming_slave_data,
-                      self.slave_socket)
+    self.slave_socket_watch \
+      = GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
+                          0,
+                          GLib.IOCondition.IN,
+                          self.incoming_slave_data,
+                          self.slave_socket)
 
 
   def incoming_slave_data(self, io, cond, slave_socket):
@@ -210,15 +210,10 @@ class VeyonSlaveConnection(PuavoWidget):
   def disconnect_slave(self):
     logmsg(syslog.LOG_INFO,
            'disconnecting slave %s at %s' % (self.slave_hostname, self.address))
-    try:
-      self.slave_socket.shutdown(socket.SHUT_RDWR)
-    except Exception:
-      pass
-    try:
-      self.slave_socket.close()
-    except Exception:
-      pass
+    self.slave_socket.shutdown(socket.SHUT_RDWR)
+    self.slave_socket.close()
     self.slave_socket = None
+    GLib.source_remove(self.slave_socket_watch)
 
 
 class VeyonMaster(PuavoWidget):
@@ -475,15 +470,24 @@ class VeyonMasterConnection():
     self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.master_socket.connect((self.address, port))
 
-    message = { 'type': 'new_client', 'hostname': self.slave.hostname }
-    Veyon.send_msg(self.master_socket, message)
-
     # XXX should this be asynchronous?
-    GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
-                      0,
-                      GLib.IOCondition.IN,
-                      self.incoming_master_data,
-                      self.master_socket)
+    self.master_socket_watch \
+      = GLib.io_add_watch(GLib.IOChannel(self.master_socket.fileno()),
+                          0,
+                          GLib.IOCondition.IN,
+                          self.incoming_master_data,
+                          self.master_socket)
+
+    message = { 'type': 'new_client', 'hostname': self.slave.hostname }
+    self.send_to_master(message)
+
+
+  def send_to_master(self, msg):
+    try:
+      Veyon.send_msg(self.master_socket, msg)
+    except Exception as e:
+      logmsg(syslog.LOG_ERR, 'error sending a message to master: %s' % e)
+      self.slave.remove_master(self.address)
 
 
   def incoming_master_data(self, io, cond, master_socket):
@@ -492,7 +496,7 @@ class VeyonMasterConnection():
       if message == None:
         logmsg(syslog.LOG_INFO, 'master %s has disconnected' % self.address)
         self.slave.remove_master(self.address)
-        return
+        return False
 
       if message['type'] == 'request_close_session':
         if self.in_session:
@@ -549,32 +553,22 @@ class VeyonMasterConnection():
     return True
 
 
-  def ack_session(self):
-    Veyon.send_msg(self.master_socket, { 'type': 'public_key_accepted' })
-
-
   def close_session(self):
     self.in_session = False
-    Veyon.send_msg(self.master_socket, { 'type': 'close_session' })
+    self.send_to_master({ 'type': 'close_session' })
 
 
   def send_public_key_request(self, pin):
-    msg = { 'type': 'public_key_request', 'pin': pin }
-    Veyon.send_msg(self.master_socket, msg)
+    self.send_to_master({ 'type': 'public_key_request', 'pin': pin })
     self.pin_sent = True
 
 
   def disconnect_master(self):
     logmsg(syslog.LOG_INFO, 'disconnecting master %s' % self.address)
-    try:
-      self.master_socket.shutdown(socket.SHUT_RDWR)
-    except Exception:
-      pass
-    try:
-      self.master_socket.close()
-    except Exception:
-      pass
+    self.master_socket.shutdown(socket.SHUT_RDWR)
+    self.master_socket.close()
     self.master_socket = None
+    GLib.source_remove(self.master_socket_watch)
 
 
 class VeyonSlave(PuavoWidget):
@@ -790,7 +784,7 @@ class VeyonSlave(PuavoWidget):
   def handle_add_public_key(self):
     logmsg(syslog.LOG_INFO,
            'set a new public key received from master')
-    self.master_conn.ack_session()
+    self.send_to_master({ 'type': 'public_key_accepted' })
 
     if self.pin_window:
       self.pin_window.destroy()
