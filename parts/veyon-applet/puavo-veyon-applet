@@ -219,6 +219,10 @@ class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
     self.applet = applet
 
+    # This will wait until host gets a network... which might never happen,
+    # but this tool is not useful at all without a network.
+    self.host_ip_address = self.get_host_ip_address()
+
     self.pin = None
     self.public_key = None
     self.update_config_call_pending = False
@@ -289,20 +293,30 @@ class VeyonMaster(PuavoWidget):
 
 
   def get_host_ip_address(self):
-    for intf in sorted(netifaces.interfaces()):
-      if not re.match('^(eth|wlan)', intf):
-        continue
-      for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
-        if 'addr' in ip_addr:
-          # pick the first IP address we got that is not localhost or tun*/vpn*
-          # (if we would use several on the same host, that might get tricky)
-          ip = ip_addr['addr']
-          logmsg(syslog.LOG_INFO,
-                 'using IP address %s on interface %s' % (ip, intf))
-          return ip
+    # We wait until we get an IP address.
+    # If host is not networked we will wait indefinitely.
+    send_log_message = True
 
-    # XXX we should probably handle missing network connection a bit better?
-    raise 'could not find IP address for this host'
+    while True:
+      for intf in sorted(netifaces.interfaces()):
+        if not re.match('^(eth|wlan)', intf):
+          continue
+        for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
+          if 'addr' in ip_addr:
+            # pick the first IP address we got that is not localhost or
+            # tun*/vpn* (if we would use several on the same host, that
+            # might get tricky)
+            ip = ip_addr['addr']
+            logmsg(syslog.LOG_INFO,
+                   'using IP address %s on interface %s' % (ip, intf))
+            return ip
+
+      if send_log_message:
+        logmsg(syslog.LOG_NOTICE,
+               'no IP address on any of the interfaces we are checking')
+        send_log_message = False
+
+      time.sleep(10)
 
 
   def create_new_pin(self, widget=None):
