@@ -225,6 +225,7 @@ class VeyonMaster(PuavoWidget):
 
     self.pin = None
     self.public_key = None
+    self.serviceinfo = None
     self.update_config_call_pending = False
     self.username = self.lookup_username()
     self.veyon_slaves = {}
@@ -245,29 +246,31 @@ class VeyonMaster(PuavoWidget):
     self.applet.menu.append(self.open_master_button)
 
     self.session_button = Gtk.MenuItem(label='Setup a Veyon session')
-    self.session_button.set_sensitive(True)
+    self.session_button.set_sensitive(False)
     self.session_button_handler \
       = self.session_button.connect('activate', self.setup_session)
     self.applet.menu.append(self.session_button)
 
-
-
-  def setup_session(self, widget=None):
-    self.host_ip_address = self.get_host_ip_address()
-    self.create_new_pin()
     self.dbus_iface \
         .GetPublicKey(reply_handler=self.handle_get_public_key,
                       error_handler=self.handle_get_public_key_error)
+
+
+
+  def setup_session(self, widget=None):
+    self.create_new_pin()
     self.update_config()
-
     self.change_pin_button.set_sensitive(True)
-
     self.session_button.get_child().set_text('Close a Veyon session')
     self.session_button.disconnect(self.session_button_handler)
-    self.session_button.connect('activate', self.close_session)
+    self.session_button_handler \
+      = self.session_button.connect('activate', self.close_session)
+    self.zeroconf.register_service(self.serviceinfo)
 
 
   def close_session(self, widget=None):
+    self.zeroconf.unregister_service(self.serviceinfo)
+
     self.applet.indicator.set_label('', '')
     self.pin = None
 
@@ -279,7 +282,6 @@ class VeyonMaster(PuavoWidget):
 
     label = 'Setup a Veyon session'
     self.session_button.get_child().set_text(label)
-    self.session_button.set_sensitive(True)
     self.session_button.disconnect(self.session_button_handler)
     self.session_button_handler \
       = self.session_button.connect('activate', self.setup_session)
@@ -363,6 +365,8 @@ class VeyonMaster(PuavoWidget):
 
 
   def setup_master_service(self):
+    logmsg(syslog.LOG_NOTICE, 'setting up master service')
+
     self.socket = socket.socket()
     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.socket.bind((self.host_ip_address, Veyon.SERVICE_PORT))
@@ -374,11 +378,10 @@ class VeyonMaster(PuavoWidget):
       socket.inet_pton(socket.AF_INET, self.host_ip_address)
     ]
     my_service_name = self.make_service_name()
-    serviceinfo = zeroconf.ServiceInfo(Veyon.SERVICE_TYPE,
-                                       my_service_name,
-                                       addresses=host_ip_addresses,
-                                       port=Veyon.SERVICE_PORT)
-    self.zeroconf.register_service(serviceinfo)
+    self.serviceinfo = zeroconf.ServiceInfo(Veyon.SERVICE_TYPE,
+                                            my_service_name,
+                                            addresses=host_ip_addresses,
+                                            port=Veyon.SERVICE_PORT)
 
     # XXX should this be asynchronous?
     GLib.io_add_watch(GLib.IOChannel(self.socket.fileno()),
@@ -386,6 +389,8 @@ class VeyonMaster(PuavoWidget):
                       GLib.IOCondition.IN,
                       self.handle_new_slave,
                       self.socket)
+
+    self.session_button.set_sensitive(True)
 
 
   def make_service_name(self):
@@ -634,6 +639,9 @@ class VeyonSlave(PuavoWidget):
 
 
   def remove_master(self, address):
+    if not address in self.veyon_masters:
+      return
+
     veyon_master = self.veyon_masters[address]
     in_session = veyon_master.in_session
 
@@ -794,16 +802,25 @@ class VeyonListenForMasters():
     self.slave = slave
 
 
-  def add_service(self, zeroconf, service_type, name):
+  def check_if_ours(self, service_type, name):
     name_base = '.'.join(name.split('.')[1:])
-    if service_type == Veyon.SERVICE_TYPE \
-      and name_base == Veyon.SERVICE_BASE:
-        service = zeroconf.get_service_info(service_type, name)
-        self.slave.add_masters(service)
+    is_ours = (service_type == Veyon.SERVICE_TYPE
+                and name_base == Veyon.SERVICE_BASE)
+    return is_ours
 
 
-  def remove_service(self, zeroconf, type, name):
-    pass
+  def add_service(self, zeroconf, service_type, name):
+    if check_if_ours(service_type, name):
+      service = zeroconf.get_service_info(service_type, name)
+      self.slave.add_masters(service)
+
+
+  def remove_service(self, zeroconf, service_type, name):
+    if check_if_ours(service_type, name):
+      service = zeroconf.get_service_info(service_type, name)
+      for srv_address in service.addresses:
+        address = str(socket.inet_ntop(socket.AF_INET, srv_address))
+        self.slave.remove_master(address)
 
 
 class PuavoVeyonApplet:
