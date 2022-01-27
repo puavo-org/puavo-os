@@ -516,7 +516,7 @@ class VeyonMasterConnection():
 
       if message['type'] == 'request_close_session':
         if self.in_session:
-          self.close_session()
+          self.slave.close_session()
 
       elif message['type'] == 'master_info':
         if not 'hostname' in message:
@@ -571,7 +571,8 @@ class VeyonMasterConnection():
 
   def close_session(self):
     self.in_session = False
-    self.send_to_master({ 'type': 'close_session' })
+    if self.master_socket:
+      self.send_to_master({ 'type': 'close_session' })
 
 
   def send_public_key_request(self, pin):
@@ -665,13 +666,11 @@ class VeyonSlave(PuavoWidget):
 
     veyon_master = self.veyon_masters[address]
     in_session = veyon_master.in_session
-
-    veyon_master.disconnect_master()
-    del(self.veyon_masters[address])
-
     if in_session:
       self.close_session()
 
+    veyon_master.disconnect_master()
+    del(self.veyon_masters[address])
     if not self.veyon_masters and self.pin_window:
       self.pin_window.destroy()
 
