@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+# Use this shell script wrapper for puavo-veyon-applet so that on
+# hosts where it is not going to be used we do not need to start
+# the python interpreter (it does take a bit more of CPU time than this).
+if [ "$(puavo-conf puavo.service.puavo-veyon.enabled)" = 'true' ]; then
+  exec puavo-veyon-applet "$@"
+fi
+
+exit 0

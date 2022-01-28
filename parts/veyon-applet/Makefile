@@ -18,9 +18,10 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-veyon-applet
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-veyon-applet \
+		start-puavo-veyon-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		puavo-veyon-applet.desktop
+		start-puavo-veyon-applet.desktop
 
 .PHONY: clean
 clean:
