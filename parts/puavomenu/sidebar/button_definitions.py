@@ -7,7 +7,7 @@ SB_BUTTONS = {
         'command': {
             'type': 'webwindow',
             'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)&' \
-                    'lang=$(user_language)&theme=$(user_theme)$(password_tabs)',
+                    'lang=$(user_language)$(password_tabs)',
             'have_vars': True,
             'webwindow': {
                 'title': 'sb_change_password_window_title',
