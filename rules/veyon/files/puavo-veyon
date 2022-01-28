@@ -1,0 +1,276 @@
+#!/usr/bin/ruby
+
+require 'dbus'
+require 'fileutils'
+require 'json'
+require 'open3'
+require 'puavo/conf'
+require 'syslog'
+require 'tempfile'
+require 'uuidtools'
+
+KEY_CREATED_PATH = '/etc/veyon/.puavo_key_created'
+
+VEYON_BASE_CONFIG = {
+  'AccessControl': {
+      'UserGroupsBackend': '2917cdeb-ac13-4099-8715-20368254a367'
+  },
+  'Authentication': {
+      'Method': 1
+  },
+  'BuiltinDirectory': {
+      'NetworkObjects': {
+          'JsonStoreArray': []
+      }
+  },
+  'Core': {
+      'ApplicationVersion': 2,
+      'InstallationID': 'a5cfd50c-eeca-4b39-bfb8-823f42ee2f2f',
+      'PluginVersions': {
+          'JsonStoreObject': {
+              '{14bacaaa-ebe5-449c-b881-5b382f952571}': '1.1',
+              '{1b08265b-348f-4978-acaa-45d4f6b90bd9}': '1.1',
+              '{1bdb0d1c-f8eb-4d21-a093-d555a10f3975}': '1.1',
+              '{2917cdeb-ac13-4099-8715-20368254a367}': '1.1',
+              '{2ad98ccb-e9a5-43ef-8c4c-876ac5efbcb1}': '1.1',
+              '{387a0c43-1355-4ff6-9e1f-d098e9ce5127}': '1.1',
+              '{39d7a07f-94db-4912-aa1a-c4df8aee3879}': '1.1',
+              '{4122e8ca-b617-4e36-b851-8e050ed2d82e}': '1.2',
+              '{4790bad8-4c56-40d5-8361-099a68f0c24b}': '1.1',
+              '{63928a8a-4c51-4bfd-888e-9e13c6f3907a}': '1.1',
+              '{67dfc1c1-8f37-4539-a298-16e74e34fd8b}': '1.1',
+              '{6f0a491e-c1c6-4338-8244-f823b0bf8670}': '1.2',
+              '{85f6c631-e75a-4c78-8cb2-a7f3f502015a}': '1.1',
+              '{8ae6668b-9c12-4b29-9bfc-ff89f6604164}': '1.1',
+              '{a54ee018-42bf-4569-90c7-0d8470125ccf}': '1.1',
+              '{b47bcae0-24ff-4bf5-869c-484d64af5c4c}': '1.1',
+              '{d4bb9c42-9eef-4ecb-8dd5-dfd84b355481}': '1.0',
+              '{ee322521-f4fb-482d-b082-82a79003afa7}': '1.1'
+          }
+      }
+  },
+  'Features': {
+      'DisabledFeatures': [
+          '{f483c659-b5e7-4dbc-bd91-2c9403e70ebd}'
+      ]
+  },
+  'LDAP': {
+      'ComputerLocationAttribute': '',
+      'ComputerLocationsByAttribute': false,
+      'ComputerLocationsByContainer': false,
+      'LocationNameAttribute': '',
+      'UserLoginNameAttribute': ''
+  },
+  'Master': {
+      'AllowAddingHiddenLocations': false,
+      'AutoOpenComputerSelectPanel': false,
+      'AutoSelectCurrentLocation': false,
+      'ConfirmUnsafeActions': false,
+      'HideEmptyLocations': false,
+      'ShowCurrentLocationOnly': false
+  },
+  'NetworkObjectDirectory': {
+      'Plugin': '14bacaaa-ebe5-449c-b881-5b382f952571'
+  },
+  'Service': {
+      'RemoteConnectionNotifications': true
+  },
+  'VncServer': {
+      'Plugin': '39d7a07f-94db-4912-aa1a-c4df8aee3879'
+  }
+}
+
+def delete_puavo_veyon_key()
+  begin
+    File.unlink(KEY_CREATED_PATH)
+  rescue Errno::ENOENT
+  end
+  system('veyon-cli', 'authkeys', 'delete', 'puavo_veyon_key/private',
+         :out => File::NULL, :err => File::NULL)
+  system('veyon-cli', 'authkeys', 'delete', 'puavo_veyon_key/public',
+         :out => File::NULL, :err => File::NULL)
+end
+
+def update_veyon_config(config)
+  Tempfile.create('veyon_config') do |tmpfile|
+    tmpfile.write(config.to_json)
+    tmpfile.close
+    cmd = [ 'veyon-cli', 'config', 'import', tmpfile.path ]
+    output, status = Open3.capture2e(*cmd)
+    unless status.success? then
+      raise 'error when importing new veyon configuration'
+    end
+
+    system('service', 'veyon', 'restart') \
+      or raise 'error in restarting veyon after configuration import'
+  end
+end
+
+class VeyonSlave < DBus::Object
+  dbus_interface 'org.puavo.Veyon.slave' do
+    dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
+      begin
+        # here we do not case about errors,
+        # on the first time a missing key is normal
+        delete_puavo_veyon_key()
+
+        Tempfile.create('puavo_veyon_key') do |tmpfile|
+          tmpfile.write(public_key)
+          tmpfile.close
+          cmd = [ 'veyon-cli', 'authkeys', 'import', 'puavo_veyon_key/public',
+                  tmpfile.path ]
+          output, status = Open3.capture2e(*cmd)
+
+          unless status.success? then
+            raise 'error in importing a new auth key: %s' % output
+          end
+        end
+
+        update_veyon_config(VEYON_BASE_CONFIG)
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR,
+                   'Error in org.puavo.Veyon.slave AddPublicKey method: %s',
+                   e.message)
+        raise e
+      end
+    end
+
+    dbus_method :CleanupConfig, '' do
+      begin
+        delete_puavo_veyon_key()
+        update_veyon_config(VEYON_BASE_CONFIG)
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR,
+                   'Error in org.puavo.Veyon.slave ClenaupConfig method: %s',
+                   e.message)
+        raise e
+      end
+    end
+  end
+end
+
+class VeyonMaster < DBus::Object
+  dbus_interface 'org.puavo.Veyon.master' do
+    dbus_method :GetPublicKey, 'out public_key:s' do
+      begin
+        private_key_path = '/etc/veyon/keys/private/puavo_veyon_key/key'
+        public_key_path  = '/etc/veyon/keys/public/puavo_veyon_key/key'
+
+        begin
+          if File.exists?(KEY_CREATED_PATH) then
+            return IO.read(public_key_path)
+          end
+        rescue Errno::ENOENT => e
+        end
+
+        # just to make sure (in case only either of these exist)
+        delete_puavo_veyon_key()
+
+        cmd = [ 'veyon-cli', 'authkeys', 'create', 'puavo_veyon_key' ]
+        output, status = Open3.capture2e(*cmd)
+        unless status.success? then
+          raise 'error in creating a new auth key: %s' % output
+        end
+
+        FileUtils.chown('root', 'puavodesktop', private_key_path)
+        FileUtils.chmod(0640, private_key_path)
+        FileUtils.touch(KEY_CREATED_PATH)
+
+        return IO.read(public_key_path)
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR,
+                   'Error in org.puavo.Veyon.master GetPublicKey method: %s',
+                   e.message)
+        raise e
+      end
+    end
+
+    dbus_method :UpdateConfig, 'in hosts_json:s' do |hosts_json|
+      # This method must not be called too frequently, because this restarts
+      # veyon service and that can be done only 10 times in a minute
+      # before systemd interferes.  It is caller's responsibility
+      # to know this.
+      begin
+        hostlist = JSON.parse(hosts_json)
+
+        raise 'hostlist is not an array' unless hostlist.kind_of?(Array)
+
+        veyon_hosts = {}
+        veyon_host_locations = {}
+
+        hostlist.each do |host|
+          raise 'host is not a hash' unless host.kind_of?(Hash)
+
+          address  = host['address']
+          hostname = host['hostname']
+          location = host['location']
+
+          raise 'host is not in an expected format' \
+            unless address.kind_of?(String) \
+                     && hostname.kind_of?(String) \
+                     && location.kind_of?(String)
+
+          unless veyon_host_locations.has_key?(location) then
+            veyon_host_locations[location] = {
+              'Name' => location,
+              'Type' => 2,
+              'Uid'  => UUIDTools::UUID.random_create.to_s,
+            }
+          end
+
+          veyon_hosts[hostname] = {
+            'HostAddress' => address,
+            'Name'        => hostname,
+            'ParentUid'   => veyon_host_locations[location]['Uid'],
+            'Type'        => 3,
+            'Uid'         => UUIDTools::UUID.random_create.to_s,
+          }
+        end
+
+        config = VEYON_BASE_CONFIG.clone
+        config[:BuiltinDirectory][:NetworkObjects][:JsonStoreArray] \
+          = veyon_host_locations.values + veyon_hosts.values
+        update_veyon_config(config)
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR,
+                   'Error in org.puavo.Veyon.master UpdateConfig method: %s',
+                   e.message)
+        raise e
+      end
+    end
+  end
+end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+begin
+  # remove possible old keys
+  delete_puavo_veyon_key()
+
+  puavoconf = Puavo::Conf.new
+  veyon_role = puavoconf.get('puavo.veyon.role')
+  puavoconf.close
+
+  bus = DBus::SystemBus.instance
+  service = bus.request_service('org.puavo.Veyon')
+
+  case veyon_role
+    when 'master'
+      service.export( VeyonMaster.new('/master') )
+    when 'slave'
+      service.export( VeyonSlave.new('/slave') )
+    else
+      exit(0)
+  end
+
+  # ...and start it
+  mainloop = DBus::Main.new
+  mainloop << bus
+  mainloop.run
+rescue StandardError => e
+  Syslog.log(Syslog::LOG_ERR,
+             'Error when running puavo-veyon dbus service: %s',
+             e.message)
+end
+
+Syslog.close()

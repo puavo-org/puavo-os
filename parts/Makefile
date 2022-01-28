@@ -19,6 +19,7 @@ subdirs         := autopilot                  \
                    sharedir                   \
                    usb-factory                \
                    user-registration          \
+                   veyon-applet               \
                    vpn                        \
                    webkiosk-language-selector \
                    webwindow                  \

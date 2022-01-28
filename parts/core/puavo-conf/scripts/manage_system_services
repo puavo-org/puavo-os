@@ -235,6 +235,11 @@ set services {
         -> /lib/systemd/system/puavo-sharedir-manager.service
     }}
 
+  { puavo-veyon {
+      /etc/systemd/system/multi-user.target.wants/puavo-veyon.service
+        -> /lib/systemd/system/puavo-veyon.service
+    }}
+
   { puavo-vpn-client-dnsmasq {
       /etc/systemd/system/multi-user.target.wants/puavo-vpn-client-dnsmasq.service
         -> /lib/systemd/system/puavo-vpn-client-dnsmasq.service

@@ -38,6 +38,7 @@ class image::bundle::desktop {
   include ::tts_setup
   include ::tuxpaint
   include ::udisks2
+  include ::veyon
   include ::virtualbox
   include ::virtualbox::guest_additions
   include ::vym
