@@ -317,7 +317,12 @@ class VeyonMaster(PuavoWidget):
       for intf in sorted(netifaces.interfaces()):
         if not re.match('^(eth|wlan)', intf):
           continue
-        for ip_addr in netifaces.ifaddresses(intf)[netifaces.AF_INET]:
+
+        addresses = netifaces.ifaddresses(intf)
+        if not netifaces.AF_INET in addresses:
+          continue
+
+        for ip_addr in addresses[netifaces.AF_INET]:
           if 'addr' in ip_addr:
             # pick the first IP address we got that is not localhost or
             # tun*/vpn* (if we would use several on the same host, that
