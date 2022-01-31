@@ -225,8 +225,6 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 
 .PHONY: prepare-for-squashfs
 prepare-for-squashfs:
-	$(MAKE) -C debs remove-build-deps
-	$(_sudo) apt-get -y autoremove
 	$(_sudo) updatedb
 
 # this target requires that this host is running a puavo-os system
@@ -282,6 +280,10 @@ update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 
 	$(MAKE) apply-rules
 
+	# clean up some cruft from images
+	$(MAKE) -C debs remove-build-deps
+	$(_sudo) apt-get -y autoremove
+
 	$(_sudo) puavo-pkg gc-installations
 	$(_sudo) puavo-pkg gc-upstream-packs
 
@@ -292,6 +294,10 @@ update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 	done
 
 	$(_sudo) systemd-sysusers
+
+	# do one more fixup because remove-build-deps and autoremove might
+	# mess up some things
+	$(MAKE) apply-rules
 
 .PHONY: prepare
 prepare:
