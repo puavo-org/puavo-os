@@ -150,6 +150,7 @@ class packages {
     , 'telnet'
     , 'terminator'
     , 'tmux'
+    , 'tmux-plugin-manager'
     , 'tshark'
     , 'ulogd2'
     , 'vinagre'
