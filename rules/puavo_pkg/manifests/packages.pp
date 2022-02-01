@@ -64,6 +64,7 @@ class puavo_pkg::packages {
 			, 'tela-icon-theme'
 			, 'tilitin'
 			, 't-lasku'
+			, 'tmux-plugins-battery'
 			, 'ubuntu-firmware'
 			, 'ubuntu-wallpapers'
 			, 'unityhub-appimage'
