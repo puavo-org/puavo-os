@@ -53,8 +53,9 @@ cat <<EOF > /etc/samba/smb.conf.tmp
   # file will be ignored.
   config file = /etc/samba/puavo_smb.conf
 
+  server role = standalone
   workgroup = ${puavo_samba_domain}
-  netbios name = ${puavo_hostname}
+  netbios name = ${puavo_samba_domain}
   enable privileges = yes
   server string = ${puavo_hostname}
   wins support = yes
