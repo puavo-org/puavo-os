@@ -27,6 +27,7 @@ class image::bundle::basic {
   include ::sysctl
   include ::syslog
   include ::systemd
+  include ::tmux
   include ::udev
   include ::use_urandom
   include ::wlanap

@@ -101,11 +101,6 @@ class Sidebar:
         self.__variables['support_url'] = \
             utils.puavo_conf('puavo.support.new_bugreport_url', 'https://tuki.opinsys.fi')
 
-        if self.__settings.dark_theme:
-            self.__variables['user_theme'] = 'dark'
-        else:
-            self.__variables['user_theme'] = 'light'
-
         if self.__settings.user_type not in ('teacher', 'admin'):
             # For non-teachers and non-admins, don't show the "change someone
             # else's password" tab on the password form. Not a very good
@@ -308,7 +303,7 @@ class Sidebar:
 
         try:
             url = 'https://$(puavo_domain)/users/profile/edit?' \
-                  'lang=$(user_language)&theme=$(user_theme)'
+                  'lang=$(user_language)'
 
             utils.open_webwindow(
                 url=utils.expand_variables(url, self.__variables),
@@ -326,9 +321,8 @@ class Sidebar:
     # Open the changelog
     def __clicked_changelog(self, *_):
         try:
-            changelog_url = get_changelog_url(self.__settings.language) \
-                              + utils.expand_variables('&theme=$(user_theme)',
-                                                       self.__variables)
+            changelog_url = get_changelog_url(self.__settings.language)
+
             utils.open_webwindow(
                 url=utils.expand_variables(changelog_url),
                 title=_tr('sb_changelog_window_title'),

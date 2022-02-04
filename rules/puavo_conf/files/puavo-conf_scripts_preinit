@@ -40,6 +40,7 @@ cleanup_crash_dumps
 cleanup_network_connections
 setup_autofs
 setup_extra_environment
+setup_tmux
 disable_update_initramfs
 setup_graphics_drivers
 setup_networking

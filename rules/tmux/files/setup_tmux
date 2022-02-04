@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
+if ! org=$(awk -F. '{ print $1 }' /etc/puavo/domain 2>/dev/null); then
+  org='NOORG'
+fi
+
+case "$puavo_hosttype" in
+  bootserver)          bg_color='red'      ; fg_color='white' ;;
+  diskinstaller)       bg_color='yellow'   ; fg_color='black' ;;
+  fatclient)           bg_color='blue'     ; fg_color='white' ;;
+  laptop)              bg_color='green'    ; fg_color='black' ;;
+  preinstalled)        bg_color="'#ff8800'"; fg_color='black' ;;
+  wirelessaccesspoint) bg_color='magenta'  ; fg_color='white' ;;
+  unregistered)        bg_color='cyan'     ; fg_color='black' ;;
+  *)                   bg_color='white'    ; fg_color='black' ;;
+esac
+
+cat <<EOF > /etc/tmux.conf.tmp
+set -g status-right-length 68
+set -g status-right '#{?#{!=:#{battery_percentage},},batt:,}#{battery_percentage} #H.${org} %H:%M %d-%b'
+set -g status-style bg=${bg_color}
+set -ag status-style fg=${fg_color}
+
+run /opt/tmux/plugins/tmux-battery/battery.tmux
+EOF
+
+mv /etc/tmux.conf.tmp /etc/tmux.conf

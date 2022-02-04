@@ -30,6 +30,7 @@ setup_modules
 manage_module_blacklist
 cleanup_crash_dumps
 setup_extra_environment
+setup_tmux
 disable_update_initramfs
 setup_external_files
 setup_display_manager
