@@ -106,7 +106,10 @@ cat <<EOF > /etc/samba/smb.conf.tmp
   dos charset = 850
   unix charset = UTF8
 
-  server max protocol = NT1
+  # Enable this one in case some Puavo users need to
+  # login to some legacy Windows systems via Samba.
+  # This will break modern Windows and Bullseye/Samba access.
+  # server max protocol = NT1
 
 [homes]
   comment = Kotihakemistot
