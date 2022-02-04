@@ -9,6 +9,11 @@ class systemd {
       require => Package['systemd'],
       source  => 'puppet:///modules/systemd/system.conf';
 
+    # disable "systemd --user" service due to issues with it
+    '/etc/systemd/system/user@.service':
+      ensure => link,
+      target => '/dev/null';
+
     '/etc/sysusers.d':
       ensure => directory;
 
