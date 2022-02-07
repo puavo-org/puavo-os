@@ -368,6 +368,13 @@ install_localbootdevice() {
     # If host was preinstalled, grub will boot the host as 'preinstalled' until
     # we do this:
     puavo-install-grub --hosttype "$puavo_hosttype" --only-update-config
+    # If we were in preinstall state, chances are, we came from a restoredisk.
+    # -> Thus, we don't have proper UEFI bootorder in nvram. Let's add ourselves.
+    # Should it be the case that the preinstall was run on this machine and boot
+    # order is ok, the duplicate entry seems to get cleaned by UEFI at next boot.
+    if [ -d /sys/firmware/efi ]; then
+      efibootmgr -c -L "debian" -l '\EFI\debian\grubx64.efi'
+    fi
     # From now on the host will boot as a fully installed host.
     rm -f /images/puavo_preinstalled
   else
