@@ -20,6 +20,11 @@ class systemd {
     '/etc/sysusers.d/puavo-os.conf':
       source => 'puppet:///modules/systemd/etc_sysusers.d_puavo-os.conf';
 
+    # Pulseaudio needs help in case "systemd --user" is missing.
+    # This removes a link to /dev/null, masking autospawn activation.
+    '/usr/lib/systemd/system/pulseaudio-enable-autospawn.service':
+      ensure => absent;
+
     # no persistent journal logs by default (not useful on fatclients)
     '/var/log/journal':
       ensure => absent,
