@@ -2,7 +2,6 @@ class apt::default_repositories {
   include ::apt::backports
   include ::apt::multiarch
   include ::apt::repositories
-  include ::apt::virtualbox
 
   $mirror = $mirror ? { undef => 'ftp.debian.org', default => "$mirror", }
   $securitymirror = 'security.debian.org'

@@ -38,8 +38,6 @@ class image::bundle::desktop {
   include ::supplementary_groups
   include ::tts_setup
   include ::tuxpaint
-  include ::virtualbox
-  include ::virtualbox::guest_additions
   include ::vym
   include ::wacom
   include ::wine

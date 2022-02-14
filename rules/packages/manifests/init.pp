@@ -1,6 +1,5 @@
 class packages {
   require ::apt::multiarch
-  require ::apt::virtualbox
   include ::packages::backports
   include ::packages::compat_32bit
   include ::packages::pinned
@@ -266,8 +265,7 @@ class packages {
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
-    [ 'virtualbox-6.1'
-    , 'wine'
+    [ 'wine'
     , 'wine32'
     , 'wine-development'
     , 'wine32-development'
