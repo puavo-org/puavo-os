@@ -1,0 +1,3 @@
+Package: <%= @packages_from_fasttrack.join(' ') %>
+Pin: release n=<%= @debianversioncodename %>-fasttrack
+Pin-Priority: 990

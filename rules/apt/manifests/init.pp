@@ -1,5 +1,7 @@
 class apt {
-  define debian_repository ($localmirror='',
+  define debian_repository ($fasttrackmirror='',
+                            $fasttrackmirror_path='',
+                            $localmirror='',
                             $mirror='',
                             $mirror_path='',
                             $pin_priority=50,

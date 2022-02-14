@@ -9,3 +9,6 @@ deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodena
 
 deb http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
 deb-src http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
+
+deb http://<%= @fasttrackmirror %><%= @fasttrackmirror_path %>/ <%= @debianversioncodename %>-fasttrack main contrib non-free
+deb-src http://<%= @fasttrackmirror %><%= @fasttrackmirror_path %>/ <%= @debianversioncodename %>-fasttrack main contrib non-free

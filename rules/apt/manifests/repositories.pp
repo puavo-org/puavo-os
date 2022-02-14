@@ -9,7 +9,9 @@ class apt::repositories {
                       }
                     }
 
-  define setup ($localmirror='',
+  define setup ($fasttrackmirror,
+                $fasttrackmirror_path='',
+                $localmirror='',
                 $mirror,
                 $mirror_path='',
                 $securitymirror,
@@ -18,12 +20,14 @@ class apt::repositories {
                                                Integer $pin_priority| {
       ::apt::debian_repository {
         $distrib_version:
-          localmirror         => $localmirror,
-          mirror              => $mirror,
-          mirror_path         => $mirror_path,
-          pin_priority        => $pin_priority,
-          securitymirror      => $securitymirror,
-          securitymirror_path => $securitymirror_path;
+          fasttrackmirror      => $fasttrackmirror,
+          fasttrackmirror_path => $fasttrackmirror_path,
+          localmirror          => $localmirror,
+          mirror               => $mirror,
+          mirror_path          => $mirror_path,
+          pin_priority         => $pin_priority,
+          securitymirror       => $securitymirror,
+          securitymirror_path  => $securitymirror_path;
       }
     }
 
