@@ -45,6 +45,8 @@ class packages::backports {
 
                   , 'inkscape'
 
+                  , 'liblzf1'           # for VirtualBox
+
                   , 'musescore3'
                   , 'musescore3-common'
                   , 'musescore-general-soundfont'

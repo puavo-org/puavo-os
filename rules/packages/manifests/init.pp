@@ -2,6 +2,7 @@ class packages {
   require ::apt::multiarch
   include ::packages::backports
   include ::packages::compat_32bit
+  include ::packages::fasttrack
   include ::packages::pinned
   include ::packages::purged
 
@@ -265,7 +266,8 @@ class packages {
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
-    [ 'wine'
+    [ 'virtualbox'
+    , 'wine'
     , 'wine32'
     , 'wine-development'
     , 'wine32-development'
