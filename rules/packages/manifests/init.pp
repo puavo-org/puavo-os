@@ -267,6 +267,8 @@ class packages {
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
     [ 'virtualbox'
+    , 'virtualbox-dkms'
+    , 'virtualbox-qt'
     , 'wine'
     , 'wine32'
     , 'wine-development'
@@ -750,12 +752,14 @@ class packages {
   $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.144'
   $nvidia_dkms_410_module   = 'nvidia-current/418.211.00'
   $r8168_module             = 'r8168/8.046.00'
+  $virtualbox_module        = 'virtualbox/6.1.28'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
                       , $nvidia_dkms_340_module
                       , $nvidia_dkms_390_module
                       , $nvidia_dkms_410_module
-		      , $r8168_module ]
+		      , $r8168_module
+		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
     '4.19.0-18-amd64':
@@ -763,7 +767,7 @@ class packages {
       package_name => 'linux-image-4.19.0-18-amd64';
 
     '5.10.0-0.bpo.9-amd64':
-      dkms_modules => [ $broadcom_sta_dkms_module ],
+      dkms_modules => [ $broadcom_sta_dkms_module, $virtualbox_module, ],
       package_name => 'linux-image-5.10.0-0.bpo.9-amd64';
   }
 
