@@ -297,11 +297,6 @@ set services {
         -> /lib/systemd/system/ulogd2.service
     }}
 
-  { vboxadd-service {
-      /etc/systemd/system/multi-user.target.wants/vboxadd-service.service
-        -> /lib/systemd/system/vboxadd-service.service
-    }}
-
   { veyon-service {
       /etc/systemd/system/multi-user.target.wants/veyon-service.service
         -> /lib/systemd/system/veyon-service.service
