@@ -40,6 +40,11 @@ class apt::repositories {
         content => template('apt/sources.list'),
         notify  => Exec['apt update'];
 
+      '/etc/apt/sources.list.d/debian-fasttrack.list':
+        content => template('apt/debian-fasttrack.list'),
+        require => [ Exec['apt update']
+                   , File['/etc/apt/sources.list'] ];
+
       # Put the local this into a separate file so it can be excluded
       # in the image build along with the actual archive.
       '/etc/apt/sources.list.d/puavo-os-local.list':

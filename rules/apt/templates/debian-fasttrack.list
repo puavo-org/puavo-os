@@ -1,0 +1,2 @@
+deb http://<%= @fasttrackmirror %><%= @fasttrackmirror_path %>/ <%= @debianversioncodename %>-fasttrack main contrib non-free
+deb-src http://<%= @fasttrackmirror %><%= @fasttrackmirror_path %>/ <%= @debianversioncodename %>-fasttrack main contrib non-free

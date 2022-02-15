@@ -15,9 +15,6 @@ class apt::default_repositories {
       fasttrackmirror_path => $fasttrackmirror_path,
       localmirror          => $localmirror,
       mirror               => $mirror,
-      require              => Package['fasttrack-archive-keyring'],
       securitymirror       => $securitymirror;
   }
-
-  Package <| title == 'fasttrack-archive-keyring' |>
 }
