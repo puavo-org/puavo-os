@@ -39,8 +39,6 @@ class image::bundle::desktop {
   include ::tuxpaint
   include ::udisks2
   include ::veyon
-  include ::virtualbox
-  include ::virtualbox::guest_additions
   include ::vym
   include ::wacom
   include ::wine

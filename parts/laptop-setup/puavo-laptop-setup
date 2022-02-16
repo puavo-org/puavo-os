@@ -5,6 +5,7 @@ import gettext
 import gi
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -134,11 +135,18 @@ class PuavoLaptopSetup:
             return None
 
 
-    def get_version_from_bn(self, build_number):
-        for version, bn in self.abitti_info['build_numbers'].items():
-            if str(bn) == build_number:
-                return version
-        return build_number
+    def get_human_version(self, abitti_version):
+        stripped_version = strip_abitti_v(abitti_version)
+        if not re.match('^\d+$', stripped_version):
+          return stripped_version
+
+        version_with_abitti = 'abitti-v%s' % stripped_version
+        if version_with_abitti in self.abitti_info['images']:
+          version_info = self.abitti_info['images'][version_with_abitti]
+          if 'version' in version_info:
+            return version_info['version']
+
+        return abitti_version
 
 
     def get_abitti_latest_version(self):
@@ -146,8 +154,7 @@ class PuavoLaptopSetup:
             latest_version = self.abitti_info['latest']
             if type(latest_version) != str:
                 raise Exception('latest version is not a string')
-            stripped_latest = strip_abitti_v(latest_version)
-            return self.get_version_from_bn(stripped_latest)
+            return self.get_human_version(latest_version)
         except:
             return None
 
@@ -161,8 +168,7 @@ class PuavoLaptopSetup:
             school_version = device['conf']['puavo.abitti.version']
             if type(school_version) != str:
                 raise Exception('school version is not a string')
-            stripped_school_version = strip_abitti_v(school_version)
-            return _tr( self.get_version_from_bn(stripped_school_version) )
+            return self.get_human_version(school_version)
         except:
             return None
 

@@ -1,8 +1,8 @@
 class packages {
   require ::apt::multiarch
-  require ::apt::virtualbox
   include ::packages::backports
   include ::packages::compat_32bit
+  include ::packages::fasttrack
   include ::packages::pinned
   include ::packages::purged
 
@@ -268,7 +268,12 @@ class packages {
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
-    [ 'virtualbox-6.1'
+    [ 'virtualbox'
+    , 'virtualbox-dkms'
+    , 'virtualbox-guest-dkms'
+    , 'virtualbox-guest-utils'
+    , 'virtualbox-guest-x11'
+    , 'virtualbox-qt'
     , 'wine'
     , 'wine32'
     , 'winetricks' ]:
@@ -752,11 +757,14 @@ class packages {
   $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.144'
   $nvidia_dkms_410_module   = 'nvidia-current/460.91.03'
   $r8168_module             = 'r8168/8.048.03'
+  $virtualbox_module        = 'virtualbox/6.1.28'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
                       , $nvidia_dkms_390_module
                       , $nvidia_dkms_410_module
-		      , $r8168_module ]
+		      , $r8168_module
+		      , $virtualbox_module ]
+
 
   packages::kernels::kernel_package {
     '5.10.0-11-amd64':
@@ -764,7 +772,9 @@ class packages {
       package_name => 'linux-image-5.10.0-11-amd64';
 
     '5.15.0-0.bpo.2-amd64':
-      dkms_modules => [ $broadcom_sta_dkms_module, $r8168_module ],
+      dkms_modules => [ $broadcom_sta_dkms_module
+                      , $r8168_module
+                      , $virtualbox_module ],
       package_name => 'linux-image-5.15.0-0.bpo.2-amd64';
   }
 
