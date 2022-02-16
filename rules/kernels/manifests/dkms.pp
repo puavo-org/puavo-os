@@ -19,8 +19,7 @@ class kernels::dkms {
 
       /^r8168\//: { $dkms_module_package = 'r8168-dkms' }
 
-      /^virtualbox\//:       { $dkms_module_package = 'virtualbox-dkms'       }
-      /^virtualbox-guest\//: { $dkms_module_package = 'virtualbox-guest-dkms' }
+      /^virtualbox\//: { $dkms_module_package = 'virtualbox-dkms' }
 
       default: {
         fail("Unknown package dependency for dkms module ${dkms_module}")
