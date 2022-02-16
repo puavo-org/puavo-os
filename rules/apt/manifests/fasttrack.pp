@@ -15,13 +15,4 @@ class apt::fasttrack {
         ensure => absent;
     }
   }
-
-  # Require "/etc/apt/sources.list", because in Buster this package
-  # comes from backports that is set up in our "sources.list".
-  package {
-    'fasttrack-archive-keyring':
-      ensure  => present,
-      require => [ Exec['apt update']
-                 , File['/etc/apt/sources.list'] ];
-  }
 }
