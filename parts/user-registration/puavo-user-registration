@@ -1,16 +1,16 @@
 #!/usr/bin/python3
 
-# New user registration program, v2.0
+# New user registration program
 
-import os
-import logging
 import argparse
-import subprocess
-import socket
 import gettext
-import sys
-
 import gi
+import logging
+import logging.handlers
+import os
+import socket
+import subprocess
+import sys
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GdkPixbuf, Gio
@@ -40,7 +40,7 @@ def disable_registration_window(is_production):
            'puavo.xsessions.user_registration.enabled',
            'false']
 
-    logging.info('disable_registration_window(): running "%s"', cmd)
+    log.info('disable_registration_window(): running "%s"', cmd)
 
     if is_production:
         subprocess.check_call(cmd)
@@ -48,11 +48,11 @@ def disable_registration_window(is_production):
 
 def login_locally(username, password, is_production):
     if not is_production:
-        logging.info('login_locally(): setting up local login, ' \
+        log.info('login_locally(): setting up local login, ' \
                      'username="%s", password="%s"', username, password)
         return True
 
-    logging.info('login_locally(): setting up local login, username="%s"',
+    log.info('login_locally(): setting up local login, username="%s"',
         username)
 
     if not (username and password):
@@ -107,8 +107,8 @@ class NewUserRegistrationWindow:
         try:
             screen_width = Gdk.Screen.get_default().width()
         except Exception as exc:
-            logging.warning('Unable to determine the screen width:')
-            logging.warning(str(exc))
+            log.warning('Unable to determine the screen width:')
+            log.warning(str(exc))
             screen_width = 1366
 
         if not self.prod_mode:
@@ -174,7 +174,7 @@ class NewUserRegistrationWindow:
             self.main_builder.connect_signals(self)
 
         except Exception as exc:
-            logging.fatal(str(exc), exc_info=True)
+            log.fatal(str(exc), exc_info=True)
             return
 
         self.main_window = self.main_builder.get_object('main_window')
@@ -195,14 +195,14 @@ class NewUserRegistrationWindow:
             os.path.realpath(os.path.join(self.data_dir, 'privacy_policy.html'))
 
         if os.path.exists(self.__privacy_policy_file):
-            logging.info('Privacy policy file "%s" exists', self.__privacy_policy_file)
+            log.info('Privacy policy file "%s" exists', self.__privacy_policy_file)
             self.main_builder.get_object('privacy_policy').show()
 
         # Try to set the lower corner logo
         self.__logo_file = os.path.realpath(os.path.join(self.data_dir, 'lower_logo.png'))
 
         if os.path.exists(self.__logo_file):
-            logging.info('Lower corner logo file "%s" exists', self.__logo_file)
+            log.info('Lower corner logo file "%s" exists', self.__logo_file)
 
             logo = self.main_builder.get_object('logo')
 
@@ -218,8 +218,8 @@ class NewUserRegistrationWindow:
                 logo.show()
             except Exception as exc:
                 logo.hide()
-                logging.error('Could not set the lower corner logo image:')
-                logging.error(str(exc), exc_info=True)
+                log.error('Could not set the lower corner logo image:')
+                log.error(str(exc), exc_info=True)
 
         self.main_title = self.main_builder.get_object('main_title')
 
@@ -239,7 +239,7 @@ class NewUserRegistrationWindow:
                 if ctor == PageAccount:
                     self.account_page = page
         except Exception as exc:
-            logging.error(str(exc), exc_info=True)
+            log.error(str(exc), exc_info=True)
             self.main_window.destroy()
         else:
             # Activate the initial page
@@ -296,7 +296,7 @@ class NewUserRegistrationWindow:
     # Called from the "complete" page to finish up the operation
     def finish_registration(self):
         try:
-            logging.info('Finishing up the registration process')
+            log.info('Finishing up the registration process')
 
             disable_registration_window(self.prod_mode)
 
@@ -307,7 +307,7 @@ class NewUserRegistrationWindow:
                 if not login_ok:
                     raise Exception('login failed after registration')
             except Exception as exc:
-                logging.fatal(str(exc), exc_info=True)
+                log.fatal(str(exc), exc_info=True)
                 error_msg \
                   = _tr('Could not do initial login with new user' \
                         ' credentials.  Please remember your username' \
@@ -317,7 +317,7 @@ class NewUserRegistrationWindow:
                 utils.show_error_message(self.main_window, _tr('Error'),
                     error_msg)
 
-            logging.info('Rebooting now')
+            log.info('Rebooting now')
 
             if self.prod_mode:
                 subprocess.run(['systemctl', 'reboot', '-i'])
@@ -325,7 +325,7 @@ class NewUserRegistrationWindow:
             self.main_window.destroy()
 
         except Exception as exc:
-            logging.error(str(exc), exc_info=True)
+            log.error(str(exc), exc_info=True)
 
             utils.show_error_message( \
                 self.main_window,
@@ -347,7 +347,7 @@ class NewUserRegistrationWindow:
             else:
                 self.next_page()
         except Exception as e:
-            logging.warning('unexpected error in local login: %s' % str(e))
+            log.warning('unexpected error in local login: %s' % str(e))
             utils.show_error_message(self.main_window, _tr('Error'),
                 _tr('An unexpected error occurred'))
 
@@ -430,6 +430,7 @@ class UserRegistrationApplication(Gtk.Application):
 # ==============================================================================
 # ==============================================================================
 
+
 # Handle command-line arguments
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -449,13 +450,15 @@ args = parser.parse_args()
 prod_mode = args.prod or args.at_session_startup
 
 # Setup logging
-if prod_mode:
-    logging.basicConfig(filename='/tmp/register.log',
-                        format='%(asctime)s %(levelname)s: %(message)s',
-                        level=logging.DEBUG)
-else:
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
-                        level=logging.DEBUG)
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+handler = logging.handlers.SysLogHandler(address = '/dev/log')
+formatter = logging.Formatter('%(module)s.%(funcName)s: %(message)s')
+handler.setFormatter(formatter)
+log.addHandler(handler)
+
+log.debug('heippati')
+log.critical('critical heippati')
 
 settings = {
     'prod_mode': prod_mode,
@@ -488,6 +491,6 @@ try:
 
     app.run()
 except Exception as exc:
-    logging.fatal('TOP-LEVEL EXCEPTION CAUGHT')
-    logging.fatal(str(exc), exc_info=True)
+    log.fatal('TOP-LEVEL EXCEPTION CAUGHT')
+    log.fatal(str(exc), exc_info=True)
     exit(1)
