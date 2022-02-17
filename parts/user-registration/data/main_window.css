@@ -274,6 +274,7 @@ THE ACCOUNT CREATION PAGE
 .register_user entry {
     padding: 2px 5px;
     border: 2px solid #888;
+    min-height: 1em;
     outline: none;
     font-size: $(entry_font_size);
     font-family: "Noto Sans";
