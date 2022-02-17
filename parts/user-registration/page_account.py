@@ -91,6 +91,9 @@ class PageAccount(PageDefinition):
         self.network_thread = None
 
         # Get handles to elements
+
+        self.password_confirm_label = self.builder.get_object('password_confirm_label')
+
         self.first_name_field = self.builder.get_object('first_name')
         self.last_name_field = self.builder.get_object('last_name')
         self.username_field = self.builder.get_object('username')
@@ -290,6 +293,19 @@ class PageAccount(PageDefinition):
         self.username_hint.set_markup('<span color="%s">%s</span>' % (color, message))
 
 
+    def update_color_note(self, gtk_element, add_note):
+      text = gtk_element.get_text()
+      if add_note:
+        gtk_element.set_markup('<span color="%s">%s</span>' % ('#f44', text))
+      else:
+        gtk_element.set_text(text)
+
+
+    def update_password_confirm_label(self):
+      self.update_color_note(self.password_confirm_label,
+                             self.user_password != self.user_password_confirm)
+
+
     # Update the username field without triggering a "changed" event
     def update_username_field(self):
         with self.username_field.handler_block(self.username_change_signal):
@@ -339,11 +355,13 @@ class PageAccount(PageDefinition):
         # NOTE: no strip() call here, the field contents are used
         # as-is!
         self.user_password = self.password_field.get_text()
+        self.update_password_confirm_label()
         self.set_submit_state()
 
 
     def on_password_confirm_changed(self, edit):
         self.user_password_confirm = self.password_confirm_field.get_text()
+        self.update_password_confirm_label()
         self.set_submit_state()
 
 
