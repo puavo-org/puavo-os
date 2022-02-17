@@ -115,96 +115,35 @@ class NewUserRegistrationWindow:
             screen_width = 1366
             screen_height = 768
 
-        if screen_width == 1920:
+        if screen_width >= 1920:
             css_variables = {
+                'background_image': 'background_1920.png',
+                'entry_font_size': '28px',
                 'gtk_dialog_font_scale': '150%',
                 'main_font_scale': '200%',
-                'background_image': 'background_1920.png',
-
-                'welcome_padding_top': '75px',
-                'welcome_padding_left': '250px',
-                'welcome_padding_right': '50px',
-
-                'network_container_left': '150px',
-
-                'account_top_padding': '75px',
-                'account_left_padding': '500px',
-
-                'login_top_padding': '300px',
-
-                'complete_top_padding': '200px',
-                'complete_left_padding': '250px',
-
-                'entry_font_size': '28px',
             }
-        elif screen_width in (1600, 1680):
-            # Weirdo resolutions we see sometimes. The background
-            # image overlaps the text badly, though.
+        elif screen_width >= 1600:
             css_variables = {
+                'background_image': 'background_1366.png',
+                'entry_font_size': '24px',
                 'gtk_dialog_font_scale': '120%',
                 'main_font_scale': '150%',
-                'background_image': 'background_1920.png',
-
-                'welcome_padding_top': '150px',
-                'welcome_padding_left': '250px',
-                'welcome_padding_right': '50px',
-
-                'network_container_left': '150px',
-
-                'account_top_padding': '50px',
-                'account_left_padding': '600px',
-
-                'login_top_padding': '250px',
-
-                'complete_top_padding': '200px',
-                'complete_left_padding': '250px',
-
-                'entry_font_size': '20px',
             }
-        elif screen_width == 1024:
-            # A virtual machine?
+        elif screen_width >= 1024:
             css_variables = {
-                'gtk_dialog_font_scale': '100%',
+                'background_image': 'background_640.png',
+                'entry_font_size': '16px',
+                'gtk_dialog_font_scale': '80%',
                 'main_font_scale': '100%',
-                'background_image': 'background_1366.png',
-
-                'welcome_padding_top': '100px',
-                'welcome_padding_left': '100px',
-                'welcome_padding_right': '100px',
-
-                'network_container_left': '50px',
-
-                'account_top_padding': '50px',
-                'account_left_padding': '400px',
-
-                'login_top_padding': '200px',
-
-                'complete_top_padding': '100px',
-                'complete_left_padding': '50px',
-
-                'entry_font_size': '15px',
             }
         else:
+            # XXX sizes as small as these do not work,
+            # XXX but I am hoping to make them work
             css_variables = {
-                'gtk_dialog_font_scale': '110%',
-                'main_font_scale': '110%',
-                'background_image': 'background_1366.png',
-
-                'welcome_padding_top': '75px',
-                'welcome_padding_left': '250px',
-                'welcome_padding_right': '50px',
-
-                'network_container_left': '150px',
-
-                'account_top_padding': '25px',
-                'account_left_padding': '550px',
-
-                'login_top_padding': '150px',
-
-                'complete_top_padding': '100px',
-                'complete_left_padding': '250px',
-
-                'entry_font_size': '16px',
+                'background_image': 'background_640.png',
+                'entry_font_size': '12px',
+                'gtk_dialog_font_scale': '50%',
+                'main_font_scale': '60%',
             }
 
         css_variables['background_image'] = \
