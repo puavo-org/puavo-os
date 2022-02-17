@@ -49,7 +49,7 @@ def disable_registration_window(is_production):
 def login_locally(username, password, is_production):
     if not is_production:
         log.info('login_locally(): setting up local login, ' \
-                     'username="%s", password="%s"', username, password)
+                   'username="%s", password="%s"', username, password)
         return True
 
     log.info('login_locally(): setting up local login, username="%s"',
@@ -106,9 +106,8 @@ class NewUserRegistrationWindow:
 
         try:
             screen_width = Gdk.Screen.get_default().width()
-        except Exception as exc:
-            log.warning('Unable to determine the screen width:')
-            log.warning(str(exc))
+        except Exception as e:
+            log.warning('unable to determine the screen width: %s', str(e))
             screen_width = 1366
 
         if not self.prod_mode:
@@ -173,8 +172,8 @@ class NewUserRegistrationWindow:
             # Setup event handling
             self.main_builder.connect_signals(self)
 
-        except Exception as exc:
-            log.fatal(str(exc), exc_info=True)
+        except Exception as e:
+            log.fatal('%s', str(e), exc_info=True)
             return
 
         self.main_window = self.main_builder.get_object('main_window')
@@ -195,14 +194,14 @@ class NewUserRegistrationWindow:
             os.path.realpath(os.path.join(self.data_dir, 'privacy_policy.html'))
 
         if os.path.exists(self.__privacy_policy_file):
-            log.info('Privacy policy file "%s" exists', self.__privacy_policy_file)
+            log.info('privacy policy file "%s" exists', self.__privacy_policy_file)
             self.main_builder.get_object('privacy_policy').show()
 
         # Try to set the lower corner logo
         self.__logo_file = os.path.realpath(os.path.join(self.data_dir, 'lower_logo.png'))
 
         if os.path.exists(self.__logo_file):
-            log.info('Lower corner logo file "%s" exists', self.__logo_file)
+            log.info('lower corner logo file "%s" exists', self.__logo_file)
 
             logo = self.main_builder.get_object('logo')
 
@@ -216,10 +215,10 @@ class NewUserRegistrationWindow:
 
                 logo.set_from_pixbuf(pixbuf)
                 logo.show()
-            except Exception as exc:
+            except Exception as e:
                 logo.hide()
-                log.error('Could not set the lower corner logo image:')
-                log.error(str(exc), exc_info=True)
+                log.error('could not set the lower corner logo image: %s',
+                          str(e), exc_info=True)
 
         self.main_title = self.main_builder.get_object('main_title')
 
@@ -238,8 +237,8 @@ class NewUserRegistrationWindow:
                 self.all_pages.append(page)
                 if ctor == PageAccount:
                     self.account_page = page
-        except Exception as exc:
-            log.error(str(exc), exc_info=True)
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
             self.main_window.destroy()
         else:
             # Activate the initial page
@@ -296,7 +295,7 @@ class NewUserRegistrationWindow:
     # Called from the "complete" page to finish up the operation
     def finish_registration(self):
         try:
-            log.info('Finishing up the registration process')
+            log.info('finishing up the registration process')
 
             disable_registration_window(self.prod_mode)
 
@@ -306,8 +305,8 @@ class NewUserRegistrationWindow:
                                          self.prod_mode)
                 if not login_ok:
                     raise Exception('login failed after registration')
-            except Exception as exc:
-                log.fatal(str(exc), exc_info=True)
+            except Exception as e:
+                log.fatal('%s', str(e), exc_info=True)
                 error_msg \
                   = _tr('Could not do initial login with new user' \
                         ' credentials.  Please remember your username' \
@@ -317,15 +316,15 @@ class NewUserRegistrationWindow:
                 utils.show_error_message(self.main_window, _tr('Error'),
                     error_msg)
 
-            log.info('Rebooting now')
+            log.info('rebooting now')
 
             if self.prod_mode:
                 subprocess.run(['systemctl', 'reboot', '-i'])
 
             self.main_window.destroy()
 
-        except Exception as exc:
-            log.error(str(exc), exc_info=True)
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
 
             utils.show_error_message( \
                 self.main_window,
@@ -347,7 +346,7 @@ class NewUserRegistrationWindow:
             else:
                 self.next_page()
         except Exception as e:
-            log.warning('unexpected error in local login: %s' % str(e))
+            log.warning('unexpected error in local login: %s', str(e))
             utils.show_error_message(self.main_window, _tr('Error'),
                 _tr('An unexpected error occurred'))
 
@@ -457,9 +456,6 @@ formatter = logging.Formatter('%(module)s.%(funcName)s: %(message)s')
 handler.setFormatter(formatter)
 log.addHandler(handler)
 
-log.debug('heippati')
-log.critical('critical heippati')
-
 settings = {
     'prod_mode': prod_mode,
 }
@@ -490,7 +486,7 @@ try:
                                       settings)
 
     app.run()
-except Exception as exc:
+except Exception as e:
     log.fatal('TOP-LEVEL EXCEPTION CAUGHT')
-    log.fatal(str(exc), exc_info=True)
+    log.fatal('%s', str(e), exc_info=True)
     exit(1)
