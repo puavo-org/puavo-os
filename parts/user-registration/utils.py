@@ -5,6 +5,8 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+from logger import log
+
 
 def show_error_message(parent, message, secondary_message=None):
     """Show a modal error message box."""

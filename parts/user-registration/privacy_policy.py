@@ -7,6 +7,8 @@ gi.require_version('WebKit2', '4.0')
 from gi.repository import Gtk
 from gi.repository import WebKit2
 
+from logger import log
+
 
 class PrivacyPolicy(Gtk.Dialog):
     def __init__(self, parent, policy_file):

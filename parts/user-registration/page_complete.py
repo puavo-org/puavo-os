@@ -2,6 +2,8 @@
 
 import gettext
 
+from logger import log
+
 from page_definition import PageDefinition
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
