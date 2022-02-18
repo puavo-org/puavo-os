@@ -636,8 +636,8 @@ class PageAccount(PageDefinition):
             log.info('trying to parse server response |%s|', str(response_data))
             server_data = response_data.decode('utf-8')
             server_json = json.loads(server_data)
-        except Exception as exc:
-            log.error('%s', str(exc), exc_info=True)
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
 
             utils.show_error_message(
                 self.parent_window,
@@ -683,8 +683,8 @@ class PageAccount(PageDefinition):
             # All other return codes fall through to the "should not get here"
             # block below
 
-        except Exception as exc:
-            log.error('%s', str(exc), exc_info=True)
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
 
             utils.show_error_message(
                 self.parent_window,
@@ -748,11 +748,12 @@ class NetworkThread(threading.Thread):
         except socket.timeout:
             self.response['error'] = 'timeout'
             self.response['failed'] = True
-        except http.client.HTTPException as exc:
-            self.response['error'] = exc
+        except http.client.HTTPException as e:
+            self.response['error'] = e
             self.response['failed'] = True
-        except Exception as exc:
-            self.response['error'] = exc
+        except Exception as e:
+            log.error('got error when connecting to %s: %s', server_addr, e)
+            self.response['error'] = e
             self.response['failed'] = True
         finally:
             if conn:
