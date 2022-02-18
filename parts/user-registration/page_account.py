@@ -730,7 +730,7 @@ class NetworkThread(threading.Thread):
         try:
             server_addr = open('/etc/puavo/domain', 'rb').read().decode('utf-8').strip()
 
-            conn = http.client.HTTPSConnection(server_addr, timeout=10)
+            conn = http.client.HTTPSConnection(server_addr, timeout=60)
 
             conn.request('POST',
                          '/register_user',
