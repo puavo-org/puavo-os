@@ -90,6 +90,8 @@ class PageAccount(PageDefinition):
 
         # Get handles to elements
 
+        self.timeout_retry_mode = False
+
         self.password_confirm_label = self.builder.get_object('password_confirm_label')
 
         self.first_name_field = self.builder.get_object('first_name')
@@ -105,6 +107,7 @@ class PageAccount(PageDefinition):
         self.phone_hint = self.builder.get_object('phone_number_hint')
         self.spinner = self.builder.get_object('registration_spinner')
         self.status = self.builder.get_object('status_message')
+        self.account_previous_page = self.builder.get_object('account_previous_page')
         self.submit_button = self.builder.get_object('submit')
 
         for lang in LANGUAGES:
@@ -167,8 +170,19 @@ class PageAccount(PageDefinition):
 
 
     def enable_inputs(self, state):
+        # Keep inputs disabled in if have received timeout and can only
+        # retry sending (this is to avoid user changing password and other
+        # information... in case of a timeout, we might have been successful
+        # already but we just do not know it).
+        if self.timeout_retry_mode:
+            state = False
+
         for obj in self.builder.get_objects():
             if obj is self.status:
+                continue
+            if self.timeout_retry_mode and \
+              (obj is self.account_previous_page or obj is self.submit_button):
+                obj.set_sensitive(True)
                 continue
 
             if isinstance(obj, Gtk.Entry) or \
@@ -595,6 +609,8 @@ class PageAccount(PageDefinition):
 
     def idle_func(self, event, thread):
         if event.is_set():
+            self.timeout_retry_mode = False
+
             log.info('thread event set, idle function is exiting')
             self.status.set_text('')
             self.spinner.stop()
@@ -603,6 +619,7 @@ class PageAccount(PageDefinition):
 
             if thread.response['failed']:
                 if thread.response['error'] == 'timeout':
+                    self.timeout_retry_mode = True
                     utils.show_error_message(
                         self.parent_window,
                         _tr('Error'),
