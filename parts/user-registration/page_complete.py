@@ -28,6 +28,11 @@ class PageComplete(PageDefinition):
         self.builder.get_object('complete_reboot').connect('clicked', self.reboot_clicked)
 
 
+    def activate(self):
+        super().activate()
+        self.application.finish_registration()
+
+
     def enable_desktop_button(self):
         return False
 
@@ -37,4 +42,4 @@ class PageComplete(PageDefinition):
 
 
     def reboot_clicked(self, *args):
-        self.application.finish_registration()
+        self.application.reboot()

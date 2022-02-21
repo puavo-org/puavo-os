@@ -315,13 +315,6 @@ class NewUserRegistrationWindow:
                 utils.show_error_message(self.main_window, _tr('Error'),
                     error_msg)
 
-            log.info('rebooting now')
-
-            if self.prod_mode:
-                subprocess.run(['systemctl', 'reboot', '-i'])
-
-            self.main_window.destroy()
-
         except Exception as e:
             log.error('%s', str(e), exc_info=True)
 
@@ -329,6 +322,20 @@ class NewUserRegistrationWindow:
                 self.main_window,
                 _tr('Fatal Error'),
                 _tr('Could not finish the registration process.  Please contact support.'))
+
+
+    def reboot(self):
+        try:
+            log.info('rebooting now')
+            if self.prod_mode:
+                subprocess.run(['systemctl', 'reboot', '-i'])
+            self.main_window.destroy()
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
+            utils.show_error_message( \
+                self.main_window,
+                _tr('Reboot'),
+                _tr('Could not reboot.'))
 
 
     def login_locally_from_loginpage(self, username, password):
