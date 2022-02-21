@@ -33,49 +33,18 @@ LANGUAGES = [
 
 
 # Used when interpreting a failed server response
-FIELD_ERRORS = {
-    'first_name': {
-        'name': _tr('first name'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-        }
-    },
-
-    'last_name': {
-        'name': _tr('last name'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-        }
-    },
-
-    'username': {
-        'name': _tr('login name'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-        }
-    },
-
-    'email': {
-        'name': _tr('email address'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-        }
-    },
-
-    'phone': {
-        'name': _tr('phone number'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-            'too_long': _tr('is too long'),
-        }
-    },
+FIELDS = {
+    'first_name': _tr('first name'),
+    'last_name':  _tr('last name'),
+    'username':   _tr('login name'),
+    'email':      _tr('email address'),
+    'phone':      _tr('phone number'),
 }
-
+REASONS = {
+    'empty': _tr('is empty'),
+    'failed_validation': _tr('contains bad characters'),
+    'too_long': _tr('is too long'),
+}
 
 class PageAccount(PageDefinition):
     def __init__(self, application, parent_window, parent_container, data_dir, main_builder):
@@ -206,8 +175,7 @@ class PageAccount(PageDefinition):
                 self.user_username[0] not in 'abcdefghijklmnopqrstuvwxyz0123456789':
             state = False
 
-        if len(self.user_email) == 0:
-            state = False
+        # not checking email which is not a required attribute
 
         if len(self.user_password) == 0:
             state = False
@@ -360,7 +328,6 @@ class PageAccount(PageDefinition):
 
     def on_email_changed(self, edit):
         self.user_email = self.email_field.get_text().strip()
-        self.set_submit_state()
 
 
     def on_password_changed(self, edit):
@@ -451,13 +418,22 @@ class PageAccount(PageDefinition):
             if len(response['failed_fields']) > 0:
                 msg = _tr('Something is wrong on the following form fields.' \
                           '  Check their contents and try again.')
-
                 msg += '\n\n'
 
                 for field in response['failed_fields']:
-                    error = FIELD_ERRORS[field['name']]
-                    msg += '\t- {0} {1}\n'. \
-                        format(error['name'], error['reasons'][field['reason']])
+                    field_msg = '?'
+                    if 'name' in field:
+                      field_msg = field['name']
+                      if field_msg in FIELDS:
+                        field_msg = FIELDS[field_msg]
+
+                    reason_msg = '?'
+                    if 'reason' in field:
+                      reason_msg = field['reason']
+                      if reason_msg in REASONS:
+                        reason_msg = REASONS[reason_msg]
+
+                    msg += "\t- {0} {1}\n".format(field_msg, reason_msg)
 
                 utils.show_error_message(
                     self.parent_window,
