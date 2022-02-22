@@ -92,24 +92,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="login_with_existing_account">
-                <property name="label" translatable="yes">Login with existing account</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="valign">end</property>
-                <signal name="clicked" handler="login_with_existing_account_clicked" swapped="no"/>
-                <style>
-                  <class name="login_with_existing_account"/>
-                </style>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkImage" id="logo">
                 <property name="can_focus">False</property>
                 <property name="no_show_all">True</property>

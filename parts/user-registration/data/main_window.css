@@ -359,7 +359,7 @@ THE LOGIN PAGE
 */
 .login {
     padding-top: 15em;
-    padding-left: 25em;
+    padding-left: 20em;
     font-size: 100%;
 }
 
@@ -376,10 +376,12 @@ THE LOGIN PAGE
     outline: none;
 }
 
-.login .account_label {
+.login .login_label {
     color: #fff;
     text-shadow: 1px 1px 0 #000;
 }
 
 .login .login_button_box {
+    min-width: 40em;
+    padding-top: 10em;
 }
