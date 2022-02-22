@@ -46,14 +46,13 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="no_account_button">
+          <object class="GtkButton" id="do_login">
+            <property name="label" translatable="yes">THIS TEXT HERE SHOULD BE A LOT WIDER .... Login HERE</property>
             <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="halign">center</property>
-            <property name="label" translatable="yes">In case you do not have a user account, press this.</property>
-            <style>
-              <class name="login_label"/>
-            </style>
+            <property name="sensitive">False</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="clicked" handler="on_login_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left-attach">0</property>
@@ -116,13 +115,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="do_login">
-            <property name="label" translatable="yes">Login</property>
+          <object class="GtkButton" id="no_account_button">
+            <property name="label" translatable="yes">No user account?  Create one!</property>
             <property name="visible">True</property>
-            <property name="sensitive">False</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-            <signal name="clicked" handler="on_login_clicked" swapped="no"/>
+            <property name="can-focus">False</property>
+            <property name="halign">end</property>
+            <signal name="clicked" handler="on_no_account_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>

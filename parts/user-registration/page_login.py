@@ -20,11 +20,12 @@ class PageLogin(PageDefinition):
         # Setup event handling
         handlers = {
           'on_login_clicked':      self.on_login_clicked,
+          'on_no_account_clicked': self.on_no_account_clicked,
           'on_password_activated': self.on_password_activated,
           'on_password_changed':   self.maybe_enable_login_button,
+          'on_previous_clicked':   self.on_previous_clicked,
           'on_username_activated': self.on_username_activated,
           'on_username_changed':   self.maybe_enable_login_button,
-          'on_previous_clicked':   self.on_previous_clicked,
         }
         self.builder.connect_signals(handlers)
 
@@ -57,6 +58,10 @@ class PageLogin(PageDefinition):
 
     def on_previous_clicked(self, *args):
         self.application.previous_page()
+
+
+    def on_no_account_clicked(self, widget):
+       self.application.next_page()
 
 
     def on_login_clicked(self, widget):
