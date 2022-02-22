@@ -664,17 +664,18 @@ darkdm_main()
 
 gather_device_data()
 {
+#"battery": "$(upower --show-info /org/freedesktop/UPower/devices/battery_BAT0 \
+#  |grep 'vendor:\|model:\|serial:\|capacity:\|percentage:\|voltage:' 2>/dev/null || true)",
   cat <<EOF
 {
-"battery": "$(upower --show-info /org/freedesktop/UPower/devices/battery_BAT0 \
-  |grep 'vendor:\|model:\|serial:\|capacity:\|percentage:\|voltage:' 2>/dev/null || true)"
+
 "bios": "$(facter dmi.bios.vendor) / $(facter dmi.bios.version)",
 "cpu": "$(facter processors.models.1)",
-"disks": "$(facter --json disks | jq -r '.disks ')",
+"disks": $(facter --json disks | jq -r '.disks '),
 "manufacturer": "$(facter dmi.manufacturer)",
-"memory": "$(facter memory.system.total_bytes)" "$(facter memory.system.total)",
+"memory": "$(facter memory.system.total_bytes) $(facter memory.system.total)",
 "model": "$(facter dmi.product.name)",
-"resolution" "`cat /sys/class/graphics/fb0/virtual_size`",
+"resolution": "`cat /sys/class/graphics/fb0/virtual_size`",
 "serialnum": "$(facter dmi.product.serial_number)"
 }
 EOF
@@ -692,8 +693,8 @@ if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
     preseed_json=''
   fi
   deviceid_url="https://${image_server}/deviceid"
-  if ! device_identifier=$(curl --cacert /etc/puavo-conf/rootca.pem \
-                           -d '$(gather_device_data)' --fail --max-time 5 --silent \
+  if ! device_identifier=$(curl --cacert /etc/puavo-conf/rootca.pem  \
+                           -d "$(gather_device_data)" --fail  -H "Content-Type: application/json" --max-time 5 --silent \
                            -X POST "$deviceid_url"); then
     device_identifier=''
   fi
