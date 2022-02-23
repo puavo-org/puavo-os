@@ -294,7 +294,7 @@ class NewUserRegistrationWindow:
         try:
             log.info('finishing up the registration process')
 
-            self.disable_registration_window(self.prod_mode)
+            self.disable_registration_window()
 
             error_msg = ''
             try:
@@ -347,7 +347,7 @@ class NewUserRegistrationWindow:
                 utils.show_error_message(self.main_window, _tr('Error'),
                                         _tr('Bad username and/or password'))
             else:
-                self.goto_page(self.page_complete)
+                self.goto_page(self.complete_page)
         except Exception as e:
             log.warning('unexpected error in local login: %s', str(e))
             utils.show_error_message(self.main_window, _tr('Error'),

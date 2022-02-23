@@ -325,7 +325,6 @@ THE COMPLETE PAGE
 
 .complete_texts_container {
     padding-top: 10em;
-    padding-left: 12em;
 }
 
 .complete_texts_container label {
@@ -359,7 +358,7 @@ THE LOGIN PAGE
 */
 .login {
     padding-top: 15em;
-    padding-left: 20em;
+    padding-left: 15em;
     font-size: 100%;
 }
 
@@ -382,6 +381,10 @@ THE LOGIN PAGE
 }
 
 .login .login_button_box {
-    min-width: 40em;
+    min-width: 50em;
     padding-top: 10em;
+}
+
+.login .login_entry_box {
+    padding-left: 10em;
 }

@@ -47,7 +47,7 @@
         </child>
         <child>
           <object class="GtkButton" id="do_login">
-            <property name="label" translatable="yes">THIS TEXT HERE SHOULD BE A LOT WIDER .... Login HERE</property>
+            <property name="label" translatable="yes">Login</property>
             <property name="visible">True</property>
             <property name="sensitive">False</property>
             <property name="can-focus">True</property>
@@ -88,6 +88,9 @@
             <property name="top-attach">1</property>
           </packing>
         </child>
+        <style>
+          <class name="login_entry_box"/>
+        </style>
       </object>
       <packing>
         <property name="expand">False</property>
