@@ -294,23 +294,28 @@ class NewUserRegistrationWindow:
         try:
             log.info('finishing up the registration process')
 
-            self.disable_registration_window()
-
             error_msg = ''
+            login_ok = False
+
             try:
                 login_ok = self.login_locally()
                 if not login_ok:
                     raise Exception('login failed after registration')
+
             except Exception as e:
                 log.fatal('%s', str(e), exc_info=True)
                 error_msg \
-                  = _tr('Could not do initial login with new user' \
-                        ' credentials.  Please remember your username' \
-                        ' "%s" for the first login.  Contact support if' \
-                        ' there are problems.') % self.username
+                  = _tr('Could not do initial login with new user credentials.' \
+                        '  Please remember your username "%s" and password for the first login.' \
+                        '  Contact support if there are problems.') % self.username
             if error_msg:
                 utils.show_error_message(self.main_window, _tr('Error'),
                     error_msg)
+
+            if login_ok:
+                # disable registration window only in case
+                # we had a successful login
+                self.disable_registration_window()
 
         except Exception as e:
             log.error('%s', str(e), exc_info=True)

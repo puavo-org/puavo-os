@@ -16,11 +16,12 @@ msgstr "sisäinen virhe: käyttäjänimi ja salasana puuttuvat"
 #: puavo-user-registration:78
 #, python-format
 msgid ""
-"Could not do initial login with new user credentials.  Please remember your "
-"username \"%s\" for the first login.  Contact support if there are problems."
+"Could not do initial login with new user credentials."
+"  Please remember your username \"%s\" and password for the first login."
+"  Contact support if there are problems."
 msgstr ""
 "Ensikirjautuminen uudella tunnuksella ei onnistunut."
-"  Muista käyttäjätunnuksesi \"%s\" ensikirjautumista varten."
+"  Muista käyttäjätunnuksesi \"%s\" ja salasanasi ensikirjautumista varten."
 "  Ota ongelmatilanteissa yhteys tukeen."
 
 #: puavo-user-registration:84
