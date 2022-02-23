@@ -24,7 +24,7 @@ class PageWelcome(PageDefinition):
           + '\n\n\t<span color="#0f0"><big>1.</big></span>' \
           + _tr('Join a wireless network') \
           + '\n\t<span color="#0f0"><big>2.</big></span>' \
-          + _tr('Register your new login') + '\n\n')
+          + _tr('Login or register your new login') + '\n\n')
 
         self.builder.get_object('welcome_footer').set_markup( \
           '<span color="#0f0">' + _tr('Tip:') + '</span>' \
@@ -32,9 +32,7 @@ class PageWelcome(PageDefinition):
                   'you can do that later and use this host temporarily in ' \
                   'guest-mode by clicking the') \
             + '<i>"' + _tr('Go to desktop') + '"</i>-' \
-            + _tr('button in the bottom corner.') \
-            + '  ' + _tr('If you already have an account, choose') \
-            + ' ' + '<i>"' + _tr('Login with existing account') + '"</i>.')
+            + _tr('button in the bottom corner.'))
 
         self.builder.get_object('welcome_next').connect('clicked', self.welcome_next_clicked)
 
