@@ -8,11 +8,20 @@ from logger import log
 
 
 class NetworkThread(threading.Thread):
-    def __init__(self, json_data, event):
+    def __init__(self, request_method, json_data, event):
         super().__init__()
+        self.request_method = request_method
         self.json_data = json_data
         self.event = event
         self.response = {}
+
+
+    def register_user(self, conn):
+        headers = { 'Content-type': 'application/json', }
+        conn.request('POST',
+                     '/register_user',
+                     body=bytes(self.json_data, 'utf-8'),
+                     headers=headers)
 
 
     def run(self):
@@ -23,10 +32,6 @@ class NetworkThread(threading.Thread):
 
         response = None
 
-        headers = {
-            'Content-type': 'application/json',
-        }
-
         conn = None
 
         try:
@@ -34,10 +39,7 @@ class NetworkThread(threading.Thread):
 
             conn = http.client.HTTPSConnection(server_addr, timeout=60)
 
-            conn.request('POST',
-                         '/register_user',
-                         body=bytes(self.json_data, 'utf-8'),
-                         headers=headers)
+            getattr(self, self.request_method)(conn)
 
             # Must read the response here, because the "finally" handler
             # closes the connection and that happens before we can read

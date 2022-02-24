@@ -388,7 +388,8 @@ class PageAccount(PageDefinition):
 
         self.network_thread_event = threading.Event()
 
-        self.network_thread = NetworkThread(json_data,
+        self.network_thread = NetworkThread('register_user',
+                                            json_data,
                                             self.network_thread_event)
         self.network_thread.daemon = True
         self.network_thread.start()
