@@ -291,39 +291,33 @@ class NewUserRegistrationWindow:
 
     # Called from the "complete" page to finish up the operation
     def finish_registration(self):
+        log.info('finishing up the registration process')
+
+        error_msg = ''
+        login_ok = False
         try:
-            log.info('finishing up the registration process')
-
-            error_msg = ''
-            login_ok = False
-
-            try:
-                login_ok = self.login_locally()
-                if not login_ok:
-                    raise Exception('login failed after registration')
-
-            except Exception as e:
-                log.fatal('%s', str(e), exc_info=True)
-                error_msg \
-                  = _tr('Could not do initial login with new user credentials.' \
-                        '  Please remember your username "%s" and password for the first login.' \
-                        '  Contact support if there are problems.') % self.username
-            if error_msg:
-                utils.show_error_message(self.main_window, _tr('Error'),
-                    error_msg)
-
-            if login_ok:
-                # disable registration window only in case
-                # we had a successful login
-                self.disable_registration_window()
-
+            login_ok = self.login_locally()
+            if not login_ok:
+                raise Exception('login failed after registration')
         except Exception as e:
-            log.error('%s', str(e), exc_info=True)
+            log.fatal('%s', str(e), exc_info=True)
+            error_msg \
+              = _tr('Could not do initial login with new user credentials.' \
+                    '  Please remember your username "%s" and password for the first login.' \
+                    '  Contact support if there are problems.') % self.username
+        if error_msg:
+            utils.show_error_message(self.main_window, _tr('Error'), error_msg)
 
-            utils.show_error_message( \
-                self.main_window,
-                _tr('Fatal Error'),
-                _tr('Could not finish the registration process.  Please contact support.'))
+        # disable registration window only in case we had a successful login
+        if login_ok:
+            try:
+                self.disable_registration_window()
+            except Exception as e:
+                log.error('%s', str(e), exc_info=True)
+                utils.show_error_message( \
+                    self.main_window,
+                    _tr('Error'),
+                    _tr('Could not disable the registration tool.  Please contact support.'))
 
 
     def reboot(self):
