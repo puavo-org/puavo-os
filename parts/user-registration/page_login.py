@@ -17,6 +17,10 @@ class PageLogin(PageDefinition):
 
         self.load_file('login.glade', 'login')
 
+        self.no_account_button = self.builder.get_object('no_account_button')
+        self.primary_user_info = self.builder.get_object('primary_user_info')
+        self.username_field    = self.builder.get_object('username')
+
         # Setup event handling
         handlers = {
           'on_login_clicked':      self.on_login_clicked,
@@ -28,6 +32,18 @@ class PageLogin(PageDefinition):
           'on_username_changed':   self.maybe_enable_login_button,
         }
         self.builder.connect_signals(handlers)
+
+
+    def set_primary_user(self, primary_user):
+        msg = _tr("This host has already been registered\n" \
+                    + "to user \"%s\".  Please provide\n" \
+                    + "the password to start using this host.\n") \
+                 % primary_user
+        self.primary_user_info.set_markup(
+          '<span color="%s">%s</span>' % ('#faa', msg))
+        self.username_field.set_text(primary_user)
+        self.username_field.set_sensitive(False)
+        self.no_account_button.set_sensitive(False)
 
 
     def get_main_title(self):
@@ -46,7 +62,7 @@ class PageLogin(PageDefinition):
 
     def maybe_enable_login_button(self, widget):
        have_password = (self.builder.get_object('password').get_text() != '')
-       have_username = (self.builder.get_object('username').get_text() != '')
+       have_username = (self.username_field.get_text() != '')
        do_login = self.builder.get_object('do_login')
        do_login.set_sensitive(have_password and have_username)
 

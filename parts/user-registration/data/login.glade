@@ -46,21 +46,6 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="do_login">
-            <property name="label" translatable="yes">Login</property>
-            <property name="visible">True</property>
-            <property name="sensitive">False</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-            <signal name="clicked" handler="on_login_clicked" swapped="no"/>
-          </object>
-          <packing>
-            <property name="left-attach">0</property>
-            <property name="top-attach">2</property>
-            <property name="width">2</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkEntry" id="username">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -86,6 +71,37 @@
           <packing>
             <property name="left-attach">1</property>
             <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="do_login">
+            <property name="label" translatable="yes">Login</property>
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="clicked" handler="on_login_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">2</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="primary_user_info">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes"></property>
+            <property name="justify">center</property>
+            <style>
+              <class name="primary_user_info"/>
+            </style>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">3</property>
+            <property name="width">2</property>
           </packing>
         </child>
         <style>

@@ -46,7 +46,6 @@ class NewUserRegistrationWindow:
         self.prod_mode = settings['prod_mode']
         self.machine_password = settings['machine_password']
         self.organisation_domain = settings['organisation_domain']
-        self.primary_user = None
 
         self.local_login_done = False
 
@@ -209,6 +208,8 @@ class NewUserRegistrationWindow:
                     self.account_page = page
                 elif ctor == PageComplete:
                     self.complete_page = page
+                elif ctor == PageLogin:
+                    self.login_page = page
         except Exception as e:
             log.error('%s', str(e), exc_info=True)
             self.main_window.destroy()
@@ -254,16 +255,18 @@ class NewUserRegistrationWindow:
                 log.info('got server response: %s' % server_data)
                 if type(server_data) != dict:
                     raise Exception('server did not return a dict')
-                if server_data['status'] != 'ok':
-                    raise Exception('server did not return status ok')
+                if server_data['status'] != 'device_already_in_use':
+                    return False
                 if server_data['primary_user'] == None:
                     return False
                 if type(server_data['primary_user']) != str:
                     raise Exception('server did not return primary user as string')
-                # XXX what to do this this information?
-                server_data['primary_user']
+                log.info('this host has primary user set to %s' \
+                           % server_data['primary_user'])
 
-                log.info('we have primary user %s' % self.primary_user)
+                self.login_page.set_primary_user(server_data['primary_user'])
+                if self.current_page == self.account_page:
+                    self.goto_page(self.login_page)
 
             except Exception as e:
                 log.error('error when looking up primary user: %s', str(e))
