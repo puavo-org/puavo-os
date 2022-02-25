@@ -129,6 +129,7 @@ class packages {
     , 'mlocate'
     , 'moreutils'
     , 'nmap'
+    , 'nvme-cli'
     , 'powertop'
     , 'procps'
     , 'pssh'

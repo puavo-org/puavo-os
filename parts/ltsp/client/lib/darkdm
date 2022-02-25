@@ -263,6 +263,7 @@ $(show_battery_status)
 product:         $(facter dmi.manufacturer) / ${colorized_product_name}
 serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board) / ${sku_number} (SKU)
 Windows license: $(windows_license)
+${device_identifier}
 EOF
 }
 
@@ -662,19 +663,50 @@ darkdm_main()
 }
 
 # get preseed, we might need it
-echo -n 'Getting preseed (if it can be found)... '
+echo -n 'Getting preseed and device identifier (if server can be found)... '
 preseed_json=''
+sysinfo_json=''
+device_identifier=''
 if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
   preseed_url="https://${image_server}/preseeds/index.json"
   if ! preseed_json=$(curl --cacert /etc/puavo-conf/rootca.pem --fail \
                            --max-time 5 --silent "$preseed_url"); then
     preseed_json=''
   fi
+  deviceid_url="https://${image_server}/deviceid"
+  if sysinfo_json=$(
+    dbus-send --system --dest=org.puavo.client.systeminfocollectordaemon \
+              --print-reply=literal /systeminfocollector \
+              org.puavo.client.systeminfocollector.CollectSysinfo \
+              | jq --arg nresolution "`cat /sys/class/graphics/fb0/virtual_size`" \
+              '. + {"resolution": $nresolution}'); then
+        if ! device_identifier=$(curl --cacert /etc/puavo-conf/rootca.pem  \
+                            -d "${sysinfo_json}" --fail  -H "Content-Type: application/json" --max-time 5 --silent \
+                            -X POST "$deviceid_url"); then
+            device_identifier=''
+        fi
+  else
+    device_identifier='-'
+  fi
 fi
 if [ -n "$preseed_json" ]; then
-  echo 'OK.'
+  echo -n 'Preseed OK. '
 else
-  echo 'failed.'
+  echo -n 'Preseed failed. '
+fi
+
+if [ "$device_identifier" == "n/a" ]; then
+  echo 'Device backend not enabled.'
+  device_identifier=''
+elif [ "$device_identifier" == "-" ]; then
+  echo 'Error during device data gathering.'
+  device_identifier=''
+elif [ -n "$device_identifier" ]; then
+  echo 'Device identifier OK.'
+  device_identifier="Device id:       $device_identifier"
+else
+  echo 'Server does not support device backend.'
+  device_identifier=''
 fi
 
 echo 'Gathering system information...'

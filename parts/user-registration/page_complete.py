@@ -2,6 +2,8 @@
 
 import gettext
 
+from logger import log
+
 from page_definition import PageDefinition
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
@@ -26,13 +28,14 @@ class PageComplete(PageDefinition):
         self.builder.get_object('complete_reboot').connect('clicked', self.reboot_clicked)
 
 
+    def activate(self):
+        super().activate()
+        self.application.finish_registration()
+
+
     def enable_desktop_button(self):
         return False
 
 
-    def enable_login_button(self):
-        return False
-
-
     def reboot_clicked(self, *args):
-        self.application.finish_registration()
+        self.application.reboot()

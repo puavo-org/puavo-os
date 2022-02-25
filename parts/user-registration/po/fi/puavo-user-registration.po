@@ -16,11 +16,12 @@ msgstr "sisäinen virhe: käyttäjänimi ja salasana puuttuvat"
 #: puavo-user-registration:78
 #, python-format
 msgid ""
-"Could not do initial login with new user credentials.  Please remember your "
-"username \"%s\" for the first login.  Contact support if there are problems."
+"Could not do initial login with new user credentials."
+"  Please remember your username \"%s\" and password for the first login."
+"  Contact support if there are problems."
 msgstr ""
 "Ensikirjautuminen uudella tunnuksella ei onnistunut."
-"  Muista käyttäjätunnuksesi \"%s\" ensikirjautumista varten."
+"  Muista käyttäjätunnuksesi \"%s\" ja salasanasi ensikirjautumista varten."
 "  Ota ongelmatilanteissa yhteys tukeen."
 
 #: puavo-user-registration:84
@@ -48,13 +49,9 @@ msgstr ""
 "Oletko varma, että et halua luoda käyttäjätunnusta?"
 "  Ilman käyttäjätunnusta tiedostosi katoavat, kun työpöytäsessiosi loppuu."
 
-#: puavo-user-registration:346
-msgid "Fatal Error"
-msgstr "Aika paha virhe"
-
 #: puavo-user-registration:347
-msgid "Could not finish the registration process.  Please contact support."
-msgstr "Rekisteröinti ei onnistunut.  Ota yhteys tukeen."
+msgid "Could not disable the registration tool.  Please contact support."
+msgstr "Rekisteröintityökalun poiskytkentä ei onnistunut.  Ota yhteys tukeen."
 
 #: puavo-user-registration:456
 msgid "You do not have the required permissions to use this tool."
@@ -368,8 +365,8 @@ msgid "Join a wireless network"
 msgstr "Liittymään langattomaan verkkoon"
 
 #: page_welcome.py:23
-msgid "Register your new login"
-msgstr "Rekisteröimään itsellesi uusi käyttäjätunnus"
+msgid "Login or register your new login"
+msgstr "Kirjautumaan tai rekisteröimään itsellesi uusi käyttäjätunnus"
 
 #: page_welcome.py:26
 msgid "Tip:"
@@ -461,8 +458,26 @@ msgstr "Seuraava"
 msgid "Login"
 msgstr "Kirjaudu"
 
+msgid "No user account?  Create one!"
+msgstr "Ei käyttäjätunnusta?  Luo uusi!"
+
 msgid "Bad username and/or password"
 msgstr "Väärä käyttäjätunnus ja/tai salasana"
 
 msgid "An unexpected error occurred"
 msgstr "Tapahtui odottamaton virhe"
+
+msgid "Reboot"
+msgstr "Uudelleenkäynnistys"
+
+msgid "Could not reboot."
+msgstr "Uudelleenkäynnistys ei onnistunut."
+
+msgid ""
+"This host has already been registered\n"
+"to user \"%s\".  Please provide\n"
+"the password to start using this host.\n"
+msgstr ""
+"Tämä kone on jo rekisteröity\n"
+"käyttäjälle \"%s\".  Anna salasana,\n"
+"jotta voit aloittaa koneen käytön.\n"

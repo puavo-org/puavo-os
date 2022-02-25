@@ -11,6 +11,8 @@ import subprocess
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, GObject
 
+from logger import log
+
 from page_definition import PageDefinition
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
@@ -94,7 +96,7 @@ class PageNetwork(PageDefinition):
                 if self.ask_if_wifi_network_is_okay(self.parent_window, network_ssid):
                     # We already have a WiFi connection, so nothing
                     # needs to be done here
-                    logging.info('We already have a WiFi connection, moving on')
+                    log.info('we already have a WiFi connection, moving on')
                     self.application.next_page()
                     return
 
@@ -103,7 +105,7 @@ class PageNetwork(PageDefinition):
         if not wireless_active and self.check_network_connectivity():
             # Ask if a wired connection is okay
             if not self.ask_if_wireless_network_is_wanted(self.parent_window):
-                logging.info('We already have a connection, moving on')
+                log.info('we already have a connection, moving on')
                 self.application.next_page()
                 return
 
@@ -267,7 +269,7 @@ class PageNetwork(PageDefinition):
         if self.wifi_connect_pid:
             return
 
-        logging.info('Trying to connect to network "%s"', self.network_ssid)
+        log.info('trying to connect to network "%s"', self.network_ssid)
 
         self.connection_status.set_text(_tr('Connecting to "%s"...') % self.network_ssid)
         self.connect_button.set_sensitive(False)
@@ -337,12 +339,12 @@ class PageNetwork(PageDefinition):
             # so instead we look at the output :-(
             if 'successfully activated' in self.wifi_connect_output:
                 self.connection_status.set_text(_tr('Connection successful!'))
-                logging.info('Network connection successful!')
+                log.info('network connection successful!')
                 # TODO: automatically go to the next page here?
                 #self.application.next_page()
                 self.button_to_account_page.set_sensitive(True)
             else:
-                logging.info('Network connection failed')
+                log.info('network connection failed')
                 self.connection_status.set_text(_tr('Connection failed'))
                 self.remove_all_wireless_connections()
 

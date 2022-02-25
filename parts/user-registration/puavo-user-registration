@@ -1,19 +1,21 @@
 #!/usr/bin/python3
 
-# New user registration program, v2.0
+# New user registration program
 
-import os
-import logging
 import argparse
-import subprocess
-import socket
 import gettext
-import sys
-
 import gi
+import json
+import os
+import socket
+import subprocess
+import sys
+import threading
+import time
 
+gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GdkPixbuf, Gio
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
 gettext.textdomain('puavo-user-registration')
@@ -21,57 +23,16 @@ _tr = gettext.gettext
 
 sys.path.append('/usr/share/puavo-user-registration')
 
+from logger import log
+
 import utils
 import privacy_policy
-from page_welcome import PageWelcome
-from page_network import PageNetwork
-from page_account import PageAccount
-from page_login import PageLogin
-from page_complete import PageComplete
-
-
-# ==============================================================================
-# ==============================================================================
-
-
-def disable_registration_window(is_production):
-    cmd = ['sudo', '-n',
-           '/usr/sbin/puavo-conf-local',
-           'puavo.xsessions.user_registration.enabled',
-           'false']
-
-    logging.info('disable_registration_window(): running "%s"', cmd)
-
-    if is_production:
-        subprocess.check_call(cmd)
-
-
-def login_locally(username, password, is_production):
-    if not is_production:
-        logging.info('login_locally(): setting up local login, ' \
-                     'username="%s", password="%s"', username, password)
-        return True
-
-    logging.info('login_locally(): setting up local login, username="%s"',
-        username)
-
-    if not (username and password):
-        raise Exception(_tr('internal error: username and password missing'))
-
-    cmd = ['sudo', '-n', '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
-           username]
-
-    proc = subprocess.Popen(cmd,
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL)
-
-    proc.stdin.write(password.encode())
-    proc.stdin.close()
-    proc.wait()
-
-    return proc.returncode == 0
-
+from network_thread import NetworkThread
+from page_welcome   import PageWelcome
+from page_network   import PageNetwork
+from page_account   import PageAccount
+from page_login     import PageLogin
+from page_complete  import PageComplete
 
 # ==============================================================================
 # ==============================================================================
@@ -86,9 +47,12 @@ class NewUserRegistrationWindow:
         self.machine_password = settings['machine_password']
         self.organisation_domain = settings['organisation_domain']
 
+        self.local_login_done = False
+
         self.page_definitions = [
             (PageWelcome),
             (PageNetwork),
+            (PageLogin),
             (PageAccount),
             (PageComplete),
         ]
@@ -106,105 +70,50 @@ class NewUserRegistrationWindow:
 
         try:
             screen_width = Gdk.Screen.get_default().width()
-        except Exception as exc:
-            logging.warning('Unable to determine the screen width:')
-            logging.warning(str(exc))
+        except Exception as e:
+            log.warning('unable to determine the screen width: %s', str(e))
             screen_width = 1366
+
+        try:
+            self.hostname = open('/etc/puavo/hostname', 'rb') \
+                                   .read().decode('utf-8').strip()
+        except Exception as e:
+            log.fatal('could not read /etc/puavo/hostname')
+            return
 
         if not self.prod_mode:
             screen_width = 1366
             screen_height = 768
 
-        if screen_width == 1920:
+        if screen_width >= 1920:
             css_variables = {
+                'background_image': 'background_1920.png',
+                'entry_font_size': '28px',
                 'gtk_dialog_font_scale': '150%',
                 'main_font_scale': '200%',
-                'background_image': 'background_1920.png',
-
-                'welcome_padding_top': '75px',
-                'welcome_padding_left': '250px',
-                'welcome_padding_right': '50px',
-
-                'network_container_left': '150px',
-
-                'account_top_padding': '75px',
-                'account_left_padding': '500px',
-
-                'login_top_padding': '300px',
-
-                'complete_top_padding': '200px',
-                'complete_left_padding': '250px',
-
-                'entry_font_size': '28px',
             }
-        elif screen_width in (1600, 1680):
-            # Weirdo resolutions we see sometimes. The background
-            # image overlaps the text badly, though.
+        elif screen_width >= 1600:
             css_variables = {
+                'background_image': 'background_1366.png',
+                'entry_font_size': '24px',
                 'gtk_dialog_font_scale': '120%',
                 'main_font_scale': '150%',
-                'background_image': 'background_1920.png',
-
-                'welcome_padding_top': '150px',
-                'welcome_padding_left': '250px',
-                'welcome_padding_right': '50px',
-
-                'network_container_left': '150px',
-
-                'account_top_padding': '50px',
-                'account_left_padding': '600px',
-
-                'login_top_padding': '250px',
-
-                'complete_top_padding': '200px',
-                'complete_left_padding': '250px',
-
-                'entry_font_size': '20px',
             }
-        elif screen_width == 1024:
-            # A virtual machine?
+        elif screen_width >= 1024:
             css_variables = {
-                'gtk_dialog_font_scale': '100%',
+                'background_image': 'background_640.png',
+                'entry_font_size': '16px',
+                'gtk_dialog_font_scale': '80%',
                 'main_font_scale': '100%',
-                'background_image': 'background_1366.png',
-
-                'welcome_padding_top': '100px',
-                'welcome_padding_left': '100px',
-                'welcome_padding_right': '100px',
-
-                'network_container_left': '50px',
-
-                'account_top_padding': '50px',
-                'account_left_padding': '400px',
-
-                'login_top_padding': '200px',
-
-                'complete_top_padding': '100px',
-                'complete_left_padding': '50px',
-
-                'entry_font_size': '15px',
             }
         else:
+            # XXX sizes as small as these do not work,
+            # XXX but I am hoping to make them work
             css_variables = {
-                'gtk_dialog_font_scale': '110%',
-                'main_font_scale': '110%',
-                'background_image': 'background_1366.png',
-
-                'welcome_padding_top': '75px',
-                'welcome_padding_left': '250px',
-                'welcome_padding_right': '50px',
-
-                'network_container_left': '150px',
-
-                'account_top_padding': '25px',
-                'account_left_padding': '550px',
-
-                'login_top_padding': '150px',
-
-                'complete_top_padding': '100px',
-                'complete_left_padding': '250px',
-
-                'entry_font_size': '16px',
+                'background_image': 'background_640.png',
+                'entry_font_size': '12px',
+                'gtk_dialog_font_scale': '50%',
+                'main_font_scale': '60%',
             }
 
         css_variables['background_image'] = \
@@ -234,8 +143,8 @@ class NewUserRegistrationWindow:
             # Setup event handling
             self.main_builder.connect_signals(self)
 
-        except Exception as exc:
-            logging.fatal(str(exc), exc_info=True)
+        except Exception as e:
+            log.fatal('%s', str(e), exc_info=True)
             return
 
         self.main_window = self.main_builder.get_object('main_window')
@@ -256,14 +165,14 @@ class NewUserRegistrationWindow:
             os.path.realpath(os.path.join(self.data_dir, 'privacy_policy.html'))
 
         if os.path.exists(self.__privacy_policy_file):
-            logging.info('Privacy policy file "%s" exists', self.__privacy_policy_file)
+            log.info('privacy policy file "%s" exists', self.__privacy_policy_file)
             self.main_builder.get_object('privacy_policy').show()
 
         # Try to set the lower corner logo
         self.__logo_file = os.path.realpath(os.path.join(self.data_dir, 'lower_logo.png'))
 
         if os.path.exists(self.__logo_file):
-            logging.info('Lower corner logo file "%s" exists', self.__logo_file)
+            log.info('lower corner logo file "%s" exists', self.__logo_file)
 
             logo = self.main_builder.get_object('logo')
 
@@ -277,16 +186,14 @@ class NewUserRegistrationWindow:
 
                 logo.set_from_pixbuf(pixbuf)
                 logo.show()
-            except Exception as exc:
+            except Exception as e:
                 logo.hide()
-                logging.error('Could not set the lower corner logo image:')
-                logging.error(str(exc), exc_info=True)
+                log.error('could not set the lower corner logo image: %s',
+                          str(e), exc_info=True)
 
         self.main_title = self.main_builder.get_object('main_title')
 
         self.desktop_button = self.main_builder.get_object('go_to_desktop')
-        self.login_button \
-            = self.main_builder.get_object('login_with_existing_account')
 
         middle_box = self.main_builder.get_object('middle_box')
         middle_box.show_all()
@@ -299,17 +206,76 @@ class NewUserRegistrationWindow:
                 self.all_pages.append(page)
                 if ctor == PageAccount:
                     self.account_page = page
-        except Exception as exc:
-            logging.error(str(exc), exc_info=True)
+                elif ctor == PageComplete:
+                    self.complete_page = page
+                elif ctor == PageLogin:
+                    self.login_page = page
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
             self.main_window.destroy()
         else:
             # Activate the initial page
             self.goto_page_by_num(0)
 
-        self.login_page = PageLogin(self, self.main_window, middle_box,
-            self.data_dir, self.main_builder)
+        self.start_primary_user_lookup()
 
         self.main_window.show()
+
+
+    def check_host(self, conn):
+        machine_data = self.get_machine_data()
+        json_data = json.dumps(machine_data, ensure_ascii=False)
+        headers = { 'Content-type': 'application/json', }
+        conn.request('POST',
+                     '/check_host',
+                     body=bytes(json_data, 'utf-8'),
+                     headers=headers)
+
+
+    def start_primary_user_lookup(self):
+        self.pul_thread_event = threading.Event()
+        self.pul_thread = NetworkThread(self.check_host,
+                                        self.pul_thread_event)
+        self.pul_thread.daemon = True
+        self.pul_thread.start()
+
+        # This will interpret the server's response
+        GLib.idle_add(self.pul_idle_func,
+                      self.pul_thread_event,
+                      self.pul_thread)
+
+
+    def pul_idle_func(self, event, thread):
+        if event.is_set():
+            try:
+                if thread.response['failed'] or thread.response['code'] != 200:
+                    raise Exception('looking up primary user failed')
+
+                server_data = json.loads(thread.response['data'])
+                log.info('got server response: %s' % server_data)
+                if type(server_data) != dict:
+                    raise Exception('server did not return a dict')
+                if server_data['status'] != 'device_already_in_use':
+                    return False
+                if server_data['primary_user'] == None:
+                    return False
+                if type(server_data['primary_user']) != str:
+                    raise Exception('server did not return primary user as string')
+                log.info('this host has primary user set to %s' \
+                           % server_data['primary_user'])
+
+                self.login_page.set_primary_user(server_data['primary_user'])
+                if self.current_page == self.account_page:
+                    self.goto_page(self.login_page)
+
+            except Exception as e:
+                log.error('error when looking up primary user: %s', str(e))
+
+            return False
+
+        time.sleep(0.05)
+
+        return True
 
 
     def close(self, *args):
@@ -333,10 +299,6 @@ class NewUserRegistrationWindow:
             self.main_window.destroy()
 
 
-    def login_with_existing_account_clicked(self, *args):
-        self.login_page.swap_with(self.account_page)
-
-
     # Show the privacy policy dialog
     def privacy_policy_clicked(self, *args):
         dlg = privacy_policy.PrivacyPolicy(self.main_window, self.__privacy_policy_file)
@@ -354,44 +316,96 @@ class NewUserRegistrationWindow:
         self.password = password
 
 
+    def login_locally(self):
+        if not self.prod_mode:
+            log.info('login_locally(): setting up local login, ' \
+                       'username="%s", password="%s"',
+                       self.username, self.password)
+            return True
+
+        if self.local_login_done:
+            return True
+
+        log.info('login_locally(): setting up local login, username="%s"',
+            self.username)
+
+        if not (self.username and self.password):
+            raise Exception(_tr('internal error: username and password missing'))
+
+        cmd = ['sudo', '-n', '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
+               self.username]
+
+        proc = subprocess.Popen(cmd,
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL)
+
+        proc.stdin.write(self.password.encode())
+        proc.stdin.close()
+        proc.wait()
+
+        if proc.returncode == 0:
+            self.local_login_done = True
+            return True
+
+        return False
+
+
+    def disable_registration_window(self):
+        cmd = ['sudo', '-n',
+               '/usr/sbin/puavo-conf-local',
+               'puavo.xsessions.user_registration.enabled',
+               'false']
+
+        log.info('disable_registration_window(): running "%s"', cmd)
+
+        if self.prod_mode:
+            subprocess.check_call(cmd)
+
+
     # Called from the "complete" page to finish up the operation
     def finish_registration(self):
+        log.info('finishing up the registration process')
+
+        error_msg = ''
+        login_ok = False
         try:
-            logging.info('Finishing up the registration process')
+            login_ok = self.login_locally()
+            if not login_ok:
+                raise Exception('login failed after registration')
+        except Exception as e:
+            log.fatal('%s', str(e), exc_info=True)
+            error_msg \
+              = _tr('Could not do initial login with new user credentials.' \
+                    '  Please remember your username "%s" and password for the first login.' \
+                    '  Contact support if there are problems.') % self.username
+        if error_msg:
+            utils.show_error_message(self.main_window, _tr('Error'), error_msg)
 
-            disable_registration_window(self.prod_mode)
-
-            error_msg = ''
+        # disable registration window only in case we had a successful login
+        if login_ok:
             try:
-                login_ok = login_locally(self.username, self.password,
-                                         self.prod_mode)
-                if not login_ok:
-                    raise Exception('login failed after registration')
-            except Exception as exc:
-                logging.fatal(str(exc), exc_info=True)
-                error_msg \
-                  = _tr('Could not do initial login with new user' \
-                        ' credentials.  Please remember your username' \
-                        ' "%s" for the first login.  Contact support if' \
-                        ' there are problems.') % self.username
-            if error_msg:
-                utils.show_error_message(self.main_window, _tr('Error'),
-                    error_msg)
+                self.disable_registration_window()
+            except Exception as e:
+                log.error('%s', str(e), exc_info=True)
+                utils.show_error_message( \
+                    self.main_window,
+                    _tr('Error'),
+                    _tr('Could not disable the registration tool.  Please contact support.'))
 
-            logging.info('Rebooting now')
 
+    def reboot(self):
+        try:
+            log.info('rebooting now')
             if self.prod_mode:
                 subprocess.run(['systemctl', 'reboot', '-i'])
-
             self.main_window.destroy()
-
-        except Exception as exc:
-            logging.error(str(exc), exc_info=True)
-
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
             utils.show_error_message( \
                 self.main_window,
-                _tr('Fatal Error'),
-                _tr('Could not finish the registration process.  Please contact support.'))
+                _tr('Reboot'),
+                _tr('Could not reboot.'))
 
 
     def login_locally_from_loginpage(self, username, password):
@@ -401,14 +415,14 @@ class NewUserRegistrationWindow:
         self.password = password
 
         try:
-            login_ok = login_locally(username, password, self.prod_mode)
+            login_ok = self.login_locally()
             if not login_ok:
                 utils.show_error_message(self.main_window, _tr('Error'),
                                         _tr('Bad username and/or password'))
             else:
-                self.next_page()
+                self.goto_page(self.complete_page)
         except Exception as e:
-            logging.warning('unexpected error in local login: %s' % str(e))
+            log.warning('unexpected error in local login: %s', str(e))
             utils.show_error_message(self.main_window, _tr('Error'),
                 _tr('An unexpected error occurred'))
 
@@ -423,7 +437,7 @@ class NewUserRegistrationWindow:
 
         if self.prod_mode:
             data['dn'] = open('/etc/puavo/ldap/dn', 'rb').read().decode('utf-8').strip()
-            data['hostname'] = socket.gethostname()
+            data['hostname'] = self.hostname
         else:
             # This machine does not exist anywhere, development purposes only
             data['dn'] = 'puavoId=37,ou=Devices,ou=Hosts,dc=edu,dc=hogwarts,dc=net'
@@ -467,7 +481,6 @@ class NewUserRegistrationWindow:
 
         # Some pages disable the "Go to desktop" button
         self.desktop_button.set_sensitive(self.current_page.enable_desktop_button())
-        self.login_button.set_sensitive(self.current_page.enable_login_button())
 
         # Switch the page
         self.current_page.activate()
@@ -491,6 +504,7 @@ class UserRegistrationApplication(Gtk.Application):
 # ==============================================================================
 # ==============================================================================
 
+
 # Handle command-line arguments
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -508,15 +522,6 @@ parser.add_argument('--at-session-startup',     # backwards compat only
 args = parser.parse_args()
 
 prod_mode = args.prod or args.at_session_startup
-
-# Setup logging
-if prod_mode:
-    logging.basicConfig(filename='/tmp/register.log',
-                        format='%(asctime)s %(levelname)s: %(message)s',
-                        level=logging.DEBUG)
-else:
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
-                        level=logging.DEBUG)
 
 settings = {
     'prod_mode': prod_mode,
@@ -548,7 +553,7 @@ try:
                                       settings)
 
     app.run()
-except Exception as exc:
-    logging.fatal('TOP-LEVEL EXCEPTION CAUGHT')
-    logging.fatal(str(exc), exc_info=True)
+except Exception as e:
+    log.fatal('TOP-LEVEL EXCEPTION CAUGHT')
+    log.fatal('%s', str(e), exc_info=True)
     exit(1)

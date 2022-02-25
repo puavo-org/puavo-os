@@ -28,6 +28,12 @@ mv "${primary_user_override_path}.tmp" "$primary_user_override_path"
 
 puavo-conf puavo.admin.primary_user "$PAM_USER"
 
+# In case we are in user registration mode, we should not try to setup
+# anything (reboot is what we really need).
+if [ "$(puavo-conf puavo.xsessions.user_registration.enabled)" = 'true' ]; then
+  exit 0
+fi
+
 #
 # Run some puavo-conf scripts because puavo.admin.primary_user value affects
 # those and we want those to be effective immediately.

@@ -1,28 +1,25 @@
 # The "Create account" page
 
-import re
-import unicodedata
-import socket
-import json
-import threading
-import http.client
 import gettext
-import time
-import logging
-
 import gi
+import json
+import re
+import threading
+import time
+import unicodedata
+import utils
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk
 
-import utils
+from logger import log
 
+from network_thread  import NetworkThread
 from page_definition import PageDefinition
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
 gettext.textdomain('puavo-user-registration')
 _tr = gettext.gettext
-
 
 # These language codes must be the same that are configured/allowed
 # on the server!
@@ -33,51 +30,19 @@ LANGUAGES = [
     ('de_CH.UTF-8', _tr('German')),
 ]
 
-
 # Used when interpreting a failed server response
-FIELD_ERRORS = {
-    'first_name': {
-        'name': _tr('first name'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-        }
-    },
-
-    'last_name': {
-        'name': _tr('last name'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-        }
-    },
-
-    'username': {
-        'name': _tr('login name'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-        }
-    },
-
-    'email': {
-        'name': _tr('email address'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-        }
-    },
-
-    'phone': {
-        'name': _tr('phone number'),
-        'reasons': {
-            'empty': _tr('is empty'),
-            'failed_validation': _tr('contains bad characters'),
-            'too_long': _tr('is too long'),
-        }
-    },
+FIELDS = {
+    'first_name': _tr('first name'),
+    'last_name':  _tr('last name'),
+    'username':   _tr('login name'),
+    'email':      _tr('email address'),
+    'phone':      _tr('phone number'),
 }
-
+REASONS = {
+    'empty': _tr('is empty'),
+    'failed_validation': _tr('contains bad characters'),
+    'too_long': _tr('is too long'),
+}
 
 class PageAccount(PageDefinition):
     def __init__(self, application, parent_window, parent_container, data_dir, main_builder):
@@ -91,6 +56,11 @@ class PageAccount(PageDefinition):
         self.network_thread = None
 
         # Get handles to elements
+
+        self.timeout_retry_mode = False
+
+        self.password_confirm_label = self.builder.get_object('password_confirm_label')
+
         self.first_name_field = self.builder.get_object('first_name')
         self.last_name_field = self.builder.get_object('last_name')
         self.username_field = self.builder.get_object('username')
@@ -104,6 +74,7 @@ class PageAccount(PageDefinition):
         self.phone_hint = self.builder.get_object('phone_number_hint')
         self.spinner = self.builder.get_object('registration_spinner')
         self.status = self.builder.get_object('status_message')
+        self.account_previous_page = self.builder.get_object('account_previous_page')
         self.submit_button = self.builder.get_object('submit')
 
         for lang in LANGUAGES:
@@ -166,8 +137,19 @@ class PageAccount(PageDefinition):
 
 
     def enable_inputs(self, state):
+        # Keep inputs disabled in if have received timeout and can only
+        # retry sending (this is to avoid user changing password and other
+        # information... in case of a timeout, we might have been successful
+        # already but we just do not know it).
+        if self.timeout_retry_mode:
+            state = False
+
         for obj in self.builder.get_objects():
             if obj is self.status:
+                continue
+            if self.timeout_retry_mode and \
+              (obj is self.account_previous_page or obj is self.submit_button):
+                obj.set_sensitive(True)
                 continue
 
             if isinstance(obj, Gtk.Entry) or \
@@ -191,8 +173,7 @@ class PageAccount(PageDefinition):
                 self.user_username[0] not in 'abcdefghijklmnopqrstuvwxyz0123456789':
             state = False
 
-        if len(self.user_email) == 0:
-            state = False
+        # not checking email which is not a required attribute
 
         if len(self.user_password) == 0:
             state = False
@@ -200,7 +181,7 @@ class PageAccount(PageDefinition):
         if len(self.user_password_confirm) == 0:
             state = False
 
-        if len(self.user_phone) > 0 and not self.__is_valid_phone_number(self.user_phone):
+        if len(self.user_phone) > 0 and not self.is_valid_phone_number(self.user_phone):
             state = False
 
         if self.user_password != self.user_password_confirm:
@@ -213,7 +194,7 @@ class PageAccount(PageDefinition):
     # like superscripts and Kharotshi numbers, which our database
     # will reject because it does not consider them to be digits.
     # Also permit + and -.
-    def __is_valid_phone_number(self, s):
+    def is_valid_phone_number(self, s):
         for c in s:
             if not c in "0123456789+-":
                 return False
@@ -230,7 +211,7 @@ class PageAccount(PageDefinition):
         return True
 
 
-    def __normalize_string(self, s):
+    def normalize_string(self, s):
         out = s.lower()
 
         out = out.strip()
@@ -248,8 +229,8 @@ class PageAccount(PageDefinition):
 
 
     def build_username(self):
-        fn = self.__normalize_string(self.user_first_name)
-        ln = self.__normalize_string(self.user_last_name)
+        fn = self.normalize_string(self.user_first_name)
+        ln = self.normalize_string(self.user_last_name)
 
         # Combine the parts "intelligently"
         if len(fn) == 0 and len(ln) == 0:
@@ -288,6 +269,19 @@ class PageAccount(PageDefinition):
 
         color = '#888' if is_good else '#f44'
         self.username_hint.set_markup('<span color="%s">%s</span>' % (color, message))
+
+
+    def update_color_note(self, gtk_element, add_note):
+      text = gtk_element.get_text()
+      if add_note:
+        gtk_element.set_markup('<span color="%s">%s</span>' % ('#f44', text))
+      else:
+        gtk_element.set_text(text)
+
+
+    def update_password_confirm_label(self):
+      self.update_color_note(self.password_confirm_label,
+                             self.user_password != self.user_password_confirm)
 
 
     # Update the username field without triggering a "changed" event
@@ -332,18 +326,19 @@ class PageAccount(PageDefinition):
 
     def on_email_changed(self, edit):
         self.user_email = self.email_field.get_text().strip()
-        self.set_submit_state()
 
 
     def on_password_changed(self, edit):
         # NOTE: no strip() call here, the field contents are used
         # as-is!
         self.user_password = self.password_field.get_text()
+        self.update_password_confirm_label()
         self.set_submit_state()
 
 
     def on_password_confirm_changed(self, edit):
         self.user_password_confirm = self.password_confirm_field.get_text()
+        self.update_password_confirm_label()
         self.set_submit_state()
 
 
@@ -353,7 +348,8 @@ class PageAccount(PageDefinition):
 
 
     def on_phone_number_changed(self, edit):
-        self.user_phone = self.phone_field.get_text().strip()
+        # remove all whitespace from telephone numbers
+        self.user_phone = re.sub(r'\s+', '', self.phone_field.get_text())
         self.set_submit_state()
 
 
@@ -362,7 +358,7 @@ class PageAccount(PageDefinition):
     # NETWORKING AND SERVER RESPONSE INTERPRETATION
 
 
-    def on_submit_clicked(self, *args):
+    def register_user(self, conn):
         # ----------------------------------------------------------------------
         # Gather data
 
@@ -383,7 +379,14 @@ class PageAccount(PageDefinition):
 
         json_data = json.dumps(data, ensure_ascii=False)
 
-        # --------------------------------------------------------------------------
+        headers = { 'Content-type': 'application/json', }
+        conn.request('POST',
+                     '/register_user',
+                     body=bytes(json_data, 'utf-8'),
+                     headers=headers)
+
+
+    def on_submit_clicked(self, *args):
         # Launch a background thread
 
         self.enable_inputs(False)
@@ -392,7 +395,7 @@ class PageAccount(PageDefinition):
 
         self.network_thread_event = threading.Event()
 
-        self.network_thread = NetworkThread(json_data,
+        self.network_thread = NetworkThread(self.register_user,
                                             self.network_thread_event)
         self.network_thread.daemon = True
         self.network_thread.start()
@@ -404,7 +407,7 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_error(self, response):
-        logging.error('handle_server_error(): response=%s', response)
+        log.error('handle_server_error(): response=%s', response)
 
         utils.show_error_message(
             self.parent_window,
@@ -415,19 +418,28 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_400(self, response):
-        logging.error('handle_server_400(): response=%s', response)
+        log.error('handle_server_400(): response=%s', response)
 
         if response['status'] == 'missing_data':
             if len(response['failed_fields']) > 0:
                 msg = _tr('Something is wrong on the following form fields.' \
                           '  Check their contents and try again.')
-
                 msg += '\n\n'
 
                 for field in response['failed_fields']:
-                    error = FIELD_ERRORS[field['name']]
-                    msg += '\t- {0} {1}\n'. \
-                        format(error['name'], error['reasons'][field['reason']])
+                    field_msg = '?'
+                    if 'name' in field:
+                      field_msg = field['name']
+                      if field_msg in FIELDS:
+                        field_msg = FIELDS[field_msg]
+
+                    reason_msg = '?'
+                    if 'reason' in field:
+                      reason_msg = field['reason']
+                      if reason_msg in REASONS:
+                        reason_msg = REASONS[reason_msg]
+
+                    msg += "\t- {0} {1}\n".format(field_msg, reason_msg)
 
                 utils.show_error_message(
                     self.parent_window,
@@ -497,7 +509,7 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_401(self, response):
-        logging.error('handle_server_401(): response=%s', response)
+        log.error('handle_server_401(): response=%s', response)
 
         if response['status'] == 'unknown_machine':
             # This machine does not exist in the database
@@ -529,7 +541,7 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_409(self, response):
-        logging.error('handle_server_409(): response=%s', response)
+        log.error('handle_server_409(): response=%s', response)
 
         if response['status'] == 'username_unavailable':
             utils.show_error_message(
@@ -562,12 +574,12 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_500(self, response):
-        logging.error('handle_server_500(): response=%s', response)
+        log.error('handle_server_500(): response=%s', response)
         self.handle_server_error(response)
 
 
     def handle_network_error(self, msg):
-        logging.error('handle_network_error: msg="%s"', msg)
+        log.error('handle_network_error: msg="%s"', msg)
 
         utils.show_error_message(
             self.parent_window,
@@ -579,14 +591,17 @@ class PageAccount(PageDefinition):
 
     def idle_func(self, event, thread):
         if event.is_set():
-            logging.info('Thread event set, idle function is exiting')
+            self.timeout_retry_mode = False
+
+            log.info('thread event set, idle function is exiting')
             self.status.set_text('')
             self.spinner.stop()
 
-            logging.info('idle_func(): full server response: |%s|', thread.response)
+            log.info('idle_func(): full server response: |%s|', thread.response)
 
             if thread.response['failed']:
                 if thread.response['error'] == 'timeout':
+                    self.timeout_retry_mode = True
                     utils.show_error_message(
                         self.parent_window,
                         _tr('Error'),
@@ -617,11 +632,11 @@ class PageAccount(PageDefinition):
     def interpret_server_response(self, response_code, response_headers, response_data):
         # Parse the returned JSON
         try:
-            logging.info('Trying to parse server response |%s|', str(response_data))
+            log.info('trying to parse server response |%s|', str(response_data))
             server_data = response_data.decode('utf-8')
             server_json = json.loads(server_data)
-        except Exception as exc:
-            logging.error(str(exc), exc_info=True)
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
 
             utils.show_error_message(
                 self.parent_window,
@@ -652,7 +667,7 @@ class PageAccount(PageDefinition):
                 self.enable_inputs(True)
                 return
             elif response_code == 200:          # the good response
-                logging.info('interpret_server_response(): received a 200 response code!')
+                log.info('interpret_server_response(): received a 200 response code!')
 
                 # The parent window has no way to retrieve the username or
                 # the password.
@@ -667,8 +682,8 @@ class PageAccount(PageDefinition):
             # All other return codes fall through to the "should not get here"
             # block below
 
-        except Exception as exc:
-            logging.error(str(exc), exc_info=True)
+        except Exception as e:
+            log.error('%s', str(e), exc_info=True)
 
             utils.show_error_message(
                 self.parent_window,
@@ -683,64 +698,3 @@ class PageAccount(PageDefinition):
             _tr('Something went wrong'),
             _tr('This situation should never happen, something has gone very ' \
                 'badly wrong.') + '  ' + _tr('Please contact support.'))
-
-
-    def enable_login_button(self):
-        return True
-
-
-class NetworkThread(threading.Thread):
-    def __init__(self, json_data, event):
-        super().__init__()
-        self.json_data = json_data
-        self.event = event
-        self.response = {}
-
-
-    def run(self):
-        logging.info('Network thread is starting')
-
-        self.response['failed'] = False
-        self.response['error'] = None
-
-        response = None
-
-        headers = {
-            'Content-type': 'application/json',
-        }
-
-        conn = None
-
-        try:
-            server_addr = open('/etc/puavo/domain', 'rb').read().decode('utf-8').strip()
-
-            conn = http.client.HTTPSConnection(server_addr, timeout=10)
-
-            conn.request('POST',
-                         '/register_user',
-                         body=bytes(self.json_data, 'utf-8'),
-                         headers=headers)
-
-            # Must read the response here, because the "finally" handler
-            # closes the connection and that happens before we can read
-            # the response
-            response = conn.getresponse()
-            self.response['code'] = response.status
-            self.response['headers'] = response.getheaders()
-            self.response['data'] = response.read()
-
-        except socket.timeout:
-            self.response['error'] = 'timeout'
-            self.response['failed'] = True
-        except http.client.HTTPException as exc:
-            self.response['error'] = exc
-            self.response['failed'] = True
-        except Exception as exc:
-            self.response['error'] = exc
-            self.response['failed'] = True
-        finally:
-            if conn:
-                conn.close()
-
-        self.event.set()
-        logging.info('Network thread is exiting')
