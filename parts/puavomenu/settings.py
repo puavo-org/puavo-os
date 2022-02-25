@@ -67,9 +67,6 @@ class Settings:
         # that are opened from the menu needs to know this.
         self.user_type = 'student'
 
-        # True if a dark application theme has been enabled
-        self.dark_theme = False
-
         # True if we will be saving program usage counts. Guest and webkiosk
         # sessions disable this. The frequently used programs list is built
         # from these numbers.
@@ -184,31 +181,6 @@ class Settings:
             )
             logging.error(str(e))
             self.user_type = 'student'
-
-        # Detect dark theme usage. Follow the application theme, not the shell
-        # theme. We're technically part of the shell, but at the moment, the
-        # dark theme flag is only used to pass information about the theme to
-        # puavo-web forms (which ignores them (my bad)), which tehnically are
-        # applications. Of course, this setting won't be updated at runtime,
-        # so if the theme changes, it points to the old state :-(
-        try:
-            import gi
-            from gi.repository import Gio
-
-            schema = 'org.gnome.desktop.interface'
-            key = 'gtk-theme'
-
-            gsettings = Gio.Settings.new(schema)
-            theme = gsettings.get_value(key).unpack()
-
-            # so very accurate... no
-            if 'dark' in theme or 'Dark' in theme:
-                self.dark_theme = True
-                logging.info('detect_environment(): dark theme has been enabled')
-        except Exception as exception:
-            # okay then, no dark theme for you
-            logging.error('detect_environment(): dark theme check failed')
-            logging.error(str(exception))
 
         # Load the per-user config file, if it exists
         if not (self.is_guest or self.is_webkiosk):
