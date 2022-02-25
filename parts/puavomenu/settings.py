@@ -156,9 +156,7 @@ class Settings:
                     'guest'
                 ))
 
-                filename = os.environ['PUAVO_SESSION_PATH']
-
-                with open(filename, mode='r', encoding='utf-8') as session:
+                with open(os.path.expandvars('$PUAVO_SESSION_PATH'), mode='r', encoding='utf-8') as session:
                     session_data = json.load(session)
 
                 self.user_type = session_data['user']['user_type']
