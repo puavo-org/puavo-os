@@ -8,25 +8,14 @@ from logger import log
 
 
 class NetworkThread(threading.Thread):
-    def __init__(self, request_method, json_data, event):
+    def __init__(self, request_method, event):
         super().__init__()
         self.request_method = request_method
-        self.json_data = json_data
         self.event = event
         self.response = {}
 
 
-    def register_user(self, conn):
-        headers = { 'Content-type': 'application/json', }
-        conn.request('POST',
-                     '/register_user',
-                     body=bytes(self.json_data, 'utf-8'),
-                     headers=headers)
-
-
     def run(self):
-        log.info('network thread is starting')
-
         self.response['failed'] = False
         self.response['error'] = None
 
@@ -39,7 +28,7 @@ class NetworkThread(threading.Thread):
 
             conn = http.client.HTTPSConnection(server_addr, timeout=60)
 
-            getattr(self, self.request_method)(conn)
+            self.request_method(conn)
 
             # Must read the response here, because the "finally" handler
             # closes the connection and that happens before we can read
@@ -64,4 +53,3 @@ class NetworkThread(threading.Thread):
                 conn.close()
 
         self.event.set()
-        log.info('network thread is exiting')

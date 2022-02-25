@@ -5,13 +5,17 @@
 import argparse
 import gettext
 import gi
+import json
 import os
 import socket
 import subprocess
 import sys
+import threading
+import time
 
+gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GdkPixbuf, Gio
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
 gettext.textdomain('puavo-user-registration')
@@ -23,11 +27,12 @@ from logger import log
 
 import utils
 import privacy_policy
-from page_welcome  import PageWelcome
-from page_network  import PageNetwork
-from page_account  import PageAccount
-from page_login    import PageLogin
-from page_complete import PageComplete
+from network_thread import NetworkThread
+from page_welcome   import PageWelcome
+from page_network   import PageNetwork
+from page_account   import PageAccount
+from page_login     import PageLogin
+from page_complete  import PageComplete
 
 # ==============================================================================
 # ==============================================================================
@@ -41,6 +46,7 @@ class NewUserRegistrationWindow:
         self.prod_mode = settings['prod_mode']
         self.machine_password = settings['machine_password']
         self.organisation_domain = settings['organisation_domain']
+        self.primary_user = None
 
         self.local_login_done = False
 
@@ -68,6 +74,13 @@ class NewUserRegistrationWindow:
         except Exception as e:
             log.warning('unable to determine the screen width: %s', str(e))
             screen_width = 1366
+
+        try:
+            self.hostname = open('/etc/puavo/hostname', 'rb') \
+                                   .read().decode('utf-8').strip()
+        except Exception as e:
+            log.fatal('could not read /etc/puavo/hostname')
+            return
 
         if not self.prod_mode:
             screen_width = 1366
@@ -192,7 +205,9 @@ class NewUserRegistrationWindow:
                 page = ctor(self, self.main_window, middle_box, self.data_dir,
                     self.main_builder)
                 self.all_pages.append(page)
-                if ctor == PageComplete:
+                if ctor == PageAccount:
+                    self.account_page = page
+                elif ctor == PageComplete:
                     self.complete_page = page
         except Exception as e:
             log.error('%s', str(e), exc_info=True)
@@ -201,7 +216,63 @@ class NewUserRegistrationWindow:
             # Activate the initial page
             self.goto_page_by_num(0)
 
+        self.start_primary_user_lookup()
+
         self.main_window.show()
+
+
+    def check_host(self, conn):
+        machine_data = self.get_machine_data()
+        json_data = json.dumps(machine_data, ensure_ascii=False)
+        headers = { 'Content-type': 'application/json', }
+        conn.request('POST',
+                     '/check_host',
+                     body=bytes(json_data, 'utf-8'),
+                     headers=headers)
+
+
+    def start_primary_user_lookup(self):
+        self.pul_thread_event = threading.Event()
+        self.pul_thread = NetworkThread(self.check_host,
+                                        self.pul_thread_event)
+        self.pul_thread.daemon = True
+        self.pul_thread.start()
+
+        # This will interpret the server's response
+        GLib.idle_add(self.pul_idle_func,
+                      self.pul_thread_event,
+                      self.pul_thread)
+
+
+    def pul_idle_func(self, event, thread):
+        if event.is_set():
+            try:
+                if thread.response['failed'] or thread.response['code'] != 200:
+                    raise Exception('looking up primary user failed')
+
+                server_data = json.loads(thread.response['data'])
+                log.info('got server response: %s' % server_data)
+                if type(server_data) != dict:
+                    raise Exception('server did not return a dict')
+                if server_data['status'] != 'ok':
+                    raise Exception('server did not return status ok')
+                if server_data['primary_user'] == None:
+                    return False
+                if type(server_data['primary_user']) != str:
+                    raise Exception('server did not return primary user as string')
+                # XXX what to do this this information?
+                server_data['primary_user']
+
+                log.info('we have primary user %s' % self.primary_user)
+
+            except Exception as e:
+                log.error('error when looking up primary user: %s', str(e))
+
+            return False
+
+        time.sleep(0.05)
+
+        return True
 
 
     def close(self, *args):
@@ -363,7 +434,7 @@ class NewUserRegistrationWindow:
 
         if self.prod_mode:
             data['dn'] = open('/etc/puavo/ldap/dn', 'rb').read().decode('utf-8').strip()
-            data['hostname'] = socket.gethostname()
+            data['hostname'] = self.hostname
         else:
             # This machine does not exist anywhere, development purposes only
             data['dn'] = 'puavoId=37,ou=Devices,ou=Hosts,dc=edu,dc=hogwarts,dc=net'

@@ -14,7 +14,7 @@ from gi.repository import GLib, Gtk
 
 from logger import log
 
-from network_thread import NetworkThread
+from network_thread  import NetworkThread
 from page_definition import PageDefinition
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
@@ -358,7 +358,7 @@ class PageAccount(PageDefinition):
     # NETWORKING AND SERVER RESPONSE INTERPRETATION
 
 
-    def on_submit_clicked(self, *args):
+    def register_user(self, conn):
         # ----------------------------------------------------------------------
         # Gather data
 
@@ -379,7 +379,14 @@ class PageAccount(PageDefinition):
 
         json_data = json.dumps(data, ensure_ascii=False)
 
-        # --------------------------------------------------------------------------
+        headers = { 'Content-type': 'application/json', }
+        conn.request('POST',
+                     '/register_user',
+                     body=bytes(json_data, 'utf-8'),
+                     headers=headers)
+
+
+    def on_submit_clicked(self, *args):
         # Launch a background thread
 
         self.enable_inputs(False)
@@ -388,8 +395,7 @@ class PageAccount(PageDefinition):
 
         self.network_thread_event = threading.Event()
 
-        self.network_thread = NetworkThread('register_user',
-                                            json_data,
+        self.network_thread = NetworkThread(self.register_user,
                                             self.network_thread_event)
         self.network_thread.daemon = True
         self.network_thread.start()
