@@ -21,7 +21,7 @@ THE MAIN WINDOW
 /* The main window */
 .main_window {
     background: url('$(background_image)') #272727;
-    background-position: -100px 0;
+    background-position: -5em 0;
     background-repeat: no-repeat;
 }
 
@@ -34,7 +34,7 @@ THE MAIN WINDOW
 /* Page title bar */
 .main_title {
     background: rgba(0, 103, 179, 0.5);
-    padding: 10px;
+    padding: 1em;
 
     font-size: 150%;
     font-weight: bold;
@@ -54,7 +54,7 @@ THE MAIN WINDOW
 /* Buttons, contact info, etc. */
 .lower_box {
     background: rgba(0, 103, 179, 0.25);
-    padding: 10px;
+    padding: 1em;
 }
 
 .main_window button, .policy_buttons button {
@@ -62,7 +62,7 @@ THE MAIN WINDOW
     border: 2px solid #0067b3;
     box-shadow: none;
     text-shadow: none;
-    padding: 5px 25px;
+    padding: 1em 3em;
     border-radius: 0;
     color: #ddd;
 }
@@ -100,7 +100,7 @@ THE MAIN WINDOW
 .policy_buttons {
     border-top: 2px solid #ccc;
     background: #383838;
-    padding: 10px;
+    padding: 1em;
 }
 
 /*
@@ -115,9 +115,9 @@ THE WELCOME PAGE
 
 */
 .welcome_texts_container {
-    padding-top: $(welcome_padding_top);
-    padding-left: $(welcome_padding_left);
-    padding-right: $(welcome_padding_right);
+    padding-top: 4em;
+    padding-left: 15em;
+    padding-right: 3em;
     font-size: 100%;
     color: #fff;
 }
@@ -141,8 +141,8 @@ THE WELCOME PAGE
 .welcome_texts_container .welcome_next {
     /* Keeps the button *roughly* at the same position it's
        on the network setup page */
-    margin-top: 50px;
-    margin-right: 100px;
+    margin-top: 3em;
+    margin-right: 6em;
 }
 
 /*
@@ -152,7 +152,7 @@ THE NETWORK CONNECTIONS PAGE
 */
 
 .network_container {
-    padding: 50px $(network_container_left);
+    padding: 3em 10em;
 }
 
 .network_container .scrolled_window {
@@ -199,7 +199,7 @@ THE NETWORK CONNECTIONS PAGE
 }
 
 .network_container .password_container {
-    padding-left: 25px;
+    padding-left: 2em;
     color: #fff;
 }
 
@@ -211,21 +211,21 @@ THE NETWORK CONNECTIONS PAGE
     font-size: 150%;
     font-weight: bold;
     text-shadow: 2px 2px 0 #000;
-    padding-bottom: 25px;
+    padding-bottom: 2em;
 }
 
 .network_container .password_container .network_credentials_grid {
-    padding-bottom: 25px;
+    padding-bottom: 2em;
 }
 
 .network_container .password_container .network_username_label {
-    padding-right: 10px;
-    margin-bottom: 10px;
+    padding-right: 1em;
+    margin-bottom: 1em;
 }
 
 .network_container .password_container .network_username_entry {
     padding: 2px 5px;
-    margin-bottom: 10px;
+    margin-bottom: 1em;
     border: 2px solid #888;
     outline: none;
     font-weight: bold;
@@ -252,7 +252,7 @@ THE NETWORK CONNECTIONS PAGE
 }
 
 .network_container .password_container .network_status_box {
-    padding-top: 25px;
+    padding-top: 2em;
 }
 
 .network_container .password_container .network_connection_status {
@@ -266,14 +266,15 @@ THE ACCOUNT CREATION PAGE
 
 */
 .register_user {
-    padding-top: $(account_top_padding);
-    padding-left: $(account_left_padding);
+    padding-top: 3em;
+    padding-left: 25em;
     font-size: 100%;
 }
 
 .register_user entry {
     padding: 2px 5px;
     border: 2px solid #888;
+    min-height: 1em;
     outline: none;
     font-size: $(entry_font_size);
     font-family: "Noto Sans";
@@ -323,8 +324,7 @@ THE COMPLETE PAGE
 */
 
 .complete_texts_container {
-    padding-top: $(complete_top_padding);
-    padding-left: $(complete_left_padding);
+    padding-top: 10em;
 }
 
 .complete_texts_container label {
@@ -342,13 +342,13 @@ THE COMPLETE PAGE
 }
 
 .complete_texts_container .complete_text {
-    padding-top: 50px;
+    padding-top: 3em;
     font-size: 125%;
 }
 
 .complete_texts_container .complete_reboot {
-    margin-top: 50px;
-    padding: 10px 150px;
+    margin-top: 3em;
+    padding: 1em 10em;
 }
 
 /*
@@ -357,8 +357,8 @@ THE LOGIN PAGE
 
 */
 .login {
-    padding-top: $(login_top_padding);
-    padding-left: $(account_left_padding);
+    padding-top: 15em;
+    padding-left: 15em;
     font-size: 100%;
 }
 
@@ -375,10 +375,20 @@ THE LOGIN PAGE
     outline: none;
 }
 
-.login .account_label {
+.login .login_label {
     color: #fff;
     text-shadow: 1px 1px 0 #000;
 }
 
+.login .primary_user_info {
+    color: #faa;
+}
+
 .login .login_button_box {
+    min-width: 50em;
+    padding-top: 10em;
+}
+
+.login .login_entry_box {
+    padding-left: 10em;
 }

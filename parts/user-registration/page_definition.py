@@ -1,8 +1,9 @@
 # Base page class for all child dialogs
 
+import gi
 import os
 
-import gi
+from logger import log
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -50,8 +51,3 @@ class PageDefinition:
     def enable_desktop_button(self):
         # Return False to hide the "Go to desktop" button
         return True
-
-
-    def enable_login_button(self):
-        # Return True to show the "Login with existing account" button
-        return False
