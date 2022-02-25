@@ -67,6 +67,9 @@ class Settings:
         # that are opened from the menu needs to know this.
         self.user_type = 'student'
 
+        # The primary school of the user, or -1 if unknown
+        self.user_primary_school = -1
+
         # True if we will be saving program usage counts. Guest and webkiosk
         # sessions disable this. The frequently used programs list is built
         # from these numbers.
@@ -144,7 +147,7 @@ class Settings:
                 )
                 logging.error(str(e))
 
-        # User type
+        # Load the user type and primary school from the session data generated during login
         try:
             if 'PUAVO_SESSION_PATH' in os.environ:
                 VALID_TYPES = frozenset((
@@ -167,6 +170,8 @@ class Settings:
                         'defaulting to "student"', self.user_type
                     )
                     self.user_type = 'student'
+
+                self.user_primary_school = session_data['user']['primary_school_id']
             else:
                 logging.warning(
                     'detect_environment(): "PUAVO_SESSION_PATH" not in environment ' \
@@ -179,6 +184,7 @@ class Settings:
             )
             logging.error(str(e))
             self.user_type = 'student'
+            self.user_primary_school = -1
 
         # Load the per-user config file, if it exists
         if not (self.is_guest or self.is_webkiosk):
