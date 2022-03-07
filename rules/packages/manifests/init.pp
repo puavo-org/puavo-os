@@ -392,7 +392,8 @@ class packages {
     , 'x264' ]:
       tag => [ 'tag_mediaplayer', 'tag_debian_desktop', ];
 
-    [ 'audacity'
+    [ 'ardour'
+    , 'audacity'
     , 'denemo'
     , 'fmit'
     , 'hydrogen'
