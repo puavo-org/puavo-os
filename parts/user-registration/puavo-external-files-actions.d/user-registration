@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -eu
+
+link_src='/usr/share/puavo-user-registration/data/privacy_policy.html'
+link_target='/state/external_files/privacy_policy.html'
+
+policy_backup="${link_src}.orig"
+
+if [ -e "$link_target" ]; then
+  if [ -e "$link_src" -a ! -h "$link_src" ]; then
+    mv "$link_src" "$policy_backup"
+  fi
+  ln -fns "$link_target" "$link_src"
+elif [ -e "$policy_backup" ]; then
+  mv "$policy_backup" "$link_src"
+fi
