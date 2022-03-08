@@ -379,6 +379,8 @@ class PageAccount(PageDefinition):
 
         json_data = json.dumps(data, ensure_ascii=False)
 
+        log.info('making /register_user request to server')
+
         headers = { 'Content-type': 'application/json', }
         conn.request('POST',
                      '/register_user',
@@ -407,7 +409,7 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_error(self, response):
-        log.error('handle_server_error(): response=%s', response)
+        log.error('handling server error response=%s', response)
 
         utils.show_error_message(
             self.parent_window,
@@ -418,7 +420,7 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_400(self, response):
-        log.error('handle_server_400(): response=%s', response)
+        log.error('handling server 400 error response=%s', response)
 
         if response['status'] == 'missing_data':
             if len(response['failed_fields']) > 0:
@@ -509,7 +511,7 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_401(self, response):
-        log.error('handle_server_401(): response=%s', response)
+        log.error('handling server 401 error response=%s', response)
 
         if response['status'] == 'unknown_machine':
             # This machine does not exist in the database
@@ -541,7 +543,7 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_409(self, response):
-        log.error('handle_server_409(): response=%s', response)
+        log.error('handling server 409 error response=%s', response)
 
         if response['status'] == 'username_unavailable':
             utils.show_error_message(
@@ -574,12 +576,12 @@ class PageAccount(PageDefinition):
 
 
     def handle_server_500(self, response):
-        log.error('handle_server_500(): response=%s', response)
+        log.error('handling server 500 error response=%s', response)
         self.handle_server_error(response)
 
 
     def handle_network_error(self, msg):
-        log.error('handle_network_error: msg="%s"', msg)
+        log.error('handling network error msg="%s"', msg)
 
         utils.show_error_message(
             self.parent_window,
@@ -594,10 +596,11 @@ class PageAccount(PageDefinition):
             self.timeout_retry_mode = False
 
             log.info('thread event set, idle function is exiting')
+
             self.status.set_text('')
             self.spinner.stop()
 
-            log.info('idle_func(): full server response: |%s|', thread.response)
+            log.info('full server response: |%s|', thread.response)
 
             if thread.response['failed']:
                 if thread.response['error'] == 'timeout':
@@ -632,7 +635,8 @@ class PageAccount(PageDefinition):
     def interpret_server_response(self, response_code, response_headers, response_data):
         # Parse the returned JSON
         try:
-            log.info('trying to parse server response |%s|', str(response_data))
+            log.info('trying to parse server response |%s|',
+                     str(response_data))
             server_data = response_data.decode('utf-8')
             server_json = json.loads(server_data)
         except Exception as e:
@@ -667,7 +671,7 @@ class PageAccount(PageDefinition):
                 self.enable_inputs(True)
                 return
             elif response_code == 200:          # the good response
-                log.info('interpret_server_response(): received a 200 response code!')
+                log.info('received a 200 response code from server')
 
                 # The parent window has no way to retrieve the username or
                 # the password.

@@ -46,6 +46,8 @@ class NewUserRegistrationWindow:
         self.prod_mode = settings['prod_mode']
         self.machine_password = settings['machine_password']
         self.organisation_domain = settings['organisation_domain']
+        self.username = None
+        self.password = None
 
         self.local_login_done = False
 
@@ -170,7 +172,8 @@ class NewUserRegistrationWindow:
             os.path.realpath(os.path.join(self.data_dir, 'privacy_policy.html'))
 
         if os.path.exists(self.__privacy_policy_file):
-            log.info('privacy policy file "%s" exists', self.__privacy_policy_file)
+            log.info('privacy policy file "%s" exists',
+                     self.__privacy_policy_file)
             self.main_builder.get_object('privacy_policy').show()
 
         # Try to set the lower corner logo
@@ -266,8 +269,8 @@ class NewUserRegistrationWindow:
                     return False
                 if type(server_data['primary_user']) != str:
                     raise Exception('server did not return primary user as string')
-                log.info('this host has primary user set to %s' \
-                           % server_data['primary_user'])
+                log.info('this host has primary user set to %s',
+                         server_data['primary_user'])
 
                 self.login_page.set_primary_user(server_data['primary_user'])
                 if self.current_page == self.account_page:
@@ -326,19 +329,18 @@ class NewUserRegistrationWindow:
 
     def login_locally(self):
         if not self.prod_mode:
-            log.info('login_locally(): setting up local login, ' \
-                       'username="%s", password="%s"',
-                       self.username, self.password)
+            log.info('skipping local login with username="%s", password="%s"' \
+                       ' due to non-production mode',
+                     self.username, self.password)
             return True
 
         if self.local_login_done:
             return True
 
-        log.info('login_locally(): setting up local login, username="%s"',
-            self.username)
-
         if not (self.username and self.password):
             raise Exception(_tr('internal error: username and password missing'))
+
+        log.info('local login: trying username="%s"', self.username)
 
         cmd = ['sudo', '-n', '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
                self.username]
@@ -353,6 +355,8 @@ class NewUserRegistrationWindow:
         proc.wait()
 
         if proc.returncode == 0:
+            log.info('login locally with username="%s" was successful',
+                     self.username)
             self.local_login_done = True
             return True
 
@@ -365,7 +369,7 @@ class NewUserRegistrationWindow:
                'puavo.xsessions.user_registration.enabled',
                'false']
 
-        log.info('disable_registration_window(): running "%s"', cmd)
+        log.info('disabling registration window')
 
         if self.prod_mode:
             subprocess.check_call(cmd)

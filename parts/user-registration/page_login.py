@@ -38,6 +38,8 @@ class PageLogin(PageDefinition):
 
 
     def set_primary_user(self, primary_user):
+        log.info('this host is previously registered to "%s"', primary_user)
+
         msg = _tr("This host has already been registered\n" \
                     + "to user \"%s\".  Please provide\n" \
                     + "the password to start using this host.\n") \
@@ -93,7 +95,12 @@ class PageLogin(PageDefinition):
     def do_login(self):
         username = self.builder.get_object('username').get_text().strip()
         password = self.builder.get_object('password').get_text()
+
+        log.info('user tries to log in from login form with username="%s"',
+                 username)
+
         self.application.login_locally_from_loginpage(username, password)
+
         self.enable_inputs(True)
 
         return False
