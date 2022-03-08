@@ -321,7 +321,7 @@ class NewUserRegistrationWindow:
         self.password = password
 
         # tell complete page that we created an account
-        self.complete_page.account_created()
+        self.complete_page.set_account_created()
 
 
     def login_locally(self):

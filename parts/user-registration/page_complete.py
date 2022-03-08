@@ -24,7 +24,7 @@ class PageComplete(PageDefinition):
         self.builder.get_object('complete_reboot').connect('clicked', self.reboot_clicked)
 
 
-    def account_created(self):
+    def set_account_created(self):
         self.account_created = True
 
 
