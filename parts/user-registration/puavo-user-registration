@@ -320,6 +320,9 @@ class NewUserRegistrationWindow:
         self.username = username
         self.password = password
 
+        # tell complete page that we created an account
+        self.complete_page.account_created()
+
 
     def login_locally(self):
         if not self.prod_mode:
