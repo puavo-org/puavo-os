@@ -88,32 +88,37 @@ class NewUserRegistrationWindow:
         if screen_width >= 1920:
             css_variables = {
                 'background_image': 'background_1920.png',
-                'entry_font_size': '28px',
-                'gtk_dialog_font_scale': '150%',
-                'main_font_scale': '200%',
+                'entry_font_size': '24px',
+                'gtk_dialog_font_scale': '192%',
+                'main_font_scale': '144%',
             }
         elif screen_width >= 1600:
             css_variables = {
-                'background_image': 'background_1366.png',
-                'entry_font_size': '24px',
-                'gtk_dialog_font_scale': '120%',
-                'main_font_scale': '150%',
+                'background_image': 'background_1920.png',
+                'entry_font_size': '20px',
+                'gtk_dialog_font_scale': '160%',
+                'main_font_scale': '120%',
+            }
+        elif screen_width >= 1366:
+            css_variables = {
+                'background_image': 'background_1600.png',
+                'entry_font_size': '17px',
+                'gtk_dialog_font_scale': '136%',
+                'main_font_scale': '102%',
             }
         elif screen_width >= 1024:
             css_variables = {
-                'background_image': 'background_640.png',
-                'entry_font_size': '16px',
-                'gtk_dialog_font_scale': '80%',
-                'main_font_scale': '100%',
+                'background_image': 'background_1366.png',
+                'entry_font_size': '12px',
+                'gtk_dialog_font_scale': '102%',
+                'main_font_scale': '76%',
             }
         else:
-            # XXX sizes as small as these do not work,
-            # XXX but I am hoping to make them work
             css_variables = {
-                'background_image': 'background_640.png',
-                'entry_font_size': '12px',
-                'gtk_dialog_font_scale': '50%',
-                'main_font_scale': '60%',
+                'background_image': 'background_1024.png',
+                'entry_font_size': '8px',
+                'gtk_dialog_font_scale': '64%',
+                'main_font_scale': '48%',
             }
 
         css_variables['background_image'] = \
