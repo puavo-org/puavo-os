@@ -235,7 +235,7 @@ class NewUserRegistrationWindow:
         json_data = json.dumps(machine_data, ensure_ascii=False)
         headers = { 'Content-type': 'application/json', }
         conn.request('POST',
-                     '/check_host',
+                     '/register_user/check_host',
                      body=bytes(json_data, 'utf-8'),
                      headers=headers)
 
