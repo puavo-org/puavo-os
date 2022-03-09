@@ -40,6 +40,9 @@
                 "id": "appinventor"
             }
         },
+        "ardour": {
+            "tags": "default, audio"
+        },
         "arduino": {
             "name": "Arduino IDE",
             "icon": "/opt/arduino-ide/lib/icons/96x96/apps/arduino.png",
@@ -1625,6 +1628,7 @@
                 "tuxguitar",
                 "fmit",
                 "qstopmotion",
+                "ardour",
                 "qsynth",
                 "qjackctl",
                 "winff"
@@ -2071,6 +2075,7 @@
             "icon": "/usr/share/icons/Faenza/apps/64/gmusicbrowser.png",
             "programs": [
                 "audacity",
+                "ardour",
                 "solfege",
                 "hydrogen",
                 "lmms",
