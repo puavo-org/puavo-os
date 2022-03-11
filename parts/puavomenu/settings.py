@@ -67,8 +67,8 @@ class Settings:
         # that are opened from the menu needs to know this.
         self.user_type = 'student'
 
-        # True if a dark application theme has been enabled
-        self.dark_theme = False
+        # The primary school of the user, or -1 if unknown
+        self.user_primary_school = -1
 
         # True if we will be saving program usage counts. Guest and webkiosk
         # sessions disable this. The frequently used programs list is built
@@ -147,7 +147,7 @@ class Settings:
                 )
                 logging.error(str(e))
 
-        # User type
+        # Load the user type and primary school from the session data generated during login
         try:
             if 'PUAVO_SESSION_PATH' in os.environ:
                 VALID_TYPES = frozenset((
@@ -159,9 +159,7 @@ class Settings:
                     'guest'
                 ))
 
-                filename = os.environ['PUAVO_SESSION_PATH']
-
-                with open(filename, mode='r', encoding='utf-8') as session:
+                with open(os.path.expandvars('$PUAVO_SESSION_PATH'), mode='r', encoding='utf-8') as session:
                     session_data = json.load(session)
 
                 self.user_type = session_data['user']['user_type']
@@ -172,6 +170,8 @@ class Settings:
                         'defaulting to "student"', self.user_type
                     )
                     self.user_type = 'student'
+
+                self.user_primary_school = session_data['user']['primary_school_id']
             else:
                 logging.warning(
                     'detect_environment(): "PUAVO_SESSION_PATH" not in environment ' \
@@ -184,31 +184,7 @@ class Settings:
             )
             logging.error(str(e))
             self.user_type = 'student'
-
-        # Detect dark theme usage. Follow the application theme, not the shell
-        # theme. We're technically part of the shell, but at the moment, the
-        # dark theme flag is only used to pass information about the theme to
-        # puavo-web forms (which ignores them (my bad)), which tehnically are
-        # applications. Of course, this setting won't be updated at runtime,
-        # so if the theme changes, it points to the old state :-(
-        try:
-            import gi
-            from gi.repository import Gio
-
-            schema = 'org.gnome.desktop.interface'
-            key = 'gtk-theme'
-
-            gsettings = Gio.Settings.new(schema)
-            theme = gsettings.get_value(key).unpack()
-
-            # so very accurate... no
-            if 'dark' in theme or 'Dark' in theme:
-                self.dark_theme = True
-                logging.info('detect_environment(): dark theme has been enabled')
-        except Exception as exception:
-            # okay then, no dark theme for you
-            logging.error('detect_environment(): dark theme check failed')
-            logging.error(str(exception))
+            self.user_primary_school = -1
 
         # Load the per-user config file, if it exists
         if not (self.is_guest or self.is_webkiosk):

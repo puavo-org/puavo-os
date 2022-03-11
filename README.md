@@ -2,13 +2,12 @@
 
 To build images with these sources,
 your build environment should be a Debian GNU/Linux
-installation.  To build images with "Stretch"-version,
-use the "master"-branch (this will probably change).
-To build images with "Buster"-version, use the "buster"-branch.
-The build host should probably be of the same version
-your target image is.  Currently, you should really build
-Buster images and not bother with Stretch, yet they are
-both maintained.
+installation.  To build images with "Buster"-version,
+use the "buster"-branch.  To build images with "Bullseye"-version,
+use the "bullseye"-branch.  The build host should probably be
+of the same version your target image is.  As of March 2022,
+our main production version is Buster and Bullseye
+is under active development.
 
 After cloning the repository, you should also update
 submodules:

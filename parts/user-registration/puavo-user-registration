@@ -46,6 +46,8 @@ class NewUserRegistrationWindow:
         self.prod_mode = settings['prod_mode']
         self.machine_password = settings['machine_password']
         self.organisation_domain = settings['organisation_domain']
+        self.username = None
+        self.password = None
 
         self.local_login_done = False
 
@@ -88,32 +90,37 @@ class NewUserRegistrationWindow:
         if screen_width >= 1920:
             css_variables = {
                 'background_image': 'background_1920.png',
-                'entry_font_size': '28px',
-                'gtk_dialog_font_scale': '150%',
-                'main_font_scale': '200%',
+                'entry_font_size': '24px',
+                'gtk_dialog_font_scale': '192%',
+                'main_font_scale': '144%',
             }
         elif screen_width >= 1600:
             css_variables = {
-                'background_image': 'background_1366.png',
-                'entry_font_size': '24px',
-                'gtk_dialog_font_scale': '120%',
-                'main_font_scale': '150%',
+                'background_image': 'background_1920.png',
+                'entry_font_size': '20px',
+                'gtk_dialog_font_scale': '160%',
+                'main_font_scale': '120%',
+            }
+        elif screen_width >= 1366:
+            css_variables = {
+                'background_image': 'background_1600.png',
+                'entry_font_size': '17px',
+                'gtk_dialog_font_scale': '136%',
+                'main_font_scale': '102%',
             }
         elif screen_width >= 1024:
             css_variables = {
-                'background_image': 'background_640.png',
-                'entry_font_size': '16px',
-                'gtk_dialog_font_scale': '80%',
-                'main_font_scale': '100%',
+                'background_image': 'background_1366.png',
+                'entry_font_size': '12px',
+                'gtk_dialog_font_scale': '102%',
+                'main_font_scale': '76%',
             }
         else:
-            # XXX sizes as small as these do not work,
-            # XXX but I am hoping to make them work
             css_variables = {
-                'background_image': 'background_640.png',
-                'entry_font_size': '12px',
-                'gtk_dialog_font_scale': '50%',
-                'main_font_scale': '60%',
+                'background_image': 'background_1024.png',
+                'entry_font_size': '8px',
+                'gtk_dialog_font_scale': '64%',
+                'main_font_scale': '48%',
             }
 
         css_variables['background_image'] = \
@@ -165,7 +172,8 @@ class NewUserRegistrationWindow:
             os.path.realpath(os.path.join(self.data_dir, 'privacy_policy.html'))
 
         if os.path.exists(self.__privacy_policy_file):
-            log.info('privacy policy file "%s" exists', self.__privacy_policy_file)
+            log.info('privacy policy file "%s" exists',
+                     self.__privacy_policy_file)
             self.main_builder.get_object('privacy_policy').show()
 
         # Try to set the lower corner logo
@@ -227,7 +235,7 @@ class NewUserRegistrationWindow:
         json_data = json.dumps(machine_data, ensure_ascii=False)
         headers = { 'Content-type': 'application/json', }
         conn.request('POST',
-                     '/check_host',
+                     '/register_user/check_host',
                      body=bytes(json_data, 'utf-8'),
                      headers=headers)
 
@@ -261,8 +269,8 @@ class NewUserRegistrationWindow:
                     return False
                 if type(server_data['primary_user']) != str:
                     raise Exception('server did not return primary user as string')
-                log.info('this host has primary user set to %s' \
-                           % server_data['primary_user'])
+                log.info('this host has primary user set to %s',
+                         server_data['primary_user'])
 
                 self.login_page.set_primary_user(server_data['primary_user'])
                 if self.current_page == self.account_page:
@@ -315,22 +323,24 @@ class NewUserRegistrationWindow:
         self.username = username
         self.password = password
 
+        # tell complete page that we created an account
+        self.complete_page.set_account_created()
+
 
     def login_locally(self):
         if not self.prod_mode:
-            log.info('login_locally(): setting up local login, ' \
-                       'username="%s", password="%s"',
-                       self.username, self.password)
+            log.info('skipping local login with username="%s", password="%s"' \
+                       ' due to non-production mode',
+                     self.username, self.password)
             return True
 
         if self.local_login_done:
             return True
 
-        log.info('login_locally(): setting up local login, username="%s"',
-            self.username)
-
         if not (self.username and self.password):
             raise Exception(_tr('internal error: username and password missing'))
+
+        log.info('local login: trying username="%s"', self.username)
 
         cmd = ['sudo', '-n', '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
                self.username]
@@ -345,6 +355,8 @@ class NewUserRegistrationWindow:
         proc.wait()
 
         if proc.returncode == 0:
+            log.info('login locally with username="%s" was successful',
+                     self.username)
             self.local_login_done = True
             return True
 
@@ -357,7 +369,7 @@ class NewUserRegistrationWindow:
                'puavo.xsessions.user_registration.enabled',
                'false']
 
-        log.info('disable_registration_window(): running "%s"', cmd)
+        log.info('disabling registration window')
 
         if self.prod_mode:
             subprocess.check_call(cmd)

@@ -21,7 +21,7 @@ THE MAIN WINDOW
 /* The main window */
 .main_window {
     background: url('$(background_image)') #272727;
-    background-position: -5em 0;
+    background-position: -200px 0;
     background-repeat: no-repeat;
 }
 
@@ -115,8 +115,8 @@ THE WELCOME PAGE
 
 */
 .welcome_texts_container {
-    padding-top: 4em;
-    padding-left: 15em;
+    padding-top: 8em;
+    padding-left: 20em;
     padding-right: 3em;
     font-size: 100%;
     color: #fff;
@@ -266,8 +266,8 @@ THE ACCOUNT CREATION PAGE
 
 */
 .register_user {
-    padding-top: 3em;
-    padding-left: 25em;
+    padding-top: 5em;
+    padding-left: 30em;
     font-size: 100%;
 }
 
@@ -358,7 +358,7 @@ THE LOGIN PAGE
 */
 .login {
     padding-top: 15em;
-    padding-left: 15em;
+    padding-left: 30em;
     font-size: 100%;
 }
 

@@ -98,6 +98,7 @@ class Sidebar:
             utils.get_file_contents('/etc/puavo/domain')
         self.__variables['user_name'] = getpass.getuser()
         self.__variables['user_language'] = self.__settings.language
+        self.__variables['user_primary_school'] = str(self.__settings.user_primary_school)
         self.__variables['support_url'] = \
             utils.puavo_conf('puavo.support.new_bugreport_url', 'https://tuki.opinsys.fi')
 

@@ -2,6 +2,7 @@ prefix = /usr
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
+sysconfdir = $(prefix)/etc
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -30,10 +31,13 @@ installdirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-user-registration/data
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
 
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-user-registration
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d \
+		puavo-external-files-actions.d/*
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
 		puavo-user-registration.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \

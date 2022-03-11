@@ -1,6 +1,9 @@
 # The "Login" page
 
 import gettext
+import gi
+
+from gi.repository import GLib
 
 from logger import log
 
@@ -35,6 +38,8 @@ class PageLogin(PageDefinition):
 
 
     def set_primary_user(self, primary_user):
+        log.info('this host is previously registered to "%s"', primary_user)
+
         msg = _tr("This host has already been registered\n" \
                     + "to user \"%s\".  Please provide\n" \
                     + "the password to start using this host.\n") \
@@ -80,7 +85,27 @@ class PageLogin(PageDefinition):
        self.application.next_page()
 
 
-    def on_login_clicked(self, widget):
+    def enable_inputs(self, state):
+        object_names = [ 'username', 'password', 'do_login',
+                         'login_previous_page', 'no_account_button' ]
+        for obj in object_names:
+          self.builder.get_object(obj).set_sensitive(state)
+
+
+    def do_login(self):
         username = self.builder.get_object('username').get_text().strip()
         password = self.builder.get_object('password').get_text()
+
+        log.info('user tries to log in from login form with username="%s"',
+                 username)
+
         self.application.login_locally_from_loginpage(username, password)
+
+        self.enable_inputs(True)
+
+        return False
+
+
+    def on_login_clicked(self, widget):
+        self.enable_inputs(False)
+        GLib.timeout_add(50, self.do_login)
