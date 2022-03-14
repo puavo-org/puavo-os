@@ -22,7 +22,6 @@ class packages {
   @package {
     [ 'puavo-autopilot'
     , 'puavo-autopoweroff'
-    , 'puavo-bigtouch-shutdown'
     , 'puavo-blackboard'
     , 'puavo-client'
     , 'puavo-conf'
