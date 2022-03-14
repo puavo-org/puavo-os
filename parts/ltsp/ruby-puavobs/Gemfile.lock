@@ -1,32 +1,36 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    addressable (2.7.0)
+    addressable (2.8.0)
       public_suffix (>= 2.0.2, < 5.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    ffi (1.12.2)
+    ffi (1.15.5)
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
-    http (4.3.0)
-      addressable (~> 2.3)
+    http (5.0.4)
+      addressable (~> 2.8)
       http-cookie (~> 1.0)
       http-form_data (~> 2.2)
-      http-parser (~> 1.2.0)
-    http-cookie (1.0.3)
+      llhttp-ffi (~> 0.4.0)
+    http-cookie (1.0.4)
       domain_name (~> 0.5)
-    http-form_data (2.2.0)
-    http-parser (1.2.1)
-      ffi-compiler (>= 1.0, < 2.0)
-    public_suffix (4.0.3)
-    rake (13.0.1)
+    http-form_data (2.3.0)
+    llhttp-ffi (0.4.0)
+      ffi-compiler (~> 1.0)
+      rake (~> 13.0)
+    public_suffix (4.0.6)
+    rake (13.0.6)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.7.6)
+    unf_ext (0.0.8.1)
 
 PLATFORMS
-  ruby
+  x86_64-linux
 
 DEPENDENCIES
   http
+
+BUNDLED WITH
+   2.2.5
