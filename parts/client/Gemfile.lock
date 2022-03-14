@@ -1,55 +1,66 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    CFPropertyList (2.3.5)
-    addressable (2.5.2)
-      public_suffix (>= 2.0.2, < 4.0)
-    crack (0.4.3)
-      safe_yaml (~> 1.0.0)
-    domain_name (0.5.20170404)
+    addressable (2.8.0)
+      public_suffix (>= 2.0.2, < 5.0)
+    crack (0.4.5)
+      rexml
+    domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    facter (2.5.1)
-      CFPropertyList (~> 2.2)
-    ffi (1.9.18)
-    gssapi (1.2.0)
+    facter (4.2.7)
+      hocon (~> 1.3)
+      thor (>= 1.0.1, < 2.0)
+    ffi (1.15.5)
+    ffi-compiler (1.0.1)
+      ffi (>= 1.0.0)
+      rake
+    gssapi (1.3.1)
       ffi (>= 1.0.1)
-    hashdiff (0.3.7)
-    highline (1.7.8)
-    http (3.0.0)
-      addressable (~> 2.3)
+    hashdiff (1.0.1)
+    highline (2.0.3)
+    hocon (1.3.1)
+    http (5.0.4)
+      addressable (~> 2.8)
       http-cookie (~> 1.0)
-      http-form_data (>= 2.0.0.pre.pre2, < 3)
-      http_parser.rb (~> 0.6.0)
-    http-cookie (1.0.3)
+      http-form_data (~> 2.2)
+      llhttp-ffi (~> 0.4.0)
+    http-accept (1.7.0)
+    http-cookie (1.0.4)
       domain_name (~> 0.5)
-    http-form_data (2.0.0)
-    http_parser.rb (0.6.0)
-    httparty (0.15.6)
+    http-form_data (2.3.0)
+    httparty (0.20.0)
+      mime-types (~> 3.0)
       multi_xml (>= 0.5.2)
-    json (2.1.0)
-    mime-types (3.1)
+    json (2.6.1)
+    llhttp-ffi (0.4.0)
+      ffi-compiler (~> 1.0)
+      rake (~> 13.0)
+    mime-types (3.4.1)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2016.0521)
-    minitest (5.10.3)
-    minitest-stub_any_instance (1.0.1)
+    mime-types-data (3.2022.0105)
+    minitest (5.15.0)
+    minitest-stub_any_instance (1.0.3)
     multi_xml (0.6.0)
     netrc (0.11.0)
-    public_suffix (3.0.0)
-    rest-client (2.0.2)
+    public_suffix (4.0.6)
+    rake (13.0.6)
+    rest-client (2.1.0)
+      http-accept (>= 1.7.0, < 2.0)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
-    safe_yaml (1.0.4)
+    rexml (3.2.5)
+    thor (1.2.1)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.7.4)
-    webmock (3.1.0)
-      addressable (>= 2.3.6)
+    unf_ext (0.0.8.1)
+    webmock (3.14.0)
+      addressable (>= 2.8.0)
       crack (>= 0.3.2)
-      hashdiff
+      hashdiff (>= 0.4.0, < 2.0.0)
 
 PLATFORMS
-  ruby
+  x86_64-linux
 
 DEPENDENCIES
   addressable
@@ -63,3 +74,6 @@ DEPENDENCIES
   minitest-stub_any_instance
   rest-client
   webmock
+
+BUNDLED WITH
+   2.2.5
