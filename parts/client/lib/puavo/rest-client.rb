@@ -273,11 +273,7 @@ class PuavoRestClient
     verbose_log_headers(headers)
 
     if @options[:timeout]
-      timeout = @options[:timeout] / 3.0
-      http = http.timeout(:global,
-                          :write   => timeout,
-                          :connect => timeout,
-                          :read    => timeout)
+      http = http.timeout(@options[:timeout])
     end
 
     if @options[:auth] == :kerberos
