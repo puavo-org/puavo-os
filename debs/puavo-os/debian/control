@@ -155,16 +155,6 @@ Description: Puavo Examination Room Server
  (currently Abitti KTP).
  .
 
-Package: puavo-hw-tools
-Architecture: all
-Depends: ${misc:Depends},
- jq,
- puavo-conf,
- ruby
-Description: Puavo enabled tools and tweaks to enable and fix hardware features
- Puavo enabled tools and tweaks to enable and fix hardware features
- .
-
 Package: puavo-laptop-setup
 Architecture: all
 Depends: ${misc:Depends},
@@ -298,7 +288,6 @@ Depends: ${misc:Depends},
  puavo-client,
  puavo-conf,
  puavo-core,
- puavo-hw-tools,
  puavo-pam,
  puavo-vpn-client,
  python,
