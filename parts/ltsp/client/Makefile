@@ -52,9 +52,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
 		gdm/greeter/autostart/puavo-run-xrandr.desktop
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
-		pam/configs/puavo-local-access
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-conf-parameters.json
 
