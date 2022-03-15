@@ -166,14 +166,6 @@ Description: Puavo Laptop Setup
  users on personally administered hosts.
  .
 
-Package: puavo-local-config
-Architecture: all
-Depends: ${misc:Depends}, nwjs, puavo-ltsp-client, puavo-pkg, ruby,
- whois
-Description: Puavo configuration tool for local (host-specific) features.
- Puavo configuration tool for local (host-specific) features.
- .
-
 Package: puavo-ltsp-bootserver
 Architecture: all
 Depends: ${misc:Depends},
