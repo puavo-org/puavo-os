@@ -745,8 +745,8 @@ class PuavoErsExamSorter (threading.Thread):
     try:
       if not os.path.exists(current_zip_path) \
         or current_exams_filenames != self.previous_current_exams:
-          self.zip_an_exam_set(current_exams_filenames, current_zip_path)
-          self.update_decrypt_codes_in_file(decrypt_codes_list)
+          self.zip_an_exam_set(current_exams_filenames, current_zip_path,
+                               decrypt_codes_list)
           self.previous_current_exams = current_exams_filenames
     except Exception as e:
       syslog.syslog(syslog.LOG_ERR,
@@ -767,9 +767,12 @@ class PuavoErsExamSorter (threading.Thread):
         rm_f(zipfile)
 
 
-  def zip_an_exam_set(self, exams, zip_path):
-    rm_f(zip_path)
+  def zip_an_exam_set(self, exams, zip_path, decrypt_codes_list=None):
     if len(exams) == 0:
+      if os.path.exists(zip_path):
+        rm_f(zip_path)
+        if decrypt_codes_list != None:
+          self.update_decrypt_codes_in_file(decrypt_codes_list)
       return
 
     exam_paths = [ os.path.join(KTP_JAKO_DIR, p) for p in exams ]
@@ -782,6 +785,9 @@ class PuavoErsExamSorter (threading.Thread):
       for filename in unique_exam_paths:
         zipObj.write(filename, os.path.basename(filename))
     os.rename(tmpfile, zip_path)
+
+    if decrypt_codes_list != None:
+     self.update_decrypt_codes_in_file(decrypt_codes_list)
 
 
   def update_decrypt_codes_in_file(self, decrypt_codes_list):
