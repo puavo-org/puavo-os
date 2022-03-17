@@ -78,6 +78,7 @@ class ExamSchedulerNotActive(Exception):
 class PuavoErsApplet:
   NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
   PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
+  CONFIG_PATH = os.path.join(PUAVO_ERS_DIR, 'config.json')
   NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
   SERVER_VERSION_PATH  = os.path.join(COMM_DIR, '.server_version')
 
@@ -95,6 +96,8 @@ class PuavoErsApplet:
 
     os.makedirs(self.PUAVO_ERS_DIR, exist_ok=True)
 
+    self.load_configuration()
+
     self.menu = Gtk.Menu()
     self.old_exams = None
     self.menuitems = []
@@ -104,10 +107,10 @@ class PuavoErsApplet:
 
     self.menu.show_all()
 
-    self.exam_sync = PuavoErsExamSync()
+    self.exam_sync = PuavoErsExamSync(self.exam_sync_active)
     self.exam_sync.start()
 
-    self.exam_sorter = PuavoErsExamSorter()
+    self.exam_sorter = PuavoErsExamSorter(self.exam_sync_active)
     self.exam_sorter.start()
 
     self.exams_server_helper = PuavoErsServerHelper()
@@ -123,10 +126,61 @@ class PuavoErsApplet:
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
 
 
+  def load_configuration(self):
+    self.automation_active = None
+    self.exam_sync_active = None
+
+    error = None
+    try:
+      with open(self.CONFIG_PATH) as file:
+        config = json.load(file)
+      if 'automation_active' in config:
+        self.automation_active = config['automation_active']
+      if 'exam_sync_active' in config:
+        self.exam_sync_active = config['exam_sync_active']
+    except OSError as e:
+      if e.errno != errno.ENOENT:
+        error = e
+    except Exception as e:
+      error = e
+
+    if error:
+      syslog.syslog(syslog.LOG_ERR, 'could not read configuration: %s' % error)
+
+    create_defaults = False
+
+    if self.automation_active == None:
+      create_defaults = True
+      self.automation_active = True
+    if self.exam_sync_active == None:
+      create_defaults = True
+      self.exam_sync_active = True
+
+    if create_defaults:
+      self.save_configuration()
+
+
+  def save_configuration(self):
+    try:
+      data = {
+        'automation_active': self.automation_active,
+        'exam_sync_active':  self.exam_sync_active,
+      }
+      tmpfile = '%s.tmp' % self.CONFIG_PATH
+      with open(tmpfile, 'w') as f:
+        json.dump(data, f)
+      os.rename(tmpfile, self.CONFIG_PATH)
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR, 'could not save configuration: %s' % e)
+
+
   def main(self):
     self.run_naksu()
     GLib.timeout_add_seconds(1, self.update_decrypt_codes)
-    self.enable_exam_scheduler()
+
+    if self.automation_active and self.exam_sync_active:
+      self.enable_exam_scheduler()
+
     Gtk.main()
 
 
@@ -231,7 +285,7 @@ class PuavoErsApplet:
 
       labels_and_exams_list.append({ 'exam': exam, 'label': label })
 
-    self.make_automation_control_button()
+    self.make_automation_control_buttons()
 
     if len(labels_and_exams_list) > 24:
       # we can not fit too many labels on the applet menu,
@@ -267,7 +321,31 @@ class PuavoErsApplet:
       self.menu.append(instructions)
 
 
-  def make_automation_control_button(self):
+  def make_automation_control_buttons(self):
+    if self.exam_sync_active:
+      sync_info_button = Gtk.MenuItem(label=_tr('Exam sync is active'))
+      sync_info_button.set_sensitive(False)
+      sync_control_button = Gtk.MenuItem(label=_tr('Disable exam sync'))
+      sync_control_button.connect('activate', self.disable_exam_sync)
+    else:
+      sync_info_button = Gtk.MenuItem(label=_tr('Exam sync is NOT active'))
+      sync_info_button.set_sensitive(False)
+      sync_control_button = Gtk.MenuItem(label=_tr('Enable exam sync'))
+      sync_control_button.connect('activate', self.enable_exam_sync)
+
+    sync_info_button.show()
+    self.menu.append(sync_info_button)
+    self.menuitems.append(sync_info_button)
+
+    sync_control_button.show()
+    self.menu.append(sync_control_button)
+    self.menuitems.append(sync_control_button)
+
+    separator = Gtk.SeparatorMenuItem()
+    separator.show()
+    self.menuitems.append(separator)
+    self.menu.append(separator)
+
     if self.exams_scheduler.exam_scheduler_enabled:
       auto_info_button = Gtk.MenuItem(
         label=_tr('Exam session automation is active'))
@@ -286,6 +364,7 @@ class PuavoErsApplet:
     self.menuitems.append(auto_info_button)
 
     auto_control_button.show()
+    auto_control_button.set_sensitive(self.exam_sync_active)
     self.menu.append(auto_control_button)
     self.menuitems.append(auto_control_button)
 
@@ -295,14 +374,53 @@ class PuavoErsApplet:
     self.menu.append(separator)
 
 
+  def disable_exam_sync(self, widget=None):
+    self.exam_sync_active = False
+    self.save_configuration()
+
+    self.exam_sorter.exam_sorter_enabled = False
+    self.exam_sync.exam_sync_enabled     = False
+    self.update_decrypt_codes(True)
+
+    syslog.syslog(syslog.LOG_INFO, 'exam sync is now disabled')
+    Notify.Notification.new(_tr('Exam sync is NOT active')).show()
+
+    self.disable_exam_scheduler()
+
+
+  def enable_exam_sync(self, widget=None):
+    self.exam_sync_active = True
+    self.save_configuration()
+
+    self.exam_sorter.exam_sorter_enabled = True
+    self.exam_sync.exam_sync_enabled     = True
+    self.update_decrypt_codes(True)
+
+    syslog.syslog(syslog.LOG_INFO, 'exam sync is now enabled')
+    Notify.Notification.new(_tr('Exam sync is active')).show()
+
+    if self.automation_active:
+      self.enable_exam_scheduler()
+
+
   def disable_exam_scheduler(self, widget=None):
+    if widget:
+      self.automation_active = False
+      self.save_configuration()
+
+    is_enabled = self.exams_scheduler.exam_scheduler_enabled
     self.exams_scheduler.exam_scheduler_enabled = False
-    syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now disabled')
-    Notify.Notification.new(_tr('Exam session automation is NOT active')).show()
+    if is_enabled != self.exams_scheduler.exam_scheduler_enabled:
+      syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now disabled')
+      Notify.Notification.new(_tr('Exam session automation is NOT active')).show()
     self.update_decrypt_codes(True)
 
 
   def enable_exam_scheduler(self, widget=None):
+    if widget:
+      self.automation_active = True
+      self.save_configuration()
+
     current_automation_server_version = None
     current_server_version = None
 
@@ -347,10 +465,12 @@ class PuavoErsApplet:
       Notify.Notification.new(summary, body).show()
       return
 
-    Notify.Notification.new(_tr('Exam session automation is active')).show()
-
+    is_enabled = self.exams_scheduler.exam_scheduler_enabled
     self.exams_scheduler.exam_scheduler_enabled = True
-    syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now enabled')
+    if is_enabled != self.exams_scheduler.exam_scheduler_enabled:
+      Notify.Notification.new(_tr('Exam session automation is active')).show()
+      syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now enabled')
+
     self.update_decrypt_codes(True)
 
 
@@ -414,8 +534,10 @@ class DecryptCodesWindow:
 
 
 class PuavoErsExamSync (threading.Thread):
-  def __init__(self):
+  def __init__(self, is_active):
     threading.Thread.__init__(self)
+
+    self.exam_sync_enabled = is_active
 
     with open('/etc/puavo/domain') as f:
       self.domain = f.read().rstrip()
@@ -430,9 +552,16 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def run(self):
+     is_enabled = None
+
      while True:
        try:
-         self.sync_exams()
+         if self.exam_sync_enabled:
+           self.sync_exams()
+         elif is_enabled != self.exam_sync_enabled:
+           syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
+           is_enabled = self.exam_sync_enabled
+
        except Exception as e:
          syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
 
@@ -592,18 +721,26 @@ class ExamSet:
 
 
 class PuavoErsExamSorter (threading.Thread):
-  def __init__(self):
+  def __init__(self, is_active):
     threading.Thread.__init__(self)
 
+    self.exam_sorter_enabled    = is_active
     self.previous_current_exams = None
     self.previous_todays_exams  = None
 
 
   def run(self):
+    is_enabled = None
+
     while True:
       try:
-        with exam_scheduler_lock:
-          self.sort_exams_to_dirs()
+        if self.exam_sorter_enabled:
+          with exam_scheduler_lock:
+            self.sort_exams_to_dirs()
+        elif is_enabled != self.exam_sorter_enabled:
+          syslog.syslog(syslog.LOG_INFO, 'exam sorter has been disabled')
+          is_enabled = self.exam_sorter_enabled
+
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'error when sorting exams: %s' % e)
 
@@ -921,6 +1058,7 @@ class PuavoErsExamScheduler (threading.Thread):
     global current_exams_set
 
     comm_ok = False
+    is_enabled = None
     old_comm_state = None
 
     while True:
@@ -948,7 +1086,9 @@ class PuavoErsExamScheduler (threading.Thread):
             self.schedule_exams(current_exams_set)
 
       except ExamSchedulerNotActive as e:
-        syslog.syslog(syslog.LOG_INFO, 'exam scheduler has been disabled')
+        if is_enabled != self.exam_scheduler_enabled:
+          syslog.syslog(syslog.LOG_INFO, 'exam scheduler has been disabled')
+          is_enabled = self.exam_scheduler_enabled
 
       except Exception as e:
         comm_ok = False
