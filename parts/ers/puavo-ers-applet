@@ -76,6 +76,49 @@ class ExamSchedulerNotActive(Exception):
   pass
 
 
+class PuavoExamServer:
+  def __init__(self):
+    self.exam_server_name = puavoconf_get('puavo.abitti.exam_server')
+
+    with open('/etc/puavo/domain') as f:
+      self.domain = f.read().rstrip()
+    with open('/etc/puavo/hostname') as f:
+      self.hostname = f.read().rstrip()
+    with open('/etc/puavo/id') as f:
+      self.id = f.read().rstrip()
+    with open('/etc/puavo/ldap/dn') as f:
+      self.ldap_dn = f.read().rstrip()
+    with open('/etc/puavo/ldap/password') as f:
+      self.ldap_password = f.read().rstrip()
+
+
+  def get(self, path, params={}):
+    uri = 'https://%s%s' % (self.exam_server_name, path)
+
+    req_params = params
+    req_params.update({
+                        'domain':   self.domain,
+                        'hostname': self.hostname,
+                        'id':       self.id,
+                      })
+
+    try:
+      response = requests.get(uri,
+                              auth=HTTPBasicAuth(self.ldap_dn,
+                                                 self.ldap_password),
+                              params=req_params,
+                              timeout=20)
+      if response.status_code != requests.codes.ok:
+        syslog.syslog(syslog.LOG_ERR,
+          'error on GET request to %s: code=%s' % (uri, response.status_code))
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'error on GET request to %s: %s' % (uri, e))
+      return
+
+    return response
+
+
 class PuavoErsApplet:
   NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
   PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
@@ -108,13 +151,15 @@ class PuavoErsApplet:
 
     self.menu.show_all()
 
-    self.exam_sync = PuavoErsExamSync(self.exam_sync_active)
+    exam_server = PuavoExamServer()
+
+    self.exam_sync = PuavoErsExamSync(exam_server, self.exam_sync_active)
     self.exam_sync.start()
 
     self.exam_sorter = PuavoErsExamSorter(self.exam_sync_active)
     self.exam_sorter.start()
 
-    self.exam_control = PuavoErsExamControl()
+    self.exam_control = PuavoErsExamControl(exam_server)
     self.exam_control.start()
 
     self.exams_server_helper = PuavoErsServerHelper()
@@ -538,21 +583,11 @@ class DecryptCodesWindow:
 
 
 class PuavoErsExamSync (threading.Thread):
-  def __init__(self, is_active):
+  def __init__(self, exam_server, is_active):
     threading.Thread.__init__(self)
 
+    self.exam_server = exam_server
     self.exam_sync_enabled = is_active
-
-    with open('/etc/puavo/domain') as f:
-      self.domain = f.read().rstrip()
-    with open('/etc/puavo/hostname') as f:
-      self.hostname = f.read().rstrip()
-    with open('/etc/puavo/id') as f:
-      self.id = f.read().rstrip()
-    with open('/etc/puavo/ldap/dn') as f:
-      self.ldap_dn = f.read().rstrip()
-    with open('/etc/puavo/ldap/password') as f:
-      self.ldap_password = f.read().rstrip()
 
 
   def run(self):
@@ -573,25 +608,10 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def sync_exams(self):
-    self.exam_server_address = puavoconf_get('puavo.abitti.exam_server')
-    index_uri = 'https://%s/v1/schedules/query_exam_server_schedule' \
-                   % self.exam_server_address
+    syslog.syslog(syslog.LOG_INFO, 'requesting for new exams')
 
-    syslog.syslog(syslog.LOG_INFO, 'checking for new exams from %s' % index_uri)
-
-    response = requests.get(index_uri,
-                            auth=HTTPBasicAuth(self.ldap_dn,
-                                               self.ldap_password),
-                            params={
-                              'domain':   self.domain,
-                              'hostname': self.hostname,
-                              'id':       self.id,
-                            },
-                            timeout=20)
-    if not response:
-      syslog.syslog(syslog.LOG_ERR,
-        'error when getting exam index from %s: %s' \
-          % (index_uri, response.status_code))
+    response = self.exam_server.get('/v1/schedules/query_exam_server_schedule')
+    if not response or response.status_code != requests.codes.ok:
       return
 
     exams_json = response.content.decode('utf-8')
@@ -646,21 +666,10 @@ class PuavoErsExamSync (threading.Thread):
     if not isinstance(exam_hash, str):
       raise Exception('could not determine exam hash for %s' % exam_file_name)
 
-    exam_uri = 'https://%s/v1/exams/raw_file' % self.exam_server_address
-
-    response = requests.get(exam_uri,
-                            auth=HTTPBasicAuth(self.ldap_dn,
-                                               self.ldap_password),
-                            params={
-                              'domain':   self.domain,
-                              'hash':     exam_hash,
-                              'hostname': self.hostname,
-                              'id':       self.id,
-                            },
-                            timeout=20)
-    if not response:
-      raise Exception('error when getting an exam from %s: %s' \
-              % (exam_uri, response.status_code))
+    exam_params = { 'hash': exam_hash }
+    response = self.exam_server.get('/v1/exams/raw_file', exam_params)
+    if not response or response.status_code != requests.codes.ok:
+      raise Exception('error when getting an exam %s' % exam_file_name)
 
     tmpfile = '%s.tmp' % exam_file_path
     with open(tmpfile, 'wb') as f:
@@ -673,8 +682,10 @@ class PuavoErsExamSync (threading.Thread):
 class PuavoErsExamControl (threading.Thread):
   STATUS_PATH = os.path.join(COMM_DIR, '.status.json')
 
-  def __init__(self):
+  def __init__(self, exam_server):
     threading.Thread.__init__(self)
+
+    self.exam_server = exam_server
 
     self.send_status_update = threading.Condition()
     self.status = None
@@ -701,6 +712,8 @@ class PuavoErsExamControl (threading.Thread):
 
   def send_status(self, status):
     syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
+
+    status_path = '/v1/exam_session_status'
 
 #     response = requests.get(index_uri,
 #                             auth=HTTPBasicAuth(self.ldap_dn,
