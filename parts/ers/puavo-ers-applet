@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import copy
 import datetime
 import errno
 import fcntl
@@ -113,10 +114,13 @@ class PuavoErsApplet:
     self.exam_sorter = PuavoErsExamSorter(self.exam_sync_active)
     self.exam_sorter.start()
 
+    self.exam_control = PuavoErsExamControl()
+    self.exam_control.start()
+
     self.exams_server_helper = PuavoErsServerHelper()
     self.exams_server_helper.start()
 
-    self.exams_scheduler = PuavoErsExamScheduler()
+    self.exams_scheduler = PuavoErsExamScheduler(self.exam_control)
     self.exams_scheduler.start()
 
     # Copy "naksu" to NAKSU_BIN_PATH only if it does not exist yet.
@@ -666,6 +670,75 @@ class PuavoErsExamSync (threading.Thread):
     syslog.syslog(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
 
 
+class PuavoErsExamControl (threading.Thread):
+  STATUS_PATH = os.path.join(COMM_DIR, '.status.json')
+
+  def __init__(self):
+    threading.Thread.__init__(self)
+
+    self.send_status_update = threading.Condition()
+    self.status = None
+    self.status_updated = False
+
+
+  def run(self):
+    while True:
+      try:
+        self.send_status_update.acquire()
+
+        while not self.status_updated:
+          self.send_status_update.wait()
+
+        status_copy = copy.deepcopy(self.status)
+        self.status_updated = False
+        self.send_status_update.release()
+
+        self.send_status(status_copy)
+      except Exception as e:
+        syslog.syslog(syslog.LOG_ERR,
+                      'error when sending status update: %s' % e)
+
+
+  def send_status(self, status):
+    syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
+
+#     response = requests.get(index_uri,
+#                             auth=HTTPBasicAuth(self.ldap_dn,
+#                                                self.ldap_password),
+#                             params={
+#                               'domain':   self.domain,
+#                               'hostname': self.hostname,
+#                               'id':       self.id,
+#                             },
+#                             timeout=20)
+
+
+  def update_status(self, new_status):
+    self.send_status_update.acquire()
+
+    if self.status != new_status:
+      self.status = new_status
+      syslog.syslog(syslog.LOG_INFO,
+                    'received status update from exam scheduler')
+      self.status_updated = True
+      self.send_status_update.notify()
+
+    self.send_status_update.release()
+
+
+  def save_status_to_disk(self):
+    # This method has no other purpose except to help with
+    # monitoring/debugging.  Perhaps this should be removed?
+    try:
+      tmpfile = '%s.tmp' % self.STATUS_PATH
+      with open(tmpfile, 'w') as f:
+        json.dump(self.status, f)
+      os.rename(tmpfile, self.STATUS_PATH)
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'error when saving status to disk: %s' % e)
+
+
 class ExamSet:
   def __init__(self, exams):
     self.exams = exams
@@ -986,10 +1059,11 @@ class PuavoErsExamScheduler (threading.Thread):
   STATS_PATH           = os.path.join(COMM_DIR, 'stats')
 
 
-  def __init__(self):
+  def __init__(self, exam_control):
     threading.Thread.__init__(self)
 
     self.answers_stored_time    = None
+    self.exam_control           = exam_control
     self.exam_scheduler_enabled = False
     self.finished_and_students  = None
     self.finish_time            = self.end_of_today()
@@ -1063,9 +1137,6 @@ class PuavoErsExamScheduler (threading.Thread):
 
     while True:
       try:
-        if not self.exam_scheduler_enabled:
-          raise ExamSchedulerNotActive
-
         if not comm_ok:
           output = self.ping()
           if output['error'] == False:
@@ -1095,7 +1166,7 @@ class PuavoErsExamScheduler (threading.Thread):
         syslog.syslog(syslog.LOG_ERR,
                       'error when scheduling exams: %s' % e)
 
-      time.sleep(20)
+      time.sleep(3)
 
 
   def maybe_store_answers(self, currently_loaded_exams, status):
@@ -1214,6 +1285,11 @@ class PuavoErsExamScheduler (threading.Thread):
     status_response = self.get_status()
     status = status_response['status']
     has_started = (status['hasStarted'] == True)
+
+    self.exam_control.update_status(status)
+
+    if not self.exam_scheduler_enabled:
+      raise ExamSchedulerNotActive
 
     exams_response = self.get_exams()
     currently_loaded_exams = exams_response['exams']
