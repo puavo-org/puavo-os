@@ -9,6 +9,7 @@ import filecmp
 import gettext
 import gi
 import glob
+import hashlib
 import json
 import os
 import re
@@ -671,9 +672,13 @@ class PuavoErsExamSync (threading.Thread):
     if not response or response.status_code != requests.codes.ok:
       raise Exception('error when getting an exam %s' % exam_file_name)
 
+    exam_contents = response.content
+    if exam_hash != hashlib.sha256(exam_contents).hexdigest():
+      raise Exception('exam checksum did not match for %s' % exam_file_name)
+
     tmpfile = '%s.tmp' % exam_file_path
     with open(tmpfile, 'wb') as f:
-      f.write(response.content)
+      f.write(exam_contents)
     os.rename(tmpfile, exam_file_path)
 
     syslog.syslog(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
