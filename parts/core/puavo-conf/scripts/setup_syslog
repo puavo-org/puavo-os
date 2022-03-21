@@ -199,11 +199,9 @@ module(load="omprog")
 #### GLOBAL DIRECTIVES ####
 ###########################
 
-#
-# Use traditional timestamp format.
-# To enable high precision timestamps, comment out the following line.
-#
-\$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+# this is like the "RSYSLOG_TraditionalFileFormat" but with a year included
+\$template PuavoLogFormat,"%timegenerated:1:6:date-rfc3164% %timegenerated:1:4:date-rfc3339% %timegenerated:8:15:date-rfc3164% %HOSTNAME% %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
+\$ActionFileDefaultTemplate PuavoLogFormat
 
 #
 # Set the default permissions for all log files.
