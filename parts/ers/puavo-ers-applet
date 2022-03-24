@@ -280,9 +280,17 @@ class PuavoErsApplet:
     error = None
     try:
       with open(EXAMS_JSON_FILE) as file:
-        new_exams = json.load(file)
+        error_no_exams = False
+        try:
+          new_exams = json.load(file)
+        except Exception as e:
+          error_no_exams = True
+          new_exams = []
+          syslog.syslog(syslog.LOG_ERR,
+                        'could not parse exams json: %s' % e)
+
         if (force_update or self.old_exams != new_exams):
-          self.update_decrypt_codes_in_ui(new_exams)
+          self.update_decrypt_codes_in_ui(new_exams, error_no_exams)
         self.old_exams = new_exams
     except OSError as e:
       if e.errno != errno.ENOENT:
@@ -298,7 +306,7 @@ class PuavoErsApplet:
     return True
 
 
-  def update_decrypt_codes_in_ui(self, new_exams):
+  def update_decrypt_codes_in_ui(self, new_exams, error_no_exams):
     # We can show decrypt codes for future exams as well, in case user
     # wants to try those out manually.  Showing them for old exams is probably
     # just a distraction.
@@ -364,7 +372,10 @@ class PuavoErsApplet:
         self.menuitems.append(button)
 
     else:
-      instructions = Gtk.MenuItem(label=_tr('No current exams'))
+      no_exams_message = _tr('No current exams')
+      if error_no_exams:
+        no_exams_message = _tr('No exams due to error')
+      instructions = Gtk.MenuItem(label=no_exams_message)
       instructions.set_sensitive(False)
       instructions.show()
       self.menuitems.append(instructions)
