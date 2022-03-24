@@ -378,7 +378,7 @@ while true; do
                microphone 'Test microphone' \
                mouse      'Test mouse/mice' \
                wifi       'Test wireless networking' \
-	       speakers   'Test speakers' \
+               speakers   'Test speakers' \
                quit       'Exit tests') || true
 
   case "$response" in
