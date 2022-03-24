@@ -113,20 +113,49 @@ class PuavoExamServer (threading.Thread):
          # XXX have a timeout of one hour or something?
 
          while self.ws:
-           self.handle_message( self.ws.recv() )
+           try:
+             self.handle_message( self.ws.recv() )
+           except websocket.WebSocketTimeoutException as e:
+             self.ping()
        except Exception as e:
-         syslog.syslog(syslog.LOG_ERR, 'error with server connection: %s' % e)
+         syslog.syslog(syslog.LOG_ERR,
+                       'error with websocket connection: %s' % e)
        finally:
          if self.ws:
+           syslog.syslog(syslog.LOG_INFO, 'closing websocket connection')
            self.ws.close()
            self.ws = None
 
        time.sleep(10)
 
 
-  def handle_message(self, msg):
-    # XXX
-    syslog.syslog(syslog.LOG_INFO, 'we got a message: %s' % msg)
+  def ping(self):
+    self.send({ 'type': 'ping' })
+
+
+  def send(self, msg):
+     self.ws.send( json.dumps(msg) )
+
+
+  def handle_message(self, msgjson):
+    msg = json.loads(msgjson)
+    if type(msg) != dict:
+      raise Exception('message is not a dict')
+    if not 'type' in msg:
+      raise Exception('message does not have a type')
+    if msg['type'] != str:
+      raise Exception('message type is not a string')
+
+    if msg['type'] == 'pong':
+      return
+
+    if msg['type'] == 'check_exam_session_access_code':
+      # XXX should do something useful
+      return
+
+    if msg['type'] == 'refresh_exams':
+      # XXX should do something useful
+      return
 
 
   def open_connection(self):
@@ -144,7 +173,8 @@ class PuavoExamServer (threading.Thread):
     url = 'wss://%s/v1/server_connection?%s' % (self.exam_server_name, params)
     ws.connect(url,
                connection='Connection: Upgrade',
-               header={'Authorization': basic_auth})
+               header={'Authorization': basic_auth},
+               timeout=45)
 
     return ws
 
@@ -677,6 +707,7 @@ class PuavoErsExamSync (threading.Thread):
        except Exception as e:
          syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
 
+       # XXX this should be longer I think, but not bigger than 3600
        time.sleep(60)
 
 
