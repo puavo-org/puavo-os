@@ -73,7 +73,7 @@ case "$mode" in
       image_name="$answer"
     fi
 
-    ocs-sr -q2 -j2 -z1p -i 4096 -fsck-src-part -scs -p true \
+    ocs-sr -rm-win-swap-hib -q2 -j2 -z1p -i 4096 -fsck-src-part -scs -p true \
            savedisk "$image_name" "$source_disk"
     ;;
   *)
