@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import base64
 import copy
 import datetime
 import errno
@@ -21,6 +22,8 @@ import sys
 import syslog
 import threading
 import time
+import urllib
+import websocket
 import zipfile
 
 gi.require_version('AppIndicator3', '0.1')
@@ -77,8 +80,10 @@ class ExamSchedulerNotActive(Exception):
   pass
 
 
-class PuavoExamServer:
+class PuavoExamServer (threading.Thread):
   def __init__(self):
+    threading.Thread.__init__(self)
+
     self.exam_server_name = puavoconf_get('puavo.abitti.exam_server')
 
     with open('/etc/puavo/domain') as f:
@@ -91,6 +96,57 @@ class PuavoExamServer:
       self.ldap_dn = f.read().rstrip()
     with open('/etc/puavo/ldap/password') as f:
       self.ldap_password = f.read().rstrip()
+
+    self.ws = None
+
+
+  def run(self):
+     while True:
+       try:
+         self.ws = self.open_connection()
+
+         # XXX we should fetch exam index in case we are here
+         # XXX (those might have been updated when we have not had a
+         # XXX connection and we would not have gotten a notification about it)
+         # XXX time is also another factor... received data changes as time
+         # XXX goes past.... so the exam fetch condition variable should
+         # XXX have a timeout of one hour or something?
+
+         while self.ws:
+           self.handle_message( self.ws.recv() )
+       except Exception as e:
+         syslog.syslog(syslog.LOG_ERR, 'error with server connection: %s' % e)
+       finally:
+         if self.ws:
+           self.ws.close()
+           self.ws = None
+
+       time.sleep(10)
+
+
+  def handle_message(self, msg):
+    # XXX
+    syslog.syslog(syslog.LOG_INFO, 'we got a message: %s' % msg)
+
+
+  def open_connection(self):
+    ws = websocket.WebSocket()
+
+    credentials = '%s:%s' % (self.ldap_dn, self.ldap_password)
+    creds_encoded = base64.b64encode( credentials.encode('ascii') ) \
+                          .decode('ascii')
+    basic_auth = 'Basic %s' % creds_encoded
+
+    params = urllib.parse.urlencode({ 'domain':   self.domain,
+                                      'hostname': self.hostname,
+                                      'id':       self.id })
+
+    url = 'wss://%s/v1/server_connection?%s' % (self.exam_server_name, params)
+    ws.connect(url,
+               connection='Connection: Upgrade',
+               header={'Authorization': basic_auth})
+
+    return ws
 
 
   def get(self, path, params={}):
@@ -153,6 +209,7 @@ class PuavoErsApplet:
     self.menu.show_all()
 
     exam_server = PuavoExamServer()
+    exam_server.start()
 
     self.exam_sync = PuavoErsExamSync(exam_server, self.exam_sync_active)
     self.exam_sync.start()
@@ -607,8 +664,12 @@ class PuavoErsExamSync (threading.Thread):
 
      while True:
        try:
+         # XXX there should perhaps be some condition variable and this could
+         # XXX be activated by the puavo_exam_server instead of constantly
+         # XXX sleeping
          if self.exam_sync_enabled:
            self.sync_exams()
+           # XXX acquire lock and do sync
          elif is_enabled != self.exam_sync_enabled:
            syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
            is_enabled = self.exam_sync_enabled
