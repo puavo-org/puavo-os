@@ -377,8 +377,8 @@ while true; do
                keyboard   'Test keyboard' \
                microphone 'Test microphone' \
                mouse      'Test mouse/mice' \
-               speakers   'Test speakers' \
                wifi       'Test wireless networking' \
+	       speakers   'Test speakers' \
                quit       'Exit tests') || true
 
   case "$response" in
@@ -386,9 +386,9 @@ while true; do
     disks)      mainmenu_default_item=disks;      test_disks      || true ;;
     keyboard)   mainmenu_default_item=microphone; test_keyboard   || true ;;
     microphone) mainmenu_default_item=mouse;      test_microphone || true ;;
-    mouse)      mainmenu_default_item=speakers;   test_mouse      || true ;;
-    speakers)   mainmenu_default_item=wifi;       test_speakers   || true ;;
-    wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
+    mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
+    wifi)       mainmenu_default_item=speakers;   test_wifi       || true ;;
+    speakers)   mainmenu_default_item=quit;       test_speakers   || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
