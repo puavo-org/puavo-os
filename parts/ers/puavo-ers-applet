@@ -107,9 +107,13 @@ class PuavoExamServer (threading.Thread):
   def run(self):
      while True:
        try:
-         self.exam_sync.trigger_sync_exams()
-
-         self.ws = self.open_connection()
+         try:
+           self.ws = self.open_connection()
+         finally:
+           # Sync exams should be done always after opening a new connection,
+           # even if that fails (because we need a plan B if websocket does
+           # not work).
+           self.exam_sync.trigger_sync_exams()
 
          while True:
            try:
@@ -210,6 +214,36 @@ class PuavoExamServer (threading.Thread):
       return
 
     return response
+
+
+  def post(self, path, data):
+    uri = 'https://%s%s' % (self.exam_server_name, path)
+
+    req_params = {
+                   'domain':   self.domain,
+                   'hostname': self.hostname,
+                   'id':       self.id,
+                 }
+    json_data = json.dumps(data)
+
+    try:
+      response = requests.post(uri,
+                              auth=HTTPBasicAuth(self.ldap_dn,
+                                                 self.ldap_password),
+                              params=req_params,
+                              data=json_data,
+                              timeout=20)
+      if response.status_code != requests.codes.ok:
+        syslog.syslog(syslog.LOG_ERR,
+          'error on POST request to %s: code=%s' % (uri, response.status_code))
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'error on POST request to %s: %s' % (uri, e))
+      return
+
+    return response
+
+
 
 
 class PuavoErsApplet:
@@ -696,7 +730,7 @@ class PuavoErsExamSync (threading.Thread):
     self.exam_server = exam_server
     self.exam_sorter = exam_sorter
     self.exam_sync_enabled = is_active
-    self.do_exam_sync = True
+    self.do_exam_sync = False
     self.sync_exams_lock = threading.Condition()
 
 
@@ -735,7 +769,7 @@ class PuavoErsExamSync (threading.Thread):
 
     response = self.exam_server.get('/v1/schedules/query_exam_server_schedule')
     if not response or response.status_code != requests.codes.ok:
-      return
+      raise Exception('could not get exam schedules from server')
 
     exams_json = response.content.decode('utf-8')
     self.update_exams_json_on_disk(exams_json)
@@ -824,22 +858,30 @@ class PuavoErsExamControl (threading.Thread):
 
     self.send_status_update_lock = threading.Condition()
     self.status = None
-    self.status_updated = False
+    self.local_status_updated = False
 
 
   def run(self):
+    status_send_error = False
+
     while True:
       try:
         self.send_status_update_lock.acquire()
 
-        while not self.status_updated:
-          self.send_status_update_lock.wait()
+        if not status_send_error:
+          while not self.local_status_updated:
+            self.send_status_update_lock.wait()
 
         status_copy = copy.deepcopy(self.status)
-        self.status_updated = False
+        self.local_status_updated = False
         self.send_status_update_lock.release()
 
-        self.send_status(status_copy)
+        try:
+          self.send_status(status_copy)
+          status_send_error = False
+        except Exception as e:
+          status_send_error = True
+          raise e
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR,
                       'error when sending status update: %s' % e)
@@ -850,17 +892,18 @@ class PuavoErsExamControl (threading.Thread):
   def send_status(self, status):
     syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
 
-    status_path = '/v1/exam_session_status'
+    msg = {
+      'version':    0,
+      'ers_status': status,
+    }
 
-#     response = requests.get(index_uri,
-#                             auth=HTTPBasicAuth(self.ldap_dn,
-#                                                self.ldap_password),
-#                             params={
-#                               'domain':   self.domain,
-#                               'hostname': self.hostname,
-#                               'id':       self.id,
-#                             },
-#                             timeout=20)
+    response = self.exam_server.post('/v1/servers/status_update', msg)
+    if not response or response.status_code != requests.codes.ok:
+      raise Exception('could not send status update to server')
+
+    self.status = status
+
+    # XXX is there anything we should do with the response?
 
 
   def update_status(self, new_status):
@@ -870,7 +913,7 @@ class PuavoErsExamControl (threading.Thread):
       self.status = new_status
       syslog.syslog(syslog.LOG_INFO,
                     'received status update from exam scheduler')
-      self.status_updated = True
+      self.local_status_updated = True
       self.send_status_update_lock.notify()
 
     self.send_status_update_lock.release()
