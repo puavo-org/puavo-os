@@ -100,19 +100,18 @@ class PuavoExamServer (threading.Thread):
     self.ws = None
 
 
+  def add_other_threads(self, exam_sync):
+    self.exam_sync = exam_sync
+
+
   def run(self):
      while True:
        try:
+         self.exam_sync.trigger_sync_exams()
+
          self.ws = self.open_connection()
 
-         # XXX we should fetch exam index in case we are here
-         # XXX (those might have been updated when we have not had a
-         # XXX connection and we would not have gotten a notification about it)
-         # XXX time is also another factor... received data changes as time
-         # XXX goes past.... so the exam fetch condition variable should
-         # XXX have a timeout of one hour or something?
-
-         while self.ws:
+         while True:
            try:
              self.handle_message( self.ws.recv() )
            except websocket.WebSocketTimeoutException as e:
@@ -126,10 +125,12 @@ class PuavoExamServer (threading.Thread):
            self.ws.close()
            self.ws = None
 
-       time.sleep(10)
+       time.sleep(60)
 
 
   def ping(self):
+    # XXX the websocket protocol might support ping/pong with no body
+    # XXX but we have handmade tiny messages
     self.send({ 'type': 'ping' })
 
 
@@ -143,18 +144,23 @@ class PuavoExamServer (threading.Thread):
       raise Exception('message is not a dict')
     if not 'type' in msg:
       raise Exception('message does not have a type')
-    if msg['type'] != str:
+    if type(msg['type']) != str:
       raise Exception('message type is not a string')
 
     if msg['type'] == 'pong':
       return
 
-    if msg['type'] == 'check_exam_session_access_code':
-      # XXX should do something useful
+    if msg['type'] == 'change_exam_session_access_code':
+      # XXX don't just log, do something!
+      syslog.syslog(syslog.LOG_INFO,
+                    'received change exam session access code message from' \
+                      + ' exams controller')
       return
 
     if msg['type'] == 'refresh_exams':
-      # XXX should do something useful
+      syslog.syslog(syslog.LOG_INFO,
+                    'received refresh exams messages from exams controller')
+      self.exam_sync.trigger_sync_exams()
       return
 
 
@@ -238,23 +244,22 @@ class PuavoErsApplet:
 
     self.menu.show_all()
 
-    exam_server = PuavoExamServer()
-    exam_server.start()
-
-    self.exam_sync = PuavoErsExamSync(exam_server, self.exam_sync_active)
-    self.exam_sync.start()
-
+    self.exam_server = PuavoExamServer()
+    self.exam_sync = PuavoErsExamSync(self.exam_server, self.exam_sync_active)
+    self.exam_control = PuavoErsExamControl(self.exam_server)
     self.exam_sorter = PuavoErsExamSorter(self.exam_sync_active)
+    self.exam_server_helper = PuavoErsServerHelper()
+    self.exam_scheduler = PuavoErsExamScheduler(self.exam_control)
+
+    self.exam_server.add_other_threads(self.exam_sync)
+
+    self.exam_server.start()
+    self.exam_sync.start()
     self.exam_sorter.start()
-
-    self.exam_control = PuavoErsExamControl(exam_server)
     self.exam_control.start()
+    self.exam_server_helper.start()
+    self.exam_scheduler.start()
 
-    self.exams_server_helper = PuavoErsServerHelper()
-    self.exams_server_helper.start()
-
-    self.exams_scheduler = PuavoErsExamScheduler(self.exam_control)
-    self.exams_scheduler.start()
 
     # Copy "naksu" to NAKSU_BIN_PATH only if it does not exist yet.
     # This is because "naksu" is self-updating and self.NAKSU_BIN_PATH
@@ -494,7 +499,7 @@ class PuavoErsApplet:
     self.menuitems.append(separator)
     self.menu.append(separator)
 
-    if self.exams_scheduler.exam_scheduler_enabled:
+    if self.exam_scheduler.exam_scheduler_enabled:
       auto_info_button = Gtk.MenuItem(
         label=_tr('Exam session automation is active'))
       auto_info_button.set_sensitive(False)
@@ -540,6 +545,8 @@ class PuavoErsApplet:
     self.exam_sync_active = True
     self.save_configuration()
 
+    self.exam_sync.trigger_sync_exams()
+
     self.exam_sorter.exam_sorter_enabled = True
     self.exam_sync.exam_sync_enabled     = True
     self.update_decrypt_codes(True)
@@ -556,9 +563,9 @@ class PuavoErsApplet:
       self.automation_active = False
       self.save_configuration()
 
-    is_enabled = self.exams_scheduler.exam_scheduler_enabled
-    self.exams_scheduler.exam_scheduler_enabled = False
-    if is_enabled != self.exams_scheduler.exam_scheduler_enabled:
+    is_enabled = self.exam_scheduler.exam_scheduler_enabled
+    self.exam_scheduler.exam_scheduler_enabled = False
+    if is_enabled != self.exam_scheduler.exam_scheduler_enabled:
       syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now disabled')
       Notify.Notification.new(_tr('Exam session automation is NOT active')).show()
     self.update_decrypt_codes(True)
@@ -613,9 +620,9 @@ class PuavoErsApplet:
       Notify.Notification.new(summary, body).show()
       return
 
-    is_enabled = self.exams_scheduler.exam_scheduler_enabled
-    self.exams_scheduler.exam_scheduler_enabled = True
-    if is_enabled != self.exams_scheduler.exam_scheduler_enabled:
+    is_enabled = self.exam_scheduler.exam_scheduler_enabled
+    self.exam_scheduler.exam_scheduler_enabled = True
+    if is_enabled != self.exam_scheduler.exam_scheduler_enabled:
       Notify.Notification.new(_tr('Exam session automation is active')).show()
       syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now enabled')
 
@@ -687,28 +694,39 @@ class PuavoErsExamSync (threading.Thread):
 
     self.exam_server = exam_server
     self.exam_sync_enabled = is_active
+    self.do_exam_sync = True
+    self.sync_exams_lock = threading.Condition()
 
 
   def run(self):
      is_enabled = None
+     self.sync_exams_lock.acquire()
 
      while True:
        try:
-         # XXX there should perhaps be some condition variable and this could
-         # XXX be activated by the puavo_exam_server instead of constantly
-         # XXX sleeping
+         # we do not check with while, because periodically sync_exams()
+         # should be run, as clock ticks forward
+         if not self.do_exam_sync:
+           self.sync_exams_lock.wait(timeout=3600)
+
          if self.exam_sync_enabled:
            self.sync_exams()
-           # XXX acquire lock and do sync
          elif is_enabled != self.exam_sync_enabled:
            syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
            is_enabled = self.exam_sync_enabled
+         self.do_exam_sync = False
 
        except Exception as e:
          syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
 
-       # XXX this should be longer I think, but not bigger than 3600
-       time.sleep(60)
+       time.sleep(10)
+
+
+  def trigger_sync_exams(self):
+    self.sync_exams_lock.acquire()
+    self.do_exam_sync = True
+    self.sync_exams_lock.notify()
+    self.sync_exams_lock.release()
 
 
   def sync_exams(self):
@@ -795,7 +813,7 @@ class PuavoErsExamControl (threading.Thread):
 
     self.exam_server = exam_server
 
-    self.send_status_update = threading.Condition()
+    self.send_status_update_lock = threading.Condition()
     self.status = None
     self.status_updated = False
 
@@ -803,19 +821,21 @@ class PuavoErsExamControl (threading.Thread):
   def run(self):
     while True:
       try:
-        self.send_status_update.acquire()
+        self.send_status_update_lock.acquire()
 
         while not self.status_updated:
-          self.send_status_update.wait()
+          self.send_status_update_lock.wait()
 
         status_copy = copy.deepcopy(self.status)
         self.status_updated = False
-        self.send_status_update.release()
+        self.send_status_update_lock.release()
 
         self.send_status(status_copy)
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR,
                       'error when sending status update: %s' % e)
+
+      time.sleep(10)
 
 
   def send_status(self, status):
@@ -835,16 +855,16 @@ class PuavoErsExamControl (threading.Thread):
 
 
   def update_status(self, new_status):
-    self.send_status_update.acquire()
+    self.send_status_update_lock.acquire()
 
     if self.status != new_status:
       self.status = new_status
       syslog.syslog(syslog.LOG_INFO,
                     'received status update from exam scheduler')
       self.status_updated = True
-      self.send_status_update.notify()
+      self.send_status_update_lock.notify()
 
-    self.send_status_update.release()
+    self.send_status_update_lock.release()
 
 
   def save_status_to_disk(self):
