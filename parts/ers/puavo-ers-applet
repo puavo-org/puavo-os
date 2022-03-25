@@ -245,9 +245,10 @@ class PuavoErsApplet:
     self.menu.show_all()
 
     self.exam_server = PuavoExamServer()
-    self.exam_sync = PuavoErsExamSync(self.exam_server, self.exam_sync_active)
-    self.exam_control = PuavoErsExamControl(self.exam_server)
     self.exam_sorter = PuavoErsExamSorter(self.exam_sync_active)
+    self.exam_sync = PuavoErsExamSync(self.exam_server, self.exam_sorter,
+                                      self.exam_sync_active)
+    self.exam_control = PuavoErsExamControl(self.exam_server)
     self.exam_server_helper = PuavoErsServerHelper()
     self.exam_scheduler = PuavoErsExamScheduler(self.exam_control)
 
@@ -689,17 +690,17 @@ class DecryptCodesWindow:
 
 
 class PuavoErsExamSync (threading.Thread):
-  def __init__(self, exam_server, is_active):
+  def __init__(self, exam_server, exam_sorter, is_active):
     threading.Thread.__init__(self)
 
     self.exam_server = exam_server
+    self.exam_sorter = exam_sorter
     self.exam_sync_enabled = is_active
     self.do_exam_sync = True
     self.sync_exams_lock = threading.Condition()
 
 
   def run(self):
-     is_enabled = None
      self.sync_exams_lock.acquire()
 
      while True:
@@ -711,9 +712,9 @@ class PuavoErsExamSync (threading.Thread):
 
          if self.exam_sync_enabled:
            self.sync_exams()
-         elif is_enabled != self.exam_sync_enabled:
+         else:
            syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
-           is_enabled = self.exam_sync_enabled
+
          self.do_exam_sync = False
 
        except Exception as e:
@@ -739,6 +740,8 @@ class PuavoErsExamSync (threading.Thread):
     exams_json = response.content.decode('utf-8')
     self.update_exams_json_on_disk(exams_json)
 
+    fatal_errors = False
+
     exam_name_list = []
     for exam in json.loads(exams_json):
       try:
@@ -755,6 +758,7 @@ class PuavoErsExamSync (threading.Thread):
         exam_name_list.append(exam_file_name)
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'error in syncing one exam: %s' % e)
+        fatal_errors = True
 
     # clean up old exams that no longer belong to exams subdirectories
     for exam_path in glob.glob( os.path.join(EXAMS_DIR, 'exam_*.me[bx]') ):
@@ -763,6 +767,11 @@ class PuavoErsExamSync (threading.Thread):
         # it has already been archived and we can delete it here.
         if os.stat(exam_path).st_nlink > 1:
           rm_f(exam_path)
+
+    self.exam_sorter.trigger_sort_exams()
+
+    if fatal_errors:
+      raise Exception('there were errors when syncing exams')
 
 
   def update_exams_json_on_disk(self, exams_json):
@@ -942,18 +951,26 @@ class PuavoErsExamSorter (threading.Thread):
     self.previous_current_exams = None
     self.previous_todays_exams  = None
 
+    self.do_sort_exams = True
+    self.sort_exams_lock = threading.Condition()
+
 
   def run(self):
-    is_enabled = None
+    self.sort_exams_lock.acquire()
 
     while True:
       try:
+         # we do not check with while, because this can be run periodically
+        if not self.do_sort_exams:
+          self.sort_exams_lock.wait(timeout=600)
+
         if self.exam_sorter_enabled:
           with exam_scheduler_lock:
             self.sort_exams_to_dirs()
-        elif is_enabled != self.exam_sorter_enabled:
+        else:
           syslog.syslog(syslog.LOG_INFO, 'exam sorter has been disabled')
-          is_enabled = self.exam_sorter_enabled
+
+        self.do_sort_exams = False
 
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'error when sorting exams: %s' % e)
@@ -961,8 +978,17 @@ class PuavoErsExamSorter (threading.Thread):
       time.sleep(10)
 
 
+  def trigger_sort_exams(self):
+    self.sort_exams_lock.acquire()
+    self.do_sort_exams = True
+    self.sort_exams_lock.notify()
+    self.sort_exams_lock.release()
+
+
   def sort_exams_to_dirs(self):
     global current_exams_set
+
+    syslog.syslog(syslog.LOG_INFO, 'sorting exams in filesystem')
 
     self.current_day  = datetime.date.today()
     self.current_time = datetime.datetime.now()
@@ -983,6 +1009,8 @@ class PuavoErsExamSorter (threading.Thread):
     upcoming_exams_filenames = []
 
     decrypt_codes_list = []
+
+    fatal_errors = False
 
     for exam in all_exams:
       try:
@@ -1015,6 +1043,7 @@ class PuavoErsExamSorter (threading.Thread):
 
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
+        fatal_errors = True
 
     current_exams_set = ExamSet(current_exams)
     current_exams_set.add_overlapping_exams(todays_exams, self.current_time)
@@ -1033,6 +1062,9 @@ class PuavoErsExamSorter (threading.Thread):
 
     self.zip_exams(current_exams_filenames, todays_exams_filenames,
         decrypt_codes_list)
+
+    if fatal_errors:
+      raise Exception('there were some problems when sorting exams')
 
 
   def cleanup_exams(self, linkdir, exam_filenames):
@@ -1300,7 +1332,7 @@ class PuavoErsExamScheduler (threading.Thread):
       except ExamSchedulerNotActive as e:
         if is_enabled != self.exam_scheduler_enabled:
           syslog.syslog(syslog.LOG_INFO, 'exam scheduler has been disabled')
-          is_enabled = self.exam_scheduler_enabled
+          is_enabled = False
 
       except Exception as e:
         comm_ok = False
@@ -1497,7 +1529,6 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def try_server_cmd(self, cmd):
-    syslog.syslog(syslog.LOG_INFO, 'sending command to exam server: "%s"' % cmd)
     output_paths = [ self.CMD_IN_PROGRESS_PATH, self.CMD_RESULT_PATH,
                      self.DEBUG_OUTPUT_PATH, self.EXAMS_PATH, self.OUTPUT_PATH,
                      self.STATS_PATH ]
@@ -1512,6 +1543,9 @@ class PuavoErsExamScheduler (threading.Thread):
 
       with open(self.CMD_IN_PROGRESS_PATH, 'w') as f:
         pass
+
+      syslog.syslog(syslog.LOG_INFO,
+                    'sending command to exam server: "%s"' % cmd)
 
       with open(self.CMD_PATH, 'w') as f:
         f.write("%s\n" % cmd)
