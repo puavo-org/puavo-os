@@ -180,17 +180,43 @@ class PuavoExamServer (threading.Thread):
                                       'hostname': self.hostname,
                                       'id':       self.id })
 
-    url = 'wss://%s/v1/server_connection?%s' % (self.exam_server_name, params)
+    url = self.server_uri('/v1/server_connection?%s' % params, True)
     ws.connect(url,
                connection='Connection: Upgrade',
                header={'Authorization': basic_auth},
                timeout=45)
 
+    syslog.syslog(syslog.LOG_INFO,
+                  'websocket connection opened to exam control server')
+
     return ws
 
 
+  def server_uri(self, path, websocket=False):
+    if self.exam_server_name.startswith('http://'):
+      server_name = self.exam_server_name.replace('http://', '')
+      use_http = True
+    elif self.exam_server_name.startswith('https://'):
+      server_name = self.exam_server_name.replace('https://', '')
+      use_http = False
+    else:
+      server_name = self.exam_server_name
+      use_http = False
+
+    if websocket:
+      if use_http:
+        return 'ws://%s%s' % (server_name, path)
+      else:
+        return 'wss://%s%s' % (server_name, path)
+    else:
+      if use_http:
+        return 'http://%s%s' % (server_name, path)
+      else:
+        return 'https://%s%s' % (server_name, path)
+
+
   def get(self, path, params={}):
-    uri = 'https://%s%s' % (self.exam_server_name, path)
+    uri = self.server_uri(path)
 
     req_params = params
     req_params.update({
@@ -217,7 +243,7 @@ class PuavoExamServer (threading.Thread):
 
 
   def post(self, path, data):
-    uri = 'https://%s%s' % (self.exam_server_name, path)
+    uri = self.server_uri(path)
 
     req_params = {
                    'domain':   self.domain,
