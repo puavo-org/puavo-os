@@ -916,16 +916,11 @@ class PuavoErsExamControl (threading.Thread):
 
 
   def send_status(self, status):
-    syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
-
-    msg = {
-      'version':    0,
-      'ers_status': status,
-    }
-
-    response = self.exam_server.post('/v1/servers/status_update', msg)
+    response = self.exam_server.post('/v1/servers/status_update', status)
     if not response or response.status_code != requests.codes.ok:
       raise Exception('could not send status update to server')
+
+    syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
 
     self.status = status
 
