@@ -299,7 +299,7 @@ test_microphone() {
     echo 'Recording finished.'
   fi
 
-  sleep 5
+  sleep 2
 }
 
 test_speakers() {
