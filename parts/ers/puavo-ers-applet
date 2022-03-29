@@ -100,7 +100,8 @@ class PuavoExamServer (threading.Thread):
     self.ws = None
 
 
-  def add_other_threads(self, exam_sync):
+  def add_other_threads(self, exam_scheduler, exam_sync):
+    self.exam_scheduler = exam_scheduler
     self.exam_sync = exam_sync
 
 
@@ -155,10 +156,10 @@ class PuavoExamServer (threading.Thread):
       return
 
     if msg['type'] == 'change_exam_session_access_code':
-      # XXX don't just log, do something!
       syslog.syslog(syslog.LOG_INFO,
                     'received change exam session access code message from' \
                       + ' exams controller')
+      self.exam_scheduler.request_keycode_change()
       return
 
     if msg['type'] == 'refresh_exams':
@@ -312,7 +313,7 @@ class PuavoErsApplet:
     self.exam_server_helper = PuavoErsServerHelper()
     self.exam_scheduler = PuavoErsExamScheduler(self.exam_control)
 
-    self.exam_server.add_other_threads(self.exam_sync)
+    self.exam_server.add_other_threads(self.exam_scheduler, self.exam_sync)
 
     self.exam_server.start()
     self.exam_sync.start()
@@ -882,9 +883,9 @@ class PuavoErsExamControl (threading.Thread):
 
     self.exam_server = exam_server
 
+    self.local_status_updated = False
     self.send_status_update_lock = threading.Condition()
     self.status = None
-    self.local_status_updated = False
 
 
   def run(self):
@@ -938,6 +939,8 @@ class PuavoErsExamControl (threading.Thread):
       self.send_status_update_lock.notify()
 
     self.send_status_update_lock.release()
+
+    # self.save_status_to_disk()
 
 
   def save_status_to_disk(self):
@@ -1299,11 +1302,17 @@ class PuavoErsExamScheduler (threading.Thread):
   def __init__(self, exam_control):
     threading.Thread.__init__(self)
 
-    self.answers_stored_time    = None
-    self.exam_control           = exam_control
-    self.exam_scheduler_enabled = False
-    self.finished_and_students  = None
-    self.finish_time            = self.end_of_today()
+    self.answers_stored_time       = None
+    self.do_keycode_change_request = False
+    self.exam_control              = exam_control
+    self.exam_scheduler_enabled    = False
+    self.finished_and_students     = None
+    self.finish_time               = self.end_of_today()
+    self.has_started               = False
+
+
+  def change_keycode(self):
+    return self.server_cmd('change-keycode')
 
 
   def get_exams(self):
@@ -1312,6 +1321,10 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def get_status(self):
     return self.server_cmd('get-status')
+
+
+  def request_keycode_change(self):
+    self.do_keycode_change_request = True
 
 
   def load_empty_examset(self):
@@ -1519,9 +1532,16 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def schedule_exams(self, current_exams_set):
-    status_response = self.get_status()
-    status = status_response['status']
-    has_started = (status['hasStarted'] == True)
+    if self.has_started and self.do_keycode_change_request:
+      try:
+        syslog.syslog(syslog.LOG_INFO, 'handling keycode change request')
+        self.change_keycode()
+        self.do_keycode_change_request = False
+      except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, 'could not change keycode: %s' % e)
+
+    status = (self.get_status())['status']
+    self.has_started = (status['hasStarted'] == True)
 
     self.exam_control.update_status(status)
 
@@ -1539,13 +1559,13 @@ class PuavoErsExamScheduler (threading.Thread):
     if exams_finished:
       self.maybe_store_answers(currently_loaded_exams, status)
 
-    if has_started and not exams_finished:
+    if self.has_started and not exams_finished:
       syslog.syslog(syslog.LOG_INFO,
                     'examinations are in progress, not loading any exams')
       return
 
     if len(current_exams_set.exams) == 0:
-      if has_started:
+      if self.has_started:
         msg = 'exams ongoing but should not be according to schedule,' \
                  + ' resetting server state'
         syslog.syslog(syslog.LOG_INFO, msg)
@@ -1567,13 +1587,13 @@ class PuavoErsExamScheduler (threading.Thread):
         syslog.syslog(syslog.LOG_INFO, 'loading exams')
         self.load_exams()
         self.finish_time = current_exams_set.latest_end_time
-        has_started = False
+        self.has_started = False
     except CurrentZipNotReady as e:
       syslog.syslog(syslog.LOG_INFO,
                     'exam scheduler is waiting for zip file to be ready')
       return
 
-    if not has_started \
+    if not self.has_started \
       and current_exams_set.earliest_start_time <= datetime.datetime.now():
         syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
         self.start_loaded_exams()
