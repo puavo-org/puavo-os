@@ -151,15 +151,21 @@ class PuavoExamServer (threading.Thread):
       raise Exception('message does not have a type')
     if type(msg['type']) != str:
       raise Exception('message type is not a string')
+    if not 'id' in msg:
+      raise Exception('message does not have a id')
+    if type(msg['id']) != int:
+      raise Exception('message id is not a integer')
 
     if msg['type'] == 'pong':
       return
 
-    if msg['type'] == 'change_exam_session_access_code':
+    self.send({ 'type': 'ack', 'id': msg['id'] })
+
+    if msg['type'] == 'change_access_code':
       syslog.syslog(syslog.LOG_INFO,
-                    'received change exam session access code message from' \
-                      + ' exams controller')
+                    'received change access code message from exams controller')
       self.exam_scheduler.request_keycode_change()
+      # XXX should return some ack message?
       return
 
     if msg['type'] == 'refresh_exams':
@@ -1310,6 +1316,8 @@ class PuavoErsExamScheduler (threading.Thread):
     self.finish_time               = self.end_of_today()
     self.has_started               = False
 
+    self.keycode_change_request_lock = threading.Lock()
+
 
   def change_keycode(self):
     return self.server_cmd('change-keycode')
@@ -1324,7 +1332,8 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def request_keycode_change(self):
-    self.do_keycode_change_request = True
+    with self.keycode_change_request_lock:
+      self.do_keycode_change_request = True
 
 
   def load_empty_examset(self):
@@ -1531,14 +1540,19 @@ class PuavoErsExamScheduler (threading.Thread):
         self.finish_time = now
 
 
-  def schedule_exams(self, current_exams_set):
-    if self.has_started and self.do_keycode_change_request:
+  def handle_keycode_change_request(self):
+    with self.keycode_change_request_lock:
       try:
-        syslog.syslog(syslog.LOG_INFO, 'handling keycode change request')
-        self.change_keycode()
-        self.do_keycode_change_request = False
+        if self.has_started and self.do_keycode_change_request:
+          syslog.syslog(syslog.LOG_INFO, 'handling keycode change request')
+          self.change_keycode()
+          self.do_keycode_change_request = False
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not change keycode: %s' % e)
+
+
+  def schedule_exams(self, current_exams_set):
+    self.handle_keycode_change_request()
 
     status = (self.get_status())['status']
     self.has_started = (status['hasStarted'] == True)
