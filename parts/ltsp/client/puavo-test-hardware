@@ -287,9 +287,13 @@ test_mouse() {
 
 test_microphone() {
   local alsadev
-
-  alsadev='hw:0,0'
-
+  product_name=`cat /sys/class/dmi/id/product_name`
+  case "$product_name" in
+    "HP EliteBook 840 G1" )
+      alsadev='hw:1,0' ;;
+    *)
+      alsadev='hw:0,0' ;;
+  esac
   clear
   echo "Using ALSA device ${alsadev} for recording..."
   echo
