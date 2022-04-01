@@ -18,7 +18,6 @@ import requests
 import shutil
 import signal
 import subprocess
-import sys
 import syslog
 import threading
 import time
@@ -134,8 +133,6 @@ class PuavoExamServer (threading.Thread):
 
 
   def ping(self):
-    # XXX the websocket protocol might support ping/pong with no body
-    # XXX but we have handmade tiny messages
     self.send({ 'type': 'ping' })
 
 
@@ -165,7 +162,6 @@ class PuavoExamServer (threading.Thread):
       syslog.syslog(syslog.LOG_INFO,
                     'received change access code message from exams controller')
       self.exam_scheduler.request_keycode_change()
-      # XXX should return some ack message?
       return
 
     if msg['type'] == 'refresh_exams':
@@ -295,7 +291,6 @@ class PuavoErsApplet:
 
     self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
-    # XXX do we need this?
     Notify.init('puavo-ers-applet')
 
     os.makedirs(self.PUAVO_ERS_DIR, exist_ok=True)
@@ -459,7 +454,6 @@ class PuavoErsApplet:
       error = e
 
     if error:
-      # XXX should user be notified?
       syslog.syslog(syslog.LOG_ERR,
                     'error when updating decrypt codes: %s' % error)
 
@@ -635,7 +629,8 @@ class PuavoErsApplet:
     self.exam_scheduler.exam_scheduler_enabled = False
     if is_enabled != self.exam_scheduler.exam_scheduler_enabled:
       syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now disabled')
-      Notify.Notification.new(_tr('Exam session automation is NOT active')).show()
+      Notify.Notification.new(_tr('Exam session automation is NOT active')) \
+                         .show()
     self.update_decrypt_codes(True)
 
 
@@ -848,7 +843,6 @@ class PuavoErsExamSync (threading.Thread):
         f.write(exams_json)
       os.rename(tmpfile, EXAMS_JSON_FILE)
     except Exception as e:
-      # XXX should user be notified?
       syslog.syslog(syslog.LOG_CRIT,
         'error in writing exams (json) to %s: %s' % (EXAMS_JSON_FILE, e))
 
@@ -930,8 +924,6 @@ class PuavoErsExamControl (threading.Thread):
     syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
 
     self.status = status
-
-    # XXX is there anything we should do with the response?
 
 
   def update_status(self, new_status):
