@@ -158,9 +158,9 @@ class PuavoExamServer (threading.Thread):
 
     self.send({ 'type': 'ack', 'id': msg['id'] })
 
-    if msg['type'] == 'change_access_code':
+    if msg['type'] == 'change_keycode':
       syslog.syslog(syslog.LOG_INFO,
-                    'received change access code message from exams controller')
+                    'received change keycode message from exams controller')
       self.exam_scheduler.request_keycode_change()
       return
 
