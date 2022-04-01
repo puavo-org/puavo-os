@@ -917,17 +917,20 @@ class PuavoErsExamControl (threading.Thread):
 
 
   def send_status(self, status):
+    syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
+
     response = self.exam_server.post('/v1/servers/status_update', status)
     if not response or response.status_code != requests.codes.ok:
       raise Exception('could not send status update to server')
 
-    syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
 
-    self.status = status
-
-
-  def update_status(self, new_status):
+  def update_status(self, new_abitti_status, monitoring_passphrase):
     self.send_status_update_lock.acquire()
+
+    new_status = {
+      'monitoring_passphrase': monitoring_passphrase,
+      'status':                new_abitti_status,
+    }
 
     if self.status != new_status:
       self.status = new_status
@@ -937,21 +940,6 @@ class PuavoErsExamControl (threading.Thread):
       self.send_status_update_lock.notify()
 
     self.send_status_update_lock.release()
-
-    # self.save_status_to_disk()
-
-
-  def save_status_to_disk(self):
-    # This method has no other purpose except to help with
-    # monitoring/debugging.  Perhaps this should be removed?
-    try:
-      tmpfile = '%s.tmp' % self.STATUS_PATH
-      with open(tmpfile, 'w') as f:
-        json.dump(self.status, f)
-      os.rename(tmpfile, self.STATUS_PATH)
-    except Exception as e:
-      syslog.syslog(syslog.LOG_ERR,
-                    'error when saving status to disk: %s' % e)
 
 
 class ExamSet:
@@ -1307,6 +1295,7 @@ class PuavoErsExamScheduler (threading.Thread):
     self.finished_and_students     = None
     self.finish_time               = self.end_of_today()
     self.has_started               = False
+    self.monitoring_passphrase     = None
 
     self.keycode_change_request_lock = threading.Lock()
 
@@ -1317,6 +1306,10 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def get_exams(self):
     return self.server_cmd('get-exam')
+
+
+  def get_passphrase(self):
+    return self.server_cmd('get-passphrase')
 
 
   def get_status(self):
@@ -1389,6 +1382,8 @@ class PuavoErsExamScheduler (threading.Thread):
     while True:
       try:
         if not comm_ok:
+          self.monitoring_passphrase = None
+
           output = self.ping()
           if output['error'] == False:
             comm_ok = True
@@ -1410,7 +1405,7 @@ class PuavoErsExamScheduler (threading.Thread):
       except ExamSchedulerNotActive as e:
         if is_enabled != self.exam_scheduler_enabled:
           syslog.syslog(syslog.LOG_INFO, 'exam scheduler has been disabled')
-          is_enabled = False
+        is_enabled = False
 
       except Exception as e:
         comm_ok = False
@@ -1543,13 +1538,39 @@ class PuavoErsExamScheduler (threading.Thread):
         syslog.syslog(syslog.LOG_ERR, 'could not change keycode: %s' % e)
 
 
+  def update_monitoring_passphrase(self):
+    # Assume that this does not change except when the virtual exam server
+    # has rebooted and we must have lost communication to it as that has
+    # happened.
+    if self.monitoring_passphrase:
+      return
+
+    try:
+      answer = self.get_passphrase()
+      if not 'get-passphrase' in answer:
+        raise Exception('no get-passphrase key')
+      if type(answer['get-passphrase']) != dict:
+        raise Exception('get-passphrase value is not a dict')
+      if not 'passphrase' in answer['get-passphrase']:
+        raise Exception('no passphrase key')
+      if type(answer['get-passphrase']['passphrase']) != str:
+        raise Exception('passphrase key is not a string')
+      self.monitoring_passphrase = answer['get-passphrase']['passphrase']
+      syslog.syslog(syslog.LOG_INFO,
+        "looked up monitoring passphrase: '%s'" % self.monitoring_passphrase)
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'could not get monitoring passphrase: %s' % e)
+
+
   def schedule_exams(self, current_exams_set):
     self.handle_keycode_change_request()
 
     status = (self.get_status())['status']
     self.has_started = (status['hasStarted'] == True)
 
-    self.exam_control.update_status(status)
+    self.update_monitoring_passphrase()
+    self.exam_control.update_status(status, self.monitoring_passphrase)
 
     if not self.exam_scheduler_enabled:
       raise ExamSchedulerNotActive
