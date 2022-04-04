@@ -763,22 +763,20 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def run(self):
-     self.sync_exams_lock.acquire()
-
      while True:
        try:
+         self.sync_exams_lock.acquire()
          # we do not check with while, because periodically sync_exams()
          # should be run, as clock ticks forward
          if not self.do_exam_sync:
            self.sync_exams_lock.wait(timeout=3600)
+         self.do_exam_sync = False
+         self.sync_exams_lock.release()
 
          if self.exam_sync_enabled:
            self.sync_exams()
          else:
            syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
-
-         self.do_exam_sync = False
-
        except Exception as e:
          syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
 
