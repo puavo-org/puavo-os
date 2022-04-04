@@ -1,9 +1,18 @@
-cups (2.2.10-6+deb10u4+puavo1+buildonce) buster; urgency=medium
+cups (2.2.10-6+deb10u5+puavo1+buildonce) buster; urgency=medium
 
   * Add puavo-no-avahi-printers.patch to potentially suppress
     printers appearing in UI dialogs.
 
  -- Puavo Org <dev@opinsys.fi>  Thu, 02 Sep 2021 11:06:26 +0300
+
+cups (2.2.10-6+deb10u5) buster; urgency=medium
+
+  * Non-maintainer upload by the LTS Team.
+  * CVE-2020-10001.patch
+    An input validation issue might allow a malicious application
+    to read restricted memory.
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Wed, 23 Feb 2022 22:03:02 +0100
 
 cups (2.2.10-6+deb10u4) buster; urgency=medium
 
