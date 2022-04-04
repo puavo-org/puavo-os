@@ -11,7 +11,7 @@ prepare_hp_utils() {
 
 use_hp_utils() {
   prepare_hp_utils
- 
+
   cat << EOF
 > Running Bash for you, the current working directory is "${hp_utils_dir}".
 > It has "hp-flash" and "hp-repsetup".
@@ -66,6 +66,3 @@ case "$chosen" in
     use_hp_utils
     ;;
 esac
-
-
-
