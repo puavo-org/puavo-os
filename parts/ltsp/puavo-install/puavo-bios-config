@@ -5,14 +5,14 @@ set -eu
 prepare_hp_utils() {
   puavo-conf puavo.pkg.hp-bios-utils latest
   puavo-pkg-update hp-bios-utils
+  export PATH="/opt/hp/hp-flash:${PATH}"
+  hp_utils_dir='/opt/hp/hp-flash'
 }
 
 use_hp_utils() {
   prepare_hp_utils
-
-  export PATH="/opt/hp/hp-flash:${PATH}"
-  hp_utils_dir='/opt/hp/hp-flash'
-  cat <<EOF
+ 
+  cat << EOF
 > Running Bash for you, the current working directory is "${hp_utils_dir}".
 > It has "hp-flash" and "hp-repsetup".
 > PATH is $PATH
@@ -21,8 +21,22 @@ EOF
   (cd "$hp_utils_dir" && bash)
 }
 
+import_config_student_laptop() {
+  prepare_hp_utils
+
+  (cd "$hp_utils_dir" && hp-repsetup -s HpSetup-student-laptop.txt)
+}
+
+import_config_usb_stick_factory() {
+  prepare_hp_utils
+
+  (cd "$hp_utils_dir" && hp-repsetup -s HpSetup-usb-factory.txt)
+}
+
 ask_choice() {
   choices=$(cat <<'EOF')
+Import Student laptop BIOS Config
+Import USB Stick factory BIOS Config
 use HP BIOS utilities
 exit
 EOF
@@ -42,7 +56,16 @@ case "$chosen" in
   exit)
     exit 0
     ;;
+  'Import Student laptop BIOS Config')
+    import_config_student_laptop
+    ;;
+  'Import USB Stick factory BIOS Config')
+    import_config_usb_stick_factory
+    ;;
   'use HP BIOS utilities')
     use_hp_utils
     ;;
 esac
+
+
+
