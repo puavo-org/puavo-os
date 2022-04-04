@@ -183,7 +183,7 @@ class PuavoExamServer (threading.Thread):
                                       'hostname': self.hostname,
                                       'id':       self.id })
 
-    url = self.server_uri('/v1/server_connection?%s' % params, True)
+    url = self.server_uri('/servers/ers_connection?%s' % params, True)
     ws.connect(url,
                connection='Connection: Upgrade',
                header={'Authorization': basic_auth},
