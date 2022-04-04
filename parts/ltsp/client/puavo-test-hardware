@@ -287,14 +287,8 @@ test_mouse() {
 
 test_microphone() {
   local alsadev
+  alsadev='plughw:CARD=PCH'
   clear
-  product_name=`cat /sys/class/dmi/id/product_name`
-  case "$product_name" in
-    "HP EliteBook 820 G1" | "HP EliteBook 840 G1" | "HP EliteBook 820 G2" | "HP EliteBook 840 G2" )
-      alsadev='hw:1,0' ;;
-    *)
-      alsadev='hw:0,0' ;;
-  esac
   echo "Using ALSA device ${alsadev} for recording..."
   echo
 
@@ -308,28 +302,23 @@ test_microphone() {
 
 test_speakers() {
   local speaker_test_status
-
-  clear
+  local alsadev
   speaker_test_status=0
-  product_name=`cat /sys/class/dmi/id/product_name`
-  case "$product_name" in
-    "HP EliteBook 820 G1" | "HP EliteBook 840 G1" | "HP EliteBook 820 G2" | "HP EliteBook 840 G2" )
-      alsadev='hw:1,0'
-      speaker-test --device="${alsadev}" -t wav  -c 2 -l 3 || speaker_test_status=1
-      speaker-test --device="${alsadev}" -t pink -c 2 -l 1 || speaker_test_status=1 ;;
-    *)
-      alsadev='default'
-      speaker-test --device="${alsadev}" -t wav  -c 2 -l 3 || speaker_test_status=1
-      speaker-test --device="${alsadev}" -t pink -c 2 -l 1 || speaker_test_status=1
 
-      # XXX This uses wav files that might no longer exist after
-      # XXX Scratch or Solfege is updated.
-      aplay /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
-            /usr/share/scratch/Media/Sounds/Electronic/ComputerBeeps1.wav \
-            /usr/share/scratch/Media/Sounds/Human/Laugh-female.wav \
-            /usr/share/solfege/exercises/standard/lesson-files/share/fanfare.wav \
-        || speaker_test_status=1;;
-  esac
+  alsadev='plughw:CARD=PCH'
+  clear
+  speaker-test --device="${alsadev}" -t wav -p 256 -c 2 -l 2 || speaker_test_status=1
+  speaker-test --device="${alsadev}" -t pink -p 256 -c 2 -l 1 || speaker_test_status=1
+
+  # XXX This uses wav files that might no longer exist after
+  # XXX Scratch or Solfege is updated.
+  aplay --device="${alsadev}" \
+        /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
+        /usr/share/scratch/Media/Sounds/Electronic/ComputerBeeps1.wav \
+        /usr/share/scratch/Media/Sounds/Human/Laugh-female.wav \
+        /usr/share/solfege/exercises/standard/lesson-files/share/fanfare.wav \
+    || speaker_test_status=1
+
   sleep 2
 }
 
