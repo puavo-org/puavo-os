@@ -270,7 +270,6 @@ class packages {
 
     [ 'virtualbox'
     , 'virtualbox-dkms'
-    , 'virtualbox-guest-dkms'
     , 'virtualbox-guest-utils'
     , 'virtualbox-guest-x11'
     , 'virtualbox-qt'
@@ -758,7 +757,6 @@ class packages {
   $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.144'
   $nvidia_dkms_410_module   = 'nvidia-current/418.211.00'
   $r8168_module             = 'r8168/8.046.00'
-  $virtualbox_guest_module  = 'virtualbox-guest/6.1.22'
   $virtualbox_module        = 'virtualbox/6.1.32'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
@@ -766,7 +764,6 @@ class packages {
 		      , $nvidia_dkms_390_module
 		      , $nvidia_dkms_410_module
 		      , $r8168_module
-		      , $virtualbox_guest_module
 		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
@@ -776,7 +773,6 @@ class packages {
 
     '5.10.0-0.bpo.12-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module
-                      , $virtualbox_guest_module
                       , $virtualbox_module ],
       package_name => 'linux-image-5.10.0-0.bpo.12-amd64';
   }

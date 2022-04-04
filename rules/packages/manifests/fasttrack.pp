@@ -6,7 +6,6 @@ class packages::fasttrack {
 
   $package_list = [ 'virtualbox'
                   , 'virtualbox-dkms'
-                  , 'virtualbox-guest-dkms'
                   , 'virtualbox-guest-utils'
                   , 'virtualbox-guest-x11'
                   , 'virtualbox-qt' ]
