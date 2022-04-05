@@ -39,14 +39,6 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-devscripts
 
-	$(MAKE) -C devscripts				\
-		install-lxc-tools prefix=/usr sysconfdir=/etc	\
-		DESTDIR=$(CURDIR)/debian/puavo-devscripts-lxc
-
-	$(MAKE) -C devscripts				\
-		install-dch-suffix prefix=/usr sysconfdir=/etc	\
-		DESTDIR=$(CURDIR)/debian/dch-suffix
-
 	$(MAKE) -C ers				        \
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-ers
