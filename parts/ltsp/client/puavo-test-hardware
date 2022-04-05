@@ -287,9 +287,7 @@ test_mouse() {
 
 test_microphone() {
   local alsadev
-
-  alsadev='hw:0,0'
-
+  alsadev='plughw:CARD=PCH'
   clear
   echo "Using ALSA device ${alsadev} for recording..."
   echo
@@ -299,22 +297,23 @@ test_microphone() {
     echo 'Recording finished.'
   fi
 
-  sleep 5
+  sleep 2
 }
 
 test_speakers() {
   local speaker_test_status
-
+  local alsadev
   speaker_test_status=0
 
+  alsadev='plughw:CARD=PCH'
   clear
-
-  speaker-test -t wav  -c 2 -l 3 || speaker_test_status=1
-  speaker-test -t pink -c 2 -l 1 || speaker_test_status=1
+  speaker-test --device="${alsadev}" -t wav -p 256 -c 2 -l 2 || speaker_test_status=1
+  speaker-test --device="${alsadev}" -t pink -p 256 -c 2 -l 1 || speaker_test_status=1
 
   # XXX This uses wav files that might no longer exist after
   # XXX Scratch or Solfege is updated.
-  aplay /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
+  aplay --device="${alsadev}" \
+        /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
         /usr/share/scratch/Media/Sounds/Electronic/ComputerBeeps1.wav \
         /usr/share/scratch/Media/Sounds/Human/Laugh-female.wav \
         /usr/share/solfege/exercises/standard/lesson-files/share/fanfare.wav \
@@ -377,8 +376,8 @@ while true; do
                keyboard   'Test keyboard' \
                microphone 'Test microphone' \
                mouse      'Test mouse/mice' \
-               speakers   'Test speakers' \
                wifi       'Test wireless networking' \
+               speakers   'Test speakers' \
                quit       'Exit tests') || true
 
   case "$response" in
@@ -386,9 +385,9 @@ while true; do
     disks)      mainmenu_default_item=disks;      test_disks      || true ;;
     keyboard)   mainmenu_default_item=microphone; test_keyboard   || true ;;
     microphone) mainmenu_default_item=mouse;      test_microphone || true ;;
-    mouse)      mainmenu_default_item=speakers;   test_mouse      || true ;;
-    speakers)   mainmenu_default_item=wifi;       test_speakers   || true ;;
-    wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
+    mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
+    wifi)       mainmenu_default_item=speakers;   test_wifi       || true ;;
+    speakers)   mainmenu_default_item=quit;       test_speakers   || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
