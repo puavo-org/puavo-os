@@ -15,7 +15,7 @@ if [ "$1" = '-d' ]; then
   fi
 
 elif [ "$1" = '-m' ]; then
-  time="`date +%Y-%m`-monthly-print"
+  time="`date +%Y-%m-%d`-monthly-print"
   mkdir --parents /var/log/cups/monthly-statistics/
   mv /var/log/cups/monthlysum /var/log/cups/monthly-statistics/$time
 
