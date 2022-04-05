@@ -3,8 +3,7 @@
 set -eu
 
 prepare_hp_utils() {
-  puavo-conf puavo.pkg.hp-bios-utils latest
-  puavo-pkg-update hp-bios-utils
+  puavo-pkg install /usr/share/puavo-pkg/packages/hp-bios-utils.tar.gz
   export PATH="/opt/hp/hp-flash:${PATH}"
   hp_utils_dir='/opt/hp/hp-flash'
 }
@@ -40,7 +39,7 @@ Import USB Stick factory BIOS Config
 use HP BIOS utilities
 exit
 EOF
-  printf "%s" "$choices" | fzf --height=1 --layout=reverse-list
+  printf "%s" "$choices" | fzf --height=6 --layout=reverse-list
 }
 
 printf "\n"
@@ -58,9 +57,11 @@ case "$chosen" in
     ;;
   'Import Student laptop BIOS Config')
     import_config_student_laptop
+    sleep 3
     ;;
   'Import USB Stick factory BIOS Config')
     import_config_usb_stick_factory
+    sleep 3
     ;;
   'use HP BIOS utilities')
     use_hp_utils
