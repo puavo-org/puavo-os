@@ -32,10 +32,17 @@ import_config_usb_stick_factory() {
   (cd "$hp_utils_dir" && hp-repsetup -s HpSetup-usb-factory.txt)
 }
 
+flash_bios_update_elitebook_g3() {
+  prepare_hp_utils
+
+  (cd "$hp_utils_dir" && hp-flash bios-elitebook-g3.bin)
+}
+
 ask_choice() {
   choices=$(cat <<'EOF')
 Import Student laptop BIOS Config
 Import USB Stick factory BIOS Config
+Flash Elitebook G3 bios
 use HP BIOS utilities
 exit
 EOF
@@ -63,6 +70,10 @@ case "$chosen" in
     import_config_usb_stick_factory
     sleep 3
     ;;
+  'Flash Elitebook G3 bios')
+    flash_bios_update_elitebook_g3
+    sleep 3
+    ;; 
   'use HP BIOS utilities')
     use_hp_utils
     ;;
