@@ -187,7 +187,8 @@ class PuavoExamServer (threading.Thread):
     ws.connect(url,
                connection='Connection: Upgrade',
                header={'Authorization': basic_auth},
-               timeout=45)
+               timeout=30)
+    ws.settimeout(45)
 
     syslog.syslog(syslog.LOG_INFO,
                   'websocket connection opened to exam control server')
