@@ -1,8 +1,38 @@
-mutter (3.38.6-2~deb11u1+puavo1) bullseye; urgency=medium
+mutter (3.38.6-2~deb11u2+puavo1) bullseye; urgency=medium
 
   * Add our own patches to Mutter.
 
  -- Puavo Org <dev@opinsys.fi>  Fri, 13 Aug 2021 14:18:32 +0300
+
+mutter (3.38.6-2~deb11u2) bullseye; urgency=medium
+
+  * d/patches: Update to commit 3.38.6-9-g0b26ad635 from gnome-3-38 branch
+    (Closes: #1002651)
+    - d/p/wayland-subsurface-Check-for-parent-actor-before-unparent.patch,
+      d/p/wayland-subsurface-Handle-node-unlinking-on-parent-destro.patch,
+      d/p/window-actor-wayland-Remove-subsurface-actors-on-dispose.patch:
+      Fix a crash involving Wayland subsurfaces, which can be triggered by
+      Firefox in Wayland mode (fix backported from 41~beta and 40.5)
+    - d/p/wayland-data-offer-Accept-final-preferrence-of-drop-desti.patch:
+      Fix protocol error during Alt + drag-and-drop from Firefox in
+      Wayland mode, which would result in Firefox being terminated
+      (fix backported from 41.1 and 40.6)
+    - d/p/surface-actor-Fix-unobscurred_fraction-calculation.patch:
+      When an app/game using VSync is full-screen in a multi-monitor setup,
+      use the refresh rate of the correct monitor (LP: #1788535)
+      (fix backported from 41.3)
+    - d/p/xwayland-Fix-condition-for-queuing-a-window-to-META_QUEUE.patch:
+      Avoid flooding Xwayland clients (X11 apps under Wayland) with window
+      management events, which can cause performance problems
+      (fix backported from 41.1 and 40.6)
+    - d/p/wayland-surface-Switch-order-for-calculating-surface-dama.patch,
+      d/p/wayland-surface-Use-correct-default-viewport-for-surface-.patch,
+      d/p/wayland-surface-Do-not-uncoditionally-process-surface-dam.patch:
+      Fix visible glitches for Wayland clients that use the wp_viewporter
+      protocol in combination with wl_surface_damage(), such as the
+      GStreamer waylandsink element (fix backported from 41.3)
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 30 Jan 2022 16:58:45 +0000
 
 mutter (3.38.6-2~deb11u1) bullseye; urgency=medium
 

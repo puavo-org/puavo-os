@@ -1,0 +1,45 @@
+From: Robert Mader <robert.mader@posteo.de>
+Date: Wed, 6 Oct 2021 20:08:12 +0200
+Subject: wayland/data-offer: Accept final preferrence of drop destination
+
+Quoting the spec for `wl_data_device::drop`:
+> If the resulting action is "ask", the action will not be considered
+> final. The drag-and-drop destination is expected to perform one last
+> wl_data_offer.set_actions request, or wl_data_offer.destroy in order
+> to cancel the operation.
+
+We did not respect the action choosen by the drop destination when
+it called `wl_data_offer::set_actions` after `wl_data_device::drop`
+if a user override was still active. This eventually resulted in
+a protocol error in `wl_data_offer::finish`, as the current action
+could still be `ask`.
+
+Fix this by only allowing a user override to `ask` before `drop` is
+called, thus making sure the final `set_actions` preference is
+honored.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2043>
+
+(cherry picked from commit 33b834c43373b715219d1b911813b59b2d0e2477)
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/1952
+Origin: upstream, 3.38.7, commit:5a6b3c4b67f2c07d4497e955f4a85a1a11474ca1
+---
+ src/wayland/meta-wayland-data-offer.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/wayland/meta-wayland-data-offer.c b/src/wayland/meta-wayland-data-offer.c
+index fa14fae..e9a7369 100644
+--- a/src/wayland/meta-wayland-data-offer.c
++++ b/src/wayland/meta-wayland-data-offer.c
+@@ -276,7 +276,9 @@ data_offer_choose_action (MetaWaylandDataOffer *offer)
+     return WL_DATA_DEVICE_MANAGER_DND_ACTION_NONE;
+ 
+   /* If the user is forcing an action, go for it */
+-  if ((user_action & available_actions) != 0)
++  if ((user_action & available_actions) != 0 &&
++      !(user_action == WL_DATA_DEVICE_MANAGER_DND_ACTION_ASK &&
++        meta_wayland_data_source_get_drop_performed (source)))
+     return user_action;
+ 
+   /* If the dest side has a preferred DnD action, use it */

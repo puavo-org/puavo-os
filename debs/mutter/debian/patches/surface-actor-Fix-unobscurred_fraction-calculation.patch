@@ -1,0 +1,29 @@
+From: Robert Mader <robert.mader@posteo.de>
+Date: Sun, 19 Dec 2021 23:42:57 +0100
+Subject: surface-actor: Fix unobscurred_fraction calculation
+
+This calculation wrongly applied a `x2 - x1` pattern.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2169>
+
+(cherry picked from commit 6204769fdb8a048ee23f49be0ca532f8ff1d557a)
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/1971
+Origin: upstream, 3.38.7, commit:15ac84da2da518850e9c247b81d23becad223195
+---
+ src/compositor/meta-surface-actor.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/compositor/meta-surface-actor.c b/src/compositor/meta-surface-actor.c
+index bdf4272..75622f6 100644
+--- a/src/compositor/meta-surface-actor.c
++++ b/src/compositor/meta-surface-actor.c
+@@ -523,7 +523,7 @@ meta_surface_actor_is_obscured_on_stage_view (MetaSurfaceActor *self,
+           cairo_rectangle_int_t rect;
+ 
+           cairo_region_get_rectangle (intersection_region, i, &rect);
+-          intersection_size += (rect.width - rect.x) * (rect.height - rect.x);
++          intersection_size += rect.width * rect.height;
+         }
+       cairo_region_destroy (intersection_region);
+ 

@@ -1,0 +1,33 @@
+From: Dor Askayo <dor.askayo@gmail.com>
+Date: Fri, 1 Oct 2021 23:40:53 +0300
+Subject: xwayland: Fix condition for queuing a window to
+ META_QUEUE_CALC_SHOWING
+
+This logic was changed by accident in df642eb15. The change caused every
+Xwayland window to be queued to META_QUEUE_CALC_SHOWING on every surface
+commit. As a result, X11 window management events, including _NET_WM_STATE,
+were dispatched at clients on every single frame.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2032>
+
+(cherry picked from commit 98d5aa159e0eb9f433b211044ce30cd612d42734)
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/1955
+Origin: upstream, 3.38.7, commit:bb85f21d1f0c7ff7d65fc4a89f41c9fed6025f05
+---
+ src/wayland/meta-xwayland-surface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/wayland/meta-xwayland-surface.c b/src/wayland/meta-xwayland-surface.c
+index 11f5801..f86d7d4 100644
+--- a/src/wayland/meta-xwayland-surface.c
++++ b/src/wayland/meta-xwayland-surface.c
+@@ -166,7 +166,7 @@ meta_xwayland_surface_pre_apply_state (MetaWaylandSurfaceRole  *surface_role,
+   MetaXwaylandSurface *xwayland_surface = META_XWAYLAND_SURFACE (surface_role);
+ 
+   if (pending->newly_attached &&
+-      surface->buffer_ref->buffer &&
++      !surface->buffer_ref->buffer &&
+       xwayland_surface->window)
+     meta_window_queue (xwayland_surface->window, META_QUEUE_CALC_SHOWING);
+ }

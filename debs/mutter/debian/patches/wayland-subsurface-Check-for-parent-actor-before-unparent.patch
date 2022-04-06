@@ -1,0 +1,29 @@
+From: Robert Mader <robert.mader@posteo.de>
+Date: Fri, 6 Aug 2021 13:12:26 +0200
+Subject: wayland/subsurface: Check for parent actor before unparenting
+
+No need to assume the actor still has a parent. This silences warnings
+in normal builds and prevents a crash in fully optimized ones.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1958>
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/1892
+Origin: upstream, 3.38.7, commit:0db4ac7373965011a0fb2d3ff0465c227333d4c3
+---
+ src/wayland/meta-wayland-subsurface.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/wayland/meta-wayland-subsurface.c b/src/wayland/meta-wayland-subsurface.c
+index e876277..e8842a7 100644
+--- a/src/wayland/meta-wayland-subsurface.c
++++ b/src/wayland/meta-wayland-subsurface.c
+@@ -291,7 +291,8 @@ unparent_actor (MetaWaylandSurface *surface)
+     return;
+ 
+   parent_actor = clutter_actor_get_parent (actor);
+-  clutter_actor_remove_child (parent_actor, actor);
++  if (parent_actor)
++    clutter_actor_remove_child (parent_actor, actor);
+ }
+ 
+ static void
