@@ -1018,8 +1018,8 @@ update_dmi_table(struct dmi *dmi_table, size_t tablesize)
 		}
 
 		/* Note that .value may be NULL here.  Because some hardware
-		/* may lack the dmi values, a warning message is adequate and
-		/* we do not need to return an error. */
+		 * may lack the dmi values, a warning message is adequate and
+		 * we do not need to return an error. */
 		dmi_table[i].value = get_first_line(id_path);
 	}
 
