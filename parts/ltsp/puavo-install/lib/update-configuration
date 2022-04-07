@@ -137,6 +137,18 @@ def update_device_json(restclient)
   tmp_filepath = "#{ state_device_json_path }.tmp"
   File.open(tmp_filepath, 'w') { |f| f.write(device.to_json) }
 
+  system('puavo-conf-update', '--devicejson-path', tmp_filepath)
+  unless $?.exited? then
+    FileUtils.rm_f(tmp_filepath)
+    raise 'puavo-conf-update did not exit properly,' \
+            + ' not using the new device.json'
+  end
+
+  puavo_conf_update_exit_status = $?.exitstatus
+
+  # We can use the new device.json even if puavo-conf-update found some error,
+  # because puavo-conf-update must have handled the error.
+
   replace_if_changed(state_device_json_path, tmp_filepath)
 
   if remove_primary_user_override then
@@ -149,7 +161,9 @@ def update_device_json(restclient)
   FileUtils.cp(state_device_json_path, tmp_filepath)
   replace_if_changed(device_json_path, tmp_filepath)
 
-  run('puavo-conf-update')
+  errmsg = 'error in running puavo-conf-update: exit status' \
+             + " #{ puavo_conf_update_exit_status }"
+  raise errmsg unless puavo_conf_update_exit_status == 0
 end
 
 def update_external_files(restclient)
