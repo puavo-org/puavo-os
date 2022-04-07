@@ -24,6 +24,7 @@ require 'etc'
 require 'json'
 require 'facter'
 require 'open3'
+require 'sys/proctable'
 
 def lookup_free_space(fs_path)
   begin
@@ -41,6 +42,27 @@ def lookup_free_space(fs_path)
   end
 
   return nil
+end
+
+def lookup_xrandr()
+  displays = {}
+
+  Sys::ProcTable.ps.each do |p|
+    disp = p.environ['DISPLAY']
+    xauthority = p.environ['XAUTHORITY']
+    next unless disp && xauthority
+    next if displays[disp]
+    displays[disp] = xauthority
+  end
+
+  last_display = displays.keys.sort.last
+  return '' unless last_display
+
+  xauthority = displays[last_display]
+  cmd_env = { 'DISPLAY' => last_display, 'XAUTHORITY' => xauthority }
+  IO.popen([ cmd_env, 'xrandr', '-q' ]) do |io|
+    return io.read
+  end
 end
 
 class SystemInfoCollector < DBus::Object
@@ -253,12 +275,7 @@ class SystemInfoCollector < DBus::Object
 
           xrandr_output = nil
           begin
-            gdm_uid = Etc.getpwnam('Debian-gdm').uid
-            gdm_xauthority_path = "/run/user/#{ gdm_uid }/gdm/Xauthority"
-            cmd_env = { 'DISPLAY' => ':0', 'XAUTHORITY' => gdm_xauthority_path }
-            IO.popen([ cmd_env, 'xrandr', '-q' ]) do |io|
-              xrandr_output = io.read
-            end
+            xrandr_output = lookup_xrandr()
           rescue StandardError => e
             warn "could not query xrandr output: #{ e.message }"
           end

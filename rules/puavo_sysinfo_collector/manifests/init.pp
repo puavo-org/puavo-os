@@ -22,7 +22,8 @@ class puavo_sysinfo_collector {
 
     '/usr/sbin/puavo-sysinfo-collector':
       mode    => '0755',
-      require => File['/etc/dbus-1/system.d/org.puavo.sysinfo.conf'],
+      require => [ File['/etc/dbus-1/system.d/org.puavo.sysinfo.conf']
+                 , Package['ruby-sys-proctable'] ],
       source  => 'puppet:///modules/puavo_sysinfo_collector/puavo-sysinfo-collector';
   }
 
@@ -45,5 +46,5 @@ class puavo_sysinfo_collector {
       source  => 'puppet:///modules/puavo_sysinfo_collector/puavo-send-sysinfo-to-puavo';
   }
 
-  Package <| title == systemd |>
+  Package <| title == "ruby-sys-proctable" or title == systemd |>
 }

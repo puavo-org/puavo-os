@@ -136,6 +136,7 @@ class packages {
     , 'pwman3'
     , 'read-edid'
     , 'rsyslog'
+    , 'ruby-sys-proctable'
     , 'screen'
     , 'secure-delete'
     , 'setserial'
