@@ -20,9 +20,10 @@ class image::bundle::basic {
   include ::pam
   include ::plymouth
   include ::puavo_external_files
-  include ::puavo_shutdown
   include ::puavomenu
+  include ::puavo_shutdown
   include ::rpcgssd
+  include ::ssh_server
   include ::sysctl
   include ::syslog
   include ::systemd
