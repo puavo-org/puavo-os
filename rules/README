@@ -160,10 +160,6 @@ puavo_shutdown
 rpcgssd
     Configure rpc-gssd for netboot devices.
 
-ssh_client
-    Settings for openssh client.  XXX these actually weaken security from
-    default, should find a way to do this in a smarter way.
-
 themes
     Themes for desktop.
 

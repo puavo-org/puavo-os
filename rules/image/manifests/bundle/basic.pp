@@ -23,7 +23,6 @@ class image::bundle::basic {
   include ::puavo_shutdown
   include ::puavomenu
   include ::rpcgssd
-  include ::ssh_client
   include ::sysctl
   include ::syslog
   include ::systemd
