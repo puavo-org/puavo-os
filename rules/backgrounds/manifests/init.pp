@@ -16,6 +16,9 @@ class backgrounds {
   }
 
   file {
+    '/etc/X11/Xsession.d/72puavo-ensure-desktop-background':
+      source => 'puppet:///modules/backgrounds/72puavo-ensure-desktop-background';
+
     [ '/usr/share/backgrounds', $backgrounds_dir ]:
       ensure => directory;
   }

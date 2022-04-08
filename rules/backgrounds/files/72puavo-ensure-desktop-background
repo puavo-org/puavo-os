@@ -1,0 +1,17 @@
+puavo_background_exists() {
+  dconf read "$1" \
+    | perl -MURI::Escape -lne "
+	s/^'//; s/'\$//;
+	exit(0) unless m|^file:///|;
+	s|file://||;
+	-e uri_unescape(\$_) && exit(0);
+	exit(1);
+      "
+}
+
+for puavo_dconf_path in /org/gnome/desktop/background/picture-uri \
+                        /org/gnome/desktop/screensaver/picture-uri; do
+  if ! puavo_background_exists "$puavo_dconf_path"; then
+    dconf reset "$puavo_dconf_path"
+  fi
+done
