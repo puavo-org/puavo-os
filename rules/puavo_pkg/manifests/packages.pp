@@ -61,7 +61,7 @@ class puavo_pkg::packages {
 			, 'tilitin'
 			, 't-lasku'
 			, 'tmux-plugins-battery'
-			, 'ubuntu-wallpapers'
+			, 'ubuntu-wallpapers-bullseye'
 			, 'unityhub-appimage'
 			, 'veracrypt'
 			, 'vstloggerpro'
