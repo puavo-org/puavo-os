@@ -10,7 +10,7 @@ class backgrounds {
     file {
       "${::backgrounds::backgrounds_dir}/${background_file}":
         ensure  => link,
-        require => Puavo_pkg::Install['ubuntu-wallpapers'],
+        require => Puavo_pkg::Install['ubuntu-wallpapers-bullseye'],
         target  => "../${background_file}";
     }
   }
@@ -39,5 +39,5 @@ class backgrounds {
     , 'Wall_with_door_on_Gozo_by_Matthias_Niess.jpg' ]: ;
   }
 
-  Puavo_pkg::Install <| title == 'ubuntu-wallpapers' |>
+  Puavo_pkg::Install <| title == 'ubuntu-wallpapers-bullseye' |>
 }

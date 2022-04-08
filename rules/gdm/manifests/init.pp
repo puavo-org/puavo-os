@@ -22,7 +22,8 @@ class gdm {
     '/etc/gdm3/background.img':
       ensure  => link,
       replace => false, # just initial setup, see setup_loginscreen_background
-      require => [ Package['gdm3'], Puavo_pkg::Install['ubuntu-wallpapers'], ],
+      require => [ Package['gdm3']
+                 , Puavo_pkg::Install['ubuntu-wallpapers-bullseye'], ],
       target  => '/usr/share/backgrounds/Grass_by_Jeremy_Hill.jpg';
 
     '/etc/gdm3/daemon.conf':
@@ -99,5 +100,5 @@ class gdm {
     or title == puavo-ltsp-client
   |>
 
-  Puavo_pkg::Install <| title == ubuntu-wallpapers |>
+  Puavo_pkg::Install <| title == 'ubuntu-wallpapers-bullseye' |>
 }
