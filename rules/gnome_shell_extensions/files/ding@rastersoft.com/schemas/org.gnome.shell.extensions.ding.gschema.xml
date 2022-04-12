@@ -12,18 +12,25 @@
         <value value="2" nick="bottom-left"/>
         <value value="3" nick="bottom-right"/>
     </enum>
+        <enum id="org.gnome.shell.extension.ding.ArrangeOrder">
+        <value value="1" nick="NAME"/>
+        <value value="2" nick="DESCENDINGNAME"/>
+        <value value="3" nick="MODIFIEDTIME"/>
+        <value value="4" nick="KIND"/>
+        <value value="5" nick="SIZE"/>
+    </enum>
     <schema path="/org/gnome/shell/extensions/ding/" id="org.gnome.shell.extensions.ding">
     <key name="icon-size" enum="org.gnome.shell.extension.ding.ZoomLevel">
         <default>'standard'</default>
         <summary>Icon size</summary>
         <description>Set the size for the desktop icons.</description>
     </key>
-	<key type="b" name="show-home">
+    <key type="b" name="show-home">
         <default>true</default>
         <summary>Show personal folder</summary>
         <description>Show the personal folder in the desktop.</description>
     </key>
-	<key type="b" name="show-trash">
+    <key type="b" name="show-trash">
         <default>true</default>
         <summary>Show trash icon</summary>
         <description>Show the trash icon in the desktop.</description>
@@ -53,5 +60,45 @@
         <summary>Shows a rectangle in the destination place during DnD</summary>
         <description>When doing a Drag'n'Drop operation, marks the place in the grid where the icon will be put with a semitransparent rectangle.</description>
     </key>
-  </schema>
+    <key type="b" name="sort-special-folders">
+        <default>false</default>
+        <summary>Sort Special Folders - Home/Trash Drives.</summary>
+        <description>When arranging Icons on desktop, to sort and change the position of the Home, Trash and mounted Network or External Drives</description>
+    </key>
+    <key type="b" name="keep-arranged">
+        <default>false</default>
+        <summary>Keep Icons Arranged</summary>
+        <description>Always keep Icons Arranged by the last arranged order</description>
+    </key>
+    <key name="arrangeorder" enum="org.gnome.shell.extension.ding.ArrangeOrder">
+        <default>'NAME'</default>
+        <summary>Arrange Order</summary>
+        <description>Icons Arranged by this property</description>
+    </key>
+    <key type="b" name="keep-stacked">
+        <default>false</default>
+        <summary>Keep Icons Stacked</summary>
+        <description>Always keep Icons Stacked, Similar types are grouped</description>
+    </key>
+    <key type="as" name="unstackedtypes">
+        <default>[]</default>
+        <summary>Type of Files to not Stack</summary>
+        <description>An Array of strings types, Don't Stack these types of files</description>
+    </key>
+    <key type="b" name="use-nemo">
+        <default>false</default>
+        <summary>Use Nemo to open folders</summary>
+        <description>Use Nemo instead of Nautilus to open folders.</description>
+    </key>
+    <key type="b" name="show-link-emblem">
+        <default>true</default>
+        <summary>Add an emblem to links</summary>
+        <description>Add an emblem to allow to identify soft links.</description>
+    </key>
+    <key type="b" name="dark-text-in-labels">
+        <default>false</default>
+        <summary>Use black for label text</summary>
+        <description>Paint the label text in black instead of white. Useful when using light backgrounds.</description>
+    </key>
+    </schema>
 </schemalist>

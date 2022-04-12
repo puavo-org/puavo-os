@@ -29,70 +29,154 @@ let codePath = '.';
 let errorFound = false;
 let asDesktop = false;
 let primaryIndex = 0;
+let desktopVariants = [];
+let remoteDingActions;
 
-for(let arg of ARGV) {
-    if (lastCommand == null) {
-        switch(arg) {
-        case '-E':
-            // run it as a true desktop (transparent window and so on)
-            asDesktop = true;
-            break;
-        case '-P':
-        case '-D':
-        case '-M':
-            lastCommand = arg;
-            break;
-        default:
-            print(`Parameter ${arg} not recognized. Aborting.`);
-            errorFound = true;
+function parseCommandLine(argv) {
+    desktops = [];
+    for(let arg of argv) {
+        if (lastCommand == null) {
+            switch(arg) {
+            case '-E':
+                // run it as a true desktop (transparent window and so on)
+                asDesktop = true;
+                break;
+            case '-P':
+            case '-D':
+            case '-M':
+                lastCommand = arg;
+                break;
+            default:
+                print(`Parameter ${arg} not recognized. Aborting.`);
+                errorFound = true;
+                break;
+            }
+            continue;
+        }
+        if (errorFound) {
             break;
         }
-        continue;
+        switch(lastCommand) {
+        case '-P':
+            codePath = arg;
+            break;
+        case '-D':
+            let data = arg.split(":");
+            desktops.push({
+                x:parseInt(data[0]),
+                y:parseInt(data[1]),
+                width:parseInt(data[2]),
+                height:parseInt(data[3]),
+                zoom:parseFloat(data[4]),
+                marginTop:parseInt(data[5]),
+                marginBottom:parseInt(data[6]),
+                marginLeft:parseInt(data[7]),
+                marginRight:parseInt(data[8]),
+                monitorIndex:parseInt(data[9])
+            });
+            let datavariant = new GLib.Variant ('a{sd}', {
+                x:parseInt(data[0]),
+                y:parseInt(data[1]),
+                width:parseInt(data[2]),
+                height:parseInt(data[3]),
+                zoom:parseFloat(data[4]),
+                marginTop:parseInt(data[5]),
+                marginBottom:parseInt(data[6]),
+                marginLeft:parseInt(data[7]),
+                marginRight:parseInt(data[8]),
+                monitorIndex:parseInt(data[9])
+            });
+            desktopVariants.push(datavariant);
+            break;
+        case '-M':
+            primaryIndex = parseInt(arg);
+            break;
+        }
+        lastCommand = null;
     }
-    if (errorFound) {
-        break;
+    if (desktops.length == 0) {
+        /* if no desktop list is provided, like when launching the program in stand-alone mode,
+         * configure a 1280x720 desktop
+         */
+        desktops.push({x:0, y:0, width: 1280, height: 720, zoom: 1, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0, monitorIndex: 0});
+        desktopVariants.push(new GLib.Variant ('a{sd}', {x:0, y:0, width: 1280, height: 720, zoom: 1, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0, monitorIndex: 0}));
     }
-    switch(lastCommand) {
-    case '-P':
-        codePath = arg;
-        break;
-    case '-D':
-        let data = arg.split(":");
-        desktops.push({x:parseInt(data[0]), y:parseInt(data[1]), width:parseInt(data[2]), height:parseInt(data[3]), zoom:parseFloat(data[4])});
-        break;
-    case '-M':
-        primaryIndex = parseInt(arg);
-        break;
-    }
-    lastCommand = null;
 }
 
-if (desktops.length == 0) {
-    /* if no desktop list is provided, like when launching the program in stand-alone mode,
-     * configure a 1280x720 desktop
-     */
-    desktops.push({x:0, y:0, width: 1280, height: 720, zoom: 1});
-}
+parseCommandLine(ARGV);
 
 // this allows to import files from the current folder
 
 imports.searchPath.unshift(codePath);
 
+const DBusUtils = imports.dbusUtils;
 const Prefs = imports.preferences;
 const Gettext = imports.gettext;
 
-Gettext.bindtextdomain("ding", GLib.build_filenamev([codePath, "locale"]));
+let localePath = GLib.build_filenamev([codePath, "locale"]);
+if (Gio.File.new_for_path(localePath).query_exists(null)) {
+    Gettext.bindtextdomain("ding", localePath);
+}
 
 const DesktopManager = imports.desktopManager;
 
-if (!errorFound) {
-    Gtk.init(null);
+var desktopManager = null;
+
+if (asDesktop) {
+    remoteDingActions = Gio.DBusActionGroup.get(
+        Gio.DBus.session,
+        'com.rastersoft.ding',
+        '/com/rastersoft/ding/actions'
+    );
+} else {
+    remoteDingActions = Gio.DBusActionGroup.get(
+        Gio.DBus.session,
+        'com.rastersoft.dingtest',
+        '/com/rastersoft/dingtest/actions'
+    );
+}
+
+// Use different AppIDs to allow to test it from a command line while the main desktop is also running from the extension
+const dingApp = new Gtk.Application({application_id: asDesktop ? 'com.rastersoft.ding' : 'com.rastersoft.dingtest',
+                                     flags: Gio.ApplicationFlags.HANDLES_COMMAND_LINE});
+
+dingApp.connect('startup', () => {
     Prefs.init(codePath);
-    var desktopManager = new DesktopManager.DesktopManager(desktops, codePath, asDesktop, primaryIndex);
-    Gtk.main();
-    // return value
+    DBusUtils.init();
+});
+
+dingApp.connect('activate', () => {
+    if (!desktopManager) {
+        desktopManager = new DesktopManager.DesktopManager(dingApp,
+                                                           desktops,
+                                                           codePath,
+                                                           asDesktop,
+                                                           primaryIndex);
+    }
+});
+
+dingApp.connect('command-line', (app, commandLine) => {
+    let argv =[];
+    argv = commandLine.get_arguments();
+    parseCommandLine(argv);
+    if (! errorFound) {
+        if (commandLine.get_is_remote()) {
+            desktopManager.updateGridWindows(desktops);
+            // If testing Dbus activations, comment the above and uncomment the following
+            //remoteDingActions.activate_action('updateGridWindows', new GLib.Variant('av', desktopVariants));
+        } else {
+            dingApp.activate();
+        }
+        commandLine.set_exit_status(0);
+    } else {
+        commandLine.set_exit_status(1);
+    }
+});
+
+dingApp.run(ARGV);
+
+if (!errorFound) {
     0;
 } else {
-    // return value
     1;
 }
