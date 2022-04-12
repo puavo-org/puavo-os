@@ -26,16 +26,36 @@ gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 
-from gi.repository import AyatanaAppIndicator3
-from gi.repository import GLib
-from gi.repository import Gtk
-from gi.repository import Notify
+from gi.repository import AyatanaAppIndicator3, Gdk, GLib, Gtk, Notify
 
 gettext.bindtextdomain('puavo-veyon-applet', '/usr/share/locale')
 gettext.textdomain('puavo-veyon-applet')
 _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+CSS = b"""
+#pin_entry {
+    background-color: white;
+    color: black;
+    margin-left: 0.5em;
+}
+
+#pin_window {
+    background-color: rgba(1.0, 1.0, 1.0, 0.85);
+    color: orange;
+    font-size: 3em;
+}
+"""
+
+style_provider = Gtk.CssProvider()
+style_provider.load_from_data(CSS)
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(),
+    style_provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+)
 
 
 def logmsg(priority, message):
@@ -687,9 +707,9 @@ class VeyonSlave(PuavoWidget):
       self.pin_window.present()
       return
 
-    self.label = Gtk.Label(label='Provide a PIN for Veyon session:')
+    self.label = Gtk.Label(label='PIN for Veyon session:')
 
-    self.pin_entry = Gtk.Entry()
+    self.pin_entry = Gtk.Entry(name='pin_entry')
     self.pin_entry.set_input_purpose(Gtk.InputPurpose.DIGITS)
     self.pin_entry.set_max_length(5)
     self.pin_entry.set_width_chars(5)
@@ -702,7 +722,11 @@ class VeyonSlave(PuavoWidget):
     self.alignment = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
     self.alignment.add(self.box)
 
-    self.pin_window = Gtk.Window()
+    self.pin_window = Gtk.Window(name='pin_window')
+    screen = self.pin_window.get_screen()
+    visual = screen.get_rgba_visual()
+    self.pin_window.set_visual(visual)
+
     self.pin_window.connect('destroy', self.pin_window_closed)
     self.pin_window.fullscreen()
 
