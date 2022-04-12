@@ -19,11 +19,20 @@
 const Gtk = imports.gi.Gtk;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Gdk = imports.gi.Gdk;
 const Prefs = imports.preferences;
 const Enums = imports.enums;
 const Gettext = imports.gettext.domain('ding');
 
 const _ = Gettext.gettext;
+
+function getModifiersInDnD(context, modifiersToCheck) {
+    let device = context.get_device();
+    let display = device.get_display();
+    let keymap = Gdk.Keymap.get_for_display(display);
+    let modifiers = keymap.get_modifier_state();
+    return ((modifiers & modifiersToCheck) != 0);
+}
 
 function getDesktopDir() {
     let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
@@ -35,14 +44,22 @@ function getScriptsDir() {
     return Gio.File.new_for_commandline_arg(scriptsDir);
 }
 
+function getTemplatesDir() {
+    let templatesDir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_TEMPLATES);
+    if ((templatesDir == GLib.get_home_dir()) || (templatesDir == null)) {
+        return null;
+    }
+    return Gio.File.new_for_commandline_arg(templatesDir)
+}
+
 function clamp(value, min, max) {
     return Math.max(Math.min(value, max), min);
 };
 
-function spawnCommandLine(command_line) {
+function spawnCommandLine(command_line, environ=null) {
     try {
         let [success, argv] = GLib.shell_parse_argv(command_line);
-        trySpawn(null, argv);
+        trySpawn(null, argv, environ);
     } catch (err) {
         print(`${command_line} failed with ${err}`);
     }
@@ -56,10 +73,10 @@ function launchTerminal(workdir, command) {
         argv.push('-e');
         argv.push(command);
     }
-    trySpawn(workdir, argv);
+    trySpawn(workdir, argv, null);
 }
 
-function trySpawn(workdir, argv) {
+function trySpawn(workdir, argv, environ=null) {
     /* The following code has been extracted from GNOME Shell's
      * source code in Misc.Util.trySpawn function and modified to
      * set the working directory.
@@ -69,7 +86,7 @@ function trySpawn(workdir, argv) {
 
     var success, pid;
     try {
-        [success, pid] = GLib.spawn_async(workdir, argv, null,
+        [success, pid] = GLib.spawn_async(workdir, argv, environ,
                                           GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
                                           null);
     } catch (err) {
@@ -94,6 +111,21 @@ function trySpawn(workdir, argv) {
     // because then we lose the parent-child relationship, which
     // can break polkit.  See https://bugzilla.redhat.com//show_bug.cgi?id=819275
     GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, () => {});
+}
+
+function getFilteredEnviron() {
+    let environ = [];
+    for (let env of GLib.get_environ()) {
+        /* It's a must to remove the WAYLAND_SOCKET environment variable
+            because, under Wayland, DING uses an specific socket to allow the
+            extension to detect its windows. But the scripts must run under
+            the normal socket */
+        if (env.startsWith('WAYLAND_SOCKET=')) {
+            continue;
+        }
+        environ.push(env);
+    }
+    return environ;
 }
 
 function distanceBetweenPoints(x, y, x2, y2) {
@@ -181,54 +213,6 @@ function getFilesFromNautilusDnD(selection, type) {
     return retval;
 }
 
-
-function isExecutable(mimetype, file_name) {
-
-    if (Gio.content_type_can_be_executable(mimetype)) {
-        // Gnome Shell 40 removed this option
-        try {
-            var action = Prefs.nautilusSettings.get_string('executable-text-activation');
-        } catch(e) {
-            var action = 'ask';
-        }
-        switch (action) {
-            default: // display
-                return Enums.WhatToDoWithExecutable.DISPLAY;
-            case 'launch':
-                return Enums.WhatToDoWithExecutable.EXECUTE;
-            case 'ask':
-                let dialog = new Gtk.MessageDialog({
-                    text: _("Do you want to run “{0}”, or display its contents?").replace('{0}', file_name),
-                    secondary_text: _("“{0}” is an executable text file.").replace('{0}', file_name),
-                    message_type: Gtk.MessageType.QUESTION,
-                    buttons: Gtk.ButtonsType.NONE
-                });
-                dialog.add_button(_("Execute in a terminal"),
-                                  Enums.WhatToDoWithExecutable.EXECUTE_IN_TERMINAL);
-                dialog.add_button(_("Show"),
-                                  Enums.WhatToDoWithExecutable.DISPLAY);
-                dialog.add_button(_("Cancel"),
-                                  Gtk.ResponseType.CANCEL);
-                dialog.add_button(_("Execute"),
-                                  Enums.WhatToDoWithExecutable.EXECUTE);
-                dialog.set_default_response(Gtk.ResponseType.CANCEL);
-
-                dialog.show_all();
-                let result = dialog.run();
-                dialog.destroy();
-                if ((result != Enums.WhatToDoWithExecutable.EXECUTE) &&
-                    (result != Enums.WhatToDoWithExecutable.EXECUTE_IN_TERMINAL) &&
-                    (result != Enums.WhatToDoWithExecutable.DISPLAY)) {
-                        return Gtk.ResponseType.CANCEL;
-                } else {
-                        return result;
-                }
-        }
-    } else {
-        return Enums.WhatToDoWithExecutable.DISPLAY;
-    }
-}
-
 function writeTextFileToDesktop(text, filename, dropCoordinates) {
     let path = GLib.build_filenamev([GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP),  filename]);
     let file = Gio.File.new_for_path(path);
@@ -243,4 +227,41 @@ function writeTextFileToDesktop(text, filename, dropCoordinates) {
             file.set_attributes_from_info(info, Gio.FileQueryInfoFlags.NONE, null);
         } catch(e) {}
     }
+}
+
+function windowHidePagerTaskbarModal(window, modal) {
+    let using_X11 = Gdk.Display.get_default().constructor.$gtype.name === 'GdkX11Display';
+    if (using_X11) {
+        window.set_type_hint(Gdk.WindowTypeHint.NORMAL);
+        window.set_skip_taskbar_hint(true);
+        window.set_skip_pager_hint(true);
+    } else {
+        let title = window.get_title();
+        if (title == null) {
+            title = "";
+        }
+        if (modal) {
+            title = title + '  ';
+        } else {
+            title = title + ' ';
+        }
+        window.set_title(title);
+    }
+    if (modal) {
+        window.connect('focus-out-event', () => {
+            window.set_keep_above(true);
+            window.stick();
+            window.grab_focus();
+        });
+        window.grab_focus();
+    }
+}
+
+function waitDelayMs(ms) {
+    return new Promise( (resolve, reject) => {
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+            resolve();
+            return false;
+        });
+    });
 }

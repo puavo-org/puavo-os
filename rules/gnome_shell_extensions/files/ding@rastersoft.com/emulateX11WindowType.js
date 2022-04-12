@@ -33,26 +33,39 @@ class ManageWindow {
        * D : show this window in all desktops
        * H : hide this window from window list
 
-       Using the title is not a problem because this is only useful for windows
-       without decorations.
+       Using the title is generally not a problem because the desktop windows
+       doesn't have a tittle. But some other windows may have and still need to
+       take advantage of this, so adding a single blank space at the end of the
+       title is equivalent to @!H, and having two blank spaces at the end of the
+       title is equivalent to @!HTD. This allows to take advantage of these flags
+       even to decorated windows.
     */
 
-    constructor(window, wayland_client) {
+    constructor(window, wayland_client, changedStatusCB) {
         this._wayland_client = wayland_client;
         this._window = window;
         this._signalIDs = [];
+        this._changedStatusCB = changedStatusCB;
         this._signalIDs.push(window.connect_after('raised', () => {
             if (this._keepAtBottom && !this._keepAtTop) {
                 this._window.lower();
             }
         }));
         this._signalIDs.push(window.connect('position-changed', () => {
-            if ((this._x !== null) && (this._y !== null)) {
-                this._window.move_frame(false, this._x, this._y);
+            if (this._fixed && (this._x !== null) && (this._y !== null)) {
+                this._window.move_frame(true, this._x, this._y);
             }
         }));
         this._signalIDs.push(window.connect("notify::title", () => {
             this._parseTitle();
+        }));
+        this._signalIDs.push(window.connect("notify::above", () => {
+            if (this._keepAtBottom && this._window.above) {
+                this._window.unmake_above();
+            }
+        }));
+        this._signalIDs.push(window.connect("notify::minimized", () => {
+            this._window.unminimize();
         }));
         this._parseTitle();
     }
@@ -80,8 +93,16 @@ class ManageWindow {
         this._keepAtTop = false;
         this._showInAllDesktops = false;
         this._hideFromWindowList = false;
+        this._fixed = false;
         let title = this._window.get_title();
         if (title != null) {
+            if ((title.length > 0) && (title[title.length-1] == ' ')) {
+                if ((title.length > 1) && (title[title.length-2] == ' ')) {
+                    title = "@!HTD";
+                } else {
+                    title = "@!H";
+                }
+            }
             let pos = title.search("@!");
             if (pos != -1) {
                 let pos2 = title.search(";", pos)
@@ -95,10 +116,10 @@ class ManageWindow {
                     this._x = parseInt(coords[0]);
                     this._y = parseInt(coords[1]);
                 } catch(e) {
-                    print(`Exception ${e.message}`);
+                    global.log(`Exception ${e.message}.\n${e.stack}`);
                 }
                 try {
-                    let extra_chars = title.substring(pos2).trim().toUpperCase();
+                    let extra_chars = title.substring(pos+2).trim().toUpperCase();
                     for (let char of extra_chars) {
                         switch (char) {
                         case 'B':
@@ -115,10 +136,13 @@ class ManageWindow {
                         case 'H':
                             this._hideFromWindowList = true;
                             break;
+                        case 'F':
+                            this._fixed = true;
+                            break;
                         }
                     }
                 } catch(e) {
-                    print(`Exception ${e.message}`);
+                    global.log(`Exception ${e.message}.\n${e.stack}`);
                 }
             }
             if (this._wayland_client) {
@@ -138,21 +162,22 @@ class ManageWindow {
             if (this._keepAtBottom) {
                 this._window.lower();
             }
-            if ((this._x !== null) && (this._y !== null)) {
-                this._window.move_frame(false, this._x, this._y);
+            if (this._fixed && (this._x !== null) && (this._y !== null)) {
+                this._window.move_frame(true, this._x, this._y);
             }
+            this._changedStatusCB(this);
         }
     }
 
     refreshState(checkWorkspace) {
-        if (this._keepAtBottom) {
-            this._window.lower();
-        }
         if (checkWorkspace && this._showInAllDesktops) {
             let currentWorkspace = global.workspace_manager.get_active_workspace();
             if (!this._window.located_on_workspace(currentWorkspace)) {
                 this._window.change_workspace(currentWorkspace);
             }
+        }
+        if (this._keepAtBottom) {
+            this._window.lower();
         }
     }
 
@@ -192,7 +217,6 @@ var EmulateX11WindowType = class {
         if (this._isX11) {
             return;
         }
-        replaceMethod(Shell.Global, 'get_window_actors', newGetWindowActors);
         this._idMap = global.window_manager.connect_after('map', (obj, windowActor) => {
             let window = windowActor.get_meta_window();
             if (this._wayland_client && this._wayland_client.query_window_belongs_to(window)) {
@@ -222,7 +246,7 @@ var EmulateX11WindowType = class {
             this._enableRefresh = false;
         });
 
-		this._hidingId = Main.overview.connect('hiding', () => {
+        this._hidingId = Main.overview.connect('hiding', () => {
             this._enableRefresh = true;
             this._refreshWindows(true);
         });
@@ -240,12 +264,6 @@ var EmulateX11WindowType = class {
             this._clearWindow(window);
         }
         this._windowList = [];
-
-        // restore external methods only if have been intercepted
-        if (replaceData.old_get_window_actors) {
-            Shell.Global.prototype['get_window_actors'] = replaceData.old_get_window_actors;
-        }
-        replaceData = {};
 
         // disconnect signals
         if (this._idMap) {
@@ -277,7 +295,9 @@ var EmulateX11WindowType = class {
         if (window.get_meta_window) { // it is a MetaWindowActor
             window = window.get_meta_window();
         }
-        window.customJS_ding = new ManageWindow(window, this._wayland_client);
+        window.customJS_ding = new ManageWindow(window, this._wayland_client, () => {
+            this._refreshWindows(true);
+        });
         this._windowList.push(window);
         window.customJS_ding.unmanagedID = window.connect("unmanaged", (window) => {
             this._clearWindow(window);
@@ -301,10 +321,20 @@ var EmulateX11WindowType = class {
                     if (checkWorkspace) {
                         // activate the top-most window
                         let windows = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace());
+                        let anyActive = false;
                         for (let window of windows) {
                             if ((!window.customJS_ding || !window.customJS_ding._keepAtBottom) && !window.minimized) {
                                 Main.activateWindow(window);
+                                anyActive = true;
                                 break;
+                            }
+                        }
+                        if (!anyActive) {
+                            for (let window of this._windowList) {
+                                if (window.customJS_ding && window.customJS_ding._keepAtBottom && !window.minimized) {
+                                    Main.activateWindow(window);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -314,64 +344,4 @@ var EmulateX11WindowType = class {
             });
         }
     }
-}
-
-/**
- * Functions used to remove a window from the window list
- */
-
-let replaceData = {};
-
-/**
- * Replaces a method in a class with our own method, and stores the original
- * one in 'replaceData' using 'old_XXXX' (being XXXX the name of the original method),
- * or 'old_classId_XXXX' if 'classId' is defined. This is done this way for the
- * case that two methods with the same name must be replaced in two different
- * classes
- *
- * @param {class} className The class where to replace the method
- * @param {string} methodName The method to replace
- * @param {function} functionToCall The function to call as the replaced method
- * @param {string} [classId] an extra ID to identify the stored method when two
- *                           methods with the same name are replaced in
- *                           two different classes
- */
-function replaceMethod(className, methodName, functionToCall, classId) {
-    if (classId) {
-        replaceData['old_' + classId + '_' + methodName] = className.prototype[methodName];
-    } else {
-        replaceData['old_' + methodName] = className.prototype[methodName];
-    }
-    className.prototype[methodName] = functionToCall;
-}
-
-/**
- * Receives a list of metaWindow or metaWindowActor objects, and remove from it
- * our desktop window
- *
- * @param {GList} windowList A list of metaWindow or metaWindowActor objects
- * @returns {GList} The same list, but with the desktop window removed
- */
-function removeDesktopWindowFromList(windowList) {
-
-    let returnVal = [];
-    for (let element of windowList) {
-        let window = element;
-        if (window.get_meta_window) { // it is a MetaWindowActor
-            window = window.get_meta_window();
-        }
-        if (!window.customJS_ding || !window.customJS_ding.hideFromWindowList) {
-            returnVal.push(element);
-        }
-    }
-    return returnVal;
-}
-
-/**
- * Method replacement for Shell.Global.get_window_actors
- * It removes the desktop window from the list of windows in the Activities mode
- */
-function newGetWindowActors() {
-    let windowList = replaceData.old_get_window_actors.apply(this, []);
-    return removeDesktopWindowFromList(windowList);
 }

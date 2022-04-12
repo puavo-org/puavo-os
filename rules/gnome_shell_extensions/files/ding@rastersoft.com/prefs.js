@@ -18,27 +18,40 @@
  */
 
 const Gtk = imports.gi.Gtk;
-const Pango = imports.gi.Pango;
+const Gio = imports.gi.Gio;
+const GioSSS = Gio.SettingsSchemaSource;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Gettext = imports.gettext;
-
+const Me = ExtensionUtils.getCurrentExtension();
+const Enums = Me.imports.enums;
+const PrefsWindow = Me.imports.prefswindow;
 
 var _ = Gettext.domain('ding').gettext;
 
-function init() {}
+var nautilusSettings;
+var gtkSettings;
+var desktopSettings;
+
+function init() {
+    let schemaSource = GioSSS.get_default();
+    let schemaGtk = schemaSource.lookup(Enums.SCHEMA_GTK, true);
+    gtkSettings = new Gio.Settings({ settings_schema: schemaGtk });
+    let schemaObj = schemaSource.lookup(Enums.SCHEMA_NAUTILUS, true);
+    if (!schemaObj) {
+        nautilusSettings = null;
+    } else {
+        nautilusSettings = new Gio.Settings({ settings_schema: schemaObj });;
+    }
+    desktopSettings = PrefsWindow.get_schema(Me.dir.get_path(), Enums.SCHEMA);
+}
 
 function buildPrefsWidget() {
-    let extension = ExtensionUtils.getCurrentExtension();
 
-    let localedir = extension.dir.get_child('locale');
+    let localedir = Me.dir.get_child('locale');
     if (localedir.query_exists(null))
         Gettext.bindtextdomain('ding', localedir.get_path());
 
-    let frame = new Gtk.Label({ label: _("To configure Desktop Icons NG, do right-click in the desktop and choose the last item: 'Desktop Icons settings'"),
-                                lines: 5,
-                                justify: Gtk.Justification.CENTER,
-                                wrap: true,
-                                wrap_mode: Pango.WrapMode.WORD});
+    let frame = PrefsWindow.preferencesFrame(Gtk, desktopSettings, nautilusSettings, gtkSettings);
     if (frame.show_all) {
         frame.show_all();
     } else {
