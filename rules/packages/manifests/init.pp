@@ -483,10 +483,6 @@ class packages {
     , 'lftp'
     , 'remmina'
     , 'smbclient'
-    , 'veyon-configurator'
-    , 'veyon-master'
-    , 'veyon-plugins'
-    , 'veyon-service'
     , 'wget'
     , 'xtightvncviewer' ]:
       tag => [ 'tag_remote_access', 'tag_debian_desktop', ];

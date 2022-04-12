@@ -64,6 +64,7 @@ class puavo_pkg::packages {
 			, 'ubuntu-wallpapers-bullseye'
 			, 'unityhub-appimage'
 			, 'veracrypt'
+			, 'veyon'
 			, 'vstloggerpro'
 			, 'zoom' ]
 

@@ -1,5 +1,0 @@
-#!/bin/sh
-
-# make sure veyon-server picks up our x11vnc wrapper
-exec env PATH="/usr/local/lib/puavo-veyon:${PATH}" \
-         /usr/bin/veyon-server.distrib "$@"
