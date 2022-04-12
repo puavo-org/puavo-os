@@ -781,9 +781,6 @@
             "icon": "folder-home",
             "tags": "default, utility"
         },
-        "org.gnome.Screenshot": {
-            "tags": "default, utility, graphics"
-        },
         "org.gnome.SoundJuicer": {
             "tags": "default"
         },
@@ -933,6 +930,15 @@
                 "de": "Step Physik Simulator"
             },
             "tags": "default, education, science"
+        },
+        "org.kde.spectacle": {
+            "name": {
+                "fi": "Kuvakaappaus",
+                "en": "Screenshot",
+                "sv": "Skärmbild",
+                "de": "Bildschirmfoto"
+            },
+            "tags": "default, utility, graphics"
         },
         "org.kde.tellico": {
             "name": {
@@ -1528,7 +1534,7 @@
                 "veracrypt",
                 "system-config-printer",
                 "pavucontrol",
-                "org.gnome.Screenshot",
+                "org.kde.spectacle",
                 "simplescreenrecorder",
                 "veyon-configurator",
                 "veyon-master",
