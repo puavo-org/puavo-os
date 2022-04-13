@@ -49,8 +49,10 @@ CSS = b"""
 }
 
 #connection_label {
-  color: grey;
   font-size: 70%;
+}
+
+#connection_spinner {
   margin-bottom: 5em;
 }
 
@@ -754,9 +756,11 @@ class VeyonSlave(PuavoWidget):
     box_align.add(entry_and_cancel_box)
 
     self.connection_label = Gtk.Label(label='', name='connection_label')
+    self.connection_spinner = Gtk.Spinner(name='connection_spinner')
     window_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
     window_box.pack_start(box_align, True, False, 0)
     window_box.pack_start(self.connection_label, False, False, 0)
+    window_box.pack_start(self.connection_spinner, False, False, 0)
 
     self.pin_window = Gtk.Window(name='pin_window')
 
@@ -818,6 +822,7 @@ class VeyonSlave(PuavoWidget):
     self.pin_entry.set_sensitive(True)
     self.pin_entry.grab_focus()
     self.connection_label.set_markup('')
+    self.connection_spinner.stop()
 
 
   def handle_wrong_pin(self):
@@ -831,6 +836,7 @@ class VeyonSlave(PuavoWidget):
       markup = '<span color="%s">%s</span>' \
                  % ('red', 'no matching session found for PIN')
       self.connection_label.set_markup(markup)
+      self.connection_spinner.stop()
       GLib.timeout_add_seconds(2, self.reenable_pin_entry)
 
 
@@ -841,8 +847,9 @@ class VeyonSlave(PuavoWidget):
     entry.handler_unblock_by_func(self.pin_entry_changed)
     if len(new_text) == 5:
       self.pin_entry.set_sensitive(False)
-      markup = '<span color="%s">%s</span>' % ('grey', 'connecting...')
+      markup = '<span color="%s">%s</span>' % ('orange', 'connecting...')
       self.connection_label.set_markup(markup)
+      self.connection_spinner.start()
 
       for master_conn in self.veyon_masters.values():
         master_conn.send_public_key_request(new_text)
@@ -865,6 +872,7 @@ class VeyonSlave(PuavoWidget):
     if there_was_a_timeout and self.pin_window:
       markup = '<span color="%s">%s</span>' % ('red', 'timeout')
       self.connection_label.set_markup(markup)
+      self.connection_spinner.stop()
       self.pin_entry.set_sensitive(False)
       GLib.timeout_add_seconds(2, self.reenable_pin_entry)
 
