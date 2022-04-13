@@ -73,13 +73,15 @@ function preferencesFrame(_Gtk, desktopSettings, nautilusSettings, gtkSettings) 
         }));
     frame.add(buildSwitcher(desktopSettings, 'add-volumes-opposite', _('Add new drives to the opposite side of the screen')));
     frame.add(buildSwitcher(desktopSettings, 'show-drop-place', _("Highlight the drop place during Drag'n'Drop")));
-    frame.add(buildSwitcher(desktopSettings, 'use-nemo', _('Use Nemo to open folders')));
+//  Disable some extra options not necessary for our desktop experience - Puavo Devs
+//  frame.add(buildSwitcher(desktopSettings, 'use-nemo', _("Use Nemo to open folders")));
 
     frame.add(buildSwitcher(desktopSettings, 'show-link-emblem', _('Add an emblem to soft links')));
 
     frame.add(buildSwitcher(desktopSettings, 'dark-text-in-labels', _('Use dark text in icon labels')));
 
-    frame.add(new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL}));
+// Disable some extra options not necessary for our desktop experience - Puavo Devs
+/*  frame.add(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }));
 
 
     // Nautilus options
@@ -126,7 +128,7 @@ function preferencesFrame(_Gtk, desktopSettings, nautilusSettings, gtkSettings) 
             'never': _('Never'),
             'local-only': _('Local files only'),
             'always': _('Always'),
-        }));
+        })); */
     return frame;
 }
 
