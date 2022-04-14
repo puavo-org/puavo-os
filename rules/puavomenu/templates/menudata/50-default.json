@@ -973,11 +973,28 @@
         "pavucontrol": {
             "tags": "default"
         },
-        "pedanet": {
+        "pedanet-frontpage": {
+            "type": "web",
+            "url": "https://peda.net",
+            "name": {
+                "fi": "Peda.net etusivu",
+                "en": "Peda.net front page",
+                "sv": "Peda.net framsida",
+                "de": "Peda.net titelseite"
+            },
+            "icon": "/opt/puavomenu/icons/peda.net.png",
+            "tags": "default, education"
+        },
+        "pedanet-workspace": {
             "type": "web",
             "url": "https://peda.net/:loginopinsys",
-            "name": "Peda.net",
-            "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
+            "name": {
+                "fi": "Peda.net OmaTila",
+                "en": "Peda.net My profile",
+                "sv": "Peda.net Min profil",
+                "de": "Peda.net Mein profil"
+            },
+            "icon": "/opt/puavomenu/icons/peda.net.png",
             "tags": "default, education"
         },
         "perunakellari": {
@@ -2234,7 +2251,8 @@
                 "otava-opiskelija",
                 "edison",
                 "unelmakoulu",
-                "pedanet",
+                "pedanet-frontpage",
+                "pedanet-workspace",
                 "viope"
             ]
         },
