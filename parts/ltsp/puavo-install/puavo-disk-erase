@@ -1,0 +1,44 @@
+#!/bin/sh
+
+set -eu
+
+ask_disk() {
+  disks=$(awk '$4 ~ /^((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z]|xvd[a-z])$/ {
+                 print "/dev/"$4
+		 #print $4
+               }' /proc/partitions)
+  [ -n "$disks" ] || return 1
+  printf %s "$disks" | fzf -1 --height=5 --layout=reverse-list
+}
+
+secure_erase() {
+  echo 'Choose a disk to Secure Erase:'
+  if ! target_disk=$(ask_disk); then
+    echo 'No disk selected, aborting!' >&2
+    exit 1
+  fi
+
+  echo "Chosen << ${target_disk} >>"
+  if ! hdparm -I "${target_disk}" | grep -P "SECURITY ERASE UNIT" >&2; then
+    echo 'Selected disk does not support Secure Erase!'
+    exit 1
+  else
+    echo 'Disk supports Secure Erase.'
+    if ! hdparm -I "${target_disk}" | grep -P "not\tfrozen" >&2; then
+      echo 'Disk is in frozen state, aborting. Please close the lid of the device for a few seconds.'
+    else
+      echo 'Disk is not in frozen state, we can continue.'
+      hdparm --user-master user --security-set-pass Pass "${target_disk}"
+      if hdparm -I "${target_disk}" | grep -P "Security level high" >&2; then
+        echo 'User and password set, ready for secure erase.'
+	hdparm --user-master user --security-erase Pass "${target_disk}"
+        echo 'Command completed. If you see no errors above, you may now reboot the device.'
+      else
+        echo 'Failed setting user and password, exiting.'
+	exit 1
+      fi
+    fi
+  fi
+}
+
+secure_erase
