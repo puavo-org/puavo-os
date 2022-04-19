@@ -73,6 +73,7 @@ VEYON_BASE_CONFIG = {
       'Plugin': '14bacaaa-ebe5-449c-b881-5b382f952571'
   },
   'Service': {
+      'HideTrayIcon': true,
       'RemoteConnectionNotifications': true
   },
   'VncServer': {
