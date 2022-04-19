@@ -248,6 +248,8 @@ begin
   # remove possible old keys
   delete_puavo_veyon_key()
 
+  update_veyon_config(VEYON_BASE_CONFIG)
+
   puavoconf = Puavo::Conf.new
   veyon_role = puavoconf.get('puavo.veyon.role')
   puavoconf.close
