@@ -24,13 +24,12 @@ VEYON_BASE_CONFIG = {
       }
   },
   'Core': {
-      'ApplicationVersion': 2,
-      'InstallationID': 'a5cfd50c-eeca-4b39-bfb8-823f42ee2f2f',
+      'ApplicationVersion': 5,
+      'InstallationID': '0e108652-9c32-4262-b2b1-9289b505fc8f',
       'PluginVersions': {
           'JsonStoreObject': {
               '{14bacaaa-ebe5-449c-b881-5b382f952571}': '1.1',
               '{1b08265b-348f-4978-acaa-45d4f6b90bd9}': '1.1',
-              '{1bdb0d1c-f8eb-4d21-a093-d555a10f3975}': '1.1',
               '{2917cdeb-ac13-4099-8715-20368254a367}': '1.1',
               '{2ad98ccb-e9a5-43ef-8c4c-876ac5efbcb1}': '1.1',
               '{387a0c43-1355-4ff6-9e1f-d098e9ce5127}': '1.1',
@@ -40,17 +39,19 @@ VEYON_BASE_CONFIG = {
               '{63928a8a-4c51-4bfd-888e-9e13c6f3907a}': '1.1',
               '{67dfc1c1-8f37-4539-a298-16e74e34fd8b}': '1.1',
               '{6f0a491e-c1c6-4338-8244-f823b0bf8670}': '1.2',
-              '{85f6c631-e75a-4c78-8cb2-a7f3f502015a}': '1.1',
+              '{80580500-2e59-4297-9e35-e53959b028cd}': '1.2',
               '{8ae6668b-9c12-4b29-9bfc-ff89f6604164}': '1.1',
-              '{a54ee018-42bf-4569-90c7-0d8470125ccf}': '1.1',
-              '{b47bcae0-24ff-4bf5-869c-484d64af5c4c}': '1.1',
+              '{a54ee018-42bf-4569-90c7-0d8470125ccf}': '2.0',
               '{d4bb9c42-9eef-4ecb-8dd5-dfd84b355481}': '1.0',
-              '{ee322521-f4fb-482d-b082-82a79003afa7}': '1.1'
+              '{e11bee03-b99c-465c-bf90-7e5339b83f6b}': '1.0',
+              '{ee322521-f4fb-482d-b082-82a79003afa7}': '1.1',
+              '{f626f759-7691-45c0-bd4a-37171d98d219}': '1.0'
           }
       }
   },
   'Features': {
       'DisabledFeatures': [
+          '{7310707d-3918-460d-a949-65bd152cb958}',
           '{f483c659-b5e7-4dbc-bd91-2c9403e70ebd}'
       ]
   },
