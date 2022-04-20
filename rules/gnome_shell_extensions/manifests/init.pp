@@ -38,8 +38,7 @@ class gnome_shell_extensions {
     , 'nohotcorner@azuri.free.fr'
     , 'puavomenu@puavo.org'
     , 'TopIcons@phocean.net'
-    , 'uparrows@puavo.org'
-    , 'window-list-mod@puavo.org' ]:
+    , 'uparrows@puavo.org' ]:
       ;
   }
 
