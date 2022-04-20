@@ -5,6 +5,7 @@ require 'fileutils'
 require 'json'
 require 'open3'
 require 'puavo/conf'
+require 'socket'
 require 'syslog'
 require 'tempfile'
 require 'uuidtools'
@@ -62,13 +63,18 @@ VEYON_BASE_CONFIG = {
       'LocationNameAttribute': '',
       'UserLoginNameAttribute': ''
   },
+  'Logging': {
+      'LogLevel': '5'   # XXX remove this later
+  },
   'Master': {
       'AllowAddingHiddenLocations': false,
-      'AutoOpenComputerSelectPanel': false,
-      'AutoSelectCurrentLocation': false,
-      'ConfirmUnsafeActions': false,
-      'HideEmptyLocations': false,
-      'ShowCurrentLocationOnly': false
+      'AutoOpenComputerSelectPanel': true,
+      'AutoSelectCurrentLocation': true,
+      'ConfirmUnsafeActions': true,
+      'HideEmptyLocations': true,
+      'HideLocalComputer': true,
+      'HideOwnSession': true,
+      'ShowCurrentLocationOnly': true
   },
   'NetworkObjectDirectory': {
       'Plugin': '14bacaaa-ebe5-449c-b881-5b382f952571'
@@ -81,6 +87,9 @@ VEYON_BASE_CONFIG = {
       'Plugin': '39d7a07f-94db-4912-aa1a-c4df8aee3879'
   }
 }
+
+HOSTNAME   = Socket.gethostname()
+IP_ADDRESS = IPSocket.getaddress(HOSTNAME)
 
 def delete_puavo_veyon_key()
   begin
@@ -199,6 +208,12 @@ class VeyonMaster < DBus::Object
 
         veyon_hosts = {}
         veyon_host_locations = {}
+
+        hostlist << {
+          'address'  => IP_ADDRESS,
+          'hostname' => HOSTNAME,
+          'location' => 'Classroom',    # XXX should probably invent this for clients as well?
+        }
 
         hostlist.each do |host|
           raise 'host is not a hash' unless host.kind_of?(Hash)
