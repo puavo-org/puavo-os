@@ -419,7 +419,19 @@ class VeyonMaster(PuavoWidget):
     ]
 
     if len(procs) == 0:
-      subprocess.Popen([ '/usr/bin/veyon-master' ], close_fds=True)
+      try:
+        pid = os.fork()
+        if (pid != 0):
+          return
+        pid = os.fork()
+        if (pid != 0):
+          os._exit(0)
+      except OSError as e:
+        logmsg(syslog.LOG_ERR,
+               'could not fork to execute veyon-master: %s' % e.message)
+        return
+
+      os.execv('/usr/bin/veyon-master', ['/usr/bin/veyon-master'])
 
     subprocess.Popen([ 'wmctrl', '-a', 'Veyon Master' ], close_fds=True)
 
