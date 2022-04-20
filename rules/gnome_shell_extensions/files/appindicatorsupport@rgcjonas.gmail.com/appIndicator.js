@@ -21,6 +21,7 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
+const Meta = imports.gi.Meta;
 const St = imports.gi.St;
 
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
@@ -30,6 +31,7 @@ const IconCache = Extension.imports.iconCache;
 const Util = Extension.imports.util;
 const Interfaces = Extension.imports.interfaces;
 const PromiseUtils = Extension.imports.promiseUtils;
+const SettingsManager = Extension.imports.settingsManager;
 
 PromiseUtils._promisify(Gio.File.prototype, 'read_async', 'read_finish');
 PromiseUtils._promisify(Gio._LocalFilePrototype, 'read_async', 'read_finish');
@@ -98,7 +100,7 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         try {
             await this._proxy.init_async(GLib.PRIORITY_DEFAULT, this._cancellable);
             this._checkIfReady();
-            this._checkMenuReady();
+            this._checkNeededProperties();
         } catch (e) {
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                 Util.Logger.warn(`While initalizing proxy for ${this._uniqueId}: ${e}`);
@@ -109,7 +111,7 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         let wasReady = this.isReady;
         let isReady = false;
 
-        if (this.hasNameOwner && this.menuPath)
+        if (this.hasNameOwner && this.id && this.menuPath)
             isReady = true;
 
         this.isReady = isReady;
@@ -128,8 +130,8 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         return false;
     }
 
-    async _checkMenuReady() {
-        if (this.menuPath)
+    async _checkNeededProperties() {
+        if (this.id && this.menuPath)
             return true;
 
         const cancellable = this._cancellable;
@@ -138,17 +140,18 @@ var AppIndicator = class AppIndicatorsAppIndicator {
                 GLib.PRIORITY_DEFAULT_IDLE, cancellable);
             // eslint-disable-next-line no-await-in-loop
             await this._delayCheck;
+            Util.refreshPropertyOnProxy(this._proxy, 'Id');
             Util.refreshPropertyOnProxy(this._proxy, 'Menu');
         }
 
-        return !!this.menuPath;
+        return this.id && this.menuPath;
     }
 
     _nameOwnerChanged() {
         if (!this.hasNameOwner)
             this._checkIfReady();
         else
-            this._checkMenuReady();
+            this._checkNeededProperties();
 
         this.emit('name-owner-changed');
     }
@@ -181,6 +184,8 @@ var AppIndicator = class AppIndicatorsAppIndicator {
             this._addExtraProperty('XAyatanaLabel');
             this._addExtraProperty('XAyatanaLabelGuide');
             this._addExtraProperty('XAyatanaOrderingIndex');
+            this._addExtraProperty('IconAccessibleDesc');
+            this._addExtraProperty('AttentionAccessibleDesc');
         }
     }
 
@@ -196,7 +201,7 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         if (!prop)
             return;
 
-        [prop, `${prop}Name`, `${prop}Pixmap`].filter(p =>
+        [prop, `${prop}Name`, `${prop}Pixmap`, `${prop}AccessibleDesc`].filter(p =>
             this._proxyPropertyList.includes(p)).forEach(p =>
             Util.refreshPropertyOnProxy(this._proxy, p, {
                 skipEqualityCheck: p.endsWith('Pixmap'),
@@ -242,6 +247,13 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         return this._proxy.XAyatanaLabel;
     }
 
+    get accessibleName() {
+        const accessibleDesc = this.status === SNIStatus.NEEDS_ATTENTION
+            ? this._proxy.AccessibleDesc : this._proxy.IconAccessibleDesc;
+
+        return accessibleDesc || this.title;
+    }
+
     get menuPath() {
         if (this._proxy.Menu === '/NO_DBUSMENU')
             return null;
@@ -285,17 +297,22 @@ var AppIndicator = class AppIndicatorsAppIndicator {
     _onPropertiesChanged(_proxy, changed, _invalidated) {
         let props = Object.keys(changed.unpack());
         let signalsToEmit = new Set();
+        const checkIfReadyChanged = () => {
+            if (checkIfReadyChanged.value === undefined)
+                checkIfReadyChanged.value = this._checkIfReady();
+            return checkIfReadyChanged.value;
+        };
 
         props.forEach(property => {
             // some property changes require updates on our part,
             // a few need to be passed down to the displaying code
+            if (property === 'Id')
+                checkIfReadyChanged();
 
             // all these can mean that the icon has to be changed
-            if (property === 'Status' ||
-                property.startsWith('Icon') ||
+            if (property.startsWith('Icon') ||
                 property.startsWith('AttentionIcon'))
                 signalsToEmit.add('icon');
-
 
             // same for overlays
             if (property.startsWith('OverlayIcon'))
@@ -312,13 +329,21 @@ var AppIndicator = class AppIndicatorsAppIndicator {
                 signalsToEmit.add('label');
 
             if (property === 'Menu') {
-                if (!this._checkIfReady() && this.isReady)
+                if (!checkIfReadyChanged() && this.isReady)
                     signalsToEmit.add('menu');
             }
 
+            if (property === 'IconAccessibleDesc' ||
+                property === 'AttentionAccessibleDesc' ||
+                property === 'Title')
+                signalsToEmit.add('accessible-name');
+
             // status updates may cause the indicator to be hidden
-            if (property === 'Status')
+            if (property === 'Status') {
+                signalsToEmit.add('icon');
                 signalsToEmit.add('status');
+                signalsToEmit.add('accessible-name');
+            }
         });
 
         signalsToEmit.forEach(s => this.emit(s));
@@ -341,24 +366,48 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         delete this._nameWatcher;
     }
 
-    open() {
+    open(x, y) {
         // we can't use WindowID because we're not able to get the x11 window id from a MetaWindow
         // nor can we call any X11 functions. Luckily, the Activate method usually works fine.
         // parameters are "an hint to the item where to show eventual windows" [sic]
         // ... and don't seem to have any effect.
-        this._proxy.ActivateRemote(0, 0);
+        this._proxy.ActivateRemote(x, y, this._cancellable, (_, e) => {
+            if (e && !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                Util.Logger.critical(`${this._indicator.id}, failed to activate: ${e.message}`);
+        });
     }
 
-    secondaryActivate() {
-        this._proxy.SecondaryActivateRemote(0, 0);
+    secondaryActivate(timestamp, x, y) {
+        const cancellable = this._cancellable;
+
+        this._proxy.XAyatanaSecondaryActivateRemote(timestamp, cancellable, (_, e) => {
+            if (e && e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_METHOD)) {
+                this._proxy.SecondaryActivateRemote(x, y, cancellable, (_r, error) => {
+                    if (error && !error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                        Util.Logger.critical(`${this._indicator.id}, failed to secondary activate: ${e.message}`);
+                });
+            } else if (e && !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
+                Util.Logger.critical(`${this._indicator.id}, failed to secondary activate: ${e.message}`);
+            }
+        });
     }
 
     scroll(dx, dy) {
-        if (dx !== 0)
-            this._proxy.ScrollRemote(Math.floor(dx), 'horizontal');
+        const cancellable = this._cancellable;
 
-        if (dy !== 0)
-            this._proxy.ScrollRemote(Math.floor(dy), 'vertical');
+        if (dx !== 0) {
+            this._proxy.ScrollRemote(Math.floor(dx), 'horizontal', cancellable, (_, e) => {
+                if (e && !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                    Util.Logger.critical(`${this._indicator.id}, failed to scroll horizontally: ${e.message}`);
+            });
+        }
+
+        if (dy !== 0) {
+            this._proxy.ScrollRemote(Math.floor(dy), 'vertical', cancellable, (_, e) => {
+                if (e && !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                    Util.Logger.critical(`${this._indicator.id}, failed to scroll vertically: ${e.message}`);
+            });
+        }
     }
 };
 Signals.addSignalMethods(AppIndicator.prototype);
@@ -375,6 +424,7 @@ class AppIndicatorsIconActor extends St.Icon {
 
         this.name = this.constructor.name;
         this.add_style_class_name('appindicator-icon');
+        this.add_style_class_name('status-notifier-icon');
         this.set_style('padding:0');
 
         // eslint-disable-next-line no-undef
@@ -382,6 +432,7 @@ class AppIndicatorsIconActor extends St.Icon {
         this.height = iconSize * themeContext.scale_factor;
 
         this._indicator     = indicator;
+        this._customIcons   = new Map();
         this._iconSize      = iconSize;
         this._iconCache     = new IconCache.IconCache();
         this._cancellable   = new Gio.Cancellable();
@@ -391,6 +442,13 @@ class AppIndicatorsIconActor extends St.Icon {
         Util.connectSmart(this._indicator, 'overlay-icon', this, this._updateOverlayIcon);
         Util.connectSmart(this._indicator, 'reset', this, this._invalidateIcon);
 
+        const settings = SettingsManager.getDefaultGSettings();
+        Util.connectSmart(settings, 'changed::icon-size', this, this._invalidateIcon);
+        Util.connectSmart(settings, 'changed::custom-icons', this, () => {
+            this._updateCustomIcons();
+            this._invalidateIcon();
+        });
+
         Util.connectSmart(themeContext, 'notify::scale-factor', this, tc => {
             this.height = iconSize * tc.scale_factor;
             this._invalidateIcon();
@@ -398,13 +456,16 @@ class AppIndicatorsIconActor extends St.Icon {
 
         Util.connectSmart(this._indicator, 'ready', this, () => {
             this._updateIconClass();
+            this._updateCustomIcons();
             this._invalidateIcon();
         });
 
-        Util.connectSmart(Gtk.IconTheme.get_default(), 'changed', this, this._invalidateIcon);
+        Util.connectSmart(Util.getDefaultTheme(), 'changed', this, this._invalidateIcon);
 
-        if (indicator.isReady)
+        if (indicator.isReady) {
+            this._updateCustomIcons();
             this._invalidateIcon();
+        }
 
         this.connect('destroy', () => {
             this._iconCache.destroy();
@@ -534,14 +595,20 @@ class AppIndicatorsIconActor extends St.Icon {
 
             // we try to avoid messing with the default icon theme, so we'll create a new one if needed
             let iconTheme = null;
+            const defaultTheme = Util.getDefaultTheme();
             if (themePath) {
                 iconTheme = new Gtk.IconTheme();
-                Gtk.IconTheme.get_default().get_search_path().forEach(p =>
+                defaultTheme.get_search_path().forEach(p =>
                     iconTheme.append_search_path(p));
                 iconTheme.append_search_path(themePath);
-                iconTheme.set_screen(imports.gi.Gdk.Screen.get_default());
+
+                if (!Meta.is_wayland_compositor()) {
+                    const defaultScreen = imports.gi.Gdk.Screen.get_default();
+                    if (defaultScreen)
+                        iconTheme.set_screen(defaultScreen);
+                }
             } else {
-                iconTheme = Gtk.IconTheme.get_default();
+                iconTheme = defaultTheme;
             }
             if (iconTheme) {
                 // try to look up the icon in the icon theme
@@ -651,13 +718,15 @@ class AppIndicatorsIconActor extends St.Icon {
     // one (as in some cases it may be equal, but not the same object).
     // So when it's not need anymore we make sure to check the .inUse property
     // and set it to false so that it can be picked up by the garbage collector.
-    _setGicon(iconType, gicon) {
+    _setGicon(iconType, gicon, iconSize) {
         if (iconType !== SNIconType.OVERLAY) {
             if (gicon) {
                 this.gicon = new Gio.EmblemedIcon({ gicon });
 
                 if (!(gicon instanceof GdkPixbuf.Pixbuf))
                     gicon.inUse = this.gicon.get_icon() === gicon;
+
+                this.set_icon_size(iconSize);
             } else {
                 this.gicon = null;
                 Util.Logger.critical(`unable to update icon for ${this._indicator.id}`);
@@ -697,26 +766,50 @@ class AppIndicatorsIconActor extends St.Icon {
 
         const [name, pixmap, theme] = icon;
         let gicon = null;
+        const commonArgs = [theme, iconType, iconSize];
+
+        if (this._customIcons.size) {
+            let customIcon = this._customIcons.get(iconType);
+            gicon = await this._createIcon(customIcon, null, ...commonArgs);
+
+            if (!gicon) {
+                customIcon = this._customIcons.get(SNIconType.NORMAL);
+                gicon = await this._createIcon(customIcon, null, ...commonArgs);
+            }
+        } else {
+            gicon = await this._createIcon(name, pixmap, ...commonArgs);
+        }
+
         try {
-            if (name && name.length) {
-                gicon = await this._cacheOrCreateIconByName(iconSize, name, theme);
-                if (!gicon && pixmap)
-                    gicon = await this._createIconFromPixmap(iconSize, pixmap, iconType);
-            } else if (pixmap) {
-                gicon = await this._createIconFromPixmap(iconSize, pixmap, iconType);
+            this._setGicon(iconType, gicon, iconSize);
+        } catch (e) {
+            logError(e, 'Setting GIcon failed');
+        }
+    }
+
+    // updates the base icon
+    async _createIcon(name, pixmap, theme, iconType, iconSize) {
+        try {
+            if (name) {
+                const gicon = await this._cacheOrCreateIconByName(iconSize, name, theme);
+                if (gicon)
+                    return gicon;
             }
 
-            this._setGicon(iconType, gicon);
+            if (pixmap && pixmap.length)
+                return this._createIconFromPixmap(iconSize, pixmap, iconType);
         } catch (e) {
             /* We handle the error messages already */
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED) &&
                 !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING))
                 Util.Logger.debug(`${this._indicator.id}, Impossible to load icon: ${e}`);
         }
+
+        return null;
     }
 
     // updates the base icon
-    _updateIcon() {
+    async _updateIcon() {
         if (this.gicon instanceof Gio.EmblemedIcon) {
             let { gicon } = this.gicon;
 
@@ -728,10 +821,18 @@ class AppIndicatorsIconActor extends St.Icon {
         let iconType = this._indicator.status === SNIStatus.NEEDS_ATTENTION
             ? SNIconType.ATTENTION : SNIconType.NORMAL;
 
-        this._updateIconByType(iconType, this._iconSize);
+        this._updateIconSize();
+
+        try {
+            await this._updateIconByType(iconType, this._iconSize);
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED) &&
+                !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING))
+                logError(e, `${this._indicator.id}: Updating icon type ${iconType} failed`);
+        }
     }
 
-    _updateOverlayIcon() {
+    async _updateOverlayIcon() {
         if (this._emblem) {
             let { icon } = this._emblem;
 
@@ -744,7 +845,13 @@ class AppIndicatorsIconActor extends St.Icon {
         // our algorithms will always pick a smaller one instead of stretching it.
         let iconSize = Math.floor(this._iconSize / 1.6);
 
-        this._updateIconByType(SNIconType.OVERLAY, iconSize);
+        try {
+            await this._updateIconByType(SNIconType.OVERLAY, iconSize);
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED) &&
+                !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING))
+                logError(e, `${this._indicator.id}: Updating overlay icon failed`);
+        }
     }
 
     // called when the icon theme changes
@@ -754,5 +861,32 @@ class AppIndicatorsIconActor extends St.Icon {
 
         this._updateIcon();
         this._updateOverlayIcon();
+    }
+
+    _updateIconSize() {
+        const settings = SettingsManager.getDefaultGSettings();
+        const sizeValue = settings.get_int('icon-size');
+        if (sizeValue > 0) {
+            if (!this._defaultIconSize)
+                this._defaultIconSize = this._iconSize;
+
+            this._iconSize = sizeValue;
+        } else if (this._defaultIconSize) {
+            this._iconSize = this._defaultIconSize;
+            delete this._defaultIconSize;
+        }
+    }
+
+    _updateCustomIcons() {
+        const settings = SettingsManager.getDefaultGSettings();
+        this._customIcons.clear();
+
+        settings.get_value('custom-icons').deep_unpack().forEach(customIcons => {
+            const [indicatorId, normalIcon, attentionIcon] = customIcons;
+            if (this._indicator.id === indicatorId) {
+                this._customIcons.set(SNIconType.NORMAL, normalIcon);
+                this._customIcons.set(SNIconType.ATTENTION, attentionIcon);
+            }
+        });
     }
 });
