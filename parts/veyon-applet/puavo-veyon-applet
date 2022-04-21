@@ -741,7 +741,7 @@ class VeyonSlave(PuavoWidget):
 
   def activate_pin_entry(self, widget=None):
     if self.pin_window:
-      self.pin_window.present()
+      self.pin_window.present_with_time( int(time.time()) )
       return
 
     pin_label = Gtk.Label(label='PIN for Veyon session:')
@@ -788,9 +788,12 @@ class VeyonSlave(PuavoWidget):
     self.pin_window.connect('focus-out-event', self.close_pin_entry)
 
     self.pin_window.fullscreen()
+    self.pin_window.present_with_time( int(time.time()) )
     self.pin_window.set_keep_above(True)
     self.pin_window.add(window_box)
     self.pin_window.show_all()
+
+    self.pin_entry.grab_focus()
 
 
   def close_pin_entry(self, widget=None, event=None):
