@@ -363,7 +363,7 @@ EOF
 
 darkdm_print_short_help() {
   darkdm_print_help \
-    | awk '$1 !~ /bios|expert|mount|reboot|preinstall|savedisk/'
+    | awk '$1 !~ /bios|erase|expert|mount|reboot|preinstall|savedisk/'
 }
 
 darkdm_shell()
