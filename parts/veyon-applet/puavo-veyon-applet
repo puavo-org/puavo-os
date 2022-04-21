@@ -643,7 +643,6 @@ class VeyonMasterConnection():
 
   def disconnect_master(self):
     logmsg(syslog.LOG_INFO, 'disconnecting master %s' % self.address)
-    self.master_socket.shutdown(socket.SHUT_RDWR)
     self.master_socket.close()
     self.master_socket = None
     GLib.source_remove(self.master_socket_watch)
