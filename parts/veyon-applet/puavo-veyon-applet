@@ -471,12 +471,15 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_new_slave(self, io, cond, sock):
-    (conn, sock_slave_address) = sock.accept()
-    slave_address = sock_slave_address[0]
-    if slave_address in self.veyon_slaves:
-      self.remove_slave(slave_address, True)
-    slave = VeyonSlaveConnection(self, conn, slave_address)
-    self.veyon_slaves[slave.address] = slave
+    try:
+      (conn, sock_slave_address) = sock.accept()
+      slave_address = sock_slave_address[0]
+      if slave_address in self.veyon_slaves:
+        self.remove_slave(slave_address, True)
+      slave = VeyonSlaveConnection(self, conn, slave_address)
+      self.veyon_slaves[slave.address] = slave
+    except Exception as e:
+      logmsg(syslog.LOG_ERR, 'could not accept a slave connection: %s' % e)
 
     return True
 
@@ -553,7 +556,7 @@ class VeyonMasterConnection():
                           self.master_socket)
 
     message = { 'type': 'new_client', 'hostname': self.slave.hostname }
-    self.send_to_master(message)
+    Veyon.send_msg(self.master_socket, message)
 
 
   def send_to_master(self, msg):
@@ -712,10 +715,14 @@ class VeyonSlave(PuavoWidget):
       if not address in self.veyon_masters:
         logmsg(syslog.LOG_INFO,
                'connecting to a veyon master %s' % address)
-        self.veyon_masters[address] \
-          = VeyonMasterConnection(address, port, self)
-        self.update_action_button()
+        try:
+          master_conn = VeyonMasterConnection(address, port, self)
+          self.veyon_masters[address] = master_conn
+        except Exception as e:
+          logmsg(syslog.LOG_ERR,
+                 'could not connect to master %s: %s' % (address, e))
 
+    self.update_action_button()
 
 
   def remove_master(self, address):
