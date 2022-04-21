@@ -170,7 +170,7 @@ else
 end
 
 if options.has_key?(:username)
-  username =  options[:username] 
+  username =  options[:username]
   puts "Username: #{username}"
 else
   print "Username> "
@@ -249,7 +249,7 @@ AdminUser.create_admin_user
 school = School.first
 puts "\nCreate new school"
 school_name = "Administration"
-puts "School name: #{school_name}" 
+puts "School name: #{school_name}"
 school = School.create( :displayName => school_name,
                         :cn => school_name.downcase.gsub(/[^a-z0-9]/, "") )
 school.save
@@ -296,6 +296,7 @@ user.uid = username
 user.new_password = password
 user.new_password_confirmation = password
 user.puavoSchool = school.dn
+user.puavoEduPersonPrimarySchool = school.dn
 user.puavoEduPersonAffiliation = "admin"
 user_save = false
 while user_save != true
