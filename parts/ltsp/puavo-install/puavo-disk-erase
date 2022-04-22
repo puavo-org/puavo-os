@@ -18,55 +18,64 @@ secure_erase() {
   fi
 
   echo "Chosen << ${target_disk} >>"
-  if udevadm info --query=all --name="${target_disk}" | grep 'ID_BUS=usb'; then
-    echo 'Selected disk is a USB device, I do not support them. Aborting..' >&2
-    exit 1
-  fi
+  case "${target_disk}" in
+    *nvme*)
+      echo 'Selected disk is an NVMe disk. Using nvme-cli utility...'
+      nvme format -s1 "${target_disk}"
+      exit 1
+      ;;
+    *)
+      if udevadm info --query=all --name="${target_disk}" | grep 'ID_BUS=usb'; then
+        echo 'Selected disk is a USB device, I do not support them. Aborting..' >&2
+        exit 1
+      fi
 
-  if ! hdparm -I "${target_disk}" | grep -P "SECURITY ERASE UNIT" >&2; then
-    echo 'Selected disk does not support Secure Erase!' >&2
-    exit 1
-  fi
+      if ! hdparm -I "${target_disk}" | grep -P "SECURITY ERASE UNIT" >&2; then
+        echo 'Selected disk does not support Secure Erase!' >&2
+        exit 1
+      fi
 
-  echo 'Disk supports Secure Erase.'
-  if ! hdparm -I "${target_disk}" | grep -P "not\tfrozen" >&2; then
-    echo 'Disk is in frozen state, aborting!' >&2
-    echo 'Please close the lid of the device for a few seconds, reopen it and try again.' >&2
-    echo
-    echo 'If we are netbooted, closing the lid will not put the device to sleep.'
-    echo 'We can however put it to sleep and wake it up with the usage of rtcwake.'
-    echo
-    read -p "Shall I run the command for you now? (y/n)[y] " gosleep
-      case $gosleep in
-        [yY]|"")
-          echo 'Going to sleep now.'
-          sleep 1
-          rtcwake -m mem -s 5
-          ;;
-        [nN])
-          echo 'Not going to sleep. You must close and reopen the lid, or run the command by hand. Then retry.'
-          sleep 1
-          exit 1
-          ;;
-        *)
-          echo 'Invalid answer, exiting.' >&2
-          sleep 1
-          exit 1
-          ;;
-      esac
-    exit 1
-  fi
+      echo 'Disk supports Secure Erase.'
+        if ! hdparm -I "${target_disk}" | grep -P "not\tfrozen" >&2; then
+        echo 'Disk is in frozen state, aborting!' >&2
+        echo 'Please close the lid of the device for a few seconds, reopen it and try again.' >&2
+        echo
+        echo 'If we are netbooted, closing the lid will not put the device to sleep.'
+        echo 'We can however put it to sleep and wake it up with the usage of rtcwake.'
+        echo
+        read -p "Shall I run the command for you now? (y/n)[y] " gosleep
+        case $gosleep in
+          [yY]|"")
+            echo 'Going to sleep now.'
+            sleep 1
+            rtcwake -m mem -s 5
+            ;;
+          [nN])
+            echo 'Not going to sleep. You must close and reopen the lid, or run the command by hand. Then retry.'
+            sleep 1
+            exit 1
+            ;;
+          *)
+            echo 'Invalid answer, exiting.' >&2
+            sleep 1
+            exit 1
+            ;;
+        esac
+      exit 1
+    fi
 
-  echo 'Disk is not in frozen state, we can continue.'
-  hdparm --user-master user --security-set-pass Pass "${target_disk}"
-  if ! hdparm -I "${target_disk}" | grep -P "Security level high" >&2; then
-    echo 'Failed setting user and password, exiting.' >&2
-    exit 1
-  fi
+    echo 'Disk is not in frozen state, we can continue.'
+    hdparm --user-master user --security-set-pass Pass "${target_disk}"
+    if ! hdparm -I "${target_disk}" | grep -P "Security level high" >&2; then
+      echo 'Failed setting user and password, exiting.' >&2
+      exit 1
+    fi
 
-  echo 'User and password set, ready for secure erase.'
-  hdparm --user-master user --security-erase Pass "${target_disk}"
-  echo 'Command completed. If you see no errors above, you may now reboot the device.'
+    echo 'User and password set, ready for secure erase.'
+    hdparm --user-master user --security-erase Pass "${target_disk}"
+    echo 'Command completed. If you see no errors above, you may now reboot the device.'
+    ;;
+  esac
 }
 
 secure_erase
