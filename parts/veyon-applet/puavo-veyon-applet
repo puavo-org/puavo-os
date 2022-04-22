@@ -26,16 +26,57 @@ gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 
-from gi.repository import AyatanaAppIndicator3
-from gi.repository import GLib
-from gi.repository import Gtk
-from gi.repository import Notify
+from gi.repository import AyatanaAppIndicator3, Gdk, GLib, Gtk, Notify
 
 gettext.bindtextdomain('puavo-veyon-applet', '/usr/share/locale')
 gettext.textdomain('puavo-veyon-applet')
 _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+CSS = b"""
+#cancel_button {
+  background-color: #333333;
+  border-color: grey;
+  color: white;
+  font-size: 70%;
+  margin-top: 0.5em;
+}
+
+#cancel_button:hover {
+  border-color: white;
+  background-color: grey;
+}
+
+#connection_label {
+  font-size: 70%;
+}
+
+#connection_spinner {
+  margin-bottom: 5em;
+}
+
+#pin_entry {
+  background-color: white;
+  color: black;
+  margin-left: 0.5em;
+}
+
+#pin_window {
+  background-color: rgba(1.0, 1.0, 1.0, 0.85);
+  color: orange;
+  font-size: 3em;
+}
+"""
+
+style_provider = Gtk.CssProvider()
+style_provider.load_from_data(CSS)
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(),
+    style_provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+)
 
 
 def logmsg(priority, message):
@@ -127,7 +168,7 @@ class VeyonSlaveConnection(PuavoWidget):
       Veyon.send_msg(self.slave_socket, msg)
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error sending a message to slave: %s' % e)
-      self.master.remove_slave(self.address, True)
+      self.master.remove_slave(self.address)
 
 
   def incoming_slave_data(self, io, cond, slave_socket):
@@ -136,7 +177,7 @@ class VeyonSlaveConnection(PuavoWidget):
       if message == None:
         logmsg(syslog.LOG_INFO, 'slave %s at %s has disconnected' \
                                   % (self.slave_hostname, self.address))
-        self.master.remove_slave(self.address, False)
+        self.master.remove_slave(self.address)
         return False
 
       if message['type'] == 'new_client':
@@ -193,7 +234,7 @@ class VeyonSlaveConnection(PuavoWidget):
 
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error with slave %s: %s' % (self.address, e))
-      self.master.remove_slave(self.address, True)
+      self.master.remove_slave(self.address)
       return False
 
     return True
@@ -215,11 +256,9 @@ class VeyonSlaveConnection(PuavoWidget):
     self.send_to_slave(msg)
 
 
-  def disconnect_slave(self, do_shutdown):
+  def disconnect_slave(self):
     logmsg(syslog.LOG_INFO,
            'disconnecting slave %s at %s' % (self.slave_hostname, self.address))
-    if do_shutdown:
-      self.slave_socket.shutdown(socket.SHUT_RDWR)
     self.slave_socket.close()
     self.slave_socket = None
     GLib.source_remove(self.slave_socket_watch)
@@ -378,7 +417,19 @@ class VeyonMaster(PuavoWidget):
     ]
 
     if len(procs) == 0:
-      subprocess.Popen([ '/usr/bin/veyon-master' ], close_fds=True)
+      try:
+        pid = os.fork()
+        if (pid != 0):
+          return
+        pid = os.fork()
+        if (pid != 0):
+          os._exit(0)
+      except OSError as e:
+        logmsg(syslog.LOG_ERR,
+               'could not fork to execute veyon-master: %s' % e.message)
+        return
+
+      os.execv('/usr/bin/veyon-master', ['/usr/bin/veyon-master'])
 
     subprocess.Popen([ 'wmctrl', '-a', 'Veyon Master' ], close_fds=True)
 
@@ -418,12 +469,15 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_new_slave(self, io, cond, sock):
-    (conn, sock_slave_address) = sock.accept()
-    slave_address = sock_slave_address[0]
-    if slave_address in self.veyon_slaves:
-      self.remove_slave(slave_address, True)
-    slave = VeyonSlaveConnection(self, conn, slave_address)
-    self.veyon_slaves[slave.address] = slave
+    try:
+      (conn, sock_slave_address) = sock.accept()
+      slave_address = sock_slave_address[0]
+      if slave_address in self.veyon_slaves:
+        self.remove_slave(slave_address)
+      slave = VeyonSlaveConnection(self, conn, slave_address)
+      self.veyon_slaves[slave.address] = slave
+    except Exception as e:
+      logmsg(syslog.LOG_ERR, 'could not accept a slave connection: %s' % e)
 
     return True
 
@@ -471,10 +525,10 @@ class VeyonMaster(PuavoWidget):
            'error occurred when updating configuration: %s' % dbusexception)
 
 
-  def remove_slave(self, address, do_shutdown):
+  def remove_slave(self, address):
     slave = self.veyon_slaves[address]
     in_session = slave.in_session
-    slave.disconnect_slave(do_shutdown)
+    slave.disconnect_slave()
     del(self.veyon_slaves[address])
     if in_session:
        self.update_config()
@@ -500,7 +554,7 @@ class VeyonMasterConnection():
                           self.master_socket)
 
     message = { 'type': 'new_client', 'hostname': self.slave.hostname }
-    self.send_to_master(message)
+    Veyon.send_msg(self.master_socket, message)
 
 
   def send_to_master(self, msg):
@@ -587,7 +641,6 @@ class VeyonMasterConnection():
 
   def disconnect_master(self):
     logmsg(syslog.LOG_INFO, 'disconnecting master %s' % self.address)
-    self.master_socket.shutdown(socket.SHUT_RDWR)
     self.master_socket.close()
     self.master_socket = None
     GLib.source_remove(self.master_socket_watch)
@@ -659,10 +712,14 @@ class VeyonSlave(PuavoWidget):
       if not address in self.veyon_masters:
         logmsg(syslog.LOG_INFO,
                'connecting to a veyon master %s' % address)
-        self.veyon_masters[address] \
-          = VeyonMasterConnection(address, port, self)
-        self.update_action_button()
+        try:
+          master_conn = VeyonMasterConnection(address, port, self)
+          self.veyon_masters[address] = master_conn
+        except Exception as e:
+          logmsg(syslog.LOG_ERR,
+                 'could not connect to master %s: %s' % (address, e))
 
+    self.update_action_button()
 
 
   def remove_master(self, address):
@@ -684,30 +741,64 @@ class VeyonSlave(PuavoWidget):
 
   def activate_pin_entry(self, widget=None):
     if self.pin_window:
-      self.pin_window.present()
+      self.pin_window.present_with_time( int(time.time()) )
       return
 
-    self.label = Gtk.Label(label='Provide a PIN for Veyon session:')
+    pin_label = Gtk.Label(label='PIN for Veyon session:')
 
-    self.pin_entry = Gtk.Entry()
+    self.pin_entry = Gtk.Entry(name='pin_entry')
     self.pin_entry.set_input_purpose(Gtk.InputPurpose.DIGITS)
     self.pin_entry.set_max_length(5)
     self.pin_entry.set_width_chars(5)
     self.pin_entry.connect('changed', self.pin_entry_changed)
 
-    self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-    self.box.pack_start(self.label, True, True, 3)
-    self.box.pack_start(self.pin_entry, True, True, 3)
+    pin_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+    pin_box.pack_start(pin_label, False, False, 0)
+    pin_box.pack_start(self.pin_entry, False, False, 0)
 
-    self.alignment = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
-    self.alignment.add(self.box)
+    entry_and_cancel_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    cancel_button = Gtk.Button(label='Cancel', name='cancel_button')
+    cancel_button.set_can_focus(False)
+    cancel_button.connect('clicked', self.close_pin_entry)
+    button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+    button_box.pack_start(cancel_button, False, False, 0)
+    button_align = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
+    button_align.add(button_box)
 
-    self.pin_window = Gtk.Window()
+    entry_and_cancel_box.pack_start(pin_box, False, False, 0)
+    entry_and_cancel_box.pack_start(button_align, False, False, 0)
+
+    box_align = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
+    box_align.add(entry_and_cancel_box)
+
+    self.connection_label = Gtk.Label(label='', name='connection_label')
+    self.connection_spinner = Gtk.Spinner(name='connection_spinner')
+    window_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    window_box.pack_start(box_align, True, False, 0)
+    window_box.pack_start(self.connection_label, False, False, 0)
+    window_box.pack_start(self.connection_spinner, False, False, 0)
+
+    self.pin_window = Gtk.Window(name='pin_window')
+
+    screen = self.pin_window.get_screen()
+    visual = screen.get_rgba_visual()
+    self.pin_window.set_visual(visual)
+
     self.pin_window.connect('destroy', self.pin_window_closed)
-    self.pin_window.fullscreen()
+    self.pin_window.connect('focus-out-event', self.close_pin_entry)
 
-    self.pin_window.add(self.alignment)
+    self.pin_window.fullscreen()
+    self.pin_window.present_with_time( int(time.time()) )
+    self.pin_window.set_keep_above(True)
+    self.pin_window.add(window_box)
     self.pin_window.show_all()
+
+    self.pin_entry.grab_focus()
+
+
+  def close_pin_entry(self, widget=None, event=None):
+    if self.pin_window:
+      self.pin_window.destroy()
 
 
   def update_action_button(self):
@@ -743,13 +834,29 @@ class VeyonSlave(PuavoWidget):
       GLib.timeout_add(0, lambda: self.action_button.set_sensitive(False))
 
 
+  def reenable_pin_entry(self):
+    if not self.pin_window:
+      return
+
+    self.pin_entry.set_sensitive(True)
+    self.pin_entry.grab_focus()
+    self.connection_label.set_markup('')
+    self.connection_spinner.stop()
+
+
   def handle_wrong_pin(self):
     for master_conn in self.veyon_masters.values():
       if master_conn.pin_sent:
         # still waiting for some answer
         return
 
-    logmsg(syslog.LOG_INFO, 'wrong pin sent to all masters')
+    if self.pin_window:
+      logmsg(syslog.LOG_INFO, 'no matching session found for PIN')
+      markup = '<span color="%s">%s</span>' \
+                 % ('red', 'no matching session found for PIN')
+      self.connection_label.set_markup(markup)
+      self.connection_spinner.stop()
+      GLib.timeout_add_seconds(2, self.reenable_pin_entry)
 
 
   def pin_entry_changed(self, entry):
@@ -758,8 +865,11 @@ class VeyonSlave(PuavoWidget):
     entry.set_text(new_text)
     entry.handler_unblock_by_func(self.pin_entry_changed)
     if len(new_text) == 5:
-      # XXX we probably need some connect buttons and exit buttons instead
-      # XXX of this, but this can be used for testing
+      self.pin_entry.set_sensitive(False)
+      markup = '<span color="%s">%s</span>' % ('orange', 'connecting...')
+      self.connection_label.set_markup(markup)
+      self.connection_spinner.start()
+
       for master_conn in self.veyon_masters.values():
         master_conn.send_public_key_request(new_text)
       if self.public_key_request_timer_id:
@@ -778,9 +888,12 @@ class VeyonSlave(PuavoWidget):
       master_conn.pin_sent = False
 
     self.public_key_request_timer_id = None
-    if there_was_a_timeout:
-      # XXX react to this in UI somehow
-      pass
+    if there_was_a_timeout and self.pin_window:
+      markup = '<span color="%s">%s</span>' % ('red', 'timeout')
+      self.connection_label.set_markup(markup)
+      self.connection_spinner.stop()
+      self.pin_entry.set_sensitive(False)
+      GLib.timeout_add_seconds(2, self.reenable_pin_entry)
 
 
   def pin_window_closed(self, widget):
@@ -788,6 +901,13 @@ class VeyonSlave(PuavoWidget):
 
 
   def open_session(self, master_conn, public_key):
+    if self.pin_window:
+      hostname = master_conn.master_info['hostname']
+      username = master_conn.master_info['username']
+      msg = 'connecting to %s (%s)' % (hostname, username)
+      markup = '<span color="%s">%s</span>' % ('lightgreen', msg)
+      self.connection_label.set_markup(markup)
+
     for master_conn in self.veyon_masters.values():
       master_conn.pin_sent = False
     self.master_conn = master_conn
@@ -806,9 +926,6 @@ class VeyonSlave(PuavoWidget):
            'set a new public key received from master')
     self.master_conn.send_to_master({ 'type': 'public_key_accepted' })
 
-    if self.pin_window:
-      self.pin_window.destroy()
-
     self.update_action_button()
 
     self.applet.set_icon('OPEN')
@@ -816,6 +933,8 @@ class VeyonSlave(PuavoWidget):
                 'This host may now be viewed and controlled by %s from %s' \
                   % (self.master_conn.master_info['username'],
                      self.master_conn.master_info['hostname']))
+
+    GLib.timeout_add_seconds(2, self.close_pin_entry)
 
 
   def handle_add_public_key_error(self, dbusexception):
