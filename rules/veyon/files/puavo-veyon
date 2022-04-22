@@ -71,13 +71,14 @@ VEYON_BASE_CONFIG = {
       'AutoOpenComputerSelectPanel': true,
       'AutoSelectCurrentLocation': true,
       'ConfirmUnsafeActions': true,
-      'HideEmptyLocations': true,
+      'HideEmptyLocations': false,
       'HideLocalComputer': true,
       'HideOwnSession': true,
-      'ShowCurrentLocationOnly': true
+      'ShowCurrentLocationOnly': false
   },
   'NetworkObjectDirectory': {
-      'Plugin': '14bacaaa-ebe5-449c-b881-5b382f952571'
+      'Plugin': '14bacaaa-ebe5-449c-b881-5b382f952571',
+      'UpdateInterval': '10'
   },
   'Service': {
       'HideTrayIcon': true,
