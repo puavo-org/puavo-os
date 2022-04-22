@@ -192,7 +192,6 @@ var DesktopManager = class {
         this._configureSelectionColor();
         this._createDesktopBackgroundMenu();
         this._createGridWindows();
-        this._dbusAdvertiseUpdate();
 
         DBusUtils.NautilusFileOperations2.connectToProxy('g-properties-changed', this._undoStatusChanged.bind(this));
         DBusUtils.GtkVfsMetadata.connectSignalToProxy('AttributeChanged', this._metadataChanged.bind(this));
@@ -232,7 +231,7 @@ var DesktopManager = class {
                 return false;
             });
         }
-
+        this._dbusAdvertiseUpdate();
     }
 
     _metadataChanged(proxy, nameOwner, args) {
@@ -248,26 +247,20 @@ var DesktopManager = class {
     }
 
     _dbusAdvertiseUpdate() {
-        let updateGridWindows = new Gio.SimpleAction({
-            name: 'updateGridWindows',
-            parameter_type: new GLib.VariantType('av')
+        DBusUtils.extensionControl.connect('action-state-changed', (actionGroup, actionName, data) => {
+            if (actionName == 'desktopGeometry') {
+                this.updateGridWindows(data.recursiveUnpack());
+            }
         });
-        updateGridWindows.connect('activate', (action, parameter) => {
-            this.updateGridWindows(parameter.recursiveUnpack());
+        DBusUtils.extensionControl.connect('action-added', (actionGroup, actionName) => {
+            // this signal allows us to know when the action is available and we can read the initial value
+            if (actionName == 'desktopGeometry') {
+                let data = DBusUtils.extensionControl.get_action_state('desktopGeometry');
+                this.updateGridWindows(data.recursiveUnpack());
+            }
         });
-        let actionGroup = new Gio.SimpleActionGroup();
-        actionGroup.add_action(updateGridWindows);
-        let busname = this.mainApp.get_dbus_object_path();
-        this._connection = Gio.DBus.session;
-        this._dbusConnectionGroupId = this._connection.export_action_group(
-            `${busname}/actions`,
-            actionGroup
-        );
-        this._extensionControl = Gio.DBusActionGroup.get(
-            Gio.DBus.session,
-            'com.rastersoft.dingextension',
-            '/com/rastersoft/dingextension/control'
-        );
+        // This is required to trigger the 'action-added' signal
+        DBusUtils.extensionControl.list_actions();
     }
 
     updateGridWindows(newdesktoplist) {
@@ -1385,11 +1378,11 @@ var DesktopManager = class {
      * with a GLib.SimpleAction.
      */
     doCopy() {
-        this._extensionControl.activate_action('doCopy', this._getClipboardText());
+        DBusUtils.extensionControl.activate_action('doCopy', this._getClipboardText());
     }
 
     doCut() {
-        this._extensionControl.activate_action('doCut', this._getClipboardText());
+        DBusUtils.extensionControl.activate_action('doCut', this._getClipboardText());
     }
 
     doTrash() {

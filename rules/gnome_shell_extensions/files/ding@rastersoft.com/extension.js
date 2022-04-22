@@ -116,37 +116,27 @@ function innerEnable(removeId) {
      * thus adapting to it on-the-fly.
      */
     data.monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => {
-        reloadIfSizesChanged();
+        updateDesktopGeometry();
     });
     /*
      * Any change in the workareas must be detected too, for example if the used size
      * changes.
      */
     data.workareasChangedId = global.display.connect('workareas-changed', () => {
-        reloadIfSizesChanged();
+        updateDesktopGeometry();
     });
 
     /*
      * This callback allows to detect a change in the working area (like when changing the Scale value)
      */
-    data.sizeChangedId = global.window_manager.connect('size-changed', () => {
-        reloadIfSizesChanged();
-    });
-
     data.visibleAreaId = data.visibleArea.connect('updated-usable-area', () => {
-        reloadIfSizesChanged();
+        updateDesktopGeometry();
     });
 
     data.isEnabled = true;
     if (data.launchDesktopId) {
         GLib.source_remove(data.launchDesktopId);
     }
-    launchDesktop();
-    data.remoteDingActions = Gio.DBusActionGroup.get(
-        Gio.DBus.session,
-        'com.rastersoft.ding',
-        '/com/rastersoft/ding/actions'
-    );
 
     /*
      * Due to a problem in the Clipboard API in Gtk3, it is not possible to do the CUT/COPY operation from
@@ -171,16 +161,20 @@ function innerEnable(removeId) {
             name: 'doCut',
             parameter_type: new GLib.VariantType('as')
         });
+        let desktopGeometry = Gio.SimpleAction.new_stateful('desktopGeometry', new GLib.VariantType('av'), getDesktopGeometry());
+        desktopGeometry.set_enabled(true);
         doCopy.connect('activate', manageCutCopy);
         doCut.connect('activate', manageCutCopy);
-        let actionGroup = new Gio.SimpleActionGroup();
-        actionGroup.add_action(doCopy);
-        actionGroup.add_action(doCut);
+        data.actionGroup = new Gio.SimpleActionGroup();
+        data.actionGroup.add_action(doCopy);
+        data.actionGroup.add_action(doCut);
+        data.actionGroup.add_action(desktopGeometry);
 
         this._dbusConnectionGroupId = data.dbusConnection.export_action_group(
             '/com/rastersoft/dingextension/control',
-            actionGroup
+            data.actionGroup
         );
+        launchDesktop();
     }, null);
 }
 
@@ -278,35 +272,32 @@ function disable() {
     }
 }
 
-function reloadIfSizesChanged() {
-    if (data.dbusTimeoutId !== 0) {
-        return;
+function updateDesktopGeometry() {
+    if (data.actionGroup) {
+        data.actionGroup.change_action_state('desktopGeometry', getDesktopGeometry());
     }
-    // limit the update signals to a maximum of one per second
-    data.dbusTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
-        let desktopList = [];
-        let ws = global.workspace_manager.get_workspace_by_index(0);
-        for(let monitorIndex = 0; monitorIndex < Main.layoutManager.monitors.length; monitorIndex++) {
-            let area = data.visibleArea.getMonitorGeometry(ws, monitorIndex);
-            let desktopListElement = new GLib.Variant('a{sd}', {
-                'x' : area.x,
-                'y': area.y,
-                'width' : area.width,
-                'height' : area.height,
-                'zoom' : area.scale,
-                'marginTop' : area.marginTop,
-                'marginBottom' : area.marginBottom,
-                'marginLeft' : area.marginLeft,
-                'marginRight' : area.marginRight,
-                'monitorIndex' : monitorIndex
-            });
-            desktopList.push(desktopListElement);
-        }
-        let desktopListVariant = new GLib.Variant('av', desktopList);
-        data.remoteDingActions.activate_action('updateGridWindows', desktopListVariant);
-        data.dbusTimeoutId = 0;
-        return false;
-    });
+}
+
+function getDesktopGeometry() {
+    let desktopList = [];
+    let ws = global.workspace_manager.get_workspace_by_index(0);
+    for(let monitorIndex = 0; monitorIndex < Main.layoutManager.monitors.length; monitorIndex++) {
+        let area = data.visibleArea.getMonitorGeometry(ws, monitorIndex);
+        let desktopListElement = new GLib.Variant('a{sd}', {
+            'x' : area.x,
+            'y': area.y,
+            'width' : area.width,
+            'height' : area.height,
+            'zoom' : area.scale,
+            'marginTop' : area.marginTop,
+            'marginBottom' : area.marginBottom,
+            'marginLeft' : area.marginLeft,
+            'marginRight' : area.marginRight,
+            'monitorIndex' : monitorIndex
+        });
+        desktopList.push(desktopListElement);
+    }
+    return new GLib.Variant('av', desktopList);
 }
 
 /**

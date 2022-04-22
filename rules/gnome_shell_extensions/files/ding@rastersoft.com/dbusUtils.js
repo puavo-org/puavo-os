@@ -27,6 +27,7 @@ var GnomeNautilusPreview = null;
 var SwitcherooControl = null;
 var GnomeArchiveManager = null;
 var GtkVfsMetadata = null;
+var extensionControl = null;
 
 var discreteGpuAvailable = false;
 var dbusManagerObject;
@@ -974,4 +975,10 @@ function init() {
     } else {
         RemoteFileOperations = new LegacyRemoteFileOperationsManager(NautilusFileOperations2, FreeDesktopFileManager, GnomeNautilusPreview, GnomeArchiveManager);
     }
+
+    extensionControl = Gio.DBusActionGroup.get(
+        Gio.DBus.session,
+        'com.rastersoft.dingextension',
+        '/com/rastersoft/dingextension/control'
+    );
 }
