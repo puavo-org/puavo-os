@@ -81,6 +81,7 @@ VEYON_BASE_CONFIG = {
       'UpdateInterval': '10'
   },
   'Service': {
+      'FailedAuthenticationNotifications': false,
       'HideTrayIcon': true,
       'RemoteConnectionNotifications': false
   },
