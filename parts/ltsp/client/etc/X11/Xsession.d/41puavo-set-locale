@@ -66,6 +66,7 @@ else
     fr) LANG=fr_FR.UTF-8 ;;
     id) LANG=id_ID.UTF-8 ;;
     sv) LANG=sv_FI.UTF-8 ;;
+    uk) LANG=uk_UA.UTF-8 ;;
      *)
         echo "unknown language '${puavo_language_short_form}', falling back to 'fi'" >&2
         LANG=fi_FI.UTF-8
