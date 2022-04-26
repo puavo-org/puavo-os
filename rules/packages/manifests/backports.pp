@@ -87,6 +87,7 @@ class packages::backports {
                   , 'libreoffice-l10n-fr'
                   , 'libreoffice-l10n-id'
                   , 'libreoffice-l10n-sv'
+                  , 'libreoffice-l10n-uk'
                   , 'libreoffice-librelogo'
                   , 'libreoffice-math'
                   , 'libreoffice-report-builder'

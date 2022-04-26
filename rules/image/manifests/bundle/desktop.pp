@@ -30,6 +30,7 @@ class image::bundle::desktop {
   include ::packages::languages::fr
   include ::packages::languages::id
   include ::packages::languages::sv
+  include ::packages::languages::uk
   include ::picaxe_udev_rules
   include ::polkit_printers
   include ::puavo_pkg::packages
