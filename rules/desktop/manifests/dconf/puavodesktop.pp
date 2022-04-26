@@ -21,7 +21,7 @@ class desktop::dconf::puavodesktop {
   }
 
   ::desktop::dconf::puavodesktop::locale {
-    [ 'ar', 'de', 'en', 'fi', 'fr', 'id', 'sv', 'uk', ]:
+    [ 'ar', 'de', 'en', 'fi', 'fr', 'sv', 'uk', ]:
       ;
   }
 
