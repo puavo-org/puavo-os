@@ -20,6 +20,12 @@ EOF
   (cd "$hp_utils_dir" && bash)
 }
 
+flash_bios_update_elitebook_g3() {
+  prepare_hp_utils
+
+  (cd "$hp_utils_dir" && hp-flash bios-elitebook-g3.bin)
+}
+
 import_config_student_laptop() {
   prepare_hp_utils
 
@@ -34,12 +40,13 @@ import_config_usb_stick_factory() {
 
 ask_choice() {
   choices=$(cat <<'EOF')
+Flash Elitebook G3 bios
 Import Student laptop BIOS Config
 Import USB Stick factory BIOS Config
 use HP BIOS utilities
 exit
 EOF
-  printf "%s" "$choices" | fzf --height=6 --layout=reverse-list
+  printf "%s" "$choices" | fzf --height=7 --layout=reverse-list
 }
 
 printf "\n"
@@ -54,6 +61,10 @@ printf ">> You chose '${chosen}'\n"
 case "$chosen" in
   exit)
     exit 0
+    ;;
+  'Flash Elitebook G3 bios')
+    flash_bios_update_elitebook_g3
+    sleep 3
     ;;
   'Import Student laptop BIOS Config')
     import_config_student_laptop

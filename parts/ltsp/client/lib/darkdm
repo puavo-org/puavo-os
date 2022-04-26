@@ -256,7 +256,7 @@ release: ${this_release}
 bios:            $(facter dmi.bios.vendor) / $(facter dmi.bios.version)
 cpu:             ${colorized_cpu}
 $(list_disks)
-memory:          ${colorized_memory}
+memory:          ${colorized_memory} ($(dmidecode -t 17 |grep Size | grep -v No | wc --lines)x)
 display:         ${colorized_display_resolution}
 $(list_networks)
 $(show_battery_status)
