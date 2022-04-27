@@ -150,6 +150,7 @@ class packages {
     , 'tftp'
     , 'telnet'
     , 'terminator'
+    , 'time'
     , 'tmux'
     , 'tmux-plugin-manager'
     , 'tshark'
