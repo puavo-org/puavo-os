@@ -2,12 +2,54 @@
 
 set -eu
 
-while true; do
-  read -p 'If you want to reset host state, write YES: ' answer
-  case "$answer" in
-    YES)
-      puavo-reset-laptop-to-factory-defaults
+reset_override_path='/state/etc/puavo/reset_override'
+
+if ! reset_state=$(jq -r .reset /etc/puavo/device.json) \
+  || [ -z "$reset_state" -o "$reset_state" = 'null' ]; then
+    # no reset state
+    rm -f "$reset_override_path"
+    echo 'No reset request even though puavo-reset is run, exiting..,' >&2
+    exit 1
+fi
+
+get_key() { printf "%s\n" "$reset_state" | jq -r --arg key "$1" '.[$key]'; }
+
+from=$(        get_key from)
+id=$(          get_key id)
+mode=$(        get_key mode)
+operation=$(   get_key operation)
+request_time=$(get_key request-time)
+
+show_info() {
+  cat <<EOF
+    >>> PUAVO RESET MODE <<<
+    >>> ================ <<<
+
+  This host has been marked for reset in Puavo.
+  User home directories will be wiped out
+  and system will be returned to factory defaults.
+
+  Detailed request information:
+    user account          $from
+    id                    $id
+    operation             $operation
+    request time          $request_time
+
+EOF
+}
+
+if [ "$mode" = 'ask' ]; then
+  while true; do
+    show_info
+    read -p 'Do you want this operation to proceed?  Write YES if yes: ' answer
+    if [ "$answer" = 'YES' ]; then
       break
-      ;;
-  esac
-done
+    fi
+  done
+fi
+
+# XXX this should *not* do a reboot:
+puavo-reset-laptop-to-factory-defaults --force
+# XXX should write $reset_override_path if our operation was successful
+# XXX the above should not do a reboot ... but can this be successful
+# XXX if imageoverlays have also been wiped out?
