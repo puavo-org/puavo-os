@@ -39,9 +39,21 @@ setupcon
 dmesg -n2
 
 dm="$(puavo-conf puavo.xsessions.display_manager)"
-if [ "$dm" = 'puavo-darkdm-cowsay' ]; then
-  do_cowsay
-  exit 0
-fi
+case "$dm" in
+  puavo-darkdm)
+    ;;
+  puavo-darkdm-cowsay)
+    do_cowsay
+    exit 0
+    ;;
+  puavo-darkdm-reset)
+    exec tmux new-session /usr/lib/puavo-ltsp-client/puavo-reset
+    exit 0
+    ;;
+  *)
+    echo "Unsupported darkdm mode: '${dm}'" >&2
+    exit 1
+    ;;
+esac
 
 exec tmux new-session /usr/lib/puavo-ltsp-client/darkdm

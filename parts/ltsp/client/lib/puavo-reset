@@ -1,0 +1,13 @@
+#/bin/sh
+
+set -eu
+
+while true; do
+  read -p 'If you want to reset host state, write YES: ' answer
+  case "$answer" in
+    YES)
+      puavo-reset-laptop-to-factory-defaults
+      break
+      ;;
+  esac
+done

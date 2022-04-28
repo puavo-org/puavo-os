@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+# XXX remove this
+puavo-conf --set-mode=add puavo.admin.reset.enabled true
+
+if [ "$(puavo-conf puavo.admin.reset.enabled)" != 'true' ]; then
+  exit 0
+fi
+
+puavo-conf puavo.xsessions.display_manager puavo-darkdm-reset
