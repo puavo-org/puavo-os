@@ -25,12 +25,11 @@ hp_wget_latest_and_flash() {
 
   mainboard_sysid=$(dmidecode -s baseboard-product-name)
   hp_ftp_url="https://ftp.ext.hp.com/pub/pcbios"
-  cd "$hp_utils_dir"
-  wget "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml"
-  hp_latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" $mainboard_sysid.xml)"
-  wget "$hp_ftp_url/$mainboard_sysid/$hp_latest_bios"
-  hp-flash "$hp_latest_bios"
-  exit 1
+  (cd "$hp_utils_dir" && \
+    wget "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml" && \
+    hp_latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" $mainboard_sysid.xml)" && \
+    wget "$hp_ftp_url/$mainboard_sysid/$hp_latest_bios" && \
+    hp-flash "$hp_latest_bios")
 }
 
 import_config_student_laptop() {
