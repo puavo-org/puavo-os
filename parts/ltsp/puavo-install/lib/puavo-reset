@@ -1,0 +1,97 @@
+#/bin/sh
+
+set -eu
+
+if ! mountpoint -q /state; then
+  echo 'puavo-reset can not be run unless /state is mounted' >&2
+  exit 1
+fi
+
+reset_override_path='/state/etc/puavo/reset_override'
+
+if ! reset_state=$(jq -r .reset /etc/puavo/device.json) \
+  || [ -z "$reset_state" -o "$reset_state" = 'null' ]; then
+    # no reset state
+    rm -f "$reset_override_path"
+    echo 'No reset request even though puavo-reset is run, exiting..,' >&2
+    exit 1
+fi
+
+get_key() { printf "%s\n" "$reset_state" | jq -r --arg key "$1" '.[$key]'; }
+
+from=$(        get_key from)
+id=$(          get_key id)
+mode=$(        get_key mode)
+operation=$(   get_key operation)
+pin=$(         get_key pin)
+request_time=$(get_key request-time)
+
+request_time_for_tz=$(date --date="$request_time")
+
+show_info() {
+  cat <<EOF
+  >>> PUAVO RESET MODE <<<
+  >>> ================ <<<
+
+This host has been marked for reset in Puavo.
+User home directories will be wiped out
+and system will be returned to factory defaults.
+
+Detailed request information:
+  user account          $from
+  id                    $id
+  operation             $operation
+  request time          $request_time_for_tz
+
+EOF
+}
+
+ask_pin_to_proceed() {
+  local pin_answer
+
+  while true; do
+    clear
+    show_info
+    echo 'You must provide the correct PIN code to proceed with the operation.'
+    read -p '  PIN CODE: ' pin_answer
+    if [ "$pin_answer" = "$pin" ]; then
+      echo '    PIN OK, continuing...'
+      return 0
+    fi
+    echo '    WRONG PIN!'
+    sleep 1
+  done
+}
+
+case "$mode" in
+  ask_pin)
+    ask_pin_to_proceed "$pin"
+    sleep 2
+    ;;
+  *)
+    echo "Unsupported mode '${mode}'" >&2
+    exit 1
+    ;;
+esac
+
+puavo-reset-laptop-to-factory-defaults --force --no-reboot
+
+current_time=$(date -Iseconds)
+printf "%s\n" "$reset_state" \
+  | jq --arg current_time "$current_time" '
+      .["request-fulfilled"] = $current_time
+    ' \
+  > "${reset_override_path}.tmp"
+mv "${reset_override_path}.tmp" "$reset_override_path"
+
+# puavo-reset-laptop-to-factory-defaults has duplicate code
+i=5
+echo -n "rebooting in $i seconds..."
+while [ "$i" -gt 0 ]; do
+  i=$(($i - 1))
+  sleep 1
+  echo -n " $i"
+done
+echo .
+
+reboot
