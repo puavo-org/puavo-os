@@ -3,6 +3,7 @@
 set -eu
 
 request_confirmation=true
+do_reboot=true
 use_secure_delete=false
 
 destroy_in_dir() {
@@ -30,9 +31,10 @@ destroy_in_dir() {
 
 usage() {
   cat <<EOF
-$(basename $0) [--force] [--secure-delete]
+$(basename $0) [--force] [--no-reboot] [--secure-delete]
 
   --force               no questions asked
+  --no-reboot           no rebooting after operation is done
   --secure-delete       overwrite files before unlinking them (slow!)
 EOF
   exit 1
@@ -52,6 +54,13 @@ if [ "$(puavo-conf puavo.mounts.nethomes.enabled)" = 'true' ]; then
   exit 1
 fi
 
+for mnt in /home /images /state; do
+  if ! mountpoint -q "$mnt"; then
+    echo "${mnt} is not mounted, not continuing" >&2
+    exit 1
+  fi
+done
+
 puavo_hosttype=$(cat /etc/puavo/hosttype)
 
 if [ "$puavo_hosttype" != "laptop" ]; then
@@ -59,15 +68,16 @@ if [ "$puavo_hosttype" != "laptop" ]; then
   exit 1
 fi
 
-if ! args=$(getopt -n "$0" -o + -l 'force,secure-delete' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'force,no-reboot,secure-delete' -- "$@"); then
   usage
 fi
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --force)            request_confirmation=false; shift ;;
-    --secure-delete)    use_secure_delete=true    ; shift ;;
+    --force)         request_confirmation=false; shift ;;
+    --no-reboot)     do_reboot=false           ; shift ;;
+    --secure-delete) use_secure_delete=true    ; shift ;;
     --) shift; break ;;
     *)  usage ;;
   esac
@@ -134,13 +144,15 @@ destroy_in_dir /imageoverlays/ 'Cleaning up /imageoverlays'
 destroy_in_dir /state/etc/NetworkManager/system-connections/ \
                'Removing network manager connections'
 
-i=5
-echo -n "rebooting in $i seconds..."
-while [ "$i" -gt 0 ]; do
-  i=$(($i - 1))
-  sleep 1
-  echo -n " $i"
-done
-echo .
+if $do_reboot; then
+  i=5
+  echo -n "rebooting in $i seconds..."
+  while [ "$i" -gt 0 ]; do
+    i=$(($i - 1))
+    sleep 1
+    echo -n " $i"
+  done
+  echo .
 
-reboot
+  reboot
+fi
