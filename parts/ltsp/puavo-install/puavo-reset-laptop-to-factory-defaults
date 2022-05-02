@@ -145,6 +145,7 @@ destroy_in_dir /state/etc/NetworkManager/system-connections/ \
                'Removing network manager connections'
 
 if $do_reboot; then
+  # puavo-reset has duplicated code
   i=5
   echo -n "rebooting in $i seconds..."
   while [ "$i" -gt 0 ]; do

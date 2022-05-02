@@ -83,3 +83,15 @@ printf "%s\n" "$reset_state" \
     ' \
   > "${reset_override_path}.tmp"
 mv "${reset_override_path}.tmp" "$reset_override_path"
+
+# puavo-reset-laptop-to-factory-defaults has duplicate code
+i=5
+echo -n "rebooting in $i seconds..."
+while [ "$i" -gt 0 ]; do
+  i=$(($i - 1))
+  sleep 1
+  echo -n " $i"
+done
+echo .
+
+reboot
