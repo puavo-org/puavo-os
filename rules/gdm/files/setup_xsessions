@@ -65,12 +65,13 @@ if [ -e /etc/X11/sessions/puavo-desktop.desktop ]; then
   for lang in $alt_languages; do
     test -n "$lang" || continue
     case "$lang" in
-      de) language_message='Deutsch'  ;;
-      en) language_message='English'  ;;
-      fi) language_message='suomi'    ;;
-      fr) language_message='français' ;;
-      sv) language_message='svenska'  ;;
-      *)  language_message=$lang      ;;
+      de) language_message='Deutsch'   ;;
+      en) language_message='English'   ;;
+      fi) language_message='suomi'     ;;
+      fr) language_message='français'  ;;
+      sv) language_message='svenska'   ;;
+      uk) language_message='украї́нська';;
+      *)  language_message=$lang       ;;
     esac
 
     # Create language-specific puavo session.
