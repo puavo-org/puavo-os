@@ -48,7 +48,6 @@ case "$dm" in
     ;;
   puavo-darkdm-reset)
     exec tmux new-session /usr/lib/puavo-ltsp-client/puavo-reset
-    exit 0
     ;;
   *)
     echo "Unsupported darkdm mode: '${dm}'" >&2
