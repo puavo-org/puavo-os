@@ -62,6 +62,14 @@ test_disks() {
   dialog --no-collapse --msgbox "${error_output}${all_output}" -1 -1
 }
 
+test_bluetooth() {
+  btmac=$(hcitool dev | awk '$0=$2')
+  clear
+  echo "Bluetooh module MAC: ${btmac}"
+  hcitool scan
+  sleep 4
+}
+
 test_keyboard() {
   local ruby_test_keyboard_script
 
@@ -217,7 +225,7 @@ run_mouse_test() {
   echo ">>> Now running evtest ${1} for 10 seconds"
   echo '>>>'
   sleep 1
-  timeout -k 1 10 evtest "$1" || true
+  timeout -k 1 4 evtest "$1" || true
   sleep 1
 
 }
@@ -288,6 +296,16 @@ test_mouse() {
 test_microphone() {
   local alsadev
   alsadev='plughw:CARD=PCH'
+  product_name=$(dmidecode -s system-product-name)
+  case "$(product_name)" in
+    *"820 G1"* | *"820 G2"* | *"840 G1"* | *"840 G2"*)
+      alsadev='hw:1,0'
+      ;;
+    *)
+      alsadev='hw:0,0'
+      ;;
+  esac
+
   clear
   echo "Using ALSA device ${alsadev} for recording..."
   echo
@@ -304,19 +322,25 @@ test_speakers() {
   local speaker_test_status
   local alsadev
   speaker_test_status=0
+  product_name=$(dmidecode -s system-product-name)
+  case "${product_name}" in
+    ### Could we just use *G1* and *G2* instead of the one below? Needs testing..
+    *"820 G1"* | *"820 G2"* | *"840 G1"* | *"840 G2"*)
+      alsadev='hw:1,0'
+      ;;
+    *)
+      alsadev='hw:0,0'
+      ;;
+  esac
 
-  alsadev='plughw:CARD=PCH'
   clear
-  speaker-test --device="${alsadev}" -t wav -p 256 -c 2 -l 2 || speaker_test_status=1
-  speaker-test --device="${alsadev}" -t pink -p 256 -c 2 -l 1 || speaker_test_status=1
+  speaker-test --device="${alsadev}" -t wav -c 2 -l 1 || speaker_test_status=1
 
   # XXX This uses wav files that might no longer exist after
   # XXX Scratch or Solfege is updated.
+  # XXX Replace the below file with some type of sinewave audio which goes through multiple frequencies.
   aplay --device="${alsadev}" \
         /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
-        /usr/share/scratch/Media/Sounds/Electronic/ComputerBeeps1.wav \
-        /usr/share/scratch/Media/Sounds/Human/Laugh-female.wav \
-        /usr/share/solfege/exercises/standard/lesson-files/share/fanfare.wav \
     || speaker_test_status=1
 
   sleep 2
@@ -370,9 +394,10 @@ fi
 mainmenu_default_item='camera'
 while true; do
   response=$(dialog --stdout --default-item "$mainmenu_default_item" \
-                    --menu 'Choose a test' 15 44 8 \
+                    --menu 'Choose a test' 16 44 9 \
                camera     'Test webcam' \
                disks      'Test disks' \
+               bluetooth  'Test bluetooth' \
                keyboard   'Test keyboard' \
                microphone 'Test microphone' \
                mouse      'Test mouse/mice' \
@@ -381,8 +406,9 @@ while true; do
                quit       'Exit tests') || true
 
   case "$response" in
-    camera)     mainmenu_default_item=keyboard;   test_camera     || true ;;
-    disks)      mainmenu_default_item=disks;      test_disks      || true ;;
+    camera)     mainmenu_default_item=bluetooth;  test_camera     || true ;;
+    disks)      mainmenu_default_item=bluetooth;  test_disks      || true ;;
+    bluetooth)  mainmenu_default_item=keyboard;   test_bluetooth  || true ;;
     keyboard)   mainmenu_default_item=microphone; test_keyboard   || true ;;
     microphone) mainmenu_default_item=mouse;      test_microphone || true ;;
     mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
