@@ -20,7 +20,6 @@ fi
 get_key() { printf "%s\n" "$reset_state" | jq -r --arg key "$1" '.[$key]'; }
 
 from=$(        get_key from)
-id=$(          get_key id)
 mode=$(        get_key mode)
 operation=$(   get_key operation)
 pin=$(         get_key pin)
@@ -38,10 +37,9 @@ User home directories will be wiped out
 and system will be returned to factory defaults.
 
 Detailed request information:
-  user account          $from
-  id                    $id
-  operation             $operation
-  request time          $request_time_for_tz
+  user account    $from
+  operation       $operation
+  request time    $request_time_for_tz
 
 EOF
 }
@@ -76,10 +74,10 @@ esac
 
 case "$operation" in
   fast-reset)
-    puavo-reset-laptop-to-factory-defaults --force --no-reboot
+    prltfd_args='--force'
     ;;
   reset)
-    puavo-reset-laptop-to-factory-defaults --force --no-reboot --secure-delete
+    prltfd_args='--force --secure-delete'
     ;;
   *)
     echo "Unknown operation: '${operation}'" >&2
@@ -87,22 +85,8 @@ case "$operation" in
     ;;
 esac
 
-current_time=$(date -Iseconds)
-printf "%s\n" "$reset_state" \
-  | jq --arg current_time "$current_time" '
-      .["request-fulfilled"] = $current_time
-    ' \
-  > "${reset_override_path}.tmp"
-mv "${reset_override_path}.tmp" "$reset_override_path"
-
-# puavo-reset-laptop-to-factory-defaults has duplicate code
-i=5
-echo -n "rebooting in $i seconds..."
-while [ "$i" -gt 0 ]; do
-  i=$(($i - 1))
-  sleep 1
-  echo -n " $i"
-done
-echo .
-
-reboot
+if ! puavo-reset-laptop-to-factory-defaults $prltfd_args; then
+  echo 'DEVICE RESET FAILED, press ENTER to reboot.' >&2
+  read answer
+  reboot
+fi

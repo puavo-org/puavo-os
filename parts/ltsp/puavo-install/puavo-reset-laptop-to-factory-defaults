@@ -3,7 +3,6 @@
 set -eu
 
 request_confirmation=true
-do_reboot=true
 use_secure_delete=false
 
 destroy_in_dir() {
@@ -31,13 +30,40 @@ destroy_in_dir() {
 
 usage() {
   cat <<EOF
-$(basename $0) [--force] [--no-reboot] [--secure-delete]
+$(basename $0) [--force] [--secure-delete]
 
   --force               no questions asked
-  --no-reboot           no rebooting after operation is done
   --secure-delete       overwrite files before unlinking them (slow!)
 EOF
   exit 1
+}
+
+write_reset_override() {
+  local current_time operation reset_override_path user
+
+  operation=$1
+
+  reset_override_path='/state/etc/puavo/reset_override'
+
+  current_time=$(date -Iseconds) || return 1
+  user="${SUDO_USER:-}"
+  if [ -z "$user" ]; then user="${USER:-}"; fi
+  if [ -z "$user" ]; then user='?'        ; fi
+
+  jq -r --arg current_time "$current_time" \
+        --arg operation    "$operation"    \
+        --arg user         "$user" '
+    if (.|has("reset")) and (.reset|type == "object") then
+      .reset
+    else
+      {
+        "from":         $user,
+        "operation":    $operation,
+        "request-time": $current_time,
+      }
+    end | .["request-fulfilled"] = $current_time
+  ' /state/etc/puavo/device.json > "${reset_override_path}.tmp" || return 1
+  mv "${reset_override_path}.tmp" "$reset_override_path" || return 1
 }
 
 wrap_msg() {
@@ -68,7 +94,7 @@ if [ "$puavo_hosttype" != "laptop" ]; then
   exit 1
 fi
 
-if ! args=$(getopt -n "$0" -o + -l 'force,no-reboot,secure-delete' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'force,secure-delete' -- "$@"); then
   usage
 fi
 
@@ -76,7 +102,6 @@ eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
     --force)         request_confirmation=false; shift ;;
-    --no-reboot)     do_reboot=false           ; shift ;;
     --secure-delete) use_secure_delete=true    ; shift ;;
     --) shift; break ;;
     *)  usage ;;
@@ -84,6 +109,12 @@ while [ $# -ne 0 ]; do
 done
 
 [ $# -eq 0 ] || usage
+
+if $use_secure_delete; then
+  operation='reset'
+else
+  operation='fast-reset'
+fi
 
 while $request_confirmation; do
   cat <<'EOF'
@@ -144,16 +175,18 @@ destroy_in_dir /imageoverlays/ 'Cleaning up /imageoverlays'
 destroy_in_dir /state/etc/NetworkManager/system-connections/ \
                'Removing network manager connections'
 
-if $do_reboot; then
-  # puavo-reset has duplicated code
-  i=5
-  echo -n "rebooting in $i seconds..."
-  while [ "$i" -gt 0 ]; do
-    i=$(($i - 1))
-    sleep 1
-    echo -n " $i"
-  done
-  echo .
-
-  reboot
+if ! write_reset_override "$operation"; then
+  echo 'error in writing reset override' >&2
+  exit 1
 fi
+
+i=5
+echo -n "rebooting in $i seconds..."
+while [ "$i" -gt 0 ]; do
+  i=$(($i - 1))
+  sleep 1
+  echo -n " $i"
+done
+echo .
+
+reboot
