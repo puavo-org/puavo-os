@@ -222,7 +222,7 @@ EOF
 run_mouse_test() {
   clear
   echo '>>>'
-  echo ">>> Now running evtest ${1} for 10 seconds"
+  echo ">>> Now running evtest ${1} for 4 seconds"
   echo '>>>'
   sleep 1
   timeout -k 1 4 evtest "$1" || true
@@ -295,7 +295,6 @@ test_mouse() {
 
 test_microphone() {
   local alsadev
-  alsadev='plughw:CARD=PCH'
   product_name=$(dmidecode -s system-product-name)
   case "$(product_name)" in
     *"820 G1"* | *"820 G2"* | *"840 G1"* | *"840 G2"*)
@@ -334,7 +333,6 @@ test_speakers() {
   esac
 
   clear
-  speaker-test --device="${alsadev}" -t wav -c 2 -l 1 || speaker_test_status=1
 
   # XXX This uses wav files that might no longer exist after
   # XXX Scratch or Solfege is updated.
