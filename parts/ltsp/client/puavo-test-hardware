@@ -293,37 +293,14 @@ test_mouse() {
   return 0
 }
 
-test_microphone() {
+test_audio() {
+  local audio_test_status
   local alsadev
-  product_name=$(dmidecode -s system-product-name)
-  case "$(product_name)" in
-    *"820 G1"* | *"820 G2"* | *"840 G1"* | *"840 G2"*)
-      alsadev='hw:1,0'
-      ;;
-    *)
-      alsadev='hw:0,0'
-      ;;
-  esac
-
-  clear
-  echo "Using ALSA device ${alsadev} for recording..."
-  echo
-
-  if arecord --vumeter=stereo -f cd -d 10 --device="${alsadev}" /dev/null; then
-    echo
-    echo 'Recording finished.'
-  fi
-
-  sleep 2
-}
-
-test_speakers() {
-  local speaker_test_status
-  local alsadev
-  speaker_test_status=0
+  audio_test_status=0
   product_name=$(dmidecode -s system-product-name)
   case "${product_name}" in
     ### Could we just use *G1* and *G2* instead of the one below? Needs testing..
+    ### For now, this suffices.
     *"820 G1"* | *"820 G2"* | *"840 G1"* | *"840 G2"*)
       alsadev='hw:1,0'
       ;;
@@ -333,13 +310,12 @@ test_speakers() {
   esac
 
   clear
-
-  # XXX This uses wav files that might no longer exist after
-  # XXX Scratch or Solfege is updated.
-  # XXX Replace the below file with some type of sinewave audio which goes through multiple frequencies.
+  ### This file needs to be put somewhere.
   aplay --device="${alsadev}" \
-        /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
-    || speaker_test_status=1
+        /wheretoputthisfile/testaudio.wav & \
+  arecord --vumeter=stereo -f cd -d 4 --device="${alsadev}" /dev/null && \
+  echo 'Recording finished.' \
+      || audio_test_status=1
 
   sleep 2
 }
@@ -389,29 +365,27 @@ if [ "$(id -u)" -ne 0 ]; then
   return 1
 fi
 
-mainmenu_default_item='camera'
+mainmenu_default_item='audio'
 while true; do
   response=$(dialog --stdout --default-item "$mainmenu_default_item" \
-                    --menu 'Choose a test' 16 44 9 \
+                    --menu 'Choose a test' 15 44 8 \
+               audio      'Test audio devices' \
                camera     'Test webcam' \
-               disks      'Test disks' \
                bluetooth  'Test bluetooth' \
+               disks      'Test disks' \
                keyboard   'Test keyboard' \
-               microphone 'Test microphone' \
                mouse      'Test mouse/mice' \
                wifi       'Test wireless networking' \
-               speakers   'Test speakers' \
                quit       'Exit tests') || true
 
   case "$response" in
+    audio)      mainmenu_default_item=camera;     test_audio      || true ;;
     camera)     mainmenu_default_item=bluetooth;  test_camera     || true ;;
-    disks)      mainmenu_default_item=bluetooth;  test_disks      || true ;;
     bluetooth)  mainmenu_default_item=keyboard;   test_bluetooth  || true ;;
-    keyboard)   mainmenu_default_item=microphone; test_keyboard   || true ;;
-    microphone) mainmenu_default_item=mouse;      test_microphone || true ;;
+    disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
+    keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
     mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
-    wifi)       mainmenu_default_item=speakers;   test_wifi       || true ;;
-    speakers)   mainmenu_default_item=quit;       test_speakers   || true ;;
+    wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
