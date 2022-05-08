@@ -67,7 +67,7 @@ test_bluetooth() {
   clear
   echo "Bluetooh module MAC: ${btmac}"
   hcitool scan
-  sleep 4
+  sleep 3
 }
 
 test_keyboard() {
