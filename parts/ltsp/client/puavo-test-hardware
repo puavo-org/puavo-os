@@ -67,7 +67,7 @@ bt_test_status() {
   if [ "$a" -gt "1" ]; then
     echo "OK"
   else
-    echo "Scanning..."                                                                                                                                                                                                                              
+    echo "Scanning..."
   fi
 }
 
@@ -397,12 +397,12 @@ while true; do
 
   case "$response" in
     audio)      mainmenu_default_item=camera;     test_audio      || true ;;
-    camera)     mainmenu_default_item=bluetooth;  test_camera     || true ;;
+    camera)     mainmenu_default_item=keyboard;   test_camera     || true ;;
     disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
     keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
     mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
-    wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
-    bluetooth)  mainmenu_default_item=keyboard;   bt_test_results || true ;;
+    wifi)       mainmenu_default_item=bluetooth;  test_wifi       || true ;;
+    bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
