@@ -37,9 +37,9 @@ User home directories will be wiped out
 and system will be returned to factory defaults.
 
 Detailed request information:
-  user account    $from
-  operation       $operation
-  request time    $request_time_for_tz
+  operation:            $operation
+  request came from:    $from
+  request time:         $request_time_for_tz
 
 EOF
 }
