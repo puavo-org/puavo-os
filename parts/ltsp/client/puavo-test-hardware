@@ -62,11 +62,18 @@ test_disks() {
   dialog --no-collapse --msgbox "${error_output}${all_output}" -1 -1
 }
 
-test_bluetooth() {
-  btmac=$(hcitool dev | awk '$0=$2')
+bt_test_status() {
+  a="$(wc --lines /tmp/bluetoothtest | awk '{print $1}')"
+  if [ "$a" -gt "1" ]; then
+    echo "OK"
+  else
+    echo "Scanning..."                                                                                                                                                                                                                              
+  fi
+}
+
+bt_test_results() {
   clear
-  echo "Bluetooh module MAC: ${btmac}"
-  hcitool scan
+  cat /tmp/bluetoothtest
   sleep 3
 }
 
@@ -373,30 +380,34 @@ if [ "$(id -u)" -ne 0 ]; then
   return 1
 fi
 
+hcitool scan >> /tmp/bluetoothtest 2> /dev/null &
+
 mainmenu_default_item='audio'
 while true; do
   response=$(dialog --stdout --default-item "$mainmenu_default_item" \
                     --menu 'Choose a test' 15 44 8 \
                audio      'Test audio devices' \
                camera     'Test webcam' \
-               bluetooth  'Test bluetooth' \
                disks      'Test disks' \
                keyboard   'Test keyboard' \
                mouse      'Test mouse/mice' \
                wifi       'Test wireless networking' \
+               bluetooth  "$(bt_test_status)" \
                quit       'Exit tests') || true
 
   case "$response" in
     audio)      mainmenu_default_item=camera;     test_audio      || true ;;
     camera)     mainmenu_default_item=bluetooth;  test_camera     || true ;;
-    bluetooth)  mainmenu_default_item=keyboard;   test_bluetooth  || true ;;
     disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
     keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
     mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
     wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
+    bluetooth)  mainmenu_default_item=keyboard;   bt_test_results || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
 done
+
+rm -f /tmp/bluetoothtest
 
 exit 0
