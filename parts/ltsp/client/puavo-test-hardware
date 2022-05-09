@@ -303,6 +303,9 @@ test_audio() {
     ### For now, this suffices.
     *"820 G1"* | *"820 G2"* | *"840 G1"* | *"840 G2"*)
       alsadev='hw:1,0'
+      ### Let's also raise the volume a bit, since G1/G2 speakers seem to be quieter than newer gen.
+      ### Still needs testing, so not using it yet.
+      # amixer --card 'PCH' set 'Master' 75
       ;;
     *)
       alsadev='hw:0,0'
@@ -312,12 +315,12 @@ test_audio() {
   clear
 
   ### On some devices, VUMeter does not register changes in audio levels if we play the test with normal sensitivity. Probably something to do with the microphones location.
-  ### We do not want to break our ears by boosting the audio itself, so lets just boost microphone input by one level (about 12 dB).
-  amixer set 'Internal Mic Boost' 1
+  ### We do not want to break our ears by boosting the audio itself, so lets just boost microphone input by a couple levels (a few dozen dB).
+  amixer --card 'PCH' set 'Internal Mic Boost' 2
 
   ### This file needs to be put somewhere.
   aplay --device="${alsadev}" \
-        /folder/testaudio.wav & \
+        /usr/share/sounds/speakertest.wav & \
   arecord --vumeter=stereo -f cd -d 4 --device="${alsadev}" /dev/null && \
   echo 'Recording finished.' \
       || audio_test_status=1
