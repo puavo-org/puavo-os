@@ -63,8 +63,8 @@ test_disks() {
 }
 
 bt_test_status() {
-  a="$(wc --lines $teststderr | awk '{print $1}')"
-  b="$(wc --lines $teststdout | awk '{print $1}')"
+  a="$(wc --lines "$teststderr" | awk '{print $1}')"
+  b="$(wc --lines "$teststdout" | awk '{print $1}')"
   if [ "$a" -gt "0" ]; then
     echo "ERROR"
   elif [ "$b" -gt "1" ]; then
@@ -76,8 +76,7 @@ bt_test_status() {
 
 bt_test_results() {
   clear
-  cat $teststderr
-  cat $teststdout
+  cat "$teststderr" "$teststdout"
   sleep 2
 }
 
@@ -383,10 +382,10 @@ if [ "$(id -u)" -ne 0 ]; then
   return 1
 fi
 
-teststdout=$(mktemp)
-teststderr=$(mktemp)
+teststdout=$(mktemp /tmp/puavo-test-hardware-bluetooth-stdout.XXXXXX)
+teststderr=$(mktemp /tmp/puavo-test-hardware-bluetooth-stderr.XXXXXX)
 
-hcitool scan >> $teststdout 2> $teststderr &
+hcitool scan > "$teststdout" 2> "$teststderr" &
 
 mainmenu_default_item='audio'
 while true; do
@@ -414,7 +413,6 @@ while true; do
   esac
 done
 
-rm -f $teststdout
-rm -f $teststderr
+rm -f "$teststdout" "$teststderr"
 
 exit 0
