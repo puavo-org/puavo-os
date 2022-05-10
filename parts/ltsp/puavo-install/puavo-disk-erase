@@ -75,6 +75,8 @@ secure_erase() {
       echo 'User and password set, proceeding to Secure Erase.'
       time --format "Time elapsed: %E" hdparm --user-master user --security-erase Pass "${target_disk}"
       echo 'Command completed. You may check how long the erase took above.'
+      echo 'Unlocking disk..'
+      hdparm --user-master user --security-unlock Pass "${target_disk}"
       echo 'If you see no errors, you may re-plug the disk or reboot the device.'
       ;;
   esac
