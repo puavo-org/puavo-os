@@ -151,7 +151,11 @@ list_networks() {
 show_bluetooth() {
   btdev=$(hcitool dev | awk 'FNR == 2 {print $1}')
   btmac=$(hcitool dev | awk '$0=$2')
-  printf "bluetooth ${btdev}:  MAC ${btmac}"
+  if [ -z ${btdev} ]; then
+    printf "bluetooth:%-6s not present"
+  else
+    printf "bluetooth %-6s MAC %s" "${btdev}:" "${btmac}"
+  fi
 }
 
 show_battery_status() {
