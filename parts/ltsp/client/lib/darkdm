@@ -338,6 +338,7 @@ Puavo OS Command Shell
 
 Commands:
   bios                   configure BIOS (only on some supported machines)
+  erase                  secure erase a disk (only on SSD's that support it)
   expert-install         install Puavo OS with more detailed questions
   expert-preinstall      install without registering, expert mode
   help                   show more detailed help
@@ -362,7 +363,7 @@ EOF
 
 darkdm_print_short_help() {
   darkdm_print_help \
-    | awk '$1 !~ /bios|expert|mount|reboot|preinstall|savedisk/'
+    | awk '$1 !~ /bios|erase|expert|mount|reboot|preinstall|savedisk/'
 }
 
 darkdm_shell()
@@ -530,6 +531,9 @@ darkdm_menu()
     case "$command" in
       bios)
         puavo-bios-config || return 1
+        ;;
+      erase)
+        puavo-disk-erase || return 1
         ;;
       expert-install)
         darkdm_install expert-install || return 1

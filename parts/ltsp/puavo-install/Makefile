@@ -34,6 +34,7 @@ install : installdirs
 		puavo-bios-config \
 		puavo-client-daemon \
 		puavo-disk-clone \
+		puavo-disk-erase \
 		puavo-install \
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
