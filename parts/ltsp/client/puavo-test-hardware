@@ -63,8 +63,11 @@ test_disks() {
 }
 
 bt_test_status() {
-  a="$(wc --lines /tmp/bluetoothtest | awk '{print $1}')"
-  if [ "$a" -gt "1" ]; then
+  a="$(wc --lines $teststderr | awk '{print $1}')"
+  b="$(wc --lines $teststdout | awk '{print $1}')"
+  if [ "$a" -gt "0" ]; then
+    echo "ERROR"
+  elif [ "$b" -gt "1" ]; then
     echo "OK"
   else
     echo "Scanning..."
@@ -73,8 +76,9 @@ bt_test_status() {
 
 bt_test_results() {
   clear
-  cat /tmp/bluetoothtest
-  sleep 3
+  cat $teststderr
+  cat $teststdout
+  sleep 2
 }
 
 test_keyboard() {
@@ -379,7 +383,10 @@ if [ "$(id -u)" -ne 0 ]; then
   return 1
 fi
 
-hcitool scan >> /tmp/bluetoothtest 2> /dev/null &
+teststdout=$(mktemp)
+teststderr=$(mktemp)
+
+hcitool scan >> $teststdout 2> $teststderr &
 
 mainmenu_default_item='audio'
 while true; do
@@ -407,6 +414,7 @@ while true; do
   esac
 done
 
-rm -f /tmp/bluetoothtest
+rm -f $teststdout
+rm -f $teststderr
 
 exit 0
