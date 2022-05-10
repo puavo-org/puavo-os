@@ -149,18 +149,28 @@ list_networks() {
 }
 
 show_bluetooth() {
-  btdev=$(hcitool dev | awk 'FNR == 2 {print $1}')
-  btmac=$(hcitool dev | awk '$0=$2')
-  if [ -z ${btdev} ]; then
-    printf "bluetooth:%-6s not present"
+  local btdev btdev_str btmac colorvalue colorized_value
+
+  btdev=$(hcitool dev | awk 'NR == 2 { print $1 }')
+  btmac=$(hcitool dev | awk 'NR == 2 { print $2 }')
+
+  btdev_str=''
+  if [ -z "$btdev" ]; then
+    btmac='not present'
+    colorvalue=0
   else
-    printf "bluetooth %-6s MAC %s" "${btdev}:" "${btmac}"
+    btmac="MAC ${btmac}"
+    colorvalue=100
+    btdev_str=" $btdev"
   fi
+
+  colorized_value=$(colorize bluetooth 1 1 1 "$colorvalue" "$btmac")
+  printf "bluetooth%-7s %s" "${btdev_str}:" "$colorized_value"
 }
 
 show_battery_status() {
-  local battery_capacity colorized_battery_capacity other_battery_info \
-        battery_status upower_output
+  local battery_capacity battery_color_value colorized_battery_status \
+        battery_status other_battery_info upower_output
 
   upower_output=$(upower --show-info \
                          /org/freedesktop/UPower/devices/battery_BAT0 \
@@ -169,12 +179,10 @@ show_battery_status() {
   battery_capacity=$(printf "%s" "$upower_output" \
     | awk '$1 == "capacity:" { sub(/%$/, "", $2); printf "%d\n", $2 }')
 
-  battery_serial=$(echo "$upower_output" | awk '$1 == "serial:" { printf $3 }')
+  battery_serial=$(printf %s "$upower_output" \
+                     | awk '$1 == "serial:" { print $2, $3 }')
 
-  colorized_battery_capacity=$(colorize battery 70 80 90 \
-                                 "$battery_capacity" \
-                                 "${battery_capacity}% (capacity)")
-  other_battery_info=$(printf "%s\n" "hello $upower_output" \
+  other_battery_info=$(printf "%s\n" "$upower_output" \
     | awk '
         $1 == "energy:"             { energy             = $2 $3 }
         $1 == "energy-full:"        { energy_full        = $2 $3 }
@@ -185,13 +193,19 @@ show_battery_status() {
         }
       ')
 
-  if echo "${battery_serial}" | grep "2000/01/31" ; then
-    battery_status="${colorized_battery_capacity} | ${other_battery_info} | MISSING BATTERY?"
+  if printf %s "$battery_serial" | grep -q '00001 2000/01/31'; then
+    battery_color_value=0
+    other_battery_info="${other_battery_info} | MISSING?"
   else
-    battery_status="${colorized_battery_capacity} | ${other_battery_info}"
+    battery_color_value="$battery_capacity"
   fi
 
-  printf "battery:         %s\n" "$battery_status"
+  battery_status="${battery_capacity}% (capacity) | ${other_battery_info}"
+
+  colorized_battery_status=$(colorize battery 70 80 90 "$battery_color_value" \
+                                      "$battery_status")
+
+  printf "battery:         %s\n" "$colorized_battery_status"
 }
 
 windows_license() {
