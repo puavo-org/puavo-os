@@ -148,6 +148,16 @@ list_networks() {
   done
 }
 
+show_bluetooth() {
+  btdev=$(hcitool dev | awk 'FNR == 2 {print $1}')
+  btmac=$(hcitool dev | awk '$0=$2')
+  if [ -z ${btdev} ]; then
+    printf "bluetooth:%-6s not present"
+  else
+    printf "bluetooth %-6s MAC %s" "${btdev}:" "${btmac}"
+  fi
+}
+
 show_battery_status() {
   local battery_capacity colorized_battery_capacity other_battery_info \
         battery_status upower_output
@@ -159,22 +169,25 @@ show_battery_status() {
   battery_capacity=$(printf "%s" "$upower_output" \
     | awk '$1 == "capacity:" { sub(/%$/, "", $2); printf "%d\n", $2 }')
 
-  if [ -z "$battery_capacity" ]; then
-    status='NONE'
+  battery_serial=$(echo "$upower_output" | awk '$1 == "serial:" { printf $3 }')
+
+  colorized_battery_capacity=$(colorize battery 70 80 90 \
+                                 "$battery_capacity" \
+                                 "${battery_capacity}% (capacity)")
+  other_battery_info=$(printf "%s\n" "hello $upower_output" \
+    | awk '
+        $1 == "energy:"             { energy             = $2 $3 }
+        $1 == "energy-full:"        { energy_full        = $2 $3 }
+        $1 == "energy-full-design:" { energy_full_design = $2 $3 }
+        END {
+          printf "%s/%s (design capacity: %s)", energy, energy_full,
+            energy_full_design
+        }
+      ')
+
+  if echo "${battery_serial}" | grep "2000/01/31" ; then
+    battery_status="${colorized_battery_capacity} | ${other_battery_info} | MISSING BATTERY?"
   else
-    colorized_battery_capacity=$(colorize battery 70 80 90 \
-                                   "$battery_capacity" \
-                                   "${battery_capacity}% (capacity)")
-    other_battery_info=$(printf "%s\n" "hello $upower_output" \
-      | awk '
-          $1 == "energy:"             { energy             = $2 $3 }
-          $1 == "energy-full:"        { energy_full        = $2 $3 }
-          $1 == "energy-full-design:" { energy_full_design = $2 $3 }
-          END {
-            printf "%s/%s (design capacity: %s)", energy, energy_full,
-              energy_full_design
-          }
-        ')
     battery_status="${colorized_battery_capacity} | ${other_battery_info}"
   fi
 
@@ -259,6 +272,7 @@ $(list_disks)
 memory:          ${colorized_memory} ($(dmidecode -t 17 |grep Size | grep -v No | wc --lines)x)
 display:         ${colorized_display_resolution}
 $(list_networks)
+$(show_bluetooth)
 $(show_battery_status)
 product:         $(facter dmi.manufacturer) / ${colorized_product_name}
 serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board) / ${sku_number} (SKU)
