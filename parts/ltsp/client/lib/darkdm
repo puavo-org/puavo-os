@@ -172,8 +172,8 @@ show_battery_status() {
   battery_serial=$(echo "$upower_output" | awk '$1 == "serial:" { printf $3 }')
 
   colorized_battery_capacity=$(colorize battery 70 80 90 \
-                                   "$battery_capacity" \
-                                   "${battery_capacity}% (capacity)")
+                                 "$battery_capacity" \
+                                 "${battery_capacity}% (capacity)")
   other_battery_info=$(printf "%s\n" "hello $upower_output" \
     | awk '
         $1 == "energy:"             { energy             = $2 $3 }
