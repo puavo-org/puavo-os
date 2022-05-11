@@ -419,6 +419,7 @@ class packages {
     , 'impressive'
     , 'libreoffice'
     , 'libreoffice-base'
+    , 'retext'
     , 'scribus'
     , 'sent'
     , 'tellico'
@@ -456,6 +457,7 @@ class packages {
     , 'lazarus'
     , 'lokalize'
     , 'meld'
+    , 'okteta'
     , 'pyqt4-dev-tools'
     , 'python-doc'
     , 'python-jsonpickle' # a dependency for
