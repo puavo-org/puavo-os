@@ -250,15 +250,16 @@ class Updater < DBus::Object
       log(Syslog::LOG_INFO, "Starting configuration update\n")
 
       begin
-        # Notify Puavo on our current image situation.  It is good to do this
-        # on every image update, but also periodically, in case we have booted
-        # to a new image (there might be a better place for this, but at least
-        # the configuration update should be run periodically anyway).
+        # Notify Puavo on our current client state changes, mostly regarding
+        # our image situation.  It is good to do this on every image update,
+        # but also periodically, in case we have booted to a new image (there
+        # might be a better place for this, but at least the configuration
+        # update should be run periodically anyway).
         begin
-          notify_puavo_on_images()
+          update_client_state_on_puavo()
         rescue StandardError => e
           logerr(Syslog::LOG_WARNING,
-                 "Could not update image information in Puavo: %s\n",
+                 "Could not update client state information in Puavo: %s\n",
                  e.message)
         end
 
@@ -395,7 +396,7 @@ class Updater < DBus::Object
     return thread
   end
 
-  def notify_puavo_on_images
+  def update_client_state_on_puavo
     available_images \
       = (Dir.glob('/images/*.img').map { |p| File.basename(p, '.img') } \
            - %w(ltsp ltsp-backup)).sort
@@ -409,7 +410,16 @@ class Updater < DBus::Object
       = ((deviceinfo['available_images'] || []).sort != available_images)
     update_current_image = (deviceinfo['current_image'] != current_image)
 
-    if update_available_images || update_current_image then
+    reset_state = nil
+    if $puavoetc.hosttype == 'laptop' then
+      reset_state = JSON.parse( File.read('/state/etc/puavo/reset_override') ) \
+                      rescue nil
+    end
+
+    if reset_state || update_available_images || update_current_image then
+      if reset_state then
+        log(Syslog::LOG_NOTICE, "Sending reset state\n")
+      end
       if update_available_images then
         log(Syslog::LOG_NOTICE, "Updating available images in Puavo\n")
       end
@@ -423,11 +433,12 @@ class Updater < DBus::Object
 
       restpath = ($puavoetc.hosttype == 'bootserver')            \
                     ? "/v3/boot_servers/#{ Socket.gethostname }" \
-                    : "/v3/devices/#{ Socket.gethostname }"
+                    : "/v3/devices/#{ Socket.gethostname }/state_update"
       senddata = {
         'available_images' => available_images,
         'current_image'    => current_image,
       }
+      senddata['reset'] = reset_state if reset_state
       client.post(restpath, :json => senddata)
     end
   end

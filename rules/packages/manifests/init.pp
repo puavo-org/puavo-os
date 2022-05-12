@@ -151,6 +151,7 @@ class packages {
     , 'tftp'
     , 'telnet'
     , 'terminator'
+    , 'time'
     , 'tmux'
     , 'tmux-plugin-manager'
     , 'tshark'
@@ -423,6 +424,7 @@ class packages {
     , 'impressive'
     , 'libreoffice'
     , 'libreoffice-base'
+    , 'retext'
     , 'scribus'
     , 'sent'
     , 'tellico'
@@ -460,6 +462,7 @@ class packages {
     , 'lazarus'
     , 'lokalize'
     , 'meld'
+    , 'okteta'
     , 'pylint'
     , 'python3-doc'
     , 'python3-jsonpickle' # a dependency for

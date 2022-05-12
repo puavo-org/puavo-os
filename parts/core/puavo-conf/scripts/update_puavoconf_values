@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# THIS SCRIPT OVERWRITES PUAVO-CONF VARIABLES
+
 set -eu
 
 status=0

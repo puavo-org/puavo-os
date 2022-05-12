@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# THIS SCRIPT OVERWRITES PUAVO-CONF VARIABLES
+
 set -eu
 
 default_target='multi-user.target'
@@ -25,7 +27,9 @@ dm=$(puavo-conf puavo.xsessions.display_manager)
 
 case "$dm" in
   gdm|nodm)
-    if ! is_netboot_exception; then
+    if is_netboot_exception; then
+      puavo-conf puavo.xsessions.display_manager puavo-darkdm
+    else
       default_target='graphical.target'
     fi
     ;;

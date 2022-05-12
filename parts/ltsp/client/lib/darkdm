@@ -148,9 +148,29 @@ list_networks() {
   done
 }
 
+show_bluetooth() {
+  local btdev btdev_str btmac colorvalue colorized_value
+
+  btdev=$(hcitool dev | awk 'NR == 2 { print $1 }')
+  btmac=$(hcitool dev | awk 'NR == 2 { print $2 }')
+
+  btdev_str=''
+  if [ -z "$btdev" ]; then
+    btmac='not present'
+    colorvalue=0
+  else
+    btmac="MAC ${btmac}"
+    colorvalue=100
+    btdev_str=" $btdev"
+  fi
+
+  colorized_value=$(colorize bluetooth 1 1 1 "$colorvalue" "$btmac")
+  printf "bluetooth%-7s %s" "${btdev_str}:" "$colorized_value"
+}
+
 show_battery_status() {
-  local battery_capacity colorized_battery_capacity other_battery_info \
-        battery_status upower_output
+  local battery_capacity battery_color_value colorized_battery_status \
+        battery_status other_battery_info upower_output
 
   upower_output=$(upower --show-info \
                          /org/freedesktop/UPower/devices/battery_BAT0 \
@@ -159,26 +179,33 @@ show_battery_status() {
   battery_capacity=$(printf "%s" "$upower_output" \
     | awk '$1 == "capacity:" { sub(/%$/, "", $2); printf "%d\n", $2 }')
 
-  if [ -z "$battery_capacity" ]; then
-    status='NONE'
+  battery_serial=$(printf %s "$upower_output" \
+                     | awk '$1 == "serial:" { print $2, $3 }')
+
+  other_battery_info=$(printf "%s\n" "$upower_output" \
+    | awk '
+        $1 == "energy:"             { energy             = $2 $3 }
+        $1 == "energy-full:"        { energy_full        = $2 $3 }
+        $1 == "energy-full-design:" { energy_full_design = $2 $3 }
+        END {
+          printf "%s/%s (design capacity: %s)", energy, energy_full,
+            energy_full_design
+        }
+      ')
+
+  if printf %s "$battery_serial" | grep -q '00001 2000/01/31'; then
+    battery_color_value=0
+    other_battery_info="${other_battery_info} | MISSING?"
   else
-    colorized_battery_capacity=$(colorize battery 70 80 90 \
-                                   "$battery_capacity" \
-                                   "${battery_capacity}% (capacity)")
-    other_battery_info=$(printf "%s\n" "hello $upower_output" \
-      | awk '
-          $1 == "energy:"             { energy             = $2 $3 }
-          $1 == "energy-full:"        { energy_full        = $2 $3 }
-          $1 == "energy-full-design:" { energy_full_design = $2 $3 }
-          END {
-            printf "%s/%s (design capacity: %s)", energy, energy_full,
-              energy_full_design
-          }
-        ')
-    battery_status="${colorized_battery_capacity} | ${other_battery_info}"
+    battery_color_value="$battery_capacity"
   fi
 
-  printf "battery:         %s\n" "$battery_status"
+  battery_status="${battery_capacity}% (capacity) | ${other_battery_info}"
+
+  colorized_battery_status=$(colorize battery 70 80 90 "$battery_color_value" \
+                                      "$battery_status")
+
+  printf "battery:         %s\n" "$colorized_battery_status"
 }
 
 windows_license() {
@@ -259,6 +286,7 @@ $(list_disks)
 memory:          ${colorized_memory} ($(dmidecode -t 17 |grep Size | grep -v No | wc --lines)x)
 display:         ${colorized_display_resolution}
 $(list_networks)
+$(show_bluetooth)
 $(show_battery_status)
 product:         $(facter dmi.manufacturer) / ${colorized_product_name}
 serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board) / ${sku_number} (SKU)
@@ -338,6 +366,7 @@ Puavo OS Command Shell
 
 Commands:
   bios                   configure BIOS (only on some supported machines)
+  erase                  secure erase a disk (only on SSD's that support it)
   expert-install         install Puavo OS with more detailed questions
   expert-preinstall      install without registering, expert mode
   help                   show more detailed help
@@ -362,7 +391,7 @@ EOF
 
 darkdm_print_short_help() {
   darkdm_print_help \
-    | awk '$1 !~ /bios|expert|mount|reboot|preinstall|savedisk/'
+    | awk '$1 !~ /bios|erase|expert|mount|reboot|preinstall|savedisk/'
 }
 
 darkdm_shell()
@@ -530,6 +559,9 @@ darkdm_menu()
     case "$command" in
       bios)
         puavo-bios-config || return 1
+        ;;
+      erase)
+        puavo-disk-erase || return 1
         ;;
       expert-install)
         darkdm_install expert-install || return 1

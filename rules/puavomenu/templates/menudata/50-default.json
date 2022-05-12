@@ -136,6 +136,9 @@
         "ClassPadManagerforClassPadII": {
             "tags": "default"
         },
+        "clevertouch-lynx": {
+            "tags": "default"
+        },
         "cmaptools": {
             "name": {
                 "fi": "CmapTools-miellekartta",
@@ -301,7 +304,7 @@
             },
             "tags": "default"
         },
-        "FlashPrint": {
+        "FlashPrint5": {
             "name": "FlashForge 3D",
             "tags": "default",
             "puavopkg": {
@@ -1916,7 +1919,7 @@
                 "freecad",
                 "qcad-cam",
                 "openscad",
-                "FlashPrint"
+                "FlashPrint5"
             ]
         },
         "menu-health": {
@@ -2268,7 +2271,8 @@
             "programs": [
                 "smarttech-notebook",
                 "openboard",
-                "mimio-notebook"
+                "mimio-notebook",
+                "clevertouch-lynx"
             ]
         }
     },

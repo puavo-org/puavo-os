@@ -1,0 +1,85 @@
+#!/bin/sh
+
+set -eu
+
+ask_disk() {
+  disks=$(awk '$4 ~ /^((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z]|xvd[a-z])$/ {
+                 print "/dev/"$4
+               }' /proc/partitions)
+  [ -n "$disks" ] || return 1
+  printf %s "$disks" | fzf -1 --height=5 --layout=reverse-list
+}
+
+secure_erase() {
+  echo 'Choose a disk to Secure Erase:'
+  if ! target_disk=$(ask_disk); then
+    echo 'No disk selected, aborting!' >&2
+    exit 1
+  fi
+
+  echo "Chosen << ${target_disk} >>"
+  case "${target_disk}" in
+    *nvme*)
+      echo 'Selected disk is an NVMe disk. Using "nvme-cli" utility for Secure Erase.'
+      time --format "Time elapsed: %E" nvme format -s1 "${target_disk}"
+      echo 'You may check how long the erase took above.'
+      exit 1
+      ;;
+    *)
+      if udevadm info --query=all --name="${target_disk}" | grep 'ID_BUS=usb'; then
+        echo 'Selected disk is a USB device, I do not support them. Aborting..' >&2
+        exit 1
+      fi
+
+      if ! hdparm -I "${target_disk}" | grep "SECURITY ERASE UNIT" >&2; then
+        echo 'Selected disk does not support Secure Erase!' >&2
+        exit 1
+      fi
+
+      echo 'Disk supports Secure Erase.'
+      if ! hdparm -I "${target_disk}" | grep -P "not\tfrozen" >&2; then
+        echo 'Disk is in frozen state, cannot continue!' >&2
+        echo 'Please close the lid of the device for a few seconds, reopen it and try again.' >&2
+        echo
+        echo 'If we are netbooted, closing the lid will not put the device to sleep.'
+        echo 'We can however put it to sleep and wake it up with the usage of rtcwake.'
+        echo
+        read -p "Shall I run the command for you now? (y/n)[y] " gosleep
+        case $gosleep in
+          [yY]|"")
+            echo 'Going to sleep now.'
+            sleep 1
+            rtcwake -m mem -s 5
+            ;;
+          [nN])
+            echo 'Not going to sleep. You must close and reopen the lid, or run the command by hand. Then retry.'
+            sleep 1
+            exit 1
+            ;;
+          *)
+            echo 'Invalid answer, exiting.' >&2
+            sleep 1
+            exit 1
+            ;;
+        esac
+        exit 1
+      fi
+
+      echo 'Disk is not in frozen state, we can continue.'
+      hdparm --user-master user --security-set-pass Pass "${target_disk}"
+      if ! hdparm -I "${target_disk}" | grep -P "Security level high" >&2; then
+        echo 'Failed setting user and password, exiting.' >&2
+        exit 1
+      fi
+
+      echo 'User and password set, proceeding to Secure Erase.'
+      time --format "Time elapsed: %E" hdparm --user-master user --security-erase Pass "${target_disk}"
+      echo 'Command completed. You may check how long the erase took above.'
+      echo 'Unlocking disk..'
+      hdparm --user-master user --security-unlock Pass "${target_disk}"
+      echo 'If you see no errors, you may re-plug the disk or reboot the device.'
+      ;;
+  esac
+}
+
+secure_erase

@@ -20,10 +20,16 @@ EOF
   (cd "$hp_utils_dir" && bash)
 }
 
-flash_bios_update_elitebook_g3() {
+hp_wget_latest_and_flash() {
   prepare_hp_utils
 
-  (cd "$hp_utils_dir" && hp-flash bios-elitebook-g3.bin)
+  mainboard_sysid=$(dmidecode -s baseboard-product-name)
+  hp_ftp_url="https://ftp.ext.hp.com/pub/pcbios"
+  (cd "$hp_utils_dir" && \
+    wget "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml" && \
+    hp_latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" $mainboard_sysid.xml)" && \
+    wget "$hp_ftp_url/$mainboard_sysid/$hp_latest_bios" && \
+    hp-flash "$hp_latest_bios")
 }
 
 import_config_student_laptop() {
@@ -40,7 +46,7 @@ import_config_usb_stick_factory() {
 
 ask_choice() {
   choices=$(cat <<'EOF')
-Flash Elitebook G3 bios
+Flash latest BIOS (HP)
 Import Student laptop BIOS Config
 Import USB Stick factory BIOS Config
 use HP BIOS utilities
@@ -62,8 +68,8 @@ case "$chosen" in
   exit)
     exit 0
     ;;
-  'Flash Elitebook G3 bios')
-    flash_bios_update_elitebook_g3
+  'Flash latest BIOS (HP)')
+    hp_wget_latest_and_flash
     sleep 3
     ;;
   'Import Student laptop BIOS Config')

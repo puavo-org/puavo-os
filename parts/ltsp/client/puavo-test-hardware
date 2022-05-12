@@ -62,6 +62,24 @@ test_disks() {
   dialog --no-collapse --msgbox "${error_output}${all_output}" -1 -1
 }
 
+bt_test_status() {
+  a="$(wc --lines "$teststderr" | awk '{print $1}')"
+  b="$(wc --lines "$teststdout" | awk '{print $1}')"
+  if [ "$a" -gt "0" ]; then
+    echo "ERROR"
+  elif [ "$b" -gt "1" ]; then
+    echo "OK"
+  else
+    echo "Scanning..."
+  fi
+}
+
+bt_test_results() {
+  clear
+  cat "$teststderr" "$teststdout"
+  sleep 2
+}
+
 test_keyboard() {
   local ruby_test_keyboard_script
 
@@ -214,10 +232,10 @@ EOF
 run_mouse_test() {
   clear
   echo '>>>'
-  echo ">>> Now running evtest ${1} for 10 seconds"
+  echo ">>> Now running evtest ${1} for 4 seconds"
   echo '>>>'
   sleep 1
-  timeout -k 1 10 evtest "$1" || true
+  timeout -k 1 4 evtest "$1" || true
   sleep 1
 
 }
@@ -285,39 +303,36 @@ test_mouse() {
   return 0
 }
 
-test_microphone() {
+test_audio() {
+  local audio_test_status
   local alsadev
-  alsadev='plughw:CARD=PCH'
+  audio_test_status=0
+  product_name=$(dmidecode -s system-product-name)
+  case "${product_name}" in
+    ### Could we just use *G1* and *G2* instead of the one below? Needs testing..
+    ### For now, this suffices.
+    "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
+      alsadev='hw:1,0'
+      ### Let's also raise the volume a bit, since G1/G2 speakers seem to be quieter than newer gen.
+      amixer --card 'PCH' set 'Master' 85%
+      ;;
+    *)
+      alsadev='hw:0,0'
+      ;;
+  esac
+
   clear
-  echo "Using ALSA device ${alsadev} for recording..."
-  echo
 
-  if arecord --vumeter=stereo -f cd -d 10 --device="${alsadev}" /dev/null; then
-    echo
-    echo 'Recording finished.'
-  fi
+  ### On some devices, VUMeter does not register changes in audio levels if we play the test with normal sensitivity. Probably something to do with the microphones location.
+  ### We do not want to break our ears by boosting the audio itself, so lets just boost microphone input by a couple levels (a few dozen dB).
+  amixer --card 'PCH' set 'Internal Mic Boost' 2
 
-  sleep 2
-}
-
-test_speakers() {
-  local speaker_test_status
-  local alsadev
-  speaker_test_status=0
-
-  alsadev='plughw:CARD=PCH'
-  clear
-  speaker-test --device="${alsadev}" -t wav -p 256 -c 2 -l 2 || speaker_test_status=1
-  speaker-test --device="${alsadev}" -t pink -p 256 -c 2 -l 1 || speaker_test_status=1
-
-  # XXX This uses wav files that might no longer exist after
-  # XXX Scratch or Solfege is updated.
+  ### This file needs to be put somewhere.
   aplay --device="${alsadev}" \
-        /usr/share/scratch/Media/Sounds/Vocals/Singer1.wav \
-        /usr/share/scratch/Media/Sounds/Electronic/ComputerBeeps1.wav \
-        /usr/share/scratch/Media/Sounds/Human/Laugh-female.wav \
-        /usr/share/solfege/exercises/standard/lesson-files/share/fanfare.wav \
-    || speaker_test_status=1
+        /usr/share/sounds/puavo/speakertest.wav & \
+  arecord --vumeter=stereo -f cd -d 4 --device="${alsadev}" /dev/null && \
+  echo 'Recording finished.' \
+      || audio_test_status=1
 
   sleep 2
 }
@@ -367,30 +382,37 @@ if [ "$(id -u)" -ne 0 ]; then
   return 1
 fi
 
-mainmenu_default_item='camera'
+teststdout=$(mktemp /tmp/puavo-test-hardware-bluetooth-stdout.XXXXXX)
+teststderr=$(mktemp /tmp/puavo-test-hardware-bluetooth-stderr.XXXXXX)
+
+hcitool scan > "$teststdout" 2> "$teststderr" &
+
+mainmenu_default_item='audio'
 while true; do
   response=$(dialog --stdout --default-item "$mainmenu_default_item" \
                     --menu 'Choose a test' 15 44 8 \
+               audio      'Test audio devices' \
                camera     'Test webcam' \
                disks      'Test disks' \
                keyboard   'Test keyboard' \
-               microphone 'Test microphone' \
                mouse      'Test mouse/mice' \
                wifi       'Test wireless networking' \
-               speakers   'Test speakers' \
+               bluetooth  "$(bt_test_status)" \
                quit       'Exit tests') || true
 
   case "$response" in
+    audio)      mainmenu_default_item=camera;     test_audio      || true ;;
     camera)     mainmenu_default_item=keyboard;   test_camera     || true ;;
-    disks)      mainmenu_default_item=disks;      test_disks      || true ;;
-    keyboard)   mainmenu_default_item=microphone; test_keyboard   || true ;;
-    microphone) mainmenu_default_item=mouse;      test_microphone || true ;;
+    disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
+    keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
     mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
-    wifi)       mainmenu_default_item=speakers;   test_wifi       || true ;;
-    speakers)   mainmenu_default_item=quit;       test_speakers   || true ;;
+    wifi)       mainmenu_default_item=bluetooth;  test_wifi       || true ;;
+    bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
 done
+
+rm -f "$teststdout" "$teststderr"
 
 exit 0

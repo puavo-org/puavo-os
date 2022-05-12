@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# THIS SCRIPT OVERWRITES PUAVO-CONF VARIABLES
+
+set -eu
+
+if [ "$(puavo-conf puavo.admin.reset.enabled)" != 'true' ]; then
+  exit 0
+fi
+
+reset_override_path='/state/etc/puavo/reset_override'
+
+if ! reset_state=$(jq -r .reset /etc/puavo/device.json) \
+  || [ -z "$reset_state" -o "$reset_state" = 'null' ]; then
+    # no reset state
+    rm -f "$reset_override_path"
+    exit 0
+fi
+
+request_time=$(printf "%s\n" "$reset_state" | jq -r '.["request-time"]')
+if [ -z "$request_time" ]; then
+  # no reset request time
+  rm -f "$reset_override_path"
+  exit 0
+fi
+
+#
+# there is a reset request, but we must check out other things
+#
+
+request_fulfilled=$(printf "%s\n" "$reset_state" \
+                      | jq -r '.["request-fulfilled"]')
+if ! [ -z "$request_fulfilled" -o "$request_fulfilled" = 'null' ]; then
+  # reset request exists, but reset has already been fulfilled
+  rm -f "$reset_override_path"
+  exit 0
+fi
+
+# If there was a request time, it may be that Puavo does not know it has been
+# fulfilled, but we may know better.
+reset_override=$(cat "$reset_override_path" 2>/dev/null) || true
+if [ -z "$reset_override" ]; then
+  # we did not know any better and thus must handle the reset request
+  puavo-conf puavo.xsessions.display_manager puavo-darkdm-reset
+  rm -f "$reset_override_path"  # remove in case an empty file
+  exit 0
+fi
+
+override_request_time=$(printf "%s\n" "$reset_override" \
+                          | jq -r '.["request-time"]')
+
+if [ "$request_time" != "$override_request_time" ]; then
+  # we did have information on an old reset request,
+  # but it is not the same as the new one, thus we must handle the request
+  puavo-conf puavo.xsessions.display_manager puavo-darkdm-reset
+  exit 0
+fi
+
+override_request_fulfilled=$(printf "%s\n" "$reset_override" \
+                               | jq -r '.["request-fulfilled"]')
+if [ -z "$override_request_fulfilled" \
+     -o "$override_request_fulfilled" = 'null' ]; then
+  # our override info does not indicate that the request was fulfilled,
+  # must handle the request
+  puavo-conf puavo.xsessions.display_manager puavo-darkdm-reset
+  exit 0
+fi
+
+# we had handled the reset request after all, even though Puavo did not
+# know it yet, so continue with normal boot
+exit 0
