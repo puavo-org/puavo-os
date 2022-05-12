@@ -410,8 +410,11 @@ class Updater < DBus::Object
       = ((deviceinfo['available_images'] || []).sort != available_images)
     update_current_image = (deviceinfo['current_image'] != current_image)
 
-    reset_state = JSON.parse( File.read('/state/etc/puavo/reset_override') ) \
-                    rescue nil
+    reset_state = nil
+    if $puavoetc.hosttype == 'laptop' then
+      reset_state = JSON.parse( File.read('/state/etc/puavo/reset_override') ) \
+                      rescue nil
+    end
 
     if reset_state || update_available_images || update_current_image then
       if reset_state then
@@ -430,7 +433,7 @@ class Updater < DBus::Object
 
       restpath = ($puavoetc.hosttype == 'bootserver')            \
                     ? "/v3/boot_servers/#{ Socket.gethostname }" \
-                    : "/v3/devices/#{ Socket.gethostname }"
+                    : "/v3/devices/#{ Socket.gethostname }/state_update"
       senddata = {
         'available_images' => available_images,
         'current_image'    => current_image,
