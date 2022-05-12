@@ -329,7 +329,7 @@ test_audio() {
 
   ### This file needs to be put somewhere.
   aplay --device="${alsadev}" \
-        /usr/share/sounds/speakertest.wav & \
+        /usr/share/sounds/puavo/speakertest.wav & \
   arecord --vumeter=stereo -f cd -d 4 --device="${alsadev}" /dev/null && \
   echo 'Recording finished.' \
       || audio_test_status=1

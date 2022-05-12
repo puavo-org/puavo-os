@@ -11,9 +11,6 @@ class art {
     '/usr/share/puavo-art':
       source  => 'puppet:///modules/art/puavo-art',
       recurse => true;
-
-    '/usr/share/sounds':
-      source => 'puppet:///modules/art/speakertest.wav';
   }
 
   ::puavo_conf::definition {

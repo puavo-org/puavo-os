@@ -41,6 +41,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites
+	mkdir -p $(DESTDIR)$(datarootdir)/sounds/puavo
 	mkdir -p $(DESTDIR)$(datarootdir)/wayland-sessions
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system
@@ -60,6 +61,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites \
 		profile-overwrites/*.json
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/sounds/puavo \
+		sounds/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/wayland-sessions \
 		wayland-sessions/*
