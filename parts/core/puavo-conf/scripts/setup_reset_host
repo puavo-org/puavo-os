@@ -17,9 +17,9 @@ if ! reset_state=$(jq -r .reset /etc/puavo/device.json) \
     exit 0
 fi
 
-id=$(printf "%s\n" "$reset_state" | jq -r .id)
-if [ -z "$id" ]; then
-  # no reset request id
+request_time=$(printf "%s\n" "$reset_state" | jq -r '.["request-time"]')
+if [ -z "$request_time" ]; then
+  # no reset request time
   rm -f "$reset_override_path"
   exit 0
 fi
@@ -36,7 +36,7 @@ if ! [ -z "$request_fulfilled" -o "$request_fulfilled" = 'null' ]; then
   exit 0
 fi
 
-# If there was a request id, it may be that Puavo does not know it has been
+# If there was a request time, it may be that Puavo does not know it has been
 # fulfilled, but we may know better.
 reset_override=$(cat "$reset_override_path" 2>/dev/null) || true
 if [ -z "$reset_override" ]; then
@@ -46,9 +46,10 @@ if [ -z "$reset_override" ]; then
   exit 0
 fi
 
-override_id=$(printf "%s\n" "$reset_override" | jq -r .id)
+override_request_time=$(printf "%s\n" "$reset_override" \
+                          | jq -r '.["request-time"]')
 
-if [ "$id" != "$override_id" ]; then
+if [ "$request_time" != "$override_request_time" ]; then
   # we did have information on an old reset request,
   # but it is not the same as the new one, thus we must handle the request
   puavo-conf puavo.xsessions.display_manager puavo-darkdm-reset
