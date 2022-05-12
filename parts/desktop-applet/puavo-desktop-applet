@@ -1168,8 +1168,19 @@ class RemoteAssistance:
 
 
   def make_bugreport(self, widget):
+    hostname = ""
+    domain = ""
+    fqdn = ""
+    try:
+      hostname = read_firstline('/etc/puavo/hostname')
+      domain   = read_firstline('/etc/puavo/domain')
+      fqdn = '%s.%s' % (hostname, domain)
+    except Exception:
+      pass
+
+    url     = self.config['new_bugreport_url'].replace("%HOSTNAME%", hostname) \
+	      .replace("%DOMAIN%", domain).replace("%FQDN%", fqdn)
     browser = self.config['new_bugreport_browser']
-    url     = self.config['new_bugreport_url']
 
     if browser == 'firefox':
       cmd = [ browser, '-new-window', url ]
