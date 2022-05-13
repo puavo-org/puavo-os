@@ -67,7 +67,7 @@ secure_erase() {
 
       echo 'Disk is not in frozen state, we can continue.'
       hdparm --user-master user --security-set-pass Pass "${target_disk}"
-      if ! hdparm -I "${target_disk}" | grep -P "Security level high" >&2; then
+      if ! hdparm -I "${target_disk}" | grep "Security level high" >&2; then
         echo 'Failed setting user and password, exiting.' >&2
         exit 1
       fi
@@ -75,8 +75,12 @@ secure_erase() {
       echo 'User and password set, proceeding to Secure Erase.'
       time --format "Time elapsed: %E" hdparm --user-master user --security-erase Pass "${target_disk}"
       echo 'Command completed. You may check how long the erase took above.'
-      echo 'Unlocking disk..'
-      hdparm --user-master user --security-unlock Pass "${target_disk}"
+
+      if ! hdparm -I "${target_disk}" | grep -P "not\tlocked"; then
+        echo 'Unlocking disk..'
+        hdparm --user-master user --security-unlock Pass "${target_disk}"
+      fi
+
       echo 'If you see no errors, you may re-plug the disk or reboot the device.'
       ;;
   esac
