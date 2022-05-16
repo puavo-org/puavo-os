@@ -229,8 +229,7 @@ class packages {
     , 'xmonad' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
 
-    [ 'acct'
-    , 'ack'
+    [ 'ack'
     , 'build-essential'
     , 'bvi'
     , 'cdbs'
