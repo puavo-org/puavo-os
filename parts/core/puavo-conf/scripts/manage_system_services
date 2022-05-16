@@ -84,11 +84,6 @@ set services {
       /etc/rc5.d/S01freeradius -> /etc/init.d/freeradius
     }}
 
-  { google-cloud-print {
-      /etc/systemd/system/multi-user.target.wants/google-cloud-print.service
-        -> /etc/systemd/system/google-cloud-print.service
-    }}
-
   { gpm {
       /etc/rc2.d/S01gpm -> /etc/init.d/gpm
       /etc/rc3.d/S01gpm -> /etc/init.d/gpm
