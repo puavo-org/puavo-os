@@ -15,6 +15,10 @@ class bootserver_krb5kdc {
     '/etc/systemd/system/krb5-kdc.service.d/override.conf':
       require => File['/usr/local/lib/puavo-service-wait-for-slapd'],
       source  => 'puppet:///modules/bootserver_krb5kdc/krb5-kdc_override.conf';
+
+    '/etc/systemd/system/multi-user.target.wants/krb5-admin-server.service':
+      ensure  => absent,
+      require => Package['systemd'];
   }
 
   ::puavo_conf::script {
@@ -22,7 +26,8 @@ class bootserver_krb5kdc {
       source => 'puppet:///modules/bootserver_krb5kdc/setup_krb5kdc';
   }
 
-  Package <| title == krb5-kdc
+  Package <| title == krb5-admin-server
+          or title == krb5-kdc
           or title == logrotate
           or title == systemd |>
 }

@@ -66,6 +66,7 @@ class packages {
     , 'gpm'
     , 'incron'
     , 'isc-dhcp-server'
+    , 'krb5-admin-server'
     , 'krb5-kdc'
     , 'libudev1'
     , 'logrotate'
