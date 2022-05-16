@@ -40,8 +40,7 @@ class packages {
     , 'puavo-veyon-applet'
     , 'puavo-vpn-client'
     , 'puavo-webwindow'
-    # , 'puavo-wlanap'          # XXX missing from Bullseye
-    # , 'puavo-wlanmapper'      # XXX missing from Bullseye
+    , 'puavo-wlanap'
     , 'puavo-wlangw'
     , 'puavomenu'
     , 'ruby-puavowlan'
