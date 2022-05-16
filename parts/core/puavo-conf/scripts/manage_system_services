@@ -203,6 +203,15 @@ set services {
       /etc/rc5.d/S01nslcd -> /etc/init.d/nslcd
     }}
 
+  { nvidia-persistenced {
+      /etc/rc2.d/S01nvidia-persistenced -> /etc/init.d/nvidia-persistenced
+      /etc/rc3.d/S01nvidia-persistenced -> /etc/init.d/nvidia-persistenced
+      /etc/rc4.d/S01nvidia-persistenced -> /etc/init.d/nvidia-persistenced
+      /etc/rc5.d/S01nvidia-persistenced -> /etc/init.d/nvidia-persistenced
+      /etc/systemd/system/multi-user.target.wants/nvidia-persistenced.service
+        -> /lib/systemd/system/nvidia-persistenced.service
+    }}
+
   { puavo-autopoweroff {
       /etc/systemd/system/multi-user.target.wants/puavo-autopoweroff.service
         -> /lib/systemd/system/puavo-autopoweroff.service

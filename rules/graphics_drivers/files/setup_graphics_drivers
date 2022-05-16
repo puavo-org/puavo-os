@@ -1,21 +1,26 @@
 #!/bin/sh
 
+# THIS SCRIPT OVERWRITES PUAVO-CONF VARIABLES
+
 set -eu
 
 graphics_driver=$(puavo-conf puavo.graphics.driver)
 
 glx_alternative=
 nvidia_alternative=
+use_nvidia_persistenced=false
 
 case "$graphics_driver" in
   nvidia)
     glx_alternative=/usr/lib/nvidia
     nvidia_alternative=current
+    use_nvidia_persistenced=true
     xserver_driver=nvidia
     ;;
   nvidia-390)
     glx_alternative=/usr/lib/nvidia
     nvidia_alternative=legacy-390xx
+    use_nvidia_persistenced=true
     xserver_driver=nvidia
     ;;
   *)
@@ -47,4 +52,8 @@ EOF
   mv /etc/X11/xorg.conf.tmp /etc/X11/xorg.conf
 else
   rm -f /etc/X11/xorg.conf
+fi
+
+if $use_nvidia_persistenced; then
+  puavo-conf puavo.service.nvidia-persistenced.enabled true
 fi

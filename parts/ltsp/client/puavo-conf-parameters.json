@@ -170,13 +170,16 @@
   "puavo.service.nfs-server.enabled": {
     "default": "false"
   },
-  "puavo.service.nscd.enabled": {
-    "default": "false"
-  },
   "puavo.service.nmbd.enabled": {
     "default": "false"
   },
+  "puavo.service.nscd.enabled": {
+    "default": "false"
+  },
   "puavo.service.nslcd.enabled": {
+    "default": "false"
+  },
+  "puavo.service.nvidia-persistenced.enabled": {
     "default": "false"
   },
   "puavo.service.puavo-darkdm.enabled": {

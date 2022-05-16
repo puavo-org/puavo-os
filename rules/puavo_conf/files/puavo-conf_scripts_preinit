@@ -13,6 +13,7 @@ setup_device_json
 update_puavoconf_values
 map_special_puavoconf_values
 setup_cron
+setup_graphics_drivers
 manage_system_services
 set_machine_id
 setup_reset_host
@@ -43,7 +44,6 @@ setup_autofs
 setup_extra_environment
 setup_tmux
 disable_update_initramfs
-setup_graphics_drivers
 setup_networking
 setup_network_manager
 setup_xsessions
