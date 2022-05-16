@@ -428,14 +428,13 @@ Architecture: all
 Depends: ${misc:Depends},
  bridge-utils,
  crda,
- hostapd (>= 2:2.4-1+deb9u1+puavo1),
+ hostapd,
  isc-dhcp-client,
  iproute2,
  iw,
- puavo-client (>= 0.1.1),
- puavo-wlanmapper,
+ puavo-client,
  ruby-puavowlan,
- vtun (>= 3.0.2-1+puavo1),
+ vtun,
  wireless-regdb,
  wireless-tools
 Description: host tunneled WLAN accesspoint
