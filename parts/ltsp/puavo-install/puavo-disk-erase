@@ -23,7 +23,8 @@ secure_erase() {
       echo 'Selected disk is an NVMe disk. Using "nvme-cli" utility for Secure Erase.'
       time --format "Time elapsed: %E" nvme format -s1 "${target_disk}"
       echo 'You may check how long the erase took above.'
-      exit 1
+      echo 
+      sleep 2
       ;;
     *)
       if udevadm info --query=all --name="${target_disk}" | grep 'ID_BUS=usb'; then
@@ -62,7 +63,6 @@ secure_erase() {
             exit 1
             ;;
         esac
-        exit 1
       fi
 
       echo 'Disk is not in frozen state, we can continue.'
@@ -77,11 +77,12 @@ secure_erase() {
       echo 'Command completed. You may check how long the erase took above.'
 
       if ! hdparm -I "${target_disk}" | grep -P "not\tlocked"; then
-        echo 'Unlocking disk..'
+        echo 'Disk seems to be locked after erase. Unlocking now.'
         hdparm --user-master user --security-unlock Pass "${target_disk}"
       fi
 
       echo 'If you see no errors, you may re-plug the disk or reboot the device.'
+      echo 
       ;;
   esac
 }
