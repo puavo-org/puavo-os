@@ -1,0 +1,54 @@
+Description: Clear up the Spectacle main window a bit to make feel more
+ in-place with our desktop looks.
+Author: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Last-Update: 2022-05-17
+
+--- a/src/Gui/KSMainWindow.cpp
++++ b/src/Gui/KSMainWindow.cpp
+@@ -146,8 +146,6 @@
+ 
+     // the Button Bar
+ 
+-    mDialogButtonBox->setStandardButtons(QDialogButtonBox::Help);
+-    mDialogButtonBox->button(QDialogButtonBox::Help)->setAutoDefault(false);
+ 
+     mConfigureButton->setDefaultAction(KStandardAction::preferences(this, SLOT(showPreferencesDialog()), this));
+     mConfigureButton->setText(i18n("Configure..."));
+@@ -187,10 +185,6 @@
+     mDialogButtonBox->addButton(mToolsButton, QDialogButtonBox::ActionRole);
+     mToolsButton->setMenu(mToolsMenu);
+ 
+-    KGuiItem::assign(mSendToButton, KGuiItem(i18n("Export")));
+-    mSendToButton->setIcon(QIcon::fromTheme(QStringLiteral("document-share")));
+-    mSendToButton->setAutoDefault(false);
+-    mDialogButtonBox->addButton(mSendToButton, QDialogButtonBox::ActionRole);
+ 
+     mClipboardButton->setDefaultAction(KStandardAction::copy(this, &KSMainWindow::copy, this));
+     mClipboardButton->setText(i18n("Copy to Clipboard"));
+@@ -203,9 +197,6 @@
+     mSaveButton->setPopupMode(QToolButton::MenuButtonPopup);
+     mDialogButtonBox->addButton(mSaveButton, QDialogButtonBox::ActionRole);
+ 
+-    // the help menu
+-    KHelpMenu *helpMenu = new KHelpMenu(this, KAboutData::applicationData(), true);
+-    mDialogButtonBox->button(QDialogButtonBox::Help)->setMenu(helpMenu->menu());
+ 
+     // the tools menu
+     mToolsMenu->addAction(QIcon::fromTheme(QStringLiteral("document-open-folder")),
+@@ -245,8 +236,15 @@
+     mMessageWidget->hide();
+ 
+     // populate our send-to actions
+-    mSendToButton->setMenu(mExportMenu);
++    mExportMenu->setTitle(i18n("Export"));
++    mExportMenu->setIcon(QIcon::fromTheme(QStringLiteral("document-share")));
++    mToolsMenu->addMenu(mExportMenu);
++
+     connect(mExportMenu, &ExportMenu::imageShared, this, &KSMainWindow::showImageSharedFeedback);
++    
++    // the help menu
++    KHelpMenu *helpMenu = new KHelpMenu(this, KAboutData::applicationData(), true);
++    mToolsMenu->addMenu(helpMenu->menu());
+ 
+     // lock down the onClick mode depending on available shutter modes
+     if (!mShutterModes.testFlag(Platform::ShutterMode::OnClick)) {

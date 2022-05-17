@@ -10,6 +10,7 @@ _pkgs_ports := cups                 \
                gtk+3.0              \
                hooktftp             \
                incron               \
+               kde-spectacle        \
                libpam-ccreds        \
                mutter               \
                openboard            \

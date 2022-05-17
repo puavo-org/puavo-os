@@ -1,0 +1,385 @@
+kde-spectacle (20.12.3-1) unstable; urgency=medium
+
+  * New upstream release (20.12.3).
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Tue, 09 Mar 2021 23:27:00 +0100
+
+kde-spectacle (20.12.2-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Update upstream GPG signing key.
+
+ -- Pino Toscano <pino@debian.org>  Thu, 04 Feb 2021 15:10:12 +0100
+
+kde-spectacle (20.12.1-1) unstable; urgency=medium
+
+  * New upstream release (20.12.1).
+  * Reenable the kimageannotator features now that kimageannotator has a
+    proper SONAME management (see #977649).
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Thu, 07 Jan 2021 23:13:52 +0100
+
+kde-spectacle (20.12.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * Disable the kimageannotator features, as kimageannotator does not have
+    a proper SONAME and Debian package (see #977649):
+    - comment out the libkcolorpicker-dev, and libkimageannotator-dev build
+      dependencies
+  * Do not create a temporary HOME directory for dh_auto_test, as debhelper
+    does that already in compatibility version 13.
+  * debian/copyright: use spaces rather than tabs to start continuation lines.
+
+ -- Pino Toscano <pino@debian.org>  Thu, 24 Dec 2020 00:03:42 +0100
+
+kde-spectacle (20.12.0-1) unstable; urgency=medium
+
+  [ Pino Toscano ]
+  * Switch the transitional libxcb-util0-dev build dependency to
+    libxcb-util-dev.
+  * Bump Standards-Version to 4.5.1, no changes required.
+
+  [ Aurélien COUDERC ]
+  * New upstream release (20.12.0).
+  * Update the build dependencies according to the upstream build system:
+    - bump KF packages to 5.73.0
+    - add libqt5svg5-dev
+    - add libkcolorpicker-dev and libkimageannotator-dev
+  * Update project homepage.
+  * Refresh copyright information.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Thu, 10 Dec 2020 19:45:15 +0100
+
+kde-spectacle (20.08.3-1) unstable; urgency=medium
+
+  * New upstream release (20.08.3).
+  * Refresh upstream metadata.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Wed, 11 Nov 2020 00:00:39 +0100
+
+kde-spectacle (20.08.2-1) unstable; urgency=medium
+
+  * New upstream release (20.08.2).
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Mon, 26 Oct 2020 11:27:34 +0100
+
+kde-spectacle (20.08.0-1) unstable; urgency=medium
+
+  [ Aurélien COUDERC ]
+  * New upstream release (20.08.0).
+  * Add myself to the uploaders.
+  * Remove now useless lintian override.
+  * Add Source: URL to copyright information.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Fri, 14 Aug 2020 01:05:34 +0200
+
+kde-spectacle (20.04.1-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Aurélien COUDERC ]
+  * New upstream release (20.04.1).
+  * Refresh copyright information.
+  * Remove explicit --as-needed from linker flags, it’s now injected by
+    default.
+  * Bump debhelper compat level to 13.
+  * Refresh lintian override for desktop file using qdbus not shipped by the
+    package.
+  * Actually add qdbus-qt5 to dependencies and not build-deps (thanks to
+    Alexander Volkov for noticing).
+  * Add bug submission URL to upstream metadata.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Fri, 05 Jun 2020 17:42:52 +0200
+
+kde-spectacle (19.12.3-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Aurélien COUDERC ]
+  * New upstream point release (19.12.3).
+  * Drop upstream_tests-make-sure-testNumbering-works.patch applied upstream.
+  * Add patch to fix %T filename pattern in fullscreen captures.
+    (Closes: #953536)
+  * Bump Standards-Version to 4.5.0:
+    - Add Rules-Requires-Root: no.
+  * Borrow minimal upstream signing key from k3b.
+  * Review copyright information.
+  * Add qdbus-qt5 to dependencies as the desktop files uses it to start
+    spectacle.
+  * Add lintian override for desktop file using qdbus binary not shipped by
+    spectacle now we explicitely depend on qdbus-qt5.
+  * Build with hardening=+all build hardening flag.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Tue, 10 Mar 2020 15:32:40 +0100
+
+kde-spectacle (19.12.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * Backport upstream commit 655a5a536d98fc997445f9bcda1157aa3f50bf8d to fix
+    filename_test; patch upstream_tests-make-sure-testNumbering-works.patch.
+
+ -- Pino Toscano <pino@debian.org>  Tue, 07 Jan 2020 23:36:46 +0100
+
+kde-spectacle (19.12.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Update watch file to the new release-service location.
+  * Update the build dependencies according to the upstream build system:
+    - bump KF packages to 5.56.0
+    - add libkf5wayland-dev
+    - explicitly add gettext
+  * Stop passing --destdir to dh_auto_install, as there is only one binary now.
+  * Switch from dhmk to the dh sequencer:
+    - invoke the dh sequencer using the kf5 addon
+    - explicitly link in as-needed mode
+    - call the right debhelper command instead of $(overridden_command)
+  * Switch from the debhelper build dependency to debhelper-compat
+    - remove debian/compat
+  * Bump Standards-Version to 4.4.1, no changes required.
+  * Small copyright update.
+  * Drop the compatibility ksnapshot forward script, not needed anymore after
+    two Debian stable releases.
+  * Do not mention KSnapshot in the short description anymore.
+  * Use $(CURDIR) instead of $(pwd) in rules.
+  * Enable all the reprotest variations in the salsa CI.
+
+ -- Pino Toscano <pino@debian.org>  Tue, 07 Jan 2020 08:11:20 +0100
+
+kde-spectacle (19.08.1-1) unstable; urgency=medium
+
+  * New revision
+  * Drop the transitional package ksnapshot (Closes: 939245)
+  * New upstream release (19.08.1).
+  * Update build-deps and deps with the info from cmake
+  * Add a salsa-ci script
+  * Bump Standards-Version to 4.4.0.
+  * Bump debhelper build-dep and compat to 12.
+  * Also drop the gencontrol override for ksnapshot
+  * Create a home for the tests
+  * Drop kde-l10n and ksnapshot breaks/replaces, fixed versions already in stable
+  * Build with hardening bindnow
+  * Release to unstable
+
+ -- Maximiliano Curia <maxy@debian.org>  Fri, 27 Sep 2019 16:29:44 -0700
+
+kde-spectacle (18.04.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Update the build dependencies:
+    - bump cmake to >= 3.0~, as specified by the upstream build system
+    - bump qtbase5-dev, and qtdeclarative5-dev to >= 5.6.0~, as specified by
+      the upstream build system
+    - add libkf5newstuff-dev, new dependency
+    - bump libkf5purpose-dev to >= 5.44.0~, to make sure to use the Frameworks
+      version
+  * Switch Vcs-* fields to salsa.debian.org.
+  * Bump the debhelper compatibility to 11:
+    - bump the debhelper build dependency to 11~
+    - bump compat to 11
+  * Bump Standards-Version to 4.1.4, no changes required.
+  * Use https for Format in copyright.
+  * Remove duplicated Priority in ksnapshot.
+
+ -- Pino Toscano <pino@debian.org>  Sun, 22 Apr 2018 09:00:37 +0200
+
+kde-spectacle (17.08.3-1) unstable; urgency=medium
+
+  * Team upload.
+  * Upload to unstable. (Closes: #881973)
+  * New upstream release.
+  * Adjust l10npkgs_firstversion_ok to the version where kde-l10n will
+    drop translations.
+  * Bump Standards-Version to 4.1.1, no changes required.
+  * Simplify watch file, and switch it to https.
+  * Remove unused debian/meta/cmake-ignore file.
+
+ -- Pino Toscano <pino@debian.org>  Sun, 26 Nov 2017 16:07:34 +0100
+
+kde-spectacle (17.08.1-1) experimental; urgency=medium
+
+  * New upstream release (17.08.1)
+  * Bump Standards-Version to 4.1.0.
+  * Update upstream metadata
+  * Update build-deps and deps with the info from cmake
+  * Release to experimental
+
+ -- Maximiliano Curia <maxy@debian.org>  Tue, 12 Sep 2017 15:36:00 +0200
+
+kde-spectacle (17.08.1-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Tue, 05 Sep 2017 14:06:59 +0000
+
+kde-spectacle (17.08.0-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Thu, 17 Aug 2017 09:46:31 +0000
+
+kde-spectacle (17.04.3-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 12 Jul 2017 10:26:59 +0000
+
+kde-spectacle (17.04.2-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 07 Jun 2017 12:25:24 +0000
+
+kde-spectacle (17.04.1-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Thu, 11 May 2017 18:28:57 +0000
+
+kde-spectacle (17.04.0-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Thu, 20 Apr 2017 12:46:18 +0000
+
+kde-spectacle (16.12.3-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 08 Mar 2017 13:52:00 +0000
+
+kde-spectacle (16.12.2-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 08 Feb 2017 17:05:20 +0000
+
+kde-spectacle (16.12.1-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 11 Jan 2017 13:27:28 +0000
+
+kde-spectacle (16.12.0-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 14 Dec 2016 16:34:19 +0000
+
+kde-spectacle (16.08.3-2) unstable; urgency=medium
+
+  * Add transitional script for ksnapshot.
+    Thanks to Thorsten Glaser for the report (Closes: 845449)
+
+ -- Maximiliano Curia <maxy@debian.org>  Tue, 06 Dec 2016 14:13:16 +0100
+
+kde-spectacle (16.08.3-1) unstable; urgency=medium
+
+  * New upstream release (16.08.3)
+
+ -- Maximiliano Curia <maxy@debian.org>  Wed, 23 Nov 2016 22:08:11 +0100
+
+kde-spectacle (16.08.3-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Mon, 21 Nov 2016 13:55:21 +0000
+
+kde-spectacle (16.08.2-1) unstable; urgency=medium
+
+  [ Automatic packaging ]
+  * Update build-deps and deps with the info from cmake
+
+  [ Maximiliano Curia ]
+  * New upstream release (16.08.2)
+
+ -- Maximiliano Curia <maxy@debian.org>  Wed, 19 Oct 2016 12:44:00 +0200
+
+kde-spectacle (16.08.2-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Fri, 14 Oct 2016 13:42:05 +0000
+
+kde-spectacle (16.08.1-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Fri, 16 Sep 2016 13:08:57 +0000
+
+kde-spectacle (16.08.0-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 17 Aug 2016 11:51:13 +0000
+
+kde-spectacle (16.04.3-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Maximiliano Curia ]
+  * Add ksnapshot transitional package (Closes: 835480).
+    Thanks: Bernhard Schmidt for reporting.
+
+  [ Pino Toscano ]
+  * New upstream release.
+  * Add the libkf5kipi-dev build dependency, to enable the support for
+    KIPI plugins.
+  * Add the pkg-config build dependency.
+  * Change the watch file to look for stable releases only.
+
+ -- Pino Toscano <pino@debian.org>  Fri, 02 Sep 2016 21:22:26 +0200
+
+kde-spectacle (16.04.3-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Tue, 12 Jul 2016 11:36:38 +0000
+
+kde-spectacle (16.04.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Maximiliano Curia <maxy@debian.org>  Wed, 22 Jun 2016 16:28:19 +0200
+
+kde-spectacle (16.04.2-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 15 Jun 2016 14:45:45 +0000
+
+kde-spectacle (16.04.1-2) unstable; urgency=medium
+
+  * Release to unstable.
+
+ -- Maximiliano Curia <maxy@debian.org>  Wed, 01 Jun 2016 10:35:31 +0200
+
+kde-spectacle (16.04.1-1) experimental; urgency=medium
+
+  [ Maximiliano Curia ]
+  * New upstream release (15.12.2).
+  * Add upstream metadata (DEP-12)
+  * debian/control: Update Vcs-Browser and Vcs-Git fields
+
+  [ Automatic packaging ]
+  * Bump Standards-Version to 3.9.8
+  * Add a .gitattributes file to use dpkg-mergechangelogs
+  * Update build-deps and deps with the info from cmake
+
+ -- Maximiliano Curia <maxy@debian.org>  Thu, 26 May 2016 00:32:20 +0200
+
+kde-spectacle (16.04.1-0neon) xenial; urgency=medium
+
+  * New release
+
+ -- Neon CI <neon@kde.org>  Wed, 11 May 2016 10:01:22 +0000
+
+spectacle (15.12.1-1) experimental; urgency=medium
+
+  * Initial release (15.12.0).
+  * Update copyright information.
+  * New upstream release (15.12.1).
+
+ -- Maximiliano Curia <maxy@debian.org>  Mon, 01 Feb 2016 10:24:06 +0100

@@ -1,0 +1,27 @@
+Description: Fix %T filename pattern in fullscreen captures
+ The %T pattern can be used in file names to add the title of the window being
+ captured. In case of fullscreen capture when there is no title spectacles
+ removes this pattern, but also surrounding separators.
+ .
+ Unfortunately it is too aggressive in removing separators and will also eat
+ the % character of the closest following pattern in some cases. This breaks
+ patterns like %T_%Y-%M-%D_%H%m%S.
+ .
+ See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=953536
+Forwarded: https://phabricator.kde.org/D27969
+Author: Aurélien COUDERC <coucouf@debian.org>
+Last-Update: 2020-03-10
+
+--- a/src/ExportManager.cpp
++++ b/src/ExportManager.cpp
+@@ -176,7 +176,9 @@
+         title = mWindowTitle.replace(QLatin1Char('/'), QLatin1String("_"));  // POSIX doesn't allow "/" in filenames
+     } else {
+         // Remove '%T' with separators around it
+-        const auto wordSymbol = QStringLiteral(R"(\p{L}\p{M}\p{N})");
++        // Separators are anything that isn't a unicode letter \p{L}, mark \p{M}, number \p{N}
++        // or the % character to avoid eating into a nearby pattern.
++        const auto wordSymbol = QStringLiteral(R"(\p{L}\p{M}\p{N}%)");
+         const auto separator = QStringLiteral("([^%1]+)").arg(wordSymbol);
+         const auto re = QRegularExpression(QStringLiteral("(.*?)(%1%T|%T%1)(.*?)").arg(separator));
+         baseName.replace(re, QStringLiteral(R"(\1\5)"));
