@@ -2,8 +2,11 @@
 
 set -eu
 
-if [ "$PAM_TTY" = '/dev/tty1' ]; then
-  # if on tty1, local login not ok
+# This is a weird test, but we need to distinguish between
+# login screen logins and lock screen logins.  On login
+# screen our group id is 0(root), on lock screen it is not.
+if [ "$(id -g)" -eq 0 ]; then
+  # on login screen, must get a kerberos ticket
   exit 1
 fi
 
@@ -16,9 +19,10 @@ krb5_tickets=$(
   find /tmp -maxdepth 1 -name "krb5cc_${PAM_USER}_*" -type f \
 	  -user "$PAM_USER" ! -size 0 -mtime "-${days_limit}")
 
-# if we have an active ticket, we can do local login
 if [ -n "$krb5_tickets" ]; then
+  # if we have an active ticket, we can do local login
   exit 0
 fi
 
+# on lock screen but kerberos ticket is getting old, must get a new one
 exit 1
