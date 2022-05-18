@@ -6,23 +6,11 @@ set -eu
 # login screen logins and lock screen logins.  On login
 # screen our group id is 0(root), on lock screen it is not.
 if [ "$(id -g)" -eq 0 ]; then
-  # on login screen, must get a kerberos ticket
+  # on login screen, must do remove login (getting a kerberos
+  # ticket)
   exit 1
 fi
 
-days_limit=3
-
-# This is an inaccurate heuristic but should be good enough:
-# if we can find any ticket for this user that is less than four days old,
-# then we consider that user has an active kerberos ticket.
-krb5_tickets=$(
-  find /tmp -maxdepth 1 -name "krb5cc_${PAM_USER}_*" -type f \
-	  -user "$PAM_USER" ! -size 0 -mtime "-${days_limit}")
-
-if [ -n "$krb5_tickets" ]; then
-  # if we have an active ticket, we can do local login
-  exit 0
-fi
-
-# on lock screen but kerberos ticket is getting old, must get a new one
-exit 1
+# We can do local login.  Renewing our kerberos ticket appears
+# to happen in the background and needs no special action.
+exit 0
