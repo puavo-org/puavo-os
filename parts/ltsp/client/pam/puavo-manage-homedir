@@ -6,10 +6,6 @@ set -eu
 # XXX puavo-ltsp/bootserver/sbin/puavo-bootserver-make-homedir,
 # XXX unify these if possible
 
-if [ "${PAM_TYPE:-}" != 'open_session' ]; then
-  exit 0
-fi
-
 logmsg() {
   logger -t puavo-manage-homedir "$@"
 }
@@ -25,9 +21,29 @@ if [ -z "$username" ]; then
   username="$PAM_USER"
 fi
 
-user_uid="$(id -u "$username" 2>/dev/null)" || true
+user_password=''
 
-if [ -z "$user_uid" ]; then
+if [ "${PAM_TYPE:-}" = 'close_session' ]; then
+  # XXX only in case there is some actual mount...
+  # XXX except that it does not actually return any error even if there is not
+  # XXX any mount... so what should I do?
+  encfs -u "/home/${username}"
+  exit 0
+fi
+
+if [ "${PAM_TYPE:-}" != 'auth' ]; then
+  exit 0
+fi
+
+if ! user_password="$(cat)" || [ -z "$user_password" ]; then
+  logmsg err 'could not read user password'
+  exit 1
+fi
+
+user_uid="$(id -u "$username" 2>/dev/null)" || true
+user_gid="$(id -g "$username" 2>/dev/null)" || true
+
+if [ -z "$user_uid" -o -z "$user_gid" ]; then
   logmsg -p user.err "user $username is not known"
   exit 1
 fi
@@ -60,6 +76,15 @@ if [ -n "$current_home_uid" -a "$current_home_uid" != "$user_uid" ]; then
     logmsg -p user.err "error when moving ${user_homedir}"
     exit 1
   fi
+fi
+
+# XXX I do not know how this interacts with later stuff
+encfs_dir="/home/.encfs/${user_uid}"
+if [ -d "$encfs_dir" ]; then
+  # XXX what if this fails?  what should be done then?
+  install -d -o "$user_uid" -g "$user_gid" -m 700 "/home/${username}"
+  printf "%s\n" "$user_password" \
+    | encfs --public --stdinpass "$encfs_dir" "/home/${username}"
 fi
 
 # In case the directory does not exist, we lookup if user has
