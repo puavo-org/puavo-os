@@ -78,13 +78,21 @@ if [ -n "$current_home_uid" -a "$current_home_uid" != "$user_uid" ]; then
   fi
 fi
 
-# XXX I do not know how this interacts with later stuff
 encfs_dir="/home/.encfs/${user_uid}"
 if [ -d "$encfs_dir" ]; then
-  # XXX what if this fails?  what should be done then?
-  install -d -o "$user_uid" -g "$user_gid" -m 700 "/home/${username}"
-  printf "%s\n" "$user_password" \
-    | encfs --public --stdinpass "$encfs_dir" "/home/${username}"
+  install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir"
+  if [ -z "$(find "$user_homedir" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
+    # directory is not empty, that is a problem, something is wrong
+    logmsg -p user.err "user home directory '${user_homedir}' is not empty"
+    exit 1
+  fi
+  if ! printf "%s\n" "$user_password" \
+    | encfs --public --stdinpass "$encfs_dir" "/home/${username}"; then
+      # XXX what should we really do?
+      logmsg -p user.err \
+             "could not decrypt encfs dir '${encfs_dir}' with user password"
+      exit 1
+  fi
 fi
 
 # In case the directory does not exist, we lookup if user has
