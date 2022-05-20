@@ -1,0 +1,13 @@
+if [ -h "$HOME" ]; then
+  case "$(readlink "$HOME")" in
+    /tmp/tmphome_*)
+      if [ -e "${HOME}/.puavo/change_encfs_password" ]; then
+        /usr/bin/openbsd-cwm & cwm_pid=$!
+        xterm -e encfsctl passwd "/home/.encfs/$(id -u)"
+        kill -9 "$cwm_pid"
+      fi
+      ;;
+  esac
+
+  exit 0
+fi

@@ -6,6 +6,10 @@
 
 set -eu
 
+logmsg() {
+  logger -t puavo-manage-homedir "$@"
+}
+
 create_encrypted_home() {
   local user_uid user_gid user_homedir encfs_dir user_password encfs_tmpdir
 
@@ -35,8 +39,22 @@ create_encrypted_home() {
   mv "$encfs_tmpdir" "$encfs_dir" || return 1
 }
 
-logmsg() {
-  logger -t puavo-manage-homedir "$@"
+# XXX how should this be cleaned up?
+# XXX (at least the home directory link should be cleaned up somehow)
+setup_tmp_home() {
+  local tmp_home user_gid user_homedir user_uid
+
+  user_homedir=$1
+  user_uid=$2
+  user_gid=$3
+
+  rmdir "$user_homedir" || return 1
+  tmp_home=$(mktemp -d /tmp/tmphome_${username}.XXXXXX) || return 1
+  mkdir -p "${tmp_home}/.puavo" || return 1
+  touch "${tmp_home}/.puavo/change_encfs_password" || return 1
+  chown -R "${user_uid}:${user_gid}" "$tmp_home" || return 1
+
+  ln -fns "$tmp_home" "$user_homedir" || return 1
 }
 
 username=${1:-}
@@ -131,11 +149,14 @@ if [ -d "$encfs_dir" ]; then
     exit 1
   fi
   if ! printf "%s\n" "$user_password" \
-    | encfs --public --stdinpass "$encfs_dir" "/home/${username}"; then
-      # XXX what should we really do?
+    | encfs --public --stdinpass "$encfs_dir" "$user_homedir"; then
       logmsg -p user.err \
              "could not decrypt encfs dir ${encfs_dir} with user password"
-      exit 1
+      if ! setup_tmp_home "$user_homedir" "$user_uid" "$user_gid"; then
+        logmsg -p user.err 'failed to set up a temporary home'
+        exit 1
+      fi
+      exit 0
   fi
   logmsg -p user.err \
          "encrypted home ${encfs_dir} mounted to ${user_homedir}"
