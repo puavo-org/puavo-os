@@ -1,10 +1,39 @@
 #!/bin/sh
 
-set -eu
-
 # XXX very similar functionality in
 # XXX puavo-ltsp/bootserver/sbin/puavo-bootserver-make-homedir,
 # XXX unify these if possible
+
+set -eu
+
+create_encrypted_home() {
+  local user_uid user_gid user_homedir encfs_dir user_password encfs_tmpdir
+
+  user_uid=$1
+  user_gid=$2
+  user_homedir=$3
+  encfs_dir=$4
+  user_password=$5
+
+  encfs_tmpdir="${encfs_dir}.tmp"
+
+  rm -rf "$encfs_tmpdir" || return 1
+
+  install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir" \
+          "$encfs_tmpdir" || return 1
+  printf "%s\n" "$user_password" \
+    | encfs --public --stdinpass --standard "$encfs_tmpdir" "$user_homedir" \
+      || return 1
+  if ! cp -RT /etc/skel "$user_homedir" \
+       || ! chown -R "${user_uid}:${user_gid}" "$user_homedir" \
+                  "${encfs_tmpdir}/.encfs6.xml"; then
+    encfs -u "$user_homedir" || true
+    return 1
+  fi
+
+  encfs -u "$user_homedir" || true
+  mv "$encfs_tmpdir" "$encfs_dir" || return 1
+}
 
 logmsg() {
   logger -t puavo-manage-homedir "$@"
@@ -78,21 +107,39 @@ if [ -n "$current_home_uid" -a "$current_home_uid" != "$user_uid" ]; then
   fi
 fi
 
+# XXX this should be conditional based on puavo-conf or some such
+encrypt_home_dirs=true
+
 encfs_dir="/home/.encfs/${user_uid}"
+
+if $encrypt_home_dirs && [ ! -d "$encfs_dir" ]; then
+  logmsg -p user.notice \
+         "creating an encrypted home for ${username} to ${encfs_dir}"
+  if ! create_encrypted_home "$user_uid" "$user_gid" "$user_homedir" \
+                             "$encfs_dir" "$user_password"; then
+    logmsg -p user.err \
+           "failed in creating an encrypted dir ${encfs_dir} for ${username}"
+    exit 1
+  fi
+fi
+
 if [ -d "$encfs_dir" ]; then
   install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir"
   if [ -z "$(find "$user_homedir" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
     # directory is not empty, that is a problem, something is wrong
-    logmsg -p user.err "user home directory '${user_homedir}' is not empty"
+    logmsg -p user.err "user home directory ${user_homedir} is not empty"
     exit 1
   fi
   if ! printf "%s\n" "$user_password" \
     | encfs --public --stdinpass "$encfs_dir" "/home/${username}"; then
       # XXX what should we really do?
       logmsg -p user.err \
-             "could not decrypt encfs dir '${encfs_dir}' with user password"
+             "could not decrypt encfs dir ${encfs_dir} with user password"
       exit 1
   fi
+  logmsg -p user.err \
+         "encrypted home ${encfs_dir} mounted to ${user_homedir}"
+  exit 0
 fi
 
 # In case the directory does not exist, we lookup if user has
