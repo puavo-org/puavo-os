@@ -460,13 +460,13 @@ while true; do
                quit       'Exit tests') || true 
 
   case "$response" in
-    audio)      mainmenu_default_item=keyboard;     test_audio      || true ;;
+    audio)      mainmenu_default_item=keyboard;   test_audio      || true ;;
     disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
     keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
     mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
     wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
     bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
-    camera)     mainmenu_default_item=quit;   test_camera     || true ;;
+    camera)     mainmenu_default_item=quit;       test_camera     || true ;;
     usb)        mainmenu_default_item=quit;       show_usb        || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
