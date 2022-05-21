@@ -2,8 +2,57 @@
 
 set -eu
 
+analyze_image() {
+mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 1 -sstep 100 -vo jpeg 2> /dev/null &&
+python3 -c '
+import matplotlib.image as mpimg
+import numpy as np
+
+img = mpimg.imread("00000001.jpg")
+
+data = np.unique(img.reshape(-1, img.shape[-1]), axis=0, return_counts=True)[0]
+
+print(len(data))' > "$camerastdout" &
+}
+
+camera_test_status() {
+  if [ -z $(cat $camerastdout) ]; then
+    echo "Scanning...";
+  else
+    if [ $(cat $camerastdout) -gt 20000 ]; then
+      echo "OK "$(cat $camerastdout);
+    else
+      echo "Bad camera "$(cat $camerastdout);
+    fi
+  fi
+}
+
 test_camera() {
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
+}
+
+log_usb() {
+  while sleep 0.5
+  do
+  if [[ $(lsusb -t 2>/dev/null | grep ' Port 1') ]]; then
+    echo "Right" > $usb1stdout
+  fi
+  if [[ $(lsusb -t 2>/dev/null | grep ' Port 2') ]]; then
+    echo "Left " > $usb2stdout
+  fi
+  done
+}
+
+usb_status() {
+  if [ -z $(cat $usb2stdout)$(cat $usb1stdout) ]; then
+    echo "Scanning..."
+  else
+    echo "$(cat $usb2stdout)$(cat $usb1stdout)"
+  fi
+}
+
+show_usb() {
+  exit 0
 }
 
 test_disks() {
@@ -384,35 +433,46 @@ fi
 
 teststdout=$(mktemp /tmp/puavo-test-hardware-bluetooth-stdout.XXXXXX)
 teststderr=$(mktemp /tmp/puavo-test-hardware-bluetooth-stderr.XXXXXX)
+camerastdout=$(mktemp /tmp/puavo-test-hardware-camera-stdout.XXXXXX)
+usb1stdout=$(mktemp /tmp/puavo-test-hardware-usb1-stdout.XXXXXX)
+usb2stdout=$(mktemp /tmp/puavo-test-hardware-usb2-stdout.XXXXXX)
 
+
+analyze_image
+
+log_usb &
 hcitool scan > "$teststdout" 2> "$teststderr" &
 
 mainmenu_default_item='audio'
 while true; do
+
+  
   response=$(dialog --stdout --default-item "$mainmenu_default_item" \
-                    --menu 'Choose a test' 15 44 8 \
+                    --menu 'Choose a test' 18 50 10 \
                audio      'Test audio devices' \
-               camera     'Test webcam' \
                disks      'Test disks' \
                keyboard   'Test keyboard' \
                mouse      'Test mouse/mice' \
                wifi       'Test wireless networking' \
                bluetooth  "$(bt_test_status)" \
-               quit       'Exit tests') || true
+               camera     "$(camera_test_status)" \
+               usb        "$(usb_status)" \
+               quit       'Exit tests') || true 
 
   case "$response" in
-    audio)      mainmenu_default_item=camera;     test_audio      || true ;;
-    camera)     mainmenu_default_item=keyboard;   test_camera     || true ;;
+    audio)      mainmenu_default_item=keyboard;     test_audio      || true ;;
     disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
     keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
     mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
-    wifi)       mainmenu_default_item=bluetooth;  test_wifi       || true ;;
+    wifi)       mainmenu_default_item=quit;       test_wifi       || true ;;
     bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
+    camera)     mainmenu_default_item=quit;   test_camera     || true ;;
+    usb)        mainmenu_default_item=quit;       show_usb        || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
 done
 
-rm -f "$teststdout" "$teststderr"
+rm -f "$teststdout" "$teststderr" 00000001.jpg "$camerastdout" "$usb1stdout" "$usb2stdout"
 
 exit 0
