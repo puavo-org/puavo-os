@@ -12,7 +12,7 @@ img = mpimg.imread("00000001.jpg")
 
 data = np.unique(img.reshape(-1, img.shape[-1]), axis=0, return_counts=True)[0]
 
-print(len(data))' > "$camerastdout" &
+print(len(data))' > "$camerastdout" 2>/dev/null &
 }
 
 camera_test_status() {
