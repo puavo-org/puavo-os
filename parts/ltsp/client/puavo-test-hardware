@@ -422,17 +422,21 @@ wifi_status() {
   err="$(wc --lines "$wifistderr" | awk '{print $1}')"
   if [ "$wifi" -gt "0" ]; then
     echo "OK"
-  elif [ "$err" -gt "1" ]; then
+  elif [ "$err" -gt "0" ]; then
     echo "Bad wifi"
+  elif [ "$wifi" -eq "0" ] && [ "$err" -eq "0" ]; then
+    echo "Scanning..."
   fi
 }
 
 wifi_results() {
   a="$(wc --lines "$wifistdout" | awk '{print $1}')"
-  if [ "$a" -lt "1" ]; then
-    results='No networks found.
-Maybe a problem with wireless interface?'
-    dialog --no-collapse --msgbox "$results" 6 48
+  if [ "$a" -eq "0" ]; then
+    results="$(cat "$wifistderr")
+
+No networks found.
+Maybe a problem with wireless interface?"
+    dialog --no-collapse --msgbox "$results" 9 48
     return 1
   fi
   results=$(cat "$wifistdout")
@@ -482,8 +486,8 @@ while true; do
                disks      'Test disks' \
                keyboard   'Test keyboard' \
                mouse      'Test mouse/mice' \
-               wifi       "$(wifi_status)" \
                power      'Test power' \
+               wifi       "$(wifi_status)" \
                bluetooth  "$(bt_test_status)" \
                camera     "$(camera_test_status)" \
                usb        "$(usb_status)" \
