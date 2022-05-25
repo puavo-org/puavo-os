@@ -429,7 +429,7 @@ wifi_status() {
   fi
 }
 
-wifi_results() {
+show_wifi() {
   a="$(wc --lines "$wifistdout" | awk '{print $1}')"
   if [ "$a" -eq "0" ]; then
     results="$(cat "$wifistderr")
@@ -444,19 +444,34 @@ Maybe a problem with wireless interface?"
 }
 
 test_power() {
-  ac_online=$(cat /sys/class/power_supply/AC/online)
-  dock_present=$(lsusb -t | grep "hub" | grep "Port 4")
-  clear
+  ac_online=$(cat "/sys/class/power_supply/AC/online")
 
-  if [ "${ac_online}" -eq 1 ] && [ "$dock_present" ]; then
-    echo "Dock is supplying power."
-  elif [ "${ac_online}" -eq 1 ] && [ !"$dock_present" ]; then
-    echo "AC Adapter is supplying power."
+  while sleep 0.5
+  do
+    if [ "${ac_online}" -eq "1" ] && [ "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
+      echo "Dock OK " > $power1stdout
+    fi
+    if [ "${ac_online}" -eq "1" ] && [ ! "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
+      echo "AC OK" > $power2stdout
+    fi
+  done
+}
+
+power_status() {
+  if [ -z $(cat $power1stdout)$(cat $power2stdout) ]; then
+    echo "Scanning..."
   else
-    echo "AC Adapter or Dock is NOT supplying power!"
+    echo "$(cat $power1stdout)$(cat $power2stdout)"
   fi
+}
 
-  sleep 3
+show_power() {
+  if [ -z $(cat $power1stdout)$(cat $power2stdout) ]; then
+    results="Scanning..."
+  else
+    results="$(cat $power1stdout)$(cat $power2stdout)"
+  fi
+  dialog --no-collapse --msgbox "$results" 6 48
 }
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -471,12 +486,15 @@ usb1stdout=$(mktemp /tmp/puavo-test-hardware-usb1-stdout.XXXXXX)
 usb2stdout=$(mktemp /tmp/puavo-test-hardware-usb2-stdout.XXXXXX)
 wifistdout=$(mktemp /tmp/puavo-test-hardware-wifi-stdout.XXXXXX)
 wifistderr=$(mktemp /tmp/puavo-test-hardware-wifi-stderr.XXXXXX)
+power1stdout=$(mktemp /tmp/puavo-test-hardware-power1-stdout.XXXXXX)
+power2stdout=$(mktemp /tmp/puavo-test-hardware-power2-stdout.XXXXXX)
 
 analyze_image
 
 log_usb &
 hcitool scan > "$teststdout" 2> "$teststderr" &
 test_wifi > "$wifistdout" &
+test_power &
 
 mainmenu_default_item='audio'
 while true; do
@@ -486,7 +504,7 @@ while true; do
                disks      'Test disks' \
                keyboard   'Test keyboard' \
                mouse      'Test mouse/mice' \
-               power      'Test power' \
+               power      "$(power_status)" \
                wifi       "$(wifi_status)" \
                bluetooth  "$(bt_test_status)" \
                camera     "$(camera_test_status)" \
@@ -497,9 +515,9 @@ while true; do
     audio)      mainmenu_default_item=keyboard;   test_audio      || true ;;
     disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
     keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
-    mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
-    wifi)       mainmenu_default_item=quit;       wifi_results    || true ;;
-    power)      mainmenu_default_item=quit;       test_power      || true ;;
+    mouse)      mainmenu_default_item=power;      test_mouse      || true ;;
+    power)      mainmenu_default_item=quit;       show_power      || true ;;
+    wifi)       mainmenu_default_item=quit;       show_wifi       || true ;;
     bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
     camera)     mainmenu_default_item=quit;       test_camera     || true ;;
     usb)        mainmenu_default_item=quit;       show_usb        || true ;;
@@ -508,6 +526,7 @@ while true; do
   esac
 done
 
-rm -f "$teststdout" "$teststderr" 00000001.jpg "$camerastdout" "$usb1stdout" "$usb2stdout" "$wifistdout" "$wifistderr"
+rm -f "$teststdout" "$teststderr" 00000001.jpg "$camerastdout" "$usb1stdout" \
+	"$usb2stdout" "$wifistdout" "$wifistderr" "$power1stdout" "$power2stdout"
 
 exit 0
