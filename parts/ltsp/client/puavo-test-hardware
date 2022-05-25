@@ -491,10 +491,10 @@ power2stdout=$(mktemp /tmp/puavo-test-hardware-power2-stdout.XXXXXX)
 
 analyze_image
 
-log_usb &
+log_usb & usb_pid=$!
 hcitool scan > "$teststdout" 2> "$teststderr" &
 test_wifi > "$wifistdout" &
-test_power &
+test_power & power_pid=$!
 
 mainmenu_default_item='audio'
 while true; do
@@ -526,6 +526,7 @@ while true; do
   esac
 done
 
+kill "$usb_pid" && kill "$power_pid"
 rm -f "$teststdout" "$teststderr" 00000001.jpg "$camerastdout" "$usb1stdout" \
 	"$usb2stdout" "$wifistdout" "$wifistderr" "$power1stdout" "$power2stdout"
 
