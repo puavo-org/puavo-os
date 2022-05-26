@@ -3,12 +3,12 @@
 set -eu
 
 analyze_image() {
-mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 1 -sstep 100 -vo jpeg 2> /dev/null &&
+mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 2 -sstep 100 -vo jpeg 2> /dev/null &&
 python3 -c '
 import matplotlib.image as mpimg
 import numpy as np
 
-img = mpimg.imread("00000001.jpg")
+img = mpimg.imread("00000002.jpg")
 
 data = np.unique(img.reshape(-1, img.shape[-1]), axis=0, return_counts=True)[0]
 
@@ -44,7 +44,7 @@ log_usb() {
 }
 
 usb_status() {
-  if [ -z $(cat $usb2stdout)$(cat $usb1stdout) ]; then
+  if [ -z "$(cat $usb2stdout)$(cat $usb1stdout)" ]; then
     echo "Scanning..."
   else
     echo "$(cat $usb2stdout)$(cat $usb1stdout)"
@@ -458,7 +458,7 @@ test_power() {
 }
 
 power_status() {
-  if [ -z $(cat $power1stdout)$(cat $power2stdout) ]; then
+  if [ -z "$(cat $power1stdout)$(cat $power2stdout)" ]; then
     echo "Scanning..."
   else
     echo "$(cat $power1stdout)$(cat $power2stdout)"
@@ -466,12 +466,12 @@ power_status() {
 }
 
 show_power() {
-  if [ -z $(cat $power1stdout)$(cat $power2stdout) ]; then
+  if [ -z "$(cat $power1stdout)$(cat $power2stdout)" ]; then
     results="Scanning..."
   else
     results="$(cat $power1stdout)$(cat $power2stdout)"
   fi
-  dialog --no-collapse --msgbox "$results" 6 48
+  dialog --no-collapse --msgbox "$results" 6 24
 }
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -504,10 +504,10 @@ while true; do
                disks      'Test disks' \
                keyboard   'Test keyboard' \
                mouse      'Test mouse/mice' \
-               power      "$(power_status)" \
                wifi       "$(wifi_status)" \
                bluetooth  "$(bt_test_status)" \
                camera     "$(camera_test_status)" \
+               power      "$(power_status)" \
                usb        "$(usb_status)" \
                quit       'Exit tests') || true 
 
@@ -516,10 +516,10 @@ while true; do
     disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
     keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
     mouse)      mainmenu_default_item=power;      test_mouse      || true ;;
-    power)      mainmenu_default_item=quit;       show_power      || true ;;
     wifi)       mainmenu_default_item=quit;       show_wifi       || true ;;
     bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
     camera)     mainmenu_default_item=quit;       test_camera     || true ;;
+    power)      mainmenu_default_item=quit;       show_power      || true ;;
     usb)        mainmenu_default_item=quit;       show_usb        || true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
@@ -527,7 +527,7 @@ while true; do
 done
 
 kill "$usb_pid" && kill "$power_pid"
-rm -f "$teststdout" "$teststderr" 00000001.jpg "$camerastdout" "$usb1stdout" \
-	"$usb2stdout" "$wifistdout" "$wifistderr" "$power1stdout" "$power2stdout"
+rm -f "$teststdout" "$teststderr" 0000000*.jpg "$camerastdout" "$usb1stdout" \
+      "$usb2stdout" "$wifistdout" "$wifistderr" "$power1stdout" "$power2stdout"
 
 exit 0
