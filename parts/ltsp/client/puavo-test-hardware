@@ -177,6 +177,10 @@ ruby_test_keyboard_script=$(cat <<'EOF'
        13 => [ 1, 41, 1 ],    # ´
        14 => [ 1, 45, 9 ],    # BACKSPACE
       102 => [ 1, 57, 4 ],    # HOME
+       69 => [ 1, 67, 3 ],    # NUMLOCK
+       98 => [ 1, 71, 1 ],    # Numpad /
+       55 => [ 1, 73, 1 ],    # Numpad *
+       74 => [ 1, 75, 1 ],    # Numpad -
 
        15 => [ 2, 0,  3 ],    # TAB
        16 => [ 2, 6,  1 ],    # Q
@@ -192,6 +196,10 @@ ruby_test_keyboard_script=$(cat <<'EOF'
        26 => [ 2, 38, 1 ],    # Å
        27 => [ 2, 42, 1 ],    # ¨
       104 => [ 2, 57, 4 ],    # PgUp
+       71 => [ 2, 67, 1 ],    # Numpad 7
+       72 => [ 2, 69, 1 ],    # Numpad 8
+       73 => [ 2, 71, 1 ],    # Numpad 9
+       78 => [ 2, 75, 1 ],    # Numpad +
 
        58 => [ 3,  0, 4 ],    # CAPS
        30 => [ 3,  6, 1 ],    # A
@@ -208,6 +216,9 @@ ruby_test_keyboard_script=$(cat <<'EOF'
        43 => [ 3, 42, 1 ],    # '
        28 => [ 3, 49, 5 ],    # ENTER
       109 => [ 3, 57, 4 ],    # PgDn
+       75 => [ 3, 67, 1 ],    # Numpad 4
+       76 => [ 3, 69, 1 ],    # Numpad 5
+       77 => [ 3, 71, 1 ],    # Numpad 6
 
        42 => [ 4,  0, 4 ],    # LSFT
        86 => [ 4,  5, 1 ],    # <
@@ -223,6 +234,9 @@ ruby_test_keyboard_script=$(cat <<'EOF'
        53 => [ 4, 35, 1 ],    # -
        54 => [ 4, 48, 6 ],    # RSHIFT
       107 => [ 4, 57, 3 ],    # END
+       79 => [ 4, 67, 1 ],    # Numpad 1
+       80 => [ 4, 69, 1 ],    # Numpad 2
+       81 => [ 4, 71, 1 ],    # Numpad 3
 
        29 => [ 5, 0,  4 ],    # CTRL
       125 => [ 5, 8,  3 ],    # WIN
@@ -235,15 +249,18 @@ ruby_test_keyboard_script=$(cat <<'EOF'
       103 => [ 5, 49, 2 ],    # Up
       108 => [ 5, 52, 4 ],    # Down
       106 => [ 5, 57, 5 ],    # Right
+       82 => [ 5, 67, 1 ],    # Numpad 0
+       83 => [ 5, 69, 1 ],    # Numpad ,
+       96 => [ 5, 71, 5 ],    # Numpad ENTER
     }
 
     $lines = [
       "ESC  F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 INSERT PSCR DELETE",
-      "§    1  2  3  4  5  6  7  8  9   0   +   ´   BACKSPACE   HOME",
-      "TAB   Q  W  E  R  T  Y  U  I  O   P   Å   ¨              PgUp",
-      "CAPS  A  S  D  F  G  H  J  K  L   Ö   Ä   '      ENTER   PgDn",
-      "LSFT < Z  X  C  V  B  N  M  ,  .   -            RSHIFT   END",
-      "CTRL    WIN Alt   SPACE  AltGr HAM CTRL     Left Up Down Right" ]
+      "§    1  2  3  4  5  6  7  8  9   0   +   ´   BACKSPACE   HOME      NUM / * -",
+      "TAB   Q  W  E  R  T  Y  U  I  O   P   Å   ¨              PgUp      7 8 9   +",
+      "CAPS  A  S  D  F  G  H  J  K  L   Ö   Ä   '      ENTER   PgDn      4 5 6",
+      "LSFT < Z  X  C  V  B  N  M  ,  .   -            RSHIFT   END       1 2 3",
+      "CTRL    WIN Alt   SPACE  AltGr HAM CTRL     Left Up Down Right     0 , ENTER" ]
   }
 
   if $_.match(/^keycode *(\d+) release/) then
