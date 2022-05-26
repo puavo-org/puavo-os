@@ -34,10 +34,10 @@ test_camera() {
 log_usb() {
   while sleep 0.5
   do
-  if [ "$(lsusb -t 2>/dev/null | grep ' Port 1')" ]; then
+  if [ "$(lsusb -t 2>/dev/null | grep ' Port 1' | grep -v '        |__')" ]; then
     echo "Right" > $usb1stdout
   fi
-  if [ "$(lsusb -t 2>/dev/null | grep ' Port 2')" ]; then
+  if [ "$(lsusb -t 2>/dev/null | grep ' Port 2' | grep -v '        |__')" ]; then
     echo "Left " > $usb2stdout
   fi
   done
