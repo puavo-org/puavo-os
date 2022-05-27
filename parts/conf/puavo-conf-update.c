@@ -1091,38 +1091,12 @@ parse_json_file(const char *filepath)
 {
 	json_t *root;
 	json_error_t error;
-	const char *json;
-	off_t len;
-	int fd;
 
-	root = NULL;
-
-	if ((fd = open(filepath, O_RDONLY)) == -1) {
-		warn("open() on %s", filepath);
-		return NULL;
-	}
-
-	if ((len = lseek(fd, 0, SEEK_END)) == -1) {
-		warn("lseek() on %s", filepath);
-		goto finish;
-	}
-	if (len == 0) {
-		warnx("file %s has zero size", filepath);
-		goto finish;
-	}
-
-	if ((json = mmap(0, len, PROT_READ, MAP_PRIVATE, fd, 0)) == NULL) {
-		warn("mmap() on %s", filepath);
-		goto finish;
-	}
-
-	if ((root = json_loads(json, 0, &error)) == NULL) {
+	if ((root = json_load_file(filepath, 0, &error)) == NULL) {
 		warnx("error parsing json file %s line %d: %s", filepath,
 		    error.line, error.text);
+		return NULL;
 	}
-
-finish:
-	(void) close(fd);
 
 	return root;
 }
