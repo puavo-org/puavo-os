@@ -48,7 +48,7 @@
 #define PCI_MAX         1024
 #define USB_MAX         1024
 
-#define E_SUCCESS               0
+#define E_OK                    0
 #define E_ERROR                 1
 #define E_DEVICE_JSON_FAILED    2
 
@@ -165,16 +165,16 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (apply_parameter_definitions(&cache) != 0) {
+	if (apply_parameter_definitions(&cache) != E_OK) {
 		warnx("failure in initializing puavo conf db");
 		status = EXIT_FAILURE;
 	}
 
 	update_cache_ret = update_cache(&cache, devicejson_path, verbose);
-	if (update_cache_ret != 0)
+	if (update_cache_ret != E_OK)
 		warnx("problem in updating cache");
 
-	if (write_to_puavo_conf(&cache, init, verbose) != 0) {
+	if (write_to_puavo_conf(&cache, init, verbose) != E_OK) {
 		warnx("problem in writing values to puavoconf");
 		status = EXIT_FAILURE;
 	}
@@ -216,23 +216,23 @@ apply_parameter_definitions(struct conf_cache **cache)
 	size_t i;
 	int ret, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	ret = glob(DEFINITIONS_DIR "/*.json", 0, glob_error, &globbuf);
 	if (ret != 0) {
 		if (ret == GLOB_NOMATCH)
-			return 0;
+			return E_OK;
 		warnx("glob() failure in apply_parameter_definitions()");
 		globfree(&globbuf);
-		return 1;
+		return E_ERROR;
 	}
 
 	for (i = 0; i < globbuf.gl_pathc; i++) {
 		ret = handle_paramdef_file(cache, globbuf.gl_pathv[i]);
-		if (ret != 0) {
+		if (ret != E_OK) {
 			warnx("error handling %s", globbuf.gl_pathv[i]);
 			/* Return error, but try other files. */
-			retvalue = 1;
+			retvalue = E_ERROR;
 		}
 	}
 
@@ -259,25 +259,25 @@ handle_paramdef_file(struct conf_cache **cache, const char *filepath)
 	const char *param_name;
 	int ret, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	if ((root = parse_json_file(filepath)) == NULL) {
 		warnx("parse_json_file() failed for %s", filepath);
-		return 1;
+		return E_ERROR;
 	}
 
 	if (!json_is_object(root)) {
 		warnx("root is not a json object in %s", filepath);
-		retvalue = 1;
+		retvalue = E_ERROR;
 		goto finish;
 	}
 
 	json_object_foreach(root, param_name, param_value) {
 		ret = handle_one_paramdef(cache, param_name, param_value);
-		if (ret != 0) {
+		if (ret != E_OK) {
 			warnx("error handling %s in %s", param_name, filepath);
 			/* Return error, but try other keys. */
-			retvalue = 1;
+			retvalue = E_ERROR;
 		}
 	}
 
@@ -298,26 +298,26 @@ handle_one_paramdef(struct conf_cache **cache, const char *param_name,
 	if (!json_is_object(param_value)) {
 		warnx("parameter %s does not have an object as value",
 		    param_name);
-		return 1;
+		return E_ERROR;
 	}
 
 	if ((default_node = json_object_get(param_value, "default")) == NULL) {
 		warnx("parameter %s does not have a default value", param_name);
-		return 1;
+		return E_ERROR;
 	}
 
 	if ((value = json_string_value(default_node)) == NULL) {
 		warnx("parameter %s default is not a string", param_name);
-		return 1;
+		return E_ERROR;
 	}
 
 	if ((item = make_cache_item(param_name, value)) == NULL) {
 		warn("error adding %s --> '%s'", param_name, value);
-		return 1;
+		return E_ERROR;
 	}
 	HASH_ADD_KEYPTR(hh, *cache, item->key, strlen(item->key), item);
 
-	return 0;
+	return E_OK;
 }
 
 static int
@@ -334,27 +334,27 @@ update_cache(struct conf_cache **cache, const char *devicejson_path,
 {
 	int devicejson_ret, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	/* First apply kernel arguments, because we get puavo.hosttype
 	 * and puavo.profiles.list from there, which affect subsequent
 	 * settings. */
-	if (apply_kernel_arguments(cache) != 0)
-		retvalue = 1;
+	if (apply_kernel_arguments(cache) != E_OK)
+		retvalue = E_ERROR;
 
 	/* Also apply device settings now, because that might affect
 	 * puavo.hosttype and puavo.profiles.list. */
-	if (apply_device_settings(cache, devicejson_path, verbose) != 0)
-		retvalue = 1;
+	if (apply_device_settings(cache, devicejson_path, verbose) != E_OK)
+		retvalue = E_ERROR;
 
-	if (apply_one_profile(cache, IMAGE_CONF_PATH, verbose) != 0)
-		retvalue = 1;
+	if (apply_one_profile(cache, IMAGE_CONF_PATH, verbose) != E_OK)
+		retvalue = E_ERROR;
 
-	if (apply_profiles(cache, verbose) != 0)
-		retvalue = 1;
+	if (apply_profiles(cache, verbose) != E_OK)
+		retvalue = E_ERROR;
 
-	if (apply_hwquirks(cache, verbose) != 0)
-		retvalue = 1;
+	if (apply_hwquirks(cache, verbose) != E_OK)
+		retvalue = E_ERROR;
 
 	/* Apply device settings again, because those override
 	 * profiles and hwquirks. */
@@ -362,17 +362,17 @@ update_cache(struct conf_cache **cache, const char *devicejson_path,
 
 	/* Apply possible local puavo-conf configurations. */
 	if (check_file_exists(LOCAL_CONF_PATH)) {
-		if (apply_one_profile(cache, LOCAL_CONF_PATH, verbose) != 0)
-			retvalue = 1;
+		if (apply_one_profile(cache, LOCAL_CONF_PATH, verbose) != E_OK)
+			retvalue = E_ERROR;
 	}
 
 	/* Apply kernel arguments again,
 	 * because those override everything else. */
-	if (apply_kernel_arguments(cache) != 0)
-		retvalue = 1;
+	if (apply_kernel_arguments(cache) != E_OK)
+		retvalue = E_ERROR;
 
 	/* This is more fatal than other errors. */
-	if (devicejson_ret != 0)
+	if (devicejson_ret != E_OK)
 		retvalue = E_DEVICE_JSON_FAILED;
 
 	return retvalue;
@@ -388,11 +388,11 @@ apply_profiles(struct conf_cache **cache, int verbose)
 	HASH_FIND_STR(*cache, "puavo.profiles.list", item);
 	if (item == NULL) {
 		warnx("error getting puavo.profiles.list");
-		return 1;
+		return E_ERROR;
 	}
 	if ((profiles = strdup(item->value)) == NULL) {
 		warn("strdup error in apply_profiles()");
-		return 1;
+		return E_ERROR;
 	}
 
 	/*
@@ -410,19 +410,19 @@ apply_profiles(struct conf_cache **cache, int verbose)
 		return apply_hosttype_profile(cache, verbose);
 	}
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	profiles_tmp = profiles;
 	while ((profile = strsep(&profiles_tmp, ",")) != NULL) {
 		ret = asprintf(&profile_path, PROFILES_DIR "/%s.json", profile);
 		if (ret == -1) {
 			warnx("asprintf() error in apply_hosttype_profile()");
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 
-		if (apply_one_profile(cache, profile_path, verbose) != 0)
-			retvalue = 1;
+		if (apply_one_profile(cache, profile_path, verbose) != E_OK)
+			retvalue = E_ERROR;
 		free(profile_path);
 	}
 
@@ -442,7 +442,7 @@ apply_hosttype_profile(struct conf_cache **cache, int verbose)
 	HASH_FIND_STR(*cache, "puavo.hosttype", item);
 	if (item == NULL) {
 		warnx("error getting puavo.hosttype");
-		return 1;
+		return E_ERROR;
 	}
 	hosttype = item->value;
 
@@ -450,13 +450,13 @@ apply_hosttype_profile(struct conf_cache **cache, int verbose)
 	    hosttype);
 	if (ret == -1) {
 		warnx("asprintf() error in apply_hosttype_profile()");
-		return 1;
+		return E_ERROR;
 	}
 
-	retvalue = 0;
+	retvalue = E_OK;
 
-	if (apply_one_profile(cache, hosttype_profile_path, verbose) != 0)
-		retvalue = 1;
+	if (apply_one_profile(cache, hosttype_profile_path, verbose) != E_OK)
+		retvalue = E_ERROR;
 
 	free(hosttype_profile_path);
 
@@ -501,24 +501,24 @@ apply_device_settings(struct conf_cache **cache, const char *devicejson_path,
 		    " from %s\n", devicejson_path);
 	}
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	if ((root = parse_json_file(devicejson_path)) == NULL) {
 		warnx("parse_json_file() failed for %s", devicejson_path);
-		return 1;
+		return E_ERROR;
 	}
 
 	if (!json_is_object(root)) {
 		warnx("device settings in %s are not in correct format",
 		    devicejson_path);
-		retvalue = 1;
+		retvalue = E_ERROR;
 		goto finish;
 	}
 
 	if ((device_conf = json_object_get(root, "conf")) == NULL) {
 		warnx("device settings in %s are lacking configuration values",
 		    devicejson_path);
-		retvalue = 1;
+		retvalue = E_ERROR;
 		goto finish;
 	}
 
@@ -526,12 +526,12 @@ apply_device_settings(struct conf_cache **cache, const char *devicejson_path,
 		if ((param_value = json_string_value(node_value)) == NULL) {
 			warnx("device settings in %s has a non-string value"
 			    " for key %s", devicejson_path, param_name);
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 		ret = overwrite_value(cache, param_name, param_value);
-		if (ret != 0)
-			retvalue = 1;
+		if (ret != E_OK)
+			retvalue = E_ERROR;
 	}
 
 finish:
@@ -548,7 +548,7 @@ apply_one_profile(struct conf_cache **cache, const char *profile_path,
 	const char *param_name, *param_value;
 	int ret, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 	root = NULL;
 
 	if (verbose) {
@@ -558,13 +558,13 @@ apply_one_profile(struct conf_cache **cache, const char *profile_path,
 
 	if ((root = parse_json_file(profile_path)) == NULL) {
 		warnx("parse_json_file() failed for %s", profile_path);
-		retvalue = 1;
+		retvalue = E_ERROR;
 		goto finish;
 	}
 
 	if (!json_is_object(root)) {
 		warnx("profile %s is not in correct format", profile_path);
-		retvalue = 1;
+		retvalue = E_ERROR;
 		goto finish;
 	}
 
@@ -577,12 +577,12 @@ apply_one_profile(struct conf_cache **cache, const char *profile_path,
 		if ((param_value = json_string_value(node_value)) == NULL) {
 			warnx("profile %s has a non-string value for key %s",
 			    profile_path, param_name);
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 		ret = overwrite_value(cache, param_name, param_value);
-		if (ret != 0)
-			retvalue = 1;
+		if (ret != E_OK)
+			retvalue = E_ERROR;
 	}
 
 finish:
@@ -620,7 +620,7 @@ apply_hwquirks(struct conf_cache **cache, int verbose)
 	size_t i;
 	int ret, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	hw.dmi_table = dmi_table;
 	hw.dmi_itemcount = sizeof(dmi_table) / sizeof(struct dmi);
@@ -628,17 +628,17 @@ apply_hwquirks(struct conf_cache **cache, int verbose)
 	hw.usb_id_count = 0;
 
 	ret = update_dmi_table(hw.dmi_table, hw.dmi_itemcount);
-	if (ret != 0)
+	if (ret != E_OK)
 		retvalue = ret;
 
 	ret = lookup_ids_from_cmd("lspci -n", 3, hw.pci_ids, &hw.pci_id_count,
 	    PCI_MAX);
-	if (ret != 0)
+	if (ret != E_OK)
 		retvalue = ret;
 
 	ret = lookup_ids_from_cmd("lsusb", 6, hw.usb_ids, &hw.usb_id_count,
 	    USB_MAX);
-	if (ret != 0)
+	if (ret != E_OK)
 		retvalue = ret;
 
 	if (verbose) {
@@ -659,7 +659,7 @@ apply_hwquirks(struct conf_cache **cache, int verbose)
 	}
 
 	ret = apply_hwquirks_from_rules(cache, &hw, verbose);
-	if (ret != 0)
+	if (ret != E_OK)
 		retvalue = ret;
 
 	/* free tables */
@@ -684,7 +684,7 @@ apply_hwquirks_from_rules(struct conf_cache **cache,
 	int ret, retvalue;
 	const char *quirkfilepath;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	ret = glob(HWQUIRKS_DIR "/*.json", 0, glob_error, &globbuf);
 	if (ret != 0) {
@@ -692,7 +692,7 @@ apply_hwquirks_from_rules(struct conf_cache **cache,
 			return 0;
 		warnx("glob() failure in apply_hwquirks_from_rules()");
 		globfree(&globbuf);
-		return 1;
+		return E_ERROR;
 	}
 
 	for (i = 0; i < globbuf.gl_pathc; i++) {
@@ -700,14 +700,14 @@ apply_hwquirks_from_rules(struct conf_cache **cache,
 
 		if ((root = parse_json_file(quirkfilepath)) == NULL) {
 			warnx("parse_json_file() failed for %s", quirkfilepath);
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 		ret = apply_hwquirks_from_a_json_root(cache, root, hw, verbose);
 		if (ret != 0) {
 			warnx("apply_hwquirks_from_a_json_root() failed for %s",
 			    quirkfilepath);
-			retvalue = 1;
+			retvalue = E_ERROR;
 		}
 
 		json_decref(root);
@@ -727,45 +727,45 @@ apply_hwquirks_from_a_json_root(struct conf_cache **cache, json_t *root,
 	size_t i;
 	int is_match, ret, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	if (!json_is_array(root)) {
 		warnx("rules file json is not a json array");
-		return 1;
+		return E_ERROR;
 	}
 
 	json_array_foreach(root, i, rule) {
 		if (!json_is_object(rule)) {
 			warnx("hwquirk rule is not an object");
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 
 		if ((key_obj = json_object_get(rule, "key")) == NULL ||
 		    (key = json_string_value(key_obj)) == NULL) {
 			warnx("hwquirk rule field 'key' is missing");
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 
 		if ((mm_obj = json_object_get(rule, "matchmethod")) == NULL ||
 		    (matchmethod = json_string_value(mm_obj)) == NULL) {
 			warnx("hwquirk rule field 'matchmethod' is missing");
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 
 		if ((pattern_obj = json_object_get(rule, "pattern")) == NULL ||
 		    (pattern = json_string_value(pattern_obj)) == NULL) {
 			warnx("hwquirk rule field 'pattern' is missing");
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 
 		params_obj = json_object_get(rule, "parameters");
 		if (params_obj == NULL) {
 			warnx("hwquirk rule field 'parameters' is missing");
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 
@@ -780,8 +780,8 @@ apply_hwquirks_from_a_json_root(struct conf_cache **cache, json_t *root,
 			}
 
 			ret = apply_hwquirk_rule_parameters(cache, params_obj);
-			if (ret != 0)
-				retvalue = 1;
+			if (ret != E_OK)
+				retvalue = E_ERROR;
 			if (verbose) {
 				(void) printf("puavo-conf-update: ... hwquirk"
 				    " rule done\n");
@@ -875,21 +875,21 @@ apply_hwquirk_rule_parameters(struct conf_cache **cache, json_t *params_obj)
 	const char *param_name, *param_value;
 	int ret, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	if (!json_is_object(params_obj)) {
 		warnx("parameters in hwquirk rule is not an object");
-		return 1;
+		return E_ERROR;
 	}
 
 	json_object_foreach(params_obj, param_name, node_value) {
 		if ((param_value = json_string_value(node_value)) == NULL) {
 			warnx("parameter value in hwquirk is not a string");
-			retvalue = 1;
+			retvalue = E_ERROR;
 		}
 		ret = overwrite_value(cache, param_name, param_value);
-		if (ret != 0)
-			retvalue = 1;
+		if (ret != E_OK)
+			retvalue = E_ERROR;
 
 	}
 
@@ -907,11 +907,11 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 	ssize_t len;
 	int cmd_status, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	if ((cmd_pipe = popen(cmd_string, "r")) == NULL) {
 		warn("%s popen error", cmd_string);
-		return 1;
+		return E_ERROR;
 	}
 
 	for (;;) {
@@ -925,7 +925,7 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 			}
 			warn("could not read a line from %s", cmd_string);
 			free(line);
-			retvalue = 1;
+			retvalue = E_ERROR;
 			break;
 		} else if (len < 1) {
 			free(line);
@@ -939,7 +939,7 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 			if (field == NULL) {
 				warn("could not parse a line from %s",
 				    cmd_string);
-				retvalue = 1;
+				retvalue = E_ERROR;
 				free(line);
 				break;
 			}
@@ -948,7 +948,7 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 			next_id = &idtable[*id_count];
 			if ((*next_id = strdup(field)) == NULL) {
 				warn("strdup() with %s", field);
-				retvalue = 1;
+				retvalue = E_ERROR;
 				free(line);
 				continue;
 			}
@@ -956,7 +956,7 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 			(*id_count)++;
 			if (*id_count >= id_max) {
 				warnx("id count maximum reached");
-				retvalue = 1;
+				retvalue = E_ERROR;
 				free(line);
 				break;
 			}
@@ -968,10 +968,10 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 	cmd_status = pclose(cmd_pipe);
 	if (cmd_status == -1) {
 		warn("%s error with pclose()", cmd_string);
-		retvalue = 1;
+		retvalue = E_ERROR;
 	} else if (cmd_status != 0) {
 		warnx("%s returned error code %d", cmd_string, cmd_status);
-		retvalue = 1;
+		retvalue = E_ERROR;
 	}
 
 	return retvalue;
@@ -1015,14 +1015,14 @@ update_dmi_table(struct dmi *dmi_table, size_t tablesize)
 	size_t i;
 	int ret, retvalue;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	for (i = 0; i < tablesize; i++) {
 		ret = snprintf(id_path, PATH_MAX, "%s/%s", DMI_ID_PATH,
 		    dmi_table[i].key);
 		if (ret >= PATH_MAX) {
 			warnx("snprintf() error with %s", dmi_table[i].key);
-			retvalue = 1;
+			retvalue = E_ERROR;
 			continue;
 		}
 
@@ -1047,12 +1047,12 @@ apply_kernel_arguments(struct conf_cache **cache)
 	cmdline = get_cmdline();
 	if (cmdline == NULL) {
 		warnx("could not read /proc/cmdline");
-		return 1;
+		return E_ERROR;
 	}
 
 	orig_cmdline = cmdline;
 
-	retvalue = 0;
+	retvalue = E_OK;
 
 	prefix_len = sizeof("puavo.") - 1;
 
@@ -1066,8 +1066,8 @@ apply_kernel_arguments(struct conf_cache **cache)
 			continue;
 
 		ret = overwrite_value(cache, param_name, param_value);
-		if (ret != 0)
-			retvalue = 1;
+		if (ret != E_OK)
+			retvalue = E_ERROR;
 	}
 
 	free(orig_cmdline);
@@ -1082,7 +1082,7 @@ overwrite_value(struct conf_cache **cache, const char *key, const char *value)
 
 	if ((item = make_cache_item(key, value)) == NULL) {
 		warn("error overwriting %s --> '%s'", key, value);
-		return 1;
+		return E_ERROR;
 	}
 
 	HASH_REPLACE_STR(*cache, key, item, old_item);
@@ -1092,7 +1092,7 @@ overwrite_value(struct conf_cache **cache, const char *key, const char *value)
 		free(old_item);
 	}
 
-	return 0;
+	return E_OK;
 }
 
 static json_t *
@@ -1118,17 +1118,17 @@ write_to_puavo_conf(struct conf_cache **cache, int init, int verbose)
 	struct conf_cache *item, *tmp;
 	int ret, r;
 
-	ret = 0;
+	ret = E_OK;
 
 	if (puavo_conf_open(&conf, &err)) {
 		warnx("Failed to open config backend: %s", err.msg);
-		return 1;
+		return E_ERROR;
 	}
 
 	HASH_ITER(hh, *cache, item, tmp) {
 		r = add_cacheitem_to_puavo_conf(conf, item, init, verbose);
-		if (r != 0)
-			ret = 1;
+		if (r != E_OK)
+			ret = E_ERROR;
 		HASH_DEL(*cache, item);
 		free(item->key);
 		free(item->value);
@@ -1137,7 +1137,7 @@ write_to_puavo_conf(struct conf_cache **cache, int init, int verbose)
 
 	if (puavo_conf_close(conf, &err) == -1) {
 		warnx("Failed to close config backend: %s", err.msg);
-		ret = 1;
+		ret = E_ERROR;
 	}
 
 	return ret;
@@ -1157,14 +1157,14 @@ add_cacheitem_to_puavo_conf(puavo_conf_t *conf, struct conf_cache *item,
 		if (r != 0) {
 			warnx("error adding %s --> '%s' : %s",
 			    item->key, item->value, err.msg);
-			return 1;
+			return E_ERROR;
 		}
 		if (verbose) {
 			(void) printf("puavo-conf-update:"
 			    " initialized puavo conf key %s --> %s\n",
 			    item->key, item->value);
 		}
-		return 0;
+		return E_OK;
 	}
 
 	/* Ignore puavo-conf keys which have not been defined and initialized
@@ -1177,19 +1177,19 @@ add_cacheitem_to_puavo_conf(puavo_conf_t *conf, struct conf_cache *item,
 	if (puavo_conf_has_key(conf, item->key, &haskey, &err) != 0) {
 		warnx("could not determine if puavo-conf has key '%s': %s",
 		    item->key, err.msg);
-		return 1;
+		return E_ERROR;
 	}
 	if (!haskey) {
 		warnx("ignoring attempt to set uninitialized puavo-conf"
 			" key '%s' to value '%s'", item->key, item->value);
-		return 0;
+		return E_OK;
 	}
 
 	r = puavo_conf_get(conf, item->key, &old_value, &err);
 	if (r != 0) {
 		warnx("could not read the old value of '%s': %s", item->key,
 		    err.msg);
-		return 1;
+		return E_ERROR;
 	}
 
 	if (strcmp(old_value, item->value) == 0)
@@ -1199,7 +1199,7 @@ add_cacheitem_to_puavo_conf(puavo_conf_t *conf, struct conf_cache *item,
 	if (r != 0) {
 		warnx("error overwriting %s: %s --> '%s': %s", item->key,
 		    old_value, item->value, err.msg);
-		return 1;
+		return E_ERROR;
 	}
 
 	if (verbose) {
@@ -1207,7 +1207,7 @@ add_cacheitem_to_puavo_conf(puavo_conf_t *conf, struct conf_cache *item,
 		   " key %s: %s --> %s\n", item->key, old_value, item->value);
 	}
 
-	return 0;
+	return E_OK;
 }
 
 static struct conf_cache *
