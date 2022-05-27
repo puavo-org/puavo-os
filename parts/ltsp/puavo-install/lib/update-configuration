@@ -145,6 +145,11 @@ def update_device_json(restclient)
   end
 
   puavo_conf_update_exit_status = $?.exitstatus
+  if puavo_conf_update_exit_status == 2 then
+    FileUtils.rm_f(tmp_filepath)
+    raise 'puavo-conf-update returned exit code 2,' \
+            + ' meaning there was an error specifically with device.json'
+  end
 
   # We can use the new device.json even if puavo-conf-update found some error,
   # because puavo-conf-update must have handled the error.
