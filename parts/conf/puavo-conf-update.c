@@ -48,6 +48,10 @@
 #define PCI_MAX         1024
 #define USB_MAX         1024
 
+#define E_SUCCESS               0
+#define E_ERROR                 1
+#define E_DEVICE_JSON_FAILED    2
+
 char *puavo_hosttype;
 
 struct dmi {
@@ -118,7 +122,7 @@ main(int argc, char *argv[])
 	    { "verbose",         no_argument,       0, 0 },
 	    { 0,                 0,                 0, 0 },
 	};
-	int c, init, option_index, status, verbose;
+	int c, init, option_index, status, update_cache_ret, verbose;
 
 	init = 0;
 	status = 0;
@@ -166,15 +170,17 @@ main(int argc, char *argv[])
 		status = EXIT_FAILURE;
 	}
 
-	if (update_cache(&cache, devicejson_path, verbose) != 0) {
+	update_cache_ret = update_cache(&cache, devicejson_path, verbose);
+	if (update_cache_ret != 0)
 		warnx("problem in updating cache");
-		status = EXIT_FAILURE;
-	}
 
 	if (write_to_puavo_conf(&cache, init, verbose) != 0) {
 		warnx("problem in writing values to puavoconf");
 		status = EXIT_FAILURE;
 	}
+
+	if (update_cache_ret == E_DEVICE_JSON_FAILED)
+		status = E_DEVICE_JSON_FAILED;
 
 	return status;
 }
@@ -326,7 +332,7 @@ static int
 update_cache(struct conf_cache **cache, const char *devicejson_path,
     int verbose)
 {
-	int retvalue;
+	int devicejson_ret, retvalue;
 
 	retvalue = 0;
 
@@ -352,8 +358,7 @@ update_cache(struct conf_cache **cache, const char *devicejson_path,
 
 	/* Apply device settings again, because those override
 	 * profiles and hwquirks. */
-	if (apply_device_settings(cache, devicejson_path, verbose) != 0)
-		retvalue = 1;
+	devicejson_ret = apply_device_settings(cache, devicejson_path, verbose);
 
 	/* Apply possible local puavo-conf configurations. */
 	if (check_file_exists(LOCAL_CONF_PATH)) {
@@ -365,6 +370,10 @@ update_cache(struct conf_cache **cache, const char *devicejson_path,
 	 * because those override everything else. */
 	if (apply_kernel_arguments(cache) != 0)
 		retvalue = 1;
+
+	/* This is more fatal than other errors. */
+	if (devicejson_ret != 0)
+		retvalue = E_DEVICE_JSON_FAILED;
 
 	return retvalue;
 }
