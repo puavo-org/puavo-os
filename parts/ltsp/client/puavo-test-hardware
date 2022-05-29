@@ -16,13 +16,13 @@ print(len(data))' > "$camerastdout" 2>/dev/null &
 }
 
 camera_test_status() {
-  if [ -z $(cat $camerastdout) ]; then
+  if [ -z "$(cat "$camerastdout")" ]; then
     echo "Scanning...";
   else
-    if [ $(cat $camerastdout) -gt 20000 ]; then
-      echo "OK "$(cat $camerastdout);
+    if [ "$(cat "$camerastdout")" -gt 20000 ]; then
+      echo "OK ""$(cat "$camerastdout")";
     else
-      echo "Bad camera "$(cat $camerastdout);
+      echo "Bad camera ""$(cat "$camerastdout")";
     fi
   fi
 }
@@ -35,19 +35,19 @@ log_usb() {
   while sleep 0.5
   do
   if [ "$(lsusb -t 2>/dev/null | grep ' Port 1' | grep -v '        |__')" ]; then
-    echo "Right" > $usb1stdout
+    echo "Right" > "$usb1stdout"
   fi
   if [ "$(lsusb -t 2>/dev/null | grep ' Port 2' | grep -v '        |__')" ]; then
-    echo "Left " > $usb2stdout
+    echo "Left " > "$usb2stdout"
   fi
   done
 }
 
 usb_status() {
-  if [ -z "$(cat $usb2stdout)$(cat $usb1stdout)" ]; then
+  if [ -z "$(cat "$usb2stdout")$(cat "$usb1stdout")" ]; then
     echo "Scanning..."
   else
-    echo "$(cat $usb2stdout)$(cat $usb1stdout)"
+    echo "$(cat "$usb2stdout")$(cat "$usb1stdout")"
   fi
 }
 
@@ -138,6 +138,8 @@ ruby_test_keyboard_script=$(cat <<'EOF'
     puts "Press keys until all key labels disappear."
     puts "You need to use the real keyboard, this does not work through ssh."
     puts "This will quit in case no keyboard input happens in 10 seconds."
+    puts ""
+    puts "Remember to check the physical layout of the keyboard! (QWERTY/QWERTZ/AZERTY etc.)"
     puts ""
 
     $lines.each { |line| puts "    #{ line }" }
@@ -370,7 +372,6 @@ test_mouse() {
 }
 
 test_audio() {
-  local audio_test_status
   local alsadev
   audio_test_status=0
   product_name=$(dmidecode -s system-product-name)
@@ -397,15 +398,12 @@ test_audio() {
   aplay --device="${alsadev}" \
         /usr/share/sounds/puavo/speakertest.wav & \
   arecord --vumeter=stereo -f cd -d 4 --device="${alsadev}" /dev/null && \
-  echo 'Recording finished.' \
-      || audio_test_status=1
+  echo 'Recording finished.'
 
   sleep 2
 }
 
 test_wifi() {
-  local wifiscan_results
-
   ifconfig wlan0 up || true
 
   iwlist wlan0 scan 2>"$wifistderr" \
@@ -466,27 +464,27 @@ test_power() {
   while sleep 0.5
   do
     if [ "${ac_online}" -eq "1" ] && [ "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
-      echo "Dock OK " > $power1stdout
+      echo "Dock OK " > "$power1stdout"
     fi
     if [ "${ac_online}" -eq "1" ] && [ ! "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
-      echo "AC OK" > $power2stdout
+      echo "AC OK" > "$power2stdout"
     fi
   done
 }
 
 power_status() {
-  if [ -z "$(cat $power1stdout)$(cat $power2stdout)" ]; then
+  if [ -z "$(cat "$power1stdout")$(cat "$power2stdout")" ]; then
     echo "Scanning..."
   else
-    echo "$(cat $power1stdout)$(cat $power2stdout)"
+    echo "$(cat "$power1stdout")$(cat "$power2stdout")"
   fi
 }
 
 show_power() {
-  if [ -z "$(cat $power1stdout)$(cat $power2stdout)" ]; then
+  if [ -z "$(cat "$power1stdout")$(cat "$power2stdout")" ]; then
     results="Scanning..."
   else
-    results="$(cat $power1stdout)$(cat $power2stdout)"
+    results="$(cat "$power1stdout")$(cat "$power2stdout")"
   fi
   dialog --no-collapse --msgbox "$results" 6 24
 }
