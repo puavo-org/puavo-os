@@ -11,32 +11,36 @@ logmsg() {
 }
 
 create_encrypted_home() {
-  local user_uid user_gid user_homedir encfs_dir user_password encfs_tmpdir
+  local gocryptfs_dir gocryptfs_tmpdir user_gid user_homedir user_password \
+        user_uid
 
   user_uid=$1
   user_gid=$2
   user_homedir=$3
-  encfs_dir=$4
+  gocryptfs_dir=$4
   user_password=$5
 
-  encfs_tmpdir="${encfs_dir}.tmp"
+  gocryptfs_tmpdir="${gocryptfs_dir}.tmp"
 
-  rm -rf "$encfs_tmpdir" || return 1
+  rm -rf "$gocryptfs_tmpdir" || return 1
 
   install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir" \
-          "$encfs_tmpdir" || return 1
-  printf "%s\n" "$user_password" \
-    | encfs --public --stdinpass --standard "$encfs_tmpdir" "$user_homedir" \
-      || return 1
+          "$gocryptfs_tmpdir" || return 1
+  printf "%s\n" "$user_password" | gocryptfs -init "$gocryptfs_tmpdir" \
+    || return 1
+  printf "%s\n%s\n" "$user_password" "$user_password" \
+    | gocryptfs -allow_other "$gocryptfs_tmpdir" "$user_homedir" || return 1
+
   if ! cp -RT /etc/skel "$user_homedir" \
-       || ! chown -R "${user_uid}:${user_gid}" "$user_homedir" \
-                  "${encfs_tmpdir}/.encfs6.xml"; then
-    encfs -u "$user_homedir" || true
-    return 1
+    || ! chown -R "${user_uid}:${user_gid}" "$user_homedir" \
+                  "${gocryptfs_tmpdir}/gocryptfs.conf" \
+                  "${gocryptfs_tmpdir}/gocryptfs.diriv"; then
+      fusermount -uz "$user_homedir" || true
+      return 1
   fi
 
-  encfs -u "$user_homedir" || true
-  mv "$encfs_tmpdir" "$encfs_dir" || return 1
+  fusermount -uz "$user_homedir" || true
+  mv "$gocryptfs_tmpdir" "$gocryptfs_dir" || return 1
 }
 
 # XXX how should this be cleaned up?
@@ -51,7 +55,7 @@ setup_tmp_home() {
   rmdir "$user_homedir" || return 1
   tmp_home=$(mktemp -d /tmp/tmphome_${username}.XXXXXX) || return 1
   mkdir -p "${tmp_home}/.puavo" || return 1
-  touch "${tmp_home}/.puavo/change_encfs_password" || return 1
+  touch "${tmp_home}/.puavo/change_gocryptfs_password" || return 1
   chown -R "${user_uid}:${user_gid}" "$tmp_home" || return 1
 
   ln -fns "$tmp_home" "$user_homedir" || return 1
@@ -74,7 +78,7 @@ if [ "${PAM_TYPE:-}" = 'close_session' ]; then
   # XXX only in case there is some actual mount...
   # XXX except that it does not actually return any error even if there is not
   # XXX any mount... so what should I do?
-  encfs -u "/home/${username}"
+  fusermount -uz "/home/${username}"
   exit 0
 fi
 
@@ -128,20 +132,20 @@ fi
 # XXX this should be conditional based on puavo-conf or some such
 encrypt_home_dirs=true
 
-encfs_dir="/home/.encfs/${user_uid}"
+gocryptfs_dir="/home/.gocryptfs/${user_uid}"
 
-if $encrypt_home_dirs && [ ! -d "$encfs_dir" ]; then
+if $encrypt_home_dirs && [ ! -d "$gocryptfs_dir" ]; then
   logmsg -p user.notice \
-         "creating an encrypted home for ${username} to ${encfs_dir}"
+         "creating an encrypted home for ${username} to ${gocryptfs_dir}"
   if ! create_encrypted_home "$user_uid" "$user_gid" "$user_homedir" \
-                             "$encfs_dir" "$user_password"; then
+                             "$gocryptfs_dir" "$user_password"; then
     logmsg -p user.err \
-           "failed in creating an encrypted dir ${encfs_dir} for ${username}"
+      "failed in creating an encrypted dir ${gocryptfs_dir} for ${username}"
     exit 1
   fi
 fi
 
-if [ -d "$encfs_dir" ]; then
+if [ -d "$gocryptfs_dir" ]; then
   install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir"
   if [ -z "$(find "$user_homedir" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
     # directory is not empty, that is a problem, something is wrong
@@ -149,9 +153,9 @@ if [ -d "$encfs_dir" ]; then
     exit 1
   fi
   if ! printf "%s\n" "$user_password" \
-    | encfs --public --stdinpass "$encfs_dir" "$user_homedir"; then
+    | gocryptfs -allow_other "$gocryptfs_dir" "$user_homedir"; then
       logmsg -p user.err \
-             "could not decrypt encfs dir ${encfs_dir} with user password"
+             "could not decrypt dir ${gocryptfs_dir} with user password"
       if ! setup_tmp_home "$user_homedir" "$user_uid" "$user_gid"; then
         logmsg -p user.err 'failed to set up a temporary home'
         exit 1
@@ -159,7 +163,7 @@ if [ -d "$encfs_dir" ]; then
       exit 0
   fi
   logmsg -p user.err \
-         "encrypted home ${encfs_dir} mounted to ${user_homedir}"
+         "encrypted home ${gocryptfs_dir} mounted to ${user_homedir}"
   exit 0
 fi
 
