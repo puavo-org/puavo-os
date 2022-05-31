@@ -47,6 +47,9 @@ class SystemInfoCollector < DBus::Object
   dbus_interface 'org.puavo.client.systeminfocollector' do
     dbus_method :CollectSysinfo, 'out ret:s' do
       begin
+        # Clear Facter cache and memory at the start of every run.
+        Facter.clear
+
         # These symbols are also used verbatim in the JavaScript code, so
         # changing them willy-nilly will have disastrous consequences
         values = [
