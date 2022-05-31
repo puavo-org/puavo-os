@@ -83,6 +83,7 @@ secure_erase() {
 
       echo 'If you see no errors, you may re-plug the disk or reboot the device.'
       echo 
+      sleep 2
       ;;
   esac
 }
