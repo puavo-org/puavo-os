@@ -45,13 +45,14 @@ import_config_usb_stick_factory() {
 }
 
 ask_choice() {
-  choices=$(cat <<'EOF')
+  choices=$(cat <<'EOF'
 Flash latest BIOS (HP)
 Import Student laptop BIOS Config
 Import USB Stick factory BIOS Config
 use HP BIOS utilities
 exit
 EOF
+)
   printf "%s" "$choices" | fzf --height=7 --layout=reverse-list
 }
 
