@@ -41,24 +41,65 @@ create_encrypted_home() {
 
   fusermount -uz "$user_homedir" || true
   mv "$gocryptfs_tmpdir" "$gocryptfs_dir" || return 1
+
+  logmsg -p user.notice "created an encrypted directory for user ${user_uid}"
 }
 
-# XXX how should this be cleaned up?
-# XXX (at least the home directory link should be cleaned up somehow)
-setup_tmp_home() {
-  local tmp_home user_gid user_homedir user_uid
+setup_tmphome() {
+  local msg tmp_home user_gid user_homedir user_uid
 
   user_homedir=$1
   user_uid=$2
   user_gid=$3
 
-  rmdir "$user_homedir" || return 1
-  tmp_home=$(mktemp -d /tmp/tmphome_${username}.XXXXXX) || return 1
-  mkdir -p "${tmp_home}/.puavo" || return 1
-  touch "${tmp_home}/.puavo/change_gocryptfs_password" || return 1
-  chown -R "${user_uid}:${user_gid}" "$tmp_home" || return 1
+  rmdir "$user_homedir"                                  || return 1
+  tmp_home=$(mktemp -d /anon/tmphome_${username}.XXXXXX) || return 1
+  mkdir -p "${tmp_home}/.puavo" "$user_homedir"          || return 1
+  touch "${tmp_home}/.puavo/change_gocryptfs_password"   || return 1
+  chown -R "${user_uid}:${user_gid}" "$tmp_home"         || return 1
+  mount --bind "$tmp_home" "$user_homedir"               || return 1
 
-  ln -fns "$tmp_home" "$user_homedir" || return 1
+  msg="a temporary home created for ${user_uid}"
+  msg="${msg} for home encryption password change"
+  logmsg -p user.info "$msg"
+}
+
+unmount_home() {
+  local unmount_status user_homedir
+
+  user_homedir=$1
+
+  unmount_status=0
+
+  if ! mountpoint -q "$user_homedir"; then
+    return 0
+  fi
+
+  if mount -t fuse.gocryptfs \
+       | awk -v user_homedir="$user_homedir" '
+           BEGIN { status = 1 }
+           $3 == user_homedir { status = 0 }
+           END { exit(status) }
+         '; then
+    if fusermount -uz "$user_homedir"; then
+      logmsg -p user.err 'could not unmount encrypted home directory'
+      unmount_status=1
+    fi
+  fi
+
+  if mount -t tmpfs \
+       | awk -v user_homedir="$user_homedir" '
+           BEGIN { status = 1 }
+           $3 == user_homedir { status = 0 }
+           END { exit(status) }
+         '; then
+    if ! umount -l "$user_homedir"; then
+      logmsg -p user.err 'could not unmount temporary home directory'
+      unmount_status=1
+    fi
+  fi
+
+  return $unmount_status
 }
 
 username=${1:-}
@@ -72,19 +113,24 @@ if [ -z "$username" ]; then
   username="$PAM_USER"
 fi
 
+user_homedir="$(getent passwd "$username" | awk -F: '{ print $6 }')" || true
+if [ -z "$user_homedir" ]; then
+  logmsg -p user.err "could not determine home directory for user ${username}"
+  exit 1
+fi
+
 user_password=''
 
 if [ "${PAM_TYPE:-}" = 'close_session' ]; then
-  # XXX only in case there is some actual mount...
-  # XXX except that it does not actually return any error even if there is not
-  # XXX any mount... so what should I do?
-  fusermount -uz "/home/${username}"
+  unmount_home "$user_homedir" || exit 1
   exit 0
 fi
 
 if [ "${PAM_TYPE:-}" != 'auth' ]; then
   exit 0
 fi
+
+unmount_home "$user_homedir" || exit 1
 
 if ! user_password="$(cat)" || [ -z "$user_password" ]; then
   logmsg err 'could not read user password'
@@ -104,13 +150,6 @@ if [ "$user_uid" -lt 10000 ]; then
   exit 1
 fi
 
-user_homedir="$(getent passwd "$username" | awk -F: '{ print $6 }')" || true
-
-if [ -z "$user_homedir" ]; then
-  logmsg -p user.err "could not determine home directory for user ${username}"
-  exit 1
-fi
-
 # If $user_homedir is occupied by some other user (and this can happen
 # when ${username} was used previously with a different $user_uid
 # and has since been deleted), move it out of the way.
@@ -120,7 +159,6 @@ if [ -n "$current_home_uid" -a "$current_home_uid" != "$user_uid" ]; then
 
   msg="home directory for user ${username} was reserved by"
   msg="${msg} ${current_home_uid}, moving ${user_homedir} to ${backup_path}"
-
   logmsg -p user.notice "$msg"
 
   if ! mv -T "$user_homedir" "$backup_path"; then
@@ -156,13 +194,13 @@ if [ -d "$gocryptfs_dir" ]; then
     | gocryptfs -allow_other "$gocryptfs_dir" "$user_homedir"; then
       logmsg -p user.err \
              "could not decrypt dir ${gocryptfs_dir} with user password"
-      if ! setup_tmp_home "$user_homedir" "$user_uid" "$user_gid"; then
+      if ! setup_tmphome "$user_homedir" "$user_uid" "$user_gid"; then
         logmsg -p user.err 'failed to set up a temporary home'
         exit 1
       fi
       exit 0
   fi
-  logmsg -p user.err \
+  logmsg -p user.info \
          "encrypted home ${gocryptfs_dir} mounted to ${user_homedir}"
   exit 0
 fi
