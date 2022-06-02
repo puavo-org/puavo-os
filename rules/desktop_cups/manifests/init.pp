@@ -1,5 +1,4 @@
 class desktop_cups {
-  include ::packages
   include ::puavo_conf
 
   file {
@@ -16,7 +15,4 @@ class desktop_cups {
     'setup_desktop_printer_restrictions':
       source => 'puppet:///modules/desktop_cups/setup_desktop_printer_restrictions';
   }
-
-  Package <| title == cups-browsed
-          or title == cups-daemon |>
 }
