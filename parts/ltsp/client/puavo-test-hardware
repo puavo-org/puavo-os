@@ -2,13 +2,21 @@
 
 set -eu
 
+clean() {
+rm -f "$teststdout" "$teststderr" "$camerastdout" "$usb1stdout" \
+      /tmp/00000001.jpg /tmp/00000002.jpg "$usb2stdout" "$wifistdout" \
+      "$wifistderr" "$power1stdout" "$power2stdout"
+}
+
+trap clean EXIT
+
 analyze_image() {
-mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 2 -sstep 100 -vo jpeg 2> /dev/null &&
+mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 2 -sstep 100 -vo jpeg:outdir="/tmp/" 2> /dev/null &&
+
 python3 -c '
 import matplotlib.image as mpimg
 import numpy as np
-
-img = mpimg.imread("00000002.jpg")
+img = mpimg.imread("/tmp/00000002.jpg")
 
 data = np.unique(img.reshape(-1, img.shape[-1]), axis=0, return_counts=True)[0]
 
@@ -36,7 +44,7 @@ log_usb() {
   case "${product_name}" in
     ### Look for different ports if device is a G1 or G2.
     "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
-      while sleep 0.5
+      while :
       do
         if [ "$(lsusb -t 2>/dev/null | grep '        |__ Port 4')" ]; then
           echo "Right" > "$usb1stdout"
@@ -477,13 +485,13 @@ Maybe a problem with wireless interface?"
 test_power() {
   ac1=$(cat "/sys/class/power_supply/AC/online")
 
-  while sleep 0.5
+  while :
   do
     if [ "${ac1}" -eq "1" ] && [ "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
       echo "Dock OK " > "$power1stdout"
       SECONDS=0
     fi
-    if [ "$SECONDS" -gt "4" ]; then
+    if [ "$SECONDS" -gt "2" ]; then
       ac2=$(cat "/sys/class/power_supply/AC/online")
       if [ "${ac2}" -eq "1" ] && [ ! "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
         echo "AC OK" > "$power2stdout"
@@ -544,7 +552,7 @@ while true; do
                camera     "$(camera_test_status)" \
                power      "$(power_status)" \
                usb        "$(usb_status)" \
-               quit       'Exit tests') || true 
+               quit       'Exit tests') || true
 
   case "$response" in
     audio)      mainmenu_default_item=keyboard;   test_audio      || true ;;
@@ -560,9 +568,5 @@ while true; do
     *)          echo 'Unknown option' >&2 ;;
   esac
 done
-
-kill "$usb_pid" && kill "$power_pid"
-rm -f "$teststdout" "$teststderr" 0000000*.jpg "$camerastdout" "$usb1stdout" \
-      "$usb2stdout" "$wifistdout" "$wifistderr" "$power1stdout" "$power2stdout"
 
 exit 0
