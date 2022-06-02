@@ -534,10 +534,10 @@ power2stdout=$(mktemp /tmp/puavo-test-hardware-power2-stdout.XXXXXX)
 
 analyze_image
 
-log_usb & usb_pid=$!
+log_usb &
 hcitool scan > "$teststdout" 2> "$teststderr" &
 test_wifi > "$wifistdout" &
-test_power & power_pid=$!
+test_power &
 
 mainmenu_default_item='audio'
 while true; do
