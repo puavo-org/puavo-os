@@ -848,8 +848,23 @@ class PuavoErsExamSync (threading.Thread):
 
   def sync_one_exam(self, exam_file_name, exam):
     exam_file_path = os.path.join(EXAMS_DIR, exam_file_name)
-    if os.path.isfile(exam_file_path):
-      return
+
+    exam_modified = exam['modified']
+    if type(exam_modified) != int:
+      raise Exception('exam modified time is not an integer for %s' \
+                        % exam_file_name)
+
+    try:
+      exam_file_modified = os.path.getmtime(exam_file_path)
+      if exam_modified <= exam_file_modified:
+        # no need to sync, we have an exam file that is up-to-date
+        return
+      syslog.syslog(syslog.LOG_NOTICE,
+                    'exam %s is stale, syncing' % exam_file_name)
+    except OSError as e:
+      if e.errno != errno.ENOENT:
+        raise e
+      # missing exam file, must proceed with syncing
 
     syslog.syslog(syslog.LOG_NOTICE, 'syncing exam %s' % exam_file_name)
 
@@ -869,6 +884,7 @@ class PuavoErsExamSync (threading.Thread):
     tmpfile = '%s.tmp' % exam_file_path
     with open(tmpfile, 'wb') as f:
       f.write(exam_contents)
+    os.utime(tmpfile, times=(exam_modified, exam_modified))
     os.rename(tmpfile, exam_file_path)
 
     syslog.syslog(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
