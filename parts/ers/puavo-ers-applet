@@ -1326,8 +1326,11 @@ class PuavoErsExamScheduler (threading.Thread):
     if current_zip_name == None:
       raise CurrentZipNotReady
 
+    # this can take a rather long time, we can wait up to five minutes
+    load_exams_timeout_in_seconds = 300
+
     cmd = 'load-exam %s %s' % (current_zip_name, 'PURKUKOODIT.TXT')
-    return self.server_cmd(cmd)
+    return self.server_cmd(cmd, load_exams_timeout_in_seconds)
 
 
   def reset_exam(self):
@@ -1609,14 +1612,14 @@ class PuavoErsExamScheduler (threading.Thread):
     return start_of_today + datetime.timedelta(days=1)
 
 
-  def server_cmd(self, cmd):
+  def server_cmd(self, cmd, timeout_seconds=30):
     try:
-      return self.try_server_cmd(cmd)
+      return self.try_server_cmd(cmd, timeout_seconds)
     except Exception as e:
       raise Exception('error with "%s": %s' % (cmd, e))
 
 
-  def try_server_cmd(self, cmd):
+  def try_server_cmd(self, cmd, timeout_seconds):
     output_paths = [ self.CMD_IN_PROGRESS_PATH, self.CMD_RESULT_PATH,
                      self.DEBUG_OUTPUT_PATH, self.EXAMS_PATH, self.OUTPUT_PATH,
                      self.STATS_PATH ]
@@ -1638,7 +1641,7 @@ class PuavoErsExamScheduler (threading.Thread):
       with open(self.CMD_PATH, 'w') as f:
         f.write("%s\n" % cmd)
 
-      for i in range(30):
+      for i in range(timeout_seconds):
         try:
           if not os.path.exists(self.CMD_IN_PROGRESS_PATH):
             with open(self.OUTPUT_PATH) as f:
