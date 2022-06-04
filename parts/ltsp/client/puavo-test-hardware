@@ -76,10 +76,6 @@ usb_status() {
   fi
 }
 
-show_usb() {
-  exit 0
-}
-
 test_disks() {
   local all_output disk_devices error_output letter mask smartctl_code \
         smartctl_output
@@ -508,15 +504,6 @@ power_status() {
   fi
 }
 
-show_power() {
-  if [ -z "$(cat "$power1stdout")$(cat "$power2stdout")" ]; then
-    results="Scanning..."
-  else
-    results="$(cat "$power1stdout")$(cat "$power2stdout")"
-  fi
-  dialog --no-collapse --msgbox "$results" 6 24
-}
-
 if [ "$(id -u)" -ne 0 ]; then
   echo 'Tests must be run as root!' >&2
   return 1
@@ -562,8 +549,8 @@ while true; do
     wifi)       mainmenu_default_item=quit;       show_wifi       || true ;;
     bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
     camera)     mainmenu_default_item=quit;       test_camera     || true ;;
-    power)      mainmenu_default_item=quit;       show_power      || true ;;
-    usb)        mainmenu_default_item=quit;       show_usb        || true ;;
+    power)      mainmenu_default_item=quit;                          true ;;
+    usb)        mainmenu_default_item=quit;                          true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
