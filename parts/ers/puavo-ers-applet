@@ -979,8 +979,8 @@ class ExamSet:
         self.latest_end_time = exam_end_time
 
 
-  def add_overlapping_exams(self, candidate_exams_to_be_added, now):
-    candidate_exams = candidate_exams_to_be_added.copy()
+  def add_overlapping_exams(self, candidate_exams_arg, preload_timedelta):
+    candidate_exams = candidate_exams_arg.copy()
 
     if len(self.exams) == 0:
       return
@@ -988,11 +988,12 @@ class ExamSet:
     while len(candidate_exams) > 0:
       candidate_accepted = False
       for exam in candidate_exams:
-        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time']) \
+                            - preload_timedelta
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
 
-        if exam_start_time < self.latest_end_time \
-          and self.earliest_start_time < exam_end_time:
+        if exam_start_time <= self.latest_end_time \
+          and self.earliest_start_time <= exam_end_time:
             candidate_accepted = True
 
         if candidate_accepted:
@@ -1080,6 +1081,8 @@ class PuavoErsExamSorter (threading.Thread):
 
     fatal_errors = False
 
+    preload_timedelta = datetime.timedelta(minutes=10)
+
     for exam in all_exams:
       try:
         if not re.match('^exam_.*\.me(b|x)$', exam['file_name']):
@@ -1104,7 +1107,6 @@ class PuavoErsExamSorter (threading.Thread):
         # to start.  Note that if exams are scheduled to have less than
         # 10 minutes between them, add_overlapping_exams() below will consider
         # them to be part of the same exam set (session).
-        preload_timedelta = datetime.timedelta(minutes=10)
         if (exam_start_time - preload_timedelta) <= self.current_time \
           and self.current_time < exam_end_time:
             current_exams.append(exam)
@@ -1114,7 +1116,7 @@ class PuavoErsExamSorter (threading.Thread):
         fatal_errors = True
 
     current_exams_set = ExamSet(current_exams)
-    current_exams_set.add_overlapping_exams(todays_exams, self.current_time)
+    current_exams_set.add_overlapping_exams(todays_exams, preload_timedelta)
 
     for exam in current_exams_set.exams:
       current_exams_filenames.append(exam['file_name'])
