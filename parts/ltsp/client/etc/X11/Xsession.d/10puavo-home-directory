@@ -1,13 +1,18 @@
-if [ -h "$HOME" ]; then
-  case "$(readlink "$HOME")" in
-    /tmp/tmphome_*)
-      if [ -e "${HOME}/.puavo/change_gocryptfs_password" ]; then
-        /usr/bin/openbsd-cwm & cwm_pid=$!
-        xterm -e gocryptfs -passwd "/home/.gocryptfs/$(id -u)"
-        kill -9 "$cwm_pid"
-      fi
-      ;;
-  esac
+puavo_check_for_tmphome() {
+  mountpoint -q "$HOME" || return 1
+  mount -t tmpfs \
+    | awk -v user_homedir="$HOME" '
+        BEGIN { status = 1 }
+        $3 == user_homedir { status = 0 }
+        END { exit(status) }
+      '
+}
 
-  exit 0
+if puavo_check_for_tmphome; then
+  if [ -e "${HOME}/.puavo/change_gocryptfs_password" ]; then
+    /usr/bin/openbsd-cwm & cwm_pid=$!
+    xterm -e gocryptfs -passwd "/home/.gocryptfs/$(id -u)"
+    kill -9 "$cwm_pid"
+    exit 0
+  fi
 fi

@@ -52,12 +52,12 @@ setup_tmphome() {
   user_uid=$2
   user_gid=$3
 
-  rmdir "$user_homedir"                                  || return 1
-  tmp_home=$(mktemp -d /anon/tmphome_${username}.XXXXXX) || return 1
-  mkdir -p "${tmp_home}/.puavo" "$user_homedir"          || return 1
-  touch "${tmp_home}/.puavo/change_gocryptfs_password"   || return 1
-  chown -R "${user_uid}:${user_gid}" "$tmp_home"         || return 1
-  mount --bind "$tmp_home" "$user_homedir"               || return 1
+  rmdir "$user_homedir"                                          || return 1
+  tmp_home=$(mktemp -d /anon/tmphome_${username}.XXXXXX)         || return 1
+  mkdir -p "${tmp_home}/.puavo" "$user_homedir"                  || return 1
+  touch "${tmp_home}/.puavo/change_gocryptfs_password"           || return 1
+  chown -R "${user_uid}:${user_gid}" "$tmp_home" "$user_homedir" || return 1
+  mount --bind "$tmp_home" "$user_homedir"                       || return 1
 
   msg="a temporary home created for ${user_uid}"
   msg="${msg} for home encryption password change"
