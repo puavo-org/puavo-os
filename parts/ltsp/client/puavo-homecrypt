@@ -1,6 +1,4 @@
-#!/bin/sh
-
-set -eu
+#!/usr/bin/wish
 
 # XXX this should log things to syslog
 
@@ -8,19 +6,89 @@ set -eu
 # XXX in case some time has happened between login
 # XXX and this operation and the password has changed again?
 
-new_gocryptfs_password=$(
-  cat "${HOME}/.puavo/new_gocryptfs_password" 2>/dev/null) || true
+proc logger {args} {
+  catch { exec logger -t puavo-homecrypt {*}$args }
+}
 
-if [ -z "$new_gocryptfs_password" ]; then
-  echo 'could not read a new gocrypt password' >&2
+proc change_password {new_pw} {
+  global old_gocryptfs_password
+
+  if {$old_gocryptfs_password eq ""} {
+    return
+  }
+
+  set op_success false
+
+  set logerrmsg  ""
+  set usererrmsg ""
+
+  try {
+    set uid [exec id -u]
+    set crypthome "/home/.gocryptfs/${uid}"
+    set input [format "%s\n%s\n%s\n" $old_gocryptfs_password $new_pw $new_pw]
+    exec -ignorestderr gocryptfs -passwd $crypthome << $input
+    set op_success true
+  } trap CHILDSTATUS {results options} {
+    set status [lindex [dict get $options -errorcode] 2]
+    # 12 == password incorrect
+    if {$status == 12} {
+      set logerrmsg  "gocrypt told us encryption password was NOT correct"
+      set usererrmsg "YOUR PASSWORD IS WRONG"
+    } else {
+      set logerrmsg  "gocrypt returned error code: ${status}"
+      set usererrmsg "SOME UNEXPECTED ERROR HAPPENED"
+    }
+  } on error {errmsg} {
+    set logerrmsg  "error in running gocryptfs: ${errmsg}"
+    set usererrmsg "SOME UNEXPECTED ERROR HAPPENED"
+  } finally {
+    set old_gocryptfs_password ""
+  }
+
+  if {$logerrmsg ne ""} {
+    logger -p user.err $logerrmsg
+  }
+  if {$usererrmsg ne ""} {
+    tk_messageBox -message $usererrmsg
+  }
+
+  if {$op_success} { exit 0 }
+}
+
+set old_pw_path "$env(HOME)/.puavo/new_gocryptfs_password"
+
+set old_gocryptfs_password ""
+
+try {
+  set new_gocryptfs_password [exec cat $old_pw_path]
+  if {$new_gocryptfs_password eq ""} { error "empty password" }
+} on error {errmsg} {
+  logger -p user.err "could not read the new gocrypt password: ${errmsg}"
   exit 1
-fi
+}
 
-read -p 'Provide the old password for your encrypted home? ' old_password
+wm attributes . -fullscreen 1
+wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
 
-printf "%s\n%s\n%s\n" "$old_password" "$new_gocryptfs_password" \
-                      "$new_gocryptfs_password" \
-  | gocryptfs -passwd "/home/.gocryptfs/$(id -u)"
+set bg_color "#93b176"
 
-# XXX we can look at the results for a while
-sleep 5
+. configure -bg $bg_color
+
+frame .pw_change -bg $bg_color
+
+font create puavoFont -family {Ubuntu Condensed} -size 20 -weight bold
+
+label .pw_change.explanation -bg $bg_color \
+      -font puavoFont \
+      -text "You must provide your old home directory password: "
+entry .pw_change.old_password -font puavoFont -show * \
+      -textvariable old_gocryptfs_password
+
+pack .pw_change -fill y -expand 1
+pack .pw_change.explanation .pw_change.old_password -side left -padx 3
+
+focus .pw_change.old_password
+
+bind .pw_change.old_password <KeyRelease-Return> [
+  list change_password $new_gocryptfs_password
+]
