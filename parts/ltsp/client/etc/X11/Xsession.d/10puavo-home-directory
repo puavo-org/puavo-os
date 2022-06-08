@@ -9,9 +9,9 @@ puavo_check_for_tmphome() {
 }
 
 if puavo_check_for_tmphome; then
-  if [ -e "${HOME}/.puavo/change_gocryptfs_password" ]; then
+  if [ -e "${HOME}/.puavo/new_gocryptfs_password" ]; then
     /usr/bin/openbsd-cwm & cwm_pid=$!
-    xterm -e gocryptfs -passwd "/home/.gocryptfs/$(id -u)"
+    xterm -e puavo-homecrypt change-password
     kill -9 "$cwm_pid"
     exit 0
   fi

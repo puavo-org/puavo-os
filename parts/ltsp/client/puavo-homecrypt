@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -eu
+
+# XXX this should log things to syslog
+
+# XXX should the new password still be rechecked?
+# XXX in case some time has happened between login
+# XXX and this operation and the password has changed again?
+
+new_gocryptfs_password=$(
+  cat "${HOME}/.puavo/new_gocryptfs_password" 2>/dev/null) || true
+
+if [ -z "$new_gocryptfs_password" ]; then
+  echo 'could not read a new gocrypt password' >&2
+  exit 1
+fi
+
+read -p 'Provide the old password for your encrypted home? ' old_password
+
+printf "%s\n%s\n%s\n" "$old_password" "$new_gocryptfs_password" \
+                      "$new_gocryptfs_password" \
+  | gocryptfs -passwd "/home/.gocryptfs/$(id -u)"
+
+# XXX we can look at the results for a while
+sleep 5
