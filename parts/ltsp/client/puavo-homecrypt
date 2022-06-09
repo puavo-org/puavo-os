@@ -32,14 +32,20 @@ proc change_password {new_pw} {
     set status [lindex [dict get $options -errorcode] 2]
     # 12 == password incorrect
     if {$status == 12} {
-      set logerrmsg  "gocrypt told us encryption password was NOT correct"
+      set logerrmsg "user provided a wrong password for encrypted home"
       set usererrmsg "YOUR PASSWORD IS WRONG"
     } else {
-      set logerrmsg  "gocrypt returned error code: ${status}"
+      set logerrmsg [
+        format "%s: %s" \
+          "error when attempting to change home directory encryption password" \
+          "gocrypt returned error code: ${status}"]
       set usererrmsg "SOME UNEXPECTED ERROR HAPPENED"
     }
   } on error {errmsg} {
-    set logerrmsg  "error in running gocryptfs: ${errmsg}"
+    set logerrmsg [
+      format "%s: %s" \
+        "error when attempting to change home directory encryption password" \
+        $errmsg]
     set usererrmsg "SOME UNEXPECTED ERROR HAPPENED"
   } finally {
     set old_gocryptfs_password ""
@@ -49,10 +55,13 @@ proc change_password {new_pw} {
     logger -p user.err $logerrmsg
   }
   if {$usererrmsg ne ""} {
-    tk_messageBox -message $usererrmsg
+    tk_messageBox -icon error -message $usererrmsg
   }
 
-  if {$op_success} { exit 0 }
+  if {$op_success} {
+    tk_messageBox -message "SUCCESS!  Please login again with your password."
+    exit 0
+  }
 }
 
 set old_pw_path "$env(HOME)/.puavo/new_gocryptfs_password"
