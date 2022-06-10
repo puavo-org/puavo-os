@@ -384,6 +384,7 @@ class Sidebar:
                     height = settings.get('height', None)
                     title = settings.get('title', None)
                     enable_js = settings.get('enable_js', False)
+                    pass_form_response_to = settings.get('pass_form_response_to', None)
 
                     if title:
                         title = _tr(title)
@@ -393,7 +394,8 @@ class Sidebar:
                     title=title,
                     width=width,
                     height=height,
-                    enable_js=enable_js)
+                    enable_js=enable_js,
+                    pass_form_response_to=pass_form_response_to)
         except Exception as exception:
             logging.error('Could not process a sidebar button click!')
             logging.error(str(exception))

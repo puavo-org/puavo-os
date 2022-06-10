@@ -98,7 +98,7 @@ def log_elapsed_time(title, start_ms, end_ms):
 
 # puavo-webwindow call wrapper. Remember to handle exceptions.
 def open_webwindow(url, title=None, width=None, height=None,
-                   enable_js=False, enable_plugins=False):
+                   enable_js=False, enable_plugins=False, pass_form_response_to=None):
 
     import subprocess
 
@@ -118,6 +118,9 @@ def open_webwindow(url, title=None, width=None, height=None,
 
     if enable_plugins:
         cmd += ['--enable-plugins']
+
+    if pass_form_response_to:
+        cmd += ['--pass-form-response-to', str(pass_form_response_to)]
 
     logging.info('Opening a webwindow: "%s"', cmd)
 
