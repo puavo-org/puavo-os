@@ -14,7 +14,7 @@ SB_BUTTONS = {
                 'width': 1000,
                 'height': 650,
                 'enable_js': True,
-                'pass_form_response_to': '/usr/lib/puavo-ltsp-client/change-homecrypt-password',
+                'pass_form_response_to': '/usr/lib/puavo-ltsp-client/homecrypt-change-password',
             },
         },
     },
