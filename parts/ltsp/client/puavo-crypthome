@@ -42,16 +42,24 @@ create_encrypted_home() {
 
   install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir" \
           "$gocryptfs_tmpdir" || return 1
-  printf "%s\n" "$user_password" | gocryptfs -init "$gocryptfs_tmpdir" \
-    || return 1
-  printf "%s\n%s\n" "$user_password" "$user_password" \
-    | gocryptfs -allow_other "$gocryptfs_tmpdir" "$user_homedir" || return 1
+
+  if ! printf "%s\n" "$user_password" | gocryptfs -init "$gocryptfs_tmpdir"; then
+    rm -rf "$gocryptfs_tmpdir" || true
+    return 1
+  fi
+
+  if ! printf "%s\n%s\n" "$user_password" "$user_password" \
+         | gocryptfs -allow_other "$gocryptfs_tmpdir" "$user_homedir"; then
+    rm -rf "$gocryptfs_tmpdir" || true
+    return 1
+  fi
 
   if ! cp -RT /etc/skel "$user_homedir" \
     || ! chown -R "${user_uid}:${user_gid}" "$user_homedir" \
                   "${gocryptfs_tmpdir}/gocryptfs.conf" \
                   "${gocryptfs_tmpdir}/gocryptfs.diriv"; then
       fusermount -uz "$user_homedir" || true
+      rm -rf "$gocryptfs_tmpdir" || true
       return 1
   fi
 
@@ -119,8 +127,8 @@ setup_home_pw_change() {
   # encoding password with base64 also functions as a little bit of obfuscation
   # in case some admin accidentally reads this file
   printf %s "$user_password" \
-    | base64 | jq --null-input --rawfile user_password /dev/stdin '
-      .operation = "password-change" | .new_password = $user_password
+    | base64 -w 0 | jq --null-input --rawfile user_password /dev/stdin '
+      .operation = "change-password" | .new_password = $user_password
     ' > "${tmp_home}/.puavo/crypthome_mgmt_request.json" || return 1
 
   chown -R "${user_uid}:${user_gid}" "$tmp_home" "$user_homedir" || return 1

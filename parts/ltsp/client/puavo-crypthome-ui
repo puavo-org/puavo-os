@@ -30,10 +30,10 @@ proc change_password {new_pw} {
     set username [exec id -nu]
     set input [
       ::json::write object \
-        request  [::json::write object {login[uid]}         $username     \
-                                       {login[password]}    $old_password \
-                                       {user[new_password]} $new_pw]      \
-        response [::json::write object status ok]]
+        request  [::json::write object {login[uid]}         [::json::write string $username]     \
+                                       {login[password]}    [::json::write string $old_password] \
+                                       {user[new_password]} [::json::write string $new_pw]]      \
+        response [::json::write object status [::json::write string ok]]]
     exec -ignorestderr puavo-crypthome \
                          update-crypthome-password-from-password-form << $input
     set op_success true
@@ -47,7 +47,7 @@ proc change_password {new_pw} {
       set logerrmsg [
         format "%s: %s" \
           "error when attempting to change home directory encryption password" \
-          "gocrypt returned error code: ${status}"]
+          "puavo-crypthome returned error code: ${status}"]
       set usererrmsg "SOME UNEXPECTED ERROR HAPPENED"
     }
   } on error {errmsg} {
@@ -68,7 +68,7 @@ proc change_password {new_pw} {
   }
 
   if {$op_success} {
-    file unlink $crypthome_mgmt_request_path
+    file delete $crypthome_mgmt_request_path
     tk_messageBox -message "SUCCESS!  Please login again with your password."
     exit 0
   }
@@ -118,10 +118,12 @@ set crypthome_mgmt_request_path \
     "$env(HOME)/.puavo/crypthome_mgmt_request.json"
 
 try {
-  set mgmt_request [
-    ::json::json2dict [exec cat $crypthome_mgmt_request_path]
-  ]
+  set f ""
+  set f [open $crypthome_mgmt_request_path]
+  set mgmt_request [::json::json2dict [read $f]]
+  close $f
 } on error {errmsg} {
+  if {$f ne ""} { close $f }
   logger -p user.err "could not read the management request: ${errmsg}"
   exit 1
 }
