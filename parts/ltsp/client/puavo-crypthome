@@ -121,7 +121,7 @@ setup_home_pw_change() {
   printf %s "$user_password" \
     | base64 | jq --null-input --rawfile user_password /dev/stdin '
       .operation = "password-change" | .new_password = $user_password
-    ' > "${tmp_home}/.puavo/gocryptfs_mgmt_request.json" || return 1
+    ' > "${tmp_home}/.puavo/crypthome_mgmt_request.json" || return 1
 
   chown -R "${user_uid}:${user_gid}" "$tmp_home" "$user_homedir" || return 1
   mount --bind "$tmp_home" "$user_homedir"                       || return 1
@@ -227,9 +227,6 @@ case "$cmd" in
   update-crypthome-password-from-password-form)
     json_data=$(cat)
     update_crypthome_from_password_form "$json_data"
-    ;;
-  update-crypthome-password-ui)
-    puavo-crypthome-ui update-crypthome-password
     ;;
   *)
     echo "Unknown command '${cmd}'" >&2

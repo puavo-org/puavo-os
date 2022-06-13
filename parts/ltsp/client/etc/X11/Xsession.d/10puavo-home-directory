@@ -1,18 +1,6 @@
-puavo_check_for_tmphome() {
-  mountpoint -q "$HOME" || return 1
-  mount -t tmpfs \
-    | awk -v user_homedir="$HOME" '
-        BEGIN { status = 1 }
-        $3 == user_homedir { status = 0 }
-        END { exit(status) }
-      '
-}
-
-if puavo_check_for_tmphome; then
-  if [ -e "${HOME}/.puavo/new_gocryptfs_password" ]; then
-    openbsd-cwm & cwm_pid=$!
-    puavo-crypthome update-crypthome-password-ui
-    kill -9 "$cwm_pid"
-    exit 0
-  fi
+if [ -e "${HOME}/.puavo/crypthome_mgmt_request.json" ]; then
+  openbsd-cwm & cwm_pid=$!
+  puavo-crypthome-ui
+  kill -9 "$cwm_pid"
+  exit 0
 fi

@@ -6,14 +6,18 @@
 # XXX in case some time has happened between login
 # XXX and this operation and the password has changed again?
 
+package require base64
+package require json
+package require json::write
+
 proc logger {args} {
   catch { exec logger -t puavo-homecrypt {*}$args }
 }
 
 proc change_password {new_pw} {
-  global old_gocryptfs_password
+  global crypthome_mgmt_request_path old_password
 
-  if {$old_gocryptfs_password eq ""} {
+  if {$old_password eq ""} {
     return
   }
 
@@ -23,10 +27,15 @@ proc change_password {new_pw} {
   set usererrmsg ""
 
   try {
-    set uid [exec id -u]
-    set crypthome "/home/.gocryptfs/${uid}"
-    set input [format "%s\n%s\n%s\n" $old_gocryptfs_password $new_pw $new_pw]
-    exec -ignorestderr gocryptfs -passwd $crypthome << $input
+    set username [exec id -nu]
+    set input [
+      ::json::write object \
+        request  [::json::write object {login[uid]}         $username     \
+                                       {login[password]}    $old_password \
+                                       {user[new_password]} $new_pw]      \
+        response [::json::write object status ok]]
+    exec -ignorestderr puavo-crypthome \
+                         update-crypthome-password-from-password-form << $input
     set op_success true
   } trap CHILDSTATUS {results options} {
     set status [lindex [dict get $options -errorcode] 2]
@@ -48,7 +57,7 @@ proc change_password {new_pw} {
         $errmsg]
     set usererrmsg "SOME UNEXPECTED ERROR HAPPENED"
   } finally {
-    set old_gocryptfs_password ""
+    set old_password ""
   }
 
   if {$logerrmsg ne ""} {
@@ -59,51 +68,67 @@ proc change_password {new_pw} {
   }
 
   if {$op_success} {
+    file unlink $crypthome_mgmt_request_path
     tk_messageBox -message "SUCCESS!  Please login again with your password."
     exit 0
   }
 }
 
-set cmd [lindex $argv 0]
-switch -- $cmd {
-  update-crypthome-password {}
-  default { error "unsupported command '${cmd}'" }
+proc show_password_update_ui {mgmt_request} {
+  global old_password
+
+  set old_password ""
+
+  try {
+    set new_password [::base64::decode [dict get $mgmt_request new_password]]
+    if {$new_password eq ""} { error "new password is empty" }
+  } on error {errmsg} {
+    logger -p user.err "could not read password from mgmt request: ${errmsg}"
+    exit 1
+  }
+
+  wm attributes . -fullscreen 1
+  wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
+
+  set bg_color "#93b176"
+
+  . configure -bg $bg_color
+
+  frame .pw_change -bg $bg_color
+
+  font create puavoFont -family {Ubuntu Condensed} -size 20 -weight bold
+
+  label .pw_change.explanation -bg $bg_color \
+        -font puavoFont \
+        -text "You must provide your old home directory password: "
+  entry .pw_change.old_password -font puavoFont -show * \
+        -textvariable old_password
+
+  pack .pw_change -fill y -expand 1
+  pack .pw_change.explanation .pw_change.old_password -side left -padx 3
+
+  focus .pw_change.old_password
+
+  bind .pw_change.old_password <KeyRelease-Return> [
+    list change_password $new_password
+  ]
 }
 
-set old_pw_path "$env(HOME)/.puavo/new_gocryptfs_password"
-
-set old_gocryptfs_password ""
+set crypthome_mgmt_request_path \
+    "$env(HOME)/.puavo/crypthome_mgmt_request.json"
 
 try {
-  set new_gocryptfs_password [exec cat $old_pw_path]
-  if {$new_gocryptfs_password eq ""} { error "empty password" }
+  set mgmt_request [
+    ::json::json2dict [exec cat $crypthome_mgmt_request_path]
+  ]
 } on error {errmsg} {
-  logger -p user.err "could not read the new gocrypt password: ${errmsg}"
+  logger -p user.err "could not read the management request: ${errmsg}"
   exit 1
 }
 
-wm attributes . -fullscreen 1
-wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
+set op [dict get $mgmt_request operation]
 
-set bg_color "#93b176"
-
-. configure -bg $bg_color
-
-frame .pw_change -bg $bg_color
-
-font create puavoFont -family {Ubuntu Condensed} -size 20 -weight bold
-
-label .pw_change.explanation -bg $bg_color \
-      -font puavoFont \
-      -text "You must provide your old home directory password: "
-entry .pw_change.old_password -font puavoFont -show * \
-      -textvariable old_gocryptfs_password
-
-pack .pw_change -fill y -expand 1
-pack .pw_change.explanation .pw_change.old_password -side left -padx 3
-
-focus .pw_change.old_password
-
-bind .pw_change.old_password <KeyRelease-Return> [
-  list change_password $new_gocryptfs_password
-]
+switch -- $op {
+  change-password { show_password_update_ui $mgmt_request }
+  default { error "unsupported operation '${op}'" }
+}
