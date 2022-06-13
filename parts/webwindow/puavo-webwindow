@@ -146,7 +146,7 @@ class WebWindow(Gtk.Window):
             ucm.connect('script-message-received::form_response',
                          self.on_form_response_received)
             ucm.register_script_message_handler('form_response')
-            self.form_action = { 'cmd': args.pass_form_response_to,
+            self.form_action = { 'cmd': args.pass_form_response_to.split(),
                                  'cmd_input': {} }
 
         self.webview.show()
@@ -162,7 +162,7 @@ class WebWindow(Gtk.Window):
             value = json.loads(js_result.get_js_value().to_json(0))
             self.form_action['cmd_input']['response'] = value
             cmd_input = json.dumps( self.form_action['cmd_input'] )
-            subprocess.run([ self.form_action['cmd'] ],
+            subprocess.run(self.form_action['cmd'],
                            check=True, input=cmd_input, encoding='utf-8')
             print('subprocess %s run successfully' % self.form_action['cmd'])
         except Exception as e:

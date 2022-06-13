@@ -2,6 +2,19 @@
 
 set -eu
 
+cmd="${1:-}"
+case "$cmd" in
+  update-crypthome-password-from-password-form)
+    ;;
+  update-crypthome-password-ui)
+    exec puavo-crypthome-ui update-crypthome-password
+    ;;
+  *)
+    echo "Unknown command '${cmd}'" >&2
+    exit 1
+    ;;
+esac
+
 uid_number=$(id -u)
 gocryptfs_dir="/home/.gocryptfs/${uid_number}"
 
