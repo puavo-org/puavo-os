@@ -10,106 +10,6 @@ logmsg() {
   logger -t puavo-manage-homedir "$@"
 }
 
-create_encrypted_home() {
-  local gocryptfs_dir gocryptfs_tmpdir user_gid user_homedir user_password \
-        user_uid
-
-  user_uid=$1
-  user_gid=$2
-  user_homedir=$3
-  gocryptfs_dir=$4
-  user_password=$5
-
-  gocryptfs_tmpdir="${gocryptfs_dir}.tmp"
-
-  rm -rf "$gocryptfs_tmpdir" || return 1
-
-  install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir" \
-          "$gocryptfs_tmpdir" || return 1
-  printf "%s\n" "$user_password" | gocryptfs -init "$gocryptfs_tmpdir" \
-    || return 1
-  printf "%s\n%s\n" "$user_password" "$user_password" \
-    | gocryptfs -allow_other "$gocryptfs_tmpdir" "$user_homedir" || return 1
-
-  if ! cp -RT /etc/skel "$user_homedir" \
-    || ! chown -R "${user_uid}:${user_gid}" "$user_homedir" \
-                  "${gocryptfs_tmpdir}/gocryptfs.conf" \
-                  "${gocryptfs_tmpdir}/gocryptfs.diriv"; then
-      fusermount -uz "$user_homedir" || true
-      return 1
-  fi
-
-  fusermount -uz "$user_homedir" || true
-  mv "$gocryptfs_tmpdir" "$gocryptfs_dir" || return 1
-
-  logmsg -p user.notice "created an encrypted directory for user ${user_uid}"
-}
-
-setup_home_pw_change() {
-  local msg tmp_home user_gid user_homedir user_password user_uid
-
-  user_homedir=$1
-  user_uid=$2
-  user_gid=$3
-  user_password=$4
-
-  rmdir "$user_homedir"                                  || return 1
-  tmp_home=$(mktemp -d /anon/tmphome_${username}.XXXXXX) || return 1
-  mkdir -p "${tmp_home}/.puavo" "$user_homedir"          || return 1
-
-  # XXX should this password be encrypted at least a bit?
-  # XXX (even though the key should be available somewhere...
-  # XXX it is obfuscation but might be nice anyway so that passwords
-  # XXX are not accidentally read by admins)
-  printf %s "$user_password" \
-    > "${tmp_home}/.puavo/new_gocryptfs_password" || return 1
-
-  chown -R "${user_uid}:${user_gid}" "$tmp_home" "$user_homedir" || return 1
-  mount --bind "$tmp_home" "$user_homedir"                       || return 1
-
-  msg="a temporary home created for ${user_uid}"
-  msg="${msg} for home encryption password change"
-  logmsg -p user.info "$msg"
-}
-
-unmount_home() {
-  local unmount_status user_homedir
-
-  user_homedir=$1
-
-  unmount_status=0
-
-  if ! mountpoint -q "$user_homedir"; then
-    return 0
-  fi
-
-  if mount -t fuse.gocryptfs \
-       | awk -v user_homedir="$user_homedir" '
-           BEGIN { status = 1 }
-           $3 == user_homedir { status = 0 }
-           END { exit(status) }
-         '; then
-    if fusermount -uz "$user_homedir"; then
-      logmsg -p user.err 'could not unmount encrypted home directory'
-      unmount_status=1
-    fi
-  fi
-
-  if mount -t tmpfs \
-       | awk -v user_homedir="$user_homedir" '
-           BEGIN { status = 1 }
-           $3 == user_homedir { status = 0 }
-           END { exit(status) }
-         '; then
-    if ! umount -l "$user_homedir"; then
-      logmsg -p user.err 'could not unmount temporary home directory'
-      unmount_status=1
-    fi
-  fi
-
-  return $unmount_status
-}
-
 username=${1:-}
 
 if [ -z "$username" ]; then
@@ -130,7 +30,7 @@ fi
 user_password=''
 
 if [ "${PAM_TYPE:-}" = 'close_session' ]; then
-  unmount_home "$user_homedir" || exit 1
+  puavo-crypthome unmount-encrypted-home "$username" || exit 1
   exit 0
 fi
 
@@ -138,7 +38,7 @@ if [ "${PAM_TYPE:-}" != 'auth' ]; then
   exit 0
 fi
 
-unmount_home "$user_homedir" || exit 1
+puavo-crypthome unmount-encrypted-home "$username" || exit 1
 
 if ! user_password="$(cat)" || [ -z "$user_password" ]; then
   logmsg err 'could not read user password'
@@ -146,9 +46,8 @@ if ! user_password="$(cat)" || [ -z "$user_password" ]; then
 fi
 
 user_uid="$(id -u "$username" 2>/dev/null)" || true
-user_gid="$(id -g "$username" 2>/dev/null)" || true
 
-if [ -z "$user_uid" -o -z "$user_gid" ]; then
+if [ -z "$user_uid" ]; then
   logmsg -p user.err "user $username is not known"
   exit 1
 fi
@@ -178,39 +77,23 @@ fi
 # XXX this should be conditional based on puavo-conf or some such
 encrypt_home_dirs=true
 
-gocryptfs_dir="/home/.gocryptfs/${user_uid}"
-
-if $encrypt_home_dirs && [ ! -d "$gocryptfs_dir" ]; then
-  logmsg -p user.notice \
-         "creating an encrypted home for ${username} to ${gocryptfs_dir}"
-  if ! create_encrypted_home "$user_uid" "$user_gid" "$user_homedir" \
-                             "$gocryptfs_dir" "$user_password"; then
-    logmsg -p user.err \
-      "failed in creating an encrypted dir ${gocryptfs_dir} for ${username}"
-    exit 1
+if $encrypt_home_dirs; then
+  # this creates an encrypted home for user in case it is missing
+  if ! printf %s "$user_password" \
+    | puavo-crypthome ensure-encrypted-home "$username"; then
+      logmsg -p user.err "failed in ensuring an encrypted home for ${username}"
+      exit 1
   fi
+
 fi
 
-if [ -d "$gocryptfs_dir" ]; then
-  install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir"
-  if [ -z "$(find "$user_homedir" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
-    # directory is not empty, that is a problem, something is wrong
-    logmsg -p user.err "user home directory ${user_homedir} is not empty"
-    exit 1
+if puavo-crypthome has-encrypted-home "$username"; then
+  if ! printf %s "$user_password" \
+    | puavo-crypthome mount-encrypted-home "$username"; then
+      logmsg -p user.err "failed to mount encrypted home for $username"
+      exit 1
   fi
-  if ! printf "%s\n" "$user_password" \
-    | gocryptfs -allow_other "$gocryptfs_dir" "$user_homedir"; then
-      logmsg -p user.err \
-             "could not decrypt dir ${gocryptfs_dir} with user password"
-      if ! setup_home_pw_change "$user_homedir" "$user_uid" "$user_gid" \
-                                "$user_password"; then
-          logmsg -p user.err 'failed to set up a temporary home'
-          exit 1
-      fi
-      exit 0
-  fi
-  logmsg -p user.info \
-         "encrypted home ${gocryptfs_dir} mounted to ${user_homedir}"
+  logmsg -p user.info "encrypted home mounted for $username"
   exit 0
 fi
 

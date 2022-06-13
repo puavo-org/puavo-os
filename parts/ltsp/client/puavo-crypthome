@@ -2,53 +2,237 @@
 
 set -eu
 
+logmsg() {
+  logger -t puavo-crypthome "$@"
+}
+
 cmd="${1:-}"
+username="${2:-}"
+
+if [ -z "$username" ]; then
+  if ! username=$(id -nu); then
+    logmsg -p user.err 'could not determine user'
+    exit 1
+  fi
+fi
+
+user_uid="$(id -u "$username" 2>/dev/null)" || true
+user_gid="$(id -g "$username" 2>/dev/null)" || true
+user_homedir="$(getent passwd "$username" | awk -F: '{ print $6 }')" || true
+
+if [ -z "$user_uid" -o -z "$user_gid" -o -z "$user_homedir" ]; then
+  logmsg -p user.err "user $username or homedir is not known"
+  return 1
+fi
+
+gocryptfs_dir="/home/.gocryptfs/${user_uid}"
+
+
+create_encrypted_home() {
+  local gocryptfs_tmpdir user_password
+
+  user_password=$1
+
+  logmsg -p user.notice \
+         "creating an encrypted home for ${username} to ${gocryptfs_dir}"
+
+  gocryptfs_tmpdir="${gocryptfs_dir}.tmp"
+
+  rm -rf "$gocryptfs_tmpdir" || return 1
+
+  install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir" \
+          "$gocryptfs_tmpdir" || return 1
+  printf "%s\n" "$user_password" | gocryptfs -init "$gocryptfs_tmpdir" \
+    || return 1
+  printf "%s\n%s\n" "$user_password" "$user_password" \
+    | gocryptfs -allow_other "$gocryptfs_tmpdir" "$user_homedir" || return 1
+
+  if ! cp -RT /etc/skel "$user_homedir" \
+    || ! chown -R "${user_uid}:${user_gid}" "$user_homedir" \
+                  "${gocryptfs_tmpdir}/gocryptfs.conf" \
+                  "${gocryptfs_tmpdir}/gocryptfs.diriv"; then
+      fusermount -uz "$user_homedir" || true
+      return 1
+  fi
+
+  fusermount -uz "$user_homedir" || true
+  mv "$gocryptfs_tmpdir" "$gocryptfs_dir" || return 1
+
+  logmsg -p user.notice "created an encrypted directory for user ${user_uid}"
+}
+
+ensure_encrypted_home() {
+  local user_password
+
+  if has_encrypted_home; then
+    return 0
+  fi
+
+  user_password=$1
+
+  if ! create_encrypted_home "$user_password"; then
+    logmsg -p user.err "failed to create an encrypted homedir for $username"
+    return 1
+  fi
+
+  return 0
+}
+
+has_encrypted_home() {
+  [ -d "$gocryptfs_dir" ]
+}
+
+mount_encrypted_home() {
+  local user_password
+
+  user_password=$1
+
+  install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir"
+  if [ -z "$(find "$user_homedir" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
+    # directory is not empty, that is a problem, something is wrong
+    logmsg -p user.err "user home directory ${user_homedir} is not empty"
+    return 1
+  fi
+  if ! printf "%s\n" "$user_password" \
+    | gocryptfs -allow_other "$gocryptfs_dir" "$user_homedir"; then
+      logmsg -p user.err \
+             "could not decrypt dir ${gocryptfs_dir} with user password"
+      if ! setup_home_pw_change "$user_password"; then
+        logmsg -p user.err "failed to set up a temporary home for $username"
+        return 1
+      fi
+      return 0
+  fi
+
+  return 0
+}
+
+setup_home_pw_change() {
+  local msg tmp_home user_password
+
+  user_password=$1
+
+  rmdir "$user_homedir"                                  || return 1
+  tmp_home=$(mktemp -d /anon/tmphome_${username}.XXXXXX) || return 1
+  mkdir -p "${tmp_home}/.puavo" "$user_homedir"          || return 1
+
+  # encoding password with base64 also functions as a little bit of obfuscation
+  # in case some admin accidentally reads this file
+  printf %s "$user_password" \
+    | base64 | jq --null-input --rawfile user_password /dev/stdin '
+      .operation = "password-change" | .new_password = $user_password
+    ' > "${tmp_home}/.puavo/gocryptfs_mgmt_request.json" || return 1
+
+  chown -R "${user_uid}:${user_gid}" "$tmp_home" "$user_homedir" || return 1
+  mount --bind "$tmp_home" "$user_homedir"                       || return 1
+
+  msg="a temporary home created for ${user_uid}"
+  msg="${msg} for home encryption password change"
+  logmsg -p user.info "$msg"
+}
+
+test_mounted_homedir() {
+  local mount_type
+
+  mount_type=$1
+  mount -t "$mount_type" \
+    | awk -v user_homedir="$user_homedir" '
+        BEGIN { status = 1 }
+        $3 == user_homedir { status = 0 }
+        END { exit(status) }
+      '
+}
+
+unmount_encrypted_home() {
+  local unmount_status user_homedir
+
+  unmount_status=0
+
+  if ! mountpoint -q "$user_homedir"; then
+    return 0
+  fi
+
+  if test_mounted_homedir fuse.gocryptfs; then
+    if fusermount -uz "$user_homedir"; then
+      logmsg -p user.err 'could not unmount encrypted home directory'
+      unmount_status=1
+    fi
+  fi
+
+  if test_mounted_homedir tmpfs; then
+    if ! umount -l "$user_homedir"; then
+      logmsg -p user.err 'could not unmount temporary home directory'
+      unmount_status=1
+    fi
+  fi
+
+  return $unmount_status
+}
+
+update_crypthome_from_password_form() {
+  local json_data login_password login_uid response_status user_new_password
+
+  json_data=$1
+
+  if ! has_encrypted_home; then
+    # nothing to do
+    return 0
+  fi
+
+  response_status=$(printf %s "$json_data" | jq -r .response.status)
+
+  if [ "$response_status" != 'ok' ]; then
+    echo 'Response status was not ok, failed' >&2
+    exit 1
+  fi
+
+  login_uid=$(        printf %s "$json_data" | jq -r '.request["login[uid]"]')
+  login_password=$(   printf %s "$json_data" | jq -r '.request["login[password]"]')
+  user_new_password=$(printf %s "$json_data" | jq -r '.request["user[new_password]"]')
+
+  if [ -z "$login_uid" -o "$login_uid" = 'null' \
+       -o -z "$login_password" -o "$login_password" = 'null' \
+       -o -z "$user_new_password" -o "$user_new_password" = 'null' ]; then
+    echo 'required data is missing, not doing anything' >&2
+    exit 1
+  fi
+
+  if [ "$login_uid" != "$username" ]; then
+    echo 'login uid does not match the current user' >&2
+    exit 1
+  fi
+
+  printf "%s\n%s\n%s\n" "$login_password" \
+                        "$user_new_password" \
+                        "$user_new_password" \
+    | gocryptfs -passwd "$gocryptfs_dir"
+}
+
+
 case "$cmd" in
+  ensure-encrypted-home)
+    user_password=$(cat)
+    ensure_encrypted_home "$user_password"
+    ;;
+  has-encrypted-home)
+    has_encrypted_home
+    ;;
+  mount-encrypted-home)
+    user_password=$(cat)
+    mount_encrypted_home "$user_password"
+    ;;
+  unmount-encrypted-home)
+    unmount_encrypted_home
+    ;;
   update-crypthome-password-from-password-form)
+    json_data=$(cat)
+    update_crypthome_from_password_form "$json_data"
     ;;
   update-crypthome-password-ui)
-    exec puavo-crypthome-ui update-crypthome-password
+    puavo-crypthome-ui update-crypthome-password
     ;;
   *)
     echo "Unknown command '${cmd}'" >&2
     exit 1
     ;;
 esac
-
-uid_number=$(id -u)
-gocryptfs_dir="/home/.gocryptfs/${uid_number}"
-
-if [ ! -d "$gocryptfs_dir" ]; then
-  # nothing to do
-  exit 0
-fi
-
-json_data=$(cat)
-
-response_status=$(printf %s "$json_data" | jq -r .response.status)
-
-if [ "$response_status" != 'ok' ]; then
-  echo 'Response status was not ok, failed' >&2
-  exit 1
-fi
-
-login_uid=$(        printf %s "$json_data" | jq -r '.request["login[uid]"]')
-login_password=$(   printf %s "$json_data" | jq -r '.request["login[password]"]')
-user_new_password=$(printf %s "$json_data" | jq -r '.request["user[new_password]"]')
-
-if [ -z "$login_uid" -o "$login_uid" = 'null' \
-     -o -z "$login_password" -o "$login_password" = 'null' \
-     -o -z "$user_new_password" -o "$user_new_password" = 'null' ]; then
-  echo 'required data is missing, not doing anything' >&2
-  exit 1
-fi
-
-if [ "$(id -nu)" != "$login_uid" ]; then
-  echo 'login uid does not match the current user' >&2
-  exit 1
-fi
-
-printf "%s\n%s\n%s\n" "$login_password" \
-	              "$user_new_password" \
-		      "$user_new_password" \
-  | gocryptfs -passwd "$gocryptfs_dir"
