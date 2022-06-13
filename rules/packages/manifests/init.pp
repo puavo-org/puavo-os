@@ -597,6 +597,7 @@ class packages {
     , 'ibus'
     , 'ibus-anthy'
     , 'ibus-gtk3'
+    , 'ibus-m17n'
     , 'ibus-pinyin'
     , 'ibus-table'
     , 'inputattach'
