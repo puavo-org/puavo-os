@@ -26,7 +26,8 @@ if [ -z "$user_uid" -o -z "$user_gid" -o -z "$user_homedir" ]; then
 fi
 
 gocryptfs_dir="/home/.gocryptfs/${user_uid}"
-
+puavo_dir="${user_homedir}/.puavo"
+mgmt_request_path="${puavo_dir}/crypthome_mgmt_request.json"
 
 create_encrypted_home() {
   local gocryptfs_tmpdir user_password
@@ -86,18 +87,66 @@ ensure_encrypted_home() {
   return 0
 }
 
+setup_migration_dir() {
+  local suffix
+  suffix=$1
+  install -d -o "$user_uid" -g "$user_gid" -m 700 "${user_homedir}.${suffix}"
+}
+
+handle_login() {
+  local operation user_password
+
+  user_password=$1
+
+  if ! ensure_encrypted_home "$user_password"; then
+    logmsg -p user.err "failed in ensuring an encrypted home for ${username}"
+    return 1
+  fi
+
+  if ! mount_encrypted_home "$user_password"; then
+    logmsg -p user.err "failed to mount encrypted home for ${username}"
+    return 1
+  fi
+
+  logmsg -p user.info "encrypted home mounted for ${username}"
+
+  operation=$(jq -r .operation "$mgmt_request_path" 2>/dev/null) || true
+  case "$operation" in
+    change-password)
+      ;;
+    migrate-to-crypthome)
+      setup_migration_dir crypt
+      ;;
+    migrate-to-plainhome)
+      setup_migration_dir plain
+      ;;
+    *)
+      logmsg -p user.err \
+        "not handling an unsuported homedir operation for ${username}"
+      ;;
+  esac
+
+  return 0
+}
+
 has_encrypted_home() {
   [ -d "$gocryptfs_dir" ]
 }
 
 migrate_to_crypthome() {
-  # XXX
+  # XXX --remove-source-files is also needed
+  # XXX should check if this is possible before starting
+  # XXX (or accepting to be done)
+  rsync -aHS --no-inc-recursive --outbuf=none \
+        --info=progress2 "${user_homedir}/" "${user_homedir}.crypt/" 2>&1
 }
 
 migrate_to_plainhome() {
-  # XXX
+  # XXX --remove-source-files is also needed
+  # XXX should check if this is possible before starting
+  # XXX (or accepting to be done)
   rsync -aHS --no-inc-recursive --outbuf=none \
-        --info=progress2 "${user_homedir}/" "${user_homedir}.plainhome/" 2>&1
+        --info=progress2 "${user_homedir}/" "${user_homedir}.plain/" 2>&1
 }
 
 mount_encrypted_home() {
@@ -250,22 +299,15 @@ update_crypthome_from_password_form() {
 
 
 case "$cmd" in
-  ensure-encrypted-home)
+  handle-login)
     user_password=$(cat)
-    ensure_encrypted_home "$user_password"
-    ;;
-  has-encrypted-home)
-    has_encrypted_home
+    handle_login "$user_password"
     ;;
   migrate-to-crypthome)
     migrate_to_crypthome
     ;;
   migrate-to-plainhome)
     migrate_to_plainhome
-    ;;
-  mount-encrypted-home)
-    user_password=$(cat)
-    mount_encrypted_home "$user_password"
     ;;
   request-migration-to-crypthome)
     request_migration_to_crypthome

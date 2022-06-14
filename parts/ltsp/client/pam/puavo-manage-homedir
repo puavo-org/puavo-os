@@ -74,27 +74,11 @@ if [ -n "$current_home_uid" -a "$current_home_uid" != "$user_uid" ]; then
   fi
 fi
 
-# XXX this should be conditional based on puavo-conf or some such
-encrypt_home_dirs=true
-
-if $encrypt_home_dirs; then
-  # this creates an encrypted home for user in case it is missing
-  if ! printf %s "$user_password" \
-    | puavo-crypthome ensure-encrypted-home "$username"; then
-      logmsg -p user.err "failed in ensuring an encrypted home for ${username}"
-      exit 1
-  fi
-
-fi
-
-if puavo-crypthome has-encrypted-home "$username"; then
-  if ! printf %s "$user_password" \
-    | puavo-crypthome mount-encrypted-home "$username"; then
-      logmsg -p user.err "failed to mount encrypted home for $username"
-      exit 1
-  fi
-  logmsg -p user.info "encrypted home mounted for $username"
-  exit 0
+# XXX for now this does not support plaintext home directories
+if ! printf %s "$user_password" | puavo-crypthome handle-login "$username"; then
+  logmsg -p user.err \
+    "error in running puavo-crypthome handle-login for ${username}"
+  exit 1
 fi
 
 # In case the directory does not exist, we lookup if user has
