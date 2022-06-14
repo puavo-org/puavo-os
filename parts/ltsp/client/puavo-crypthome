@@ -90,6 +90,16 @@ has_encrypted_home() {
   [ -d "$gocryptfs_dir" ]
 }
 
+migrate_to_crypthome() {
+  # XXX
+}
+
+migrate_to_plainhome() {
+  # XXX
+  rsync -aHS --no-inc-recursive --outbuf=none \
+        --info=progress2 "${user_homedir}/" "${user_homedir}.plainhome/" 2>&1
+}
+
 mount_encrypted_home() {
   local user_password
 
@@ -149,6 +159,28 @@ test_mounted_homedir() {
         $3 == user_homedir { status = 0 }
         END { exit(status) }
       '
+}
+
+request_migration_to_crypthome() {
+  if has_encrypted_home; then
+    logmsg -p user.err 'already using an encrypted home'
+    return 1
+  fi
+
+  mkdir -p "${user_homedir}/.puavo" || return 1
+  jq --null-input '.operation = "migrate-to-crypthome"' \
+    > "${user_homedir}/.puavo/crypthome_mgmt_request.json" || return 1
+}
+
+request_migration_to_plainhome() {
+  if ! has_encrypted_home; then
+    logmsg -p user.err 'not using an encrypted home to migrate from'
+    return 1
+  fi
+
+  mkdir -p "${user_homedir}/.puavo" || return 1
+  jq --null-input '.operation = "migrate-to-plainhome"' \
+    > "${user_homedir}/.puavo/crypthome_mgmt_request.json" || return 1
 }
 
 unmount_encrypted_home() {
@@ -225,9 +257,21 @@ case "$cmd" in
   has-encrypted-home)
     has_encrypted_home
     ;;
+  migrate-to-crypthome)
+    migrate_to_crypthome
+    ;;
+  migrate-to-plainhome)
+    migrate_to_plainhome
+    ;;
   mount-encrypted-home)
     user_password=$(cat)
     mount_encrypted_home "$user_password"
+    ;;
+  request-migration-to-crypthome)
+    request_migration_to_crypthome
+    ;;
+  request-migration-to-plainhome)
+    request_migration_to_plainhome
     ;;
   unmount-encrypted-home)
     unmount_encrypted_home

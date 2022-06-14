@@ -30,9 +30,10 @@ proc change_password {new_pw} {
     set username [exec id -nu]
     set input [
       ::json::write object \
-        request  [::json::write object {login[uid]}         [::json::write string $username]     \
-                                       {login[password]}    [::json::write string $old_password] \
-                                       {user[new_password]} [::json::write string $new_pw]]      \
+        request  [::json::write object \
+                    {login[uid]}         [::json::write string $username]     \
+                    {login[password]}    [::json::write string $old_password] \
+                    {user[new_password]} [::json::write string $new_pw]]      \
         response [::json::write object status [::json::write string ok]]]
     exec -ignorestderr puavo-crypthome \
                          update-crypthome-password-from-password-form << $input
@@ -74,6 +75,70 @@ proc change_password {new_pw} {
   }
 }
 
+proc update_progress {txt} {
+  global update_in_progress
+
+  .migrate.progress configure -text $txt
+  set update_in_progress ""
+}
+
+proc append_text_to_migrate_progress {cmd_f} {
+  global update_in_progress
+
+  set txt [gets $cmd_f]
+  if {[eof $cmd_f]} {
+    try {
+      close $cmd_f
+      set txt "SUCCESS!"
+    } on error {errmsg} {
+      set txt "ERROR: ${errmsg}"
+    }
+    set update_in_progress ""
+  }
+
+  if {$update_in_progress eq ""} {
+    set update_in_progress [
+      after 100 [list update_progress $txt]
+    ]
+  }
+}
+
+proc migrate_operation {cmd} {
+  global update_in_progress
+
+  set bg_color "#93b176"        ; # XXX duplication
+
+  setup_ui $bg_color
+
+  frame .migrate -bg $bg_color
+  label .migrate.progress -bg $bg_color -font puavoFont
+  pack .migrate -fill y -expand 1
+  pack .migrate.progress -side left
+
+  set update_in_progress ""
+
+  set f [open "|$cmd" r]
+  fconfigure $f -buffering line
+  fileevent $f readable [list append_text_to_migrate_progress $f]
+}
+
+proc migrate_to_crypthome {} {
+  migrate_operation [list puavo-crypthome migrate-to-crypthome]
+}
+
+proc migrate_to_plainhome {} {
+  migrate_operation [list puavo-crypthome migrate-to-plainhome]
+}
+
+proc setup_ui {bg_color} {
+  wm attributes . -fullscreen 1
+  wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
+
+  . configure -bg $bg_color
+
+  font create puavoFont -family {Ubuntu Condensed} -size 20 -weight bold
+}
+
 proc show_password_update_ui {mgmt_request} {
   global old_password
 
@@ -87,17 +152,11 @@ proc show_password_update_ui {mgmt_request} {
     exit 1
   }
 
-  wm attributes . -fullscreen 1
-  wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
+  set bg_color "#93b176" ;# XXX duplication
 
-  set bg_color "#93b176"
-
-  . configure -bg $bg_color
+  setup_ui $bg_color
 
   frame .pw_change -bg $bg_color
-
-  font create puavoFont -family {Ubuntu Condensed} -size 20 -weight bold
-
   label .pw_change.explanation -bg $bg_color \
         -font puavoFont \
         -text "You must provide your old home directory password: "
@@ -131,6 +190,8 @@ try {
 set op [dict get $mgmt_request operation]
 
 switch -- $op {
-  change-password { show_password_update_ui $mgmt_request }
+  change-password      { show_password_update_ui $mgmt_request }
+  migrate-to-crypthome { migrate_to_crypthome }
+  migrate-to-plainhome { migrate_to_plainhome }
   default { error "unsupported operation '${op}'" }
 }
