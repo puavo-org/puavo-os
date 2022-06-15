@@ -7,7 +7,7 @@ class Memberof < Overlay
               'olcMemberOfMemberAD' => 'member',
               'olcMemberOfMemberOfAD' => 'memberOf',
               'olcMemberOfDangling' => 'error',
-              'olcMemberOfRefInt' => 'TRUE' ).save(false)
+              'olcMemberOfRefInt' => 'TRUE' ).save
     
     # Save without validation
     self.new( 'objectclass' => ['olcMemberOf', 'olcOverlayConfig'],
@@ -16,7 +16,7 @@ class Memberof < Overlay
               'olcMemberOfMemberAD' => 'member',
               'olcMemberOfMemberOfAD' => 'puavoUserRole',
               'olcMemberOfDangling' => 'error',
-              'olcMemberOfRefInt' => 'TRUE' ).save(false)
+              'olcMemberOfRefInt' => 'TRUE' ).save
 
     # Save without validation
     self.new( 'objectclass' => ['olcMemberOf', 'olcOverlayConfig'],
@@ -25,7 +25,7 @@ class Memberof < Overlay
               'olcMemberOfMemberAD' => 'puavoMemberGroup',
               'olcMemberOfMemberOfAD' => 'puavoUserRole',
               'olcMemberOfDangling' => 'error',
-              'olcMemberOfRefInt' => 'TRUE' ).save(false)
+              'olcMemberOfRefInt' => 'TRUE' ).save
   end
 
   def self.index

@@ -8,7 +8,7 @@ class Unique < Overlay
                                  "ldap:///ou=People,#{args[:database].olcSuffix}?mail?sub",
                                  "ldap:///ou=People,#{args[:database].olcSuffix}?homeDirectory?sub",
                                  "ldap:///ou=Hosts,#{args[:database].olcSuffix}?puavoHostname?sub",
-                                 "ldap:///?sambaSID?sub"] ).save(false)
+                                 "ldap:///?sambaSID?sub"] ).save
   end
 
   def self.index

@@ -6,7 +6,7 @@ class Smbkrb5pwd < Overlay
               'olcSmbKrb5PwdEnable' => ['krb5', 'samba'],
               'olcSmbKrb5PwdMustChange' => '2592012',
               'olcSmbKrb5PwdKrb5Realm' => args[:kerberos_realm],
-              'olcSmbKrb5PwdRequiredClass' => "puavoEduPerson" ).save(false)
+              'olcSmbKrb5PwdRequiredClass' => "puavoEduPerson" ).save
   end
 
   def self.index

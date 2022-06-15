@@ -196,7 +196,7 @@ begin
                          :samba_domain => samba_domain,
                          :kerberos_realm => kerberos_realm )
   # Save without validation
-  new_db.save(false)
+  new_db.save
 rescue => e
   raise e
 end

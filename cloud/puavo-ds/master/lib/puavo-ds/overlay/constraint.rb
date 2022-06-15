@@ -3,7 +3,7 @@ class Constraint < Overlay
   def self.add_overlay_config(args)
     self.new( 'objectclass' => ['olcConstraintConfig', 'olcOverlayConfig'],
               'olcOverlay' => "{#{ self.index }}constraint",
-              'olcConstraintAttribute' => [%Q{puavoSchool set "(this/puavoSchool/puavoSchoolAdmin* | [#{ args[:database].olcSuffix }]/owner* | [uid=admin,o=puavo]) & user"}] ).save(false)
+              'olcConstraintAttribute' => [%Q{puavoSchool set "(this/puavoSchool/puavoSchoolAdmin* | [#{ args[:database].olcSuffix }]/owner* | [uid=admin,o=puavo]) & user"}] ).save
   end
 
   def self.index
