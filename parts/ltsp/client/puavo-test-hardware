@@ -2,13 +2,13 @@
 
 set -eu
 
-clean() {
+cleanup() {
 rm -f "$teststdout" "$teststderr" "$camerastdout" "$usb1stdout" \
       /tmp/00000001.jpg /tmp/00000002.jpg "$usb2stdout" "$wifistdout" \
       "$wifistderr" "$power1stdout" "$power2stdout"
 }
 
-trap clean EXIT
+trap cleanup EXIT
 
 analyze_image() {
 mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 2 -sstep 100 -vo jpeg:outdir="/tmp/" 2> /dev/null &&
@@ -47,9 +47,10 @@ log_usb() {
       while sleep 0.5
       do
         if [ "$(lsusb -t 2>/dev/null | grep '        |__ Port 4')" ]; then
+
           echo "Right" > "$usb1stdout"
         fi
-        if [ "$(lsusb -t 2>/dev/null | grep ' Port 4' | grep -v '        |__')" ]; then
+        if [ "$(lsusb -t 2>/dev/null | grep ' Port 4:' | grep -v '        |__')" ]; then
           echo "Left " > "$usb2stdout"
         fi
       done
@@ -57,10 +58,10 @@ log_usb() {
     *)
       while sleep 0.5
       do
-        if [ "$(lsusb -t 2>/dev/null | grep ' Port 1' | grep -v '        |__')" ]; then
+        if [ "$(lsusb -t 2>/dev/null | grep ' Port 1:' | grep -v '        |__')" ]; then
           echo "Right" > "$usb1stdout"
         fi
-        if [ "$(lsusb -t 2>/dev/null | grep ' Port 2' | grep -v '        |__')" ]; then
+        if [ "$(lsusb -t 2>/dev/null | grep ' Port 2:' | grep -v '        |__')" ]; then
           echo "Left " > "$usb2stdout"
         fi
       done
@@ -404,7 +405,8 @@ test_audio() {
       amixer --card 'PCH' set 'Master' 85%
       ;;
     *)
-      alsadev='hw:0,0'
+      ### Let's just use the system default for all other models.
+      alsadev='default'
       ;;
   esac
 
