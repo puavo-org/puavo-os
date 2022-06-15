@@ -848,8 +848,23 @@ class PuavoErsExamSync (threading.Thread):
 
   def sync_one_exam(self, exam_file_name, exam):
     exam_file_path = os.path.join(EXAMS_DIR, exam_file_name)
-    if os.path.isfile(exam_file_path):
-      return
+
+    exam_modified = exam['modified']
+    if type(exam_modified) != int:
+      raise Exception('exam modified time is not an integer for %s' \
+                        % exam_file_name)
+
+    try:
+      exam_file_modified = os.path.getmtime(exam_file_path)
+      if exam_modified <= exam_file_modified:
+        # no need to sync, we have an exam file that is up-to-date
+        return
+      syslog.syslog(syslog.LOG_NOTICE,
+                    'exam %s is stale, syncing' % exam_file_name)
+    except OSError as e:
+      if e.errno != errno.ENOENT:
+        raise e
+      # missing exam file, must proceed with syncing
 
     syslog.syslog(syslog.LOG_NOTICE, 'syncing exam %s' % exam_file_name)
 
@@ -869,6 +884,7 @@ class PuavoErsExamSync (threading.Thread):
     tmpfile = '%s.tmp' % exam_file_path
     with open(tmpfile, 'wb') as f:
       f.write(exam_contents)
+    os.utime(tmpfile, times=(exam_modified, exam_modified))
     os.rename(tmpfile, exam_file_path)
 
     syslog.syslog(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
@@ -963,8 +979,8 @@ class ExamSet:
         self.latest_end_time = exam_end_time
 
 
-  def add_overlapping_exams(self, candidate_exams_to_be_added, now):
-    candidate_exams = candidate_exams_to_be_added.copy()
+  def add_overlapping_exams(self, candidate_exams_arg, preload_timedelta):
+    candidate_exams = candidate_exams_arg.copy()
 
     if len(self.exams) == 0:
       return
@@ -972,11 +988,12 @@ class ExamSet:
     while len(candidate_exams) > 0:
       candidate_accepted = False
       for exam in candidate_exams:
-        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time']) \
+                            - preload_timedelta
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
 
-        if exam_start_time < self.latest_end_time \
-          and self.earliest_start_time < exam_end_time:
+        if exam_start_time <= self.latest_end_time \
+          and self.earliest_start_time <= exam_end_time:
             candidate_accepted = True
 
         if candidate_accepted:
@@ -1064,6 +1081,8 @@ class PuavoErsExamSorter (threading.Thread):
 
     fatal_errors = False
 
+    preload_timedelta = datetime.timedelta(minutes=10)
+
     for exam in all_exams:
       try:
         if not re.match('^exam_.*\.me(b|x)$', exam['file_name']):
@@ -1088,7 +1107,6 @@ class PuavoErsExamSorter (threading.Thread):
         # to start.  Note that if exams are scheduled to have less than
         # 10 minutes between them, add_overlapping_exams() below will consider
         # them to be part of the same exam set (session).
-        preload_timedelta = datetime.timedelta(minutes=10)
         if (exam_start_time - preload_timedelta) <= self.current_time \
           and self.current_time < exam_end_time:
             current_exams.append(exam)
@@ -1098,7 +1116,7 @@ class PuavoErsExamSorter (threading.Thread):
         fatal_errors = True
 
     current_exams_set = ExamSet(current_exams)
-    current_exams_set.add_overlapping_exams(todays_exams, self.current_time)
+    current_exams_set.add_overlapping_exams(todays_exams, preload_timedelta)
 
     for exam in current_exams_set.exams:
       current_exams_filenames.append(exam['file_name'])
@@ -1326,8 +1344,11 @@ class PuavoErsExamScheduler (threading.Thread):
     if current_zip_name == None:
       raise CurrentZipNotReady
 
+    # this can take a rather long time, we can wait up to five minutes
+    load_exams_timeout_in_seconds = 300
+
     cmd = 'load-exam %s %s' % (current_zip_name, 'PURKUKOODIT.TXT')
-    return self.server_cmd(cmd)
+    return self.server_cmd(cmd, load_exams_timeout_in_seconds)
 
 
   def reset_exam(self):
@@ -1609,14 +1630,14 @@ class PuavoErsExamScheduler (threading.Thread):
     return start_of_today + datetime.timedelta(days=1)
 
 
-  def server_cmd(self, cmd):
+  def server_cmd(self, cmd, timeout_seconds=30):
     try:
-      return self.try_server_cmd(cmd)
+      return self.try_server_cmd(cmd, timeout_seconds)
     except Exception as e:
       raise Exception('error with "%s": %s' % (cmd, e))
 
 
-  def try_server_cmd(self, cmd):
+  def try_server_cmd(self, cmd, timeout_seconds):
     output_paths = [ self.CMD_IN_PROGRESS_PATH, self.CMD_RESULT_PATH,
                      self.DEBUG_OUTPUT_PATH, self.EXAMS_PATH, self.OUTPUT_PATH,
                      self.STATS_PATH ]
@@ -1638,7 +1659,7 @@ class PuavoErsExamScheduler (threading.Thread):
       with open(self.CMD_PATH, 'w') as f:
         f.write("%s\n" % cmd)
 
-      for i in range(30):
+      for i in range(timeout_seconds):
         try:
           if not os.path.exists(self.CMD_IN_PROGRESS_PATH):
             with open(self.OUTPUT_PATH) as f:

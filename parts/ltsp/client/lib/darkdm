@@ -735,7 +735,11 @@ elif [ "$device_identifier" == "-" ]; then
   device_identifier=''
 elif [ -n "$device_identifier" ]; then
   echo 'Device identifier OK.'
-  device_identifier="Device id:       $device_identifier"
+  devidvalue=-2
+  if [[ $device_identifier =~ [0-9] ]]; then
+    devidvalue=$device_identifier
+  fi
+  device_identifier="Device id:       $(colorize deviceid 0 -1 1 "$devidvalue" "$device_identifier")"
 else
   echo 'Server does not support device backend.'
   device_identifier=''
