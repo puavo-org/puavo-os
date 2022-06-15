@@ -10,6 +10,13 @@ ask_disk() {
   printf %s "$disks" | fzf -1 --height=5 --layout=reverse-list
 }
 
+prepare_for_erase() {
+  ### Disable all swap partitions, unmount Puavo LVM and rescan partition table.
+  swapoff -a
+  lvchange -an puavo
+  partprobe
+}
+
 secure_erase() {
   echo 'Choose a disk to Secure Erase:'
   if ! target_disk=$(ask_disk); then
@@ -20,8 +27,12 @@ secure_erase() {
   echo "Chosen << ${target_disk} >>"
   case "${target_disk}" in
     *nvme*)
+      echo 'Preparing system for secure erase. This should not take long.'
+      prepare_for_erase && \
+      echo 'Preparing finished, moving on..'
       echo 'Selected disk is an NVMe disk. Using "nvme-cli" utility for Secure Erase.'
       time --format "Time elapsed: %E" nvme format -s1 "${target_disk}"
+      partprobe
       echo 'You may check how long the erase took above.'
       echo 
       sleep 2
@@ -66,6 +77,9 @@ secure_erase() {
       fi
 
       echo 'Disk is not in frozen state, we can continue.'
+      echo 'Preparing system for secure erase. This should not take long.'
+      prepare_for_erase && \
+      echo 'Preparing finished, moving on..'
       hdparm --user-master user --security-set-pass Pass "${target_disk}"
       if ! hdparm -I "${target_disk}" | grep "Security level high" >&2; then
         echo 'Failed setting user and password, exiting.' >&2
@@ -81,6 +95,7 @@ secure_erase() {
         hdparm --user-master user --security-unlock Pass "${target_disk}"
       fi
 
+      partprobe
       echo 'If you see no errors, you may re-plug the disk or reboot the device.'
       echo 
       sleep 2

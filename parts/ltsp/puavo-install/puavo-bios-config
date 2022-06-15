@@ -53,7 +53,7 @@ use HP BIOS utilities
 exit
 EOF
 )
-  printf "%s" "$choices" | fzf --height=7 --layout=reverse-list
+  printf "%s" "$choices" | fzf --height=7 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
 }
 
 printf "\n"
