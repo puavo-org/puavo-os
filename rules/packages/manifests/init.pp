@@ -385,6 +385,8 @@ class packages {
     , 'gstreamer1.0-plugins-good'
     , 'gstreamer1.0-plugins-ugly'
     , 'gstreamer1.0-tools'
+    , 'handbrake'
+    , 'handbrake-cli'
     , 'kaffeine'
     , 'libdvd-pkg'
     , 'libdvdread8'
