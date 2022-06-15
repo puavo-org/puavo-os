@@ -765,9 +765,9 @@ class packages {
 
 
   packages::kernels::kernel_package {
-    '5.10.0-14-amd64':
+    '5.10.0-15-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-5.10.0-14-amd64';
+      package_name => 'linux-image-5.10.0-15-amd64';
 
     '5.16.0-0.bpo.4-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module
