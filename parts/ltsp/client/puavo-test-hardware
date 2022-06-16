@@ -47,7 +47,6 @@ log_usb() {
       while sleep 0.5
       do
         if [ "$(lsusb -t 2>/dev/null | grep '        |__ Port 4')" ]; then
-
           echo "Right" > "$usb1stdout"
         fi
         if [ "$(lsusb -t 2>/dev/null | grep ' Port 4:' | grep -v '        |__')" ]; then
@@ -327,7 +326,6 @@ run_mouse_test() {
   sleep 1
   timeout -k 1 4 evtest "$1" || true
   sleep 1
-
 }
 
 test_mouse() {
@@ -415,8 +413,6 @@ test_audio() {
   ### On some devices, VUMeter does not register changes in audio levels if we play the test with normal sensitivity. Probably something to do with the microphones location.
   ### We do not want to break our ears by boosting the audio itself, so lets just boost microphone input by a couple levels (a few dozen dB).
   amixer --card 'PCH' set 'Internal Mic Boost' 2
-
-  ### This file needs to be put somewhere.
   aplay --device="${alsadev}" \
         /usr/share/sounds/puavo/speakertest.wav & \
   arecord --vumeter=stereo -f cd -d 4 --device="${alsadev}" /dev/null && \
@@ -506,10 +502,14 @@ power_status() {
   fi
 }
 
+check_if_root() {
 if [ "$(id -u)" -ne 0 ]; then
-  echo 'Tests must be run as root!' >&2
-  return 1
+  echo 'Not run as root, some tests might not work!
+Choose a test'
+else
+  echo 'Choose a test'
 fi
+}
 
 teststdout=$(mktemp /tmp/puavo-test-hardware-bluetooth-stdout.XXXXXX)
 teststderr=$(mktemp /tmp/puavo-test-hardware-bluetooth-stderr.XXXXXX)
@@ -531,7 +531,7 @@ test_power &
 mainmenu_default_item='audio'
 while true; do
   response=$(dialog --stdout --default-item "$mainmenu_default_item" \
-                    --menu 'Choose a test' 18 50 10 \
+                    --menu "$(check_if_root)" 18 50 10 \
                audio      'Test audio devices' \
                disks      'Test disks' \
                keyboard   'Test keyboard' \
