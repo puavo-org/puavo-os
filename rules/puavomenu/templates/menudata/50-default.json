@@ -728,6 +728,10 @@
         "openttd": {
             "tags": "default"
         },
+        "org.cryptomator.Cryptomator": {
+            "icon": "org.cryptomator.Cryptomator256.png",
+            "tags": "default"
+        },
         "org.gnome.Calculator": {
             "icon": "gnome-calculator",
             "tags": "default"
@@ -1551,6 +1555,7 @@
                 "gftp",
                 "filezilla",
                 "org.gnome.seahorse.Application",
+                "org.cryptomator.Cryptomator",
                 "veracrypt",
                 "system-config-printer",
                 "pavucontrol",

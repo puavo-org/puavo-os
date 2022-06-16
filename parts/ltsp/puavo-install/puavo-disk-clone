@@ -17,7 +17,7 @@ ask_restore_image() {
     find "$image_dir" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 \
       | xargs -0 --no-run-if-empty -n 1 basename)
   [ -n "$available_images" ] || return 1
-  printf %s "$available_images" | fzf -1 --height=1 --layout=reverse-list
+  printf %s "$available_images" | fzf -1 --height=5 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
 }
 
 bootserver_address=$(cat /run/puavo/nbd-server 2>/dev/null) || true
