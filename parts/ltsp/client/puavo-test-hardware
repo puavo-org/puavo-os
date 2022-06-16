@@ -40,7 +40,7 @@ test_camera() {
 }
 
 log_usb() {
-  product_name=$(dmidecode -s system-product-name)
+  product_name=$(cat /sys/class/dmi/id/product_name)
   case "${product_name}" in
     ### Look for different ports if device is a G1 or G2.
     "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
