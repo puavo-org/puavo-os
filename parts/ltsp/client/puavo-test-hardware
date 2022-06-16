@@ -1,9 +1,79 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 
+cleanup() {
+rm -f "$teststdout" "$teststderr" "$camerastdout" "$usb1stdout" \
+      /tmp/00000001.jpg /tmp/00000002.jpg "$usb2stdout" "$wifistdout" \
+      "$wifistderr" "$power1stdout" "$power2stdout"
+}
+
+trap cleanup EXIT
+
+analyze_image() {
+mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 2 -sstep 100 -vo jpeg:outdir="/tmp/" 2> /dev/null &&
+
+python3 -c '
+import matplotlib.image as mpimg
+import numpy as np
+img = mpimg.imread("/tmp/00000002.jpg")
+
+data = np.unique(img.reshape(-1, img.shape[-1]), axis=0, return_counts=True)[0]
+
+print(len(data))' > "$camerastdout" 2>/dev/null &
+}
+
+camera_test_status() {
+  if [ -z "$(cat "$camerastdout")" ]; then
+    echo "Scanning...";
+  else
+    if [ "$(cat "$camerastdout")" -gt 20000 ]; then
+      echo "OK ""$(cat "$camerastdout")";
+    else
+      echo "Bad camera ""$(cat "$camerastdout")";
+    fi
+  fi
+}
+
 test_camera() {
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
+}
+
+log_usb() {
+  product_name=$(dmidecode -s system-product-name)
+  case "${product_name}" in
+    ### Look for different ports if device is a G1 or G2.
+    "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
+      while sleep 0.5
+      do
+        if [ "$(lsusb -t 2>/dev/null | grep '        |__ Port 4')" ]; then
+          echo "Right" > "$usb1stdout"
+        fi
+        if [ "$(lsusb -t 2>/dev/null | grep ' Port 4:' | grep -v '        |__')" ]; then
+          echo "Left " > "$usb2stdout"
+        fi
+      done
+      ;;
+    *)
+      while sleep 0.5
+      do
+        if [ "$(lsusb -t 2>/dev/null | grep ' Port 1:' | grep -v '        |__')" ]; then
+          echo "Right" > "$usb1stdout"
+        fi
+        if [ "$(lsusb -t 2>/dev/null | grep ' Port 2:' | grep -v '        |__')" ]; then
+          echo "Left " > "$usb2stdout"
+        fi
+      done
+      ;;
+  esac
+}
+
+usb_status() {
+  if [ -z "$(cat "$usb2stdout")$(cat "$usb1stdout")" ]; then
+    echo "Scanning..."
+  else
+    echo "$(cat "$usb2stdout")$(cat "$usb1stdout")"
+  fi
 }
 
 test_disks() {
@@ -90,6 +160,8 @@ ruby_test_keyboard_script=$(cat <<'EOF'
     puts "You need to use the real keyboard, this does not work through ssh."
     puts "This will quit in case no keyboard input happens in 10 seconds."
     puts ""
+    puts "Remember to check the physical layout of the keyboard! (QWERTY/QWERTZ/AZERTY etc.)"
+    puts ""
 
     $lines.each { |line| puts "    #{ line }" }
   end
@@ -128,6 +200,10 @@ ruby_test_keyboard_script=$(cat <<'EOF'
        13 => [ 1, 41, 1 ],    # ´
        14 => [ 1, 45, 9 ],    # BACKSPACE
       102 => [ 1, 57, 4 ],    # HOME
+       69 => [ 1, 67, 3 ],    # NUMLOCK
+       98 => [ 1, 71, 1 ],    # Numpad /
+       55 => [ 1, 73, 1 ],    # Numpad *
+       74 => [ 1, 75, 1 ],    # Numpad -
 
        15 => [ 2, 0,  3 ],    # TAB
        16 => [ 2, 6,  1 ],    # Q
@@ -143,6 +219,10 @@ ruby_test_keyboard_script=$(cat <<'EOF'
        26 => [ 2, 38, 1 ],    # Å
        27 => [ 2, 42, 1 ],    # ¨
       104 => [ 2, 57, 4 ],    # PgUp
+       71 => [ 2, 67, 1 ],    # Numpad 7
+       72 => [ 2, 69, 1 ],    # Numpad 8
+       73 => [ 2, 71, 1 ],    # Numpad 9
+       78 => [ 2, 75, 1 ],    # Numpad +
 
        58 => [ 3,  0, 4 ],    # CAPS
        30 => [ 3,  6, 1 ],    # A
@@ -159,6 +239,9 @@ ruby_test_keyboard_script=$(cat <<'EOF'
        43 => [ 3, 42, 1 ],    # '
        28 => [ 3, 49, 5 ],    # ENTER
       109 => [ 3, 57, 4 ],    # PgDn
+       75 => [ 3, 67, 1 ],    # Numpad 4
+       76 => [ 3, 69, 1 ],    # Numpad 5
+       77 => [ 3, 71, 1 ],    # Numpad 6
 
        42 => [ 4,  0, 4 ],    # LSFT
        86 => [ 4,  5, 1 ],    # <
@@ -174,6 +257,9 @@ ruby_test_keyboard_script=$(cat <<'EOF'
        53 => [ 4, 35, 1 ],    # -
        54 => [ 4, 48, 6 ],    # RSHIFT
       107 => [ 4, 57, 3 ],    # END
+       79 => [ 4, 67, 1 ],    # Numpad 1
+       80 => [ 4, 69, 1 ],    # Numpad 2
+       81 => [ 4, 71, 1 ],    # Numpad 3
 
        29 => [ 5, 0,  4 ],    # CTRL
       125 => [ 5, 8,  3 ],    # WIN
@@ -186,15 +272,18 @@ ruby_test_keyboard_script=$(cat <<'EOF'
       103 => [ 5, 49, 2 ],    # Up
       108 => [ 5, 52, 4 ],    # Down
       106 => [ 5, 57, 5 ],    # Right
+       82 => [ 5, 67, 1 ],    # Numpad 0
+       83 => [ 5, 69, 1 ],    # Numpad ,
+       96 => [ 5, 71, 5 ],    # Numpad ENTER
     }
 
     $lines = [
       "ESC  F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 INSERT PSCR DELETE",
-      "§    1  2  3  4  5  6  7  8  9   0   +   ´   BACKSPACE   HOME",
-      "TAB   Q  W  E  R  T  Y  U  I  O   P   Å   ¨              PgUp",
-      "CAPS  A  S  D  F  G  H  J  K  L   Ö   Ä   '      ENTER   PgDn",
-      "LSFT < Z  X  C  V  B  N  M  ,  .   -            RSHIFT   END",
-      "CTRL    WIN Alt   SPACE  AltGr HAM CTRL     Left Up Down Right" ]
+      "§    1  2  3  4  5  6  7  8  9   0   +   ´   BACKSPACE   HOME      NUM / * -",
+      "TAB   Q  W  E  R  T  Y  U  I  O   P   Å   ¨              PgUp      7 8 9   +",
+      "CAPS  A  S  D  F  G  H  J  K  L   Ö   Ä   '      ENTER   PgDn      4 5 6",
+      "LSFT < Z  X  C  V  B  N  M  ,  .   -            RSHIFT   END       1 2 3",
+      "CTRL    WIN Alt   SPACE  AltGr HAM CTRL     Left Up Down Right     0 , ENTER" ]
   }
 
   if $_.match(/^keycode *(\d+) release/) then
@@ -237,7 +326,6 @@ run_mouse_test() {
   sleep 1
   timeout -k 1 4 evtest "$1" || true
   sleep 1
-
 }
 
 test_mouse() {
@@ -304,20 +392,19 @@ test_mouse() {
 }
 
 test_audio() {
-  local audio_test_status
   local alsadev
   audio_test_status=0
   product_name=$(dmidecode -s system-product-name)
   case "${product_name}" in
-    ### Could we just use *G1* and *G2* instead of the one below? Needs testing..
-    ### For now, this suffices.
+    ### Use different alsadev value if device is G1 or G2.
     "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
       alsadev='hw:1,0'
       ### Let's also raise the volume a bit, since G1/G2 speakers seem to be quieter than newer gen.
       amixer --card 'PCH' set 'Master' 85%
       ;;
     *)
-      alsadev='hw:0,0'
+      ### Let's just use the system default for all other models.
+      alsadev='default'
       ;;
   esac
 
@@ -326,93 +413,149 @@ test_audio() {
   ### On some devices, VUMeter does not register changes in audio levels if we play the test with normal sensitivity. Probably something to do with the microphones location.
   ### We do not want to break our ears by boosting the audio itself, so lets just boost microphone input by a couple levels (a few dozen dB).
   amixer --card 'PCH' set 'Internal Mic Boost' 2
-
-  ### This file needs to be put somewhere.
   aplay --device="${alsadev}" \
         /usr/share/sounds/puavo/speakertest.wav & \
   arecord --vumeter=stereo -f cd -d 4 --device="${alsadev}" /dev/null && \
-  echo 'Recording finished.' \
-      || audio_test_status=1
+  echo 'Recording finished.'
 
   sleep 2
 }
 
 test_wifi() {
-  local wifiscan_results
-
   ifconfig wlan0 up || true
 
-  wifiscan_results=$(
-    iwlist scan 2>/dev/null \
-      | ruby -lne '
-          BEGIN { networks = {} }
+  iwlist wlan0 scan 2>"$wifistderr" \
+    | ruby -lne '
+        BEGIN { networks = {} }
 
-          if $_.match(/Signal level=(.*?) dBm/) then
-            signal_level = $1
+        if $_.match(/Signal level=(.*?) dBm/) then
+          signal_level = $1
+        end
+
+        if $_.match(/ESSID:"(.*?)"/) then
+          essid = $1
+          if signal_level then
+            networks[essid] = signal_level
           end
+        end
 
-          if $_.match(/ESSID:"(.*?)"/) then
-            essid = $1
-            if signal_level then
-              networks[essid] = signal_level
-            end
+        END {
+          networks_list = networks.keys.sort_by do |i,j|
+                            networks[i].to_i <= networks[j].to_i
+                          end
+          networks_list.each do |essid|
+            printf("%-30s %s dBm\n", essid, networks[essid])
           end
-
-          END {
-            networks_list = networks.keys.sort_by do |i,j|
-                              networks[i].to_i <= networks[j].to_i
-                            end
-            networks_list.each do |essid|
-              printf("%-30s %s dBm\n", essid, networks[essid])
-            end
-          }
-        ')
-  if [ -z "$wifiscan_results" ]; then
-    wifiscan_results='No networks found.
-Maybe a problem with wireless interface?'
-    dialog --no-collapse --msgbox "$wifiscan_results" 6 48
-    return 1
-  fi
-
-  dialog --no-collapse --msgbox "$wifiscan_results" 20 48
+        }
+      '
 }
 
+wifi_status() {
+  wifi="$(wc --lines "$wifistdout" | awk '{print $1}')"
+  err="$(wc --lines "$wifistderr" | awk '{print $1}')"
+  if [ "$wifi" -gt "0" ]; then
+    echo "OK"
+  elif [ "$err" -gt "0" ]; then
+    echo "Bad wifi"
+  elif [ "$wifi" -eq "0" ] && [ "$err" -eq "0" ]; then
+    echo "Scanning..."
+  fi
+}
+
+show_wifi() {
+  a="$(wc --lines "$wifistdout" | awk '{print $1}')"
+  if [ "$a" -eq "0" ]; then
+    results="$(cat "$wifistderr")
+
+No networks found.
+Maybe a problem with wireless interface?"
+    dialog --no-collapse --msgbox "$results" 9 48
+    return 1
+  fi
+  results=$(cat "$wifistdout")
+  dialog --no-collapse --msgbox "$results" 20 48
+}
+
+test_power() {
+  ac1=$(cat "/sys/class/power_supply/AC/online")
+
+  while sleep 0.5
+  do
+    if [ "${ac1}" -eq "1" ] && [ "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
+      echo "Dock OK " > "$power1stdout"
+      SECONDS=0
+    fi
+    if [ "$SECONDS" -gt "2" ]; then
+      ac2=$(cat "/sys/class/power_supply/AC/online")
+      if [ "${ac2}" -eq "1" ] && [ ! "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
+        echo "AC OK" > "$power2stdout"
+      fi
+    fi
+  done
+}
+
+power_status() {
+  if [ -z "$(cat "$power1stdout")$(cat "$power2stdout")" ]; then
+    echo "Scanning..."
+  else
+    echo "$(cat "$power1stdout")$(cat "$power2stdout")"
+  fi
+}
+
+check_if_root() {
 if [ "$(id -u)" -ne 0 ]; then
-  echo 'Tests must be run as root!' >&2
-  return 1
+  echo 'Not run as root, some tests might not work!
+Choose a test'
+else
+  echo 'Choose a test'
 fi
+}
 
 teststdout=$(mktemp /tmp/puavo-test-hardware-bluetooth-stdout.XXXXXX)
 teststderr=$(mktemp /tmp/puavo-test-hardware-bluetooth-stderr.XXXXXX)
+camerastdout=$(mktemp /tmp/puavo-test-hardware-camera-stdout.XXXXXX)
+usb1stdout=$(mktemp /tmp/puavo-test-hardware-usb1-stdout.XXXXXX)
+usb2stdout=$(mktemp /tmp/puavo-test-hardware-usb2-stdout.XXXXXX)
+wifistdout=$(mktemp /tmp/puavo-test-hardware-wifi-stdout.XXXXXX)
+wifistderr=$(mktemp /tmp/puavo-test-hardware-wifi-stderr.XXXXXX)
+power1stdout=$(mktemp /tmp/puavo-test-hardware-power1-stdout.XXXXXX)
+power2stdout=$(mktemp /tmp/puavo-test-hardware-power2-stdout.XXXXXX)
 
+analyze_image
+
+log_usb &
 hcitool scan > "$teststdout" 2> "$teststderr" &
+test_wifi > "$wifistdout" &
+test_power &
 
 mainmenu_default_item='audio'
 while true; do
   response=$(dialog --stdout --default-item "$mainmenu_default_item" \
-                    --menu 'Choose a test' 15 44 8 \
+                    --menu "$(check_if_root)" 18 50 10 \
                audio      'Test audio devices' \
-               camera     'Test webcam' \
                disks      'Test disks' \
                keyboard   'Test keyboard' \
                mouse      'Test mouse/mice' \
-               wifi       'Test wireless networking' \
+               wifi       "$(wifi_status)" \
                bluetooth  "$(bt_test_status)" \
+               camera     "$(camera_test_status)" \
+               power      "$(power_status)" \
+               usb        "$(usb_status)" \
                quit       'Exit tests') || true
 
   case "$response" in
-    audio)      mainmenu_default_item=camera;     test_audio      || true ;;
-    camera)     mainmenu_default_item=keyboard;   test_camera     || true ;;
+    audio)      mainmenu_default_item=keyboard;   test_audio      || true ;;
     disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
     keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
-    mouse)      mainmenu_default_item=wifi;       test_mouse      || true ;;
-    wifi)       mainmenu_default_item=bluetooth;  test_wifi       || true ;;
+    mouse)      mainmenu_default_item=power;      test_mouse      || true ;;
+    wifi)       mainmenu_default_item=quit;       show_wifi       || true ;;
     bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
+    camera)     mainmenu_default_item=quit;       test_camera     || true ;;
+    power)      mainmenu_default_item=quit;                          true ;;
+    usb)        mainmenu_default_item=quit;                          true ;;
     quit|'')    break ;;
     *)          echo 'Unknown option' >&2 ;;
   esac
 done
-
-rm -f "$teststdout" "$teststderr"
 
 exit 0
