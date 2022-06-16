@@ -189,6 +189,7 @@ class packages {
     , 'grub-pc-bin'
     , 'ksh'
     , 'libc++1'        #needed by discord
+    , 'libjffi-jni'    #needed by cryptomator
     , 'libpam-ccreds'
     , 'libpam-krb5'
     , 'libpam-ldapd'
