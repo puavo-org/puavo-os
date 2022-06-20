@@ -2,17 +2,23 @@
 
 set -eu
 
+set -x; exec 2>/tmp/puavo-crypthome.$$.log
+
 logmsg() {
   logger -t puavo-crypthome "$@"
 }
 
 cmd="${1:-}"
-username="${2:-}"
 
+username="${PAM_USER:-}"
 if [ -z "$username" ]; then
-  if ! username=$(id -nu); then
-    logmsg -p user.err 'could not determine user'
-    exit 1
+  username=${SUDO_USER:-}
+  if [ -z "$username" ]; then
+    username=$(id -nu 2>/dev/null) || true
+    if [ -z "$username" ]; then
+      logmsg -p user.err 'could not determine user'
+      exit 1
+    fi
   fi
 fi
 
@@ -25,14 +31,24 @@ if [ -z "$user_uid" -o -z "$user_gid" -o -z "$user_homedir" ]; then
   return 1
 fi
 
-gocryptfs_dir="/home/.gocryptfs/${user_uid}"
+gocryptfs_basedir="/home/.gocryptfs"
+gocryptfs_dir="${gocryptfs_basedir}/${user_uid}"
+migration_dir="${gocryptfs_basedir}/migration"
+trash_dir="${gocryptfs_basedir}/trash"
+
+crypthome_migration_dir="${migration_dir}/${user_uid}.crypt"
+plainhome_migration_dir="${migration_dir}/${user_uid}.plain"
+
 puavo_dir="${user_homedir}/.puavo"
 mgmt_request_path="${puavo_dir}/crypthome_mgmt_request.json"
 
+sudoers_file='/etc/sudoers.d/puavo-crypthome'
+
 create_encrypted_home() {
-  local gocryptfs_tmpdir user_password
+  local gocryptfs_tmpdir init_from_skel status user_password
 
   user_password=$1
+  init_from_skel=$2
 
   logmsg -p user.notice \
          "creating an encrypted home for ${username} to ${gocryptfs_dir}"
@@ -55,31 +71,45 @@ create_encrypted_home() {
     return 1
   fi
 
-  if ! cp -RT /etc/skel "$user_homedir" \
-    || ! chown -R "${user_uid}:${user_gid}" "$user_homedir" \
-                  "${gocryptfs_tmpdir}/gocryptfs.conf" \
-                  "${gocryptfs_tmpdir}/gocryptfs.diriv"; then
-      fusermount -uz "$user_homedir" || true
-      rm -rf "$gocryptfs_tmpdir" || true
-      return 1
+  status=0
+
+  if $init_from_skel && ! cp -RT /etc/skel "$user_homedir"; then
+    status=1
+  fi
+
+  if [ "$status" -eq 0 ] && \
+    ! chown -R "${user_uid}:${user_gid}" "$user_homedir" \
+               "${gocryptfs_tmpdir}/gocryptfs.conf" \
+               "${gocryptfs_tmpdir}/gocryptfs.diriv"; then
+      status=1
   fi
 
   fusermount -uz "$user_homedir" || true
-  mv "$gocryptfs_tmpdir" "$gocryptfs_dir" || return 1
+
+  if [ "$status" -ne 0 ]; then
+    rm -rf "$gocryptfs_tmpdir" || true
+    return $status
+  fi
+
+  mv "$gocryptfs_tmpdir" "$gocryptfs_dir"
 
   logmsg -p user.notice "created an encrypted directory for user ${user_uid}"
 }
 
 ensure_encrypted_home() {
-  local user_password
+  local init_from_skel user_password
 
   if has_encrypted_home; then
     return 0
   fi
 
-  user_password=$1
+  # XXX if user already has a plainhome dir,
+  # XXX this should set up a migration to a crypthome dir
 
-  if ! create_encrypted_home "$user_password"; then
+  user_password=$1
+  init_from_skel=$2
+
+  if ! create_encrypted_home "$user_password" "$init_from_skel"; then
     logmsg -p user.err "failed to create an encrypted homedir for $username"
     return 1
   fi
@@ -87,44 +117,67 @@ ensure_encrypted_home() {
   return 0
 }
 
-setup_migration_dir() {
-  local suffix
-  suffix=$1
-  install -d -o "$user_uid" -g "$user_gid" -m 700 "${user_homedir}.${suffix}"
-}
-
 handle_login() {
-  local operation user_password
+  local force_crypthome operation user_password
 
   user_password=$1
 
-  if ! ensure_encrypted_home "$user_password"; then
-    logmsg -p user.err "failed in ensuring an encrypted home for ${username}"
-    return 1
+  # take the trash out
+  rm -rf "$sudoers_file" "$trash_dir"
+
+  # migration in progress
+  if [ -d "$plainhome_migration_dir" ]; then
+    setup_migration_to_crypthome "$user_password"
+    return 0
+  elif [ -d "$crypthome_migration_dir" ]; then
+    setup_migration_to_plainhome "$user_password"
+    return 0
   fi
 
-  if ! mount_encrypted_home "$user_password"; then
-    logmsg -p user.err "failed to mount encrypted home for ${username}"
-    return 1
+  # XXX this could come from puavo-conf or some such
+  force_crypthome=false
+
+  if $force_crypthome; then
+    if ! ensure_encrypted_home "$user_password" true; then
+      logmsg -p user.err "failed in ensuring an encrypted home for ${username}"
+      return 1
+    fi
   fi
 
-  logmsg -p user.info "encrypted home mounted for ${username}"
+  if has_encrypted_home; then
+    if ! mount_encrypted_home "$user_homedir" "$user_password"; then
+      logmsg -p user.err "failed to mount encrypted home for ${username}"
+      if ! setup_password_change "$user_password"; then
+        logmsg -p user.err "failed to set up a temporary home for $username"
+        return 1
+      fi
+      return 0
+    fi
 
-  operation=$(jq -r .operation "$mgmt_request_path" 2>/dev/null) || true
-  case "$operation" in
-    change-password)
-      ;;
-    migrate-to-crypthome)
-      setup_migration_dir crypt
-      ;;
-    migrate-to-plainhome)
-      setup_migration_dir plain
-      ;;
-    *)
-      logmsg -p user.err \
-        "not handling an unsuported homedir operation for ${username}"
-      ;;
-  esac
+    logmsg -p user.info "encrypted home mounted for ${username}"
+
+    operation=$(jq -r .operation "$mgmt_request_path" 2>/dev/null) || true
+
+    case "$operation" in
+      migrate-to-plainhome) setup_migration_to_plainhome "$user_password" ;;
+      '')                                                                 ;;
+      *) logmsg -p user.err \
+                   "not handling an unsupported homedir op for ${username}"
+         return 1
+         ;;
+    esac
+  else
+    operation=$(jq -r .operation "$mgmt_request_path" 2>/dev/null) || true
+
+    case "$operation" in
+      migrate-to-crypthome) setup_migration_to_crypthome "$user_password" ;;
+      '') ;;
+      *) logmsg -p user.err \
+                   "not handling an unsupported homedir op for ${username}"
+         return 1
+         ;;
+    esac
+  fi
 
   return 0
 }
@@ -134,102 +187,216 @@ has_encrypted_home() {
 }
 
 migrate_to_crypthome() {
-  # XXX --remove-source-files is also needed
   # XXX should check if this is possible before starting
   # XXX (or accepting to be done)
-  rsync -aHS --no-inc-recursive --outbuf=none \
-        --info=progress2 "${user_homedir}/" "${user_homedir}.crypt/" 2>&1
+  # XXX one problem with this rsync is that it gets run as owner
+  # XXX and that cannot copy files which are not owned by ordinary user
+  rsync -aHS --info=progress2 --no-inc-recursive --outbuf=none \
+        --remove-source-files "${plainhome_migration_dir}/" \
+                              "${crypthome_migration_dir}/" 2>&1
+  install -d -o root -g root -m 700 "$trash_dir"
+  mv "$plainhome_migration_dir" "${trash_dir}/"
+  rm -rf "$trash_dir"
 }
 
 migrate_to_plainhome() {
-  # XXX --remove-source-files is also needed
   # XXX should check if this is possible before starting
   # XXX (or accepting to be done)
-  rsync -aHS --no-inc-recursive --outbuf=none \
-        --info=progress2 "${user_homedir}/" "${user_homedir}.plain/" 2>&1
+  # XXX one problem with this rsync is that it gets run as owner
+  # XXX and that cannot copy files which are not owned by ordinary user
+  rsync -aHS --info=progress2 --no-inc-recursive --outbuf=none \
+        --remove-source-files "${crypthome_migration_dir}/" \
+                              "${plainhome_migration_dir}/" 2>&1
+  install -d -o root -g root -m 700 "$trash_dir"
+  mv "$crypthome_migration_dir" "${trash_dir}/"
+  rm -rf "$trash_dir"
 }
 
 mount_encrypted_home() {
-  local user_password
+  local target_dir user_password
 
-  user_password=$1
+  target_dir=$1
+  user_password=$2
 
-  install -d -o "$user_uid" -g "$user_gid" -m 700 "$user_homedir"
-  if [ -z "$(find "$user_homedir" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
+  install -d -o "$user_uid" -g "$user_gid" -m 700 "$target_dir"
+  if [ -z "$(find "$target_dir" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
     # directory is not empty, that is a problem, something is wrong
-    logmsg -p user.err "user home directory ${user_homedir} is not empty"
+    logmsg -p user.err "mount target directory ${target_dir} is not empty"
     return 1
   fi
   if ! printf "%s\n" "$user_password" \
-    | gocryptfs -allow_other "$gocryptfs_dir" "$user_homedir"; then
+    | gocryptfs -allow_other "$gocryptfs_dir" "$target_dir"; then
       logmsg -p user.err \
              "could not decrypt dir ${gocryptfs_dir} with user password"
-      if ! setup_home_pw_change "$user_password"; then
-        logmsg -p user.err "failed to set up a temporary home for $username"
-        return 1
-      fi
-      return 0
+      return 1
   fi
 
   return 0
 }
 
-setup_home_pw_change() {
-  local msg tmp_home user_password
-
-  user_password=$1
-
-  rmdir "$user_homedir"                                  || return 1
+prepare_tmphome() {
+  if [ -d "$user_homedir" ]; then
+    rmdir "$user_homedir" || return 1
+  fi
   tmp_home=$(mktemp -d /anon/tmphome_${username}.XXXXXX) || return 1
   mkdir -p "${tmp_home}/.puavo" "$user_homedir"          || return 1
+  printf %s "$tmp_home"                                  || return 1
+}
 
-  # encoding password with base64 also functions as a little bit of obfuscation
-  # in case some admin accidentally reads this file
-  printf %s "$user_password" \
-    | base64 -w 0 | jq --null-input --rawfile user_password /dev/stdin '
-      .operation = "change-password" | .new_password = $user_password
-    ' > "${tmp_home}/.puavo/crypthome_mgmt_request.json" || return 1
+mount_tmphome() {
+  local tmp_home
+
+  tmp_home=$1
 
   chown -R "${user_uid}:${user_gid}" "$tmp_home" "$user_homedir" || return 1
   mount --bind "$tmp_home" "$user_homedir"                       || return 1
 
-  msg="a temporary home created for ${user_uid}"
-  msg="${msg} for home encryption password change"
-  logmsg -p user.info "$msg"
+  logmsg -p user.info "a temporary home mounted for ${user_uid}"
 }
 
-test_mounted_homedir() {
-  local mount_type
+set_operation() {
+  local operation user_password
+
+  operation=$1
+
+  mkdir -p "$puavo_dir"
+
+  case "$operation" in
+    change-password)
+      user_password=${2:-}
+      # encoding password with base64 also functions as a little bit of
+      # obfuscation in case some admin accidentally reads this file
+      printf %s "$user_password" \
+        | base64 -w 0 | jq --null-input --rawfile user_password /dev/stdin '
+          .operation = "change-password" | .new_password = $user_password
+        ' > "$mgmt_request_path"
+      ;;
+    migrate-to-crypthome|migrate-to-plainhome)
+      jq --null-input --arg op "$operation" '.operation = $op' \
+        > "$mgmt_request_path"
+      ;;
+  esac
+}
+
+setup_password_change() {
+  local msg tmp_home user_password
+
+  user_password=$1
+
+  tmp_home=$(prepare_tmphome) || return 1
+
+  mount_tmphome "$tmp_home"
+
+  set_operation change-passord "$user_password"
+
+  logmsg -p user.info "set up a change-password environment"
+}
+
+# XXX what if, when a migration gets interrupted and a user logs out,
+# XXX and thus a migration is in progress, user password is changed
+# XXX so it does not match the encrypted dir password ... what should happen?
+
+setup_migration_to_crypthome() {
+  local user_password
+
+  user_password=$1
+
+  if [ -d "$user_homedir" ]; then
+    if [ -d "$plainhome_migration_dir" ]; then
+      logmsg -p user.err "double homedir issue on migration on $username"
+      return 1
+    else
+      install -d -o root -g root -m 700 "$migration_dir"
+      mv "$user_homedir" "$plainhome_migration_dir"
+    fi
+  elif [ ! -d "$plainhome_migration_dir" ]; then
+    logmsg -p user.err "no homedir to migrate from on user $username"
+    return 1
+  fi
+  rm -f "${plainhome_migration_dir}/.puavo/crypthome_mgmt_request.json"
+
+  if ! ensure_encrypted_home "$user_password" false; then
+    logmsg -p user.err \
+              "could not ensure an encrypted migration home for user $username"
+    return 1
+  fi
+
+  if ! mount_encrypted_home "$crypthome_migration_dir" "$user_password"; then
+    logmsg -p user.err \
+              "could not mount an encrypted migration home for user $username"
+    return 1
+  fi
+
+  tmp_home=$(prepare_tmphome)
+  mount_tmphome "$tmp_home"
+
+  set_operation migrate-to-crypthome
+
+  # "#" is not a comment here, this is how to specify a user uid in sudoers
+  cat <<EOF > "$sudoers_file"
+#${user_uid}       ALL=(ALL) NOPASSWD: /usr/bin/puavo-crypthome migrate-to-crypthome
+EOF
+}
+
+setup_migration_to_plainhome() {
+  local user_password
+
+  user_password=$1
+
+  # we want encrypted home to be in a different place for migration
+  unmount_encrypted_home
+  if ! mount_encrypted_home "$crypthome_migration_dir" "$user_password"; then
+    logmsg -p user.err \
+              "could not mount encrypted home for migration for user $username"
+    return 1
+  fi
+  rm -f "${crypthome_migration_dir}/.puavo/crypthome_mgmt_request.json"
+
+  install -d -o "$user_uid" -g "$user_gid" -m 700 "$plainhome_migration_dir"
+
+  tmp_home=$(prepare_tmphome)
+  mount_tmphome "$tmp_home"
+
+  set_operation migrate-to-plainhome
+
+  cat <<EOF > "$sudoers_file"
+${user_uid}       ALL=(ALL) NOPASSWD: /usr/bin/puavo-crypthome migrate-to-plainhome
+EOF
+}
+
+test_mounted_dir() {
+  local mntdir mount_type
 
   mount_type=$1
+  mntdir=$2
+
   mount -t "$mount_type" \
-    | awk -v user_homedir="$user_homedir" '
+    | awk -v mntdir="$mntdir" '
         BEGIN { status = 1 }
-        $3 == user_homedir { status = 0 }
+        $3 == mntdir { status = 0 }
         END { exit(status) }
       '
 }
 
 request_migration_to_crypthome() {
+  # XXX this should actually make sure that the _mounted_ home is crypthome
   if has_encrypted_home; then
     logmsg -p user.err 'already using an encrypted home'
     return 1
   fi
 
-  mkdir -p "${user_homedir}/.puavo" || return 1
-  jq --null-input '.operation = "migrate-to-crypthome"' \
-    > "${user_homedir}/.puavo/crypthome_mgmt_request.json" || return 1
+  mkdir -p "${user_homedir}/.puavo"
+  set_operation migrate-to-crypthome
 }
 
 request_migration_to_plainhome() {
+  # XXX this should actually make sure that the _mounted_ home is plainhome
   if ! has_encrypted_home; then
     logmsg -p user.err 'not using an encrypted home to migrate from'
     return 1
   fi
 
-  mkdir -p "${user_homedir}/.puavo" || return 1
-  jq --null-input '.operation = "migrate-to-plainhome"' \
-    > "${user_homedir}/.puavo/crypthome_mgmt_request.json" || return 1
+  set_operation migrate-to-plainhome
 }
 
 unmount_encrypted_home() {
@@ -241,14 +408,21 @@ unmount_encrypted_home() {
     return 0
   fi
 
-  if test_mounted_homedir fuse.gocryptfs; then
+  if test_mounted_dir fuse.gocryptfs "$user_homedir"; then
     if fusermount -uz "$user_homedir"; then
       logmsg -p user.err 'could not unmount encrypted home directory'
       unmount_status=1
     fi
   fi
 
-  if test_mounted_homedir tmpfs; then
+  if test_mounted_dir fuse.gocryptfs "$crypthome_migration_dir"; then
+    if fusermount -uz "$crypthome_migration_dir"; then
+      logmsg -p user.err 'could not unmount encrypted home migration directory'
+      unmount_status=1
+    fi
+  fi
+
+  if test_mounted_dir tmpfs "$user_homedir"; then
     if ! umount -l "$user_homedir"; then
       logmsg -p user.err 'could not unmount temporary home directory'
       unmount_status=1

@@ -10,16 +10,12 @@ logmsg() {
   logger -t puavo-manage-homedir "$@"
 }
 
-username=${1:-}
-
-if [ -z "$username" ]; then
-  if [ -z "${PAM_USER:-}" ]; then
-    logmsg -p user.err 'no username given as an argument'
-    exit 1
-  fi
-
-  username="$PAM_USER"
+if [ -z "${PAM_USER:-}" ]; then
+  logmsg -p user.err 'no username given as an argument'
+  exit 1
 fi
+
+username="$PAM_USER"
 
 user_homedir="$(getent passwd "$username" | awk -F: '{ print $6 }')" || true
 if [ -z "$user_homedir" ]; then
@@ -30,7 +26,7 @@ fi
 user_password=''
 
 if [ "${PAM_TYPE:-}" = 'close_session' ]; then
-  puavo-crypthome unmount-encrypted-home "$username" || exit 1
+  puavo-crypthome unmount-encrypted-home || exit 1
   exit 0
 fi
 
@@ -38,7 +34,7 @@ if [ "${PAM_TYPE:-}" != 'auth' ]; then
   exit 0
 fi
 
-puavo-crypthome unmount-encrypted-home "$username" || exit 1
+puavo-crypthome unmount-encrypted-home || exit 1
 
 if ! user_password="$(cat)" || [ -z "$user_password" ]; then
   logmsg err 'could not read user password'
@@ -74,8 +70,7 @@ if [ -n "$current_home_uid" -a "$current_home_uid" != "$user_uid" ]; then
   fi
 fi
 
-# XXX for now this does not support plaintext home directories
-if ! printf %s "$user_password" | puavo-crypthome handle-login "$username"; then
+if ! printf %s "$user_password" | puavo-crypthome handle-login; then
   logmsg -p user.err \
     "error in running puavo-crypthome handle-login for ${username}"
   exit 1

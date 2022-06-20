@@ -38,7 +38,7 @@ proc change_password {new_pw} {
     exec -ignorestderr puavo-crypthome \
                          update-crypthome-password-from-password-form << $input
     set op_success true
-  } trap CHILDSTATUS {results options} {
+  } trap CHILDSTATUS {errmsg options} {
     set status [lindex [dict get $options -errorcode] 2]
     # 12 == password incorrect
     if {$status == 12} {
@@ -90,10 +90,16 @@ proc append_text_to_migrate_progress {cmd_f} {
     try {
       close $cmd_f
       set txt "SUCCESS!"
-    } on error {errmsg} {
-      set txt "ERROR: ${errmsg}"
+    } on error {errmsg options} {
+      set update_in_progress ""
+      # close might trigger an error when standard error contains something
+      if {[lindex [dict get $options -errorcode] 0] eq "NONE"} {
+        set txt "SUCCESS!"
+      } else {
+        # XXX should log the error with some more detail ?
+        set txt "ERROR OCCURRED DURING MIGRATION"
+      }
     }
-    set update_in_progress ""
   }
 
   if {$update_in_progress eq ""} {
@@ -123,11 +129,15 @@ proc migrate_operation {cmd} {
 }
 
 proc migrate_to_crypthome {} {
-  migrate_operation [list puavo-crypthome migrate-to-crypthome]
+  migrate_operation [
+    list sudo -n /usr/bin/puavo-crypthome migrate-to-crypthome
+  ]
 }
 
 proc migrate_to_plainhome {} {
-  migrate_operation [list puavo-crypthome migrate-to-plainhome]
+  migrate_operation [
+    list sudo -n /usr/bin/puavo-crypthome migrate-to-plainhome
+  ]
 }
 
 proc setup_ui {bg_color} {
