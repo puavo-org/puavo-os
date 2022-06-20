@@ -127,7 +127,13 @@ handle_login() {
 
   # migration in progress
   if [ -d "$plainhome_migration_dir" ]; then
-    setup_migration_to_crypthome "$user_password"
+    if [ ! -d "$gocryptfs_dir" ]; then
+      # if encrypted dir is missing, the operation must have succeeded
+      # XXX "$user_homedir" might exist
+      mv "$plainhome_migration_dir" "$user_homedir"
+    else
+      setup_migration_to_crypthome "$user_password"
+    fi
     return 0
   elif [ -d "$crypthome_migration_dir" ]; then
     setup_migration_to_plainhome "$user_password"
@@ -186,6 +192,9 @@ has_encrypted_home() {
   [ -d "$gocryptfs_dir" ]
 }
 
+# XXX migration directory management is probably not well thought out
+# XXX and there are probably issues
+
 migrate_to_crypthome() {
   # XXX should check if this is possible before starting
   # XXX (or accepting to be done)
@@ -208,8 +217,13 @@ migrate_to_plainhome() {
         --remove-source-files "${crypthome_migration_dir}/" \
                               "${plainhome_migration_dir}/" 2>&1
   install -d -o root -g root -m 700 "$trash_dir"
-  mv "$crypthome_migration_dir" "${trash_dir}/"
+  unmount_crypthome_migration_dir
+  mv "$gocryptfs_dir" "${trash_dir}/"
   rm -rf "$trash_dir"
+}
+
+is_dir_empty() {
+  [ -n "$(find "$1" -maxdepth 0 -type d -empty 2>/dev/null)" ]
 }
 
 mount_encrypted_home() {
@@ -219,7 +233,7 @@ mount_encrypted_home() {
   user_password=$2
 
   install -d -o "$user_uid" -g "$user_gid" -m 700 "$target_dir"
-  if [ -z "$(find "$target_dir" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
+  if ! is_dir_empty "$target_dir"; then
     # directory is not empty, that is a problem, something is wrong
     logmsg -p user.err "mount target directory ${target_dir} is not empty"
     return 1
@@ -235,9 +249,11 @@ mount_encrypted_home() {
 }
 
 prepare_tmphome() {
-  if [ -d "$user_homedir" ]; then
-    rmdir "$user_homedir" || return 1
+  if [ -d "$user_homedir" ] && ! is_dir_empty "$user_homedir"; then
+    logmsg -p user.err \
+           "can not prepare a tmphome over a non-empty home for $username"
   fi
+
   tmp_home=$(mktemp -d /anon/tmphome_${username}.XXXXXX) || return 1
   mkdir -p "${tmp_home}/.puavo" "$user_homedir"          || return 1
   printf %s "$tmp_home"                                  || return 1
@@ -303,8 +319,10 @@ setup_migration_to_crypthome() {
 
   if [ -d "$user_homedir" ]; then
     if [ -d "$plainhome_migration_dir" ]; then
-      logmsg -p user.err "double homedir issue on migration on $username"
-      return 1
+      if ! is_dir_empty "$user_homedir"; then
+        logmsg -p user.err "double homedir issue on migration on $username"
+        return 1
+      fi
     else
       install -d -o root -g root -m 700 "$migration_dir"
       mv "$user_homedir" "$plainhome_migration_dir"
@@ -334,7 +352,7 @@ setup_migration_to_crypthome() {
 
   # "#" is not a comment here, this is how to specify a user uid in sudoers
   cat <<EOF > "$sudoers_file"
-#${user_uid}       ALL=(ALL) NOPASSWD: /usr/bin/puavo-crypthome migrate-to-crypthome
+#${user_uid}    ALL=(ALL) NOPASSWD: /usr/bin/puavo-crypthome migrate-to-crypthome
 EOF
 }
 
@@ -360,7 +378,7 @@ setup_migration_to_plainhome() {
   set_operation migrate-to-plainhome
 
   cat <<EOF > "$sudoers_file"
-${user_uid}       ALL=(ALL) NOPASSWD: /usr/bin/puavo-crypthome migrate-to-plainhome
+#${user_uid}    ALL=(ALL) NOPASSWD: /usr/bin/puavo-crypthome migrate-to-plainhome
 EOF
 }
 
@@ -399,6 +417,16 @@ request_migration_to_plainhome() {
   set_operation migrate-to-plainhome
 }
 
+unmount_crypthome_migration_dir() {
+  if test_mounted_dir fuse.gocryptfs "$crypthome_migration_dir"; then
+    if ! fusermount -uz "$crypthome_migration_dir"; then
+      logmsg -p user.err 'could not unmount encrypted home migration directory'
+      return 1
+    fi
+    rmdir "$crypthome_migration_dir" 2>/dev/null || true
+  fi
+}
+
 unmount_encrypted_home() {
   local unmount_status user_homedir
 
@@ -409,15 +437,8 @@ unmount_encrypted_home() {
   fi
 
   if test_mounted_dir fuse.gocryptfs "$user_homedir"; then
-    if fusermount -uz "$user_homedir"; then
+    if ! fusermount -uz "$user_homedir"; then
       logmsg -p user.err 'could not unmount encrypted home directory'
-      unmount_status=1
-    fi
-  fi
-
-  if test_mounted_dir fuse.gocryptfs "$crypthome_migration_dir"; then
-    if fusermount -uz "$crypthome_migration_dir"; then
-      logmsg -p user.err 'could not unmount encrypted home migration directory'
       unmount_status=1
     fi
   fi
@@ -428,6 +449,8 @@ unmount_encrypted_home() {
       unmount_status=1
     fi
   fi
+
+  unmount_crypthome_migration_dir || unmount_status=1
 
   return $unmount_status
 }

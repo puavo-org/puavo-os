@@ -112,6 +112,11 @@ proc append_text_to_migrate_progress {cmd_f} {
 proc migrate_operation {cmd} {
   global update_in_progress
 
+  # XXX some kind of a button might be nice, that could allow
+  # XXX exit once done ... perhaps
+  # XXX "HOME MIGRATION IN PROGRESS DO NOT TURN OFF THE COMPUTER"
+  # XXX should be appropriate, with no buttons for control
+
   set bg_color "#93b176"        ; # XXX duplication
 
   setup_ui $bg_color
