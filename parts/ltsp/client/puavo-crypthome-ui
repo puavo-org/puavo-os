@@ -78,31 +78,43 @@ proc change_password {new_pw} {
 proc update_progress {txt} {
   global update_in_progress
 
-  .migrate.progress configure -text $txt
+  set percentage_string [lindex [regexp -inline -all -- {\S+} $txt] 1]
+  if {[regexp {(\d+)%} $percentage_string _ percentage]} {
+    .migrate.progress configure -value $percentage
+  }
+
   set update_in_progress ""
 }
 
 proc append_text_to_migrate_progress {cmd_f} {
   global update_in_progress
 
+  set success false
+  set error_txt ""
+
   set txt [gets $cmd_f]
   if {[eof $cmd_f]} {
     try {
       close $cmd_f
-      set txt "SUCCESS!"
+      set success true
     } on error {errmsg options} {
-      set update_in_progress ""
       # close might trigger an error when standard error contains something
       if {[lindex [dict get $options -errorcode] 0] eq "NONE"} {
-        set txt "SUCCESS!"
+        set success true
       } else {
         # XXX should log the error with some more detail ?
-        set txt "ERROR OCCURRED DURING MIGRATION"
+        set error_txt "ERROR OCCURRED DURING MIGRATION"
       }
     }
   }
 
-  if {$update_in_progress eq ""} {
+  if {$error_txt ne ""} {
+    .migrate.finished.error_message configure -text $error_txt
+    pack .migrate.finished.error_message
+  } elseif {$success} {
+    pack .migrate.finished.go_to_login
+    .migrate.progress configure -value 100
+  } elseif {$update_in_progress eq ""} {
     set update_in_progress [
       after 100 [list update_progress $txt]
     ]
@@ -117,14 +129,39 @@ proc migrate_operation {cmd} {
   # XXX "HOME MIGRATION IN PROGRESS DO NOT TURN OFF THE COMPUTER"
   # XXX should be appropriate, with no buttons for control
 
+  switch -- $cmd {
+    to_crypthome {
+      set cmd [list sudo -n /usr/bin/puavo-crypthome migrate-to-crypthome]
+      set infotext [
+        format "%s\n%s" \
+               "Migration to an encrypted home directory in progress," \
+               "do not turn off the computer."
+      ]
+    }
+    to_plainhome {
+      set cmd [list sudo -n /usr/bin/puavo-crypthome migrate-to-plainhome]
+      set infotext [format "%s\n%s" "Home directory decryption in progress," \
+                                    "do not turn off the computer."]
+    }
+    default {
+      error "internal error: unknown migrate operation"
+    }
+  }
+
   set bg_color "#93b176"        ; # XXX duplication
 
   setup_ui $bg_color
 
   frame .migrate -bg $bg_color
-  label .migrate.progress -bg $bg_color -font puavoFont
-  pack .migrate -fill y -expand 1
-  pack .migrate.progress -side left
+  frame .migrate.finished -bg $bg_color -height 50 -width 200
+  label .migrate.info -bg $bg_color -font puavoFont -text $infotext
+  ttk::progressbar .migrate.progress -length 400
+  button .migrate.finished.go_to_login -bg {#3388ff} -font puavoFont \
+         -text "Login again" -command { exit 0 }
+  label .migrate.finished.error_message -bg $bg_color -fg {#ff2222} \
+        -font puavoFont
+  pack .migrate -expand 1
+  pack .migrate.info .migrate.progress .migrate.finished -side top -pady 10
 
   set update_in_progress ""
 
@@ -134,15 +171,11 @@ proc migrate_operation {cmd} {
 }
 
 proc migrate_to_crypthome {} {
-  migrate_operation [
-    list sudo -n /usr/bin/puavo-crypthome migrate-to-crypthome
-  ]
+  migrate_operation to_crypthome
 }
 
 proc migrate_to_plainhome {} {
-  migrate_operation [
-    list sudo -n /usr/bin/puavo-crypthome migrate-to-plainhome
-  ]
+  migrate_operation to_plainhome
 }
 
 proc setup_ui {bg_color} {

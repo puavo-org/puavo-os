@@ -2,8 +2,6 @@
 
 set -eu
 
-set -x; exec 2>/tmp/puavo-crypthome.$$.log
-
 logmsg() {
   logger -t puavo-crypthome "$@"
 }
@@ -129,7 +127,8 @@ handle_login() {
   if [ -d "$plainhome_migration_dir" ]; then
     if [ ! -d "$gocryptfs_dir" ]; then
       # if encrypted dir is missing, the operation must have succeeded
-      # XXX "$user_homedir" might exist
+      # XXX shouldn't this make sure $user_homedir does not exist or is empty?
+      rmdir "$user_homedir" 2>/dev/null || true
       mv "$plainhome_migration_dir" "$user_homedir"
     else
       setup_migration_to_crypthome "$user_password"
@@ -198,8 +197,6 @@ has_encrypted_home() {
 migrate_to_crypthome() {
   # XXX should check if this is possible before starting
   # XXX (or accepting to be done)
-  # XXX one problem with this rsync is that it gets run as owner
-  # XXX and that cannot copy files which are not owned by ordinary user
   rsync -aHS --info=progress2 --no-inc-recursive --outbuf=none \
         --remove-source-files "${plainhome_migration_dir}/" \
                               "${crypthome_migration_dir}/" 2>&1
@@ -211,8 +208,6 @@ migrate_to_crypthome() {
 migrate_to_plainhome() {
   # XXX should check if this is possible before starting
   # XXX (or accepting to be done)
-  # XXX one problem with this rsync is that it gets run as owner
-  # XXX and that cannot copy files which are not owned by ordinary user
   rsync -aHS --info=progress2 --no-inc-recursive --outbuf=none \
         --remove-source-files "${crypthome_migration_dir}/" \
                               "${plainhome_migration_dir}/" 2>&1

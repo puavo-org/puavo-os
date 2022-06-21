@@ -1,6 +1,13 @@
-if [ -e "${HOME}/.puavo/crypthome_mgmt_request.json" ]; then
-  openbsd-cwm & cwm_pid=$!
+if mount -t tmpfs | awk -v mntdir="$HOME" '
+     BEGIN { status = 1 }
+     $3 == mntdir { status = 0 }
+     END { exit(status) }
+   ' && [ -e "${HOME}/.puavo/crypthome_mgmt_request.json" ]; then
+  mkdir -p ~/.config/i3
+  cat <<'EOF' > ~/.config/i3/config
+EOF
+  i3 & i3_pid=$!
   puavo-crypthome-ui
-  kill -9 "$cwm_pid"
+  kill -9 "$i3_pid"
   exit 0
 fi
