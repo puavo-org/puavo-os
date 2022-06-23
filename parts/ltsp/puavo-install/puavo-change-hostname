@@ -1,0 +1,262 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "$(basename $0) must be run as root!" >&2
+  exit 1
+fi
+
+cleanup_started=false
+revert_bootserver_stuff=false
+revert_status=0
+try_revert_when_failed=true
+if [ "${1:-}" = '--no-revert' ]; then
+  try_revert_when_failed=false
+fi
+
+update_and_check_device_json() {
+  local device_json_hostname i new_hostname
+  new_hostname=$1
+
+  echo 'Updating configuration...'
+
+  i=0
+  # NOTE!  In case slapd has crashed at this point this might take time and
+  # even fail.  This should not happen but in case it does,
+  # "service slapd restart" might help here.
+  while [ "$i" -lt 60 ]; do
+    /usr/lib/puavo-ltsp-install/update-configuration >/dev/null 2>&1 || true
+    device_json_hostname=$(jq -r .hostname \
+                             /state/etc/puavo/device.json 2>/dev/null) || true
+    if [ "$device_json_hostname" = "$new_hostname" ]; then
+      echo '  ... got a good device.json!  OK!'
+      return 0
+    fi
+    i=$(($i + 1))
+    sleep 2
+    echo '  ... trying again'
+  done
+
+  echo '  ... could NOT get an updated hostname on device.json.'
+
+  return 1
+}
+
+old_hostname=$(cat /etc/puavo/hostname)
+old_domain=$(cat /etc/puavo/domain)
+new_hostname=''
+
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
+case "$puavo_hosttype" in
+  bootserver|laptop) ;;
+  *)
+    echo "$(basename $0) is not supported on devices" \
+         "with hosttype '${puavo_hosttype}'" >&2
+    exit 1
+    ;;
+esac
+
+time_of_running=$(date +%s)
+
+etc_puavo='/etc/puavo'
+etc_puavo_backup="${etc_puavo}.${time_of_running}"
+state_etc_puavo="/state${etc_puavo}"
+state_etc_puavo_backup="${state_etc_puavo}.${time_of_running}"
+var_lib_bind='/var/lib/bind'
+var_lib_bind_backup="${var_lib_bind}.${time_of_running}"
+
+success=false
+
+restart_openvpn() {
+  local i
+
+  echo 'restarting OpenVPN...'
+  service puavo-vpn-client-openvpn restart || true
+
+  i=0
+  while [ "$i" -lt 60 ]; do
+    if [ -n "$(ifdata -pa vpn0 2>/dev/null)" ]; then
+      return 0
+    fi
+    sleep 1
+    i=$(($i + 1))
+  done
+
+  echo 'timeout waiting for the OpenVPN interface (vpn0) to come up' >&2
+  return 1
+}
+
+do_bootserver_rename_actions() {
+  local init_ds_slave_args mode
+  mode=$1
+
+  /etc/puavo-conf/scripts/setup_hostname || return 1
+
+  case "$mode" in
+    forward)
+      service bind9 stop                           || return 1
+      cp -a "$var_lib_bind" "$var_lib_bind_backup" || return 1
+      rm -f "$var_lib_bind"/puavo_domain*          || return 1
+      /etc/puavo-conf/scripts/setup_dns            || return 1
+      ;;
+    revert)
+      if [ -d "$var_lib_bind_backup" ]; then
+        { rm -rf "$var_lib_bind" \
+            && mv "$var_lib_bind_backup" "$var_lib_bind"; } || return 1
+      fi
+      /etc/puavo-conf/scripts/setup_dns || return 1
+      service bind9 restart || true
+      ;;
+  esac
+
+  /etc/puavo-conf/scripts/setup_slapd   || return 1
+  /etc/puavo-conf/scripts/setup_krb5kdc || return 1
+
+  init_ds_slave_args=''
+  if [ "$mode" = 'revert' ]; then
+    init_ds_slave_args='--auto'
+  fi
+
+  env PUAVO_BOOTSERVER_INSTALLATION=true \
+    puavo-init-ds-slave $init_ds_slave_args || return 1
+
+  # it looks like this is needed (at least sometimes):
+  # XXX slapd might crash at this point... what to do about it?
+  service puavo-rest restart || return 1
+}
+
+cleanup_and_maybe_revert() {
+  if $success; then
+    rm -rf "$etc_puavo_backup" "$state_etc_puavo_backup" "$var_lib_bind_backup"
+    return 0
+  fi
+
+  if $cleanup_started; then
+    return $revert_status
+  fi
+
+  cleanup_started=true
+
+  if $try_revert_when_failed; then
+    echo 'Operationg failed and starting to revert host state...'
+
+    if [ -d "$etc_puavo_backup" ]; then
+      { rm -rf "$etc_puavo" && mv "$etc_puavo_backup" "$etc_puavo"; } \
+        || revert_status=1
+    fi
+    if [ -d "$state_etc_puavo_backup" ]; then
+      { rm -rf "$state_etc_puavo" \
+          && mv "$state_etc_puavo_backup" "$state_etc_puavo"; } \
+            || revert_status=1
+    fi
+
+    if $revert_bootserver_stuff; then
+      do_bootserver_rename_actions revert || revert_status=1
+    fi
+
+    if [ "$revert_status" -ne 0 ]; then
+      cat <<'EOF'
+
+  OH NO!  Something went wrong!  Host rename did not succeed,
+  and reverting the old host state was attempted, but even that failed!
+  That's bad luck!  You need to resolve some RANDOM ISSUES now!
+EOF
+    else
+      cat <<'EOF'
+
+  OH NO!  Something went wrong!  Host state has been reverted to
+  previous hostname/configuration, that hopefully works okay.
+EOF
+    fi
+  else
+    cat <<'EOF'
+
+  OH NO!  Something went wrong!  Host rename did not succeed,
+  and host state has been left as is because --no-revert was used.
+  You need to resolve some issues now.
+EOF
+  fi
+
+  if [ -n "$new_hostname" ]; then
+    cat <<EOF
+
+  As the registration apparently went through, you should maybe remove
+  ${new_hostname} from Puavo domain ${new_domain} and try again?
+
+EOF
+  fi
+}
+
+cat <<'EOF'
+
+  This script helps you changing the hostname of this device.
+
+EOF
+
+if [ "$puavo_hosttype" = 'bootserver' ]; then
+  cat <<EOF
+  As this device is a bootserver, before proceeding you should make
+  sure you have access to LDAP master to create the new Kerberos principal.
+  Also you must have the Kerberos master password for ${old_domain},
+  otherwise renaming will *not* succeed.
+
+EOF
+fi
+
+read -p 'Press ENTER to continue (or CTRL-C to quit) ' _
+
+trap cleanup_and_maybe_revert 0 INT TERM
+
+# XXX warning about the kerberos principal creation should probably be in
+# XXX place here before we proceed?  kerberos master password should also be
+# XXX known
+
+# In case OpenVPN is down, we need to start it up because bootserver
+# needs it for the OpenLDAP sync.
+mv "$etc_puavo"       "$etc_puavo_backup"
+mv "$state_etc_puavo" "$state_etc_puavo_backup"
+
+# XXX should automatically remove the old hostname from puavo?
+# XXX should copy puavo configurations from old host to new?
+puavo-register --accepted-devicetypes "$puavo_hosttype"
+new_hostname="$(cat /etc/puavo/hostname)"
+new_domain="$(cat /etc/puavo/domain)"
+
+cp -a "$etc_puavo" "$state_etc_puavo"
+
+puavo-cert-tool create
+
+# Once we have the new certs in place, we should make sure that we have
+# got the OpenVPN tunnel.  This is needed for the bootserver, and may be
+# useful for laptops as well.  In case this fails, there should be
+# an automatic hostname revert.
+restart_openvpn
+
+if [ "$puavo_hosttype" = 'bootserver' ]; then
+  # needed to make sure that ldapmaster is found:
+  service dnsmasq restart
+
+  revert_bootserver_stuff=true
+  do_bootserver_rename_actions forward
+fi
+
+update_and_check_device_json "$new_hostname"
+
+success=true
+
+cat <<EOF
+
+  It looks like all went well!  Remember to remove
+  ${old_hostname} from Puavo domain ${old_domain} manually!
+  Remember to manually copy necessary settings to new host
+  ${new_hostname} on Puavo domain ${new_domain},
+  if you need to do that!
+
+  This host must be rebooted for the hostname change to take effect.
+
+EOF
+
+read -p 'press ENTER to reboot ' _
+reboot

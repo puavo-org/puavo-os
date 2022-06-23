@@ -2,7 +2,8 @@
 
 set -eu
 
-cat <<EOF
+if [ "${1:-}" != '--auto' ]; then
+  cat <<EOF
 Run following commands as a root in your LDAP-master:
 (if you have not already done so)
 
@@ -17,8 +18,8 @@ Run following commands as a root in your LDAP-master:
 
   Press ENTER when ready.
 EOF
-
-read ready
+  read ready
+fi
 
 puavo-init-ldap-slave --force
 
