@@ -3,7 +3,7 @@
 set -eu
 
 cat <<EOF
-Run following commands as a root in your LDAP-master:
+Run the following commands as root in your LDAP-master:
 (if you have not already done so)
 
   FQDN=$(cat /etc/puavo/hostname).$(cat /etc/puavo/domain)
