@@ -476,18 +476,23 @@ Maybe a problem with wireless interface?"
   dialog --no-collapse --msgbox "$results" 20 48
 }
 
-test_power() {
-  ac1=$(cat "/sys/class/power_supply/AC/online")
+is_ac_connected() {
+  [ "$(cat /sys/class/power_supply/AC/online 2>/dev/null)" -eq 1 ]
+}
 
+is_hub_connected() {
+  [ -n "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]
+}
+
+test_power() {
   while sleep 0.5
   do
-    if [ "${ac1}" -eq "1" ] && [ "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
+    if is_ac_connected && is_hub_connected; then
       echo "Dock OK " > "$power1stdout"
       SECONDS=0
     fi
     if [ "$SECONDS" -gt "2" ]; then
-      ac2=$(cat "/sys/class/power_supply/AC/online")
-      if [ "${ac2}" -eq "1" ] && [ ! "$(lsusb -t 2>/dev/null | grep 'hub' | grep 'Port 4')" ]; then
+      if is_ac_connected && ! is_hub_connected; then
         echo "AC OK" > "$power2stdout"
       fi
     fi
