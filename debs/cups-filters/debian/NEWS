@@ -1,0 +1,8 @@
+cups-filters (1.14.0-1) experimental; urgency=medium
+
+  This release adds the "--enable-auto-setup-driverless" ./configure
+  option. With this option set, cups-browsed creates queues for all
+  discovered IPP network printers on the local network which support
+  driverless printing (IPP Everywhere or Apple AirPrint).
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 16 May 2017 20:04:57 +0200

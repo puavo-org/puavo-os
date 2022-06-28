@@ -1,0 +1,60 @@
+usr/bin/ttfread
+usr/bin/foomatic-rip
+usr/lib/cups/backend/cups-brf
+usr/lib/cups/backend/beh
+usr/lib/cups/backend/parallel
+usr/lib/cups/backend/serial
+usr/lib/cups/filter/commandtopclx
+usr/lib/cups/filter/commandtoescpx
+usr/lib/cups/filter/texttotext
+usr/lib/cups/filter/gstoraster
+usr/lib/cups/filter/mupdftoraster
+usr/lib/cups/filter/musicxmltobrf
+usr/lib/cups/filter/texttopdf
+usr/lib/cups/filter/texttops
+usr/lib/cups/filter/imagetops
+usr/lib/cups/filter/rastertoescpx
+usr/lib/cups/filter/bannertopdf
+usr/lib/cups/filter/imagetoraster
+usr/lib/cups/filter/foomatic-rip
+usr/lib/cups/filter/gstopxl
+usr/lib/cups/filter/gstopdf
+usr/lib/cups/filter/brftopagedbrf
+usr/lib/cups/filter/brftoembosser
+usr/lib/cups/filter/imagetobrf
+usr/lib/cups/filter/imagetoubrl
+usr/lib/cups/filter/imageubrltoindexv3
+usr/lib/cups/filter/imageubrltoindexv4
+usr/lib/cups/filter/textbrftoindexv3
+usr/lib/cups/filter/textbrftoindexv4
+usr/lib/cups/filter/texttobrf
+usr/lib/cups/filter/vectortopdf
+usr/lib/cups/filter/svgtopdf
+usr/lib/cups/filter/xfigtopdf
+usr/lib/cups/filter/wmftopdf
+usr/lib/cups/filter/emftopdf
+usr/lib/cups/filter/cgmtopdf
+usr/lib/cups/filter/cmxtopdf
+usr/lib/cups/filter/cgmtopdf
+usr/lib/cups/filter/vectortobrf
+usr/lib/cups/filter/vectortoubrl
+usr/share/cups/banners/*
+usr/share/cups/braille/*
+usr/share/cups/drv/*
+usr/share/cups/data/*
+usr/share/cups/mime/cupsfilters-mupdf.convs
+usr/share/cups/mime/braille.*
+usr/share/cups/ppdc/*
+usr/share/cups/charsets/*
+usr/share/ppd/cupsfilters/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd
+usr/share/ppd/cupsfilters/Generic-PDF_Printer-PDF.ppd
+usr/share/ppd/cupsfilters/HP-Color_LaserJet_CM3530_MFP-PDF.ppd
+usr/share/ppd/cupsfilters/pxlcolor.ppd
+usr/share/ppd/cupsfilters/pxlmono.ppd
+usr/share/ppd/cupsfilters/Ricoh-PDF_Printer-PDF.ppd
+../*.ppd-updater usr/share/cups/ppd-updaters/
+# Manpages
+usr/share/man/man1/foomatic-rip.1
+# Install files deprecated by CUPS
+../../filter/escp.h	usr/share/cups/ppdc/
+../../filter/pcl.h	usr/share/cups/ppdc/

@@ -1,0 +1,8 @@
+usr/sbin/cups-browsed
+etc/cups/cups-browsed.conf
+usr/lib/cups/backend/implicitclass
+../apparmor/usr.sbin.cups-browsed etc/apparmor.d/
+# Manpages
+usr/share/man/man8/cups-browsed.8
+usr/share/man/man5/cups-browsed.conf.5
+../../utils/cups-browsed.service lib/systemd/system/
