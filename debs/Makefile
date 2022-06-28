@@ -8,6 +8,7 @@ _pkgs_parts := puavo-ds puavo-os
 # XXX if there is any benefit to do so
 _pkgs_ports := aria2                \
                cups                 \
+               cups-filters         \
                fmit                 \
                gnome-control-center \
                gnome-shell          \

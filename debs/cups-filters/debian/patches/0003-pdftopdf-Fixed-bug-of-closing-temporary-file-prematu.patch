@@ -1,0 +1,33 @@
+From 4bd5d36f3eb53bf090f887c0ea12e718f38759ec Mon Sep 17 00:00:00 2001
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Date: Mon, 14 Jan 2019 17:24:30 +0100
+Subject: pdftopdf: Fixed bug of closing temporary file prematurely when
+ external PDF form flattening utilities fail.
+
+---
+ filter/pdftopdf/pdftopdf.cc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/filter/pdftopdf/pdftopdf.cc b/filter/pdftopdf/pdftopdf.cc
+index b09749b2f..49d27c976 100644
+--- a/filter/pdftopdf/pdftopdf.cc
++++ b/filter/pdftopdf/pdftopdf.cc
+@@ -1164,7 +1164,8 @@ int main(int argc,char **argv)
+ 	}
+       }
+       /* Clean up */
+-      fclose(infile);
++      if (infile != tmpfile)
++	fclose(infile);
+       /* Load the flattened PDF file into our PDF processor */
+       if (flattening_done) {
+ 	rewind(outfile);
+@@ -1202,6 +1203,8 @@ int main(int argc,char **argv)
+ 
+     emitPostamble(ppd,param);
+     ppdClose(ppd);
++    if (tmpfile)
++      fclose(tmpfile);
+   } catch (std::exception &e) {
+     // TODO? exception type
+     error("Exception: %s",e.what());
