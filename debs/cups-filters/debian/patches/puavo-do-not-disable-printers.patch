@@ -1,7 +1,7 @@
-diff -ruN cups-filters-1.21.6/utils/cups-browsed.c cups-filters-1.21.6/utils/cups-browsed.c
---- cups-filters-1.21.6/utils/cups-browsed.c	2022-06-28 15:16:23.000000000 +0300
-+++ cups-filters-1.21.6/utils/cups-browsed.c	2022-06-28 15:20:02.554056749 +0300
-@@ -2396,38 +2396,6 @@
+diff -ruN cups-filters-1.28.7/utils/cups-browsed.c cups-filters-1.28.7.build.1/utils/cups-browsed.c
+--- cups-filters-1.28.7/utils/cups-browsed.c	2021-01-07 20:44:26.000000000 +0200
++++ cups-filters-1.28.7/utils/cups-browsed.c	2022-06-29 10:34:42.505458406 +0300
+@@ -5297,38 +5297,6 @@
  }
  
  int
@@ -20,7 +20,7 @@ diff -ruN cups-filters-1.21.6/utils/cups-browsed.c cups-filters-1.21.6/utils/cup
 -  if (reason == NULL)
 -    reason = "Disabled by cups-browsed";
 -  httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
--		   "localhost", ippPort(), "/printers/%s", printer);
+-		   "localhost", 0, "/printers/%s", printer);
 -  request = ippNewRequest (IPP_PAUSE_PRINTER);
 -  ippAddString (request, IPP_TAG_OPERATION, IPP_TAG_URI,
 -		"printer-uri", NULL, uri);
@@ -38,10 +38,10 @@ diff -ruN cups-filters-1.21.6/utils/cups-browsed.c cups-filters-1.21.6/utils/cup
 -
 -int
  set_cups_default_printer(const char *printer) {
-   ipp_t	*request;
+   ipp_t *request;
    char uri[HTTP_MAX_URI];
-@@ -4559,15 +4527,6 @@
- 	  if (num_jobs != 0) { /* error or jobs */
+@@ -7815,15 +7783,6 @@
+ 	  if (num_jobs > 0) { /* There are still jobs */
  	    debug_printf("Queue has still jobs or CUPS error!\n");
  	    cupsFreeJobs(num_jobs, jobs);
 -	    /* Disable the queue */

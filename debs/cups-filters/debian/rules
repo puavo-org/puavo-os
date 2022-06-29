@@ -2,7 +2,6 @@
 
 derives_from_ubuntu := $(shell (dpkg-vendor --derives-from Ubuntu && echo "yes") || echo "no")
 
-export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
@@ -19,9 +18,6 @@ override_dh_auto_configure:
 		--enable-auto-setup-driverless \
 		--with-mutool-path=/usr/bin/mutool \
 		--with-test-font-path=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
-
-override_dh_installchangelogs:
-	dh_installchangelogs NEWS
 
 override_dh_installdocs:
 	dh_installdocs -A AUTHORS README
@@ -58,11 +54,9 @@ endif
 	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
 
 get-orig-source:
-	set -e;\
-	quilt pop -af || true ;\
-	rm -Rf .pc ;\
+	set -ex;\
 	gbp import-orig --pristine-tar --uscan --no-merge --upstream-branch=upstream/latest;\
 	utag=`git describe --exact-match heads/upstream/latest | sed -e 's#^upstream/##'` ;\
 	ucommit=`git rev-parse --verify upstream/latest`;\
-	git dpm record-new-upstream --rebase-patched --allow-changes-in-debian-branch ../cups-filters_$$utag.orig.tar.xz $$ucommit ;\
-	git dpm update-patches -m "Merge upstream $$utag version and refresh git-dpm patches"
+	git debrebase new-upstream $$utag ;\
+	git debrebase conclude

@@ -1,8 +1,359 @@
-cups-filters (1.21.6-5.1+puavo1) buster; urgency=medium
+cups-filters (1.28.7-1+deb11u1+puavo1) bullseye; urgency=medium
 
   * Make some changes to cups-browsed.
 
- -- Puavo Org <dev@opinsys.fi>  Tue, 28 Jun 2022 15:58:04 +0300
+ -- Puavo Org <dev@opinsys.fi>  Wed, 29 Jun 2022 10:40:43 +0300
+
+cups-filters (1.28.7-1+deb11u1) bullseye; urgency=medium
+
+  * debian/apparmor/usr.sbin.cups-browsed: Allow reading from Debian Edu's
+    cups-browsed config file (/etc/cups/cups-browsed-debian-edu.conf).
+    (Closes: #1006183). (patch provided by Mike Gabriel)
+  * debian/control: add myself to Uploaders:
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Mon, 14 Mar 2022 22:03:02 +0100
+
+cups-filters (1.28.7-1) unstable; urgency=medium
+
+  * 1.28.7 upstream release
+    - driverless: Removed the support quality check from Pull request #235 as
+      it takes significant time for each printer being listed, making
+      cups-driverd (`lpinfo -m`) timing out when there are many printers
+      (OpenPrinting CUPS issue #65, Closes: #979177)
+  * Drop the driverless_support_strs symbol wrongly exported since 1.27.5
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 08 Jan 2021 10:40:57 +0100
+
+cups-filters (1.28.6-1) unstable; urgency=medium
+
+  * 1.28.6 upstream release
+  * Update watch file format version to 4.
+  * Bump S-V to 4.5.1 without changes needed
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 03 Dec 2020 12:04:36 +0100
+
+cups-filters (1.28.5-1) unstable; urgency=medium
+
+  * 1.28.5 upstream release
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 14 Oct 2020 18:33:24 +0200
+
+cups-filters (1.28.4-1) unstable; urgency=medium
+
+  * New 1.28.4 upstream release
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 10 Oct 2020 10:44:47 +0200
+
+cups-filters (1.28.3-1) unstable; urgency=medium
+
+  * New 1.28.3 upstream release
+    - Bug fix release to solve problems caused by an inconsistency between the
+      resolvers for DNS-SD-based URIs (Upstream issue #308)
+  * d/rules: Drop unused get-orig-source target
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 02 Oct 2020 10:29:42 +0200
+
+cups-filters (1.28.2-1) unstable; urgency=medium
+
+  * New 1.28.2 upstream release
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 11 Sep 2020 10:43:58 +0200
+
+cups-filters (1.28.1-1) unstable; urgency=medium
+
+  * New 1.28.1 upstream release
+    - Drop typo patches merged upstream
+
+  * Add lintian overrides for all our known-but-wontfix issues
+  * Drop superfluous NEWS install
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 27 Aug 2020 12:08:11 +0200
+
+cups-filters (1.28.0-1) unstable; urgency=medium
+
+  * New 1.28.0 upstream version
+    - Install driverless-fax in cups-filters
+    - Add 3 1.28.0 symbols in libcupsfilters1
+
+  * Add patches
+    - Fix successful{,l}y and unne{c,}cessarily typos
+    - Fix att{t,}ributes typo
+
+  * Packaging cleanup
+    - Fix spelling errors in copyright
+    - Fix file mismatch in d/copyright
+    - Drop -Wl,--as-needed for Bullseye+
+    - Fix cups-brf non-standard-executable-perm lintian override
+    - Add Build-Depends-Package metadata in symbol files
+    - Add cups-browsed lintian override
+    - Add missing Pre-Depends in cups-browsed
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 25 Aug 2020 22:25:50 +0200
+
+cups-filters (1.27.5-2) unstable; urgency=medium
+
+  * Patch configure.ac to force-set INITDIR instead of relying on
+    'test -d /etc/init.d', which fails in s390x chroots
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 13 Jun 2020 16:43:11 +0200
+
+cups-filters (1.27.5-1) unstable; urgency=medium
+
+  * New upstream version 1.27.5
+    - cups-browsed: Do not remove the created local queues on shutdown,
+      to avoid their re-creation on restart, so that desktops get no
+      cluttered with notifications of new queues being created
+      (LP: #1869981, #1878241)
+  * Bump debhelper from old 12 to 13
+  * Update installed files' lists
+  * Add 3 libcupsfilter* symbols
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 10 Jun 2020 21:57:44 +0200
+
+cups-filters (1.27.4-1) unstable; urgency=medium
+
+  * New upstream version 1.27.4
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 10 Apr 2020 15:12:50 +0200
+
+cups-filters (1.27.3-1) unstable; urgency=medium
+
+  * New 1.27.3 upstream version
+  * Set upstream metadata fields
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 21 Mar 2020 10:51:17 +0100
+
+cups-filters (1.27.2-1) unstable; urgency=medium
+
+  * New 1.27.2 upstream release
+    - cups-browsed: Additional checks against crashes in the
+      is_local_hostname() function (LP: #1863716)
+    - foomatic-rip: Zero-page-job handling changes made the last
+      page of PostScript files not printed, also turning one-page
+      jobs into zero-page jobs; so drop upstream backport patch.
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 28 Feb 2020 20:12:44 +0100
+
+cups-filters (1.27.1-3) unstable; urgency=medium
+
+  * Replace patch proposal with upstream's:
+    [ JaiLuthra1 ]
+    - foomatic-rip: correct handling of jobs; Zero-page-job handling
+      changes made the last page of PostScript files not printed, also
+      turning one-page jobs into zero-page jobs
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 24 Feb 2020 18:35:35 +0100
+
+cups-filters (1.27.1-2) unstable; urgency=medium
+
+  * Add patch proposal from Andrey Jr. Melnikov:
+    - Fix foomatic-rip postscript preprocessing; fixes empty print jobs on
+      foo2zjs (at least) (upstream issue #206)
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 22 Feb 2020 17:26:46 +0100
+
+cups-filters (1.27.1-1) unstable; urgency=medium
+
+  * New 1.27.1 upstream release
+    - Drop upstream backport patch
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 17 Feb 2020 08:52:39 +0100
+
+cups-filters (1.27.0-2) unstable; urgency=medium
+
+  * Backport upstream change:
+    [ Till Kamppeter ]
+    - cups-browsed: Switched default for "CreateIPPPrinterQueues" to "All"
+      (Closes: #921252)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 31 Jan 2020 17:17:53 +0100
+
+cups-filters (1.27.0-1) unstable; urgency=medium
+
+  * New 1.27.0 upstream release
+    - Add get_printer_attributes2 symbol
+  * Upgrade Standards-Version to 4.5.0 without changes needed
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 27 Jan 2020 16:56:47 +0100
+
+cups-filters (1.26.2-1) unstable; urgency=medium
+
+  * New 1.26.2 upstream release
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 14 Jan 2020 08:27:55 +0100
+
+cups-filters (1.26.1-1) unstable; urgency=medium
+
+  * New 1.26.1 upstream release
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 04 Jan 2020 12:54:16 +0100
+
+cups-filters (1.26.0-1) unstable; urgency=medium
+
+  * New upstream version 1.26.0
+    - Add 4 new symbols to libcupsfilters1
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 24 Dec 2019 13:05:22 +0100
+
+cups-filters (1.25.13-1) unstable; urgency=medium
+
+  * New upstream version 1.25.13
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 02 Dec 2019 18:55:08 +0100
+
+cups-filters (1.25.12-1) unstable; urgency=medium
+
+  * New upstream version 1.25.12
+  * Conclude git-debrebase in get-orig-source
+  * Bump S-V to 4.4.1 without changes needed
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 22 Nov 2019 15:16:19 +0100
+
+cups-filters (1.25.11-1) unstable; urgency=medium
+
+  * New upstream version 1.25.11
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 13 Oct 2019 11:37:56 +0200
+
+cups-filters (1.25.10-1) unstable; urgency=medium
+
+  * New upstream version 1.25.10
+    - libcupsfilters: Added NULL checks when handling page size
+      names as some of the page sizes in CUPS' PWG media list have
+      a NULL PPD name (LP: #1847488)
+  * Cleanup obsolete fields from debian/upstream/metadata
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 10 Oct 2019 10:05:07 +0200
+
+cups-filters (1.25.8-1) unstable; urgency=medium
+
+  * New upstream version 1.25.8
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 09 Oct 2019 16:00:16 +0200
+
+cups-filters (1.25.7-1) unstable; urgency=medium
+
+  * New upstream version 1.25.7
+    - Add one symbol
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 09 Oct 2019 12:11:46 +0200
+
+cups-filters (1.25.6-1) unstable; urgency=medium
+
+  * New upstream version 1.25.6
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 27 Sep 2019 10:35:16 +0200
+
+cups-filters (1.25.5-1) unstable; urgency=medium
+
+  * New upstream version 1.25.5
+    - Update d/rules get-orig-source
+    - Drop backported upstream patch
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 06 Sep 2019 17:54:15 +0200
+
+cups-filters (1.25.4-2) unstable; urgency=medium
+
+  * Backport upstream patch:
+    - cups-browsed: Do not cause fatal error on left over queues of a previous
+      session (Closes: #939316)
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 04 Sep 2019 08:24:36 +0200
+
+cups-filters (1.25.4-1) unstable; urgency=medium
+
+  * New upstream version 1.25.4
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 30 Aug 2019 15:16:27 +0200
+
+cups-filters (1.25.3-1) unstable; urgency=medium
+
+  * New upstream version 1.25.3
+    - Sample PPDs: In HP-Color_LaserJet_CM3530_MFP-PDF.ppd renamed
+      "custom" choice of the option "stapleoption" to "customsize"
+      as from CUPS 2.2.12 on "custom" is not accepted any more as a
+      choice name in a PPD file. This should fix CUPS 2.2.12's
+      autopkgtest failure.
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 21 Aug 2019 21:31:30 +0200
+
+cups-filters (1.25.2-1) unstable; urgency=medium
+
+  * New upstream version 1.25.2
+
+  * Set upstream metadata fields: Contact, Name.
+  * Bump debhelper from old 11 to 12.
+  * Refresh gitlab-ci.yml
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 18 Aug 2019 16:58:04 +0200
+
+cups-filters (1.25.0-1) experimental; urgency=medium
+
+  * New upstream version 1.25.0
+    - Refresh d/copyright with CF1.0-compatible upstream COPYING
+    - Remove now-unneeded libpoppler-private-dev from B-D
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 08 Jun 2019 08:57:32 +0200
+
+cups-filters (1.24.0-1) experimental; urgency=medium
+
+  * New upstream version 1.24.0
+    - Add 4 new symbols to libcupsfilters1
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 05 Jun 2019 08:10:31 +0200
+
+cups-filters (1.23.0-1) experimental; urgency=medium
+
+  * New upstream version 1.23.0
+    - cups-browsed: When removing a local queue on shutdown or
+      when DNS-SD reports the printer as disappeared check whether
+      the local queue got overwritten by an external process as
+      sometimes the shutdown or disappearing event comes too close
+      for cups-browsed receiving a printer-modified notification
+      from CUPS before (LP: #1731417)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 17 May 2019 10:01:20 +0200
+
+cups-filters (1.22.5-1) experimental; urgency=medium
+
+  * New upstream version 1.22.5
+    - foomatic-rip: Changed Ghostscript call to count pages in a PDF file to
+      use "runpdfbegin" and not the undocumented Ghostscript internal
+      "pdfdict", so that it works with Ghostscript ≥ 9.27 (Closes: #926576)
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 10 Apr 2019 17:07:27 +0200
+
+cups-filters (1.22.4-1) experimental; urgency=medium
+
+  * New upstream version 1.22.4
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 06 Apr 2019 14:08:13 +0200
+
+cups-filters (1.22.3-1) experimental; urgency=medium
+
+  * New upstream version 1.22.3
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 27 Mar 2019 17:01:30 +0100
+
+cups-filters (1.22.2-1) experimental; urgency=medium
+
+  * New upstream version 1.22.2
+    - Add new cupsImageCrop@Base symbol
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 18 Mar 2019 17:41:12 +0100
+
+cups-filters (1.22.1-1) experimental; urgency=medium
+
+  * New upstream version 1.22.1
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 16 Feb 2019 14:09:02 +0100
+
+cups-filters (1.22.0-1) experimental; urgency=low
+
+  * New upstream version 1.22.0
+  * Bump libqpdf-dev B-D to >= 8.3
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 18 Jan 2019 14:36:00 +0100
 
 cups-filters (1.21.6-5) unstable; urgency=medium
 

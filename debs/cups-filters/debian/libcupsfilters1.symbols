@@ -1,4 +1,5 @@
 libcupsfilters.so.1 libcupsfilters1 #MINVER#
+* Build-Depends-Package: libcupsfilters-dev
  _CFcupsSetError@Base 1.13.5
  _cupsImagePutCol@Base 1.0~b1
  _cupsImagePutRow@Base 1.0~b1
@@ -37,7 +38,9 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  adobergb_gamma@Base 1.0.58
  adobergb_matrix@Base 1.0.58
  adobergb_wp@Base 1.0.58
+ apply_filters@Base 1.24.0
  blackpoint_default@Base 1.0.58
+ check_driverless_support@Base 1.27.5
  cmBlackPointDefault@Base 1.0.58
  cmGammaAdobeRgb@Base 1.0.58
  cmGammaSGray@Base 1.0.58
@@ -78,6 +81,7 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  cupsImageCMYKToRGB@Base 1.0~b1
  cupsImageCMYKToWhite@Base 1.0~b1
  cupsImageClose@Base 1.0~b1
+ cupsImageCrop@Base 1.22.2
  cupsImageGetCol@Base 1.0~b1
  cupsImageGetColorSpace@Base 1.0~b1
  cupsImageGetDepth@Base 1.0~b1
@@ -122,19 +126,32 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  free_choice_strings@Base 1.20.0
  free_opt_strings@Base 1.20.0
  free_resolution@Base 1.17.1
+ generate_sizes@Base 1.24.0
+ get_printer_attributes2@Base 1.27.0
+ get_printer_attributes3@Base 1.27.5
+ get_printer_attributes4@Base 1.28.0
+ get_printer_attributes5@Base 1.28.0
+ get_printer_attributes@Base 1.26.0
+ get_printer_attributes_log@Base 1.26.0
  get_profile_inhibitors@Base 1.0.42
  ippResolutionListToArray@Base 1.17.1
  ippResolutionToRes@Base 1.17.1
+ ippfind_based_uri_converter@Base 1.28.0
+ is_colordevice@Base 1.24.0
  joinResolutionArrays@Base 1.17.1
  load_opt_strings_catalog@Base 1.20.0
+ log_printf@Base 1.26.0
  lookup_choice@Base 1.20.0
  lookup_option@Base 1.20.0
  optArrayNew@Base 1.20.0
  opt_strings_catalog@Base 1.20.0
+ ppdCreateFromIPP2@Base 1.24.0
  ppdCreateFromIPP@Base 1.12.0
  ppdgenerator_msg@Base 1.12.0
  resolutionArrayNew@Base 1.17.1
  resolutionNew@Base 1.17.1
+ resolve_uri@Base 1.26.0
+ set_option_in_str@Base 1.25.7
  sgiClose@Base 1.0~b1
  sgiGetRow@Base 1.0~b1
  sgiOpen@Base 1.0~b1

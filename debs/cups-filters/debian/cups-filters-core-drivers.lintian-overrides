@@ -1,0 +1,11 @@
+# That's how CUPS does it
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/driver/driverless
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/imagetopdf
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/pdftopdf
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/pdftops
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/pdftoraster
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/rastertopclm
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/rastertopclx
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/rastertopdf
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/rastertops
+cups-filters-core-drivers: executable-in-usr-lib usr/lib/cups/filter/sys5ippprinter
