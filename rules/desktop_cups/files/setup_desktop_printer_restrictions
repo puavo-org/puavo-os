@@ -26,9 +26,6 @@ esac
 if [ -e /run/puavo/nbd-server ]; then
   device_json_path='/etc/puavo/device.json'
 else
-  if ! { $dry_run || $use_lpadmin; } then
-    exit 0
-  fi
   device_json_path='/state/etc/puavo/device.json'
 fi
 
@@ -207,14 +204,12 @@ for printer in $(printf "%s" "$printer_list" | sort -f); do
 
   if ! $use_puavo_permissions || [ "$allow" = '*' ]; then
     allowed_users='all'
-    browsed_conf_line=''
   else
     if [ -n "$allow" ]; then
       allowed_users="root,${allow}"
     else
       allowed_users='root'
     fi
-    browsed_conf_line="requesting-user-name-allowed=${allowed_users}"
   fi
 
   if $verbose; then
@@ -235,11 +230,21 @@ for printer in $(printf "%s" "$printer_list" | sort -f); do
     fi
   else
     browsed_printer_path="/var/cache/cups/cups-browsed-options-${printer}"
-    if [ -n "$browsed_conf_line" ]; then
-      printf "%s\n" "$browsed_conf_line"
-    else
-      printf ""
-    fi > "${browsed_printer_path}.tmp" || status=1
+    # cups-browsed needs a little help.  This is essential for fatclients,
+    # but laptops need this as well, because cups-browsed does not remove
+    # the "requesting-user-name-allowed" key even in the case "AllowUser"
+    # has been removed from the printer queue.
+    cat "$browsed_printer_path" 2>/dev/null \
+      | awk -F= -v allowed_users="$allowed_users" '
+          $1 == "requesting-user-name-allowed" { next }
+          $1 == "requesting-user-name-denied"  { next }
+          { print }
+          END {
+            if (allowed_users != "all") {
+              print "requesting-user-name-allowed=" allowed_users
+            }
+          }
+        ' > "${browsed_printer_path}.tmp" || status=1
     mv "${browsed_printer_path}.tmp" "$browsed_printer_path" || status=1
   fi
 done
