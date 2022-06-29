@@ -1,0 +1,48 @@
+From c1ec6e6233f90f7944e796732bcb68b546e75512 Mon Sep 17 00:00:00 2001
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Date: Mon, 11 Feb 2019 23:12:14 +0100
+Subject: cups-browsed, driverless: Correct attributes of
+ get-printer-attributes IPP request
+
+cups-browsed, driverless: When polling the printer's
+capabilities via get-printer-attributes IPP request for
+driverless printing, use the attributes "all" and
+"media-col-database". Without "all" some printers do not
+report "urf-supported" and without "media-col-database" not
+all paper size and marging info gets reported (Issue #22,
+Pull request #86, CUPS issue #5484).
+---
+ utils/cups-browsed.c | 4 +---
+ utils/driverless.c   | 4 +---
+ 2 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/utils/cups-browsed.c b/utils/cups-browsed.c
+index 220d862e6..c1921d6f5 100644
+--- a/utils/cups-browsed.c
++++ b/utils/cups-browsed.c
+@@ -3846,9 +3846,7 @@ get_printer_attributes(const char* uri) {
+   char valuebuffer[65536];
+   static const char * const pattrs[] =
+   {
+-    "job-template",
+-    "printer-defaults",
+-    "printer-description",
++    "all",
+     "media-col-database"
+   };
+   /* Request printer properties via IPP to generate a PPD file for the
+diff --git a/utils/driverless.c b/utils/driverless.c
+index a46a2a3d0..6371bdbcd 100644
+--- a/utils/driverless.c
++++ b/utils/driverless.c
+@@ -479,9 +479,7 @@ generate_ppd (const char *uri)
+   int i, fd, bytes;
+   static const char * const pattrs[] =
+   {
+-    "job-template",
+-    "printer-defaults",
+-    "printer-description",
++    "all",
+     "media-col-database"
+   };
+ 

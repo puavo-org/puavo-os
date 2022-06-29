@@ -5,6 +5,7 @@ _pkgs_builddeps := sblim-sfcc openwsman
 
 _pkgs_parts := puavo-ds puavo-os
 _pkgs_ports := cups                 \
+               cups-filters         \
                gnome-control-center \
                gnome-shell          \
                gtk+3.0              \
