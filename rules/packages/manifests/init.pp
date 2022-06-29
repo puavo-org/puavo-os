@@ -243,6 +243,8 @@ class packages {
     , 'gcc'
     , 'gdb'
     , 'gettext'
+    , 'git-gui'
+    , 'gitk'
     , 'glade'
     , 'gnupg'
     , 'manpages-dev'
