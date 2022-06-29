@@ -707,6 +707,7 @@ class packages {
     , 'duplicity'
     , 'exfat-fuse'
     , 'exfat-utils'
+    , 'flameshot'
     , 'fuse3'
     , 'kamoso'
     , 'kde-spectacle'
