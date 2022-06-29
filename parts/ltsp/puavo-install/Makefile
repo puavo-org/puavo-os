@@ -32,6 +32,7 @@ installdirs :
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-bios-config \
+		puavo-change-hostname \
 		puavo-client-daemon \
 		puavo-disk-clone \
 		puavo-disk-erase \
