@@ -39,9 +39,12 @@ test_camera() {
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
 }
 
+product_name() {
+ cat /sys/class/dmi/id/product_name
+}
+
 log_usb() {
-  product_name=$(cat /sys/class/dmi/id/product_name)
-  case "${product_name}" in
+  case "$(product_name)" in
     ### Look for different ports if device is a G1 or G2.
     "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
       while sleep 0.5
@@ -393,9 +396,7 @@ test_mouse() {
 
 test_audio() {
   local alsadev
-  audio_test_status=0
-  product_name=$(dmidecode -s system-product-name)
-  case "${product_name}" in
+  case "$(product_name)" in
     ### Use different alsadev value if device is G1 or G2.
     "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
       alsadev='hw:1,0'
@@ -552,7 +553,7 @@ while true; do
     audio)      mainmenu_default_item=keyboard;   test_audio      || true ;;
     disks)      mainmenu_default_item=keyboard;   test_disks      || true ;;
     keyboard)   mainmenu_default_item=mouse;      test_keyboard   || true ;;
-    mouse)      mainmenu_default_item=power;      test_mouse      || true ;;
+    mouse)      mainmenu_default_item=quit;       test_mouse      || true ;;
     wifi)       mainmenu_default_item=quit;       show_wifi       || true ;;
     bluetooth)  mainmenu_default_item=quit;       bt_test_results || true ;;
     camera)     mainmenu_default_item=quit;       test_camera     || true ;;
