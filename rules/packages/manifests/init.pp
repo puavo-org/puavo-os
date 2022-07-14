@@ -709,6 +709,7 @@ class packages {
     , 'exfat-utils'
     , 'flameshot'
     , 'fuse3'
+    , 'gnome-network-displays'
     , 'kamoso'
     , 'kde-spectacle'
     , 'mc'
