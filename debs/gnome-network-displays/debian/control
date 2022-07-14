@@ -1,0 +1,24 @@
+Source: gnome-network-displays
+Section: gnome
+Priority: optional
+Maintainer: Benjamin Berg <bberg@gnome.org>
+Uploaders: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Build-Depends: debhelper-compat (= 13),
+               libavahi-gojbect-dev,
+               libgstreamer-plugins-base1.0-dev,
+               libnm-dev,
+               meson,
+Standards-Version: 4.5.1
+Homepage: https://gitlab.gnome.org/GNOME/gnome-network-displays
+Vcs-Browser: https://gitlab.gnome.org/GNOME/gnome-network-displays
+Vcs-Git: https://gitlab.gnome.org/GNOME/gnome-network-displays
+Rules-Requires-Root: no
+
+Package: gnome-network-displays
+Section: graphics
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: GNOME Network Displays
+ GNOME Network Displays allows you to cast your desktop to a remote display.
+ Currently implemented is support for casting to Wi-Fi Display capable devices (a.k.a. Miracast).
