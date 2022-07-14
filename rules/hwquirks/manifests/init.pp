@@ -9,6 +9,9 @@ class hwquirks {
     '/usr/share/puavo-conf/hwquirk-overwrites/40-intel-audio.json':
       source => 'puppet:///modules/hwquirks/40-intel-audio.json';
 
+    '/usr/share/puavo-conf/hwquirk-overwrites/41-hp-3gmodem.json':
+      source => 'puppet:///modules/hwquirks/41-hp-3gmodem.json';
+
     '/usr/share/puavo-conf/hwquirk-overwrites/50-pm-lidswitchdocked.json':
       source => 'puppet:///modules/hwquirks/50-pm-lidswitchdocked.json';
 
