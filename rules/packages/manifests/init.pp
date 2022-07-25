@@ -770,17 +770,16 @@ class packages {
 		      , $r8168_module
 		      , $virtualbox_module ]
 
-
   packages::kernels::kernel_package {
-    '5.10.0-15-amd64':
+    '5.10.0-16-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-5.10.0-15-amd64';
+      package_name => 'linux-image-5.10.0-16-amd64';
 
-    '5.16.0-0.bpo.4-amd64':
+    '5.18.0-0.bpo.1-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module
                       , $r8168_module
                       , $virtualbox_module ],
-      package_name => 'linux-image-5.16.0-0.bpo.4-amd64';
+      package_name => 'linux-image-5.18.0-0.bpo.1-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by
