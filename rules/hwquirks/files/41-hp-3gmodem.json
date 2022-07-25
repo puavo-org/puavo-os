@@ -1,0 +1,10 @@
+[
+  {
+    "key": "usb-id",
+    "matchmethod": "exact",
+    "pattern": "03f0:0c51",
+    "parameters": {
+      "puavo.kernel.modules.blacklist": "cdc_mbim"
+    }
+  }
+]
