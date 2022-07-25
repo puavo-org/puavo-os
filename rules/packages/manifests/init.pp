@@ -162,6 +162,7 @@ class packages {
     , 'wakeonlan'
     , 'wavemon'
     , 'whois'
+    , 'wireguard-tools'
     # , 'wsmancli'              # XXX missing from Bullseye
     , 'x11vnc'
     , 'xbacklight'
@@ -849,5 +850,12 @@ class packages {
 
     'unrar':
       tag => [ 'tag_utils', 'tag_debian_nonfree', ];
+  }
+
+  # For some reason installing "wireguards-tools" prefers
+  # to install some kernel packages we do not want.
+  # Prevent this from happening by using "--no-install-recommends".
+  Package['wireguard-tools'] {
+    install_options => [ '--no-install-recommends' ],
   }
 }
