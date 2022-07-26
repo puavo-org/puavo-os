@@ -108,10 +108,4 @@ mount ${mountverbose_G} -o bind /dev/pts "${tmpdir_G}/dev/pts"
 mount ${mountverbose_G} -o bind /proc "${tmpdir_G}/proc"
 mount ${mountverbose_G} -o bind /sys "${tmpdir_G}/sys"
 
-# Disable daemons in Puavo Images
-export DISABLE_DAEMONS=true
-
-# Disable deamon in LTSP Images
-export LTSP_HANDLE_DAEMONS=false
-
-setarch i386 chroot "${tmpdir_G}"
+chroot "$tmpdir_G"
