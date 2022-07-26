@@ -191,7 +191,8 @@ EOF
 
 cat <<'EOF'
 
-  This script helps you changing the hostname of this device.
+  This script helps you change the hostname of this device.
+  RUN THIS UNDER TMUX PLEASE (in case you are not already doing so).
 
 EOF
 
@@ -208,10 +209,6 @@ fi
 read -p 'Press ENTER to continue (or CTRL-C to quit) ' _
 
 trap cleanup_and_maybe_revert 0 INT TERM
-
-# XXX warning about the kerberos principal creation should probably be in
-# XXX place here before we proceed?  kerberos master password should also be
-# XXX known
 
 # In case OpenVPN is down, we need to start it up because bootserver
 # needs it for the OpenLDAP sync.
