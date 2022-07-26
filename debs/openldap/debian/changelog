@@ -1,8 +1,14 @@
-openldap (2.4.57+dfsg-3+puavo1+buildonce) bullseye; urgency=medium
+openldap (2.4.57+dfsg-3+deb11u1+puavo1+buildonce) bullseye; urgency=medium
 
   * With some patches by Puavo Org.
 
  -- Puavo Org <dev@opinsys.fi>  Thu, 19 Aug 2021 10:59:18 +0300
+
+openldap (2.4.57+dfsg-3+deb11u1) bullseye-security; urgency=high
+
+  * Fix SQL injection in back-sql (ITS#9815) (CVE-2022-29155)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 14 May 2022 11:32:57 -0700
 
 openldap (2.4.57+dfsg-3) unstable; urgency=medium
 
