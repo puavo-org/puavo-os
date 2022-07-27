@@ -6,6 +6,7 @@ Uploaders: Puavo Org <dev@opinsys.fi>
 Build-Depends: debhelper-compat (= 13),
                libavahi-gobject-dev,
                libgstreamer-plugins-base1.0-dev,
+               libgstrtspserver-1.0-dev,
                libnm-dev,
                meson,
 Standards-Version: 4.5.1
