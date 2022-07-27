@@ -47,7 +47,7 @@ case "$mode" in
     fi
     echo "Chosen << ${target_disk} >>"
     echo "Secure Erasing the disk first, please wait."
-    sh /usr/sbin/puavo-disk-erase --noconfirm "${target_disk}"
+    /usr/sbin/puavo-disk-erase --noconfirm "$target_disk"
     ocs-sr -batch -g auto -e1 auto -e2 -r -j2 -scr -k1 -p true \
            restoredisk "$restore_image" "$target_disk"
     ;;
