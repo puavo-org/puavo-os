@@ -33,6 +33,7 @@ on_exit()
     umount ${umountverbose_G} "${tmpdir_G}/proc"
     umount ${umountverbose_G} "${tmpdir_G}/dev/pts"
     umount ${umountverbose_G} "${tmpdir_G}/dev"
+    umount ${umountverbose_G} "${tmpdir_G}/sys"
     umount ${umountverbose_G} "${tmpdir_G}"
     rmdir ${rmdirverbose_G} "${tmpdir_G}"
 
@@ -105,11 +106,6 @@ mount ${mountverbose_G} -o loop "${imgfile_G}" "${tmpdir_G}"
 mount ${mountverbose_G} -o bind /dev "${tmpdir_G}/dev"
 mount ${mountverbose_G} -o bind /dev/pts "${tmpdir_G}/dev/pts"
 mount ${mountverbose_G} -o bind /proc "${tmpdir_G}/proc"
+mount ${mountverbose_G} -o bind /sys "${tmpdir_G}/sys"
 
-# Disable daemons in Puavo Images
-export DISABLE_DAEMONS=true
-
-# Disable deamon in LTSP Images
-export LTSP_HANDLE_DAEMONS=false
-
-setarch i386 chroot "${tmpdir_G}"
+chroot "$tmpdir_G"

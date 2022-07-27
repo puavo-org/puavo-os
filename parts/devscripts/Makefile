@@ -28,6 +28,7 @@ install: bin/thumb installdirs
 		bin/do-debpool-changes \
 		bin/dpkg-diff-img \
 		bin/makethumbs \
+		bin/puavo-img-chroot \
 		bin/thumb
 
 .PHONY: clean
