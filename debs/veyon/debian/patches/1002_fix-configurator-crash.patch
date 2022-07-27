@@ -1,0 +1,41 @@
+Description: Fix crash in configurator
+ Something compiler/linker dependent causes configurator to crash.
+ As a first fix, comment out the causing line.
+ .
+ veyon (4.7.3+repack1-1) unstable; urgency=medium
+ .
+   * New upstream release.
+   * debian/copyright:
+     + Update auto-generated copyright.in file.
+     + Update copyright attributions.
+   * debian/docs:
+     + Drop CONTRIBUTORS. File vanished upstream.
+   * debian/patches:
+     + Trivial rebase of 2001_disable-CPackDefinitions-cmake.patch.
+     + Drop 2002_no-bundled-kitemmodels.patch. Feature provided upstream.
+     + Add 1001_fix-external-x11vnc.patch. Fix build with external x11vnc.
+   * debian/veyon-plugins.install:
+     + Simplify file, make it more robust to plugin changes.
+   * debian/rules:
+     + Obtain upstream tarball from Git releases (and import Git submodules
+       when creating it).
+     + Build with -DWITH_UNITY_BUILD=OFF.
+   * debian/watch:
+     + Fix for URL changes on Github.
+   * debian/control:
+     + Adapt S: fields as proposed by upstream.
+     + Bump Standards-Version: to 4.6.0. No changes needed.
+Author: Puavo Org <dev@opinsys.fi>
+
+
+--- veyon-4.7.3+repack1.orig/configurator/src/MainWindow.cpp
++++ veyon-4.7.3+repack1/configurator/src/MainWindow.cpp
+@@ -86,7 +86,7 @@ MainWindow::MainWindow( QWidget* parent
+ 
+ 	connect( viewModeGroup, &QActionGroup::triggered, this, &MainWindow::updateView );
+ 
+-	connect( ui->actionAboutQt, &QAction::triggered, QApplication::instance(), &QApplication::aboutQt );
++	//connect( ui->actionAboutQt, &QAction::triggered, QApplication::instance(), &QApplication::aboutQt );
+ 
+ 	connect( &VeyonCore::config(), &VeyonConfiguration::configurationChanged, this, &MainWindow::configurationChanged );
+ 
