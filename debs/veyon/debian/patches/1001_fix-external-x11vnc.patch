@@ -1,0 +1,37 @@
+--- a/plugins/vncserver/x11vnc-builtin/BuiltinX11VncServer.cpp
++++ b/plugins/vncserver/x11vnc-builtin/BuiltinX11VncServer.cpp
+@@ -32,7 +32,9 @@
+ #include "X11VncConfigurationWidget.h"
+ 
+ extern "C" int x11vnc_main( int argc, char * * argv );
++#ifndef VEYON_X11VNC_EXTERNAL
+ extern "C" int hasWorkingXShm();
++#endif
+ 
+ 
+ BuiltinX11VncServer::BuiltinX11VncServer( QObject* parent ) :
+@@ -73,11 +75,13 @@
+ 		cmdline.append( extraArguments.split( QLatin1Char(' ') ) );
+ 	}
+ 
++#ifndef VEYON_X11VNC_EXTERNAL
+ 	if( hasWorkingXShm() == false )
+ 	{
+ 		vDebug() << "X shared memory extension not available - passing -noshm to x11vnc";
+ 		cmdline.append( QStringLiteral("-noshm") );
+ 	}
++#endif
+ 
+ 	const auto systemEnv = QProcessEnvironment::systemEnvironment();
+ 
+--- a/plugins/vncserver/x11vnc-builtin/CMakeLists.txt
++++ b/plugins/vncserver/x11vnc-builtin/CMakeLists.txt
+@@ -199,6 +199,8 @@
+ 
+ 	set_source_files_properties(${x11vnc_SOURCES} ${libvncserver_SOURCES} PROPERTIES
+ 		COMPILE_FLAGS "${COMPILER_WARN_DISABLE_FLAGS} -Wno-deprecated-declarations -Wno-unused-result -Wno-unused-function -Wno-unused-variable -Wno-misleading-indentation")
++else()
++	add_definitions ( -DVEYON_X11VNC_EXTERNAL )
+ endif()
+ 
+ set(WITH_PCH OFF)

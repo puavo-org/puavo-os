@@ -1,0 +1,16 @@
+DFSG-FREE PACKAGE
+-----------------
+
+The SHA-1 implementation in upstream sources (ica/x11/common/sha1.{h,c})
+is directly taken from RFC 3174 "US Secure Hash Algorithm 1 (SHA1)". Given
+that Debian considers RFCs non-free according to the Debian Free Software
+Guidelines 3 and 6, the offending files have been removed from the upstream
+sources.
+
+Luckily, the SHA-1 implementation provided by the OpenSSL library is compatible
+with the own in Bacula.  The fact that iTALC is already linked against OpenSSL
+also means that nothing changed for the Debian package.
+
+This change was introduced with Debian upload of italc 2.0.2+dfsg1-2.
+
+ -- Mike Gabriel <mike.gabriel@das-netzwerkteam.de>  Thu, 14 Aug 2014 13:42:47 +0200

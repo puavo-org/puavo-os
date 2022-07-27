@@ -1,0 +1,1276 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Veyon
+Upstream-Contact: Tobias Junghans <tobydox@veyon.io>
+Source: https://github.com/veyon/veyon
+Comment:
+ Upstream sources contain several other code
+ portions that are for MS Windows and/or Mac OS X.
+ .
+ Those bits of the upstream code have been removed
+ for this Debian package.
+
+Files: cli/src/ConfigCommands.cpp
+ cli/src/ConfigCommands.h
+ cli/src/FeatureCommands.cpp
+ cli/src/FeatureCommands.h
+ cli/src/PluginCommands.cpp
+ cli/src/PluginCommands.h
+ cli/src/ServiceControlCommands.cpp
+ cli/src/ServiceControlCommands.h
+ cli/src/ShellCommands.cpp
+ cli/src/ShellCommands.h
+ cli/src/main.cpp
+ configurator/src/AccessControlPage.cpp
+ configurator/src/AccessControlPage.h
+ configurator/src/AccessControlRuleEditDialog.cpp
+ configurator/src/AccessControlRuleEditDialog.h
+ configurator/src/AccessControlRuleListModel.cpp
+ configurator/src/AccessControlRuleListModel.h
+ configurator/src/AccessControlRulesTestDialog.cpp
+ configurator/src/AccessControlRulesTestDialog.h
+ configurator/src/GeneralConfigurationPage.cpp
+ configurator/src/GeneralConfigurationPage.h
+ configurator/src/MainWindow.cpp
+ configurator/src/MainWindow.h
+ configurator/src/MasterConfigurationPage.cpp
+ configurator/src/MasterConfigurationPage.h
+ configurator/src/ServiceConfigurationPage.cpp
+ configurator/src/ServiceConfigurationPage.h
+ configurator/src/main.cpp
+ core/src/AboutDialog.cpp
+ core/src/AboutDialog.h
+ core/src/AccessControlProvider.cpp
+ core/src/AccessControlProvider.h
+ core/src/AccessControlRule.cpp
+ core/src/AccessControlRule.h
+ core/src/AuthenticationCredentials.cpp
+ core/src/AuthenticationCredentials.h
+ core/src/AuthenticationProxy.h
+ core/src/BuiltinFeatures.cpp
+ core/src/BuiltinFeatures.h
+ core/src/CommandLineIO.cpp
+ core/src/CommandLineIO.h
+ core/src/CommandLinePluginInterface.h
+ core/src/Computer.cpp
+ core/src/Computer.h
+ core/src/ComputerControlInterface.cpp
+ core/src/ComputerControlInterface.h
+ core/src/ComputerListModel.cpp
+ core/src/ComputerListModel.h
+ core/src/Configuration/JsonStore.cpp
+ core/src/Configuration/JsonStore.h
+ core/src/Configuration/LocalStore.cpp
+ core/src/Configuration/LocalStore.h
+ core/src/Configuration/Object.cpp
+ core/src/Configuration/Object.h
+ core/src/Configuration/Password.cpp
+ core/src/Configuration/Password.h
+ core/src/Configuration/Property.cpp
+ core/src/Configuration/Property.h
+ core/src/Configuration/Proxy.cpp
+ core/src/Configuration/Proxy.h
+ core/src/Configuration/Store.h
+ core/src/Configuration/UiMapping.cpp
+ core/src/Configuration/UiMapping.h
+ core/src/ConfigurationManager.cpp
+ core/src/ConfigurationManager.h
+ core/src/ConfigurationPage.cpp
+ core/src/ConfigurationPage.h
+ core/src/ConfigurationPagePluginInterface.h
+ core/src/CryptoCore.cpp
+ core/src/CryptoCore.h
+ core/src/DesktopAccessDialog.cpp
+ core/src/DesktopAccessDialog.h
+ core/src/EnumHelper.h
+ core/src/Feature.h
+ core/src/FeatureManager.cpp
+ core/src/FeatureManager.h
+ core/src/FeatureMessage.cpp
+ core/src/FeatureMessage.h
+ core/src/FeatureProviderInterface.h
+ core/src/FeatureWorkerManager.cpp
+ core/src/FeatureWorkerManager.h
+ core/src/FileSystemBrowser.cpp
+ core/src/FileSystemBrowser.h
+ core/src/Filesystem.cpp
+ core/src/Filesystem.h
+ core/src/HashList.h
+ core/src/HostAddress.cpp
+ core/src/HostAddress.h
+ core/src/KeyboardShortcutTrapper.h
+ core/src/LockWidget.cpp
+ core/src/LockWidget.h
+ core/src/Lockable.h
+ core/src/LockingPointer.h
+ core/src/Logger.cpp
+ core/src/Logger.h
+ core/src/MessageContext.h
+ core/src/MonitoringMode.cpp
+ core/src/MonitoringMode.h
+ core/src/NetworkObject.cpp
+ core/src/NetworkObject.h
+ core/src/NetworkObjectDirectory.cpp
+ core/src/NetworkObjectDirectory.h
+ core/src/NetworkObjectDirectoryManager.cpp
+ core/src/NetworkObjectDirectoryManager.h
+ core/src/NetworkObjectDirectoryPluginInterface.h
+ core/src/NetworkObjectModel.h
+ core/src/ObjectManager.h
+ core/src/PasswordDialog.cpp
+ core/src/PasswordDialog.h
+ core/src/PlatformCoreFunctions.h
+ core/src/PlatformFilesystemFunctions.h
+ core/src/PlatformInputDeviceFunctions.h
+ core/src/PlatformNetworkFunctions.h
+ core/src/PlatformPluginInterface.h
+ core/src/PlatformPluginManager.cpp
+ core/src/PlatformPluginManager.h
+ core/src/PlatformServiceFunctions.h
+ core/src/PlatformSessionFunctions.h
+ core/src/PlatformUserFunctions.h
+ core/src/Plugin.h
+ core/src/PluginInterface.h
+ core/src/PluginManager.cpp
+ core/src/PluginManager.h
+ core/src/ProcessHelper.cpp
+ core/src/ProcessHelper.h
+ core/src/QtCompat.cpp
+ core/src/QtCompat.h
+ core/src/RfbVeyonAuth.h
+ core/src/Screenshot.cpp
+ core/src/Screenshot.h
+ core/src/ServiceControl.cpp
+ core/src/ServiceControl.h
+ core/src/SocketDevice.h
+ core/src/SystemTrayIcon.cpp
+ core/src/SystemTrayIcon.h
+ core/src/ToolButton.cpp
+ core/src/ToolButton.h
+ core/src/TranslationLoader.cpp
+ core/src/TranslationLoader.h
+ core/src/UserGroupsBackendInterface.h
+ core/src/UserGroupsBackendManager.cpp
+ core/src/UserGroupsBackendManager.h
+ core/src/VariantArrayMessage.cpp
+ core/src/VariantArrayMessage.h
+ core/src/VariantStream.cpp
+ core/src/VariantStream.h
+ core/src/VeyonConfiguration.cpp
+ core/src/VeyonConfiguration.h
+ core/src/VeyonConfigurationProperties.h
+ core/src/VeyonConnection.cpp
+ core/src/VeyonConnection.h
+ core/src/VeyonCore.cpp
+ core/src/VeyonCore.h
+ core/src/VeyonMasterInterface.h
+ core/src/VeyonServerInterface.h
+ core/src/VeyonServiceControl.cpp
+ core/src/VeyonServiceControl.h
+ core/src/VeyonWorkerInterface.h
+ core/src/VncClientProtocol.cpp
+ core/src/VncClientProtocol.h
+ core/src/VncConnection.h
+ core/src/VncEvents.cpp
+ core/src/VncEvents.h
+ core/src/VncFeatureMessageEvent.cpp
+ core/src/VncFeatureMessageEvent.h
+ core/src/VncServerClient.h
+ core/src/VncServerPluginInterface.h
+ core/src/VncServerProtocol.cpp
+ core/src/VncServerProtocol.h
+ core/src/VncView.cpp
+ core/src/VncView.h
+ core/src/VncViewWidget.cpp
+ core/src/VncViewWidget.h
+ core/src/veyonconfig.h.in
+ master/src/CheckableItemProxyModel.cpp
+ master/src/CheckableItemProxyModel.h
+ master/src/ComputerControlListModel.cpp
+ master/src/ComputerControlListModel.h
+ master/src/ComputerManager.cpp
+ master/src/ComputerManager.h
+ master/src/ComputerMonitoringModel.cpp
+ master/src/ComputerMonitoringModel.h
+ master/src/ComputerMonitoringView.cpp
+ master/src/ComputerMonitoringView.h
+ master/src/ComputerMonitoringWidget.cpp
+ master/src/ComputerMonitoringWidget.h
+ master/src/ComputerSelectPanel.cpp
+ master/src/ComputerSelectPanel.h
+ master/src/ComputerZoomWidget.cpp
+ master/src/ComputerZoomWidget.h
+ master/src/DocumentationFigureCreator.cpp
+ master/src/DocumentationFigureCreator.h
+ master/src/FlexibleListView.cpp
+ master/src/FlexibleListView.h
+ master/src/KExtraColumnsProxyModel.cpp
+ master/src/KExtraColumnsProxyModel.h
+ master/src/KRecursiveFilterProxyModel.cpp
+ master/src/KRecursiveFilterProxyModel.h
+ master/src/LocationDialog.cpp
+ master/src/LocationDialog.h
+ master/src/MainToolBar.cpp
+ master/src/MainToolBar.h
+ master/src/MainWindow.cpp
+ master/src/MainWindow.h
+ master/src/NetworkObjectFilterProxyModel.cpp
+ master/src/NetworkObjectFilterProxyModel.h
+ master/src/NetworkObjectOverlayDataModel.cpp
+ master/src/NetworkObjectOverlayDataModel.h
+ master/src/NetworkObjectTreeModel.cpp
+ master/src/NetworkObjectTreeModel.h
+ master/src/RecursiveFilterProxyModel.cpp
+ master/src/RecursiveFilterProxyModel.h
+ master/src/ScreenshotManagementPanel.cpp
+ master/src/ScreenshotManagementPanel.h
+ master/src/SlideshowModel.cpp
+ master/src/SlideshowModel.h
+ master/src/SlideshowPanel.cpp
+ master/src/SlideshowPanel.h
+ master/src/SpotlightModel.cpp
+ master/src/SpotlightModel.h
+ master/src/SpotlightPanel.cpp
+ master/src/SpotlightPanel.h
+ master/src/UserConfig.cpp
+ master/src/UserConfig.h
+ master/src/VeyonMaster.cpp
+ master/src/VeyonMaster.h
+ master/src/main.cpp
+ plugins/authkeys/AuthKeysConfigurationPage.cpp
+ plugins/authkeys/AuthKeysConfigurationPage.h
+ plugins/authkeys/AuthKeysManager.cpp
+ plugins/authkeys/AuthKeysManager.h
+ plugins/authkeys/AuthKeysPlugin.cpp
+ plugins/authkeys/AuthKeysPlugin.h
+ plugins/authkeys/AuthKeysTableModel.cpp
+ plugins/authkeys/AuthKeysTableModel.h
+ plugins/builtindirectory/BuiltinDirectory.cpp
+ plugins/builtindirectory/BuiltinDirectory.h
+ plugins/builtindirectory/BuiltinDirectoryConfiguration.h
+ plugins/builtindirectory/BuiltinDirectoryConfigurationPage.cpp
+ plugins/builtindirectory/BuiltinDirectoryConfigurationPage.h
+ plugins/builtindirectory/BuiltinDirectoryPlugin.cpp
+ plugins/builtindirectory/BuiltinDirectoryPlugin.h
+ plugins/demo/DemoClient.cpp
+ plugins/demo/DemoClient.h
+ plugins/demo/DemoConfiguration.h
+ plugins/demo/DemoConfigurationPage.cpp
+ plugins/demo/DemoConfigurationPage.h
+ plugins/demo/DemoFeaturePlugin.cpp
+ plugins/demo/DemoFeaturePlugin.h
+ plugins/demo/DemoServer.cpp
+ plugins/demo/DemoServer.h
+ plugins/demo/DemoServerConnection.cpp
+ plugins/demo/DemoServerConnection.h
+ plugins/demo/DemoServerProtocol.cpp
+ plugins/demo/DemoServerProtocol.h
+ plugins/desktopservices/DesktopServiceObject.cpp
+ plugins/desktopservices/DesktopServiceObject.h
+ plugins/desktopservices/DesktopServicesConfiguration.h
+ plugins/desktopservices/DesktopServicesConfigurationPage.cpp
+ plugins/desktopservices/DesktopServicesConfigurationPage.h
+ plugins/desktopservices/DesktopServicesFeaturePlugin.cpp
+ plugins/desktopservices/DesktopServicesFeaturePlugin.h
+ plugins/desktopservices/OpenWebsiteDialog.cpp
+ plugins/desktopservices/OpenWebsiteDialog.h
+ plugins/desktopservices/StartAppDialog.cpp
+ plugins/desktopservices/StartAppDialog.h
+ plugins/filetransfer/FileReadThread.cpp
+ plugins/filetransfer/FileReadThread.h
+ plugins/filetransfer/FileTransferConfiguration.h
+ plugins/filetransfer/FileTransferConfigurationPage.cpp
+ plugins/filetransfer/FileTransferConfigurationPage.h
+ plugins/filetransfer/FileTransferController.cpp
+ plugins/filetransfer/FileTransferController.h
+ plugins/filetransfer/FileTransferDialog.cpp
+ plugins/filetransfer/FileTransferDialog.h
+ plugins/filetransfer/FileTransferListModel.cpp
+ plugins/filetransfer/FileTransferListModel.h
+ plugins/filetransfer/FileTransferPlugin.cpp
+ plugins/filetransfer/FileTransferPlugin.h
+ plugins/filetransfer/FileTransferUserConfiguration.h
+ plugins/ldap/LdapPlugin.cpp
+ plugins/ldap/LdapPlugin.h
+ plugins/ldap/common/LdapBrowseDialog.cpp
+ plugins/ldap/common/LdapBrowseDialog.h
+ plugins/ldap/common/LdapBrowseModel.cpp
+ plugins/ldap/common/LdapBrowseModel.h
+ plugins/ldap/common/LdapClient.cpp
+ plugins/ldap/common/LdapClient.h
+ plugins/ldap/common/LdapCommon.h
+ plugins/ldap/common/LdapConfiguration.cpp
+ plugins/ldap/common/LdapConfiguration.h
+ plugins/ldap/common/LdapConfigurationPage.cpp
+ plugins/ldap/common/LdapConfigurationPage.h
+ plugins/ldap/common/LdapDirectory.cpp
+ plugins/ldap/common/LdapDirectory.h
+ plugins/ldap/common/LdapNetworkObjectDirectory.cpp
+ plugins/ldap/common/LdapNetworkObjectDirectory.h
+ plugins/ldap/kldap/KLdapIntegration.cpp
+ plugins/ldap/kldap/kldap_export.h
+ plugins/ldap/kldap/klocalizedstring.h
+ plugins/ldap/kldap/ldap_debug.h
+ plugins/platform/common/LogonHelper.cpp
+ plugins/platform/common/LogonHelper.h
+ plugins/platform/common/PersistentLogonCredentials.cpp
+ plugins/platform/common/PersistentLogonCredentials.h
+ plugins/platform/common/PlatformSessionManager.cpp
+ plugins/platform/common/PlatformSessionManager.h
+ plugins/platform/common/ServiceDataManager.cpp
+ plugins/platform/common/ServiceDataManager.h
+ plugins/platform/linux/LinuxCoreFunctions.cpp
+ plugins/platform/linux/LinuxCoreFunctions.h
+ plugins/platform/linux/LinuxDesktopIntegration.h
+ plugins/platform/linux/LinuxFilesystemFunctions.cpp
+ plugins/platform/linux/LinuxFilesystemFunctions.h
+ plugins/platform/linux/LinuxInputDeviceFunctions.cpp
+ plugins/platform/linux/LinuxInputDeviceFunctions.h
+ plugins/platform/linux/LinuxKeyboardInput.cpp
+ plugins/platform/linux/LinuxKeyboardInput.h
+ plugins/platform/linux/LinuxKeyboardShortcutTrapper.h
+ plugins/platform/linux/LinuxNetworkFunctions.cpp
+ plugins/platform/linux/LinuxNetworkFunctions.h
+ plugins/platform/linux/LinuxPlatformConfiguration.h
+ plugins/platform/linux/LinuxPlatformConfigurationPage.cpp
+ plugins/platform/linux/LinuxPlatformConfigurationPage.h
+ plugins/platform/linux/LinuxPlatformPlugin.cpp
+ plugins/platform/linux/LinuxPlatformPlugin.h
+ plugins/platform/linux/LinuxServerProcess.cpp
+ plugins/platform/linux/LinuxServerProcess.h
+ plugins/platform/linux/LinuxServiceCore.cpp
+ plugins/platform/linux/LinuxServiceCore.h
+ plugins/platform/linux/LinuxServiceFunctions.cpp
+ plugins/platform/linux/LinuxServiceFunctions.h
+ plugins/platform/linux/LinuxSessionFunctions.cpp
+ plugins/platform/linux/LinuxSessionFunctions.h
+ plugins/platform/linux/LinuxUserFunctions.cpp
+ plugins/platform/linux/LinuxUserFunctions.h
+ plugins/platform/linux/auth-helper/VeyonAuthHelper.cpp
+ plugins/powercontrol/PowerControlFeaturePlugin.cpp
+ plugins/powercontrol/PowerControlFeaturePlugin.h
+ plugins/powercontrol/PowerDownTimeInputDialog.cpp
+ plugins/powercontrol/PowerDownTimeInputDialog.h
+ plugins/remoteaccess/RemoteAccessFeaturePlugin.cpp
+ plugins/remoteaccess/RemoteAccessFeaturePlugin.h
+ plugins/remoteaccess/RemoteAccessWidget.cpp
+ plugins/remoteaccess/RemoteAccessWidget.h
+ plugins/screenlock/ScreenLockFeaturePlugin.cpp
+ plugins/screenlock/ScreenLockFeaturePlugin.h
+ plugins/screenshot/ScreenshotFeaturePlugin.cpp
+ plugins/screenshot/ScreenshotFeaturePlugin.h
+ plugins/systemusergroups/SystemUserGroupsPlugin.cpp
+ plugins/systemusergroups/SystemUserGroupsPlugin.h
+ plugins/testing/TestingCommandLinePlugin.cpp
+ plugins/testing/TestingCommandLinePlugin.h
+ plugins/textmessage/TextMessageDialog.cpp
+ plugins/textmessage/TextMessageDialog.h
+ plugins/textmessage/TextMessageFeaturePlugin.cpp
+ plugins/textmessage/TextMessageFeaturePlugin.h
+ plugins/usersessioncontrol/UserLoginDialog.cpp
+ plugins/usersessioncontrol/UserLoginDialog.h
+ plugins/usersessioncontrol/UserSessionControlPlugin.cpp
+ plugins/usersessioncontrol/UserSessionControlPlugin.h
+ plugins/vncserver/external/ExternalVncServer.cpp
+ plugins/vncserver/external/ExternalVncServer.h
+ plugins/vncserver/external/ExternalVncServerConfiguration.h
+ plugins/vncserver/external/ExternalVncServerConfigurationWidget.cpp
+ plugins/vncserver/external/ExternalVncServerConfigurationWidget.h
+ plugins/vncserver/headless/HeadlessVncConfiguration.h
+ plugins/vncserver/headless/HeadlessVncServer.cpp
+ plugins/vncserver/headless/HeadlessVncServer.h
+ plugins/vncserver/ultravnc-builtin/BuiltinUltraVncServer.cpp
+ plugins/vncserver/ultravnc-builtin/BuiltinUltraVncServer.h
+ plugins/vncserver/ultravnc-builtin/LogoffEventFilter.cpp
+ plugins/vncserver/ultravnc-builtin/LogoffEventFilter.h
+ plugins/vncserver/ultravnc-builtin/UltraVncConfiguration.h
+ plugins/vncserver/ultravnc-builtin/UltraVncConfigurationWidget.cpp
+ plugins/vncserver/ultravnc-builtin/UltraVncConfigurationWidget.h
+ plugins/vncserver/ultravnc-builtin/vncntlm.cpp
+ plugins/vncserver/x11vnc-builtin/BuiltinX11VncServer.cpp
+ plugins/vncserver/x11vnc-builtin/BuiltinX11VncServer.h
+ plugins/vncserver/x11vnc-builtin/X11VncConfiguration.h
+ plugins/vncserver/x11vnc-builtin/X11VncConfigurationWidget.cpp
+ plugins/vncserver/x11vnc-builtin/X11VncConfigurationWidget.h
+ plugins/webapi/WebApiAuthenticationProxy.cpp
+ plugins/webapi/WebApiAuthenticationProxy.h
+ plugins/webapi/WebApiConfiguration.h
+ plugins/webapi/WebApiConfigurationPage.cpp
+ plugins/webapi/WebApiConfigurationPage.h
+ plugins/webapi/WebApiConnection.cpp
+ plugins/webapi/WebApiConnection.h
+ plugins/webapi/WebApiController.cpp
+ plugins/webapi/WebApiController.h
+ plugins/webapi/WebApiHttpServer.cpp
+ plugins/webapi/WebApiHttpServer.h
+ plugins/webapi/WebApiPlugin.cpp
+ plugins/webapi/WebApiPlugin.h
+ server/src/ComputerControlClient.cpp
+ server/src/ComputerControlClient.h
+ server/src/ComputerControlServer.cpp
+ server/src/ComputerControlServer.h
+ server/src/ServerAccessControlManager.cpp
+ server/src/ServerAccessControlManager.h
+ server/src/ServerAuthenticationManager.cpp
+ server/src/ServerAuthenticationManager.h
+ server/src/VeyonServerProtocol.cpp
+ server/src/VeyonServerProtocol.h
+ server/src/VncProxyConnection.cpp
+ server/src/VncProxyConnection.h
+ server/src/VncProxyConnectionFactory.h
+ server/src/VncProxyServer.cpp
+ server/src/VncProxyServer.h
+ server/src/VncServer.cpp
+ server/src/VncServer.h
+ server/src/main.cpp
+ service/src/main.cpp
+ worker/src/FeatureWorkerManagerConnection.cpp
+ worker/src/FeatureWorkerManagerConnection.h
+ worker/src/VeyonWorker.cpp
+ worker/src/VeyonWorker.h
+ worker/src/main.cpp
+Copyright: 2004-2022, Tobias Junghans <tobydox@veyon.io>
+  2006-2022, Tobias Junghans <tobydox@veyon.io>
+  2007-2022, Tobias Junghans <tobydox@veyon.io>
+  2008-2022, Tobias Junghans <tobydox@veyon.io>
+  2009-2022, Tobias Junghans <tobydox@veyon.io>
+  2010-2022, Tobias Junghans <tobydox@veyon.io>
+  2011-2022, Tobias Junghans <tobydox@veyon.io>
+  2016-2022, Tobias Junghans <tobydox@veyon.io>
+  2017-2022, Tobias Junghans <tobydox@veyon.io>
+  2018-2022, Tobias Junghans <tobydox@veyon.io>
+  2019-2022, Tobias Junghans <tobydox@veyon.io>
+  2020-2022, Tobias Junghans <tobydox@veyon.io>
+  2021-2022, Tobias Junghans <tobydox@veyon.io>
+License: GPL-2+~with-OpenSSL-Exception
+
+Files: CMakeLists.txt
+ ChangeLog
+ INSTALL
+ SECURITY.md
+ cli/CMakeLists.txt
+ cli/data/veyon-cli.exe.manifest.in
+ cli/data/veyon-wcli.exe.manifest.in
+ cli/veyon-cli.1
+ cli/veyon-cli.rc.in
+ cli/veyon-wcli.rc.in
+ cmake/CPackDefinitions.cmake
+ cmake/modules/BuildVeyonFuzzer.cmake
+ cmake/modules/CreateTranslations.cmake
+ cmake/modules/ConfigureFiles.cmake
+ cmake/modules/BuildVeyonApplication.cmake
+ cmake/modules/BuildVeyonPlugin.cmake
+ cmake/modules/FindLZO.cmake
+ cmake/modules/FindPAM.cmake
+ cmake/modules/FindQtTranslations.cmake
+ cmake/modules/LibVNCServerIntegration.cmake
+ cmake/modules/PchHelpers.cmake
+ cmake/modules/SetDefaultTargetProperties.cmake
+ cmake/modules/WindowsBuildHelpers.cmake
+ cmake/modules/WindowsInstaller.cmake
+ cmake/modules/XdgInstall.cmake
+ configurator/CMakeLists.txt
+ configurator/data/io.veyon.veyon-configurator.policy.in
+ configurator/data/veyon-configurator.desktop.in
+ configurator/data/veyon-configurator.exe.manifest.in
+ configurator/data/veyon-configurator.svg
+ configurator/data/veyon-configurator.xpm
+ configurator/resources/configurator.qrc
+ configurator/src/AccessControlPage.ui
+ configurator/src/AccessControlRuleEditDialog.ui
+ configurator/src/AccessControlRulesTestDialog.ui
+ configurator/src/GeneralConfigurationPage.ui
+ configurator/src/MainWindow.ui
+ configurator/src/MasterConfigurationPage.ui
+ configurator/src/ServiceConfigurationPage.ui
+ configurator/veyon-configurator.1
+ configurator/veyon-configurator.rc.in
+ core/CMakeLists.txt
+ core/builddata.qrc.in
+ core/resources/core.qrc
+ core/resources/default-pkey.pem
+ core/resources/go-down.png
+ core/resources/go-next.png
+ core/resources/go-previous.png
+ core/resources/go-up.png
+ core/src/AboutDialog.ui
+ core/src/PasswordDialog.ui
+ core/src/PrecompiledHeader.h
+ master/CMakeLists.txt
+ master/data/veyon-master.desktop.in
+ master/data/veyon-master.exe.manifest.in
+ master/data/veyon-master.svg
+ master/data/veyon-master.xpm
+ master/resources/computer-slideshow.png
+ master/resources/computers.png
+ master/resources/examples.qrc
+ master/resources/master.qrc
+ master/resources/spotlight.png
+ master/resources/update-realtime-disabled.png
+ master/resources/update-realtime-enabled.png
+ master/src/ComputerSelectPanel.ui
+ master/src/LocationDialog.ui
+ master/src/MainWindow.ui
+ master/src/ScreenshotManagementPanel.ui
+ master/src/SlideshowPanel.ui
+ master/src/SpotlightPanel.ui
+ master/veyon-master.1
+ master/veyon-master.rc.in
+ plugins/CMakeLists.txt
+ plugins/authkeys/AuthKeysConfigurationPage.ui
+ plugins/authkeys/CMakeLists.txt
+ plugins/builtindirectory/BuiltinDirectoryConfigurationPage.ui
+ plugins/builtindirectory/CMakeLists.txt
+ plugins/builtindirectory/builtindirectory.qrc
+ plugins/demo/CMakeLists.txt
+ plugins/demo/DemoConfigurationPage.ui
+ plugins/demo/demo.png
+ plugins/demo/demo.qrc
+ plugins/desktopservices/CMakeLists.txt
+ plugins/desktopservices/DesktopServicesConfigurationPage.ui
+ plugins/desktopservices/OpenWebsiteDialog.ui
+ plugins/desktopservices/StartAppDialog.ui
+ plugins/desktopservices/desktopservices.qrc
+ plugins/filetransfer/CMakeLists.txt
+ plugins/filetransfer/FileTransferConfigurationPage.ui
+ plugins/filetransfer/FileTransferDialog.ui
+ plugins/filetransfer/document-share.png
+ plugins/filetransfer/filetransfer.qrc
+ plugins/ldap/CMakeLists.txt
+ plugins/ldap/common/CMakeLists.txt
+ plugins/ldap/common/LdapBrowseDialog.ui
+ plugins/ldap/common/LdapConfigurationPage.ui
+ plugins/ldap/common/ldap.qrc
+ plugins/ldap/kldap/CMakeLists.txt
+ plugins/ldap/kldap/KLocalizedString
+ plugins/platform/CMakeLists.txt
+ plugins/platform/linux/CMakeLists.txt
+ plugins/platform/linux/LinuxPlatformConfigurationPage.ui
+ plugins/platform/linux/auth-helper/CMakeLists.txt
+ plugins/platform/linux/linux.qrc
+ plugins/powercontrol/CMakeLists.txt
+ plugins/powercontrol/PowerDownTimeInputDialog.ui
+ plugins/powercontrol/powercontrol.qrc
+ plugins/remoteaccess/CMakeLists.txt
+ plugins/remoteaccess/remoteaccess.qrc
+ plugins/remoteaccess/preferences-system-windows-effect-desktopgrid.png
+ plugins/screenlock/CMakeLists.txt
+ plugins/screenlock/screenlock.qrc
+ plugins/screenshot/CMakeLists.txt
+ plugins/screenshot/screenshot.qrc
+ plugins/systemusergroups/CMakeLists.txt
+ plugins/testing/CMakeLists.txt
+ plugins/textmessage/CMakeLists.txt
+ plugins/textmessage/TextMessageDialog.ui
+ plugins/textmessage/textmessage.qrc
+ plugins/vncserver/CMakeLists.txt
+ plugins/vncserver/external/CMakeLists.txt
+ plugins/vncserver/external/ExternalVncServerConfigurationWidget.ui
+ plugins/vncserver/headless/CMakeLists.txt
+ plugins/vncserver/ultravnc-builtin/CMakeLists.txt
+ plugins/vncserver/ultravnc-builtin/UltraVncConfigurationWidget.ui
+ plugins/vncserver/ultravnc-builtin/ultravnc.cpp
+ plugins/vncserver/ultravnc-builtin/vnchooks/CMakeLists.txt
+ plugins/vncserver/x11vnc-builtin/config.h.in
+ plugins/vncserver/x11vnc-builtin/CMakeLists.txt
+ plugins/vncserver/x11vnc-builtin/X11VncConfigurationWidget.ui
+ plugins/vncserver/x11vnc-builtin/x11vnc-veyon.c
+ plugins/webapi/CMakeLists.txt
+ plugins/webapi/WebApiConfigurationPage.ui
+ plugins/webapi/python/README.md
+ plugins/webapi/python/tests/test_veyon_webapi.py
+ plugins/webapi/python/veyon/__init__.py
+ plugins/webapi/qthttpserver/CMakeLists.txt
+ plugins/webapi/webapi.png
+ plugins/webapi/webapi.qrc
+ plugins/webapi/webapi.svg
+ server/CMakeLists.txt
+ server/data/veyon-server.exe.manifest.in
+ server/veyon-server.1
+ service/CMakeLists.txt
+ service/data/veyon-service.exe.manifest.in
+ service/veyon-service.1
+ service/veyon.service.in
+ server/veyon-server.rc.in
+ service/veyon-service.rc.in
+ tests/CMakeLists.txt
+ tests/libfuzzer/CMakeLists.txt
+ tests/libfuzzer/common/init.cpp
+ tests/libfuzzer/core/CMakeLists.txt
+ tests/libfuzzer/core/variantarraymessage/CMakeLists.txt
+ tests/libfuzzer/core/variantarraymessage/main.cpp
+ tests/libfuzzer/core/variantstream/CMakeLists.txt
+ tests/libfuzzer/core/variantstream/main.cpp
+ tests/libfuzzer/core/vncclientprotocol/CMakeLists.txt
+ tests/libfuzzer/core/vncclientprotocol/main.cpp
+ tests/libfuzzer/core/vncserverprotocol/CMakeLists.txt
+ tests/libfuzzer/core/vncserverprotocol/main.cpp
+ translations/CMakeLists.txt
+ translations/veyon.ts
+ translations/veyon_ar.ts
+ translations/veyon_bg.ts
+ translations/veyon_ca_ES.ts
+ translations/veyon_cs.ts
+ translations/veyon_de.ts
+ translations/veyon_el.ts
+ translations/veyon_et.ts
+ translations/veyon_es_ES.ts
+ translations/veyon_fa.ts
+ translations/veyon_fr.ts
+ translations/veyon_he.ts
+ translations/veyon_hu.ts
+ translations/veyon_id.ts
+ translations/veyon_it.ts
+ translations/veyon_ja.ts
+ translations/veyon_ko.ts
+ translations/veyon_lt.ts
+ translations/veyon_lv.ts
+ translations/veyon_mn.ts
+ translations/veyon_nl.ts
+ translations/veyon_no_NO.ts
+ translations/veyon_pl.ts
+ translations/veyon_pt_BR.ts
+ translations/veyon_pt_PT.ts
+ translations/veyon_ru.ts
+ translations/veyon_sl.ts
+ translations/veyon_sr.ts
+ translations/veyon_sv.ts
+ translations/veyon_th.ts
+ translations/veyon_tr.ts
+ translations/veyon_uk.ts
+ translations/veyon_vi.ts
+ translations/veyon_zh_TW.ts
+ translations/veyon_zh_CN.ts
+ worker/CMakeLists.txt
+ worker/data/veyon-worker.exe.manifest.in
+ worker/veyon-worker.1
+ worker/veyon-worker.rc.in
+ README.md
+ project.yml
+Copyright: 2004-2021, Tobias Junghans <tobydox@veyon.io>
+License: GPL-2+~with-OpenSSL-Exception
+Comment:
+ Assuming copyright holder and license from majority of
+ code files that contain a license header.
+
+Files: 3rdparty/kldap/CMakePresets.json
+Copyright: 2021-2022, Laurent Montel <montel@kde.org>
+License: BSD-3-Clause
+
+Files: 3rdparty/kldap/src/core/ber.cpp
+ 3rdparty/kldap/src/core/ber.h
+ 3rdparty/kldap/src/core/ldapconnection.cpp
+ 3rdparty/kldap/src/core/ldapconnection.h
+ 3rdparty/kldap/src/core/ldapcontrol.cpp
+ 3rdparty/kldap/src/core/ldapcontrol.h
+ 3rdparty/kldap/src/core/ldapdefs.h
+ 3rdparty/kldap/src/core/ldapobject.cpp
+ 3rdparty/kldap/src/core/ldapobject.h
+ 3rdparty/kldap/src/core/ldapoperation.cpp
+ 3rdparty/kldap/src/core/ldapoperation.h
+ 3rdparty/kldap/src/core/ldapsearch.cpp
+ 3rdparty/kldap/src/core/ldapsearch.h
+ 3rdparty/kldap/src/core/ldapserver.cpp
+ 3rdparty/kldap/src/core/ldapserver.h
+ 3rdparty/kldap/src/core/ldapurl.cpp
+ 3rdparty/kldap/src/core/ldapurl.h
+ 3rdparty/kldap/src/core/ldif.cpp
+ 3rdparty/kldap/src/core/ldif.h
+ 3rdparty/kldap/src/widgets/ldapconfigwidget.cpp
+ 3rdparty/kldap/src/widgets/ldapconfigwidget.h
+Copyright: 2004-2006, Szombathelyi Grgy <gyurco@freemail.hu>
+License: LGPL-2.0+
+
+Files: 3rdparty/kldap/sanitizers.supp
+ 3rdparty/kldap/metainfo.yaml
+Copyright: 2021-2022, Laurent Montel <montel@kde.org>
+License: CC0-1.0
+
+Files: 3rdparty/kldap/src/widgets/ldapclientsearchconfigreadconfigjob.cpp
+ 3rdparty/kldap/src/widgets/ldapclientsearchconfigreadconfigjob.h
+ 3rdparty/kldap/src/widgets/ldapclientsearchconfigwriteconfigjob.cpp
+ 3rdparty/kldap/src/widgets/ldapclientsearchconfigwriteconfigjob.h
+ 3rdparty/kldap/src/widgets/ldapsearchclientreadconfigserverjob.cpp
+ 3rdparty/kldap/src/widgets/ldapsearchclientreadconfigserverjob.h
+ 3rdparty/kldap/src/widgets/ldapwidgetitem_p.cpp
+ 3rdparty/kldap/src/widgets/ldapwidgetitem_p.h
+ 3rdparty/kldap/src/widgets/ldapwidgetitemreadconfigserverjob.cpp
+ 3rdparty/kldap/src/widgets/ldapwidgetitemreadconfigserverjob.h
+Copyright: 2020-2022, Laurent Montel <montel@kde.org> 
+License: LGPL-2.0+
+
+Files: 3rdparty/kldap/src/core/ldapdn.cpp
+ 3rdparty/kldap/src/core/ldapdn.h
+Copyright: 2006, Sean Harmer <sh@theharmers.co.uk>
+License: LGPL-2.0+
+
+Files: 3rdparty/kldap/src/widgets/ldapclientsearchconfig.cpp
+ 3rdparty/kldap/src/widgets/ldapclientsearchconfig.h
+Copyright: 2013-2022, Laurent Montel <montel@kde.org>
+License: LGPL-2.0+
+
+Files: 3rdparty/kldap/src/widgets/ldapconfigurewidget.cpp
+ 3rdparty/kldap/src/widgets/ldapconfigurewidget.h
+Copyright: 2019-2022, Laurent Montel <montel@kde.org>
+License: LGPL-2.0+
+
+Files: 3rdparty/kldap/src/widgets/addhostdialog.cpp
+ 3rdparty/kldap/src/widgets/addhostdialog.h
+Copyright: Text: 2002-2010, Tobias Koenig <tokoe@kde.org>
+License: LGPL-2.0+
+
+Files: 3rdparty/kldap/src/widgets/ldapclientsearch.cpp
+Copyright: 2002, KlarÃ¤lvdalens Datakonsult AB
+  2013-2022, Laurent Montel <montel@kde.org>
+License: LGPL-2.0+
+
+Files: 3rdparty/kldap/CMakeLists.txt
+ 3rdparty/kldap/KF5LdapConfig.cmake.in
+ 3rdparty/kldap/src/CMakeLists.txt
+ 3rdparty/kldap/src/Messages.sh
+ 3rdparty/kldap/src/kldap_config.h.cmake
+Copyright: 2013-2022, Laurent Montel <montel@kde.org>
+License: LGPL-2.0+
+Comment:
+ No license headers. Assuming main author of kldap as copyright holder,
+ assuming same license as kldap.
+
+Files: 3rdparty/qthttpserver/src/httpserver/qabstracthttpserver.cpp
+ 3rdparty/qthttpserver/src/httpserver/qabstracthttpserver.h
+ 3rdparty/qthttpserver/src/httpserver/qabstracthttpserver_p.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserver.cpp
+ 3rdparty/qthttpserver/src/httpserver/qhttpserver_p.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrequest.cpp
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrequest.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrequest_p.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverresponder.cpp
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverresponder.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverresponder_p.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverresponse.cpp
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverresponse.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverresponse_p.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrouter.cpp
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrouter.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrouter_p.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrouterrule.cpp
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrouterrule.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrouterrule_p.h
+ 3rdparty/qthttpserver/src/httpserver/qthttpserverglobal.h
+ 3rdparty/qthttpserver/tests/auto/qabstracthttpserver/tst_qabstracthttpserver.cpp
+ 3rdparty/qthttpserver/tests/auto/qhttpserver/tst_qhttpserver.cpp
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponder/tst_qhttpserverresponder.cpp
+ 3rdparty/qthttpserver/tests/auto/qhttpserverrouter/tst_qhttpserverrouter.cpp
+Copyright: 2019, The Qt Company Ltd.
+License: GPL-3+
+
+Files: 3rdparty/qthttpserver/.qmake.conf
+ 3rdparty/qthttpserver/CMakeLists.txt
+ 3rdparty/qthttpserver/coin/product_dependencies.yaml
+ 3rdparty/qthttpserver/dependencies.yaml
+ 3rdparty/qthttpserver/examples/CMakeLists.txt
+ 3rdparty/qthttpserver/examples/examples.pro
+ 3rdparty/qthttpserver/examples/httpserver/CMakeLists.txt
+ 3rdparty/qthttpserver/examples/httpserver/httpserver.pro
+ 3rdparty/qthttpserver/examples/httpserver/afterrequest/CMakeLists.txt
+ 3rdparty/qthttpserver/examples/httpserver/afterrequest/afterrequest.pro
+ 3rdparty/qthttpserver/examples/httpserver/simple/CMakeLists.txt
+ 3rdparty/qthttpserver/examples/httpserver/simple/assets.qrc
+ 3rdparty/qthttpserver/examples/httpserver/simple/assets/qt-logo.png
+ 3rdparty/qthttpserver/examples/httpserver/simple/main.cpp
+ 3rdparty/qthttpserver/examples/httpserver/simple/simple.pro
+ 3rdparty/qthttpserver/qthttpserver.pro
+ 3rdparty/qthttpserver/src/CMakeLists.txt
+ 3rdparty/qthttpserver/src/httpserver/CMakeLists.txt
+ 3rdparty/qthttpserver/src/httpserver/httpserver.pro
+ 3rdparty/qthttpserver/src/src.pro
+ 3rdparty/qthttpserver/src/sslserver/CMakeLists.txt
+ 3rdparty/qthttpserver/src/sslserver/sslserver.pro
+ 3rdparty/qthttpserver/sync.profile
+ 3rdparty/qthttpserver/tests/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/auto.pro
+ 3rdparty/qthttpserver/tests/auto/cmake/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/cmake/abstracthttpserver/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/cmake/abstracthttpserver/main.cpp
+ 3rdparty/qthttpserver/tests/auto/cmake/cmake.pro
+ 3rdparty/qthttpserver/tests/auto/qabstracthttpserver/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/qabstracthttpserver/qabstracthttpserver.pro
+ 3rdparty/qthttpserver/tests/auto/qhttpserver/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/qhttpserver/data/application.json
+ 3rdparty/qthttpserver/tests/auto/qhttpserver/data/text.html
+ 3rdparty/qthttpserver/tests/auto/qhttpserver/qhttpserver.pro
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponder/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponder/data/index.html
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponder/qhttpserverresponder.pro
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/data/application.json
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/data/empty
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/data/image.jpeg
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/data/image.png
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/data/image.svg
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/data/text.html
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/data/text.plain
+ 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/qhttpserverresponse.pro
+ 3rdparty/qthttpserver/tests/auto/qhttpserverrouter/CMakeLists.txt
+ 3rdparty/qthttpserver/tests/auto/qhttpserverrouter/qhttpserverrouter.pro
+ 3rdparty/qthttpserver/tests/tests.pro
+Copyright: 2019, The Qt Company Ltd.
+License: GPL-3+
+Comment:
+ No license headers, assuming main license of qhttpserver code.
+
+Files: 3rdparty/qthttpserver/examples/httpserver/afterrequest/main.cpp
+Copyright: 2018, The Qt Company Ltd.
+  2020, Mikhail Svetkin <mikhail.svetkin@gmail.com>
+License: BSD-3-clause
+
+Files: 3rdparty/qthttpserver/src/httpserver/qhttpserverfutureresponse.cpp
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverfutureresponse.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverliterals.cpp
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverliterals_p.h
+Copyright: 2019, Mikhail Svetkin <mikhail.svetkin@gmail.com>
+  2020, Mikhail Svetkin <mikhail.svetkin@gmail.com>
+License: GPL-3+
+
+Files: 3rdparty/qthttpserver/src/httpserver/qhttpserver.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverrouterviewtraits.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverviewtraits.h
+ 3rdparty/qthttpserver/src/httpserver/qhttpserverviewtraits_impl.h
+Copyright: 2019, The Qt Company Ltd.
+  2020, Mikhail Svetkin <mikhail.svetkin@gmail.com>
+License: GPL-3+
+
+Files: 3rdparty/qthttpserver/src/3rdparty/http-parser/Makefile
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/contrib/parsertrace.c
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/http_parser.c
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/http_parser.h
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/test.c
+Copyright: Joyent, Inc. and other Node contributors.
+License: Expat
+
+Files: 3rdparty/kldap/src/widgets/ldapclient.cpp
+ 3rdparty/kldap/src/widgets/ldapclient.h
+ 3rdparty/kldap/src/widgets/ldapclientsearch.h
+Copyright: 2002, Klarälvdalens Datakonsult AB
+License: LGPL-2.0+
+
+Files: 3rdparty/qthttpserver/src/3rdparty/http-parser/bench.c
+Copyright: Fedor Indutny
+License: Expat
+
+Files: 3rdparty/qthttpserver/src/3rdparty/http-parser.pri
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/AUTHORS
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/README.md
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/contrib/url_parser.c
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/fuzzers/fuzz_parser.c
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/fuzzers/fuzz_url.c
+ 3rdparty/qthttpserver/src/3rdparty/http-parser/http_parser.gyp
+ 3rdparty/qthttpserver/src/3rdparty/qt_attribution.json
+Copyright: Joyent, Inc. and other Node contributors.
+License: Expat
+Comment:
+ No license headers, assuming same license as qhttpserver's 3rd-party code
+ and same copyright holder(s).
+
+Files: 3rdparty/qthttpserver/src/sslserver/qsslserver.cpp
+ 3rdparty/qthttpserver/src/sslserver/qsslserver.h
+ 3rdparty/qthttpserver/src/sslserver/qsslserver_p.h
+ 3rdparty/qthttpserver/src/sslserver/qtsslserverglobal.h
+Copyright: 2019, Sylvain Garcia <garcia.6l20@gmail.com>.
+License: GPL-3+
+
+Files: 3rdparty/qthttpserver/tests/auto/qhttpserverresponse/tst_qhttpserverresponse.cpp
+Copyright: 2019, Tasuku Suzuki <tasuku.suzuki@qbc.io>
+License: GPL-3+
+
+Files: core/src/d3des.c
+ core/src/d3des.h
+Copyright: 1999, AT&T Laboratories Cambridge.
+License: PublicDomain
+
+Files: 3rdparty/kldap/cmake/FindLdap.cmake
+ cmake/modules/FindLdap.cmake
+ cmake/modules/FindSasl2.cmake
+Copyright: 2006, Szombathelyi György <gyurco@freemail.hu>
+  2006-2007, Laurent Montel <montel@kde.org>
+  2007-2016, Laurent Montel <montel@kde.org>
+  2007-2022, Laurent Montel <montel@kde.org>
+License: BSD-3-clause
+
+Files: core/src/VncConnection.cpp
+Copyright: 2007-2008, Urs Wolfer <uwolfer @ kde.org>
+  2008-2022, Tobias Junghans <tobydox@veyon.io>
+License: GPL-2+~with-OpenSSL-Exception
+
+Files: 3rdparty/kldap/src/core/w32-ldap-help.h
+Copyright: 2010, Andre Heinecke <aheinecke@intevation.de>
+License: LGPL-2.0+
+
+Files: cmake/modules/FindLibVNCClient.cmake
+ cmake/modules/FindLibVNCServer.cmake
+Copyright: 2020-2022, Tobias Junghans <tobydox@veyon.io>
+License: BSD-3-clause
+
+Files: configurator/data/veyon-configurator.png
+ configurator/resources/access-rule-ask.png
+ configurator/resources/application-x-ms-dos-executable.png
+ configurator/resources/application-x-sharedlib.png
+ configurator/resources/configure-shortcuts.png
+ configurator/resources/help-about.png
+ configurator/resources/network-vpn.png
+ configurator/resources/vcs-conflicting.png
+ configurator/resources/vcs-normal.png
+ configurator/resources/vcs-removed.png
+ configurator/resources/veyon-configurator.png
+ core/resources/application-x-pem-key.png
+ core/resources/dialog-ok-apply.png
+ core/resources/document-open.png
+ core/resources/document-save.png
+ core/resources/document-edit.png
+ core/resources/edit-find.png
+ core/resources/edit-delete.png
+ core/resources/help-about.png
+ core/resources/icon128.png
+ core/resources/icon16.png
+ core/resources/icon22.png
+ core/resources/icon32.png
+ core/resources/icon64.png
+ core/resources/languages.png
+ core/resources/license.png
+ core/resources/list-add.png
+ core/resources/media-playback-pause.png
+ core/resources/media-playback-start.png
+ core/resources/media-playback-stop.png
+ core/resources/media-record.png
+ core/resources/presentation-none.png
+ core/resources/toolbar-background.png
+ core/resources/user-group-new.png
+ master/data/veyon-master.png
+ master/resources/align-grid.png
+ master/resources/camera-photo.png
+ master/resources/example-screenshot.png
+ master/resources/exchange-positions-zorder.png
+ master/resources/powered-on.png
+ master/resources/preferences-desktop-display-blue.png
+ master/resources/preferences-desktop-display-gray.png
+ master/resources/preferences-desktop-display-orange.png
+ master/resources/preferences-desktop-display-red.png
+ master/resources/preferences-desktop-display.png
+ master/resources/splash.png
+ master/resources/zoom-fit-best.png
+ plugins/builtindirectory/builtindirectory.png
+ plugins/demo/presentation-fullscreen.png
+ plugins/demo/presentation-window.png
+ plugins/demo/window-duplicate.png
+ plugins/desktopservices/desktop-services.png
+ plugins/desktopservices/internet-web-browser.png
+ plugins/desktopservices/preferences-desktop-launch-feedback.png
+ plugins/filetransfer/applications-office.png
+ plugins/filetransfer/file-finished.png
+ plugins/filetransfer/file-scheduled.png
+ plugins/filetransfer/file-transferring.png
+ plugins/ldap/common/application-x-kexi-connectiondata.png
+ plugins/ldap/common/attribute.png
+ plugins/ldap/common/computer.png
+ plugins/ldap/common/configure.png
+ plugins/ldap/common/distribute-vertical-margin.png
+ plugins/ldap/common/folder-stash.png
+ plugins/ldap/common/user-group-properties.png
+ plugins/platform/linux/tux.png
+ plugins/powercontrol/preferences-system-power-management.png
+ plugins/powercontrol/system-reboot.png
+ plugins/powercontrol/system-shutdown.png
+ plugins/remoteaccess/application-exit.png
+ plugins/remoteaccess/camera-photo.png
+ plugins/remoteaccess/kmag.png
+ plugins/remoteaccess/krdc.png
+ plugins/remoteaccess/preferences-desktop-keyboard.png
+ plugins/remoteaccess/view-fullscreen.png
+ plugins/screenlock/locked-screen-background.png
+ plugins/screenlock/system-lock-screen.png
+ plugins/screenshot/camera-photo.png
+ plugins/textmessage/dialog-information.png
+ plugins/usersessioncontrol/login-user.png
+ plugins/usersessioncontrol/logout-user.png
+ plugins/usersessioncontrol/CMakeLists.txt
+ plugins/usersessioncontrol/UserLoginDialog.ui
+ plugins/usersessioncontrol/usersessioncontrol.qrc
+ plugins/webapi/python/setup.py
+Copyright: 2004-2021, Tobias Junghans <tobydox@veyon.io>
+License: GPL-2+~with-OpenSSL-Exception
+Comment:
+ Assuming license and copyright holder from the
+ majority of project files (see first block in this
+ copyright file).
+
+Files: debian/*
+Copyright: 2012-2018, Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+License: GPL-2+~with-OpenSSL-Exception or GPL-2+ or LGPL-2.0+ or LGPL-2.1+ or ISC or MIT~OldStyle or Expat or BSD-2-clause or BSD-3-clause or wxWindows-3.1+
+
+License: BSD-2-clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE.
+
+License: BSD-3-clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ .
+   - Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+   - Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+   - Neither the name of the libjpeg-turbo Project nor the names of its
+     contributors may be used to endorse or promote products derived from this
+     software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS",
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
+
+License: GPL-2+~with-OpenSSL-Exception
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 2 of the License, or (at your
+ option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ .
+ In addition, as a special exception, Tobias Junghans gives permission to
+ link the code of its release of Veyon with the OpenSSL project's
+ "OpenSSL" library (or modified versions of the "OpenSSL" library that
+ use the same license as the original version), and distribute the linked
+ executables.
+ .
+ You must comply with the GNU General Public License version 2 in all
+ respects for all of the code used other than the "OpenSSL" code.  If you
+ modify this file, you may extend this exception to your version of the
+ file, but you are not obligated to do so.  If you do not wish to do so,
+ delete this exception statement from your version of this file.
+ .
+ On Debian systems, the complete text of the GNU General Public License,
+ can be found in /usr/share/common-licenses/GPL-2.
+
+License: GPL-3+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 3 of the License, or (at your
+ option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ can be found in /usr/share/common-licenses/GPL-3.
+
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 2 of the License, or (at your
+ option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ .
+ On Debian systems, the complete text of the GNU General Public License,
+ can be found in /usr/share/common-licenses/GPL-2.
+
+License: LGPL-2.1+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ .
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ .
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ .
+ On Debian systems, the complete text of the GNU Lesser General Public
+ License version 2.1, can be found in /usr/share/common-licenses/LGPL-2.1.
+
+License: LGPL-2.0+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.0 of the License, or (at your option) any later version.
+ .
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ .
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ .
+ On Debian systems, the complete text of the GNU Lesser General Public
+ License version 2.0, can be found in /usr/share/common-licenses/LGPL-2.0.
+
+License: Expat
+ Permission is hereby granted, free of charge, to any person
+ obtaining a copy of this software and associated documentation
+ files (the "Software"), to deal in the Software without
+ restriction, including without limitation the rights to use,
+ copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following
+ conditions:
+ .
+ The above copyright notice and this permission notice shall be
+ included in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
+
+License: PublicDomain
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+License: wxWindows-3.1+
+                     WXWINDOWS LIBRARY LICENCE
+   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+ .
+ This library is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Library General Public Licence as published by
+ the Free Software Foundation; either version 2 of the Licence, or (at your
+ option) any later version.
+ .
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+ Licence for more details.
+ .
+ You should have received a copy of the GNU Library General Public Licence
+ along with this software, usually in a file named COPYING.LIB.  If not,
+ write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ Floor, Boston, MA 02110-1301 USA.
+ .
+ EXCEPTION NOTICE
+ .
+ 1. As a special exception, the copyright holders of this library give
+ permission for additional uses of the text contained in this release of the
+ library as licenced under the wxWindows Library Licence, applying either
+ version 3.1 of the Licence, or (at your option) any later version of the
+ Licence as published by the copyright holders of version 3.1 of the Licence
+ document.
+ .
+ 2. The exception is that you may use, copy, link, modify and distribute
+ under your own terms, binary object code versions of works based on the
+ Library.
+ .
+ 3. If you copy code from files distributed under the terms of the GNU
+ General Public Licence or the GNU Library General Public Licence into a
+ copy of this library, as this licence permits, the exception does not apply
+ to the code that you add in this way.  To avoid misleading anyone as to the
+ status of such modified files, you must delete this exception notice from
+ such code and/or adjust the licensing conditions notice accordingly.
+ .
+ 4. If you write modifications of your own for this library, it is your
+ choice whether to permit this exception to apply to your modifications.  If
+ you do not wish that, you must delete the exception notice from such code
+ and/or adjust the licensing conditions notice accordingly.
+
+License: ISC
+ International Business Machines, Inc. (hereinafter called IBM) grants
+ permission under its copyrights to use, copy, modify, and distribute this
+ Software with or without fee, provided that the above copyright notice and
+ all paragraphs of this notice appear in all copies, and that the name of IBM
+ not be used in connection with the marketing of any product incorporating
+ the Software or modifications thereof, without specific, written prior
+ permission.
+ .
+ To the extent it has a right to do so, IBM grants an immunity from suit
+ under its patents, if any, for the use, sale or manufacture of products to
+ the extent that such products are used for performing Domain Name System
+ dynamic updates in TCP/IP networks by means of the Software.  No immunity is
+ granted for any product per se or for any other function of any product.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", AND IBM DISCLAIMS ALL WARRANTIES,
+ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ PARTICULAR PURPOSE.  IN NO EVENT SHALL IBM BE LIABLE FOR ANY SPECIAL,
+ DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER ARISING
+ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE, EVEN
+ IF IBM IS APPRISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+License: MIT~OldStyle
+ Permission to use, copy, modify, and distribute this software for any
+ purpose with or without fee is hereby granted, provided that the above
+ copyright notice and this permission notice appear in all copies.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS" AND INTERNET SOFTWARE CONSORTIUM DISCLAIMS
+ ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL INTERNET SOFTWARE
+ CONSORTIUM BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+ ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ SOFTWARE.
+
+License: CC0-1.0
+ To the extent possible under law, the author(s) have dedicated all copyright
+ and related and neighboring rights to this software to the public domain
+ worldwide. This software is distributed without any warranty.
+ .
+ You should have received a copy of the CC0 Public Domain Dedication along with
+ this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+ .
+ On Debian systems, the full text of the CC0 1.0 Universal license can be found
+ in the file `/usr/share/common-licenses/CC0-1.0'.
+

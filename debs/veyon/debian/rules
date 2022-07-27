@@ -1,0 +1,142 @@
+#!/usr/bin/make -f
+
+NULL =
+
+include /usr/share/dpkg/buildflags.mk
+include /usr/share/cdbs/1/class/cmake.mk
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/rules/utils.mk
+
+common-binary-post-install-arch:: list-missing
+
+ifneq (,$(filter $(DEB_HOST_ARCH), armel m68k mips mipsel powerpc sh4))
+  export DEB_LDFLAGS_MAINT_APPEND += -Wl,--no-as-needed -latomic -Wl,--as-needed
+endif
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+include /usr/share/dpkg/pkg-info.mk
+
+NULL  =
+PKD   = $(word 2, abspath $(dir $(MAKEFILE_LIST)))
+PKG   = $(DEB_SOURCE)
+UVER  = $(shell echo $(DEB_VERSION) | cut -d "-" -f1)
+DTYPE = +repack1
+VER  ?= $(subst $(DTYPE),,$(UVER))
+
+DEB_DH_INSTALL_SOURCEDIR = debian/tmp
+DEB_DH_MAKESHLIBS_ARGS += -V
+
+DEB_CMAKE_NORMAL_ARGS += -DCMAKE_SKIP_RPATH=OFF \
+                         -DVEYON_X11VNC_EXTERNAL=ON \
+                         -DDATAROOTDIR=/usr/share \
+                         -DWITH_PCH=OFF \
+                         -DWITH_UNITY_BUILD=OFF \
+                         $(NULL)
+
+DEB_DH_SHLIBDEPS_ARGS_veyon-master = -L libVeyonCore -l debian/libveyoncore/usr/lib/*/veyon
+DEB_DH_SHLIBDEPS_ARGS_veyon-client = -L libVeyonCore -l debian/libveyoncore/usr/lib/*/veyon
+DEB_DH_SHLIBDEPS_ARGS_veyon-management-console = -L libVeyonCore -l debian/libveyoncore/usr/lib/*/veyon
+DEB_DH_SHLIBDEPS_ARGS_libveyoncore = -L libVeyonCore -l debian/libveyoncore/usr/lib/*/veyon
+
+DEB_BUILD_PARALLEL = 1
+
+common-install-arch::
+	install -D -m 644 debian/icons/veyon-256x256.png debian/veyon-master/usr/share/icons/hicolor/256x256/apps/veyon-master.png
+	install -D -m 644 core/resources/icon64.png debian/veyon-master/usr/share/icons/hicolor/64x64/apps/veyon-master.png
+	install -D -m 644 core/resources/icon32.png debian/veyon-master/usr/share/icons/hicolor/32x32/apps/veyon-master.png
+	install -D -m 644 core/resources/icon22.png debian/veyon-master/usr/share/icons/hicolor/22x22/apps/veyon-master.png
+	install -D -m 644 core/resources/icon16.png debian/veyon-master/usr/share/icons/hicolor/16x16/apps/veyon-master.png
+
+install/veyon-service::
+	mkdir -p debian/tmp/usr/bin/
+	mkdir -p debian/tmp/usr/lib/veyon/
+	mkdir -p debian/tmp/etc/xdg/autostart/
+	mkdir -p debian/tmp/usr/share/applications/
+	mkdir -p debian/tmp/usr/share/veyon/
+
+clean::
+	rm -f config.log
+	rm -f config.status
+
+UURL = https://github.com/veyon/veyon.git
+UREV = "v$(VER)"
+
+## http://wiki.debian.org/onlyjob/get-orig-source
+.PHONY: get-orig-source
+get-orig-source: $(PKG)_$(VER)$(DTYPE).orig.tar.xz $(info I: $(PKG)_$(VER)$(DTYPE))
+	@
+
+$(PKG)_$(VER)$(DTYPE).orig.tar.xz: $(info I: GIT Revision=$(UREV))
+	$(if $(wildcard $(PKG)-$(VER)),$(error $(PKG)-$(VER) exist, aborting..))
+	    @echo "# Downloading..."
+	git clone $(UURL) $(PKG)-$(VER) \
+	    || $(RM) -r $(PKG)-$(VER)
+	cd $(PKG)-$(VER) \
+	    && git checkout "$(UREV)" \
+	    && ( echo "# Generating ChangeLog..." \
+	            ; git --no-pager log --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%n" > ChangeLog \
+	            ; touch -d "$$(git log -1 --format='%ci')" ChangeLog) \
+	    && echo "# Setting times..." \
+	    && for F in $$(git ls-tree -r --name-only HEAD); do touch --no-dereference -d "$$(git log -1 --format="%ai" -- $$F)" "$$F"; done \
+	    && echo "# Getting Git submodules..." \
+	    && git submodule init \
+	    && git submodule update \
+	    && cd 3rdparty/qthttpserver/ \
+	    && git submodule init \
+	    && git submodule update \
+	    && cd ../../ \
+	    && echo "# Cleaning-up..." \
+	    && $(RM) -r -v \
+	       .ci/ \
+	       .github/ \
+	       .mailmap \
+	       .tx/ \
+	       3rdparty/ddengine/ \
+	       3rdparty/libfakekey/ \
+	       3rdparty/interception/ \
+	       3rdparty/kitemmodels/ \
+	       3rdparty/kldap/README.md* \
+	       3rdparty/kldap/autotests/ \
+	       3rdparty/kldap/kioslave/ \
+	       3rdparty/kldap/tests/ \
+	       3rdparty/kldap-qt-compat/ \
+	       3rdparty/libvncserver/ \
+	       3rdparty/qthttpserver/src/3rdparty/http-parser/.gitignore \
+	       3rdparty/qthttpserver/src/3rdparty/http-parser/.mailmap \
+	       3rdparty/qthttpserver/src/3rdparty/http-parser/.travis.yml \
+	       3rdparty/ultravnc/ \
+	       3rdparty/x11vnc/ \
+	       android/ \
+	       cmake/build_mingw32 \
+	       cmake/build_mingw64 \
+	       cmake/modules/AndroidDeployQt.cmake \
+	       cmake/modules/AndroidToolchain.cmake \
+	       cmake/modules/MinGWCrossCompile.cmake \
+	       cmake/modules/Win32Toolchain.cmake \
+	       cmake/modules/Win64Toolchain.cmake \
+	       configurator/data/veyon-configurator.ico \
+	       contrib/ \
+	       master/data/veyon-master.ico \
+	       nsis/ \
+	       plugins/platform/windows/ \
+	       ica/x11/common/sha1.* \
+	       ica/win32/ \
+	       $(NULL) \
+	    && $(RM) -r \
+	       .git .git* \
+	       3rdparty/kldap/.git \
+	       3rdparty/kldap/.git* \
+	       3rdparty/kldap/.kde-ci.yml \
+	       3rdparty/qthttpserver/.git \
+	       3rdparty/qthttpserver/.git* \
+	       3rdparty/qthttpserver/src/3rdparty/http-parser/.git \
+	       3rdparty/qthttpserver/src/3rdparty/http-parser/.git* \
+	       $(NULL)
+	@echo "# Packing..."
+	find -L "$(PKG)-$(VER)" -xdev -type f -print | sort \
+	    | XZ_OPT="-6v" tar -caf "../$(PKG)_$(VER)$(DTYPE).orig.tar.xz" -T- --owner=root --group=root --mode=a+rX \
+	    && $(RM) -r "$(PKG)-$(VER)" \
+	    $(NULL)

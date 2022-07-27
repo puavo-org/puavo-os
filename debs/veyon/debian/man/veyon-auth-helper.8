@@ -1,0 +1,30 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH VEYON-AUTH-HELPER 8 2018-12-05 VEYON
+.SH NAME
+veyon-auth-helper \- Veyon PAM Authentication Helper
+.SH SYNOPSIS
+.B veyon-auth-helper
+.SH DESCRIPTION
+.B veyon-auth-helper
+is a PAM-su authentication helper for the Veyon service (called \fBveyon-service\fP).
+.PP
+.I NOTE:
+.B veyon-auth-helper
+has to be installed setuid root and must be available in your system's
+environment $PATH.
+.
+.SH OPTIONS
+No options present.
+.PP
+.SH SEE ALSO
+.IR ica (1), italc (1), imc (8)
+.PP
+.IR http://veyon.io/
+.SH AUTHOR
+Veyon has been written by Tobias Junghans. See AUTHORS for details.
+.PP
+This manual page has been written by Mike Gabriel. It was originally
+written for the Debian project (but may be used by others).

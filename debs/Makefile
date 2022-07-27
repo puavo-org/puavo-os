@@ -17,6 +17,7 @@ _pkgs_ports := cups                   \
                openboard              \
                openldap               \
                pinta                  \
+               veyon                  \
                wsmancli
 
 # XXX disable most ports builds for Bullseye, these all most probably
