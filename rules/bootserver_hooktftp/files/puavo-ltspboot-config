@@ -69,7 +69,7 @@ show_image_menu() {
 default menu.c32
 menu title Choose a system
 prompt 0
-timeout 100
+timeout 50
 
 HEADER_EOF
 
@@ -225,7 +225,7 @@ if [ "$boot_mode" = "dualboot" ]; then
 default menu.c32
 menu title Choose a system
 prompt 0
-timeout 100
+timeout 50
 
 label local
   menu label Local OS
