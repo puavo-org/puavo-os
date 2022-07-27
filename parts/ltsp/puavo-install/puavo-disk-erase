@@ -52,7 +52,7 @@ case "${target_disk}" in
       echo 'Selected disk is a USB device, I do not support them. Aborting..' >&2
       exit 1
     fi
-     if ! hdparm -I "${target_disk}" | grep "SECURITY ERASE UNIT" >&2; then
+      if ! hdparm -I "${target_disk}" | grep "SECURITY ERASE UNIT" >&2; then
       echo 'Selected disk does not support Secure Erase!' >&2
       exit 1
     fi
@@ -101,11 +101,11 @@ case "${target_disk}" in
     echo 'User and password set, proceeding to Secure Erase.'
     time --format "Time elapsed: %E" hdparm --user-master user --security-erase Pass "${target_disk}"
     echo 'Command completed. You may check how long the erase took above.'
-     if ! hdparm -I "${target_disk}" | grep -P "not\tlocked"; then
+    if ! hdparm -I "${target_disk}" | grep -P "not\tlocked"; then
       echo 'Disk seems to be locked after erase. Unlocking now.'
       hdparm --user-master user --security-unlock Pass "${target_disk}"
     fi
-     partprobe
+    partprobe
     echo 'If you see no errors, you may re-plug the disk or reboot the device.'
     echo 
     sleep 2
