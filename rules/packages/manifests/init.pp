@@ -483,13 +483,15 @@ class packages {
     , 'sonic-pi' ]:
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
-    [ 'epoptes'
-    , 'epoptes-client'
-    , 'filezilla'
+    [ 'filezilla'
     , 'gftp'
     , 'lftp'
     , 'remmina'
     , 'smbclient'
+    , 'veyon-configurator'
+    , 'veyon-master'
+    , 'veyon-plugins'
+    , 'veyon-service'
     , 'wget'
     , 'xtightvncviewer' ]:
       tag => [ 'tag_remote_access', 'tag_debian_desktop', ];
