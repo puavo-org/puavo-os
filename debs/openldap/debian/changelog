@@ -1,8 +1,14 @@
-openldap (2.4.47+dfsg-3+deb10u6+puavo1+buildonce) buster; urgency=medium
+openldap (2.4.47+dfsg-3+deb10u7+puavo1+buildonce) buster; urgency=medium
 
   * With some patches by Puavo Org.
 
  -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 12:54:06 +0200
+
+openldap (2.4.47+dfsg-3+deb10u7) buster-security; urgency=high
+
+  * Fix SQL injection in back-sql (ITS#9815) (CVE-2022-29155)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 14 May 2022 11:35:44 -0700
 
 openldap (2.4.47+dfsg-3+deb10u6) buster-security; urgency=high
 

@@ -45,7 +45,7 @@ cat > /etc/cups/cups-browsed.conf.tmp <<EOF
 # /var/log/cups/cups-browsed_log ('file'), to stderr ('stderr'), or
 # not at all ('none')?
 
-# DebugLogging file
+DebugLogging file
 # DebugLogging stderr
 # DebugLogging file stderr
 # DebugLogging none
