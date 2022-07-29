@@ -1,0 +1,21 @@
+diff -ruN cups-filters-1.21.6/utils/cups-browsed.c cups-filters-1.21.6/utils/cups-browsed.c
+--- cups-filters-1.21.6/utils/cups-browsed.c	2022-07-29 13:52:10.000000000 +0300
++++ cups-filters-1.21.6/utils/cups-browsed.c	2022-07-29 13:53:02.705134431 +0300
+@@ -140,7 +140,7 @@
+ #define TIMEOUT_REMOVE      -1
+ #define TIMEOUT_CHECK_LIST   2
+ 
+-#define NOTIFY_LEASE_DURATION (24 * 60 * 60)
++#define NOTIFY_LEASE_DURATION (14 * 24 * 60 * 60)
+ #define CUPS_DBUS_NAME "org.cups.cupsd.Notifier"
+ #define CUPS_DBUS_PATH "/org/cups/cupsd/Notifier"
+ #define CUPS_DBUS_INTERFACE "org.cups.cupsd.Notifier"
+@@ -8868,7 +8868,7 @@
+   /* Subscribe to CUPS' D-Bus notifications and create a proxy to receive
+      the notifications */
+   subscription_id = create_subscription ();
+-  g_timeout_add_seconds (NOTIFY_LEASE_DURATION - 60,
++  g_timeout_add_seconds (NOTIFY_LEASE_DURATION / 2,
+ 			 renew_subscription_timeout,
+ 			 &subscription_id);
+   cups_notifier = cups_notifier_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
