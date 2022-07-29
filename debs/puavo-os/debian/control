@@ -337,6 +337,7 @@ Package: puavo-pkg
 Architecture: all
 Depends: ${misc:Depends},
  bash,
+ bzip2,
  cabextract,
  coreutils,
  findutils,
