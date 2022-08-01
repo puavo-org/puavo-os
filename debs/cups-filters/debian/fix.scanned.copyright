@@ -1,0 +1,129 @@
+# Add needed licenses
+! copyright License:GPL-2
+! copyright License:GPL-2+
+! copyright License:GPL-3
+! copyright License:LGPL-2
+! copyright License:Expat
+
+# Global License, see COPYING
+! Files:"*"
+  Copyright="1993-2007 Easy Software Products
+2007-2011 Apple Inc.
+2012 Canonical Ltd.
+2006-2012 BBR Inc.
+2008-2016 Till Kamppeter
+2008,2012 Tobias Hoffmann
+2003-2006 Red Hat, Inc.
+2003-2006 Tim Waugh
+2012 Franz Pförtsch
+2012 Tomáš Chvátal
+2010 Neil 'Superna' Armstrong
+2015-2016 Samuel Thibault
+2008 Lars Übernickel"
+  License short_name="GPL-2+"
+
+! Files:"debian/*"
+  Copyright="1999-2003, Jeff Licquia <licquia@debian.org>
+2003-2007, Kenshi Muto <kmuto@debian.org>
+2007-2012, Martin Pitt <mpitt@debian.org>
+2012-2015, Till Kamppeter <till.kamppeter@gmail.com>
+2013-2017, Didier Raboud <odyx@debian.org>"
+  License short_name="GPL-2+"
+
+! Files:"debian/local/apport-hook.py"
+  Copyright="2009 Canonical Ltd."
+  License short_name="GPL-2+"
+
+! Files:"utils/cups-browsed* org.cups.cupsd.Notifier.xml"
+ Copyright="2012-2016, Till Kamppeter <till.kamppeter@gmail.com>
+2013-2015, Tim Waugh <twaugh@redhat.com>"
+ License short_name="LGPL-2.1+"
+
+! Files:"utils/driverless*"
+ Copyright="2012-2016, Till Kamppeter <till.kamppeter@gmail.com>
+2007-2016 Apple Inc."
+ License short_name="LGPL-2.1+"
+
+! Files:"filter/pdftops.c"
+  Copyright="2011-2013 Till Kamppeter
+2007-2011 Apple Inc
+1997-2006 Easy Software Products"
+  License short_name="GPL-2"
+
+! Files:"cupsfilters/*"
+  Copyright="2007-2016 Apple Inc
+1993-2007 by Easy Software Products
+2011-2013, Richard Hughes
+2011, Tim Waugh
+2013-2016, Till Kamppeter
+2014, Joseph Simon"
+  License short_name="LGPL-2"
+
+! Files:"fontembed/*"
+  Copyright="2008,2012 Tobias Hoffmann"
+  License short_name="Expat"
+
+! Files:"filter/gstopxl* ppd/pxlcolor.ppd ppd/pxlmono.ppd"
+  Copyright="2001-2005 Easy Software Products"
+  License short_name="GPL-2+"
+
+! Files:"filter/textonly* ppd/textonly.ppd"
+  Copyright="2003-2006 Red Hat, Inc.
+2003-2006 Tim Waugh <twaugh@redhat.com>"
+  License short_name="GPL-2+"
+
+! Files:"filter/texttops* filter/imagetops*"
+  Copyright="2012 Till Kamppeter <till.kamppeter@gmail.com>"
+  License short_name="GPL-2+"
+
+! Files:"filter/pdftopdf/*"
+  Copyright="2012 Tobias Hoffmann
+2006-2011, BBR Inc"
+  License short_name="Expat"
+
+! Files:"configure"
+  License short_name="Unlimited" full_license="This configure script is free software; the Free Software Foundation gives unlimited permission to copy, distribute and modify it."
+
+# Various weird copyright formatting
+! Files:"filter/rastertopdf.cpp"
+  Copyright="2010, Neil 'Superna' Armstrong <superna9999@gmail.com>
+2012 Tobias Hoffmann <smilingthax@gmail.com>
+2014 Till Kamppeter <till.kamppeter@gmail.com>"
+
+! Files:"filter/unirast.h"
+  Copyright="2010, Neil 'Superna' Armstrong <superna9999@gmail.com>"
+
+! Files:"filter/urftopdf.cpp"
+  Copyright="2010, Neil 'Superna' Armstrong <superna9999@gmail.com>
+2012 Tobias Hoffmann <smilingthax@gmail.com>"
+
+# strcasestr.c multi-line copyright
+! Files:"filter/strcasestr.c"
+  Copyright="1990, 1993, The Regents of the University of California"
+  License full_license="Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. All advertising materials mentioning features or use of this software
+   must display the following acknowledgement:
+     This product includes software developed by the University of
+     California, Berkeley and its contributors.
+4. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+.
+THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE."

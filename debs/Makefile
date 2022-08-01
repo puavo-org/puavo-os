@@ -4,7 +4,9 @@ _pkgs_builddeps := sblim-sfcc openwsman
 # parts, ports and some cloud packages go into puavo-os images
 
 _pkgs_parts := puavo-ds puavo-os
+<<<<<<< HEAD
 _pkgs_ports := cups                   \
+               cups-filters           \
                gnome-control-center   \
                gnome-network-displays \
                gnome-shell            \

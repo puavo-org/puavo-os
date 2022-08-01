@@ -1,0 +1,62 @@
+#!/usr/bin/make -f
+
+derives_from_ubuntu := $(shell (dpkg-vendor --derives-from Ubuntu && echo "yes") || echo "no")
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--disable-silent-rules \
+		--with-shell=/bin/sh \
+		--libdir=/usr/lib/$(DEB_HOST_MULTIARCH) \
+		--mandir=/usr/share/man \
+		--enable-static \
+		--enable-mutool \
+		--enable-auto-setup-driverless \
+		--with-mutool-path=/usr/bin/mutool \
+		--with-test-font-path=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
+
+override_dh_installdocs:
+	dh_installdocs -A AUTHORS README
+
+override_dh_fixperms:
+	dh_fixperms -Xusr/lib/cups/backend
+	
+	# Make the serial backend run as root, since /dev/ttyS* are
+	# root:dialout and thus not accessible as user lp
+	chmod 744 debian/cups-filters/usr/lib/cups/backend/serial
+
+override_dh_makeshlibs:
+	dh_makeshlibs -- -c4
+
+override_dh_auto_clean:
+	[ ! -r Makefile ] || make distclean
+
+override_dh_install:
+	dh_install
+	
+ifeq ($(derives_from_ubuntu),yes)
+	#  - Install Apport hook
+	#  - Replace standard test page template by Ubuntu-branded one
+	install -D -m 644 debian/local/apport-hook.py debian/cups-filters/usr/share/apport/package-hooks/source_cups-filters.py
+	install -D -m 644 debian/local/default-testpage-ubuntu.pdf debian/cups-filters/usr/share/cups/data/default-testpage.pdf
+else
+	mkdir -p debian/cups-filters/usr/share/cups/data/
+	rsvg-convert debian/local/default-testpage-debian.svg -f pdf > debian/cups-filters/usr/share/cups/data/default-testpage.pdf
+endif
+
+	# Install the modules loader for lp, ppdev and parport_pc
+	install -D -m 644 debian/local/modules-load.conf debian/cups-filters/etc/modules-load.d/cups-filters.conf
+
+	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
+
+get-orig-source:
+	set -ex;\
+	gbp import-orig --pristine-tar --uscan --no-merge --upstream-branch=upstream/latest;\
+	utag=`git describe --exact-match heads/upstream/latest | sed -e 's#^upstream/##'` ;\
+	ucommit=`git rev-parse --verify upstream/latest`;\
+	git debrebase new-upstream $$utag ;\
+	git debrebase conclude

@@ -1,0 +1,13 @@
+etc/rc*.d/*cups-browsed
+# Well. It is through dh_installinit.
+etc/init.d/cups-browsed
+# Source-related docs
+usr/share/doc/cups-filters/INSTALL
+usr/share/doc/cups-filters/ABOUT-NLS
+# Reflected in d/copyright
+usr/share/doc/cups-filters/COPYING
+# Install by dh_installdocs
+usr/share/doc/cups-filters/AUTHORS
+usr/share/doc/cups-filters/README
+# https://wiki.debian.org/ReleaseGoals/LAFileRemoval
+usr/lib/*/*.la

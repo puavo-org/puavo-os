@@ -1,0 +1,4 @@
+# Upstream choices; they need to be run as root
+cups-browsed: executable-is-not-world-readable usr/lib/cups/backend/implicitclass 0700
+# That's how CUPS does it
+cups-browsed: executable-in-usr-lib usr/lib/cups/backend/implicitclass

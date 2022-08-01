@@ -1,0 +1,55 @@
+From: Didier Raboud <odyx@debian.org>
+Date: Sat, 13 Jun 2020 16:39:07 +0200
+Subject: Force-set INITDIR in configure.ac instead of relying on 'test -d
+ /etc/init.d', which fails on s390x
+
+---
+ configure.ac | 35 ++---------------------------------
+ 1 file changed, 2 insertions(+), 33 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 441141c..a1246a5 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -422,39 +422,8 @@ RCSTART="$rcstart"
+ RCSTOP="$rcstop"
+ 
+ if test x$rcdir = x; then
+-	case "`uname`" in
+-		FreeBSD* | OpenBSD* | MirBSD* | ekkoBSD*)
+-			# FreeBSD and OpenBSD
+-			;;
+-
+-		Linux | GNU | GNU/k*BSD*)
+-			# Linux/HURD seems to choose an init.d directory at random...
+-			if test -d /sbin/init.d; then
+-				# SuSE
+-				INITDIR="/sbin/init.d"
+-			else
+-				if test -d /etc/init.d; then
+-					# Others
+-					INITDIR="/etc"
+-				else
+-					# RedHat
+-					INITDIR="/etc/rc.d"
+-				fi
+-			fi
+-			RCSTART="82"
+-			RCSTOP="35"
+-			;;
+-
+-		NetBSD*)
+-			# NetBSD
+-			INITDDIR="/etc/rc.d"
+-			;;
+-
+-		*)
+-			INITDIR="/etc"
+-			;;
+-
+-	esac
++	# Debian
++	INITDIR=/etc
+ elif test "x$rcdir" != xno; then
+ 	if test "x$rclevels" = x; then
+ 		INITDDIR="$rcdir"

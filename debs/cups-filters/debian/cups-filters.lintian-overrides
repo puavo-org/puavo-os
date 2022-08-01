@@ -1,0 +1,39 @@
+# Upstream choices; they need to be run as root
+cups-filters: executable-is-not-world-readable usr/lib/cups/backend/cups-brf 0700
+# Upstream choices; they need to be run as root
+cups-filters: non-standard-executable-perm usr/lib/cups/backend/serial 0744 != 0755
+# Historical reasons
+cups-filters: executable-not-elf-or-script usr/share/cups/braille/cups-braille.sh
+cups-filters: executable-not-elf-or-script usr/share/cups/braille/index.sh
+cups-filters: executable-not-elf-or-script usr/share/cups/braille/indexv3.sh
+cups-filters: executable-not-elf-or-script usr/share/cups/braille/indexv4.sh
+# That's how CUPS does it
+cups-filters: executable-in-usr-lib usr/lib/cups/backend/beh
+cups-filters: executable-in-usr-lib usr/lib/cups/backend/cups-brf
+cups-filters: executable-in-usr-lib usr/lib/cups/backend/parallel
+cups-filters: executable-in-usr-lib usr/lib/cups/backend/serial
+cups-filters: executable-in-usr-lib usr/lib/cups/driver/driverless-fax
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/bannertopdf
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/brftoembosser
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/brftopagedbrf
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/commandtoescpx
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/commandtopclx
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/foomatic-rip
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/gstopdf
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/gstopxl
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/gstoraster
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/imagetobrf
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/imagetops
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/imagetoraster
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/imageubrltoindexv3
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/imageubrltoindexv4
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/mupdftoraster
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/musicxmltobrf
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/rastertoescpx
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/textbrftoindexv3
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/texttobrf
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/texttopdf
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/texttops
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/texttotext
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/vectortobrf
+cups-filters: executable-in-usr-lib usr/lib/cups/filter/vectortopdf
