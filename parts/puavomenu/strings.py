@@ -117,10 +117,10 @@ STRINGS = {
     # Sidebar
 
     'sb_avatar_hover': {
-        'en': 'Edit your user profile',
-        'fi': 'Muokkaa käyttäjäprofiiliasi',
-        'de': 'Ediere Benutzerprofil',
-        'sv': 'Redigera din användarprofil',
+        'en': 'Edit your user profile (PuavoID=$(id))',
+        'fi': 'Muokkaa käyttäjäprofiiliasi (PuavoID=$(id))',
+        'de': 'Ediere Benutzerprofil (PuavoID=$(id))',
+        'sv': 'Redigera din användarprofil (PuavoID=$(id))',
     },
 
     'sb_avatar_link_failed': {

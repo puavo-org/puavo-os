@@ -139,7 +139,11 @@ class Sidebar:
         if self.__settings.is_guest or self.__settings.is_webkiosk:
             avatar_tooltip = None
         else:
-            avatar_tooltip = _tr('sb_avatar_hover')
+            # Show the user's PuavoID in the tooltip
+            avatar_tooltip = utils.expand_variables(
+                _tr('sb_avatar_hover'),
+                { 'id': str(self.__settings.user_puavo_id) }
+            )
 
         self.__avatar = buttons.avatar.AvatarButton(self,
                                                     self.__settings,
