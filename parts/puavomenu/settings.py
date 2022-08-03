@@ -63,6 +63,9 @@ class Settings:
         # unless 'is_personally_administered' is also True.
         self.is_user_primary_user = False
 
+        # The user's puavo ID
+        self.user_puavo_id = -1
+
         # User type (student, teacher, etc.). Some of the web services
         # that are opened from the menu needs to know this.
         self.user_type = 'student'
@@ -162,6 +165,7 @@ class Settings:
                 with open(os.path.expandvars('$PUAVO_SESSION_PATH'), mode='r', encoding='utf-8') as session:
                     session_data = json.load(session)
 
+                self.user_puavo_id = session_data['user']['id']
                 self.user_type = session_data['user']['user_type']
 
                 if self.user_type not in VALID_TYPES:
