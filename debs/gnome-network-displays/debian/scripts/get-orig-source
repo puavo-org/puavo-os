@@ -6,7 +6,7 @@ orig_tarball="../gnome-network-displays-0.9+puavo1.orig.tar.bz2"
 
 if [ ! -e "${orig_tarball}" ]; then
   wget -O "${orig_tarball}.tmp" \
-       "https://gitlab.gnome.org/GNOME/gnome-network-displays/-/archive/master/gnome-network-displays-master.tar.bz2"
+       "https://gitlab.gnome.org/GNOME/gnome-network-displays/-/archive/bccbdc0d3b7b293a59d7fde2c4413c16b1c910ac/gnome-network-displays-bccbdc0d3b7b293a59d7fde2c4413c16b1c910ac.tar.bz2"
   tar -jxf "${orig_tarball}.tmp" --strip-components=1
   mv "${orig_tarball}.tmp" "$orig_tarball"
 fi
