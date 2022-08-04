@@ -26,6 +26,7 @@ fi
     --ca /etc/puavo/certs/orgcabundle.pem                  \
     --cert /etc/puavo/certs/host.crt                       \
     --client                                               \
+    --connect-retry 5 5                                    \
     --dev vpn0                                             \
     --dev-type tap                                         \
     --keepalive 10 60                                      \
