@@ -7,7 +7,7 @@ ask_disk() {
                  print "/dev/"$4
                }' /proc/partitions)
   [ -n "$disks" ] || return 1
-  printf %s "$disks" | fzf -1 --height=5 --layout=reverse-list
+  printf %s "$disks" | fzf -1 --height=5 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
 }
 
 prepare_for_erase() {
@@ -17,6 +17,11 @@ prepare_for_erase() {
   echo 'Unmounting all LVM volumes named "puavo"'
   lvchange -an puavo
 }
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'This tool must be run as root!' >&2
+  exit 1
+fi
 
 if [ $# -le 1 ]; then
   echo 'Choose a disk to Secure Erase:'
