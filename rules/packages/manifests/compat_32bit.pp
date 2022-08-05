@@ -8,17 +8,17 @@ class packages::compat_32bit {
     @package {
       [ 'libasound2:i386'
       , 'libasound2-plugins:i386'
-      , 'libatk1.0-0:i386'              # needed by mimio-studio
-      , 'libatkmm-1.6-1v5:i386'         # needed by mimio-studio
+      , 'libatk1.0-0:i386'
+      , 'libatkmm-1.6-1v5:i386'
       , 'libbluetooth3:i386'
       , 'libc6:i386'
-      , 'libcairo2:i386'                # needed by mimio-studio
-      , 'libcanberra-gtk-module:i386'   # needed by mimio-studio
+      , 'libcairo2:i386'
+      , 'libcanberra-gtk-module:i386'
       , 'libcap-ng0:i386'
       , 'libcurl4:i386'
-      , 'libdbus-1-3:i386'              # needed by mimio-studio
-      , 'libdbus-glib-1-2:i386'         # needed by mimio-studio
-      , 'libfakekey0:i386'              # needed by mimio-studio
+      , 'libdbus-1-3:i386'
+      , 'libdbus-glib-1-2:i386'
+      , 'libfakekey0:i386'
       , 'libfontconfig1:i386'
       , 'libfreetype6:i386'
       , 'libgcc-s1:i386'
@@ -29,12 +29,12 @@ class packages::compat_32bit {
       , 'libice6:i386'
       # XXX buster , 'libjpeg9:i386'
       , 'libltdl7:i386'
-      , 'libmp3lame0:i386'              # needed by mimio-studio
+      , 'libmp3lame0:i386'
       # XXX buster , 'libnspr4-0d:i386'
       , 'libnspr4:i386'
       , 'libnss3:i386'                  # needed by RobboScratch2
-      , 'libpango1.0-0:i386'            # needed by mimio-studio
-      , 'libpangomm-1.4-1v5:i386'       # needed by mimio-studio
+      , 'libpango1.0-0:i386'
+      , 'libpangomm-1.4-1v5:i386'
       # XXX buster , 'libpng12-0:i386'               # needed by GlobiLab
       , 'libpulse0:i386'
       # , 'libqt4-dbus:i386'            # XXX missing from Bullseye
