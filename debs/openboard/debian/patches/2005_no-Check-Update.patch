@@ -1,8 +1,9 @@
 Description: Disable "check for updates" feature, not appropriate for a Debian package.
 Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
 
---- a/resources/forms/mainWindow.ui
-+++ b/resources/forms/mainWindow.ui
+diff -ruN openboard.orig/OpenBoard/resources/forms/mainWindow.ui openboard/OpenBoard/resources/forms/mainWindow.ui
+--- openboard.orig/OpenBoard/resources/forms/mainWindow.ui	2020-01-23 12:29:35.000000000 +0200
++++ openboard/OpenBoard/resources/forms/mainWindow.ui	2022-08-08 15:20:38.922525554 +0300
 @@ -1583,15 +1583,6 @@
      <string>Import eduMedia simulation</string>
     </property>
@@ -19,8 +20,9 @@ Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
    <action name="actionHideApplication">
     <property name="icon">
      <iconset resource="../OpenBoard.qrc">
---- a/resources/forms/preferences.ui
-+++ b/resources/forms/preferences.ui
+diff -ruN openboard.orig/OpenBoard/resources/forms/preferences.ui openboard/OpenBoard/resources/forms/preferences.ui
+--- openboard.orig/OpenBoard/resources/forms/preferences.ui	2020-01-23 12:29:35.000000000 +0200
++++ openboard/OpenBoard/resources/forms/preferences.ui	2022-08-08 15:20:38.926525355 +0300
 @@ -3200,44 +3200,6 @@
          </widget>
         </item>
@@ -66,58 +68,9 @@ Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
          <widget class="QGroupBox" name="sankoreImporterGroupBox">
           <property name="minimumSize">
            <size>
---- a/src/core/UBPreferencesController.cpp
-+++ b/src/core/UBPreferencesController.cpp
-@@ -259,8 +259,6 @@
-     connect(mMarkerProperties->opacitySlider, SIGNAL(valueChanged(int)), this, SLOT(opacitySliderChanged(int)));
- 
-     // about tab
--    connect(mPreferencesUI->checkSoftwareUpdateAtLaunchCheckBox, SIGNAL(clicked(bool)), settings->appEnableAutomaticSoftwareUpdates, SLOT(setBool(bool)));
--
-     connect(mPreferencesUI->checkOpenSankoreAtStartup, SIGNAL(clicked(bool)), settings->appLookForOpenSankoreInstall, SLOT(setBool(bool)));
- }
- 
-@@ -269,7 +267,6 @@
-     UBSettings* settings = UBSettings::settings();
- 
-     // about tab
--    mPreferencesUI->checkSoftwareUpdateAtLaunchCheckBox->setChecked(settings->appEnableAutomaticSoftwareUpdates->get().toBool());
-     mPreferencesUI->checkOpenSankoreAtStartup->setChecked(settings->appLookForOpenSankoreInstall->get().toBool());
- 
-     // display tab
-@@ -403,10 +400,7 @@
-     }
-     else if (mPreferencesUI->mainTabWidget->currentWidget() == mPreferencesUI->aboutTab)
-     {
--        bool defaultValue = settings->appEnableAutomaticSoftwareUpdates->reset().toBool();
--        mPreferencesUI->checkSoftwareUpdateAtLaunchCheckBox->setChecked(defaultValue);
--
--        defaultValue = settings->appLookForOpenSankoreInstall->reset().toBool();
-+        bool defaultValue = settings->appLookForOpenSankoreInstall->reset().toBool();
-         mPreferencesUI->checkOpenSankoreAtStartup->setChecked(defaultValue);
- 
-     }
---- a/src/core/UBApplication.cpp
-+++ b/src/core/UBApplication.cpp
-@@ -328,7 +328,6 @@
-     mPreferencesController = new UBPreferencesController(mainWindow);
- 
-     connect(mainWindow->actionPreferences, SIGNAL(triggered()), mPreferencesController, SLOT(show()));
--    connect(mainWindow->actionCheckUpdate, SIGNAL(triggered()), applicationController, SLOT(checkUpdateRequest()));
- 
- 
-     toolBarPositionChanged(UBSettings::settings()->appToolBarPositionedAtTop->get());
-@@ -521,8 +520,6 @@
-             menu->addSeparator();
-             menu->addAction(mainWindow->actionPreferences);
-             menu->addAction(mainWindow->actionMultiScreen);
--            if (!UBSettings::settings()->appHideCheckForSoftwareUpdate->get().toBool())
--                menu->addAction(mainWindow->actionCheckUpdate);
-             menu->addSeparator();
- 
-             menu->addAction(mainWindow->actionPodcast);
---- a/src/core/UBApplicationController.cpp
-+++ b/src/core/UBApplicationController.cpp
+diff -ruN openboard.orig/OpenBoard/src/core/UBApplicationController.cpp openboard/OpenBoard/src/core/UBApplicationController.cpp
+--- openboard.orig/OpenBoard/src/core/UBApplicationController.cpp	2020-01-23 12:29:35.000000000 +0200
++++ openboard/OpenBoard/src/core/UBApplicationController.cpp	2022-08-08 15:20:38.926525355 +0300
 @@ -121,7 +121,6 @@
              , this, SLOT(addCapturedPixmap(const QPixmap &, bool, const QUrl&)));
  
@@ -246,8 +199,9 @@ Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
  void UBApplicationController::hideDesktop()
  {
      if (mMainMode == Board)
---- a/src/core/UBApplicationController.h
-+++ b/src/core/UBApplicationController.h
+diff -ruN openboard.orig/OpenBoard/src/core/UBApplicationController.h openboard/OpenBoard/src/core/UBApplicationController.h
+--- openboard.orig/OpenBoard/src/core/UBApplicationController.h	2020-01-23 12:29:35.000000000 +0200
++++ openboard/OpenBoard/src/core/UBApplicationController.h	2022-08-08 15:20:38.926525355 +0300
 @@ -150,21 +150,12 @@
          void actionCopy();
          void actionPaste();
@@ -270,3 +224,55 @@ Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
          UBBoardView *mControlView;
          UBBoardView *mDisplayView;
          QList<UBBoardView*> mPreviousViews;
+diff -ruN openboard.orig/OpenBoard/src/core/UBApplication.cpp openboard/OpenBoard/src/core/UBApplication.cpp
+--- openboard.orig/OpenBoard/src/core/UBApplication.cpp	2020-01-23 12:29:35.000000000 +0200
++++ openboard/OpenBoard/src/core/UBApplication.cpp	2022-08-08 15:20:38.926525355 +0300
+@@ -330,7 +330,6 @@
+     mPreferencesController = new UBPreferencesController(mainWindow);
+ 
+     connect(mainWindow->actionPreferences, SIGNAL(triggered()), mPreferencesController, SLOT(show()));
+-    connect(mainWindow->actionCheckUpdate, SIGNAL(triggered()), applicationController, SLOT(checkUpdateRequest()));
+ 
+ 
+     toolBarPositionChanged(UBSettings::settings()->appToolBarPositionedAtTop->get());
+@@ -521,8 +520,6 @@
+             menu->addSeparator();
+             menu->addAction(mainWindow->actionPreferences);
+             menu->addAction(mainWindow->actionMultiScreen);
+-            if (!UBSettings::settings()->appHideCheckForSoftwareUpdate->get().toBool())
+-                menu->addAction(mainWindow->actionCheckUpdate);
+             menu->addSeparator();
+ 
+             menu->addAction(mainWindow->actionPodcast);
+diff -ruN openboard.orig/OpenBoard/src/core/UBPreferencesController.cpp openboard/OpenBoard/src/core/UBPreferencesController.cpp
+--- openboard.orig/OpenBoard/src/core/UBPreferencesController.cpp	2020-01-23 12:29:35.000000000 +0200
++++ openboard/OpenBoard/src/core/UBPreferencesController.cpp	2022-08-08 15:20:38.926525355 +0300
+@@ -259,8 +259,6 @@
+     connect(mMarkerProperties->opacitySlider, SIGNAL(valueChanged(int)), this, SLOT(opacitySliderChanged(int)));
+ 
+     // about tab
+-    connect(mPreferencesUI->checkSoftwareUpdateAtLaunchCheckBox, SIGNAL(clicked(bool)), settings->appEnableAutomaticSoftwareUpdates, SLOT(setBool(bool)));
+-
+     connect(mPreferencesUI->checkOpenSankoreAtStartup, SIGNAL(clicked(bool)), settings->appLookForOpenSankoreInstall, SLOT(setBool(bool)));
+ }
+ 
+@@ -269,7 +267,6 @@
+     UBSettings* settings = UBSettings::settings();
+ 
+     // about tab
+-    mPreferencesUI->checkSoftwareUpdateAtLaunchCheckBox->setChecked(settings->appEnableAutomaticSoftwareUpdates->get().toBool());
+     mPreferencesUI->checkOpenSankoreAtStartup->setChecked(settings->appLookForOpenSankoreInstall->get().toBool());
+ 
+     // display tab
+@@ -403,10 +400,7 @@
+     }
+     else if (mPreferencesUI->mainTabWidget->currentWidget() == mPreferencesUI->aboutTab)
+     {
+-        bool defaultValue = settings->appEnableAutomaticSoftwareUpdates->reset().toBool();
+-        mPreferencesUI->checkSoftwareUpdateAtLaunchCheckBox->setChecked(defaultValue);
+-
+-        defaultValue = settings->appLookForOpenSankoreInstall->reset().toBool();
++        bool defaultValue = settings->appLookForOpenSankoreInstall->reset().toBool();
+         mPreferencesUI->checkOpenSankoreAtStartup->setChecked(defaultValue);
+ 
+     }
