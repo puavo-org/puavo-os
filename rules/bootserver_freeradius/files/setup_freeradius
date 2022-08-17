@@ -607,28 +607,24 @@ ln -fns ../mods-available/ldap /etc/freeradius/3.0/mods-enabled/ldap
 install -d -o root -o root -m 700 /state/etc/freeradius/3.0
 
 if [ ! -e /state/etc/freeradius/3.0/clients.conf ]; then
-  radius_ltsp_ip=$(ifdata -pa ltsp0) || true
-  radius_ltsp_net_cidr=$(ip -o addr | awk '$2 == "ltsp0" { split($4, a, "/"); print a[2] }') || true
-  radius_secret=$(pwgen 24) || true
+  radius_ltsp_net=$(ifdata -pN ltsp0)
+  radius_ltsp_net_cidr=$(ip -o addr | awk '$2 == "ltsp0" { split($4, a, "/"); print a[2] }')
+  radius_secret=$(pwgen 24)
 
-  if [ -n "$radius_ltsp_ip" \
-       -a -n "$radius_ltsp_net_cidr" \
-       -a -n "$radius_secret" ]; then
-    cat <<EOF > /state/etc/freeradius/3.0/clients.conf.tmp
+  cat <<EOF > /state/etc/freeradius/3.0/clients.conf.tmp
 client puavobox_radius {
-	# Lock to only one interface if needed.
-	# See /rofs/etc/freeradius/3.0/clients.conf for details.
-	# ipaddr    = ${radius_ltsp_ip}
-	# netmask   = ${radius_ltsp_net_cidr}
-	ipaddr    = *
-	secret    = ${radius_secret}
-	shortname = puavobox_radius
+    # Lock to only one interface if needed.  You can also use only IP
+    # without "/cidr" if you know the exact client IP address.
+    # See /rofs/etc/freeradius/3.0/clients.conf for details.
+    # ipaddr    = ${radius_ltsp_net}/${radius_ltsp_net_cidr}
+    ipaddr    = *
+    secret    = ${radius_secret}
+    shortname = puavobox_radius
 }
 EOF
-    chmod 640 /state/etc/freeradius/3.0/clients.conf.tmp
-    mv /state/etc/freeradius/3.0/clients.conf.tmp \
-       /state/etc/freeradius/3.0/clients.conf
-  fi
+  chmod 640 /state/etc/freeradius/3.0/clients.conf.tmp
+  mv /state/etc/freeradius/3.0/clients.conf.tmp \
+     /state/etc/freeradius/3.0/clients.conf
 fi
 
 # allow random freeradius customizations from under /state if such things exist
