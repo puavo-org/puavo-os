@@ -6,6 +6,7 @@ target_dir='/etc/shorewall.rofs'
 
 fw_logging_policy=$(puavo-conf puavo.admin.logging.firewall)
 
+# XXX duplicate code with "setup_freeradius"
 iface_to_network_cidr() {
   iface=$1
 
@@ -67,7 +68,7 @@ iface_to_network_cidr() {
     return 1
   fi
 
-  echo "$network_cidr"
+  printf %s "$network_cidr"
 }
 
 iface_no_num() { echo "$1" | sed -E 's/[0-9]+$//'; }
