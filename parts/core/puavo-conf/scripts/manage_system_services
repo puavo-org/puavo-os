@@ -76,6 +76,8 @@ set services {
     }}
 
   { freeradius {
+      /etc/systemd/system/multi-user.target.wants/freeradius.service
+        -> /lib/systemd/system/freeradius.service
       /etc/rc2.d/S01freeradius -> /etc/init.d/freeradius
       /etc/rc3.d/S01freeradius -> /etc/init.d/freeradius
       /etc/rc4.d/S01freeradius -> /etc/init.d/freeradius
