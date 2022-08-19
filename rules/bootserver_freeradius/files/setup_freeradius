@@ -574,7 +574,7 @@ ldap {
 		# using ldaps (port 636) connections
 		start_tls = yes
 
-		ca_file	= /etc/puavo/certs/rootca.pem
+		ca_file	= /etc/puavo-conf/rootca.pem
 
 #		ca_path	= \${certdir}
 #		certificate_file = /path/to/radius.crt
