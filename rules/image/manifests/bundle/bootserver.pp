@@ -5,6 +5,7 @@ class image::bundle::bootserver {
   include ::bootserver_cron
   include ::bootserver_ddns
   include ::bootserver_firewall
+  include ::bootserver_freeradius
   include ::bootserver_helpers
   include ::bootserver_hooktftp
   include ::bootserver_inetd
