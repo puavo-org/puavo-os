@@ -1,52 +1,88 @@
-Description: Automatically enable added computers.
++--- veyon-4.7.3+repack1.orig/master/src/MainWindow.cpp
+++++ veyon-4.7.3+repack1/master/src/MainWindow.cpp
++@@ -108,12 +108,13 @@ MainWindow::MainWindow( VeyonMaster &mas
++       monitoringSplitter->setStretchFactor( monitoringSplitter->indexOf(slideshowSpotlightSplitter), 1 );
++       monitoringSplitter->setStretchFactor( monitoringSplitter->indexOf(ui->computerMonitoringWidget), 1 );
+  
+-@@ -297,12 +297,26 @@ void ComputerManager::initComputerTreeMo
+-       connect( computerTreeModel(), &QAbstractItemModel::dataChanged,
+-                        this, &ComputerManager::checkChangedData );
+-       connect( computerTreeModel(), &QAbstractItemModel::rowsInserted,
+--                       this, &ComputerManager::computerSelectionChanged );
+-+                       this, &ComputerManager::computerSelectionChangedDoPreselect );
+-       connect( computerTreeModel(), &QAbstractItemModel::rowsRemoved,
+-                        this, &ComputerManager::computerSelectionChanged );
+- }
++-      mainSplitter->addWidget( computerSelectPanel );
+++      //mainSplitter->addWidget( computerSelectPanel );
++       mainSplitter->addWidget( screenshotManagementPanel );
++       mainSplitter->addWidget( monitoringSplitter );
+  
++       mainSplitter->setStretchFactor( mainSplitter->indexOf(monitoringSplitter), 1 );
+  
+-+void ComputerManager::computerSelectionChangedDoPreselect()
+-+{
+-+      QJsonArray checkedNetworkObjects;
+-+    for( const auto& location : qAsConst( m_currentLocations ) )
+-+    {
+-+        const auto computersAtLocation = getComputersAtLocation( location );
+-+        for( const auto& computer : computersAtLocation )
+-+        {
+-+            checkedNetworkObjects += computer.networkObjectUid().toString();
+-+        }
+-+    }
+-+      m_computerTreeModel->loadStates( checkedNetworkObjects );
+-+    Q_EMIT computerSelectionChanged();
+-+}
+++    ui->computerSelectPanelButton->setVisible(false);
+  
+Description: Disable location panel, automatically enable all computers.
+ As puavo uses own session system, these features are not required inside
+ veyon, and are thus disabled / hidden.
+Author: Tuomas Nurmi <dev@opinsys.fi>
 
 --- veyon-4.7.3+repack1.orig/master/src/ComputerManager.cpp
 +++ veyon-4.7.3+repack1/master/src/ComputerManager.cpp
-@@ -167,7 +167,7 @@ void ComputerManager::checkChangedData(
- 
- 	if( roles.contains( Qt::CheckStateRole ) )
+@@ -404,10 +404,10 @@ ComputerList ComputerManager::selectedCo
  	{
--		Q_EMIT computerSelectionChanged();
-+		Q_EMIT computerSelectionChangedDoPreselect();
- 	}
- }
+ 		QModelIndex entryIndex = model->index( i, 0, parent );
  
-@@ -297,12 +297,26 @@ void ComputerManager::initComputerTreeMo
- 	connect( computerTreeModel(), &QAbstractItemModel::dataChanged,
- 			 this, &ComputerManager::checkChangedData );
- 	connect( computerTreeModel(), &QAbstractItemModel::rowsInserted,
--			 this, &ComputerManager::computerSelectionChanged );
-+			 this, &ComputerManager::computerSelectionChangedDoPreselect );
- 	connect( computerTreeModel(), &QAbstractItemModel::rowsRemoved,
- 			 this, &ComputerManager::computerSelectionChanged );
- }
+-		if( QVariantHelper<Qt::CheckState>::value( model->data( entryIndex, NetworkObjectModel::CheckStateRole ) ) == Qt::Unchecked )
++		/*if( QVariantHelper<Qt::CheckState>::value( model->data( entryIndex, NetworkObjectModel::CheckStateRole ) ) == Qt::Unchecked )
+ 		{
+ 			continue;
+-		}
++		}*/
  
+ 		auto objectType = static_cast<NetworkObject::Type>( model->data( entryIndex, NetworkObjectModel::TypeRole ).toInt() );
  
-+void ComputerManager::computerSelectionChangedDoPreselect()
-+{
-+	QJsonArray checkedNetworkObjects;
-+    for( const auto& location : qAsConst( m_currentLocations ) )
-+    {
-+        const auto computersAtLocation = getComputersAtLocation( location );
-+        for( const auto& computer : computersAtLocation )
-+        {
-+            checkedNetworkObjects += computer.networkObjectUid().toString();
-+        }
-+    }
-+	m_computerTreeModel->loadStates( checkedNetworkObjects );
-+    Q_EMIT computerSelectionChanged();
-+}
+--- veyon-4.7.3+repack1.orig/master/src/MainWindow.cpp
++++ veyon-4.7.3+repack1/master/src/MainWindow.cpp
+@@ -108,12 +108,13 @@ MainWindow::MainWindow( VeyonMaster &mas
+ 	monitoringSplitter->setStretchFactor( monitoringSplitter->indexOf(slideshowSpotlightSplitter), 1 );
+ 	monitoringSplitter->setStretchFactor( monitoringSplitter->indexOf(ui->computerMonitoringWidget), 1 );
  
- void ComputerManager::updateLocationFilterList()
- {
---- veyon-4.7.3+repack1.orig/master/src/ComputerManager.h
-+++ veyon-4.7.3+repack1/master/src/ComputerManager.h
-@@ -52,6 +52,8 @@ public:
+-	mainSplitter->addWidget( computerSelectPanel );
++	//mainSplitter->addWidget( computerSelectPanel );
+ 	mainSplitter->addWidget( screenshotManagementPanel );
+ 	mainSplitter->addWidget( monitoringSplitter );
  
- 	ComputerList selectedComputers( const QModelIndex& parent );
+ 	mainSplitter->setStretchFactor( mainSplitter->indexOf(monitoringSplitter), 1 );
  
-+	void computerSelectionChangedDoPreselect();
-+
- 	void addLocation( const QString& location );
- 	void removeLocation( const QString& location );
++       ui->computerSelectPanelButton->setVisible(false);
  
+ 	static const QMap<QWidget *, QAbstractButton *> panelButtons{
+ 		{ computerSelectPanel, ui->computerSelectPanelButton },
+@@ -190,10 +191,10 @@ MainWindow::MainWindow( VeyonMaster &mas
+ 
+ 	ui->centralLayout->addWidget( mainSplitter );
+ 
+-	if( VeyonCore::config().autoOpenComputerSelectPanel() )
++	/*if( VeyonCore::config().autoOpenComputerSelectPanel() )
+ 	{
+ 		ui->computerSelectPanelButton->setChecked( true );
+-	}
++	}*/
+ 
+ 	// initialize search filter
+ 	ui->filterPoweredOnComputersButton->setChecked( m_master.userConfig().filterPoweredOnComputers() );
