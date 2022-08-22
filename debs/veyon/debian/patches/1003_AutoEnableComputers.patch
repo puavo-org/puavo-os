@@ -1,0 +1,52 @@
+Description: Automatically enable added computers.
+
+--- veyon-4.7.3+repack1.orig/master/src/ComputerManager.cpp
++++ veyon-4.7.3+repack1/master/src/ComputerManager.cpp
+@@ -167,7 +167,7 @@ void ComputerManager::checkChangedData(
+ 
+ 	if( roles.contains( Qt::CheckStateRole ) )
+ 	{
+-		Q_EMIT computerSelectionChanged();
++		Q_EMIT computerSelectionChangedDoPreselect();
+ 	}
+ }
+ 
+@@ -297,12 +297,26 @@ void ComputerManager::initComputerTreeMo
+ 	connect( computerTreeModel(), &QAbstractItemModel::dataChanged,
+ 			 this, &ComputerManager::checkChangedData );
+ 	connect( computerTreeModel(), &QAbstractItemModel::rowsInserted,
+-			 this, &ComputerManager::computerSelectionChanged );
++			 this, &ComputerManager::computerSelectionChangedDoPreselect );
+ 	connect( computerTreeModel(), &QAbstractItemModel::rowsRemoved,
+ 			 this, &ComputerManager::computerSelectionChanged );
+ }
+ 
+ 
++void ComputerManager::computerSelectionChangedDoPreselect()
++{
++	QJsonArray checkedNetworkObjects;
++    for( const auto& location : qAsConst( m_currentLocations ) )
++    {
++        const auto computersAtLocation = getComputersAtLocation( location );
++        for( const auto& computer : computersAtLocation )
++        {
++            checkedNetworkObjects += computer.networkObjectUid().toString();
++        }
++    }
++	m_computerTreeModel->loadStates( checkedNetworkObjects );
++    Q_EMIT computerSelectionChanged();
++}
+ 
+ void ComputerManager::updateLocationFilterList()
+ {
+--- veyon-4.7.3+repack1.orig/master/src/ComputerManager.h
++++ veyon-4.7.3+repack1/master/src/ComputerManager.h
+@@ -52,6 +52,8 @@ public:
+ 
+ 	ComputerList selectedComputers( const QModelIndex& parent );
+ 
++	void computerSelectionChangedDoPreselect();
++
+ 	void addLocation( const QString& location );
+ 	void removeLocation( const QString& location );
+ 
