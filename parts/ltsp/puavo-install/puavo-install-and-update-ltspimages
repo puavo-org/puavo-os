@@ -768,7 +768,6 @@ run_image_preinst_hook() {
   umount "${images_dir}/mnt" || true
 }
 
-# XXX duplicate code with puavo-install-ltspimages
 set_image_as_default_image() {
   imagename=$1
   imagepath="${images_dir}/${imagename}"
