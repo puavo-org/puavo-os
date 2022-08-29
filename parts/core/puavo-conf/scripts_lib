@@ -1,0 +1,63 @@
+iface_to_network_cidr() {
+  iface=$1
+
+  network_cidr=$(
+    awk -v iface="$iface" '
+      $1 == "iface" { current_iface = $2; address = ""; netmask = "" }
+      current_iface == iface && $1 == "address" { address = $2 }
+      current_iface == iface && $1 == "netmask" { netmask = $2 }
+      address && netmask { print address, netmask; exit(0) }
+    ' /etc/network/interfaces /etc/network/interfaces.d/* \
+      | awk 'BEGIN {
+               netMaskToCIDR["0.0.0.0"]         = 0
+               netMaskToCIDR["128.0.0.0"]       = 1
+               netMaskToCIDR["192.0.0.0"]       = 2
+               netMaskToCIDR["224.0.0.0"]       = 3
+               netMaskToCIDR["240.0.0.0"]       = 4
+               netMaskToCIDR["248.0.0.0"]       = 5
+               netMaskToCIDR["252.0.0.0"]       = 6
+               netMaskToCIDR["254.0.0.0"]       = 7
+               netMaskToCIDR["255.0.0.0"]       = 8
+               netMaskToCIDR["255.128.0.0"]     = 9
+               netMaskToCIDR["255.192.0.0"]     = 10
+               netMaskToCIDR["255.224.0.0"]     = 11
+               netMaskToCIDR["255.240.0.0"]     = 12
+               netMaskToCIDR["255.248.0.0"]     = 13
+               netMaskToCIDR["255.252.0.0"]     = 14
+               netMaskToCIDR["255.254.0.0"]     = 15
+               netMaskToCIDR["255.255.0.0"]     = 16
+               netMaskToCIDR["255.255.128.0"]   = 17
+               netMaskToCIDR["255.255.192.0"]   = 18
+               netMaskToCIDR["255.255.224.0"]   = 19
+               netMaskToCIDR["255.255.240.0"]   = 20
+               netMaskToCIDR["255.255.248.0"]   = 21
+               netMaskToCIDR["255.255.252.0"]   = 22
+               netMaskToCIDR["255.255.254.0"]   = 23
+               netMaskToCIDR["255.255.255.0"]   = 24
+               netMaskToCIDR["255.255.255.128"] = 25
+               netMaskToCIDR["255.255.255.192"] = 26
+               netMaskToCIDR["255.255.255.224"] = 27
+               netMaskToCIDR["255.255.255.240"] = 28
+               netMaskToCIDR["255.255.255.248"] = 29
+               netMaskToCIDR["255.255.255.252"] = 30
+               netMaskToCIDR["255.255.255.254"] = 31
+               netMaskToCIDR["255.255.255.255"] = 32
+             }
+
+             {
+               ip_address = $1
+               netmask    = $2
+               split(ip_address, a, /\./)
+               split(netmask,    b, /\./)
+               network = and(a[1], b[1]) "." and(a[2], b[2]) "."  and(a[3], b[3]) "." and(a[4], b[4])
+
+               print network "/" netMaskToCIDR[netmask]
+               exit(0)
+             }')
+  if [ -z "$network_cidr" ]; then
+    echo "Could not determine network/cidr for interface $iface" >&2
+    return 1
+  fi
+
+  printf %s "$network_cidr"
+}

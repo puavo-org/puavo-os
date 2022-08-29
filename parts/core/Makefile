@@ -73,6 +73,8 @@ install : $(install-subdirs) installdirs
 		puavo-conf/files/messages/*
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
 		puavo-conf/scripts/*
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts/.lib \
+		puavo-conf/scripts_lib
 
 .PHONY : $(clean-subdirs)
 $(clean-subdirs) :
