@@ -2,6 +2,8 @@
 
 set -eu
 
+. /etc/puavo-conf/scripts/.lib
+
 puavo_hosttype="$(puavo-conf puavo.hosttype)"
 
 # XXX get rid of hosttype handling
@@ -30,3 +32,33 @@ install -o root -g openldap -m 640 /etc/puavo/certs/host.key \
        /etc/ssl/certs/slapd-server.key
 install -o root -g openldap -m 644 /etc/puavo/certs/orgcabundle.pem \
        /etc/ssl/certs/slapd-ca.crt
+
+dhcpd_interfaces=$(sed -n -E '/^INTERFACESv4/s/^INTERFACESv4="(.*)"$/\1/p' \
+                       /etc/default/isc-dhcp-server)
+
+ldap_urllist=''
+for interf in lo $dhcpd_interfaces; do
+  ipaddr=$(lookup_ip "$interf")
+  ldap_urllist="${ldap_urllist}$(printf "ldap://%s/ ldaps://%s/ " \
+                                        "$ipaddr" "$ipaddr")"
+done
+ldap_urllist="${ldap_urllist}ldapi:///"
+
+cat <<EOF > /etc/systemd/system/slapd.service.tmp
+[Unit]
+Description = OpenLDAP server
+
+[Service]
+Environment=KRB5_KTNAME=/etc/ldap/krb5.keytab
+ExecStartPre = /bin/mkdir -p /run/slapd
+ExecStartPre = /bin/chown openldap:openldap /run/slapd
+ExecStart = /usr/sbin/slapd -u openldap -g openldap -h "${ldap_urllist}" -F /etc/ldap/slapd.d -d 0
+Restart = always
+RestartSec = 180
+ExecStop = /bin/rm -rf /run/slapd
+LimitNOFILE = 100000
+
+[Install]
+WantedBy = multi-user.target
+EOF
+mv /etc/systemd/system/slapd.service.tmp /etc/systemd/system/slapd.service

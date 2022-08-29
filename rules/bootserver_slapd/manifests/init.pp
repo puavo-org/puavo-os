@@ -8,10 +8,6 @@ class bootserver_slapd {
     '/etc/apparmor.d/local/usr.sbin.slapd':
       source => 'puppet:///modules/bootserver_slapd/local-apparmor-inclusions';
 
-    '/etc/systemd/system/slapd.service':
-      require => Package['systemd'],
-      source  => 'puppet:///modules/bootserver_slapd/slapd.service';
-
     '/usr/local/lib/puavo-service-wait-for-slapd':
       mode   => '0755',
       source => 'puppet:///modules/bootserver_slapd/puavo-service-wait-for-slapd';
