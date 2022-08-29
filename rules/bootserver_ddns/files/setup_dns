@@ -181,6 +181,11 @@ cache-size=10000
 dns-forward-max=1000
 localise-queries
 log-facility=/var/log/dnsmasq.log
+bind-interfaces
+interface=lo
+$(for interf in $dhcpd_interfaces; do
+    echo "interface=${interf}"
+  done)
 
 # Forward requests to upstream. Requests to puavo domain should be
 # sent to bind that handles DDNS requests
