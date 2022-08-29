@@ -36,8 +36,8 @@ install -o root -g openldap -m 644 /etc/puavo/certs/orgcabundle.pem \
 dhcpd_interfaces=$(sed -n -E '/^INTERFACESv4/s/^INTERFACESv4="(.*)"$/\1/p' \
                        /etc/default/isc-dhcp-server)
 
-ldap_urllist=''
-for interf in lo $dhcpd_interfaces; do
+ldap_urllist='ldap://127.0.0.1/ ldaps://127.0.0.1/ '
+for interf in $dhcpd_interfaces; do
   ipaddr=$(lookup_ip "$interf")
   ldap_urllist="${ldap_urllist}$(printf "ldap://%s/ ldaps://%s/ " \
                                         "$ipaddr" "$ipaddr")"

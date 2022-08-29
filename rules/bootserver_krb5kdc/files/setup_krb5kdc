@@ -24,16 +24,16 @@ read puavo_topdomain          < /etc/puavo/topdomain
 dhcpd_interfaces=$(sed -n -E '/^INTERFACESv4/s/^INTERFACESv4="(.*)"$/\1/p' \
                        /etc/default/isc-dhcp-server)
 
-kerberos_addr_list=''
-for interf in lo $dhcpd_interfaces; do
+kerberos_addr_list='127.0.0.1:88'
+for interf in $dhcpd_interfaces; do
   ipaddr=$(lookup_ip "$interf")
   kerberos_addr_list="${kerberos_addr_list} ${ipaddr}:88"
 done
 
 cat <<EOF > /etc/krb5kdc/kdc.conf.tmp
 [kdcdefaults]
-    kdc_listen     =${kerberos_addr_list}
-    kdc_tcp_listen =${kerberos_addr_list}
+    kdc_listen     = ${kerberos_addr_list}
+    kdc_tcp_listen = ${kerberos_addr_list}
 
 [realms]
     ${puavo_kerberos_realm} = {
