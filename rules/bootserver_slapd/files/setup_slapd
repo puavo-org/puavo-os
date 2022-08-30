@@ -47,6 +47,7 @@ ldap_urllist="${ldap_urllist}ldapi:///"
 cat <<EOF > /etc/systemd/system/slapd.service.tmp
 [Unit]
 Description = OpenLDAP server
+After = network.target
 
 [Service]
 Environment=KRB5_KTNAME=/etc/ldap/krb5.keytab
