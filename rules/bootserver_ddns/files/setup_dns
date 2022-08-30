@@ -150,6 +150,13 @@ puavo_cert_version_list=$(puavo-conf puavo.admin.certs.versions)
 puavo_api_server_port=444
 puavo_imageserver_port=873
 
+if win_ip="$(lookup_ip win0)"; then
+  win_domain="ad.${puavo_hostname}.${puavo_domain}"
+  win_etc_dnsmasq_conf="server=/${win_domain}/${win_ip}#53"
+else
+  win_etc_dnsmasq_conf=''
+fi
+
 cat <<EOF > /etc/dnsmasq.conf.tmp
 domain=${puavo_domain}
 domain-needed
@@ -162,6 +169,8 @@ interface=lo
 $(for interf in $dhcpd_interfaces; do
     echo "interface=${interf}"
   done)
+
+${win_etc_dnsmasq_conf}
 
 # Forward requests to upstream. Requests to puavo domain should be
 # sent to bind that handles DDNS requests
