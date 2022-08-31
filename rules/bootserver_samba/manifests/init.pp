@@ -13,6 +13,9 @@ class bootserver_samba {
     '/etc/pam.d/samba':
       source => 'puppet:///modules/bootserver_samba/etc_pam.d_samba';
 
+    '/etc/systemd/system/samba-ad-dc.service':
+      source => 'puppet:///modules/bootserver_samba/samba-ad-dc.service';
+
     '/etc/systemd/system/smbd.service.d':
       ensure  => directory,
       require => Package['systemd'];
