@@ -5,3 +5,63 @@ set -eu
 if [ "$(puavo-conf puavo.service.samba-ad-dc.enabled)" != 'true' ]; then
   exit 0
 fi
+
+read puavo_hostname       < /etc/puavo/hostname
+read puavo_kerberos_realm < /etc/puavo/kerberos/realm
+read puavo_samba_domain   < /etc/puavo/sambadomainname
+
+puavo_hostname_uppercase=$(printf %s "$puavo_hostname" | tr a-z A-Z)
+
+ad_realm="AD.${puavo_hostname_uppercase}.${puavo_kerberos_realm}"
+ad_realm_lowercase=$(printf %s "$ad_realm" | tr A-Z a-z)
+
+if [ ! -e /var/lib/samba-ad-dc/.puavo_provisioning_done ]; then
+  ad_admin_password=$(pwgen 32)
+
+  find /var/lib/samba-ad-dc/ -mindepth 1 -delete
+  install -o root -g root -m 600 /dev/null \
+          /var/lib/samba-ad-dc/.puavo_samba_adminpw
+  printf "%s\n" "$ad_admin_password" \
+    > /var/lib/samba-ad-dc/.puavo_samba_adminpw
+
+  echo
+  echo '>>> PROVISIONING SAMBA AD...'
+  samba-tool domain provision --server-role='dc' --use-rfc2307 \
+             --dns-backend='SAMBA_INTERNAL' --realm="$ad_realm" \
+             --domain="$puavo_samba_domain" --adminpass="$ad_admin_password" \
+             --option="interfaces=win0" --option="bind interfaces only=yes" \
+             --targetdir="/var/lib/samba-ad-dc"
+  touch /var/lib/samba-ad-dc/.puavo_provisioning_done
+  echo '>>> PROVISIONING DONE!'
+fi
+
+cat <<EOF > /etc/samba/samba-ad-dc.conf
+# Global parameters
+[global]
+        binddns dir = /var/lib/samba-ad-dc/bind-dns
+        bind interfaces only = Yes
+        cache directory = /var/lib/samba-ad-dc/cache
+        dns forwarder = 127.0.0.1
+        interfaces = win0
+        lock directory = /var/lib/samba-ad-dc
+        netbios name = ${puavo_hostname_uppercase}
+        pid directory = /run/samba-ad-dc
+        private dir = /var/lib/samba-ad-dc/private
+        realm = ${ad_realm}
+        server role = active directory domain controller
+        state directory = /var/lib/samba-ad-dc/state
+        workgroup = ${puavo_samba_domain}
+        idmap_ldb:use rfc2307 = yes
+
+[sysvol]
+        path = /var/lib/samba-ad-dc/state/sysvol
+        read only = No
+
+[netlogon]
+        path = /var/lib/samba-ad-dc/state/sysvol/${ad_realm_lowercase}/scripts
+        read only = No
+EOF
+
+cat <<'EOF' > /etc/default/samba
+SAMBAOPTIONS="-s /etc/samba/samba-ad-dc.conf"
+EOF
