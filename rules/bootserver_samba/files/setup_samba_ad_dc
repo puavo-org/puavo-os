@@ -6,6 +6,8 @@ if [ "$(puavo-conf puavo.service.samba-ad-dc.enabled)" != 'true' ]; then
   exit 0
 fi
 
+. /etc/puavo-conf/scripts/.lib
+
 read puavo_hostname       < /etc/puavo/hostname
 read puavo_kerberos_realm < /etc/puavo/kerberos/realm
 read puavo_samba_domain   < /etc/puavo/sambadomainname
@@ -16,6 +18,12 @@ ad_realm="AD.${puavo_hostname_uppercase}.${puavo_kerberos_realm}"
 ad_realm_lowercase=$(printf %s "$ad_realm" | tr A-Z a-z)
 
 if [ ! -e /var/lib/samba-ad-dc/.puavo_provisioning_done ]; then
+  if ! win0_ip=$(lookup_ip win0); then
+    echo 'could not find IP address for the win0 interface' >&2
+    echo 'can not provision Samba AD DC' >&2
+    exit 1
+  fi
+
   ad_admin_password=$(pwgen -B -N 3 6 | xargs | tr ' ' -)
 
   find /var/lib/samba-ad-dc/ -mindepth 1 -delete
@@ -29,7 +37,8 @@ if [ ! -e /var/lib/samba-ad-dc/.puavo_provisioning_done ]; then
   samba-tool domain provision --server-role='dc' --use-rfc2307 \
              --dns-backend='SAMBA_INTERNAL' --realm="$ad_realm" \
              --domain="$puavo_samba_domain" --adminpass="$ad_admin_password" \
-             --option="interfaces=win0" --option="bind interfaces only=yes" \
+             --host-ip="$win0_ip" --option="interfaces=win0" \
+             --option="bind interfaces only=yes" \
              --targetdir="/var/lib/samba-ad-dc"
   touch /var/lib/samba-ad-dc/.puavo_provisioning_done
   echo '>>> PROVISIONING DONE!'
