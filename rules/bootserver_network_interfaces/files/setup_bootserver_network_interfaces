@@ -103,7 +103,9 @@ for interface in $(get_interfaces); do
   esac
 done
 
-setup_win0 || status=1
+if [ "$(puavo-conf puavo.service.samba-ad-dc.enabled)" = 'true' ]; then
+  setup_win0 || status=1
+fi
 
 if [ "$status" -ne 0 ]; then
   echo 'Errors occurred while setting up network configuration' >&2
