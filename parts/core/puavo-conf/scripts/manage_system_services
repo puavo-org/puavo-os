@@ -281,6 +281,17 @@ set services {
         -> /lib/systemd/system/rpc-gssd.service
     }}
 
+  { samba-ad-dc {
+      /etc/systemd/system/samba-ad-dc.service
+        -> /lib/systemd/system/samba-ad-dc.service
+      /etc/systemd/system/multi-user.target.wants/samba-ad-dc.service
+        -> /lib/systemd/system/samba-ad-dc.service
+      /etc/rc2.d/S01samba-ad-dc -> /etc/init.d/samba-ad-dc
+      /etc/rc3.d/S01samba-ad-dc -> /etc/init.d/samba-ad-dc
+      /etc/rc4.d/S01samba-ad-dc -> /etc/init.d/samba-ad-dc
+      /etc/rc5.d/S01samba-ad-dc -> /etc/init.d/samba-ad-dc
+    }}
+
   { shorewall {
       /etc/systemd/system/basic.target.wants/shorewall.service
         -> /lib/systemd/system/shorewall.service
