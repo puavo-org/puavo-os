@@ -282,8 +282,6 @@ set services {
     }}
 
   { samba-ad-dc {
-      /etc/systemd/system/samba-ad-dc.service
-        -> /lib/systemd/system/samba-ad-dc.service
       /etc/systemd/system/multi-user.target.wants/samba-ad-dc.service
         -> /lib/systemd/system/samba-ad-dc.service
       /etc/rc2.d/S01samba-ad-dc -> /etc/init.d/samba-ad-dc
