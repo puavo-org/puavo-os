@@ -16,7 +16,7 @@ ad_realm="AD.${puavo_hostname_uppercase}.${puavo_kerberos_realm}"
 ad_realm_lowercase=$(printf %s "$ad_realm" | tr A-Z a-z)
 
 if [ ! -e /var/lib/samba-ad-dc/.puavo_provisioning_done ]; then
-  ad_admin_password=$(pwgen 32)
+  ad_admin_password=$(pwgen -B -N 3 6 | xargs | tr ' ' -)
 
   find /var/lib/samba-ad-dc/ -mindepth 1 -delete
   install -o root -g root -m 600 /dev/null \
