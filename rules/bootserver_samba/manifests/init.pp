@@ -25,6 +25,9 @@ class bootserver_samba {
   ::puavo_conf::script {
     'setup_samba':
       source => 'puppet:///modules/bootserver_samba/setup_samba';
+
+    'setup_samba_ad_dc':
+      source => 'puppet:///modules/bootserver_samba/setup_samba_ad_dc';
   }
 
   Package <| title == samba or title == systemd or title == winbind |>
