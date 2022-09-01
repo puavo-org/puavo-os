@@ -13,6 +13,9 @@ class bootserver_samba {
     '/etc/pam.d/samba':
       source => 'puppet:///modules/bootserver_samba/etc_pam.d_samba';
 
+    '/etc/systemd/system/puavo-samba-sync.service':
+      source => 'puppet:///modules/bootserver_samba/puavo-samba-sync.service';
+
     '/etc/systemd/system/samba-ad-dc.service':
       source => 'puppet:///modules/bootserver_samba/samba-ad-dc.service';
 
@@ -23,6 +26,10 @@ class bootserver_samba {
     '/etc/systemd/system/smbd.service.d/override.conf':
       require => File['/usr/local/lib/puavo-service-wait-for-slapd'],
       source  => 'puppet:///modules/bootserver_samba/smbd_override.conf';
+
+    '/usr/local/sbin/puavo-samba-sync':
+      mode   => '0755',
+      source => 'puppet:///modules/bootserver_samba/puavo-samba-sync';
   }
 
   ::puavo_conf::script {

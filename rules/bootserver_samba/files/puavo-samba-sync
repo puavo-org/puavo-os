@@ -1,0 +1,147 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use File::Basename;
+use File::Slurper qw(read_text);
+use IPC::Run qw(run);
+use Net::LDAP;
+use Net::LDAP::Control::SyncRequest;
+use Net::LDAP::Constant qw(LDAP_SYNC_REFRESH_ONLY
+                           LDAP_SYNC_REFRESH_AND_PERSIST
+                           LDAP_SUCCESS);
+use Sys::Syslog qw(:standard :macros);
+
+openlog(basename($0), '', 'user');
+
+chomp(my $bind_dn   = read_text('/etc/puavo/ldap/dn'));
+chomp(my $bind_pw   = read_text('/etc/puavo/ldap/password'));
+chomp(my $ldap_base = read_text('/etc/puavo/ldap/base'));
+chomp(my $ldap_host = read_text('/etc/puavo/ldap/master'));
+
+my $ldap = Net::LDAP->new($ldap_host);
+unless ($ldap) {
+  syslog(LOG_ERR, 'no ldap server %s', $ldap_host);
+  exit(1);
+}
+
+# XXX should really use verify
+my $ldap_response;
+$ldap_response = $ldap->start_tls(verify => 'none');
+if ($ldap_response->code != LDAP_SUCCESS) {
+  syslog(LOG_ERR, 'could not start_tls on %s', $ldap_host);
+  exit(1);
+}
+
+$ldap_response = $ldap->bind($bind_dn, password => $bind_pw);
+if ($ldap_response->code != LDAP_SUCCESS) {
+  syslog(LOG_ERR, 'failed to authenticate to %s', $ldap_host);
+  exit(1);
+}
+
+my $req = Net::LDAP::Control::SyncRequest->new(
+            mode => LDAP_SYNC_REFRESH_AND_PERSIST);
+
+# XXX how to prevent multiple instances of this script running?
+# XXX should there be some kind of a lock?
+
+# XXX we could also perhaps read and update usernames and such
+# XXX tracking puavoId should also be useful?  or maybe uidNumber is enough?
+my $search = $ldap->search(base     => "ou=People,${ldap_base}",
+                           scope    => 'sub',
+                           control  => [ $req ],
+                           callback => \&handle_search_event,
+                           filter   => '(objectClass=sambaSamAccount)',
+                           attrs    => [ qw(uid puavoLocked sambaNTPassword) ]);
+
+# XXX should never get here, what to do if we do?
+# XXX is $search useful ?
+
+sub handle_search_event {
+  my ($msg, $entry) = @_;
+
+  return unless $entry;
+
+  if ($entry->isa('Net::LDAP::Entry')) {
+    handle_entry($entry);
+  }
+}
+
+# XXX how to remove users that have been removed from Puavo
+# XXX how to lock users that have been locked in Puavo?
+
+sub check_user_password {
+  my ($uid) = @_;
+
+  my $r = run([ 'pdbedit', '-s', '/etc/samba/samba-ad-dc.conf',
+                '-u', $uid, '-w' ],
+              \(my $in = ''), \my $user_info, \my $err);
+  if (!$r) {
+    return undef if $err =~ /Username not found/;
+    die "unexpected error looking up user ${uid}: ${err}";
+  }
+
+  my $old_user_nt_pwhash = (split(/:/, $user_info))[3];
+  return '' unless defined($old_user_nt_pwhash);
+
+  lc($old_user_nt_pwhash);
+}
+
+sub create_user {
+  my ($uid) = @_;
+
+  syslog(LOG_INFO, 'creating a new user %s', $uid);
+
+  my @alnums = ('a'..'z','A'..'Z',0..9);
+  my $fake_pw = join('', map { $alnums[rand @alnums] } (1..32));
+  my $in = "${fake_pw}\n${fake_pw}\n";
+  my $err = '';
+  run([ 'pdbedit', '-s', '/etc/samba/samba-ad-dc.conf', '-a', '-u', $uid ],
+      \$in, \my $out, \$err)
+    or die "could not create user: $err";
+}
+
+sub set_user_password {
+  my ($uid, $sambaNTPassword) = @_;
+
+  syslog(LOG_INFO, 'setting user password for %s', $uid);
+
+  my $in  = '';
+  my $err = '';
+  run([ 'pdbedit', '-r', '-s', '/etc/samba/samba-ad-dc.conf', '-u', $uid,
+                   '--set-nt-hash', $sambaNTPassword ],
+      \$in, \my $out, \$err)
+    or die "could not set user ${uid} password: $err";
+}
+
+sub handle_entry {
+  my ($entry) = @_;
+
+  unless ($entry->exists('uid')) {
+    syslog(LOG_WARNING, 'got entry without an uid');
+    return;
+  }
+
+  unless ($entry->exists('sambaNTPassword')) {
+    syslog(LOG_WARNING, 'entry has no sambaNTPassword');
+    return;
+  }
+
+  my $uid = $entry->get_value('uid');
+  my $sambaNTPassword = $entry->get_value('sambaNTPassword');
+
+  eval {
+    my $old_user_nt_pwhash = check_user_password($uid);
+
+    unless (defined($old_user_nt_pwhash)) {
+      create_user($uid);
+      $old_user_nt_pwhash = '';
+    }
+
+    if ($old_user_nt_pwhash ne $sambaNTPassword) {
+      set_user_password($uid, $sambaNTPassword);
+    }
+  };
+  if ($@) { syslog(LOG_ERR, '%s', $@); }
+}
