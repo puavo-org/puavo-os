@@ -29,6 +29,9 @@ class bootserver_samba {
 
     '/usr/local/sbin/puavo-samba-sync':
       mode   => '0755',
+      require => [ Package['libfile-slurper-perl']
+                 , Package['libipc-run-perl']
+                 , Package['libnet-ldap-perl'] ],
       source => 'puppet:///modules/bootserver_samba/puavo-samba-sync';
   }
 
@@ -40,5 +43,11 @@ class bootserver_samba {
       source => 'puppet:///modules/bootserver_samba/setup_samba_ad_dc';
   }
 
-  Package <| title == samba or title == systemd or title == winbind |>
+  Package <|
+       title == 'libfile-slurper-perl'
+    or title == 'libipc-run-perl'
+    or title == 'libnet-ldap-perl'
+    or title == samba
+    or title == systemd
+    or title == winbind |>
 }

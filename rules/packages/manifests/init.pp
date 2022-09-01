@@ -14,7 +14,12 @@ class packages {
   #
 
   @package {
-    [ 'hooktftp', 'puavo-ltsp-bootserver', 'puavo-rest', ]:
+    [ 'hooktftp'
+    , 'libfile-slurper-perl'  # dependency for "puavo-samba-sync"
+    , 'libipc-run-perl'       # dependency for "puavo-samba-sync"
+    , 'libnet-ldap-perl'      # dependency for "puavo-samba-sync"
+    , 'puavo-ltsp-bootserver'
+    , 'puavo-rest', ]:
       ensure => present,
       tag    => [ 'tag_puavo_bootserver' ];
   }
