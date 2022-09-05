@@ -18,6 +18,7 @@ class puavo_pkg::packages {
 			, 'arduino-radiohead'
 			, 'arduino-tm1637'
 			, 'bluegriffon'
+			, 'celestia'
 			, 'cmaptools'
 			, 'cnijfilter2'
 			, 'cura-appimage'
