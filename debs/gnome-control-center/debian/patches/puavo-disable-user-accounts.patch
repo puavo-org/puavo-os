@@ -1,0 +1,11 @@
+diff -ruN gnome-control-center.orig/shell/cc-panel-loader.c gnome-control-center/shell/cc-panel-loader.c
+--- gnome-control-center.orig/shell/cc-panel-loader.c	2022-09-06 13:15:12.000000000 +0300
++++ gnome-control-center/shell/cc-panel-loader.c	2022-09-06 13:16:40.361956237 +0300
+@@ -118,7 +118,6 @@
+   PANEL_TYPE("thunderbolt",      cc_bolt_panel_get_type,                 NULL),
+ #endif
+   PANEL_TYPE("universal-access", cc_ua_panel_get_type,                   NULL),
+-  PANEL_TYPE("user-accounts",    cc_user_panel_get_type,                 NULL),
+ #ifdef BUILD_WACOM
+   PANEL_TYPE("wacom",            cc_wacom_panel_get_type,                cc_wacom_panel_static_init_func),
+ #endif
