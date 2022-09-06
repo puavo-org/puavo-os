@@ -205,7 +205,7 @@ ldap {
 	#  attribute ref.
 	update {
 		control:Password-With-Header	+= 'userPassword'
-#		control:NT-Password		:= 'ntPassword'
+		control:NT-Password		:= 'sambaNTPassword'
 #		reply:Reply-Message		:= 'radiusReplyMessage'
 #		reply:Tunnel-Type		:= 'radiusTunnelType'
 #		reply:Tunnel-Medium-Type	:= 'radiusTunnelMediumType'
