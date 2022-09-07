@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# in Bullseye, all icons in our default QT style do not appear
+exec env QT_STYLE_OVERRIDE=breeze /usr/bin/scribus.distrib "$@"

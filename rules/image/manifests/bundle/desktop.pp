@@ -34,6 +34,7 @@ class image::bundle::desktop {
   include ::puavo_pkg::packages
   # include ::pycharm	                # XXX pycharm needs to be packaged
   include ::run_once_on_desktop_session
+  include ::scribus
   include ::supplementary_groups
   include ::tts_setup
   include ::tuxpaint
