@@ -908,8 +908,9 @@ class VeyonSlave(PuavoWidget):
       markup = '<span color="%s">%s</span>' % ('lightgreen', msg)
       self.connection_label.set_markup(markup)
 
-    for master_conn in self.veyon_masters.values():
-      master_conn.pin_sent = False
+    for m_conn in self.veyon_masters.values():
+      m_conn.pin_sent = False
+
     self.master_conn = master_conn
     self.dbus_iface.AddPublicKey(public_key,
                                  reply_handler=self.handle_add_public_key,
