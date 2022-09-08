@@ -89,7 +89,7 @@ VEYON_BASE_CONFIG = {
       'Plugin': '39d7a07f-94db-4912-aa1a-c4df8aee3879'
   },
   'X11Vnc': {
-      'ExtraArguments': '-noshm'
+      'ExtraArguments': '-noshm -defer 500 -wait 500'
   }
 }
 
