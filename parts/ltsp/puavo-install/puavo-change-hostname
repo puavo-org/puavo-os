@@ -96,7 +96,7 @@ do_bootserver_rename_actions() {
 
   case "$mode" in
     forward)
-      service bind9 stop                           || return 1
+      service named stop                           || return 1
       cp -a "$var_lib_bind" "$var_lib_bind_backup" || return 1
       rm -f "$var_lib_bind"/puavo_domain*          || return 1
       /etc/puavo-conf/scripts/setup_dns            || return 1
@@ -107,7 +107,7 @@ do_bootserver_rename_actions() {
             && mv "$var_lib_bind_backup" "$var_lib_bind"; } || return 1
       fi
       /etc/puavo-conf/scripts/setup_dns || return 1
-      service bind9 restart || true
+      service named restart || true
       ;;
   esac
 

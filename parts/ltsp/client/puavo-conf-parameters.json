@@ -104,9 +104,6 @@
   "puavo.service.avahi-daemon.enabled": {
     "default": "true"
   },
-  "puavo.service.bind9.enabled": {
-    "default": "false"
-  },
   "puavo.service.collectd.enabled": {
     "default": "false"
   },
@@ -159,6 +156,9 @@
     "default": "false"
   },
   "puavo.service.nagios-nrpe-server.enabled": {
+    "default": "false"
+  },
+  "puavo.service.named.enabled": {
     "default": "false"
   },
   "puavo.service.nbd-server.enabled": {
