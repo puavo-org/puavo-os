@@ -122,8 +122,8 @@ def update_veyon_config(config)
   end
 end
 
-class VeyonSlave < DBus::Object
-  dbus_interface 'org.puavo.Veyon.slave' do
+class VeyonClient < DBus::Object
+  dbus_interface 'org.puavo.Veyon.client' do
     dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
       begin
         # here we do not case about errors,
@@ -145,7 +145,7 @@ class VeyonSlave < DBus::Object
         update_veyon_config(VEYON_BASE_CONFIG)
       rescue StandardError => e
         Syslog.log(Syslog::LOG_ERR,
-                   'Error in org.puavo.Veyon.slave AddPublicKey method: %s',
+                   'Error in org.puavo.Veyon.client AddPublicKey method: %s',
                    e.message)
         raise e
       end
@@ -157,7 +157,7 @@ class VeyonSlave < DBus::Object
         update_veyon_config(VEYON_BASE_CONFIG)
       rescue StandardError => e
         Syslog.log(Syslog::LOG_ERR,
-                   'Error in org.puavo.Veyon.slave ClenaupConfig method: %s',
+                   'Error in org.puavo.Veyon.client ClenaupConfig method: %s',
                    e.message)
         raise e
       end
@@ -279,10 +279,10 @@ begin
   service = bus.request_service('org.puavo.Veyon')
 
   case veyon_role
+    when 'client'
+      service.export( VeyonClient.new('/client') )
     when 'master'
       service.export( VeyonMaster.new('/master') )
-    when 'slave'
-      service.export( VeyonSlave.new('/slave') )
     else
       exit(0)
   end
