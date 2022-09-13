@@ -282,7 +282,7 @@ class VeyonMaster(PuavoWidget):
 
     self.hostname = read_firstline('/etc/puavo/hostname')
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
-                                           '/master',
+                                           '/server',
                                            'org.puavo.Veyon.master')
 
     self.client_count_label = Gtk.MenuItem(label='Clients: 0')
@@ -661,7 +661,7 @@ class VeyonClient(PuavoWidget):
     self.veyon_masters = {}
 
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
-                                           '/client',
+                                           '/server',
                                            'org.puavo.Veyon.client')
 
     self.action_button = Gtk.MenuItem(label='Join a Veyon session')
