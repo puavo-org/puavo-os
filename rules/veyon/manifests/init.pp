@@ -5,10 +5,6 @@ class veyon {
   include ::puavo_pkg::packages
 
   file {
-    '/etc/dbus-1/system.d/org.puavo.Veyon.conf':
-      require => Package['dbus'],
-      source  => 'puppet:///modules/veyon/org.puavo.Veyon.conf';
-
     '/etc/systemd/system/multi-user.target.wants/puavo-veyon.service':
       ensure  => 'link',
       require => [ File['/lib/systemd/system/puavo-veyon.service']
@@ -28,6 +24,11 @@ class veyon {
   ::puavo_conf::definition {
     'puavo-veyon.json':
       source => 'puppet:///modules/veyon/puavo-veyon.json';
+  }
+
+  ::puavo_conf::script {
+    'setup_veyon':
+      source => 'puppet:///modules/veyon/setup_veyon';
   }
 
   Package <|

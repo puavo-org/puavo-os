@@ -3,6 +3,6 @@
     "default": "false"
   },
   "puavo.veyon.role_rules" : {
-    "default": ""
+    "default": "%admin,%teacher:master+client :client"
   }
 }
