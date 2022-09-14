@@ -10,6 +10,10 @@
 
 #define PUAVODESKTOPFILES_DIR "/var/lib/puavo-desktop/users"
 
+#define STUDENT_GID	977
+#define TEACHER_GID	978
+#define ADMIN_GID	979
+
 int
 pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv)
 {
@@ -21,9 +25,10 @@ pam_sm_setcred (pam_handle_t *pamh, int flags, int argc, const char **argv)
 {
 	json_t *node, *root;
 	gid_t *groups;
+	gid_t rolegroup_gid;
 	const char *user, *user_type;
 	char *puavodesktop_path;
-	int no_groups, retvalue;
+	int group_count, retvalue;
 
 	retvalue = PAM_SUCCESS;
 
@@ -74,20 +79,29 @@ pam_sm_setcred (pam_handle_t *pamh, int flags, int argc, const char **argv)
 		goto finish;
 	}
 
-	no_groups = getgroups(0, NULL);
-	if ((groups = calloc(no_groups + 1, sizeof(gid_t))) == NULL) {
+	if (strcmp("student", user_type) == 0) {
+		rolegroup_gid = STUDENT_GID;
+	} else if (strcmp("teacher", user_type) == 0) {
+		rolegroup_gid = TEACHER_GID;
+	} else if (strcmp("admin", user_type) == 0) {
+		rolegroup_gid = ADMIN_GID;
+	} else {
+		goto finish;
+	}
+
+	group_count = getgroups(0, NULL);
+	if ((groups = calloc(group_count + 1, sizeof(gid_t))) == NULL) {
 		retvalue = PAM_SYSTEM_ERR;
 		goto finish;
 	}
-        if (getgroups(no_groups, groups) == -1) {
+
+	if (getgroups(group_count, groups) == -1) {
 		retvalue = PAM_SYSTEM_ERR;
 		goto finish;
-        }
+	}
 
-	/* XXX should determine the correct group by user_type */
-	groups[no_groups] = 999;
-
-	if (setgroups(no_groups + 1, groups) == -1) {
+	groups[group_count] = rolegroup_gid;
+	if (setgroups(group_count + 1, groups) == -1) {
 		retvalue = PAM_SYSTEM_ERR;
 		goto finish;
 	}
