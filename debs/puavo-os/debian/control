@@ -328,9 +328,9 @@ Description: PuavoMenu is a desktop menu for starting up programs.
 
 Package: puavo-pam
 Architecture: all
-Depends: ${misc:Depends}, libjansson4, libpam0g
-Description: Puavo PAM modules
- Puavo PAM modules.
+Depends: ${misc:Depends}, libpam0g
+Description: Puavo PAM module
+ Puavo PAM module.
  .
 
 Package: puavo-pkg
