@@ -76,20 +76,16 @@ busconfig_rules=$(
       }
 
       printf("  <policy context=\"default\">\n")
+      printf("    <allow send_destination=\"org.puavo.Veyon\"/>\n")
       if (allow_master_by_default) {
-        if (allow_client_by_default) {
-          printf("    <allow send_destination=\"org.puavo.Veyon\"/>\n")
-        } else {
-          dbus_allow("master")
-          dbus_deny("client")
-        }
+        dbus_allow("master")
       } else {
-        if (allow_client_by_default) {
-          dbus_allow("client")
-          dbus_deny("master")
-        } else {
-          printf("    <deny send_destination=\"org.puavo.Veyon\"/>\n")
-        }
+        dbus_deny("master")
+      }
+      if (allow_client_by_default) {
+        dbus_allow("client")
+      } else {
+        dbus_deny("client")
       }
       printf("  </policy>\n")
     }
