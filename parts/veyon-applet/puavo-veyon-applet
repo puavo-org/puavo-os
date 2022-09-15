@@ -94,6 +94,10 @@ def read_firstline(pathname):
     return (file.readlines())[0].rstrip("\n")
 
 
+class VeyonRoleDenied(Exception):
+  pass
+
+
 class PuavoWidget:
   def connect_to_dbus(self, bus_name, service, interface):
     self.bus = dbus.SystemBus()
@@ -267,6 +271,17 @@ class VeyonClientConnection(PuavoWidget):
 
 class VeyonMaster(PuavoWidget):
   def __init__(self, applet):
+    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
+                                           '/server',
+                                           'org.puavo.Veyon.master')
+
+    try:
+      self.dbus_iface.CheckAccess()
+    except dbus.exceptions.DBusException as e:
+      if e.get_dbus_name() == 'org.freedesktop.DBus.Error.AccessDenied':
+        raise VeyonRoleDenied('no permission to master role')
+      raise e
+
     self.applet = applet
 
     # This will wait until host gets a network... which might never happen,
@@ -281,9 +296,6 @@ class VeyonMaster(PuavoWidget):
     self.veyon_clients = {}
 
     self.hostname = read_firstline('/etc/puavo/hostname')
-    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
-                                           '/server',
-                                           'org.puavo.Veyon.master')
 
     self.client_count_label = Gtk.MenuItem(label='Clients: 0')
     self.client_count_label.set_sensitive(False)
@@ -649,6 +661,16 @@ class VeyonMasterConnection():
 
 class VeyonClient(PuavoWidget):
   def __init__(self, applet):
+    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
+                                           '/server',
+                                           'org.puavo.Veyon.client')
+    try:
+      self.dbus_iface.CheckAccess()
+    except dbus.exceptions.DBusException as e:
+      if e.get_dbus_name() == 'org.freedesktop.DBus.Error.AccessDenied':
+        raise VeyonRoleDenied('no permission to client role')
+      raise e
+
     self.applet = applet
 
     self.browser     = None
@@ -659,10 +681,6 @@ class VeyonClient(PuavoWidget):
     self.public_key_request_timer_id = None
 
     self.veyon_masters = {}
-
-    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
-                                           '/server',
-                                           'org.puavo.Veyon.client')
 
     self.action_button = Gtk.MenuItem(label='Join a Veyon session')
     self.action_button_handler \
@@ -999,28 +1017,25 @@ class PuavoVeyonApplet:
 
     Notify.init('puavo-veyon-applet')
 
-    try:
-      veyon_role = puavoconf_get('puavo.veyon.role')
-    except Exception as e:
-      logmsg(syslog.LOG_ERR,
-             'puavo.veyon.role could not be determined: %s' % e)
-      sys.exit(1)
-
-    if veyon_role == '':
-      logmsg(syslog.LOG_NOTICE, 'no veyon role, exiting')
-      sys.exit(0)
-    elif veyon_role != 'master' and veyon_role != 'client':
-      logmsg(syslog.LOG_ERR, 'unknown veyon role: %s' % veyon_role)
-      sys.exit(1)
-
-    logmsg(syslog.LOG_NOTICE, 'operating in veyon %s role' % veyon_role)
-
     self.menu = Gtk.Menu()
 
-    if veyon_role == 'master':
-      VeyonMaster(self)
-    else:
+    # Try to activate both roles and see if we can do that
+    # (puavo-veyon might respond we do or do not have access to either).
+    try:
       self.client = VeyonClient(self)
+      logmsg(syslog.LOG_NOTICE, 'client role activated')
+    except VeyonRoleDenied as e:
+      self.client = None
+
+    try:
+      self.master = VeyonMaster(self)
+      logmsg(syslog.LOG_NOTICE, 'master role activated')
+    except VeyonRoleDenied as e:
+      self.master = None
+
+    if not self.client and not self.master:
+      logmsg(syslog.LOG_NOTICE, 'no master or client role active, closing')
+      sys.exit(0)
 
     self.menu.show_all()
     self.indicator.set_menu(self.menu)

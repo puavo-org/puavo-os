@@ -124,6 +124,8 @@ end
 
 class PuavoVeyonServer < DBus::Object
   dbus_interface 'org.puavo.Veyon.client' do
+    dbus_method :CheckAccess, '' do return end
+
     dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
       begin
         # here we do not case about errors,
@@ -165,6 +167,8 @@ class PuavoVeyonServer < DBus::Object
   end
 
   dbus_interface 'org.puavo.Veyon.master' do
+    dbus_method :CheckAccess, '' do return end
+
     dbus_method :GetPublicKey, 'out public_key:s' do
       begin
         private_key_path = '/etc/veyon/keys/private/puavo_veyon_key/key'
