@@ -115,6 +115,7 @@ install : installdirs
 		pam/puavo-can-do-local-login \
 		pam/puavo-login \
 		pam/puavo-manage-homedir \
+		pam/puavo-manage-user-role-groups \
 		pam/puavo-nodm-pam-setup \
 		pam/puavo-setup-primary-user \
 		pam/restrict-logins-if-personally-administered
