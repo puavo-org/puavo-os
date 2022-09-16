@@ -520,8 +520,9 @@ class VeyonMaster(PuavoWidget):
     if self.update_config_call_pending:
       return
 
-    # UpdateConfig must not be called more than 10 times in a minute
-    GLib.timeout_add_seconds(6, self.dbus_update_config)
+    # Wait a bit in case we have more update_config requests coming up.
+    # The server restricts configuration updates to once-a-second anyway.
+    GLib.timeout_add_seconds(1, self.dbus_update_config)
     self.update_config_call_pending = True
 
 

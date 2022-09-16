@@ -96,6 +96,8 @@ VEYON_BASE_CONFIG = {
 HOSTNAME   = Socket.gethostname()
 IP_ADDRESS = IPSocket.getaddress(HOSTNAME)
 
+$last_veyon_restart = Time.at(0)
+
 def delete_puavo_veyon_key()
   begin
     File.unlink(KEY_CREATED_PATH)
@@ -108,6 +110,11 @@ def delete_puavo_veyon_key()
 end
 
 def update_veyon_config(config)
+  # prevent too frequent veyon service restarts
+  if Time.now < ($last_veyon_restart + 1) then
+    sleep(1)
+  end
+
   Tempfile.create('veyon_config') do |tmpfile|
     tmpfile.write(config.to_json)
     tmpfile.close
@@ -117,6 +124,7 @@ def update_veyon_config(config)
       raise 'error when importing new veyon configuration'
     end
 
+    $last_veyon_restart = Time.now
     system('service', 'veyon', 'restart') \
       or raise 'error in restarting veyon after configuration import'
   end
@@ -204,10 +212,6 @@ class PuavoVeyonServer < DBus::Object
     end
 
     dbus_method :UpdateConfig, 'in hosts_json:s' do |hosts_json|
-      # This method must not be called too frequently, because this restarts
-      # veyon service and that can be done only 10 times in a minute
-      # before systemd interferes.  It is caller's responsibility
-      # to know this.
       begin
         hostlist = JSON.parse(hosts_json)
 

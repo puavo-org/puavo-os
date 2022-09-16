@@ -11,6 +11,12 @@ class veyon {
                  , Package['systemd'] ],
       target  => '/lib/systemd/system/puavo-veyon.service';
 
+    '/etc/systemd/system/veyon.service.d':
+      ensure => directory;
+
+    '/etc/systemd/system/veyon.service.d/override.conf':
+      source  => 'puppet:///modules/veyon/veyon_override.conf';
+
     '/lib/systemd/system/puavo-veyon.service':
       require => [ File['/usr/local/sbin/puavo-veyon']
                  , Package['systemd'] ],
