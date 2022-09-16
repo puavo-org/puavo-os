@@ -270,7 +270,7 @@ class VeyonClientConnection(PuavoWidget):
 
 
 class VeyonMaster(PuavoWidget):
-  def __init__(self, applet):
+  def __init__(self, applet, samehost_client):
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
                                            '/server',
                                            'org.puavo.Veyon.master')
@@ -283,6 +283,7 @@ class VeyonMaster(PuavoWidget):
       raise e
 
     self.applet = applet
+    self.samehost_client = samehost_client
 
     # This will wait until host gets a network... which might never happen,
     # but this tool is not useful at all without a network.
@@ -296,6 +297,11 @@ class VeyonMaster(PuavoWidget):
     self.veyon_clients = {}
 
     self.hostname = read_firstline('/etc/puavo/hostname')
+
+    if self.samehost_client:
+      separator = Gtk.SeparatorMenuItem()
+      separator.show()
+      self.applet.menu.append(separator)
 
     self.client_count_label = Gtk.MenuItem(label='Clients: 0')
     self.client_count_label.set_sensitive(False)
@@ -672,6 +678,7 @@ class VeyonClient(PuavoWidget):
       raise e
 
     self.applet = applet
+    self.samehost_master = None
 
     self.browser     = None
     self.hostname    = read_firstline('/etc/puavo/hostname')
@@ -691,6 +698,10 @@ class VeyonClient(PuavoWidget):
     self.pin_window = None
 
     self.cleanup_config(self.handle_startup_cleanup)
+
+
+  def connect_to_samehost_master(self, master):
+    self.samehost_master = master
 
 
   def cleanup_config(self, reply_handler):
@@ -1028,8 +1039,10 @@ class PuavoVeyonApplet:
       self.client = None
 
     try:
-      self.master = VeyonMaster(self)
+      self.master = VeyonMaster(self, self.client)
       logmsg(syslog.LOG_NOTICE, 'master role activated')
+      if self.client:
+        self.client.connect_to_samehost_master(self.master)
     except VeyonRoleDenied as e:
       self.master = None
 
