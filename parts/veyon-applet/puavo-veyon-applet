@@ -134,11 +134,11 @@ class Veyon():
     message = json.loads(message_json)
 
     if type(message) != dict:
-      raise 'message is not a dict'
+      raise Exception('message is not a dict')
     if not 'type' in message:
-      raise 'no type in message'
+      raise Exception('no type in message')
     if type(message['type']) != str:
-      raise 'message type is not a string'
+      raise Exception('message type is not a string')
 
     return message
 
@@ -186,9 +186,9 @@ class VeyonClientConnection(PuavoWidget):
 
       if message['type'] == 'new_client':
         if not 'hostname' in message:
-          raise 'no hostname in new_client message'
+          raise Exception('no hostname in new_client message')
         if type(message['hostname']) != str:
-          raise 'hostname is not a string'
+          raise Exception('hostname is not a string')
 
         # XXX we would also like a list of groups user belongs to, probably?
         self.client_hostname = message['hostname']
@@ -203,9 +203,9 @@ class VeyonClientConnection(PuavoWidget):
 
       elif message['type'] == 'public_key_request':
         if not 'pin' in message:
-          raise 'public key request without a PIN'
+          raise Exception('public key request without a PIN')
         if type(message['pin']) != str:
-          raise 'PIN is not a string'
+          raise Exception('PIN is not a string')
 
         if message['pin'] == self.master.pin:
           logmsg(syslog.LOG_INFO,
@@ -334,7 +334,8 @@ class VeyonMaster(PuavoWidget):
   def handle_cleanup_error(self, dbusexception):
     # XXX what else could we do?
     # XXX does this close everything?
-    raise 'error in cleaning up veyon configuration: %s' % dbusexception
+    errstr = 'error in cleaning up veyon configuration: %s' % dbusexception
+    raise Exception(errstr)
 
 
   def setup_session(self, widget=None):
@@ -645,13 +646,13 @@ class VeyonMasterConnection():
 
       elif message['type'] == 'master_info':
         if not 'hostname' in message:
-          raise 'no hostname in master info'
+          raise Exception('no hostname in master info')
         if type(message['hostname']) != str:
-          raise 'master hostname is not a string'
+          raise Exception('master hostname is not a string')
         if not 'username' in message:
-          raise 'no username in master info'
+          raise Exception('no username in master info')
         if type(message['username']) != str:
-          raise 'master username is not a string'
+          raise Exception('master username is not a string')
 
         self.master_info = {
           'hostname': message['hostname'],
@@ -663,9 +664,9 @@ class VeyonMasterConnection():
 
       elif message['type'] == 'public_key':
         if not 'public_key' in message:
-          raise 'no public key in public_key message'
+          raise Exception('no public key in public_key message')
         if type(message['public_key']) != str:
-          raise 'public_key is not a string'
+          raise Exception('public_key is not a string')
 
         if self.pin_sent:
           self.in_session = True
@@ -780,7 +781,8 @@ class VeyonClient(PuavoWidget):
   def handle_cleanup_error(self, dbusexception):
     # XXX what else could we do?
     # XXX does this close everything?
-    raise 'error in cleaning up veyon configuration: %s' % dbusexception
+    errstr = 'error in cleaning up veyon configuration: %s' % dbusexception
+    raise Exception(errstr)
 
 
   def checkout_masters(self):
