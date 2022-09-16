@@ -98,6 +98,17 @@ IP_ADDRESS = IPSocket.getaddress(HOSTNAME)
 
 $last_veyon_restart = Time.at(0)
 
+def cleanup_config()
+  begin
+    delete_puavo_veyon_key()
+    update_veyon_config(VEYON_BASE_CONFIG)
+  rescue StandardError => e
+    Syslog.log(Syslog::LOG_ERR,
+               'Error in ClenaupConfig() method: %s', e.message)
+    raise e
+  end
+end
+
 def delete_puavo_veyon_key()
   begin
     File.unlink(KEY_CREATED_PATH)
@@ -132,7 +143,11 @@ end
 
 class PuavoVeyonServer < DBus::Object
   dbus_interface 'org.puavo.Veyon.client' do
-    dbus_method :CheckAccess, '' do return end
+    dbus_method :CheckAccess, '' do end
+
+    # If this process was serving in a master role previously,
+    # both of these methods destroy that configuration, which is good
+    # (both delete_puavo_veyon_key() and update_veyon_config() are called).
 
     dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
       begin
@@ -162,32 +177,22 @@ class PuavoVeyonServer < DBus::Object
     end
 
     dbus_method :CleanupConfig, '' do
-      begin
-        delete_puavo_veyon_key()
-        update_veyon_config(VEYON_BASE_CONFIG)
-      rescue StandardError => e
-        Syslog.log(Syslog::LOG_ERR,
-                   'Error in org.puavo.Veyon.client ClenaupConfig method: %s',
-                   e.message)
-        raise e
-      end
+      cleanup_config()
     end
   end
 
   dbus_interface 'org.puavo.Veyon.master' do
-    dbus_method :CheckAccess, '' do return end
+    dbus_method :CheckAccess, '' do end
 
-    dbus_method :GetPublicKey, 'out public_key:s' do
+    # If this process was serving in a client role previously,
+    # NewSession() sets up a new master role by creating new keys
+    # and removes the client Veyon configuration.  UpdateConfig()
+    # keeps the session/keys and updates host information in that session.
+
+    dbus_method :NewSession, 'out public_key:s' do
       begin
         private_key_path = '/etc/veyon/keys/private/puavo_veyon_key/key'
         public_key_path  = '/etc/veyon/keys/public/puavo_veyon_key/key'
-
-        begin
-          if File.exists?(KEY_CREATED_PATH) then
-            return IO.read(public_key_path)
-          end
-        rescue Errno::ENOENT => e
-        end
 
         # just to make sure (in case only either of these exist)
         delete_puavo_veyon_key()
@@ -201,6 +206,8 @@ class PuavoVeyonServer < DBus::Object
         FileUtils.chown('root', 'puavodesktop', private_key_path)
         FileUtils.chmod(0640, private_key_path)
         FileUtils.touch(KEY_CREATED_PATH)
+
+        update_veyon_config(VEYON_BASE_CONFIG)
 
         return IO.read(public_key_path)
       rescue StandardError => e
@@ -265,6 +272,10 @@ class PuavoVeyonServer < DBus::Object
                    e.message)
         raise e
       end
+    end
+
+    dbus_method :CleanupConfig, '' do
+      cleanup_config()
     end
   end
 end

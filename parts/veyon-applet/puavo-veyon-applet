@@ -292,9 +292,11 @@ class VeyonMaster(PuavoWidget):
     self.pin = None
     self.public_key = None
     self.serviceinfo = None
+    self.socket = None
     self.update_config_call_pending = False
     self.username = self.lookup_username()
     self.veyon_clients = {}
+    self.zeroconf = None
 
     self.hostname = read_firstline('/etc/puavo/hostname')
 
@@ -313,40 +315,45 @@ class VeyonMaster(PuavoWidget):
     self.applet.menu.append(self.change_pin_button)
 
     self.open_master_button = Gtk.MenuItem(label='Open Veyon master')
-    self.open_master_button.set_sensitive(True)
+    self.open_master_button.set_sensitive(False)
     self.open_master_button.connect('activate', self.open_veyon_master)
     self.applet.menu.append(self.open_master_button)
 
     self.session_button = Gtk.MenuItem(label='Setup a Veyon session')
-    self.session_button.set_sensitive(False)
+    self.session_button.set_sensitive(True)
     self.session_button_handler \
       = self.session_button.connect('activate', self.setup_session)
     self.applet.menu.append(self.session_button)
 
-    self.dbus_iface \
-        .GetPublicKey(reply_handler=self.handle_get_public_key,
-                      error_handler=self.handle_get_public_key_error)
 
+  def cleanup_config(self, reply_handler):
+    self.dbus_iface.CleanupConfig(reply_handler=reply_handler,
+                                  error_handler=self.handle_cleanup_error)
+
+
+  def handle_cleanup_error(self, dbusexception):
+    # XXX what else could we do?
+    # XXX does this close everything?
+    raise 'error in cleaning up veyon configuration: %s' % dbusexception
 
 
   def setup_session(self, widget=None):
-    self.create_new_pin()
-    self.update_config()
-    self.change_pin_button.set_sensitive(True)
-    self.session_button.get_child().set_text('Close a Veyon session')
-    self.session_button.disconnect(self.session_button_handler)
-    self.session_button_handler \
-      = self.session_button.connect('activate', self.close_session)
-    self.zeroconf.register_service(self.serviceinfo)
+    if self.samehost_client:
+      self.samehost_client.disable()
+
+    self.dbus_iface \
+        .NewSession(reply_handler=self.handle_new_session,
+                    error_handler=self.handle_new_session_error)
 
 
   def close_session(self, widget=None):
-    self.zeroconf.unregister_service(self.serviceinfo)
+    self.unsetup_master_service()
 
     self.applet.indicator.set_label('', '')
     self.pin = None
 
     self.change_pin_button.set_sensitive(False)
+    self.open_master_button.set_sensitive(False)
 
     for client_conn in self.veyon_clients.values():
       if client_conn.in_session:
@@ -357,6 +364,9 @@ class VeyonMaster(PuavoWidget):
     self.session_button.disconnect(self.session_button_handler)
     self.session_button_handler \
       = self.session_button.connect('activate', self.setup_session)
+
+    if self.samehost_client:
+      self.samehost_client.enable()
 
 
   def lookup_username(self):
@@ -416,16 +426,31 @@ class VeyonMaster(PuavoWidget):
     self.applet.indicator.set_label('PIN: %s' % new_pin, '')
 
 
-  def handle_get_public_key(self, public_key):
-    logmsg(syslog.LOG_INFO, 'got public key through dbus')
-    self.public_key = public_key
+  def handle_new_session(self, public_key):
+    logmsg(syslog.LOG_INFO, 'got new session and public key through dbus')
+
+    # XXX if network changes the old session should be closed
+    # XXX and a new one set up
     self.setup_master_service()
 
+    self.public_key = public_key
+    self.create_new_pin()
+    self.update_config()
+    self.change_pin_button.set_sensitive(True)
+    self.session_button.get_child().set_text('Close a Veyon session')
+    self.session_button.disconnect(self.session_button_handler)
+    self.session_button_handler \
+      = self.session_button.connect('activate', self.close_session)
+    self.open_master_button.set_sensitive(True)
 
-  def handle_get_public_key_error(self, dbusexception):
-    # XXX should issues here be shown to user?
+    self.zeroconf.register_service(self.serviceinfo)
+
+
+  # XXX this should change
+  def handle_new_session_error(self, dbusexception):
+    # XXX issues here should be shown to user somehow
     logmsg(syslog.LOG_ERR,
-           'error occurred when getting public key: %s' % dbusexception)
+           'error occurred when setting in a new session: %s' % dbusexception)
 
 
   def open_veyon_master(self, widget=None):
@@ -454,6 +479,8 @@ class VeyonMaster(PuavoWidget):
 
 
   def setup_master_service(self):
+    self.unsetup_master_service()
+
     logmsg(syslog.LOG_NOTICE, 'setting up master service')
 
     self.socket = socket.socket()
@@ -480,6 +507,25 @@ class VeyonMaster(PuavoWidget):
                       self.socket)
 
     self.session_button.set_sensitive(True)
+
+
+  def unsetup_master_service(self):
+    service_closed = False
+
+    if self.socket:
+      self.socket.close()
+      self.socket = None
+      service_closed = True
+
+    if self.zeroconf:
+      self.zeroconf.unregister_service(self.serviceinfo)
+      self.zeroconf = None
+      service_closed = True
+
+    self.serviceinfo = None
+
+    if service_closed:
+      logmsg(syslog.LOG_NOTICE, 'closed the master service')
 
 
   def make_service_name(self):
@@ -680,6 +726,7 @@ class VeyonClient(PuavoWidget):
 
     self.applet = applet
     self.samehost_master = None
+    self.enabled = True
 
     self.browser     = None
     self.hostname    = read_firstline('/etc/puavo/hostname')
@@ -691,6 +738,7 @@ class VeyonClient(PuavoWidget):
     self.veyon_masters = {}
 
     self.action_button = Gtk.MenuItem(label='Join a Veyon session')
+    self.action_button.set_sensitive(True)
     self.action_button_handler \
       = self.action_button.connect('activate', self.activate_pin_entry)
     self.update_action_button()
@@ -698,11 +746,7 @@ class VeyonClient(PuavoWidget):
 
     self.pin_window = None
 
-    self.cleanup_config(self.handle_startup_cleanup)
-
-
-  def connect_to_samehost_master(self, master):
-    self.samehost_master = master
+    self.checkout_masters()
 
 
   def cleanup_config(self, reply_handler):
@@ -710,15 +754,27 @@ class VeyonClient(PuavoWidget):
                                   error_handler=self.handle_cleanup_error)
 
 
-  def handle_startup_cleanup(self):
-    logmsg(syslog.LOG_INFO, 'veyon client config startup cleanup done')
-    self.checkout_masters()
+  def connect_to_samehost_master(self, master):
+    self.samehost_master = master
+
+
+  def disable(self):
+    self.enabled = False
+    self.update_action_button()
+
+
+  def enable(self):
+    self.enabled = True
+    self.update_action_button()
 
 
   def handle_session_cleanup(self):
     logmsg(syslog.LOG_INFO, 'veyon client config cleanup done')
     self.update_action_button()
     self.notify('Veyon session closed')
+
+    if self.samehost_master:
+      self.samehost_master.enable()
 
 
   def handle_cleanup_error(self, dbusexception):
@@ -859,7 +915,7 @@ class VeyonClient(PuavoWidget):
     label = 'Join a Veyon session'
     GLib.timeout_add(0, lambda: self.action_button.get_child().set_text(label))
 
-    if self.veyon_masters:
+    if self.enabled and self.veyon_masters:
       GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
     else:
       GLib.timeout_add(0, lambda: self.action_button.set_sensitive(False))
@@ -1051,6 +1107,19 @@ class PuavoVeyonApplet:
       logmsg(syslog.LOG_NOTICE, 'no master or client role active, closing')
       sys.exit(0)
 
+    # Call cleanup_config() either through client or master and show menu
+    # only after we are ready.
+    self.cleanup_config(self.start)
+
+
+  def cleanup_config(self, cb):
+    if self.client:
+      self.client.cleanup_config(cb)
+    else:
+      self.master.cleanup_config(cb)
+
+
+  def start(self):
     self.menu.show_all()
     self.indicator.set_menu(self.menu)
 
@@ -1068,7 +1137,7 @@ class PuavoVeyonApplet:
 
   def quit(self):
     logmsg(syslog.LOG_INFO,
-           'veyon client config cleanup done at exit, quitting')
+           'veyon config cleanup done at exit, quitting')
     Gtk.main_quit()
 
 
@@ -1079,10 +1148,7 @@ class PuavoVeyonApplet:
   def exit(self):
     if not self.exit_done:
       self.exit_done = True
-      if self.client:
-        self.client.cleanup_config(self.quit)
-      else:
-        Gtk.main_quit()
+      self.cleanup_config(self.quit)
 
 
 exitstatus = 0
