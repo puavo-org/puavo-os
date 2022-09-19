@@ -269,6 +269,57 @@ class VeyonClientConnection(PuavoWidget):
     GLib.source_remove(self.client_socket_watch)
 
 
+class IPAddressWatcher(PuavoWidget):
+  def __init__(self, client, master):
+    self.current_ip_address  = None
+    self.previous_ip_address = None
+    self.client = client
+    self.master = master
+
+    self.get_host_ip_address()
+
+
+  def get_host_ip_address(self):
+    try:
+      self.current_ip_address = None
+
+      for intf in sorted(netifaces.interfaces()):
+        if not re.match('^(eth|wlan)', intf):
+          continue
+
+        addresses = netifaces.ifaddresses(intf)
+        if not netifaces.AF_INET in addresses:
+          continue
+
+        for ip_addr in addresses[netifaces.AF_INET]:
+          if 'addr' in ip_addr:
+            # pick the first IP address we got that is not localhost or
+            # tun*/vpn* (if we would use several on the same host, that
+            # might get tricky)
+            ip = ip_addr['addr']
+            self.current_ip_address = ip
+            break
+
+      if self.current_ip_address != self.previous_ip_address:
+        if self.client:
+          self.client.host_ip_address_change(self.current_ip_address)
+        if self.master:
+          self.master.host_ip_address_change(self.current_ip_address)
+
+        if self.current_ip_address:
+          logmsg(syslog.LOG_NOTICE,
+                 'IP address used is now %s' % self.current_ip_address)
+        else:
+          logmsg(syslog.LOG_NOTICE,
+                 'no IP address on any of the interfaces we are checking')
+    except Exception as e:
+      logmsg(syslog.LOG_ERR, 'error in determining IP address: %s' % e)
+
+    self.previous_ip_address = self.current_ip_address
+
+    GLib.timeout_add_seconds(10, self.get_host_ip_address)
+
+
 class VeyonMaster(PuavoWidget):
   def __init__(self, applet, samehost_client):
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
@@ -285,9 +336,8 @@ class VeyonMaster(PuavoWidget):
     self.applet = applet
     self.samehost_client = samehost_client
 
-    # This will wait until host gets a network... which might never happen,
-    # but this tool is not useful at all without a network.
-    self.host_ip_address = self.get_host_ip_address()
+    # this will be filled in by IPAddressWatcher
+    self.host_ip_address = None
 
     self.pin = None
     self.public_key = None
@@ -320,10 +370,20 @@ class VeyonMaster(PuavoWidget):
     self.applet.menu.append(self.open_master_button)
 
     self.session_button = Gtk.MenuItem(label='Setup a Veyon session')
-    self.session_button.set_sensitive(True)
+    self.session_button.set_sensitive(False)
     self.session_button_handler \
       = self.session_button.connect('activate', self.setup_session)
     self.applet.menu.append(self.session_button)
+
+
+  def host_ip_address_change(self, ip_address):
+    self.host_ip_address = ip_address
+    self.close_session()
+
+    if ip_address:
+      self.enable()
+    else:
+      self.disable()
 
 
   def disable(self):
@@ -387,38 +447,6 @@ class VeyonMaster(PuavoWidget):
     return userinfo.pw_name
 
 
-  def get_host_ip_address(self):
-    # We wait until we get an IP address.
-    # If host is not networked we will wait indefinitely.
-    send_log_message = True
-
-    while True:
-      for intf in sorted(netifaces.interfaces()):
-        if not re.match('^(eth|wlan)', intf):
-          continue
-
-        addresses = netifaces.ifaddresses(intf)
-        if not netifaces.AF_INET in addresses:
-          continue
-
-        for ip_addr in addresses[netifaces.AF_INET]:
-          if 'addr' in ip_addr:
-            # pick the first IP address we got that is not localhost or
-            # tun*/vpn* (if we would use several on the same host, that
-            # might get tricky)
-            ip = ip_addr['addr']
-            logmsg(syslog.LOG_INFO,
-                   'using IP address %s on interface %s' % (ip, intf))
-            return ip
-
-      if send_log_message:
-        logmsg(syslog.LOG_NOTICE,
-               'no IP address on any of the interfaces we are checking')
-        send_log_message = False
-
-      time.sleep(10)
-
-
   def create_new_pin(self, widget=None):
     # We try to make a random PIN that is unique on a network with
     # maximum of 4096 hosts (netmask 255.255.240.0), on bigger networks
@@ -440,8 +468,12 @@ class VeyonMaster(PuavoWidget):
   def handle_new_session(self, public_key):
     logmsg(syslog.LOG_INFO, 'got new session and public key through dbus')
 
-    # XXX if network changes the old session should be closed
-    # XXX and a new one set up
+    # XXX what to do in this case?  it should not be possible to get here
+    # XXX in case we do not have known host_ip_address
+    if not self.host_ip_address:
+      logmsg(syslog.LOG_INFO, 'got new session but no IP address')
+      return
+
     self.setup_master_service()
 
     self.public_key = public_key
@@ -761,6 +793,14 @@ class VeyonClient(PuavoWidget):
     self.checkout_masters()
 
 
+  def host_ip_address_change(self, ip_address):
+    # XXX what to do here?  ideally the zeroconf browser should also be
+    # XXX re-initialized?
+    # logmsg(syslog.LOG_INFO, 'client got a host ip address change request')
+    # self.close_session()
+    # self.update_action_button()
+
+
   def cleanup_config(self, reply_handler):
     self.dbus_iface.CleanupConfig(reply_handler=reply_handler,
                                   error_handler=self.handle_cleanup_error)
@@ -960,6 +1000,7 @@ class VeyonClient(PuavoWidget):
 
 
   def pin_entry_changed(self, entry):
+    # XXX this should be triggered when ENTER is pressed
     entry.handler_block_by_func(self.pin_entry_changed)
     new_text = ''.join([c for c in entry.get_text() if c in string.digits])
     entry.set_text(new_text)
@@ -1040,8 +1081,10 @@ class VeyonClient(PuavoWidget):
 
 
   def close_session(self, widget=None):
-    self.master_conn.close_session()
-    self.cleanup_config(self.handle_session_cleanup)
+    if self.master_conn:
+      self.master_conn.close_session()
+      self.master_conn = None
+      self.cleanup_config(self.handle_session_cleanup)
 
 
   def handle_add_public_key(self):
@@ -1141,6 +1184,8 @@ class PuavoVeyonApplet:
     if not self.client and not self.master:
       logmsg(syslog.LOG_NOTICE, 'no master or client role active, closing')
       sys.exit(0)
+
+    self.ip_address_watcher = IPAddressWatcher(self.client, self.master)
 
     # Call cleanup_config() either through client or master and show menu
     # only after we are ready.
