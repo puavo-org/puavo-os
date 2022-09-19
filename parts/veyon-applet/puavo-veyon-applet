@@ -326,14 +326,23 @@ class VeyonMaster(PuavoWidget):
     self.applet.menu.append(self.session_button)
 
 
+  def disable(self):
+    self.session_button.set_sensitive(False)
+
+
+  def enable(self):
+    self.session_button.set_sensitive(True)
+
+
   def cleanup_config(self, reply_handler):
     self.dbus_iface.CleanupConfig(reply_handler=reply_handler,
                                   error_handler=self.handle_cleanup_error)
 
 
   def handle_cleanup_error(self, dbusexception):
-    # XXX what else could we do?
+    # XXX what else should we do?
     # XXX does this close everything?
+    # XXX maybe we should just crash?
     errstr = 'error in cleaning up veyon configuration: %s' % dbusexception
     raise Exception(errstr)
 
@@ -363,6 +372,7 @@ class VeyonMaster(PuavoWidget):
     label = 'Setup a Veyon session'
     self.session_button.get_child().set_text(label)
     self.session_button.disconnect(self.session_button_handler)
+    self.session_button.set_sensitive(True)
     self.session_button_handler \
       = self.session_button.connect('activate', self.setup_session)
 
@@ -447,7 +457,6 @@ class VeyonMaster(PuavoWidget):
     self.zeroconf.register_service(self.serviceinfo)
 
 
-  # XXX this should change
   def handle_new_session_error(self, dbusexception):
     # XXX issues here should be shown to user somehow
     logmsg(syslog.LOG_ERR,
@@ -691,6 +700,8 @@ class VeyonMasterConnection():
       logmsg(syslog.LOG_ERR, 'error with master %s: %s' % (self.address, e))
       self.client.remove_master(self.address)
       return False
+    finally:
+      self.client.check_and_maybe_enable_samehost_master()
 
     return True
 
@@ -774,13 +785,11 @@ class VeyonClient(PuavoWidget):
     self.update_action_button()
     self.notify('Veyon session closed')
 
-    if self.samehost_master:
-      self.samehost_master.enable()
-
 
   def handle_cleanup_error(self, dbusexception):
-    # XXX what else could we do?
+    # XXX what else should we do?
     # XXX does this close everything?
+    # XXX maybe we should just crash?
     errstr = 'error in cleaning up veyon configuration: %s' % dbusexception
     raise Exception(errstr)
 
@@ -908,6 +917,8 @@ class VeyonClient(PuavoWidget):
         self.applet.set_icon('OPEN')
         return
 
+    self.check_and_maybe_enable_samehost_master()
+
     self.applet.set_icon('CLOSED')
 
     self.action_button.disconnect(self.action_button_handler)
@@ -959,12 +970,32 @@ class VeyonClient(PuavoWidget):
       self.connection_label.set_markup(markup)
       self.connection_spinner.start()
 
+      # Sending public key request, disable master functionality on this host.
+      # Enabling this will be checked by calls to
+      # check_and_maybe_enable_samehost_master().
+      if self.samehost_master:
+        self.samehost_master.disable()
+
       for master_conn in self.veyon_masters.values():
         master_conn.send_public_key_request(new_text)
       if self.public_key_request_timer_id:
         GLib.source_remove(self.public_key_request_timer_id)
       self.public_key_request_timer_id \
         = GLib.timeout_add_seconds(10, self.public_key_request_timeout)
+
+
+  def check_and_maybe_enable_samehost_master(self):
+    if not self.samehost_master:
+      return
+
+    for master_conn in self.veyon_masters.values():
+      if master_conn.in_session or master_conn.pin_sent:
+        return
+
+    # no open session or pending requests, enable master functionality
+    # on this host
+
+    self.samehost_master.enable()
 
 
   def public_key_request_timeout(self):
@@ -975,6 +1006,8 @@ class VeyonClient(PuavoWidget):
         logmsg(syslog.LOG_INFO,
                'master %s did not answer in time' % master_conn.address)
       master_conn.pin_sent = False
+
+    self.check_and_maybe_enable_samehost_master()
 
     self.public_key_request_timer_id = None
     if there_was_a_timeout and self.pin_window:
