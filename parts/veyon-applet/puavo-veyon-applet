@@ -380,7 +380,7 @@ class VeyonMaster(PuavoWidget):
     self.host_ip_address = ip_address
     self.close_session()
 
-    if ip_address:
+    if self.host_ip_address:
       self.enable()
     else:
       self.disable()
@@ -466,13 +466,11 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_new_session(self, public_key):
-    logmsg(syslog.LOG_INFO, 'got new session and public key through dbus')
-
-    # XXX what to do in this case?  it should not be possible to get here
-    # XXX in case we do not have known host_ip_address
     if not self.host_ip_address:
-      logmsg(syslog.LOG_INFO, 'got new session but no IP address')
+      logmsg(syslog.LOG_INFO, 'lost IP when setting up a new session')
       return
+
+    logmsg(syslog.LOG_INFO, 'got new session and public key through dbus')
 
     self.setup_master_service()
 
@@ -775,7 +773,7 @@ class VeyonClient(PuavoWidget):
     self.browser     = None
     self.hostname    = read_firstline('/etc/puavo/hostname')
     self.master_conn = None
-    self.zeroconf    = zeroconf.Zeroconf()
+    self.zeroconf    = None
 
     self.public_key_request_timer_id = None
 
@@ -790,15 +788,21 @@ class VeyonClient(PuavoWidget):
 
     self.pin_window = None
 
-    self.checkout_masters()
+    # this sets self.browser and self.zeroconf
+    self.setup_master_browser()
 
 
   def host_ip_address_change(self, ip_address):
-    # XXX what to do here?  ideally the zeroconf browser should also be
-    # XXX re-initialized?
-    # logmsg(syslog.LOG_INFO, 'client got a host ip address change request')
-    # self.close_session()
-    # self.update_action_button()
+    logmsg(syslog.LOG_INFO, 'client got a host ip address change request')
+
+    for address in list(self.veyon_masters):
+      self.remove_master(address)
+
+    if not ip_address:
+      self.unsetup_master_browser()
+      return
+
+    self.setup_master_browser()
 
 
   def cleanup_config(self, reply_handler):
@@ -834,7 +838,13 @@ class VeyonClient(PuavoWidget):
     raise Exception(errstr)
 
 
-  def checkout_masters(self):
+  def setup_master_browser(self):
+    self.unsetup_master_browser()
+
+    logmsg(syslog.LOG_INFO, 'setting up master service browser')
+
+    self.zeroconf = zeroconf.Zeroconf()
+
     service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
                                              Veyon.SERVICE_BASE)
     if service:
@@ -843,6 +853,13 @@ class VeyonClient(PuavoWidget):
     self.browser = zeroconf.ServiceBrowser(self.zeroconf,
                                            Veyon.SERVICE_TYPE,
                                            VeyonListenForMasters(self))
+
+  def unsetup_master_browser(self):
+    if self.browser:
+      self.browser.cancel()
+      self.browser = None
+
+    self.zeroconf = None
 
 
   def add_masters(self, address_list, port):
