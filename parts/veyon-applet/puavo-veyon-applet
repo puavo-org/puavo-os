@@ -1188,7 +1188,7 @@ class PuavoVeyonApplet(QDialog):
     self.indicator = QSystemTrayIcon(self)
     self.panelindicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-veyon-applet',
-          "",
+        os.path.join(self.ICON_DIR, "../22/blank.png"),
           AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
 
 
