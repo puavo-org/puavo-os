@@ -350,7 +350,7 @@ class VeyonMaster(PuavoWidget):
     self.pin = None
     self.public_key = None
     self.serviceinfo = None
-    self.socket = None
+    self.listener_socket = None
     self.update_config_call_pending = False
     self.username = self.lookup_username()
     self.veyon_clients = {}
@@ -538,10 +538,10 @@ class VeyonMaster(PuavoWidget):
 
     logmsg(syslog.LOG_NOTICE, 'setting up master service')
 
-    self.socket = socket.socket()
-    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    self.socket.bind((self.host_ip_address, Veyon.SERVICE_PORT))
-    self.socket.listen()
+    self.listener_socket = socket.socket()
+    self.listener_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    self.listener_socket.bind((self.host_ip_address, Veyon.SERVICE_PORT))
+    self.listener_socket.listen()
 
     self.zeroconf = zeroconf.Zeroconf()
 
@@ -555,11 +555,12 @@ class VeyonMaster(PuavoWidget):
                                             port=Veyon.SERVICE_PORT)
 
     # XXX should this be asynchronous?
-    GLib.io_add_watch(GLib.IOChannel(self.socket.fileno()),
-                      0,
-                      GLib.IOCondition.IN,
-                      self.handle_new_client,
-                      self.socket)
+    self.listener_socket_watch \
+      = GLib.io_add_watch(GLib.IOChannel(self.listener_socket.fileno()),
+                          0,
+                          GLib.IOCondition.IN,
+                          self.handle_new_client,
+                          self.listener_socket)
 
     self.session_button.setEnabled(True)
 
@@ -567,9 +568,10 @@ class VeyonMaster(PuavoWidget):
   def unsetup_master_service(self):
     service_closed = False
 
-    if self.socket:
-      self.socket.close()
-      self.socket = None
+    if self.listener_socket:
+      self.listener_socket.close()
+      self.listener_socket = None
+      GLib.source_remove(self.listener_socket_watch)
       service_closed = True
 
     if self.zeroconf:
