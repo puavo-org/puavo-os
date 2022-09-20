@@ -22,6 +22,10 @@ import syslog
 import time
 import zeroconf
 
+from PyQt5.QtCore import QObject
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QApplication, QAction, QDialog, QMenu, QSystemTrayIcon)
+
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
@@ -98,7 +102,10 @@ class VeyonRoleDenied(Exception):
   pass
 
 
-class PuavoWidget:
+class PuavoWidget(QObject):
+  def __init__(self):
+    super(PuavoWidget, self).__init__()
+    
   def connect_to_dbus(self, bus_name, service, interface):
     self.bus = dbus.SystemBus()
     dbusobj = self.bus.get_object(bus_name, service)
@@ -322,6 +329,7 @@ class IPAddressWatcher(PuavoWidget):
 
 class VeyonMaster(PuavoWidget):
   def __init__(self, applet, samehost_client):
+    super(VeyonMaster, self).__init__()
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
                                            '/server',
                                            'org.puavo.Veyon.master')
@@ -353,27 +361,30 @@ class VeyonMaster(PuavoWidget):
     if self.samehost_client:
       separator = Gtk.SeparatorMenuItem()
       separator.show()
-      self.applet.menu.append(separator)
+      self.applet.menu.addSeparator()
 
-    self.client_count_label = Gtk.MenuItem(label='Clients: 0')
-    self.client_count_label.set_sensitive(False)
-    self.applet.menu.append(self.client_count_label)
+    self.client_count_label = QAction(QIcon(self.applet.ICON_OPEN), 'Clients: 0')
+    self.client_count_label.setEnabled(False)
+    self.applet.menu.addAction(self.client_count_label)
 
-    self.change_pin_button = Gtk.MenuItem(label='Change PIN')
-    self.change_pin_button.set_sensitive(False)
-    self.change_pin_button.connect('activate', self.create_new_pin)
-    self.applet.menu.append(self.change_pin_button)
+    self.change_pin_button = QAction(QIcon(self.applet.ICON_OPEN), 'Change PIN', self, triggered=self.create_new_pin)
+    self.change_pin_button.setEnabled(False)
+    #self.change_pin_button.connect('activate', self.create_new_pin)
+    self.applet.menu.addAction(self.change_pin_button)
 
-    self.open_master_button = Gtk.MenuItem(label='Open Veyon master')
-    self.open_master_button.set_sensitive(False)
-    self.open_master_button.connect('activate', self.open_veyon_master)
-    self.applet.menu.append(self.open_master_button)
+    #self.open_master_button = QAction('Open Veyon master')
+    #self.open_master_button.connect('activate', self.)
+    self.open_master_button = QAction(QIcon(self.applet.ICON_OPEN), 'Open Veyon master', self,
+                triggered=self.open_veyon_master)
+    self.open_master_button.setEnabled(False)
+    self.applet.menu.addAction(self.open_master_button)
 
-    self.session_button = Gtk.MenuItem(label='Setup a Veyon session')
-    self.session_button.set_sensitive(False)
-    self.session_button_handler \
-      = self.session_button.connect('activate', self.setup_session)
-    self.applet.menu.append(self.session_button)
+    self.session_button = QAction(QIcon(self.applet.ICON_OPEN), 'Setup a Veyon session', self,
+                triggered=self.setup_session)
+    self.session_button.setEnabled(False)
+    #self.session_button_handler \
+      #= self.session_button.connect('activate', self.setup_session)
+    self.applet.menu.addAction(self.session_button)
 
 
   def host_ip_address_change(self, ip_address):
@@ -387,11 +398,11 @@ class VeyonMaster(PuavoWidget):
 
 
   def disable(self):
-    self.session_button.set_sensitive(False)
+    self.session_button.setEnabled(False)
 
 
   def enable(self):
-    self.session_button.set_sensitive(True)
+    self.session_button.setEnabled(True)
 
 
   def cleanup_config(self, reply_handler):
@@ -417,24 +428,24 @@ class VeyonMaster(PuavoWidget):
 
 
   def close_session(self, widget=None):
+    self.applet.panelindicator.set_label('', '')
+    self.applet.panelindicator.set_status(AyatanaAppIndicator3.IndicatorStatus.PASSIVE)
     self.unsetup_master_service()
 
-    self.applet.indicator.set_label('', '')
     self.pin = None
 
-    self.change_pin_button.set_sensitive(False)
-    self.open_master_button.set_sensitive(False)
+    self.change_pin_button.setEnabled(False)
+    self.open_master_button.setEnabled(False)
 
     for client_conn in self.veyon_clients.values():
       if client_conn.in_session:
         client_conn.request_close_session()
 
     label = 'Setup a Veyon session'
-    self.session_button.get_child().set_text(label)
-    self.session_button.disconnect(self.session_button_handler)
-    self.session_button.set_sensitive(True)
-    self.session_button_handler \
-      = self.session_button.connect('activate', self.setup_session)
+    self.session_button.setText(label)
+    self.session_button.triggered.disconnect(self.close_session)
+    self.session_button.triggered.connect(self.setup_session)
+    self.session_button.setEnabled(True)
 
     if self.samehost_client:
       self.samehost_client.enable()
@@ -462,7 +473,11 @@ class VeyonMaster(PuavoWidget):
         create_new = False
 
     self.pin = new_pin
-    self.applet.indicator.set_label('PIN: %s' % new_pin, '')
+    #self.applet.indicator.showMessage('Veyon session', 'PIN: %s' % new_pin)
+    self.applet.indicator.setToolTip('PIN: %s' % new_pin)
+    self.applet.indicator.setIcon(QIcon(self.applet.ICON_OPEN))
+    self.applet.panelindicator.set_label('PIN: %s' % new_pin, '')
+    self.applet.panelindicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
 
 
   def handle_new_session(self, public_key):
@@ -477,12 +492,12 @@ class VeyonMaster(PuavoWidget):
     self.public_key = public_key
     self.create_new_pin()
     self.update_config()
-    self.change_pin_button.set_sensitive(True)
-    self.session_button.get_child().set_text('Close a Veyon session')
-    self.session_button.disconnect(self.session_button_handler)
-    self.session_button_handler \
-      = self.session_button.connect('activate', self.close_session)
-    self.open_master_button.set_sensitive(True)
+    self.change_pin_button.setEnabled(True)
+    self.session_button.setText('Close a Veyon session')
+    
+    self.session_button.triggered.disconnect(self.setup_session)
+    self.session_button.triggered.connect(self.close_session)
+    self.open_master_button.setEnabled(True)
 
     self.zeroconf.register_service(self.serviceinfo)
 
@@ -546,7 +561,7 @@ class VeyonMaster(PuavoWidget):
                       self.handle_new_client,
                       self.socket)
 
-    self.session_button.set_sensitive(True)
+    self.session_button.setEnabled(True)
 
 
   def unsetup_master_service(self):
@@ -601,7 +616,7 @@ class VeyonMaster(PuavoWidget):
       self.update_config_hosts.append(host)
 
     client_count = len(self.update_config_hosts)
-    self.client_count_label.get_child().set_text('Clients: %d' % client_count)
+    self.client_count_label.setText('Clients: %d' % client_count)
 
     if self.update_config_call_pending:
       return
@@ -756,6 +771,7 @@ class VeyonMasterConnection():
 
 class VeyonClient(PuavoWidget):
   def __init__(self, applet):
+    super(VeyonClient, self).__init__()
     self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
                                            '/server',
                                            'org.puavo.Veyon.client')
@@ -779,12 +795,10 @@ class VeyonClient(PuavoWidget):
 
     self.veyon_masters = {}
 
-    self.action_button = Gtk.MenuItem(label='Join a Veyon session')
-    self.action_button.set_sensitive(True)
-    self.action_button_handler \
-      = self.action_button.connect('activate', self.activate_pin_entry)
+    self.action_button = QAction('Join a Veyon session', self,
+                triggered=self.activate_pin_entry)
     self.update_action_button()
-    self.applet.menu.append(self.action_button)
+    self.applet.menu.addAction(self.action_button)
 
     self.pin_window = None
 
@@ -933,7 +947,7 @@ class VeyonClient(PuavoWidget):
     window_box.pack_start(self.connection_label, False, False, 0)
     window_box.pack_start(self.connection_spinner, False, False, 0)
 
-    self.pin_window = Gtk.Window(name='pin_window')
+    self.pin_window = Gtk.Window(name='pin_window') #TODO Gtk.Window not yet ported
 
     screen = self.pin_window.get_screen()
     visual = screen.get_rgba_visual()
@@ -957,20 +971,16 @@ class VeyonClient(PuavoWidget):
 
 
   def update_action_button(self):
-    # XXX GLib.timeout is used here due to some odd bug in underlying
-    # XXX libraries (otherwise only the first action happens)
 
     for master_conn in self.veyon_masters.values():
       if master_conn.in_session:
-        self.action_button.disconnect(self.action_button_handler)
-        self.action_button_handler \
-          = self.action_button.connect('activate', self.close_session)
-        GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
+        self.action_button.triggered.disconnect(self.setup_session)
+        self.action_button.triggered.connect(self.close_session)
+        GLib.timeout_add(0, lambda: self.action_button.setEnabled(True))
         label = 'Close a Veyon session from %s using %s' \
                   % (master_conn.master_info['username'],
                      master_conn.master_info['hostname'])
-        GLib.timeout_add(0,
-                         lambda: self.action_button.get_child().set_text(label))
+        self.action_button.setText(label)
         self.applet.set_icon('OPEN')
         return
 
@@ -978,24 +988,23 @@ class VeyonClient(PuavoWidget):
 
     self.applet.set_icon('CLOSED')
 
-    self.action_button.disconnect(self.action_button_handler)
-    self.action_button_handler \
-      = self.action_button.connect('activate', self.activate_pin_entry)
+    #self.action_button.triggered.disconnect() TODO
+    self.action_button.triggered=self.activate_pin_entry
 
     label = 'Join a Veyon session'
-    GLib.timeout_add(0, lambda: self.action_button.get_child().set_text(label))
+    self.action_button.setText(label)
 
     if self.enabled and self.veyon_masters:
-      GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
+      self.action_button.setEnabled(True)
     else:
-      GLib.timeout_add(0, lambda: self.action_button.set_sensitive(False))
+      self.action_button.setEnabled(False)
 
 
   def reenable_pin_entry(self):
     if not self.pin_window:
       return
 
-    self.pin_entry.set_sensitive(True)
+    self.pin_entry.setEnabled(True)
     self.pin_entry.grab_focus()
     self.connection_label.set_markup('')
     self.connection_spinner.stop()
@@ -1023,7 +1032,7 @@ class VeyonClient(PuavoWidget):
     entry.set_text(new_text)
     entry.handler_unblock_by_func(self.pin_entry_changed)
     if len(new_text) == 5:
-      self.pin_entry.set_sensitive(False)
+      self.pin_entry.setEnabled(False)
       markup = '<span color="%s">%s</span>' % ('orange', 'connecting...')
       self.connection_label.set_markup(markup)
       self.connection_spinner.start()
@@ -1072,7 +1081,7 @@ class VeyonClient(PuavoWidget):
       markup = '<span color="%s">%s</span>' % ('red', 'timeout')
       self.connection_label.set_markup(markup)
       self.connection_spinner.stop()
-      self.pin_entry.set_sensitive(False)
+      self.pin_entry.setEnabled(False)
       GLib.timeout_add_seconds(2, self.reenable_pin_entry)
 
 
@@ -1156,7 +1165,9 @@ class VeyonListenForMasters():
           self.client.remove_master(address)
 
 
-class PuavoVeyonApplet:
+app = QApplication(sys.argv)
+
+class PuavoVeyonApplet(QDialog):
   ICON_DIR = '/usr/share/icons/Faenza/status/scalable'
   ICON_CLOSED = os.path.join(ICON_DIR,
                              'software-update-available-symbolic.svg')
@@ -1164,23 +1175,38 @@ class PuavoVeyonApplet:
                              'software-update-urgent-symbolic.svg')
 
   def __init__(self):
+    super(PuavoVeyonApplet, self).__init__()
     self.exit_done = False
     self.client    = None
 
     # XXX the icon should be something else and maybe puavo-conf configurable?
-    self.indicator \
+    self.menu = QMenu(self)
+    
+    self.indicator = QSystemTrayIcon(self)
+    self.panelindicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-veyon-applet',
-          self.ICON_CLOSED,
+          "",
           AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
 
-    self.indicator.set_attention_icon_full(self.ICON_OPEN, 'open')
-    self.indicator.set_icon_full(self.ICON_CLOSED, 'closed')
 
-    self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+    #self.panelindicator.set_attention_icon_full(self.ICON_OPEN, 'open')
+    #self.panelindicator.set_icon_full(self.ICON_CLOSED, 'closed')
+
+    self.panelindicator.set_status(AyatanaAppIndicator3.IndicatorStatus.PASSIVE)
+    
+    self.indicator.setIcon(QIcon(self.ICON_CLOSED))
+      #= AyatanaAppIndicator3.Indicator.new('puavo-veyon-applet',
+       #   self.ICON_CLOSED,
+        #  AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+
+    self.indicator.setContextMenu(self.menu)
+    self.indicator.show()
+    #self.indicator.set_attention_icon_full(self.ICON_OPEN, 'open')
+    #self.indicator.set_icon_full(self.ICON_CLOSED, 'closed')
+
 
     Notify.init('puavo-veyon-applet')
 
-    self.menu = Gtk.Menu()
 
     # Try to activate both roles and see if we can do that
     # (puavo-veyon might respond we do or do not have access to either).
@@ -1217,25 +1243,23 @@ class PuavoVeyonApplet:
 
 
   def start(self):
-    self.menu.show_all()
-    self.indicator.set_menu(self.menu)
+      pass
+    #self.menu.show_all()
+    #self.indicator.set_menu(self.menu)
 
 
   def set_icon(self, icon):
     if icon == 'OPEN':
-      self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
+      self.indicator.setIcon(QIcon(self.ICON_OPEN))
     else:
-      self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+      self.indicator.setIcon(QIcon(self.ICON_CLOSED))
 
-
-  def main(self):
-    Gtk.main()
 
 
   def quit(self):
     logmsg(syslog.LOG_INFO,
            'veyon config cleanup done at exit, quitting')
-    Gtk.main_quit()
+    app.quit()
 
 
   def signal_exit(self, signum, frame):
@@ -1258,7 +1282,10 @@ try:
   applet = PuavoVeyonApplet()
   signal.signal(signal.SIGINT,  applet.signal_exit)
   signal.signal(signal.SIGTERM, applet.signal_exit)
-  applet.main()
+  #applet.show()
+  #applet.panelindicator.show()
+  applet.panelindicator.set_menu(Gtk.Menu())
+  app.exec_()
 except Exception as e:
   logmsg(syslog.LOG_ERR, 'unexpected error: %s' % e)
   exitstatus = 1
