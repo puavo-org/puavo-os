@@ -768,7 +768,7 @@ class VeyonClient(PuavoWidget):
 
     self.applet = applet
     self.samehost_master = None
-    self.enabled = True
+    self.enabled = False
 
     self.browser     = None
     self.hostname    = read_firstline('/etc/puavo/hostname')
@@ -787,9 +787,6 @@ class VeyonClient(PuavoWidget):
     self.applet.menu.append(self.action_button)
 
     self.pin_window = None
-
-    # this sets self.browser and self.zeroconf
-    self.setup_master_browser()
 
 
   def host_ip_address_change(self, ip_address):
@@ -816,10 +813,14 @@ class VeyonClient(PuavoWidget):
 
   def disable(self):
     self.enabled = False
+    self.unsetup_master_browser()
     self.update_action_button()
 
 
   def enable(self):
+    if not self.enabled:
+      self.setup_master_browser()
+
     self.enabled = True
     self.update_action_button()
 
