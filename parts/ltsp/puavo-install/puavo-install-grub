@@ -491,7 +491,7 @@ case "$hosttype" in
     puavo_kernel_arguments="nosplash ${common_kernel_arguments}"
     ;;
   laptop)
-    puavo_kernel_arguments="quiet splash ${common_kernel_arguments}"
+    puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments}"
     ;;
   *)
     log err "hosttype '${hosttype}' is not supported"
