@@ -46,10 +46,10 @@ case "$target_disk" in
     prepare_for_erase && \
     echo 'Preparing finished, moving on..'
     echo 'Selected disk is an NVMe disk. Using "nvme-cli" utility for Secure Erase.'
+
     time --format "Time elapsed: %E" nvme format -s1 "$target_disk"
     partprobe
-    echo 'You may check how long the erase took above.'
-    echo
+    echo 'You may check how long the erase took above.\n'
     sleep 2
     ;;
   *)
@@ -71,11 +71,10 @@ case "$target_disk" in
         echo 'Disk is in frozen state! Going to sleep now.'
       else
         echo 'Disk is in frozen state, cannot continue!' >&2
-        echo 'Please close the lid of the device for a few seconds, reopen it and try again.' >&2
-        echo
+        echo 'Please close the lid of the device for a few seconds, reopen it and try again.\n' >&2
         echo 'If we are netbooted, closing the lid will not put the device to sleep.'
-        echo 'We can however put it to sleep and wake it up with the usage of rtcwake.'
-        echo
+        echo 'We can however put it to sleep and wake it up with the usage of rtcwake.\n'
+
         read -p "Shall I run the command for you now? (y/n)[y] " gosleep
         case "$gosleep" in
           [yY]|"")
@@ -119,8 +118,7 @@ case "$target_disk" in
 
     partprobe
 
-    echo 'If you see no errors, you may re-plug the disk or reboot the device.'
-    echo
+    echo 'If you see no errors, you may re-plug the disk or reboot the device.\n'
     sleep 2
     ;;
 esac
