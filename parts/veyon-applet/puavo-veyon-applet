@@ -185,15 +185,24 @@ class VeyonClientConnection(PuavoWidget):
         return False
 
       if message['type'] == 'new_client':
+        if not 'groups' in message:
+          raise Exception('no groups in new_client message')
+        if type(message['groups']) != list:
+          raise Exception('groups is not a list')
+        if not all([ type(g) == str for g in groups ]):
+          raise Exception('some item of a group is not a string')
+
         if not 'hostname' in message:
           raise Exception('no hostname in new_client message')
         if type(message['hostname']) != str:
           raise Exception('hostname is not a string')
 
-        # XXX we would also like a list of groups user belongs to, probably?
+        self.client_groups   = message['groups']
         self.client_hostname = message['hostname']
+
         logmsg(syslog.LOG_INFO,
                'new client %s at %s' % (self.client_hostname, self.address))
+
         msg = {
           'type': 'master_info',
           'hostname': self.master.hostname,
@@ -661,7 +670,14 @@ class VeyonMasterConnection():
                           self.incoming_master_data,
                           self.master_socket)
 
-    message = { 'type': 'new_client', 'hostname': self.client.hostname }
+    message = {
+      'hostname': self.client.hostname,
+      'groups':   client.user_groups,
+      'type':     'new_client',
+    }
+
+    logmsg(syslog.LOG_INFO, 'sending message %s to master' % message)
+
     Veyon.send_msg(self.master_socket, message)
 
 
@@ -768,6 +784,11 @@ class VeyonClient(PuavoWidget):
         raise VeyonRoleDenied('no permission to client role')
       raise e
 
+    try:
+      self.user_groups = self.get_user_groups()
+    except Exception as e:
+      raise Exception('could not determine user groups: %s' % e)
+
     self.applet = applet
     self.samehost_master = None
     self.enabled = False
@@ -789,6 +810,38 @@ class VeyonClient(PuavoWidget):
     self.applet.menu.append(self.action_button)
 
     self.pin_window = None
+
+
+  def get_user_groups(self):
+    puavo_desktop_path = '/var/lib/puavo-desktop/users/%s/puavo_session.json' \
+                           % pwd.getpwuid(os.getuid()).pw_name
+    with open(puavo_desktop_path) as file:
+      puavo_session_info = json.load(file)
+
+    if type(puavo_session_info) != dict:
+      raise Exception('puavo session is not of correct type')
+    if not 'user' in puavo_session_info:
+      raise Exception('no user information in puavo session')
+
+    user = puavo_session_info['user']
+    if type(user) != dict:
+      raise Exception('session user information is not of correct type')
+    if not 'groups' in user:
+      raise Exception('no user group information in puavo session')
+
+    groups = user['groups']
+    if type(groups) != list:
+      raise Exception('user group information is not of correct type')
+    if not all([ type(g) == dict for g in groups ]):
+      raise Exception('some user group is not of correct type')
+    if not all([ 'name' in g for g in groups ]):
+      raise Exception('some user group does not have a name')
+
+    group_names = [ g['name'] for g in groups ]
+    if not all([ type(gn) == str for gn in group_names ]):
+      raise Exception('some user group name is not a string')
+
+    return group_names
 
 
   def host_ip_address_change(self, ip_address):
