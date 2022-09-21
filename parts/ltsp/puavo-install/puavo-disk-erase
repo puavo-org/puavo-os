@@ -47,8 +47,14 @@ case "$target_disk" in
     echo 'Preparing finished, moving on..'
     echo 'Selected disk is an NVMe disk. Using "nvme-cli" utility for Secure Erase.'
 
-    time --format "Time elapsed: %E" nvme format -s1 "$target_disk"
+    if [ $# -ne 0 ] && [ "$1" = "--noconfirm" ]; then
+      time --format "Time elapsed: %E" nvme format --force -s1 "$target_disk"
+    else
+      time --format "Time elapsed: %E" nvme format -s1 "$target_disk"
+    fi
+
     partprobe
+
     echo 'You may check how long the erase took above.\n'
     sleep 2
     ;;
