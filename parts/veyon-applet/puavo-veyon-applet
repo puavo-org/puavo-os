@@ -908,8 +908,10 @@ class VeyonClient(PuavoWidget):
 
 
   def get_user_groups(self):
-    puavo_desktop_path = '/var/lib/puavo-desktop/users/%s/puavo_session.json' \
-                           % pwd.getpwuid(os.getuid()).pw_name
+    puavo_desktop_path = os.getenv('PUAVO_SESSION_PATH')
+    if not puavo_desktop_path:
+      raise Exception('PUAVO_SESSION_PATH environment variable is not set')
+
     with open(puavo_desktop_path) as file:
       puavo_session_info = json.load(file)
 
