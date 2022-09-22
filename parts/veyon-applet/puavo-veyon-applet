@@ -189,7 +189,7 @@ class VeyonClientConnection(PuavoWidget):
           raise Exception('no groups in new_client message')
         if type(message['groups']) != list:
           raise Exception('groups is not a list')
-        if not all([ type(g) == str for g in groups ]):
+        if not all([ type(g) == str for g in message['groups'] ]):
           raise Exception('some item of a group is not a string')
 
         if not 'hostname' in message:
@@ -257,10 +257,9 @@ class VeyonClientConnection(PuavoWidget):
     self.send_to_client({ 'type': 'request_close_session' })
 
 
-  # XXX this should be useful but is not yet used in any situation
-  def send_pin_request(self):
+  def send_pin_request(self, pin):
     logmsg(syslog.LOG_INFO, 'sending PIN request to %s' % self.client_hostname)
-    self.send_to_client({ 'type': 'pin_request' })
+    self.send_to_client({ 'type': 'pin_request', 'pin': pin })
 
 
   def send_public_key(self):
@@ -331,6 +330,7 @@ class IPAddressWatcher(PuavoWidget):
 
 class VeyonMaster(PuavoWidget):
   CHANGE_PIN_ICON    = Gtk.Image.new_from_icon_name('object-rotate-left', 32)
+  INVITE_ICON        = Gtk.Image.new_from_icon_name('call-start', 32)
   OPEN_MASTER_ICON   = Gtk.Image.new_from_icon_name('view-grid', 32)
   OPEN_SESSION_ICON  = Gtk.Image.new_from_icon_name('send-to', 32)
   CLOSE_SESSION_ICON = Gtk.Image.new_from_icon_name('window-close', 32)
@@ -391,6 +391,15 @@ class VeyonMaster(PuavoWidget):
     self.open_master_button.set_sensitive(False)
     self.open_master_button.connect('activate', self.open_veyon_master)
     self.applet.menu.append(self.open_master_button)
+
+    self.invite_to_session_button \
+      = Gtk.ImageMenuItem(label='Invite to session by group')
+    self.invite_to_session_button.set_image(self.INVITE_ICON)
+    self.invite_to_session_button.set_always_show_image(True)
+    self.invite_to_session_button.set_sensitive(False)
+    self.invite_to_session_button.connect('activate',
+                                          self.show_invite_to_session_window)
+    self.applet.menu.append(self.invite_to_session_button)
 
     self.session_button = Gtk.ImageMenuItem(label='Setup a Veyon session')
     self.session_button.set_image(self.OPEN_SESSION_ICON)
@@ -461,6 +470,7 @@ class VeyonMaster(PuavoWidget):
     self.session_button.set_sensitive(True)
     self.session_button_handler \
       = self.session_button.connect('activate', self.setup_session)
+    self.invite_to_session_button.set_sensitive(False)
 
     if self.samehost_client:
       self.samehost_client.enable()
@@ -509,6 +519,10 @@ class VeyonMaster(PuavoWidget):
     self.session_button.disconnect(self.session_button_handler)
     self.session_button_handler \
       = self.session_button.connect('activate', self.close_session)
+    # XXX we could se this set_sensitive(True) only if there are clients
+    # XXX that have sent their group information ... this should be reevaluated
+    # XXX as clients come and go
+    self.invite_to_session_button.set_sensitive(True)
     self.open_master_button.set_sensitive(True)
 
     self.zeroconf.register_service(self.serviceinfo)
@@ -545,9 +559,44 @@ class VeyonMaster(PuavoWidget):
     subprocess.Popen([ 'wmctrl', '-a', 'Veyon Master' ], close_fds=True)
 
 
-  def setup_master_service(self):
-    self.unsetup_master_service()
+  def show_invite_to_session_window(self, widget=None):
+    all_groups = []
 
+    for client in self.veyon_clients.values():
+      for group in client.client_groups:
+        all_groups.append(group)
+
+    unique_groups = sorted(set(all_groups), key=str.casefold)
+
+    if not unique_groups:
+      return
+
+    choicebox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
+    for group in unique_groups:
+      button = Gtk.Button(label=group)
+      button.connect('clicked', self.invite_to_session)
+      choicebox.add(button)
+
+    self.invite_to_session_window = Gtk.Window(name='invite_to_session_window')
+    self.invite_to_session_window.set_keep_above(True)
+    self.invite_to_session_window.add(choicebox)
+    self.invite_to_session_window.show_all()
+
+
+  def invite_to_session(self, widget):
+    group_name = widget.get_label()
+
+    logmsg(syslog.LOG_INFO, 'calling "%s" to join a session' % group_name)
+
+    for client in self.veyon_clients.values():
+      if group_name in client.client_groups:
+        client.send_pin_request(self.pin)
+
+    self.invite_to_session_window.destroy()
+
+
+  def setup_master_service(self):
     logmsg(syslog.LOG_NOTICE, 'setting up master service')
 
     self.listener_socket = socket.socket()
