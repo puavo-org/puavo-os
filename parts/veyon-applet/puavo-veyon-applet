@@ -467,7 +467,7 @@ class VeyonMaster(PuavoWidget):
     self.change_pin_button.set_sensitive(False)
     self.open_master_button.set_sensitive(False)
 
-    for client_conn in self.veyon_clients.values():
+    for client_conn in list(self.veyon_clients.values()):
       if client_conn.in_session:
         client_conn.request_close_session()
 
@@ -602,7 +602,7 @@ class VeyonMaster(PuavoWidget):
 
     logmsg(syslog.LOG_INFO, 'calling "%s" to join a session' % group_name)
 
-    for client in self.veyon_clients.values():
+    for client in list(self.veyon_clients.values()):
       if group_name in client.client_groups:
         client.send_pin_request(self.pin)
 
@@ -1217,7 +1217,7 @@ class VeyonClient(PuavoWidget):
       if self.samehost_master:
         self.samehost_master.disable()
 
-      for master_conn in self.veyon_masters.values():
+      for master_conn in list(self.veyon_masters.values()):
         master_conn.send_public_key_request(new_text)
       if self.public_key_request_timer_id:
         GLib.source_remove(self.public_key_request_timer_id)
