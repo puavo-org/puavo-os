@@ -268,6 +268,9 @@ class VeyonClientConnection(PuavoWidget):
 
 
   def send_pin_request(self, pin):
+    if self.in_session:
+      return
+
     logmsg(syslog.LOG_INFO, 'sending PIN request to %s' % self.client_hostname)
     self.send_to_client({ 'type': 'pin_request', 'pin': pin })
 
