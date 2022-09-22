@@ -160,6 +160,7 @@ class VeyonClientConnection(PuavoWidget):
     self.address         = client_address
     self.in_session      = False
     self.master          = master
+    self.client_groups   = []
     self.client_hostname = '?'
     self.client_socket   = client_socket
 
@@ -204,6 +205,8 @@ class VeyonClientConnection(PuavoWidget):
 
         self.client_groups   = message['groups']
         self.client_hostname = message['hostname']
+
+        self.master.manage_invite_to_session_button()
 
         logmsg(syslog.LOG_INFO,
                'new client %s at %s' % (self.client_hostname, self.address))
@@ -524,10 +527,6 @@ class VeyonMaster(PuavoWidget):
     self.session_button.disconnect(self.session_button_handler)
     self.session_button_handler \
       = self.session_button.connect('activate', self.close_session)
-    # XXX we could se this set_sensitive(True) only if there are clients
-    # XXX that have sent their group information ... this should be reevaluated
-    # XXX as clients come and go
-    self.invite_to_session_button.set_sensitive(True)
     self.open_master_button.set_sensitive(True)
 
     self.zeroconf.register_service(self.serviceinfo)
@@ -562,6 +561,15 @@ class VeyonMaster(PuavoWidget):
       os.execv('/usr/bin/veyon-master', ['/usr/bin/veyon-master'])
 
     subprocess.Popen([ 'wmctrl', '-a', 'Veyon Master' ], close_fds=True)
+
+
+  def manage_invite_to_session_button(self):
+    for client in self.veyon_clients.values():
+      if client.client_groups:
+        self.invite_to_session_button.set_sensitive(True)
+        return
+
+    self.invite_to_session_button.set_sensitive(False)
 
 
   def show_invite_to_session_window(self, widget=None):
@@ -721,6 +729,7 @@ class VeyonMaster(PuavoWidget):
     del(self.veyon_clients[address])
     if in_session:
        self.update_config()
+    self.manage_invite_to_session_button()
 
 
 class VeyonMasterConnection():
