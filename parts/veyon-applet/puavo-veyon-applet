@@ -798,6 +798,10 @@ class VeyonMasterConnection():
         }
 
       elif message['type'] == 'pin_request':
+        # ignore join requests if we already have a session
+        if self.in_session:
+          return
+
         # we expect PIN in PIN request so that it is easy for user
         # to provide the PIN in the client
         if not 'pin' in message :
