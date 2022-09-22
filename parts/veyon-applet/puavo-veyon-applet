@@ -62,6 +62,11 @@ CSS = b"""
   margin-left: 0.5em;
 }
 
+#pin_request_message {
+  color: lightgreen;
+  font-size: 80%;
+}
+
 #pin_window {
   background-color: rgba(1.0, 1.0, 1.0, 0.85);
   color: orange;
@@ -784,7 +789,15 @@ class VeyonMasterConnection():
         }
 
       elif message['type'] == 'pin_request':
-        self.client.activate_pin_entry()
+        # we expect PIN in PIN request so that it is easy for user
+        # to provide the PIN in the client
+        if not 'pin' in message :
+          raise Exception('no pin in pin request')
+        if type(message['pin']) != str:
+          raise Exception('pin in pin request is not a string')
+        self.client.show_pin_entry(self.master_info['hostname'],
+                                   self.master_info['username'],
+                                   message['pin'])
 
       elif message['type'] == 'public_key':
         if not 'public_key' in message:
@@ -1024,6 +1037,10 @@ class VeyonClient(PuavoWidget):
 
 
   def activate_pin_entry(self, widget=None):
+    self.show_pin_entry(None, None, None)
+
+
+  def show_pin_entry(self, requesting_host, requesting_user, suggested_pin):
     if self.pin_window:
       self.pin_window.present_with_time( int(time.time()) )
       return
@@ -1034,13 +1051,30 @@ class VeyonClient(PuavoWidget):
     self.pin_entry.set_input_purpose(Gtk.InputPurpose.DIGITS)
     self.pin_entry.set_max_length(5)
     self.pin_entry.set_width_chars(5)
-    self.pin_entry.connect('changed', self.pin_entry_changed)
+
+    if suggested_pin:
+      self.pin_entry.set_text(suggested_pin)
+
+    self.pin_entry.connect('activate', self.pin_entry_changed)
+    self.pin_entry.connect('changed',  self.pin_entry_changed)
 
     pin_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
     pin_box.pack_start(pin_label, False, False, 0)
     pin_box.pack_start(self.pin_entry, False, False, 0)
 
+    request_msg_box = None
+    if requesting_host and requesting_user:
+      request_msg_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
+                                name='pin_request_message')
+      msg = '%s on host %s requests you to join to a Veyon session.' \
+               % (requesting_user, requesting_host)
+      request_msg = Gtk.Label(label=msg)
+      request_msg_box.pack_start(request_msg, False, False, 0)
+      press_msg = Gtk.Label(label='Check PIN and press ENTER to accept.')
+      request_msg_box.pack_start(press_msg, False, False, 0)
+
     entry_and_cancel_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
     cancel_button = Gtk.Button(label='Cancel', name='cancel_button')
     cancel_button.set_can_focus(False)
     cancel_button.connect('clicked', self.close_pin_entry)
@@ -1058,6 +1092,8 @@ class VeyonClient(PuavoWidget):
     self.connection_label = Gtk.Label(label='', name='connection_label')
     self.connection_spinner = Gtk.Spinner(name='connection_spinner')
     window_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    if request_msg_box:
+      window_box.pack_start(request_msg_box, True, False, 0)
     window_box.pack_start(box_align, True, False, 0)
     window_box.pack_start(self.connection_label, False, False, 0)
     window_box.pack_start(self.connection_spinner, False, False, 0)
@@ -1150,7 +1186,6 @@ class VeyonClient(PuavoWidget):
 
 
   def pin_entry_changed(self, entry):
-    # XXX this should be triggered when ENTER is pressed
     entry.handler_block_by_func(self.pin_entry_changed)
     new_text = ''.join([c for c in entry.get_text() if c in string.digits])
     entry.set_text(new_text)
