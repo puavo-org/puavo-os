@@ -155,6 +155,8 @@ class Veyon():
     socket.send(message)
 
 
+# VeyonClientConnection keeps track of a connection from
+# a master side to some client
 class VeyonClientConnection(PuavoWidget):
   def __init__(self, master, client_socket, client_address):
     self.address         = client_address
@@ -732,6 +734,8 @@ class VeyonMaster(PuavoWidget):
     self.manage_invite_to_session_button()
 
 
+# VeyonMasterConnection keeps track of a connection from
+# a client side to some master
 class VeyonMasterConnection():
   def __init__(self, address, port, client):
     self.address     = address
@@ -798,8 +802,8 @@ class VeyonMasterConnection():
         }
 
       elif message['type'] == 'pin_request':
-        # ignore join requests if we already have a session
-        if self.in_session:
+        # ignore join requests if we already have a session to some master
+        if self.client.in_session:
           return
 
         # we expect PIN in PIN request so that it is easy for user
@@ -813,6 +817,10 @@ class VeyonMasterConnection():
                                    message['pin'])
 
       elif message['type'] == 'public_key':
+        # ignore public keys if we already have a session with some master
+        if self.client.in_session:
+          return
+
         if not 'public_key' in message:
           raise Exception('no public key in public_key message')
         if type(message['public_key']) != str:
@@ -887,8 +895,9 @@ class VeyonClient(PuavoWidget):
       raise Exception('could not determine user groups: %s' % e)
 
     self.applet = applet
-    self.samehost_master = None
     self.enabled = False
+    self.in_session = False
+    self.samehost_master = None
 
     self.browser     = None
     self.hostname    = read_firstline('/etc/puavo/hostname')
@@ -1274,6 +1283,8 @@ class VeyonClient(PuavoWidget):
     for m_conn in self.veyon_masters.values():
       m_conn.pin_sent = False
 
+    self.in_session = True
+
     self.master_conn = master_conn
     self.dbus_iface.AddPublicKey(public_key,
                                  reply_handler=self.handle_add_public_key,
@@ -1281,6 +1292,8 @@ class VeyonClient(PuavoWidget):
 
 
   def close_session(self, widget=None):
+    self.in_session = False
+
     if self.master_conn:
       self.master_conn.close_session()
       self.master_conn = None
