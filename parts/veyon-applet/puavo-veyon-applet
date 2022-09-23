@@ -487,6 +487,8 @@ class VeyonMaster(PuavoWidget):
 
 
   def close_session(self, widget=None):
+    self.close_veyon_master()
+
     self.unsetup_master_service()
 
     self.applet.indicator.set_label('', '')
@@ -561,6 +563,8 @@ class VeyonMaster(PuavoWidget):
 
     self.zeroconf.register_service(self.serviceinfo)
 
+    self.open_veyon_master()
+
 
   def handle_new_session_error(self, dbusexception):
     # XXX issues here should be shown to user somehow
@@ -591,6 +595,10 @@ class VeyonMaster(PuavoWidget):
       os.execv('/usr/bin/veyon-master', ['/usr/bin/veyon-master'])
 
     subprocess.Popen([ 'wmctrl', '-a', 'Veyon Master' ], close_fds=True)
+
+
+  def close_veyon_master(self):
+    subprocess.Popen([ 'pkill', '-x', 'veyon-master' ], close_fds=True)
 
 
   def manage_invite_to_session_button(self):
