@@ -676,7 +676,7 @@ class VeyonMaster(PuavoWidget):
       if client_address in self.veyon_clients:
         self.remove_client(client_address)
       client_conn = VeyonClientConnection(self, conn, client_address)
-      self.veyon_clients[client.address] = client_conn
+      self.veyon_clients[client_conn.address] = client_conn
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'could not accept a client connection: %s' % e)
 
