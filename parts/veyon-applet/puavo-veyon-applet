@@ -1350,6 +1350,19 @@ class VeyonClient(PuavoWidget):
     self.applet.in_session = True
 
     self.master_conn = master_conn
+
+    # It could be nice if we could somehow verify that hostname is what it
+    # claims to be, but we can not use host certificates or DNS in each
+    # setting where this application might be used.  But at least log
+    # the name, hostname and IP address, where the IP address is the only
+    # information we can actually trust.
+    msg = ('setting a new public key received from master {host}' \
+             ' sent by "{name}" ({address})') \
+            .format(host=self.master_conn.master_info['hostname'],
+                    name=self.master_conn.master_info['username'],
+                    address=self.master_conn.address)
+    logmsg(syslog.LOG_INFO, msg)
+
     self.dbus_iface.AddPublicKey(public_key,
                                  reply_handler=self.handle_add_public_key,
                                  error_handler=self.handle_add_public_key_error)
@@ -1365,8 +1378,8 @@ class VeyonClient(PuavoWidget):
 
 
   def handle_add_public_key(self):
-    logmsg(syslog.LOG_INFO,
-           'set a new public key received from master')
+    logmsg(syslog.LOG_INFO, 'a veyon session is now open')
+
     self.master_conn.send_to_master({ 'type': 'public_key_accepted' })
 
     self.update_action_button()
