@@ -458,6 +458,8 @@ class VeyonMaster(PuavoWidget):
     if self.samehost_client:
       self.samehost_client.disable()
 
+    self.applet.in_session = True
+
     self.dbus_iface \
         .NewSession(reply_handler=self.handle_new_session,
                     error_handler=self.handle_new_session_error)
@@ -475,6 +477,8 @@ class VeyonMaster(PuavoWidget):
     for client_conn in list(self.veyon_clients.values()):
       if client_conn.in_session:
         client_conn.request_close_session()
+
+    self.applet.in_session = False
 
     label = 'Setup a Veyon session'
     self.session_button.get_child().set_text(label)
@@ -806,7 +810,8 @@ class VeyonMasterConnection():
 
       elif message['type'] == 'pin_request':
         # ignore join requests if we already have a session to some master
-        if self.client.in_session:
+        # or we have setup a master session
+        if self.client.applet.in_session:
           return
 
         # we expect PIN in PIN request so that it is easy for user
@@ -821,7 +826,8 @@ class VeyonMasterConnection():
 
       elif message['type'] == 'public_key':
         # ignore public keys if we already have a session with some master
-        if self.client.in_session:
+        # or we have setup a master session
+        if self.client.applet.in_session:
           return
 
         if not 'public_key' in message:
@@ -1286,7 +1292,7 @@ class VeyonClient(PuavoWidget):
     for m_conn in self.veyon_masters.values():
       m_conn.pin_sent = False
 
-    self.in_session = True
+    self.applet.in_session = True
 
     self.master_conn = master_conn
     self.dbus_iface.AddPublicKey(public_key,
@@ -1295,7 +1301,7 @@ class VeyonClient(PuavoWidget):
 
 
   def close_session(self, widget=None):
-    self.in_session = False
+    self.applet.in_session = False
 
     if self.master_conn:
       self.master_conn.close_session()
@@ -1363,8 +1369,9 @@ class PuavoVeyonApplet:
                              'software-update-urgent-symbolic.svg')
 
   def __init__(self):
-    self.exit_done = False
-    self.client    = None
+    self.client     = None
+    self.exit_done  = False
+    self.in_session = False
 
     # XXX the icon should be something else and maybe puavo-conf configurable?
     self.indicator \
