@@ -56,6 +56,27 @@ CSS = b"""
   margin-bottom: 5em;
 }
 
+#invite_button:hover, #invite_cancel:hover {
+  border-color: white;
+  background-color: grey;
+  color: white;
+}
+
+#invite_cancel {
+  font-size: 80%;
+  margin: 1em;
+  padding-left: 2em;
+  padding-right: 2em;
+}
+
+#invite_label {
+  padding: 0.5em;
+}
+
+#invite_to_session_window {
+  font-size: 3em;
+}
+
 #pin_entry {
   background-color: white;
   color: black;
@@ -595,21 +616,54 @@ class VeyonMaster(PuavoWidget):
 
     choicebox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
+    invite_text = Gtk.Label(label='Choose a group to invite to a session:',
+                            name='invite_label')
+    choicebox.pack_start(invite_text, False, False, 0)
+
     for group in unique_groups:
-      button = Gtk.Button(label=group)
+      button = Gtk.Button(label=group, name='invite_button')
       button.connect('clicked', self.invite_to_session)
-      choicebox.add(button)
+      choicebox.pack_start(button, False, False, 0)
+
+    cancel_button = Gtk.Button(label='Cancel', name='invite_cancel')
+    cancel_button.connect('clicked', self.close_invite_to_session)
+    cancel_button_align = Gtk.Alignment(xalign=1.0, yalign=0, xscale=0,
+                                        yscale=0)
+    cancel_button_align.add(cancel_button)
+
+    choicebox_align = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0.9,
+                                    yscale=0)
+    choicebox_align.add(choicebox)
+
+    invite_dialog_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    invite_dialog_box.pack_start(choicebox_align, True, True, 0)
+    invite_dialog_box.pack_start(cancel_button_align, False, False, 0)
 
     self.invite_to_session_window = Gtk.Window(name='invite_to_session_window')
+    self.invite_to_session_window.connect('destroy',
+                                          self.close_invite_to_session)
+    self.invite_to_session_window.connect('focus-out-event',
+                                          self.close_invite_to_session)
+
+    self.invite_to_session_window.fullscreen()
+    self.invite_to_session_window.present_with_time( int(time.time()) )
     self.invite_to_session_window.set_keep_above(True)
-    self.invite_to_session_window.add(choicebox)
+    self.invite_to_session_window.add(invite_dialog_box)
     self.invite_to_session_window.show_all()
+
+
+  def close_invite_to_session(self, widget=None, event=None):
+    if self.invite_to_session_window:
+      self.invite_to_session_window.destroy()
+      self.invite_to_session_window = None
 
 
   def invite_to_session(self, widget):
     group_name = widget.get_label()
 
-    logmsg(syslog.LOG_INFO, 'calling "%s" to join a session' % group_name)
+    logmsg(syslog.LOG_INFO, 'inviting "%s" to join a session' % group_name)
+
+    self.notify('Inviting "%s" to join a session.' % group_name)
 
     for client_conn in list(self.veyon_clients.values()):
       if group_name in client_conn.client_groups:
@@ -1152,6 +1206,7 @@ class VeyonClient(PuavoWidget):
   def close_pin_entry(self, widget=None, event=None):
     if self.pin_window:
       self.pin_window.destroy()
+      self.pin_window = None
 
 
   def update_action_button(self):
