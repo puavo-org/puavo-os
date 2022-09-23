@@ -564,8 +564,8 @@ class VeyonMaster(PuavoWidget):
 
 
   def manage_invite_to_session_button(self):
-    for client in self.veyon_clients.values():
-      if client.client_groups:
+    for client_conn in self.veyon_clients.values():
+      if client_conn.client_groups:
         self.invite_to_session_button.set_sensitive(True)
         return
 
@@ -575,8 +575,8 @@ class VeyonMaster(PuavoWidget):
   def show_invite_to_session_window(self, widget=None):
     all_groups = []
 
-    for client in self.veyon_clients.values():
-      for group in client.client_groups:
+    for client_conn in self.veyon_clients.values():
+      for group in client_conn.client_groups:
         all_groups.append(group)
 
     unique_groups = sorted(set(all_groups), key=str.casefold)
@@ -602,9 +602,9 @@ class VeyonMaster(PuavoWidget):
 
     logmsg(syslog.LOG_INFO, 'calling "%s" to join a session' % group_name)
 
-    for client in list(self.veyon_clients.values()):
-      if group_name in client.client_groups:
-        client.send_pin_request(self.pin)
+    for client_conn in list(self.veyon_clients.values()):
+      if group_name in client_conn.client_groups:
+        client_conn.send_pin_request(self.pin)
 
     self.invite_to_session_window.destroy()
 
@@ -670,8 +670,8 @@ class VeyonMaster(PuavoWidget):
       client_address = sock_client_address[0]
       if client_address in self.veyon_clients:
         self.remove_client(client_address)
-      client = VeyonClientConnection(self, conn, client_address)
-      self.veyon_clients[client.address] = client
+      client_conn = VeyonClientConnection(self, conn, client_address)
+      self.veyon_clients[client.address] = client_conn
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'could not accept a client connection: %s' % e)
 
@@ -680,13 +680,13 @@ class VeyonMaster(PuavoWidget):
 
   def update_config(self):
     self.update_config_hosts = []
-    for client in self.veyon_clients.values():
-      if not client.in_session:
+    for client_conn in self.veyon_clients.values():
+      if not client_conn.in_session:
         continue
 
       host = {
-        'address':  client.address,
-        'hostname': client.client_hostname,
+        'address':  client_conn.address,
+        'hostname': client_conn.client_hostname,
         'location': 'Classroom',
       }
       self.update_config_hosts.append(host)
@@ -723,9 +723,9 @@ class VeyonMaster(PuavoWidget):
 
 
   def remove_client(self, address):
-    client = self.veyon_clients[address]
-    in_session = client.in_session
-    client.disconnect_client()
+    client_conn = self.veyon_clients[address]
+    in_session = client_conn.in_session
+    client_conn.disconnect_client()
     del(self.veyon_clients[address])
     if in_session:
        self.update_config()
