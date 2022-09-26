@@ -49,3 +49,7 @@ user_group_list=$(
   ' /dev/null)
 
 usermod -G "$user_group_list" "$PAM_USER"
+
+# we need to tell dbus-daemon that user groups might have changed
+dbus-send --print-reply --system --type=method_call \
+          --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig
