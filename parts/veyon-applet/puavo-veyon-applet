@@ -887,9 +887,24 @@ class VeyonMasterConnection():
                                    message['pin'])
 
       elif message['type'] == 'public_key':
-        # ignore public keys if we already have a session with some master
-        # or we have setup a master session
+        # Reset everything if we already have a session with some master
+        # and we are receiving a new public key.  It is wrong to get another
+        # public key from the same or a different host when on a session,
+        # and it is quite possible that someone on the network is an impostor.
+        # We might get away with less but it is important to also close the
+        # negotation state with other masters and resetting state
+        # does achieve that.
         if self.client.applet.in_session:
+          logmsg(syslog.LOG_WARNING,
+                 'got another public key when already in a session,' \
+                   + ' maybe two masters share the provided PIN?' \
+                   + ' (resetting state)')
+          self.client.reset_everything(True)
+          self.client.close_pin_entry()
+          self.client.notify(
+            'Duplicate connection error',
+            'Closing connections because of a duplicate'
+              + ' session, are there two masters with the same PIN?')
           return
 
         if not 'public_key' in message:
@@ -966,7 +981,7 @@ class VeyonClient(PuavoWidget):
       raise Exception('could not determine user groups: %s' % e)
 
     self.applet = applet
-    self.enabled = False
+    self.enabled = True
     self.in_session = False
     self.samehost_master = None
 
@@ -1028,10 +1043,17 @@ class VeyonClient(PuavoWidget):
   def host_ip_address_change(self, ip_address):
     logmsg(syslog.LOG_INFO, 'client got a host ip address change request')
 
+    if ip_address:
+      self.reset_everything(True)
+    else:
+      self.reset_everything(False)
+
+
+  def reset_everything(self, is_enabled):
     for address in list(self.veyon_masters):
       self.remove_master(address)
 
-    if not ip_address:
+    if not is_enabled:
       self.unsetup_master_browser()
       return
 
@@ -1386,6 +1408,10 @@ class VeyonClient(PuavoWidget):
 
 
   def handle_add_public_key(self):
+    # this might have disappeared during dbus call
+    if not self.master_conn:
+      return
+
     logmsg(syslog.LOG_INFO, 'a veyon session is now open')
 
     self.master_conn.send_to_master({ 'type': 'public_key_accepted' })
