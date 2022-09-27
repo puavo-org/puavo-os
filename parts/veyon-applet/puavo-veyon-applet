@@ -241,6 +241,9 @@ class VeyonClientConnection(PuavoWidget):
         }
         self.send_to_client(msg)
 
+      elif message['type'] == 'ping':
+        self.send_to_client({ 'type': 'pong' })
+
       elif message['type'] == 'public_key_request':
         if not 'pin' in message:
           raise Exception('public key request without a PIN')
@@ -319,12 +322,13 @@ class IPAddressWatcher(PuavoWidget):
     self.master = master
 
     self.get_host_ip_address()
+    GLib.timeout_add_seconds(10, self.get_host_ip_address)
 
 
   def get_host_ip_address(self):
-    try:
-      self.current_ip_address = None
+    self.current_ip_address = None
 
+    try:
       for intf in sorted(netifaces.interfaces()):
         if not re.match('^(eth|wlan)', intf):
           continue
@@ -359,7 +363,7 @@ class IPAddressWatcher(PuavoWidget):
 
     self.previous_ip_address = self.current_ip_address
 
-    GLib.timeout_add_seconds(10, self.get_host_ip_address)
+    return True
 
 
 class VeyonMaster(PuavoWidget):
@@ -782,6 +786,8 @@ class VeyonMaster(PuavoWidget):
                       reply_handler=self.handle_update_config,
                       error_handler=self.handle_update_config_error)
 
+    return False
+
 
   def handle_update_config(self):
     logmsg(syslog.LOG_INFO, 'veyon configuration update ok')
@@ -807,11 +813,12 @@ class VeyonMaster(PuavoWidget):
 # a client side to some master
 class VeyonMasterConnection():
   def __init__(self, address, port, client):
-    self.address     = address
-    self.in_session  = False
-    self.master_info = { 'hostname': '?', 'username': '?' }
-    self.pin_sent    = False
-    self.client      = client
+    self.address       = address
+    self.client        = client
+    self.in_session    = False
+    self.pong_received = True
+    self.master_info   = { 'hostname': '?', 'username': '?' }
+    self.pin_sent      = False
 
     self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.master_socket.connect((self.address, port))
@@ -833,6 +840,26 @@ class VeyonMasterConnection():
     logmsg(syslog.LOG_INFO, 'sending message %s to master' % message)
 
     Veyon.send_msg(self.master_socket, message)
+
+    self.ping_sender = GLib.timeout_add_seconds(20, self.send_ping)
+
+
+  def send_ping(self):
+    if not self.pong_received:
+      logmsg(syslog.LOG_WARNING,
+             ('master %s did not reply with a pong in 20 seconds,' \
+                + ' closing connection') % self.address)
+      self.client.remove_master(self.address)
+      # VeyonListenForMasters() may not realize a master is gone,
+      # so we must help it by restarting the service browser.
+      self.client.setup_master_browser()
+      return False
+
+    logmsg(syslog.LOG_INFO, 'sending ping to master')
+    self.pong_received = False
+    self.send_to_master({ 'type': 'ping' })
+
+    return True
 
 
   def send_to_master(self, msg):
@@ -885,6 +912,9 @@ class VeyonMasterConnection():
         self.client.show_pin_entry(self.master_info['hostname'],
                                    self.master_info['username'],
                                    message['pin'])
+
+      elif message['type'] == 'pong':
+        self.pong_received = True
 
       elif message['type'] == 'public_key':
         # Reset everything if we already have a session with some master
@@ -957,6 +987,7 @@ class VeyonMasterConnection():
     self.master_socket.close()
     self.master_socket = None
     GLib.source_remove(self.master_socket_watch)
+    GLib.source_remove(self.ping_sender)
 
 
 class VeyonClient(PuavoWidget):
@@ -1098,20 +1129,24 @@ class VeyonClient(PuavoWidget):
 
 
   def setup_master_browser(self):
+    have_browser = False
+    if self.browser and self.zeroconf:
+      have_browser = True
+
     self.unsetup_master_browser()
 
-    logmsg(syslog.LOG_INFO, 'setting up master service browser')
+    if have_browser:
+      info_msg = 'restarting the master service browser'
+    else:
+      info_msg = 'setting up master service browser'
+
+    logmsg(syslog.LOG_INFO, info_msg)
 
     self.zeroconf = zeroconf.Zeroconf()
-
-    service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
-                                             Veyon.SERVICE_BASE)
-    if service:
-      self.add_masters(service)
-
     self.browser = zeroconf.ServiceBrowser(self.zeroconf,
                                            Veyon.SERVICE_TYPE,
                                            VeyonListenForMasters(self))
+
 
   def unsetup_master_browser(self):
     if self.browser:
@@ -1245,11 +1280,15 @@ class VeyonClient(PuavoWidget):
       self.pin_entry.set_sensitive(True)
       self.pin_entry.grab_focus()
 
+    return False
+
 
   def close_pin_entry(self, widget=None, event=None):
     if self.pin_window:
       self.pin_window.destroy()
       self.pin_window = None
+
+    return False
 
 
   def update_action_button(self):
@@ -1293,12 +1332,14 @@ class VeyonClient(PuavoWidget):
 
   def reenable_pin_entry(self):
     if not self.pin_window:
-      return
+      return False
 
     self.pin_entry.set_sensitive(True)
     self.pin_entry.grab_focus()
     self.connection_label.set_markup('')
     self.connection_spinner.stop()
+
+    return False
 
 
   def handle_wrong_pin(self):
@@ -1373,6 +1414,8 @@ class VeyonClient(PuavoWidget):
       self.connection_spinner.stop()
       self.pin_entry.set_sensitive(False)
       GLib.timeout_add_seconds(2, self.reenable_pin_entry)
+
+    return False
 
 
   def pin_window_closed(self, widget):
