@@ -27,9 +27,18 @@ busconfig_rules=$(
       dbus_rule("deny", dbus_interface(veyon_role))
     }
 
-    function dbus_allow_by_group(group, veyon_role) {
+    function dbus_allow_by_group(group, veyon_roles) {
       printf("  <policy group=\"%s\">\n", group)
-      dbus_allow(veyon_role)
+      if ("master" in veyon_roles) {
+        dbus_allow("master")
+      } else {
+        dbus_deny("master")
+      }
+      if ("client" in veyon_roles) {
+        dbus_allow("client")
+      } else {
+        dbus_deny("client")
+      }
       printf("  </policy>\n")
     }
 
@@ -39,7 +48,6 @@ busconfig_rules=$(
 
       split(role_rules_string, rules)
       for (rule_i in rules) {
-
         split(rules[rule_i], ruleparts, ":")
         groups_string = ruleparts[1]
         permissions_string = ruleparts[2]
@@ -48,12 +56,10 @@ busconfig_rules=$(
         }
 
         split(permissions_string, permissions_list, "+")
-
+        split("", permissions)
         for (perm_i in permissions_list) {
           permission = permissions_list[perm_i]
-          if (permission != "client" && permission != "master") {
-            continue
-          }
+          permissions[ permission ] = 1
 
           if (groups_string == "") {
             if (permission == "client") {
@@ -62,16 +68,17 @@ busconfig_rules=$(
             if (permission == "master") {
               allow_master_by_default = 1
             }
-          } else {
-            split(groups_string, groups, ",")
-            for (group_i in groups) {
-              group = groups[group_i]
-              if (match(group, /^%(.*)$/, group_match)) {
-                group = "puavo-role-" group_match[1]
-              }
-              dbus_allow_by_group(group, permission)
-            }
+            continue
           }
+        }
+
+        split(groups_string, groups, ",")
+        for (group_i in groups) {
+          group = groups[group_i]
+          if (match(group, /^%(.*)$/, group_match)) {
+            group = "puavo-role-" group_match[1]
+          }
+          dbus_allow_by_group(group, permissions)
         }
       }
 
