@@ -122,6 +122,7 @@ def read_firstline(pathname):
 
 
 def desktop_notify(summary, body=None):
+  # XXX some messsages should be flagged as warnings maybe?
   if body:
     Notify.Notification.new(summary, body).show()
   else:
@@ -194,6 +195,7 @@ class VeyonClientConnection(PuavoWidget):
     self.client_groups   = []
     self.client_hostname = '?'
     self.client_socket   = client_socket
+    self.client_user     = None
 
     # XXX should this be asynchronous?
     self.client_socket_watch \
@@ -280,9 +282,10 @@ class VeyonClientConnection(PuavoWidget):
         self.in_session = True
         self.master.update_config()
 
-        self.master.connection_log.append_info(
-          'user %s (on %s) has joined session' \
-            % (self.client_user, self.client_hostname))
+        if self.client_user:
+          self.master.connection_log.new_session(
+            '%s on %s has joined session' \
+              % (self.client_user, self.client_hostname))
 
       elif message['type'] == 'close_session':
         if self.in_session:
@@ -291,10 +294,10 @@ class VeyonClientConnection(PuavoWidget):
           self.in_session = False
           self.master.update_config()
 
-          # XXX we should know all that have dropped?
-          self.master.connection_log.append_warning(
-            'user %s (on %s) has disconnected from session' \
-              % (self.client_user, self.client_hostname))
+          if self.client_user:
+            self.master.connection_log.disconnected_session(
+              '%s on %s disconnected from session' \
+                % (self.client_user, self.client_hostname))
 
       else:
         # XXX should we define a protocol version and pass it on at some point?
@@ -332,9 +335,15 @@ class VeyonClientConnection(PuavoWidget):
     logmsg(syslog.LOG_INFO,
            'disconnecting client %s at %s' \
              % (self.client_hostname, self.address))
+
     self.client_socket.close()
     self.client_socket = None
     GLib.source_remove(self.client_socket_watch)
+
+    if self.client_user:
+      self.master.connection_log.disconnected_session(
+        '%s on %s disconnected from session' \
+          % (self.client_user, self.client_hostname))
 
 
 class IPAddressWatcher(PuavoWidget):
@@ -391,6 +400,7 @@ class IPAddressWatcher(PuavoWidget):
 
 class VeyonMaster(PuavoWidget):
   CHANGE_PIN_ICON    = Gtk.Image.new_from_icon_name('object-rotate-left', 32)
+  CLIENT_COUNT_ICON  = Gtk.Image.new_from_icon_name('format-justify-left', 32)
   INVITE_ICON        = Gtk.Image.new_from_icon_name('call-start', 32)
   OPEN_MASTER_ICON   = Gtk.Image.new_from_icon_name('view-grid', 32)
   OPEN_SESSION_ICON  = Gtk.Image.new_from_icon_name('send-to', 32)
@@ -431,8 +441,10 @@ class VeyonMaster(PuavoWidget):
       separator.show()
       self.applet.menu.append(separator)
 
-    self.client_count_label = Gtk.MenuItem(label='Clients: 0')
-    self.client_count_label.set_sensitive(True) # XXX could be False first?
+    self.client_count_label = Gtk.ImageMenuItem(label='Clients: 0 (see log)')
+    self.client_count_label.set_image(self.CLIENT_COUNT_ICON)
+    self.client_count_label.set_always_show_image(True)
+    self.client_count_label.set_sensitive(False)
     self.client_count_label.connect('activate', self.connection_log.view)
     self.applet.menu.append(self.client_count_label)
 
@@ -520,6 +532,7 @@ class VeyonMaster(PuavoWidget):
     self.pin = None
 
     self.change_pin_button.set_sensitive(False)
+    self.client_count_label.set_sensitive(False)
     self.open_master_button.set_sensitive(False)
 
     for client_conn in list(self.veyon_clients.values()):
@@ -577,6 +590,8 @@ class VeyonMaster(PuavoWidget):
     self.session_button.disconnect(self.session_button_handler)
     self.session_button_handler \
       = self.session_button.connect('activate', self.close_session)
+
+    self.client_count_label.set_sensitive(True)
     self.open_master_button.set_sensitive(True)
 
     self.zeroconf.register_service(self.serviceinfo)
@@ -779,7 +794,8 @@ class VeyonMaster(PuavoWidget):
       self.update_config_hosts.append(host)
 
     client_count = len(self.update_config_hosts)
-    self.client_count_label.get_child().set_text('Clients: %d' % client_count)
+    count_text = 'Clients: %d (see log)' % client_count
+    self.client_count_label.get_child().set_text(count_text)
 
     if self.update_config_call_pending:
       return
@@ -855,17 +871,17 @@ class VeyonMasterLog():
     self.buffer.insert_with_tags(end_iter, timestamped_text, tag)
 
 
-  def append_info(self, text):
+  def new_session(self, text):
     self.append(text, self.log_ok_tag)
 
 
-  def append_warning(self, text):
+  def disconnected_session(self, text):
     self.append(text, self.log_warning_tag)
-
+    desktop_notify('Disconnected user', text)
 
 
   def view(self, widget):
-    # XXX this could also raise the dialog above others
+    self.dialog.present_with_time( int(time.time()) )
     self.dialog.run()
     self.dialog.hide()
 
