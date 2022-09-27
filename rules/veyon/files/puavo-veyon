@@ -63,9 +63,6 @@ VEYON_BASE_CONFIG = {
       'LocationNameAttribute': '',
       'UserLoginNameAttribute': ''
   },
-  'Logging': {
-      'LogLevel': '5'   # XXX remove this later
-  },
   'Master': {
       'AllowAddingHiddenLocations': false,
       'AutoOpenComputerSelectPanel': true,
