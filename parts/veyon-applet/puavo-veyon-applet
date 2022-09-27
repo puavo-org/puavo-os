@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import datetime
 import dbus
 import dbus.mainloop.glib
 import gettext
@@ -138,6 +139,13 @@ class PuavoWidget:
     return dbus.Interface(dbusobj, dbus_interface=interface)
 
 
+  def lookup_username(self):
+    userinfo = pwd.getpwuid( os.getuid() )
+    if userinfo.pw_gecos != '':
+      return userinfo.pw_gecos
+    return userinfo.pw_name
+
+
 class Veyon():
   SERVICE_TYPE = '_http._tcp.local.'
   SERVICE_BASE = 'VeyonMaster._http._tcp.local.'
@@ -226,8 +234,14 @@ class VeyonClientConnection(PuavoWidget):
         if type(message['hostname']) != str:
           raise Exception('hostname is not a string')
 
+        if not 'user' in message:
+          raise Exception('no user in new_client message')
+        if type(message['user']) != str:
+          raise Exception('user is not a string')
+
         self.client_groups   = message['groups']
         self.client_hostname = message['hostname']
+        self.client_user     = message['user']
 
         self.master.manage_invite_to_session_button()
 
@@ -266,12 +280,21 @@ class VeyonClientConnection(PuavoWidget):
         self.in_session = True
         self.master.update_config()
 
+        self.master.connection_log.append_info(
+          'user %s (on %s) has joined session' \
+            % (self.client_user, self.client_hostname))
+
       elif message['type'] == 'close_session':
         if self.in_session:
           logmsg(syslog.LOG_INFO,
                  'client %s closed session' % self.client_hostname)
           self.in_session = False
           self.master.update_config()
+
+          # XXX we should know all that have dropped?
+          self.master.connection_log.append_warning(
+            'user %s (on %s) has disconnected from session' \
+              % (self.client_user, self.client_hostname))
 
       else:
         # XXX should we define a protocol version and pass it on at some point?
@@ -386,6 +409,7 @@ class VeyonMaster(PuavoWidget):
       raise e
 
     self.applet = applet
+    self.connection_log = VeyonMasterLog()
     self.samehost_client = samehost_client
 
     # this will be filled in by IPAddressWatcher
@@ -408,7 +432,8 @@ class VeyonMaster(PuavoWidget):
       self.applet.menu.append(separator)
 
     self.client_count_label = Gtk.MenuItem(label='Clients: 0')
-    self.client_count_label.set_sensitive(False)
+    self.client_count_label.set_sensitive(True) # XXX could be False first?
+    self.client_count_label.connect('activate', self.connection_log.view)
     self.applet.menu.append(self.client_count_label)
 
     # The ImageMenuItem objects use methods deprecated since 3.10.
@@ -514,13 +539,6 @@ class VeyonMaster(PuavoWidget):
 
     if self.samehost_client:
       self.samehost_client.enable()
-
-
-  def lookup_username(self):
-    userinfo = pwd.getpwuid( os.getuid() )
-    if userinfo.pw_gecos != '':
-      return userinfo.pw_gecos
-    return userinfo.pw_name
 
 
   def create_new_pin(self, widget=None):
@@ -801,6 +819,57 @@ class VeyonMaster(PuavoWidget):
     self.manage_invite_to_session_button()
 
 
+class VeyonMasterLog():
+  def __init__(self):
+    self.dialog = Gtk.Dialog(title=('Connection log'),
+                                 parent=None,
+                                 modal=True,
+                                 destroy_with_parent=True)
+    self.dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
+    self.dialog.set_default_size(600, 300)
+
+    view = Gtk.TextView()
+    view.set_editable(False)
+    view.set_cursor_visible(False)
+
+    self.buffer = view.get_buffer()
+    view.show()
+
+    self.log_ok_tag      = self.buffer.create_tag(foreground='green')
+    self.log_warning_tag = self.buffer.create_tag(foreground='red')
+
+    scroll = Gtk.ScrolledWindow()
+    scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+    scroll.add(view)
+    scroll.show()
+
+    self.dialog.vbox.pack_start(scroll, True, True, 0)
+
+
+  def append(self, text, tag=None):
+    timestamped_text = re.sub(r'^',
+                              '%s: ' % datetime.datetime.now(),
+                              text.rstrip(),
+                              flags=re.MULTILINE) + "\n"
+    end_iter = self.buffer.get_end_iter()
+    self.buffer.insert_with_tags(end_iter, timestamped_text, tag)
+
+
+  def append_info(self, text):
+    self.append(text, self.log_ok_tag)
+
+
+  def append_warning(self, text):
+    self.append(text, self.log_warning_tag)
+
+
+
+  def view(self, widget):
+    # XXX this could also raise the dialog above others
+    self.dialog.run()
+    self.dialog.hide()
+
+
 # VeyonMasterConnection keeps track of a connection from
 # a client side to some master
 class VeyonMasterConnection():
@@ -824,8 +893,9 @@ class VeyonMasterConnection():
                           self.master_socket)
 
     message = {
-      'hostname': self.client.hostname,
       'groups':   client.user_groups,
+      'hostname': self.client.hostname,
+      'user':     self.client.username,
       'type':     'new_client',
     }
 
@@ -1010,6 +1080,7 @@ class VeyonClient(PuavoWidget):
     self.browser     = None
     self.hostname    = read_firstline('/etc/puavo/hostname')
     self.master_conn = None
+    self.username    = self.lookup_username()
     self.zeroconf    = None
 
     self.public_key_request_timer_id = None
