@@ -855,7 +855,6 @@ class VeyonMasterConnection():
       self.client.setup_master_browser()
       return False
 
-    logmsg(syslog.LOG_INFO, 'sending ping to master')
     self.pong_received = False
     self.send_to_master({ 'type': 'ping' })
 
