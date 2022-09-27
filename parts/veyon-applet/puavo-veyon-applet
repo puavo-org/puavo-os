@@ -120,6 +120,13 @@ def read_firstline(pathname):
     return (file.readlines())[0].rstrip("\n")
 
 
+def desktop_notify(summary, body=None):
+  if body:
+    Notify.Notification.new(summary, body).show()
+  else:
+    Notify.Notification.new(summary).show()
+
+
 class VeyonRoleDenied(Exception):
   pass
 
@@ -129,13 +136,6 @@ class PuavoWidget:
     self.bus = dbus.SystemBus()
     dbusobj = self.bus.get_object(bus_name, service)
     return dbus.Interface(dbusobj, dbus_interface=interface)
-
-
-  def notify(self, summary, body=None):
-    if body:
-      Notify.Notification.new(summary, body).show()
-    else:
-      Notify.Notification.new(summary).show()
 
 
 class Veyon():
@@ -472,11 +472,7 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_cleanup_error(self, dbusexception):
-    # XXX what else should we do?
-    # XXX does this close everything?
-    # XXX maybe we should just crash?
-    errstr = 'error in cleaning up veyon configuration: %s' % dbusexception
-    raise Exception(errstr)
+    self.applet.fatal_dbus_error('master', dbusexception)
 
 
   def setup_session(self, widget=None):
@@ -571,9 +567,7 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_new_session_error(self, dbusexception):
-    # XXX issues here should be shown to user somehow
-    logmsg(syslog.LOG_ERR,
-           'error occurred when setting in a new session: %s' % dbusexception)
+    self.applet.fatal_dbus_error('master', dbusexception)
 
 
   def open_veyon_master(self, widget=None):
@@ -675,7 +669,7 @@ class VeyonMaster(PuavoWidget):
 
     logmsg(syslog.LOG_INFO, 'inviting "%s" to join a session' % group_name)
 
-    self.notify('Inviting "%s" to join a session.' % group_name)
+    desktop_notify('Inviting "%s" to join a session.' % group_name)
 
     for client_conn in list(self.veyon_clients.values()):
       if group_name in client_conn.client_groups:
@@ -794,9 +788,7 @@ class VeyonMaster(PuavoWidget):
 
 
   def handle_update_config_error(self, dbusexception):
-    # XXX should issues here be shown to user?
-    logmsg(syslog.LOG_ERR,
-           'error occurred when updating configuration: %s' % dbusexception)
+    self.applet.fatal_dbus_error('master', dbusexception)
 
 
   def remove_client(self, address):
@@ -930,7 +922,7 @@ class VeyonMasterConnection():
                    + ' (resetting state)')
           self.client.reset_everything(True)
           self.client.close_pin_entry()
-          self.client.notify(
+          desktop_notify(
             'Duplicate connection error',
             'Closing connections because of a duplicate'
               + ' session, are there two masters with the same PIN?')
@@ -1116,15 +1108,11 @@ class VeyonClient(PuavoWidget):
   def handle_session_cleanup(self):
     logmsg(syslog.LOG_INFO, 'veyon client config cleanup done')
     self.update_action_button()
-    self.notify('Veyon session closed')
+    desktop_notify('Veyon session closed')
 
 
   def handle_cleanup_error(self, dbusexception):
-    # XXX what else should we do?
-    # XXX does this close everything?
-    # XXX maybe we should just crash?
-    errstr = 'error in cleaning up veyon configuration: %s' % dbusexception
-    raise Exception(errstr)
+    self.applet.fatal_dbus_error('client', dbusexception)
 
 
   def setup_master_browser(self):
@@ -1474,18 +1462,16 @@ class VeyonClient(PuavoWidget):
     self.update_action_button()
 
     self.applet.set_icon('OPEN')
-    self.notify('Veyon session opened',
-                'This host may now be viewed and controlled by %s from %s' \
-                  % (self.master_conn.master_info['username'],
-                     self.master_conn.master_info['hostname']))
+    desktop_notify('Veyon session opened',
+                   'This host may now be viewed and controlled by %s from %s' \
+                     % (self.master_conn.master_info['username'],
+                        self.master_conn.master_info['hostname']))
 
     GLib.timeout_add_seconds(2, self.close_pin_entry)
 
 
   def handle_add_public_key_error(self, dbusexception):
-    # XXX response handling?
-    logmsg(syslog.LOG_ERR,
-           'error when trying to add a new public key %s' % dbusexception)
+    self.applet.fatal_dbus_error('client', dbusexception)
 
 
 class VeyonListenForMasters():
@@ -1570,6 +1556,14 @@ class PuavoVeyonApplet:
     # Call cleanup_config() either through client or master and show menu
     # only after we are ready.
     self.cleanup_config(self.start)
+
+
+  def fatal_dbus_error(self, mode, dbusexception):
+    desktop_notify('Fatal error on Puavo Veyon Applet',
+      'Unexpected dbus exception on puavo-veyon-applet %s mode.' % mode)
+    logmsg(syslog.LOG_ERR, 'dbus exception in %s mode: %s' \
+                             % (mode, str(dbusexception)))
+    sys.exit(1)
 
 
   def cleanup_config(self, cb):
