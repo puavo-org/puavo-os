@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Minimal Printserver, forwards a printer device to a tcp port (usually 9100)
 #
@@ -72,7 +72,7 @@ class Redirector:
     def writer(self):
         """loop forever and copy socket->serial"""
 
-        print 'in writer loop'
+        print ('in writer loop')
         self.alive = True
 
         while self.alive:
@@ -81,8 +81,8 @@ class Redirector:
                 if not data:
                     break
                 self.device.write(data)
-            except socket.error, msg:
-                print "error receiving from socket: ", msg
+            except (socket.error, msg):
+                print( "error receiving from socket: ", msg)
 
             try:
                 if self.devicetype == 'P':
@@ -101,9 +101,9 @@ def run_server(devicename, port):
 
     while 1:
         try:
-            print "Waiting for connection...."
+            print ("Waiting for connection....")
             connection, addr = srv.accept()
-            print 'Connected by', addr
+            print ('Connected by', addr)
             #enter console->serial loop
             redir = Redirector(devicename, connection)
             if redir.devicetype == 'S':
@@ -121,16 +121,16 @@ def run_server(devicename, port):
                     redir.device.xonxoff = xonxoff
                 try:
                     redir.device.open()
-                except serial.SerialException, e:
-                    print "Could not open serial port %s: %s" % (
-                        devicename.port, e)
+                except (serial.SerialException, e):
+                    print ("Could not open serial port %s: %s" % (
+                        devicename.port, e))
                     sys.exit(1)
 
             redir.shortcut()
-            print 'Disconnected'
+            print ('Disconnected')
             connection.close()
-        except socket.error, msg:
-            print msg
+        except (socket.error, msg):
+            print (msg)
 
 if __name__ == '__main__':
 
@@ -141,7 +141,7 @@ if __name__ == '__main__':
                 ["debug", "help", "baud=", "rtscts", "xonxoff"])
     except getopt.GetoptError:
         # print help information and exit:
-        print >>sys.stderr, __doc__
+        print (__doc__, file=sys.stderr)
         sys.exit(2)
 
     debug = False
