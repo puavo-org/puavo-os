@@ -81,7 +81,7 @@ class Redirector:
                 if not data:
                     break
                 self.device.write(data)
-            except (socket.error, msg):
+            except socket.error as msg:
                 print( "error receiving from socket: ", msg)
 
             try:
@@ -121,7 +121,7 @@ def run_server(devicename, port):
                     redir.device.xonxoff = xonxoff
                 try:
                     redir.device.open()
-                except (serial.SerialException, e):
+                except serial.SerialException as e:
                     print ("Could not open serial port %s: %s" % (
                         devicename.port, e))
                     sys.exit(1)
@@ -129,7 +129,7 @@ def run_server(devicename, port):
             redir.shortcut()
             print ('Disconnected')
             connection.close()
-        except (socket.error, msg):
+        except socket.error as msg:
             print (msg)
 
 if __name__ == '__main__':
