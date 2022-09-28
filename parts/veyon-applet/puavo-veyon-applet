@@ -441,7 +441,7 @@ class VeyonMaster(PuavoWidget):
       separator.show()
       self.applet.menu.append(separator)
 
-    label_text =_tr('Clients: %d (see log)') % 0
+    label_text =_tr('Participants: %d (see log)') % 0
     self.client_count_label = Gtk.ImageMenuItem(label=label_text)
     self.client_count_label.set_image(self.CLIENT_COUNT_ICON)
     self.client_count_label.set_always_show_image(True)
@@ -461,7 +461,8 @@ class VeyonMaster(PuavoWidget):
     self.change_pin_button.connect('activate', self.create_new_pin)
     self.applet.menu.append(self.change_pin_button)
 
-    self.open_master_button = Gtk.ImageMenuItem(label=_tr('Open Veyon master'))
+    self.open_master_button \
+      = Gtk.ImageMenuItem(label=_tr('Open control panel'))
     self.open_master_button.set_image(self.OPEN_MASTER_ICON)
     self.open_master_button.set_always_show_image(True)
     self.open_master_button.set_sensitive(False)
@@ -795,7 +796,7 @@ class VeyonMaster(PuavoWidget):
       self.update_config_hosts.append(host)
 
     client_count = len(self.update_config_hosts)
-    count_text = _tr('Clients: %d (see log)') % client_count
+    count_text = _tr('Participants: %d (see log)') % client_count
     self.client_count_label.get_child().set_text(count_text)
 
     if self.update_config_call_pending:
@@ -878,7 +879,7 @@ class VeyonMasterLog():
 
   def disconnected_session(self, text):
     self.append(text, self.log_warning_tag)
-    desktop_notify(_tr('Disconnected user'), text)
+    desktop_notify(_tr('Disconnected participant'), text)
 
 
   def view(self, widget):
@@ -1010,9 +1011,9 @@ class VeyonMasterConnection():
           self.client.reset_everything(True)
           self.client.close_pin_entry()
           desktop_notify(
-            _tr('Duplicate connection error'),
+            _tr('Duplicate session error'),
             _tr('Closing connections because of a duplicate' \
-                  ' session, are there two masters with the same PIN?'))
+                  ' session, are there many sessions with the same PIN?'))
           return
 
         if not 'public_key' in message:
@@ -1350,7 +1351,8 @@ class VeyonClient(PuavoWidget):
 
   def enable_pin_box(self):
     if self.enter_label and self.pin_entry:
-      self.enter_label.set_label(_tr('Check PIN and press ENTER to accept.'))
+      self.enter_label.set_label(
+        _tr('Check PIN and press ENTER to accept external control.'))
       self.enter_label.show()
       self.pin_entry.set_sensitive(True)
       self.pin_entry.grab_focus()
@@ -1376,7 +1378,7 @@ class VeyonClient(PuavoWidget):
         self.action_button_handler \
           = self.action_button.connect('activate', self.close_session)
         GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
-        label = _tr('Close a Veyon session from %s using %s') \
+        label = _tr('Close a Veyon session that is controlled by %s on %s') \
                   % (master_conn.master_info['username'],
                      master_conn.master_info['hostname'])
         GLib.timeout_add(0,
@@ -1552,7 +1554,7 @@ class VeyonClient(PuavoWidget):
     self.applet.set_icon('OPEN')
     desktop_notify(
       _tr('Veyon session opened'),
-      _tr('This host may now be viewed and controlled by %s from %s') \
+      _tr('This computer may now be viewed and controlled by %s from %s') \
         % (self.master_conn.master_info['username'],
            self.master_conn.master_info['hostname']))
 
@@ -1649,7 +1651,7 @@ class PuavoVeyonApplet:
 
   def fatal_dbus_error(self, mode, dbusexception):
     desktop_notify(_tr('Fatal error on Puavo Veyon Applet'),
-      _tr('Unexpected dbus exception on puavo-veyon-applet %s mode.') % mode)
+      _tr('Unexpected dbus error on Puavo Veyon Applet.') % mode)
     logmsg(syslog.LOG_ERR, 'dbus exception in %s mode: %s' \
                              % (mode, str(dbusexception)))
     sys.exit(1)

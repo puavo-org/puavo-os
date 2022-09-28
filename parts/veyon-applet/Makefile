@@ -9,12 +9,24 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: all
-all:
+all: po/de/puavo-veyon-applet.mo po/fi/puavo-veyon-applet.mo
+
+puavo-veyon-applet.pot: puavo-veyon-applet
+	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
+
+%.po: po/puavo-desktop-applet.pot
+	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
+	touch $@
+
+%.mo: %.po
+	msgfmt $< --output-file $@
 
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 
 .PHONY: install
 install: installdirs
@@ -22,6 +34,11 @@ install: installdirs
 		start-puavo-veyon-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		start-puavo-veyon-applet.desktop
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
+		po/fi/puavo-veyon-applet.mo
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
+		po/fi/puavo-veyon-applet.mo
 
 .PHONY: clean
 clean:
+	rm -f po/*/*.mo
