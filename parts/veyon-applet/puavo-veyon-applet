@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import datetime
 import dbus
 import dbus.mainloop.glib
 import gettext
@@ -56,10 +57,36 @@ CSS = b"""
   margin-bottom: 5em;
 }
 
+#invite_button:hover, #invite_cancel:hover {
+  border-color: white;
+  background-color: grey;
+  color: white;
+}
+
+#invite_cancel {
+  font-size: 80%;
+  margin: 1em;
+  padding-left: 2em;
+  padding-right: 2em;
+}
+
+#invite_label {
+  padding: 0.5em;
+}
+
+#invite_to_session_window {
+  font-size: 3em;
+}
+
 #pin_entry {
   background-color: white;
   color: black;
   margin-left: 0.5em;
+}
+
+#pin_request_message {
+  color: lightgreen;
+  font-size: 80%;
 }
 
 #pin_window {
@@ -94,6 +121,18 @@ def read_firstline(pathname):
     return (file.readlines())[0].rstrip("\n")
 
 
+def desktop_notify(summary, body=None):
+  # XXX some messsages should be flagged as warnings maybe?
+  if body:
+    Notify.Notification.new(summary, body).show()
+  else:
+    Notify.Notification.new(summary).show()
+
+
+class VeyonRoleDenied(Exception):
+  pass
+
+
 class PuavoWidget:
   def connect_to_dbus(self, bus_name, service, interface):
     self.bus = dbus.SystemBus()
@@ -101,11 +140,11 @@ class PuavoWidget:
     return dbus.Interface(dbusobj, dbus_interface=interface)
 
 
-  def notify(self, summary, body=None):
-    if body:
-      Notify.Notification.new(summary, body).show()
-    else:
-      Notify.Notification.new(summary).show()
+  def lookup_username(self):
+    userinfo = pwd.getpwuid( os.getuid() )
+    if userinfo.pw_gecos != '':
+      return userinfo.pw_gecos
+    return userinfo.pw_name
 
 
 class Veyon():
@@ -130,11 +169,11 @@ class Veyon():
     message = json.loads(message_json)
 
     if type(message) != dict:
-      raise 'message is not a dict'
+      raise Exception('message is not a dict')
     if not 'type' in message:
-      raise 'no type in message'
+      raise Exception('no type in message')
     if type(message['type']) != str:
-      raise 'message type is not a string'
+      raise Exception('message type is not a string')
 
     return message
 
@@ -146,213 +185,182 @@ class Veyon():
     socket.send(message)
 
 
-class VeyonSlaveConnection(PuavoWidget):
-  def __init__(self, master, slave_socket, slave_address):
-    self.address        = slave_address
-    self.in_session     = False
-    self.master         = master
-    self.slave_hostname = '?'
-    self.slave_socket   = slave_socket
+# VeyonClientConnection keeps track of a connection from
+# a master side to some client
+class VeyonClientConnection(PuavoWidget):
+  def __init__(self, master, client_socket, client_address):
+    self.address         = client_address
+    self.in_session      = False
+    self.master          = master
+    self.client_groups   = []
+    self.client_hostname = '?'
+    self.client_socket   = client_socket
+    self.client_user     = None
 
     # XXX should this be asynchronous?
-    self.slave_socket_watch \
-      = GLib.io_add_watch(GLib.IOChannel(self.slave_socket.fileno()),
+    self.client_socket_watch \
+      = GLib.io_add_watch(GLib.IOChannel(self.client_socket.fileno()),
                           0,
                           GLib.IOCondition.IN,
-                          self.incoming_slave_data,
-                          self.slave_socket)
+                          self.incoming_client_data,
+                          self.client_socket)
 
 
-  def send_to_slave(self, msg):
+  def send_to_client(self, msg):
     try:
-      Veyon.send_msg(self.slave_socket, msg)
+      Veyon.send_msg(self.client_socket, msg)
     except Exception as e:
-      logmsg(syslog.LOG_ERR, 'error sending a message to slave: %s' % e)
-      self.master.remove_slave(self.address)
+      logmsg(syslog.LOG_ERR, 'error sending a message to client: %s' % e)
+      self.master.remove_client(self.address)
 
 
-  def incoming_slave_data(self, io, cond, slave_socket):
+  def incoming_client_data(self, io, cond, client_socket):
     try:
-      message = Veyon.receive_msg(slave_socket)
+      message = Veyon.receive_msg(client_socket)
       if message == None:
-        logmsg(syslog.LOG_INFO, 'slave %s at %s has disconnected' \
-                                  % (self.slave_hostname, self.address))
-        self.master.remove_slave(self.address)
+        logmsg(syslog.LOG_INFO, 'client %s at %s has disconnected' \
+                                  % (self.client_hostname, self.address))
+        self.master.remove_client(self.address)
         return False
 
       if message['type'] == 'new_client':
-        if not 'hostname' in message:
-          raise 'no hostname in new_client message'
-        if type(message['hostname']) != str:
-          raise 'hostname is not a string'
+        if not 'groups' in message:
+          raise Exception('no groups in new_client message')
+        if type(message['groups']) != list:
+          raise Exception('groups is not a list')
+        if not all([ type(g) == str for g in message['groups'] ]):
+          raise Exception('some item of a group is not a string')
 
-        # XXX we would also like a list of groups user belongs to, probably?
-        self.slave_hostname = message['hostname']
+        if not 'hostname' in message:
+          raise Exception('no hostname in new_client message')
+        if type(message['hostname']) != str:
+          raise Exception('hostname is not a string')
+
+        if not 'user' in message:
+          raise Exception('no user in new_client message')
+        if type(message['user']) != str:
+          raise Exception('user is not a string')
+
+        self.client_groups   = message['groups']
+        self.client_hostname = message['hostname']
+        self.client_user     = message['user']
+
+        self.master.manage_invite_to_session_button()
+
         logmsg(syslog.LOG_INFO,
-               'new slave %s at %s' % (self.slave_hostname, self.address))
+               'new client %s at %s' % (self.client_hostname, self.address))
+
         msg = {
           'type': 'master_info',
           'hostname': self.master.hostname,
           'username': self.master.username,
         }
-        self.send_to_slave(msg)
+        self.send_to_client(msg)
+
+      elif message['type'] == 'ping':
+        self.send_to_client({ 'type': 'pong' })
 
       elif message['type'] == 'public_key_request':
         if not 'pin' in message:
-          raise 'public key request without a PIN'
+          raise Exception('public key request without a PIN')
         if type(message['pin']) != str:
-          raise 'PIN is not a string'
+          raise Exception('PIN is not a string')
 
         if message['pin'] == self.master.pin:
           logmsg(syslog.LOG_INFO,
-                 'slave %s sent correct PIN' % self.slave_hostname)
+                 'client %s sent correct PIN' % self.client_hostname)
           self.send_public_key()
         else:
           logmsg(syslog.LOG_INFO,
-                 'slave %s sent wrong PIN' % self.slave_hostname)
-          self.send_to_slave({ 'type': 'wrong_pin' })
+                 'client %s sent wrong PIN' % self.client_hostname)
+          self.send_to_client({ 'type': 'wrong_pin' })
 
       elif message['type'] == 'public_key_accepted':
         logmsg(syslog.LOG_INFO,
-               'slave %s accepted our public key, session open' \
-                 % self.slave_hostname)
+               'client %s accepted our public key, session open' \
+                 % self.client_hostname)
         self.in_session = True
         self.master.update_config()
+
+        if self.client_user:
+          self.master.connection_log.new_session(
+            _tr('%s on %s has joined session') \
+              % (self.client_user, self.client_hostname))
 
       elif message['type'] == 'close_session':
         if self.in_session:
           logmsg(syslog.LOG_INFO,
-                 'slave %s closed session' % self.slave_hostname)
+                 'client %s closed session' % self.client_hostname)
           self.in_session = False
           self.master.update_config()
+
+          if self.client_user:
+            self.master.connection_log.disconnected_session(
+              _tr('%s on %s disconnected from session') \
+                % (self.client_user, self.client_hostname))
 
       else:
         # XXX should we define a protocol version and pass it on at some point?
         logmsg(syslog.LOG_INFO,
-               'slave %s sent message %s that we do not understand' \
-                 % (self.slave_hostname, message['type']))
+               'client %s sent message %s that we do not understand' \
+                 % (self.client_hostname, message['type']))
 
     except Exception as e:
-      logmsg(syslog.LOG_ERR, 'error with slave %s: %s' % (self.address, e))
-      self.master.remove_slave(self.address)
+      logmsg(syslog.LOG_ERR, 'error with client %s: %s' % (self.address, e))
+      self.master.remove_client(self.address)
       return False
 
     return True
 
 
   def request_close_session(self):
-    self.send_to_slave({ 'type': 'request_close_session' })
+    self.send_to_client({ 'type': 'request_close_session' })
 
 
-  # XXX this should be useful but is not yet used in any situation
-  def send_pin_request(self):
-    logmsg(syslog.LOG_INFO, 'sending PIN request to %s' % self.slave_hostname)
-    self.send_to_slave({ 'type': 'pin_request' })
+  def send_pin_request(self, pin):
+    if self.in_session:
+      return
+
+    logmsg(syslog.LOG_INFO, 'sending PIN request to %s' % self.client_hostname)
+    self.send_to_client({ 'type': 'pin_request', 'pin': pin })
 
 
   def send_public_key(self):
-    logmsg(syslog.LOG_INFO, 'sending public key to %s' % self.slave_hostname)
+    logmsg(syslog.LOG_INFO, 'sending public key to %s' % self.client_hostname)
     msg = { 'type': 'public_key', 'public_key': self.master.public_key }
-    self.send_to_slave(msg)
+    self.send_to_client(msg)
 
 
-  def disconnect_slave(self):
+  def disconnect_client(self):
     logmsg(syslog.LOG_INFO,
-           'disconnecting slave %s at %s' % (self.slave_hostname, self.address))
-    self.slave_socket.close()
-    self.slave_socket = None
-    GLib.source_remove(self.slave_socket_watch)
+           'disconnecting client %s at %s' \
+             % (self.client_hostname, self.address))
+
+    self.client_socket.close()
+    self.client_socket = None
+    GLib.source_remove(self.client_socket_watch)
+
+    if self.client_user:
+      self.master.connection_log.disconnected_session(
+        _tr('%s on %s disconnected from session') \
+          % (self.client_user, self.client_hostname))
 
 
-class VeyonMaster(PuavoWidget):
-  def __init__(self, applet):
-    self.applet = applet
+class IPAddressWatcher(PuavoWidget):
+  def __init__(self, client, master):
+    self.current_ip_address  = None
+    self.previous_ip_address = None
+    self.client = client
+    self.master = master
 
-    # This will wait until host gets a network... which might never happen,
-    # but this tool is not useful at all without a network.
-    self.host_ip_address = self.get_host_ip_address()
-
-    self.pin = None
-    self.public_key = None
-    self.serviceinfo = None
-    self.update_config_call_pending = False
-    self.username = self.lookup_username()
-    self.veyon_slaves = {}
-
-    self.hostname = read_firstline('/etc/puavo/hostname')
-    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
-                                           '/master',
-                                           'org.puavo.Veyon.master')
-
-    self.client_count_label = Gtk.MenuItem(label='Clients: 0')
-    self.client_count_label.set_sensitive(False)
-    self.applet.menu.append(self.client_count_label)
-
-    self.change_pin_button = Gtk.MenuItem(label='Change PIN')
-    self.change_pin_button.set_sensitive(False)
-    self.change_pin_button.connect('activate', self.create_new_pin)
-    self.applet.menu.append(self.change_pin_button)
-
-    self.open_master_button = Gtk.MenuItem(label='Open Veyon master')
-    self.open_master_button.set_sensitive(True)
-    self.open_master_button.connect('activate', self.open_veyon_master)
-    self.applet.menu.append(self.open_master_button)
-
-    self.session_button = Gtk.MenuItem(label='Setup a Veyon session')
-    self.session_button.set_sensitive(False)
-    self.session_button_handler \
-      = self.session_button.connect('activate', self.setup_session)
-    self.applet.menu.append(self.session_button)
-
-    self.dbus_iface \
-        .GetPublicKey(reply_handler=self.handle_get_public_key,
-                      error_handler=self.handle_get_public_key_error)
-
-
-
-  def setup_session(self, widget=None):
-    self.create_new_pin()
-    self.update_config()
-    self.change_pin_button.set_sensitive(True)
-    self.session_button.get_child().set_text('Close a Veyon session')
-    self.session_button.disconnect(self.session_button_handler)
-    self.session_button_handler \
-      = self.session_button.connect('activate', self.close_session)
-    self.zeroconf.register_service(self.serviceinfo)
-
-
-  def close_session(self, widget=None):
-    self.zeroconf.unregister_service(self.serviceinfo)
-
-    self.applet.indicator.set_label('', '')
-    self.pin = None
-
-    self.change_pin_button.set_sensitive(False)
-
-    for slave_conn in self.veyon_slaves.values():
-      if slave_conn.in_session:
-        slave_conn.request_close_session()
-
-    label = 'Setup a Veyon session'
-    self.session_button.get_child().set_text(label)
-    self.session_button.disconnect(self.session_button_handler)
-    self.session_button_handler \
-      = self.session_button.connect('activate', self.setup_session)
-
-
-  def lookup_username(self):
-    userinfo = pwd.getpwuid( os.getuid() )
-    if userinfo.pw_gecos != '':
-      return userinfo.pw_gecos
-    return userinfo.pw_name
+    self.get_host_ip_address()
+    GLib.timeout_add_seconds(10, self.get_host_ip_address)
 
 
   def get_host_ip_address(self):
-    # We wait until we get an IP address.
-    # If host is not networked we will wait indefinitely.
-    send_log_message = True
+    self.current_ip_address = None
 
-    while True:
+    try:
       for intf in sorted(netifaces.interfaces()):
         if not re.match('^(eth|wlan)', intf):
           continue
@@ -367,16 +375,185 @@ class VeyonMaster(PuavoWidget):
             # tun*/vpn* (if we would use several on the same host, that
             # might get tricky)
             ip = ip_addr['addr']
-            logmsg(syslog.LOG_INFO,
-                   'using IP address %s on interface %s' % (ip, intf))
-            return ip
+            self.current_ip_address = ip
+            break
 
-      if send_log_message:
-        logmsg(syslog.LOG_NOTICE,
-               'no IP address on any of the interfaces we are checking')
-        send_log_message = False
+      if self.current_ip_address != self.previous_ip_address:
+        if self.client:
+          self.client.host_ip_address_change(self.current_ip_address)
+        if self.master:
+          self.master.host_ip_address_change(self.current_ip_address)
 
-      time.sleep(10)
+        if self.current_ip_address:
+          logmsg(syslog.LOG_NOTICE,
+                 'IP address used is now %s' % self.current_ip_address)
+        else:
+          logmsg(syslog.LOG_NOTICE,
+                 'no IP address on any of the interfaces we are checking')
+    except Exception as e:
+      logmsg(syslog.LOG_ERR, 'error in determining IP address: %s' % e)
+
+    self.previous_ip_address = self.current_ip_address
+
+    return True
+
+
+class VeyonMaster(PuavoWidget):
+  CHANGE_PIN_ICON    = Gtk.Image.new_from_icon_name('object-rotate-left', 32)
+  CLIENT_COUNT_ICON  = Gtk.Image.new_from_icon_name('format-justify-left', 32)
+  INVITE_ICON        = Gtk.Image.new_from_icon_name('call-start', 32)
+  OPEN_MASTER_ICON   = Gtk.Image.new_from_icon_name('view-grid', 32)
+  OPEN_SESSION_ICON  = Gtk.Image.new_from_icon_name('send-to', 32)
+  CLOSE_SESSION_ICON = Gtk.Image.new_from_icon_name('window-close', 32)
+
+  def __init__(self, applet, samehost_client):
+    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
+                                           '/server',
+                                           'org.puavo.Veyon.master')
+
+    try:
+      self.dbus_iface.CheckAccess()
+    except dbus.exceptions.DBusException as e:
+      if e.get_dbus_name() == 'org.freedesktop.DBus.Error.AccessDenied':
+        raise VeyonRoleDenied('no permission to master role')
+      raise e
+
+    self.applet = applet
+    self.connection_log = VeyonMasterLog()
+    self.samehost_client = samehost_client
+
+    # this will be filled in by IPAddressWatcher
+    self.host_ip_address = None
+
+    self.pin = None
+    self.public_key = None
+    self.serviceinfo = None
+    self.listener_socket = None
+    self.update_config_call_pending = False
+    self.username = self.lookup_username()
+    self.veyon_clients = {}
+    self.zeroconf = None
+
+    self.hostname = read_firstline('/etc/puavo/hostname')
+
+    if self.samehost_client:
+      separator = Gtk.SeparatorMenuItem()
+      separator.show()
+      self.applet.menu.append(separator)
+
+    label_text =_tr('Participants: %d (see log)') % 0
+    self.client_count_label = Gtk.ImageMenuItem(label=label_text)
+    self.client_count_label.set_image(self.CLIENT_COUNT_ICON)
+    self.client_count_label.set_always_show_image(True)
+    self.client_count_label.set_sensitive(False)
+    self.client_count_label.connect('activate', self.connection_log.view)
+    self.applet.menu.append(self.client_count_label)
+
+    # The ImageMenuItem objects use methods deprecated since 3.10.
+    # See https://docs.gtk.org/gtk3/class.ImageMenuItem.html
+    # BUT "should use GtkMenuItem and pack a GtkBox with a GtkImage
+    # and a GtkLabel instead" advice does not work in this context.
+
+    self.change_pin_button = Gtk.ImageMenuItem(label=_tr('Change PIN'))
+    self.change_pin_button.set_image(self.CHANGE_PIN_ICON)
+    self.change_pin_button.set_always_show_image(True)
+    self.change_pin_button.set_sensitive(False)
+    self.change_pin_button.connect('activate', self.create_new_pin)
+    self.applet.menu.append(self.change_pin_button)
+
+    self.open_master_button \
+      = Gtk.ImageMenuItem(label=_tr('Open control panel'))
+    self.open_master_button.set_image(self.OPEN_MASTER_ICON)
+    self.open_master_button.set_always_show_image(True)
+    self.open_master_button.set_sensitive(False)
+    self.open_master_button.connect('activate', self.open_veyon_master)
+    self.applet.menu.append(self.open_master_button)
+
+    self.invite_to_session_button \
+      = Gtk.ImageMenuItem(label=_tr('Invite to session by group'))
+    self.invite_to_session_button.set_image(self.INVITE_ICON)
+    self.invite_to_session_button.set_always_show_image(True)
+    self.invite_to_session_button.set_sensitive(False)
+    self.invite_to_session_button.connect('activate',
+                                          self.show_invite_to_session_window)
+    self.applet.menu.append(self.invite_to_session_button)
+
+    self.session_button = Gtk.ImageMenuItem(label=_tr('Setup a Veyon session'))
+    self.session_button.set_image(self.OPEN_SESSION_ICON)
+    self.session_button.set_always_show_image(True)
+    self.session_button.set_sensitive(False)
+    self.session_button_handler \
+      = self.session_button.connect('activate', self.setup_session)
+    self.applet.menu.append(self.session_button)
+
+
+  def host_ip_address_change(self, ip_address):
+    self.host_ip_address = ip_address
+    self.close_session()
+
+    if self.host_ip_address:
+      self.enable()
+    else:
+      self.disable()
+
+
+  def disable(self):
+    self.session_button.set_sensitive(False)
+
+
+  def enable(self):
+    self.session_button.set_sensitive(True)
+
+
+  def cleanup_config(self, reply_handler):
+    self.dbus_iface.CleanupConfig(reply_handler=reply_handler,
+                                  error_handler=self.handle_cleanup_error)
+
+
+  def handle_cleanup_error(self, dbusexception):
+    self.applet.fatal_dbus_error('master', dbusexception)
+
+
+  def setup_session(self, widget=None):
+    if self.samehost_client:
+      self.samehost_client.disable()
+
+    self.applet.in_session = True
+
+    self.dbus_iface \
+        .NewSession(reply_handler=self.handle_new_session,
+                    error_handler=self.handle_new_session_error)
+
+
+  def close_session(self, widget=None):
+    self.close_veyon_master()
+
+    self.unsetup_master_service()
+
+    self.applet.indicator.set_label('', '')
+    self.pin = None
+
+    self.change_pin_button.set_sensitive(False)
+    self.client_count_label.set_sensitive(False)
+    self.open_master_button.set_sensitive(False)
+
+    for client_conn in list(self.veyon_clients.values()):
+      if client_conn.in_session:
+        client_conn.request_close_session()
+
+    self.applet.in_session = False
+
+    label = _tr('Setup a Veyon session')
+    self.session_button.get_child().set_text(label)
+    self.session_button.set_image(self.OPEN_SESSION_ICON)
+    self.session_button.disconnect(self.session_button_handler)
+    self.session_button.set_sensitive(True)
+    self.session_button_handler \
+      = self.session_button.connect('activate', self.setup_session)
+    self.invite_to_session_button.set_sensitive(False)
+
+    if self.samehost_client:
+      self.samehost_client.enable()
 
 
   def create_new_pin(self, widget=None):
@@ -394,19 +571,38 @@ class VeyonMaster(PuavoWidget):
         create_new = False
 
     self.pin = new_pin
-    self.applet.indicator.set_label('PIN: %s' % new_pin, '')
+    self.applet.indicator.set_label(_tr('PIN: %s') % new_pin, '')
 
 
-  def handle_get_public_key(self, public_key):
-    logmsg(syslog.LOG_INFO, 'got public key through dbus')
-    self.public_key = public_key
+  def handle_new_session(self, public_key):
+    if not self.host_ip_address:
+      logmsg(syslog.LOG_INFO, 'lost IP when setting up a new session')
+      return
+
+    logmsg(syslog.LOG_INFO, 'got new session and public key through dbus')
+
     self.setup_master_service()
 
+    self.public_key = public_key
+    self.create_new_pin()
+    self.update_config()
+    self.change_pin_button.set_sensitive(True)
+    self.session_button.get_child().set_text(_tr('Close a Veyon session'))
+    self.session_button.set_image(self.CLOSE_SESSION_ICON)
+    self.session_button.disconnect(self.session_button_handler)
+    self.session_button_handler \
+      = self.session_button.connect('activate', self.close_session)
 
-  def handle_get_public_key_error(self, dbusexception):
-    # XXX should issues here be shown to user?
-    logmsg(syslog.LOG_ERR,
-           'error occurred when getting public key: %s' % dbusexception)
+    self.client_count_label.set_sensitive(True)
+    self.open_master_button.set_sensitive(True)
+
+    self.zeroconf.register_service(self.serviceinfo)
+
+    self.open_veyon_master()
+
+
+  def handle_new_session_error(self, dbusexception):
+    self.applet.fatal_dbus_error('master', dbusexception)
 
 
   def open_veyon_master(self, widget=None):
@@ -434,13 +630,96 @@ class VeyonMaster(PuavoWidget):
     subprocess.Popen([ 'wmctrl', '-a', 'Veyon Master' ], close_fds=True)
 
 
+  def close_veyon_master(self):
+    subprocess.Popen([ 'pkill', '-x', 'veyon-master' ], close_fds=True)
+
+
+  def manage_invite_to_session_button(self):
+    for client_conn in self.veyon_clients.values():
+      if client_conn.client_groups:
+        self.invite_to_session_button.set_sensitive(True)
+        return
+
+    self.invite_to_session_button.set_sensitive(False)
+
+
+  def show_invite_to_session_window(self, widget=None):
+    all_groups = []
+
+    for client_conn in self.veyon_clients.values():
+      for group in client_conn.client_groups:
+        all_groups.append(group)
+
+    unique_groups = sorted(set(all_groups), key=str.casefold)
+
+    if not unique_groups:
+      return
+
+    choicebox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
+    invite_text = Gtk.Label(label=_tr('Choose a group to invite to a session:'),
+                            name='invite_label')
+    choicebox.pack_start(invite_text, False, False, 0)
+
+    for group in unique_groups:
+      button = Gtk.Button(label=group, name='invite_button')
+      button.connect('clicked', self.invite_to_session)
+      choicebox.pack_start(button, False, False, 0)
+
+    cancel_button = Gtk.Button(label='Cancel', name='invite_cancel')
+    cancel_button.connect('clicked', self.close_invite_to_session)
+    cancel_button_align = Gtk.Alignment(xalign=1.0, yalign=0, xscale=0,
+                                        yscale=0)
+    cancel_button_align.add(cancel_button)
+
+    choicebox_align = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0.9,
+                                    yscale=0)
+    choicebox_align.add(choicebox)
+
+    invite_dialog_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    invite_dialog_box.pack_start(choicebox_align, True, True, 0)
+    invite_dialog_box.pack_start(cancel_button_align, False, False, 0)
+
+    self.invite_to_session_window = Gtk.Window(name='invite_to_session_window')
+    self.invite_to_session_window.connect('destroy',
+                                          self.close_invite_to_session)
+    self.invite_to_session_window.connect('focus-out-event',
+                                          self.close_invite_to_session)
+
+    self.invite_to_session_window.fullscreen()
+    self.invite_to_session_window.present_with_time( int(time.time()) )
+    self.invite_to_session_window.set_keep_above(True)
+    self.invite_to_session_window.add(invite_dialog_box)
+    self.invite_to_session_window.show_all()
+
+
+  def close_invite_to_session(self, widget=None, event=None):
+    if self.invite_to_session_window:
+      self.invite_to_session_window.destroy()
+      self.invite_to_session_window = None
+
+
+  def invite_to_session(self, widget):
+    group_name = widget.get_label()
+
+    logmsg(syslog.LOG_INFO, 'inviting "%s" to join a session' % group_name)
+
+    desktop_notify(_tr('Inviting "%s" to join a session.') % group_name)
+
+    for client_conn in list(self.veyon_clients.values()):
+      if group_name in client_conn.client_groups:
+        client_conn.send_pin_request(self.pin)
+
+    self.invite_to_session_window.destroy()
+
+
   def setup_master_service(self):
     logmsg(syslog.LOG_NOTICE, 'setting up master service')
 
-    self.socket = socket.socket()
-    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    self.socket.bind((self.host_ip_address, Veyon.SERVICE_PORT))
-    self.socket.listen()
+    self.listener_socket = socket.socket()
+    self.listener_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    self.listener_socket.bind((self.host_ip_address, Veyon.SERVICE_PORT))
+    self.listener_socket.listen()
 
     self.zeroconf = zeroconf.Zeroconf()
 
@@ -454,13 +733,34 @@ class VeyonMaster(PuavoWidget):
                                             port=Veyon.SERVICE_PORT)
 
     # XXX should this be asynchronous?
-    GLib.io_add_watch(GLib.IOChannel(self.socket.fileno()),
-                      0,
-                      GLib.IOCondition.IN,
-                      self.handle_new_slave,
-                      self.socket)
+    self.listener_socket_watch \
+      = GLib.io_add_watch(GLib.IOChannel(self.listener_socket.fileno()),
+                          0,
+                          GLib.IOCondition.IN,
+                          self.handle_new_client,
+                          self.listener_socket)
 
     self.session_button.set_sensitive(True)
+
+
+  def unsetup_master_service(self):
+    service_closed = False
+
+    if self.listener_socket:
+      self.listener_socket.close()
+      self.listener_socket = None
+      GLib.source_remove(self.listener_socket_watch)
+      service_closed = True
+
+    if self.zeroconf:
+      self.zeroconf.unregister_service(self.serviceinfo)
+      self.zeroconf = None
+      service_closed = True
+
+    self.serviceinfo = None
+
+    if service_closed:
+      logmsg(syslog.LOG_NOTICE, 'closed the master service')
 
 
   def make_service_name(self):
@@ -468,41 +768,43 @@ class VeyonMaster(PuavoWidget):
     return (self.hostname + '_' + time_seconds + '.' + Veyon.SERVICE_BASE)
 
 
-  def handle_new_slave(self, io, cond, sock):
+  def handle_new_client(self, io, cond, sock):
     try:
-      (conn, sock_slave_address) = sock.accept()
-      slave_address = sock_slave_address[0]
-      if slave_address in self.veyon_slaves:
-        self.remove_slave(slave_address)
-      slave = VeyonSlaveConnection(self, conn, slave_address)
-      self.veyon_slaves[slave.address] = slave
+      (conn, sock_client_address) = sock.accept()
+      client_address = sock_client_address[0]
+      if client_address in self.veyon_clients:
+        self.remove_client(client_address)
+      client_conn = VeyonClientConnection(self, conn, client_address)
+      self.veyon_clients[client_conn.address] = client_conn
     except Exception as e:
-      logmsg(syslog.LOG_ERR, 'could not accept a slave connection: %s' % e)
+      logmsg(syslog.LOG_ERR, 'could not accept a client connection: %s' % e)
 
     return True
 
 
   def update_config(self):
     self.update_config_hosts = []
-    for slave in self.veyon_slaves.values():
-      if not slave.in_session:
+    for client_conn in self.veyon_clients.values():
+      if not client_conn.in_session:
         continue
 
       host = {
-        'address':  slave.address,
-        'hostname': slave.slave_hostname,
+        'address':  client_conn.address,
+        'hostname': client_conn.client_hostname,
         'location': 'Classroom',
       }
       self.update_config_hosts.append(host)
 
     client_count = len(self.update_config_hosts)
-    self.client_count_label.get_child().set_text('Clients: %d' % client_count)
+    count_text = _tr('Participants: %d (see log)') % client_count
+    self.client_count_label.get_child().set_text(count_text)
 
     if self.update_config_call_pending:
       return
 
-    # UpdateConfig must not be called more than 10 times in a minute
-    GLib.timeout_add_seconds(6, self.dbus_update_config)
+    # Wait a bit in case we have more update_config requests coming up.
+    # The server restricts configuration updates to once-a-second anyway.
+    GLib.timeout_add_seconds(1, self.dbus_update_config)
     self.update_config_call_pending = True
 
 
@@ -514,33 +816,88 @@ class VeyonMaster(PuavoWidget):
                       reply_handler=self.handle_update_config,
                       error_handler=self.handle_update_config_error)
 
+    return False
+
 
   def handle_update_config(self):
     logmsg(syslog.LOG_INFO, 'veyon configuration update ok')
 
 
   def handle_update_config_error(self, dbusexception):
-    # XXX should issues here be shown to user?
-    logmsg(syslog.LOG_ERR,
-           'error occurred when updating configuration: %s' % dbusexception)
+    self.applet.fatal_dbus_error('master', dbusexception)
 
 
-  def remove_slave(self, address):
-    slave = self.veyon_slaves[address]
-    in_session = slave.in_session
-    slave.disconnect_slave()
-    del(self.veyon_slaves[address])
+  def remove_client(self, address):
+    client_conn = self.veyon_clients[address]
+    in_session = client_conn.in_session
+    client_conn.disconnect_client()
+    del(self.veyon_clients[address])
     if in_session:
        self.update_config()
+    self.manage_invite_to_session_button()
 
 
+class VeyonMasterLog():
+  def __init__(self):
+    self.dialog = Gtk.Dialog(title=_tr('Connection log'),
+                             parent=None,
+                             modal=True,
+                             destroy_with_parent=True)
+    self.dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
+    self.dialog.set_default_size(600, 300)
+
+    view = Gtk.TextView()
+    view.set_editable(False)
+    view.set_cursor_visible(False)
+
+    self.buffer = view.get_buffer()
+    view.show()
+
+    self.log_ok_tag      = self.buffer.create_tag(foreground='green')
+    self.log_warning_tag = self.buffer.create_tag(foreground='red')
+
+    scroll = Gtk.ScrolledWindow()
+    scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+    scroll.add(view)
+    scroll.show()
+
+    self.dialog.vbox.pack_start(scroll, True, True, 0)
+
+
+  def append(self, text, tag=None):
+    timestamped_text = re.sub(r'^',
+                              '%s: ' % datetime.datetime.now(),
+                              text.rstrip(),
+                              flags=re.MULTILINE) + "\n"
+    end_iter = self.buffer.get_end_iter()
+    self.buffer.insert_with_tags(end_iter, timestamped_text, tag)
+
+
+  def new_session(self, text):
+    self.append(text, self.log_ok_tag)
+
+
+  def disconnected_session(self, text):
+    self.append(text, self.log_warning_tag)
+    desktop_notify(_tr('Disconnected participant'), text)
+
+
+  def view(self, widget):
+    self.dialog.present_with_time( int(time.time()) )
+    self.dialog.run()
+    self.dialog.hide()
+
+
+# VeyonMasterConnection keeps track of a connection from
+# a client side to some master
 class VeyonMasterConnection():
-  def __init__(self, address, port, slave):
-    self.address     = address
-    self.in_session  = False
-    self.master_info = { 'hostname': '?', 'username': '?' }
-    self.pin_sent    = False
-    self.slave       = slave
+  def __init__(self, address, port, client):
+    self.address       = address
+    self.client        = client
+    self.in_session    = False
+    self.pong_received = True
+    self.master_info   = { 'hostname': '?', 'username': '?' }
+    self.pin_sent      = False
 
     self.master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.master_socket.connect((self.address, port))
@@ -553,8 +910,35 @@ class VeyonMasterConnection():
                           self.incoming_master_data,
                           self.master_socket)
 
-    message = { 'type': 'new_client', 'hostname': self.slave.hostname }
+    message = {
+      'groups':   client.user_groups,
+      'hostname': self.client.hostname,
+      'user':     self.client.username,
+      'type':     'new_client',
+    }
+
+    logmsg(syslog.LOG_INFO, 'sending message %s to master' % message)
+
     Veyon.send_msg(self.master_socket, message)
+
+    self.ping_sender = GLib.timeout_add_seconds(20, self.send_ping)
+
+
+  def send_ping(self):
+    if not self.pong_received:
+      logmsg(syslog.LOG_WARNING,
+             ('master %s did not reply with a pong in 20 seconds,' \
+                + ' closing connection') % self.address)
+      self.client.remove_master(self.address)
+      # VeyonListenForMasters() may not realize a master is gone,
+      # so we must help it by restarting the service browser.
+      self.client.setup_master_browser()
+      return False
+
+    self.pong_received = False
+    self.send_to_master({ 'type': 'ping' })
+
+    return True
 
 
   def send_to_master(self, msg):
@@ -562,7 +946,7 @@ class VeyonMasterConnection():
       Veyon.send_msg(self.master_socket, msg)
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error sending a message to master: %s' % e)
-      self.slave.remove_master(self.address)
+      self.client.remove_master(self.address)
 
 
   def incoming_master_data(self, io, cond, master_socket):
@@ -570,22 +954,22 @@ class VeyonMasterConnection():
       message = Veyon.receive_msg(master_socket)
       if message == None:
         logmsg(syslog.LOG_INFO, 'master %s has disconnected' % self.address)
-        self.slave.remove_master(self.address)
+        self.client.remove_master(self.address)
         return False
 
       if message['type'] == 'request_close_session':
         if self.in_session:
-          self.slave.close_session()
+          self.client.close_session()
 
       elif message['type'] == 'master_info':
         if not 'hostname' in message:
-          raise 'no hostname in master info'
+          raise Exception('no hostname in master info')
         if type(message['hostname']) != str:
-          raise 'master hostname is not a string'
+          raise Exception('master hostname is not a string')
         if not 'username' in message:
-          raise 'no username in master info'
+          raise Exception('no username in master info')
         if type(message['username']) != str:
-          raise 'master username is not a string'
+          raise Exception('master username is not a string')
 
         self.master_info = {
           'hostname': message['hostname'],
@@ -593,17 +977,53 @@ class VeyonMasterConnection():
         }
 
       elif message['type'] == 'pin_request':
-        self.slave.activate_pin_entry()
+        # ignore join requests if we already have a session to some master
+        # or we have setup a master session
+        if self.client.applet.in_session:
+          return
+
+        # we expect PIN in PIN request so that it is easy for user
+        # to provide the PIN in the client
+        if not 'pin' in message :
+          raise Exception('no pin in pin request')
+        if type(message['pin']) != str:
+          raise Exception('pin in pin request is not a string')
+        self.client.show_pin_entry(self.master_info['hostname'],
+                                   self.master_info['username'],
+                                   message['pin'])
+
+      elif message['type'] == 'pong':
+        self.pong_received = True
 
       elif message['type'] == 'public_key':
+        # Reset everything if we already have a session with some master
+        # and we are receiving a new public key.  It is wrong to get another
+        # public key from the same or a different host when on a session,
+        # and it is quite possible that someone on the network is an impostor.
+        # We might get away with less but it is important to also close the
+        # negotation state with other masters and resetting state
+        # does achieve that.
+        if self.client.applet.in_session:
+          logmsg(syslog.LOG_WARNING,
+                 'got another public key when already in a session,' \
+                   + ' maybe two masters share the provided PIN?' \
+                   + ' (resetting state)')
+          self.client.reset_everything(True)
+          self.client.close_pin_entry()
+          desktop_notify(
+            _tr('Duplicate session error'),
+            _tr('Closing connections because of a duplicate' \
+                  ' session, are there many sessions with the same PIN?'))
+          return
+
         if not 'public_key' in message:
-          raise 'no public key in public_key message'
+          raise Exception('no public key in public_key message')
         if type(message['public_key']) != str:
-          raise 'public_key is not a string'
+          raise Exception('public_key is not a string')
 
         if self.pin_sent:
           self.in_session = True
-          self.slave.open_session(self, message['public_key'])
+          self.client.open_session(self, message['public_key'])
         else:
           logmsg(syslog.LOG_INFO,
                  'master %s sent public key even if we have not sent a PIN' \
@@ -612,7 +1032,7 @@ class VeyonMasterConnection():
       elif message['type'] == 'wrong_pin':
         if self.pin_sent:
           self.pin_sent = False
-          self.slave.handle_wrong_pin()
+          self.client.handle_wrong_pin()
       else:
         # XXX should we define a protocol version and pass it on at some point?
         logmsg(syslog.LOG_INFO,
@@ -622,8 +1042,10 @@ class VeyonMasterConnection():
 
     except Exception as e:
       logmsg(syslog.LOG_ERR, 'error with master %s: %s' % (self.address, e))
-      self.slave.remove_master(self.address)
+      self.client.remove_master(self.address)
       return False
+    finally:
+      self.client.check_and_maybe_enable_samehost_master()
 
     return True
 
@@ -644,26 +1066,49 @@ class VeyonMasterConnection():
     self.master_socket.close()
     self.master_socket = None
     GLib.source_remove(self.master_socket_watch)
+    GLib.source_remove(self.ping_sender)
 
 
-class VeyonSlave(PuavoWidget):
+class VeyonClient(PuavoWidget):
+  CLOSE_ICON = Gtk.Image.new_from_icon_name('go-down', 32)
+  JOIN_ICON  = Gtk.Image.new_from_icon_name('go-up',   32)
+
+
   def __init__(self, applet):
+    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
+                                           '/server',
+                                           'org.puavo.Veyon.client')
+    try:
+      self.dbus_iface.CheckAccess()
+    except dbus.exceptions.DBusException as e:
+      if e.get_dbus_name() == 'org.freedesktop.DBus.Error.AccessDenied':
+        raise VeyonRoleDenied('no permission to client role')
+      raise e
+
+    try:
+      self.user_groups = self.get_user_groups()
+    except Exception as e:
+      raise Exception('could not determine user groups: %s' % e)
+
     self.applet = applet
+    self.enabled = True
+    self.in_session = False
+    self.samehost_master = None
 
     self.browser     = None
     self.hostname    = read_firstline('/etc/puavo/hostname')
     self.master_conn = None
-    self.zeroconf    = zeroconf.Zeroconf()
+    self.username    = self.lookup_username()
+    self.zeroconf    = None
 
     self.public_key_request_timer_id = None
 
     self.veyon_masters = {}
 
-    self.dbus_iface = self.connect_to_dbus('org.puavo.Veyon',
-                                           '/slave',
-                                           'org.puavo.Veyon.slave')
-
-    self.action_button = Gtk.MenuItem(label='Join a Veyon session')
+    self.action_button = Gtk.ImageMenuItem(label=_tr('Join a Veyon session'))
+    self.action_button.set_image(self.JOIN_ICON)
+    self.action_button.set_always_show_image(True)
+    self.action_button.set_sensitive(True)
     self.action_button_handler \
       = self.action_button.connect('activate', self.activate_pin_entry)
     self.update_action_button()
@@ -671,7 +1116,59 @@ class VeyonSlave(PuavoWidget):
 
     self.pin_window = None
 
-    self.cleanup_config(self.handle_startup_cleanup)
+
+  def get_user_groups(self):
+    puavo_desktop_path = os.getenv('PUAVO_SESSION_PATH')
+    if not puavo_desktop_path:
+      raise Exception('PUAVO_SESSION_PATH environment variable is not set')
+
+    with open(puavo_desktop_path) as file:
+      puavo_session_info = json.load(file)
+
+    if type(puavo_session_info) != dict:
+      raise Exception('puavo session is not of correct type')
+    if not 'user' in puavo_session_info:
+      raise Exception('no user information in puavo session')
+
+    user = puavo_session_info['user']
+    if type(user) != dict:
+      raise Exception('session user information is not of correct type')
+    if not 'groups' in user:
+      raise Exception('no user group information in puavo session')
+
+    groups = user['groups']
+    if type(groups) != list:
+      raise Exception('user group information is not of correct type')
+    if not all([ type(g) == dict for g in groups ]):
+      raise Exception('some user group is not of correct type')
+    if not all([ 'name' in g for g in groups ]):
+      raise Exception('some user group does not have a name')
+
+    group_names = [ g['name'] for g in groups ]
+    if not all([ type(gn) == str for gn in group_names ]):
+      raise Exception('some user group name is not a string')
+
+    return group_names
+
+
+  def host_ip_address_change(self, ip_address):
+    logmsg(syslog.LOG_INFO, 'client got a host ip address change request')
+
+    if ip_address:
+      self.reset_everything(True)
+    else:
+      self.reset_everything(False)
+
+
+  def reset_everything(self, is_enabled):
+    for address in list(self.veyon_masters):
+      self.remove_master(address)
+
+    if not is_enabled:
+      self.unsetup_master_browser()
+      return
+
+    self.setup_master_browser()
 
 
   def cleanup_config(self, reply_handler):
@@ -679,32 +1176,60 @@ class VeyonSlave(PuavoWidget):
                                   error_handler=self.handle_cleanup_error)
 
 
-  def handle_startup_cleanup(self):
-    logmsg(syslog.LOG_INFO, 'veyon slave config startup cleanup done')
-    self.checkout_masters()
+  def connect_to_samehost_master(self, master):
+    self.samehost_master = master
+
+
+  def disable(self):
+    self.enabled = False
+    self.unsetup_master_browser()
+    self.update_action_button()
+
+
+  def enable(self):
+    if not self.enabled:
+      self.setup_master_browser()
+
+    self.enabled = True
+    self.update_action_button()
 
 
   def handle_session_cleanup(self):
-    logmsg(syslog.LOG_INFO, 'veyon slave config cleanup done')
+    logmsg(syslog.LOG_INFO, 'veyon client config cleanup done')
     self.update_action_button()
-    self.notify('Veyon session closed')
+    desktop_notify(_tr('Veyon session closed'))
 
 
   def handle_cleanup_error(self, dbusexception):
-    # XXX what else could we do?
-    # XXX does this close everything?
-    raise 'error in cleaning up veyon configuration: %s' % dbusexception
+    self.applet.fatal_dbus_error('client', dbusexception)
 
 
-  def checkout_masters(self):
-    service = self.zeroconf.get_service_info(Veyon.SERVICE_TYPE,
-                                             Veyon.SERVICE_BASE)
-    if service:
-      self.add_masters(service)
+  def setup_master_browser(self):
+    have_browser = False
+    if self.browser and self.zeroconf:
+      have_browser = True
 
+    self.unsetup_master_browser()
+
+    if have_browser:
+      info_msg = 'restarting the master service browser'
+    else:
+      info_msg = 'setting up master service browser'
+
+    logmsg(syslog.LOG_INFO, info_msg)
+
+    self.zeroconf = zeroconf.Zeroconf()
     self.browser = zeroconf.ServiceBrowser(self.zeroconf,
                                            Veyon.SERVICE_TYPE,
                                            VeyonListenForMasters(self))
+
+
+  def unsetup_master_browser(self):
+    if self.browser:
+      self.browser.cancel()
+      self.browser = None
+
+    self.zeroconf = None
 
 
   def add_masters(self, address_list, port):
@@ -740,24 +1265,47 @@ class VeyonSlave(PuavoWidget):
 
 
   def activate_pin_entry(self, widget=None):
+    self.show_pin_entry(None, None, None)
+
+
+  def show_pin_entry(self, requesting_host, requesting_user, suggested_pin):
     if self.pin_window:
       self.pin_window.present_with_time( int(time.time()) )
       return
 
-    pin_label = Gtk.Label(label='PIN for Veyon session:')
+    pin_label = Gtk.Label(label=_tr('PIN for Veyon session:'))
 
     self.pin_entry = Gtk.Entry(name='pin_entry')
     self.pin_entry.set_input_purpose(Gtk.InputPurpose.DIGITS)
     self.pin_entry.set_max_length(5)
     self.pin_entry.set_width_chars(5)
-    self.pin_entry.connect('changed', self.pin_entry_changed)
+
+    if suggested_pin:
+      self.pin_entry.set_text(suggested_pin)
+
+    self.pin_entry.connect('activate', self.pin_entry_changed)
+    self.pin_entry.connect('changed',  self.pin_entry_changed)
 
     pin_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
     pin_box.pack_start(pin_label, False, False, 0)
     pin_box.pack_start(self.pin_entry, False, False, 0)
 
+    request_msg_box = None
+    self.enter_label = None
+    if requesting_host and requesting_user:
+      request_msg_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
+                                name='pin_request_message')
+      msg = _tr('%s on host %s requests you to join to a Veyon session.') \
+               % (requesting_user, requesting_host)
+      request_msg = Gtk.Label(label=msg)
+      request_msg_box.pack_start(request_msg, False, False, 0)
+      self.enter_label = Gtk.Label(label='Check PIN.')
+      request_msg_box.pack_start(self.enter_label, False, False, 0)
+      self.pin_entry.set_sensitive(False)
+
     entry_and_cancel_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    cancel_button = Gtk.Button(label='Cancel', name='cancel_button')
+
+    cancel_button = Gtk.Button(label=_tr('Cancel'), name='cancel_button')
     cancel_button.set_can_focus(False)
     cancel_button.connect('clicked', self.close_pin_entry)
     button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -774,6 +1322,8 @@ class VeyonSlave(PuavoWidget):
     self.connection_label = Gtk.Label(label='', name='connection_label')
     self.connection_spinner = Gtk.Spinner(name='connection_spinner')
     window_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    if request_msg_box:
+      window_box.pack_start(request_msg_box, True, False, 0)
     window_box.pack_start(box_align, True, False, 0)
     window_box.pack_start(self.connection_label, False, False, 0)
     window_box.pack_start(self.connection_spinner, False, False, 0)
@@ -793,12 +1343,29 @@ class VeyonSlave(PuavoWidget):
     self.pin_window.add(window_box)
     self.pin_window.show_all()
 
-    self.pin_entry.grab_focus()
+    if self.enter_label:
+      GLib.timeout_add_seconds(3, self.enable_pin_box)
+    else:
+      self.pin_entry.grab_focus()
+
+
+  def enable_pin_box(self):
+    if self.enter_label and self.pin_entry:
+      self.enter_label.set_label(
+        _tr('Check PIN and press ENTER to accept external control.'))
+      self.enter_label.show()
+      self.pin_entry.set_sensitive(True)
+      self.pin_entry.grab_focus()
+
+    return False
 
 
   def close_pin_entry(self, widget=None, event=None):
     if self.pin_window:
       self.pin_window.destroy()
+      self.pin_window = None
+
+    return False
 
 
   def update_action_button(self):
@@ -811,13 +1378,17 @@ class VeyonSlave(PuavoWidget):
         self.action_button_handler \
           = self.action_button.connect('activate', self.close_session)
         GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
-        label = 'Close a Veyon session from %s using %s' \
+        label = _tr('Close a Veyon session that is controlled by %s on %s') \
                   % (master_conn.master_info['username'],
                      master_conn.master_info['hostname'])
         GLib.timeout_add(0,
                          lambda: self.action_button.get_child().set_text(label))
+        GLib.timeout_add(0,
+                         lambda: self.action_button.set_image(self.CLOSE_ICON))
         self.applet.set_icon('OPEN')
         return
+
+    self.check_and_maybe_enable_samehost_master()
 
     self.applet.set_icon('CLOSED')
 
@@ -825,10 +1396,12 @@ class VeyonSlave(PuavoWidget):
     self.action_button_handler \
       = self.action_button.connect('activate', self.activate_pin_entry)
 
-    label = 'Join a Veyon session'
+    label = _tr('Join a Veyon session')
     GLib.timeout_add(0, lambda: self.action_button.get_child().set_text(label))
+    GLib.timeout_add(0,
+                     lambda: self.action_button.set_image(self.JOIN_ICON))
 
-    if self.veyon_masters:
+    if self.enabled and self.veyon_masters:
       GLib.timeout_add(0, lambda: self.action_button.set_sensitive(True))
     else:
       GLib.timeout_add(0, lambda: self.action_button.set_sensitive(False))
@@ -836,12 +1409,14 @@ class VeyonSlave(PuavoWidget):
 
   def reenable_pin_entry(self):
     if not self.pin_window:
-      return
+      return False
 
     self.pin_entry.set_sensitive(True)
     self.pin_entry.grab_focus()
     self.connection_label.set_markup('')
     self.connection_spinner.stop()
+
+    return False
 
 
   def handle_wrong_pin(self):
@@ -853,7 +1428,7 @@ class VeyonSlave(PuavoWidget):
     if self.pin_window:
       logmsg(syslog.LOG_INFO, 'no matching session found for PIN')
       markup = '<span color="%s">%s</span>' \
-                 % ('red', 'no matching session found for PIN')
+                 % ('red', _tr('no matching session found for PIN'))
       self.connection_label.set_markup(markup)
       self.connection_spinner.stop()
       GLib.timeout_add_seconds(2, self.reenable_pin_entry)
@@ -866,16 +1441,36 @@ class VeyonSlave(PuavoWidget):
     entry.handler_unblock_by_func(self.pin_entry_changed)
     if len(new_text) == 5:
       self.pin_entry.set_sensitive(False)
-      markup = '<span color="%s">%s</span>' % ('orange', 'connecting...')
+      markup = '<span color="%s">%s</span>' % ('orange', _tr('connecting...'))
       self.connection_label.set_markup(markup)
       self.connection_spinner.start()
 
-      for master_conn in self.veyon_masters.values():
+      # Sending public key request, disable master functionality on this host.
+      # Enabling this will be checked by calls to
+      # check_and_maybe_enable_samehost_master().
+      if self.samehost_master:
+        self.samehost_master.disable()
+
+      for master_conn in list(self.veyon_masters.values()):
         master_conn.send_public_key_request(new_text)
       if self.public_key_request_timer_id:
         GLib.source_remove(self.public_key_request_timer_id)
       self.public_key_request_timer_id \
         = GLib.timeout_add_seconds(10, self.public_key_request_timeout)
+
+
+  def check_and_maybe_enable_samehost_master(self):
+    if not self.samehost_master:
+      return
+
+    for master_conn in self.veyon_masters.values():
+      if master_conn.in_session or master_conn.pin_sent:
+        return
+
+    # no open session or pending requests, enable master functionality
+    # on this host
+
+    self.samehost_master.enable()
 
 
   def public_key_request_timeout(self):
@@ -887,13 +1482,17 @@ class VeyonSlave(PuavoWidget):
                'master %s did not answer in time' % master_conn.address)
       master_conn.pin_sent = False
 
+    self.check_and_maybe_enable_samehost_master()
+
     self.public_key_request_timer_id = None
     if there_was_a_timeout and self.pin_window:
-      markup = '<span color="%s">%s</span>' % ('red', 'timeout')
+      markup = '<span color="%s">%s</span>' % ('red', _tr('timeout'))
       self.connection_label.set_markup(markup)
       self.connection_spinner.stop()
       self.pin_entry.set_sensitive(False)
       GLib.timeout_add_seconds(2, self.reenable_pin_entry)
+
+    return False
 
 
   def pin_window_closed(self, widget):
@@ -904,50 +1503,72 @@ class VeyonSlave(PuavoWidget):
     if self.pin_window:
       hostname = master_conn.master_info['hostname']
       username = master_conn.master_info['username']
-      msg = 'connecting to %s (%s)' % (hostname, username)
+      msg = _tr('connecting to %s (%s)') % (hostname, username)
       markup = '<span color="%s">%s</span>' % ('lightgreen', msg)
       self.connection_label.set_markup(markup)
 
     for m_conn in self.veyon_masters.values():
       m_conn.pin_sent = False
 
+    self.applet.in_session = True
+
     self.master_conn = master_conn
+
+    # It could be nice if we could somehow verify that hostname is what it
+    # claims to be, but we can not use host certificates or DNS in each
+    # setting where this application might be used.  But at least log
+    # the name, hostname and IP address, where the IP address is the only
+    # information we can actually trust.
+    msg = ('setting a new public key received from master {host}' \
+             ' sent by "{name}" ({address})') \
+            .format(host=self.master_conn.master_info['hostname'],
+                    name=self.master_conn.master_info['username'],
+                    address=self.master_conn.address)
+    logmsg(syslog.LOG_INFO, msg)
+
     self.dbus_iface.AddPublicKey(public_key,
                                  reply_handler=self.handle_add_public_key,
                                  error_handler=self.handle_add_public_key_error)
 
 
   def close_session(self, widget=None):
-    self.master_conn.close_session()
-    self.cleanup_config(self.handle_session_cleanup)
+    self.applet.in_session = False
+
+    if self.master_conn:
+      self.master_conn.close_session()
+      self.master_conn = None
+      self.cleanup_config(self.handle_session_cleanup)
 
 
   def handle_add_public_key(self):
-    logmsg(syslog.LOG_INFO,
-           'set a new public key received from master')
+    # this might have disappeared during dbus call
+    if not self.master_conn:
+      return
+
+    logmsg(syslog.LOG_INFO, 'a veyon session is now open')
+
     self.master_conn.send_to_master({ 'type': 'public_key_accepted' })
 
     self.update_action_button()
 
     self.applet.set_icon('OPEN')
-    self.notify('Veyon session opened',
-                'This host may now be viewed and controlled by %s from %s' \
-                  % (self.master_conn.master_info['username'],
-                     self.master_conn.master_info['hostname']))
+    desktop_notify(
+      _tr('Veyon session opened'),
+      _tr('This computer may now be viewed and controlled by %s from %s') \
+        % (self.master_conn.master_info['username'],
+           self.master_conn.master_info['hostname']))
 
     GLib.timeout_add_seconds(2, self.close_pin_entry)
 
 
   def handle_add_public_key_error(self, dbusexception):
-    # XXX response handling?
-    logmsg(syslog.LOG_ERR,
-           'error when trying to add a new public key %s' % dbusexception)
+    self.applet.fatal_dbus_error('client', dbusexception)
 
 
 class VeyonListenForMasters():
-  def __init__(self, slave):
+  def __init__(self, client):
     self.master_services = {}
-    self.slave = slave
+    self.client = client
 
 
   def check_if_ours(self, service_type, name):
@@ -964,14 +1585,14 @@ class VeyonListenForMasters():
         str(socket.inet_ntop(socket.AF_INET, a)) for a in service.addresses
       ]
       self.master_services[name] = address_list
-      self.slave.add_masters(address_list, service.port)
+      self.client.add_masters(address_list, service.port)
 
 
   def remove_service(self, zeroconf, service_type, name):
     if self.check_if_ours(service_type, name):
       if name in self.master_services:
         for address in self.master_services[name]:
-          self.slave.remove_master(address)
+          self.client.remove_master(address)
 
 
 class PuavoVeyonApplet:
@@ -982,8 +1603,9 @@ class PuavoVeyonApplet:
                              'software-update-urgent-symbolic.svg')
 
   def __init__(self):
-    self.exit_done = False
-    self.slave     = None
+    self.client     = None
+    self.exit_done  = False
+    self.in_session = False
 
     # XXX the icon should be something else and maybe puavo-conf configurable?
     self.indicator \
@@ -998,29 +1620,51 @@ class PuavoVeyonApplet:
 
     Notify.init('puavo-veyon-applet')
 
-    try:
-      veyon_role = puavoconf_get('puavo.veyon.role')
-    except Exception as e:
-      logmsg(syslog.LOG_ERR,
-             'puavo.veyon.role could not be determined: %s' % e)
-      sys.exit(1)
-
-    if veyon_role == '':
-      logmsg(syslog.LOG_NOTICE, 'no veyon role, exiting')
-      sys.exit(0)
-    elif veyon_role != 'master' and veyon_role != 'slave':
-      logmsg(syslog.LOG_ERR, 'unknown veyon role: %s' % veyon_role)
-      sys.exit(1)
-
-    logmsg(syslog.LOG_NOTICE, 'operating in veyon %s role' % veyon_role)
-
     self.menu = Gtk.Menu()
 
-    if veyon_role == 'master':
-      VeyonMaster(self)
-    else:
-      self.slave = VeyonSlave(self)
+    # Try to activate both roles and see if we can do that
+    # (puavo-veyon might respond we do or do not have access to either).
+    try:
+      self.client = VeyonClient(self)
+      logmsg(syslog.LOG_NOTICE, 'client role activated')
+    except VeyonRoleDenied as e:
+      self.client = None
 
+    try:
+      self.master = VeyonMaster(self, self.client)
+      logmsg(syslog.LOG_NOTICE, 'master role activated')
+      if self.client:
+        self.client.connect_to_samehost_master(self.master)
+    except VeyonRoleDenied as e:
+      self.master = None
+
+    if not self.client and not self.master:
+      logmsg(syslog.LOG_NOTICE, 'no master or client role active, closing')
+      sys.exit(0)
+
+    self.ip_address_watcher = IPAddressWatcher(self.client, self.master)
+
+    # Call cleanup_config() either through client or master and show menu
+    # only after we are ready.
+    self.cleanup_config(self.start)
+
+
+  def fatal_dbus_error(self, mode, dbusexception):
+    desktop_notify(_tr('Fatal error on Puavo Veyon Applet'),
+      _tr('Unexpected dbus error on Puavo Veyon Applet.') % mode)
+    logmsg(syslog.LOG_ERR, 'dbus exception in %s mode: %s' \
+                             % (mode, str(dbusexception)))
+    sys.exit(1)
+
+
+  def cleanup_config(self, cb):
+    if self.client:
+      self.client.cleanup_config(cb)
+    else:
+      self.master.cleanup_config(cb)
+
+
+  def start(self):
     self.menu.show_all()
     self.indicator.set_menu(self.menu)
 
@@ -1037,7 +1681,8 @@ class PuavoVeyonApplet:
 
 
   def quit(self):
-    logmsg(syslog.LOG_INFO, 'veyon slave config cleanup done at exit, quitting')
+    logmsg(syslog.LOG_INFO,
+           'veyon config cleanup done at exit, quitting')
     Gtk.main_quit()
 
 
@@ -1048,10 +1693,7 @@ class PuavoVeyonApplet:
   def exit(self):
     if not self.exit_done:
       self.exit_done = True
-      if self.slave:
-        self.slave.cleanup_config(self.quit)
-      else:
-        Gtk.main_quit()
+      self.cleanup_config(self.quit)
 
 
 exitstatus = 0

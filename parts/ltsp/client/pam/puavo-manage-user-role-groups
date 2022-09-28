@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -eu
+
+if [ -z "$PAM_USER" ]; then
+  echo 'PAM_USER is not set' >&2
+  exit 1
+fi
+
+if ! current_user_groups=$(id -Gn "$PAM_USER"); then
+  echo 'could not list user groups' >&2
+  exit 1
+fi
+
+puavodesktop_path="/var/lib/puavo-desktop/users/${PAM_USER}/puavo_session.json"
+
+user_type=$(jq -r .user.user_type "$puavodesktop_path" 2>/dev/null) || true
+
+rolegroup_name=''
+case "$user_type" in
+  admin)   rolegroup_name='puavo-role-admin'   ;;
+  student) rolegroup_name='puavo-role-student' ;;
+  teacher) rolegroup_name='puavo-role-teacher' ;;
+  *)                                           ;;
+esac
+
+user_group_list=$(
+  awk -v current_user_groups_string="$current_user_groups" \
+      -v rolegroup_name="$rolegroup_name" '
+    BEGIN {
+      groupcount = 0
+      split(current_user_groups_string, current_user_groups)
+      for (i in current_user_groups) {
+        if (current_user_groups[i] !~ /^puavo-role-/) {
+          groups[++groupcount] = current_user_groups[i]
+        }
+      }
+      if (rolegroup_name != "") {
+        groups[++groupcount] = rolegroup_name
+      }
+      for (i in groups) {
+        if (i < groupcount) {
+          printf "%s,", groups[i]
+        } else {
+          printf "%s", groups[i]
+        }
+      }
+    }
+  ' /dev/null)
+
+usermod -G "$user_group_list" "$PAM_USER"
+
+# we need to tell dbus-daemon that user groups might have changed
+dbus-send --print-reply --system --type=method_call \
+          --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig

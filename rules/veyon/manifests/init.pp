@@ -5,15 +5,17 @@ class veyon {
   include ::puavo_pkg::packages
 
   file {
-    '/etc/dbus-1/system.d/org.puavo.Veyon.conf':
-      require => Package['dbus'],
-      source  => 'puppet:///modules/veyon/org.puavo.Veyon.conf';
-
     '/etc/systemd/system/multi-user.target.wants/puavo-veyon.service':
       ensure  => 'link',
       require => [ File['/lib/systemd/system/puavo-veyon.service']
                  , Package['systemd'] ],
       target  => '/lib/systemd/system/puavo-veyon.service';
+
+    '/etc/systemd/system/veyon.service.d':
+      ensure => directory;
+
+    '/etc/systemd/system/veyon.service.d/override.conf':
+      source  => 'puppet:///modules/veyon/veyon_override.conf';
 
     '/lib/systemd/system/puavo-veyon.service':
       require => [ File['/usr/local/sbin/puavo-veyon']
@@ -28,6 +30,11 @@ class veyon {
   ::puavo_conf::definition {
     'puavo-veyon.json':
       source => 'puppet:///modules/veyon/puavo-veyon.json';
+  }
+
+  ::puavo_conf::script {
+    'setup_veyon':
+      source => 'puppet:///modules/veyon/setup_veyon';
   }
 
   Package <|

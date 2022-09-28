@@ -1,3 +1,7 @@
+# These are reserved UIDs in Puavo OS.
+# See GIDs for reserved group IDs.
+# Note that group IDs 977, 978 and 979 are also reserved.
+
 puavodesktop            (dynamically allocated)
 puavo-wlancontroller    (dynamically allocated)
 puavo-update            991
@@ -5,7 +9,6 @@ puavo-ers               992
 papercut                993
 puavo                   994
 puavo-pkg               995
-gcp                     996
 puavo-usb-factory       997
 puavo-infotv            998
 guest                   999

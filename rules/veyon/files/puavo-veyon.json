@@ -2,7 +2,7 @@
   "puavo.service.puavo-veyon.enabled" : {
     "default": "false"
   },
-  "puavo.veyon.role" : {
-    "default": ""
+  "puavo.veyon.role_rules" : {
+    "default": "%admin,%teacher:master :client"
   }
 }

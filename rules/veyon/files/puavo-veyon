@@ -63,9 +63,6 @@ VEYON_BASE_CONFIG = {
       'LocationNameAttribute': '',
       'UserLoginNameAttribute': ''
   },
-  'Logging': {
-      'LogLevel': '5'   # XXX remove this later
-  },
   'Master': {
       'AllowAddingHiddenLocations': false,
       'AutoOpenComputerSelectPanel': true,
@@ -96,6 +93,19 @@ VEYON_BASE_CONFIG = {
 HOSTNAME   = Socket.gethostname()
 IP_ADDRESS = IPSocket.getaddress(HOSTNAME)
 
+$last_veyon_restart = Time.at(0)
+
+def cleanup_config()
+  begin
+    delete_puavo_veyon_key()
+    update_veyon_config(VEYON_BASE_CONFIG)
+  rescue StandardError => e
+    Syslog.log(Syslog::LOG_ERR,
+               'Error in ClenaupConfig() method: %s', e.message)
+    raise e
+  end
+end
+
 def delete_puavo_veyon_key()
   begin
     File.unlink(KEY_CREATED_PATH)
@@ -108,6 +118,11 @@ def delete_puavo_veyon_key()
 end
 
 def update_veyon_config(config)
+  # prevent too frequent veyon service restarts
+  if Time.now < ($last_veyon_restart + 1) then
+    sleep(1)
+  end
+
   Tempfile.create('veyon_config') do |tmpfile|
     tmpfile.write(config.to_json)
     tmpfile.close
@@ -117,13 +132,20 @@ def update_veyon_config(config)
       raise 'error when importing new veyon configuration'
     end
 
+    $last_veyon_restart = Time.now
     system('service', 'veyon', 'restart') \
       or raise 'error in restarting veyon after configuration import'
   end
 end
 
-class VeyonSlave < DBus::Object
-  dbus_interface 'org.puavo.Veyon.slave' do
+class PuavoVeyonServer < DBus::Object
+  dbus_interface 'org.puavo.Veyon.client' do
+    dbus_method :CheckAccess, '' do end
+
+    # If this process was serving in a master role previously,
+    # both of these methods destroy that configuration, which is good
+    # (both delete_puavo_veyon_key() and update_veyon_config() are called).
+
     dbus_method :AddPublicKey, 'in public_key:s' do |public_key|
       begin
         # here we do not case about errors,
@@ -145,39 +167,29 @@ class VeyonSlave < DBus::Object
         update_veyon_config(VEYON_BASE_CONFIG)
       rescue StandardError => e
         Syslog.log(Syslog::LOG_ERR,
-                   'Error in org.puavo.Veyon.slave AddPublicKey method: %s',
+                   'Error in org.puavo.Veyon.client AddPublicKey method: %s',
                    e.message)
         raise e
       end
     end
 
     dbus_method :CleanupConfig, '' do
-      begin
-        delete_puavo_veyon_key()
-        update_veyon_config(VEYON_BASE_CONFIG)
-      rescue StandardError => e
-        Syslog.log(Syslog::LOG_ERR,
-                   'Error in org.puavo.Veyon.slave ClenaupConfig method: %s',
-                   e.message)
-        raise e
-      end
+      cleanup_config()
     end
   end
-end
 
-class VeyonMaster < DBus::Object
   dbus_interface 'org.puavo.Veyon.master' do
-    dbus_method :GetPublicKey, 'out public_key:s' do
+    dbus_method :CheckAccess, '' do end
+
+    # If this process was serving in a client role previously,
+    # NewSession() sets up a new master role by creating new keys
+    # and removes the client Veyon configuration.  UpdateConfig()
+    # keeps the session/keys and updates host information in that session.
+
+    dbus_method :NewSession, 'out public_key:s' do
       begin
         private_key_path = '/etc/veyon/keys/private/puavo_veyon_key/key'
         public_key_path  = '/etc/veyon/keys/public/puavo_veyon_key/key'
-
-        begin
-          if File.exists?(KEY_CREATED_PATH) then
-            return IO.read(public_key_path)
-          end
-        rescue Errno::ENOENT => e
-        end
 
         # just to make sure (in case only either of these exist)
         delete_puavo_veyon_key()
@@ -192,6 +204,8 @@ class VeyonMaster < DBus::Object
         FileUtils.chmod(0640, private_key_path)
         FileUtils.touch(KEY_CREATED_PATH)
 
+        update_veyon_config(VEYON_BASE_CONFIG)
+
         return IO.read(public_key_path)
       rescue StandardError => e
         Syslog.log(Syslog::LOG_ERR,
@@ -202,10 +216,6 @@ class VeyonMaster < DBus::Object
     end
 
     dbus_method :UpdateConfig, 'in hosts_json:s' do |hosts_json|
-      # This method must not be called too frequently, because this restarts
-      # veyon service and that can be done only 10 times in a minute
-      # before systemd interferes.  It is caller's responsibility
-      # to know this.
       begin
         hostlist = JSON.parse(hosts_json)
 
@@ -260,6 +270,10 @@ class VeyonMaster < DBus::Object
         raise e
       end
     end
+
+    dbus_method :CleanupConfig, '' do
+      cleanup_config()
+    end
   end
 end
 
@@ -271,21 +285,9 @@ begin
 
   update_veyon_config(VEYON_BASE_CONFIG)
 
-  puavoconf = Puavo::Conf.new
-  veyon_role = puavoconf.get('puavo.veyon.role')
-  puavoconf.close
-
   bus = DBus::SystemBus.instance
   service = bus.request_service('org.puavo.Veyon')
-
-  case veyon_role
-    when 'master'
-      service.export( VeyonMaster.new('/master') )
-    when 'slave'
-      service.export( VeyonSlave.new('/slave') )
-    else
-      exit(0)
-  end
+  service.export( PuavoVeyonServer.new('/server') )
 
   # ...and start it
   mainloop = DBus::Main.new

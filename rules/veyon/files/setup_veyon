@@ -1,0 +1,114 @@
+#!/bin/sh
+
+set -eu
+
+role_rules=$(puavo-conf puavo.veyon.role_rules)
+
+busconfig_rules=$(
+  awk -v role_rules_string="$role_rules" '
+    function dbus_rule(allow_or_deny, send_interface) {
+      if (send_interface == "") { return }
+      printf("    <%s send_destination=\"org.puavo.Veyon\"\n", allow_or_deny)
+      printf("           send_interface=\"%s\"/>\n", send_interface)
+    }
+
+    function dbus_interface(veyon_role) {
+      switch (veyon_role) {
+        case "client": return "org.puavo.Veyon.client"
+        case "master": return "org.puavo.Veyon.master"
+      }
+    }
+
+    function dbus_allow(veyon_role) {
+      dbus_rule("allow", dbus_interface(veyon_role))
+    }
+
+    function dbus_deny(veyon_role) {
+      dbus_rule("deny", dbus_interface(veyon_role))
+    }
+
+    function dbus_allow_by_group(group, veyon_roles) {
+      printf("  <policy group=\"%s\">\n", group)
+      if ("master" in veyon_roles) {
+        dbus_allow("master")
+      } else {
+        dbus_deny("master")
+      }
+      if ("client" in veyon_roles) {
+        dbus_allow("client")
+      } else {
+        dbus_deny("client")
+      }
+      printf("  </policy>\n")
+    }
+
+    BEGIN {
+      allow_master_by_default = 0
+      allow_client_by_default = 0
+
+      split(role_rules_string, rules)
+      for (rule_i in rules) {
+        split(rules[rule_i], ruleparts, ":")
+        groups_string = ruleparts[1]
+        permissions_string = ruleparts[2]
+        if (permissions_string == "") {
+          continue
+        }
+
+        split(permissions_string, permissions_list, "+")
+        split("", permissions)
+        for (perm_i in permissions_list) {
+          permission = permissions_list[perm_i]
+          permissions[ permission ] = 1
+
+          if (groups_string == "") {
+            if (permission == "client") {
+              allow_client_by_default = 1
+            }
+            if (permission == "master") {
+              allow_master_by_default = 1
+            }
+            continue
+          }
+        }
+
+        split(groups_string, groups, ",")
+        for (group_i in groups) {
+          group = groups[group_i]
+          if (match(group, /^%(.*)$/, group_match)) {
+            group = "puavo-role-" group_match[1]
+          }
+          dbus_allow_by_group(group, permissions)
+        }
+      }
+
+      printf("  <policy context=\"default\">\n")
+      printf("    <allow send_destination=\"org.puavo.Veyon\"/>\n")
+      if (allow_master_by_default) {
+        dbus_allow("master")
+      } else {
+        dbus_deny("master")
+      }
+      if (allow_client_by_default) {
+        dbus_allow("client")
+      } else {
+        dbus_deny("client")
+      }
+      printf("  </policy>\n")
+    }
+  ' /dev/null)
+
+cat <<EOF > /etc/dbus-1/system.d/org.puavo.Veyon.conf.tmp
+<!DOCTYPE busconfig PUBLIC
+	  "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+	  "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <policy user="root">
+    <allow own="org.puavo.Veyon"/>
+    <allow send_destination="org.puavo.Veyon"/>
+  </policy>
+${busconfig_rules}
+</busconfig>
+EOF
+mv /etc/dbus-1/system.d/org.puavo.Veyon.conf.tmp \
+   /etc/dbus-1/system.d/org.puavo.Veyon.conf
