@@ -534,7 +534,6 @@ class VeyonMaster(PuavoWidget):
     self.pin = None
 
     self.change_pin_button.set_sensitive(False)
-    self.client_count_label.set_sensitive(False)
     self.open_master_button.set_sensitive(False)
 
     for client_conn in list(self.veyon_clients.values()):
