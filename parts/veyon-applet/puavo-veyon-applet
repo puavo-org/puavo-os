@@ -666,7 +666,7 @@ class VeyonMaster(PuavoWidget):
       button.connect('clicked', self.invite_to_session)
       choicebox.pack_start(button, False, False, 0)
 
-    cancel_button = Gtk.Button(label='Cancel', name='invite_cancel')
+    cancel_button = Gtk.Button(label=_tr('Cancel'), name='invite_cancel')
     cancel_button.connect('clicked', self.close_invite_to_session)
     cancel_button_align = Gtk.Alignment(xalign=1.0, yalign=0, xscale=0,
                                         yscale=0)
