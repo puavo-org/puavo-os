@@ -284,7 +284,7 @@ class VeyonClientConnection(PuavoWidget):
 
         if self.client_user:
           self.master.connection_log.new_session(
-            _tr('%s on %s has joined session') \
+            _tr('%s on %s has joined session.') \
               % (self.client_user, self.client_hostname))
 
       elif message['type'] == 'close_session':
@@ -296,7 +296,7 @@ class VeyonClientConnection(PuavoWidget):
 
           if self.client_user:
             self.master.connection_log.disconnected_session(
-              _tr('%s on %s disconnected from session') \
+              _tr('%s on %s disconnected from session.') \
                 % (self.client_user, self.client_hostname))
 
       else:
@@ -342,7 +342,7 @@ class VeyonClientConnection(PuavoWidget):
 
     if self.master.applet.in_session and self.client_user:
       self.master.connection_log.disconnected_session(
-        _tr('%s on %s disconnected from session') \
+        _tr('%s on %s disconnected from session.') \
           % (self.client_user, self.client_hostname))
 
 
@@ -1553,7 +1553,7 @@ class VeyonClient(PuavoWidget):
     self.applet.set_icon('OPEN')
     desktop_notify(
       _tr('Veyon session opened'),
-      _tr('This computer may now be viewed and controlled by %s from %s') \
+      _tr('This computer may now be viewed and controlled by %s from %s.') \
         % (self.master_conn.master_info['username'],
            self.master_conn.master_info['hostname']))
 
