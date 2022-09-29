@@ -35,6 +35,8 @@ _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
+CLIENT_PROTOCOL_VERSION = 1
+
 CSS = b"""
 #cancel_button {
   background-color: #333333;
@@ -241,6 +243,16 @@ class VeyonClientConnection(PuavoWidget):
         if type(message['user']) != str:
           raise Exception('user is not a string')
 
+        if not 'version' in message:
+          raise Exception('no protocol version in new_client message')
+        if type(message['version']) != int:
+          raise Exception('protocol version is not an integer')
+
+        if message['version'] < CLIENT_PROTOCOL_VERSION:
+          raise Exception(
+            'unsupported client protocol version: %d (%d is required)' \
+              % (message['version'], CLIENT_PROTOCOL_VERSION))
+
         self.client_groups   = message['groups']
         self.client_hostname = message['hostname']
         self.client_user     = message['user']
@@ -300,7 +312,6 @@ class VeyonClientConnection(PuavoWidget):
                 % (self.client_user, self.client_hostname))
 
       else:
-        # XXX should we define a protocol version and pass it on at some point?
         logmsg(syslog.LOG_INFO,
                'client %s sent message %s that we do not understand' \
                  % (self.client_hostname, message['type']))
@@ -914,6 +925,7 @@ class VeyonMasterConnection():
       'hostname': self.client.hostname,
       'user':     self.client.username,
       'type':     'new_client',
+      'version':  CLIENT_PROTOCOL_VERSION,
     }
 
     logmsg(syslog.LOG_INFO, 'sending message %s to master' % message)
