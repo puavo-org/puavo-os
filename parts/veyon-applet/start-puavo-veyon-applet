@@ -6,7 +6,9 @@ set -eu
 # hosts where it is not going to be used we do not need to start
 # the python interpreter (it does take a bit more of CPU time than this).
 if [ "$(puavo-conf puavo.service.puavo-veyon.enabled)" = 'true' ]; then
-  exec puavo-veyon-applet "$@"
+  # Redirect outputs to /dev/null so messages do not end up twice in syslog.
+  # puavo-veyon-applet outputs to both stderr and syslog.
+  exec puavo-veyon-applet "$@" > /dev/null 2>&1
 fi
 
 exit 0
