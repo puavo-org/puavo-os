@@ -1651,7 +1651,7 @@ class PuavoVeyonApplet:
 
   def fatal_dbus_error(self, mode, dbusexception):
     desktop_notify(_tr('Fatal error on Puavo Veyon Applet'),
-      _tr('Unexpected dbus error on Puavo Veyon Applet.') % mode)
+                   _tr('Unexpected dbus error on Puavo Veyon Applet.'))
     logmsg(syslog.LOG_ERR, 'dbus exception in %s mode: %s' \
                              % (mode, str(dbusexception)))
     sys.exit(1)
