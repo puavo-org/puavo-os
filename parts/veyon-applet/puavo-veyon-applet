@@ -839,7 +839,7 @@ class VeyonMaster(PuavoWidget):
 
 class VeyonMasterLog():
   def __init__(self):
-    self.dialog = Gtk.Dialog(title=_tr('Connection log'),
+    self.dialog = Gtk.Dialog(title=_tr('Puavo Veyon connection log'),
                              parent=None,
                              modal=True,
                              destroy_with_parent=True)
