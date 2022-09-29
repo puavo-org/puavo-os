@@ -340,7 +340,7 @@ class VeyonClientConnection(PuavoWidget):
     self.client_socket = None
     GLib.source_remove(self.client_socket_watch)
 
-    if self.client_user:
+    if self.master.applet.in_session and self.client_user:
       self.master.connection_log.disconnected_session(
         _tr('%s on %s disconnected from session') \
           % (self.client_user, self.client_hostname))
