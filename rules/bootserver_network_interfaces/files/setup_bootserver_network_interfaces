@@ -3,7 +3,7 @@
 set -eu
 
 get_interfaces() {
-  sed 's/^.*NAME="//; s/"$//' /state/etc/udev/rules.d/70-persistent-net.rules
+  sed '/^#/d; s/^.*NAME="//; s/"$//' /state/etc/udev/rules.d/70-persistent-net.rules
 }
 
 setup_inet0() {
