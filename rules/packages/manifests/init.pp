@@ -776,9 +776,9 @@ class packages {
 		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
-    '5.10.0-17-amd64':
+    '5.10.0-18-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-5.10.0-17-amd64';
+      package_name => 'linux-image-5.10.0-18-amd64';
 
     '5.18.0-0.deb11.4-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module
