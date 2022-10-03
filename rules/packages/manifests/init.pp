@@ -557,6 +557,7 @@ class packages {
     , 'fonts-cantarell'
     , 'fonts-dejavu-core'
     , 'fonts-freefont-ttf'
+    , 'fonts-noto-color-emoji'                  # Chrome emoji support
     , 'foomatic-db-compressed-ppds'
     , 'gcr'
     , 'gedit'
