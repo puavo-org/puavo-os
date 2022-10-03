@@ -8,140 +8,145 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"PO-Revision-Date: 2022-09-28 13:39+0300\n"
-"X-Generator: Lokalize 2.0\n"
+"PO-Revision-Date: 2022-10-03 16:54+0300\n"
+"X-Generator: Lokalize 20.12.0\n"
 
 #: puavo-veyon-applet:287
 #, python-format
 msgid "%s on %s has joined session."
-msgstr "%s on %s has joined session."
+msgstr "%s auf %s hat die Sitzung angemeldet."
 
 #: puavo-veyon-applet:299 puavo-veyon-applet:345
 #, python-format
 msgid "%s on %s disconnected from session."
-msgstr ""
+msgstr "%s auf %s hat die Sitzung abgemeldet."
 
 #: puavo-veyon-applet:444 puavo-veyon-applet:798
 #, python-format
 msgid "Participants: %d (see log)"
-msgstr ""
+msgstr "Teilnehmer:innen: %d (Protokoll öffnen)"
 
 #: puavo-veyon-applet:457
 msgid "Change PIN"
-msgstr ""
+msgstr "PIN ändern"
 
 #: puavo-veyon-applet:464
 msgid "Open control panel"
-msgstr ""
+msgstr "Veyon Master öffnen"
 
 #: puavo-veyon-applet:472
 msgid "Invite to session by group"
-msgstr ""
+msgstr "Eine Gruppe zur Veyon-Sitzung einladen"
 
 #: puavo-veyon-applet:480 puavo-veyon-applet:545
 msgid "Setup a Veyon session"
-msgstr ""
+msgstr "Veyon-Sitzung erstellen"
 
 #: puavo-veyon-applet:573
 #, python-format
 msgid "PIN: %s"
-msgstr ""
+msgstr "PIN: %s"
 
 #: puavo-veyon-applet:589
 msgid "Close a Veyon session"
-msgstr ""
+msgstr "Veyon-Sitzung beenden"
 
 #: puavo-veyon-applet:659
 msgid "Choose a group to invite to a session:"
-msgstr ""
+msgstr "Lade die folgende Gruppe in diese Sitzung ein:"
 
 #: puavo-veyon-applet:706
 #, python-format
 msgid "Inviting \"%s\" to join a session."
-msgstr ""
+msgstr "\"%s\" wird zur Veyon-Sitzung eingeladen"
 
 #: puavo-veyon-applet:841
 msgid "Puavo Veyon connection log"
-msgstr ""
+msgstr "Puavo Veyon Verbindungsprotokoll"
 
 #: puavo-veyon-applet:881
 msgid "Disconnected participant"
-msgstr ""
+msgstr "Abgemeldete Teilnehmer:in"
 
 #: puavo-veyon-applet:1013
 msgid "Duplicate session error"
-msgstr ""
+msgstr "Duplikatsitzungfehler"
 
 #: puavo-veyon-applet:1014
 msgid ""
 "Closing connections because of a duplicate session, are there two masters "
 "with the same PIN?"
 msgstr ""
+"Ein Verbindungsausfall wegen einer doppelten Sitzung. Gibt es zwei Masters"
+" mit der gleichen PIN?"
 
 #: puavo-veyon-applet:1107 puavo-veyon-applet:1397
 msgid "Join a Veyon session"
-msgstr ""
+msgstr "Ein Veyon-Sitzung "
 
 #: puavo-veyon-applet:1199
 msgid "Veyon session closed"
-msgstr ""
+msgstr "Die Veyon-Sitzung wurde beendet"
 
 #: puavo-veyon-applet:1275
 msgid "PIN for Veyon session:"
-msgstr ""
+msgstr "PIN für die Veyon-Sitzung:"
 
 #: puavo-veyon-applet:1297
 #, python-format
 msgid "%s on host %s requests you to join to a Veyon session."
-msgstr ""
+msgstr "%s auf das Gerät %s bittet um diese Sitzung verbinden zu können."
 
 #: puavo-veyon-applet:1307
 msgid "Cancel"
-msgstr ""
+msgstr "Abbrechen"
 
 #: puavo-veyon-applet:1353
 msgid "Check PIN and press ENTER to accept external control."
 msgstr ""
+"Bitte die PIN kontrollieren und die Eingabetaste drücken, zu externes"
+" Steuerung zu zustimmen."
 
 #: puavo-veyon-applet:1379
 #, python-format
 msgid "Close a Veyon session that is controlled by %s on %s"
-msgstr ""
+msgstr "Verlasse die von %s auf %s gesteuerte Veyon-SItzung."
 
 #: puavo-veyon-applet:1429
 msgid "no matching session found for PIN"
-msgstr ""
+msgstr "keine passende Sitzungen für die PIN gefunden"
 
 #: puavo-veyon-applet:1442
 msgid "connecting..."
-msgstr ""
+msgstr "verbindet..."
 
 #: puavo-veyon-applet:1487
 msgid "timeout"
-msgstr ""
+msgstr "Timeout"
 
 #: puavo-veyon-applet:1504
 #, python-format
 msgid "connecting to %s (%s)"
-msgstr ""
+msgstr "verbindet mit %s (%s)"
 
 #: puavo-veyon-applet:1554
 msgid "Veyon session opened"
-msgstr ""
+msgstr "Veyon-Sitzung geöffnet"
 
 #: puavo-veyon-applet:1555
 #, python-format
 msgid "This computer may now be viewed and controlled by %s from %s."
 msgstr ""
+"Dieser Computer kann jetzt von %s auf %s beobachtet und gesteuert werden."
 
 #: puavo-veyon-applet:1651
 msgid "Fatal error on Puavo Veyon Applet"
-msgstr ""
+msgstr "Ein schwerer Fehler in dem Puavo Veyon Applet"
 
 #: puavo-veyon-applet:1652
 #, python-format
 msgid "Unexpected dbus error on Puavo Veyon Applet."
-msgstr ""
+msgstr "Unerwartete DBus-Fehler in Puavo Veyon Applet."
 
 msgid "Check PIN."
-msgstr ""
+msgstr "Bitte PIN prüfen."
