@@ -4,6 +4,7 @@ set -eu
 
 chromium_config=$(puavo-conf puavo.www.chromium.config)
 chromium_extensions=$(puavo-conf puavo.www.chromium.extensions)
+chromium_pwa_list=$(puavo-conf puavo.www.chromium.pwa.forcelist)
 
 chromium_dir="/etc/chromium/policies/managed"
 chrome_dir="/etc/opt/chrome/policies/managed"
@@ -28,4 +29,20 @@ if [ -n "$chromium_extensions" ]; then
 else
   rm -f "${chromium_dir}/extension_install_forcelist.json" \
         "${chrome_dir}/extension_install_forcelist.json"
+fi
+
+if [ -n "$chromium_pwa_list" ]; then
+  jq --null-input --arg pwa_list "$chromium_pwa_list" '
+    .WebAppInstallForceList =
+      ($pwa_list | split(" ")
+        | map({ url: . } | .default_launch_container = "window"))
+  ' > "${chromium_dir}/puavo-pwa-forcelist.json.tmp"
+  mv "${chromium_dir}/puavo-pwa-forcelist.json.tmp" \
+     "${chromium_dir}/puavo-pwa-forcelist.json"
+  ln -fns "${chromium_dir}/puavo-pwa-forcelist.json" \
+          "${chrome_dir}/puavo-pwa-forcelist.json"
+
+else
+  rm -f "${chromium_dir}/puavo-pwa-forcelist.json" \
+        "${chrome_dir}/puavo-pwa-forcelist.json"
 fi
