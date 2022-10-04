@@ -11,15 +11,18 @@ INSTALL_DATA = $(INSTALL) -m 644
 .PHONY: all
 all: po/de/puavo-veyon-applet.mo po/fi/puavo-veyon-applet.mo
 
-puavo-veyon-applet.pot: puavo-veyon-applet
+po/puavo-veyon-applet.pot: puavo-veyon-applet
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
 
-%.po: po/puavo-desktop-applet.pot
+%.po: po/puavo-veyon-applet.pot
 	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
 	touch $@
 
 %.mo: %.po
 	msgfmt $< --output-file $@
+
+.PHONY: i18nupdate
+i18nupdate: po/puavo-veyon-applet.pot po/de/puavo-veyon-applet.po po/fi/puavo-veyon-applet.po
 
 .PHONY: installdirs
 installdirs:
@@ -41,4 +44,4 @@ install: installdirs
 
 .PHONY: clean
 clean:
-	rm -f po/*/*.mo
+	rm -f po/*/*.mo po/*.pot

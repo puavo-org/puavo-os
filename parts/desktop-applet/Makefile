@@ -11,7 +11,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 .PHONY: all
 all: po/de/puavo-desktop-applet.mo po/fi/puavo-desktop-applet.mo po/sv/puavo-desktop-applet.mo
 
-puavo-desktop-applet.pot: puavo-desktop-applet
+po/puavo-desktop-applet.pot: puavo-desktop-applet
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
 
 %.po: po/puavo-desktop-applet.pot
@@ -20,6 +20,9 @@ puavo-desktop-applet.pot: puavo-desktop-applet
 
 %.mo: %.po
 	msgfmt $< --output-file $@
+
+.PHONY: i18nupdate
+i18nupdate: po/puavo-desktop-applet.pot po/de/puavo-desktop-applet.po po/fi/puavo-desktop-applet.po po/sv/puavo-desktop-applet.po
 
 .PHONY: installdirs
 installdirs:
