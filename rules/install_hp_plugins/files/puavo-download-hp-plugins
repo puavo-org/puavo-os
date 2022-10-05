@@ -8,27 +8,59 @@
 # seconds, that is probably too short).
 set timeout 120
 
-spawn env LANG=C hp-plugin -i
+set help_txt [exec hp-plugin -h]
 
-expect {
-  -ex "Enter option (d=download*, p=specify path, q=quit) ? " {
-    send "\n"
-  }
-  -ex "Do you wish to download and re-install the plug-in? (y=yes*, n=no, q=quit) ? " {
-    send "q\n"
-    expect
-    exit 0
+set hplip_version ""
+foreach line [split $help_txt "\n"] {
+  if {![regexp {HP Linux Imaging and Printing System \(ver. (.*?)\)} \
+               $line _ hplip_version]} {
+    continue
   }
 }
 
-expect {
-  -ex "Do you still want to install the plug-in? (y=yes, n=no*, q=quit) ? " {
-    # unfortunately very frequently there is a
-    # "error: Unable to recieve key from keyserver" message from hp-plugin
-    send "y\n"
-    exp_continue
-  }
+if {$hplip_version eq ""} {
+  error {could not determine hplip-version from "hp-plugin -h"}
+}
 
+set tmpdir [exec mktemp -d /tmp/hp-plugin.XXXXXX]
+
+set base_url    "https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins"
+set run_url     "${base_url}/hplip-${hplip_version}-plugin.run"
+set run_asc_url "${base_url}/hplip-${hplip_version}-plugin.run.asc"
+
+set run_path     "${tmpdir}/hplip-${hplip_version}-plugin.run"
+set run_asc_path "${tmpdir}/hplip-${hplip_version}-plugin.run.asc"
+
+exec wget -q -O $run_path     $run_url
+exec wget -q -O $run_asc_path $run_asc_url
+
+set run_checksum     [lindex [exec sha256sum $run_path]     0]
+set run_asc_checksum [lindex [exec sha256sum $run_asc_path] 0]
+
+switch -- $hplip_version {
+  "3.18.12" {
+    set expected_run_checksum     84a0dc385083ffc9acd66d3ab9a22a9a0943b9f6ed7db8e406682f6bc7f642a6
+    set expected_run_asc_checksum 97b637f704f02579e012bc205d310ca1bb8602a21db181ed50144b3c83723910
+  }
+  "3.21.2" {
+    set expected_run_checksum     363a467925ecca8a0856821ea74a2ae74445f654313f59427289452032d6aef3
+    set expected_run_asc_checksum c89a33e30da0a0786b0ea87931cda6048567fbf7ebeb8b3d57fedec28a2fc83f
+  }
+  default {
+    error "no checksum found for version $hplip_version"
+  }
+}
+
+if {$run_checksum ne $expected_run_checksum} {
+  error "$run_url checksum did not match the expected value"
+}
+if {$run_asc_checksum ne $expected_run_asc_checksum} {
+  error "$run_asc_url checksum did not match the expected value"
+}
+
+spawn env LANG=C hp-plugin -i -p $run_path
+
+expect {
   -ex "Do you accept the license terms for the plug-in (y=yes*, n=no, q=quit) ? " {
     send "\n"
   }
@@ -51,5 +83,7 @@ expect {
     }
   }
 }
+
+file delete -force -- $tmpdir
 
 exit $statuscode
