@@ -48,6 +48,7 @@ class puavo_pkg::packages {
                         , 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
 			, 'processing'
+			, 'puavo-firmware'
 			, 'pycharm'
 			, 'robboscratch'
 			, 'robotmeshconnect'
