@@ -6,11 +6,43 @@ set -eu
 # login screen logins and lock screen logins.  On login
 # screen our group id is 0(root), on lock screen it is not.
 if [ "$(id -g)" -eq 0 ]; then
-  # on login screen, must do remove login (getting a kerberos
-  # ticket)
+  # on login screen, must get a kerberos ticket
   exit 1
 fi
 
-# We can do local login.  Renewing our kerberos ticket appears
-# to happen in the background and needs no special action.
+#
+# Get a new ticket if our current ticket is expiring in two and a half days.
+#
+
+# find credentials cache for this user
+krb5_ticket_cache=$(
+  find /tmp -maxdepth 1 -name "krb5cc_${PAM_USER}_*" -type f \
+          -user "$PAM_USER" ! -size 0 -print -quit) || true
+
+if [ -z "$krb5_ticket_cache" ]; then
+  # we could not find kerberos ticket cache for $PAM_USER, get a new ticket
+  exit 1
+fi
+
+ticket_expiration_time=$(env LANG=C klist "$krb5_ticket_cache" \
+                           | awk '$5 ~ /krbtgt\// { print $3, $4; exit(0) }')
+
+if [ -z "$ticket_expiration_time" ]; then
+  # if we could not find ticket expiration time, get a new ticket
+  exit 1
+fi
+
+if ! expiration_timestamp=$(date -d "$ticket_expiration_time" +%s) \
+  || [ -z "$expiration_timestamp" ]; then
+    # could not convert ticket expiration timestamp
+    exit 1
+fi
+
+# 216000 seconds = 60 hours = 2½ days
+if [ "$(date +%s)" -gt "$(($expiration_timestamp - 216000))" ]; then
+  # ticket is expiring in two and a half days, get a new ticket
+  exit 1
+fi
+
+# our ticket is still valid for some reasonable time, just do local login
 exit 0
