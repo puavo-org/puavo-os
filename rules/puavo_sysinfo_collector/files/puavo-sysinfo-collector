@@ -205,6 +205,8 @@ class SystemInfoCollector < DBus::Object
             data[:ssd] = '-1'
           end
 
+          data[:uefi] = File.exists?("/sys/firmware/efi")
+
           # detailed RAM slot info
           data[:memory] = []
 
