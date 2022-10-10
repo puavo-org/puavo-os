@@ -55,8 +55,8 @@ EOF
   cat <<EOF
 [libdefaults]
     default_realm = ${puavo_kerberos_realm}
-    default_tgs_enctypes = des3-hmac-sha1 des-cbc-crc
-    default_tkt_enctypes = des3-hmac-sha1 des-cbc-crc
+    default_tgs_enctypes = aes256-cts-hmac-sha384-192 aes256-cts-hmac-sha1-96 des3-hmac-sha1
+    default_tkt_enctypes = aes256-cts-hmac-sha384-192 aes256-cts-hmac-sha1-96 des3-hmac-sha1
     dns_lookup_kdc = false
     dns_lookup_realm = false
     allow_weak_crypto = true
