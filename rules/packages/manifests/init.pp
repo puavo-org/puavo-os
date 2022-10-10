@@ -420,6 +420,11 @@ class packages {
 
     [ 'amtterm'
     , 'hostapd'
+    , 'libnss3-tools'      #needed by pyscrlink
+    , 'python3-cffi'       #needed by pyscrlink
+    , 'python3-openssl'    #needed by pyscrlink
+    , 'python3-pycparser'  #needed by pyscrlink
+    , 'python3-websockets' #needed by pyscrlink
     , 'vtun' ]:
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
