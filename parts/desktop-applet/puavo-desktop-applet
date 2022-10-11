@@ -17,14 +17,11 @@ import signal
 import subprocess
 import sys
 
-gi.require_version('AyatanaAppIndicator3', '0.1')
-gi.require_version('Gtk', '3.0')
-gi.require_version('Notify', '0.7')
 
-from gi.repository import AyatanaAppIndicator3
 from gi.repository import GLib
-from gi.repository import Gtk
-from gi.repository import Notify
+from PyQt5.QtCore import (QTimer)
+from PyQt5.QtGui import (QIcon, QWindow)
+from PyQt5.QtWidgets import (QApplication, QAction, QMenu, QSystemTrayIcon, QWidget)
 
 gettext.bindtextdomain('puavo-desktop-applet', '/usr/share/locale')
 gettext.textdomain('puavo-desktop-applet')
@@ -59,7 +56,7 @@ def read_firstline(pathname):
     return (file.readlines())[0].rstrip("\n")
 
 
-class PuavoWidget:
+class PuavoWidget(QAction):
   def connect_to_dbus(self, service, interface):
     self.bus = dbus.SystemBus()
     dbusobj = self.bus.get_object('org.puavo.client.Daemon', service)
@@ -70,18 +67,14 @@ class PuavoWidget:
     # no notifications if running on login screen
     if getpass.getuser() == 'Debian-gdm':
       return
-
-    if body:
-      Notify.Notification.new(summary, body).show()
-    else:
-      Notify.Notification.new(summary).show()
+    self.parent().indicator.showMessage(summary, body)
 
 
 class HostnameInfo(PuavoWidget):
-  def __init__(self, applet):
-    self.applet = applet
+  def __init__(self, parent=None):
+    super(HostnameInfo, self).__init__(parent)
 
-    self.enabled = False
+    self.setVisible(False)
     self.fqdn = ''
 
     try:
@@ -91,27 +84,18 @@ class HostnameInfo(PuavoWidget):
     except Exception:
       return
 
-    self.enabled = True
+    self.setVisible(True)
+    self.updateItem()
 
-
-  def append_items_to_menu(self):
-    if not self.enabled:
-      return False
-
-    hostname_label = '%s: %s' % (_tr('Hostname'), self.fqdn)
-    menuitem = Gtk.MenuItem(label=hostname_label)
-    menuitem.show()
-    menuitem.set_sensitive(False)
-
-    self.applet.menu.append(menuitem)
-
-    return True
+  def updateItem(self):
+    self.setEnabled(False)
+    self.setText('%s: %s' % (_tr('Hostname'), self.fqdn))
 
 
 class ChangelogNotifier(PuavoWidget):
-  def __init__(self, applet):
-    self.applet = applet
-    self.enabled = False
+  def __init__(self, parent=None):
+    super(ChangelogNotifier, self).__init__(parent)
+    self.setVisible(True)
 
     if getpass.getuser() == 'Debian-gdm':
       return
@@ -140,22 +124,14 @@ class ChangelogNotifier(PuavoWidget):
     if not self.user_has_been_notified_about_this_version():
       self.notify_user_on_update()
       self.write_user_versions(False)
-      self.enabled = True
+      self.setVisible(True)
 
+    self.updateItem()
+    self.triggered.connect(self.button_callback)
 
-  def append_items_to_menu(self):
-    if not self.enabled:
-      return False
-
-    buttonmsg = '%s (%s)' % (_tr('Information on the latest system update'),
-                             self.system_release_name)
-
-    button = Gtk.MenuItem(label=buttonmsg)
-    button.show()
-    self.applet.menu.append(button)
-    button.connect('activate', self.button_callback)
-
-    return True
+  def updateItem(self):
+    self.setText('%s (%s)' % (_tr('Information on the latest system update'),
+                             self.system_release_name))
 
 
   def button_callback(self, widget):
@@ -199,8 +175,8 @@ class ChangelogNotifier(PuavoWidget):
 
       if changelog_ok:
         self.write_user_versions(True)
-        self.enabled = False
-        self.applet.create_menu()
+        self.setVisible(False)
+        self.parent().updateMenu()
 
     if condition & GLib.IO_HUP:
       channel.close()
@@ -292,8 +268,8 @@ class ChangelogNotifier(PuavoWidget):
 
 
 class ContentUpdates(PuavoWidget):
-  def __init__(self, applet):
-    self.applet = applet
+  def __init__(self, parent=None):
+    super(ContentUpdates, self).__init__(parent)
 
     self.content_elements = {}
 
@@ -309,6 +285,7 @@ class ContentUpdates(PuavoWidget):
     self.dbus_iface.connect_to_signal('UpdateFailed',
                                         self.update_failed)
     self.get_contents()
+    self.updateItem()
 
 
   def get_contents(self):
@@ -342,27 +319,24 @@ class ContentUpdates(PuavoWidget):
 
     if self.content_elements != new_content_elements:
       self.content_elements = new_content_elements
-      self.applet.create_menu()
+      self.parent().updateMenu()
 
-
-  def append_items_to_menu(self):
-    has_items_in_menu = False
+  def updateItem(self):
 
     for contentname in self.content_elements.keys():
       if self.content_elements[contentname]['menuitem']:
-         self.content_elements[contentname]['menuitem'].destroy()
-         self.content_elements[contentname]['menuitem'] = None
+         self.content_elements[contentname]['menuitem'].setVisible(False)
 
     for contentname in sorted(self.content_elements):
-      menuitem = Gtk.MenuItem(label=self.content_elements[contentname]['text'])
-      menuitem.set_sensitive(False)
+      if self.content_elements[contentname]['menuitem']:
+          self.content_elements[contentname]['menuitem'].setVisible(menuitem.text.isEmpty())
+      else:
+          menuitem = QAction(self.content_elements[contentname]['text'])
+          menuitem.setEnabled(False)
+          self.content_elements[contentname]['menuitem'] = menuitem
+          self.parent().menu.insertAction(menuitem, self)
+          menuitem.setVisible(menuitem.text.isEmpty())
 
-      self.applet.menu.append(menuitem)
-      has_items_in_menu = True
-
-      self.content_elements[contentname]['menuitem'] = menuitem
-
-    return has_items_in_menu
 
 
   def translate_contentname(self, contentname):
@@ -432,66 +406,33 @@ class ContentUpdates(PuavoWidget):
 
 
 class ImageUpdater(PuavoWidget):
-  def __init__(self, applet):
-    self.applet = applet
+  def __init__(self, parent=None):
+    super(ImageUpdater, self).__init__(parent)
 
-    self.enabled = False
-    if os.path.exists('/run/puavo/nbd-server'):
-      return
-    if on_persistent_overlay():
-      return
+    self.dbus_iface = None
+    self.updates_enabled=(not (os.path.exists('/run/puavo/nbd-server') or on_persistent_overlay()))
 
     self.available_notice_shown = False
     self.download_animation_icons \
       = [ 'update-downloading-%02d' % x for x in range(1, 14) ]
     self.setup_log()
 
-    self.dbus_iface = None
-    self.enabled = True
+    self.setVisible(self.updates_enabled)
+    self.set_update_button_mode('check')
 
 
-  def append_items_to_menu(self):
-    if not self.enabled:
-      return False
-
-    self.add_update_button()
+  def updateItem(self):
     # log viewing does not work on login screen
-    if getpass.getuser() != 'Debian-gdm':
-      self.add_view_log_button()
-    self.add_progress()
+    if getpass.getuser() != 'Debian-gdm' and self.updates_enabled:
+      self.parent().view_log_button.setVisible(True)
 
     if not self.dbus_iface:
       self.setup_dbus_iface()
       self.check_for_updates()
 
-    return True
 
 
-  def add_progress(self):
-    self.progress = Gtk.MenuItem(label='')
-    self.set_progress_text( _tr('(No system update progress.)') )
-    self.progress.set_sensitive(False)
-    self.progress.show()
-    self.roll_progress_id = None
 
-    self.applet.menu.append(self.progress)
-
-
-  def add_update_button(self):
-    self.update_button = Gtk.MenuItem(label='')
-    self.button_action_handler = None
-    self.set_update_button_mode('check')
-    self.update_button.show()
-
-    self.applet.menu.append(self.update_button)
-
-
-  def add_view_log_button(self):
-    self.view_log_item = Gtk.MenuItem(label=_tr('View system update log...'))
-    self.view_log_item.connect('activate', self.view_log)
-    self.view_log_item.show()
-
-    self.applet.menu.append(self.view_log_item)
 
 
   def append_error_to_log(self, errortext):
@@ -565,8 +506,7 @@ class ImageUpdater(PuavoWidget):
     self.stop_roll_progress()
     self.set_update_button_mode('update')
 
-    self.set_icon('update-available',
-                  AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
+    self.set_icon('update-available', 'attention')
 
     # show only once after each login
     if not self.available_notice_shown:
@@ -614,8 +554,7 @@ class ImageUpdater(PuavoWidget):
   def on_update_failed(self):
     self.stop_roll_progress()
     self.set_update_button_mode('update')
-    self.set_icon('update-error',
-                  AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
+    self.set_icon('update-error', 'attention')
 
     self.append_error_to_log( _tr('System update failed.') + "\n" )
 
@@ -628,12 +567,10 @@ class ImageUpdater(PuavoWidget):
 
     if reboot_required:
       self.on_update_progress_indicator('finished')
-      self.set_icon('update-installed',
-                    AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
+      self.set_icon('update-installed', 'attention')
     else:
       self.on_update_progress_indicator('uptodate')
-      self.set_icon('update-idle',
-                    AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
+      self.set_icon('update-idle', 'attention')
 
 
   def on_update_message(self, msgtype, content):
@@ -707,8 +644,7 @@ class ImageUpdater(PuavoWidget):
 
   def on_update_started(self):
     self.set_update_button_mode('updating')
-    self.set_icon('update-downloading',
-                  AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
+    self.set_icon('update-downloading', 'attention')
 
     self.append_text_to_log( _tr('System update has been started.') \
                                + "\n" )
@@ -725,8 +661,7 @@ class ImageUpdater(PuavoWidget):
 
 
   def roll_progress_animation(self):
-    self.set_icon(self.download_animation_icons[0],
-                  AyatanaAppIndicator3.IndicatorStatus.ATTENTION)
+    self.set_icon(self.download_animation_icons[0], 'attention')
 
     # cycle attention icons
     self.download_animation_icons         \
@@ -738,10 +673,11 @@ class ImageUpdater(PuavoWidget):
 
   def set_progress_text(self, text):
     wrapped_text = '-=> ' + text + ' <=-'
-    self.progress.get_child().set_text(wrapped_text)
+    self.setText(wrapped_text)
 
 
   def set_update_button_mode(self, mode):
+    self.setVisible(self.updates_enabled)
     action = None
 
     # 'update' and 'updating' button modes are only for primary users
@@ -767,18 +703,16 @@ class ImageUpdater(PuavoWidget):
     else:
       raise Exception('Wrong arguments for set_update_button_mode')
 
-    if self.button_action_handler:
-      self.update_button.disconnect(self.button_action_handler)
-      self.button_action_handler = None
+    #self.triggered.disconnect()
     if action:
-      self.button_action_handler \
-        = self.update_button.connect('activate', action)
+      self.triggered.connect(action)
 
-      self.update_button.get_child().set_text(message)
-      self.update_button.set_sensitive(sensitivity)
+      self.setText(message)
+      self.setEnabled(sensitivity)
 
 
   def setup_log(self):
+    return  #TODO
     self.log_dialog \
       = Gtk.Dialog(title=_tr('System update log'),
                    parent=None,
@@ -806,9 +740,10 @@ class ImageUpdater(PuavoWidget):
 
 
   def stop_roll_progress(self):
-    if self.roll_progress_id:
-      GLib.source_remove(self.roll_progress_id)
-      self.roll_progress_id = None
+    pass
+  #  if self.roll_progress_id: # not used at the moment
+  #    GLib.source_remove(self.roll_progress_id)
+  #    self.roll_progress_id = None
 
 
   def update_image(self, widget):
@@ -827,29 +762,23 @@ class ImageUpdater(PuavoWidget):
 
 
 class MonitorsUpdater(PuavoWidget):
-  def __init__(self, applet):
-    self.applet = applet
+  def __init__(self, parent=None):
+    super(MonitorsUpdater, self).__init__(parent)
 
-    self.enabled = False
+    self.setVisible(False)
     try:
       if os.environ['PUAVO_PERSISTENT_DISPLAY_MANAGEMENT'] != 'true':
         return
     except KeyError:
       return
 
-    self.enabled = True
+    self.setVisible(True)
+    self.triggered.connect(self.send_display_configuration)
+    self.updateItem()
 
 
-  def append_items_to_menu(self):
-    if not self.enabled:
-      return False
-
-    self.send_button = Gtk.MenuItem(label=_tr('Send display configuration'))
-    self.send_button.connect('activate', self.send_display_configuration)
-    self.send_button.show()
-    self.applet.menu.append(self.send_button)
-
-    return True
+  def updateItem(self):
+    self.setText(_tr('Send display configuration'))
 
 
   def send_display_configuration(self, widget):
@@ -887,9 +816,9 @@ class MonitorsUpdater(PuavoWidget):
     return True
 
 
-class RemoteAssistance:
-  def __init__(self, applet):
-    self.applet = applet
+class RemoteAssistance(QAction):
+  def __init__(self, parent=None):
+    super(RemoteAssistance, self).__init__(parent)
     self.config = self.parse_config()
 
     # always disable vino remote access
@@ -915,6 +844,7 @@ class RemoteAssistance:
 
     self.latest_vino_enabled = None
     self.latest_ssh_enabled  = None
+
 
 
   def parse_config(self):
@@ -1112,44 +1042,6 @@ class RemoteAssistance:
     return ssh_settings_changed or vino_settings_changed
 
 
-  def create_access_controls(self):
-    to_disable_msg = self.get_available_access_controls_string(True)
-    to_enable_msg  = self.get_available_access_controls_string(False)
-
-    if to_disable_msg:
-      access_state_msg = '%s %s' % (_tr('Remote access allowed'),
-                                    to_disable_msg)
-      indicator_icon = puavoconf_get('puavo.support.remoteaccess.icons.allowed')
-    elif to_enable_msg:
-      access_state_msg = '%s %s' % (_tr('Remote access denied'), to_enable_msg)
-      indicator_icon = puavoconf_get('puavo.support.remoteaccess.icons.denied')
-    else:
-      # if there is nothing to enable/disable, just show nothing
-      return False
-
-    self.access_status_label = Gtk.MenuItem(label=('-=> %s <=-' % access_state_msg))
-    self.access_status_label.set_sensitive(False)
-    self.access_status_label.show()
-    self.applet.menu.append(self.access_status_label)
-
-    if to_enable_msg:
-      enable_msg = '%s %s' % (_tr('Enable remote access'), to_enable_msg)
-      self.enable_access_button = Gtk.MenuItem(label=enable_msg)
-      self.enable_access_button.connect('activate', self.enable_remote_access)
-      self.enable_access_button.show()
-      self.applet.menu.append(self.enable_access_button)
-
-    if to_disable_msg:
-      disable_msg = '%s %s' % (_tr('Disable remote access'), to_disable_msg)
-      self.disable_access_button = Gtk.MenuItem(label=disable_msg)
-      self.disable_access_button.connect('activate', self.disable_remote_access)
-      self.disable_access_button.show()
-      self.applet.menu.append(self.disable_access_button)
-
-    self.applet.indicator.set_icon_full(indicator_icon, access_state_msg)
-
-    return True
-
 
   def disable_remote_access(self, widget):
     if self.ssh_controls_available():
@@ -1158,7 +1050,7 @@ class RemoteAssistance:
     if self.vino_controls_available():
       self.disable_vino_remote_access()
 
-    self.applet.create_menu()
+    self.parent().updateMenu()
 
 
   def enable_remote_access(self, widget):
@@ -1169,7 +1061,7 @@ class RemoteAssistance:
       interface = self.config['vino_network_interface']
       self.enable_vino_remote_access(interface)
 
-    self.applet.create_menu()
+    self.parent().updateMenu()
 
 
   def make_bugreport(self, widget):
@@ -1207,38 +1099,65 @@ class RemoteAssistance:
     return ('vino' in self.config['show_accesscontrols_for'])
 
 
-  def append_items_to_menu(self):
-    has_items_in_menu = False
-    if self.create_access_controls():
-      has_items_in_menu = True
+  def updateItem(self):
 
-    make_bugreport_button = self.config['new_bugreport_browser'] \
-                              and self.config['new_bugreport_url'] \
-                              and getpass.getuser() != 'Debian-gdm'
-    if make_bugreport_button:
-      self.new_ticket_button = Gtk.MenuItem(label=_tr('New support request'))
-      self.new_ticket_button.connect('activate', self.make_bugreport)
-      self.new_ticket_button.show()
-      self.applet.menu.append(self.new_ticket_button)
-      has_items_in_menu = True
+    to_disable_msg = self.get_available_access_controls_string(True)
+    to_enable_msg  = self.get_available_access_controls_string(False)
+    
+    if to_disable_msg:
+      access_state_msg = '%s %s' % (_tr('Remote access allowed'),
+                                    to_disable_msg)
+      indicator_icon = puavoconf_get('puavo.support.remoteaccess.icons.allowed')
+    elif to_enable_msg:
+      access_state_msg = '%s %s' % (_tr('Remote access denied'), to_enable_msg)
+      indicator_icon = puavoconf_get('puavo.support.remoteaccess.icons.denied')
+    
+    self.setText('-=> %s <=-' % access_state_msg)
+    self.setEnabled(False)
 
-    return has_items_in_menu
+    if to_enable_msg:
+      self.parent().enable_access_button.setVisible(True)
+    else:
+      self.parent().enable_access_button.setVisible(False)
+
+    if to_disable_msg:
+      self.parent().disable_access_button.setVisible(True)
+    else:
+      self.parent().disable_access_button.setVisible(False)
+
+    enable_msg = '%s %s' % (_tr('Enable remote access'), to_enable_msg)
+    disable_msg = '%s %s' % (_tr('Disable remote access'), to_disable_msg)
+
+    self.parent().enable_access_button.setText(enable_msg)
+    self.parent().disable_access_button.setText(disable_msg)
+
+    self.parent().bugreport.setVisible( self.config['new_bugreport_browser'] \
+                and self.config['new_bugreport_url'] \
+                and getpass.getuser() != 'Debian-gdm' )
+
+    self.parent().indicator.setIcon(QIcon(indicator_icon))
 
 
 class ResetDevState(PuavoWidget):
-  def __init__(self, applet):
-    self.applet = applet
+  def __init__(self, parent=None):
+    super(ResetDevState, self).__init__(parent)
 
-    self.enabled = False
+    self.setVisible(False)
     if os.path.exists('/run/puavo/nbd-server'):
       return
-    if not on_persistent_overlay():
+    if not on_persistent_overlay(): #TODO replace these 3
       return
     if not administered_by_user():
       return
 
     self.dbus_iface = None
-    self.enabled = True
+
+    msg = _tr('System updates are disabled in developer mode, boot to normal'
+              ' mode to update.')
+
+    self.setEnabled(False)
+    self.setText(msg)
+    self.setVisible(True)
 
 
   def setup_dbus_iface(self):
@@ -1280,7 +1199,7 @@ class ResetDevState(PuavoWidget):
                         ' System will also reboot itself after this'
                         ' operation.')
 
-    self.reset_devstate_dialog = Gtk.MessageDialog(None,
+    self.reset_devstate_dialog = Gtk.MessageDialog(None, #TODO
                                                    Gtk.DialogFlags.MODAL,
                                                    Gtk.MessageType.QUESTION,
                                                    Gtk.ButtonsType.YES_NO,
@@ -1300,56 +1219,46 @@ class ResetDevState(PuavoWidget):
     self.reset_devstate_button.set_sensitive(False)
 
 
-  def append_items_to_menu(self):
-    if not self.enabled:
-      return False
-
-    self.add_development_state_widgets()
+  def updateItem(self):
+    #TODO disable parts when appropriate
 
     if not self.dbus_iface:
       self.setup_dbus_iface()
 
-    return True
 
 
-  def add_development_state_widgets(self):
-    msg = _tr('System updates are disabled in developer mode, boot to normal'
-              ' mode to update.')
-    self.disabled_msg = Gtk.MenuItem(label=msg)
-    self.disabled_msg.set_sensitive(False)
-    self.disabled_msg.show()
-
-    self.applet.menu.append(self.disabled_msg)
-
-    buttonmsg = _tr('Reset development state')
-    self.reset_devstate_button = Gtk.MenuItem(label=buttonmsg)
-    self.reset_devstate_button.connect('activate',
-                                       self.confirm_reset_devstate)
-    self.reset_devstate_button.show()
-
-    self.applet.menu.append(self.reset_devstate_button)
-
-
-class PuavoDesktopApplet:
-  def __init__(self):
+class PuavoDesktopApplet(QWidget):
+  def __init__(self, parent=None):
+    super(QWidget, self).__init__(parent)
     # XXX this should be something else and maybe puavo-conf configurable?
 
     self.indicator \
-      = AyatanaAppIndicator3.Indicator.new('puavo-desktop-applet',
-          puavoconf_get('puavo.support.remoteaccess.icons.denied'),
-          AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
-
-    self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
-
-    Notify.init('puavo-desktop-applet')
+      = QSystemTrayIcon(QIcon(puavoconf_get('puavo.support.remoteaccess.icons.denied')))
 
     self.hostname_info      = HostnameInfo(self)
     self.changelog_notifier = ChangelogNotifier(self)
     self.content_updates    = ContentUpdates(self)
+    self.content_updates_s  = None
     self.image_updater      = ImageUpdater(self)
+
+    self.progress = QAction(_tr('(No system update progress.)') )
+    self.progress.setVisible(self.image_updater.updates_enabled)
+
+    self.view_log_button = QAction(_tr('View system update log...'), self, triggered=self.image_updater.view_log)
+    self.view_log_button.setVisible(False)
+
     self.monitors_updater   = MonitorsUpdater(self)
+
     self.remote_assistance  = RemoteAssistance(self)
+    self.enable_access_button = QAction("", self, triggered=self.remote_assistance.enable_remote_access)
+    self.disable_access_button = QAction("", self, triggered=self.remote_assistance.disable_remote_access)
+    self.bugreport = QAction(_tr('New support request'), self, triggered=self.remote_assistance.make_bugreport)
+
     self.reset_dev_state    = ResetDevState(self)
+
+    resetbuttonmsg = _tr('Reset development state')
+    self.reset_devstate_button = QAction(resetbuttonmsg)
+    self.reset_devstate_button.triggered.connect(self.reset_dev_state.confirm_reset_devstate)
 
     self.menu = False
     self.create_menu()
@@ -1357,59 +1266,55 @@ class PuavoDesktopApplet:
 
   def create_menu(self):
     if self.menu:
-      self.menu.destroy()
+      return
 
-    self.menu = Gtk.Menu()
+    self.menu = QMenu()
 
-    something_in_menu = False
+    self.menu.addAction(self.hostname_info)
+    self.menu.addAction(self.reset_dev_state)
+    self.menu.addAction(self.reset_devstate_button)
+    self.menu.addAction(self.image_updater)
+    self.menu.addAction(self.progress)
+    self.menu.addAction(self.view_log_button)
 
-    if self.hostname_info.append_items_to_menu():
-      something_in_menu = True
-    if self.reset_dev_state.append_items_to_menu():
-      something_in_menu = True
-    if self.image_updater.append_items_to_menu():
-      something_in_menu = True
-    if self.changelog_notifier.append_items_to_menu():
-      something_in_menu = True
+    self.menu.addAction(self.changelog_notifier)
+    self.menu.addSeparator()
 
-    separator = Gtk.SeparatorMenuItem()
-    separator.show()
-    self.menu.append(separator)
+    self.content_updates_s=self.menu.addSeparator()
 
-    if self.content_updates.append_items_to_menu():
-      something_in_menu = True
+    self.menu.addAction(self.remote_assistance)
+    self.menu.addAction(self.enable_access_button)
+    self.menu.addAction(self.disable_access_button)
+    self.menu.addAction(self.bugreport)
 
-    separator = Gtk.SeparatorMenuItem()
-    separator.show()
-    self.menu.append(separator)
+    self.menu.addAction(self.monitors_updater)
 
-    if self.remote_assistance.append_items_to_menu():
-      something_in_menu = True
-
-    if self.monitors_updater.append_items_to_menu():
-      something_in_menu = True
-
-    if something_in_menu:
-      self.menu.show_all()
-      self.indicator.set_menu(self.menu)
-    else:
-      self.indicator.set_menu(None)
-
+  def updateMenu(self):
+    for action in self.menu.actions():
+      if hasattr( action, 'updateItem' ) and callable(action.updateItem):
+        action.updateItem()
 
   def check_for_changed_settings(self):
     if self.remote_assistance.check_for_changed_settings():
-      self.create_menu()
+      self.updateMenu()
+    if not self.menu.isEmpty():
+      self.indicator.setContextMenu(self.menu)
+      self.indicator.show()
+    else:
+      self.indicator.setContextMenu(None)
 
 
   def main(self):
     self.check_for_changed_settings()
-    GLib.timeout_add_seconds(5, self.check_for_changed_settings)
+    self.timer=QTimer()
+    self.timer.timeout.connect(self.check_for_changed_settings)
+    self.timer.start(5000)
 
-    Gtk.main()
 
-
+app = QApplication(sys.argv)
 applet = PuavoDesktopApplet()
 
 if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal.SIG_DFL)
   applet.main()
+  app.exec_()
