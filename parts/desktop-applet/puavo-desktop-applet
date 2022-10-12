@@ -21,7 +21,8 @@ import sys
 from gi.repository import GLib
 from PyQt5.QtCore import (QTimer)
 from PyQt5.QtGui import (QIcon, QWindow)
-from PyQt5.QtWidgets import (QApplication, QAction, QMenu, QSystemTrayIcon, QWidget)
+from PyQt5.QtWidgets import (QApplication, QAction, QDialog, QMenu, QMessageBox,
+                             QPushButton, QSystemTrayIcon, QTextBrowser, QVBoxLayout, QWidget)
 
 gettext.bindtextdomain('puavo-desktop-applet', '/usr/share/locale')
 gettext.textdomain('puavo-desktop-applet')
@@ -432,9 +433,6 @@ class ImageUpdater(PuavoWidget):
 
 
 
-
-
-
   def append_error_to_log(self, errortext):
     self.append_text_to_log(errortext, True)
 
@@ -443,8 +441,6 @@ class ImageUpdater(PuavoWidget):
     if text == '':
       return
 
-    end_iter = self.log_buffer.get_end_iter()
-
     timestamped_text = re.sub(r'^',
                               '%s: ' % datetime.datetime.now(),
                               text.rstrip(),
@@ -452,14 +448,12 @@ class ImageUpdater(PuavoWidget):
                          + "\n"
 
     if not error:
-      self.log_buffer.insert_with_tags(end_iter,
-                                       timestamped_text,
-                                       self.log_ok_tag)
+      self.log_view.setHtml(self.log_view.toHtml()+"<font color='green'>"
+                            +timestamped_text+"</font></br>")
       print(timestamped_text, end='')
     else:
-      self.log_buffer.insert_with_tags(end_iter,
-                                       timestamped_text,
-                                       self.log_error_tag)
+      self.log_view.setHtml(self.log_view.toHtml()+"<font color='red'>"
+                            +timestamped_text+"</font></br>")
       print(timestamped_text, file=sys.stderr, end='')
 
 
@@ -687,56 +681,45 @@ class ImageUpdater(PuavoWidget):
 
     if mode == 'check':
       action      = self.check_for_updates
+      icon        = QIcon("/usr/share/icons/Tela/24/actions/gtk-connect.svg")
       message     = _tr('Check for system updates')
       sensitivity = True
     elif mode == 'checking':
       message     = _tr('(Checking for system updates.)')
+      icon        = QIcon("/usr/share/icons/Tela/24/actions/gtk-connect.svg")
       sensitivity = False
     elif mode == 'update':
       action      = self.update_image
+      icon        = QIcon("/usr/share/icons/Tela/24/actions/gtk-connect.svg")
       sensitivity = True
       message     = _tr('Update system')
     elif mode == 'updating':
       action      = self.cancel_image_update
+      icon        = QIcon("/usr/share/icons/Tela/24/actions/gtk-connect.svg")
       sensitivity = True
       message     = _tr('Cancel system update')
     else:
       raise Exception('Wrong arguments for set_update_button_mode')
 
-    #self.triggered.disconnect()
+    #self.triggered.disconnect() #TODO
     if action:
       self.triggered.connect(action)
-
+      self.setIcon(icon)
       self.setText(message)
       self.setEnabled(sensitivity)
 
 
   def setup_log(self):
-    return  #TODO
-    self.log_dialog \
-      = Gtk.Dialog(title=_tr('System update log'),
-                   parent=None,
-                   modal=True,
-                   destroy_with_parent=True)
-    self.log_dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
-    self.log_dialog.set_default_size(600, 300)
+    self.log_dialog = QDialog(self.parent())
+    self.log_dialog.setWindowTitle(_tr('System update log'))
+    self.log_dialog.resize(600, 300)
 
-    self.log_view = Gtk.TextView()
-    self.log_view.set_editable(False)
-    self.log_view.set_cursor_visible(False)
-    self.log_view.show()
-
-    self.log_buffer = self.log_view.get_buffer()
-
-    self.log_ok_tag    = self.log_buffer.create_tag(foreground='green')
-    self.log_error_tag = self.log_buffer.create_tag(foreground='red')
-
-    log_scroll = Gtk.ScrolledWindow()
-    log_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-    log_scroll.add(self.log_view)
-    log_scroll.show()
-
-    self.log_dialog.vbox.pack_start(log_scroll, True, True, 0)
+    self.log_view = QTextBrowser()
+    okbutton = QPushButton(_tr("Close"))
+    okbutton.clicked.connect(self.log_dialog.hide)
+    self.log_dialog.setLayout(QVBoxLayout())
+    self.log_dialog.layout().addWidget(self.log_view)
+    self.log_dialog.layout().addWidget(okbutton)
 
 
   def stop_roll_progress(self):
@@ -756,9 +739,8 @@ class ImageUpdater(PuavoWidget):
     self.on_update_progress_indicator('starting')
 
 
-  def view_log(self, widget):
-    self.log_dialog.run()
-    self.log_dialog.hide()
+  def view_log(self):
+    self.log_dialog.show()
 
 
 class MonitorsUpdater(PuavoWidget):
@@ -773,6 +755,7 @@ class MonitorsUpdater(PuavoWidget):
       return
 
     self.setVisible(True)
+    self.setIcon(QIcon("/usr/share/icons/Tela/scalable/apps/display.svg"))
     self.triggered.connect(self.send_display_configuration)
     self.updateItem()
 
@@ -1142,13 +1125,8 @@ class ResetDevState(PuavoWidget):
   def __init__(self, parent=None):
     super(ResetDevState, self).__init__(parent)
 
-    self.setVisible(False)
-    if os.path.exists('/run/puavo/nbd-server'):
-      return
-    if not on_persistent_overlay(): #TODO replace these 3
-      return
-    if not administered_by_user():
-      return
+    self.dev_state_visible=(not os.path.exists('/run/puavo/nbd-server')
+                            and on_persistent_overlay() and administered_by_user())
 
     self.dbus_iface = None
 
@@ -1157,7 +1135,7 @@ class ResetDevState(PuavoWidget):
 
     self.setEnabled(False)
     self.setText(msg)
-    self.setVisible(True)
+    self.setVisible(self.dev_state_visible)
 
 
   def setup_dbus_iface(self):
@@ -1174,13 +1152,13 @@ class ResetDevState(PuavoWidget):
 
 
   def on_delete_overlays_completed(self):
-    self.reset_devstate_button.set_sensitive(True)
+    self.parent().reset_devstate_button.setEnabled(True)
     self.notify( _tr('Reset development state is now done,'
                      ' rebooting the system.') )
 
 
   def on_delete_overlays_failed(self, errmsg):
-    self.reset_devstate_button.set_sensitive(True)
+    self.parent().reset_devstate_button.setEnabled(True)
     msg = _tr('An error occurred when resetting development state')
     self.notify("%s: %s" % (msg, errmsg))
 
@@ -1199,28 +1177,25 @@ class ResetDevState(PuavoWidget):
                         ' System will also reboot itself after this'
                         ' operation.')
 
-    self.reset_devstate_dialog = Gtk.MessageDialog(None, #TODO
-                                                   Gtk.DialogFlags.MODAL,
-                                                   Gtk.MessageType.QUESTION,
-                                                   Gtk.ButtonsType.YES_NO,
-                                                   dialogmsg)
+    reset_state_box = QMessageBox(QMessageBox.Warning, _tr('Reset development state'),
+        dialogmsg, QMessageBox.StandardButtons(QMessageBox.Yes | QMessageBox.No), self.parent())
+    
+    reset_state_box.button(QMessageBox.Yes).setText(_tr("Reset"))
+    reset_state_box.button(QMessageBox.No).setText(_tr("Cancel"))
+    reset_state = reset_state_box.exec()
 
-    self.reset_devstate_dialog.set_title( _tr('Reset development state') )
-
-    response = self.reset_devstate_dialog.run()
-    self.reset_devstate_dialog.destroy()
-
-    if response == Gtk.ResponseType.YES:
+    if reset_state == QMessageBox.Yes :
       self.reset_development_state()
 
 
   def reset_development_state(self):
     self.dbus_iface.DeleteImageOverlays()
-    self.reset_devstate_button.set_sensitive(False)
+    self.parent().reset_devstate_button.setEnabled(False)
 
 
   def updateItem(self):
-    #TODO disable parts when appropriate
+    self.setVisible(self.dev_state_visible)
+    self.parent().reset_devstate_button.setVisible(self.dev_state_visible)
 
     if not self.dbus_iface:
       self.setup_dbus_iface()
@@ -1244,15 +1219,20 @@ class PuavoDesktopApplet(QWidget):
     self.progress = QAction(_tr('(No system update progress.)') )
     self.progress.setVisible(self.image_updater.updates_enabled)
 
-    self.view_log_button = QAction(_tr('View system update log...'), self, triggered=self.image_updater.view_log)
+    self.view_log_button = QAction(QIcon("/usr/share/icons/Tela/24/actions/gtk-connect.svg"), _tr('View system update log...'), self, triggered=self.image_updater.view_log)
     self.view_log_button.setVisible(False)
 
     self.monitors_updater   = MonitorsUpdater(self)
 
     self.remote_assistance  = RemoteAssistance(self)
-    self.enable_access_button = QAction("", self, triggered=self.remote_assistance.enable_remote_access)
-    self.disable_access_button = QAction("", self, triggered=self.remote_assistance.disable_remote_access)
-    self.bugreport = QAction(_tr('New support request'), self, triggered=self.remote_assistance.make_bugreport)
+    self.enable_access_button = QAction(
+        QIcon(puavoconf_get('puavo.support.remoteaccess.icons.allowed')), "", self,
+        triggered=self.remote_assistance.enable_remote_access)
+    self.disable_access_button = QAction(
+        QIcon(puavoconf_get('puavo.support.remoteaccess.icons.denied')), "", self,
+        triggered=self.remote_assistance.disable_remote_access)
+    self.bugreport = QAction(QIcon("/usr/share/icons/Tela/scalable/apps/bug.svg"),
+        _tr('New support request'), self, triggered=self.remote_assistance.make_bugreport)
 
     self.reset_dev_state    = ResetDevState(self)
 
@@ -1312,6 +1292,7 @@ class PuavoDesktopApplet(QWidget):
 
 
 app = QApplication(sys.argv)
+app.setQuitOnLastWindowClosed(False)
 applet = PuavoDesktopApplet()
 
 if __name__ == '__main__':
