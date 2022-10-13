@@ -39,7 +39,7 @@ user_group_list=$(
         groups[++groupcount] = rolegroup_name
       }
       for (i in groups) {
-        if (i < groupcount) {
+        if (int(i) < groupcount) {
           printf "%s,", groups[i]
         } else {
           printf "%s", groups[i]
