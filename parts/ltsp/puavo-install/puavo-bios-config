@@ -6,6 +6,10 @@ prepare_hp_utils() {
   puavo-pkg install /usr/share/puavo-pkg/packages/hp-bios-utils.tar.gz
   export PATH="/opt/hp/hp-flash:${PATH}"
   hp_utils_dir='/opt/hp/hp-flash'
+  wget "https://raw.githubusercontent.com/opinsys/opinsys-host-configurations/main/HP/HpSetup-student-laptop.txt" \
+   -O "$hp_utils_dir/HpSetup-student-laptop.txt"
+  wget "https://raw.githubusercontent.com/opinsys/opinsys-host-configurations/main/HP/HpSetup-usb-factory.txt" \
+   -O "$hp_utils_dir/HpSetup-usb-factory.txt"
 }
 
 use_hp_utils() {
