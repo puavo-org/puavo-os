@@ -48,12 +48,15 @@ my $req = Net::LDAP::Control::SyncRequest->new(
 
 # XXX we could also perhaps read and update usernames and such
 # XXX tracking puavoId should also be useful?  or maybe uidNumber is enough?
+my @followed_attributes
+  = qw(givenName sambaNTPassword puavoLocked sambaSID sn uid);
+
 my $search = $ldap->search(base     => "ou=People,${ldap_base}",
                            scope    => 'sub',
                            control  => [ $req ],
                            callback => \&handle_search_event,
                            filter   => '(objectClass=sambaSamAccount)',
-                           attrs    => [ qw(uid puavoLocked sambaNTPassword) ]);
+                           attrs    => \@followed_attributes);
 
 # XXX should never get here, what to do if we do?
 # XXX is $search useful ?
@@ -71,25 +74,52 @@ sub handle_search_event {
 # XXX how to remove users that have been removed from Puavo
 # XXX how to lock users that have been locked in Puavo?
 
-sub check_user_password {
+sub get_samba_account_info {
   my ($uid) = @_;
 
-  my $r = run([ 'pdbedit', '-s', '/etc/samba/samba-ad-dc.conf',
-                '-u', $uid, '-w' ],
-              \(my $in = ''), \my $user_info, \my $err);
-  if (!$r) {
+  # XXX pdbedit apparently needs to use -u :-( instead if -U
+  # XXX -U is only for setting and modifying, and not similar to -u
+
+  my $status = run([ 'pdbedit', '-s', '/etc/samba/samba-ad-dc.conf',
+                                '-u', $uid, '-vw' ],
+                        \(my $in = ''), \my $user_info, \my $err);
+  if (!$status) {
     return undef if $err =~ /Username not found/;
-    die "unexpected error looking up user ${uid}: ${err}";
+    die "unexpected error looking up user with ${uid}: ${err}";
   }
 
-  my $old_user_nt_pwhash = (split(/:/, $user_info))[3];
-  return '' unless defined($old_user_nt_pwhash);
+  my ($flags, $full_name, $nt_hash, $sid, $uid_in_samba);
+  foreach (split(/\n/, $user_info)) {
+    $flags        = $1     if /^Account Flags\s*:\s*\[(.*)\]$/;
+    $full_name    = $1     if /^Full Name\s*:\s*(.*)$/;
+    $nt_hash      = lc($1) if /^NT hash\s*:\s*(.*)$/;
+    $sid          = $1     if /^User SID\s*:\s*(.*)$/;
+    $uid_in_samba = $1     if /^Unix username\s*:\s*(.*)$/;
+  }
 
-  lc($old_user_nt_pwhash);
+  die "user account flags not found for ${uid}" unless defined($flags);
+  die "user account full name not found for ${uid}" unless defined($full_name);
+  die "user account NT password not found for ${uid}" unless defined($nt_hash);
+  die "user account UID not found for ${uid}" unless defined($uid_in_samba);
+  die "user account unix username not found for ${uid}" unless defined($uid);
+
+  if ($uid_in_samba ne $uid) {
+    die "user account info does not match user we were looking for with $uid";
+  }
+
+  {
+    flags     => $flags,
+    full_name => $full_name,
+    nt_hash   => $nt_hash,
+    sid       => $sid,
+    uid       => $uid,
+  }
 }
 
 sub create_user {
-  my ($uid) = @_;
+  my ($puavo_account_info) = @_;
+
+  my $uid = $puavo_account_info->{uid};
 
   syslog(LOG_INFO, 'creating a new user %s', $uid);
 
@@ -102,46 +132,76 @@ sub create_user {
     or die "could not create user: $err";
 }
 
-sub set_user_password {
-  my ($uid, $sambaNTPassword) = @_;
+sub update_user_information {
+  my ($puavo_account_info, $samba_account_info) = @_;
 
-  syslog(LOG_INFO, 'setting user password for %s', $uid);
+  my $uid = $puavo_account_info->{uid};
+
+  my @change_opts;
+
+  if ($puavo_account_info->{full_name} ne $samba_account_info->{full_name}) {
+    syslog(LOG_INFO, 'update full name for %s', $puavo_account_info->{uid});
+    push @change_opts, '--fullname', $puavo_account_info->{full_name};
+  }
+
+  if ($puavo_account_info->{nt_hash} ne $samba_account_info->{nt_hash}) {
+    syslog(LOG_INFO, 'updating user password for %s',
+                     $puavo_account_info->{uid});
+    push @change_opts, '--set-nt-hash', $puavo_account_info->{nt_hash};
+  }
+
+  unless (@change_opts) {
+    syslog(LOG_INFO, 'no changes to user %s information', $uid);
+    return;
+  }
 
   my $in  = '';
   my $err = '';
   run([ 'pdbedit', '-r', '-s', '/etc/samba/samba-ad-dc.conf', '-u', $uid,
-                   '--set-nt-hash', $sambaNTPassword ],
+                   @change_opts ],
       \$in, \my $out, \$err)
-    or die "could not set user ${uid} password: $err";
+    or die "could not update user ${uid} information: ${err}";
 }
 
 sub handle_entry {
   my ($entry) = @_;
 
-  unless ($entry->exists('uid')) {
-    syslog(LOG_WARNING, 'got entry without an uid');
-    return;
-  }
+  # XXX we are also interested in the puavoLocked attribute
+  # XXX what kind of event we get when an account is REMOVED from Puavo?
 
-  unless ($entry->exists('sambaNTPassword')) {
-    syslog(LOG_WARNING, 'entry has no sambaNTPassword');
-    return;
+  foreach (qw(givenName sambaNTPassword sambaSID sn uid)) {
+    unless ($entry->exists($_)) {
+      syslog(LOG_WARNING, "got an entry without '%s' attribute", $_);
+      return;
+    }
   }
 
   my $uid = $entry->get_value('uid');
-  my $sambaNTPassword = $entry->get_value('sambaNTPassword');
+
+  my $puavo_account_info = {
+    full_name => $entry->get_value('givenName')
+                    . ' ' . $entry->get_value('sn'),
+    locked    => $entry->get_value('puavoLocked'),
+    nt_hash   => $entry->get_value('sambaNTPassword'),
+    sid       => $entry->get_value('sambaSID'),
+    uid       => $uid,
+  };
 
   eval {
-    my $old_user_nt_pwhash = check_user_password($uid);
+    my $samba_account_info = get_samba_account_info($uid);
 
-    unless (defined($old_user_nt_pwhash)) {
-      create_user($uid);
-      $old_user_nt_pwhash = '';
+    unless (defined($samba_account_info)) {
+      create_user($puavo_account_info);
+      $samba_account_info = get_samba_account_info($uid);
+      die("could not get user account info for ${uid}"
+            . ' (even though it was just created)')
+        unless defined($samba_account_info);
     }
 
-    if ($old_user_nt_pwhash ne $sambaNTPassword) {
-      set_user_password($uid, $sambaNTPassword);
-    }
+    update_user_information($puavo_account_info, $samba_account_info);
   };
-  if ($@) { syslog(LOG_ERR, '%s', $@); }
+  if ($@) {
+    chomp $@;
+    syslog(LOG_ERR, 'error in updating user information: %s', $@);
+  }
 }
