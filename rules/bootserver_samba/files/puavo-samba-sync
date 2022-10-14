@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 
+use BerkeleyDB;
 use File::Basename;
 use File::Slurper qw(read_text);
 use IPC::Run qw(run);
@@ -11,9 +12,21 @@ use Net::LDAP::Control::SyncRequest;
 use Net::LDAP::Constant qw(LDAP_SYNC_REFRESH_ONLY
                            LDAP_SYNC_REFRESH_AND_PERSIST
                            LDAP_SUCCESS);
+use Net::LDAP::LDIF;
+use Net::LDAP::Util qw(escape_dn_value escape_filter_value);
 use Sys::Syslog qw(:standard :macros);
 
 openlog(basename($0), '', 'user');
+
+my $samba_ad_dc_dir = '/var/lib/samba-ad-dc';
+my $samba_sam_ldb_path = "${samba_ad_dc_dir}/private/sam.ldb";
+my $puavo_idmap_path = "${samba_ad_dc_dir}/.puavo_idmap.db";
+my $puavoid_db
+  = tie my %puavoid_to_samba_sid, 'BerkeleyDB::Hash',
+           -Filename => $puavo_idmap_path,
+           -Flags => DB_CREATE,
+           -Mode => 0600
+      or die "could not open ${puavo_idmap_path}";
 
 chomp(my $bind_dn   = read_text('/etc/puavo/ldap/dn'));
 chomp(my $bind_pw   = read_text('/etc/puavo/ldap/password'));
@@ -46,10 +59,8 @@ my $req = Net::LDAP::Control::SyncRequest->new(
 # XXX how to prevent multiple instances of this script running?
 # XXX should there be some kind of a lock?
 
-# XXX we could also perhaps read and update usernames and such
-# XXX tracking puavoId should also be useful?  or maybe uidNumber is enough?
 my @followed_attributes
-  = qw(givenName sambaNTPassword puavoLocked sambaSID sn uid);
+  = qw(givenName puavoId puavoLocked sambaNTPassword sn uid);
 
 my $search = $ldap->search(base     => "ou=People,${ldap_base}",
                            scope    => 'sub',
@@ -74,11 +85,8 @@ sub handle_search_event {
 # XXX how to remove users that have been removed from Puavo
 # XXX how to lock users that have been locked in Puavo?
 
-sub get_samba_account_info {
+sub get_samba_account_info_by_uid {
   my ($uid) = @_;
-
-  # XXX pdbedit apparently needs to use -u :-( instead if -U
-  # XXX -U is only for setting and modifying, and not similar to -u
 
   my $status = run([ 'pdbedit', '-s', '/etc/samba/samba-ad-dc.conf',
                                 '-u', $uid, '-vw' ],
@@ -94,18 +102,11 @@ sub get_samba_account_info {
     $full_name    = $1     if /^Full Name\s*:\s*(.*)$/;
     $nt_hash      = lc($1) if /^NT hash\s*:\s*(.*)$/;
     $sid          = $1     if /^User SID\s*:\s*(.*)$/;
-    $uid_in_samba = $1     if /^Unix username\s*:\s*(.*)$/;
   }
 
   die "user account flags not found for ${uid}" unless defined($flags);
   die "user account full name not found for ${uid}" unless defined($full_name);
   die "user account NT password not found for ${uid}" unless defined($nt_hash);
-  die "user account UID not found for ${uid}" unless defined($uid_in_samba);
-  die "user account unix username not found for ${uid}" unless defined($uid);
-
-  if ($uid_in_samba ne $uid) {
-    die "user account info does not match user we were looking for with $uid";
-  }
 
   {
     flags     => $flags,
@@ -113,7 +114,7 @@ sub get_samba_account_info {
     nt_hash   => $nt_hash,
     sid       => $sid,
     uid       => $uid,
-  }
+  };
 }
 
 sub create_user {
@@ -132,9 +133,116 @@ sub create_user {
     or die "could not create user: $err";
 }
 
+sub get_samba_account_info_by_sid {
+  my ($sid) = @_;
+
+  my $search_sid_filter = sprintf('(objectSid=%s)', escape_filter_value($sid));
+
+  my @cmd = ('ldbsearch', '-H', $samba_sam_ldb_path,
+               $search_sid_filter, 'sAMAccountName');
+
+  open(my $ldif_cmd, '-|', @cmd)
+    or die "could not run ldbsearch looking for $sid";
+
+  my $ldif = Net::LDAP::LDIF->new($ldif_cmd, 'r', onerror => 'undef');
+
+  while (!$ldif->eof()) {
+    my $entry = $ldif->read_entry();
+    next unless $entry;
+    close($ldif_cmd);
+    return {
+      dn  => $entry->dn,
+      uid => $entry->get_value('sAMAccountName'),
+    };
+  }
+
+  close($ldif_cmd);
+  return undef;
+}
+
+sub check_and_maybe_update_uid {
+  my ($puavo_account_info) = @_;
+
+  my $puavo_id = $puavo_account_info->{puavo_id};
+  my $uid = $puavo_account_info->{uid};
+  my $sid = $puavoid_to_samba_sid{$puavo_id};
+
+  return unless $sid;
+
+  my $samba_account_info = get_samba_account_info_by_sid($sid);
+
+  if (!$samba_account_info) {
+    syslog(LOG_WARNING,
+           'could not find Samba SID %s for %s, removing from puavo_idmap',
+           $sid, $uid);
+    delete $puavoid_to_samba_sid{$puavo_id};
+    $puavoid_db->db_sync();
+  }
+
+  my $uid_in_samba = $samba_account_info->{uid};
+
+  if ($uid eq $uid_in_samba) {
+    return;
+  }
+
+  syslog(LOG_INFO,
+         'user id in Puavo has changed from "%s" to "%s", updating id',
+         $uid_in_samba, $uid);
+
+  my $current_dn = $samba_account_info->{dn};
+  if ($current_dn !~ /^CN=(.*?),(.*)$/) {
+    die "Samba user DN ${current_dn} is not in expected format";
+  }
+  my $expected_dn = sprintf('CN=%s,%s', escape_dn_value($uid), $2);
+
+  if ($current_dn ne $expected_dn) {
+    # XXX this outputs "Renamed 1 record" to stdout/stderr
+    # XXX maybe we could direct that elsewhere?
+    run([ 'ldbrename', '-H', $samba_sam_ldb_path, $current_dn, $expected_dn ])
+      or die "could not update user ${uid} information";
+  }
+
+  my @cmd = ('ldbmodify', '-H', $samba_sam_ldb_path);
+
+  open(my $ldif_cmd, '|-', @cmd)
+    or die "could not run ldbmodify to change user id";
+
+  my $change_entry = Net::LDAP::Entry->new;
+  $change_entry->dn($expected_dn);
+  $change_entry->add(changetype     => 'modify');
+  $change_entry->add(replace        => 'sAMAccountName');
+  $change_entry->add(sAMAccountName => $uid);
+
+  print $ldif_cmd $change_entry->ldif();
+
+  close($ldif_cmd);
+}
+
+sub update_puavo_id_map {
+  my ($puavo_account_info, $samba_account_info) = @_;
+
+  my $puavo_id = $puavo_account_info->{puavo_id};
+  my $sid = $samba_account_info->{sid};
+
+  if (!$puavoid_to_samba_sid{$puavo_id}) {
+    $puavoid_to_samba_sid{$puavo_id} = $sid;
+    $puavoid_db->db_sync();
+    return;
+  }
+
+  if ($puavoid_to_samba_sid{$puavo_id} ne $sid) {
+    my $uid = $puavo_account_info->{uid};
+    die "user $uid puavoId ($puavo_id) maps to a new Samba SID $sid,"
+        . " this should never happen";
+  }
+}
+
 sub update_user_information {
   my ($puavo_account_info, $samba_account_info) = @_;
 
+  # XXX what if user uid has changed?  we should check for changed uids,
+  # XXX and check user uid first and update that in case it has changed
+  my $puavo_id = $puavo_account_info->{puavo_id};
   my $uid = $puavo_account_info->{uid};
 
   my @change_opts;
@@ -155,7 +263,7 @@ sub update_user_information {
   my $in  = '';
   my $err = '';
   run([ 'pdbedit', '-r', '-s', '/etc/samba/samba-ad-dc.conf', '-u', $uid,
-                   @change_opts ],
+        @change_opts ],
       \$in, \my $out, \$err)
     or die "could not update user ${uid} information: ${err}";
 }
@@ -166,7 +274,7 @@ sub handle_entry {
   # XXX we are also interested in the puavoLocked attribute
   # XXX what kind of event we get when an account is REMOVED from Puavo?
 
-  foreach (qw(givenName sambaNTPassword sambaSID sn uid)) {
+  foreach (qw(givenName puavoId sambaNTPassword sn uid)) {
     unless ($entry->exists($_)) {
       syslog(LOG_WARNING, "got an entry without '%s' attribute", $_);
       return;
@@ -180,20 +288,24 @@ sub handle_entry {
                     . ' ' . $entry->get_value('sn'),
     locked    => $entry->get_value('puavoLocked'),
     nt_hash   => $entry->get_value('sambaNTPassword'),
-    sid       => $entry->get_value('sambaSID'),
+    puavo_id  => $entry->get_value('puavoId'),
     uid       => $uid,
   };
 
   eval {
-    my $samba_account_info = get_samba_account_info($uid);
+    check_and_maybe_update_uid($puavo_account_info);
+
+    my $samba_account_info = get_samba_account_info_by_uid($uid);
 
     unless (defined($samba_account_info)) {
       create_user($puavo_account_info);
-      $samba_account_info = get_samba_account_info($uid);
+      $samba_account_info = get_samba_account_info_by_uid($uid);
       die("could not get user account info for ${uid}"
             . ' (even though it was just created)')
         unless defined($samba_account_info);
     }
+
+    update_puavo_id_map($puavo_account_info, $samba_account_info);
 
     update_user_information($puavo_account_info, $samba_account_info);
   };
