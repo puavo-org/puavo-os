@@ -420,12 +420,6 @@ class packages {
 
     [ 'amtterm'
     , 'hostapd'
-    , 'libnss3-tools'      #needed by pyscrlink
-    , 'python3-bluez'      #needed by pyscrlink
-    , 'python3-cffi'       #needed by pyscrlink
-    , 'python3-openssl'    #needed by pyscrlink
-    , 'python3-pycparser'  #needed by pyscrlink
-    , 'python3-websockets' #needed by pyscrlink
     , 'vtun' ]:
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
@@ -697,12 +691,18 @@ class packages {
     # some dependencies from puavo-pkg packages
     [ 'libftdi1'                          # mindplus
     , 'libhidapi-hidraw0'                 # mindplus
+    , 'libnss3-tools'                     # pyscrlink
     , 'libopencsg1'                       # openscad-nightly
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
     # XXX bullseye , 'libqwt5-qt4'        # aseba
     , 'libusb-0.1-4'                      # mindplus
+    , 'python3-bluez'                     # pyscrlink
+    , 'python3-cffi'                      # pyscrlink
+    , 'python3-openssl'                   # pyscrlink
+    , 'python3-pycparser'                 # pyscrlink
+    , 'python3-websockets'                # pyscrlink
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
     ]:
