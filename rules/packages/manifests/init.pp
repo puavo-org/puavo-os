@@ -421,6 +421,7 @@ class packages {
     [ 'amtterm'
     , 'hostapd'
     , 'libnss3-tools'      #needed by pyscrlink
+    , 'python3-bluez'      #needed by pyscrlink
     , 'python3-cffi'       #needed by pyscrlink
     , 'python3-openssl'    #needed by pyscrlink
     , 'python3-pycparser'  #needed by pyscrlink
