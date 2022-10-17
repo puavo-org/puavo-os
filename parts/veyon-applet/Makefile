@@ -38,7 +38,7 @@ install: installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		start-puavo-veyon-applet.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
-		po/fi/puavo-veyon-applet.mo
+		po/de/puavo-veyon-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-veyon-applet.mo
 
