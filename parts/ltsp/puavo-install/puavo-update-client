@@ -125,17 +125,24 @@ if $automatically_triggered && ! $personally_administered; then
   use_rate_limit=true
 fi
 
-dbus_cmd="
-  dbus-send --dest=org.puavo.client.Daemon
-            --print-reply=literal
-            --reply-timeout=30000
-            --system
-            /updater
-"
+run_dbus() {
+  dbus-send --dest=org.puavo.client.Daemon \
+            --print-reply=literal          \
+            --reply-timeout=30000          \
+            --system                       \
+            "$@" > /dev/null
+}
+
+# trigger puavo-pkg-update
+if run_dbus /pkgupdater org.puavo.client.pkgupdater.StartUpdate; then
+  log notice 'triggered puavo-pkg updates'
+else
+  log err 'error in triggering puavo-pkg updates'
+fi
 
 if ! $do_image_update; then
   # do only the configuration update
-  if $dbus_cmd org.puavo.client.update.UpdateConfiguration >/dev/null; then
+  if run_dbus /updater org.puavo.client.update.UpdateConfiguration; then
     log notice 'configuration update started'
   else
     log err 'starting configuration update failed'
@@ -149,8 +156,8 @@ else
   fi
 
   # do the whole update (configuration update + image update)
-  if $dbus_cmd org.puavo.client.update.Update \
-               "boolean:${use_rate_limit}" >/dev/null; then
+  if run_dbus /updater org.puavo.client.update.Update \
+              "boolean:${use_rate_limit}"; then
     log notice 'system update started'
   else
     log notice 'starting system update failed'
