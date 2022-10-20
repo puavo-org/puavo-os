@@ -116,6 +116,50 @@ class OverlayHandler < DBus::Object
   end
 end
 
+class PkgUpdater < DBus::Object
+  def initialize(subpath)
+    super
+    @puavopkg_update_thread = nil
+  end
+
+  dbus_interface 'org.puavo.client.pkgupdater' do
+    dbus_method :StartUpdate, '' do
+      return if @puavopkg_update_thread
+      puavopkg_update()
+    end
+  end
+
+  def puavopkg_update
+    @puavopkg_update_thread = Thread.new do
+      begin
+        log(Syslog::LOG_INFO, "starting puavo-pkg update\n")
+        pid = spawn('/usr/sbin/puavo-pkg-update', :in     => '/dev/null',
+                                                  :out    => '/dev/null',
+                                                  :err    => '/dev/null',
+                                                  :pgroup => true)
+        pid, status = Process.waitpid2(pid) rescue nil
+        if status.success? then
+          logerr(Syslog::LOG_INFO, "puavo-pkg-update returned with success\n")
+        elsif status.exited?
+          logerr(Syslog::LOG_WARNING,
+                 "puavo-pkg-update returned error with code %d\n",
+                 status.exitstatus)
+        elsif status.signaled? then
+          logerr(Syslog::LOG_WARNING,
+                 "puavo-pkg-update was terminated by signal %d\n",
+                 status.termsig)
+        end
+      rescue StandardError => e
+        logerr(Syslog::LOG_WARNING,
+               "Error in running puavo-pkg-update: %s\n",
+               e.message)
+      ensure
+        @puavopkg_update_thread = nil
+      end
+    end
+  end
+end
+
 class ContentUpdates < DBus::Object
   EXTRA_CONTENT_SCRIPTS_PATH = '/etc/puavo-extra-contents/scripts'
 
@@ -530,7 +574,8 @@ service = bus.request_service("org.puavo.client.Daemon")
 # Export all dbus-accessible objects.
 service.export(ContentUpdates.new('/contentupdates'))
 service.export(OverlayHandler.new('/overlayhandler'))
-service.export(Updater.new("/updater"))
+service.export(PkgUpdater.new('/pkgupdater'))
+service.export(Updater.new('/updater'))
 
 # Run Forrest, run!
 loop = DBus::Main.new
