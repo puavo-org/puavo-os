@@ -526,7 +526,7 @@ class ImageUpdater(PuavoWidget):
     self.dbus_iface.CancelImageUpdate()
 
 
-  def check_for_updates(self, widget=None):
+  def check_for_updates(self):
     self.set_update_button_mode('checking')
 
     self.dbus_iface \
@@ -534,9 +534,16 @@ class ImageUpdater(PuavoWidget):
                              error_handler=self.handle_dbus_error)
 
 
+  def gui_check_for_updates(self, widget=None):
+    # When checking update from GUI, also update puavo-pkgs.
+    # This provides a way to trigger puavo-pkg updates from UI.
+    self.applet.puavopkg_updater.update()
+    self.check_for_updates()
+
+
   def setup_dbus_iface(self):
     self.dbus_iface = self.connect_to_dbus('/updater',
-                                             'org.puavo.client.update')
+                                           'org.puavo.client.update')
 
     self.dbus_iface.connect_to_signal('UpdateIsUpToDate',
                                         self.on_update_isuptodate)
@@ -750,7 +757,7 @@ class ImageUpdater(PuavoWidget):
       mode = 'check'
 
     if mode == 'check':
-      action      = self.check_for_updates
+      action      = self.gui_check_for_updates
       message     = _tr('Check for system updates')
       sensitivity = True
     elif mode == 'checking':
@@ -824,6 +831,18 @@ class ImageUpdater(PuavoWidget):
   def view_log(self, widget):
     self.log_dialog.run()
     self.log_dialog.hide()
+
+
+class PuavopkgUpdater(PuavoWidget):
+  def __init__(self, applet):
+    self.applet = applet
+    self.dbus_iface \
+      = self.connect_to_dbus('/pkgupdater', 'org.puavo.client.pkgupdater')
+
+
+  def update(self):
+    self.dbus_iface.StartUpdate(reply_handler=lambda: None,
+                                error_handler=lambda dbusexception: None)
 
 
 class MonitorsUpdater(PuavoWidget):
@@ -1348,6 +1367,7 @@ class PuavoDesktopApplet:
     self.content_updates    = ContentUpdates(self)
     self.image_updater      = ImageUpdater(self)
     self.monitors_updater   = MonitorsUpdater(self)
+    self.puavopkg_updater   = PuavopkgUpdater(self)
     self.remote_assistance  = RemoteAssistance(self)
     self.reset_dev_state    = ResetDevState(self)
 
