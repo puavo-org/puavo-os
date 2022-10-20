@@ -32,10 +32,6 @@ installdirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	${MAKE} -C packages installdirs
 
-# XXX We do not install puavo-pkg-updater, puavo-pkg-updater.conf and
-# XXX puavo-update-remote-pkginstaller-bundle because we probably
-# XXX do not need them anymore.
-
 .PHONY: install
 install: installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
