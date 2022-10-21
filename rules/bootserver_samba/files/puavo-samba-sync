@@ -20,13 +20,13 @@ openlog(basename($0), '', 'user');
 
 my $samba_ad_dc_dir = '/var/lib/samba-ad-dc';
 my $samba_sam_ldb_path = "${samba_ad_dc_dir}/private/sam.ldb";
-my $puavo_idmap_path = "${samba_ad_dc_dir}/.puavo_idmap.db";
-my $puavoid_db
-  = tie my %puavoid_to_samba_sid, 'BerkeleyDB::Hash',
-           -Filename => $puavo_idmap_path,
+my $puavo_dnmap_path = "${samba_ad_dc_dir}/.puavo_dnmap.db";
+my $puavodn_db
+  = tie my %puavodn_to_samba_sid, 'BerkeleyDB::Hash',
+           -Filename => $puavo_dnmap_path,
            -Flags => DB_CREATE,
            -Mode => 0600
-      or die "could not open ${puavo_idmap_path}";
+      or die "could not open ${puavo_dnmap_path}";
 
 
 sub handle_search_event {
@@ -119,9 +119,9 @@ sub get_samba_account_info_by_sid {
 sub check_and_maybe_update_uid {
   my ($puavo_account_info) = @_;
 
-  my $puavo_id = $puavo_account_info->{puavo_id};
+  my $puavo_dn = $puavo_account_info->{dn};
   my $uid = $puavo_account_info->{uid};
-  my $sid = $puavoid_to_samba_sid{$puavo_id};
+  my $sid = $puavodn_to_samba_sid{$puavo_dn};
 
   return unless $sid;
 
@@ -129,10 +129,10 @@ sub check_and_maybe_update_uid {
 
   if (!$samba_account_info) {
     syslog(LOG_WARNING,
-           'could not find Samba SID %s for %s, removing from puavo_idmap',
+           'could not find Samba SID %s for %s, removing from puavo_dnmap',
            $sid, $uid);
-    delete $puavoid_to_samba_sid{$puavo_id};
-    $puavoid_db->db_sync();
+    delete $puavodn_to_samba_sid{$puavo_dn};
+    $puavodn_db->db_sync();
   }
 
   my $uid_in_samba = $samba_account_info->{uid};
@@ -168,21 +168,21 @@ sub check_and_maybe_update_uid {
     or die "failed to change sAMAccountName for user ${uid}";
 }
 
-sub update_puavo_id_map {
+sub update_puavo_dn_map {
   my ($puavo_account_info, $samba_account_info) = @_;
 
-  my $puavo_id = $puavo_account_info->{puavo_id};
+  my $puavo_dn = $puavo_account_info->{dn};
   my $sid = $samba_account_info->{sid};
 
-  if (!$puavoid_to_samba_sid{$puavo_id}) {
-    $puavoid_to_samba_sid{$puavo_id} = $sid;
-    $puavoid_db->db_sync();
+  if (!$puavodn_to_samba_sid{$puavo_dn}) {
+    $puavodn_to_samba_sid{$puavo_dn} = $sid;
+    $puavodn_db->db_sync();
     return;
   }
 
-  if ($puavoid_to_samba_sid{$puavo_id} ne $sid) {
+  if ($puavodn_to_samba_sid{$puavo_dn} ne $sid) {
     my $uid = $puavo_account_info->{uid};
-    die "user $uid puavoId ($puavo_id) maps to a new Samba SID $sid,"
+    die "user $uid puavo account ($puavo_dn) maps to a new Samba SID $sid,"
         . " this should never happen";
   }
 }
@@ -190,7 +190,7 @@ sub update_puavo_id_map {
 sub update_user_information {
   my ($puavo_account_info, $samba_account_info) = @_;
 
-  my $puavo_id = $puavo_account_info->{puavo_id};
+  my $puavo_dn = $puavo_account_info->{dn};
   my $uid = $puavo_account_info->{uid};
 
   my @change_opts;
@@ -226,30 +226,74 @@ sub update_user_information {
     or die "could not update user ${uid} information: ${err}";
 }
 
+sub remove_account {
+  my ($puavo_dn) = @_;
+
+  eval {
+    syslog(LOG_INFO, 'deleting user %s from Samba', $puavo_dn);
+
+    my $sid = $puavodn_to_samba_sid{$puavo_dn};
+    unless ($sid) {
+      die('could not find user SambaSID for Puavo account '
+            . $puavo_dn . ' that should be removed');
+    }
+
+    my $samba_account_info = get_samba_account_info_by_sid($sid);
+    unless ($samba_account_info) {
+      die('could not lookup samba account information for Samba SID ' . $sid);
+    }
+
+    run([ 'pdbedit', '-s', '/etc/samba/samba-ad-dc.conf',
+                     '-x', '-u', $samba_account_info->{uid} ],
+            '<', '/dev/null', '>&', '/dev/null')
+      or die "could not remove ${puavo_dn} (SambaSID ${sid}) from Samba";
+
+    delete $puavodn_to_samba_sid{$puavo_dn};
+    $puavodn_db->db_sync();
+
+    syslog(LOG_WARNING, 'user %s was deleted from Samba with success',
+                        $puavo_dn);
+  };
+  if ($@) {
+    chomp $@;
+    syslog(LOG_ERR, 'error in removing user account: %s', $@);
+  }
+}
+
 sub handle_entry {
   my ($entry) = @_;
 
-  # XXX what kind of event we get when an account is REMOVED from Puavo?
+  # XXX We also need to iterate all accounts to remove accounts that
+  # XXX have been missing while we were not running.
+  # XXX Perhaps we should do a full ldap search somehow?
+  # XXX (we should at least know when we have exhausted the current database
+  # XXX state)
 
-  foreach (qw(givenName puavoId puavoLocked sambaNTPassword sn uid)) {
-    unless ($entry->exists($_)) {
-      syslog(LOG_WARNING, "got an entry without '%s' attribute", $_);
-      return;
-    }
+  if (!$entry->attributes) {
+    remove_account($entry->dn);
+    return;
   }
 
-  my $uid = $entry->get_value('uid');
-
-  my $puavo_account_info = {
-    full_name => $entry->get_value('givenName')
-                   . ' ' . $entry->get_value('sn'),
-    locked    => ($entry->get_value('puavoLocked') eq 'TRUE'),
-    nt_hash   => $entry->get_value('sambaNTPassword'),
-    puavo_id  => $entry->get_value('puavoId'),
-    uid       => $uid,
-  };
-
   eval {
+    my $uid = $entry->get_value('uid');
+
+    foreach (qw(givenName puavoLocked sambaNTPassword sn uid)) {
+      unless ($entry->exists($_)) {
+        syslog(LOG_WARNING, "user %s does not have '%s' attribute",
+                            $uid || $entry->dn, $_);
+        return;
+      }
+    }
+
+    my $puavo_account_info = {
+      dn        => $entry->dn,
+      full_name => $entry->get_value('givenName')
+                     . ' ' . $entry->get_value('sn'),
+      locked    => ($entry->get_value('puavoLocked') eq 'TRUE'),
+      nt_hash   => $entry->get_value('sambaNTPassword'),
+      uid       => $uid,
+    };
+
     check_and_maybe_update_uid($puavo_account_info);
 
     my $samba_account_info = get_samba_account_info_by_uid($uid);
@@ -262,7 +306,7 @@ sub handle_entry {
         unless defined($samba_account_info);
     }
 
-    update_puavo_id_map($puavo_account_info, $samba_account_info);
+    update_puavo_dn_map($puavo_account_info, $samba_account_info);
 
     update_user_information($puavo_account_info, $samba_account_info);
   };
@@ -303,8 +347,7 @@ my $req = Net::LDAP::Control::SyncRequest->new(
 # XXX how to prevent multiple instances of this script running?
 # XXX should there be some kind of a lock?
 
-my @followed_attributes
-  = qw(givenName puavoId puavoLocked sambaNTPassword sn uid);
+my @followed_attributes = qw(givenName puavoLocked sambaNTPassword sn uid);
 
 my $search = $ldap->search(base     => "ou=People,${ldap_base}",
                            scope    => 'sub',
