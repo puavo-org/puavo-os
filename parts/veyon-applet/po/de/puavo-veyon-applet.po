@@ -14,17 +14,17 @@ msgstr ""
 #: puavo-veyon-applet:299
 #, python-format
 msgid "%s on %s has joined session."
-msgstr "%s auf %s hat die Sitzung angemeldet."
+msgstr "%s auf %s hat sich die Sitzung angemeldet."
 
 #: puavo-veyon-applet:311 puavo-veyon-applet:356
 #, python-format
 msgid "%s on %s disconnected from session."
-msgstr "%s auf %s hat die Sitzung abgemeldet."
+msgstr "%s auf %s hat sich die Sitzung abgemeldet."
 
 #: puavo-veyon-applet:455 puavo-veyon-applet:809
 #, python-format
 msgid "Participants: %d (see log)"
-msgstr "Teilnehmer:innen: %d (Protokoll öffnen)"
+msgstr "TeilnehmerInnen: %d (Protokoll öffnen)"
 
 #: puavo-veyon-applet:468
 msgid "Change PIN"
@@ -81,10 +81,12 @@ msgid ""
 "Closing connections because of a duplicate session, are there many sessions "
 "with the same PIN?"
 msgstr ""
+"Ein Verbindungsausfall wegen einer doppelten Sitzung. Gibt es zwei "
+"Sitzungen mit der gleichen PIN?"
 
 #: puavo-veyon-applet:1119 puavo-veyon-applet:1410
 msgid "Join a Veyon session"
-msgstr "Ein Veyon-Sitzung "
+msgstr "Eine Veyon-Sitzung beitreten"
 
 #: puavo-veyon-applet:1211
 msgid "Veyon session closed"
@@ -101,7 +103,7 @@ msgstr "%s auf das Gerät %s bittet um diese Sitzung verbinden zu können."
 
 #: puavo-veyon-applet:1313
 msgid "Check PIN."
-msgstr "Bitte PIN prüfen."
+msgstr "Bitte PIN überprüfen."
 
 #: puavo-veyon-applet:1366
 msgid "Check PIN and press ENTER to accept external control."
@@ -112,7 +114,7 @@ msgstr ""
 #: puavo-veyon-applet:1392
 #, python-format
 msgid "Close a Veyon session that is controlled by %s on %s"
-msgstr "Verlasse die von %s auf %s gesteuerte Veyon-SItzung."
+msgstr "Verlasse die von %s auf %s gesteuerte Veyon-Sitzung."
 
 #: puavo-veyon-applet:1442
 msgid "no matching session found for PIN"
