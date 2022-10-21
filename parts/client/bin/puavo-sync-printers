@@ -168,18 +168,15 @@ current_printers = HTTParty.get(options[:get_printers],
  )
 assert_response res
 
-current_printer_descriptions = current_printers.map do |p|
-  p["description"]
-end
-
 server_printers = parse_cups_printers_conf(options[:printers_conf])
 puts "Ensuring #{ server_printers.size } printers to puavo"
 server_printers.each do |description, info|
   begin
-    # TODO: We might want to check if any of the attributes has been changed and
-    # update the printer. Now we only send the printer data if it is completely
-    # new.
-    if current_printer_descriptions.include?(description)
+    cp = current_printers.select {|thispr, val| thispr["description"] == description}
+    if cp.size > 0
+      next if cp[0]["model"] == info["MakeModel"] && cp[0]["location"] == info["Location"] \
+        && cp[0]["type"] == info["Type"] && cp[0]["local_uri"] == info["DeviceURI"]
+      puts "Printer details changed, updating existing #{description}"
       next
     end
 
