@@ -250,6 +250,16 @@ sub update_user_information {
     push @change_opts, '--set-nt-hash', $puavo_account_info->{nt_hash};
   }
 
+  if ($puavo_account_info->{locked}
+        && index($samba_account_info->{flags}, 'D') == -1) {
+    syslog(LOG_INFO, 'disabling user account %s', $puavo_account_info->{uid});
+    push @change_opts, '-c', '[D]';
+  } elsif (!$puavo_account_info->{locked}
+              && index($samba_account_info->{flags}, 'D') >= 0) {
+    syslog(LOG_INFO, 'enabling user account %s', $puavo_account_info->{uid});
+    push @change_opts, '-c', '[]';
+  }
+
   return unless @change_opts;
 
   my $in  = '';
@@ -263,10 +273,9 @@ sub update_user_information {
 sub handle_entry {
   my ($entry) = @_;
 
-  # XXX we are also interested in the puavoLocked attribute
   # XXX what kind of event we get when an account is REMOVED from Puavo?
 
-  foreach (qw(givenName puavoId sambaNTPassword sn uid)) {
+  foreach (qw(givenName puavoId puavoLocked sambaNTPassword sn uid)) {
     unless ($entry->exists($_)) {
       syslog(LOG_WARNING, "got an entry without '%s' attribute", $_);
       return;
@@ -277,8 +286,8 @@ sub handle_entry {
 
   my $puavo_account_info = {
     full_name => $entry->get_value('givenName')
-                    . ' ' . $entry->get_value('sn'),
-    locked    => $entry->get_value('puavoLocked'),
+                   . ' ' . $entry->get_value('sn'),
+    locked    => ($entry->get_value('puavoLocked') eq 'TRUE'),
     nt_hash   => $entry->get_value('sambaNTPassword'),
     puavo_id  => $entry->get_value('puavoId'),
     uid       => $uid,
