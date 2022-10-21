@@ -28,49 +28,6 @@ my $puavoid_db
            -Mode => 0600
       or die "could not open ${puavo_idmap_path}";
 
-chomp(my $bind_dn   = read_text('/etc/puavo/ldap/dn'));
-chomp(my $bind_pw   = read_text('/etc/puavo/ldap/password'));
-chomp(my $ldap_base = read_text('/etc/puavo/ldap/base'));
-chomp(my $ldap_host = read_text('/etc/puavo/ldap/master'));
-
-my $ldap = Net::LDAP->new($ldap_host);
-unless ($ldap) {
-  syslog(LOG_ERR, 'no ldap server %s', $ldap_host);
-  exit(1);
-}
-
-# XXX should really use verify
-my $ldap_response;
-$ldap_response = $ldap->start_tls(verify => 'none');
-if ($ldap_response->code != LDAP_SUCCESS) {
-  syslog(LOG_ERR, 'could not start_tls on %s', $ldap_host);
-  exit(1);
-}
-
-$ldap_response = $ldap->bind($bind_dn, password => $bind_pw);
-if ($ldap_response->code != LDAP_SUCCESS) {
-  syslog(LOG_ERR, 'failed to authenticate to %s', $ldap_host);
-  exit(1);
-}
-
-my $req = Net::LDAP::Control::SyncRequest->new(
-            mode => LDAP_SYNC_REFRESH_AND_PERSIST);
-
-# XXX how to prevent multiple instances of this script running?
-# XXX should there be some kind of a lock?
-
-my @followed_attributes
-  = qw(givenName puavoId puavoLocked sambaNTPassword sn uid);
-
-my $search = $ldap->search(base     => "ou=People,${ldap_base}",
-                           scope    => 'sub',
-                           control  => [ $req ],
-                           callback => \&handle_search_event,
-                           filter   => '(objectClass=sambaSamAccount)',
-                           attrs    => \@followed_attributes);
-
-# XXX should never get here, what to do if we do?
-# XXX is $search useful ?
 
 sub handle_search_event {
   my ($msg, $entry) = @_;
@@ -83,7 +40,6 @@ sub handle_search_event {
 }
 
 # XXX how to remove users that have been removed from Puavo
-# XXX how to lock users that have been locked in Puavo?
 
 sub get_samba_account_info_by_uid {
   my ($uid) = @_;
@@ -315,3 +271,47 @@ sub handle_entry {
     syslog(LOG_ERR, 'error in updating user information: %s', $@);
   }
 }
+
+chomp(my $bind_dn   = read_text('/etc/puavo/ldap/dn'));
+chomp(my $bind_pw   = read_text('/etc/puavo/ldap/password'));
+chomp(my $ldap_base = read_text('/etc/puavo/ldap/base'));
+chomp(my $ldap_host = read_text('/etc/puavo/ldap/master'));
+
+my $ldap = Net::LDAP->new($ldap_host);
+unless ($ldap) {
+  syslog(LOG_ERR, 'no ldap server %s', $ldap_host);
+  exit(1);
+}
+
+# XXX should really use verify
+my $ldap_response;
+$ldap_response = $ldap->start_tls(verify => 'none');
+if ($ldap_response->code != LDAP_SUCCESS) {
+  syslog(LOG_ERR, 'could not start_tls on %s', $ldap_host);
+  exit(1);
+}
+
+$ldap_response = $ldap->bind($bind_dn, password => $bind_pw);
+if ($ldap_response->code != LDAP_SUCCESS) {
+  syslog(LOG_ERR, 'failed to authenticate to %s', $ldap_host);
+  exit(1);
+}
+
+my $req = Net::LDAP::Control::SyncRequest->new(
+            mode => LDAP_SYNC_REFRESH_AND_PERSIST);
+
+# XXX how to prevent multiple instances of this script running?
+# XXX should there be some kind of a lock?
+
+my @followed_attributes
+  = qw(givenName puavoId puavoLocked sambaNTPassword sn uid);
+
+my $search = $ldap->search(base     => "ou=People,${ldap_base}",
+                           scope    => 'sub',
+                           control  => [ $req ],
+                           callback => \&handle_search_event,
+                           filter   => '(objectClass=sambaSamAccount)',
+                           attrs    => \@followed_attributes);
+
+# XXX should never get here, what to do if we do?
+# XXX is $search useful ?
