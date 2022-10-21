@@ -196,16 +196,10 @@ sub check_and_maybe_update_uid {
   my $expected_dn = sprintf('CN=%s,%s', escape_dn_value($uid), $2);
 
   if ($current_dn ne $expected_dn) {
-    # XXX this outputs "Renamed 1 record" to stdout/stderr
-    # XXX maybe we could direct that elsewhere?
-    run([ 'ldbrename', '-H', $samba_sam_ldb_path, $current_dn, $expected_dn ])
+    run([ 'ldbrename', '-H', $samba_sam_ldb_path, $current_dn, $expected_dn ],
+        '<', '/dev/null', '>&', '/dev/null')
       or die "could not update user ${uid} information";
   }
-
-  my @cmd = ('ldbmodify', '-H', $samba_sam_ldb_path);
-
-  open(my $ldif_cmd, '|-', @cmd)
-    or die "could not run ldbmodify to change user id";
 
   my $change_entry = Net::LDAP::Entry->new;
   $change_entry->dn($expected_dn);
@@ -213,9 +207,9 @@ sub check_and_maybe_update_uid {
   $change_entry->add(replace        => 'sAMAccountName');
   $change_entry->add(sAMAccountName => $uid);
 
-  print $ldif_cmd $change_entry->ldif();
-
-  close($ldif_cmd);
+  run([ 'ldbmodify', '-H', $samba_sam_ldb_path ],
+      \$change_entry->ldif(), '>&', '/dev/null')
+    or die "failed to change sAMAccountName for user ${uid}";
 }
 
 sub update_puavo_id_map {
@@ -240,8 +234,6 @@ sub update_puavo_id_map {
 sub update_user_information {
   my ($puavo_account_info, $samba_account_info) = @_;
 
-  # XXX what if user uid has changed?  we should check for changed uids,
-  # XXX and check user uid first and update that in case it has changed
   my $puavo_id = $puavo_account_info->{puavo_id};
   my $uid = $puavo_account_info->{uid};
 
