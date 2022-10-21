@@ -1,0 +1,13 @@
+#compdef puavo-bootserver-sync-images
+
+_puavo-bsi() {
+	COMPREPLY=()
+        current="${COMP_WORDS[COMP_CWORD]}"
+
+        allcmds="--delete-unmanaged-interactively --diff-limit --download-path --file --force-delete-unmanaged \
+          --force-verify --image --image-limit --keep-unused --no-puavo-series-url-lookup --series --url --help"
+
+	COMPREPLY=( $( compgen -W "${allcmds}" -- ${current}) )
+}
+
+complete -F _puavo-bsi puavo-bootserver-sync-images
