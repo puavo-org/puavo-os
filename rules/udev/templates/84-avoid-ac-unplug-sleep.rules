@@ -1,0 +1,4 @@
+#A hack to avoid directly going to sleep when AC is unplugged. This is not desired behaviour, people do often e.g. first unplug a laptop,
+#then move to another location (e.g. a more ergonomic table) and then start working. They shouldn't have to press key before unplugging AC
+#to avoid the sleep mode. The keysym used is XKB_KEY_VoidSymbol minus 1, just in case someone would use the VoidSymbol for some functionality.
+ACTION=="change", SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_NAME}=="AC", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="/usr/bin/adm-x --force /usr/bin/xdotool key 0xfffffe"
