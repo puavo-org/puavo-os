@@ -173,11 +173,16 @@ puts "Ensuring #{ server_printers.size } printers to puavo"
 server_printers.each do |description, info|
   begin
     cp = current_printers.select {|thispr, val| thispr["description"] == description}
-    if cp.size > 0
-      next if cp[0]["model"] == info["MakeModel"] && cp[0]["location"] == info["Location"] \
-        && cp[0]["type"] == info["Type"] && cp[0]["local_uri"] == info["DeviceURI"]
+    existing = -1
+    for i in (0..cp.size-1)
+      next if cp[i]["server_dn"] != options[:server_dn] #different cupses can have printers with same descriptions
+      existing = i
+    end
+
+    if existing > -1
+      next if cp[existing]["model"] == info["MakeModel"] && cp[existing]["location"] == info["Location"] \
+        && cp[existing]["type"] == info["Type"] && cp[existing]["local_uri"] == info["DeviceURI"]
       puts "Printer details changed, updating existing #{description}"
-      next
     end
 
     printer = {
