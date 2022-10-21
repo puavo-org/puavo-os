@@ -32,6 +32,7 @@ class packages::purged {
     , 'texlive-fonts-extra'
     , 'texlive-fonts-extra-doc'
     , 'texlive-fonts-recommended-doc'
+    , 'texlive-lang-english'     #seems actually to be only documentation
     , 'texlive-latex-base-doc'
     , 'texlive-latex-extra-doc'
     , 'texlive-latex-recommended-doc'
