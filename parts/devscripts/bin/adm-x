@@ -6,6 +6,12 @@ if [ -z "${SUDO_USER:-}" ]; then
   exec sudo $0 "$@"
 fi
 
+force_last=false
+if [ "${1:-}" = '--force' ]; then
+  force_last=true
+  shift
+fi
+
 default_path=
 declare -a choices user_ids
 
@@ -50,6 +56,8 @@ elif [ $i -eq 1 ]; then
   echo
   echo 'Choosing the only session.'
   choice=1
+elif $force_last; then
+  choice=$i
 else
   echo
   choice=
