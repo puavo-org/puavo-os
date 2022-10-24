@@ -302,6 +302,11 @@ if (\$hostname == "${hostname}") then {
     stop
   }
 
+  if \$programname == "puavo-samba-sync" then {
+    action(type="omfile" file="/var/log/puavo/puavo-samba-sync.log")
+    stop
+  }
+
   if \$programname == "puavo-rest" then {
     action(type="omfile" file="/var/log/puavo/puavo-rest.log")
     stop
