@@ -181,7 +181,7 @@ server_printers.each do |description, info|
 
     if existing > -1
       next if cp[existing]["model"] == info["MakeModel"] && cp[existing]["type"] == info["Type"] \
-        && (info["Location"]=="" || cp[existing]["location"] == info["Location"]) \
+        && (info["Location"]==nil || info["Location"]=="" || cp[existing]["location"] == info["Location"]) \
         && cp[existing]["local_uri"] == info["DeviceURI"] # ^ "" is somewhy saved as "-" in LDAP
       puts "Printer details changed, updating existing #{description}"
     end
