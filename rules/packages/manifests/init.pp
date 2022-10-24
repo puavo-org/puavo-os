@@ -786,9 +786,10 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-5.10.0-19-amd64';
 
+    # XXX The $r8168_module works with 5.18 but the version
+    # XXX in backports (in 2022-10-24) does not work with 5.19.
     '5.19.0-0.deb11.2-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module
-                      , $r8168_module
                       , $virtualbox_module ],
       package_name => 'linux-image-5.19.0-0.deb11.2-amd64-unsigned';
   }
