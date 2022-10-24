@@ -1,11 +1,8 @@
 cdrom/*
 cow
 dev/*
-etc/apt/apt.conf.d/00imagebuild-proxy
 etc/apt/sources.list.d/puavo-os-local.list
-etc/epoptes/server.key
 etc/machine-id
-etc/mysql/debian.cnf
 etc/NetworkManager/system-connections/*
 etc/udev/rules.d/??-persistent-*.rules
 home/*
@@ -14,7 +11,6 @@ lost+found/*
 media/*
 mnt/*
 mntroot
-opt/ltsp*
 proc/*
 puavo-os/debs/.archive
 puavo-os/debs/.workdir
@@ -29,14 +25,10 @@ tmp/*
 var/backups/*
 var/cache/apt/archives/*.deb
 var/cache/apt/archives/partial/*
-var/cache/apt-xapian-index/*
-var/cache/lightdm/dmrc/*
 var/cache/puavo-pkg/*
 var/cache/puppet/*
 var/crash/*
 var/lib/apt/lists/*
-var/lib/lightdm/.*
-var/lib/lightdm/*
 var/lib/mysql/*
 var/lib/sudo/*
 var/log/*.1
@@ -50,8 +42,7 @@ var/tmp/.*
 var/tmp/*
 
 # Remove build-time resolvconfs
-etc/resolvconf/resolv.conf.d/original
-etc/resolvconf/resolv.conf.d/tail
+etc/resolvconf/resolv.conf.d/*
 
 # Remove build-time sysv rc policy
 usr/sbin/policy-rc.d
