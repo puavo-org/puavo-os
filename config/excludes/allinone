@@ -15,14 +15,14 @@ proc/*
 puavo-os/debs/.archive
 puavo-os/debs/.workdir
 rofs
-run/.*
 run/*
+run/.*
 srv/*
 state/*
 sys/*
-tmp/.*
 tmp/*
-/usr/lib/x86_64-linux-gnu/avogadro2/staticplugins
+tmp/.*
+usr/lib/x86_64-linux-gnu/avogadro2/staticplugins
 var/backups/*
 var/cache/apt/archives/*.deb
 var/cache/apt/archives/partial/*
@@ -36,11 +36,11 @@ var/log/*.1
 var/log/*.gz
 var/log/*.old
 var/mail/*
-var/run/.*
 var/run/*
+var/run/.*
 var/spool/squid3/*
-var/tmp/.*
 var/tmp/*
+var/tmp/.*
 
 # Remove build-time resolvconfs
 etc/resolvconf/resolv.conf.d/*
