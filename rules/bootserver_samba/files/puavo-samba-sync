@@ -28,18 +28,43 @@ my $puavodn_db
            -Mode => 0600
       or die "could not open ${puavo_dnmap_path}";
 
+my %puavo_accounts_seen;
 
 sub handle_search_event {
   my ($msg, $entry) = @_;
 
   return unless $entry;
 
+  if ($entry->isa('Net::LDAP::Intermediate::SyncInfo')) {
+     my $refresh_done = $entry->{asn} && $entry->{asn}{refreshDelete}
+                          && $entry->{asn}{refreshDelete}{refreshDone};
+     if ($refresh_done) {
+       syslog(LOG_NOTICE, 'ldap refresh done, cleaning up Samba user accounts');
+       cleanup_removed_users_from_samba();
+     }
+  }
+
   if ($entry->isa('Net::LDAP::Entry')) {
     handle_entry($entry);
   }
 }
 
-# XXX how to remove users that have been removed from Puavo
+sub cleanup_removed_users_from_samba {
+  unless (%puavo_accounts_seen) {
+    # this is a safeguard to prevent accidents in case something is badly wrong
+    syslog(LOG_NOTICE, 'did not find any Puavo user account,'
+                         . ' not removing all Samba accounts');
+    return;
+  }
+
+  while (my ($puavo_dn, $sid) = each %puavodn_to_samba_sid) {
+    next if $puavo_accounts_seen{ $puavo_dn };
+    syslog(LOG_INFO,
+           'user %s (%s) has disappeared from Puavo, removing from Samba',
+           $puavo_dn, $sid);
+    remove_account($puavo_dn);
+  }
+}
 
 sub get_samba_account_info_by_uid {
   my ($uid) = @_;
@@ -239,14 +264,17 @@ sub remove_account {
     }
 
     my $samba_account_info = get_samba_account_info_by_sid($sid);
-    unless ($samba_account_info) {
-      die('could not lookup samba account information for Samba SID ' . $sid);
+    if ($samba_account_info) {
+      run([ 'pdbedit', '-s', '/etc/samba/samba-ad-dc.conf',
+                       '-x', '-u', $samba_account_info->{uid} ],
+              '<', '/dev/null', '>&', '/dev/null')
+        or die "could not remove ${puavo_dn} (SambaSID ${sid}) from Samba";
+    } else {
+      syslog(LOG_WARNING,
+             'could not lookup samba account information for Samba SID %s,'
+               . ' presuming it no longer exists',
+             $sid);
     }
-
-    run([ 'pdbedit', '-s', '/etc/samba/samba-ad-dc.conf',
-                     '-x', '-u', $samba_account_info->{uid} ],
-            '<', '/dev/null', '>&', '/dev/null')
-      or die "could not remove ${puavo_dn} (SambaSID ${sid}) from Samba";
 
     delete $puavodn_to_samba_sid{$puavo_dn};
     $puavodn_db->db_sync();
@@ -263,30 +291,27 @@ sub remove_account {
 sub handle_entry {
   my ($entry) = @_;
 
-  # XXX We also need to iterate all accounts to remove accounts that
-  # XXX have been missing while we were not running.
-  # XXX Perhaps we should do a full ldap search somehow?
-  # XXX (we should at least know when we have exhausted the current database
-  # XXX state)
-
   if (!$entry->attributes) {
     remove_account($entry->dn);
     return;
   }
 
   eval {
+    my $dn  = $entry->dn;
     my $uid = $entry->get_value('uid');
+
+    $puavo_accounts_seen{ $dn } = 1;
 
     foreach (qw(givenName puavoLocked sambaNTPassword sn uid)) {
       unless ($entry->exists($_)) {
         syslog(LOG_WARNING, "user %s does not have '%s' attribute",
-                            $uid || $entry->dn, $_);
+                            $uid || $dn, $_);
         return;
       }
     }
 
     my $puavo_account_info = {
-      dn        => $entry->dn,
+      dn        => $dn,
       full_name => $entry->get_value('givenName')
                      . ' ' . $entry->get_value('sn'),
       locked    => ($entry->get_value('puavoLocked') eq 'TRUE'),
