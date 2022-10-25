@@ -27,6 +27,7 @@ class puavo_pkg::packages {
 			, 'ekapeli-alku'
 			, 'enchanting'
 			, 'extra-xkb-symbols'
+			, 'filius'
 			, 'firefox'
 			, 'flashforge-flashprint'
 			, 'geogebra'
