@@ -15,9 +15,6 @@ class packages {
 
   @package {
     [ 'hooktftp'
-    , 'libfile-slurper-perl'  # dependency for "puavo-samba-sync"
-    , 'libipc-run-perl'       # dependency for "puavo-samba-sync"
-    , 'libnet-ldap-perl'      # dependency for "puavo-samba-sync"
     , 'puavo-ltsp-bootserver'
     , 'puavo-rest', ]:
       ensure => present,
@@ -39,6 +36,7 @@ class packages {
     , 'puavo-ltsp-install'
     , 'puavo-pam'
     , 'puavo-pkg'
+    , 'puavo-samba-sync'
     , 'puavo-sharedir-client'
     , 'puavo-usb-factory'
     , 'puavo-user-registration'

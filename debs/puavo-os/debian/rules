@@ -75,6 +75,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc	\
 		DESTDIR=$(CURDIR)/debian/puavomenu
 
+	$(MAKE) -C samba-sync				\
+		install prefix=/usr sysconfdir=/etc	\
+		DESTDIR=$(CURDIR)/debian/puavo-samba-sync
+
 	$(MAKE) -C sharedir/client			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-sharedir-client

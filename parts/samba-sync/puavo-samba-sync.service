@@ -1,0 +1,11 @@
+[Unit]
+Description=Puavo Samba Sync
+After=network.target
+
+[Service]
+ExecStart=/usr/sbin/puavo-samba-sync
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

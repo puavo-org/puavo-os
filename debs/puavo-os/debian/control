@@ -364,6 +364,18 @@ Description: Package manager for Puavo packages
  Scripts to make the life of a Opinsys developer easier
  .
 
+Package: puavo-samba-sync
+Architecture: all
+Depends: ${misc:Depends},
+  ldb-tools,
+  libberkeleydb-perl,
+  libfile-slurper-perl,
+  libipc-run-perl,
+  libnet-ldap-perl
+Description: Puavo Samba Sync
+ Sync user accounts from LDAP to Samba.
+ .
+
 Package: puavo-sharedir-client
 Architecture: all
 Depends: ${misc:Depends},
