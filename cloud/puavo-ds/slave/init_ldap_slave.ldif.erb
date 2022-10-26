@@ -62,6 +62,11 @@ olcModuleLoad: {9}constraint
 olcModuleLoad: {10}accesslog
 olcModuleLoad: {11}deref
 
+dn: olcOverlay={0}syncprov,olcDatabase={0}config,cn=config
+objectClass: olcSyncProvConfig
+objectClass: olcOverlayConfig
+olcOverlay: {0}syncprov
+
 dn: olcDatabase={1}hdb,cn=config
 objectClass: olcDatabaseConfig
 objectClass: olcHdbConfig
@@ -95,3 +100,8 @@ olcDbIndex: macAddress eq
 olcDbIndex: memberUid eq
 olcDbIndex: uidNumber eq
 <%= @acls %>
+
+dn: olcOverlay={0}syncprov,olcDatabase={1}hdb,cn=config
+objectClass: olcSyncProvConfig
+objectClass: olcOverlayConfig
+olcOverlay: {0}syncprov
