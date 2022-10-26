@@ -346,40 +346,59 @@ chomp(my $my_hostname = read_text('/etc/puavo/hostname'));
 chomp(my $my_domain   = read_text('/etc/puavo/domain'));
 my $ldap_host = "${my_hostname}.${my_domain}";
 
-my $ldap = Net::LDAP->new($ldap_host);
-unless ($ldap) {
-  syslog(LOG_ERR, 'no ldap server %s', $ldap_host);
-  exit(1);
-}
+sub connect_and_handle_changes {
+  my ($ldap_host, $ldap_base, $bind_dn, $bind_pw) = @_;
 
-# XXX should really use verify
-my $ldap_response;
-$ldap_response = $ldap->start_tls(verify => 'none');
-if ($ldap_response->code != LDAP_SUCCESS) {
-  syslog(LOG_ERR, 'could not start_tls on %s', $ldap_host);
-  exit(1);
-}
+  syslog(LOG_INFO, 'connecting to %s to watch ldap changes', $ldap_host);
 
-$ldap_response = $ldap->bind($bind_dn, password => $bind_pw);
-if ($ldap_response->code != LDAP_SUCCESS) {
-  syslog(LOG_ERR, 'failed to authenticate to %s', $ldap_host);
-  exit(1);
-}
+  my $ldap = Net::LDAP->new($ldap_host);
+  unless ($ldap) {
+    die "no ldap server $ldap_host";
+  }
 
-my $req = Net::LDAP::Control::SyncRequest->new(
-            mode => LDAP_SYNC_REFRESH_AND_PERSIST);
+  # XXX should really use verify
+  my $ldap_response;
+  $ldap_response = $ldap->start_tls(verify => 'none');
+  if ($ldap_response->code != LDAP_SUCCESS) {
+    die "could not start_tls on $ldap_host";
+  }
+
+  $ldap_response = $ldap->bind($bind_dn, password => $bind_pw);
+  if ($ldap_response->code != LDAP_SUCCESS) {
+    die "failed to authenticate to $ldap_host";
+  }
+
+  my $req = Net::LDAP::Control::SyncRequest->new(
+              mode => LDAP_SYNC_REFRESH_AND_PERSIST);
+
+  my @followed_attributes = qw(givenName puavoLocked sambaNTPassword sn uid);
+
+  $ldap->search(base     => "ou=People,${ldap_base}",
+                scope    => 'sub',
+                control  => [ $req ],
+                callback => \&handle_search_event,
+                filter   => '(objectClass=sambaSamAccount)',
+                attrs    => \@followed_attributes);
+
+  die 'lost connnection to ldap server';
+}
 
 # XXX how to prevent multiple instances of this script running?
 # XXX should there be some kind of a lock?
 
-my @followed_attributes = qw(givenName puavoLocked sambaNTPassword sn uid);
+while (1) {
+  eval {
+    connect_and_handle_changes($ldap_host, $ldap_base, $bind_dn, $bind_pw);
+  };
+  if ($@) {
+    chomp $@;
+    syslog(LOG_ERR, 'error in ldap sync: %s', $@);
+  }
 
-my $search = $ldap->search(base     => "ou=People,${ldap_base}",
-                           scope    => 'sub',
-                           control  => [ $req ],
-                           callback => \&handle_search_event,
-                           filter   => '(objectClass=sambaSamAccount)',
-                           attrs    => \@followed_attributes);
+  syslog(LOG_INFO, 'reconnecting after a minute');
+  sleep(60);
+}
 
-# XXX should never get here, what to do if we do?
-# XXX is $search useful ?
+closelog();
+
+exit(1);
