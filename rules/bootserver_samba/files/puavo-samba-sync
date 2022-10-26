@@ -9,9 +9,7 @@ use File::Slurper qw(read_text);
 use IPC::Run qw(run);
 use Net::LDAP;
 use Net::LDAP::Control::SyncRequest;
-use Net::LDAP::Constant qw(LDAP_SYNC_REFRESH_ONLY
-                           LDAP_SYNC_REFRESH_AND_PERSIST
-                           LDAP_SUCCESS);
+use Net::LDAP::Constant qw(LDAP_SUCCESS LDAP_SYNC_REFRESH_AND_PERSIST);
 use Net::LDAP::LDIF;
 use Net::LDAP::Util qw(escape_dn_value escape_filter_value);
 use Sys::Syslog qw(:standard :macros);
@@ -24,8 +22,8 @@ my $puavo_dnmap_path = "${samba_ad_dc_dir}/.puavo_dnmap.db";
 my $puavodn_db
   = tie my %puavodn_to_samba_sid, 'BerkeleyDB::Hash',
            -Filename => $puavo_dnmap_path,
-           -Flags => DB_CREATE,
-           -Mode => 0600
+           -Flags    => DB_CREATE,
+           -Mode     => 0600
       or die "could not open ${puavo_dnmap_path}";
 
 my %puavo_accounts_seen;
