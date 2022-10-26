@@ -341,10 +341,12 @@ sub handle_entry {
   }
 }
 
-chomp(my $bind_dn   = read_text('/etc/puavo/ldap/dn'));
-chomp(my $bind_pw   = read_text('/etc/puavo/ldap/password'));
-chomp(my $ldap_base = read_text('/etc/puavo/ldap/base'));
-chomp(my $ldap_host = read_text('/etc/puavo/ldap/master'));
+chomp(my $bind_dn     = read_text('/etc/puavo/ldap/dn'));
+chomp(my $bind_pw     = read_text('/etc/puavo/ldap/password'));
+chomp(my $ldap_base   = read_text('/etc/puavo/ldap/base'));
+chomp(my $my_hostname = read_text('/etc/puavo/hostname'));
+chomp(my $my_domain   = read_text('/etc/puavo/domain'));
+my $ldap_host = "${my_hostname}.${my_domain}";
 
 my $ldap = Net::LDAP->new($ldap_host);
 unless ($ldap) {
