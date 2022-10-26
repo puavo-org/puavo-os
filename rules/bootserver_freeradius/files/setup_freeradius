@@ -754,11 +754,3 @@ fi
 # allow random freeradius customizations from under /state if such things exist
 rsync -a --usermap=root:freerad --groupmap=root:freerad \
       /state/etc/freeradius/3.0/ /etc/freeradius/3.0/
-
-# adding "-lstdout" is needed for FreeRADIUS daemon to actually work (?)
-cat <<'EOF' > /etc/default/freeradius.tmp
-# Options for the FreeRADIUS daemon.
-FREERADIUS_OPTIONS="-lstdout"
-EOF
-mv /etc/default/freeradius.tmp \
-   /etc/default/freeradius
