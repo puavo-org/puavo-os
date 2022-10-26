@@ -356,9 +356,9 @@ sub connect_and_handle_changes {
     die "no ldap server $ldap_host";
   }
 
-  # XXX should really use verify
   my $ldap_response;
-  $ldap_response = $ldap->start_tls(verify => 'none');
+  $ldap_response = $ldap->start_tls(cafile => '/etc/puavo-conf/rootca.pem',
+                                    verify => 'require');
   if ($ldap_response->code != LDAP_SUCCESS) {
     die "could not start_tls on $ldap_host";
   }
