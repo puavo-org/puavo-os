@@ -44,7 +44,8 @@ class bootserver_samba {
   }
 
   Package <|
-       title == 'libberkeleydb-perl'
+       title == 'ldb-tools'
+    or title == 'libberkeleydb-perl'
     or title == 'libfile-slurper-perl'
     or title == 'libipc-run-perl'
     or title == 'libnet-ldap-perl'
