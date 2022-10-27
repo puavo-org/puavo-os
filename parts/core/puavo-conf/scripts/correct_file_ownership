@@ -23,6 +23,7 @@ fix_recursively_if_exists munin:www-data            /state/var/lib/munin/cgi-tmp
 fix_recursively_if_exists statd:nogroup             /state/var/lib/nfs
 fix_recursively_if_exists puavodesktop:puavodesktop /state/var/lib/puavo-desktop/shared
 fix_recursively_if_exists Debian-exim:adm           /state/var/log/exim4
+fix_recursively_if_exists freerad:adm               /state/var/log/freeradius
 fix_recursively_if_exists munin:adm                 /state/var/log/munin
 fix_recursively_if_exists root:root                 /state/var/log/munin/munin-node.log
 fix_recursively_if_exists www-data:adm              /state/var/log/nginx
