@@ -280,8 +280,10 @@ class packages {
     , 'virtualbox-guest-utils'
     , 'virtualbox-guest-x11'
     , 'virtualbox-qt'
-    , 'wine'
-    , 'wine32'
+    , 'wine-devel'
+    , 'wine-devel-amd64'
+    , 'wine-devel-i386:i386'
+    , 'winehq-devel'
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
