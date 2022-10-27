@@ -5,14 +5,14 @@ class wine {
   file {
     '/usr/share/applications/wine.desktop':
       ensure  => link,
-      require => Package['wine'],
+      require => Package['wine-devel'],
       target  => '/usr/share/doc/wine/examples/wine.desktop';
   }
 
   file {
     '/usr/bin/wine-development':
       ensure  => link,
-      require => Package['wine'],
+      require => Package['wine-devel'],
       target  => '/usr/bin/wine';
   }
 
