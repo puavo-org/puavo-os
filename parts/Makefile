@@ -12,6 +12,7 @@ subdirs         := autopilot                  \
                    pam                        \
                    pkg                        \
                    puavomenu                  \
+                   samba-sync                 \
                    sharedir                   \
                    usb-factory                \
                    user-registration          \
