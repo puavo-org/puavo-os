@@ -1,6 +1,7 @@
 class wine {
   include ::packages
   include ::wine::setup
+  include ::wine::strip
 
   file {
     '/usr/share/applications/wine.desktop':
