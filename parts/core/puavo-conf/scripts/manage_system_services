@@ -228,7 +228,7 @@ set services {
 
   { puavo-samba-sync {
       /etc/systemd/system/multi-user.target.wants/puavo-samba-sync.service
-        -> /etc/systemd/system/puavo-samba-sync.service
+        -> /lib/systemd/system/puavo-samba-sync.service
     }}
 
   { puavo-sharedir-manager {
