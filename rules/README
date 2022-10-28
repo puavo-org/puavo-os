@@ -149,6 +149,9 @@ puavo
     Contains a plugin for getting some variables from /etc/puavo into
     puppet variables.
 
+puavo_bash_completions
+    Install bash completion files for some puavo tools.
+
 puavo_conf
     Support module for puavo-conf integrations.
 
