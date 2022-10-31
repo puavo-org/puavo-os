@@ -310,9 +310,15 @@ class Sidebar:
             url = 'https://$(puavo_domain)/users/profile/edit?' \
                   'lang=$(user_language)'
 
+            # Show the user's PuavoID in the window title
+            title = utils.expand_variables(
+                _tr('sb_avatar_hover'),
+                { 'id': str(self.__settings.user_puavo_id) }
+            )
+
             utils.open_webwindow(
                 url=utils.expand_variables(url, self.__variables),
-                title=_tr('sb_avatar_hover'),
+                title=title,
                 width=1000,
                 height=650,
                 enable_js=True)     # The profile editor needs JavaScript
