@@ -150,11 +150,13 @@ puavo_cert_version_list=$(puavo-conf puavo.admin.certs.versions)
 puavo_api_server_port=444
 puavo_imageserver_port=873
 
+win_etc_dnsmasq_conf=''
 if win_ip="$(lookup_ip win0)"; then
-  win_domain="ad.${puavo_hostname}.${puavo_domain}"
-  win_etc_dnsmasq_conf="server=/${win_domain}/${win_ip}#53"
-else
-  win_etc_dnsmasq_conf=''
+  win_domain="$(cat /var/lib/samba-ad-dc/.puavo_samba_ad_domain 2>/dev/null)" \
+                  || true
+  if [ -n "$win_domain" ]; then
+    win_etc_dnsmasq_conf="server=/${win_domain}/${win_ip}#53"
+  fi
 fi
 
 cat <<EOF > /etc/dnsmasq.conf.tmp

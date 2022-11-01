@@ -1,0 +1,178 @@
+#!/bin/sh
+
+set -eu
+
+read puavo_domain       < /etc/puavo/domain
+read puavo_samba_domain < /etc/puavo/sambadomainname
+
+puavo_conf_test() {
+  local puavo_conf_key should_be
+
+  puavo_conf_key=$1
+  should_be=$2
+
+  if [ "$(puavo-conf "$puavo_conf_key")" = "$should_be" ]; then
+    return 0
+  fi
+
+  {
+    echo "${puavo_conf_key} is not ${should_be}"
+  } >&2
+
+  return 1
+}
+
+check_puavo_conf_values() {
+  local should_be status
+  should_be=$1
+
+  status=0
+  puavo_conf_test puavo.service.puavo-samba-sync.enabled "$should_be" \
+    || status=1
+  puavo_conf_test puavo.service.samba-ad-dc.enabled "$should_be" \
+    || status=1
+
+  if [ "$status" -ne 0 ]; then
+    echo 'Fix this and try again!' >&2
+  fi
+
+  return $status
+}
+
+destroy_samba_ad_database() {
+  service puavo-samba-sync stop
+  service samba-ad-dc stop
+  find /var/lib/samba-ad-dc/ -mindepth 1 -delete
+}
+
+if [ "${1:-}" = '--destroy' ]; then
+  check_puavo_conf_values false || exit 1
+  destroy_samba_ad_database
+  exit 0
+fi
+
+ask_ad_domain_name() {
+  local all_options choice school_option_count school_options
+
+  school_options=$(
+    puavo-rest-request /v4/schools?fields=group_prefix --user-etc \
+      | jq -r '.data[].group_prefix' | sort 2>/dev/null) || true
+
+  all_options="$(printf "%s\n%s\n" '(custom_subdomain)' \
+                                   "$school_options")"
+
+  while true; do
+    if [ -n "$school_options" ]; then
+      cat <<'EOF'
+Choose AD domain name based on school abbreviation.
+Use arrow keys or type your choice and then press ENTER.
+If no choice is good, choose "(custom_subdomain)" and press ENTER.
+
+EOF
+      school_option_count="$(printf %s "$school_options" | wc -w)"
+      choice=$(
+        printf %s "$all_options" \
+          | fzf --height="$(($school_option_count + 8))" \
+                --layout=reverse-list \
+                --preview="printf 'AD domain: ad.%s.%s' {} '${puavo_domain}'" \
+                --preview-window='down')
+    fi
+
+    if [ "$choice" = '(custom_subdomain)' ]; then
+      read -p "Enter an AD domain (must match ad.*.${puavo_domain}): " \
+              ad_domain_name
+    else
+      ad_domain_name=$(printf "ad.%s.%s" "$choice" "$puavo_domain")
+    fi
+
+    awk -v ad_domain_name="$ad_domain_name" -v puavo_domain="$puavo_domain" '
+      BEGIN {
+        split(ad_domain_name, ad_domain_name_a, ".")
+        split(puavo_domain,   puavo_domain_a,   ".")
+        if (ad_domain_name_a[1] != "ad") { exit(1) }
+        if (ad_domain_name_a[2] !~ /^[a-z]+$/) { exit(1) }
+        for (i in puavo_domain_a) {
+          if (puavo_domain_a[i] != ad_domain_name_a[i+2]) { exit(1) }
+        }
+        exit(0)
+      }
+    ' /dev/null && break
+
+    echo
+    echo "Your Samba AD domain was ${ad_domain_name}, not OKAY!  Try again!"
+    echo
+  done
+}
+
+check_puavo_conf_values true || exit 1
+
+force=false
+if [ "${1:-}" = '--force' ]; then
+  force=true
+fi
+
+if [ -e /var/lib/samba-ad-dc/.puavo_provisioning_done ] && ! $force; then
+  {
+    cat <<'EOF'
+Samba AD provisioning already done!  Run with "--force"
+to destroy the current domain and re-init.  The current
+Samba domain can also be destroyed with "--destroy".
+Note that with both of these actions all Windows hosts
+on this domain need to be re-joined.
+EOF
+  } >&2
+  exit 1
+fi
+
+if [ ! -e /etc/network/interfaces.d/win0 ]; then
+  /etc/puavo-conf/scripts/setup_bootserver_network_interfaces
+  install -o root -g root -m 644 /etc/network/interfaces.d.rofs/win0 \
+                                 /etc/network/interfaces.d/win0
+fi
+
+ifup win0 2>/dev/null || true
+if ! win0_ip=$(ifdata -pa win0 2>/dev/null); then
+  {
+    echo 'Could not find IP address for the win0 interface.'
+    echo 'This is needed by Samba AD.  Provisioning not done.'
+  } >&2
+  exit 1
+fi
+
+# this sets $ad_domain_name
+ask_ad_domain_name
+
+ad_realm=$(printf %s "$ad_domain_name" | tr a-z A-Z)
+ad_admin_password=$(pwgen -B -N 3 6 | xargs | tr ' ' -)
+
+cat <<EOF
+>>> Your Samba AD domain name is ${ad_domain_name}
+>>> Samba AD password for "Administrator" is ${ad_admin_password}
+>>> You may later look the AD domain name from
+>>> /var/lib/samba-ad-dc/.puavo_samba_ad_domain and the Administrator
+>>> password from /var/lib/samba-ad-dc/.puavo_samba_adminpw
+>>>
+EOF
+
+read -p '>>> Press ENTER to provision Samba AD: ' answer
+
+destroy_samba_ad_database
+
+printf "%s\n" "$ad_domain_name" \
+  > /var/lib/samba-ad-dc/.puavo_samba_ad_domain
+
+install -o root -g root -m 600 /dev/null \
+        /var/lib/samba-ad-dc/.puavo_samba_adminpw
+printf "%s\n" "$ad_admin_password" \
+  > /var/lib/samba-ad-dc/.puavo_samba_adminpw
+
+echo
+echo '>>> PROVISIONING SAMBA AD...'
+samba-tool domain provision --server-role='dc' --use-rfc2307 \
+           --dns-backend='SAMBA_INTERNAL' --realm="$ad_realm" \
+           --domain="$puavo_samba_domain" --adminpass="$ad_admin_password" \
+           --host-ip="$win0_ip" --option="interfaces=win0" \
+           --option="bind interfaces only=yes" \
+           --targetdir="/var/lib/samba-ad-dc"
+touch /var/lib/samba-ad-dc/.puavo_provisioning_done
+echo '>>> PROVISIONING DONE!'

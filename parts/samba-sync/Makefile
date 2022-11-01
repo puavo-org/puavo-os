@@ -18,7 +18,8 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) puavo-samba-sync
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavo-init-samba-ad puavo-samba-sync
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		puavo-samba-sync.service
 	ln -fns /lib/systemd/system/puavo-samba-sync.service \
