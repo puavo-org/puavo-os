@@ -176,3 +176,8 @@ samba-tool domain provision --server-role='dc' --use-rfc2307 \
            --targetdir="/var/lib/samba-ad-dc"
 touch /var/lib/samba-ad-dc/.puavo_provisioning_done
 echo '>>> PROVISIONING DONE!'
+
+/etc/puavo-conf/scripts/setup_dns
+service dnsmasq restart
+service samba-ad-dc start
+service puavo-samba-sync start
