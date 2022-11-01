@@ -1,6 +1,7 @@
 [Unit]
 Description=Puavo Samba Sync
 After=network.target
+ConditionPathExists=/var/lib/samba-ad-dc/.puavo_provisioning_done
 
 [Service]
 ExecStart=/usr/sbin/puavo-samba-sync
