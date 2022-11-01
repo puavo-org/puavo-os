@@ -86,9 +86,6 @@ parser = OptionParser.new do |opts|
   Synchronize CUPS printers to Puavo. Printers are identified by their
   description in the CUPS config.
 
-  NOTE: Currently printer attributes won't be updated if the printer already
-  exists in Puavo.
-
   Be default printers are read from #{ options[:printers_conf] }
   "
 
@@ -181,6 +178,7 @@ server_printers.each do |description, info|
 
     if existing > -1
       next if cp[existing]["model"] == info["MakeModel"] && cp[existing]["type"] == info["Type"] \
+        && (info["Info"]==nil || info["Info"] == "" || cp[existing]["info"] == info["Info"]) \
         && (info["Location"]==nil || info["Location"]=="" || cp[existing]["location"] == info["Location"]) \
         && cp[existing]["local_uri"] == info["DeviceURI"] # ^ "" is somewhy saved as "-" in LDAP
       puts "Printer details changed, updating existing #{description}"
@@ -188,6 +186,7 @@ server_printers.each do |description, info|
 
     printer = {
       "printerDescription" => description,
+      "printerInfo" => info["Info"] || "",
       "printerLocation" => info["Location"] || "",
       "printerMakeAndModel" => info["MakeModel"] || "",
       "printerType" => info["Type"] || "" ,
