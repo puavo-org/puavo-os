@@ -9,8 +9,8 @@ class apt::winehq {
     '/etc/apt/preferences.d/50-winehq.pref':
       content => template('apt/50-winehq.pref');
 
-    '/etc/apt/sources.list.d/winehq-bullseye.sources':
-      content => template('apt/winehq-bullseye.sources'),
+    '/etc/apt/sources.list.d/winehq.sources':
+      content => template('apt/winehq.sources'),
       notify  => Exec['apt update'],
       require => File['/etc/apt/keyrings/winehq-archive.key'];
   }
