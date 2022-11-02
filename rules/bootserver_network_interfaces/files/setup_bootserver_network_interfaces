@@ -63,6 +63,22 @@ EOF
   mv "${wlan_if_confpath}.tmp" "$wlan_if_confpath" || return 1
 }
 
+setup_win0() {
+  cat <<'EOF' > /etc/network/interfaces.d.rofs/win0.tmp || return 1
+auto win0
+iface win0 inet static
+       address 10.253.15.254
+       netmask 255.255.240.0
+       bridge_ports none
+       bridge_stp off
+       bridge_fd 0
+       bridge_maxwait 0
+EOF
+  mv /etc/network/interfaces.d.rofs/win0.tmp \
+     /etc/network/interfaces.d.rofs/win0     \
+    || return 1
+}
+
 # XXX get rid of hosttype handling!
 puavo_hosttype=$(puavo-conf puavo.hosttype)
 
@@ -86,6 +102,10 @@ for interface in $(get_interfaces); do
     ltsp[0-7]) setup_ltsp "${interface#ltsp}" || status=1 ;;
   esac
 done
+
+if [ "$(puavo-conf puavo.service.samba-ad-dc.enabled)" = 'true' ]; then
+  setup_win0 || status=1
+fi
 
 if [ "$status" -ne 0 ]; then
   echo 'Errors occurred while setting up network configuration' >&2
