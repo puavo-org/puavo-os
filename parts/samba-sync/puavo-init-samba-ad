@@ -90,7 +90,7 @@ EOF
         split(ad_domain_name, ad_domain_name_a, ".")
         split(puavo_domain,   puavo_domain_a,   ".")
         if (ad_domain_name_a[1] != "ad") { exit(1) }
-        if (ad_domain_name_a[2] !~ /^[a-z]+$/) { exit(1) }
+        if (ad_domain_name_a[2] !~ /^[0-9a-z-]+$/) { print "subdomain not good"; exit(1) }
         for (i in puavo_domain_a) {
           if (puavo_domain_a[i] != ad_domain_name_a[i+2]) { exit(1) }
         }
