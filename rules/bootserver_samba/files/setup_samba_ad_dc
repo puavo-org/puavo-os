@@ -10,10 +10,12 @@ if [ ! -e /var/lib/samba-ad-dc/.puavo_provisioning_done ]; then
   exit 0
 fi
 
+read puavo_hostname             < /etc/puavo/hostname
 read puavo_samba_ad_domain_name < /var/lib/samba-ad-dc/.puavo_samba_ad_domain
-read puavo_samba_domain < /etc/puavo/sambadomainname
+read puavo_samba_domain         < /etc/puavo/sambadomainname
 
 ad_realm=$(printf %s "$puavo_samba_ad_domain_name" | tr a-z A-Z)
+netbios_name=$(printf %s "$puavo_hostname" | tr a-z A-Z)
 
 cat <<EOF > /etc/samba/samba-ad-dc.conf
 # Global parameters
@@ -24,7 +26,7 @@ cat <<EOF > /etc/samba/samba-ad-dc.conf
         dns forwarder = 127.0.0.1
         interfaces = win0
         lock directory = /var/lib/samba-ad-dc
-        netbios name = ${puavo_samba_domain}
+        netbios name = ${netbios_name}
         pid directory = /run/samba-ad-dc
         private dir = /var/lib/samba-ad-dc/private
         realm = ${ad_realm}
