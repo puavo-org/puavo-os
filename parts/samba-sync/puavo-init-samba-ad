@@ -178,6 +178,8 @@ touch /var/lib/samba-ad-dc/.puavo_provisioning_done
 echo '>>> PROVISIONING DONE!'
 
 /etc/puavo-conf/scripts/setup_dns
+/etc/puavo-conf/scripts/setup_samba_ad_dc
+
 service dnsmasq restart
 service samba-ad-dc start
 service puavo-samba-sync start
