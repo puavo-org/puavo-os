@@ -1,29 +1,16 @@
-msgid ""
-msgstr ""
-"Project-Id-Version: puavo-user-registration\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
-"Language: fi\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
 #: puavo-user-registration:296
 msgid "Go to desktop?"
-msgstr "Siirry työpöydälle?"
+msgstr ""
 
 #: puavo-user-registration:299
 msgid ""
 "Are you sure you do not want to create a user account?  Without a user "
 "account, your files will be lost after your desktop session ends."
 msgstr ""
-"Oletko varma, että et halua luoda käyttäjätunnusta?  Ilman käyttäjätunnusta "
-"tiedostosi katoavat, kun työpöytäsessiosi loppuu."
 
 #: puavo-user-registration:341
 msgid "internal error: username and password missing"
-msgstr "sisäinen virhe: käyttäjänimi ja salasana puuttuvat"
+msgstr ""
 
 #: puavo-user-registration:391
 #, python-format
@@ -32,464 +19,356 @@ msgid ""
 "username \"%s\" and password for the first login.  Contact support if there "
 "are problems."
 msgstr ""
-"Ensikirjautuminen uudella tunnuksella ei onnistunut.  Muista "
-"käyttäjätunnuksesi \"%s\" ja salasanasi ensikirjautumista varten.  Ota "
-"ongelmatilanteissa yhteys tukeen."
 
 #: puavo-user-registration:395 puavo-user-registration:405
 #: puavo-user-registration:432 puavo-user-registration:438 page_account.py:416
 #: page_account.py:506 page_account.py:540 page_account.py:573
 #: page_account.py:588 page_account.py:610 page_account.py:647
 msgid "Error"
-msgstr "Virhe"
+msgstr ""
 
 #: puavo-user-registration:406
 msgid "Could not disable the registration tool.  Please contact support."
-msgstr "Rekisteröintityökalun poiskytkentä ei onnistunut.  Ota yhteys tukeen."
+msgstr ""
 
 #: puavo-user-registration:419
 msgid "Reboot"
-msgstr "Uudelleenkäynnistys"
+msgstr ""
 
 #: puavo-user-registration:420
 msgid "Could not reboot."
-msgstr "Uudelleenkäynnistys ei onnistunut."
+msgstr ""
 
 #: puavo-user-registration:433
 msgid "Bad username and/or password"
-msgstr "Väärä käyttäjätunnus ja/tai salasana"
+msgstr ""
 
 #: puavo-user-registration:439
 msgid "An unexpected error occurred"
-msgstr "Tapahtui odottamaton virhe"
+msgstr ""
 
 #: puavo-user-registration:553
 msgid "You do not have the required permissions to use this tool."
-msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
+msgstr ""
 
 #: puavo-user-registration:554
 msgid "No permissions"
-msgstr "Ei oikeuksia"
+msgstr ""
 
 #: page_account.py:27
 msgid "Finnish"
-msgstr "Suomi"
+msgstr ""
 
 #: page_account.py:28
 msgid "Swedish"
-msgstr "Ruotsi"
+msgstr ""
 
 #: page_account.py:29
 msgid "English"
-msgstr "Englanti"
+msgstr ""
 
 #: page_account.py:30
 msgid "German"
-msgstr "Saksa"
+msgstr ""
 
 #: page_account.py:35
 msgid "first name"
-msgstr "etunimi"
+msgstr ""
 
 #: page_account.py:36
 msgid "last name"
-msgstr "sukunimi"
+msgstr ""
 
 #: page_account.py:37
 msgid "login name"
-msgstr "käyttäjätunnus"
+msgstr ""
 
 #: page_account.py:38
 msgid "email address"
-msgstr "sähköpostiosoite"
+msgstr ""
 
 #: page_account.py:39
 msgid "phone number"
-msgstr "puhelinnumero"
+msgstr ""
 
 #: page_account.py:42
 msgid "is empty"
-msgstr "on tyhjä"
+msgstr ""
 
 #: page_account.py:43
 msgid "contains bad characters"
-msgstr "sisältää virheellisiä merkkejä"
+msgstr ""
 
 #: page_account.py:44
 msgid "is too long"
-msgstr "on liian pitkä"
+msgstr ""
 
 #: page_account.py:122
 msgid "Account Setup"
-msgstr "Rekisteröinti"
+msgstr ""
 
 #: page_account.py:258
 msgid "The login name contains invalid characters"
-msgstr "Käyttäjätunnus sisältää virheellisiä merkkejä"
+msgstr ""
 
 #: page_account.py:261
 msgid "The login name must be at least three characters long"
-msgstr "Käyttäjätunnuksen on oltava vähintään kolme merkkiä pitkä"
+msgstr ""
 
 #: page_account.py:264
 msgid "The login name must start with a letter"
-msgstr "Käyttäjätunnuksen täytyy alkaa kirjaimella"
+msgstr ""
 
 #: page_account.py:395
 msgid "Sending information to the server..."
-msgstr "Lähetetään tietoja palvelimelle..."
+msgstr ""
 
 #: page_account.py:417
 msgid "Something went wrong on the server end."
-msgstr "Jokin meni pieleen palvelinpäässä"
+msgstr ""
 
 #: page_account.py:418 page_account.py:457 page_account.py:466
 #: page_account.py:476 page_account.py:509 page_account.py:522
 #: page_account.py:531
 msgid "Please contact support and give them this code:"
-msgstr "Ole hyvä ja ota yhteys tukeen, anna tämä koodi:"
+msgstr ""
 
 #: page_account.py:427
 msgid ""
 "Something is wrong on the following form fields.  Check their contents and "
 "try again."
 msgstr ""
-"Näiden kenttien sisällössä on jotain vikaa.  Tarkista niiden sisältö ja "
-"yritä uudelleen."
 
 #: page_account.py:448 page_account.py:455
 msgid "Bad Information"
-msgstr "Epäkelpoa tietoa"
+msgstr ""
 
 #: page_account.py:456
 msgid "This registration program sent bad information to the server."
-msgstr "Tämä rekisteröintiohjelma lähetti epäkelpoa tietoa palvelimelle."
+msgstr ""
 
 #: page_account.py:463
 msgid "Invalid organisation"
-msgstr "Virheellinen organisaatio"
+msgstr ""
 
 #: page_account.py:464
 msgid "This machine has been registered to an invalid organisation."
-msgstr "Tämä laite on rekisteröity virheelliseen organisaatioon."
+msgstr ""
 
 #: page_account.py:473
 msgid "Missing information"
-msgstr "Puutteelliset tiedot"
+msgstr ""
 
 #: page_account.py:474
 msgid "Registration program did not send all required information to server."
-msgstr "Rekisteröintiohjelma lähetti palvelimelle puutteellisia tietoja."
+msgstr ""
 
 #: page_account.py:482 page_account.py:488 page_account.py:494
 #: page_account.py:500
 msgid "Invalid input"
-msgstr "Virheellinen tieto"
+msgstr ""
 
 #: page_account.py:483
 msgid "The login name contains invalid characters."
-msgstr "Käyttäjätunnus sisältää virheellisiä merkkejä."
+msgstr ""
 
 #: page_account.py:489
 msgid "The email address is not valid."
-msgstr "Sähköpostiosoite ei ole kelvollinen."
+msgstr ""
 
 #: page_account.py:495
 msgid "The password and its confirmation do not match."
-msgstr "Salasana ja sen varmistus eivät täsmää."
+msgstr ""
 
 #: page_account.py:501
 msgid "The selected language is not valid."
-msgstr "Valittu kieli on virheellinen."
+msgstr ""
 
 #: page_account.py:507 page_account.py:574
 msgid "An unknown error occurred when handling user information."
-msgstr "Käyttäjätietojen käsittelyssä tapahtui tuntematon virhe."
+msgstr ""
 
 #: page_account.py:520
 msgid "Unregistered host"
-msgstr "Rekisteröimätön kone"
+msgstr ""
 
 #: page_account.py:521
 msgid "This host was not found on the database."
-msgstr "Koneesi tietoja ei löydy tietokannasta."
+msgstr ""
 
 #: page_account.py:529
 msgid "Host is already in use"
-msgstr "Kone on jo käytössä."
+msgstr ""
 
 #: page_account.py:530
 msgid "User registration has already been done on this host."
-msgstr "Tältä koneelta on jo suoritettu käyttäjän luonti."
+msgstr ""
 
 #: page_account.py:541
 msgid "An unknown error occurred when handling host information."
-msgstr "Laitetietojen käsittelyssä tapahtui tuntematon virhe."
+msgstr ""
 
 #: page_account.py:551
 msgid "Login name already in use"
-msgstr "Käyttäjätunnus on jo käytössä"
+msgstr ""
 
 #: page_account.py:552
 msgid ""
 "The login name you have chosen is already in use.  Please choose another."
 msgstr ""
-"Valitsemasi käyttäjätunnus on jo käytössä.  Valitse toinen käyttäjätunnus."
 
 #: page_account.py:557
 msgid "Too short login name"
-msgstr "Liian lyhyt käyttäjänimi"
+msgstr ""
 
 #: page_account.py:558
 msgid "Your login name is too short.  It must have at least three characters."
 msgstr ""
-"Käyttäjänimesi on liian lyhyt.  Sen on oltava vähintään kolme merkkiä pitkä."
 
 #: page_account.py:563
 msgid "Email address is already in use"
-msgstr "Sähköpostiosoite on jo käytössä"
+msgstr ""
 
 #: page_account.py:564
 msgid "This email address is already in use.  Please use another address."
-msgstr "Tämä sähköpostiosoite on jo käytössä.  Käytä toista osoitetta."
+msgstr ""
 
 #: page_account.py:566
 msgid ""
 "If using another email address is not possible, please contact support and "
 "give them this code:"
 msgstr ""
-"Jos toisen osoitteen käyttö ei ole mahdollista, ota yhteys tukeen.  Anna "
-"heille tämä koodi:"
 
 #: page_account.py:589
 msgid "Could not contact the server:"
-msgstr "Ei yhteyttä palvelimeen:"
+msgstr ""
 
 #: page_account.py:590
 msgid "Check the network connection and try again."
-msgstr "Tarkista verkkoyhteyden tila ja yritä uudelleen."
+msgstr ""
 
 #: page_account.py:591
 msgid "If the problem persists, contact support."
-msgstr "Jos ongelma toistuu, ota yhteys tukeen."
+msgstr ""
 
 #: page_account.py:611
 msgid ""
 "The server is not responding.  Try again after a while.  If the problem "
 "persists, contact support."
 msgstr ""
-"Palvelin ei vastaa pyyntöön.  Yritä lähetystä uudelleen hetken kuluttua.  "
-"Jos tilanne toistuu, ota yhteys tukeen."
 
 #: page_account.py:648 page_account.py:695
 msgid "Could not interpret the response sent by the server."
-msgstr "Palvelimen palauttamaa viestiä ei pystytty tulkitsemaan."
+msgstr ""
 
 #: page_account.py:650 page_account.py:696 page_account.py:704
 msgid "Please contact support."
-msgstr "Ole hyvä ja ota yhteys tukeen."
+msgstr ""
 
 #: page_account.py:694 page_account.py:702
 msgid "Something went wrong"
-msgstr "Jokin meni pieleen"
+msgstr ""
 
 #: page_account.py:703
 msgid ""
 "This situation should never happen, something has gone very badly wrong."
-msgstr "Tätä ei pitäisi koskaan tapahtua, jokin on pahasti pielessä."
+msgstr ""
 
 #: page_complete.py:22
 msgid "Congratulations!"
-msgstr "Onneksi olkoon!"
+msgstr ""
 
 #: page_complete.py:33
 msgid "Your user account has been created."
-msgstr "Tunnuksesi on luotu."
+msgstr ""
 
 #: page_complete.py:35
 msgid "Login with your user account was successful."
-msgstr "Kirjautuminen käyttäjätunnuksellasi onnistui."
+msgstr ""
 
 #: page_complete.py:38
 msgid "Have a nice time with your studies!"
-msgstr "Mukavaa opiskeluaikaa!"
+msgstr ""
 
 #: page_complete.py:39
 msgid "System must be rebooted."
-msgstr "Tietokoneesi täytyy käynnistää uudelleen."
+msgstr ""
 
 #: page_network.py:69
 msgid "Network Setup"
-msgstr "Verkkoasetukset"
+msgstr ""
 
 #: page_network.py:213
 msgid "Searching for networks..."
-msgstr "Etsitään verkkoja..."
+msgstr ""
 
 #: page_network.py:274
 #, python-format
 msgid "Connecting to \"%s\"..."
-msgstr "Yhdistetään verkkoon \"%s\"..."
+msgstr ""
 
 #: page_network.py:341
 msgid "Connection successful!"
-msgstr "Yhdistetty!"
+msgstr ""
 
 #: page_network.py:348
 msgid "Connection failed"
-msgstr "Yhteyden muodostus epäonnistui"
+msgstr ""
 
 #: page_network.py:366
 msgid "Connect to network"
-msgstr "Yhdistä verkkoon"
+msgstr ""
 
 #: page_network.py:399
 #, python-format
 msgid "Use network \"%s\"?"
-msgstr "Käytä verkkoa \"%s\"?"
+msgstr ""
 
 #: page_network.py:401
 #, python-format
 msgid "You are connected to network \"%s\", do you want to use this network?"
-msgstr "Olet liittyneenä verkkoon \"%s\", haluatko käyttää tätä verkkoa?"
+msgstr ""
 
 #: page_network.py:415
 msgid "Join wireless network?"
-msgstr "Liity langattomaan verkkoon?"
+msgstr ""
 
 #: page_network.py:417
 msgid ""
 "You are connected to a network that is not a wireless network.  Do you want "
 "to join a wireless network anyway?"
 msgstr ""
-"Olet liittyneenä verkkoon joka ei ole langaton verkko.  Haluatko silti "
-"liittyä langattomaan verkkoon?"
 
 #: page_welcome.py:20
 msgid "Welcome!"
-msgstr "Tervetuloa!"
+msgstr ""
 
 #: page_welcome.py:23
 msgid "To put your new laptop into use, we guide you to:"
-msgstr "Uuden kannettavasi käyttöönottamiseksi, sinut opastetaan seuraavaksi:"
+msgstr ""
 
 #: page_welcome.py:25
 msgid "Join a wireless network"
-msgstr "Liittymään langattomaan verkkoon"
+msgstr ""
 
 #: page_welcome.py:27
 msgid "Login or register your new login"
-msgstr "Kirjautumaan tai rekisteröimään itsellesi uusi käyttäjätunnus"
+msgstr ""
 
 #: page_welcome.py:30
 msgid "Tip:"
-msgstr "Vinkki:"
+msgstr ""
 
 #: page_welcome.py:31
 msgid ""
 "In case you can not connect to a wireless network right now, you can do that "
 "later and use this host temporarily in guest-mode by clicking the"
 msgstr ""
-"Siinä tapauksessa, että et voi liittää konettasi langattomaan verkkoon juuri "
-"nyt, voit tehdä sen myöhemmin ja käyttää tätä konetta tilapäisesti vieras-"
-"tilassa klikkaamalla"
 
 #: page_welcome.py:34
 msgid "Go to desktop"
-msgstr "Siirry työpöydälle"
+msgstr ""
 
 #: page_welcome.py:35
 msgid "button in the bottom corner."
-msgstr "painiketta alareunassa."
-
-#~ msgid "Unknown login error:"
-#~ msgstr "Tuntematon kirjautumisvirhe:"
-
-#~ msgid "Privacy policy"
-#~ msgstr "Rekisteriseloste"
-
-#~ msgid "If you already have an account, choose"
-#~ msgstr "Jos sinulla on jo tunnus, valitse"
-
-#~ msgid "Login with existing account"
-#~ msgstr "Kirjaudu jo luodulla tunnuksella"
-
-#~ msgid "First name:"
-#~ msgstr "Etunimi:"
-
-#~ msgid "Last name:"
-#~ msgstr "Sukunimi:"
-
-#~ msgid "Login name:"
-#~ msgstr "Käyttäjätunnus:"
-
-#~ msgid "Email address:"
-#~ msgstr "Sähköpostiosoite:"
-
-#~ msgid "Login password:"
-#~ msgstr "Salasana:"
-
-#~ msgid "Password confirmation:"
-#~ msgstr "Salasanan vahvistus:"
-
-#~ msgid "Language:"
-#~ msgstr "Kieli:"
-
-#~ msgid "Phone number:"
-#~ msgstr "Puhelinnumero:"
-
-#~ msgid ""
-#~ "The phone number is optional. It is used only for technical support.\n"
-#~ "Please enter only digits, + and - -signs."
-#~ msgstr ""
-#~ "Puhelinnumero on valinnainen. Sitä käytetään vain tukitilanteissa.\n"
-#~ "Käytäthän vain numeroita, + ja - -merkkejä."
-
-#~ msgid ""
-#~ "You will receive a confirmation to your email.  The address is also used "
-#~ "for password resets."
-#~ msgstr ""
-#~ "Saat sähköpostiisi vahvistuksen rekisteröinnistä.  Osoitetta käytetään "
-#~ "myös salasanan nollauksiin."
-
-#~ msgid "Previous"
-#~ msgstr "Edellinen"
-
-#~ msgid "Create your account!"
-#~ msgstr "Luo tunnus!"
-
-#~ msgid "Finish and reboot"
-#~ msgstr "Lopeta ja uudelleenkäynnistä"
-
-#~ msgid "New User Registration"
-#~ msgstr "Uuden käyttäjän rekisteröinti"
-
-#~ msgid "Privacy Policy"
-#~ msgstr "Rekisteriseloste"
-
-#~ msgid "Username:"
-#~ msgstr "Käyttäjätunnus:"
-
-#~ msgid "Password:"
-#~ msgstr "Salasana:"
-
-#~ msgid "Connect"
-#~ msgstr "Yhdistä"
-
-#~ msgid "Next"
-#~ msgstr "Seuraava"
-
-#~ msgid "Login"
-#~ msgstr "Kirjaudu"
-
-#~ msgid "No user account?  Create one!"
-#~ msgstr "Ei käyttäjätunnusta?  Luo uusi!"
-
-#~ msgid ""
-#~ "This host has already been registered\n"
-#~ "to user \"%s\".  Please provide\n"
-#~ "the password to start using this host.\n"
-#~ msgstr ""
-#~ "Tämä kone on jo rekisteröity\n"
-#~ "käyttäjälle \"%s\".  Anna salasana,\n"
-#~ "jotta voit aloittaa koneen käytön.\n"
+msgstr ""
