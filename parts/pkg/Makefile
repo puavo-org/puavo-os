@@ -10,10 +10,10 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: all
-all: po/fi/puavo-pkgs-ui.mo
+all: po/de/puavo-pkgs-ui.mo po/fi/puavo-pkgs-ui.mo po/sv/puavo-pkgs-ui.mo
 	${MAKE} -C packages all
 
-puavo-pkgs-ui.pot: puavo-pkgs-ui
+po/puavo-pkgs-ui.pot: puavo-pkgs-ui
 	xgettext --omit-header --language python --keyword=_tr -o $@ $^
 
 %.po: po/puavo-pkgs-ui.pot
@@ -22,6 +22,10 @@ puavo-pkgs-ui.pot: puavo-pkgs-ui
 
 %.mo: %.po
 	msgfmt $< --output-file $@
+
+.PHONY: i18nupdate
+i18nupdate: po/puavo-pkgs-ui.pot po/de/puavo-pkgs-ui.po po/fi/puavo-pkgs-ui.po po/sv/puavo-pkgs-ui.po
+
 
 .PHONY: installdirs
 installdirs:
@@ -49,8 +53,14 @@ install: installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-pkg \
 		puavo-pkg.conf
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
+		po/de/puavo-pkgs-ui.mo
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-pkgs-ui.mo
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
+		po/sv/puavo-pkgs-ui.mo
 
 	${MAKE} -C packages install
 
