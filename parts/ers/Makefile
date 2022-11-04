@@ -9,9 +9,9 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 0644
 
 .PHONY: all
-all: po/fi/puavo-ers-applet.mo
+all: po/de/puavo-ers-applet.mo po/fi/puavo-ers-applet.mo po/sv/puavo-ers-applet.mo
 
-puavo-ers-applet.pot: puavo-ers-applet
+po/puavo-ers-applet.pot: puavo-ers-applet
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
 
 %.po: po/puavo-ers-applet.pot
@@ -21,10 +21,16 @@ puavo-ers-applet.pot: puavo-ers-applet
 %.mo: %.po
 	msgfmt $< --output-file $@
 
+.PHONY: i18nupdate
+i18nupdate: po/puavo-ers-applet.pot po/de/puavo-ers-applet.po po/fi/puavo-ers-applet.po po/sv/puavo-ers-applet.po
+
+
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
@@ -34,8 +40,12 @@ install: installdirs
 		puavo-ers-startup
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-ers-applet
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
+		po/de/puavo-ers-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-ers-applet.mo
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
+		po/sv/puavo-ers-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-ers-startup.desktop
 
