@@ -33,7 +33,9 @@ installdirs:
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-pkg
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 	${MAKE} -C packages installdirs
 
 .PHONY: install
