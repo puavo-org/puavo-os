@@ -8,9 +8,9 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: all
-all: po/fi/puavo-laptop-setup.mo
+all: po/de/puavo-laptop-setup.mo po/fi/puavo-laptop-setup.mo po/sv/puavo-laptop-setup.mo
 
-puavo-laptop-setup.pot: puavo-laptop-setup
+po/puavo-laptop-setup.pot: puavo-laptop-setup
 	xgettext --omit-header --language python --keyword=_tr -o $@ $^
 
 %.po: po/puavo-laptop-setup.pot
@@ -20,12 +20,20 @@ puavo-laptop-setup.pot: puavo-laptop-setup
 %.mo: %.po
 	msgfmt $< --output-file $@
 
+.PHONY: i18nupdate
+i18nupdate: po/puavo-laptop-setup.pot po/de/puavo-laptop-setup.po po/fi/puavo-laptop-setup.po po/sv/puavo-laptop-setup.po
+
+
+
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-laptop-setup
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
+
 
 .PHONY: install
 install: installdirs
@@ -34,8 +42,13 @@ install: installdirs
 		puavo-laptop-setup.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-laptop-setup \
 		puavo-laptop-setup.glade
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
+		po/de/puavo-laptop-setup.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-laptop-setup.mo
+	${INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
+		po/sv/puavo-laptop-setup.mo
+
 
 .PHONY: clean
 clean:

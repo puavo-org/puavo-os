@@ -9,71 +9,88 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-laptop-setup:184
+#: puavo-laptop-setup:257
+msgid ""
+"It is now possible to choose Windows from the boot menu when starting up the "
+"computer."
+msgstr ""
+"Windows on nyt lisätty käynnistysvaihtoehdoksi tietokoneen "
+"käynnistysvalikkoon. Käynnistysvalikko tulee näkyviin aina tietokoneen "
+"uudelleen käynnistyksen yhteydessä."
+
+#: puavo-laptop-setup:261
+msgid ""
+"Abitti-compatible eExam-system is not updated when running Windows, you have "
+"to boot into the current system to update it."
+msgstr ""
+"Huomioi, että Abitti-yhteensopivaa koejärjestelmää ei päivitetä silloin, kun "
+"tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi "
+"kannettavan koejärjestelmäversiota, sinun tulee valita tietokoneen "
+"käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt "
+"käytössä olevaan Opinsys OS -käyttöjärjestelmään."
+
+#: puavo-laptop-setup:378
 msgid "error saving changes"
 msgstr "virhe tallennuksessa"
 
-msgid "You do not have the required permissions to use this tool."
-msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
-
-msgid "Laptop setup"
-msgstr "Kannettavan asetukset"
-
-msgid "is already running"
-msgstr "on jo käynnissä"
-
-msgid "It is now possible to choose Windows from the boot menu when starting up the computer."
-msgstr "Windows on nyt lisätty käynnistysvaihtoehdoksi tietokoneen käynnistysvalikkoon. Käynnistysvalikko tulee näkyviin aina tietokoneen uudelleen käynnistyksen yhteydessä."
-
-msgid "Abitti-compatible eExam-system is not updated when running Windows, you have to boot into the current system to update it."
-msgstr "Huomioi, että Abitti-yhteensopivaa koejärjestelmää ei päivitetä silloin, kun tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi kannettavan koejärjestelmäversiota, sinun tulee valita tietokoneen käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt käytössä olevaan Opinsys OS -käyttöjärjestelmään."
-
-# from puavo-laptop-setup.glade
-msgid "Start using Windows"
-msgstr "Ota Windows käyttöön"
-
-msgid "Default operating system at boot"
-msgstr "Oletuksena käynnistettävä järjestelmä"
-
-msgid "Show developer mode in boot menu"
-msgstr "Näytä kehittäjätila tietokonetta käynnistettäessä"
-
-msgid "eExam-system"
-msgstr "Koejärjestelmä"
-
-msgid "eExam-system version (Abitti-compatible)"
-msgstr "Koejärjestelmäversio (Abitti-yhteensopiva)"
-
-msgid "latest version"
-msgstr "viimeisin versio"
-
-msgid "latest"
-msgstr "viimeisin"
-
-msgid "school version"
-msgstr "koulun versio"
-
-msgid "this version:"
-msgstr "tämä versio:"
-
-msgid ""
-"Destroy all user data and reset laptop to factory state"
-" (requires password)"
-msgstr ""
-"Tuhoa kaikki tiedot ja palauta tietokone tehdastilaan"
-" (vaatii salasanan)"
-
+#: puavo-laptop-setup:401
 msgid "DANGER! DANGER!"
 msgstr "VAARA! VAARA!"
 
+#: puavo-laptop-setup:403
 msgid ""
-"THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!"
-"  IT WILL DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY,"
-" AND MORE!  WHEN IN DOUBT, TURN OFF THE MACHINE, PANIC"
-" AND RUN AWAY!  (press OK and provide your password"
-" if you still want to do this.)"
+"THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!  IT WILL DESTROY "
+"ALL YOUR DATA IN YOUR HOME DIRECTORY, AND MORE!  WHEN IN DOUBT, TURN OFF THE "
+"MACHINE, PANIC AND RUN AWAY!  (press OK and provide your password if you "
+"still want to do this.)"
 msgstr ""
-"TÄMÄ TOIMENPIDE PALAUTTAA TÄMÄN TIETOKONEEN TEHDASASETUKSILLE!"
-" SE TUHOAA KAIKEN DATAN KOTIHAKEMISTOSSASI, JA ENEMMÄNKIN!"
-" JOS EPÄILET OLLENKAAN, SAMMUTA KONE, PANIKOI JA JUOKSE KARKUUN!"
-" (paina OK ja anna salasanasi jos haluat kuitenkin tehdä tämän.)"
+"TÄMÄ TOIMENPIDE PALAUTTAA TÄMÄN TIETOKONEEN TEHDASASETUKSILLE! SE TUHOAA "
+"KAIKEN DATAN KOTIHAKEMISTOSSASI, JA ENEMMÄNKIN! JOS EPÄILET OLLENKAAN, "
+"SAMMUTA KONE, PANIKOI JA JUOKSE KARKUUN! (paina OK ja anna salasanasi jos "
+"haluat kuitenkin tehdä tämän.)"
+
+#: puavo-laptop-setup:430 puavo-laptop-setup:446
+msgid "Laptop setup"
+msgstr "Kannettavan asetukset"
+
+#: puavo-laptop-setup:436
+msgid "You do not have the required permissions to use this tool."
+msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
+
+#: puavo-laptop-setup:446
+msgid "is already running"
+msgstr "on jo käynnissä"
+
+# from puavo-laptop-setup.glade
+#~ msgid "Start using Windows"
+#~ msgstr "Ota Windows käyttöön"
+
+#~ msgid "Default operating system at boot"
+#~ msgstr "Oletuksena käynnistettävä järjestelmä"
+
+#~ msgid "Show developer mode in boot menu"
+#~ msgstr "Näytä kehittäjätila tietokonetta käynnistettäessä"
+
+#~ msgid "eExam-system"
+#~ msgstr "Koejärjestelmä"
+
+#~ msgid "eExam-system version (Abitti-compatible)"
+#~ msgstr "Koejärjestelmäversio (Abitti-yhteensopiva)"
+
+#~ msgid "latest version"
+#~ msgstr "viimeisin versio"
+
+#~ msgid "latest"
+#~ msgstr "viimeisin"
+
+#~ msgid "school version"
+#~ msgstr "koulun versio"
+
+#~ msgid "this version:"
+#~ msgstr "tämä versio:"
+
+#~ msgid ""
+#~ "Destroy all user data and reset laptop to factory state (requires "
+#~ "password)"
+#~ msgstr ""
+#~ "Tuhoa kaikki tiedot ja palauta tietokone tehdastilaan (vaatii salasanan)"
