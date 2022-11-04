@@ -61,36 +61,52 @@ msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
 msgid "is already running"
 msgstr "on jo käynnissä"
 
+#: puavo-laptop-setup.glade:22
+msgid "eExam-system version (Abitti-compatible)"
+msgstr "Koejärjestelmäversio (Abitti-yhteensopiva)"
+
+#: puavo-laptop-setup.glade:33
+msgid "Show developer mode in boot menu"
+msgstr "Näytä kehittäjätila tietokonetta käynnistettäessä"
+
+#: puavo-laptop-setup.glade:44
+msgid "Default operating system at boot"
+msgstr "Oletuksena käynnistettävä järjestelmä"
+
+#: puavo-laptop-setup.glade:58
+msgid "latest version"
+msgstr "viimeisin versio"
+
+#: puavo-laptop-setup.glade:74
+msgid "school version"
+msgstr "koulun versio"
+
+#: puavo-laptop-setup.glade:91
+msgid "this version:"
+msgstr "tämä versio:"
+
+#: puavo-laptop-setup.glade:127
+msgid "Puavo OS (Linux)"
+msgstr ""
+
+#: puavo-laptop-setup.glade:143
+msgid "eExam-system"
+msgstr "Koejärjestelmä"
+
+#: puavo-laptop-setup.glade:159
+msgid "Windows"
+msgstr ""
+
 # from puavo-laptop-setup.glade
-#~ msgid "Start using Windows"
-#~ msgstr "Ota Windows käyttöön"
+#: puavo-laptop-setup.glade:195
+msgid "Start using Windows"
+msgstr "Ota Windows käyttöön"
 
-#~ msgid "Default operating system at boot"
-#~ msgstr "Oletuksena käynnistettävä järjestelmä"
-
-#~ msgid "Show developer mode in boot menu"
-#~ msgstr "Näytä kehittäjätila tietokonetta käynnistettäessä"
-
-#~ msgid "eExam-system"
-#~ msgstr "Koejärjestelmä"
-
-#~ msgid "eExam-system version (Abitti-compatible)"
-#~ msgstr "Koejärjestelmäversio (Abitti-yhteensopiva)"
-
-#~ msgid "latest version"
-#~ msgstr "viimeisin versio"
+#: puavo-laptop-setup.glade:214
+msgid ""
+"Destroy all user data and reset laptop to factory state (requires password)"
+msgstr ""
+"Tuhoa kaikki tiedot ja palauta tietokone tehdastilaan (vaatii salasanan)"
 
 #~ msgid "latest"
 #~ msgstr "viimeisin"
-
-#~ msgid "school version"
-#~ msgstr "koulun versio"
-
-#~ msgid "this version:"
-#~ msgstr "tämä versio:"
-
-#~ msgid ""
-#~ "Destroy all user data and reset laptop to factory state (requires "
-#~ "password)"
-#~ msgstr ""
-#~ "Tuhoa kaikki tiedot ja palauta tietokone tehdastilaan (vaatii salasanan)"

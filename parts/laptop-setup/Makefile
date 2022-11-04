@@ -12,6 +12,7 @@ all: po/de/puavo-laptop-setup.mo po/fi/puavo-laptop-setup.mo po/sv/puavo-laptop-
 
 po/puavo-laptop-setup.pot: puavo-laptop-setup
 	xgettext --omit-header --language python --keyword=_tr -o $@ $^
+	xgettext -j --omit-header --language Glade -o po/puavo-laptop-setup.pot puavo-laptop-setup.glade
 
 %.po: po/puavo-laptop-setup.pot
 	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
