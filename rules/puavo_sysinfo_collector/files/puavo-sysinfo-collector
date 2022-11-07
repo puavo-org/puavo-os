@@ -17,51 +17,346 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Why, yes, this is my first DBus service ever, can you tell?
-
 require 'dbus'
 require 'etc'
-require 'json'
 require 'facter'
+require 'ipaddr'
+require 'json'
 require 'open3'
 require 'sys/proctable'
 
-def lookup_free_space(fs_path)
-  begin
-    return nil unless system('mountpoint', '-q', fs_path)
+class SysInfo
+  attr_reader :data
 
-    blocksize, status = Open3.capture2('stat', '-f', '-c', '%S', fs_path)
-    raise 'error running stat for blocksize' unless status.success?
-    free_blocks, status = Open3.capture2('stat', '-f', '-c', '%a', fs_path)
-    raise 'error running stat for free blocks' unless status.success?
+  def initialize
+    @data = {}
 
-    return (blocksize.to_i * free_blocks.to_i)
-
-  rescue StandardError => e
-    warn "could not lookup free space for #{ fs_path }: #{ e.message }"
+    # timestamp (so we know how old this information is)
+    @data[:timestamp] = Time.now.to_i
   end
 
-  return nil
-end
+  def update_all
+    update_functions = [
+      [ :update_release_info,    'release information'              ],
+      [ :update_facter_values,   'facter values'                    ],
+      [ :update_interfaces,      'network interfaces information'   ],
+      [ :update_hard_drive_info, 'hard drive information'           ],
+      [ :update_uefi_info,       'uefi'                             ],
+      [ :update_memory_info,     'memory information'               ],
+      [ :update_lspci_info,      'PCI information'                  ],
+      [ :update_lsusb_info,      'USB information'                  ],
+      [ :update_wifi,            'WIFI information'                 ],
+      [ :update_xrandr,          'xrandr information'               ],
+      [ :update_battery_info,    'battery information'              ],
+      [ :update_extra_contents,  'extra system contents'            ],
+      [ :update_free_space_info, 'partition free space information' ],
+      [ :update_windows_info,    'Windows information'              ],
+      [ :update_sku_number,      'SKU number'                       ],
+    ]
 
-def lookup_xrandr()
-  displays = {}
-
-  Sys::ProcTable.ps.each do |p|
-    disp = p.environ['DISPLAY']
-    xauthority = p.environ['XAUTHORITY']
-    next unless disp && xauthority
-    next if displays[disp]
-    displays[disp] = xauthority
+    update_functions.each do |update_item|
+      update_fn, comment = *update_item
+      begin
+        send(update_fn)
+      rescue StandardError => e
+        warn "error in updating #{ comment }: #{e}"
+      end
+    end
   end
 
-  last_display = displays.keys.sort.last
-  return '' unless last_display
+  def update_release_info
+    @data[:this_image]   = IO.read('/etc/puavo-image/name'   ).strip rescue '?'
+    @data[:this_release] = IO.read('/etc/puavo-image/release').strip rescue '?'
+  end
 
-  xauthority = displays[last_display]
-  cmd_env = { 'DISPLAY' => last_display, 'XAUTHORITY' => xauthority }
-  IO.popen([ cmd_env, 'xrandr', '-q' ]) do |io|
-    return io.read
+  def update_facter_values
+    # These symbols are also used verbatim in the JavaScript code,
+    # so changing them willy-nilly will have disastrous consequences.
+    values = [
+      :bios_release_date,
+      :bios_vendor,
+      :bios_version,
+      :boardserialnumber,
+      :kernelrelease,
+      :manufacturer,
+      :memorysize_mb,
+      :processor0,
+      :processorcount,
+      :productname,
+      :serialnumber,
+    ]
+
+    values.each { |f| @data[f] = Facter.value(f) }
+  end
+
+  def update_interfaces
+    # network interface addresses
+    @data[:network_interfaces] = []
+
+    (Facter.value('interfaces').split(',') || []).each do |intf|
+      next if intf == 'lo'
+
+      begin
+        ip      = Facter.value("ipaddress_#{ intf }")  || '<N/A>'
+        mac     = Facter.value("macaddress_#{ intf }") || '<N/A>'
+        netmask = Facter.value("netmask_#{ intf }")    || '<N/A>'
+        prefix  = IPAddr.new(ip).mask(netmask).prefix rescue '<N/A>'
+
+        @data[:network_interfaces] << {
+          ip:     ip,
+          mac:    mac,
+          name:   intf,
+          prefix: prefix,
+        }
+      rescue StandardError => e
+        warn "error in determining ip for interface #{ intf }: #{ e }"
+      end
+    end
+  end
+
+  def update_hard_drive_info
+    # Hard drive size and model.  Find the largest block device, assume
+    # it's the "main" storage device and store it under the "sda"
+    # moniker for backwards compatibility.  Assume all fixed disks are
+    # named predictably, like "sda", or "nvme0n1" or even "mmcblk-something".
+    block_devices = ''
+    begin
+      block_devices = Facter.value(:blockdevices) || ''
+    rescue StandardError => e
+      warn "could not list block_devices: #{e}"
+    end
+
+    main_disk_drive = nil
+    model = nil
+    size = -1
+
+    begin
+      disk_regexp \
+        = %r{\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z]|xvd[a-z])\z}
+      block_devices.split(',').each do |this_device|
+        next unless this_device.match(disk_regexp)
+
+        this_size  = Facter.value("blockdevice_#{this_device}_size").to_i
+        this_model = Facter.value("blockdevice_#{this_device}_model")
+
+        if this_size > size then
+          main_disk_drive = this_device
+          model = this_model
+          size  = this_size
+        end
+      end
+    rescue StandardError => e
+      warn "could not parse device info: #{e}"
+    end
+
+    @data[:blockdevice_sda_model] = model || ''
+    @data[:blockdevice_sda_size]  = (size != -1) ? size : 0
+
+    @data[:blockdevice_sda_smart] = nil
+    if main_disk_drive then
+      begin
+        cmd = [ '/usr/sbin/smartctl', '-a', '--json',
+                  "/dev/#{ main_disk_drive }" ]
+        smartctl_output, status = Open3.capture2(*cmd)
+        warn "smartctl returned error code: #{ status.exitstatus }" \
+          unless status.success?
+        @data[:blockdevice_sda_smart] = JSON.parse(smartctl_output)
+      rescue StandardError => e
+        warn "could not determine smartctl data: #{e}"
+      end
+    end
+
+    # SSD or spinning platters?
+    # XXX: this obviously fails with NVME disks and SD cards
+    # XXX: why is this a string?
+    @data[:ssd] = '-1'
+    begin
+      @data[:ssd] \
+        = (IO.read('/sys/block/sda/queue/rotational').strip == '0') ? '1' : '0'
+    rescue Errno::ENOENT
+    rescue StandardError => e
+      warn "could not determine if the hard drive is an SSD: #{e}"
+    end
+  end
+
+  def update_uefi_info
+    @data[:uefi] = File.exists?("/sys/firmware/efi")
+  end
+
+  def update_memory_info
+    # detailed RAM slot info
+    @data[:memory] = []
+
+    slot_info = nil
+
+    dmidata = %x(dmidecode --type 17)
+
+    # parse dmidecode output
+    dmidata.split("\n").each do |line|
+      if line == 'Memory Device' then
+        # store the current slot, if any, and start a new one
+        @data[:memory] << slot_info if slot_info
+        slot_info = {}
+      elsif line[0] == "\t" then
+        # parse info lines and store values for the current slot
+        parts = line.split(':').map(&:strip)
+        next if parts.size != 2
+
+        key, value = *parts
+        if key == 'Size' && value != 'No Module Installed'
+          slot_info[:size] = value.to_i
+        elsif key == 'Locator' && value != 'Not Specified'
+          slot_info[:slot] = value
+        elsif key == 'Part Number' && value != 'Not Specified'
+          slot_info[:product] = value
+        elsif key == 'Manufacturer' && value != 'Not Specified'
+          slot_info[:vendor] = value
+        end
+      end
+    end
+
+    # store the last slot
+    @data[:memory] << slot_info if slot_info
+  end
+
+  def update_lspci_info
+    @data[:lspci_values] = []
+    @data[:lspci_values] = %x(lspci).strip.split("\n").map(&:strip)
+  end
+
+  def update_lsusb_info
+    @data[:lsusb_values] = []
+    @data[:lsusb_values] = %x(lsusb).strip.split("\n").map(&:strip)
+  end
+
+  def update_wifi
+    @data[:wifi] = nil
+    # XXX wireless info (this needs to be improved)
+    x = `lspci -nnk | grep 0280 | cut -c 36-`
+    @data[:wifi] = (x.strip.split("\n").first || '').strip
+  end
+
+  def update_xrandr
+    @data[:xrandr] = nil
+
+    displays = {}
+
+    Sys::ProcTable.ps.each do |p|
+      disp = p.environ['DISPLAY']
+      xauthority = p.environ['XAUTHORITY']
+      next unless disp && xauthority
+      next if displays[disp]
+      displays[disp] = xauthority
+    end
+
+    last_display = displays.keys.sort.last
+    return unless last_display
+
+    xauthority = displays[last_display]
+    cmd_env = { 'DISPLAY' => last_display, 'XAUTHORITY' => xauthority }
+    IO.popen([ cmd_env, 'xrandr', '-q' ]) do |io|
+      @data[:xrandr] = io.read.strip
+    end
+  end
+
+  def update_battery_info
+    @data[:battery] = nil
+
+    has_battery = false
+    upower_cmd = [ 'upower',
+                   '--show-info',
+                   '/org/freedesktop/UPower/devices/battery_BAT0' ]
+
+    battery = {}
+
+    IO.popen(upower_cmd) do |io|
+      io.readlines.each do |line|
+        key, value = * line.split(':')
+        next unless key.kind_of?(String) && value.kind_of?(String)
+        key.strip!
+        value.strip!
+
+        if key == 'native-path' && value != '(null)' then
+          has_battery = true
+          next
+        end
+
+        next unless has_battery
+
+        accepted_keys = %w(capacity
+                           energy
+                           energy-empty
+                           energy-full
+                           energy-full-design
+                           model
+                           percentage
+                           serial
+                           state
+                           technology
+                           vendor
+                           voltage
+                           warning-level)
+
+        battery[key] = value if accepted_keys.include?(key)
+      end
+    end
+
+    @data[:battery] = battery unless battery.empty?
+  end
+
+  def update_extra_contents
+    # contains version information on Abitti-version or some other such
+    # extra contents
+    @data[:extra_system_contents] = {}
+    esc_path = '/var/lib/puavo-desktop/extra_system_contents.json'
+    begin
+      @data[:extra_system_contents] = JSON.parse( IO.read(esc_path) )
+    rescue Errno::ENOENT
+    end
+  end
+
+  def lookup_free_space(fs_path)
+    begin
+      return nil unless system('mountpoint', '-q', fs_path)
+
+      blocksize, status = Open3.capture2('stat', '-f', '-c', '%S', fs_path)
+      raise 'error running stat for blocksize' unless status.success?
+      free_blocks, status = Open3.capture2('stat', '-f', '-c', '%a', fs_path)
+      raise 'error running stat for free blocks' unless status.success?
+
+      return (blocksize.to_i * free_blocks.to_i)
+
+    rescue StandardError => e
+      warn "could not lookup free space for #{ fs_path }: #{ e.message }"
+    end
+
+    return nil
+  end
+
+  def update_free_space_info
+    @data[:free_space] = {}
+    fs_paths = %w(/home /imageoverlays /images /installimages /state /tmp)
+    fs_paths.each do |fs_path|
+      free_space_for_fs_path = lookup_free_space(fs_path)
+      next unless free_space_for_fs_path
+      @data[:free_space][fs_path] = free_space_for_fs_path
+    end
+  end
+
+  def update_windows_info
+    @data[:has_windows] = File.exists?('/images/boot/.puavo_windows_partition')
+
+    # Windows license information (not always available)
+    @data[:windows_license] = nil
+    if File.exists?('/sys/firmware/acpi/tables/MSDM') then
+      @data[:windows_license] = `strings /sys/firmware/acpi/tables/MSDM`
+    end
+  end
+
+  def update_sku_number
+    # SKU number (not available on all machines)
+    @data[:sku] = File.read('/sys/devices/virtual/dmi/id/product_sku').strip \
+                    rescue nil
   end
 end
 
@@ -72,322 +367,23 @@ class SystemInfoCollector < DBus::Object
         # Clear Facter cache and memory at the start of every run.
         Facter.clear
 
-        # These symbols are also used verbatim in the JavaScript code, so
-        # changing them willy-nilly will have disastrous consequences
-        values = [
-          :kernelrelease,
-          :bios_vendor,
-          :bios_version,
-          :bios_release_date,
-          :processorcount,
-          :processor0,
-          :memorysize_mb,
-          :manufacturer,
-          :productname,
-          :serialnumber,
-          :boardserialnumber,
-        ]
+        sysinfo = SysInfo.new
+        sysinfo.update_all
 
-        netmasks = {
-          '128.0.0.0' => 1, '255.128.0.0' => 9,  '255.255.128.0' => 17, '255.255.255.128' => 25,
-          '192.0.0.0' => 2, '255.192.0.0' => 10, '255.255.192.0' => 18, '255.255.255.192' => 26,
-          '224.0.0.0' => 3, '255.224.0.0' => 11, '255.255.224.0' => 19, '255.255.255.224' => 27,
-          '240.0.0.0' => 4, '255.240.0.0' => 12, '255.255.240.0' => 20, '255.255.255.240' => 28,
-          '248.0.0.0' => 5, '255.248.0.0' => 13, '255.255.248.0' => 21, '255.255.255.248' => 29,
-          '252.0.0.0' => 6, '255.252.0.0' => 14, '255.255.252.0' => 22, '255.255.255.252' => 30,
-          '254.0.0.0' => 7, '255.254.0.0' => 15, '255.255.254.0' => 23, '255.255.255.254' => 31,
-          '255.0.0.0' => 8, '255.255.0.0' => 16, '255.255.255.0' => 24, '255.255.255.255' => 32
-        }
-
-        data = {}
-
-        begin
-          # timestamp (so we know how old this information is)
-          data[:timestamp] = Time.now.to_i
-
-          # release info
-          data[:this_image]   = IO.read('/etc/puavo-image/name').strip rescue '?'
-          data[:this_release] = IO.read('/etc/puavo-image/release').strip rescue '?'
-
-          # facter stuff
-          values.each { |f| data[f] = Facter.value(f) }
-
-          # network interface addresses
-          interfaces = []
-
-          begin
-            (Facter.value('interfaces').split(',') || []).each do |i|
-              next if i == 'lo'
-
-              ip = Facter.value("ipaddress_#{i}") || '<N/A>'
-              mac = Facter.value("macaddress_#{i}") || '<N/A>'
-              prefix = Facter.value("netmask_#{i}") || 0
-              prefix = netmasks[prefix] if netmasks.include?(prefix)
-
-              interfaces << {
-                name: i,
-                ip: ip,
-                mac: mac,
-                prefix: prefix
-              }
-            end
-          rescue StandardError => e
-            warn "could not list network interfaces: #{e}"
-            interfaces = []
-          end
-
-          data[:network_interfaces] = interfaces
-
-          # Hard drive size and model. Find the largest block device, assume
-          # it's the "main" storage device and store it under the "sda"
-          # moniker for backwards compatibility. Assume all fixed disks are
-          # named predictably, like "sda", or "nvme0n1" or even
-          # "mmcblk-something".
-          begin
-            block_devices = Facter.value(:blockdevices)
-            block_devices = '' if block_devices.nil?
-          rescue StandardError => e
-            warn "could not list block_devices: #{e}"
-            block_devices = ''
-          end
-
-          main_disk_drive = nil
-          model = nil
-          size = -1
-
-          begin
-            block_devices.split(',').each do |this_device|
-              next unless this_device.include?('mmcblk')    \
-                            || this_device.include?('nvme') \
-                            || this_device.include?('sda')
-
-              this_size  = Facter.value("blockdevice_#{this_device}_size").to_i
-              this_model = Facter.value("blockdevice_#{this_device}_model")
-
-              if this_size > size
-                main_disk_drive = this_device
-                model = this_model
-                size  = this_size
-              end
-            end
-          rescue StandardError => e
-            warn "could not parse device info: #{e}"
-            model = nil
-            size  = -1
-          end
-
-          data[:blockdevice_sda_model] = model || ''
-          data[:blockdevice_sda_size]  = (size != -1) ? size : 0
-
-          data[:blockdevice_sda_smart] = nil
-          if main_disk_drive then
-            begin
-              cmd = [ '/usr/sbin/smartctl', '-a', '--json',
-                        "/dev/#{ main_disk_drive }" ]
-              smartctl_output, status = Open3.capture2(*cmd)
-              warn "smartctl returned error code: #{ status.exitstatus }" \
-                unless status.success?
-              data[:blockdevice_sda_smart] = JSON.parse(smartctl_output)
-            rescue StandardError => e
-              warn "could not determine smartctl data: #{e}"
-            end
-          end
-
-          # SSD or spinning platters?
-          # FIXME: this obviously fails with NVME disks and SD cards
-          # FIXME: why is this a string?
-          data[:ssd] = '-1'
-
-          begin
-            data[:ssd] = IO.read('/sys/block/sda/queue/rotational').strip == '0' ? '1' : '0'
-          rescue StandardError => e
-            warn "could not determine if the hard drive is an SSD: #{e}"
-            data[:ssd] = '-1'
-          end
-
-          data[:uefi] = File.exists?("/sys/firmware/efi")
-
-          # detailed RAM slot info
-          data[:memory] = []
-
-          begin
-            slot_info = nil
-
-            dmidata = `dmidecode --type 17`
-
-            # parse dmidecode output
-            dmidata.split("\n").each do |line|
-              if line == 'Memory Device'
-                # store the current slot, if any, and start a new one
-                data[:memory] << slot_info if slot_info
-                slot_info = {}
-              elsif line[0] == "\t"
-                # parse info lines and store values for the current slot
-                parts = line.split(':').map(&:strip)
-
-                if parts.size == 2
-                  if parts[0] == 'Size' && parts[1] != 'No Module Installed'
-                    slot_info[:size] = parts[1].to_i
-                  elsif parts[0] == 'Locator' && parts[1] != 'Not Specified'
-                    slot_info[:slot] = parts[1]
-                  elsif parts[0] == 'Part Number' && parts[1] != 'Not Specified'
-                    slot_info[:product] = parts[1]
-                  elsif parts[0] == 'Manufacturer' && parts[1] != 'Not Specified'
-                    slot_info[:vendor] = parts[1]
-                  end
-                end
-              end
-            end
-
-            # store the last slot
-            data[:memory] << slot_info if slot_info
-          rescue StandardError => e
-            # if the memory info fails, ensure a valid output still exists
-            warn "could not parse memory slot information: #{e}"
-            data[:memory] = []
-          end
-
-          # lspci contents
-          data[:lspci_values] = []
-
-          begin
-            lspci_raw = %x(lspci)
-            lspci_raw.strip.split("\n").each { |i| data[:lspci_values] << i.strip }
-          rescue StandardError => e
-            warn "could not get lspci output: #{e}"
-            data[:lspci_values] = []
-          end
-
-          # lsusb contents
-          data[:lsusb_values] = []
-
-          begin
-            lsusb_raw = %x(lsusb)
-            lsusb_raw.strip.split("\n").each { |i| data[:lsusb_values] << i.strip }
-          rescue StandardError => e
-            warn "could not get lsusb output: #{e}"
-            data[:lsusb_values] = []
-          end
-
-          # wireless info (this needs to be improved)
-          begin
-            x = `lspci -nnk | grep 0280 | cut -c 36-`
-            data[:wifi] = (x.strip.split("\n").first || '').strip
-          rescue StandardError => e
-            warn "could not wireless information: #{e}"
-            data[:wifi] = nil
-          end
-
-          xrandr_output = nil
-          begin
-            xrandr_output = lookup_xrandr()
-          rescue StandardError => e
-            warn "could not query xrandr output: #{ e.message }"
-          end
-          data[:xrandr] = xrandr_output.rstrip if xrandr_output
-
-          battery = {}
-          begin
-            has_battery = false
-            upower_cmd = [ 'upower',
-                           '--show-info',
-                           '/org/freedesktop/UPower/devices/battery_BAT0' ]
-            IO.popen(upower_cmd) do |io|
-              io.readlines.each do |line|
-                key, value = * line.split(':')
-                next unless key.kind_of?(String) && value.kind_of?(String)
-                key.strip!
-                value.strip!
-
-                if key == 'native-path' && value != '(null)' then
-                  has_battery = true
-                  next
-                end
-
-                next unless has_battery
-
-                accepted_keys = %w(capacity
-                                   energy
-                                   energy-empty
-                                   energy-full
-                                   energy-full-design
-                                   model
-                                   percentage
-                                   serial
-                                   state
-                                   technology
-                                   vendor
-                                   voltage
-                                   warning-level)
-
-                battery[key] = value if accepted_keys.include?(key)
-              end
-            end
-          rescue StandardError => e
-            warn "could not query battery information: #{ e.message }"
-          end
-          data[:battery] = battery unless battery.empty?
-
-          # contains version information on Abitti-version or some other such
-          # extra contents
-          extra_system_contents = {}
-          begin
-            esc_path = '/var/lib/puavo-desktop/extra_system_contents.json'
-            extra_system_contents = JSON.parse( IO.read(esc_path) )
-          rescue StandardError => e
-            warn "could not query extra system contents: #{ e.message }"
-          end
-          data[:extra_system_contents] = extra_system_contents
-
-          begin
-            free_space = {}
-            fs_paths = %w(/home /imageoverlays /images /installimages /state /tmp)
-            fs_paths.each do |fs_path|
-              free_space_for_fs_path = lookup_free_space(fs_path)
-              free_space[fs_path] = free_space_for_fs_path \
-                if free_space_for_fs_path
-            end
-            data[:free_space] = free_space
-          rescue StandardError => e
-            warn "could not get disk free space information: #{e}"
-            data[:free_space] = {}
-          end
-        rescue
-        end
-
-        # Windows license information (not always available, so fail gracefully)
-        data[:windows_license] = nil
-
-        begin
-          if File.exists?('/sys/firmware/acpi/tables/MSDM')
-            data[:windows_license] = `strings /sys/firmware/acpi/tables/MSDM`
-          end
-        rescue StandardError => e
-          warn "could not read the Windows license file: #{e}"
-          data[:windows_license] = nil
-        end
-
-        # SKU number (not available on all machines)
-        data[:sku] = nil
-
-        begin
-          data[:sku] = File.read('/sys/devices/virtual/dmi/id/product_sku').strip
-        rescue StandardError => e
-          warn "could not read the SKU number: #{e}"
-          data[:sku] = nil
-        end
-
-        # use pretty_generate because humans might read the file out of curiosity
+        # use pretty_generate because humans might read the file
+        # out of curiosity
         File.open('/run/puavo/puavo-sysinfo.json', 'w') do |f|
-          f.write(JSON.pretty_generate(data))
+          f.write( JSON.pretty_generate(sysinfo.data) )
         end
 
         # return the raw data to the caller directly
-        out = JSON.generate(data)
+        out = JSON.generate(sysinfo.data)
       rescue StandardError => e
         # ensure we return valid data in all cases
         out = '{}'
       end
+
+      out
     end
   end
 end
