@@ -244,9 +244,21 @@ module DiskHandler
 
     # when creating a disk image file (with puavo-make-install-disk)
     # we need to do this, otherwise this appears to be useless
+    # Edit: this seems to be the case for all creations of vfat partitions
+    # with # higher than the highest in the previous partition table.
+    # e.g. the typical usb stick with 1 partition fails when creating
+    # uefi booting stick, since two vfat partitions are to be created.
+    # this might also be the case in some installations; needs more
+    # inspecting however, as the error couldn't be reproduced at least
+    # with completely the same steps as with the usb sticks
+    wait_iterations = 0
+    partition_dev = nil
     if UI::loopback_only then
-      wait_iterations = 0
       partition_dev = "/dev/#{ device }p1"
+    elsif UI::hosttype == 'diskinstaller' && %w(UEFI/GPT UEFI/MBR+GPT).include?(partitioning_scheme)
+      partition_dev = "/dev/#{ device }2"
+    end
+    if partition_dev
       until File.exists?(partition_dev) do
         run('partprobe', "/dev/#{ device }")
         sleep(1)
@@ -259,6 +271,9 @@ module DiskHandler
       create_efi_filesystem(device)
     end
 
+    # hybrid partitioning apparently needs to be set up after normal partitioning,
+    # as is done here. one could think this is strange, running gdisk twice in this
+    # function, but everything is ok.
     if partitioning_scheme == 'UEFI/MBR+GPT' then
       IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
         f.print(hybrid_format)
