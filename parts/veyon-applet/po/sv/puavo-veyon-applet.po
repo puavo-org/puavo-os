@@ -1,0 +1,149 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"PO-Revision-Date: 2022-10-03 14:34+0300\n"
+"Last-Translator: Hannu Järvistö <dev@opinsys.fi>\n"
+"Language-Team: none\n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 20.12.0\n"
+
+#: puavo-veyon-applet:299
+#, python-format
+msgid "%s on %s has joined session."
+msgstr "%s har anslutat sig till sessionen på %s."
+
+#: puavo-veyon-applet:311 puavo-veyon-applet:356
+#, python-format
+msgid "%s on %s disconnected from session."
+msgstr "%s på datorn %s har lämnat sessionen."
+
+#: puavo-veyon-applet:455 puavo-veyon-applet:809
+#, python-format
+msgid "Participants: %d (see log)"
+msgstr "Deltagare: %d (se logg)"
+
+#: puavo-veyon-applet:468
+msgid "Change PIN"
+msgstr "Byta PIN"
+
+#: puavo-veyon-applet:476
+msgid "Open control panel"
+msgstr "Öppna kontrollbord"
+
+#: puavo-veyon-applet:484
+msgid "Invite to session by group"
+msgstr "Bjuda in session enligt gruppen"
+
+#: puavo-veyon-applet:492 puavo-veyon-applet:556
+msgid "Setup a Veyon session"
+msgstr "Skapa en ny Veyon-session"
+
+#: puavo-veyon-applet:584
+#, python-format
+msgid "PIN: %s"
+msgstr "PIN: %s"
+
+#: puavo-veyon-applet:600
+msgid "Close a Veyon session"
+msgstr "Stänga Veyon-sessionen"
+
+#: puavo-veyon-applet:670
+msgid "Choose a group to invite to a session:"
+msgstr "Välj grupp, som du vill bjuda in i sessionen"
+
+#: puavo-veyon-applet:679 puavo-veyon-applet:1319
+msgid "Cancel"
+msgstr "Avbryta"
+
+#: puavo-veyon-applet:717
+#, python-format
+msgid "Inviting \"%s\" to join a session."
+msgstr "Bjuder \"%s\" att ansluta sig till sessionen."
+
+#: puavo-veyon-applet:852
+msgid "Puavo Veyon connection log"
+msgstr "Puavo Veyon anslutningslogg"
+
+#: puavo-veyon-applet:892
+msgid "Disconnected participant"
+msgstr "Deltagaren lämnade sessionen"
+
+#: puavo-veyon-applet:1025
+msgid "Duplicate session error"
+msgstr "Dubbelsession-problem"
+
+#: puavo-veyon-applet:1026
+msgid ""
+"Closing connections because of a duplicate session, are there many sessions "
+"with the same PIN?"
+msgstr ""
+"Anslutningarna stängs på grund av dubbelsession-problem. Finns det flera "
+"sessioner med samma PIN-kod?"
+
+#: puavo-veyon-applet:1119 puavo-veyon-applet:1410
+msgid "Join a Veyon session"
+msgstr "Ansluta Veyon-sessionen"
+
+#: puavo-veyon-applet:1211
+msgid "Veyon session closed"
+msgstr "Veyon-sessionen stängdes"
+
+#: puavo-veyon-applet:1287
+msgid "PIN for Veyon session:"
+msgstr "PIN för Veyon-sessionen:"
+
+#: puavo-veyon-applet:1309
+#, python-format
+msgid "%s on host %s requests you to join to a Veyon session."
+msgstr "%s på datorn %s ber dig att ansluta till Veyon-sessionen."
+
+#: puavo-veyon-applet:1313
+msgid "Check PIN."
+msgstr "Kolla PIN."
+
+#: puavo-veyon-applet:1366
+msgid "Check PIN and press ENTER to accept external control."
+msgstr "Kolla PIN och trycka på ENTER, om du tillåter externt övervakandet."
+
+#: puavo-veyon-applet:1392
+#, python-format
+msgid "Close a Veyon session that is controlled by %s on %s"
+msgstr "Stäng Veyon-Sessionen, som övervakas av %s på datorn %s"
+
+#: puavo-veyon-applet:1442
+msgid "no matching session found for PIN"
+msgstr "Ingen session hittades med PIN-Kod som du gav"
+
+#: puavo-veyon-applet:1455
+msgid "connecting..."
+msgstr "Anslutar ..."
+
+#: puavo-veyon-applet:1500
+msgid "timeout"
+msgstr "Timeout"
+
+#: puavo-veyon-applet:1517
+#, python-format
+msgid "connecting to %s (%s)"
+msgstr "Anslutar med datorn %s (%s)"
+
+#: puavo-veyon-applet:1567
+msgid "Veyon session opened"
+msgstr "Veyon-sessionen öppnades"
+
+#: puavo-veyon-applet:1568
+#, python-format
+msgid "This computer may now be viewed and controlled by %s from %s."
+msgstr "Den här datorn kan nu ses och övervakas av %s från %s."
+
+#: puavo-veyon-applet:1664
+msgid "Fatal error on Puavo Veyon Applet"
+msgstr "Ett alvarligt Fel uppståd på Puavo Veyon applet"
+
+#: puavo-veyon-applet:1665
+msgid "Unexpected dbus error on Puavo Veyon Applet."
+msgstr "oväntad dbus-fel på Puavo Veyon -applet."

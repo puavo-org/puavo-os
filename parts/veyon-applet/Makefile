@@ -9,7 +9,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: all
-all: po/de/puavo-veyon-applet.mo po/fi/puavo-veyon-applet.mo
+all: po/de/puavo-veyon-applet.mo po/fi/puavo-veyon-applet.mo po/sv/puavo-veyon-applet.mo
 
 po/puavo-veyon-applet.pot: puavo-veyon-applet
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
@@ -22,7 +22,7 @@ po/puavo-veyon-applet.pot: puavo-veyon-applet
 	msgfmt $< --output-file $@
 
 .PHONY: i18nupdate
-i18nupdate: po/puavo-veyon-applet.pot po/de/puavo-veyon-applet.po po/fi/puavo-veyon-applet.po
+i18nupdate: po/puavo-veyon-applet.pot po/de/puavo-veyon-applet.po po/fi/puavo-veyon-applet.po po/sv/puavo-veyon-applet.po
 
 .PHONY: installdirs
 installdirs:
@@ -30,6 +30,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 
 .PHONY: install
 install: installdirs
@@ -41,6 +42,9 @@ install: installdirs
 		po/de/puavo-veyon-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-veyon-applet.mo
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
+		po/sv/puavo-veyon-applet.mo
+
 
 .PHONY: clean
 clean:

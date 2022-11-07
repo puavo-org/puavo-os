@@ -1,22 +1,38 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: puavo-laptop-setup\n"
+"Last-Translator: Hannu Järvistö\n"
+"Language-Team: none\n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
 #: puavo-laptop-setup:257
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
 msgstr ""
+"Es ist jetzt möglich Windows beim Startmenü wählen. Das Menü wird kurz nach "
+"dem Einschalten von dem Computer gezeigt."
 
 #: puavo-laptop-setup:261
 msgid ""
 "Abitti-compatible eExam-system is not updated when running Windows, you have "
 "to boot into the current system to update it."
 msgstr ""
+"Achtung Abitti-kompatibles elektronisches Testsystem wird nicht aktualisiert "
+"bei Windows-Betriebssystem. Sie müssen zu diesem laufenden Betriebssystem "
+"booten um auch das Testsystem zu aktualisieren."
 
 #: puavo-laptop-setup:378
 msgid "error saving changes"
-msgstr ""
+msgstr "Fehler beim Speichern der Veränderungen"
 
 #: puavo-laptop-setup:401
 msgid "DANGER! DANGER!"
-msgstr ""
+msgstr "GEFAHR! GEFAHR!"
 
 #: puavo-laptop-setup:403
 msgid ""
@@ -25,60 +41,70 @@ msgid ""
 "MACHINE, PANIC AND RUN AWAY!  (press OK and provide your password if you "
 "still want to do this.)"
 msgstr ""
+" DIESE PROZEDUR WIRD DIESEN COMPUTER ZU WERKSEINSTELLUNGEN ZURÛCKSETZEN!  ES "
+"WIRD ALLE DATEN IN IHREM BENUTZERVERZEICHNIS LÖSCHEN UND MEHR! WENN SIE "
+"ZÖGERN - BITTE DEN COMPUTER ZU MACHEN UND WEG RENNEN! (Bitte OK drücken und "
+"Passwort eingeben, wenn Sie jedoch das machen wollen)"
 
 #: puavo-laptop-setup:430 puavo-laptop-setup:446
 msgid "Laptop setup"
-msgstr ""
+msgstr "Laptop Einstellungen"
 
 #: puavo-laptop-setup:436
 msgid "You do not have the required permissions to use this tool."
-msgstr ""
+msgstr "Sie haben nicht ausreichende Rechte um dieses Werkzeug zu verwenden"
 
 #: puavo-laptop-setup:446
 msgid "is already running"
-msgstr ""
+msgstr "schon im Gang"
 
 #: puavo-laptop-setup.glade:22
 msgid "eExam-system version (Abitti-compatible)"
-msgstr ""
+msgstr "Version des elektronischen Testsystems  (Abitti-kompatibel)"
 
 #: puavo-laptop-setup.glade:33
 msgid "Show developer mode in boot menu"
-msgstr ""
+msgstr "Entwicklungsmodus beim Startmenü zeigen"
 
 #: puavo-laptop-setup.glade:44
 msgid "Default operating system at boot"
-msgstr ""
+msgstr "Standardbetriebssystem beim Starten"
 
 #: puavo-laptop-setup.glade:58
 msgid "latest version"
-msgstr ""
+msgstr "Die letzte version"
 
 #: puavo-laptop-setup.glade:74
 msgid "school version"
-msgstr ""
+msgstr "Schulversion"
 
 #: puavo-laptop-setup.glade:91
 msgid "this version:"
-msgstr ""
+msgstr "Diese Version:"
 
 #: puavo-laptop-setup.glade:127
 msgid "Puavo OS (Linux)"
-msgstr ""
+msgstr "Puavo OS (Linux)"
 
 #: puavo-laptop-setup.glade:143
 msgid "eExam-system"
-msgstr ""
+msgstr "Elektronisches Test-System (Abitti)"
 
 #: puavo-laptop-setup.glade:159
 msgid "Windows"
-msgstr ""
+msgstr "Windows"
 
+# from puavo-laptop-setup.glade
 #: puavo-laptop-setup.glade:195
 msgid "Start using Windows"
-msgstr ""
+msgstr "Windows aktivieren"
 
 #: puavo-laptop-setup.glade:214
 msgid ""
 "Destroy all user data and reset laptop to factory state (requires password)"
 msgstr ""
+"Alle Benutzerdaten löschen und das System zu Werkseinstellungen "
+"zurücksetzen. (Passwort erforderlich)"
+
+#~ msgid "latest"
+#~ msgstr "letzte"
