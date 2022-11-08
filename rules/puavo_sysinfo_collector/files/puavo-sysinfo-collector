@@ -368,13 +368,21 @@ class SysInfo
   end
 
   def update_windows_info
-    @data[:has_windows] = File.exists?('/images/boot/.puavo_windows_partition')
+    @data[:windows] = {}
 
     # Windows license information (not always available)
+    # XXX :windows_license is deprecated, use @data[:windows][:license]
+    # XXX once Puavo understands it
+
     @data[:windows_license] = nil
     if File.exists?('/sys/firmware/acpi/tables/MSDM') then
       @data[:windows_license] = `strings /sys/firmware/acpi/tables/MSDM`
     end
+
+    @data[:windows] = {
+      :is_installed => File.exists?('/images/boot/.puavo_windows_partition'),
+      # XXX :license => @data[:windows_license],
+    }
   end
 
   def update_sku_number
