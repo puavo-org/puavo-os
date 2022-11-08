@@ -183,6 +183,26 @@ class SysInfo
     @data[:uefi] = File.exists?("/sys/firmware/efi")
   end
 
+  def convert_ramsize_to_bytes(size_str)
+    matchdata = size_str.match(/^(\d+)\s*(\w+)$/)
+    return 0 unless matchdata
+
+    count = matchdata[1].to_i
+    unit  = matchdata[2]
+
+    powers = {
+      'bytes' => 0,
+      'KB'    => 1,
+      'MB'    => 2,
+      'GB'    => 3,
+      'TB'    => 4,
+    }
+
+    return 0 unless powers.has_key?(unit)
+
+    return count * (1024 ** powers[unit])
+  end
+
   def update_memory_info
     # detailed RAM slot info
     @data[:memory] = []
@@ -204,7 +224,9 @@ class SysInfo
 
         key, value = *parts
         if key == 'Size' && value != 'No Module Installed'
-          slot_info[:size] = value.to_i
+          slot_info[:bytes] = convert_ramsize_to_bytes(value)
+          # Puavo expects size in MiB
+          slot_info[:size] = slot_info[:bytes] / 1048576
         elsif key == 'Locator' && value != 'Not Specified'
           slot_info[:slot] = value
         elsif key == 'Part Number' && value != 'Not Specified'
