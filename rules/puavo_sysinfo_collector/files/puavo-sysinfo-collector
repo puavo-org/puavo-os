@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 # DBus service to collect some system information on-demand.
-# Version 0.99, (c) Opinsys Oy 2017-2021
+# (c) Opinsys Oy 2017-2022
 # Author: Jarmo Pietiläinen (jarmo@opinsys.fi)
 
 # This program is free software: you can redistribute it and/or modify
@@ -53,6 +53,7 @@ class SysInfo
       [ :update_windows_info,    'Windows information'              ],
       [ :update_sku_number,      'SKU number'                       ],
       [ :update_local_puavoconf, 'local puavo-conf information'     ],
+      [ :update_puavopkg_info,   'installed puavo-pkg information'  ],
     ]
 
     update_functions.each do |update_item|
@@ -383,12 +384,53 @@ class SysInfo
   end
 
   def update_local_puavoconf
-    @data[:local_puavoconf] = {}
+    @data[:puavoconf] = {}
 
     puavoconf_path = '/state/etc/puavo/local/puavo_conf.json'
     return unless File.exists?(puavoconf_path)
 
-    @data[:local_puavoconf] = JSON.parse( IO.read(puavoconf_path) )
+    @data[:puavoconf][:local] = JSON.parse( IO.read(puavoconf_path) )
+  end
+
+  def update_puavopkg_info
+    @data[:puavopkgs] = {}
+
+    installed_pkg_paths \
+      = Dir.glob('/images/puavo-pkg/root/packages/*/*/.installed') \
+           .map { |p| File.dirname(p) }
+
+    installed_pkg_paths.each do |pkgpath|
+      begin
+        version_path = File.join(pkgpath, '.puavo-pkg-version')
+        pkg = {}
+        File.readlines(version_path).each do |line|
+          key, value = *line.split
+          pkg[key.to_sym] = value if %w(name package-id version).include?(key)
+        end
+
+        raise "no package name found from #{ version_path }" unless pkg[:name]
+
+        pkg_name = pkg.delete(:name)
+
+        upstream_packs_dir \
+          = File.join('/images/puavo-pkg/cache/upstream_packs', pkg_name)
+
+        upstream_pack_paths = Dir.glob( File.join(upstream_packs_dir, '*') )
+        upstream_pack \
+          = upstream_pack_paths.sort_by { |f| File.stat(f).mtime }.last
+        pkg[:upstream_pack] \
+          = upstream_pack ? File.basename(upstream_pack) : nil
+
+        @data[:puavopkgs][:installed] ||= {}
+        @data[:puavopkgs][:installed][pkg_name] = pkg
+
+      rescue StandardError => e
+        warn "some error in checking #{ pkgpath }: #{ e.message }"
+      end
+    end
+
+    space_used = %x(du -bs /images/puavo-pkg).split.first
+    @data[:puavopkgs][:diskspace_used] = space_used.to_i if space_used
   end
 end
 
