@@ -52,6 +52,7 @@ class SysInfo
       [ :update_free_space_info, 'partition free space information' ],
       [ :update_windows_info,    'Windows information'              ],
       [ :update_sku_number,      'SKU number'                       ],
+      [ :update_local_puavoconf, 'local puavo-conf information'     ],
     ]
 
     update_functions.each do |update_item|
@@ -379,6 +380,15 @@ class SysInfo
     # SKU number (not available on all machines)
     @data[:sku] = File.read('/sys/devices/virtual/dmi/id/product_sku').strip \
                     rescue nil
+  end
+
+  def update_local_puavoconf
+    @data[:local_puavoconf] = {}
+
+    puavoconf_path = '/state/etc/puavo/local/puavo_conf.json'
+    return unless File.exists?(puavoconf_path)
+
+    @data[:local_puavoconf] = JSON.parse( IO.read(puavoconf_path) )
   end
 end
 
