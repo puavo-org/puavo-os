@@ -4,6 +4,14 @@ set -eu
 
 logmsg() { logger -t puavo-send-sysinfo-to-puavo "$@"; }
 
+delete_network_interfaces() {
+  # delete network interface info but keep vpn0 info so that
+  # we can see if host has such a thing functioning
+  printf %s "$1" \
+    | jq '.network_interfaces =
+            (.network_interfaces[] | select(.name == "vpn0"))'
+}
+
 status=0
 
 background_mode=false
@@ -39,7 +47,7 @@ while true; do
     logmsg -p user.err 'could not get sysinfo from sysinfocollector'
   else
     tmpfile=$(mktemp /tmp/puavo-send-sysinfo-to-puavo.XXXXXX)
-    if ! printf %s "$sysinfo_json" | jq 'del(.network_interfaces)' > "$tmpfile"; then
+    if ! delete_network_interfaces "$sysinfo_json" > "$tmpfile"; then
       logmsg -p user.err 'could not filter out network interfaces info'
     else
       if ! puavo-rest-request "$url" $prr_args \
