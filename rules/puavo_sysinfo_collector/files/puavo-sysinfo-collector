@@ -54,6 +54,7 @@ class SysInfo
       [ :update_sku_number,      'SKU number'                       ],
       [ :update_local_puavoconf, 'local puavo-conf information'     ],
       [ :update_puavopkg_info,   'installed puavo-pkg information'  ],
+      [ :update_login_info,      'last user logged in'              ],
     ]
 
     update_functions.each do |update_item|
@@ -439,6 +440,18 @@ class SysInfo
 
     space_used = %x(du -bs /images/puavo-pkg).split.first
     @data[:puavopkgs][:diskspace_used] = space_used.to_i if space_used
+  end
+
+  def update_login_info
+    last_output = %x(last -n 1 --time-format iso 1 :1 :2 :3 :4 :5 :6 :7 :9)
+    login_line = last_output.split("\n").first
+    return unless login_line
+
+    uid, _, _, timestamp = *login_line.split
+
+    @data[:logins] = {
+      :last => { :uid => uid, :timestamp => timestamp },
+    }
   end
 end
 
