@@ -152,10 +152,9 @@ class SysInfo
       warn "could not parse device info: #{e}"
     end
 
-    @data[:blockdevice_sda_model] = model || ''
-    @data[:blockdevice_sda_size]  = (size != -1) ? size : 0
+    @data[:blockdevice_sda_model] = model if model
+    @data[:blockdevice_sda_size]  = size  if size > 0
 
-    @data[:blockdevice_sda_smart] = nil
     if main_disk_drive then
       begin
         cmd = [ '/usr/sbin/smartctl', '-a', '--json',
@@ -245,25 +244,20 @@ class SysInfo
   end
 
   def update_lspci_info
-    @data[:lspci_values] = []
     @data[:lspci_values] = %x(lspci).strip.split("\n").map(&:strip)
   end
 
   def update_lsusb_info
-    @data[:lsusb_values] = []
     @data[:lsusb_values] = %x(lsusb).strip.split("\n").map(&:strip)
   end
 
   def update_wifi
-    @data[:wifi] = nil
     # XXX wireless info (this needs to be improved)
     x = `lspci -nnk | grep 0280 | cut -c 36-`
     @data[:wifi] = (x.strip.split("\n").first || '').strip
   end
 
   def update_xrandr
-    @data[:xrandr] = nil
-
     displays = {}
 
     Sys::ProcTable.ps.each do |p|
@@ -285,8 +279,6 @@ class SysInfo
   end
 
   def update_battery_info
-    @data[:battery] = nil
-
     has_battery = false
     upower_cmd = [ 'upower',
                    '--show-info',
@@ -332,7 +324,6 @@ class SysInfo
   def update_extra_contents
     # contains version information on Abitti-version or some other such
     # extra contents
-    @data[:extra_system_contents] = {}
     esc_path = '/var/lib/puavo-desktop/extra_system_contents.json'
     begin
       @data[:extra_system_contents] = JSON.parse( IO.read(esc_path) )
@@ -369,8 +360,6 @@ class SysInfo
   end
 
   def update_windows_info
-    @data[:windows] = {}
-
     # Windows license information (not always available)
     # XXX :windows_license is deprecated, use @data[:windows][:license]
     # XXX once Puavo understands it
@@ -393,12 +382,10 @@ class SysInfo
   end
 
   def update_local_puavoconf
-    @data[:puavoconf] = {}
-
     puavoconf_path = '/state/etc/puavo/local/puavo_conf.json'
     return unless File.exists?(puavoconf_path)
 
-    @data[:puavoconf][:local] = JSON.parse( IO.read(puavoconf_path) )
+    @data[:puavoconf] = { :local => JSON.parse( IO.read(puavoconf_path) ) }
   end
 
   def update_puavopkg_info
