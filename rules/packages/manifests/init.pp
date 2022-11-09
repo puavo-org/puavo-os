@@ -389,8 +389,10 @@ class packages {
     , 'gstreamer1.0-plugins-good'
     , 'gstreamer1.0-plugins-ugly'
     , 'gstreamer1.0-tools'
+    , 'gstreamer1.0-vaapi'
     , 'handbrake'
     , 'handbrake-cli'
+    , 'intel-media-va-driver-non-free' # the free version seems to cause crashes in bullseye
     , 'kaffeine'
     , 'libdvd-pkg'
     , 'libdvdread8'
