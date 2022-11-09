@@ -6,7 +6,9 @@ class packages::compat_32bit {
   # software packages: adobereader-enu, skype, smartboard.
   if $architecture == 'amd64' {
     @package {
-      [ 'libasound2:i386'
+      [ 'gstreamer1.0-gl:i386'         # needed for better media support in wine
+      [ 'gstreamer1.0-vaapi:i386'      # needed for better media support in wine
+      , 'libasound2:i386'
       , 'libasound2-plugins:i386'
       , 'libatk1.0-0:i386'
       , 'libatkmm-1.6-1v5:i386'
@@ -25,6 +27,9 @@ class packages::compat_32bit {
       , 'libgif7:i386'                  # needed by RobboScratch2
       , 'libgl1-mesa-glx:i386'
       , 'libglib2.0-0:i386'
+      , 'libgraphene-1.0-0:i386'             # needed for better media support in wine
+      , 'libgstreamer-gl1.0-0:i386'          # needed for better media support in wine
+      , 'libgstreamer-plugins-bad1.0-0:i386' # needed for better media support in wine
       , 'libgtk2.0-0:i386'
       , 'libice6:i386'
       # XXX buster , 'libjpeg9:i386'
@@ -50,6 +55,7 @@ class packages::compat_32bit {
       , 'libudev1:i386'
       , 'libusb-1.0-0:i386'
       , 'libuuid1:i386'
+      , 'libva-wayland2:i386'           # needed for better media support in wine
       , 'libx11-6:i386'
       , 'libxext6:i386'
       , 'libxinerama1:i386'
