@@ -392,7 +392,6 @@ class packages {
     , 'gstreamer1.0-vaapi'
     , 'handbrake'
     , 'handbrake-cli'
-    , 'intel-media-va-driver-non-free' # the free version seems to cause crashes in bullseye
     , 'kaffeine'
     , 'libdvd-pkg'
     , 'libdvdread8'
@@ -814,6 +813,7 @@ class packages {
       tag => [ 'tag_debian_desktop', 'tag_debian_desktop_nonfree', ];
 
     [ 'broadcom-sta-dkms'
+    , 'intel-media-va-driver-non-free' # the free version seems to cause crashes in bullseye
     , 'libgl1-nvidia-legacy-390xx-glx'
     , 'nvidia-kernel-dkms'
     , 'nvidia-legacy-390xx-kernel-dkms'
