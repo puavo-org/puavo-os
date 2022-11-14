@@ -7,7 +7,7 @@ orig_tarball="../veyon_${upstream_version}.orig.tar.xz"
 
 if [ ! -e "${orig_tarball}" ]; then
   wget -O "${orig_tarball}.tmp" \
-       "http://archive.ubuntu.com/ubuntu/pool/universe/v/veyon/veyon_${upstream_version}.orig.tar.xz"
+       "http://deb.debian.org/debian/pool/main/v/veyon/veyon_${upstream_version}.orig.tar.xz"
   tar -Jxf "${orig_tarball}.tmp" --strip-components=1
   mv "${orig_tarball}.tmp" "$orig_tarball"
 fi

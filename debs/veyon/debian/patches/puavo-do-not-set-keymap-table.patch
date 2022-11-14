@@ -1,5 +1,7 @@
---- veyon-4.7.3+repack1.orig/plugins/platform/linux/LinuxInputDeviceFunctions.cpp
-+++ veyon-4.7.3+repack1/plugins/platform/linux/LinuxInputDeviceFunctions.cpp
+Index: veyon/plugins/platform/linux/LinuxInputDeviceFunctions.cpp
+===================================================================
+--- veyon.orig/plugins/platform/linux/LinuxInputDeviceFunctions.cpp
++++ veyon/plugins/platform/linux/LinuxInputDeviceFunctions.cpp
 @@ -33,8 +33,6 @@ void LinuxInputDeviceFunctions::enableIn
  {
  	if( m_inputDevicesDisabled )

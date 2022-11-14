@@ -3,7 +3,7 @@ Description: Ignore CPackDefinitions.cmake for official Debian package.
 
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -271,7 +271,7 @@
+@@ -276,7 +276,7 @@
  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
  
  
