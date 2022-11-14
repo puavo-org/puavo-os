@@ -47,7 +47,7 @@ install: installdirs
 		po/de/puavo-laptop-setup.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-laptop-setup.mo
-	${INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
 		po/sv/puavo-laptop-setup.mo
 
 
