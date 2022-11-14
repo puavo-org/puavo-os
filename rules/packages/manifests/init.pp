@@ -115,6 +115,8 @@ class packages {
     , 'inotify-tools'
     , 'iotop'
     , 'iperf'
+    , 'jc'
+    , 'jq'
     , 'libstdc++5'
     , 'linssid'
     , 'lm-sensors'
