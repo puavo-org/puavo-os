@@ -12,7 +12,7 @@ maybe_run_command() {
 backuppable_dirs="/home/ /state/"
 
 for dir in $backuppable_dirs; do
-  maybe_run_command "rsync --server --sender -lHogDtprSe.iLsfxC . ${dir}"
+  maybe_run_command "rsync --server --sender -lHogDtprSe.iLsfxCIvu . ${dir}"
 done
 
 echo 'Access not allowed' >&2
