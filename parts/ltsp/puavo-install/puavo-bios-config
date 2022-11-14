@@ -6,31 +6,6 @@ prepare_hp_utils() {
   puavo-pkg install /usr/share/puavo-pkg/packages/hp-bios-utils.tar.gz
   export PATH="/opt/hp/hp-flash:${PATH}"
   hp_utils_dir='/opt/hp/hp-flash'
-
-  ### Create log file solely for gathering errors from curl.
-  ### If it already exists, just move it out of the way so we can read it if needed.
-  errlogfile="/tmp/puavo-bios-config-curl.log"
-  if [ -f "$errlogfile" ]; then
-    mv "$errlogfile" "/tmp/puavo-bios-config-curl.log.old"
-  fi
-
-  baseurl_git="https://raw.githubusercontent.com/opinsys/opinsys-host-configurations/main/HP"
-
-  studentlaptop="$(cd "$hp_utils_dir" && curl -O --silent --show-error \
-   --url "$baseurl_git/HpSetup-student-laptop.txt" \
-   --write-out "%{filename_effective}")" 2>> "$errlogfile" || true
-
-  studentlaptop_uefi="$(cd "$hp_utils_dir" && curl -O --silent --show-error \
-   --url "$baseurl_git/HpSetup-student-laptop-uefi.txt" \
-   --write-out "%{filename_effective}")" 2>> "$errlogfile" || true
-
-  usbfactory="$(cd "$hp_utils_dir" && curl -O --silent --show-error \
-   --url "$baseurl_git/HpSetup-usb-factory.txt" \
-   --write-out "%{filename_effective}")" 2>> "$errlogfile" || true
-
-  usbfactory_uefi="$(cd "$hp_utils_dir" && curl -O --silent --show-error \
-   --url "$baseurl_git/HpSetup-usb-factory-uefi.txt" \
-   --write-out "%{filename_effective}")" 2>> "$errlogfile" || true
 }
 
 use_hp_utils() {
@@ -57,53 +32,28 @@ hp_wget_latest_and_flash() {
     hp-flash "$hp_latest_bios")
 }
 
-import_config_student_laptop() {
+import_config() {
   prepare_hp_utils
 
-  if [ ! -f "$hp_utils_dir/$studentlaptop" ] && [ "$(cat "$errlogfile" | wc --lines)" -gt 0 ]; then
-    echo "Could not find config $studentlaptop in $hp_utils_dir."
-    echo "Error log has entries, see $errlogfile."
-  else
-    (cd "$hp_utils_dir" && hp-repsetup -s "$studentlaptop")
+  config="$1"
+  baseurl_git="https://raw.githubusercontent.com/opinsys/opinsys-host-configurations/main/HP"
+
+  ### Create log file solely for gathering errors from curl.
+  ### If it already exists, just move it out of the way so we can read it if needed.
+  errlogfile="/tmp/puavo-bios-config-curl.log"
+  if [ -f "$errlogfile" ]; then
+    mv "$errlogfile" "/tmp/puavo-bios-config-curl.log.old"
   fi
 
-  echo "Returning to puavo-bios-config menu.\n"
-}
+  (cd "$hp_utils_dir" && curl -O --silent --show-error \
+   --url "$baseurl_git/$config" \
+   --write-out "$config") 2>> "$errlogfile" || true
 
-import_config_student_laptop_uefi() {
-  prepare_hp_utils
-
-  if [ ! -f "$hp_utils_dir/$studentlaptop_uefi" ] && [ "$(cat "$errlogfile" | wc --lines)" -gt 0 ]; then
-    echo "Could not find config $studentlaptop_uefi in $hp_utils_dir."
+  if [ ! -f "$hp_utils_dir/$config" ] && [ "$(grep -c . "$errlogfile")" -gt 0 ]; then
+    echo "Could not find config $config in $hp_utils_dir."
     echo "Error log has entries, see $errlogfile."
   else
-    (cd "$hp_utils_dir" && hp-repsetup -s "$studentlaptop_uefi")
-  fi
-
-  echo "Returning to puavo-bios-config menu.\n"
-}
-
-import_config_usb_stick_factory() {
-  prepare_hp_utils
-
-  if [ ! -f "$hp_utils_dir/$usbfactory" ] && [ "$(cat "$errlogfile" | wc --lines)" -gt 0 ]; then
-    echo "Could not find config $usbfactory in $hp_utils_dir."
-    echo "Error log has entries, see $errlogfile."
-  else
-    (cd "$hp_utils_dir" && hp-repsetup -s "$usbfactory")
-  fi
-
-  echo "Returning to puavo-bios-config menu.\n"
-}
-
-import_config_usb_stick_factory_uefi() {
-  prepare_hp_utils
-
-  if [ ! -f "$hp_utils_dir/$usbfactory_uefi" ] && [ "$(cat "$errlogfile" | wc --lines)" -gt 0 ]; then
-    echo "Could not find config $usbfactory_uefi in $hp_utils_dir."
-    echo "Error log has entries, see $errlogfile."
-  else
-    (cd "$hp_utils_dir" && hp-repsetup -s "$usbfactory_uefi")
+    (cd "$hp_utils_dir" && hp-repsetup -s "$config")
   fi
 
   echo "Returning to puavo-bios-config menu.\n"
@@ -123,11 +73,11 @@ EOF
   printf "%s" "$choices" | fzf --height=9 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
 }
 
-while chosen=$(ask_choice); do
-  printf "\n"
-  printf ">>> Welcome to puavo-bios-config!\n"
-  printf ">>> What do you want to do?\n\n"
+printf "\n"
+printf ">>> Welcome to puavo-bios-config!\n"
+printf ">>> What do you want to do?\n\n"
 
+while chosen=$(ask_choice); do
   printf ">> You chose '${chosen}'\n"
 
   case "$chosen" in
@@ -139,19 +89,19 @@ while chosen=$(ask_choice); do
       sleep 3
       ;;
     'Import Student laptop BIOS Config')
-      import_config_student_laptop
+      import_config HpSetup-student-laptop.txt
       sleep 3
       ;;
     'Import Student laptop BIOS Config (UEFI)')
-      import_config_student_laptop_uefi
+      import_config HpSetup-student-laptop-uefi.txt
       sleep 3
       ;;
     'Import USB Stick factory BIOS Config')
-      import_config_usb_stick_factory
+      import_config HpSetup-usb-factory.txt
       sleep 3
       ;;
     'Import USB Stick factory BIOS Config (UEFI)')
-      import_config_usb_stick_factory_uefi
+      import_config HpSetup-usb-factory-uefi.txt
       sleep 3
       ;;
     'use HP BIOS utilities')
