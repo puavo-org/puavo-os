@@ -47,7 +47,7 @@ end
 # Comment this out when you use this script
 ##############################################################
 puts
-puts "Script is disable. See source code of #{ __FILE__} file"
+puts "This script is disabled.  See the source code in #{ __FILE__ }"
 exit 2
 ##############################################################
 ##############################################################
