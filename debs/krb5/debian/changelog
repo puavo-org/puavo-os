@@ -1,8 +1,26 @@
-krb5 (1.18.3-6+puavo1) bullseye; urgency=medium
+krb5 (1.18.3-6+deb11u3) bullseye-security; urgency=high
 
-  * Added a patch to increase maximum number of realms.
+  * Integer overflows in PAC parsing; potentially critical for 32-bit
+    KDCs or when cross-realm acts maliciously; DOS in other conditions;
+    CVE-2022-42898, Closes: #1024267
 
- -- Puavo Org <dev@opinsys.fi>  Thu, 19 Aug 2021 12:28:55 +0300
+ -- Sam Hartman <hartmans@debian.org>  Thu, 17 Nov 2022 12:41:46 -0700
+
+krb5 (1.18.3-6+deb11u2) bullseye; urgency=medium
+
+  * Use SHA256 as Pkinit CMS Digest, Closes: #1017995
+
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 23 Aug 2022 14:49:09 -0600
+
+krb5 (1.18.3-6+deb11u1) bullseye; urgency=medium
+
+  * Fix KDC null dereference crash on FAST request with no server field,
+    CVE-2021-37750, Closes: #992607
+  * Fix memory leak in krb5_gss_inquire_cred, Closes: #991140
+
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 29 Aug 2021 16:38:12 -0600
 
 krb5 (1.18.3-6) unstable; urgency=high
 

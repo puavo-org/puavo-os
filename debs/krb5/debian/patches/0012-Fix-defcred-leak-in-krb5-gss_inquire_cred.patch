@@ -1,0 +1,41 @@
+From: Greg Hudson <ghudson@mit.edu>
+Date: Wed, 21 Jul 2021 13:44:30 -0400
+Subject: Fix defcred leak in krb5 gss_inquire_cred()
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Commit 1cd2821c19b2b95e39d5fc2f451a035585a40fa5 altered the memory
+management of krb5_gss_inquire_cred(), introducing defcred to act as
+an owner pointer when the function must acquire a default credential.
+The commit neglected to update the code to release the default cred
+along the successful path.  The old code does not trigger because
+cred_handle is now reassigned, so the default credential is leaked.
+
+Reported by Pavel Březina.
+
+(a minimal alternative to commit 593e16448e1af23eef74689afe06a7bcc86e79c7)
+
+ticket: 9016
+version_fixed: 1.18.4
+
+(cherry picked from commit b92be484630b38e26f5ee4bd67973fbd7627009c)
+---
+ src/lib/gssapi/krb5/inq_cred.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/src/lib/gssapi/krb5/inq_cred.c b/src/lib/gssapi/krb5/inq_cred.c
+index a8f2541..cd8384d 100644
+--- a/src/lib/gssapi/krb5/inq_cred.c
++++ b/src/lib/gssapi/krb5/inq_cred.c
+@@ -197,9 +197,7 @@ krb5_gss_inquire_cred(minor_status, cred_handle, name, lifetime_ret,
+         mechs = GSS_C_NO_OID_SET;
+     }
+ 
+-    if (cred_handle == GSS_C_NO_CREDENTIAL)
+-        krb5_gss_release_cred(minor_status, (gss_cred_id_t *)&cred);
+-
++    krb5_gss_release_cred(minor_status, &defcred);
+     krb5_free_context(context);
+     *minor_status = 0;
+     return((lifetime == 0)?GSS_S_CREDENTIALS_EXPIRED:GSS_S_COMPLETE);
