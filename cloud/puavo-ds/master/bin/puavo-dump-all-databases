@@ -17,7 +17,7 @@ options[:verbose] = false
 Timeout_seconds = 900
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: puavo-restore-all-databases [options]"
+  opts.banner = "Usage: puavo-dump-all-databases [options]"
 
   opts.on("-d", "--destination-directory [DESTDIR]", "destination directory for dump files") do |directory|
     options[:destdir] = directory
