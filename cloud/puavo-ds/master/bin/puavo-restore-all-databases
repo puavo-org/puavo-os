@@ -110,10 +110,38 @@ def convert_to_mdb(linelist)
       when /^olcDbCacheSize:/, /^olcDbConfig:/, /^olcDbDNcacheSize:/
         nil
 
-      when /^olcDbDirectory:/
-        [ line, "olcDbMaxSize: 40000000000" ]
-
       # everything else
+      else
+        line
+    end
+  end.compact
+end
+
+def apply_mdb_configurations(linelist)
+  applied_confs  = {}
+  in_mdb_section = false
+
+  linelist.map do |line|
+    case line
+      when /^objectClass: olcMdbConfig$/
+        in_mdb_section = true
+        line
+      when /^olcDbMaxSize: 40000000000/
+        applied_confs[:olcDbMaxSize] = true
+        'olcDbMaxSize: 40000000000'
+      when /^olcDbCheckpoint:/
+        nil
+      when /^$/
+        conf_lines = []
+        if in_mdb_section then
+          unless applied_confs[:olcDbMaxSize] then
+            conf_lines << 'olcDbMaxSize: 40000000000'
+          end
+        end
+        in_mdb_section = false
+        applied_confs = {}
+        conf_lines << line
+        conf_lines
       else
         line
     end
@@ -125,7 +153,10 @@ def handle_db_config_conversions(source, target)
   database_dirs = lookup_db_dirs(lines)
 
   lines = update_schemas(lines) if $options[:update_schemas]
-  lines = convert_to_mdb(lines) if $options[:convert_to_mdb]
+
+  if $options[:convert_to_mdb] then
+    lines = apply_mdb_configurations( convert_to_mdb(lines) )
+  end
 
   lines.each do |line|
     target.puts line
