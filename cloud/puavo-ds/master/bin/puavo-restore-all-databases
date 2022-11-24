@@ -120,7 +120,10 @@ def lookup_db_dirs(db_conf_lines)
 end
 
 def restore_databases(dumpdir, cn_config_path)
-  puts "Restore configurations (cn=config)"
+  puts
+  puts ">>> restoring configurations (cn=config)"
+
+  FileUtils.mkdir_p('/etc/ldap/slapd.d')
   response = Puavo::Execute.run([
                '/usr/sbin/slapadd', '-l', cn_config_path,
                  '-F', '/etc/ldap/slapd.d', '-b', 'cn=config' ])
@@ -132,9 +135,9 @@ def restore_databases(dumpdir, cn_config_path)
     match_data = db_dump_file.match(/(.*)\.ldif$/)
     if match_data then
       ldap_base = match_data[1]
-      puts "Restore database: #{ ldap_base }"
 
-      # Restore database
+      puts ">>> restoring database #{ ldap_base }"
+
       db_ldif_path = File.join(dumpdir, db_dump_file)
       response = Puavo::Execute.run([
                    '/usr/sbin/slapadd', '-q', '-b', ldap_base,
@@ -148,19 +151,26 @@ def restore_databases(dumpdir, cn_config_path)
 end
 
 def shutdown_and_remove_databases
-  # Stop slapd service
   begin
     response = Puavo::Execute.run([ '/usr/sbin/service', 'slapd', 'stop' ])
     warn response.stderr if $options[:verbose]
   rescue Puavo::ExitStatusError => exception
-    warn "\nCould not stop slapd service: " + exception.response.stderr.to_s
+    warn "Could not stop slapd service: " + exception.response.stderr.to_s
   end
 
-  # Remove slapd configuration directory
-  FileUtils.rm_r(Dir.glob('/etc/ldap/slapd.d/cn=config*'))
+  backup_timestamp = Time.now.strftime('%FT%T%z')
 
-  # Remove all databases
-  FileUtils.rm_r(Dir.glob('/var/lib/ldap/*'))
+  if File.exists?('/etc/ldap/slapd.d') then
+    conf_target_dir = "/etc/ldap/slapd.d-backup.#{ backup_timestamp }"
+    puts ">>> moving /etc/ldap/slapd.d to #{ conf_target_dir }"
+    FileUtils.mv('/etc/ldap/slapd.d', conf_target_dir)
+  end
+
+  if File.exists?('/var/lib/ldap') then
+    db_target_dir = "/var/lib/ldap-backup.#{ backup_timestamp }"
+    puts ">>> moving /var/lib/ldap to #{ db_target_dir }"
+    FileUtils.mv('/var/lib/ldap', db_target_dir)
+  end
 end
 
 $options = {}
@@ -232,7 +242,6 @@ Tempfile.open('cn_config.ldif') do |cnconf_target|
 
   # we should now be ready for the operation
 
-  # XXX making a backup of everything destroyed here might be a very good idea
   shutdown_and_remove_databases
 
   database_dirs.each do |db_dir|
@@ -242,4 +251,6 @@ Tempfile.open('cn_config.ldif') do |cnconf_target|
   restore_databases($options[:dumpdir], modified_cn_config_path)
 end
 
-puts "\nDatabases were successfully restored!\n\n"
+puts
+puts ">>> All databases were successfully restored!"
+puts
