@@ -1,7 +1,5 @@
 # Core menu data definitions
 
-import re
-
 from enum import IntEnum
 
 
@@ -292,34 +290,69 @@ class Menudata:
 
     # Searches for programs, returns them sorted by their names
     def search(self, key):
-        matches = []
+        grouped_matches = []
 
-        for _, program in self.programs.items():
-            if key in program.name.casefold():
-                matches.append(program)
-                continue
+        # Some programs are in multiple menus, show only the first match
+        seen = set()
 
-            found_keyword = False
+        add_group = lambda category, menu, programs: \
+            grouped_matches.append({
+                'category': category,
+                'menu': menu,
+                'programs': sorted(programs, key=lambda p: p.name.lower())
+            })
 
-            for kwd in program.keywords:
-                if key in kwd:
-                    matches.append(program)
-                    found_keyword = True
-                    break
+        # Scan all categories and child menus for matching programs. Group the
+        # results by category/menu, in the order they're defined.
+        for cid in self.category_index:
+            category = self.categories[cid]
+            programs = []
 
-            if found_keyword:
-                continue
+            # Search for program matches in category top level
+            for pid in category.program_ids:
+                self.__add_program_if_match(key, pid, programs, seen)
 
-            # I don't remember who asked for menudata ID and .desktop file
-            # checks, but apparently there are programs that are hard to
-            # find without these
-            if key in program.menudata_id:
-                matches.append(program)
-                continue
+            if programs:
+                add_group(category.name, None, programs)
 
-            if program.original_desktop_file is not None:
-                if key in program.original_desktop_file.replace('.desktop', '').casefold():
-                    matches.append(program)
-                    continue
+            # Search for program matches in menus
+            for mid in category.menu_ids:
+                menu = self.menus[mid]
+                programs = []
 
-        return sorted(matches, key=lambda program: program.name.lower())
+                for pid in menu.program_ids:
+                    self.__add_program_if_match(key, pid, programs, seen)
+
+                if programs:
+                    add_group(category.name, menu.name, programs)
+
+        return grouped_matches
+
+
+    # Used by search() above. Curse you Python and your stubborn lambda limitations.
+    def __add_program_if_match(self, key, pid, programs, seen):
+        if (pid not in seen) and self.__program_matches(key, self.programs[pid]):
+            programs.append(self.programs[pid])
+            seen.add(pid)
+
+
+    # Returns True if the program matches the search keyword
+    def __program_matches(self, key, program):
+        if key in program.name.casefold():
+            return True
+
+        for kwd in program.keywords:
+            if key in kwd:
+                return True
+
+        # I don't remember who asked for menudata ID and .desktop file
+        # checks, but apparently there are programs that are hard to
+        # find without these
+        if key in program.menudata_id:
+            return True
+
+        if program.original_desktop_file is not None:
+            if key in program.original_desktop_file.replace('.desktop', '').casefold():
+                return True
+
+        return False

@@ -1110,15 +1110,62 @@ class PuavoMenu(Gtk.Window):
         else:
             self.__show_empty_message(_tr('search_no_results'))
 
-        # create new buttons for results and show them
-        new_buttons = []
+        # Remove old contents
+        self.__programs_icons.hide()
+        self.__programs_container.hide()
 
-        for m in matches:
-            b = self.__make_program_button(m)
-            b.connect('clicked', self.clicked_program_button)
-            new_buttons.append(b)
+        for widget in self.__programs_icons.get_children():
+            widget.destroy()
 
-        self.__place_buttons_in_container(new_buttons)
+        # List the search results. __place_buttons_in_container() can't be used
+        # because it does not understand the grouping structure.
+        ypos = 0
+
+        for group in matches:
+            # Create a label for this results group
+            label = Gtk.Label()
+            label.get_style_context().add_class('search_group')
+            label.set_size_request(PROGRAMS_WIDTH - SCROLLBAR_WIDTH,
+                                   PROGRAMS_SEARCH_GROUP_HEIGHT)
+            label.set_ellipsize(Pango.EllipsizeMode.END)
+            label.set_xalign(0)
+            label.set_yalign(0.5)
+            label.set_use_markup(False)
+
+            if group['menu']:
+                label.set_text(f"{group['category']} / {group['menu']}")
+            else:
+                label.set_text(group['category'])
+
+            self.__programs_icons.put(label, 0, ypos)
+
+            ypos += PROGRAMS_SEARCH_GROUP_HEIGHT + MAIN_PADDING
+            xpos = 0
+
+            for index, program in enumerate(group['programs']):
+                button = self.__make_program_button(program)
+                button.connect('clicked', self.clicked_program_button)
+
+                self.__programs_icons.put(button, xpos, ypos)
+
+                xpos += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
+
+                if (index + 1) % PROGRAMS_PER_ROW == 0:
+                    # New line
+                    xpos = 0
+
+                    # Don't create a new line if there's nothing left
+                    if index + 1 < len(group['programs']):
+                        ypos += PROGRAM_BUTTON_HEIGHT + PROGRAM_ROW_PADDING
+
+            ypos += PROGRAM_BUTTON_HEIGHT + MAIN_PADDING
+
+        self.__programs_icons.show_all()
+
+        if self.__programs_icons.get_children():
+            self.__programs_icons.show()
+            self.__programs_container.show()
+
         self.__update_menu_title()
 
 
@@ -1159,10 +1206,12 @@ class PuavoMenu(Gtk.Window):
             if text:
                 buttons = self.__programs_icons.get_children()
 
-                if len(buttons) == 1:
+                if len(buttons) == 2:
                     # Only one matching program found and the user pressed
-                    # Enter, so launch it!
-                    self.clicked_program_button(buttons[0])
+                    # Enter, so launch it! (Note that there's a category/
+                    # menu banner also in there, so if there's only one
+                    # matching result the child container has two elements.)
+                    self.clicked_program_button(buttons[1])
 
         return False
 

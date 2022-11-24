@@ -142,6 +142,20 @@ entry {
     color: @theme_unfocused_fg_color;
 }
 
+/* Search results group header */
+.search_group {
+    background: linear-gradient(
+        90deg,
+        shade(@theme_selected_bg_color, 0.75),
+        alpha(@bg_color, 0.0)
+    );
+
+    color: @theme_selected_fg_color;
+    border-radius: 10px 0 0 10px;
+    padding-left: 10px;
+    font-weight: bold;
+}
+
 /* Sidebar buttons */
 .button_sidebar { }
 
