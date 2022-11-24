@@ -75,9 +75,7 @@ require 'tempfile'
 
 def update_schemas(linelist)
   filter_out = false
-
-  new_lines = []
-
+  new_lines  = []
 
   linelist.each do |line|
     filter_out = false if line.match(/^$/)
@@ -95,11 +93,39 @@ def update_schemas(linelist)
   new_lines
 end
 
+def convert_to_mdb(linelist)
+  linelist.map do |line|
+    case line
+      # these control the database used
+      when /^olcModuleLoad: {.*}back_hdb$/
+        line.sub('back_hdb', 'back_mdb')
+      when /hdb,cn=config/
+        line.sub('hdb,cn=config', 'mdb,cn=config')
+      when /^olcDatabase: {.*}hdb$/
+        line.sub('hdb', 'mdb')
+      when /bjectClass: olcHdbConfig$/
+        line.sub('olcHdbConfig', 'olcMdbConfig')
+
+      # remove hdb-specific configurations
+      when /^olcDbCacheSize:/, /^olcDbConfig:/, /^olcDbDNcacheSize:/
+        nil
+
+      when /^olcDbDirectory:/
+        [ line, "olcDbMaxSize: 40000000000" ]
+
+      # everything else
+      else
+        line
+    end
+  end.flatten.compact
+end
+
 def handle_db_config_conversions(source, target)
   lines = source.readlines
   database_dirs = lookup_db_dirs(lines)
 
   lines = update_schemas(lines) if $options[:update_schemas]
+  lines = convert_to_mdb(lines) if $options[:convert_to_mdb]
 
   lines.each do |line|
     target.puts line
@@ -185,6 +211,10 @@ OptionParser.new do |opts|
 
   opts.on('--debug', 'Use debugging mode') do
     $options[:debug] = true
+  end
+
+  opts.on('--convert-to-mdb', 'Convert database to the "mdb"-format') do
+    $options[:convert_to_mdb] = true
   end
 
   opts.on('--update-schemas', 'Use system ldap schemas') do
