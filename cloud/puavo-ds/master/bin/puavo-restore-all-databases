@@ -73,9 +73,33 @@ require 'tempfile'
 #   end
 # end
 
+def update_schemas(linelist)
+  filter_out = false
+
+  new_lines = []
+
+
+  linelist.each do |line|
+    filter_out = false if line.match(/^$/)
+
+    matchdata = line.match(/^dn: cn={.*}(.*),cn=schema,cn=config/)
+    if matchdata then
+      schema = $1
+      new_lines << "include: file:///etc/ldap/schema/#{ schema }.ldif"
+      filter_out = true
+    end
+
+    new_lines << line unless filter_out
+  end
+
+  new_lines
+end
+
 def handle_db_config_conversions(source, target)
   lines = source.readlines
   database_dirs = lookup_db_dirs(lines)
+
+  lines = update_schemas(lines) if $options[:update_schemas]
 
   lines.each do |line|
     target.puts line
@@ -139,7 +163,7 @@ def shutdown_and_remove_databases
   FileUtils.rm_r(Dir.glob('/var/lib/ldap/*'))
 end
 
-$options = { :verbose => false }
+$options = {}
 
 OptionParser.new do |opts|
   opts.banner = 'Usage: puavo-restore-all-databases [options]'
@@ -149,9 +173,16 @@ OptionParser.new do |opts|
     $options[:dumpdir] = dir
   end
 
- opts.on('-v', '--[no-]verbose',
-          'Run verbosely. Print STDERR of shell command (eg. slapadd)') do |v|
-    $options[:verbose] = v
+  opts.on('--debug', 'Use debugging mode') do
+    $options[:debug] = true
+  end
+
+  opts.on('--update-schemas', 'Use system ldap schemas') do
+    $options[:update_schemas] = true
+  end
+
+  opts.on('-v', '--verbose', 'Run verbosely') do
+    $options[:verbose] = true
   end
 
   opts.on_tail('-h', '--help', 'Show this message') do
@@ -190,8 +221,18 @@ Tempfile.open('cn_config.ldif') do |cnconf_target|
   cnconf_target.close
   modified_cn_config_path = cnconf_target.path
 
+  if $options[:debug] then
+    puts
+    puts ">>> leaving modified cn=config to /tmp/cn=config.ldif for inspection"
+    puts ">>> (due to --debug mode)"
+    puts
+    FileUtils.cp(modified_cn_config_path, '/tmp/cn=config.ldif')
+    sleep 1
+  end
+
   # we should now be ready for the operation
 
+  # XXX making a backup of everything destroyed here might be a very good idea
   shutdown_and_remove_databases
 
   database_dirs.each do |db_dir|
