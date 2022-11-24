@@ -117,6 +117,30 @@ def convert_to_mdb(linelist)
   end.compact
 end
 
+def update_configurations(linelist)
+  db_type = nil
+  linelist.each do |line|
+    if line.match(/^olcModuleLoad: {.*}back_hdb$/) then
+      db_type = :hdb
+      break
+    end
+    if line.match(/^olcModuleLoad: {.*}back_mdb$/) then
+      db_type = :mdb
+      break
+    end
+  end
+
+  raise 'could not determine database format' unless db_type
+
+  return apply_hdb_configurations(linelist) if db_type == :hdb
+
+  apply_mdb_configurations(linelist)
+end
+
+def apply_hdb_configurations(linelist)
+  linelist
+end
+
 def apply_mdb_configurations(linelist)
   applied_confs  = {}
   in_mdb_section = false
@@ -155,8 +179,11 @@ def handle_db_config_conversions(source, target)
   lines = update_schemas(lines) if $options[:update_schemas]
 
   if $options[:convert_to_mdb] then
-    lines = apply_mdb_configurations( convert_to_mdb(lines) )
+    lines = convert_to_mdb(lines)
+    $options[:update_configurations] = true
   end
+
+  lines = update_configurations(lines) if $options[:update_configurations]
 
   lines.each do |line|
     target.puts line
@@ -246,6 +273,10 @@ OptionParser.new do |opts|
 
   opts.on('--convert-to-mdb', 'Convert database to the "mdb"-format') do
     $options[:convert_to_mdb] = true
+  end
+
+  opts.on('--update-configurations', 'Update DB configurations') do
+    $options[:update_configurations] = true
   end
 
   opts.on('--update-schemas', 'Use system ldap schemas') do
