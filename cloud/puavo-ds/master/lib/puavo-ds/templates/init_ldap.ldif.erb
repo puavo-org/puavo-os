@@ -62,7 +62,7 @@ dn: cn=module{0},cn=config
 objectClass: olcModuleList
 cn: module{0}
 olcModulePath: /usr/lib/ldap
-olcModuleLoad: {0}back_hdb
+olcModuleLoad: {0}back_mdb
 olcModuleLoad: {1}dynlist
 olcModuleLoad: {2}unique
 olcModuleLoad: {3}ppolicy
@@ -81,19 +81,16 @@ objectClass: olcSyncProvConfig
 objectClass: olcOverlayConfig
 olcOverlay: {0}syncprov
 
-dn: olcDatabase={1}hdb,cn=config
+dn: olcDatabase={1}mdb,cn=config
 objectClass: olcDatabaseConfig
-objectClass: olcHdbConfig
-olcDatabase: {1}hdb
+objectClass: olcMdbConfig
+olcDatabase: {1}mdb
 olcDbDirectory: /var/lib/ldap/o=puavo
 olcSuffix: o=puavo
 olcLastMod: TRUE
 olcRootDN: uid=admin,o=puavo
 olcRootPW: <%= @rootpw_hash %>
 olcDbCheckpoint: 512 30
-olcDbConfig: {0}set_cachesize 0 10485760 0
-olcDbConfig: {1}set_lg_bsize 2097512
-olcDbConfig: {2}set_flags DB_LOG_AUTOREMOVE
 olcDbIndex: uid pres,eq
 olcDbIndex: cn,sn,mail pres,eq,approx,sub
 olcDbIndex: objectClass eq
@@ -101,7 +98,7 @@ olcAccess: {0}to attrs=userPassword by anonymous auth
 olcAccess: {1}to dn.exact="cn=idPool,o=Puavo" attrs="puavoNextGidNumber,puavoNextUidNumber,puavoNextId" by dn.exact="uid=puavo,o=Puavo" write
 olcAccess: {2}to dn.subtree="o=Puavo" by dn.exact="uid=puavo,o=Puavo" read
 
-dn: olcOverlay={0}syncprov,olcDatabase={1}hdb,cn=config
+dn: olcOverlay={0}syncprov,olcDatabase={1}mdb,cn=config
 objectClass: olcSyncProvConfig
 objectClass: olcOverlayConfig
 olcOverlay: {0}syncprov

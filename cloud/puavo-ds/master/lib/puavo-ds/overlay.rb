@@ -1,4 +1,4 @@
-# Disable duplicate DN creation checks as the hdb database creation 
+# Disable duplicate DN creation checks as the database creation
 # fails otherwise. A better workaround should be figured out for this.
 module ActiveLdap
   module Validations
@@ -9,7 +9,6 @@ module ActiveLdap
 end
 
 class Overlay < ActiveLdap::Base
-
   def self.ldap_mapping(args)
     super( :dn_attribute => "olcOverlay",
            :prefix => args[:prefix] )
