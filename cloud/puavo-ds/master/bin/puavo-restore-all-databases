@@ -8,6 +8,7 @@
 
 require 'fileutils'
 require 'optparse'
+require 'puavo-ds/database_config'
 require 'puavo/execute'
 require 'tempfile'
 
@@ -122,11 +123,7 @@ def update_configurations(linelist)
       break
     end
     if line.match(/^olcModuleLoad: {.*}back_mdb$/) then
-      # XXX we should pick this config from database initialization routines
-      db_config = {
-        'olcDbCheckpoint' => [],
-        'olcDbMaxSize'    => [ '40000000000' ],
-      }
+      db_config = PUAVO_DB_CONFIG
       db_config_objectclass = 'olcMdbConfig'
       break
     end

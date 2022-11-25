@@ -1,5 +1,6 @@
 require 'puavo-ds/id_pool'
 require 'puavo-ds/database_acl'
+require 'puavo-ds/database_config'
 require 'tempfile'
 
 class Database < ActiveLdap::Base
@@ -7,39 +8,7 @@ class Database < ActiveLdap::Base
                 :prefix => "",
                 :classes => ['olcDatabaseConfig', 'olcMdbConfig'] )
 
-  attr_accessor :samba_domain
-  attr_accessor :kerberos_realm
-
-  PUAVO_DB_CONFIG = {
-    'olcDbIndex' => [ 'cn eq,sub',
-                      'creatorsName eq',
-                      'displayName sub',
-                      'entryCSN eq',
-                      'gidNumber eq',
-                      'givenName sub',
-                      'homeDirectory eq',
-                      'krbPrincipalName eq',
-                      'member eq',
-                      'memberUid eq',
-                      'objectClass eq',
-                      'puavoAdminOfSchool eq',
-                      'puavoDevicePrimaryUser eq',
-                      'puavoDeviceType eq',
-                      'puavoEduGroupType eq',
-                      'puavoEduPersonAffiliation eq',
-                      'puavoExternalId eq',
-                      'puavoHostname eq',
-                      'puavoId eq',
-                      'puavoPrinterQueue eq',
-                      'puavoSchoolAdmin eq',
-                      'puavoSchool eq',
-                      'puavoServiceDomain eq',
-                      'puavoWirelessPrinterQueue eq',
-                      'sn sub',
-                      'uid eq,sub' ],
-    'olcDbMaxSize' => [ '40000000000' ],
-    'olcLastMod'   => [ 'TRUE' ],
-  }
+  attr_accessor :kerberos_realm, :samba_domain
 
   def initialize(args)
     ActiveLdap::Base.setup_connection( configurations["settings"]["ldap_server"].merge( "base" => "cn=config" ) )
