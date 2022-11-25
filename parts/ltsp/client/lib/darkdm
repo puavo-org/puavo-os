@@ -84,12 +84,20 @@ get_smart_lettercode() {
 }
 
 list_disks() {
-  local colorized_disk_info colorized_smart_status disk disk_devices \
+  local colorized_disk_info colorized_smart_status color_no_disk disk disk_devices \
         disk_label disk_model disk_size_in_gb smartctl_code smartctl_data \
         smartctl_json smart_color_status smart_lettercodes smart_status
 
   disk_devices=$(facter --json disks | jq -r '.disks | keys | .[]' \
                    | grep -E '^(mmcblk|nvme|sd|vd|xvda)')
+
+  if [ -z "$disk_devices" ]; then
+    color_no_disk=0
+    colorized_disk_info=$(colorize disk_devices 1 1 1 "$color_no_disk" "NO DISK FOUND")
+    printf "disk %-12s%s\n" "" "$colorized_disk_info"
+    return
+  fi
+
   for disk in $disk_devices; do
     smartctl_code=0
     smartctl_json=$(smartctl -a --json=c "/dev/${disk}") || smartctl_code=$?
