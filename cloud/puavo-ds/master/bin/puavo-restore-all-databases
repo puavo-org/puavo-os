@@ -118,58 +118,63 @@ def convert_to_mdb(linelist)
 end
 
 def update_configurations(linelist)
-  db_type = nil
+  db_config = nil
+  db_config_objectclass = nil
+
   linelist.each do |line|
     if line.match(/^olcModuleLoad: {.*}back_hdb$/) then
-      db_type = :hdb
+      # XXX we should pick this config from database initialization routines
+      db_config = {}
+      db_config_objectclass = 'olcMdbConfig'
       break
     end
     if line.match(/^olcModuleLoad: {.*}back_mdb$/) then
-      db_type = :mdb
+      # XXX we should pick this config from database initialization routines
+      db_config = {
+        'olcDbCheckpoint' => [],
+        'olcDbMaxSize'    => [ '40000000000' ],
+      }
+      db_config_objectclass = 'olcMdbConfig'
       break
     end
   end
 
-  raise 'could not determine database format' unless db_type
+  raise 'could not determine database format' unless db_config
 
-  return apply_hdb_configurations(linelist) if db_type == :hdb
-
-  apply_mdb_configurations(linelist)
+  apply_db_configurations(linelist, db_config, db_config_objectclass)
 end
 
-def apply_hdb_configurations(linelist)
-  linelist
-end
+def apply_db_configurations(linelist, db_config, db_config_objectclass)
+  in_dbconf_section = false
+  new_linelist = []
 
-def apply_mdb_configurations(linelist)
-  applied_confs  = {}
-  in_mdb_section = false
+  linelist.each do |line|
+    if line.match(/^objectClass: #{ db_config_objectclass }$/) then
+      in_dbconf_section = true
+      new_linelist << line
+      next
+    end
 
-  linelist.map do |line|
-    case line
-      when /^objectClass: olcMdbConfig$/
-        in_mdb_section = true
-        line
-      when /^olcDbMaxSize: 40000000000/
-        applied_confs[:olcDbMaxSize] = true
-        'olcDbMaxSize: 40000000000'
-      when /^olcDbCheckpoint:/
-        nil
-      when /^$/
-        conf_lines = []
-        if in_mdb_section then
-          unless applied_confs[:olcDbMaxSize] then
-            conf_lines << 'olcDbMaxSize: 40000000000'
+    if line.match(/^$/) then
+      if in_dbconf_section then
+        db_config.each do |key, valuelist|
+          valuelist.each do |value|
+            new_linelist << "#{ key }: #{ value }"
           end
         end
-        in_mdb_section = false
-        applied_confs = {}
-        conf_lines << line
-        conf_lines
-      else
-        line
+      end
+      in_dbconf_section = false
+      new_linelist << line
+      next
     end
-  end.flatten.compact
+
+    key = line.split(':').first
+    next if db_config.has_key?(key)
+
+    new_linelist << line
+  end
+
+  new_linelist
 end
 
 def handle_db_config_conversions(source, target)
