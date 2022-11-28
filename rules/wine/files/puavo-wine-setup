@@ -2,6 +2,14 @@
 
 set -eu
 
+disable_winebus_sdl() {
+  run_regedit <<EOF
+Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\WineBus]
+"Enable SDL"="0"
+EOF
+}
+
 setup_d_drive() {
   ln -fns "$HOME" "${WINEPREFIX}/dosdevices/d:"
 }
@@ -240,11 +248,12 @@ fi
 
 status=0
 
-if ! args=$(getopt -n "$0" -o + -l 'setup-d-drive,update-shell-folders,user-dirs:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'disable-winebus-sdl,setup-d-drive,update-shell-folders,user-dirs:' -- "$@"); then
   echo 'Could not parse command line arguments' >&2
   exit 1
 fi
 
+disable_winebus_sdl=false
 setup_d_drive=false
 update_shell_folders=false
 user_dirs=''
@@ -252,15 +261,23 @@ user_dirs=''
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
+    --disable-winebus-sdl)  disable_winebus_sdl=true   shift ;;
     --setup-d-drive)        setup_d_drive=true;        shift ;;
     --update-shell-folders) update_shell_folders=true; shift ;;
     --user-dirs)            user_dirs=$2; shift;       shift ;;
     --) shift; break ;;
-    *) echo 'Usage: puavo-wine-setup [--setup-d-drive] [--update-shell-folders] [--user-dirs opts]' >&2
+    *) echo 'Usage: puavo-wine-setup [--disable-winebus-sdl] [--setup-d-drive] [--update-shell-folders] [--user-dirs opts]' >&2
        exit 1
        ;;
   esac
 done
+
+if $disable_winebus_sdl; then
+  if ! disable_winebus_sdl; then
+    echo 'Problem occurred when disabling winebus SDL.' >&2
+    status=1
+  fi
+fi
 
 if $setup_d_drive; then
   if ! setup_d_drive; then
