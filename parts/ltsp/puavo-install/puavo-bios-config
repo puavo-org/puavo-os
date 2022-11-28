@@ -50,10 +50,11 @@ import_config() {
    --write-out "$config") 2>> "$errlogfile" || true
 
   if [ ! -f "$hp_utils_dir/$config" ] && [ "$(grep -c . "$errlogfile")" -gt 0 ]; then
-    echo "Could not find config $config in $hp_utils_dir."
+    echo "Could not find config $config in $hp_utils_dir. Config was not imported!!"
     echo "Error log has entries, see $errlogfile."
   else
     (cd "$hp_utils_dir" && hp-repsetup -s "$config")
+    echo "\nSelected config $config should now be set.\nPlease check the output above to be sure.\n\n"
   fi
 
   echo "Returning to puavo-bios-config menu.\n"

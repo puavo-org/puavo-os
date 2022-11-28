@@ -11,6 +11,9 @@ MAIN_PADDING = 10
 # so I took a screenshot and measured it.
 SCROLLBAR_WIDTH = 16
 
+# Height of the separator label for search results
+PROGRAMS_SEARCH_GROUP_HEIGHT = 25
+
 # Icons per row in program lists
 PROGRAMS_PER_ROW = 4
 

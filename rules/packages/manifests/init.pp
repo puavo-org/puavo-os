@@ -692,10 +692,16 @@ class packages {
       tag => [ 'tag_gnome_desktop', 'tag_debian_desktop', ];
 
     # some dependencies from puavo-pkg packages
-    [ 'libftdi1'                          # mindplus
+    [ 'libftdi-dev'                       # flashprint
+    , 'libftdi1'                          # mindplus
+    , 'libftdi1-2'                        # flashprint
+    , 'libhidapi-dev'                     # mindplus
     , 'libhidapi-hidraw0'                 # mindplus
     , 'libnss3-tools'                     # pyscrlink
     , 'libopencsg1'                       # openscad-nightly
+    , 'libudev-dev'                       # flashprint
+    , 'libusb-1.0-0-dev'                  # flashprint
+    , 'libusb-dev'                        # flashprint
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean

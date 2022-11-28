@@ -10,7 +10,7 @@ our main production version is Buster and Bullseye
 is under active development.
 
 After cloning the repository, you should also update
-submodules:
+submodules (unless the repository was cloned with parameter --recursive):
 
     git submodule init
     git submodule update
