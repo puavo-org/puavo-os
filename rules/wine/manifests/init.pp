@@ -17,5 +17,12 @@ class wine {
       target  => '/usr/bin/wine';
   }
 
+  file {
+    '/usr/bin/wine-stable':
+      ensure  => link,
+      require => Package['wine-devel'],
+      target  => '/usr/bin/wine';
+  }
+
   Package <| title == 'wine' |>
 }
