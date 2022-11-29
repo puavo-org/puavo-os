@@ -12,16 +12,16 @@ class wine {
 
   file {
     '/usr/bin/wine-development':
-      ensure  => link,
       require => Package['wine-devel'],
-      target  => '/usr/bin/wine';
+      mode    => '0755',
+      source  => 'puppet:///modules/wine/wine-launcher';
   }
 
   file {
     '/usr/bin/wine-stable':
-      ensure  => link,
       require => Package['wine-devel'],
-      target  => '/usr/bin/wine';
+      mode    => '0755',
+      source  => 'puppet:///modules/wine/wine-launcher';
   }
 
   Package <| title == 'wine' |>

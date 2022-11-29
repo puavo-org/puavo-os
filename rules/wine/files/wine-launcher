@@ -1,0 +1,6 @@
+#!/bin/sh
+# As we previously used debian's standard wine, which had wine-stable and
+# and wine-development through alternatives system, and /usr/bin/wine was a
+# starter script, programs invoking it through symlinks cause problems with
+# with binary names. So we'll call it through a small wrap now.
+exec /usr/bin/wine "$@"
