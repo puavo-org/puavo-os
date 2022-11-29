@@ -57,7 +57,6 @@ def convert_to_hdb(linelist)
         line
     end
   end.compact
-
 end
 
 def convert_to_mdb(linelist)
@@ -99,7 +98,32 @@ def update_configurations(linelist)
         'olcDbCacheSize'   => [ '30000' ],
         'olcDbCheckpoint'  => [ '64 5'  ],
         'olcDbDNCacheSize' => [ '60000' ],
-        'olcDbIndex'       => [
+      }
+      db_config_objectclass = 'olcHdbConfig'
+      break
+    end
+    if line.match(/^olcModuleLoad: {.*}back_mdb$/) then
+      db_config = PuavoDatabaseConfig::CONFIG
+      db_config_objectclass = 'olcMdbConfig'
+      break
+    end
+  end
+
+  raise 'could not determine database format' unless db_config_objectclass
+
+  apply_db_configurations(linelist, db_config, db_config_objectclass)
+end
+
+def update_indexes(linelist)
+  db_config = nil
+  db_config_objectclass = nil
+
+  linelist.each do |line|
+    if line.match(/^olcModuleLoad: {.*}back_hdb$/) then
+      # XXX these can be thrown away once we no longer support downgrade
+      # XXX to hdb
+      db_config = {
+        'olcDbIndex' => [
           'uidNumber pres,eq',
           'sambaSID pres,eq',
           'sambaSIDList pres,eq',
@@ -117,19 +141,19 @@ def update_configurations(linelist)
           'objectClass eq',
           'entryUUID eq',
           'entryCSN eq',
-          'macAddress eq' ],
+          'macAddress eq' ]
       }
       db_config_objectclass = 'olcHdbConfig'
       break
     end
     if line.match(/^olcModuleLoad: {.*}back_mdb$/) then
-      db_config = PUAVO_DB_CONFIG
+      db_config = { 'olcDbIndex' => PuavoDatabaseConfig::INDEXES }
       db_config_objectclass = 'olcMdbConfig'
       break
     end
   end
 
-  raise 'could not determine database format' unless db_config
+  raise 'could not determine database format' unless db_config_objectclass
 
   apply_db_configurations(linelist, db_config, db_config_objectclass)
 end
@@ -176,14 +200,17 @@ def handle_db_config_conversions(source, target)
   if $options[:convert_to_hdb] then
     lines = convert_to_hdb(lines)
     $options[:update_configurations] = true
+    $options[:update_indexes]        = true
   end
 
   if $options[:convert_to_mdb] then
     lines = convert_to_mdb(lines)
     $options[:update_configurations] = true
+    $options[:update_indexes] = true
   end
 
   lines = update_configurations(lines) if $options[:update_configurations]
+  lines = update_indexes(lines)        if $options[:update_indexes]
 
   lines.each do |line|
     target.puts line
@@ -281,6 +308,10 @@ OptionParser.new do |opts|
 
   opts.on('--update-configurations', 'Update DB configurations') do
     $options[:update_configurations] = true
+  end
+
+  opts.on('--update-indexes', 'Update DB indexes') do
+    $options[:update_indexes] = true
   end
 
   opts.on('--update-schemas', 'Use system ldap schemas') do
