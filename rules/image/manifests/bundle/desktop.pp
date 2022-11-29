@@ -13,6 +13,7 @@ class image::bundle::desktop {
   include ::fuse
   include ::gdm
   include ::gnome_terminal
+  include ::gnome_disks
   include ::graphics_drivers
   include ::homedir_management
   include ::ibus

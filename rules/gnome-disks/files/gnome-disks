@@ -1,0 +1,14 @@
+#!/bin/sh
+# bullseye workaround for https://gitlab.gnome.org/GNOME/gnome-disk-utility/-/commit/9f6571532c6b6f9c78f0ec4ce47ec3d0b178dba7
+set -eu
+
+p=""
+for var in "$@"
+do
+  case $var in
+   "--xid") shift 2;;
+   *) p="$p $var" ;;
+  esac
+done
+
+/usr/bin/gnome-disks.distrib "$p"
