@@ -7,7 +7,7 @@ class wine {
     '/usr/share/applications/wine.desktop':
       ensure  => link,
       require => Package['wine-devel'],
-      target  => '/usr/share/doc/wine/examples/wine.desktop';
+      target  => '/opt/wine-devel/share/applications/wine.desktop';
   }
 
   file {
