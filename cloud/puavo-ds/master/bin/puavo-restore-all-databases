@@ -83,80 +83,71 @@ def convert_to_mdb(linelist)
   end.compact
 end
 
-def update_configurations(linelist)
-  db_config = nil
-  db_config_objectclass = nil
-
+def get_db_type(linelist)
   linelist.each do |line|
-    if line.match(/^olcModuleLoad: {.*}back_hdb$/) then
-      # XXX these can be thrown away once we no longer support downgrade
-      # XXX to hdb
-      db_config = {
-        'olcDbConfig'      => [ 'set_cachesize 0 10485760 0',
-                                'set_lg_bsize 2097512',
-                                'set_flags DB_LOG_AUTOREMOVE' ],
-        'olcDbCacheSize'   => [ '30000' ],
-        'olcDbCheckpoint'  => [ '64 5'  ],
-        'olcDbDNCacheSize' => [ '60000' ],
-      }
-      db_config_objectclass = 'olcHdbConfig'
-      break
-    end
-    if line.match(/^olcModuleLoad: {.*}back_mdb$/) then
-      db_config = PuavoDatabaseConfig::CONFIG
-      db_config_objectclass = 'olcMdbConfig'
-      break
-    end
+    return :hdb if line.match(/^olcModuleLoad: {.*}back_hdb$/)
+    return :mdb if line.match(/^olcModuleLoad: {.*}back_mdb$/)
   end
 
-  raise 'could not determine database format' unless db_config_objectclass
+  raise 'could not determine database type'
+end
+
+def update_configurations(linelist, db_type)
+  if db_type == :hdb then
+    db_config = {
+      'olcDbConfig'      => [ 'set_cachesize 0 10485760 0',
+                              'set_lg_bsize 2097512',
+                              'set_flags DB_LOG_AUTOREMOVE' ],
+      'olcDbCacheSize'   => [ '30000' ],
+      'olcDbCheckpoint'  => [ '64 5'  ],
+      'olcDbDNCacheSize' => [ '60000' ],
+    }
+    db_config_objectclass = 'olcHdbConfig'
+  else
+    db_config = PuavoDatabaseConfig::CONFIG
+    db_config_objectclass = 'olcMdbConfig'
+  end
 
   apply_db_configurations(linelist, db_config, db_config_objectclass)
 end
 
-def update_indexes(linelist)
-  db_config = nil
-  db_config_objectclass = nil
-
-  linelist.each do |line|
-    if line.match(/^olcModuleLoad: {.*}back_hdb$/) then
-      # XXX these can be thrown away once we no longer support downgrade
-      # XXX to hdb
-      db_config = {
-        'olcDbIndex' => [
-          'uidNumber pres,eq',
-          'sambaSID pres,eq',
-          'sambaSIDList pres,eq',
-          'sambaGroupType pres,eq',
-          'member,memberUid pres,eq',
-          'puavoSchool pres,eq',
-          'puavoId pres,eq',
-          'puavoTag pres,eq',
-          'puavoDeviceType pres,eq',
-          'puavoHostname pres,eq,sub',
-          'displayName,puavoEduPersonReverseDisplayName pres,eq,sub',
-          'uid pres,eq',
-          'krbPrincipalName pres,eq',
-          'cn,sn,mail,givenName pres,eq,approx,sub',
-          'objectClass eq',
-          'entryUUID eq',
-          'entryCSN eq',
-          'macAddress eq' ]
-      }
-      db_config_objectclass = 'olcHdbConfig'
-      break
-    end
-    if line.match(/^olcModuleLoad: {.*}back_mdb$/) then
-      db_config = { 'olcDbIndex' => PuavoDatabaseConfig::INDEXES }
-      db_config_objectclass = 'olcMdbConfig'
-      break
-    end
+def update_indexes(linelist, db_type)
+  if db_type == :hdb then
+    db_config = {
+      'olcDbIndex' => [
+        'uidNumber pres,eq',
+        'sambaSID pres,eq',
+        'sambaSIDList pres,eq',
+        'sambaGroupType pres,eq',
+        'member,memberUid pres,eq',
+        'puavoSchool pres,eq',
+        'puavoId pres,eq',
+        'puavoTag pres,eq',
+        'puavoDeviceType pres,eq',
+        'puavoHostname pres,eq,sub',
+        'displayName,puavoEduPersonReverseDisplayName pres,eq,sub',
+        'uid pres,eq',
+        'krbPrincipalName pres,eq',
+        'cn,sn,mail,givenName pres,eq,approx,sub',
+        'objectClass eq',
+        'entryUUID eq',
+        'entryCSN eq',
+        'macAddress eq' ]
+    }
+    db_config_objectclass = 'olcHdbConfig'
+  else
+    db_config = { 'olcDbIndex' => PuavoDatabaseConfig::INDEXES }
+    db_config_objectclass = 'olcMdbConfig'
   end
-
-  raise 'could not determine database format' unless db_config_objectclass
 
   apply_db_configurations(linelist, db_config, db_config_objectclass)
 end
+
+def update_modules(linelist)
+  db_config = { 'olcModuleLoad' => PuavoDatabaseConfig::MODULES }
+  apply_db_configurations(linelist, db_config, 'olcModuleList')
+end
+
 
 def apply_db_configurations(linelist, db_config, db_config_objectclass)
   in_dbconf_section = false
@@ -195,22 +186,34 @@ def handle_db_config_conversions(source, target)
   lines = source.readlines
   database_dirs = lookup_db_dirs(lines)
 
+  db_type = get_db_type(lines)
+
   lines = update_schemas(lines) if $options[:update_schemas]
 
   if $options[:convert_to_hdb] then
     lines = convert_to_hdb(lines)
+    db_type = :hdb
     $options[:update_configurations] = true
     $options[:update_indexes]        = true
   end
 
   if $options[:convert_to_mdb] then
     lines = convert_to_mdb(lines)
+    db_type = :mdb
     $options[:update_configurations] = true
     $options[:update_indexes] = true
   end
 
-  lines = update_configurations(lines) if $options[:update_configurations]
-  lines = update_indexes(lines)        if $options[:update_indexes]
+  if $options[:update_configurations] then
+    lines = update_configurations(lines, db_type)
+  end
+
+  lines = update_indexes(lines, db_type) if $options[:update_indexes]
+
+  if $options[:update_modules] && db_type == :mdb then
+    # XXX db_type test can be removed once hdb is no longer supported
+    lines = update_modules(lines)
+  end
 
   lines.each do |line|
     target.puts line
@@ -312,6 +315,10 @@ OptionParser.new do |opts|
 
   opts.on('--update-indexes', 'Update DB indexes') do
     $options[:update_indexes] = true
+  end
+
+  opts.on('--update-modules', 'Update DB modules') do
+    $options[:update_modules] = true
   end
 
   opts.on('--update-schemas', 'Use system ldap schemas') do
