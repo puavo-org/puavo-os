@@ -72,6 +72,19 @@
             },
             "tags": "default"
         },
+        "bitwarden": {
+            "name": {
+                "fi": "Bitwarden salasanojen hallintaohjelma",
+                "en": "Bitwarden password manager",
+                "sv": "Bitwarden lösenordshanterare",
+                "de": "Bitwarden Passwort-Manager"
+            },
+            "icon": "/usr/share/icons/hicolor/64x64/apps/bitwarden.png",
+            "tags": "default",
+            "puavopkg": {
+                "id": "bitwarden"
+            }
+        },
         "blender": {
             "name": {
                 "fi": "Blender-3D-mallinnusohjelma",
@@ -2035,7 +2048,8 @@
                 "net.sourceforge.liferea",
                 "vinagre",
                 "VidyoDesktop",
-                "webex"
+                "webex",
+                "bitwarden"
             ]
         },
         "menu-languages": {
