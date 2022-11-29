@@ -41,5 +41,6 @@ module PuavoDatabaseConfig
               '{9}constraint',
               '{10}accesslog',
               '{11}deref',
-              '{12}smbkrb5pwd_srv' ]
+              '{12}lastbind',
+              '{13}smbkrb5pwd_srv' ]
 end

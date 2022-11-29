@@ -62,19 +62,7 @@ dn: cn=module{0},cn=config
 objectClass: olcModuleList
 cn: module{0}
 olcModulePath: /usr/lib/ldap
-olcModuleLoad: {0}back_mdb
-olcModuleLoad: {1}dynlist
-olcModuleLoad: {2}unique
-olcModuleLoad: {3}ppolicy
-olcModuleLoad: {4}syncprov
-olcModuleLoad: {5}memberof
-olcModuleLoad: {6}valsort
-olcModuleLoad: {7}auditlog
-olcModuleLoad: {8}refint
-olcModuleLoad: {9}constraint
-olcModuleLoad: {10}accesslog
-olcModuleLoad: {11}deref
-olcModuleLoad: {12}smbkrb5pwd_srv
+<%= PuavoDatabaseConfig::MODULES.map { |v| "olcModuleLoad: #{ v }\n" }.join %>
 
 dn: olcOverlay={0}syncprov,olcDatabase={0}config,cn=config
 objectClass: olcSyncProvConfig
