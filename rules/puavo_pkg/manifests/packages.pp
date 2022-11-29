@@ -68,6 +68,7 @@ class puavo_pkg::packages {
 			, 'unityhub-appimage'
 			, 'veracrypt'
 			, 'vstloggerpro'
+                        , 'wine-gecko'
                         , 'wine-mono'
 			, 'zoom' ]
 
