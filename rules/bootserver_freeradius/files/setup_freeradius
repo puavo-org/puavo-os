@@ -726,6 +726,7 @@ ldap {
 EOF
 mv /etc/freeradius/3.0/mods-available/ldap.tmp \
    /etc/freeradius/3.0/mods-available/ldap
+chown freerad:freerad /etc/freeradius/3.0/mods-available/ldap
 
 ln -fns ../mods-available/ldap /etc/freeradius/3.0/mods-enabled/ldap
 
@@ -1631,6 +1632,7 @@ EOF
 chmod 640 /etc/freeradius/3.0/radiusd.conf.tmp
 mv /etc/freeradius/3.0/radiusd.conf.tmp \
    /etc/freeradius/3.0/radiusd.conf
+chown freerad:freerad /etc/freeradius/3.0/radiusd.conf
 
 install -d -o root -o root -m 700 /state/etc/freeradius/3.0
 
