@@ -309,6 +309,11 @@ set services {
       /etc/systemd/system/multi-user.target.wants/winbind.service
         -> /usr/lib/systemd/system/winbind.service
     }}
+
+  { zram-config {
+      /etc/systemd/system/multi-user.target.wants/zram-config.service
+        -> /etc/systemd/system/zram-config.service
+    }}
 }
 
 proc set_service {service_name enabled linkpaths} {
