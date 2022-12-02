@@ -1,4 +1,4 @@
-class gnome-disks {
+class gnome_disks {
   include ::dpkg
   include ::packages
 
@@ -12,7 +12,7 @@ class gnome-disks {
   file {
     '/usr/bin/gnome-disks':
       mode   => '0755',
-      source => 'puppet:///modules/gnome-disks/gnome-disks';
+      source => 'puppet:///modules/gnome_disks/gnome-disks';
   }
 
   Package <| title == gnome-disk-utility |>
