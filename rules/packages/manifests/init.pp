@@ -482,8 +482,7 @@ class packages {
     # , 'renpy'         # XXX missing from Bullseye
     , 'sbcl'
     , 'scite'
-    , 'scratch'
-    , 'sonic-pi' ]:
+    , 'scratch' ]:
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
     [ 'filezilla'
