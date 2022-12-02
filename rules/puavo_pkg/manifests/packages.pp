@@ -53,6 +53,7 @@ class puavo_pkg::packages {
 			, 'pycharm'
 			, 'robboscratch'
 			, 'robotmeshconnect'
+			, 'rustdesk'
 			, 'schoolstore-ti-widgets'
 			, 'scratux'
 			, 'shotcut'
