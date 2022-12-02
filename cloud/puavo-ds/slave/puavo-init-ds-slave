@@ -12,9 +12,9 @@ Run the following commands as root in your LDAP-master:
   kadmin.local -r \${REALM} -q "addprinc -randkey ldap/\${FQDN}"
   kadmin.local -r \${REALM} -q "addprinc -randkey host/\${FQDN}"
   kadmin.local -r \${REALM} -q "addprinc -randkey IPP/\${FQDN}"
-  kadmin.local -r \${REALM} -q "addprinc -randkey cifs/\${FQDN}"
   kadmin.local -r \${REALM} -q "addprinc -randkey nfs/\${FQDN}"
   kadmin.local -r \${REALM} -q "addprinc -randkey HTTP/\${FQDN}"
+  kadmin.local -r \${REALM} -q "addprinc -randkey -e \"aes256-cts-hmac-sha1-96:normal des3-hmac-sha1:normal\" cifs/\${FQDN}"
 
   Press ENTER when ready.
 EOF
