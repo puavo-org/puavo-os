@@ -56,6 +56,7 @@ class packages::compat_32bit {
       , 'libusb-1.0-0:i386'
       , 'libuuid1:i386'
       , 'libva-wayland2:i386'           # needed for better media support in wine
+      , 'libvkd3d-shader1:i386'
       , 'libx11-6:i386'
       , 'libxext6:i386'
       , 'libxinerama1:i386'
@@ -66,6 +67,8 @@ class packages::compat_32bit {
       , 'libxss1:i386'
       , 'libxtst6:i386'
       , 'libxv1:i386'
+      , 'vkd3d-compiler:i386'
+      , 'wine-devel-i386:i386'
       , 'zlib1g:i386' ]:
         ensure => present,
         tag    => [ 'tag_debian_desktop', 'tag_i386' ];

@@ -276,17 +276,14 @@ class packages {
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
     [ 'libvkd3d-shader1'
-    , 'libvkd3d-shader1:i386'
     , 'virtualbox'
     , 'virtualbox-dkms'
     , 'virtualbox-guest-utils'
     , 'virtualbox-guest-x11'
     , 'virtualbox-qt'
     , 'vkd3d-compiler'
-    , 'vkd3d-compiler:i386'
     , 'wine-devel'
     , 'wine-devel-amd64'
-    , 'wine-devel-i386:i386'
     , 'winehq-devel'
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
