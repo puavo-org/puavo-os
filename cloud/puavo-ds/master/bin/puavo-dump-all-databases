@@ -6,9 +6,7 @@
 #
 
 require 'fileutils'
-require 'ldap'
 require 'optparse'
-require 'puavo/etc'
 require 'puavo/execute'
 require 'timeout'
 
@@ -53,25 +51,14 @@ Timeout::timeout(Timeout_seconds) do
                '/usr/sbin/slapcat', '-b', 'cn=config', '-l', config_ldif_path ])
   warn response.stderr if options[:verbose]
 
-  # Find all databases
-  conn = LDAP::SSLConn.new(host=PUAVO_ETC.ldap_master, port=636)
-  conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
-
-  # Accept both hdb and mdb format databases.  We should have only one in use
-  # (and that should be mdb), but when transitioning from hdb to mdb it is
-  # good to dump both kinds.
-  filter = '(&(objectClass=olcDatabaseConfig)' \
-              + '(|(objectClass=olcHdbConfig)(objectClass=olcMdbConfig)))'
-  conn.bind(PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password) do
-    conn.search('cn=config',
-                LDAP::LDAP_SCOPE_SUBTREE,
-                filter,
-                %w(olcSuffix)) do |result|
-      databases.push(result['olcSuffix'].first)
+  IO.readlines(config_ldif_path).each do |line|
+    key, value = *line.split
+    if key == 'olcSuffix:' then
+      databases << value
     end
   end
 
-  raise "Can not find any databases: #{ filter }" if databases.empty?
+  raise 'Can not find any databases' if databases.empty?
 end
 
 exitstatus = 0
