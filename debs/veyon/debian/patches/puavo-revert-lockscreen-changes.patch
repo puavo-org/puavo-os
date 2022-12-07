@@ -1,0 +1,61 @@
+Revert changes in this upstream commit:
+https://github.com/veyon/veyon/commit/eb552df3805f5a1dcfe9ddb15db24ed004cb23cc
+
+If we do not do this, we have the same issue as in here:
+https://github.com/veyon/veyon/issues/850
+
+diff -ruN veyon/core/src/LockWidget.cpp veyon/core/src/LockWidget.cpp
+--- veyon/core/src/LockWidget.cpp	2022-07-29 12:38:30.000000000 +0300
++++ veyon/core/src/LockWidget.cpp	2022-12-07 13:44:47.153571166 +0200
+@@ -36,34 +36,34 @@
+ 	m_background( background ),
+ 	m_mode( mode )
+ {
+-	auto leftMostScreen = QGuiApplication::primaryScreen();
+-	int minimumX = 0;
+-	for (auto* screen : QGuiApplication::screens())
++	if( mode == DesktopVisible )
+ 	{
+-		if (screen->geometry().x() < minimumX)
++		auto screen = QGuiApplication::primaryScreen();
++		if( windowHandle() )
+ 		{
+-			minimumX = screen->geometry().x();
+-			leftMostScreen = screen;
++			screen = windowHandle()->screen();
+ 		}
+-	}
+ 
+-	if (mode == DesktopVisible)
+-	{
+-		m_background = leftMostScreen->grabWindow(0);
++		if( screen )
++		{
++			m_background = screen->grabWindow( 0 );
++		}
+ 	}
+ 
++
+ 	VeyonCore::platform().coreFunctions().setSystemUiState( false );
+ 	VeyonCore::platform().inputDeviceFunctions().disableInputDevices();
+ 
+ 	setWindowTitle( {} );
+-
+-	move(leftMostScreen->geometry().topLeft());
++	show();
++	move( 0, 0 );
++	setFixedSize(
++#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
++		windowHandle()->
++#endif
++				  screen()->virtualSize());
++	VeyonCore::platform().coreFunctions().raiseWindow( this, true );
+ 	showFullScreen();
+-	windowHandle()->setScreen(leftMostScreen);
+-	setFixedSize(leftMostScreen->virtualSize());
+-
+-	VeyonCore::platform().coreFunctions().raiseWindow(this, true);
+-
+ 	setFocusPolicy( Qt::StrongFocus );
+ 	setFocus();
+ 	grabMouse();
