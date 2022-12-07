@@ -2,6 +2,7 @@ class zram_configuration {
   # These configurations are mostly copied from the Ubuntu "zram-config"
   # package.
   include ::packages
+  include ::puavo_conf
 
   file {
     '/etc/systemd/system/multi-user.target.wants/zram-config.service':
@@ -22,6 +23,11 @@ class zram_configuration {
     '/usr/local/bin/init-zram-swapping':
       mode   => '0755',
       source => 'puppet:///modules/zram_configuration/init-zram-swapping';
+  }
+
+  ::puavo_conf::definition {
+    'puavo-zram.json':
+      source => 'puppet:///modules/zram_configuration/puavo-zram.json';
   }
 
   Package <| title == systemd |>
