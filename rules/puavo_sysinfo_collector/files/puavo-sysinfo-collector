@@ -235,6 +235,8 @@ class SysInfo
           slot_info[:product] = value
         elsif key == 'Manufacturer' && value != 'Not Specified'
           slot_info[:vendor] = value
+        elsif key == 'Serial Number' && value != 'Not Specified'
+          slot_info[:serialnumber] = value
         end
       end
     end
