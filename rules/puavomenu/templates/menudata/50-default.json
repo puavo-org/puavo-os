@@ -990,6 +990,9 @@
             "tags": "default, office",
             "keywords": "tellico"
         },
+            "org.mobsya.ThymioSuite": {
+            "tags": "default"
+        },
         "org.pitivi.Pitivi": {
             "tags": "default"
         },
@@ -2198,6 +2201,7 @@
             "programs": [
                 "arduino",
                 "asebastudiothymio",
+                "org.mobsya.ThymioSuite",
                 "otto-blockly",
                 "fritzing",
                 "teddybear",
