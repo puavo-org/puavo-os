@@ -463,7 +463,6 @@ class packages {
     , 'gcc-avr'
     , 'geany'
     , 'idle'
-    , 'idle-python2.7'
     , 'idle-python3.9'
     , 'kturtle'
     , 'lazarus'
