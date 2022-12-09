@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ def _get_configured_hostnames():
         with open(os.environ['MUNIN_STATEFILE']) as state_file:
             for line in state_file:
                 configured_hostnames.add(line.strip())
-    except IOError, e:
+    except IOError as e:
         if e.errno != errno.ENOENT:
             raise
 
