@@ -67,6 +67,6 @@ class bootserver_munin {
 
   Package <| title == 'munin'
           or title == 'munin-node'
-          or title == 'python-numpy'
-          or title == 'python-redis' |>
+          or title == 'python3-numpy'
+          or title == 'python3-redis' |>
 }
