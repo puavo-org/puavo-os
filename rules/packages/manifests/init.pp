@@ -478,6 +478,7 @@ class packages {
                            # http://meetedison.com/robot-programming-software/
     , 'python3-pip'
     , 'python3-pygame'
+    , 'python-is-python3'
     # , 'pythontracer'  # XXX missing from Bullseye
     , 'racket'
     , 'racket-doc'
