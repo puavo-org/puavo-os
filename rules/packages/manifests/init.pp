@@ -275,13 +275,16 @@ class packages {
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
-    [ 'virtualbox'
+    [ 'libvkd3d-shader1'
+    , 'virtualbox'
     , 'virtualbox-dkms'
     , 'virtualbox-guest-utils'
     , 'virtualbox-guest-x11'
     , 'virtualbox-qt'
-    , 'wine'
-    , 'wine32'
+    , 'vkd3d-compiler'
+    , 'wine-devel'
+    , 'wine-devel-amd64'
+    , 'winehq-devel'
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
