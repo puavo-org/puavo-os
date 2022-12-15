@@ -1,8 +1,6 @@
-# sblim-sfcc openwsman are dependencies for wsmancli
-_pkgs_builddeps := sblim-sfcc openwsman
-
 # parts, ports and some cloud packages go into puavo-os images
 
+_pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
 _pkgs_ports := cups                   \
                cups-filters           \
@@ -21,27 +19,43 @@ _pkgs_ports := cups                   \
                veyon                  \
                wsmancli
 
+# sblim-sfcc openwsman are dependencies for wsmancli
+_pkgs_cloud_builddeps :=
+_pkgs_parts_builddeps :=
+_pkgs_ports_builddeps := sblim-sfcc openwsman
+
 # XXX disable most ports builds for Bullseye, these all most probably
 # XXX need some work
-# _pkgs_ports := incron               \
-#                vtun
+# _pkgs_ports := vtun
 
-_pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
-_pkgs_cloud     := krb5 openldap puavo-ds puavo-os
+_pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
+               $(_pkgs_parts) $(_pkgs_ports)
 
-_dpkg_buildpackage_builddeps := $(_pkgs_builddeps:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_cloud     := $(_pkgs_cloud:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_parts     := $(_pkgs_parts:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_ports     := $(_pkgs_ports:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage           := $(_pkgs_image:%=.dpkg-buildpackage-%)
+
+_dpkg_buildpackage_cloud_builddeps := \
+  $(_pkgs_cloud_builddeps:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_parts_builddeps := \
+  $(_pkgs_parts_builddeps:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_ports_builddeps := \
+  $(_pkgs_ports_builddeps:%=.dpkg-buildpackage-%)
 
 _workdir = .workdir
 
 .PHONY: all
 all: $(_dpkg_buildpackage)
 
-.PHONY: builddeps
-builddeps: $(_dpkg_buildpackage_builddeps)
+.PHONY: cloud-builddeps
+cloud-builddeps: $(_dpkg_buildpackage_cloud_builddeps)
+
+.PHONY: parts-builddeps
+parts-builddeps: $(_dpkg_buildpackage_parts_builddeps)
+
+.PHONY: ports-builddeps
+ports-builddeps: $(_dpkg_buildpackage_ports_builddeps)
 
 .PHONY: cloud
 cloud: $(_dpkg_buildpackage_cloud)

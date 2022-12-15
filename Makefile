@@ -98,21 +98,22 @@ build-all-images: check-all-release-names $(patsubst %,build-%-image,$(all_image
 .PHONY: build
 build: build-debs-ports build-debs-parts
 
-.PHONY: build-debs-builddeps
-build-debs-builddeps:
-	$(_sudo) apt-get -y install devscripts
-	$(MAKE) -C debs builddeps
-
 .PHONY: build-debs-cloud
-build-debs-cloud: build-debs-builddeps
+build-debs-cloud:
+	$(_sudo) apt-get -y install devscripts
+	$(MAKE) -C debs cloud-builddeps
 	env DEB_BUILD_OPTIONS=nocheck $(MAKE) -C debs cloud
 
 .PHONY: build-debs-parts
-build-debs-parts: build-debs-builddeps
+build-debs-parts:
+	$(_sudo) apt-get -y install devscripts
+	$(MAKE) -C debs parts-builddeps
 	$(MAKE) -C debs parts
 
 .PHONY: build-debs-ports
-build-debs-ports: build-debs-builddeps
+build-debs-ports:
+	$(_sudo) apt-get -y install devscripts
+	$(MAKE) -C debs ports-builddeps
 	env DEB_BUILD_OPTIONS=nocheck $(MAKE) -C debs ports
 
 # mainly for development use
