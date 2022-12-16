@@ -165,7 +165,7 @@ class packages {
     , 'wavemon'
     , 'whois'
     , 'wireguard-tools'
-    # , 'wsmancli'              # XXX missing from Bullseye
+    , 'wsmancli'
     , 'x11vnc'
     , 'xbacklight'
     , 'xinput-calibrator' ]:
