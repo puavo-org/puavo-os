@@ -1,174 +1,395 @@
 #!/usr/bin/ruby
 #
-# Destroy current slapd installation and restore all
-# databases and slapd configurations (cn=config) from
-# the dump files.
+# Destroy current slapd installation and restore all databases
+# and slapd configurations (cn=config) from the dump files.
 #
-# Usage: puavo-restore-all-databases [options]
+# Usage: puavo-restore-all-databases [options] --dump-directory DIR
 #
 
 require 'fileutils'
 require 'optparse'
+require 'puavo-ds/database_config'
 require 'puavo/execute'
+require 'tempfile'
 
-@debug = false
+def update_schemas(linelist)
+  filter_out = false
+  new_lines  = []
 
-options = {}
-options[:verbose] = false
+  linelist.each do |line|
+    filter_out = false if line.match(/^$/)
+
+    matchdata = line.match(/^dn: cn={.*}(.*),cn=schema,cn=config/)
+    if matchdata then
+      schema = $1
+      new_lines << "include: file:///etc/ldap/schema/#{ schema }.ldif"
+      filter_out = true
+    end
+
+    new_lines << line unless filter_out
+  end
+
+  new_lines
+end
+
+# XXX This convert_to_hdb() should go away but this is for the emergency
+# XXX case something goes wrong with the mdb update and we only notice it
+# XXX later when the database has been in use for some time.
+def convert_to_hdb(linelist)
+  linelist.map do |line|
+    case line
+      # these control the database used
+      when /^olcModuleLoad: {.*}back_mdb$/
+        line.sub('back_mdb', 'back_hdb')
+      when /mdb,cn=config/
+        line.sub('mdb,cn=config', 'hdb,cn=config')
+      when /^olcDatabase: {.*}mdb$/
+        line.sub('mdb', 'hdb')
+      when /bjectClass: olcMdbConfig$/
+        line.sub('olcMdbConfig', 'olcHdbConfig')
+
+      # remove mdb-specific configurations
+      when /^olcDbMaxSize:/
+        nil
+
+      # everything else
+      else
+        line
+    end
+  end.compact
+end
+
+def convert_to_mdb(linelist)
+  linelist.map do |line|
+    case line
+      # these control the database used
+      when /^olcModuleLoad: {.*}back_hdb$/
+        line.sub('back_hdb', 'back_mdb')
+      when /hdb,cn=config/
+        line.sub('hdb,cn=config', 'mdb,cn=config')
+      when /^olcDatabase: {.*}hdb$/
+        line.sub('hdb', 'mdb')
+      when /bjectClass: olcHdbConfig$/
+        line.sub('olcHdbConfig', 'olcMdbConfig')
+
+      # remove hdb-specific configurations
+      when /^olcDbCacheSize:/, /^olcDbConfig:/, /^olcDbDNcacheSize:/
+        nil
+
+      # everything else
+      else
+        line
+    end
+  end.compact
+end
+
+def get_db_type(linelist)
+  linelist.each do |line|
+    return :hdb if line.match(/^olcModuleLoad: {.*}back_hdb$/)
+    return :mdb if line.match(/^olcModuleLoad: {.*}back_mdb$/)
+  end
+
+  raise 'could not determine database type'
+end
+
+def update_configurations(linelist, db_type)
+  if db_type == :hdb then
+    db_config = {
+      'olcDbConfig'      => [ 'set_cachesize 0 10485760 0',
+                              'set_lg_bsize 2097512',
+                              'set_flags DB_LOG_AUTOREMOVE' ],
+      'olcDbCacheSize'   => [ '30000' ],
+      'olcDbCheckpoint'  => [ '64 5'  ],
+      'olcDbDNCacheSize' => [ '60000' ],
+    }
+    db_config_objectclass = 'olcHdbConfig'
+  else
+    db_config = PuavoDatabaseConfig::CONFIG
+    db_config_objectclass = 'olcMdbConfig'
+  end
+
+  apply_db_configurations(linelist, db_config, db_config_objectclass)
+end
+
+def update_indexes(linelist, db_type)
+  if db_type == :hdb then
+    db_config = {
+      'olcDbIndex' => [
+        'uidNumber pres,eq',
+        'sambaSID pres,eq',
+        'sambaSIDList pres,eq',
+        'sambaGroupType pres,eq',
+        'member,memberUid pres,eq',
+        'puavoSchool pres,eq',
+        'puavoId pres,eq',
+        'puavoTag pres,eq',
+        'puavoDeviceType pres,eq',
+        'puavoHostname pres,eq,sub',
+        'displayName,puavoEduPersonReverseDisplayName pres,eq,sub',
+        'uid pres,eq',
+        'krbPrincipalName pres,eq',
+        'cn,sn,mail,givenName pres,eq,approx,sub',
+        'objectClass eq',
+        'entryUUID eq',
+        'entryCSN eq',
+        'macAddress eq' ]
+    }
+    db_config_objectclass = 'olcHdbConfig'
+  else
+    db_config = { 'olcDbIndex' => PuavoDatabaseConfig::INDEXES }
+    db_config_objectclass = 'olcMdbConfig'
+  end
+
+  apply_db_configurations(linelist, db_config, db_config_objectclass)
+end
+
+def update_modules(linelist)
+  db_config = { 'olcModuleLoad' => PuavoDatabaseConfig::MODULES }
+  apply_db_configurations(linelist, db_config, 'olcModuleList')
+end
+
+
+def apply_db_configurations(linelist, db_config, db_config_objectclass)
+  in_dbconf_section = false
+  new_linelist = []
+
+  linelist.each do |line|
+    if line.match(/^objectClass: #{ db_config_objectclass }$/) then
+      in_dbconf_section = true
+      new_linelist << line
+      next
+    end
+
+    if line.match(/^$/) then
+      if in_dbconf_section then
+        db_config.each do |key, valuelist|
+          valuelist.each do |value|
+            new_linelist << "#{ key }: #{ value }"
+          end
+        end
+      end
+      in_dbconf_section = false
+      new_linelist << line
+      next
+    end
+
+    key = line.split(':').first
+    next if db_config.has_key?(key)
+
+    new_linelist << line
+  end
+
+  new_linelist
+end
+
+def handle_db_config_conversions(source, target)
+  lines = source.readlines
+  database_dirs = lookup_db_dirs(lines)
+
+  db_type = get_db_type(lines)
+
+  lines = update_schemas(lines) if $options[:update_schemas]
+
+  if $options[:convert_to_hdb] then
+    lines = convert_to_hdb(lines)
+    db_type = :hdb
+    $options[:update_configurations] = true
+    $options[:update_indexes]        = true
+  end
+
+  if $options[:convert_to_mdb] then
+    lines = convert_to_mdb(lines)
+    db_type = :mdb
+    $options[:update_configurations] = true
+    $options[:update_indexes] = true
+  end
+
+  if $options[:update_configurations] then
+    lines = update_configurations(lines, db_type)
+  end
+
+  lines = update_indexes(lines, db_type) if $options[:update_indexes]
+
+  if $options[:update_modules] && db_type == :mdb then
+    # XXX db_type test can be removed once hdb is no longer supported
+    lines = update_modules(lines)
+  end
+
+  lines.each do |line|
+    target.puts line
+  end
+
+  database_dirs
+end
+
+def lookup_db_dirs(db_conf_lines)
+  database_dirs = []
+  db_conf_lines.each do |line|
+    matchdata = line.match(/olcDbDirectory: (.*)/)
+    if matchdata then
+      database_dirs << matchdata[1]
+    end
+  end
+  database_dirs
+end
+
+def restore_databases(dumpdir, cn_config_path)
+  puts
+  puts ">>> restoring configurations (cn=config)"
+
+  FileUtils.mkdir_p('/etc/ldap/slapd.d')
+  response = Puavo::Execute.run([
+               '/usr/sbin/slapadd', '-l', cn_config_path,
+                 '-F', '/etc/ldap/slapd.d', '-b', 'cn=config' ])
+  warn response.stderr if $options[:verbose]
+
+  Dir.foreach(dumpdir) do |db_dump_file|
+    next if db_dump_file == 'cn=config.ldif'
+
+    match_data = db_dump_file.match(/(.*)\.ldif$/)
+    if match_data then
+      ldap_base = match_data[1]
+
+      puts ">>> restoring database #{ ldap_base }"
+
+      db_ldif_path = File.join(dumpdir, db_dump_file)
+      response = Puavo::Execute.run([
+                   '/usr/sbin/slapadd', '-q', '-b', ldap_base,
+                   '-l', db_ldif_path, '-F', '/etc/ldap/slapd.d' ])
+      warn response.stderr if $options[:verbose]
+    end
+  end
+
+  FileUtils.chown_R('openldap', 'openldap', '/etc/ldap/slapd.d/')
+  FileUtils.chown_R('openldap', 'openldap', '/var/lib/ldap')
+end
+
+def shutdown_and_remove_databases
+  begin
+    response = Puavo::Execute.run([ '/usr/sbin/service', 'slapd', 'stop' ])
+    warn response.stderr if $options[:verbose]
+  rescue Puavo::ExitStatusError => exception
+    warn "Could not stop slapd service: " + exception.response.stderr.to_s
+  end
+
+  backup_timestamp = Time.now.strftime('%FT%T%z')
+
+  if File.exists?('/etc/ldap/slapd.d') then
+    conf_target_dir = "/etc/ldap/slapd.d-backup.#{ backup_timestamp }"
+    puts ">>> moving /etc/ldap/slapd.d to #{ conf_target_dir }"
+    FileUtils.mv('/etc/ldap/slapd.d', conf_target_dir)
+  end
+
+  if File.exists?('/var/lib/ldap') then
+    db_target_dir = "/var/lib/ldap-backup.#{ backup_timestamp }"
+    puts ">>> moving /var/lib/ldap to #{ db_target_dir }"
+    FileUtils.mv('/var/lib/ldap', db_target_dir)
+  end
+end
+
+$options = {}
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: puavo-restore-all-databases [options]"
+  opts.banner = 'Usage: puavo-restore-all-databases [options]'
 
-  opts.on("-d", "--dump-directory [DUMPDIR]", "source directory of dump files") do |directory|
-    options[:dumpdir] = directory
+  opts.on('-d', '--dump-directory [DUMPDIR]',
+          'source directory of dump files') do |dir|
+    $options[:dumpdir] = dir
   end
 
-  opts.on("-v", "--[no-]verbose", "Run verbosely. Print STDERR of shell command (eg. slapadd)") do |v|
-    options[:verbose] = v
+  opts.on('--debug', 'Use debugging mode') do
+    $options[:debug] = true
   end
 
-  opts.on_tail("-h", "--help", "Show this message") do
+  opts.on('--convert-to-hdb', 'Convert database to the "hdb"-format') do
+    $options[:convert_to_hdb] = true
+  end
+
+  opts.on('--convert-to-mdb', 'Convert database to the "mdb"-format') do
+    $options[:convert_to_mdb] = true
+  end
+
+  opts.on('--update-configurations', 'Update DB configurations') do
+    $options[:update_configurations] = true
+  end
+
+  opts.on('--update-indexes', 'Update DB indexes') do
+    $options[:update_indexes] = true
+  end
+
+  opts.on('--update-modules', 'Update DB modules') do
+    $options[:update_modules] = true
+  end
+
+  opts.on('--update-schemas', 'Use system ldap schemas') do
+    $options[:update_schemas] = true
+  end
+
+  opts.on('-v', '--verbose', 'Run verbosely') do
+    $options[:verbose] = true
+  end
+
+  opts.on_tail('-h', '--help', 'Show this message') do
     puts opts
-    exit
+    exit 0
   end
 end.parse!
 
-if options[:dumpdir].nil?
-  $stderr.puts "Missing argument --dump-directory"
-  exit 2
+if $options[:dumpdir].nil? then
+  warn 'Missing argument --dump-directory'
+  exit 1
 end
 
-if not File.directory?(options[:dumpdir])
-  $stderr.puts "Cannot find dump directory: #{options[:dumpdir]}"
-  exit 2
+unless File.directory?($options[:dumpdir]) then
+  warn "Can not find dump directory: #{ $options[:dumpdir] }"
+  exit 1
 end
 
-##############################################################
-# Comment this out when you use this script
-##############################################################
-puts
-puts "This script is disabled.  See the source code in #{ __FILE__ }"
-exit 2
-##############################################################
-##############################################################
-
-puts
-puts "This will destroy previous databases permanently and restore databases from the dump files!"
-
-while(true)
-  print "Type YES to continue> "
-  break if STDIN.gets.strip == "YES"
+if $options[:convert_to_hdb] && $options[:convert_to_mdb] then
+  warn 'Can not convert databases both to hdb and mdb formats'
+  exit 1
 end
 
-generic_olc_db_config = ['set_cachesize 0 10485760 0',
-                         'set_lg_bsize 2097512',
-                         'set_flags DB_LOG_AUTOREMOVE']
-generic_olc_db_index = ['uidNumber pres,eq',
-                        'sambaSID pres,eq',
-                        'sambaSIDList pres,eq',
-                        'sambaGroupType pres,eq',
-                        'member,memberUid pres,eq',
-                        'puavoSchool pres,eq',
-                        'puavoId pres,eq',
-                        'puavoTag pres,eq',
-                        'puavoDeviceType pres,eq',
-                        'puavoHostname pres,eq,sub',
-                        'displayName,puavoEduPersonReverseDisplayName pres,eq,sub',
-                        'uid pres,eq',
-                        'krbPrincipalName pres,eq',
-                        'cn,sn,mail,givenName pres,eq,approx,sub',
-                        'objectClass eq',
-                        'entryUUID eq',
-                        'entryCSN eq',
-                        'macAddress eq'
-                       ]
-generic_olc_db_cache_size = '30000'
-generic_olc_db_dn_cache_size = '60000'
-generic_olc_db_checkpoint = '64 5'
+puts 'This will destroy previous databases permanently and restore databases' \
+        + ' from the dump files!'
+puts 'ARE YOU SURE YOU WANT TO DO THIS?'
 
-# Stop slapd service
-begin
-  response = Puavo::Execute.run( ["/usr/sbin/service", "slapd", "stop"] )
-  $stderr.puts response.stderr if options[:verbose]
-rescue Puavo::ExitStatusError => exception
-  $stderr.puts "\nCould not stop slapd service: " + exception.response.stderr.to_s
-  $stderr.puts
+loop do
+  print 'Type YES to continue (or press CTRL-C to abort)> '
+  break if gets.strip == 'YES'
 end
 
-# Remove slapd configuration directory
-FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/cn=config*')
-# Remove all databases
-FileUtils.rm_r Dir.glob('/var/lib/ldap/*')
-
-File.open("/tmp/config.ldif", "w") do |cf|
-  File.open(File.join(options[:dumpdir], "cn=config.ldif")) do |f|
-    f.each_line do |line|
-      if line.match(/dn: olcDatabase=.*hdb/)
-        cf.puts line
-
-        generic_olc_db_config.each do |config|
-          cf.puts "olcDbConfig: #{ config }"
-        end
-        generic_olc_db_index.each do |index|
-          cf.puts "olcDbIndex: #{ index }"
-        end
-
-        cf.puts "olcDbCacheSize: #{ generic_olc_db_cache_size }"
-        cf.puts "olcDbDNCacheSize: #{ generic_olc_db_dn_cache_size }"
-        cf.puts "olcDbCheckpoint: #{ generic_olc_db_checkpoint }"
-
-      elsif line.match(/olcDbConfig:/)
-        next # skip old value
-      elsif line.match(/olcDbIndex:/)
-        next # skip old value
-      elsif line.match(/olcDbCacheSize:/i)
-        next # skip old value
-      elsif line.match(/olcDbDNcacheSize:/i)
-        next # skip old value
-      elsif line.match(/olcDbCheckpoint:/i)
-        next # skip old value
-      elsif line.match(/olcDbDirectory:/)
-	cf.puts line
-        db_directory = line.match(/olcDbDirectory: (.*)/)[1]
-        # Create data directory for database
-        FileUtils.mkdir_p(db_directory)
-      else
-        cf.puts line
-      end
-    end
+Tempfile.open('cn_config.ldif') do |cnconf_target|
+  # Check cn=config.ldif first before destroying anything,
+  # in case we have some issues.
+  cn_config_source_path = File.join($options[:dumpdir], 'cn=config.ldif')
+  database_dirs = nil
+  File.open(cn_config_source_path) do |cnconf_source|
+    database_dirs = handle_db_config_conversions(cnconf_source, cnconf_target)
   end
-end
+  cnconf_target.close
+  modified_cn_config_path = cnconf_target.path
 
-# Restore slapd configuration
-puts "Restore configurations (cn=config)"
-response = Puavo::Execute.run(
-             [ '/usr/sbin/slapadd',
-               '-l', '/tmp/config.ldif',
-               '-F', '/etc/ldap/slapd.d',
-               '-b', 'cn=config' ])
-$stderr.puts response.stderr if options[:verbose]
-
-
-Dir.foreach(options[:dumpdir]) do |filename|
-  next if filename == "cn=config.ldif"
-
-  if match_data = filename.match(/(.*)\.ldif$/)
-    base = match_data[1]
-    puts "Restore database: #{base}"
-
-    # Restore database
-    response = Puavo::Execute.run(
-                 [ '/usr/sbin/slapadd',
-                   '-q',
-                   '-b', base,
-                   '-l', File.join(options[:dumpdir], filename),
-                   '-F', '/etc/ldap/slapd.d'])
-    $stderr.puts response.stderr if options[:verbose]
+  if $options[:debug] then
+    puts
+    puts ">>> leaving modified cn=config to /tmp/cn=config.ldif for inspection"
+    puts ">>> (due to --debug mode)"
+    puts
+    FileUtils.cp(modified_cn_config_path, '/tmp/cn=config.ldif')
+    sleep 1
   end
+
+  # we should now be ready for the operation
+
+  shutdown_and_remove_databases
+
+  database_dirs.each do |db_dir|
+    FileUtils.mkdir_p(db_dir)
+  end
+
+  restore_databases($options[:dumpdir], modified_cn_config_path)
 end
 
-# Fix permission of slapd files
-FileUtils.chown_R("openldap", "openldap", "/etc/ldap/slapd.d/")
-FileUtils.chown_R("openldap", "openldap", "/var/lib/ldap")
-
-puts "\nDatabases was successfully restored!\n\n"
+puts
+puts ">>> All databases were successfully restored!"
+puts

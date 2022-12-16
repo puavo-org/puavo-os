@@ -8,16 +8,17 @@ $LOAD_PATH.unshift(
 )
 
 require 'erb'
-require 'yaml'
-require 'tempfile'
-require 'optparse'
 require 'fileutils'
+require 'optparse'
 require 'socket'
+require 'tempfile'
+require 'yaml'
 
 require 'puavo/etc'
-require 'puavo-ds/templates'
-require 'puavo-ds/kerberos'
+require 'puavo-ds/database_config'
 require 'puavo-ds/helpers'
+require 'puavo-ds/kerberos'
+require 'puavo-ds/templates'
 
 if ["-h", "--help"].include? ARGV.first
   STDERR.puts "
