@@ -279,6 +279,10 @@ def execute(server_socket, testrun)
 
 end
 
+def image_exists? image
+  return File.file?("/images/#{image}.img")
+end
+
 def run_test(admin_username, admin_password, school, testrun_label)
 
   server_socket_path = '/run/puavo/puavo-bootserver-smoke-test.socket'
@@ -291,6 +295,7 @@ def run_test(admin_username, admin_password, school, testrun_label)
       puts("=== Test run #{testrun_label} ===")
       print('Prepare ...')
       testrun.prepare()
+      raise "Image #{testrun.testclient_image} not found on server" unless image_exists? testrun.testclient_image
       puts_ok()
       puts("    School   : #{school['name']}")
       puts("    Hostname : #{testrun.testclient_hostname}")
