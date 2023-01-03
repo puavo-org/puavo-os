@@ -1,4 +1,6 @@
 class apt::winehq {
+  $wine_version = '8.0~rc1~bullseye-1'
+
   file {
     '/etc/apt/keyrings':
       ensure => directory;
