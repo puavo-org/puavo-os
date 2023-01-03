@@ -161,10 +161,9 @@ EOF
 }
 
 setup_wine_links() {
-  local dir lang languages link_name link_setup_status my_language user_dirs \
-        user_dirs_arg
+  local dir lang languages link_name link_setup_status my_language user_dirs
 
-  user_dirs_arg=$1
+  user_dirs=$1
   if [ "$user_dirs" = 'ALL' ]; then
     user_dirs='DESKTOP DOWNLOAD DOCUMENTS MUSIC PICTURES TEMPLATES VIDEOS'
   else
