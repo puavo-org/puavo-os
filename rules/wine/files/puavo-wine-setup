@@ -105,7 +105,7 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders]
 "{374DE290-123F-4565-9164-39C4925E467B}"=hex(2):$(hexconv '%USERPROFILE%\Downloads')
-"Desktop"=hex(2):$(hexconv "%USERPROFILE%${fi_desktop_string}")
+"Desktop"=hex(2):$(hexconv "%USERPROFILE%\\${fi_desktop_string}")
 "Personal"=hex(2):$(hexconv '%USERPROFILE%\Omat tiedostot')
 "My Music"=hex(2):$(hexconv '%USERPROFILE%\Omat musiikkitiedostot')
 "My Pictures"=hex(2):$(hexconv '%USERPROFILE%\Omat kuvatiedostot')
