@@ -1064,7 +1064,7 @@
         },
         "primusclient": {
             "tags": "default",
-            "condition": "!personally_administered"
+            "condition": "only_teacher_admin"
         },
         "processing": {
             "name": "Processing",
