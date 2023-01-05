@@ -24,4 +24,12 @@ if (apiserver) {
   lockPref("network.negotiate-auth.trusted-uris", apiserver);
 }
 
+user = getenv("USER");
+if (user === "guest") {
+  // no need to bother guest user with theme choices or any such
+  // "first run"-items
+  lockPref("browser.startup.homepage_override.mstone", "ignore");
+  lockPref("datareporting.policy.firstRunURL", "");
+}
+
 lockPref("nglayout.enable_drag_images", false);
