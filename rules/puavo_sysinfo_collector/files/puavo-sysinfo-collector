@@ -432,7 +432,7 @@ class SysInfo
   end
 
   def update_login_info
-    last_output = %x(last -n 1 --time-format iso 1 :1 :2 :3 :4 :5 :6 :7 :9)
+    last_output = %x(last -n 1 --time-format iso -w 1 :1 :2 :3 :4 :5 :6 :7 :9)
     login_line = last_output.split("\n").first
     return unless login_line
 
