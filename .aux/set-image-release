@@ -25,3 +25,10 @@ fi
 mkdir -p "${rootfs}/etc/puavo-image"
 echo "$image_filename" > "${rootfs}/etc/puavo-image/name"
 echo "$release_name"   > "${rootfs}/etc/puavo-image/release"
+
+# Get a git log of one hundred latest commits to better keep track
+# of what this image contains.
+(
+  cd "${rootfs}/puavo-os"
+  git log HEAD~100..HEAD > "${rootfs}/etc/puavo-image/puavo-os-git.log"
+)
