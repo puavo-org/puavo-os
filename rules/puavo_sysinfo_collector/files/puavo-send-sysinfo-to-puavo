@@ -66,7 +66,10 @@ while true; do
     break
   fi
 
-  sleep 86400
+  # Send device information after every four hours.  This means
+  # active device hours, not the ones this device is in suspended state.
+  # This could be a bit smarter, guaranteeing once a day or more often.
+  sleep 14400
 done
 
 exit $status
