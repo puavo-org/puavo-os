@@ -407,20 +407,18 @@ exitstatus=0
 
 hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
 images_dir=/images
-add_efi_label=false
 only_update_config=false
 vgname=puavo
 
-if ! args=$(getopt -n "$0" -o + \
-              -l 'add-efi-label,hosttype:,images-dir:,only-update-config,vgname:' \
-              -- "$@"); then
+if ! args=$(getopt -n "$0" -o +                                          \
+                   -l 'hosttype:,images-dir:,only-update-config,vgname:' \
+                   -- "$@"); then
   usage
 fi
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --add-efi-label)      add_efi_label=true;      shift        ;;
     --hosttype)           hosttype=$2;             shift; shift ;;
     --images-dir)         images_dir=$2;           shift; shift ;;
     --only-update-config) only_update_config=true; shift        ;;
@@ -557,7 +555,9 @@ install_efi_grub() {
 
 grub_install_done=false
 
-if ! $only_update_config; then
+if $only_update_config; then
+  log info 'only updating Grub configuration'
+else
   for grubdev in $grub_target_devices; do
     log info "installing grub to ${grubdev}"
 
@@ -605,17 +605,6 @@ if ! $only_update_config; then
     mv "${boot_dir}/grub/version.tmp" "${boot_dir}/grub/version"
     log notice "Grub version ${new_grub_version} has been installed to: $(printf %s "$grub_target_devices")"
   fi
-fi
-
-if $add_efi_label && [ -d /sys/firmware/efi ]; then
-  for grubdev in $grub_target_devices; do
-    log notice "adding an EFI label to device ${grubdev}"
-    if ! efibootmgr -c -d "$grubdev" -L debian -l '\EFI\debian\grubx64.efi' \
-      > /dev/null; then
-        log err "error when adding an EFI label to device ${grubdev}"
-        exitstatus=1
-    fi
-  done
 fi
 
 grub_cfg_path="${boot_dir}/grub/grub.cfg"

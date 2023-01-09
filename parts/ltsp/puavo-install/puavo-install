@@ -366,15 +366,10 @@ install_localbootdevice() {
 
   if is_preinstalled "$puavo_install_hosttype"; then
     # If host was preinstalled, grub will boot the host as 'preinstalled' until
-    # we install a new grub configuration.  However, we should also add an EFI
-    # label (in case we have booted in UEFI mode), because we have possibly
-    # come from a restoredisk and may not have a proper UEFI bootorder
-    # in nvram.  Should it be the case that the preinstall was run on this
-    # machine and boot order is ok, the duplicate entry seems to get cleaned
-    # by UEFI at next boot.
-    puavo-install-grub --add-efi-label              \
-                       --hosttype "$puavo_hosttype" \
-                       --only-update-config
+    # we install a new grub configuration.  We also (re)install Grub because
+    # it handles the EFI label and it might be missing in case we have been
+    # installed from a restoredisk image.
+    puavo-install-grub --hosttype "$puavo_hosttype"
     # From now on the host will boot as a fully installed host.
     rm -f /images/puavo_preinstalled
   else
