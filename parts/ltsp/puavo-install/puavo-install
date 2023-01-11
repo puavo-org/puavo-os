@@ -114,7 +114,7 @@ ask_preseed() {
   if [ -n "$preseed_devicetype" ]; then
     puavo_preseed_register_args+=('--devicetype' "$preseed_devicetype")
   fi
-  if [ -n "$preseed_admin_password" ]; then
+  if [ -n "$preseed_puavo_server" ]; then
     puavo_preseed_register_args+=('--puavoserver' "$preseed_puavo_server")
   fi
   if [ "$preseed_force_reg_defaults" = 'true' ]; then
