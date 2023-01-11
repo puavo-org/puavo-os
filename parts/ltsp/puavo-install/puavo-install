@@ -499,7 +499,7 @@ esac
 accepted_hosttypes=$(get_accepted_hosttypes "$puavo_install_hosttype")
 
 puavo-register --accepted-devicetypes "$accepted_hosttypes" \
-               ${puavo_preseed_register_args[@]}
+               "${puavo_preseed_register_args[@]}"
 
 puavo_hosttype=$(cat /etc/puavo/hosttype)
 puavo-conf puavo.hosttype "$puavo_hosttype"
