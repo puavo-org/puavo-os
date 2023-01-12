@@ -651,6 +651,7 @@ class packages {
     , 'printer-driver-cups-pdf'
     , 'printer-driver-foo2zjs'
     , 'printer-driver-gutenprint'
+    , 'printer-driver-hpijs'
     , 'printer-driver-min12xxw'
     , 'printer-driver-pnm2ppa'
     , 'printer-driver-ptouch'
