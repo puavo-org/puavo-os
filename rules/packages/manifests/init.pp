@@ -732,6 +732,8 @@ class packages {
     , 'flameshot'
     , 'fuse3'
     , 'gnome-network-displays'
+    , 'ideviceinstaller'
+    , 'idevicerestore'
     , 'kamoso'
     , 'kde-spectacle'
     , 'mc'
