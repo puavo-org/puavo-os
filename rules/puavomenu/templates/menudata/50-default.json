@@ -501,9 +501,6 @@
             "icon": "x-office-presentation",
             "tags": "default, education"
         },
-        "org.kde.kamoso": {
-            "tags": "default"
-        },
         "kenavision": {
             "type": "custom",
             "command": "/opt/av4kav/lib/av4.sh",
@@ -861,10 +858,16 @@
             },
             "tags": "default, education, science"
         },
+        "org.kde.kamoso": {
+            "tags": "default"
+        },
         "org.kde.kbruch": {
             "tags": "default"
         },
         "org.kde.kcalc": {
+            "tags": "default"
+        },
+        "org.kde.kdeconnect.app": {
             "tags": "default"
         },
         "org.kde.kdenlive": {
@@ -1613,6 +1616,7 @@
                 "veracrypt",
                 "system-config-printer",
                 "pavucontrol",
+                "org.kde.kdeconnect.app",
                 "org.kde.spectacle",
                 "simplescreenrecorder",
                 "veyon-configurator",
