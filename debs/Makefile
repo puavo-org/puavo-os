@@ -13,6 +13,7 @@ _pkgs_ports := cups                   \
                kde-spectacle          \
                libpam-ccreds          \
                mutter                 \
+               nbd                    \
                openboard              \
                openldap               \
                pinta                  \
