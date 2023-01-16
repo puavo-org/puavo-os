@@ -1,0 +1,42 @@
+commit bb9c47f6b9fea87597beaa2061c1261d46dffa47
+Author: Juha Erkkilä <Juha.Erkkila@opinsys.fi>
+Date:   Mon Jan 16 13:15:05 2023 +0200
+
+    Fix server array reference counting.
+    
+    The function given to g_array_set_clear_func() for clearing
+    server arrays gets a pointer to server pointer as a parameter
+    instead of simply pointer to server structure.  This change
+    adds a wrapper function removing one level of indirection.
+    Before this change, when arrays are freed, the serve_dec_ref()
+    would decrement random stuff in memory and rarely call free()
+    to some random memory address, crashing nbd-server.
+
+diff --git a/nbd-server.c b/nbd-server.c
+index 9dac526..8658308 100644
+--- a/nbd-server.c
++++ b/nbd-server.c
+@@ -764,6 +764,14 @@ GArray* do_cfile_dir(gchar* dir, struct generic_conf *const genconf, GError** e)
+ 	return retval;
+ }
+ 
++/**
++ * To be called by GArray clearing function.
++ * @param server pointer to server element
++ */
++static void serve_clear_element(SERVER **server) {
++	serve_dec_ref(*server);
++}
++
+ /**
+  * Parse the config file.
+  *
+@@ -867,7 +875,7 @@ GArray* parse_cfile(gchar* f, struct generic_conf *const genconf, bool expect_ge
+ 	cfile = g_key_file_new();
+ 	retval = g_array_new(FALSE, TRUE, sizeof(SERVER*));
+ 	if(expect_generic) {
+-		g_array_set_clear_func(retval, (GDestroyNotify)serve_dec_ref);
++		g_array_set_clear_func(retval, (GDestroyNotify)serve_clear_element);
+ 	}
+ 	if(!g_key_file_load_from_file(cfile, f, G_KEY_FILE_KEEP_COMMENTS |
+ 			G_KEY_FILE_KEEP_TRANSLATIONS, &err)) {
