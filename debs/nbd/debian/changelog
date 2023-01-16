@@ -1,3 +1,9 @@
+nbd (1:3.24-1.1+puavo1) bookworm; urgency=medium
+
+  * Fix server reference counting in nbd-server.
+
+ -- Puavo Org <dev@opinsys.fi>  Wed, 15 Mar 2023 15:36:31 +0200
+
 nbd (1:3.24-1.1) unstable; urgency=medium
 
   * Non-maintainer upload with maintainer permission.
