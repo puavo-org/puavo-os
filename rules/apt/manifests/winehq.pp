@@ -1,5 +1,5 @@
 class apt::winehq {
-  $wine_version = '8.0~rc1~bullseye-1'
+  $wine_version = '8.0~rc1~bookworm-1'
 
   file {
     '/etc/apt/keyrings':
