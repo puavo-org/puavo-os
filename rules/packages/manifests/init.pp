@@ -757,8 +757,8 @@ class packages {
     , 'epiphany-browser'
     , 'icedtea-netx'
     , 'liferea'
-    , 'openjdk-11-jdk'
-    , 'openjdk-11-jre'
+    , 'openjdk-17-jdk'
+    , 'openjdk-17-jre'
     , 'php-cli'
     , 'php-sqlite3'
     , 'sqlite3' ]:
