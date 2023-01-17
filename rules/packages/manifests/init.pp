@@ -592,7 +592,7 @@ class packages {
     , 'gnome-system-monitor'
     , 'gnome-terminal'
     , 'gnome-themes-standard'
-    , 'gnome-tweak-tool'
+    , 'gnome-tweaks'
     , 'gnome-user-share'
     , 'gnome-video-effects'
     , 'gsettings-desktop-schemas'
