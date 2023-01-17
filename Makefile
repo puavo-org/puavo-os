@@ -67,7 +67,7 @@ _image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -
 # "puppet" has to be installed separately with apt instead of as part
 # of debootstrap (in Bullseye) due to some issue.
 _debootstrap_packages      := git,jq,locales,lsb-release,make,sudo,wget
-_post_debootstrap_packages := puppet
+_post_debootstrap_packages := puppet puppet-module-puppetlabs-sshkeys-core
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid/squid.conf \
 			 && echo true || echo false)

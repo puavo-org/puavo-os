@@ -14,7 +14,7 @@ apply_rules() {
       --detailed-exitcodes                            \
       --logdest console                               \
       --logdest /var/log/puavo/puppet/apply-rules.log \
-      --modulepath rules                              \
+      --modulepath rules:/usr/share/puppet/modules    \
       rules/site.pp
 }
 
