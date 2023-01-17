@@ -204,7 +204,7 @@ class packages {
     , 'openssh-client'
     , 'openssh-server'
     , 'pm-utils'
-    , 'rng-tools'
+    , 'rng-tools-debian'
     , 'systemd'
     , 'udev'
     , 'udisks2'
