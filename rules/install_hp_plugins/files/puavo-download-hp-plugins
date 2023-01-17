@@ -46,6 +46,10 @@ switch -- $hplip_version {
     set expected_run_checksum     363a467925ecca8a0856821ea74a2ae74445f654313f59427289452032d6aef3
     set expected_run_asc_checksum c89a33e30da0a0786b0ea87931cda6048567fbf7ebeb8b3d57fedec28a2fc83f
   }
+  "3.22.6" {
+    set expected_run_checksum     3124023e749754bad74b59cf208be5531d31b216f25343a5a5f2ce82164c82fb
+    set expected_run_asc_checksum c0ed09635d2f4c371ac4f8dcbb643d6ca1cd4a4fe1302ef82f2bb9ac2870784b
+  }
   default {
     error "no checksum found for version $hplip_version"
   }
