@@ -466,7 +466,7 @@ class packages {
     , 'gcc-avr'
     , 'geany'
     , 'idle'
-    , 'idle-python3.9'
+    , 'idle-python3.11'
     , 'kturtle'
     , 'lazarus'
     , 'lokalize'
