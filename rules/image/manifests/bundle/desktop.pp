@@ -5,7 +5,6 @@ class image::bundle::desktop {
   include ::desktop
   include ::desktop_cups
   include ::devilspie
-  include ::disable_accounts_service
   include ::disable_unclutter
   include ::exec_restrictions
   include ::firefox
