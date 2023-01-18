@@ -426,6 +426,7 @@ class packages {
 
     [ 'amtterm'
     , 'hostapd'
+    , 'nload'
     , 'vtun' ]:
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
