@@ -1,4 +1,5 @@
 class image::bundle::desktop {
+  include ::accountsservice
   include ::autostart
   include ::blueman
   include ::chromium
