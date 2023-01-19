@@ -4,7 +4,7 @@ import re
 import logging
 import getpass
 import os.path
-import lsb_release
+import platform
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -31,9 +31,9 @@ from sidebar.avatar_downloader import AvatarDownloaderThread
 def get_changelog_url(lang):
     series = utils.get_file_contents('/etc/puavo-image/class')
     version = utils.get_file_contents('/etc/puavo-image/name')
-    lsb_codename = lsb_release.get_distro_information()['CODENAME']
+    codename = platform.freedesktop_os_release()["VERSION_CODENAME"]
 
-    logging.info('The current distribution codename is "%s"', lsb_codename)
+    logging.info('The current distribution codename is "%s"', codename)
     logging.info('The current image series is "%s"', series)
     logging.info('The current image version is "%s"', version)
 
@@ -47,7 +47,7 @@ def get_changelog_url(lang):
     url = url.replace('%%IMAGESERIES%%', series)
     url = url.replace('%%IMAGEVERSION%%', version)
     url = url.replace('%%LANG%%', lang)
-    url = url.replace('%%LSBCODENAME%%', lsb_codename)
+    url = url.replace('%%LSBCODENAME%%', codename)
 
     logging.info('The final changelog URL is "%s"', url)
 
