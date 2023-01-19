@@ -415,7 +415,6 @@ class packages {
     , 'fmit'
     , 'hydrogen'
     , 'lmms'
-    , 'musescore3'
     , 'qsynth'
     , 'rosegarden'
     , 'solfege'
