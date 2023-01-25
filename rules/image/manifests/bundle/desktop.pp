@@ -7,6 +7,7 @@ class image::bundle::desktop {
   include ::desktop_cups
   include ::devilspie
   include ::disable_unclutter
+  include ::exammode
   include ::exec_restrictions
   include ::firefox
   include ::fontconfig
