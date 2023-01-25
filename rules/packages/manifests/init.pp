@@ -295,6 +295,7 @@ class packages {
     , 'nvidia-settings'
     , 'nvidia-settings-tesla-470'
     , 'update-glx'
+    , 'xserver-xorg-core'
     , 'xserver-xorg-input-all'
     , 'xserver-xorg-input-evdev'
     , 'xserver-xorg-video-all' ]:
