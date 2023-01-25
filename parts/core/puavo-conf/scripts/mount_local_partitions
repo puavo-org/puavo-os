@@ -59,54 +59,52 @@ puavo_mount_partition() {
   mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
 }
 
-# get rid of hosttype handling?
-puavo_hosttype=$(puavo-conf puavo.hosttype)
-
-case "$puavo_hosttype" in
-  diskinstaller)
-    vgchange -a y puavoinstaller
-    ;;
-  fatclient)
-    # fatclients normally do not have a "puavo" volume group,
-    # so failing this is not an error and there is nothing more to do.
-    vgchange -a y puavo 2>/dev/null || exit 0
-    ;;
-  unregistered)
-    # Do not attach puavo VG when installing a new system.
-    ;;
-  *)
-    vgchange -a y puavo
-    ;;
-esac
+puavo_mounts=$(puavo-conf puavo.mounts.local)
 
 status=0
 
-if [ "$puavo_hosttype" = 'diskinstaller' ]; then
-  puavo_mount_partition puavoinstaller-installimages /installimages || status=1
-fi
+have_puavo_mounts=false
 
-if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
-  puavo_mount_partition puavo-home /home || status=1
-fi
+for mountpoint in $puavo_mounts; do
+  if [ "$mountpoint" = 'installimages' ]; then
+    {
+      vgchange -a y puavoinstaller \
+        && puavo_mount_partition puavoinstaller-installimages /installimages
+    } || status=1
+    break
+  else
+    have_puavo_mounts=true
+  fi
+done
 
-# These are needed for system updates when on NBD.
-case "$puavo_hosttype" in
-  bootserver|laptop|preinstalled|wirelessaccesspoint)
-    puavo_mount_partition puavo-images /images || status=1
-    puavo_mount_partition puavo-state  /state  || status=1
-    ;;
-esac
-
-case "$puavo_hosttype" in
-  diskinstaller|unregistered)
-    # do not mount from /dev/mapper/puavo-tmp when installing
-    ;;
-  *)
-    if [ -b /dev/mapper/puavo-tmp ]; then
-      { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || status=1
+if $have_puavo_mounts; then
+  if ! vgchange -a y puavo 2>/dev/null; then
+    if [ "$puavo_mounts" = '!tmp' ]; then
+      # with !tmp it is okay if we have failed vgchange
+      # (this is optional for fatclients)
+      exit 0
     fi
-    ;;
-esac
+    echo 'could not attach the "puavo" volume group' >&2
+    exit 1
+  fi
+fi
+
+for mountpoint in $puavo_mounts; do
+  case "$mountpoint" in
+    home)   puavo_mount_partition puavo-home   /home   || status=1 ;;
+    images) puavo_mount_partition puavo-images /images || status=1 ;;
+    state)  puavo_mount_partition puavo-state  /state  || status=1 ;;
+    tmp)
+      { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || status=1
+      ;;
+    !tmp)
+      { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || true
+      ;;
+    *)
+      echo "unsupported mountpoint $mountpoint" >&2 || status=1
+      ;;
+  esac
+done
 
 rm -f /images/forcefsck
 
