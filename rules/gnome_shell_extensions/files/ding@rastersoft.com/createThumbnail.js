@@ -17,13 +17,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+'use strict';
 imports.gi.versions.GnomeDesktop = '3.0';
 const GnomeDesktop = imports.gi.GnomeDesktop;
 const Gio = imports.gi.Gio;
 
+/**
+ *
+ */
 function CreateThumbnail() {
-    let thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
+    let thumbnailFactoryNormal = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.NORMAL);
+    let thumbnailFactoryLarge = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
 
     let file = Gio.File.new_for_path(ARGV[0]);
     if (!file.query_exists(null)) {
@@ -35,21 +39,25 @@ function CreateThumbnail() {
     let modifiedTime = fileInfo.get_attribute_uint64('time::modified');
 
     // check if the thumbnail has been already created in the meantime by another program
-    let thumbnail = thumbnailFactory.lookup(fileUri, modifiedTime);
-    if (thumbnail != null) {
+    let thumbnailLarge = thumbnailFactoryLarge.lookup(fileUri, modifiedTime);
+    if (thumbnailLarge != null) {
         return 3;
     }
-    if (thumbnailFactory.has_valid_failed_thumbnail(fileUri, modifiedTime)) {
+    let thumbnailNormal = thumbnailFactoryNormal.lookup(fileUri, modifiedTime);
+    if (thumbnailNormal != null) {
+        return 3;
+    }
+    if (thumbnailFactoryNormal.has_valid_failed_thumbnail(fileUri, modifiedTime)) {
         return 4;
     }
 
     // now, generate the file
-    let thumbnailPixbuf = thumbnailFactory.generate_thumbnail(fileUri, fileInfo.get_content_type());
+    let thumbnailPixbuf = thumbnailFactoryLarge.generate_thumbnail(fileUri, fileInfo.get_content_type());
     if (thumbnailPixbuf == null) {
-        thumbnailFactory.create_failed_thumbnail(fileUri, modifiedTime);
+        thumbnailFactoryLarge.create_failed_thumbnail(fileUri, modifiedTime);
         return 2;
     } else {
-        thumbnailFactory.save_thumbnail(thumbnailPixbuf, fileUri, modifiedTime);
+        thumbnailFactoryLarge.save_thumbnail(thumbnailPixbuf, fileUri, modifiedTime);
         return 0;
     }
 }

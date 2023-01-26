@@ -100,5 +100,10 @@
         <summary>Use black for label text</summary>
         <description>Paint the label text in black instead of white. Useful when using light backgrounds.</description>
     </key>
+    <key type="b" name="check-x11wayland">
+        <default>true</default>
+        <summary>Show a popup if running on X11Wayland</summary>
+        <description>Whether DING should show a popup if it is running on X11Wayland, or the user decided to not show it anymore.</description>
+    </key>
     </schema>
 </schemalist>

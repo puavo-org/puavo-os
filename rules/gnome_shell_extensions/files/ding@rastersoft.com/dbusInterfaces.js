@@ -14,10 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/* exported DBusInterfaces */
+'use strict';
 var DBusInterfaces = {
-  // net.haddes.SwitcherooControl
-  'net.hadess.SwitcherooControl': `<node>
+    // net.haddes.SwitcherooControl
+    'net.hadess.SwitcherooControl': `<node>
     <interface name="net.hadess.SwitcherooControl">
       <property name="HasDualGpu" type="b" access="read"/>
       <property name="NumGPUs" type="u" access="read"/>
@@ -25,8 +26,8 @@ var DBusInterfaces = {
     </interface>
   </node>`,
 
-  // org.freedesktop.FileManager1
-  'org.freedesktop.FileManager1': `<node>
+    // org.freedesktop.FileManager1
+    'org.freedesktop.FileManager1': `<node>
     <interface name='org.freedesktop.FileManager1'>
       <method name='ShowItems'>
         <arg name='URIs' type='as' direction='in'/>
@@ -39,8 +40,8 @@ var DBusInterfaces = {
     </interface>
   </node>`,
 
-  // org.gnome.ArchiveManager1
-  'org.gnome.ArchiveManager1': `<node>
+    // org.gnome.ArchiveManager1
+    'org.gnome.ArchiveManager1': `<node>
     <interface name="org.gnome.ArchiveManager1">
       <method name="GetSupportedTypes">
         <arg name="action" type="s" direction="in"/>
@@ -72,8 +73,8 @@ var DBusInterfaces = {
     </interface>
   </node>`,
 
-  // org.gnome.Nautilus.FileOperations2
-  'org.gnome.Nautilus.FileOperations2': `<node>
+    // org.gnome.Nautilus.FileOperations2
+    'org.gnome.Nautilus.FileOperations2': `<node>
     <interface name='org.gnome.Nautilus.FileOperations2'>
       <method name='CopyURIs'>
         <arg type='as' name='sources' direction='in'/>
@@ -117,8 +118,8 @@ var DBusInterfaces = {
     </interface>
   </node>`,
 
-  // org.gnome.NautilusPreviewer
-  'org.gnome.NautilusPreviewer': `<node>
+    // org.gnome.NautilusPreviewer
+    'org.gnome.NautilusPreviewer': `<node>
     <interface name='org.gnome.NautilusPreviewer'>
       <method name='ShowFile'>
         <arg name='FileUri' type='s' direction='in'/>
@@ -128,8 +129,8 @@ var DBusInterfaces = {
     </interface>
   </node>`,
 
-  // org.gtk.vfs.Metadata
-  'org.gtk.vfs.Metadata': `<node>
+    // org.gtk.vfs.Metadata
+    'org.gtk.vfs.Metadata': `<node>
     <interface name='org.gtk.vfs.Metadata'>
       <method name="Set">
         <arg type='ay' name='treefile' direction='in'/>
@@ -157,8 +158,8 @@ var DBusInterfaces = {
     </interface>
   </node>`,
 
-  // org.freedesktop.DBus.Introspectable
-  'org.freedesktop.DBus.Introspectable': `<node>
+    // org.freedesktop.DBus.Introspectable
+    'org.freedesktop.DBus.Introspectable': `<node>
     <interface name="org.freedesktop.DBus.Introspectable">
       <method name="Introspect">
         <arg direction="out" type="s"/>
@@ -166,8 +167,8 @@ var DBusInterfaces = {
     </interface>
   </node>`,
 
-  // org.freedesktop.Notifications
-  'org.freedesktop.Notifications': `<node>
+    // org.freedesktop.Notifications
+    'org.freedesktop.Notifications': `<node>
   <interface name="org.freedesktop.Notifications">
     <method name="Notify">
       <arg type="s" name="arg_0" direction="in">
@@ -220,5 +221,5 @@ var DBusInterfaces = {
       </arg>
     </signal>
   </interface>
-</node>`
+</node>`,
 };

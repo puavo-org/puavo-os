@@ -18,23 +18,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
+'use strict';
 const Gdk = imports.gi.Gdk;
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const Pango = imports.gi.Pango;
-const GdkPixbuf = imports.gi.GdkPixbuf;
-const Cairo = imports.gi.cairo;
-const DesktopIconsUtil = imports.desktopIconsUtil;
 const desktopIconItem = imports.desktopIconItem;
 
 const Prefs = imports.preferences;
-const Enums = imports.enums;
-const DBusUtils = imports.dbusUtils;
 
-const ByteArray = imports.byteArray;
 const Signals = imports.signals;
 const Gettext = imports.gettext.domain('ding');
 
@@ -42,10 +31,9 @@ const _ = Gettext.gettext;
 
 
 var stackItem = class extends desktopIconItem.desktopIconItem {
-
     constructor(desktopManager, file, attributeContentType, fileExtra) {
         super(desktopManager, fileExtra);
-        this._isSpecial = false
+        this._isSpecial = false;
         this._file = file;
         this.isStackTop = true;
         this.stackUnique = false;
@@ -74,14 +62,14 @@ var stackItem = class extends desktopIconItem.desktopIconItem {
     }
 
     setSelected() {
-        return;
+
     }
 
     updateIcon() {
         this._createStackTopIcon();
     }
 
-    /***********************
+    /** *********************
      * Getters and setters *
      ***********************/
 
@@ -132,6 +120,5 @@ var stackItem = class extends desktopIconItem.desktopIconItem {
     set time(time) {
         this._modifiedTime = time;
     }
-
 };
 Signals.addSignalMethods(stackItem.prototype);

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+'use strict';
 const Main = imports.ui.main;
 const Signals = imports.signals;
 const GLib = imports.gi.GLib;
@@ -26,7 +26,7 @@ var VisibleArea = class {
         this._marginsList = {};
         this._refreshTimerId = null;
         // This UUID allows to ensure that the object is really a DesktopIconsIntegration object
-        this._extensionUUID = "130cbc66-235c-4bd6-8571-98d2d8bba5e2";
+        this._extensionUUID = '130cbc66-235c-4bd6-8571-98d2d8bba5e2';
     }
 
     disable() {
@@ -69,7 +69,7 @@ var VisibleArea = class {
                         top: 0,
                         bottom: 0,
                         left: 0,
-                        right: 0
+                        right: 0,
                     };
                 }
                 for (let index2 of ['top', 'bottom', 'left', 'right']) {
@@ -107,7 +107,6 @@ var VisibleArea = class {
      */
 
     getMonitorGeometry(ws, monitorIndex) {
-
         let geometry = ws.get_display().get_monitor_geometry(monitorIndex);
         let scale = ws.get_display().get_monitor_scale(monitorIndex);
         let area = ws.get_work_area_for_monitor(monitorIndex);
@@ -133,16 +132,16 @@ var VisibleArea = class {
             y: geometry.y,
             width: geometry.width,
             height: geometry.height,
-            scale: scale,
-            marginTop: marginTop,
-            marginBottom: marginBottom,
-            marginLeft: marginLeft,
-            marginRight: marginRight
+            scale,
+            marginTop,
+            marginBottom,
+            marginLeft,
+            marginRight,
         };
     }
 
     get uuid() {
         return this._extensionUUID;
     }
-}
+};
 Signals.addSignalMethods(VisibleArea.prototype);

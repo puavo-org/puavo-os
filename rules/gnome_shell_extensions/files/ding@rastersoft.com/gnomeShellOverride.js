@@ -15,20 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/* exported GnomeShellOverride */
+'use strict';
 const Shell = imports.gi.Shell;
 const Meta = imports.gi.Meta;
-const Main = imports.ui.main;
 var WorkspaceAnimation = null;
 try {
     WorkspaceAnimation = imports.ui.workspaceAnimation;
-} catch(err) {
-    log ("Workspace Animation does not exist");
+} catch (err) {
+    log('Workspace Animation does not exist');
 }
 
 var replaceData = {};
 
-    /*
+/*
      * This class overrides methods in the Gnome Shell. The new methods
      * need to be defined below the class as seperate functions.
      * The old methods that are overriden can be accesed by relpacedata.old_'name-of-replaced-method'
@@ -37,7 +37,7 @@ var replaceData = {};
 
 
 var GnomeShellOverride = class {
-    constructor () {
+    constructor() {
         this._isX11 = !Meta.is_wayland_compositor();
     }
 
@@ -45,7 +45,7 @@ var GnomeShellOverride = class {
         if (this._isX11) {  // ** X11 Methods only
             if (WorkspaceAnimation &&
                 WorkspaceAnimation.WorkspaceGroup !== undefined) {
-                this.replaceMethod(WorkspaceAnimation.WorkspaceGroup, '_shouldShowWindow', new_shouldShowWindow);
+                this.replaceMethod(WorkspaceAnimation.WorkspaceGroup, '_shouldShowWindow', newShouldShowWindow);
             }
         } else {    // ** Wayland replace methods below this
             this.replaceMethod(Shell.Global, 'get_window_actors', newGetWindowActors);
@@ -72,7 +72,7 @@ var GnomeShellOverride = class {
      *
      * @param {class} className The class where to replace the method
      * @param {string} methodName The method to replace
-     * @param {function} functionToCall The function to call as the replaced method
+     * @param {Function} functionToCall The function to call as the replaced method
      * @param {string} [classId] an extra ID to identify the stored method when two
      *                           methods with the same name are replaced in
      *                           two different classes
@@ -80,59 +80,72 @@ var GnomeShellOverride = class {
 
     replaceMethod(className, methodName, functionToCall, classId) {
         if (classId) {
-            replaceData['old_' + classId + '_' + methodName] = [className.prototype[methodName], className, methodName, classId];
+            replaceData[`old_${classId}_${methodName}`] = [className.prototype[methodName], className, methodName, classId];
         } else {
-            replaceData['old_' + methodName] = [className.prototype[methodName], className, methodName];
+            replaceData[`old_${methodName}`] = [className.prototype[methodName], className, methodName];
         }
         className.prototype[methodName] = functionToCall;
     }
+};
+
+
+/**
+ * New Functions used to replace the gnome shell functions are defined below.
+ */
+
+/**
+ * Receives a list of metaWindow or metaWindowActor objects, and remove from it
+ * our desktop window
+ *
+ * @param {GList} windowList A list of metaWindow or metaWindowActor objects
+ * @returns {GList} The same list, but with the desktop window removed
+ */
+
+/**
+ *
+ * @param windowList
+ */
+function removeDesktopWindowFromList(windowList) {
+    let returnVal = [];
+    for (let element of windowList) {
+        let window = element;
+        if (window.get_meta_window) { // it is a MetaWindowActor
+            window = window.get_meta_window();
+        }
+        if (!window.customJS_ding || !window.customJS_ding.hideFromWindowList) {
+            returnVal.push(element);
+        }
+    }
+    return returnVal;
 }
 
+/**
+ * Method replacement for Shell.Global.get_window_actors
+ * It removes the desktop window from the list of windows in the Activities mode
+ */
 
-    /**
-     * New Functions used to replace the gnome shell functions are defined below.
-     */
+/**
+ *
+ */
+function newGetWindowActors() {
+    /* eslint-disable no-invalid-this */
+    let windowList = replaceData.old_get_window_actors[0].apply(this, []);
+    return removeDesktopWindowFromList(windowList);
+}
 
-    /**
-     * Receives a list of metaWindow or metaWindowActor objects, and remove from it
-     * our desktop window
-     *
-     * @param {GList} windowList A list of metaWindow or metaWindowActor objects
-     * @returns {GList} The same list, but with the desktop window removed
-     */
+/**
+ * Method replacement under X11 for should show window
+ * It removes the desktop window from the window animation
+ */
 
-    function removeDesktopWindowFromList(windowList) {
-        let returnVal = [];
-        for (let element of windowList) {
-            let window = element;
-            if (window.get_meta_window) { // it is a MetaWindowActor
-                window = window.get_meta_window();
-            }
-            if (!window.customJS_ding || !window.customJS_ding.hideFromWindowList) {
-                returnVal.push(element);
-            }
-        }
-        return returnVal;
+/**
+ *
+ * @param window
+ */
+function newShouldShowWindow(window) {
+    if (window.get_window_type() === Meta.WindowType.DESKTOP) {
+        return false;
     }
-
-    /**
-     * Method replacement for Shell.Global.get_window_actors
-     * It removes the desktop window from the list of windows in the Activities mode
-     */
-
-    function newGetWindowActors() {
-        let windowList = replaceData.old_get_window_actors[0].apply(this, []);
-        return removeDesktopWindowFromList(windowList);
-    }
-
-    /**
-     * Method replacement under X11 for should show window
-     * It removes the desktop window from the window animation
-     */
-
-    function new_shouldShowWindow(window) {
-        if (window.get_window_type() === Meta.WindowType.DESKTOP) {
-            return false;
-        }
-        return replaceData.old__shouldShowWindow[0].apply(this, [window,]);
-    }
+    /* eslint-disable no-invalid-this */
+    return replaceData.old__shouldShowWindow[0].apply(this, [window]);
+}

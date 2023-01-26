@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+'use strict';
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Gtk = imports.gi.Gtk;
@@ -24,11 +24,10 @@ const DesktopIconsUtil = imports.desktopIconsUtil;
 var TemplatesScriptsManagerFlags = {
     'NONE': 0,
     'ONLY_EXECUTABLE': 1,
-    'HIDE_EXTENSIONS': 2
+    'HIDE_EXTENSIONS': 2,
 };
 
 var TemplatesScriptsManager = class {
-
     constructor(baseFolder, flags, activatedCB) {
         this._activatedCB = activatedCB;
         this._entries = [];
@@ -46,11 +45,11 @@ var TemplatesScriptsManager = class {
             this._monitorDir = baseFolder.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
             this._monitorDir.set_rate_limit(1000);
             this._monitorDir.connect('changed', (obj, file, otherFile, eventType) => {
-                this._updateEntries().catch((e) => {
+                this._updateEntries().catch(e => {
                     print(`Exception while updating entries in monitor: ${e.message}\n${e.stack}`);
                 });
             });
-            this._updateEntries().catch((e) => {
+            this._updateEntries().catch(e => {
                 print(`Exception while updating entries: ${e.message}\n${e.stack}`);
             });
         }
@@ -70,13 +69,13 @@ var TemplatesScriptsManager = class {
         let entriesList = null;
 
         do {
-            this._entriesDirMonitors.map(f => {
+            this._entriesDirMonitors.forEach(f => {
                 f[0].disconnect(f[1]);
                 f[0].cancel();
             });
             this._entriesDirMonitors = [];
             this._entriesFolderChanged = false;
-            if (! this._entriesDir.query_exists(null)) {
+            if (!this._entriesDir.query_exists(null)) {
                 entriesList = null;
                 break;
             }
@@ -91,13 +90,15 @@ var TemplatesScriptsManager = class {
         if (directory !== this._entriesDir) {
             let monitorDir = directory.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
             monitorDir.set_rate_limit(1000);
-            let monitorId = monitorDir.connect('changed', (obj, file, otherFile, eventType) => { this._updateEntries(); });
+            let monitorId = monitorDir.connect('changed', (obj, file, otherFile, eventType) => {
+                this._updateEntries();
+            });
             this._entriesDirMonitors.push([monitorDir, monitorId]);
         }
 
         try {
             var files = await this._readDirectory(directory);
-        } catch(e) {
+        } catch (e) {
             return null;
         }
 
@@ -119,7 +120,6 @@ var TemplatesScriptsManager = class {
             }
         }
         return output;
-
     }
 
     _readDirectory(directory) {
@@ -144,31 +144,33 @@ var TemplatesScriptsManager = class {
                         }
                         let info;
                         while ((info = fileEnum.next_file(null))) {
-                            let isDir = (info.get_file_type() == Gio.FileType.DIRECTORY);
+                            let isDir = info.get_file_type() == Gio.FileType.DIRECTORY;
                             if ((this._flags & TemplatesScriptsManagerFlags.ONLY_EXECUTABLE) &&
                                 !isDir &&
                                 !info.get_attribute_boolean('access::can-execute')) {
-                                    continue;
+                                continue;
                             }
                             let child = fileEnum.get_child(info);
                             fileList.push([info.get_name(), isDir ? child : child.get_path(), isDir ? [] : null]);
                         }
-                    } catch(e) {
+                    } catch (e) {
                         if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
                             resolve(null);
                         } else {
-                            reject('file-read-error');
+                            reject(new GLib.Error(Gio.IOErrorEnum,
+                                Gio.IOErrorEnum.FAILED,
+                                'file-read-error'));
                         }
                         return;
                     }
-                    fileList.sort((a,b) => {
+                    fileList.sort((a, b) => {
                         return a[0].localeCompare(b[0], {
-                            sensitivity: 'accent' ,
+                            sensitivity: 'accent',
                             numeric: 'true',
-                            localeMatcher: 'lookup' });
+                            localeMatcher: 'lookup',
+                        });
                     });
                     resolve(fileList);
-                    return;
                 }
             );
         });
@@ -186,14 +188,15 @@ var TemplatesScriptsManager = class {
         for (let fileItem of scriptsList) {
             let menuItemName = fileItem[0];
             if (this._flags & TemplatesScriptsManagerFlags.HIDE_EXTENSIONS) {
-                let offset = DesktopIconsUtil.getFileExtensionOffset(menuItemName, false);
-                menuItemName = menuItemName.substring(0, offset);
+                menuItemName = DesktopIconsUtil.getFileExtensionOffset(menuItemName, false).basename;
             }
             let menuItemPath = fileItem[1];
             let subDirs = fileItem[2];
             if (subDirs === null) {
                 let menuItem = new Gtk.MenuItem({label: menuItemName});
-                menuItem.connect("activate", () => {this._activatedCB(menuItemPath);});
+                menuItem.connect('activate', () => {
+                    this._activatedCB(menuItemPath);
+                });
                 scriptSubMenu.add(menuItem);
             } else {
                 let subMenu = this._createTemplatesScriptsSubMenu(subDirs);
@@ -207,4 +210,4 @@ var TemplatesScriptsManager = class {
         scriptSubMenu.show_all();
         return scriptSubMenu;
     }
-}
+};
