@@ -44,7 +44,12 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
     constructor(watchDog) {
         this._watchDog = watchDog;
         this._dbusImpl = Gio.DBusExportedObject.wrapJSObject(Interfaces.StatusNotifierWatcher, this);
-        this._dbusImpl.export(Gio.DBus.session, WATCHER_OBJECT);
+        try {
+            this._dbusImpl.export(Gio.DBus.session, WATCHER_OBJECT);
+        } catch (e) {
+            Util.Logger.warn(`Failed to export ${WATCHER_OBJECT}`);
+            logError(e);
+        }
         this._cancellable = new Gio.Cancellable();
         this._everAcquiredName = false;
         this._ownName = Gio.DBus.session.own_name(WATCHER_BUS_NAME,
@@ -53,7 +58,12 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
             this._lostName.bind(this));
         this._items = new Map();
 
-        this._dbusImpl.emit_signal('StatusNotifierHostRegistered', null);
+        try {
+            this._dbusImpl.emit_signal('StatusNotifierHostRegistered', null);
+        } catch (e) {
+            Util.Logger.warn(`Failed to notify registered host ${WATCHER_OBJECT}`);
+        }
+
         this._seekStatusNotifierItems().catch(e => {
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                 logError(e, 'Looking for StatusNotifierItem\'s');
@@ -73,14 +83,8 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
         this._watchDog.nameAcquired = false;
     }
 
-
-    // create a unique index for the _items dictionary
-    _getItemId(busName, objPath) {
-        return busName + objPath;
-    }
-
     async _registerItem(service, busName, objPath) {
-        let id = this._getItemId(busName, objPath);
+        const id = Util.indicatorId(service, busName, objPath);
 
         if (this._items.has(id)) {
             Util.Logger.warn(`Item ${id} is already registered`);
@@ -92,20 +96,26 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
         try {
             const indicator = new AppIndicator.AppIndicator(service, busName, objPath);
             this._items.set(id, indicator);
+            indicator.connect('destroy', () => this._onIndicatorDestroyed(indicator));
 
             indicator.connect('name-owner-changed', async () => {
                 if (!indicator.hasNameOwner) {
-                    await new PromiseUtils.TimeoutPromise(500,
-                        GLib.PRIORITY_DEFAULT, this._cancellable);
-                    if (!indicator.hasNameOwner)
-                        this._itemVanished(id);
+                    try {
+                        await new PromiseUtils.TimeoutPromise(500,
+                            GLib.PRIORITY_DEFAULT, this._cancellable);
+                        if (!indicator.hasNameOwner)
+                            indicator.destroy();
+                    } catch (e) {
+                        if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                            logError(e);
+                    }
                 }
             });
 
             // if the desktop is not ready delay the icon creation and signal emissions
             await Util.waitForStartupCompletion(indicator.cancellable);
             const statusIcon = new IndicatorStatusIcon.IndicatorStatusIcon(indicator);
-            indicator.connect('destroy', () => statusIcon.destroy());
+            IndicatorStatusIcon.addIconToPanel(statusIcon);
 
             this._dbusImpl.emit_signal('StatusNotifierItemRegistered',
                 GLib.Variant.new('(s)', [indicator.uniqueId]));
@@ -118,8 +128,8 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
         }
     }
 
-    _ensureItemRegistered(service, busName, objPath) {
-        let id = this._getItemId(busName, objPath);
+    async _ensureItemRegistered(service, busName, objPath) {
+        const id = Util.indicatorId(service, busName, objPath);
         let item = this._items.get(id);
 
         if (item) {
@@ -129,7 +139,7 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
             return;
         }
 
-        this._registerItem(service, busName, objPath);
+        await this._registerItem(service, busName, objPath);
     }
 
     async _seekStatusNotifierItems() {
@@ -144,18 +154,23 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
         const uniqueNames = await Util.getBusNames(bus, cancellable);
         const introspectName = async name => {
             const nodes = await Util.introspectBusObject(bus, name, cancellable);
+            const services = [...uniqueNames.get(name)];
             nodes.forEach(({ nodeInfo, path }) => {
                 if (Util.dbusNodeImplementsInterfaces(nodeInfo, ['org.kde.StatusNotifierItem'])) {
-                    Util.Logger.debug(`Found ${name} at ${path} implementing StatusNotifierItem iface`);
-                    const id = this._getItemId(name, path);
-                    if (!this._items.has(id)) {
+                    const ids = services.map(s => Util.indicatorId(s, name, path));
+                    if (ids.every(id => !this._items.has(id))) {
+                        const service = services.find(s =>
+                            s.startsWith('org.kde.StatusNotifierItem')) || services[0];
+                        const id = Util.indicatorId(
+                            path === DEFAULT_ITEM_OBJECT_PATH ? service : null,
+                            name, path);
                         Util.Logger.warn(`Using Brute-force mode for StatusNotifierItem ${id}`);
-                        this._registerItem(path, name, path);
+                        this._registerItem(service, name, path);
                     }
                 }
             });
         };
-        await Promise.allSettled([...uniqueNames].map(n => introspectName(n)));
+        await Promise.allSettled([...uniqueNames.keys()].map(n => introspectName(n)));
     }
 
     async RegisterStatusNotifierItemAsync(params, invocation) {
@@ -188,27 +203,29 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
             return;
         }
 
-        this._ensureItemRegistered(service, busName, objPath);
-
-        invocation.return_value(null);
+        try {
+            await this._ensureItemRegistered(service, busName, objPath);
+            invocation.return_value(null);
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e);
+            invocation.return_dbus_error('org.gnome.gjs.JSError.ValueError',
+                e.message);
+        }
     }
 
-    _itemVanished(id) {
-        // FIXME: this is useless if the path name disappears while the bus stays alive (not unheard of)
-        if (this._items.has(id))
-            this._remove(id);
-    }
-
-    _remove(id) {
-        const indicator = this._items.get(id);
+    _onIndicatorDestroyed(indicator) {
         const { uniqueId } = indicator;
-        indicator.destroy();
-        this._items.delete(id);
+        this._items.delete(uniqueId);
 
-        this._dbusImpl.emit_signal('StatusNotifierItemUnregistered',
-            GLib.Variant.new('(s)', [uniqueId]));
-        this._dbusImpl.emit_property_changed('RegisteredStatusNotifierItems',
-            GLib.Variant.new('as', this.RegisteredStatusNotifierItems));
+        try {
+            this._dbusImpl.emit_signal('StatusNotifierItemUnregistered',
+                GLib.Variant.new('(s)', [uniqueId]));
+            this._dbusImpl.emit_property_changed('RegisteredStatusNotifierItems',
+                GLib.Variant.new('as', this.RegisteredStatusNotifierItems));
+        } catch (e) {
+            Util.Logger.warn(`Failed to emit signals: ${e}`);
+        }
     }
 
     RegisterStatusNotifierHostAsync(_service, invocation) {
@@ -235,16 +252,35 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
     }
 
     destroy() {
-        if (!this._isDestroyed) {
-            // this doesn't do any sync operation and doesn't allow us to hook up the event of being finished
-            // which results in our unholy debounce hack (see extension.js)
-            Array.from(this._items.keys()).forEach(i => this._remove(i));
+        if (this._isDestroyed)
+            return;
+
+        // this doesn't do any sync operation and doesn't allow us to hook up
+        // the event of being finished which results in our unholy debounce hack
+        // (see extension.js)
+        this._items.forEach(indicator => indicator.destroy());
+        this._cancellable.cancel();
+
+        try {
             this._dbusImpl.emit_signal('StatusNotifierHostUnregistered', null);
-            Gio.DBus.session.unown_name(this._ownName);
-            this._cancellable.cancel();
-            this._dbusImpl.unexport();
-            delete this._items;
-            this._isDestroyed = true;
+        } catch (e) {
+            Util.Logger.warn(`Failed to emit uinregistered signal: ${e}`);
         }
+
+        Gio.DBus.session.unown_name(this._ownName);
+
+        try {
+            this._dbusImpl.unexport();
+        } catch (e) {
+            Util.Logger.warn(`Failed to unexport watcher object: ${e}`);
+        }
+
+        AppIndicator.AppIndicator.destroy();
+
+        this._dbusImpl.run_dispose();
+        delete this._dbusImpl;
+
+        delete this._items;
+        this._isDestroyed = true;
     }
 };

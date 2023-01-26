@@ -227,6 +227,7 @@ var DBusClient = class AppIndicatorsDBusClient {
         // property requests are queued
         this._propertiesRequestedFor = new Set(/* ids */);
 
+        this._layoutUpdated = false;
         Util.connectSmart(this._proxy, 'notify::g-name-owner', this, () => {
             if (this.isReady)
                 this._requestLayoutUpdate();
@@ -234,7 +235,7 @@ var DBusClient = class AppIndicatorsDBusClient {
     }
 
     get isReady() {
-        return !!this._proxy.g_name_owner;
+        return this._layoutUpdated && !!this._proxy.g_name_owner;
     }
 
     getRoot() {
@@ -321,14 +322,24 @@ var DBusClient = class AppIndicatorsDBusClient {
         this._flagLayoutUpdateInProgress = true;
     }
 
+    _updateLayoutState(state) {
+        const wasReady = this.isReady;
+        this._layoutUpdated = state;
+        if (this.isReady !== wasReady)
+            this.emit('ready-changed');
+    }
+
     _endLayoutUpdate(result, error) {
         if (error) {
-            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
                 Util.Logger.warn(`While reading menu layout on proxy ${this._proxy.g_name_owner}: ${error}`);
+                this._updateLayoutState(false);
+            }
             return;
         }
 
         let [revision_, root] = result;
+        this._updateLayoutState(true);
         this._doLayoutUpdate(root);
         this._gcItems();
 
@@ -381,7 +392,10 @@ var DBusClient = class AppIndicatorsDBusClient {
         } else {
             // we don't, so let's create us
             this._items.set(id, new DbusMenuItem(this, id, properties, childrenIds));
-            this._requestProperties(id);
+            this._requestProperties(id).catch(e => {
+                if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                    Util.Logger.warn(`Could not get menu properties menu proxy: ${e}`);
+            });
         }
 
         return id;
@@ -533,6 +547,11 @@ const MenuItemFactory = {
         Util.connectSmart(shellItem, 'activate',
             shellItem, MenuItemFactory._onActivate);
 
+        shellItem.connect('destroy', () => {
+            shellItem._dbusItem = null;
+            shellItem._dbusClient = null;
+        });
+
         if (shellItem.menu) {
             Util.connectSmart(shellItem.menu, 'open-state-changed',
                 shellItem,  MenuItemFactory._onOpenStateChanged);
@@ -568,8 +587,13 @@ const MenuItemFactory = {
         }
     },
 
-    _onActivate() {
-        this._dbusItem.handleEvent('clicked', GLib.Variant.new('i', 0), 0);
+    _onActivate(_item, event) {
+        const timestamp = event.get_time();
+        if (timestamp && this._dbusClient.indicator)
+            this._dbusClient.indicator.provideActivationToken(timestamp);
+
+        this._dbusItem.handleEvent('clicked', GLib.Variant.new('i', 0),
+            timestamp);
     },
 
     _onPropertyChanged(dbusItem, prop, _value) {
@@ -719,12 +743,16 @@ const MenuUtils = {
  */
 var Client = class AppIndicatorsClient {
 
-    constructor(busName, path) {
+    constructor(busName, path, indicator) {
         this._busName  = busName;
         this._busPath  = path;
         this._client   = new DBusClient(busName, path);
         this._rootMenu = null; // the shell menu
         this._rootItem = null; // the DbusMenuItem for the root
+        this.indicator = indicator;
+
+        Util.connectSmart(this._client, 'ready-changed', this,
+            () => this.emit('ready-changed'));
     }
 
     get isReady() {
@@ -816,6 +844,7 @@ var Client = class AppIndicatorsClient {
         this._client   = null;
         this._rootItem = null;
         this._rootMenu = null;
+        this.indicator = null;
     }
 };
 Signals.addSignalMethods(Client.prototype);

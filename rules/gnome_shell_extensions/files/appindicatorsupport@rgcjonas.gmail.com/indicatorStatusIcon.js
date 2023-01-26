@@ -14,9 +14,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-/* exported IndicatorStatusIcon, IndicatorStatusTrayIcon */
+/* exported BaseStatusIcon, IndicatorStatusIcon, IndicatorStatusTrayIcon,
+            addIconToPanel, getTrayIcons, getAppIndicatorIcons */
 
 const Clutter = imports.gi.Clutter;
+const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const St = imports.gi.St;
 
@@ -34,15 +36,49 @@ const Util = Extension.imports.util;
 const PromiseUtils = Extension.imports.promiseUtils;
 const SettingsManager = Extension.imports.settingsManager;
 
-const BaseStatusIcon = GObject.registerClass(
+function addIconToPanel(statusIcon) {
+    if (!(statusIcon instanceof BaseStatusIcon))
+        throw TypeError(`Unexpected icon type: ${statusIcon}`);
+
+    const settings = SettingsManager.getDefaultGSettings();
+    const indicatorId = `appindicator-${statusIcon.uniqueId}`;
+
+    const currentIcon = Main.panel.statusArea[indicatorId];
+    if (currentIcon) {
+        if (currentIcon !== statusIcon)
+            currentIcon.destroy();
+
+        Main.panel.statusArea[indicatorId] = null;
+    }
+
+    Main.panel.addToStatusArea(indicatorId, statusIcon, 1,
+        settings.get_string('tray-pos'));
+
+    Util.connectSmart(settings, 'changed::tray-pos', statusIcon, () =>
+        addIconToPanel(statusIcon));
+}
+
+function getTrayIcons() {
+    return Object.values(Main.panel.statusArea).filter(
+        i => i instanceof IndicatorStatusTrayIcon);
+}
+
+function getAppIndicatorIcons() {
+    return Object.values(Main.panel.statusArea).filter(
+        i => i instanceof IndicatorStatusIcon);
+}
+
+var BaseStatusIcon = GObject.registerClass(
 class AppIndicatorsIndicatorBaseStatusIcon extends PanelMenu.Button {
     _init(menuAlignment, nameText, iconActor, dontCreateMenu) {
         super._init(menuAlignment, nameText, dontCreateMenu);
 
         const settings = SettingsManager.getDefaultGSettings();
         Util.connectSmart(settings, 'changed::icon-opacity', this, this._updateOpacity);
-        Util.connectSmart(settings, 'changed::tray-pos', this, this._showIfReady);
         this.connect('notify::hover', () => this._onHoverChanged());
+
+        if (!super._onDestroy)
+            this.connect('destroy', () => this._onDestroy());
 
         this._setIconActor(iconActor);
         this._showIfReady();
@@ -52,21 +88,36 @@ class AppIndicatorsIndicatorBaseStatusIcon extends PanelMenu.Button {
         if (!(icon instanceof Clutter.Actor))
             throw new Error(`${icon} is not a valid actor`);
 
-        if (!this._icon) {
-            const settings = SettingsManager.getDefaultGSettings();
-            Util.connectSmart(settings, 'changed::icon-saturation', this, this._updateSaturation);
-            Util.connectSmart(settings, 'changed::icon-brightness', this, this._updateBrightnessContrast);
-            Util.connectSmart(settings, 'changed::icon-contrast', this, this._updateBrightnessContrast);
-        } else if (this._icon !== icon) {
+        if (this._icon && this._icon !== icon)
             this._icon.destroy();
-        }
 
         this._icon = icon;
         this._updateEffects();
+        this._monitorIconEffects();
+
+        if (this._icon) {
+            const id = this._icon.connect('destroy', () => {
+                this._icon.disconnect(id);
+                this._icon = null;
+                this._monitorIconEffects();
+            });
+        }
+    }
+
+    _onDestroy() {
+        if (this._icon)
+            this._icon.destroy();
+
+        if (super._onDestroy)
+            super._onDestroy();
     }
 
     isReady() {
         throw new GObject.NotImplementedError('isReady() in %s'.format(this.constructor.name));
+    }
+
+    get icon() {
+        return this._icon;
     }
 
     get uniqueId() {
@@ -74,13 +125,7 @@ class AppIndicatorsIndicatorBaseStatusIcon extends PanelMenu.Button {
     }
 
     _showIfReady() {
-        if (!this.isReady())
-            return;
-
-        const indicatorId = `appindicator-${this.uniqueId}`;
-        Main.panel.statusArea[indicatorId] = null;
-        Main.panel.addToStatusArea(indicatorId, this, 1,
-            SettingsManager.getDefaultGSettings().get_string('tray-pos'));
+        this.visible = this.isReady();
     }
 
     _onHoverChanged() {
@@ -110,6 +155,32 @@ class AppIndicatorsIndicatorBaseStatusIcon extends PanelMenu.Button {
         if (this._icon) {
             this._updateSaturation();
             this._updateBrightnessContrast();
+        }
+    }
+
+    _monitorIconEffects() {
+        const settings = SettingsManager.getDefaultGSettings();
+        const monitoring = !!this._iconSaturationIds;
+
+        if (!this._icon && monitoring) {
+            Util.disconnectSmart(settings, this, this._iconSaturationIds);
+            delete this._iconSaturationIds;
+
+            Util.disconnectSmart(settings, this, this._iconBrightnessIds);
+            delete this._iconBrightnessIds;
+
+            Util.disconnectSmart(settings, this, this._iconContrastIds);
+            delete this._iconContrastIds;
+        } else if (this._icon && !monitoring) {
+            this._iconSaturationIds =
+                Util.connectSmart(settings, 'changed::icon-saturation', this,
+                    this._updateSaturation);
+            this._iconBrightnessIds =
+                Util.connectSmart(settings, 'changed::icon-brightness', this,
+                    this._updateBrightnessContrast);
+            this._iconContrastIds =
+                Util.connectSmart(settings, 'changed::icon-contrast', this,
+                    this._updateBrightnessContrast);
         }
     }
 
@@ -158,6 +229,10 @@ class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
             new AppIndicator.IconActor(indicator, Panel.PANEL_ICON_SIZE));
         this._indicator = indicator;
 
+        this._lastClickTime = -1;
+        this._lastClickX = -1;
+        this._lastClickY = -1;
+
         this._box = new St.BoxLayout({ style_class: 'panel-status-indicators-box' });
         this._box.add_style_class_name('appindicator-box');
         this.add_child(this._box);
@@ -174,15 +249,21 @@ class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
         });
         Util.connectSmart(this._indicator, 'accessible-name', this, () =>
             this.set_accessible_name(this._indicator.accessibleName));
+        Util.connectSmart(this._indicator, 'destroy', this, () => this.destroy());
 
-        this.connect('destroy', () => {
-            if (this._menuClient) {
-                this._menuClient.destroy();
-                this._menuClient = null;
-            }
-        });
+        this.connect('notify::visible', () => this._updateMenu());
 
         this._showIfReady();
+    }
+
+    _onDestroy() {
+        if (this._menuClient) {
+            this._menuClient.disconnect(this._menuReadyId);
+            this._menuClient.destroy();
+            this._menuClient = null;
+        }
+
+        super._onDestroy();
     }
 
     get uniqueId() {
@@ -218,20 +299,34 @@ class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
     }
 
     _updateStatus() {
+        const wasVisible = this.visible;
         this.visible = this._indicator.status !== AppIndicator.SNIStatus.PASSIVE;
+
+        if (this.visible !== wasVisible)
+            this._indicator.checkAlive().catch(logError);
     }
 
     _updateMenu() {
         if (this._menuClient) {
+            this._menuClient.disconnect(this._menuReadyId);
             this._menuClient.destroy();
             this._menuClient = null;
             this.menu.removeAll();
         }
 
-        if (this._indicator.menuPath) {
+        if (this.visible && this._indicator.menuPath) {
             this._menuClient = new DBusMenu.Client(this._indicator.busName,
-                this._indicator.menuPath);
-            this._menuClient.attachToMenu(this.menu);
+                this._indicator.menuPath, this._indicator);
+
+            if (this._menuClient.isReady)
+                this._menuClient.attachToMenu(this.menu);
+
+            this._menuReadyId = this._menuClient.connect('ready-changed', () => {
+                if (this._menuClient.isReady)
+                    this._menuClient.attachToMenu(this.menu);
+                else
+                    this._updateMenu();
+            });
         }
     }
 
@@ -242,22 +337,93 @@ class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
         this._updateLabel();
         this._updateStatus();
         this._updateMenu();
+    }
 
-        super._showIfReady();
+    _updateClickCount(buttonEvent) {
+        const { x, y, time } = buttonEvent;
+        const { doubleClickDistance, doubleClickTime } =
+            Clutter.Settings.get_default();
+
+        if (time > (this._lastClickTime + doubleClickTime) ||
+            (Math.abs(x - this._lastClickX) > doubleClickDistance) ||
+            (Math.abs(y - this._lastClickY) > doubleClickDistance))
+            this._clickCount = 0;
+
+        this._lastClickTime = time;
+        this._lastClickX = x;
+        this._lastClickY = y;
+
+        this._clickCount = (this._clickCount % 2) + 1;
+
+        return this._clickCount;
+    }
+
+    _maybeHandleDoubleClick(buttonEvent) {
+        if (this._indicator.supportsActivation === false)
+            return Clutter.EVENT_PROPAGATE;
+
+        if (buttonEvent.button !== Clutter.BUTTON_PRIMARY)
+            return Clutter.EVENT_PROPAGATE;
+
+        if (buttonEvent.click_count === 2 ||
+            (buttonEvent.click_count === undefined &&
+             this._updateClickCount(buttonEvent) === 2)) {
+            this._indicator.open(buttonEvent.x, buttonEvent.y, buttonEvent.time);
+            return Clutter.EVENT_STOP;
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+    }
+
+    vfunc_event(event) {
+        if (this.menu.numMenuItems && event.type() === Clutter.EventType.TOUCH_BEGIN)
+            this.menu.toggle();
+
+        return Clutter.EVENT_PROPAGATE;
     }
 
     vfunc_button_press_event(buttonEvent) {
+        if (this._waitDoubleClickId) {
+            GLib.source_remove(this._waitDoubleClickId);
+            this._waitDoubleClickId = 0;
+        }
+
         // if middle mouse button clicked send SecondaryActivate dbus event and do not show appindicator menu
-        if (buttonEvent.button === 2) {
-            Main.panel.menuManager._closeMenu(true, Main.panel.menuManager.activeMenu);
+        if (buttonEvent.button === Clutter.BUTTON_MIDDLE) {
+            if (Main.panel.menuManager.activeMenu)
+                Main.panel.menuManager._closeMenu(true, Main.panel.menuManager.activeMenu);
             this._indicator.secondaryActivate(buttonEvent.time, buttonEvent.x, buttonEvent.y);
             return Clutter.EVENT_STOP;
         }
 
-        if (buttonEvent.button === 1 && buttonEvent.click_count === 2) {
-            this._indicator.open(buttonEvent.x, buttonEvent.y);
-            return Clutter.EVENT_STOP;
+        if (buttonEvent.button === Clutter.BUTTON_SECONDARY) {
+            this.menu.toggle();
+            return Clutter.EVENT_PROPAGATE;
         }
+
+        const doubleClickHandled = this._maybeHandleDoubleClick(buttonEvent);
+        if (doubleClickHandled === Clutter.EVENT_PROPAGATE &&
+            buttonEvent.button === Clutter.BUTTON_PRIMARY &&
+            this.menu.numMenuItems) {
+            if (this._indicator.supportsActivation) {
+                const { doubleClickTime } = Clutter.Settings.get_default();
+                this._waitDoubleClickId = GLib.timeout_add(GLib.PRIORITY_DEFAULT,
+                    doubleClickTime, () => {
+                        this.menu.toggle();
+                        this._waitDoubleClickId = 0;
+                        return GLib.SOURCE_REMOVE;
+                    });
+            } else {
+                this.menu.toggle();
+            }
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+    }
+
+    vfunc_button_release_event(buttonEvent) {
+        if (!this._indicator.supportsActivation)
+            return this._maybeHandleDoubleClick(buttonEvent);
 
         return Clutter.EVENT_PROPAGATE;
     }
@@ -320,18 +486,22 @@ class AppIndicatorsIndicatorTrayIcon extends BaseStatusIcon {
         const settings = SettingsManager.getDefaultGSettings();
         Util.connectSmart(settings, 'changed::icon-size', this, this._updateIconSize);
 
-        // eslint-disable-next-line no-undef
         const themeContext = St.ThemeContext.get_for_stage(global.stage);
         Util.connectSmart(themeContext, 'notify::scale-factor', this, () =>
             this._updateIconSize());
 
         this._updateIconSize();
+    }
 
-        this.connect('destroy', () => {
-            Util.Logger.debug(`Destroying legacy tray icon ${this.uniqueId}`);
-            this._icon.destroy();
-            this._icon = null;
-        });
+    _onDestroy() {
+        Util.Logger.debug(`Destroying legacy tray icon ${this.uniqueId}`);
+
+        if (this._waitDoubleClickId) {
+            GLib.source_remove(this._waitDoubleClickId);
+            this._waitDoubleClickId = 0;
+        }
+
+        super._onDestroy();
     }
 
     isReady() {
@@ -413,8 +583,7 @@ class AppIndicatorsIndicatorTrayIcon extends BaseStatusIcon {
 
     _updateIconSize() {
         const settings = SettingsManager.getDefaultGSettings();
-        // eslint-disable-next-line no-undef
-        const { scale_factor: scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
+        const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
         let iconSize = settings.get_int('icon-size');
 
         if (iconSize <= 0)

@@ -40,6 +40,7 @@ PromiseUtils._promisify(GdkPixbuf.Pixbuf, 'new_from_stream_at_scale_async', 'new
 PromiseUtils._promisify(Gio.DBusProxy.prototype, 'init_async', 'init_finish');
 
 const MAX_UPDATE_FREQUENCY = 100; // In ms
+const NEEDED_PROPERTIES = ['Id', 'Menu'];
 
 // eslint-disable-next-line no-unused-vars
 const SNICategory = {
@@ -67,12 +68,27 @@ const SNIconType = {
  */
 var AppIndicator = class AppIndicatorsAppIndicator {
 
+    static interfaceInfo() {
+        if (!AppIndicator._interfaceInfo) {
+            AppIndicator._interfaceInfo = Gio.DBusInterfaceInfo.new_for_xml(
+                Interfaces.StatusNotifierItem);
+        }
+        return AppIndicator._interfaceInfo;
+    }
+
+    static destroy() {
+        delete AppIndicator._interfaceInfo;
+    }
+
     constructor(service, busName, object) {
+        print('service', typeof service, "=", service);
+        print('busName', typeof busName, "=", busName);
+        print('object', typeof object, "=", object);
         this.busName = busName;
-        this._uniqueId = busName + object;
+        this._uniqueId = Util.indicatorId(service, busName, object);
         this._accumulatedSignals = new Set();
 
-        const interfaceInfo = Gio.DBusInterfaceInfo.new_for_xml(Interfaces.StatusNotifierItem);
+        const interfaceInfo = AppIndicator.interfaceInfo();
 
         // HACK: we cannot use Gio.DBusProxy.makeProxyWrapper because we need
         //      to specify G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES
@@ -86,24 +102,37 @@ var AppIndicator = class AppIndicatorsAppIndicator {
 
         this._setupProxy();
         Util.connectSmart(this._proxy, 'g-properties-changed', this, this._onPropertiesChanged);
-        Util.connectSmart(this._proxy, 'g-signal', this, this._onProxySignal);
+        Util.connectSmart(this._proxy, 'g-signal', this, (...args) => this._onProxySignal(...args).catch(logError));
         Util.connectSmart(this._proxy, 'notify::g-name-owner', this, this._nameOwnerChanged);
 
-        if (service !== busName && service.match(Util.BUS_ADDRESS_REGEX)) {
-            this._uniqueId = service;
+        if (this.uniqueId === service) {
             this._nameWatcher = new Util.NameWatcher(service);
             Util.connectSmart(this._nameWatcher, 'changed', this, this._nameOwnerChanged);
         }
     }
 
     async _setupProxy() {
+        const cancellable = this._cancellable;
+
         try {
-            await this._proxy.init_async(GLib.PRIORITY_DEFAULT, this._cancellable);
+            this._proxy.set_cached_property('Status',
+                new GLib.Variant('s', SNIStatus.PASSIVE));
+            await this._proxy.init_async(GLib.PRIORITY_DEFAULT, cancellable);
+            this._setupProxyAsyncMethods();
             this._checkIfReady();
-            this._checkNeededProperties();
+            await this._checkNeededProperties();
         } catch (e) {
-            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
                 Util.Logger.warn(`While initalizing proxy for ${this._uniqueId}: ${e}`);
+                this.destroy();
+            }
+        }
+
+        try {
+            this._commandLine = await Util.getProcessName(this.busName,
+                cancellable, GLib.PRIORITY_LOW);
+        } catch (e) {
+            Util.Logger.debug(`${this._indicator.id}, failed getting command line: ${e.message}`);
         }
     }
 
@@ -130,28 +159,57 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         return false;
     }
 
+    _setupProxyAsyncMethods() {
+        Util.ensureProxyAsyncMethod(this._proxy, 'Activate');
+        Util.ensureProxyAsyncMethod(this._proxy, 'ContextMenu');
+        Util.ensureProxyAsyncMethod(this._proxy, 'Scroll');
+        Util.ensureProxyAsyncMethod(this._proxy, 'SecondaryActivate');
+        Util.ensureProxyAsyncMethod(this._proxy, 'ProvideXdgActivationToken');
+        Util.ensureProxyAsyncMethod(this._proxy, 'XAyatanaSecondaryActivate');
+    }
+
+    _resetNeededProperties() {
+        NEEDED_PROPERTIES.forEach(p =>
+            this._proxy.set_cached_property(p, null));
+    }
+
     async _checkNeededProperties() {
         if (this.id && this.menuPath)
             return true;
 
         const cancellable = this._cancellable;
-        for (let checks = 0; checks < 3 && !this.isReady; ++checks) {
+        for (let checks = 0; checks < 3; ++checks) {
             this._delayCheck = new PromiseUtils.TimeoutSecondsPromise(1,
                 GLib.PRIORITY_DEFAULT_IDLE, cancellable);
             // eslint-disable-next-line no-await-in-loop
             await this._delayCheck;
-            Util.refreshPropertyOnProxy(this._proxy, 'Id');
-            Util.refreshPropertyOnProxy(this._proxy, 'Menu');
+            // eslint-disable-next-line no-await-in-loop
+            await Promise.all(NEEDED_PROPERTIES.map(p =>
+                Util.refreshPropertyOnProxy(this._proxy, p)));
+
+            if (this.id && this.menuPath)
+                break;
         }
 
         return this.id && this.menuPath;
     }
 
-    _nameOwnerChanged() {
-        if (!this.hasNameOwner)
+    async _nameOwnerChanged() {
+        this._resetNeededProperties();
+
+        if (!this.hasNameOwner) {
+            Util.cancelRefreshPropertyOnProxy(this._proxy);
             this._checkIfReady();
-        else
-            this._checkNeededProperties();
+        } else {
+            try {
+                await this._checkNeededProperties();
+            } catch (e) {
+                if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
+                    Util.Logger.warn(`${this.uniqueId}, Impossible to get basic properties: ${e}`);
+                    this.checkAlive();
+                }
+            }
+        }
 
         this.emit('name-owner-changed');
     }
@@ -189,14 +247,18 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         }
     }
 
+    _signalToPropertyName(signal) {
+        if (signal.startsWith('New'))
+            return signal.substr(3);
+        else if (signal.startsWith('XAyatanaNew'))
+            return `XAyatana${signal.substr(11)}`;
+
+        return null;
+    }
+
     // The Author of the spec didn't like the PropertiesChanged signal, so he invented his own
     _translateNewSignals(signal) {
-        let prop = null;
-
-        if (signal.startsWith('New'))
-            prop = signal.substr(3);
-        else if (signal.startsWith('XAyatanaNew'))
-            prop = `XAyatana${signal.substr(11)}`;
+        const prop = this._signalToPropertyName(signal);
 
         if (!prop)
             return;
@@ -205,11 +267,21 @@ var AppIndicator = class AppIndicatorsAppIndicator {
             this._proxyPropertyList.includes(p)).forEach(p =>
             Util.refreshPropertyOnProxy(this._proxy, p, {
                 skipEqualityCheck: p.endsWith('Pixmap'),
-            }),
+            }).catch(e => logError(e)),
         );
     }
 
-    async _onProxySignal(_proxy, _sender, signal, _params) {
+    async _onProxySignal(_proxy, _sender, signal, params) {
+        const property = this._signalToPropertyName(signal);
+
+        if (property && !params.get_type().equal(GLib.VariantType.new('()'))) {
+            // If the property includes arguments, we can just emit the changes
+            // unless if a delayed change is already planned
+            const [value] = params.unpack();
+            await Util.queueProxyPropertyUpdate(this._proxy, property, value);
+            return;
+        }
+
         this._accumulatedSignals.add(signal);
 
         if (this._signalsAccumulator)
@@ -258,7 +330,7 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         if (this._proxy.Menu === '/NO_DBUSMENU')
             return null;
 
-        return this._proxy.Menu || '/MenuBar';
+        return this._proxy.Menu;
     }
 
     get attentionIcon() {
@@ -286,12 +358,56 @@ var AppIndicator = class AppIndicatorsAppIndicator {
     }
 
     get hasNameOwner() {
-        return !!this._proxy.g_name_owner ||
-            this._nameWatcher && this._nameWatcher.nameOnBus;
+        if (this._nameWatcher && !this._nameWatcher.nameOnBus)
+            return false;
+        return !!this._proxy.g_name_owner;
     }
 
     get cancellable() {
         return this._cancellable;
+    }
+
+    async checkAlive() {
+        // Some applications (hey electron!) just remove the indicator object
+        // from bus after hiding it, without closing its bus name, so we are
+        // not able to understand whe they're gone.
+        // Thus we just kill it when an expected well-known method is failing.
+        if (this.status !== SNIStatus.PASSIVE && this._checkIfReady()) {
+            if (this._checkAliveTimeout) {
+                this._checkAliveTimeout.cancel();
+                delete this._checkAliveTimeout;
+            }
+            return;
+        }
+
+        if (this._checkAliveTimeout)
+            return;
+
+        try {
+            const cancellable = this._cancellable;
+            this._checkAliveTimeout = new PromiseUtils.TimeoutSecondsPromise(10,
+                GLib.PRIORITY_DEFAULT_IDLE, cancellable);
+            Util.Logger.debug(`${this.uniqueId}: may not respond, checking...`);
+            await this._checkAliveTimeout;
+
+            // We should call the Ping method instead but in some containers
+            // such as snaps that's not accessible, so let's just use our own
+            await Util.getProxyProperty(this._proxy, 'Status', cancellable);
+        } catch (e) {
+            if (e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_OBJECT) ||
+                e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_INTERFACE) ||
+                e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_METHOD) ||
+                e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_PROPERTY)) {
+                Util.Logger.warn(`${this.uniqueId}: not on bus anymore, removing it`);
+                this.destroy();
+                return;
+            }
+
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e);
+        } finally {
+            delete this._checkAliveTimeout;
+        }
     }
 
     _onPropertiesChanged(_proxy, changed, _invalidated) {
@@ -341,6 +457,7 @@ var AppIndicator = class AppIndicatorsAppIndicator {
             // status updates may cause the indicator to be hidden
             if (property === 'Status') {
                 signalsToEmit.add('icon');
+                signalsToEmit.add('overlay-icon');
                 signalsToEmit.add('status');
                 signalsToEmit.add('accessible-name');
             }
@@ -366,47 +483,101 @@ var AppIndicator = class AppIndicatorsAppIndicator {
         delete this._nameWatcher;
     }
 
-    open(x, y) {
+    _getActivationToken(timestamp) {
+        const launchContext = global.create_app_launch_context(timestamp, -1);
+        const fakeAppInfo = Gio.AppInfo.create_from_commandline(
+            this._commandLine || 'true', this.id,
+            Gio.AppInfoCreateFlags.SUPPORTS_STARTUP_NOTIFICATION);
+        return [launchContext, launchContext.get_startup_notify_id(fakeAppInfo, [])];
+    }
+
+    async provideActivationToken(timestamp) {
+        if (this._hasProvideXdgActivationToken === false)
+            return;
+
+        const [launchContext, activationToken] = this._getActivationToken(timestamp);
+        try {
+            await this._proxy.ProvideXdgActivationTokenAsync(activationToken,
+                this._cancellable);
+            this._hasProvideXdgActivationToken = true;
+        } catch (e) {
+            launchContext.launch_failed(activationToken);
+
+            if (e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_METHOD))
+                this._hasProvideXdgActivationToken = false;
+            else
+                Util.Logger.warn(`${this.id}, failed to provide activation token: ${e.message}`);
+        }
+    }
+
+    async open(x, y, timestamp) {
+        const cancellable = this._cancellable;
         // we can't use WindowID because we're not able to get the x11 window id from a MetaWindow
         // nor can we call any X11 functions. Luckily, the Activate method usually works fine.
         // parameters are "an hint to the item where to show eventual windows" [sic]
         // ... and don't seem to have any effect.
-        this._proxy.ActivateRemote(x, y, this._cancellable, (_, e) => {
-            if (e && !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                Util.Logger.critical(`${this._indicator.id}, failed to activate: ${e.message}`);
-        });
-    }
 
-    secondaryActivate(timestamp, x, y) {
-        const cancellable = this._cancellable;
-
-        this._proxy.XAyatanaSecondaryActivateRemote(timestamp, cancellable, (_, e) => {
-            if (e && e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_METHOD)) {
-                this._proxy.SecondaryActivateRemote(x, y, cancellable, (_r, error) => {
-                    if (error && !error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                        Util.Logger.critical(`${this._indicator.id}, failed to secondary activate: ${e.message}`);
-                });
-            } else if (e && !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
-                Util.Logger.critical(`${this._indicator.id}, failed to secondary activate: ${e.message}`);
+        try {
+            await this.provideActivationToken(timestamp);
+            await this._proxy.ActivateAsync(x, y, cancellable);
+            this.supportsActivation = true;
+        } catch (e) {
+            if (e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_METHOD)) {
+                this.supportsActivation = false;
+                Util.Logger.warn(`${this.id}, does not support activation: ${e.message}`);
+                return;
             }
-        });
+
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                Util.Logger.critical(`${this.id}, failed to activate: ${e.message}`);
+        }
     }
 
-    scroll(dx, dy) {
+    async secondaryActivate(timestamp, x, y) {
         const cancellable = this._cancellable;
 
-        if (dx !== 0) {
-            this._proxy.ScrollRemote(Math.floor(dx), 'horizontal', cancellable, (_, e) => {
-                if (e && !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                    Util.Logger.critical(`${this._indicator.id}, failed to scroll horizontally: ${e.message}`);
-            });
-        }
+        try {
+            await this.provideActivationToken(timestamp);
 
-        if (dy !== 0) {
-            this._proxy.ScrollRemote(Math.floor(dy), 'vertical', cancellable, (_, e) => {
-                if (e && !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                    Util.Logger.critical(`${this._indicator.id}, failed to scroll vertically: ${e.message}`);
-            });
+            if (this._hasAyatanaSecondaryActivate !== false) {
+                try {
+                    await this._proxy.XAyatanaSecondaryActivateAsync(timestamp, cancellable);
+                    this._hasAyatanaSecondaryActivate = true;
+                } catch (e) {
+                    if (e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_METHOD))
+                        this._hasAyatanaSecondaryActivate = false;
+                    else
+                        throw e;
+                }
+            }
+
+            if (!this._hasAyatanaSecondaryActivate)
+                await this._proxy.SecondaryActivateAsync(x, y, cancellable);
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                Util.Logger.critical(`${this.id}, failed to secondary activate: ${e.message}`);
+        }
+    }
+
+    async scroll(dx, dy) {
+        const cancellable = this._cancellable;
+
+        try {
+            const actions = [];
+
+            if (dx !== 0) {
+                actions.push(this._proxy.ScrollAsync(Math.floor(dx),
+                    'horizontal', cancellable));
+            }
+
+            if (dy !== 0) {
+                actions.push(this._proxy.ScrollAsync(Math.floor(dy),
+                    'vertical', cancellable));
+            }
+
+            await Promise.all(actions);
+        } catch (e) {
+            Util.Logger.critical(`${this.id}, failed to scroll: ${e.message}`);
         }
     }
 };
@@ -427,7 +598,6 @@ class AppIndicatorsIconActor extends St.Icon {
         this.add_style_class_name('status-notifier-icon');
         this.set_style('padding:0');
 
-        // eslint-disable-next-line no-undef
         let themeContext = St.ThemeContext.get_for_stage(global.stage);
         this.height = iconSize * themeContext.scale_factor;
 
@@ -435,8 +605,9 @@ class AppIndicatorsIconActor extends St.Icon {
         this._customIcons   = new Map();
         this._iconSize      = iconSize;
         this._iconCache     = new IconCache.IconCache();
-        this._cancellable   = new Gio.Cancellable();
-        this._loadingIcons  = new Set();
+        this._loadingIcons  = {};
+
+        Object.values(SNIconType).forEach(t => (this._loadingIcons[t] = new Map()));
 
         Util.connectSmart(this._indicator, 'icon', this, this._updateIcon);
         Util.connectSmart(this._indicator, 'overlay-icon', this, this._updateOverlayIcon);
@@ -469,7 +640,7 @@ class AppIndicatorsIconActor extends St.Icon {
 
         this.connect('destroy', () => {
             this._iconCache.destroy();
-            this._cancellable.cancel();
+            this._cancelLoading();
         });
     }
 
@@ -479,47 +650,74 @@ class AppIndicatorsIconActor extends St.Icon {
     }
 
     _cancelLoading() {
-        if (this._loadingIcons.size > 0) {
-            this._cancellable.cancel();
-            this._cancellable = new Gio.Cancellable();
-            this._loadingIcons.clear();
+        Object.values(SNIconType).forEach(iconType => this._cancelLoadingByType(iconType));
+    }
+
+    _cancelLoadingByType(iconType) {
+        this._loadingIcons[iconType].forEach(c => c.cancel());
+        this._loadingIcons[iconType].clear();
+    }
+
+    _ensureNoIconIsLoading(iconType, id) {
+        if (this._loadingIcons[iconType].has(id)) {
+            Util.Logger.debug(`${this._indicator.id}, Icon ${id} Is still loading, ignoring the request`);
+            throw new GLib.Error(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING,
+                'Already in progress');
+        } else if (this._loadingIcons[iconType].size > 0) {
+            throw new GLib.Error(Gio.IOErrorEnum, Gio.IOErrorEnum.EXISTS,
+                'Another icon is already loading');
         }
+    }
+
+    _getIconLoadingCancellable(iconType, loadingId) {
+        try {
+            this._ensureNoIconIsLoading(iconType, loadingId);
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.EXISTS))
+                throw e;
+            this._cancelLoadingByType(iconType);
+        }
+
+        const cancellable = new Gio.Cancellable();
+        this._loadingIcons[iconType].set(loadingId, cancellable);
+
+        return cancellable;
+    }
+
+    _cleanupIconLoadingCancellable(iconType, loadingId) {
+        this._loadingIcons[iconType].delete(loadingId);
     }
 
     // Will look the icon up in the cache, if it's found
     // it will return it. Otherwise, it will create it and cache it.
-    async _cacheOrCreateIconByName(iconSize, iconName, themePath) {
-        // eslint-disable-next-line no-undef
-        let { scale_factor: scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
-        let id = `${iconName}@${iconSize * scaleFactor}${themePath || ''}`;
+    async _cacheOrCreateIconByName(iconType, iconSize, iconName, themePath) {
+        let { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
+        const id = `${iconType}:${iconName}@${iconSize * scaleFactor}:${themePath || ''}`;
         let gicon = this._iconCache.get(id);
 
         if (gicon)
             return gicon;
 
-        if (this._loadingIcons.has(id)) {
-            Util.Logger.debug(`${this._indicator.id}, Icon ${id} Is still loading, ignoring the request`);
-            throw new GLib.Error(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING,
-                'Already in progress');
-        } else {
-            this._cancelLoading();
-        }
+        const path = this._getIconInfo(iconName, themePath, iconSize, scaleFactor);
+        const loadingId = path || id;
 
-        this._loadingIcons.add(id);
-        let path = this._getIconInfo(iconName, themePath, iconSize, scaleFactor);
-        gicon = await this._createIconByName(path);
-        this._loadingIcons.delete(id);
+        const cancellable = await this._getIconLoadingCancellable(iconType, id);
+        try {
+            gicon = await this._createIconByName(path, cancellable);
+        } finally {
+            this._cleanupIconLoadingCancellable(iconType, loadingId);
+        }
         if (gicon)
             gicon = this._iconCache.add(id, gicon);
         return gicon;
     }
 
-    async _createIconByPath(path, width, height) {
+    async _createIconByPath(path, width, height, cancellable) {
         let file = Gio.File.new_for_path(path);
         try {
-            const inputStream = await file.read_async(GLib.PRIORITY_DEFAULT, this._cancellable);
+            const inputStream = await file.read_async(GLib.PRIORITY_DEFAULT, cancellable);
             const pixbuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(inputStream,
-                height, width, true, this._cancellable);
+                height, width, true, cancellable);
             this.icon_size = width > 0 ? width : this._iconSize;
             return pixbuf;
         } catch (e) {
@@ -529,7 +727,7 @@ class AppIndicatorsIconActor extends St.Icon {
         }
     }
 
-    async _createIconByName(path) {
+    async _createIconByName(path, cancellable) {
         if (!path) {
             if (this._createIconIdle) {
                 throw new GLib.Error(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING,
@@ -538,7 +736,7 @@ class AppIndicatorsIconActor extends St.Icon {
 
             try {
                 this._createIconIdle = new PromiseUtils.IdlePromise(GLib.PRIORITY_DEFAULT_IDLE,
-                    this._cancellable);
+                    cancellable);
                 await this._createIconIdle;
             } catch (e) {
                 if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
@@ -555,7 +753,7 @@ class AppIndicatorsIconActor extends St.Icon {
 
         try {
             const [format, width, height] = await GdkPixbuf.Pixbuf.get_file_info_async(
-                path, this._cancellable);
+                path, cancellable);
 
             if (!format) {
                 Util.Logger.critical(`${this._indicator.id}, Invalid image format: ${path}`);
@@ -658,9 +856,8 @@ class AppIndicatorsIconActor extends St.Icon {
         return dest;
     }
 
-    async _createIconFromPixmap(iconSize, iconPixmapArray) {
-        // eslint-disable-next-line no-undef
-        const { scale_factor: scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
+    async _createIconFromPixmap(iconType, iconSize, iconPixmapArray) {
+        const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
         iconSize *= scaleFactor;
         // the pixmap actually is an array of pixmaps with different sizes
         // we use the one that is smaller or equal the iconSize
@@ -688,20 +885,11 @@ class AppIndicatorsIconActor extends St.Icon {
         const rowStride = width * 4; // hopefully this is correct
 
         const id = `__PIXMAP_ICON_${width}x${height}`;
-        if (this._loadingIcons.has(id)) {
-            Util.Logger.debug(`${this._indicator.id}, Pixmap ${width}x${height} ` +
-                'Is still loading, ignoring the request');
-            throw new GLib.Error(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING,
-                'Already in progress');
-        } else {
-            this._cancelLoading();
-        }
 
-        this._loadingIcons.add(id);
-
+        const cancellable = this._getIconLoadingCancellable(iconType, id);
         try {
             return GdkPixbuf.Pixbuf.new_from_bytes(
-                await this.argbToRgba(bytes, this._cancellable),
+                await this.argbToRgba(bytes, cancellable),
                 GdkPixbuf.Colorspace.RGB, true,
                 8, width, height, rowStride);
         } catch (e) {
@@ -710,7 +898,7 @@ class AppIndicatorsIconActor extends St.Icon {
                 Util.Logger.warn(`${this._indicator.id}, Impossible to create image from data: ${e}`);
             throw e;
         } finally {
-            this._loadingIcons.delete(id);
+            this._cleanupIconLoadingCancellable(iconType, id);
         }
     }
 
@@ -729,7 +917,6 @@ class AppIndicatorsIconActor extends St.Icon {
                 this.set_icon_size(iconSize);
             } else {
                 this.gicon = null;
-                Util.Logger.critical(`unable to update icon for ${this._indicator.id}`);
             }
         } else if (gicon) {
             this._emblem = new Gio.Emblem({ icon: gicon });
@@ -738,7 +925,6 @@ class AppIndicatorsIconActor extends St.Icon {
                 gicon.inUse = true;
         } else {
             this._emblem = null;
-            Util.Logger.debug(`unable to update icon emblem for ${this._indicator.id}`);
         }
 
         if (this.gicon) {
@@ -765,51 +951,72 @@ class AppIndicatorsIconActor extends St.Icon {
         }
 
         const [name, pixmap, theme] = icon;
-        let gicon = null;
         const commonArgs = [theme, iconType, iconSize];
 
         if (this._customIcons.size) {
             let customIcon = this._customIcons.get(iconType);
-            gicon = await this._createIcon(customIcon, null, ...commonArgs);
-
-            if (!gicon) {
-                customIcon = this._customIcons.get(SNIconType.NORMAL);
-                gicon = await this._createIcon(customIcon, null, ...commonArgs);
+            if (!await this._createAndSetIcon(customIcon, null, ...commonArgs)) {
+                if (iconType !== SNIconType.OVERLAY) {
+                    customIcon = this._customIcons.get(SNIconType.NORMAL);
+                    this._createAndSetIcon(customIcon, null, ...commonArgs);
+                }
             }
         } else {
-            gicon = await this._createIcon(name, pixmap, ...commonArgs);
+            this._createAndSetIcon(name, pixmap, ...commonArgs);
+        }
+    }
+
+    async _createAndSetIcon(name, pixmap, theme, iconType, iconSize) {
+        let gicon = null;
+
+        try {
+            gicon = await this._createIcon(name, pixmap, theme, iconType, iconSize);
+        } catch (e) {
+            if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED) ||
+                e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING)) {
+                Util.Logger.debug(`${this._indicator.id}, Impossible to load icon: ${e}`);
+                return null;
+            }
+
+            if (iconType === SNIconType.OVERLAY)
+                logError(e, `unable to update icon emblem for ${this._indicator.id}`);
+            else
+                logError(e, `unable to update icon for ${this._indicator.id}`);
         }
 
         try {
             this._setGicon(iconType, gicon, iconSize);
+            return gicon;
         } catch (e) {
             logError(e, 'Setting GIcon failed');
+            return null;
         }
     }
 
     // updates the base icon
     async _createIcon(name, pixmap, theme, iconType, iconSize) {
-        try {
-            if (name) {
-                const gicon = await this._cacheOrCreateIconByName(iconSize, name, theme);
-                if (gicon)
-                    return gicon;
-            }
+        // From now on we consider them the same thing, as one replaces the other
+        if (iconType === SNIconType.ATTENTION)
+            iconType = SNIconType.NORMAL;
 
-            if (pixmap && pixmap.length)
-                return this._createIconFromPixmap(iconSize, pixmap, iconType);
-        } catch (e) {
-            /* We handle the error messages already */
-            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED) &&
-                !e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.PENDING))
-                Util.Logger.debug(`${this._indicator.id}, Impossible to load icon: ${e}`);
+        if (name) {
+            const gicon = await this._cacheOrCreateIconByName(
+                iconType, iconSize, name, theme);
+            if (gicon)
+                return gicon;
         }
+
+        if (pixmap && pixmap.length)
+            return this._createIconFromPixmap(iconType, iconSize, pixmap);
 
         return null;
     }
 
     // updates the base icon
     async _updateIcon() {
+        if (this._indicator.status === SNIStatus.PASSIVE)
+            return;
+
         if (this.gicon instanceof Gio.EmblemedIcon) {
             let { gicon } = this.gicon;
 
@@ -833,6 +1040,9 @@ class AppIndicatorsIconActor extends St.Icon {
     }
 
     async _updateOverlayIcon() {
+        if (this._indicator.status === SNIStatus.PASSIVE)
+            return;
+
         if (this._emblem) {
             let { icon } = this._emblem;
 
@@ -859,7 +1069,7 @@ class AppIndicatorsIconActor extends St.Icon {
         this._iconCache.clear();
         this._cancelLoading();
 
-        this._updateIcon();
+        this._updateIcon().catch(e => logError(e));
         this._updateOverlayIcon();
     }
 
