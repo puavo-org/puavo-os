@@ -796,9 +796,9 @@ class packages {
 		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
-    '5.10.0-20-amd64':
+    '5.10.0-21-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-5.10.0-20-amd64';
+      package_name => 'linux-image-5.10.0-21-amd64';
 
     # XXX The $r8168_module works with 5.18 but the version
     # XXX in backports (in 2022-10-24) does not work with 5.19.
