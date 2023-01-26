@@ -1863,9 +1863,6 @@ var MyShowAppsIconMenu = class extends PopupMenu.PopupMenu {
             Me.settings.set_boolean('taskbar-locked', !Me.settings.get_boolean('taskbar-locked'));
         });
 
-        let settingsMenuItem = this._appendMenuItem(_('Dash to Panel Settings'));
-        settingsMenuItem.connect('activate', () => ExtensionUtils.openPrefs())
-
         if(this.sourceActor == Main.layoutManager.dummyCursor) {
             this._appendSeparator();
             let item = this._appendMenuItem(this._dtpPanel._restoreWindowList ? _('Restore Windows') : _('Show Desktop'));
