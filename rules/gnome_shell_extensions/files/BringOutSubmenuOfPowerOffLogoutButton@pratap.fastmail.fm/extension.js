@@ -18,223 +18,273 @@
 
 /* exported init */
 
-'use strict';
-
-const { GObject, Shell, St } = imports.gi;
+const {
+    GObject, St, GLib, Clutter, Gio,
+} = imports.gi;
 
 const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
+const Target = Main.panel.statusArea.quickSettings._system._systemItem.child;
+const {QuickSettingsItem} = imports.ui.quickSettings;
 const SystemActions = imports.misc.systemActions;
+const BindFlags = GObject.BindingFlags.DEFAULT | GObject.BindingFlags.SYNC_CREATE;
 const ExtensionUtils = imports.misc.extensionUtils;
-const System = Main.panel.statusArea.aggregateMenu._system;
-const SystemMenu = System.menu;
+const Me = ExtensionUtils.getCurrentExtension();
+const iconsPath = Me.dir.get_child('icons').get_path();
 
-const GnomeSession = imports.misc.gnomeSession;
-let SessionManager = null;
+const SUSPEND = 'suspend';
+const HYBRID_SLEEP = 'hybrid_sleep';
+const HIBERNATE = 'hibernate';
+const SWITCH_USER = 'switch_user';
+const LOGOUT = 'logout';
+const RESTART = 'restart';
+const POWEROFF = 'poweroff';
 
-const Config = imports.misc.config;
-const SHELL_MAJOR_VERSION = parseInt(Config.PACKAGE_VERSION.split('.')[0]);
-
-let DefaultActions;
-
-var _bringOut = new GObject.registerClass(
-class BringOutSubmenu extends PanelMenu.SystemIndicator {
-
-_init() {
-	DefaultActions = new SystemActions.getDefault();
-	this._settings = ExtensionUtils.getSettings();
-	
-	SystemMenu.actor.remove_child(System._sessionSubMenu);
-	
-	this._createMenu();
-	this._connectSettings();
-	this._takeAction();
-	
-	SystemMenu.connect('open-state-changed', (menu, open) => {
-		if(!open)
-		return;
-		DefaultActions._sessionUpdated();
-		DefaultActions.forceUpdate();
-	});
-    	}
-
-_createMenu() {
-	let bindFlags = GObject.BindingFlags.DEFAULT | GObject.BindingFlags.SYNC_CREATE;
-	let boolean;
-	
-	// Suspend
-
-	this._suspend = new PopupMenu.PopupImageMenuItem(_('Suspend'), 'media-playback-pause-symbolic');
-	this._suspend.connect('activate', () => {
-	DefaultActions.activateSuspend();
-	});
-	
-	boolean = this._settings.get_boolean('remove-suspend-button');
-	
-	if(!boolean) {
-        SystemMenu.addMenuItem(this._suspend);
-	DefaultActions.bind_property('can-suspend', this._suspend, 'visible', bindFlags); }
-	
-				
-	// Restart
-
-	this._restart = new PopupMenu.PopupImageMenuItem(_('Restart…'), 'system-reboot-symbolic');
-	this._restart.connect('activate', () => {
-	SHELL_MAJOR_VERSION >= 40 ? DefaultActions.activateRestart() : SessionManager.RebootRemote();
-        });
-	
-	boolean = this._settings.get_boolean('remove-restart-button');
-	
-	if(!boolean) {
-        SystemMenu.addMenuItem(this._restart);
-	SHELL_MAJOR_VERSION >=40 ? DefaultActions.bind_property('can-restart', this._restart, 'visible', bindFlags) :
-        				DefaultActions.bind_property('can-power-off', this._restart, 'visible', bindFlags) }
-				
-	// Power
-
-	this._power = new PopupMenu.PopupImageMenuItem(_('Power Off…'), 'system-shutdown-symbolic');
-	this._power.connect('activate', () => { DefaultActions.activatePowerOff(); });
-	
-	boolean = this._settings.get_boolean('remove-power-button');
-	
-	if(!boolean) {
-        SystemMenu.addMenuItem(this._power);
-	DefaultActions.bind_property('can-power-off', this._power, 'visible', bindFlags); }
-	
-	// Logout
-
-	this._logout = new PopupMenu.PopupImageMenuItem(_('Log Out'), 'system-log-out-symbolic');
-	this._logout.connect('activate', () => { DefaultActions.activateLogout(); });
-	
-	boolean = this._settings.get_boolean('remove-logout-button');
-	
-	if(!boolean) {
-        SystemMenu.addMenuItem(this._logout);
-	DefaultActions.bind_property('can-logout', this._logout, 'visible', bindFlags); }
-	
-	// Switch User
-
-	this._switchUser = new PopupMenu.PopupImageMenuItem(_('Switch User…'), 'system-switch-user-symbolic');
-	SystemMenu.addMenuItem(this._switchUser)
-	this._switchUser.connect('activate', () => { DefaultActions.activatSwitchUser(); });
-	DefaultActions.bind_property('can-switch-user', this._switchUser, 'visible', bindFlags);
-	
-	// Separators
-	
-	this._separator1 = new PopupMenu.PopupSeparatorMenuItem;
-	this._separator2 = new PopupMenu.PopupSeparatorMenuItem;
-
-	SystemMenu.addMenuItem(this._separator1);
-	SystemMenu.addMenuItem(this._separator2);
-	
-	// Main Course
-	
-	this._getAvailableButtons();
-	
-	DefaultActions._sessionUpdated();
-	DefaultActions.forceUpdate();	
-
-	}
-	
-_getAvailableButtons() {
-			let BUTTONS_ORDER = this._settings.get_value('buttons-order').deepUnpack();
-		   	
-		   	const initialArray = [
-				System._orientationLockItem,
-				System._settingsItem,
-				System._lockScreenItem,
-				this._suspend,
-				this._switchUser,
-				this._logout,
-				this._restart,
-				this._power,
-				this._separator1,
-				this._separator2
-			    	]
-				    	
-			const orderedArray = BUTTONS_ORDER.map((idx) => initialArray[idx - 1]);
-			
-			const filterdArray = orderedArray.filter(obj => obj !== null);
-			
-			for (let i = 0; i < filterdArray.length; i++) {
-			SystemMenu.moveMenuItem((filterdArray[i]), i);
-			}
-	}
-	
-_connectSettings() {
-        this.removeSuspendButtonChanged = this._settings.connect('changed::remove-suspend-button', this._takeAction.bind(this));
-        this.removeRestartButtonChanged = this._settings.connect('changed::remove-restart-button', this._takeAction.bind(this));
-        this.removePoweroffButtonChanged = this._settings.connect('changed::remove-power-button', this._takeAction.bind(this));
-        this.removeLogoutButtonChanged = this._settings.connect('changed::remove-logout-button', this._takeAction.bind(this));
-        this.buttonsOrderChanged = this._settings.connect('changed::buttons-order', this._takeAction.bind(this));
-	}
-
-_onDestroy() {
-	
-	if(this.removeSuspendButtonChanged) {
-        this._settings.disconnect(this.removeSuspendButtonChanged);
-        this.removeSuspendButtonChanged = 0;
-        }
-
-        if(this.removeRestartButtonChanged) {
-        this._settings.disconnect(this.removeRestartButtonChanged);
-        this.removeRestartButtonChanged = 0;
-        }
-        
-        if(this.removePoweroffButtonChanged) {
-        this._settings.disconnect(this.removePoweroffButtonChanged);
-        this.removePoweroffButtonChanged = 0;
-        }
-        
-	if(this.removeLogoutButtonChanged) {
-        this._settings.disconnect(this.removeLogoutButtonChanged);
-        this.removeLogoutButtonChanged = 0;
-        }
-        
-        if(this.buttonsOrderChanged) {
-        this._settings.disconnect(this.buttonsOrderChanged);
-        this.buttonsOrderChanged = 0;
-        }
-	}
-	
-_removeActors() {
-	SystemMenu.box.remove_actor(this._separator1);
-	SystemMenu.box.remove_actor(this._separator2);
-	SystemMenu.box.remove_actor(this._suspend);
-	SystemMenu.box.remove_actor(this._restart);
-	SystemMenu.box.remove_actor(this._power);
-	SystemMenu.box.remove_actor(this._logout);
-	SystemMenu.box.remove_actor(this._switchUser);
-	}
-	
-_takeAction() {
-	this._removeActors();
-	this._createMenu();
-	}
-});
-
-function init() {
+/**
+ *
+ * @param {string} input - HybridSleep/Hibernate
+ */
+function hybridSleepOrHibernate(input) {
+    const LoginManager = imports.misc.loginManager.getLoginManager();
+    if (LoginManager._proxy)
+        LoginManager._proxy.call(input, GLib.Variant.new('(b)', [true]), Gio.DBusCallFlags.NONE, -1, null, null);
 }
+
+let items;
+let keys;
+
+const LabelLauncher = new GObject.registerClass(
+    class LabelLauncher extends St.Widget {
+        _init() {
+            this.label = new St.Label({style_class: 'dash-label'});
+            this.label.hide();
+            Main.layoutManager.addTopChrome(this.label);
+        }
+
+        showLabel(button) {
+            this.label.set_text(button.accessible_name);
+            this.label.opacity = 0;
+            this.label.show();
+
+            const center = button.get_transformed_position();
+            const x = center[0] - 20;
+            const y = 10;
+
+            this.label.set_position(x, y);
+            this.label.ease({
+                opacity: 255,
+                duration: 100,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            });
+        }
+
+        hideLabel() {
+            this.label.ease({
+                opacity: 0,
+                duration: 500,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => this.label.hide(),
+            });
+        }
+    }
+);
+
+const SyncLabel = GObject.registerClass(
+    class SyncLabel extends QuickSettingsItem {
+        _init(item) {
+            this.item = item;
+            this.item._showLabelTimeoutId = 0;
+            this.item._resetHoverTimeoutId = 0;
+            this.item._labelShowing = false;
+            this.toolTip = new LabelLauncher();
+            this.toolTip.child = this.item;
+        }
+
+        _syncLabel() {
+            if (this.toolTip.child.hover) {
+                if (this.item._showLabelTimeoutId === 0) {
+                    const timeout = this.item._labelShowing ? 0 : 100;
+                    this.item._showLabelTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, timeout,
+                        () => {
+                            this.item._labelShowing = true;
+                            this.toolTip.showLabel(this.item);
+                            this.item._showLabelTimeoutId = 0;
+                            return GLib.SOURCE_REMOVE;
+                        });
+                    GLib.Source.set_name_by_id(this._showLabelTimeoutId, '[gnome-shell this.toolTip.showLabel');
+                    if (this.item._resetHoverTimeoutId > 0) {
+                        GLib.source_remove(this.item._resetHoverTimeoutId);
+                        this.item._resetHoverTimeoutId = 0;
+                    }
+                }
+            } else {
+                if (this.item._showLabelTimeoutId > 0)
+                    GLib.source_remove(this.item._showLabelTimeoutId);
+                this.item._showLabelTimeoutId = 0;
+                this.toolTip.hideLabel();
+                if (this.item._labelShowing) {
+                    this.item._resetHoverTimeoutId = GLib.timeout_add(
+                        GLib.PRIORITY_DEFAULT, 100,
+                        () => {
+                            this.item._labelShowing = false;
+                            this.item._resetHoverTimeoutId = 0;
+                            return GLib.SOURCE_REMOVE;
+                        }
+                    );
+                    GLib.Source.set_name_by_id(this.item._resetHoverTimeoutId, '[gnome-shell] this.item._labelShowing');
+                }
+            }
+        }
+    });
+
+const CreateItem = GObject.registerClass(
+    class CreateItem extends QuickSettingsItem {
+        _init(ICON_NAME, ACCESSIBLE_NAME, ACTION, KEY = null, BINDING_ID = null) {
+            super._init({
+                style_class: 'icon-button',
+                can_focus: true,
+                track_hover: true,
+                child: ICON_NAME.startsWith('bosm-') ? new St.Icon({gicon: Gio.icon_new_for_string(`${iconsPath}/${ICON_NAME}`)}) : new St.Icon({icon_name: ICON_NAME}),
+                accessible_name: ACCESSIBLE_NAME,
+            });
+
+            const TakeAction = new SystemActions.getDefault();
+
+            this.connect('clicked', () => {
+                switch (ACTION) {
+                case SUSPEND:
+                    TakeAction.activateSuspend();
+                    break;
+                case HYBRID_SLEEP:
+                    hybridSleepOrHibernate('HybridSleep');
+                    break;
+                case HIBERNATE:
+                    hybridSleepOrHibernate('Hibernate');
+                    break;
+                case SWITCH_USER:
+                    TakeAction.activateSwitchUser();
+                    break;
+                case LOGOUT:
+                    TakeAction.activateLogout();
+                    break;
+                case RESTART:
+                    TakeAction.activateRestart();
+                    break;
+                case POWEROFF:
+                    TakeAction.activatePowerOff();
+                    break;
+                }
+
+                Main.panel.closeQuickSettings();
+            });
+
+            if (BINDING_ID)
+                TakeAction.bind_property(BINDING_ID, this, 'visible', BindFlags);
+
+            const callSync = new SyncLabel(this);
+            this.connect('notify::hover', () => {
+                callSync._syncLabel();
+            });
+
+            items.push(this);
+            keys.push(KEY);
+        }
+    }
+);
+
+let removed = Target.get_children()[6];
+
+const BringOutExtension = new GObject.registerClass(
+    class BringOutExtension extends QuickSettingsItem {
+        _init() {
+            Target.remove_child(removed);
+            this._settings = ExtensionUtils.getSettings();
+            this._createMenu();
+            this._connectSettings();
+        }
+
+        _createMenu() {
+            items = [];
+            keys = [];
+            this._suspendItem = new CreateItem('media-playback-pause-symbolic', 'Suspend', SUSPEND, 'remove-suspend-button', 'can-suspend');
+            this._hybridSleepItem = new CreateItem('bosm-hybrid-sleep-symbolic.svg', 'Hybrid Sleep', HYBRID_SLEEP, 'remove-hybrid-sleep-button');
+            this._hibernateItem = new CreateItem('bosm-hibernate-symbolic.svg', 'Hibernate', HIBERNATE, 'remove-hibernate-button');
+            this._switchUserItem = new CreateItem('system-switch-user-symbolic', 'Switch User…', SWITCH_USER, null, 'can-switch-user');
+            this._logoutItem = new CreateItem('system-log-out-symbolic', 'Log Out…', LOGOUT, 'remove-logout-button', 'can-logout');
+            this._restartItem = new CreateItem('system-reboot-symbolic', 'Restart…', RESTART, 'remove-restart-button', 'can-restart');
+            this._powerItem = new CreateItem('system-shutdown-symbolic', 'Power Off…', POWEROFF, 'remove-power-button', 'can-power-off');
+
+            items.forEach((item, index) => {
+                let boolean;
+                let key = keys[index];
+                if (key) {
+                    boolean = this._settings.get_boolean(key);
+                    if (!boolean)
+                        Target.add(item);
+                } else {
+                    Target.add(item);
+                }
+            });
+        }
+
+        _connectSettings() {
+            items.forEach((item, index) => {
+                let key = keys[index];
+                if (key)
+                    item._buttonShowHide = this._settings.connect(`changed::${key}`, this._settingsChanged.bind(this));
+            });
+        }
+
+        _settingsChanged() {
+            items.forEach(item => {
+                if (item)
+                    Target.remove_child(item);
+            });
+            this._createMenu();
+        }
+
+        _destroy() {
+            items.forEach(item => {
+                if (item._resetHoverTimeoutId) {
+                    GLib.source_remove(item._resetHoverTimeoutId);
+                    item._resetHoverTimeoutId = null;
+                }
+
+                if (item._showLabelTimeoutId) {
+                    GLib.source_remove(item._showLabelTimeoutId);
+                    item._showLabelTimeoutId = null;
+                }
+
+                if (item._buttonShowHide)
+                    this._settings.disconnect(item._buttonShowHide);
+
+                item.destroy();
+                item = null;
+            });
+
+            Target.add_child(removed);
+            items = [];
+            keys = [];
+        }
+    }
+);
 
 let modifiedMenu;
 
-function enable() {
-SessionManager = GnomeSession.SessionManager();
-modifiedMenu = new _bringOut();
+class Extension {
+    enable() {
+        modifiedMenu = new BringOutExtension();
+    }
+
+    disable() {
+        modifiedMenu._destroy();
+        modifiedMenu.destroy();
+        modifiedMenu = null;
+    }
 }
 
-function disable() {
-	if(SessionManager) {
-	SessionManager = null;
-	}
-	
-	modifiedMenu._removeActors();
-	modifiedMenu._onDestroy();
-	modifiedMenu = null;
-	
-	SystemMenu.moveMenuItem(System._orientationLockItem, 0);		
-	SystemMenu.moveMenuItem(System._settingsItem, 1);
-	SystemMenu.moveMenuItem(System._lockScreenItem, 2);
-	SystemMenu.actor.insert_child_at_index(System._sessionSubMenu, SystemMenu.numMenuItems);
+/**
+ *
+ */
+function init() {
+    return new Extension();
 }
