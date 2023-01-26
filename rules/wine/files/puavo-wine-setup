@@ -21,17 +21,12 @@ produce_tahoma() {
   fi
   if ! md5sum /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf | grep -q 'f59457d7ce48dd38a0c8aee8afc6f91a'; then
     echo "Not a known source font file, doing nothing."
-    return 0;
+    return 0
   fi
 
-  patchfile=$(mktemp /tmp/puavo-wine-setup-tahoma.XXXXXX) || return 1
-
   echo -n "1sPEAAUCHWZlaWtraXRhaG9tYS50dGYvL3RhaG9tYS50dGYvBa6aVABkrppFAy8mBH0FhjMT/Td6WFoAAAD/EtlBAgAhAQwAAACPmEGcAQASVABhAGgAbwBtAGEAAFRhaG9tYQr9N3pYWgAAAP8S2UECACEBDAAAAI+YQZwBAAkTqbcKARMThOMoAKm3LA==" \
-    | base64 --decode > "$patchfile"
-  xdelta3 -d -c -s /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf "$patchfile" > "$TAHOMAPATH"
-
-  rm -f "$patchfile"
-
+    | base64 --decode | xdelta3 -d -c -s /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf /dev/stdin > "${TAHOMAPATH}.tmp"
+  mv "${TAHOMAPATH}.tmp" "${TAHOMAPATH}"
 }
 
 setup_d_drive() {
