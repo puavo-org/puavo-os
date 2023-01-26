@@ -2,9 +2,12 @@
   <img src="/media/design/svg/D2P_logo.svg" width="620"/>
 </p>
 <p align="left">
-    <img src="/media/design/svg/GitHub_logo.svg" width="120" style="margin-left: 4px"/>
-    <a href="https://extensions.gnome.org/extension/1160/dash-to-panel/" >
+    <img src="/media/design/svg/GitHub_logo.svg" width="120"/>&nbsp;
+    <a href="https://extensions.gnome.org/extension/1160/dash-to-panel/" style="margin-left: 20px">
         <img src="/media/design/svg/Gnome_logo.svg" width="120px"/>
+    </a>&nbsp;
+    <a href="https://www.paypal.com/donate/?hosted_button_id=5DCVELP7BSAVQ">
+        <img src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" />
     </a>
 </p>
 
@@ -100,7 +103,7 @@ Beyond that, just about every aspect of the panel is fully customizable. From po
 **To install the most recent official release:
 [Visit Dash-to-Panel at GNOME Extensions](https://extensions.gnome.org/extension/1160/dash-to-panel/)**
 
-To install a development version from source, please see the [Installation wiki page](https://github.com/jderose9/dash-to-panel/wiki/Installation).
+To install a development version from source, please see the [Installation wiki page](https://github.com/home-sweet-gnome/dash-to-panel/wiki/Installation).
 
 ## 
 ### FAQ
@@ -133,17 +136,10 @@ This extension has been tested with Gnome 3.18+.
 
 This extension manipulates the Gnome Main Panel, aka Top Bar. So, most other extensions which operate on the top bar should be compatible.
 
-## 
-### Donation
-
-Dash-to-Panel is provided free of charge. If it has improved your workflow, or you had a great support experience, feel free to say thanks by making a donation to the developers. (If you would like your donation to go to a specific developer, you may mention it in the note field during payment)
-
-[![Donate via Paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Y5PBB2CRJ6F2W&source=url)
-
 ##
 ### Volunteers needed!
 
-This extension could be even better with your help! Any items in the issue tracker labelled `help wanted` or `good first issue` are up for grabs. For more info, see the [Contributing wiki page](https://github.com/jderose9/dash-to-panel/wiki/Contributing).
+This extension could be even better with your help! Any items in the issue tracker labelled `help wanted` or `good first issue` are up for grabs. For more info, see the [Contributing wiki page](https://github.com/home-sweet-gnome/dash-to-panel/wiki/Contributing).
 
 ## 
 ### Credits
@@ -176,20 +172,23 @@ Ideas for recursing child actors and assigning inline styles are based on code f
 - @ArtyomZorin for animated urgent icons
 - @jvpessoa10 for additional click window cycle options
 - @marksvc for assigning percent of display for panel length
+- @philippun1 for GNOME 40 support :rocket:
+- @HaselLoyance for toggle for notification counter badge
+- @rastersoft for Desktop Icons NG integration
 
 #### Bug Fixes: 
-@imrvelj, @Teslator, @bil-elmoussaoui, @brandon-schumann, @sw9, @rockon999 , @lexruee, @3v1n0, @freeroot, @moqmar, @ArtyomZorin, @lkc0987, @saibotk, @vanillajonathan, @Zkdc, @leebickmtu, @l3nn4rt, @Melix19, @Aikatsui, @melix99
+@imrvelj, @Teslator, @bil-elmoussaoui, @brandon-schumann, @sw9, @rockon999 , @lexruee, @3v1n0, @freeroot, @moqmar, @ArtyomZorin, @lkc0987, @saibotk, @vanillajonathan, @Zkdc, @leebickmtu, @l3nn4rt, @Melix19, @Aikatsui, @melix99, @kyrillzorin, @oneshadab, @CorvetteCole, @vantu5z, @spectreseven1138
 
 #### Documentation Improvements:
 @BoQsc, @zakkak, @dandv
 
 #### Translations: 
-@frnogueira (pt_BR), @zeten30 (cs), @franglais125 / @calotam / @oeramirez (es), @LaurentTreguier / @SolarLiner (fr), @elsieholmes (uk), @hosiet (zh\_CN), @jonnius / @linuxr01 (de), @urbalazs / @pappfer (hu), @crayxt (kk), @pkomur / @MartinPL / @alex4401 (pl), @AlexGluck / @GoodNike / @rjapolov / @vantu5z (ru), @sicklylife-jp / @ryonakano (ja), @oltulu / @TeknoMobil / @daenney (tr), @sbadux / @kowalski7cc / @l3nn4rt (it), @OriginCode / @pan93412 (zh\_TW), @ojn (sv), @frandieguez (gl)
+@frnogueira / @victorwpbastos / @vagkaefer (pt_BR), @zeten30 (cs), @franglais125 / @calotam / @oeramirez (es), @LaurentTreguier / @SolarLiner (fr), @elsieholmes (uk), @hosiet (zh\_CN), @jonnius / @linuxr01 / @daPhipz (de), @urbalazs / @pappfer (hu), @crayxt (kk), @pkomur / @MartinPL / @alex4401 (pl), @AlexGluck / @GoodNike / @rjapolov / @vantu5z (ru), @sicklylife-jp / @ryonakano / @nexryai (ja), @oltulu / @TeknoMobil / @daenney (tr), @sbadux / @kowalski7cc / @l3nn4rt (it), @OriginCode / @pan93412 (zh\_TW), @ojn (sv), @frandieguez (gl), @kuroehanako / @MarongHappy (ko)
 
 
 ## 
 ### License & Terms ![](media/design/png/copyleft-16.png)
 
-Dash to Panel is available under the terms of the GPL-v2 or later license See [`COPYING`](https://github.com/jderose9/dash-to-panel/blob/master/COPYING) for details.
+Dash to Panel is available under the terms of the GPL-v2 or later license See [`COPYING`](https://github.com/home-sweet-gnome/dash-to-panel/blob/master/COPYING) for details.
 
 ![](https://img.shields.io/badge/Language-JavaScript-yellow.svg) ![](https://img.shields.io/badge/Licence-GPL--2.0-blue.svg)

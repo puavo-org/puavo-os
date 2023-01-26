@@ -23,7 +23,6 @@
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const ExtensionUtils = imports.misc.extensionUtils;
-const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const St = imports.gi.St;
@@ -33,30 +32,25 @@ const Panel = Me.imports.panel;
 const Taskbar = Me.imports.taskbar;
 const Utils = Me.imports.utils;
 
-var dtpPanelStyle = Utils.defineClass({
-    Name: 'DashToPanel.PanelStyle',
+var PanelStyle = class {
 
-    _init: function() {
-
-    },
-
-    enable : function(panel) {
+    enable(panel) {
         this.panel = panel;
 
         this._applyStyles();
 
         this._bindSettingsChanges();
-    },
+    }
 
-    disable: function () {
+    disable() {
         for (let i = 0; i < this._dtpSettingsSignalIds.length; ++i) {
             Me.settings.disconnect(this._dtpSettingsSignalIds[i]);
         }
 
         this._removeStyles();
-    },
+    }
 
-    _bindSettingsChanges: function() {
+    _bindSettingsChanges() {
         let configKeys = [
             "tray-size",
             "leftbox-size",
@@ -68,14 +62,14 @@ var dtpPanelStyle = Utils.defineClass({
         this._dtpSettingsSignalIds = [];
         
         for(let i in configKeys) {
-            this._dtpSettingsSignalIds.push(Me.settings.connect('changed::' + configKeys[i], Lang.bind(this, function () {
+            this._dtpSettingsSignalIds.push(Me.settings.connect('changed::' + configKeys[i], () => {
                 this._removeStyles();
                 this._applyStyles();
-            })));
+            }));
         }
-    },
+    }
 
-    _applyStyles: function() {
+    _applyStyles() {
         this._rightBoxOperations = [];
         
         let trayPadding = Me.settings.get_int('tray-padding');
@@ -90,7 +84,8 @@ var dtpPanelStyle = Utils.defineClass({
                 trayPaddingStyleLine = paddingStyle.format(trayPadding);
                 operation.compareFn = function (actor) {
                     let parent = actor.get_parent();
-                    return (parent && parent.has_style_class_name && parent.has_style_class_name('panel-button'));
+                    return ((parent && parent.has_style_class_name && (parent.has_style_class_name('panel-button') && !parent.has_style_class_name('clock-display'))) || 
+                            (actor.has_style_class_name && actor.has_style_class_name('clock')));
                 };
             } else {
                 trayPaddingStyleLine = '-natural-hpadding: %dpx'.format(trayPadding);
@@ -103,10 +98,10 @@ var dtpPanelStyle = Utils.defineClass({
                 };
             }
             
-            operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
+            operation.applyFn = (actor, operationIdx) => {
                 this._overrideStyle(actor, trayPaddingStyleLine, operationIdx);
                 this._refreshPanelButton(actor);
-            });
+            };
             this._rightBoxOperations.push(operation);
         }
 
@@ -117,9 +112,9 @@ var dtpPanelStyle = Utils.defineClass({
             operation.compareFn = function (actor) {
                 return (actor.has_style_class_name && actor.has_style_class_name('system-status-icon'));
             };
-            operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
+            operation.applyFn = (actor, operationIdx) => {
                 this._overrideStyle(actor, statusIconPaddingStyleLine, operationIdx);
-            });
+            };
             this._rightBoxOperations.push(operation);
         }
 
@@ -130,9 +125,9 @@ var dtpPanelStyle = Utils.defineClass({
             operation.compareFn = function (actor) {
                 return (actor.constructor && actor.constructor.name == 'St_Icon');
             };
-            operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
+            operation.applyFn = (actor, operationIdx) => {
                 this._overrideStyle(actor, trayIconSizeStyleLine, operationIdx);
-            });
+            };
             this._rightBoxOperations.push(operation);
 
             let trayContentSizeStyleLine = 'font-size: %dpx'.format(trayContentSize)
@@ -140,9 +135,9 @@ var dtpPanelStyle = Utils.defineClass({
             operation.compareFn = function (actor) {
                 return (actor.constructor && actor.constructor.name == 'St_Label');
             };
-            operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
+            operation.applyFn = (actor, operationIdx) => {
                 this._overrideStyle(actor, trayContentSizeStyleLine, operationIdx);
-            });
+            };
             this._rightBoxOperations.push(operation);
 
             this._overrideStyle(this.panel._rightBox, trayContentSizeStyleLine, 0);
@@ -162,9 +157,9 @@ var dtpPanelStyle = Utils.defineClass({
                 let parent = actor.get_parent();
                 return (parent && parent.has_style_class_name && parent.has_style_class_name('panel-button'));
             };
-            operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
+            operation.applyFn = (actor, operationIdx) => {
                 this._overrideStyle(actor, leftboxPaddingStyleLine, operationIdx);
-            });
+            };
             this._leftBoxOperations.push(operation);
         }
 
@@ -175,9 +170,9 @@ var dtpPanelStyle = Utils.defineClass({
             operation.compareFn = function (actor) {
                 return (actor.constructor && actor.constructor.name == 'St_Icon');
             };
-            operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
+            operation.applyFn = (actor, operationIdx) => {
                 this._overrideStyle(actor, leftboxIconSizeStyleLine, operationIdx);
-            });
+            };
             this._leftBoxOperations.push(operation);
 
             let leftboxContentSizeStyleLine = 'font-size: %dpx'.format(leftboxContentSize)
@@ -185,9 +180,9 @@ var dtpPanelStyle = Utils.defineClass({
             operation.compareFn = function (actor) {
                 return (actor.constructor && actor.constructor.name == 'St_Label');
             };
-            operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
+            operation.applyFn = (actor, operationIdx) => {
                 this._overrideStyle(actor, leftboxContentSizeStyleLine, operationIdx);
-            });
+            };
             this._leftBoxOperations.push(operation);
 
             this._overrideStyle(this.panel._leftBox, leftboxContentSizeStyleLine, 0);
@@ -197,30 +192,30 @@ var dtpPanelStyle = Utils.defineClass({
         
         /* connect signal */
         this._rightBoxActorAddedID = this.panel._rightBox.connect('actor-added',
-            Lang.bind(this, function (container, actor) {
+            (container, actor) => {
                 if(this._rightBoxOperations.length && !this._ignoreAddedChild)
                     this._recursiveApply(actor, this._rightBoxOperations);
 
                 this._ignoreAddedChild = 0;
-            })
+            }
         );
         this._centerBoxActorAddedID = this.panel._centerBox.connect('actor-added',
-            Lang.bind(this, function (container, actor) {
+            (container, actor) => {
                 if(this._centerBoxOperations.length && !this._ignoreAddedChild)
                     this._recursiveApply(actor, this._centerBoxOperations);
 
                 this._ignoreAddedChild = 0;
-            })
+            }
         );
         this._leftBoxActorAddedID = this.panel._leftBox.connect('actor-added',
-            Lang.bind(this, function (container, actor) {
+            (container, actor) => {
                 if(this._leftBoxOperations.length)
                     this._recursiveApply(actor, this._leftBoxOperations);
-            })
+            }
         );
-    },
+    }
 
-    _removeStyles: function() {
+    _removeStyles() {
         /* disconnect signal */
         if (this._rightBoxActorAddedID) 
             this.panel._rightBox.disconnect(this._rightBoxActorAddedID);
@@ -234,13 +229,13 @@ var dtpPanelStyle = Utils.defineClass({
         this._restoreOriginalStyle(this.panel._leftBox);
 
         this._applyStylesRecursively(true);
-    },
+    }
 
-    _applyStylesRecursively: function(restore) {
+    _applyStylesRecursively(restore) {
         /*recurse actors */
         if(this._rightBoxOperations.length) {
             // add the system menu as we move it from the rightbox to the panel to position it independently
-            let children = this.panel._rightBox.get_children().concat([this.panel.statusArea.aggregateMenu.container]);
+            let children = this.panel._rightBox.get_children().concat([this.panel.statusArea[Utils.getSystemMenuInfo().name].container]);
             for(let i in children)
                 this._recursiveApply(children[i], this._rightBoxOperations, restore);
         }
@@ -257,9 +252,9 @@ var dtpPanelStyle = Utils.defineClass({
             for(let i in children)
                 this._recursiveApply(children[i], this._leftBoxOperations, restore);
         }
-    },
+    }
 
-    _recursiveApply: function(actor, operations, restore) {
+    _recursiveApply(actor, operations, restore) {
         for(let i in operations) {
             let o = operations[i];
             if(o.compareFn(actor))
@@ -275,9 +270,9 @@ var dtpPanelStyle = Utils.defineClass({
                 this._recursiveApply(children[i], operations, restore);
             }
         }
-    },
+    }
     
-    _overrideStyle: function(actor, styleLine, operationIdx) {
+    _overrideStyle(actor, styleLine, operationIdx) {
         if (actor._dtp_original_inline_style === undefined) {
             actor._dtp_original_inline_style = actor.get_style();
         }
@@ -291,9 +286,9 @@ var dtpPanelStyle = Utils.defineClass({
         for(let i in actor._dtp_style_overrides)
             newStyleLine += actor._dtp_style_overrides[i] + '; ';
         actor.set_style(newStyleLine + (actor._dtp_original_inline_style || ''));
-     },
+     }
 
-    _restoreOriginalStyle: function(actor) {
+    _restoreOriginalStyle(actor) {
         if (actor._dtp_original_inline_style !== undefined) {
             actor.set_style(actor._dtp_original_inline_style);
             delete actor._dtp_original_inline_style;
@@ -303,10 +298,10 @@ var dtpPanelStyle = Utils.defineClass({
         if (actor.has_style_class_name('panel-button')) {
             this._refreshPanelButton(actor);
         }
-    },
+    }
 
-    _refreshPanelButton: function(actor) {
-        if (actor.visible && imports.misc.config.PACKAGE_VERSION >= '3.34.0') {
+    _refreshPanelButton(actor) {
+        if (actor.visible) {
             //force gnome 3.34+ to refresh (having problem with the -natural-hpadding)
             let parent = actor.get_parent();
             let children = parent.get_children();
@@ -323,4 +318,4 @@ var dtpPanelStyle = Utils.defineClass({
         }
     }
     
-});
+}

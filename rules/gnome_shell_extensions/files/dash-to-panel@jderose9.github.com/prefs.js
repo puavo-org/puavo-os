@@ -26,11 +26,10 @@ const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
-const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
+const ExtensionUtils = imports.misc.extensionUtils;
 const Gettext = imports.gettext.domain(Me.metadata['gettext-domain']);
 const _ = Gettext.gettext;
 const N_ = function(e) { return e };
@@ -47,7 +46,6 @@ const LENGTH_MARKS = [ 100, 90, 80, 70, 60, 50, 40, 30, 20, 10 ];
 const MAX_WINDOW_INDICATOR = 4;
 
 const SCHEMA_PATH = '/org/gnome/shell/extensions/dash-to-panel/';
-const GSET = 'gnome-shell-extension-tool';
 
 /**
  * This function was copied from the activities-config extension
@@ -83,9 +81,9 @@ function cssHexString(css) {
 
 function setShortcut(settings, shortcutName) {
     let shortcut_text = settings.get_string(shortcutName + '-text');
-    let [key, mods] = Gtk.accelerator_parse(shortcut_text);
+    let [success, key, mods] = Gtk.accelerator_parse(shortcut_text);
 
-    if (Gtk.accelerator_valid(key, mods)) {
+    if (success && Gtk.accelerator_valid(key, mods)) {
         let shortcut = Gtk.accelerator_name(key, mods);
         settings.set_strv(shortcutName, [shortcut]);
     }
@@ -102,9 +100,9 @@ function checkHotkeyPrefix(settings) {
        hotkeyPrefix = '<Super>';
     else if (hotkeyPrefix == 'SuperAlt')
        hotkeyPrefix = '<Super><Alt>';
-    let [, mods]       = Gtk.accelerator_parse(hotkeyPrefix);
-    let [, shift_mods] = Gtk.accelerator_parse('<Shift>' + hotkeyPrefix);
-    let [, ctrl_mods]  = Gtk.accelerator_parse('<Ctrl>'  + hotkeyPrefix);
+    let [ , , mods]       = Gtk.accelerator_parse(hotkeyPrefix);
+    let [ , , shift_mods] = Gtk.accelerator_parse('<Shift>' + hotkeyPrefix);
+    let [ , , ctrl_mods]  = Gtk.accelerator_parse('<Ctrl>'  + hotkeyPrefix);
 
     let numHotkeys = 10;
     for (let i = 1; i <= numHotkeys; i++) {
@@ -157,24 +155,16 @@ function mergeObjects(main, bck) {
     return main;
 };
 
-const Settings = new Lang.Class({
-    Name: 'DashToPanel.Settings',
+const Preferences = class {
 
-    _init: function() {
-        this._settings = Convenience.getSettings('org.gnome.shell.extensions.dash-to-panel');
-
+    constructor() {
+        this._settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.dash-to-panel');
         this._rtl = (Gtk.Widget.get_default_direction() == Gtk.TextDirection.RTL);
-
         this._builder = new Gtk.Builder();
+        this._builder.set_scope(new BuilderScope(this));
         this._builder.set_translation_domain(Me.metadata['gettext-domain']);
         this._builder.add_from_file(Me.path + '/Settings.ui');
-
         this.notebook = this._builder.get_object('settings_notebook');
-        this.viewport = new Gtk.Viewport();
-        this.viewport.add(this.notebook);
-        this.widget = new Gtk.ScrolledWindow();
-        this.widget.add(this.viewport);
-        
 
         // Timeout to delay the update of the settings
         this._panel_size_timeout = 0;
@@ -187,20 +177,18 @@ const Settings = new Lang.Class({
         this._tray_padding_timeout = 0;
         this._statusicon_padding_timeout = 0;
         this._leftbox_padding_timeout = 0;
-
+        this._addFormatValueCallbacks();
         this._bindSettings();
-
-        this._builder.connect_signals_full(Lang.bind(this, this._connector));
-    },
+    }
 
     /**
      * Connect signals
      */
-    _connector: function(builder, object, signal, handler) {
-        object.connect(signal, Lang.bind(this, this._SignalHandler[handler]));
-    },
+    _connector(builder, object, signal, handler) {
+        object.connect(signal, this._SignalHandler[handler].bind(this));
+    }
 
-    _updateVerticalRelatedOptions: function() {
+    _updateVerticalRelatedOptions() {
         let position = this._getPanelPosition(this._currentMonitorIndex);
         let isVertical = position == Pos.LEFT || position == Pos.RIGHT;
         let showDesktopWidthLabel = this._builder.get_object('show_showdesktop_width_label');
@@ -208,9 +196,9 @@ const Settings = new Lang.Class({
         showDesktopWidthLabel.set_text(isVertical ? _('Show Desktop button height (px)') : _('Show Desktop button width (px)'));
 
         this._displayPanelPositionsForMonitor(this._currentMonitorIndex);
-    },
+    }
 
-    _maybeDisableTopPosition: function() {
+    _maybeDisableTopPosition() {
         let keepTopPanel = this._settings.get_boolean('stockgs-keep-top-panel');
         let monitorSync = this._settings.get_boolean('panel-element-positions-monitors-sync');
         let topAvailable = !keepTopPanel || (!monitorSync && this._currentMonitorIndex != this.monitors[0]);
@@ -218,22 +206,22 @@ const Settings = new Lang.Class({
 
         topRadio.set_sensitive(topAvailable);
         topRadio.set_tooltip_text(!topAvailable ? _('Unavailable when gnome-shell top panel is present') : '');
-    },
+    }
 
-    _getPanelPosition: function(monitorIndex) {
+    _getPanelPosition(monitorIndex) {
         return PanelSettings.getPanelPosition(this._settings, monitorIndex);
-    },
+    }
 
-    _setPanelPosition: function(position) {
+    _setPanelPosition(position) {
         const monitorSync = this._settings.get_boolean('panel-element-positions-monitors-sync');
         const monitorsToSetFor = monitorSync ? this.monitors : [this._currentMonitorIndex];
         monitorsToSetFor.forEach(monitorIndex => {
             PanelSettings.setPanelPosition(this._settings, monitorIndex, position);
         });
         this._setAnchorLabels(this._currentMonitorIndex);
-    },
+    }
 
-    _setPositionRadios: function(position) {
+    _setPositionRadios(position) {
         this._ignorePositionRadios = true;
 
         switch (position) {
@@ -252,14 +240,14 @@ const Settings = new Lang.Class({
         }
 
         this._ignorePositionRadios = false;
-    },
+    }
 
     /**
      * Set panel anchor combo labels according to whether the monitor's panel is vertical
      * or horizontal, or if all monitors' panels are being configured and they are a mix
      * of vertical and horizontal.
      */
-    _setAnchorLabels: function(currentMonitorIndex) {
+    _setAnchorLabels(currentMonitorIndex) {
         const monitorSync = this._settings.get_boolean('panel-element-positions-monitors-sync');
         const monitorsToSetFor = monitorSync ? this.monitors : [currentMonitorIndex];
         const allVertical = monitorsToSetFor.every(i => {
@@ -299,13 +287,13 @@ const Settings = new Lang.Class({
             const panel_anchor = PanelSettings.getPanelAnchor(this._settings, currentMonitorIndex);
             this._builder.get_object('panel_anchor_combo').set_active_id(panel_anchor);
         }
-    },
+    }
 
     /**
      * When a monitor is selected, update the widgets for panel position, size, anchoring,
      * and contents so they accurately show the settings for the panel on that monitor.
      */
-    _updateWidgetSettingsForMonitor: function(monitorIndex) {
+    _updateWidgetSettingsForMonitor(monitorIndex) {
         // Update display of panel screen position setting
         this._maybeDisableTopPosition();
         const panelPosition = this._getPanelPosition(monitorIndex);
@@ -325,22 +313,25 @@ const Settings = new Lang.Class({
 
         // Update display of panel content settings
         this._displayPanelPositionsForMonitor(monitorIndex);
-    },
+    }
 
     /**
      * Anchor is only relevant if panel length is less than 100%. Enable or disable
      * anchor widget sensitivity accordingly.
      */
-    _setAnchorWidgetSensitivity: function(panelLength) {
+    _setAnchorWidgetSensitivity(panelLength) {
         const isPartialLength = panelLength < 100;
         this._builder.get_object('panel_anchor_label').set_sensitive(isPartialLength);
         this._builder.get_object('panel_anchor_combo').set_sensitive(isPartialLength);
-    },
+    }
 
-    _displayPanelPositionsForMonitor: function(monitorIndex) {
+    _displayPanelPositionsForMonitor(monitorIndex) {
         let taskbarListBox = this._builder.get_object('taskbar_display_listbox');
-
-        taskbarListBox.get_children().forEach(c => c.destroy());
+        
+        while(taskbarListBox.get_first_child())
+        {
+            taskbarListBox.remove(taskbarListBox.get_first_child());
+        }
 
         let labels = {};
         let panelPosition = this._getPanelPosition(monitorIndex);
@@ -352,14 +343,17 @@ const Settings = new Lang.Class({
             let monitorSync = this._settings.get_boolean('panel-element-positions-monitors-sync');
             let monitors = monitorSync ? this.monitors : [monitorIndex];
 
-            taskbarListBox.get_children().forEach(c => {
+            let child = taskbarListBox.get_first_child();
+            while (child != null)
+            {
                 newPanelElementPositions.push({
-                    element: c.id,
-                    visible: c.visibleToggleBtn.get_active(),
-                    position: c.positionCombo.get_active_id()
+                    element: child.id,
+                    visible: child.visibleToggleBtn.get_active(),
+                    position: child.positionCombo.get_active_id()
                 });
-            });
-
+                child = child.get_next_sibling();
+            }
+            
             monitors.forEach(m => panelElementPositionsSettings[m] = newPanelElementPositions);
             this._settings.set_string('panel-element-positions', JSON.stringify(panelElementPositionsSettings));
         };
@@ -377,7 +371,7 @@ const Settings = new Lang.Class({
 
         panelElementPositions.forEach(el => {
             let row = new Gtk.ListBoxRow();
-            let grid = new Gtk.Grid({ margin: 2, margin_left: 12, margin_right: 12, column_spacing: 8 });
+            let grid = new Gtk.Grid({ margin_start: 12, margin_end: 12, column_spacing: 8 });
             let upDownGrid = new Gtk.Grid({ column_spacing: 2 });
             let upBtn = new Gtk.Button({ tooltip_text: _('Move up') });
             let upImg = new Gtk.Image({ icon_name: 'go-up-symbolic', pixel_size: 12 });
@@ -406,43 +400,41 @@ const Settings = new Lang.Class({
             visibleToggleBtn.connect('toggled', () => updateElementsSettings());
             positionCombo.connect('changed', () => updateElementsSettings());
 
-            upBtn.add(upImg);
-            downBtn.add(downImg);
+            upBtn.set_child(upImg);
+            downBtn.set_child(downImg);
 
-            upDownGrid.add(upBtn);
-            upDownGrid.add(downBtn);
+            upDownGrid.attach(upBtn, 0, 0, 1, 1);
+            upDownGrid.attach(downBtn, 1, 0, 1, 1);
 
-            grid.add(upDownGrid);
-            grid.add(new Gtk.Label({ label: labels[el.element], xalign: 0, hexpand: true }));
+            grid.attach(upDownGrid, 0, 0, 1, 1);
+            grid.attach(new Gtk.Label({ label: labels[el.element], xalign: 0, hexpand: true }), 1, 0, 1, 1);
 
             if (Pos.optionDialogFunctions[el.element]) {
                 let cogImg = new Gtk.Image({ icon_name: 'emblem-system-symbolic' });
                 let optionsBtn = new Gtk.Button({ tooltip_text: _('More options') });
                 
                 optionsBtn.get_style_context().add_class('circular');
-                optionsBtn.add(cogImg);
-                grid.add(optionsBtn);
+                optionsBtn.set_child(cogImg);
+                grid.attach(optionsBtn, 2, 0, 1, 1);
 
                 optionsBtn.connect('clicked', () => this[Pos.optionDialogFunctions[el.element]]());
             }
 
-            grid.add(visibleToggleBtn);
-            grid.add(positionCombo);
+            grid.attach(visibleToggleBtn, 3, 0, 1, 1);
+            grid.attach(positionCombo, 4, 0, 1, 1);
 
             row.id = el.element;
             row.visibleToggleBtn = visibleToggleBtn;
             row.positionCombo = positionCombo;
 
-            row.add(grid);
-            taskbarListBox.add(row);
+            row.set_child(grid);
+            taskbarListBox.insert(row, -1);
         });
+    }
 
-        taskbarListBox.show_all();
-    },
-
-    _showShowAppsButtonOptions: function() {
+    _showShowAppsButtonOptions() {
         let dialog = new Gtk.Dialog({ title: _('Show Applications options'),
-                                        transient_for: this.widget.get_toplevel(),
+                                        transient_for: this.notebook.get_root(),
                                         use_header_bar: true,
                                         modal: true });
 
@@ -451,35 +443,42 @@ const Settings = new Lang.Class({
         dialog.add_button(_('Reset to defaults'), 1);
 
         let box = this._builder.get_object('show_applications_options');
-        dialog.get_content_area().add(box);
+        dialog.get_content_area().append(box);
 
-        let fileChooser = this._builder.get_object('show_applications_icon_file_filebutton');
+        let fileChooserButton = this._builder.get_object('show_applications_icon_file_filebutton');
+        let fileChooser = new Gtk.FileChooserNative({ title: _('Open icon'), transient_for: dialog });
         let fileImage = this._builder.get_object('show_applications_current_icon_image');
         let fileFilter = new Gtk.FileFilter();
+        fileFilter.add_pixbuf_formats();
+        fileChooser.filter = fileFilter;
+
         let handleIconChange = function(newIconPath) {
             if (newIconPath && GLib.file_test(newIconPath, GLib.FileTest.EXISTS)) {
-                let file = Gio.File.new_for_path(newIconPath)
+                let file = Gio.File.new_for_path(newIconPath);
                 let pixbuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(file.read(null), 32, 32, true, null);
 
                 fileImage.set_from_pixbuf(pixbuf);
-                fileChooser.set_filename(newIconPath);
+                fileChooser.set_file(file);
+                fileChooserButton.set_label(newIconPath);
             } else {
                 newIconPath = '';
-                fileImage.set_from_icon_name('view-app-grid-symbolic', 32);
-                fileChooser.unselect_all();
-                fileChooser.set_current_folder(GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES));
+                fileImage.set_from_icon_name('view-app-grid-symbolic');
+                let picturesFolder = Gio.File.new_for_path(GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES));
+                fileChooser.set_file(picturesFolder);
+                fileChooserButton.set_label("(None)");
             }
 
             this._settings.set_string('show-apps-icon-file', newIconPath || '');
         };
-        
-        fileFilter.add_pixbuf_formats();
-        fileChooser.filter = fileFilter;
 
-        fileChooser.connect('file-set', widget => handleIconChange.call(this, widget.get_filename()));
+        fileChooserButton.connect('clicked', () => {
+            fileChooser.show();
+        });
+
+        fileChooser.connect('response', widget => handleIconChange.call(this, widget.get_file().get_path()));
         handleIconChange.call(this, this._settings.get_string('show-apps-icon-file'));
 
-        dialog.connect('response', Lang.bind(this, function(dialog, id) {
+        dialog.connect('response', (dialog, id) => {
             if (id == 1) {
                 // restore default settings
                 this._settings.set_value('show-apps-icon-side-padding', this._settings.get_default_value('show-apps-icon-side-padding'));
@@ -490,16 +489,18 @@ const Settings = new Lang.Class({
                 // remove the settings box so it doesn't get destroyed;
                 dialog.get_content_area().remove(box);
                 dialog.destroy();
+                fileChooser.destroy();
             }
             return;
-        }));
+        });
 
-        dialog.show_all();
-    },
+        dialog.show();
+        dialog.set_default_size(1, 1);
+    }
 
-    _showDesktopButtonOptions: function() {
+    _showDesktopButtonOptions() {
         let dialog = new Gtk.Dialog({ title: _('Show Desktop options'),
-                                        transient_for: this.widget.get_toplevel(),
+                                        transient_for: this.notebook.get_root(),
                                         use_header_bar: true,
                                         modal: true });
 
@@ -508,24 +509,24 @@ const Settings = new Lang.Class({
         dialog.add_button(_('Reset to defaults'), 1);
 
         let box = this._builder.get_object('box_show_showdesktop_options');
-        dialog.get_content_area().add(box);
+        dialog.get_content_area().append(box);
 
         this._builder.get_object('show_showdesktop_width_spinbutton').set_value(this._settings.get_int('showdesktop-button-width'));
-        this._builder.get_object('show_showdesktop_width_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('show_showdesktop_width_spinbutton').connect('value-changed', (widget) => {
             this._settings.set_int('showdesktop-button-width', widget.get_value());
-        }));
+        });
 
         this._builder.get_object('show_showdesktop_delay_spinbutton').set_value(this._settings.get_int('show-showdesktop-delay'));
-        this._builder.get_object('show_showdesktop_delay_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('show_showdesktop_delay_spinbutton').connect('value-changed', (widget) => {
             this._settings.set_int('show-showdesktop-delay', widget.get_value());
-        }));
+        });
 
         this._builder.get_object('show_showdesktop_time_spinbutton').set_value(this._settings.get_int('show-showdesktop-time'));
-        this._builder.get_object('show_showdesktop_time_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('show_showdesktop_time_spinbutton').connect('value-changed', (widget) => {
             this._settings.set_int('show-showdesktop-time', widget.get_value());
-        }));
+        });
 
-        dialog.connect('response', Lang.bind(this, function(dialog, id) {
+        dialog.connect('response', (dialog, id) => {
             if (id == 1) {
                 // restore default settings
                 this._settings.set_value('showdesktop-button-width', this._settings.get_default_value('showdesktop-button-width'));
@@ -544,12 +545,90 @@ const Settings = new Lang.Class({
                 dialog.destroy();
             }
             return;
-        }));
+        });
 
-        dialog.show_all();
-    },
+        dialog.show();
+        dialog.set_default_size(1, 1);
+    }
 
-    _bindSettings: function() {
+    _addFormatValueCallbacks() {
+        // position
+        this._builder.get_object('panel_size_scale')
+        .set_format_value_func((scale, value) => {
+            return value + ' px';
+        });
+
+        // style
+        this._builder.get_object('appicon_margin_scale')
+        .set_format_value_func((scale, value) => {
+            return value + ' px';
+        });
+
+        this._builder.get_object('appicon_padding_scale')
+        .set_format_value_func((scale, value) => {
+            return value + ' px';
+        });
+
+        // fine-tune box1
+        this._builder.get_object('tray_size_scale')
+        .set_format_value_func((scale, value) => {
+            return value + ' px';
+        });
+
+        this._builder.get_object('leftbox_size_scale')
+        .set_format_value_func((scale, value) => {
+            return value + ' px';
+        });
+
+        // fine-tune box2
+        this._builder.get_object('tray_padding_scale')
+        .set_format_value_func((scale, value) => {
+            return value + ' px';
+        });
+
+        this._builder.get_object('statusicon_padding_scale')
+        .set_format_value_func((scale, value) => {
+            return value + ' px';
+        });
+
+        this._builder.get_object('leftbox_padding_scale')
+        .set_format_value_func((scale, value) => {
+            return value + ' px';
+        });
+
+        // animate hovering app icons dialog
+        this._builder.get_object('animate_appicon_hover_options_duration_scale')
+        .set_format_value_func((scale, value) => {
+            return _("%d ms").format(value);
+        });
+
+        this._builder.get_object('animate_appicon_hover_options_rotation_scale')
+        .set_format_value_func((scale, value) => {
+            return _("%d °").format(value);
+        });
+
+        this._builder.get_object('animate_appicon_hover_options_travel_scale')
+        .set_format_value_func((scale, value) => {
+            return _("%d %%").format(value);
+        });
+
+        this._builder.get_object('animate_appicon_hover_options_zoom_scale')
+        .set_format_value_func((scale, value) => {
+            return _("%d %%").format(value);
+        });
+
+        this._builder.get_object('animate_appicon_hover_options_convexity_scale')
+        .set_format_value_func((scale, value) => {
+            return _("%.1f").format(value);
+        });
+
+        this._builder.get_object('animate_appicon_hover_options_extent_scale')
+        .set_format_value_func((scale, value) => {
+            return Gettext.ngettext("%d icon", "%d icons", value).format(value);
+        });
+    }
+
+    _bindSettings() {
         // size options
         let panel_size_scale = this._builder.get_object('panel_size_scale');
         panel_size_scale.set_range(DEFAULT_PANEL_SIZES[DEFAULT_PANEL_SIZES.length - 1], DEFAULT_PANEL_SIZES[0]);
@@ -587,61 +666,61 @@ const Settings = new Lang.Class({
         }
 
         this._builder.get_object('dot_style_focused_combo').set_active_id(this._settings.get_string('dot-style-focused'));
-        this._builder.get_object('dot_style_focused_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('dot_style_focused_combo').connect('changed', (widget) => {
             this._settings.set_string('dot-style-focused', widget.get_active_id());
-        }));
+        });
 
         this._builder.get_object('dot_style_unfocused_combo').set_active_id(this._settings.get_string('dot-style-unfocused'));
-        this._builder.get_object('dot_style_unfocused_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('dot_style_unfocused_combo').connect('changed', (widget) => {
             this._settings.set_string('dot-style-unfocused', widget.get_active_id());
-        }));
+        });
 
         for (let i = 1; i <= MAX_WINDOW_INDICATOR; i++) {
             let idx = i;
-            this._builder.get_object('dot_color_' + idx + '_colorbutton').connect('notify::color', Lang.bind(this, function(button) {
+            this._builder.get_object('dot_color_' + idx + '_colorbutton').connect('color-set', (button) => {
                 let rgba = button.get_rgba();
                 let css = rgba.to_string();
                 let hexString = cssHexString(css);
                 this._settings.set_string('dot-color-' + idx, hexString);
-            }));
+            });
 
-            this._builder.get_object('dot_color_unfocused_' + idx + '_colorbutton').connect('notify::color', Lang.bind(this, function(button) {
+            this._builder.get_object('dot_color_unfocused_' + idx + '_colorbutton').connect('color-set', (button) => {
                 let rgba = button.get_rgba();
                 let css = rgba.to_string();
                 let hexString = cssHexString(css);
                 this._settings.set_string('dot-color-unfocused-' + idx, hexString);
-            }));
+            });
         }
 
-        this._builder.get_object('dot_color_apply_all_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('dot_color_apply_all_button').connect('clicked', () => {
             for (let i = 2; i <= MAX_WINDOW_INDICATOR; i++) {
                 this._settings.set_value('dot-color-' + i, this._settings.get_value('dot-color-1'));
                 let rgba = new Gdk.RGBA();
                 rgba.parse(this._settings.get_string('dot-color-' + i));
                 this._builder.get_object('dot_color_' + i + '_colorbutton').set_rgba(rgba);
             }
-        }));
+        });
 
-        this._builder.get_object('dot_color_unfocused_apply_all_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('dot_color_unfocused_apply_all_button').connect('clicked', () => {
             for (let i = 2; i <= MAX_WINDOW_INDICATOR; i++) {
                 this._settings.set_value('dot-color-unfocused-' + i, this._settings.get_value('dot-color-unfocused-1'));
                 let rgba = new Gdk.RGBA();
                 rgba.parse(this._settings.get_string('dot-color-unfocused-' + i));
                 this._builder.get_object('dot_color_unfocused_' + i + '_colorbutton').set_rgba(rgba);
             }
-        }));
+        });
 
-        this._builder.get_object('focus_highlight_color_colorbutton').connect('notify::color', Lang.bind(this, function(button) {
+        this._builder.get_object('focus_highlight_color_colorbutton').connect('color-set', (button) => {
             let rgba = button.get_rgba();
             let css = rgba.to_string();
             let hexString = cssHexString(css);
             this._settings.set_string('focus-highlight-color', hexString);
-        }));
+        });
 
-        this._builder.get_object('dot_style_options_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('dot_style_options_button').connect('clicked', () => {
 
             let dialog = new Gtk.Dialog({ title: _('Running Indicator Options'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -650,7 +729,7 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('box_dots_options');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
             this._settings.bind('dot-color-dominant',
                             this._builder.get_object('dot_color_dominant_switch'),
@@ -663,12 +742,12 @@ const Settings = new Lang.Class({
                             Gio.SettingsBindFlags.DEFAULT);
 
             // when either becomes active, turn the other off
-            this._builder.get_object('dot_color_dominant_switch').connect('state-set', Lang.bind (this, function(widget) {
+            this._builder.get_object('dot_color_dominant_switch').connect('state-set', (widget) => {
                 if (widget.get_active()) this._settings.set_boolean('dot-color-override', false);
-            }));
-            this._builder.get_object('dot_color_override_switch').connect('state-set', Lang.bind (this, function(widget) {
+            });
+            this._builder.get_object('dot_color_override_switch').connect('state-set', (widget) => {
                 if (widget.get_active()) this._settings.set_boolean('dot-color-dominant', false);
-            }));
+            });
 
             this._settings.bind('dot-color-unfocused-different',
                             this._builder.get_object('dot_color_unfocused_different_switch'),
@@ -733,16 +812,16 @@ const Settings = new Lang.Class({
             }).apply(this);
 
             this._builder.get_object('focus_highlight_opacity_spinbutton').set_value(this._settings.get_int('focus-highlight-opacity'));
-            this._builder.get_object('focus_highlight_opacity_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('focus_highlight_opacity_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('focus-highlight-opacity', widget.get_value());
-            }));
+            });
 
             this._builder.get_object('dot_size_spinbutton').set_value(this._settings.get_int('dot-size'));
-            this._builder.get_object('dot_size_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('dot_size_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('dot-size', widget.get_value());
-            }));
+            });
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('dot-color-dominant', this._settings.get_default_value('dot-color-dominant'));
@@ -781,11 +860,12 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(1, 1);
 
-        }));
+        });
 
         //multi-monitor
         this.monitors = this._settings.get_value('available-monitors').deep_unpack();
@@ -802,7 +882,7 @@ const Settings = new Lang.Class({
         this._updateVerticalRelatedOptions();
         
         for (let i = 0; i < this.monitors.length; ++i) {
-            //the primary index is the first one in the "available-monitors" setting
+            //the gnome-shell primary index is the first one in the "available-monitors" setting
             let label = !i ? _('Primary monitor') : _('Monitor ') + (i + 1);
 
             this._builder.get_object('multimon_primary_combo').append_text(label);
@@ -828,14 +908,14 @@ const Settings = new Lang.Class({
             this._setAnchorLabels(this._currentMonitorIndex);
         });
 
-        this._builder.get_object('multimon_primary_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('multimon_primary_combo').connect('changed', (widget) => {
             this._settings.set_int('primary-monitor', this.monitors[widget.get_active()]);
-        }));
+        });
 
-        this._builder.get_object('taskbar_position_monitor_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('taskbar_position_monitor_combo').connect('changed', (widget) => {
             this._currentMonitorIndex = this.monitors[widget.get_active()];
             this._updateWidgetSettingsForMonitor(this._currentMonitorIndex);
-        }));
+        });
 
         this._settings.bind('multi-monitors',
                             this._builder.get_object('multimon_multi_switch'),
@@ -847,7 +927,7 @@ const Settings = new Lang.Class({
         }
 
         const panel_length_scale = this._builder.get_object('panel_length_scale');
-        panel_length_scale.connect('value-changed', Lang.bind (this, function(widget) {
+        panel_length_scale.connect('value-changed', (widget) => {
             const value = widget.get_value();
             const monitorSync = this._settings.get_boolean('panel-element-positions-monitors-sync');
             const monitorsToSetFor = monitorSync ? this.monitors : [this._currentMonitorIndex];
@@ -856,9 +936,9 @@ const Settings = new Lang.Class({
             });
 
             this._setAnchorWidgetSensitivity(value);
-        }));
+        });
 
-        this._builder.get_object('panel_anchor_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('panel_anchor_combo').connect('changed', (widget) => {
             const value = widget.get_active_id();
             // Value can be null while anchor labels are being swapped out
             if (value !== null) {
@@ -868,7 +948,7 @@ const Settings = new Lang.Class({
                     PanelSettings.setPanelAnchor(this._settings, monitorIndex, value);
                 });
             }
-        }));
+        });
 
         this._updateWidgetSettingsForMonitor(this._currentMonitorIndex);
 
@@ -887,12 +967,12 @@ const Settings = new Lang.Class({
         rgba.parse(this._settings.get_string('trans-bg-color'));
         this._builder.get_object('trans_bg_color_colorbutton').set_rgba(rgba);
 
-        this._builder.get_object('trans_bg_color_colorbutton').connect('notify::color', Lang.bind(this, function (button) {
+        this._builder.get_object('trans_bg_color_colorbutton').connect('color-set',  (button) => {
             let rgba = button.get_rgba();
             let css = rgba.to_string();
             let hexString = cssHexString(css);
             this._settings.set_string('trans-bg-color', hexString);
-        }));
+        });
 
         this._settings.bind('trans-use-custom-opacity',
                             this._builder.get_object('trans_opacity_override_switch'),
@@ -910,9 +990,9 @@ const Settings = new Lang.Class({
         });
 
         this._builder.get_object('trans_opacity_spinbutton').set_value(this._settings.get_double('trans-panel-opacity') * 100);
-        this._builder.get_object('trans_opacity_spinbutton').connect('value-changed', Lang.bind(this, function (widget) {
+        this._builder.get_object('trans_opacity_spinbutton').connect('value-changed',  (widget) => {
             this._settings.set_double('trans-panel-opacity', widget.get_value() * 0.01);
-        }));
+        });
 
         this._settings.bind('trans-use-dynamic-opacity',
                             this._builder.get_object('trans_dyn_switch'),
@@ -942,51 +1022,51 @@ const Settings = new Lang.Class({
         rgba.parse(this._settings.get_string('trans-gradient-top-color'));
         this._builder.get_object('trans_gradient_color1_colorbutton').set_rgba(rgba);
 
-        this._builder.get_object('trans_gradient_color1_colorbutton').connect('notify::color', Lang.bind(this, function (button) {
+        this._builder.get_object('trans_gradient_color1_colorbutton').connect('color-set',  (button) => {
             let rgba = button.get_rgba();
             let css = rgba.to_string();
             let hexString = cssHexString(css);
             this._settings.set_string('trans-gradient-top-color', hexString);
-        }));
+        });
 
         this._builder.get_object('trans_gradient_color1_spinbutton').set_value(this._settings.get_double('trans-gradient-top-opacity') * 100);
-        this._builder.get_object('trans_gradient_color1_spinbutton').connect('value-changed', Lang.bind(this, function (widget) {
+        this._builder.get_object('trans_gradient_color1_spinbutton').connect('value-changed',  (widget) => {
             this._settings.set_double('trans-gradient-top-opacity', widget.get_value() * 0.01);
-        }));
+        });
 
         rgba.parse(this._settings.get_string('trans-gradient-bottom-color'));
         this._builder.get_object('trans_gradient_color2_colorbutton').set_rgba(rgba);
 
-        this._builder.get_object('trans_gradient_color2_colorbutton').connect('notify::color', Lang.bind(this, function (button) {
+        this._builder.get_object('trans_gradient_color2_colorbutton').connect('color-set',  (button) => {
             let rgba = button.get_rgba();
             let css = rgba.to_string();
             let hexString = cssHexString(css);
             this._settings.set_string('trans-gradient-bottom-color', hexString);
-        }));
+        });
 
         this._builder.get_object('trans_gradient_color2_spinbutton').set_value(this._settings.get_double('trans-gradient-bottom-opacity') * 100);
-        this._builder.get_object('trans_gradient_color2_spinbutton').connect('value-changed', Lang.bind(this, function (widget) {
+        this._builder.get_object('trans_gradient_color2_spinbutton').connect('value-changed',  (widget) => {
             this._settings.set_double('trans-gradient-bottom-opacity', widget.get_value() * 0.01);
-        }));
+        });
 
         this._builder.get_object('trans_options_distance_spinbutton').set_value(this._settings.get_int('trans-dynamic-distance'));
-        this._builder.get_object('trans_options_distance_spinbutton').connect('value-changed', Lang.bind(this, function (widget) {
+        this._builder.get_object('trans_options_distance_spinbutton').connect('value-changed',  (widget) => {
             this._settings.set_int('trans-dynamic-distance', widget.get_value());
-        }));
+        });
         
         this._builder.get_object('trans_options_min_opacity_spinbutton').set_value(this._settings.get_double('trans-dynamic-anim-target') * 100);
-        this._builder.get_object('trans_options_min_opacity_spinbutton').connect('value-changed', Lang.bind(this, function (widget) {
+        this._builder.get_object('trans_options_min_opacity_spinbutton').connect('value-changed',  (widget) => {
             this._settings.set_double('trans-dynamic-anim-target', widget.get_value() * 0.01);
-        }));
+        });
 
         this._builder.get_object('trans_options_anim_time_spinbutton').set_value(this._settings.get_int('trans-dynamic-anim-time'));
-        this._builder.get_object('trans_options_anim_time_spinbutton').connect('value-changed', Lang.bind(this, function (widget) {
+        this._builder.get_object('trans_options_anim_time_spinbutton').connect('value-changed',  (widget) => {
             this._settings.set_int('trans-dynamic-anim-time', widget.get_value());
-        }));
+        });
 
-        this._builder.get_object('trans_dyn_options_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('trans_dyn_options_button').connect('clicked', () => {
             let dialog = new Gtk.Dialog({ title: _('Dynamic opacity options'),
-                                            transient_for: this.widget.get_toplevel(),
+                                            transient_for: this.notebook.get_root(),
                                             use_header_bar: true,
                                             modal: true });
 
@@ -995,9 +1075,9 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('box_dynamic_opacity_options');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('trans-dynamic-behavior', this._settings.get_default_value('trans-dynamic-behavior'));
@@ -1016,11 +1096,12 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(1, 1);
 
-        }));
+        });
         
         this._settings.bind('desktop-line-use-custom-color',
                             this._builder.get_object('override_show_desktop_line_color_switch'),
@@ -1034,11 +1115,11 @@ const Settings = new Lang.Class({
         
         rgba.parse(this._settings.get_string('desktop-line-custom-color'));
         this._builder.get_object('override_show_desktop_line_color_colorbutton').set_rgba(rgba);
-        this._builder.get_object('override_show_desktop_line_color_colorbutton').connect('notify::color', Lang.bind(this, function (button) {
+        this._builder.get_object('override_show_desktop_line_color_colorbutton').connect('color-set',  (button) => {
             let rgba = button.get_rgba();
             let css = rgba.to_string();
             this._settings.set_string('desktop-line-custom-color', css);
-        }));
+        });
 
 
         this._settings.bind('intellihide',
@@ -1097,14 +1178,14 @@ const Settings = new Lang.Class({
         });
 
         this._builder.get_object('intellihide_pressure_threshold_spinbutton').set_value(this._settings.get_int('intellihide-pressure-threshold'));
-        this._builder.get_object('intellihide_pressure_threshold_spinbutton').connect('value-changed', Lang.bind(this, function (widget) {
+        this._builder.get_object('intellihide_pressure_threshold_spinbutton').connect('value-changed',  (widget) => {
             this._settings.set_int('intellihide-pressure-threshold', widget.get_value());
-        }));
+        });
 
         this._builder.get_object('intellihide_pressure_time_spinbutton').set_value(this._settings.get_int('intellihide-pressure-time'));
-        this._builder.get_object('intellihide_pressure_time_spinbutton').connect('value-changed', Lang.bind(this, function (widget) {
+        this._builder.get_object('intellihide_pressure_time_spinbutton').connect('value-changed',  (widget) => {
             this._settings.set_int('intellihide-pressure-time', widget.get_value());
-        }));
+        });
 
         this._settings.bind('intellihide-key-toggle-text',
                              this._builder.get_object('intellihide_toggle_entry'),
@@ -1113,23 +1194,23 @@ const Settings = new Lang.Class({
         this._settings.connect('changed::intellihide-key-toggle-text', () => setShortcut(this._settings, 'intellihide-key-toggle'));
 
         this._builder.get_object('intellihide_animation_time_spinbutton').set_value(this._settings.get_int('intellihide-animation-time'));
-        this._builder.get_object('intellihide_animation_time_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('intellihide_animation_time_spinbutton').connect('value-changed', (widget) => {
             this._settings.set_int('intellihide-animation-time', widget.get_value());
-        }));
+        });
 
         this._builder.get_object('intellihide_close_delay_spinbutton').set_value(this._settings.get_int('intellihide-close-delay'));
-        this._builder.get_object('intellihide_close_delay_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('intellihide_close_delay_spinbutton').connect('value-changed', (widget) => {
             this._settings.set_int('intellihide-close-delay', widget.get_value());
-        }));
+        });
 
         this._builder.get_object('intellihide_enable_start_delay_spinbutton').set_value(this._settings.get_int('intellihide-enable-start-delay'));
-        this._builder.get_object('intellihide_enable_start_delay_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('intellihide_enable_start_delay_spinbutton').connect('value-changed', (widget) => {
             this._settings.set_int('intellihide-enable-start-delay', widget.get_value());
-        }));
+        });
 
-        this._builder.get_object('intellihide_options_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('intellihide_options_button').connect('clicked', () => {
             let dialog = new Gtk.Dialog({ title: _('Intellihide options'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -1138,9 +1219,9 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('box_intellihide_options');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('intellihide-hide-from-windows', this._settings.get_default_value('intellihide-hide-from-windows'));
@@ -1171,23 +1252,19 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(1, 1);
 
-        }));
+        });
 
         // Behavior panel
 
         this._builder.get_object('show_applications_side_padding_spinbutton').set_value(this._settings.get_int('show-apps-icon-side-padding'));
-        this._builder.get_object('show_applications_side_padding_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('show_applications_side_padding_spinbutton').connect('value-changed', (widget) => {
             this._settings.set_int('show-apps-icon-side-padding', widget.get_value());
-        }));
-
-        this._settings.bind('animate-show-apps',
-                            this._builder.get_object('application_button_animation_switch'),
-                            'active',
-                            Gio.SettingsBindFlags.DEFAULT);
+        });
 
         this._settings.bind('show-apps-override-escape',
                             this._builder.get_object('show_applications_esc_key_switch'),
@@ -1246,17 +1323,17 @@ const Settings = new Lang.Class({
 
         this._setPreviewTitlePosition();
 
-        this._builder.get_object('grid_preview_title_font_color_colorbutton').connect('notify::color', Lang.bind(this, function (button) {
+        this._builder.get_object('grid_preview_title_font_color_colorbutton').connect('color-set',  (button) => {
             let rgba = button.get_rgba();
             let css = rgba.to_string();
             let hexString = cssHexString(css);
             this._settings.set_string('window-preview-title-font-color', hexString);
-        }));
+        });
 
-        this._builder.get_object('show_window_previews_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('show_window_previews_button').connect('clicked', () => {
 
             let dialog = new Gtk.Dialog({ title: _('Window preview options'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -1266,14 +1343,12 @@ const Settings = new Lang.Class({
 
             let scrolledWindow = this._builder.get_object('box_window_preview_options');
 
-            adjustScrollableHeight(this._builder.get_object('viewport_window_preview_options'), scrolledWindow);
-            
-            dialog.get_content_area().add(scrolledWindow);
+            dialog.get_content_area().append(scrolledWindow);
 
             this._builder.get_object('preview_timeout_spinbutton').set_value(this._settings.get_int('show-window-previews-timeout'));
-            this._builder.get_object('preview_timeout_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('preview_timeout_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('show-window-previews-timeout', widget.get_value());
-            }));
+            });
 
             this._settings.bind('preview-middle-click-close',
                             this._builder.get_object('preview_middle_click_close_switch'),
@@ -1308,9 +1383,9 @@ const Settings = new Lang.Class({
                             Gio.SettingsBindFlags.DEFAULT);
 
             this._builder.get_object('preview_custom_opacity_spinbutton').set_value(this._settings.get_int('preview-custom-opacity'));
-            this._builder.get_object('preview_custom_opacity_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('preview_custom_opacity_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('preview-custom-opacity', widget.get_value());
-            }));
+            });
                             
             this._settings.bind('peek-mode',
                             this._builder.get_object('peek_mode_switch'),
@@ -1347,14 +1422,14 @@ const Settings = new Lang.Class({
                             Gio.SettingsBindFlags.DEFAULT);
 
             this._builder.get_object('enter_peek_mode_timeout_spinbutton').set_value(this._settings.get_int('enter-peek-mode-timeout'));
-            this._builder.get_object('enter_peek_mode_timeout_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('enter_peek_mode_timeout_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('enter-peek-mode-timeout', widget.get_value());
-            }));
+            });
 
             this._builder.get_object('leave_timeout_spinbutton').set_value(this._settings.get_int('leave-timeout'));
-            this._builder.get_object('leave_timeout_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('leave_timeout_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('leave-timeout', widget.get_value());
-            }));
+            });
 
             this._settings.bind('window-preview-hide-immediate-click',
                                 this._builder.get_object('preview_immediate_click_button'),
@@ -1362,49 +1437,49 @@ const Settings = new Lang.Class({
                                 Gio.SettingsBindFlags.DEFAULT);
 
             this._builder.get_object('animation_time_spinbutton').set_value(this._settings.get_int('window-preview-animation-time'));
-            this._builder.get_object('animation_time_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('animation_time_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('window-preview-animation-time', widget.get_value());
-            }));
+            });
 
             this._builder.get_object('peek_mode_opacity_spinbutton').set_value(this._settings.get_int('peek-mode-opacity'));
-            this._builder.get_object('peek_mode_opacity_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('peek_mode_opacity_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('peek-mode-opacity', widget.get_value());
-            }));
+            });
 
             this._builder.get_object('preview_size_spinbutton').set_value(this._settings.get_int('window-preview-size'));
-            this._builder.get_object('preview_size_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('preview_size_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('window-preview-size', widget.get_value());
-            }));
+            });
 
             this._builder.get_object('preview_aspect_ratio_x_combo').set_active_id(this._settings.get_int('window-preview-aspect-ratio-x').toString());
-            this._builder.get_object('preview_aspect_ratio_x_combo').connect('changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('preview_aspect_ratio_x_combo').connect('changed', (widget) => {
                 this._settings.set_int('window-preview-aspect-ratio-x', parseInt(widget.get_active_id(), 10));
-            }));
+            });
 
             this._builder.get_object('preview_aspect_ratio_y_combo').set_active_id(this._settings.get_int('window-preview-aspect-ratio-y').toString());
-            this._builder.get_object('preview_aspect_ratio_y_combo').connect('changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('preview_aspect_ratio_y_combo').connect('changed', (widget) => {
                 this._settings.set_int('window-preview-aspect-ratio-y', parseInt(widget.get_active_id(), 10));
-            }));
+            });
 
             this._builder.get_object('preview_padding_spinbutton').set_value(this._settings.get_int('window-preview-padding'));
-            this._builder.get_object('preview_padding_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('preview_padding_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('window-preview-padding', widget.get_value());
-            }));
+            });
 
             this._builder.get_object('preview_title_size_spinbutton').set_value(this._settings.get_int('window-preview-title-font-size'));
-            this._builder.get_object('preview_title_size_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('preview_title_size_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('window-preview-title-font-size', widget.get_value());
-            }));
+            });
             
             this._builder.get_object('preview_custom_icon_size_spinbutton').set_value(this._settings.get_int('window-preview-custom-icon-size'));
-            this._builder.get_object('preview_custom_icon_size_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('preview_custom_icon_size_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('window-preview-custom-icon-size', widget.get_value());
-            }));
+            });
 
             this._builder.get_object('grid_preview_title_weight_combo').set_active_id(this._settings.get_string('window-preview-title-font-weight'));
-            this._builder.get_object('grid_preview_title_weight_combo').connect('changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('grid_preview_title_weight_combo').connect('changed', (widget) => {
                 this._settings.set_string('window-preview-title-font-weight', widget.get_active_id());
-            }));
+            });
 
             (function() {
                 let rgba = new Gdk.RGBA();
@@ -1412,7 +1487,7 @@ const Settings = new Lang.Class({
                 this._builder.get_object('grid_preview_title_font_color_colorbutton').set_rgba(rgba);
             }).apply(this);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('show-window-previews-timeout', this._settings.get_default_value('show-window-previews-timeout'));
@@ -1480,11 +1555,11 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
 
-        }));
+        });
        
         this._settings.bind('isolate-workspaces',
                             this._builder.get_object('isolate_workspaces_switch'),
@@ -1501,6 +1576,11 @@ const Settings = new Lang.Class({
                             'active',
                             Gio.SettingsBindFlags.DEFAULT);
 
+        this._settings.bind('hide-overview-on-startup',
+                            this._builder.get_object('hide_overview_on_startup_switch'),
+                            'active',
+                            Gio.SettingsBindFlags.DEFAULT);
+
         this._settings.bind('group-apps',
                             this._builder.get_object('group_apps_switch'),
                             'active',
@@ -1511,19 +1591,24 @@ const Settings = new Lang.Class({
                             'sensitive',
                             Gio.SettingsBindFlags.DEFAULT | Gio.SettingsBindFlags.INVERT_BOOLEAN);
 
-        this._builder.get_object('group_apps_label_font_color_colorbutton').connect('notify::color', Lang.bind(this, function (button) {
+        this._settings.bind('progress-show-count',
+                            this._builder.get_object('show_notification_badge_switch'),
+                            'active',
+                            Gio.SettingsBindFlags.DEFAULT);
+
+        this._builder.get_object('group_apps_label_font_color_colorbutton').connect('color-set',  (button) => {
             let rgba = button.get_rgba();
             let css = rgba.to_string();
             let hexString = cssHexString(css);
             this._settings.set_string('group-apps-label-font-color', hexString);
-        }));
+        });
 
-        this._builder.get_object('group_apps_label_font_color_minimized_colorbutton').connect('notify::color', Lang.bind(this, function (button) {
+        this._builder.get_object('group_apps_label_font_color_minimized_colorbutton').connect('color-set',  (button) => {
             let rgba = button.get_rgba();
             let css = rgba.to_string();
             let hexString = cssHexString(css);
             this._settings.set_string('group-apps-label-font-color-minimized', hexString);
-        }));
+        });
 
         this._settings.bind('group-apps-use-fixed-width',
                             this._builder.get_object('group_apps_use_fixed_width_switch'),
@@ -1540,9 +1625,9 @@ const Settings = new Lang.Class({
                             'active',
                             Gio.SettingsBindFlags.DEFAULT);    
 
-        this._builder.get_object('show_group_apps_options_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('show_group_apps_options_button').connect('clicked', () => {
             let dialog = new Gtk.Dialog({ title: _('Ungrouped application options'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -1551,17 +1636,17 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('box_group_apps_options');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
             this._builder.get_object('group_apps_label_font_size_spinbutton').set_value(this._settings.get_int('group-apps-label-font-size'));
-            this._builder.get_object('group_apps_label_font_size_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('group_apps_label_font_size_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('group-apps-label-font-size', widget.get_value());
-            }));
+            });
 
             this._builder.get_object('group_apps_label_font_weight_combo').set_active_id(this._settings.get_string('group-apps-label-font-weight'));
-            this._builder.get_object('group_apps_label_font_weight_combo').connect('changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('group_apps_label_font_weight_combo').connect('changed', (widget) => {
                 this._settings.set_string('group-apps-label-font-weight', widget.get_active_id());
-            }));
+            });
 
             (function() {
                 let rgba = new Gdk.RGBA();
@@ -1576,11 +1661,11 @@ const Settings = new Lang.Class({
             }).apply(this);
 
             this._builder.get_object('group_apps_label_max_width_spinbutton').set_value(this._settings.get_int('group-apps-label-max-width'));
-            this._builder.get_object('group_apps_label_max_width_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('group_apps_label_max_width_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('group-apps-label-max-width', widget.get_value());
-            }));
+            });
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('group-apps-label-font-size', this._settings.get_default_value('group-apps-label-font-size'));
@@ -1611,33 +1696,34 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(600, 1);
 
-        }));    
+        });    
 
         this._builder.get_object('click_action_combo').set_active_id(this._settings.get_string('click-action'));
-        this._builder.get_object('click_action_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('click_action_combo').connect('changed', (widget) => {
             this._settings.set_string('click-action', widget.get_active_id());
-        }));
+        });
 
-        this._builder.get_object('shift_click_action_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('shift_click_action_combo').connect('changed', (widget) => {
             this._settings.set_string('shift-click-action', widget.get_active_id());
-        }));
+        });
 
-        this._builder.get_object('middle_click_action_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('middle_click_action_combo').connect('changed', (widget) => {
             this._settings.set_string('middle-click-action', widget.get_active_id());
-        }));
-        this._builder.get_object('shift_middle_click_action_combo').connect('changed', Lang.bind (this, function(widget) {
+        });
+        this._builder.get_object('shift_middle_click_action_combo').connect('changed', (widget) => {
             this._settings.set_string('shift-middle-click-action', widget.get_active_id());
-        }));
+        });
 
         // Create dialog for middle-click options
-        this._builder.get_object('middle_click_options_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('middle_click_options_button').connect('clicked', () => {
 
             let dialog = new Gtk.Dialog({ title: _('Customize middle-click behavior'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -1646,7 +1732,7 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('box_middle_click_options');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
             this._builder.get_object('shift_click_action_combo').set_active_id(this._settings.get_string('shift-click-action'));
 
@@ -1667,7 +1753,7 @@ const Settings = new Lang.Class({
                                 'active-id',
                                 Gio.SettingsBindFlags.DEFAULT);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings for the relevant keys
                     let keys = ['shift-click-action', 'middle-click-action', 'shift-middle-click-action'];
@@ -1683,26 +1769,27 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(700, 1);
 
-        }));
+        });
 
         this._builder.get_object('scroll_panel_combo').set_active_id(this._settings.get_string('scroll-panel-action'));
-        this._builder.get_object('scroll_panel_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('scroll_panel_combo').connect('changed', (widget) => {
             this._settings.set_string('scroll-panel-action', widget.get_active_id());
-        }));
+        });
 
         this._builder.get_object('scroll_icon_combo').set_active_id(this._settings.get_string('scroll-icon-action'));
-        this._builder.get_object('scroll_icon_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('scroll_icon_combo').connect('changed', (widget) => {
             this._settings.set_string('scroll-icon-action', widget.get_active_id());
-        }));
+        });
 
         // Create dialog for panel scroll options
-        this._builder.get_object('scroll_panel_options_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('scroll_panel_options_button').connect('clicked', () => {
             let dialog = new Gtk.Dialog({ title: _('Customize panel scroll behavior'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -1711,19 +1798,19 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('scroll_panel_options_box');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
             this._builder.get_object('scroll_panel_options_delay_spinbutton').set_value(this._settings.get_int('scroll-panel-delay'));
-            this._builder.get_object('scroll_panel_options_delay_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('scroll_panel_options_delay_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('scroll-panel-delay', widget.get_value());
-            }));
+            });
 
             this._settings.bind('scroll-panel-show-ws-popup',
                             this._builder.get_object('scroll_panel_options_show_ws_popup_switch'),
                             'active',
                             Gio.SettingsBindFlags.DEFAULT);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('scroll-panel-delay', this._settings.get_default_value('scroll-panel-delay'));
@@ -1736,16 +1823,17 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(640, 1);
 
-        }));
+        });
 
         // Create dialog for icon scroll options
-        this._builder.get_object('scroll_icon_options_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('scroll_icon_options_button').connect('clicked', () => {
             let dialog = new Gtk.Dialog({ title: _('Customize icon scroll behavior'),
-                                            transient_for: this.widget.get_toplevel(),
+                                            transient_for: this.notebook.get_root(),
                                             use_header_bar: true,
                                             modal: true });
 
@@ -1754,14 +1842,14 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('scroll_icon_options_box');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
             this._builder.get_object('scroll_icon_options_delay_spinbutton').set_value(this._settings.get_int('scroll-icon-delay'));
-            this._builder.get_object('scroll_icon_options_delay_spinbutton').connect('value-changed', Lang.bind (this, function(widget) {
+            this._builder.get_object('scroll_icon_options_delay_spinbutton').connect('value-changed', (widget) => {
                 this._settings.set_int('scroll-icon-delay', widget.get_value());
-            }));
+            });
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('scroll-icon-delay', this._settings.get_default_value('scroll-icon-delay'));
@@ -1772,11 +1860,12 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(640, 1);
 
-        }));
+        });
 
         this._settings.bind('hot-keys',
                             this._builder.get_object('hot_keys_switch'),
@@ -1787,9 +1876,9 @@ const Settings = new Lang.Class({
                             'sensitive',
                             Gio.SettingsBindFlags.DEFAULT);
 
-        this._builder.get_object('overlay_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('overlay_combo').connect('changed', (widget) => {
             this._settings.set_string('hotkeys-overlay-combo', widget.get_active_id());
-        }));
+        });
 
         this._settings.bind('shortcut-previews',
                             this._builder.get_object('shortcut_preview_switch'),
@@ -1797,11 +1886,11 @@ const Settings = new Lang.Class({
                             Gio.SettingsBindFlags.DEFAULT);
 
         this._builder.get_object('shortcut_num_keys_combo').set_active_id(this._settings.get_string('shortcut-num-keys'));
-        this._builder.get_object('shortcut_num_keys_combo').connect('changed', Lang.bind (this, function(widget) {
+        this._builder.get_object('shortcut_num_keys_combo').connect('changed', (widget) => {
             this._settings.set_string('shortcut-num-keys', widget.get_active_id());
-        }));
+        });
 
-        this._settings.connect('changed::hotkey-prefix-text', Lang.bind(this, function() {checkHotkeyPrefix(this._settings);}));
+        this._settings.connect('changed::hotkey-prefix-text', () => {checkHotkeyPrefix(this._settings);});
 
         this._builder.get_object('hotkey_prefix_combo').set_active_id(this._settings.get_string('hotkey-prefix-text'));
 
@@ -1825,24 +1914,24 @@ const Settings = new Lang.Class({
             this._builder.get_object('timeout_spinbutton').set_sensitive(false);
         }
 
-        this._settings.connect('changed::hotkeys-overlay-combo', Lang.bind(this, function() {
+        this._settings.connect('changed::hotkeys-overlay-combo', () => {
             if (this._settings.get_string('hotkeys-overlay-combo') !== 'TEMPORARILY')
                 this._builder.get_object('timeout_spinbutton').set_sensitive(false);
             else
                 this._builder.get_object('timeout_spinbutton').set_sensitive(true);
-        }));
+        });
 
         this._settings.bind('shortcut-text',
                             this._builder.get_object('shortcut_entry'),
                             'text',
                             Gio.SettingsBindFlags.DEFAULT);
-        this._settings.connect('changed::shortcut-text', Lang.bind(this, function() {setShortcut(this._settings, 'shortcut');}));
+        this._settings.connect('changed::shortcut-text', () => {setShortcut(this._settings, 'shortcut');});
 
         // Create dialog for number overlay options
-        this._builder.get_object('overlay_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('overlay_button').connect('clicked', () => {
 
             let dialog = new Gtk.Dialog({ title: _('Advanced hotkeys options'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -1851,9 +1940,9 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('box_overlay_shortcut');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings for the relevant keys
                     let keys = ['hotkey-prefix-text', 'shortcut-text', 'hotkeys-overlay-combo', 'overlay-timeout', 'shortcut-previews'];
@@ -1866,17 +1955,18 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(600, 1);
 
-        }));
+        });
         
         // setup dialog for secondary menu options
-        this._builder.get_object('secondarymenu_options_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('secondarymenu_options_button').connect('clicked', () => {
 
             let dialog = new Gtk.Dialog({ title: _('Secondary Menu Options'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -1885,7 +1975,7 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('box_secondarymenu_options');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
             this._settings.bind('secondarymenu-contains-appmenu',
                     this._builder.get_object('secondarymenu_appmenu_switch'),
@@ -1897,7 +1987,7 @@ const Settings = new Lang.Class({
                     'active',
                     Gio.SettingsBindFlags.DEFAULT);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('secondarymenu-contains-appmenu', this._settings.get_default_value('secondarymenu-contains-appmenu'));
@@ -1908,17 +1998,18 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(480, 1);
 
-        }));
+        });
 
         // setup dialog for advanced options
-        this._builder.get_object('button_advanced_options').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('button_advanced_options').connect('clicked', () => {
 
             let dialog = new Gtk.Dialog({ title: _('Advanced Options'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -1927,9 +2018,9 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('box_advanced_options');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings  
                                  
@@ -1939,11 +2030,12 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
+            dialog.set_default_size(480, 1);
 
-        }));
+        });
 
         // Fine-tune panel
 
@@ -2051,9 +2143,9 @@ const Settings = new Lang.Class({
             scales.forEach(updateScale);
         }
 
-        this._builder.get_object('animate_appicon_hover_button').connect('clicked', Lang.bind(this, function() {
+        this._builder.get_object('animate_appicon_hover_button').connect('clicked', () => {
             let dialog = new Gtk.Dialog({ title: _('App icon animation options'),
-                                          transient_for: this.widget.get_toplevel(),
+                                          transient_for: this.notebook.get_root(),
                                           use_header_bar: true,
                                           modal: true });
 
@@ -2062,9 +2154,9 @@ const Settings = new Lang.Class({
             dialog.add_button(_('Reset to defaults'), 1);
 
             let box = this._builder.get_object('animate_appicon_hover_options');
-            dialog.get_content_area().add(box);
+            dialog.get_content_area().append(box);
 
-            dialog.connect('response', Lang.bind(this, function(dialog, id) {
+            dialog.connect('response', (dialog, id) => {
                 if (id == 1) {
                     // restore default settings
                     this._settings.set_value('animate-appicon-hover-animation-type', this._settings.get_default_value('animate-appicon-hover-animation-type'));
@@ -2080,11 +2172,11 @@ const Settings = new Lang.Class({
                     dialog.destroy();
                 }
                 return;
-            }));
+            });
 
-            dialog.show_all();
+            dialog.show();
 
-        }));
+        });
 
         this._settings.bind('stockgs-keep-dash',
                             this._builder.get_object('stockgs_dash_switch'),
@@ -2119,9 +2211,8 @@ const Settings = new Lang.Class({
         this._builder.get_object('importexport_export_button').connect('clicked', widget => {
             this._showFileChooser(
                 _('Export settings'),
-                { action: Gtk.FileChooserAction.SAVE,
-                  do_overwrite_confirmation: true },
-                Gtk.STOCK_SAVE,
+                { action: Gtk.FileChooserAction.SAVE },
+                "Save",
                 filename => {
                     let file = Gio.file_new_for_path(filename);
                     let raw = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
@@ -2137,36 +2228,32 @@ const Settings = new Lang.Class({
             this._showFileChooser(
                 _('Import settings'),
                 { action: Gtk.FileChooserAction.OPEN },
-                Gtk.STOCK_OPEN,
+                "Open",
                 filename => {
-                    let settingsFile = Gio.File.new_for_path(filename);
-                    let [ , pid, stdin, stdout, stderr] = 
-                        GLib.spawn_async_with_pipes(
-                            null,
-                            ['dconf', 'load', SCHEMA_PATH],
-                            null,
-                            GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-                            null
-                        );
-        
-                    stdin = new Gio.UnixOutputStream({ fd: stdin, close_fd: true });
-                    GLib.close(stdout);
-                    GLib.close(stderr);
-                                        
-                    let [ , , , retCode] = GLib.spawn_command_line_sync(GSET + ' -d ' + Me.uuid);
-                                        
-                    if (retCode == 0) {
-                        GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, () => GLib.spawn_command_line_sync(GSET + ' -e ' + Me.uuid));
-                    }
+                    if (filename && GLib.file_test(filename, GLib.FileTest.EXISTS)) {
+                        let settingsFile = Gio.File.new_for_path(filename);
+                        let [ , pid, stdin, stdout, stderr] =
+                            GLib.spawn_async_with_pipes(
+                                null,
+                                ['dconf', 'load', SCHEMA_PATH],
+                                null,
+                                GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                                null
+                            );
 
-                    stdin.splice(settingsFile.read(null), Gio.OutputStreamSpliceFlags.CLOSE_SOURCE | Gio.OutputStreamSpliceFlags.CLOSE_TARGET, null);
+                        stdin = new Gio.UnixOutputStream({ fd: stdin, close_fd: true });
+                        GLib.close(stdout);
+                        GLib.close(stderr);
+
+                        stdin.splice(settingsFile.read(null), Gio.OutputStreamSpliceFlags.CLOSE_SOURCE | Gio.OutputStreamSpliceFlags.CLOSE_TARGET, null);
+                    }
                 }
             );
         });
 
-    },
+    }
 
-    _setPreviewTitlePosition: function() {
+    _setPreviewTitlePosition() {
         switch (this._settings.get_string('window-preview-title-position')) {
             case 'BOTTOM':
                 this._builder.get_object('preview_title_position_bottom_button').set_active(true);
@@ -2175,259 +2262,224 @@ const Settings = new Lang.Class({
                 this._builder.get_object('preview_title_position_top_button').set_active(true);
                 break;
         }
-    },
+    }
 
-    _showFileChooser: function(title, params, acceptBtn, acceptHandler) {
-        let dialog = new Gtk.FileChooserDialog(mergeObjects({ title: title, transient_for: this.widget.get_toplevel() }, params));
+    _showFileChooser(title, params, acceptBtn, acceptHandler) {
+        let dialog = new Gtk.FileChooserDialog(mergeObjects({ title: title, transient_for: this.notebook.get_root() }, params));
 
-        dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL);
+        dialog.add_button("Cancel", Gtk.ResponseType.CANCEL);
         dialog.add_button(acceptBtn, Gtk.ResponseType.ACCEPT);
 
-        if (dialog.run() == Gtk.ResponseType.ACCEPT) {
-            try {
-                acceptHandler(dialog.get_filename());
-            } catch(e) {
-                log('error from dash-to-panel filechooser: ' + e);
-            }
-        }
+        dialog.show();
 
-        dialog.destroy();
-    },
+        dialog.connect('response', (dialog, id) => {
+            if (id == Gtk.ResponseType.ACCEPT)
+                acceptHandler.call(this, dialog.get_file().get_path());
+            
+            dialog.destroy();
+        });
+    }
+}
 
-    /**
-     * Object containing all signals defined in the glade file
-     */
-    _SignalHandler: {
-        animate_appicon_hover_options_duration_scale_format_value_cb: function(scale, value) {
-            return _("%d ms").format(value);
-        },
 
-        animate_appicon_hover_options_rotation_scale_format_value_cb: function(scale, value) {
-            return _("%d °").format(value);
-        },
+const BuilderScope = GObject.registerClass({
+    Implements: [Gtk.BuilderScope],
+}, class BuilderScope extends GObject.Object {
+  
+    _init(preferences) {
+        this._preferences = preferences;
+        super._init();
+    }
 
-        animate_appicon_hover_options_travel_scale_format_value_cb: function(scale, value) {
-            return _("%d %%").format(value);
-        },
-
-        animate_appicon_hover_options_zoom_scale_format_value_cb: function(scale, value) {
-            return _("%d %%").format(value);
-        },
-
-        animate_appicon_hover_options_convexity_scale_format_value_cb: function(scale, value) {
-            return _("%.1f").format(value);
-        },
-
-        animate_appicon_hover_options_extent_scale_format_value_cb: function(scale, value) {
-            return Gettext.ngettext("%d icon", "%d icons", value).format(value);
-        },
-
-        position_bottom_button_clicked_cb: function(button) {
-            if (!this._ignorePositionRadios && button.get_active()) this._setPanelPosition(Pos.BOTTOM);
-        },
-		
-		position_top_button_clicked_cb: function(button) {
-            if (!this._ignorePositionRadios && button.get_active()) this._setPanelPosition(Pos.TOP);
-        },
+    vfunc_create_closure(builder, handlerName, flags, connectObject) {
+        if (flags & Gtk.BuilderClosureFlags.SWAPPED)
+            throw new Error('Unsupported template signal flag "swapped"');
         
-        position_left_button_clicked_cb: function(button) {
-            if (!this._ignorePositionRadios && button.get_active()) this._setPanelPosition(Pos.LEFT);
-        },
-		
-		position_right_button_clicked_cb: function(button) {
-            if (!this._ignorePositionRadios && button.get_active()) this._setPanelPosition(Pos.RIGHT);
-        },
+        if (typeof this[handlerName] === 'undefined')
+            throw new Error(`${handlerName} is undefined`);
+        
+        return this[handlerName].bind(connectObject || this);
+    }
+    
+    on_btn_click(connectObject) {
+        connectObject.set_label("Clicked");
+    }
 
-        dots_bottom_button_toggled_cb: function(button) {
-            if (button.get_active())
-                this._settings.set_string('dot-position', "BOTTOM");
-        },
-		
-		dots_top_button_toggled_cb: function(button) {
-            if (button.get_active())
-                this._settings.set_string('dot-position', "TOP");
-        },
+    position_bottom_button_clicked_cb(button) {
+        if (!this._preferences._ignorePositionRadios && button.get_active()) this._preferences._setPanelPosition(Pos.BOTTOM);
+    }
 
-        dots_left_button_toggled_cb: function(button) {
-            if (button.get_active())
-                this._settings.set_string('dot-position', "LEFT");
-        },
-		
-		dots_right_button_toggled_cb: function(button) {
-            if (button.get_active())
-                this._settings.set_string('dot-position', "RIGHT");
-        },
+    position_top_button_clicked_cb(button) {
+        if (!this._preferences._ignorePositionRadios && button.get_active()) this._preferences._setPanelPosition(Pos.TOP);
+    }
+    
+    position_left_button_clicked_cb(button) {
+       if (!this._preferences._ignorePositionRadios && button.get_active()) this._preferences._setPanelPosition(Pos.LEFT);
+    }
 
-        preview_title_position_bottom_button_toggled_cb: function(button) {
-            if (button.get_active())
-                this._settings.set_string('window-preview-title-position', 'BOTTOM');
-        },
-		
-		preview_title_position_top_button_toggled_cb: function(button) {
-            if (button.get_active())
-                this._settings.set_string('window-preview-title-position', 'TOP');
-        },
+    position_right_button_clicked_cb(button) {
+       if (!this._preferences._ignorePositionRadios && button.get_active()) this._preferences._setPanelPosition(Pos.RIGHT);
+    }
 
+    dots_bottom_button_toggled_cb(button) {
+        if (button.get_active())
+            this._preferences._settings.set_string('dot-position', "BOTTOM");
+    }
 
-        panel_length_scale_format_value_cb: function(scale, value) {
-            return value+ '%';
-        },
+    dots_top_button_toggled_cb(button) {
+        if (button.get_active())
+            this._preferences._settings.set_string('dot-position', "TOP");
+    }
 
-        panel_size_scale_format_value_cb: function(scale, value) {
-            return value+ ' px';
-        },
+    dots_left_button_toggled_cb(button) {
+        if (button.get_active())
+            this._preferences._settings.set_string('dot-position', "LEFT");
+    }
 
-        panel_size_scale_value_changed_cb: function(scale) {
-            // Avoid settings the size continuously
-            if (this._panel_size_timeout > 0)
-                Mainloop.source_remove(this._panel_size_timeout);
+    dots_right_button_toggled_cb(button) {
+        if (button.get_active())
+            this._preferences._settings.set_string('dot-position', "RIGHT");
+    }
 
-            this._panel_size_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, Lang.bind(this, function() {
-                const value = scale.get_value();
-                const monitorSync = this._settings.get_boolean('panel-element-positions-monitors-sync');
-                const monitorsToSetFor = monitorSync ? this.monitors : [this._currentMonitorIndex];
-                monitorsToSetFor.forEach(monitorIndex => {
-                    PanelSettings.setPanelSize(this._settings, monitorIndex, value);
-                });
+    preview_title_position_bottom_button_toggled_cb(button) {
+        if (button.get_active())
+            this._preferences._settings.set_string('window-preview-title-position', 'BOTTOM');
+    }
 
-                this._panel_size_timeout = 0;
-                return GLib.SOURCE_REMOVE;
-            }));
-        },
+    preview_title_position_top_button_toggled_cb(button) {
+        if (button.get_active())
+            this._preferences._settings.set_string('window-preview-title-position', 'TOP');
+    }
 
-        tray_size_scale_format_value_cb: function(scale, value) {
-            return value+ ' px';
-        },
+    panel_size_scale_value_changed_cb(scale) {
+        // Avoid settings the size continuously
+        if (this._preferences._panel_size_timeout > 0)
+            Mainloop.source_remove(this._preferences._panel_size_timeout);
 
-        tray_size_scale_value_changed_cb: function(scale) {
-            // Avoid settings the size consinuosly
-            if (this._tray_size_timeout > 0)
-                Mainloop.source_remove(this._tray_size_timeout);
+        this._preferences._panel_size_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, (() => {
+            const value = scale.get_value();
+            const monitorSync = this._preferences._settings.get_boolean('panel-element-positions-monitors-sync');
+            const monitorsToSetFor = monitorSync ? this._preferences.monitors : [this._preferences._currentMonitorIndex];
+            monitorsToSetFor.forEach(monitorIndex => {
+                PanelSettings.setPanelSize(this._preferences._settings, monitorIndex, value);
+            });
 
-            this._tray_size_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, Lang.bind(this, function() {
-                this._settings.set_int('tray-size', scale.get_value());
-                this._tray_size_timeout = 0;
-                return GLib.SOURCE_REMOVE;
-            }));
-        },
+            this._preferences._panel_size_timeout = 0;
+            return GLib.SOURCE_REMOVE;
+        }));
+    }
 
-        leftbox_size_scale_format_value_cb: function(scale, value) {
-            return value+ ' px';
-        },
+    tray_size_scale_value_changed_cb(scale) {
+        // Avoid settings the size consinuosly
+        if (this._preferences._tray_size_timeout > 0)
+            Mainloop.source_remove(this._preferences._tray_size_timeout);
 
-        leftbox_size_scale_value_changed_cb: function(scale) {
-            // Avoid settings the size consinuosly
-            if (this._leftbox_size_timeout > 0)
-                Mainloop.source_remove(this._leftbox_size_timeout);
+        this._preferences._tray_size_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, () => {
+            this._preferences._settings.set_int('tray-size', scale.get_value());
+            this._preferences._tray_size_timeout = 0;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
 
-            this._leftbox_size_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, Lang.bind(this, function() {
-                this._settings.set_int('leftbox-size', scale.get_value());
-                this._leftbox_size_timeout = 0;
-                return GLib.SOURCE_REMOVE;
-            }));
-        },
+    leftbox_size_scale_value_changed_cb(scale) {
+        // Avoid settings the size consinuosly
+        if (this._preferences._leftbox_size_timeout > 0)
+            Mainloop.source_remove(this._preferences._leftbox_size_timeout);
 
-        appicon_margin_scale_format_value_cb: function(scale, value) {
-            return value+ ' px';
-        },
+        this._preferences._leftbox_size_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, () => {
+            this._preferences._settings.set_int('leftbox-size', scale.get_value());
+            this._preferences._leftbox_size_timeout = 0;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
 
-        appicon_margin_scale_value_changed_cb: function(scale) {
-            // Avoid settings the size consinuosly
-            if (this._appicon_margin_timeout > 0)
-                Mainloop.source_remove(this._appicon_margin_timeout);
+    appicon_margin_scale_value_changed_cb(scale) {
+        // Avoid settings the size consinuosly
+        if (this._preferences._appicon_margin_timeout > 0)
+            Mainloop.source_remove(this._preferences._appicon_margin_timeout);
 
-            this._appicon_margin_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, Lang.bind(this, function() {
-                this._settings.set_int('appicon-margin', scale.get_value());
-                this._appicon_margin_timeout = 0;
-                return GLib.SOURCE_REMOVE;
-            }));
-        },
+        this._preferences._appicon_margin_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, () => {
+            this._preferences._settings.set_int('appicon-margin', scale.get_value());
+            this._preferences._appicon_margin_timeout = 0;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
 
-        appicon_padding_scale_format_value_cb: function(scale, value) {
-            return value + ' px';
-        },
+    appicon_padding_scale_value_changed_cb(scale) {
+        // Avoid settings the size consinuosly
+        if (this._preferences._appicon_padding_timeout > 0)
+            Mainloop.source_remove(this._preferences._appicon_padding_timeout);
 
-        appicon_padding_scale_value_changed_cb: function(scale) {
-            // Avoid settings the size consinuosly
-            if (this._appicon_padding_timeout > 0)
-                Mainloop.source_remove(this._appicon_padding_timeout);
+        this._preferences._appicon_padding_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, () => {
+            this._preferences._settings.set_int('appicon-padding', scale.get_value());
+            this._preferences._appicon_padding_timeout = 0;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
 
-            this._appicon_padding_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, Lang.bind(this, function() {
-                this._settings.set_int('appicon-padding', scale.get_value());
-                this._appicon_padding_timeout = 0;
-                return GLib.SOURCE_REMOVE;
-            }));
-        },
+    tray_padding_scale_value_changed_cb(scale) {
+        // Avoid settings the size consinuosly
+        if (this._preferences._tray_padding_timeout > 0)
+            Mainloop.source_remove(this._preferences._tray_padding_timeout);
 
-        tray_padding_scale_format_value_cb: function(scale, value) {
-            return value+ ' px';
-        },
+        this._preferences._tray_padding_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, () => {
+            this._preferences._settings.set_int('tray-padding', scale.get_value());
+            this._preferences._tray_padding_timeout = 0;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
 
-        tray_padding_scale_value_changed_cb: function(scale) {
-            // Avoid settings the size consinuosly
-            if (this._tray_padding_timeout > 0)
-                Mainloop.source_remove(this._tray_padding_timeout);
+    statusicon_padding_scale_value_changed_cb(scale) {
+        // Avoid settings the size consinuosly
+        if (this._preferences._statusicon_padding_timeout > 0)
+            Mainloop.source_remove(this._preferences._statusicon_padding_timeout);
 
-            this._tray_padding_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, Lang.bind(this, function() {
-                this._settings.set_int('tray-padding', scale.get_value());
-                this._tray_padding_timeout = 0;
-                return GLib.SOURCE_REMOVE;
-            }));
-        },
+        this._preferences._statusicon_padding_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, () => {
+            this._preferences._settings.set_int('status-icon-padding', scale.get_value());
+            this._preferences._statusicon_padding_timeout = 0;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
 
-        statusicon_padding_scale_format_value_cb: function(scale, value) {
-            return value+ ' px';
-        },
+    leftbox_padding_scale_value_changed_cb(scale) {
+        // Avoid settings the size consinuosly
+        if (this._preferences._leftbox_padding_timeout > 0)
+            Mainloop.source_remove(this._preferences._leftbox_padding_timeout);
 
-        statusicon_padding_scale_value_changed_cb: function(scale) {
-            // Avoid settings the size consinuosly
-            if (this._statusicon_padding_timeout > 0)
-                Mainloop.source_remove(this._statusicon_padding_timeout);
-
-            this._statusicon_padding_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, Lang.bind(this, function() {
-                this._settings.set_int('status-icon-padding', scale.get_value());
-                this._statusicon_padding_timeout = 0;
-                return GLib.SOURCE_REMOVE;
-            }));
-        },
-
-        leftbox_padding_scale_format_value_cb: function(scale, value) {
-            return value+ ' px';
-        },
-
-        leftbox_padding_scale_value_changed_cb: function(scale) {
-            // Avoid settings the size consinuosly
-            if (this._leftbox_padding_timeout > 0)
-                Mainloop.source_remove(this._leftbox_padding_timeout);
-
-            this._leftbox_padding_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, Lang.bind(this, function() {
-                this._settings.set_int('leftbox-padding', scale.get_value());
-                this._leftbox_padding_timeout = 0;
-                return GLib.SOURCE_REMOVE;
-            }));
-        }
+        this._preferences._leftbox_padding_timeout = Mainloop.timeout_add(SCALE_UPDATE_TIMEOUT, () => {
+            this._preferences._settings.set_int('leftbox-padding', scale.get_value());
+            this._preferences._leftbox_padding_timeout = 0;
+            return GLib.SOURCE_REMOVE;
+        });
     }
 });
 
 function init() {
-    Convenience.initTranslations();
+    ExtensionUtils.initTranslations();
+}
+
+function fillPreferencesWindow(window) {
+    window.set_default_size(680, 740);
+
+    let preferences = new Preferences();
+    let box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+
+    // dummy page to prevent 'Extension did not provide any UI'
+    // error until we migrate to Adw
+    let dummyPage = new imports.gi.Adw.PreferencesPage()
+
+    box.append(new imports.gi.Adw.HeaderBar);
+    window.add(dummyPage);
+    window.visible_page = dummyPage
+
+    box.append(preferences.notebook);
+    window.set_content(box);
 }
 
 function buildPrefsWidget() {
-    let settings = new Settings();
-    let widget = settings.widget;
-
-    // I'd like the scrolled window to default to a size large enough to show all without scrolling, if it fits on the screen
-    // But, it doesn't seem possible, so I'm setting a minimum size if there seems to be enough screen real estate
-    widget.show_all();
-    adjustScrollableHeight(settings.viewport, widget);
+    Gtk.Window.list_toplevels()[0].set_default_size(680, 740);
     
-    return widget;
-}
-
-function adjustScrollableHeight(viewport, scrollableWindow) {
-    let viewportSize = viewport.size_request();
-    let screenHeight = scrollableWindow.get_screen().get_height() - 120;
+    let preferences = new Preferences();
     
-    scrollableWindow.set_size_request(viewportSize.width, viewportSize.height > screenHeight ? screenHeight : viewportSize.height);  
+    return preferences.notebook;
 }

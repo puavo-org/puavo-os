@@ -15,7 +15,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Lang = imports.lang;
 const Clutter = imports.gi.Clutter;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
@@ -52,10 +51,9 @@ var Hold = {
     PERMANENT: 2
 };
 
-var Intellihide = Utils.defineClass({
-    Name: 'DashToPanel.Intellihide',
+var Intellihide = class {
 
-    _init: function(dtpPanel) {
+    constructor(dtpPanel) {
         this._dtpPanel = dtpPanel;
         this._panelBox = dtpPanel.panelBox;
         this._panelManager = dtpPanel.panelManager;
@@ -70,9 +68,9 @@ var Intellihide = Utils.defineClass({
 
         this.enabled = false;
         this._changeEnabledStatus();
-    },
+    }
 
-    enable: function() {
+    enable() {
         this.enabled = true;
         this._monitor = this._dtpPanel.monitor;
         this._animationDestination = -1;
@@ -89,7 +87,8 @@ var Intellihide = Utils.defineClass({
 
         if (Me.settings.get_boolean('intellihide-hide-from-windows')) {
             this._proximityWatchId = this._proximityManager.createWatch(
-                this._panelBox.get_parent(), 
+                this._panelBox.get_parent(),
+                this._dtpPanel.monitor.index,
                 Proximity.Mode[Me.settings.get_string('intellihide-behaviour')], 
                 0, 0,
                 overlap => { 
@@ -101,9 +100,9 @@ var Intellihide = Utils.defineClass({
 
         this._setRevealMechanism();
         this._queueUpdatePanelPosition();
-    },
+    }
 
-    disable: function(reset) {
+    disable(reset) {
         if (this._proximityWatchId) {
             this._proximityManager.removeWatch(this._proximityWatchId);
         }
@@ -118,43 +117,43 @@ var Intellihide = Utils.defineClass({
         this._revealPanel(!reset);
         
         this.enabled = false;
-    },
+    }
 
-    destroy: function() {
+    destroy() {
         Me.settings.disconnect(this._intellihideChangedId);
         Me.settings.disconnect(this._intellihideOnlySecondaryChangedId);
         
         if (this.enabled) {
             this.disable();
         }
-    },
+    }
 
-    toggle: function() {
+    toggle() {
         this[this._holdStatus & Hold.PERMANENT ? 'release' : 'revealAndHold'](Hold.PERMANENT);
-    },
+    }
 
-    revealAndHold: function(holdStatus) {
+    revealAndHold(holdStatus) {
         if (this.enabled && !this._holdStatus) {
             this._revealPanel();
         }
         
         this._holdStatus |= holdStatus;
-    },
+    }
 
-    release: function(holdStatus) {
+    release(holdStatus) {
         this._holdStatus -= holdStatus;
 
         if (this.enabled && !this._holdStatus) {
             this._queueUpdatePanelPosition();
         }
-    },
+    }
 
-    reset: function() {
+    reset() {
         this.disable(true);
         this.enable();
-    },
+    }
 
-    _changeEnabledStatus: function() {
+    _changeEnabledStatus() {
         let intellihide = Me.settings.get_boolean('intellihide');
         let onlySecondary = Me.settings.get_boolean('intellihide-only-secondary');
         let enabled = intellihide && !(this._dtpPanel.isPrimary && onlySecondary);
@@ -162,14 +161,17 @@ var Intellihide = Utils.defineClass({
         if (this.enabled !== enabled) {
             this[enabled ? 'enable' : 'disable']();
         }
-    },
+    }
 
-    _bindGeneralSignals: function() {
+    _bindGeneralSignals() {
         this._signalsHandler.add(
             [
                 this._dtpPanel.taskbar,
-                'menu-closed',
-                () => this._panelBox.sync_hover()
+                ['menu-closed', 'end-drag'],
+                () => {
+                    this._panelBox.sync_hover();
+                    this._onHoverChanged();
+                }
             ],
             [
                 Me.settings, 
@@ -201,17 +203,16 @@ var Intellihide = Utils.defineClass({
                 () => this._queueUpdatePanelPosition()
             ]
         );
-    },
+    }
 
-    _onHoverChanged: function() {
+    _onHoverChanged() {
         this._hoveredOut = !this._panelBox.hover;
         this._queueUpdatePanelPosition();
-    },
+    }
 
-    _setTrackPanel: function(enable) {
-        let trackedIndex = Main.layoutManager._findActor(this._panelBox);
-        let actorData = Main.layoutManager._trackedActors[trackedIndex]
-            
+    _setTrackPanel(enable) {
+        let actorData = Utils.getTrackedActorData(this._panelBox)
+
         actorData.affectsStruts = !enable;
         actorData.trackFullscreen = !enable;
 
@@ -220,9 +221,9 @@ var Intellihide = Utils.defineClass({
         this._panelBox.visible = enable ? enable : this._panelBox.visible;
         
         Main.layoutManager._queueUpdateRegions();
-    },
+    }
 
-    _setRevealMechanism: function() {
+    _setRevealMechanism() {
         if (global.display.supports_extended_barriers() && Me.settings.get_boolean('intellihide-use-pressure')) {
             this._edgeBarrier = this._createBarrier();
             this._pressureBarrier = new Layout.PressureBarrier(
@@ -236,9 +237,9 @@ var Intellihide = Utils.defineClass({
             this._pointerWatch = PointerWatcher.getPointerWatcher()
                                                .addWatch(CHECK_POINTER_MS, (x, y) => this._checkMousePointer(x, y));
         }
-    },
+    }
 
-    _removeRevealMechanism: function() {
+    _removeRevealMechanism() {
         if (this._pointerWatch) {
             PointerWatcher.getPointerWatcher()._removeWatch(this._pointerWatch);
         }
@@ -246,10 +247,12 @@ var Intellihide = Utils.defineClass({
         if (this._pressureBarrier) {
             this._pressureBarrier.destroy();
             this._edgeBarrier.destroy();
-        }
-    },
 
-    _createBarrier: function() {
+            this._pressureBarrier = 0;
+        }
+    }
+
+    _createBarrier() {
         let position = this._dtpPanel.geom.position;
         let opts = { display: global.display };
 
@@ -276,9 +279,9 @@ var Intellihide = Utils.defineClass({
         }
 
         return new Meta.Barrier(opts);
-    },
+    }
 
-    _checkMousePointer: function(x, y) {
+    _checkMousePointer(x, y) {
         let position = this._dtpPanel.geom.position;
 
         if (!this._panelBox.hover && !Main.overview.visible &&
@@ -290,9 +293,9 @@ var Intellihide = Utils.defineClass({
              (y >= this._monitor.y && y < this._monitor.y + this._monitor.height))) {
             this._queueUpdatePanelPosition(true);
         }
-    },
+    }
 
-    _queueUpdatePanelPosition: function(fromRevealMechanism) {
+    _queueUpdatePanelPosition(fromRevealMechanism) {
         if (!fromRevealMechanism && this._timeoutsHandler.getId(T2) && !Main.overview.visible) {
             //unless this is a mouse interaction or entering/leaving the overview, limit the number
             //of updates, but remember to update again when the limit timeout is reached
@@ -301,18 +304,18 @@ var Intellihide = Utils.defineClass({
             this._checkIfShouldBeVisible(fromRevealMechanism) ? this._revealPanel() : this._hidePanel();
             this._timeoutsHandler.add([T2, MIN_UPDATE_MS, () => this._endLimitUpdate()]);
         }
-    },
+    }
 
-    _endLimitUpdate: function() {
+    _endLimitUpdate() {
         if (this._pendingUpdate) {
             this._pendingUpdate = false;
             this._queueUpdatePanelPosition();
         }
-    },
+    }
 
-    _checkIfShouldBeVisible: function(fromRevealMechanism) {
+    _checkIfShouldBeVisible(fromRevealMechanism) {
         if (Main.overview.visibleTarget || this._dtpPanel.taskbar.previewMenu.opened || 
-            this._panelBox.get_hover() || this._checkIfGrab()) {
+            this._dtpPanel.taskbar._dragMonitor || this._panelBox.get_hover() || this._checkIfGrab()) {
             return true;
         }
 
@@ -332,35 +335,50 @@ var Intellihide = Utils.defineClass({
         }
 
         return !this._windowOverlap;
-    },
+    }
 
-    _checkIfGrab: function() {
-        if (GrabHelper._grabHelperStack.some(gh => gh._owner == this._dtpPanel.panel.actor)) {
+    _checkIfGrab() {
+        let isGrab 
+        
+        if (GrabHelper._grabHelperStack)
+            // gnome-shell < 42
+            isGrab = GrabHelper._grabHelperStack.some(gh => gh._owner == this._dtpPanel.panel)
+        else if (global.stage.get_grab_actor) {
+            // gnome-shell >= 42
+            let grabActor = global.stage.get_grab_actor()
+            let sourceActor = grabActor?._sourceActor || grabActor
+
+            isGrab = sourceActor && 
+                     (sourceActor == Main.layoutManager.dummyCursor || 
+                      this._dtpPanel.statusArea.quickSettings?.menu.actor.contains(sourceActor) || 
+                      this._dtpPanel.panel.contains(sourceActor))
+        }
+
+        if (isGrab)
             //there currently is a grab on a child of the panel, check again soon to catch its release
             this._timeoutsHandler.add([T1, CHECK_GRAB_MS, () => this._queueUpdatePanelPosition()]);
 
-            return true;
-        }
-    },
+        return isGrab;
+    }
 
-    _revealPanel: function(immediate) {
+    _revealPanel(immediate) {
         if (!this._panelBox.visible) {
             this._panelBox.visible = true;
             this._dtpPanel.taskbar._shownInitially = false;
         }
 
         this._animatePanel(0, immediate);
-    },
+    }
 
-    _hidePanel: function(immediate) {
+    _hidePanel(immediate) {
         let position = this._dtpPanel.geom.position;
         let size = this._panelBox[position == St.Side.LEFT || position == St.Side.RIGHT ? 'width' : 'height']; 
         let coefficient = position == St.Side.TOP || position == St.Side.LEFT ? -1 : 1;
 
         this._animatePanel(size * coefficient, immediate);
-    },
+    }
 
-    _animatePanel: function(destination, immediate) {
+    _animatePanel(destination, immediate) {
         let animating = Utils.isAnimating(this._panelBox, this._translationProp);
 
         if (!((animating && destination === this._animationDestination) || 
@@ -397,5 +415,5 @@ var Intellihide = Utils.defineClass({
         }
 
         this._hoveredOut = false;
-    },
-});
+    }
+}

@@ -22,7 +22,6 @@ const Main = imports.ui.main;
 const Meta = imports.gi.Meta;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const Lang = imports.lang;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 const WindowManager = imports.ui.windowManager;
@@ -31,20 +30,21 @@ const Mainloop = imports.mainloop;
 const Signals = imports.signals;
 
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const PanelManager = Me.imports.panelManager;
+const { PanelManager } = Me.imports.panelManager;
 const Utils = Me.imports.utils;
+const AppIcons = Me.imports.appIcons;
 
 const UBUNTU_DOCK_UUID = 'ubuntu-dock@ubuntu.com';
 
 let panelManager;
-let oldDash;
 let extensionChangedHandler;
 let disabledUbuntuDock;
 let extensionSystem = (Main.extensionManager || imports.ui.extensionSystem);
 
 function init() {
-    Convenience.initTranslations(Utils.TRANSLATION_DOMAIN);
+    this._realHasOverview = Main.sessionMode.hasOverview;
+
+    ExtensionUtils.initTranslations(Utils.TRANSLATION_DOMAIN);
     
     //create an object that persists until gnome-shell is restarted, even if the extension is disabled
     Me.persistentStorage = {};
@@ -88,10 +88,19 @@ function _enable() {
 
     if (panelManager) return; //already initialized
 
-    Me.settings = Convenience.getSettings('org.gnome.shell.extensions.dash-to-panel');
-    Me.desktopSettings = Convenience.getSettings('org.gnome.desktop.interface');
+    Me.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.dash-to-panel');
+    Me.desktopSettings = ExtensionUtils.getSettings('org.gnome.desktop.interface');
 
-    panelManager = new PanelManager.dtpPanelManager();
+    Main.layoutManager.startInOverview = !Me.settings.get_boolean('hide-overview-on-startup');
+
+    if (Me.settings.get_boolean('hide-overview-on-startup') && Main.layoutManager._startingUp) {
+        Main.sessionMode.hasOverview = false;
+        Main.layoutManager.connect('startup-complete', () => {
+            Main.sessionMode.hasOverview = this._realHasOverview
+        });
+    }
+
+    panelManager = new PanelManager();
 
     panelManager.enable();
     
@@ -99,36 +108,29 @@ function _enable() {
     Utils.addKeybinding(
         'open-application-menu',
         new Gio.Settings({ schema_id: WindowManager.SHELL_KEYBINDINGS_SCHEMA }),
-        Lang.bind(this, function() {
+        () => {
             if(Me.settings.get_boolean('show-appmenu'))
                 Main.wm._toggleAppMenu();
             else
                 panelManager.primaryPanel.taskbar.popupFocusedAppSecondaryMenu();
-        }),
+        },
         Shell.ActionMode.NORMAL | Shell.ActionMode.POPUP
     );
-
-    // Pretend I'm the dash: meant to make appgrd swarm animation come from the
-    // right position of the appShowButton.
-    oldDash = Main.overview._dash;
-    Main.overview._dash = panelManager.primaryPanel.taskbar;
 }
 
 function disable(reset) {
     panelManager.disable();
-    Main.overview._dash = oldDash;
     Me.settings.run_dispose();
     Me.desktopSettings.run_dispose();
 
     delete Me.settings;
-    oldDash = null;
     panelManager = null;
     
     Utils.removeKeybinding('open-application-menu');
     Utils.addKeybinding(
         'open-application-menu',
         new Gio.Settings({ schema_id: WindowManager.SHELL_KEYBINDINGS_SCHEMA }),
-        Lang.bind(Main.wm, Main.wm._toggleAppMenu),
+        Main.wm._toggleAppMenu.bind(Main.wm),
         Shell.ActionMode.NORMAL | Shell.ActionMode.POPUP
     );
 
@@ -140,5 +142,9 @@ function disable(reset) {
         if (disabledUbuntuDock && Main.sessionMode.allowExtensions) {
             (extensionSystem._callExtensionEnable || extensionSystem.enableExtension).call(extensionSystem, UBUNTU_DOCK_UUID);
         }
+
+        AppIcons.resetRecentlyClickedApp();
     }
+
+    Main.sessionMode.hasOverview = this._realHasOverview;
 }
