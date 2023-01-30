@@ -239,26 +239,31 @@ def setup_rdiff_tasks(source_image_file, target_image_file, metadata_file)
   source_image_signature_file_fp =
       "#{ Signatures_dir }/#{ source_image_signature_file }"
 
-  file source_image_signature_file_fp => Signatures_dir
-  file source_image_signature_file_fp => source_image_file_fp do |t|
-    tmpfile = "#{ source_image_signature_file_fp }.tmp"
-    FileUtils.rm_f(tmpfile)
-    sh 'rdiff', 'signature', '--block-size=256', source_image_file_fp, tmpfile
-    mv tmpfile, t.name
+  unless Rake::Task::task_defined?(source_image_signature_file_fp) then
+    file source_image_signature_file_fp => Signatures_dir
+    file source_image_signature_file_fp => source_image_file_fp do |t|
+      tmpfile = "#{ source_image_signature_file_fp }.tmp"
+      FileUtils.rm_f(tmpfile)
+      sh 'rdiff', '--block-size=64', 'signature', source_image_file_fp, tmpfile
+      mv tmpfile, t.name
+    end
   end
 
   target_image_file_fp = "#{ Image_dir }/#{ target_image_file }"
 
   task rdiff_file => rdiff_file_fp
-  file rdiff_file_fp => [ Rdiffs_dir,
-			  source_image_signature_file_fp,
-			  target_image_file_fp ]
-  file rdiff_file_fp do |t|
-    tmpfile = "#{ rdiff_file_fp }.tmp"
-    FileUtils.rm_f(tmpfile)
-    sh 'rdiff', 'delta', source_image_signature_file_fp, target_image_file_fp,
-      tmpfile
-    mv tmpfile, t.name
+
+  unless Rake::Task::task_defined?(rdiff_file_fp) then
+    file rdiff_file_fp => [ Rdiffs_dir,
+                            source_image_signature_file_fp,
+                            target_image_file_fp ]
+    file rdiff_file_fp do |t|
+      tmpfile = "#{ rdiff_file_fp }.tmp"
+      FileUtils.rm_f(tmpfile)
+      sh 'rdiff', '--block-size=64', 'delta', source_image_signature_file_fp,
+        target_image_file_fp, tmpfile
+      mv tmpfile, t.name
+    end
   end
 
   checksum_files = setup_checksum_tasks(rdiff_file, rdiff_file_fp)
