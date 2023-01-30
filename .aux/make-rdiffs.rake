@@ -1,4 +1,4 @@
-#!/usr/bin/rake -mf
+#!/usr/bin/rake -f
 
 require 'fileutils'
 require 'json'

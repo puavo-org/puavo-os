@@ -328,7 +328,7 @@ apply-rules: /puavo-os
 
 .PHONY: rdiffs
 rdiffs: $(image_dir) $(mirror_dir)
-	$(_sudo) .aux/make-rdiffs image_dir="$(image_dir)" \
+	$(_sudo) rake -j 8 -mf .aux/make-rdiffs.rake image_dir="$(image_dir)" \
 		images_json_path="config/images/$(debootstrap_suite).json" \
 		images_urlbase="$(images_urlbase)" \
 		mirror_dir="$(mirror_dir)" mode="$(mode)" $(rdiff_targets)
