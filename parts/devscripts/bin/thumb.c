@@ -87,10 +87,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    GdkPixbuf *thumb = gnome_desktop_thumbnail_factory_generate_thumbnail(factory, uri, mime);
-
+    GdkPixbuf *thumb = gnome_desktop_thumbnail_factory_generate_thumbnail(
+        factory, uri, mime, NULL, &error);
     if (!thumb) {
-        fputs("gnome_desktop_thumbnail_factory_generate_thumbnail() failed\n", stderr);
+        fprintf(stderr, "could not generate a thumbnail for %s: %s\n", uri,
+            error->message);
         g_free(uri);
         g_free(mime);
         g_object_unref(fi);
@@ -99,7 +100,17 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    gnome_desktop_thumbnail_factory_save_thumbnail(factory, thumb, uri, mtime.tv_sec);
+    if (!gnome_desktop_thumbnail_factory_save_thumbnail(factory, thumb, uri, mtime.tv_sec, NULL, &error)) {
+        fprintf(stderr, "could not save a thumnail for %s: %s\n", uri,
+            error->message);
+        g_free(thumb);
+        g_free(uri);
+        g_free(mime);
+        g_object_unref(fi);
+        g_object_unref(f);
+        g_clear_object(&factory);
+	return 1;
+    }
 
     // if you just could specify the actual output directory, that'd be great
     GChecksum *checksum = g_checksum_new(G_CHECKSUM_MD5);
