@@ -11,6 +11,7 @@ rm -f "$teststdout" "$teststderr" "$camerastdout" \
 trap cleanup EXIT
 
 analyze_image() {
+# XXX replace mplayer with something else? (disappeared from Bookworm)
 mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 2 -sstep 100 -vo jpeg:outdir="/tmp/" 2> /dev/null &&
 
 python3 -c '
@@ -36,6 +37,7 @@ camera_test_status() {
 }
 
 test_camera() {
+  # XXX replace mplayer with something else? (disappeared from Bookworm)
   env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
 }
 
