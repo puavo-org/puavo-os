@@ -50,7 +50,7 @@ class packages::compat_32bit {
       # , 'libqtwebkit4:i386'
       , 'libselinux1:i386'
       , 'libsm6:i386'
-      , 'libssl1.1:i386'
+      , 'libssl3:i386'
       , 'libstdc++6:i386'
       , 'libudev1:i386'
       , 'libusb-1.0-0:i386'
