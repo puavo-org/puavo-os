@@ -5,6 +5,7 @@ require 'etc'
 require 'getoptlong'
 require 'fileutils'
 require 'json'
+require 'resolv'
 require 'socket'
 
 ## 3rd-party libraries.
@@ -372,6 +373,14 @@ end
 
 if ARGV.length != 0 then
   STDERR.puts("ERROR: invalid number of arguments (#{ARGV.length}), expected 0")
+  exit 1
+end
+
+begin
+  ldaphost=File.read("/etc/puavo/ldap/master").strip
+  ldapaddress = Resolv.getaddress(ldaphost)
+rescue Resolv::ResolvError
+  STDERR.puts("ERROR: seems that we can't resolve our ldap server at #{ldaphost}, is network ok? (Maybe try restarting dnsmasq?)")
   exit 1
 end
 
