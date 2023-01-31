@@ -1,28 +1,31 @@
 # parts, ports and some cloud packages go into puavo-os images
 
-_pkgs_cloud := krb5 openldap puavo-ds puavo-os
+# XXX disabled for bookworm
+# _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := cups                   \
-               cups-filters           \
-               gnome-control-center   \
-               gnome-network-displays \
-               gnome-shell            \
-               gtk+3.0                \
-               hooktftp               \
-               incron                 \
-               kde-spectacle          \
-               libpam-ccreds          \
-               mutter                 \
-               openboard              \
-               openldap               \
-               pinta                  \
-               veyon                  \
-               wsmancli
+# XXX disabled for bookworm
+# _pkgs_ports := cups                   \
+#                cups-filters           \
+#                gnome-control-center   \
+#                gnome-network-displays \
+#                gnome-shell            \
+#                gtk+3.0                \
+#                hooktftp               \
+#                incron                 \
+#                kde-spectacle          \
+#                libpam-ccreds          \
+#                mutter                 \
+#                openboard              \
+#                openldap               \
+#                pinta                  \
+#                veyon                  \
+#                wsmancli
 
 # sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
 _pkgs_parts_builddeps :=
-_pkgs_ports_builddeps := sblim-sfcc openwsman
+# XXX disabled for bookworm
+# _pkgs_ports_builddeps := sblim-sfcc openwsman
 
 # XXX disable most ports builds for Bullseye, these all most probably
 # XXX need some work
