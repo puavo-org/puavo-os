@@ -2,6 +2,7 @@ require_relative 'puavobs-vendor/bundler/setup.rb'
 
 ## Standard libraries.
 require 'base64'
+require 'etc'
 require 'json'
 require 'rexml/document'
 require 'securerandom'
@@ -104,7 +105,7 @@ module PuavoBS
   def self.ask_admin_credentials()
     puavo_domain = File.read('/etc/puavo/domain').strip()
     say("Enter administrator credentials for organization #{puavo_domain}")
-    username = ask('Username: ')
+    username = ask('Username: ') { |q| q.default = Etc.getlogin }
     password = ask('Password: ') { |q| q.echo = '*' }
     [username, password]
   end
