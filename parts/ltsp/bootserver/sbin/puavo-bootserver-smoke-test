@@ -134,7 +134,8 @@ class TestRun
   def prepare_assert_no_homedir()
     error = nil
     homedir = nil
-    [0, 1, 1, 1, 1].each do |delay|
+    [0, 1, 1, 1, 1, 10].each do |delay|
+      puts "Getting homedir seems to take unusually long. Waiting patiently one more long moment." if delay==10
       sleep delay
       begin
         homedir = Etc.getpwnam(@testuser_username)['dir']
