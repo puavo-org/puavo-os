@@ -35,18 +35,19 @@ class apt::repositories {
     # Do this in its own stage because in Buster
     # "fasttrack-archive-keyring" is found in buster-backports
     # that should be configured first.
-    if $::puavoruleset == 'prepare-fasttrack' {
-      file {
-        '/etc/apt/sources.list.d/debian-fasttrack.list':
-          content => template('apt/debian-fasttrack.list'),
-          notify  => Exec['apt update'],
-          require => Package['fasttrack-archive-keyring'];
-      }
-
-      package {
-        'fasttrack-archive-keyring':
-          ensure => present;
-      }
-    }
+##### XXX fasttrack missing from Bookworm, do not enable it (yet)
+#   if $::puavoruleset == 'prepare-fasttrack' {
+#     file {
+#       '/etc/apt/sources.list.d/debian-fasttrack.list':
+#         content => template('apt/debian-fasttrack.list'),
+#         notify  => Exec['apt update'],
+#         require => Package['fasttrack-archive-keyring'];
+#     }
+#
+#     package {
+#       'fasttrack-archive-keyring':
+#         ensure => present;
+#     }
+#   }
   }
 }
