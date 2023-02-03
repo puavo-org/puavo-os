@@ -524,7 +524,7 @@ proc quick_verify_check {devpath} {
 }
 
 proc set_devstate {devpath state args} {
-  global diskdevices port_labels
+  global calibration_in_progress diskdevices port_labels
 
   set port_id [dict get $diskdevices $devpath port_id]
   if {($port_labels($port_id) eq "") && ($state ne "nomedia")} {
@@ -611,21 +611,28 @@ proc set_devstate {devpath state args} {
         log_operation_time $devpath writing write_start_time
       }
 
-      logger -p user.warning "verifying device [dev_logid $devpath]"
-
-      if {[quick_verify_check $devpath]} {
-        set fh [start_verifying $devpath]
-        dict set diskdevices $devpath fh $fh
-        if {$fh ne ""} {
-          dict set diskdevices $devpath verify_start_time [clock milliseconds]
-          dict set diskdevices $devpath state $state
-          set_usbicon_state $devpath $state
-        }
-      } else {
-        # if image is not in disk, move on to start_writing
+      if {$calibration_in_progress} {
+        # Debug logging, (un)comment below line if needed.
         logger -p user.warning \
-               "quick verification check failed on [dev_logid $devpath]"
-        set_devstate $devpath start_writing
+               "Cancelling verify, calibration in progress."
+        set_usbicon_state $devpath nomedia
+      } else {
+        logger -p user.warning "verifying device [dev_logid $devpath]"
+
+        if {[quick_verify_check $devpath]} {
+          set fh [start_verifying $devpath]
+          dict set diskdevices $devpath fh $fh
+          if {$fh ne ""} {
+            dict set diskdevices $devpath verify_start_time [clock milliseconds]
+            dict set diskdevices $devpath state $state
+            set_usbicon_state $devpath $state
+          }
+        } else {
+          # if image is not in disk, move on to start_writing
+          logger -p user.warning \
+                 "quick verification check failed on [dev_logid $devpath]"
+          set_devstate $devpath start_writing
+        }
       }
     }
 
