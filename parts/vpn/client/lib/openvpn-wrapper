@@ -28,7 +28,7 @@ fi
     --client                                               \
     --connect-retry 5 5                                    \
     --dev vpn0                                             \
-    --dev-type tap                                         \
+    --dev-type tun                                         \
     --keepalive 10 60                                      \
     --key /etc/puavo/certs/host.key                        \
     --proto tcp-client                                     \
