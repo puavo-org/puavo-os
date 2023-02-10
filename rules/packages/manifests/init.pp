@@ -335,7 +335,7 @@ class packages {
     [ 'dbus-x11'
     , 'gnome-applets'
     , 'gnome-power-manager'
-    # , 'gnome-user-guide'      # XXX bookworm
+    , 'gnome-user-docs'
     , 'notification-daemon' ]:
       tag => [ 'tag_gnome', 'tag_debian_desktop', ];
 
@@ -354,7 +354,7 @@ class packages {
     , 'inkscape'
     , 'kdenlive'
     # , 'kino'                  # XXX missing from Bullseye
-    , 'kolourpaint4'
+    , 'kolourpaint'
     , 'krita'
     , 'krita-l10n'
     , 'libsane'
@@ -366,7 +366,7 @@ class packages {
     , 'openscad'
     , 'openshot-qt'
     , 'pencil2d'
-    , 'pinta'
+    # , 'pinta'                 # XXX bookworm
     , 'pitivi'
     , 'python3-lxml'
     , 'sane-utils'
@@ -397,7 +397,6 @@ class packages {
     , 'kaffeine'
     , 'libdvd-pkg'
     , 'libdvdread8'
-    , 'ogmrip'
     , 'recordmydesktop'
     , 'regionset'
     , 'smplayer'
@@ -548,7 +547,6 @@ class packages {
     , 'cups-client'
     , 'cups-filters'
     , 'dconf-editor'
-    , 'empathy'
     , 'eog'
     , 'evince'
     , 'evolution'
@@ -578,7 +576,6 @@ class packages {
     , 'gnome-keyring'
     , 'gnome-menus'
     , 'gnome-online-accounts'
-    , 'gnome-orca'
     , 'gnome-screenshot'
     , 'gnome-session'
     , 'gnome-settings-daemon'
@@ -588,7 +585,8 @@ class packages {
     , 'gnome-system-log'
     , 'gnome-system-monitor'
     , 'gnome-terminal'
-    , 'gnome-themes-standard'
+    , 'gnome-themes-extra'
+    , 'gnome-themes-extra-data'
     , 'gnome-tweaks'
     , 'gnome-user-share'
     , 'gnome-video-effects'
@@ -596,7 +594,6 @@ class packages {
     , 'gstreamer1.0-alsa'
     , 'gstreamer1.0-pulseaudio'
     , 'gucharmap'
-    , 'gvfs-bin'
     , 'gvfs-fuse'
     , 'hplip'
     , 'ibus'
@@ -632,7 +629,6 @@ class packages {
     , 'mousetweaks'
     , 'mutter'
     , 'nautilus'
-    , 'nautilus-sendto'
     , 'network-manager'
     , 'network-manager-l2tp'                    # needed by citrix
     , 'network-manager-l2tp-gnome'              # needed by citrix
@@ -640,6 +636,7 @@ class packages {
     , 'network-manager-pptp-gnome'
     , 'nodm'                                    # for infotv
     , 'openprinting-ppds'
+    , 'orca'
     , 'pcmciautils'
     , 'plymouth'
     , 'plymouth-themes'
@@ -724,7 +721,6 @@ class packages {
     , 'devilspie2'
     , 'duplicity'
     , 'exfat-fuse'
-    , 'exfat-utils'
     , 'flameshot'
     , 'fuse3'
     , 'gnome-network-displays'
