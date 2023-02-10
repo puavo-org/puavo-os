@@ -46,6 +46,13 @@ class gdm {
       require => [ Package['gdm3'], Package['puavo-desktop-applet'], ],
       target  => '/etc/xdg/autostart/puavo-desktop-applet.desktop';
 
+    '/var/lib/gdm3':
+      ensure  => directory,
+      owner   => 'Debian-gdm',
+      group   => 'Debian-gdm',
+      mode    => '0755',
+      require => Package['gdm3'];
+
     '/var/lib/gdm3/.config':
       ensure  => directory,
       owner   => 'Debian-gdm',
