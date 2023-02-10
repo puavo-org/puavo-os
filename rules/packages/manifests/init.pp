@@ -163,7 +163,7 @@ class packages {
     , 'wavemon'
     , 'whois'
     , 'wireguard-tools'
-    , 'wsmancli'
+    # , 'wsmancli'                      # XXX bookworm
     , 'x11vnc'
     , 'xbacklight'
     , 'xinput-calibrator' ]:
@@ -274,11 +274,11 @@ class packages {
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
     [ 'libvkd3d-shader1'
-    , 'virtualbox'
-    , 'virtualbox-dkms'
-    , 'virtualbox-guest-utils'
-    , 'virtualbox-guest-x11'
-    , 'virtualbox-qt'
+    # , 'virtualbox'                    # XXX bookworm
+    # , 'virtualbox-dkms'               # XXX bookworm
+    # , 'virtualbox-guest-utils'        # XXX bookworm
+    # , 'virtualbox-guest-x11'          # XXX bookworm
+    # , 'virtualbox-qt'                 # XXX bookworm
     , 'vkd3d-compiler'
     , 'wine-devel'
     , 'wine-devel-amd64'
@@ -291,7 +291,7 @@ class packages {
     , 'firmware-b43-installer'
     , 'firmware-b43legacy-installer'
     , 'firmware-linux-free'
-    , 'firmware-microbit-micropython'
+    # , 'firmware-microbit-micropython' # XXX bookworm
     , 'firmware-tomu'
     , 'hdmi2usb-fx2-firmware'
     , 'isight-firmware-tools'
@@ -335,7 +335,7 @@ class packages {
     [ 'dbus-x11'
     , 'gnome-applets'
     , 'gnome-power-manager'
-    , 'gnome-user-guide'
+    # , 'gnome-user-guide'      # XXX bookworm
     , 'notification-daemon' ]:
       tag => [ 'tag_gnome', 'tag_debian_desktop', ];
 
@@ -347,9 +347,8 @@ class packages {
     , 'freecad'
     , 'gimp'
     , 'gimp-data-extras'
-    , 'gimp-gap'
+    # , 'gimp-gap'              # XXX bookworm
     , 'gimp-plugin-registry'
-    # , 'gimp-ufraw'            # XXX missing from Bullseye
     , 'godot3'
     , 'gthumb'
     , 'inkscape'
@@ -780,15 +779,15 @@ class packages {
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
   $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.157'
-  $nvidia_dkms_410_module   = 'nvidia-current/470.161.03'
+  $nvidia_dkms_520_module   = 'nvidia-current/520.56.06'
   $r8168_module             = 'r8168/8.050.03'
   $virtualbox_module        = 'virtualbox/6.1.40'
 
-  $all_dkms_modules = [ $broadcom_sta_dkms_module
-                      , $nvidia_dkms_390_module
-                      , $nvidia_dkms_410_module
-		      , $r8168_module
-		      , $virtualbox_module ]
+  # $broadcom_sta_dkms_module     # XXX bookworm
+  $all_dkms_modules = [ $nvidia_dkms_390_module
+                      , $nvidia_dkms_520_module ]
+		    # , $r8168_module                   # XXX bookworm
+		    # , $virtualbox_module              # XXX bookworm ]
 
   packages::kernels::kernel_package {
     '6.1.0-2-amd64':
