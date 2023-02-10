@@ -4,20 +4,21 @@ set -eu
 
 cleanup() {
 rm -f "$teststdout" "$teststderr" "$camerastdout" \
-      /tmp/00000001.jpg /tmp/00000002.jpg "$wifistdout" \
-      "$wifistderr" "$power1stdout" "$power2stdout"
+      "$cameratmpimg" "$wifistdout" "$wifistderr" \
+      "$power1stdout" "$power2stdout"
 }
 
 trap cleanup EXIT
 
 analyze_image() {
-# XXX replace mplayer with something else? (disappeared from Bookworm)
-mplayer -msglevel all=-1 tv:// -tv driver=v4l2:device=/dev/video0 -fps 1 -frames 2 -sstep 100 -vo jpeg:outdir="/tmp/" 2> /dev/null &&
+v4l2-ctl --device /dev/video0 --stream-mmap --stream-count=1 --set-fmt-video=pixelformat=MJPG --stream-to="$cameratmpimg" 2> /dev/null &&
+export cameratmpimg
 
 python3 -c '
+from os import environ
 import matplotlib.image as mpimg
 import numpy as np
-img = mpimg.imread("/tmp/00000002.jpg")
+img = mpimg.imread(environ["cameratmpimg"])
 
 data = np.unique(img.reshape(-1, img.shape[-1]), axis=0, return_counts=True)[0]
 
@@ -486,6 +487,7 @@ fi
 teststdout=$(mktemp /tmp/puavo-test-hardware-bluetooth-stdout.XXXXXX)
 teststderr=$(mktemp /tmp/puavo-test-hardware-bluetooth-stderr.XXXXXX)
 camerastdout=$(mktemp /tmp/puavo-test-hardware-camera-stdout.XXXXXX)
+cameratmpimg=$(mktemp /tmp/puavo-test-hardware-camera-tmpimg.XXXXXX)
 wifistdout=$(mktemp /tmp/puavo-test-hardware-wifi-stdout.XXXXXX)
 wifistderr=$(mktemp /tmp/puavo-test-hardware-wifi-stderr.XXXXXX)
 power1stdout=$(mktemp /tmp/puavo-test-hardware-power1-stdout.XXXXXX)
