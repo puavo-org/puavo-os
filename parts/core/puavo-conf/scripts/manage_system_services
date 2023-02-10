@@ -246,23 +246,6 @@ set services {
         -> /lib/systemd/system/puavo-vpn-client-openvpn.service
     }}
 
-  { puavo-wlanap {
-      /etc/systemd/system/multi-user.target.wants/puavo-wlanap.service
-        -> /lib/systemd/system/puavo-wlanap.service
-    }}
-
-  { puavo-wlancontroller {
-      /etc/systemd/system/multi-user.target.wants/puavo-wlancontroller.service
-        -> /lib/systemd/system/puavo-wlancontroller.service
-    }}
-
-  { puavo-wlangw {
-      /etc/rc2.d/S01puavo-wlangw -> /etc/init.d/puavo-wlangw
-      /etc/rc3.d/S01puavo-wlangw -> /etc/init.d/puavo-wlangw
-      /etc/rc4.d/S01puavo-wlangw -> /etc/init.d/puavo-wlangw
-      /etc/rc5.d/S01puavo-wlangw -> /etc/init.d/puavo-wlangw
-    }}
-
   { redis-server {
       /etc/systemd/system/multi-user.target.wants/redis-server.service
         -> /lib/systemd/system/redis-server.service

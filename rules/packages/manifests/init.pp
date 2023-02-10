@@ -41,10 +41,7 @@ class packages {
     , 'puavo-veyon-applet'
     , 'puavo-vpn-client'
     , 'puavo-webwindow'
-    , 'puavo-wlanap'
-    , 'puavo-wlangw'
     , 'puavomenu'
-    , 'ruby-puavowlan'
     , 'webkiosk-language-selector' ]:
       ensure => present,
       tag    => [ 'tag_puavo' ];

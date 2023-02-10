@@ -18,8 +18,7 @@ subdirs         := autopilot                  \
                    veyon-applet               \
                    vpn                        \
                    webkiosk-language-selector \
-                   webwindow                  \
-                   wlan
+                   webwindow
 subdirs-all     := $(subdirs:%=.all-%)
 subdirs-clean   := $(subdirs:%=.clean-%)
 subdirs-install := $(subdirs:%=.install-%)

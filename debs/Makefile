@@ -27,10 +27,6 @@ _pkgs_parts_builddeps :=
 # XXX disabled for bookworm
 # _pkgs_ports_builddeps := sblim-sfcc openwsman
 
-# XXX disable most ports builds for Bullseye, these all most probably
-# XXX need some work
-# _pkgs_ports := vtun
-
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
                $(_pkgs_parts) $(_pkgs_ports)
 

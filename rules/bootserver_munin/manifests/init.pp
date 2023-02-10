@@ -39,11 +39,6 @@ class bootserver_munin {
       require => [ File['/usr/local/bin/puavo-bootserver-list-clients']
                  , Package['munin-node'] ],
       source  => 'puppet:///modules/bootserver_munin/puavo-bootserver-clients';
-
-    '/usr/share/munin/plugins/puavo-wlan':
-      mode    => '0755',
-      require => Package['munin-node'],
-      source  => 'puppet:///modules/bootserver_munin/puavo-wlan';
   }
 
   ::bootserver_munin::plugin {
@@ -53,9 +48,6 @@ class bootserver_munin {
     [ 'puavo-bootserver-clients'
     , 'users' ]:
       ;
-
-    'puavo-wlan':
-      require => [ Package['python3-numpy'], Package['python3-redis'] ];
   }
 
   ::bootserver_nginx::enable { 'munin': ; }

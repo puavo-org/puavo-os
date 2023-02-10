@@ -255,7 +255,7 @@ mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
 
 $(for dhcp_ip in $dhcpd_ip_list; do
     # XXX should we try to cut down this list of subdomains some day... ?
-    echo "${dhcp_ip}	${puavo_hostname}.${puavo_domain} ${puavo_hostname}$(for hostalias in cups eventlog homedir kerberos ntp printserver syslog wlangw; do subdomain_names "$hostalias" $dhcpd_subdomain_list; done)"
+    echo "${dhcp_ip}	${puavo_hostname}.${puavo_domain} ${puavo_hostname}$(for hostalias in cups eventlog homedir kerberos ntp printserver syslog; do subdomain_names "$hostalias" $dhcpd_subdomain_list; done)"
   done)
 
 # The following lines are desirable for IPv6 capable hosts

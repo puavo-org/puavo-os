@@ -22,8 +22,6 @@ class image::bundle::bootserver {
   include ::bootserver_slapd
   include ::packages
 
-  # include ::bootserver_dummywlan              # XXX needs work
-
   Package <| tag == tag_debian_bootserver
           or tag == tag_puavo_bootserver |>
 }
