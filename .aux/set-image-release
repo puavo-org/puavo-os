@@ -30,5 +30,7 @@ echo "$release_name"   > "${rootfs}/etc/puavo-image/release"
 # of what this image contains.
 (
   cd "${rootfs}/puavo-os"
-  git log HEAD~100..HEAD > "${rootfs}/etc/puavo-image/puavo-os-git.log"
+  gitdir=$(pwd -P)
+  git -c safe.directory="$gitdir" log HEAD~100..HEAD \
+    > "${rootfs}/etc/puavo-image/puavo-os-git.log"
 )
