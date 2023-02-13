@@ -825,7 +825,6 @@ class packages {
     , 'firmware-brcm80211'
     , 'firmware-cavium'
     , 'firmware-intel-sound'
-    , 'firmware-intelwimax'
     , 'firmware-ipw2x00'
     , 'firmware-ivtv'
     , 'firmware-iwlwifi'
