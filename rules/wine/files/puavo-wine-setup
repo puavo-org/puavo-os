@@ -10,6 +10,25 @@ Windows Registry Editor Version 5.00
 EOF
 }
 
+produce_tahoma() {
+  # Sometimes winetahoma is just not enough. This function binary patches a copy of
+  # system DejaVu Sans to act like it was Tahoma. Note that DejaVu Sans doesn't
+  # include bitmap fonts, so one should have font anti-aliasing on when using this.
+  TAHOMAPATH="${WINEPREFIX}/drive_c/windows/Fonts/tahoma.ttf"
+  if test -f "$TAHOMAPATH"; then
+    echo "Tahoma already exists, doing nothing."
+    return 0
+  fi
+  if ! md5sum /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf | grep -q 'f59457d7ce48dd38a0c8aee8afc6f91a'; then
+    echo "Not a known source font file, doing nothing."
+    return 0
+  fi
+
+  echo -n "1sPEAAUCHWZlaWtraXRhaG9tYS50dGYvL3RhaG9tYS50dGYvBa6aVABkrppFAy8mBH0FhjMT/Td6WFoAAAD/EtlBAgAhAQwAAACPmEGcAQASVABhAGgAbwBtAGEAAFRhaG9tYQr9N3pYWgAAAP8S2UECACEBDAAAAI+YQZwBAAkTqbcKARMThOMoAKm3LA==" \
+    | base64 --decode | xdelta3 -d -c -s /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf /dev/stdin > "${TAHOMAPATH}.tmp"
+  mv "${TAHOMAPATH}.tmp" "${TAHOMAPATH}"
+}
+
 setup_d_drive() {
   ln -fns "$HOME" "${WINEPREFIX}/dosdevices/d:"
 }
@@ -247,12 +266,13 @@ fi
 
 status=0
 
-if ! args=$(getopt -n "$0" -o + -l 'disable-winebus-sdl,setup-d-drive,update-shell-folders,user-dirs:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'disable-winebus-sdl,produce-tahoma,setup-d-drive,update-shell-folders,user-dirs:' -- "$@"); then
   echo 'Could not parse command line arguments' >&2
   exit 1
 fi
 
 disable_winebus_sdl=false
+produce_tahoma=false
 setup_d_drive=false
 update_shell_folders=false
 user_dirs=''
@@ -260,12 +280,13 @@ user_dirs=''
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --disable-winebus-sdl)  disable_winebus_sdl=true   shift ;;
+    --disable-winebus-sdl)  disable_winebus_sdl=true;  shift ;;
+    --produce-tahoma)       produce_tahoma=true;       shift ;;
     --setup-d-drive)        setup_d_drive=true;        shift ;;
     --update-shell-folders) update_shell_folders=true; shift ;;
     --user-dirs)            user_dirs=$2; shift;       shift ;;
     --) shift; break ;;
-    *) echo 'Usage: puavo-wine-setup [--disable-winebus-sdl] [--setup-d-drive] [--update-shell-folders] [--user-dirs opts]' >&2
+    *) echo 'Usage: puavo-wine-setup [--disable-winebus-sdl] [--produce-tahoma] [--setup-d-drive] [--update-shell-folders] [--user-dirs opts]' >&2
        exit 1
        ;;
   esac
@@ -274,6 +295,13 @@ done
 if $disable_winebus_sdl; then
   if ! disable_winebus_sdl; then
     echo 'Problem occurred when disabling winebus SDL.' >&2
+    status=1
+  fi
+fi
+
+if $produce_tahoma; then
+  if ! produce_tahoma; then
+    echo 'Problem occurred producing Tahoma replacement.' >&2
     status=1
   fi
 fi

@@ -41,6 +41,7 @@ class puavo_pkg::packages {
 			, 'mafynetti'
 			, 'marvinsketch'
 			, 'mattermost-desktop'
+			, 'musescore-appimage'
 			, 'msttcorefonts'
 			, 'netbeans'
 			, 'nextcloud-desktop'

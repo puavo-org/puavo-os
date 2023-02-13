@@ -52,11 +52,6 @@ case "$target_disk" in
     else
       time --format "Time elapsed: %E" nvme format -s1 "$target_disk"
     fi
-
-    partprobe
-
-    echo 'You may check how long the erase took above.\n'
-    sleep 2
     ;;
   *)
     if udevadm info --query=all --name="$target_disk" | grep 'ID_BUS=usb'; then
@@ -121,10 +116,26 @@ case "$target_disk" in
       echo 'Disk seems to be locked after erase. Unlocking now.'
       hdparm --user-master user --security-unlock Pass "$target_disk"
     fi
-
-    partprobe
-
-    echo 'If you see no errors, you may re-plug the disk or reboot the device.\n'
-    sleep 2
     ;;
 esac
+
+partprobe
+
+if [ -e "/sys/firmware/efi" ]; then
+  efitable="$(efibootmgr | awk '/debian/ {print substr($0,5,4)} /Windows/ {print substr($0,5,4)}')"
+
+  if [ -n "$efitable" ]; then
+    echo 'Removing leftover EFI boot entries.'
+    for entry in $efitable;
+    do
+      efibootmgr -q -b "$entry" -B
+    done
+    echo 'Leftover EFI boot entries have been removed.'
+  else
+    echo 'No leftover EFI boot entries to remove.'
+  fi
+fi
+
+echo 'You may check how long the erase took above.'
+echo 'If you see no errors, you may re-plug the disk or reboot the device.\n'
+sleep 2

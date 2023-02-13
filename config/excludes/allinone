@@ -47,6 +47,9 @@ etc/resolvconf/resolv.conf.d/*
 # Remove build-time sysv rc policy
 usr/sbin/policy-rc.d
 
+# Skip the one drumkit that takes more space than all the others combined
+usr/share/hydrogen/data/drumkits/ForzeeStereo
+
 # Skip locales that aren't generally used/available
 usr/share/locale/ab
 usr/share/locale/ace

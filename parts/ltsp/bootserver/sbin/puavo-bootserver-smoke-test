@@ -5,6 +5,7 @@ require 'etc'
 require 'getoptlong'
 require 'fileutils'
 require 'json'
+require 'resolv'
 require 'socket'
 
 ## 3rd-party libraries.
@@ -133,7 +134,8 @@ class TestRun
   def prepare_assert_no_homedir()
     error = nil
     homedir = nil
-    [0, 1, 1, 1, 1].each do |delay|
+    [0, 1, 1, 1, 1, 10].each do |delay|
+      puts "Getting homedir seems to take unusually long. Waiting patiently one more long moment." if delay==10
       sleep delay
       begin
         homedir = Etc.getpwnam(@testuser_username)['dir']
@@ -372,6 +374,14 @@ end
 
 if ARGV.length != 0 then
   STDERR.puts("ERROR: invalid number of arguments (#{ARGV.length}), expected 0")
+  exit 1
+end
+
+begin
+  ldaphost=File.read("/etc/puavo/ldap/master").strip
+  ldapaddress = Resolv.getaddress(ldaphost)
+rescue Resolv::ResolvError
+  STDERR.puts("ERROR: seems that we can't resolve our ldap server at #{ldaphost}, is network ok? (Maybe try restarting dnsmasq?)")
   exit 1
 end
 

@@ -284,6 +284,18 @@ diff -ruN gnome-shell.0/js/gdm/util.js gnome-shell.1/js/gdm/util.js
 diff -ruN gnome-shell.0/po/de.po gnome-shell.1/po/de.po
 --- gnome-shell.0/po/de.po	2021-03-15 23:28:45.104281700 +0200
 +++ gnome-shell.1/po/de.po	2021-10-05 10:41:09.423359622 +0300
+@@ -476,7 +476,7 @@
+ 
+ #: js/gdm/loginDialog.js:457
+ msgid "Not listed?"
+-msgstr "Nicht aufgeführt?"
++msgstr "Mit einem anderen Konto anmelden"
+ 
+ #. Translators: this message is shown below the username entry field
+ #. to clue the user in on how to login to the local network realm
+diff -ruN gnome-shell.0/po/de.po gnome-shell.1/po/de.po
+--- gnome-shell.0/po/de.po	2021-03-15 23:28:45.104281700 +0200
++++ gnome-shell.1/po/de.po	2021-10-05 10:41:09.423359622 +0300
 @@ -3003,6 +3003,14 @@
  msgid "System Sounds"
  msgstr "Systemklänge"
@@ -298,6 +310,19 @@ diff -ruN gnome-shell.0/po/de.po gnome-shell.1/po/de.po
 +
  #~ msgid "Frequently used applications will appear here"
  #~ msgstr "Häufig genutzte Anwendungen erscheinen hier"
+ 
+diff -ruN gnome-shell.0/po/fi.po gnome-shell.1/po/fi.po
+--- gnome-shell.0/po/fi.po	2021-03-15 23:28:45.118281400 +0200
++++ gnome-shell.1/po/fi.po	2021-10-05 10:41:09.427359411 +0300
+@@ -476,7 +476,7 @@
+ 
+ #: js/gdm/loginDialog.js:457
+ msgid "Not listed?"
+-msgstr "Ei luettelossa?"
++msgstr "Kirjaudu eri käyttäjänä"
+ 
+ #. Translators: this message is shown below the username entry field
+ #. to clue the user in on how to login to the local network realm
  
 diff -ruN gnome-shell.0/po/fi.po gnome-shell.1/po/fi.po
 --- gnome-shell.0/po/fi.po	2021-03-15 23:28:45.118281400 +0200
@@ -335,6 +360,18 @@ diff -ruN gnome-shell.0/po/fr.po gnome-shell.1/po/fr.po
  #~ msgid "Frequently used applications will appear here"
  #~ msgstr "Les applications fréquemment utilisées apparaîtront ici"
  
+diff -ruN gnome-shell.0/po/sv.po gnome-shell.1/po/sv.po
+--- gnome-shell.0/po/sv.po	2021-03-15 23:28:45.177279700 +0200
++++ gnome-shell.1/po/sv.po	2021-10-05 10:41:09.431359200 +0300
+@@ -453,7 +453,7 @@
+ 
+ #: js/gdm/loginDialog.js:457
+ msgid "Not listed?"
+-msgstr "Inte listad?"
++msgstr "Logga in en annan användare"
+ 
+ #. Translators: this message is shown below the username entry field
+ #. to clue the user in on how to login to the local network realm
 diff -ruN gnome-shell.0/po/sv.po gnome-shell.1/po/sv.po
 --- gnome-shell.0/po/sv.po	2021-03-15 23:28:45.177279700 +0200
 +++ gnome-shell.1/po/sv.po	2021-10-05 10:41:09.431359200 +0300

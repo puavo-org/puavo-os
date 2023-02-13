@@ -15,6 +15,7 @@ _pkgs_parts := puavo-ds puavo-os
 #                kde-spectacle          \
 #                libpam-ccreds          \
 #                mutter                 \
+#                nbd                    \
 #                openboard              \
 #                openldap               \
 #                pinta                  \

@@ -720,7 +720,7 @@ if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
               org.puavo.client.systeminfocollector.CollectSysinfo \
               | jq --arg nresolution "`cat /sys/class/graphics/fb0/virtual_size`" \
                 --arg hastouchscreen "`udevadm info --export-db | grep -c ID_INPUT_TOUCHSCREEN=1`" \
-              '. + {"resolution": $nresolution, "touchscreen": $hastouchscreen}'); then
+              '. + {"resolution": $nresolution, "touchscreen": $hastouchscreen}' | jq '{"hw_info": .}'); then
         if ! device_identifier=$(curl --cacert /etc/puavo-conf/rootca.pem  \
                             -d "${sysinfo_json}" --fail  -H "Content-Type: application/json" --max-time 5 --silent \
                             -X POST "$deviceid_url"); then

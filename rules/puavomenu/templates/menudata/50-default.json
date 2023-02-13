@@ -463,6 +463,9 @@
         "gucharmap": {
             "tags": "default"
         },
+        "hamstersimulator": {
+            "tags": "default"
+        },
         "org.hydrogenmusic.Hydrogen": {
             "name": {
                 "fi": "Hydrogen-rumpukone",
@@ -500,9 +503,6 @@
             "description": "Kahoot",
             "icon": "x-office-presentation",
             "tags": "default, education"
-        },
-        "org.kde.kamoso": {
-            "tags": "default"
         },
         "kenavision": {
             "type": "custom",
@@ -861,10 +861,16 @@
             },
             "tags": "default, education, science"
         },
+        "org.kde.kamoso": {
+            "tags": "default"
+        },
         "org.kde.kbruch": {
             "tags": "default"
         },
         "org.kde.kcalc": {
+            "tags": "default"
+        },
+        "org.kde.kdeconnect.app": {
             "tags": "default"
         },
         "org.kde.kdenlive": {
@@ -1406,6 +1412,14 @@
                 "id": "ti5-nspire-cx-cas-ss"
             }
         },
+        "ti6_nspire_cx_cas_ss": {
+            "name": "TI-Nspire CX Cas 6",
+            "tags": "default",
+            "keywords": "tinspire",
+            "puavopkg": {
+                "id": "ti6-nspire-cx-cas-ss"
+            }
+        },
         "tilitin": {
             "name": "Tilitin",
             "tags": "default",
@@ -1573,6 +1587,7 @@
                 "speedcrunch",
                 "ti_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss",
+                "ti6_nspire_cx_cas_ss",
                 "ClassPadManagerforClassPadII",
                 "LoggerPro",
                 "LoggerPro3",
@@ -1613,6 +1628,7 @@
                 "veracrypt",
                 "system-config-printer",
                 "pavucontrol",
+                "org.kde.kdeconnect.app",
                 "org.kde.spectacle",
                 "simplescreenrecorder",
                 "veyon-configurator",
@@ -1674,6 +1690,7 @@
                 "shotcut",
                 "solfege",
                 "mscore3",
+                "musescore-appimage",
                 "org.hydrogenmusic.Hydrogen",
                 "lmms",
                 "com.rosegardenmusic.rosegarden",
@@ -1820,6 +1837,7 @@
                 "io.github.wxmaxima_developers.wxMaxima",
                 "ti_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss",
+                "ti6_nspire_cx_cas_ss",
                 "ClassPadManagerforClassPadII",
                 "avogadro2",
                 "org.kde.kalzium",
@@ -2139,6 +2157,7 @@
                 "org.hydrogenmusic.Hydrogen",
                 "lmms",
                 "mscore3",
+                "musescore-appimage",
                 "spotify",
                 "libreoffice-writer",
                 "kahoot",
@@ -2244,6 +2263,7 @@
                 "scratux",
                 "scratch3",
                 "pyscrlink",
+                "hamstersimulator",
                 "bluefish",
                 "designer-qt5",
                 "processing",

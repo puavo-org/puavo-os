@@ -411,7 +411,6 @@ class packages {
     , 'fmit'
     , 'hydrogen'
     , 'lmms'
-    , 'musescore3'
     , 'qsynth'
     , 'rosegarden'
     , 'solfege'
@@ -422,6 +421,7 @@ class packages {
 
     [ 'amtterm'
     , 'hostapd'
+    , 'nload'
     , 'vtun' ]:
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
@@ -645,6 +645,7 @@ class packages {
     , 'printer-driver-cups-pdf'
     , 'printer-driver-foo2zjs'
     , 'printer-driver-gutenprint'
+    , 'printer-driver-hpijs'
     , 'printer-driver-min12xxw'
     , 'printer-driver-pnm2ppa'
     , 'printer-driver-ptouch'
@@ -724,6 +725,8 @@ class packages {
     , 'flameshot'
     , 'fuse3'
     , 'gnome-network-displays'
+    , 'ideviceinstaller'
+    , 'idevicerestore'
     , 'kamoso'
     , 'kde-spectacle'
     , 'mc'
@@ -777,7 +780,7 @@ class packages {
   $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.157'
   $nvidia_dkms_520_module   = 'nvidia-current/520.56.06'
   $r8168_module             = 'r8168/8.050.03'
-  $virtualbox_module        = 'virtualbox/6.1.40'
+  $virtualbox_module        = 'virtualbox/7.0.6'
 
   # $broadcom_sta_dkms_module     # XXX bookworm
   $all_dkms_modules = [ $nvidia_dkms_390_module

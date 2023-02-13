@@ -1,4 +1,9 @@
 {
-  "puavo-os-allinone-bullseye-amd64": [],
-  "puavo-os-allinone-bullseye-amd64-devel": []
+  "puavo-os-allinone-bullseye-amd64": {
+    "images": []
+  },
+  "puavo-os-allinone-bullseye-amd64-devel": {
+    "images": [],
+    "extra_rdiffs": {}
+  }
 }

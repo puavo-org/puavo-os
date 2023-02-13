@@ -1,0 +1,177 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the nbd package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: nbd\n"
+"Report-Msgid-Bugs-To: nbd@packages.debian.org\n"
+"POT-Creation-Date: 2016-06-30 21:30+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: error
+#. Description
+#: ../nbd-client.templates:2001
+msgid "AUTO_GEN is set to \"n\" in /etc/nbd-client"
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../nbd-client.templates:2001
+msgid ""
+"The /etc/nbd-client file contains a line that sets the AUTO_GEN variable to "
+"\"n\". This indicates that you prefer that the nbd configuration is not "
+"automatically generated."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../nbd-client.templates:2001
+msgid ""
+"Since nbd-client 1:3.14-1, the file /etc/nbd-client is no longer used for "
+"boot-time configuration; instead, a file /etc/nbdtab is used, with a "
+"different format. The debconf configuration options have been removed, and "
+"this file is therefore never automatically generated, except that this "
+"upgrade would have generated a /etc/nbdtab file from your /etc/nbd-client if "
+"AUTO_GEN had not been set to \"n\". As such, you'll need to either disable "
+"the AUTO_GEN line in /etc/nbd-client and call `dpkg-reconfigure nbd-client' "
+"to allow the configuration to be migrated, or write the nbdtab file yourself "
+"manually."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../nbd-client.templates:2001
+msgid ""
+"If you do not take either of those steps, your nbd-client boot-time "
+"configuration will not be functional."
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../nbd-client.templates:3001
+msgid "KILLALL is no longer supported"
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../nbd-client.templates:3001
+msgid ""
+"You have a file /etc/nbd-client which does not set the shell variable "
+"KILLALL to false. Since nbd-client 1:3.14-1, the boot sequence has been "
+"changed to use /etc/nbdtab instead of /etc/nbd-client, and this mode of "
+"operation no longer supports killing devices that are not specified in "
+"nbdtab."
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../nbd-client.templates:3001
+msgid ""
+"Your configuration has been migrated to /etc/nbdtab and the /etc/nbd-client "
+"file moved to /etc/nbd-client.old, but please note that you must bring down "
+"any devices not specified in /etc/nbdtab manually from now on."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nbd-server.templates:2001
+msgid "Number of nbd-server instances to run:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nbd-server.templates:2001
+msgid ""
+"Multiple nbd-server processes may run to export multiple files or block "
+"devices. Please specify how many configurations for such servers you want to "
+"generate."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nbd-server.templates:2001
+msgid ""
+"Note that you can always add extra servers by adding them to /etc/nbd-server/"
+"config, or by running \"dpkg-reconfigure nbd-server\"."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nbd-server.templates:3001
+msgid "Name of export ${number}:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nbd-server.templates:3001
+msgid "Please specify a name for this export."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nbd-server.templates:4001
+msgid "File to export (server number ${number}):"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nbd-server.templates:4001
+#, no-c-format
+msgid ""
+"Please specify a file name or block device that should be exported over the "
+"network. You can export a real block device (for instance \"/dev/hda1\"); a "
+"normal file (such as \"/export/nbd/bl1\"); or a bunch of files all at once. "
+"For the third option, you can use \"%s\" in the filename, which will be "
+"expanded to the IP-address of the connecting client. An example would be \"/"
+"export/swaps/swp%s\"."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nbd-server.templates:4001
+msgid ""
+"Note that it is possible to tune the way in which the IP address will be "
+"substituted in the file name. See \"man 5 nbd-server\" for details."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../nbd-server.templates:5001
+msgid "AUTO_GEN is set to \"n\" in /etc/nbd-server"
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../nbd-server.templates:5001
+msgid ""
+"The /etc/nbd-server file contains a line that sets the AUTO_GEN variable to "
+"\"n\". The file will therefore not be regenerated automatically."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../nbd-server.templates:5001
+msgid ""
+"Note that the current version of the nbd-server package no longer uses /etc/"
+"nbd-server. Instead it uses a new configuration file, read by nbd-server "
+"itself (rather than the init script), which supports more options. See \"man "
+"5 nbd-server\" for details."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../nbd-server.templates:5001
+msgid ""
+"If you remove or comment out the AUTO_GEN line, a file /etc/nbd-server/"
+"config in the new format may be generated based on the current "
+"configuration. Until then, the nbd-server installation will be broken."
+msgstr ""

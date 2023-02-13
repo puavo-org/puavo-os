@@ -1,5 +1,6 @@
-#!/usr/bin/rake -mf
+#!/usr/bin/rake -f
 
+require 'fileutils'
 require 'json'
 
 Image_dir        = ENV['image_dir']
@@ -69,12 +70,13 @@ def generate_development_image_series()
     m = path.match(/\A(.*?)-\d/)
     if m then
       series_name = "#{ m[1] }-devel"
-      (image_series[ series_name ] ||= []) << path
+      image_series['images'] ||= []
+      (image_series['images'][ series_name ] ||= []) << path
     end
   end
-  image_series.each do |series_name, images|
+  image_series.each do |series_name, series_spec|
     # take only the latest four images after sorting each series
-    image_series[series_name] = images.sort.last(4)
+    image_series['images'][series_name] = series_spec['images'].sort.last(4)
   end
 
   image_series
@@ -137,9 +139,10 @@ def parse_image_series(json_path)
   raise 'expecting hash' unless image_series.kind_of?(Hash)
   image_series.each do |key, value|
     raise 'expecting string as key' unless key.kind_of?(String)
-    raise 'expecting list as value' unless value.kind_of?(Array)
-    value.each do |item|
-      raise 'expecting string as list value' unless item.kind_of?(String)
+    raise 'expecting hash as value' unless value.kind_of?(Hash)
+    raise 'expecting images key in a hash' unless value['images'].kind_of?(Array)
+    value['images'].each do |image|
+      raise 'expecting string as an image value' unless image.kind_of?(String)
     end
   end
 
@@ -236,24 +239,31 @@ def setup_rdiff_tasks(source_image_file, target_image_file, metadata_file)
   source_image_signature_file_fp =
       "#{ Signatures_dir }/#{ source_image_signature_file }"
 
-  file source_image_signature_file_fp => Signatures_dir
-  file source_image_signature_file_fp => source_image_file_fp do |t|
-    tmpfile = "#{ source_image_signature_file_fp }.tmp"
-    sh 'rdiff', 'signature', source_image_file_fp, tmpfile
-    mv tmpfile, t.name
+  unless Rake::Task::task_defined?(source_image_signature_file_fp) then
+    file source_image_signature_file_fp => Signatures_dir
+    file source_image_signature_file_fp => source_image_file_fp do |t|
+      tmpfile = "#{ source_image_signature_file_fp }.tmp"
+      FileUtils.rm_f(tmpfile)
+      sh 'rdiff', '--block-size=64', 'signature', source_image_file_fp, tmpfile
+      mv tmpfile, t.name
+    end
   end
 
   target_image_file_fp = "#{ Image_dir }/#{ target_image_file }"
 
   task rdiff_file => rdiff_file_fp
-  file rdiff_file_fp => [ Rdiffs_dir,
-			  source_image_signature_file_fp,
-			  target_image_file_fp ]
-  file rdiff_file_fp do |t|
-    tmpfile = "#{ rdiff_file_fp }.tmp"
-    sh 'rdiff', 'delta', source_image_signature_file_fp, target_image_file_fp,
-      tmpfile
-    mv tmpfile, t.name
+
+  unless Rake::Task::task_defined?(rdiff_file_fp) then
+    file rdiff_file_fp => [ Rdiffs_dir,
+                            source_image_signature_file_fp,
+                            target_image_file_fp ]
+    file rdiff_file_fp do |t|
+      tmpfile = "#{ rdiff_file_fp }.tmp"
+      FileUtils.rm_f(tmpfile)
+      sh 'rdiff', '--block-size=64', 'delta', source_image_signature_file_fp,
+        target_image_file_fp, tmpfile
+      mv tmpfile, t.name
+    end
   end
 
   checksum_files = setup_checksum_tasks(rdiff_file, rdiff_file_fp)
@@ -295,7 +305,7 @@ file Cksums_file
 
 task :all_series
 
-image_series.each do |series_name, image_list|
+image_series.each do |series_name, series_spec|
   task series_name
   task :all_series => series_name
 
@@ -307,6 +317,9 @@ image_series.each do |series_name, image_list|
   file series_metadata_file => Metadata_dir
 
   target_image_rdiff_target = nil
+
+  extra_rdiffs = series_spec['extra_rdiffs'] || {}
+  image_list   = series_spec['images']
 
   image_list.each_index do |i|
     target_image_file = image_list[i]
@@ -349,6 +362,8 @@ image_series.each do |series_name, image_list|
 
     file series_metadata_file => [ target_image_file_copy ] + checksum_files
 
+    rdiff_source_files = []
+
     # make rdiffs only to the last three images in image list
     # (perhaps make this adjustable with a command line option in case
     # anyone wants to build the whole set?)
@@ -356,14 +371,19 @@ image_series.each do |series_name, image_list|
       image_list.each_index do |j|
         source_image_file = image_list[j]
         next if source_image_file == target_image_file
-
-        rdiff_metadata = setup_rdiff_tasks(source_image_file, target_image_file,
-          series_metadata_file)
-
-        task target_image_rdiff_target => rdiff_metadata['filename']
-
-        image_metadata['diffs'] << rdiff_metadata
+        rdiff_source_files << source_image_file
       end
+    end
+
+    if extra_rdiffs[target_image_file] then
+      rdiff_source_files += extra_rdiffs[target_image_file]
+    end
+
+    rdiff_source_files.uniq.each do |source_image_file|
+      rdiff_metadata = setup_rdiff_tasks(source_image_file, target_image_file,
+                         series_metadata_file)
+      task target_image_rdiff_target = rdiff_metadata['filename']
+      image_metadata['diffs'] << rdiff_metadata
     end
 
     series_metadata['images'] << image_metadata
