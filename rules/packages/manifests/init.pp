@@ -810,7 +810,6 @@ class packages {
 
     [ 'broadcom-sta-dkms'
     , 'intel-media-va-driver-non-free' # the free version seems to cause crashes in bullseye
-    , 'libgl1-nvidia-legacy-390xx-glx'
     , 'nvidia-kernel-dkms'
     , 'nvidia-legacy-390xx-kernel-dkms'
     , 'r8168-dkms'
