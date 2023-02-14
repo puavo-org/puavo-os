@@ -5,7 +5,10 @@ class packages::purged {
   Package { ensure => purged, }
 
   @package {
-    [ 'exim4-base'              # we do not need an MTA
+    [ 'asymptote-doc'           # asymptote not included in menus or anywhere, docs bigger than the main package
+    , 'bzip2-doc'               # API docs, algorithm description, not needed in image
+    , 'denemo-doc'              # denemo not included in menu, doc bigger than the main package, doesn't seem to open from denemo UI
+    , 'exim4-base'              # we do not need an MTA
     , 'exim4-config'
     , 'exim4-daemon-light'
 
@@ -18,6 +21,13 @@ class packages::purged {
     # slows down login considerably
     # (runs dpkg-query without speed considerations)
     , 'im-config'
+
+    , 'laby'                    # gnome programming game, not quite polished or known + we have plenty of others
+
+    # various HTML api docs. not quite needed in image
+    , 'libglib2.0-doc'
+    , 'libgtk-3-doc'
+    , 'nodejs-doc'
 
     , 'lilypond-doc'
     , 'lilypond-doc-html'
