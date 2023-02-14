@@ -327,7 +327,6 @@ class packages {
     , 'luola'
     , 'minetest'
     , 'neverball'
-    , 'neverputt'
     , 'openttd'
     , 'qml-module-qtquick-dialogs'	        # needed by teamviewer
     , 'qml-module-qtquick-privatewidgets'	# needed by teamviewer
@@ -530,8 +529,7 @@ class packages {
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     , 'oxygen-icon-theme'
-    , 'xscreensaver-data'
-    , 'xscreensaver-data-extra' ]:
+    , 'xscreensaver-data' ]:
       tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     # desktop-packages relating to gnome and other, some of these

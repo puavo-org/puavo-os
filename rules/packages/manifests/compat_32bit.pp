@@ -25,7 +25,6 @@ class packages::compat_32bit {
       , 'libfreetype6:i386'
       , 'libgcc-s1:i386'
       , 'libgif7:i386'                  # needed by RobboScratch2
-      , 'libgl1-mesa-glx:i386'
       , 'libglib2.0-0:i386'
       , 'libgraphene-1.0-0:i386'             # needed for better media support in wine
       , 'libgstreamer-gl1.0-0:i386'          # needed for better media support in wine
