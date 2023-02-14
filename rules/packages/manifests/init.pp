@@ -165,11 +165,13 @@ class packages {
     , 'wireguard-tools'
     # , 'wsmancli'                      # XXX bookworm
     , 'x11vnc'
+    , 'xvfb'
     , 'xbacklight'
     , 'xinput-calibrator' ]:
       tag => [ 'tag_admin', 'tag_debian_desktop', ];
 
     [ 'espeak-ng'
+    , 'lame'
     , 'libasound2-plugins'
     , 'linphone'
     , 'mumble'
@@ -177,7 +179,8 @@ class packages {
     , 'pavumeter'
     , 'qstopmotion'
     , 'simplescreenrecorder'
-    , 'timidity' ]:
+    , 'timidity'
+    , 'vorbis-tools' ]:
       tag => [ 'tag_audio', 'tag_debian_desktop', ];
 
     [ 'bash'
@@ -303,6 +306,7 @@ class packages {
     [ 'fontconfig'
     , 'fonts-ubuntu'
     , 'gnome-font-viewer'
+    , 'ttf-bitstream-vera'
     , 'xfonts-terminus'
     , 'xfonts-utils' ]:
       tag => [ 'tag_fonts', 'tag_debian_desktop', ];
@@ -420,6 +424,7 @@ class packages {
       tag => [ 'tag_music_making', 'tag_debian_desktop', ];
 
     [ 'amtterm'
+    , 'etherwake'
     , 'hostapd'
     , 'nload'
     , 'vtun' ]:
@@ -532,6 +537,7 @@ class packages {
     , 'adwaita-icon-theme'
     , 'alsa-utils'
     , 'anacron'
+    , 'appstream'
     , 'at-spi2-core'
     , 'avahi-autoipd'
     , 'avahi-daemon'
@@ -559,6 +565,7 @@ class packages {
     , 'fonts-freefont-ttf'
     , 'fonts-noto-color-emoji'                  # Chrome emoji support
     , 'foomatic-db-compressed-ppds'
+    , 'foomatic-db-engine'
     , 'gcr'
     , 'gedit'
     , 'genisoimage'
@@ -596,6 +603,7 @@ class packages {
     , 'gucharmap'
     , 'gvfs-fuse'
     , 'hplip'
+    , 'hunspell-en-us'´
     , 'ibus'
     , 'ibus-anthy'
     , 'ibus-gtk3'
@@ -668,6 +676,7 @@ class packages {
     , 'speedcrunch'
     , 'ssh-askpass-gnome'
     , 'telepathy-idle'
+    , 'tesseract-ocr'
     , 'totem'
     , 'transmission-gtk'
     , 'unzip'
@@ -716,7 +725,9 @@ class packages {
 
     # [ 'anki'                  # XXX missing from Bookworm
     [ 'bindfs'
+    , 'binfmt-support'
     , 'blueman'
+    , 'crda'
     , 'desktop-file-utils'
     , 'detox'
     , 'devilspie2'
@@ -736,11 +747,13 @@ class packages {
     , 'password-gorilla'
     , 'system-config-printer'
     , 'tlp'
+    , 'ubertooth'
     , 'unace'
     , 'unionfs-fuse'    # Ekapeli might need this.
     , 'wimtools'
     , 'wmctrl'
-    , 'xinput' ]:
+    , 'xinput'
+    , 'xxd' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
     [ 'qemu-system-x86'
