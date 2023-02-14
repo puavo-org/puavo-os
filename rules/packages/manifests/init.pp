@@ -104,6 +104,7 @@ class packages {
     , 'elinks'
     , 'ethtool'
     , 'expect'
+    , 'f2fs-tools'
     , 'fping'
     , 'gawk'
     , 'git'
@@ -303,6 +304,9 @@ class packages {
       tag => [ 'tag_firmware', 'tag_debian_desktop', ];
 
     [ 'fontconfig'
+    , 'fonts-motoya-l-cedar'
+    , 'fonts-nanum'
+    , 'fonts-roboto'
     , 'fonts-ubuntu'
     , 'gnome-font-viewer'
     , 'xfonts-terminus'
