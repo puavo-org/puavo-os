@@ -35,7 +35,6 @@ class gnome_shell_extensions {
     , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
-    , 'nohotcorner@azuri.free.fr'
     , 'puavomenu@puavo.org'
     , 'TopIcons@phocean.net'
     , 'uparrows@puavo.org' ]:
