@@ -1,0 +1,20 @@
+# Backported from upstream.
+xcb_screens_uaf.patch
+qnam_connect_memory_leak.diff
+gcc_11_limits.diff
+qiodevice_readline_memory.diff
+mime_globs.diff
+fix-invalid-pointer-return-with-QGridLayout.diff
+
+# Debian specific.
+gnukfreebsd.diff
+no_htmlinfo_example.diff
+remove_privacy_breaches.diff
+link_fbclient.diff
+gnukfreebsd_linker_warnings.diff
+armv4.diff
+nonlinux_utime.diff
+qdoc_default_incdirs.diff
+path_max.diff
+qstorageinfo_linux.diff
+cross_build_mysql.diff

@@ -17,6 +17,7 @@ _pkgs_ports := cups                   \
                openboard              \
                openldap               \
                pinta                  \
+               qtbase-opensource-src  \
                veyon                  \
                wsmancli
 
