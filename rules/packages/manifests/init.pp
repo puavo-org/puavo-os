@@ -144,6 +144,7 @@ class packages {
     , 'secure-delete'
     , 'setserial'
     , 'smartmontools'
+    , 'speedtest-cli'
     , 'sshfs'
     , 'strace'
     , 'stress'
