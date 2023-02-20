@@ -38,7 +38,7 @@ Build-Depends:
  libxrandr-dev,
  libxinerama-dev,
  default-jdk | gcj-jdk | gcj,
-Standards-Version: 4.6.0
+Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Homepage: https://veyon.io/
 Vcs-Git: https://salsa.debian.org/debian-edu-pkg-team/veyon.git
@@ -51,7 +51,7 @@ Depends:
  ${misc:Depends},
  libveyon-core (= ${binary:Version}),
  veyon-service (= ${binary:Version}),
- policykit-1,
+ pkexec | policykit-1,
 Recommends:
  veyon-configurator,
 Description: Computer Monitoring and Classroom Management Software - master

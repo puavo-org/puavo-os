@@ -169,7 +169,6 @@ Files: cli/src/ConfigCommands.cpp
  core/src/VeyonWorkerInterface.h
  core/src/VncClientProtocol.cpp
  core/src/VncClientProtocol.h
- core/src/VncConnection.h
  core/src/VncEvents.cpp
  core/src/VncEvents.h
  core/src/VncFeatureMessageEvent.cpp
@@ -289,27 +288,6 @@ Files: cli/src/ConfigCommands.cpp
  plugins/filetransfer/FileTransferPlugin.cpp
  plugins/filetransfer/FileTransferPlugin.h
  plugins/filetransfer/FileTransferUserConfiguration.h
- plugins/ldap/LdapPlugin.cpp
- plugins/ldap/LdapPlugin.h
- plugins/ldap/common/LdapBrowseDialog.cpp
- plugins/ldap/common/LdapBrowseDialog.h
- plugins/ldap/common/LdapBrowseModel.cpp
- plugins/ldap/common/LdapBrowseModel.h
- plugins/ldap/common/LdapClient.cpp
- plugins/ldap/common/LdapClient.h
- plugins/ldap/common/LdapCommon.h
- plugins/ldap/common/LdapConfiguration.cpp
- plugins/ldap/common/LdapConfiguration.h
- plugins/ldap/common/LdapConfigurationPage.cpp
- plugins/ldap/common/LdapConfigurationPage.h
- plugins/ldap/common/LdapDirectory.cpp
- plugins/ldap/common/LdapDirectory.h
- plugins/ldap/common/LdapNetworkObjectDirectory.cpp
- plugins/ldap/common/LdapNetworkObjectDirectory.h
- plugins/ldap/kldap/KLdapIntegration.cpp
- plugins/ldap/kldap/kldap_export.h
- plugins/ldap/kldap/klocalizedstring.h
- plugins/ldap/kldap/ldap_debug.h
  plugins/platform/common/LogonHelper.cpp
  plugins/platform/common/LogonHelper.h
  plugins/platform/common/PersistentLogonCredentials.cpp
@@ -646,7 +624,7 @@ Files: CMakeLists.txt
  worker/veyon-worker.rc.in
  README.md
  project.yml
-Copyright: 2004-2021, Tobias Junghans <tobydox@veyon.io>
+Copyright: 2004-2023, Tobias Junghans <tobydox@veyon.io>
 License: GPL-2+~with-OpenSSL-Exception
 Comment:
  Assuming copyright holder and license from majority of
@@ -685,6 +663,31 @@ Files: 3rdparty/kldap/sanitizers.supp
 Copyright: 2021-2022, Laurent Montel <montel@kde.org>
 License: CC0-1.0
 
+Files: plugins/ldap/LdapPlugin.cpp
+ plugins/ldap/LdapPlugin.h
+ plugins/ldap/common/LdapBrowseDialog.cpp
+ plugins/ldap/common/LdapBrowseDialog.h
+ plugins/ldap/common/LdapBrowseModel.cpp
+ plugins/ldap/common/LdapBrowseModel.h
+ plugins/ldap/common/LdapClient.cpp
+ plugins/ldap/common/LdapClient.h
+ plugins/ldap/common/LdapCommon.h
+ plugins/ldap/common/LdapConfiguration.cpp
+ plugins/ldap/common/LdapConfiguration.h
+ plugins/ldap/common/LdapConfigurationPage.cpp
+ plugins/ldap/common/LdapConfigurationPage.h
+ plugins/ldap/common/LdapDirectory.cpp
+ plugins/ldap/common/LdapDirectory.h
+ plugins/ldap/common/LdapNetworkObjectDirectory.cpp
+ plugins/ldap/common/LdapNetworkObjectDirectory.h
+ plugins/ldap/kldap/KLdapIntegration.cpp
+ plugins/ldap/kldap/kldap_export.h
+ plugins/ldap/kldap/klocalizedstring.h
+ plugins/ldap/kldap/ldap_debug.h
+Copyright: 2016-2023, Tobias Junghans <tobydox@veyon.io>
+  2019-2023, Tobias Junghans <tobydox@veyon.io>
+License: LGPL-2.0+
+
 Files: 3rdparty/kldap/src/widgets/ldapclientsearchconfigreadconfigjob.cpp
  3rdparty/kldap/src/widgets/ldapclientsearchconfigreadconfigjob.h
  3rdparty/kldap/src/widgets/ldapclientsearchconfigwriteconfigjob.cpp
@@ -695,7 +698,7 @@ Files: 3rdparty/kldap/src/widgets/ldapclientsearchconfigreadconfigjob.cpp
  3rdparty/kldap/src/widgets/ldapwidgetitem_p.h
  3rdparty/kldap/src/widgets/ldapwidgetitemreadconfigserverjob.cpp
  3rdparty/kldap/src/widgets/ldapwidgetitemreadconfigserverjob.h
-Copyright: 2020-2022, Laurent Montel <montel@kde.org> 
+Copyright: 2020-2022, Laurent Montel <montel@kde.org>
 License: LGPL-2.0+
 
 Files: 3rdparty/kldap/src/core/ldapdn.cpp
@@ -897,6 +900,7 @@ Copyright: 2006, Szombathelyi György <gyurco@freemail.hu>
 License: BSD-3-clause
 
 Files: core/src/VncConnection.cpp
+ core/src/VncConnection.h
 Copyright: 2007-2008, Urs Wolfer <uwolfer @ kde.org>
   2008-2022, Tobias Junghans <tobydox@veyon.io>
 License: GPL-2+~with-OpenSSL-Exception
@@ -1003,7 +1007,7 @@ Comment:
  copyright file).
 
 Files: debian/*
-Copyright: 2012-2018, Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+Copyright: 2012-2023, Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
 License: GPL-2+~with-OpenSSL-Exception or GPL-2+ or LGPL-2.0+ or LGPL-2.1+ or ISC or MIT~OldStyle or Expat or BSD-2-clause or BSD-3-clause or wxWindows-3.1+
 
 License: BSD-2-clause
@@ -1273,4 +1277,3 @@ License: CC0-1.0
  .
  On Debian systems, the full text of the CC0 1.0 Universal license can be found
  in the file `/usr/share/common-licenses/CC0-1.0'.
-

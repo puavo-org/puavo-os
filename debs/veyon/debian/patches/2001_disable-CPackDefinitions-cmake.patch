@@ -1,5 +1,6 @@
 Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
 Description: Ignore CPackDefinitions.cmake for official Debian package.
+Forwarded: not needed, Debian specific
 
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt

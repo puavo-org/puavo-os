@@ -1,3 +1,7 @@
+Description: Fix building with VEYON_X11VNC_EXTERNAL.
+Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+Forwarded: https://github.com/veyon/veyon/pull/864
+
 --- a/plugins/vncserver/x11vnc-builtin/BuiltinX11VncServer.cpp
 +++ b/plugins/vncserver/x11vnc-builtin/BuiltinX11VncServer.cpp
 @@ -32,7 +32,9 @@
@@ -26,7 +30,7 @@
  
 --- a/plugins/vncserver/x11vnc-builtin/CMakeLists.txt
 +++ b/plugins/vncserver/x11vnc-builtin/CMakeLists.txt
-@@ -199,6 +199,8 @@
+@@ -200,6 +200,8 @@
  
  	set_source_files_properties(${x11vnc_SOURCES} ${libvncserver_SOURCES} PROPERTIES
  		COMPILE_FLAGS "${COMPILER_WARN_DISABLE_FLAGS} -Wno-deprecated-declarations -Wno-unused-result -Wno-unused-function -Wno-unused-variable -Wno-misleading-indentation")
