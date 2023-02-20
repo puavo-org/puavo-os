@@ -38,8 +38,7 @@ camera_test_status() {
 }
 
 test_camera() {
-  # XXX replace mplayer with something else? (disappeared from Bookworm)
-  env CACA_DRIVER=ncurses mplayer -quiet -frames 200 -vo caca -vf mirror tv://
+  env CACA_DRIVER=ncurses mpv --really-quiet -frames 200 --vo=caca av://v4l2:/dev/video0
 }
 
 product_name() {
