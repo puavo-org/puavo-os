@@ -526,7 +526,6 @@ class packages {
     [ 'gnome-icon-theme'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
-    , 'oxygen-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
       tag => [ 'tag_themes', 'tag_debian_desktop', ];
