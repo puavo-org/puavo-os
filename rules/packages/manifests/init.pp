@@ -533,8 +533,7 @@ class packages {
 
     # desktop-packages relating to gnome and other, some of these
     # maybe belong to other categories or may be removed
-    [ 'acpi-support'
-    , 'adwaita-icon-theme'
+    [ 'adwaita-icon-theme'
     , 'alsa-utils'
     , 'anacron'
     , 'appstream'
