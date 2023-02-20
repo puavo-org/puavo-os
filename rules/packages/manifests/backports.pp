@@ -60,7 +60,6 @@ class packages::backports {
                   , 'libreoffice-script-provider-bsh'
                   , 'libreoffice-script-provider-js'
                   , 'libreoffice-script-provider-python'
-                  , 'libreoffice-sdbc-firebird'
                   , 'libreoffice-sdbc-hsqldb'
                   , 'libreoffice-sdbc-mysql'
                   , 'libreoffice-sdbc-postgresql'
