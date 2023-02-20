@@ -38,8 +38,6 @@ cat <<EOF > /etc/systemd/logind.conf.tmp
 KillUserProcesses=yes
 #KillOnlyUsers=
 KillExcludeUsers=root ${puavo_os_group_users}
-Controllers=blkio cpu cpuacct cpuset devices freezer hugetlb memory perf_event net_cls net_prio
-ResetControllers=
 InhibitDelayMaxSec=60
 #HandlePowerKey=poweroff
 #HandleSuspendKey=suspend
