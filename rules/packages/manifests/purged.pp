@@ -46,6 +46,7 @@ class packages::purged {
     , 'python-is-python2'
 
     # the functionality in these is not for our end users
+    , 'mercurial'
     , 'software-properties-gtk'
     , 'synaptic'
 
