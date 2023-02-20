@@ -544,6 +544,7 @@ class packages {
     , 'avahi-daemon'
     , 'baobab'
     , 'bc'
+    , 'bluetooth'
     , 'bluez'
     , 'bluez-cups'
     , 'brasero'
