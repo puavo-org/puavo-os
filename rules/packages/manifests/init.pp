@@ -308,6 +308,7 @@ class packages {
     , 'fonts-motoya-l-cedar'
     , 'fonts-nanum'
     , 'fonts-roboto'
+    , 'fonts-symbola'
     , 'fonts-ubuntu'
     , 'gnome-font-viewer'
     , 'xfonts-terminus'
