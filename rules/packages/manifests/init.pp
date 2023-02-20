@@ -342,7 +342,6 @@ class packages {
     [ 'dbus-x11'
     , 'gnome-applets'
     , 'gnome-power-manager'
-    , 'gnome-user-guide'
     , 'notification-daemon' ]:
       tag => [ 'tag_gnome', 'tag_debian_desktop', ];
 
