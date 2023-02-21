@@ -48,6 +48,10 @@ if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'true' ]; then
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="HybridSleep"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="SuspendThenHibernate"/>
 '
 
   suspend_enabled_part_two='
@@ -62,6 +66,10 @@ if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'true' ]; then
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanHybridSleep"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanSuspendThenHibernate"/>
 '
 else
   suspend_enabled_part_one=''
@@ -74,6 +82,8 @@ cat > /etc/dbus-1/system.d/org.freedesktop.login1.conf.tmp <<EOF
         "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
 
 <!--
+  SPDX-License-Identifier: LGPL-2.1-or-later
+
   This file is part of systemd.
 
   systemd is free software; you can redistribute it and/or modify it
@@ -202,6 +212,10 @@ cat > /etc/dbus-1/system.d/org.freedesktop.login1.conf.tmp <<EOF
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="Reboot"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="Halt"/>
 ${suspend_enabled_part_one}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
@@ -210,6 +224,10 @@ ${suspend_enabled_part_one}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanReboot"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanHalt"/>
 ${suspend_enabled_part_two}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
@@ -221,11 +239,35 @@ ${suspend_enabled_part_two}
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanRebootParameter"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="SetRebootParameter"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
                        send_member="CanRebootToFirmwareSetup"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="SetRebootToFirmwareSetup"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanRebootToBootLoaderMenu"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="SetRebootToBootLoaderMenu"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanRebootToBootLoaderEntry"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="SetRebootToBootLoaderEntry"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
@@ -297,6 +339,10 @@ ${suspend_enabled_part_two}
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Session"
+                       send_member="SetType"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Session"
                        send_member="TakeDevice"/>
 
                 <allow send_destination="org.freedesktop.login1"
@@ -306,6 +352,10 @@ ${suspend_enabled_part_two}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Session"
                        send_member="PauseDeviceComplete"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Session"
+                       send_member="SetBrightness"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.User"
