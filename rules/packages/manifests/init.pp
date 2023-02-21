@@ -325,7 +325,6 @@ class packages {
     , 'khangman'
     , 'ktouch'
     , 'kwordquiz'
-    , 'laby'
     , 'luola'
     , 'minetest'
     , 'neverball'
