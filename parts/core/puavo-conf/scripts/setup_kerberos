@@ -2,33 +2,16 @@
 
 set -eu
 
-read puavo_domain          < /etc/puavo/domain
-read puavo_kerberos_master < /etc/puavo/kerberos/master
-read puavo_kerberos_realm  < /etc/puavo/kerberos/realm
+read puavo_domain            < /etc/puavo/domain
+read puavo_kerberos_master   < /etc/puavo/kerberos/master
+read puavo_kerberos_realm    < /etc/puavo/kerberos/realm
+read puavo_kerberos_toprealm < /etc/puavo/kerberos/toprealm
+read puavo_ldap_master       < /etc/puavo/ldap/master
+read puavo_topdomain         < /etc/puavo/topdomain
 
 krb5_config() {
-  local use_kerberos_master use_kerberos_slave
-
-  use_kerberos_master=$1
-  use_kerberos_slave=$2
-
-  toprealm_config=''
-
-  if $use_kerberos_master; then
-    puavo_kerberos_toprealm=$(cat /etc/puavo/kerberos/toprealm 2>/dev/null \
-                                || true)
-    puavo_topdomain=$(cat /etc/puavo/topdomain 2>/dev/null || true)
-    if [ -n "$puavo_kerberos_toprealm" -a -n "$puavo_topdomain" ]; then
-      toprealm_config=$(cat <<EOF
-        ${puavo_kerberos_toprealm} = {
-                kdc = ${puavo_kerberos_master}
-                default_domain = ${puavo_topdomain}
-        }
-EOF
-)
-    fi
-
-  fi
+  local use_kerberos_slave
+  use_kerberos_slave=$1
 
   slave_kdc_config=''
   if $use_kerberos_slave \
@@ -48,7 +31,10 @@ EOF
     cat <<EOF
                 default_domain = ${puavo_domain}
         }
-${toprealm_config}
+        ${puavo_kerberos_toprealm} = {
+                kdc = ${puavo_ldap_master}
+                default_domain = ${puavo_topdomain}
+        }
 EOF
 )
 
@@ -76,14 +62,8 @@ ${realms}
 EOF
 }
 
-use_master_kerberos=true
-if [ -e /run/puavo/nbd-server ]; then
-  # on networking clients, we can rely on bootserver kerberos server
-  use_master_kerberos=false
-fi
-
-krb5_config "$use_master_kerberos" true > /etc/krb5.conf.tmp
+krb5_config true > /etc/krb5.conf.tmp
 mv /etc/krb5.conf.tmp /etc/krb5.conf
 
-krb5_config true false > /etc/krb5.conf.masteronly.tmp
+krb5_config false > /etc/krb5.conf.masteronly.tmp
 mv /etc/krb5.conf.masteronly.tmp /etc/krb5.conf.masteronly
