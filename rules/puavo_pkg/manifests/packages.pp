@@ -61,6 +61,7 @@ class puavo_pkg::packages {
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
+			, 'teams'
 			, 'tela-icon-theme'
 			, 'tilitin'
 			, 't-lasku'
