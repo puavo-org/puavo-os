@@ -606,7 +606,7 @@ class packages {
     , 'gucharmap'
     , 'gvfs-fuse'
     , 'hplip'
-    , 'hunspell-en-us'´
+    , 'hunspell-en-us'
     , 'ibus'
     , 'ibus-anthy'
     , 'ibus-gtk3'
