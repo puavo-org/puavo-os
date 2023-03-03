@@ -1,4 +1,48 @@
-veyon (4.7.4+repack1-1) bookworm; urgency=medium
+veyon (4.7.5+repack1-1) bookworm; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    + Trivial rebase of 1001_fix-external-x11vnc.patch.
+    + Drop upstream patches 0001, 0002a, 0002b, 0003, 0004, 0005 and 0006.
+      All included in this upstream release.
+    + Add 2001_disable-upstream-Git-version-detection.patch. Breaks version
+      detection when building insider the Debian packaging Git repo.
+    + Add 1002_fix-libproc2.patch. Complete the libproc2 build option.
+      Incomplete upstream change spotted.
+  * debian/copyright:
+    + Update auto-generated copyright.in file.
+    + Update copyright attributions.
+  * lintian: Add overrides for license files not listed in d/copyright. The
+    veyon source tree contains license files with uncommon names, we won't
+    list copyright attributions for those files.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Fri, 03 Feb 2023 08:55:32 +0100
+
+veyon (4.7.4+repack1-2) unstable; urgency=medium
+
+  * debian/control:
+    + Change D: from policykit-1 to pkexec. (Closes: #1025634).
+    + Bump Standards-Version: to 4.6.2. No changes needed.
+    + Add patches 0001, 0002a, 0002b, 0003 and 0004 as recommended by upstream.
+    + In B-D: switch from libprocps-dev to libproc2-dev. (Closes:
+      #1024225).
+  * debian/patches:
+    + Add 0005_LinuxCoreFunctions-add-support-for-libproc2.patch. (relates to
+      #1024225).
+    + Add 0006_LDAP-relicense-under-LGPL-2.patch. Upstream has relicensed
+      the LDAP plugin from GPL-2 to LGPL-2 to fix a license conflict with
+      libsasl2 (which is linked into kldap). This license change will be
+      shipped as a patch until the next release of Veyon. (Closes: #1023923).
+    + Add patch header for 1001_fix-external-x11vnc.patch. Mark patch as
+      forwarded.
+    + Mark patch 2001 as Debian-specific.
+  * debian/copyright:
+    + Update auto-generated copyright.in file.
+    + Update copyright attributions.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Fri, 27 Jan 2023 08:30:46 +0100
+
+veyon (4.7.4+repack1-1) unstable; urgency=medium
 
   * New upstream release.
   * debian/patches:

@@ -19,6 +19,7 @@ _pkgs_parts := puavo-ds puavo-os
 #                openboard              \
 #                openldap               \
 #                pinta                  \
+#                qtbase-opensource-src  \
 #                veyon                  \
 #                wsmancli
 

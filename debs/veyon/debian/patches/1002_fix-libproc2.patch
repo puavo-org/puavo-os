@@ -1,0 +1,16 @@
+Description: Fix proc2 build variant. Regression in 4.7.5 upstream patch backport.
+Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+Forwarded: via email
+
+--- a/plugins/platform/linux/LinuxServerProcess.cpp
++++ b/plugins/platform/linux/LinuxServerProcess.cpp
+@@ -25,7 +25,9 @@
+ #include <QFileInfo>
+ 
+ #include <csignal>
++#ifdef HAVE_LIBPROCPS
+ #include <proc/readproc.h>
++#endif
+ #include <sys/errno.h>
+ #include <sys/types.h>
+ #include <sys/wait.h>

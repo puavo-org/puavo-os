@@ -3,20 +3,10 @@
         "acroread": {
             "name": "Acrobat Reader",
             "tags": "default",
-            "keywords": [
-                "pdf"
-            ],
+            "keywords": "pdf",
             "puavopkg": {
                 "id": "adobe-reader"
             }
-        },
-       "anton": {
-            "type": "web",
-            "url": "https://anton.app/de/",
-            "name": "Anton",
-            "description": "Anton App",
-            "icon": "www",
-            "tags": "german"
         },
         "amme": {
             "type": "web",
@@ -32,6 +22,14 @@
                 "en": "Anki"
             },
             "tags": "default, education"
+        },
+        "anton": {
+            "type": "web",
+            "url": "https://anton.app/de/",
+            "name": "Anton",
+            "description": "Anton App",
+            "icon": "www",
+            "tags": "german"
         },
         "appinventor": {
             "name": "AppInventor USB",
@@ -167,6 +165,10 @@
         "code": {
             "tags": "default, development, education"
         },
+        "com.obsproject.Studio": {
+            "icon": "obs",
+            "tags": "default"
+        },
         "com.rosegardenmusic.rosegarden": {
             "name": {
                 "fi": "Rosegarden-sekvensseri",
@@ -184,10 +186,10 @@
                 "id": "cura-appimage"
             }
         },
-        "db_algebra_5": {
+        "db_algebra_12": {
             "tags": "default"
         },
-        "db_algebra_12": {
+        "db_algebra_5": {
             "tags": "default"
         },
         "db_bignumbers": {
@@ -308,9 +310,6 @@
                 "id": "enchanting"
             }
         },
-        "org.gnome.eog": {
-            "tags": "default"
-        },
         "epson-easymp": {
             "tags": "default"
         },
@@ -352,9 +351,6 @@
             "tags": "default, audio"
         },
         "freecad": {
-            "tags": "default"
-        },
-        "org.freeciv.gtk2": {
             "tags": "default"
         },
         "freeplane": {
@@ -410,21 +406,6 @@
                 "id": "globilab"
             }
         },
-        "org.gnome.Klotski": {
-            "tags": "default"
-        },
-        "org.gnome.NetworkDisplays": {
-            "tags": "default"
-        },
-        "org.gnome.Mahjongg": {
-            "tags": "default"
-        },
-        "org.gnome.Mines": {
-            "tags": "default"
-        },
-        "org.gnome.Sudoku": {
-            "tags": "default"
-        },
         "gnubg": {
             "tags": "default"
         },
@@ -465,15 +446,6 @@
         },
         "hamstersimulator": {
             "tags": "default"
-        },
-        "org.hydrogenmusic.Hydrogen": {
-            "name": {
-                "fi": "Hydrogen-rumpukone",
-                "en": "Hydrogen-drum machine",
-                "sv": "Hydrogen-trummaskin",
-                "de": "Hydrogen Drum Machine"
-            },
-            "tags": "default, audio"
         },
         "idle-python3.11": {
             "tags": "default"
@@ -584,6 +556,9 @@
             "tags": "default, office, education",
             "keywords": "writer, kirjoitus, libreoffice, word"
         },
+        "lmaths": {
+            "tags": "default"
+        },
         "lmms": {
             "name": {
                 "fi": "LMMS - musiikkityökalu",
@@ -591,9 +566,6 @@
                 "de": "LMMS - Software zur Musik-Produktion"
             },
             "tags": "default, audio"
-        },
-        "lmaths": {
-            "tags": "default"
         },
         "LoggerPro": {
             "name": "LoggerPro",
@@ -658,9 +630,6 @@
                 "id": "mindplus"
             }
         },
-        "net.minetest.minetest": {
-            "tags": "default"
-        },
         "mousepad": {
             "tags": "default"
         },
@@ -685,6 +654,9 @@
         "mypaint": {
             "tags": "default, graphics"
         },
+        "net.minetest.minetest": {
+            "tags": "default"
+        },
         "net.sourceforge.liferea": {
             "tags": "default"
         },
@@ -707,20 +679,6 @@
                 "id": "nightcode"
             }
         },
-        "novoconnect-software": {
-            "name": "NovoConnect Software",
-            "tags": "default",
-            "puavopkg": {
-                "id": "novoconnect"
-            }
-        },
-        "novo-launcher": {
-            "name": "LauncherOne",
-            "tags": "default",
-            "puavopkg": {
-                "id": "launcherone"
-            }
-        },
         "novo_desktop_streamer": {
             "type": "custom",
             "command": "puavo-chromium-app run novo_desktop_streamer",
@@ -729,9 +687,19 @@
             "icon": "/opt/puavo-chromium-apps/novo_desktop_streamer/logo.png",
             "tags": "default"
         },
-        "com.obsproject.Studio": {
-            "icon": "obs",
-            "tags": "default"
+        "novo-launcher": {
+            "name": "LauncherOne",
+            "tags": "default",
+            "puavopkg": {
+                "id": "launcherone"
+            }
+        },
+        "novoconnect-software": {
+            "name": "NovoConnect Software",
+            "tags": "default",
+            "puavopkg": {
+                "id": "novoconnect"
+            }
         },
         "onboard": {
             "tags": "default"
@@ -756,9 +724,6 @@
             "name": "OpenSCAD",
             "tags": "default"
         },
-        "org.openshot.OpenShot": {
-            "tags": "default"
-        },
         "openttd": {
             "tags": "default"
         },
@@ -766,11 +731,17 @@
             "icon": "org.cryptomator.Cryptomator256.png",
             "tags": "default"
         },
+        "org.freeciv.gtk2": {
+            "tags": "default"
+        },
         "org.gnome.Calculator": {
             "icon": "gnome-calculator",
             "tags": "default"
         },
         "org.gnome.Cheese": {
+            "tags": "default"
+        },
+        "org.gnome.eog": {
             "tags": "default"
         },
         "org.gnome.Epiphany": {
@@ -818,16 +789,43 @@
             },
             "tags": "default"
         },
+        "org.gnome.Klotski": {
+            "tags": "default"
+        },
+        "org.gnome.Mahjongg": {
+            "tags": "default"
+        },
+        "org.gnome.Mines": {
+            "tags": "default"
+        },
         "org.gnome.Nautilus": {
             "icon": "folder-home",
             "tags": "default, utility"
         },
+        "org.gnome.NetworkDisplays": {
+            "tags": "default"
+        },
+        "org.gnome.seahorse.Application": {
+            "tags": "default"
+        },
         "org.gnome.SoundJuicer": {
+            "tags": "default"
+        },
+        "org.gnome.Sudoku": {
             "tags": "default"
         },
         "org.gnome.Terminal": {
             "tags": "default",
             "keywords": "terminal, utility"
+        },
+        "org.hydrogenmusic.Hydrogen": {
+            "name": {
+                "fi": "Hydrogen-rumpukone",
+                "en": "Hydrogen-drum machine",
+                "sv": "Hydrogen-trummaskin",
+                "de": "Hydrogen Drum Machine"
+            },
+            "tags": "default, audio"
         },
         "org.inkscape.Inkscape": {
             "name": {
@@ -969,15 +967,6 @@
             "tags": "default, office",
             "keywords": "pdf"
         },
-        "org.kde.step": {
-            "name": {
-                "fi": "Step-fysiikan simulaattori",
-                "en": "Step-physics simulator",
-                "sv": "Step-fysik simulator",
-                "de": "Step Physik Simulator"
-            },
-            "tags": "default, education, science"
-        },
         "org.kde.spectacle": {
             "name": {
                 "fi": "Kuvakaappaus",
@@ -986,6 +975,15 @@
                 "de": "Bildschirmfoto"
             },
             "tags": "default, utility, graphics"
+        },
+        "org.kde.step": {
+            "name": {
+                "fi": "Step-fysiikan simulaattori",
+                "en": "Step-physics simulator",
+                "sv": "Step-fysik simulator",
+                "de": "Step Physik Simulator"
+            },
+            "tags": "default, education, science"
         },
         "org.kde.tellico": {
             "name": {
@@ -997,23 +995,38 @@
             "tags": "default, office",
             "keywords": "tellico"
         },
-            "org.mobsya.ThymioSuite": {
+        "org.mobsya.ThymioSuite": {
+            "tags": "default"
+        },
+        "org.openshot.OpenShot": {
             "tags": "default"
         },
         "org.pitivi.Pitivi": {
             "tags": "default"
         },
-        "otava-oppilas": {
-            "type": "web",
-            "url": "https://oppilas.otava.fi/",
-            "name": "Otava - Oppilaan maailma",
-            "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
-            "tags": "default, education"
+        "org.qgis.qgis": {
+            "tags": "default"
+        },
+        "org.stellarium.Stellarium": {
+            "name": {
+                "fi": "Stellarium-planetaario",
+                "en": "Stellarium-planetarium",
+                "sv": "Stellarium-planetarium",
+                "de": "Stellarium-Planetarium"
+            },
+            "tags": "default, education, science"
         },
         "otava-opiskelija": {
             "type": "web",
             "url": "https://opiskelija.otava.fi/",
             "name": "Otava - Opiskelijan maailma",
+            "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
+            "tags": "default, education"
+        },
+        "otava-oppilas": {
+            "type": "web",
+            "url": "https://oppilas.otava.fi/",
+            "name": "Otava - Oppilaan maailma",
             "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
             "tags": "default, education"
         },
@@ -1112,10 +1125,10 @@
         },
         "pyscrlink": {
             "name": {
-                 "en": "Scratch device connector",
-                 "fi": "Scratch-laiteyhdistäjä",
-                 "de": "Scratch-Verbindungswerkzeug",
-                 "sv": "Scratch-anslutningsverktyg"
+                "en": "Scratch device connector",
+                "fi": "Scratch-laiteyhdistäjä",
+                "de": "Scratch-Verbindungswerkzeug",
+                "sv": "Scratch-anslutningsverktyg"
             },
             "keywords": "scratch link",
             "tags": "default",
@@ -1132,9 +1145,6 @@
             },
             "icon": "/usr/share/icons/oxygen/base/64x64/categories/applications-internet.png",
             "tags": "default, education, development"
-        },
-        "org.qgis.qgis": {
-            "tags": "default"
         },
         "qcad-cam": {
             "tags": "default"
@@ -1213,9 +1223,6 @@
                 "de": "Scribus Seitengestaltung"
             },
             "tags": "default, office"
-        },
-        "org.gnome.seahorse.Application": {
-            "tags": "default"
         },
         "shotcut": {
             "tags": "default"
@@ -1314,15 +1321,6 @@
         "steam": {
             "tags": "steam"
         },
-        "org.stellarium.Stellarium": {
-            "name": {
-                "fi": "Stellarium-planetaario",
-                "en": "Stellarium-planetarium",
-                "sv": "Stellarium-planetarium",
-                "de": "Stellarium-Planetarium"
-            },
-            "tags": "default, education, science"
-        },
         "sumopaint": {
             "type": "web",
             "url": "https://www.sumopaint.com/",
@@ -1380,8 +1378,11 @@
                 "id": "teddybear"
             }
         },
-       "telegramdesktop": {
+        "telegramdesktop": {
             "name": "Telegram",
+            "tags": "default"
+        },
+        "texmaker": {
             "tags": "default"
         },
         "thunderbird": {
@@ -1392,9 +1393,6 @@
                 "de": "Thunderbird-Email"
             },
             "tags": "default, network"
-        },
-       "texmaker": {
-            "tags": "default"
         },
         "ti_nspire_cx_cas_ss": {
             "name": "TI-Nspire CX Cas",

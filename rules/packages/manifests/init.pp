@@ -102,6 +102,7 @@ class packages {
     , 'elinks'
     , 'ethtool'
     , 'expect'
+    , 'f2fs-tools'
     , 'fping'
     , 'gawk'
     , 'git'
@@ -141,6 +142,7 @@ class packages {
     , 'secure-delete'
     , 'setserial'
     , 'smartmontools'
+    , 'speedtest-cli'
     , 'sshfs'
     , 'strace'
     , 'stress'
@@ -304,6 +306,10 @@ class packages {
       tag => [ 'tag_firmware', 'tag_debian_desktop', ];
 
     [ 'fontconfig'
+    , 'fonts-motoya-l-cedar'
+    , 'fonts-nanum'
+    , 'fonts-roboto'
+    , 'fonts-symbola'
     , 'fonts-ubuntu'
     , 'gnome-font-viewer'
     , 'ttf-bitstream-vera'
@@ -321,11 +327,9 @@ class packages {
     , 'khangman'
     , 'ktouch'
     , 'kwordquiz'
-    , 'laby'
     , 'luola'
     , 'minetest'
     , 'neverball'
-    , 'neverputt'
     , 'openttd'
     , 'qml-module-qtquick-dialogs'	        # needed by teamviewer
     , 'qml-module-qtquick-privatewidgets'	# needed by teamviewer
@@ -526,8 +530,8 @@ class packages {
     [ 'gnome-icon-theme'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
-    , 'xscreensaver-data'
-    , 'xscreensaver-data-extra' ]:
+    , 'oxygen-icon-theme'
+    , 'xscreensaver-data' ]:
       tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     # desktop-packages relating to gnome and other, some of these
@@ -541,6 +545,7 @@ class packages {
     , 'avahi-daemon'
     , 'baobab'
     , 'bc'
+    , 'bluetooth'
     , 'bluez'
     , 'bluez-cups'
     , 'brasero'

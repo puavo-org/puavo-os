@@ -7,13 +7,14 @@ https://github.com/veyon/veyon/issues/850
 diff -ruN veyon/core/src/LockWidget.cpp veyon/core/src/LockWidget.cpp
 --- veyon/core/src/LockWidget.cpp	2022-07-29 12:38:30.000000000 +0300
 +++ veyon/core/src/LockWidget.cpp	2022-12-07 13:44:47.153571166 +0200
-@@ -36,34 +36,34 @@
+@@ -36,35 +36,34 @@
  	m_background( background ),
  	m_mode( mode )
  {
 -	auto leftMostScreen = QGuiApplication::primaryScreen();
 -	int minimumX = 0;
--	for (auto* screen : QGuiApplication::screens())
+-	const auto screens = QGuiApplication::screens();
+-	for (auto* screen : screens)
 +	if( mode == DesktopVisible )
  	{
 -		if (screen->geometry().x() < minimumX)

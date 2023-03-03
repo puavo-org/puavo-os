@@ -2,6 +2,8 @@
 
 set -eu
 
+deviceid_url="" # set during installer startup but used also later
+
 colorize() {
   local color component yellow_limit grey_limit green_limit value text \
         preseed_args
@@ -624,7 +626,11 @@ darkdm_menu()
         darkdm_reboot || return 1
         ;;
       restoredisk)
+        # try running restoredisk and notify inventory system if successful
         puavo-disk-clone restoredisk || return 1
+        curl --cacert /etc/puavo-conf/rootca.pem \
+          -d "$(jq -n --arg sn "$(facter dmi.product.serial_number)" '.serialnumber = $sn | .restoredisked = true')" \
+          --fail -H "Content-Type: application/json" --max-time 5 --silent -X POST "$deviceid_url" || true
         ;;
       savedisk)
         puavo-disk-clone savedisk || return 1

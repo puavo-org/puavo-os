@@ -33,7 +33,7 @@ Author: Tuomas Nurmi <dev@opinsys.fi>
  
 +       ui->computerSelectPanelButton->setVisible(false);
  
- 	static const QMap<QWidget *, QAbstractButton *> panelButtons{
+ 	static const QHash<QWidget *, QAbstractButton *> panelButtons{
  		{ computerSelectPanel, ui->computerSelectPanelButton },
 @@ -190,10 +191,10 @@ MainWindow::MainWindow( VeyonMaster &mas
  
