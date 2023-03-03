@@ -805,9 +805,9 @@ class packages {
 		    # , $virtualbox_module              # XXX bookworm ]
 
   packages::kernels::kernel_package {
-    '6.1.0-3-amd64':
+    '6.1.0-5-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.1.0-3-amd64';
+      package_name => 'linux-image-6.1.0-5-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by
