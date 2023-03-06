@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -eu
+
+deb_url=$1
+srcpath=$2
+destpath=$3
+
+tmpdir=$(mktemp -d /tmp/unpack_a_file_from_deb.XXXXXX)
+
+cleanup() {
+  rm -rf "$tmpdir"
+}
+
+trap cleanup 0
+
+cd "$tmpdir"
+
+wget -O deb "$deb_url"
+
+dpkg-deb -x deb data
+
+mkdir -p "$(dirname "$destpath")"
+cp -p "data/${srcpath}" "${destpath}.tmp"
+mv "${destpath}.tmp" "$destpath"
