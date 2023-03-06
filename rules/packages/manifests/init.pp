@@ -730,7 +730,6 @@ class packages {
     [ 'bindfs'
     , 'binfmt-support'
     , 'blueman'
-    , 'crda'
     , 'desktop-file-utils'
     , 'detox'
     , 'devilspie2'
