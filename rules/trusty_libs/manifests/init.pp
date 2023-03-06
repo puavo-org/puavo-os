@@ -1,4 +1,6 @@
 class trusty_libs {
+  include ::trusty_libs::file_unpack
+
   $basedir = '/opt/trusty/lib'
   $trusty_mirror_base  = 'https://mirrors.kernel.org'
 
@@ -10,12 +12,6 @@ class trusty_libs {
         creates => $targetpath,
         require => File['/usr/local/lib/puavo-unpack-a-file-from-deb'];
     }
-  }
-
-  file {
-    '/usr/local/lib/puavo-unpack-a-file-from-deb':
-      mode   => '0755',
-      source => 'puppet:///modules/trusty_libs/puavo-unpack-a-file-from-deb';
   }
 
   ::trusty_libs::deb_unpack {
