@@ -292,7 +292,6 @@ class packages {
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
     [ 'b43-fwcutter'
-    , 'firmware-ath9k-htc'
     , 'firmware-b43-installer'
     , 'firmware-b43legacy-installer'
     , 'firmware-linux-free'
