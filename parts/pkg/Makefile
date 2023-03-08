@@ -1,6 +1,7 @@
 prefix = /usr
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
+libdir = $(exec_prefix)/lib
 sbindir = $(exec_prefix)/sbin
 sysconfdir = /etc
 datarootdir = $(prefix)/share
@@ -30,12 +31,13 @@ i18nupdate: po/puavo-pkgs-ui.pot po/de/puavo-pkgs-ui.po po/fi/puavo-pkgs-ui.po p
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(sbindir)
-	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-pkg
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(libdir)/puavo-pkg
+	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-pkg
 	${MAKE} -C packages installdirs
 
 .PHONY: install
@@ -44,6 +46,9 @@ install: installdirs
                 puavo-pkgs-ui.json
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-pkg-wine-helper
+
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-pkg \
+                lib/unpack-a-file-from-deb
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-pkg \
