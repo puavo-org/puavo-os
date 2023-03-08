@@ -1,5 +1,5 @@
 class focal_libs {
-  include ::trusty_libs::file_unpack
+  include ::packages
 
   $basedir = '/opt/focal/lib'
   $focal_mirror_base  = 'https://mirrors.kernel.org'
@@ -8,9 +8,9 @@ class focal_libs {
     $targetpath = "${::focal_libs::basedir}/${title}"
 
     exec {
-      "/usr/local/lib/puavo-unpack-a-file-from-deb ${url} ${srcpath} ${targetpath}":
+      "/usr/lib/puavo-pkg/unpack-a-file-from-deb ${url} ${srcpath} ${targetpath}":
         creates => $targetpath,
-        require => File['/usr/local/lib/puavo-unpack-a-file-from-deb'];
+        require => Package['puavo-pkg'];
     }
   }
 
@@ -83,4 +83,6 @@ class focal_libs {
       srcpath => '/usr/lib/x86_64-linux-gnu/libxqilla.so.6',
       url     => "${focal_mirror_base}/ubuntu/pool/universe/x/xqilla/libxqilla6v5_2.3.4-1build2_amd64.deb";
   }
+
+  Package <| title == "puavo-pkg" |>
 }

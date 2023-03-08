@@ -1,5 +1,5 @@
 class trusty_libs {
-  include ::trusty_libs::file_unpack
+  include ::packages
 
   $basedir = '/opt/trusty/lib'
   $trusty_mirror_base  = 'https://mirrors.kernel.org'
@@ -8,9 +8,9 @@ class trusty_libs {
     $targetpath = "${::trusty_libs::basedir}/${title}"
 
     exec {
-      "/usr/local/lib/puavo-unpack-a-file-from-deb ${url} ${srcpath} ${targetpath}":
+      "/usr/lib/puavo-pkg/unpack-a-file-from-deb ${url} ${srcpath} ${targetpath}":
         creates => $targetpath,
-        require => File['/usr/local/lib/puavo-unpack-a-file-from-deb'];
+        require => Package['puavo-pkg'];
     }
   }
 
@@ -63,4 +63,6 @@ class trusty_libs {
       srcpath => '/usr/lib/x86_64-linux-gnu/libpangomm-1.4.so.1.0.30',
       url     => "${trusty_mirror_base}/ubuntu/pool/main/p/pangomm/libpangomm-1.4-1_2.34.0-1ubuntu1_amd64.deb";
   }
+
+  Package <| title == "puavo-pkg" |>
 }
