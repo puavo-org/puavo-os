@@ -1,5 +1,4 @@
 class puavo_pkg::packages {
-  include ::focal_libs          # needed by smartboard
   include ::puavo_conf
   include ::puavo_pkg
   include ::trusty_libs         # needed by globilab and vstloggerpro
