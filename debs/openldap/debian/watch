@@ -1,6 +1,4 @@
-# debian/watch -- Rules for uscan to find new upstream versions.
-
-version=3
-opts=dversionmangle=s/\+dfsg// \
+version=4
+opts=pgpmode=auto,dversionmangle=s/\+dfsg//,repacksuffix=+dfsg \
 https://www.openldap.org/software/download/ \
-    (?:.*/)?openldap-?_?([\d+\.]+)\.tgz
+    (?:.*/)?openldap-@ANY_VERSION@@ARCHIVE_EXT@

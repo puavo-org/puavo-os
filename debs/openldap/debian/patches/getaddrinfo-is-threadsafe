@@ -15,7 +15,7 @@ thread-safe implementations.
 
 --- a/libraries/libldap/os-ip.c
 +++ b/libraries/libldap/os-ip.c
-@@ -602,13 +602,7 @@ ldap_connect_to_host(LDAP *ld, Sockbuf *
+@@ -591,13 +591,7 @@
  	hints.ai_socktype = socktype;
  	snprintf(serv, sizeof serv, "%d", port );
  
@@ -27,11 +27,11 @@ thread-safe implementations.
 -	LDAP_MUTEX_UNLOCK(&ldap_int_resolv_mutex);
 -
  	if ( err != 0 ) {
- 		osip_debug(ld, "ldap_connect_to_host: getaddrinfo failed: %s\n",
- 			AC_GAI_STRERROR(err), 0, 0);
+ 		Debug1(LDAP_DEBUG_TRACE,
+ 			"ldap_connect_to_host: getaddrinfo failed: %s\n",
 --- a/libraries/libldap/util-int.c
 +++ b/libraries/libldap/util-int.c
-@@ -431,9 +431,7 @@ int ldap_pvt_get_hname(
+@@ -533,9 +533,7 @@
  	int rc;
  #if defined( HAVE_GETNAMEINFO )
  

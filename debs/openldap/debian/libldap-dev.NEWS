@@ -1,0 +1,13 @@
+openldap (2.5.5+dfsg-1~exp1) experimental; urgency=medium
+
+   This is a major release of OpenLDAP, and as such it introduces several
+   changes, new features and deprecations/removals.  This is a
+   non-exhaustive list of things to be aware of:
+
+   * Changes:
+     - The libldap2-dev package has been renamed to libldap-dev.
+     - The libldap_r library has been merged into libldap.
+       Applications should link with -lldap. This package still provides
+       a libldap_r.so symlink for compatibility.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 11 Jun 2021 11:43:15 -0700

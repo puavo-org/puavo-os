@@ -8,7 +8,7 @@ Upstream ITS #6302 filed.
 
 --- a/libraries/libldap/cyrus.c
 +++ b/libraries/libldap/cyrus.c
-@@ -74,28 +74,6 @@
+@@ -74,29 +74,6 @@
   */
  int ldap_int_sasl_init( void )
  {
@@ -26,21 +26,22 @@ Upstream ITS #6302 filed.
 -		sprintf( version, "%u.%d.%d", (unsigned)rc >> 24, (rc >> 16) & 0xff,
 -			rc & 0xffff );
 -
--		Debug( LDAP_DEBUG_ANY,
+-		Debug1( LDAP_DEBUG_ANY,
 -		"ldap_int_sasl_init: SASL library version mismatch:"
 -		" expected " SASL_VERSION_STRING ","
--		" got %s\n", version, 0, 0 );
+-		" got %s\n", version );
 -		return -1;
 -	}
 -	}
 -#endif
- 
+-
  /* SASL 2 takes care of its own memory completely internally */
  #if SASL_VERSION_MAJOR < 2 && !defined(CSRIMALLOC)
+ 	sasl_set_alloc(
 --- a/servers/slapd/sasl.c
 +++ b/servers/slapd/sasl.c
-@@ -1145,26 +1145,6 @@ int slap_sasl_init( void )
- #endif
+@@ -1271,26 +1271,6 @@
+ 	rewrite_mapper_register( &slapd_mapper );
  
  #ifdef HAVE_CYRUS_SASL
 -#ifdef HAVE_SASL_VERSION
@@ -59,7 +60,7 @@ Upstream ITS #6302 filed.
 -			rc & 0xffff );
 -		Debug( LDAP_DEBUG_ANY, "slap_sasl_init: SASL library version mismatch:"
 -			" expected %s, got %s\n",
--			SASL_VERSION_STRING, version, 0 );
+-			SASL_VERSION_STRING, version );
 -		return -1;
 -	}
 -#endif

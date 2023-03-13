@@ -1,3 +1,11 @@
 Tests: slapd
 Depends: ldap-utils
 Restrictions: allow-stderr, isolation-container, needs-root, superficial
+
+Tests: smbk5pwd
+Depends: ldap-utils, slapd, slapd-contrib, heimdal-kdc, samba, schema2ldif
+Restrictions: allow-stderr, isolation-container, needs-root, superficial
+
+Tests: sha2-contrib
+Depends: slapd, openssl
+Restrictions: superficial

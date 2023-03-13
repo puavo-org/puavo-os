@@ -1,3 +1,38 @@
+openldap (2.5.5+dfsg-1~exp1) experimental; urgency=medium
+
+   This is a major release of OpenLDAP, and as such it introduces several
+   changes, new features and deprecations/removals.  This is a
+   non-exhaustive list of things to be aware of:
+
+   * Removals:
+     - The shell backend (slapd-shell) has been removed.
+     - The BDB and HDB backends have been removed.
+
+   * Additions:
+     - New backend: slapd-asyncmeta(5).
+     - New core overlays: slapd-homedir(5), slapd-otp(5), and
+       slapd-remoteauth(5).
+
+   * Changes:
+     - The ppolicy module now provides its own built-in schema.
+       The external ppolicy schema has been removed.
+
+   You can find the upstream announcement containing the full list of
+   changes in the 2.5.x series at
+   <https://www.openldap.org/software/release/announce.html>.
+
+   In certain situations, it is possible that the post-installation
+   scripts will not be able to successfully migrate your current
+   installation to new formats (e.g., when you are using an old
+   backend like BDB/HDB).  If this happens, you will be notified about
+   the failure and the slapd service will NOT be (re)started; you will
+   then have to take manual action in order to migrate your data and
+   start the service.  Please look at the README.Debian file (under
+   /usr/share/doc/slapd/) for more instructions on how to cope with
+   some of the most problematic cases.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 11 Jun 2021 11:43:15 -0700
+
 openldap (2.4.49+dfsg-1) unstable; urgency=medium
 
    This release fixes an issue with how the slapo-ppolicy(5) overlay

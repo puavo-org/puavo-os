@@ -10,8 +10,12 @@ usr/lib/ldap/back_*.la
 
 usr/lib/ldap/accesslog*.so*
 usr/lib/ldap/accesslog.la
+usr/lib/ldap/argon2*.so*
+usr/lib/ldap/argon2.la
 usr/lib/ldap/auditlog*.so*
 usr/lib/ldap/auditlog.la
+usr/lib/ldap/collect*.so*
+usr/lib/ldap/collect.la
 usr/lib/ldap/constraint*.so*
 usr/lib/ldap/constraint.la
 usr/lib/ldap/dds*.so*
@@ -22,16 +26,20 @@ usr/lib/ldap/dyngroup*.so*
 usr/lib/ldap/dyngroup.la
 usr/lib/ldap/dynlist*.so*
 usr/lib/ldap/dynlist.la
+usr/lib/ldap/homedir*.so*
+usr/lib/ldap/homedir.la
 usr/lib/ldap/memberof*.so*
 usr/lib/ldap/memberof.la
+usr/lib/ldap/otp*.so*
+usr/lib/ldap/otp.la
 usr/lib/ldap/pcache*.so*
 usr/lib/ldap/pcache.la
-usr/lib/ldap/collect*.so*
-usr/lib/ldap/collect.la
 usr/lib/ldap/ppolicy*.so*
 usr/lib/ldap/ppolicy.la
 usr/lib/ldap/refint*.so*
 usr/lib/ldap/refint.la
+usr/lib/ldap/remoteauth*.so*
+usr/lib/ldap/remoteauth.la
 usr/lib/ldap/retcode*.so*
 usr/lib/ldap/retcode.la
 usr/lib/ldap/rwm*.so*

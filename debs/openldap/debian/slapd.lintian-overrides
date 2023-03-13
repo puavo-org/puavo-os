@@ -1,3 +1,5 @@
+# #687022
+lacks-unversioned-link-to-shared-library usr/lib/*/libslapi-*.so.* usr/lib/*/libslapi-*.so
 # libslapi is a special case, used only for writing extension modules for
 # slapd, and is therefore shipped with slapd.
-slapd: package-name-doesnt-match-sonames libslapi-2.4-2
+package-name-doesnt-match-sonames libslapi-2.5-0

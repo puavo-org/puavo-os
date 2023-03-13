@@ -13,7 +13,7 @@ Debian-specific.
 -.B LIBEXECDIR/slapd 
 +.B /usr/sbin/slapd 
  [\c
- .BR \-4 | \-6 ]
+ .BR \-V [ V [ V ]]
  [\c
 @@ -103,11 +103,10 @@
  will not fork or disassociate from the invoking terminal.  Some general

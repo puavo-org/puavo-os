@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2019-10-03 23:01+0000\n"
+"POT-Creation-Date: 2021-08-16 01:12+0000\n"
 "PO-Revision-Date: 2017-01-15 13:46+0900\n"
 "Last-Translator: Kenshi Muto <kmuto@debian.org>\n"
 "Language-Team: Japanese <debian-japanese@lists.debian.org>\n"
@@ -285,110 +285,105 @@ msgstr ""
 #. Type: note
 #. Description
 #: ../slapd.templates:15001
-msgid "Potentially unsafe slapd access control configuration"
-msgstr "潜在的に安全でない slapd のアクセス制御設定です"
+msgid "Error while performing post-installation tasks"
+msgstr ""
 
 #. Type: note
 #. Description
 #: ../slapd.templates:15001
 msgid ""
-"One or more of the configured databases has an access control rule that "
-"allows users to modify most of their own attributes. This may be unsafe, "
-"depending on how the database is used."
+"There has been one or more errors while performing some post-installation "
+"tasks. This probably means that the slapd package could not automatically "
+"migrate one or more LDAP databases, or that a backend being used by the "
+"current OpenLDAP installation is not supported anymore."
 msgstr ""
-"設定されたデータベースには、ユーザに自身の属性のほとんどの変更を許容する 1 つ"
-"以上のアクセス制御ルールがあります。これはデータベースの使いようによっては安"
-"全でない可能性があります。"
-
-#. Type: note
-#. Description
-#. Translators: keep "by self write" and "to *" unchanged. These are part
-#. of the slapd configuration and are not translatable.
-#: ../slapd.templates:15001
-msgid ""
-"In the case of slapd access rules that begin with \"to *\", it is "
-"recommended to remove any instances of \"by self write\", so that users are "
-"only able to modify specifically allowed attributes."
-msgstr ""
-"\"to *\" で始まる slapd アクセスルールがある場合、各 \"by self write\" 記述を"
-"削除することをお勧めします。そうすれば、ユーザが変更できるのは明示的に許可さ"
-"れた属性のみになります。"
 
 #. Type: note
 #. Description
 #: ../slapd.templates:15001
-msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr ""
-"詳細については /usr/share/doc/slapd/README.Debian.gz を参照してください。"
-
-#. Type: select
-#. Choices
-#: ../slapd.templates:16001
-msgid "abort installation"
-msgstr "インストールの中止"
-
-#. Type: select
-#. Choices
-#: ../slapd.templates:16001
-msgid "continue regardless"
-msgstr "かまわず続ける"
-
-#. Type: select
-#. Description
-#: ../slapd.templates:16002
-msgid "Manual ppolicy schema update recommended"
-msgstr "手動の ppolicy スキーマ更新の推奨"
-
-#. Type: select
-#. Description
-#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
-#: ../slapd.templates:16002
 msgid ""
-"The new version of the Password Policy (ppolicy) overlay requires the schema "
-"to define the pwdMaxRecordedFailure attribute type, which is not present in "
-"the schema currently in use. It is recommended to abort the upgrade now, and "
-"to update the ppolicy schema before upgrading slapd. If replication is in "
-"use, the schema update should be applied on every server before continuing "
-"with the upgrade."
+"The maintainer script responsible for executing the post-installation tasks "
+"has exited, but the slapd service has NOT been (re)started. You will need to "
+"manually fix the problem and then start the service."
 msgstr ""
-"Password Policy (ppolicy) オーバレイの新しいバージョンは、現在使用しているス"
-"キーマに存在しない pwdMaxRecordedFailure 属性型をスキーマに定義する必要があり"
-"ます。アップグレードを今すぐ中止し、slapd をアップグレードする前に ppolicy ス"
-"キーマを更新することをお勧めします。レプリケーションが使われている場合、この"
-"アップグレードを続ける前にスキーマの更新を各サーバに適用しておくべきです。"
 
-#. Type: select
+#. Type: note
 #. Description
-#. This paragraph is followed by the path to the generated file (not
-#. translatable). The sentence continues in the following paragraph.
-#: ../slapd.templates:16002
+#: ../slapd.templates:15001
 msgid ""
-"An LDIF file has been generated with the changes required for the upgrade:"
-msgstr "アップグレードに必要な変更付きの LDIF ファイルが生成されました:"
-
-#. Type: select
-#. Description
-#. This paragraph continues the sentence started in the previous
-#. paragraph. It is followed by a command line.
-#: ../slapd.templates:16002
-msgid ""
-"so if slapd is using the default access control rules, these changes can be "
-"applied (after starting slapd) by using the command:"
+"For more information on possible problematic scenarios and how to address "
+"them, please take a look at the README.Debian file (under /usr/share/doc/"
+"slapd/)."
 msgstr ""
-"slapd がデフォルトのアクセス制御ルールを使っているのであれば、これらの変更は "
-"(slapd が開始した後に) 以下のコマンドによって適用できます:"
 
-#. Type: select
-#. Description
-#: ../slapd.templates:16002
-msgid ""
-"If instead you choose to continue the installation, the new attribute type "
-"will be added automatically, but the change will not be acted on by slapd "
-"overlays, and replication with other servers may be affected."
-msgstr ""
-"インストールを続けることを選ぶと、新しい属性型は自動的に追加されますが、この"
-"変更は slapd オーバレイで実行されず、他のサーバとのレプリケーションに影響する"
-"可能性があります。"
+#~ msgid "abort installation"
+#~ msgstr "インストールの中止"
+
+#~ msgid "continue regardless"
+#~ msgstr "かまわず続ける"
+
+#~ msgid "Manual ppolicy schema update recommended"
+#~ msgstr "手動の ppolicy スキーマ更新の推奨"
+
+#~ msgid ""
+#~ "The new version of the Password Policy (ppolicy) overlay requires the "
+#~ "schema to define the pwdMaxRecordedFailure attribute type, which is not "
+#~ "present in the schema currently in use. It is recommended to abort the "
+#~ "upgrade now, and to update the ppolicy schema before upgrading slapd. If "
+#~ "replication is in use, the schema update should be applied on every "
+#~ "server before continuing with the upgrade."
+#~ msgstr ""
+#~ "Password Policy (ppolicy) オーバレイの新しいバージョンは、現在使用している"
+#~ "スキーマに存在しない pwdMaxRecordedFailure 属性型をスキーマに定義する必要"
+#~ "があります。アップグレードを今すぐ中止し、slapd をアップグレードする前に "
+#~ "ppolicy スキーマを更新することをお勧めします。レプリケーションが使われてい"
+#~ "る場合、このアップグレードを続ける前にスキーマの更新を各サーバに適用してお"
+#~ "くべきです。"
+
+#~ msgid ""
+#~ "An LDIF file has been generated with the changes required for the upgrade:"
+#~ msgstr "アップグレードに必要な変更付きの LDIF ファイルが生成されました:"
+
+#~ msgid ""
+#~ "so if slapd is using the default access control rules, these changes can "
+#~ "be applied (after starting slapd) by using the command:"
+#~ msgstr ""
+#~ "slapd がデフォルトのアクセス制御ルールを使っているのであれば、これらの変更"
+#~ "は (slapd が開始した後に) 以下のコマンドによって適用できます:"
+
+#~ msgid ""
+#~ "If instead you choose to continue the installation, the new attribute "
+#~ "type will be added automatically, but the change will not be acted on by "
+#~ "slapd overlays, and replication with other servers may be affected."
+#~ msgstr ""
+#~ "インストールを続けることを選ぶと、新しい属性型は自動的に追加されますが、こ"
+#~ "の変更は slapd オーバレイで実行されず、他のサーバとのレプリケーションに影"
+#~ "響する可能性があります。"
+
+#~ msgid "Potentially unsafe slapd access control configuration"
+#~ msgstr "潜在的に安全でない slapd のアクセス制御設定です"
+
+#~ msgid ""
+#~ "One or more of the configured databases has an access control rule that "
+#~ "allows users to modify most of their own attributes. This may be unsafe, "
+#~ "depending on how the database is used."
+#~ msgstr ""
+#~ "設定されたデータベースには、ユーザに自身の属性のほとんどの変更を許容する "
+#~ "1 つ以上のアクセス制御ルールがあります。これはデータベースの使いようによっ"
+#~ "ては安全でない可能性があります。"
+
+#~ msgid ""
+#~ "In the case of slapd access rules that begin with \"to *\", it is "
+#~ "recommended to remove any instances of \"by self write\", so that users "
+#~ "are only able to modify specifically allowed attributes."
+#~ msgstr ""
+#~ "\"to *\" で始まる slapd アクセスルールがある場合、各 \"by self write\" 記"
+#~ "述を削除することをお勧めします。そうすれば、ユーザが変更できるのは明示的に"
+#~ "許可された属性のみになります。"
+
+#~ msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+#~ msgstr ""
+#~ "詳細については /usr/share/doc/slapd/README.Debian.gz を参照してください。"
 
 #~ msgid "Database backend to use:"
 #~ msgstr "利用するデータベースバックエンド:"

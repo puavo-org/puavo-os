@@ -1,0 +1,40 @@
+# we have our own default config files in debian/
+etc/ldap/ldap.conf.default
+etc/ldap/slapd.conf
+etc/ldap/slapd.conf.default
+etc/ldap/slapd.ldif
+etc/ldap/slapd.ldif.default
+
+# libtool archives are not installed for public libraries
+usr/lib/*/*.la
+
+# static libslapi is not installed
+usr/lib/*/libslapi.a
+
+# static builds of slapd modules are not installed
+usr/lib/ldap/*.a
+
+# these are handled specially in debian/rules
+usr/sbin/slapacl
+usr/sbin/slapadd
+usr/sbin/slapauth
+usr/sbin/slapcat
+usr/sbin/slapdn
+usr/sbin/slapindex
+usr/sbin/slapmodify
+usr/sbin/slappasswd
+usr/sbin/slapschema
+usr/sbin/slaptest
+
+# lloadd is not packaged yet
+usr/share/man/man5/lloadd.conf.5
+usr/share/man/man8/lloadd.8
+
+# man pages for modules we don't build
+usr/share/man/man5/slapd-wt.5
+usr/share/man/man5/slapo-autoca.5
+usr/share/man/man5/slapd-pw-radius.5
+
+# supports vc overlay (contrib, not packaged)
+usr/bin/ldapvc
+usr/share/man/man1/ldapvc.1

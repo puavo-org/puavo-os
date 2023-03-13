@@ -91,7 +91,8 @@ Using the MDB Backend
 
   MDB is a new database backend using the LMDB library created by the
   OpenLDAP developers. The MDB backend has fewer configuration
-  parameters than HDB/BDB and generally does not require hand tuning.
+  parameters than the former Berkeley DB backend, and generally does not
+  require hand tuning.
 
   The database is stored in a sparse file with a specified maximum size.
   The size should be set larger than the database is ever anticipated to
@@ -102,50 +103,17 @@ Using the MDB Backend
   The space currently used by the database can be found using du(1); for
   example: du -h /var/lib/ldap/data.mdb
 
-Using BDB/HDB Backends
-
-  HDB was the recommended backend before MDB was developed. It's the
-  same as BDB but allows some additional operations.
-   
-  slapd BDB and HDB backends rely on libdb to store data on your disks.
-  libdb uses a configuration file to tune database specific
-  parameters. This file is called DB_CONFIG, and should be created in each
-  directory containing one of your ldap databases, usually /var/lib/ldap.
-
-  It is VERY IMPORTANT to correctly setup a DB_CONFIG file.  It is not
-  just a matter of performance: depending on the version of slapd and
-  libdb being used, your slapd may just hang and stop answering queries.
-
-  To correctly set up your DB_CONFIG file, please refer to
-  README.DB_CONFIG.gz in this directory.
-
-BerkeleyDB Version
-
-  slapd has been built against version 5.3.28 of BerkeleyDB.
-
-  slapd will automatically handle database recovery, so you generally do
-  not need the BerkeleyDB utilities.  However, if you want to perform
-  other operations directly on the raw database without using the slapd
-  tools, install db5.3-util and use those BerkeleyDB utilities. Utilities
-  from other db*-util packages will not work correctly and may render the
-  database unusable by slapd.
-
-BerkeleyDB database format upgrades
-
-  When upgrading slapd to a new version where the Berkeley DB library's
-  storage format has changed, the database has to be backed up using
-  slapcat(8) before upgrading and restored using slapadd(8) afterwards.
-  Normally the maintainer scripts will handle this automatically,
-  performing the dump and restore as needed.
-
-  If, after upgrading, slapd fails to start and you see the message
-  "Program version doesn't match environment version" in syslog, then
-  the DB version may have changed without a dump and reload. This should
-  be reported as a bug in the slapd package. In this case you will have
-  to downgrade slapd to the previous version as the new tools are unable
-  to dump the old database, and the same error would prevent you from
-  upgrading to the fixed version. Old package versions can be
-  found at <http://snapshot.debian.org> if needed.
+  When upgrading slapd to a new version where the database's storage
+  format has changed, the database has to be backed up using slapcat(8)
+  before upgrading and restored using slapadd(8) afterwards.  Normally
+  the maintainer scripts will handle this automatically, performing the
+  dump and restore as needed. If the database format changes without a
+  corresponding dump and reload, this should be reported as a bug in the
+  slapd package. In this case you will have to downgrade slapd to the
+  previous version as the new tools are unable to dump the old database,
+  and the same error would prevent you from upgrading to the fixed
+  version. Old package versions can be found at
+  <http://snapshot.debian.org> if needed.
 
 Logging
 
@@ -262,10 +230,6 @@ Modifications Compared to Upstream
   * slapd is configured to look in /etc/ldap/sasl2 in addition to
     /usr/lib/sasl2 for SASL configuration files.
 
-  * The libldap library is patched to add two functions used by
-    evolution-exchange for NTLM authentication to Active Directory.  See
-    <http://bugs.debian.org/457374>.
-
   * Several paths have been adjusted to fit Debian file permissions and
     for Filesystem Hierarchy Standard compliance, namely:
     - The ldapi socket is in /var/run/slapd
@@ -288,46 +252,129 @@ Modifications Compared to Upstream
 
  -- Russ Allbery <rra@debian.org>, Thu, 14 Feb 2008 18:47:07 -0800
 
-Unsafe access control rule installed by default in previous versions
+Migrating your installation to OpenLDAP 2.5.x
 
-  Versions of slapd before 2.4.40-1 configured the default database with 
-  an access control rule of the form:
+  OpenLDAP 2.5 is a major new release and includes several incompatible
+  changes as described in the upstream ANNOUNCEMENT file. Depending on
+  your configuration, completing the upgrade from 2.4.x might require
+  manual intervention.
 
-  to *
-    by self write
-    by dn="cn=admin,dc=example,dc=com" write
-    by * read
+  The package upgrade process first exports your databases to LDIF
+  format using slapcat(8), then updates the slapd package, and finally
+  imports the LDIF files using slapadd(8). If the slapadd process fails,
+  it must be completed manually after resolving whatever issues caused
+  the failure.
 
-  Depending on how the database and client applications are configured, 
-  users might be able to impersonate others by editing attributes such 
-  as their Unix user and group numbers, or other application-specific 
-  attributes.
+  By default, the Debian package uses LDAP-based configuration
+  (cn=config). To resolve configuration issues with a cn=config
+  database, follow the steps below to reload the config database from an
+  LDIF file. If you use a slapd.conf configuration file, configuration
+  issues can be resolved by just editing that file.
 
-  New installations no longer include "by self write", but existing 
-  configurations will not be automatically modified.
+  The following steps assume your configuration database is stored in
+  the default location (/etc/ldap/slapd.d).
 
-  To list your current access control rules, use the command:
+  1. Locate the backup LDIF file exported by the upgrade process:
 
-    ldapsearch -Y EXTERNAL -H ldapi:/// -b 'cn=config' '(olcAccess=*)' olcAccess
+       /var/backups/slapd-<OLDVERSION>/cn=config.ldif
 
-  To fix the problem, create an LDIF file to replace the rules as 
-  needed. For example:
+     Make a copy of this file for working on.
 
-    dn: olcDatabase={1}hdb,cn=config
-    delete: olcAccess
-    olcAccess: {2}
-    -
-    add: olcAccess
-    olcAccess: {2}to * by dn="cn=admin,dc=example,dc=com" write by * read
+  2. Edit your copy of cn=config.ldif to fix the issues noted by
+     slapadd, such as removed or renamed modules or backends. See below
+     for suggestions for some specific issues.
 
-  Adjust the database DN, the administrative DN, and the rule numbers 
-  according to your configuration, following the output from ldapsearch.
+  3. Move away or delete the contents of /etc/ldap/slapd.d, so that it
+     is an empty directory.
 
-  Next, apply the configuration changes from the file:
+  4. Load your edited cn=config.ldif into the cn=config database:
 
-    ldapmodify -Y EXTERNAL -H ldapi:/// -f mods.ldif
+       slapadd -F/etc/ldap/slapd.d -n0 -l /var/backups/slapd-<OLDVERSION>/cn=config.ldif
 
-  For more information about access control rules, refer to the 
-  slapd.access(5) man page.
+  5. If the slapadd command failed, go back to step 2.
 
- -- Ryan Tandy <ryan@nardis.ca>, Mon, 20 Oct 2014 11:45:20 -0700
+  6. After the slapadd command succeeds, change the permissions on the
+     slapd.d directory to be owned by the openldap user:
+
+       chown -R openldap:openldap /etc/ldap/slapd.d
+
+  Now you can proceed with reloading the remaining databases. For each
+  configured database:
+
+  1. Locate the backup LDIF file exported by the upgrade process:
+
+       /var/backups/slapd-<OLDVERSION>/<SUFFIX>.ldif
+
+     where <SUFFIX> is the database suffix such as dc=example,dc=com.
+
+  2. Ensure the directory where the database is stored (for example
+     /var/lib/ldap) is empty. By default the upgrade process moves away
+     the database files to a directory named
+     /var/backups/<SUFFIX>-<OLDVERSION>.ldapdb.
+
+  3. Reload the data using slapadd:
+
+       slapadd -l /var/backups/slapd-<OLDVERSION>/<SUFFIX>.ldif
+
+  4. Make sure the slapadd command succeeded, and then change the
+     permissions on the data directory:
+
+       chown -R openldap:openldap /var/lib/ldap
+
+  After all of your databases have been reloaded successfully, you
+  should be able to start the slapd service again.
+
+Known issues for OpenLDAP 2.5.x upgrades
+
+  * BDB/HDB backends removed: migrating to LMDB backend
+
+  The slapd-bdb(5) and slapd-hdb(5) backends have been removed. These
+  were configured by default in older versions of the slapd package. If
+  you are still using one of these backends, slapadd fails with the
+  following message:
+
+    lt_dlopenext failed: (back_hdb) file not found
+
+  You have to change to the LMDB backend. Edit the exported
+  configuration LDIF as described above, and make the following changes:
+
+  1. Change olcModuleLoad: back_bdb or back_hdb to back_mdb.
+  2. If you have an olcBackend: bdb or hdb entry, change it to mdb, or
+     delete it if you don't have to override any global LMDB settings.
+  2. For each configured BDB or HDB database:
+    - Change objectClass: olcBdbConfig or olcHdbConfig to olcMdbConfig.
+      Also update structuralObjectClass.
+    - Change olcDatabase: bdb or hdb to mdb. Also update the attribute
+      in the DN, for example: olcDatabase={1}mdb,cn=config.
+    - Delete any olcDbConfig attributes.
+    - Add the olcDbMaxSize attribute to set the maximum size of the
+      database, in bytes. If not configured, the default is 10 MiB.
+
+  * ppolicy schema changed to internal
+
+  The slapo-ppolicy(5) module now includes its schema compiled into the
+  module code itself. The external schema is no longer used, and
+  conflicts with the internal copy. If you have the ppolicy schema
+  loaded, slapadd fails with the following message:
+
+    olcAttributeTypes: value #0 olcAttributeTypes: Duplicate attributeType: "1.3.6.1.4.1.42.2.27.8.1.1"
+
+  Edit the exported configuration LDIF as described above. Remove the
+  entire ppolicy schema entry. That is, delete from the line like:
+
+    dn: cn={4}ppolicy,cn=schema,cn=config
+
+  all the way to the next blank line.
+
+  * argon2 module renamed
+
+  The pw-argon2 contrib passwd module was promoted to core and was
+  renamed to argon2. If your config loads the module by its old name,
+  slapadd fails with the following message:
+
+    lt_dlopenext failed: (pw-argon2) file not found
+
+  Edit the exported configuration LDIF as described above. Change
+  olcModuleLoad: pw-argon2 to argon2.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 14 Aug 2021 15:03:31 -0700

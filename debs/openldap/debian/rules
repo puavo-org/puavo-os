@@ -5,14 +5,10 @@ include /usr/share/dpkg/pkg-info.mk
 
 # Set this variable if you're building packages outside of Debian and don't
 # want the checks for DFSG-freeness.
-DFSG_NONFREE = 1
+#DFSG_NONFREE = 1
 
-export DEB_CFLAGS_MAINT_APPEND := -Wall -Wno-format-extra-args -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
-export DEB_BUILD_MAINT_OPTIONS := hardening=+pie,+bindnow
-
-# Configure calls AM_INIT_AUTOMAKE, but Automake fails as there is no Makefile.am.
-# Tell dh-autoreconf to skip automake.
-export AUTOMAKE = true
+export DEB_CFLAGS_MAINT_APPEND := -Wall -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
+export DEB_BUILD_MAINT_OPTIONS := hardening=+all
 
 # Expose maintainer address to build/mkversion (see debian/patches/set-maintainer-name)
 export DEB_MAINTAINER := $(shell sed -ne 's/Maintainer:\s\+//p' debian/control)
@@ -25,14 +21,13 @@ export RESOLV_MULTI = off
 
 CONFIG		= $(shell grep -v "^\#" debian/configure.options)
 ifeq ($(DEB_HOST_ARCH_OS),hurd)
-	CONFIG += --disable-bdb --disable-hdb --disable-mdb
+	CONFIG += --disable-mdb
 endif
 ifneq ($(filter pkg.openldap.noslapd,$(DEB_BUILD_PROFILES)),)
 	CONFIG += --disable-slapd
 endif
 
-CONTRIB_MODULES = autogroup lastbind passwd passwd/argon2 passwd/pbkdf2 \
-                  passwd/sha2 smbk5pwd smbkrb5pwd
+CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 smbk5pwd
 
 # Ensure CC is set correctly for cross builds, unless it has already
 # been set explicitly.
@@ -44,44 +39,21 @@ installdir	:= $(CURDIR)/debian/tmp
 builddir	:= $(CURDIR)/debian/build
 slapddir	:= $(CURDIR)/debian/slapd/usr/sbin
 
-MAKEVARS	:= STRIP=
-
 # Standard variables used in contrib Makefiles.
 # We override these in make invocations rather than patch every one.
 CONTRIB_MAKEVARS := \
 	LDAP_BUILD='$(builddir)' \
+	OPT= \
 	prefix=/usr \
 	ldap_subdir=/ldap \
 	moduledir='$$(libdir)$$(ldap_subdir)'
 
-# These variables are used only by get-orig-source, which will normally only
-# be run by maintainers.
-VERSION = $(subst +dfsg,,$(DEB_VERSION_UPSTREAM))
-URL     = https://www.openldap.org/software/download/OpenLDAP/openldap-release/
-
-get-orig-source:
-	@if [ ! -d "debian/schema" ] ; then \
-	    echo 'Run this from the top directory of the Debian source' >&2; \
-	    exit 1; \
-	fi
-	wget $(URL)/openldap-$(VERSION).tgz -O ../openldap_$(VERSION).orig.tar.gz
-	tar xzf ../openldap_$(VERSION).orig.tar.gz --strip-components=1 -C .
-
-DH = dh $@ --with quilt,autoreconf,systemd --builddirectory=$(builddir) --parallel
+DH = dh $@ --builddirectory=$(builddir)
 .PHONY: build
 build:
 	$(DH)
 %:
 	$(DH)
-
-# Only contrib/ldapc++ uses Automake, so special care is needed to update
-# config.guess and config.sub at the top level.
-autoreconf:
-	autoreconf -f -i . contrib/ldapc++
-	cp -f /usr/share/misc/config.guess /usr/share/misc/config.sub build/
-
-override_dh_autoreconf:
-	dh_autoreconf debian/rules -- autoreconf
 
 override_dh_auto_configure:
 	# Check if we include the RFCs, Internet-Drafts, or upstream schemas
@@ -107,22 +79,26 @@ override_dh_auto_configure:
 	dh_auto_configure -- $(CONFIG)
 
 override_dh_auto_build:
-	dh_auto_build -- $(MAKEVARS)
+	dh_auto_build
 ifeq ($(filter pkg.openldap.noslapd,$(DEB_BUILD_PROFILES)),)
+	# passwd/sha2 needs special handling, see #1030716 and LP: #2000817
 	for mod in $(CONTRIB_MODULES); do \
-		dh_auto_build -Dcontrib/slapd-modules/$$mod -Bcontrib/slapd-modules/$$mod -- $(CONTRIB_MAKEVARS) || exit $$?; \
+		if [ "$$mod" = "passwd/sha2" ]; then \
+			EXTRA_OPT="-fno-strict-aliasing"; \
+		else \
+			EXTRA_OPT=""; \
+		fi; \
+		dh_auto_build -Dcontrib/slapd-modules/$$mod -Bcontrib/slapd-modules/$$mod -- $(CONTRIB_MAKEVARS) OPT+=$$EXTRA_OPT || exit $$?; \
 	done
 endif
 
 override_dh_auto_test:
-ifeq ($(DEB_HOST_ARCH),ppc64el)
-	# Disable test060-mt-host on ppc64el until #866122 is fixed.
-	rm -f tests/scripts/test060-mt-hot
-endif
+	# Disable certain timing-sensitive tests which can be flaky on buildds (#1010608)
+	rm -f tests/scripts/test063-delta-multiprovider tests/scripts/test069-delta-multiprovider-starttls
 	dh_auto_test
 
 override_dh_auto_install:
-	dh_auto_install -- $(MAKEVARS)
+	dh_auto_install -- STRIP_OPTS=
 ifeq ($(filter pkg.openldap.noslapd,$(DEB_BUILD_PROFILES)),)
 	for mod in $(CONTRIB_MODULES); do \
 		dh_auto_install -Dcontrib/slapd-modules/$$mod -Bcontrib/slapd-modules/$$mod -- $(CONTRIB_MAKEVARS) || exit $$?; \
@@ -153,43 +129,29 @@ endif
 	find $(installdir)/usr/share/man -name \*.8 \
 		| xargs perl -pi -e 's#(\.TH \w+ 8)C#$$1#'
 
-ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
-override_dh_install-arch:
-	dh_install
-	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbk5pwd*
-	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbkrb5pwd*
-endif
-
 override_dh_installinit:
-	dh_installinit -- "defaults 19 80"
+	dh_installinit --no-restart-after-upgrade --error-handler=ignore_init_failure -- "defaults 19 80"
 
 ifeq ($(filter pkg.openldap.noslapd,$(DEB_BUILD_PROFILES)),)
-override_dh_installman:
-	dh_installman
-	rm -f $(CURDIR)/debian/slapd/usr/share/man/man5/slapo-smbk5pwd.*
-
 override_dh_fixperms-arch:
 	dh_fixperms
 	chmod +x $(CURDIR)/debian/slapd/usr/share/slapd/ldiftopasswd
 endif
 
 override_dh_strip:
-	dh_strip -plibldap-2.4-2 --dbgsym-migration='libldap-2.4-2-dbg (<< 2.4.45+dfsg-1~)'
 	dh_strip -pslapd --dbgsym-migration='slapd-dbg (<< 2.4.45+dfsg-1~)'
 	dh_strip --remaining-packages
 ifeq ($(filter pkg.openldap.noslapd,$(DEB_BUILD_PROFILES)),)
 	# hardlink these so not confined by apparmor; do this here and not
 	# in dh_link so that dh_strip doesn't get confused and put the wrong
 	# binary in the debug package.
-	for f in slapacl slapadd slapauth slapcat slapdn slapindex slappasswd slaptest slapschema ; do \
+	for f in slapacl slapadd slapauth slapcat slapdn slapindex slapmodify slappasswd slapschema slaptest; do \
 	    ln -f $(slapddir)/slapd $(slapddir)/$$f ; \
 	done
 endif
 
 override_dh_link:
-	for pkg in libldap2-dev libldap-2.4-2; do \
-		sed -e"s/\$${DEB_HOST_MULTIARCH}/$(DEB_HOST_MULTIARCH)/g" < debian/$$pkg.links.in > debian/$$pkg.links; \
-	done
+	sed -e"s/\$${DEB_HOST_MULTIARCH}/$(DEB_HOST_MULTIARCH)/g" < debian/libldap-dev.links.in > debian/libldap-dev.links
 	dh_link
 
 ifeq ($(filter pkg.openldap.noslapd,$(DEB_BUILD_PROFILES)),)
@@ -207,6 +169,9 @@ override_dh_installdeb:
 	dh_installdeb
 	perl -w debian/dh_installscripts-common -p slapd
 endif
+
+override_dh_missing:
+	dh_missing --fail-missing
 
 override_dh_auto_clean:
 	dh_auto_clean

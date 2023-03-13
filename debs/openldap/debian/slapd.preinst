@@ -1,0 +1,37 @@
+#! /bin/sh
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+# This will be replaced with debian/slapd.scripts-common which includes
+# various helper functions and $OLD_VERSION and $SLAPD_CONF
+#SCRIPTSCOMMON#
+
+# If we are upgrading from an old version then stop slapd and attempt to
+# slapcat out the data so we can use it in postinst to do the upgrade.
+# If slapd was removed and is being reinstalled, slapcat is not
+# available at this time, so the data should have been dumped before the
+# old slapd was removed.
+
+# dh_installinit currently does not stop the service in preinst (#989155)
+if [ "$MODE" = upgrade ] && [ -x /etc/init.d/slapd ]; then
+	invoke-rc.d slapd stop || exit 1
+fi
+
+# Dump the config database before upgrading to 2.5.
+# If the upgrade fails due to needing manual config changes, the LDIF
+# export is the preferred format for making those changes.
+if [ "$MODE" = upgrade ] && previous_version_older '2.5.5+dfsg-1~'; then
+	dump_config
+fi
+
+if [ "$MODE" = upgrade ]; then
+	dump_databases
+fi
+
+#DEBHELPER#
+
+exit 0
+
+# vim: set sw=8 foldmethod=marker: 

@@ -50,7 +50,7 @@ database_format_changed() {						# {{{
 # Return success if yes.
 # Usage: if database_format_changed; then
 
-	if dpkg --compare-versions "$OLD_VERSION" lt-nl 2.4.39-1; then
+	if dpkg --compare-versions "$OLD_VERSION" lt-nl 2.5; then
 		return 0
 	else
 		return 1
@@ -114,51 +114,6 @@ update_databases_permissions() {	# {{{
 # }}}
 # ----- Dumping and loading the data ------------------------------------ {{{
 
-migrate_to_slapd_d_style() {				# {{{
-
-	# Check if we need to migrate to the new style.
-	if previous_version_older 2.4.23-3 && [ -f "${SLAPD_CONF}" ] \
-	   && ! [ -d /etc/ldap/slapd.d ]
-	then
-
-		# Create the new configuration directory
-		mkdir /etc/ldap/slapd.d
-
-		echo -n "  Migrating slapd.conf to slapd.d configuration style... " >&2
-		capture_diagnostics slaptest -f ${SLAPD_CONF} -F /etc/ldap/slapd.d || failed=1
-		if [ "$failed" ]; then
-
-			echo "failed." >&2
-			echo >&2
-			cat <<-EOF
-Migrating slapd.conf file (${SLAPD_CONF}) to slapd.d failed with the following
-error while running slaptest:
-EOF
-			release_diagnostics "    "
-			rm -rf /etc/ldap/slapd.d
-			exit 1
-		fi
-
-		# Backup the old slapd.conf
-		mv ${SLAPD_CONF} ${SLAPD_CONF}.old
-		SLAPD_CONF=/etc/ldap/slapd.d
-
-		# Add olcAccess control to grant local root connections access
-		sed -i '/^olcDatabase: {-1}frontend/a\
-olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break\
-olcAccess: {1}to dn.exact="" by * read\
-olcAccess: {2}to dn.base="cn=Subschema" by * read' "${SLAPD_CONF}/cn=config/olcDatabase={-1}frontend.ldif"
-		sed -i '/^olcDatabase: {0}config/a\
-olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break' "${SLAPD_CONF}/cn=config/olcDatabase={0}config.ldif"
-
-		# TODO: Now we are doing something that is not allowed by policy but it
-		# has to be done.
-		sed -i -e "/^[[:space:]]*SLAPD_CONF=.*/ s/^/#/" /etc/default/slapd
-		echo "done." >&2
-	fi
-}
-
-# }}}
 dump_config() {								# {{{
 # Dump the cn=config database to the backup directory.
 # This is not the same as backup_config_once, which copies the slapd.d 
@@ -252,7 +207,7 @@ load_databases() {							# {{{
 	error while running slapadd:
 EOF
 			release_diagnostics "    "
-			exit 1
+			return 1
 		fi
 		echo "done." >&2
 
@@ -495,11 +450,6 @@ EOF
 	echo "done." >&2
 }
 # }}}
-encode_utf8() { #{{{
-# Make the value utf8 encoded. Takes one argument and utf8 encode it.
-# Usage: val=`encode_utf8 <value>`
-  perl -e 'use Encode; print encode_utf8($ARGV[0]);' "$1"
-} #}}}
 create_new_directory() {						# {{{
 # Create a new directory. Takes the basedn and the dc value of that entry.
 # Other information is extracted from debconf.
@@ -509,9 +459,8 @@ create_new_directory() {						# {{{
 	basedn="$1"
 	dc="$2"
 	
-	# Encode to utf8 and base64 encode the organization.
 	db_get shared/organization
-	organization=`encode_utf8 "$RET"`
+	organization="$RET"
 	db_get slapd/internal/adminpw
 	adminpass="$RET"
 
@@ -562,11 +511,6 @@ backup_config_once() {							# {{{
 	fi
 }
 
-# }}}
-normalize_ldif() {							# {{{
-# Unwrap LDIF lines and strip comments.
-	perl -00 -pe 's/\n[ \t]//g; s/^#.*\n//mg' "$@"
-}
 # }}}
 
 
@@ -696,33 +640,6 @@ is_empty_dir() {							# {{{
 
 # }}}
 
-find_old_ppolicy_schema() {						# {{{
-# Helper for the ppolicy schema update in 2.4.43. Checks whether the 
-# exported config includes an old version of the ppolicy schema that 
-# needs the new attribute added. If such a schema is found, echos its DN 
-# to stdout. If the schema is not loaded or is already up-to-date, 
-# returns nothing. The provided LDIF should have its lines unwrapped 
-# already.
-# Usage: ppolicy_dn="$(find_old_ppolicy_schema "$exported_ldif")"
-	local ppolicy_dn
-
-	# Is the ppolicy schema loaded?
-	if ! ppolicy_dn="$(grep '^dn: cn={[0-9]\+}ppolicy,cn=schema,cn=config$' "$1")"; then
-		return
-	fi
-
-	# Has the pwdMaxRecordedFailure attribute already been added?
-	# It might have been replicated from a newer server.
-	if grep -q '^olcAttributeTypes: .*NAME '\''pwdMaxRecordedFailure'\' "$1"; then
-		return
-	fi
-
-	# The schema is loaded and needs to be updated.
-	ppolicy_dn="${ppolicy_dn#dn: }"
-	echo "$ppolicy_dn"
-}
-# }}}
-
 # ===== Global variables ================================================ {{{
 #
 # At some points we need to know which version we are upgrading from if
@@ -784,11 +701,7 @@ release_diagnostics() {							# {{{
 # prefixing each line.
 # Usage: release_diagnostics "prefix"
 
-	local script
-	script='
-		seek STDIN, 0, 0;
-		print "$ARGV[0]$_" while (<STDIN>);';
-	perl -e "$script" "$1" <&7
+	{ exec < /dev/stdin ; sed -e "s/^/$1/" ; } <&7
 }
 
 # }}}

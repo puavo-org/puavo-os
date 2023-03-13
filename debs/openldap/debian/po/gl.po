@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap_2.4.40-2_gl\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2019-10-03 23:01+0000\n"
+"POT-Creation-Date: 2021-08-16 01:12+0000\n"
 "PO-Revision-Date: 2014-11-17 00:40+0100\n"
 "Last-Translator: Jorge Barreiro <yortx.barry@gmail.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -288,100 +288,64 @@ msgstr ""
 #. Type: note
 #. Description
 #: ../slapd.templates:15001
-msgid "Potentially unsafe slapd access control configuration"
+msgid "Error while performing post-installation tasks"
 msgstr ""
-"A configuración de control de acceso de slapd é potencialmente insegura"
 
 #. Type: note
 #. Description
 #: ../slapd.templates:15001
 msgid ""
-"One or more of the configured databases has an access control rule that "
-"allows users to modify most of their own attributes. This may be unsafe, "
-"depending on how the database is used."
+"There has been one or more errors while performing some post-installation "
+"tasks. This probably means that the slapd package could not automatically "
+"migrate one or more LDAP databases, or that a backend being used by the "
+"current OpenLDAP installation is not supported anymore."
 msgstr ""
-"Polo menos unha das bases de datos configuradas ten unha regra de control de "
-"acceso que permite aos usuarios modificar a maioría dos atributos. Isto pode "
-"ser inseguro dependendo da maneira en que se use a base de datos."
-
-#. Type: note
-#. Description
-#. Translators: keep "by self write" and "to *" unchanged. These are part
-#. of the slapd configuration and are not translatable.
-#: ../slapd.templates:15001
-msgid ""
-"In the case of slapd access rules that begin with \"to *\", it is "
-"recommended to remove any instances of \"by self write\", so that users are "
-"only able to modify specifically allowed attributes."
-msgstr ""
-"No caso das regras de acceso de «slapd» que comezan con «to *», "
-"recoméndaselle eliminar calquera instancia de «by self write», de maneira "
-"que os usuarios só poidan modificar os atributos especificamente permitidos."
 
 #. Type: note
 #. Description
 #: ../slapd.templates:15001
-msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr "Pode obter máis información en /usr/share/doc/slapd/README.Debian.gz ."
-
-#. Type: select
-#. Choices
-#: ../slapd.templates:16001
-msgid "abort installation"
-msgstr ""
-
-#. Type: select
-#. Choices
-#: ../slapd.templates:16001
-msgid "continue regardless"
-msgstr ""
-
-#. Type: select
-#. Description
-#: ../slapd.templates:16002
-msgid "Manual ppolicy schema update recommended"
-msgstr ""
-
-#. Type: select
-#. Description
-#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
-#: ../slapd.templates:16002
 msgid ""
-"The new version of the Password Policy (ppolicy) overlay requires the schema "
-"to define the pwdMaxRecordedFailure attribute type, which is not present in "
-"the schema currently in use. It is recommended to abort the upgrade now, and "
-"to update the ppolicy schema before upgrading slapd. If replication is in "
-"use, the schema update should be applied on every server before continuing "
-"with the upgrade."
+"The maintainer script responsible for executing the post-installation tasks "
+"has exited, but the slapd service has NOT been (re)started. You will need to "
+"manually fix the problem and then start the service."
 msgstr ""
 
-#. Type: select
+#. Type: note
 #. Description
-#. This paragraph is followed by the path to the generated file (not
-#. translatable). The sentence continues in the following paragraph.
-#: ../slapd.templates:16002
+#: ../slapd.templates:15001
 msgid ""
-"An LDIF file has been generated with the changes required for the upgrade:"
+"For more information on possible problematic scenarios and how to address "
+"them, please take a look at the README.Debian file (under /usr/share/doc/"
+"slapd/)."
 msgstr ""
 
-#. Type: select
-#. Description
-#. This paragraph continues the sentence started in the previous
-#. paragraph. It is followed by a command line.
-#: ../slapd.templates:16002
-msgid ""
-"so if slapd is using the default access control rules, these changes can be "
-"applied (after starting slapd) by using the command:"
-msgstr ""
+#~ msgid "Potentially unsafe slapd access control configuration"
+#~ msgstr ""
+#~ "A configuración de control de acceso de slapd é potencialmente insegura"
 
-#. Type: select
-#. Description
-#: ../slapd.templates:16002
-msgid ""
-"If instead you choose to continue the installation, the new attribute type "
-"will be added automatically, but the change will not be acted on by slapd "
-"overlays, and replication with other servers may be affected."
-msgstr ""
+#~ msgid ""
+#~ "One or more of the configured databases has an access control rule that "
+#~ "allows users to modify most of their own attributes. This may be unsafe, "
+#~ "depending on how the database is used."
+#~ msgstr ""
+#~ "Polo menos unha das bases de datos configuradas ten unha regra de control "
+#~ "de acceso que permite aos usuarios modificar a maioría dos atributos. "
+#~ "Isto pode ser inseguro dependendo da maneira en que se use a base de "
+#~ "datos."
+
+#~ msgid ""
+#~ "In the case of slapd access rules that begin with \"to *\", it is "
+#~ "recommended to remove any instances of \"by self write\", so that users "
+#~ "are only able to modify specifically allowed attributes."
+#~ msgstr ""
+#~ "No caso das regras de acceso de «slapd» que comezan con «to *», "
+#~ "recoméndaselle eliminar calquera instancia de «by self write», de maneira "
+#~ "que os usuarios só poidan modificar os atributos especificamente "
+#~ "permitidos."
+
+#~ msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+#~ msgstr ""
+#~ "Pode obter máis información en /usr/share/doc/slapd/README.Debian.gz ."
 
 #~ msgid "Database backend to use:"
 #~ msgstr "Motor de base de datos a empregar:"

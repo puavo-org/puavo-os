@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+reference_hash="{SHA256}$(echo -n secret | openssl dgst -sha256 -binary | openssl enc -base64)"
+test_hash=$(/usr/sbin/slappasswd -s secret -h '{SHA256}' -o module-load=pw-sha2)
+
+echo "Reference hash of \"secret\" (openssl): ${reference_hash}"
+echo "slapd's pw-sha2 hash:                 ${test_hash}"
+
+if [ "${reference_hash}" != "${test_hash}" ]; then
+    echo "ERROR: hashes differ"
+    exit 1
+else
+    echo "PASS: hashes are identical"
+fi

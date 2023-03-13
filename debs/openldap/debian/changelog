@@ -1,14 +1,263 @@
-openldap (2.4.57+dfsg-3+deb11u1+puavo1+buildonce) bookworm; urgency=medium
+openldap (2.5.13+dfsg-5) unstable; urgency=medium
 
-  * With some patches by Puavo Org.
+  * Fix sha2-contrib autopkgtest failure. Call slappasswd using its full path.
+    (Closes: #1030814)
+  * Disable flaky test test069-delta-multiprovider-starttls.
 
- -- Puavo Org <dev@opinsys.fi>  Thu, 19 Aug 2021 10:59:18 +0300
+ -- Ryan Tandy <ryan@nardis.ca>  Tue, 07 Feb 2023 17:56:12 -0800
 
-openldap (2.4.57+dfsg-3+deb11u1) bullseye-security; urgency=high
+openldap (2.5.13+dfsg-4) unstable; urgency=medium
 
-  * Fix SQL injection in back-sql (ITS#9815) (CVE-2022-29155)
+  [ Andreas Hasenack ]
+  * d/rules: Fix passwd/sha2 build (Closes: #1030716, LP: #2000817)
+  * d/t/sha2-contrib: add test for sha2 module
 
- -- Ryan Tandy <ryan@nardis.ca>  Sat, 14 May 2022 11:32:57 -0700
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 06 Feb 2023 19:21:05 -0800
+
+openldap (2.5.13+dfsg-3) unstable; urgency=medium
+
+  [ Ryan Tandy ]
+  * Disable flaky test test063-delta-multiprovider. Mitigates #1010608.
+
+  [ Gioele Barabucci ]
+  * slapd.scripts-common: Avoid double-UTF8-encoding org name (Closes: #1016185)
+  * d/slapd.scripts-common: Remove outdated `migrate_to_slapd_d_style`
+  * d/slapd.postinst: Remove test for ancient version
+  * slapd.scripts-common: Remove unused `normalize_ldif`
+  * d/slapd.scripts-common: Use sed instead of perl in `release_diagnostics`
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 13 Jan 2023 16:29:59 -0800
+
+openldap (2.5.13+dfsg-2) unstable; urgency=medium
+
+  * d/tests/smbk5pwd: Grant slapd access to /var/lib/heimdal-kdc. Fixes the
+    autopkgtest failure due to heimdal setting mode 700 on this directory.
+    (Closes: #1020442)
+  * d/source/lintian-overrides: Add wildcards to make overrides compatible
+    with both older and newer versions of lintian.
+  * d/slapd-contrib.lintian-overrides: Remove unused
+    custom-library-search-path override now that krb5-config no longer sets
+    -rpath.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 24 Sep 2022 12:40:21 -0700
+
+openldap (2.5.13+dfsg-1) unstable; urgency=medium
+
+  * d/rules: Remove get-orig-source, now unnecessary.
+  * Check PGP signature when running uscan.
+  * d/watch: Modernize watch file; use repacksuffix.
+  * d/copyright: Update according to DEP-5.
+  * d/control: Add myself to Uploaders.
+  * New upstream release.
+
+ -- Sergio Durigan Junior <sergiodj@debian.org>  Sun, 18 Sep 2022 18:29:46 -0400
+
+openldap (2.5.12+dfsg-2) unstable; urgency=medium
+
+  * Stop slapd explicitly in prerm as a workaround for #1006147, which caused
+    dpkg-reconfigure to not restart the service, so the new configuration was
+    not applied. See also #994204. (Closes: #1010971)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 23 May 2022 10:14:53 -0700
+
+openldap (2.5.12+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fixed SQL injection in back-sql (ITS#9815) (CVE-2022-29155)
+  * Update debconf translations:
+    - German, thanks to Helge Kreutzmann. (Closes: #1007728)
+    - Spanish, thanks to Camaleón. (Closes: #1008529)
+    - Dutch, thanks to Frans Spiesschaert. (Closes: #1010034)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Wed, 04 May 2022 18:00:16 -0700
+
+openldap (2.5.11+dfsg-1) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 11 Mar 2022 19:38:02 -0800
+
+openldap (2.5.11+dfsg-1~exp1) experimental; urgency=medium
+
+  * New upstream release.
+  * Add openssl to Build-Depends to enable more checks in test067-tls.
+  * Update slapd-contrib's custom-library-search-path override to work with
+    current Lintian.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 23 Jan 2022 17:16:05 -0800
+
+openldap (2.5.8+dfsg-1~exp1) experimental; urgency=medium
+
+  * New upstream release.
+  * Update slapd-contrib's custom-library-search-path override to work with
+    Lintian 2.108.0.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Wed, 13 Oct 2021 18:42:55 -0700
+
+openldap (2.5.7+dfsg-1~exp1) experimental; urgency=medium
+
+  * New upstream release.
+  * Don't run autoreconf in contrib/ldapc++. We don't build it, and it is not
+    yet compatible with autoconf 2.71. (Closes: #993032)
+  * Stop disabling automake in debian/rules now that upstream removed the
+    AM_INIT_AUTOMAKE invocation.
+  * Drop custom config.{guess,sub} handling. dh_update_autotools_config does
+    the right thing for us.
+  * Update Standards-Version to 4.6.0; no changes required.
+  * debian/not-installed: Add the ldapvc.1 man page.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 30 Aug 2021 18:54:25 -0700
+
+openldap (2.5.6+dfsg-1~exp1) experimental; urgency=medium
+
+  [ Ryan Tandy ]
+  * New upstream release.
+  * Export the cn=config database to LDIF format before upgrading from 2.4.
+  * slapd.README.Debian:
+    - Remove text about the dropped evolution-ntlm patch.
+    - Add guidance for recovering from upgrade failures.
+  * Remove the debconf warning and README text about the unsafe ACL configured
+    by default in versions before jessie.
+  * Remove upgrade code for adding the pwdMaxRecordedFailure attribute to the
+    ppolicy schema. It's obsolete since the schema has been internalized.
+
+  [ Sergio Durigan Junior ]
+  * Implement the "escape hatch" mechanism.
+    - d/po/*.po: Update PO files given the new template note.
+    - d/po/templates.pot: Update file.
+    - d/slapd.templates: Add note warning user about a postinst failure,
+      its possible cause and what to do.
+    - d/slapd.postinst: Make certain upgrade functions return failure
+      instead of exiting, which allows the postinst script to gracefully
+      fail when applicable.  Also, when the general configuration upgrade
+      fails, display a critical warning to the user.  Implement
+      ignore_init_failure function.
+    - d/slapd.prerm: Implement ignore_init_failure function.
+    - d/slapd.scripts-common: Make certain functions return failure
+      instead of exiting.
+    - d/rules: Use dh_installinit's --error-handler to instruct it on how
+      to handle possible errors with the init script.
+    - d/slapd.NEWS: Add excerpt mentioning that the postinst script might
+      error out if it can't migrate the existing (old) database backend.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 16 Aug 2021 18:32:29 -0700
+
+openldap (2.5.5+dfsg-1~exp1) experimental; urgency=medium
+
+  * New upstream release.
+    - Drop patches applied upstream: ITS#9544, ITS#9548.
+  * Mark slapd-contrib as breaking the old version of slapd to reduce the
+    chance of upgrade failure due to slapd-contrib being unpacked first.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 11 Jun 2021 11:43:15 -0700
+
+openldap (2.5.4+dfsg-1~exp1) experimental; urgency=medium
+
+  * New upstream release.
+    - Changing olcAuthzRegexp dynamically is supported. (Closes: #761407)
+    - Support for LANMAN password hashes has been removed. (Closes: #988033)
+    - Added pkg-config files for liblber and libldap. (Closes: #670824)
+    - libldap_r has been merged into libldap. The Debian package will continue
+      to install a libldap_r.so symlink for backwards compatibility with
+      applications that still link with -lldap_r.
+    - The Berkeley DB backends, slapd-bdb(5) and slapd-hdb(5), have been
+      removed.
+    - The shell backend, slapd-shell(5), has been removed.
+    - New backend: slapd-asyncmeta(5).
+    - New core overlays: slapd-homedir(5), slapd-otp(5), and
+      slapd-remoteauth(5).
+    - The ppolicy schema has been merged into the slapo-ppolicy(5) module.
+    - The argon2 password module has been promoted from contrib to core.
+  * Add a superficial autopkgtest for smbk5pwd.
+  * Update Standards-Version to 4.5.1; no changes needed.
+  * Upgrade to debhelper compat level 12.
+    - Remove debian/compat, add Build-Depends: debhelper-compat.
+  * Run dh_missing --fail-missing during build.
+    - Add debian/not-installed.
+  * Drop debian/tmp/ prefix from paths in *.install and *.manpages.
+  * Override Lintian false positives:
+    * slapd: lacks-unversioned-link-to-shared-library. See #687022.
+    * libldap-2.4-2: shared-library-not-shipped.
+  * Follow renamed Lintian tags:
+    - dev-pkg-without-shlib-symlink => lacks-unversioned-link-to-shared-library
+    - binary-or-shlib-defines-rpath => custom-library-search-path
+  * Rename libldap2-dev to libldap-dev (Policy 8.4). Keep libldap2-dev as a
+    transitional package for now.
+    - Drop ancient Conflicts/Replaces: libopenldap-dev.
+  * Prune implied or unneeded directories from debian/*.dirs.
+    - Stop installing empty /var/lib/slapd directory. (Closes: #714174)
+  * Stop disabling test060-mt-hot on ppc64el. The underlying kernel bug
+    (#866122) is fixed in all relevant suites by now.
+  * Drop evolution-ntlm patch. (Closes: #457374)
+  * Drop patches applied or superseded upstream.
+  * Update or refresh remaining patches as needed.
+  * debian/configure.options:
+    - Refresh with new `./configure --help' output.
+    - Drop directory options set automatically by debhelper: --prefix,
+      --sysconfdir, --localstatedir, and --mandir.
+    - Enable the perl and sql backends explicitly. They are deprecated and
+      --enable-backends= no longer includes them.
+    - Disable the experimental wiredtiger backend.
+    - Disable the autoca overlay. It does not support GnuTLS yet.
+    - Enable the argon2 password hashing module.
+    - Disable the new load balancer daemon (lloadd) for now.
+    - Disable systemd service notification support for now.
+  * debian/rules:
+    - Enable all current and future hardening flags.
+    - Use the new STRIP_OPTS variable to disable stripping.
+    - Drop -Wno-format-extra-args from DEB_CFLAGS_MAINT_APPEND.
+      The Debug macro has been changed upstream to use variadic args.
+    - Override OPT variable to empty for contrib modules.
+  * debian/schema: Sync with upstream.
+    - core.{schema,ldif}: Update description of deltaCRL.
+    - cosine.schema, pmi.schema: spelling fixes.
+    - namedobject.schema: Added.
+    - ppolicy.schema: Removed upstream, dropped.
+  * Add Build-Depends: pkg-config, required for autoreconf.
+  * Add upstream patch to fix SLAPI compilation. (ITS#9544)
+  * Move the argon2 password module from slapd-contrib to slapd.
+    - Add upstream patch to fix argon2 installation.
+  * Transition libldap-2.4-2 to libldap-2.5-0.
+    - Install the real libldap instead of a symlink to libldap_r.
+    - Symlink libldap_r.{a,so} to libldap for backwards compatibility.
+    - Drop the shlibs file, no longer needed.
+  * Remove references to removed BDB backends.
+    - Drop Build-Depends: libdb5.3-dev.
+    - Drop arch-specific configure options to disable those backends on Hurd.
+    - Delete example DB_CONFIG file and README.DB_CONFIG.
+    - Remove information about Berkeley DB from slapd README.
+  * Install new slapmodify(8) tool as a hard link to slapd(8).
+  * Install new man pages: slapo-deref(5), slapo-pw-pbkdf2(5), and
+    slapo-pw-sha2(5).
+    - Drop debian/slapo-pw-pbkdf2.5, included upstream.
+  * Add unpackaged files to debian/not-installed:
+    - ldapvc(1): undocumented tool supporting the vc overlay (contrib)
+    - lloadd(8) and lloadd.conf(5) man pages
+    - slapd-wt(5) and slapo-autoca(5) man pages
+  * Delete obsolete ppolicy.schema and ppolicy.ldif conffiles on upgrade.
+  * Dump and reload slapd-mdb(5) databases on upgrade from 2.4.
+    - Call dh_installinit with --no-restart-after-upgrade to ensure slapd is
+      stopped before dumping the old database.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 30 May 2021 08:41:25 -0700
+
+openldap (2.4.59+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Fix FTBFS with autoconf 2.71 (Closes: #993032):
+    - Backport upstream changes to support Autoconf 2.69 instead of simply
+      disabling automake in debian/rules. Fixes FTBFS due to autoreconf
+      thinking files required by Automake are missing, even though Automake is
+      not actually used.
+    - Stop running autoreconf in contrib/ldapc++ since we don't build it.
+    - Drop custom config.{guess,sub} handling. dh_update_autotools_config does
+      the right thing for us.
+  * Update Standards-Version to 4.6.0; no changes required.
+  * Add a superficial autopkgtest for smbk5pwd.
+  * Stop disabling test060-mt-hot on ppc64el. The underlying kernel bug
+    (#866122) is fixed in all relevant suites by now.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 27 Aug 2021 09:42:31 -0700
 
 openldap (2.4.57+dfsg-3) unstable; urgency=medium
 

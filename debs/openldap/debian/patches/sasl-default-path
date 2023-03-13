@@ -5,18 +5,18 @@ interest upstream.
 
 --- a/include/ldap_defaults.h
 +++ b/include/ldap_defaults.h
-@@ -63,4 +63,6 @@
- 	/* dn of the default "monitor" subentry */
- #define SLAPD_MONITOR_DN		"cn=Monitor"
+@@ -68,4 +68,6 @@
+  */
+ #define LLOADD_DEFAULT_CONFIGFILE	LDAP_SYSCONFDIR LDAP_DIRSEP "lloadd.conf"
  
 +#define SASL_CONFIGPATH                        LDAP_SYSCONFDIR LDAP_DIRSEP "sasl2"
 +
  #endif /* _LDAP_CONFIG_H */
 --- a/servers/slapd/sasl.c
 +++ b/servers/slapd/sasl.c
-@@ -1103,12 +1103,38 @@ static const rewrite_mapper slapd_mapper
+@@ -1231,12 +1231,38 @@
+ 	slapd_rw_destroy
  };
- #endif
  
 +static int
 +slap_sasl_getconfpath( void * context, char ** path )

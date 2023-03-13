@@ -120,52 +120,19 @@ _Description: slapcat failure during upgrade
  Then move the database files back to a backup area and then try running
  slapadd from ${location}.
 
-Template: slapd/unsafe_selfwrite_acl
+Template: slapd/postinst_error
 Type: note
-#flag:comment:3
-# Translators: keep "by self write" and "to *" unchanged. These are part
-# of the slapd configuration and are not translatable.
-_Description: Potentially unsafe slapd access control configuration
- One or more of the configured databases has an access control rule that
- allows users to modify most of their own attributes. This may be
- unsafe, depending on how the database is used.
+_Description: Error while performing post-installation tasks
+ There has been one or more errors while performing some
+ post-installation tasks. This probably means that the slapd package
+ could not automatically migrate one or more LDAP databases, or that a
+ backend being used by the current OpenLDAP installation is not
+ supported anymore.
  .
- In the case of slapd access rules that begin with "to *", it is
- recommended to remove any instances of "by self write", so that users
- are only able to modify specifically allowed attributes.
+ The maintainer script responsible for executing the post-installation
+ tasks has exited, but the slapd service has NOT been (re)started. You
+ will need to manually fix the problem and then start the service.
  .
- See /usr/share/doc/slapd/README.Debian.gz for more details.
-
-Template: slapd/ppolicy_schema_needs_update
-Type: select
-__Choices: abort installation, continue regardless
-DefaultChoice: abort installation
-#flag:comment:2
-# "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
-#flag:comment:3
-# This paragraph is followed by the path to the generated file (not
-# translatable). The sentence continues in the following paragraph.
-#flag:comment:5
-# This paragraph continues the sentence started in the previous
-# paragraph. It is followed by a command line.
-#flag:translate!:4,6
-_Description: Manual ppolicy schema update recommended
- The new version of the Password Policy (ppolicy) overlay requires the
- schema to define the pwdMaxRecordedFailure attribute type, which is not
- present in the schema currently in use. It is recommended to abort the
- upgrade now, and to update the ppolicy schema before upgrading slapd.
- If replication is in use, the schema update should be applied on every
- server before continuing with the upgrade.
- .
- An LDIF file has been generated with the changes required for the upgrade:
- .
- ${ldif}
- .
- so if slapd is using the default access control rules, these changes can be
- applied (after starting slapd) by using the command:
- .
- ldapmodify -H ldapi:/// -Y EXTERNAL -f ${ldif}
- .
- If instead you choose to continue the installation, the new attribute
- type will be added automatically, but the change will not be acted on
- by slapd overlays, and replication with other servers may be affected.
+ For more information on possible problematic scenarios and how to
+ address them, please take a look at the README.Debian file (under
+ /usr/share/doc/slapd/).

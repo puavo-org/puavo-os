@@ -1,70 +1,25 @@
 --- a/contrib/slapd-modules/passwd/Makefile
 +++ b/contrib/slapd-modules/passwd/Makefile
-@@ -13,7 +13,7 @@
+@@ -14,7 +14,7 @@
  INCS = $(LDAP_INC)
  LIBS = $(LDAP_LIB)
  
 -PROGRAMS = pw-kerberos.la pw-netscape.la pw-radius.la pw-apr1.la
 +PROGRAMS = pw-netscape.la pw-apr1.la
+ MANPAGES = slapd-pw-radius.5
  LTVER = 0:0:0
  
- prefix=/usr/local
-@@ -27,24 +27,24 @@
- .SUFFIXES: .c .o .lo
- 
- .c.lo:
--	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
-+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $<
- 
- all: $(PROGRAMS)
- 
- pw-kerberos.la:	kerberos.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $? -lkrb5
- 
- pw-netscape.la:	netscape.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $?
- 
- pw-radius.la:	radius.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $? -lradius
- 
- pw-apr1.la:	apr1.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $?
- 
- clean:
 --- a/contrib/slapd-modules/passwd/pbkdf2/Makefile
 +++ b/contrib/slapd-modules/passwd/pbkdf2/Makefile
-@@ -12,7 +12,7 @@
+@@ -13,7 +13,7 @@
  #DEFS = -DSLAPD_PBKDF2_DEBUG
  
- INCS = $(LDAP_INC)
--LIBS = $(LDAP_LIB) -lcrypto
-+LIBS = $(LDAP_LIB) -lnettle
+ SSL_INC =
+-SSL_LIB = -lcrypto
++SSL_LIB = -lnettle
  
- PROGRAMS = pw-pbkdf2.la
- LTVER = 0:0:0
-@@ -30,12 +30,12 @@
- .SUFFIXES: .c .o .lo
- 
- .c.lo:
--	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
-+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $<
- 
- all:		$(PROGRAMS)
- 
- pw-pbkdf2.la: pw-pbkdf2.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $? $(LIBS)
- 
- clean:
+ INCS = $(LDAP_INC) $(SSL_INC)
+ LIBS = $(LDAP_LIB) $(SSL_LIB)
 --- a/contrib/slapd-modules/smbk5pwd/Makefile
 +++ b/contrib/slapd-modules/smbk5pwd/Makefile
 @@ -19,10 +19,10 @@
@@ -80,8 +35,8 @@
 +HEIMDAL_LIB = $(shell krb5-config.heimdal --libs krb5 kadm-server)
  
  LIBTOOL = $(LDAP_BUILD)/libtool
- CC = gcc
-@@ -30,7 +30,8 @@
+ INSTALL = /usr/bin/install
+@@ -31,7 +31,8 @@
  # Omit DO_KRB5, DO_SAMBA or DO_SHADOW if you don't want to support it.
  DEFS = -DDO_KRB5 -DDO_SAMBA -DDO_SHADOW
  INCS = $(LDAP_INC) $(HEIMDAL_INC) $(SSL_INC)
@@ -90,96 +45,4 @@
 +LIBS = $(HEIMDAL_LIB) $(LDAP_LIB) $(SSL_LIB)
  
  PROGRAMS = smbk5pwd.la
- LTVER = 0:0:0
-@@ -46,12 +47,12 @@
- .SUFFIXES: .c .o .lo
- 
- .c.lo:
--	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
-+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $<
- 
- all: $(PROGRAMS)
- 
- smbk5pwd.la:	smbk5pwd.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $? $(LIBS)
- 
- clean:
---- a/contrib/slapd-modules/autogroup/Makefile
-+++ b/contrib/slapd-modules/autogroup/Makefile
-@@ -27,12 +27,12 @@
- .SUFFIXES: .c .o .lo
- 
- .c.lo:
--	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
-+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $<
- 
- all: $(PROGRAMS)
- 
- autogroup.la: autogroup.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $? $(LIBS)
- 
- clean:
---- a/contrib/slapd-modules/lastbind/Makefile
-+++ b/contrib/slapd-modules/lastbind/Makefile
-@@ -37,12 +37,12 @@
- .SUFFIXES: .c .o .lo
- 
- .c.lo:
--	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
-+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $<
- 
- all: $(PROGRAMS)
- 
- lastbind.la: lastbind.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $? $(LIBS)
- 
- clean:
---- a/contrib/slapd-modules/passwd/sha2/Makefile
-+++ b/contrib/slapd-modules/passwd/sha2/Makefile
-@@ -28,12 +28,12 @@
- .SUFFIXES: .c .o .lo
- 
- .c.lo:
--	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
-+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $<
- 
- all:		$(PROGRAMS)
- 
- pw-sha2.la:	slapd-sha2.lo sha2.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $? $(LIBS)
- 
- clean:
---- a/contrib/slapd-modules/passwd/argon2/Makefile
-+++ b/contrib/slapd-modules/passwd/argon2/Makefile
-@@ -14,7 +14,7 @@
- INCS = $(LDAP_INC)
- LIBS = $(LDAP_LIB)
- 
--implementation = sodium
-+implementation = argon2
- 
- ifeq ($(implementation),argon2)
- LIBS += -largon2
-@@ -42,12 +42,12 @@
- .SUFFIXES: .c .o .lo
- 
- .c.lo:
--	$(LIBTOOL) --mode=compile $(CC) $(OPT) $(DEFS) $(INCS) -c $<
-+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(INCS) -c $<
- 
- all:		$(PROGRAMS)
- 
- pw-argon2.la: pw-argon2.lo
--	$(LIBTOOL) --mode=link $(CC) $(OPT) -version-info $(LTVER) \
-+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-info $(LTVER) \
- 	-rpath $(moduledir) -module -o $@ $? $(LIBS)
- 
- clean:
+ MANPAGES = slapo-smbk5pwd.5
