@@ -1,0 +1,14 @@
+
+Package: @basename@-jre-zero
+Architecture: @altzero_archs@
+Multi-Arch: same
+Priority: optional
+Pre-Depends: ${dpkg:Depends}
+Depends: @basename@-jre-headless (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Provides: ${zerovm:Provides}
+Description: Alternative JVM for OpenJDK, using Zero
+ The package provides an alternative runtime using the Zero VM. Built on
+ architectures in addition to the Hotspot VM as a debugging aid for those
+ architectures which don't have a Hotspot VM.
+ .
+ The VM is started with the option `-zero'. See the README.Debian for details.

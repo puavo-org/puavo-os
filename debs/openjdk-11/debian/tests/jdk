@@ -1,0 +1,26 @@
+#!/bin/bash
+set -o errexit
+set -o errtrace
+set -o pipefail
+set -o nounset
+
+# TODO: native library support
+
+cleanup() {
+  pid="$(jobs -p)"
+  [ -n "$pid" ] && pkill -P ${pid}
+  pkill -9 -P $$
+}
+
+for sig in INT QUIT HUP TERM; do trap "cleanup; trap - $sig EXIT; kill -s $sig "'"$$"' "$sig"; done
+trap cleanup EXIT
+
+export HOME="$(pwd)/jdk/test/"
+export XAUTHORITY="${HOME}/.Xauthority"
+export DISPLAY=:10
+
+debian/tests/start-xvfb.sh 10 &
+sleep 3
+
+debian/tests/jtreg-autopkgtest.sh jdk -exclude:test/jdk/ProblemList.txt test/jdk:jdk_stable || true
+debian/tests/jtdiff-autopkgtest.sh jdk

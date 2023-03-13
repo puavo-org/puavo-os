@@ -15,6 +15,7 @@ _pkgs_ports := cups                   \
                mutter                 \
                nbd                    \
                openboard              \
+               openjdk-11             \
                openldap               \
                pinta                  \
                qtbase-opensource-src  \
