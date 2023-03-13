@@ -28,6 +28,9 @@ DEB_BUILD_ARCH		?= $(call vafilt,$(DPKG_VARS),DEB_BUILD_ARCH)
 DEB_HOST_ARCH_CPU	?= $(call vafilt,$(DPKG_VARS),DEB_HOST_ARCH_CPU)
 DEB_HOST_MULTIARCH	?= $(call vafilt,$(DPKG_VARS),DEB_HOST_MULTIARCH)
 
+# Fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
+DEB_LDFLAGS_SET='--no-as-needed'
+
 PATH := $(CURDIR)/bin:$(PATH)
 export PATH
 
