@@ -1,0 +1,30 @@
+Description: Patch duplicate define used in case statement.
+ it has the same value as PEER error.
+Author: Dimitri John Ledkov <xnox@ubuntu.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2020-04-01
+
+--- openwsman-2.6.5.orig/src/lib/wsman-curl-client-transport.c
++++ openwsman-2.6.5/src/lib/wsman-curl-client-transport.c
+@@ -194,8 +194,8 @@ convert_to_last_error(CURLcode r)
+ 		return WS_LASTERR_SSL_ENGINE_SETFAILED;
+ 	case CURLE_SSL_CERTPROBLEM:
+ 		return WS_LASTERR_SSL_CERTPROBLEM;
+-	case CURLE_SSL_CACERT:
+-		return WS_LASTERR_SSL_CACERT;
++//	case CURLE_SSL_CACERT:
++//		return WS_LASTERR_SSL_CACERT;
+ #if LIBCURL_VERSION_NUM > 0x70C01
+ 	case CURLE_SSL_ENGINE_INITFAILED:
+ 		return WS_LASTERR_SSL_ENGINE_INITFAILED;

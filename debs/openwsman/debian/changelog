@@ -1,8 +1,39 @@
-openwsman (2.6.9-0+puavo1) bookworm; urgency=medium
+openwsman (2.6.5-0ubuntu8+puavo1) bookworm; urgency=medium
 
-  * Update to 2.6.9.
+  * Update to 2.6.5.
 
- -- Puavo Org <dev@opinsys.fi>  Wed, 21 Aug 2019 08:57:37 +0300
+ -- Puavo Org <dev@opinsys.fi>  Tue, 14 Mar 2023 14:48:19 +0200
+
+openwsman (2.6.5-0ubuntu8) lunar; urgency=medium
+
+  * Turn off python build in debian/rules.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sat, 31 Dec 2022 08:24:11 +0000
+
+openwsman (2.6.5-0ubuntu7) lunar; urgency=medium
+
+  * Drop python2 bindings.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sat, 31 Dec 2022 08:09:04 +0000
+
+openwsman (2.6.5-0ubuntu6) jammy; urgency=medium
+
+  * No-change rebuild against libssl3
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Thu, 09 Dec 2021 00:11:39 +0000
+
+openwsman (2.6.5-0ubuntu5) focal; urgency=medium
+
+  * Switch to python2-dev build-dependency.
+  * Patch duplicate define used in case statement.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Wed, 01 Apr 2020 18:04:24 +0100
+
+openwsman (2.6.5-0ubuntu4) focal; urgency=medium
+
+  * No-change rebuild for libgcc-s1 package name change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Mon, 23 Mar 2020 07:22:16 +0100
 
 openwsman (2.6.5-0ubuntu3) bionic; urgency=medium
 

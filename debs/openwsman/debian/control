@@ -2,7 +2,7 @@ Source: openwsman
 Section: admin
 Priority: extra
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-Build-Depends: debhelper (>= 9.0.0), cmake (>= 2.8.5), libssl-dev, libpam0g-dev, libxml2-dev, libcurl4-openssl-dev, libcimcclient0-dev, swig, python-dev
+Build-Depends: debhelper (>= 9.0.0), cmake (>= 2.8.5), libssl-dev, libpam0g-dev, libxml2-dev, libcurl4-openssl-dev, libcimcclient0-dev, swig, dh-python
 Standards-Version: 3.9.5
 Homepage: http://openwsman.github.io/
 
@@ -136,18 +136,3 @@ Description: Open Web Services Manager C++ bindings development files
  .
  This package provides the development files for the C++ interface to the
  Openwsman client libraries
-
-Package: python-openwsman
-Section: python
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libwsman1 (= ${binary:Version})
-Description: Open Web Services Manager Python bindings
- Openwsman is a project intended to provide an open-source implementation of
- the Web Services Management specification (WS-Management) and to expose
- system management information on the Linux operating system using the
- WS-Management protocol. WS-Management is based on a suite of web services
- specifications and usage requirements that exposes a set of operations
- focused on and covers all system management aspects.
- .
- This package provides the Python bindings for the Openwsman client API.
-
