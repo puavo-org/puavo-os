@@ -2,6 +2,7 @@
 
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
+_pkgs_ports := libpam-ccreds
 
 # XXX disabled for bookworm
 # _pkgs_ports := cups                   \
@@ -13,7 +14,6 @@ _pkgs_parts := puavo-ds puavo-os
 #                hooktftp               \
 #                incron                 \
 #                kde-spectacle          \
-#                libpam-ccreds          \
 #                mutter                 \
 #                nbd                    \
 #                openboard              \
