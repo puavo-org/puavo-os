@@ -3,7 +3,8 @@
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
 _pkgs_ports := libpam-ccreds \
-               veyon
+               veyon         \
+               wsmancli
 
 # XXX disabled for bookworm
 # _pkgs_ports := cups                   \
@@ -20,13 +21,11 @@ _pkgs_ports := libpam-ccreds \
 #                openboard              \
 #                pinta                  \
 #                qtbase-opensource-src  \
-#                wsmancli
 
 # sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
 _pkgs_parts_builddeps :=
-# XXX disabled for bookworm
-# _pkgs_ports_builddeps := sblim-sfcc openwsman
+_pkgs_ports_builddeps := sblim-sfcc openwsman
 
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
                $(_pkgs_parts) $(_pkgs_ports)
