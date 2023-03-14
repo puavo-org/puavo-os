@@ -1,8 +1,8 @@
 # parts, ports and some cloud packages go into puavo-os images
 
-# XXX disabled for bookworm
-# _pkgs_cloud := krb5 openldap puavo-ds puavo-os
+_pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
+
 # XXX disabled for bookworm
 # _pkgs_ports := cups                   \
 #                cups-filters           \
@@ -17,7 +17,6 @@ _pkgs_parts := puavo-ds puavo-os
 #                mutter                 \
 #                nbd                    \
 #                openboard              \
-#                openldap               \
 #                pinta                  \
 #                qtbase-opensource-src  \
 #                veyon                  \
