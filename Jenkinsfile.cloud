@@ -1,7 +1,7 @@
 pipeline {
   agent {
     docker {
-      image 'debian:bullseye'
+      image 'debian:bookworm'
       // XXX could you do most operations as normal user?
       args '-u root --mount type=bind,source=/etc/jenkins-docker-config,destination=/etc/jenkins-docker-config,readonly --env-file=/etc/jenkins-docker-config/environment'
     }
