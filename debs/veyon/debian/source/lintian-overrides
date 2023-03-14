@@ -1,0 +1,9 @@
+# License files with uncommon names, we won't list copyright attributions for those files in d/copyright.
+source: file-without-copyright-information 3rdparty/kldap/CMakePresets.json.license [debian/copyright]
+source: file-without-copyright-information 3rdparty/kldap/LICENSES/BSD-3-Clause.txt [debian/copyright]
+source: file-without-copyright-information 3rdparty/kldap/LICENSES/CC0-1.0.txt [debian/copyright]
+source: file-without-copyright-information 3rdparty/kldap/LICENSES/LGPL-2.0-or-later.txt [debian/copyright]
+source: file-without-copyright-information 3rdparty/kldap/LICENSES/MIT.txt [debian/copyright]
+source: file-without-copyright-information 3rdparty/kldap/metainfo.yaml.license [debian/copyright]
+source: file-without-copyright-information 3rdparty/qthttpserver/LICENSE.GPL3 [debian/copyright]
+source: file-without-copyright-information 3rdparty/qthttpserver/src/3rdparty/http-parser/LICENSE-MIT [debian/copyright]
