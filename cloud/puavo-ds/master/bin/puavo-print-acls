@@ -597,7 +597,9 @@ rule {
 rule {
   # allow statistics to read some group information
   [dn subtree $Groups]
-    [attrs displayName entry objectClass puavoDeviceImage puavoId]
+    [attrs cn displayName entry objectClass puavoActiveService puavoConf \
+           puavoDeviceImage puavoId puavoImageSeriesSourceURL puavoSchool \
+           puavoTag]
       by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [puavo_dn statistics]   read
       by *                       none break
@@ -664,7 +666,7 @@ rule {
   # allow statistics to read user role
   [dn subtree $People]
     [attrs entry objectClass puavoEduPersonAffiliation \
-                 puavoEduPersonPrimarySchool puavoSchool]
+                 puavoEduPersonPrimarySchool puavoId puavoSchool uid]
       by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [puavo_dn statistics]     read
       by *                         none break
