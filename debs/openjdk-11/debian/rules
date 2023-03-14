@@ -28,9 +28,6 @@ DEB_BUILD_ARCH		?= $(call vafilt,$(DPKG_VARS),DEB_BUILD_ARCH)
 DEB_HOST_ARCH_CPU	?= $(call vafilt,$(DPKG_VARS),DEB_HOST_ARCH_CPU)
 DEB_HOST_MULTIARCH	?= $(call vafilt,$(DPKG_VARS),DEB_HOST_MULTIARCH)
 
-# Fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-DEB_LDFLAGS_SET='--no-as-needed'
-
 PATH := $(CURDIR)/bin:$(PATH)
 export PATH
 
@@ -242,7 +239,8 @@ dpkg_buildflags_hs += dpkg-buildflags
 export EXTRA_CPPFLAGS_HS := $(shell $(dpkg_buildflags_hs) --get CPPFLAGS)
 export EXTRA_CFLAGS_HS   := $(shell $(dpkg_buildflags_hs) --get CFLAGS; $(dpkg_buildflags_hs) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_HS := $(shell $(dpkg_buildflags_hs) --get CXXFLAGS) -Wno-deprecated-declarations
-export EXTRA_LDFLAGS_HS  := $(shell $(dpkg_buildflags_hs) --get LDFLAGS)
+# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
+export EXTRA_LDFLAGS_HS  := $(shell $(dpkg_buildflags_hs) --get LDFLAGS) -Wl,--no-as-needed
 
 dpkg_buildflags_zero = \
 	DEB_BUILD_MAINT_OPTIONS="optimize=-lto" \
@@ -258,7 +256,8 @@ dpkg_buildflags_zero += dpkg-buildflags
 export EXTRA_CPPFLAGS_ZERO := $(shell $(dpkg_buildflags_zero) --get CPPFLAGS)
 export EXTRA_CFLAGS_ZERO   := $(shell $(dpkg_buildflags_zero) --get CFLAGS; $(dpkg_buildflags_zero) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_ZERO := $(shell $(dpkg_buildflags_zero) --get CXXFLAGS)
-export EXTRA_LDFLAGS_ZERO  := $(shell $(dpkg_buildflags_zero) --get LDFLAGS)
+# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
+export EXTRA_LDFLAGS_ZERO  := $(shell $(dpkg_buildflags_zero) --get LDFLAGS) -Wl,--no-as-needed
 
 ifeq ($(DEB_HOST_ARCH),alpha)
   export EXTRA_LDFLAGS_ZERO += -Wl,--no-relax
@@ -275,7 +274,8 @@ dpkg_buildflags_jdk += dpkg-buildflags
 export EXTRA_CPPFLAGS_JDK := $(shell $(dpkg_buildflags_jdk) --get CPPFLAGS)
 export EXTRA_CFLAGS_JDK   := $(shell $(dpkg_buildflags_jdk) --get CFLAGS) $(shell $(dpkg_buildflags_jdk) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_JDK := $(shell $(dpkg_buildflags_jdk) --get CXXFLAGS)
-export EXTRA_LDFLAGS_JDK  := $(shell $(dpkg_buildflags_jdk) --get LDFLAGS)
+# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
+export EXTRA_LDFLAGS_JDK  := $(shell $(dpkg_buildflags_jdk) --get LDFLAGS) -Wl,--no-as-needed
 
 #for IcedTea
 dpkg_buildflags_it = \
@@ -288,7 +288,8 @@ dpkg_buildflags_it += dpkg-buildflags
 export EXTRA_CPPFLAGS_IT := $(shell $(dpkg_buildflags_it) --get CPPFLAGS)
 export EXTRA_CFLAGS_IT   := $(shell $(dpkg_buildflags_it) --get CFLAGS)
 export EXTRA_CXXFLAGS_IT := $(shell $(dpkg_buildflags_it) --get CXXFLAGS)
-export EXTRA_LDFLAGS_IT  := $(shell $(dpkg_buildflags_it) --get LDFLAGS)
+# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
+export EXTRA_LDFLAGS_IT  := $(shell $(dpkg_buildflags_it) --get LDFLAGS) -Wl,--no-as-needed
 
 # This section should be in sync with "bd_gcc" definition
 ifneq (,$(filter $(distrel),saucy))
