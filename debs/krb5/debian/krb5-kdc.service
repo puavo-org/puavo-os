@@ -4,7 +4,7 @@ Description=Kerberos 5 Key Distribution Center
 
 [Service]
 Type=forking
-PIDFile=/var/run/krb5-kdc.pid
+PIDFile=/run/krb5-kdc.pid
 ExecReload=/bin/kill -HUP $MAINPID
 EnvironmentFile=-/etc/default/krb5-kdc
 ExecStart=/usr/sbin/krb5kdc -P /var/run/krb5-kdc.pid $DAEMON_ARGS
@@ -13,6 +13,10 @@ ReadOnlyDirectories=/
 ReadWriteDirectories=-/var/tmp /tmp /var/lib/krb5kdc -/var/run /run
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 Restart=on-abnormal
+ProtectProc=invisible
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
 
 
 [Install]

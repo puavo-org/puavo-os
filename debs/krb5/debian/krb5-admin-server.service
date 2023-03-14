@@ -11,6 +11,10 @@ ReadOnlyDirectories=/
 ReadWriteDirectories=-/var/tmp /tmp /var/lib/krb5kdc -/var/run /run
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 Restart=on-abnormal
+ProtectProc=invisible
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
 
 [Install]
 WantedBy=multi-user.target

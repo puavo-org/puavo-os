@@ -15,13 +15,13 @@ Patch-Category: debian-local
  2 files changed, 2 insertions(+)
 
 diff --git a/src/plugins/kdb/ldap/Makefile.in b/src/plugins/kdb/ldap/Makefile.in
-index 94df816..2ed562b 100644
+index 69c120e..e185651 100644
 --- a/src/plugins/kdb/ldap/Makefile.in
 +++ b/src/plugins/kdb/ldap/Makefile.in
 @@ -20,6 +20,7 @@ SHLIB_EXPDEPS = \
  	$(TOPLIBD)/libkrb5$(SHLIBEXT) \
  	$(TOPLIBD)/lib$(SUPPORT_LIBNAME)$(SHLIBEXT)
- SHLIB_EXPLIBS= -lkdb_ldap $(GSSRPC_LIBS) -lkrb5 -lcom_err -lk5crypto -lkrb5support $(LIBS)
+ SHLIB_EXPLIBS= -lkdb_ldap $(GSSRPC_LIBS) -lkrb5 $(COM_ERR_LIB) -lk5crypto -lkrb5support $(LIBS)
 +SHLIB_DIRS=-L$(TOPLIBD) -Wl,-rpath,$(KRB5_LIBDIR)/krb5
  
  SRCS= 	$(srcdir)/ldap_exp.c

@@ -71,10 +71,10 @@ index 356501d..d39eeef 100644
  Libs: -L${libdir} -lkdb5
  Libs.private: ${KDB5_DB_LIB}
 diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
-index ac2f582..010457e 100755
+index 6297142..3ad8a9b 100755
 --- a/src/build-tools/krb5-config.in
 +++ b/src/build-tools/krb5-config.in
-@@ -208,7 +208,7 @@ fi
+@@ -207,7 +207,7 @@ fi
  
  if test -n "$do_cflags"; then
      if test x"$includedir" != x"/usr/include" ; then
@@ -95,7 +95,7 @@ index b2b2436..f919222 100644
 +Cflags: -isystem ${includedir}
  Libs: -L${libdir} -lgssapi_krb5
 diff --git a/src/build-tools/mit-krb5.pc.in b/src/build-tools/mit-krb5.pc.in
-index 058e75f..455427a 100644
+index b39d395..863603c 100644
 --- a/src/build-tools/mit-krb5.pc.in
 +++ b/src/build-tools/mit-krb5.pc.in
 @@ -10,6 +10,6 @@ defcktname=@DEFCKTNAME@
@@ -104,5 +104,5 @@ index 058e75f..455427a 100644
  Version: @KRB5_VERSION@
 -Cflags: -I${includedir}
 +Cflags: -isystem ${includedir}
- Libs: -L${libdir} -lkrb5 -lk5crypto -lcom_err
+ Libs: -L${libdir} -lkrb5 -lk5crypto @COM_ERR_LIB@
  Libs.private: -lkrb5support

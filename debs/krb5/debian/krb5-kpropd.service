@@ -1,7 +1,7 @@
 [Unit]
 Description=Kerberos 5 slave KDC update server
 Conflicts=krb5-admin-server.service
-
+After=network.target
 [Service]
 ExecReload=/bin/kill -HUP $MAINPID
 EnvironmentFile=-/etc/default/krb5-kpropd
@@ -10,6 +10,10 @@ InaccessibleDirectories=-/etc/ssh -/etc/ssl/private  /root
 ReadOnlyDirectories=/
 ReadWriteDirectories=/var/tmp /tmp /var/lib/krb5kdc /var/run /run
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+ProtectProc=invisible
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
 
 [Install]
 WantedBy=multi-user.target

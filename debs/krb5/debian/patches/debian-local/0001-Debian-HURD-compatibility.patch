@@ -11,11 +11,10 @@ Thanks Pino Toscano for making the patch more robust.
  src/kadmin/ktutil/ktutil_funcs.c            | 4 ++++
  src/kprop/kprop_util.c                      | 4 ++++
  src/plugins/kdb/db2/libdb2/include/db-int.h | 4 ++++
- src/tests/resolve/resolve.c                 | 4 ++++
- 6 files changed, 26 insertions(+)
+ 5 files changed, 22 insertions(+)
 
 diff --git a/src/clients/ksu/ksu.h b/src/clients/ksu/ksu.h
-index 3bf0bd4..f680b33 100644
+index 66fb4bc..44d120b 100644
 --- a/src/clients/ksu/ksu.h
 +++ b/src/clients/ksu/ksu.h
 @@ -56,6 +56,10 @@
@@ -30,10 +29,10 @@ index 3bf0bd4..f680b33 100644
  extern int optind;
  extern char * optarg;
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index 9616b24..09ad057 100644
+index 44dc1ee..5c582dc 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
-@@ -595,6 +595,12 @@ extern char *strdup (const char *);
+@@ -596,6 +596,12 @@ extern char *strdup (const char *);
  #ifdef HAVE_SYS_PARAM_H
  #include <sys/param.h>                  /* MAXPATHLEN */
  #endif
@@ -47,7 +46,7 @@ index 9616b24..09ad057 100644
  #ifdef HAVE_SYS_FILE_H
  #include <sys/file.h>                   /* prototypes for file-related
 diff --git a/src/kadmin/ktutil/ktutil_funcs.c b/src/kadmin/ktutil/ktutil_funcs.c
-index e2e005d..ed342b2 100644
+index 56bed1b..582b306 100644
 --- a/src/kadmin/ktutil/ktutil_funcs.c
 +++ b/src/kadmin/ktutil/ktutil_funcs.c
 @@ -34,6 +34,10 @@
@@ -62,7 +61,7 @@ index e2e005d..ed342b2 100644
   * Free a kt_list
   */
 diff --git a/src/kprop/kprop_util.c b/src/kprop/kprop_util.c
-index c32d174..d72ab18 100644
+index c0aa2c8..6ee7800 100644
 --- a/src/kprop/kprop_util.c
 +++ b/src/kprop/kprop_util.c
 @@ -32,6 +32,10 @@
@@ -89,18 +88,3 @@ index 7e981d4..d83b3b6 100644
 +# define MAXPATHLEN 4096
 +#endif
  #endif /* _DB_INT_H_ */
-diff --git a/src/tests/resolve/resolve.c b/src/tests/resolve/resolve.c
-index ea02391..9597695 100644
---- a/src/tests/resolve/resolve.c
-+++ b/src/tests/resolve/resolve.c
-@@ -51,6 +51,10 @@
- #include <sys/param.h>
- #endif
- 
-+#ifndef MAXHOSTNAMELEN
-+# define MAXHOSTNAMELEN 256
-+#endif
-+
- int
- main(int argc, char **argv)
- {

@@ -43,7 +43,6 @@ override_dh_auto_configure:
 	dh_auto_configure $(DH_BUILD_OPTS) -- --with-system-et --with-system-ss --disable-rpath  \
 		--enable-shared $(CONFIGURE_LDAP) --without-tcl \
 	--with-system-verto \
-		--libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
 		--sysconfdir=/etc  \
 		--localstatedir=/etc
 
@@ -143,10 +142,10 @@ override_dh_fixperms-arch:
 	chmod 700 debian/krb5-kdc/var/lib/krb5kdc
 	chmod 700 debian/krb5-kdc/etc/krb5kdc
 
-override_dh_auto_test: 
+override_dh_auto_test:
 
 %:
-	dh $@ 
+	dh $@
 
 
 #.PHONY: build clean configure binary-indep binary-arch binary install

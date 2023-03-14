@@ -4,20 +4,20 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13), byacc | bison,
  comerr-dev, docbook-to-man,
  libkeyutils-dev [linux-any], libldap2-dev <!stage1>, libsasl2-dev <!stage1>,
- libncurses5-dev, libssl-dev,  ss-dev,
+ libssl-dev,  ss-dev,
  libverto-dev (>= 0.2.4), pkg-config
-Build-Depends-Indep: python3, python3-cheetah, python3-lxml, python3-sphinx, doxygen, doxygen-latex
-Standards-Version: 4.5.0
+Build-Depends-Indep: python3, python3-cheetah, python3-lxml, python3-sphinx, doxygen, doxygen-latex, tex-gyre
+Standards-Version: 4.6.1
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@debian.org>, Benjamin Kaduk <kaduk@mit.edu>
-Homepage: http://web.mit.edu/kerberos/
-VCS-Git: https://salsa.debian.org/debian/krb5
-VCS-Browser: https://salsa.debian.org/debian/krb5
+Homepage: https://web.mit.edu/kerberos/
+Vcs-Git: https://salsa.debian.org/debian/krb5
+Vcs-Browser: https://salsa.debian.org/debian/krb5
 
 Package: krb5-user
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version}),
-  krb5-config
+Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version})
+Recommends: krb5-config
 Multi-Arch: foreign
 Conflicts: heimdal-clients
 Suggests: krb5-k5tls
@@ -242,6 +242,7 @@ Multi-Arch: foreign
 Conflicts: heimdal-docs
 Section: doc
 Depends: ${misc:Depends}
+Recommends: libjs-sphinxdoc, libjs-jquery, libjs-underscore
 Description: documentation for MIT Kerberos
  Kerberos is a system for authenticating users and services on a network.
  Kerberos is a trusted third-party service.  That means that there is a
@@ -256,7 +257,7 @@ Description: documentation for MIT Kerberos
 
 Package: libkrb5-3
 Section: libs
-Breaks:  sssd (<= 1.2.1-4.3), libsmbclient (<= 2:3.6.1-2), libapache2-mod-auth-kerb (<= 5.4-2.4)
+Breaks: sssd (<= 1.2.1-4.3), libsmbclient (<= 2:3.6.1-2), libapache2-mod-auth-kerb (<= 5.4-2.4)
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends},
  libkrb5support0 (= ${binary:Version})
@@ -371,7 +372,7 @@ Description: MIT Kerberos runtime libraries - Crypto Library
 
 Package: libkdb5-10
 Section: libs
-Breaks:  libkadm5srv-mit8 (<< 1.11+dfsg~), krb5-kdc (= 1.13~alpha1+dfsg-1)
+Breaks: libkadm5srv-mit8 (<< 1.11+dfsg~), krb5-kdc (= 1.13~alpha1+dfsg-1)
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: krb5-doc, krb5-user
@@ -389,9 +390,9 @@ Description: MIT Kerberos runtime libraries - Kerberos database
 
 Package: libkrb5support0
 Section: libs
-Breaks: libgssapi-krb5-2 (<< 1.13~alpha1-1),
+Breaks: libgssapi-krb5-2 (<< 1.20),
  libkadm5srv-mit9 (<< 1.13~alpha1-1), libkadm5clnt-mit9 (<< 1.13~alpha1-1),
- libk5crypto3 (<< 1.16),  libkdb5-8 (<< 1.16)
+ libk5crypto3 (<< 1.20),  libkdb5-8 (<< 1.16)
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Multi-Arch: same
@@ -424,7 +425,6 @@ Description: MIT Kerberos runtime libraries - RADIUS library
  This package contains the internal support library for RADIUS functionality.
 
 Package: krb5-gss-samples
-Section: net
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: MIT Kerberos GSS Sample applications

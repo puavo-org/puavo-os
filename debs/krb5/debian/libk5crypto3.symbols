@@ -5,9 +5,6 @@ libk5crypto.so.3 libk5crypto3 #MINVER#
  k5_allow_weak_pbkdf2iter@k5crypto_3_MIT 1.12~beta2+dfsg
  k5_enctype_to_ssf@k5crypto_3_MIT 1.16
  k5_sha256@k5crypto_3_MIT 1.15~beta1
- k5_sha256_final@k5crypto_3_MIT 1.10+dfsg~alpha1
- k5_sha256_init@k5crypto_3_MIT 1.10+dfsg~alpha1
- k5_sha256_update@k5crypto_3_MIT 1.10+dfsg~alpha1
  k5crypto_3_MIT@k5crypto_3_MIT 1.6.dfsg.2
  krb5_c_block_size@k5crypto_3_MIT 1.6.dfsg.2
  krb5_c_checksum_length@k5crypto_3_MIT 1.6.dfsg.2
@@ -35,9 +32,9 @@ libk5crypto.so.3 libk5crypto3 #MINVER#
  krb5_c_prf_length@k5crypto_3_MIT 1.6.dfsg.2
  krb5_c_prfplus@k5crypto_3_MIT 1.14+dfsg
  krb5_c_random_add_entropy@k5crypto_3_MIT 1.6.dfsg.2
- krb5_c_random_make_octets@k5crypto_3_MIT 1.6.dfsg.2
- krb5_c_random_os_entropy@k5crypto_3_MIT 1.6.dfsg.2
- krb5_c_random_seed@k5crypto_3_MIT 1.6.dfsg.2
+ krb5_c_random_make_octets@k5crypto_3_MIT 1.20
+ krb5_c_random_os_entropy@k5crypto_3_MIT 1.20
+ krb5_c_random_seed@k5crypto_3_MIT 1.20
  krb5_c_random_to_key@k5crypto_3_MIT 1.6.dfsg.2
  krb5_c_string_to_key@k5crypto_3_MIT 1.7+dfsg
  krb5_c_string_to_key_with_params@k5crypto_3_MIT 1.7+dfsg
@@ -81,8 +78,6 @@ libk5crypto.so.3 libk5crypto3 #MINVER#
  krb5_use_enctype@k5crypto_3_MIT 1.6.dfsg.2
  krb5_verify_checksum@k5crypto_3_MIT 1.6.dfsg.2
  krb5int_aes_decrypt@k5crypto_3_MIT 1.6.dfsg.2
- krb5int_aes_enc_blk@k5crypto_3_MIT 1.10+dfsg~alpha1
- krb5int_aes_enc_key@k5crypto_3_MIT 1.10+dfsg~alpha1
  krb5int_aes_encrypt@k5crypto_3_MIT 1.6.dfsg.2
  krb5int_arcfour_gsscrypt@k5crypto_3_MIT 1.8+dfsg
  krb5int_c_copy_keyblock@k5crypto_3_MIT 1.8+dfsg
@@ -93,7 +88,7 @@ libk5crypto.so.3 libk5crypto3 #MINVER#
  krb5int_c_init_keyblock@k5crypto_3_MIT 1.6.dfsg.2
  krb5int_c_mandatory_cksumtype@k5crypto_3_MIT 1.6.dfsg.2
  krb5int_c_weak_enctype@k5crypto_3_MIT 1.8+dfsg
- krb5int_camellia_cbc_mac@k5crypto_3_MIT 1.9+dfsg~beta1
+ krb5int_camellia_encrypt@k5crypto_3_MIT 1.20~beta1
  krb5int_cmac_checksum@k5crypto_3_MIT 1.9+dfsg~beta1
  krb5int_derive_key@k5crypto_3_MIT 1.9+dfsg~beta2
  krb5int_derive_random@k5crypto_3_MIT 1.15~beta1
