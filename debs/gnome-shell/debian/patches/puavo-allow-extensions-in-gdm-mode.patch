@@ -1,0 +1,11 @@
+diff -ruN gnome-shell/js/ui/sessionMode.js gnome-shell/js/ui/sessionMode.js
+--- gnome-shell/js/ui/sessionMode.js	2023-02-14 02:11:32.000000000 +0200
++++ gnome-shell/js/ui/sessionMode.js	2023-03-15 16:35:23.777185401 +0200
+@@ -49,6 +49,7 @@
+     },
+ 
+     'gdm': {
++        allowExtensions: true,
+         hasNotifications: true,
+         isGreeter: true,
+         isPrimary: true,
