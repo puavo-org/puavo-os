@@ -9,7 +9,7 @@ delete_network_interfaces() {
   # we can see if host has such a thing functioning
   printf %s "$1" \
     | jq '.network_interfaces =
-            (.network_interfaces[] | select(.name == "vpn0"))'
+            [ (.network_interfaces[] | select(.name == "vpn0")) ]'
 }
 
 status=0
