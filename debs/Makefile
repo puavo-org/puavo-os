@@ -2,7 +2,8 @@
 
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := libpam-ccreds \
+_pkgs_ports := hooktftp      \
+               libpam-ccreds \
                veyon         \
                wsmancli
 
@@ -13,7 +14,6 @@ _pkgs_ports := libpam-ccreds \
 #                gnome-network-displays \
 #                gnome-shell            \
 #                gtk+3.0                \
-#                hooktftp               \
 #                incron                 \
 #                kde-spectacle          \
 #                mutter                 \

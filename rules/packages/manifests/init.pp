@@ -13,9 +13,8 @@ class packages {
   # Puavo OS packages
   #
 
-  # XXX hooktftp missing from bookworm
   @package {
-    [ 'puavo-ltsp-bootserver', 'puavo-rest', ]:
+    [ 'hooktftp', 'puavo-ltsp-bootserver', 'puavo-rest', ]:
       ensure => present,
       tag    => [ 'tag_puavo_bootserver' ];
   }
