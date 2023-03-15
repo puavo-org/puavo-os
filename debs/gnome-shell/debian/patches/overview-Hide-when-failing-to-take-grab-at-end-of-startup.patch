@@ -1,0 +1,27 @@
+From: Sebastian Keller <skeller@gnome.org>
+Date: Wed, 1 Mar 2023 21:48:45 +0100
+Subject: overview: Hide when failing to take grab at end of startup animation
+
+Otherwise keyboard input would be going to whatever window was
+preventing us from taking the grab while it is obscured by the overview.
+
+Bug: https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/6478
+Bug-Debian: https://bugs.debian.org/1032497
+Forwarded: https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/2667
+Origin: upstream, 44.rc, commit:56478f21e6641478f7509527fd3ed40169b2ec67
+---
+ js/ui/overview.js | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/js/ui/overview.js b/js/ui/overview.js
+index cd4b01b..757a8e4 100644
+--- a/js/ui/overview.js
++++ b/js/ui/overview.js
+@@ -692,6 +692,7 @@ var Overview = class extends Signals.EventEmitter {
+ 
+             if (!this._syncGrab()) {
+                 callback();
++                this.hide();
+                 return;
+             }
+ 
