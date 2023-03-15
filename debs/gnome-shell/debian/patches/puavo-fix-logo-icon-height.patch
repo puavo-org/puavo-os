@@ -1,0 +1,20 @@
+diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell.6/js/gdm/loginDialog.js
+--- gnome-shell/js/gdm/loginDialog.js	2023-03-16 12:41:31.412029059 +0200
++++ gnome-shell/js/gdm/loginDialog.js	2023-03-16 12:55:17.540853557 +0200
+@@ -35,6 +35,7 @@
+ const UserWidget = imports.ui.userWidget;
+ 
+ const _FADE_ANIMATION_TIME = 250;
++const _LOGO_ICON_HEIGHT = 48;
+ const _SCROLL_ANIMATION_TIME = 500;
+ const _TIMED_LOGIN_IDLE_THRESHOLD = 5.0;
+ 
+@@ -828,7 +829,7 @@
+         if (this._logoFile) {
+             let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+             this._logoBin.add_child(this._textureCache.load_file_async(this._logoFile,
+-                                                                       -1, -1,
++                                                                       -1, _LOGO_ICON_HEIGHT,
+                                                                        scaleFactor,
+                                                                        resourceScale));
+         }
