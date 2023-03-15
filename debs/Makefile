@@ -3,6 +3,7 @@
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
 _pkgs_ports := hooktftp      \
+               gnome-shell   \
                libpam-ccreds \
                veyon         \
                wsmancli
@@ -12,7 +13,6 @@ _pkgs_ports := hooktftp      \
 #                cups-filters           \
 #                gnome-control-center   \
 #                gnome-network-displays \
-#                gnome-shell            \
 #                gtk+3.0                \
 #                incron                 \
 #                kde-spectacle          \
