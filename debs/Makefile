@@ -5,6 +5,7 @@ _pkgs_parts := puavo-ds puavo-os
 _pkgs_ports := hooktftp      \
                gnome-shell   \
                libpam-ccreds \
+               nbd           \
                veyon         \
                wsmancli
 
@@ -17,7 +18,6 @@ _pkgs_ports := hooktftp      \
 #                incron                 \
 #                kde-spectacle          \
 #                mutter                 \
-#                nbd                    \
 #                openboard              \
 #                pinta                  \
 #                qtbase-opensource-src  \
