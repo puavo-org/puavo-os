@@ -1,1 +1,7 @@
-{"shell-version": ["3.22.3"], "uuid": "hostinfo@puavo.org", "description": "Shows host type, host name and other information in the login screen", "name": "Host info in the login screen"}
+{
+  "description": "Shows host type, host name and other information in the login screen",
+  "name": "Host info in the login screen",
+  "session-modes": [ "gdm", "user" ],
+  "shell-version": [ "43" ],
+  "uuid": "hostinfo@puavo.org"
+}

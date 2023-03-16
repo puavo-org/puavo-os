@@ -37,7 +37,8 @@ class gnome_shell_extensions {
     , 'Move_Clock@rmy.pobox.com'
     , 'puavomenu@puavo.org'
     , 'TopIcons@phocean.net'
-    , 'uparrows@puavo.org' ]:
+    , 'uparrows@puavo.org'
+    , 'user-theme@gnome-shell-extensions.gcampax.github.com' ]:
       ;
   }
 
