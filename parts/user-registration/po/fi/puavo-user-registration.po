@@ -339,7 +339,7 @@ msgstr "Yhdistetty!"
 msgid "Connection failed"
 msgstr "Yhteyden muodostus epäonnistui"
 
-#: page_network.py:366
+#: page_network.py:366 data/network.glade:55
 msgid "Connect to network"
 msgstr "Yhdistä verkkoon"
 
@@ -394,7 +394,7 @@ msgstr ""
 "nyt, voit tehdä sen myöhemmin ja käyttää tätä konetta tilapäisesti vieras-"
 "tilassa klikkaamalla"
 
-#: page_welcome.py:34
+#: page_welcome.py:34 data/main_window.glade:59
 msgid "Go to desktop"
 msgstr "Siirry työpöydälle"
 
@@ -402,11 +402,100 @@ msgstr "Siirry työpöydälle"
 msgid "button in the bottom corner."
 msgstr "painiketta alareunassa."
 
+#: data/account.glade:22
+msgid "First name:"
+msgstr "Etunimi:"
+
+#: data/account.glade:37
+msgid "Last name:"
+msgstr "Sukunimi:"
+
+#: data/account.glade:53 data/login.glade:23
+msgid "Login name:"
+msgstr "Käyttäjätunnus:"
+
+#: data/account.glade:68
+msgid "Email address:"
+msgstr "Sähköpostiosoite:"
+
+#: data/account.glade:83 data/login.glade:38
+msgid "Login password:"
+msgstr "Salasana:"
+
+#: data/account.glade:98
+msgid "Password confirmation:"
+msgstr "Salasanan vahvistus:"
+
+#: data/account.glade:113
+msgid "Language:"
+msgstr "Kieli:"
+
+#: data/account.glade:129
+msgid "Phone number:"
+msgstr "Puhelinnumero:"
+
+#: data/account.glade:271
+msgid ""
+"The phone number is optional. It is used only for technical support.\n"
+"Please enter only digits, + and - -signs."
+msgstr ""
+"Puhelinnumero on valinnainen. Sitä käytetään vain tukitilanteissa.\n"
+"Käytäthän vain numeroita, + ja - -merkkejä."
+
+#: data/account.glade:290
+msgid ""
+"You will receive a confirmation to your email.  The address is also used for "
+"password resets."
+msgstr ""
+"Saat sähköpostiisi vahvistuksen rekisteröinnistä.  Osoitetta käytetään myös "
+"salasanan nollauksiin."
+
+#: data/account.glade:355 data/login.glade:123
+msgid "Previous"
+msgstr "Edellinen"
+
+#: data/account.glade:370
+msgid "Create your account!"
+msgstr "Luo tunnus!"
+
+#: data/complete.glade:42
+msgid "Finish and reboot"
+msgstr "Lopeta ja uudelleenkäynnistä"
+
+#: data/login.glade:78
+msgid "Login"
+msgstr "Kirjaudu"
+
+#: data/login.glade:138
+msgid "No user account?  Create one!"
+msgstr "Ei käyttäjätunnusta?  Luo uusi!"
+
+#: data/main_window.glade:7
+msgid "New User Registration"
+msgstr "Uuden käyttäjän rekisteröinti"
+
+#: data/main_window.glade:77
+msgid "Privacy policy"
+msgstr "Rekisteriseloste"
+
+#: data/network.glade:75
+msgid "Username:"
+msgstr "Käyttäjätunnus:"
+
+#: data/network.glade:106
+msgid "Password:"
+msgstr "Salasana:"
+
+#: data/network.glade:146
+msgid "Connect"
+msgstr "Yhdistä"
+
+#: data/network.glade:203 data/welcome.glade:54
+msgid "Next"
+msgstr "Seuraava"
+
 #~ msgid "Unknown login error:"
 #~ msgstr "Tuntematon kirjautumisvirhe:"
-
-#~ msgid "Privacy policy"
-#~ msgstr "Rekisteriseloste"
 
 #~ msgid "If you already have an account, choose"
 #~ msgstr "Jos sinulla on jo tunnus, valitse"
@@ -414,76 +503,8 @@ msgstr "painiketta alareunassa."
 #~ msgid "Login with existing account"
 #~ msgstr "Kirjaudu jo luodulla tunnuksella"
 
-#~ msgid "First name:"
-#~ msgstr "Etunimi:"
-
-#~ msgid "Last name:"
-#~ msgstr "Sukunimi:"
-
-#~ msgid "Login name:"
-#~ msgstr "Käyttäjätunnus:"
-
-#~ msgid "Email address:"
-#~ msgstr "Sähköpostiosoite:"
-
-#~ msgid "Login password:"
-#~ msgstr "Salasana:"
-
-#~ msgid "Password confirmation:"
-#~ msgstr "Salasanan vahvistus:"
-
-#~ msgid "Language:"
-#~ msgstr "Kieli:"
-
-#~ msgid "Phone number:"
-#~ msgstr "Puhelinnumero:"
-
-#~ msgid ""
-#~ "The phone number is optional. It is used only for technical support.\n"
-#~ "Please enter only digits, + and - -signs."
-#~ msgstr ""
-#~ "Puhelinnumero on valinnainen. Sitä käytetään vain tukitilanteissa.\n"
-#~ "Käytäthän vain numeroita, + ja - -merkkejä."
-
-#~ msgid ""
-#~ "You will receive a confirmation to your email.  The address is also used "
-#~ "for password resets."
-#~ msgstr ""
-#~ "Saat sähköpostiisi vahvistuksen rekisteröinnistä.  Osoitetta käytetään "
-#~ "myös salasanan nollauksiin."
-
-#~ msgid "Previous"
-#~ msgstr "Edellinen"
-
-#~ msgid "Create your account!"
-#~ msgstr "Luo tunnus!"
-
-#~ msgid "Finish and reboot"
-#~ msgstr "Lopeta ja uudelleenkäynnistä"
-
-#~ msgid "New User Registration"
-#~ msgstr "Uuden käyttäjän rekisteröinti"
-
 #~ msgid "Privacy Policy"
 #~ msgstr "Rekisteriseloste"
-
-#~ msgid "Username:"
-#~ msgstr "Käyttäjätunnus:"
-
-#~ msgid "Password:"
-#~ msgstr "Salasana:"
-
-#~ msgid "Connect"
-#~ msgstr "Yhdistä"
-
-#~ msgid "Next"
-#~ msgstr "Seuraava"
-
-#~ msgid "Login"
-#~ msgstr "Kirjaudu"
-
-#~ msgid "No user account?  Create one!"
-#~ msgstr "Ei käyttäjätunnusta?  Luo uusi!"
 
 #~ msgid ""
 #~ "This host has already been registered\n"

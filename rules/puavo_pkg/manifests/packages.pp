@@ -1,7 +1,7 @@
 class puavo_pkg::packages {
   include ::puavo_conf
   include ::puavo_pkg
-  include ::trusty_libs
+  include ::trusty_libs         # needed by globilab and vstloggerpro
 
   # list removed puavo-pkg packages here
   ::puavo_conf::definition {
@@ -61,6 +61,7 @@ class puavo_pkg::packages {
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
+			, 'teams'
 			, 'tela-icon-theme'
 			, 'tilitin'
 			, 't-lasku'

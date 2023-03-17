@@ -10,7 +10,6 @@
       <object class="GtkLabel" id="complete_title">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">HELLO WORLD</property>
         <style>
           <class name="complete_title"/>
         </style>
@@ -25,7 +24,6 @@
       <object class="GtkLabel" id="complete_text">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">label</property>
         <style>
           <class name="complete_text"/>
         </style>

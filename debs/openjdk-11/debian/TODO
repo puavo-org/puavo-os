@@ -1,0 +1,10 @@
+to remove:
+hotspot-set-compiler.diff
+hotspot-warn-no-errformat.diff
+
+evaluate:
+ld-symbolic-functions.diff still needed?
+hotspot-sparc-arch.diff
+pass-extra-flags.diff
+hotspot-disable-werror.diff
+hotspot-undefined-target-cpu.diff

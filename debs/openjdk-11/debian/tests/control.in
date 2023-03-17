@@ -1,0 +1,15 @@
+Test-Command: java --version
+Depends: openjdk-11-jre-headless
+Restrictions: superficial
+
+Test-Command: javac --version
+Depends: openjdk-11-jdk-headless
+Restrictions: superficial
+
+#Tests: hotspot, jaxp, langtools
+#Depends: @, default-jre-headless, @jtreg_pkg@:native (>= @min_jtreg_version@), testng:native, build-essential
+#Restrictions: allow-stderr, skippable, flaky
+
+#Tests: jdk
+#Depends: @, default-jre-headless, @jtreg_pkg@:native (>= @min_jtreg_version@), testng:native, build-essential, xfwm4:native, xvfb, dbus-x11
+#Restrictions: allow-stderr, skippable, flaky

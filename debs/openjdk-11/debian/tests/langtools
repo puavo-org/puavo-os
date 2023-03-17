@@ -1,0 +1,8 @@
+#!/bin/bash
+set -o errexit
+set -o errtrace
+set -o pipefail
+set -o nounset
+
+debian/tests/jtreg-autopkgtest.sh langtools -exclude:test/langtools/ProblemList.txt -dir:test/langtools jdk tools lib || true
+debian/tests/jtdiff-autopkgtest.sh langtools

@@ -1,0 +1,12 @@
+#!/bin/bash
+set -o errexit
+set -o errtrace
+set -o pipefail
+set -o nounset
+
+debian/tests/jtreg-autopkgtest.sh hotspot \
+	-exclude:test/hotspot/jtreg/ProblemList.txt \
+	-dir:test/hotspot/jtreg \
+	:hotspot_compiler :hotspot_gc :hotspot_runtime :hotspot_serviceability || true
+
+debian/tests/jtdiff-autopkgtest.sh hotspot

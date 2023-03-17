@@ -326,7 +326,7 @@ msgstr ""
 msgid "Connection failed"
 msgstr ""
 
-#: page_network.py:366
+#: page_network.py:366 data/network.glade:55
 msgid "Connect to network"
 msgstr ""
 
@@ -376,10 +376,98 @@ msgid ""
 "later and use this host temporarily in guest-mode by clicking the"
 msgstr ""
 
-#: page_welcome.py:34
+#: page_welcome.py:34 data/main_window.glade:59
 msgid "Go to desktop"
 msgstr ""
 
 #: page_welcome.py:35
 msgid "button in the bottom corner."
+msgstr ""
+
+#: data/account.glade:22
+msgid "First name:"
+msgstr ""
+
+#: data/account.glade:37
+msgid "Last name:"
+msgstr ""
+
+#: data/account.glade:53 data/login.glade:23
+msgid "Login name:"
+msgstr ""
+
+#: data/account.glade:68
+msgid "Email address:"
+msgstr ""
+
+#: data/account.glade:83 data/login.glade:38
+msgid "Login password:"
+msgstr ""
+
+#: data/account.glade:98
+msgid "Password confirmation:"
+msgstr ""
+
+#: data/account.glade:113
+msgid "Language:"
+msgstr ""
+
+#: data/account.glade:129
+msgid "Phone number:"
+msgstr ""
+
+#: data/account.glade:271
+msgid ""
+"The phone number is optional. It is used only for technical support.\n"
+"Please enter only digits, + and - -signs."
+msgstr ""
+
+#: data/account.glade:290
+msgid ""
+"You will receive a confirmation to your email.  The address is also used for "
+"password resets."
+msgstr ""
+
+#: data/account.glade:355 data/login.glade:123
+msgid "Previous"
+msgstr ""
+
+#: data/account.glade:370
+msgid "Create your account!"
+msgstr ""
+
+#: data/complete.glade:42
+msgid "Finish and reboot"
+msgstr ""
+
+#: data/login.glade:78
+msgid "Login"
+msgstr ""
+
+#: data/login.glade:138
+msgid "No user account?  Create one!"
+msgstr ""
+
+#: data/main_window.glade:7
+msgid "New User Registration"
+msgstr ""
+
+#: data/main_window.glade:77
+msgid "Privacy policy"
+msgstr ""
+
+#: data/network.glade:75
+msgid "Username:"
+msgstr ""
+
+#: data/network.glade:106
+msgid "Password:"
+msgstr ""
+
+#: data/network.glade:146
+msgid "Connect"
+msgstr ""
+
+#: data/network.glade:203 data/welcome.glade:54
+msgid "Next"
 msgstr ""

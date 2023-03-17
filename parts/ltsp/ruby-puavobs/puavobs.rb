@@ -204,7 +204,7 @@ module PuavoBS
   def self.remove_user(admin_username, admin_password, user_username)
     user_id = self.get_user_id(admin_username, admin_password, user_username)
 
-    url = self.get_api_url("/v3/users/#{ user_username }/mark_for_deletion")
+    url = self.get_api_url("/v3/users/#{ user_username }")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .delete(url)

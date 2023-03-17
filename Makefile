@@ -127,7 +127,7 @@ install: install-parts
 
 # mainly for development use
 .PHONY: install-parts
-install-parts: /puavo-os
+install-parts: /etc/puavo-image/class
 	$(_sudo) $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: help
@@ -321,7 +321,7 @@ upload-debs:
 	dput puavo debs/.archive/pool/*.changes
 
 .PHONY: apply-rules
-apply-rules: /puavo-os
+apply-rules: /etc/puavo-image/class
 	$(_sudo) .aux/setup-debconf
 	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
 	    'FACTER_puavoruleset=$(image_class)' .aux/apply-rules
@@ -375,6 +375,6 @@ release-builds:
 	sudo -E rootfs_dir_base=$(rootfs_dir_base) \
 	    .aux/release-builds $(all_image_classes)
 
-/puavo-os:
+/etc/puavo-image/class:
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false

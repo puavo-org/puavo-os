@@ -1,0 +1,35 @@
+--- a/src/java.base/unix/native/launcher/jexec.c
++++ b/src/java.base/unix/native/launcher/jexec.c
+@@ -168,9 +168,10 @@ int main(int argc, const char * argv[])
+ 
+     /* Get the path to the java binary, which is in a known position relative
+      * to our current position, which is in argv[0]. */
+-    if (getJavaPath(argv[argi++], java, RELATIVE_DEPTH) != 0) {
++    if (getJavaPath(JDK_BASE_DIR "/lib/jexec", java, RELATIVE_DEPTH) != 0) {
+         errorExit(errno, MISSING_JAVA_MSG);
+     }
++    argi++;
+     alen = (argc + 2) * (sizeof (const char *));
+     if (alen <= 0 || alen > INT_MAX / sizeof(char *)) {
+         errorExit(errno, BAD_ARG_MSG);
+--- a/make/launcher/Launcher-java.base.gmk
++++ b/make/launcher/Launcher-java.base.gmk
+@@ -57,6 +57,9 @@ $(eval $(call SetupBuildLauncher, keytoo
+ ################################################################################
+ 
+ ifeq ($(OPENJDK_TARGET_OS), linux)
++  ifeq (,$(DEBIAN_JDK_BASE_DIR))
++    $(error DEBIAN_JDK_BASE_DIR must be defined for jexec build)
++  endif
+   $(eval $(call SetupJdkExecutable, BUILD_JEXEC, \
+       NAME := jexec, \
+       SRC := $(TOPDIR)/src/$(MODULE)/unix/native/launcher, \
+@@ -64,7 +67,7 @@ ifeq ($(OPENJDK_TARGET_OS), linux)
+       OPTIMIZATION := LOW, \
+       CFLAGS := $(CFLAGS_JDKEXE) \
+           -I$(TOPDIR)/src/$(MODULE)/share/native/libjli, \
+-      CFLAGS_linux := -fPIC, \
++      CFLAGS_linux := -fPIC '-DJDK_BASE_DIR="$(DEBIAN_JDK_BASE_DIR)"', \
+       CFLAGS_solaris := -KPIC, \
+       LDFLAGS := $(LDFLAGS_JDKEXE), \
+       OUTPUT_DIR := $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE), \

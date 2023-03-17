@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+if [ $# -le 3 ]; then
+  echo "Usage: $(basename "$0") url sha384sum destdir file1 [file2 ...]" >&2
+  exit 1
+fi
+
+deb_url=$1           ; shift
+expected_sha384sum=$1; shift
+destdir=$1           ; shift
+
+tmpdir=$(mktemp -d /tmp/unpack_a_file_from_deb.XXXXXX)
+
+cleanup() {
+  rm -rf "$tmpdir"
+}
+
+trap cleanup 0
+
+cd "$tmpdir"
+
+wget -O deb "$deb_url"
+
+deb_sha384sum=$(sha384sum deb | awk '{ print $1 }')
+if [ "$deb_sha384sum" != "$expected_sha384sum" ]; then
+  echo "expected sha384sum was ${expected_sha384sum}, got ${deb_sha384sum}" >&2
+  exit 1
+fi
+
+dpkg-deb -x deb data
+
+for srcpath in "$@"; do
+  destpath="${destdir}/$(basename "$srcpath")"
+  mkdir -p "$(dirname "$destpath")"
+  cp -p "data/${srcpath}" "${destpath}.tmp"
+  mv "${destpath}.tmp" "$destpath"
+done

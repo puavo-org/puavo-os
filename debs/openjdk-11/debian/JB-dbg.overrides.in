@@ -1,0 +1,7 @@
+# this are pre-stripped binaries (fastdebug)
+@basename@-dbg binary: library-in-debug-or-profile-should-not-be-stripped
+@basename@-dbg binary: debug-file-with-no-debug-symbols
+
+# these are java's .debuginfo files ...
+@basename@-dbg binary: binary-with-bad-dynamic-table
+@basename@-dbg binary: statically-linked-binary

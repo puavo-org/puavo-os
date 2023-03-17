@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+set -e
+
+jdk_hl_tools='@jdk_hl_tools@'
+basedir=/@basedir@
+
+
+if [ "$1" = "remove" ] || [ "$1" = "deconfigure" ]; then
+    for i in $jdk_hl_tools; do
+	update-alternatives --remove $i $basedir/bin/$i
+    done
+fi
+
+#DEBHELPER#
