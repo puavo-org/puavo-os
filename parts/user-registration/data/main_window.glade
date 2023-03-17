@@ -16,7 +16,6 @@
         <child>
           <object class="GtkLabel" id="main_title">
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Page title goes here</property>
             <style>
               <class name="main_title"/>
             </style>
