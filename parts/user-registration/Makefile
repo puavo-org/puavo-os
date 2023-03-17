@@ -16,6 +16,8 @@ PY_FILES = page_account.py page_complete.py page_definition.py \
 po/puavo-user-registration.pot: puavo-user-registration ${PY_FILES}
 	xgettext --from-code UTF-8 --omit-header --language python \
             --keyword=_tr -o $@ $^
+	xgettext -j --omit-header --language Glade -o po/puavo-user-registration.pot data/account.glade \
+            data/complete.glade data/login.glade data/main_window.glade data/network.glade data/welcome.glade
 
 %.po: po/puavo-user-registration.pot
 	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
