@@ -264,6 +264,8 @@ var DesktopManager = class {
     }
 
     updateGridWindows(newdesktoplist) {
+        if (newdesktoplist.length==0) // Not visible, not in a consistent state, so don't do anything
+          return;
         if (newdesktoplist.length != this._desktopList.length) {
             this._fileList.forEach(x => x.removeFromGrid());
             this._desktopList = newdesktoplist;
