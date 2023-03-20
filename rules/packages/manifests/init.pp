@@ -782,10 +782,10 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-4.19.0-23-amd64';
 
-    '5.10.0-0.deb10.20-amd64':
+    '5.10.0-0.deb10.21-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module
                       , $virtualbox_module ],
-      package_name => 'linux-image-5.10.0-0.deb10.20-amd64';
+      package_name => 'linux-image-5.10.0-0.deb10.21-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by
