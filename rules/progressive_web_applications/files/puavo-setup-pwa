@@ -12,7 +12,7 @@ get_icon_url() {
   local manifest_path
   manifest_path=$1
 
-  for size in 256x256 128x128 64x64 32x32 16x16; do
+  for size in 256x256 192x192 128x128 96x96 64x64 32x32 16x16; do
     icon_url=$(jq -r --arg size "$size" '
                  .icons[] | select(.sizes == $size) | .src
                ' "$manifest_path") || true
@@ -29,6 +29,13 @@ get_icon_url() {
 get_manifest_url() {
   local url
   url=$1
+
+  # If we get an url with .json suffix, we assume we already have a manifest
+  # url, otherwise we try fetching a page and see if we find a manifest link.
+  if printf %s "$url" | grep -q '\.json$'; then
+    printf %s "$url"
+    return 0
+  fi
 
   wget -q -O - --user-agent="$user_agent" "$url" \
     | perl -lne '
@@ -84,6 +91,14 @@ case "$icon_suffix" in
     echo "Unsupported icon format at $pwa_icon_url" >&2
     exit 1
     ;;
+esac
+
+case "$pwa_icon_url" in
+  http*) ;;
+  *) pwa_icon_urlbase="$(printf %s "$pwa_manifest_url" \
+                           | perl -lne 'm|^(https?://.*?/)| && print "$1\n"')"
+     pwa_icon_url="${pwa_icon_urlbase}/${pwa_icon_url}"
+     ;;
 esac
 
 mkdir -p "$icon_dir"
