@@ -1,0 +1,109 @@
+#!/bin/sh
+
+set -eu
+
+applications_dir='/var/lib/puavo-pwa/applications'
+icon_dir='/var/lib/puavo-pwa/icons'
+manifests_dir='/var/lib/puavo-pwa/manifests'
+
+user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
+
+get_icon_url() {
+  local manifest_path
+  manifest_path=$1
+
+  for size in 256x256 128x128 64x64 32x32 16x16; do
+    icon_url=$(jq -r --arg size "$size" '
+                 .icons[] | select(.sizes == $size) | .src
+               ' "$manifest_path") || true
+    if [ -n "$icon_url" -a "$icon_url" != 'null' ]; then
+      printf %s "$icon_url"
+      return 0
+    fi
+  done
+
+  echo 'Could not find an icon url' >&2
+  return 1
+}
+
+get_manifest_url() {
+  local url
+  url=$1
+
+  wget -q -O - --user-agent="$user_agent" "$url" \
+    | perl -lne '
+        BEGIN { $status = 1 };
+        /.*<(.*link.*rel="manifest".*?)\/>/ && $1 =~ /href="(.*?)"/
+          && do { $status = 0; print $1; exit($status) };
+        END { exit($status) }
+      '
+}
+
+name=${1:-}
+url=${2:-}
+
+if [ -z "$name" -o -z "$url" ]; then
+  echo "Usage: $(basename "$0") name url" >&2
+  exit 1
+fi
+
+if ! pwa_manifest_url=$(get_manifest_url "$url"); then
+  echo "could not read PWA manifest url from ${url}" >&2
+  exit 1
+fi
+
+manifest_path="${manifests_dir}/${name}.json"
+manifest_tmppath="${manifest_path}.tmp"
+
+mkdir -p "$manifests_dir"
+manifest_json=$(wget -q --compression=auto -O "${manifest_tmppath}" \
+                  --user-agent="$user_agent" "$pwa_manifest_url")
+
+pwa_name="$(jq -r .short_name "$manifest_tmppath")"
+if [ -z "$name" ]; then
+  echo "name is missing from manifest in ${url}" >&2
+  exit 1
+fi
+
+pwa_description="$(jq -r .name "$manifest_tmppath")"
+if [ -z "$pwa_description" ]; then
+  echo "description is missing from manifest in ${url}" >&2
+  exit 1
+fi
+
+pwa_icon_url=$(get_icon_url "$manifest_tmppath")
+if [ -z "$pwa_icon_url" ]; then
+  echo "icon url is missing from manifest in ${url}" >&2
+  exit 1
+fi
+
+icon_suffix="${pwa_icon_url##*.}"
+case "$icon_suffix" in
+  jpeg|jpg|png|svg|svgz|xpm) ;;
+  *)
+    echo "Unsupported icon format at $pwa_icon_url" >&2
+    exit 1
+    ;;
+esac
+
+mkdir -p "$icon_dir"
+icon_path="${icon_dir}/${name}.${icon_suffix}"
+wget -q -O "$icon_path" "$pwa_icon_url"
+
+mkdir -p "$applications_dir"
+desktop_path="${applications_dir}/${name}.desktop"
+cat <<EOF > "$desktop_path"
+[Desktop Entry]
+Type=Application
+Name=${pwa_name}
+Description=${pwa_description}
+Icon=${icon_path}
+Exec=puavo-pwa ${name}
+EOF
+
+# link to /usr/local/share/applications
+mkdir -p /usr/local/share/applications
+ln -fns "$desktop_path" /usr/local/share/applications/
+
+# we are ready
+mv "$manifest_tmppath" "$manifest_path"
