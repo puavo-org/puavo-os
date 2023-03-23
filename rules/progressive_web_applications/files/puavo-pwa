@@ -1,0 +1,147 @@
+#!/bin/sh
+
+set -eu
+
+# XXX prepackage the results of this tool for guest user!
+# XXX there should be a lock that only one install per user of this script
+# XXX should be running
+
+cleanup() {
+  if [ -n "$browser_pid" ]; then
+    kill "$browser_pid" || true
+    browser_pid=
+  fi
+  if [ -n "$xvfb_pid" ]; then
+    kill "$xvfb_pid" || true
+    xvfb_pid=
+  fi
+}
+
+get_browser_bin_name() {
+  if [ "$browser" = 'chrome' ]; then
+    printf %s google-chrome-stable
+    return 0
+  fi
+  printf %s "$browser"
+}
+
+get_browser_preferences_path() {
+  # XXX why "Default" ?  should you check the profile is correct?
+  if [ "$browser" = 'chrome' ]; then
+    printf %s ~/.config/google-chrome/Default/Preferences
+    return 0
+  fi
+
+  printf %s ~/".config/${browser}/Default/Preferences"
+}
+
+set -x
+
+# XXX the browser should be configurable to chromium or chrome with a command
+# XXX line parameter or something?  or maybe we have it in
+# XXX /var/lib/puavo-pwa/${pwa_name}/browser ?
+# XXX we should also check that the browser is actually installed
+
+# XXX we should also check that chrome/chromium is configured to install
+# XXX the particular PWA we need!
+
+# XXX $browser must be chrome or chromium
+browser=chrome
+browser=chromium
+browser_bin=$(get_browser_bin_name "$browser")
+browser_preferences_path=$(get_browser_preferences_path "$browser")
+
+browser_pid=
+xvfb_pid=
+
+trigger_pwa_installation() {
+  local fake_display i pwa_url
+  pwa_url=$1
+
+  fake_display=:71
+
+  Xvfb "$fake_display" >/dev/null 2>&1 & xvfb_pid=$!
+
+  i=0
+  while [ "$i" -lt 100 ]; do
+    if env DISPLAY="$fake_display" xterm -e true >/dev/null 2>&1; then
+      break
+    fi
+    sleep 0.1
+    i=$(($i + 1))
+  done
+
+  env DISPLAY="$fake_display" "$browser_bin" >/dev/null 2>&1 & browser_pid=$!
+}
+
+wait_for_app_installation() {
+  local app_id i pwa_url
+  pwa_url=$1
+
+  i=0
+  while [ "$i" -lt 60 ]; do
+    if app_id=$(lookup_app_id "$pwa_url"); then
+      printf %s "$app_id"
+      return 0
+    fi
+    sleep 1
+    i=$(($i + 1))
+  done
+
+  return 1
+}
+
+lookup_app_id() {
+  local app_id pwa_url
+  pwa_url=$1
+
+  app_id="$(jq -r --arg pwa_url "$pwa_url" '
+              .web_apps.extension_ids[$pwa_url].extension_id
+            ' "$browser_preferences_path" 2>/dev/null || true)"
+
+  if [ -n "$app_id" -a "$app_id" != 'null' ]; then
+    printf %s "$app_id"
+    return 0
+  fi
+
+  return 1
+}
+
+trap cleanup 0 ABRT INT PIPE QUIT TERM
+
+manifests_dir='/var/lib/puavo-pwa/manifests'
+
+pwa_name=${1:-}
+
+if [ -z "$pwa_name" ]; then
+  echo "Usage: $(basename "$0") pwa_name" >&2
+  exit 1
+fi
+
+manifest_path="${manifests_dir}/${pwa_name}.json"
+
+pwa_url="$(jq -r .start_url "$manifest_path" 2>/dev/null || true)"
+if [ -z "$pwa_url" -o "$pwa_url" = 'null' ]; then
+  echo "Can not read pwa_url from ${manifest_path}" >&2
+  exit 1
+fi
+
+if ! app_id=$(lookup_app_id "$pwa_url"); then
+  if ! pgrep -U "$USER" -x "$browser"; then
+    if ! trigger_pwa_installation "$pwa_url"; then
+      # XXX should user be notified?
+      echo "Could not trigger PWA installation ${pwa_url}" >&2
+      exit 1
+    fi
+  fi
+
+  if ! app_id=$(wait_for_app_installation "$pwa_url"); then
+    # XXX should user be notified?
+    echo "PWA app installation was not successful for ${pwa_url}" >&2
+    exit 1
+  fi
+fi
+
+cleanup || true
+
+exec "$browser_bin" --profile-directory=Default --app-id="$app_id"
