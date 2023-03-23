@@ -34,12 +34,12 @@ get_browser() {
   printf %s "$browser"
 }
 
-get_browser_bin_name() {
+get_browser_path() {
   if [ "$browser" = 'chrome' ]; then
-    printf %s google-chrome-stable
+    echo /usr/bin/google-chrome-stable
     return 0
   fi
-  printf %s "$browser"
+  echo /usr/bin/chromium
 }
 
 get_browser_preferences_path() {
@@ -80,7 +80,7 @@ trigger_pwa_installation() {
     i=$(($i + 1))
   done
 
-  env DISPLAY="$fake_display" "$browser_bin" >/dev/null 2>&1 & browser_pid=$!
+  env DISPLAY="$fake_display" "$browser_path" >/dev/null 2>&1 & browser_pid=$!
 }
 
 wait_for_app_installation() {
@@ -138,7 +138,12 @@ if ! browser=$(get_browser "$pwa_dir"); then
   exit 1
 fi
 
-browser_bin=$(get_browser_bin_name "$browser")
+browser_path=$(get_browser_path "$browser")
+if [ ! -x "$browser_path" ]; then
+  echo "$browser is not installed or not found in path $browser_path" >&2
+  exit 1
+fi
+
 browser_preferences_path=$(get_browser_preferences_path "$browser")
 
 pwa_url="$(cat "$pwa_url_path" 2>/dev/null || true)"
@@ -165,4 +170,4 @@ fi
 
 cleanup || true
 
-exec "$browser_bin" --profile-directory=Default --app-id="$app_id"
+exec "$browser_path" --profile-directory=Default --app-id="$app_id"
