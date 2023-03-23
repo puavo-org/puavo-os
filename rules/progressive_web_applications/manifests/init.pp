@@ -1,10 +1,10 @@
 class progressive_web_applications {
-  define install ($url) {
+  define install ($browser, $url) {
     $pwa_name = $title
 
     exec {
-      "/usr/local/lib/puavo-setup-pwa ${pwa_name} ${url}":
-        creates => "/var/lib/puavo-pwa/manifests/${name}.json",
+      "/usr/local/lib/puavo-setup-pwa ${pwa_name} ${url} ${browser}":
+        creates => "/var/lib/puavo-pwa/${pwa_name}",
         require => File['/usr/local/lib/puavo-setup-pwa'];
     }
   }
@@ -20,6 +20,8 @@ class progressive_web_applications {
   }
 
   Progressive_web_applications::Install {
-    'teams': url => 'https://teams.microsoft.com/manifest.json';
+    'teams':
+      browser => 'chrome',
+      url     => 'https://teams.microsoft.com/manifest.json';
   }
 }

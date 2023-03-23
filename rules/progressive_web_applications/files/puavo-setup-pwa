@@ -2,9 +2,7 @@
 
 set -eu
 
-applications_dir='/var/lib/puavo-pwa/applications'
-icon_dir='/var/lib/puavo-pwa/icons'
-manifests_dir='/var/lib/puavo-pwa/manifests'
+pwa_basedir='/var/lib/puavo-pwa'
 
 user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
 
@@ -48,37 +46,54 @@ get_manifest_url() {
 
 name=${1:-}
 url=${2:-}
+browser=${3:-}
 
-if [ -z "$name" -o -z "$url" ]; then
-  echo "Usage: $(basename "$0") name url" >&2
+if [ -z "$name" -o -z "$url" -o -z "$browser" ]; then
+  echo "Usage: $(basename "$0") name url browser" >&2
   exit 1
 fi
+
+if ! printf %s "$name" | grep -Eqx '[A-Za-z0-9-]+'; then
+  echo "Usage: name '${name}' contains unaccepted characters" >&2
+  exit 1
+fi
+
+case "$browser" in
+  chrome|chromium)
+    ;;
+  *)
+    echo 'Only "chrome" and "chromium" are supported browsers.' >&2
+    exit 1
+    ;;
+esac
 
 if ! pwa_manifest_url=$(get_manifest_url "$url"); then
   echo "could not read PWA manifest url from ${url}" >&2
   exit 1
 fi
 
-manifest_path="${manifests_dir}/${name}.json"
-manifest_tmppath="${manifest_path}.tmp"
+pwa_dir="${pwa_basedir}/${name}"
+pwa_tmpdir="${pwa_dir}.tmp"
 
-mkdir -p "$manifests_dir"
-manifest_json=$(wget -q --compression=auto -O "${manifest_tmppath}" \
+mkdir -p "$pwa_tmpdir"
+
+manifest_path="${pwa_tmpdir}/manifest.json"
+manifest_json=$(wget -q --compression=auto -O "$manifest_path" \
                   --user-agent="$user_agent" "$pwa_manifest_url")
 
-pwa_name="$(jq -r .short_name "$manifest_tmppath")"
+pwa_name="$(jq -r .short_name "$manifest_path")"
 if [ -z "$name" ]; then
   echo "name is missing from manifest in ${url}" >&2
   exit 1
 fi
 
-pwa_description="$(jq -r .name "$manifest_tmppath")"
+pwa_description="$(jq -r .name "$manifest_path")"
 if [ -z "$pwa_description" ]; then
   echo "description is missing from manifest in ${url}" >&2
   exit 1
 fi
 
-pwa_icon_url=$(get_icon_url "$manifest_tmppath")
+pwa_icon_url=$(get_icon_url "$manifest_path")
 if [ -z "$pwa_icon_url" ]; then
   echo "icon url is missing from manifest in ${url}" >&2
   exit 1
@@ -101,13 +116,14 @@ case "$pwa_icon_url" in
      ;;
 esac
 
-mkdir -p "$icon_dir"
-icon_path="${icon_dir}/${name}.${icon_suffix}"
-wget -q -O "$icon_path" "$pwa_icon_url"
+icon_path="${pwa_dir}/icon.${icon_suffix}"
+tmp_icon_path="${pwa_tmpdir}/icon.${icon_suffix}"
+wget -q -O "$tmp_icon_path" "$pwa_icon_url"
 
-mkdir -p "$applications_dir"
-desktop_path="${applications_dir}/${name}.desktop"
-cat <<EOF > "$desktop_path"
+desktop_path="${pwa_dir}/${name}.desktop"
+tmp_desktop_path="${pwa_tmpdir}/${name}.desktop"
+
+cat <<EOF > "$tmp_desktop_path"
 [Desktop Entry]
 Type=Application
 Name=${pwa_name}
@@ -116,9 +132,11 @@ Icon=${icon_path}
 Exec=puavo-pwa ${name}
 EOF
 
+printf "%s\n" "$browser" > "${pwa_tmpdir}/browser"
+
 # link to /usr/local/share/applications
 mkdir -p /usr/local/share/applications
 ln -fns "$desktop_path" /usr/local/share/applications/
 
 # we are ready
-mv "$manifest_tmppath" "$manifest_path"
+mv "$pwa_tmpdir" "$pwa_dir"
