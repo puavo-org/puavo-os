@@ -389,6 +389,7 @@ StScrollBar {
   .popup-menu .popup-menu-content {
     padding: .7em 0em .7em 0em; }
   .popup-menu .popup-menu-item {
+    color:rgba(0, 0, 0, 0.9);
     spacing: 12px; }
     .popup-menu .popup-menu-item:ltr {
       padding: .4em 32px .4em 0em; }
@@ -403,7 +404,7 @@ StScrollBar {
       background-color: #5294e2;
       box-shadow: none; }
     .popup-menu .popup-menu-item:insensitive {
-      color: rgba(92, 97, 108, 0.5);
+      color: rgba(92, 97, 108, 1);
       background: none; }
   .popup-menu .popup-inactive-menu-item {
     color: #5c616c; }
@@ -600,7 +601,8 @@ StScrollBar {
   #panel.dynamic-top-bar-white-btn {
     border-image: none; }
   #panel.unlock-screen, #panel.login-screen {
-    background-color: transparent;
+    background-color: rgba(37, 42, 53, 0.75);
+    font-size:1.3em;
     border: none; }
     #panel.unlock-screen .panel-button:focus, #panel.unlock-screen .panel-button.clock-display .clock:focus, #panel.unlock-screen .panel-button:focus.clock-display .clock, #panel.unlock-screen .panel-button.clock-display .clock:focus.clock-display .clock, #panel.unlock-screen .panel-button:active, #panel.unlock-screen .panel-button.clock-display .clock:active, #panel.unlock-screen .panel-button:active.clock-display .clock, #panel.unlock-screen .panel-button.clock-display .clock:active.clock-display .clock, #panel.unlock-screen .panel-button:checked, #panel.unlock-screen .panel-button.clock-display .clock:checked, #panel.unlock-screen .panel-button:checked.clock-display .clock, #panel.unlock-screen .panel-button.clock-display .clock:checked.clock-display .clock, #panel.login-screen .panel-button:focus, #panel.login-screen .panel-button.clock-display .clock:focus, #panel.login-screen .panel-button:focus.clock-display .clock, #panel.login-screen .panel-button.clock-display .clock:focus.clock-display .clock, #panel.login-screen .panel-button:active, #panel.login-screen .panel-button.clock-display .clock:active, #panel.login-screen .panel-button:active.clock-display .clock, #panel.login-screen .panel-button.clock-display .clock:active.clock-display .clock, #panel.login-screen .panel-button:checked, #panel.login-screen .panel-button.clock-display .clock:checked, #panel.login-screen .panel-button:checked.clock-display .clock, #panel.login-screen .panel-button.clock-display .clock:checked.clock-display .clock {
       color: #ffffff;
@@ -2000,17 +2002,21 @@ StScrollBar {
   padding-bottom: 20px; }
 
 .login-dialog-user-selection-box {
-  padding: 100px 0px; }
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  padding: 50px 50px; }
 
 .login-dialog-not-listed-label {
   padding-left: 2px; }
   .login-dialog-not-listed-button:focus .login-dialog-not-listed-label, .login-dialog-not-listed-button:hover .login-dialog-not-listed-label {
-    color: white; }
+    color: white; 
+    text-decoration: underline;}
 
 .login-dialog-not-listed-label {
-  font-size: 10pt;
+  font-size: 14pt;
   font-weight: bold;
-  color: #BAC3CF;
+  color: rgba(247, 247, 247, 0.9);
+  text-shadow: 1px 1px black;
   padding-top: 1em; }
 
 .login-dialog-user-list-view {
@@ -2073,11 +2079,11 @@ StScrollBar {
   border-radius: 5px;}
   
 .login-dialog-prompt-entry {
+  font-size: 14pt;
   height: 1.5em; }
 
 .login-dialog-prompt-label {
   color: #BAC3CF;
-  font-size: 12pt;
   padding-top: 1em; }
 
 .unlock-dialog-clock {
