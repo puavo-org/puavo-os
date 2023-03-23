@@ -6,16 +6,37 @@ pwa_basedir='/var/lib/puavo-pwa'
 
 user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
 
+get_absolute_url() {
+  local pwa_url pwa_urlbase subpath
+  pwa_url=$1
+  urlpath=$2
+
+  case "$urlpath" in
+    http*)
+      printf %s "$urlpath"
+      ;;
+    /*)
+      pwa_urlbase="$(printf %s "$pwa_url" \
+                       | perl -lne 'm|^(https?://.*?)/| && print "$1\n"')"
+      printf '%s%s' "$pwa_urlbase" "$urlpath"
+      ;;
+    *)
+      echo "Unsupported url scheme: ${urlpath}" >&2
+      return 1
+      ;;
+  esac
+}
+
 get_icon_url() {
-  local manifest_path
-  manifest_path=$1
+  local icon_url pwa_url
+  pwa_url=$1
 
   for size in 256x256 192x192 128x128 96x96 64x64 32x32 16x16; do
     icon_url=$(jq -r --arg size "$size" '
                  .icons[] | select(.sizes == $size) | .src
                ' "$manifest_path") || true
     if [ -n "$icon_url" -a "$icon_url" != 'null' ]; then
-      printf %s "$icon_url"
+      get_absolute_url "$pwa_url" "$icon_url" || return 1
       return 0
     fi
   done
@@ -25,17 +46,17 @@ get_icon_url() {
 }
 
 get_manifest_url() {
-  local url
-  url=$1
+  local pwa_url
+  pwa_url=$1
 
   # If we get an url with .json suffix, we assume we already have a manifest
   # url, otherwise we try fetching a page and see if we find a manifest link.
-  if printf %s "$url" | grep -q '\.json$'; then
-    printf %s "$url"
+  if printf %s "$pwa_url" | grep -q '\.json$'; then
+    printf %s "$pwa_url"
     return 0
   fi
 
-  wget -q -O - --user-agent="$user_agent" "$url" \
+  wget -q -O - --user-agent="$user_agent" "$pwa_url" \
     | perl -lne '
         BEGIN { $status = 1 };
         /.*<(.*link.*rel="manifest".*?)\/>/ && $1 =~ /href="(.*?)"/
@@ -44,12 +65,25 @@ get_manifest_url() {
       '
 }
 
+get_pwa_start_url() {
+  local manifest_path pwa_url start_url
+  pwa_url=$1
+  manifest_path=$2
+
+  start_url="$(jq -r .start_url "$manifest_path" 2>/dev/null || true)"
+  if [ -z "$start_url" ]; then
+    return 1
+  fi
+
+  get_absolute_url "$pwa_url" "$start_url" || return 1
+}
+
 name=${1:-}
-url=${2:-}
+pwa_url=${2:-}
 browser=${3:-}
 
-if [ -z "$name" -o -z "$url" -o -z "$browser" ]; then
-  echo "Usage: $(basename "$0") name url browser" >&2
+if [ -z "$name" -o -z "$pwa_url" -o -z "$browser" ]; then
+  echo "Usage: $(basename "$0") name pwa_url browser" >&2
   exit 1
 fi
 
@@ -67,8 +101,8 @@ case "$browser" in
     ;;
 esac
 
-if ! pwa_manifest_url=$(get_manifest_url "$url"); then
-  echo "could not read PWA manifest url from ${url}" >&2
+if ! pwa_manifest_url=$(get_manifest_url "$pwa_url"); then
+  echo "could not read PWA manifest url from ${pwa_url}" >&2
   exit 1
 fi
 
@@ -83,19 +117,23 @@ manifest_json=$(wget -q --compression=auto -O "$manifest_path" \
 
 pwa_name="$(jq -r .short_name "$manifest_path")"
 if [ -z "$name" ]; then
-  echo "name is missing from manifest in ${url}" >&2
+  echo "name is missing from manifest in ${pwa_url}" >&2
   exit 1
 fi
 
 pwa_description="$(jq -r .name "$manifest_path")"
 if [ -z "$pwa_description" ]; then
-  echo "description is missing from manifest in ${url}" >&2
+  echo "description is missing from manifest in ${pwa_url}" >&2
   exit 1
 fi
 
-pwa_icon_url=$(get_icon_url "$manifest_path")
-if [ -z "$pwa_icon_url" ]; then
-  echo "icon url is missing from manifest in ${url}" >&2
+if ! pwa_icon_url=$(get_icon_url "$manifest_path"); then
+  echo "icon url is missing from manifest in ${pwa_url}" >&2
+  exit 1
+fi
+
+if ! pwa_start_url=$(get_pwa_start_url "$pwa_url" "$manifest_path"); then
+  echo "could not lookup start_url from manifest in ${pwa_url}" >&2
   exit 1
 fi
 
@@ -108,16 +146,9 @@ case "$icon_suffix" in
     ;;
 esac
 
-case "$pwa_icon_url" in
-  http*) ;;
-  *) pwa_icon_urlbase="$(printf %s "$pwa_manifest_url" \
-                           | perl -lne 'm|^(https?://.*?/)| && print "$1\n"')"
-     pwa_icon_url="${pwa_icon_urlbase}/${pwa_icon_url}"
-     ;;
-esac
-
 icon_path="${pwa_dir}/icon.${icon_suffix}"
 tmp_icon_path="${pwa_tmpdir}/icon.${icon_suffix}"
+pwa_icon_url=$(get_icon_url "$pwa_url")
 wget -q -O "$tmp_icon_path" "$pwa_icon_url"
 
 desktop_path="${pwa_dir}/${name}.desktop"
@@ -132,7 +163,8 @@ Icon=${icon_path}
 Exec=puavo-pwa ${name}
 EOF
 
-printf "%s\n" "$browser" > "${pwa_tmpdir}/browser"
+printf "%s\n" "$browser"       > "${pwa_tmpdir}/browser"
+printf "%s\n" "$pwa_start_url" > "${pwa_tmpdir}/url"
 
 # link to /usr/local/share/applications
 mkdir -p /usr/local/share/applications

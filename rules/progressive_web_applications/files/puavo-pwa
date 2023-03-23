@@ -126,7 +126,7 @@ if [ -z "$pwa_name" ]; then
 fi
 
 pwa_dir="/var/lib/puavo-pwa/${pwa_name}"
-manifest_path="${pwa_dir}/manifest.json"
+pwa_url_path="${pwa_dir}/url"
 
 if [ ! -d "$pwa_dir" ]; then
   echo "PWA '${pwa_name}' has not been setup for use" >&2
@@ -141,9 +141,9 @@ fi
 browser_bin=$(get_browser_bin_name "$browser")
 browser_preferences_path=$(get_browser_preferences_path "$browser")
 
-pwa_url="$(jq -r .start_url "$manifest_path" 2>/dev/null || true)"
-if [ -z "$pwa_url" -o "$pwa_url" = 'null' ]; then
-  echo "Can not read pwa_url from ${manifest_path}" >&2
+pwa_url="$(cat "$pwa_url_path" 2>/dev/null || true)"
+if [ -z "$pwa_url" ]; then
+  echo "Can not read pwa_url from ${pwa_url_path}" >&2
   exit 1
 fi
 
