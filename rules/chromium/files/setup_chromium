@@ -11,7 +11,7 @@ get_nonunique_pwa_list() {
   for pwa_path in /var/lib/puavo-pwa/*; do
     test -d "$pwa_path" || continue
     pwa_browser=$(cat "${pwa_path}/browser" 2>/dev/null || true)
-    if [ "$pwa_browser" = "$browser" ]; then
+    if [ -z "$pwa_browser" -o "$pwa_browser" = "$browser" ]; then
       cat "${pwa_path}/url" 2>/dev/null || status=1
     fi
   done

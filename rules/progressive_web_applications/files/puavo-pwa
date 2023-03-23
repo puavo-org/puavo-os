@@ -18,12 +18,12 @@ cleanup() {
 }
 
 get_browser() {
-  local browser pwa_dir
+  local browser chrome_path pwa_dir
   pwa_dir=$1
 
   browser=$(cat "${pwa_dir}/browser" 2>/dev/null || true)
   case "$browser" in
-    chrome|chromium)
+    chrome|chromium|'')
       ;;
     *)
       echo "Unsupported browser '${browser}' in PWA ${pwa_dir}" >&2
@@ -31,10 +31,24 @@ get_browser() {
       ;;
   esac
 
+  if [ -z "$browser" ]; then
+    # If browser is not specified, test if chrome is installed and use it
+    # in case it is.  Otherwise fall back to chromium.
+    chrome_path=$(get_browser_path chrome)
+    if [ -x "$chrome_path" ]; then
+      browser='chrome'
+    else
+      browser='chromium'
+    fi
+  fi
+
   printf %s "$browser"
 }
 
 get_browser_path() {
+  local browser
+  browser=$1
+
   if [ "$browser" = 'chrome' ]; then
     echo /usr/bin/google-chrome-stable
     return 0
@@ -43,6 +57,9 @@ get_browser_path() {
 }
 
 get_browser_preferences_path() {
+  local browser
+  browser=$1
+
   # XXX why "Default" ?  should you check the profile is correct?
   if [ "$browser" = 'chrome' ]; then
     printf %s ~/.config/google-chrome/Default/Preferences

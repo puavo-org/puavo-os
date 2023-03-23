@@ -1,5 +1,5 @@
 class progressive_web_applications {
-  define install ($browser, $url) {
+  define install ($browser='', $url) {
     $pwa_name = $title
 
     exec {

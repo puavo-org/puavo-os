@@ -71,7 +71,7 @@ get_pwa_start_url() {
   manifest_path=$2
 
   start_url="$(jq -r .start_url "$manifest_path" 2>/dev/null || true)"
-  if [ -z "$start_url" ]; then
+  if [ -z "$start_url" ]; then
     return 1
   fi
 
@@ -82,8 +82,8 @@ name=${1:-}
 pwa_url=${2:-}
 browser=${3:-}
 
-if [ -z "$name" -o -z "$pwa_url" -o -z "$browser" ]; then
-  echo "Usage: $(basename "$0") name pwa_url browser" >&2
+if [ -z "$name" -o -z "$pwa_url" ]; then
+  echo "Usage: $(basename "$0") name pwa_url [browser]" >&2
   exit 1
 fi
 
@@ -93,7 +93,7 @@ if ! printf %s "$name" | grep -Eqx '[A-Za-z0-9-]+'; then
 fi
 
 case "$browser" in
-  chrome|chromium)
+  chrome|chromium|'')
     ;;
   *)
     echo 'Only "chrome" and "chromium" are supported browsers.' >&2
@@ -163,7 +163,12 @@ Icon=${icon_path}
 Exec=puavo-pwa ${name}
 EOF
 
-printf "%s\n" "$browser"       > "${pwa_tmpdir}/browser"
+if [ -n "$browser" ]; then
+  printf "%s\n" "$browser" > "${pwa_tmpdir}/browser"
+else
+  rm -f "${pwa_tmpdir}/browser"
+fi
+
 printf "%s\n" "$pwa_start_url" > "${pwa_tmpdir}/url"
 
 # link to /usr/local/share/applications
