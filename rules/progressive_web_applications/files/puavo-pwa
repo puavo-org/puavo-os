@@ -52,6 +52,20 @@ get_browser_preferences_path() {
   printf %s ~/".config/${browser}/Default/Preferences"
 }
 
+check_if_enabled() {
+  local pwa_conf_path pwa_url
+  pwa_url=$1
+
+  if [ "$browser" = 'chrome' ]; then
+    pwa_conf_path='/etc/opt/chrome/policies/managed/puavo-pwa-forcelist.json'
+  else
+    pwa_conf_path='/etc/chromium/policies/managed/puavo-pwa-forcelist.json'
+  fi
+
+  jq -r '.WebAppInstallForceList | map(.url) | .[]' "$pwa_conf_path" \
+    | grep -Fqx "$pwa_url"
+}
+
 # XXX the browser should be configurable to chromium or chrome with a command
 # XXX line parameter or something?  or maybe we have it in
 # XXX /var/lib/puavo-pwa/${pwa_name}/browser ?
@@ -139,7 +153,7 @@ if ! browser=$(get_browser "$pwa_dir"); then
 fi
 
 browser_path=$(get_browser_path "$browser")
-if [ ! -x "$browser_path" ]; then
+if [ ! -x "$browser_path" ]; then
   echo "$browser is not installed or not found in path $browser_path" >&2
   exit 1
 fi
@@ -149,6 +163,11 @@ browser_preferences_path=$(get_browser_preferences_path "$browser")
 pwa_url="$(cat "$pwa_url_path" 2>/dev/null || true)"
 if [ -z "$pwa_url" ]; then
   echo "Can not read pwa_url from ${pwa_url_path}" >&2
+  exit 1
+fi
+
+if ! check_if_enabled "$pwa_url"; then
+  echo "PWA ${pwa_name} is not enabled for ${browser}" >&2
   exit 1
 fi
 
