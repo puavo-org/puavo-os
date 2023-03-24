@@ -1300,7 +1300,7 @@
         },
         "sphere_lite": {
             "type": "custom",
-            "command": "puavo-chromium-app run sphere_lite",
+            "command": "google-chrome-stable --app=chrome-extension://bhmibpbadaengbikmoglphhlhioajdjn/main.html",
             "name": "Sphere Lite",
             "description": {
                 "fi": "Sovellus jolla voit näyttää kuvaa AVer -dokumenttikameroista ja piirtää sen päälle.",
