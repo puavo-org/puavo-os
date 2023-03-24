@@ -1,4 +1,6 @@
 class progressive_web_applications {
+  include ::chromium
+
   define install ($browser='', $url) {
     $pwa_name = $title
 
@@ -19,8 +21,9 @@ class progressive_web_applications {
       source => 'puppet:///modules/progressive_web_applications/puavo-pwa';
 
     '/usr/local/lib/puavo-setup-pwa':
-      mode   => '0755',
-      source => 'puppet:///modules/progressive_web_applications/puavo-setup-pwa';
+      mode    => '0755',
+      require => Puavo_conf::Script['setup_chromium'],
+      source  => 'puppet:///modules/progressive_web_applications/puavo-setup-pwa';
 
     '/usr/local/lib/puavo-setup-guestuser-pwas':
       mode   => '0755',

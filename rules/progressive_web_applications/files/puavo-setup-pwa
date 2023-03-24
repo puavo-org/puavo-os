@@ -180,5 +180,7 @@ printf "%s\n" "$pwa_start_url" > "${pwa_tmpdir}/url"
 mkdir -p /usr/local/share/applications
 ln -fns "$desktop_path" /usr/local/share/applications/
 
+/etc/puavo-conf/scripts/setup_chromium
+
 # we are ready
 mv "$pwa_tmpdir" "$pwa_dir"
