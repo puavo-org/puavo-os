@@ -2,7 +2,7 @@ class progressive_web_applications {
   define install ($browser='', $url) {
     $pwa_name = $title
 
-    exec {
+    exec {
       "/usr/local/lib/puavo-setup-pwa ${pwa_name} ${url} ${browser}":
         creates => "/var/lib/puavo-pwa/${pwa_name}",
         require => File['/usr/local/lib/puavo-setup-pwa'];
@@ -19,7 +19,10 @@ class progressive_web_applications {
       source => 'puppet:///modules/progressive_web_applications/puavo-setup-pwa';
   }
 
-  Progressive_web_applications::Install {
+  Progressive_web_applications::Install {
+    'graphical_analysis':
+      url     => 'https://graphicalanalysis.app';
+
     'teams':
       browser => 'chrome',
       url     => 'https://teams.microsoft.com/manifest.json';

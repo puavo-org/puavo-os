@@ -16,13 +16,12 @@ get_absolute_url() {
       printf %s "$urlpath"
       ;;
     /*)
-      pwa_urlbase="$(printf %s "$pwa_url" \
+      pwa_urlbase="$(printf '%s/' "${pwa_url%/}" \
                        | perl -lne 'm|^(https?://.*?)/| && print "$1\n"')"
       printf '%s%s' "$pwa_urlbase" "$urlpath"
       ;;
     *)
-      echo "Unsupported url scheme: ${urlpath}" >&2
-      return 1
+      printf '%s/%s' "${pwa_url%/}" "$urlpath"
       ;;
   esac
 }
@@ -46,7 +45,7 @@ get_icon_url() {
 }
 
 get_manifest_url() {
-  local pwa_url
+  local manifest_subpath pwa_url
   pwa_url=$1
 
   # If we get an url with .json suffix, we assume we already have a manifest
@@ -56,13 +55,19 @@ get_manifest_url() {
     return 0
   fi
 
-  wget -q -O - --user-agent="$user_agent" "$pwa_url" \
-    | perl -lne '
-        BEGIN { $status = 1 };
-        /.*<(.*link.*rel="manifest".*?)\/>/ && $1 =~ /href="(.*?)"/
-          && do { $status = 0; print $1; exit($status) };
-        END { exit($status) }
-      '
+  if ! manifest_subpath=$(
+    wget -q -O - --user-agent="$user_agent" "$pwa_url" \
+      | perl -lne '
+          BEGIN { $status = 1 };
+          /.*<(.*link.*rel="manifest".*?)\/>/ && $1 =~ /href="(.*?)"/
+            && do { $status = 0; print $1; exit($status) };
+          END { exit($status) }
+        '); then
+    echo "Could not find manifest url from ${pwa_url}" >&2
+    exit 1
+  fi
+
+  get_absolute_url "$pwa_url" "$manifest_subpath" || return 1
 }
 
 get_pwa_start_url() {
@@ -87,7 +92,7 @@ if [ -z "$name" -o -z "$pwa_url" ]; then
   exit 1
 fi
 
-if ! printf %s "$name" | grep -Eqx '[A-Za-z0-9-]+'; then
+if ! printf %s "$name" | grep -Eqx '[A-Za-z0-9_-]+'; then
   echo "Usage: name '${name}' contains unaccepted characters" >&2
   exit 1
 fi
