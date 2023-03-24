@@ -83,14 +83,6 @@ check_if_enabled() {
     | grep -Fqx "$pwa_url"
 }
 
-# XXX the browser should be configurable to chromium or chrome with a command
-# XXX line parameter or something?  or maybe we have it in
-# XXX /var/lib/puavo-pwa/${pwa_name}/browser ?
-# XXX we should also check that the browser is actually installed
-
-# XXX we should also check that chrome/chromium is configured to install
-# XXX the particular PWA we need!
-
 browser_pid=
 xvfb_pid=
 
