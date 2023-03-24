@@ -6,6 +6,11 @@ set -eu
 # XXX there should be a lock that only one install per user of this script
 # XXX should be running
 
+usage() {
+  echo "Usage: $(basename "$0") [--browser browser] [--setup-only] pwa_name" \
+    >&2
+}
+
 cleanup() {
   if [ -n "$browser_pid" ]; then
     kill "$browser_pid" || true
@@ -19,14 +24,18 @@ cleanup() {
 
 get_browser() {
   local browser chrome_path pwa_dir
-  pwa_dir=$1
+  browser=$1
+  pwa_dir=$2
 
-  browser=$(cat "${pwa_dir}/browser" 2>/dev/null || true)
+  if [ -z "$browser" ]; then
+    browser=$(cat "${pwa_dir}/browser" 2>/dev/null || true)
+  fi
+
   case "$browser" in
     chrome|chromium|'')
       ;;
     *)
-      echo "Unsupported browser '${browser}' in PWA ${pwa_dir}" >&2
+      echo "Unsupported browser '${browser}'" >&2
       return 1
       ;;
   esac
@@ -56,7 +65,7 @@ get_browser_path() {
   echo /usr/bin/chromium
 }
 
-get_browser_preferences_path() {
+get_browser_prefs_path() {
   local browser
   browser=$1
 
@@ -87,8 +96,9 @@ browser_pid=
 xvfb_pid=
 
 trigger_pwa_installation() {
-  local fake_display i pwa_url
+  local browser_path fake_display i pwa_url
   pwa_url=$1
+  browser_path=$2
 
   fake_display=:71
 
@@ -107,12 +117,13 @@ trigger_pwa_installation() {
 }
 
 wait_for_app_installation() {
-  local app_id i pwa_url
+  local app_id browser_prefs_path i pwa_url
   pwa_url=$1
+  browser_prefs_path=$2
 
   i=0
   while [ "$i" -lt 60 ]; do
-    if app_id=$(lookup_app_id "$pwa_url"); then
+    if app_id=$(lookup_app_id "$pwa_url" "$browser_prefs_path"); then
       printf %s "$app_id"
       return 0
     fi
@@ -124,12 +135,13 @@ wait_for_app_installation() {
 }
 
 lookup_app_id() {
-  local app_id pwa_url
+  local app_id browser_prefs_path pwa_url
   pwa_url=$1
+  browser_prefs_path=$2
 
   app_id="$(jq -r --arg pwa_url "$pwa_url" '
               .web_apps.extension_ids[$pwa_url].extension_id
-            ' "$browser_preferences_path" 2>/dev/null || true)"
+            ' "$browser_prefs_path" 2>/dev/null || true)"
 
   if [ -n "$app_id" -a "$app_id" != 'null' ]; then
     printf %s "$app_id"
@@ -141,10 +153,26 @@ lookup_app_id() {
 
 trap cleanup 0 ABRT INT PIPE QUIT TERM
 
-pwa_name=${1:-}
+if ! args=$(getopt -n "$0" -o + -l 'browser:,setup-only' -- "$@"); then
+  usage
+  exit 1
+fi
 
+setup_only=false
+user_browser=''
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --browser)    user_browser="$2"; shift; shift ;;
+    --setup-only) setup_only=true;   shift        ;;
+    --) shift; break;;
+  esac
+done
+
+pwa_name=${1:-}
 if [ -z "$pwa_name" ]; then
-  echo "Usage: $(basename "$0") pwa_name" >&2
+  usage
   exit 1
 fi
 
@@ -156,7 +184,7 @@ if [ ! -d "$pwa_dir" ]; then
   exit 1
 fi
 
-if ! browser=$(get_browser "$pwa_dir"); then
+if ! browser=$(get_browser "$user_browser" "$pwa_dir"); then
   echo 'Could not determine the browser to use' >&2
   exit 1
 fi
@@ -167,7 +195,7 @@ if [ ! -x "$browser_path" ]; then
   exit 1
 fi
 
-browser_preferences_path=$(get_browser_preferences_path "$browser")
+browser_prefs_path=$(get_browser_prefs_path "$browser")
 
 pwa_url="$(cat "$pwa_url_path" 2>/dev/null || true)"
 if [ -z "$pwa_url" ]; then
@@ -180,16 +208,17 @@ if ! check_if_enabled "$pwa_url"; then
   exit 1
 fi
 
-if ! app_id=$(lookup_app_id "$pwa_url"); then
+if ! app_id=$(lookup_app_id "$pwa_url" "$browser_prefs_path"); then
   if ! pgrep -U "$USER" -x "$browser"; then
-    if ! trigger_pwa_installation "$pwa_url"; then
+    if ! trigger_pwa_installation "$pwa_url" "$browser_path"; then
       # XXX should user be notified?
       echo "Could not trigger PWA installation ${pwa_url}" >&2
       exit 1
     fi
   fi
 
-  if ! app_id=$(wait_for_app_installation "$pwa_url"); then
+  if ! app_id=$(wait_for_app_installation "$pwa_url" \
+                                          "$browser_prefs_path"); then
     # XXX should user be notified?
     echo "PWA app installation was not successful for ${pwa_url}" >&2
     exit 1
@@ -197,5 +226,9 @@ if ! app_id=$(lookup_app_id "$pwa_url"); then
 fi
 
 cleanup || true
+
+if $setup_only; then
+  exit 0
+fi
 
 exec "$browser_path" --profile-directory=Default --app-id="$app_id"
