@@ -2,12 +2,10 @@
 
 set -eu
 
-{
-
-status=0
-
 USER=$(id -nu)
 HOME=$(getent passwd "$USER" | awk -F: '{ print $6 }')
+
+tar_path="$(dirname "$HOME")/guest-profile.tar"
 
 export HOME USER
 
@@ -22,11 +20,10 @@ for pwa_dir in /var/lib/puavo-pwa/*; do
   fi
 
   for browser in $browser_list; do
-    pwa_name="$(basename "$pwa_dir")"                       || status=1
-    puavo-pwa --browser "$browser" --setup-only "$pwa_name" || status=1
+    pwa_name="$(basename "$pwa_dir")"
+    puavo-pwa --browser "$browser" --setup-only "$pwa_name"
   done
 done
 
-exit $status
-
-} > /tmp/puavo-setup-guestuser-pwas.log 2>&1
+tar -C "$HOME" --exclude='Singleton*' -cf "${tar_path}.tmp" .config
+mv "${tar_path}.tmp" "$tar_path"
