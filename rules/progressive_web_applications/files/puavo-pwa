@@ -113,7 +113,8 @@ trigger_pwa_installation() {
     i=$(($i + 1))
   done
 
-  env DISPLAY="$fake_display" "$browser_path" >/dev/null 2>&1 & browser_pid=$!
+  env DISPLAY="$fake_display" "$browser_path" --profile-directory=Default \
+    >/dev/null 2>&1 & browser_pid=$!
 }
 
 wait_for_app_installation() {
