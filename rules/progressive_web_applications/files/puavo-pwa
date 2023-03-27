@@ -2,10 +2,6 @@
 
 set -eu
 
-# XXX prepackage the results of this tool for guest user!
-# XXX there should be a lock that only one install per user of this script
-# XXX should be running
-
 usage() {
   echo "Usage: $(basename "$0") [--browser browser] [--setup-only] pwa_name" \
     >&2
