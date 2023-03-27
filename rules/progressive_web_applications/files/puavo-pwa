@@ -206,7 +206,7 @@ if ! check_if_enabled "$pwa_url"; then
 fi
 
 if ! app_id=$(lookup_app_id "$pwa_url" "$browser_prefs_path"); then
-  if ! pgrep -U "$USER" -x "$browser"; then
+  if ! pgrep -U "$USER" -x "$browser" >/dev/null 2>&1; then
     if ! trigger_pwa_installation "$pwa_url" "$browser_path"; then
       # XXX should user be notified?
       echo "Could not trigger PWA installation ${pwa_url}" >&2
