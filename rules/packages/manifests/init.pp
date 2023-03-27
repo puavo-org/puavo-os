@@ -808,7 +808,7 @@ class packages {
     '6.1.0-0.deb11.5-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module
                       , $virtualbox_module ],
-      package_name => 'linux-image-6.1.0-0.deb11.5-amd64';
+      package_name => 'linux-image-6.1.0-0.deb11.5-amd64-unsigned';
   }
 
   # Packages which are not restricted per se, but which are required by
