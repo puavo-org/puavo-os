@@ -1,0 +1,4 @@
+if [ "$USER" = 'guest' \
+     -a -r /var/lib/puavo-guestsetup/guest-profile.tar ]; then
+  tar -C "$HOME" -x -f /var/lib/puavo-guestsetup/guest-profile.tar
+fi
