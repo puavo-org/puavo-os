@@ -30,10 +30,6 @@ class progressive_web_applications {
       source => 'puppet:///modules/progressive_web_applications/puavo-setup-guestuser-pwas';
   }
 
-  # XXX this should actually setup stuff for both chrome and chromium?
-  # XXX (in case chrome is installed into the system)
-  # XXX Puavo_pkg::Install['google-chrome'] should be conditionally required
-  # XXX (only require it in case it is set to be installed)
   exec {
     'setup guestuser PWAs':
       command => '/usr/local/lib/puavo-setup-guestuser-pwas',
@@ -41,6 +37,7 @@ class progressive_web_applications {
                  , File['/var/lib/puavo-guestsetup']
                  , Package['chromium']
                  , User['puavo-guestsetup'] ],
+      onlyif  => '/usr/bin/test ! -e /var/lib/puavo-guestsetup/guest-profile.tar -o /var/lib/puavo-guestsetup/guest-profile.tar -ot /var/lib/puavo-pwa -o /var/lib/puavo-guestsetup/guest-profile.tar -ot /usr/bin/google-chrome-stable',
       user    => 'puavo-guestsetup';
   }
 
