@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+menudata_path='/etc/puavomenu/menudata/98-schoolmenu.json'
+
+menudata_changed=false
+puavomenu_reload=false
+
+opt="${1:-}"
+if [ "$opt" = '--reload' ]; then
+  puavomenu_reload=true
+fi
+
+if ! menudata=$(jq .puavomenu /etc/puavo/device.json); then
+  echo 'could not lookup menudata from device.json' >&2
+  exit 1
+fi
+
+if [ -z "$menudata" -o "$menudata" = 'null' -o "$menudata" = '{}' ]; then
+  if [ -e "$menudata_path" ]; then
+    menudata_changed=true
+    rm -f "$menudata_path"
+  fi
+else
+  printf "%s\n" "$menudata" > "${menudata_path}.tmp"
+  if ! cmp "${menudata_path}.tmp" "$menudata_path" >/dev/null 2>&1; then
+    menudata_changed=true
+    mv "${menudata_path}.tmp" "$menudata_path"
+  else
+    rm -f "${menudata_path}.tmp"
+  fi
+fi
+
+if $menudata_changed && $puavomenu_reload; then
+  for puavomenu_socket in /run/user/*/puavomenu; do
+    test -S "$puavomenu_socket" || continue
+    echo reload-menudata | nc -U -w 5 "$puavomenu_socket" || true
+  done
+fi
