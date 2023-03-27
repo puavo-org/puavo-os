@@ -1,5 +1,4 @@
 class chromium {
-  include ::chromium::apps
   include ::dpkg
   include ::packages
   include ::puavo_conf
