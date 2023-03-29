@@ -1465,7 +1465,10 @@
             "tags": "default, education"
         },
         "unityhub": {
-            "tags": "unityhub"
+            "tags": "default",
+            "puavopkg": {
+                "id": "unityhub"
+            }
         },
         "veracrypt": {
             "tags": "default"
