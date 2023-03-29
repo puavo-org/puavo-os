@@ -66,7 +66,6 @@ class puavo_pkg::packages {
 			, 't-lasku'
 			, 'tmux-plugins-battery'
 			, 'ubuntu-wallpapers-bullseye'
-			, 'unityhub-appimage'
 			, 'veracrypt'
 			, 'vstloggerpro'
                         , 'wine-gecko'
