@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+USER=$(id -nu)
+HOME=$(getent passwd "$USER" | awk -F: '{ print $6 }')
+
+tar_path="$(dirname "$HOME")/guest-profile.tar"
+
+export HOME USER
+
+for pwa_dir in /var/lib/puavo-pwa/*; do
+  test -d "$pwa_dir" || continue
+
+  pwa_browser=$(cat "${pwa_dir}/browser" 2>/dev/null || true)
+  if [ -x /usr/bin/google-chrome-stable ]; then
+    if [ -n "$pwa_browser" ]; then
+      browser_list="$pwa_browser"
+    else
+      browser_list='chrome chromium'
+    fi
+  else
+    if [ "$pwa_browser" = 'chrome' ]; then
+      continue
+    elif [ -n "$pwa_browser" ]; then
+      browser_list="$pwa_browser"
+    else
+      browser_list='chromium'
+    fi
+  fi
+
+  for browser in $browser_list; do
+    pwa_name="$(basename "$pwa_dir")"
+    puavo-pwa --browser "$browser" --setup-only "$pwa_name"
+  done
+done
+
+tar -C "$HOME" --exclude='Singleton*' -cf "${tar_path}.tmp" .config
+mv "${tar_path}.tmp" "$tar_path"

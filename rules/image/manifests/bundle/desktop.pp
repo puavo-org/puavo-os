@@ -33,6 +33,7 @@ class image::bundle::desktop {
   include ::packages::languages::uk
   include ::picaxe_udev_rules
   include ::polkit_printers
+  include ::progressive_web_applications::apps
   include ::puavo_pkg::packages
   # include ::pycharm	                # XXX pycharm needs to be packaged
   include ::run_once_on_desktop_session

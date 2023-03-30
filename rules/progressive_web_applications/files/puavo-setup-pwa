@@ -1,0 +1,186 @@
+#!/bin/sh
+
+set -eu
+
+pwa_basedir='/var/lib/puavo-pwa'
+
+user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
+
+get_absolute_url() {
+  local pwa_url pwa_urlbase subpath
+  pwa_url=$1
+  urlpath=$2
+
+  case "$urlpath" in
+    http*)
+      printf %s "$urlpath"
+      ;;
+    /*)
+      pwa_urlbase="$(printf '%s/' "${pwa_url%/}" \
+                       | perl -lne 'm|^(https?://.*?)/| && print "$1\n"')"
+      printf '%s%s' "$pwa_urlbase" "$urlpath"
+      ;;
+    *)
+      printf '%s/%s' "${pwa_url%/}" "$urlpath"
+      ;;
+  esac
+}
+
+get_icon_url() {
+  local icon_url pwa_url
+  pwa_url=$1
+
+  for size in 256x256 192x192 128x128 96x96 64x64 32x32 16x16; do
+    icon_url=$(jq -r --arg size "$size" '
+                 .icons[] | select(.sizes == $size) | .src
+               ' "$manifest_path") || true
+    if [ -n "$icon_url" -a "$icon_url" != 'null' ]; then
+      get_absolute_url "$pwa_url" "$icon_url" || return 1
+      return 0
+    fi
+  done
+
+  echo 'Could not find an icon url' >&2
+  return 1
+}
+
+get_manifest_url() {
+  local manifest_subpath pwa_url
+  pwa_url=$1
+
+  # If we get an url with .json suffix, we assume we already have a manifest
+  # url, otherwise we try fetching a page and see if we find a manifest link.
+  if printf %s "$pwa_url" | grep -q '\.json$'; then
+    printf %s "$pwa_url"
+    return 0
+  fi
+
+  if ! manifest_subpath=$(
+    wget -q -O - --user-agent="$user_agent" "$pwa_url" \
+      | perl -lne '
+          BEGIN { $status = 1 };
+          /.*<(.*link.*rel="manifest".*?)\/>/ && $1 =~ /href="(.*?)"/
+            && do { $status = 0; print $1; exit($status) };
+          END { exit($status) }
+        '); then
+    echo "Could not find manifest url from ${pwa_url}" >&2
+    exit 1
+  fi
+
+  get_absolute_url "$pwa_url" "$manifest_subpath" || return 1
+}
+
+get_pwa_start_url() {
+  local manifest_path pwa_url start_url
+  pwa_url=$1
+  manifest_path=$2
+
+  start_url="$(jq -r .start_url "$manifest_path" 2>/dev/null || true)"
+  if [ -z "$start_url" ]; then
+    return 1
+  fi
+
+  get_absolute_url "$pwa_url" "$start_url" || return 1
+}
+
+name=${1:-}
+pwa_url=${2:-}
+browser=${3:-}
+
+if [ -z "$name" -o -z "$pwa_url" ]; then
+  echo "Usage: $(basename "$0") name pwa_url [browser]" >&2
+  exit 1
+fi
+
+if ! printf %s "$name" | grep -Eqx '[A-Za-z0-9_-]+'; then
+  echo "Usage: name '${name}' contains unaccepted characters" >&2
+  exit 1
+fi
+
+case "$browser" in
+  chrome|chromium|'')
+    ;;
+  *)
+    echo 'Only "chrome" and "chromium" are supported browsers.' >&2
+    exit 1
+    ;;
+esac
+
+if ! pwa_manifest_url=$(get_manifest_url "$pwa_url"); then
+  echo "could not read PWA manifest url from ${pwa_url}" >&2
+  exit 1
+fi
+
+pwa_dir="${pwa_basedir}/${name}"
+pwa_tmpdir="${pwa_dir}.tmp"
+
+mkdir -p "$pwa_tmpdir"
+
+manifest_path="${pwa_tmpdir}/manifest.json"
+manifest_json=$(wget -q --compression=auto -O "$manifest_path" \
+                  --user-agent="$user_agent" "$pwa_manifest_url")
+
+pwa_name="$(jq -r .short_name "$manifest_path")"
+if [ -z "$name" ]; then
+  echo "name is missing from manifest in ${pwa_url}" >&2
+  exit 1
+fi
+
+pwa_description="$(jq -r .name "$manifest_path")"
+if [ -z "$pwa_description" ]; then
+  echo "description is missing from manifest in ${pwa_url}" >&2
+  exit 1
+fi
+
+if ! pwa_icon_url=$(get_icon_url "$manifest_path"); then
+  echo "icon url is missing from manifest in ${pwa_url}" >&2
+  exit 1
+fi
+
+if ! pwa_start_url=$(get_pwa_start_url "$pwa_url" "$manifest_path"); then
+  echo "could not lookup start_url from manifest in ${pwa_url}" >&2
+  exit 1
+fi
+
+icon_suffix="${pwa_icon_url##*.}"
+case "$icon_suffix" in
+  jpeg|jpg|png|svg|svgz|xpm) ;;
+  *)
+    echo "Unsupported icon format at $pwa_icon_url" >&2
+    exit 1
+    ;;
+esac
+
+icon_path="${pwa_dir}/icon.${icon_suffix}"
+tmp_icon_path="${pwa_tmpdir}/icon.${icon_suffix}"
+pwa_icon_url=$(get_icon_url "$pwa_url")
+wget -q -O "$tmp_icon_path" "$pwa_icon_url"
+
+desktop_path="${pwa_dir}/${name}.desktop"
+tmp_desktop_path="${pwa_tmpdir}/${name}.desktop"
+
+cat <<EOF > "$tmp_desktop_path"
+[Desktop Entry]
+Type=Application
+Name=${pwa_name}
+Description=${pwa_description}
+Icon=${icon_path}
+Exec=puavo-pwa ${name}
+EOF
+
+if [ -n "$browser" ]; then
+  printf "%s\n" "$browser" > "${pwa_tmpdir}/browser"
+else
+  rm -f "${pwa_tmpdir}/browser"
+fi
+
+printf "%s\n" "$pwa_start_url" > "${pwa_tmpdir}/url"
+
+# link to /usr/local/share/applications
+mkdir -p /usr/local/share/applications
+ln -fns "$desktop_path" /usr/local/share/applications/
+
+/etc/puavo-conf/scripts/setup_chromium
+
+# we are ready
+mv "$pwa_tmpdir" "$pwa_dir"

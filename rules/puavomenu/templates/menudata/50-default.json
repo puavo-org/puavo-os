@@ -441,6 +441,10 @@
             "tags": "default, internet, education",
             "keywords": "etäopetus, etätyö, etä, remote, distance"
         },
+        "graphical_analysis": {
+            "name": "Vernier Graphical Analysis",
+            "tags": "default"
+        },
         "gucharmap": {
             "tags": "default"
         },
@@ -1300,7 +1304,7 @@
         },
         "sphere_lite": {
             "type": "custom",
-            "command": "puavo-chromium-app run sphere_lite",
+            "command": "google-chrome-stable --app=chrome-extension://bhmibpbadaengbikmoglphhlhioajdjn/main.html",
             "name": "Sphere Lite",
             "description": {
                 "fi": "Sovellus jolla voit näyttää kuvaa AVer -dokumenttikameroista ja piirtää sen päälle.",
@@ -1308,7 +1312,7 @@
                 "sv": "Aver DocCam - Sphere lite.",
                 "de": "Aver DocCam - Sphere lite."
             },
-            "icon": "/opt/puavo-chromium-apps/sphere_lite/logo.png",
+            "icon": "/opt/puavomenu/icons/sphere_lite.png",
             "tags": "default"
         },
         "spotify": {
@@ -1361,10 +1365,7 @@
         },
         "teams": {
             "name": "Teams",
-            "tags": "default",
-            "puavopkg": {
-                "id": "teams"
-            }
+            "tags": "default"
         },
         "teddybear": {
             "name": {
@@ -1464,7 +1465,10 @@
             "tags": "default, education"
         },
         "unityhub": {
-            "tags": "unityhub"
+            "tags": "default",
+            "puavopkg": {
+                "id": "unityhub"
+            }
         },
         "veracrypt": {
             "tags": "default"
@@ -1828,6 +1832,7 @@
                 "tracker",
                 "LoggerPro",
                 "LoggerPro3",
+                "graphical_analysis",
                 "GlobiLab",
                 "filius",
                 "lmaths",
@@ -2212,6 +2217,7 @@
                 "tracker",
                 "LoggerPro",
                 "LoggerPro3",
+                "graphical_analysis",
                 "libreoffice-writer",
                 "phet",
                 "youtube"

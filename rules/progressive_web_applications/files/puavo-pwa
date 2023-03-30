@@ -1,0 +1,231 @@
+#!/bin/sh
+
+set -eu
+
+usage() {
+  echo "Usage: $(basename "$0") [--browser browser] [--setup-only] pwa_name" \
+    >&2
+}
+
+cleanup() {
+  if [ -n "$browser_pid" ]; then
+    kill "$browser_pid" || true
+    browser_pid=
+  fi
+  if [ -n "$xvfb_pid" ]; then
+    kill "$xvfb_pid" || true
+    xvfb_pid=
+  fi
+}
+
+get_browser() {
+  local browser chrome_path pwa_dir
+  browser=$1
+  pwa_dir=$2
+
+  if [ -z "$browser" ]; then
+    browser=$(cat "${pwa_dir}/browser" 2>/dev/null || true)
+  fi
+
+  case "$browser" in
+    chrome|chromium|'')
+      ;;
+    *)
+      echo "Unsupported browser '${browser}'" >&2
+      return 1
+      ;;
+  esac
+
+  if [ -z "$browser" ]; then
+    # If browser is not specified, test if chrome is installed and use it
+    # in case it is.  Otherwise fall back to chromium.
+    chrome_path=$(get_browser_path chrome)
+    if [ -x "$chrome_path" ]; then
+      browser='chrome'
+    else
+      browser='chromium'
+    fi
+  fi
+
+  printf %s "$browser"
+}
+
+get_browser_path() {
+  local browser
+  browser=$1
+
+  if [ "$browser" = 'chrome' ]; then
+    echo /usr/bin/google-chrome-stable
+    return 0
+  fi
+  echo /usr/bin/chromium
+}
+
+get_browser_prefs_path() {
+  local browser
+  browser=$1
+
+  # XXX why "Default" ?  should you check the profile is correct?
+  if [ "$browser" = 'chrome' ]; then
+    printf %s ~/.config/google-chrome/Default/Preferences
+    return 0
+  fi
+
+  printf %s ~/".config/${browser}/Default/Preferences"
+}
+
+check_if_enabled() {
+  local pwa_conf_path pwa_url
+  pwa_url=$1
+
+  if [ "$browser" = 'chrome' ]; then
+    pwa_conf_path='/etc/opt/chrome/policies/managed/puavo-pwa-forcelist.json'
+  else
+    pwa_conf_path='/etc/chromium/policies/managed/puavo-pwa-forcelist.json'
+  fi
+
+  jq -r '.WebAppInstallForceList | map(.url) | .[]' "$pwa_conf_path" \
+    | grep -Fqx "$pwa_url"
+}
+
+browser_pid=
+xvfb_pid=
+
+trigger_pwa_installation() {
+  local browser_path fake_display i pwa_url
+  pwa_url=$1
+  browser_path=$2
+
+  fake_display=:71
+
+  Xvfb "$fake_display" >/dev/null 2>&1 & xvfb_pid=$!
+
+  i=0
+  while [ "$i" -lt 100 ]; do
+    if env DISPLAY="$fake_display" xterm -e true >/dev/null 2>&1; then
+      break
+    fi
+    sleep 0.1
+    i=$(($i + 1))
+  done
+
+  env DISPLAY="$fake_display" "$browser_path" --profile-directory=Default \
+    >/dev/null 2>&1 & browser_pid=$!
+}
+
+wait_for_app_installation() {
+  local app_id browser_prefs_path i pwa_url
+  pwa_url=$1
+  browser_prefs_path=$2
+
+  i=0
+  while [ "$i" -lt 60 ]; do
+    if app_id=$(lookup_app_id "$pwa_url" "$browser_prefs_path"); then
+      printf %s "$app_id"
+      return 0
+    fi
+    sleep 1
+    i=$(($i + 1))
+  done
+
+  return 1
+}
+
+lookup_app_id() {
+  local app_id browser_prefs_path pwa_url
+  pwa_url=$1
+  browser_prefs_path=$2
+
+  app_id="$(jq -r --arg pwa_url "$pwa_url" '
+              .web_apps.extension_ids[$pwa_url].extension_id
+            ' "$browser_prefs_path" 2>/dev/null || true)"
+
+  if [ -n "$app_id" -a "$app_id" != 'null' ]; then
+    printf %s "$app_id"
+    return 0
+  fi
+
+  return 1
+}
+
+trap cleanup 0 ABRT INT PIPE QUIT TERM
+
+if ! args=$(getopt -n "$0" -o + -l 'browser:,setup-only' -- "$@"); then
+  usage
+  exit 1
+fi
+
+setup_only=false
+user_browser=''
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --browser)    user_browser="$2"; shift; shift ;;
+    --setup-only) setup_only=true;   shift        ;;
+    --) shift; break;;
+  esac
+done
+
+pwa_name=${1:-}
+if [ -z "$pwa_name" ]; then
+  usage
+  exit 1
+fi
+
+pwa_dir="/var/lib/puavo-pwa/${pwa_name}"
+pwa_url_path="${pwa_dir}/url"
+
+if [ ! -d "$pwa_dir" ]; then
+  echo "PWA '${pwa_name}' has not been setup for use" >&2
+  exit 1
+fi
+
+if ! browser=$(get_browser "$user_browser" "$pwa_dir"); then
+  echo 'Could not determine the browser to use' >&2
+  exit 1
+fi
+
+browser_path=$(get_browser_path "$browser")
+if [ ! -x "$browser_path" ]; then
+  echo "$browser is not installed or not found in path $browser_path" >&2
+  exit 1
+fi
+
+browser_prefs_path=$(get_browser_prefs_path "$browser")
+
+pwa_url="$(cat "$pwa_url_path" 2>/dev/null || true)"
+if [ -z "$pwa_url" ]; then
+  echo "Can not read pwa_url from ${pwa_url_path}" >&2
+  exit 1
+fi
+
+if ! check_if_enabled "$pwa_url"; then
+  echo "PWA ${pwa_name} is not enabled for ${browser}" >&2
+  exit 1
+fi
+
+if ! app_id=$(lookup_app_id "$pwa_url" "$browser_prefs_path"); then
+  if ! pgrep -U "$USER" -x "$browser" >/dev/null 2>&1; then
+    if ! trigger_pwa_installation "$pwa_url" "$browser_path"; then
+      # XXX should user be notified?
+      echo "Could not trigger PWA installation ${pwa_url}" >&2
+      exit 1
+    fi
+  fi
+
+  if ! app_id=$(wait_for_app_installation "$pwa_url" \
+                                          "$browser_prefs_path"); then
+    # XXX should user be notified?
+    echo "PWA app installation was not successful for ${pwa_url}" >&2
+    exit 1
+  fi
+fi
+
+cleanup || true
+
+if $setup_only; then
+  exit 0
+fi
+
+exec "$browser_path" --profile-directory=Default --app-id="$app_id"

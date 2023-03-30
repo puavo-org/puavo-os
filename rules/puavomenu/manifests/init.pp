@@ -48,5 +48,10 @@ class puavomenu {
       source => 'puppet:///modules/puavomenu/puavomenu.json';
   }
 
+  ::puavo_conf::script {
+    'setup_puavomenu':
+      source => 'puppet:///modules/puavomenu/setup_puavomenu';
+  }
+
   Package <| title == puavomenu |>
 }

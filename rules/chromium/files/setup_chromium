@@ -2,9 +2,75 @@
 
 set -eu
 
-chromium_config=$(puavo-conf puavo.www.chromium.config)
-chromium_extensions=$(puavo-conf puavo.www.chromium.extensions)
-chromium_pwa_list=$(puavo-conf puavo.www.chromium.pwa.forcelist)
+puavo_conf() {
+  # If the puavo-conf database does not exist, we must be in image building
+  # phase and can not run puavo-conf.  Because this script can be run
+  # during image build, we need to use this trick.
+  if [ ! -e /run/puavo/conf.db ]; then
+    return 0
+  fi
+
+  puavo-conf "$@"
+}
+
+get_nonunique_pwa_list() {
+  local browser puavoconf_value pwa_browser status
+  browser=$1
+
+  status=0
+
+  for pwa_path in /var/lib/puavo-pwa/*; do
+    test -d "$pwa_path" || continue
+    pwa_browser=$(cat "${pwa_path}/browser" 2>/dev/null || true)
+    if [ -z "$pwa_browser" -o "$pwa_browser" = "$browser" ]; then
+      cat "${pwa_path}/url" 2>/dev/null || status=1
+    fi
+  done
+
+  if puavoconf_value=$(puavo_conf puavo.www.chromium.pwa.forcelist); then
+    if [ -n "$puavoconf_value" ]; then
+      printf "%s\n" "$puavoconf_value" | xargs -n 1
+    fi
+  else
+    status=1
+  fi
+
+  return $status
+}
+
+get_pwa_list() {
+  local pwa_list status
+  status=0
+  pwa_list=$(get_nonunique_pwa_list "$@") || status=1
+  printf %s "$pwa_list" | sort | uniq || return 1
+  return $status
+}
+
+write_pwa_conf() {
+  local conf_path pwa_list
+  pwa_list=$1
+  conf_path=$2
+
+  if [ -z "$pwa_list" ]; then
+    rm -f "$conf_path"
+    return 0
+  fi
+
+  jq --null-input --arg pwa_list "$pwa_list" '
+    .WebAppInstallForceList =
+      ($pwa_list | split("\n")
+        | map({ url: . } | .default_launch_container = "window"))
+  ' > "${conf_path}.tmp"
+  mv "${conf_path}.tmp" "$conf_path"
+}
+
+status=0
+
+chromium_config=$(puavo_conf puavo.www.chromium.config)
+chromium_extensions=$(puavo_conf puavo.www.chromium.extensions)
+
+chromium_pwa_list=$(get_pwa_list chromium) || status=1
+chrome_pwa_list=$(  get_pwa_list chrome  ) || status=1
 
 chromium_dir="/etc/chromium/policies/managed"
 chrome_dir="/etc/opt/chrome/policies/managed"
@@ -31,18 +97,9 @@ else
         "${chrome_dir}/extension_install_forcelist.json"
 fi
 
-if [ -n "$chromium_pwa_list" ]; then
-  jq --null-input --arg pwa_list "$chromium_pwa_list" '
-    .WebAppInstallForceList =
-      ($pwa_list | split(" ")
-        | map({ url: . } | .default_launch_container = "window"))
-  ' > "${chromium_dir}/puavo-pwa-forcelist.json.tmp"
-  mv "${chromium_dir}/puavo-pwa-forcelist.json.tmp" \
-     "${chromium_dir}/puavo-pwa-forcelist.json"
-  ln -fns "${chromium_dir}/puavo-pwa-forcelist.json" \
-          "${chrome_dir}/puavo-pwa-forcelist.json"
+write_pwa_conf "$chromium_pwa_list" "${chromium_dir}/puavo-pwa-forcelist.json" \
+  || status=1
+write_pwa_conf "$chrome_pwa_list" "${chrome_dir}/puavo-pwa-forcelist.json" \
+  || status=1
 
-else
-  rm -f "${chromium_dir}/puavo-pwa-forcelist.json" \
-        "${chrome_dir}/puavo-pwa-forcelist.json"
-fi
+exit $status
