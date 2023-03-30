@@ -262,10 +262,6 @@ handle_external_login() {
       request_authoritative=true
       return 1
       ;;
-    UPDATEERROR)
-      logmsg error "external login UPDATEERROR: $(printf %s "$extlogins" | jq .msg)"
-      return 1
-      ;;
     BADUSERCREDS)
       logmsg notice "external login BADUSERCREDS: $(printf %s "$extlogins" | jq .msg)"
       return 1
@@ -276,8 +272,14 @@ handle_external_login() {
     NOTCONFIGURED)
       extlogin_errmsg="external login is not configured: $(printf %s "$external_logins" | jq .msg)"
       ;;
+    PUAVOUSERMISSING)
+      extlogin_errmsg="external login user is missing from puavo: $(printf %s "$external_logins" | jq .msg)"
+      ;;
     UNAVAILABLE)
       extlogin_errmsg="external login was not available: $(printf %s "$external_logins" | jq .msg)"
+      ;;
+    UPDATEERROR)
+      extlogin_errmsg="external login update error: $(printf %s "$extlogins" | jq .msg)"
       ;;
     *)
       extlogin_errmsg='external login encountered an unknown error'
