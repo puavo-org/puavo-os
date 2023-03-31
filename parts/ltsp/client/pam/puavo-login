@@ -249,37 +249,37 @@ handle_external_login() {
 
   case "$external_login_status" in
     NOCHANGE)
-      logmsg info "external login NOCHANGE: $(printf %s "$extlogins" | jq .msg)"
+      logmsg info "external login NOCHANGE: $(printf %s "$extlogins" | jq -r .msg)"
       return 0
       ;;
     UPDATED)
-      logmsg info "external login UPDATED: $(printf %s "$extlogins" | jq .msg)"
+      logmsg info "external login UPDATED: $(printf %s "$extlogins" | jq -r .msg)"
       request_authoritative=true
       return 0
       ;;
     UPDATED_BUT_FAIL)
-      logmsg notice "external login UPDATED_BUT_FAIL: $(printf %s "$extlogins" | jq .msg)"
+      logmsg notice "external login UPDATED_BUT_FAIL: $(printf %s "$extlogins" | jq -r .msg)"
       request_authoritative=true
       return 1
       ;;
     BADUSERCREDS)
-      logmsg notice "external login BADUSERCREDS: $(printf %s "$extlogins" | jq .msg)"
+      logmsg notice "external login BADUSERCREDS: $(printf %s "$extlogins" | jq -r .msg)"
       return 1
       ;;
     CONFIGERROR)
-      extlogin_errmsg="external login configuration error: $(printf %s "$external_logins" | jq .msg)"
+      extlogin_errmsg="external login configuration error: $(printf %s "$extlogins" | jq -r .msg)"
       ;;
     NOTCONFIGURED)
-      extlogin_errmsg="external login is not configured: $(printf %s "$external_logins" | jq .msg)"
+      extlogin_errmsg="external login is not configured: $(printf %s "$extlogins" | jq -r .msg)"
       ;;
     PUAVOUSERMISSING)
-      extlogin_errmsg="external login user is missing from puavo: $(printf %s "$external_logins" | jq .msg)"
+      extlogin_errmsg="external login user is missing from puavo: $(printf %s "$extlogins" | jq -r .msg)"
       ;;
     UNAVAILABLE)
-      extlogin_errmsg="external login was not available: $(printf %s "$external_logins" | jq .msg)"
+      extlogin_errmsg="external login was not available: $(printf %s "$extlogins" | jq -r .msg)"
       ;;
     UPDATEERROR)
-      extlogin_errmsg="external login update error: $(printf %s "$extlogins" | jq .msg)"
+      extlogin_errmsg="external login update error: $(printf %s "$extlogins" | jq -r .msg)"
       ;;
     *)
       extlogin_errmsg='external login encountered an unknown error'
