@@ -648,7 +648,7 @@ module QueryDiskInfo
 
     disk_devices.each do |device|
       print "\n[#{ device }]\n"
-      system("fdisk -l /dev/#{ device } | sed 's/^/  /'") \
+      system("fdisk -l /dev/#{ device } | sed 's/^/  /' | more -e") \
         or raise "Error running fdisk for device '#{ device }'"
     end
   end
