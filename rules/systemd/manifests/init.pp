@@ -1,5 +1,6 @@
 class systemd {
   include ::packages
+  include ::systemd::sysusers
 
   file {
     '/etc/pam.d/systemd-user':
@@ -13,12 +14,6 @@ class systemd {
     '/etc/systemd/system/user@.service':
       ensure => link,
       target => '/dev/null';
-
-    '/etc/sysusers.d':
-      ensure => directory;
-
-    '/etc/sysusers.d/puavo-os.conf':
-      source => 'puppet:///modules/systemd/etc_sysusers.d_puavo-os.conf';
 
     # Pulseaudio needs help in case "systemd --user" is missing.
     # This removes a link to /dev/null, masking autospawn activation.

@@ -64,17 +64,14 @@ endif
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
 
-# "puppet" has to be installed separately with apt instead of as part
-# of debootstrap (in Bullseye) due to some issue.
-_debootstrap_packages      := git,jq,locales,lsb-release,make,sudo,wget
-_post_debootstrap_packages := puppet puppet-module-puppetlabs-sshkeys-core
+_debootstrap_packages      := apt-utils,git,jq,locales,lsb-release,make,puppet,puppet-module-puppetlabs-sshkeys-core,sudo,wget
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid/squid.conf \
 			 && echo true || echo false)
 ifdef PUAVO_CACHE_PROXY
   _proxy_address := ${PUAVO_CACHE_PROXY}
 else ifeq ($(_cache_configured),true)
-  _proxy_address := localhost:3128
+  _proxy_address := 127.0.0.1:3128
 endif
 ifdef _proxy_address
 _proxywrap_cmd := $(CURDIR)/.aux/proxywrap --with-proxy $(_proxy_address)
@@ -179,6 +176,7 @@ rootfs-debootstrap:
 		--arch='$(target_arch)'				\
 		--include='$(_debootstrap_packages)'	        \
 		--components=main,contrib,non-free		\
+		--variant=minbase                               \
 		'$(debootstrap_suite)'				\
 		'$(rootfs_dir).tmp' '$(debootstrap_mirror)'
 
@@ -193,9 +191,6 @@ rootfs-debootstrap:
 
 	$(_sudo) .aux/create-adm-user '$(rootfs_dir).tmp' '/puavo-os' \
 	    '$(_adm_user)' '$(_adm_group)' '$(_adm_uid)' '$(_adm_gid)'
-
-	$(_systemd_nspawn_cmd) -D '$(rootfs_dir).tmp' \
-	  sudo apt-get -y install $(_post_debootstrap_packages)
 
 	$(_sudo) mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 

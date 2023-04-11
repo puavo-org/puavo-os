@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Run first with no arguments so /etc/sysusers.d/puavo-os.conf is read
+# and matters.
+/usr/bin/systemd-sysusers.orig
+
+# Then as requested.
+exec /usr/bin/systemd-sysusers.orig "$@"
