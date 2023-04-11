@@ -579,7 +579,7 @@ darkdm_menu()
       expert-preinstall)
         darkdm_install expert-preinstall || return 1
         ;;
-      help|?)
+      help|"?")
         show_helpinfo=false
         darkdm_print_help
         ;;
