@@ -2,7 +2,7 @@
 
 set -eu
 
-if [ $# -le 3 ]; then
+if [ $# -le 3 ]; then
   echo "Usage: $(basename "$0") url sha384sum destdir file1 [file2 ...]" >&2
   exit 1
 fi
