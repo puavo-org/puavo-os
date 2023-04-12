@@ -23,6 +23,7 @@ EOF
 fi
 
 /usr/sbin/openvpn                                          \
+    --auth-nocache                                         \
     --ca /etc/puavo/certs/orgcabundle.pem                  \
     --cert /etc/puavo/certs/host.crt                       \
     --client                                               \

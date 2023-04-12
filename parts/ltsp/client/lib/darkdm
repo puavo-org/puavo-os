@@ -567,7 +567,7 @@ darkdm_menu()
     fi
 
     case "$command" in
-      bios)
+      bios|b)
         puavo-bios-config || return 1
         ;;
       erase)
@@ -579,7 +579,7 @@ darkdm_menu()
       expert-preinstall)
         darkdm_install expert-preinstall || return 1
         ;;
-      help|?)
+      help|"?")
         show_helpinfo=false
         darkdm_print_help
         ;;
@@ -625,7 +625,7 @@ darkdm_menu()
       reboot)
         darkdm_reboot || return 1
         ;;
-      restoredisk)
+      restoredisk|r)
         # try running restoredisk and notify inventory system if successful
         puavo-disk-clone restoredisk || return 1
         curl --cacert /etc/puavo-conf/rootca.pem \
@@ -638,7 +638,7 @@ darkdm_menu()
       shell)
         darkdm_shell || return 1
         ;;
-      test)
+      test|t)
         # Keyboard test makes tmux exit prematurely in ttys (not under X)
         # unless run outside tmux, this is why we run tests with openvt.
         # Actually even with this tmux does exit without a warning, but

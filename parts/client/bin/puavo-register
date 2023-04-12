@@ -188,7 +188,7 @@ class RegisterUserInterface
 
   def choicelist(items, field, header, prompt)
     selected = nil
-    itemkeys = items.keys.sort_by { |i| items[i]['order'] }
+    itemkeys = items.keys.sort_by { |i| items[i]['label'].downcase }
 
     choose do |menu|
       itemkeys.each do |id|
