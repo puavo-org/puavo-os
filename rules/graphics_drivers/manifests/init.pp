@@ -4,8 +4,8 @@ class graphics_drivers {
 
   $glx_packages = [ 'glx-alternative-mesa', 'libgl1-mesa-glx', 'update-glx' ]
 
-  $nvidia_packages = [ 'nvidia-kernel-dkms'
-                     , 'nvidia-legacy-390xx-kernel-dkms' ]
+  $nvidia_packages = [ 'nvidia-kernel-dkms' ]
+                     # , 'nvidia-legacy-390xx-kernel-dkms' ]    # XXX bookworm
 
   ::puavo_conf::script {
     'setup_graphics_drivers':
