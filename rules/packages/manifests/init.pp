@@ -214,7 +214,7 @@ class packages {
     , 'vlan' ]:
       tag => [ 'tag_basic', 'tag_debian_desktop', ];
 
-    [ 'debootstrap'
+    [ 'debootstrap'
     , 'squashfs-tools'
     , 'systemd-container' ]:
       tag => [ 'tag_builder', 'tag_debian_desktop', ];
