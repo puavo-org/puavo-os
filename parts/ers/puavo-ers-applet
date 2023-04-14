@@ -1350,8 +1350,8 @@ class PuavoErsExamScheduler (threading.Thread):
     if current_zip_name == None:
       raise CurrentZipNotReady
 
-    # this can take a rather long time, we can wait up to five minutes
-    load_exams_timeout_in_seconds = 300
+    # this can take a rather long time, we can wait up to twenty minutes
+    load_exams_timeout_in_seconds = 1200
 
     cmd = 'load-exam %s %s' % (current_zip_name, 'PURKUKOODIT.TXT')
     return self.server_cmd(cmd, load_exams_timeout_in_seconds)
