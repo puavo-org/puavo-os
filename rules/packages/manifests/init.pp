@@ -202,6 +202,7 @@ class packages {
     , 'libpam-modules'
     , 'libpam-runtime'
     , 'lvm2'
+    , 'nano'
     , 'nfs-common'
     , 'openssh-client'
     , 'openssh-server'
