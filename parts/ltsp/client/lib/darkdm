@@ -376,6 +376,7 @@ Puavo OS Command Shell
 
 Commands:
   bios                   configure BIOS (only on some supported machines)
+  customdescription (cd) send a custom device description to inventory backend)
   erase                  secure erase a disk (only on SSD's that support it)
   expert-install         install Puavo OS with more detailed questions
   expert-preinstall      install without registering, expert mode
@@ -401,7 +402,7 @@ EOF
 
 darkdm_print_short_help() {
   darkdm_print_help \
-    | awk '$1 !~ /bios|erase|expert|mount|reboot|preinstall|savedisk/'
+    | awk '$1 !~ /bios|customdescription|erase|expert|mount|reboot|preinstall|savedisk/'
 }
 
 darkdm_shell()
@@ -569,6 +570,13 @@ darkdm_menu()
     case "$command" in
       bios|b)
         puavo-bios-config || return 1
+        ;;
+      customdescription|cd)
+        # try sending a custom description to inventory system
+        read -e -p "Custom description? " customdesc || return 1
+        curl --cacert /etc/puavo-conf/rootca.pem \
+          -d "$(jq -n --arg sn "$(facter dmi.product.serial_number)" --arg cd "$customdesc" '.serialnumber = $sn | .customdescription = $cd')" \
+          --fail -H "Content-Type: application/json" --max-time 5 --silent -X POST "$deviceid_url" || echo "Send failed."
         ;;
       erase)
         puavo-disk-erase || return 1
