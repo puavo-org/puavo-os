@@ -17,15 +17,18 @@ destroy_in_dir() {
   directory=$1
   message=$2
 
-  if ! $force_insecure && $use_secure_delete; then
-    delete_cmd='srm -llrv'
-  else
-    delete_cmd='rm -vrf'
+  if [ ! -e "$directory" ]; then
+    return 0
   fi
 
-  { find "$directory" -mindepth 1 -maxdepth 1 -print0; } \
-    | { xargs -0 $delete_cmd; } 2>&1 \
-    | wrap_msg "$message"
+  if ! $force_insecure && $use_secure_delete; then
+    delete_cmd='srm -llr'
+  else
+    delete_cmd='rm -rf'
+  fi
+
+  { find "$directory" -mindepth 1 -maxdepth 1 -print0 || return 1; } \
+    | pv -F "$message %t" | { xargs -0 $delete_cmd || return 1; }
 }
 
 usage() {
@@ -79,10 +82,6 @@ write_reset_override() {
     end | .["request-fulfilled"] = $current_time
   ' /state/etc/puavo/device.json > "${reset_override_path}.tmp" || return 1
   mv "${reset_override_path}.tmp" "$reset_override_path" || return 1
-}
-
-wrap_msg() {
-  awk -v msg="$1" '{ print ">>>>> " msg " - | " $0 }'
 }
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -187,13 +186,13 @@ cat /dev/null > /state/etc/puavo/primary_user_override
 # we can speed up secure delete by not applying it to puavo-pkgs
 destroy_in_dir --force-insecure /images/puavo-pkg/ 'Removing all puavo-pkgs'
 
-destroy_in_dir /home/                  'Cleaning up /home'
+destroy_in_dir /home/                  'Cleaning up home directories'
 destroy_in_dir /state/etc/puavo/local/ 'Removing local configurations (made by user)'
 destroy_in_dir /state/var/cache/       'Cleaning up caches'
 destroy_in_dir /state/var/lib/         'Removing some system configurations'
 
 /usr/lib/puavo-ltsp-install/update-configuration 2>&1 \
-  | wrap_msg 'Updating system configuration'
+  | pv -F 'Updating system configuration... %t' > /dev/null
 
 destroy_in_dir /imageoverlays/ 'Cleaning up /imageoverlays'
 destroy_in_dir /state/etc/NetworkManager/system-connections/ \
