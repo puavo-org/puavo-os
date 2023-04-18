@@ -53,7 +53,8 @@ send_state_reset_to_puavo() {
 
   echo -n 'sending reset information to Puavo... '
   timeout -k 5 30 puavo-rest-request "$url" --post --user-etc --writable \
-    -- --data-binary "$reset_json" -H 'application/json' || return 1
+    -- --data-binary "$reset_json" -H 'Content-Type: application/json' \
+    || return 1
   echo DONE.
 }
 
