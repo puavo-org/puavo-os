@@ -36,7 +36,7 @@ destroy_in_dir() {
       -print0 || return 1
   else
     find "$directory" -mindepth 1 -maxdepth 1 -print0 || return 1
-  fi | pv -F "$message %t" \
+  fi | pv -F ">>> $message %t" \
      | { xargs -0 --no-run-if-empty $delete_cmd || return 1; }
 }
 
@@ -60,7 +60,7 @@ send_state_reset_to_puavo() {
 
   url="/v3/devices/${hostname}/state_update"
 
-  echo -n 'sending reset information to Puavo... '
+  echo -n '>>> Sending reset information to Puavo... '
   timeout -k 5 30 puavo-rest-request "$url" --post --user-etc --writable \
     -- --data-binary "$reset_json" -H 'Content-Type: application/json' \
     > /dev/null || return 1
@@ -181,7 +181,7 @@ done
 if [ -b /dev/mapper/puavo-imageoverlays ]; then
   if ! mountpoint -q /imageoverlays; then
     if ! mount /dev/mapper/puavo-imageoverlays /imageoverlays; then
-      echo 'could not mount imageoverlays' >&2
+      echo 'Could not mount imageoverlays' >&2
       exit 1
     fi
   fi
@@ -196,13 +196,14 @@ cat /dev/null > /state/etc/puavo/primary_user_override
 # we can speed up secure delete by not applying it to puavo-pkgs
 destroy_in_dir --force-insecure /images/puavo-pkg/ 'Removing all puavo-pkgs'
 
-destroy_in_dir /home/                  'Cleaning up home directories'
-destroy_in_dir /state/etc/puavo/local/ 'Removing local configurations (made by user)'
-destroy_in_dir /state/var/cache/       'Cleaning up caches'
-destroy_in_dir /state/var/lib/         'Removing some system configurations'
+destroy_in_dir /home/ 'Cleaning up home directories'
+destroy_in_dir /state/etc/puavo/local/ \
+               'Removing local configurations (made by user)'
+destroy_in_dir /state/var/cache/ 'Cleaning up caches'
+destroy_in_dir /state/var/lib/   'Removing some system configurations'
 
 /usr/lib/puavo-ltsp-install/update-configuration 2>&1 \
-  | pv -F 'Updating system configuration... %t' > /dev/null
+  | pv -F '>>> Updating system configuration... %t' > /dev/null
 
 destroy_in_dir --force-insecure --preserve-etc-puavo /imageoverlays/ \
                'Cleaning up most of /imageoverlays'
@@ -211,15 +212,19 @@ destroy_in_dir /state/etc/NetworkManager/system-connections/ \
 
 reset_override_path='/state/etc/puavo/reset_override'
 if ! write_reset_override "$operation" "$reset_override_path"; then
-  echo 'error in writing reset override' >&2
+  echo
+  echo 'Error in writing reset override' >&2
+  echo
   exit 1
 fi
 
 if ! send_state_reset_to_puavo "$reset_override_path"; then
   {
+    echo
     echo 'Failed to sending reset information to Puavo.'
     echo 'You may reboot this host, it tries to update the reset information'
     echo 'later, but you may also remove it manually from the Puavo interface.'
+    echo
   } >&2
   exit 1
 fi
@@ -228,7 +233,8 @@ destroy_in_dir --force-insecure /imageoverlays/ \
                'Cleaning up all of /imageoverlays'
 
 i=5
-echo -n "rebooting in $i seconds..."
+echo
+echo -n "Rebooting in $i seconds..."
 while [ "$i" -gt 0 ]; do
   i=$(($i - 1))
   sleep 1
