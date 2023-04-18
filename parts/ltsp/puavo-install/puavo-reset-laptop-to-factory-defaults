@@ -38,12 +38,27 @@ EOF
   exit 1
 }
 
+send_state_reset_to_puavo() {
+  local hostname reset_json reset_override_path url
+
+  reset_override_path=$1
+
+  hostname=$(cat /etc/puavo/hostname)                      || return 1
+  reset_json=$(jq '{ "reset": . }' "$reset_override_path") || return 1
+
+  url="/v3/devices/${hostname}/state_update"
+
+  echo -n 'sending reset information to Puavo... '
+  timeout -k 5 30 puavo-rest-request "$url" --post --user-etc --writable \
+    -- --data-binary "$reset_json" -H 'application/json' || return 1
+  echo DONE.
+}
+
 write_reset_override() {
   local current_time operation reset_override_path user
 
   operation=$1
-
-  reset_override_path='/state/etc/puavo/reset_override'
+  reset_override_path=$2
 
   current_time=$(date -Iseconds) || return 1
   user="${SUDO_USER:-}"
@@ -184,8 +199,18 @@ destroy_in_dir /imageoverlays/ 'Cleaning up /imageoverlays'
 destroy_in_dir /state/etc/NetworkManager/system-connections/ \
                'Removing network manager connections'
 
-if ! write_reset_override "$operation"; then
+reset_override_path='/state/etc/puavo/reset_override'
+if ! write_reset_override "$operation" "$reset_override_path"; then
   echo 'error in writing reset override' >&2
+  exit 1
+fi
+
+if ! send_state_reset_to_puavo "$reset_override_path"; then
+  {
+    echo 'Failed to sending reset information to Puavo.'
+    echo 'You may reboot this host, it tries to update the reset information'
+    echo 'later, but you may also remove it manually from the Puavo interface.'
+  } >&2
   exit 1
 fi
 
