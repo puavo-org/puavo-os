@@ -154,6 +154,15 @@ EOF
   esac
 done
 
+if [ -b /dev/mapper/puavo-imageoverlays ]; then
+  if ! mountpoint -q /imageoverlays; then
+    if ! mount /dev/mapper/puavo-imageoverlays /imageoverlays; then
+      echo 'could not mount imageoverlays' >&2
+      exit 1
+    fi
+  fi
+fi
+
 cd /
 
 # Remove primary user (so that we will send this information
