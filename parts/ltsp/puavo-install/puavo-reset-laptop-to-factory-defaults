@@ -6,13 +6,17 @@ request_confirmation=true
 use_secure_delete=false
 
 destroy_in_dir() {
-  local delete_cmd directory force_insecure message
+  local delete_cmd directory force_insecure message preserve_etc_puavo
 
   force_insecure=false
-  if [ "$1" = '--force-insecure' ]; then
-    force_insecure=true
-    shift
-  fi
+  preserve_etc_puavo=false
+  while true; do
+    case "$1" in
+      --force-insecure)     force_insecure=true;     shift;;
+      --preserve-etc-puavo) preserve_etc_puavo=true; shift;;
+      *) break ;;
+    esac
+  done
 
   directory=$1
   message=$2
@@ -27,8 +31,12 @@ destroy_in_dir() {
     delete_cmd='rm -rf'
   fi
 
-  { find "$directory" -mindepth 1 -maxdepth 1 -print0 || return 1; } \
-    | pv -F "$message %t" | { xargs -0 $delete_cmd || return 1; }
+  if $preserve_etc_puavo; then
+    find "$directory" -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' \
+      -print0 || return 1
+  else
+    find "$directory" -mindepth 1 -maxdepth 1 -print0 || return 1
+  fi | pv -F "$message %t" | { xargs -0 $delete_cmd || return 1; }
 }
 
 usage() {
@@ -195,7 +203,8 @@ destroy_in_dir /state/var/lib/         'Removing some system configurations'
 /usr/lib/puavo-ltsp-install/update-configuration 2>&1 \
   | pv -F 'Updating system configuration... %t' > /dev/null
 
-destroy_in_dir /imageoverlays/ 'Cleaning up /imageoverlays'
+destroy_in_dir --force-insecure --preserve-etc-puavo /imageoverlays/ \
+               'Cleaning up most of /imageoverlays'
 destroy_in_dir /state/etc/NetworkManager/system-connections/ \
                'Removing network manager connections'
 
@@ -213,6 +222,9 @@ if ! send_state_reset_to_puavo "$reset_override_path"; then
   } >&2
   exit 1
 fi
+
+destroy_in_dir --force-insecure /imageoverlays/ \
+               'Cleaning up all of /imageoverlays'
 
 i=5
 echo -n "rebooting in $i seconds..."
