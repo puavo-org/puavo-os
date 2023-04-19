@@ -131,7 +131,7 @@ def update_device_json(restclient)
 
     device['primary_user'] = primary_user_override
     device['conf'] ||= {}
-    device['conf']['puavo.admin.primary_user'] = primary_user_override
+    device['conf']['puavo.admin.primary_user'] = primary_user_override || ''
   end
 
   tmp_filepath = "#{ state_device_json_path }.tmp"
