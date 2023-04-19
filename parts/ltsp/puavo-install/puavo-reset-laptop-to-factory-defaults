@@ -180,7 +180,8 @@ done
 
 if [ -b /dev/mapper/puavo-imageoverlays ]; then
   if ! mountpoint -q /imageoverlays; then
-    if ! mount /dev/mapper/puavo-imageoverlays /imageoverlays; then
+    if ! { mkdir -p /imageoverlays \
+             && mount /dev/mapper/puavo-imageoverlays /imageoverlays; }; then
       echo 'Could not mount imageoverlays' >&2
       exit 1
     fi
