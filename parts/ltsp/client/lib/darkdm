@@ -146,6 +146,42 @@ list_disks() {
   done
 }
 
+firmwaremode() {
+  local colorvalue colorized_value
+
+  if [ -d /sys/firmware/efi ]; then
+      colorvalue=100
+      colorized_value=$(colorize firmware 1 1 1 "$colorvalue" "|| UEFI mode")
+      echo "$colorized_value"
+  else
+      colorvalue=0
+      colorized_value=$(colorize firmware 1 1 1 "$colorvalue" "|| Legacy mode")
+      echo "$colorized_value"
+  fi
+}
+
+is_wifi6_compatible() {
+  ### Very crude way to quickly assess whether we have a known
+  ### Wi-Fi 6 compatible wireless interface.
+  local listhwdev compatible colorvalue colorized_value
+
+  listhwdev=$(lshw | grep -i "$(facter networking.interfaces.wlan0.mac)" -B7 )
+  compatible="|| Wi-Fi 6 compatible"
+  colorvalue=100
+  colorized_value=$(colorize wifi 1 1 1 "$colorvalue" "$compatible")
+
+  case "$listhwdev" in
+    *"Comet Lake PCH-LP CNVi WiFi"*|*"Wi-Fi 6"* )
+      echo "$colorized_value"
+      ;;
+    *)
+      colorvalue=0
+      colorized_value=$(colorize wifi 1 1 1 "$colorvalue" "|| Not Wi-Fi 6 compatible")
+      echo "$colorized_value"
+      ;;
+  esac
+}
+
 list_networks() {
   local netdev network_devices
   network_devices=$(facter --json networking.interfaces \
@@ -290,12 +326,12 @@ darkdm_common_systeminfo()
 image:   ${this_image}
 release: ${this_release}
 
-bios:            $(facter dmi.bios.vendor) / $(facter dmi.bios.version)
+bios:            $(facter dmi.bios.vendor) / $(facter dmi.bios.version) $(firmwaremode)
 cpu:             ${colorized_cpu}
 $(list_disks)
 memory:          ${colorized_memory} ($(dmidecode -t 17 |grep Size | grep -v No | wc --lines)x)
 display:         ${colorized_display_resolution}
-$(list_networks)
+$(list_networks) $(is_wifi6_compatible)
 $(show_bluetooth)
 $(show_battery_status)
 product:         $(facter dmi.manufacturer) / ${colorized_product_name}
@@ -376,7 +412,7 @@ Puavo OS Command Shell
 
 Commands:
   bios                   configure BIOS (only on some supported machines)
-  customdescription (cd) send a custom device description to inventory backend)
+  customdescription (cd) send a custom device description to inventory backend
   erase                  secure erase a disk (only on SSD's that support it)
   expert-install         install Puavo OS with more detailed questions
   expert-preinstall      install without registering, expert mode
