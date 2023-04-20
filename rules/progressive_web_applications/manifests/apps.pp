@@ -7,6 +7,6 @@ class progressive_web_applications::apps {
 
     'teams':
       browser => 'chrome',
-      url     => 'https://teams.microsoft.com/manifest.json';
+      url     => 'https://teams.live.com/manifest.json';
   }
 }
