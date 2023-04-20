@@ -41,8 +41,9 @@ destroy_in_dir() {
       2> /dev/null || return 1
   else
     find "$directory" -mindepth 1 -maxdepth 1 -print0 2> /dev/null || return 1
-  fi | pv -F ">>> $message %t" \
-     | { xargs -0 --no-run-if-empty $delete_cmd > /dev/null 2>&1 || return 1; }
+  fi | {
+    xargs -0 --no-run-if-empty $delete_cmd 2> /dev/null || return 1
+  } | pv -F ">>> $message %t" > /dev/null
 }
 
 usage() {
