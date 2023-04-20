@@ -38,11 +38,11 @@ destroy_in_dir() {
 
   if $preserve_etc_puavo; then
     find "$directory" -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' -print0 \
-      || return 1
+      2> /dev/null || return 1
   else
-    find "$directory" -mindepth 1 -maxdepth 1 -print0 || return 1
+    find "$directory" -mindepth 1 -maxdepth 1 -print0 2> /dev/null || return 1
   fi | pv -F ">>> $message %t" \
-     | { xargs -0 --no-run-if-empty $delete_cmd || return 1; }
+     | { xargs -0 --no-run-if-empty $delete_cmd > /dev/null 2>&1 || return 1; }
 }
 
 usage() {
