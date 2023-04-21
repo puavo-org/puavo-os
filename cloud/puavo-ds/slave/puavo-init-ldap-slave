@@ -5,13 +5,13 @@ require 'fileutils'
 require 'getoptlong'
 require 'tempfile'
 
-use_force = false
 update_only_config = false
+use_force = false
 
 opts = GetoptLong.new(
-  ['--help', '-h', GetoptLong::NO_ARGUMENT],
-  ['--force', GetoptLong::NO_ARGUMENT],
-  ['--update-only-config', GetoptLong::NO_ARGUMENT]
+  [ '--help', '-h',         GetoptLong::NO_ARGUMENT ],
+  [ '--force',              GetoptLong::NO_ARGUMENT ],
+  [ '--update-only-config', GetoptLong::NO_ARGUMENT ],
 )
 
 opts.each do |opt, arg|
@@ -36,30 +36,22 @@ EOF
 end
 
 if ARGV.length != 0 then
-  STDERR.puts("error: invalid number of arguments #{ARGV.length}, expected 0")
+  warn 'error: extra arguments'
   exit(1)
 end
 
-# Use SSL certificate from the image, or if that does not
-# exist (we not an image based ldap-slave), use the cert that
-# was acquired when the host was registered to Puavo.
-ENV["LDAPTLS_REQCERT"] = "demand"
-
-if File.exists?('/etc/puavo-conf/rootca.pem') then
-  ENV["LDAPTLS_CACERT"] = '/etc/puavo-conf/rootca.pem'
-else
-  ENV["LDAPTLS_CACERT"] = '/etc/puavo/certs/rootca.pem'
-end
+ENV['LDAPTLS_REQCERT'] = 'demand'
+ENV['LDAPTLS_CACERT']  = '/etc/puavo-conf/rootca.pem'
 
 Sentinel_file = '/state/var/lib/ldap/init_ldap_slave_done'
 
-if !File.exist?(Sentinel_file) and update_only_config
-  STDERR.puts('error: cannot update uninitialized slapd, run without --update-only-config')
+if !File.exist?(Sentinel_file) && update_only_config then
+  warn 'error: cannot update uninitialized slapd'
   exit(1)
 end
 
-if File.exist?(Sentinel_file) and not use_force
-  STDERR.puts('error: slapd is already initialized, use the --force, Luke!')
+if File.exist?(Sentinel_file) && !use_force then
+  warn 'error: slapd is already initialized, use the --force, Luke!'
   exit(1)
 end
 
@@ -80,14 +72,14 @@ def parse_erb(basename)
 end
 
 @acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
-if $?.exitstatus != 0
-  STDERR.puts('error: failed to get ACLs from the master server')
+if $?.exitstatus != 0 then
+  warn 'error: failed to get ACLs from the master server'
   exit(1)
 end
 
 @schemas = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=schema,cn=config`
-if $?.exitstatus != 0
-  STDERR.puts('error: failed to get schemas from the master server')
+if $?.exitstatus != 0 then
+  warn 'error: failed to get schemas from the master server'
   exit(1)
 end
 
@@ -101,46 +93,46 @@ FileUtils.mkdir_p '/state/etc/ldap/slapd.d'
 FileUtils.chmod(0750, '/state/etc/ldap/slapd.d')
 FileUtils.chown('openldap', 'openldap', '/state/etc/ldap/slapd.d')
 
-if !system('rm -rf /state/etc/ldap/slapd.d/*')
-  STDERR.puts('error: failed to remove old LDAP configuration')
+if !system('rm -rf /state/etc/ldap/slapd.d/*') then
+  warn 'error: failed to remove old LDAP configuration'
   exit(1)
 end
 
-if !system("slapadd -l #{tempfile.path} -F /state/etc/ldap/slapd.d -b cn=config")
-  STDERR.puts('error: failed to update the configuration of the database')
+if !system("slapadd -l #{tempfile.path} -F /state/etc/ldap/slapd.d -b cn=config") then
+  warn 'error: failed to update the configuration of the database'
   exit(1)
 end
 
-if !system('chown -R openldap.openldap /state/etc/ldap/slapd.d')
-  STDERR.puts('error: failed to chown /state/etc/ldap/slapd.d to openldap')
+if !system('chown -R openldap.openldap /state/etc/ldap/slapd.d') then
+  warn 'error: failed to chown /state/etc/ldap/slapd.d to openldap'
   exit(1)
 end
 
-if update_only_config
-  if !system('service slapd start')
-    STDERR.puts('error: failed to start slapd')
+if update_only_config then
+  if !system('service slapd start') then
+    warn 'error: failed to start slapd'
     exit(1)
   end
   exit(0)
 end
 
-if !system('rm -rf /state/var/lib/ldap/*')
-  STDERR.puts('error: failed to remove the old LDAP database')
+if !system('rm -rf /state/var/lib/ldap/*') then
+  warn 'error: failed to remove the old LDAP database'
   exit(1)
 end
 
-if !system('chown -R openldap.openldap /state/var/lib/ldap')
-  STDERR.puts('error: failed to chown /state/var/lib/ldap to openldap')
+if !system('chown -R openldap.openldap /state/var/lib/ldap') then
+  warn 'error: failed to chown /state/var/lib/ldap to openldap'
   exit(1)
 end
 
-if !system('chmod -R 0750 /state/var/lib/ldap')
-  STDERR.puts('error: failed to chmod /var/lib/ldap')
+if !system('chmod -R 0750 /state/var/lib/ldap') then
+  warn 'error: failed to chmod /var/lib/ldap'
   exit(1)
 end
 
-if !system('service slapd start')
-  STDERR.puts('error: failed to start slapd')
+if !system('service slapd start') then
+  warn 'error: failed to start slapd'
   exit(1)
 end
 
@@ -151,18 +143,18 @@ puts('This may take a while.')
 
 previous_linecount = -1
 current_linecount = 0
-while previous_linecount != current_linecount
+while previous_linecount != current_linecount do
   if current_linecount > 0 then
-    puts("Still waiting... the magic number is #{current_linecount} now.")
+    puts("Still waiting... the magic number is #{ current_linecount } now.")
   end
 
   sleep 10
   previous_linecount = current_linecount
-  IO::popen("slapcat") do |io|
+  IO::popen('slapcat') do |io|
     current_linecount = io.readlines().count
     io.close()
-    if !$?.success?
-      STDERR.puts('error: failed to query the database contents')
+    if !$?.success? then
+      warn 'error: failed to query the database contents'
       exit(1)
     end
   end
