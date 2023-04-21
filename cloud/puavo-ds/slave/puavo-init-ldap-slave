@@ -3,7 +3,31 @@
 require 'erb'
 require 'fileutils'
 require 'getoptlong'
+require 'open3'
 require 'tempfile'
+
+def get_slapcat_datasize()
+  stdout_str, stderr_str, status = Open3.capture3('slapcat')
+  unless status.success? then
+    raise 'failed to query the database contents'
+  end
+
+  datasize = stdout_str.length
+  raise 'no output from slapcat' if datasize == 0
+
+  datasize
+end
+
+def parse_erb(basename)
+  ldif_template = File.read("/usr/share/puavo-ds-slave/#{ basename }.ldif.erb")
+  ldif = ERB.new(ldif_template, 0, "%<>")
+
+  tempfile = Tempfile.open(basename)
+  tempfile.puts ldif.result
+  tempfile.close
+
+  tempfile
+end
 
 update_only_config = false
 use_force = false
@@ -55,21 +79,12 @@ if File.exist?(Sentinel_file) && !use_force then
   exit(1)
 end
 
+puts 'Setting up ldap database for synchronization.'
+
 @binddn        = File.read('/etc/puavo/ldap/dn'      ).chomp
 @bindpw        = File.read('/etc/puavo/ldap/password').chomp
 @master_server = File.read('/etc/puavo/ldap/master'  ).chomp
 @suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
-
-def parse_erb(basename)
-  ldif_template = File.read("/usr/share/puavo-ds-slave/#{ basename }.ldif.erb")
-  ldif = ERB.new(ldif_template, 0, "%<>")
-
-  tempfile = Tempfile.open(basename)
-  tempfile.puts ldif.result
-  tempfile.close
-
-  tempfile
-end
 
 @acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
 if $?.exitstatus != 0 then
@@ -93,12 +108,16 @@ FileUtils.mkdir_p '/state/etc/ldap/slapd.d'
 FileUtils.chmod(0750, '/state/etc/ldap/slapd.d')
 FileUtils.chown('openldap', 'openldap', '/state/etc/ldap/slapd.d')
 
+expected_datasize = get_slapcat_datasize() rescue nil
+
 if !system('rm -rf /state/etc/ldap/slapd.d/*') then
   warn 'error: failed to remove old LDAP configuration'
   exit(1)
 end
 
-if !system("slapadd -l #{tempfile.path} -F /state/etc/ldap/slapd.d -b cn=config") then
+if !system('slapadd', '-l', tempfile.path.to_s, '-F',
+           '/state/etc/ldap/slapd.d', '-b', 'cn=config',
+           { :out => '/dev/null', :err => '/dev/null' }) then
   warn 'error: failed to update the configuration of the database'
   exit(1)
 end
@@ -138,27 +157,59 @@ end
 
 FileUtils.touch(Sentinel_file)
 
-puts('Waiting for slapd to synchronize all data from the LDAP master.')
-puts('This may take a while.')
+puts 'Waiting for slapd to synchronize all data from the LDAP master.'
+puts 'This may take a while.'
 
-previous_linecount = -1
-current_linecount = 0
-while previous_linecount != current_linecount do
-  if current_linecount > 0 then
-    puts("Still waiting... the magic number is #{ current_linecount } now.")
-  end
+no_output_times = 0
+previous_datasize = nil
 
-  sleep 10
-  previous_linecount = current_linecount
-  IO::popen('slapcat') do |io|
-    current_linecount = io.readlines().count
-    io.close()
-    if !$?.success? then
-      warn 'error: failed to query the database contents'
-      exit(1)
-    end
+sleep_amount = 1
+until File.exists?('/var/lib/ldap/alock') do
+  sleep(sleep_amount)
+  sleep_amount += 1
+  if sleep_amount >= 6 then
+    warn 'error: it appears slapd is doing nothing'
+    exit 1
   end
 end
 
-puts('Synchronization complete.')
+while true do
+  current_datasize = get_slapcat_datasize() rescue nil
+
+  progress = nil
+
+  if current_datasize then
+    if expected_datasize then
+      progress \
+        = (100 * current_datasize / expected_datasize).round
+      printf("  ... sync is in progress with about %3s%% done\n", progress)
+    else
+      printf("  ... sync has received %12s characters of data\n",
+             current_datasize)
+    end
+  end
+
+  if !current_datasize || previous_datasize == current_datasize then
+    no_output_times += 1
+  else
+    no_output_times = 0
+  end
+
+  previous_datasize = current_datasize
+
+  if (progress && progress >= 99.5) || no_output_times >= 4 then
+    if !current_datasize then
+      warn 'error: can not read ldap data, some errors in synchronization?'
+      exit 1
+    end
+    break
+  end
+
+  sleep 5
+end
+
+sleep 2
+
+puts()
+puts('Synchronization is most probably complete now.')
 puts()
