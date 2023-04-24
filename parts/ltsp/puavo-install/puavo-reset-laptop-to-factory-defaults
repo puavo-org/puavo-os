@@ -16,7 +16,7 @@ logerr() {
 }
 
 destroy_in_dir() {
-  local delete_cmd directory force_insecure message preserve_etc_puavo
+  local delete_file_cmd directory force_insecure message preserve_etc_puavo
 
   force_insecure=false
   preserve_etc_puavo=false
@@ -36,18 +36,25 @@ destroy_in_dir() {
   fi
 
   if ! $force_insecure && $use_secure_delete; then
-    delete_cmd='srm -llr'
+    delete_file_cmd='shred -n 1 -u'
   else
-    delete_cmd='rm -rf'
+    delete_file_cmd='rm -f'
   fi
 
-  if $preserve_etc_puavo; then
-    find "$directory" -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' -print0 \
-      2> /dev/null || return 1
-  else
-    find "$directory" -mindepth 1 -maxdepth 1 -print0 2> /dev/null || return 1
-  fi | {
-    xargs -0 --no-run-if-empty $delete_cmd 2> /dev/null || return 1
+  {
+    if $preserve_etc_puavo; then
+      find "$directory" -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' \
+        -type f -print0 || return 1
+    else
+      find "$directory" -mindepth 1 -maxdepth 1 -type f -print0 || return 1
+    fi | { xargs -0 --no-run-if-empty $delete_file_cmd || return 1; }
+
+    if $preserve_etc_puavo; then
+      find "$directory" -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' \
+        -print0 || return 1
+    else
+      find "$directory" -mindepth 1 -maxdepth 1 -print0 || return 1
+    fi | { xargs -0 --no-run-if-empty rm -rf || return 1; }
   } | pv -F ">>> $message %t" > /dev/null
 }
 
