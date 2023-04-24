@@ -10,6 +10,11 @@ logmsg() {
   logger -t puavo-reset-laptop-to-factory-defaults -p "user.${1}" "$2" || true
 }
 
+logerr() {
+  printf "> %s\n" "$1" >&2
+  logmsg error "$1"
+}
+
 destroy_in_dir() {
   local delete_cmd directory force_insecure message preserve_etc_puavo
 
@@ -112,8 +117,7 @@ fi
 
 for mnt in /home /images /state; do
   if ! mountpoint -q "$mnt"; then
-    logmsg err "${mnt} is not mounted, not continuing"
-    echo "${mnt} is not mounted, not continuing" >&2
+    logerr "${mnt} is not mounted, not continuing"
     exit 1
   fi
 done
@@ -121,8 +125,7 @@ done
 puavo_hosttype=$(cat /etc/puavo/hosttype)
 
 if [ "$puavo_hosttype" != "laptop" ]; then
-  logmsg err 'unsuported hosttype'
-  echo "I do not know how to wipe hosts of type '${puavo_hosttype}'" >&2
+  logerr "wiping hosts of type '${puavo_hosttype}' is not supported"
   exit 1
 fi
 
@@ -194,8 +197,7 @@ if [ -b /dev/mapper/puavo-imageoverlays ]; then
   if ! mountpoint -q /imageoverlays; then
     if ! { mkdir -p /imageoverlays \
              && mount /dev/mapper/puavo-imageoverlays /imageoverlays; }; then
-      logmsg err 'could not mount imageoverlays'
-      echo 'Could not mount imageoverlays' >&2
+      logerr 'could not mount imageoverlays'
       resetstatus=1
     fi
   fi
@@ -208,7 +210,7 @@ cd /
 if cat /dev/null > /state/etc/puavo/primary_user_override; then
   logmsg info 'wrote /state/etc/puavo/primary_user_override'
 else
-  logmsg err 'could not write /state/etc/puavo/primary_user_override'
+  logerr 'could not write /state/etc/puavo/primary_user_override'
   resetstatus=1
 fi
 
@@ -217,14 +219,14 @@ if destroy_in_dir --force-insecure /images/puavo-pkg/ \
                     'Removing all puavo-pkgs'; then
   logmsg info 'removed all puavo-pkgs'
 else
-  logmsg err 'error in removing all puavo-pkgs'
+  logerr 'error in removing all puavo-pkgs'
   resetstatus=1
 fi
 
 if destroy_in_dir /home/ 'Cleaning up home directories'; then
   logmsg notice 'cleaned up all home directories'
 else
-  logmsg err 'error in cleaning up home directories'
+  logerr 'error in cleaning up home directories'
   resetstatus=1
 fi
 
@@ -232,21 +234,21 @@ if destroy_in_dir /state/etc/puavo/local/ \
                     'Removing local configurations (made by user)'; then
   logmsg info 'removed local configurations'
 else
-  logmsg err 'error in removing local configurations'
+  logerr 'error in removing local configurations'
   resetstatus=1
 fi
 
 if destroy_in_dir /state/var/cache/ 'Cleaning up caches'; then
   logmsg info 'cleaned up caches'
 else
-  logmsg err 'error in cleaning up caches'
+  logerr 'error in cleaning up caches'
   resetstatus=1
 fi
 
 if destroy_in_dir /state/var/lib/ 'Removing some system configurations'; then
   logmsg info 'removed some system configurations'
 else
-  logmsg err 'error in removing some system configurations'
+  logerr 'error in removing some system configurations'
   resetstatus=1
 fi
 
@@ -258,7 +260,7 @@ if destroy_in_dir --force-insecure --preserve-etc-puavo /imageoverlays/ \
                     'Cleaning up most of /imageoverlays'; then
   logmsg info 'cleaned up most of /imageoverlays'
 else
-  logmsg err 'error in cleaning up (most of) /imageoverlays'
+  logerr 'error in cleaning up (most of) /imageoverlays'
   resetstatus=1
 fi
 
@@ -266,7 +268,7 @@ if destroy_in_dir /state/etc/NetworkManager/system-connections/ \
                'Removing network manager connections'; then
   logmsg info 'removed network manager configurations'
 else
-  logmsg err 'error in removing network manager configurations'
+  logerr 'error in removing network manager configurations'
   resetstatus=1
 fi
 
@@ -284,14 +286,14 @@ if [ "$resetstatus" -eq 0 ]; then
         echo 'but you may also remove it manually from the Puavo interface.'
         echo
       } >&2
-      logmsg err 'failed sending reset state to puavo'
+      logerr 'failed sending reset state to puavo'
       resetstatus=1
     fi
   else
     echo
     echo 'Error in writing reset override' >&2
     echo
-    logmsg err 'error in writing reset override'
+    logerr 'error in writing reset override'
     resetstatus=1
   fi
 else
@@ -307,8 +309,7 @@ else
 fi
 
 if [ "$resetstatus" -ne 0 ]; then
-  logmsg err 'errors occurred in device reset'
-  echo 'Errors in device reset' >&2
+  logerr 'errors occurred in device reset'
   exit $resetstatus
 fi
 
