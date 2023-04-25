@@ -12,6 +12,11 @@ get_etc_puavo() {
   echo "$etc_puavo_data"
 }
 
+validate_ip() {
+  ipcalc $1 | \
+    awk 'BEGIN{FS=":";is_invalid=0} /^INVALID/ {is_invalid=1} END{exit is_invalid}'
+}
+
 puavo_domain=$(           get_etc_puavo /etc/puavo/domain           )
 puavo_hostname=$(         get_etc_puavo /etc/puavo/hostname         )
 puavo_kerberos_realm=$(   get_etc_puavo /etc/puavo/kerberos/realm   )
@@ -301,3 +306,24 @@ EOF
     exit 1
     ;;
 esac
+
+# puavo.networking.dns.upstream_servers should contain servers in form:
+# "1.1.1.1 2.2.2.2 3.3.3.3" and so on. At least one is needed.
+dns_upstream_servers=$(puavo-conf puavo.networking.dns.upstream_servers)
+
+if [ -n "${dns_upstream_servers}" ]; then
+  for ip in ${dns_upstream_servers}; do
+    if ! validate_ip "$ip"; then
+      echo "Invalid IP address in puavo.networking.dns.upstream_servers: '${ip}'" >&2
+      rm -f /etc/dnsmasq.d/01-upstream_servers.conf
+      exit 1
+    fi
+  done
+
+  cat <<EOF > /etc/dnsmasq.d/01-upstream_servers.conf.tmp
+no-resolv
+$(for ip in ${dns_upstream_servers}; do echo "server=${ip}"; done)
+EOF
+  mv /etc/dnsmasq.d/01-upstream_servers.conf.tmp /etc/dnsmasq.d/01-upstream_servers.conf
+else rm -f /etc/dnsmasq.d/01-upstream_servers.conf
+fi

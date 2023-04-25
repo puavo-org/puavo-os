@@ -64,6 +64,7 @@ class packages {
     , 'freeradius-ldap'
     , 'gpm'
     , 'incron'
+    , 'ipcalc'
     , 'isc-dhcp-server'
     , 'krb5-admin-server'
     , 'krb5-kdc'
