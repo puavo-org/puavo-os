@@ -1344,6 +1344,24 @@ class PuavoErsExamScheduler (threading.Thread):
       self.do_keycode_change_request = True
 
 
+  def log_load_exams(self, output):
+    exams_seen = {}
+
+    for decrypt in output['decrypt']:
+      for exam in decrypt['mebs']:
+        if exam in exams_seen:
+          continue
+        if decrypt['wrongPassword']:
+          syslog.syslog(syslog.LOG_ERR,
+                       'exam "%s" load ERROR (bad password "%s")' \
+                         % (exam, decrypt['password']))
+        else:
+          syslog.syslog(syslog.LOG_INFO,
+                       'exam "%s" loaded OK (with password "%s")' \
+                         % (exam, decrypt['password']))
+        exams_seen[exam] = 1
+
+
   def load_exams(self):
     global current_zip_name
 
@@ -1354,7 +1372,15 @@ class PuavoErsExamScheduler (threading.Thread):
     load_exams_timeout_in_seconds = 1200
 
     cmd = 'load-exam %s %s' % (current_zip_name, 'PURKUKOODIT.TXT')
-    return self.server_cmd(cmd, load_exams_timeout_in_seconds)
+    output = self.server_cmd(cmd, load_exams_timeout_in_seconds)
+
+    try:
+      self.log_load_exams(output)
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'could not interpret load exams output: %s' % e)
+
+    return output
 
 
   def reset_exam(self):
