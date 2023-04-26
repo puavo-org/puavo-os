@@ -399,14 +399,11 @@ install_localbootdevice() {
   update_configuration || update_configuration_retstatus=1
   puavo-conf puavo.hosttype "$puavo_hosttype"
 
-  if [ "$puavo_hosttype" = 'bootserver' ]; then
-    bootserver_setup_state
-  fi
-
   install_image "$puavo_install_hosttype"
   update_images || update_configuration_retstatus=1
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
+    bootserver_setup_state
     /usr/local/lib/puavo-handle-image-changes \
       || update_configuration_retstatus=1
   fi
