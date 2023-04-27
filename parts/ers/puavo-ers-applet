@@ -1383,11 +1383,12 @@ class PuavoErsExamScheduler (threading.Thread):
                         + ' answerPaperCount={answerPaperCount}'             \
                         + ' rootDiskFreePercentage={rootDiskFreePercentage}' \
                         + ' replicationStatus={replicationStatus}'
-      msg = format_string.format(hasStarted=status.get('hasStarted'),
-                                 startTime=start_time,
-                                 answerPaperCount=status.get('answerPaperCount'),
-                                 rootDiskFreePercentage=status.get('rootDiskFreePercentage'),
-                                 replicationStatus=status.get('replicationStatus'))
+      msg = format_string.format(
+              hasStarted=status.get('hasStarted'),
+              startTime=start_time,
+              answerPaperCount=status.get('answerPaperCount'),
+              rootDiskFreePercentage=status.get('rootDiskFreePercentage'),
+              replicationStatus=status.get('replicationStatus'))
       syslog.syslog(syslog.LOG_INFO, msg)
 
       by_exam = {}
@@ -1402,9 +1403,12 @@ class PuavoErsExamScheduler (threading.Thread):
                                           % (exam_title, len(student_list)))
 
         for student in student_list:
-          exam_started  = to_datetime( student.get('examStarted' ) ).strftime('%H:%M:%S')
-          exam_finished = to_datetime( student.get('examFinished') ).strftime('%H:%M:%S')
-          update_time   = to_datetime( student.get('updateTime'  ) ).strftime('%H:%M:%S')
+          exam_started  = to_datetime( student.get('examStarted' ) ) \
+                            .strftime('%H:%M:%S')
+          exam_finished = to_datetime( student.get('examFinished') ) \
+                            .strftime('%H:%M:%S')
+          update_time   = to_datetime( student.get('updateTime'  ) ) \
+                            .strftime('%H:%M:%S')
 
           format_string = '    studentUuid={studentUuid}'         \
                             + ' studentStatus={studentStatus}' \
