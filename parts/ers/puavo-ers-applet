@@ -1000,7 +1000,7 @@ class ExamSet:
 
     while len(candidate_exams) > 0:
       candidate_accepted = False
-      for exam in candidate_exams:
+      for exam in list(candidate_exams):
         exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
         exam_load_time  = exam_start_time - PRELOAD_TIMEDELTA
