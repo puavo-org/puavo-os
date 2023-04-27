@@ -113,31 +113,31 @@ class PuavoExamServer (threading.Thread):
 
 
   def run(self):
-     while True:
-       try:
-         try:
-           self.ws = self.open_connection()
-         finally:
-           # Sync exams should be done always after opening a new connection,
-           # even if that fails (because we need a plan B if websocket does
-           # not work).
-           self.exam_sync.trigger_sync_exams()
+    while True:
+      try:
+        try:
+          self.ws = self.open_connection()
+        finally:
+          # Sync exams should be done always after opening a new connection,
+          # even if that fails (because we need a plan B if websocket does
+          # not work).
+          self.exam_sync.trigger_sync_exams()
 
-         while True:
-           try:
-             self.handle_message( self.ws.recv() )
-           except websocket.WebSocketTimeoutException as e:
-             self.ping()
-       except Exception as e:
-         syslog.syslog(syslog.LOG_ERR,
-                       'error with websocket connection: %s' % e)
-       finally:
-         if self.ws:
-           syslog.syslog(syslog.LOG_INFO, 'closing websocket connection')
-           self.ws.close()
-           self.ws = None
+        while True:
+          try:
+            self.handle_message( self.ws.recv() )
+          except websocket.WebSocketTimeoutException as e:
+            self.ping()
+      except Exception as e:
+        syslog.syslog(syslog.LOG_ERR,
+                      'error with websocket connection: %s' % e)
+      finally:
+        if self.ws:
+          syslog.syslog(syslog.LOG_INFO, 'closing websocket connection')
+          self.ws.close()
+          self.ws = None
 
-       time.sleep(60)
+      time.sleep(60)
 
 
   def ping(self):
@@ -772,24 +772,24 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def run(self):
-     while True:
-       try:
-         self.sync_exams_lock.acquire()
-         # we do not check with while, because periodically sync_exams()
-         # should be run, as clock ticks forward
-         if not self.do_exam_sync:
-           self.sync_exams_lock.wait(timeout=3600)
-         self.do_exam_sync = False
-         self.sync_exams_lock.release()
+    while True:
+      try:
+        self.sync_exams_lock.acquire()
+        # we do not check with while, because periodically sync_exams()
+        # should be run, as clock ticks forward
+        if not self.do_exam_sync:
+          self.sync_exams_lock.wait(timeout=3600)
+        self.do_exam_sync = False
+        self.sync_exams_lock.release()
 
-         if self.exam_sync_enabled:
-           self.sync_exams()
-         else:
-           syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
-       except Exception as e:
-         syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
+        if self.exam_sync_enabled:
+          self.sync_exams()
+        else:
+          syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
+      except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
 
-       time.sleep(10)
+      time.sleep(10)
 
 
   def trigger_sync_exams(self):
