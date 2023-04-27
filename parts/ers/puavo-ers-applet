@@ -73,6 +73,13 @@ def rm_f(path, with_logging=True):
       raise e
 
 
+def to_datetime(timestring):
+  if not timestring:
+    return None
+  return datetime.datetime.strptime(timestring, '%Y-%m-%dT%H:%M:%S.%f%z') \
+                          .astimezone()
+
+
 class CurrentZipNotReady(Exception):
   pass
 
@@ -1345,21 +1352,79 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def log_load_exams(self, output):
-    exams_seen = {}
+    try:
+      exams_seen = {}
 
-    for decrypt in output['decrypt']:
-      for exam in decrypt['mebs']:
-        if exam in exams_seen:
-          continue
-        if decrypt['wrongPassword']:
-          syslog.syslog(syslog.LOG_ERR,
-                       'exam "%s" load ERROR (bad password "%s")' \
-                         % (exam, decrypt['password']))
-        else:
-          syslog.syslog(syslog.LOG_INFO,
-                       'exam "%s" loaded OK (with password "%s")' \
-                         % (exam, decrypt['password']))
-        exams_seen[exam] = 1
+      for decrypt in output['decrypt']:
+        for exam in decrypt['mebs']:
+          if exam in exams_seen:
+            continue
+          if decrypt['wrongPassword']:
+            syslog.syslog(syslog.LOG_ERR,
+                         'exam "%s" load ERROR (bad password "%s")' \
+                           % (exam, decrypt['password']))
+          else:
+            syslog.syslog(syslog.LOG_INFO,
+                         'exam "%s" loaded OK (with password "%s")' \
+                           % (exam, decrypt['password']))
+          exams_seen[exam] = 1
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'could not interpret load exams output: %s' % e)
+
+
+  def log_status(self, status):
+    try:
+      start_time = to_datetime( status.get('startTime') ).strftime('%H:%M:%S')
+
+      format_string = 'exam session status:'                                 \
+                        + ' hasStarted={hasStarted}'                         \
+                        + ' startTime={startTime}'                           \
+                        + ' answerPaperCount={answerPaperCount}'             \
+                        + ' rootDiskFreePercentage={rootDiskFreePercentage}' \
+                        + ' replicationStatus={replicationStatus}'
+      msg = format_string.format(hasStarted=status.get('hasStarted'),
+                                 startTime=start_time,
+                                 answerPaperCount=status.get('answerPaperCount'),
+                                 rootDiskFreePercentage=status.get('rootDiskFreePercentage'),
+                                 replicationStatus=status.get('replicationStatus'))
+      syslog.syslog(syslog.LOG_INFO, msg)
+
+      by_exam = {}
+      for student in status['students']:
+        exam_title = student.get('examTitle', '(unknown-exam)')
+        if not exam_title in by_exam:
+          by_exam[exam_title] = []
+        by_exam[exam_title].append(student)
+
+      for exam_title, student_list in by_exam.items():
+        syslog.syslog(syslog.LOG_INFO, '  exam "%s" has %d students:' \
+                                          % (exam_title, len(student_list)))
+
+        for student in student_list:
+          exam_started  = to_datetime( student.get('examStarted' ) ).strftime('%H:%M:%S')
+          exam_finished = to_datetime( student.get('examFinished') ).strftime('%H:%M:%S')
+          update_time   = to_datetime( student.get('updateTime'  ) ).strftime('%H:%M:%S')
+
+          format_string = '    studentUuid={studentUuid}'         \
+                            + ' studentStatus={studentStatus}' \
+                            + ' examStarted={examStarted}'     \
+                            + ' examFinished={examFinished}'   \
+                            + ' updateTime={updateTime}'       \
+                            + ' authorized={authorized}'       \
+                            + ' pingError={pingError}'
+          msg = format_string.format(studentUuid=student.get('studentUuid'),
+                                     studentStatus=student.get('studentStatus'),
+                                     examStarted=exam_started,
+                                     examFinished=exam_finished,
+                                     updateTime=update_time,
+                                     authorized=student.get('authorized'),
+                                     pingError=student.get('pingError'))
+          syslog.syslog(syslog.LOG_INFO, msg)
+
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'could not interpret status: %s' % e)
 
 
   def load_exams(self):
@@ -1373,13 +1438,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
     cmd = 'load-exam %s %s' % (current_zip_name, 'PURKUKOODIT.TXT')
     output = self.server_cmd(cmd, load_exams_timeout_in_seconds)
-
-    try:
-      self.log_load_exams(output)
-    except Exception as e:
-      syslog.syslog(syslog.LOG_ERR,
-                    'could not interpret load exams output: %s' % e)
-
+    self.log_load_exams(output)
     return output
 
 
@@ -1463,6 +1522,9 @@ class PuavoErsExamScheduler (threading.Thread):
         return
 
     if there_should_be_answers:
+      syslog.syslog(syslog.LOG_INFO,
+                    'logging status as we are taking out the answers')
+      self.log_status(status)
       self.store_answers(currently_loaded_exams)
     else:
       # Trying to store answers when there are none returns an error.
@@ -1514,9 +1576,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
       # this student has npt finished, yet has no active connection
       if ('updateTime' in student) and (student['updateTime'] != None):
-        update_time = datetime.datetime.strptime(
-                        student['updateTime'], '%Y-%m-%dT%H:%M:%S.%f%z')\
-                          .astimezone()
+        update_time = to_datetime(student['updateTime'])
         five_minutes_before_now = now - datetime.timedelta(minutes=5)
         if update_time >= five_minutes_before_now.astimezone():
           # but he/she has updated in the last five minutes, so still counts
