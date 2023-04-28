@@ -1595,9 +1595,7 @@ class PuavoErsExamScheduler (threading.Thread):
     last_finished_time = None
     for student in status['students']:
       if ('examFinished' in student) and (student['examFinished'] != None):
-        finish_time = datetime.datetime.strptime(
-                        student['examFinished'], '%Y-%m-%dT%H:%M:%S.%f%z')\
-                          .astimezone()
+        finish_time = to_datetime(student['examFinished'])
         if not last_finished_time or last_finished_time < finish_time:
           last_finished_time = finish_time
 
