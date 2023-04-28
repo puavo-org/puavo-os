@@ -1411,23 +1411,25 @@ class PuavoErsExamScheduler (threading.Thread):
                     'could not interpret load exams output: %s' % e)
 
 
-  def log_status(self, status):
-    try:
-      start_time = to_datetime( status.get('startTime') ).strftime('%H:%M:%S')
+  def session_status_msg(self, status):
+    start_time = to_datetime( status.get('startTime') ).strftime('%H:%M:%S')
+    format_string = 'exam session status:'                                 \
+                      + ' hasStarted={hasStarted}'                         \
+                      + ' startTime={startTime}'                           \
+                      + ' answerPaperCount={answerPaperCount}'             \
+                      + ' rootDiskFreePercentage={rootDiskFreePercentage}' \
+                      + ' replicationStatus={replicationStatus}'
+    return format_string.format(
+             hasStarted=status.get('hasStarted'),
+             startTime=start_time,
+             answerPaperCount=status.get('answerPaperCount'),
+             rootDiskFreePercentage=status.get('rootDiskFreePercentage'),
+             replicationStatus=status.get('replicationStatus'))
 
-      format_string = 'exam session status:'                                 \
-                        + ' hasStarted={hasStarted}'                         \
-                        + ' startTime={startTime}'                           \
-                        + ' answerPaperCount={answerPaperCount}'             \
-                        + ' rootDiskFreePercentage={rootDiskFreePercentage}' \
-                        + ' replicationStatus={replicationStatus}'
-      msg = format_string.format(
-              hasStarted=status.get('hasStarted'),
-              startTime=start_time,
-              answerPaperCount=status.get('answerPaperCount'),
-              rootDiskFreePercentage=status.get('rootDiskFreePercentage'),
-              replicationStatus=status.get('replicationStatus'))
-      syslog.syslog(syslog.LOG_INFO, msg)
+
+  def log_status_with_students(self, status):
+    try:
+      syslog.syslog(syslog.LOG_INFO, self.session_status_msg(status))
 
       by_exam = {}
       for student in status['students']:
@@ -1467,6 +1469,13 @@ class PuavoErsExamScheduler (threading.Thread):
     except Exception as e:
       syslog.syslog(syslog.LOG_ERR,
                     'could not interpret status: %s' % e)
+
+
+  def log_status(self, status):
+    try:
+      syslog.syslog(syslog.LOG_INFO, self.session_status_msg(status))
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR, 'could not interpret status: %s' % e)
 
 
   def load_exams(self):
@@ -1568,7 +1577,7 @@ class PuavoErsExamScheduler (threading.Thread):
     if there_should_be_answers:
       syslog.syslog(syslog.LOG_INFO,
                     'logging status as we are taking out the answers')
-      self.log_status(status)
+      self.log_status_with_students(status)
       self.store_answers(currently_loaded_exams)
     else:
       # Trying to store answers when there are none returns an error.
@@ -1617,7 +1626,7 @@ class PuavoErsExamScheduler (threading.Thread):
       if ('pingError' in student) and (student['pingError'] == False):
         # someone still has a connection, we have at least one active student
         syslog.syslog(syslog.LOG_DEBUG,
-                      'someone is connected and has not finished the exam')
+                      'at least someone is connected and doing the exam')
         return True
 
       # this student has npt finished, yet has no active connection
@@ -1707,6 +1716,8 @@ class PuavoErsExamScheduler (threading.Thread):
 
     status = (self.get_status())['status']
     self.has_started = (status['hasStarted'] == True)
+
+    self.log_status(status)
 
     self.update_monitoring_passphrase()
     self.exam_control.update_status(status, self.monitoring_passphrase)
