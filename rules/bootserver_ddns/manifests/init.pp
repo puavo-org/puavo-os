@@ -38,6 +38,7 @@ class bootserver_ddns {
       require => [ File['/usr/local/lib/puavo-update-ddns']
                  , Package['bind9']
                  , Package['bind9utils']
+                 , Package['ipcalc']
                  , Package['isc-dhcp-server']
                  , Package['moreutils'] ],
       source  => 'puppet:///modules/bootserver_ddns/setup_dns';
@@ -46,6 +47,7 @@ class bootserver_ddns {
   Package <| title == 'bind9'
           or title == 'bind9utils'
           or title == 'dnsmasq'
+          or title == 'ipcalc'
           or title == 'isc-dhcp-server'
           or title == 'moreutils'
           or title == 'ruby-ipaddress' |>

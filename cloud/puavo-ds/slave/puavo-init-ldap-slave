@@ -3,15 +3,39 @@
 require 'erb'
 require 'fileutils'
 require 'getoptlong'
+require 'open3'
 require 'tempfile'
 
-use_force = false
+def get_slapcat_datasize()
+  stdout_str, stderr_str, status = Open3.capture3('slapcat')
+  unless status.success? then
+    raise 'failed to query the database contents'
+  end
+
+  datasize = stdout_str.length
+  raise 'no output from slapcat' if datasize == 0
+
+  datasize
+end
+
+def parse_erb(basename)
+  ldif_template = File.read("/usr/share/puavo-ds-slave/#{ basename }.ldif.erb")
+  ldif = ERB.new(ldif_template, 0, "%<>")
+
+  tempfile = Tempfile.open(basename)
+  tempfile.puts ldif.result
+  tempfile.close
+
+  tempfile
+end
+
 update_only_config = false
+use_force = false
 
 opts = GetoptLong.new(
-  ['--help', '-h', GetoptLong::NO_ARGUMENT],
-  ['--force', GetoptLong::NO_ARGUMENT],
-  ['--update-only-config', GetoptLong::NO_ARGUMENT]
+  [ '--help', '-h',         GetoptLong::NO_ARGUMENT ],
+  [ '--force',              GetoptLong::NO_ARGUMENT ],
+  [ '--update-only-config', GetoptLong::NO_ARGUMENT ],
 )
 
 opts.each do |opt, arg|
@@ -36,58 +60,41 @@ EOF
 end
 
 if ARGV.length != 0 then
-  STDERR.puts("error: invalid number of arguments #{ARGV.length}, expected 0")
+  warn 'error: extra arguments'
   exit(1)
 end
 
-# Use SSL certificate from the image, or if that does not
-# exist (we not an image based ldap-slave), use the cert that
-# was acquired when the host was registered to Puavo.
-ENV["LDAPTLS_REQCERT"] = "demand"
-
-if File.exists?('/etc/puavo-conf/rootca.pem') then
-  ENV["LDAPTLS_CACERT"] = '/etc/puavo-conf/rootca.pem'
-else
-  ENV["LDAPTLS_CACERT"] = '/etc/puavo/certs/rootca.pem'
-end
+ENV['LDAPTLS_REQCERT'] = 'demand'
+ENV['LDAPTLS_CACERT']  = '/etc/puavo-conf/rootca.pem'
 
 Sentinel_file = '/state/var/lib/ldap/init_ldap_slave_done'
 
-if !File.exist?(Sentinel_file) and update_only_config
-  STDERR.puts('error: cannot update uninitialized slapd, run without --update-only-config')
+if !File.exist?(Sentinel_file) && update_only_config then
+  warn 'error: cannot update uninitialized slapd'
   exit(1)
 end
 
-if File.exist?(Sentinel_file) and not use_force
-  STDERR.puts('error: slapd is already initialized, use the --force, Luke!')
+if File.exist?(Sentinel_file) && !use_force then
+  warn 'error: slapd is already initialized, use the --force, Luke!'
   exit(1)
 end
+
+puts 'Setting up ldap database for synchronization.'
 
 @binddn        = File.read('/etc/puavo/ldap/dn'      ).chomp
 @bindpw        = File.read('/etc/puavo/ldap/password').chomp
 @master_server = File.read('/etc/puavo/ldap/master'  ).chomp
 @suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
 
-def parse_erb(basename)
-  ldif_template = File.read("/usr/share/puavo-ds-slave/#{ basename }.ldif.erb")
-  ldif = ERB.new(ldif_template, 0, "%<>")
-
-  tempfile = Tempfile.open(basename)
-  tempfile.puts ldif.result
-  tempfile.close
-
-  tempfile
-end
-
 @acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
-if $?.exitstatus != 0
-  STDERR.puts('error: failed to get ACLs from the master server')
+if $?.exitstatus != 0 then
+  warn 'error: failed to get ACLs from the master server'
   exit(1)
 end
 
 @schemas = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=schema,cn=config`
-if $?.exitstatus != 0
-  STDERR.puts('error: failed to get schemas from the master server')
+if $?.exitstatus != 0 then
+  warn 'error: failed to get schemas from the master server'
   exit(1)
 end
 
@@ -101,72 +108,108 @@ FileUtils.mkdir_p '/state/etc/ldap/slapd.d'
 FileUtils.chmod(0750, '/state/etc/ldap/slapd.d')
 FileUtils.chown('openldap', 'openldap', '/state/etc/ldap/slapd.d')
 
-if !system('rm -rf /state/etc/ldap/slapd.d/*')
-  STDERR.puts('error: failed to remove old LDAP configuration')
+expected_datasize = get_slapcat_datasize() rescue nil
+
+if !system('rm -rf /state/etc/ldap/slapd.d/*') then
+  warn 'error: failed to remove old LDAP configuration'
   exit(1)
 end
 
-if !system("slapadd -l #{tempfile.path} -F /state/etc/ldap/slapd.d -b cn=config")
-  STDERR.puts('error: failed to update the configuration of the database')
+if !system('slapadd', '-l', tempfile.path.to_s, '-F',
+           '/state/etc/ldap/slapd.d', '-b', 'cn=config',
+           { :out => '/dev/null', :err => '/dev/null' }) then
+  warn 'error: failed to update the configuration of the database'
   exit(1)
 end
 
-if !system('chown -R openldap.openldap /state/etc/ldap/slapd.d')
-  STDERR.puts('error: failed to chown /state/etc/ldap/slapd.d to openldap')
+if !system('chown -R openldap.openldap /state/etc/ldap/slapd.d') then
+  warn 'error: failed to chown /state/etc/ldap/slapd.d to openldap'
   exit(1)
 end
 
-if update_only_config
-  if !system('service slapd start')
-    STDERR.puts('error: failed to start slapd')
+if update_only_config then
+  if !system('service slapd start') then
+    warn 'error: failed to start slapd'
     exit(1)
   end
   exit(0)
 end
 
-if !system('rm -rf /state/var/lib/ldap/*')
-  STDERR.puts('error: failed to remove the old LDAP database')
+if !system('rm -rf /state/var/lib/ldap/*') then
+  warn 'error: failed to remove the old LDAP database'
   exit(1)
 end
 
-if !system('chown -R openldap.openldap /state/var/lib/ldap')
-  STDERR.puts('error: failed to chown /state/var/lib/ldap to openldap')
+if !system('chown -R openldap.openldap /state/var/lib/ldap') then
+  warn 'error: failed to chown /state/var/lib/ldap to openldap'
   exit(1)
 end
 
-if !system('chmod -R 0750 /state/var/lib/ldap')
-  STDERR.puts('error: failed to chmod /var/lib/ldap')
+if !system('chmod -R 0750 /state/var/lib/ldap') then
+  warn 'error: failed to chmod /var/lib/ldap'
   exit(1)
 end
 
-if !system('service slapd start')
-  STDERR.puts('error: failed to start slapd')
+if !system('service slapd start') then
+  warn 'error: failed to start slapd'
   exit(1)
 end
 
 FileUtils.touch(Sentinel_file)
 
-puts('Waiting for slapd to synchronize all data from the LDAP master.')
-puts('This may take a while.')
+puts 'Waiting for slapd to synchronize all data from the LDAP master.'
+puts 'This may take a while.'
 
-previous_linecount = -1
-current_linecount = 0
-while previous_linecount != current_linecount
-  if current_linecount > 0 then
-    puts("Still waiting... the magic number is #{current_linecount} now.")
-  end
+no_output_times = 0
+previous_datasize = nil
 
-  sleep 10
-  previous_linecount = current_linecount
-  IO::popen("slapcat") do |io|
-    current_linecount = io.readlines().count
-    io.close()
-    if !$?.success?
-      STDERR.puts('error: failed to query the database contents')
-      exit(1)
-    end
+sleep_amount = 1
+until File.exists?('/var/lib/ldap/alock') do
+  sleep(sleep_amount)
+  sleep_amount += 1
+  if sleep_amount >= 6 then
+    warn 'error: it appears slapd is doing nothing'
+    exit 1
   end
 end
 
-puts('Synchronization complete.')
+while true do
+  current_datasize = get_slapcat_datasize() rescue nil
+
+  progress = nil
+
+  if current_datasize then
+    if expected_datasize then
+      progress \
+        = (100 * current_datasize / expected_datasize).round
+      printf("  ... sync is in progress with about %3s%% done\n", progress)
+    else
+      printf("  ... sync has received %12s characters of data\n",
+             current_datasize)
+    end
+  end
+
+  if !current_datasize || previous_datasize == current_datasize then
+    no_output_times += 1
+  else
+    no_output_times = 0
+  end
+
+  previous_datasize = current_datasize
+
+  if (progress && progress >= 99.5) || no_output_times >= 4 then
+    if !current_datasize then
+      warn 'error: can not read ldap data, some errors in synchronization?'
+      exit 1
+    end
+    break
+  end
+
+  sleep 5
+end
+
+sleep 2
+
+puts()
+puts('Synchronization is most probably complete now.')
 puts()

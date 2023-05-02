@@ -810,7 +810,8 @@
             "tags": "default, utility"
         },
         "org.gnome.NetworkDisplays": {
-            "tags": "default"
+            "tags": "default",
+            "keywords": "miracast"
         },
         "org.gnome.seahorse.Application": {
             "tags": "default"
@@ -1297,6 +1298,9 @@
             },
             "tags": "default, education"
         },
+        "sparkvue": {
+            "tags": "default"
+        },
         "speedcrunch": {
             "icon": "/usr/share/pixmaps/speedcrunch.png",
             "tags": "default"
@@ -1327,6 +1331,12 @@
         },
         "steam": {
             "tags": "steam"
+        },
+        "structorizer": {
+            "tags": "default"
+        },
+        "structorizer-arranger": {
+            "tags": "default"
         },
         "sumopaint": {
             "type": "web",
@@ -1596,6 +1606,7 @@
                 "ClassPadManagerforClassPadII",
                 "LoggerPro",
                 "LoggerPro3",
+                "sparkvue",
                 "MarvinSketch",
                 "dia",
                 "mousepad",
@@ -2272,6 +2283,8 @@
                 "scratch3",
                 "pyscrlink",
                 "hamstersimulator",
+                "structorizer",
+                "structorizer-arranger",
                 "bluefish",
                 "designer-qt5",
                 "processing",

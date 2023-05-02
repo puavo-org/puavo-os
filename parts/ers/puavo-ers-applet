@@ -73,6 +73,13 @@ def rm_f(path, with_logging=True):
       raise e
 
 
+def to_datetime(timestring):
+  if not timestring:
+    return None
+  return datetime.datetime.strptime(timestring, '%Y-%m-%dT%H:%M:%S.%f%z') \
+                          .astimezone()
+
+
 class CurrentZipNotReady(Exception):
   pass
 
@@ -106,31 +113,33 @@ class PuavoExamServer (threading.Thread):
 
 
   def run(self):
-     while True:
-       try:
-         try:
-           self.ws = self.open_connection()
-         finally:
-           # Sync exams should be done always after opening a new connection,
-           # even if that fails (because we need a plan B if websocket does
-           # not work).
-           self.exam_sync.trigger_sync_exams()
+    while True:
+      try:
+        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoExamServer run() loop')
 
-         while True:
-           try:
-             self.handle_message( self.ws.recv() )
-           except websocket.WebSocketTimeoutException as e:
-             self.ping()
-       except Exception as e:
-         syslog.syslog(syslog.LOG_ERR,
-                       'error with websocket connection: %s' % e)
-       finally:
-         if self.ws:
-           syslog.syslog(syslog.LOG_INFO, 'closing websocket connection')
-           self.ws.close()
-           self.ws = None
+        try:
+          self.ws = self.open_connection()
+        finally:
+          # Sync exams should be done always after opening a new connection,
+          # even if that fails (because we need a plan B if websocket does
+          # not work).
+          self.exam_sync.trigger_sync_exams()
 
-       time.sleep(60)
+        while True:
+          try:
+            self.handle_message( self.ws.recv() )
+          except websocket.WebSocketTimeoutException as e:
+            self.ping()
+      except Exception as e:
+        syslog.syslog(syslog.LOG_ERR,
+                      'error with websocket connection: %s' % e)
+      finally:
+        if self.ws:
+          syslog.syslog(syslog.LOG_INFO, 'closing websocket connection')
+          self.ws.close()
+          self.ws = None
+
+      time.sleep(60)
 
 
   def ping(self):
@@ -173,6 +182,8 @@ class PuavoExamServer (threading.Thread):
 
 
   def open_connection(self):
+    syslog.syslog(syslog.LOG_DEBUG, 'opening websocket connection')
+
     ws = websocket.WebSocket()
 
     credentials = '%s:%s' % (self.ldap_dn, self.ldap_password)
@@ -198,6 +209,9 @@ class PuavoExamServer (threading.Thread):
 
 
   def server_uri(self, path, websocket=False):
+    syslog.syslog(syslog.LOG_DEBUG,
+                  'using server name %s' % self.exam_server_name)
+
     if self.exam_server_name.startswith('http://'):
       server_name = self.exam_server_name.replace('http://', '')
       use_http = True
@@ -222,6 +236,8 @@ class PuavoExamServer (threading.Thread):
 
   def get(self, path, params={}):
     uri = self.server_uri(path)
+
+    syslog.syslog(syslog.LOG_DEBUG, 'sending get request to %s' % uri)
 
     req_params = params
     req_params.update({
@@ -250,6 +266,8 @@ class PuavoExamServer (threading.Thread):
   def post(self, path, data):
     uri = self.server_uri(path)
 
+    syslog.syslog(syslog.LOG_DEBUG, 'sending post request to %s' % uri)
+
     req_params = {
                    'domain':   self.domain,
                    'hostname': self.hostname,
@@ -273,8 +291,6 @@ class PuavoExamServer (threading.Thread):
       return
 
     return response
-
-
 
 
 class PuavoErsApplet:
@@ -334,6 +350,8 @@ class PuavoErsApplet:
 
 
   def load_configuration(self):
+    syslog.syslog(syslog.LOG_DEBUG, 'loading configuration')
+
     self.automation_active = None
     self.exam_sync_active = None
 
@@ -368,6 +386,8 @@ class PuavoErsApplet:
 
 
   def save_configuration(self):
+    syslog.syslog(syslog.LOG_DEBUG, 'saving configuration')
+
     try:
       data = {
         'automation_active': self.automation_active,
@@ -411,6 +431,9 @@ class PuavoErsApplet:
 
   def handle_naksu(self, fd, condition, channel):
     try:
+      syslog.syslog(syslog.LOG_DEBUG,
+                    'some IO event with naksu: condition is %s' % condition)
+
       if condition & GLib.IO_IN:
         channel.read()
 
@@ -718,9 +741,13 @@ class DecryptCodesWindow:
 
 
   def open(self, widget):
+    syslog.syslog(syslog.LOG_INFO, 'opening alternative crypt codes window')
+
     if self.win:
       self.win.present()
       return
+
+    syslog.syslog(syslog.LOG_DEBUG, 'creating a new crypt codes window')
 
     self.win = Gtk.Window(title=_tr('Decrypt codes'))
     self.win.set_default_size(400, 700)
@@ -750,6 +777,7 @@ class DecryptCodesWindow:
 
 
   def window_closed(self, widget):
+    syslog.syslog(syslog.LOG_DEBUG, 'crypt codes window closed')
     self.win = None
 
 
@@ -765,27 +793,30 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def run(self):
-     while True:
-       try:
-         self.sync_exams_lock.acquire()
-         # we do not check with while, because periodically sync_exams()
-         # should be run, as clock ticks forward
-         if not self.do_exam_sync:
-           self.sync_exams_lock.wait(timeout=3600)
-         self.do_exam_sync = False
-         self.sync_exams_lock.release()
+    while True:
+      try:
+        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsExamSync run() loop')
 
-         if self.exam_sync_enabled:
-           self.sync_exams()
-         else:
-           syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
-       except Exception as e:
-         syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
+        self.sync_exams_lock.acquire()
+        # we do not check with while, because periodically sync_exams()
+        # should be run, as clock ticks forward
+        if not self.do_exam_sync:
+          self.sync_exams_lock.wait(timeout=3600)
+        self.do_exam_sync = False
+        self.sync_exams_lock.release()
 
-       time.sleep(10)
+        if self.exam_sync_enabled:
+          self.sync_exams()
+        else:
+          syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
+      except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
+
+      time.sleep(10)
 
 
   def trigger_sync_exams(self):
+    syslog.syslog(syslog.LOG_DEBUG, 'sync exams triggered')
     self.sync_exams_lock.acquire()
     self.do_exam_sync = True
     self.sync_exams_lock.notify()
@@ -837,6 +868,8 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def update_exams_json_on_disk(self, exams_json):
+    syslog.syslog(syslog.LOG_DEBUG, 'updating exams.json')
+
     try:
       tmpfile = '%s.tmp' % EXAMS_JSON_FILE
       with open(tmpfile, 'w') as f:
@@ -909,6 +942,8 @@ class PuavoErsExamControl (threading.Thread):
 
     while True:
       try:
+        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsExamControl run() loop')
+
         self.send_status_update_lock.acquire()
 
         if not status_send_error:
@@ -992,8 +1027,12 @@ class ExamSet:
       return
 
     while len(candidate_exams) > 0:
+      syslog.syslog(syslog.LOG_DEBUG,
+                    'checking exam timetable overlaps, %d exams left' \
+                      % len(candidate_exams))
+
       candidate_accepted = False
-      for exam in candidate_exams:
+      for exam in list(candidate_exams):
         exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
         exam_load_time  = exam_start_time - PRELOAD_TIMEDELTA
@@ -1037,7 +1076,9 @@ class PuavoErsExamSorter (threading.Thread):
 
     while True:
       try:
-         # we do not check with while, because this can be run periodically
+        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsExamSorter run() loop')
+
+        # we do not check with while, because this can be run periodically
         if not self.do_sort_exams:
           self.sort_exams_lock.wait(timeout=600)
 
@@ -1056,6 +1097,7 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def trigger_sort_exams(self):
+    syslog.syslog(syslog.LOG_DEBUG, 'sort exams triggered')
     self.sort_exams_lock.acquire()
     self.do_sort_exams = True
     self.sort_exams_lock.notify()
@@ -1144,6 +1186,7 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def cleanup_exams(self, linkdir, exam_filenames):
+    syslog.syslog(syslog.LOG_DEBUG, 'cleaning up exams')
     for path in glob.glob( os.path.join(linkdir, 'exam_*.me[bx]') ):
       if not os.path.basename(path) in exam_filenames:
         rm_f(path)
@@ -1270,6 +1313,8 @@ class PuavoErsServerHelper (threading.Thread):
   def run(self):
     while True:
       try:
+        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsServerHelper run() loop')
+
         update = False
         try:
           if os.path.exists(self.MGMT_INSTALL_SOURCE_PATH):
@@ -1344,6 +1389,95 @@ class PuavoErsExamScheduler (threading.Thread):
       self.do_keycode_change_request = True
 
 
+  def log_load_exams(self, output):
+    try:
+      exams_seen = {}
+
+      for decrypt in output['decrypt']:
+        for exam in decrypt['mebs']:
+          if exam in exams_seen:
+            continue
+          if decrypt['wrongPassword']:
+            syslog.syslog(syslog.LOG_ERR,
+                         'exam "%s" load ERROR (bad password "%s")' \
+                           % (exam, decrypt['password']))
+          else:
+            syslog.syslog(syslog.LOG_INFO,
+                         'exam "%s" loaded OK (with password "%s")' \
+                           % (exam, decrypt['password']))
+          exams_seen[exam] = 1
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'could not interpret load exams output: %s' % e)
+
+
+  def session_status_msg(self, status):
+    start_time = to_datetime( status.get('startTime') ).strftime('%H:%M:%S')
+    format_string = 'exam session status:'                                 \
+                      + ' hasStarted={hasStarted}'                         \
+                      + ' startTime={startTime}'                           \
+                      + ' answerPaperCount={answerPaperCount}'             \
+                      + ' rootDiskFreePercentage={rootDiskFreePercentage}' \
+                      + ' replicationStatus={replicationStatus}'
+    return format_string.format(
+             hasStarted=status.get('hasStarted'),
+             startTime=start_time,
+             answerPaperCount=status.get('answerPaperCount'),
+             rootDiskFreePercentage=status.get('rootDiskFreePercentage'),
+             replicationStatus=status.get('replicationStatus'))
+
+
+  def log_status_with_students(self, status):
+    try:
+      syslog.syslog(syslog.LOG_INFO, self.session_status_msg(status))
+
+      by_exam = {}
+      for student in status['students']:
+        exam_title = student.get('examTitle', '(unknown-exam)')
+        if not exam_title in by_exam:
+          by_exam[exam_title] = []
+        by_exam[exam_title].append(student)
+
+      for exam_title, student_list in by_exam.items():
+        syslog.syslog(syslog.LOG_INFO, '  exam "%s" has %d students:' \
+                                          % (exam_title, len(student_list)))
+
+        for student in student_list:
+          exam_started  = to_datetime( student.get('examStarted' ) ) \
+                            .strftime('%H:%M:%S')
+          exam_finished = to_datetime( student.get('examFinished') ) \
+                            .strftime('%H:%M:%S')
+          update_time   = to_datetime( student.get('updateTime'  ) ) \
+                            .strftime('%H:%M:%S')
+
+          format_string = '    studentUuid={studentUuid}'         \
+                            + ' studentStatus={studentStatus}' \
+                            + ' examStarted={examStarted}'     \
+                            + ' examFinished={examFinished}'   \
+                            + ' updateTime={updateTime}'       \
+                            + ' authorized={authorized}'       \
+                            + ' pingError={pingError}'
+          msg = format_string.format(studentUuid=student.get('studentUuid'),
+                                     studentStatus=student.get('studentStatus'),
+                                     examStarted=exam_started,
+                                     examFinished=exam_finished,
+                                     updateTime=update_time,
+                                     authorized=student.get('authorized'),
+                                     pingError=student.get('pingError'))
+          syslog.syslog(syslog.LOG_INFO, msg)
+
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'could not interpret status: %s' % e)
+
+
+  def log_status(self, status):
+    try:
+      syslog.syslog(syslog.LOG_INFO, self.session_status_msg(status))
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR, 'could not interpret status: %s' % e)
+
+
   def load_exams(self):
     global current_zip_name
 
@@ -1354,7 +1488,9 @@ class PuavoErsExamScheduler (threading.Thread):
     load_exams_timeout_in_seconds = 1200
 
     cmd = 'load-exam %s %s' % (current_zip_name, 'PURKUKOODIT.TXT')
-    return self.server_cmd(cmd, load_exams_timeout_in_seconds)
+    output = self.server_cmd(cmd, load_exams_timeout_in_seconds)
+    self.log_load_exams(output)
+    return output
 
 
   def reset_exam(self):
@@ -1385,6 +1521,8 @@ class PuavoErsExamScheduler (threading.Thread):
 
     while True:
       try:
+        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsExamScheduler run() loop')
+
         if not comm_ok:
           self.monitoring_passphrase = None
 
@@ -1437,6 +1575,9 @@ class PuavoErsExamScheduler (threading.Thread):
         return
 
     if there_should_be_answers:
+      syslog.syslog(syslog.LOG_INFO,
+                    'logging status as we are taking out the answers')
+      self.log_status_with_students(status)
       self.store_answers(currently_loaded_exams)
     else:
       # Trying to store answers when there are none returns an error.
@@ -1484,17 +1625,20 @@ class PuavoErsExamScheduler (threading.Thread):
 
       if ('pingError' in student) and (student['pingError'] == False):
         # someone still has a connection, we have at least one active student
+        syslog.syslog(syslog.LOG_DEBUG,
+                      'at least someone is connected and doing the exam')
         return True
 
       # this student has npt finished, yet has no active connection
       if ('updateTime' in student) and (student['updateTime'] != None):
-        update_time = datetime.datetime.strptime(
-                        student['updateTime'], '%Y-%m-%dT%H:%M:%S.%f%z')\
-                          .astimezone()
+        update_time = to_datetime(student['updateTime'])
         five_minutes_before_now = now - datetime.timedelta(minutes=5)
         if update_time >= five_minutes_before_now.astimezone():
           # but he/she has updated in the last five minutes, so still counts
           # as active
+          msg = 'there is at least one student that has an ongoing exam' \
+                  + ' with connection issues'
+          syslog.syslog(syslog.LOG_INFO, msg)
           return True
 
     # no student is active
@@ -1505,9 +1649,7 @@ class PuavoErsExamScheduler (threading.Thread):
     last_finished_time = None
     for student in status['students']:
       if ('examFinished' in student) and (student['examFinished'] != None):
-        finish_time = datetime.datetime.strptime(
-                        student['examFinished'], '%Y-%m-%dT%H:%M:%S.%f%z')\
-                          .astimezone()
+        finish_time = to_datetime(student['examFinished'])
         if not last_finished_time or last_finished_time < finish_time:
           last_finished_time = finish_time
 
@@ -1568,10 +1710,14 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def schedule_exams(self, current_exams_set):
+    syslog.syslog(syslog.LOG_DEBUG, 'running exam scheduler')
+
     self.handle_keycode_change_request()
 
     status = (self.get_status())['status']
     self.has_started = (status['hasStarted'] == True)
+
+    self.log_status(status)
 
     self.update_monitoring_passphrase()
     self.exam_control.update_status(status, self.monitoring_passphrase)

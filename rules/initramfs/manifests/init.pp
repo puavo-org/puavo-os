@@ -13,8 +13,9 @@ class initramfs {
       require => Package['initramfs-tools'],
       source  => 'puppet:///modules/initramfs/initramfs.conf';
 
-    '/etc/modules':
-      source => 'puppet:///modules/initramfs/etc_modules';
+    '/etc/initramfs-tools/modules':
+      require => Package['initramfs-tools'],
+      source  => 'puppet:///modules/initramfs/etc_initramfs-tools_modules';
   }
 
   Package <| title == initramfs-tools |>
