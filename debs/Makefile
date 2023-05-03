@@ -20,6 +20,7 @@ _pkgs_ports := cups                   \
                pinta                  \
                qtbase-opensource-src  \
                veyon                  \
+               wine                   \
                wsmancli
 
 # sblim-sfcc openwsman are dependencies for wsmancli
