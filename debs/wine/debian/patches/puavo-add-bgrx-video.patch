@@ -1,0 +1,19 @@
+--- a/dlls/winegstreamer/media_source.c
++++ b/dlls/winegstreamer/media_source.c
+@@ -856,7 +856,7 @@ static HRESULT new_media_stream(struct media_source *source,
+ static HRESULT media_stream_init_desc(struct media_stream *stream)
+ {
+     IMFMediaTypeHandler *type_handler = NULL;
+-    IMFMediaType *stream_types[6];
++    IMFMediaType *stream_types[7];
+     struct wg_format format;
+     DWORD type_count = 0;
+     unsigned int i;
+@@ -875,6 +875,7 @@ static HRESULT media_stream_init_desc(struct media_stream *stream)
+             WG_VIDEO_FORMAT_YV12,
+             WG_VIDEO_FORMAT_YUY2,
+             WG_VIDEO_FORMAT_I420,
++            WG_VIDEO_FORMAT_BGRx,
+         };
+ 
+         IMFMediaType *base_type = mf_media_type_from_wg_format(&format);
