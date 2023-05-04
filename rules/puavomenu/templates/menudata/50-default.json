@@ -451,6 +451,18 @@
         "hamstersimulator": {
             "tags": "default"
         },
+        "ica-excel": {
+            "tags": "default"
+        },
+        "ica-explorer": {
+            "tags": "default"
+        },
+        "ica-powerpoint": {
+            "tags": "default"
+        },
+        "ica-word": {
+            "tags": "default"
+        },
         "idle-python3.9": {
             "tags": "default"
         },
@@ -2207,6 +2219,9 @@
                 "libreoffice-draw",
                 "libreoffice-base",
                 "libreoffice-math",
+                "ica-word",
+                "ica-excel",
+                "ica-powerpoint",
                 "projectlibre",
                 "texmaker",
                 "scribus",
