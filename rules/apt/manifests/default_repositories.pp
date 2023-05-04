@@ -3,7 +3,6 @@ class apt::default_repositories {
   include ::apt::fasttrack
   include ::apt::multiarch
   include ::apt::repositories
-  include ::apt::winehq
 
   $fasttrackmirror = 'fasttrack.debian.net'
   $fasttrackmirror_path = '/debian'
