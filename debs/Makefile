@@ -2,7 +2,6 @@
 
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
-<<<<<<< HEAD
 _pkgs_ports := hooktftp      \
                gnome-shell   \
                libpam-ccreds \
