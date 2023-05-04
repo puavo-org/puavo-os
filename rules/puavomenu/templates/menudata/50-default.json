@@ -451,6 +451,18 @@
         "hamstersimulator": {
             "tags": "default"
         },
+        "ica-excel": {
+            "tags": "default"
+        },
+        "ica-explorer": {
+            "tags": "default"
+        },
+        "ica-powerpoint": {
+            "tags": "default"
+        },
+        "ica-word": {
+            "tags": "default"
+        },
         "idle-python3.11": {
             "tags": "default"
         },
@@ -1110,6 +1122,10 @@
         "primusclient": {
             "tags": "default"
         },
+        "projectlibre": {
+            "tags": "default"
+        },
+
         "processing": {
             "name": "Processing",
             "tags": "default",
@@ -2203,6 +2219,10 @@
                 "libreoffice-draw",
                 "libreoffice-base",
                 "libreoffice-math",
+                "ica-word",
+                "ica-excel",
+                "ica-powerpoint",
+                "projectlibre",
                 "texmaker",
                 "scribus",
                 "freeplane",

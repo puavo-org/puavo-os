@@ -2,6 +2,7 @@
 
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
+<<<<<<< HEAD
 _pkgs_ports := hooktftp      \
                gnome-shell   \
                libpam-ccreds \
@@ -22,6 +23,7 @@ _pkgs_ports := hooktftp      \
 #                openjdk-11             \
 #                pinta                  \
 #                qtbase-opensource-src  \
+#                wine                   \
 
 # sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
