@@ -21,7 +21,6 @@ _pkgs_ports := hooktftp      \
 #                mutter                 \
 #                openboard              \
 #                openjdk-11             \
-#                pinta                  \
 #                qtbase-opensource-src  \
 
 # sblim-sfcc openwsman are dependencies for wsmancli

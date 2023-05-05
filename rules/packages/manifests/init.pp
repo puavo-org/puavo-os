@@ -373,7 +373,6 @@ class packages {
     , 'openscad'
     , 'openshot-qt'
     , 'pencil2d'
-    # , 'pinta'                 # XXX bookworm
     , 'pitivi'
     , 'python3-lxml'
     , 'sane-utils'

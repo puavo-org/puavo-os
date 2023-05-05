@@ -1110,15 +1110,6 @@
             },
             "tags": "default"
         },
-        "pinta": {
-            "name": {
-                "fi": "Pinta-kuvankäsittely",
-                "en": "Pinta",
-                "sv": "Pinta",
-                "de": "Pinta"
-            },
-            "tags": "default, graphics"
-        },
         "primusclient": {
             "tags": "default"
         },
@@ -1609,7 +1600,6 @@
             "icon": "/usr/share/puavo-art/puavomenu-icons/highschool.svg",
             "programs": [
                 "gimp",
-                "pinta",
                 "org.inkscape.Inkscape",
                 "geogebra",
                 "geogebra6",
@@ -1685,7 +1675,6 @@
                 "org.kde.kolourpaint",
                 "org.kde.krita",
                 "mypaint",
-                "pinta",
                 "gimp",
                 "org.inkscape.Inkscape",
                 "sumopaint",
@@ -1789,7 +1778,6 @@
             },
             "icon": "applications-engineering",
             "programs": [
-                "pinta",
                 "gimp",
                 "org.inkscape.Inkscape",
                 "sumopaint",
@@ -2021,7 +2009,6 @@
                 "tuxpaint",
                 "mypaint",
                 "gimp",
-                "pinta",
                 "org.gnome.gThumb",
                 "org.gnome.eog",
                 "shotwell",
