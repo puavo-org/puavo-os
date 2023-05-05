@@ -19,7 +19,6 @@ _pkgs_ports := hooktftp      \
 #                incron                 \
 #                kde-spectacle          \
 #                mutter                 \
-#                openboard              \
 #                openjdk-11             \
 #                qtbase-opensource-src  \
 
