@@ -7,6 +7,7 @@ class packages::compat_32bit {
   if $architecture == 'amd64' {
     @package {
       [ 'gstreamer1.0-gl:i386'           # needed for better media support in wine
+      , 'gstreamer1.0-libav:i386'        # needed for better media support in wine
       , 'gstreamer1.0-vaapi:i386'        # needed for better media support in wine
       , 'gstreamer1.0-plugins-bad:i386'  # needed for better media support in wine
       , 'gstreamer1.0-plugins-good:i386' # needed for better media support in wine
