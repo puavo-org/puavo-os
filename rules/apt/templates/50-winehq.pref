@@ -1,8 +1,0 @@
-Package: libvkd3d-shader1 libvkd3d-shader1:i386 vkd3d-compiler vkd3d-compiler:i386
-Pin: origin "dl.winehq.org"
-Pin-Priority: 1001
-
-Package: wine-devel wine-devel-amd64 wine-devel-i386:i386 winehq-devel
-Pin: origin "dl.winehq.org"
-Pin: version <%= scope.lookupvar('apt::winehq::wine_version') %>
-Pin-Priority: 1001
