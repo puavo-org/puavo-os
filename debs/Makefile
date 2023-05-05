@@ -7,6 +7,7 @@ _pkgs_ports := hooktftp      \
                libpam-ccreds \
                nbd           \
                veyon         \
+               wine          \
                wsmancli
 
 # XXX disabled for bookworm
@@ -22,7 +23,6 @@ _pkgs_ports := hooktftp      \
 #                openjdk-11             \
 #                pinta                  \
 #                qtbase-opensource-src  \
-#                wine                   \
 
 # sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
