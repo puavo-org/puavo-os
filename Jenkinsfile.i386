@@ -38,6 +38,19 @@ pipeline {
       steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-openldap' }
     }
 
+    stage('Build wine') {
+      steps {
+        sh '''
+          make -C debs update-repo
+          cat <<'EOF' >> /etc/apt/sources.list
+deb [trusted=yes] file:///puavo-os/debs/.archive /
+EOF
+          apt-get update
+          make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-wine
+        '''
+      }
+    }
+
     stage('Upload deb-packages') {
       steps {
         sh '''
