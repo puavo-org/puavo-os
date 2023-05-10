@@ -114,8 +114,6 @@ class PuavoEtc
   puavo_attr :ds_email_mgmt_password, "ds/email-mgmt/password", :mode => 0640
   puavo_attr :ds_examomatic_dn, "ds/examomatic/dn"
   puavo_attr :ds_examomatic_password, "ds/examomatic/password", :mode => 0640
-  puavo_attr :ds_importtool_dn, "ds/importtool/dn"
-  puavo_attr :ds_importtool_password, "ds/importtool/password", :mode => 0640
   puavo_attr :ds_kadmin_dn, "ds/kadmin/dn"
   puavo_attr :ds_kadmin_password, "ds/kadmin/password", :mode => 0640
   puavo_attr :ds_kdc_dn, "ds/kdc/dn"

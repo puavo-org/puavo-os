@@ -87,13 +87,6 @@ uid: examomatic
 description: Account for exam scheduler service
 userPassword: <%= @examomatic_pw_hash %>
 
-dn: <%= @importtool_dn %>
-objectClass: account
-objectClass: simpleSecurityObject
-uid: importtool
-description: Account for user import tool
-userPassword: <%= @importtool_pw_hash %>
-
 dn: ou=Services,o=puavo
 ou: Services
 objectClass: top
