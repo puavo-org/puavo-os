@@ -73,6 +73,27 @@ uid: statistics
 description: Account for gathering statistics
 userPassword: <%= @statistics_pw_hash %>
 
+dn: <%= @email_mgmt_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: email-mgmt
+description: Account for verified email management
+userPassword: <%= @email_mgmt_pw_hash %>
+
+dn: <%= @examomatic_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: examomatic
+description: Account for exam scheduler service
+userPassword: <%= @examomatic_pw_hash %>
+
+dn: <%= @importtool_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: importtool
+description: Account for user import tool
+userPassword: <%= @importtool_pw_hash %>
+
 dn: ou=Services,o=puavo
 ou: Services
 objectClass: top

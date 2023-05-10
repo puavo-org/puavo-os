@@ -131,6 +131,15 @@ puts
 @statistics_dn = ask_puavo_attr("statistics dn", :ds_statistics_dn, "uid=statistics,o=puavo")
 @statistics_pw = ask_puavo_attr("statistics password", :ds_statistics_password)
 
+@email_mgmt_dn = ask_puavo_attr("email-mgmt dn", :ds_email_mgmt_dn, "uid=email-mgmt,o=puavo")
+@email_mgmt_pw = ask_puavo_attr("email-mgmt password", :ds_email_mgmt_password)
+
+@examomatic_dn = ask_puavo_attr("examomatic dn", :ds_examomatic_dn, "uid=examomatic,o=puavo")
+@examomatic_pw = ask_puavo_attr("examomatic password", :ds_examomatic_password)
+
+@importtool_dn = ask_puavo_attr("importtool dn", :ds_importtool_dn, "uid=importtool,o=puavo")
+@importtool_pw = ask_puavo_attr("importtool password", :ds_importtool_password)
+
 puts "Using #{@rootdn} as rootdn"
 
 @rootpw_hash=`slappasswd -h "{SSHA}" -s "#{@rootpw}"`.gsub(/\n/,"")
@@ -141,6 +150,9 @@ puts "Using #{@rootdn} as rootdn"
 @slavepw_hash=`slappasswd -h "{SSHA}" -s "#{@slavepw}"`.gsub(/\n/,"")
 @pw_mgmt_pw_hash=`slappasswd -h "{SSHA}" -s "#{@pw_mgmt_pw}"`.gsub(/\n/,"")
 @statistics_pw_hash=`slappasswd -h "{SSHA}" -s "#{@statistics_pw}"`.gsub(/\n/,"")
+@email_mgmt_pw_hash=`slappasswd -h "{SSHA}" -s "#{@email_mgmt_pw}"`.gsub(/\n/,"")
+@examomatic_pw_hash=`slappasswd -h "{SSHA}" -s "#{@examomatic_pw}"`.gsub(/\n/,"")
+@importtool_pw_hash=`slappasswd -h "{SSHA}" -s "#{@importtool_pw}"`.gsub(/\n/,"")
 
 print <<EOF
 I'm now going to initialize new LDAP databases on this machine.
