@@ -69,6 +69,15 @@ proc systemgroup {groupname} {
          $groupname $ldapsuffix
 }
 
+proc admins_with_permission {permission} {
+  ldapset [
+    format {([admin,%s])
+              & (user/puavoEduPersonAffiliation
+                  + [,] + user/puavoAdminPermissions)} \
+           $permission
+  ]
+}
+
 #
 # some constants
 #
@@ -795,6 +804,14 @@ rule {
       by *    none break
 }
 
+rule {
+  # Only organisation owners can modify admin user special permissions
+  # (and others can not even read them).
+  [dn subtree $People]
+    [attrs puavoAdminPermissions]
+      by $org_owners write
+}
+
 # Give hosts access to owner information (so that org.json can contain
 # admin users).
 # XXX Note that while the need is for owners, this checks the admin status
@@ -810,13 +827,15 @@ rule {
 
 rule {
   # Allow organisation owners and admins in the same school to
-  # change peoples' information.
+  # change peoples' information.  Allow read access to school teachers
+  # and admins using the import tool.
   [dn subtree $People]
-      by $org_owners           write
-      by $this_school_admins   write
-      by $this_school_staff    read     # /v3/my_school_users requires this
-      by $this_school_teachers read     # /v3/my_school_users requires this
-      by self                  read
+      by $org_owners                         write
+      by $this_school_admins                 write
+      by $this_school_staff                  read       # for /v3/my_school_users
+      by $this_school_teachers               read       # for /v3/my_school_users
+      by [admins_with_permission importtool] read
+      by self                                read
 }
 
 # rules for ou=Desktops
