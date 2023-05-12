@@ -633,6 +633,7 @@ rule {
 rule {
   [dn exact $People]
     [attrs children entry objectClass ou]
+      by [puavo_dn email-mgmt]     read
       by [puavo_dn puavo]          read
       by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [puavo_dn pw-mgmt]        read
@@ -735,6 +736,20 @@ rule {
       by *                    none break
 }
 
+# rules needed by email-mgmt (email management user)
+rule {
+  [dn subtree $People]
+    [attrs entry objectClass puavoId uid]
+      by [puavo_dn email-mgmt] read
+      by *                     none break
+}
+
+rule {
+  [dn subtree $People]
+    [attrs mail puavoPrimaryEmail puavoVerifiedEmail]
+      by [puavo_dn email-mgmt] write
+      by *                     none break
+}
 
 # rules needed by puavo and pw-mgmt (password management user)
 # XXX Not sure why these are needed or if puavo and pw-mgmt need a
