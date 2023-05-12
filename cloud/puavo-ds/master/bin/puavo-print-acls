@@ -830,12 +830,12 @@ rule {
   # change peoples' information.  Allow read access to school teachers
   # and admins using the import tool.
   [dn subtree $People]
-      by $org_owners                         write
-      by $this_school_admins                 write
-      by $this_school_staff                  read       # for /v3/my_school_users
-      by $this_school_teachers               read       # for /v3/my_school_users
-      by [admins_with_permission importtool] read
-      by self                                read
+      by $org_owners                           write
+      by $this_school_admins                   write
+      by $this_school_staff                    read     # for /v3/my_school_users
+      by $this_school_teachers                 read     # for /v3/my_school_users
+      by [admins_with_permission import_users] read
+      by self                                  read
 }
 
 # rules for ou=Desktops
