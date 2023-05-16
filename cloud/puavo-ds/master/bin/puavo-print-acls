@@ -394,10 +394,9 @@ rule {
 # (note that these can not look under ou=Samba,ou=Hosts)
 rule {
   [dn subtree $Hosts]
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by *                       none break
+      by [puavo_dn monitor]    read
+      by [puavo_dn statistics] read
+      by *                     none break
 }
 
 # rules for ou=Devices,ou=Hosts
@@ -568,12 +567,11 @@ rule {
 rule {
   [dn exact $Groups]
     [attrs children entry objectClass ou]
-      by $org_owners             read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [dn children $People]   read
-      by [dn children $Hosts]    read
-      by [systemgroup getent]    read
+      by $org_owners           read
+      by [puavo_dn statistics] read
+      by [dn children $People] read
+      by [dn children $Hosts]  read
+      by [systemgroup getent]  read
 }
 
 # deny $admins and $staff write access to some school attributes
@@ -614,9 +612,8 @@ rule {
     [attrs cn displayName entry objectClass puavoActiveService puavoConf \
            puavoDeviceImage puavoId puavoImageSeriesSourceURL puavoSchool \
            puavoTag]
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by *                       none break
+      by [puavo_dn statistics] read
+      by *                     none break
 }
 
 rule {
@@ -649,7 +646,6 @@ rule {
     [attrs children entry objectClass ou]
       by [puavo_dn email-mgmt]     read
       by [puavo_dn puavo]          read
-      by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [puavo_dn pw-mgmt]        read
       by [puavo_dn statistics]     read
       by [systemgroup addressbook] read
@@ -682,9 +678,8 @@ rule {
   [dn subtree $People]
     [attrs entry objectClass puavoEduPersonAffiliation \
                  puavoEduPersonPrimarySchool puavoId puavoSchool uid]
-      by [puavo_dn puavo-ticket]   read  # XXX to be removed later
-      by [puavo_dn statistics]     read
-      by *                         none break
+      by [puavo_dn statistics] read
+      by *                     none break
 }
 
 # some permissions to "addressbook"
@@ -838,8 +833,8 @@ rule {
   [dn subtree $People]
       by $org_owners                           write
       by $this_school_admins                   write
-      by $this_school_staff                    read     # for /v3/my_school_users
-      by $this_school_teachers                 read     # for /v3/my_school_users
+      by $this_school_staff                    read   # for /v3/my_school_users
+      by $this_school_teachers                 read   # for /v3/my_school_users
       by [admins_with_permission import_users] read
       by self                                  read
 }
@@ -921,18 +916,17 @@ rule {
   # Allow organisation owners to change many organisation settings,
   # and most other entities to read them.
   [dn]
-      by $org_owners             write
-      by [dn children $People]   read
-      by [dn children $Hosts]    read
-      by [puavo_dn kadmin]       read
-      by [puavo_dn kdc]          read
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup getent]    read
-      by [systemgroup orginfo]   read
-      by *                       +dsx
+      by $org_owners           write
+      by [dn children $People] read
+      by [dn children $Hosts]  read
+      by [puavo_dn kadmin]     read
+      by [puavo_dn kdc]        read
+      by [puavo_dn monitor]    read
+      by [puavo_dn puavo]      read
+      by [puavo_dn statistics] read
+      by [systemgroup getent]  read
+      by [systemgroup orginfo] read
+      by *                     +dsx
 }
 
 #
