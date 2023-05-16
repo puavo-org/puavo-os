@@ -2,7 +2,8 @@
 
 set -eu
 
-orig_tarball="../gnome-network-displays-0.9+puavo2.orig.tar.bz2"
+upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p')
+orig_tarball="../gnome-network-displays_${upstream_version}.orig.tar.bz2"
 
 if [ ! -e "${orig_tarball}" ]; then
   wget -O "${orig_tarball}.tmp" \
