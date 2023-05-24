@@ -29,6 +29,7 @@ const PopupMenu = imports.ui.popupMenu;
 const Clutter = imports.gi.Clutter;
 const Mainloop = imports.mainloop;
 const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
 
 var domain, hostName, hostType, releaseName;
 
@@ -44,14 +45,10 @@ function jval(json, key, defaultValue = "<Unknown>")
     return (key in json && json[key] !== null) ? json[key] : defaultValue;
 }
 
-const HostInfoButton = new Lang.Class(
-{
-    Name: "HostInfoButton",
-    Extends: PanelMenu.Button,
-
-    _init: function()
-    {
-        this.parent(0.0);
+const HostInfoButton = GObject.registerClass(
+class HostInfoButton extends PanelMenu.Button {
+     _init() {
+        super._init(0);
 
         /*
         Rough schematic of the containers and other elements we're creating:
@@ -112,7 +109,7 @@ const HostInfoButton = new Lang.Class(
 
         buttonContainer.add_child(new PopupMenu.arrowIcon(St.Side.TOP));
 
-        this.actor.add_actor(buttonContainer);
+        this.add_actor(buttonContainer);
 
         // -----------------------------------------------------------------------------------------
         // Construct the popup menu
@@ -160,7 +157,7 @@ const HostInfoButton = new Lang.Class(
         // Build the final container hierarchy and finish the menu layout
         this.mainContainer.add_actor(this.infoContainer);
         this.mainContainer.add_actor(this.buttonsContainer);
-        this.baseMenuItem.actor.add(this.mainContainer);
+        this.baseMenuItem.add(this.mainContainer);
         this.menu.addMenuItem(this.baseMenuItem);
 
         // Setup a D-Bus proxy for system info queries
@@ -186,53 +183,54 @@ const HostInfoButton = new Lang.Class(
 
         // Setup info retrieval/update logic
         if (this.updateButton && this.proxy) {
-            this.updateButton.connect("clicked", Lang.bind(this, function() {
-                this.updateButton.reactive = false;
-                this.updateButton.opacity = 128;        // simulate a "disabled" look
+            this.updateButton.connect("clicked", this._updateButtonClicked.bind(this));
+        }
+    };
 
-                try {
-                    // asynchronous D-Bus method call
-                    this.proxy.call(
-                        "org.puavo.client.systeminfocollector.CollectSysinfo",
-                        null, 0, 5000, null,
-                        Lang.bind(this, function(source, res, user_data) {
-                            this.updateButton.reactive = true;
-                            this.updateButton.opacity = 255;
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
-                            if (this.infoTextBlock) {
-                                // remove old contents first
-                                this.infoContainer.hide();
-                                this.infoContainer.remove_actor(this.infoTextBlock);
-                                this.infoTextBlock = null;
-                            }
+    _updateButtonClicked() {
+        this.updateButton.reactive = false;
+        this.updateButton.opacity = 128;        // simulate a "disabled" look
 
-                            if (!this.createInfoText())
-                                this.updateButton.label = "Try again?";
-                            else this.updateButton.label = "Update";
+        try {
+            // asynchronous D-Bus method call
+            this.proxy.call(
+                "org.puavo.client.systeminfocollector.CollectSysinfo",
+                null, 0, 5000, null,
+                Lang.bind(this, function(source, res, user_data) {
+                    this.updateButton.reactive = true;
+                    this.updateButton.opacity = 255;
 
-                            this.infoContainer.show();
-                            this.infoContainer.add_actor(this.infoTextBlock);
-                        }),
-                        null    // userdata
-                    );
-                } catch (error) {
-                    // UNTESTED
                     if (this.infoTextBlock) {
+                        // remove old contents first
+                        this.infoContainer.hide();
                         this.infoContainer.remove_actor(this.infoTextBlock);
                         this.infoTextBlock = null;
                     }
 
-                    this.errorText(this.infoContainer, "Failed :-(");
-                }
-            }));
+                    if (!this.createInfoText())
+                        this.updateButton.label = "Try again?";
+                    else this.updateButton.label = "Update";
+
+                    this.infoContainer.show();
+                    this.infoContainer.add_actor(this.infoTextBlock);
+                }),
+                null    // userdata
+            );
+        } catch (error) {
+            // UNTESTED
+            if (this.infoTextBlock) {
+                this.infoContainer.remove_actor(this.infoTextBlock);
+                this.infoTextBlock = null;
+            }
+
+            this.errorText(this.infoContainer, "Failed :-(");
         }
-    },
+    };
 
-    // ---------------------------------------------------------------------------------------------
-    // ---------------------------------------------------------------------------------------------
-
-    createInfoText: function()
-    {
+    createInfoText() {
         if (this.infoTextBlock) {
             // if the block already exists, do nothing because something is wrong
             return;
@@ -464,59 +462,53 @@ const HostInfoButton = new Lang.Class(
         }
 
         return true;
-    },
+    };
 
     // Adds a text label in the container. "params" must contain the text value,
     // style class and possibly other, optional, arguments.
-    addLabel: function(container, params)
-    {
+    addLabel(container, params) {
         container.add_actor(new St.Label(params));
-    },
+    };
 
     // adds a category title
-    category: function(where, value)
-    {
+    category(where, value) {
         let r = new St.BoxLayout();
 
         this.addLabel(r, { text: value, style_class: "infoTextCategory" });
         where.add_actor(r);
-    },
+    };
 
     // adds an empty spacer row (this used to be a CSS property,
     // but it was hard to control)
-    spacer: function(where)
-    {
+    spacer(where) {
         let r = new St.BoxLayout();
 
         this.addLabel(r, { text: " ", style_class: "infoTextSpacer" });
         where.add_actor(r);
-    },
+    };
 
     // add a value without title
-    value: function(where, value)
-    {
+    value(where, value) {
         let r = new St.BoxLayout();
 
         this.addLabel(r, { text: value, style_class: "infoTextPlainValue" });
         where.add_actor(r);
-    },
+    };
 
     // add a title with value
-    titleValue: function(where, title, value)
-    {
+    titleValue(where, title, value) {
         let r = new St.BoxLayout();
 
         this.addLabel(r, { text: title + ":", style_class: "infoTextKey" });
         this.addLabel(r, { text: value, style_class: "infoTextValue" });
 
         where.add_actor(r);
-    },
+    };
 
     // adds an error text, used in error conditions
-    errorText: function(where, text)
-    {
+    errorText(where, text) {
         where.add_actor(new St.Label({ text: text, style_class: "errorText" }));
-    },
+    };
 });
 
 // -------------------------------------------------------------------------------------------------
