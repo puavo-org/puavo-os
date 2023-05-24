@@ -75,7 +75,7 @@ function init()
 function enable()
 {
     for (let id in Main.panel.statusArea) {
-        reorientArrows(Main.panel.statusArea[id].actor.get_first_child(),
+        reorientArrows(Main.panel.statusArea[id].get_first_child(),
             "pan-down-symbolic",
             "pan-up-symbolic")
     }
@@ -84,7 +84,7 @@ function enable()
 function disable()
 {
     for (let id in Main.panel.statusArea) {
-        reorientArrows(Main.panel.statusArea[id].actor.get_first_child(),
+        reorientArrows(Main.panel.statusArea[id].get_first_child(),
             "pan-up-symbolic",
             "pan-down-symbolic")
     }

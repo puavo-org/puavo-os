@@ -112,7 +112,7 @@ const HostInfoButton = new Lang.Class(
 
         buttonContainer.add_child(new PopupMenu.arrowIcon(St.Side.TOP));
 
-        this.actor.add_actor(buttonContainer);
+        this.add_actor(buttonContainer);
 
         // -----------------------------------------------------------------------------------------
         // Construct the popup menu
@@ -160,7 +160,7 @@ const HostInfoButton = new Lang.Class(
         // Build the final container hierarchy and finish the menu layout
         this.mainContainer.add_actor(this.infoContainer);
         this.mainContainer.add_actor(this.buttonsContainer);
-        this.baseMenuItem.actor.add(this.mainContainer);
+        this.baseMenuItem.add(this.mainContainer);
         this.menu.addMenuItem(this.baseMenuItem);
 
         // Setup a D-Bus proxy for system info queries
