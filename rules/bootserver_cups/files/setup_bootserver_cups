@@ -151,6 +151,10 @@ Browsing Yes
 BrowseLocalProtocols all
 HostNameLookups On
 
+# Raise IPP subscription limit. Default is 100 and it tends to go full and
+# cause errors with unknown, but probably negative, consequences.
+MaxSubscriptions 2000
+
 # Default authentication type, when authentication is required...
 DefaultAuthType Basic
 DefaultEncryption Required
