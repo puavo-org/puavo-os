@@ -118,6 +118,7 @@ class PuavoLaptopSetup:
             self.use_windows_switch_changed)
 
         self.remove_entries_without_puavoconf()
+        self.remove_disabled_entries()
         self.update_gui_state_from_puavoconf()
 
         self.abitti_version_box.connect('changed',
@@ -327,6 +328,21 @@ class PuavoLaptopSetup:
             self.remove_grid_entry(self.puavo_conf_grid,
                                    self.builder.get_object(puavo_conf_key))
 
+    def remove_disabled_entries(self):
+        disableconfs = {
+            'puavo.laptop-setup.enable_setting.abitti_version':  'puavo.abitti.version',
+            'puavo.laptop-setup.enable_setting.boot_default':    'puavo.grub.boot_default',
+            'puavo.laptop-setup.enable_setting.windows_enabled': 'puavo.grub.windows.enabled',
+        }
+
+        for disabler_key in disableconfs:
+            try:
+                if(puavoconf_get(disabler_key)=="false"):
+                    self.remove_grid_entry(self.puavo_conf_grid,
+                        self.builder.get_object(disableconfs[disabler_key]))
+            except subprocess.CalledProcessError:
+                print("could not get puavo-conf key for %s" % disabler_key,
+                        file=sys.stderr)
 
     def update_gui_state_from_puavoconf(self):
         for key, value in self.puavo_conf.items():
