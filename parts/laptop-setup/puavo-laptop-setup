@@ -340,6 +340,10 @@ class PuavoLaptopSetup:
                 if(puavoconf_get(disabler_key)=="false"):
                     self.remove_grid_entry(self.puavo_conf_grid,
                         self.builder.get_object(disableconfs[disabler_key]))
+                    if(disabler_key=='puavo.laptop-setup.enable_setting.abitti_version'):
+                        Gtk.Widget.set_visible(self.builder.get_object('puavo.abitti.version.display'), True)
+                        self.set_abitti_version(None) # default to school version
+                        self.builder.get_object('puavo.abitti.version.number').set_text(self.get_abitti_school_version())
             except subprocess.CalledProcessError:
                 print("could not get puavo-conf key for %s" % disabler_key,
                         file=sys.stderr)
