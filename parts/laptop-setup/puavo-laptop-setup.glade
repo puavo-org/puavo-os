@@ -26,7 +26,7 @@
         </child>
         <child>
           <object class="GtkLabel" id="puavo.abitti.version.display">
-            <property name="visible">True</property>
+            <property name="visible">False</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">eExam-system version (Abitti-compatible)</property>
           </object>
