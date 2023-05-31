@@ -41,6 +41,7 @@ import_config() {
   ### Create log file solely for gathering errors from curl.
   ### If it already exists, just move it out of the way so we can read it if needed.
   errlogfile="/tmp/puavo-bios-config-curl.log"
+
   if [ -f "$errlogfile" ]; then
     mv "$errlogfile" "/tmp/puavo-bios-config-curl.log.old"
   fi
@@ -78,35 +79,44 @@ printf "\n"
 printf ">>> Welcome to puavo-bios-config!\n"
 printf ">>> What do you want to do?\n\n"
 
-while chosen=$(ask_choice); do
-  printf ">> You chose '${chosen}'\n"
+if [ $# -eq 1 ]; then
+  chosen="$1"
+  eval $chosen
+elif [ $# -eq 2 ]; then
+  chosen="$1"
+  config="$2"
+  eval $chosen $config
+else
+  while chosen=$(ask_choice); do
+    printf ">> You chose '${chosen}'\n"
 
-  case "$chosen" in
-    exit)
-      exit 0
-      ;;
-    'Flash latest BIOS (HP)')
-      hp_wget_latest_and_flash
-      sleep 3
-      ;;
-    'Import Student laptop BIOS Config')
-      import_config HpSetup-student-laptop.txt
-      sleep 3
-      ;;
-    'Import Student laptop BIOS Config (UEFI)')
-      import_config HpSetup-student-laptop-uefi.txt
-      sleep 3
-      ;;
-    'Import USB Stick factory BIOS Config')
-      import_config HpSetup-usb-factory.txt
-      sleep 3
-      ;;
-    'Import USB Stick factory BIOS Config (UEFI)')
-      import_config HpSetup-usb-factory-uefi.txt
-      sleep 3
-      ;;
-    'use HP BIOS utilities')
-      use_hp_utils
-      ;;
-  esac
-done
+    case "$chosen" in
+      exit)
+        exit 0
+        ;;
+      'Flash latest BIOS (HP)')
+        hp_wget_latest_and_flash
+        sleep 3
+        ;;
+      'Import Student laptop BIOS Config')
+        import_config HpSetup-student-laptop.txt
+        sleep 3
+        ;;
+      'Import Student laptop BIOS Config (UEFI)')
+        import_config HpSetup-student-laptop-uefi.txt
+        sleep 3
+        ;;
+      'Import USB Stick factory BIOS Config')
+        import_config HpSetup-usb-factory.txt
+        sleep 3
+        ;;
+      'Import USB Stick factory BIOS Config (UEFI)')
+        import_config HpSetup-usb-factory-uefi.txt
+        sleep 3
+        ;;
+      'use HP BIOS utilities')
+        use_hp_utils
+        ;;
+    esac
+  done
+fi
