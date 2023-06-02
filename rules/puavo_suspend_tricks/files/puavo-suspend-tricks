@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -eu
+
+modules=$(puavo-conf puavo.pm.suspend.reload_modules)
+if [ "$modules" = '' ]; then
+  exit 0
+fi
+
+
+case $1 in
+    post)
+      for i in ${modules[@]}
+      do
+        logger "puavo-suspend-tricks: reloading $i"
+        sleep 1
+        rmmod "$i"
+        sleep 1
+        modprobe "$i"
+      done
+      ;;
+esac
