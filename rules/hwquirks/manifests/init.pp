@@ -15,6 +15,9 @@ class hwquirks {
     '/usr/share/puavo-conf/hwquirk-overwrites/50-pm-lidswitchdocked.json':
       source => 'puppet:///modules/hwquirks/50-pm-lidswitchdocked.json';
 
+    '/usr/share/puavo-conf/hwquirk-overwrites/51-pm-reloadtouchpad.json':
+      source => 'puppet:///modules/hwquirks/51-pm-reloadtouchpad.json';
+
     '/usr/share/puavo-conf/hwquirk-overwrites/60-disable-grub-theme.json':
       source => 'puppet:///modules/hwquirks/60-disable-grub-theme.json';
 
