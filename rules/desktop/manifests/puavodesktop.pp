@@ -12,6 +12,7 @@ class desktop::puavodesktop {
   include ::nodm
   include ::packages
   include ::puavomenu
+  include ::puavo_suspend_tricks
   include ::puavo_sysinfo_collector
   include ::themes
 
