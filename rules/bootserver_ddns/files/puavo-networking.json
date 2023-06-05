@@ -4,7 +4,7 @@
   },
   "puavo.networking.dns.upstream_servers" : {
     "default": "",
-    "description": "Set upstream servers for dnsmasq via a configuration file and ignore /etc/resolv.conf"
+    "description": "Set upstream servers for dnsmasq via a configuration file and ignore /etc/resolv.conf",
     "typehint": "string"
   },
   "puavo.networking.ubnt.unifi.address": {

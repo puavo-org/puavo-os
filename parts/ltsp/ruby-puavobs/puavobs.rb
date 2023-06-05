@@ -123,6 +123,7 @@ module PuavoBS
       schools.each() do |school|
         menu.choice(school['name']) { school }
       end
+      menu.default="1"
     end
   end
 

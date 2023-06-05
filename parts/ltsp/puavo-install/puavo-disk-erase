@@ -11,6 +11,9 @@ ask_disk() {
 }
 
 prepare_for_erase() {
+  ### There might be leftover nvram dumps that could prevent
+  ### a successful bootloader installation later on. Clean them up.
+  rm -f /sys/firmware/efi/efivars/dump-*
   ### Disable all swap partitions, unmount Puavo LVM.
   echo 'Disabling all swap partitions..'
   swapoff -a

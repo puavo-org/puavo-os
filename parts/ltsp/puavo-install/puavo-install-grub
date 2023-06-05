@@ -538,6 +538,11 @@ install_efi_grub() {
     log err "could not mount /boot/efi from ${efi_devpath}"
     return 1
   fi
+
+  # We might actually have leftover nvram dumps from previous installations
+  # that prevent a successful bootloader installation. Clean them up first.
+  rm -f /sys/firmware/efi/efivars/dump-*
+
   grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
   if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
                     $grub_efi_arguments "$grubdev" \

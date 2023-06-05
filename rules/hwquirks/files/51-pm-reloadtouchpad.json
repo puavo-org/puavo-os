@@ -1,0 +1,10 @@
+[
+  {
+    "key": "product_name",
+    "matchmethod": "exact",
+    "pattern": "Latitude 5480",
+    "parameters": {
+      "puavo.pm.suspend.reload_modules": "i2c_hid"
+    }
+  }
+]

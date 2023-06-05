@@ -34,6 +34,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 
 
 .PHONY: install
@@ -49,6 +50,8 @@ install: installdirs
 		po/fi/puavo-laptop-setup.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
 		po/sv/puavo-laptop-setup.mo
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+		puavo-laptop-setup.json
 
 
 .PHONY: clean

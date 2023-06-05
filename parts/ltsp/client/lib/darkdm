@@ -146,17 +146,41 @@ list_disks() {
   done
 }
 
+check_bios_version() {
+  if [ $(echo $(facter dmi.manufacturer)) = "HP" ]; then
+    hp_ftp_url="https://ftp.ext.hp.com/pub/pcbios"
+    mainboard_sysid=$(facter dmi.board.product)
+    wget --timeout="2" "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml"
+    if [ -e "$mainboard_sysid.xml" ]; then
+      latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Ver)" $mainboard_sysid.xml)"
+      if [ "$(echo $(facter dmi.bios.version) | awk '{ print $3 }')" = "$latest_bios" ]; then
+        colorize "bios_version" 1 50 100 "100" "$(facter dmi.bios.version)"
+      else
+        colorize "bios_version" 1 50 100 "1" "$(facter dmi.bios.version)"
+      fi
+    else
+      echo $(facter dmi.bios.version)
+    fi
+    return
+  fi
+
+  echo $(facter dmi.bios.version)
+}
+
 firmwaremode() {
-  local colorvalue colorized_value
+  local conf_colorized_value fw_colorized_value
 
   if [ -d /sys/firmware/efi ]; then
-      colorvalue=100
-      colorized_value=$(colorize firmware 1 1 1 "$colorvalue" "|| UEFI mode")
-      echo "$colorized_value"
+    if [ -e /sys/firmware/efi/efivars/BootOptionSupport-8be4df61-93ca-11d2-aa0d-00e098032b8c ]; then
+      conf_colorized_value=$(colorize hostconf 1 1 1 "100" "|| Looks like device has CORRECT CONFIG")
+    else
+      conf_colorized_value=$(colorize hostconf 1 1 1 "0" "|| Looks like device has WRONG CONFIG")
+    fi
+    fw_colorized_value=$(colorize firmware 1 1 1 "100" "|| UEFI mode")
+    echo "$fw_colorized_value" "$conf_colorized_value"
   else
-      colorvalue=0
-      colorized_value=$(colorize firmware 1 1 1 "$colorvalue" "|| Legacy mode")
-      echo "$colorized_value"
+    fw_colorized_value=$(colorize firmware 1 1 1 "0" "|| Legacy mode")
+    echo "$fw_colorized_value"
   fi
 }
 
@@ -326,7 +350,7 @@ darkdm_common_systeminfo()
 image:   ${this_image}
 release: ${this_release}
 
-bios:            $(facter dmi.bios.vendor) / $(facter dmi.bios.version) $(firmwaremode)
+bios:            $(facter dmi.bios.vendor) / $(check_bios_version) $(firmwaremode)
 cpu:             ${colorized_cpu}
 $(list_disks)
 memory:          ${colorized_memory} ($(dmidecode -t 17 |grep Size | grep -v No | wc --lines)x)
