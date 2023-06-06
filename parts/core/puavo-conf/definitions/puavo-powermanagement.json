@@ -19,8 +19,8 @@
   },
   "puavo.pm.suspend.reload_modules": {
     "default": "",
-    "description": "List of kernel modules to reload when waking up from suspend."
-    "typehint": "string",
+    "description": "List of kernel modules to reload when waking up from suspend.",
+    "typehint": "string"
   },
   "puavo.pm.usbcore.autosuspend": {
     "default": ""
