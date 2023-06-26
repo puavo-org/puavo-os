@@ -57,5 +57,4 @@ function disable() {
     let indicator = Main.panel.statusArea['activities'];
     if(indicator != null)
     indicator.container.show();
-    Main.panel._activitiesButton.actor.show();
 }
