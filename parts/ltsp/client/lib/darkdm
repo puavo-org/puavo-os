@@ -299,8 +299,8 @@ darkdm_common_systeminfo()
 {
   local colorized_cpu colorized_display_resolution colorized_memory \
         colorized_product_name cpu cpu_text display_resolution \
-        horz_resolution product_name sku_number this_image this_release \
-        vert_resolution
+        display_touch horz_resolution product_name sku_number this_image \
+        this_release vert_resolution
 
   this_image=$(cat /etc/puavo-image/name)
   this_release=$(cat /etc/puavo-image/release)
@@ -327,6 +327,11 @@ darkdm_common_systeminfo()
     colorized_display_resolution='? (resolution)'
   fi
 
+  display_touch=""
+  if [ "$(udevadm info --export-db | grep "ID_INPUT_TOUCHSCREEN=1")" ]; then
+    display_touch=$(colorize touch 1 50 100 "1" "|| TOUCH")
+  fi
+
   sku_number=$(cat /sys/devices/virtual/dmi/id/product_sku 2>/dev/null || true)
   if [ -z "$sku_number" ]; then
     sku_number='?'
@@ -344,7 +349,7 @@ bios:            $(facter dmi.bios.vendor) / $(check_bios_version) $(firmwaremod
 cpu:             ${colorized_cpu}
 $(list_disks)
 memory:          ${colorized_memory} ($(dmidecode -t 17 |grep Size | grep -v No | wc --lines)x)
-display:         ${colorized_display_resolution}
+display:         ${colorized_display_resolution} ${display_touch}
 $(list_networks) $(is_wifi6_compatible)
 $(show_bluetooth)
 $(show_battery_status)
