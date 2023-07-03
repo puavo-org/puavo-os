@@ -2,12 +2,8 @@
 const St = imports.gi.St;
 const Gtk = imports.gi.Gtk;
 const Main = imports.ui.main;
-const Panel = imports.ui.panel;
 const PanelMenu = imports.ui.panelMenu;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const Keys = Me.imports.keys;
-const Shell = imports.gi.Shell;
 const Meta = imports.gi.Meta;
 const Atk = imports.gi.Atk;
 const Clutter = imports.gi.Clutter;
@@ -16,7 +12,7 @@ const Clutter = imports.gi.Clutter;
 const baseGIcon = 'puavo-base-user-desktop';
 const hoverGIcon = 'puavo-hover-user-desktop';
 
-let indicatorBox, icon, _desktopShown, _alreadyMinimizedWindows, box, _settings, shouldrestore;
+let indicatorBox, icon, _desktopShown, _alreadyMinimizedWindows, box, shouldrestore;
 
     //get currently focused window this was pulled from https://github.com/mathematicalcoffee/Gnome-Shell-Window-Buttons-Extension
 function _getWindowToControl () {
@@ -57,17 +53,17 @@ function _showDesktop() {
                 }
             if (shouldrestore) {
                 //toggle icon to the opposite settings when windows are minimized
-                indicatorBox.actor.connect('enter-event', function() {
+                indicatorBox.connect('enter-event', function() {
                     _SetButtonIcon('hover');
                 });
-                indicatorBox.actor.connect('leave-event', function() {
+                indicatorBox.connect('leave-event', function() {
                     _SetButtonIcon('base');
                 });
                 //only check and hide overview when button clicked durp durp
                 if (Main.overview.visible) {
                     Main.overview.hide();
                 }
-                windows[i].unminimize(global.get_current_time());
+                windows[i].unminimize();
                 //activate and bring the last focused window to the top
                 let win = _getWindowToControl();
                 //find better method than current time as shell complains or did maybe a bug but i have no reference
@@ -81,17 +77,17 @@ function _showDesktop() {
             if (!windows[i].skip_taskbar){
                 if (!windows[i].minimized) {
                     //set dfault hover icon when no windows minimized
-                    indicatorBox.actor.connect('enter-event', function() {
+                    indicatorBox.connect('enter-event', function() {
                         _SetButtonIcon('base');
                     });
-                    indicatorBox.actor.connect('leave-event', function() {
+                    indicatorBox.connect('leave-event', function() {
                         _SetButtonIcon('hover');
                     });
                     //only check and hide overview when button clicked durp durp
                     if (Main.overview.visible) {
                         Main.overview.hide();
                     }
-                    windows[i].minimize(global.get_current_time());
+                    windows[i].minimize();
                 } else {
                     _alreadyMinimizedWindows.push(windows[i]);
                 }
@@ -104,7 +100,7 @@ function _showDesktop() {
 function ShowDesktopButton() {
     //create initial panel button
     indicatorBox = new PanelMenu.Button(0.0, null, true);
-    indicatorBox.actor.accessible_role = Atk.Role.TOGGLE_BUTTON;
+    indicatorBox.accessible_role = Atk.Role.TOGGLE_BUTTON;
     //get current status to create the right icon mode if we change panel positions and have already toggled
     if (_desktopShown == false) {
         //create base icon since we have not toggled
@@ -114,11 +110,11 @@ function ShowDesktopButton() {
             style_class: 'system-status-icon' //sets st icon to system style
         });
         //set icon on mouse over
-        indicatorBox.actor.connect('enter-event', function() {
+        indicatorBox.connect('enter-event', function() {
             _SetButtonIcon('hover');
         });
         //reverse mode when the cursor is no longer hovering
-        indicatorBox.actor.connect('leave-event', function() {
+        indicatorBox.connect('leave-event', function() {
             _SetButtonIcon('base');
         });
     } else {
@@ -129,20 +125,20 @@ function ShowDesktopButton() {
             style_class: 'system-status-icon' //sets st icon to system style
         });
         //set icon on mouse over
-        indicatorBox.actor.connect('enter-event', function() {
+        indicatorBox.connect('enter-event', function() {
             _SetButtonIcon('base');
         });
         //reverse mode when the cursor is no longer hovering
-        indicatorBox.actor.connect('leave-event', function() {
+        indicatorBox.connect('leave-event', function() {
             _SetButtonIcon('hover');
         });
     }
     //add icon to panel button
-    indicatorBox.actor.add_actor(icon);
+    indicatorBox.add_actor(icon);
     //sets key release event when icon is hovered via alt tab panel or selecting an item in panel
-    indicatorBox.actor.connect_after('key-release-event', _onKeyRelease);
+    indicatorBox.connect_after('key-release-event', _onKeyRelease);
     //calls the function to toggle desktop when clicked now works when click is released
-    indicatorBox.actor.connect('button-release-event', _showDesktop);
+    indicatorBox.connect('button-release-event', _showDesktop);
     //finally add panel button to statusArea todo allow settings position as well as box
     Main.panel.addToStatusArea("ShowDesktop", indicatorBox, 1, box);
 }
@@ -178,27 +174,19 @@ function init(extensionMeta) {
     _desktopShown = false;
     //creates windows we have minimized variable
     _alreadyMinimizedWindows = [];
-    //create settings constant
-    _settings = Convenience.getSettings();
     //get icon path gio wasnt being called correctly gi gi o
     Gtk.IconTheme.get_default().append_search_path(Me.dir.get_child('icons').get_path());
 }
     //by creating everything in a function and calling that function in enable we can call disbale enable to force correct settings
 function enable() {
-    //hackish settings connect method on enable when called only gets called once when you click new location
-    //it first disconnects and waits to be called again as disable and then enable are called
-    this._settingsSignals = [];
-    this._settingsSignals.push(_settings.connect('changed::' + Keys.POSITION, _setPosition));
-    //get current panel box position this also needs help
-    this.boxPosition = _settings.get_string(Keys.POSITION);
+    // Set position on panel. Possible values are 'left', 'center', 'right'.
+    this.boxPosition = 'left';
     box = this.boxPosition;
     //call function which creates button
     new ShowDesktopButton();
 }
 
 function disable() {
-    //disconnect signal or settings will cause leak when setPosition is called as it would connect recursively
-    _settings.disconnect(this._settingsSignals);
     //null out status role so this role can be used again
     Main.panel.statusArea['ShowDesktop'] = null;
     //destroy button and null it out were done here
