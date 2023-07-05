@@ -790,14 +790,12 @@ class packages {
   }
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-  # $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.157'   # XXX bookworm
   $nvidia_dkms_525_module   = 'nvidia-current/525.105.17'
   $r8168_module             = 'r8168/8.050.03'
   $virtualbox_module        = 'virtualbox/7.0.6'
 
   # $broadcom_sta_dkms_module     # XXX bookworm
   $all_dkms_modules = [ $nvidia_dkms_525_module ]
-                    # , $nvidia_dkms_390_module         # XXX bookworm
 		    # , $r8168_module                   # XXX bookworm
 		    # , $virtualbox_module              # XXX bookworm ]
 
@@ -827,10 +825,8 @@ class packages {
     [ 'broadcom-sta-dkms'
     , 'intel-media-va-driver-non-free' # the free version seems to cause crashes in bullseye
     , 'nvidia-kernel-dkms'
-    # , 'nvidia-legacy-390xx-kernel-dkms'       # XXX bookworm
     , 'r8168-dkms'
     , 'xserver-xorg-video-nvidia' ]:
-    # , 'xserver-xorg-video-nvidia-legacy-390xx' ]:     # XXX bookworm
       tag => [ 'tag_drivers', 'tag_debian_desktop_nonfree', ];
 
     [ 'amd64-microcode'
