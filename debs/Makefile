@@ -2,18 +2,18 @@
 
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := hooktftp      \
-               gnome-shell   \
-               libpam-ccreds \
-               nbd           \
-               veyon         \
-               wine          \
+_pkgs_ports := gnome-control-center \
+               gnome-shell          \
+               hooktftp             \
+               libpam-ccreds        \
+               nbd                  \
+               veyon                \
+               wine                 \
                wsmancli
 
 # XXX disabled for bookworm
 # _pkgs_ports := cups                   \
 #                cups-filters           \
-#                gnome-control-center   \
 #                gnome-network-displays \
 #                gtk+3.0                \
 #                incron                 \
