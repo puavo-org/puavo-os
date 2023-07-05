@@ -1,6 +1,6 @@
-Expose-touchpad-settings-if-synaptics-is-in-use.patch
-Debian-s-adduser-doesn-t-allow-uppercase-letters-by-defau.patch
-distro-logo.patch
-Revert-build-Bump-build-dependency-on-polkit.patch
-puavo-add-appearance.patch
-puavo-disable-user-accounts.patch
+keyboard-Allow-disabling-alternate-characters-key.patch
+build-Look-for-snapd-glib-2.patch
+debian/Expose-touchpad-settings-if-synaptics-is-in-use.patch
+debian/Debian-s-adduser-doesn-t-allow-uppercase-letters-by-defau.patch
+debian/Ignore-result-of-test-network-panel.patch
+debian/firmware-security-disable.patch

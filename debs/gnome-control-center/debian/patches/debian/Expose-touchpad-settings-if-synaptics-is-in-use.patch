@@ -1,6 +1,6 @@
 From: Daniel van Vugt <daniel.van.vugt@canonical.com>
 Date: Fri, 16 Mar 2018 13:53:10 -0400
-Subject: [PATCH 01/22] Expose touchpad settings if synaptics is in use
+Subject: Expose touchpad settings if synaptics is in use
 
 Upstream is aggressively pushing for libinput over synaptics. However that
 creates a factually incorrect situation where gnome-control-center thinks
@@ -20,7 +20,7 @@ https://gitlab.gnome.org/GNOME/mutter/merge_requests/37
  2 files changed, 16 insertions(+), 7 deletions(-)
 
 diff --git a/panels/mouse/cc-mouse-caps-helper.c b/panels/mouse/cc-mouse-caps-helper.c
-index 69546b2..39534b9 100644
+index 6658f41..12aafdb 100644
 --- a/panels/mouse/cc-mouse-caps-helper.c
 +++ b/panels/mouse/cc-mouse-caps-helper.c
 @@ -38,6 +38,13 @@ touchpad_check_capabilities_x11 (gboolean *have_two_finger_scrolling,
@@ -38,10 +38,10 @@ index 69546b2..39534b9 100644
          display = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
  	prop_scroll_methods = XInternAtom (display, "libinput Scroll Methods Available", False);
 diff --git a/panels/mouse/cc-mouse-panel.c b/panels/mouse/cc-mouse-panel.c
-index a7f018b..08304bf 100644
+index cdd28ab..6d1269a 100644
 --- a/panels/mouse/cc-mouse-panel.c
 +++ b/panels/mouse/cc-mouse-panel.c
-@@ -68,7 +68,6 @@ struct _CcMousePanel
+@@ -64,7 +64,6 @@ struct _CcMousePanel
    gboolean           have_mouse;
    gboolean           have_touchpad;
    gboolean           have_touchscreen;
@@ -49,13 +49,13 @@ index a7f018b..08304bf 100644
  
    gboolean           left_handed;
    GtkGesture        *left_gesture;
-@@ -86,7 +85,7 @@ setup_touchpad_options (CcMousePanel *self)
+@@ -82,7 +81,7 @@ setup_touchpad_options (CcMousePanel *self)
    gboolean have_edge_scrolling;
    gboolean have_tap_to_click;
  
 -  if (self->have_synaptics || !self->have_touchpad) {
 +  if (!self->have_touchpad) {
-     gtk_widget_hide (GTK_WIDGET (self->touchpad_frame));
+     gtk_widget_hide (GTK_WIDGET (self->touchpad_group));
      return;
    }
 @@ -308,7 +307,10 @@ setup_dialog (CcMousePanel *self)
@@ -70,7 +70,7 @@ index a7f018b..08304bf 100644
  
    setup_touchpad_options (self);
  
-@@ -397,11 +399,11 @@ cc_mouse_panel_init (CcMousePanel *self)
+@@ -363,11 +365,11 @@ cc_mouse_panel_init (CcMousePanel *self)
                             G_CALLBACK (device_changed), self, G_CONNECT_SWAPPED);
  
    self->have_mouse = mouse_is_present ();

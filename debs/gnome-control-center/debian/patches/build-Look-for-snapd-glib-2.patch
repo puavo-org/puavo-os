@@ -1,0 +1,21 @@
+From: Jeremy Bicha <jeremy.bicha@canonical.com>
+Date: Fri, 26 Aug 2022 08:53:00 -0400
+Subject: build: Look for snapd-glib-2
+
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index bd2ade9..24059a6 100644
+--- a/meson.build
++++ b/meson.build
+@@ -204,7 +204,7 @@ config_h.set10('HAVE_FN_EXPLICIT_BZERO',
+ enable_snap = get_option('snap')
+ if enable_snap
+   snapd_glib_deps = [
+-    dependency('snapd-glib', version: '>= 1.57')
++    dependency('snapd-glib-2', version: '>= 1.57')
+   ]
+ endif
+ config_h.set('HAVE_SNAP', enable_snap,

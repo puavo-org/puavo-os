@@ -1,8 +1,356 @@
-gnome-control-center (1:3.38.4-1+puavo1) bookworm; urgency=medium
+gnome-control-center (1:43.4.1-1) unstable; urgency=medium
 
-  * Add "appearance" plugin to gnome-control-center.
+  * New upstream release
+  * Branch for bookworm
 
- -- Puavo Org <dev@opinsys.fi>  Fri, 13 Aug 2021 13:22:39 +0300
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 14 Feb 2023 11:08:53 -0500
+
+gnome-control-center (1:43.2-2) unstable; urgency=medium
+
+  * d/control.in: Add libspa-0.2-bluetooth as an alternative for
+    pulseaudio-module-bluetooth
+
+ -- Laurent Bigonville <bigon@debian.org>  Wed, 25 Jan 2023 13:01:34 +0100
+
+gnome-control-center (1:43.2-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Dropped patches (applied upstream):
+    - d/p/object-cache-Avoid-use-after-free-of-task-error.patch
+    - d/p/network-fix-crashes-in-eap-method-simple.patch
+  * d/p/keyboard-Allow-disabling-alternate-characters-key.patch
+    (closes: #1027003)
+  * Bump Standards-Version to 4.6.2
+
+ -- Gunnar Hjalmarsson <gunnarhj@debian.org>  Thu, 29 Dec 2022 17:13:57 +0100
+
+gnome-control-center (1:43.1-2) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Remove 2 obsolete maintscript entries in 1 files.
+  * Update upstream metadata fields: Bug-Database, Bug-Submit
+
+  [ Jeremy Bicha ]
+  * Add patch to build with the new snapd-glib
+  * debian/control.in: Bump minimum snapd-glib to 1.63
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Thu, 08 Dec 2022 21:06:20 -0500
+
+gnome-control-center (1:43.1-1) unstable; urgency=medium
+
+  [ Jeremy Bicha ]
+  * New upstream release
+  * Drop patches applied in new release
+  * Cherry-pick 2 crash fixes from the gnome-43 branch
+
+  [ Simon McVittie ]
+  * Update syntax of Lintian overrides
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 22 Nov 2022 14:28:00 -0500
+
+gnome-control-center (1:43.0-2) unstable; urgency=medium
+
+  * Team upload
+  * d/control.in: Build-Depend on polkitd instead of transitional policykit-1
+  * d/control.in: Recommend polkitd and Suggest pkexec instead of
+    recommending transitional policykit-1.
+    polkitd is needed for many privileged actions, such as setting up user
+    accounts, networking and the system clock. pkexec is currently only
+    needed when enabling or disabling remote logins (sshd).
+  * d/patches: Update translations from upstream
+    (ab, ca, cs, de, fur, he, hr, ka, kk, ne, nl, sk, sl, tr, zh_TW)
+  * d/patches: Add post-release bug fixes from upstream.
+    This effectively updates the package to commit 43.0-32-g3182b7019.
+  * Standards-Version: 4.6.1 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 14 Oct 2022 10:05:39 +0100
+
+gnome-control-center (1:43.0-1) unstable; urgency=medium
+
+  [ Jeremy Bicha ]
+  * New upstream release
+
+  [ Sebastien Bacher ]
+  * Include dh_translations override needed for Ubuntu
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Thu, 15 Sep 2022 14:17:01 -0400
+
+gnome-control-center (1:43~rc-2) unstable; urgency=medium
+
+  * New upstream release
+    - Fixes Screen Blank control (Closes: #1018672, LP: #1988087)
+  * debian/control.in: Bump minimum meson to 0.57.0
+  * Build against libsoup3 libraries
+  * Drop sound patch: applied in new release
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 05 Sep 2022 16:57:51 -0400
+
+gnome-control-center (1:43~beta-4) unstable; urgency=medium
+
+  * Cherry-pick patch to fix sound alert selection (LP: #1987161)
+  * Recommend gnome-bluetooth-sendto
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sun, 28 Aug 2022 13:21:15 -0400
+
+gnome-control-center (1:43~beta-3) unstable; urgency=medium
+
+  * Add patch to disable new Device Security panel.
+    It's too technical and unhelpful currently (LP: #1987162)
+    You can get the same info by running
+      fwupdmgr security
+  * debian/control.in: Depend on webp-pixbuf-loader
+    - This is required to display several of the new GNOME 43
+      wallpapers. Please log out and log back in for this feature
+      to work fully.
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Fri, 26 Aug 2022 20:07:03 -0400
+
+gnome-control-center (1:43~beta-2) unstable; urgency=medium
+
+  * Release to unstable
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sun, 21 Aug 2022 18:48:25 -0400
+
+gnome-control-center (1:43~beta-1) experimental; urgency=medium
+
+  * New upstream release
+    - New Privacy > Device Security screen
+    - New alert sounds
+  * Drop gnome-desktop and distributor-logo patches: applied in new release
+  * debian/control.in: Bump minimum libadwaita to 1.2~alpha
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Fri, 19 Aug 2022 13:33:46 -0400
+
+gnome-control-center (1:42.3-2) unstable; urgency=medium
+
+  * Lower gnome-remote-desktop from Depends to Recommends (Closes: #1014879)
+  * Cherry-pick patches to use gnome-shell version number as
+    the GNOME Version in the About page
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sat, 16 Jul 2022 16:24:18 +0200
+
+gnome-control-center (1:42.3-1) unstable; urgency=medium
+
+  [ Jeremy Bicha ]
+  * New upstream release
+  * debian/control.in: Depend on gnome-remote-desktop (LP: #1980606)
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/patches: Use Fedora patch to handle distro logo
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sun, 03 Jul 2022 19:21:29 -0400
+
+gnome-control-center (1:42.2-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop the snap & RDP patches: applied in new release
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Fri, 27 May 2022 08:06:29 -0400
+
+gnome-control-center (1:42.1-3) unstable; urgency=medium
+
+  * Cherry-pick patch to fix snap support
+  * Enable snap support in the Applications panel
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Wed, 25 May 2022 20:33:19 -0400
+
+gnome-control-center (1:42.1-2) unstable; urgency=high
+
+  * Add patch to turn off RDP gsettings key when turning off RDP Sharing
+    (LP: #1971415)
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 10 May 2022 21:56:10 -0400
+
+gnome-control-center (1:42.1-1) unstable; urgency=medium
+
+  * New upstream release
+    - Fix On switch for RDP Sharing
+  * Drop 4 patches applied in new release
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 26 Apr 2022 14:17:10 -0400
+
+gnome-control-center (1:42.0-3) unstable; urgency=medium
+
+  * Team upload
+  * d/p/appdata-Correct-name-of-launchable.patch:
+    Add proposed patch to correct name of .desktop file in appdata
+  * d/p/debian/Ignore-result-of-test-network-panel.patch:
+    Add patch to work around build-time test failure
+  * Reorder patch series so patches from upstream come first
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 15 Apr 2022 11:54:13 +0100
+
+gnome-control-center (1:42.0-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Jeremy Bicha ]
+  * Update build-dependencies
+  * Revert "Disable colord panel until colord GTK4 client library is available"
+  * debian/control.in: Recommend power-profiles-daemon for power mode feature
+  * debian/rules: Disable malcontent on Ubuntu: it's not in main there yet
+  * d/p/online-accounts-Fix-goa-helper-on-X11.patch:
+    Cherry-pick a patch to fix GNOME Online Accounts in Xorg
+  * d/p/network-connection-editor-destroy-the-editor-when-closing.patch,
+    d/p/network-connection-editor-always-load-all-available-VPN-p.patch:
+    Cherry-pick two network connection-editor fixes
+
+  [ Simon McVittie ]
+  * Add a Breaks to upgrade -control-center and -remote-desktop together
+  * Add a Breaks to get gnome-shell upgraded to version 42
+  * Release to unstable
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 13 Apr 2022 16:48:13 +0100
+
+gnome-control-center (1:42.0-1) experimental; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Refresh patch series
+  * d/copyright: Update
+  * Update build-dependencies
+  * Update colord dependency
+  * Disable colord panel until colord GTK4 client library is available
+    (this is a known regression, blocked by #1008678).
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 30 Mar 2022 20:24:07 +0100
+
+gnome-control-center (1:41.4-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Marco Trevisan (Treviño) ]
+  * d/p/debian/Debian-s-adduser-doesn-t-allow-uppercase-letters-by-defau.patch:
+    Fix a memory leak when creating a new user
+
+  [ Jeremy Bicha ]
+  * Update Lintian override for new gnome-control-center .desktop name.
+    This update is harmless for GNOME 41, but useful for GNOME 42.
+
+  [ Simon McVittie ]
+  * Update to upstream gnome-41 branch commit 41.4-10-g3c47db21a2
+    - Improve keyboard accessibility for setting hostname
+    - Translation updates
+  * Stop installing configuration for keyboard shortcuts for screenshots.
+    With GNOME Shell 42, this duplicates a similar file shipped by GNOME
+    Shell itself; and with gnome-settings-daemon 42, it causes a
+    gnome-control-center assertion failure, because those keyboard shortcuts
+    have been removed from g-s-d's settings schema. (Closes: #1008493)
+  * d/patches: Add various bug fixes from upstream 42.0, via Ubuntu.
+    Ubuntu 22.04 is going to stick with gnome-control-center 41.x, so we're
+    not upgrading to 42 in Debian either until Ubuntu is further into its
+    freeze.
+    - This includes a dependency on gsettings-desktop-schemas, so update
+      d/control accordingly.
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 28 Mar 2022 19:13:05 +0100
+
+gnome-control-center (1:41.4-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Only show network configuration button for active/connecting
+      connections
+    - Fix error cancelling PPD dialog
+    - Translation updates
+    - Other changes were already included in 1:41.2-2
+  * Drop patches that came from upstream
+  * d/copyright: Update
+    - Document that some files are now GPL-3+ (Closes: #1005755)
+  * Mark a Debian-specific patch as deliberately not forwarded
+  * Standards-Version: 4.6.0 (no changes required)
+  * Silence some Lintian tags
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 16 Feb 2022 10:54:42 +0000
+
+gnome-control-center (1:41.2-2) unstable; urgency=medium
+
+  * Team upload
+  * d/patches: Update to gnome-41 branch commit 41.2-19-g600b0a014
+    - Fix build with recent meson versions (Closes: #1004761)
+    - Do not invert order of video modes, which can result in a lower
+      than intended refresh rate being selected for a non-preferred mode
+    - Adjust icon for default applications panel
+    - Ensure sound recording level indicator is cleared when microphone
+      is unplugged
+    - Translation updates
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 01 Feb 2022 22:56:12 +0000
+
+gnome-control-center (1:41.2-1) unstable; urgency=medium
+
+  * New upstream release
+  * Bump debhelper-compat to 13
+  * debian/rules: Drop unneeded -Wl,--as-needed
+
+ -- Jeremy Bicha <jbicha@debian.org>  Sun, 05 Dec 2021 09:54:38 -0500
+
+gnome-control-center (1:41.1-1) unstable; urgency=medium
+
+  * Team upload
+
+  [ Jeremy Bicha ]
+  * debian/control.in: Bump minimum gnome-settings-daemon to 41,
+    for power-saver-profile-on-low-battery gsettings key
+
+  [ Simon McVittie ]
+  * New upstream release
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 05 Nov 2021 19:38:16 +0000
+
+gnome-control-center (1:41.0-2) unstable; urgency=medium
+
+  * Release to unstable
+
+ -- Jeremy Bicha <jbicha@debian.org>  Tue, 28 Sep 2021 19:35:52 -0400
+
+gnome-control-center (1:41.0-1) experimental; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * debian/control.in: Bump minimum glib to 2.68.0 & libhandy to 1.2
+  * debian/control.in: Build-Depend on libgcr-3-dev
+  * debian/control.in: Build-Depend on libxml2-utils for xmllint
+  * debian/control.in: Don't Build-Depend on libgrilo-0.3-dev & at-spi2-core
+
+ -- Jeremy Bicha <jbicha@debian.org>  Sun, 26 Sep 2021 16:46:05 -0400
+
+gnome-control-center (1:40.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+
+ -- Jeremy Bicha <jbicha@debian.org>  Sat, 18 Sep 2021 07:37:48 -0400
+
+gnome-control-center (1:40.0-2) unstable; urgency=medium
+
+  * Team upload
+  * Release to unstable, part of transition #992870
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 11 Sep 2021 21:32:44 +0100
+
+gnome-control-center (1:40.0-1) experimental; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * New upstream release
+  * debian/control: Update dependencies to match upstream
+  * debian/control: Bump dependency on schemas 40
+  * d/p/distro-logo: Update to follow upstream changes.
+  * debian/patches: Cleanup to use gbp-pq generated names.
+    And we can avoid annoying numbered patches that doesn't make any sense
+    in the patch-queue branch.
+  * debian/control: B-D on dh-sequence-gnome (>= 0.22.2)
+    It's required for supporting new gnome versioning schema. As per this we
+    can drop the explicit --with gnome in debian/rules
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Thu, 10 Jun 2021 18:36:49 +0200
+
+gnome-control-center (1:3.38.5-1) experimental; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 23 Mar 2021 08:46:50 +0100
 
 gnome-control-center (1:3.38.4-1) unstable; urgency=medium
 

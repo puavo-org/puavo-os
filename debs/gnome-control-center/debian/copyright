@@ -12,37 +12,51 @@ Copyright:
  2004-2006 Adam Weinberger
  2004 Alan Cox
  2013 Aleksander Morgado
- 2020 Alexander Mikhaylenko
+ 2019-2021 Alexander Mikhaylenko
+ 2021 Alexander Shopov
  2007 Aleś Navicki
  2007 Anas Husseini
+ 2020 Andrei Lișiță
  2003 Arafat Medini
  2006-2014 Bastien Nocera
- 2005-2012 Canonical Ltd.
+ 2005-2020 Canonical Ltd.
  2014 Carlos Garnacho
+ 2018 Christian Hergert
  2010 Codethink Limited
  2012 Colin Walters
+ 2020 Collabora Ltd.
  2011-2012 Conor Curran
+ (unspecified) Croatian team
  2012 David Henningsson
  2002 Diego Gonzalez
  2006 Djihed Afifi
+ 2016 Endless Mobile Inc.
  2016 Endless, Inc.
+ 2022 Endless OS Foundation, LLC
+ 2020 Felipe Borges
+ 2020 Felix Häcker
  1996-2018 Free Software Foundation, Inc.
- 2017-2018 Georges Basile Stavracas Neto
+ 2003 Gary Curtis
+ 2017-2021 Georges Basile Stavracas Neto
  2011-2012 Giovanni Campagna
  2011 Gnome Telegu Contributors
  2003 Hasbullah Bin Pit
  2012 Ibrahim Saed
  2011 Inclusive Design Research Centre, OCAD University
  2009-2013 Intel, Inc.
- 2010 Iranian Free Software Users Group (IFSUG.org) translation team
+ 2010-2011 Iranian Free Software Users Group (IFSUG.org) translation team
  2002 Isam Bayazidi
  2006 Johannes H. Jensen
  2006 Jonh Wendell
+ 2019 Jordan Petridis
+ 1995-1997 Josh MacDonald
  2013 Kalev Lember
  2006-2018 Khaled Hosny
+ 2009 Krasimir "Bfaf" Chonov
  2006-2008 Lennart Poettering
  2006 Lukas Novotny
  2005-2008 Marcel Holtmann
+ 2018 Matthias Clasen
  2010 Milan Bouchet-Valat
  2003-2006 Miloslav Trmac
  2017 Mohammed Sadiq
@@ -50,17 +64,24 @@ Copyright:
  2003 Nikos Charonitakis
  2003-2012 Novell, Inc.
  (unspecified) Nuno Pires
- 2002-2018 Red Hat, Inc.
+ 1995-1997 Peter Mattis
+ (unspecified) Project Nayuki
+ 2017-2022 Purism SPC
+ 2002-2022 Red Hat, Inc.
  2010-2017 Richard Hughes
  2007-2011 Rosetta Contributors
  2001 Roy-Magne Mo
+ 2020 SUSE LINUX GmbH
  2002 Sayed Jaffer Al-Mosawi
  2003-2005 Sharif FarsiWeb, Inc.
  2008 Sjoerd Simons
  2009 Soren Hauberg
+ 1995-1997 Spencer Kimball
  2003 Sun Microsystems, Inc.
  2005-2012 Swecha Telugu Localisation Team
  2020 System76, Inc.
+ 2003 The FarsiWeb Project Group
+ 2021 The GNOME Control Center authors
  2004-2009 The GNOME Foundation
  1999-2015 The Gnome Project
  2012 Thomas Bechtold
@@ -68,9 +89,16 @@ Copyright:
  2012 Wacom
  2008 William Jon McCann
  2000-2001 Ximian, Inc.
+ 2019 Zander Brown
  2004 Zuza Software Foundation
  2004-2017 the timezones authors
-License: GPL-2+ and LGPL-2.1+ and LGPL-2+ and Expat
+License: GPL-2+ and GPL-3+ and LGPL-2.1+ and LGPL-2+ and Expat and CC0-1.0
+
+Files:
+ panels/datetime/backward
+Copyright:
+ none
+License: tzdb-public-domain
 
 License: GPL-2+
   This program is free software; you can redistribute it and/or modify
@@ -85,6 +113,20 @@ License: GPL-2+
 Comment:
  On Debian systems, the complete text of the GNU General
  Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+License: GPL-3+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  (at your option) any later version.
+  .
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+Comment:
+ On Debian systems, the complete text of the GNU General
+ Public License can be found in `/usr/share/common-licenses/GPL-3'.
 
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -132,3 +174,12 @@ License: LGPL-2.1+
 Comment:
  On Debian systems, the complete text of the GNU Lesser General
  Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
+
+License: tzdb-public-domain
+ This file is in the public domain, so clarified as of
+ 2009-05-17 by Arthur David Olson.
+
+License: CC0-1.0
+ On Debian systems, the complete text of the Creative Commons Zero v1.0
+ Universal Public Domain Dedication can be found in
+ </usr/share/common-licenses/CC0-1.0>.
