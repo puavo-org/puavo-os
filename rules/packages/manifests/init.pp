@@ -282,11 +282,11 @@ class packages {
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
     [ 'libvkd3d-shader1'
-    # , 'virtualbox'                    # XXX bookworm
-    # , 'virtualbox-dkms'               # XXX bookworm
-    # , 'virtualbox-guest-utils'        # XXX bookworm
-    # , 'virtualbox-guest-x11'          # XXX bookworm
-    # , 'virtualbox-qt'                 # XXX bookworm
+    , 'virtualbox'
+    , 'virtualbox-dkms'
+    , 'virtualbox-guest-utils'
+    , 'virtualbox-guest-x11'
+    , 'virtualbox-qt'
     , 'vkd3d-compiler'
     , 'wine-devel'
     , 'wine-devel-amd64'
@@ -799,9 +799,9 @@ class packages {
   $virtualbox_module        = 'virtualbox/7.0.6'
 
   # $broadcom_sta_dkms_module     # XXX bookworm
-  $all_dkms_modules = [ $nvidia_dkms_525_module ]
+  $all_dkms_modules = [ $nvidia_dkms_525_module
+		      , $virtualbox_module      ]
 		    # , $r8168_module                   # XXX bookworm
-		    # , $virtualbox_module              # XXX bookworm ]
 
   packages::kernels::kernel_package {
     '6.1.0-11-amd64':

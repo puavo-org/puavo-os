@@ -32,22 +32,16 @@ class apt::repositories {
         source => 'puppet:///modules/apt/opinsys.gpg';
     }
 
-    # Do this in its own stage because in Buster
-    # "fasttrack-archive-keyring" is found in buster-backports
-    # that should be configured first.
-##### XXX fasttrack missing from Bookworm, do not enable it (yet)
-#   if $::puavoruleset == 'prepare-fasttrack' {
-#     file {
-#       '/etc/apt/sources.list.d/debian-fasttrack.list':
-#         content => template('apt/debian-fasttrack.list'),
-#         notify  => Exec['apt update'],
-#         require => Package['fasttrack-archive-keyring'];
-#     }
-#
-#     package {
-#       'fasttrack-archive-keyring':
-#         ensure => present;
-#     }
-#   }
+    file {
+      '/etc/apt/sources.list.d/debian-fasttrack.list':
+        content => template('apt/debian-fasttrack.list'),
+        notify  => Exec['apt update'],
+        require => Package['fasttrack-archive-keyring'];
+    }
+
+    package {
+      'fasttrack-archive-keyring':
+        ensure => present;
+    }
   }
 }
