@@ -306,10 +306,8 @@ update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 .PHONY: prepare
 prepare:
 	$(MAKE) -C debs prepare
-	for ruleset in prepare prepare-fasttrack; do \
-	  $(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
-	      FACTER_puavoruleset=$${ruleset} .aux/apply-rules; \
-	done
+	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
+	    FACTER_puavoruleset=prepare .aux/apply-rules
 
 .PHONY: upload-debs
 upload-debs:
