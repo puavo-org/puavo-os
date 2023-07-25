@@ -42,18 +42,6 @@ if [ -n "$nvidia_alternative" ]; then
   fi
 fi
 
-if [ -n "$graphics_driver" ]; then
-  cat <<EOF > /etc/X11/xorg.conf.tmp
-Section "Device"
-    Identifier "Device0"
-    Driver "${xserver_driver}"
-EndSection
-EOF
-  mv /etc/X11/xorg.conf.tmp /etc/X11/xorg.conf
-else
-  rm -f /etc/X11/xorg.conf
-fi
-
 if $use_nvidia_persistenced; then
   puavo-conf puavo.service.nvidia-persistenced.enabled true
 fi
