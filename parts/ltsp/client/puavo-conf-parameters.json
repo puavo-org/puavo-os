@@ -104,6 +104,9 @@
   "puavo.service.avahi-daemon.enabled": {
     "default": "true"
   },
+  "puavo.service.certbot": {
+    "default": "false"
+  },
   "puavo.service.collectd.enabled": {
     "default": "false"
   },

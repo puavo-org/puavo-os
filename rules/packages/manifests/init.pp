@@ -80,6 +80,7 @@ class packages {
     , 'nginx'
     , 'openbsd-inetd'
     , 'policykit-1'
+    , 'python3-certbot-nginx'
     , 'python3-numpy'
     , 'python3-redis'
     , 'pxelinux'
