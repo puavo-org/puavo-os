@@ -103,6 +103,7 @@ case "$(puavo-conf puavo.hosttype)" in
       /etc/shorewall
       /var/lib/bind
       /var/lib/dhcp
+      /var/lib/docker
       /var/lib/krb5kdc
       /var/lib/ldap
       /var/lib/logrotate

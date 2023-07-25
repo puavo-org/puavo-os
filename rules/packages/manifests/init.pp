@@ -59,6 +59,7 @@ class packages {
     , 'cifs-utils'
     , 'dbus'
     , 'dnsmasq'
+    , 'docker-compose'
     , 'freeradius'
     , 'freeradius-krb5'
     , 'freeradius-ldap'
