@@ -164,7 +164,7 @@ no_output_times = 0
 previous_datasize = nil
 
 sleep_amount = 1
-until File.exists?('/var/lib/ldap/alock') do
+until File.exists?('/var/lib/ldap/data.mdb') do
   sleep(sleep_amount)
   sleep_amount += 1
   if sleep_amount >= 6 then
