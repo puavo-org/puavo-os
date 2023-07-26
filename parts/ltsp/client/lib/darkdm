@@ -333,7 +333,8 @@ darkdm_common_systeminfo()
   fi
 
   display_safety=""
-  if [ -e "/sys/firmware/efi/efivars/HP System Firmware-50a24076-b36e-44f7-a70d-7db9a6bfc306" ]; then
+  if [ "$((hexdump /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
+        2>/dev/null || echo 2) |tail -c 22 | head -c 1)" = "1" ]; then
     display_safety=$(colorize safety 1 50 100 "1" "|| SAFETY")
   fi
 
@@ -794,7 +795,8 @@ if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
               org.puavo.client.systeminfocollector.CollectSysinfo \
               | jq --arg nresolution "`cat /sys/class/graphics/fb0/virtual_size`" \
                 --arg hastouchscreen "`udevadm info --export-db | grep -c ID_INPUT_TOUCHSCREEN=1`" \
-                --arg hassafety "`test -s /sys/firmware/efi/efivars/HP\ System\ Firmware-50a24076-b36e-44f7-a70d-7db9a6bfc306 && echo 1 || echo 0`" \
+                --arg hassafety "`(hexdump /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
+                                    2>/dev/null || echo 2) |tail -c 22 | head -c 1`" \
               '. + {"resolution": $nresolution, "touchscreen": $hastouchscreen, "safety": $hassafety}' | jq '{"hw_info": .}'); then
         if ! device_identifier=$(curl --cacert /etc/puavo-conf/rootca.pem  \
                             -d "${sysinfo_json}" --fail  -H "Content-Type: application/json" --max-time 5 --silent \
