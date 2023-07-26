@@ -18,11 +18,12 @@ class Database < ActiveLdap::Base
   end
 
   def set_attribute_values
-    self.olcDatabase    = 'mdb'
-    self.olcDbDirectory = "/var/lib/ldap/#{ self.olcSuffix }"
-    self.olcDbIndex     = PuavoDatabaseConfig::INDEXES
-    self.olcDbMaxSize   = PuavoDatabaseConfig::CONFIG['olcDbMaxSize']
-    self.olcLastMod     = PuavoDatabaseConfig::CONFIG['olcLastMod']
+    self.olcDatabase     = 'mdb'
+    self.olcDbDirectory  = "/var/lib/ldap/#{ self.olcSuffix }"
+    self.olcDbIndex      = PuavoDatabaseConfig::INDEXES
+    self.olcDbMaxReaders = PuavoDatabaseConfig::CONFIG['olcDbMaxReaders']
+    self.olcDbMaxSize    = PuavoDatabaseConfig::CONFIG['olcDbMaxSize']
+    self.olcLastMod      = PuavoDatabaseConfig::CONFIG['olcLastMod']
 
     # Database ACLs
     suffix = self.olcSuffix

@@ -1,7 +1,8 @@
 module PuavoDatabaseConfig
   CONFIG = {
-    'olcDbMaxSize' => [ '40000000000' ],
-    'olcLastMod'   => [ 'TRUE' ],
+    'olcDbMaxReaders' => [ '4096' ],
+    'olcDbMaxSize'    => [ '40000000000' ],
+    'olcLastMod'      => [ 'TRUE' ],
   }
   INDEXES = [ 'cn eq,sub',
               'creatorsName eq',
