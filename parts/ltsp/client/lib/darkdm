@@ -196,6 +196,18 @@ is_wifi6_compatible() {
   fi
 }
 
+get_safetydisplay_status() {
+  local display
+  display=$(hexdump -v /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
+        2>/dev/null || echo -n 2)
+  dlen=`echo -n $display | wc -c`
+  if [ $dlen -eq "50" ]; then
+    echo $display | tail -c 17 | head -c 1
+  else
+    echo -n "2" # we're not familliar with this variable format, do nothing
+  fi
+}
+
 list_networks() {
   local netdev network_devices
   network_devices=$(facter --json networking.interfaces \
@@ -333,8 +345,7 @@ darkdm_common_systeminfo()
   fi
 
   display_safety=""
-  if [ "$((hexdump /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
-        2>/dev/null || echo 2) |tail -c 22 | head -c 1)" = "1" ]; then
+  if [ $(get_safetydisplay_status) = "1" ]; then
     display_safety=$(colorize safety 1 50 100 "1" "|| SAFETY")
   fi
 
@@ -795,8 +806,7 @@ if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
               org.puavo.client.systeminfocollector.CollectSysinfo \
               | jq --arg nresolution "`cat /sys/class/graphics/fb0/virtual_size`" \
                 --arg hastouchscreen "`udevadm info --export-db | grep -c ID_INPUT_TOUCHSCREEN=1`" \
-                --arg hassafety "`(hexdump /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
-                                    2>/dev/null || echo 2) |tail -c 22 | head -c 1`" \
+                --arg hassafety "$(get_safetydisplay_status)" \
               '. + {"resolution": $nresolution, "touchscreen": $hastouchscreen, "safety": $hassafety}' | jq '{"hw_info": .}'); then
         if ! device_identifier=$(curl --cacert /etc/puavo-conf/rootca.pem  \
                             -d "${sysinfo_json}" --fail  -H "Content-Type: application/json" --max-time 5 --silent \
