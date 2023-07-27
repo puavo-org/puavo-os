@@ -104,6 +104,9 @@
   "puavo.service.avahi-daemon.enabled": {
     "default": "true"
   },
+  "puavo.service.certbot.enabled": {
+    "default": "false"
+  },
   "puavo.service.collectd.enabled": {
     "default": "false"
   },
@@ -117,6 +120,9 @@
     "default": "false"
   },
   "puavo.service.dnsmasq.enabled": {
+    "default": "false"
+  },
+  "puavo.service.docker.enabled": {
     "default": "false"
   },
   "puavo.service.epoptes.enabled": {

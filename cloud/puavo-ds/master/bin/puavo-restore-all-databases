@@ -49,7 +49,7 @@ def convert_to_hdb(linelist)
         line.sub('olcMdbConfig', 'olcHdbConfig')
 
       # remove database configurations (will be added later)
-      when /^olcDbCacheSize:/, /^olcDbConfig:/, /^olcDbDNcacheSize:/, /^olcDbMaxSize:/
+      when /^olcDbCacheSize:/, /^olcDbConfig:/, /^olcDbDNcacheSize:/, /^olcDbMaxReaders:/, /^olcDbMaxSize:/
         nil
 
       # everything else
@@ -73,7 +73,7 @@ def convert_to_mdb(linelist)
         line.sub('olcHdbConfig', 'olcMdbConfig')
 
       # remove database configurations (will be added later)
-      when /^olcDbCacheSize:/, /^olcDbConfig:/, /^olcDbDNcacheSize:/, /^olcDbMaxSize:/
+      when /^olcDbCacheSize:/, /^olcDbConfig:/, /^olcDbDNcacheSize:/, /^olcDbMaxReaders:/, /^olcDbMaxSize:/
         nil
 
       # everything else

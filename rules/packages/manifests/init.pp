@@ -56,6 +56,7 @@ class packages {
     , 'cifs-utils'
     , 'dbus'
     , 'dnsmasq'
+    , 'docker-compose'
     , 'freeradius'
     , 'freeradius-krb5'
     , 'freeradius-ldap'
@@ -76,6 +77,7 @@ class packages {
     , 'nginx'
     , 'openbsd-inetd'
     , 'policykit-1'
+    , 'python3-certbot-nginx'
     , 'python3-numpy'
     , 'python3-redis'
     , 'pxelinux'
@@ -800,9 +802,9 @@ class packages {
 		    # , $virtualbox_module              # XXX bookworm ]
 
   packages::kernels::kernel_package {
-    '6.1.0-9-amd64':
+    '6.1.0-10-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.1.0-9-amd64';
+      package_name => 'linux-image-6.1.0-10-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by

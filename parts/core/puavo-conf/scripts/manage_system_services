@@ -32,6 +32,11 @@ set services {
         -> /lib/systemd/system/avahi-daemon.socket
     }}
 
+  { certbot {
+      /etc/systemd/system/timers.target.wants/certbot.timer
+        -> /lib/systemd/system/certbot.timer
+    }}
+
   { collectd {
       /etc/systemd/system/multi-user.target.wants/collectd.service
         -> /lib/systemd/system/collectd.service
@@ -54,6 +59,17 @@ set services {
   { dnsmasq {
       /etc/systemd/system/multi-user.target.wants/dnsmasq.service
         -> /lib/systemd/system/dnsmasq.service
+    }}
+
+  { docker {
+      /etc/systemd/system/multi-user.target.wants/docker.service
+        -> /lib/systemd/system/docker.service
+      /etc/systemd/system/sockets.target.wants/docker.socket
+        -> /lib/systemd/system/docker.socket
+      /etc/rc2.d/S01docker -> /etc/init.d/docker
+      /etc/rc3.d/S01docker -> /etc/init.d/docker
+      /etc/rc4.d/S01docker -> /etc/init.d/docker
+      /etc/rc5.d/S01docker -> /etc/init.d/docker
     }}
 
   { epoptes {

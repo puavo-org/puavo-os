@@ -158,6 +158,7 @@ check_bios_version() {
       else
         colorize "bios_version" 1 50 100 "1" "$(facter dmi.bios.version)"
       fi
+      rm $mainboard_sysid.xml
     else
       echo $(facter dmi.bios.version)
     fi
@@ -185,25 +186,14 @@ firmwaremode() {
 }
 
 is_wifi6_compatible() {
-  ### Very crude way to quickly assess whether we have a known
-  ### Wi-Fi 6 compatible wireless interface.
-  local listhwdev compatible colorvalue colorized_value
-
-  listhwdev=$(lshw | grep -i "$(facter networking.interfaces.wlan0.mac)" -B7 )
-  compatible="|| Wi-Fi 6 compatible"
-  colorvalue=100
-  colorized_value=$(colorize wifi 1 1 1 "$colorvalue" "$compatible")
-
-  case "$listhwdev" in
-    *"Comet Lake PCH-LP CNVi WiFi"*|*"Wi-Fi 6"* )
-      echo "$colorized_value"
-      ;;
-    *)
-      colorvalue=0
-      colorized_value=$(colorize wifi 1 1 1 "$colorvalue" "|| Not Wi-Fi 6 compatible")
-      echo "$colorized_value"
-      ;;
-  esac
+  ### In "iw list" output, Wi-Fi 6 capabilities are listed under
+  ### "HE PHY Capabilities" which stands for "High Efficiency" wireless.
+  ### If no such capabilities are found, said section is not in the output.
+  if [ -n "$(iw list | grep "HE PHY Capabilities")" ]; then
+    colorize wifi 1 1 1 "100" "|| Wi-Fi 6 compatible"
+  else
+    colorize wifi 1 1 1 "0" "|| Not Wi-Fi 6 compatible"
+  fi
 }
 
 list_networks() {
@@ -309,8 +299,8 @@ darkdm_common_systeminfo()
 {
   local colorized_cpu colorized_display_resolution colorized_memory \
         colorized_product_name cpu cpu_text display_resolution \
-        horz_resolution product_name sku_number this_image this_release \
-        vert_resolution
+        display_touch display_safety horz_resolution product_name sku_number this_image \
+        this_release vert_resolution
 
   this_image=$(cat /etc/puavo-image/name)
   this_release=$(cat /etc/puavo-image/release)
@@ -337,6 +327,17 @@ darkdm_common_systeminfo()
     colorized_display_resolution='? (resolution)'
   fi
 
+  display_touch=""
+  if [ "$(udevadm info --export-db | grep "ID_INPUT_TOUCHSCREEN=1")" ]; then
+    display_touch=$(colorize touch 1 50 100 "1" "|| TOUCH")
+  fi
+
+  display_safety=""
+  if [ "$((hexdump /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
+        2>/dev/null || echo 2) |tail -c 22 | head -c 1)" = "1" ]; then
+    display_safety=$(colorize safety 1 50 100 "1" "|| SAFETY")
+  fi
+
   sku_number=$(cat /sys/devices/virtual/dmi/id/product_sku 2>/dev/null || true)
   if [ -z "$sku_number" ]; then
     sku_number='?'
@@ -354,7 +355,7 @@ bios:            $(facter dmi.bios.vendor) / $(check_bios_version) $(firmwaremod
 cpu:             ${colorized_cpu}
 $(list_disks)
 memory:          ${colorized_memory} ($(dmidecode -t 17 |grep Size | grep -v No | wc --lines)x)
-display:         ${colorized_display_resolution}
+display:         ${colorized_display_resolution} ${display_touch} ${display_safety}
 $(list_networks) $(is_wifi6_compatible)
 $(show_bluetooth)
 $(show_battery_status)
@@ -794,7 +795,9 @@ if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
               org.puavo.client.systeminfocollector.CollectSysinfo \
               | jq --arg nresolution "`cat /sys/class/graphics/fb0/virtual_size`" \
                 --arg hastouchscreen "`udevadm info --export-db | grep -c ID_INPUT_TOUCHSCREEN=1`" \
-              '. + {"resolution": $nresolution, "touchscreen": $hastouchscreen}' | jq '{"hw_info": .}'); then
+                --arg hassafety "`(hexdump /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
+                                    2>/dev/null || echo 2) |tail -c 22 | head -c 1`" \
+              '. + {"resolution": $nresolution, "touchscreen": $hastouchscreen, "safety": $hassafety}' | jq '{"hw_info": .}'); then
         if ! device_identifier=$(curl --cacert /etc/puavo-conf/rootca.pem  \
                             -d "${sysinfo_json}" --fail  -H "Content-Type: application/json" --max-time 5 --silent \
                             -X POST "$deviceid_url"); then
