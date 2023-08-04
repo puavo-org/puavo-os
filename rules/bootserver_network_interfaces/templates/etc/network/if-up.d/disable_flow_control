@@ -10,5 +10,6 @@ if [ "$puavo_hosttype" != 'bootserver' ]; then
 fi
 
 if [[ "$IFACE" =~ ^ltsp[0-9.]+$ ]]; then
-  /sbin/ethtool -A $IFACE autoneg off rx off tx off
+  /sbin/ethtool -A $IFACE autoneg off rx off tx off \
+    || echo "Error: /etc/network/if-up.d/disable_flow_control failed for $IFACE"
 fi
