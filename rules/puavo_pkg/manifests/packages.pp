@@ -1,7 +1,6 @@
 class puavo_pkg::packages {
   include ::puavo_conf
   include ::puavo_pkg
-  include ::trusty_libs         # needed by globilab and vstloggerpro
 
   # list removed puavo-pkg packages here
   ::puavo_conf::definition {
@@ -31,7 +30,6 @@ class puavo_pkg::packages {
 			, 'flashforge-flashprint'
 			, 'geogebra'
 			, 'geogebra6'
-			, 'globilab'
 			, 'google-chrome'
 			, 'google-earth'
 			, 'idid'
@@ -59,6 +57,7 @@ class puavo_pkg::packages {
 			, 'tilitin'
 			, 't-lasku'
 			, 'tmux-plugins-battery'
+			, 'ubuntu-trusty-libs'
 			, 'ubuntu-wallpapers-bullseye'
 			, 'veracrypt'
                         , 'wine-gecko'
