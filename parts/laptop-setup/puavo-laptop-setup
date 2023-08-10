@@ -343,7 +343,13 @@ class PuavoLaptopSetup:
                     if(disabler_key=='puavo.laptop-setup.enable_setting.abitti_version'):
                         Gtk.Widget.set_visible(self.builder.get_object('puavo.abitti.version.display'), True)
                         self.set_abitti_version(None) # default to school version
-                        self.builder.get_object('puavo.abitti.version.number').set_text(self.get_abitti_school_version())
+                        if(self.abitti_school_version):
+                            self.builder.get_object('puavo.abitti.version.number').set_text(self.abitti_school_version)
+                        else:
+                            try:
+                                self.builder.get_object('puavo.abitti.version.number').set_text(self.abitti_latest_version)
+                            except TypeError: # weird case, nothing relevant to display available, leave blank
+                                self.builder.get_object('puavo.abitti.version.number').set_text("")
             except subprocess.CalledProcessError:
                 print("could not get puavo-conf key for %s" % disabler_key,
                         file=sys.stderr)
