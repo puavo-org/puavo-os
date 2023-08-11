@@ -7,7 +7,11 @@ class docker {
       ensure => directory;
 
     '/etc/puavo-docker/docker-compose.yml.tmpl':
-      source => 'puppet:///modules/docker/docker-compose.yml.tmpl';
+      require => File['/etc/puavo-docker/files/Dockerfile.nextcloud'],
+      source  => 'puppet:///modules/docker/docker-compose.yml.tmpl';
+
+    '/etc/puavo-docker/files':
+      ensure => directory;
   }
 
   ::puavo_conf::definition {
