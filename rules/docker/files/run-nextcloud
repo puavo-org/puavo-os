@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+puavo_ldap_password_file=''
+
+cleanup() {
+  if [ -n "$puavo_ldap_password_file" ]; then
+    rm -f "$puavo_ldap_password_file"
+  fi
+  puavo_ldap_password_file=''
+}
+
+trap cleanup 0 INT TERM
+
+puavo_ldap_password_file=$(mktemp /tmp/puavo_ldap_password.XXXXXX)
+install -o root -g www-data -m 640 /run/secrets/puavo_ldap_password \
+        "$puavo_ldap_password_file"
+
+# configure Apache
+install -o root -g root -m 644 /puavo-nextcloud/000-default.conf \
+        /etc/apache2/sites-available/000-default.conf
+install -o root -g www-data -m 640 /run/secrets/nextcloud_keytab \
+        /etc/apache2/nextcloud.keytab
+
+mkdir -p /var/lib/apache2/ccache /var/www/images /var/www/nc_data
+chown www-data: /var/lib/apache2/ccache /var/www/images /var/www/nc_data
+
+a2enmod rewrite ssl
+
+install -o root -g root -m 644 /puavo-nextcloud/.config/krb5.conf \
+        /etc/krb5.conf
+
+# Configure Nextcloud.
+su -p www-data -s /bin/sh -c \
+  "/puavo-nextcloud/configure-nextcloud $puavo_ldap_password_file"
+
+cleanup
+
+exec "$@"
