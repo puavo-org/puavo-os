@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:VERSION
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: nc
+      POSTGRES_USER: pgadmin
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_db_password
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    secrets:
+      - postgres_db_password
+
+  nextcloud:
+    build:
+      args:
+        IMAGE: nextcloud:VERSION
+      context: /etc/puavo-docker
+      dockerfile: files/Dockerfile.nextcloud
+    container_name: nextcloud
+    restart: unless-stopped
+    ports:
+      - 880:80
+    volumes:
+      - nextcloud:/var/www/html
+      - nextclouddata:/var/www/nc_data
+      - ./files:/puavo-nextcloud
+    environment:
+      NEXTCLOUD_ADMIN_PASSWORD_FILE: /run/secrets/nextcloud_admin_password
+      NEXTCLOUD_ADMIN_USER: root
+      NEXTCLOUD_DATA_DIR: /var/www/nc_data
+      NEXTCLOUD_TABLE_PREFIX: nc
+      POSTGRES_DB: nc
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: pgadmin
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_db_password
+      PUAVO_KERBEROS_CCACHE_DIR: /var/lib/apache2/ccache
+      PUAVO_LDAP_AGENT_PASSWORD_FILE: /run/secrets/puavo_ldap_password
+    depends_on:
+      - postgres
+    secrets:
+      - nextcloud_admin_password
+      - nextcloud_keytab
+      - postgres_db_password
+      - puavo_ldap_password
+
+  collabora:
+    container_name: cool
+    image: collabora/code:VERSION
+    restart: unless-stopped
+    ports:
+      - 9980:9980
+
+secrets:
+  nextcloud_admin_password:
+    file: secrets/nextcloud_admin_password
+  nextcloud_keytab:
+    file: secrets/nextcloud_keytab
+  postgres_db_password:
+    file: secrets/postgres_db_password
+  puavo_ldap_password:
+    file: secrets/puavo_ldap_password
+
+volumes:
+  postgres:
+  nextcloud:
+  nextclouddata:
