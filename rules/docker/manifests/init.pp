@@ -13,6 +13,10 @@ class docker {
     '/etc/puavo-docker/files':
       ensure => directory;
 
+    '/etc/puavo-docker/secrets':
+      mode   => '0700',
+      ensure => directory;
+
     '/usr/local/sbin/puavo-manage-docker':
       mode    => '0755',
       require => File['/etc/puavo-docker/docker-compose.yml.tmpl'],
