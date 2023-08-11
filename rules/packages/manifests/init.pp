@@ -60,6 +60,7 @@ class packages {
     , 'dbus'
     , 'dnsmasq'
     , 'docker-compose'
+    , 'docker.io'
     , 'freeradius'
     , 'freeradius-krb5'
     , 'freeradius-ldap'

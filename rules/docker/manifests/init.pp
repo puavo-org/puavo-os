@@ -14,4 +14,9 @@ class docker {
     'puavo-docker-nextcloud.json':
       source => 'puppet:///modules/docker/puavo-docker-nextcloud.json';
   }
+
+  Package <|
+       title == "docker-compose"
+    or title == "docker.io"
+  |>
 }
