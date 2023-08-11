@@ -20,6 +20,7 @@ class image::bundle::bootserver {
   include ::bootserver_pxe
   include ::bootserver_samba
   include ::bootserver_slapd
+  include ::docker
   include ::packages
 
   # include ::bootserver_dummywlan              # XXX needs work
