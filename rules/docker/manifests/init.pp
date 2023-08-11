@@ -12,6 +12,11 @@ class docker {
 
     '/etc/puavo-docker/files':
       ensure => directory;
+
+    '/usr/local/sbin/puavo-manage-docker':
+      mode    => '0755',
+      require => File['/etc/puavo-docker/docker-compose.yml.tmpl'],
+      source  => 'puppet:///modules/docker/puavo-manage-docker';
   }
 
   ::puavo_conf::definition {
