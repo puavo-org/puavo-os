@@ -17,19 +17,38 @@ class docker {
       mode   => '0700',
       ensure => directory;
 
-    '/usr/local/sbin/puavo-manage-docker':
+    '/etc/systemd/system/puavo-docker.service':
+      source => 'puppet:///modules/docker/puavo-docker.service';
+
+    '/etc/systemd/system/puavo-docker.timer':
+      source => 'puppet:///modules/docker/puavo-docker.timer';
+
+    '/etc/systemd/system/multi-user.target.wants/puavo-docker.service':
+      ensure  => 'link',
+      require => [ File['/etc/systemd/system/puavo-docker.service']
+                 , Package['systemd'] ],
+      target  => '/etc/systemd/system/puavo-docker.service';
+
+    '/etc/systemd/system/timers.target.wants/puavo-docker.timer':
+      ensure  => 'link',
+      require => [ File['/etc/systemd/system/puavo-docker.timer']
+                 , Package['systemd'] ],
+      target  => '/etc/systemd/system/puavo-docker.timer';
+
+    '/usr/local/sbin/puavo-docker':
       mode    => '0755',
       require => File['/etc/puavo-docker/docker-compose.yml.tmpl'],
-      source  => 'puppet:///modules/docker/puavo-manage-docker';
+      source  => 'puppet:///modules/docker/puavo-docker';
   }
 
   ::puavo_conf::definition {
-    'puavo-docker-nextcloud.json':
-      source => 'puppet:///modules/docker/puavo-docker-nextcloud.json';
+    'puavo-docker.json':
+      source => 'puppet:///modules/docker/puavo-docker.json';
   }
 
   Package <|
-       title == "docker-compose"
-    or title == "docker.io"
+       title == 'docker-compose'
+    or title == 'docker.io'
+    or title == 'systemd'
   |>
 }

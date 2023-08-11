@@ -230,6 +230,13 @@ set services {
         -> /lib/systemd/system/puavo-darkdm.service
     }}
 
+  { puavo-docker {
+      /etc/systemd/system/multi-user.target.wants/puavo-docker.service
+        -> /etc/systemd/system/puavo-docker.service
+      /etc/systemd/system/timers.target.wants/puavo-docker.timer
+        -> /etc/systemd/system/puavo-docker.timer
+    }}
+
   { puavo-image-torrent-updated {
       /etc/systemd/system/multi-user.target.wants/puavo-image-torrent-updated.service
         -> /lib/systemd/system/puavo-image-torrent-updated.service

@@ -21,4 +21,9 @@ class docker::nextcloud {
                  , File['/etc/puavo-docker/files/setup-nextcloud-docker'] ],
       source  => 'puppet:///modules/docker/Dockerfile.nextcloud';
   }
+
+  ::puavo_conf::definition {
+    'puavo-docker-nextcloud.json':
+      source => 'puppet:///modules/docker/puavo-docker-nextcloud.json';
+  }
 }
