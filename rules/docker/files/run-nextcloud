@@ -17,19 +17,44 @@ puavo_ldap_password_file=$(mktemp /tmp/puavo_ldap_password.XXXXXX)
 install -o root -g www-data -m 640 /run/secrets/puavo_ldap_password \
         "$puavo_ldap_password_file"
 
+install -o root -g root -m 644 /puavo-nextcloud/.config/krb5.conf \
+        /etc/krb5.conf
+
+#
 # configure Apache
-install -o root -g root -m 644 /puavo-nextcloud/000-default.conf \
-        /etc/apache2/sites-available/000-default.conf
+#
+
 install -o root -g www-data -m 640 /run/secrets/nextcloud_keytab \
         /etc/apache2/nextcloud.keytab
 
 mkdir -p /var/lib/apache2/ccache /var/www/images /var/www/nc_data
 chown www-data: /var/lib/apache2/ccache /var/www/images /var/www/nc_data
 
-a2enmod rewrite ssl
+cat <<'EOF' > /etc/apache2/sites-available/000-default.conf
+<VirtualHost *:80>
+        DocumentRoot /var/www/html
 
-install -o root -g root -m 644 /puavo-nextcloud/.config/krb5.conf \
-        /etc/krb5.conf
+        ErrorLog ${APACHE_LOG_DIR}/error-file.log
+        CustomLog ${APACHE_LOG_DIR}/access-file.log combined
+
+        <Location "/apps/user_saml/saml/login">
+            AuthType GSSAPI
+            AuthName "Nextcloud SSO Login"
+
+            Require valid-user
+
+            GssapiCredStore keytab:/etc/apache2/nextcloud.keytab
+            GssapiDelegCcacheDir /var/lib/apache2/ccache
+            GssapiLocalName On
+            GssapiNegotiateOnce On
+            GssapiSSLonly On
+
+            ErrorDocument 401 "<html><meta http-equiv=\"refresh\" content=\"0;url=/login?direct=1\"></html>"
+        </Location>
+</VirtualHost>
+EOF
+
+a2enmod rewrite ssl
 
 # Configure Nextcloud.
 su -p www-data -s /bin/sh -c \
