@@ -13,6 +13,8 @@ cleanup() {
 
 trap cleanup 0 INT TERM
 
+/entrypoint.sh "$@"
+
 puavo_ldap_password_file=$(mktemp /tmp/puavo_ldap_password.XXXXXX)
 install -o root -g www-data -m 640 /run/secrets/puavo_ldap_password \
         "$puavo_ldap_password_file"
