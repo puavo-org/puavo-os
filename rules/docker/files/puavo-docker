@@ -64,7 +64,7 @@ CONTAINER_LIST.each do |container_name|
     image_version = puavoconf.get(puavoconf_var)
     service_conf = docker_compose['services'][container_name]
     if service_conf['image'] then
-      service_conf['image'] = "#{ container_name }:#{ image_version }"
+      service_conf['image'] = "#{ IMAGEMAP[container_name] }:#{ image_version }"
     end
     if service_conf.dig('build', 'args', 'IMAGE') then
       service_conf['build']['args']['IMAGE'] \
