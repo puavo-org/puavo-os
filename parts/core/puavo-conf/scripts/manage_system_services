@@ -231,8 +231,6 @@ set services {
     }}
 
   { puavo-docker {
-      /etc/systemd/system/multi-user.target.wants/puavo-docker.service
-        -> /etc/systemd/system/puavo-docker.service
       /etc/systemd/system/timers.target.wants/puavo-docker.timer
         -> /etc/systemd/system/puavo-docker.timer
     }}

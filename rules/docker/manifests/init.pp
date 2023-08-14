@@ -23,12 +23,6 @@ class docker {
     '/etc/systemd/system/puavo-docker.timer':
       source => 'puppet:///modules/docker/puavo-docker.timer';
 
-    '/etc/systemd/system/multi-user.target.wants/puavo-docker.service':
-      ensure  => 'link',
-      require => [ File['/etc/systemd/system/puavo-docker.service']
-                 , Package['systemd'] ],
-      target  => '/etc/systemd/system/puavo-docker.service';
-
     '/etc/systemd/system/timers.target.wants/puavo-docker.timer':
       ensure  => 'link',
       require => [ File['/etc/systemd/system/puavo-docker.timer']
