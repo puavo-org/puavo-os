@@ -13,7 +13,14 @@ cleanup() {
 
 trap cleanup 0 INT TERM
 
-/entrypoint.sh "$@"
+# Do not run Apache from entrypoint so we can configure Nextcloud
+# first and then run Apache ourselves.
+if tail -1 /entrypoint.sh | grep exec; then
+  sed -i '$d' /entrypoint.sh
+fi
+
+mkdir -p /var/lib/apache2/ccache /var/www/images /var/www/nc_data
+chown www-data: /var/lib/apache2/ccache /var/www/images /var/www/nc_data
 
 puavo_ldap_password_file=$(mktemp /tmp/puavo_ldap_password.XXXXXX)
 install -o root -g www-data -m 640 /run/secrets/puavo_ldap_password \
@@ -28,9 +35,6 @@ install -o root -g root -m 644 /puavo-nextcloud/.config/krb5.conf \
 
 install -o root -g www-data -m 640 /run/secrets/nextcloud_keytab \
         /etc/apache2/nextcloud.keytab
-
-mkdir -p /var/lib/apache2/ccache /var/www/images /var/www/nc_data
-chown www-data: /var/lib/apache2/ccache /var/www/images /var/www/nc_data
 
 cat <<'EOF' > /etc/apache2/sites-available/000-default.conf
 <VirtualHost *:80>
@@ -57,6 +61,8 @@ cat <<'EOF' > /etc/apache2/sites-available/000-default.conf
 EOF
 
 a2enmod rewrite ssl
+
+/entrypoint.sh "$@"
 
 # Configure Nextcloud.
 su -p www-data -s /bin/sh -c \
