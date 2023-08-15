@@ -94,6 +94,8 @@ dhcpd_interfaces=$(get_dhcp_interfaces)
 # -- interfaces
 cat <<EOF > "${target_dir}/interfaces.tmp"
 #ZONE	INTERFACE	BROADCAST	OPTIONS
+dock	docker0		detect		physical=docker+,routeback=1
+dock	br		detect		physical=br-+,routeback=1
 inet	inet0		detect		dhcp,tcpflags,nosmurfs,bridge
 $(for iface in $dhcpd_interfaces; do
     echo "$(iface_no_num "$iface")	${iface}	        detect		dhcp,tcpflags,nosmurfs,bridge"
@@ -179,6 +181,7 @@ cat <<EOF > "${target_dir}/zones.tmp"
 #ZONE   TYPE    OPTIONS                 IN                      OUT
 #                                       OPTIONS                 OPTIONS
 fw      firewall
+dock	ipv4		# Docker network
 inet    ipv4		# Internet
 ltsp    ipv4		# LTSP network(s)
 ovpn    ipv4		# OpenVPN for server administration
