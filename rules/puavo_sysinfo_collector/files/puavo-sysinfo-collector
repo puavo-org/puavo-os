@@ -55,6 +55,7 @@ class SysInfo
       [ :update_local_puavoconf, 'local puavo-conf information'     ],
       [ :update_puavopkg_info,   'installed puavo-pkg information'  ],
       [ :update_login_info,      'last user logged in'              ],
+      [ :update_uptime,          'host uptime'                      ],
     ]
 
     update_functions.each do |update_item|
@@ -441,6 +442,12 @@ class SysInfo
     @data[:logins] = {
       :last => { :uid => uid, :timestamp => timestamp },
     }
+  end
+
+  def update_uptime
+    @data[:uptime] = nil
+    uptime = (IO.read('/proc/uptime').split)[0].to_i
+    @data[:uptime] = uptime if uptime > 0
   end
 end
 
