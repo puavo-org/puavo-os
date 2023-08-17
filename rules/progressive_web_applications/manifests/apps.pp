@@ -3,9 +3,11 @@ class progressive_web_applications::apps {
 
   Progressive_web_applications::Install {
     'graphical_analysis':
-      url     => 'https://graphicalanalysis.app';
+      app_id => 'ocgiedgmgfoocelalnmphikjnbgnnmdb',
+      url    => 'https://graphicalanalysis.app';
 
     'teams':
+      app_id  => 'ibdmcfbponkigmniimeihhiafmeifncn',
       browser => 'chrome',
       url     => 'https://teams.live.com/manifest.json';
   }

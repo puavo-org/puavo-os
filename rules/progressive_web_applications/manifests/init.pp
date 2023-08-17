@@ -1,11 +1,11 @@
 class progressive_web_applications {
   include ::chromium
 
-  define install ($browser='', $url) {
+  define install ($browser='', $url, $app_id) {
     $pwa_name = $title
 
     exec {
-      "/usr/local/lib/puavo-setup-pwa ${pwa_name} ${url} ${browser}":
+      "/usr/local/lib/puavo-setup-pwa ${pwa_name} ${url} ${app_id} ${browser}":
         creates => "/var/lib/puavo-pwa/${pwa_name}",
         before  => Exec['setup guestuser PWAs'],
         require => File['/usr/local/lib/puavo-setup-pwa'];
