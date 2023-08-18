@@ -97,6 +97,9 @@ EOF
   rm -f "$extfiles_config"
 fi
 
+# XXX where to get this one?
+collabora_server_ip=172.18.0.1
+
 office_domain=$(cat /puavo-nextcloud/.config/office_domain 2>/dev/null) || true
 if [ -n "$office_domain" ]; then
   # Install and setup richdocuments
@@ -108,6 +111,8 @@ if [ -n "$office_domain" ]; then
   occ config:app:set --value yes richdocuments enabled
   occ config:app:set --value "$url" richdocuments wopi_url
   occ config:app:set --value "$url" richdocuments public_wopi_url
+  occ config:app:set --value "$collabora_server_ip" richdocuments \
+                     wopi_allowlist
   occ richdocuments:activate-config
 else
   occ config:app:set --value no richdocuments enabled
