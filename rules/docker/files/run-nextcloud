@@ -53,7 +53,7 @@ cat <<'EOF' > /etc/apache2/sites-available/000-default.conf
             GssapiDelegCcacheDir /var/lib/apache2/ccache
             GssapiLocalName On
             GssapiNegotiateOnce On
-            GssapiSSLonly On
+            GssapiSSLonly Off
 
             ErrorDocument 401 "<html><meta http-equiv=\"refresh\" content=\"0;url=/login?direct=1\"></html>"
         </Location>
