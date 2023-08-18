@@ -153,6 +153,9 @@ ACCEPT		any			any			icmp    8
 
 # Maybe enable for some cases:
 #ACCEPT		inet			fw			tcp	22
+
+# for Nextcloud
+ACCEPT		dock			fw			tcp	88,139,389,443,445
 EOF
 
   if [ "$fw_logging_policy" = 'outgoing,rejected' ] ; then
