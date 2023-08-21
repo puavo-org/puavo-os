@@ -5,8 +5,11 @@ services:
     container_name: postgres
     image: postgres:VERSION
     restart: unless-stopped
+    networks:
+      puavo:
+        ipv4_address: 172.18.238.1
     ports:
-      - 5432:5432
+      - <%= scope.lookupvar('docker_ip') %>:5432:5432
     environment:
       POSTGRES_DB: nc
       POSTGRES_USER: pgadmin
@@ -18,15 +21,18 @@ services:
       - postgres_db_password
 
   nextcloud:
+    container_name: nextcloud
     build:
       args:
         IMAGE: nextcloud:VERSION
       context: /etc/puavo-docker
       dockerfile: files/Dockerfile.nextcloud
-    container_name: nextcloud
     restart: unless-stopped
+    networks:
+      puavo:
+        ipv4_address: 172.18.238.2
     ports:
-      - 880:80
+      - <%= scope.lookupvar('docker_ip') %>:880:80
     volumes:
       - nextcloud:/var/www/html
       - nextclouddata:/var/www/nc_data
@@ -54,8 +60,18 @@ services:
     container_name: cool
     image: collabora/code:VERSION
     restart: unless-stopped
+    networks:
+      puavo:
+        ipv4_address: 172.18.238.3
     ports:
-      - 9980:9980
+      - <%= scope.lookupvar('docker_ip') %>:9980:9980
+
+networks:
+  puavo:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.238.0/16"
 
 secrets:
   nextcloud_admin_password:

@@ -2,13 +2,20 @@ class docker {
   include ::docker::collabora
   include ::docker::nextcloud
 
+  $docker_ip = '172.17.0.1'
+  $docker_ip_with_cidr = "${docker_ip}/16"
+
   file {
+    '/etc/docker/daemon.json':
+      content => template('docker/daemon.json'),
+      require => Package['docker.io'];
+
     '/etc/puavo-docker':
       ensure => directory;
 
     '/etc/puavo-docker/docker-compose.yml.tmpl':
-      require => File['/etc/puavo-docker/files/Dockerfile.nextcloud'],
-      source  => 'puppet:///modules/docker/docker-compose.yml.tmpl';
+      content => template('docker/docker-compose.yml.tmpl'),
+      require => File['/etc/puavo-docker/files/Dockerfile.nextcloud'];
 
     '/etc/puavo-docker/files':
       ensure => directory;

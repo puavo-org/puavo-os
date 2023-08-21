@@ -1,0 +1,3 @@
+{
+  "bip": "<%= scope.lookupvar('docker_ip_with_cidr') %>"
+}

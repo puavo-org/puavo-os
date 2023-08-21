@@ -115,7 +115,7 @@ office_domain_path = File.join(DOCKER_CONFIG_FILES_DIR, 'office_domain')
 if puavoconf.get('puavo.docker.collabora.enabled') == 'true' \
   && !collabora_domain.empty? then
     tmp_office_domain_path = "#{ office_domain_path }.tmp"
-    File.write(tmp_office_domain_path, "#{ collabora_domain }")
+    File.write(tmp_office_domain_path, "#{ collabora_domain }\n")
     File.rename(tmp_office_domain_path, office_domain_path)
 else
   File.unlink(office_domain_path) rescue Errno::ENOENT
