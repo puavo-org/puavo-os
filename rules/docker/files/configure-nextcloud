@@ -97,10 +97,10 @@ EOF
   rm -f "$extfiles_config"
 fi
 
-# XXX where to get this one?
-collabora_server_ip=172.18.0.1
-
+# This is the container network gateway.
+collabora_server_ip='172.18.0.1'
 office_domain=$(cat /puavo-nextcloud/.config/office_domain 2>/dev/null) || true
+
 if [ -n "$office_domain" ]; then
   # Install and setup richdocuments
   if ! occ app:getpath richdocuments >/dev/null; then

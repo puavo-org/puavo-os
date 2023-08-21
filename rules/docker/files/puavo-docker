@@ -20,10 +20,7 @@ IMAGEMAP = {
 
 status = 0
 
-def get_docker_ip()
-  dockerd_conf = JSON.parse( IO.read('/etc/docker/daemon.json') )
-  dockerd_conf['bip'].split('/').first
-end
+DOCKER_IP = '172.17.0.1'
 
 def ldap_agent_dn(ldap_base)
   "uid=nextcloud,ou=System Accounts,#{ ldap_base }"
@@ -154,17 +151,10 @@ rescue StandardError => e
   exit(1)
 end
 
-begin
-  docker_ip = get_docker_ip()
-rescue StandardError => e
-  warn("could not get docker IP address: #{ e.message }")
-  exit(1)
-end
-
 # setup dnsmasq configuration
 begin
-  dnsmasq_conf  = "host-record=#{ nextcloud_domain },#{ docker_ip }\n"
-  dnsmasq_conf += "host-record=#{ collabora_domain },#{ docker_ip }\n"
+  dnsmasq_conf  = "host-record=#{ nextcloud_domain },#{ DOCKER_IP }\n"
+  dnsmasq_conf += "host-record=#{ collabora_domain },#{ DOCKER_IP }\n"
   dnsmasq_conf_path = '/etc/dnsmasq.d/10-docker.conf'
   tmp_dnsmasq_conf_path = "#{ dnsmasq_conf_path }.tmp"
   File.write(tmp_dnsmasq_conf_path, dnsmasq_conf)
@@ -196,7 +186,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
-        proxy_pass http://#{ docker_ip }:880$request_uri;
+        proxy_pass http://#{ DOCKER_IP }:880$request_uri;
     }
 
     location /.well-known/carddav {
@@ -216,25 +206,25 @@ server {
 
     # static files
     location ^~ /browser {
-	proxy_pass https://#{ docker_ip }:9980;
+	proxy_pass https://#{ DOCKER_IP }:9980;
 	proxy_set_header Host $http_host;
     }
 
     # WOPI discovery URL
     location ^~ /hosting/discovery {
-	proxy_pass https://#{ docker_ip }:9980;
+	proxy_pass https://#{ DOCKER_IP }:9980;
 	proxy_set_header Host $http_host;
     }
 
     # Capabilities
     location ^~ /hosting/capabilities {
-	proxy_pass https://#{ docker_ip }:9980;
+	proxy_pass https://#{ DOCKER_IP }:9980;
 	proxy_set_header Host $http_host;
     }
 
     # main websocket
     location ~ ^/cool/(.*)/ws$ {
-	proxy_pass https://#{ docker_ip }:9980;
+	proxy_pass https://#{ DOCKER_IP }:9980;
 	proxy_set_header Upgrade $http_upgrade;
 	proxy_set_header Connection "Upgrade";
 	proxy_set_header Host $http_host;
@@ -243,13 +233,13 @@ server {
 
     # download, presentation and image upload
     location ~ ^/(c|l)ool {
-	proxy_pass https://#{ docker_ip }:9980;
+	proxy_pass https://#{ DOCKER_IP }:9980;
 	proxy_set_header Host $http_host;
     }
 
     # Admin Console websocket
     location ^~ /cool/adminws {
-	proxy_pass https://#{ docker_ip }:9980;
+	proxy_pass https://#{ DOCKER_IP }:9980;
 	proxy_set_header Upgrade $http_upgrade;
 	proxy_set_header Connection "Upgrade";
 	proxy_set_header Host $http_host;

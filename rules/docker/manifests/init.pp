@@ -6,10 +6,6 @@ class docker {
   $docker_ip_with_cidr = "${docker_ip}/16"
 
   file {
-    '/etc/docker/daemon.json':
-      content => template('docker/daemon.json'),
-      require => Package['docker.io'];
-
     '/etc/puavo-docker':
       ensure => directory;
 
