@@ -154,9 +154,15 @@ rescue StandardError => e
   exit(1)
 end
 
-# setup dnsmasq configuration
 begin
   docker_ip = get_docker_ip()
+rescue StandardError => e
+  warn("could not get docker IP address: #{ e.message }")
+  exit(1)
+end
+
+# setup dnsmasq configuration
+begin
   dnsmasq_conf  = "host-record=#{ nextcloud_domain },#{ docker_ip }\n"
   dnsmasq_conf += "host-record=#{ collabora_domain },#{ docker_ip }\n"
   dnsmasq_conf_path = '/etc/dnsmasq.d/10-docker.conf'
@@ -173,6 +179,103 @@ begin
   end
 rescue StandardError => e
   warn("could not configure dnsmasq: #{ e.message }")
+  exit(1)
+end
+
+# setup nginx configuration
+begin
+  nginx_conf = <<EOF
+server {
+    listen 443 ssl;
+    server_name #{ nextcloud_domain };
+
+    # https://docs.nextcloud.com/server/27/admin_manual/configuration_server/reverse_proxy_configuration.html
+
+    location / {
+        proxy_set_header HOST $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_pass http://#{ docker_ip }:880$request_uri;
+    }
+
+    location /.well-known/carddav {
+        return 301 $scheme://$host/remote.php/dav;
+    }
+    location /.well-known/caldav {
+        return 301 $scheme://$host/remote.php/dav;
+    }
+
+    access_log /var/log/nginx/nextcloud-access.log;
+    error_log /var/log/nginx/nextcloud-error.log;
+}
+
+server {
+    listen 443 ssl;
+    server_name #{ collabora_domain };
+
+    # static files
+    location ^~ /browser {
+	proxy_pass https://#{ docker_ip }:9980;
+	proxy_set_header Host $http_host;
+    }
+
+    # WOPI discovery URL
+    location ^~ /hosting/discovery {
+	proxy_pass https://#{ docker_ip }:9980;
+	proxy_set_header Host $http_host;
+    }
+
+    # Capabilities
+    location ^~ /hosting/capabilities {
+	proxy_pass https://#{ docker_ip }:9980;
+	proxy_set_header Host $http_host;
+    }
+
+    # main websocket
+    location ~ ^/cool/(.*)/ws$ {
+	proxy_pass https://#{ docker_ip }:9980;
+	proxy_set_header Upgrade $http_upgrade;
+	proxy_set_header Connection "Upgrade";
+	proxy_set_header Host $http_host;
+	proxy_read_timeout 36000s;
+    }
+
+    # download, presentation and image upload
+    location ~ ^/(c|l)ool {
+	proxy_pass https://#{ docker_ip }:9980;
+	proxy_set_header Host $http_host;
+    }
+
+    # Admin Console websocket
+    location ^~ /cool/adminws {
+	proxy_pass https://#{ docker_ip }:9980;
+	proxy_set_header Upgrade $http_upgrade;
+	proxy_set_header Connection "Upgrade";
+	proxy_set_header Host $http_host;
+	proxy_read_timeout 36000s;
+    }
+
+    access_log /var/log/nginx/nextcloud-access.log;
+    error_log /var/log/nginx/nextcloud-error.log;
+}
+EOF
+  nginx_conf_path = '/etc/nginx/sites-available/nextcloud'
+  tmp_nginx_conf_path = "#{ nginx_conf_path }.tmp"
+  File.write(tmp_nginx_conf_path, nginx_conf)
+
+  if !File.exists?(nginx_conf_path) \
+    || !FileUtils.compare_file(nginx_conf_path, tmp_nginx_conf_path) then
+      File.rename(tmp_nginx_conf_path, nginx_conf_path)
+      File.unlink('/etc/nginx/sites-enabled/nextcloud') rescue Errno::ENOENT
+      File.symlink('../sites-available/nextcloud', '/etc/nginx/sites-enabled/nextcloud')
+      system('service', 'nginx', 'reload') \
+        or raise('could not reload nginx configuration')
+  else
+    File.unlink(tmp_nginx_conf_path)
+  end
+rescue StandardError => e
+  warn("could not configure nginx: #{ e.message }")
   exit(1)
 end
 
