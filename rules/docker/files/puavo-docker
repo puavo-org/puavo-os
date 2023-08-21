@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'fileutils'
+require 'json'
 require 'puavo/conf'
 require 'yaml'
 
@@ -19,6 +20,11 @@ IMAGEMAP = {
 
 status = 0
 
+def get_docker_ip()
+  dockerd_conf = JSON.parse( IO.read('/etc/docker/daemon.json') )
+  dockerd_conf['bip'].split('/').first
+end
+
 def ldap_agent_dn(ldap_base)
   "uid=nextcloud,ou=System Accounts,#{ ldap_base }"
 end
@@ -31,7 +37,9 @@ PASSWORDS_TO_GENERATE.each do |password_name|
   unless File.exists?(password_path) then
     chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
     password = Array.new(32) { chars[rand(chars.size)] }.join
-    File.write(password_path, "#{ password }\n", 0, :perm => 0600)
+    tmp_password_path = "#{ password_path }.tmp"
+    File.write(tmp_password_path, "#{ password }\n", 0, :perm => 0600)
+    File.rename(tmp_password_path, password_path)
   end
   File.chmod(0600, password_path)
 end
@@ -87,6 +95,7 @@ end
 
 begin
   nextcloud_domain = puavoconf.get('puavo.docker.nextcloud.domain')
+  raise 'no Nextcloud domain set' if nextcloud_domain.empty?
   nextcloud_env = docker_compose['services']['nextcloud']['environment']
   nextcloud_env['NEXTCLOUD_TRUSTED_DOMAINS'] = nextcloud_domain
   nextcloud_env['PUAVO_KERBEROS_REALM'] \
@@ -101,6 +110,7 @@ end
 
 begin
   collabora_domain = puavoconf.get('puavo.docker.collabora.domain')
+  raise 'no Collabora domain set' if collabora_domain.empty?
   collabora_env = docker_compose['services']['collabora']['environment'] || {}
   collabora_env['server_name'] = collabora_domain
   collabora_env['aliasgroup1'] = "https://#{ nextcloud_domain }"
@@ -141,6 +151,28 @@ begin
 rescue StandardError => e
   warn("could not write #{ nextcloud_keytab_path }: #{ e.message }")
   warn("perhaps HTTP/#{ nextcloud_domain } principal does not exist?")
+  exit(1)
+end
+
+# setup dnsmasq configuration
+begin
+  docker_ip = get_docker_ip()
+  dnsmasq_conf  = "host-record=#{ nextcloud_domain },#{ docker_ip }\n"
+  dnsmasq_conf += "host-record=#{ collabora_domain },#{ docker_ip }\n"
+  dnsmasq_conf_path = '/etc/dnsmasq.d/10-docker.conf'
+  tmp_dnsmasq_conf_path = "#{ dnsmasq_conf_path }.tmp"
+  File.write(tmp_dnsmasq_conf_path, dnsmasq_conf)
+
+  if !File.exists?(dnsmasq_conf_path) \
+    || !FileUtils.compare_file(dnsmasq_conf_path, tmp_dnsmasq_conf_path) then
+      File.rename(tmp_dnsmasq_conf_path, dnsmasq_conf_path)
+      system('service', 'dnsmasq', 'reload') \
+        or raise('could not reload dnsmasq configuration')
+  else
+    File.unlink(tmp_dnsmasq_conf_path)
+  end
+rescue StandardError => e
+  warn("could not configure dnsmasq: #{ e.message }")
   exit(1)
 end
 
