@@ -46,7 +46,7 @@ EOF
     dns_lookup_kdc = false
     dns_lookup_realm = false
     allow_weak_crypto = true
-    rdns = false   # Do not use reverse DNS queries and force use of fqdn names for everything
+    dns_canonicalize_hostname = false
 
 ${realms}
 
