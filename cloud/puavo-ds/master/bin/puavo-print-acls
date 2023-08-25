@@ -506,6 +506,14 @@ rule {
 }
 
 rule {
+  # Allow cert-mgmt to read some server information.
+  [dn children $Servers]
+    [attrs entry objectClass puavoHostname puavoNextcloudSubDomain]
+      by [puavo_dn cert-mgmt] read
+      by *                    none break
+}
+
+rule {
   [dn children $Servers]
       by $org_owners           write
       by [systemgroup servers] read
@@ -930,6 +938,14 @@ rule {
            sambaDomainName]
       by $org_owners read
       by *           none break
+}
+
+rule {
+  # Allow cert-mgmt to read only some organisation specific info.
+  [dn]
+    [attrs entry puavoDomain puavoNextcloudDomain puavoOfficeDomain]
+      by [puavo_dn cert-mgmt] read
+      by *                    none break
 }
 
 rule {
