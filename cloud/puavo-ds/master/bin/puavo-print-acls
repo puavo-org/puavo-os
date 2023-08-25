@@ -483,6 +483,7 @@ rule {
       by $org_owners           read
       by $admins               read
       by $staff                read     # XXX maybe just remove this?
+      by [puavo_dn cert-mgmt]  read
       by [systemgroup servers] read
       by anonymous             auth
 }
@@ -503,6 +504,14 @@ rule {
       by [devicetype_set laptop] read
 
       by * none break
+}
+
+rule {
+  # Allow cert-mgmt to read some server information.
+  [dn children $Servers]
+    [attrs entry objectClass puavoHostname puavoNextcloudSubDomain]
+      by [puavo_dn cert-mgmt] read
+      by *                    none break
 }
 
 rule {
@@ -910,6 +919,14 @@ rule {
            sambaDomainName]
       by $org_owners read
       by *           none break
+}
+
+rule {
+  # Allow cert-mgmt to read only some organisation specific info.
+  [dn]
+    [attrs entry objectClass puavoDomain puavoNextcloudDomain puavoOfficeDomain]
+      by [puavo_dn cert-mgmt] read
+      by *                    none break
 }
 
 rule {
