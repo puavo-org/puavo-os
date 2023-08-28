@@ -1,4 +1,5 @@
 class image::bundle::bootserver {
+  include ::bootserver_authorized_keys
   include ::bootserver_autopoweron
   include ::bootserver_backup
   include ::bootserver_cups

@@ -1,4 +1,5 @@
 class docker::nextcloud {
+  include ::bootserver_authorized_keys
   include ::docker::postgres
   include ::puavo_conf
 

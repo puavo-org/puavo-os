@@ -1,15 +1,10 @@
 class bootserver_backup {
+  include ::bootserver_authorized_keys
   include ::puavo_conf
 
   ::puavo_conf::definition {
     'puavo-admin-backup.json':
       source => 'puppet:///modules/bootserver_backup/puavo-admin-backup.json';
-  }
-
-  ::puavo_conf::script {
-    'setup_backup':
-      require => ::Puavo_conf::Definition['puavo-admin-backup.json'],
-      source  => 'puppet:///modules/bootserver_backup/setup_backup';
   }
 
   file {
