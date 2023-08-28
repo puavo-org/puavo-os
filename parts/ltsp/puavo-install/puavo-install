@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -eu
+deviceid_url=""
+chosen_preseed=""
 
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
@@ -49,6 +51,7 @@ ask_preseed() {
      return 1
   fi
 
+  deviceid_url="https://${image_server}/deviceid"
   preseed_url="https://${image_server}/preseeds/index.json"
   if ! preseed_json=$(curl --cacert /etc/puavo-conf/rootca.pem --fail \
                         --show-error --silent "$preseed_url"); then
@@ -497,6 +500,12 @@ accepted_hosttypes=$(get_accepted_hosttypes "$puavo_install_hosttype")
 
 puavo-register --accepted-devicetypes "$accepted_hosttypes" \
                "${puavo_preseed_register_args[@]}"
+
+if [ "$chosen_preseed" != "" ]; then
+  curl --cacert /etc/puavo-conf/rootca.pem \
+    -d "$(jq -n --arg sn "$(facter dmi.product.serial_number)" --arg preseed "$chosen_preseed" '.serialnumber = $sn | .preseed = $preseed')" \
+    --fail -H "Content-Type: application/json" --max-time 5 --silent -X POST "$deviceid_url" > /dev/null || echo "Preseed notification send failed."
+fi
 
 puavo_hosttype=$(cat /etc/puavo/hosttype)
 puavo-conf puavo.hosttype "$puavo_hosttype"
