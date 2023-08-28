@@ -10,6 +10,7 @@ DOCKER_COMPOSE_TEMPLATE_PATH = '/etc/puavo-docker/docker-compose.yml.tmpl'
 DOCKER_COMPOSE_PATH = '/etc/puavo-docker/docker-compose.yml'
 DOCKER_FILES_DIR = '/etc/puavo-docker/files'
 DOCKER_CONFIG_FILES_DIR = File.join(DOCKER_FILES_DIR, '.config')
+NGINX_CERT_DIR = '/etc/nginx/certs'
 SECRETS_DIR = '/etc/puavo-docker/secrets'
 
 IMAGEMAP = {
@@ -24,21 +25,6 @@ DOCKER_IP = '172.17.0.1'
 
 def ldap_agent_dn(ldap_base)
   "uid=nextcloud,ou=System Accounts,#{ ldap_base }"
-end
-
-FileUtils.mkdir_p(DOCKER_CONFIG_FILES_DIR)
-
-PASSWORDS_TO_GENERATE = %w(postgres_db_password nextcloud_admin_password)
-PASSWORDS_TO_GENERATE.each do |password_name|
-  password_path = File.join(SECRETS_DIR, password_name)
-  unless File.exists?(password_path) then
-    chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
-    password = Array.new(32) { chars[rand(chars.size)] }.join
-    tmp_password_path = "#{ password_path }.tmp"
-    File.write(tmp_password_path, "#{ password }\n", 0, :perm => 0600)
-    File.rename(tmp_password_path, password_path)
-  end
-  File.chmod(0600, password_path)
 end
 
 begin
@@ -91,7 +77,7 @@ rescue StandardError => e
 end
 
 begin
-  nextcloud_domain = puavoconf.get('puavo.docker.nextcloud.domain')
+  nextcloud_domain = puavoconf.get('puavo.nextcloud.domain')
   raise 'no Nextcloud domain set' if nextcloud_domain.empty?
   nextcloud_env = docker_compose['services']['nextcloud']['environment']
   nextcloud_env['NEXTCLOUD_TRUSTED_DOMAINS'] = nextcloud_domain
@@ -106,7 +92,7 @@ rescue StandardError => e
 end
 
 begin
-  collabora_domain = puavoconf.get('puavo.docker.collabora.domain')
+  collabora_domain = puavoconf.get('puavo.collabora.domain')
   raise 'no Collabora domain set' if collabora_domain.empty?
   collabora_env = docker_compose['services']['collabora']['environment'] || {}
   collabora_env['server_name'] = collabora_domain
@@ -115,6 +101,35 @@ begin
 rescue StandardError => e
   warn("could not configure collabora for docker-compose: #{ e.message }")
   exit(1)
+end
+
+cert_chain_path = File.join(NGINX_CERT_DIR,
+                            "#{ nextcloud_domain }-fullchain.pem")
+cert_key_path = File.join(NGINX_CERT_DIR, "#{ nextcloud_domain }.key")
+
+unless File.exists?(cert_chain_path) then
+  warn("certificate file #{ cert_chain_path } is missing")
+  exit(1)
+end
+
+unless File.exists?(cert_key_path) then
+  warn("certificate key #{ cert_key_path } is missing")
+  exit(1)
+end
+
+FileUtils.mkdir_p(DOCKER_CONFIG_FILES_DIR)
+
+PASSWORDS_TO_GENERATE = %w(postgres_db_password nextcloud_admin_password)
+PASSWORDS_TO_GENERATE.each do |password_name|
+  password_path = File.join(SECRETS_DIR, password_name)
+  unless File.exists?(password_path) then
+    chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
+    password = Array.new(32) { chars[rand(chars.size)] }.join
+    tmp_password_path = "#{ password_path }.tmp"
+    File.write(tmp_password_path, "#{ password }\n", 0, :perm => 0600)
+    File.rename(tmp_password_path, password_path)
+  end
+  File.chmod(0600, password_path)
 end
 
 collabora_enabled = false
@@ -179,7 +194,12 @@ server {
     listen 443 ssl;
     server_name #{ nextcloud_domain };
 
+    ssl on;
+    ssl_certificate #{ cert_chain_path }
+    ssl_certificate_key #{ cert_key_path }
+
     # https://docs.nextcloud.com/server/27/admin_manual/configuration_server/reverse_proxy_configuration.html
+
 
     location / {
         proxy_set_header HOST $host;

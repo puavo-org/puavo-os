@@ -20,6 +20,10 @@ class docker::nextcloud {
       require => [ File['/etc/puavo-docker/files/run-nextcloud']
                  , File['/etc/puavo-docker/files/setup-nextcloud-docker'] ],
       source  => 'puppet:///modules/docker/Dockerfile.nextcloud';
+
+    '/usr/local/sbin/puavo-update-letsencrypt-certificates':
+      mode   => '0755',
+      source => 'puppet:///modules/docker/puavo-update-letsencrypt-certificates';
   }
 
   ::puavo_conf::definition {
