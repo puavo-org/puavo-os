@@ -519,6 +519,7 @@ class packages {
     , 'kstars'
     , 'mandelbulber2'
     , 'marble-qt'
+    , 'openbabel'
     , 'pspp'
     , 'qgis'
     , 'stellarium'
