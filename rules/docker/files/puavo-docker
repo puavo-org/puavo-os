@@ -195,11 +195,10 @@ server {
     server_name #{ nextcloud_domain };
 
     ssl on;
-    ssl_certificate #{ cert_chain_path }
-    ssl_certificate_key #{ cert_key_path }
+    ssl_certificate #{ cert_chain_path };
+    ssl_certificate_key #{ cert_key_path };
 
     # https://docs.nextcloud.com/server/27/admin_manual/configuration_server/reverse_proxy_configuration.html
-
 
     location / {
         proxy_set_header HOST $host;
