@@ -62,6 +62,8 @@ set services {
     }}
 
   { docker {
+      /etc/systemd/system/multi-user.target.wants/containerd.service
+        -> /lib/systemd/system/containerd.service
       /etc/systemd/system/multi-user.target.wants/docker.service
         -> /lib/systemd/system/docker.service
       /etc/systemd/system/sockets.target.wants/docker.socket
