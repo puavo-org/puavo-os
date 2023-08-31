@@ -85,10 +85,11 @@ get_pwa_start_url() {
 
 name=${1:-}
 pwa_url=${2:-}
-browser=${3:-}
+app_id=${3:-}
+browser=${4:-}
 
-if [ -z "$name" -o -z "$pwa_url" ]; then
-  echo "Usage: $(basename "$0") name pwa_url [browser]" >&2
+if [ -z "$name" -o -z "$pwa_url" -o -z "$app_id" ]; then
+  echo "Usage: $(basename "$0") name pwa_url app_id [browser]" >&2
   exit 1
 fi
 
@@ -174,6 +175,7 @@ else
   rm -f "${pwa_tmpdir}/browser"
 fi
 
+printf "%s\n" "$app_id"        > "${pwa_tmpdir}/app_id"
 printf "%s\n" "$pwa_start_url" > "${pwa_tmpdir}/url"
 
 # link to /usr/local/share/applications

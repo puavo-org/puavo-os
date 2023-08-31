@@ -1442,6 +1442,14 @@
                 "id": "ti5-nspire-cx-cas-ss-personal"
             }
         },
+        "ti6_nspire_cx": {
+            "name": "TI-Nspire CX 6",
+            "tags": "default",
+            "keywords": "tinspire",
+            "puavopkg": {
+                "id": "ti6-nspire-cx"
+            }
+        },
         "ti6_nspire_cx_cas_ss": {
             "name": "TI-Nspire CX Cas 6",
             "tags": "default",
@@ -1620,6 +1628,7 @@
                 "ti_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss_personal",
+                "ti6_nspire_cx",
                 "ti6_nspire_cx_cas_ss",
                 "ClassPadManagerforClassPadII",
                 "LoggerPro",

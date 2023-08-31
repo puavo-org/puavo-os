@@ -26,7 +26,6 @@ class gnome_shell_extensions {
       require => ::Themes::Iconlink['scalable/apps/puavo-multitasking-view.svg'];
 
     [ 'appindicatorsupport@rgcjonas.gmail.com'
-    , 'audio-switcher@AndresCidoncha'
     , 'bottompanel@tmoer93'
     , 'BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm'
     , 'dash-to-panel@jderose9.github.com'
@@ -36,6 +35,7 @@ class gnome_shell_extensions {
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
     , 'puavomenu@puavo.org'
+    , 'sound-output-device-chooser@kgshank.net'
     , 'TopIcons@phocean.net'
     , 'uparrows@puavo.org'
     , 'user-theme@gnome-shell-extensions.gcampax.github.com' ]:

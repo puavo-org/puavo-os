@@ -114,14 +114,13 @@ trigger_pwa_installation() {
 }
 
 wait_for_app_installation() {
-  local app_id browser_prefs_path i pwa_url
-  pwa_url=$1
+  local app_id browser_prefs_path i
+  app_id=$1
   browser_prefs_path=$2
 
   i=0
   while [ "$i" -lt 60 ]; do
-    if app_id=$(lookup_app_id "$pwa_url" "$browser_prefs_path"); then
-      printf %s "$app_id"
+    if check_app_is_installed "$app_id" "$browser_prefs_path"; then
       return 0
     fi
     sleep 1
@@ -131,17 +130,16 @@ wait_for_app_installation() {
   return 1
 }
 
-lookup_app_id() {
-  local app_id browser_prefs_path pwa_url
-  pwa_url=$1
+check_app_is_installed() {
+  local app_id browser_prefs_path install_info
+  app_id=$1
   browser_prefs_path=$2
 
-  app_id="$(jq -r --arg pwa_url "$pwa_url" '
-              .web_apps.extension_ids[$pwa_url].extension_id
-            ' "$browser_prefs_path" 2>/dev/null || true)"
+  install_info="$(jq -r --arg app_id "$app_id" \
+                     '.web_app_install_metrics[$app_id]' \
+                     "$browser_prefs_path" 2>/dev/null || true)"
 
-  if [ -n "$app_id" -a "$app_id" != 'null' ]; then
-    printf %s "$app_id"
+  if [ -n "$install_info" -a "$install_info" != 'null' ]; then
     return 0
   fi
 
@@ -174,6 +172,7 @@ if [ -z "$pwa_name" ]; then
 fi
 
 pwa_dir="/var/lib/puavo-pwa/${pwa_name}"
+app_id_path="${pwa_dir}/app_id"
 pwa_url_path="${pwa_dir}/url"
 
 if [ ! -d "$pwa_dir" ]; then
@@ -194,6 +193,12 @@ fi
 
 browser_prefs_path=$(get_browser_prefs_path "$browser")
 
+app_id="$(cat "$app_id_path" 2>/dev/null || true)"
+if [ -z "$app_id" ]; then
+  echo "Can not read app_id from ${app_id_path}" >&2
+  exit 1
+fi
+
 pwa_url="$(cat "$pwa_url_path" 2>/dev/null || true)"
 if [ -z "$pwa_url" ]; then
   echo "Can not read pwa_url from ${pwa_url_path}" >&2
@@ -205,7 +210,7 @@ if ! check_if_enabled "$pwa_url"; then
   exit 1
 fi
 
-if ! app_id=$(lookup_app_id "$pwa_url" "$browser_prefs_path"); then
+if ! check_app_is_installed "$app_id" "$browser_prefs_path"; then
   if ! pgrep -U "$USER" -x "$browser" >/dev/null 2>&1; then
     if ! trigger_pwa_installation "$pwa_url" "$browser_path"; then
       # XXX should user be notified?
@@ -214,8 +219,7 @@ if ! app_id=$(lookup_app_id "$pwa_url" "$browser_prefs_path"); then
     fi
   fi
 
-  if ! app_id=$(wait_for_app_installation "$pwa_url" \
-                                          "$browser_prefs_path"); then
+  if ! wait_for_app_installation "$app_id" "$browser_prefs_path"; then
     # XXX should user be notified?
     echo "PWA app installation was not successful for ${pwa_url}" >&2
     exit 1

@@ -4,16 +4,20 @@ class SystemGroup < LdapOrganisationBase
                 :classes => ['puavoSystemGroup'])
 
   def self.create_system_groups
-    [ { "cn" => "auth", "description" => "LDAP bind (dn, uid)" },
-      { "cn" => "getent", "description" => "getent passwd and group" },
-      { "cn" => "printerqueues", "description" => "Printer queues" },
-      { "cn" => "servers", "description" => "Server information" },
-      { "cn" => "devices", "description" => "Client devices" },
-      { "cn" => "bookmarks", "description" => "Bookmarks" },
-      { "cn" => "orginfo", "description" => "Organisation information" },
-      { "cn" => "addressbook", "description" => "Addressbook" } ].
-      each do |system_group|
-      self.create( system_group )
+    group_specs = [
+      { 'cn' => 'addressbook',   'description' => 'Addressbook'              },
+      { 'cn' => 'auth',          'description' => 'LDAP bind (dn, uid)'      },
+      { 'cn' => 'bookmarks',     'description' => 'Bookmarks'                },
+      { 'cn' => 'devices',       'description' => 'Client devices'           },
+      { 'cn' => 'getent',        'description' => 'getent passwd and group'  },
+      { 'cn' => 'nextcloud',     'description' => 'Nextcloud'                },
+      { 'cn' => 'orginfo',       'description' => 'Organisation information' },
+      { 'cn' => 'printerqueues', 'description' => 'Printer queues'           },
+      { 'cn' => 'servers',       'description' => 'Server information'       },
+    ]
+
+    group_specs.each do |system_group|
+      self.create(system_group)
     end
   end
 end

@@ -651,6 +651,7 @@ rule {
       by [systemgroup addressbook] read
       by [systemgroup auth]        read
       by [systemgroup getent]      read
+      by [systemgroup nextcloud]   read
       by [dn children $People]     read
       by [dn children $Hosts]      read
       by anonymous                 auth
@@ -743,6 +744,25 @@ rule {
            uidNumber]
       by [systemgroup getent] read
       by *                    none break
+}
+
+# some permissions to "nextcloud"
+rule {
+  [dn subtree $People]
+    [attrs cn                \
+           displayName       \
+           entry             \
+           entryUuid         \
+           givenName         \
+           jpegPhoto         \
+           mail              \
+           objectClass       \
+           preferredLanguage \
+           sn                \
+           telephoneNumber   \
+           uid]
+      by [systemgroup nextcloud] read
+      by *                       none break
 }
 
 # rules needed by email-mgmt (email management user)
