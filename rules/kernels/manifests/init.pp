@@ -29,10 +29,10 @@ class kernels {
   }
 
   $default_kernel = '6.1.0-11-amd64'
-  # XXX $recent_kernel  = ''
+  $crisp_kernel   = '6.4.0-0.deb12.2-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
-    # XXX 'recent':  kernel => $recent_kernel;
+    'crisp':   kernel => $crisp_kernel;
   }
 }
