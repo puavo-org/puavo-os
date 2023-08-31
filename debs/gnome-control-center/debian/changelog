@@ -1,8 +1,53 @@
-gnome-control-center (1:43.4.1-1+puavo1) bookworm; urgency=medium
+gnome-control-center (1:43.6-2~deb12u1+puavo1) bookworm; urgency=medium
 
   * Add our changes to "gnome-control-center".
 
  -- Puavo Org <dev@opinsys.fi>  Wed, 05 Jul 2023 14:32:43 +0300
+
+gnome-control-center (1:43.6-2~deb12u1) bookworm; urgency=medium
+
+  * Team upload
+  * Rebuild for bookworm
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 15 Jun 2023 11:35:10 +0100
+
+gnome-control-center (1:43.6-2) unstable; urgency=medium
+
+  * Team upload
+  * Expand previous changelog entry to include more details of the
+    upstream changes
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 13 Jun 2023 09:40:29 +0100
+
+gnome-control-center (1:43.6-1) unstable; urgency=medium
+
+  * New upstream bugfix release 43.5
+    - Populate list of previous WWAN (Mobile Network) connetions more
+      reliably, avoiding creation of duplicate connections in
+      NetworkManager (gnome-control-center#1468 upstream)
+    - Stop listing displays in the reverse of the intended order
+    - Add 32:9 as a well-known aspect ratio
+      (gnome-control-center#2334 upstream)
+    - Fix an assertion failure when activating the Users panel
+      (gnome-control-center#2219 upstream)
+    - Don't access User objects before they are fully loaded
+      (gnome-control-center#2348, #2349 upstream)
+    - Fix an assertion failure when cropping an avatar
+    - Don't allow commas in users' "real name" field, because the GECOS
+      encoding in /etc/passwd cannot represent those
+      (gnome-control-center#888 upstream)
+    - Automatically close user avatar chooser before showing file
+      chooser (gnome-control-center#2315 upstream)
+    - Restore the default cursor when leaving the dialog to crop an
+      avatar (gnome-control-center#2359 upstream)
+    - Fix a crash when cancelling authentication for Thunderbolt
+    - Remove a duplicate property from the "add user" UI
+    - Translation updates: ca, fr, hu
+  * New upstream bugfix release 43.6
+    - Fix a use-after-free crash when editing network connections
+    - Translation updates: ab, hu; add fo
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Mon, 29 May 2023 15:21:14 -0400
 
 gnome-control-center (1:43.4.1-1) unstable; urgency=medium
 
