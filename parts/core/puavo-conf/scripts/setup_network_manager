@@ -237,12 +237,17 @@ EOF
 end
 
 class Wlan < Network
-  def initialize(ssid)
+  def initialize(ssid, priority)
     raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
 
     super(ssid.scan(/[[:alnum:]_-]/).join)
 
     @ssid = ssid
+    @priority = priority
+  end
+
+  def autoconnect_priority
+    @priority || "0"
   end
 end
 
@@ -259,7 +264,7 @@ class Wlan::Eap < Wlan
   def client_cert_path; "#{ certdir }/client_cert"; end
   def client_key_path;  "#{ certdir }/client_key";  end
 
-  def initialize(ssid, identity, password, certs, phase2_auth)
+  def initialize(ssid, identity, password, certs, phase2_auth, priority)
     raise 'Wlan eap-tls ssid is not a non-empty string' \
       unless ssid.kind_of?(String) && !ssid.empty?
     raise 'Wlan eap-tls identity is not a non-empty string' \
@@ -302,6 +307,7 @@ id=#{ @id }
 uuid=#{ @uuid }
 type=wifi
 permissions=
+autoconnect-priority=#{ autoconnect_priority }
 
 [wifi]
 mode=infrastructure
@@ -401,6 +407,7 @@ id=#{ @id }
 uuid=#{ @uuid }
 type=wifi
 permissions=
+autoconnect-priority=#{ autoconnect_priority }
 
 [wifi]
 mode=infrastructure
@@ -419,12 +426,12 @@ EOF
 end
 
 class Wlan::Psk < Wlan
-  def initialize(ssid, psk)
+  def initialize(ssid, psk, priority)
     raise "Wlan password is not set for ssid=#{ ssid }" \
       if (psk.nil? || psk.empty?)
     @psk = psk
 
-    super(ssid)
+    super(ssid, priority)
   end
 
   def config
@@ -434,6 +441,7 @@ id=#{ @id }
 uuid=#{ @uuid }
 type=wifi
 permissions=
+autoconnect-priority=#{ autoconnect_priority }
 
 [wifi]
 mode=infrastructure
@@ -474,7 +482,8 @@ networks_specs.each do |network_spec|
                                        network_spec['identity'],
                                        network_spec['password'],
                                        network_spec['certs'],
-                                       network_spec['phase2_auth'])
+                                       network_spec['phase2_auth'],
+                                       network_spec['priority'])
                    end
 
   begin
@@ -494,9 +503,11 @@ networks_specs.each do |network_spec|
                     network_spec['number'],
                     network_spec['pin'])
           when 'open'
-            Wlan::Open.new(network_spec['ssid'])
+            Wlan::Open.new(network_spec['ssid'], network_spec['priority'])
           when 'psk'
-            Wlan::Psk.new(network_spec['ssid'], network_spec['password'])
+            Wlan::Psk.new(network_spec['ssid'],
+                          network_spec['password'],
+                          network_spec['priority'])
           else
             warn "Unsupported wlan type #{ network_spec['type'] }"
             nil
