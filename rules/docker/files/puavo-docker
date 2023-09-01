@@ -223,6 +223,10 @@ server {
     listen 443 ssl;
     server_name #{ collabora_domain };
 
+    ssl on;
+    ssl_certificate #{ cert_chain_path };
+    ssl_certificate_key #{ cert_key_path };
+
     # static files
     location ^~ /browser {
 	proxy_pass https://#{ DOCKER_IP }:9980;
