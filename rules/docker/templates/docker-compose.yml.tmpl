@@ -23,7 +23,7 @@ services:
       args:
         IMAGE: nextcloud:VERSION
       context: /etc/puavo-docker
-      dockerfile: files/Dockerfile.nextcloud
+      dockerfile: ./files/Dockerfile.nextcloud
     restart: unless-stopped
     ports:
       - <%= scope.lookupvar('docker_ip') %>:880:80
@@ -31,6 +31,7 @@ services:
       - nextcloud:/var/www/html
       - nextclouddata:/var/www/nc_data
       - ./files:/puavo-nextcloud
+      - /state/etc/docker/config:/puavo-nextcloud-config
     environment:
       NEXTCLOUD_ADMIN_PASSWORD_FILE: /run/secrets/nextcloud_admin_password
       NEXTCLOUD_ADMIN_USER: root
@@ -59,13 +60,13 @@ services:
 
 secrets:
   nextcloud_admin_password:
-    file: secrets/nextcloud_admin_password
+    file: /state/etc/docker/secrets/nextcloud_admin_password
   nextcloud_keytab:
-    file: secrets/nextcloud_keytab
+    file: /state/etc/docker/secrets/nextcloud_keytab
   postgres_db_password:
-    file: secrets/postgres_db_password
+    file: /state/etc/docker/secrets/postgres_db_password
   puavo_ldap_password:
-    file: secrets/puavo_ldap_password
+    file: /state/etc/docker/secrets/puavo_ldap_password
 
 volumes:
   postgres:

@@ -16,10 +16,6 @@ class docker {
     '/etc/puavo-docker/files':
       ensure => directory;
 
-    '/etc/puavo-docker/secrets':
-      mode   => '0700',
-      ensure => directory;
-
     '/etc/systemd/system/puavo-docker.service':
       source => 'puppet:///modules/docker/puavo-docker.service';
 

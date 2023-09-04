@@ -30,10 +30,10 @@ keyfile="${nextcloud_domain}.key"
 cafile="${nextcloud_domain}-ca.pem"
 fullchainfile="${nextcloud_domain}-fullchain.pem"
 
-certdir='/etc/nginx/certs'
-tmpcertdir=$(mktemp -d "${certdir}/nextcloud_certs.XXXXXX")
+certdir='/state/etc/docker/certs'
+tmpcertdir=$(mktemp -d "${certdir}/incoming.XXXXXX")
 
-mkdir -p "$tmpcertdir"
+mkdir -p "$certdir" "$tmpcertdir"
 
 tar -C "$tmpcertdir" --strip-components=1 --no-same-owner \
     --no-same-permissions -zxf - "${fqdn}/${certfile}" "${fqdn}/${keyfile}" \

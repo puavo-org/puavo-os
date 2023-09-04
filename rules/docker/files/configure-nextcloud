@@ -99,7 +99,7 @@ fi
 
 # This is the container network gateway.
 collabora_server_ip='172.18.0.1'
-office_domain=$(cat /puavo-nextcloud/.config/office_domain 2>/dev/null) || true
+office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
 
 if [ -n "$office_domain" ]; then
   # Install and setup richdocuments

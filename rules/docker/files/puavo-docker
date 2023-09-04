@@ -5,13 +5,16 @@ require 'json'
 require 'puavo/conf'
 require 'yaml'
 
+DOCKER_STATE_DIR = '/state/etc/docker'
+
 CONTAINER_LIST = %w(postgres nextcloud collabora)
 DOCKER_COMPOSE_TEMPLATE_PATH = '/etc/puavo-docker/docker-compose.yml.tmpl'
 DOCKER_COMPOSE_PATH = '/etc/puavo-docker/docker-compose.yml'
 DOCKER_FILES_DIR = '/etc/puavo-docker/files'
-DOCKER_CONFIG_FILES_DIR = File.join(DOCKER_FILES_DIR, '.config')
-NGINX_CERT_DIR = '/etc/nginx/certs'
-SECRETS_DIR = '/etc/puavo-docker/secrets'
+
+CERTS_DIR   = File.join(DOCKER_STATE_DIR, 'certs')
+CONFIG_DIR  = File.join(DOCKER_STATE_DIR, 'config')
+SECRETS_DIR = File.join(DOCKER_STATE_DIR, 'secrets')
 
 IMAGEMAP = {
   'collabora' => 'collabora/code',
@@ -33,6 +36,9 @@ rescue StandardError => e
   warn("could not determine system ldap base: #{ e.message }")
   exit(1)
 end
+
+FileUtils.mkdir_p([ DOCKER_STATE_DIR, CERTS_DIR, CONFIG_DIR ])
+FileUtils.mkdir_p(SECRETS_DIR, :mode => 0700)
 
 puavo_ldap_password_path = File.join(SECRETS_DIR, 'puavo_ldap_password')
 if not File.exists?(puavo_ldap_password_path) then
@@ -103,9 +109,8 @@ rescue StandardError => e
   exit(1)
 end
 
-cert_chain_path = File.join(NGINX_CERT_DIR,
-                            "#{ nextcloud_domain }-fullchain.pem")
-cert_key_path = File.join(NGINX_CERT_DIR, "#{ nextcloud_domain }.key")
+cert_chain_path = File.join(CERTS_DIR, "#{ nextcloud_domain }-fullchain.pem")
+cert_key_path = File.join(CERTS_DIR, "#{ nextcloud_domain }.key")
 
 unless File.exists?(cert_chain_path) then
   warn("certificate file #{ cert_chain_path } is missing")
@@ -116,8 +121,6 @@ unless File.exists?(cert_key_path) then
   warn("certificate key #{ cert_key_path } is missing")
   exit(1)
 end
-
-FileUtils.mkdir_p(DOCKER_CONFIG_FILES_DIR)
 
 PASSWORDS_TO_GENERATE = %w(postgres_db_password nextcloud_admin_password)
 PASSWORDS_TO_GENERATE.each do |password_name|
@@ -133,7 +136,7 @@ PASSWORDS_TO_GENERATE.each do |password_name|
 end
 
 collabora_enabled = false
-office_domain_path = File.join(DOCKER_CONFIG_FILES_DIR, 'office_domain')
+office_domain_path = File.join(CONFIG_DIR, 'office_domain')
 if puavoconf.get('puavo.docker.collabora.enabled') == 'true' \
   && !collabora_domain.empty? then
     tmp_office_domain_path = "#{ office_domain_path }.tmp"
@@ -148,7 +151,7 @@ File.write(tmpfile, docker_compose.to_yaml)
 File.rename(tmpfile, DOCKER_COMPOSE_PATH)
 
 FileUtils.copy_file('/etc/krb5.conf',
-                    File.join(DOCKER_CONFIG_FILES_DIR, 'krb5.conf'),
+                    File.join(CONFIG_DIR, 'krb5.conf'),
                     :preserve => true)
 
 begin
