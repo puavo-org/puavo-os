@@ -72,7 +72,7 @@ if ! check_external_files_config; then
   "mount_id": 1,
   "mount_point": "\/",
   "storage": "\\\\OCA\\\\Files_External\\\\Lib\\\\Storage\\\\SMB",
-  "authentication_type": "smb::kerberosapache",
+  "authentication_type": "password::logincredentials",
   "configuration": {
       "check_acl": false,
       "default_realm": "",
@@ -122,27 +122,86 @@ fi
 
 patch_ok_path='/var/www/html/apps/files_external/lib/Lib/Backend/SMB.php.patch_ok'
 if [ ! -e "$patch_ok_path" ]; then
-  patch -d /var/www/html -p0 <<'EOF'
---- apps/files_external/lib/Lib/Backend/SMB.php	2023-08-04 11:49:00.245729858 +0000
-+++ apps/files_external/lib/Lib/Backend/SMB.php	2023-08-10 09:31:33.257671624 +0000
-@@ -94,7 +94,9 @@
- 						throw new \InvalidArgumentException('invalid authentication backend');
- 					}
- 					$credentialsStore = $auth->getCredentialsStore();
+  patch -b -d /var/www/html -p0 <<'EOF'
+--- apps/files_external/lib/Lib/Backend/SMB.php	2023-09-04 08:15:33.513544741 +0000
++++ apps/files_external/lib/Lib/Backend/SMB.php	2023-09-04 08:51:21.760494332 +0000
+@@ -74,7 +74,16 @@
+ 
+ 	public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
+ 		$auth = $storage->getAuthMechanism();
+-		if ($auth->getScheme() === AuthMechanism::SCHEME_PASSWORD) {
++		if ($auth->getIdentifier() !== 'password::logincredentials') {
++			throw new \RuntimeException('only password::logincredentials is supported with puavo');
++		}
++
++		$user_uid = null;
++		if ($user) { $user_uid = $user->getUID(); }
++		$kerbAuth = new KerberosApacheAuth($user_uid);
++		if ($kerbAuth->checkTicket()) {
++			$smbAuth = $kerbAuth;
++		} else {
+ 			if (!is_string($storage->getBackendOption('user')) || !is_string($storage->getBackendOption('password'))) {
+ 				throw new \InvalidArgumentException('user or password is not set');
+ 			}
+@@ -84,51 +93,6 @@
+ 				$storage->getBackendOption('domain'),
+ 				$storage->getBackendOption('password')
+ 			);
+-		} else {
+-			switch ($auth->getIdentifier()) {
+-				case 'smb::kerberos':
+-					$smbAuth = new KerberosAuth();
+-					break;
+-				case 'smb::kerberosapache':
+-					if (!$auth instanceof KerberosApacheAuthMechanism) {
+-						throw new \InvalidArgumentException('invalid authentication backend');
+-					}
+-					$credentialsStore = $auth->getCredentialsStore();
 -					$kerbAuth = new KerberosApacheAuth();
-+					$user_uid = null;
-+					if ($user) { $user_uid = $user->getUID(); }
-+					$kerbAuth = new KerberosApacheAuth($user_uid);
- 					// check if a kerberos ticket is available, else fallback to session credentials
- 					if ($kerbAuth->checkTicket()) {
- 						$smbAuth = $kerbAuth;
+-					// check if a kerberos ticket is available, else fallback to session credentials
+-					if ($kerbAuth->checkTicket()) {
+-						$smbAuth = $kerbAuth;
+-					} else {
+-						try {
+-							$credentials = $credentialsStore->getLoginCredentials();
+-							$user = $credentials->getLoginName();
+-							$pass = $credentials->getPassword();
+-							preg_match('/(.*)@(.*)/', $user, $matches);
+-							$realm = $storage->getBackendOption('default_realm');
+-							if (empty($realm)) {
+-								$realm = 'WORKGROUP';
+-							}
+-							if (count($matches) === 0) {
+-								$username = $user;
+-								$workgroup = $realm;
+-							} else {
+-								$username = $matches[1];
+-								$workgroup = $matches[2];
+-							}
+-							$smbAuth = new BasicAuth(
+-								$username,
+-								$workgroup,
+-								$pass
+-							);
+-						} catch (\Exception $e) {
+-							throw new InsufficientDataForMeaningfulAnswerException('No session credentials saved');
+-						}
+-					}
+-
+-					break;
+-				default:
+-					throw new \InvalidArgumentException('unknown authentication backend');
+-			}
+ 		}
+ 
+ 		$storage->setBackendOption('auth', $smbAuth);
 EOF
   touch "$patch_ok_path"
 fi
 
 patch_ok_path='/var/www/html/apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php.patch_ok'
 if [ ! -e "$patch_ok_path" ]; then
-  patch -d /var/www/html -p0 <<'EOF'
+  patch -b -d /var/www/html -p0 <<'EOF'
 --- apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-08-04 11:49:00.197729857 +0000
 +++ apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-08-10 09:30:08.126531506 +0000
 @@ -37,7 +37,17 @@
