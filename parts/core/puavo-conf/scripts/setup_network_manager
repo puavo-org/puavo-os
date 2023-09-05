@@ -247,7 +247,7 @@ class Wlan < Network
   end
 
   def autoconnect_priority
-    @priority || "0"
+    @priority.to_s.length > 0 ? @priority.to_s : "0"
   end
 end
 
@@ -425,7 +425,7 @@ EOF
   end
 
   def autoconnect_priority
-    @priority || "-1"
+    @priority.to_s.length > 0 ? @priority.to_s : "-1"
   end
 end
 
