@@ -181,7 +181,7 @@ begin
     || !FileUtils.compare_file(dnsmasq_conf_path, tmp_dnsmasq_conf_path) then
       File.rename(tmp_dnsmasq_conf_path, dnsmasq_conf_path)
       system('service', 'dnsmasq', 'restart') \
-        or raise('could not reload dnsmasq configuration')
+        or raise('could not restart dnsmasq')
   else
     File.unlink(tmp_dnsmasq_conf_path)
   end
