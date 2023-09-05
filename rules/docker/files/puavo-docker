@@ -194,10 +194,9 @@ end
 begin
   nginx_conf = <<EOF
 server {
-    listen 443 ssl;
+    listen 443 http2 ssl;
     server_name #{ nextcloud_domain };
 
-    ssl on;
     ssl_certificate #{ cert_chain_path };
     ssl_certificate_key #{ cert_key_path };
 
@@ -223,10 +222,9 @@ server {
 }
 
 server {
-    listen 443 ssl;
+    listen 443 http2 ssl;
     server_name #{ collabora_domain };
 
-    ssl on;
     ssl_certificate #{ cert_chain_path };
     ssl_certificate_key #{ cert_key_path };
 
