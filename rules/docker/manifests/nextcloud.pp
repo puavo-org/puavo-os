@@ -22,6 +22,9 @@ class docker::nextcloud {
                  , File['/etc/puavo-docker/files/setup-nextcloud-docker'] ],
       source  => 'puppet:///modules/docker/Dockerfile.nextcloud';
 
+    '/etc/X11/Xsession.d/48puavo-set-nextcloud-topdomain':
+      source => 'puppet:///modules/docker/48puavo-set-nextcloud-topdomain';
+
     '/usr/local/sbin/puavo-update-letsencrypt-certificates':
       mode   => '0755',
       source => 'puppet:///modules/docker/puavo-update-letsencrypt-certificates';
