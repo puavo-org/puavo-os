@@ -423,6 +423,10 @@ dns-search=
 method=auto
 EOF
   end
+
+  def autoconnect_priority
+    @priority || "-1"
+  end
 end
 
 class Wlan::Psk < Wlan
