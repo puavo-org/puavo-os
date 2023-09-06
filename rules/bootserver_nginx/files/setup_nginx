@@ -6,6 +6,11 @@ puavo_cert_version_list=$(puavo-conf puavo.admin.certs.versions)
 puavo_api_server_port=444
 puavo_cdn_server_port=873
 
+read puavo_hostname < /etc/puavo/hostname
+read puavo_domain   < /etc/puavo/domain
+
+puavo_fqdn="${puavo_hostname}.${puavo_domain}"
+
 cdn_conf() {
   cert_version=$1
   port=$2
@@ -16,12 +21,11 @@ cdn_conf() {
 
   cat <<EOF
 server {
-    listen ${port};
+    listen ${port} ssl;
 
     # XXX should we perhaps not serve *everything* under /images ?
     root /images;
 
-    ssl on;
     ssl_certificate /state/etc/puavo/certificates/${cert_version}/hostorgcabundle.pem;
     ssl_certificate_key /state/etc/puavo/certificates/${cert_version}/host.key;
 
@@ -41,11 +45,20 @@ puavo_rest_conf() {
 
   cat <<EOF
 server {
-   listen ${port};
+   listen ${port} ssl;
+   server_name ${puavo_fqdn};
+
+   # Allow access to puavo-rest only from private networks.
+   # The instance on bootservers does not need to serve anyone
+   # through the public networks.
+   allow 127.0.0.0/8;
+   allow 10.0.0.0/8;
+   allow 172.16.0.0/12;
+   allow 192.168.0.0/16;
+   deny all;
 
    root /usr/share/nginx/www;
 
-   ssl on;
    ssl_certificate /state/etc/puavo/certificates/${cert_version}/hostorgcabundle.pem;
    ssl_certificate_key /state/etc/puavo/certificates/${cert_version}/host.key;
 

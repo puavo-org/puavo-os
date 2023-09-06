@@ -270,8 +270,8 @@ server {
 	proxy_read_timeout 36000s;
     }
 
-    access_log /var/log/nginx/nextcloud-access.log;
-    error_log /var/log/nginx/nextcloud-error.log;
+    access_log /var/log/nginx/office-access.log;
+    error_log /var/log/nginx/office-error.log;
 }
 EOF
   nginx_conf_path = '/etc/nginx/sites-available/nextcloud'
