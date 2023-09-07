@@ -297,7 +297,7 @@ class Wlan::Eap < Wlan
       end
     end
 
-    super(ssid)
+    super(ssid, priority)
   end
 
   def config
