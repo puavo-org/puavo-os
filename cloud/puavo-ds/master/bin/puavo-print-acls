@@ -489,8 +489,8 @@ rule {
 
 rule {
   [dn children $Servers]
-    [attrs entry objectClass ou puavoEduPersonPrimarySchool puavoExport \
-                 puavoHostname puavoId puavoSchool]
+    [attrs entry objectClass ou puavoDeviceType puavoEduPersonPrimarySchool \
+           puavoExport puavoHostname puavoId puavoSchool]
       by $org_owners write
       by $admins     read
       by $staff      read       # XXX maybe just remove this?
