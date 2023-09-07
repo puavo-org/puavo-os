@@ -18,6 +18,15 @@ check_external_files_config() {
 puavo_ldap_password_file=$1
 read puavo_ldap_password < "$puavo_ldap_password_file"
 
+ldap_login_filter=$(cat /puavo-nextcloud-config/ldap_login_filter 2>/dev/null) || true
+ldap_user_filter=$(cat /puavo-nextcloud-config/ldap_user_filter 2>/dev/null) || true
+if [ -z "$ldap_login_filter" -o -z "$ldap_user_filter" ]; then
+  echo 'ldap login/user filter not set, can not setup Nextcloud' 2>/dev/null
+  exit 1
+fi
+
+office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
+
 # we let the bootserver nginx handle the ssl
 occ config:system:set --value https overwriteprotocol
 
@@ -57,10 +66,10 @@ occ ldap:set-config s01 ldapGroupFilter '(objectclass=posixGroup)'
 occ ldap:set-config s01 ldapGroupFilterObjectclass posixGroup
 occ ldap:set-config s01 ldapGroupMemberAssocAttr memberUid
 occ ldap:set-config s01 ldapHost "ldap://${PUAVO_SERVER_FQDN}"
-occ ldap:set-config s01 ldapLoginFilter '(&(|(objectclass=posixAccount))(uid=%uid))'
+occ ldap:set-config s01 ldapLoginFilter "$ldap_login_filter"
 occ ldap:set-config s01 ldapPort 389
 occ ldap:set-config s01 ldapTLS 1
-occ ldap:set-config s01 ldapUserFilter '(|(objectclass=posixAccount))'
+occ ldap:set-config s01 ldapUserFilter "$ldap_user_filter"
 occ ldap:set-config s01 ldapUserFilterObjectclass posixAccount
 occ ldap:set-config s01 turnOffCertCheck 1      # XXX is this okay?
 
@@ -99,7 +108,6 @@ fi
 
 # This is the container network gateway.
 collabora_server_ip='172.18.0.1'
-office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
 
 if [ -n "$office_domain" ]; then
   # Install and setup richdocuments
