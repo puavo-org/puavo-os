@@ -80,7 +80,7 @@ LDAPVerifyServerCert Off
 </VirtualHost>
 EOF
 
-a2enmod authnz_ldap ssl
+a2enmod ldap authnz_ldap ssl
 
 /entrypoint.sh "$@"
 
