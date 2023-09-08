@@ -110,6 +110,8 @@ class PuavoEtc
 
   puavo_attr :primary_ltsp_server, "primary_ltsp_server"
 
+  puavo_attr :ds_cert_mgmt_dn, "ds/cert-mgmt/dn"
+  puavo_attr :ds_cert_mgmt_password, "ds/cert-mgmt/password", :mode => 0640
   puavo_attr :ds_email_mgmt_dn, "ds/email-mgmt/dn"
   puavo_attr :ds_email_mgmt_password, "ds/email-mgmt/password", :mode => 0640
   puavo_attr :ds_examomatic_dn, "ds/examomatic/dn"

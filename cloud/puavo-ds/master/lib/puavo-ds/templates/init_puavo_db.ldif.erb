@@ -87,6 +87,13 @@ uid: examomatic
 description: Account for exam scheduler service
 userPassword: <%= @examomatic_pw_hash %>
 
+dn: <%= @cert_mgmt_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: cert-mgmt
+description: Account for public certificate management
+userPassword: <%= @cert_mgmt_pw_hash %>
+
 dn: ou=Services,o=puavo
 ou: Services
 objectClass: top
