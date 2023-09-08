@@ -29,6 +29,12 @@ install -o root -g www-data -m 640 /run/secrets/puavo_ldap_password \
 install -o root -g root -m 644 /puavo-nextcloud-config/krb5.conf \
         /etc/krb5.conf
 
+# XXX could we do without this? (seems this is needed by Apache configuration)
+cat <<'EOF' > /etc/ldap/ldap.conf
+TLS_CACERT      /etc/ssl/certs/ca-certificates.crt
+TLS_REQCERT     never
+EOF
+
 #
 # configure Apache
 #
@@ -36,18 +42,28 @@ install -o root -g root -m 644 /puavo-nextcloud-config/krb5.conf \
 install -o root -g www-data -m 640 /run/secrets/nextcloud_keytab \
         /etc/apache2/nextcloud.keytab
 
-cat <<'EOF' > /etc/apache2/sites-available/000-default.conf
+ldap_user_filter=$(cat /puavo-nextcloud-config/ldap_user_filter 2>/dev/null) || true
+if [ -z "$ldap_user_filter" ]; then
+  echo 'ldap user filter not set, can not setup Nextcloud' 2>/dev/null
+  exit 1
+fi
+
+# for some reason Apache does not like putting an ldap filter in parenthesis
+apache_ldap_filter=$(printf %s "$ldap_user_filter" | sed 's/^(//; s/)$//')
+
+cat <<EOF > /etc/apache2/sites-available/000-default.conf
+LDAPTrustedMode TLS
+LDAPVerifyServerCert Off
+
 <VirtualHost *:80>
         DocumentRoot /var/www/html
 
-        ErrorLog ${APACHE_LOG_DIR}/error-file.log
-        CustomLog ${APACHE_LOG_DIR}/access-file.log combined
+        ErrorLog \${APACHE_LOG_DIR}/error-file.log
+        CustomLog \${APACHE_LOG_DIR}/access-file.log combined
 
         <Location "/apps/user_saml/saml/login">
             AuthType GSSAPI
             AuthName "Nextcloud SSO Login"
-
-            Require valid-user
 
             GssapiCredStore keytab:/etc/apache2/nextcloud.keytab
             GssapiDelegCcacheDir /var/lib/apache2/ccache
@@ -55,12 +71,17 @@ cat <<'EOF' > /etc/apache2/sites-available/000-default.conf
             GssapiNegotiateOnce On
             GssapiSSLonly Off
 
-            ErrorDocument 401 "<html><meta http-equiv=\"refresh\" content=\"0;url=/login?direct=1\"></html>"
+            AuthLDAPURL "ldap://${PUAVO_SERVER_FQDN}/${PUAVO_LDAP_BASE_DN}?uid"
+            AuthLDAPBindDN "uid=nextcloud,ou=System Accounts,${PUAVO_LDAP_BASE_DN}"
+            AuthLDAPBindPassword "exec:/usr/bin/cat /run/secrets/puavo_ldap_password"
+            Require ldap-filter ${apache_ldap_filter}
+
+            ErrorDocument 401 "<html><meta http-equiv=\\"refresh\\" content=\\"0;url=/login?direct=1\\"></html>"
         </Location>
 </VirtualHost>
 EOF
 
-a2enmod rewrite ssl
+a2enmod authnz_ldap ssl
 
 /entrypoint.sh "$@"
 
