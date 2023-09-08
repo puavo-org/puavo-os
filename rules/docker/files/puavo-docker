@@ -32,6 +32,13 @@ def ldap_agent_dn(ldap_base)
   "uid=nextcloud,ou=System Accounts,#{ ldap_base }"
 end
 
+def write_config_file(data, name)
+  path = File.join(CONFIG_DIR, name)
+  tmp_path = "#{ path }.tmp"
+  File.write(tmp_path, data)
+  File.rename(tmp_path, path)
+end
+
 begin
   ldap_base = File.read('/etc/puavo/ldap/base').chomp
 rescue StandardError => e
@@ -150,28 +157,30 @@ begin
   if school_dns.empty? then
     # use "false" filter, nothing should match
     # https://www.ietf.org/rfc/rfc4526.txt
-    login_filter = '(|)'
-    user_filter  = '(|)'
+    apache_login_filter = '(|)'
+    login_filter        = '(|)'
+    user_filter         = '(|)'
   else
     objectclass_filter = Net::LDAP::Filter.eq('objectClass', 'posixAccount')
+    puavolocked_filter = Net::LDAP::Filter.eq('puavoLocked', 'FALSE')
     puavoschool_filters = \
       school_dns.map do |school_dn|
         Net::LDAP::Filter.eq('puavoSchool', Net::LDAP::Filter.escape(school_dn))
       end
-    login_filter = (objectclass_filter & puavoschool_filters.reduce(:|) \
+    apache_login_filter = (objectclass_filter & puavolocked_filter \
+                             & puavoschool_filters.reduce(:|)).to_s
+    login_filter = (objectclass_filter & puavolocked_filter \
+                      & puavoschool_filters.reduce(:|)      \
                       & Net::LDAP::Filter.eq('uid', '%uid')).to_s
     user_filter = (objectclass_filter & puavoschool_filters.reduce(:|)).to_s
   end
 
-  login_filter_path = File.join(CONFIG_DIR, 'ldap_login_filter')
-  tmp_login_filter_path = "#{ login_filter_path }.tmp"
-  File.write(tmp_login_filter_path, "#{ login_filter }\n")
-  File.rename(tmp_login_filter_path, login_filter_path)
+  # for some reason Apache does not like ldap filters in parenthesis
+  apache_conf_filter = apache_login_filter.sub(/^\(/, '').sub(/\)$/, '')
 
-  user_filter_path = File.join(CONFIG_DIR, 'ldap_user_filter')
-  tmp_user_filter_path = "#{ user_filter_path }.tmp"
-  File.write(tmp_user_filter_path, "#{ user_filter }\n")
-  File.rename(tmp_user_filter_path, user_filter_path)
+  write_config_file("#{ apache_conf_filter }\n", 'apache_ldap_login_filter')
+  write_config_file("#{ login_filter }\n",       'ldap_login_filter')
+  write_config_file("#{ user_filter }\n",        'ldap_user_filter')
 rescue StandardError => e
   warn("could not determine ldap user filter for this server: #{ e.message }")
   exit(1)

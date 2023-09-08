@@ -42,16 +42,15 @@ EOF
 install -o root -g www-data -m 640 /run/secrets/nextcloud_keytab \
         /etc/apache2/nextcloud.keytab
 
-ldap_user_filter=$(cat /puavo-nextcloud-config/ldap_user_filter 2>/dev/null) || true
-if [ -z "$ldap_user_filter" ]; then
-  echo 'ldap user filter not set, can not setup Nextcloud' 2>/dev/null
+apache_ldap_filter=$(cat /puavo-nextcloud-config/apache_ldap_login_filter \
+                       2>/dev/null) || true
+if [ -z "$apache_ldap_filter" ]; then
+  echo 'apache ldap login filter not set, can not setup Nextcloud' 2>/dev/null
   exit 1
 fi
 
-# for some reason Apache does not like putting an ldap filter in parenthesis
-apache_ldap_filter=$(printf %s "$ldap_user_filter" | sed 's/^(//; s/)$//')
-
 cat <<EOF > /etc/apache2/sites-available/000-default.conf
+LDAPCacheTTL 10
 LDAPTrustedMode TLS
 LDAPVerifyServerCert Off
 
