@@ -804,9 +804,9 @@ class packages {
 		    # , $r8168_module                   # XXX bookworm
 
   packages::kernels::kernel_package {
-    '6.1.0-11-amd64':
+    '6.1.0-12-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.1.0-11-amd64';
+      package_name => 'linux-image-6.1.0-12-amd64';
 
     '6.4.0-0.deb12.2-amd64':
       dkms_modules => $all_dkms_modules,
