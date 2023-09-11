@@ -1,6 +1,10 @@
 #!/bin/sh
 
 set -eu
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+NC="\033[0m"
 
 prepare_hp_utils() {
   puavo-pkg install /usr/share/puavo-pkg/packages/hp-bios-utils.tar.gz
@@ -29,6 +33,20 @@ hp_wget_latest_and_flash() {
     wget "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml" && \
     hp_latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" $mainboard_sysid.xml)" && \
     wget "$hp_ftp_url/$mainboard_sysid/$hp_latest_bios" && \
+    bin_sha384="$(xmllint --xpath "string(/BIOS/Rel[starts-with(@Bin,"$hp_latest_bios")]/@Sha384)" $mainboard_sysid.xml)"
+
+    if [ -n "$bin_sha384" ]; then
+      echo "Cryptographic hash for the binary was found in the list. Comparing it now."
+      if [ "$(sha384sum "$hp_latest_bios" | grep -i "$bin_sha384")" ]; then
+        printf "${GREEN}The hash is a match, continuing.${NC}"
+      else
+        printf "${RED}The hash does NOT match, aborting.${NC}"
+        return 0
+      fi
+    else
+      printf "${YELLOW}WARNING: No cryptographic hash found for the binary. Proceed with caution.${NC}"
+    fi
+
     hp-flash "$hp_latest_bios")
 }
 
