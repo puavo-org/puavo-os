@@ -719,6 +719,12 @@ darkdm_menu()
         darkdm_shell || return 1
         ;;
       test|t)
+        # In case the going gets weird during puavo-test-hardware, just notify inventory
+        # system beforehand that tests are starting. Result reporting might come later.
+        curl --cacert /etc/puavo-conf/rootca.pem \
+          -d "$(jq -n --arg sn "$(facter dmi.product.serial_number)" '.serialnumber = $sn | .systemtested = true')" \
+          --fail -H "Content-Type: application/json" --max-time 5 --silent -X POST "$deviceid_url" || true
+
         # Keyboard test makes tmux exit prematurely in ttys (not under X)
         # unless run outside tmux, this is why we run tests with openvt.
         # Actually even with this tmux does exit without a warning, but
