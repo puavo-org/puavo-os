@@ -75,6 +75,7 @@ CONTAINER_LIST.each do |container_name|
     if service_conf.dig('build', 'args', 'IMAGE') then
       service_conf['build']['args']['IMAGE'] \
         = "#{ IMAGEMAP[container_name] }:#{ image_version }"
+      service_conf['image'] = "puavo_#{ IMAGEMAP[container_name] }:#{ image_version }"
     end
   rescue StandardError => e
     warn("could not set #{ container_name }: #{ e.message }")
