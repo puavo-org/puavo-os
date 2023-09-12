@@ -24,8 +24,19 @@ EOF
   (cd "$hp_utils_dir" && bash)
 }
 
-hp_wget_latest_and_flash() {
+flash_latest() {
   prepare_hp_utils
+
+  if [ $# -eq 0 ]; then
+    param=""
+  else
+    param="$1"
+    if [ "$param" != "-y" ]; then
+      echo "Invalid parameter: '$param'"
+      echo "Accepted parameters are: '-y'"
+      return 1
+    fi
+  fi
 
   mainboard_sysid=$(dmidecode -s baseboard-product-name)
   hp_ftp_url="https://ftp.ext.hp.com/pub/pcbios"
@@ -41,13 +52,13 @@ hp_wget_latest_and_flash() {
         printf "${GREEN}The hash is a match, continuing.${NC}"
       else
         printf "${RED}The hash does NOT match, aborting.${NC}"
-        return 0
+        return 0 ### Return 0 here so we get back to the puavo-bios-config menu.
       fi
     else
       printf "${YELLOW}WARNING: No cryptographic hash found for the binary. Proceed with caution.${NC}"
     fi
 
-    hp-flash "$hp_latest_bios")
+    hp-flash "$hp_latest_bios" $param)
 }
 
 import_config() {
@@ -113,7 +124,7 @@ else
         exit 0
         ;;
       'Flash latest BIOS (HP)')
-        hp_wget_latest_and_flash
+        flash_latest
         sleep 3
         ;;
       'Import Student laptop BIOS Config')
