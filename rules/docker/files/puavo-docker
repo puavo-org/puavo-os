@@ -3,6 +3,7 @@
 require 'fileutils'
 require 'json'
 require 'net/ldap'
+require 'open3'
 require 'puavo/conf'
 require 'yaml'
 
@@ -24,9 +25,30 @@ IMAGEMAP = {
   'postgres'  => 'postgres',
 }
 
+raise('not running as root') unless Process.uid == 0
+
 status = 0
 
 DOCKER_IP = '172.17.0.1'
+
+# sudo docker container ls --format '{{.Image}} {{.Names}}'
+# sudo docker image     ls --format '{{.Repository}} {{.Tag}}'
+def get_container_versions()
+  output, status \
+   = Open3.capture2('docker', 'container', 'ls', '--format',
+                    '{{.Image}} {{.Names}}')
+  raise('docker container lookup returned error') unless status.success?
+
+  container_versions = {}
+
+  output.split("\n").each do
+    image, container_name = *output.split
+    version = image.split(':')[1]
+    container_versions[container_name] = version
+  end
+
+  container_versions
+end
 
 def ldap_agent_dn(ldap_base)
   "uid=nextcloud,ou=System Accounts,#{ ldap_base }"
@@ -62,12 +84,24 @@ File.chmod(0600, puavo_ldap_password_path)
 
 puavoconf = Puavo::Conf.new
 
+current_versions = get_container_versions()
+
 docker_compose = YAML::load_file(DOCKER_COMPOSE_TEMPLATE_PATH)
 
 CONTAINER_LIST.each do |container_name|
   begin
     puavoconf_var = "puavo.docker.#{ container_name }.version"
     image_version = puavoconf.get(puavoconf_var)
+
+    if image_version != 'latest' \
+      && current_versions.has_key?(container_name) then
+        current = Gem::Version.new(current_versions[container_name])
+        if Gem::Version.new(image_version) < Gem::Version.new(current) then
+          raise("requested version (#{ image_version }) is older than" \
+                  + " current running version (#{ current })")
+        end
+    end
+
     service_conf = docker_compose['services'][container_name]
     if service_conf['image'] then
       service_conf['image'] = "#{ IMAGEMAP[container_name] }:#{ image_version }"
@@ -94,7 +128,7 @@ end
 
 begin
   nextcloud_domain = puavoconf.get('puavo.nextcloud.domain')
-  raise 'no Nextcloud domain set' if nextcloud_domain.empty?
+  raise('no Nextcloud domain set') if nextcloud_domain.empty?
   nextcloud_env = docker_compose['services']['nextcloud']['environment']
   nextcloud_env['NEXTCLOUD_TRUSTED_DOMAINS'] = nextcloud_domain
   nextcloud_env['PUAVO_KERBEROS_REALM'] \
@@ -109,7 +143,7 @@ end
 
 begin
   collabora_domain = puavoconf.get('puavo.collabora.domain')
-  raise 'no Collabora domain set' if collabora_domain.empty?
+  raise('no Collabora domain set') if collabora_domain.empty?
   collabora_env = docker_compose['services']['collabora']['environment'] || {}
   collabora_env['server_name'] = collabora_domain
   collabora_env['aliasgroup1'] = "https://#{ nextcloud_domain }"
@@ -151,9 +185,9 @@ FileUtils.copy_file('/etc/krb5.conf',
 
 begin
   device_info = JSON.parse( IO.read(DEVICE_JSON_PATH) )
-  raise 'device info is not a hash' unless device_info.kind_of?(Hash)
+  raise('device info is not a hash') unless device_info.kind_of?(Hash)
   school_dns = device_info['school_dns']
-  raise 'device info lacks school DNs' unless school_dns.kind_of?(Array)
+  raise('device info lacks school DNs') unless school_dns.kind_of?(Array)
 
   if school_dns.empty? then
     # use "false" filter, nothing should match
