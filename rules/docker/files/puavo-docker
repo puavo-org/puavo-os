@@ -19,20 +19,23 @@ CERTS_DIR   = File.join(DOCKER_STATE_DIR, 'certs')
 CONFIG_DIR  = File.join(DOCKER_STATE_DIR, 'config')
 SECRETS_DIR = File.join(DOCKER_STATE_DIR, 'secrets')
 
+DOCKER_IP = '172.17.0.1'
+
 IMAGEMAP = {
   'collabora' => 'collabora/code',
   'nextcloud' => 'nextcloud',
   'postgres'  => 'postgres',
 }
 
-raise('not running as root') unless Process.uid == 0
+def cleanup_docker_images()
+  puts('> removing unused Docker images')
+  unless system('docker', 'image', 'prune', '--all', '--force') then
+    warn('error in pruning unused Docker images')
+    return false
+  end
+  return true
+end
 
-status = 0
-
-DOCKER_IP = '172.17.0.1'
-
-# sudo docker container ls --format '{{.Image}} {{.Names}}'
-# sudo docker image     ls --format '{{.Repository}} {{.Tag}}'
 def get_container_versions()
   output, status \
    = Open3.capture2('docker', 'container', 'ls', '--format',
@@ -60,6 +63,11 @@ def write_config_file(data, name)
   File.write(tmp_path, data)
   File.rename(tmp_path, path)
 end
+
+raise('not running as root') unless Process.uid == 0
+
+status = 0
+status = 1 unless cleanup_docker_images()
 
 begin
   ldap_base = File.read('/etc/puavo/ldap/base').chomp
@@ -409,12 +417,7 @@ CONTAINER_LIST.each do |container_name|
   end
 end
 
-
-puts('> removing unused Docker images')
-unless system('docker', 'image', 'prune', '--force') then
-  warn('error in pruning unused Docker images')
-  status = 1
-end
+status = 1 unless cleanup_docker_images()
 
 puavoconf.close()
 
