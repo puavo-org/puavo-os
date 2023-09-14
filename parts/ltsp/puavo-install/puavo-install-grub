@@ -553,6 +553,13 @@ install_efi_grub() {
   fi
   umount /boot/efi || true
 
+  bootorder="$(efibootmgr | awk 'BEGIN{ORS=","; delete arr} \
+  /USB/ {arr[length(arr)+0]=substr($1,5,4)} / debian/ {arr[3]=substr($1,5,4)} \
+  /Windows/ {arr[4]=substr($1,5,4)} END{arrlen=length(arr);for(n=0;n<=arrlen;++n) print arr[n]}' \
+  | sed -e 's/,,$/,/' -e 's/,$//' -e 's/,,0/,0/' -e 's/^,0//')"
+
+  efibootmgr --bootorder "$bootorder"
+
   log info "Grub (UEFI) installation to ${grubdev} was OK."
 
   return 0
