@@ -100,6 +100,7 @@ CONTAINER_LIST.each do |container_name|
   begin
     puavoconf_var = "puavo.docker.#{ container_name }.version"
     image_version = puavoconf.get(puavoconf_var)
+    raise 'no image version set' if image_version.empty?
 
     if image_version != 'latest' \
       && current_versions.has_key?(container_name) then
