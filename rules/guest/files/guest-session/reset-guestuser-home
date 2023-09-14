@@ -24,3 +24,5 @@ rm -rf "$guesthome"
 cp -RT /etc/guest-session/skel "$guesthome"
 chown -R "${guestuser}:" "$guesthome"
 chmod 700 "$guesthome"
+
+/etc/puavo-conf/scripts/cleanup_network_connections guest

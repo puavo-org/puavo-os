@@ -6,17 +6,21 @@ set -eu
 # (made by "Debian-gdm"-user).  Normal users are allowed to have their
 # own networks and we want that information to persist.
 
+bad_user_list="${1:-Debian-gdm guest}"
+
 find /etc/NetworkManager/system-connections/ -mindepth 1 -maxdepth 1 -type f \
-  -print0 \
-  | xargs -0 --no-run-if-empty awk '
-      BEGIN { FS = "="; ORS = "\0" }
-      $1 == "permissions" {
-        split($2, userlist, /;/)
-        for (i in userlist) {
-          if (userlist[i] == "user:Debian-gdm:") {
-            print FILENAME
+  ! -name 'puavo-*' -print0 \
+    | xargs -0 --no-run-if-empty awk -v bad_user_list="$bad_user_list" '
+        BEGIN { FS = "="; ORS = "\0"; split(bad_user_list, bad_users, " "); }
+        $1 == "permissions" {
+          split($2, userlist, /;/)
+          for (u in userlist) {
+            for (b in bad_users) {
+              if (userlist[u] == ("user:" bad_users[b] ":")) {
+                print FILENAME
+              }
+            }
           }
         }
-      }
-    ' \
-  | xargs -0 rm -f
+      ' \
+    | xargs -0 rm -f
