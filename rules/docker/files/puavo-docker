@@ -1,0 +1,386 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'json'
+require 'net/ldap'
+require 'puavo/conf'
+require 'yaml'
+
+DEVICE_JSON_PATH = '/state/etc/puavo/device.json'
+DOCKER_STATE_DIR = '/state/etc/docker'
+
+CONTAINER_LIST = %w(postgres nextcloud collabora)
+DOCKER_COMPOSE_TEMPLATE_PATH = '/etc/puavo-docker/docker-compose.yml.tmpl'
+DOCKER_COMPOSE_PATH = '/etc/puavo-docker/docker-compose.yml'
+DOCKER_FILES_DIR = '/etc/puavo-docker/files'
+
+CERTS_DIR   = File.join(DOCKER_STATE_DIR, 'certs')
+CONFIG_DIR  = File.join(DOCKER_STATE_DIR, 'config')
+SECRETS_DIR = File.join(DOCKER_STATE_DIR, 'secrets')
+
+IMAGEMAP = {
+  'collabora' => 'collabora/code',
+  'nextcloud' => 'nextcloud',
+  'postgres'  => 'postgres',
+}
+
+status = 0
+
+DOCKER_IP = '172.17.0.1'
+
+def ldap_agent_dn(ldap_base)
+  "uid=nextcloud,ou=System Accounts,#{ ldap_base }"
+end
+
+def write_config_file(data, name)
+  path = File.join(CONFIG_DIR, name)
+  tmp_path = "#{ path }.tmp"
+  File.write(tmp_path, data)
+  File.rename(tmp_path, path)
+end
+
+begin
+  ldap_base = File.read('/etc/puavo/ldap/base').chomp
+rescue StandardError => e
+  warn("could not determine system ldap base: #{ e.message }")
+  exit(1)
+end
+
+FileUtils.mkdir_p([ DOCKER_STATE_DIR, CERTS_DIR, CONFIG_DIR ])
+FileUtils.mkdir_p(SECRETS_DIR, :mode => 0700)
+
+puavo_ldap_password_path = File.join(SECRETS_DIR, 'puavo_ldap_password')
+if not File.exists?(puavo_ldap_password_path) then
+  warn(%Q[Will not install/setup Nextcloud,])
+  warn(%Q["#{ puavo_ldap_password_path }" is missing.  You should write])
+  warn(%Q[the password of "#{ ldap_agent_dn(ldap_base) }" to])
+  warn(%Q["#{ puavo_ldap_password_path }".])
+  exit(1)
+end
+
+File.chmod(0600, puavo_ldap_password_path)
+
+puavoconf = Puavo::Conf.new
+
+docker_compose = YAML::load_file(DOCKER_COMPOSE_TEMPLATE_PATH)
+
+CONTAINER_LIST.each do |container_name|
+  begin
+    puavoconf_var = "puavo.docker.#{ container_name }.version"
+    image_version = puavoconf.get(puavoconf_var)
+    service_conf = docker_compose['services'][container_name]
+    if service_conf['image'] then
+      service_conf['image'] = "#{ IMAGEMAP[container_name] }:#{ image_version }"
+    end
+    if service_conf.dig('build', 'args', 'IMAGE') then
+      service_conf['build']['args']['IMAGE'] \
+        = "#{ IMAGEMAP[container_name] }:#{ image_version }"
+    end
+  rescue StandardError => e
+    warn("could not set #{ container_name }: #{ e.message }")
+    exit(1)
+  end
+end
+
+begin
+  puavo_hostname = File.read('/etc/puavo/hostname').chomp
+  puavo_domain   = File.read('/etc/puavo/domain').chomp
+  puavo_server_fqdn = "#{ puavo_hostname }.#{ puavo_domain }"
+rescue StandardError => e
+  warn("could not determine system ldap base: #{ e.message }")
+  exit(1)
+end
+
+begin
+  nextcloud_domain = puavoconf.get('puavo.nextcloud.domain')
+  raise 'no Nextcloud domain set' if nextcloud_domain.empty?
+  nextcloud_env = docker_compose['services']['nextcloud']['environment']
+  nextcloud_env['NEXTCLOUD_TRUSTED_DOMAINS'] = nextcloud_domain
+  nextcloud_env['PUAVO_KERBEROS_REALM'] \
+    = File.read('/etc/puavo/kerberos/realm').chomp
+  nextcloud_env['PUAVO_LDAP_AGENT_DN'] = ldap_agent_dn(ldap_base)
+  nextcloud_env['PUAVO_LDAP_BASE_DN'] = ldap_base
+  nextcloud_env['PUAVO_SERVER_FQDN'] = puavo_server_fqdn
+rescue StandardError => e
+  warn("could not configure nextcloud for docker-compose: #{ e.message }")
+  exit(1)
+end
+
+begin
+  collabora_domain = puavoconf.get('puavo.collabora.domain')
+  raise 'no Collabora domain set' if collabora_domain.empty?
+  collabora_env = docker_compose['services']['collabora']['environment'] || {}
+  collabora_env['server_name'] = collabora_domain
+  collabora_env['aliasgroup1'] = "https://#{ nextcloud_domain }"
+  docker_compose['services']['collabora']['environment'] = collabora_env
+rescue StandardError => e
+  warn("could not configure collabora for docker-compose: #{ e.message }")
+  exit(1)
+end
+
+cert_chain_path = File.join(CERTS_DIR, "#{ nextcloud_domain }-fullchain.pem")
+cert_key_path = File.join(CERTS_DIR, "#{ nextcloud_domain }.key")
+
+unless File.exists?(cert_chain_path) then
+  warn("certificate file #{ cert_chain_path } is missing")
+  exit(1)
+end
+
+unless File.exists?(cert_key_path) then
+  warn("certificate key #{ cert_key_path } is missing")
+  exit(1)
+end
+
+PASSWORDS_TO_GENERATE = %w(postgres_db_password nextcloud_admin_password)
+PASSWORDS_TO_GENERATE.each do |password_name|
+  password_path = File.join(SECRETS_DIR, password_name)
+  unless File.exists?(password_path) then
+    chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
+    password = Array.new(32) { chars[rand(chars.size)] }.join
+    tmp_password_path = "#{ password_path }.tmp"
+    File.write(tmp_password_path, "#{ password }\n", 0, :perm => 0600)
+    File.rename(tmp_password_path, password_path)
+  end
+  File.chmod(0600, password_path)
+end
+
+FileUtils.copy_file('/etc/krb5.conf',
+                    File.join(CONFIG_DIR, 'krb5.conf'),
+                    :preserve => true)
+
+begin
+  device_info = JSON.parse( IO.read(DEVICE_JSON_PATH) )
+  raise 'device info is not a hash' unless device_info.kind_of?(Hash)
+  school_dns = device_info['school_dns']
+  raise 'device info lacks school DNs' unless school_dns.kind_of?(Array)
+
+  if school_dns.empty? then
+    # use "false" filter, nothing should match
+    # https://www.ietf.org/rfc/rfc4526.txt
+    apache_login_filter = '(|)'
+    login_filter        = '(|)'
+    user_filter         = '(|)'
+  else
+    objectclass_filter = Net::LDAP::Filter.eq('objectClass', 'posixAccount')
+    puavolocked_filter = Net::LDAP::Filter.eq('puavoLocked', 'FALSE')
+    puavoschool_filters = \
+      school_dns.map do |school_dn|
+        Net::LDAP::Filter.eq('puavoSchool', Net::LDAP::Filter.escape(school_dn))
+      end
+    apache_login_filter = (objectclass_filter & puavolocked_filter \
+                             & puavoschool_filters.reduce(:|)).to_s
+    login_filter = (objectclass_filter & puavolocked_filter \
+                      & puavoschool_filters.reduce(:|)      \
+                      & Net::LDAP::Filter.eq('uid', '%uid')).to_s
+    user_filter = (objectclass_filter & puavoschool_filters.reduce(:|)).to_s
+  end
+
+  # for some reason Apache does not like ldap filters in parenthesis
+  apache_conf_filter = apache_login_filter.sub(/^\(/, '').sub(/\)$/, '')
+
+  write_config_file("#{ apache_conf_filter }\n", 'apache_ldap_login_filter')
+  write_config_file("#{ login_filter }\n",       'ldap_login_filter')
+  write_config_file("#{ user_filter }\n",        'ldap_user_filter')
+rescue StandardError => e
+  warn("could not determine ldap user filter for this server: #{ e.message }")
+  exit(1)
+end
+
+collabora_enabled = false
+office_domain_path = File.join(CONFIG_DIR, 'office_domain')
+if puavoconf.get('puavo.docker.collabora.enabled') == 'true' \
+  && !collabora_domain.empty? then
+    tmp_office_domain_path = "#{ office_domain_path }.tmp"
+    File.write(tmp_office_domain_path, "#{ collabora_domain }\n")
+    File.rename(tmp_office_domain_path, office_domain_path)
+else
+  File.unlink(office_domain_path) rescue Errno::ENOENT
+end
+
+tmpfile = "#{ DOCKER_COMPOSE_PATH }.tmp"
+File.write(tmpfile, docker_compose.to_yaml)
+File.rename(tmpfile, DOCKER_COMPOSE_PATH)
+
+begin
+  nextcloud_keytab_path = File.join(SECRETS_DIR, 'nextcloud_keytab')
+  unless File.exists?(nextcloud_keytab_path) then
+    FileUtils.rm_f("#{ nextcloud_keytab_path }.tmp")
+    system('kadmin.local', '-q',
+           "ktadd -norandkey -k #{ nextcloud_keytab_path }.tmp HTTP/#{ nextcloud_domain }")
+    File.rename("#{ nextcloud_keytab_path }.tmp", nextcloud_keytab_path)
+  end
+  FileUtils.chmod(0600, nextcloud_keytab_path)
+rescue StandardError => e
+  warn("could not write #{ nextcloud_keytab_path }: #{ e.message }")
+  warn("perhaps HTTP/#{ nextcloud_domain } principal does not exist?")
+  exit(1)
+end
+
+# setup dnsmasq configuration
+begin
+  dnsmasq_conf  = "host-record=#{ nextcloud_domain },#{ DOCKER_IP }\n"
+  dnsmasq_conf += "host-record=#{ collabora_domain },#{ DOCKER_IP }\n"
+  dnsmasq_conf_path = '/etc/dnsmasq.d/10-docker.conf'
+  tmp_dnsmasq_conf_path = "#{ dnsmasq_conf_path }.tmp"
+  File.write(tmp_dnsmasq_conf_path, dnsmasq_conf)
+
+  if !File.exists?(dnsmasq_conf_path) \
+    || !FileUtils.compare_file(dnsmasq_conf_path, tmp_dnsmasq_conf_path) then
+      File.rename(tmp_dnsmasq_conf_path, dnsmasq_conf_path)
+      system('service', 'dnsmasq', 'restart') \
+        or raise('could not restart dnsmasq')
+  else
+    File.unlink(tmp_dnsmasq_conf_path)
+  end
+rescue StandardError => e
+  warn("could not configure dnsmasq: #{ e.message }")
+  exit(1)
+end
+
+# setup nginx configuration
+begin
+  nginx_conf = <<EOF
+server {
+    listen 443 http2 ssl;
+    server_name #{ nextcloud_domain };
+
+    ssl_certificate #{ cert_chain_path };
+    ssl_certificate_key #{ cert_key_path };
+
+    # https://docs.nextcloud.com/server/27/admin_manual/configuration_server/reverse_proxy_configuration.html
+
+    location / {
+        proxy_set_header HOST $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_pass http://#{ DOCKER_IP }:880$request_uri;
+    }
+
+    location /.well-known/carddav {
+        return 301 $scheme://$host/remote.php/dav;
+    }
+    location /.well-known/caldav {
+        return 301 $scheme://$host/remote.php/dav;
+    }
+
+    access_log /var/log/nginx/nextcloud-access.log;
+    error_log /var/log/nginx/nextcloud-error.log;
+}
+
+server {
+    listen 443 http2 ssl;
+    server_name #{ collabora_domain };
+
+    ssl_certificate #{ cert_chain_path };
+    ssl_certificate_key #{ cert_key_path };
+
+    # static files
+    location ^~ /browser {
+	proxy_pass https://#{ DOCKER_IP }:9980;
+	proxy_set_header Host $http_host;
+    }
+
+    # WOPI discovery URL
+    location ^~ /hosting/discovery {
+	proxy_pass https://#{ DOCKER_IP }:9980;
+	proxy_set_header Host $http_host;
+    }
+
+    # Capabilities
+    location ^~ /hosting/capabilities {
+	proxy_pass https://#{ DOCKER_IP }:9980;
+	proxy_set_header Host $http_host;
+    }
+
+    # main websocket
+    location ~ ^/cool/(.*)/ws$ {
+	proxy_pass https://#{ DOCKER_IP }:9980;
+	proxy_set_header Upgrade $http_upgrade;
+	proxy_set_header Connection "Upgrade";
+	proxy_set_header Host $http_host;
+	proxy_read_timeout 36000s;
+    }
+
+    # download, presentation and image upload
+    location ~ ^/(c|l)ool {
+	proxy_pass https://#{ DOCKER_IP }:9980;
+	proxy_set_header Host $http_host;
+    }
+
+    # Admin Console websocket
+    location ^~ /cool/adminws {
+	proxy_pass https://#{ DOCKER_IP }:9980;
+	proxy_set_header Upgrade $http_upgrade;
+	proxy_set_header Connection "Upgrade";
+	proxy_set_header Host $http_host;
+	proxy_read_timeout 36000s;
+    }
+
+    access_log /var/log/nginx/office-access.log;
+    error_log /var/log/nginx/office-error.log;
+}
+EOF
+  nginx_conf_path = '/etc/nginx/sites-available/nextcloud'
+  tmp_nginx_conf_path = "#{ nginx_conf_path }.tmp"
+  File.write(tmp_nginx_conf_path, nginx_conf)
+
+  if !File.exists?(nginx_conf_path) \
+    || !FileUtils.compare_file(nginx_conf_path, tmp_nginx_conf_path) then
+      File.rename(tmp_nginx_conf_path, nginx_conf_path)
+      File.unlink('/etc/nginx/sites-enabled/nextcloud') rescue Errno::ENOENT
+      File.symlink('../sites-available/nextcloud', '/etc/nginx/sites-enabled/nextcloud')
+      system('service', 'nginx', 'reload') \
+        or raise('could not reload nginx configuration')
+  else
+    File.unlink(tmp_nginx_conf_path)
+  end
+rescue StandardError => e
+  warn("could not configure nginx: #{ e.message }")
+  exit(1)
+end
+
+CONTAINER_LIST.each do |container_name|
+  puavoconf_var = "puavo.docker.#{ container_name }.enabled"
+  if puavoconf.get(puavoconf_var) == 'true' then
+    puts("> starting up container #{ container_name }")
+    unless system('docker-compose', '--file', DOCKER_COMPOSE_PATH,
+                    '--project-name', 'puavo', 'up', '-d',
+                    container_name) then
+      warn("error in starting up #{ container_name }")
+      status = 1
+    end
+    next
+  end
+
+  unless system('docker', 'inspect', container_name,
+                          :out => File::NULL, :err => File::NULL) then
+    # container does not exist, nothing to do
+    next
+  end
+
+  puts("> removing container #{ container_name }")
+  unless system('docker', 'container', 'stop', container_name,
+                          :out => File::NULL, :err => File::NULL) then
+    warn("error in stopping container #{ container_name }")
+    status = 1
+    next
+  end
+
+  unless system('docker', 'container', 'rm', container_name,
+                          :out => File::NULL, :err => File::NULL) then
+    warn("error in removing container #{ container_name }")
+    status = 1
+  end
+end
+
+
+puts('> removing unused Docker images')
+unless system('docker', 'image', 'prune', '--force') then
+  warn('error in pruning unused Docker images')
+  status = 1
+end
+
+puavoconf.close()
+
+exit(status)

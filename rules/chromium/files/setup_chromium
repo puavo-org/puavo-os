@@ -75,6 +75,27 @@ chrome_pwa_list=$(  get_pwa_list chrome  ) || status=1
 chromium_dir="/etc/chromium/policies/managed"
 chrome_dir="/etc/opt/chrome/policies/managed"
 
+api_server=$(puavo-conf puavo.www.apiserver)
+nextcloud_topdomain=$(puavo-conf puavo.nextcloud.topdomain)
+
+if [ -n "$api_server" -o -n "$nextcloud_topdomain" ]; then
+  if [ -n "$nextcloud_topdomain" ]; then
+    nextcloud_topdomain="https://.${nextcloud_topdomain}"
+  fi
+  jq --null-input --arg api_server "$api_server" \
+                  --arg nextcloud_topdomain "$nextcloud_topdomain" '
+    [ $api_server, $nextcloud_topdomain ] | map(select(. != "")) | join(",")
+      | { "AuthNegotiateDelegateAllowlist": ., "AuthServerAllowlist": . }
+  ' > /etc/chromium/policies/managed/puavo-sso.json.tmp
+  mv /etc/chromium/policies/managed/puavo-sso.json.tmp \
+     /etc/chromium/policies/managed/puavo-sso.json
+  ln -fns /etc/chromium/policies/managed/puavo-sso.json \
+          /etc/opt/chrome/policies/managed/puavo-sso.json
+else
+  rm -f /etc/chromium/policies/managed/puavo-sso.json \
+        /etc/opt/chrome/policies/managed/puavo-sso.json
+fi
+
 if [ -n "$chromium_config" ]; then
   printf "%s\n" "$chromium_config" > "${chromium_dir}/puavo-conf.json.tmp"
   mv "${chromium_dir}/puavo-conf.json.tmp" "${chromium_dir}/puavo-conf.json"

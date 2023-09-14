@@ -49,6 +49,9 @@ disable_unclutter
 disable_update_initramfs
     Disable initramfs generation.
 
+docker
+    Configurations for Docker, including Nextcloud and Collabora.
+
 dpkg
     A helper module for dealing with dpkg.
 

@@ -18,10 +18,20 @@ if (homepage) {
   lockPref("startup.homepage_welcome_url", "");
 }
 
+var auth_uris = [];
 apiserver = getenv("PUAVO_APISERVER");
 if (apiserver) {
-  lockPref("network.negotiate-auth.delegation-uris", apiserver);
-  lockPref("network.negotiate-auth.trusted-uris", apiserver);
+  auth_uris.push(apiserver);
+}
+nextcloud_topdomain = getenv("PUAVO_NEXTCLOUD_TOPDOMAIN");
+if (nextcloud_topdomain) {
+  auth_uris.push('https://.' + nextcloud_topdomain);
+}
+
+var auth_uris_str = auth_uris.join(',');
+if (auth_uris_str) {
+  lockPref("network.negotiate-auth.delegation-uris", auth_uris_str);
+  lockPref("network.negotiate-auth.trusted-uris", auth_uris_str);
 }
 
 user = getenv("USER");

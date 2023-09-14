@@ -483,6 +483,7 @@ rule {
       by $org_owners           read
       by $admins               read
       by $staff                read     # XXX maybe just remove this?
+      by [puavo_dn cert-mgmt]  read
       by [systemgroup servers] read
       by anonymous             auth
 }
@@ -945,7 +946,7 @@ rule {
 rule {
   # Allow cert-mgmt to read only some organisation specific info.
   [dn]
-    [attrs entry puavoDomain puavoNextcloudDomain puavoOfficeDomain]
+    [attrs entry objectClass puavoDomain puavoNextcloudDomain puavoOfficeDomain]
       by [puavo_dn cert-mgmt] read
       by *                    none break
 }

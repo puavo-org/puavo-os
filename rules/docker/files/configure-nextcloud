@@ -1,0 +1,236 @@
+#!/bin/sh
+
+set -eu
+
+occ() {
+  php /var/www/html/occ --no-interaction "$@"
+}
+
+check_external_files_config() {
+  occ files_external:list \
+    | awk '
+        BEGIN { status = 1 }
+        $4 == "/" && $6 == "SMB/CIFS" { status = 0 }
+        END { exit(status) }
+      '
+}
+
+puavo_ldap_password_file=$1
+read puavo_ldap_password < "$puavo_ldap_password_file"
+
+ldap_login_filter=$(cat /puavo-nextcloud-config/ldap_login_filter 2>/dev/null) || true
+ldap_user_filter=$(cat /puavo-nextcloud-config/ldap_user_filter 2>/dev/null) || true
+if [ -z "$ldap_login_filter" -o -z "$ldap_user_filter" ]; then
+  echo 'ldap login/user filter not set, can not setup Nextcloud' 2>/dev/null
+  exit 1
+fi
+
+office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
+
+# we let the bootserver nginx handle the ssl
+occ config:system:set --value https overwriteprotocol
+
+# Do not use the skeleton directory
+# (it would copy files to user network home directory).
+occ config:system:set --value '' skeletondirectory
+
+# Enable apps
+occ app:enable files_external
+occ app:enable user_ldap
+
+# Install and setup user_saml
+if ! occ app:getpath user_saml >/dev/null; then
+  occ app:install user_saml
+fi
+
+# As kerberos login does not autoprovision user, run the ldap sync
+# hourly so new users can get in faster.
+occ config:app:set --value=3600 user_ldap updateAttributesInterval
+
+occ config:app:set --value environment-variable user_saml type
+occ config:app:set --value 1 user_saml general-require_provisioned_account
+occ saml:config:set --general-uid_mapping REDIRECT_REMOTE_USER 1
+
+if [ -z "$(occ ldap:show-config)" ]; then
+  occ ldap:create-empty-config
+fi
+
+occ ldap:set-config s01 ldapAgentName "$PUAVO_LDAP_AGENT_DN"
+occ ldap:set-config s01 ldapAgentPassword "$puavo_ldap_password"
+occ ldap:set-config s01 ldapBase "$PUAVO_LDAP_BASE_DN"
+occ ldap:set-config s01 ldapBaseGroups "ou=Groups,${PUAVO_LDAP_BASE_DN}"
+occ ldap:set-config s01 ldapBaseUsers "ou=People,${PUAVO_LDAP_BASE_DN}"
+occ ldap:set-config s01 ldapConfigurationActive 1
+occ ldap:set-config s01 ldapExpertUsernameAttr uid
+occ ldap:set-config s01 ldapGroupFilter '(objectclass=posixGroup)'
+occ ldap:set-config s01 ldapGroupFilterObjectclass posixGroup
+occ ldap:set-config s01 ldapGroupMemberAssocAttr memberUid
+occ ldap:set-config s01 ldapHost "ldap://${PUAVO_SERVER_FQDN}"
+occ ldap:set-config s01 ldapLoginFilter "$ldap_login_filter"
+occ ldap:set-config s01 ldapPort 389
+occ ldap:set-config s01 ldapTLS 1
+occ ldap:set-config s01 ldapUserFilter "$ldap_user_filter"
+occ ldap:set-config s01 ldapUserFilterObjectclass posixAccount
+occ ldap:set-config s01 turnOffCertCheck 1      # XXX is this okay?
+
+# to handle updates, (possibly) delete and create new
+if ! check_external_files_config; then
+  extfiles_config=$(mktemp /tmp/extfiles_config.XXXXXX)
+  cat > "$extfiles_config" <<EOF
+{
+  "mount_id": 1,
+  "mount_point": "\/",
+  "storage": "\\\\OCA\\\\Files_External\\\\Lib\\\\Storage\\\\SMB",
+  "authentication_type": "password::logincredentials",
+  "configuration": {
+      "check_acl": false,
+      "default_realm": "",
+      "domain": "",
+      "host": "${PUAVO_SERVER_FQDN}",
+      "root": "",
+      "share": "homes",
+      "show_hidden": false,
+      "timeout": ""
+  },
+  "options": {
+      "enable_sharing": false,
+      "filesystem_check_changes": 1,
+      "previews": true,
+      "readonly": false
+  },
+  "applicable_users": [],
+  "applicable_groups": []
+}
+EOF
+  occ files_external:import "$extfiles_config"
+  rm -f "$extfiles_config"
+fi
+
+# This is the container network gateway.
+collabora_server_ip='172.18.0.1'
+
+if [ -n "$office_domain" ]; then
+  # Install and setup richdocuments
+  if ! occ app:getpath richdocuments >/dev/null; then
+    occ app:install richdocuments
+  fi
+
+  url="https://${office_domain}"
+  occ config:app:set --value yes richdocuments enabled
+  occ config:app:set --value "$url" richdocuments wopi_url
+  occ config:app:set --value "$url" richdocuments public_wopi_url
+  occ config:app:set --value "$collabora_server_ip" richdocuments \
+                     wopi_allowlist
+  occ richdocuments:activate-config
+else
+  occ config:app:set --value no richdocuments enabled
+fi
+
+# patch Nextcloud apps
+
+patch_ok_path='/var/www/html/apps/files_external/lib/Lib/Backend/SMB.php.patch_ok'
+if [ ! -e "$patch_ok_path" ]; then
+  patch -b -d /var/www/html -p0 <<'EOF'
+--- apps/files_external/lib/Lib/Backend/SMB.php	2023-09-04 08:15:33.513544741 +0000
++++ apps/files_external/lib/Lib/Backend/SMB.php	2023-09-04 08:51:21.760494332 +0000
+@@ -74,7 +74,16 @@
+ 
+ 	public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
+ 		$auth = $storage->getAuthMechanism();
+-		if ($auth->getScheme() === AuthMechanism::SCHEME_PASSWORD) {
++		if ($auth->getIdentifier() !== 'password::logincredentials') {
++			throw new \RuntimeException('only password::logincredentials is supported with puavo');
++		}
++
++		$user_uid = null;
++		if ($user) { $user_uid = $user->getUID(); }
++		$kerbAuth = new KerberosApacheAuth($user_uid);
++		if ($kerbAuth->checkTicket()) {
++			$smbAuth = $kerbAuth;
++		} else {
+ 			if (!is_string($storage->getBackendOption('user')) || !is_string($storage->getBackendOption('password'))) {
+ 				throw new \InvalidArgumentException('user or password is not set');
+ 			}
+@@ -84,51 +93,6 @@
+ 				$storage->getBackendOption('domain'),
+ 				$storage->getBackendOption('password')
+ 			);
+-		} else {
+-			switch ($auth->getIdentifier()) {
+-				case 'smb::kerberos':
+-					$smbAuth = new KerberosAuth();
+-					break;
+-				case 'smb::kerberosapache':
+-					if (!$auth instanceof KerberosApacheAuthMechanism) {
+-						throw new \InvalidArgumentException('invalid authentication backend');
+-					}
+-					$credentialsStore = $auth->getCredentialsStore();
+-					$kerbAuth = new KerberosApacheAuth();
+-					// check if a kerberos ticket is available, else fallback to session credentials
+-					if ($kerbAuth->checkTicket()) {
+-						$smbAuth = $kerbAuth;
+-					} else {
+-						try {
+-							$credentials = $credentialsStore->getLoginCredentials();
+-							$user = $credentials->getLoginName();
+-							$pass = $credentials->getPassword();
+-							preg_match('/(.*)@(.*)/', $user, $matches);
+-							$realm = $storage->getBackendOption('default_realm');
+-							if (empty($realm)) {
+-								$realm = 'WORKGROUP';
+-							}
+-							if (count($matches) === 0) {
+-								$username = $user;
+-								$workgroup = $realm;
+-							} else {
+-								$username = $matches[1];
+-								$workgroup = $matches[2];
+-							}
+-							$smbAuth = new BasicAuth(
+-								$username,
+-								$workgroup,
+-								$pass
+-							);
+-						} catch (\Exception $e) {
+-							throw new InsufficientDataForMeaningfulAnswerException('No session credentials saved');
+-						}
+-					}
+-
+-					break;
+-				default:
+-					throw new \InvalidArgumentException('unknown authentication backend');
+-			}
+ 		}
+ 
+ 		$storage->setBackendOption('auth', $smbAuth);
+EOF
+  touch "$patch_ok_path"
+fi
+
+patch_ok_path='/var/www/html/apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php.patch_ok'
+if [ ! -e "$patch_ok_path" ]; then
+  patch -b -d /var/www/html -p0 <<'EOF'
+--- apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-08-04 11:49:00.197729857 +0000
++++ apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-08-10 09:30:08.126531506 +0000
+@@ -37,7 +37,17 @@
+ 	/** @var string|false */
+ 	private $ticketName;
+ 
+-	public function __construct() {
++	public function __construct($user_uid = null) {
++		$kerberos_realm = getenv('PUAVO_KERBEROS_REALM');
++		$ccache_dir = getenv('PUAVO_KERBEROS_CCACHE_DIR');
++		if (!is_null($user_uid) && $kerberos_realm !== false && $ccache_dir !== false) {
++			$ticketPath = "${ccache_dir}/${user_uid}@${kerberos_realm}";
++			if (file_exists($ticketPath)) {
++				$this->ticketName = "FILE:${ticketPath}";
++				return;
++			}
++		}
++
+ 		$this->ticketName = getenv("KRB5CCNAME");
+ 	}
+
+EOF
+  touch "$patch_ok_path"
+fi

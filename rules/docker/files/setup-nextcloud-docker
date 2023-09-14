@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+# upgrade
+env DEBIAN_FRONTEND=noninteractive apt-get update
+env DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -q -y
+
+# install some basic stuff we expect to have (for troubleshooting)
+env DEBIAN_FRONTEND=noninteractive apt-get install -q -y bind9-dnsutils \
+  ldap-utils less netcat-openbsd tmux vim wget
+
+# install stuff we need for Nextcloud configuration + apps
+env DEBIAN_FRONTEND=noninteractive apt-get install -q -y \
+  libapache2-mod-auth-gssapi libkrb5-dev libsmbclient-dev smbclient
+
+pecl install krb5 smbclient
+docker-php-ext-enable krb5 smbclient
