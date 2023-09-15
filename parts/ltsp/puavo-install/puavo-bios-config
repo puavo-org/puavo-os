@@ -41,18 +41,22 @@ flash_latest() {
   mainboard_sysid=$(dmidecode -s baseboard-product-name)
   hp_ftp_url="https://ftp.ext.hp.com/pub/pcbios"
   (cd "$hp_utils_dir" && \
-    wget "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml" && \
-    hp_latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" $mainboard_sysid.xml)" && \
-    wget "$hp_ftp_url/$mainboard_sysid/$hp_latest_bios" && \
-    bin_sha384="$(xmllint --xpath "string(/BIOS/Rel[starts-with(@Bin,"$hp_latest_bios")]/@Sha384)" $mainboard_sysid.xml)"
 
-    if [ -n "$bin_sha384" ]; then
+    wget "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml" -O "$mainboard_sysid.xml" && \
+    hp_latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" "$mainboard_sysid.xml")" && \
+    wget "$hp_ftp_url/$mainboard_sysid/$hp_latest_bios" -O "$hp_latest_bios" && \
+
+    providedhash="$(xmllint --xpath "string(/BIOS/Rel[starts-with(@Bin,\"$hp_latest_bios\")]/@Sha385)" "$mainboard_sysid.xml")"
+    calculatedhash=$(sha384sum "$hp_latest_bios" | awk '{print $1}')
+
+    if [ -n "$providedhash" ]; then
       echo "Cryptographic hash for the binary was found in the list. Comparing it now."
-      if [ "$(sha384sum "$hp_latest_bios" | grep -i "$bin_sha384")" ]; then
+      if [ "$(printf "%s" "$calculatedhash" | grep -iP "^${providedhash}$")" ] ; then
         printf "${GREEN}The hash is a match, continuing.${NC}"
       else
-        printf "${RED}The hash does NOT match, aborting.${NC}"
-        return 0 ### Return 0 here so we get back to the puavo-bios-config menu.
+        printf "${RED}The hash does NOT match, aborting.${NC}\n"
+        printf "Calculated hash: %s\nProvided hash: %s\n" "$calculatedhash" "$providedhash"
+        return 1
       fi
     else
       printf "${YELLOW}WARNING: No cryptographic hash found for the binary. Proceed with caution.${NC}"
@@ -124,7 +128,7 @@ else
         exit 0
         ;;
       'Flash latest BIOS (HP)')
-        flash_latest
+        flash_latest "$@"
         sleep 3
         ;;
       'Import Student laptop BIOS Config')
