@@ -4,23 +4,41 @@ set -o errtrace
 set -o pipefail
 set -o nounset
 
-# TODO: native library support
-
 cleanup() {
-  pid="$(jobs -p)"
-  [ -n "$pid" ] && pkill -P ${pid}
-  pkill -9 -P $$
+    # kill window manager to clean up (rest will exit automatically)
+    pid="$(jobs -p)"
+    if [ -n "$pid" ]; then
+            xvfbpid="$(pgrep -l -P ${pid} | grep xvfb-run | cut -d' ' -f1)"
+            if [ -n "$xvfbpid" ]; then
+                pgrep -l -P ${xvfbpid} | grep xfwm4 | cut -d' ' -f1 | xargs kill -9
+            fi
+    fi
 }
 
 for sig in INT QUIT HUP TERM; do trap "cleanup; trap - $sig EXIT; kill -s $sig "'"$$"' "$sig"; done
 trap cleanup EXIT
 
-export HOME="$(pwd)/jdk/test/"
-export XAUTHORITY="${HOME}/.Xauthority"
+export HOME="${AUTOPKGTEST_TMP}"
+export XAUTHORITY="${AUTOPKGTEST_TMP}/.Xauthority"
 export DISPLAY=:10
 
 debian/tests/start-xvfb.sh 10 &
 sleep 3
 
-debian/tests/jtreg-autopkgtest.sh jdk -exclude:test/jdk/ProblemList.txt test/jdk:jdk_stable || true
+problem_list=${AUTOPKGTEST_TMP}/jdk-problems.txt
+cat test/jdk/ProblemList.txt > ${problem_list}
+
+host_arch="${DEB_HOST_ARCH:-$(dpkg --print-architecture)}"
+if [[ -f debian/tests/problems-${host_arch}.txt ]]; then
+    cat debian/tests/problems-${host_arch}.txt >> ${problem_list}
+fi
+
+native_path=$(pwd)/build/images/test/jdk/jtreg/native
+debian/tests/jtreg-autopkgtest.sh jdk \
+    -exclude:${problem_list} \
+    -dir:test/jdk \
+    -nativepath:${native_path} \
+    -k:!stress \
+    :tier1 :tier2
+
 debian/tests/jtdiff-autopkgtest.sh jdk

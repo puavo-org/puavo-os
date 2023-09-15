@@ -124,6 +124,10 @@ configure)
 	rm -f $log
     esac
 
+    # Now that java is fully registered and configured,
+    # call update-ca-certificates-java
+    dpkg-trigger update-ca-certificates-java
+
     ;;
 
 esac

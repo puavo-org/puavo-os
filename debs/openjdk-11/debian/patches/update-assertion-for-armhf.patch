@@ -1,0 +1,15 @@
+Description: armhf does not support frame unwinding, simplify assertion
+ os::current_frame() is stubbed out on armhf and this test fails.
+ Simplify assertion as there is no "from xxxx" output on armhf.
+Author: Vladimir Petko <vladimir.petko@canonical.com>
+Bug: https://bugs.openjdk.org/browse/JDK-8305480
+--- a/test/hotspot/jtreg/runtime/NMT/VirtualAllocCommitMerge.java
++++ b/test/hotspot/jtreg/runtime/NMT/VirtualAllocCommitMerge.java
+@@ -321,6 +321,6 @@
+     public static void checkCommitted(OutputAnalyzer output, long addr, long size, String sizeString) {
+         output.shouldMatch("\\[0x[0]*" + Long.toHexString(addr) + " - 0x[0]*"
+                            + Long.toHexString(addr + size)
+-                           + "\\] committed " + sizeString + " from.*");
++                           + "\\] committed " + sizeString + ".*");
+     }
+ }

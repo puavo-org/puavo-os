@@ -1,0 +1,28 @@
+Description: Use IP address in tests
+ Ubuntu build machines are not set up for dns. Use IP addresses to get correct test
+ outcomes.
+Author: Vladimir Petko <vladimir.petko@canonical.com>
+Forwarded: not-needed
+Last-Update: 2023-03-27
+--- a/test/jdk/java/net/InetAddress/IsReachableViaLoopbackTest.java
++++ b/test/jdk/java/net/InetAddress/IsReachableViaLoopbackTest.java
+@@ -13,7 +13,7 @@
+     public static void main(String[] args) {
+         try {
+             InetAddress addr = InetAddress.getByName("localhost");
+-            InetAddress remoteAddr = InetAddress.getByName("bugs.openjdk.java.net");
++            InetAddress remoteAddr = InetAddress.getByName("8.8.8.8");
+             if (!addr.isReachable(10000))
+                 throw new RuntimeException("Localhost should always be reachable");
+             NetworkInterface inf = NetworkInterface.getByInetAddress(addr);
+--- a/test/jdk/java/net/InetAddress/getOriginalHostName.java
++++ b/test/jdk/java/net/InetAddress/getOriginalHostName.java
+@@ -40,7 +40,7 @@
+         SharedSecrets.getJavaNetInetAddressAccess();
+ 
+     public static void main(String[] args) throws Exception {
+-        final String HOST = "dummyserver.java.net";
++        final String HOST = "localhost";
+         InetAddress ia = null;
+         ia = InetAddress.getByName(HOST);
+         testInetAddress(ia, HOST);

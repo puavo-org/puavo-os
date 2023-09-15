@@ -4,9 +4,20 @@ set -o errtrace
 set -o pipefail
 set -o nounset
 
+problem_list=${AUTOPKGTEST_TMP}/hotspot-problems.txt
+cat test/hotspot/jtreg/ProblemList.txt > ${problem_list}
+
+host_arch="${DEB_HOST_ARCH:-$(dpkg --print-architecture)}"
+if [[ -f debian/tests/problems-${host_arch}.txt ]]; then
+    cat debian/tests/problems-${host_arch}.txt >> ${problem_list}
+fi
+
+native_path=$(pwd)/build/images/test/hotspot/jtreg/native
 debian/tests/jtreg-autopkgtest.sh hotspot \
-	-exclude:test/hotspot/jtreg/ProblemList.txt \
-	-dir:test/hotspot/jtreg \
-	:hotspot_compiler :hotspot_gc :hotspot_runtime :hotspot_serviceability || true
+    -exclude:${problem_list} \
+    -dir:test/hotspot/jtreg \
+    -nativepath:${native_path} \
+    -k:!stress \
+    :tier1 :tier2
 
 debian/tests/jtdiff-autopkgtest.sh hotspot

@@ -3,12 +3,12 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: no
 --- a/make/autoconf/basic.m4
 +++ b/make/autoconf/basic.m4
-@@ -100,7 +100,7 @@ AC_DEFUN_ONCE([BASIC_SETUP_PATHS],
-
+@@ -101,7 +101,7 @@ AC_DEFUN_ONCE([BASIC_SETUP_PATHS],
+ 
    # Setup username (for use in adhoc version strings etc)
    # Outer [ ] to quote m4.
 -  [ USERNAME=`$ECHO "$USER" | $TR -d -c '[a-z][A-Z][0-9]'` ]
 +  [ USERNAME="unknown" ]
    AC_SUBST(USERNAME)
  ])
-
+ 

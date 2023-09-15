@@ -1,0 +1,16 @@
+Description: Unable to obtain frame pointer on Thumb architecture
+ ARM Thumb has os::current_frame() disabled. Disable associated test.
+Author: Vladimir Petko <vladimir.petko@canonical.com>
+Bug: https://bugs.openjdk.org/browse/JDK-8305481
+Last-Update: 2023-03-30
+--- a/test/hotspot/gtest/runtime/test_os.cpp
++++ b/test/hotspot/gtest/runtime/test_os.cpp
+@@ -347,7 +347,7 @@
+ }
+ 
+ TEST_VM(os, is_first_C_frame) {
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(ZERO) && !defined(__thumb__)
+   frame invalid_frame;
+   EXPECT_TRUE(os::is_first_C_frame(&invalid_frame)); // the frame has zeroes for all values
+ 

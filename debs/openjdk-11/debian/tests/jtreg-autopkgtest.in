@@ -18,6 +18,10 @@ if [ -z "${JDK_TO_TEST+x}" ]; then
   JDK_TO_TEST=$(echo @JDK_DIR@ | sed "s/-[^-]*$/-$host_arch/")
 fi
 
+if [ -z "${BOOTJDK_HOME+x}" ]; then
+  BOOTJDK_HOME=${JDK_TO_TEST}
+fi
+
 jtreg_version="$(dpkg-query -W @jtreg_pkg@ | cut -f2)"
 
 # set additional jtreg options
@@ -82,12 +86,13 @@ trap "cleanup" EXIT INT TERM ERR
 jtwork_dir="${AUTOPKGTEST_TMP}/${testsuite}/JTwork"
 output_dir="${AUTOPKGTEST_ARTIFACTS}/${testsuite}/"
 
-# retry tests with "fail" or "error" status at most 3 times
-for i in 0 1 2 3; do
+# retry tests with "fail" or "error" status at most 2 times
+for i in 0 1 2; do
   # save each try under its own folder to preserve history
   report_path="${i}/JTreport"
   report_dir="${output_dir}/${report_path}"
   jtreg ${jt_options} \
+    -vmoption:-Djtreg.home=/usr/share/jtreg \
     -verbose:summary \
     -automatic \
     -retain:none \
@@ -97,6 +102,8 @@ for i in 0 1 2 3; do
     -workDir:"${jtwork_dir}" \
     -reportDir:"${report_dir}" \
     -jdk:${JDK_TO_TEST} \
+    -vmoption:-Dtest.boot.jdk=${BOOTJDK_HOME} \
+    -vmoption:-XX:MaxRAMPercentage=25 \
     ${on_retry:-} $@ \
       && exit_code=0 || exit_code=$?
 
@@ -116,9 +123,8 @@ for i in 0 1 2 3; do
 
   # break if jtdiff reports no difference from previous run
   # also deletes the just created JTreport
-  # DISABLED: don't use it for now as flaky tests could still pass given more retries
-  #jtdiff "${output_dir}/JTreport" "$report_dir" >/dev/null 2>&1 \
-  #  && rm -rf "${report_dir}" && break
+  jtdiff "${output_dir}/JTreport" "$report_dir" >/dev/null 2>&1 \
+    && rm -rf "${report_dir}" && break
 
   # link latest JTreport to output_dir
   ln -sf -t "${output_dir}" "${report_path}"

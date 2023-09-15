@@ -11,5 +11,5 @@ Restrictions: superficial
 #Restrictions: allow-stderr, skippable, flaky
 
 #Tests: jdk
-#Depends: @, default-jre-headless, jtreg6:native (>= 6+1-0~), testng:native, build-essential, xfwm4:native, xvfb, dbus-x11
+#Depends: @, default-jre-headless, jtreg6:native (>= 6+1-0~), testng:native, build-essential, xfwm4:native, xvfb, dbus-x11, zip
 #Restrictions: allow-stderr, skippable, flaky

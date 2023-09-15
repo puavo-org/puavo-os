@@ -1,0 +1,51 @@
+Description: Add missing permissions for TestNG 7.7
+ TestNG has added more configuration properties, allow them in the minimal policy
+Author: Vladimir Petko <vladimir.petko@canonical.com>
+Last-Update: 2023-03-24
+--- a/test/jdk/java/lang/ProcessHandle/PermissionTest.java
++++ b/test/jdk/java/lang/ProcessHandle/PermissionTest.java
+@@ -216,6 +216,7 @@
+         permissions.add(new PropertyPermission("testng.mode.dryrun", "read"));
+         permissions.add(new PropertyPermission("testng.report.xml.name", "read"));
+         permissions.add(new PropertyPermission("testng.timezone", "read"));
++        permissions.add(new PropertyPermission("testng.default.verbose", "read"));
+         permissions.add(new ReflectPermission("suppressAccessChecks"));
+         permissions.add(new FilePermission("<<ALL FILES>>", "execute"));
+     }
+--- a/test/jdk/java/sql/testng/util/TestPolicy.java
++++ b/test/jdk/java/sql/testng/util/TestPolicy.java
+@@ -113,6 +113,8 @@
+         permissions.add(new PropertyPermission("testng.mode.dryrun", "read"));
+         permissions.add(new PropertyPermission("testng.report.xml.name", "read"));
+         permissions.add(new PropertyPermission("testng.timezone", "read"));
++        permissions.add(new PropertyPermission("testng.default.verbose", "read"));
++        permissions.add(new PropertyPermission("testng.ignore.callback.skip", "read"));
+         permissions.add(new ReflectPermission("suppressAccessChecks"));
+         permissions.add(new FilePermission("<<ALL FILES>>",
+                 "read, write, delete"));
+--- a/test/jaxp/javax/xml/jaxp/libs/jaxp/library/JAXPPolicyManager.java
++++ b/test/jaxp/javax/xml/jaxp/libs/jaxp/library/JAXPPolicyManager.java
+@@ -35,6 +35,7 @@
+ import java.util.HashMap;
+ import java.util.Map;
+ import java.util.PropertyPermission;
++import java.lang.reflect.ReflectPermission;
+ import java.util.Set;
+ import java.util.StringJoiner;
+ 
+@@ -110,6 +111,15 @@
+         addPermission(new SecurityPermission("setPolicy"));
+         addPermission(new RuntimePermission("setSecurityManager"));
+         addPermission(new PropertyPermission("test.src", "read"));
++        addPermission(new PropertyPermission("testng.show.stack.frames", "read"));
++        addPermission(new PropertyPermission("testng.thread.affinity", "read"));
++        addPermission(new PropertyPermission("testng.memory.friendly", "read"));
++        addPermission(new PropertyPermission("testng.mode.dryrun", "read"));
++        addPermission(new PropertyPermission("testng.report.xml.name", "read"));
++        addPermission(new PropertyPermission("testng.timezone", "read"));
++        addPermission(new PropertyPermission("testng.default.verbose", "read"));
++        addPermission(new PropertyPermission("testng.ignore.callback.skip", "read"));
++        addPermission(new ReflectPermission("suppressAccessChecks"));
+     }
+ 
+     /*

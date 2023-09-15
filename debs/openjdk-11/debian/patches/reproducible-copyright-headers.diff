@@ -11,7 +11,7 @@ Forwarded: no
  import java.util.GregorianCalendar;
  import java.util.Locale;
  import java.util.TimeZone;
-@@ -150,8 +151,14 @@ class CopyrightHeaders {
+@@ -150,8 +151,14 @@
      }
  
      private static int getYear() {
@@ -30,7 +30,7 @@ Forwarded: no
      // no instantiation
 --- a/make/jdk/src/classes/build/tools/generatelsrequivmaps/EquivMapsGenerator.java
 +++ b/make/jdk/src/classes/build/tools/generatelsrequivmaps/EquivMapsGenerator.java
-@@ -34,9 +34,13 @@ import java.time.ZoneId;
+@@ -34,9 +34,13 @@
  import java.time.ZonedDateTime;
  import java.util.ArrayList;
  import java.util.Arrays;
@@ -44,7 +44,7 @@ Forwarded: no
  import java.util.TreeMap;
  import java.util.stream.Collectors;
  
-@@ -246,8 +250,15 @@ public class EquivMapsGenerator {
+@@ -246,8 +250,15 @@
          + "}";
  
      private static String getOpenJDKCopyright() {

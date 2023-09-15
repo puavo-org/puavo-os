@@ -1,6 +1,6 @@
 --- a/src/java.base/unix/native/launcher/jexec.c
 +++ b/src/java.base/unix/native/launcher/jexec.c
-@@ -168,9 +168,10 @@ int main(int argc, const char * argv[])
+@@ -168,9 +168,10 @@
  
      /* Get the path to the java binary, which is in a known position relative
       * to our current position, which is in argv[0]. */
@@ -14,17 +14,17 @@
          errorExit(errno, BAD_ARG_MSG);
 --- a/make/launcher/Launcher-java.base.gmk
 +++ b/make/launcher/Launcher-java.base.gmk
-@@ -57,6 +57,9 @@ $(eval $(call SetupBuildLauncher, keytoo
+@@ -57,6 +57,9 @@
  ################################################################################
  
- ifeq ($(OPENJDK_TARGET_OS), linux)
+ ifeq ($(call isTargetOs, linux), true)
 +  ifeq (,$(DEBIAN_JDK_BASE_DIR))
 +    $(error DEBIAN_JDK_BASE_DIR must be defined for jexec build)
 +  endif
    $(eval $(call SetupJdkExecutable, BUILD_JEXEC, \
        NAME := jexec, \
        SRC := $(TOPDIR)/src/$(MODULE)/unix/native/launcher, \
-@@ -64,7 +67,7 @@ ifeq ($(OPENJDK_TARGET_OS), linux)
+@@ -64,7 +67,7 @@
        OPTIMIZATION := LOW, \
        CFLAGS := $(CFLAGS_JDKEXE) \
            -I$(TOPDIR)/src/$(MODULE)/share/native/libjli, \

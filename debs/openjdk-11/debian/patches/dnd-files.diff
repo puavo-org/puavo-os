@@ -1,8 +1,6 @@
-Index: b/src/java.desktop/unix/classes/sun/awt/X11/XDataTransferer.java
-===================================================================
 --- a/src/java.desktop/unix/classes/sun/awt/X11/XDataTransferer.java
 +++ b/src/java.desktop/unix/classes/sun/awt/X11/XDataTransferer.java
-@@ -273,14 +273,14 @@ public class XDataTransferer extends Dat
+@@ -273,14 +273,14 @@
               BufferedReader reader = new BufferedReader(isr)) {
              String line;
              ArrayList<URI> uriList = new ArrayList<>();

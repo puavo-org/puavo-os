@@ -52,7 +52,7 @@
 +])
 --- a/make/autoconf/spec.gmk.in
 +++ b/make/autoconf/spec.gmk.in
-@@ -776,6 +776,7 @@
+@@ -780,6 +780,7 @@
  ENABLE_INTREE_EC:=@ENABLE_INTREE_EC@
  USE_EXTERNAL_LIBJPEG:=@USE_EXTERNAL_LIBJPEG@
  USE_EXTERNAL_LIBGIF:=@USE_EXTERNAL_LIBGIF@
