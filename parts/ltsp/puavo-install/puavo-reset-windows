@@ -1,0 +1,269 @@
+#!/bin/bash
+
+## puavo-reset-windows
+##
+## Scans all block devices for Windows partitions and resets them. By
+## default, asks user for a confirmation to reset.
+##
+## --force              no questions asked
+## --secure-delete      wipe unused data from Windows partitions after reset
+##
+
+set -eu
+set -o pipefail
+
+## Globals
+exitval=1                 # Premature exit is an error by default.
+tmpdir=                   # Will be created after EXIT trap is set.
+use_force=false           # --force sets to true
+use_secure_delete=false   # --secure-delete sets to true
+
+on_exit()
+{
+    set +e
+
+    if [ -n "${tmpdir}" ]; then
+	rm -rf "${tmpdir}"
+    fi
+
+    exit $exitval
+}
+
+logmsg() {
+  logger -t puavo-reset-windows -p "user.${1}" "$2" || true
+}
+
+loginfo() {
+  printf "> %s\n" "$1" >&2
+  logmsg info "$1"
+}
+
+logerr() {
+  printf "> ERROR: %s\n" "$1" >&2
+  logmsg error "$1"
+}
+
+usage() {
+  cat <<EOF
+$(basename $0) [--force] [--secure-delete]
+
+  --force               no questions asked
+  --secure-delete       overwrite Windows system partition before re-creating a new filesystem on it
+EOF
+  exit 1
+}
+
+print0_win_primary_partition_devpaths()
+{
+    while IFS= read -r -d $'\0' ntfs_partition_devpath; do
+	ntfsls -F "${ntfs_partition_devpath}" | grep -q -x 'Windows/' || {
+	    continue
+	}
+	printf '%s\0' "${ntfs_partition_devpath}"
+	# GPT Microsoft basic data partition GUID: ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+	# MBR HPFS/NTFS/exFAT type: 0x7
+    done < <(lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "0x7" || $2 == "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" {printf "%s\0", $1}') || {
+	logerr 'Failed to list partitions.'
+	return 1
+    }
+}
+
+print0_win_product_name()
+{
+    local win_primary_partition_devpath
+
+    win_primary_partition_devpath=$1
+    shift
+
+    ntfscat "${win_primary_partition_devpath}" 'Windows/System32/config/SOFTWARE' >"${tmpdir}/hive" || {
+	logerr "Failed to get hive from '${win_primary_partition_devpath}'."
+	return 1
+    }
+
+    win_product_name=$(hivexget "${tmpdir}/hive" 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"ProductName"="(.+)"$/\1/p') || {
+	logerr "Failed to parse ProductName from hive of '${win_primary_partition_devpath}'."
+	return 1
+    }
+
+    printf '%s' "${win_product_name}"
+}
+
+check_wim_file()
+{
+    local wim_file_path expected_win_product_name win_product_name
+
+    wim_file_path=$1
+    shift
+
+    expected_win_product_name=$1
+    shift
+
+    wiminfo "${wim_file_path}" | grep '^Index:' | wc -l | grep -x -q 1 || {
+	logerr "WIM file '${wim_file_path}' has multiple images, expected it to have just one."
+	return 1
+    }
+
+    win_product_name=$(wiminfo "${wim_file_path}" | sed -r -n 's/^Product Name:\s*(.+)$/\1/p')
+    if [ "${win_product_name}" != "${expected_win_product_name}" ]; then
+	logerr "WIM file '${wim_file_path}' has image for an incorrect product '${win_product_name}'."
+	return 1
+    fi
+
+    return 0
+}
+
+
+fetch_wim_file()
+{
+    local win_product_name wim_file_path
+
+    win_product_name=$1
+    shift
+
+    loginfo "Fetching WIM file for '${win_product_name}'..."
+
+    ## TODO: Where WIM files should be fetched from?
+    ##
+    ## There are only 4 file we need for this:
+    ## - Windwos 10 Home
+    ## - Windows 10 Pro
+    ## - Windows 11 Home
+    ## - Windows 11 Pro
+    ##
+    ## So perhaps we need to support:
+    ## - cdn.opinsys.fi / cdn.puavo.org? (We probably still need to download the WIM file to /home or /images for the duration of reset)
+    ## - USB mass media? (If we decide to use a separate "Windows Reset USB stick")
+    ## - Other persistent storage? (Reserve 6G or so for the factory image)
+    ## - Live download from Microsoft website via Mido? (Microsoft does seem to IP-block some legit IP addresses, this is not reliable method at all.)
+    ##
+    ## Win10 images are ~7G (compressed).
+
+    ## TODO: obviously remove this once we know where to get
+    ## images. This is just for development purposes.
+    wim_file_path="/home/wim-files/${win_product_name}.wim"
+
+    loginfo "Fetched WIM file '${wim_file_path}' for '${win_product_name}'."
+
+    check_wim_file "${wim_file_path}" "${win_product_name}" || {
+	logerr "Invalid WIM file '${wim_file_path}' for '${win_product_name}'."
+	return 1
+    }
+
+    printf '%s' "${wim_file_path}"
+}
+
+reset_win()
+{
+    local win_product_name win_primary_partition_devpath wim_file_path
+
+    win_product_name=$1
+    shift
+
+    win_primary_partition_devpath=$1
+    shift
+
+    wim_file_path=$(fetch_wim_file "${win_product_name}") || {
+	logerr "Failed to fetch WIM file for '${win_product_name}'."
+	return 1
+    }
+
+    mkfs.ntfs -f "${win_primary_partition_devpath}"
+
+    ## TODO: do we need to reset the system partition too?
+    wimapply "${wim_file_path}" "${win_primary_partition_devpath}"
+
+    if $use_secure_delete; then
+	# Wipes all unused data from the partition.
+	ntfswipe -a "${win_primary_partition_devpath}"
+    fi
+}
+
+
+reset_all_wins()
+{
+    local returnval
+
+    returnval=0
+
+    while IFS= read -r -d $'\0' win_primary_partition_devpath; do
+	win_product_name=$(print0_win_product_name "${win_primary_partition_devpath}") || {
+	    logerr "Failed to get the product name of Windows on '${win_primary_partition_devpath}'."
+	    returnval=1
+	    continue
+	}
+
+	loginfo "Detected '${win_product_name}' on '${win_primary_partition_devpath}'."
+
+	## TODO: add (and test!) Windows 11 support
+	case "${win_product_name}" in
+	    'Windows 10 Home' | 'Windows 10 Pro')
+		;;
+	    *)
+		logerr "Skipping unsupported '${win_product_name}' on '${win_primary_partition_devpath}'."
+		returnval=1
+		continue
+		;;
+	esac
+
+	dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+	       "Reset '${win_product_name}' on '${win_primary_partition_devpath}'?" 5 80 || {
+	    logerr "Skipping '${win_product_name}' on '${win_primary_partition_devpath}'."
+	    returnval=1
+	    continue
+	}
+
+	dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+	       'All data will be lost! Are you really sure you want to proceed?' 5 80 || {
+	    logerr "Skipping '${win_product_name}' on '${win_primary_partition_devpath}'."
+	    returnval=1
+	    continue
+    }
+
+
+	reset_win "${win_product_name}" "${win_primary_partition_devpath}" || {
+	    logerr "Failed to reset '${win_product_name}' on '${win_primary_partition_devpath}'."
+	    returnval=1
+	    continue
+	}
+
+	loginfo "Reset '${win_product_name}' on '${win_primary_partition_devpath}' to factory settings successfully."
+
+    done < <(print0_win_primary_partition_devpaths)
+
+    return $returnval
+}
+
+while [ $# -ne 0 ]; do
+    case "$1" in
+	--force)
+	    use_force=true
+	    shift
+	    ;;
+	--secure-delete)
+	    use_secure_delete=true
+	    shift
+	    ;;
+	--)
+	    shift
+	    break
+	    ;;
+	*)
+	    usage
+	    ;;
+    esac
+done
+
+[ $# -eq 0 ] || usage
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'You can run me as root only!' >&2
+  exit 1
+fi
+
+trap on_exit EXIT
+tmpdir=$(mktemp -d)
+
+reset_all_wins
+
+# Reached to the end, everything is fine then.
+exitval=0
