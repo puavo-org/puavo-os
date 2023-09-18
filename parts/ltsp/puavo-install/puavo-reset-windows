@@ -90,14 +90,71 @@ print0_win_product_name()
     printf '%s' "${win_product_name}"
 }
 
+print0_win_language_tag()
+{
+    local win_language_id \
+          win_language_tag \
+          win_primary_partition_devpath
+
+    win_primary_partition_devpath=$1
+    shift
+
+    ntfscat "${win_primary_partition_devpath}" 'Windows/System32/config/SYSTEM' >"${tmpdir}/system_hive" || {
+        logerr "Failed to get SYSTEM hive from '${win_primary_partition_devpath}'."
+        return 1
+    }
+
+    win_language_id=$(hivexget "${tmpdir}/system_hive" 'ControlSet001\Control\Nls\Language' \
+                          | sed -r -n 's/"InstallLanguage"="([0-9A-Fa-f]{4})"$/\1/p' \
+                          | tr '[:upper:]' '[:lower:]') || {
+        logerr "Failed to parse InstallLanguage from SYSTEM hive of '${win_primary_partition_devpath}'."
+        return 1
+    }
+
+    ## https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-LCID/%5bMS-LCID%5d.pdf
+    case "${win_language_id}" in
+        '0407')
+            win_language_tag='de-DE'
+            ;;
+        '0409')
+            win_language_tag='en-US'
+            ;;
+        '040b')
+            win_language_tag='fi-FI'
+            ;;
+        '041d')
+            win_language_tag='sv-SE'
+            ;;
+        '0419')
+            win_language_tag='ru-RU'
+            ;;
+        '0422')
+            win_language_tag='uk-UA'
+            ;;
+        *)
+            logerr "Unsupported language ID '${win_language_id}'"
+            return 1
+            ;;
+    esac
+
+    printf '%s' "${win_language_tag}"
+}
+
 check_wim_file()
 {
-    local wim_file_path expected_win_product_name win_product_name
+    local expected_win_language_tag \
+          expected_win_product_name \
+          win_language_tag \
+          win_product_name \
+          wim_file_path
 
     wim_file_path=$1
     shift
 
     expected_win_product_name=$1
+    shift
+
+    expected_win_language_tag=$1
     shift
 
     wiminfo "${wim_file_path}" | grep -c '^Index:' | grep -x -q 1 || {
@@ -111,18 +168,29 @@ check_wim_file()
         return 1
     fi
 
+    win_language_tag=$(wiminfo "${wim_file_path}" | sed -r -n 's/^Default Language:\s*(.+)$/\1/p')
+    if [ "${win_language_tag}" != "${expected_win_language_tag}" ]; then
+        logerr "WIM file '${wim_file_path}' has image for an incorrect language '${win_language_tag}'."
+        return 1
+    fi
+
     return 0
 }
 
 
 fetch_wim_file()
 {
-    local win_product_name wim_file_path
+    local wim_file_path \
+          win_language_tag \
+          win_product_name \
 
     win_product_name=$1
     shift
 
-    loginfo "Fetching WIM file for '${win_product_name}'..."
+    win_language_tag=$1
+    shift
+
+    loginfo "Fetching WIM file for '${win_product_name} ${win_language_tag}'..."
 
     ## TODO: Where WIM files should be fetched from?
     ##
@@ -142,12 +210,12 @@ fetch_wim_file()
 
     ## TODO: obviously remove this once we know where to get
     ## images. This is just for development purposes.
-    wim_file_path="/home/wim-files/${win_product_name}.wim"
+    wim_file_path="/home/wim-files/${win_product_name}_${win_language_tag}.wim"
 
-    loginfo "Fetched WIM file '${wim_file_path}' for '${win_product_name}'."
+    loginfo "Fetched WIM file '${wim_file_path}' for '${win_product_name} ${win_language_tag}'."
 
-    check_wim_file "${wim_file_path}" "${win_product_name}" || {
-        logerr "Invalid WIM file '${wim_file_path}' for '${win_product_name}'."
+    check_wim_file "${wim_file_path}" "${win_product_name}" "${win_language_tag}" || {
+        logerr "Invalid WIM file '${wim_file_path}' for '${win_product_name} ${win_language_tag}'."
         return 1
     }
 
@@ -156,15 +224,21 @@ fetch_wim_file()
 
 reset_win()
 {
-    local win_product_name win_primary_partition_devpath wim_file_path
+    local wim_file_path \
+          win_language_tag \
+          win_primary_partition_devpath \
+          win_product_name
 
     win_product_name=$1
+    shift
+
+    win_language_tag=$1
     shift
 
     win_primary_partition_devpath=$1
     shift
 
-    wim_file_path=$(fetch_wim_file "${win_product_name}") || {
+    wim_file_path=$(fetch_wim_file "${win_product_name}" "${win_language_tag}") || {
         logerr "Failed to fetch WIM file for '${win_product_name}'."
         return 1
     }
@@ -194,7 +268,9 @@ reset_win()
 
 reset_all_wins()
 {
-    local returnval
+    local returnval \
+          win_language_tag \
+          win_product_name
 
     returnval=0
 
@@ -204,8 +280,13 @@ reset_all_wins()
             returnval=1
             continue
         }
+        win_language_tag=$(print0_win_language_tag "${win_primary_partition_devpath}") || {
+            logerr "Failed to get the language of Windows on '${win_primary_partition_devpath}'."
+            returnval=1
+            continue
+        }
 
-        loginfo "Detected '${win_product_name}' on '${win_primary_partition_devpath}'."
+        loginfo "Detected '${win_product_name} ${win_language_tag}' on '${win_primary_partition_devpath}'."
 
         ## TODO: add (and test!) Windows 11 support
         case "${win_product_name}" in
@@ -219,27 +300,26 @@ reset_all_wins()
         esac
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               "Reset '${win_product_name}' on '${win_primary_partition_devpath}'?" 5 80 || {
-            logerr "Skipping '${win_product_name}' on '${win_primary_partition_devpath}'."
-            returnval=1
-            continue
-            }
-
-        $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               'All data will be lost! Are you really sure you want to proceed?' 5 80 || {
-            logerr "Skipping '${win_product_name}' on '${win_primary_partition_devpath}'."
-            returnval=1
-            continue
-            }
-
-
-        reset_win "${win_product_name}" "${win_primary_partition_devpath}" || {
-            logerr "Failed to reset '${win_product_name}' on '${win_primary_partition_devpath}'."
+               "Reset '${win_product_name} ${win_language_tag}' on '${win_primary_partition_devpath}'?" 5 80 || {
+            logerr "Skipping '${win_product_name} ${win_language_tag}' on '${win_primary_partition_devpath}'."
             returnval=1
             continue
         }
 
-        loginfo "Reset '${win_product_name}' on '${win_primary_partition_devpath}' to factory settings successfully."
+        $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+               'All data will be lost! Are you really sure you want to proceed?' 5 80 || {
+            logerr "Skipping '${win_product_name} ${win_language_tag}' on '${win_primary_partition_devpath}'."
+            returnval=1
+            continue
+        }
+
+        reset_win "${win_product_name}" "${win_language_tag}" "${win_primary_partition_devpath}" || {
+            logerr "Failed to reset '${win_product_name} ${win_language_tag}' on '${win_primary_partition_devpath}'."
+            returnval=1
+            continue
+        }
+
+        loginfo "Reset '${win_product_name} ${win_language_tag}' on '${win_primary_partition_devpath}' to factory settings successfully."
 
     done < <(print0_win_primary_partition_devpaths)
 
