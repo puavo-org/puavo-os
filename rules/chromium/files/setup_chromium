@@ -75,8 +75,8 @@ chrome_pwa_list=$(  get_pwa_list chrome  ) || status=1
 chromium_dir="/etc/chromium/policies/managed"
 chrome_dir="/etc/opt/chrome/policies/managed"
 
-api_server=$(puavo-conf puavo.www.apiserver)
-nextcloud_topdomain=$(puavo-conf puavo.nextcloud.topdomain)
+api_server=$(puavo_conf puavo.www.apiserver)
+nextcloud_topdomain=$(puavo_conf puavo.nextcloud.topdomain)
 
 if [ -n "$api_server" -o -n "$nextcloud_topdomain" ]; then
   if [ -n "$nextcloud_topdomain" ]; then
