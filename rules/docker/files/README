@@ -1,0 +1,12 @@
+Here is a Puavo-implementation for installing Nextcloud on a bootserver.
+The "puavo-docker" script manages Docker and other scripts help with
+Nextcloud configuration.
+
+This work was inspired by the Nextcloud configuration
+of the FUSS project (see https://fuss.bz.it/ and
+https://gitlab.fuss.bz.it/fuss-team/fuss-nc).
+Their presentation "Empowering the school of the future" can be seen
+at https://archive.fosdem.org/2021/schedule/event/fuss_remote_access/ .
+If you are looking for possible ways to automatically setup Nextcloud
+with LDAP and Samba, you may also want to look up their implementation
+for ideas.
