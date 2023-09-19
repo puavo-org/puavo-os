@@ -1412,7 +1412,10 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def session_status_msg(self, status):
-    start_time = to_datetime( status.get('startTime') ).strftime('%H:%M:%S')
+    start_time = None
+    if status['hasStarted'] and 'startTime' in status:
+      start_time = to_datetime(status['startTime']).strftime('%H:%M:%S')
+
     format_string = 'exam session status:'                                 \
                       + ' hasStarted={hasStarted}'                         \
                       + ' startTime={startTime}'                           \
@@ -1468,7 +1471,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
     except Exception as e:
       syslog.syslog(syslog.LOG_ERR,
-                    'could not interpret status: %s' % e)
+                    'could not interpret status (with student information): %s' % e)
 
 
   def log_status(self, status):
@@ -1714,7 +1717,11 @@ class PuavoErsExamScheduler (threading.Thread):
 
     self.handle_keycode_change_request()
 
-    status = (self.get_status())['status']
+    try:
+      status = (self.get_status())['status']
+    except Exception as e:
+      raise Exception('%s (maybe the server is not yet ready?)' % e)
+
     self.has_started = (status['hasStarted'] == True)
 
     self.log_status(status)
