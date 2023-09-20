@@ -98,7 +98,6 @@ set System_Groups   "ou=System Groups"
 set org_owners   [ldapset [format {[%s]/owner & user} $ldapsuffix]]
 set schooladmins [ldapset "this & user/puavoAdminOfSchool"]
 set admins       [ldapset [person_affiliation admin]]
-set staff        [ldapset [person_affiliation staff]]
 set teachers     [ldapset [person_affiliation teacher]]
 
 # "self" but only if self is an admin
@@ -111,12 +110,6 @@ set selfadmins [
 set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool"]
 
 # this means: target/what and actor/who must be in the same school
-# and actor/who must also be a staff member
-set this_school_staff [ldapset \
-  {([staff,] + this/puavoSchool)
-     & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}]
-
-# this means: target/what and actor/who must be in the same school
 # and actor/who must also be a teacher
 set this_school_teachers [ldapset \
   {([teacher,] + this/puavoSchool)
@@ -125,12 +118,6 @@ set this_school_teachers [ldapset \
 #
 # RULES
 #
-
-# XXX I do not think "staff" should have special rules, but historically
-# XXX this has been the case.  This is why "maybe just remove this?"-comment
-# XXX is there on the staff rules.  Perhaps on the early stages of Puavo
-# XXX "staff" was pretty much the same as "admin"?  "staff" could be made
-# XXX the same as "teacher" with equivalent permissions.
 
 # special wide rules
 
@@ -314,7 +301,6 @@ rule {
     [attrs sambaNextRid]
       by $org_owners write
       by $admins     write
-      by $staff      write      # XXX maybe just remove this?
       by *           none break
 }
 
@@ -322,7 +308,6 @@ rule {
   [dn exact sambaDomainName=${samba_domain}]
       by $org_owners write
       by $admins     read
-      by $staff      read       # XXX maybe just remove this?
 }
 
 rule {
@@ -337,7 +322,6 @@ rule {
   [dn exact $Domain_Admins]
       by $org_owners read
       by $admins     read
-      by $staff      read       # XXX maybe just remove this?
 }
 
 rule {
@@ -346,7 +330,6 @@ rule {
     [attrs memberUid]
       by $org_owners write
       by $admins     write
-      by $staff      write      # XXX maybe just remove this?
 }
 
 rule {
@@ -354,7 +337,6 @@ rule {
   [dn exact $Domain_Users]
       by $org_owners read
       by $admins     read
-      by $staff      read       # XXX maybe just remove this?
 }
 
 # Kerberos Realms related rules
@@ -376,7 +358,6 @@ rule {
     [attrs children]
       by $org_owners write
       by $admins     write
-      by $staff      write      # XXX maybe just remove this?
 }
 
 rule {
@@ -385,7 +366,6 @@ rule {
     [attrs entry]
       by $org_owners write
       by $admins     write
-      by $staff      write      # XXX maybe just remove this?
 }
 
 # rules for ou=Hosts (and subtrees)
@@ -409,7 +389,6 @@ rule {
     [attrs children]
       by $org_owners write
       by $admins     write
-      by $staff      write      # XXX maybe just remove this?
       by anonymous   none
       by *           none break
 }
@@ -472,7 +451,6 @@ rule {
     [attrs children]
       by $org_owners write
       by $admins     read
-      by $staff      read               # XXX maybe just remove this?
       by anonymous   none
       by *           none break
 }
@@ -482,7 +460,6 @@ rule {
     [attrs children entry objectClass ou]
       by $org_owners           read
       by $admins               read
-      by $staff                read     # XXX maybe just remove this?
       by [puavo_dn cert-mgmt]  read
       by [systemgroup servers] read
       by anonymous             auth
@@ -494,7 +471,6 @@ rule {
            puavoExport puavoHostname puavoId puavoSchool]
       by $org_owners write
       by $admins     read
-      by $staff      read       # XXX maybe just remove this?
 
       # XXX This is needed by /v3/sessions printer queues server information.
       # XXX It is unclear if this is needed in the real world, but old ACLs
@@ -527,7 +503,6 @@ rule {
   [dn exact $Hosts]
       by $org_owners           read
       by $admins               read
-      by $staff                read     # XXX maybe just remove this?
       by [dn children $Hosts]  read
       by [systemgroup devices] read
       by [systemgroup servers] read
@@ -569,7 +544,6 @@ rule {
     [attrs children]
       by $org_owners write
       by $admins     write
-      by $staff      write      # XXX maybe just remove this?
       by *           none break
 }
 
@@ -583,14 +557,13 @@ rule {
       by [systemgroup getent]  read
 }
 
-# deny $admins and $staff write access to some school attributes
+# deny $admins write access to some school attributes
 rule {
   [dn subtree $Groups]
     filter="(objectClass=puavoSchool)"
     [attrs puavoBillingInfo puavoSchoolAdmin]
       by $org_owners write      # must be explicit here, org_owners are admins
       by $admins     read
-      by $staff      read       # XXX maybe just remove this?
       by *           none break
 }
 
@@ -602,7 +575,6 @@ rule {
     [attrs member memberUid]
       by $org_owners write
       by $admins     write      # XXX maybe this_school_admins instead?
-      by $staff      write      # XXX maybe just remove this?
       by $teachers   read
 
       # Users must be able to check if they belong to a particular group.
@@ -630,7 +602,6 @@ rule {
   [dn subtree $Groups]
       by $org_owners             write
       by $admins                 write  # XXX maybe this_school_admins instead?
-      by $staff                  write  # XXX maybe just remove this?
       by [puavo_dn puavo]        read
       by [puavo_dn pw-mgmt]      read
       by [dn children $People]   read
@@ -646,7 +617,6 @@ rule {
     [attrs children]
       by $org_owners write
       by $admins     write
-      by $staff      write      # XXX maybe just remove this?
       by *           none break
 }
 
@@ -864,7 +834,6 @@ rule {
   [dn subtree $People]
       by $org_owners                           write
       by $this_school_admins                   write
-      by $this_school_staff                    read   # for /v3/my_school_users
       by $this_school_teachers                 read   # for /v3/my_school_users
       by [admins_with_permission import_users] read
       by self                                  read
