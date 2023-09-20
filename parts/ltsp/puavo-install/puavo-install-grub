@@ -662,6 +662,10 @@ else
   fi
 fi
 
+if [ -d /sys/firmware/efi ]; then
+  puavo-setup-efi --bootorder-usb-drives-first || true
+fi
+
 if $grub_install_done; then
   # Do an extra sleep in case we really installed grub (and have not only
   # updated the configuration), in case cache flushing was not adequate.

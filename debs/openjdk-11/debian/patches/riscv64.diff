@@ -21,7 +21,7 @@ Reviewed-by: aph, erikj, ehelin, ihse
 +fi
 +
  DIR=`dirname $0`
- OUT=`. $DIR/autoconf-config.guess`
+ OUT=`. $DIR/autoconf-config.guess 2> /dev/null`
  
 --- a/make/autoconf/build-aux/config.sub
 +++ b/make/autoconf/build-aux/config.sub

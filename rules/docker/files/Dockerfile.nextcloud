@@ -1,0 +1,9 @@
+ARG IMAGE=nextcloud:latest
+FROM $IMAGE
+MAINTAINER Puavo Org <dev@opinsys.fi>
+
+COPY files/setup-nextcloud-docker /setup-nextcloud-docker
+RUN /setup-nextcloud-docker
+
+ENTRYPOINT ["/puavo-nextcloud/run-nextcloud"]
+CMD ["apache2-foreground"]

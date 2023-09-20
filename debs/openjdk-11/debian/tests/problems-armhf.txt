@@ -1,0 +1,22 @@
+
+# :hotspot
+
+# exclude test pending investigation
+# see https://launchpadlibrarian.net/658682532/buildlog_ubuntu-lunar-armhf.openjdk-20_20+36~us1-0ubuntu1~ppa22_BUILDING.txt.gz
+# crash log was present.
+
+runtime/ErrorHandling/MachCodeFramesInErrorFile.java 000000 generic-all
+
+# In armhf vm profiled methods code cache memory bean is not present.
+# This causes npe in the test.
+# The patch can not be sent upstream as it requires further investigation,
+
+compiler/codecache/MHIntrinsicAllocFailureTest.java
+
+# : jdk
+
+# this test passes but is very slow in CI, causing timeout
+
+jdk/sun/security/rsa/SignedObjectChain.java 000000 generic-all
+sun/security/ec/ed/EdDSATest.java 000000 generic-all
+java/security/SignedObject/Chain.java 000000 generic-all

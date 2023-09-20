@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 11),
   m4, lsb-release, zip, unzip,
   sharutils, gawk, cpio, pkg-config, procps, wdiff, fastjar (>= 2:0.96-0ubuntu2),
   time, strip-nondeterminism, debugedit (>= 4.16),
-  file,
+  jtreg6 (>= 6+1-0~) <!nocheck>, xvfb <!nocheck>, xauth <!nocheck>, xfonts-base <!nocheck>, libgl1-mesa-dri [!x32] <!nocheck>, xfwm4 <!nocheck>, x11-xkb-utils <!nocheck>, dbus-x11 <!nocheck>, googletest <!nocheck>, google-mock <!nocheck>, xvfb  <!nocheck>,
   autoconf, automake, autotools-dev, ant, ant-optional,
   g++-10 <!cross>,
   openjdk-11-jdk-headless:native | openjdk-10-jdk-headless:native,
@@ -17,7 +17,7 @@ Build-Depends: debhelper (>= 11),
   libnss3-dev (>= 2:3.17.1),
   openjdk-11-jdk-headless <cross>,
 Build-Depends-Indep: graphviz, pandoc,
-Standards-Version: 4.5.1
+Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Homepage: https://openjdk.java.net/
 Vcs-Browser: https://salsa.debian.org/openjdk-team/openjdk/tree/openjdk-11
@@ -30,7 +30,7 @@ Pre-Depends: ${dpkg:Depends}
 Depends: openjdk-11-jre-headless (= ${binary:Version}),
   ${shlibs:Depends}, ${misc:Depends}
 Suggests: openjdk-11-demo, openjdk-11-source
-Provides: java-sdk-headless, java2-sdk-headless,
+Provides: java-sdk-headless (= ${vm:Version}), java2-sdk-headless,
   java5-sdk-headless, java6-sdk-headless,
   java7-sdk-headless, java8-sdk-headless,
   java9-sdk-headless, java10-sdk-headless,
@@ -53,7 +53,7 @@ Recommends: ${dlopenhl:Recommends}
 Suggests: libnss-mdns,
   fonts-dejavu-extra,
   fonts-ipafont-gothic, fonts-ipafont-mincho, fonts-wqy-microhei | fonts-wqy-zenhei, fonts-indic,
-Provides: java-runtime-headless, java2-runtime-headless,
+Provides: java-runtime-headless (= ${vm:Version}), java2-runtime-headless,
   java5-runtime-headless, java6-runtime-headless,
   java7-runtime-headless, java8-runtime-headless,
   java9-runtime-headless, java10-runtime-headless,
@@ -75,7 +75,7 @@ Depends: openjdk-11-jre (= ${binary:Version}),
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: libxt-dev
 Suggests: openjdk-11-demo, openjdk-11-source, visualvm
-Provides: java-sdk, java2-sdk, java5-sdk, java6-sdk,
+Provides: java-sdk (= ${vm:Version}), java2-sdk, java5-sdk, java6-sdk,
   java7-sdk, java8-sdk, java9-sdk, java10-sdk, java11-sdk,
   java-compiler
 Conflicts: openjdk-11-jre-headless (<< 11~19-2)
@@ -92,7 +92,7 @@ Depends: openjdk-11-jre-headless (= ${binary:Version}),
   ${xandsound:Depends}, ${dlopenjre:Depends},
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: ${dlopenjre:Recommends}, ${bridge:Recommends}, fonts-dejavu-extra
-Provides: java-runtime, java2-runtime,
+Provides: java-runtime (= ${vm:Version}), java2-runtime,
   java5-runtime, java6-runtime,
   java7-runtime, java8-runtime,
   java9-runtime, java10-runtime,

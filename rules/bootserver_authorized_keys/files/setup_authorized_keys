@@ -1,0 +1,68 @@
+#!/bin/sh
+
+set -eu
+
+configure_certificate_management() {
+  local authorized_hosts authorized_ssh_pubkey
+
+  authorized_hosts=$(puavo-conf puavo.admin.cert-mgmt.authorized_hosts)
+  authorized_ssh_pubkey=$(puavo-conf puavo.admin.cert-mgmt.authorized_ssh_pubkey)
+
+  # Do not enable certificate management unless we have a Nextcloud domain set.
+  # This is not needed by all bootservers.
+  nextcloud_domain=$(puavo-conf puavo.nextcloud.domain)
+
+  if [ -n "$authorized_hosts" -a -n "$authorized_ssh_pubkey" -a -n "$nextcloud_domain" ]; then
+    cat <<EOF
+from="${authorized_hosts}",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="/usr/local/sbin/puavo-update-letsencrypt-certificates" ${authorized_ssh_pubkey}
+EOF
+  fi
+}
+
+configure_rsync_backup_home_state() {
+  local authorized_hosts authorized_ssh_pubkey
+
+  authorized_hosts=$(puavo-conf puavo.admin.backup.authorized_hosts)
+  authorized_ssh_pubkey=$(puavo-conf puavo.admin.backup.authorized_ssh_pubkey)
+
+  if [ -n "$authorized_hosts" -a -n "$authorized_ssh_pubkey" ]; then
+    cat <<EOF
+from="${authorized_hosts}",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="/usr/local/sbin/rsync-server-backup-home-state" ${authorized_ssh_pubkey}
+EOF
+  fi
+}
+
+backup_authorized_keys=''
+
+status=0
+
+backup_modes=$(puavo-conf puavo.admin.backup.modes)
+
+for mode in $(printf %s "$backup_modes" | tr , ' '); do
+  case "$mode" in
+    rsync-backup-home-state)
+      backup_authorized_keys="$(configure_rsync_backup_home_state)"
+      ;;
+    *)
+      echo "Mode '${mode}' is not supported" >&2
+      status=1
+      ;;
+  esac
+done
+
+cert_authorized_keys="$(configure_certificate_management)"
+
+authorized_keys=$(
+  if [ -n "$backup_authorized_keys" ]; then printf "%s\n" "$backup_authorized_keys"; fi
+  if [ -n "$cert_authorized_keys"   ]; then printf "%s\n" "$cert_authorized_keys"  ; fi
+)
+
+if [ -n "$authorized_keys" ]; then
+  mkdir -p -m 700 /root/.ssh
+  printf "%s\n" "$authorized_keys" > /root/.ssh/authorized_keys.tmp
+  mv /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
+else
+  rm -f /root/.ssh/authorized_keys
+fi
+
+exit $status

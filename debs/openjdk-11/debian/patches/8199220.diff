@@ -9,7 +9,7 @@ Reviewed-by: dholmes, stuefe, eosterlund, glaubitz, coleenp
 
 --- a/src/hotspot/share/utilities/debug.hpp
 +++ b/src/hotspot/share/utilities/debug.hpp
-@@ -202,6 +202,7 @@ void warning(const char* format, ...) AT
+@@ -202,6 +202,7 @@
  // use of an array type.
  
  template<bool x> struct STATIC_ASSERT_FAILURE;

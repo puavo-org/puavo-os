@@ -14,17 +14,17 @@
  #endif // _LP64
 --- a/make/autoconf/boot-jdk.m4
 +++ b/make/autoconf/boot-jdk.m4
-@@ -459,6 +459,9 @@ AC_DEFUN_ONCE([BOOTJDK_SETUP_BOOT_JDK_ARGUMENTS],
+@@ -459,6 +459,9 @@
    fi
    UTIL_ADD_JVM_ARG_IF_OK([-Xmx${JVM_MAX_HEAP}M],boot_jdk_jvmargs_big,[$JAVA])
    UTIL_ADD_JVM_ARG_IF_OK([-XX:ThreadStackSize=$STACK_SIZE],boot_jdk_jvmargs_big,[$JAVA])
 +  if test "$VAR_CPU" = s390x; then
 +    UTIL_ADD_JVM_ARG_IF_OK([-Xss1600k],boot_jdk_jvmargs_big,[$JAVA])
 +  fi
-
+ 
    AC_MSG_RESULT([$boot_jdk_jvmargs_big])
-
-@@ -488,6 +491,9 @@ AC_DEFUN_ONCE([BOOTJDK_SETUP_BOOT_JDK_ARGUMENTS],
+ 
+@@ -488,6 +491,9 @@
    UTIL_ADD_JVM_ARG_IF_OK([-XX:+UseSerialGC],boot_jdk_jvmargs_small,[$JAVA])
    UTIL_ADD_JVM_ARG_IF_OK([-Xms32M],boot_jdk_jvmargs_small,[$JAVA])
    UTIL_ADD_JVM_ARG_IF_OK([-Xmx512M],boot_jdk_jvmargs_small,[$JAVA])
@@ -32,11 +32,11 @@
 +    UTIL_ADD_JVM_ARG_IF_OK([-Xss1600k],boot_jdk_jvmargs_small,[$JAVA])
 +  fi
    UTIL_ADD_JVM_ARG_IF_OK([-XX:TieredStopAtLevel=1],boot_jdk_jvmargs_small,[$JAVA])
-
+ 
    AC_MSG_RESULT([$boot_jdk_jvmargs_small])
 --- a/make/autoconf/build-performance.m4
 +++ b/make/autoconf/build-performance.m4
-@@ -443,6 +443,9 @@ AC_DEFUN_ONCE([BPERF_SETUP_SMART_JAVAC],
+@@ -443,6 +443,9 @@
      MX_VALUE=512
    fi
    UTIL_ADD_JVM_ARG_IF_OK([-Xms${MS_VALUE}M -Xmx${MX_VALUE}M],SJAVAC_SERVER_JAVA_FLAGS,[$SJAVAC_SERVER_JAVA])
@@ -44,5 +44,5 @@
 +    UTIL_ADD_JVM_ARG_IF_OK([-Xss1600k],SJAVAC_SERVER_JAVA_FLAGS,[$SJAVAC_SERVER_JAVA])
 +  fi
    AC_SUBST(SJAVAC_SERVER_JAVA_FLAGS)
-
+ 
    AC_ARG_ENABLE([sjavac], [AS_HELP_STRING([--enable-sjavac],

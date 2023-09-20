@@ -1,0 +1,39 @@
+Description: Skip test when getFileStore() fails
+ Due to https://bugs.openjdk.org/browse/JDK-8166162 getFileStore() fails with exception
+ failing the test suite. Skip test when getFileStore() throws.
+Author: Vladimir Petko <vladimir.petko@canonical.com>
+Bug: https://bugs.openjdk.org/browse/JDK-8166162
+Forwarded: not-needed
+Last-Update: 2023-03-27
+--- a/test/jdk/java/lang/invoke/lambda/LogGeneratedClassesTest.java
++++ b/test/jdk/java/lang/invoke/lambda/LogGeneratedClassesTest.java
+@@ -191,14 +191,21 @@
+ 
+     @Test
+     public void testDumpDirNotWritable() throws IOException {
+-        if (!Files.getFileStore(Paths.get("."))
+-                  .supportsFileAttributeView(PosixFileAttributeView.class)) {
+-            // No easy way to setup readonly directory without POSIX
+-            // We would like to skip the test with a cause with
+-            //     throw new SkipException("Posix not supported");
+-            // but jtreg will report failure so we just pass the test
+-            // which we can look at if jtreg changed its behavior
+-            System.out.println("WARNING: POSIX is not supported. Skipping testDumpDirNotWritable test.");
++        try
++        {
++            if (!Files.getFileStore(Paths.get("."))
++                    .supportsFileAttributeView(PosixFileAttributeView.class)) {
++                // No easy way to setup readonly directory without POSIX
++                // We would like to skip the test with a cause with
++                //     throw new SkipException("Posix not supported");
++                // but jtreg will report failure so we just pass the test
++                // which we can look at if jtreg changed its behavior
++                System.out.println("WARNING: POSIX is not supported. Skipping testDumpDirNotWritable test.");
++                return;
++            }
++        }
++        catch (Throwable t) {
++            System.out.println("WARNING: Mount point not found (JDK-8166162). Skipping testDumpDirNotWritable test.");
+             return;
+         }
+ 

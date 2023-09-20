@@ -3,7 +3,7 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: no
 --- a/make/jdk/src/classes/build/tools/module/GenModuleInfoSource.java
 +++ b/make/jdk/src/classes/build/tools/module/GenModuleInfoSource.java
-@@ -154,9 +154,10 @@ public class GenModuleInfoSource {
+@@ -154,9 +154,10 @@
                  if (l.trim().startsWith("module ")) {
                      if (debug) {
                          // print URI rather than file path to avoid escape

@@ -1,8 +1,6 @@
-Index: b/src/jdk.javadoc/share/classes/jdk/javadoc/internal/doclets/toolkit/WorkArounds.java
-===================================================================
 --- a/src/jdk.javadoc/share/classes/jdk/javadoc/internal/doclets/toolkit/WorkArounds.java
 +++ b/src/jdk.javadoc/share/classes/jdk/javadoc/internal/doclets/toolkit/WorkArounds.java
-@@ -126,7 +126,7 @@ public class WorkArounds {
+@@ -126,7 +126,7 @@
          }
  
          if (!msgOptionSeen) {

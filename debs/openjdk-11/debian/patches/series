@@ -5,7 +5,6 @@ icedtea-override-redirect-compiz.diff
 libpcsclite-dlopen.diff
 jexec.diff
 default-jvm-cfg.diff
-workaround_expand_exec_shield_cs_limit.diff
 adlc-parser.diff
 multiple-pkcs11-library-init.diff
 s390x-thread-stack-size.diff
@@ -21,15 +20,11 @@ hotspot-disable-exec-shield-workaround.diff
 atk-wrapper-security.diff
 dnd-files.diff
 hotspot-libpath.diff
-generated-headers.patch
-parallel-build-fix.diff
 #m68k-support.diff
 reproducible-properties-timestamp.diff
 reproducible-javadoc-timestamp.diff
 Don-t-optimize-fdlibm-fork-for-Zero-on-linux-sparc-Z.patch
 keep-gtk2-as-default.patch
-jaw-classpath.diff
-jaw-optional.diff
 riscv64.diff
 reproducible-character-data.diff
 reproducible-module-info.diff
@@ -37,3 +32,10 @@ reproducible-copyright-headers.diff
 reproducible-build-user.diff
 reproducible-build-jmod.diff
 hotspot-test-fix-npe-on-missing-file.patch
+disable-thumb-assertion.patch
+update-assertion-for-armhf.patch
+log-generated-classes-test.patch
+update-permission-test.patch
+ldap-timeout-test-use-ip.patch
+test-use-ip-address.patch
+exclude-broken-tests.patch

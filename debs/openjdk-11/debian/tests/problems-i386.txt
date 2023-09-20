@@ -1,0 +1,15 @@
+
+# quarantine i386 tests pending investigation
+
+# : hotspot
+
+compiler/arguments/CheckCICompilerCount.java 000000 generic-all
+gtest/MetaspaceGtests.java#reclaim-none-ndebug 000000 generic-all
+gtest/MetaspaceGtests.java#reclaim-aggressive-ndebug 000000 generic-all
+gtest/GTestWrapper.java 000000 generic-all
+
+# : jdk
+
+tools/jlink/JLinkTest.java 000000 generic-all
+
+java/net/httpclient/http2/HpackBinaryTestDriver.java 000000 generic-all

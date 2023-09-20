@@ -1,0 +1,62 @@
+#!/bin/sh
+
+set -eu
+
+tmpcertdir=''
+
+cleanup() {
+  if [ -n "$tmpcertdir" ]; then
+    rm -rf "$tmpcertdir"
+    tmpcertdir=''
+  fi
+}
+
+trap cleanup 0 INT TERM
+
+nextcloud_domain=$(puavo-conf puavo.nextcloud.domain)
+
+if printf "%s" "$nextcloud_domain" | grep -qE '(/|\.\.)'; then
+  echo "ERROR: nextcloud domain '${nextcloud_domain}' is not valid" >&2
+  exit 1
+fi
+
+read hostname < /etc/puavo/hostname
+read domain   < /etc/puavo/domain
+
+fqdn="${hostname}.${domain}"
+
+certfile="${nextcloud_domain}.crt"
+keyfile="${nextcloud_domain}.key"
+cafile="${nextcloud_domain}-ca.pem"
+fullchainfile="${nextcloud_domain}-fullchain.pem"
+
+certdir='/state/etc/docker/certs'
+tmpcertdir=$(mktemp -d "${certdir}/incoming.XXXXXX")
+
+mkdir -p "$certdir" "$tmpcertdir"
+
+tar -C "$tmpcertdir" --strip-components=1 --no-same-owner \
+    --no-same-permissions -zxf - "${fqdn}/${certfile}" "${fqdn}/${keyfile}" \
+    "${fqdn}/${cafile}" "${fqdn}/${fullchainfile}"
+
+chmod 600 "${tmpcertdir}/${keyfile}"
+
+status=0
+reload_nginx=false
+
+for f in $certfile $keyfile $cafile $fullchainfile; do
+  if ! cmp "${certdir}/${f}" "${tmpcertdir}/${f}" 2>/dev/null; then
+    if ! mv "${tmpcertdir}/${f}" "${certdir}/${f}"; then
+      echo "error copying ${tmpcertdir}/${f} to ${certdir}/${f}" >&2
+      status=1
+    else
+      reload_nginx=true
+    fi
+  fi
+done
+
+if $reload_nginx && [ "$status" -eq 0 ]; then
+  service nginx reload
+fi
+
+exit $status

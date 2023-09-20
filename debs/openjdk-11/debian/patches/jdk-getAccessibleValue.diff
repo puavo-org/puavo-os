@@ -1,6 +1,6 @@
 --- a/src/java.desktop/share/classes/javax/swing/JTree.java
 +++ b/src/java.desktop/share/classes/javax/swing/JTree.java
-@@ -5063,7 +5063,7 @@ public class JTree extends JComponent im
+@@ -5063,7 +5063,7 @@
              public AccessibleSelection getAccessibleSelection() {
                  AccessibleContext ac = getCurrentAccessibleContext();
                  if (ac != null && isLeaf) {
@@ -9,7 +9,7 @@
                  } else {
                      return this;
                  }
-@@ -5078,7 +5078,7 @@ public class JTree extends JComponent im
+@@ -5078,7 +5078,7 @@
              public AccessibleText getAccessibleText() {
                  AccessibleContext ac = getCurrentAccessibleContext();
                  if (ac != null) {
@@ -18,7 +18,7 @@
                  } else {
                      return null;
                  }
-@@ -5093,7 +5093,7 @@ public class JTree extends JComponent im
+@@ -5093,7 +5093,7 @@
              public AccessibleValue getAccessibleValue() {
                  AccessibleContext ac = getCurrentAccessibleContext();
                  if (ac != null) {
@@ -29,7 +29,7 @@
                  }
 --- a/src/java.desktop/share/classes/javax/swing/table/JTableHeader.java
 +++ b/src/java.desktop/share/classes/javax/swing/table/JTableHeader.java
-@@ -1114,7 +1114,12 @@ public class JTableHeader extends JCompo
+@@ -1114,7 +1114,12 @@
              }
  
              public AccessibleAction getAccessibleAction() {
@@ -43,7 +43,7 @@
              }
  
             /**
-@@ -1130,15 +1135,30 @@ public class JTableHeader extends JCompo
+@@ -1130,15 +1135,30 @@
              }
  
              public AccessibleSelection getAccessibleSelection() {
@@ -79,7 +79,7 @@
  
 --- a/src/java.desktop/share/classes/javax/swing/JTable.java
 +++ b/src/java.desktop/share/classes/javax/swing/JTable.java
-@@ -9165,7 +9165,12 @@ public class JTable extends JComponent i
+@@ -9165,7 +9165,12 @@
               * @return the <code>AccessibleAction</code>, or <code>null</code>
               */
              public AccessibleAction getAccessibleAction() {
@@ -93,7 +93,7 @@
              }
  
              /**
-@@ -9187,7 +9192,12 @@ public class JTable extends JComponent i
+@@ -9187,7 +9192,12 @@
               *    <code>null</code>
               */
              public AccessibleSelection getAccessibleSelection() {
@@ -107,7 +107,7 @@
              }
  
              /**
-@@ -9197,7 +9207,12 @@ public class JTable extends JComponent i
+@@ -9197,7 +9207,12 @@
               * @return the <code>AccessibleText</code>, or <code>null</code>
               */
              public AccessibleText getAccessibleText() {
@@ -121,7 +121,7 @@
              }
  
              /**
-@@ -9207,7 +9222,12 @@ public class JTable extends JComponent i
+@@ -9207,7 +9222,12 @@
               * @return the <code>AccessibleValue</code>, or <code>null</code>
               */
              public AccessibleValue getAccessibleValue() {
@@ -137,7 +137,7 @@
  
 --- a/src/jdk.accessibility/windows/classes/com/sun/java/accessibility/internal/AccessBridge.java
 +++ b/src/jdk.accessibility/windows/classes/com/sun/java/accessibility/internal/AccessBridge.java
-@@ -6549,7 +6549,7 @@ final public class AccessBridge {
+@@ -6549,7 +6549,7 @@
          public AccessibleSelection getAccessibleSelection() {
              AccessibleContext ac = getCurrentAccessibleContext();
              if (ac != null && isLeaf) {
@@ -146,7 +146,7 @@
              } else {
                  return this;
              }
-@@ -6564,7 +6564,7 @@ final public class AccessBridge {
+@@ -6564,7 +6564,7 @@
          public AccessibleText getAccessibleText() {
              AccessibleContext ac = getCurrentAccessibleContext();
              if (ac != null) {
@@ -155,7 +155,7 @@
              } else {
                  return null;
              }
-@@ -6579,7 +6579,7 @@ final public class AccessBridge {
+@@ -6579,7 +6579,7 @@
          public AccessibleValue getAccessibleValue() {
              AccessibleContext ac = getCurrentAccessibleContext();
              if (ac != null) {

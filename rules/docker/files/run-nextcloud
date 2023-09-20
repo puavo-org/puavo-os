@@ -1,0 +1,93 @@
+#!/bin/sh
+
+set -eu
+
+puavo_ldap_password_file=''
+
+cleanup() {
+  if [ -n "$puavo_ldap_password_file" ]; then
+    rm -f "$puavo_ldap_password_file"
+  fi
+  puavo_ldap_password_file=''
+}
+
+trap cleanup 0 INT TERM
+
+# Do not run Apache from entrypoint so we can configure Nextcloud
+# first and then run Apache ourselves.
+if tail -1 /entrypoint.sh | grep exec; then
+  sed -i '$d' /entrypoint.sh
+fi
+
+mkdir -p /var/lib/apache2/ccache /var/www/images /var/www/nc_data
+chown www-data: /var/lib/apache2/ccache /var/www/images /var/www/nc_data
+
+puavo_ldap_password_file=$(mktemp /tmp/puavo_ldap_password.XXXXXX)
+install -o root -g www-data -m 640 /run/secrets/puavo_ldap_password \
+        "$puavo_ldap_password_file"
+
+install -o root -g root -m 644 /puavo-nextcloud-config/krb5.conf \
+        /etc/krb5.conf
+
+# XXX could we do without this? (seems this is needed by Apache configuration)
+cat <<'EOF' > /etc/ldap/ldap.conf
+TLS_CACERT      /etc/ssl/certs/ca-certificates.crt
+TLS_REQCERT     never
+EOF
+
+#
+# configure Apache
+#
+
+install -o root -g www-data -m 640 /run/secrets/nextcloud_keytab \
+        /etc/apache2/nextcloud.keytab
+
+apache_ldap_filter=$(cat /puavo-nextcloud-config/apache_ldap_login_filter \
+                       2>/dev/null) || true
+if [ -z "$apache_ldap_filter" ]; then
+  echo 'apache ldap login filter not set, can not setup Nextcloud' 2>/dev/null
+  exit 1
+fi
+
+cat <<EOF > /etc/apache2/sites-available/000-default.conf
+LDAPCacheTTL 10
+LDAPTrustedMode TLS
+LDAPVerifyServerCert Off
+
+<VirtualHost *:80>
+        DocumentRoot /var/www/html
+
+        ErrorLog \${APACHE_LOG_DIR}/error-file.log
+        CustomLog \${APACHE_LOG_DIR}/access-file.log combined
+
+        <Location "/apps/user_saml/saml/login">
+            AuthType GSSAPI
+            AuthName "Nextcloud SSO Login"
+
+            GssapiCredStore keytab:/etc/apache2/nextcloud.keytab
+            GssapiDelegCcacheDir /var/lib/apache2/ccache
+            GssapiLocalName On
+            GssapiNegotiateOnce On
+            GssapiSSLonly Off
+
+            AuthLDAPURL "ldap://${PUAVO_SERVER_FQDN}/${PUAVO_LDAP_BASE_DN}?uid"
+            AuthLDAPBindDN "uid=nextcloud,ou=System Accounts,${PUAVO_LDAP_BASE_DN}"
+            AuthLDAPBindPassword "exec:/usr/bin/cat /run/secrets/puavo_ldap_password"
+            Require ldap-filter ${apache_ldap_filter}
+
+            ErrorDocument 401 "<html><meta http-equiv=\\"refresh\\" content=\\"0;url=/login?direct=1\\"></html>"
+        </Location>
+</VirtualHost>
+EOF
+
+a2enmod ldap authnz_ldap ssl
+
+/entrypoint.sh "$@"
+
+# Configure Nextcloud.
+su -p www-data -s /bin/sh -c \
+  "/puavo-nextcloud/configure-nextcloud $puavo_ldap_password_file"
+
+cleanup
+
+exec "$@"

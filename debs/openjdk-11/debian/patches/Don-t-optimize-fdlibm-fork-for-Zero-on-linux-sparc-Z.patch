@@ -9,7 +9,7 @@ Subject: [PATCH] Don't optimize fdlibm-fork for Zero on linux-sparc (Zero)
 
 --- a/make/hotspot/lib/JvmOverrideFiles.gmk
 +++ b/make/hotspot/lib/JvmOverrideFiles.gmk
-@@ -48,6 +48,15 @@ LIBJVM_FDLIBM_COPY_OPT_FLAG := $(CXX_O_F
+@@ -48,6 +48,15 @@
  # by using -ffp-contract=off on GCC/Clang platforms.
  ifneq ($(FDLIBM_CFLAGS), )
    LIBJVM_FDLIBM_COPY_OPT_FLAG := $(CXX_O_FLAG_NORM)
@@ -24,4 +24,4 @@ Subject: [PATCH] Don't optimize fdlibm-fork for Zero on linux-sparc (Zero)
 +  endif
  endif
  
- ifeq ($(OPENJDK_TARGET_OS), linux)
+ ifeq ($(call isTargetOs, linux), true)

@@ -17,7 +17,7 @@ Build-Depends: @bd_debhelper@
   @bd_nss@
   @bd_cross@
 Build-Depends-Indep: graphviz, pandoc,
-Standards-Version: 4.5.1
+Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Homepage: https://openjdk.java.net/
 Vcs-Browser: https://salsa.debian.org/openjdk-team/openjdk/tree/openjdk-11
@@ -30,7 +30,7 @@ Pre-Depends: ${dpkg:Depends}
 Depends: @basename@-jre-headless (= ${binary:Version}),
   ${shlibs:Depends}, ${misc:Depends}
 Suggests: @basename@-demo, @basename@-source
-Provides: java-sdk-headless, java2-sdk-headless,
+Provides: java-sdk-headless (= ${vm:Version}), java2-sdk-headless,
   java5-sdk-headless, java6-sdk-headless,
   java7-sdk-headless, java8-sdk-headless,
   java9-sdk-headless, java10-sdk-headless,
@@ -53,7 +53,7 @@ Recommends: ${dlopenhl:Recommends}
 Suggests: libnss-mdns,
   @core_fonts@,
   @cjk_fonts@
-Provides: java-runtime-headless, java2-runtime-headless,
+Provides: java-runtime-headless (= ${vm:Version}), java2-runtime-headless,
   java5-runtime-headless, java6-runtime-headless,
   java7-runtime-headless, java8-runtime-headless,
   java9-runtime-headless, java10-runtime-headless,
@@ -75,7 +75,7 @@ Depends: @basename@-jre (= ${binary:Version}),
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: libxt-dev
 Suggests: @basename@-demo, @basename@-source, visualvm
-Provides: java-sdk, java2-sdk, java5-sdk, java6-sdk,
+Provides: java-sdk (= ${vm:Version}), java2-sdk, java5-sdk, java6-sdk,
   java7-sdk, java8-sdk, java9-sdk, java10-sdk, java11-sdk,
   java-compiler
 Conflicts: openjdk-11-jre-headless (<< 11~19-2)
@@ -92,7 +92,7 @@ Depends: @basename@-jre-headless (= ${binary:Version}),
   ${xandsound:Depends}, ${dlopenjre:Depends},
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: ${dlopenjre:Recommends}, ${bridge:Recommends}, @core_fonts@
-Provides: java-runtime, java2-runtime,
+Provides: java-runtime (= ${vm:Version}), java2-runtime,
   java5-runtime, java6-runtime,
   java7-runtime, java8-runtime,
   java9-runtime, java10-runtime,

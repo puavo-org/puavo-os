@@ -1,2 +1,6 @@
 # these are in the -jre-headless package, -jre depends on it
 @basename@-jre binary: desktop-command-not-in-package
+
+# LP: #2012326 - in order to print allocation locations,
+# the libraries need to retain symbols
+@basename@-jre binary: unstripped-binary-or-object

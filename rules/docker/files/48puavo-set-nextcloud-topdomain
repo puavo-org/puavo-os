@@ -1,0 +1,5 @@
+puavo_nextcloud_topdomain=$(puavo-conf puavo.nextcloud.topdomain)
+
+if [ -n "$puavo_nextcloud_topdomain" ]; then
+  export PUAVO_NEXTCLOUD_TOPDOMAIN="$puavo_nextcloud_topdomain"
+fi

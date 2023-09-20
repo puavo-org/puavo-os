@@ -1,4 +1,5 @@
 class image::bundle::bootserver {
+  include ::bootserver_authorized_keys
   include ::bootserver_autopoweron
   include ::bootserver_backup
   include ::bootserver_cups
@@ -20,6 +21,7 @@ class image::bundle::bootserver {
   include ::bootserver_pxe
   include ::bootserver_samba
   include ::bootserver_slapd
+  include ::docker
   include ::packages
 
   Package <| tag == tag_debian_bootserver

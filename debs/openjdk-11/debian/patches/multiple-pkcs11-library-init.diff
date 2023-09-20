@@ -15,7 +15,7 @@ Allow multiple PKCS11 library initialisation to be a non-critical error.
  
      // same as allowSingleThreadedModules but controlled via a system property
      // and applied to all providers. if set to false, no SunPKCS11 instances
-@@ -1026,6 +1027,8 @@
+@@ -1030,6 +1031,8 @@
              handleStartupErrors = ERR_IGNORE_LIB;
          } else if (val.equals("halt")) {
              handleStartupErrors = ERR_HALT;
