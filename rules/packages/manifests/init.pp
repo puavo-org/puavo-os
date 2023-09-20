@@ -355,6 +355,7 @@ class packages {
     , 'dvgrab'
     , 'feh'
     , 'freecad'
+    , 'geeqie'
     , 'gimp'
     , 'gimp-data-extras'
     , 'gimp-gap'
