@@ -1,0 +1,86 @@
+#!/bin/sh
+
+set -eu
+
+logmsg() {
+  printf "> %s\n" "$2"
+  logger -p "user.$1" -t puavo-setup-efi "$2" || true
+}
+
+get_bootorder() {
+  local efibootmgr_output
+
+  if ! efibootmgr_output=$(efibootmgr); then
+    logmsg err 'efibootmgr returned error when looking up bootorder'
+    return 1
+  fi
+
+  printf %s "$efibootmgr_output" | awk '
+    $1 == "BootOrder:" {
+      old_bootorder_string = $2
+      new_bootorder_string = ""
+      split($2, bootorder, ",")
+    }
+    $1 ~ /^Boot/ && / USB / {
+      choice = $1
+      sub(/^Boot/, "", choice)
+      sub(/\*$/, "", choice)
+      usb_drives[choice] = 1
+    }
+    END {
+      if (length(usb_drives) == 0) {
+        exit(0)
+      }
+      if (length(bootorder) == 0) {
+        exit(1)
+      }
+
+      new_i = 1
+      for (usb in usb_drives) {
+        new_bootorder[new_i++] = usb
+      }
+      for (i in bootorder) {
+        choice = bootorder[i]
+        if (choice in usb_drives) { continue }
+        new_bootorder[new_i++] = choice
+      }
+      for (new_i in new_bootorder) {
+        new_bootorder_string \
+          = sprintf("%s%s%s", new_bootorder_string,
+                              new_bootorder[new_i],
+                              (int(new_i) < length(new_bootorder) ? "," : ""))
+      }
+      if (old_bootorder_string != new_bootorder_string) {
+        print new_bootorder_string
+      }
+    }
+  ' || return 1
+}
+
+if [ ! -d /sys/firmware/efi ]; then
+  logmsg err 'puavo-setup-efi called but system not in EFI mode'
+  exit 1
+fi
+
+if [ "${1:-}" != '--bootorder-usb-drives-first' ]; then
+  logmsg err 'unknown subcommand'
+  exit 1
+fi
+
+if ! bootorder=$(get_bootorder); then
+  logmsg err 'failed to get bootorder'
+  exit 1
+fi
+
+if [ -z "$bootorder" ]; then
+  logmsg info 'no need to change EFI bootorder'
+  exit 0
+fi
+
+logmsg notice "changing EFI bootorder to ${bootorder} (prioritize USB)"
+if ! efibootmgr --bootorder "$bootorder" >/dev/null; then
+  logmsg err 'efibootmgr failed to set bootorder'
+  exit 1
+fi
+
+logmsg notice 'efibootmgr reported success'
