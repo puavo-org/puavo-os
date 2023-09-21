@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+# update-initramfs does not like our extra symbolic links to move them
+# away before it does its thing and put them back after that.
+
+for f in /boot/initrd.img-* /boot/vmlinuz-*; do
+  if [ ! -h "$f" ]; then continue; fi
+  save_f="$(dirname "$f")/.$(basename "$f")"
+  mv "$f" "$save_f"
+done
+
+/bin/live-update-initramfs "$@"
+
+for save_f in /boot/.initrd.img-* /boot/.vmlinuz-* ; do
+  if [ ! -h "$save_f" ]; then continue; fi
+  save_f_name="$(basename "$save_f")"
+  f="$(dirname "$f")/${save_f_name#.}"
+  mv "$save_f" "$f"
+done

@@ -1,13 +1,6 @@
 class initramfs {
   include ::packages
 
-  exec {
-    'update initramfs':
-      command     => '/usr/sbin/update-initramfs -k all -u',
-      refreshonly => true,
-      require     => File['/etc/initramfs-tools/initramfs.conf'];
-  }
-
   file {
     '/etc/initramfs-tools/initramfs.conf':
       require => Package['initramfs-tools'],
@@ -16,7 +9,14 @@ class initramfs {
     '/etc/initramfs-tools/modules':
       require => Package['initramfs-tools'],
       source  => 'puppet:///modules/initramfs/etc_initramfs-tools_modules';
+
+    # live-tools is required because it sets up a divert
+    '/usr/sbin/update-initramfs':
+      mode    => '0755',
+      require => [ Package['initramfs-tools']
+                 , Package['live-tools'] ],
+      source  => 'puppet:///modules/initramfs/update-initramfs';
   }
 
-  Package <| title == initramfs-tools |>
+  Package <| title == "initramfs-tools" or title == "live-tools" |>
 }
