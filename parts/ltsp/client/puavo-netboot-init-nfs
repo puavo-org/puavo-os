@@ -37,7 +37,6 @@ fi
 # a temporary fix, first do a sec=sys mount of / without a kerberos
 # principal to force SETCLIENTID to be called with auth=sys.
 
-PUAVO_DOMAIN=$(cat /etc/puavo/domain)
 HOMEDIR_SERVER=$(cat /etc/puavo/ldap/slave)
 
 # First check that the dummy /mntroot mountpoint exists
