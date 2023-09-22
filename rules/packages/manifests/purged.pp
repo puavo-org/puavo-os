@@ -33,6 +33,8 @@ class packages::purged {
 
     , 'linux-image-generic'             # we want to choose kernels explicitly
 
+    , 'needrestart'     # no need for this when using image-based system
+
     # no Python 2
     , 'libpython2.7-minimal'
     , 'libpython2.7-stdlib'
