@@ -1,5 +1,4 @@
 class console {
-  include ::initramfs
   include ::packages
 
   file {
@@ -15,7 +14,6 @@ class console {
 
     '/usr/share/puavo-conf/definitions/puavo-rules-console.json':
       content => template('console/puavo-conf-parameters.json'),
-      notify  => Exec['update initramfs'],
       require => Package['puavo-conf'];
   }
 

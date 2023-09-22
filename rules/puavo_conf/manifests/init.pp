@@ -1,5 +1,4 @@
 class puavo_conf {
-  include ::initramfs
   include ::packages
 
   file {
@@ -12,7 +11,6 @@ class puavo_conf {
 
     file {
       "/usr/share/puavo-conf/definitions/${definition_name}":
-        notify  => Exec['update initramfs'],
         require => Package['puavo-conf'],
         source  => $source;
     }
