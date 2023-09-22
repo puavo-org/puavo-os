@@ -74,16 +74,6 @@ set services {
       /etc/rc5.d/S01docker -> /etc/init.d/docker
     }}
 
-  { epoptes {
-      /etc/systemd/system/multi-user.target.wants/epoptes.service
-        -> /lib/systemd/system/epoptes.service
-    }}
-
-  { epoptes-client {
-      /etc/systemd/system/multi-user.target.wants/epoptes-client.service
-        -> /lib/systemd/system/epoptes-client.service
-    }}
-
   { freeradius {
       /etc/systemd/system/multi-user.target.wants/freeradius.service
         -> /lib/systemd/system/freeradius.service
