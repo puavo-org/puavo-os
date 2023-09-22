@@ -35,16 +35,6 @@ class packages::purged {
 
     , 'needrestart'     # no need for this when using image-based system
 
-    # no Python 2
-    , 'libpython2.7-minimal'
-    , 'libpython2.7-stdlib'
-    , 'libpython2-stdlib'
-    , 'python2'
-    , 'python2.7'
-    , 'python2.7-minimal'
-    , 'python2-minimal'
-    , 'python-is-python2'
-
     # the functionality in these is not for our end users
     , 'mercurial'
     , 'software-properties-gtk'
