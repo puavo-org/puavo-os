@@ -51,6 +51,7 @@ install : installdirs
 		dbus-1/org.puavo.client.Daemon.service
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
+		lib/Mido.sh \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-image-preinst \
