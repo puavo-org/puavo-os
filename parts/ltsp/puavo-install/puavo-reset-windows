@@ -13,20 +13,32 @@ set -eu
 set -o pipefail
 
 ## Globals
-exitval=1                 # Premature exit is an error by default.
-tmpdir=                   # Will be created after EXIT trap is set.
-use_force=false           # --force sets to true
-use_secure_delete=false   # --secure-delete sets to true
+exitval=1                           # Premature exit is an error by default.
+use_force=false                     # --force sets to true
+use_secure_delete=false             # --secure-delete sets to true
+WORK_DIR=/home/.puavo-reset-windows # Where Windows ISO files will be downloaded, mounted etc.
 
 on_exit()
 {
     set +e
 
-    if [ -n "${tmpdir}" ]; then
-        rm -rf "${tmpdir}"
-    fi
+    loginfo 'Unmounting ISO files...'
+    find "${WORK_DIR}" -type d -name '*.mountpoint' -exec umount -q {} \;
+    loginfo 'Unmounted ISO files.'
 
+    loginfo "Removing working directory '${WORK_DIR}'..."
+    rm -rf "${WORK_DIR}"
+    loginfo "Removed working directory '${WORK_DIR}'."
+
+    loginfo "Removing PID file '/run/puavo-reset-windows.pid'..."
     rm -f /run/puavo-reset-windows.pid
+    loginfo "Removed PID file '/run/puavo-reset-windows.pid'."
+
+    if [ $exitval -ne 0 ]; then
+        logerr 'Failed!'
+    else
+        loginfo 'Succeeded.'
+    fi
 
     exit $exitval
 }
@@ -77,12 +89,12 @@ print0_win_product_name()
     win_primary_partition_devpath=$1
     shift
 
-    ntfscat "${win_primary_partition_devpath}" 'Windows/System32/config/SOFTWARE' >"${tmpdir}/software_hive" || {
+    ntfscat "${win_primary_partition_devpath}" 'Windows/System32/config/SOFTWARE' >software_hive || {
         logerr "Failed to get SOFTWARE hive from '${win_primary_partition_devpath}'."
         return 1
     }
 
-    win_product_name=$(hivexget "${tmpdir}/software_hive" 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"ProductName"="(.+)"$/\1/p') || {
+    win_product_name=$(hivexget software_hive 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"ProductName"="(.+)"$/\1/p') || {
         logerr "Failed to parse ProductName from SOFTWARE hive of '${win_primary_partition_devpath}'."
         return 1
     }
@@ -90,72 +102,145 @@ print0_win_product_name()
     printf '%s' "${win_product_name}"
 }
 
-check_wim_file()
+print0_wim_image_index()
 {
-    local expected_win_product_name \
-          win_product_name \
-          wim_file_path
+    local win_product_name \
+          wim_file_path \
+          wim_image_index
 
     wim_file_path=$1
     shift
 
-    expected_win_product_name=$1
+    win_product_name=$1
     shift
 
-    ## TODO: add WIM file checksum check. Check against pre-verified
-    ## hard-coded checksums.
+    loginfo "Finding WIM image for '${win_product_name}' from '${wim_file_path}'..."
 
-    wiminfo "${wim_file_path}" | grep -c '^Index:' | grep -x -q 1 || {
-        logerr "WIM file '${wim_file_path}' has multiple images, expected it to have just one."
+    wim_image_index=$(wiminfo "${wim_file_path}" \
+                          | sed -r -n 's/^Display Name:\s+//p' \
+                          | grep -n -x "${win_product_name}" \
+                          | cut -d: -f1) || {
+        logerr "Failed to find WIM image for '${win_product_name}' from '${wim_file_path}'."
         return 1
     }
-
-    win_product_name=$(wiminfo "${wim_file_path}" | sed -r -n 's/^Product Name:\s*(.+)$/\1/p')
-    if [ "${win_product_name}" != "${expected_win_product_name}" ]; then
-        logerr "WIM file '${wim_file_path}' has image for an incorrect product '${win_product_name}'."
+    if ! [ "${wim_image_index}" -ge 1 ]; then
+        logerr "Failed to find WIM image for '${win_product_name}' from '${wim_file_path}'."
         return 1
     fi
 
-    return 0
+    loginfo "Found WIM image for '${win_product_name}' from '${wim_file_path}' at index ${wim_image_index}."
+
+    printf "%d" "${wim_image_index}"
 }
 
-
-fetch_wim_file()
+print0_win_iso_file_name()
 {
-    local wim_file_path \
-          win_language_tag \
-          win_product_name \
+    local win_iso_file_name \
+          win_product_name
 
     win_product_name=$1
     shift
 
+    case "${win_product_name}" in
+        'Windows 10 Home' | 'Windows 10 Pro')
+            win_iso_file_name='win10x64.iso'
+            ;;
+        'Windows 11 Home' | 'Windows 11 Pro')
+            win_iso_file_name='win11x64.iso'
+            ;;
+        *)
+            logerr "Unexpected Windows product name '${win_product_name}'"
+            return 1
+            ;;
+    esac
+
+    printf "%s" "${win_iso_file_name}"
+}
+
+verify_win_iso()
+{
+    local win_iso_file_name
+
+    win_iso_file_name=$1
     shift
 
-    loginfo "Fetching WIM file for '${win_product_name}'..."
+    loginfo "Verifying ISO file '${win_iso_file_name}'..."
+    {
+        # Windows 10 22H2 May 2023 Update
+        echo a6f470ca6d331eb353b815c043e327a347f594f37ff525f17764738fe812852e  win10x64.iso
 
-    ## TODO: Where WIM files should be fetched from?
+        # Windwws 11 22H2 May 2023 Update
+        echo 8059a99b8902906a90afe068ac00465c52588c2bd54f5d9d96c1297f88ef1076  win11x64.iso
+    } | awk -v "file_name=${win_iso_file_name}" '$2 == file_name' | sha256sum --strict --status -c || {
+        logerr "Failed to verify ISO file '${win_iso_file_name}'."
+        return 1
+    }
+    loginfo "Verified ISO file '${win_iso_file_name}'."
+}
+
+fetch_win_iso_mido()
+{
+    local win_iso_file_name \
+          win_iso_file_name_without_ext
+
+    win_iso_file_name=$1
+    shift
+
+    loginfo "Fetching ISO file '${win_iso_file_name}' with Mido.sh..."
+
+    ## Mido.sh has a quite special "feature": it changes cwd to the
+    ## directory where the script is, UNLESS it's in PATH. But I
+    ## didn't want to install Mido.sh to a dir in PATH, somehow that
+    ## didn't feel right; Mido.sh is just for puavo-reset-windows, I
+    ## don't want to pollute the command namespace unnecessarily.
     ##
-    ## We need 2 files:
-    ## - Windwos 10
-    ## - Windows 11
+    ## And I didn't want to tweak Mido.sh either. I think copying it
+    ## to our WORK_DIR is quite robust solution. Symlinking would have
+    ## worked fine too, but I feel having a full copy is better.
+    install -m 0755 /usr/lib/puavo-ltsp-install/Mido.sh .
 
-    ## TODO: obviously remove this once we know where to get
-    ## images. This is just for development purposes.
-    wim_file_path="/home/wim-files/${win_product_name}_${win_language_tag}.wim"
+    win_iso_file_name_without_ext=$(basename "${win_iso_file_name}" .iso)
+    ./Mido.sh "${win_iso_file_name_without_ext}" || {
+        logerr "Failed to fetch ISO file '${win_iso_file_name}' with Mido.sh."
+        return 1
+    }
+}
 
-    loginfo "Fetched WIM file '${wim_file_path}' for '${win_product_name}'."
+fetch_win_iso()
+{
+    local win_iso_file_name
 
-    check_wim_file "${wim_file_path}" "${win_product_name}" || {
-        logerr "Invalid WIM file '${wim_file_path}' for '${win_product_name}'."
+    win_iso_file_name=$1
+    shift
+
+    loginfo "Fetching ISO file '${win_iso_file_name}'..."
+
+    if [ -f "${win_iso_file_name}" ]; then
+        loginfo "ISO file '${win_iso_file_name}' already exists."
+        if verify_win_iso "${win_iso_file_name}"; then
+            return 0
+        fi
+        loginfo "Existing ISO file '${win_iso_file_name}' is invalid. Re-fetching it."
+    fi
+
+    ## TODO: Implement other fetch functions, e.g. from bootserver
+    ## with rsync, from cdn.opinsys.fi with rsync, from USB storage
+    ## with rsync.
+    fetch_win_iso_mido "${win_iso_file_name}" || {
+        logerr "Failed to fetch ISO file '${win_iso_file_name}'."
         return 1
     }
 
-    printf '%s' "${wim_file_path}"
+    loginfo "Fetched ISO file '${win_iso_file_name}'."
+
+    verify_win_iso "${win_iso_file_name}"
 }
 
 reset_win()
 {
     local wim_file_path \
+          win_iso_file_name \
+          win_iso_mountpoint \
           win_primary_partition_devpath \
           win_product_name
 
@@ -165,29 +250,65 @@ reset_win()
     win_primary_partition_devpath=$1
     shift
 
-    wim_file_path=$(fetch_wim_file "${win_product_name}") || {
-        logerr "Failed to fetch WIM file for '${win_product_name}'."
+    loginfo "Reseting '${win_product_name}' on '${win_primary_partition_devpath}'..."
+
+    win_iso_file_name=$(print0_win_iso_file_name "${win_product_name}") || {
+        logerr "Failed to get ISO file name for '${win_product_name}'"
         return 1
     }
 
+    fetch_win_iso "${win_iso_file_name}" || {
+        logerr "Failed to fetch ISO file for '${win_product_name}'."
+        return 1
+    }
+
+    loginfo "Mounting ISO file '${win_iso_file_name}'..."
+
+    win_iso_mountpoint="${win_iso_file_name}.mountpoint"
+
+    if ! mountpoint -q "${win_iso_mountpoint}"; then
+        mkdir -p "${win_iso_mountpoint}" || {
+            logerr "Something is crooked! Failed to ensure '${win_iso_mountpoint}' exists."
+            return 1
+        }
+        # Files will be unmounted on exit (on_exit()).
+        mount -oro,loop "${win_iso_file_name}" "${win_iso_mountpoint}" || {
+            logerr "Failed to mount ISO file '${win_iso_file_name}' to '${win_iso_mountpoint}'."
+            return 1
+        }
+    fi
+    loginfo "Mounted ISO file '${win_iso_file_name}' to '${win_iso_mountpoint}'."
+
+    wim_file_path="${win_iso_mountpoint}/sources/install.wim"
+
+    wim_image_index=$(print0_wim_image_index "${wim_file_path}" "${win_product_name}")
+
+    loginfo "Re-creating NTFS filesystem on '${win_primary_partition_devpath}'..."
     # Force needed to overwrite the existing filesystem without questions.
     mkfs.ntfs -f "${win_primary_partition_devpath}" || {
         logerr "Failed to create NTFS filesystem on '${win_primary_partition_devpath}'"
         return 1
     }
+    loginfo "Re-created NTFS filesystem on '${win_primary_partition_devpath}'."
 
-    wimapply "${wim_file_path}" "${win_primary_partition_devpath}" || {
-        logerr "Failed to apply WIM image from '${wim_file_path}' to '${win_primary_partition_devpath}'."
+    loginfo "Applying WIM image to '${win_primary_partition_devpath}'..."
+    wimapply "${wim_file_path}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
+        logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_file_path}' to '${win_primary_partition_devpath}'."
         return 1
     }
+    loginfo "Applied WIM image to '${win_primary_partition_devpath}'."
 
     if $use_secure_delete; then
+        loginfo "Wiping all unused data from '${win_primary_partition_devpath}'..."
         # Wipes all unused data from the partition.
         ntfswipe -a "${win_primary_partition_devpath}" || {
             logerr "Failed to wipe '${win_primary_partition_devpath}'."
             return 1
         }
+        loginfo "Wiped all unused data from '${win_primary_partition_devpath}'."
     fi
+
+    loginfo "Reset '${win_product_name}' on '${win_primary_partition_devpath}' to factory settings successfully."
 
     return 0
 }
@@ -221,16 +342,14 @@ reset_all_wins()
         esac
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               "Reset '${win_product_name}' on '${win_primary_partition_devpath}'?" 5 80 || {
-            logerr "Skipping '${win_product_name}' on '${win_primary_partition_devpath}'."
-            returnval=1
+               "Reset '${win_product_name}' on '${win_primary_partition_devpath}'?" 5 100 || {
+            loginfo "Skipping '${win_product_name}' on '${win_primary_partition_devpath}'."
             continue
         }
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               'All data will be lost! Are you really sure you want to proceed?' 5 80 || {
-            logerr "Skipping '${win_product_name}' on '${win_primary_partition_devpath}'."
-            returnval=1
+               "All data will be lost on '${win_primary_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
+            loginfo "Skipping '${win_product_name}' on '${win_primary_partition_devpath}'."
             continue
         }
 
@@ -239,8 +358,6 @@ reset_all_wins()
             returnval=1
             continue
         }
-
-        loginfo "Reset '${win_product_name}' on '${win_primary_partition_devpath}' to factory settings successfully."
 
     done < <(print0_win_primary_partition_devpaths) || {
         logerr "Unexpected termination of Windows reset loop"
@@ -287,7 +404,9 @@ trap on_exit EXIT
 
 echo "$$" >/run/puavo-reset-windows.pid
 
-tmpdir=$(mktemp -d)
+install -d -m 0700 "${WORK_DIR}"
+cd "${WORK_DIR}"
+loginfo "Changed current working directory to '${WORK_DIR}'."
 
 reset_all_wins
 
