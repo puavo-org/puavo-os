@@ -321,7 +321,10 @@ reset_all_wins()
 
         loginfo "Reset '${win_product_name} ${win_language_tag}' on '${win_primary_partition_devpath}' to factory settings successfully."
 
-    done < <(print0_win_primary_partition_devpaths)
+    done < <(print0_win_primary_partition_devpaths) || {
+        logerr "Unexpected termination of Windows reset loop"
+        returnval=1
+    }
 
     return $returnval
 }
