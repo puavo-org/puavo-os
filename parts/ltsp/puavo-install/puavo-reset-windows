@@ -180,7 +180,53 @@ verify_win_iso()
     loginfo "Verified ISO file '${win_iso_file_name}'."
 }
 
-fetch_win_iso_mido()
+fetch_win_iso_from_filesystem()
+{
+    local win_iso_file_name \
+          target_win_iso_file_path
+
+    win_iso_file_name=$1
+    shift
+
+    target_win_iso_file_path=$(readlink -f "${win_iso_file_name}")
+
+    while read -r json_string_mountpoint; do
+        ## This is the moment when I wish I had used Python instead.
+        ## All this juggling because of the theoretical case the
+        ## mountpoint contains newline characters: so first we parse
+        ## lsblk's output JSON while being aware that mountpoint might
+        ## have newline chars, that's why we output it as JSON string
+        ## instead and then parse each JSON string separately to avoid
+        ## splitting. I don't know how this could be done easier (jq
+        ## does not have printf, it does not have nul-delimited
+        ## output).
+        mountpoint=$(jq -j -n "${json_string_mountpoint}")
+
+        while IFS= read -r -d $'\0' source_win_iso_file_path; do
+            if [ "${source_win_iso_file_path}" = "${target_win_iso_file_path}" ]; then
+                continue
+            fi
+            ## A bit optimistic approach: assume the source file is
+            ## ok. It will be verified in the upper layer, but if it's
+            ## invalid, then there's nothing the upper layer can do
+            ## about it anymore. It would be better if this function
+            ## could just go on and look for other files, but I don't
+            ## know if it's worth the effort. In practice, there will
+            ## be just one win10x64.iso out there, if any.
+            loginfo "Fetching ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'..."
+            install -m 0644 "${source_win_iso_file_path}" "${target_win_iso_file_path}" || {
+                logerr "Failed to fetch ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'."
+                return 1
+            }
+            loginfo "Fetched ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'."
+            return 0
+        done < <(find "${mountpoint}" -type f -name "${win_iso_file_name}" -print0)
+
+    done < <(lsblk -J -o MOUNTPOINT,FSTYPE \
+                 | jq '.blockdevices[] | select(.mountpoint and (.fstype == "exfat" or .fstype == "ext4" or .fstype == "ntfs")).mountpoint')
+}
+
+fetch_win_iso_from_microsoft()
 {
     local win_iso_file_name \
           win_iso_file_name_without_ext
@@ -188,7 +234,7 @@ fetch_win_iso_mido()
     win_iso_file_name=$1
     shift
 
-    loginfo "Fetching ISO file '${win_iso_file_name}' with Mido.sh..."
+    loginfo "Fetching ISO file '${win_iso_file_name}' from Microsoft..."
 
     ## Mido.sh has a quite special "feature": it changes cwd to the
     ## directory where the script is, UNLESS it's in PATH. But I
@@ -206,6 +252,8 @@ fetch_win_iso_mido()
         logerr "Failed to fetch ISO file '${win_iso_file_name}' with Mido.sh."
         return 1
     }
+
+    loginfo "Fetched ISO file '${win_iso_file_name}' from Microsoft."
 }
 
 fetch_win_iso()
@@ -225,10 +273,18 @@ fetch_win_iso()
         loginfo "Existing ISO file '${win_iso_file_name}' is invalid. Re-fetching it."
     fi
 
-    ## TODO: Implement other fetch functions, e.g. from bootserver
-    ## with rsync, from cdn.opinsys.fi with rsync, from USB storage
-    ## with rsync.
-    fetch_win_iso_mido "${win_iso_file_name}" || {
+    if fetch_win_iso_from_filesystem "${win_iso_file_name}"; then
+        if verify_win_iso "${win_iso_file_name}"; then
+            loginfo "Fetched ISO file '${win_iso_file_name}'."
+            return 0
+        fi
+    fi
+
+    ## TODO: Implement other fetch functions:
+    ## - from bootserver
+    ## - from cdn.opinsys.fi
+
+    fetch_win_iso_from_microsoft "${win_iso_file_name}" || {
         logerr "Failed to fetch ISO file '${win_iso_file_name}'."
         return 1
     }
