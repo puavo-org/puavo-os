@@ -13,10 +13,12 @@ set -eu
 set -o pipefail
 
 ## Globals
-exitval=1                           # Premature exit is an error by default.
-use_force=false                     # --force sets to true
-use_secure_delete=false             # --secure-delete sets to true
-WORK_DIR=/home/.puavo-reset-windows # Where Windows ISO files will be downloaded, mounted etc.
+exitval=1                             # Premature exit is an error by default.
+use_force=false                       # --force sets to true
+use_secure_delete=false               # --secure-delete sets to true
+lockfd=                               # Will be set when lockfile is opened
+WORK_DIR=/home/.puavo-reset-windows   # Where Windows ISO files will be downloaded, mounted etc.
+PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
 
 on_exit()
 {
@@ -30,9 +32,9 @@ on_exit()
     rm -rf "${WORK_DIR}"
     loginfo "Removed working directory '${WORK_DIR}'."
 
-    loginfo "Removing PID file '/run/puavo-reset-windows.pid'..."
-    rm -f /run/puavo-reset-windows.pid
-    loginfo "Removed PID file '/run/puavo-reset-windows.pid'."
+    loginfo "Removing PID file '${PID_FILE}'..."
+    rm -f "${PID_FILE}"
+    loginfo "Removed PID file '${PID_FILE}'."
 
     if [ $exitval -ne 0 ]; then
         logerr 'Failed!'
@@ -394,7 +396,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-exec {lockfd}<> /run/puavo-reset-windows.pid
+exec {lockfd}<> "${PID_FILE}"
 flock -x -n "${lockfd}" || {
     logerr "puavo-reset-windows is already running!"
     exit 1
@@ -402,7 +404,7 @@ flock -x -n "${lockfd}" || {
 
 trap on_exit EXIT
 
-echo "$$" >/run/puavo-reset-windows.pid
+echo "$$" >"${PID_FILE}"
 
 install -d -m 0700 "${WORK_DIR}"
 cd "${WORK_DIR}"
