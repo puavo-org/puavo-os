@@ -1,5 +1,7 @@
 {
   "puavo.l10n.locale" : {
-    "default": "fi_FI.UTF-8"
+    "default": "fi_FI.UTF-8",
+    "description": "The default system locale",
+    "typehint": "string"
   }
 }

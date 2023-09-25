@@ -1,11 +1,17 @@
 {
-  "puavo.mounts.by_user_from_bootserver.enabled" : {
-    "default": "false"
+  "puavo.mounts.by_user_from_bootserver.enabled": {
+    "default": "false",
+    "description": "Enable/disable user-specific network home directory mounts (for systems with a local home)",
+    "typehint": "bool"
   },
-  "puavo.mounts.extramounts" : {
-    "default": ""
+  "puavo.mounts.extramounts": {
+    "default": "",
+    "description": "",
+    "typehint": "bool"
   },
-  "puavo.mounts.nethomes.enabled" : {
-    "default": "false"
+  "puavo.mounts.nethomes.enabled": {
+    "default": "false",
+    "description": "Enable/disable network home directory mount (for systems that lack a home directory)",
+    "typehint": "bool"
   }
 }

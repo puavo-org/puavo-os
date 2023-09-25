@@ -35,9 +35,13 @@
     "typehint": "string"
   },
   "puavo.image.torrent.download.ratelimit": {
-    "default": "20m"
+    "default": "20m",
+    "description": "Image update torrent download rate limit, as bytes per second, add k for kilobytes and m for megabytes",
+    "typehint": "string"
   },
   "puavo.image.torrent.upload.ratelimit": {
-    "default": "20m"
+    "default": "20m",
+    "description": "Image update torrent upload rate limit, as bytes per second, add k for kilobytes and m for megabytes",
+    "typehint": "string"
   }
 }

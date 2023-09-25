@@ -18,7 +18,7 @@
   "puavo.autopilot.session_args": {
     "default": "[]",
     "description": "Arguments for autopilot session command as a JSON array",
-    "typehint": "string"
+    "typehint": "json"
   },
   "puavo.autopilot.username": {
     "default": "puavo.autopilot",

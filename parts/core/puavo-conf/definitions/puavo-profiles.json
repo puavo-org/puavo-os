@@ -1,50 +1,91 @@
 {
   "puavo.hosttype": {
-    "default": ""
+    "choices": [
+      "bootserver",
+      "diskinstaller",
+      "fatclient",
+      "laptop",
+      "preinstalled",
+      "unregistered",
+      "wirelessaccesspoint"
+    ],
+    "default": "The hosttype of this puavo host",
+    "description": "Network filesystem protocol used for network mounted home directories",
+    "typehint": "string"
   },
   "puavo.profile.bigtouch": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the bigtouch puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.bootserver": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the bootserver puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.diskinstaller": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the diskinstaller puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.ers": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the examination room server puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.fatclient": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the fatclient puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.infotv": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the information television puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.laptop": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the laptop puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.onlyfree": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the onlyfree puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.personal": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the personal device puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.preinstalled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the preinstalled device puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.unregistered": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the unregistered device puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.usb-factory": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the usb-factory puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.webkiosk": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the webkiosk puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profile.wirelessaccesspoint": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the wirelessaccesspoint puavo-conf profile",
+    "typehint": "bool"
   },
   "puavo.profiles.list": {
-    "default": ""
+    "default": "",
+    "description": "A comma-separated list of profiles to enable (please use the puavo.profile.* variables instead)",
+    "typehint": "string"
   }
 }
