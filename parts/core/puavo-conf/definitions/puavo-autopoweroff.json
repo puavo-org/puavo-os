@@ -1,14 +1,22 @@
 {
   "puavo.autopoweroff.daytime_end_hour": {
-    "default": "16"
+    "default": "16",
+    "description": "Hour of day after automatic poweroff should activate",
+    "typehint": "integer"
   },
   "puavo.autopoweroff.daytime_start_hour": {
-    "default": "7"
+    "default": "7",
+    "description": "Hour of day after automatic poweroff should not activate",
+    "typehint": "integer"
   },
   "puavo.autopoweroff.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable automatic poweroff",
+    "typehint": "bool"
   },
   "puavo.service.puavo-autopoweroff.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable the automatic poweroff service",
+    "typehint": "bool"
   }
 }

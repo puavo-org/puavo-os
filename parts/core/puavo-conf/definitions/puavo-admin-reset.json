@@ -1,5 +1,7 @@
 {
   "puavo.admin.reset.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable centralized host reset feature",
+    "typehint": "bool"
   }
 }
