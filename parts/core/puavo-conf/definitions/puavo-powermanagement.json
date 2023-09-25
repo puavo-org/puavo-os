@@ -1,31 +1,60 @@
 {
   "puavo.pm.display.drrs.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Set false to disable DRRS display management (used for reduced power consumption)",
+    "typehint": "bool"
   },
   "puavo.pm.lidsuspend.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable suspend on closed laptop lid",
+    "typehint": "bool"
   },
   "puavo.pm.lidswitchdocked.action": {
-    "default": ""
+    "choices": [
+      "factory-reset",
+      "halt",
+      "hibernate",
+      "hybrid-sleep",
+      "ignore",
+      "kexec",
+      "lock",
+      "poweroff",
+      "reboot",
+      "suspend",
+      "suspend-then-hibernate"
+    ],
+    "default": "",
+    "description": "Set action for event when a device is connected to a dock",
+    "typehint": "string"
   },
   "puavo.pm.nmi_watchdog.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable NMI watchdog in kernel",
+    "typehint": "bool"
   },
   "puavo.pm.sata_alpm.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable SATA ALPM",
+    "typehint": "bool"
   },
   "puavo.pm.suspend.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable system suspend",
+    "typehint": "bool"
   },
   "puavo.pm.suspend.reload_modules": {
     "default": "",
-    "description": "List of kernel modules to reload when waking up from suspend.",
+    "description": "List of kernel modules to reload when waking up from suspend",
     "typehint": "string"
   },
   "puavo.pm.usbcore.autosuspend": {
-    "default": ""
+    "default": "",
+    "description": "A value for controlling usbcore autosuspend feature",
+    "typehint": "string"
   },
   "puavo.pm.wireless.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable wireless network power management",
+    "typehint": "bool"
   }
 }

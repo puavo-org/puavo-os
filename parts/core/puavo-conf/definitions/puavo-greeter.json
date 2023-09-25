@@ -1,5 +1,7 @@
 {
-  "puavo.greeter.userlist.accepted_users" : {
-    "default": ""
+  "puavo.greeter.userlist.accepted_users": {
+    "default": "",
+    "description": "A comma-separated list of user accounts that may be shown on the login screen",
+    "typehint": "string"
   }
 }

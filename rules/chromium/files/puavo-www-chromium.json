@@ -1,11 +1,17 @@
 {
   "puavo.www.chromium.config": {
-    "default": ""
+    "default": "",
+    "description": "Arbitrary configurations for Chromium/Chrome browsers",
+    "typehint": "string"
   },
   "puavo.www.chromium.extensions": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of Chromium/Chrome extensions to setup",
+    "typehint": "string"
   },
   "puavo.www.chromium.pwa.forcelist": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of Chromium/Chrome PWA urls to setup",
+    "typehint": "string"
   }
 }

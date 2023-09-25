@@ -1,5 +1,7 @@
 {
   "puavo.pkgs.ui.pkglist": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of puavo-pkg packages to show in graphical puavo-pkg installer",
+    "typehint": "string"
   }
 }

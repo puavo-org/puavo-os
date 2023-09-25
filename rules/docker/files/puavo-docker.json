@@ -1,8 +1,12 @@
 {
   "puavo.service.docker.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable Docker service",
+    "typehint": "bool"
   },
   "puavo.service.puavo-docker.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable puavo-docker service (for managing Docker containers)",
+    "typehint": "bool"
   }
 }

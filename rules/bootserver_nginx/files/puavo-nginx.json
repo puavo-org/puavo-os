@@ -1,5 +1,7 @@
 {
   "puavo.service.nginx.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable nginx service",
+    "typehint": "bool"
   }
 }

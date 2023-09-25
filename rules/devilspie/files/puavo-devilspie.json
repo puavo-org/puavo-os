@@ -1,5 +1,7 @@
 {
-  "puavo.desktop.devilspie.scripts" : {
-    "default": ""
+  "puavo.desktop.devilspie.scripts": {
+    "default": "",
+    "description": "A comma-separated list of devilspie scripts to enable under /etc/devilspie",
+    "typehint": "bool"
   }
 }

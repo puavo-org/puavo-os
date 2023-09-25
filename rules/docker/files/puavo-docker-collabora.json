@@ -1,8 +1,12 @@
 {
-  "puavo.docker.collabora.enabled" : {
-    "default": "false"
+  "puavo.docker.collabora.enabled": {
+    "default": "false",
+    "description": "Enable/disable Collabora Docker container",
+    "typehint": "bool"
   },
-  "puavo.docker.collabora.version" : {
-    "default": "latest"
+  "puavo.docker.collabora.version": {
+    "default": "latest",
+    "description": "Collabora Docker container version",
+    "typehint": "string"
   }
 }

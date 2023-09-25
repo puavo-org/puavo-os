@@ -1,17 +1,28 @@
 {
-    "puavo.autopilot.enabled" : {
-        "default": "false"
-    },
-    "puavo.autopilot.mode" : {
-        "default": "stress"
-    },
-    "puavo.autopilot.password" : {
-        "default": "puavo.autopilot"
-    },
-    "puavo.autopilot.session_args" : {
-        "default": "[]"
-    },
-    "puavo.autopilot.username" : {
-        "default": "puavo.autopilot"
-    }
+  "puavo.autopilot.enabled": {
+    "default": "false",
+    "description": "Enable/disable autopilot user",
+    "typehint": "bool"
+  },
+  "puavo.autopilot.mode": {
+    "choices": [ "releasetest", "smoke", "stress" ],
+    "description": "Autopilot operation mode",
+    "default": "stress",
+    "typehint": "string"
+  },
+  "puavo.autopilot.password": {
+    "default": "puavo.autopilot",
+    "description": "Autopilot user password (in plaintext)",
+    "typehint": "string"
+  },
+  "puavo.autopilot.session_args": {
+    "default": "[]",
+    "description": "Arguments for autopilot session command as a JSON array",
+    "typehint": "json"
+  },
+  "puavo.autopilot.username": {
+    "default": "puavo.autopilot",
+    "description": "Autopilot user username",
+    "typehint": "string"
+  }
 }

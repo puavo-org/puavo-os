@@ -1,8 +1,12 @@
 {
   "puavo.xorg.intel_backlight": {
-    "default": "false"
+    "default": "false",
+    "description": "Set to true to force intel display driver backlight feature for Xorg",
+    "typehint": "bool"
   },
   "puavo.xorg.noaccel": {
-    "default": "false"
+    "default": "false",
+    "description": "Set to true to force hardware acceleration off for Xorg",
+    "typehint": "bool"
   }
 }

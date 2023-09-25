@@ -1,8 +1,12 @@
 {
   "puavo.grub.config": {
-    "default": "default"
+    "default": "default",
+    "description": "Use for Grub customization, file under /boot/grub/puavo/$VALUE.cfg is included in Grub configuration",
+    "typehint": "string"
   },
   "puavo.grub.theme": {
-    "default": "StylishDark"
+    "default": "StylishDark",
+    "description": "Grub theme to use",
+    "typehint": "string"
   }
 }

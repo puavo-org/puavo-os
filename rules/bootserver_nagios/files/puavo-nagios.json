@@ -1,5 +1,7 @@
 {
   "puavo.monitoring.nagios.allowed_hosts": {
-    "default": "127.0.0.1"
+    "default": "127.0.0.1",
+    "description": "A comma-separated list of hosts that can trigger monitoring checks through NRPE server",
+    "typehint": "string"
   }
 }

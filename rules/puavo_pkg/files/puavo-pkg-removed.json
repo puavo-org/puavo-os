@@ -1,8 +1,14 @@
 {
   "puavo.pkg.adobe-flashplugin": {
-    "default": "remove"
+    "choices": [ "remove" ],
+    "default": "remove",
+    "description": "Ensure obsolete puavo-pkg package adobe-flashplugin gets removed",
+    "typehint": "string"
   },
   "puavo.pkg.adobe-pepperflashplugin": {
-    "default": "remove"
+    "choices": [ "remove" ],
+    "default": "remove",
+    "description": "Ensure obsolete puavo-pkg package adobe-pepperflashplugin gets removed",
+    "typehint": "string"
   }
 }

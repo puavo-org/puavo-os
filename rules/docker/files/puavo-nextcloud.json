@@ -1,17 +1,27 @@
 {
   "puavo.admin.cert-mgmt.authorized_hosts": {
-    "default": ""
+    "default": "",
+    "description": "A host pattern (as understood by ssh) that must match for hosts trying to add certificates",
+    "typehint": "string"
   },
   "puavo.admin.cert-mgmt.authorized_ssh_pubkey": {
-    "default": ""
+    "default": "",
+    "description": "An ssh public key to accept for hosts trying to add certificates",
+    "typehint": "string"
   },
   "puavo.collabora.domain": {
-    "default": ""
+    "default": "",
+    "description": "Collabora Office domain name",
+    "typehint": "string"
   },
   "puavo.nextcloud.domain": {
-    "default": ""
+    "default": "",
+    "description": "Nextcloud domain name, should be subdomain of .topdomain",
+    "typehint": "string"
   },
   "puavo.nextcloud.topdomain": {
-    "default": ""
+    "default": "",
+    "description": "Nextcloud topdomain name",
+    "typehint": "string"
   }
 }

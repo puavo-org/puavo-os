@@ -1,8 +1,12 @@
 {
-  "puavo.docker.nextcloud.enabled" : {
-    "default": "false"
+  "puavo.docker.nextcloud.enabled": {
+    "default": "false",
+    "description": "Enable/disable Nextcloud Docker container",
+    "typehint": "bool"
   },
-  "puavo.docker.nextcloud.version" : {
-    "default": "latest"
+  "puavo.docker.nextcloud.version": {
+    "default": "latest",
+    "description": "Nextcloud Docker container version",
+    "typehint": "string"
   }
 }

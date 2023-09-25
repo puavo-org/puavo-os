@@ -1,8 +1,19 @@
 {
   "puavo.admin.logging.master": {
-    "default": ""
+    "default": "",
+    "description": "Centralized logging server address (FQDN or IP)",
+    "typehint": "string"
   },
   "puavo.admin.logging.policy": {
-    "default": "local-only"
+    "choices": [
+      "local-only",
+      "receive-as-bootserver",
+      "send-as-laptop",
+      "send-everything-to-bootserver",
+      "send-sessiondata-as-laptop"
+    ],
+    "default": "local-only",
+    "description": "Logging policy",
+    "typehint": "string"
   }
 }

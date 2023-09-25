@@ -1,5 +1,7 @@
 {
-    "puavo.vpn.client.remote_servers": {
-        "default": ""
-    }
+  "puavo.vpn.client.remote_servers": {
+    "default": "",
+    "description": "A space-separated list of vpn servers in format of host|port|protocol (only host is required)",
+    "typehint": "string"
+  }
 }

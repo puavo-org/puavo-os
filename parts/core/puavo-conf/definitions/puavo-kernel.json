@@ -1,14 +1,22 @@
 {
   "puavo.kernel.arguments": {
-    "default": ""
+    "default": "",
+    "description": "Additional kernel arguments to add when booting kernel",
+    "typehint": "string"
   },
   "puavo.kernel.modules.blacklist" : {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of kernel modules to block from loading",
+    "typehint": "string"
   },
   "puavo.kernel.modules.load" : {
-    "default": ""
+    "default": "",
+    "description": "A list of kernel modules to load at boot",
+    "typehint": "string"
   },
   "puavo.kernel.version": {
-    "default": ""
+    "default": "",
+    "description": "A kernel version to boot, may be a version number or a referential name",
+    "typehint": "string"
   }
 }

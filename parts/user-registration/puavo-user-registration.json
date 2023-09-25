@@ -1,5 +1,7 @@
 {
   "puavo.xsessions.user_registration.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable user registration",
+    "typehint": "bool"
   }
 }

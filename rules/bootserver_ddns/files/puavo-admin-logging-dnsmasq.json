@@ -1,5 +1,8 @@
 {
-  "puavo.admin.logging.dnsmasq" : {
-    "default": ""
+  "puavo.admin.logging.dnsmasq": {
+    "choices": [ "", "log-queries" ],
+    "default": "",
+    "description": "Dnsmasq logging policy",
+    "typehint": "bool"
   }
 }

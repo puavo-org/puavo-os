@@ -1,11 +1,17 @@
 {
   "puavo.laptop-setup.enable_setting.abitti_version": {
-    "default": "true"
+    "default": "true",
+    "description": "Show/hide the Abitti version UI elements for puavo-laptop-setup",
+    "typehint": "bool"
   },
   "puavo.laptop-setup.enable_setting.boot_default": {
-    "default": "true"
+    "default": "true",
+    "description": "Show/hide the boot default UI elements for puavo-laptop-setup",
+    "typehint": "bool"
   },
   "puavo.laptop-setup.enable_setting.windows_enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Show/hide the Windows UI elements for puavo-laptop-setup",
+    "typehint": "bool"
   }
 }

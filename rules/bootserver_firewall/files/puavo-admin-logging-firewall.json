@@ -1,5 +1,8 @@
 {
   "puavo.admin.logging.firewall" : {
-    "default": ""
+    "choices": [ "", "outgoing,rejected" ],
+    "default": "",
+    "description": "Firewall logging policy",
+    "typehint": "string"
   }
 }

@@ -1,302 +1,513 @@
 {
   "puavo.admin.certs.versions": {
-    "default": ""
+    "default": "",
+    "description": "List of certificate chain versions",
+    "typehint": "string"
   },
   "puavo.admin.persistent_homedirs": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable persistent admin user home directories (stored under /state)",
+    "typehint": "bool"
   },
   "puavo.admin.personally_administered": {
-    "default": "false"
+    "default": "false",
+    "description": "Set host as personally administered",
+    "typehint": "bool"
   },
   "puavo.admin.primary_user": {
-    "default": ""
+    "default": "",
+    "description": "The user account of the primary user",
+    "typehint": "string"
   },
   "puavo.admin.set_root_password": {
-    "default": "false"
+    "default": "false",
+    "description": "Set system root password from a password hash under /state (if it exists)",
+    "typehint": "bool"
   },
   "puavo.admin.superusers": {
-    "default": ""
+    "choices": [ "", "primary-user", "user-registration" ],
+    "default": "",
+    "description": "System configuration mode for superuser permissions",
+    "typehint": "string"
   },
   "puavo.admin.vpn.subnet": {
-    "default": ""
+    "default": "",
+    "description": "The subnet of the administrative vpn connection",
+    "typehint": "string"
   },
   "puavo.audio.pa.alsa.sink": {
-    "default": ""
+    "default": "",
+    "description": "The ALSA playback output for Pulseaudio",
+    "typehint": "string"
   },
   "puavo.audio.pa.alsa.source": {
-    "default": ""
+    "default": "",
+    "description": "The ALSA recording input for Pulseaudio",
+    "typehint": "string"
   },
   "puavo.audio.pa.default_sink": {
-    "default": ""
+    "default": "",
+    "description": "The default Pulseaudio playback device",
+    "typehint": "string"
   },
   "puavo.audio.pa.default_source": {
-    "default": ""
+    "default": "",
+    "description": "The default Pulseaudio recording device",
+    "typehint": "string"
   },
   "puavo.displays.forced": {
-    "default": "true"
+    "default": "true",
+    "description": "If true, force the monitors.xml display settings received from Puavo",
+    "typehint": "string"
   },
   "puavo.displays.setup": {
-    "default": "all-mirror"
+    "choices": [ "all-mirror", "external", "builtin" ],
+    "default": "all-mirror",
+    "description": "The default display setup",
+    "typehint": "string"
   },
   "puavo.graphics.display_server": {
-    "default": "xorg"
+    "choices": [ "wayland", "xorg" ],
+    "default": "xorg",
+    "description": "The display server to use",
+    "typehint": "string"
   },
   "puavo.graphics.driver": {
-    "default": ""
+    "choices": [ "", "nvidia", "nvidia-525", "nvidia-470" ],
+    "default": "",
+    "description": "The display driver to use (leave blank to use the default)",
+    "typehint": "string"
   },
   "puavo.grub.boot_default": {
-    "default": "puavo-os"
+    "choices": [ "abitti", "puavo-os", "windows" ],
+    "default": "puavo-os",
+    "description": "The operating system to boot by default",
+    "typehint": "string"
   },
   "puavo.grub.developer_mode.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable developer mode (use persistent image overlay)",
+    "typehint": "bool"
   },
   "puavo.grub.efi.force_extra_removable": {
-    "default": "true"
+    "default": "true",
+    "description": "If true, pass --force-extra-removable argument to grub-install",
+    "typehint": "bool"
   },
   "puavo.grub.windows.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "If true and Windows is installed, show it in Grub boot menu",
+    "typehint": "bool"
   },
   "puavo.guestlogin.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable guest login option on login screen",
+    "typehint": "bool"
   },
   "puavo.guestlogin.mode": {
-    "default": "manual"
+    "choices": [ "automatic", "manual" ],
+    "default": "manual",
+    "description": "Guest login mode",
+    "typehint": "string"
   },
   "puavo.login.external.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "If true, do a double login, first to an external authentication service through Puavo, then normal login",
+    "typehint": "string"
   },
   "puavo.networking.bootserver.interfaces.schools": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of network_interface:school pairs, where both sides may contain a comma-separated list",
+    "typehint": "string"
   },
   "puavo.networking.dhcp.interfaces": {
-    "default": ""
+    "default": "",
+    "description": "List of network interfaces to use DHCP on (on systems without NetworkManager or manual configuration)",
+    "typehint": "string"
   },
   "puavo.printing.airprint.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Lookup Airprint printers with cups-browsed",
+    "typehint": "bool"
   },
   "puavo.printing.cleanup_printers": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of printer removal rules, use printer_state:seconds for each item",
+    "typehint": "string"
   },
   "puavo.printing.default_printer": {
-    "default": ""
-  },
-  "puavo.printing.default_uri": {
-    "default": ""
+    "default": "",
+    "description": "The default printer to use",
+    "typehint": "string"
   },
   "puavo.printing.jetpipe.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable Jetpipe (that passes devices to a network to enable printer sharing)",
+    "typehint": "string"
   },
   "puavo.printing.servers": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of cups servers to use",
+    "typehint": "string"
   },
   "puavo.printing.ui.show_avahi_printers": {
-    "default": "false"
+    "default": "false",
+    "description": "If true, allow application to show Avahi printers directly",
+    "typehint": "bool"
   },
   "puavo.printing.use_puavo_permissions": {
-    "default": "true"
+    "default": "true",
+    "description": "If true, apply printer permissions as specified in Puavo, otherwise allow all printers for all users",
+    "typehint": "bool"
   },
   "puavo.service.atop.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable atop service",
+    "typehint": "bool"
   },
   "puavo.service.autofs.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable autofs service",
+    "typehint": "bool"
   },
   "puavo.service.avahi-daemon.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable avahi-daemon service",
+    "typehint": "bool"
   },
   "puavo.service.certbot.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable certbot service",
+    "typehint": "bool"
   },
   "puavo.service.collectd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable collectd service",
+    "typehint": "bool"
   },
   "puavo.service.cron.cronjobs": {
-    "default": "puavo-cleanup-old-users"
+    "default": "puavo-cleanup-old-users",
+    "description": "A comma-separated list of puavo-specific cron jobs to run",
+    "typehint": "string"
   },
   "puavo.service.cups-browsed.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable cups-browsed service",
+    "typehint": "bool"
   },
   "puavo.service.cups-watchdog.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable cups-watchdog service",
+    "typehint": "bool"
   },
   "puavo.service.dnsmasq.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable dnsmasq service",
+    "typehint": "bool"
+  },
+  "puavo.service.docker.enabled": {
+    "default": "false",
+    "description": "Enable/disable docker service",
+    "typehint": "bool"
   },
   "puavo.service.freeradius.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable freeradius service",
+    "typehint": "bool"
   },
   "puavo.service.gpm.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable gpm service",
+    "typehint": "bool"
   },
   "puavo.service.hooktftp.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable hooktftp service",
+    "typehint": "bool"
   },
   "puavo.service.incron.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable incron service",
+    "typehint": "bool"
   },
   "puavo.service.inetd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable inetd service",
+    "typehint": "bool"
   },
   "puavo.service.isc-dhcp-server.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable isc-dhcp-server service",
+    "typehint": "bool"
   },
   "puavo.service.krb5-kdc.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable krb5-kdc service",
+    "typehint": "bool"
   },
   "puavo.service.libvirtd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable libvirtd service",
+    "typehint": "bool"
   },
   "puavo.service.ModemManager.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable ModemManager service",
+    "typehint": "bool"
   },
   "puavo.service.munin-node.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable munin-node service",
+    "typehint": "bool"
   },
   "puavo.service.nagios-nrpe-server.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable nagios-nrpe-server service",
+    "typehint": "bool"
   },
   "puavo.service.named.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable named service",
+    "typehint": "bool"
   },
   "puavo.service.nbd-server.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable nbd-server service",
+    "typehint": "bool"
   },
   "puavo.service.NetworkManager.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable NetworkManager service",
+    "typehint": "bool"
   },
   "puavo.service.nfs-server.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable nfs-server service",
+    "typehint": "bool"
   },
   "puavo.service.nmbd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable nmbd service",
+    "typehint": "bool"
   },
   "puavo.service.nscd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable nscd service",
+    "typehint": "bool"
   },
   "puavo.service.nslcd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable nslcd service",
+    "typehint": "bool"
   },
   "puavo.service.nvidia-persistenced.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable nvidia-persistenced service",
+    "typehint": "bool"
   },
   "puavo.service.puavo-darkdm.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable puavo-darkdm service",
+    "typehint": "bool"
   },
   "puavo.service.puavo-image-torrent-updated.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable puavo-image-torrent-updated service",
+    "typehint": "bool"
   },
   "puavo.service.puavo-rest.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable puavo-rest service",
+    "typehint": "bool"
   },
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable puavo-vpn-client-dnsmasq service",
+    "typehint": "bool"
   },
   "puavo.service.puavo-vpn-client-openvpn.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable puavo-vpn-client-openvpn service",
+    "typehint": "bool"
   },
   "puavo.service.redis-server.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable redis-server service",
+    "typehint": "bool"
   },
   "puavo.service.rpc-gssd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable rpc-gssd service",
+    "typehint": "bool"
   },
   "puavo.service.shorewall.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable shorewall service",
+    "typehint": "bool"
   },
   "puavo.service.slapd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable slapd service",
+    "typehint": "bool"
   },
   "puavo.service.smbd.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable smbd service",
+    "typehint": "bool"
   },
   "puavo.service.tlp.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable tlp service",
+    "typehint": "bool"
   },
   "puavo.service.ulogd2.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable ulogd2 service",
+    "typehint": "bool"
   },
   "puavo.service.veyon.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable veyon service",
+    "typehint": "bool"
   },
   "puavo.service.winbind.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable winbind service",
+    "typehint": "bool"
   },
   "puavo.support.image_changelog_url": {
-    "default": ""
+    "default": "",
+    "description": "Changelog url, string replace done for IMAGESERIES, IMAGEVERSION, LANG and LSBCODENAME strings between double percent (%%) characters",
+    "typehint": "string"
   },
   "puavo.support.new_bugreport_browser": {
-    "default": "firefox"
+    "default": "firefox",
+    "description": "The default web browser for opening a support ticket",
+    "typehint": "string"
   },
   "puavo.support.new_bugreport_url": {
-    "default": ""
+    "default": "",
+    "description": "The URL for opening a support ticket, string replace done for DOMAIN, FQDN and HOSTNAME strings between percent (%) characters",
+    "typehint": "string"
   },
   "puavo.support.remoteaccess.icons.allowed": {
-    "default": "puavoremoteaccess-green"
+    "default": "puavoremoteaccess-green",
+    "description": "The path for support icon (when remote access is allowed)",
+    "typehint": "string"
   },
   "puavo.support.remoteaccess.icons.denied": {
-    "default": "puavoremoteaccess-grey"
+    "default": "puavoremoteaccess-grey",
+    "description": "The path for support icon (when remote access is disallowed)",
+    "typehint": "string"
   },
   "puavo.support.show_accesscontrols_for": {
-    "default": "vino"
+    "default": "vino",
+    "description": "A comma-separated list of remote access methods to show access controls for, 'ssh' and 'vino' and possible options",
+    "typehint": "string"
   },
   "puavo.support.ssh_access_timeout": {
-    "default": ""
+    "default": "",
+    "description": "Time in seconds for enabled remote ssh access, use 0 to disable remote ssh",
+    "typehint": "integer"
   },
   "puavo.support.vino_network_interface": {
-    "default": "eth0"
+    "default": "eth0",
+    "description": "The network interface where vino-server accepts connections",
+    "typehint": "string"
   },
   "puavo.swap.local.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable swap to local devices",
+    "typehint": "bool"
   },
   "puavo.wired.nm.shared.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable network sharing on ethernet port",
+    "typehint": "bool"
   },
   "puavo.wireless.broadcom.driver": {
-    "default": "wl"
+    "choices": [ "", "b43", "b43legacy", "b44", "brcm80211", "wl" ],
+    "default": "wl",
+    "description": "Set preferred driver for wireless Broadcom chips",
+    "typehint": "string"
   },
   "puavo.wireless.nm.no_autoconnect_networks": {
-    "default": "[]"
+    "default": "[]",
+    "description": "A JSON array of network names to which NetworkManager should not automatically connect to",
+    "typehint": "json"
   },
   "puavo.wireless.nm.gsm.automatic.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable automatic GSM network connection",
+    "typehint": "bool"
   },
   "puavo.www.apiserver": {
-    "default": ""
+    "default": "",
+    "description": "The cloud puavo-rest server url",
+    "typehint": "string"
   },
   "puavo.www.homepage": {
-    "default": ""
-  },
-  "puavo.xorg.server": {
-    "default": ""
+    "default": "",
+    "description": "The default web browser start page",
+    "typehint": "string"
   },
   "puavo.xrandr.apply_presets": {
-    "default": ""
+    "default": "",
+    "description": "A comma-separated list of xrandr presets to apply, supports 'clone' and 'custom'",
+    "typehint": "string"
   },
   "puavo.xrandr.args": {
-    "default": "[]"
+    "default": "[]",
+    "description": "A JSON array of xrandr args to run when setting up monitors, each string is split and run as a separate xrandr-command",
+    "typehint": "json"
   },
   "puavo.xrandr.extra_modes": {
-    "default": "auto"
+    "default": "auto",
+    "description": "A comma-separated list of extra modes to setup, for example 1152x792 for a unique screen resolution, use 'auto' for automatic",
+    "typehint": "string"
   },
   "puavo.xrandr.forced": {
-    "default": "true"
+    "default": "true",
+    "description": "If true, do not allow users to save their display settings",
+    "typehint": "bool"
   },
   "puavo.xrandr.mutter_permissions": {
-    "default": "auto"
+    "default": "auto",
+    "description": "A comma-separated list of permissions for settings up displays, may contain 'default', 'temporary' and 'user'",
+    "typehint": "string"
   },
   "puavo.xsessions.alternative_languages": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of language codes that can be chosen for desktop sessions",
+    "typehint": "string"
   },
   "puavo.xsessions.locked": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/desktop desktop session type choice button on login screen",
+    "typehint": "bool"
   },
   "puavo.xsessions.cowsay.message": {
-    "default": "Moo!"
+    "default": "Moo!",
+    "description": "What does the cow say? (when puavo.xsessions.display_manager is set to puavo-darkdm-cowsay)",
+    "typehint": "string"
   },
   "puavo.xsessions.default": {
-    "default": "puavo-desktop"
+    "choices": [
+      "puavo-desktop",
+      "puavo-ers",
+      "puavo-infotv",
+      "puavo-usb-factory",
+      "puavo-user-registration",
+      "puavo-webkiosk"
+    ],
+    "default": "puavo-desktop",
+    "description": "The default desktop session (may also contain any non-Puavo desktop /usr/share/xsessions)",
+    "typehint": "string"
   },
   "puavo.xsessions.display_manager": {
-    "default": "puavo-darkdm"
+    "choices": [ "gdm", "nodm", "puavo-darkdm" ],
+    "default": "puavo-darkdm",
+    "description": "The display manager to use",
+    "typehint": "string"
   }
 }

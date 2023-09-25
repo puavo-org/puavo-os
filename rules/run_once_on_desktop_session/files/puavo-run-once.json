@@ -1,5 +1,7 @@
 {
   "puavo.desktop.run_once.scripts": {
-    "default": ""
+    "default": "",
+    "description": "List of scripts to run from under /usr/local/share/puavo-run-once-on-desktop-session during login (with the trick that these are run only once per user)",
+    "typehint": "string"
   }
 }

@@ -1,17 +1,27 @@
 {
-  "puavo.desktop.background" : {
-    "default": ""
+  "puavo.desktop.background": {
+    "default": "",
+    "description": "The default desktop backgronud image path (absolute path or something under /usr/share/backgrounds)",
+    "typehint": "string"
   },
-  "puavo.desktop.dconf.settings" : {
-    "default": ""
+  "puavo.desktop.dconf.settings": {
+    "default": "",
+    "description": "A list of locked dconf setttings, separate with \"|\" and set with key=value",
+    "typehint": "string"
   },
-  "puavo.desktop.environment" : {
-    "default": ""
+  "puavo.desktop.environment": {
+    "default": "",
+    "description": "Set an environment variable with KEY=VALUE for desktop sessions",
+    "typehint": "string"
   },
-  "puavo.desktop.keyboard.layout" : {
-    "default": "fi,ru,ru,gb"
+  "puavo.desktop.keyboard.layout": {
+    "default": "fi,ru,ru,gb",
+    "description": "A comma-separated list of keyboard layouts to support on desktop",
+    "typehint": "string"
   },
-  "puavo.desktop.keyboard.variant" : {
-    "default": ",,phonetic,dvorak"
+  "puavo.desktop.keyboard.variant": {
+    "default": ",,phonetic,dvorak",
+    "description": "A comma-separated list of keyboard layouts variants to support on desktop, to be used matching with puavo.desktop.keyboard.layout setting",
+    "typehint": "string"
   }
 }
