@@ -1,5 +1,7 @@
 {
   "puavo.boot.plymouth.theme": {
-    "default": "kites"
+    "default": "kites",
+    "description": "Plymouth theme to use at boot",
+    "typehint": "string"
   }
 }

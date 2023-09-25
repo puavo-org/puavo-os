@@ -1,29 +1,43 @@
 {
-  "puavo.image.automatic_updates" : {
-    "default": "true"
+  "puavo.image.automatic_updates": {
+    "default": "true",
+    "description": "Enable/disable automatic system image updates",
+    "typehint": "bool"
   },
-  "puavo.image.download.ratelimit" : {
-    "default": "4m"
+  "puavo.image.download.ratelimit": {
+    "default": "4m",
+    "description": "Image update download rate limit, as bytes per second, add k for kilobytes and m for megabytes",
+    "typehint": "string"
   },
-  "puavo.image.overlay" : {
-    "default": ""
+  "puavo.image.overlay": {
+    "default": "",
+    "description": "Image overlay name to use",
+    "typehint": "string"
   },
   "puavo.image.path": {
-    "default": "/ltsp.img"
+    "default": "/ltsp.img",
+    "description": "The image path to boot from (must be under /images)",
+    "typehint": "string"
   },
   "puavo.image.preferred": {
-    "default": ""
+    "default": "",
+    "description": "The system image to update to",
+    "typehint": "string"
   },
   "puavo.image.series.urls": {
-    "default": "[]"
+    "default": "[]",
+    "description": "A JSON array of urls to find information about available system images",
+    "typehint": "json"
   },
   "puavo.image.servers": {
-    "default": ""
+    "default": "",
+    "description": "A list of server names to lookup system updates from",
+    "typehint": "string"
   },
-  "puavo.image.torrent.download.ratelimit" : {
+  "puavo.image.torrent.download.ratelimit": {
     "default": "20m"
   },
-  "puavo.image.torrent.upload.ratelimit" : {
+  "puavo.image.torrent.upload.ratelimit": {
     "default": "20m"
   }
 }
