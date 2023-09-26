@@ -1,5 +1,7 @@
 {
   "puavo.time.timezone" : {
-    "default": "Europe/Helsinki"
+    "default": "Europe/Helsinki",
+    "description": "System timezone",
+    "typehint": "string"
   }
 }

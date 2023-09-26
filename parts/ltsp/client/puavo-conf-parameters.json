@@ -1,87 +1,144 @@
 {
   "puavo.admin.certs.versions": {
-    "default": ""
+    "default": "",
+    "description": "List of certificate chain versions",
+    "typehint": "string"
   },
   "puavo.admin.persistent_homedirs": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable persistent admin user home directories (stored under /state)",
+    "typehint": "bool"
   },
   "puavo.admin.personally_administered": {
-    "default": "false"
+    "default": "false",
+    "description": "Set host as personally administered",
+    "typehint": "bool"
   },
   "puavo.admin.primary_user": {
-    "default": ""
+    "default": "",
+    "description": "The user account of the primary user",
+    "typehint": "string"
   },
   "puavo.admin.set_root_password": {
-    "default": "false"
+    "default": "false",
+    "description": "Set system root password from a password hash under /state (if it exists)",
+    "typehint": "bool"
   },
   "puavo.admin.superusers": {
-    "default": ""
+    "choices": [ "primary-user", "user-registration" ],
+    "default": "",
+    "description": "System configuration mode for superuser permissions",
+    "typehint": "string"
   },
   "puavo.admin.vpn.subnet": {
-    "default": ""
+    "default": "",
+    "description": "The subnet of the administrative vpn connection",
+    "typehint": "string"
   },
   "puavo.audio.pa.alsa.sink": {
-    "default": ""
+    "default": "",
+    "description": "The ALSA playback output for Pulseaudio",
+    "typehint": "string"
   },
   "puavo.audio.pa.alsa.source": {
-    "default": ""
+    "default": "",
+    "description": "The ALSA recording input for Pulseaudio",
+    "typehint": "string"
   },
   "puavo.audio.pa.default_sink": {
-    "default": ""
+    "default": "",
+    "description": "The default Pulseaudio playback device",
+    "typehint": "string"
   },
   "puavo.audio.pa.default_source": {
-    "default": ""
+    "default": "",
+    "description": "The default Pulseaudio recording device",
+    "typehint": "string"
   },
   "puavo.displays.forced": {
-    "default": "true"
+    "default": "true",
+    "description": "If true, do not save user-specified display settings",
+    "typehint": "string"
   },
   "puavo.displays.setup": {
-    "default": "all-mirror"
+    "choices": [ "all-mirror", "external", "builtin" ],
+    "default": "all-mirror",
+    "description": "The default display setup",
+    "typehint": "string"
   },
   "puavo.graphics.display_server": {
-    "default": "xorg"
+    "choices": [ "wayland", "xorg" ],
+    "default": "xorg",
+    "description": "The display server to use",
+    "typehint": "string"
   },
   "puavo.graphics.driver": {
-    "default": ""
+    "choices": [ "", "nvidia", "nvidia-525", "nvidia-470" ],
+    "default": "",
+    "description": "The display driver to use (leave blank to use the default)",
+    "typehint": "string"
   },
   "puavo.grub.boot_default": {
-    "default": "puavo-os"
+    "choices": [ "abitti", "puavo-os", "windows" ],
+    "default": "puavo-os",
+    "description": "The operating system to boot by default",
+    "typehint": "string"
   },
   "puavo.grub.developer_mode.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable developer mode (use persistent image overlay)",
+    "typehint": "bool"
   },
   "puavo.grub.efi.force_extra_removable": {
-    "default": "true"
+    "default": "true",
+    "description": "If true, pass --force-extra-removable argument to grub-install",
+    "typehint": "bool"
   },
   "puavo.grub.windows.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "If true and Windows is installed, show it in Grub boot menu",
+    "typehint": "bool"
   },
   "puavo.guestlogin.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable guest login option on login screen",
+    "typehint": "bool"
   },
   "puavo.guestlogin.mode": {
-    "default": "manual"
+    "choices": [ "automatic", "manual" ],
+    "default": "manual",
+    "description": "Guest login mode",
+    "typehint": "string"
   },
   "puavo.login.external.enabled": {
     "default": "false"
+    "description": "If true, do a double login, first to an external authentication service through Puavo, then normal login",
+    "typehint": "string"
   },
   "puavo.networking.bootserver.interfaces.schools": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of network_interface:school pairs, where both sides may contain a comma-separated list",
+    "typehint": "string"
   },
   "puavo.networking.dhcp.interfaces": {
-    "default": ""
+    "default": "",
+    "description": "List of network interfaces to use DHCP on (on systems without NetworkManager or manual configuration)",
+    "typehint": "string"
   },
   "puavo.printing.airprint.enabled": {
-    "default": "true"
+    "default": "true",
+    "description": "Lookup Airprint printers with cups-browsed",
+    "typehint": "bool"
   },
   "puavo.printing.cleanup_printers": {
-    "default": ""
+    "default": "",
+    "description": "A space-separated list of printer removal rules, use printer_state:seconds for each item",
+    "typehint": "string"
   },
   "puavo.printing.default_printer": {
-    "default": ""
-  },
-  "puavo.printing.default_uri": {
-    "default": ""
+    "default": "",
+    "description": "The default printer to use",
+    "typehint": "string"
   },
   "puavo.printing.jetpipe.enabled": {
     "default": "false"
