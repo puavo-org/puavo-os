@@ -1,5 +1,7 @@
 {
   "puavo.service.puavo-sharedir-manager.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable atop service",
+    "typehint": "boot"
   }
 }

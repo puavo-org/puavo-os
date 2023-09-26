@@ -1,20 +1,33 @@
 {
   "puavo.desktop.vendor.logo": {
-    "default": "/usr/share/puavo-art/puavo-os_logo-white.svg"
+    "default": "/usr/share/puavo-art/puavo-os_logo-white.svg",
+    "description": "Filesystem path to OS vendor logo",
+    "typehint": "string"
   },
   "puavo.greeter.background.default": {
-    "default": ""
+    "default": "",
+    "description": "The login screen background image, either an absolute path or a file under /usr/share/backgrounds",
+    "typehint": "string"
   },
   "puavo.greeter.background.firstlogin": {
-    "default": ""
+    "default": "",
+    "description": "The login screen background image to use in case nobody has yet logged in into this host (ever)",
+    "typehint": "string"
   },
   "puavo.greeter.background.mode": {
-    "default": "random"
+    "choices": [ "dynamic", "random", "static" ],
+    "default": "random",
+    "description": "Background mode: static does nothing, dynamic uses .default, random uses .random.dir for a random choice",
+    "typehint": "string"
   },
   "puavo.greeter.background.random.dir": {
-    "default": "puavo-greeter-default-random"
+    "default": "puavo-greeter-default-random",
+    "description": "The directory to choose a random background image when .mode is random",
+    "typehint": "string"
   },
   "puavo.greeter.logo": {
-    "default": "/usr/share/puavo-art/puavo-os_logo-white.svg"
+    "default": "/usr/share/puavo-art/puavo-os_logo-white.svg",
+    "description": "Absolute path to logo used in login screen (under the login dialog)",
+    "typehint": "string"
   }
 }

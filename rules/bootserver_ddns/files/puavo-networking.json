@@ -1,6 +1,8 @@
 {
   "puavo.networking.ddns.dhcpd_interfaces" : {
-    "default": ""
+    "default": "",
+    "description": "A comma-separated list of glob patterns of network interfaces that serve DHCP, for example ltsp*:wlan*",
+    "typehint": "string"
   },
   "puavo.networking.dns.upstream_servers" : {
     "default": "",
@@ -8,6 +10,8 @@
     "typehint": "string"
   },
   "puavo.networking.ubnt.unifi.address": {
-    "default": ""
+    "default": "",
+    "description": "Address of Unifi controller, sent by DHCP server as part of DHCP request",
+    "typehint": "string"
   }
 }

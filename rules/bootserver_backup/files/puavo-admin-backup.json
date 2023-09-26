@@ -1,11 +1,18 @@
 {
   "puavo.admin.backup.authorized_hosts": {
-    "default": ""
+    "default": "",
+    "description": "A host pattern (as understood by ssh) that must match for hosts trying to do backups",
+    "typehint": "string"
   },
   "puavo.admin.backup.authorized_ssh_pubkey": {
-    "default": ""
+    "default": "",
+    "description": "An ssh public key to accept for hosts trying to do backups",
+    "typehint": "string"
   },
   "puavo.admin.backup.modes": {
-    "default": ""
+    "choices": [ "", "rsync-backup-home-state" ],
+    "default": "",
+    "description": "Backup mode, determines what may be backed up and how",
+    "typehint": "string"
   }
 }
