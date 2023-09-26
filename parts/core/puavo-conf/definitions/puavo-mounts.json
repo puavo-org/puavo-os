@@ -6,8 +6,8 @@
   },
   "puavo.mounts.extramounts": {
     "default": "",
-    "description": "",
-    "typehint": "bool"
+    "description": "A JSON array of special mountpoints for autofs",
+    "typehint": "JSON"
   },
   "puavo.mounts.nethomes.enabled": {
     "default": "false",
