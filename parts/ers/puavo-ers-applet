@@ -73,11 +73,24 @@ def rm_f(path, with_logging=True):
       raise e
 
 
-def to_datetime(timestring):
-  if not timestring:
+def timestring_with_strftime(timestring, format_string):
+  datetime_obj = to_datetime(timestring)
+  if not datetime_obj:
     return None
-  return datetime.datetime.strptime(timestring, '%Y-%m-%dT%H:%M:%S.%f%z') \
-                          .astimezone()
+  return datetime_obj.strftime(format_string)
+
+
+def to_datetime(timestring):
+  try:
+    if not timestring:
+      return None
+    return datetime.datetime.strptime(timestring, '%Y-%m-%dT%H:%M:%S.%f%z') \
+                            .astimezone()
+  except Exception as e:
+    syslog.syslog(syslog.LOG_WARNING,
+                  'could not convert timestring %s to datetime object' \
+                    % timestring)
+    return None
 
 
 class CurrentZipNotReady(Exception):
@@ -1414,7 +1427,7 @@ class PuavoErsExamScheduler (threading.Thread):
   def session_status_msg(self, status):
     start_time = None
     if status['hasStarted'] and 'startTime' in status:
-      start_time = to_datetime(status['startTime']).strftime('%H:%M:%S')
+      start_time = timestring_with_strftime(status['startTime'], '%H:%M:%S')
 
     format_string = 'exam session status:'                                 \
                       + ' hasStarted={hasStarted}'                         \
@@ -1446,13 +1459,12 @@ class PuavoErsExamScheduler (threading.Thread):
                                           % (exam_title, len(student_list)))
 
         for student in student_list:
-          exam_started  = to_datetime( student.get('examStarted' ) ) \
-                            .strftime('%H:%M:%S')
-          exam_finished = to_datetime( student.get('examFinished') ) \
-                            .strftime('%H:%M:%S')
-          update_time   = to_datetime( student.get('updateTime'  ) ) \
-                            .strftime('%H:%M:%S')
-
+          exam_started  = timestring_with_strftime(student.get('examStarted'),
+                                                   '%H:%M:%S')
+          exam_finished = timestring_with_strftime(student.get('examFinished'),
+                                                   '%H:%M:%S')
+          update_time   = timestring_with_strftime(student.get('updateTime'),
+                                                   '%H:%M:%S')
           format_string = '    studentUuid={studentUuid}'         \
                             + ' studentStatus={studentStatus}' \
                             + ' examStarted={examStarted}'     \
@@ -1632,7 +1644,7 @@ class PuavoErsExamScheduler (threading.Thread):
                       'at least someone is connected and doing the exam')
         return True
 
-      # this student has npt finished, yet has no active connection
+      # this student has not finished, yet has no active connection
       if ('updateTime' in student) and (student['updateTime'] != None):
         update_time = to_datetime(student['updateTime'])
         five_minutes_before_now = now - datetime.timedelta(minutes=5)
