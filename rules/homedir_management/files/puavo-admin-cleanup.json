@@ -1,14 +1,22 @@
 {
   "puavo.admin.cleanup.homedirs.ensure_free_space": {
-    "default": "false"
+    "default": "false",
+    "description": "If true, remove most unused home directories when disk space is low",
+    "typehint": "bool"
   },
   "puavo.admin.cleanup.homedirs.freespace_min": {
-    "default": "1073741824"
+    "default": "1073741824",
+    "description": "Ensure this many bytes of disk space for home directories when .ensure_free_space is true",
+    "typehint": "integer"
   },
   "puavo.admin.cleanup.old_user_homedir_daylimit": {
-    "default": "365"
+    "default": "365",
+    "description": "Number of days a home directory must be unused before it is removed, when .remove_old_users is true and user account has already been removed",
+    "typehint": "integer"
   },
   "puavo.admin.cleanup.remove_old_users": {
-    "default": "true"
+    "default": "true",
+    "description": "If true, users deleted from Puavo are also deleted from devices (but see also .old_user_homedir_daylimit)",
+    "typehint": "bool"
   }
 }

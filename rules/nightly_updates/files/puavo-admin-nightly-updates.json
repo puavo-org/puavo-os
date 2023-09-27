@@ -1,5 +1,7 @@
 {
   "puavo.admin.nightly_updates": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable automatic nightly updates",
+    "typehint": "bool"
   }
 }

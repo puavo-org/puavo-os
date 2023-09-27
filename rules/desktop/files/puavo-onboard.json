@@ -1,5 +1,7 @@
 {
   "puavo.onscreenkeyboard.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable screen keyboard (onboard) on desktop",
+    "typehint": "bool"
   }
 }

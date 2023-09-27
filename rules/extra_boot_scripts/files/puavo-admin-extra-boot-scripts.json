@@ -1,8 +1,12 @@
 {
   "puavo.admin.extra_boot_script.prefixes": {
-    "default": "default"
+    "default": "default",
+    "description": "A space-separated list of ebs prefixes, it is recommended to always include 'default' in the list",
+    "typehint": "string"
   },
   "puavo.admin.run_extra_boot_scripts": {
-    "default": "true"
+    "default": "true",
+    "description": "Enable/disable extra boot scripts (fetching and executing)",
+    "typehint": "bool"
   }
 }

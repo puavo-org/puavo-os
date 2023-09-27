@@ -1,5 +1,7 @@
 {
-    "puavo.serialconsole.enabled" : {
-        "default": "false"
-    }
+  "puavo.serialconsole.enabled": {
+    "default": "false",
+    "description": "Enable/disable serial console",
+    "typehint": "bool"
+  }
 }

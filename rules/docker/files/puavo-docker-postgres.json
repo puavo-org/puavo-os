@@ -1,8 +1,12 @@
 {
   "puavo.docker.postgres.enabled" : {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable PostgreSQL Docker container",
+    "typehint": "bool"
   },
   "puavo.docker.postgres.version" : {
-    "default": "latest"
+    "default": "latest",
+    "description": "PostgreSQL Docker container version",
+    "typehint": "string"
   }
 }
