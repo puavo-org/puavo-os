@@ -1,14 +1,22 @@
 {
   "puavo.desktop.themes.cursor_themes": {
-    "default": "Adwaita,deepin,Obsidian"
+    "default": "Adwaita,deepin,Obsidian",
+    "description": "A comma-separated list of cursor themes to choose from",
+    "typehint": "string"
   },
   "puavo.desktop.themes.desktop_themes.light": {
-    "default": "Arc,Arc"
+    "default": "Arc,Arc",
+    "description": "A comma-separated list of light-colored desktop themes to choose from",
+    "typehint": "string"
   },
   "puavo.desktop.themes.desktop_themes.dark": {
-    "default": "Arc-Dark,Arc-Dark"
+    "default": "Arc-Dark,Arc-Dark",
+    "description": "A comma-separated list of dark-colored desktop themes to choose from",
+    "typehint": "string"
   },
   "puavo.desktop.themes.icon_themes": {
-    "default": "breeze,Faenza,Papirus,Tela"
+    "default": "breeze,Faenza,Papirus,Tela",
+    "description": "A comma-separated list of icon themes to choose from",
+    "typehint": "string"
   }
 }

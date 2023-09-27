@@ -1,23 +1,22 @@
 {
-  "puavo.puavomenu.enabled": {
-    "default": "true"
-  },
   "puavo.puavomenu.tags": {
-    "typehint": "string",
     "default": "default",
-    "description": "Control which programs, menus and categories should be visible or hidden in Puavomenu."
+    "description": "Control which programs, menus and categories should be visible or hidden in Puavomenu",
+    "typehint": "string"
   },
   "puavo.puavomenu.show_my_school_users": {
-    "default": "false"
+    "default": "false",
+    "description": "If true, show a tool to see school user list",
+    "typehint": "bool"
   },
   "puavo.puavomenu.sidebar_hide_elements": {
     "default": "",
-    "typehint": "string",
-    "description": "Allows you to forcibly hide certain Puavomenu sidebar elements. Takes a whitespace-separated list of element names."
+    "description": "A space-separated list of Puavomenu sidebar elements to hide (avatar change_password hostinfo laptop_settings lock_screen logout puavopkg_installer restart shutdown sleep_mode support system_settings)",
+    "typehint": "string"
   },
   "puavo.puavomenu.password_change.link": {
     "default": "",
-    "typehint": "string",
-    "description": "User password change URL override. You can use variables like $(username) in the URL if necessary."
+    "description": "Set to use a non-standard password change URL, variables such as $(username) are replaced in string",
+    "typehint": "string"
   }
 }

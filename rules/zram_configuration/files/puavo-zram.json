@@ -1,5 +1,7 @@
 {
   "puavo.service.zram-config.enabled": {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable memory data compression",
+    "typehint": "bool"
   }
 }

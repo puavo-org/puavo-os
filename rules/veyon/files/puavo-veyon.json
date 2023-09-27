@@ -1,8 +1,12 @@
 {
   "puavo.service.puavo-veyon.enabled" : {
-    "default": "false"
+    "default": "false",
+    "description": "Enable/disable puavo-veyon service",
+    "typehint": "bool"
   },
   "puavo.veyon.role_rules" : {
-    "default": "%admin,%teacher:master :client"
+    "default": "%admin,%teacher:master :client",
+    "description": "A space-separated list of user_groups:veyon_role mappings, user groups are roles when prefixed with %, may be separated with a comma, empty group matches all users, veyon role is master, client or master+client, first match wins",
+    "typehint": "string"
   }
 }
