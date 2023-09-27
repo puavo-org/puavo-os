@@ -199,6 +199,9 @@ gc_upstream_packs() {
 
   gc_status=$SC_OK
 
+  # remove possible temporary files in upstream pack cache
+  rm -f "$g_puavo_pkg_cachedir"/upstream_packs/*/*.tmp 2>/dev/null || true
+
   for cache_subdir in "$g_puavo_pkg_cachedir"/upstream_packs/*; do
     test -d "$cache_subdir" || continue
 
@@ -530,7 +533,8 @@ cache_load_upstream_pack()
 
 cache_save_upstream_pack()
 {
-  local cksum_str pkg_name pkg_id pkg_dir upstream_pack
+  local cachedir cachefile_path cksum_str pkg_name pkg_id pkg_dir \
+        tmp_cachefile_path upstream_pack
 
   pkg_name=$1
   pkg_id=$2
@@ -541,12 +545,21 @@ cache_save_upstream_pack()
   upstream_pack="${pkg_dir}/packs/upstream_pack"
   cksum_str=$(sha384sum "$upstream_pack" | cut -d' ' -f1)
 
-  if [ -n "$cksum_str" ]; then
-    mkdir -p "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}"
-    cp -a -T "$upstream_pack" \
-             "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${cksum_str}" \
-      || return 1
+  if [ -z "$cksum_str" ]; then
+    log_error "${pkg_name}: could not calculate checksum"
+    return 1
   fi
+
+  cachedir="${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}"
+  mkdir -p "$cachedir"
+
+  cachefile_path="${cachedir}/${cksum_str}"
+  tmp_cachefile_path="${cachefile_path}.tmp"
+  if ! cp -a -T "$upstream_pack" "$tmp_cachefile_path"; then
+    rm -f "$tmp_cachefile_path"
+    return 1
+  fi
+  mv "$tmp_cachefile_path" "$cachefile_path"
 
   log_info "${pkg_name}: saved upstream pack to cache successfully"
 }
