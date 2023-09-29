@@ -85,7 +85,9 @@ usage() {
 readonly win7x64_ultimate="win7x64-ultimate.iso"
 readonly win81x64="win81x64.iso"
 readonly win10x64="win10x64.iso"
+readonly win10x64_fi="win10x64_fi.iso"
 readonly win11x64="win11x64.iso"
+readonly win11x64_fi="win11x64_fi.iso"
 readonly win81x64_enterprise_eval="win81x64-enterprise-eval.iso"
 readonly win10x64_enterprise_eval="win10x64-enterprise-eval.iso"
 readonly win11x64_enterprise_eval="win11x64-enterprise-eval.iso"
@@ -121,8 +123,14 @@ parse_args() {
             win10x64)
                 media_list="$media_list $win10x64"
                 ;;
+            win10x64_fi)
+                media_list="$media_list $win10x64_fi"
+                ;;
             win11x64)
                 media_list="$media_list $win11x64"
+                ;;
+            win11x64_fi)
+                media_list="$media_list $win11x64_fi"
                 ;;
             win81x64-enterprise-eval)
                 media_list="$media_list $win81x64_enterprise_eval"
@@ -313,6 +321,7 @@ consumer_download() {
     out_file="$1"
     # Either 8, 10, or 11
     windows_version="$2"
+    language="$3"
 
     url="https://www.microsoft.com/en-us/software-download/windows$windows_version"
     case "$windows_version" in
@@ -363,13 +372,25 @@ consumer_download() {
     # Limit untrusted size for input validation
     language_skuid_table_html="$(echo "$language_skuid_table_html" | head -c 10240)"
     # tr: Filter for only alphanumerics or "-" to prevent HTTP parameter injection
-    sku_id="$(echo "$language_skuid_table_html" | grep "English (United States)" | sed 's/&quot;//g' | cut -d ',' -f 1  | cut -d ':' -f 2 | tr -cd '[:alnum:]-' | head -c 16)"
+    sku_id="$(echo "$language_skuid_table_html" | grep "$language" | sed 's/&quot;//g' | cut -d ',' -f 1  | cut -d ':' -f 2 | tr -cd '[:alnum:]-' | head -c 16)"
     [ "$VERBOSE" ] && echo "SKU ID: $sku_id" >&2
+
+    ## Translate to valid query parameter value
+    case "$language" in
+        'English (United States)')
+            language='English'
+            ;;
+        'Finnish')
+            ;;
+        *)
+            echo "ERROR: unsupported language '${language}'" >&2
+            return 1
+    esac
 
     # Get ISO download link
     # If any request is going to be blocked by Microsoft it's always this last one (the previous requests always seem to succeed)
     # --referer: Required by Microsoft servers to allow request
-    iso_download_link_html="$(curl --request POST --user-agent "$user_agent" --data "" --referer "$url" --header "Accept:" --fail --proto =https --tlsv1.2 --http1.1 -- "https://www.microsoft.com/en-US/api/controls/contentinclude/html?pageId=6e2a1789-ef16-4f27-a296-74ef7ef5d96b&host=www.microsoft.com&segments=software-download,$url_segment_parameter&query=&action=GetProductDownloadLinksBySku&sessionId=$session_id&skuId=$sku_id&language=English&sdVersion=2")" || {
+    iso_download_link_html="$(curl --request POST --user-agent "$user_agent" --data "" --referer "$url" --header "Accept:" --fail --proto =https --tlsv1.2 --http1.1 -- "https://www.microsoft.com/en-US/api/controls/contentinclude/html?pageId=6e2a1789-ef16-4f27-a296-74ef7ef5d96b&host=www.microsoft.com&segments=software-download,$url_segment_parameter&query=&action=GetProductDownloadLinksBySku&sessionId=$session_id&skuId=$sku_id&language=$language&sdVersion=2")" || {
         # This should only happen if there's been some change to how this API works
         handle_curl_error $?
         return $?
@@ -496,18 +517,25 @@ download_media() {
                 scurl_file "$media" "1.3" "https://web.archive.org/web/20221228154140/https://download.microsoft.com/download/5/1/9/5195A765-3A41-4A72-87D8-200D897CBE21/7601.24214.180801-1700.win7sp1_ldr_escrow_CLIENT_ULTIMATE_x64FRE_en-us.iso"
                 ;;
             "$win81x64")
-                echo_info "Downloading Windows 8.1..."
-                consumer_download "$media" 8
+                echo_info "Downloading Windows 8.1 English (United States)..."
+                consumer_download "$media" 8 'English (United States)'
                 ;;
             "$win10x64")
-                echo_info "Downloading Windows 10..."
-                consumer_download "$media" 10
+                echo_info "Downloading Windows 10 English (United States)..."
+                consumer_download "$media" 10 'English (United States)'
+                ;;
+            "$win10x64_fi")
+                echo_info "Downloading Windows 10 Finnish..."
+                consumer_download "$media" 10 'Finnish'
                 ;;
             "$win11x64")
-                echo_info "Downloading Windows 11..."
-                consumer_download "$media" 11
+                echo_info "Downloading Windows 11 English (United States)..."
+                consumer_download "$media" 11 'English (United States)'
                 ;;
-
+            "$win11x64_fi")
+                echo_info "Downloading Windows 11 Finnish..."
+                consumer_download "$media" 11 'Finnish'
+                ;;
             "$win81x64_enterprise_eval")
                 echo_info "Downloading Windows 8.1 Enterprise Evaluation..."
                 # This download link is "Update 1": https://files.rg-adguard.net/file/166cbcab-1647-53d5-1785-6ef9e22a6500
@@ -583,8 +611,12 @@ dec04cbd352b453e437b2fe9614b67f28f7c0b550d8351827bc1e9ef3f601389  win7x64-ultima
 d8333cf427eb3318ff6ab755eb1dd9d433f0e2ae43745312c1cd23e83ca1ce51  win81x64.iso
 # Windows 10 22H2 May 2023 Update
 a6f470ca6d331eb353b815c043e327a347f594f37ff525f17764738fe812852e  win10x64.iso
+# Windows 10 22H2 May 2023 Update
+c17f3cfa9ec971dcd64b4a1152a7b563ade165fb9deb941f7c791e0f722d2d2f  win10x64_fi.iso
 # Windwws 11 22H2 May 2023 Update
 8059a99b8902906a90afe068ac00465c52588c2bd54f5d9d96c1297f88ef1076  win11x64.iso
+# Windwws 11 22H2 May 2023 Update
+ed5dd98addd6ae42c9eba993bbec17a199028e34e73e6a12c1574dec33942fb2  win11x64_fi.iso
 2dedd44c45646c74efc5a028f65336027e14a56f76686a4631cf94ffe37c72f2  win81x64-enterprise-eval.iso
 ef7312733a9f5d7d51cfa04ac497671995674ca5e1058d5164d6028f0938d668  win10x64-enterprise-eval.iso
 ebbc79106715f44f5020f77bd90721b17c5a877cbc15a3535b99155493a1bb3f  win11x64-enterprise-eval.iso
