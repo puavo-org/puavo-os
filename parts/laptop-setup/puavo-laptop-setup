@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, GObject, Gtk
@@ -439,13 +440,128 @@ class PuavoLaptopSetup:
 
 
     def run_reset_to_factory_settings(self):
-        # how to handle error codes or anything?
-        # maybe some progress bar should be shown... ?
-        cmd = [ 'pkexec',
-                '/usr/sbin/puavo-reset-laptop-to-factory-defaults',
-                '--force' ]
-        subprocess.call(cmd)
+        factory_reset_text_view = builder.get_object('factory_reset_text_view')
+        factory_reset_status_bar = builder.get_object('factory_reset_status_bar')
+        factory_reset_text_buffer = Gtk.TextBuffer()
+        factory_reset_text_view.set_buffer(factory_reset_text_buffer)
+        context_id = factory_reset_status_bar.get_context_id('progress')
 
+        def text_buffer_write(line):
+            step_log_line_match = re.match(r'^> info: step (\d+/\d+)$', line)
+            if step_log_line_match is not None:
+                steps = step_log_line_match.group(1)
+                text = _tr('Factory reset is running step')
+                status_message = f"{text} {steps}..."
+                factory_reset_status_bar.push(context_id, status_message)
+
+            factory_reset_text_buffer.insert_at_cursor(line)
+
+            return False
+
+        def text_view_scroll_to_bottom():
+            factory_reset_text_view.scroll_mark_onscreen(factory_reset_text_buffer.get_insert())
+            return False
+
+        def on_cmd_start():
+            status_message = _tr('Factory reset is running')
+            factory_reset_status_bar.push(context_id, f"{status_message}...")
+
+            return False
+
+        def on_cmd_start_error(exception):
+            factory_reset_dialog.set_deletable(True)
+            factory_reset_dialog_button.set_sensitive(True)
+            status_message = _tr('Failed to start factory reset')
+            factory_reset_status_bar.push(context_id, f"{status_message}.")
+            text_buffer_write(str(exception))
+            dialog_title = _tr('Factory reset failed')
+            dialog = Gtk.MessageDialog(
+                parent=factory_reset_dialog,
+                title=f"{dialog_title}!",
+                flags=0,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text=f"{status_message}.",
+            )
+            dialog.run()
+            dialog.destroy()
+
+            return False
+
+        def on_cmd_exit(returnvalue):
+            factory_reset_dialog.set_deletable(True)
+            factory_reset_dialog_button.set_sensitive(True)
+            if returnvalue == 0:
+                text = _tr('Factory reset succeeded. The system is going to reboot in few seconds...')
+                factory_reset_status_bar.push(context_id, text)
+                dialog = Gtk.MessageDialog(
+                    parent=factory_reset_dialog,
+                    flags=0,
+                    message_type=Gtk.MessageType.INFO,
+                    buttons=Gtk.ButtonsType.OK,
+                    text=text,
+                )
+            else:
+                status_message = _tr('Factory reset failed')
+                factory_reset_status_bar.push(context_id, f"{status_message}.")
+                help_message = _tr('Further details can be found from the factory reset log. Please contact support for assistance.')
+                dialog = Gtk.MessageDialog(
+                    parent=factory_reset_dialog,
+                    flags=0,
+                    message_type=Gtk.MessageType.ERROR,
+                    buttons=Gtk.ButtonsType.OK,
+                    text=f"{status_message}. {help_message}",
+                )
+            dialog.run()
+            dialog.destroy()
+
+            return False
+
+        def run_cmd():
+            cmd = [ 'pkexec',
+                    '/usr/sbin/puavo-reset-laptop-to-factory-defaults',
+                    '--force' ]
+
+            cmd_process = None
+            try:
+                cmd_process = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, text=True)
+            except Exception as e:
+                GLib.idle_add(on_cmd_start_error, e)
+            else:
+                GLib.idle_add(on_cmd_start)
+                cmd_process.stdout.reconfigure(line_buffering=True)
+
+                for line in cmd_process.stdout:
+                    GLib.idle_add(text_buffer_write, line)
+
+                GLib.idle_add(text_view_scroll_to_bottom)
+            finally:
+                if cmd_process is not None:
+                    ## Wait forever? Killing
+                    ## puavo-reset-latop-to-factory-defaults might lead to
+                    ## a corrupt system.
+                    returncode = cmd_process.wait()
+                    GLib.idle_add(on_cmd_exit, returncode)
+
+        thread = threading.Thread(target=run_cmd, daemon=True)
+        thread.start()
+        factory_reset_dialog.run()
+        factory_reset_dialog.hide()
+
+def on_factory_reset_dialog_delete_event(dialog, event):
+    # We don't want to destroy the factory reset dialog because the
+    # user might re-enter or retry it. The dialog is created by
+    # builder only once.
+
+    # The other way would be to actually destroy them, but then
+    # recreating would mean we would need to create a new builder each
+    # time the dialog is shown. See
+    # https://discourse.gnome.org/t/cannot-reopen-dialog-after-closed-with-x-if-using-gtkbuilder-for-construction/7019
+    #
+    # I thing hiding is fine. Recreating builder and new dialog each
+    # time seems unncessary waste of resources.
+    dialog.hide()
+    return True
 
 builder = Gtk.Builder()
 builder.set_translation_domain('puavo-laptop-setup')
@@ -455,6 +571,20 @@ app_window = builder.get_object('app_window')
 app_window.set_icon_name('drive-harddisk-system')
 app_window.set_title(_tr('Laptop setup'))
 app_window.connect('destroy', Gtk.main_quit)
+
+factory_reset_dialog = builder.get_object('factory_reset_dialog')
+factory_reset_dialog.connect('delete-event', on_factory_reset_dialog_delete_event)
+factory_reset_dialog.set_size_request(800, 400)
+
+factory_reset_dialog_button = builder.get_object('factory_reset_dialog_button')
+## I could figure it out how in earth this should be done with Glade
+## for GtkDialog. Some googling seems to indicate that there should be
+## "Response ID" etc. available and setting it should connect the
+## button signal automatically to dialog.response with that response
+## ID, but nope, I could not find that from Glade.
+##
+## Glade seems quite awkward and clumsy.
+factory_reset_dialog_button.connect('clicked', lambda _: factory_reset_dialog.response(Gtk.ResponseType.CLOSE))
 
 try:
     subprocess.check_call([ 'sudo', '-n', 'puavo-conf-local', '--check'])
