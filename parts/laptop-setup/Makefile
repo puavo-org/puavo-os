@@ -10,8 +10,8 @@ INSTALL_DATA = $(INSTALL) -m 644
 .PHONY: all
 all: po/de/puavo-laptop-setup.mo po/fi/puavo-laptop-setup.mo po/sv/puavo-laptop-setup.mo
 
-po/puavo-laptop-setup.pot: puavo-laptop-setup
-	xgettext --omit-header --language python --keyword=_tr -o $@ $^
+po/puavo-laptop-setup.pot: puavo-laptop-setup puavo-laptop-setup.glade
+	xgettext --omit-header --language python --keyword=_tr -o $@ puavo-laptop-setup
 	xgettext -j --omit-header --language Glade -o po/puavo-laptop-setup.pot puavo-laptop-setup.glade
 
 %.po: po/puavo-laptop-setup.pot
