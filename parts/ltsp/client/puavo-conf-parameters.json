@@ -205,11 +205,6 @@
     "description": "Enable/disable dnsmasq service",
     "typehint": "bool"
   },
-  "puavo.service.docker.enabled": {
-    "default": "false",
-    "description": "Enable/disable docker service",
-    "typehint": "bool"
-  },
   "puavo.service.freeradius.enabled": {
     "default": "false",
     "description": "Enable/disable freeradius service",
