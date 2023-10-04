@@ -25,11 +25,10 @@ set -eu
 
 new_mnt=/images/mnt
 
-bind_paths='/dev /images /proc /run /sys /sys/firmware/efi/efivars'
-reverse_bind_paths='/sys/firmware/efi/efivars /sys /run /proc /images /dev'
+bind_paths='/dev /images /proc /run /sys'
 
 cleanup() {
-  for path in $reverse_bind_paths; do
+  for path in $bind_paths; do
     { mountpoint -q "${new_mnt}${path}" && umount "${new_mnt}${path}"; } \
       || true
   done
@@ -103,15 +102,10 @@ if [ -z "$hosttype" ]; then
   fi
 fi
 
+
 # Duplicate /images (and other $bind_paths) mount under $new_mnt
 # so that grub installation can access it.
 for path in $bind_paths; do
-  # /sys/firmware/efi/efivars does not exist on legacy bios boot,
-  # no need to bind mount it in that case.
-  if [ "$path" = '/sys/firmware/efi/efivars' -a ! -d "$path" ]; then
-    continue
-  fi
-
   if ! mount -o bind "$path" "${new_mnt}${path}"; then
     echo "Could not mount bind ${path} under ${new_mnt}${path}" >&2
     exit 1

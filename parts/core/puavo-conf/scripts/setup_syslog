@@ -297,6 +297,11 @@ if (\$hostname == "${hostname}") then {
     stop
   }
 
+  if \$programname == "puavo-docker" then {
+    action(type="omfile" file="/var/log/puavo/puavo-docker.log")
+    stop
+  }
+
   if \$programname == "puavo-ers-applet" then {
     # do not include debug level messages (normally)
     if \$syslogseverity < 7 then {

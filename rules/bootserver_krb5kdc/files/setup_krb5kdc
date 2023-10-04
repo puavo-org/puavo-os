@@ -43,7 +43,6 @@ cat <<EOF > /etc/krb5.conf.tmp
 	dns_lookup_kdc = true
 	dns_lookup_realm = true
 	allow_weak_crypto = true
-	dns_canonicalize_hostname = false
 
 [realms]
 	${puavo_kerberos_realm} = {

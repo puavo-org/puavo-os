@@ -1,11 +1,6 @@
 #!/bin/sh
 
 # This script must be run from PAM stack during user login.
-#
-# The script mounts user home directory from NFS server. The /home directory
-# is mounted from host homedir.<puavo domain>. The script relies on reverse
-# DNS query support in kerberos so that the real server name is not needed
-# for the mount.
 
 set -eu
 
@@ -42,8 +37,7 @@ fi
 # a temporary fix, first do a sec=sys mount of / without a kerberos
 # principal to force SETCLIENTID to be called with auth=sys.
 
-PUAVO_DOMAIN=$(cat /etc/puavo/domain)
-HOMEDIR_SERVER="homedir.${PUAVO_DOMAIN}"
+HOMEDIR_SERVER=$(cat /etc/puavo/ldap/slave)
 
 # First check that the dummy /mntroot mountpoint exists
 if ! is_mounted "/mntroot"; then
