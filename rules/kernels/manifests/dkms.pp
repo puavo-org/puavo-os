@@ -13,8 +13,8 @@ class kernels::dkms {
         $dkms_module_package = 'nvidia-kernel-dkms'
       }
 
-      /^nvidia-legacy-390xx\//: {
-        $dkms_module_package = 'nvidia-legacy-390xx-kernel-dkms'
+      /^nvidia-tesla-470\//: {
+        $dkms_module_package = 'nvidia-tesla-470-kernel-dkms'
       }
 
       /^r8168\//: { $dkms_module_package = 'r8168-dkms' }

@@ -4,7 +4,7 @@ class graphics_drivers {
 
   $glx_packages = [ 'glx-alternative-mesa', 'libgl1-mesa-glx', 'update-glx' ]
 
-  $nvidia_packages = [ 'nvidia-kernel-dkms' ]
+  $nvidia_packages = [ 'nvidia-kernel-dkms', 'nvidia-tesla-470-kernel-dkms' ]
 
   ::puavo_conf::script {
     'setup_graphics_drivers':
