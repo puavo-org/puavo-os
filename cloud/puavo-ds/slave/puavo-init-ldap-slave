@@ -122,7 +122,7 @@ if !system('slapadd', '-l', tempfile.path.to_s, '-F',
   exit(1)
 end
 
-if !system('chown -R openldap.openldap /state/etc/ldap/slapd.d') then
+if !system('chown -R openldap:openldap /state/etc/ldap/slapd.d') then
   warn 'error: failed to chown /state/etc/ldap/slapd.d to openldap'
   exit(1)
 end
@@ -140,7 +140,7 @@ if !system('rm -rf /state/var/lib/ldap/*') then
   exit(1)
 end
 
-if !system('chown -R openldap.openldap /state/var/lib/ldap') then
+if !system('chown -R openldap:openldap /state/var/lib/ldap') then
   warn 'error: failed to chown /state/var/lib/ldap to openldap'
   exit(1)
 end
