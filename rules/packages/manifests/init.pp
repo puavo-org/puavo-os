@@ -123,7 +123,6 @@ class packages {
     , 'iperf'
     , 'jc'
     , 'jq'
-    , 'libhivex-bin'                    # used by puavo-reset-windows to access registry hives
     , 'libstdc++5'
     , 'linssid'
     , 'lm-sensors'
