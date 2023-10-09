@@ -86,7 +86,9 @@ print0_win_primary_partition_devpaths()
 
 print0_win_product_name()
 {
-    local win_primary_partition_devpath win_product_name
+    local win_build_number \
+          win_primary_partition_devpath \
+          win_product_name
 
     win_primary_partition_devpath=$1
     shift
@@ -100,6 +102,22 @@ print0_win_product_name()
         logerr "Failed to parse ProductName from SOFTWARE hive of '${win_primary_partition_devpath}'."
         return 1
     }
+
+    win_build_number=$(hivexget software_hive 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"CurrentBuildNumber"="(.+)"$/\1/p') || {
+        logerr "Failed to parse CurrentBuildNumber from SOFTWARE hive of '${win_primary_partition_devpath}'."
+        return 1
+    }
+
+    ## Windows 11 lies and claims to be Windows 10, but the build
+    ## number seems to reveal the truth. Windows 11 build numbers
+    ## start from 22000.
+    ##
+    ## https://learn.microsoft.com/en-us/answers/questions/555857/windows-11-product-name-in-registry
+    ## https://learn.microsoft.com/en-us/windows/release-health/release-information
+    if [ "${win_build_number}" -ge 22000 ]; then
+        # This is actually Windows 11.
+        win_product_name=$(echo -n "${win_product_name}" | sed -r 's/^Windows 10/Windows 11/')
+    fi
 
     printf '%s' "${win_product_name}"
 }
@@ -144,10 +162,10 @@ print0_win_iso_file_name()
     shift
 
     case "${win_product_name}" in
-        'Windows 10 Home' | 'Windows 10 Pro')
+        'Windows 10 '*)
             win_iso_file_name='win10x64.iso'
             ;;
-        'Windows 11 Home' | 'Windows 11 Pro')
+        'Windows 11 '*)
             win_iso_file_name='win11x64.iso'
             ;;
         *)
@@ -168,11 +186,17 @@ verify_win_iso()
 
     loginfo "Verifying ISO file '${win_iso_file_name}'..."
     {
-        # Windows 10 22H2 May 2023 Update
+        # Windows 10 22H2 May 2023 Update English
         echo a6f470ca6d331eb353b815c043e327a347f594f37ff525f17764738fe812852e  win10x64.iso
 
-        # Windwws 11 22H2 May 2023 Update
+        # Windows 10 22H2 May 2023 Update Finnish
+        echo c17f3cfa9ec971dcd64b4a1152a7b563ade165fb9deb941f7c791e0f722d2d2f  win10x64_fi.iso
+
+        # Windwws 11 22H2 May 2023 Update English
         echo 8059a99b8902906a90afe068ac00465c52588c2bd54f5d9d96c1297f88ef1076  win11x64.iso
+
+        # Windwws 11 22H2 May 2023 Update Finnish
+        echo ed5dd98addd6ae42c9eba993bbec17a199028e34e73e6a12c1574dec33942fb2  win11x64_fi.iso
     } | awk -v "file_name=${win_iso_file_name}" '$2 == file_name' | sha256sum --strict --status -c || {
         logerr "Failed to verify ISO file '${win_iso_file_name}'."
         return 1
@@ -388,9 +412,8 @@ reset_all_wins()
 
         loginfo "Detected '${win_product_name}' on '${win_primary_partition_devpath}'."
 
-        ## TODO: add (and test!) Windows 11 support
         case "${win_product_name}" in
-            'Windows 10 Home' | 'Windows 10 Pro')
+            'Windows 10 Home' | 'Windows 10 Pro' | 'Windows 11 Home' | 'Windows 11 Pro')
                 ;;
             *)
                 logerr "Skipping unsupported '${win_product_name}' on '${win_primary_partition_devpath}'."
