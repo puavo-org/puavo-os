@@ -8,7 +8,7 @@ class image::bundle::bootserver {
   include ::bootserver_firewall
   include ::bootserver_freeradius
   include ::bootserver_helpers
-  # include ::bootserver_hooktftp               # XXX disabled for bookworm
+  include ::bootserver_hooktftp
   include ::bootserver_inetd
   include ::bootserver_krb5kdc
   include ::bootserver_ltspimages
