@@ -16,7 +16,6 @@ _pkgs_ports := gnome-control-center \
 #                cups-filters           \
 #                gnome-network-displays \
 #                gtk+3.0                \
-#                incron                 \
 #                kde-spectacle          \
 #                mutter                 \
 #                openjdk-11             \
