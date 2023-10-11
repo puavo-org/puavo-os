@@ -20,7 +20,7 @@ end
 
 def parse_erb(basename)
   ldif_template = File.read("/usr/share/puavo-ds-slave/#{ basename }.ldif.erb")
-  ldif = ERB.new(ldif_template, 0, "%<>")
+  ldif = ERB.new(ldif_template, trim_mode: '%<>')
 
   tempfile = Tempfile.open(basename)
   tempfile.puts ldif.result

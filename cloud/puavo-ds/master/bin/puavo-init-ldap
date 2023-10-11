@@ -53,7 +53,7 @@ end
 
 def parse_erb(basename)
   template = File.read("#{ TEMPLATES_PATH }/#{basename}.erb")
-  parse_file = ERB.new(template, 0, "%<>")
+  parse_file = ERB.new(template, trim_mode: '%<>')
 
   tempfile = Tempfile.open(basename)
   tempfile.puts parse_file.result

@@ -15,7 +15,7 @@ module Puavo
       end
 
       conf_template = File.read( File.join(@template_dir, "templates", template_file) )
-      conf = ERB.new(conf_template, 0, "%<>")
+      conf = ERB.new(conf_template, trim_mode: '%<>')
 
       perm = 0644
 

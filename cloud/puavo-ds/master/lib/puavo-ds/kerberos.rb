@@ -62,7 +62,7 @@ class KerberosSettings
       return @kdc_conf
     else
       kdc_conf_erb = File.read("#{ TEMPLATES_PATH }/kdc.conf.erb")
-      kdc_conf = ERB.new(kdc_conf_erb, 0, "%<>")
+      kdc_conf = ERB.new(kdc_conf_erb, trim_mode: '%<>')
 
       @kdc_conf = kdc_conf.result(getBinding)
 
@@ -75,7 +75,7 @@ class KerberosSettings
       return @krb5_conf
     else
       krb5_conf_erb = File.read("#{ TEMPLATES_PATH }/krb5.conf.erb")
-      krb5_conf = ERB.new(krb5_conf_erb, 0, "%<>")
+      krb5_conf = ERB.new(krb5_conf_erb, trim_mode: '%<>')
 
       @krb5_conf = krb5_conf.result(getBinding)
 
@@ -88,7 +88,7 @@ class KerberosSettings
       return @kadm5_acl
     else
       kadm5_acl_erb = File.read("#{ TEMPLATES_PATH }/kadm5.acl.erb")
-      kadm5_acl = ERB.new(kadm5_acl_erb, 0, "%<>")
+      kadm5_acl = ERB.new(kadm5_acl_erb, trim_mode: '%<>')
 
       @kadm5_acl = kadm5_acl.result(getBinding)
 
