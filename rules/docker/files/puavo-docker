@@ -290,6 +290,13 @@ end
 begin
   nginx_conf = <<EOF
 server {
+    listen 80;
+    server_name #{ nextcloud_domain } #{ collabora_domain };
+
+    return 301 https://${host}${request_uri};
+}
+
+server {
     listen 443 http2 ssl;
     server_name #{ nextcloud_domain };
 
@@ -367,6 +374,8 @@ server {
 	proxy_set_header Host $http_host;
 	proxy_read_timeout 36000s;
     }
+
+    location / { return 404; }
 
     access_log /var/log/nginx/office-access.log;
     error_log /var/log/nginx/office-error.log;
