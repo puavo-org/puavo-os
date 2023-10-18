@@ -304,6 +304,8 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
         proxy_pass http://#{ DOCKER_IP }:880$request_uri;
+
+        client_max_body_size 512M;
     }
 
     location /.well-known/carddav {
