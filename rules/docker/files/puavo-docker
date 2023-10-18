@@ -132,6 +132,16 @@ CONTAINER_LIST.each do |container_name|
 end
 
 begin
+  locale = puavoconf.get('puavo.l10n.locale')
+  server_location = locale[0..1]
+  raise 'location not two letters' unless server_location.length == 2
+  write_config_file("#{ server_location }\n", 'location_countrycode')
+rescue StandardError => e
+  warn("could not determine server location: #{ e.message }")
+  FileUtils.rm_f(File.join(CONFIG_DIR, 'location_countrycode'))
+end
+
+begin
   puavo_hostname = File.read('/etc/puavo/hostname').chomp
   puavo_domain   = File.read('/etc/puavo/domain').chomp
   puavo_server_fqdn = "#{ puavo_hostname }.#{ puavo_domain }"

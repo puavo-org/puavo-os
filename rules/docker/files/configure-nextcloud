@@ -25,6 +25,9 @@ if [ -z "$ldap_login_filter" -o -z "$ldap_user_filter" ]; then
   exit 1
 fi
 
+location_countrycode=$(cat /puavo-nextcloud-config/location_countrycode \
+                         2>/dev/null) || true
+
 office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
 
 # we let the bootserver nginx handle the ssl
@@ -42,6 +45,9 @@ occ app:enable user_ldap
 if ! occ app:getpath user_saml >/dev/null; then
   occ app:install user_saml
 fi
+
+# set server location
+occ config:app:set --value "$location_countrycode" privacy readableLocation
 
 # As kerberos login does not autoprovision user, run the ldap sync
 # hourly so new users can get in faster.
