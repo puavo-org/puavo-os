@@ -66,6 +66,13 @@ end
 
 raise('not running as root') unless Process.uid == 0
 
+puavoconf = Puavo::Conf.new
+hosttype = puavoconf.get('puavo.hosttype')
+
+# Check hosttype to prevent some crazy accidents.
+# This really does require a bootserver.
+raise('hosttype is not bootserver') unless hosttype == 'bootserver'
+
 status = 0
 status = 1 unless cleanup_docker_images()
 
@@ -89,8 +96,6 @@ if not File.exists?(puavo_ldap_password_path) then
 end
 
 File.chmod(0600, puavo_ldap_password_path)
-
-puavoconf = Puavo::Conf.new
 
 current_versions = get_container_versions()
 
