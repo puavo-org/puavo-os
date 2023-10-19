@@ -15,6 +15,31 @@ check_external_files_config() {
       '
 }
 
+patch_nc() {
+  local path srcpath destpath destpath_tmp
+  path=$1
+  srcpath="/usr/src/nextcloud/${path}"
+  destpath="/var/www/html/${path}"
+  destpath_tmp="${destpath}.tmp"
+
+  if ! patch -o "$destpath_tmp" "$srcpath"; then
+    echo "failed to patch ${destpath_tmp} from ${srcpath}" >&2
+    rm -f "$destpath_tmp" || return 1
+  fi
+
+  if ! chmod 644 "$destpath_tmp"; then
+    echo "failed to chmod $destpath_tmp to 644" >&2
+    rm -f "$destpath_tmp" || return 1
+  fi
+
+  if ! mv "$destpath_tmp" "$destpath"; then
+    echo "failed to move ${destpath_tmp} to ${destpath}" >&2
+    rm -f "$destpath_tmp" || return 1
+  fi
+
+  return 0
+}
+
 puavo_ldap_password_file=$1
 read puavo_ldap_password < "$puavo_ldap_password_file"
 
@@ -129,9 +154,7 @@ fi
 
 # patch Nextcloud apps
 
-patch_ok_path='/var/www/html/apps/files_external/lib/Lib/Backend/SMB.php.patch_ok'
-if [ ! -e "$patch_ok_path" ]; then
-  patch -b -d /var/www/html -p0 <<'EOF'
+patch_nc apps/files_external/lib/Lib/Backend/SMB.php <<'EOF'
 --- apps/files_external/lib/Lib/Backend/SMB.php	2023-09-04 08:15:33.513544741 +0000
 +++ apps/files_external/lib/Lib/Backend/SMB.php	2023-09-04 08:51:21.760494332 +0000
 @@ -74,7 +74,16 @@
@@ -205,12 +228,8 @@ if [ ! -e "$patch_ok_path" ]; then
  
  		$storage->setBackendOption('auth', $smbAuth);
 EOF
-  touch "$patch_ok_path"
-fi
 
-patch_ok_path='/var/www/html/apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php.patch_ok'
-if [ ! -e "$patch_ok_path" ]; then
-  patch -b -d /var/www/html -p0 <<'EOF'
+patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php <<'EOF'
 --- apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-08-04 11:49:00.197729857 +0000
 +++ apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-08-10 09:30:08.126531506 +0000
 @@ -37,7 +37,17 @@
@@ -233,5 +252,3 @@ if [ ! -e "$patch_ok_path" ]; then
  	}
 
 EOF
-  touch "$patch_ok_path"
-fi
