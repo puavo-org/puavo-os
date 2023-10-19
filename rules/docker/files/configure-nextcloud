@@ -152,6 +152,10 @@ else
   occ config:app:set --value no richdocuments enabled
 fi
 
+# database maintenance
+occ db:add-missing-indices
+occ db:convert-filecache-bigint
+
 # patch Nextcloud apps
 
 patch_nc apps/files_external/lib/Lib/Backend/SMB.php <<'EOF'
