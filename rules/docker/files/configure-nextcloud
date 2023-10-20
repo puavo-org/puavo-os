@@ -234,9 +234,9 @@ patch_nc apps/files_external/lib/Lib/Backend/SMB.php <<'EOF'
 EOF
 
 patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php <<'EOF'
---- apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-08-04 11:49:00.197729857 +0000
-+++ apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-08-10 09:30:08.126531506 +0000
-@@ -37,7 +37,17 @@
+--- apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-10-05 10:47:41.000000000 +0000
++++ apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2023-10-19 12:36:33.687214586 +0000
+@@ -37,11 +37,31 @@
  	/** @var string|false */
  	private $ticketName;
  
@@ -247,12 +247,27 @@ patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php <<'
 +		if (!is_null($user_uid) && $kerberos_realm !== false && $ccache_dir !== false) {
 +			$ticketPath = "${ccache_dir}/${user_uid}@${kerberos_realm}";
 +			if (file_exists($ticketPath)) {
-+				$this->ticketName = "FILE:${ticketPath}";
-+				return;
++				# Do not let old, expired tickets bother us for too
++				# long.  (This requires that new sessions must be
++				# established more frequently than every three days).
++				$current_time = time();
++				$file_time = filemtime($ticketPath);
++				if ($file_time) {
++					$expiry_time = $file_time + 3 * 24 * 60 * 60;
++					if ($current_time < $expiry_time) {
++						$this->ticketName = "FILE:${ticketPath}";
++						return;
++					}
++				}
++				unlink($ticketPath);
 +			}
 +		}
 +
  		$this->ticketName = getenv("KRB5CCNAME");
  	}
-
+ 
+-
+ 	/**
+ 	 * Copy the ticket to a temporary location and use that ticket for authentication
+ 	 *
 EOF
