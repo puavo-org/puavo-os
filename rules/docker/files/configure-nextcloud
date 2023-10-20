@@ -256,3 +256,26 @@ patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php <<'
  	}
 
 EOF
+
+patch_nc lib/private/Authentication/LoginCredentials/Store.php <<'EOF'
+--- lib/private/Authentication/LoginCredentials/Store.php	2023-10-05 10:47:42.000000000 +0000
++++ lib/private/Authentication/LoginCredentials/Store.php	2023-10-20 09:26:58.397232445 +0000
+@@ -64,6 +64,17 @@
+ 	 */
+ 	public function authenticate(array $params) {
+ 		$this->session->set('login_credentials', json_encode($params));
++
++		# Remove user kerberos ticket if it exists (expiring tickets
++		# should be removed if we have a valid alternative method).
++	 	$kerberos_realm = getenv('PUAVO_KERBEROS_REALM');
++		$ccache_dir = getenv('PUAVO_KERBEROS_CCACHE_DIR');
++		if ($kerberos_realm !== false && $ccache_dir !== false
++		    && isset($params['uid']) && isset($params['password'])) {
++			$uid = $params['uid'];
++			$ticketPath = "${ccache_dir}/${uid}@${kerberos_realm}";
++			@unlink($ticketPath);
++		}
+ 	}
+ 
+ 	/**
+EOF
