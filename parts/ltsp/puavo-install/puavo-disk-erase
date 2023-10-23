@@ -62,12 +62,18 @@ case "$target_disk" in
       exit 1
     fi
 
+    local erase_mode
+
     if ! hdparm -I "$target_disk" | grep "SECURITY ERASE UNIT" >&2; then
       echo 'Selected disk does not support Secure Erase!' >&2
       exit 1
+    elif hdparm -I "$target_disk" | grep "ENHANCED SECURITY ERASE UNIT" >&2; then
+      echo 'Disk supports Enhanced Secure Erase, using it.'
+      erase_mode="--security-erase-enhanced"
+    else
+      echo 'Disk only supports normal Secure Erase, using it.'
+      erase_mode="--security-erase"
     fi
-
-    echo 'Disk supports Secure Erase.'
 
     if ! hdparm -I "$target_disk" | grep -P "not\tfrozen" >&2; then
       if [ $# -ne 0 ] && [ "$1" = "--noconfirm" ]; then
@@ -112,7 +118,7 @@ case "$target_disk" in
     fi
 
     echo 'User and password set, proceeding to Secure Erase.'
-    time --format "Time elapsed: %E" hdparm --user-master user --security-erase Pass "$target_disk"
+    time --format "Time elapsed: %E" hdparm --user-master user "$erase_mode" Pass "$target_disk"
     echo 'Command completed. You may check how long the erase took above.'
 
     if ! hdparm -I "$target_disk" | grep -P "not\tlocked"; then
