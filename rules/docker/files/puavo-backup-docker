@@ -11,6 +11,36 @@ cleanup() {
   fi
 }
 
+get_backup_info() {
+  local container container_version jq_args ls_out timestamp
+
+  if ! ls_out=$(docker container ls -a --format '{{.Names}} {{.Image}}'); then
+    echo 'could not get container list' >&2
+    return 1
+  fi
+
+  timestamp=$(date -Iseconds)
+  jq_args="--arg timestamp ${timestamp}"
+  for container in collabora nextcloud postgres; do
+    container_version=$(printf %s "$ls_out" \
+      | awk -v container="$container" '
+          $1 == container { split($2, a, ":"); print a[2] }
+        ')
+    if [ -n "$container_version" ]; then
+      jq_args="${jq_args} --arg ${container} ${container_version}"
+    else
+      jq_args="${jq_args} --argjson ${container} null"
+    fi
+  done
+
+  jq --null-input $jq_args '
+      .collabora = $collabora
+    | .nextcloud = $nextcloud
+    | .postgres  = $postgres
+    | .timestamp = $timestamp
+  '
+}
+
 run_rsnapshot() {
   rsnapshot -v -c /etc/puavo-docker/rsnapshot.conf "$@"
 }
@@ -105,8 +135,8 @@ esac
 run_rsnapshot sync
 
 # first remove so that hardlinking is removed
-rm -f /state/backup/docker/.sync/TIMESTAMP
-date -Iseconds > /state/backup/docker/.sync/TIMESTAMP
+rm -f /state/backup/docker/.sync/backup_info.json
+get_backup_info > /state/backup/docker/.sync/backup_info.json
 
 run_rsnapshot current
 
