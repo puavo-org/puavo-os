@@ -417,11 +417,9 @@ rescue StandardError => e
   exit(1)
 end
 
-if container_exists?('nextcloud') then
-  if !system('/usr/local/sbin/puavo-backup-docker') then
-    warn('could not backup docker state before installing/updating')
-    exit(1)
-  end
+if !system('/usr/local/sbin/puavo-backup-docker') then
+  warn('could not backup docker state before installing/updating')
+  exit(1)
 end
 
 CONTAINER_LIST.each do |container_name|

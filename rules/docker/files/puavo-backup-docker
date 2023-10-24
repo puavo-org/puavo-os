@@ -5,8 +5,10 @@ set -eu
 backupdir='/state/backup/docker'
 
 cleanup() {
-  docker exec nextcloud su -l -s /bin/bash www-data \
-    -c 'php /var/www/html/occ maintenance:mode --off'
+  if [ "$nextcloud_running" = 'true' ]; then
+    docker exec nextcloud su -l -s /bin/bash www-data \
+      -c 'php /var/www/html/occ maintenance:mode --off'
+  fi
 }
 
 run_rsnapshot() {
@@ -62,17 +64,43 @@ if [ "$(id -u)" != 0 ]; then
   exit 1
 fi
 
+nextcloud_running=$(docker inspect nextcloud | jq -r '.[0].State.Running') \
+                      || true
+case "$nextcloud_running" in
+  true)
+    docker exec nextcloud su -l -s /bin/bash www-data \
+      -c 'php /var/www/html/occ maintenance:mode --on'
+    # It takes a while before maintenance mode is actually effective (why?).
+    sleep 120
+    ;;
+  false)
+    ;;
+  *)
+    echo "Could not determine Nextcloud container state" >&2
+    exit 1
+    ;;
+esac
+
 trap cleanup 0 ABRT INT PIPE QUIT TERM
 
-docker exec nextcloud su -l -s /bin/bash www-data \
-  -c 'php /var/www/html/occ maintenance:mode --on'
-
-# It takes a while before maintenance mode is actually effective.
-sleep 120
-
+postgres_running=$(docker inspect postgres | jq -r '.[0].State.Running') \
+                     || true
 pg_dump_path='/state/var/lib/docker/volumes/puavo_postgres/_data/.puavo_pg.dump'
-docker exec postgres pg_dump -U pgadmin nc > "${pg_dump_path}.tmp"
-mv "${pg_dump_path}.tmp" "$pg_dump_path"
+case "$postgres_running" in
+  true)
+    docker exec postgres pg_dump -U pgadmin nc > "${pg_dump_path}.tmp"
+    mv "${pg_dump_path}.tmp" "$pg_dump_path"
+    ;;
+  false)
+    # If PostgreSQL is not running, remove a stale dump file, we should
+    # restore by restoring all the database files as is.
+    rm -f "$pg_dump_path"
+    ;;
+  *)
+    echo "Could not determine PostgreSQL container state" >&2
+    exit 1
+    ;;
+esac
 
 run_rsnapshot sync
 
@@ -86,4 +114,5 @@ maybe_store_snapshot daily
 maybe_store_snapshot weekly
 maybe_store_snapshot monthly
 
-# cleanup removes maintenance mode from Nextcloud
+# The "cleanup"-function removes maintenance mode from Nextcloud if it
+# was running.
