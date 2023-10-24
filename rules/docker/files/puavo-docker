@@ -36,6 +36,11 @@ def cleanup_docker_images()
   return true
 end
 
+def container_exists?(container_name)
+  system('docker', 'inspect', container_name,
+         :out => File::NULL, :err => File::NULL)
+end
+
 def get_container_versions()
   output, status \
    = Open3.capture2('docker', 'container', 'ls', '--format',
@@ -123,7 +128,8 @@ CONTAINER_LIST.each do |container_name|
     if service_conf.dig('build', 'args', 'IMAGE') then
       service_conf['build']['args']['IMAGE'] \
         = "#{ IMAGEMAP[container_name] }:#{ image_version }"
-      service_conf['image'] = "puavo_#{ IMAGEMAP[container_name] }:#{ image_version }"
+      service_conf['image'] \
+        = "puavo_#{ IMAGEMAP[container_name] }:#{ image_version }"
     end
   rescue StandardError => e
     warn("could not set #{ container_name }: #{ e.message }")
@@ -399,7 +405,8 @@ EOF
     || !FileUtils.compare_file(nginx_conf_path, tmp_nginx_conf_path) then
       File.rename(tmp_nginx_conf_path, nginx_conf_path)
       File.unlink('/etc/nginx/sites-enabled/nextcloud') rescue Errno::ENOENT
-      File.symlink('../sites-available/nextcloud', '/etc/nginx/sites-enabled/nextcloud')
+      File.symlink('../sites-available/nextcloud',
+                   '/etc/nginx/sites-enabled/nextcloud')
       system('service', 'nginx', 'reload') \
         or raise('could not reload nginx configuration')
   else
@@ -408,6 +415,13 @@ EOF
 rescue StandardError => e
   warn("could not configure nginx: #{ e.message }")
   exit(1)
+end
+
+if container_exists?('nextcloud') then
+  if !system('/usr/local/sbin/puavo-backup-docker') then
+    warn('could not backup docker state before installing/updating')
+    exit(1)
+  end
 end
 
 CONTAINER_LIST.each do |container_name|
@@ -423,11 +437,7 @@ CONTAINER_LIST.each do |container_name|
     next
   end
 
-  unless system('docker', 'inspect', container_name,
-                          :out => File::NULL, :err => File::NULL) then
-    # container does not exist, nothing to do
-    next
-  end
+  next unless container_exists?(container_name)
 
   puts("> removing container #{ container_name }")
   unless system('docker', 'container', 'stop', container_name,

@@ -1,0 +1,89 @@
+#!/bin/sh
+
+set -eu
+
+backupdir='/state/backup/docker'
+
+cleanup() {
+  docker exec nextcloud su -l -s /bin/bash www-data \
+    -c 'php /var/www/html/occ maintenance:mode --off'
+}
+
+run_rsnapshot() {
+  rsnapshot -v -c /etc/puavo-docker/rsnapshot.conf "$@"
+}
+
+maybe_store_snapshot() {
+  local last_modified tag
+  tag=$1
+
+  # the numbers here must match rsnapshot configuration
+
+  case "$tag" in
+    daily)
+      source="${backupdir}/current.2"
+      target="${backupdir}/daily.0"
+      timediff=86400
+      ;;
+    weekly)
+      source="${backupdir}/daily.6"
+      target="${backupdir}/weekly.0"
+      timediff=604800
+      ;;
+    monthly)
+      source="${backupdir}/weekly.4"
+      target="${backupdir}/monthly.0"
+      timediff=2592000
+      ;;
+    *)
+      echo 'error with check_snapshot' >&2
+      return 1
+      ;;
+  esac
+
+  if [ ! -e "$source" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$target" ]; then
+    run_rsnapshot "$tag"
+    return 0
+  fi
+
+  if last_modified=$(stat -c %Y "$target" 2>/dev/null); then
+    if [ "$(date +%s)" -gt "$(($last_modified + $timediff))" ]; then
+      run_rsnapshot "$tag"
+    fi
+  fi
+}
+
+if [ "$(id -u)" != 0 ]; then
+  echo "Run $(basename $0) as root" >&2
+  exit 1
+fi
+
+trap cleanup 0 ABRT INT PIPE QUIT TERM
+
+docker exec nextcloud su -l -s /bin/bash www-data \
+  -c 'php /var/www/html/occ maintenance:mode --on'
+
+# It takes a while before maintenance mode is actually effective.
+sleep 120
+
+pg_dump_path='/state/var/lib/docker/volumes/puavo_postgres/_data/.puavo_pg.dump'
+docker exec postgres pg_dump -U pgadmin nc > "${pg_dump_path}.tmp"
+mv "${pg_dump_path}.tmp" "$pg_dump_path"
+
+run_rsnapshot sync
+
+# first remove so that hardlinking is removed
+rm -f /state/backup/docker/.sync/TIMESTAMP
+date -Iseconds > /state/backup/docker/.sync/TIMESTAMP
+
+run_rsnapshot current
+
+maybe_store_snapshot daily
+maybe_store_snapshot weekly
+maybe_store_snapshot monthly
+
+# cleanup removes maintenance mode from Nextcloud

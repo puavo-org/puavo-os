@@ -16,6 +16,9 @@ class docker {
     '/etc/puavo-docker/files':
       ensure => directory;
 
+    '/etc/puavo-docker/rsnapshot.conf':
+      source => 'puppet:///modules/docker/rsnapshot.conf';
+
     '/etc/systemd/system/puavo-docker.service':
       source => 'puppet:///modules/docker/puavo-docker.service';
 
@@ -27,6 +30,13 @@ class docker {
       require => [ File['/etc/systemd/system/puavo-docker.timer']
                  , Package['systemd'] ],
       target  => '/etc/systemd/system/puavo-docker.timer';
+
+    '/usr/local/sbin/puavo-backup-docker':
+      mode    => '0755',
+      require => [ File['/etc/puavo-docker/rsnapshot.conf']
+                 , Package['docker.io']
+                 , Package['rsnapshot'], ],
+      source  => 'puppet:///modules/docker/puavo-backup-docker';
 
     '/usr/local/sbin/puavo-docker':
       mode    => '0755',
@@ -43,6 +53,7 @@ class docker {
   Package <|
        title == 'docker-compose'
     or title == 'docker.io'
+    or title == 'rsnapshot'
     or title == 'ruby-net-ldap'
     or title == 'systemd'
   |>
