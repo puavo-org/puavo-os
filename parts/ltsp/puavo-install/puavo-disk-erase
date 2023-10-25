@@ -26,19 +26,43 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-if [ $# -le 1 ]; then
+usage() {
+  cat <<EOF
+$(basename $0) [--force] [--normal] [device]
+
+  --force               Use the Force
+  --normal              We default to doing an Enhanced Secure Erase (ATA) or a Cryptographic Erase (NVMe), provided the device supports such action.
+                        With this, one can opt to do a "normal" Secure Erase instead.
+  device                Specify the device name (e.g. sda, sdb). If not specified here, it will be asked.
+EOF
+  exit 1
+}
+
+useforce="false"
+enhanced="true"
+erase_mode=""
+
+if ! args=$(getopt -n "$0" -o + -l 'force,normal' -- "$@"); then
+  usage
+fi
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --force)    useforce="true" ;  shift ;;
+    --normal)   enhanced="false";  shift ;;
+    --) shift; break ;;
+    *)   ;;
+  esac
+done
+
+if [ "$@" ]; then
+  target_disk="/dev/$@"
+else
   echo 'Choose a disk to Secure Erase:'
   if ! target_disk=$(ask_disk); then
     echo 'No disk selected, aborting!' >&2
     exit 1
-  fi
-fi
-
-if [ $# -eq 2 ]; then
-  if [ "$1" = "--noconfirm" ]; then
-    if [ -n "$2" ]; then
-      target_disk="/dev/$2"
-    fi
   fi
 fi
 
@@ -50,10 +74,20 @@ case "$target_disk" in
     echo 'Preparing finished, moving on..'
     echo 'Selected disk is an NVMe disk. Using "nvme-cli" utility for Secure Erase.'
 
-    if [ $# -ne 0 ] && [ "$1" = "--noconfirm" ]; then
-      time --format "Time elapsed: %E" nvme format --force -s1 "$target_disk"
+    if ("$enhanced"); then
+      if nvme id-ctrl "$target_disk" --vendor-specific -H | grep "Crypto Erase Supported as part of Secure Erase" >&2; then
+      echo 'Disk supports Cryptographic Erase and override was not given. Running Cryptographic Erase.'
+        erase_mode="-s2"
+      else
+      echo 'Disk either does not support Cryptographic Erase or override was given. Running Secure Erase.'
+        erase_mode="-s1"
+      fi
+    fi
+
+    if ("$useforce"); then
+      time --format "Time elapsed: %E" nvme format --force "$erase_mode" "$target_disk"
     else
-      time --format "Time elapsed: %E" nvme format -s1 "$target_disk"
+      time --format "Time elapsed: %E" nvme format "$erase_mode" "$target_disk"
     fi
     ;;
   *)
@@ -62,22 +96,20 @@ case "$target_disk" in
       exit 1
     fi
 
-    local erase_mode
-
     if ! hdparm -I "$target_disk" | grep "SECURITY ERASE UNIT" >&2; then
       echo 'Selected disk does not support Secure Erase!' >&2
       exit 1
-    elif hdparm -I "$target_disk" | grep "ENHANCED SECURITY ERASE UNIT" >&2; then
-      echo 'Disk supports Enhanced Secure Erase, using it.'
+    elif ("$enhanced") && hdparm -I "$target_disk" | grep "ENHANCED SECURITY ERASE UNIT" >&2; then
+      echo 'Disk supports Enhanced Secure Erase and override was not given. Running Enhanced Secure Erase.'
       erase_mode="--security-erase-enhanced"
     else
-      echo 'Disk only supports normal Secure Erase, using it.'
+      echo 'Disk either does not support Enhanced Secure Erase or override was given. Running Secure Erase.'
       erase_mode="--security-erase"
     fi
 
     if ! hdparm -I "$target_disk" | grep -P "not\tfrozen" >&2; then
-      if [ $# -ne 0 ] && [ "$1" = "--noconfirm" ]; then
-        echo 'Flag "--noconfirm" was given.'
+      if ("$useforce"); then
+        echo 'Flag "--force" was given.'
         echo 'Disk is in frozen state! Going to sleep now.'
       else
         echo 'Disk is in frozen state, cannot continue!' >&2
