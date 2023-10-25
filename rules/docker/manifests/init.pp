@@ -43,6 +43,11 @@ class docker {
       require => [ File['/etc/puavo-docker/docker-compose.yml.tmpl']
                  , Package['ruby-net-ldap'] ],
       source  => 'puppet:///modules/docker/puavo-docker';
+
+    '/usr/local/sbin/puavo-restore-docker':
+      mode    => '0755',
+      require => Package['docker.io'],
+      source  => 'puppet:///modules/docker/puavo-restore-docker';
   }
 
   ::puavo_conf::definition {
