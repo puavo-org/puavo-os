@@ -55,6 +55,11 @@ location_countrycode=$(cat /puavo-nextcloud-config/location_countrycode \
 
 office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
 
+# First turn off the maintenance mode in case it is on
+# (when restoring from a backup maintenance mode is likely active).
+# Some app-commands below require maintenance mode to be off.
+occ maintenance:mode --off
+
 # we let the bootserver nginx handle the ssl
 occ config:system:set --value https overwriteprotocol
 

@@ -1,0 +1,153 @@
+#!/bin/sh
+
+set -eu
+
+backup_basedir='/state/backup/docker'
+
+get_backup_info() {
+  local backup_dir backup_info_path key
+
+  key=$1
+  backup_dir=$2
+  backup_info_path="${backup_dir}/backup_info.json"
+
+  jq -r ".${key}" "$backup_info_path" 2>/dev/null
+}
+
+list_backups() {
+  echo "Available Docker container backups:"
+  jq -r '
+    .timestamp
+      + " collabora:" + .collabora
+      + " nextcloud:" + .nextcloud
+      + " postgres:"  + .postgres
+  ' ${backup_basedir}/*/backup_info.json \
+    | sort -r | sed 's/^/  /'
+
+  echo
+  echo "Restore with: $(basename $0) timestamp"
+  echo
+  echo "You should ensure that the puavo-conf puavo.docker.*.version variables"
+  echo "match backup versions to be restored."
+}
+
+if [ "$(id -u)" != 0 ]; then
+  echo "Run $(basename $0) as root." >&2
+  exit 1
+fi
+
+backup_timestamp=${1:-}
+
+if [ -z "$backup_timestamp" ]; then
+  list_backups
+  exit 0
+fi
+
+backup_dir_to_restore=''
+
+for backup_dir in ${backup_basedir}/*; do
+  test -d "$backup_dir" || continue
+  if ! candidate_timestamp=$(get_backup_info timestamp "$backup_dir"); then
+    echo "Could not read backup timestamp from ${backup_info_path}." >&2
+    continue
+  fi
+
+  if [ "$backup_timestamp" = "$candidate_timestamp" ]; then
+    backup_dir_to_restore="$backup_dir"
+    break
+  fi
+done
+
+if [ -z "$backup_dir_to_restore" ]; then
+  echo "No matching backup for timestamp '${backup_timestamp}'." >&2
+  echo
+  list_backups
+  exit 1
+fi
+
+requested_versions_ok=true
+
+for container_name in collabora nextcloud postgres; do
+  backup_container_version=$(get_backup_info "$container_name" "$backup_dir")
+  if [ -n "$backup_container_version" ]; then
+    puavo_conf_var="puavo.docker.${container_name}.version"
+    requested_version=$(puavo-conf "$puavo_conf_var")
+    if [ "$requested_version" != "$backup_container_version" ]; then
+      echo "Backup container version does not match requested version."
+      echo "Change ${puavo_conf_var} to ${backup_container_version} in Puavo."
+      requested_versions_ok=false
+    fi
+  fi
+done
+
+if ! $requested_versions_ok; then
+  exit 1
+fi
+
+for container_name in collabora nextcloud postgres; do
+  if ! docker inspect "$container_name" >/dev/null 2>&1; then
+    # presume container does not exist in case we can not inspect it
+    continue
+  fi
+
+  echo "Removing container ${container_name}."
+
+  if ! docker container stop "$container_name" >/dev/null 2>&1; then
+    echo "Failed to stop ${container_name}." >&2
+    exit 1
+  fi
+  if ! docker container rm "$container_name" >/dev/null 2>&1; then
+    echo "Failed to remove ${container_name}." >&2
+    exit 1
+  fi
+done
+
+if ! service puavo-docker stop 2>/dev/null; then
+  echo 'Failed to stop puavo-docker.' >&2
+  exit 1
+fi
+echo 'Stopped the puavo-docker service.'
+
+if ! service docker stop 2>/dev/null; then
+  echo 'Failed to stop docker.' >&2
+  exit 1
+fi
+echo 'Stopped the Docker service.'
+
+echo 'Restoring the Docker volumes.'
+rsync -a --delete \
+  ${backup_dir}/localhost/var/lib/docker/volumes/ \
+  /state/var/lib/docker/volumes/
+
+if ! service docker start 2>/dev/null; then
+  echo 'Failed to start Docker.' >&2
+  exit 1
+fi
+echo 'Started the Docker service.'
+sleep 15        # nasty sleep
+
+pg_dump_path='/state/var/lib/docker/volumes/puavo_postgres/_data/.puavo_pg.dump'
+if [ -e "$pg_dump_path" ]; then
+  echo 'Starting up PostgreSQL.'
+  puavo-docker --no-backup postgres
+  echo 'Restoring a PostgreSQL database dump...'
+  sleep 60        # nasty sleep again
+  docker exec postgres psql -h localhost -U pgadmin -d template1 \
+    -c 'DROP DATABASE "nextcloud";' >/dev/null || true
+  docker exec postgres psql -h localhost -U pgadmin -d template1 \
+    -c 'CREATE DATABASE "nextcloud";' >/dev/null || true
+  docker exec postgres psql -h localhost -U pgadmin nextcloud < "$pg_dump_path"
+  echo 'PostgreSQL database restored from dump.'
+else
+  echo 'No PostgreSQL database dump, skipping database restore (this is okay).'
+fi
+
+puavo-docker --no-backup
+
+if ! service puavo-docker start 2>/dev/null; then
+  echo 'Failed to start puavo-docker.' >&2
+  exit 1
+fi
+
+echo
+echo "Docker backup ${backup_timestamp} restored!"

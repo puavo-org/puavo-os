@@ -10,7 +10,7 @@ require 'yaml'
 DEVICE_JSON_PATH = '/state/etc/puavo/device.json'
 DOCKER_STATE_DIR = '/state/etc/docker'
 
-CONTAINER_LIST = %w(postgres nextcloud collabora)
+DEFAULT_CONTAINER_LIST = %w(postgres nextcloud collabora)
 DOCKER_COMPOSE_TEMPLATE_PATH = '/etc/puavo-docker/docker-compose.yml.tmpl'
 DOCKER_COMPOSE_PATH = '/etc/puavo-docker/docker-compose.yml'
 DOCKER_FILES_DIR = '/etc/puavo-docker/files'
@@ -106,7 +106,17 @@ current_versions = get_container_versions()
 
 docker_compose = YAML::load_file(DOCKER_COMPOSE_TEMPLATE_PATH)
 
-CONTAINER_LIST.each do |container_name|
+backup_before_docker_ops = true
+startup_container_list = DEFAULT_CONTAINER_LIST
+if ARGV[0] == '--no-backup' then
+  ARGV.shift
+  backup_before_docker_ops = false
+  startup_container_list = ARGV unless ARGV.empty?
+end
+
+# Go through all containers here so that docker_compose file
+# has correct configurations.
+DEFAULT_CONTAINER_LIST.each do |container_name|
   begin
     puavoconf_var = "puavo.docker.#{ container_name }.version"
     image_version = puavoconf.get(puavoconf_var)
@@ -417,12 +427,14 @@ rescue StandardError => e
   exit(1)
 end
 
-if !system('/usr/local/sbin/puavo-backup-docker') then
-  warn('could not backup docker state before installing/updating')
-  exit(1)
+if backup_before_docker_ops then
+  if !system('/usr/local/sbin/puavo-backup-docker') then
+    warn('could not backup docker state before installing/updating')
+    exit(1)
+  end
 end
 
-CONTAINER_LIST.each do |container_name|
+startup_container_list.each do |container_name|
   puavoconf_var = "puavo.docker.#{ container_name }.enabled"
   if puavoconf.get(puavoconf_var) == 'true' then
     puts("> starting up container #{ container_name }")
