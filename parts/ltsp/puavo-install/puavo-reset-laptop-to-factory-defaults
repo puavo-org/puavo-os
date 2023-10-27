@@ -56,18 +56,18 @@ destroy_in_dir() {
 
   {
     if $preserve_etc_puavo; then
-      find "$directory" -mindepth 5 ! -path '*/etc/puavo' \
+      find "$directory" -xdev -mindepth 5 ! -path '*/etc/puavo' \
         -type f -print0 || return 1
     else
-      find "$directory" -mindepth 1 -type f -print0 || return 1
+      find "$directory" -xdev -mindepth 1 -type f -print0 || return 1
     fi | { xargs -0 --no-run-if-empty $delete_file_cmd || return 1; }
 
     if $preserve_etc_puavo; then
-      find "$directory" -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' \
+      find "$directory" -xdev -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' \
         -print0 || return 1
     else
-      find "$directory" -mindepth 1 -maxdepth 1 -print0 || return 1
-    fi | { xargs -0 --no-run-if-empty rm -rf || return 1; }
+      find "$directory" -xdev -mindepth 1 -maxdepth 1 -print0 || return 1
+    fi | { xargs -0 --no-run-if-empty rm --one-file-system -rf || return 1; }
   } | pv -F ">>> $message %t" > /dev/null
 }
 
