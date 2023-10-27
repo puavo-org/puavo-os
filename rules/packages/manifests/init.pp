@@ -385,15 +385,18 @@ class packages {
     , 'xsane' ]:
       tag => [ 'tag_graphics', 'tag_debian_desktop', ];
 
-    # XXX some issue on Debian
-    # [ 'kdump-tools' ]:
-    #   tag => [ 'tag_kernelutils', 'tag_debian_desktop', ];
-
     [ 'irssi'
     , 'irssi-plugin-xmpp'
     , 'pidgin'
     , 'pidgin-plugin-pack' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
+
+    # XXX some issue on Debian
+    # [ 'kdump-tools' ]:
+    #   tag => [ 'tag_kernelutils', 'tag_debian_desktop', ];
+
+    [ 'libportaudiocpp0' ]:     # needed by xournalpp puavo-pkg
+      tag => [ 'tag_libraries', 'tag_debian_desktop', ];
 
     [ 'goobox'
     , 'gstreamer1.0-clutter-3.0'
