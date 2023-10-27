@@ -224,6 +224,15 @@ if [ -b /dev/mapper/puavo-imageoverlays ]; then
   fi
 fi
 
+## Best-effort killing of some possibly interfering processes
+systemctl mask colord.service || true
+systemctl stop colord.service || true
+pkill -f /usr/libexec/tracker || true
+pkill -f /usr/libexec/gvfs || true
+pkill -f /usr/bin/pulseaudio || true
+pkill -f /usr/libexec/evolution || true
+pkill -f /usr/libexec/gsd-color || true
+
 cd /
 
 # Remove primary user (so that we will send this information
