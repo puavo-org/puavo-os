@@ -76,18 +76,18 @@ case "$target_disk" in
 
     if ("$enhanced"); then
       if nvme id-ctrl "$target_disk" --vendor-specific -H | grep "Crypto Erase Supported as part of Secure Erase" >&2; then
-      echo 'Disk supports Cryptographic Erase and override was not given. Running Cryptographic Erase.'
+        echo 'Disk supports Cryptographic Erase and override was not given. Running Cryptographic Erase.'
         erase_mode="-s2"
       else
-      echo 'Disk either does not support Cryptographic Erase or override was given. Running Secure Erase.'
+        echo 'Disk either does not support Cryptographic Erase or override was given. Running Secure Erase.'
         erase_mode="-s1"
       fi
     fi
 
     if ("$useforce"); then
-      time --format "Time elapsed: %E" nvme format --force "$erase_mode" "$target_disk"
+      time --format "Time elapsed: %E" nvme format --force $erase_mode "$target_disk"
     else
-      time --format "Time elapsed: %E" nvme format "$erase_mode" "$target_disk"
+      time --format "Time elapsed: %E" nvme format $erase_mode "$target_disk"
     fi
     ;;
   *)
