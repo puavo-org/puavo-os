@@ -70,6 +70,7 @@ class puavo_pkg::packages {
 			, 'vstloggerpro'
                         , 'wine-gecko'
                         , 'wine-mono'
+                        , 'xournalpp'
 			, 'zoom' ]
 
   @puavo_pkg::install { $available_packages: ; }
