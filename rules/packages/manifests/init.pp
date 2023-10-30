@@ -395,7 +395,8 @@ class packages {
     # [ 'kdump-tools' ]:
     #   tag => [ 'tag_kernelutils', 'tag_debian_desktop', ];
 
-    [ 'libportaudiocpp0' ]:     # needed by xournalpp puavo-pkg
+    [ 'libportaudiocpp0'        # needed by xournalpp puavo-pkg
+    , 'libuvc0' ]:              # needed by visualizer puavo-pkg
       tag => [ 'tag_libraries', 'tag_debian_desktop', ];
 
     [ 'goobox'
