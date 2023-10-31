@@ -49,6 +49,12 @@
                 "id": "arduino-ide"
             }
         },
+        "arduino-ide2": {
+            "tags": "default",
+            "puavopkg": {
+                "id": "arduino-ide2"
+            }
+        },
         "asebastudiothymio": {
             "tags": "default"
         },
@@ -1823,6 +1829,7 @@
                 "sumopaint",
                 "fritzing",
                 "arduino",
+                "arduino-ide2",
                 "teddybear",
                 "libreoffice-writer",
                 "kahoot",
