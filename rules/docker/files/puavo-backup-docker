@@ -118,7 +118,7 @@ postgres_running=$(docker inspect postgres | jq -r '.[0].State.Running') \
 pg_dump_path='/state/var/lib/docker/volumes/puavo_postgres/_data/.puavo_pg.dump'
 case "$postgres_running" in
   true)
-    docker exec postgres pg_dump nc > "${pg_dump_path}.tmp"
+    docker exec postgres pg_dump -U pgadmin nc > "${pg_dump_path}.tmp"
     mv "${pg_dump_path}.tmp" "$pg_dump_path"
     ;;
   false)
