@@ -143,6 +143,7 @@ class packages {
     , 'pwgen'
     , 'pwman3'
     , 'read-edid'
+    , 'rsnapshot'
     , 'rsyslog'
     , 'ruby-sys-proctable'
     , 'screen'
