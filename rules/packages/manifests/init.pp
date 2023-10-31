@@ -825,13 +825,13 @@ class packages {
 		    # , $r8168_module                   # XXX bookworm
 
   packages::kernels::kernel_package {
-    '6.1.0-12-amd64':
+    '6.1.0-13-amd64':
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-6.1.0-12-amd64';
 
-    '6.4.0-0.deb12.2-amd64':
+    '6.5.0-0.deb12.1-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.4.0-0.deb12.2-amd64';
+      package_name => 'linux-image-6.5.0-0.deb12.1-amd64-unsigned';
   }
 
   # Packages which are not restricted per se, but which are required by
