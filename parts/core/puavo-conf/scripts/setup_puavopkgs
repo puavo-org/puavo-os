@@ -193,7 +193,7 @@ remove_puavopkgs() {
                                  }')
   for pkg_name in $puavopkgs_to_remove; do
     if [ -e "/var/lib/puavo-pkg/installed/${pkg_name}" ]; then
-      puavo-pkg remove "$pkg_name" || status=1
+      timeout -k 5 15 puavo-pkg remove "$pkg_name" || status=1
     fi
   done
 }

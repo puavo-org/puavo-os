@@ -5,14 +5,27 @@ set -o pipefail
 
 request_confirmation=true
 use_secure_delete=false
+step=0
+
+# This basically assumes logstep is called only from the top-level,
+# which is quite reasonable assumption in this script. But note that
+# this is a hack and is not universal. It can get broken if called
+# inside a loop or from a function. But for our purposes, I think it's
+# quite nice way to report progress.
+max_steps=$(grep -c -x logstep "$0")
 
 logmsg() {
+  printf "> %s: %s\n" "$1" "$2" >&2 || true
   logger -t puavo-reset-laptop-to-factory-defaults -p "user.${1}" "$2" || true
 }
 
 logerr() {
-  printf "> %s\n" "$1" >&2
   logmsg error "$1"
+}
+
+logstep() {
+    step=$((step + 1)) || true
+    logmsg info "step ${step}/${max_steps}" || true
 }
 
 destroy_in_dir() {
@@ -43,18 +56,18 @@ destroy_in_dir() {
 
   {
     if $preserve_etc_puavo; then
-      find "$directory" -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' \
+      find "$directory" -xdev -mindepth 5 ! -path '*/etc/puavo' \
         -type f -print0 || return 1
     else
-      find "$directory" -mindepth 1 -maxdepth 1 -type f -print0 || return 1
+      find "$directory" -xdev -mindepth 1 -type f -print0 || return 1
     fi | { xargs -0 --no-run-if-empty $delete_file_cmd || return 1; }
 
     if $preserve_etc_puavo; then
-      find "$directory" -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' \
+      find "$directory" -xdev -mindepth 5 -maxdepth 5 ! -path '*/etc/puavo' \
         -print0 || return 1
     else
-      find "$directory" -mindepth 1 -maxdepth 1 -print0 || return 1
-    fi | { xargs -0 --no-run-if-empty rm -rf || return 1; }
+      find "$directory" -xdev -mindepth 1 -maxdepth 1 -print0 || return 1
+    fi | { xargs -0 --no-run-if-empty rm --one-file-system -rf || return 1; }
   } | pv -F ">>> $message %t" > /dev/null
 }
 
@@ -199,6 +212,7 @@ done
 resetstatus=0
 
 logmsg notice "starting reset operation (${operation})"
+logstep
 
 if [ -b /dev/mapper/puavo-imageoverlays ]; then
   if ! mountpoint -q /imageoverlays; then
@@ -210,6 +224,15 @@ if [ -b /dev/mapper/puavo-imageoverlays ]; then
   fi
 fi
 
+## Best-effort killing of some possibly interfering processes
+systemctl mask colord.service || true
+systemctl stop colord.service || true
+pkill -f /usr/libexec/tracker || true
+pkill -f /usr/libexec/gvfs || true
+pkill -f /usr/bin/pulseaudio || true
+pkill -f /usr/libexec/evolution || true
+pkill -f /usr/libexec/gsd-color || true
+
 cd /
 
 # Remove primary user (so that we will send this information
@@ -220,6 +243,7 @@ else
   logerr 'could not write /state/etc/puavo/primary_user_override'
   resetstatus=1
 fi
+logstep
 
 # we can speed up secure delete by not applying it to puavo-pkgs
 if destroy_in_dir --force-insecure /images/puavo-pkg/ \
@@ -229,6 +253,7 @@ else
   logerr 'error in removing all puavo-pkgs'
   resetstatus=1
 fi
+logstep
 
 if destroy_in_dir /home/ 'Cleaning up home directories'; then
   logmsg notice 'cleaned up all home directories'
@@ -236,6 +261,7 @@ else
   logerr 'error in cleaning up home directories'
   resetstatus=1
 fi
+logstep
 
 if destroy_in_dir /state/etc/puavo/local/ \
                     'Removing local configurations (made by user)'; then
@@ -244,6 +270,7 @@ else
   logerr 'error in removing local configurations'
   resetstatus=1
 fi
+logstep
 
 if destroy_in_dir /state/var/cache/ 'Cleaning up caches'; then
   logmsg info 'cleaned up caches'
@@ -251,6 +278,7 @@ else
   logerr 'error in cleaning up caches'
   resetstatus=1
 fi
+logstep
 
 if destroy_in_dir /state/var/lib/ 'Removing some system configurations'; then
   logmsg info 'removed some system configurations'
@@ -258,6 +286,7 @@ else
   logerr 'error in removing some system configurations'
   resetstatus=1
 fi
+logstep
 
 { /usr/lib/puavo-ltsp-install/update-configuration || true; } 2>&1 \
   | pv -F '>>> Updating system configuration... %t' > /dev/null
@@ -270,6 +299,7 @@ else
   logerr 'error in cleaning up (most of) /imageoverlays'
   resetstatus=1
 fi
+logstep
 
 if destroy_in_dir /state/etc/NetworkManager/system-connections/ \
                'Removing network manager connections'; then
@@ -278,6 +308,7 @@ else
   logerr 'error in removing network manager configurations'
   resetstatus=1
 fi
+logstep
 
 reset_override_path='/state/etc/puavo/reset_override'
 if [ "$resetstatus" -eq 0 ]; then
@@ -306,6 +337,7 @@ if [ "$resetstatus" -eq 0 ]; then
 else
   logmsg warning 'not sending reset state to puavo because of failures'
 fi
+logstep
 
 if destroy_in_dir --force-insecure /imageoverlays/ \
                'Cleaning up all of /imageoverlays'; then
@@ -314,6 +346,7 @@ else
   logmsg warning 'error in cleaning up all of /imageoverlays'
   resetstatus=1
 fi
+logstep
 
 if [ "$resetstatus" -ne 0 ]; then
   logerr 'errors occurred in device reset'

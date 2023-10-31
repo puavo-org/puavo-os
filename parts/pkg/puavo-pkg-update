@@ -236,9 +236,10 @@ else
   puavo_pkg_specs=$(
     puavo-conf \
       | awk -v pkg="$puavo_pkg_package" '
-          $1 ~ /^puavo\.pkg\./ { gsub(/^puavo\.pkg\./, "", $1)
-          if (pkg == "" || pkg == $1) { print }
-        }')
+          $1 ~ /^puavo\.pkg\.[^.]+$/ {
+            gsub(/^puavo\.pkg\./, "", $1)
+            if (pkg == "" || pkg == $1) { print }
+          }')
 fi
 
 if [ -n "$puavo_pkg_package" -a -z "$puavo_pkg_specs" ]; then

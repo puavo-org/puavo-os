@@ -23,5 +23,10 @@
     "default": "",
     "description": "Nextcloud topdomain name",
     "typehint": "string"
+  },
+  "puavo.nextcloud.trusted_proxies": {
+    "default": "",
+    "description": "Whitespace separated list of Nextcloud trusted proxies",
+    "typehint": "string"
   }
 }

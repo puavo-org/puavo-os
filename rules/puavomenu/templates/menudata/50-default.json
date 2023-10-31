@@ -49,6 +49,12 @@
                 "id": "arduino-ide"
             }
         },
+        "arduino-ide2": {
+            "tags": "default",
+            "puavopkg": {
+                "id": "arduino-ide2"
+            }
+        },
         "asebastudiothymio": {
             "tags": "default"
         },
@@ -178,6 +184,9 @@
             },
             "icon": "rosegarden",
             "tags": "default, audio"
+        },
+        "com.github.xournalpp.xournalpp": {
+            "tags": "default"
         },
         "cura-appimage": {
             "name": "Cura",
@@ -1534,6 +1543,9 @@
             "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
             "tags": "default, education"
         },
+        "visualizer": {
+            "tags": "default"
+        },
         "vlc": {
             "tags": "default"
         },
@@ -1729,6 +1741,7 @@
                 "org.gnome.Cheese",
                 "kenavision",
                 "org.kde.kamoso",
+                "visualizer",
                 "elmo-imagemate",
                 "sphere_lite",
                 "epson-easymp",
@@ -1811,6 +1824,7 @@
                 "sumopaint",
                 "fritzing",
                 "arduino",
+                "arduino-ide2",
                 "teddybear",
                 "libreoffice-writer",
                 "kahoot",
@@ -2242,6 +2256,7 @@
                 "ica-powerpoint",
                 "projectlibre",
                 "texmaker",
+                "com.github.xournalpp.xournalpp",
                 "scribus",
                 "freeplane",
                 "vym",

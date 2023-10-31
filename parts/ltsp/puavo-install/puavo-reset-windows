@@ -1,0 +1,570 @@
+#!/bin/bash
+
+## puavo-reset-windows
+##
+## Scans all block devices for Windows partitions and resets them. By
+## default, asks user for a confirmation to reset.
+##
+## --force              no questions asked
+## --secure-delete      wipe unused data from Windows partitions after reset
+##
+
+set -eu
+set -o pipefail
+
+## Globals
+exitval=1                             # Premature exit is an error by default.
+use_force=false                       # --force sets to true
+use_secure_delete=false               # --secure-delete sets to true
+lockfd=                               # Will be set when lockfile is opened
+WORK_DIR=/home/.puavo-reset-windows   # Where Windows ISO files will be downloaded, mounted etc.
+PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
+
+on_exit()
+{
+    set +e
+
+    loginfo 'Unmounting ISO files...'
+    find "${WORK_DIR}" -type d -name '*.mountpoint' -exec umount -q {} \;
+    loginfo 'Unmounted ISO files.'
+
+    loginfo "Removing working directory '${WORK_DIR}'..."
+    rm -rf "${WORK_DIR}"
+    loginfo "Removed working directory '${WORK_DIR}'."
+
+    loginfo "Removing PID file '${PID_FILE}'..."
+    rm -f "${PID_FILE}"
+    loginfo "Removed PID file '${PID_FILE}'."
+
+    if [ $exitval -ne 0 ]; then
+        logerr 'Failed!'
+    else
+        loginfo 'Succeeded.'
+    fi
+
+    exit $exitval
+}
+
+logmsg() {
+  logger -t puavo-reset-windows -p "user.${1}" "$2" || true
+}
+
+loginfo() {
+  printf "> %s\n" "$1" >&2
+  logmsg info "$1"
+}
+
+logerr() {
+  printf "> ERROR: %s\n" "$1" >&2
+  logmsg error "$1"
+}
+
+usage() {
+  cat <<EOF
+$(basename "$0") [--force] [--secure-delete]
+
+  --force               no questions asked
+  --secure-delete       wipe unused data of the Windows primary partition
+EOF
+  exit 1
+}
+
+print0_win_primary_partition_devpaths()
+{
+    while IFS= read -r -d $'\0' ntfs_partition_devpath; do
+        ntfsls -F "${ntfs_partition_devpath}" | grep -q -x 'Windows/' || {
+            continue
+        }
+        printf '%s\0' "${ntfs_partition_devpath}"
+        # GPT Microsoft basic data partition GUID: ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+        # MBR HPFS/NTFS/exFAT type: 0x7
+    done < <(lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "0x7" || $2 == "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" {printf "%s\0", $1}') || {
+        logerr 'Failed to list partitions.'
+        return 1
+    }
+}
+
+print0_win_language_tag()
+{
+    local win_language_id \
+          win_language_tag \
+          win_primary_partition_devpath
+
+    win_primary_partition_devpath=$1
+    shift
+
+    ntfscat "${win_primary_partition_devpath}" 'Windows/System32/config/SYSTEM' >system_hive || {
+        logerr "Failed to get SYSTEM hive from '${win_primary_partition_devpath}'."
+        return 1
+    }
+
+    win_language_id=$(hivexget system_hive 'ControlSet001\Control\Nls\Language' \
+                          | sed -r -n 's/"InstallLanguage"="([0-9A-Fa-f]{4})"$/\1/p' \
+                          | tr '[:upper:]' '[:lower:]') || {
+        logerr "Failed to parse InstallLanguage from SYSTEM hive of '${win_primary_partition_devpath}'."
+        return 1
+    }
+
+    ## https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-LCID/%5bMS-LCID%5d.pdf
+    case "${win_language_id}" in
+        '0407')
+            win_language_tag='de-DE'
+            ;;
+        '0409')
+            win_language_tag='en-US'
+            ;;
+        '040b')
+            win_language_tag='fi-FI'
+            ;;
+        '041d')
+            win_language_tag='sv-SE'
+            ;;
+        '0419')
+            win_language_tag='ru-RU'
+            ;;
+        '0422')
+            win_language_tag='uk-UA'
+            ;;
+        *)
+            logerr "Unsupported language ID '${win_language_id}'"
+            return 1
+            ;;
+    esac
+
+    printf '%s' "${win_language_tag}"
+}
+
+print0_win_product_name()
+{
+    local win_build_number \
+          win_primary_partition_devpath \
+          win_product_name
+
+    win_primary_partition_devpath=$1
+    shift
+
+    ntfscat "${win_primary_partition_devpath}" 'Windows/System32/config/SOFTWARE' >software_hive || {
+        logerr "Failed to get SOFTWARE hive from '${win_primary_partition_devpath}'."
+        return 1
+    }
+
+    win_product_name=$(hivexget software_hive 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"ProductName"="(.+)"$/\1/p') || {
+        logerr "Failed to parse ProductName from SOFTWARE hive of '${win_primary_partition_devpath}'."
+        return 1
+    }
+
+    win_build_number=$(hivexget software_hive 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"CurrentBuildNumber"="(.+)"$/\1/p') || {
+        logerr "Failed to parse CurrentBuildNumber from SOFTWARE hive of '${win_primary_partition_devpath}'."
+        return 1
+    }
+
+    ## Windows 11 lies and claims to be Windows 10, but the build
+    ## number seems to reveal the truth. Windows 11 build numbers
+    ## start from 22000.
+    ##
+    ## https://learn.microsoft.com/en-us/answers/questions/555857/windows-11-product-name-in-registry
+    ## https://learn.microsoft.com/en-us/windows/release-health/release-information
+    if [ "${win_build_number}" -ge 22000 ]; then
+        # This is actually Windows 11.
+        win_product_name=$(echo -n "${win_product_name}" | sed -r 's/^Windows 10/Windows 11/')
+    fi
+
+    printf '%s' "${win_product_name}"
+}
+
+print0_wim_image_index()
+{
+    local win_product_name \
+          wim_file_path \
+          wim_image_index
+
+    wim_file_path=$1
+    shift
+
+    win_product_name=$1
+    shift
+
+    loginfo "Finding WIM image for '${win_product_name}' from '${wim_file_path}'..."
+
+    wim_image_index=$(wiminfo "${wim_file_path}" \
+                          | sed -r -n 's/^Display Name:\s+//p' \
+                          | grep -n -x "${win_product_name}" \
+                          | cut -d: -f1) || {
+        logerr "Failed to find WIM image for '${win_product_name}' from '${wim_file_path}'."
+        return 1
+    }
+    if ! [ "${wim_image_index}" -ge 1 ]; then
+        logerr "Failed to find WIM image for '${win_product_name}' from '${wim_file_path}'."
+        return 1
+    fi
+
+    loginfo "Found WIM image for '${win_product_name}' from '${wim_file_path}' at index ${wim_image_index}."
+
+    printf "%d" "${wim_image_index}"
+}
+
+print0_win_iso_file_name()
+{
+    local win_iso_file_name \
+          win_iso_file_name_suffix \
+          win_language_tag \
+          win_product_name
+
+    win_product_name=$1
+    shift
+
+    win_language_tag=$1
+    shift
+
+    case "${win_language_tag}" in
+        'fi-FI')
+            win_iso_file_name_suffix='_fi'
+            ;;
+        *)
+            win_iso_file_name_suffix=''
+            ;;
+    esac
+
+    case "${win_product_name}" in
+        'Windows 10 '*)
+            win_iso_file_name="win10x64${win_iso_file_name_suffix}.iso"
+            ;;
+        'Windows 11 '*)
+            win_iso_file_name="win11x64${win_iso_file_name_suffix}.iso"
+            ;;
+        *)
+            logerr "Unexpected Windows product name '${win_product_name}'"
+            return 1
+            ;;
+    esac
+
+    printf "%s" "${win_iso_file_name}"
+}
+
+verify_win_iso()
+{
+    local win_iso_file_name
+
+    win_iso_file_name=$1
+    shift
+
+    loginfo "Verifying ISO file '${win_iso_file_name}'..."
+    {
+        # Windows 10 22H2 May 2023 Update English
+        echo a6f470ca6d331eb353b815c043e327a347f594f37ff525f17764738fe812852e  win10x64.iso
+
+        # Windows 10 22H2 May 2023 Update Finnish
+        echo c17f3cfa9ec971dcd64b4a1152a7b563ade165fb9deb941f7c791e0f722d2d2f  win10x64_fi.iso
+
+        # Windwws 11 22H2 May 2023 Update English
+        echo 8059a99b8902906a90afe068ac00465c52588c2bd54f5d9d96c1297f88ef1076  win11x64.iso
+
+        # Windwws 11 22H2 May 2023 Update Finnish
+        echo ed5dd98addd6ae42c9eba993bbec17a199028e34e73e6a12c1574dec33942fb2  win11x64_fi.iso
+    } | awk -v "file_name=${win_iso_file_name}" '$2 == file_name' | sha256sum --strict --status -c || {
+        logerr "Failed to verify ISO file '${win_iso_file_name}'."
+        return 1
+    }
+    loginfo "Verified ISO file '${win_iso_file_name}'."
+}
+
+fetch_win_iso_from_filesystem()
+{
+    local win_iso_file_name \
+          target_win_iso_file_path
+
+    win_iso_file_name=$1
+    shift
+
+    target_win_iso_file_path=$(readlink -f "${win_iso_file_name}")
+
+    while read -r json_string_mountpoint; do
+        ## This is the moment when I wish I had used Python instead.
+        ## All this juggling because of the theoretical case the
+        ## mountpoint contains newline characters: so first we parse
+        ## lsblk's output JSON while being aware that mountpoint might
+        ## have newline chars, that's why we output it as JSON string
+        ## instead and then parse each JSON string separately to avoid
+        ## splitting. I don't know how this could be done easier (jq
+        ## does not have printf, it does not have nul-delimited
+        ## output).
+        mountpoint=$(jq -j -n "${json_string_mountpoint}")
+
+        while IFS= read -r -d $'\0' source_win_iso_file_path; do
+            if [ "${source_win_iso_file_path}" = "${target_win_iso_file_path}" ]; then
+                continue
+            fi
+            ## A bit optimistic approach: assume the source file is
+            ## ok. It will be verified in the upper layer, but if it's
+            ## invalid, then there's nothing the upper layer can do
+            ## about it anymore. It would be better if this function
+            ## could just go on and look for other files, but I don't
+            ## know if it's worth the effort. In practice, there will
+            ## be just one win10x64.iso out there, if any.
+            loginfo "Fetching ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'..."
+            install -m 0644 "${source_win_iso_file_path}" "${target_win_iso_file_path}" || {
+                logerr "Failed to fetch ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'."
+                return 1
+            }
+            loginfo "Fetched ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'."
+            return 0
+        done < <(find "${mountpoint}" -type f -name "${win_iso_file_name}" -print0)
+
+    done < <(lsblk -J -o MOUNTPOINT,FSTYPE \
+                 | jq '.blockdevices[] | select(.mountpoint and (.fstype == "exfat" or .fstype == "ext4" or .fstype == "ntfs")).mountpoint')
+}
+
+fetch_win_iso_from_microsoft()
+{
+    local win_iso_file_name \
+          win_iso_file_name_without_ext
+
+    win_iso_file_name=$1
+    shift
+
+    loginfo "Fetching ISO file '${win_iso_file_name}' from Microsoft..."
+
+    ## Mido.sh has a quite special "feature": it changes cwd to the
+    ## directory where the script is, UNLESS it's in PATH. But I
+    ## didn't want to install Mido.sh to a dir in PATH, somehow that
+    ## didn't feel right; Mido.sh is just for puavo-reset-windows, I
+    ## don't want to pollute the command namespace unnecessarily.
+    ##
+    ## And I didn't want to tweak Mido.sh either. I think copying it
+    ## to our WORK_DIR is quite robust solution. Symlinking would have
+    ## worked fine too, but I feel having a full copy is better.
+    install -m 0755 /usr/lib/puavo-ltsp-install/Mido.sh .
+
+    win_iso_file_name_without_ext=$(basename "${win_iso_file_name}" .iso)
+    ./Mido.sh "${win_iso_file_name_without_ext}" || {
+        logerr "Failed to fetch ISO file '${win_iso_file_name}' with Mido.sh."
+        return 1
+    }
+
+    loginfo "Fetched ISO file '${win_iso_file_name}' from Microsoft."
+}
+
+fetch_win_iso()
+{
+    local win_iso_file_name
+
+    win_iso_file_name=$1
+    shift
+
+    loginfo "Fetching ISO file '${win_iso_file_name}'..."
+
+    if [ -f "${win_iso_file_name}" ]; then
+        loginfo "ISO file '${win_iso_file_name}' already exists."
+        if verify_win_iso "${win_iso_file_name}"; then
+            return 0
+        fi
+        loginfo "Existing ISO file '${win_iso_file_name}' is invalid. Re-fetching it."
+    fi
+
+    if fetch_win_iso_from_filesystem "${win_iso_file_name}"; then
+        if verify_win_iso "${win_iso_file_name}"; then
+            loginfo "Fetched ISO file '${win_iso_file_name}'."
+            return 0
+        fi
+    fi
+
+    ## TODO: Implement other fetch functions:
+    ## - from bootserver
+    ## - from cdn.opinsys.fi
+
+    fetch_win_iso_from_microsoft "${win_iso_file_name}" || {
+        logerr "Failed to fetch ISO file '${win_iso_file_name}'."
+        return 1
+    }
+
+    loginfo "Fetched ISO file '${win_iso_file_name}'."
+
+    verify_win_iso "${win_iso_file_name}"
+}
+
+reset_win()
+{
+    local wim_file_path \
+          win_iso_file_name \
+          win_iso_mountpoint \
+          win_language_tag \
+          win_primary_partition_devpath \
+          win_product_name
+
+    win_product_name=$1
+    shift
+
+    win_language_tag=$1
+    shift
+
+    win_primary_partition_devpath=$1
+    shift
+
+    loginfo "Reseting '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'..."
+
+    win_iso_file_name=$(print0_win_iso_file_name "${win_product_name}" "${win_language_tag}") || {
+        logerr "Failed to get ISO file name for '${win_product_name} (${win_language_tag})'"
+        return 1
+    }
+
+    fetch_win_iso "${win_iso_file_name}" || {
+        logerr "Failed to fetch ISO file for '${win_product_name} (${win_language_tag})'."
+        return 1
+    }
+
+    loginfo "Mounting ISO file '${win_iso_file_name}'..."
+
+    win_iso_mountpoint="${win_iso_file_name}.mountpoint"
+
+    if ! mountpoint -q "${win_iso_mountpoint}"; then
+        mkdir -p "${win_iso_mountpoint}" || {
+            logerr "Something is crooked! Failed to ensure '${win_iso_mountpoint}' exists."
+            return 1
+        }
+        # Files will be unmounted on exit (on_exit()).
+        mount -oro,loop "${win_iso_file_name}" "${win_iso_mountpoint}" || {
+            logerr "Failed to mount ISO file '${win_iso_file_name}' to '${win_iso_mountpoint}'."
+            return 1
+        }
+    fi
+    loginfo "Mounted ISO file '${win_iso_file_name}' to '${win_iso_mountpoint}'."
+
+    wim_file_path="${win_iso_mountpoint}/sources/install.wim"
+
+    wim_image_index=$(print0_wim_image_index "${wim_file_path}" "${win_product_name}")
+
+    loginfo "Re-creating NTFS filesystem on '${win_primary_partition_devpath}'..."
+    # Force needed to overwrite the existing filesystem without questions.
+    mkfs.ntfs -f "${win_primary_partition_devpath}" || {
+        logerr "Failed to create NTFS filesystem on '${win_primary_partition_devpath}'"
+        return 1
+    }
+    loginfo "Re-created NTFS filesystem on '${win_primary_partition_devpath}'."
+
+    loginfo "Applying WIM image to '${win_primary_partition_devpath}'..."
+    wimapply "${wim_file_path}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
+        logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_file_path}' to '${win_primary_partition_devpath}'."
+        return 1
+    }
+    loginfo "Applied WIM image to '${win_primary_partition_devpath}'."
+
+    if $use_secure_delete; then
+        loginfo "Wiping all unused data from '${win_primary_partition_devpath}'..."
+        # Wipes all unused data from the partition.
+        ntfswipe -a "${win_primary_partition_devpath}" || {
+            logerr "Failed to wipe '${win_primary_partition_devpath}'."
+            return 1
+        }
+        loginfo "Wiped all unused data from '${win_primary_partition_devpath}'."
+    fi
+
+    loginfo "Reset '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}' to factory settings successfully."
+
+    return 0
+}
+
+
+reset_all_wins()
+{
+    local returnval \
+          win_language_tag \
+          win_product_name
+
+    returnval=0
+
+    while IFS= read -r -d $'\0' win_primary_partition_devpath; do
+        win_product_name=$(print0_win_product_name "${win_primary_partition_devpath}") || {
+            logerr "Failed to get the product name of Windows on '${win_primary_partition_devpath}'."
+            returnval=1
+            continue
+        }
+
+        win_language_tag=$(print0_win_language_tag "${win_primary_partition_devpath}") || {
+            logerr "Failed to get the language tag of Windows on '${win_primary_partition_devpath}'."
+            returnval=1
+            continue
+        }
+
+        loginfo "Detected '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'."
+
+        case "${win_product_name}" in
+            'Windows 10 Home' | 'Windows 10 Pro' | 'Windows 11 Home' | 'Windows 11 Pro')
+                ;;
+            *)
+                logerr "Skipping unsupported '${win_product_name}' on '${win_primary_partition_devpath}'."
+                returnval=1
+                continue
+                ;;
+        esac
+
+        $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+               "Reset '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'?" 5 100 || {
+            loginfo "Skipping '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'."
+            continue
+        }
+
+        $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+               "All data will be lost on '${win_primary_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
+            loginfo "Skipping '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'."
+            continue
+        }
+
+        reset_win "${win_product_name}" "${win_language_tag}" "${win_primary_partition_devpath}" || {
+            logerr "Failed to reset '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'."
+            returnval=1
+            continue
+        }
+
+    done < <(print0_win_primary_partition_devpaths) || {
+        logerr "Unexpected termination of Windows reset loop"
+        returnval=1
+    }
+
+    return $returnval
+}
+
+while [ $# -ne 0 ]; do
+    case "$1" in
+        --force)
+            use_force=true
+            shift
+            ;;
+        --secure-delete)
+            use_secure_delete=true
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+
+[ $# -eq 0 ] || usage
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'You can run me as root only!' >&2
+  exit 1
+fi
+
+exec {lockfd}<> "${PID_FILE}"
+flock -x -n "${lockfd}" || {
+    logerr "puavo-reset-windows is already running!"
+    exit 1
+}
+
+trap on_exit EXIT
+
+echo "$$" >"${PID_FILE}"
+
+install -d -m 0700 "${WORK_DIR}"
+cd "${WORK_DIR}"
+loginfo "Changed current working directory to '${WORK_DIR}'."
+
+reset_all_wins
+
+# Reached the end, everything is fine then.
+exitval=0

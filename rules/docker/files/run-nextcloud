@@ -11,6 +11,26 @@ cleanup() {
   puavo_ldap_password_file=''
 }
 
+get_apache_max_request_workers() {
+  awk '
+    BEGIN { status = 1 }
+    $1 == "MemTotal:" && $3 == "kB" {
+      total_memory = $2
+      half_memory = $2 / 2
+      half_memory_in_mb = half_memory / 1024
+      apache_process_estimate_in_mb = 128
+      max_request_workers = int(half_memory_in_mb / apache_process_estimate_in_mb)
+      # If this max limit of 64 should be raised, care must be taken to allow
+      # enough client connections in postgres.
+      if (max_request_workers < 8) { max_request_workers = 8 }
+      if (max_request_workers > 64) { max_request_workers = 64 }
+      print max_request_workers
+      status = 0
+    }
+    END { exit(status) }
+  ' /proc/meminfo
+}
+
 trap cleanup 0 INT TERM
 
 # Do not run Apache from entrypoint so we can configure Nextcloud
@@ -49,10 +69,14 @@ if [ -z "$apache_ldap_filter" ]; then
   exit 1
 fi
 
+max_request_workers=$(get_apache_max_request_workers)
+
 cat <<EOF > /etc/apache2/sites-available/000-default.conf
 LDAPCacheTTL 10
 LDAPTrustedMode TLS
 LDAPVerifyServerCert Off
+
+MaxRequestWorkers ${max_request_workers}
 
 <VirtualHost *:80>
         DocumentRoot /var/www/html

@@ -48,6 +48,9 @@
     "description": "Enable/disable the laptop puavo-conf profile",
     "typehint": "bool"
   },
+  "puavo.profile.nextcloud": {
+    "default": "false"
+  },
   "puavo.profile.onlyfree": {
     "default": "false",
     "description": "Enable/disable the onlyfree puavo-conf profile",

@@ -150,6 +150,7 @@ class packages {
     , 'pwgen'
     , 'pwman3'
     , 'read-edid'
+    , 'rsnapshot'
     , 'rsyslog'
     , 'ruby-sys-proctable'
     , 'screen'
@@ -395,15 +396,19 @@ class packages {
     , 'xsane' ]:
       tag => [ 'tag_graphics', 'tag_debian_desktop', ];
 
-    # XXX some issue on Debian
-    # [ 'kdump-tools' ]:
-    #   tag => [ 'tag_kernelutils', 'tag_debian_desktop', ];
-
     [ 'irssi'
     , 'irssi-plugin-xmpp'
     , 'pidgin'
     , 'pidgin-plugin-pack' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
+
+    # XXX some issue on Debian
+    # [ 'kdump-tools' ]:
+    #   tag => [ 'tag_kernelutils', 'tag_debian_desktop', ];
+
+    [ 'libportaudiocpp0'        # needed by xournalpp puavo-pkg
+    , 'libuvc0' ]:              # needed by visualizer puavo-pkg
+      tag => [ 'tag_libraries', 'tag_debian_desktop', ];
 
     [ 'goobox'
     , 'gstreamer1.0-clutter-3.0'
@@ -811,7 +816,7 @@ class packages {
   $nvidia_dkms_470_module   = 'nvidia-tesla-470/470.199.02'
   $nvidia_dkms_525_module   = 'nvidia-current/525.125.06'
   $r8168_module             = 'r8168/8.050.03'
-  $virtualbox_module        = 'virtualbox/7.0.10'
+  $virtualbox_module        = 'virtualbox/7.0.12'
 
   # $broadcom_sta_dkms_module     # XXX bookworm
   $all_dkms_modules = [ $nvidia_dkms_470_module

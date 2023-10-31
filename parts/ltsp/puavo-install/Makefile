@@ -41,6 +41,7 @@ install : installdirs
 		puavo-install-grub \
 		puavo-make-install-disk \
 		puavo-reset-laptop-to-factory-defaults \
+		puavo-reset-windows \
 		puavo-set-root-password \
 		puavo-setup-filesystems \
 		puavo-update-client \
@@ -50,6 +51,7 @@ install : installdirs
 		dbus-1/org.puavo.client.Daemon.service
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
+		lib/Mido.sh \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-image-preinst \

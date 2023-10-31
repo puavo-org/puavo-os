@@ -51,6 +51,20 @@ lookup_ifdata() {
 lookup_ip()      { lookup_ifdata -pa address "$1"; }
 lookup_netmask() { lookup_ifdata -pn netmask "$1"; }
 
+nextcloud_domains() {
+  local collabora_domain nextcloud_domain
+
+  collabora_domain=$(puavo-conf puavo.collabora.domain) || true
+  nextcloud_domain=$(puavo-conf puavo.nextcloud.domain) || true
+
+  if [ -n "$nextcloud_domain" ]; then
+    printf ' %s' "$nextcloud_domain"
+  fi
+  if [ -n "$collabora_domain" ]; then
+    printf ' %s' "$collabora_domain"
+  fi
+}
+
 subdomain_names() {
   host=$1
   shift
@@ -260,7 +274,7 @@ mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
 
 $(for dhcp_ip in $dhcpd_ip_list; do
     # XXX should we try to cut down this list of subdomains some day... ?
-    echo "${dhcp_ip}	${puavo_hostname}.${puavo_domain} ${puavo_hostname}$(for hostalias in cups eventlog homedir kerberos ntp printserver syslog; do subdomain_names "$hostalias" $dhcpd_subdomain_list; done)"
+    echo "${dhcp_ip}	${puavo_hostname}.${puavo_domain} ${puavo_hostname}$(for hostalias in cups eventlog homedir kerberos ntp printserver syslog; do subdomain_names "$hostalias" $dhcpd_subdomain_list; done)$(nextcloud_domains)"
   done)
 
 # The following lines are desirable for IPv6 capable hosts

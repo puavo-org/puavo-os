@@ -5,12 +5,13 @@ require 'json'
 require 'net/ldap'
 require 'open3'
 require 'puavo/conf'
+require 'socket'
 require 'yaml'
 
 DEVICE_JSON_PATH = '/state/etc/puavo/device.json'
 DOCKER_STATE_DIR = '/state/etc/docker'
 
-CONTAINER_LIST = %w(postgres nextcloud collabora)
+DEFAULT_CONTAINER_LIST = %w(postgres nextcloud collabora)
 DOCKER_COMPOSE_TEMPLATE_PATH = '/etc/puavo-docker/docker-compose.yml.tmpl'
 DOCKER_COMPOSE_PATH = '/etc/puavo-docker/docker-compose.yml'
 DOCKER_FILES_DIR = '/etc/puavo-docker/files'
@@ -34,6 +35,11 @@ def cleanup_docker_images()
     return false
   end
   return true
+end
+
+def container_exists?(container_name)
+  system('docker', 'inspect', container_name,
+         :out => File::NULL, :err => File::NULL)
 end
 
 def get_container_versions()
@@ -66,6 +72,13 @@ end
 
 raise('not running as root') unless Process.uid == 0
 
+puavoconf = Puavo::Conf.new
+hosttype = puavoconf.get('puavo.hosttype')
+
+# Check hosttype to prevent some crazy accidents.
+# This really does require a bootserver.
+raise('hosttype is not bootserver') unless hosttype == 'bootserver'
+
 status = 0
 status = 1 unless cleanup_docker_images()
 
@@ -90,13 +103,21 @@ end
 
 File.chmod(0600, puavo_ldap_password_path)
 
-puavoconf = Puavo::Conf.new
-
 current_versions = get_container_versions()
 
 docker_compose = YAML::load_file(DOCKER_COMPOSE_TEMPLATE_PATH)
 
-CONTAINER_LIST.each do |container_name|
+backup_before_docker_ops = true
+startup_container_list = DEFAULT_CONTAINER_LIST
+if ARGV[0] == '--no-backup' then
+  ARGV.shift
+  backup_before_docker_ops = false
+  startup_container_list = ARGV unless ARGV.empty?
+end
+
+# Go through all containers here so that docker_compose file
+# has correct configurations.
+DEFAULT_CONTAINER_LIST.each do |container_name|
   begin
     puavoconf_var = "puavo.docker.#{ container_name }.version"
     image_version = puavoconf.get(puavoconf_var)
@@ -118,12 +139,23 @@ CONTAINER_LIST.each do |container_name|
     if service_conf.dig('build', 'args', 'IMAGE') then
       service_conf['build']['args']['IMAGE'] \
         = "#{ IMAGEMAP[container_name] }:#{ image_version }"
-      service_conf['image'] = "puavo_#{ IMAGEMAP[container_name] }:#{ image_version }"
+      service_conf['image'] \
+        = "puavo_#{ IMAGEMAP[container_name] }:#{ image_version }"
     end
   rescue StandardError => e
     warn("could not set #{ container_name }: #{ e.message }")
     exit(1)
   end
+end
+
+begin
+  locale = puavoconf.get('puavo.l10n.locale')
+  server_location = locale[0..1]
+  raise 'location not two letters' unless server_location.length == 2
+  write_config_file("#{ server_location }\n", 'location_countrycode')
+rescue StandardError => e
+  warn("could not determine server location: #{ e.message }")
+  FileUtils.rm_f(File.join(CONFIG_DIR, 'location_countrycode'))
 end
 
 begin
@@ -133,6 +165,19 @@ begin
 rescue StandardError => e
   warn("could not determine system ldap base: #{ e.message }")
   exit(1)
+end
+
+def get_nextcloud_trusted_proxies(puavoconf)
+  required_proxy_addresses \
+    = Socket.getifaddrs.map do |iface|
+        next unless iface.name.match(/^(inet|ltsp|wlan)\d+/) && iface.addr.ipv4?
+        iface.addr.ip_address
+      end.compact
+
+  additional_trusted_proxies \
+    = puavoconf.get('puavo.nextcloud.trusted_proxies').split(' ')
+
+  required_proxy_addresses + additional_trusted_proxies
 end
 
 begin
@@ -159,6 +204,14 @@ begin
   docker_compose['services']['collabora']['environment'] = collabora_env
 rescue StandardError => e
   warn("could not configure collabora for docker-compose: #{ e.message }")
+  exit(1)
+end
+
+begin
+  trusted_proxies = get_nextcloud_trusted_proxies(puavoconf).join(' ')
+  write_config_file("#{ trusted_proxies }\n", 'trusted_proxies')
+rescue StandardError => e
+  warn("could not write trusted proxies configuration file: #{ e.message }")
   exit(1)
 end
 
@@ -260,30 +313,16 @@ rescue StandardError => e
   exit(1)
 end
 
-# setup dnsmasq configuration
-begin
-  dnsmasq_conf  = "host-record=#{ nextcloud_domain },#{ DOCKER_IP }\n"
-  dnsmasq_conf += "host-record=#{ collabora_domain },#{ DOCKER_IP }\n"
-  dnsmasq_conf_path = '/etc/dnsmasq.d/10-docker.conf'
-  tmp_dnsmasq_conf_path = "#{ dnsmasq_conf_path }.tmp"
-  File.write(tmp_dnsmasq_conf_path, dnsmasq_conf)
-
-  if !File.exists?(dnsmasq_conf_path) \
-    || !FileUtils.compare_file(dnsmasq_conf_path, tmp_dnsmasq_conf_path) then
-      File.rename(tmp_dnsmasq_conf_path, dnsmasq_conf_path)
-      system('service', 'dnsmasq', 'restart') \
-        or raise('could not restart dnsmasq')
-  else
-    File.unlink(tmp_dnsmasq_conf_path)
-  end
-rescue StandardError => e
-  warn("could not configure dnsmasq: #{ e.message }")
-  exit(1)
-end
-
 # setup nginx configuration
 begin
   nginx_conf = <<EOF
+server {
+    listen 80;
+    server_name #{ nextcloud_domain } #{ collabora_domain };
+
+    return 301 https://${host}${request_uri};
+}
+
 server {
     listen 443 http2 ssl;
     server_name #{ nextcloud_domain };
@@ -299,6 +338,8 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
         proxy_pass http://#{ DOCKER_IP }:880$request_uri;
+
+        client_max_body_size 512M;
     }
 
     location /.well-known/carddav {
@@ -361,6 +402,8 @@ server {
 	proxy_read_timeout 36000s;
     }
 
+    location / { return 404; }
+
     access_log /var/log/nginx/office-access.log;
     error_log /var/log/nginx/office-error.log;
 }
@@ -373,7 +416,8 @@ EOF
     || !FileUtils.compare_file(nginx_conf_path, tmp_nginx_conf_path) then
       File.rename(tmp_nginx_conf_path, nginx_conf_path)
       File.unlink('/etc/nginx/sites-enabled/nextcloud') rescue Errno::ENOENT
-      File.symlink('../sites-available/nextcloud', '/etc/nginx/sites-enabled/nextcloud')
+      File.symlink('../sites-available/nextcloud',
+                   '/etc/nginx/sites-enabled/nextcloud')
       system('service', 'nginx', 'reload') \
         or raise('could not reload nginx configuration')
   else
@@ -384,7 +428,14 @@ rescue StandardError => e
   exit(1)
 end
 
-CONTAINER_LIST.each do |container_name|
+if backup_before_docker_ops then
+  if !system('/usr/local/sbin/puavo-backup-docker') then
+    warn('could not backup docker state before installing/updating')
+    exit(1)
+  end
+end
+
+startup_container_list.each do |container_name|
   puavoconf_var = "puavo.docker.#{ container_name }.enabled"
   if puavoconf.get(puavoconf_var) == 'true' then
     puts("> starting up container #{ container_name }")
@@ -397,11 +448,7 @@ CONTAINER_LIST.each do |container_name|
     next
   end
 
-  unless system('docker', 'inspect', container_name,
-                          :out => File::NULL, :err => File::NULL) then
-    # container does not exist, nothing to do
-    next
-  end
+  next unless container_exists?(container_name)
 
   puts("> removing container #{ container_name }")
   unless system('docker', 'container', 'stop', container_name,
