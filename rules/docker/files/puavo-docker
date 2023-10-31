@@ -5,6 +5,7 @@ require 'json'
 require 'net/ldap'
 require 'open3'
 require 'puavo/conf'
+require 'socket'
 require 'yaml'
 
 DEVICE_JSON_PATH = '/state/etc/puavo/device.json'
@@ -166,6 +167,19 @@ rescue StandardError => e
   exit(1)
 end
 
+def get_nextcloud_trusted_proxies(puavoconf)
+  required_proxy_addresses \
+    = Socket.getifaddrs.map do |iface|
+        next unless iface.name.match(/^(inet|ltsp|wlan)\d+/) && iface.addr.ipv4?
+        iface.addr.ip_address
+      end.compact
+
+  additional_trusted_proxies \
+    = puavoconf.get('puavo.nextcloud.trusted_proxies').split(' ')
+
+  required_proxy_addresses + additional_trusted_proxies
+end
+
 begin
   nextcloud_domain = puavoconf.get('puavo.nextcloud.domain')
   raise('no Nextcloud domain set') if nextcloud_domain.empty?
@@ -190,6 +204,14 @@ begin
   docker_compose['services']['collabora']['environment'] = collabora_env
 rescue StandardError => e
   warn("could not configure collabora for docker-compose: #{ e.message }")
+  exit(1)
+end
+
+begin
+  trusted_proxies = get_nextcloud_trusted_proxies(puavoconf).join(' ')
+  write_config_file("#{ trusted_proxies }\n", 'trusted_proxies')
+rescue StandardError => e
+  warn("could not write trusted proxies configuration file: #{ e.message }")
   exit(1)
 end
 

@@ -57,6 +57,9 @@ location_countrycode=$(cat /puavo-nextcloud-config/location_countrycode \
 
 office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
 
+trusted_proxies=$(cat /puavo-nextcloud-config/trusted_proxies 2>/dev/null) \
+                    || true
+
 # First turn off the maintenance mode in case it is on
 # (when restoring from a backup maintenance mode is likely active).
 # Some app-commands below require maintenance mode to be off.
@@ -189,6 +192,13 @@ if [ -n "$office_domain" ]; then
 else
   occ config:app:set --value no richdocuments enabled
 fi
+
+occ config:system:delete trusted_proxies
+i=0
+for proxy in $trusted_proxies; do
+  occ config:system:set --value "$proxy" trusted_proxies "$i"
+  i=$(($i + 1))
+done
 
 # database maintenance
 occ db:add-missing-indices
