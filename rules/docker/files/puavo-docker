@@ -291,27 +291,6 @@ rescue StandardError => e
   exit(1)
 end
 
-# setup dnsmasq configuration
-begin
-  dnsmasq_conf  = "host-record=#{ nextcloud_domain },#{ DOCKER_IP }\n"
-  dnsmasq_conf += "host-record=#{ collabora_domain },#{ DOCKER_IP }\n"
-  dnsmasq_conf_path = '/etc/dnsmasq.d/10-docker.conf'
-  tmp_dnsmasq_conf_path = "#{ dnsmasq_conf_path }.tmp"
-  File.write(tmp_dnsmasq_conf_path, dnsmasq_conf)
-
-  if !File.exists?(dnsmasq_conf_path) \
-    || !FileUtils.compare_file(dnsmasq_conf_path, tmp_dnsmasq_conf_path) then
-      File.rename(tmp_dnsmasq_conf_path, dnsmasq_conf_path)
-      system('service', 'dnsmasq', 'restart') \
-        or raise('could not restart dnsmasq')
-  else
-    File.unlink(tmp_dnsmasq_conf_path)
-  end
-rescue StandardError => e
-  warn("could not configure dnsmasq: #{ e.message }")
-  exit(1)
-end
-
 # setup nginx configuration
 begin
   nginx_conf = <<EOF
