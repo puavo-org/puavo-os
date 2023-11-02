@@ -50,7 +50,6 @@ setup_xsessions
 setup_devilspie
 setup_primary_disk_id
 setup_preinstalled_mode
-setup_dconf_settings
 setup_puavomenu
 setup_guestuser
 setup_nfs_client
@@ -64,6 +63,7 @@ setup_x_session_manager
 setup_xdg_autostart
 setup_puavopkgs
 setup_external_files
+setup_dconf_settings
 setup_loginscreen_background
 setup_grub_default
 setup_superusers
