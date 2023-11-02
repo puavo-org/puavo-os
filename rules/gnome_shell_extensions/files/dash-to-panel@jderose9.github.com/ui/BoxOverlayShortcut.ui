@@ -67,6 +67,7 @@
 
         <child>
           <object class="AdwActionRow">
+            <property name="use-markup">FALSE</property>
             <property name="title" translatable="yes">Shortcut to show the overlay for 2 seconds</property>
             <property name="subtitle" translatable="yes">Syntax: &lt;Shift&gt;, &lt;Ctrl&gt;, &lt;Alt&gt;, &lt;Super&gt;</property>
             <child>

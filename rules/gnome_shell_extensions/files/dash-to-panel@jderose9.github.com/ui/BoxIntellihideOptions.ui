@@ -153,6 +153,7 @@
 
         <child>
           <object class="AdwActionRow">
+            <property name="use-markup">FALSE</property>
             <property name="title" translatable="yes">Keyboard shortcut to reveal and hold the panel</property>
             <property name="subtitle" translatable="yes">Syntax: &lt;Shift&gt;, &lt;Ctrl&gt;, &lt;Alt&gt;, &lt;Super&gt;</property>
             <child>
