@@ -27,7 +27,7 @@ index 8c790da..769f31c 100644
  imports.gi.versions.Gdm = '1.0';
  imports.gi.versions.Geoclue = '2.0';
 diff --git a/meson.build b/meson.build
-index e44c576..b59e345 100644
+index 4ed1a9b..8b04a7e 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -20,7 +20,7 @@ libmutter_test_pc = 'libmutter-test-' + mutter_api_version

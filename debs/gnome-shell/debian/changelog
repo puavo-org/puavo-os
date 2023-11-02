@@ -1,8 +1,82 @@
-gnome-shell (43.3-3+puavo1) bookworm; urgency=medium
+gnome-shell (43.6-1~deb12u2) bookworm-security; urgency=high
 
-  * Build gnome-shell for Bookworm.
+  * Team upload
+  * Avoid exposing window previews on lock screen via keyboard shortcuts
+    (Closes: #1052067, CVE-2023-43090, gnome-shell#6990)
 
- -- Puavo Org <dev@opinsys.fi>  Wed, 15 Mar 2023 16:24:40 +0200
+ -- Simon McVittie <smcv@debian.org>  Sun, 17 Sep 2023 17:18:49 +0100
+
+gnome-shell (43.6-1~deb12u1) bookworm; urgency=medium
+
+  * Rebuild for bookworm
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 11 Jun 2023 00:08:43 +0100
+
+gnome-shell (43.6-1) unstable; urgency=medium
+
+  * New upstream stable release 43.5
+    - Fix a regression in 43~beta involving detection of hotplugged media
+      with autorunnable content (gnome-shell!2745)
+    - Make search results fill unused space as intended (gnome-shell#5924)
+    - Improve matching of app StartupWMClass to a .desktop file, giving
+      priority to apps that were not hidden by OnlyShowIn under the current
+      desktop environment, in particular preferring gnome-system-monitor's
+      non-KDE-specific .desktop file while running GNOME (gnome-shell!2721)
+    - Fix assertion failures after a window preview is destroyed
+      (gnome-shell#5512, gnome-shell#6065)
+    - Avoid destroying labels twice, most commonly when using
+      gnome-shell-extension-dash-to-dock (gnome-shell!2739)
+    - Avoid keyboard navigation focus getting stuck on top bar buttons with
+      no associated menu (gnome-shell!2734, might help #1032319)
+    - Fix queued notifications getting into a state where they can no
+      longer be removed (gnome-shell!2736)
+    - Receive notifications of removed objects from D-Bus ObjectManager
+      instances correctly (gnome-shell!2730)
+    - Fix a cursor appearing at 0,0 in screenshots that should not
+      include it (gnome-shell!2702)
+    - Update visibility of workspaces in workspace switcher when required
+      (gnome-shell#6519)
+    - After 60 second timeout in logout/reboot/poweroff confirmation
+      dialog, do the requested action instead of leaving the Shell in a
+      broken state (gnome-shell#6506)
+    - Fix an assertion failure during shutdown (gnome-shell#6512)
+    - Fix an assertion failure if Geoclue isn't D-Bus-activatable
+      (gnome-shell!2689)
+    - Fix a regression in which the cursor would not be included in
+      screenshots since mutter 43.1 (gnome-shell!2710)
+    - Upstream CI fixes not relevant to Debian
+    - Translation update: zh_CN
+  * New upstream stable release 43.6
+    - Fix a crash when a window preview is destroyed (gnome-shell#6570)
+    - When cancelling the polkit agent prompt while using
+      gnome-remote-desktop, don't break subsequent polkit prompts
+      (gnome-shell!2761)
+    - Fix "TypeError: this._dragActor is null" warnings related to
+      drag-and-drop (gnome-shell!2770)
+    - Fix input method popup getting stuck on screen during engine changes
+      (gnome-shell#6717)
+    - Translation update: pt_BR
+  * d/control.in: Build-depend on mutter 43.5, for a newly-public utility
+    function needed by gnome-shell!2710
+  * d/patches: Drop ab translation patch, applied upstream
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 10 Jun 2023 21:17:13 +0100
+
+gnome-shell (43.4-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Fix memory leaks when the list of wireless networks is refreshed
+      (GNOME/gnome-shell!2652)
+    - Stop tracking drag-and-drop source object when destroyed
+      (part of GNOME/gnome-shell!2318)
+    - Translation update: fr
+    - All other changes were included in 43.3-2 and 43.3-3
+  * Drop patches added by 43.3-2 and 43.3-3, included in upstream 43.4
+  * d/patches: Update to gnome-43 branch commit 43.4-1-g3499d2e87
+    - Translation update: ab
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 10 Apr 2023 14:07:38 +0100
 
 gnome-shell (43.3-3) unstable; urgency=medium
 
