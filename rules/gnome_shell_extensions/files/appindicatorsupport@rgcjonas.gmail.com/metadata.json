@@ -3,7 +3,6 @@
   "description": "Adds AppIndicator, KStatusNotifierItem and legacy Tray icons support to the Shell",
   "gettext-domain": "AppIndicatorExtension",
   "name": "AppIndicator and KStatusNotifierItem Support",
-  "session-modes": [ "gdm", "user" ],
   "settings-schema": "org.gnome.shell.extensions.appindicator",
   "shell-version": [
     "3.34",
@@ -12,9 +11,10 @@
     "40",
     "41",
     "42",
-    "43"
+    "43",
+    "44"
   ],
   "url": "https://github.com/ubuntu/gnome-shell-extension-appindicator",
   "uuid": "appindicatorsupport@rgcjonas.gmail.com",
-  "version": 46
+  "version": 53
 }

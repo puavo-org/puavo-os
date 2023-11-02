@@ -22,6 +22,7 @@ const GLib = imports.gi.GLib;
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 
 const AppIndicator = Extension.imports.appIndicator;
+const DBusMenu = Extension.imports.dbusMenu;
 const IndicatorStatusIcon = Extension.imports.indicatorStatusIcon;
 const Interfaces = Extension.imports.interfaces;
 const PromiseUtils = Extension.imports.promiseUtils;
@@ -103,7 +104,7 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
                     try {
                         await new PromiseUtils.TimeoutPromise(500,
                             GLib.PRIORITY_DEFAULT, this._cancellable);
-                        if (!indicator.hasNameOwner)
+                        if (this._items.has(id) && !indicator.hasNameOwner)
                             indicator.destroy();
                     } catch (e) {
                         if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
@@ -149,26 +150,26 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
         // StatusNotifierItem interface... However let's do it after a low
         // priority idle, so that it won't affect startup.
         const cancellable = this._cancellable;
-        await new PromiseUtils.IdlePromise(GLib.PRIORITY_LOW, cancellable);
         const bus = Gio.DBus.session;
         const uniqueNames = await Util.getBusNames(bus, cancellable);
         const introspectName = async name => {
-            const nodes = await Util.introspectBusObject(bus, name, cancellable);
+            const nodes = Util.introspectBusObject(bus, name, cancellable,
+                ['org.kde.StatusNotifierItem']);
             const services = [...uniqueNames.get(name)];
-            nodes.forEach(({ nodeInfo, path }) => {
-                if (Util.dbusNodeImplementsInterfaces(nodeInfo, ['org.kde.StatusNotifierItem'])) {
-                    const ids = services.map(s => Util.indicatorId(s, name, path));
-                    if (ids.every(id => !this._items.has(id))) {
-                        const service = services.find(s =>
-                            s.startsWith('org.kde.StatusNotifierItem')) || services[0];
-                        const id = Util.indicatorId(
-                            path === DEFAULT_ITEM_OBJECT_PATH ? service : null,
-                            name, path);
-                        Util.Logger.warn(`Using Brute-force mode for StatusNotifierItem ${id}`);
-                        this._registerItem(service, name, path);
-                    }
+
+            for await (const node of nodes) {
+                const { path } = node;
+                const ids = services.map(s => Util.indicatorId(s, name, path));
+                if (ids.every(id => !this._items.has(id))) {
+                    const service = services.find(s =>
+                        s && s.startsWith('org.kde.StatusNotifierItem')) || services[0];
+                    const id = Util.indicatorId(
+                        path === DEFAULT_ITEM_OBJECT_PATH ? service : null,
+                        name, path);
+                    Util.Logger.warn(`Using Brute-force mode for StatusNotifierItem ${id}`);
+                    this._registerItem(service, name, path);
                 }
-            });
+            }
         };
         await Promise.allSettled([...uniqueNames.keys()].map(n => introspectName(n)));
     }
@@ -275,7 +276,10 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
             Util.Logger.warn(`Failed to unexport watcher object: ${e}`);
         }
 
-        AppIndicator.AppIndicator.destroy();
+        DBusMenu.DBusClient.destroy();
+        AppIndicator.AppIndicatorProxy.destroy();
+        Util.DBusProxy.destroy();
+        Util.destroyDefaultTheme();
 
         this._dbusImpl.run_dispose();
         delete this._dbusImpl;

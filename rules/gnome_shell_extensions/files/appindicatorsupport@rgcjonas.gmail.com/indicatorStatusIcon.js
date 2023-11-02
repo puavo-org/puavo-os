@@ -18,7 +18,7 @@
             addIconToPanel, getTrayIcons, getAppIndicatorIcons */
 
 const Clutter = imports.gi.Clutter;
-const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const St = imports.gi.St;
 
@@ -80,6 +80,9 @@ class AppIndicatorsIndicatorBaseStatusIcon extends PanelMenu.Button {
         if (!super._onDestroy)
             this.connect('destroy', () => this._onDestroy());
 
+        this._box = new St.BoxLayout({ style_class: 'panel-status-indicators-box' });
+        this.add_child(this._box);
+
         this._setIconActor(iconActor);
         this._showIfReady();
     }
@@ -96,6 +99,7 @@ class AppIndicatorsIndicatorBaseStatusIcon extends PanelMenu.Button {
         this._monitorIconEffects();
 
         if (this._icon) {
+            this._box.add_child(this._icon);
             const id = this._icon.connect('destroy', () => {
                 this._icon.disconnect(id);
                 this._icon = null;
@@ -233,11 +237,7 @@ class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
         this._lastClickX = -1;
         this._lastClickY = -1;
 
-        this._box = new St.BoxLayout({ style_class: 'panel-status-indicators-box' });
         this._box.add_style_class_name('appindicator-box');
-        this.add_child(this._box);
-
-        this._box.add_child(this._icon);
 
         Util.connectSmart(this._indicator, 'ready', this, this._showIfReady);
         Util.connectSmart(this._indicator, 'menu', this, this._updateMenu);
@@ -375,6 +375,22 @@ class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
         return Clutter.EVENT_PROPAGATE;
     }
 
+    async _waitForDoubleClick() {
+        const { doubleClickTime } = Clutter.Settings.get_default();
+        this._waitDoubleClickPromise = new PromiseUtils.TimeoutPromise(
+            doubleClickTime);
+
+        try {
+            await this._waitDoubleClickPromise;
+            this.menu.toggle();
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                throw e;
+        } finally {
+            delete this._waitDoubleClickPromise;
+        }
+    }
+
     vfunc_event(event) {
         if (this.menu.numMenuItems && event.type() === Clutter.EventType.TOUCH_BEGIN)
             this.menu.toggle();
@@ -383,10 +399,8 @@ class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
     }
 
     vfunc_button_press_event(buttonEvent) {
-        if (this._waitDoubleClickId) {
-            GLib.source_remove(this._waitDoubleClickId);
-            this._waitDoubleClickId = 0;
-        }
+        if (this._waitDoubleClickPromise)
+            this._waitDoubleClickPromise.cancel();
 
         // if middle mouse button clicked send SecondaryActivate dbus event and do not show appindicator menu
         if (buttonEvent.button === Clutter.BUTTON_MIDDLE) {
@@ -405,17 +419,10 @@ class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
         if (doubleClickHandled === Clutter.EVENT_PROPAGATE &&
             buttonEvent.button === Clutter.BUTTON_PRIMARY &&
             this.menu.numMenuItems) {
-            if (this._indicator.supportsActivation) {
-                const { doubleClickTime } = Clutter.Settings.get_default();
-                this._waitDoubleClickId = GLib.timeout_add(GLib.PRIORITY_DEFAULT,
-                    doubleClickTime, () => {
-                        this.menu.toggle();
-                        this._waitDoubleClickId = 0;
-                        return GLib.SOURCE_REMOVE;
-                    });
-            } else {
+            if (this._indicator.supportsActivation)
+                this._waitForDoubleClick().catch(logError);
+            else
                 this.menu.toggle();
-            }
         }
 
         return Clutter.EVENT_PROPAGATE;
@@ -450,11 +457,7 @@ class AppIndicatorsIndicatorTrayIcon extends BaseStatusIcon {
     _init(icon) {
         super._init(0.5, icon.wm_class, icon, { dontCreateMenu: true });
         Util.Logger.debug(`Adding legacy tray icon ${this.uniqueId}`);
-        this._box = new St.BoxLayout({ style_class: 'panel-status-indicators-box' });
         this._box.add_style_class_name('appindicator-trayicons-box');
-        this.add_child(this._box);
-
-        this._box.add_child(this._icon);
         this.add_style_class_name('appindicator-icon');
         this.add_style_class_name('tray-icon');
 
@@ -496,10 +499,8 @@ class AppIndicatorsIndicatorTrayIcon extends BaseStatusIcon {
     _onDestroy() {
         Util.Logger.debug(`Destroying legacy tray icon ${this.uniqueId}`);
 
-        if (this._waitDoubleClickId) {
-            GLib.source_remove(this._waitDoubleClickId);
-            this._waitDoubleClickId = 0;
-        }
+        if (this._waitDoubleClickPromise)
+            this._waitDoubleClickPromise.cancel();
 
         super._onDestroy();
     }
@@ -590,7 +591,11 @@ class AppIndicatorsIndicatorTrayIcon extends BaseStatusIcon {
             iconSize = Panel.PANEL_ICON_SIZE;
 
         this.height = -1;
-        this._icon.set_height(iconSize * scaleFactor);
-        this._icon.set_y_align(Clutter.ActorAlign.CENTER);
+        this._icon.set({
+            width: iconSize * scaleFactor,
+            height: iconSize * scaleFactor,
+            xAlign: Clutter.ActorAlign.CENTER,
+            yAlign: Clutter.ActorAlign.CENTER,
+        });
     }
 });

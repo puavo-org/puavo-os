@@ -14,6 +14,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
 const GLib = imports.gi.GLib;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const PopupMenu = imports.ui.popupMenu;
@@ -25,6 +26,9 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const DBusInterfaces = Extension.imports.interfaces;
 const PromiseUtils = Extension.imports.promiseUtils;
 const Util = Extension.imports.util;
+
+PromiseUtils._promisify(GdkPixbuf.Pixbuf, 'new_from_stream_async',
+    'new_from_stream_finish');
 
 // ////////////////////////////////////////////////////////////////////////
 // PART ONE: "ViewModel" backend implementation.
@@ -196,46 +200,71 @@ var DbusMenuItem = class AppIndicatorsDbusMenuItem {
 Signals.addSignalMethods(DbusMenuItem.prototype);
 
 
-const BusClientProxy = Gio.DBusProxy.makeProxyWrapper(DBusInterfaces.DBusMenu);
-
 /**
  * The client does the heavy lifting of actually reading layouts and distributing events
  */
-var DBusClient = class AppIndicatorsDBusClient {
 
-    constructor(busName, busPath) {
-        this._cancellable = new Gio.Cancellable();
-        this._proxy = new BusClientProxy(Gio.DBus.session,
-            busName,
-            busPath,
-            this._clientReady.bind(this),
-            this._cancellable);
-        this._items = new Map([
-            [
-                0,
-                new DbusMenuItem(this, 0, {
-                    'children-display': GLib.Variant.new_string('submenu'),
-                }, []),
-            ],
-        ]);
+var DBusClient = GObject.registerClass({
+    Signals: { 'ready-changed': {} },
+}, class AppIndicatorsDBusClient extends Util.DBusProxy {
+    static get interfaceInfo() {
+        if (!this._interfaceInfo) {
+            this._interfaceInfo = Gio.DBusInterfaceInfo.new_for_xml(
+                DBusInterfaces.DBusMenu);
+        }
+        return this._interfaceInfo;
+    }
 
-        // will be set to true if a layout update is requested while one is already in progress
-        // then the handler that completes the layout update will request another update
+    static get baseItems() {
+        if (!this._baseItems) {
+            this._baseItems = {
+                'children-display': GLib.Variant.new_string('submenu'),
+            };
+        }
+        return this._baseItems;
+    }
+
+    static destroy() {
+        delete this._interfaceInfo;
+    }
+
+    _init(busName, objectPath) {
+        const { interfaceInfo } = AppIndicatorsDBusClient;
+
+        super._init(busName, objectPath, interfaceInfo,
+            Gio.DBusProxyFlags.DO_NOT_LOAD_PROPERTIES);
+
+        this._items = new Map();
+        this._items.set(0, new DbusMenuItem(this, 0, DBusClient.baseItems, []));
+        this._flagItemsUpdateRequired = false;
+
+        // will be set to true if a layout update is needed once active
         this._flagLayoutUpdateRequired = false;
-        this._flagLayoutUpdateInProgress = false;
 
         // property requests are queued
         this._propertiesRequestedFor = new Set(/* ids */);
 
         this._layoutUpdated = false;
-        Util.connectSmart(this._proxy, 'notify::g-name-owner', this, () => {
-            if (this.isReady)
-                this._requestLayoutUpdate();
-        });
+        this._active = false;
+    }
+
+    async initAsync(cancellable) {
+        await super.initAsync(cancellable);
+
+        this._requestLayoutUpdate();
+    }
+
+    _onNameOwnerChanged() {
+        if (this.isReady)
+            this._requestLayoutUpdate();
     }
 
     get isReady() {
-        return this._layoutUpdated && !!this._proxy.g_name_owner;
+        return this._layoutUpdated && !!this.gNameOwner;
+    }
+
+    get cancellable() {
+        return this._cancellable;
     }
 
     getRoot() {
@@ -243,44 +272,27 @@ var DBusClient = class AppIndicatorsDBusClient {
     }
 
     _requestLayoutUpdate() {
-        if (this._flagLayoutUpdateInProgress)
-            this._flagLayoutUpdateRequired = true;
-        else
-            this._beginLayoutUpdate();
+        const cancellable = new Util.CancellableChild(this._cancellable);
+        this._beginLayoutUpdate(cancellable);
     }
 
-    async _requestProperties(id) {
-        this._propertiesRequestedFor.add(id);
+    async _requestProperties(propertyId, cancellable) {
+        this._propertiesRequestedFor.add(propertyId);
+
+        if (this._propertiesRequest && this._propertiesRequest.pending())
+            return;
 
         // if we don't have any requests queued, we'll need to add one
-        if (!this._propertiesRequest || !this._propertiesRequest.pending()) {
-            this._propertiesRequest = new PromiseUtils.IdlePromise(
-                GLib.PRIORITY_DEFAULT_IDLE, this._cancellable);
-            await this._propertiesRequest;
-            this._beginRequestProperties();
-        }
-    }
+        this._propertiesRequest = new PromiseUtils.IdlePromise(
+            GLib.PRIORITY_DEFAULT_IDLE, cancellable);
+        await this._propertiesRequest;
 
-    _beginRequestProperties() {
-        this._proxy.GetGroupPropertiesRemote(
-            Array.from(this._propertiesRequestedFor),
-            [],
-            this._cancellable,
-            this._endRequestProperties.bind(this));
-
+        const requestedProperties = Array.from(this._propertiesRequestedFor);
         this._propertiesRequestedFor.clear();
-        return false;
-    }
+        const [result] = await this.GetGroupPropertiesAsync(requestedProperties,
+            [], cancellable);
 
-    _endRequestProperties(result, error) {
-        if (error) {
-            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                Util.Logger.warn(`Could not retrieve properties: ${error}`);
-            return;
-        }
-
-        // for some funny reason, the result array is hidden in an array
-        result[0].forEach(([id, properties]) => {
+        result.forEach(([id, properties]) => {
             let item = this._items.get(id);
             if (!item)
                 return;
@@ -310,16 +322,40 @@ var DBusClient = class AppIndicatorsDBusClient {
 
     // the original implementation will only request partial layouts if somehow possible
     // we try to save us from multiple kinds of race conditions by always requesting a full layout
-    _beginLayoutUpdate() {
+    _beginLayoutUpdate(cancellable) {
+        this._layoutUpdateUpdateAsync(cancellable).catch(e => {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e);
+        });
+    }
+
+    // the original implementation will only request partial layouts if somehow possible
+    // we try to save us from multiple kinds of race conditions by always requesting a full layout
+    async _layoutUpdateUpdateAsync(cancellable) {
         // we only read the type property, because if the type changes after reading all properties,
         // the view would have to replace the item completely which we try to avoid
-        this._proxy.GetLayoutRemote(0, -1,
-            ['type', 'children-display'],
-            this._cancellable,
-            this._endLayoutUpdate.bind(this));
+        if (this._layoutUpdateCancellable)
+            this._layoutUpdateCancellable.cancel();
 
-        this._flagLayoutUpdateRequired = false;
-        this._flagLayoutUpdateInProgress = true;
+        this._layoutUpdateCancellable = cancellable;
+
+        try {
+            const [revision_, root] = await this.GetLayoutAsync(0, -1,
+                ['type', 'children-display'], cancellable);
+
+            this._updateLayoutState(true);
+            this._doLayoutUpdate(root, cancellable);
+            this._gcItems();
+            this._flagLayoutUpdateRequired = false;
+            this._flagItemsUpdateRequired = false;
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                this._updateLayoutState(false);
+            throw e;
+        } finally {
+            if (this._layoutUpdateCancellable === cancellable)
+                this._layoutUpdateCancellable = null;
+        }
     }
 
     _updateLayoutState(state) {
@@ -329,42 +365,22 @@ var DBusClient = class AppIndicatorsDBusClient {
             this.emit('ready-changed');
     }
 
-    _endLayoutUpdate(result, error) {
-        if (error) {
-            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
-                Util.Logger.warn(`While reading menu layout on proxy ${this._proxy.g_name_owner}: ${error}`);
-                this._updateLayoutState(false);
-            }
-            return;
-        }
+    _doLayoutUpdate(item, cancellable) {
+        const [id, properties, children] = item;
 
-        let [revision_, root] = result;
-        this._updateLayoutState(true);
-        this._doLayoutUpdate(root);
-        this._gcItems();
-
-        if (this._flagLayoutUpdateRequired)
-            this._beginLayoutUpdate();
-        else
-            this._flagLayoutUpdateInProgress = false;
-    }
-
-    _doLayoutUpdate(item) {
-        let [id, properties, children] = item;
-
-        let childrenUnpacked = children.map(c => c.deep_unpack());
-        let childrenIds = childrenUnpacked.map(c => c[0]);
+        const childrenUnpacked = children.map(c => c.deep_unpack());
+        const childrenIds = childrenUnpacked.map(([c]) => c);
 
         // make sure all our children exist
-        childrenUnpacked.forEach(c => this._doLayoutUpdate(c));
+        childrenUnpacked.forEach(c => this._doLayoutUpdate(c, cancellable));
 
         // make sure we exist
         const menuItem = this._items.get(id);
+
         if (menuItem) {
             // we do, update our properties if necessary
             for (let prop in properties)
                 menuItem.propertySet(prop, properties[prop]);
-
 
             // make sure our children are all at the right place, and exist
             let oldChildrenIds = menuItem.getChildrenIds();
@@ -389,30 +405,85 @@ var DBusClient = class AppIndicatorsDBusClient {
 
             // remove any old children that weren't reused
             oldChildrenIds.forEach(c => menuItem.removeChild(c));
-        } else {
-            // we don't, so let's create us
-            this._items.set(id, new DbusMenuItem(this, id, properties, childrenIds));
-            this._requestProperties(id).catch(e => {
-                if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                    Util.Logger.warn(`Could not get menu properties menu proxy: ${e}`);
-            });
+
+            if (!this._flagItemsUpdateRequired)
+                return id;
         }
+
+        // we don't, so let's create us
+        let newMenuItem = menuItem;
+
+        if (!newMenuItem) {
+            newMenuItem = new DbusMenuItem(this, id, properties, childrenIds);
+            this._items.set(id, newMenuItem);
+        }
+
+        this._requestProperties(id, cancellable).catch(e => {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                Util.Logger.warn(`Could not get menu properties menu proxy: ${e}`);
+        });
 
         return id;
     }
 
-    _clientReady(result, error) {
-        if (error) {
-            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                Util.Logger.warn(`Could not initialize menu proxy: ${error}`);
-            return;
+    async _doPropertiesUpdateAsync(cancellable) {
+        if (this._propertiesUpdateCancellable)
+            this._propertiesUpdateCancellable.cancel();
+
+        this._propertiesUpdateCancellable = cancellable;
+
+        try {
+            const requests = [];
+
+            this._items.forEach((_, id) =>
+                requests.push(this._requestProperties(id, cancellable)));
+
+            await Promise.all(requests);
+        } finally {
+            if (this._propertiesUpdateCancellable === cancellable)
+                this._propertiesUpdateCancellable = null;
         }
+    }
 
-        this._requestLayoutUpdate();
+    _doPropertiesUpdate() {
+        const cancellable = new Util.CancellableChild(this._cancellable);
+        this._doPropertiesUpdateAsync(cancellable).catch(e => {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                Util.Logger.warn(`Could not get menu properties menu proxy: ${e}`);
+        });
+    }
 
-        // listen for updated layouts and properties
-        this._proxy.connectSignal('LayoutUpdated', this._onLayoutUpdated.bind(this));
-        this._proxy.connectSignal('ItemsPropertiesUpdated', this._onPropertiesUpdated.bind(this));
+
+    set active(active) {
+        const wasActive = this._active;
+        this._active = active;
+
+        if (active && wasActive !== active) {
+            if (this._flagLayoutUpdateRequired) {
+                this._requestLayoutUpdate();
+            } else if (this._flagItemsUpdateRequired) {
+                this._doPropertiesUpdate();
+                this._flagItemsUpdateRequired = false;
+            }
+        }
+    }
+
+    _onSignal(_sender, signal, params) {
+        if (signal === 'LayoutUpdated') {
+            if (!this._active) {
+                this._flagLayoutUpdateRequired = true;
+                return;
+            }
+
+            this._requestLayoutUpdate();
+        } else if (signal === 'ItemsPropertiesUpdated') {
+            if (!this._active) {
+                this._flagItemsUpdateRequired = true;
+                return;
+            }
+
+            this._onPropertiesUpdated(params.deep_unpack());
+        }
     }
 
     getItem(id) {
@@ -423,40 +494,35 @@ var DBusClient = class AppIndicatorsDBusClient {
     }
 
     // we don't need to cache and burst-send that since it will not happen that frequently
-    sendAboutToShow(id) {
+    async sendAboutToShow(id) {
         /* Some indicators (you, dropbox!) don't use the right signature
          * and don't return a boolean, so we need to support both cases */
-        let connection = this._proxy.get_connection();
-        connection.call(this._proxy.get_name(), this._proxy.get_object_path(),
-            this._proxy.get_interface_name(), 'AboutToShow',
-            new GLib.Variant('(i)', [id]), null,
-            Gio.DBusCallFlags.NONE, -1, null, (proxy, res) => {
-                try {
-                    let ret = proxy.call_finish(res);
-                    if ((ret.is_of_type(new GLib.VariantType('(b)')) &&
-                     ret.get_child_value(0).get_boolean()) ||
-                    ret.is_of_type(new GLib.VariantType('()')))
-                        this._requestLayoutUpdate();
+        try {
+            const ret = await this.gConnection.call(this.gName, this.gObjectPath,
+                this.gInterfaceName, 'AboutToShow', new GLib.Variant('(i)', [id]),
+                null, Gio.DBusCallFlags.NONE, -1, this._cancellable);
 
-                } catch (e) {
-                    Util.Logger.warn(`Impossible to send about-to-show to menu: ${e}`);
-                }
-            });
+            if ((ret.is_of_type(new GLib.VariantType('(b)')) &&
+                 ret.get_child_value(0).get_boolean()) ||
+                ret.is_of_type(new GLib.VariantType('()')))
+                this._requestLayoutUpdate();
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e);
+        }
     }
 
     sendEvent(id, event, params, timestamp) {
-        if (!this._proxy)
+        if (!this.gNameOwner)
             return;
 
-        this._proxy.EventRemote(id, event, params, timestamp, this._cancellable,
-            () => { /* we don't care */ });
+        this.EventAsync(id, event, params, timestamp, this._cancellable).catch(e => {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e);
+        });
     }
 
-    _onLayoutUpdated() {
-        this._requestLayoutUpdate();
-    }
-
-    _onPropertiesUpdated(proxy, name, [changed, removed]) {
+    _onPropertiesUpdated([changed, removed]) {
         changed.forEach(([id, props]) => {
             let item = this._items.get(id);
             if (!item)
@@ -473,17 +539,12 @@ var DBusClient = class AppIndicatorsDBusClient {
             propNames.forEach(propName => item.propertySet(propName, null));
         });
     }
+});
 
-    destroy() {
-        this.emit('destroy');
-
-        this._cancellable.cancel();
-        Signals._disconnectAll.apply(this._proxy);
-
-        this._proxy = null;
-    }
-};
-Signals.addSignalMethods(DBusClient.prototype);
+if (imports.system.version < 17101) {
+    /* In old versions wrappers are not applied to sub-classes, so let's do it */
+    DBusClient.prototype.init_async = Gio.DBusProxy.prototype.init_async;
+}
 
 // ////////////////////////////////////////////////////////////////////////
 // PART TWO: "View" frontend implementation.
@@ -517,7 +578,10 @@ const MenuItemFactory = {
         shellItem._dbusClient = client;
 
         if (shellItem instanceof PopupMenu.PopupMenuItem) {
-            shellItem._icon = new St.Icon({ style_class: 'popup-menu-icon', x_align: St.Align.END });
+            shellItem._icon = new St.Icon({
+                style_class: 'popup-menu-icon',
+                x_align: St.Align.END,
+            });
             shellItem.add_child(shellItem._icon);
             shellItem.label.x_expand = true;
         }
@@ -550,6 +614,7 @@ const MenuItemFactory = {
         shellItem.connect('destroy', () => {
             shellItem._dbusItem = null;
             shellItem._dbusClient = null;
+            shellItem._icon = null;
         });
 
         if (shellItem.menu) {
@@ -663,16 +728,25 @@ const MenuItemFactory = {
             this.setOrnament(PopupMenu.Ornament.NONE);
     },
 
-    _updateImage() {
+    async _updateImage() {
         if (!this._icon)
             return; // might be missing on submenus / separators
 
         let iconName = this._dbusItem.propertyGet('icon-name');
         let iconData = this._dbusItem.propertyGetVariant('icon-data');
-        if (iconName)
+        if (iconName) {
             this._icon.icon_name = iconName;
-        else if (iconData)
-            this._icon.gicon = GdkPixbuf.Pixbuf.new_from_stream(Gio.MemoryInputStream.new_from_bytes(iconData.get_data_as_bytes()), null);
+        } else if (iconData) {
+            try {
+                const inputStream = Gio.MemoryInputStream.new_from_bytes(
+                    iconData.get_data_as_bytes());
+                this._icon.gicon = await GdkPixbuf.Pixbuf.new_from_stream_async(
+                    inputStream, this._dbusClient.cancellable);
+            } catch (e) {
+                if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                    logError(e);
+            }
+        }
     },
 
     _updateVisible() {
@@ -750,6 +824,12 @@ var Client = class AppIndicatorsClient {
         this._rootMenu = null; // the shell menu
         this._rootItem = null; // the DbusMenuItem for the root
         this.indicator = indicator;
+        this.cancellable = new Util.CancellableChild(this.indicator.cancellable);
+
+        this._client.initAsync(this.cancellable).catch(e => {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e);
+        });
 
         Util.connectSmart(this._client, 'ready-changed', this,
             () => this.emit('ready-changed'));
@@ -764,6 +844,7 @@ var Client = class AppIndicatorsClient {
     attachToMenu(menu) {
         this._rootMenu = menu;
         this._rootItem = this._client.getRoot();
+        this._itemsBeingAdded = new Set();
 
         // cleanup: remove existing children (just in case)
         this._rootMenu.removeAll();
@@ -783,8 +864,9 @@ var Client = class AppIndicatorsClient {
         this._rootItem.sendAboutToShow();
 
         // fill the menu for the first time
-        this._rootItem.getChildren().forEach(child =>
-            this._rootMenu.addMenuItem(MenuItemFactory.createItem(this, child)));
+        const children = this._rootItem.getChildren();
+        children.forEach(child =>
+            this._onRootChildAdded(this._rootItem, child));
     }
 
     _setOpenedSubmenu(submenu) {
@@ -804,16 +886,35 @@ var Client = class AppIndicatorsClient {
     }
 
     _onRootChildAdded(dbusItem, child, position) {
-        this._rootMenu.addMenuItem(MenuItemFactory.createItem(this, child), position);
+        // Menu additions can be expensive, so let's do it in different chunks
+        const basePriority = this.isOpen ? GLib.PRIORITY_DEFAULT : GLib.PRIORITY_LOW;
+        const idlePromise = new PromiseUtils.IdlePromise(
+            basePriority + this._itemsBeingAdded.size, this.cancellable);
+        this._itemsBeingAdded.add(child);
+
+        idlePromise.then(() => {
+            if (!this._itemsBeingAdded.has(child))
+                return;
+
+            this._rootMenu.addMenuItem(
+                MenuItemFactory.createItem(this, child), position);
+        }).catch(e => {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e);
+        }).finally(() => this._itemsBeingAdded.delete(child));
     }
 
     _onRootChildRemoved(dbusItem, child) {
         // children like to play hide and seek
         // but we know how to find it for sure!
-        this._rootMenu._getMenuItems().forEach(item => {
-            if (item._dbusItem === child)
-                item.destroy();
-        });
+        const item = this._rootMenu._getMenuItems().find(it =>
+            it._dbusItem === child);
+
+        if (item)
+            item.destroy();
+        else
+            this._itemsBeingAdded.delete(child);
+
     }
 
     _onRootChildMoved(dbusItem, child, oldpos, newpos) {
@@ -823,6 +924,8 @@ var Client = class AppIndicatorsClient {
     _onMenuOpened(menu, state) {
         if (!this._rootItem)
             return;
+
+        this._client.active = state;
 
         if (state) {
             if (this._openedSubMenu && this._openedSubMenu.isOpen)
@@ -845,6 +948,7 @@ var Client = class AppIndicatorsClient {
         this._rootItem = null;
         this._rootMenu = null;
         this.indicator = null;
+        this._itemsBeingAdded = null;
     }
 };
 Signals.addSignalMethods(Client.prototype);
