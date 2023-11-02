@@ -1803,11 +1803,6 @@ var MyShowAppsIconMenu = class extends PopupMenu.PopupMenu {
         });
 
         this._appendItem({
-            title: _('Extensions'),
-            cmd: ['gnome-shell-extension-prefs']
-        });
-
-        this._appendItem({
             title: _('Settings'),
             cmd: ['gnome-control-center']
         });
