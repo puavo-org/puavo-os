@@ -818,8 +818,8 @@ class packages {
   $r8168_module             = 'r8168/8.050.03'
   $virtualbox_module        = 'virtualbox/7.0.12'
 
-  # $broadcom_sta_dkms_module     # XXX bookworm
-  $all_dkms_modules = [ $nvidia_dkms_470_module
+  $all_dkms_modules = [ $broadcom_sta_dkms_module
+                      , $nvidia_dkms_470_module
                       , $nvidia_dkms_525_module
 		      , $virtualbox_module      ]
 		    # , $r8168_module                   # XXX bookworm
@@ -832,7 +832,7 @@ class packages {
     '6.5.0-0.deb12.1-amd64':
       # The current nvidia packages (470.199.02-1~deb12u1 and
       # 525.125.06-1~deb12u1) do not compile for 6.5.x.
-      dkms_modules => [ $virtualbox_module ],
+      dkms_modules => [ $broadcom_sta_dkms_module, $virtualbox_module ],
       package_name => 'linux-image-6.5.0-0.deb12.1-amd64-unsigned';
   }
 
