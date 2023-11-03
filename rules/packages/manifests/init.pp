@@ -830,7 +830,9 @@ class packages {
       package_name => 'linux-image-6.1.0-12-amd64';
 
     '6.5.0-0.deb12.1-amd64':
-      dkms_modules => $all_dkms_modules,
+      # The current nvidia packages (470.199.02-1~deb12u1 and
+      # 525.125.06-1~deb12u1) do not compile for 6.5.x.
+      dkms_modules => [ $virtualbox_module ],
       package_name => 'linux-image-6.5.0-0.deb12.1-amd64-unsigned';
   }
 
