@@ -13,3 +13,6 @@ gtest/GTestWrapper.java 000000 generic-all
 tools/jlink/JLinkTest.java 000000 generic-all
 
 java/net/httpclient/http2/HpackBinaryTestDriver.java 000000 generic-all
+
+# runner issue, disk space size exceeds 32 bit integer
+java/io/File/GetXSpace.java 000000 generic-all
