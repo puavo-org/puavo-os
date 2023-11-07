@@ -3,7 +3,17 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: no
 --- a/src/java.base/share/classes/java/util/Properties.java
 +++ b/src/java.base/share/classes/java/util/Properties.java
-@@ -929,7 +929,7 @@
+@@ -53,6 +53,9 @@
+ import sun.nio.cs.UTF_8;
+ import sun.nio.cs.ISO_8859_1;
+ 
++import java.security.AccessController;
++import java.security.PrivilegedAction;
++
+ /**
+  * The {@code Properties} class represents a persistent set of
+  * properties. The {@code Properties} can be saved to a stream
+@@ -929,7 +932,7 @@
          if (comments != null) {
              writeComments(bw, comments);
          }
@@ -12,7 +22,7 @@ Forwarded: no
          bw.newLine();
          synchronized (this) {
              for (Map.Entry<Object, Object> e : entrySet()) {
-@@ -1579,4 +1579,22 @@
+@@ -1579,4 +1582,27 @@
          }
          this.map = map;
      }
@@ -23,14 +33,19 @@ Forwarded: no
 +     * environment variable is specified. In this case the format used is
 +     * locale and timezone insensitive to ensure the output is reproducible.
 +     */
++    @SuppressWarnings("removal")
 +    private String getFormattedTimestamp() {
-+        if (System.getenv("SOURCE_DATE_EPOCH") == null) {
++        String epoch = AccessController.doPrivileged(new PrivilegedAction<String>(){
++            public String run() { return System.getenv("SOURCE_DATE_EPOCH"); }
++        });
++
++        if (epoch == null) {
 +            return new Date().toString();
 +        } else {
 +            // Use the SOURCE_DATE_EPOCH timestamp and make the format locale/timezone insensitive
 +            java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", java.util.Locale.ENGLISH);
 +            fmt.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-+            Date date = new Date(1000 * Long.parseLong(System.getenv("SOURCE_DATE_EPOCH")));
++            Date date = new Date(1000 * Long.parseLong(epoch));
 +            return fmt.format(date);
 +        }
 +    }

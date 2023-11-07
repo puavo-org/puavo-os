@@ -1,0 +1,45 @@
+# NSS3 failure when processing SHA3 hashes (needs investigation)
+sun/security/pkcs11/Signature/KeyAndParamCheckForPSS.java 0000000 generic-all
+sun/security/pkcs11/MessageDigest/TestCloning.java 0000000 generic-all
+sun/security/pkcs11/Signature/SignatureTestPSS.java 0000000 generic-all
+
+# https://bugs.openjdk.org/browse/JDK-8312488
+tools/jpackage/share/AppLauncherEnvTest.java 0000000 generic-all
+
+# java.lang.Exception: Proc abnormal end
+sun/security/krb5/auto/Cleaners.java 0000000 generic-all
+
+# result: Failed. Execution failed: `main' threw exception: java.io.IOException: Mount point not found
+# https://bugs.openjdk.org/browse/JDK-8166162
+
+java/io/File/createTempFile/TargetDirectory.java 8166162 generic-all
+java/nio/file/Files/CheckPermissions.java 8166162 generic-all
+java/nio/file/Files/TemporaryFiles.java 8166162 generic-all
+java/nio/file/Files/Misc.java 8166162 generic-all
+java/nio/file/Files/CopyAndMove.java 8166162 generic-all
+java/nio/file/Files/InterruptCopy.java 8166162 generic-all
+java/nio/file/Files/FileAttributes.java 8166162 generic-all
+java/nio/file/attribute/BasicFileAttributeView/SetTimesNanos.java 8166162 generic-all
+java/nio/file/attribute/AclFileAttributeView/Basic.java 8166162 generic-all
+java/nio/file/attribute/DosFileAttributeView/Basic.java 8166162 generic-all
+java/nio/file/attribute/PosixFileAttributeView/Basic.java 8166162 generic-all
+java/nio/file/attribute/UserDefinedFileAttributeView/Basic.java 8166162 generic-all
+java/nio/file/FileStore/Basic.java 8166162 generic-all
+java/nio/channels/FileChannel/directio/DirectIOTest.java 8166162 generic-all
+java/nio/channels/FileChannel/directio/ReadDirect.java 8166162 generic-all
+java/nio/channels/FileChannel/directio/PreadDirect.java 8166162 generic-all
+java/nio/channels/FileChannel/directio/PwriteDirect.java 8166162 generic-all
+java/nio/channels/FileChannel/directio/WriteDirect.java 8166162 generic-all
+
+# utf-8 locale is missing on build machine
+# https://bugs.openjdk.org/browse/JDK-8249079
+
+java/lang/invoke/lambda/LambdaFileEncodingSerialization.java 8249079 generic-all
+
+# disable scoped value (incubating feature) test pending investigation
+
+jdk/incubator/concurrent/ScopedValue/StressStackOverflow.java 000000 generic-all
+java/lang/ScopedValue/StressStackOverflow.java 000000 generic-all
+
+# https://bugs.openjdk.org/browse/JDK-8309214
+sun/security/pkcs11/KeyStore/CertChainRemoval.java 000000 generic-all

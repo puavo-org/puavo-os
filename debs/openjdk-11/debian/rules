@@ -78,6 +78,7 @@ else
 endif
 
 is_upstream_release = yes
+#is_upstream_release =
 
 srcdir		= .
 builddir	= build
@@ -339,10 +340,14 @@ else ifneq (,$(filter $(distrel),jammy))
   export CC = $(DEB_HOST_GNU_TYPE)-gcc-11
   export CXX = $(DEB_HOST_GNU_TYPE)-g++-11
   bd_gcc = g++-11 <!cross>,
-else
+else ifneq (,$(filter $(distrel),bookworm lunar))
   export CC = $(DEB_HOST_GNU_TYPE)-gcc-12
   export CXX = $(DEB_HOST_GNU_TYPE)-g++-12
   bd_gcc = g++-12 <!cross>,
+else
+  export CC = $(DEB_HOST_GNU_TYPE)-gcc-13
+  export CXX = $(DEB_HOST_GNU_TYPE)-g++-13
+  bd_gcc = g++-13 <!cross>,
 endif
 
 # until we are able to b-d on gcc-for-host ...
@@ -1882,8 +1887,9 @@ endif
 	dh_builddeb -a $(nodemo) $(nojrez) #$(bd_options)
 
 is_release		= yes
+#is_release		=
 git_project		= jdk11u
-git_tag			= jdk-11.0.20+8
+git_tag			= jdk-11.0.21+9
 package_version		= $(subst jdk-,,$(git_tag))
 package_version		= $(shell echo $(PKGVERSION) | sed 's/-[^-][^-]*$$//')
 ifneq ($(is_release),yes)

@@ -2,8 +2,6 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Files-Excluded:
   .github/*
   .gitattributes
-  src/java.desktop/share/native/liblcms/cms*.c
-  src/java.desktop/share/native/liblcms/lcms2*.h
   src/java.base/share/native/libzip/zlib/*
   src/java.desktop/share/native/libsplashscreen/giflib/*
   src/java.desktop/share/native/libsplashscreen/libpng/*

@@ -1,0 +1,24 @@
+# Wrong test environment in autopkgtest
+# java.lang.IllegalStateException: Launching JShell execution engine threw: ERROR: transport error 202: getaddrinfo: failed to parse address
+jdk/jshell/JdiListeningLocalhostExecutionControlTest.java 0000000 generic-all
+
+# tests failing due to disable-doclint-by-default.diff
+
+jdk/javadoc/doclet/testSupplementary/TestSupplementary.java 0000000 generic-all
+jdk/javadoc/doclet/testPackageHtml/TestPackageHtml.java 0000000 generic-all
+jdk/javadoc/doclet/testSummaryTag/TestSummaryTag.java 0000000 generic-all
+jdk/javadoc/doclet/testStylesheet/TestStylesheet.java 0000000 generic-all
+jdk/javadoc/doclet/testSeeTag/TestSeeTag.java 0000000 generic-all
+jdk/javadoc/doclet/testRelativeLinks/TestRelativeLinks.java 0000000 generic-all
+jdk/javadoc/doclet/testBadHtml/TestBadHtml.java 0000000 generic-all
+jdk/javadoc/doclet/testParamTaglet/TestParamTaglet.java 0000000 generic-all
+jdk/javadoc/doclet/testNonInlineHtmlTagRemoval/TestNonInlineHtmlTagRemoval.java 0000000 generic-all
+jdk/javadoc/doclet/dupThrowsTags/TestDupThrowsTags.java 0000000 generic-all
+jdk/javadoc/doclet/testLinkOption/TestLinkOption.java 0000000 generic-all
+jdk/javadoc/doclet/T6735320/T6735320.java 0000000 generic-all
+jdk/javadoc/doclet/testValueTag/TestValueTag.java 0000000 generic-all
+jdk/javadoc/tool/modules/Modules.java 0000000 generic-all
+jdk/javadoc/doclet/testWarnings/TestWarnings.java 0000000 generic-all
+jdk/javadoc/doclet/testHtmlTableStyles/TestHtmlTableStyles.java 0000000 generic-all
+jdk/javadoc/tool/doclint/DocLintTest.java 0000000 generic-all
+jdk/javadoc/doclet/testBadPackageFileInJar/TestBadPackageFileInJar.java 0000000 generic-all

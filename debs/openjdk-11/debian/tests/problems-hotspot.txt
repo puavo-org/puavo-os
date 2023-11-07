@@ -1,0 +1,21 @@
+# tests that need to be investigated
+
+gc/shenandoah/mxbeans/TestChurnNotifications.java#aggressive 0000000 generic-all
+gc/shenandoah/mxbeans/TestChurnNotifications.java#iu 0000000 generic-all
+
+#result: Failed. Execution failed: `main' threw exception: java.io.IOException: Mount point not found
+# https://bugs.openjdk.org/browse/JDK-8166162
+
+runtime/LoadClass/LongBCP.java 8166162 generic-all
+
+# flaky test
+compiler/vectorization/runner/MultipleLoopsTest.java 000000 generic-all
+
+# Intermittent failures because LingeredApp.class is not found
+runtime/cds/appcds/jcmd/JCmdTestDynamicDump.java 000000 generic-all
+runtime/cds/appcds/jcmd/JCmdTestFileSafety.java  000000 generic-all
+runtime/cds/appcds/jcmd/JCmdTestStaticDump.java  000000 generic-all
+
+# Unexpected exit from the test
+runtime/NMT/SafepointPollingPages.java 000000 generic-all
+

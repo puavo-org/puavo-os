@@ -4,6 +4,7 @@ set -o errtrace
 set -o pipefail
 set -o nounset
 
+
 cleanup() {
     # kill window manager to clean up (rest will exit automatically)
     pid="$(jobs -p)"
@@ -25,13 +26,8 @@ export DISPLAY=:10
 debian/tests/start-xvfb.sh 10 &
 sleep 3
 
-problem_list=${AUTOPKGTEST_TMP}/jdk-problems.txt
-cat test/jdk/ProblemList.txt > ${problem_list}
-
-host_arch="${DEB_HOST_ARCH:-$(dpkg --print-architecture)}"
-if [[ -f debian/tests/problems-${host_arch}.txt ]]; then
-    cat debian/tests/problems-${host_arch}.txt >> ${problem_list}
-fi
+problem_list=${AUTOPKGTEST_TMP}/problems.txt
+debian/tests/write-problems ${problem_list} test/jdk/ProblemList.txt jdk
 
 native_path=$(pwd)/build/images/test/jdk/jtreg/native
 debian/tests/jtreg-autopkgtest.sh jdk \

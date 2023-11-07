@@ -1,14 +1,50 @@
-openjdk-11 (11.0.20+8-1~deb11u1+puavo1) bullseye; urgency=medium
+openjdk-11 (11.0.21+9-1~deb11u1+puavo1) bullseye; urgency=medium
 
   * Build with our patches.
 
  -- Puavo Org <dev@opinsys.fi>  Fri, 15 Sep 2023 14:24:12 +0300
 
-openjdk-11 (11.0.20+8-1~deb11u1) bullseye-security; urgency=medium
+openjdk-11 (11.0.21+9-1~deb11u1) bullseye-security; urgency=medium
 
-  * Rebuild for bullseye
+  * Backport to bullseye.
 
- -- Moritz Muehlenhoff <jmm@debian.org>  Sun, 23 Jul 2023 21:23:09 +0200
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Fri, 27 Oct 2023 08:54:07 +0200
+
+openjdk-11 (11.0.21+9-1) unstable; urgency=high
+
+  * OpenJDK 11.0.21 release, build 9.
+    - CVE-2023-22081.
+    - Release notes:
+      https://www.oracle.com/java/technologies/javase/11-0-21-relnotes.html#R11_0_21
+
+  [ Vladimir Petko ]
+  * d/test: update problemlist.
+  * d/p: drop exclude-broken-tests.patch.
+  * d/p/reproducible-properties-timestamp.diff: use the privileged action
+    to read the system property (JDK-8272157, 914278).
+
+  [ Matthias Klose ]
+  * Build using GCC 13 on development versions.
+
+  [ Pushkar Kulkarni ]
+  * Handle limited ECC capabilities of NSS on older releases.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 18 Oct 2023 09:28:04 +0200
+
+openjdk-11 (11.0.21~4ea-1) unstable; urgency=medium
+
+  * OpenJDK 11.0.21 release, build 4 (early access).
+
+  [ Vladimir Petko ]
+  * d/copyright: remove liblcms from excluded files.
+  * Refresh patch for 11.0.21+2 ea.
+  * d/t/jtreg-autopkgtest.{sh,in}: JDK-8232153 - set NSS_DEFAULT_DB_TYPE
+    to let sun/security/pkcs11/Secmod/AddTrustedCert.java pass.
+
+  [ Matthias Klose ]
+  * Explicitly configure --without-jtreg with the nocheck profile
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 24 Aug 2023 12:53:49 +0200
 
 openjdk-11 (11.0.20+8-1) unstable; urgency=high
 
