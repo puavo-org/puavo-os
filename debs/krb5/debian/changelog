@@ -1,8 +1,21 @@
-krb5 (1.20.1-1+puavo1) bookworm; urgency=high
+krb5 (1.20.1-2+deb12u1) bookworm; urgency=high
 
-  * Added a patch to increase maximum number of realms.
+  * Fixes CVE-2023-36054: a  remote authenticated attacker can cause
+    kadmind to free an uninitialized pointer.  Upstream believes remote
+    code execusion is unlikely, Closes: #1043431 
 
- -- Puavo Org <dev@opinsys.fi>  Tue, 14 Mar 2023 10:23:22 +0200
+ -- Sam Hartman <hartmans@debian.org>  Mon, 14 Aug 2023 14:06:53 -0600
+
+krb5 (1.20.1-2) unstable; urgency=medium
+
+  * Tighten dependencies on libkrb5support0.  This means that the entire
+    upgrade from bullseye to bookworm needs to be lockstep, but it appears
+    that's what is required, Closes: #1036055
+  
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 15 May 2023 17:44:41 -0600
+
+krb5 (1.20.1-1) unstable; urgency=high
 
   [ Bastian Germann ]
   * Sync debian/copyright with NOTICE from upstream
