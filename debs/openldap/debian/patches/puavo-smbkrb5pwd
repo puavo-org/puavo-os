@@ -547,25 +547,25 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +	if (worker_pid == -1) {
 +		switch (errno) {
 +			case EAGAIN:
-+				Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++				Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +				      "smbkrb5pwd %s : failed to fork process for password change (EAGAIN)!\n",
 +				      op->o_log_prefix);
 +
 +				return LDAP_LOCAL_ERROR;
 +			case ENOMEM:
-+				Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++				Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +				      "smbkrb5pwd %s : failed to fork process for password change (ENOMEM - No memory)!\n",
 +				      op->o_log_prefix);
 +
 +				return LDAP_LOCAL_ERROR;
 +			case ENOSYS:
-+				Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++				Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +				      "smbkrb5pwd %s : failed to fork process for password change (ENOSYS - Not supported)!\n",
 +				      op->o_log_prefix);
 +
 +				return LDAP_LOCAL_ERROR;
 +			default:
-+				Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++				Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +				      "smbkrb5pwd %s : failed to fork process for password change!\n",
 +				      op->o_log_prefix);
 +
@@ -577,7 +577,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +		waitpid(worker_pid, &status, 0);
 +
 +		if (status == SIGALRM) {
-+			Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++			Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +			      "smbkrb5pwd %s : forked password change process did not complete in 15s\n",
 +			      op->o_log_prefix);
 +
@@ -756,7 +756,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +	rc = SLAP_CB_CONTINUE;
 +	if (pi->oc_requiredObjectclass &&
 +	    !is_entry_objectclass(e, pi->oc_requiredObjectclass, 0)) {
-+		Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
 +	     	     "smbkrb5pwd %s : an entry is not of required"
 +		     " objectClass\n",
 +	     	     op->o_log_prefix);
@@ -1088,7 +1088,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +					   &pi->admin_princstr);
 +		if (rc)
 +			return rc;
-+		Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_INFO,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_INFO,
 +		     "smbkrb5pwd : using admin principal %s\n",
 +		      pi->admin_princstr);
 +		break;
@@ -1096,7 +1096,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +
 +	case PC_SMB_REQUIREDCLASS: {
 +		if (!(pi->oc_requiredObjectclass = oc_find(c->value_string))) {
-+			Log1(LDAP_DEBUG_ANY, LDAP_LEVEL_INFO,
++			Log(LDAP_DEBUG_ANY, LDAP_LEVEL_INFO,
 +			     "smbkrb5pwd : could not find required "
 +			     "objectclass %s\n",
 +			     c->value_string);
