@@ -16,9 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 'use strict';
+const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
 const Main = imports.ui.main;
@@ -48,6 +50,7 @@ function init() {
     data.launchDesktopId = 0;
     data.currentProcess = null;
     data.dbusTimeoutId = 0;
+    data.switchWorkspaceId = 0;
 
     data.GnomeShellOverride = null;
     data.GnomeShellVersion = parseInt(Config.PACKAGE_VERSION.split('.')[0]);
@@ -110,6 +113,15 @@ function innerEnable() {
     // under X11 we don't need to cheat, so only do all this under wayland
     if (Meta.is_wayland_compositor()) {
         data.x11Manager.enable();
+    } else {
+        data.switchWorkspaceId = global.window_manager.connect('switch-workspace', () => {
+            let windows = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace());
+            windows = global.display.sort_windows_by_stacking(windows);
+            if (windows.length) {
+                let topWindow = windows[windows.length - 1];
+                topWindow.focus(Clutter.CURRENT_TIME);
+            }
+        });
     }
 
     /*
@@ -269,6 +281,10 @@ function disable() {
         data.doCopy = undefined;
     }
 
+    if (data.switchWorkspaceId) {
+        global.window_manager.disconnect(data.switchWorkspaceId);
+        data.switchWorkspaceId = 0;
+    }
     if (data.doCutId) {
         data.doCut.disconnect(data.doCutId);
         data.doCutId = 0;
@@ -396,7 +412,7 @@ function doKillAllOldDesktopProcesses() {
                 contents += String.fromCharCode(readData[i]);
             }
         }
-        let path = `gjs ${GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, 'ding.js'])}`;
+        let path = `gjs ${GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, 'app', 'ding.js'])}`;
         if (contents.startsWith(path)) {
             let proc = new Gio.Subprocess({argv: ['/bin/kill', filename]});
             proc.init(null);
@@ -433,12 +449,12 @@ function doRelaunch(reloadTime) {
 function launchDesktop() {
     global.log('Launching DING process');
     let argv = [];
-    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, 'ding.js']));
+    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, 'app', 'ding.js']));
     // Specify that it must work as true desktop
     argv.push('-E');
     // The path. Allows the program to find translations, settings and modules.
     argv.push('-P');
-    argv.push(ExtensionUtils.getCurrentExtension().path);
+    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, 'app']));
 
     data.currentProcess = new LaunchSubprocess(0, 'DING');
     data.currentProcess.set_cwd(GLib.get_home_dir());
@@ -489,7 +505,13 @@ var LaunchSubprocess = class {
         this.cancellable = new Gio.Cancellable();
         this._launcher = new Gio.SubprocessLauncher({flags: flags | Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_MERGE});
         if (Meta.is_wayland_compositor()) {
-            this._waylandClient = Meta.WaylandClient.new(this._launcher);
+            try {
+                this._waylandClient = Meta.WaylandClient.new(this._launcher);
+            } catch (e) {
+                this._waylandClient = Meta.WaylandClient.new(global.context,
+                                                             this._launcher);
+            }
+
             if (Config.PACKAGE_VERSION == '3.38.0') {
                 // workaround for bug in 3.38.0
                 this._launcher.ref();

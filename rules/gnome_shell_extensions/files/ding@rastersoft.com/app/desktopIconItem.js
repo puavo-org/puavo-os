@@ -100,8 +100,10 @@ var desktopIconItem = class desktopIconItem {
     }
 
     _onDestroy() {
-        this._destroy();
-        this._destroyed = true;
+        if (!this._destroyed) {
+            this._destroy();
+            this._destroyed = true;
+        }
     }
 
     _connectSignal(object, signal, callback) {

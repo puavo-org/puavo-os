@@ -302,10 +302,10 @@ var FileItem = class extends desktopIconItem.desktopIconItem {
         if (this._isDirectory && this._desktopManager.useNemo) {
             try {
                 DesktopIconsUtil.trySpawn(GLib.get_home_dir(), ['nemo', this.file.get_uri()], DesktopIconsUtil.getFilteredEnviron());
-                return;
             } catch (err) {
                 log(`Error trying to launch Nemo: ${err.message}\n${err}`);
             }
+            return;
         }
 
         if (!DBusUtils.GnomeArchiveManager.isAvailable &&

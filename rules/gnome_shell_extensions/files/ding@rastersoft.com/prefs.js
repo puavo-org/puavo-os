@@ -19,14 +19,6 @@
 'use strict';
 const Gtk = imports.gi.Gtk;
 const Gio = imports.gi.Gio;
-const GioSSS = Gio.SettingsSchemaSource;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Gettext = imports.gettext;
-const Me = ExtensionUtils.getCurrentExtension();
-const Enums = Me.imports.enums;
-const PrefsWindow = Me.imports.prefswindow;
-
-var _ = Gettext.domain('ding').gettext;
 
 /**
  *
@@ -37,28 +29,19 @@ function init() {}
  *
  */
 function buildPrefsWidget() {
-    let schemaSource = GioSSS.get_default();
-    let schemaGtk = schemaSource.lookup(Enums.SCHEMA_GTK, true);
-    let gtkSettings = new Gio.Settings({settings_schema: schemaGtk});
-    let schemaObj = schemaSource.lookup(Enums.SCHEMA_NAUTILUS, true);
-    let nautilusSettings;
-    if (!schemaObj) {
-        nautilusSettings = null;
-    } else {
-        nautilusSettings = new Gio.Settings({settings_schema: schemaObj});
-    }
-    let desktopSettings = PrefsWindow.get_schema(Me.dir.get_path(), Enums.SCHEMA);
+    let mainAppControl = Gio.DBusActionGroup.get(
+        Gio.DBus.session,
+        'com.rastersoft.ding',
+        '/com/rastersoft/ding'
+    );
+    mainAppControl.activate_action('changeDesktopIconSettings', null);
 
-    let localedir = Me.dir.get_child('locale');
-    if (localedir.query_exists(null)) {
-        Gettext.bindtextdomain('ding', localedir.get_path());
-    }
-
-    let frame = PrefsWindow.preferencesFrame(Gtk, desktopSettings, nautilusSettings, gtkSettings);
-    if (frame.show_all) {
-        frame.show_all();
-    } else {
-        frame.show();
-    }
-    return frame;
+    return new Gtk.Box({
+        orientation: Gtk.Orientation.VERTICAL,
+        spacing: 10,
+        margin_top: 10,
+        margin_bottom: 10,
+        margin_start: 10,
+        margin_end: 10,
+    });;
 }

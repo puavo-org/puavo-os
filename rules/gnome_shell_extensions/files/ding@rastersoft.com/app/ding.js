@@ -154,7 +154,7 @@ PromiseUtils._promisify({keepOriginal: true}, Gio._LocalFilePrototype, 'make_dir
 PromiseUtils._promisify({keepOriginal: true}, Gio._LocalFilePrototype, 'query_info_async');
 PromiseUtils._promisify({keepOriginal: true}, Gio._LocalFilePrototype, 'set_attributes_async');
 
-let localePath = GLib.build_filenamev([codePath, 'locale']);
+let localePath = GLib.build_filenamev([codePath, '..', 'locale']);
 if (Gio.File.new_for_path(localePath).query_exists(null)) {
     Gettext.bindtextdomain('ding', localePath);
 }
