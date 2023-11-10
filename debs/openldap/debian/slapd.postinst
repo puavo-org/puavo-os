@@ -1,0 +1,23 @@
+#! /bin/sh 
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+# This will be replaced with debian/slapd.scripts-common which includes
+# various helper functions and $OLD_VERSION and $SLAPD_CONF
+#SCRIPTSCOMMON#
+
+# Create a new user.  Don't create the user, however, if the local
+# administrator has already customized slapd to run as a different user.
+if [ "$MODE" = "configure" ] || [ "$MODE" = "reconfigure" ] ; then
+	if [ "openldap" = "$SLAPD_USER" ] ; then
+		create_new_user
+	fi
+fi
+
+#DEBHELPER#
+
+exit 0
+
+# vim: set sw=8 foldmethod=marker: 

@@ -1,3 +1,9 @@
+openldap (2.5.13+dfsg-5+puavo2+buildonce) bookworm; urgency=medium
+
+  * Add slapd.postinst, we need it to create a system user.
+
+ -- Puavo Org <dev@opinsys.fi>  Fri, 10 Nov 2023 09:56:52 +0100
+
 openldap (2.5.13+dfsg-5+puavo1+buildonce) bookworm; urgency=medium
 
   * With some patches by Puavo Org.
