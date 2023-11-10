@@ -791,6 +791,8 @@ set_image_as_default_image() {
 }
 
 try_full_image_update_from_imageserver() {
+  local rsync_retry_count
+
   image_server=$1
   rate_limit=$2
   next_image=$3
@@ -814,33 +816,48 @@ try_full_image_update_from_imageserver() {
   # rsync may take a little while before it outputs progress information
   echo 0 | update_stats_with_progress image_sync
 
-  rsync_error_code=$(
-    {
+  rsync_retry_count=0
+  rsync_error_code=''
+  while [ "$rsync_retry_count" -lt 5 ]; do
+    rsync_error_code=$(
       {
-	rsync --fuzzy                           \
-	      --inplace                         \
-	      --progress                        \
-	      $rsyncopts                        \
-	      "$remote_rsyncpath"               \
-	      "${images_dir}/${next_image}.tmp" \
-	    2>/dev/null                         \
-	  || echo $? >&2
-      } | unbuffer -p awk '
-	    BEGIN { progress = -1 }
+        {
+          rsync --contimeout=60                            \
+                --timeout=900                              \
+                --fuzzy                                    \
+                --inplace                                  \
+                --progress                                 \
+                --sockopts=SO_RCVTIMEO=900,SO_SNDTIMEO=900 \
+                $rsyncopts                                 \
+                "$remote_rsyncpath"                        \
+                "${images_dir}/${next_image}.tmp"          \
+              2>/dev/null                                  \
+            || echo $? >&2
+        } | unbuffer -p awk '
+              BEGIN { progress = -1 }
 
-	    {
-	      if (match($2, /^([[:digit:]]+)%$/, a)) {
-		new_progress = a[1]
-		if (progress != new_progress) {
-		  progress = new_progress
-		  print progress
-		}
-	      }
-	    }
-	  ' \
-	| update_stats_with_progress image_sync
-    } 2>&1 || true
-  )
+              {
+                if (match($2, /^([[:digit:]]+)%$/, a)) {
+                  new_progress = a[1]
+                  if (progress != new_progress) {
+                    progress = new_progress
+                    print progress
+                  }
+                }
+              }
+            ' \
+          | update_stats_with_progress image_sync
+      } 2>&1 || true
+    )
+
+    case "$rsync_error_code" in
+      30) log err "rsyncing ${remote_rsyncpath}: timeout in send/receive"    ;;
+      35) log err "rsyncing ${remote_rsyncpath}: timeout in connection setup";;
+      *)  break;;
+    esac
+
+    rsync_retry_count=$(($rsync_retry_count + 1))
+  done
 
   if [ -z "$rsync_error_code" ]; then
     log info "rsync fetched the image $next_image with success"
