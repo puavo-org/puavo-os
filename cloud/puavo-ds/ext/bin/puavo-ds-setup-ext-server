@@ -103,7 +103,7 @@ conn.bind(@binddn, @bindpw) do
         tempfile.puts
 
         `mkdir -p #{@directory}`
-        `chown openldap.openldap #{@directory}`
+        `chown openldap:openldap #{@directory}`
         `chmod 0750 #{@directory}`
       end
 
@@ -118,8 +118,8 @@ puts "#{tempfile.path}"
 tempfile.close(false)
 
 `slapadd -F /etc/ldap/slapd.d/ -l #{tempfile.path} -b cn=config`
-`chown -R openldap: /etc/ldap/slapd.d`
-`chown -R openldap.openldap /var/lib/ldap/*`
+`chown -R openldap:openldap /etc/ldap/slapd.d`
+`chown -R openldap:openldap /var/lib/ldap/*`
 `service slapd start`
 
 tempfile.unlink

@@ -189,7 +189,7 @@ puts "\nStop krb5-kdc service\n\n"
 
 begin
   `mkdir -p "/var/lib/ldap/#{suffix}"`
-  `chown openldap.openldap "/var/lib/ldap/#{suffix}"`
+  `chown openldap:openldap "/var/lib/ldap/#{suffix}"`
 
   new_db = Database.new( "olcSuffix" => suffix,
                          "olcRootDN" => PUAVO_ETC.ldap_dn,
