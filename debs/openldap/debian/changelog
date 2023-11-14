@@ -1,3 +1,9 @@
+openldap (2.5.13+dfsg-5+puavo3) bookworm; urgency=medium
+
+  * Drop +buildonce from version.
+
+ -- Puavo Org <dev@opinsys.fi>  Tue, 14 Nov 2023 12:16:02 +0200
+
 openldap (2.5.13+dfsg-5+puavo2+buildonce) bookworm; urgency=medium
 
   * Add slapd.postinst, we need it to create a system user.
