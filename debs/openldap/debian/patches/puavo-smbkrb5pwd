@@ -602,7 +602,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +
 +	a_uid = attr_find(e->e_attrs, ad_uid);
 +	if (!a_uid) {
-+		Log2(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +		      "smbkrb5pwd %s : could not find uid in entry: %s\n",
 +		      op->o_log_prefix,
 +		      ldap_err2string(LDAP_NO_SUCH_ATTRIBUTE));
@@ -618,7 +618,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +
 +	retval = kadm5_init_krb5_context(&context);
 +	if (retval) {
-+		Log3(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +		     "smbkrb5pwd %s : kadm5_init_krb5_context() failed"
 +		     " for user %s: %s\n",
 +		     op->o_log_prefix, user_uid, error_message(retval));
@@ -646,7 +646,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +#endif
 +
 +	if (retval) {
-+		Log4(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +		      "smbkrb5pwd %s : kadm5_init_with_password() failed"
 +		      " for user %s (%s): %s\n",
 +  		      op->o_log_prefix, user_uid, pi->admin_princstr, error_message(retval));
@@ -667,7 +667,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +
 +	retval = krb5_parse_name(context, user_princstr, &princ.principal);
 +	if (retval) {
-+		Log3(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +		     "smbkrb5pwd %s : krb5_parse_name() failed"
 +		     " for user %s: %s\n",
 +		     op->o_log_prefix, user_princstr, error_message(retval));
@@ -680,7 +680,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +	retval = kadm5_create_principal(kadm5_handle, &princ, create_mask,
 +					user_password);
 +	if (retval == KADM5_OK) {
-+		Log2(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
 +		     "smbkrb5pwd %s : created principal for user %s\n",
 +		     op->o_log_prefix, user_princstr);
 +		rc = LDAP_SUCCESS;
@@ -689,7 +689,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +		retval = kadm5_chpass_principal(kadm5_handle, princ.principal,
 +						user_password);
 +		if (retval) {
-+			Log3(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++			Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +			     "smbkrb5pwd %s : kadm5_chpass_principal() failed "
 +			     "for user %s: %s\n",
 +			     op->o_log_prefix, user_princstr,
@@ -697,13 +697,13 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +			rc = LDAP_CONNECT_ERROR;
 +			goto mitkrb_error_with_princ;
 +		} else {
-+			Log2(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
++			Log(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
 +			     "smbkrb5pwd %s : changed password for user %s\n",
 +			     op->o_log_prefix, user_princstr);
 +			rc = LDAP_SUCCESS;
 +		}
 +	} else {
-+		Log3(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_ERR,
 +		     "smbkrb5pwd %s : Problem creating principal for user %s: "
 +		     "%s\n", op->o_log_prefix, user_princstr,
 +		     error_message(retval));
