@@ -2,6 +2,15 @@ class kernels::dkms {
   include ::kernels::dkms::r8168
   include ::packages
 
+  file {
+    '/etc/dkms':
+      ensure => directory;
+
+    '/etc/dkms/no-autoinstall':
+      before => Package['dkms'],
+      ensure => present;
+  }
+
   define install_dkms_module_for_kernel ($kernel_packages, $kernel_version) {
     $titlearray  = split($title, ' ')
     $dkms_module = $titlearray[0]
