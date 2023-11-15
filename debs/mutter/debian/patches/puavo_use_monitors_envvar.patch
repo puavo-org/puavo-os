@@ -1,0 +1,62 @@
+diff -ruN mutter/src/backends/meta-monitor-config-migration.c mutter/src/backends/meta-monitor-config-migration.c
+--- mutter/src/backends/meta-monitor-config-migration.c	2023-06-01 18:35:15.000000000 +0300
++++ mutter/src/backends/meta-monitor-config-migration.c	2023-11-15 13:08:37.642191053 +0200
+@@ -1158,9 +1158,14 @@
+   g_autoptr (GFile) backup_file = NULL;
+   g_autofree char *user_file_path = NULL;
+   g_autoptr (GFile) user_file = NULL;
++  char *monitors_file_path;
++
++  monitors_file_path = getenv("MUTTER_MONITOR_FILENAME");
++  if (monitors_file_path == NULL)
++    monitors_file_path = "monitors.xml";
+ 
+   user_file_path = g_build_filename (g_get_user_config_dir (),
+-                                     "monitors.xml",
++                                     monitors_file_path,
+                                      NULL);
+   user_file = g_file_new_for_path (user_file_path);
+   backup_path = g_build_filename (g_get_user_config_dir (),
+@@ -1173,8 +1178,8 @@
+                     NULL, NULL, NULL,
+                     error))
+     {
+-      g_warning ("Failed to make a backup of monitors.xml: %s",
+-                 (*error)->message);
++      g_warning ("Failed to make a backup of %s: %s",
++                 monitors_file_path, (*error)->message);
+       g_clear_error (error);
+     }
+ 
+diff -ruN mutter/src/backends/meta-monitor-config-store.c mutter/src/backends/meta-monitor-config-store.c
+--- mutter/src/backends/meta-monitor-config-store.c	2023-06-01 18:35:15.000000000 +0300
++++ mutter/src/backends/meta-monitor-config-store.c	2023-11-15 13:13:17.680569694 +0200
+@@ -24,6 +24,7 @@
+ #include "backends/meta-monitor-config-store.h"
+ 
+ #include <gio/gio.h>
++#include <stdlib.h>
+ #include <string.h>
+ 
+ #include "backends/meta-monitor-config-manager.h"
+@@ -2003,6 +2004,11 @@
+   const char * const *system_dirs;
+   char *user_file_path;
+   GError *error = NULL;
++  char *monitors_file_path;
++
++  monitors_file_path = getenv("MUTTER_MONITOR_FILENAME");
++  if (monitors_file_path == NULL)
++    monitors_file_path = "monitors.xml";
+ 
+   g_clear_object (&config_store->user_file);
+   g_clear_object (&config_store->custom_read_file);
+@@ -2015,7 +2021,7 @@
+     {
+       g_autofree char *system_file_path = NULL;
+ 
+-      system_file_path = g_build_filename (*system_dirs, "monitors.xml", NULL);
++      system_file_path = g_build_filename (*system_dirs, monitors_file_path, NULL);
+       if (g_file_test (system_file_path, G_FILE_TEST_EXISTS))
+         {
+           g_autoptr (GFile) system_file = NULL;
