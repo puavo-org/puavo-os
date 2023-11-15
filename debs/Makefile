@@ -6,6 +6,7 @@ _pkgs_ports := gnome-control-center \
                gnome-shell          \
                hooktftp             \
                libpam-ccreds        \
+               mutter               \
                nbd                  \
                veyon                \
                wine                 \
@@ -17,7 +18,6 @@ _pkgs_ports := gnome-control-center \
 #                gnome-network-displays \
 #                gtk+3.0                \
 #                kde-spectacle          \
-#                mutter                 \
 #                openjdk-11             \
 #                qtbase-opensource-src  \
 
