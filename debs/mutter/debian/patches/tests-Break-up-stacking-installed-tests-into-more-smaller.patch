@@ -1,0 +1,103 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Sun, 18 Dec 2022 13:28:40 +0000
+Subject: tests: Break up stacking installed-tests into more, smaller tests
+
+Running each stacking test as a separate installed-test is analogous to
+what was done for build-time tests in c6d1cf4a (!442) and should make it
+easier to track regressions, by being able to see whether a regression
+is specific to one .metatest script or applies to more than one.
+
+An accidental side-effect of this is that state is not carried over between
+one test and the next, which makes the workspace-basic test stop crashing
+(see #2559). (If the same issue can happen in real life, the previous patch
+mitigates it from a crash to a critical warning.)
+
+Signed-off-by: Simon McVittie <smcv@debian.org>
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2773
+Accidentally mitigates: https://gitlab.gnome.org/GNOME/mutter/-/issues/2559
+Accidentally mitigates: https://bugs.debian.org/1024438
+---
+ src/tests/meson.build        | 29 ++++++++++++++++-------------
+ src/tests/mutter-all.test.in |  9 ---------
+ src/tests/stacking.test.in   |  9 +++++++++
+ 3 files changed, 25 insertions(+), 22 deletions(-)
+ delete mode 100644 src/tests/mutter-all.test.in
+ create mode 100644 src/tests/stacking.test.in
+
+diff --git a/src/tests/meson.build b/src/tests/meson.build
+index 66b79b6..efe95e5 100644
+--- a/src/tests/meson.build
++++ b/src/tests/meson.build
+@@ -86,19 +86,6 @@ subdir('wayland-test-clients')
+ 
+ if have_installed_tests
+   stacking_files_datadir = join_paths(pkgdatadir, 'tests')
+-
+-  installed_tests_cdata = configuration_data()
+-  installed_tests_cdata.set('libexecdir', libexecdir)
+-  installed_tests_cdata.set('apiversion', libmutter_api_version)
+-
+-  configure_file(
+-    input: 'mutter-all.test.in',
+-    output: 'mutter-all.test',
+-    configuration: installed_tests_cdata,
+-    install: true,
+-    install_dir: mutter_installed_tests_datadir,
+-  )
+-
+   install_subdir('stacking', install_dir: stacking_files_datadir)
+ endif
+ 
+@@ -472,6 +459,22 @@ foreach stacking_test: stacking_tests
+     is_parallel: false,
+     timeout: 60,
+   )
++
++  if have_installed_tests
++    installed_tests_cdata = configuration_data()
++    installed_tests_cdata.set('apiversion', libmutter_api_version)
++    installed_tests_cdata.set('libexecdir', libexecdir)
++    installed_tests_cdata.set('tests_datadir', tests_datadir)
++    installed_tests_cdata.set('stacking_test', stacking_test)
++
++    configure_file(
++      input: 'stacking.test.in',
++      output: stacking_test + '.test',
++      configuration: installed_tests_cdata,
++      install: true,
++      install_dir: mutter_installed_tests_datadir,
++    )
++  endif
+ endforeach
+ 
+ if have_kvm_tests or have_tty_tests
+diff --git a/src/tests/mutter-all.test.in b/src/tests/mutter-all.test.in
+deleted file mode 100644
+index 12536c1..0000000
+--- a/src/tests/mutter-all.test.in
++++ /dev/null
+@@ -1,9 +0,0 @@
+-[Test]
+-Description=All Mutter tests
+-# Can't use TestEnvironment for GSETTINGS_BACKEND=memory until there's
+-# a solution for
+-# https://gitlab.gnome.org/GNOME/gnome-desktop-testing/-/issues/1,
+-# and anyway that wouldn't be sufficient to handle XDG_RUNTIME_DIR
+-Exec=sh -ec 'env GSETTINGS_BACKEND=memory XDG_RUNTIME_DIR="$(mktemp -d -t mutter-@apiversion@-all-tests-XXXXXX)" @libexecdir@/installed-tests/mutter-@apiversion@/mutter-installed-dbus-session.py xvfb-run -a -s "+iglx -noreset" -- @libexecdir@/installed-tests/mutter-@apiversion@/mutter-test-runner --all'
+-Type=session
+-Output=TAP
+diff --git a/src/tests/stacking.test.in b/src/tests/stacking.test.in
+new file mode 100644
+index 0000000..c26ec74
+--- /dev/null
++++ b/src/tests/stacking.test.in
+@@ -0,0 +1,9 @@
++[Test]
++Description=Mutter stacking test: @stacking_test@
++# Can't use TestEnvironment for GSETTINGS_BACKEND=memory until there's
++# a solution for
++# https://gitlab.gnome.org/GNOME/gnome-desktop-testing/-/issues/1,
++# and anyway that wouldn't be sufficient to handle XDG_RUNTIME_DIR
++Exec=sh -ec 'env GSETTINGS_BACKEND=memory XDG_RUNTIME_DIR="$(mktemp -d -t mutter-@apiversion@-@stacking_test@-XXXXXX)" @libexecdir@/installed-tests/mutter-@apiversion@/mutter-installed-dbus-session.py xvfb-run -a -s "+iglx -noreset" -- @libexecdir@/installed-tests/mutter-@apiversion@/mutter-test-runner @tests_datadir@/stacking/@stacking_test@.metatest'
++Type=session
++Output=TAP

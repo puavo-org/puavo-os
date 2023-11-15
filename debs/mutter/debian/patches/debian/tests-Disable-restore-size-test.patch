@@ -1,0 +1,25 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Tue, 15 Nov 2022 10:20:35 +0000
+Subject: tests: Disable restore-size test
+
+This intermittently fails on x86 and consistently fails on 32-bit ARM.
+Workaround for https://gitlab.gnome.org/GNOME/mutter/-/issues/2509
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/2509
+Forwarded: not-needed
+---
+ src/tests/meson.build | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/tests/meson.build b/src/tests/meson.build
+index 49995ca..f2d375e 100644
+--- a/src/tests/meson.build
++++ b/src/tests/meson.build
+@@ -435,7 +435,6 @@ stacking_tests = [
+   'override-redirect',
+   'set-override-redirect-parent',
+   'set-parent-exported',
+-  'restore-size',
+   'unmaximize-new-size',
+   'fullscreen-maximize',
+   'unfullscreen-strut-change',

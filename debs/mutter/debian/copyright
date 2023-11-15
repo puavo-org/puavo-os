@@ -1,5 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Source: https://download.gnome.org/sources/mutter/
+Upstream-Name: mutter
 
 Files:
  *
@@ -9,7 +10,8 @@ Copyright:
    2007-2018  Ask Hjorth Larsen
    2012  Bastian Winkler
    1999-2005  Brian Paul
-   2005-2018  Canonical Ltd.
+   2005-2021  Canonical Ltd.
+   2021  Christian Rauch
    2011-2014  Collabora Ltd
    1997-2000  Dan Pascu and Alfredo Kojima
    1987  Digital Equipment Corporation
@@ -58,11 +60,11 @@ Copyright:
    2005-2007  Olivier Fourdan
    2006-2008  OpenedHand Ltd
    1995-1997  Peter Mattis
-   2001-2020  Red Hat Inc
+   2001-2022  Red Hat Inc
    2014  Rico Tzschichholz
    2003-2004  Rob Adams
    2011  Robert Bosch Car Multimedia GmbH
-   2018-2019  Robert Mader
+   2018-2021  Robert Mader
    2004-2008  Rodney Dawes
    2005-2011  Rosetta Contributors
    2002  Ross Burton
@@ -100,6 +102,12 @@ Copyright:
  1970-2003 Wm. Randolph Franklin
  2011 Intel Corporation
 License: WRF-BSD-variant
+
+Files:
+ src/tests/share/icc/vx239-calibrated.icc
+Copyright: none
+License: free-of-known-restrictions
+ This profile is free of known copyright restrictions
 
 Files:
  src/x11/mutter-Xatomtype.h

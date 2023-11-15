@@ -1,44 +1,798 @@
-mutter (3.38.6-2~deb11u2+puavo1) bookworm; urgency=medium
+mutter (43.6-1~deb12u1) bookworm; urgency=medium
 
-  * Add our own patches to Mutter.
+  * Rebuild for bookworm
 
- -- Puavo Org <dev@opinsys.fi>  Fri, 13 Aug 2021 14:18:32 +0300
+ -- Simon McVittie <smcv@debian.org>  Sat, 10 Jun 2023 22:59:13 +0100
 
-mutter (3.38.6-2~deb11u2) bullseye; urgency=medium
+mutter (43.6-1) unstable; urgency=medium
 
-  * d/patches: Update to commit 3.38.6-9-g0b26ad635 from gnome-3-38 branch
-    (Closes: #1002651)
-    - d/p/wayland-subsurface-Check-for-parent-actor-before-unparent.patch,
-      d/p/wayland-subsurface-Handle-node-unlinking-on-parent-destro.patch,
-      d/p/window-actor-wayland-Remove-subsurface-actors-on-dispose.patch:
-      Fix a crash involving Wayland subsurfaces, which can be triggered by
-      Firefox in Wayland mode (fix backported from 41~beta and 40.5)
-    - d/p/wayland-data-offer-Accept-final-preferrence-of-drop-desti.patch:
-      Fix protocol error during Alt + drag-and-drop from Firefox in
-      Wayland mode, which would result in Firefox being terminated
-      (fix backported from 41.1 and 40.6)
-    - d/p/surface-actor-Fix-unobscurred_fraction-calculation.patch:
-      When an app/game using VSync is full-screen in a multi-monitor setup,
-      use the refresh rate of the correct monitor (LP: #1788535)
-      (fix backported from 41.3)
-    - d/p/xwayland-Fix-condition-for-queuing-a-window-to-META_QUEUE.patch:
-      Avoid flooding Xwayland clients (X11 apps under Wayland) with window
-      management events, which can cause performance problems
-      (fix backported from 41.1 and 40.6)
-    - d/p/wayland-surface-Switch-order-for-calculating-surface-dama.patch,
-      d/p/wayland-surface-Use-correct-default-viewport-for-surface-.patch,
-      d/p/wayland-surface-Do-not-uncoditionally-process-surface-dam.patch:
-      Fix visible glitches for Wayland clients that use the wp_viewporter
-      protocol in combination with wl_surface_damage(), such as the
-      GStreamer waylandsink element (fix backported from 41.3)
+  * New upstream stable release 43.5
+    - Always update surfaces belonging to a window that is being recorded
+      or included in a screencast, even if the window is not visible
+      on a local display (mutter#2538, mutter!2789)
+    - Export previously-private meta_window_has_pointer(), needed by
+      screenshot UI fixes in gnome-shell 43.5 (mutter!2928)
+      + d/libmutter-11-0.symbols: Update to add that symbol
+    - All other changes were already present in 43.4-2
+  * New upstream stable release 43.6
+    - Fix a resource leak when a compositor view is destroyed (mutter!2991)
+    - Fix a crash when headless gdm greeter via gnome-remote-desktop
+      attempts to blank the screen (mutter#2841)
+  * d/patches: Drop patches that were applied upstream
+  * d/p/wayland-outputs-Fix-potential-crash-when-output-has-no-mo.patch:
+    Backport patch from 44~beta to fix a crash during suspend/resume on
+    some systems (mutter#2570, Closes: #1036268)
 
- -- Simon McVittie <smcv@debian.org>  Sun, 30 Jan 2022 16:58:45 +0000
+ -- Simon McVittie <smcv@debian.org>  Sat, 10 Jun 2023 21:17:19 +0100
 
-mutter (3.38.6-2~deb11u1) bullseye; urgency=medium
+mutter (43.4-2) unstable; urgency=medium
 
-  * Rebuild for bullseye
+  * Team upload
+  * d/patches: Update to upstream gnome-43 branch commit 43.4-5-gc35e9f8c0
+    - d/p/clutter-actor-Get-next-action-from-list-before-handling-c.patch:
+      Fix a use-after-free that was always a problem in theory, but causes
+      crashes in practice with GLib 2.76.x (mutter!2955, gnome-shell#6552)
+    - d/p/cursor-tracker-Don-t-leak-window-cursor-on-exit.patch:
+      Fix a minor memory leak (mutter!2969)
+    - d/p/wayland-cursor-surface-Update-cursor-on-dispose.patch:
+      Fix a crash in rare situations involving Wayland cursor changes,
+      and add test coverage (mutter!2969)
+  * d/libmutter-11-0.symbols: Add new private symbols used by tests
+    for the above changes
+  * d/p/wayland-xdg-shell-Dismiss-instead-of-destroy-invalid-popu.patch:
+    Backport a fix from upstream 44.x branch to fix popup-related crashes
+    (mutter#2728, mutter!2940, Closes: #1033484)
 
- -- Simon McVittie <smcv@debian.org>  Wed, 01 Sep 2021 21:25:34 +0100
+ -- Simon McVittie <smcv@debian.org>  Fri, 21 Apr 2023 10:10:24 +0100
+
+mutter (43.4-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Improve performance by reducing memory bandwidth use on some GPUs
+      (GNOME/mutter!2091)
+    - Fix handling of rotated screens, for example on Pinephone Pro and
+      Pinebook Pro (GNOME/mutter#2557)
+    - Avoid warnings when destroying a ClutterText object with recent
+      GLib versions (GNOME/mutter#2566)
+    - Other changes were included in previous Debian packaging updates
+  * Drop most patches, applied upstream
+  * d/patches: Update to upstream gnome-43 branch commit 43.4-2-gba5cb0542
+    - Fix a crash with newer GStreamer gtkwaylandsink (GNOME/mutter!2917)
+    - Translation update: ab
+  * Remove #1032388 from previous changelog entry.
+    I hoped !2878 would fix both #1032388 and #1031945, but in fact it
+    only fixes #1031945.
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 10 Apr 2023 14:07:33 +0100
+
+mutter (43.3-5) unstable; urgency=medium
+
+  * Team upload
+  * d/patches: Use the same order in which patches were applied upstream
+  * d/p/color-device-Make-sure-lcms_context-is-not-NULL.patch,
+    d/p/color-device-Don-t-close-lcms-profile-on-error-from-cd_ic.patch:
+    Use final version of these patches as applied upstream
+  * d/p/Revert-x11-Do-not-move-X11-input-focus-during-grabs.patch,
+    d/p/Revert-x11-events-Do-not-update-focus-XWindow-during-grab.patch,
+    d/p/x11-Ignore-_NET_ACTIVE_WINDOW-client-messages-while-grabb.patch,
+    d/p/core-Avoid-focusing-windows-on-map-during-grabs.patch:
+    Backport upstream merge request !2878, fixing X11 focus regressions
+    (Closes: #1031945)
+  * d/p/tests-Use-a-more-interoperable-path-to-bash.patch:
+    Fix path to interpreter in x11-test.sh instead of disabling it
+    - d/p/tests-Disable-broken-test.patch: Drop patch, no longer needed
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 06 Mar 2023 11:35:23 +0000
+
+mutter (43.3-4) unstable; urgency=medium
+
+  * Team upload
+  * d/p/color-device-Make-sure-lcms_context-is-not-NULL.patch,
+    d/p/color-device-Don-t-close-lcms-profile-on-error-from-cd_ic.patch:
+    Fix a double-free when loading the ICC profile from a device's EDID
+    fails (Closes: #1031847)
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 02 Mar 2023 08:50:50 +0000
+
+mutter (43.3-3) unstable; urgency=medium
+
+  * Team upload
+  * d/p/x11-Avoid-updating-focus-on-wayland-compositor.patch:
+    Add patch from upstream fixing a focus-handling regression in
+    Wayland sessions.
+    In 43.3, switching from an Xwayland window to a native Wayland window
+    would not always work.
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 18 Feb 2023 18:44:12 +0000
+
+mutter (43.3-2) unstable; urgency=medium
+
+  * Team upload
+  * Mention LP: #1985089 in the 43.2-6 changelog
+  * d/p/Support-Dynamic-triple-double-buffering.patch:
+    Record the exact revision that was used (no content changes)
+  * Remove Lintian overrides that are no longer necessary now that
+    lintian/lintian!452 is in a release
+  * Upload to unstable
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 16 Feb 2023 09:37:11 +0000
+
+mutter (43.3-1) experimental; urgency=medium
+
+  * Team upload
+  * Initially uploading to experimental pending feedback on whether the
+    downclocking patch needs adjustment for 43.3
+
+  [ Daniel van Vugt ]
+  * d/p/Support-Dynamic-triple-double-buffering.patch:
+    Improve downclocking (triple to double buffering) support so it
+    happens sooner and more reliably. This reduces input latency during
+    light rendering as well as reducing CPU usage of cursor movement.
+    Also correct the origin information.
+
+  [ Simon McVittie ]
+  * New upstream release
+    - Make sure there is always a non-null list of extensions
+      (LP: #1994011)
+    - Fix a crash when colour management operations are cancelled
+      (mutter!2794)
+    - Fix lockup when pointer crosses the intersection of 4 displays
+      (mutter#2598)
+    - Fix some small memory leaks (mutter!2811)
+    - Fix a misleading error message (mutter!2811)
+    - Revert a problematic change to the handling of frame event timing
+      (mutter!2835)
+    - On X11, Don't allow focus to be taken by an app during grabs
+      (gnome-shell#5932, mutter!2832)
+    - Many changes that were already in 43.2-6
+  * Drop patches that were applied upstream
+  * d/p/wayland-Don-t-overwrite-surface-offsets.patch:
+    Add patch from upstream to fix drag-and-drop cursor position on Wayland
+    (mutter#2622)
+    This updates us to upstream gnome-43 branch commit 43.3-1-ga8a348185b.
+  * d/control.in, d/gbp.conf, d/watch: Set up branches for 43.x in bookworm.
+    This leaves the default branch available for GNOME 44 betas in
+    experimental and Ubuntu.
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 15 Feb 2023 17:00:58 +0000
+
+mutter (43.2-6) unstable; urgency=medium
+
+  * Team upload
+  * d/patches: Update to upstream gnome-43 branch commit 43.2-29-g35763ca0cc
+    - Avoid lag while altering the split point between edge-tiled windows
+      on the left and right halves of the screen
+      (mutter#2246, LP: #1985089)
+    - Disable direct scanout optimization during drag-and-drop to ensure
+      the dragged content is visible (mutter#2470)
+    - Performance improvements (mutter!2671)
+    - Enable the direct scanout optimization for fullscreen mpv in Wayland
+      (mutter#2550)
+    - Revert an optimization which caused some extensions to regress
+    - Prevent mouse cursor disappearing for windows that appeared while a
+      menu was open (mutter#2553)
+    - Make pointer confinement compatible with subsurfaces (mutter#2223)
+    - Report width and height of rotated screens consistently with the spec
+      and other compositors (mutter#2519)
+    - Avoid unintended focus change on secondary display when switching
+      workspace on primary display (mutter#2548)
+    - Make workspace-switching more resilient against crashes (mutter!2707)
+    - Fix a crash during screen recording at certain resolution/scale
+      combinations (mutter#2542)
+    - Fix cursor position scaling while recording a single window
+      (mutter#1541)
+    - Avoid integer overflow during screencasting (mutter!2762)
+    - Ensure cursor reappears when using touchscreen and then mouse in X11
+      (mutter#2344)
+    - Ensure keyboard accessibility works at beginning of session if
+      previously enabled in configuration (mutter#1858)
+    - Fix mapping between graphics tablets and displays (mutter!2767)
+    - Fix a small memory leak (mutter!2799)
+    - Translation updates: ru
+  * d/patches: Sort closest-to-upstream first
+  * d/patches: Improve metadata
+  * d/control.in: Drop Multi-Arch from libmutter-test-11.
+    The test library is not usefully multiarch, because it depends on a
+    matching architecture of mutter.
+  * lintian-overrides: Silence a false positive for libegl1-mesa-dev
+    libegl1-mesa-dev is not transitional or obsolete, see lintian/lintian!452.
+  * d/copyright: Add a missing short name field
+  * d/control.in: Standards-Version: 4.6.2 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 29 Jan 2023 15:26:48 +0000
+
+mutter (43.2-5) unstable; urgency=medium
+
+  [ Daniel van Vugt ]
+  * Update Support-Dynamic-triple-double-buffering.patch.
+    Fix tearing on monitors attached to secondary GPUs (LP: #1999216)
+  * Add patch for cursor-renderer-native to workaround broken arm64 drivers.
+    By forcing cursors to use dumb buffers. At least until Mesa gets fixed
+    for panfrost, vc4, v3d... (LP: #1988859)
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 23 Jan 2023 11:30:06 -0500
+
+mutter (43.2-4) unstable; urgency=medium
+
+  * Team upload
+  * Mark xwayland test-case as known to be flaky on 32-bit ARM.
+    Mitigates: #1026445
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 20 Dec 2022 12:48:02 +0000
+
+mutter (43.2-3) unstable; urgency=medium
+
+  * Team upload
+  * Rebuild source package with non-expired signing key
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 18 Dec 2022 22:32:32 +0000
+
+mutter (43.2-2) unstable; urgency=medium
+
+  * Team upload
+  * d/p/workspace-Don-t-crash-on-invalid-argument-to-meta_workspa.patch:
+    Add proposed patch to avoid crashing on an invalid argument
+  * d/p/tests-Break-up-stacking-installed-tests-into-more-smaller.patch:
+    Add proposed patch to have more, smaller installed-tests.
+    As well as doing what it was intended to do, this also avoids a crash
+    during autopkgtest. (Mitigates: #1024438)
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 18 Dec 2022 21:29:01 +0000
+
+mutter (43.2-1) unstable; urgency=medium
+
+  * New upstream release
+  * Update symbols files
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sat, 10 Dec 2022 16:46:15 -0500
+
+mutter (43.1-2) unstable; urgency=medium
+
+  * Team upload
+  * Disable restore-size test.
+    This avoids intermittent FTBFS, especially on armel and armhf.
+  * Build-/test-depend on dbus-daemon instead of dbus
+  * d/upstream/metadata: Add Repository field
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 15 Nov 2022 10:32:45 +0000
+
+mutter (43.1-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Among other fixes, this avoids a fullscreen window on one display
+      being replicated on another display (Closes: #1023256, LP: #1990563)
+  * Refresh patch series
+    - Drop patches that were included upstream
+    - Update triple-buffering patch from GNOME/mutter!1441
+  * Set field Upstream-Name in debian/copyright.
+  * d/upstream/metadata: Add
+  * Update symbols file for new upstream release
+  * Reduce entropy of .symbols file.
+    The SONAME changed in version 43~beta, so there's no point in keeping
+    track of whether symbols are older than that version.
+    Similarly, if a symbol was introduced in a prerelease, we want
+    dependent packages to depend on the final release, so there's little
+    point in finer-grained tracking of which specific prerelease each
+    symbol came from.
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 04 Nov 2022 20:09:07 +0000
+
+mutter (43.0-3) unstable; urgency=medium
+
+  * Cherry-pick patch to fix Night Light availability in GNOME Settings
+    (Closes: #1020941) (LP: #1990207)
+  * Cherry-pick patches to avoid crash when ICC color profile is invalid
+    (Closes: #1021680) (LP: #1993114)
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 17 Oct 2022 06:57:50 -0400
+
+mutter (43.0-2) unstable; urgency=medium
+
+  * Release to unstable (Closes: #1009990, #1019266, #1020515)
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 27 Sep 2022 19:00:48 -0400
+
+mutter (43.0-1) experimental; urgency=medium
+
+  * Team upload
+
+  [ Simon McVittie ]
+  * Team upload
+  * New upstream release
+  * d/copyright: Update
+  * Standards-Version: 4.6.1 (no changes required)
+  * d/libmutter-11-0.symbols: Add new symbols
+
+  [ Jeremy Bicha ]
+  * Mark as Linux-any
+    - Build tests indicate mutter doesn't work on Hurd or kFreeBSD
+    - Mutter is only used by GNOME Shell and Budgie, neither of which
+      are currently available on those architectures for other reasons
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 18 Sep 2022 20:18:26 +0100
+
+mutter (43~rc-2) experimental; urgency=medium
+
+  [ Simon McVittie ]
+  * d/control: Drop compatibility with old libgdk-pixbuf2.0-dev package
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/patches: Update triple-buffering patch against newest version
+    (LP: #1969422, #1988625)
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Thu, 08 Sep 2022 17:35:16 +0200
+
+mutter (43~rc-1) experimental; urgency=medium
+
+  * New upstream release
+  * Build-Depend on libcolord-dev & liblcms2-dev
+  * debian/*.symbols: Update
+  * Drop Consistently-pass-timestamp….patch: Applied in new release
+  * Refresh 2 patches
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 06 Sep 2022 14:07:28 -0400
+
+mutter (43~beta-4) experimental; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/control: Remove <!nocheck> from xvfb-run
+
+  [ Jeremy Bicha ]
+  * debian/tests/libmutter-11-dev: fix a reference to mutter-10
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Thu, 25 Aug 2022 05:28:09 -0400
+
+mutter (43~beta-3) experimental; urgency=medium
+
+  * Add patches from Ubuntu:
+    - Support-Dynamic-triple-double-buffering.patch
+    - backends-native-kms-crtc-Don-t-compare-gamma-values-on-un.patch
+      + Avoid memory errors when comparing gamma values
+    - wayland-data-device-Allow-any-drag-timestamp....patch
+      + Allow any drag timestamp as drag start serial
+  * debian/libmutter-11-0.symbols: Add new symbols from triple buffering patch
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sun, 21 Aug 2022 12:27:28 -0400
+
+mutter (43~beta-2) experimental; urgency=medium
+
+  * Update mutter-10 to mutter-11 in more places
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sun, 21 Aug 2022 10:35:35 -0400
+
+mutter (43~beta-1) experimental; urgency=medium
+
+  * New upstream release
+  * Rename packages for API bump (mutter-10 -> mutter-11)
+  * debian/libmutter-11-0.symbols: Update
+  * debian/control.in: Bump minimum libwayland and wayland-protocols
+  * Refresh patches
+  * Add temporary patch to skip broken build test
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 16 Aug 2022 12:07:41 -0400
+
+mutter (42.4-1) unstable; urgency=medium
+
+  * New upstream release
+  * debian/patches: Refresh
+  * debian/libmutter-10-0.symbols: Sync with new and removed internal symbols
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Thu, 11 Aug 2022 19:21:12 -0400
+
+mutter (42.3-2) unstable; urgency=medium
+
+  * debian/libmutter-10-0.symbols: Add new symbols
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sat, 16 Jul 2022 14:14:30 +0200
+
+mutter (42.3-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Thu, 14 Jul 2022 16:33:25 +0200
+
+mutter (42.2-1) unstable; urgency=medium
+
+  * New upstream release (LP: #1976381)
+    - Fix crash when restarting GNOME Shell on Xorg (LP: #1969893)
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 31 May 2022 10:10:28 -0400
+
+mutter (42.1-1) unstable; urgency=medium
+
+  * New upstream release
+    (LP: #1972726, #1967274, #1965557, #1969574, #1948410, #1967219, #1971693)
+  * Drop patches applied in new release
+  * debian/libmutter-10-0.symbols: Add new symbol
+  * debian/libmutter-10-0.symbols: Drop a symbol that was only in experimental
+  * Add Breaks against old gtk3 & gtk4 versions.
+    See Ubuntu bug 1972721
+  * Release to unstable
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 09 May 2022 16:51:12 -0400
+
+mutter (42.0-5) experimental; urgency=medium
+
+  * Team upload
+  * d/patches: Update to upstream commit 42.0-74-g6c8e8fbba
+    - Bug fixes targeted for 42.1
+    - d/p/clutter-stage-Repick-when-pointer-actor-goes-unmapped.patch:
+      Replace with the version that was applied upstream
+    - d/p/core-Account-ClutterStage-grabs-on-Wayland-key-focus-sync.patch:
+      Mark as applied upstream
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 25 Apr 2022 10:04:42 +0100
+
+mutter (42.0-4) unstable; urgency=medium
+
+  * Team upload
+  * d/patches: Update to upstream commit 42.0-55-gbe9deeba0
+    - Update translations
+    - Update upstream status of cherry-picked patches
+    - Add various bug fixes including LP: #1959888, LP: #1964037
+  * d/p/core-Account-ClutterStage-grabs-on-Wayland-key-focus-sync.patch:
+    Add patch proposed upstream to fix grabs vs. system-modal prompts.
+    This is particularly annoying when using pkexec, or when using gcr as
+    a passphrase prompt for PGP, ssh and/or sudo.
+    (Closes: #1008998, LP: #1964442)
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 19 Apr 2022 11:54:56 +0100
+
+mutter (42.0-3) unstable; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/patches: Cherry-pick upstream fixes targeting 42.1
+  * debian/patches: Ensure repick happens on actors visibility changed
+    (LP: #1964545)
+
+  [ Jeremy Bicha ]
+  * Release to unstable
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 28 Mar 2022 09:34:27 -0400
+
+mutter (42.0-1) experimental; urgency=medium
+
+  [ Jeremy Bicha ]
+  * New upstream release
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/patches: Skip monitor-size tests that may fail on autopkgtest
+
+ -- Jeremy Bicha <jeremy.bicha@canonical.com>  Mon, 14 Mar 2022 09:28:30 -0400
+
+mutter (42~rc-1) experimental; urgency=medium
+
+  * New upstream release
+  * debian/control.in: Add Breaks: gnome-shell (<< 42~rc)
+  * debian/control.in: Bump minimum meson, libwayland-dev & wayland-protocols
+  * debian/libmutter-10-0.symbols: Add new symbols
+  * Refresh patches
+
+ -- Jeremy Bicha <jeremy.bicha@canonical.com>  Wed, 09 Mar 2022 13:11:43 -0500
+
+mutter (42~beta-1) experimental; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * New upstream release:
+    - Implement a new Clutter grab API
+    - Support KMS testing via QEMU
+    - Add support for privacy screen
+    - Allow changing monitor configuration policy
+    - Fix possible missed clicks on menus
+    - Place popups on the same monitor as the anchor rect (LP: #1930567)
+    - Announce DMA-BUF support via pipewire
+    - Raise the file descriptor limit of the wayland compositor
+    - Fix resetting idle time on lid open
+    - Reset idletime when unplugging the power cable
+    - Keep a single cursor sprite visible with tablets
+    - Sync keyboard LEDs after layout changes (LP: #1830637)
+    - Honor window input area in picking
+    - Handle mixture of keycombo/no action in pad rings/strips
+    - Fix videos in Firefox stuttering in overview
+    - Fix X11 middle button emulation setting
+    - Fix crash on empty frame info queue (LP: #1960585)
+    - Fix window size after returning from fullscreen (LP: #1947467)
+    - Don't change workspaces of unmanaged windows (LP: #1933996)
+    - Ensure constraints after client resize (LP: #1917939)
+  * debian/watch: Accept pre-release version
+    Can still use gbp import --upstream-version=XX.Y to get stable only
+  * debian: Rename packages to use mutter-10 API
+  * debian/rules: Compute mutter API version on unstable releases too
+  * debian/control: Update dependencies
+  * debian/patches: Refresh and update to latest code
+  * debian/libmutter-(test-)10.symbols: Update
+
+  [ Jeremy Bicha ]
+  * Update autopkgtest & lintian override for new version
+
+ -- Jeremy Bicha <jeremy.bicha@canonical.com>  Fri, 18 Feb 2022 07:32:24 -0500
+
+mutter (41.3-3) unstable; urgency=medium
+
+  * Build-Depend on xcvt instead of xserver-xorg-core (Closes: #1005299)
+
+ -- Jeremy Bicha <jeremy.bicha@canonical.com>  Fri, 11 Feb 2022 07:48:31 -0500
+
+mutter (41.3-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Simon McVittie ]
+  * Adjust previous changelog entry to mention Launchpad bug 1872870
+    against the correct bullet point
+  * d/control.in: Build-depend on sysprof as well as
+    libsysprof-capture-4-dev.
+    The D-Bus interfaces are currently in sysprof, although arguably they
+    should move to a -dev package.
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/control: Depend on xvfb even on nocheck, as it's checked during
+    configuration
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 07 Feb 2022 18:55:58 +0000
+
+mutter (41.3-1) unstable; urgency=medium
+
+  * New upstream release:
+    - Check keyboard serials for activation
+    - Fix mixed up refresh rates in multi-monitor setups (LP: #1788535)
+    - Allow disabling HW cursors
+    - Improve damage handling
+    - Consider xrandr flags for advertised modes
+    - Ensure constraints after client resize
+    - window-group: Disable culling when rendering clone to offscreen buffer
+      (LP: #1872870)
+    - Fix workspace switch animation in default plugin
+    - Fix unfullscreening of window that were mapped fullscreen
+    - Fix DMA-BUF screencasts with unredirected fullscreen windows
+    - Fix orientation changes on devices with 90°
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 25 Jan 2022 03:26:38 +0100
+
+mutter (41.2-2) unstable; urgency=medium
+
+  * Team upload
+  * d/p/Consistently-pass-timestamp-as-uint64-when-creating-MetaS.patch:
+    Add proposed patch to fix FTBFS on 32-bit architectures
+  * d/patches: Update to 41.2-6-g7b64c159a
+    - Surface damage viewport improvements
+  * Update patch metadata with upstream status
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 22 Dec 2021 19:47:37 +0000
+
+mutter (41.2-1) unstable; urgency=medium
+
+  * Team upload
+
+  [ Simon McVittie ]
+  * New upstream release
+  * d/patches: Drop patches that were applied upstream
+  * d/patches: Update to upstream gnome-41 branch commit 41.2-3-g5d0c26631
+    - wayland: Check keyboard serials for activation
+    - Sync refresh rate to the correct monitor for maximized/full-screen
+      apps in a multi-monitor layout
+    - Add a debug environment variable to disable hardware cursors for
+      faulty hardware and drivers
+
+  [ Laurent Bigonville ]
+  * debian/rules: Disable systemd support on non-linux architectures
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 22 Dec 2021 10:57:19 +0000
+
+mutter (41.1-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Drop a patch that came from upstream
+  * Update Lintian overrides
+  * Replace patches for #995929 with the version that was applied upstream
+  * Remove workaround for #994806
+  * d/libmutter-9-0.symbols: Ignore removal of clutter_stage_capture_into.
+    Nothing else in Debian references this symbol, except for forks of
+    the mutter codebase.
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 05 Nov 2021 16:40:11 +0000
+
+mutter (41.0-5) unstable; urgency=medium
+
+  * Team upload
+  * Merge packaging from unstable
+    - No changes relative to 41.0-4, except for the changelog
+  * Close #995929 via changelog.
+    The patches in 41.0-4 seem to have been successful.
+  * Release to unstable (starts transition: #996607)
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 16 Oct 2021 18:52:20 +0100
+
+mutter (41.0-4) experimental; urgency=medium
+
+  * Team upload
+  * d/control.in: libmutter-test-9 Depends on mutter.
+    It wants the libdefault.so plugin, which is in mutter.deb.
+  * Update Lintian overrides for RUNPATH
+  * d/patches: Another try at fixing #995929 (Closes: #995929)
+  * d/rules: Disable gvfs when running unit tests
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 11 Oct 2021 11:41:12 +0100
+
+mutter (41.0-3) experimental; urgency=medium
+
+  * Team upload
+  * d/p/tests-Change-how-we-wait-for-an-orientation-change.patch:
+    Add patch attempting to fix #995929
+  * d/p/tests-Add-additional-debug-in-wait_for_orientation.patch,
+    d/p/tests-Watch-the-orientation-manager-independently.patch:
+    Try to diagnose what's going on if #995929 is still not fixed
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 10 Oct 2021 21:05:02 +0100
+
+mutter (41.0-2) experimental; urgency=medium
+
+  * Team upload
+  * Build-depend on libgl-dev instead of transitional libgl1-mesa-dev
+  * (Build-)Depend on libgles-dev instead of transitional libgles2-mesa-dev
+  * d/rules: Don't let log from flaky tests overwrite log from main tests
+  * d/p/tests-dbus-runner-Make-sure-to-tear-down-even-on-test-fai.patch:
+    Add patch from upstream to stop failing tests causing a timeout.
+    Failing tests will generally still cause FTBFS, but failing immediately
+    is more buildd-friendly than timing out.
+  * d/p/tests-Don-t-use-TestEnvironment.patch,
+    d/p/tests-Don-t-continue-if-setup-commands-fail.patch:
+    Update patches for installed-tests to latest version submitted upstream
+  * d/p/tests-Add-additional-debug-for-Debian-995929.patch:
+    Add more debug logging to try to diagnose #995929
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 09 Oct 2021 18:54:23 +0100
+
+mutter (41.0-1) experimental; urgency=medium
+
+  * Team upload
+
+  [ Jeremy Bicha ]
+  * debian/watch: Watch for stable releases
+
+  [ Simon McVittie ]
+  * New upstream release
+  * Update package names for ABI break
+  * Update build-dependencies
+  * d/copyright: Update
+  * Rebase patch series
+  * Update symbols file
+  * d/p/debian/synaptics-support.patch:
+    Stop patching in Xorg synaptics driver support.
+    Upstream rejected this patch back in 2018, but we continued to apply it
+    as a transitional step for Ubuntu 18.04. Since then we've had stable/LTS
+    releases of Debian 10, Ubuntu 18.04, Debian 11 and Ubuntu 20.04,
+    libinput has improved, and both Debian and Ubuntu have switched to
+    running GNOME in Wayland mode by default; let's have another try at
+    following upstream on this. (Closes: #993171)
+  * d/rules: Use upstream driver selection, except on 32-bit ARM.
+    Specifying -Ddefault_driver=gl on x86 (and other architectures that are
+    not 32-bit ARM) is no longer the same as the upstream default: the
+    upstream default is now gl3, meaning modern OpenGL, whereas the gl driver
+    is legacy (pre-3.2) OpenGL. Assume upstream are doing this for a reason.
+    For now we continue to specify -Ddefault_driver=gles2 on 32-bit ARM, and
+    apply the patch that adds the default_driver option, because 32-bit ARM
+    has historically been an exception to the usual rules.
+  * Add test-dependency on python3-dbus, python3-dbusmock
+  * d/p/meta-dbus-runner-Import-importlib.util.patch:
+    Add patch to fix test failure by working around #994806
+  * d/p/tests-Don-t-use-TestEnvironment.patch,
+    d/p/tests-Don-t-continue-if-setup-commands-fail.patch:
+    Add patch to avoid using TestEnvironment.
+    This works around a gnome-desktop-testing bug.
+  * Add Lintian override for another RUNPATH in the tests.
+    As with the existing tests, this is necessary to use mutter's fork of
+    clutter and cogl.
+  * Standards-Version: 4.6.0 (no changes required)
+  * Put the new libmutter-test-9 in its own binary package.
+    To avoid micro-packages, this includes the -dev files too; there is no
+    explicit dependency on libmutter-9-dev, but packages compiling against
+    this library are expected to build-depend on both. Outside mutter
+    itself, it is only expected to be used by gnome-shell.
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 21 Sep 2021 18:44:18 +0100
+
+mutter (40.5-1) unstable; urgency=medium
+
+  * New upstream release:
+    - Fix monitor screencast scanouts
+    - Fix middle-click emulation support on X11
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Fri, 24 Sep 2021 21:11:07 +0200
+
+mutter (40.4-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Jeremy Bicha ]
+  * Build-Depend on libsysprof-capture-4-dev instead of sysprof
+
+  [ Simon McVittie ]
+  * Upload to unstable, part of transition #992870
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 11 Sep 2021 21:34:10 +0100
+
+mutter (40.4-1) experimental; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Don't require a newly attached buffer to apply state
+    - Fix upside-down Xshape surface with EGLstream
+    - Handle failure to allocate offscreen
+    - Improve window state checks
+    - Fix area-based screencast recording for unredirected windows such
+      as fullscreen games
+    - Fix ability to map a graphics tablet to a monitor
+    - Fix a crash if scanout fails unexpectedly
+    - Fix a logic error in determining number of input device modes
+    - Translation updates
+  * Don't let debhelper 13.4+ make all of /usr/libexec executable.
+    This is not what we want for installed-tests' associated data.
+  * Add a lintian override for dh-exec-subst-unknown-variable
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 31 Aug 2021 10:14:04 +0100
+
+mutter (40.2.1-1) experimental; urgency=medium
+
+  * New upstream release
+  * debian/patches: Refresh
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Wed, 16 Jun 2021 01:36:22 +0200
+
+mutter (40.2-1) experimental; urgency=medium
+
+  * New upstream release:
+    - Fix mouse position in remote desktop with fractional scaling
+    - Fix fd leak
+    - Disable KMS modifiers on radeon driver
+    - Fix adding virtual monitor to physical session
+    - Unbreak press-drag-release to pop up and select right click menus
+    - Fix VKMS detection
+  * debian/patches: Refresh, dropping applied upstream
+  * d/p: Mark view-verification tests as incomplete in big-endian archs.
+    Saved pixmaps are invalid in big-endian architectures, so let's disable
+    the tests for now, checking only the basic metadata but not comparing
+    the contents.
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 15 Jun 2021 22:07:25 +0200
+
+mutter (40.1-1) experimental; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * New upstream release:
+    - Only snap to window edges when CTRL is pressed (LP: #1727225)
+    - Fix viewport of offscreen effects (LP: #1825126)
+  * debian: Update library name to follow soname (mutter-8)
+  * debian/control: Bump dependencies to match upstream requirements
+  * debian/patches:
+    - Refresh
+    - Do not run screencast tests.
+      They require to have a full running pipewire (that requires a system
+      dbus daemon) so, we can't easily get one up and running while building.
+  * debian/libmutter-8-0.symbols: Sync with new library symbols
+  * debian/control: Do not break on old gnome-shell versions
+  * debian: Enable sysprof profiler on linux
+  * debian/libmutter-8-0.symbols: Add new cogl trace symbols
+  * debian/rules: Enforce symbols checking via higher gen symbols check level
+  * debian/patches: Fix failing installed tests and ensure they work with runner
+  * debian: Enable installed tests and package them in mutter-8-tests
+  * debian/tests: Run installed tests as part of the autopkg tests
+  * debian/control: Add dependency on xwayland to mutter-tests
+  * debian/tests: Use multiple stanzas to run the autopkg tests
+  * debian/rules: disable native tests on non-linux
+  * debian/control: Depend on binary version for mutter package
+  * debian: Use dh-exec to install linux-only files
+  * debian/libmutter-8-0.symbols: Mark more symbols as linux-only
+  * debian/mutter-8-tests.lintian-override: Use versioned package name
+
+  [ Laurent Bigonville ]
+  * debian/watch: Updated to follow the new versioning scheme
+  * Remove Conflicts for old libmutter-*-dev packages
+
+ -- Laurent Bigonville <bigon@debian.org>  Thu, 27 May 2021 21:31:05 +0200
 
 mutter (3.38.6-2) unstable; urgency=medium
 

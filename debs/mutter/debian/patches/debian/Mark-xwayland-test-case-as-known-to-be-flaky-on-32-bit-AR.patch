@@ -1,0 +1,22 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Tue, 20 Dec 2022 11:53:37 +0000
+Subject: Mark xwayland test case as known to be flaky on 32-bit ARM
+
+Bug-Debian: https://bugs.debian.org/1026445
+Forwarded: no
+---
+ src/tests/meson.build | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/tests/meson.build b/src/tests/meson.build
+index f2d375e..1b36d8c 100644
+--- a/src/tests/meson.build
++++ b/src/tests/meson.build
+@@ -378,6 +378,7 @@ if have_native_tests
+     {
+       'name': 'xwayland',
+       'suite': 'wayland',
++      'flaky': host_machine.cpu_family() == 'arm',
+       'sources': [
+         'xwayland-tests.c',
+       ],

@@ -1,0 +1,24 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Sun, 18 Dec 2022 15:54:55 +0000
+Subject: workspace: Don't crash on invalid argument to meta_workspace_index
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/2559
+Bug-Debian: https://bugs.debian.org/1024438
+Signed-off-by: Simon McVittie <smcv@debian.org>
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2774
+---
+ src/core/workspace.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/core/workspace.c b/src/core/workspace.c
+index e933995..b8fd7d7 100644
+--- a/src/core/workspace.c
++++ b/src/core/workspace.c
+@@ -729,6 +729,7 @@ meta_workspace_index (MetaWorkspace *workspace)
+ {
+   int ret;
+ 
++  g_return_val_if_fail (META_IS_WORKSPACE (workspace), -1);
+   ret = g_list_index (workspace->manager->workspaces, workspace);
+   g_return_val_if_fail (ret >= 0, -1);
+ 

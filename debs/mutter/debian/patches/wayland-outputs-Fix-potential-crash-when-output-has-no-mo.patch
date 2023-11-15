@@ -1,0 +1,40 @@
+From: Keyu Tao <me@taoky.moe>
+Date: Mon, 6 Feb 2023 15:29:47 +0800
+Subject: wayland/outputs: Fix potential crash when output has no monitor
+
+bind_output() creates output interface resource, but does not
+set implementation for it when wayland_output->monitor is NULL.
+However, when the wayland library is running wl_closure_invoke(),
+it expects the implementation to be non-NULL, and if not, it just
+segfaults mutter by NULL pointer dereference.
+
+This commit tries to address this issue by setting an implementation
+when wayland_output->monitor is NULL. This could help prevent crash
+when resuming from suspend or hotplugging displays.
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/2570
+Bug-Debian: https://bugs.debian.org/1010478 (maybe)
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2827
+Applied-upstream: 44~beta, commit:c1ab3f39d73a041b488acf7296456840fa83c0da
+---
+ src/wayland/meta-wayland-outputs.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/wayland/meta-wayland-outputs.c b/src/wayland/meta-wayland-outputs.c
+index bdce99c..3c08616 100644
+--- a/src/wayland/meta-wayland-outputs.c
++++ b/src/wayland/meta-wayland-outputs.c
+@@ -299,7 +299,12 @@ bind_output (struct wl_client *client,
+ 
+   monitor = wayland_output->monitor;
+   if (!monitor)
+-    return;
++    {
++      wl_resource_set_implementation (resource,
++                                      &meta_wl_output_interface,
++                                      NULL, NULL);
++      return;
++    }
+ 
+   wayland_output->resources = g_list_prepend (wayland_output->resources,
+                                               resource);

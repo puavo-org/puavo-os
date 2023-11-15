@@ -1,0 +1,70 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Mon, 6 Mar 2023 10:32:55 +0000
+Subject: tests: Use a more interoperable path to bash
+
+On systems that have undergone the /usr merge, /bin/bash and
+/usr/bin/bash can be used interchangeably, but on systems where /bin and
+/usr/bin are separate (such as Debian 11 or older), bash was traditionally
+in /bin and there is no bash in /usr/bin.
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/2385
+Signed-off-by: Simon McVittie <smcv@debian.org>
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2900
+---
+ .gitlab-ci/checkout-gnome-shell.sh      | 2 +-
+ .gitlab-ci/download-coverity-tarball.sh | 2 +-
+ src/tests/kvm/run-kvm-test.sh           | 2 +-
+ src/tests/kvm/virtme-run.sh             | 2 +-
+ src/tests/x11-test.sh                   | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/.gitlab-ci/checkout-gnome-shell.sh b/.gitlab-ci/checkout-gnome-shell.sh
+index e4bb9c4..4e086da 100755
+--- a/.gitlab-ci/checkout-gnome-shell.sh
++++ b/.gitlab-ci/checkout-gnome-shell.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/bash
++#!/bin/bash
+ 
+ fetch() {
+   local remote=$1
+diff --git a/.gitlab-ci/download-coverity-tarball.sh b/.gitlab-ci/download-coverity-tarball.sh
+index ca875c9..182363c 100755
+--- a/.gitlab-ci/download-coverity-tarball.sh
++++ b/.gitlab-ci/download-coverity-tarball.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/bash
++#!/bin/bash
+ 
+ # We need a coverity token to fetch the tarball
+ if [ -x $COVERITY_TOKEN ]
+diff --git a/src/tests/kvm/run-kvm-test.sh b/src/tests/kvm/run-kvm-test.sh
+index 974ff75..5ad2c6b 100755
+--- a/src/tests/kvm/run-kvm-test.sh
++++ b/src/tests/kvm/run-kvm-test.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/bash
++#!/bin/bash
+ 
+ set -e
+ 
+diff --git a/src/tests/kvm/virtme-run.sh b/src/tests/kvm/virtme-run.sh
+index 755f280..8c96c79 100755
+--- a/src/tests/kvm/virtme-run.sh
++++ b/src/tests/kvm/virtme-run.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/bash
++#!/bin/bash
+ 
+ set -e
+ 
+diff --git a/src/tests/x11-test.sh b/src/tests/x11-test.sh
+index 376a019..59e460f 100755
+--- a/src/tests/x11-test.sh
++++ b/src/tests/x11-test.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/bash
++#!/bin/bash
+ 
+ set -e
+ 

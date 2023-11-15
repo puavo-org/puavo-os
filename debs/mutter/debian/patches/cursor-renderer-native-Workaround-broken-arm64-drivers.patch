@@ -1,0 +1,49 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Fri, 4 Nov 2022 10:24:45 +0100
+Subject: cursor-renderer-native: Workaround broken arm64 drivers
+
+By forcing cursors to use dumb buffers. At least until Mesa gets fixed
+for panfrost, vc4, v3d...
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/2379
+Bug-Ubuntu: https://launchpad.net/bugs/1988859
+---
+ src/backends/native/meta-cursor-renderer-native.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/backends/native/meta-cursor-renderer-native.c b/src/backends/native/meta-cursor-renderer-native.c
+index 81ce0c6..2db0c7e 100644
+--- a/src/backends/native/meta-cursor-renderer-native.c
++++ b/src/backends/native/meta-cursor-renderer-native.c
+@@ -1142,6 +1142,7 @@ ensure_cursor_priv (MetaCursorSprite *cursor_sprite)
+   return cursor_priv;
+ }
+ 
++#ifndef __aarch64__
+ static MetaDrmBuffer *
+ create_cursor_drm_buffer_gbm (MetaGpuKms         *gpu_kms,
+                               MetaDeviceFile     *device_file,
+@@ -1199,6 +1200,7 @@ create_cursor_drm_buffer_gbm (MetaGpuKms         *gpu_kms,
+ 
+   return META_DRM_BUFFER (buffer_gbm);
+ }
++#endif
+ 
+ static MetaDrmBuffer *
+ create_cursor_drm_buffer_dumb (MetaGpuKms      *gpu_kms,
+@@ -1244,6 +1246,7 @@ create_cursor_drm_buffer (MetaGpuKms      *gpu_kms,
+                           uint32_t         format,
+                           GError         **error)
+ {
++#ifndef __aarch64__
+   struct gbm_device *gbm_device;
+ 
+   gbm_device = meta_gbm_device_from_gpu (gpu_kms);
+@@ -1257,6 +1260,7 @@ create_cursor_drm_buffer (MetaGpuKms      *gpu_kms,
+                                            error);
+     }
+   else
++#endif
+     {
+       return create_cursor_drm_buffer_dumb (gpu_kms, device_file,
+                                             pixels,

@@ -34,7 +34,7 @@ EOF
 
 # Deliberately word-splitting pkg-config's output:
 # shellcheck disable=SC2046
-"${CROSS_COMPILE}gcc" -o trivial trivial.c $("${CROSS_COMPILE}pkg-config" --cflags --libs libmutter-7)
+"${CROSS_COMPILE}gcc" -o trivial trivial.c $("${CROSS_COMPILE}pkg-config" --cflags --libs libmutter-11)
 echo "build: OK"
 [ -x trivial ]
 xvfb-run -a dbus-run-session -- ./trivial

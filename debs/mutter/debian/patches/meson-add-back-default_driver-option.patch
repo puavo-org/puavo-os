@@ -9,6 +9,7 @@ Expose this functionality in meson as well
 
 Origin: https://gitlab.gnome.org/GNOME/mutter/merge_requests/392
 Forwarded: yes
+Applied-upstream: no
 ---
  cogl/cogl-config.h.meson | 3 +++
  cogl/meson.build         | 4 ++++
@@ -29,7 +30,7 @@ index 29ca429..85fd0c6 100644
 +
  #define COGL_CONFIG_H_INCLUDED 1
 diff --git a/cogl/meson.build b/cogl/meson.build
-index a3c61cf..c45614c 100644
+index a87cd18..6a60648 100644
 --- a/cogl/meson.build
 +++ b/cogl/meson.build
 @@ -10,6 +10,10 @@ cdata.set('HAVE_COGL_GLES2', have_gles2)
@@ -44,10 +45,10 @@ index a3c61cf..c45614c 100644
    input: 'cogl-config.h.meson',
    output: 'cogl-config.h',
 diff --git a/meson.build b/meson.build
-index 3b328c8..ced0b83 100644
+index da2be27..f509037 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -224,6 +224,8 @@ if have_wayland_eglstream
+@@ -269,6 +269,8 @@ if have_wayland_eglstream
    endif
  endif
  
@@ -56,25 +57,28 @@ index 3b328c8..ced0b83 100644
  have_sm = get_option('sm')
  if have_sm
    sm_dep = dependency('sm')
-@@ -489,6 +491,7 @@ output = [
-   '        Wayland EGLStream........ ' + have_wayland_eglstream.to_string(),
-   '        Native Backend........... ' + have_native_backend.to_string(),
-   '        EGL Device............... ' + have_egl_device.to_string(),
-+  '        Default driver........... ' + default_driver,
-   '        Remote desktop........... ' + have_remote_desktop.to_string(),
-   '        gudev.................... ' + have_libgudev.to_string(),
-   '        Wacom.................... ' + have_libwacom.to_string(),
+@@ -662,6 +664,7 @@ summary('X11', have_x11, section: 'Options')
+ summary('XWayland', have_xwayland, section: 'Options')
+ summary('Native Backend', have_native_backend, section: 'Options')
+ summary('EGL Device', have_egl_device, section: 'Options')
++summary('Default driver', default_driver, section: 'Options')
+ summary('Remote desktop', have_remote_desktop, section: 'Options')
+ summary('libgnome-desktop', have_gnome_desktop, section: 'Options')
+ summary('Sound player', have_sound_player, section: 'Options')
 diff --git a/meson_options.txt b/meson_options.txt
-index 601f0a7..7824c2d 100644
+index cddcc1a..674d30e 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
-@@ -158,3 +158,9 @@ option('xwayland_initfd',
-   value: 'auto',
-   description: 'Whether -initfd argument is passed to Xwayland to guarantee services (e.g. gsd-xsettings) startup before applications'
+@@ -75,6 +75,12 @@ option('wayland_eglstream',
+   description: 'Enable Wayland EGLStream support client support'
  )
-+
+ 
 +option('default_driver',
 +  type: 'combo',
 +  choices: ['auto', 'gl', 'gl3', 'gles2', 'nop'],
 +  value: 'auto'
 +)
++
+ option('udev',
+   type: 'boolean',
+   value: true,

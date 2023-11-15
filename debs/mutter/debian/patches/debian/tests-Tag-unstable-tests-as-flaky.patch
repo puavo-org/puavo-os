@@ -9,11 +9,11 @@ This is Debian-only: for upstream these tests should be fixed.
 Forwarded: not-needed
 ---
  src/tests/clutter/conform/meson.build | 6 +++++-
- src/tests/meson.build                 | 2 +-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ src/tests/meson.build                 | 4 +++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/src/tests/clutter/conform/meson.build b/src/tests/clutter/conform/meson.build
-index 387360d..683400b 100644
+index 0936863..ccc8a5c 100644
 --- a/src/tests/clutter/conform/meson.build
 +++ b/src/tests/clutter/conform/meson.build
 @@ -73,8 +73,12 @@ foreach test : clutter_conform_tests
@@ -31,15 +31,24 @@ index 387360d..683400b 100644
      is_parallel: false,
    )
 diff --git a/src/tests/meson.build b/src/tests/meson.build
-index 1eab95f..c177cc8 100644
+index efe95e5..49995ca 100644
 --- a/src/tests/meson.build
 +++ b/src/tests/meson.build
-@@ -198,7 +198,7 @@ test('headless-start', headless_start_test,
- )
+@@ -208,6 +208,7 @@ test_cases += [
+   },
+   {
+     'name': 'stage-views',
++    'flaky': true,
+     'suite': 'compositor',
+     'sources': [ 'stage-view-tests.c', ],
+   },
+@@ -406,7 +407,8 @@ if have_native_tests
+     )
  
- test('stage-view', stage_view_tests,
--  suite: ['core', 'mutter/unit'],
-+  suite: ['core', 'mutter/unit', 'flaky'],
-   env: test_env,
-   is_parallel: false,
-   timeout: 60,
+     test(test_case['name'], test_executable,
+-      suite: ['core', 'mutter/' + test_case['suite']],
++      suite: ['core', 'mutter/' + test_case['suite']]
++        + (test_case.get('flaky', false) ? ['flaky'] : []),
+       env: test_env,
+       is_parallel: false,
+       timeout: 60,
