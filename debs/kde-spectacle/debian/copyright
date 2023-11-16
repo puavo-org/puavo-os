@@ -4,21 +4,18 @@ Upstream-Contact: kde-devel@kde.org
 Source: https://download.kde.org/
 
 Files: *
-Copyright: 2008-2009, Aleix Pol <aleixpol@kde.org>
-           2008-2009, Alex Fiestas <alex@eyeos.org>
+Copyright: 2018, Ambareesh "Amby" Balaji <ambareeshbalaji@gmail.com>
            2015-2019, Boudhayan Gupta <bgupta@kde.org>
-           2015, Boudhayan Gupta <me@BaloneyGeek.com>
-           2008, Lubos Lunak <l.lunak@kde.org>
-           2013, Martin Gräßlin <mgraesslin@kde.org>
-           2010, Pau Garcia i Quiles <pgquiles@elpauer.org>
            2019, David Redondo <kde@david-redondo.de>
+           2016, Martin Graesslin <mgraesslin@kde.org>
            2020, Méven Car <meven.car@enioka.com>
+           2010, Pau Garcia i Quiles <pgquiles@elpauer.org>
+           2021, Vlad Zahorodnii <vlad.zahorodnii@kde.org>
 License: LGPL-2+
 
-Files: debian/*
-Copyright: 2011, Harald Sitter <apachelogger@ubuntu.com>
-           2011-2020, Debian/Kubuntu Qt/KDE Team <debian-qt-kde@lists.debian.org>
-License: GPL-2+
+Files: CMakePresets.json.license
+Copyright: 2021, Laurent Montel <montel@kde.org>
+License: BSD-3-Clause
 
 Files: desktop/org.kde.spectacle.appdata.xml
 Copyright: 2016, Burkhard Lück <lueck@hube-lueck.de>
@@ -30,22 +27,52 @@ Copyright: 2015, Boudhayan Gupta
            1997-2000, Richard J. Moore
 License: GFDL-NIV-1.2+
 
+Files: src/Gui/SettingsDialog/ShortcutsOptionsPage.cpp
+       src/Gui/SettingsDialog/ShortcutsOptionsPage.h
+       src/ShortcutActions.cpp
+       src/ShortcutActions.h
+Copyright: 2019, David Redondo <kde@david-redondo.de>
+License: GPL-2+
+
 Files: src/Gui/ProgressButton.cpp
        src/Gui/ProgressButton.h
 Copyright: 2019, David Redondo <kde@david-redondo.de>
 License: LGPL-2.1+
 
-Files: src/Gui/SettingsDialog/ShortcutsOptionsPage.cpp
-       src/Gui/SettingsDialog/ShortcutsOptionsPage.h
-       src/KipiInterface/KSGKipiImageCollectionSelector.cpp
-       src/KipiInterface/KSGKipiImageCollectionSelector.h
-       src/ShortcutActions.cpp
-       src/ShortcutActions.h
-Copyright: 2008, Aurélien Gâteau <agateau@kde.org>
-           2010, Pau Garcia i Quiles <pgquiles@elpauer.org>
-           2015, Boudhayan Gupta <me@BaloneyGeek.com>
-           2019, David Redondo <kde@david-redondo.de>
+Files: debian/*
+Copyright: 2011, Harald Sitter <apachelogger@ubuntu.com>
+           2011-2022, Debian/Kubuntu Qt/KDE Team <debian-qt-kde@lists.debian.org>
 License: GPL-2+
+
+License: BSD-3-Clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ .
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+ .
+ 3. Neither the name of the copyright holder nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
 
 License: CC0-1.0
  To the extent possible under law, the author(s) have dedicated all copyright
