@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+puavo_topdomain=$(cat /etc/puavo/topdomain 2>/dev/null || true)
+
+if [ -z "${puavo_topdomain:-}" ]; then
+  echo 'could not determine puavo topdomain' >&2
+  exit 1
+fi
+
+ntp_server="ntp.${puavo_topdomain}"
+
+mkdir -p /etc/systemd/timesyncd.conf.d
+cat <<EOF > /etc/systemd/timesyncd.conf.d/puavo.conf.tmp
+[Time]
+NTP=${ntp_server}
+EOF
+
+mv /etc/systemd/timesyncd.conf.d/puavo.conf.tmp \
+   /etc/systemd/timesyncd.conf.d/puavo.conf

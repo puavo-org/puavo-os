@@ -25,7 +25,7 @@ setup_dbus
 setup_keyboard
 set_timezone
 setup_locale
-setup_ntp
+setup_timesyncd
 setup_modules
 manage_module_blacklist
 cleanup_crash_dumps

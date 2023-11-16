@@ -2,8 +2,9 @@
 
 (
   sleep 2
-  ntp_server=$(awk '$1 == "server" { print $2; exit(0) }' /etc/ntp.conf)
+  ntp_server=$(awk -F= '$1 == "NTP" { print $2; exit(0) }' \
+                 /etc/systemd/timesyncd.conf.d/puavo.conf)
   if [ -n "$ntp_server" ]; then
-    sntp -Ss -M 10000 "$ntp_server"
+    ntpdig -Ss -M 10000 "$ntp_server"
   fi
 ) &
