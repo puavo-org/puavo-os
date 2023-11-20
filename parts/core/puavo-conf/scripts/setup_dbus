@@ -35,11 +35,14 @@ EOF
 mv "${puavo_client_conf}.tmp" "$puavo_client_conf"
 
 if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'true' ]; then
-
-  suspend_enabled_part_one='
+  suspend_enabled='
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="Suspend"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="SuspendWithFlags"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
@@ -47,14 +50,36 @@ if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'true' ]; then
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
+                       send_member="HibernateWithFlags"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
                        send_member="HybridSleep"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
-                       send_member="SuspendThenHibernate"/>
-'
+                       send_member="HybridSleepWithFlags"/>
 
-  suspend_enabled_part_two='
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="SuspendThenHibernate"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="SuspendThenHibernateWithFlags"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanPowerOff"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanReboot"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanHalt"/>
+
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanSuspend"/>
@@ -72,14 +97,13 @@ if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'true' ]; then
                        send_member="CanSuspendThenHibernate"/>
 '
 else
-  suspend_enabled_part_one=''
-  suspend_enabled_part_two=''
+  suspend_enabled=''
 fi
 
 cat > /etc/dbus-1/system.d/org.freedesktop.login1.conf.tmp <<EOF
 <?xml version="1.0"?> <!--*-nxml-*-->
 <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
-        "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+        "https://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
 
 <!--
   SPDX-License-Identifier: LGPL-2.1-or-later
@@ -211,24 +235,24 @@ cat > /etc/dbus-1/system.d/org.freedesktop.login1.conf.tmp <<EOF
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
+                       send_member="PowerOffWithFlags"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
                        send_member="Reboot"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
+                       send_member="RebootWithFlags"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
                        send_member="Halt"/>
-${suspend_enabled_part_one}
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanPowerOff"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanReboot"/>
-
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanHalt"/>
-${suspend_enabled_part_two}
+                       send_member="HaltWithFlags"/>
+${suspend_enabled}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="ScheduleShutdown"/>
@@ -364,6 +388,10 @@ ${suspend_enabled_part_two}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.User"
                        send_member="Kill"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Session"
+                       send_member="SetDisplay"/>
 
                 <allow receive_sender="org.freedesktop.login1"/>
         </policy>
