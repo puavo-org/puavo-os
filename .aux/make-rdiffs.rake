@@ -244,7 +244,7 @@ def setup_rdiff_tasks(source_image_file, target_image_file, metadata_file)
     file source_image_signature_file_fp => source_image_file_fp do |t|
       tmpfile = "#{ source_image_signature_file_fp }.tmp"
       FileUtils.rm_f(tmpfile)
-      sh 'rdiff', '--block-size=64', 'signature', source_image_file_fp, tmpfile
+      sh 'rdiff', '--block-size=128', 'signature', source_image_file_fp, tmpfile
       mv tmpfile, t.name
     end
   end
@@ -260,7 +260,7 @@ def setup_rdiff_tasks(source_image_file, target_image_file, metadata_file)
     file rdiff_file_fp do |t|
       tmpfile = "#{ rdiff_file_fp }.tmp"
       FileUtils.rm_f(tmpfile)
-      sh 'rdiff', '--block-size=64', 'delta', source_image_signature_file_fp,
+      sh 'rdiff', '--block-size=128', 'delta', source_image_signature_file_fp,
         target_image_file_fp, tmpfile
       mv tmpfile, t.name
     end
