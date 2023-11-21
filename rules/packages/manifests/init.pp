@@ -448,9 +448,7 @@ class packages {
 
     [ 'amtterm'
     , 'etherwake'
-    , 'hostapd'
-    , 'nload'
-    , 'vtun' ]:
+    , 'nload' ]:
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
     [ 'calibre'
