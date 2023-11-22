@@ -29,7 +29,6 @@ session    required   pam_exec.so /usr/lib/puavo-ltsp-client/pam/puavo-nodm-pam-
 
 # Enable ConsoleKit integration
 session optional pam_loginuid.so
--session optional pam_ck_connector.so
 
 # Standard Un*x session
 @include common-session
