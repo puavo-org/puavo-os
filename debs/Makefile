@@ -19,7 +19,6 @@ _pkgs_ports := gnome-control-center   \
 #                gtk+3.0                \
 #                kde-spectacle          \
 #                openjdk-11             \
-#                qtbase-opensource-src  \
 
 # sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
