@@ -1,0 +1,131 @@
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Date: Thu, 31 Aug 2023 11:53:14 +0200
+Subject: [PATCH] locking/rtmutex: Acquire the hb lock via trylock after
+ wait-proxylock.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Origin: https://www.kernel.org/pub/linux/kernel/projects/rt/6.5/older/patches-6.5.2-rt8.tar.xz
+
+After rt_mutex_wait_proxy_lock() task_struct::pi_blocked_on is cleared
+if current owns the lock. If the operation has been interrupted by a
+signal or timeout then pi_blocked_on can be set. This means spin_lock()
+*can* overwrite pi_blocked_on on PREEMPT_RT. This has been noticed by
+the recently added lockdep-asserts…
+
+The rt_mutex_cleanup_proxy_lock() operation will clear pi_blocked_on
+(and update pending waiters as expected) but it must happen under the hb
+lock to ensure the same state in rtmutex and userland.
+
+Given all the possibilities it is probably the simplest option to
+try-lock the hb lock. In case the lock is occupied a quick nap is
+needed. A busy loop can lock up the system if performed by a task with
+high priorioty preventing the owner from running.
+
+The rt_mutex_post_schedule() needs to be put before try-lock-loop
+because otherwie the schedule() in schedule_hrtimeout() will trip over
+the !sched_rt_mutex assert.
+
+Introduce futex_trylock_hblock() to try-lock the hb lock and sleep until
+the try-lock operation succeeds. Use it after rt_mutex_wait_proxy_lock()
+to acquire the lock.
+
+Suggested-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://lore.kernel.org/r/20230831095314.fTliy0Bh@linutronix.de
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ kernel/futex/futex.h     |   23 +++++++++++++++++++++++
+ kernel/futex/pi.c        |   10 ++++------
+ kernel/futex/requeue.c   |    4 ++--
+ kernel/locking/rtmutex.c |    7 +++++--
+ 4 files changed, 34 insertions(+), 10 deletions(-)
+
+--- a/kernel/futex/futex.h
++++ b/kernel/futex/futex.h
+@@ -254,6 +254,29 @@ double_unlock_hb(struct futex_hash_bucke
+ 		spin_unlock(&hb2->lock);
+ }
+ 
++static inline void futex_trylock_hblock(spinlock_t *lock)
++{
++	do {
++		ktime_t chill_time;;
++
++		/*
++		 * Current is not longer pi_blocked_on if it owns the lock. It
++		 * can still have pi_blocked_on set if the lock acquiring was
++		 * interrupted by signal or timeout. The trylock operation does
++		 * not clobber pi_blocked_on so it is the only option.
++		 * Should the try-lock operation fail then it needs leave the CPU
++		 * to avoid a busy loop in case it is the task with the highest
++		 * priority.
++		 */
++		if (spin_trylock(lock))
++			return;
++
++		chill_time = ktime_set(0, NSEC_PER_MSEC);
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		schedule_hrtimeout(&chill_time, HRTIMER_MODE_REL_HARD);
++	} while (1);
++}
++
+ /* syscalls */
+ 
+ extern int futex_wait_requeue_pi(u32 __user *uaddr, unsigned int flags, u32
+--- a/kernel/futex/pi.c
++++ b/kernel/futex/pi.c
+@@ -1046,7 +1046,10 @@ int futex_lock_pi(u32 __user *uaddr, uns
+ 	ret = rt_mutex_wait_proxy_lock(&q.pi_state->pi_mutex, to, &rt_waiter);
+ 
+ cleanup:
+-	spin_lock(q.lock_ptr);
++	rt_mutex_post_schedule();
++
++	futex_trylock_hblock(q.lock_ptr);
++
+ 	/*
+ 	 * If we failed to acquire the lock (deadlock/signal/timeout), we must
+ 	 * first acquire the hb->lock before removing the lock from the
+@@ -1058,11 +1061,6 @@ int futex_lock_pi(u32 __user *uaddr, uns
+ 	 */
+ 	if (ret && !rt_mutex_cleanup_proxy_lock(&q.pi_state->pi_mutex, &rt_waiter))
+ 		ret = 0;
+-
+-	/*
+-	 * Waiter is unqueued.
+-	 */
+-	rt_mutex_post_schedule();
+ no_block:
+ 	/*
+ 	 * Fixup the pi_state owner and possibly acquire the lock if we
+--- a/kernel/futex/requeue.c
++++ b/kernel/futex/requeue.c
+@@ -850,8 +850,8 @@ int futex_wait_requeue_pi(u32 __user *ua
+ 		pi_mutex = &q.pi_state->pi_mutex;
+ 		ret = rt_mutex_wait_proxy_lock(pi_mutex, to, &rt_waiter);
+ 
+-		/* Current is not longer pi_blocked_on */
+-		spin_lock(q.lock_ptr);
++		futex_trylock_hblock(q.lock_ptr);
++
+ 		if (ret && !rt_mutex_cleanup_proxy_lock(pi_mutex, &rt_waiter))
+ 			ret = 0;
+ 
+--- a/kernel/locking/rtmutex.c
++++ b/kernel/locking/rtmutex.c
+@@ -1166,10 +1166,13 @@ try_to_take_rt_mutex(struct rt_mutex_bas
+ 	 * Clear @task->pi_blocked_on. Requires protection by
+ 	 * @task->pi_lock. Redundant operation for the @waiter == NULL
+ 	 * case, but conditionals are more expensive than a redundant
+-	 * store.
++	 * store. But then there is FUTEX and if rt_mutex_wait_proxy_lock()
++	 * did not acquire the lock it try-locks another lock before it clears
++	 * @task->pi_blocked_on so we mustn't clear it here premature.
+ 	 */
+ 	raw_spin_lock(&task->pi_lock);
+-	task->pi_blocked_on = NULL;
++	if (waiter)
++		task->pi_blocked_on = NULL;
+ 	/*
+ 	 * Finish the lock acquisition. @task is the new owner. If
+ 	 * other waiters exist we have to insert the highest priority

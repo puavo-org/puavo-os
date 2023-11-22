@@ -1,0 +1,19 @@
+[base]
+flavours:
+ s390x
+default-flavour: s390x
+kernel-arch: s390
+
+[build]
+image-file: arch/s390/boot/bzImage
+vdso: true
+
+[image]
+bootloaders: s390-tools
+install-stem: vmlinuz
+
+[relations]
+headers%gcc-12: linux-compiler-gcc-12-s390
+
+[s390x_description]
+hardware: IBM zSeries
