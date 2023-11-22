@@ -2,16 +2,17 @@
 
 set -eu
 
+if [ $# -ne 3 ]; then
+  echo "Error: invalid number of arguments ($#), expected 3" >&2
+  echo "Usage: $(basename $0) srcpkg workdir pooldir" >&2
+  exit 1
+fi
+
 srcpkgname=$1
 workdir=$2
 pooldir=$3
 
 checksum_file="${workdir}/.checksum.${srcpkgname}.build"
-
-if [ -z "$srcpkgname" -o -z "$workdir" -o -z "$pooldir" ]; then
-  echo "Usage: $(basename $0) srcpkg workdir pooldir" >&2
-  exit 1
-fi
 
 export EMAIL='Puavo Org <dev@opinsys.fi>'
 
