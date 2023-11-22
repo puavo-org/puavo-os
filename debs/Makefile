@@ -10,6 +10,7 @@ _pkgs_ports := cups                   \
                gtk+3.0                \
                hooktftp               \
                libpam-ccreds          \
+               linux                  \
                mutter                 \
                nbd                    \
                veyon                  \
