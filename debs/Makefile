@@ -18,7 +18,6 @@ _pkgs_ports := gnome-control-center   \
 #                cups-filters           \
 #                gtk+3.0                \
 #                kde-spectacle          \
-#                openjdk-11             \
 
 # sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
