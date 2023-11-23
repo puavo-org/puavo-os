@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+if [ "${PUAVO_JAVA:-}" = 'openjdk-11' ]; then
+  java_path='/usr/lib/jvm/java-11-openjdk-amd64/bin/java'
+else
+  java_path='/usr/lib/jvm/java-17-openjdk-amd64/bin/java'
+fi
+
+exec "$java_path" "$@"
