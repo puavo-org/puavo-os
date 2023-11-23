@@ -2,7 +2,8 @@
 
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := gnome-control-center   \
+_pkgs_ports := cups                   \
+               gnome-control-center   \
                gnome-network-displays \
                gnome-shell            \
                hooktftp               \
@@ -14,7 +15,6 @@ _pkgs_ports := gnome-control-center   \
                wsmancli
 
 # XXX disabled for bookworm
-# _pkgs_ports := cups                   \
 #                cups-filters           \
 #                gtk+3.0                \
 #                kde-spectacle          \
