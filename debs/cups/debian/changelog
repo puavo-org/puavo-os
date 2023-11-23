@@ -1,3 +1,11 @@
+cups (2.3.3op2-3+deb11u9+puavo1+buildonce) bullseye; urgency=medium
+
+  * Add puavo-no-avahi-printers.patch to potentially suppress
+    printers appearing in UI dialogs.
+  * Fix running lpoptions as root.
+
+ -- Puavo Org <dev@opinsys.fi>  Mon, 30 Sep 2024 09:12:01 +0300
+
 cups (2.3.3op2-3+deb11u9) bullseye-security; urgency=medium
 
   * CVE-2024-47175
