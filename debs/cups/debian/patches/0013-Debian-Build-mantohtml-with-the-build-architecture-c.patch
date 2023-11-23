@@ -9,18 +9,19 @@ In particular, removing uses of strlcpy and replacing host architecture-
 specific includes is thus needed.
 
 Bug-Debian: https://bugs.debian.org/837936
+Forwarded: not-needed
 ---
  Makedefs.in     |  1 +
- configure.ac    |  9 +++++++++
+ configure.ac    | 10 ++++++++++
  man/Makefile    |  5 ++---
- man/mantohtml.c | 15 ++++++++++-----
- 4 files changed, 22 insertions(+), 8 deletions(-)
+ man/mantohtml.c | 12 ++++++++----
+ 4 files changed, 21 insertions(+), 7 deletions(-)
 
 diff --git a/Makedefs.in b/Makedefs.in
-index 038bb94..291099c 100644
+index f571fc8..e44c2c0 100644
 --- a/Makedefs.in
 +++ b/Makedefs.in
-@@ -22,6 +22,7 @@ CUPS_VERSION    =       @CUPS_VERSION@
+@@ -23,6 +23,7 @@ CUPS_VERSION    =       @CUPS_VERSION@
  AR		=	@AR@
  AWK		=	@AWK@
  CC		=	@LIBTOOL_CC@ @CC@
@@ -29,18 +30,19 @@ index 038bb94..291099c 100644
  CXX		=	@LIBTOOL_CXX@ @CXX@
  DSO		=	@DSO@
 diff --git a/configure.ac b/configure.ac
-index 93a4b97..b60b832 100644
+index 76793ce..9eaeaa3 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -20,6 +20,15 @@ sinclude(config-scripts/cups-common.m4)
+@@ -25,6 +25,16 @@ sinclude(config-scripts/cups-opsys.m4)
+ sinclude(config-scripts/cups-common.m4)
  sinclude(config-scripts/cups-directories.m4)
  sinclude(config-scripts/cups-manpages.m4)
- 
++
 +AC_MSG_CHECKING([for build system compiler])
 +if test "$cross_compiling" = yes; then
-+	CC_FOR_BUILD=${CC_FOR_BUILD-cc}
++       CC_FOR_BUILD=${CC_FOR_BUILD-cc}
 +else
-+	CC_FOR_BUILD=${CC}
++       CC_FOR_BUILD=${CC}
 +fi
 +AC_MSG_RESULT(${CC_FOR_BUILD})
 +AC_SUBST(CC_FOR_BUILD)
@@ -62,7 +64,7 @@ index 621fe60..e01591a 100644
 +mantohtml:	mantohtml.c
 +	$(CC_FOR_BUILD) -o $@ $<
 diff --git a/man/mantohtml.c b/man/mantohtml.c
-index 2a9353a..6223f17 100644
+index 0c9c883..6ba901a 100644
 --- a/man/mantohtml.c
 +++ b/man/mantohtml.c
 @@ -11,8 +11,10 @@
@@ -88,23 +90,13 @@ index 2a9353a..6223f17 100644
        }
        else if (strncmp(line, ".\\\"", 3))
        {
-@@ -940,7 +943,8 @@ html_alternate(const char *s,		/* I - String */
- 		manfile[1024],		/* Man page filename */
- 		manurl[1024];		/* Man page URL */
+@@ -944,7 +947,8 @@ html_alternate(const char *s,		/* I - String */
+ 		manfile[1024],		// Man page filename
+ 		manurl[1024];		// Man page URL
  
 -        strlcpy(name, s, sizeof(name));
 +        strncpy(name, s, sizeof(name) - 1);
 +        name[sizeof(name) - 1] = '\0';
          if ((size_t)(end - s) < sizeof(name))
            name[end - s] = '\0';
- 
-@@ -1173,7 +1177,8 @@ html_fputs(const char *s,		/* I  - String */
-       if (end[-1] == ',' || end[-1] == '.' || end[-1] == ')')
-         end --;
- 
--      strlcpy(temp, s, sizeof(temp));
-+      strncpy(temp, s, sizeof(temp) - 1);
-+      temp[sizeof(temp) - 1] = '\0';
-       if ((size_t)(end -s) < sizeof(temp))
-         temp[end - s] = '\0';
  

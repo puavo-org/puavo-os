@@ -8,7 +8,7 @@ Reprotest insist in running these tests as root; skip them there.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/test/run-stp-tests.sh b/test/run-stp-tests.sh
-index 4498a8c..ce868ea 100755
+index bcace0d..251bc43 100755
 --- a/test/run-stp-tests.sh
 +++ b/test/run-stp-tests.sh
 @@ -19,7 +19,8 @@ argcount=$#

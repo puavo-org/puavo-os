@@ -11,15 +11,16 @@ Bug-Debian: https://bugs.debian.org/741519
 Bug-Debian: https://bugs.debian.org/727058
 Bug-Debian: https://bugs.debian.org/730838
 Bug-Debian: https://bugs.debian.org/751157
+Forwarded: not-needed
 ---
  cups-config.in | 7 ++++---
  1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/cups-config.in b/cups-config.in
-index 9dd094d..b073a07 100755
+index d081df9..efe2bf9 100755
 --- a/cups-config.in
 +++ b/cups-config.in
-@@ -17,7 +17,7 @@ prefix=@prefix@
+@@ -18,7 +18,7 @@ prefix=@prefix@
  exec_prefix=@exec_prefix@
  bindir=@bindir@
  includedir=@includedir@
@@ -28,17 +29,17 @@ index 9dd094d..b073a07 100755
  datarootdir=@datadir@
  datadir=@datadir@
  sysconfdir=@sysconfdir@
-@@ -29,7 +29,8 @@ INSTALLSTATIC=@INSTALLSTATIC@
+@@ -30,7 +30,8 @@ INSTALLSTATIC=@INSTALLSTATIC@
  # flags for compiler and linker...
  CFLAGS=""
  LDFLAGS="@EXPORT_LDFLAGS@"
--LIBS="@LIBGSSAPI@ @DNSSDLIBS@ @EXPORT_SSLLIBS@ @LIBZ@ @LIBS@"
+-LIBS="@LIBGSSAPI@ @DNSSDLIBS@ @EXPORT_TLSLIBS@ @LIBZ@ @LIBS@"
 +LIBGSSAPI=`[ ! -x /usr/bin/krb5-config ] || /usr/bin/krb5-config --libs`
 +LIBS="$LIBGSSAPI @DNSSDLIBS@ @EXPORT_SSLLIBS@ @LIBZ@ @LIBS@"
  
  # Check for local invocation...
  selfdir=`dirname $0`
-@@ -43,7 +44,7 @@ else
+@@ -44,7 +45,7 @@ else
  	CFLAGS="$CFLAGS -I$includedir"
      fi
  

@@ -3,15 +3,16 @@ Date: Wed, 3 Feb 2021 14:27:34 +0100
 Subject: Debian: Reproducibility: httpAddrGetHostname() test fails under
  reprotest; skip it
 
+Forwarded: not-needed
 ---
  cups/testhttp.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/cups/testhttp.c b/cups/testhttp.c
-index dfb767c..8cb87d6 100644
+index 2cda4f7..73f8e34 100644
 --- a/cups/testhttp.c
 +++ b/cups/testhttp.c
-@@ -416,8 +416,7 @@ main(int  argc,				/* I - Number of command-line arguments */
+@@ -417,8 +417,7 @@ main(int  argc,				/* I - Number of command-line arguments */
      }
      else
      {

@@ -2,12 +2,13 @@ From: Martin Pitt <mpitt@debian.org>
 Date: Tue, 9 Aug 2016 18:11:38 +0200
 Subject: Debian: Set LogFileGroup to adm
 
+Forwarded: not-needed
 ---
  conf/cups-files.conf.in | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/conf/cups-files.conf.in b/conf/cups-files.conf.in
-index af11fcc..80ca351 100644
+index 93584a1..b505c40 100644
 --- a/conf/cups-files.conf.in
 +++ b/conf/cups-files.conf.in
 @@ -29,6 +29,10 @@ SystemGroup @CUPS_SYSTEM_GROUPS@

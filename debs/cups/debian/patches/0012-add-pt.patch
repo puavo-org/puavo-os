@@ -1,0 +1,36 @@
+From: Thorsten Alteholz <debian@alteholz.de>
+Date: Sun, 26 Feb 2023 19:07:47 +0100
+Subject: add pt
+
+---
+ man/Makefile    | 2 +-
+ man/pt/Makefile | 7 +++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+ create mode 100644 man/pt/Makefile
+
+diff --git a/man/Makefile b/man/Makefile
+index 48f06c4..7c30dd2 100644
+--- a/man/Makefile
++++ b/man/Makefile
+@@ -63,7 +63,7 @@ MAN8	=	cupsaccept.8 \
+ 		lpmove.8 \
+ 		lpc.8
+ 
+-LANGUAGES=de fr
++LANGUAGES=de fr pt
+ 
+ #
+ # Make everything...
+diff --git a/man/pt/Makefile b/man/pt/Makefile
+new file mode 100644
+index 0000000..e043451
+--- /dev/null
++++ b/man/pt/Makefile
+@@ -0,0 +1,7 @@
++#
++#   Man page makefile for the Common UNIX Printing System (CUPS).
++#
++
++LANGUAGE=pt
++
++include ../Makefile.l10n
