@@ -1,9 +1,36 @@
-cups (2.3.3op2-3+deb11u2+puavo1+buildonce) bullseye; urgency=high
+cups (2.3.3op2-3+deb11u6) bullseye; urgency=medium
 
-  * Add puavo-no-avahi-printers.patch to potentially suppress
-    printers appearing in UI dialogs.
+  * remove debian/NEWS again to avoid too much information when only
+    the client part is installed
+  * fix typo in config filename
 
- -- Puavo Org <dev@opinsys.fi>  Thu, 02 Sep 2021 11:06:26 +0300
+ -- Thorsten Alteholz <debian@alteholz.de>  Thu, 05 Oct 2023 16:35:27 +0200
+
+cups (2.3.3op2-3+deb11u5) bullseye; urgency=medium
+
+  * move debian/NEWS.Debian to debian/NEWS
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Fri, 29 Sep 2023 21:20:27 +0200
+
+cups (2.3.3op2-3+deb11u4) bullseye; urgency=medium
+
+  * CVE-2023-4504
+    Postscript parsing heap-based buffer overflow
+  * CVE-2023-32360 (Closes: #1051953)
+    authentication issue
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Tue, 19 Sep 2023 21:20:27 +0200
+
+cups (2.3.3op2-3+deb11u3) bullseye; urgency=medium
+
+  * CVE-2023-34241 (Closes: #1038885)
+    use-after-free in cupsdAcceptClient()
+
+  * CVE-2023-32324
+    A heap buffer overflow vulnerability would allow a remote attacker to 
+    lauch a dos attack.
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Sat, 24 Jun 2023 10:54:05 +0200
 
 cups (2.3.3op2-3+deb11u2) bullseye-security; urgency=high
 
