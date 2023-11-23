@@ -1,3 +1,10 @@
+cups (2.4.2-3+deb12u4+puavo1+buildonce) bookworm; urgency=medium
+
+  * Add puavo-no-avahi-printers.patch to potentially suppress
+    printers appearing in UI dialogs.
+
+ -- Puavo Org <dev@opinsys.fi>  Thu, 23 Nov 2023 15:56:37 +0100
+
 cups (2.4.2-3+deb12u4) bookworm; urgency=medium
 
   * remove debian/NEWS again to avoid too much information when only
