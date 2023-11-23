@@ -1,18 +1,129 @@
-cups-filters (1.28.7-1+deb11u2+puavo1) bookworm; urgency=medium
+cups-filters (1.28.17-3) unstable; urgency=medium
 
-  * Make some changes to cups-browsed.
-  * Add manually the incoming 1.28.7-1+deb11u2 (main) [bullseye-proposed-updates] patch
+  * CVE-2023-24805 
+    prevent arbitrary command execution by escaping the quoting
+    of the arguments in a job with a forged job title
+    more information are available in the commit message at:
+    https://github.com/OpenPrinting/cups-filters/commit/93e60d3df35
+    (Closes: #1036224)
 
- -- Puavo Org <dev@opinsys.fi>  Wed, 29 Jun 2022 10:40:43 +0300
+ -- Thorsten Alteholz <debian@alteholz.de>  Fri, 19 May 2023 18:25:20 +0200
 
-cups-filters (1.28.7-1+deb11u1) bullseye; urgency=medium
+cups-filters (1.28.17-2) unstable; urgency=medium
 
+  * qpdf needs at least c++17
+    (Closes: #1032546)
+  * update lintian-overrides to really see what is wrong
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Fri, 10 Mar 2023 19:25:20 +0100
+
+cups-filters (1.28.17-1) unstable; urgency=medium
+
+  * Update to new upstream version 1.28.17.
+    this will be the version in bookworm
+    though, bug fixing uploads will follow
+  * debian/apparmor/usr.sbin.cups-browsed: avoid spamming syslog
+    (thanks a lot to Boyuan Yang for the patch; Closes: #1019270)
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Sun, 05 Feb 2023 00:25:20 +0100
+
+cups-filters (1.28.16-1) unstable; urgency=medium
+
+  * Update to new upstream version 1.28.16.
+  * debian/*symbols: update symbols file
+  * debian/control: add libexif-dev as build-dependency
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Sat, 03 Sep 2022 00:36:02 +0200
+
+cups-filters (1.28.15-1) unstable; urgency=medium
+
+  * Update to new upstream version 1.28.15.
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Tue, 12 Apr 2022 19:05:13 +0200
+
+cups-filters (1.28.14-1) unstable; urgency=medium
+
+  * Update to new upstream version 1.28.14.
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Wed, 06 Apr 2022 19:30:28 +0200
+
+cups-filters (1.28.13-1) unstable; urgency=medium
+
+  * Update to new upstream version 1.28.13.
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Thu, 31 Mar 2022 23:26:03 +0200
+
+cups-filters (1.28.12-1) unstable; urgency=medium
+
+  * Update to new upstream version 1.28.12.
   * debian/apparmor/usr.sbin.cups-browsed: Allow reading from Debian Edu's
     cups-browsed config file (/etc/cups/cups-browsed-debian-edu.conf).
     (Closes: #1006183). (patch provided by Mike Gabriel)
-  * debian/control: add myself to Uploaders:
 
- -- Thorsten Alteholz <debian@alteholz.de>  Mon, 14 Mar 2022 22:03:02 +0100
+ -- Thorsten Alteholz <debian@alteholz.de>  Mon, 21 Feb 2022 19:42:22 +0100
+
+cups-filters (1.28.11-2) unstable; urgency=medium
+
+  * debian/control: lynx has to be handled different in Debian and Ubuntu
+  * debian/rules: lynx has to be handled different in Debian and Ubuntu
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Sat, 22 Jan 2022 12:19:51 +0100
+
+cups-filters (1.28.11-1) unstable; urgency=medium
+
+  * Update to new upstream version 1.28.11.
+  * debian/control: add myself to Uploaders:
+  * debian/control: Recommend lynx (Closes: #896875)
+  * debian/control: update homepage (Closes: #995911)
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Sun, 16 Jan 2022 12:29:51 +0000
+
+cups-filters (1.28.10-2) unstable; urgency=medium
+
+  * Remove myself from Uploaders
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 06 Sep 2021 12:12:22 +0200
+
+cups-filters (1.28.10-1) unstable; urgency=low
+
+  * New 1.28.10 upstream version
+    - Stop installing ttfread, not built anymore
+  * Packaging cleanup:
+    - Redo get-orig-source d/rules target
+    - Run wrap-and-sort -baskt
+    - Upgrade to S-V 4.6.0 without changes needed
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 24 Aug 2021 15:25:58 +0200
+
+cups-filters (1.28.9-1) experimental; urgency=medium
+
+  * New 1.28.9 upstream version
+  * Only install /etc/modules-load.d/cups-filters.conf on
+    amd64 i386 mips64el mipsel alpha hppa ia64 sparc64 (Closes: #989306)
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 16 Jun 2021 22:12:00 +0200
+
+cups-filters (1.28.8-3) experimental; urgency=medium
+
+  [ Mike Gabriel ]
+  * Apparmor: allow read-access to /usr/share/{,cups/}locale (Closes: #988764)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 21 May 2021 15:54:38 +0200
+
+cups-filters (1.28.8-2) experimental; urgency=low
+
+  [ Sergio Durigan Junior ]
+  * Backport upstream patch to circumvent conflict with upcoming OpenLDAP 2.5:
+    cups-browsed: Renamed ldap_connect() due to conflict in new openldap
+    (Closes: #988434)
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 16 May 2021 14:06:54 +0200
+
+cups-filters (1.28.8-1) experimental; urgency=low
+
+  * New 1.28.8 upstream release
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 30 Mar 2021 19:18:52 +0200
 
 cups-filters (1.28.7-1) unstable; urgency=medium
 

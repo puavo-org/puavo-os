@@ -1,2 +1,9 @@
 version=4
-https://www.openprinting.org/download/cups-filters/ cups-filters-(?:[_\-]v?|)(\d\S*)\.(?:tar\.xz|txz)
+opts="filenamemangle=s%(?:.*?)?v?(\d[\d.]*)\.tar\.gz%cups-filters-$1.tar.gz%" \
+    https://github.com/OpenPrinting/cups-filters/tags \
+    (?:.*?/)?v?(\d[\d.]*)\.tar\.gz
+
+
+# not everything is published here
+#version=4
+#https://www.openprinting.org/download/cups-filters/ cups-filters-(?:[_\-]v?|)(\d\S*)\.(?:tar\.xz|txz)

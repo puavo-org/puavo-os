@@ -1,0 +1,11 @@
+  gbp clone --debian-branch=debian/main --all git@salsa.debian.org:printing-team/cups-filters
+  cd cups-filters/
+  gbp import-orig --no-merge --uscan --upstream-branch=upstream/latest --debian-branch=debian/main
+  git debrebase new-upstream 1.28.13
+  git debrebase conclude
+  git debrebase make-patches
+
+  gbp buildpackage --git-pbuilder-options=--source-only-changes --git-pbuilder --git-ignore-new
+
+  gbp buildpackage --git-pbuilder-options=--source-only-changes --git-pbuilder --git-tag --git-debian-branch=debian/main
+
