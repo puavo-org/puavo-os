@@ -1,0 +1,12 @@
+diff -ruN cups-filters/utils/cups-browsed.c cups-filters/utils/cups-browsed.c
+--- cups-filters/utils/cups-browsed.c	2023-11-23 16:52:27.221695535 +0100
++++ cups-filters/utils/cups-browsed.c	2023-11-23 16:55:54.082215446 +0100
+@@ -489,7 +489,7 @@
+ static autoshutdown_inactivity_type_t autoshutdown_on = NO_QUEUES;
+ static guint autoshutdown_exec_id = 0;
+ static const char *default_printer = NULL;
+-static unsigned int notify_lease_duration = 86400;
++static unsigned int notify_lease_duration = 30 * 86400;
+ 
+ static int debug_stderr = 0;
+ static int debug_logfile = 0;
