@@ -35,7 +35,7 @@ LOG_DEBUG=7
 
 g_log_level=${LOG_INFO}
 
-SUPPORTED_PKG_FORMAT=2
+SUPPORTED_PKG_FORMAT=3
 
 ## Exit status codes:
 SC_OK=0       ## Success
@@ -47,8 +47,14 @@ g_sc=${SC_ERR} ## Prime with a generic error.
 # XXX get rid of hosttype handling
 puavo_hosttype=$(puavo-conf puavo.hosttype)
 
+download_tmpdir=''
+
 on_exit()
 {
+  if [ -n "$download_tmpdir" ]; then
+    rm -rf "$download_tmpdir" || true
+  fi
+
   return ${g_sc}
 }
 
@@ -593,8 +599,7 @@ download_upstream_pack()
     }
     popd > /dev/null 2>&1 || true
   else
-    if ! download_upstream_pack_from_multiple_urls "$pkg_dir" \
-                                                   "$upstream_tmppack"; then
+    if ! download_upstream_pack_from_urls "$pkg_dir" "$upstream_tmppack"; then
       rm -rf "$upstream_tmppack"
       return 1
     fi
@@ -618,17 +623,16 @@ download_upstream_pack()
   log_info "${pkg_name}: downloaded upstream pack successfully"
 }
 
-download_upstream_pack_from_multiple_urls()
+get_from_alternative_sources()
 {
-  local pkg_dir upstream_tmppack
+  local upstream_pack_url upstream_tmppack
 
-  pkg_dir=$1
+  upstream_pack_url=$1
   upstream_tmppack=$2
 
-  # try to lookup files from our own servers first, then the upstream url
-
-  read upstream_pack_url < "${pkg_dir}/upstream_pack_url" || return 1
   upstream_pack_filename="${upstream_pack_url##*/}"
+
+  # try to lookup files from our own servers first, then the upstream url
 
   distfile_url_list=''
   for distfile_server in $(puavo-conf puavo.image.servers) \
@@ -648,6 +652,43 @@ download_upstream_pack_from_multiple_urls()
 
   [ $? -eq 4 ] && g_sc=${SC_ERR_NET}
   return 1
+}
+
+download_upstream_pack_from_urls()
+{
+  local pkg_dir upstream_pack_url upstream_tmppack url url_count url_filename
+
+  pkg_dir=$1
+  upstream_tmppack=$2
+
+  upstream_pack_url_list=$(cat "${pkg_dir}/upstream_pack_url" 2>/dev/null) || true
+  if [ -z "$upstream_pack_url_list" ]; then
+    log_error 'no upstream pack url'
+    return 1
+  fi
+
+  url_count=$(printf "%s\n" "$upstream_pack_url_list" | wc -l)
+  if [ "$url_count" = 1 ]; then
+    get_from_alternative_sources "$upstream_pack_url" "$upstream_tmppack" \
+      || return 1
+    return 0
+  fi
+
+  download_tmpdir=$(mktemp -d /tmp/puavo_pkg_download.XXXXXX)
+  for url in $upstream_pack_url_list; do
+    url_filename="${download_tmpdir}/${url##*/}"
+    if ! get_from_alternative_sources "$url" "$url_filename"; then
+      log_error "failed to download ${url_filename}"
+      return 1
+    fi
+    # XXX this is unfinished, it is probably not a good idea to put
+    # XXX unpack-method information here
+    case "$url_filename" in
+      *.deb) dpkg-deb -x "$url_filename" "${download_tmpdir}/pkg" ;;
+    esac
+  done
+
+  return 0
 }
 
 get_pkg_field_from_installer()
