@@ -132,6 +132,7 @@ class PuavoMenu(Gtk.Window):
         self.connect('delete-event', self.__try_exit)
         self.connect('key-press-event', self.__on_keypress)
         self.connect('button-press-event', self.__on_mouse_click)
+        self.connect('show', self.__on_show)
 
         self.__focus_signal = None
 
@@ -544,7 +545,6 @@ class PuavoMenu(Gtk.Window):
             self.__frequent_sep.show()
             self.__frequent_list.show()
             self.__search.show()
-            self.__search.grab_focus()
 
         logging.info('PuavoMenu::load_menu_data() ends')
         return True
@@ -1314,6 +1314,14 @@ class PuavoMenu(Gtk.Window):
         logging.info('Exit not permitted')
         return True
 
+    # Category buttons will receive the initial focus. Compared to
+    # giving the inital focus to the search field, this has a clear
+    # benefit on touchscreen devices: the virtual keyboard does not
+    # pop up immediately when the menu is shown. And because pressing
+    # any symbol key already automatically focuses the search field,
+    # the "fast search and spawn" behavior is not lost.
+    def __on_show(self, _):
+        self.__category_buttons.grab_focus()
 
     # TODO: put this in a lambda
     def __try_exit(self, menu, event):
@@ -1359,7 +1367,6 @@ class PuavoMenu(Gtk.Window):
 
         if self.is_visible():
             logging.debug('Hiding the window')
-            self.__search.grab_focus()
             self.set_keep_above(False)
             self.set_visible(False)
         else:
@@ -1388,10 +1395,6 @@ class PuavoMenu(Gtk.Window):
             self.set_visible(True)
             self.present()
 
-            self.__search.grab_focus()
-            self.activate_focus()
-
-
     # Socket handler: toggle window visibility
     def __socket_toggle_window(self, data):
         if self.__settings.reset_view_after_start:
@@ -1400,7 +1403,6 @@ class PuavoMenu(Gtk.Window):
 
         if self.is_visible():
             logging.debug('Toggling window visibility (hide)')
-            self.__search.grab_focus()
             self.set_keep_above(False)
             self.set_visible(False)
         else:
@@ -1417,10 +1419,6 @@ class PuavoMenu(Gtk.Window):
             self.set_keep_above(True)
             self.set_visible(True)
             self.present()
-
-            self.__search.grab_focus()
-            self.activate_focus()
-
 
     # Socket handler: update puavo-pkg program state
     def __socket_update_puavopkg(self, data):
