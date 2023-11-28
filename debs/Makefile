@@ -8,6 +8,7 @@ _pkgs_ports := cups                   \
                gnome-network-displays \
                gnome-shell            \
                gtk+3.0                \
+               gtk4                   \
                hooktftp               \
                libpam-ccreds          \
                mutter                 \
