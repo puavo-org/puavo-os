@@ -1,3 +1,9 @@
+gtk+3.0 (3.24.38-2~deb12u1+puavo1) bookworm; urgency=medium
+
+  * Build gtk+3.0 with our Avahi-printing patch.
+
+ -- Puavo Org <dev@opinsys.fi>  Tue, 28 Nov 2023 10:02:13 +0200
+
 gtk+3.0 (3.24.38-2~deb12u1) bookworm; urgency=medium
 
   * Rebuild new upstream release 3.24.38 for Debian 12
