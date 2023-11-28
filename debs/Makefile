@@ -7,6 +7,7 @@ _pkgs_ports := cups                   \
                gnome-control-center   \
                gnome-network-displays \
                gnome-shell            \
+               gtk+3.0                \
                hooktftp               \
                libpam-ccreds          \
                mutter                 \
@@ -16,7 +17,6 @@ _pkgs_ports := cups                   \
                wsmancli
 
 # XXX disabled for bookworm
-#                gtk+3.0                \
 #                kde-spectacle          \
 
 # sblim-sfcc openwsman are dependencies for wsmancli
