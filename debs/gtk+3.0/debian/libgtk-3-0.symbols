@@ -498,11 +498,13 @@ libgdk-3.so.0 libgtk-3-0 #MINVER#
  (arch=linux-any)gdk_wayland_seat_get_wl_seat@Base 3.19.12
  (arch=linux-any)gdk_wayland_selection_add_targets_libgtk_only@Base 3.13.8
  (arch=linux-any)gdk_wayland_selection_clear_targets_libgtk_only@Base 3.13.8
+ (arch=linux-any)gdk_wayland_window_add_frame_callback_surface@Base 3.24.25
  (arch=linux-any)gdk_wayland_window_announce_csd@Base 3.22.25
  (arch=linux-any)gdk_wayland_window_announce_ssd@Base 3.23.1
  (arch=linux-any)gdk_wayland_window_export_handle@Base 3.21.5
  (arch=linux-any)gdk_wayland_window_get_type@Base 3.9.10
  (arch=linux-any)gdk_wayland_window_get_wl_surface@Base 3.9.10
+ (arch=linux-any)gdk_wayland_window_remove_frame_callback_surface@Base 3.24.25
  (arch=linux-any)gdk_wayland_window_set_application_id@Base 3.24.22
  (arch=linux-any)gdk_wayland_window_set_dbus_properties_libgtk_only@Base 3.10.0
  (arch=linux-any)gdk_wayland_window_set_transient_for_exported@Base 3.21.5
@@ -760,6 +762,7 @@ libgdk-3.so.0 libgtk-3-0 #MINVER#
  gdk_x11_xatom_to_atom@Base 3.0.0
  gdk_x11_xatom_to_atom_for_display@Base 3.0.0
 libgtk-3.so.0 libgtk-3-0 #MINVER#
+* Build-Depends-Package: libgtk-3-dev
  gtk_about_dialog_add_credit_section@Base 3.3.16
  gtk_about_dialog_get_artists@Base 3.0.0
  gtk_about_dialog_get_authors@Base 3.0.0
@@ -1931,6 +1934,7 @@ libgtk-3.so.0 libgtk-3-0 #MINVER#
  gtk_file_chooser_unselect_file@Base 3.0.0
  gtk_file_chooser_unselect_filename@Base 3.0.0
  gtk_file_chooser_unselect_uri@Base 3.0.0
+ gtk_file_chooser_widget_accessible_get_type@Base 3.24.30
  gtk_file_chooser_widget_get_type@Base 3.0.0
  gtk_file_chooser_widget_new@Base 3.0.0
  gtk_file_filter_add_custom@Base 3.0.0

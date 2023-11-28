@@ -1,8 +1,501 @@
-gtk+3.0 (3.24.24-4+puavo1) bookworm; urgency=medium
+gtk+3.0 (3.24.38-2~deb12u1) bookworm; urgency=medium
 
-  * Build gtk+3.0 with our Avahi-printing patch.
+  * Rebuild new upstream release 3.24.38 for Debian 12
+  * Changes since 3.24.37-2 in initial Debian 12 release:
+    - Fix application crash with "Couldn't find current GLX or EGL context"
+      under unknown circumstances (gtk#5711 upstream, regression in 3.24.37)
+    - Fix a gnome-flashback crash when taking screenshots
+      (gtk#5691, regression in 3.24.37)
+    - Fix application crash when running under Wayland with the
+      cursor-theme-size GSetting set to 0 (gtk#5700)
+    - Ensure apps launched under Wayland after setting
+      org.gtk.Settings.Modules will load the desired modules at startup
+      (gtk!5733)
+    - Don't crash in Wayland environments that don't implement
+      xdg_activation_v1, such as Enlightenment (Closes: #1043000)
+    - Fix a crash in gtk_application_set_screensaver_active() during
+      app exit (gtk#5775)
+    - Silence GFileInfo warnings if used with a backported version of GLib
+      (gtk!5645)
+    - Use a light colour for the caret in dark themes, making it much
+      easier to see in some apps, in particular Evince (evince#1842)
+    - Show more information in the "inspector" debugging interface: Pango
+      backend, input method module (gtk!5706, gtk#4512)
+    - Fix broken links in documentation (gtk!5718)
+    - Update documentation to discourage use of
+      gdk_pixbuf_get_from_window() (gtk#5691)
+    - Translation updates: ab, bg, ca, da, de, es, eu, fa, fr, gl, he, hu,
+      id, it, ka, ko, lt, nl, pl, pt, pt_BR, ru, sl, sr, sv, tr, uk
+    - testsuite: Disable some reftests that are not reliable
+    - Windows-specific changes not relevant to Debian
+    - macOS-specific (Quartz) changes not relevant to Debian
+    - d/p/Update-Galician-translation.patch,
+      d/p/Update-Hebrew-translation.patch,
+      d/p/selection-Use-the-right-mime-type.patch:
+      Drop patches that were included in 3.24.38
 
- -- Puavo Org <dev@opinsys.fi>  Wed, 01 Sep 2021 13:45:54 +0300
+ -- Simon McVittie <smcv@debian.org>  Sat, 09 Sep 2023 20:30:40 +0100
+
+gtk+3.0 (3.24.38-2) unstable; urgency=medium
+
+  * Release to unstable
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Sun, 23 Jul 2023 16:14:18 -0400
+
+gtk+3.0 (3.24.38-1) experimental; urgency=medium
+
+  [ Jeremy Bícha ]
+  * New upstream release
+  * Drop 3 patches applied in new release
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Mon, 22 May 2023 13:35:52 -0400
+
+gtk+3.0 (3.24.37-2) unstable; urgency=medium
+
+  * d/p/selection-Use-the-right-mime-type.patch:
+    Add patch to fix incorrect MIME type for file transfer portal.
+    Regression in 3.24.37, affecting interoperability with other
+    implementations like the one requested in QTBUG-91357.
+  * d/patches: Update translations from upstream git: gl, he
+  * d/copyright: Remove gtk-text-input.xml.
+    This file is no longer present in the source package.
+  * Remove Lintian overrides for lintian/lintian!452, no longer necessary
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 08 Mar 2023 14:52:40 +0000
+
+gtk+3.0 (3.24.37-1) experimental; urgency=medium
+
+  * New upstream release
+    - Add support for xdg-desktop-portal file transfer API, allowing
+      copy/paste and drag-and-drop of files where one of the apps involved
+      is sandboxed by Flatpak, Snap or similar (GNOME/gtk!5554)
+    - Fix a regression for startup notifications (GNOME/gtk!5581)
+    - Fix potential invalid pointer dereference when checking whether a
+      list store iterator is valid
+    - Simple input method: Silence a warning from newer GLib by correctly
+      returning a value from a task
+    - Search engine: Reduce severity of the warning when Tracker
+      initialization failed, avoiding crashes when run with
+      G_DEBUG=fatal-criticals and without Tracker (GNOME/gtk!5490)
+    - Wayland backend: Drop support for an obsolete text input protocol,
+      which was only used by GNOME versions prior to Debian 10
+    - Broadway backend: Implement modal dialogs, preventing issues
+      with focus loss in complex UIs (GNOME/gtk!3990)
+    - Tests: Stop using GTestDBus, avoiding test timeouts if a dependency
+      leaks a bus connection
+    - Windows and macOS fixes not directly relevant to Debian
+  * d/patches: Drop patches that were applied upstream
+  * d/p/gdk-wayland-save-custom-xdg-activation-startup_id.patch,
+    d/p/window-focus-on-window-show-for-wayland-activation.patch:
+    Drop temporary fixes for GNOME/gtk#5386 (see 3.24.36-2, 3.24.35-3
+    changelogs). These were rejected upstream, and the change from
+    GNOME/gtk!5581 included in 3.24.37 should fix the issue more
+    correctly.
+  * Upload to experimental for further testing
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 03 Mar 2023 20:27:28 +0000
+
+gtk+3.0 (3.24.36-4) unstable; urgency=medium
+
+  * Team upload.
+  * Backport upstream patch to fix outdated screen state on screenshots.
+    (Closes: #1031112)
+
+ -- Dmitry Shachnev <mitya57@debian.org>  Wed, 15 Feb 2023 12:45:23 +0300
+
+gtk+3.0 (3.24.36-3) unstable; urgency=medium
+
+  * d/patches: Update to gtk-3-24 branch commit 3.24.36-33-g5554113c74,
+    excluding Windows- and macOS-specific changes, and a workaround for
+    a libhandy bug which was applied and then reverted.
+    - Fix logic for when to build GObject-Introspection
+    - Treat XKB_MOD_NAME_LOGO as Super key in Wayland (GNOME/gtk#4913)
+    - Fix animations and transitions randomly stopping (GNOME/gtk#4426)
+    - Take UI scale into account when loading "image-missing" icon
+    - Improve tracking of app status during activation in an attempt to
+      solve GNOME/gtk#5386 in an upstreamable way
+    - Fix a touchscreen handling bug that can cause applications to become
+      unresponsive (GNOME/gtk#4947)
+    - Fix GL rendering issues in Totem after the Mesa AMD driver enabled
+      threaded rendering (GNOME/gtk#5517)
+    - Translation updates: ab, lt, tr
+  * Standards-Version: 4.6.2 (no changes required)
+  * Clean up unused Lintian overrides
+  * Add overrides for lintian/lintian!452
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 04 Feb 2023 17:31:57 +0000
+
+gtk+3.0 (3.24.36-2) unstable; urgency=medium
+
+  [ Jeremy Bicha ]
+  * d/p/dist/Reinstate-gdk-wayland-cursor-meson.build.patch:
+    Drop, no longer needed as of 3.24.36.
+
+  [ Simon McVittie ]
+  * d/p/gdk-wayland-save-custom-xdg-activation-startup_id.patch,
+    d/p/window-focus-on-window-show-for-wayland-activation.patch:
+    Reinstate patches added in 3.24.35-3 and accidentally dropped while
+    rebasing on 3.24.36.
+    Note that this solution to GNOME/gtk#5386 has been rejected upstream
+    and should be replaced with a backport from GTK 4.
+  * d/rules: Accept minor rendering differences in label-background test.
+    Workaround for GNOME/gtk#5545
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 24 Jan 2023 18:33:47 +0000
+
+gtk+3.0 (3.24.36-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop patches that were applied upstream
+  * d/control: Increase Meson build-dependency to 0.60
+  * d/rules: Remove Autotools remnants.
+    Upstream releases are now built with Meson.
+  * d/copyright: Add license for cursor images used in Windows builds
+  * d/control.in: Explicitly build-depend on Freetype
+  * d/copyright: Update
+  * d/copyright: Move standalone license stanzas to the end
+  * d/tests, d/run-tests.sh: Copy run-with-display from gtk4.
+    This should make the build-time tests a bit more robust, by using the
+    -noreset option to avoid a race condition (see #981201).
+  * d/rules: Stop trying to install AUTHORS, no longer shipped upstream
+  * d/rules: Install README.md instead of README
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 03 Jan 2023 15:09:37 +0000
+
+gtk+3.0 (3.24.35-3) unstable; urgency=medium
+
+  * Cherry-pick 2 proposed patches to fix app startup regressions
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Fri, 09 Dec 2022 08:25:27 -0500
+
+gtk+3.0 (3.24.35-2) unstable; urgency=medium
+
+  * d/rules: Return to the print backends we previously enabled.
+    lpr and test were enabled during the move to Meson, but we didn't enable
+    them in the past and they don't seem to be desirable. (Closes: #1025271)
+  * d/rules: Remove redundant gtk_doc option.
+    In both cases (documentation enabled or disabled) we override this later.
+  * d/patches: Update to upstream commit 3.24.35-15-g9c60b8d4d4
+    - Load icon themes from ~/.local/share/icons and ~/.icons under Wayland
+    - Fix links in documentation to point to correct git branch for GTK 3
+    - Translation update: pt_BR
+  * Remove dpkg trigger on old immodules search path.
+    GTK 3 hasn't searched this path since 2015, so it was no longer useful
+    to have a trigger on it.
+  * d/rules: Remove redundant --libdir override.
+    We get the correct library directory from dh_auto_configure.
+  * Install emoji data for non-English languages.
+    With Autotools this was incorporated into the shared library, but with
+    Meson it's loaded on-demand.
+  * d/control.in: Disable API documentation under nodoc build profile
+  * d/control.in, d/rules: Disable man pages under nodoc build-profile
+  * d/control.in: Don't depend on gtk-doc-tools under nodoc build-profile.
+    This was needed at autoreconf time when we built with Autotools, but not
+    with Meson.
+  * Force software rendering during tests.
+    Workaround for Mesa regression #1025312. We expect only software
+    rendering to be available in a buildd or autopkgtest environment anyway.
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 02 Dec 2022 16:25:44 +0000
+
+gtk+3.0 (3.24.35-1) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * New upstream release
+    - Drop most patches, included in upstream release
+  * d/rules, d/run-tests.sh: Build using Meson
+  * d/p/dist/Reinstate-gdk-wayland-cursor-meson.build.patch:
+    Add a missing build file from upstream git
+  * d/p/Flush-drawable-surface-when-getting-a-pixbuf.patch:
+    Add post-release fix from upstream to avoid an assertion failure in
+    gnome-screenshot and epiphany
+  * d/p/Disable-accessibility-dump-aka-a11ytests-test.patch,
+    d/p/testsuite-Allow-reftest-output-directory-to-be-forced-via.patch:
+    Drop patches that are not needed when building with Meson
+  * d/p/testsuite-Avoid-using-should_fail.patch,
+    d/p/testsuite-Try-enabling-a11y-tests-other-than-those-known-.patch,
+    d/p/testsuite-Don-t-create-.test-files-for-flaky-or-failing-t.patch:
+    Add patches from upstream to improve handling of flaky tests.
+    With these changes, the flaky/known-failing tests are no longer installed
+    as installed-tests at all, so remove them from the autopkgtest metadata.
+
+  [ Jeremy Bicha ]
+  * debian/control.in, debian/tests/control: Depend on
+    adwaita-icon-theme-full for tests. In Debian this is a virtual package
+    provided by adwaita-icon-theme, and in Ubuntu it's a separate package.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 24 Nov 2022 13:52:17 +0000
+
+gtk+3.0 (3.24.34-5) unstable; urgency=medium
+
+  * d/p/build-Define-USE_XDG_ACTIVATION-conditional-when-Wayland-.patch:
+    Mark patch as applied upstream
+  * Skip border-image-excess-size reftest on big-endian machines.
+    Mitigates: #1024392
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 18 Nov 2022 23:56:42 +0000
+
+gtk+3.0 (3.24.34-4) unstable; urgency=medium
+
+  * d/patches: Update to upstream gtk-3-24 branch commit
+    3.24.34-209-gf8d26e2acc (Windows- and macOS-specific changes excluded)
+    - Don't crash on HiDPI systems if the cursor theme has cursors of
+      the wrong size
+    - When using server-side window decorations, don't draw a shadow around
+      maximized windows
+    - Fix popup coordinates on HiDPI
+    - Don't force HighContrast icon theme, which is deprecated in favour of
+      symbolic icons from the ordinary theme (already high-contrast)
+    - Fix a memory leak when applying symbolic colours
+    - Avoid pointer motion hint mask on Wayland
+    - Fix runtime warnings in popover
+    - Fix runtime warnings in font chooser for some fonts
+    - Improve tablet stylus detection on X11
+    - Fix drag-and-drop in Firefox on Plasma Wayland
+    - Documentation/introspection fixes
+    - Improve handling of titlebar clicks in mutter-based compositors
+    - Fix copy/paste interop between GTK and Eclipse
+    - Always send motion events even if event compression is disabled
+    - Improve support for input methods
+    - Fix cursor hotspot scaling under HiDPI
+    - Fix tooltip positioning under HiDPI
+    - Add non-GNOME-specific support for transferring focus when one
+      application launches another
+    - Distinguish between ordinary number keys and their equivalents on
+      the numeric keypad
+    - Don't try to initialize "desktop" OpenGL if GDK_GL=gles is set
+    - Translation updates
+  * (Build-)Depend on libfontconfig-dev, not transitional libfontconfig1-dev
+  * Build-/test-depend on dbus-daemon for dbus-run-session, instead of dbus
+  * d/p/build-Define-USE_XDG_ACTIVATION-conditional-when-Wayland-.patch:
+    Add patch to fix FTBFS for the udeb and non-Linux architectures
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 18 Nov 2022 11:53:03 +0000
+
+gtk+3.0 (3.24.34-3) unstable; urgency=medium
+
+  * d/control.in: Remove support for pre-bullseye versions of gdk-pixbuf
+  * Backport reftest comparison machinery from our gtk4 packaging.
+    This will let us distinguish between "fails by small differences caused
+    by rounding/i387/..." and "completely different result", without having
+    to move the whole build system to Meson, which seems like one variation
+    too many during a transition.
+  * d/rules: Ignore new reftest failure for linear-gradient on any-i386.
+    This seems to have regressed despite the GTK code not having changed,
+    possibly as a result of changes in another package, and it seems to be
+    the reference rendering rather than the test output that changed.
+    Please report a bug if there are user-visible rendering issues
+    involving gradients on i386.
+  * Update Lintian overrides
+  * Refer to #1017578 in previous changelog entry
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 21 Aug 2022 20:57:41 +0100
+
+gtk+3.0 (3.24.34-2) unstable; urgency=medium
+
+  * d/p/Avoid-repeated-g_log_set_writer_func-in-tests.patch:
+    Add proposed patch to fix test failure with GLib 2.73.x
+    (Closes: #1017578)
+  * Standards-Version: 4.6.1 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 20 Aug 2022 19:58:54 +0100
+
+gtk+3.0 (3.24.34-1) unstable; urgency=medium
+
+  * New upstream release
+  * d/copyright: Update
+  * Drop patches that were cherry-picked from upstream
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 01 Jun 2022 17:12:17 +0100
+
+gtk+3.0 (3.24.33-2) unstable; urgency=medium
+
+  * Cherry-pick gtk-3-24 commits needed for mutter 42.1 (LP: #1972721)
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 09 May 2022 15:47:13 -0400
+
+gtk+3.0 (3.24.33-1) unstable; urgency=medium
+
+  [ Jeremy Bicha ]
+  * New upstream release
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 09 Mar 2022 11:05:39 +0000
+
+gtk+3.0 (3.24.31-1) unstable; urgency=medium
+
+  * New upstream release
+    - Support touchpad gestures with XI 2.4
+    - Avoid clipboard-related lockups on Wayland
+    - textview: Add CSS letter spacing
+    - Translation updates: is, oc
+    - Various Windows- and macOS-specific changes that are not directly
+      relevant in Debian
+    - Various other changes that were already in 3.24.30-4
+  * Drop patches that came from upstream
+  * d/copyright: Update
+  * d/control.in: Update build-dependencies
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 26 Dec 2021 19:50:22 +0000
+
+gtk+3.0 (3.24.30-4) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * Update to upstream commit 3.24.30-129-g6c4cc93121, excluding CI
+    changes and Windows- and macOS-specific code changes
+    - Signal that a search has finished when required, fixing typeahead
+      search when using NFS (Closes: #976334)
+    - Update name and icon on file chooser button for remote files
+    - Don't unset the URI for the recent files filter
+    - Fix an infinite loop with certain popup behaviours in Wayland
+    - Don't change surface scales for wl_output globals not bound by GTK
+    - Don't print a message on stderr if Broadway (HTML) backend is
+      unavailable
+    - Don't require wayland-protocols when building GTK-dependent
+      components
+    - Avoid a double-free with large or slow clipboard contents
+    - Avoid false-positive warnings with gcc 11
+    - Invalidate compose table cache if target of a symlink changes
+    - Avoid a crash when parsing some radial gradients
+    - Use correct serial number for Wayland drag-and-drop
+    - Fix a crash involving GtkScale
+    - Make Wayland popups avoid triggering X11 heuristics
+    - Trap errors when getting X11 CRTC information, avoiding a crash if
+      monitor configuration changes rapidly
+    - Make reftests more reliable by always using default settings
+    - Documentation improvements
+    - Translation updates: cs, da, de, es, eu, fa, fi, fr, fur, gl, hr,
+      hu, is, it, kk, ko, lv, nl, oc, pt_BR, ru, sr, sv, zh_CN, zh_TW
+  * Standards-Version: 4.6.0 (no changes required)
+  * Avoid explicitly specifying -Wl,--as-needed linker flag.
+    This is the default in newer toolchains.
+  * Use debhelper compat level 13
+  * Adjust a Lintian override to match with newer Lintian
+  * Add Build-Depends-Package to both libraries in .symbols file.
+    Previously, it took effect for libgtk but not for libgtk.
+
+  [ Laurent Bigonville ]
+  * Disable the tests on architectures where librsvg2-common is not built.
+    librsvg is only built on architectures that rust has been ported to,
+    so disable them on the other architectures.
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 30 Nov 2021 14:50:13 +0000
+
+gtk+3.0 (3.24.30-3) unstable; urgency=medium
+
+  * Move org.gtk.Settings.Debug schema from -dev to -common.
+    gnome-terminal 3.40 wants this. (Closes: #993469)
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 01 Sep 2021 19:35:33 +0100
+
+gtk+3.0 (3.24.30-2) unstable; urgency=medium
+
+  * d/control.in: Drop unnecessary Build-Depends on gcc:native.
+    Consensus on #debian-devel is that build-essential implies this,
+    even when cross-compiling.
+  * Normalize permissions in installed-tests.
+    debhelper 13.4 makes everything below /usr/libexec executable, but
+    that's not what we want.
+  * Disable gvfs for unit tests.
+    It won't be installed on buildds, but can trigger (fatal) warnings
+    when building on a developer system.
+  * Wrap unit tests with dbus-run-session
+  * d/tests: Disable AT-SPI for tests that do not guarantee to install it.
+    This squashes another warning.
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 20 Aug 2021 15:25:28 +0100
+
+gtk+3.0 (3.24.30-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop build-dependencies used for the Google Cloud Print backend.
+    The service required by this backend was shut down, so the printing
+    backend is no longer useful and was removed by upstream.
+  * d/missing-sources: Add emojibase data in JSON format.
+    The GVariant data blobs in gtk/emoji/*.data are mechanically converted
+    from these.
+    - Do the conversion in d/rules, as an easy way to check that we have
+      the correct source files.
+  * Update symbols file
+  * Switch branch to debian/master for upload to unstable
+  * Mention #982925 in changelog entry for 3.24.25-1
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 16 Aug 2021 11:03:25 +0100
+
+gtk+3.0 (3.24.29-1) experimental; urgency=medium
+
+  * New upstream release
+    - Improve input handling to allow 3rd and 5th level choosers
+    - Correct cursor position in non-ASCII preedit text
+    - Handle smb mounts better
+    - Fix extending multi-selections in list boxes
+    - Don't beep on untrusted X11 displays, which can cause an X error
+    - Various fixes that were already included in 3.24.28-1
+  * Drop patches taken from upstream
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 30 Apr 2021 10:17:56 +0100
+
+gtk+3.0 (3.24.28-1) experimental; urgency=medium
+
+  * New upstream release
+    - Fix size changes in server-side decorations that could cause mutter
+      crashes
+    - Use transparent black for window border in dark theme
+    - Reinstate invisible borders for tiled windows
+    - Wayland: Find font settings more reliably
+    - Improve Compose and dead key handling
+    - Fix rendering of scaled text shadows (LP: #1919404)
+    - Wayland: Fix matching of accelerators with multiple layouts
+    - Fix crashes in X11 drag & drop with certain configurations of the
+      NVIDIA proprietary driver (LP: #1911036)
+    - Translation updates
+  * d/patches: Add various fixes from upstream
+    - d/p/imcontext-Look-for-Compose-file-in-the-right-place.patch,
+      d/p/Revert-Compose-sequence-changes.patch,
+      d/p/imcontext-Eat-key-events-during-preedit.patch:
+      Fix input regressions
+    - d/p/label-Fix-reacting-to-screen-resolution-changes.patch:
+      Redraw labels when "large text" setting changes
+    - d/p/spinbutton-Interpret-localized-digits.patch:
+      Interpret non-ASCII digits in spinbutton
+    - d/p/gdk-wayland-Defer-processing-of-globals-closures.patch:
+      Improve compatibility with non-GNOME compositors
+    - d/p/wayland-Improve-font-setting-fallback.patch,
+      d/p/wayland-Improve-font-setting-fallback-more.patch:
+      Improve default font settings
+    - d/p/scale-Fix-sporadic-criticals.patch:
+      Fix a use-after-free
+    - d/p/scrolledwindow-Always-add-other-scrollbar-size.patch:
+      Make sure to allocate enough space for scrollbars
+    - d/p/scrolledwindow-Cancel-overshoot-on-dimension-changes.patch:
+      Cancel overshoot handling if size changes during kinetic scrolling
+    - d/p/Fix-a-possible-crash-in-gtk_show_uri.patch:
+      Fix a possible crash if showing a URI with no basename
+    - d/p/x11-Be-quiet-on-exit-by-default.patch:
+      Don't log lots of messages when X11 server terminates
+    - Translation updates
+  * d/p/updateiconcache-Sort-list-of-entries.patch: Drop, applied upstream
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 21 Apr 2021 10:20:11 +0100
+
+gtk+3.0 (3.24.25-1) experimental; urgency=medium
+
+  * New upstream release
+    - Support for cursor aspect ratio setting
+    - Broadway fixes
+    - Avoid crashes with tablet input in Wayland
+    - Add API for better support for Wayland subsurfaces
+    - Make the Inspector available in non-debug builds
+    - Make scrollbars larger
+    - Disable shadows on maximized, fullscreen and tiled windows
+    - Support Avahi-discovered printers better (Closes: #982925)
+    - Show preedit for compose sequences
+    - Support long compose sequences
+    - Support compose sequences producing multiple characters
+    - Translation updates
+  * Upload to experimental for now, to assess whether this is desirable
+    for bullseye
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 18 Feb 2021 16:34:08 +0000
 
 gtk+3.0 (3.24.24-4) unstable; urgency=medium
 

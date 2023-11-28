@@ -12,7 +12,7 @@ srcdir=${srcdir}/testsuite/reftests
 builddir=${builddir}/testsuite/reftests
 
 cd "${builddir}"
-xvfb-run -a \
+debian/tests/run-with-display x11 \
 dbus-run-session -- \
 env \
     -u XDG_RUNTIME_DIR \

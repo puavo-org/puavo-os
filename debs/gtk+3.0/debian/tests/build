@@ -8,6 +8,12 @@ set -e
 set -u
 set -x
 
+export NO_AT_BRIDGE=1
+srcdir="$(pwd)"
+
+# Workaround for #1025312
+export LIBGL_ALWAYS_SOFTWARE=1
+
 WORKDIR=$(mktemp -d)
 cleanup () {
     rm -fr "$WORKDIR"
@@ -53,6 +59,7 @@ EOF
 "${CROSS_COMPILE}gcc" -o gtktest gtktest.c $("${CROSS_COMPILE}pkg-config" --cflags --libs gtk+-3.0)
 echo "build: OK"
 [ -x gtktest ]
-xvfb-run -a -s "-screen 0 1024x768x24" \
+"${srcdir}"/debian/tests/run-with-display x11 \
+dbus-run-session -- \
 ./gtktest
 echo "run: OK"

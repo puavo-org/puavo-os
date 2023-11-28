@@ -11,10 +11,10 @@ Forwarded: yes
  1 file changed, 5 insertions(+)
 
 diff --git a/gtk/gtkmain.c b/gtk/gtkmain.c
-index de0abbb..bf78de4 100644
+index 6148489..7cd685c 100644
 --- a/gtk/gtkmain.c
 +++ b/gtk/gtkmain.c
-@@ -2326,9 +2326,14 @@ gtk_device_grab_add (GtkWidget *widget,
+@@ -2327,9 +2327,14 @@ gtk_device_grab_add (GtkWidget *widget,
  {
    GtkWindowGroup *group;
    GtkWidget *old_grab_widget;

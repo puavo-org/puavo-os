@@ -1,6 +1,13 @@
 #!/bin/sh
 
-xvfb-run -a -s "-screen 0 1024x768x24" \
+export NO_AT_BRIDGE=1
+
+# Workaround for #1025312
+export LIBGL_ALWAYS_SOFTWARE=1
+
+exec \
+debian/tests/run-with-display x11 \
+dbus-run-session -- \
 python3 <<EOF
 import gi
 gi.require_version('Gtk', '3.0')
