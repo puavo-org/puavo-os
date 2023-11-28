@@ -1,0 +1,35 @@
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Tue, 18 Oct 2022 16:40:37 -0400
+Subject: fontchooser: Drop a few errant translations
+
+No point in translating these properties, they
+are not strings.
+
+Bug: https://gitlab.gnome.org/GNOME/gtk/-/issues/5146
+Origin: upstream, 4.8.4, commit:92ebf8ab13ab7e24cb2d9971cafd52bc579ab3c3
+---
+ gtk/ui/gtkfontchooserwidget.ui | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gtk/ui/gtkfontchooserwidget.ui b/gtk/ui/gtkfontchooserwidget.ui
+index 9932448..ffd3ae6 100644
+--- a/gtk/ui/gtkfontchooserwidget.ui
++++ b/gtk/ui/gtkfontchooserwidget.ui
+@@ -188,7 +188,7 @@
+                                 <property name="tooltip-text" translatable="yes">Preview Font</property>
+                                 <child>
+                                   <object class="GtkEventControllerScroll">
+-                                    <property name="flags" translatable="yes">horizontal</property>
++                                    <property name="flags">horizontal</property>
+                                     <signal name="scroll" handler="resize_by_scroll_cb"/>
+                                   </object>
+                                 </child>
+@@ -217,7 +217,7 @@
+                                 <property name="round-digits">0</property>
+                                 <child>
+                                   <object class="GtkEventControllerScroll">
+-                                    <property name="flags" translatable="yes">horizontal</property>
++                                    <property name="flags">horizontal</property>
+                                     <signal name="scroll" handler="resize_by_scroll_cb"/>
+                                   </object>
+                                 </child>

@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+update_modules () {
+    for dir in immodules printbackends; do
+        if [ -d "/@MODULES_BASE_PATH@/$dir" ]; then
+            /@LIBDIR@/glib-2.0/gio-querymodules "/@MODULES_BASE_PATH@/$dir" || true
+        fi
+    done
+}
+
+if [ "$1" = triggered ]; then
+    # This is triggered everytime an application installs a
+    # GTK IM module or print backend
+    update_modules
+    exit 0
+fi
+
+#DEBHELPER#
+
+# Also handle the initial installation
+update_modules

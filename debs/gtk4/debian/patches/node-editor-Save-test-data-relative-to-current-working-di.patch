@@ -1,0 +1,31 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Tue, 6 Dec 2022 11:13:59 +0000
+Subject: node-editor: Save test data relative to current working directory
+
+This avoids hard-coding the GTK source directory into the binary, which
+would make the binary non-reproducible across different source paths,
+particularly in a distro build environment where the source directory
+used by autobuilders will often not exist on end-user systems. The node
+editor can still be used to create new test-cases by running it with the
+GTK source directory as its current working directory.
+
+Bug: https://gitlab.gnome.org/GNOME/gtk/-/issues/5403
+Forwarded: https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/5297
+Signed-off-by: Simon McVittie <smcv@debian.org>
+---
+ demos/node-editor/meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/demos/node-editor/meson.build b/demos/node-editor/meson.build
+index 03489f3..bd0fe05 100644
+--- a/demos/node-editor/meson.build
++++ b/demos/node-editor/meson.build
+@@ -15,7 +15,7 @@ executable('gtk4-node-editor',
+   dependencies: [ libgtk_dep, demo_conf_h ],
+   include_directories: confinc,
+   c_args: [
+-    '-DNODE_EDITOR_SOURCE_DIR="@0@/../../testsuite/gsk/compare/"'.format(meson.current_source_dir())
++    '-DNODE_EDITOR_SOURCE_DIR="testsuite/gsk/compare/"'
+   ] + common_cflags,
+   win_subsystem: 'windows',
+   link_args: extra_demo_ldflags,

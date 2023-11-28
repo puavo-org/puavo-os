@@ -1,0 +1,77 @@
+#!/bin/sh
+# autopkgtest check: Build and run a program against GTK, to verify that the
+# headers and pkg-config file are installed correctly
+# Based on examples/hello-world.c:
+# (C) 1997-2015 GTK contributors (see debian/copyright)
+# and on an older autopkgtest:
+# (C) 2012 Canonical Ltd.
+# Author: Martin Pitt <martin.pitt@ubuntu.com>
+
+set -e
+set -u
+set -x
+
+export GTK_A11Y=none
+
+srcdir="$(pwd)"
+WORKDIR=$(mktemp -d)
+cleanup () {
+    rm -fr "$WORKDIR"
+}
+trap cleanup 0 INT QUIT ABRT PIPE TERM
+cd "$WORKDIR"
+
+if [ -n "${DEB_HOST_GNU_TYPE:-}" ]; then
+    CROSS_COMPILE="$DEB_HOST_GNU_TYPE-"
+else
+    CROSS_COMPILE=
+fi
+
+cat <<EOF > gtktest.c
+#include <glib.h>
+#include <gtk/gtk.h>
+
+static gboolean
+do_quit (gpointer user_data)
+{
+    gtk_window_destroy (user_data);
+    g_object_unref (user_data);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+activate (GtkApplication *app,
+          gpointer        user_data)
+{
+    GtkWidget *window;
+
+    window = gtk_application_window_new (app);
+    gtk_window_set_title (GTK_WINDOW (window), "Window");
+    gtk_window_set_default_size (GTK_WINDOW (window), 200, 200);
+
+    gtk_widget_show (window);
+    g_timeout_add_seconds (1, do_quit, g_object_ref_sink (window));
+}
+
+int main(int argc, char **argv)
+{
+    GtkApplication *app;
+    int status;
+
+    app = gtk_application_new ("org.debian.gtk_4_0.example", G_APPLICATION_NON_UNIQUE);
+    g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+    status = g_application_run (G_APPLICATION (app), argc, argv);
+    g_object_unref (app);
+    return status;
+}
+EOF
+
+# Deliberately word-splitting, that's how pkg-config works:
+# shellcheck disable=SC2046
+"${CROSS_COMPILE}gcc" -o gtktest gtktest.c $("${CROSS_COMPILE}pkg-config" --cflags --libs gtk4)
+echo "build: OK"
+[ -x gtktest ]
+"${srcdir}"/debian/tests/run-with-display "$GDK_BACKEND" \
+dbus-run-session -- \
+./gtktest
+echo "run: OK"

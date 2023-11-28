@@ -1,0 +1,46 @@
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Fri, 3 Feb 2023 10:00:03 +0100
+Subject: placessidebar: Make all rows ellipsize
+
+Otherwise, we end up with a single long row
+pushing the content of all the other rows
+off to the left, which is much worse than
+ellipsizing.
+
+Bug: https://gitlab.gnome.org/GNOME/gtk/-/issues/4710
+Bug-Debian: https://bugs.debian.org/1043261
+Applied-upstream: 4.9.3, commit:463f12a3bb42c60e2b86093f443d9d14541c9852
+Applied-upstream: 4.8.4, commit:c4ddf47d8f0625e23c5677a412bcc6ba585fa5a8
+---
+ gtk/gtksidebarrow.c     | 5 -----
+ gtk/ui/gtksidebarrow.ui | 1 +
+ 2 files changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/gtk/gtksidebarrow.c b/gtk/gtksidebarrow.c
+index f2adfde..11ccf43 100644
+--- a/gtk/gtksidebarrow.c
++++ b/gtk/gtksidebarrow.c
+@@ -278,11 +278,6 @@ gtk_sidebar_row_set_property (GObject      *object,
+ 
+     case PROP_SECTION_TYPE:
+       self->section_type = g_value_get_enum (value);
+-      if (self->section_type == GTK_PLACES_SECTION_COMPUTER ||
+-          self->section_type == GTK_PLACES_SECTION_OTHER_LOCATIONS)
+-        gtk_label_set_ellipsize (GTK_LABEL (self->label_widget), PANGO_ELLIPSIZE_NONE);
+-      else
+-        gtk_label_set_ellipsize (GTK_LABEL (self->label_widget), PANGO_ELLIPSIZE_END);
+       break;
+ 
+     case PROP_PLACE_TYPE:
+diff --git a/gtk/ui/gtksidebarrow.ui b/gtk/ui/gtksidebarrow.ui
+index 046a1af..3521704 100644
+--- a/gtk/ui/gtksidebarrow.ui
++++ b/gtk/ui/gtksidebarrow.ui
+@@ -25,6 +25,7 @@
+               <object class="GtkLabel" id="label_widget">
+                 <property name="hexpand">1</property>
+                 <property name="xalign">0</property>
++                <property name="ellipsize">end</property>
+                 <style>
+                   <class name="sidebar-label"/>
+                 </style>

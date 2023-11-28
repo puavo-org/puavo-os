@@ -1,0 +1,49 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Wed, 23 Nov 2022 21:26:50 +0000
+Subject: testsuite: Don't create .test files for flaky or failing tests
+
+These tests can be run manually, but are not suitable for use as an
+acceptance test, so let's not make frameworks like Debian's autopkgtest
+run these when they run ginsttest-runner in the most obvious way.
+
+Signed-off-by: Simon McVittie <smcv@debian.org>
+Applied-upstream: 4.9.2, commit:94b57a967c492ab18df8142557710ba0b1a02cee
+---
+ testsuite/gdk/meson.build | 6 ++++++
+ testsuite/gtk/meson.build | 6 ++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/testsuite/gdk/meson.build b/testsuite/gdk/meson.build
+index 7aa0cf6..3236ce7 100644
+--- a/testsuite/gdk/meson.build
++++ b/testsuite/gdk/meson.build
+@@ -83,6 +83,12 @@ endforeach
+ if get_option('install-tests')
+   foreach t : tests
+     test_name = t.get('name')
++    suites = t.get('suites', [])
++
++    if suites.contains('flaky') or suites.contains('failing')
++      continue
++    endif
++
+     test_cdata = configuration_data()
+     test_cdata.set('testexecdir', testexecdir)
+     test_cdata.set('test', test_name)
+diff --git a/testsuite/gtk/meson.build b/testsuite/gtk/meson.build
+index 926ed06..bc92fa9 100644
+--- a/testsuite/gtk/meson.build
++++ b/testsuite/gtk/meson.build
+@@ -291,6 +291,12 @@ endforeach
+ if get_option('install-tests')
+   foreach t : tests
+     test_name = t.get('name')
++    suites = t.get('suites', [])
++
++    if suites.contains('flaky') or suites.contains('failing')
++      continue
++    endif
++
+     conf = configuration_data()
+     conf.set('testexecdir', testexecdir)
+     conf.set('test', test_name)

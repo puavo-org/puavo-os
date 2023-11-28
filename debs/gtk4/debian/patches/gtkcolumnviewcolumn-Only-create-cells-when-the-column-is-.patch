@@ -1,0 +1,73 @@
+From: Benjamin Otte <otte.benjamin@googlemail.com>
+Date: Thu, 29 Dec 2022 22:21:43 +0000
+Subject: gtkcolumnviewcolumn: Only create cells when the column is visible
+
+Merge branch 'wip/corey/list-item-visible' into 'main'
+
+listitemwidget: Setup factory only once the widget is visible
+
+See merge request GNOME/gtk!5374
+
+(cherry picked from commit 188f9269b7e25847d4d50ba12c004f5da81aa352)
+
+Origin: upstream, 4.8.4, commit:2aaefd9ff67446bcd0fdee90fe0ed3ac8c02fb12
+---
+ gtk/gtkcolumnlistitemfactory.c |  9 +++++----
+ gtk/gtkcolumnviewcolumn.c      | 10 +++-------
+ 2 files changed, 8 insertions(+), 11 deletions(-)
+
+diff --git a/gtk/gtkcolumnlistitemfactory.c b/gtk/gtkcolumnlistitemfactory.c
+index 9951a7c..d69bd12 100644
+--- a/gtk/gtkcolumnlistitemfactory.c
++++ b/gtk/gtkcolumnlistitemfactory.c
+@@ -65,10 +65,11 @@ gtk_column_list_item_factory_setup (GtkListItemFactory *factory,
+     {
+       GtkColumnViewColumn *column = g_list_model_get_item (columns, i);
+ 
+-      gtk_column_list_item_factory_add_column (self,
+-                                               widget,
+-                                               column,
+-                                               FALSE);
++      if (gtk_column_view_column_get_visible (column))
++        gtk_column_list_item_factory_add_column (self,
++                                                 widget,
++                                                 column,
++                                                 FALSE);
+ 
+       g_object_unref (column);
+     }
+diff --git a/gtk/gtkcolumnviewcolumn.c b/gtk/gtkcolumnviewcolumn.c
+index 74c89c0..7520989 100644
+--- a/gtk/gtkcolumnviewcolumn.c
++++ b/gtk/gtkcolumnviewcolumn.c
+@@ -551,7 +551,8 @@ gtk_column_view_column_remove_header (GtkColumnViewColumn *self)
+ static void
+ gtk_column_view_column_ensure_cells (GtkColumnViewColumn *self)
+ {
+-  if (self->view && gtk_widget_get_root (GTK_WIDGET (self->view)))
++  if (self->view && gtk_widget_get_root (GTK_WIDGET (self->view)) &&
++      gtk_column_view_column_get_visible (self))
+     gtk_column_view_column_create_cells (self);
+   else
+     gtk_column_view_column_remove_cells (self);
+@@ -787,8 +788,6 @@ void
+ gtk_column_view_column_set_visible (GtkColumnViewColumn *self,
+                                     gboolean             visible)
+ {
+-  GtkColumnViewCell *cell;
+-
+   g_return_if_fail (GTK_IS_COLUMN_VIEW_COLUMN (self));
+ 
+   if (self->visible == visible)
+@@ -802,10 +801,7 @@ gtk_column_view_column_set_visible (GtkColumnViewColumn *self,
+   if (self->header)
+     gtk_widget_set_visible (GTK_WIDGET (self->header), visible);
+ 
+-  for (cell = self->first_cell; cell; cell = gtk_column_view_cell_get_next (cell))
+-    {
+-      gtk_widget_set_visible (GTK_WIDGET (cell), visible);
+-    }
++  gtk_column_view_column_ensure_cells (self);
+ 
+   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_VISIBLE]);
+ }

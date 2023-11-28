@@ -1,0 +1,34 @@
+From: Matteo Percivaldi <m.percivaldi@fastassembler.com>
+Date: Fri, 13 Jan 2023 14:05:10 +0100
+Subject: gtkcssanimatedstyle: Fix return of new_advance()
+
+This was causing animation and transition to stop randomly and reset
+their state to initial state.
+
+This issue has existed since commit
+7b68bdb8316fc1bb96c4a5ad16c1885506131d22.
+
+Bug: https://gitlab.gnome.org/GNOME/gtk/-/issues/4426
+Origin: upstream, 4.8.4, commit:1ff3a26c9644fbcbd91107280ff1ef839d4ea2f2
+---
+ gtk/gtkcssanimatedstyle.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/gtk/gtkcssanimatedstyle.c b/gtk/gtkcssanimatedstyle.c
+index fdfcf17..17287f2 100644
+--- a/gtk/gtkcssanimatedstyle.c
++++ b/gtk/gtkcssanimatedstyle.c
+@@ -937,9 +937,12 @@ gtk_css_animated_style_new_advance (GtkCssAnimatedStyle *source,
+   gtk_internal_return_val_if_fail (GTK_IS_CSS_ANIMATED_STYLE (source), NULL);
+   gtk_internal_return_val_if_fail (GTK_IS_CSS_STYLE (base_style), NULL);
+ 
+-  if (timestamp == 0 || timestamp == source->current_time)
++  if (timestamp == 0)
+     return g_object_ref (source->style);
+ 
++  if (timestamp == source->current_time)
++    return g_object_ref (GTK_CSS_STYLE (source));
++
+   gtk_internal_return_val_if_fail (timestamp > source->current_time, NULL);
+ 
+   animations = NULL;

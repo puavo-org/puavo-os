@@ -1,0 +1,48 @@
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Sat, 4 Feb 2023 13:10:42 +0100
+Subject: gdk/x11: Reset all scroll valuators on enter
+
+We no longer need to make much distinction between multiple logical
+devices, plus it breaks esp. with the Xwayland input device distribution.
+Just iterate across all devices and reset their scroll valuators.
+
+(cherry picked from commit 824e983372d939693f7eba5c394e647a9035a0f8)
+
+Origin: https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/5479
+Bug: https://gitlab.gnome.org/GNOME/gtk/-/issues/4160
+Bug: https://gitlab.gnome.org/GNOME/gtk/-/issues/5202
+Bug-Debian: https://bugs.debian.org/1029972
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/gtk4/+bug/1993594
+Applied-upstream: 4.9.3, commit:824e983372d939693f7eba5c394e647a9035a0f8
+Applied-upstream: 4.8.4, commit:37843ec941f611a6c9e05732442c86e99016d5f0
+---
+ gdk/x11/gdkdevicemanager-xi2.c | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
+
+diff --git a/gdk/x11/gdkdevicemanager-xi2.c b/gdk/x11/gdkdevicemanager-xi2.c
+index 02ceb2f..dd3f86c0 100644
+--- a/gdk/x11/gdkdevicemanager-xi2.c
++++ b/gdk/x11/gdkdevicemanager-xi2.c
+@@ -2064,19 +2064,10 @@ gdk_x11_device_manager_xi2_translate_event (GdkEventTranslator *translator,
+             xev->detail != XINotifyInferior && xev->mode != XINotifyPassiveUngrab &&
+             GDK_IS_TOPLEVEL (surface))
+           {
+-            if (gdk_x11_device_xi2_get_device_type ((GdkX11DeviceXI2 *) device) != GDK_X11_DEVICE_TYPE_LOGICAL)
+-              _gdk_device_xi2_reset_scroll_valuators (GDK_X11_DEVICE_XI2 (source_device));
+-            else
+-              {
+-                GList *physical_devices, *l;
+-
+-                physical_devices = gdk_device_list_physical_devices (source_device);
++            GList *l;
+ 
+-                for (l = physical_devices; l; l = l->next)
+-                  _gdk_device_xi2_reset_scroll_valuators (GDK_X11_DEVICE_XI2 (l->data));
+-
+-                g_list_free (physical_devices);
+-              }
++            for (l = device_manager->devices; l; l = l->next)
++              _gdk_device_xi2_reset_scroll_valuators (GDK_X11_DEVICE_XI2 (l->data));
+           }
+ 
+         event = gdk_crossing_event_new (ev->evtype == XI_Enter

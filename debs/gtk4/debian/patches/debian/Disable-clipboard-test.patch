@@ -1,0 +1,28 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Fri, 3 Sep 2021 15:08:08 +0100
+Subject: Disable clipboard test
+
+This regularly times out on buildds, but I can't reproduce the hang
+locally.
+
+Bug: https://gitlab.gnome.org/GNOME/gtk/-/issues/4229
+Forwarded: no
+---
+ testsuite/gdk/meson.build | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/testsuite/gdk/meson.build b/testsuite/gdk/meson.build
+index 3236ce7..45c4744 100644
+--- a/testsuite/gdk/meson.build
++++ b/testsuite/gdk/meson.build
+@@ -12,7 +12,9 @@ clipboard_client = executable('clipboard-client',
+ tests = [
+   { 'name': 'array' },
+   { 'name': 'cairo' },
+-  { 'name': 'clipboard', 'parallel': false, },
++  { 'name': 'clipboard',
++    'parallel': false,
++    'suites': ['flaky'], },
+   { 'name': 'contentformats' },
+   { 'name': 'contentserializer' },
+   { 'name': 'cursor' },

@@ -1,0 +1,26 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Fri, 12 Aug 2022 10:44:17 +0100
+Subject: Disable inscription-markup.ui reftest
+
+It's rendered 1px to the left of where it should be, which is not a
+serious problem for practical use of GTK, but is a test failure.
+
+Bug: https://gitlab.gnome.org/GNOME/gtk/-/issues/5099
+Forwarded: not-needed, workaround
+---
+ testsuite/reftests/meson.build | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/testsuite/reftests/meson.build b/testsuite/reftests/meson.build
+index 329348d..8edf55d 100644
+--- a/testsuite/reftests/meson.build
++++ b/testsuite/reftests/meson.build
+@@ -608,6 +608,8 @@ flaky = [
+   # to be left enabled. Remove it until somebody figures out
+   # what is going on there.
+   'treeview-headers-hidden.ui',
++  # https://gitlab.gnome.org/GNOME/gtk/-/issues/5099
++  'inscription-markup.ui',
+ ]
+ 
+ reftest_env = environment()

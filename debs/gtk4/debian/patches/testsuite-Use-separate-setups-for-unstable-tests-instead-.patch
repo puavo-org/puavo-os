@@ -1,0 +1,545 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Wed, 23 Nov 2022 19:13:32 +0000
+Subject: testsuite: Use separate setups for unstable tests instead of
+ should_fail
+
+There are two possible interpretations of "expected failure": either
+the test *must* fail (exactly the inverse of an ordinary test, with
+success becoming failure and failure becoming success), or the test
+*may* fail (with success intended, but failure possible in some
+environments). Autotools had the second interpretation, which seems
+more useful in practice, but Meson has the first.
+
+Instead of using should_fail, we can put the tests in one of two new
+suites: "flaky" is intended for tests that succeed or fail unpredictably
+according to the test environment or chance, while "failing" is for
+tests that ought to succeed but currently never do as a result of a
+bug or missing functionality. With a sufficiently new version of Meson,
+the flaky and failing tests are not run by default, but can be requested
+by running a setup that does not exclude them, with a command like:
+
+    meson test --setup=x11_unstable --suite=flaky --suite=failing
+
+As a bonus, now that we're setting up setups and their excluded suites
+programmatically, the gsk-compare-broadway tests are also excluded by
+default when running the test setup for a non-broadway backend.
+
+When running the tests in CI, --suite=gtk overrides the default
+exclude_suites, so we have to specify --no-suite=flaky and
+--no-suite=failing explicitly.
+
+This arrangement is inspired by GNOME/glib!2987, which was contributed
+by Marco Trevisan.
+
+Signed-off-by: Simon McVittie <smcv@debian.org>
+Applied-upstream: 4.9.2, commit:957dd49ef7d371926f90212bdf52b92742062e3e
+---
+ .gitlab-ci.yml                 |  3 ++
+ .gitlab-ci/run-tests.sh        | 70 ++++++++++++++++++++++++++++--------
+ testsuite/a11y/meson.build     |  7 ----
+ testsuite/gdk/meson.build      |  4 ++-
+ testsuite/gtk/meson.build      | 24 ++++---------
+ testsuite/meson.build          | 68 +++++++++++++++++------------------
+ testsuite/reftests/meson.build | 81 ++++++++++++++++++++++++------------------
+ 7 files changed, 147 insertions(+), 110 deletions(-)
+
+diff --git a/.gitlab-ci.yml b/.gitlab-ci.yml
+index dae2128..d2f730f 100644
+--- a/.gitlab-ci.yml
++++ b/.gitlab-ci.yml
+@@ -51,8 +51,11 @@ style-check-diff:
+     reports:
+       junit:
+         - "${CI_PROJECT_DIR}/_build/report-x11.xml"
++        - "${CI_PROJECT_DIR}/_build/report-x11_unstable.xml"
+         - "${CI_PROJECT_DIR}/_build/report-wayland.xml"
++        - "${CI_PROJECT_DIR}/_build/report-wayland_unstable.xml"
+         - "${CI_PROJECT_DIR}/_build/report-broadway.xml"
++        - "${CI_PROJECT_DIR}/_build/report-broadway_unstable.xml"
+     name: "gtk-${CI_COMMIT_REF_NAME}"
+     paths:
+       - "${CI_PROJECT_DIR}/_build/meson-logs"
+diff --git a/.gitlab-ci/run-tests.sh b/.gitlab-ci/run-tests.sh
+index e68cf5a..b60c3b3 100755
+--- a/.gitlab-ci/run-tests.sh
++++ b/.gitlab-ci/run-tests.sh
+@@ -19,11 +19,21 @@ case "${backend}" in
+                 --print-errorlogs \
+                 --setup=${backend} \
+                 --suite=gtk \
++                --no-suite=failing \
++                --no-suite=flaky \
+                 --no-suite=gsk-compare-broadway
+ 
+     # Store the exit code for the CI run, but always
+     # generate the reports
+     exit_code=$?
++
++    xvfb-run -a -s "-screen 0 1024x768x24 -noreset" \
++          meson test -C ${builddir} \
++                --timeout-multiplier "${MESON_TEST_TIMEOUT_MULTIPLIER}" \
++                --print-errorlogs \
++                --setup=${backend}_unstable \
++                --suite=flaky \
++                --suite=failing || true
+     ;;
+ 
+   wayland)
+@@ -38,9 +48,18 @@ case "${backend}" in
+                 --print-errorlogs \
+                 --setup=${backend} \
+                 --suite=gtk \
++                --no-suite=failing \
++                --no-suite=flaky \
+                 --no-suite=gsk-compare-broadway
+-
+     exit_code=$?
++
++    meson test -C ${builddir} \
++                --timeout-multiplier "${MESON_TEST_TIMEOUT_MULTIPLIER}" \
++                --print-errorlogs \
++                --setup=${backend}_unstable \
++                --suite=flaky \
++                --suite=failing || true
++
+     kill ${compositor}
+     ;;
+ 
+@@ -56,9 +75,18 @@ case "${backend}" in
+                 --print-errorlogs \
+                 --setup=${backend} \
+                 --suite=gtk \
++                --no-suite=failing \
++                --no-suite=flaky \
+                 --no-suite=gsk-compare-broadway
+-
+     exit_code=$?
++
++    meson test -C ${builddir} \
++                --timeout-multiplier "${MESON_TEST_TIMEOUT_MULTIPLIER}" \
++                --print-errorlogs \
++                --setup=${backend}_unstable \
++                --suite=flaky \
++                --suite=failing || true
++
+     kill ${compositor}
+     ;;
+ 
+@@ -74,10 +102,20 @@ case "${backend}" in
+                 --print-errorlogs \
+                 --setup=${backend} \
+                 --suite=gtk \
++                --no-suite=failing \
++                --no-suite=flaky \
+                 --no-suite=gsk-compare-opengl
+ 
+     # don't let Broadway failures fail the run, for now
+     exit_code=0
++
++    meson test -C ${builddir} \
++                --timeout-multiplier "${MESON_TEST_TIMEOUT_MULTIPLIER}" \
++                --print-errorlogs \
++                --setup=${backend}_unstable \
++                --suite=flaky \
++                --suite=failing || true
++
+     kill ${server}
+     ;;
+ 
+@@ -90,18 +128,20 @@ esac
+ 
+ cd ${builddir}
+ 
+-$srcdir/.gitlab-ci/meson-junit-report.py \
+-        --project-name=gtk \
+-        --backend=${backend} \
+-        --job-id="${CI_JOB_NAME}" \
+-        --output=report-${backend}.xml \
+-        meson-logs/testlog-${backend}.json
+-$srcdir/.gitlab-ci/meson-html-report.py \
+-        --project-name=gtk \
+-        --backend=${backend} \
+-        --job-id="${CI_JOB_NAME}" \
+-        --reftest-output-dir="testsuite/reftests/output/${backend}" \
+-        --output=report-${backend}.html \
+-        meson-logs/testlog-${backend}.json
++for suffix in "" "_unstable"; do
++    $srcdir/.gitlab-ci/meson-junit-report.py \
++            --project-name=gtk \
++            --backend="${backend}${suffix}" \
++            --job-id="${CI_JOB_NAME}" \
++            --output="report-${backend}${suffix}.xml" \
++            "meson-logs/testlog-${backend}${suffix}.json"
++    $srcdir/.gitlab-ci/meson-html-report.py \
++            --project-name=gtk \
++            --backend="${backend}${suffix}" \
++            --job-id="${CI_JOB_NAME}" \
++            --reftest-output-dir="testsuite/reftests/output/${backend}${suffix}" \
++            --output="report-${backend}${suffix}.html" \
++            "meson-logs/testlog-${backend}${suffix}.json"
++done
+ 
+ exit $exit_code
+diff --git a/testsuite/a11y/meson.build b/testsuite/a11y/meson.build
+index 4f50d3a..4547b21 100644
+--- a/testsuite/a11y/meson.build
++++ b/testsuite/a11y/meson.build
+@@ -35,10 +35,6 @@ tests = [
+ ]
+ 
+ 
+-# Tests that are expected to fail
+-xfail = [
+-]
+-
+ is_debug = get_option('buildtype').startswith('debug')
+ 
+ test_cargs = []
+@@ -76,8 +72,6 @@ foreach t : tests
+     install_dir: testexecdir,
+   )
+ 
+-  expect_fail = xfail.contains(test_name)
+-
+   if test_extra_suites.contains('slow')
+     test_timeout = 90
+   endif
+@@ -88,6 +82,5 @@ foreach t : tests
+     timeout: test_timeout,
+     env: test_env,
+     suite: ['a11y'] + test_extra_suites,
+-    should_fail: expect_fail,
+   )
+ endforeach
+diff --git a/testsuite/gdk/meson.build b/testsuite/gdk/meson.build
+index 03528a3..7aa0cf6 100644
+--- a/testsuite/gdk/meson.build
++++ b/testsuite/gdk/meson.build
+@@ -39,6 +39,8 @@ foreach t : tests
+     install_dir: testexecdir,
+   )
+ 
++  suites = ['gdk'] + t.get('suites', [])
++
+   test(test_name, test_exe,
+     args: [ '--tap', '-k' ],
+     protocol: 'tap',
+@@ -48,7 +50,7 @@ foreach t : tests
+       'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
+       'DBUS_SESSION_BUS_ADDRESS=',
+     ],
+-    suite: 'gdk',
++    suite: suites,
+   )
+ endforeach
+ 
+diff --git a/testsuite/gtk/meson.build b/testsuite/gtk/meson.build
+index b9f0396..926ed06 100644
+--- a/testsuite/gtk/meson.build
++++ b/testsuite/gtk/meson.build
+@@ -23,8 +23,9 @@ endif
+ #  - 'suites': (array): additional test suites
+ tests = [
+   { 'name': 'accel' },
+-# sadly, mesons xfail support seems busted
+-#  { 'name': 'accessor-apis' },
++  # we are still missing some accessors
++  { 'name': 'accessor-apis',
++    'suites': ['failing'] },
+   { 'name': 'action' },
+   { 'name': 'adjustment' },
+   { 'name': 'bitset' },
+@@ -105,6 +106,9 @@ tests = [
+   { 'name': 'revealer-size' },
+   { 'name': 'widgetorder' },
+   { 'name': 'widget-refcount' },
++  # This test was disabled for long enough that it no longer compiles
++  #{ 'name': 'window',
++  #  'suites': ['failing'] },
+ ]
+ 
+ # Tests that test private apis and therefore are linked against libgtk-4.a
+@@ -128,16 +132,6 @@ internal_tests = [
+   { 'name': 'fnmatch' },
+ ]
+ 
+-# Tests that are expected to fail
+-xfail = [
+-  # we are still missing some accessors
+-  'accessor-apis',
+-  # one of the window resizing tests fails after
+-  # the GdkToplevel refactoring, and needs a big
+-  # gtkwindow.c configure request cleanup
+-  'window',
+-]
+-
+ is_debug = get_option('buildtype').startswith('debug')
+ 
+ test_cargs = []
+@@ -181,8 +175,6 @@ foreach t : tests
+     install_dir: testexecdir,
+   )
+ 
+-  expect_fail = xfail.contains(test_name)
+-
+   if test_extra_suites.contains('slow')
+     test_timeout = 90
+   endif
+@@ -193,7 +185,6 @@ foreach t : tests
+     timeout: test_timeout,
+     env: test_env,
+     suite: ['gtk'] + test_extra_suites,
+-    should_fail: expect_fail,
+   )
+ endforeach
+ 
+@@ -214,8 +205,6 @@ foreach t : internal_tests
+     install_dir: testexecdir,
+   )
+ 
+-  expect_fail = xfail.contains(test_name)
+-
+   if test_extra_suites.contains('slow')
+     test_timeout = 90
+   endif
+@@ -226,7 +215,6 @@ foreach t : internal_tests
+     timeout: test_timeout,
+     env: test_env,
+     suite: ['gtk'] + test_extra_suites,
+-    should_fail: expect_fail,
+   )
+ endforeach
+ 
+diff --git a/testsuite/meson.build b/testsuite/meson.build
+index 97344f3..688a253 100644
+--- a/testsuite/meson.build
++++ b/testsuite/meson.build
+@@ -10,47 +10,45 @@ common_env = [
+   'GSETTINGS_SCHEMA_DIR=@0@'.format(gtk_schema_build_dir),
+   'GDK_DEBUG=default-settings',
+ ]
++exclude_unstable = ['flaky', 'failing']
+ 
+-if x11_enabled
+-  add_test_setup ('x11',
+-                  env: common_env + [
+-                       'GDK_BACKEND=x11',
+-                       'TEST_OUTPUT_SUBDIR=x11',
+-                       ])
+-endif
++setups = [
++  { 'backend': 'x11', 'if': x11_enabled, },
++  { 'backend': 'wayland', 'if': wayland_enabled, 'is_default': true, },
++  { 'name': 'waylandgles', 'backend': 'wayland', 'if': wayland_enabled,
++    'env': ['GDK_DEBUG=gl-gles,default-settings'], },
++  { 'backend': 'win32', 'if': os_win32 },
++  { 'backend': 'broadway', 'if': broadway_enabled, },
++]
+ 
+-if wayland_enabled
+-  add_test_setup ('wayland',
+-                  is_default: true,
+-                  env: common_env + [
+-                        'GDK_BACKEND=wayland',
+-                        'TEST_OUTPUT_SUBDIR=wayland',
+-                        ])
++foreach setup : setups
++  if setup.get('if')
++    backend = setup.get('backend')
++    name = setup.get('name', backend)
++    exclude = []
+ 
+-  add_test_setup ('waylandgles',
+-                  env: common_env + [
+-                        'GDK_BACKEND=wayland',
+-                        'TEST_OUTPUT_SUBDIR=waylandgles',
+-                        'GDK_DEBUG=gl-gles,default-settings',
+-                        ])
++    if backend != 'broadway'
++      exclude += 'gsk-compare-broadway'
++    endif
+ 
+-endif
++    env = common_env + [
++      'GDK_BACKEND=@0@'.format(backend),
++    ] + setup.get('env', [])
+ 
+-if os_win32
+-  add_test_setup ('win32',
+-                  env: common_env + [
+-                        'GDK_BACKEND=win32',
+-                        'TEST_OUTPUT_SUBDIR=win32',
+-                        ])
+-endif
++    add_test_setup(
++      name,
++      env: env + ['TEST_OUTPUT_SUBDIR=@0@'.format(name)],
++      exclude_suites: exclude_unstable + exclude,
++      is_default: setup.get('is_default', false),
++    )
+ 
+-if broadway_enabled
+-  add_test_setup ('broadway',
+-                  env: common_env + [
+-                        'GDK_BACKEND=broadway',
+-                        'TEST_OUTPUT_SUBDIR=broadway',
+-                        ])
+-endif
++    add_test_setup(
++      '@0@_unstable'.format(name),
++      env: env + ['TEST_OUTPUT_SUBDIR=@0@_unstable'.format(name)],
++      exclude_suites: exclude,
++    )
++  endif
++endforeach
+ 
+ subdir('performance')
+ subdir('gdk')
+diff --git a/testsuite/reftests/meson.build b/testsuite/reftests/meson.build
+index 2cd31db..329348d 100644
+--- a/testsuite/reftests/meson.build
++++ b/testsuite/reftests/meson.build
+@@ -137,11 +137,9 @@ testdata = [
+   'border-image-url-scaled.css',
+   'border-image-url-scaled.ref.ui',
+   'border-image-url-scaled.ui',
+-  # this seems to make assumptions on text positioning
+-  # that are not valid with subpixel positioning
+-  #'border-image-url.css',
+-  #'border-image-url.ref.ui',
+-  #'border-image-url.ui',
++  'border-image-url.css',
++  'border-image-url.ref.ui',
++  'border-image-url.ui',
+   'border-radius-clamp.css',
+   'border-radius-clamp.ref.ui',
+   'border-radius-clamp.ui',
+@@ -382,11 +380,9 @@ testdata = [
+   'label-attribute-preference.css',
+   'label-attribute-preference.ref.ui',
+   'label-attribute-preference.ui',
+-  # makes assumptions about text positioning that are not
+-  # valid with subpixel positioning
+-  #'label-background.css',
+-  #'label-background.ref.ui',
+-  #'label-background.ui',
++  'label-background.css',
++  'label-background.ref.ui',
++  'label-background.ui',
+   'label-box-shadow-clip.css',
+   'label-box-shadow-clip.ref.ui',
+   'label-box-shadow-clip.ui',
+@@ -432,10 +428,8 @@ testdata = [
+   'label-wrap-word-char-natural-size.ui',
+   'label-wrapped-huge-max-width-chars.ref.ui',
+   'label-wrapped-huge-max-width-chars.ui',
+-  # this seems to make assumptions on text positioning
+-  # that are not valid with subpixel positioning
+-  #'label-wrap-justify.ref.ui',
+-  #'label-wrap-justify.ui',
++  'label-wrap-justify.ref.ui',
++  'label-wrap-justify.ui',
+   'late-binding.ui',
+   'late-binding.ref.ui',
+   'late-property.ui',
+@@ -559,23 +553,18 @@ testdata = [
+   'textview-border-windows.css',
+   'textview-border-windows.ref.ui',
+   'textview-border-windows.ui',
+-  # these tests needs a better way to perform delayed actions
+-  # they are not in xfail since they succeed on some platforms
+-  #'textview-margins.css',
+-  #'textview-margins.ref.ui',
+-  #'textview-margins.ui',
+-  #'textview-tags.ref.ui',
+-  #'textview-tags.ui',
++  'textview-margins.css',
++  'textview-margins.ref.ui',
++  'textview-margins.ui',
++  'textview-tags.ref.ui',
++  'textview-tags.ui',
+   'treeview-crash-too-wide.ref.ui',
+   'treeview-crash-too-wide.ui',
+   'treeview-fixed-height.css',
+   'treeview-fixed-height.ref.ui',
+   'treeview-fixed-height.ui',
+-  # this test fails with an off-by-one in ci too frequently
+-  # to be left enabled. Remove it until somebody figures out
+-  # what is going on there.
+-  #'treeview-headers-hidden.ref.ui',
+-  #'treeview-headers-hidden.ui',
++  'treeview-headers-hidden.ref.ui',
++  'treeview-headers-hidden.ui',
+   'unresolvable.css',
+   'unresolvable.ref.ui',
+   'unresolvable.ui',
+@@ -589,21 +578,36 @@ testdata = [
+   'window-default-size.ui',
+   'window-height-for-width.ref.ui',
+   'window-height-for-width.ui',
+-  # this test needs a better way to perform delayed actions
+-  # it is not in xfail since it succeeds on some platforms
+-  #'window-show-contents-on-map.ref.ui',
+-  #'window-show-contents-on-map.ui',
++  'window-show-contents-on-map.ref.ui',
++  'window-show-contents-on-map.ui',
+   'wrap-margin-align-critical.ref.ui',
+   'wrap-margin-align-critical.ui',
+   'wrapping-in-boxes-in-boxes.ref.ui',
+   'wrapping-in-boxes-in-boxes.ui',
+ ]
+ 
+-# These need to be fixed but the issue hasn't been tracked down.
+ xfails = [
++  # needs to be fixed but the issue hasn't been tracked down
+   'sizegroups-evolution-identity-page.ui',
+   # the NGL renderer can't deal with non-integer sizes
+-  'border-half-pixel.ui'
++  'border-half-pixel.ui',
++
++  # makes assumptions about text positioning that are not
++  # valid with subpixel positioning
++  'border-image-url.ui',
++  'label-background.ui',
++  'label-wrap-justify.ui',
++]
++flaky = [
++  # these tests need a better way to perform delayed actions
++  # they are not in xfails since they succeed on some platforms
++  'textview-margins.ui',
++  'textview-tags.ui',
++  'window-show-contents-on-map.ui',
++  # this test fails with an off-by-one in ci too frequently
++  # to be left enabled. Remove it until somebody figures out
++  # what is going on there.
++  'treeview-headers-hidden.ui',
+ ]
+ 
+ reftest_env = environment()
+@@ -616,6 +620,16 @@ reftest_env.set('G_ENABLE_DIAGNOSTIC', '0')
+ reftest_env.set('REFTEST_MODULE_DIR', meson.current_build_dir())
+ 
+ foreach testname : testdata
++  suites = ['reftest']
++
++  if flaky.contains(testname)
++    suites += 'flaky'
++  endif
++
++  if xfails.contains(testname)
++    suites += 'failing'
++  endif
++
+   if testname.endswith('.ui') and not testname.endswith('.ref.ui')
+     test('reftest ' + testname, gtk_reftest,
+       args: [
+@@ -626,8 +640,7 @@ foreach testname : testdata
+       ],
+       protocol: 'tap',
+       env: reftest_env,
+-      suite: 'reftest',
+-      should_fail: xfails.contains(testname),
++      suite: suites,
+     )
+   endif
+ endforeach

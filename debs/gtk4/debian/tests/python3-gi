@@ -1,0 +1,26 @@
+#!/bin/sh
+
+export GTK_A11Y=none
+
+debian/tests/run-with-display "$GDK_BACKEND" \
+dbus-run-session \
+python3 <<EOF
+import gi
+gi.require_version('Gtk', '4.0')
+from gi.repository import GLib, Gtk
+
+loop = GLib.MainLoop()
+
+def do_quit(user_data):
+    window.destroy()
+    loop.quit()
+    return GLib.SOURCE_REMOVE
+
+window = Gtk.Window()
+window.set_title('Test Window')
+window.set_visible("true")
+GLib.timeout_add_seconds(1, do_quit, None)
+
+loop.run()
+EOF
+
