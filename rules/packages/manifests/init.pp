@@ -818,10 +818,10 @@ class packages {
 
     # XXX The $r8168_module works with 5.18 but the version
     # XXX in backports (in 2022-10-24) does not work with 5.19.
-    '6.1.0-0.deb11.11-amd64':
+    '6.1.0-0.deb11.13-amd64':
       dkms_modules => [ $broadcom_sta_dkms_module
                       , $virtualbox_module ],
-      package_name => 'linux-image-6.1.0-0.deb11.11-amd64';
+      package_name => 'linux-image-6.1.0-0.deb11.13-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by
