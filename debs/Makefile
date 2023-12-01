@@ -70,7 +70,7 @@ clean:
 
 .dpkg-buildpackage-%: %
 	@env PUAVOOS_SUDO='$(_sudo)' \
-	    ../.aux/build-debs "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
+	    ../.aux/debs-build "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
 	$(MAKE) update-repo
 	$(_sudo) apt-get update
 
