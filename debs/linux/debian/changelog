@@ -1,3 +1,10 @@
+linux (6.5.10-1~bpo12+1+puavo1+buildonce) puavo-bookworm; urgency=medium
+
+  * Add linux-surface patches.
+    - Set ABI to 0.puavo1
+
+ -- Puavo Org <dev@opinsys.fi>  Fri, 01 Dec 2023 11:16:20 +0200
+
 linux (6.5.10-1~bpo12+1) bookworm-backports; urgency=medium
 
   * Rebuild for bookworm-backports:
