@@ -11,7 +11,7 @@ browser_is_active() {
 
   browser_dir=$1
   latest_modified_file=$(find "$browser_dir" -printf '%Ts\n' \
-                           | sort -k1,1nr | head -1) || return 1
+                           | sort -nr | head -1) || return 1
   if [ -z "$latest_modified_file" ]; then
     echo 'latest modified file timestamp could not be found' >&2
     return 1
