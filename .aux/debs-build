@@ -68,7 +68,7 @@ echo "Building ${srcpkgname}"
       dch --distribution "$(lsb_release -cs)" --force-distribution --release ''
   fi
 
-  dpkg-buildpackage -sa -uc -us
+  dpkg-buildpackage -sa -uc -us "-j$(nproc)"
   ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
 )
 
