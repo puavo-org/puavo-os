@@ -51,7 +51,12 @@ echo "Building ${srcpkgname}"
 
 (
   cd "${pkgworkdir}/${srcpkgname}"
-  debian/scripts/get-orig-source
+
+  if [ -x puavo/get-orig-source ]; then
+    puavo/get-orig-source
+  else
+    debian/scripts/get-orig-source
+  fi
 
   current_deb_version="$(dpkg-parsechangelog -S version \
 			   | sed -E 's/\+build[0-9]+$//')"
