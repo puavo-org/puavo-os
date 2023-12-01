@@ -2,7 +2,56 @@
 
 set -eu
 
+browser_dir=~/.config/chromium
+browser_name='Chromium'
+
+browser_is_active() {
+  # this checks browser activity on any host sharing the home directory
+  local browser_dir latest_modified
+
+  browser_dir=$1
+  latest_modified_file=$(find "$browser_dir" -printf '%Ts\n' \
+                           | sort -nr | head -1) || return 1
+  if [ -z "$latest_modified_file" ]; then
+    echo 'latest modified file timestamp could not be found' >&2
+    return 1
+  fi
+
+  [ "$(date +%s)" -lt "$(($latest_modified_file + 60))" ]
+}
+
+fix_browser_lock() {
+  local browser_lock browser_lock_hostname puavo_hostname
+
+  browser_lock=$(readlink "${browser_dir}/SingletonLock" 2>/dev/null) || true
+
+  if [ -z "$browser_lock" ]; then
+    # no lock, okay
+    return 0
+  fi
+
+  browser_lock_hostname=${browser_lock%-*}
+
+  read puavo_hostname < /etc/puavo/hostname || return 1
+
+  if [ "$puavo_hostname" = "$browser_lock_hostname" ]; then
+    # lock is for the same host, okay
+    return 0
+  fi
+
+  if browser_is_active "$browser_dir"; then
+    zenity --error --title="${browser_name} startup error" --timeout=10 \
+           --no-wrap --text="${browser_name} is active on host ${browser_lock_hostname}, please close it there and then try again" || true
+    return 1
+  fi
+
+  rm -f "$browser_dir"/Singleton* || return 1
+
+  return 0
+}
+
 browser_running() {
+  # this checks browser activity on this host
   pgrep -x -U "$USER" chromium.distrib >/dev/null
 }
 
@@ -31,6 +80,10 @@ set_first_homepage() {
 }
 
 default_args="--disable-infobars --no-default-browser-check --no-first-run"
+
+if ! fix_browser_lock; then
+  exit 1
+fi
 
 if ! browser_running; then
   preferences_dir=~/.config/chromium/Default
