@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 
@@ -42,7 +42,13 @@ fi
 (
   echo "Installing build dependencies for ${srcpkgname}"
   cd "$pkgworkdir"
-  mk-build-deps "${srcpkgname}/debian/control"
+
+  mk_build_deps_options=()
+  if [ -f "${srcpkgname}/puavo/build_profiles" ]; then
+    build_profiles=$(cat "${srcpkgname}/puavo/build_profiles")
+    mk_build_deps_options+=(--build-profiles "${build_profiles}")
+  fi
+  mk-build-deps "${mk_build_deps_options[@]}" "${srcpkgname}/debian/control"
   ${PUAVOOS_SUDO:-} apt-get install -y "./${srcpkgname}-build-deps_"*.deb
   rm -f "./${srcpkgname}-build-deps_"*.deb
 )
@@ -73,7 +79,13 @@ echo "Building ${srcpkgname}"
       dch --distribution "$(lsb_release -cs)" --force-distribution --release ''
   fi
 
-  dpkg-buildpackage -ipuavo -sa --no-sign "-j$(nproc)"
+  dpkg_buildpackage_options=(-ipuavo -sa --no-sign "-j$(nproc)")
+  if [ -f puavo/build_profiles ]; then
+    build_profiles=$(cat puavo/build_profiles)
+    dpkg_buildpackage_options+=("-P${build_profiles}")
+  fi
+
+  dpkg-buildpackage "${dpkg_buildpackage_options[@]}"
   ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
 )
 
