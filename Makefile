@@ -18,6 +18,7 @@ upload_pkgregex         :=
 upload_server           :=
 
 include defaults.mk
+-include local_defaults.mk
 
 ifeq "$(remote_mirror)" ""
   ifeq "$(mode)" "development"
