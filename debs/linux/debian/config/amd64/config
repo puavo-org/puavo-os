@@ -93,6 +93,11 @@ CONFIG_SIGNED_PE_FILE_VERIFICATION=y
 CONFIG_ACPI_BGRT=y
 
 ##
+## file: drivers/acpi/pmic/Kconfig
+##
+CONFIG_TPS68470_PMIC_OPREGION=y
+
+##
 ## file: drivers/android/Kconfig
 ##
 CONFIG_ANDROID_BINDER_IPC=m
@@ -103,6 +108,11 @@ CONFIG_ANDROID_BINDER_IPC=m
 CONFIG_AGP=y
 #. Needed by GART_IOMMU
 CONFIG_AGP_AMD64=y
+
+##
+## file: drivers/clk/Kconfig
+##
+CONFIG_COMMON_CLK_TPS68470=m
 
 ##
 ## file: drivers/cxl/Kconfig
@@ -123,6 +133,11 @@ CONFIG_EDAC_SBRIDGE=m
 CONFIG_EDAC_IGEN6=m
 
 ##
+## file: drivers/gpio/Kconfig
+##
+CONFIG_GPIO_TPS68470=m
+
+##
 ## file: drivers/gpu/drm/i915/Kconfig
 ##
 CONFIG_DRM_I915_GVT_KVMGT=m
@@ -134,9 +149,35 @@ CONFIG_DRM_I915_PXP=y
 CONFIG_AMD_SFH_HID=m
 
 ##
+## file: drivers/hid/ipts/Kconfig
+##
+CONFIG_HID_IPTS=m
+
+##
+## file: drivers/hid/ithc/Kconfig
+##
+CONFIG_HID_ITHC=m
+
+##
+## file: drivers/hid/surface-hid/Kconfig
+##
+CONFIG_SURFACE_HID=m
+CONFIG_SURFACE_KBD=m
+
+##
 ## file: drivers/i2c/Kconfig
 ##
 CONFIG_I2C_STUB=m
+
+##
+## file: drivers/iio/light/Kconfig
+##
+CONFIG_APDS9960=m
+
+##
+## file: drivers/input/misc/Kconfig
+##
+CONFIG_INPUT_SOC_BUTTON_ARRAY=m
 
 ##
 ## file: drivers/input/mouse/Kconfig
@@ -154,10 +195,29 @@ CONFIG_AMD_IOMMU=y
 CONFIG_AMD_IOMMU_V2=y
 
 ##
+## file: drivers/leds/Kconfig
+##
+CONFIG_LEDS_TPS68470=m
+
+##
 ## file: drivers/macintosh/Kconfig
 ##
 CONFIG_MACINTOSH_DRIVERS=y
 CONFIG_MAC_EMUMOUSEBTN=y
+
+##
+## file: drivers/media/i2c/Kconfig
+##
+CONFIG_VIDEO_OV5693=m
+CONFIG_VIDEO_OV7251=m
+CONFIG_VIDEO_OV8865=m
+CONFIG_VIDEO_DW9719=m
+
+##
+## file: drivers/media/pci/intel/ipu3/Kconfig
+##
+CONFIG_VIDEO_IPU3_CIO2=m
+CONFIG_CIO2_BRIDGE=y
 
 ##
 ## file: drivers/net/Kconfig
@@ -199,7 +259,31 @@ CONFIG_PCI_HYPERV=y
 ##
 ## file: drivers/pinctrl/Kconfig
 ##
+CONFIG_PINCTRL=y
 CONFIG_PINCTRL_AMD=y
+
+##
+## file: drivers/platform/surface/Kconfig
+##
+CONFIG_SURFACE_3_POWER_OPREGION=m
+CONFIG_SURFACE_ACPI_NOTIFY=m
+CONFIG_SURFACE_AGGREGATOR_CDEV=m
+CONFIG_SURFACE_AGGREGATOR_HUB=m
+CONFIG_SURFACE_AGGREGATOR_REGISTRY=m
+CONFIG_SURFACE_AGGREGATOR_TABLET_SWITCH=m
+CONFIG_SURFACE_BOOK1_DGPU_SWITCH=m
+CONFIG_SURFACE_DTX=m
+CONFIG_SURFACE_GPE=m
+CONFIG_SURFACE_HOTPLUG=m
+CONFIG_SURFACE_PLATFORM_PROFILE=m
+CONFIG_SURFACE_PRO3_BUTTON=m
+
+##
+## file: drivers/platform/surface/aggregator/Kconfig
+##
+CONFIG_SURFACE_AGGREGATOR=m
+CONFIG_SURFACE_AGGREGATOR_BUS=y
+# CONFIG_SURFACE_AGGREGATOR_ERROR_INJECTION is not set
 
 ##
 ## file: drivers/platform/x86/amd/Kconfig
@@ -212,9 +296,25 @@ CONFIG_AMD_PMC=m
 CONFIG_INTEL_IFS=m
 
 ##
+## file: drivers/platform/x86/intel/int3472/Kconfig
+##
+CONFIG_INTEL_SKL_INT3472=m
+
+##
 ## file: drivers/platform/x86/intel/uncore-frequency/Kconfig
 ##
 CONFIG_INTEL_UNCORE_FREQ_CONTROL=m
+
+##
+## file: drivers/power/supply/Kconfig
+##
+CONFIG_BATTERY_SURFACE=m
+CONFIG_CHARGER_SURFACE=m
+
+##
+## file: drivers/regulator/Kconfig
+##
+CONFIG_REGULATOR_TPS68470=m
 
 ##
 ## file: drivers/scsi/Kconfig
@@ -225,6 +325,16 @@ CONFIG_SCSI_INIA100=m
 ## file: drivers/spi/Kconfig
 ##
 CONFIG_SPI_PXA2XX=m
+
+##
+## file: drivers/staging/media/atomisp/Kconfig
+##
+# CONFIG_INTEL_ATOMISP is not set
+
+##
+## file: drivers/staging/media/ipu3/Kconfig
+##
+CONFIG_VIDEO_IPU3_IMGU=m
 
 ##
 ## file: drivers/tty/Kconfig
