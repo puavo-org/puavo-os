@@ -633,6 +633,7 @@ rule {
   [dn exact $People]
     [attrs children entry objectClass ou]
       by [puavo_dn email-mgmt]     read
+      by [puavo_dn mfa-mgmt]       read
       by [puavo_dn puavo]          read
       by [puavo_dn pw-mgmt]        read
       by [puavo_dn statistics]     read
@@ -756,10 +757,12 @@ rule {
 }
 
 # rules needed by email-mgmt (email management user)
+# and mfa-mgmt (multi-factor authentication management user)
 rule {
   [dn subtree $People]
     [attrs entry objectClass puavoId uid]
       by [puavo_dn email-mgmt] read
+      by [puavo_dn mfa-mgmt]   read
       by *                     none break
 }
 
@@ -768,6 +771,13 @@ rule {
     [attrs mail puavoPrimaryEmail puavoVerifiedEmail]
       by [puavo_dn email-mgmt] write
       by *                     none break
+}
+
+rule {
+  [dn subtree $People]
+    [attrs puavoMFAEnabled]
+      by [puavo_dn mfa-mgmt] write
+      by *                   none break
 }
 
 # rules needed by puavo and pw-mgmt (password management user)
