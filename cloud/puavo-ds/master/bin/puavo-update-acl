@@ -79,7 +79,7 @@ def update_acls(suffix)
     tmpfile.write acls
     tmpfile.close
 
-    system('ldapmodify', '-c', '-h', PUAVO_ETC.ldap_master, '-x', '-D',
+    system('ldapmodify', '-c', '-H', "ldap://#{ PUAVO_ETC.ldap_master }", '-x', '-D',
            PUAVO_ETC.ldap_dn, '-Z', '-w', @bindpw, '-f', tmpfile.path) \
       or raise 'error when running ldapmodify'
   end
