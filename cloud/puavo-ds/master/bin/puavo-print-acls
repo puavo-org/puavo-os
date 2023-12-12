@@ -550,11 +550,12 @@ rule {
 rule {
   [dn exact $Groups]
     [attrs children entry objectClass ou]
-      by $org_owners           read
-      by [puavo_dn statistics] read
-      by [dn children $People] read
-      by [dn children $Hosts]  read
-      by [systemgroup getent]  read
+      by $org_owners             read
+      by [puavo_dn statistics]   read
+      by [dn children $People]   read
+      by [dn children $Hosts]    read
+      by [systemgroup getent]    read
+      by [systemgroup nextcloud] read
 }
 
 # deny $admins write access to some school attributes
@@ -585,6 +586,14 @@ rule {
       by [dn children $People]  none
       by [dn children $Devices] none
       by *                      none break
+}
+
+rule {
+  # allow nextcloud user to read some group information
+  [dn subtree $Groups]
+    [attrs cn displayName entry member memberUid objectClass]
+      by [systemgroup nextcloud] read
+      by *                       none break
 }
 
 rule {
