@@ -153,6 +153,7 @@ help:
 	@echo '    rootfs-sync-repo     sync Puavo OS rootfs repo with the current repo'
 	@echo '    rootfs-update        update Puavo OS rootfs'
 	@echo '    setup-buildhost      some optional setup for buildhost'
+	@echo '    setup-wim            setup wim images dir (optional)'
 	@echo '    update               update Puavo OS localhost'
 	@echo '    upload-debs          upload debs to remote archive'
 	@echo
@@ -258,6 +259,15 @@ rootfs-update: rootfs-sync-repo
 .PHONY: setup-buildhost
 setup-buildhost:
 	.aux/setup-buildhost
+
+.PHONY: setup-wim
+setup-wim:
+	sudo install -o puavo-os -g puavo-os -m 775 -d /srv/wim-images \
+	    /srv/wim-images/images
+	sudo install -o puavo-os -g puavo-os -m 644 .aux/Makefile.wim-images \
+	    /srv/wim-images/Makefile
+	sudo install -o puavo-os -g puavo-os -m 755 .aux/write-wim-json \
+	    /srv/wim-images/write-wim-json
 
 /etc/puavo-conf/image.json: config/puavo_conf/$(image_class).json
 	$(_sudo) mkdir -p $(@D)

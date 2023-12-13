@@ -1,0 +1,11 @@
+wim_images = $(shell ls images/*.wim)
+
+.PHONY: all
+all: wim.json
+
+wim.json: $(wim_images)
+	./write-wim-json $^
+
+.PHONY: clean
+clean:
+	rm -f *.tmp wim.json

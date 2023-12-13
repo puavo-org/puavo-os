@@ -1,0 +1,71 @@
+#!/usr/bin/ruby
+
+require 'digest'
+require 'fileutils'
+require 'json'
+
+SUPPORTED_LANGUAGES    = %w(Finnish)
+SUPPORTED_WIN_VERSIONS = %w(Win10 Win11)
+
+def get_image_info(image_path)
+  image_basename = File.basename(image_path)
+  win_version, win_subversion, win_language = image_basename.split('_')
+
+  raise "unknown Windows version: #{ win_version }" \
+    unless win_version && SUPPORTED_WIN_VERSIONS.include?(win_version)
+
+  raise 'Windows subversion not set' \
+    unless win_subversion && !win_subversion.empty?
+
+  raise "Windows language is unknown: #{ win_language }" \
+    unless win_language && SUPPORTED_LANGUAGES.include?(win_language)
+
+  puts("> calculating sha512 for #{ image_path }")
+
+  sha512 = Digest::SHA512.new()
+  File.open(image_path) do |io|
+    while (chunk = io.read(4096)) && chunk.length > 0 do
+      sha512.update(chunk)
+    end
+  end
+
+  {
+    'language'   => win_language,
+    'sha512sum'  => sha512.hexdigest,
+    'size'       => File.stat(image_path).size,
+    'subversion' => win_subversion,
+    'version'    => win_version,
+  }
+end
+
+wim_image_files = ARGV
+
+wim_json_path = 'wim.json'
+
+begin
+  wim = JSON.parse( IO.read(wim_json_path) )
+rescue Errno::ENOENT
+  wim = { 'images' => {} }
+end
+
+has_changes = false
+wim_image_files.sort.each do |image|
+  next if wim['images'][image]
+  image_basename = File.basename(image)
+  wim['images'][image_basename] = get_image_info(image)
+  has_changes = true
+end
+
+unless has_changes then
+  puts('> no changes to wim images')
+  FileUtils.touch(wim_json_path)
+  exit(0)
+end
+
+json_data = JSON.pretty_generate(wim)
+
+tmpfile_path = "#{ wim_json_path }.tmp"
+File.write(tmpfile_path, json_data)
+FileUtils.mv(tmpfile_path, wim_json_path)
+
+puts("> updated #{ wim_json_path }")
