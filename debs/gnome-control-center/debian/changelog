@@ -1,3 +1,11 @@
+gnome-control-center (1:43.6-2~deb12u1+puavo2) bookworm; urgency=medium
+
+  * Add display patches from Ubuntu:
+    - display-Support-UI-scaled-logical-monitor-mode.patch
+    - display-Allow-fractional-scaling-to-be-enabled.patch
+
+ -- Puavo Org <dev@opinsys.fi>  Wed, 13 Dec 2023 21:42:18 +0200
+
 gnome-control-center (1:43.6-2~deb12u1+puavo1) bookworm; urgency=medium
 
   * Add our changes to "gnome-control-center".
