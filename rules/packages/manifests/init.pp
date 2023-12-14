@@ -621,6 +621,7 @@ class packages {
     , 'gnome-video-effects'
     , 'gsettings-desktop-schemas'
     , 'gstreamer1.0-alsa'
+    , 'gstreamer1.0-libcamera'
     , 'gstreamer1.0-pulseaudio'
     , 'gucharmap'
     , 'gvfs-fuse'
@@ -637,6 +638,9 @@ class packages {
     , 'kcalc'
     , 'laptop-detect'
     , 'libatk-adaptor'
+    , 'libcamera-ipa'
+    , 'libcamera-tools'
+    , 'libcamera0.0.3'
     , 'libgail-common'
     , 'libnotify-bin'
     , 'libnss-extrausers'
@@ -668,6 +672,7 @@ class packages {
     , 'openprinting-ppds'
     , 'orca'
     , 'pcmciautils'
+    , 'pipewire-libcamera'
     , 'plymouth'
     , 'plymouth-themes'
     , 'printer-driver-all'
@@ -827,11 +832,11 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-6.1.0-13-amd64';
 
-    '6.5.0-0.deb12.4-amd64':
+    '6.5.0-0.puavo1-amd64':
       # The current nvidia packages (470.199.02-1~deb12u1 and
       # 525.125.06-1~deb12u1) do not compile for 6.5.x.
       dkms_modules => [ $broadcom_sta_dkms_module, $virtualbox_module ],
-      package_name => 'linux-image-6.5.0-0.deb12.4-amd64-unsigned';
+      package_name => 'linux-image-6.5.0-0.puavo1-amd64-unsigned';
   }
 
   # Packages which are not restricted per se, but which are required by

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -eu
+
+if [ $# -ne 0 ]; then
+  echo "ERROR: invalid number of arguments ($#), expected 0" >&2
+  exit 1
+fi
+
+[ -d puavo/patches ] || exit 0
+
+# Ensure all upstream patches are applied.
+QUILT_PATCHES=debian/patches quilt push -a
+
+while IFS= read -r -d $'\0' rel_patch_file_path; do
+  # Imported patches are put on top in the series.
+  QUILT_PATCHES=debian/patches quilt import -P "${rel_patch_file_path}" "puavo/patches/${rel_patch_file_path}"
+  # Push to ensure the patch applies correctly.
+  QUILT_PATCHES=debian/patches quilt push
+done < <(find puavo/patches -type f -printf "%P\0" | sort -z -V)
+
+# Finally pop all patches to leave the source pristine.
+QUILT_PATCHES=debian/patches quilt pop -a

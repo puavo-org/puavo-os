@@ -1,0 +1,48 @@
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Date: Thu, 3 Aug 2023 12:09:32 +0200
+Subject: [PATCH 2/2] signal: Don't disable preemption in ptrace_stop() on
+ PREEMPT_RT.
+Origin: https://www.kernel.org/pub/linux/kernel/projects/rt/6.5/older/patches-6.5.2-rt8.tar.xz
+
+On PREEMPT_RT keeping preemption disabled during the invocation of
+cgroup_enter_frozen() is a problem because the function acquires css_set_lock
+which is a sleeping lock on PREEMPT_RT and must not be acquired with disabled
+preemption.
+The preempt-disabled section is only for performance optimisation
+reasons and can be avoided.
+
+Extend the comment and don't disable preemption before scheduling on
+PREEMPT_RT.
+
+Acked-by: Oleg Nesterov <oleg@redhat.com>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Link: https://lore.kernel.org/r/20230803100932.325870-3-bigeasy@linutronix.de
+---
+ kernel/signal.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+--- a/kernel/signal.c
++++ b/kernel/signal.c
+@@ -2333,11 +2333,20 @@ static int ptrace_stop(int exit_code, in
+ 	 * The preempt-disable section ensures that there will be no preemption
+ 	 * between unlock and schedule() and so improving the performance since
+ 	 * the ptracer has no reason to sleep.
++	 *
++	 * On PREEMPT_RT locking tasklist_lock does not disable preemption.
++	 * Therefore the task can be preempted (after
++	 * do_notify_parent_cldstop()) before unlocking tasklist_lock so there
++	 * is no benefit in doing this. The optimisation is harmful on
++	 * PEEMPT_RT because the spinlock_t (in cgroup_enter_frozen()) must not
++	 * be acquired with disabled preemption.
+ 	 */
+-	preempt_disable();
++	if (!IS_ENABLED(CONFIG_PREEMPT_RT))
++		preempt_disable();
+ 	read_unlock(&tasklist_lock);
+ 	cgroup_enter_frozen();
+-	preempt_enable_no_resched();
++	if (!IS_ENABLED(CONFIG_PREEMPT_RT))
++		preempt_enable_no_resched();
+ 	schedule();
+ 	cgroup_leave_frozen(true);
+ 

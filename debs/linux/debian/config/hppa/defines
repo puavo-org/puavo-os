@@ -1,0 +1,36 @@
+[base]
+flavours: parisc parisc64
+default-flavour: parisc
+kernel-arch: parisc
+
+[build]
+image-file: arch/parisc/boot/bzImage
+
+[image]
+suggests: palo
+install-stem: vmlinuz
+
+[relations]
+gcc-12: gcc-12 <!stage1 !cross !pkg.linux.nokernel>, gcc-12-hppa-linux-gnu <!stage1 cross !pkg.linux.nokernel>, gcc-hppa-linux-gnu <!stage1 cross !pkg.linux.nokernel>, binutils-hppa64-linux-gnu:native <!stage1 !pkg.linux.nokernel>, gcc-12-hppa64-linux-gnu:native <!stage1 !pkg.linux.nokernel>
+
+[parisc_description]
+hardware: 32-bit PA-RISC
+hardware-long: HP PA-RISC 32-bit systems with max 4 GB RAM
+
+[parisc_relations]
+headers%gcc-12: gcc-12
+
+[parisc64_base]
+cflags: -fno-cse-follow-jumps
+# no Debian architecture defined; force cross-build
+kernel-deb-arch: undefined
+kernel-gnu-type: hppa64-linux-gnu
+compat-deb-arch: hppa
+compat-gnu-type: hppa-linux-gnu
+
+[parisc64_description]
+hardware: 64-bit PA-RISC
+hardware-long: HP PA-RISC 64-bit systems with support for more than 4 GB RAM
+
+[parisc64_relations]
+headers%gcc-12: gcc-12-hppa64-linux-gnu

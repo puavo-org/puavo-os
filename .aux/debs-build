@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -eu
+
+if [ $# -ne 3 ]; then
+  echo "Error: invalid number of arguments ($#), expected 3" >&2
+  echo "Usage: $(basename $0) srcpkg workdir pooldir" >&2
+  exit 1
+fi
+
+srcpkgname=$1
+workdir=$2
+pooldir=$3
+
+checksum_file="${workdir}/.checksum.${srcpkgname}.build"
+
+export EMAIL='Puavo Org <dev@opinsys.fi>'
+
+pkgworkdir="${workdir}/${srcpkgname}"
+
+rm -rf "${pkgworkdir}"
+mkdir -p "${pkgworkdir}/${srcpkgname}"
+
+cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
+
+current_srctree_checksum="$(find "$pkgworkdir" -type f -exec md5sum \{} \; \
+                             | sort | md5sum | awk '{ print $1 }')"
+
+if [ -z "$current_srctree_checksum" ]; then
+  echo 'Could not calculate checksum from source tree' >&2
+  exit 1
+fi
+
+old_srctree_checksum="$(cat "${checksum_file}" 2>/dev/null || true)"
+
+if [ "$current_srctree_checksum" = "$old_srctree_checksum" ]; then
+  # No need to build if source tree matches what we have handled previously.
+  echo "No changes to ${srcpkgname}."
+  exit 0
+fi
+
+(
+  echo "Installing build dependencies for ${srcpkgname}"
+  cd "$pkgworkdir"
+
+  mk_build_deps_options=()
+  if [ -f "${srcpkgname}/puavo/build_profiles" ]; then
+    build_profiles=$(cat "${srcpkgname}/puavo/build_profiles")
+    mk_build_deps_options+=(--build-profiles "${build_profiles}")
+  fi
+  mk-build-deps "${mk_build_deps_options[@]}" "${srcpkgname}/debian/control"
+  ${PUAVOOS_SUDO:-} apt-get install -y "./${srcpkgname}-build-deps_"*.deb
+  rm -f "./${srcpkgname}-build-deps_"*.deb
+)
+
+echo "Building ${srcpkgname}"
+
+(
+  cd "${pkgworkdir}/${srcpkgname}"
+
+  if [ -x puavo/get-orig-source ]; then
+    puavo/get-orig-source
+  else
+    debian/scripts/get-orig-source
+  fi
+
+  current_deb_version="$(dpkg-parsechangelog -S version \
+			   | sed -E 's/\+build[0-9]+$//')"
+  if [ -z "$current_deb_version" ]; then
+    echo "Could not determine package version for ${srcpkgname}." >&2
+    exit 1
+  fi
+
+  if ! echo "$current_deb_version" | grep -q '\+buildonce$'; then
+    new_deb_version="${current_deb_version}+build$(date +%s)"
+    env DEBFULLNAME="Puavo Org" DEBEMAIL="dev@opinsys.fi" \
+      dch --newversion "$new_deb_version" \
+	"Automatic build for puavo-os on $(env LANG=C date)."
+      dch --distribution "$(lsb_release -cs)" --force-distribution --release ''
+  fi
+
+  dpkg_buildpackage_options=(-ipuavo -sa --no-sign "-j$(nproc)")
+  if [ -f puavo/build_profiles ]; then
+    build_profiles=$(cat puavo/build_profiles)
+    dpkg_buildpackage_options+=("-P${build_profiles}")
+  fi
+
+  dpkg-buildpackage "${dpkg_buildpackage_options[@]}"
+  ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
+)
+
+echo "$current_srctree_checksum" > "$checksum_file"

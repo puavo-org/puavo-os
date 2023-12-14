@@ -1,0 +1,19 @@
+[base]
+flavours:
+ mips32r6eb
+kernel-arch: mips
+
+[build]
+image-file: vmlinuz
+
+[image]
+install-stem: vmlinuz
+
+[mips32r6eb_description]
+hardware: MIPS Generic (mips32r6eb)
+hardware-long: MIPS Generic platform (mips32r6eb)
+
+[mips32r6eb_image]
+configs:
+ kernelarch-mips/config.boston
+ kernelarch-mips/config.mips32r6

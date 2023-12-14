@@ -10,6 +10,7 @@ _pkgs_ports := cups                   \
                gtk+3.0                \
                hooktftp               \
                libpam-ccreds          \
+               linux                  \
                mutter                 \
                nbd                    \
                veyon                  \
@@ -70,7 +71,7 @@ clean:
 
 .dpkg-buildpackage-%: %
 	@env PUAVOOS_SUDO='$(_sudo)' \
-	    ../.aux/build-debs "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
+	    ../.aux/debs-build "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
 	$(MAKE) update-repo
 	$(_sudo) apt-get update
 

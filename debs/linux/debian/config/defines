@@ -1,0 +1,175 @@
+[abi]
+abiname: 0.puavo1
+ignore-changes:
+ __cpuhp_*
+ __udp_gso_segment
+ bpf_analyzer
+ bpf_offload_dev_create
+ bpf_verifier_log_write
+ cxl_*
+ dax_flush
+ ieee80211_nullfunc_get
+ inet_add_protocol
+ inet_del_protocol
+ iommu_device_*
+ mm_iommu_*
+ mv_mbus_*
+ perf_*
+ register_cxl_calls
+ register_key_type
+ unregister_cxl_calls
+ *_hw_breakpoint
+ module:drivers/crypto/ccp/*
+ module:drivers/hv/*
+ module:drivers/gpu/drm/sun4i/*
+ module:drivers/iio/**
+ module:drivers/misc/cxl/*
+ module:drivers/misc/lis3lv02d/*
+ module:drivers/mtd/nand/*
+ module:drivers/net/ethernet/**
+ module:drivers/net/wireless/**
+ module:drivers/nvdimm/*
+ module:drivers/nvme/**
+ module:drivers/power/supply/bq27xxx_battery
+ module:drivers/scsi/cxgbi/*
+ module:drivers/scsi/libiscs*
+ module:drivers/scsi/qla2xxx/qla2xxx
+ module:drivers/scsi/ufs/*
+ module:drivers/target/**
+ module:drivers/usb/chipidea/**
+ module:drivers/usb/gadget/**
+ module:drivers/usb/host/**
+ module:drivers/usb/musb/**
+ module:fs/nfs/**
+ module:net/ceph/libceph
+ module:net/l2tp/**
+ module:net/openvswitch/**
+ module:net/rxrpc/rxrpc
+ module:net/sctp/**
+ module:sound/core/seq/**
+ module:sound/firewire/snd-firewire-lib
+ module:sound/pci/hda/*
+# btree library is only selected by few drivers so not useful OOT
+ btree_*
+ visitor*
+# Exported for related protocols only
+ can_rx_register
+ ip6_xmit
+ module:net/dccp/dccp
+ module:net/rds/rds
+# devfreq is unlikely to be useful for OOT modules
+ devfreq_*
+ devm_devfreq_*
+ update_devfreq
+# Assume IB drivers are added/updated through OFED, which also updates IB core
+ module:drivers/infiniband/**
+# Declared in private header, not usable OOT
+ acpi_ec_add_query_handler
+ acpi_ec_remove_query_handler
+ first_ec
+# Exported for tracefs only
+ debugfs_create_automount
+# ignore changes to inv_mpu6050/*
+ module:drivers/iio/imu/inv_mpu6050/*
+ drm_crtc_accurate_vblank_count
+# ignore acpi_nfit_init, acpi_nfit_desc_init
+ acpi_nfit_desc_init
+ acpi_nfit_init
+# ignore loop_register_transfer (used by cryptoloop, nothing OOT)
+ loop_register_transfer
+# Only used in vmlinux
+ xen_xlate_*
+# Not OOT
+ nf_nat_masquerade_ipv4_register_notifier
+ nf_nat_masquerade_ipv6_register_notifier
+# Not used in OOT (and changed in 5.10.5)
+ dfltcc_*
+# ignore changes to hisi_sas/*
+ module:drivers/scsi/hisi_sas/*
+# KVM internal
+ __gfn_*
+ __kvmhv_*
+ __kvm_*
+ __xive_vm_h_*
+ gfn_*
+ h_ipi_redirect
+ halt_poll_ns*
+ kvm_*
+ kvmhv_*
+ kvmppc_*
+ mark_page_dirty
+ vcpu_*
+ module:arch/powerpc/kvm/*
+ module:arch/s390/kvm/*
+ module:arch/x86/kvm/*
+# used only within arch/s390
+ uv_info
+# Not used in OOT
+ xhci_init_driver
+# Not used in OOT, symbol is only defined when DEBUG_INFO_BTF is enabled
+ xfrm_bpf_md_dst
+
+[base]
+arches:
+ alpha
+ amd64
+ arm64
+ arm64ilp32
+ armel
+ armhf
+ hppa
+ i386
+ ia64
+ m68k
+ mips
+ mips64
+ mips64el
+ mips64r6
+ mips64r6el
+ mipsel
+ mipsn32
+ mipsn32el
+ mipsn32r6
+ mipsn32r6el
+ mipsr6
+ mipsr6el
+ powerpc
+ ppc64
+ ppc64el
+ riscv64
+ s390
+ s390x
+ sh3
+ sh4
+ sparc
+ sparc64
+ x32
+compiler: gcc-12
+featuresets:
+ none
+ rt
+
+[build]
+# Disable code signing by default; this can be overridden per-architecture
+signed-code: false
+trusted-certs: debian/certs/debian-uefi-certs.pem
+
+[featureset-rt_base]
+enabled: false
+
+[description]
+part-long-up: This kernel is not suitable for SMP (multi-processor,
+ multi-core or hyper-threaded) systems.
+
+[image]
+initramfs-generators: initramfs-tools initramfs-fallback
+breaks: fwupdate (<< 12-7), wireless-regdb (<< 2019.06.03-1~)
+recommends: apparmor
+
+[relations]
+# compilers
+gcc-12: gcc-12 <!stage1 !cross !pkg.linux.nokernel>, gcc-12-@gnu-type-package@ <!stage1 cross !pkg.linux.nokernel>
+
+# initramfs-generators
+initramfs-fallback: linux-initramfs-tool
+initramfs-tools: initramfs-tools (>= 0.120+deb8u2)

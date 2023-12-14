@@ -1,0 +1,16 @@
+Author: Luca Boccassi <bluca@debian.org>
+Description: trust machine keyring (MoK) by default
+ Debian always trusted keys in MoK by default. Upstream made it conditional on
+ a new EFI variable being set. To keep backward compatibility skip this check.
+--- a/security/integrity/platform_certs/machine_keyring.c
++++ b/security/integrity/platform_certs/machine_keyring.c
+@@ -69,8 +69,7 @@
+ 	if (!initialized) {
+ 		initialized = true;
+ 
+-		if (uefi_check_trust_mok_keys())
+-			trust_mok = true;
++		trust_mok = true;
+ 	}
+ 
+ 	return trust_mok;
