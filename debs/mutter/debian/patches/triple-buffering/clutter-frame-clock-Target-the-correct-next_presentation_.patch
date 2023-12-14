@@ -1,0 +1,56 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Fri, 3 Feb 2023 19:37:30 +0800
+Subject: clutter/frame-clock: Target the correct next_presentation_time_us
+
+Where "correct" means a different time to when we expect the previous
+update(s) to present. Otherwise we get stuck in triple buffering for
+too long by scheduling the next update earlier than necessary.
+
+This logic error has existed for a long time but it worked because
+prior to triple buffering, `calculate_next_update_time_us` would only
+ever be called from the `IDLE` state.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ clutter/clutter/clutter-frame-clock.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
+index 1a16b04..78f8dde 100644
+--- a/clutter/clutter/clutter-frame-clock.c
++++ b/clutter/clutter/clutter-frame-clock.c
+@@ -457,7 +457,7 @@ calculate_next_update_time_us (ClutterFrameClock *frame_clock,
+   int64_t refresh_interval_us;
+   int64_t min_render_time_allowed_us;
+   int64_t max_render_time_allowed_us;
+-  int64_t next_presentation_time_us;
++  int64_t next_presentation_time_us = 0;
+   int64_t next_update_time_us;
+ 
+   now_us = g_get_monotonic_time ();
+@@ -501,7 +501,24 @@ calculate_next_update_time_us (ClutterFrameClock *frame_clock,
+    *
+    */
+   last_presentation_time_us = frame_clock->last_presentation_time_us;
+-  next_presentation_time_us = last_presentation_time_us + refresh_interval_us;
++  switch (frame_clock->state)
++    {
++    case CLUTTER_FRAME_CLOCK_STATE_INIT:
++    case CLUTTER_FRAME_CLOCK_STATE_IDLE:
++    case CLUTTER_FRAME_CLOCK_STATE_SCHEDULED:
++      next_presentation_time_us = last_presentation_time_us +
++                                  refresh_interval_us;
++      break;
++    case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_ONE:
++    case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_ONE_AND_SCHEDULED:
++      next_presentation_time_us = last_presentation_time_us +
++                                  2 * refresh_interval_us;
++      break;
++    case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_TWO:
++      next_presentation_time_us = last_presentation_time_us +
++                                  3 * refresh_interval_us;
++      break;
++    }
+ 
+   /*
+    * However, the last presentation could have happened more than a frame ago.

@@ -1,0 +1,81 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 7 Sep 2021 19:08:15 +0800
+Subject: clutter/frame: Add ClutterFrameHint to ClutterFrame
+
+This will allow the backend to provide performance hints to the frame
+clock in future.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ clutter/clutter/clutter-frame-clock.h   |  6 ++++++
+ clutter/clutter/clutter-frame-private.h |  1 +
+ clutter/clutter/clutter-frame.c         | 13 +++++++++++++
+ clutter/clutter/clutter-frame.h         |  7 +++++++
+ 4 files changed, 27 insertions(+)
+
+diff --git a/clutter/clutter/clutter-frame-clock.h b/clutter/clutter/clutter-frame-clock.h
+index 91e6b3a..18c7676 100644
+--- a/clutter/clutter/clutter-frame-clock.h
++++ b/clutter/clutter/clutter-frame-clock.h
+@@ -34,6 +34,12 @@ typedef enum _ClutterFrameResult
+   CLUTTER_FRAME_RESULT_IDLE,
+ } ClutterFrameResult;
+ 
++typedef enum _ClutterFrameHint
++{
++  CLUTTER_FRAME_HINT_NONE = 0,
++  CLUTTER_FRAME_HINT_DIRECT_SCANOUT_ATTEMPTED = 1 << 0,
++} ClutterFrameHint;
++
+ #define CLUTTER_TYPE_FRAME_CLOCK (clutter_frame_clock_get_type ())
+ CLUTTER_EXPORT
+ G_DECLARE_FINAL_TYPE (ClutterFrameClock, clutter_frame_clock,
+diff --git a/clutter/clutter/clutter-frame-private.h b/clutter/clutter/clutter-frame-private.h
+index e008856..0658149 100644
+--- a/clutter/clutter/clutter-frame-private.h
++++ b/clutter/clutter/clutter-frame-private.h
+@@ -24,6 +24,7 @@ struct _ClutterFrame
+ {
+   gboolean has_result;
+   ClutterFrameResult result;
++  ClutterFrameHint hints;
+ };
+ 
+ #define CLUTTER_FRAME_INIT ((ClutterFrame) { 0 })
+diff --git a/clutter/clutter/clutter-frame.c b/clutter/clutter/clutter-frame.c
+index 3c708da..63ae302 100644
+--- a/clutter/clutter/clutter-frame.c
++++ b/clutter/clutter/clutter-frame.c
+@@ -40,3 +40,16 @@ clutter_frame_set_result (ClutterFrame       *frame,
+   frame->result = result;
+   frame->has_result = TRUE;
+ }
++
++void
++clutter_frame_set_hint (ClutterFrame     *frame,
++                        ClutterFrameHint  hint)
++{
++  frame->hints |= hint;
++}
++
++ClutterFrameHint
++clutter_frame_get_hints (ClutterFrame *frame)
++{
++  return frame->hints;
++}
+diff --git a/clutter/clutter/clutter-frame.h b/clutter/clutter/clutter-frame.h
+index d3608e8..06c5f7f 100644
+--- a/clutter/clutter/clutter-frame.h
++++ b/clutter/clutter/clutter-frame.h
+@@ -33,4 +33,11 @@ void clutter_frame_set_result (ClutterFrame       *frame,
+ CLUTTER_EXPORT
+ gboolean clutter_frame_has_result (ClutterFrame *frame);
+ 
++CLUTTER_EXPORT
++void clutter_frame_set_hint (ClutterFrame     *frame,
++                             ClutterFrameHint  hint);
++
++CLUTTER_EXPORT
++ClutterFrameHint clutter_frame_get_hints (ClutterFrame *frame);
++
+ #endif /* CLUTTER_FRAME_H */

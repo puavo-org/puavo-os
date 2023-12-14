@@ -1,0 +1,25 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 8 Sep 2022 16:45:29 +0800
+Subject: kms: Avoid queuing multiple (un)assignments to the same plane in an
+ update
+
+Just like we already do in `meta_kms_update_assign_plane`.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-kms-update.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/backends/native/meta-kms-update.c b/src/backends/native/meta-kms-update.c
+index a12a3be..cbbf1a0 100644
+--- a/src/backends/native/meta-kms-update.c
++++ b/src/backends/native/meta-kms-update.c
+@@ -256,6 +256,8 @@ meta_kms_update_unassign_plane (MetaKmsUpdate *update,
+   g_assert (meta_kms_crtc_get_device (crtc) == update->device);
+   g_assert (meta_kms_plane_get_device (plane) == update->device);
+ 
++  drop_plane_assignment (update, plane, NULL);
++
+   plane_assignment = g_new0 (MetaKmsPlaneAssignment, 1);
+   *plane_assignment = (MetaKmsPlaneAssignment) {
+     .update = update,

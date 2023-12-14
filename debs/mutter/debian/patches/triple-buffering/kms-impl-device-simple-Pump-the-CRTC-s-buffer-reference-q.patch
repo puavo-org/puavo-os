@@ -1,0 +1,36 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 7 Dec 2021 18:31:16 +0800
+Subject: kms/impl-device/simple: Pump the CRTC's buffer reference queue on
+ scanout
+
+In this case "on scanout" means when `drmModeSetCrtc` succeeds. This is
+the only case where there won't be a `meta_kms_page_flip_data_flipped` to
+do it for us.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-kms-impl-device-simple.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/backends/native/meta-kms-impl-device-simple.c b/src/backends/native/meta-kms-impl-device-simple.c
+index 648de51..b5b179c 100644
+--- a/src/backends/native/meta-kms-impl-device-simple.c
++++ b/src/backends/native/meta-kms-impl-device-simple.c
+@@ -486,6 +486,8 @@ process_mode_set (MetaKmsImplDevice  *impl_device,
+       return FALSE;
+     }
+ 
++  meta_kms_crtc_on_scanout_started (crtc);
++
+   if (drm_mode)
+     {
+       g_hash_table_replace (impl_device_simple->cached_mode_sets,
+@@ -875,6 +877,8 @@ mode_set_fallback (MetaKmsImplDeviceSimple  *impl_device_simple,
+       return FALSE;
+     }
+ 
++  meta_kms_crtc_on_scanout_started (crtc);
++
+   if (!impl_device_simple->mode_set_fallback_feedback_source)
+     {
+       GSource *source;

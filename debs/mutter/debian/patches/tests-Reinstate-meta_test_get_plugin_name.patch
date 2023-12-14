@@ -1,0 +1,49 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Thu, 17 Aug 2023 18:30:46 +0100
+Subject: tests: Reinstate meta_test_get_plugin_name()
+
+Another package could conceivably have been relying on this.
+
+This partially reverts commit 2a5ad7cb5196e9bdda9c747f8bd881b95b74a8b4.
+---
+ src/tests/meta-test-utils.c | 12 ++++++++++++
+ src/tests/meta-test-utils.h |  3 +++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/src/tests/meta-test-utils.c b/src/tests/meta-test-utils.c
+index 31ede95..313792c 100644
+--- a/src/tests/meta-test-utils.c
++++ b/src/tests/meta-test-utils.c
+@@ -703,6 +703,18 @@ meta_test_client_destroy (MetaTestClient *client)
+   g_free (client);
+ }
+ 
++const char *
++meta_test_get_plugin_name (void)
++{
++  const char *name;
++
++  name = g_getenv ("MUTTER_TEST_PLUGIN_PATH");
++  if (name)
++    return name;
++  else
++    return "libdefault";
++}
++
+ void
+ meta_set_custom_monitor_config_full (MetaBackend            *backend,
+                                      const char             *filename,
+diff --git a/src/tests/meta-test-utils.h b/src/tests/meta-test-utils.h
+index d6de337..6122e2e 100644
+--- a/src/tests/meta-test-utils.h
++++ b/src/tests/meta-test-utils.h
+@@ -105,6 +105,9 @@ MetaTestClient * meta_test_client_new (MetaContext           *context,
+ META_EXPORT
+ void meta_test_client_destroy (MetaTestClient *client);
+ 
++META_EXPORT
++const char * meta_test_get_plugin_name (void);
++
+ META_EXPORT
+ void meta_set_custom_monitor_config_full (MetaBackend            *backend,
+                                           const char             *filename,

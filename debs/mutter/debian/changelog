@@ -1,8 +1,86 @@
-mutter (43.6-1~deb12u1+puavo1) bookworm; urgency=medium
+mutter (43.8-0+deb12u1) bookworm; urgency=medium
 
-  * Add our own patches to Mutter.
+  [ Simon McVittie ]
+  * d/control.in, d/gbp.conf: Use debian/bookworm branch
+  * Apply changes from 43.7-2 to bookworm
+    (Closes: #1035092, #1049934, #1042055)
+  * New upstream stable release 43.8
+    - Fix the ability to drag libdecor windows by their title bar on
+      touchscreens (mutter#2872)
+    - Fix flickering and rendering artifacts when using software rendering,
+      for example on older Intel hardware unsupported by the Gallium i915
+      driver (mutter#2602)
+    - Improve GNOME Shell app grid performance by avoiding repainting
+      monitors other than the one it is displayed on
+      (partially fixes gnome-shell#6819)
+    - Upstream CI adjustments not relevant to Debian
+    - All other changes were previously included in 43.7-1, 43.7-2
+  * d/patches: Drop patches that were included in the upstream release
+  * Split the triple-buffering patch into its individual commits.
+    This should hopefully make it easier to keep track of its status.
 
- -- Puavo Org <dev@opinsys.fi>  Wed, 15 Nov 2023 12:34:21 +0200
+  [ Daniel van Vugt ]
+  * Update triple-buffering-v4-43 patchset to 43.8-54-g95b2d2157c
+    (2023-09-25)
+    - d/p/triple-buffering/clutter-frame-clock-Fall-back-to-triple-buffering-not-dou.patch:
+      Fall back to triple buffering, not double buffering, when the driver
+      doesn't support GPU timestamps (Xorg, Raspberry Pi, others).
+      This avoids lower than intended framerates, typically 30fps rather
+      than 60fps. Change also included in 44.1-1.
+      (LP: #2017137, #2017097)
+    - d/p/triple-buffering/clutter-frame-clock-Avoid-rapidly-toggling-dynamic-max-re.patch:
+      Fix increased mouse input latency after the above change.
+      Change also included in 45.alpha and 44.3 upstream.
+      (LP: #2023363)
+    - d/p/triple-buffering/clutter-frame-clock-Record-measurements-of-zero-for-curso.patch:
+      Fix mouse cursor stuttering when moving across animated UI elements,
+      possibly a regression in 41.0. Change also included in 44.3-2.
+      (LP: #2023766)
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 10 Oct 2023 09:51:59 +0100
+
+mutter (43.7-2) unstable; urgency=medium
+
+  * Team upload
+  * d/patches: Update to upstream gnome-43 branch commit
+    43.7-9-g3139cbb47c, excluding CI-only changes
+    - d/p/output-kms-Use-meta_kms_connector_get_preferred_mode-in-i.patch:
+      Make the choice of preferred video mode consistent between code
+      paths, fixing choice of video mode on some monitors (mutter!3055)
+    - d/p/cogl-gl-framebuffer-Fix-inverted-test-in-ensure_bits_init.patch:
+      change was already included in 43.7-1, just update metadata
+    - d/p/clutter-stage-Add-is-grabbed-property.patch,
+      d/p/window-Postpone-focusing-until-grab-ended-if-uninteractab.patch:
+      Give focus to new app windows when launched from the gnome-shell
+      overview, fixing a regression in 43.3-5 and upstream 43.4
+      (Closes: #1035092, #1049934)
+    - d/p/tests-Introduce-and-use-a-custom-test-shell.patch,
+      d/p/tests-test-shell-Emulate-overview-grabs.patch,
+      d/p/tests-test-runner-Add-toggle_overview-command.patch,
+      d/p/tests-Add-test-case-for-restoring-focus-after-overview.patch:
+      Add unit test coverage for #1035092
+  * d/p/tests-Reinstate-meta_test_get_plugin_name.patch:
+    Reinstate a symbol in libmutter-test-11 removed by the above patches,
+    in case a dependent package is using it
+  * d/libmutter-test-11.symbols: Add a new symbol introduced by the test
+    for #1035092
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 20 Aug 2023 11:35:31 +0100
+
+mutter (43.7-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream stable release 43.7
+    - Functionally equivalent to 43.6-1
+  * d/p/wayland-outputs-Fix-potential-crash-when-output-has-no-mo.patch:
+    Drop patch, applied upstream
+  * d/gbp.conf, d/control.in: Use debian/trixie branch
+  * d/p/cogl-gl-framebuffer-Fix-inverted-test-in-ensure_bits_init.patch:
+    Add patch from upstream 45.beta to fix a test failure with recent Mesa
+    (Closes: #1042055, LP: #2025287)
+  * d/patches: Improve tracking of upstream status
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 18 Aug 2023 17:40:39 +0100
 
 mutter (43.6-1~deb12u1) bookworm; urgency=medium
 

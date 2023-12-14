@@ -1,0 +1,66 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 17 Feb 2022 15:54:57 +0800
+Subject: clutter/frame-clock: Subtract buffer queue latency from
+ max_swap_to_flip_us
+
+swap_to_flip times were getting stuck at over one frame interval
+because of a positive feedback loop with triple buffering.
+
+The moment triple buffering started it would cause swap_to_flip times
+to exceed one frame interval. Then that high value would feed back
+through max_render_time which in turn ensured triple buffering
+continued which ensured swap_to_flip stayed over one frame interval.
+So even when actual GPU render times became low we were stuck with
+a high value of max_render_time and stuck in triple buffering when we
+should have switched to double buffering.
+
+By subtracting the constant buffer queue latency from max_swap_to_flip_us
+we break this positive feedback loop and only include real performance
+measurements. So now the frame clock is able to drop back to double
+buffering when appropriate.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ clutter/clutter/clutter-frame-clock.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
+index c38cf82..8be25fd 100644
+--- a/clutter/clutter/clutter-frame-clock.c
++++ b/clutter/clutter/clutter-frame-clock.c
+@@ -380,6 +380,7 @@ clutter_frame_clock_compute_max_render_time_us (ClutterFrameClock *frame_clock)
+   int64_t max_swap_to_rendering_done_us = 0;
+   int64_t max_swap_to_flip_us = 0;
+   int64_t max_render_time_us;
++  int buffer_queue_latency_frames = 0;
+   int i;
+ 
+   refresh_interval_us = frame_clock->refresh_interval_us;
+@@ -402,6 +403,27 @@ clutter_frame_clock_compute_max_render_time_us (ClutterFrameClock *frame_clock)
+              frame_clock->swap_to_flip_us.values[i]);
+     }
+ 
++  switch (frame_clock->state)
++    {
++    case CLUTTER_FRAME_CLOCK_STATE_INIT:
++    case CLUTTER_FRAME_CLOCK_STATE_IDLE:
++    case CLUTTER_FRAME_CLOCK_STATE_SCHEDULED:
++      buffer_queue_latency_frames = 0;
++      break;
++    case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_ONE:
++    case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_ONE_AND_SCHEDULED:
++      buffer_queue_latency_frames = 1;
++      break;
++    case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_TWO:
++      g_warn_if_reached ();
++      buffer_queue_latency_frames = 2;
++      break;
++    }
++
++  max_swap_to_flip_us -= refresh_interval_us * buffer_queue_latency_frames;
++  if (max_swap_to_flip_us < 0)
++    max_swap_to_flip_us = 0;
++
+   /* Max render time shows how early the frame clock needs to be dispatched
+    * to make it to the predicted next presentation time. It is composed of:
+    * - An estimate of duration from dispatch start to buffer swap.

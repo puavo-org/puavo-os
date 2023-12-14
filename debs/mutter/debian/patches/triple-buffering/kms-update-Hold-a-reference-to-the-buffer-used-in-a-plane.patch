@@ -1,0 +1,31 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Mon, 16 Aug 2021 17:06:43 +0800
+Subject: kms/update: Hold a reference to the buffer used in a plane
+ assignment
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-kms-update.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/backends/native/meta-kms-update.c b/src/backends/native/meta-kms-update.c
+index 4c34000..0adb046 100644
+--- a/src/backends/native/meta-kms-update.c
++++ b/src/backends/native/meta-kms-update.c
+@@ -149,6 +149,7 @@ static void
+ meta_kms_plane_assignment_free (MetaKmsPlaneAssignment *plane_assignment)
+ {
+   g_clear_pointer (&plane_assignment->fb_damage, meta_kms_fb_damage_free);
++  g_clear_object (&plane_assignment->buffer);
+   g_free (plane_assignment);
+ }
+ 
+@@ -228,7 +229,7 @@ meta_kms_update_assign_plane (MetaKmsUpdate          *update,
+     .update = update,
+     .crtc = crtc,
+     .plane = plane,
+-    .buffer = buffer,
++    .buffer = g_object_ref (buffer),
+     .src_rect = src_rect,
+     .dst_rect = dst_rect,
+     .flags = flags,

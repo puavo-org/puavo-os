@@ -1,0 +1,57 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 18 Jul 2023 16:08:25 +0800
+Subject: clutter/frame-clock: Record measurements of zero for cursor-only
+ updates
+
+But only if we've ever got actual swap measurements
+(COGL_FEATURE_ID_TIMESTAMP_QUERY). If it's supported then we now drop to
+double buffering and get optimal latency on a burst of cursor-only
+updates.
+
+Fixes: https://launchpad.net/bugs/2023363
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ clutter/clutter/clutter-frame-clock.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
+
+diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
+index e7c67a7..7b00041 100644
+--- a/clutter/clutter/clutter-frame-clock.c
++++ b/clutter/clutter/clutter-frame-clock.c
+@@ -287,19 +287,27 @@ clutter_frame_clock_notify_presented (ClutterFrameClock *frame_clock,
+ 
+   frame_clock->got_measurements_last_frame = FALSE;
+ 
+-  if (frame_info->cpu_time_before_buffer_swap_us != 0 &&
+-      frame_info->gpu_rendering_duration_ns != 0)
++  if ((frame_info->cpu_time_before_buffer_swap_us != 0 &&
++       frame_info->gpu_rendering_duration_ns != 0) ||
++       frame_clock->ever_got_measurements)
+     {
+       int64_t dispatch_to_swap_us, swap_to_rendering_done_us, swap_to_flip_us;
+ 
+-      dispatch_to_swap_us =
+-        frame_info->cpu_time_before_buffer_swap_us -
+-        frame_clock->last_dispatch_time_us;
++      if (frame_info->cpu_time_before_buffer_swap_us == 0)
++        {
++          /* Cursor-only updates with no "swap" or "flip" */
++          dispatch_to_swap_us = 0;
++          swap_to_flip_us = 0;
++        }
++      else
++        {
++          dispatch_to_swap_us = frame_info->cpu_time_before_buffer_swap_us -
++                                frame_clock->last_dispatch_time_us;
++          swap_to_flip_us = frame_clock->last_flip_time_us -
++                            frame_info->cpu_time_before_buffer_swap_us;
++        }
+       swap_to_rendering_done_us =
+         frame_info->gpu_rendering_duration_ns / 1000;
+-      swap_to_flip_us =
+-        frame_clock->last_flip_time_us -
+-        frame_info->cpu_time_before_buffer_swap_us;
+ 
+       CLUTTER_NOTE (FRAME_TIMINGS,
+                     "%s: dispatch2swap %ld µs, swap2render %ld µs, swap2flip %ld µs",

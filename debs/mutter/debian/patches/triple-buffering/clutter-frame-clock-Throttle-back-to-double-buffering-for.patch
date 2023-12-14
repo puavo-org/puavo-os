@@ -1,0 +1,32 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 7 Sep 2021 19:15:55 +0800
+Subject: clutter/frame-clock: Throttle back to double buffering for direct
+ scanout
+
+There's no compositing during direct scanout so the "render" time is zero.
+Thus there is no need to implement triple buffering for direct scanouts.
+Stick to double buffering and enjoy the lower latency.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ clutter/clutter/clutter-frame-clock.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
+index b41cab1..7f480bf 100644
+--- a/clutter/clutter/clutter-frame-clock.c
++++ b/clutter/clutter/clutter-frame-clock.c
+@@ -702,6 +702,13 @@ clutter_frame_clock_schedule_update (ClutterFrameClock *frame_clock)
+     case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_ONE_AND_SCHEDULED:
+       return;
+     case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_ONE:
++      if (frame_clock->last_flip_hints & CLUTTER_FRAME_HINT_DIRECT_SCANOUT_ATTEMPTED)
++        {
++          /* Force double buffering, disable triple buffering */
++          frame_clock->pending_reschedule = TRUE;
++          return;
++        }
++
+       calculate_next_update_time_us (frame_clock,
+                                      &next_update_time_us,
+                                      &frame_clock->next_presentation_time_us);

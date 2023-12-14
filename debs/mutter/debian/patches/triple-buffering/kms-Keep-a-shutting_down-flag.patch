@@ -1,0 +1,55 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 20 Apr 2022 18:33:43 +0800
+Subject: kms: Keep a shutting_down flag
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-kms.c | 10 ++++++++++
+ src/backends/native/meta-kms.h |  2 ++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/src/backends/native/meta-kms.c b/src/backends/native/meta-kms.c
+index 21be532..2f7fb2f 100644
+--- a/src/backends/native/meta-kms.c
++++ b/src/backends/native/meta-kms.c
+@@ -177,6 +177,8 @@ struct _MetaKms
+ 
+   GList *pending_callbacks;
+   guint callback_source_id;
++
++  gboolean shutting_down;
+ };
+ 
+ G_DEFINE_TYPE (MetaKms, meta_kms, G_TYPE_OBJECT)
+@@ -752,10 +754,18 @@ prepare_shutdown_in_impl (MetaKmsImpl  *impl,
+ void
+ meta_kms_prepare_shutdown (MetaKms *kms)
+ {
++  kms->shutting_down = TRUE;
++
+   meta_kms_run_impl_task_sync (kms, prepare_shutdown_in_impl, NULL, NULL);
+   flush_callbacks (kms);
+ }
+ 
++gboolean
++meta_kms_is_shutting_down (MetaKms *kms)
++{
++  return kms->shutting_down;
++}
++
+ static void
+ meta_kms_finalize (GObject *object)
+ {
+diff --git a/src/backends/native/meta-kms.h b/src/backends/native/meta-kms.h
+index bd9fe5c..dbc4eb7 100644
+--- a/src/backends/native/meta-kms.h
++++ b/src/backends/native/meta-kms.h
+@@ -68,6 +68,8 @@ MetaKmsDevice * meta_kms_create_device (MetaKms            *kms,
+ 
+ void meta_kms_prepare_shutdown (MetaKms *kms);
+ 
++gboolean meta_kms_is_shutting_down (MetaKms *kms);
++
+ MetaKms * meta_kms_new (MetaBackend   *backend,
+                         MetaKmsFlags   flags,
+                         GError       **error);

@@ -1,0 +1,52 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 22 Sep 2021 17:19:45 +0800
+Subject: kms: Add functions meta_kms_update_include[s]_crtc()
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-kms-update-private.h |  6 ++++++
+ src/backends/native/meta-kms-update.c         | 14 ++++++++++++++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/src/backends/native/meta-kms-update-private.h b/src/backends/native/meta-kms-update-private.h
+index 3a648ba..cfcf4b0 100644
+--- a/src/backends/native/meta-kms-update-private.h
++++ b/src/backends/native/meta-kms-update-private.h
+@@ -137,6 +137,12 @@ uint64_t meta_kms_update_get_sequence_number (MetaKmsUpdate *update);
+ META_EXPORT_TEST
+ MetaKmsDevice * meta_kms_update_get_device (MetaKmsUpdate *update);
+ 
++gboolean meta_kms_update_includes_crtc (MetaKmsUpdate *update,
++                                        MetaKmsCrtc   *crtc);
++
++void meta_kms_update_include_crtc (MetaKmsUpdate *update,
++                                   MetaKmsCrtc   *crtc);
++
+ void meta_kms_plane_assignment_set_rotation (MetaKmsPlaneAssignment *plane_assignment,
+                                              MetaKmsPlaneRotation    rotation);
+ 
+diff --git a/src/backends/native/meta-kms-update.c b/src/backends/native/meta-kms-update.c
+index 0c5594d..a12a3be 100644
+--- a/src/backends/native/meta-kms-update.c
++++ b/src/backends/native/meta-kms-update.c
+@@ -709,6 +709,20 @@ meta_kms_update_get_device (MetaKmsUpdate *update)
+   return update->device;
+ }
+ 
++gboolean
++meta_kms_update_includes_crtc (MetaKmsUpdate *update,
++                               MetaKmsCrtc   *crtc)
++{
++  return g_hash_table_contains (update->crtcs, crtc);
++}
++
++void
++meta_kms_update_include_crtc (MetaKmsUpdate *update,
++                              MetaKmsCrtc   *crtc)
++{
++  g_hash_table_add (update->crtcs, crtc);
++}
++
+ MetaKmsCustomPageFlip *
+ meta_kms_update_take_custom_page_flip_func (MetaKmsUpdate *update)
+ {

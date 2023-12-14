@@ -1,0 +1,49 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 17 Aug 2021 17:40:57 +0800
+Subject: kms/impl-device/simple: Keep a reference to buffers assigned to
+ planes
+
+The MetaKmsCrtc will hold these references during future scanouts until
+such time as a new buffer is assigned to the plane AND another scanout
+has occurred after that.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-kms-impl-device-simple.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/backends/native/meta-kms-impl-device-simple.c b/src/backends/native/meta-kms-impl-device-simple.c
+index b5b179c..8f5481d 100644
+--- a/src/backends/native/meta-kms-impl-device-simple.c
++++ b/src/backends/native/meta-kms-impl-device-simple.c
+@@ -1306,7 +1306,7 @@ process_plane_assignment (MetaKmsImplDevice       *impl_device,
+     {
+     case META_KMS_PLANE_TYPE_PRIMARY:
+       /* Handled as part of the mode-set and page flip. */
+-      return TRUE;
++      goto assigned;
+     case META_KMS_PLANE_TYPE_CURSOR:
+       if (!process_cursor_plane_assignment (impl_device, update,
+                                             plane_assignment,
+@@ -1320,7 +1320,7 @@ process_plane_assignment (MetaKmsImplDevice       *impl_device,
+         }
+       else
+         {
+-          return TRUE;
++          goto assigned;
+         }
+     case META_KMS_PLANE_TYPE_OVERLAY:
+       error = g_error_new_literal (G_IO_ERROR, G_IO_ERROR_FAILED,
+@@ -1333,6 +1333,12 @@ process_plane_assignment (MetaKmsImplDevice       *impl_device,
+     }
+ 
+   g_assert_not_reached ();
++
++assigned:
++  meta_kms_crtc_remember_plane_buffer (plane_assignment->crtc,
++                                       meta_kms_plane_get_id (plane),
++                                       plane_assignment->buffer);
++  return TRUE;
+ }
+ 
+ static gboolean

@@ -1,0 +1,97 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Fri, 28 Jan 2022 16:35:42 +0800
+Subject: onscreen/native: Use CRTC-specific update retrieval
+
+For mode setting we want all CRTCs to share the same MetaKmsUpdate, but
+after that we don't want them to share the same update for regular flips
+and cursor movement. The reason being that different CRTCs are attached to
+different displays with different clocks. So each CRTC would finish the
+same update at slightly different times.
+
+If you wait for all CRTCs to complete a shared update then you have waited
+half a frame on average, possibly more. This waiting would consume most of
+the render time for the next frame and risk stuttering.
+
+If you only wait for one CRTC to complete a shared update then the next
+shared update may be posted before other CRTCs have finished the last, so
+the next update would fail due to those other CRTCs still being busy.
+
+So the only safe answer for maintaining full framerate of multiple outputs
+is to ensure unsynchronized CRTCs don't share the same update. At least
+not after mode setting.
+
+This fixes a multi-monitor bug for atomic KMS whereby
+`meta_onscreen_native_finish_frame` would fail its post because it was
+trying to commit a cursor update on the wrong (busy) CRTC.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index f137c68..6c8245f 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -423,7 +423,7 @@ meta_onscreen_native_flip_crtc (CoglOnscreen                *onscreen,
+   gpu_kms = META_GPU_KMS (meta_crtc_get_gpu (crtc));
+   kms_device = meta_gpu_kms_get_kms_device (gpu_kms);
+   kms = meta_kms_device_get_kms (kms_device);
+-  kms_update = meta_kms_ensure_pending_update (kms, kms_device);
++  kms_update = meta_kms_ensure_pending_update_for_crtc (kms, kms_crtc);
+ 
+   g_assert (meta_gpu_kms_is_crtc_active (gpu_kms, crtc));
+ 
+@@ -483,7 +483,7 @@ meta_onscreen_native_set_crtc_mode (CoglOnscreen              *onscreen,
+   COGL_TRACE_BEGIN_SCOPED (MetaOnscreenNativeSetCrtcModes,
+                            "Onscreen (set CRTC modes)");
+ 
+-  kms_update = meta_kms_ensure_pending_update (kms, kms_device);
++  kms_update = meta_kms_ensure_pending_update_for_crtc (kms, kms_crtc);
+ 
+   switch (renderer_gpu_data->mode)
+     {
+@@ -1291,7 +1291,9 @@ try_post_latest_swap (CoglOnscreen *onscreen)
+               meta_kms_device_get_path (kms_device));
+ 
+   flags = META_KMS_UPDATE_FLAG_NONE;
+-  kms_feedback = meta_kms_post_pending_update_sync (kms, kms_device, flags);
++  kms_feedback = meta_kms_post_pending_update_for_crtc_sync (kms,
++                                                             kms_crtc,
++                                                             flags);
+   g_return_if_fail (kms_feedback != NULL);
+ 
+   switch (meta_kms_feedback_get_result (kms_feedback))
+@@ -1449,7 +1451,9 @@ meta_onscreen_native_direct_scanout (CoglOnscreen   *onscreen,
+               meta_kms_device_get_path (kms_device));
+ 
+   flags = META_KMS_UPDATE_FLAG_PRESERVE_ON_ERROR;
+-  kms_feedback = meta_kms_post_pending_update_sync (kms, kms_device, flags);
++  kms_feedback = meta_kms_post_pending_update_for_crtc_sync (kms,
++                                                             kms_crtc,
++                                                             flags);
+   switch (meta_kms_feedback_get_result (kms_feedback))
+     {
+     case META_KMS_FEEDBACK_PASSED:
+@@ -1501,7 +1505,7 @@ meta_onscreen_native_finish_frame (CoglOnscreen *onscreen,
+   if (cogl_onscreen_count_pending_frames (onscreen) > 0)
+     return;
+ 
+-  kms_update = meta_kms_get_pending_update (kms, kms_device);
++  kms_update = meta_kms_get_pending_update_for_crtc (kms, kms_crtc);
+   if (!kms_update)
+     {
+       clutter_frame_set_result (frame, CLUTTER_FRAME_RESULT_IDLE);
+@@ -1516,9 +1520,9 @@ meta_onscreen_native_finish_frame (CoglOnscreen *onscreen,
+                                           g_object_unref);
+ 
+   flags = META_KMS_UPDATE_FLAG_NONE;
+-  kms_feedback = meta_kms_post_pending_update_sync (kms,
+-                                                    kms_device,
+-                                                    flags);
++  kms_feedback = meta_kms_post_pending_update_for_crtc_sync (kms,
++                                                             kms_crtc,
++                                                             flags);
+   switch (meta_kms_feedback_get_result (kms_feedback))
+     {
+     case META_KMS_FEEDBACK_PASSED:

@@ -1,0 +1,33 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Fri, 28 Jan 2022 15:46:09 +0800
+Subject: cursor-renderer/native: Use CRTC-specific update retrieval
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-cursor-renderer-native.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/backends/native/meta-cursor-renderer-native.c b/src/backends/native/meta-cursor-renderer-native.c
+index b8e5285..81ce0c6 100644
+--- a/src/backends/native/meta-cursor-renderer-native.c
++++ b/src/backends/native/meta-cursor-renderer-native.c
+@@ -289,8 +289,8 @@ assign_cursor_plane (MetaCursorRendererNative *native,
+     flags |= META_KMS_ASSIGN_PLANE_FLAG_FB_UNCHANGED;
+ 
+   kms_update =
+-    meta_kms_ensure_pending_update (meta_kms_device_get_kms (kms_device),
+-                                    meta_kms_crtc_get_device (kms_crtc));
++    meta_kms_ensure_pending_update_for_crtc (meta_kms_device_get_kms (kms_device),
++                                             kms_crtc);
+   plane_assignment = meta_kms_update_assign_plane (kms_update,
+                                                    kms_crtc,
+                                                    cursor_plane,
+@@ -435,7 +435,7 @@ unset_crtc_cursor (MetaCursorRendererNative *native,
+       MetaKms *kms = meta_kms_device_get_kms (kms_device);
+       MetaKmsUpdate *kms_update;
+ 
+-      kms_update = meta_kms_ensure_pending_update (kms, kms_device);
++      kms_update = meta_kms_ensure_pending_update_for_crtc (kms, kms_crtc);
+       meta_kms_update_unassign_plane (kms_update, kms_crtc, cursor_plane);
+     }
+ 

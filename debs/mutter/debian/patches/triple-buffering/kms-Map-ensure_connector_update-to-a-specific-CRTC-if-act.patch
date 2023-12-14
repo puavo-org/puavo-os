@@ -1,0 +1,60 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 13 Apr 2022 18:07:44 +0800
+Subject: kms: Map ensure_connector_update to a specific CRTC if active
+
+Otherwise the connector update gets orphaned and never committed:
+https://launchpad.net/bugs/1966178
+
+Although I wonder if there's a nicer way to decide when to apply
+connector updates (i.e. not reliant on swap buffers).
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-kms-update.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/src/backends/native/meta-kms-update.c b/src/backends/native/meta-kms-update.c
+index b89c08d..0c5594d 100644
+--- a/src/backends/native/meta-kms-update.c
++++ b/src/backends/native/meta-kms-update.c
+@@ -25,6 +25,7 @@
+ #include "backends/meta-display-config-shared.h"
+ #include "backends/native/meta-kms-connector.h"
+ #include "backends/native/meta-kms-crtc.h"
++#include "backends/native/meta-kms-device.h"
+ #include "backends/native/meta-kms-mode-private.h"
+ #include "backends/native/meta-kms-plane.h"
+ 
+@@ -300,6 +301,8 @@ ensure_connector_update (MetaKmsUpdate    *update,
+ {
+   GList *l;
+   MetaKmsConnectorUpdate *connector_update;
++  MetaKmsDevice *device;
++  const MetaKmsConnectorState *state;
+ 
+   for (l = update->connector_updates; l; l = l->next)
+     {
+@@ -314,6 +317,23 @@ ensure_connector_update (MetaKmsUpdate    *update,
+ 
+   update->connector_updates = g_list_prepend (update->connector_updates,
+                                               connector_update);
++  device = meta_kms_connector_get_device (connector);
++  state = meta_kms_connector_get_current_state (connector);
++  if (device && state && state->current_crtc_id)
++    {
++      GList *l;
++
++      for (l = meta_kms_device_get_crtcs (device); l; l = l->next)
++        {
++          MetaKmsCrtc *kms_crtc = l->data;
++
++          if (meta_kms_crtc_get_id (kms_crtc) == state->current_crtc_id)
++            {
++              g_hash_table_add (update->crtcs, kms_crtc);
++              break;
++            }
++        }
++    }
+ 
+   return connector_update;
+ }

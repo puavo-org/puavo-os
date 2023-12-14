@@ -1,0 +1,33 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 28 Oct 2021 17:24:11 +0800
+Subject: onscreen/native: Add a missing frame notification
+
+In the unlikely event that swap_buffers_with_damage drops the previous swap
+it was forgetting to notify about the discarded frame. That could lead to
+frame clock freezes.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index fef5aaf..2f0b4e1 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -1103,6 +1103,15 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+     {
+     case META_RENDERER_NATIVE_MODE_GBM:
+       g_warn_if_fail (onscreen_native->gbm.next_fb == NULL);
++      if (onscreen_native->gbm.next_fb != NULL)
++        {
++          CoglFrameInfo *frame_info;
++
++          frame_info = cogl_onscreen_peek_head_frame_info (onscreen);
++          frame_info->flags |= COGL_FRAME_INFO_FLAG_SYMBOLIC;
++          meta_onscreen_native_notify_frame_complete (onscreen);
++        }
++
+       if (onscreen_native->secondary_gpu_state)
+         {
+           g_set_object (&onscreen_native->gbm.next_fb, secondary_gpu_fb);

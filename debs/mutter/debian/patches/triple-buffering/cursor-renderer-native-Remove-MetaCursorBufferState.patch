@@ -1,0 +1,131 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 18 Aug 2021 16:12:24 +0800
+Subject: cursor-renderer/native: Remove MetaCursorBufferState
+
+It was theoretically useful for flagging when a NULL buffer had been
+SET, but in practice set_cursor_sprite_buffer is never called when the
+buffer is NULL. So we can instead just compare the buffer with NULL to
+tell when it is valid.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-cursor-renderer-native.c | 61 ++---------------------
+ 1 file changed, 4 insertions(+), 57 deletions(-)
+
+diff --git a/src/backends/native/meta-cursor-renderer-native.c b/src/backends/native/meta-cursor-renderer-native.c
+index 4280d03..b8e5285 100644
+--- a/src/backends/native/meta-cursor-renderer-native.c
++++ b/src/backends/native/meta-cursor-renderer-native.c
+@@ -91,17 +91,9 @@ typedef struct _MetaCursorRendererNativeGpuData
+   uint64_t cursor_height;
+ } MetaCursorRendererNativeGpuData;
+ 
+-typedef enum _MetaCursorBufferState
+-{
+-  META_CURSOR_BUFFER_STATE_NONE,
+-  META_CURSOR_BUFFER_STATE_SET,
+-  META_CURSOR_BUFFER_STATE_INVALIDATED,
+-} MetaCursorBufferState;
+-
+ typedef struct _MetaCursorNativeGpuState
+ {
+   MetaGpu *gpu;
+-  MetaCursorBufferState pending_buffer_state;
+   MetaDrmBuffer *buffer;
+ } MetaCursorNativeGpuState;
+ 
+@@ -194,7 +186,6 @@ set_cursor_sprite_buffer (MetaCursorSprite *cursor_sprite,
+   cursor_priv = ensure_cursor_priv (cursor_sprite);
+   cursor_gpu_state = ensure_cursor_gpu_state (cursor_priv, gpu_kms);
+   cursor_gpu_state->buffer = buffer;
+-  cursor_gpu_state->pending_buffer_state = META_CURSOR_BUFFER_STATE_SET;
+ }
+ 
+ static void
+@@ -552,19 +543,7 @@ has_valid_cursor_sprite_buffer (MetaCursorSprite *cursor_sprite,
+   if (!cursor_gpu_state)
+     return FALSE;
+ 
+-  switch (cursor_gpu_state->pending_buffer_state)
+-    {
+-    case META_CURSOR_BUFFER_STATE_NONE:
+-      return cursor_gpu_state->buffer != NULL;
+-    case META_CURSOR_BUFFER_STATE_SET:
+-      return TRUE;
+-    case META_CURSOR_BUFFER_STATE_INVALIDATED:
+-      return FALSE;
+-    }
+-
+-  g_assert_not_reached ();
+-
+-  return FALSE;
++  return cursor_gpu_state->buffer != NULL;
+ }
+ 
+ static void
+@@ -1113,11 +1092,7 @@ invalidate_cursor_gpu_state (MetaCursorSprite *cursor_sprite)
+ 
+   g_hash_table_iter_init (&iter, cursor_priv->gpu_states);
+   while (g_hash_table_iter_next (&iter, NULL, (gpointer *) &cursor_gpu_state))
+-    {
+-      g_clear_object (&cursor_gpu_state->buffer);
+-      cursor_gpu_state->pending_buffer_state =
+-        META_CURSOR_BUFFER_STATE_INVALIDATED;
+-    }
++    g_clear_object (&cursor_gpu_state->buffer);
+ }
+ 
+ static void
+@@ -1358,34 +1333,6 @@ load_cursor_sprite_gbm_buffer_for_gpu (MetaCursorRendererNative *native,
+   set_cursor_sprite_buffer (cursor_sprite, gpu_kms, buffer);
+ }
+ 
+-static gboolean
+-is_cursor_hw_state_valid (MetaCursorSprite *cursor_sprite,
+-                          MetaGpuKms       *gpu_kms)
+-{
+-  MetaCursorNativePrivate *cursor_priv;
+-  MetaCursorNativeGpuState *cursor_gpu_state;
+-
+-  cursor_priv = get_cursor_priv (cursor_sprite);
+-  if (!cursor_priv)
+-    return FALSE;
+-
+-  cursor_gpu_state = get_cursor_gpu_state (cursor_priv, gpu_kms);
+-  if (!cursor_gpu_state)
+-    return FALSE;
+-
+-  switch (cursor_gpu_state->pending_buffer_state)
+-    {
+-    case META_CURSOR_BUFFER_STATE_SET:
+-    case META_CURSOR_BUFFER_STATE_NONE:
+-      return TRUE;
+-    case META_CURSOR_BUFFER_STATE_INVALIDATED:
+-      return FALSE;
+-    }
+-
+-  g_assert_not_reached ();
+-  return FALSE;
+-}
+-
+ static gboolean
+ is_cursor_scale_and_transform_valid (MetaCursorRenderer *renderer,
+                                      MetaCursorSprite   *cursor_sprite)
+@@ -1550,7 +1497,7 @@ realize_cursor_sprite_from_wl_buffer_for_gpu (MetaCursorRenderer      *renderer,
+   if (!cursor_renderer_gpu_data || cursor_renderer_gpu_data->hw_cursor_broken)
+     return;
+ 
+-  if (is_cursor_hw_state_valid (cursor_sprite, gpu_kms) &&
++  if (has_valid_cursor_sprite_buffer (cursor_sprite, gpu_kms) &&
+       is_cursor_scale_and_transform_valid (renderer, cursor_sprite))
+     return;
+ 
+@@ -1720,7 +1667,7 @@ realize_cursor_sprite_from_xcursor_for_gpu (MetaCursorRenderer      *renderer,
+   if (!cursor_renderer_gpu_data || cursor_renderer_gpu_data->hw_cursor_broken)
+     return;
+ 
+-  if (is_cursor_hw_state_valid (cursor_sprite, gpu_kms) &&
++  if (has_valid_cursor_sprite_buffer (cursor_sprite, gpu_kms) &&
+       is_cursor_scale_and_transform_valid (renderer, cursor_sprite))
+     return;
+ 

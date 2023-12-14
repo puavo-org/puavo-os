@@ -1,0 +1,52 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 14 Jun 2023 19:49:29 +0800
+Subject: clutter/frame-clock: Avoid rapidly toggling dynamic max render time
+
+This could happen when moving the cursor over GUIs that only redraw
+in response to cursor movement. Mutter would experience alternating
+cursor-only updates and page flips, and so the `max_render_time_allowed_us`
+would jump between pessimised and optimised resulting in inconsistent
+frame pacing.
+
+Aside from fixing the smoothness problem this should also provide
+lower latency cursor movement.
+
+Fixes: https://launchpad.net/bugs/2023766
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/3074>
+
+(cherry picked from commit be0aa2976e19f4a6b91bd90ce3942d6b107af7c0)
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ clutter/clutter/clutter-frame-clock.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
+index f89db25..e7c67a7 100644
+--- a/clutter/clutter/clutter-frame-clock.c
++++ b/clutter/clutter/clutter-frame-clock.c
+@@ -109,6 +109,7 @@ struct _ClutterFrameClock
+   EstimateQueue swap_to_flip_us;
+   /* If we got new measurements last frame. */
+   gboolean got_measurements_last_frame;
++  gboolean ever_got_measurements;
+ 
+   gboolean pending_reschedule;
+   gboolean pending_reschedule_now;
+@@ -315,6 +316,7 @@ clutter_frame_clock_notify_presented (ClutterFrameClock *frame_clock,
+                                 swap_to_flip_us);
+ 
+       frame_clock->got_measurements_last_frame = TRUE;
++      frame_clock->ever_got_measurements = TRUE;
+     }
+   else
+     {
+@@ -389,7 +391,7 @@ clutter_frame_clock_compute_max_render_time_us (ClutterFrameClock *frame_clock)
+ 
+   refresh_interval_us = frame_clock->refresh_interval_us;
+ 
+-  if (!frame_clock->got_measurements_last_frame ||
++  if (!frame_clock->ever_got_measurements ||
+       G_UNLIKELY (clutter_paint_debug_flags &
+                   CLUTTER_DEBUG_DISABLE_DYNAMIC_MAX_RENDER_TIME))
+     {

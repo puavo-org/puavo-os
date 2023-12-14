@@ -1,0 +1,22 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Fri, 28 Jan 2022 15:50:24 +0800
+Subject: crtc/native: Use CRTC-specific update retrieval
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-crtc-kms.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/backends/native/meta-crtc-kms.c b/src/backends/native/meta-crtc-kms.c
+index 0bfd3f5..3590608 100644
+--- a/src/backends/native/meta-crtc-kms.c
++++ b/src/backends/native/meta-crtc-kms.c
+@@ -394,7 +394,7 @@ meta_crtc_kms_maybe_set_gamma (MetaCrtcKms   *crtc_kms,
+   if (!gamma)
+     return;
+ 
+-  kms_update = meta_kms_ensure_pending_update (kms, kms_device);
++  kms_update = meta_kms_ensure_pending_update_for_crtc (kms, kms_crtc);
+   meta_kms_update_set_crtc_gamma (kms_update,
+                                   kms_crtc,
+                                   gamma->size,

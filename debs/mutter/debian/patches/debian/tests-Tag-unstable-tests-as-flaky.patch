@@ -13,10 +13,10 @@ Forwarded: not-needed
  2 files changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/src/tests/clutter/conform/meson.build b/src/tests/clutter/conform/meson.build
-index 0936863..ccc8a5c 100644
+index 0c83fee..d49ad5a 100644
 --- a/src/tests/clutter/conform/meson.build
 +++ b/src/tests/clutter/conform/meson.build
-@@ -73,8 +73,12 @@ foreach test : clutter_conform_tests
+@@ -72,8 +72,12 @@ foreach test : clutter_conform_tests
      install: false,
    )
  
@@ -31,10 +31,10 @@ index 0936863..ccc8a5c 100644
      is_parallel: false,
    )
 diff --git a/src/tests/meson.build b/src/tests/meson.build
-index efe95e5..49995ca 100644
+index a8aeaef..ab7d9ac 100644
 --- a/src/tests/meson.build
 +++ b/src/tests/meson.build
-@@ -208,6 +208,7 @@ test_cases += [
+@@ -210,6 +210,7 @@ test_cases += [
    },
    {
      'name': 'stage-views',
@@ -42,7 +42,7 @@ index efe95e5..49995ca 100644
      'suite': 'compositor',
      'sources': [ 'stage-view-tests.c', ],
    },
-@@ -406,7 +407,8 @@ if have_native_tests
+@@ -408,7 +409,8 @@ if have_native_tests
      )
  
      test(test_case['name'], test_executable,

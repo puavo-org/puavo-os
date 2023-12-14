@@ -1,0 +1,34 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 2 Nov 2021 19:04:04 +0800
+Subject: onscreen/native: Keep a reference to the CRTC used
+
+Otherwise it may get destroyed during hotplug events. Meanwhile we're
+still active and might try using it in the next/final frame notification
+callbacks.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index 12acf0e..43ab538 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -2248,7 +2248,7 @@ meta_onscreen_native_new (MetaRendererNative *renderer_native,
+   onscreen_native->renderer_native = renderer_native;
+   onscreen_native->render_gpu = render_gpu;
+   onscreen_native->output = output;
+-  onscreen_native->crtc = crtc;
++  onscreen_native->crtc = g_object_ref (crtc);
+ 
+   return onscreen_native;
+ }
+@@ -2296,6 +2296,7 @@ meta_onscreen_native_dispose (GObject *object)
+ 
+   G_OBJECT_CLASS (meta_onscreen_native_parent_class)->dispose (object);
+ 
++  g_clear_object (&onscreen_native->crtc);
+   g_clear_pointer (&onscreen_native->gbm.surface, gbm_surface_destroy);
+   g_clear_pointer (&onscreen_native->secondary_gpu_state,
+                    secondary_gpu_state_free);

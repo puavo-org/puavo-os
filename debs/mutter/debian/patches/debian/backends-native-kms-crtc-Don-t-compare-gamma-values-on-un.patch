@@ -11,6 +11,7 @@ the gamma values not initialized.
 And this may lead meta_kms_crtc_state_changes() to return wrong values.
 
 Origin: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2371
+Applied-upstream: no, should be unnecessary since https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2435
 ---
  src/backends/native/meta-kms-crtc.c | 7 +++++++
  1 file changed, 7 insertions(+)

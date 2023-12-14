@@ -9,10 +9,10 @@ Forwarded: no
  1 file changed, 1 insertion(+)
 
 diff --git a/src/tests/meson.build b/src/tests/meson.build
-index f2d375e..1b36d8c 100644
+index 1aac2c2..ffd8884 100644
 --- a/src/tests/meson.build
 +++ b/src/tests/meson.build
-@@ -378,6 +378,7 @@ if have_native_tests
+@@ -380,6 +380,7 @@ if have_native_tests
      {
        'name': 'xwayland',
        'suite': 'wayland',

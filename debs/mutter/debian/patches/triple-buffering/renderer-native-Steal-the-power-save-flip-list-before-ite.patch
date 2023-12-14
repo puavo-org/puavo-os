@@ -1,0 +1,37 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Mon, 1 Nov 2021 19:35:34 +0800
+Subject: renderer/native: Steal the power save flip list before iterating
+ over it
+
+Because a single iteration might also grow the list again.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-renderer-native.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/backends/native/meta-renderer-native.c b/src/backends/native/meta-renderer-native.c
+index 9665ce6..18b6b4c 100644
+--- a/src/backends/native/meta-renderer-native.c
++++ b/src/backends/native/meta-renderer-native.c
+@@ -684,12 +684,18 @@ static gboolean
+ dummy_power_save_page_flip_cb (gpointer user_data)
+ {
+   MetaRendererNative *renderer_native = user_data;
++  GList *old_list =
++    g_steal_pointer (&renderer_native->power_save_page_flip_onscreens);
+ 
+-  g_list_foreach (renderer_native->power_save_page_flip_onscreens,
++  g_list_foreach (old_list,
+                   (GFunc) meta_onscreen_native_dummy_power_save_page_flip,
+                   NULL);
+-  g_clear_list (&renderer_native->power_save_page_flip_onscreens,
++  g_clear_list (&old_list,
+                 g_object_unref);
++
++  if (renderer_native->power_save_page_flip_onscreens != NULL)
++    return G_SOURCE_CONTINUE;
++
+   renderer_native->power_save_page_flip_source_id = 0;
+ 
+   return G_SOURCE_REMOVE;

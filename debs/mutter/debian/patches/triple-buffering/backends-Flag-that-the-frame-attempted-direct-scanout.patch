@@ -1,0 +1,27 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 7 Sep 2021 19:10:26 +0800
+Subject: backends: Flag that the frame attempted direct scanout
+
+We need this hint whether direct scanout succeeds or fails because it's
+the mechanism by which we will tell the clock to enforce double buffering,
+thus making direct scanout possible on future frames. Triple buffering
+will be disabled until such time that direct scanout is not being attempted.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/meta-stage-impl.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/backends/meta-stage-impl.c b/src/backends/meta-stage-impl.c
+index 93e911b..09908e8 100644
+--- a/src/backends/meta-stage-impl.c
++++ b/src/backends/meta-stage-impl.c
+@@ -733,6 +733,8 @@ meta_stage_impl_redraw_view (ClutterStageWindow *stage_window,
+     {
+       g_autoptr (GError) error = NULL;
+ 
++      clutter_frame_set_hint (frame, CLUTTER_FRAME_HINT_DIRECT_SCANOUT_ATTEMPTED);
++
+       if (meta_stage_impl_scanout_view (stage_impl,
+                                         stage_view,
+                                         scanout,

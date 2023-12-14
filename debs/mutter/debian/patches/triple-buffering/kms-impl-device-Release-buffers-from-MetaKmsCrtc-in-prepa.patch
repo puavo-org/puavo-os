@@ -1,0 +1,31 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 9 Feb 2022 16:44:09 +0800
+Subject: kms/impl-device: Release buffers from MetaKmsCrtc in
+ prepare_shutdown
+
+This allows them to release their buffers cleanly while all the
+associated resources to do the release still exist. Otherwise we
+might crash later in meta_drm_buffer_finalize.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-kms-impl-device.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/backends/native/meta-kms-impl-device.c b/src/backends/native/meta-kms-impl-device.c
+index d9ea276..4eeb182 100644
+--- a/src/backends/native/meta-kms-impl-device.c
++++ b/src/backends/native/meta-kms-impl-device.c
+@@ -1204,8 +1204,12 @@ meta_kms_impl_device_init_mode_setting (MetaKmsImplDevice  *impl_device,
+ void
+ meta_kms_impl_device_prepare_shutdown (MetaKmsImplDevice *impl_device)
+ {
++  MetaKmsImplDevicePrivate *priv =
++    meta_kms_impl_device_get_instance_private (impl_device);
+   MetaKmsImplDeviceClass *klass = META_KMS_IMPL_DEVICE_GET_CLASS (impl_device);
+ 
++  g_list_foreach (priv->crtcs, (GFunc) meta_kms_crtc_release_buffers, NULL);
++
+   if (klass->prepare_shutdown)
+     klass->prepare_shutdown (impl_device);
+ 

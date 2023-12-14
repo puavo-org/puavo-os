@@ -1,0 +1,47 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 10 Mar 2022 16:44:14 +0800
+Subject: clutter/frame-clock: Add env var
+ MUTTER_DEBUG_DISABLE_TRIPLE_BUFFERING
+
+You can set environment variable MUTTER_DEBUG_DISABLE_TRIPLE_BUFFERING=1
+to disable triple buffering. This shouldn't ever be needed except when
+debugging.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ clutter/clutter/clutter-frame-clock.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
+index 7f480bf..1a16b04 100644
+--- a/clutter/clutter/clutter-frame-clock.c
++++ b/clutter/clutter/clutter-frame-clock.c
+@@ -45,6 +45,8 @@ typedef struct _EstimateQueue
+   int next_index;
+ } EstimateQueue;
+ 
++static gboolean triple_buffering_disabled = FALSE;
++
+ #define SYNC_DELAY_FALLBACK_FRACTION 0.875
+ 
+ typedef struct _ClutterFrameListener
+@@ -702,7 +704,8 @@ clutter_frame_clock_schedule_update (ClutterFrameClock *frame_clock)
+     case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_ONE_AND_SCHEDULED:
+       return;
+     case CLUTTER_FRAME_CLOCK_STATE_DISPATCHED_ONE:
+-      if (frame_clock->last_flip_hints & CLUTTER_FRAME_HINT_DIRECT_SCANOUT_ATTEMPTED)
++      if (frame_clock->last_flip_hints & CLUTTER_FRAME_HINT_DIRECT_SCANOUT_ATTEMPTED ||
++          triple_buffering_disabled)
+         {
+           /* Force double buffering, disable triple buffering */
+           frame_clock->pending_reschedule = TRUE;
+@@ -989,6 +992,9 @@ clutter_frame_clock_class_init (ClutterFrameClockClass *klass)
+ {
+   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+ 
++  if (!g_strcmp0 (g_getenv ("MUTTER_DEBUG_DISABLE_TRIPLE_BUFFERING"), "1"))
++    triple_buffering_disabled = TRUE;
++
+   object_class->dispose = clutter_frame_clock_dispose;
+ 
+   signals[DESTROY] =

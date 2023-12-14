@@ -1,0 +1,34 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Fri, 10 Dec 2021 16:40:58 +0800
+Subject: onscreen/native: Log swapbuffers and N-buffering when
+ MUTTER_DEBUG=kms
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index 74e2d00..af1fa69 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -1037,6 +1037,19 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+   COGL_TRACE_BEGIN_SCOPED (MetaRendererNativeSwapBuffers,
+                            "Onscreen (swap-buffers)");
+ 
++  if (meta_is_topic_enabled (META_DEBUG_KMS))
++    {
++      unsigned int frames_pending =
++        cogl_onscreen_count_pending_frames (onscreen);
++
++      meta_topic (META_DEBUG_KMS,
++                  "Swap buffers: %u frames pending (%s-buffering)",
++                  frames_pending,
++                  frames_pending == 1 ? "double" :
++                  frames_pending == 2 ? "triple" :
++                  "?");
++    }
++
+   secondary_gpu_fb =
+     update_secondary_gpu_state_pre_swap_buffers (onscreen,
+                                                  rectangles,

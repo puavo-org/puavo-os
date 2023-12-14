@@ -1,0 +1,22 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 12 Aug 2021 18:28:57 +0800
+Subject: onscreen/native: Warn instead of crashing if posting without an
+ update
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index 8ee481a..fef5aaf 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -1235,6 +1235,7 @@ post_latest_swap (CoglOnscreen *onscreen)
+ 
+   flags = META_KMS_UPDATE_FLAG_NONE;
+   kms_feedback = meta_kms_post_pending_update_sync (kms, kms_device, flags);
++  g_return_if_fail (kms_feedback != NULL);
+ 
+   switch (meta_kms_feedback_get_result (kms_feedback))
+     {

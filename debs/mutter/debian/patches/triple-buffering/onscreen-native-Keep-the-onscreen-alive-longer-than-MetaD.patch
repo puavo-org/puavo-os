@@ -1,0 +1,37 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Fri, 24 Sep 2021 21:49:45 +0800
+Subject: onscreen/native: Keep the onscreen alive longer than
+ `MetaDrmBufferGbm`
+
+Because `MetaDrmBufferGbm` uses `gbm_surface` in its destructor and
+`gbm_surface` can't be refcounted directly. So we reference its owner
+(the onscreen) instead.
+
+This avoids a crash that can otherwise occur when hotplugging monitors as
+the old onscreen might get disposed before the new onscreen has presented
+a replacement frame on the same `MetaKmsCrtc`.
+
+We could instead wrap and refcount all users of `gbm_surface`, but that
+would be a lot more work for no additional benefit right now.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index d5a9c5c..74e2d00 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -409,6 +409,11 @@ meta_onscreen_native_flip_crtc (CoglOnscreen                *onscreen,
+           meta_kms_plane_assignment_set_fb_damage (plane_assignment,
+                                                    rectangles, n_rectangles);
+         }
++
++      g_object_set_data_full (G_OBJECT (buffer),
++                              "gbm_surface owner",
++                              g_object_ref (onscreen),
++                              (GDestroyNotify) g_object_unref);
+       break;
+     case META_RENDERER_NATIVE_MODE_SURFACELESS:
+       g_assert_not_reached ();

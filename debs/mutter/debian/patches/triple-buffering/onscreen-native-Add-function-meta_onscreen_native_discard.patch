@@ -1,0 +1,46 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 4 Nov 2021 16:09:26 +0800
+Subject: onscreen/native: Add function
+ meta_onscreen_native_discard_pending_swaps
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 11 +++++++++++
+ src/backends/native/meta-onscreen-native.h |  2 ++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index 43ab538..c799ccf 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -1534,6 +1534,17 @@ meta_onscreen_native_finish_frame (CoglOnscreen *onscreen,
+     }
+ }
+ 
++void
++meta_onscreen_native_discard_pending_swaps (CoglOnscreen *onscreen)
++{
++  MetaOnscreenNative *onscreen_native = META_ONSCREEN_NATIVE (onscreen);
++
++  onscreen_native->swaps_pending = 0;
++
++  g_clear_object (&onscreen_native->gbm.stalled_fb);
++  g_clear_object (&onscreen_native->gbm.next_fb);
++}
++
+ static gboolean
+ should_surface_be_sharable (CoglOnscreen *onscreen)
+ {
+diff --git a/src/backends/native/meta-onscreen-native.h b/src/backends/native/meta-onscreen-native.h
+index 8ea7ec2..81b0eea 100644
+--- a/src/backends/native/meta-onscreen-native.h
++++ b/src/backends/native/meta-onscreen-native.h
+@@ -42,6 +42,8 @@ void meta_onscreen_native_finish_frame (CoglOnscreen *onscreen,
+ 
+ void meta_onscreen_native_dummy_power_save_page_flip (CoglOnscreen *onscreen);
+ 
++void meta_onscreen_native_discard_pending_swaps (CoglOnscreen *onscreen);
++
+ gboolean meta_onscreen_native_is_buffer_scanout_compatible (CoglOnscreen  *onscreen,
+                                                             MetaDrmBuffer *fb);
+ 

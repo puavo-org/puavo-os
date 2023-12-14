@@ -1,0 +1,127 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 28 Jul 2021 16:29:27 +0800
+Subject: onscreen/native: Split swap_buffers_with_damage into two functions
+
+1. The EGL part: meta_onscreen_native_swap_buffers_with_damage
+2. The KMS part: post_latest_swap
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 60 +++++++++++++++++++++++-------
+ 1 file changed, 46 insertions(+), 14 deletions(-)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index 0153d40..8ee481a 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -105,11 +105,19 @@ struct _MetaOnscreenNative
+ #endif
+ 
+   MetaRendererView *view;
++
++  struct {
++    int *rectangles;  /* 4 x n_rectangles */
++    int n_rectangles;
++  } next_post;
+ };
+ 
+ G_DEFINE_TYPE (MetaOnscreenNative, meta_onscreen_native,
+                COGL_TYPE_ONSCREEN_EGL)
+ 
++static void
++post_latest_swap (CoglOnscreen *onscreen);
++
+ static gboolean
+ init_secondary_gpu_state (MetaRendererNative  *renderer_native,
+                           CoglOnscreen        *onscreen,
+@@ -1010,29 +1018,18 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+   CoglRendererEGL *cogl_renderer_egl = cogl_renderer->winsys;
+   MetaRendererNativeGpuData *renderer_gpu_data = cogl_renderer_egl->platform;
+   MetaRendererNative *renderer_native = renderer_gpu_data->renderer_native;
+-  MetaRenderer *renderer = META_RENDERER (renderer_native);
+-  MetaBackend *backend = meta_renderer_get_backend (renderer);
+-  MetaBackendNative *backend_native = META_BACKEND_NATIVE (backend);
+-  MetaMonitorManager *monitor_manager =
+-    meta_backend_get_monitor_manager (backend);
+-  MetaKms *kms = meta_backend_native_get_kms (backend_native);
+   MetaOnscreenNative *onscreen_native = META_ONSCREEN_NATIVE (onscreen);
+   MetaGpuKms *render_gpu = onscreen_native->render_gpu;
+   MetaDeviceFile *render_device_file;
+   ClutterFrame *frame = user_data;
+   CoglOnscreenClass *parent_class;
+   gboolean egl_context_changed = FALSE;
+-  MetaPowerSave power_save_mode;
+   g_autoptr (GError) error = NULL;
+   MetaDrmBufferFlags buffer_flags;
+   MetaDrmBufferGbm *buffer_gbm;
+   g_autoptr (MetaDrmBuffer) primary_gpu_fb = NULL;
+   g_autoptr (MetaDrmBuffer) secondary_gpu_fb = NULL;
+-  MetaKmsCrtc *kms_crtc;
+-  MetaKmsDevice *kms_device;
+-  MetaKmsUpdateFlag flags;
+-  g_autoptr (MetaKmsFeedback) kms_feedback = NULL;
+-  const GError *feedback_error;
++  size_t rectangles_size;
+ 
+   COGL_TRACE_BEGIN_SCOPED (MetaRendererNativeSwapBuffers,
+                            "Onscreen (swap-buffers)");
+@@ -1139,6 +1136,39 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+   if (egl_context_changed)
+     _cogl_winsys_egl_ensure_current (cogl_display);
+ 
++  rectangles_size = n_rectangles * 4 * sizeof (int);
++  onscreen_native->next_post.rectangles =
++    g_realloc (onscreen_native->next_post.rectangles, rectangles_size);
++  memcpy (onscreen_native->next_post.rectangles, rectangles, rectangles_size);
++  onscreen_native->next_post.n_rectangles = n_rectangles;
++
++  post_latest_swap (onscreen);
++}
++
++static void
++post_latest_swap (CoglOnscreen *onscreen)
++{
++  CoglFramebuffer *framebuffer = COGL_FRAMEBUFFER (onscreen);
++  CoglContext *cogl_context = cogl_framebuffer_get_context (framebuffer);
++  CoglRenderer *cogl_renderer = cogl_context->display->renderer;
++  CoglRendererEGL *cogl_renderer_egl = cogl_renderer->winsys;
++  MetaRendererNativeGpuData *renderer_gpu_data = cogl_renderer_egl->platform;
++  MetaRendererNative *renderer_native = renderer_gpu_data->renderer_native;
++  MetaRenderer *renderer = META_RENDERER (renderer_native);
++  MetaBackend *backend = meta_renderer_get_backend (renderer);
++  MetaBackendNative *backend_native = META_BACKEND_NATIVE (backend);
++  MetaMonitorManager *monitor_manager =
++    meta_backend_get_monitor_manager (backend);
++  MetaKms *kms = meta_backend_native_get_kms (backend_native);
++  MetaOnscreenNative *onscreen_native = META_ONSCREEN_NATIVE (onscreen);
++  MetaPowerSave power_save_mode;
++  MetaCrtcKms *crtc_kms = META_CRTC_KMS (onscreen_native->crtc);
++  MetaKmsCrtc *kms_crtc = meta_crtc_kms_get_kms_crtc (crtc_kms);
++  MetaKmsDevice *kms_device = meta_kms_crtc_get_device (kms_crtc);
++  MetaKmsUpdateFlag flags;
++  g_autoptr (MetaKmsFeedback) kms_feedback = NULL;
++  const GError *feedback_error;
++
+   power_save_mode = meta_monitor_manager_get_power_save_mode (monitor_manager);
+   if (power_save_mode == META_POWER_SAVE_ON)
+     {
+@@ -1147,8 +1177,8 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+                                       onscreen_native->view,
+                                       onscreen_native->crtc,
+                                       META_KMS_PAGE_FLIP_LISTENER_FLAG_NONE,
+-                                      rectangles,
+-                                      n_rectangles);
++                                      onscreen_native->next_post.rectangles,
++                                      onscreen_native->next_post.n_rectangles);
+     }
+   else
+     {
+@@ -2202,6 +2232,8 @@ meta_onscreen_native_dispose (GObject *object)
+   g_clear_pointer (&onscreen_native->gbm.surface, gbm_surface_destroy);
+   g_clear_pointer (&onscreen_native->secondary_gpu_state,
+                    secondary_gpu_state_free);
++  g_clear_pointer (&onscreen_native->next_post.rectangles, g_free);
++  onscreen_native->next_post.n_rectangles = 0;
+ }
+ 
+ static void

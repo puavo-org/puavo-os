@@ -1,0 +1,27 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 28 Jul 2021 16:35:56 +0800
+Subject: onscreen/native: Replace an assertion that double buffering is the
+ maximum
+
+Because it soon won't be the maximum. But we do want to verify that the
+frame info queue is not empty, to avoid NULL dereferencing and catch logic
+errors.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index af1fa69..8e08d2b 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -150,7 +150,7 @@ meta_onscreen_native_notify_frame_complete (CoglOnscreen *onscreen)
+ 
+   info = cogl_onscreen_pop_head_frame_info (onscreen);
+ 
+-  g_assert (!cogl_onscreen_peek_head_frame_info (onscreen));
++  g_assert (info);
+ 
+   _cogl_onscreen_notify_frame_sync (onscreen, info);
+   _cogl_onscreen_notify_complete (onscreen, info);

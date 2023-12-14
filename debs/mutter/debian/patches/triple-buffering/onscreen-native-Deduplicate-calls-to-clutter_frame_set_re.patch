@@ -1,0 +1,82 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 16 Sep 2021 16:26:25 +0800
+Subject: onscreen/native: Deduplicate calls to clutter_frame_set_result
+
+All paths out of `meta_onscreen_native_swap_buffers_with_damage` from
+here onward would set the same `CLUTTER_FRAME_RESULT_PENDING_PRESENTED`
+(or terminate with `g_assert_not_reached`).
+
+Even failed posts set this result because they will do a
+`meta_onscreen_native_notify_frame_complete` in
+`page_flip_feedback_discarded`.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index 8e08d2b..0153d40 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -1127,6 +1127,9 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+ #endif
+     }
+ 
++  clutter_frame_set_result (frame,
++                            CLUTTER_FRAME_RESULT_PENDING_PRESENTED);
++
+   /*
+    * If we changed EGL context, cogl will have the wrong idea about what is
+    * current, making it fail to set it when it needs to. Avoid that by making
+@@ -1151,8 +1154,6 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+     {
+       meta_renderer_native_queue_power_save_page_flip (renderer_native,
+                                                        onscreen);
+-      clutter_frame_set_result (frame,
+-                                CLUTTER_FRAME_RESULT_PENDING_PRESENTED);
+       return;
+     }
+ 
+@@ -1170,9 +1171,6 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+                       "Postponing primary plane composite update for CRTC %u (%s)",
+                       meta_kms_crtc_get_id (kms_crtc),
+                       meta_kms_device_get_path (kms_device));
+-
+-          clutter_frame_set_result (frame,
+-                                    CLUTTER_FRAME_RESULT_PENDING_PRESENTED);
+           return;
+         }
+       else if (meta_renderer_native_has_pending_mode_set (renderer_native))
+@@ -1182,8 +1180,6 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+ 
+           meta_renderer_native_notify_mode_sets_reset (renderer_native);
+           meta_renderer_native_post_mode_set_updates (renderer_native);
+-          clutter_frame_set_result (frame,
+-                                    CLUTTER_FRAME_RESULT_PENDING_PRESENTED);
+           return;
+         }
+       break;
+@@ -1196,8 +1192,6 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+         {
+           meta_renderer_native_notify_mode_sets_reset (renderer_native);
+           meta_renderer_native_post_mode_set_updates (renderer_native);
+-          clutter_frame_set_result (frame,
+-                                    CLUTTER_FRAME_RESULT_PENDING_PRESENTED);
+           return;
+         }
+       break;
+@@ -1215,13 +1209,8 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+   switch (meta_kms_feedback_get_result (kms_feedback))
+     {
+     case META_KMS_FEEDBACK_PASSED:
+-      clutter_frame_set_result (frame,
+-                                CLUTTER_FRAME_RESULT_PENDING_PRESENTED);
+       break;
+     case META_KMS_FEEDBACK_FAILED:
+-      clutter_frame_set_result (frame,
+-                                CLUTTER_FRAME_RESULT_PENDING_PRESENTED);
+-
+       feedback_error = meta_kms_feedback_get_error (kms_feedback);
+       if (!g_error_matches (feedback_error,
+                             G_IO_ERROR,

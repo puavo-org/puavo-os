@@ -1,0 +1,55 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 4 Nov 2021 16:09:52 +0800
+Subject: renderer/native: Discard pending swaps when rebuilding views
+
+It's analogous to discard_pending_page_flips but represents swaps that
+might become flips after the next frame notification callbacks, thanks
+to triple buffering. Since the views are being rebuilt and their onscreens
+are about to be destroyed, turning those swaps into more flips/posts would
+just lead to unexpected behaviour (like trying to flip on a half-destroyed
+inactive CRTC).
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-renderer-native.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/src/backends/native/meta-renderer-native.c b/src/backends/native/meta-renderer-native.c
+index 18b6b4c..a99142e 100644
+--- a/src/backends/native/meta-renderer-native.c
++++ b/src/backends/native/meta-renderer-native.c
+@@ -1418,6 +1418,26 @@ meta_renderer_native_create_view (MetaRenderer       *renderer,
+   return view;
+ }
+ 
++static void
++discard_pending_swaps (MetaRenderer *renderer)
++{
++  GList *views = meta_renderer_get_views (renderer);;
++  GList *l;
++
++  for (l = views; l; l = l->next)
++    {
++      ClutterStageView *stage_view = l->data;
++      CoglFramebuffer *fb = clutter_stage_view_get_onscreen (stage_view);
++      CoglOnscreen *onscreen;
++
++      if (!COGL_IS_ONSCREEN (fb))
++        continue;
++
++      onscreen = COGL_ONSCREEN (fb);
++      meta_onscreen_native_discard_pending_swaps (onscreen);
++    }
++}
++
+ static void
+ keep_current_onscreens_alive (MetaRenderer *renderer)
+ {
+@@ -1446,6 +1466,7 @@ meta_renderer_native_rebuild_views (MetaRenderer *renderer)
+   MetaRendererClass *parent_renderer_class =
+     META_RENDERER_CLASS (meta_renderer_native_parent_class);
+ 
++  discard_pending_swaps (renderer);
+   meta_kms_discard_pending_page_flips (kms);
+   meta_kms_discard_pending_updates (kms);
+ 

@@ -16,6 +16,7 @@ Signed-off-by: Simon McVittie <smcv@debian.org>
 Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2773
 Accidentally mitigates: https://gitlab.gnome.org/GNOME/mutter/-/issues/2559
 Accidentally mitigates: https://bugs.debian.org/1024438
+Applied-upstream: 44.beta, commit:ca70c1dfb5d5792e25df4e23f3ff89cc05dffb3e
 ---
  src/tests/meson.build        | 29 ++++++++++++++++-------------
  src/tests/mutter-all.test.in |  9 ---------
@@ -25,10 +26,10 @@ Accidentally mitigates: https://bugs.debian.org/1024438
  create mode 100644 src/tests/stacking.test.in
 
 diff --git a/src/tests/meson.build b/src/tests/meson.build
-index 66b79b6..efe95e5 100644
+index 775c97b..a8aeaef 100644
 --- a/src/tests/meson.build
 +++ b/src/tests/meson.build
-@@ -86,19 +86,6 @@ subdir('wayland-test-clients')
+@@ -88,19 +88,6 @@ subdir('wayland-test-clients')
  
  if have_installed_tests
    stacking_files_datadir = join_paths(pkgdatadir, 'tests')
@@ -48,7 +49,7 @@ index 66b79b6..efe95e5 100644
    install_subdir('stacking', install_dir: stacking_files_datadir)
  endif
  
-@@ -472,6 +459,22 @@ foreach stacking_test: stacking_tests
+@@ -475,6 +462,22 @@ foreach stacking_test: stacking_tests
      is_parallel: false,
      timeout: 60,
    )

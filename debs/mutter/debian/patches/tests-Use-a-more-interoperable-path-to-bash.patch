@@ -10,6 +10,7 @@ in /bin and there is no bash in /usr/bin.
 Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/2385
 Signed-off-by: Simon McVittie <smcv@debian.org>
 Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2900
+Applied-upstream: 44.1, commit:d6af73ba68bb6d51cf3e6712a3d43ff0c79a377c
 ---
  .gitlab-ci/checkout-gnome-shell.sh      | 2 +-
  .gitlab-ci/download-coverity-tarball.sh | 2 +-

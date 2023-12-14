@@ -1,0 +1,45 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 11 May 2022 16:00:32 +0800
+Subject: onscreen/native: Skip try_post_latest_swap if shutting down
+
+Otherwise we could get:
+
+  meta_kms_prepare_shutdown ->
+  flush_callbacks ->
+  ... ->
+  try_post_latest_swap ->
+  post and queue more callbacks
+
+So later in shutdown those callbacks would trigger an assertion failure
+in meta_kms_impl_device_atomic_finalize:
+
+  g_hash_table_size (impl_device_atomic->page_flip_datas) == 0
+
+Also remember to discard_pending_swaps to break the circular reference
+between MetaOnscreenNative and its next_fb caused by the association
+"gbm_surface owner". Or else that would trigger another assertion failure:
+
+  meta_device_pool_finalize: runtime check failed: (!pool->files)
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index c799ccf..f137c68 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -1205,6 +1205,12 @@ try_post_latest_swap (CoglOnscreen *onscreen)
+   const GError *feedback_error;
+   unsigned int frames_pending = cogl_onscreen_count_pending_frames (onscreen);
+ 
++  if (meta_kms_is_shutting_down (kms))
++    {
++      meta_onscreen_native_discard_pending_swaps (onscreen);
++      return;
++    }
++
+   if (onscreen_native->swaps_pending == 0)
+     return;
+ 

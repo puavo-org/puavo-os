@@ -1,0 +1,46 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 10 Aug 2021 17:46:49 +0800
+Subject: clutter/frame-clock: Lower the threshold for disabling error
+ diffusion
+
+Error diffusion was introduced in 0555a5bbc15 for Nvidia where last
+presentation time is always unknown (zero). Dispatch times would drift
+apart always being a fraction of a frame late, and accumulated to cause
+periodic frame skips. So error diffusion corrected that precisely and
+avoided the skips.
+
+That works great with double buffering but less great with triple
+buffering. It's certainly still needed with triple buffering but
+correcting for a lateness of many milliseconds isn't a good idea. That's
+because a dispatch being that late is not due to main loop jitter but due
+to Nvidia's swap buffers blocking when the queue is full. So scheduling
+the next frame even earlier using last_dispatch_lateness_us would just
+perpetuate the problem of swap buffers blocking for too long.
+
+So now we lower the threshold of when error diffusion gets disabled. It's
+still high enough to fix the original smoothness problem it was for, but
+now low enough to detect Nvidia's occasionally blocking swaps and backs
+off in that case.
+
+Since the average duration of a blocking swap is half a frame interval
+and we want to distinguish between that and sub-millisecond jitter, the
+logical threshold is halfway again: refresh_interval_us/4.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ clutter/clutter/clutter-frame-clock.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
+index 34d676f..99b7f77 100644
+--- a/clutter/clutter/clutter-frame-clock.c
++++ b/clutter/clutter/clutter-frame-clock.c
+@@ -676,7 +676,7 @@ clutter_frame_clock_dispatch (ClutterFrameClock *frame_clock,
+                            frame_clock->refresh_interval_us;
+ 
+   lateness_us = time_us - ideal_dispatch_time_us;
+-  if (lateness_us < 0 || lateness_us >= frame_clock->refresh_interval_us)
++  if (lateness_us < 0 || lateness_us >= frame_clock->refresh_interval_us / 4)
+     frame_clock->last_dispatch_lateness_us = 0;
+   else
+     frame_clock->last_dispatch_lateness_us = lateness_us;

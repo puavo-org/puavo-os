@@ -1,0 +1,135 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 19 Jan 2022 18:43:15 +0800
+Subject: onscreen/native: Hold primary GPU FBs for the secondary scanout
+ lifetime
+
+This is out of an abundance of caution. In cases where we have copied the
+primary GPU's buffer to a dumb buffer for secondary GPU (DisplayLink)
+scanout, we don't really know how long OpenGL will take to complete that
+copy in the background. And there is no swap buffers or locking of the
+secondary GPU front buffer to guarantee when.
+
+So to avoid needing `glFinish` or similar we now reference the original
+source FB for the scanout lifetime of the secondary (dumb) buffer. This
+is effectively identical to the pre-!2087 behaviour.
+
+Although it's not theoretically optimal because the primary GPU FB is
+not needed after scanout starts (`next_fb` is moved to `current_fb`),
+this approach does give us the simplicity of only having to track the
+lifetime of a single buffer after it is flipped.
+
+Origin: https://gitlab.gnome.org/Community/Ubuntu/mutter/-/commits/triple-buffering-v4-43
+---
+ src/backends/native/meta-onscreen-native.c | 64 ++++++++++++++++++++++++++++--
+ 1 file changed, 61 insertions(+), 3 deletions(-)
+
+diff --git a/src/backends/native/meta-onscreen-native.c b/src/backends/native/meta-onscreen-native.c
+index a605230..ffdfeb3 100644
+--- a/src/backends/native/meta-onscreen-native.c
++++ b/src/backends/native/meta-onscreen-native.c
+@@ -72,6 +72,7 @@ typedef struct _MetaOnscreenNativeSecondaryGpuState
+   struct {
+     MetaDrmBufferDumb *current_dumb_fb;
+     MetaDrmBufferDumb *dumb_fbs[2];
++    MetaDrmBuffer *source_fbs[2];
+   } cpu;
+ 
+   gboolean noted_primary_gpu_copy_ok;
+@@ -495,13 +496,41 @@ meta_onscreen_native_set_crtc_mode (CoglOnscreen              *onscreen,
+                                kms_update);
+ }
+ 
++static void
++hold_primary_gpu_fb_for_secondary_gpu_scanout (MetaOnscreenNativeSecondaryGpuState *secondary_gpu_state,
++                                               MetaDrmBuffer                       *primary_gpu_fb,
++                                               MetaDrmBuffer                       *secondary_gpu_fb)
++{
++  if (META_IS_DRM_BUFFER_DUMB (secondary_gpu_fb))
++    {
++      MetaDrmBufferDumb *dumb_fb = META_DRM_BUFFER_DUMB (secondary_gpu_fb);
++      int i;
++      const int n = G_N_ELEMENTS (secondary_gpu_state->cpu.dumb_fbs);
++
++      for (i = 0; i < n; i++)
++        {
++          if (dumb_fb == secondary_gpu_state->cpu.dumb_fbs[i])
++            {
++              g_set_object (&secondary_gpu_state->cpu.source_fbs[i],
++                            primary_gpu_fb);
++              break;
++            }
++        }
++
++      g_warn_if_fail (i < n);
++    }
++}
++
+ static void
+ secondary_gpu_release_dumb (MetaOnscreenNativeSecondaryGpuState *secondary_gpu_state)
+ {
+   unsigned i;
+ 
+   for (i = 0; i < G_N_ELEMENTS (secondary_gpu_state->cpu.dumb_fbs); i++)
+-    g_clear_object (&secondary_gpu_state->cpu.dumb_fbs[i]);
++    {
++      g_clear_object (&secondary_gpu_state->cpu.dumb_fbs[i]);
++      g_clear_object (&secondary_gpu_state->cpu.source_fbs[i]);
++    }
+ }
+ 
+ static void
+@@ -1084,9 +1113,17 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen  *onscreen,
+     case META_RENDERER_NATIVE_MODE_GBM:
+       g_warn_if_fail (onscreen_native->gbm.next_fb == NULL);
+       if (onscreen_native->secondary_gpu_state)
+-        g_set_object (&onscreen_native->gbm.next_fb, secondary_gpu_fb);
++        {
++          g_set_object (&onscreen_native->gbm.next_fb, secondary_gpu_fb);
++          hold_primary_gpu_fb_for_secondary_gpu_scanout (
++            onscreen_native->secondary_gpu_state,
++            primary_gpu_fb,
++            secondary_gpu_fb);
++        }
+       else
+-        g_set_object (&onscreen_native->gbm.next_fb, primary_gpu_fb);
++        {
++          g_set_object (&onscreen_native->gbm.next_fb, primary_gpu_fb);
++        }
+       break;
+     case META_RENDERER_NATIVE_MODE_SURFACELESS:
+       break;
+@@ -1966,6 +2003,21 @@ pick_secondary_gpu_framebuffer_format_for_cpu (CoglOnscreen *onscreen)
+   return DRM_FORMAT_INVALID;
+ }
+ 
++static void
++dumb_toggle_notify (gpointer  data,
++                    GObject  *object,
++                    gboolean  is_last_ref)
++{
++  MetaDrmBuffer **source_fb = data;
++
++  g_return_if_fail (source_fb != NULL);
++  if (is_last_ref && *source_fb)
++    {
++      g_return_if_fail (META_IS_DRM_BUFFER (*source_fb));
++      g_clear_object (source_fb);
++    }
++}
++
+ static gboolean
+ init_secondary_gpu_state_cpu_copy_mode (MetaRendererNative         *renderer_native,
+                                         CoglOnscreen               *onscreen,
+@@ -2022,6 +2074,12 @@ init_secondary_gpu_state_cpu_copy_mode (MetaRendererNative         *renderer_nat
+         }
+ 
+       secondary_gpu_state->cpu.dumb_fbs[i] = META_DRM_BUFFER_DUMB (dumb_buffer);
++      g_object_add_toggle_ref (G_OBJECT (dumb_buffer),
++                               dumb_toggle_notify,
++                               &secondary_gpu_state->cpu.source_fbs[i]);
++
++      /* It was incremented higher than we need by add_toggle_ref */
++      g_object_unref (dumb_buffer);
+     }
+ 
+   /*
