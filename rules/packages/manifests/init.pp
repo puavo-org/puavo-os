@@ -816,8 +816,8 @@ class packages {
   }
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-  $nvidia_dkms_470_module   = 'nvidia-tesla-470/470.199.02'
-  $nvidia_dkms_525_module   = 'nvidia-current/525.125.06'
+  $nvidia_dkms_470_module   = 'nvidia-tesla-470/470.223.02'
+  $nvidia_dkms_525_module   = 'nvidia-current/525.147.05'
   $r8168_module             = 'r8168/8.050.03'
   $virtualbox_module        = 'virtualbox/7.0.12'
 
