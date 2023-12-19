@@ -4,7 +4,7 @@ require 'digest'
 require 'fileutils'
 require 'json'
 
-SUPPORTED_LANGUAGES    = %w(Finnish)
+SUPPORTED_LANGUAGES    = %w(English Finnish)
 SUPPORTED_WIN_VERSIONS = %w(Win10 Win11)
 
 def get_image_info(image_path)
