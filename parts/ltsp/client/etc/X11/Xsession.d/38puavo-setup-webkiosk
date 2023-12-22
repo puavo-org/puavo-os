@@ -12,7 +12,7 @@ if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' ]; then
   mkdir -p ~/.config/autostart
   cp /usr/share/applications/chromium.desktop ~/.config/autostart/
 
-  export DESKTOP_SESSION=puavo-desktop
+  export DESKTOP_SESSION=zzz-puavo-desktop-lang-${PUAVO_SESSION_LANGUAGE}
   export GDMSESSION=puavo-desktop
   export XDG_SESSION_DESKTOP=puavo-desktop
 fi
