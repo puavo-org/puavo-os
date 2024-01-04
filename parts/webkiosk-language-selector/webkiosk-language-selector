@@ -5,7 +5,9 @@ wm protocol . WM_DELETE_WINDOW { };     # do not allow window close
 
 set bg_color "#efeff0"
 
-frame .frame
+. configure -bg $bg_color
+
+frame .frame -bg $bg_color
 
 font create buttonFont -family {Ubuntu Condensed} -size 20 -weight bold
 
@@ -16,11 +18,14 @@ image create photo .flag_sv -height 150 -width 250 -file $imageDir/sv.png
 image create photo .flag_en -height 150 -width 250 -file $imageDir/en.png
 image create photo .flag_de -height 150 -width 250 -file $imageDir/de.png
 
-set button_opts [list          \
-              -borderwidth 0   \
-              -font buttonFont \
-              -cursor hand2    \
-              -padx 35         \
+set button_opts [list                        \
+              -borderwidth 0                 \
+              -background $bg_color          \
+              -highlightbackground $bg_color \
+              -activebackground "#d7d7da"    \
+              -font buttonFont               \
+              -cursor hand2                  \
+              -padx 35                       \
               -pady 35]
 
 button .frame.fi -image .flag_fi -compound top -text Aloita {*}$button_opts -command { puts "fi"; exit 0 }
