@@ -226,19 +226,19 @@ if [ -b /dev/mapper/puavo-imageoverlays ]; then
 fi
 
 if [ "$(lsblk -b -n -o DISC-MAX -r /dev/mapper/puavo-home)" != 0 ]; then
-  logmsg notice 'disk supports discard'
+  logmsg info 'disk supports discard'
   device_supports_discard=true
 else
-  logmsg notice 'disk does not support discard, operations might be slow'
+  logmsg info 'disk does not support discard, operations might be slow'
 fi
 logstep
 
 ## Best-effort killing of some possibly interfering processes
-systemctl mask colord.service || true
-systemctl stop colord.service || true
-pkill -f /usr/libexec/tracker || true
-pkill -f /usr/libexec/gvfs || true
-pkill -f /usr/bin/pulseaudio || true
+systemctl mask colord.service >/dev/null 2>&1 || true
+systemctl stop colord.service >/dev/null 2>&1 || true
+pkill -f /usr/libexec/tracker   || true
+pkill -f /usr/libexec/gvfs      || true
+pkill -f /usr/bin/pulseaudio    || true
 pkill -f /usr/libexec/evolution || true
 pkill -f /usr/libexec/gsd-color || true
 
@@ -298,7 +298,7 @@ fi
 logstep
 
 { /usr/lib/puavo-ltsp-install/update-configuration || true; } 2>&1 \
-  | pv -F '>>> Updating system configuration... %t' > /dev/null
+  | pv -F '>>> Updating system configuration %t' > /dev/null
 logmsg info 'system configuration update done'
 
 if destroy_in_dir --force-insecure --preserve-etc-puavo /imageoverlays/ \
@@ -357,12 +357,10 @@ else
 fi
 logstep
 
-logmsg info 'running fstrim to ensure secure deletion'
-logstep
-if systemctl start fstrim; then
-  logmsg info 'fstrim done'
+if systemctl start fstrim | pv -F '>>> Running fstrim %t' > /dev/null; then
+  logmsg info 'fstrim finished with success'
 else
-  logerr 'errors in running fstrim'
+  logerr 'fstrim returned an error'
   resetstatus=1
 fi
 logstep
