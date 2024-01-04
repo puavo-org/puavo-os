@@ -3,6 +3,7 @@
 set -eu
 set -o pipefail
 
+device_supports_discard=false
 request_confirmation=true
 use_secure_delete=true
 step=0
@@ -48,7 +49,7 @@ destroy_in_dir() {
     return 0
   fi
 
-  if ! $force_insecure && $use_secure_delete; then
+  if ! $device_supports_discard && ! $force_insecure && $use_secure_delete; then
     delete_file_cmd='shred -n 1 -u'
   else
     delete_file_cmd='rm -f'
@@ -224,6 +225,14 @@ if [ -b /dev/mapper/puavo-imageoverlays ]; then
   fi
 fi
 
+if [ "$(lsblk -b -n -o DISC-MAX -r /dev/mapper/puavo-home)" != 0 ]; then
+  logmsg notice 'disk supports discard'
+  device_supports_discard=true
+else
+  logmsg notice 'disk does not support discard, operations might be slow'
+fi
+logstep
+
 ## Best-effort killing of some possibly interfering processes
 systemctl mask colord.service || true
 systemctl stop colord.service || true
@@ -344,6 +353,16 @@ if destroy_in_dir --force-insecure /imageoverlays/ \
   logmsg info 'cleaned up all of /imageoverlays'
 else
   logmsg warning 'error in cleaning up all of /imageoverlays'
+  resetstatus=1
+fi
+logstep
+
+logmsg info 'running fstrim to ensure secure deletion'
+logstep
+if systemctl start fstrim; then
+  logmsg info 'fstrim done'
+else
+  logerr 'errors in running fstrim'
   resetstatus=1
 fi
 logstep
