@@ -1,18 +1,37 @@
 if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' ]; then
   /usr/bin/openbsd-cwm & cwm_pid=$!
 
-  export PUAVO_SESSION_LANGUAGE=$(webkiosk-language-selector)
+  puavo_session_language=$(webkiosk-language-selector)
+
+  case "$puavo_session_language" in
+    'fi')
+      text='Sessiosi on loppumassa. Jos haluat jatkaa koneen käytöä paina OK.'
+      ;;
+    'sv')
+      text='Din session håller på att avslutas. Om du vill fortsätta trycker du på OK.'
+      ;;
+    'en')
+      text='Your session is ending. If you want to continue, press OK.'
+      ;;
+    'de')
+      text='Ihre Sitzung endet. Wenn Sie fortfahren möchten, drücken Sie OK.'
+      ;;
+  esac
 
   kill -9 "$cwm_pid"
 
-  # Logout user automatically if nothing has been done in 10 minutes
-  xautolock -locker "kill -9 -1" -time 10 &
+  zenity_cmd="zenity --info --text=\"<span size=\"xx-large\">$text</span>\" --timeout 60 --width 600 --timeout 60"
+  idle_timeout=$(puavo-conf puavo.webkiosk.idle_timeout)
+
+  # Warn user of ending session and then logout user automatically if nothing
+  # has been done in defined timeout
+  xautolock -locker "kill -9 -1" -time $idle_timeout -notify 60 -notifier "${zenity_cmd}" &
 
   # Automatically start chromium after session is opened
   mkdir -p ~/.config/autostart
   cp /usr/share/applications/chromium.desktop ~/.config/autostart/
 
-  export DESKTOP_SESSION=zzz-puavo-desktop-lang-${PUAVO_SESSION_LANGUAGE}
+  export DESKTOP_SESSION=zzz-puavo-desktop-lang-${puavo_session_language}
   export GDMSESSION=puavo-desktop
   export XDG_SESSION_DESKTOP=puavo-desktop
 fi
