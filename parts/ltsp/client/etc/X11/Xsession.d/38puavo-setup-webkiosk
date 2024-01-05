@@ -1,18 +1,27 @@
 if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' ]; then
   /usr/bin/openbsd-cwm & cwm_pid=$!
 
-  export PUAVO_SESSION_LANGUAGE=$(webkiosk-language-selector)
+  puavo_session_language=$(webkiosk-language-selector)
 
   kill -9 "$cwm_pid"
 
-  # Logout user automatically if nothing has been done in 10 minutes
-  xautolock -locker "kill -9 -1" -time 10 &
+  xscreensaver -nosplash &
+
+  idle_timeout=$(puavo-conf puavo.webkiosk.idle_timeout)
+
+  # Warn user of ending session and then logout user automatically if nothing
+  # has been done in defined timeout
+  xautolock \
+    -time $idle_timeout \
+    -locker "kill -9 -1" \
+    -notify 60 \
+    -notifier "webkiosk-activate-screensaver ${puavo_session_language}"
 
   # Automatically start chromium after session is opened
   mkdir -p ~/.config/autostart
   cp /usr/share/applications/chromium.desktop ~/.config/autostart/
 
-  export DESKTOP_SESSION=zzz-puavo-desktop-lang-${PUAVO_SESSION_LANGUAGE}
+  export DESKTOP_SESSION=zzz-puavo-desktop-lang-${puavo_session_language}
   export GDMSESSION=puavo-desktop
   export XDG_SESSION_DESKTOP=puavo-desktop
 fi
