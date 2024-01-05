@@ -63,6 +63,24 @@ int puavo_conf_open(puavo_conf_t **confp,
                     struct puavo_conf_err *errp);
 
 /**
+ * puavo_conf_open_direct() - open a config backend with direct database access
+ *
+ * @conf - initialized config object
+ *
+ * @errp - pointer to an error struct or NULL
+ *
+ * After a successful call, the caller is responsible for calling
+ * puavo_conf_close().
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
+ * Return 0 on success and -1 on error.
+ */
+int puavo_conf_open_direct(puavo_conf_t **confp,
+                           struct puavo_conf_err *errp);
+
+/**
  * puavo_conf_close() - close a config backend
  *
  * @conf - initialized config object

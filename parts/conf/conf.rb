@@ -28,6 +28,9 @@ module Puavo
         attach_function(:puavo_conf_open,
                         [:pointer, ConfErr.by_ref],
                         :int)
+        attach_function(:puavo_conf_open_direct,
+                        [:pointer, ConfErr.by_ref],
+                        :int)
         attach_function(:puavo_conf_clear,
                         [:pointer, ConfErr.by_ref],
                         :int)
@@ -56,11 +59,13 @@ module Puavo
                         [ConfList.by_ref],
                         :void)
 
-        def initialize
+        def initialize(direct=false)
             puavoconf_p = FFI::MemoryPointer.new(:pointer)
             err = ConfErr.new
 
-            if puavo_conf_open(puavoconf_p, err) == -1
+            open_func = direct ? method(:puavo_conf_open_direct) \
+                               : method(:puavo_conf_open)
+            if open_func.call(puavoconf_p, err) == -1 then
                 raise Puavo::Conf::Error, err[:msg].to_ptr.read_string
             end
 

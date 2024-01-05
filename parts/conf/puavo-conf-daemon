@@ -128,16 +128,28 @@ end
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 bus = DBus::SystemBus.instance
-
 service = bus.request_service("org.puavo.Conf1")
-puavoconf = Puavo::Conf.new
+
+# wait until we get a direct access to the puavo-conf database
+puavoconf = nil
+loop do
+  begin
+    puavoconf = Puavo::Conf.new(true)
+    break
+  rescue StandardError => e
+    Syslog.log(Syslog::LOG_ERR, 'error in opening the puavo-conf database,' \
+                                  + ' is some other process reserving it?')
+  end
+  sleep 1
+end
+
 service.export(Conf1.new('/org/puavo/Conf1', puavoconf))
 
-loop = DBus::Main.new
-loop << bus
+dbus_loop = DBus::Main.new
+dbus_loop << bus
 
 begin
-  loop.run
+  dbus_loop.run
 ensure
   puavoconf.close
   Syslog.close()

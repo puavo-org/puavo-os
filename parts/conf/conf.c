@@ -87,6 +87,34 @@ out:
         return retval;
 }
 
+int puavo_conf_open_direct(struct puavo_conf **const confp,
+                           struct puavo_conf_err *const errp)
+{
+        int retval;
+        struct puavo_conf *conf;
+
+        retval = -1;
+
+        if (puavo_conf_init(confp, errp))
+                return -1;
+
+        conf = (*confp);
+
+        conf->ops = &PUAVO_CONF_OPS_DB;
+        if (conf->ops->open(conf, errp) == -1)
+                goto out;
+
+        retval = 0;
+
+out:
+        if (retval) {
+                free(*confp);
+                *confp = NULL;
+        }
+
+        return retval;
+}
+
 int puavo_conf_close(struct puavo_conf *const conf,
                      struct puavo_conf_err *const errp)
 {
