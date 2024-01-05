@@ -46,7 +46,7 @@ flash_latest() {
     hp_latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" "$mainboard_sysid.xml")" && \
     wget "$hp_ftp_url/$mainboard_sysid/$hp_latest_bios" -O "$hp_latest_bios" && \
 
-    providedhash="$(xmllint --xpath "string(/BIOS/Rel[starts-with(@Bin,\"$hp_latest_bios\")]/@Sha385)" "$mainboard_sysid.xml")"
+    providedhash="$(xmllint --xpath "string(/BIOS/Rel[starts-with(@Bin,\"$hp_latest_bios\")]/@Sha384)" "$mainboard_sysid.xml")"
     calculatedhash=$(sha384sum "$hp_latest_bios" | awk '{print $1}')
 
     if [ -n "$providedhash" ]; then

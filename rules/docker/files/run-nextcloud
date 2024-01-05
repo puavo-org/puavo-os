@@ -114,4 +114,7 @@ su -p www-data -s /bin/sh -c \
 
 cleanup
 
+# run cron
+/cron.sh &
+
 exec "$@"

@@ -1,26 +1,32 @@
 #!/usr/bin/wish
 
 wm attributes . -fullscreen 1
-wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
+wm protocol . WM_DELETE_WINDOW { };     # do not allow window close
 
-set bg_color "#93b176"
+set bg_color "#efeff0"
 
-. configure -bg $bg_color
-
-frame .buttons -bg $bg_color
+frame .frame
 
 font create buttonFont -family {Ubuntu Condensed} -size 20 -weight bold
 
-set button_opts [list -background $bg_color          \
-		      -borderwidth 0                 \
-	              -highlightbackground $bg_color \
-		      -font buttonFont               \
-		      -padx 80                       \
-		      -pady 20]
+set imageDir /usr/share/puavo-webkiosk-language-selector
 
-button .buttons.en -text Start  {*}$button_opts -command { puts "en"; exit 0 }
-button .buttons.fi -text Aloita {*}$button_opts -command { puts "fi"; exit 0 }
-button .buttons.sv -text Börja  {*}$button_opts -command { puts "sv"; exit 0 }
+image create photo .flag_fi -height 150 -width 250 -file $imageDir/fi.png
+image create photo .flag_sv -height 150 -width 250 -file $imageDir/sv.png
+image create photo .flag_en -height 150 -width 250 -file $imageDir/en.png
+image create photo .flag_de -height 150 -width 250 -file $imageDir/de.png
 
-pack .buttons -fill y -expand 1
-pack .buttons.en .buttons.fi .buttons.sv -side left
+set button_opts [list          \
+              -borderwidth 0   \
+              -font buttonFont \
+              -cursor hand2    \
+              -padx 35         \
+              -pady 35]
+
+button .frame.fi -image .flag_fi -compound top -text Aloita {*}$button_opts -command { puts "fi"; exit 0 }
+button .frame.sv -image .flag_sv -compound top -text Börja  {*}$button_opts -command { puts "sv"; exit 0 }
+button .frame.en -image .flag_en -compound top -text Start  {*}$button_opts -command { puts "en"; exit 0 }
+button .frame.de -image .flag_de -compound top -text Start  {*}$button_opts -command { puts "de"; exit 0 }
+
+pack .frame -expand 1
+pack .frame.fi .frame.sv .frame.en .frame.de -side left -padx 20 -pady 20

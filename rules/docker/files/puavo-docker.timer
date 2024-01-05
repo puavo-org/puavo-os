@@ -2,7 +2,7 @@
 Description=Manage Docker containers
 
 [Timer]
-OnStartupSec=1m
+OnStartupSec=5m
 OnCalendar=02:47
 
 [Install]

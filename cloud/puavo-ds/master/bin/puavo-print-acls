@@ -550,11 +550,12 @@ rule {
 rule {
   [dn exact $Groups]
     [attrs children entry objectClass ou]
-      by $org_owners           read
-      by [puavo_dn statistics] read
-      by [dn children $People] read
-      by [dn children $Hosts]  read
-      by [systemgroup getent]  read
+      by $org_owners             read
+      by [puavo_dn statistics]   read
+      by [dn children $People]   read
+      by [dn children $Hosts]    read
+      by [systemgroup getent]    read
+      by [systemgroup nextcloud] read
 }
 
 # deny $admins write access to some school attributes
@@ -585,6 +586,14 @@ rule {
       by [dn children $People]  none
       by [dn children $Devices] none
       by *                      none break
+}
+
+rule {
+  # allow nextcloud user to read some group information
+  [dn subtree $Groups]
+    [attrs cn displayName entry member memberUid objectClass]
+      by [systemgroup nextcloud] read
+      by *                       none break
 }
 
 rule {
@@ -624,6 +633,7 @@ rule {
   [dn exact $People]
     [attrs children entry objectClass ou]
       by [puavo_dn email-mgmt]     read
+      by [puavo_dn mfa-mgmt]       read
       by [puavo_dn puavo]          read
       by [puavo_dn pw-mgmt]        read
       by [puavo_dn statistics]     read
@@ -747,10 +757,12 @@ rule {
 }
 
 # rules needed by email-mgmt (email management user)
+# and mfa-mgmt (multi-factor authentication management user)
 rule {
   [dn subtree $People]
     [attrs entry objectClass puavoId uid]
       by [puavo_dn email-mgmt] read
+      by [puavo_dn mfa-mgmt]   read
       by *                     none break
 }
 
@@ -759,6 +771,13 @@ rule {
     [attrs mail puavoPrimaryEmail puavoVerifiedEmail]
       by [puavo_dn email-mgmt] write
       by *                     none break
+}
+
+rule {
+  [dn subtree $People]
+    [attrs puavoMFAEnabled]
+      by [puavo_dn mfa-mgmt] write
+      by *                   none break
 }
 
 # rules needed by puavo and pw-mgmt (password management user)

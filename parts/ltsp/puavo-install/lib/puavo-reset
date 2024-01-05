@@ -74,10 +74,10 @@ esac
 
 case "$operation" in
   fast-reset)
-    prltfd_args='--force'
+    prltfd_args='--force --insecure'
     ;;
   reset)
-    prltfd_args='--force --secure-delete'
+    prltfd_args='--force'
     ;;
   *)
     echo "Unknown operation: '${operation}'" >&2

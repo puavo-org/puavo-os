@@ -293,9 +293,9 @@ patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php <<'
 +		$kerberos_realm = getenv('PUAVO_KERBEROS_REALM');
 +		$ccache_dir = getenv('PUAVO_KERBEROS_CCACHE_DIR');
 +		if (!is_null($user_uid) && $kerberos_realm !== false && $ccache_dir !== false) {
-+			$ticketPath = "${ccache_dir}/${user_uid}@${kerberos_realm}";
++			$ticketPath = "{$ccache_dir}/{$user_uid}@{$kerberos_realm}";
 +			if (file_exists($ticketPath)) {
-+				$this->ticketName = "FILE:${ticketPath}";
++				$this->ticketName = "FILE:{$ticketPath}";
 +				return;
 +			}
 +		}
@@ -320,7 +320,7 @@ patch_nc lib/private/Authentication/LoginCredentials/Store.php <<'EOF'
 +		if ($kerberos_realm !== false && $ccache_dir !== false
 +		    && isset($params['uid']) && isset($params['password'])) {
 +			$uid = $params['uid'];
-+			$ticketPath = "${ccache_dir}/${uid}@${kerberos_realm}";
++			$ticketPath = "{$ccache_dir}/{$uid}@{$kerberos_realm}";
 +			@unlink($ticketPath);
 +		}
  	}

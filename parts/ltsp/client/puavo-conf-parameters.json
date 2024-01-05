@@ -415,6 +415,11 @@
     "description": "Enable/disable swap to local devices",
     "typehint": "bool"
   },
+  "puavo.windows.image.sources": {
+    "default": "",
+    "description": "A whitespace-separated list of urls to fetch Windows-image catalogues",
+    "typehint": "string"
+  },
   "puavo.wired.nm.shared.enabled": {
     "default": "false",
     "description": "Enable/disable network sharing on ethernet port",

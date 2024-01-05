@@ -120,6 +120,8 @@ class PuavoEtc
   puavo_attr :ds_kadmin_password, "ds/kadmin/password", :mode => 0640
   puavo_attr :ds_kdc_dn, "ds/kdc/dn"
   puavo_attr :ds_kdc_password, "ds/kdc/password", :mode => 0640
+  puavo_attr :ds_mfa_mgmt_dn, "ds/mfa-mgmt/dn"
+  puavo_attr :ds_mfa_mgmt_password, "ds/mfa-mgmt/password", :mode => 0640
   puavo_attr :ds_monitor_dn, "ds/monitor/dn"
   puavo_attr :ds_monitor_password, "ds/monitor/password", :mode => 0640
   puavo_attr :ds_puavo_dn, "ds/puavo/dn"

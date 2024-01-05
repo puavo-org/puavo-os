@@ -94,6 +94,13 @@ uid: cert-mgmt
 description: Account for public certificate management
 userPassword: <%= @cert_mgmt_pw_hash %>
 
+dn: <%= @mfa_mgmt_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: mfa-mgmt
+description: Account for managing multi-factor authentication
+userPassword: <%= @mfa_mgmt_pw_hash %>
+
 dn: ou=Services,o=puavo
 ou: Services
 objectClass: top

@@ -428,6 +428,16 @@ rescue StandardError => e
   exit(1)
 end
 
+# Close puavoconf database before running operations that take a longer time.
+containers_expected_to_run = {}
+startup_container_list.each do |container_name|
+  puavoconf_var = "puavo.docker.#{ container_name }.enabled"
+  containers_expected_to_run[container_name] \
+    = (puavoconf.get(puavoconf_var) == 'true')
+end
+
+puavoconf.close()
+
 if backup_before_docker_ops then
   if !system('/usr/local/sbin/puavo-backup-docker') then
     warn('could not backup docker state before installing/updating')
@@ -436,8 +446,7 @@ if backup_before_docker_ops then
 end
 
 startup_container_list.each do |container_name|
-  puavoconf_var = "puavo.docker.#{ container_name }.enabled"
-  if puavoconf.get(puavoconf_var) == 'true' then
+  if containers_expected_to_run[container_name] then
     puts("> starting up container #{ container_name }")
     unless system('docker-compose', '--file', DOCKER_COMPOSE_PATH,
                     '--project-name', 'puavo', 'up', '-d',
@@ -466,7 +475,5 @@ startup_container_list.each do |container_name|
 end
 
 status = 1 unless cleanup_docker_images()
-
-puavoconf.close()
 
 exit(status)
