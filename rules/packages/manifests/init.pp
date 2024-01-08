@@ -829,9 +829,9 @@ class packages {
 		    # , $r8168_module                   # XXX bookworm
 
   packages::kernels::kernel_package {
-    '6.1.0-13-amd64':
+    '6.1.0-17-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.1.0-13-amd64';
+      package_name => 'linux-image-6.1.0-17-amd64';
 
     '6.5.0-0.puavo1-amd64':
       # The current nvidia packages (470.199.02-1~deb12u1 and
