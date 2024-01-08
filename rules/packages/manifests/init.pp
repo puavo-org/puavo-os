@@ -263,6 +263,7 @@ class packages {
     , 'dpkg-dev'
     , 'dput'
     , 'fakeroot'
+    , 'faketime'
     , 'gcc'
     , 'gdb'
     , 'gettext'
