@@ -138,6 +138,7 @@ class packages {
     , 'nvme-cli'
     , 'powertop'
     , 'procps'
+    , 'psensor'
     , 'pssh'
     , 'pv'
     , 'pwgen'
