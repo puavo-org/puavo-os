@@ -1,11 +1,11 @@
 require 'ldap'
-require 'socket'
 
 class PuavoLdap
   attr_reader :base, :dn, :password
 
   Puavodomain        = File.read('/etc/puavo/domain').chomp
-  Default_ldapserver = "#{ Socket.gethostname }.#{ Puavodomain }"
+  Puavohostname      = File.read('/etc/puavo/hostname').chomp
+  Default_ldapserver = "#{ Puavohostname }.#{ Puavodomain }"
 
   def initialize(ldapserver='localhost')
     @base     = File.read('/etc/puavo/ldap/base'    ).chomp
@@ -22,7 +22,7 @@ class PuavoLdap
       @conn.start_tls
       @conn.bind(@dn, @password)
 
-      @my_fqdn = "#{ Socket.gethostname }.#{ Puavodomain }"
+      @my_fqdn = "#{ Puavohostname }.#{ Puavodomain }"
     else
       @conn = nil
     end
