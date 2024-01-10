@@ -33,6 +33,10 @@ class PuavoLdap
     @ldap = Net::LDAP.new(connection_args)
   end
 
+  def escape_for_filter(string)
+    Net::LDAP::Filter.escape(string)
+  end
+
   def search(filter, &block)
     search_with_base(@base, filter, &block)
   end

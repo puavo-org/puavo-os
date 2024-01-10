@@ -339,13 +339,15 @@ class PuavoShareLDAP
   end
 
   def find_groups_by_school(school)
-    schoolfilter = "(&(objectClass=puavoSchool)(cn=#{ school.cn }))"
+    cn_escaped = @puavoldap.escape_for_filter(school.cn)
+    schoolfilter = "(&(objectClass=puavoSchool)(cn=#{ cn_escaped }))"
     schooldn     = ''
     @puavoldap.search_with_baseprefix('ou=Groups', schoolfilter) do |entry|
       schooldn = entry.dn
     end
 
-    find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ schooldn }))")
+    dn_escaped = @puavoldap.escape_for_filter(schooldn)
+    find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ dn_escaped }))")
   end
 
   def find_locale(school)
