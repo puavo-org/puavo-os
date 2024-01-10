@@ -93,7 +93,7 @@ class PuavoShare
 
   def self.delete(path)
     # delete path in a somewhat safe way
-    if not path.match(/^#{ ShareDirBase }/)
+    if not path.match(/^#{ ShareDirBase }/) then
       raise "An internal error, trying to delete '#{ path }'"
     end
     begin
@@ -116,11 +116,11 @@ class PuavoShare
 
     # getfacl() returns empty in case of symbolic links, only change their
     # ownerships (permissions on symbolic links do not matter).
-    if actual_acls.empty?
+    if actual_acls.empty? then
       begin
-        if File.symlink?(path)
+        if File.symlink?(path) then
           lstat = File.lstat(path)
-          if lstat.uid != 0 or lstat.gid != 0
+          if lstat.uid != 0 or lstat.gid != 0 then
             File.lchown(0, 0, path)
           end
         end
@@ -147,7 +147,7 @@ class PuavoShare
     Open3.popen3(*cmd) do |stdin, stdout, stderr|
       acls = stdout.readlines.select { |l| not l =~ /^# file:/ }.join('')
       errormsg = stderr.read
-      if not errormsg.empty?
+      if !errormsg.empty? then
         raise "Could not get ACLs for #{ path }: #{ errormsg }"
       end
     end
@@ -155,7 +155,7 @@ class PuavoShare
   end
 
   def get_wanted_acls(filename)
-    if File.directory?(filename)
+    if File.directory?(filename) then
       @wanted_directory_acls
     else
       @wanted_file_acls
@@ -215,7 +215,7 @@ class PuavoShare
     raise 'This should never be called unless automatic_acls is set' \
       unless @spec.automatic_acls
 
-    if parent_of?(filename)
+    if parent_of?(filename) then
       begin
         uid = File.stat(filename).uid
         Syslog.info('%s', "Reset ACLs for #{ filename } (uid=#{ uid }).")
@@ -248,7 +248,7 @@ class PuavoShare
       stdin.write(wanted_acls)
       stdin.close
       errormsg = stderr.read
-      if not errormsg.empty?
+      if !errormsg.empty? then
         raise "Could not set ACLs for #{ path }: #{ errormsg }"
       end
     end
@@ -280,10 +280,10 @@ class ShareBox
 
   def fix_acls(path)
     @shares.values.each do |share|
-      if share.parent_of?(path)
+      if share.parent_of?(path) then
         # in case of a directory, it might have been moved from another
         # directory, in which case we need to traverse it
-        if File.directory?(path)
+        if File.directory?(path) then
           share.fix_acls_recursively(path)
         else
           share.fix_acls(path)
@@ -351,7 +351,7 @@ class PuavoShareLDAP
   def find_locale(school)
     school_language = (school.preferredLanguage rescue nil)
 
-    if school_language
+    if school_language then
       return school_language
     else
       @puavoldap.search('(objectClass=puavoEduOrg)') do |entry|
@@ -479,9 +479,9 @@ class Control
 
             # :recursive does not work reliably due to some race condition,
             # so we must help it a bit for freshly created directories
-            if File.directory?(path)
+            if File.directory?(path) then
               notifier.watch(path, *events)
-            elsif File.dirname(path).end_with?('/returnbox') && event.flags.include?(:create)
+            elsif File.dirname(path).end_with?('/returnbox') && event.flags.include?(:create) then
               targetpathbase="#{File.dirname(File.dirname(path))}/returns/#{Etc.getpwuid(
                 File.stat(path).uid).name}-#{File.basename(path)}"
               targetpath=targetpathbase
@@ -495,7 +495,7 @@ class Control
           end
         end
 
-        while IO.select([ notifier.to_io ], [], [], seconds_left)
+        while IO.select([ notifier.to_io ], [], [], seconds_left) do
           notifier.process
           seconds_left = [ max_time - Time.new.to_i, 0 ].max
           break if seconds_left == 0
@@ -543,7 +543,7 @@ loop do
     exception_msg = "Unknown error: #{ e.message }"
   end
 
-  if exception_msg
+  if exception_msg then
     Syslog.err('%s', exception_msg)
     sleep 60    # wait a while in case errors just repeat and repeat...
   end
