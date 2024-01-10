@@ -1555,11 +1555,29 @@ class PuavoErsExamScheduler (threading.Thread):
     return False
 
 
+  def has_student_finished(self, student):
+    server_versions_where_finished_means_finished = [
+      'SERVER2202E', 'SERVER2216L', 'SERVER2226A', 'SERVER22436',
+      'SERVER2244T', 'SERVER2245K', 'SERVER2302X', 'SERVER2307S',
+      'SERVER2318U', 'SERVER2332I'
+    ]
+
+    if self.server_version in server_versions_where_finished_means_finished:
+      if ('examFinished' in student) and (student['examFinished'] != None):
+        return True
+
+    if ('studentStatus' in student) \
+      and (student['studentStatus'] == 'logged_out'):
+        return True
+
+    return False
+
+
   def there_are_still_active_students(self, status):
     now = datetime.datetime.now()
 
     for student in status['students']:
-      if ('examFinished' in student) and (student['examFinished'] != None):
+      if self.has_student_finished(student):
         # this student has finished the exam, does not count
         continue
 
