@@ -379,7 +379,7 @@ Description: Puavo shared directory client
 
 Package: puavo-sharedir-manager
 Architecture: all
-Depends: ${misc:Depends}, ruby, acl, ruby-rb-inotify
+Depends: ${misc:Depends}, acl, ruby, ruby-net-ldap, ruby-rb-inotify
 Description: Puavo shared directory manager
  Puavo shared directory manager
  .

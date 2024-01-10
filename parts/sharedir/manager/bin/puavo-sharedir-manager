@@ -333,7 +333,7 @@ class PuavoShareLDAP
   def find_groups(filter)
     groups = []
     @puavoldap.search_with_baseprefix('ou=Groups', filter) do |entry|
-      groups << PuavoGroup.new(entry.to_hash)
+      groups << PuavoGroup.new(entry)
     end
     groups
   end
@@ -371,10 +371,6 @@ class PuavoShareLDAP
     # XXX we need something smarter here than regexp
     groups.select { |group| group.cn =~ /(-ope|opettajat)/ }
   end
-
-  def unbind
-    @puavoldap.unbind
-  end
 end
 
 class Control
@@ -397,8 +393,6 @@ class Control
     @schools.each do |school|
       add_directory(shareldap, school)
     end
-
-    shareldap.unbind
   end
 
   def add_directory(shareldap, school)
@@ -543,12 +537,10 @@ loop do
     control.fix_acls_recursively
     Process.waitpid(notifier_pid)
 
-  rescue LDAP::ResultError => e
-    exception_msg = \
-      "Error in accessing LDAP: #{ e.message }: #{ e.backtrace.inspect }."
+  rescue Net::LDAP::LdapError => e
+    exception_msg = "Error in accessing LDAP: #{ e.message }"
   rescue StandardError => e
-    exception_msg = \
-      "Unknown error: #{ e.message }: #{ e.backtrace.inspect }."
+    exception_msg = "Unknown error: #{ e.message }"
   end
 
   if exception_msg

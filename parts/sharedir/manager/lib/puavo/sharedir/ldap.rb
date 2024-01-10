@@ -1,31 +1,36 @@
-require 'ldap'
+require 'net/ldap'
 
 class PuavoLdap
   attr_reader :base, :dn, :password
 
-  Puavodomain        = File.read('/etc/puavo/domain').chomp
-  Puavohostname      = File.read('/etc/puavo/hostname').chomp
-  Default_ldapserver = "#{ Puavohostname }.#{ Puavodomain }"
+  Puavodomain   = File.read('/etc/puavo/domain').chomp
+  Puavohostname = File.read('/etc/puavo/hostname').chomp
+  My_FQDN       = "#{ Puavohostname }.#{ Puavodomain }"
 
-  def initialize(ldapserver='localhost')
-    @base     = File.read('/etc/puavo/ldap/base'    ).chomp
-    @dn       = File.read('/etc/puavo/ldap/dn'      ).chomp
-    @password = File.read('/etc/puavo/ldap/password').chomp
+  def initialize
+    @base = File.read('/etc/puavo/ldap/base'    ).chomp
 
-    if ldapserver == 'localhost' then
-      ldapserver = Default_ldapserver
-    end
+    dn       = File.read('/etc/puavo/ldap/dn'      ).chomp
+    password = File.read('/etc/puavo/ldap/password').chomp
 
-    if ldapserver
-      @conn = LDAP::Conn.new(ldapserver)
-      @conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
-      @conn.start_tls
-      @conn.bind(@dn, @password)
+    connection_args = {
+      :auth => {
+        :method   => :simple,
+        :username => dn,
+        :password => password,
+      },
+      :host => My_FQDN,
+      :port => 389,
+      :encryption => {
+        :method => :start_tls,
+        :tls_options => {
+          :ca_file     => '/etc/puavo-conf/rootca.pem',
+          :verify_mode => OpenSSL::SSL::VERIFY_PEER,
+        },
+      }
+    }
 
-      @my_fqdn = "#{ Puavohostname }.#{ Puavodomain }"
-    else
-      @conn = nil
-    end
+    @ldap = Net::LDAP.new(connection_args)
   end
 
   def search(filter, &block)
@@ -33,16 +38,10 @@ class PuavoLdap
   end
 
   def search_with_base(base, filter, &block)
-    return [] unless @conn
-    @conn.search(base, LDAP::LDAP_SCOPE_SUBTREE, filter, &block)
+    @ldap.search(:base => base, :filter => filter, &block)
   end
 
   def search_with_baseprefix(baseprefix, filter, &block)
     search_with_base("#{ baseprefix },#{ @base }", filter, &block)
-  end
-
-  def unbind
-    @conn.unbind if @conn
-    @conn = nil
   end
 end
