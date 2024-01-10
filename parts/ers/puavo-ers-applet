@@ -311,7 +311,6 @@ class PuavoErsApplet:
   PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
   CONFIG_PATH = os.path.join(PUAVO_ERS_DIR, 'config.json')
   NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
-  SERVER_VERSION_PATH  = os.path.join(COMM_DIR, '.server_version')
 
   def __init__(self):
     self.indicator \
@@ -942,11 +941,13 @@ class PuavoErsExamControl (threading.Thread):
       raise Exception('could not send status update to server')
 
 
-  def update_status(self, new_abitti_status, monitoring_passphrase):
+  def update_status(self, new_abitti_status, monitoring_passphrase,
+                    server_version):
     self.send_status_update_lock.acquire()
 
     new_status = {
       'monitoring_passphrase': monitoring_passphrase,
+      'server_version':        server_version,
       'status':                new_abitti_status,
     }
 
@@ -1283,6 +1284,7 @@ class PuavoErsExamScheduler (threading.Thread):
   EXAMS_PATH           = os.path.join(COMM_DIR, 'exams')
   OUTPUT_PATH          = os.path.join(COMM_DIR, 'output')
   STATS_PATH           = os.path.join(COMM_DIR, 'stats')
+  SERVER_VERSION_PATH  = os.path.join(COMM_DIR, '.server_version')
 
 
   def __init__(self, exam_control):
@@ -1296,6 +1298,7 @@ class PuavoErsExamScheduler (threading.Thread):
     self.finish_time               = self.end_of_today()
     self.has_started               = False
     self.monitoring_passphrase     = None
+    self.server_version            = None
 
     self.keycode_change_request_lock = threading.Lock()
 
@@ -1463,9 +1466,12 @@ class PuavoErsExamScheduler (threading.Thread):
           output = self.ping()
           if output['error'] == False:
             comm_ok = True
+            self.server_version = self.get_server_version()
             if old_comm_state != comm_ok:
               syslog.syslog(syslog.LOG_NOTICE,
                             'communication link to exam server is ok')
+              syslog.syslog(syslog.LOG_NOTICE,
+                            'exam server version is %s' % self.server_version)
           else:
             comm_ok = False
             if old_comm_state != comm_ok:
@@ -1658,7 +1664,9 @@ class PuavoErsExamScheduler (threading.Thread):
     self.log_status(status)
 
     self.update_monitoring_passphrase()
-    self.exam_control.update_status(status, self.monitoring_passphrase)
+    self.exam_control.update_status(status,
+                                    self.monitoring_passphrase,
+                                    self.server_version)
 
     if not self.exam_scheduler_enabled:
       raise ExamSchedulerNotActive
@@ -1725,6 +1733,15 @@ class PuavoErsExamScheduler (threading.Thread):
       return self.try_server_cmd(cmd, timeout_seconds)
     except Exception as e:
       raise Exception('error with "%s": %s' % (cmd, e))
+
+
+  def get_server_version(self):
+    try:
+      with open(self.SERVER_VERSION_PATH) as f:
+        return f.read().rstrip()
+    except Exception as e:
+      syslog.syslog(syslog.LOG_WARNING, 'could not read server version')
+      return None
 
 
   def try_server_cmd(self, cmd, timeout_seconds):
