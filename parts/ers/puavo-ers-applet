@@ -342,7 +342,6 @@ class PuavoErsApplet:
     self.exam_sync = PuavoErsExamSync(self.exam_server, self.exam_sorter,
                                       self.exam_sync_active)
     self.exam_control = PuavoErsExamControl(self.exam_server)
-    self.exam_server_helper = PuavoErsServerHelper()
     self.exam_scheduler = PuavoErsExamScheduler(self.exam_control)
 
     self.exam_server.add_other_threads(self.exam_scheduler, self.exam_sync)
@@ -351,7 +350,6 @@ class PuavoErsApplet:
     self.exam_sync.start()
     self.exam_sorter.start()
     self.exam_control.start()
-    self.exam_server_helper.start()
     self.exam_scheduler.start()
 
 
@@ -1273,41 +1271,6 @@ class PuavoErsExamSorter (threading.Thread):
       for decrypt_code in decrypt_codes_list:
         f.write("%s\n" % decrypt_code)
     os.rename(tmpfile, DECRYPT_CODES_PATH)
-
-
-class PuavoErsServerHelper (threading.Thread):
-  MGMT_INSTALL_SOURCE_PATH = '/opt/abitti-ktpapi/ktpapu-asennin'
-  MGMT_INSTALL_TARGET_PATH = os.path.join(KTP_JAKO_DIR, 'ktpapu-asennin')
-
-  def run(self):
-    while True:
-      try:
-        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsServerHelper run() loop')
-
-        update = False
-        try:
-          if os.path.exists(self.MGMT_INSTALL_SOURCE_PATH):
-            if not filecmp.cmp(self.MGMT_INSTALL_SOURCE_PATH,
-                               self.MGMT_INSTALL_TARGET_PATH):
-              update = True
-        except OSError as e:
-          if e.errno != errno.ENOENT:
-            raise e
-          update = True
-
-        if update:
-          syslog.syslog(syslog.LOG_NOTICE,
-                        'copying/updating %s to %s' \
-                          % (self.MGMT_INSTALL_SOURCE_PATH,
-                             self.MGMT_INSTALL_TARGET_PATH))
-          shutil.copy2(self.MGMT_INSTALL_SOURCE_PATH,
-                       self.MGMT_INSTALL_TARGET_PATH)
-
-      except Exception as e:
-        syslog.syslog(syslog.LOG_ERR,
-                      'error when managing exams dir: %s' % e)
-
-      time.sleep(60)
 
 
 class PuavoErsExamScheduler (threading.Thread):
