@@ -401,18 +401,18 @@ class Control
                                  :writeonlygroups => [])
 
 
-    ss                = ss_tmpl.clone
+    ss = ss_tmpl.clone
     ss.automatic_acls = false
-    ss.sharepath      = "#{ school_sharedir }/programs"
+    ss.sharepath = "#{ school_sharedir }/programs"
     @box.add_dir(ss)
 
-    ss            = ss_tmpl.clone
+    ss = ss_tmpl.clone
     ss.readgroups = [ school.cn ]
-    ss.sharepath  = "#{ school_sharedir }/material"
+    ss.sharepath = "#{ school_sharedir }/material"
     @box.add_dir(ss)
 
-    ss             = ss_tmpl.clone
-    ss.sharepath   = "#{ school_sharedir }/all"
+    ss = ss_tmpl.clone
+    ss.sharepath = "#{ school_sharedir }/all"
     ss.writegroups = [ school.cn ]
     @box.add_dir(ss)
 
@@ -420,22 +420,22 @@ class Control
 
     writeonlygroups = school_groups.map { |group| group.cn }
 
-    ss             = ss_tmpl.clone
-    ss.sharepath   = "#{ school_sharedir }/returnbox"
+    ss = ss_tmpl.clone
+    ss.sharepath = "#{ school_sharedir }/returnbox"
     ss.writeonlygroups = writeonlygroups
     @box.add_dir(ss)
 
-    ss             = ss_tmpl.clone
-    ss.sharepath   = "#{ school_sharedir }/returns"
+    ss = ss_tmpl.clone
+    ss.sharepath = "#{ school_sharedir }/returns"
     @box.add_dir(ss)
 
     school_groups.each do |group|
       group_sharedir \
         = "#{ ShareDirBaseFileStore }/#{ school.puavoId }/#{ group.puavoId }"
 
-      ss             = ss_tmpl.clone
-      ss.group       = group
-      ss.sharepath   = group_sharedir
+      ss = ss_tmpl.clone
+      ss.group = group
+      ss.sharepath = group_sharedir
       ss.writegroups = [ group.cn ]
 
       @box.add_dir(ss)
