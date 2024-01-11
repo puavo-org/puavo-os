@@ -350,20 +350,6 @@ class PuavoShareLDAP
     find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ dn_escaped }))")
   end
 
-  def find_locale(school)
-    school_language = (school.preferredLanguage rescue nil)
-
-    if school_language then
-      return school_language
-    else
-      @puavoldap.search('(objectClass=puavoEduOrg)') do |entry|
-        return Array(entry['preferredLanguage']).first
-      end
-    end
-
-    raise "No language can be found for '#{ Array(school['cn']).first }'"
-  end
-
   def find_schools_served_by_this_server()
     @puavoldap.filter_by_schools_served_by_this_server() \
               .map { |e| PuavoGroup.new(e) }
