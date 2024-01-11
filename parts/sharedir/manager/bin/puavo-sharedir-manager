@@ -339,14 +339,14 @@ class PuavoShareLDAP
   end
 
   def find_groups_by_school(school)
-    cn_escaped = @puavoldap.escape_for_filter(school.cn)
+    cn_escaped = @puavoldap.escape(school.cn)
     schoolfilter = "(&(objectClass=puavoSchool)(cn=#{ cn_escaped }))"
     schooldn     = ''
     @puavoldap.search_with_baseprefix('ou=Groups', schoolfilter) do |entry|
       schooldn = entry.dn
     end
 
-    dn_escaped = @puavoldap.escape_for_filter(schooldn)
+    dn_escaped = @puavoldap.escape(schooldn)
     find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ dn_escaped }))")
   end
 
@@ -364,8 +364,9 @@ class PuavoShareLDAP
     raise "No language can be found for '#{ Array(school['cn']).first }'"
   end
 
-  def find_school_groups()
-    find_groups('(objectClass=puavoSchool)')
+  def find_schools_served_by_this_server()
+    @puavoldap.filter_by_schools_served_by_this_server() \
+              .map { |e| PuavoGroup.new(e) }
   end
 
   def find_teacher_groups()
@@ -380,7 +381,7 @@ class Control
     shareldap = PuavoShareLDAP.new
 
     admins   = shareldap.find_teacher_groups()
-    @schools = shareldap.find_school_groups()
+    @schools = shareldap.find_schools_served_by_this_server()
 
     @box = ShareBox.new(admins)
 

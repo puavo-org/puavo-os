@@ -33,8 +33,23 @@ class PuavoLdap
     @ldap = Net::LDAP.new(connection_args)
   end
 
-  def escape_for_filter(string)
+  def escape(string)
     Net::LDAP::Filter.escape(string)
+  end
+
+  def filter_by_schools_served_by_this_server
+    this_server_schools = []
+    search("(puavoHostname=#{ escape(Puavohostname) })") do |entry|
+      this_server_schools += Array(entry['puavoSchool'])
+    end
+
+    school_entries = []
+    search('(objectClass=puavoSchool)') do |entry|
+      next unless this_server_schools.include?(entry.dn)
+      school_entries << entry
+    end
+
+    school_entries
   end
 
   def search(filter, &block)
