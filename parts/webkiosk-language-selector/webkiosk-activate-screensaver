@@ -33,14 +33,6 @@ imageDirectory:	/usr/share/puavo-webkiosk-language-selector/screensaver/$1
 mode:			one
 selected:		0
 
-textMode:		url
-textLiteral:	XScreenSaver
-textFile:
-textProgram:	fortune
-textURL:		https://planet.debian.org/rss20.xml
-dialogTheme:	default
-settingsGeom:	863,741 2042,741
-
 programs:                                                                     \
 - GL:                           glslideshow --root --delay 29008              \
 								  --duration 262 --zoom 90 --pan 25           \
