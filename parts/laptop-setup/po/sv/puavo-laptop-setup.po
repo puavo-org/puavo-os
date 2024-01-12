@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-laptop-setup:259
+#: puavo-laptop-setup:261
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
@@ -17,7 +17,7 @@ msgstr ""
 "Windows har nu tilläggats till startmenun. Menun syns alltid när man startar "
 "om datorn."
 
-#: puavo-laptop-setup:263
+#: puavo-laptop-setup:265
 msgid ""
 "Abitti-compatible eExam-system is not updated when running Windows, you have "
 "to boot into the current system to update it."
@@ -26,62 +26,49 @@ msgstr ""
 "till Windows. För att byta / uppdatera din laptops Abitti-system måste man "
 "välja normal start och välja det här Opinsys Os som används nu. "
 
-#: puavo-laptop-setup:405
+#: puavo-laptop-setup:403
 msgid "error saving changes"
 msgstr "fel i sparning av ändringarna "
 
-#: puavo-laptop-setup:428
-msgid "DANGER! DANGER!"
-msgstr "FARA! FARA!"
-
-#: puavo-laptop-setup:430
-msgid ""
-"THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!  IT WILL DESTROY "
-"ALL YOUR DATA IN YOUR HOME DIRECTORY, AND MORE!  WHEN IN DOUBT, TURN OFF THE "
-"MACHINE, PANIC AND RUN AWAY!  (press OK and provide your password if you "
-"still want to do this.)"
-msgstr ""
-" DENNA PROCEDUR KOMMER ATT ÅTERSTÄLLA DENNA DATOR TILL "
-"FABRIKSINSTÄLLNINGARNA.  DET KOMMER FÖRSTÖRA ALL DATA I HEMKATALOG OCH MERA! "
-"OM DU TVIVLAR - STÄNG DATOR, GÅ I PANIK OCH SPRING BORT! (Tryck OK och ge "
-"ditt lösenord om du ändå vill göra det här.)"
-
-#: puavo-laptop-setup:453
+#: puavo-laptop-setup:438
 msgid "Factory reset is running step"
 msgstr "Fabriksåterställning kör steg"
 
-#: puavo-laptop-setup:466
+#: puavo-laptop-setup:451
 msgid "Factory reset is running"
 msgstr "Fabriksåterställning pågår"
 
-#: puavo-laptop-setup:474
+#: puavo-laptop-setup:459
 msgid "Failed to start factory reset"
 msgstr "Fabriksåterställningen kunde inte börjas"
 
-#: puavo-laptop-setup:477 puavo-laptop-setup:505
+#: puavo-laptop-setup:462 puavo-laptop-setup:490
 msgid "Factory reset failed"
 msgstr "Fabriksåterställningen mislyckades"
 
-#: puavo-laptop-setup:495
+#: puavo-laptop-setup:480
 msgid ""
 "Factory reset succeeded. The system is going to reboot in few seconds..."
-msgstr "Fabriksåterställningen lyckades. Systemet startar om i några sekunder..."
+msgstr ""
+"Fabriksåterställningen lyckades. Systemet startar om i några sekunder..."
 
-#: puavo-laptop-setup:507
+#: puavo-laptop-setup:492
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
-msgstr "Ytterligare detaljer kan hittas från fabriksåterställningsloggen. Kontakta supporten för hjälp."
+msgstr ""
+"Ytterligare detaljer kan hittas från fabriksåterställningsloggen. Kontakta "
+"supporten för hjälp."
 
-#: puavo-laptop-setup:572 puavo-laptop-setup:602
+#: puavo-laptop-setup:576 puavo-laptop-setup:622
 msgid "Laptop setup"
 msgstr "Laptop inställningar"
 
-#: puavo-laptop-setup:592
+#: puavo-laptop-setup:612
 msgid "You do not have the required permissions to use this tool."
 msgstr "Du har inte tillräckliga rättigheter att använda verktyget."
 
-#: puavo-laptop-setup:602
+#: puavo-laptop-setup:622
 msgid "is already running"
 msgstr "är redan igång"
 
@@ -117,7 +104,7 @@ msgstr "Puavo OS (Linux)"
 msgid "eExam-system"
 msgstr "eProv-system Abitti"
 
-#: puavo-laptop-setup.glade:176
+#: puavo-laptop-setup.glade:176 puavo-laptop-setup.glade:340
 msgid "Windows"
 msgstr "Windows"
 
@@ -127,23 +114,68 @@ msgid "Start using Windows"
 msgstr "Aktivera Windows"
 
 #: puavo-laptop-setup.glade:231
-msgid ""
-"Destroy all user data and reset laptop to factory state (requires password)"
+msgid "Factory reset..."
 msgstr ""
-"Förstör all data och återställ datorn till fabriksinställningarna (kräver "
-"lösenord)"
 
 #: puavo-laptop-setup.glade:257
+msgid "Factory reset confirmation"
+msgstr ""
+
+#: puavo-laptop-setup.glade:275
+msgid "Cancel"
+msgstr ""
+
+#: puavo-laptop-setup.glade:291
+msgid "Reset"
+msgstr ""
+
+#: puavo-laptop-setup.glade:314
+msgid "Select operating systems to reset:"
+msgstr ""
+
+#: puavo-laptop-setup.glade:324
+msgid "Puavo OS"
+msgstr ""
+
+#: puavo-laptop-setup.glade:360
+msgid ""
+"<big>Factory reset will <span foreground=\"red\" size=\"x-large\">erase all "
+"user data</span> from selected operating systems and restore their state to "
+"factory settings!</big>"
+msgstr ""
+
+#: puavo-laptop-setup.glade:374
 msgid "Factory reset"
 msgstr "Fabriksåterställning"
 
-#: puavo-laptop-setup.glade:272
+#: puavo-laptop-setup.glade:389
 msgid "Close"
 msgstr "Stäng"
 
-#: puavo-laptop-setup.glade:317
+#: puavo-laptop-setup.glade:434
 msgid "Factory reset log"
 msgstr "Fabriksåterställningslogg"
+
+#~ msgid "DANGER! DANGER!"
+#~ msgstr "FARA! FARA!"
+
+#~ msgid ""
+#~ "THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!  IT WILL "
+#~ "DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY, AND MORE!  WHEN IN DOUBT, "
+#~ "TURN OFF THE MACHINE, PANIC AND RUN AWAY!  (press OK and provide your "
+#~ "password if you still want to do this.)"
+#~ msgstr ""
+#~ " DENNA PROCEDUR KOMMER ATT ÅTERSTÄLLA DENNA DATOR TILL "
+#~ "FABRIKSINSTÄLLNINGARNA.  DET KOMMER FÖRSTÖRA ALL DATA I HEMKATALOG OCH "
+#~ "MERA! OM DU TVIVLAR - STÄNG DATOR, GÅ I PANIK OCH SPRING BORT! (Tryck OK "
+#~ "och ge ditt lösenord om du ändå vill göra det här.)"
+
+#~ msgid ""
+#~ "Destroy all user data and reset laptop to factory state (requires "
+#~ "password)"
+#~ msgstr ""
+#~ "Förstör all data och återställ datorn till fabriksinställningarna (kräver "
+#~ "lösenord)"
 
 #~ msgid "latest"
 #~ msgstr "senast"
