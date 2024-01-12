@@ -64,15 +64,15 @@ msgstr ""
 "Tarkemmat tiedot virheestä löytyvät tehdasasetusten palautuslokista. Olkaa "
 "hyvä ja ottakaa yhteyttä tukeen ongelman selvittämiseksi."
 
-#: puavo-laptop-setup:576 puavo-laptop-setup:622
+#: puavo-laptop-setup:577 puavo-laptop-setup:623
 msgid "Laptop setup"
 msgstr "Kannettavan asetukset"
 
-#: puavo-laptop-setup:612
+#: puavo-laptop-setup:613
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
 
-#: puavo-laptop-setup:622
+#: puavo-laptop-setup:623
 msgid "is already running"
 msgstr "on jo käynnissä"
 
@@ -119,23 +119,23 @@ msgstr "Ota Windows käyttöön"
 
 #: puavo-laptop-setup.glade:231
 msgid "Factory reset..."
-msgstr ""
+msgstr "Tehdasasetusten palautus..."
 
 #: puavo-laptop-setup.glade:257
-msgid "Factory reset confirmation"
-msgstr ""
+msgid "Confirmation of factory reset"
+msgstr "Vahvistus tehdasasetusten palautukselle"
 
 #: puavo-laptop-setup.glade:275
 msgid "Cancel"
-msgstr ""
+msgstr "Peruuta"
 
 #: puavo-laptop-setup.glade:291
 msgid "Reset"
-msgstr ""
+msgstr "Palauta tehdasasetuksille"
 
 #: puavo-laptop-setup.glade:314
 msgid "Select operating systems to reset:"
-msgstr ""
+msgstr "Valitse tehdasasetuksille palautettavat käyttöjärjestelmät:"
 
 #: puavo-laptop-setup.glade:324
 msgid "Puavo OS"
@@ -143,20 +143,23 @@ msgstr ""
 
 #: puavo-laptop-setup.glade:360
 msgid ""
-"<big>Factory reset will <span foreground=\"red\" size=\"x-large\">erase all "
-"user data</span> from selected operating systems and restore their state to "
+"<big>Factory reset <span foreground=\"red\" size=\"x-large\">erases all user "
+"data</span> from selected operating systems and restores their state to "
 "factory settings!</big>"
 msgstr ""
+"<big>Tehdasasetusten palautus <span foreground=\"red\" size=\"x-"
+"large\">tuhoaa kaiken datan</span> valituista käyttöjärjestelmistä ja "
+"palauttaa ne takaisin tehdasasetuksille!</big>"
 
-#: puavo-laptop-setup.glade:374
+#: puavo-laptop-setup.glade:375
 msgid "Factory reset"
 msgstr "Tehdasasetusten palautus"
 
-#: puavo-laptop-setup.glade:389
+#: puavo-laptop-setup.glade:390
 msgid "Close"
 msgstr "Sulje"
 
-#: puavo-laptop-setup.glade:434
+#: puavo-laptop-setup.glade:435
 msgid "Factory reset log"
 msgstr "Tehdaasetusten palautusloki"
 
