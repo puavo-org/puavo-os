@@ -27,6 +27,20 @@ Languages             = %w(de en fi sv)
 ShareDirBase          = '/home/share'
 ShareDirBaseFileStore = "#{ ShareDirBase }/.share"
 
+def delete_if_an_empty_dir(path)
+  begin
+    Dir.rmdir(path)
+    Syslog.info('Deleted directory %s as it was empty', path)
+  rescue Errno::ENOTEMPTY, Errno::ENOTDIR, Errno::ENOENT
+  rescue StandardError => e
+    Syslog.warning('Error in removing a possible directory %s', path)
+  end
+end
+
+def is_parent_of?(subpath, dir)
+  subpath[0, dir.length] == dir
+end
+
 class PuavoShareSpec
   attr_accessor :automatic_acls,
                 :group,
@@ -208,7 +222,7 @@ class PuavoShare
   end
 
   def parent_of?(path)
-    path.to_s[0, @spec.sharepath.length] == @spec.sharepath
+    is_parent_of?(path.to_s, @spec.sharepath)
   end
 
   def reset_acls(filename, wanted_acls)
@@ -366,6 +380,8 @@ class Control
   def initialize_shares_from_ldap
     shareldap = PuavoShareLDAP.new
 
+    @managed_schooldirs = []
+
     admins   = shareldap.find_teacher_groups()
     @schools = shareldap.find_schools_served_by_this_server()
 
@@ -386,6 +402,7 @@ class Control
 
   def add_directory(shareldap, school)
     school_sharedir = "#{ ShareDirBaseFileStore }/#{ school.puavoId }"
+    @managed_schooldirs << school_sharedir
 
     PuavoShare.mkdir(school_sharedir, 0755)
 
@@ -501,6 +518,41 @@ class Control
     end
   end
 
+  def delete_unmanaged_paths
+    # Delete links that do not point to school directories
+    # that are managed by us.
+    Find.find(ShareDirBase).each do |path|
+      begin
+        linkdest = File.readlink(path)
+      rescue Errno::EINVAL
+        next
+      end
+
+      target = Pathname.new(File.join(path, '..', linkdest)).cleanpath.to_s
+      next if @managed_schooldirs.any? { |dir| is_parent_of?(target, dir) }
+
+      PuavoShare.delete(path)
+      Syslog.info('Deleted link %s as it should not be managed by us', path)
+    end
+
+    # Delete school directories that we should not be managing.
+    Dir.glob(File.join(ShareDirBase, '*', '*')).each do |path|
+      delete_if_an_empty_dir(path)
+    end
+
+    # Delete unmanaged empty dirs under /home/share/.share, run twice
+    # because the first run may empty a directory we can delete later.
+    # Does not remove files!  Link structures to files can be recreated
+    # later in case those are needed.
+    2.times do
+      Find.find(ShareDirBaseFileStore).each do |path|
+        Find.prune if @managed_schooldirs.include?(path)
+        next if path == ShareDirBaseFileStore
+        delete_if_an_empty_dir(path)
+      end
+    end
+  end
+
   def run_notifier_but_breakout_at_nighttime
     # Run run_notifier for (25 - Time.new.hour) hours, so we will break out
     # to searching LDAP and fixing all file permissions once a night,
@@ -523,7 +575,8 @@ loop do
     control.initialize_shares_from_ldap
 
     notifier_pid = fork { control.run_notifier_but_breakout_at_nighttime }
-    control.fix_acls_recursively
+    control.fix_acls_recursively()
+    control.delete_unmanaged_paths()
     Process.waitpid(notifier_pid)
 
   rescue Net::LDAP::LdapError => e
