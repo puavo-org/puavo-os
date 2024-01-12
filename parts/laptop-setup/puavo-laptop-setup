@@ -36,6 +36,8 @@ def strip_abitti_v(value):
         return value.replace('abitti-v', '')
     return value
 
+def we_have_windows():
+    return os.path.exists('/images/boot/.puavo_windows_partition')
 
 class PuavoLaptopSetup:
     def __init__(self, app_window, builder):
@@ -281,17 +283,13 @@ class PuavoLaptopSetup:
                  and type(self.abitti_info['build_numbers']) == dict
 
 
-    def we_have_windows(self):
-        return os.path.exists('/images/boot/.puavo_windows_partition')
-
-
     def remove_entries_without_puavoconf(self):
         remove_gui_elements = {}
 
         if not self.we_have_abitti():
             del self.puavo_conf['puavo.abitti.version']
 
-        if not self.we_have_windows():
+        if not we_have_windows():
             del self.puavo_conf['puavo.grub.windows.enabled']
 
         if not 'puavo.abitti.version' in self.puavo_conf:
@@ -419,24 +417,11 @@ class PuavoLaptopSetup:
 
 
     def confirm_reset_to_factory_settings(self, widget):
-        dialog = Gtk.MessageDialog(
-            parent=self.app_window,
-            modal=True,
-            destroy_with_parent=True,
-            message_type=Gtk.MessageType.WARNING,
-            buttons=Gtk.ButtonsType.OK_CANCEL,
-            text=_tr('DANGER! DANGER!'),
-            secondary_text=_tr(
-              'THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!' \
-              + '  IT WILL DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY,' \
-              + ' AND MORE!  WHEN IN DOUBT, TURN OFF THE MACHINE, PANIC' \
-              + ' AND RUN AWAY!  (press OK and provide your password' \
-              + ' if you still want to do this.)')
-        )
-        response = dialog.run()
+        target_chooser_dialog
+        response = target_chooser_dialog.run()
+        target_chooser_dialog.hide()
         if response == Gtk.ResponseType.OK:
           self.run_reset_to_factory_settings()
-        dialog.destroy()
 
 
     def run_reset_to_factory_settings(self):
@@ -518,9 +503,18 @@ class PuavoLaptopSetup:
             return False
 
         def run_cmd():
+            os_targets = []
+            if target_checkbutton_windows.get_active():
+                os_targets.append('Windows')
+            if target_checkbutton_puavo_os.get_active():
+                os_targets.append('PuavoOS')
+
             cmd = [ 'pkexec',
                     '/usr/sbin/puavo-reset-laptop-to-factory-defaults',
-                    '--force' ]
+                    '--force',
+                    '--os-targets',
+                    ','.join(os_targets),
+                   ]
 
             cmd_process = None
             try:
@@ -548,20 +542,31 @@ class PuavoLaptopSetup:
         factory_reset_dialog.run()
         factory_reset_dialog.hide()
 
-def on_factory_reset_dialog_delete_event(dialog, event):
-    # We don't want to destroy the factory reset dialog because the
-    # user might re-enter or retry it. The dialog is created by
-    # builder only once.
 
+def on_dialog_delete_event(dialog, event):
+    # We don't want to destroy the dialog because the user might
+    # re-enter or retry it. The dialog is created by builder only
+    # once.
+    #
     # The other way would be to actually destroy them, but then
     # recreating would mean we would need to create a new builder each
     # time the dialog is shown. See
     # https://discourse.gnome.org/t/cannot-reopen-dialog-after-closed-with-x-if-using-gtkbuilder-for-construction/7019
     #
-    # I thing hiding is fine. Recreating builder and new dialog each
+    # I think hiding is fine. Recreating builder and new dialog each
     # time seems unncessary waste of resources.
     dialog.hide()
     return True
+
+def on_target_chooser_dialog_show(_):
+    target_checkbutton_windows.set_visible(we_have_windows())
+    target_checkbutton_windows.set_active(False)
+    target_checkbutton_puavo_os.set_active(False)
+
+def on_target_checkbutton_toggled(_):
+    target_chooser_dialog_button_reset.set_sensitive(
+        target_checkbutton_windows.get_active() or target_checkbutton_puavo_os.get_active()
+    )
 
 builder = Gtk.Builder()
 builder.set_translation_domain('puavo-laptop-setup')
@@ -573,7 +578,7 @@ app_window.set_title(_tr('Laptop setup'))
 app_window.connect('destroy', Gtk.main_quit)
 
 factory_reset_dialog = builder.get_object('factory_reset_dialog')
-factory_reset_dialog.connect('delete-event', on_factory_reset_dialog_delete_event)
+factory_reset_dialog.connect('delete-event', on_dialog_delete_event)
 factory_reset_dialog.set_size_request(800, 400)
 
 factory_reset_dialog_button = builder.get_object('factory_reset_dialog_button')
@@ -585,6 +590,22 @@ factory_reset_dialog_button = builder.get_object('factory_reset_dialog_button')
 ##
 ## Glade seems quite awkward and clumsy.
 factory_reset_dialog_button.connect('clicked', lambda _: factory_reset_dialog.response(Gtk.ResponseType.CLOSE))
+
+target_chooser_dialog = builder.get_object('target_chooser_dialog')
+target_chooser_dialog.connect('delete-event', on_dialog_delete_event)
+target_chooser_dialog.connect('show', on_target_chooser_dialog_show)
+
+target_chooser_dialog_button_cancel = builder.get_object('target_chooser_dialog_button_cancel')
+target_chooser_dialog_button_cancel.connect('clicked', lambda _: target_chooser_dialog.response(Gtk.ResponseType.CANCEL))
+
+target_chooser_dialog_button_reset = builder.get_object('target_chooser_dialog_button_reset')
+target_chooser_dialog_button_reset.connect('clicked', lambda _: target_chooser_dialog.response(Gtk.ResponseType.OK))
+
+target_checkbutton_windows = builder.get_object('target_checkbutton_windows')
+target_checkbutton_windows.connect('toggled', on_target_checkbutton_toggled)
+target_checkbutton_puavo_os = builder.get_object('target_checkbutton_puavo_os')
+target_checkbutton_puavo_os.connect('toggled', on_target_checkbutton_toggled)
+
 
 try:
     subprocess.check_call([ 'sudo', '-n', 'puavo-conf-local', '--check'])
