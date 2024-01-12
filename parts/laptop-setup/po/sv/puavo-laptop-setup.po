@@ -60,15 +60,15 @@ msgstr ""
 "Ytterligare detaljer kan hittas från fabriksåterställningsloggen. Kontakta "
 "supporten för hjälp."
 
-#: puavo-laptop-setup:576 puavo-laptop-setup:622
+#: puavo-laptop-setup:577 puavo-laptop-setup:623
 msgid "Laptop setup"
 msgstr "Laptop inställningar"
 
-#: puavo-laptop-setup:612
+#: puavo-laptop-setup:613
 msgid "You do not have the required permissions to use this tool."
 msgstr "Du har inte tillräckliga rättigheter att använda verktyget."
 
-#: puavo-laptop-setup:622
+#: puavo-laptop-setup:623
 msgid "is already running"
 msgstr "är redan igång"
 
@@ -115,23 +115,23 @@ msgstr "Aktivera Windows"
 
 #: puavo-laptop-setup.glade:231
 msgid "Factory reset..."
-msgstr ""
+msgstr "Fabriksåterställning..."
 
 #: puavo-laptop-setup.glade:257
-msgid "Factory reset confirmation"
-msgstr ""
+msgid "Confirmation of factory reset"
+msgstr "Bekräftelse på fabriksåterställning"
 
 #: puavo-laptop-setup.glade:275
 msgid "Cancel"
-msgstr ""
+msgstr "Avbryt"
 
 #: puavo-laptop-setup.glade:291
 msgid "Reset"
-msgstr ""
+msgstr "Återställa"
 
 #: puavo-laptop-setup.glade:314
 msgid "Select operating systems to reset:"
-msgstr ""
+msgstr "Välj operativsystem som ska återställas:"
 
 #: puavo-laptop-setup.glade:324
 msgid "Puavo OS"
@@ -139,20 +139,23 @@ msgstr ""
 
 #: puavo-laptop-setup.glade:360
 msgid ""
-"<big>Factory reset will <span foreground=\"red\" size=\"x-large\">erase all "
-"user data</span> from selected operating systems and restore their state to "
+"<big>Factory reset <span foreground=\"red\" size=\"x-large\">erases all user "
+"data</span> from selected operating systems and restores their state to "
 "factory settings!</big>"
 msgstr ""
+"<big>Fabriksåterställning <span foreground=\"red\" size=\"x-large\"> raderar "
+"all användardata</span> från valda operativsystem och återställer deras "
+"tillstånd till fabriksinställningarna!</big>"
 
-#: puavo-laptop-setup.glade:374
+#: puavo-laptop-setup.glade:375
 msgid "Factory reset"
 msgstr "Fabriksåterställning"
 
-#: puavo-laptop-setup.glade:389
+#: puavo-laptop-setup.glade:390
 msgid "Close"
 msgstr "Stäng"
 
-#: puavo-laptop-setup.glade:434
+#: puavo-laptop-setup.glade:435
 msgid "Factory reset log"
 msgstr "Fabriksåterställningslogg"
 
