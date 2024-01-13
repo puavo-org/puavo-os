@@ -477,7 +477,10 @@ class PuavoLaptopSetup:
             factory_reset_dialog.set_deletable(True)
             factory_reset_dialog_button.set_sensitive(True)
             if returnvalue == 0:
-                text = _tr('Factory reset succeeded. The system is going to reboot in few seconds...')
+                texts = [_tr('Factory reset succeeded.')]
+                if target_checkbutton_puavo_os.get_active():
+                    texts.append(_tr('The system is going to reboot in few seconds...'))
+                text = ' '.join(texts)
                 factory_reset_status_bar.push(context_id, text)
                 dialog = Gtk.MessageDialog(
                     parent=factory_reset_dialog,
