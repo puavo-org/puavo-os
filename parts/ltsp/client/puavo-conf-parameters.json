@@ -60,6 +60,11 @@
     "description": "If true, force the monitors.xml display settings received from Puavo",
     "typehint": "string"
   },
+  "puavo.displays.max_bpc": {
+    "default": "8",
+    "description": "Max color depth (bits per color) for all displays",
+    "typehint": "integer"
+  },
   "puavo.displays.setup": {
     "choices": [ "all-mirror", "external", "builtin" ],
     "default": "all-mirror",
