@@ -42,17 +42,19 @@ msgstr "Fabriksåterställning pågår"
 msgid "Failed to start factory reset"
 msgstr "Fabriksåterställningen kunde inte börjas"
 
-#: puavo-laptop-setup:462 puavo-laptop-setup:490
+#: puavo-laptop-setup:462 puavo-laptop-setup:493
 msgid "Factory reset failed"
 msgstr "Fabriksåterställningen mislyckades"
 
 #: puavo-laptop-setup:480
-msgid ""
-"Factory reset succeeded. The system is going to reboot in few seconds..."
-msgstr ""
-"Fabriksåterställningen lyckades. Systemet startar om i några sekunder..."
+msgid "Factory reset succeeded."
+msgstr "Fabriksåterställningen lyckades."
 
-#: puavo-laptop-setup:492
+#: puavo-laptop-setup:482
+msgid "The system is going to reboot in few seconds..."
+msgstr "Systemet startar om i några sekunder..."
+
+#: puavo-laptop-setup:495
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -60,15 +62,15 @@ msgstr ""
 "Ytterligare detaljer kan hittas från fabriksåterställningsloggen. Kontakta "
 "supporten för hjälp."
 
-#: puavo-laptop-setup:577 puavo-laptop-setup:623
+#: puavo-laptop-setup:580 puavo-laptop-setup:626
 msgid "Laptop setup"
 msgstr "Laptop inställningar"
 
-#: puavo-laptop-setup:613
+#: puavo-laptop-setup:616
 msgid "You do not have the required permissions to use this tool."
 msgstr "Du har inte tillräckliga rättigheter att använda verktyget."
 
-#: puavo-laptop-setup:623
+#: puavo-laptop-setup:626
 msgid "is already running"
 msgstr "är redan igång"
 
