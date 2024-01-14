@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+rm debian/*0.deb12* # Remove old ABI files
+sed -i -r 's/^abiname:.*$/abiname: 0.puavo1/' debian/config/defines # Define new ABI version
+debian/rules debian/control-real || true # Update control files
+
+# Merge surface config
+cat puavo/surface-config >>debian/config/amd64/config
+puavo/tools/kernel-team/utils/kconfigeditor2/process.py .
+
+dch -a 'Add linux-surface patches.'
+dch -a 'Set ABI to 0.puavo1'

@@ -1,0 +1,14 @@
+{
+    "name": "linux",
+    "version": "6.5.10-1~bpo12+1+puavo1+buildonce",
+    "tarballs": {
+        "debian": {
+            "sha256sum": "1422371a6eacc894f1ba1a95311da36eb4563ca48a1d663cb8c1252085e677e7",
+            "url": "https://deb.debian.org/debian/pool/main/l/linux/linux_6.5.10-1~bpo12+1.debian.tar.xz"
+        },
+        "orig": {
+            "sha256sum": "f6bf9109e7f5f7602eff38597931fecdfc0bcaf342cc9e8e009136429045a36b",
+            "url": "https://deb.debian.org/debian/pool/main/l/linux/linux_6.5.10.orig.tar.xz"
+        }
+    }
+}
