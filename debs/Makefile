@@ -42,6 +42,8 @@ _dpkg_buildpackage_parts_builddeps := \
 _dpkg_buildpackage_ports_builddeps := \
   $(_pkgs_ports_builddeps:%=.dpkg-buildpackage-%)
 
+reset_debian_targets := $(_pkgs_ports:%=reset-debian-%)
+
 _workdir = .workdir
 
 .PHONY: all
@@ -103,3 +105,7 @@ $(_workdir):
 	cd .archive && apt-ftparchive \
 	    -o APT::FTPArchive::Release::Origin=puavo-os-local release . \
 	    > Release
+
+.PHONY: $(reset_debian_targets)
+$(reset_debian_targets): reset-debian-%: %
+	cd '$<' && ../../.aux/debs-reset-debian
