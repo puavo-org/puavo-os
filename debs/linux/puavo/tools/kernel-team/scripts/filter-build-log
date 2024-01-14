@@ -1,0 +1,86 @@
+#!/bin/sh -eu
+
+# Copyright 2019-2020,2022 Ben Hutchings
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+# Censor warning messages in kernel build logs that should be ignored.
+# Then real warnings can be found by searching for "warn".
+
+sed -r -e '
+# perl: Harmless warnings about missing locales, because Kbuild *unsets* LC_ALL
+s/\b(perl: w)arn(ing:.* locale\b)/\1***\2/
+
+# dpkg-source: Package is expected to be unsigned
+s/^(dpkg-source: w)arn(ing: extracting unsigned)/\1***\2/
+
+# Some patch names include "warn"
+s/^((dpkg-source: info: applying|Applying patch) .*\bw)arn/\1***/i
+
+# Doc build warnings that everyone ignores
+s/\b(w)arn(ing(\([^)]*\))?: (no structured comments found|No description found for parameter|Excess function parameter|Function parameter or member .* not described|Excess struct\/union\/enum\/typedef member|(Block quote|Explicit markup|Line block) ends without a blank line|Inline (emphasis|literal|strong|interpreted text or phrase reference|substitution_reference) start-string without end-string|(Bullet|Definition) list ends without a blank line|cannot understand function prototype|bad line|duplicate label|Unexpected indentation))/\1***\2/i
+s/(W)arn(: (AUTHOR sect\.: no personblurb\|contrib for|meta author : no (refentry\/info\/author|author data)|meta source : no fallback for source))/\1***\2/g
+
+# sphinx: Spurious warning about missing (but unneeded) convert
+s/^(W)ARN(ING: convert\(1\) not found, for SVG to PDF conversion install ImageMagick)/\1***\2/
+
+# Some document names include "warn"
+s/^(writing output\.\.\. .*w)arn/\1***/
+
+# dpkg-gencontrol: Spurious warning in minimal builds
+s/^(dpkg-gencontrol: w)arn(ing: File::FcntlLock not available)/\1***\2/
+
+# dpkg-gencontrol: Spurious warning when substitution variable only used
+# in long description
+s/(dpkg-gencontrol: w)arn(ing: package linux-cpupower: substitution variable \$\{cpupower:Arch-Description\} unused, but is defined)/\1***\2/
+
+# dpkg-*: Spurious warnings for backports
+s/^(dpkg-genchanges: w)arn(ing: the current version \(.*\) is earlier than the previous one)/\1***\2/
+s/^(dpkg-(gencontrol|source|genchanges): w)arn(ing: unknown information field .Rules-Requires-Root)/\1***\2/
+
+# Some build commands include "warn"
+s/\b(EXTRA_W)ARN(INGS=)/\1***\2/
+s/\b(CONFIG_.*W)ARN/\1***/
+s/\b(Makefile\.extraw)arn/\1***/
+
+# Warning when building some user-space tools, not interesting to us
+s/(W)arn(ing: .* differs from (kernel$|latest version at))/\1***\2/
+
+# libtool: Warning that should be informational
+s/\b(libtool: w)arn(ing: remember to run)/\1***\2/
+
+# x11-common bug #785076
+s/^(update-rc.d: w)arn(ing: start and stop actions are no longer supported)/\1***\2/
+
+# objtool: Warning about unreachable code, probably harmless
+s/\b(w)arn(ing: objtool: .*: unreachable instruction)/\1***\2/
+
+# bison: Warnings about conflicts in kconfig language, probably harmless
+s@(/parse.y: w)arn(ing: (9 shift|5 reduce)/reduce conflicts)@\1***\2@
+
+# ld: Mask away --no-warn-rwx-segments flag
+s/(--no-w)arn(-rwx-segments)\b/\1***\2/
+
+# [ef]grep: Warnings that they are obsolescent, harmless for now
+s/([ef]grep: w)arn(ing: [ef]grep is obsolescent)/\1***\2/
+
+' "$@" \
+| {
+    if tty -s <&1; then
+	"${PAGER:-pager}"
+    else
+	cat
+    fi
+}

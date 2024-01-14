@@ -1,0 +1,66 @@
+#!/bin/sh -eu
+
+# Check that we are on a branch
+if ! git diff --quiet HEAD; then
+   echo >&2 "E: Working tree has uncommitted changes"
+   exit 1
+fi
+status="$(git status -b --porcelain)"
+if [ "${status%\?\? *}" != "$status" ]; then
+    echo >&2 "E: Working tree has files that are untracked and not ignored"
+    exit 1
+fi
+head="${status#\#\# }"
+if [ "$head" = "HEAD (no branch)" ]; then
+   echo >&2 "E: HEAD is not a branch"
+   exit 1
+fi
+branch="${head%...*}"
+real_branch="$branch"
+
+package="$(dpkg-parsechangelog -S Source)"
+ver="$(dpkg-parsechangelog -S Version)"
+
+case "$package" in
+*-[4-9].[0-9] | *-[4-9].[1-9][0-9])
+    package_suffix=-${package##*-}
+    if [ "${branch%$package_suffix}" = "$branch" ]; then
+	echo >&2 "E: Branch name doesn't include the package name suffix ($package_suffix)"
+	exit 1
+    fi
+    branch=${branch%$package_suffix}
+esac
+
+# Check that distribution agrees with branch
+dist=$(dpkg-parsechangelog -S Distribution)
+case "$branch,$dist" in
+debian/latest,unstable | debian/latest,experimental)
+    # OK
+    ;;
+master,unstable | master,experimental | sid,unstable)
+    # OK
+    ;;
+debian/sid,*)
+    echo >&2 "E: Use debian/unstable not debian/sid"
+    exit 1
+    ;;
+*)
+    if [ "${branch#debian/}" != "$dist" ] && \
+       [ "${branch#debian/}" != "$dist-updates" ] && \
+       [ "${branch#debian/}" != "$dist-embargoed" ]; then
+	echo >&2 "E: Uploads to $dist do not belong on branch $real_branch"
+	exit 1
+    fi
+    ;;
+esac
+
+# OK, let's do it
+tag="$(echo $ver | sed 's/~/_/g; s/:/%/g')"
+if [ "${ver%-*}" != "$ver" ]; then
+    # Non-native, needs debian/ prefix
+    tag="debian/$tag"
+fi
+echo "Creating tag $tag"
+git tag -s -m "Release $package ($ver)." $tag
+
+echo "Remember to push $real_branch and $tag to Salsa"

@@ -1,0 +1,33 @@
+#!/bin/bash -eu
+
+# Check that we are on a branch
+if ! git diff --quiet HEAD; then
+   echo >&2 "E: Working tree has uncommitted changes"
+   exit 1
+fi
+status="$(git status -b --porcelain)"
+if [ "${status%\?\? *}" != "$status" ]; then
+    echo >&2 "E: Working tree has files that are untracked and not ignored"
+    exit 1
+fi
+head="${status#\#\# }"
+if [ "$head" = "HEAD (no branch)" ]; then
+   echo >&2 "E: HEAD is not a branch"
+   exit 1
+fi
+
+dist="$(dpkg-parsechangelog -S Distribution)"
+if [ "$dist" != UNRELEASED ]; then
+   echo >&2 "E: Changelog distribution is already set to $dist"
+   exit 1
+fi
+
+package="$(dpkg-parsechangelog -S Source)"
+ver="$(dpkg-parsechangelog -S Version)"
+
+git_commit="$(git rev-parse HEAD)"
+git_date="$(TZ=UTC git log --format=%cd --date=short-local -1)"
+
+dch -v "$ver~git${git_date//-/}.${git_commit:0:7}" --force-bad-version --distribution UNRELEASED --urgency medium --no-force-save-on-release "Snapshot build from commit $git_commit"
+
+echo 'Remember to reset after building the package'

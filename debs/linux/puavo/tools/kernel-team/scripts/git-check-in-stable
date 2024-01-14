@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# List which stable series have a given upstream commit (or anything
+# else you might want to search for in their commit messages).
+
+set -eu
+
+PAGER=cat
+
+needle="$1"
+only_version="${2:-}"
+git for-each-ref 'refs/remotes/stable/linux-[4-9].*.y' \
+                 'refs/remotes/stable-rt/v*-stable' \
+                 'refs/remotes/ubuntu/linux-*.y' |
+while read commit dummy ref; do
+    version="$(echo "$ref" | sed -r 's@.*/(linux-|v)(.*)(-stable|\.y)@\2@')"
+    if [ "$version" = 2.6.11 ]; then
+	continue # 2.6.11 is pre-history
+    fi
+    if [ -n "$only_version" ] && [ "$version" != "$only_version" ]; then
+	continue
+    fi
+    for hash in $(git rev-list --grep="$needle" v$version..$commit); do
+	tag="$(git describe --contains --match="v$version.*" $hash | sed 's/~.*//')"
+	git log --format="$tag: ${hash:0:12} %s" $hash -1
+    done
+done

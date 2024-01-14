@@ -1,0 +1,25 @@
+Upload procedure :
+
+  1) Finalise the changelog:
+         .../kernel-team/scripts/d-k-prerelease
+  2) Regenerate files:
+         git clean -d -f -x
+         # For firmware-nonfree, linux, linux-tools:
+         debian/rules orig
+         # For firmware-free, firmware-nonfree, linux, linux-latest, linux-tools:
+         debian/rules debian/control
+  3) Export the package:
+         dpkg-buildpackage -uc -us -S
+  3) Build from the source package (pbuilder or sbuild)
+  4) Run: .../kernel-team/scripts/d-k-tag
+  5) Push the branch and tag
+  6) Sign and upload the changes
+
+Changelog practice :
+
+  When making a change in a package, without having it uploaded,
+  please put the changelog entry to UNRELEASED instead of unstable.
+  When doing the upload, this UNRELEASED tag has to be changed back
+  to unstable.  Additionally, the trailer line should be updated (the
+  line containing the name of the person doing the upload and the
+  date). But then, dch takes care of this for you :)

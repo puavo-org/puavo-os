@@ -1,0 +1,65 @@
+The following people maintain the Debian Linux kernel packages.
+Names in parentheses are not officially on the kernel team (yet).
+
+General:
+
+  - Maximilian Attems
+  - Bastian Blank
+  - Salvatore Bonaccorso
+  - Ben Hutchings
+  - Romain Perier
+
+Security branches:
+
+  - Salvatore Bonaccorso
+  - Ben Hutchings
+  - Yves-Alexis Perez
+
+Backport branches:
+
+  * stretch-security-4.19
+    - Ben Hutchings
+  * buster-backports
+    - Ben Hutchings
+  * bullseye-backports
+    - Ben Hutchings
+
+Porters, sorted by source architecture:
+
+  * alpha
+    - Helge Deller
+  * arm
+    - Vagrant Cascadian, Uwe Kleine-König, Roger Shimizu
+  * arm64
+    - Vagrant Cascadian, Uwe Kleine-König
+  * ia64
+    - no maintainer
+  * m68k
+    - (John Paul Adrian Glaubitz)
+  * mips
+    - Aurelien Jarno, (YunQiang Su)
+  * parisc
+    - Helge Deller
+  * powerpc
+    - no maintainer
+  * riscv
+    - Aurelien Jarno
+  * s390
+    - Bastian Blank
+  * sh
+    - (John Paul Adrian Glaubitz)
+  * sparc
+    - no maintainer
+  * x86
+    - [amd64] Ben Hutchings
+    - [i386] no maintainer
+    - [x32] no maintainer
+
+Other specialisations:
+
+  * cloud
+    - Bastian Blank, (Noah Meyerhans)
+  * rt
+    - Ben Hutchings, Salvatore Bonaccorso
+  * xen
+    - no maintainer
