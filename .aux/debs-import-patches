@@ -9,6 +9,8 @@ fi
 
 [ -d puavo/patches ] || exit 0
 
+rm -rf .pc
+
 # Ensure all upstream patches are applied.
 QUILT_PATCHES=debian/patches quilt push -a
 
