@@ -27,16 +27,6 @@ Languages             = %w(de en fi sv)
 ShareDirBase          = '/home/share'
 ShareDirBaseFileStore = "#{ ShareDirBase }/.share"
 
-def delete_if_an_empty_dir(path)
-  begin
-    Dir.rmdir(path)
-    Syslog.info('Deleted directory %s as it was empty', path)
-  rescue Errno::ENOTEMPTY, Errno::ENOTDIR, Errno::ENOENT
-  rescue StandardError => e
-    Syslog.warning('Error in removing a possible directory %s', path)
-  end
-end
-
 def is_parent_of?(subpath, dir)
   subpath[0, dir.length] == dir
 end
@@ -79,6 +69,17 @@ class PuavoShare
     @wanted_file_acls      = make_wanted_acls('rw-', 'r--', '---', false)
   end
 
+  def self.delete_link(path)
+    # delete link in a somewhat safe way
+    if not path.match(/^#{ ShareDirBase }/) then
+      raise "An internal error, trying to delete '#{ path }' (link)"
+    end
+    begin
+      File.delete(path)
+    rescue Errno::ENOENT
+    end
+  end
+
   def automatic_acls
     @spec.automatic_acls
   end
@@ -99,22 +100,11 @@ class PuavoShare
 
         next if current_linkdest == expected_linkdest
 
-        self.class.delete(link_path)
+        self.class.delete_link(link_path)
         File.symlink(expected_linkdest, link_path)
         Syslog.notice('%s',
           "Made link from '#{ link_path }' to '#{ expected_linkdest }'.")
       end 
-    end
-  end
-
-  def self.delete(path)
-    # delete path in a somewhat safe way
-    if not path.match(/^#{ ShareDirBase }/) then
-      raise "An internal error, trying to delete '#{ path }'"
-    end
-    begin
-      File.delete(path)
-    rescue Errno::ENOENT
     end
   end
 
@@ -520,6 +510,19 @@ class Control
     end
   end
 
+  def self.delete_if_an_empty_dir(path)
+    if not path.match(/^#{ ShareDirBase }/) then
+      raise "An internal error, trying to delete '#{ path }' (dir)"
+    end
+    begin
+      Dir.rmdir(path)
+      Syslog.info('Deleted directory %s as it was empty', path)
+    rescue Errno::ENOTEMPTY, Errno::ENOTDIR, Errno::ENOENT
+    rescue StandardError => e
+      Syslog.warning('Error in removing a possible directory %s', path)
+    end
+  end
+
   def delete_unmanaged_paths
     # Delete links that do not point to school directories
     # that are managed by us.
@@ -533,13 +536,13 @@ class Control
       target = Pathname.new(File.join(path, '..', linkdest)).cleanpath.to_s
       next if @managed_schooldirs.any? { |dir| is_parent_of?(target, dir) }
 
-      PuavoShare.delete(path)
+      PuavoShare.delete_link(path)
       Syslog.info('Deleted link %s as it should not be managed by us', path)
     end
 
     # Delete school directories that we should not be managing.
     Dir.glob(File.join(ShareDirBase, '*', '*')).each do |path|
-      delete_if_an_empty_dir(path)
+      self.class.delete_if_an_empty_dir(path)
     end
 
     # Delete unmanaged empty dirs under /home/share/.share, run twice
@@ -550,7 +553,7 @@ class Control
       Find.find(ShareDirBaseFileStore).each do |path|
         Find.prune if @managed_schooldirs.include?(path)
         next if path == ShareDirBaseFileStore
-        delete_if_an_empty_dir(path)
+        self.class.delete_if_an_empty_dir(path)
       end
     end
   end
