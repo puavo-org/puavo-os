@@ -92,15 +92,17 @@ class PuavoShare
       begin
         PuavoShare.mkdir(File.dirname(link_path), 0755)
 
-        prev_linktarget = File.readlink(link_path) rescue ''
-        if @spec.sharepath != prev_linktarget then
-          self.class.delete(link_path)
-          link_dir = Pathname(link_path).dirname()
-          link_dest = Pathname(@spec.sharepath).relative_path_from(link_dir)
-          File.symlink(link_dest, link_path)
-          Syslog.notice('%s',
-            "Made link from '#{ link_path }' to '#{ @spec.sharepath }'.")
-        end
+        current_linkdest = File.readlink(link_path) rescue nil
+        link_dir = Pathname(link_path).dirname()
+        expected_linkdest = Pathname(@spec.sharepath) \
+                              .relative_path_from(link_dir).to_s
+
+        next if current_linkdest == expected_linkdest
+
+        self.class.delete(link_path)
+        File.symlink(expected_linkdest, link_path)
+        Syslog.notice('%s',
+          "Made link from '#{ link_path }' to '#{ expected_linkdest }'.")
       end 
     end
   end
