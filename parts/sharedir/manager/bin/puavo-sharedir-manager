@@ -564,10 +564,7 @@ class Control
 end
 
 loop do
-  Syslog.open(File.basename($0), Syslog::LOG_DAEMON \
-                                 | Syslog::LOG_CONS \
-                                 | Syslog::LOG_PERROR \
-                                 | Syslog::LOG_PID)
+  Syslog.open(File.basename($0), Syslog::LOG_DAEMON|Syslog::LOG_PID)
 
   exception_msg = nil
   begin
