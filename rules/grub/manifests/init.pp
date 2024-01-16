@@ -27,6 +27,9 @@ class grub {
     'puavo.grub.developer_mode.enabled':
       script => 'setup_grub_environment';
 
+    'puavo.grub.timeout':
+      script => 'setup_grub_environment';
+
     'puavo.grub.windows.enabled':
       script => 'setup_grub_environment';
   }

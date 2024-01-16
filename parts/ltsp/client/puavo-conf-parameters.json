@@ -53,6 +53,9 @@
   "puavo.grub.efi.force_extra_removable": {
     "default": "true"
   },
+  "puavo.grub.timeout": {
+    "default": "5"
+  },
   "puavo.grub.windows.enabled": {
     "default": "true"
   },
