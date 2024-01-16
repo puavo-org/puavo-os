@@ -60,7 +60,7 @@ mode:		                one
 nice:			        10
 passwdTimeout:	                0:00:01
 pointerHysteresis:              10
-programs:                       - GL: glslideshow --root --delay 20000 --duration 600 --zoom 75 --pan 16 --fade 1 --no-letterbox
+programs:                       - GL: glslideshow -root -delay 20000 -duration 600 -zoom 75 -pan 16 -fade 1 -no-letterbox
 selected:	                0
 splashDuration:	                0:00:05
 splash:			        False
