@@ -39,12 +39,12 @@ class packages {
     , 'puavo-user-registration'
     , 'puavo-veyon-applet'
     , 'puavo-vpn-client'
+    , 'puavo-webkiosk'
     , 'puavo-webwindow'
     , 'puavo-wlanap'
     , 'puavo-wlangw'
     , 'puavomenu'
-    , 'ruby-puavowlan'
-    , 'webkiosk-language-selector' ]:
+    , 'ruby-puavowlan' ]:
       ensure => present,
       tag    => [ 'tag_puavo' ];
   }
@@ -545,7 +545,8 @@ class packages {
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     , 'oxygen-icon-theme'
-    , 'xscreensaver-data' ]:
+    , 'xscreensaver-data'
+    , 'xscreensaver-gl' ]:
       tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     # desktop-packages relating to gnome and other, some of these
