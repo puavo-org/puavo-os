@@ -20,7 +20,9 @@ if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' -a "$USER" = 'guest' ]; then
 
   # Automatically start chromium after session is opened
   mkdir -p ~/.config/autostart
-  cp /usr/share/applications/chromium.desktop ~/.config/autostart/
+  sed '/^Exec=/s|^.*$|Exec=/usr/bin/chromium --start-maximized %U|' \
+    /usr/share/applications/chromium.desktop \
+    > ~/.config/autostart/chromium.desktop
 
   export DESKTOP_SESSION=zzz-puavo-desktop-lang-${puavo_session_language}
   export GDMSESSION=puavo-desktop
