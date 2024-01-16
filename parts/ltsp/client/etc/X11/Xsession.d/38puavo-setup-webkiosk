@@ -1,6 +1,13 @@
 if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' ]; then
   /usr/bin/openbsd-cwm & cwm_pid=$!
 
+  # Disable screen blanking and power saving features
+  xset s 0 0
+  xset s off
+  xset s noblank
+  xset dpms 0 0 0
+  xset -dpms
+
   puavo_session_language=$(puavo-webkiosk-language-selector)
 
   kill -9 "$cwm_pid"
