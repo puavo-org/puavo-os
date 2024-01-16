@@ -271,6 +271,7 @@ class packages {
     , 'gitk'
     , 'glade'
     , 'gnupg'
+    , 'kernel-wedge'
     , 'manpages-dev'
     , 'perl-doc'
     , 'pinfo'
