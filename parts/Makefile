@@ -1,24 +1,24 @@
-subdirs         := autopilot                  \
-                   autopoweroff               \
-                   blackboard                 \
-                   client                     \
-                   conf                       \
-                   core                       \
-                   desktop-applet             \
-                   devscripts                 \
-                   ers                        \
-                   laptop-setup               \
-                   ltsp                       \
-                   pam                        \
-                   pkg                        \
-                   puavomenu                  \
-                   sharedir                   \
-                   usb-factory                \
-                   user-registration          \
-                   veyon-applet               \
-                   vpn                        \
-                   webkiosk-language-selector \
-                   webwindow                  \
+subdirs         := autopilot         \
+                   autopoweroff      \
+                   blackboard        \
+                   client            \
+                   conf              \
+                   core              \
+                   desktop-applet    \
+                   devscripts        \
+                   ers               \
+                   laptop-setup      \
+                   ltsp              \
+                   pam               \
+                   pkg               \
+                   puavomenu         \
+                   sharedir          \
+                   usb-factory       \
+                   user-registration \
+                   veyon-applet      \
+                   vpn               \
+                   webkiosk          \
+                   webwindow         \
                    wlan
 subdirs-all     := $(subdirs:%=.all-%)
 subdirs-clean   := $(subdirs:%=.clean-%)

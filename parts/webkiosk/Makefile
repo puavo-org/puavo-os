@@ -7,8 +7,8 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 0644
 
-FLAGS_PATH = /puavo-webkiosk-language-selector/flags
-SCREENSAVER_PATH = /puavo-webkiosk-language-selector/screensaver
+FLAGS_PATH = /puavo-webkiosk/flags
+SCREENSAVER_PATH = /puavo-webkiosk/screensaver
 
 FLAG_IMAGES = \
 	images/flags/de.png \

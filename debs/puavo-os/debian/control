@@ -281,7 +281,7 @@ Depends: ${misc:Depends},
  wireless-tools,
  xautolock,
  xserver-xorg-core
-Suggests: webkiosk-language-selector
+Suggests: puavo-webkiosk
 Description: Bits and pieces needed inside the LTSP chroot image.
 
 Package: puavo-ltsp-install
@@ -543,9 +543,9 @@ Description: simple drawing application
  to big touch screen devices.
  .
 
-Package: webkiosk-language-selector
+Package: puavo-webkiosk
 Architecture: all
-Depends: ${misc:Depends}, tcl, tk
-Description: Webkiosk language selector
- Helper for webkiosks to select session language.
+Depends: ${misc:Depends}, tcl, tk, xscreensaver-gl
+Description: Webkiosk utils
+ Puavo webkiosk implementation utilities.
  .

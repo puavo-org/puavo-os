@@ -11,7 +11,7 @@ frame .frame -bg $bg_color
 
 font create buttonFont -family {Ubuntu Condensed} -size 20 -weight bold
 
-set imageDir /usr/share/puavo-webkiosk-language-selector/flags
+set imageDir /usr/share/puavo-webkiosk/flags
 
 image create photo .flag_fi -height 150 -width 250 -file $imageDir/fi.png
 image create photo .flag_sv -height 150 -width 250 -file $imageDir/sv.png

@@ -39,12 +39,12 @@ class packages {
     , 'puavo-user-registration'
     , 'puavo-veyon-applet'
     , 'puavo-vpn-client'
+    , 'puavo-webkiosk'
     , 'puavo-webwindow'
     , 'puavo-wlanap'
     , 'puavo-wlangw'
     , 'puavomenu'
-    , 'ruby-puavowlan'
-    , 'webkiosk-language-selector' ]:
+    , 'ruby-puavowlan' ]:
       ensure => present,
       tag    => [ 'tag_puavo' ];
   }
