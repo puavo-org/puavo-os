@@ -32,8 +32,8 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) webkiosk-language-selector
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) webkiosk-activate-screensaver
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		puavo-webkiosk-language-selector puavo-webkiosk-screensaver
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)$(FLAGS_PATH) ${FLAG_IMAGES}
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)$(SCREENSAVER_PATH)/de \
 		${SCREENSAVER_IMAGES}/de.png
