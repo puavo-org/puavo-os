@@ -1,4 +1,4 @@
-if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' ]; then
+if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' -a "$USER" = 'guest' ]; then
   /usr/bin/openbsd-cwm & cwm_pid=$!
 
   # Disable screen blanking and power saving features
