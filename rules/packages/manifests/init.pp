@@ -254,6 +254,7 @@ class packages {
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
 
     [ 'ack'
+    , 'black'
     , 'build-essential'
     , 'bvi'
     , 'cdbs'
@@ -262,6 +263,7 @@ class packages {
     , 'dh-make'
     , 'dpkg-dev'
     , 'dput'
+    , 'elpa-flycheck'
     , 'fakeroot'
     , 'faketime'
     , 'gcc'
