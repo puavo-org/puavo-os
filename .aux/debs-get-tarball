@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+
+"""Download tarballs for Debian (Puavo) packages."""
+
+# Standard library imports
+import argparse
+import enum
+import hashlib
+import json
+import os
+import os.path
+import pathlib
+import re
+import sys
+import tarfile
+
+# Third-party imports
+import debian.debian_support
+import pydantic
+import pydantic.main
+import pydantic.networks
+import pydantic.types
+import requests
+
+
+class TarballType(str, enum.Enum):
+    DEBIAN = "debian"
+    ORIG = "orig"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class Tarball(pydantic.main.BaseModel):
+    """Models downloadable tarball"""
+
+    sha256sum: pydantic.types.StrictStr
+    url: pydantic.networks.HttpUrl
+
+    @pydantic.validator("sha256sum")
+    @classmethod
+    def _validate_sha256sum(cls, value):
+        if not re.match(r"[a-f0-9]{64}$", value):
+            raise ValueError("invalid SHA256 checksum", value)
+        return value
+
+
+class Tarballs(pydantic.main.BaseModel):
+    """A set of downloadable tarballs"""
+
+    debian: Tarball
+    orig: Tarball
+
+
+class PuavoInfo(pydantic.main.BaseModel):
+    """Models puavo/info.json"""
+
+    name: pydantic.types.StrictStr
+    version: pydantic.types.StrictStr
+    tarballs: Tarballs
+
+    @pydantic.validator("name")
+    @classmethod
+    def _validate_name(cls, value):
+        if not re.match(r"^[0-9a-z]([0-9a-z-][0-9a-z])*$", value):
+            raise ValueError("invalid name", value)
+        return value
+
+    @pydantic.validator("version")
+    @classmethod
+    def _validate_version(cls, value):
+        return str(debian.debian_support.Version(value))
+
+
+def _read_chunks(fileobj, chunk_size=4096):
+    while True:
+        chunk = fileobj.read(chunk_size)
+        if not chunk:
+            break
+        yield chunk
+
+
+def _get_source_url(puavo_info, tarball_type) -> pydantic.networks.HttpUrl:
+    return puavo_info.tarballs.dict()[tarball_type]["url"]
+
+
+def _parse_filename_part(url: pydantic.networks.HttpUrl) -> str:
+    if url.path is None:
+        raise ValueError("URL does not have path", url)
+    return url.path.split("/")[-1]
+
+
+def _download(puavo_info, tarball_type) -> str:
+    source_url = _get_source_url(puavo_info, tarball_type)
+    source_filename = _parse_filename_part(source_url)
+    dest_filename = source_filename
+    dest_filepath = os.path.join("..", dest_filename)
+    sha256sum = puavo_info.tarballs.dict()[tarball_type]["sha256sum"]
+
+    if os.path.exists(dest_filepath):
+        sha256 = hashlib.sha256()
+        with open(dest_filepath, "rb") as dest_file:
+            for chunk in _read_chunks(dest_file):
+                sha256.update(chunk)
+
+        if sha256.hexdigest().lower() == sha256sum.lower():
+            return dest_filepath
+
+        raise RuntimeError(
+            f"destination file {dest_filepath!r} already exists, but its "
+            f"SHA256 ({sha256.hexdigest()}) does not match {sha256sum!r}!"
+        )
+
+    sha256 = hashlib.sha256()
+    with requests.get(source_url, stream=True, timeout=60) as response:
+        response.raise_for_status()
+        with open(f"{dest_filepath}.tmp", "wb") as dest_file:
+            for chunk in _read_chunks(response.raw):
+                dest_file.write(chunk)
+                sha256.update(chunk)
+
+    if sha256.hexdigest().lower() != sha256sum.lower():
+        raise RuntimeError(
+            f"SHA256 of the downloaded file ({sha256.hexdigest()}) does not "
+            "match {sha256sum!r}!"
+        )
+
+    os.rename(f"{dest_filepath}.tmp", dest_filepath)
+
+    return dest_filepath
+
+
+def _read_puavo_info() -> PuavoInfo:
+    with open(os.path.join("puavo", "info.json"), "rb") as puavo_info_json_file:
+        puavo_info = PuavoInfo.parse_obj(json.load(puavo_info_json_file))
+
+    # Just an extra sanity check. I bet some part of the build chain
+    # makes this assumption.
+    curdir_name = os.path.basename(os.getcwd())
+    if curdir_name != puavo_info.name:
+        raise RuntimeError(
+            "current directory name is different than package name",
+            curdir_name,
+            puavo_info.name,
+        )
+
+    return puavo_info
+
+
+class InvalidTarMemberError(Exception):
+    pass
+
+
+def _check_tar_member(
+    *,
+    puavo_info: PuavoInfo,
+    member: tarfile.TarInfo,
+    tarball_type: str,
+    dest_dir_path=os.path.curdir,
+):
+    if member.type not in (tarfile.DIRTYPE, tarfile.SYMTYPE, tarfile.REGTYPE):
+        raise InvalidTarMemberError(
+            "tar file member is of invalid type", member.name, member.type
+        )
+
+    if os.path.isabs(member.name):
+        raise InvalidTarMemberError("tar file member is absolute", member.name)
+
+    if os.path.isabs(member.linkname):
+        raise InvalidTarMemberError(
+            "tar file member links to an absolute path", member.name, member.linkname
+        )
+
+    if member.linkname:
+        resolved_dest_link_target = pathlib.Path(
+            os.path.join(dest_dir_path, member.name)
+        ).resolve()
+        if not resolved_dest_link_target.is_relative_to(
+            pathlib.Path(dest_dir_path).resolve(strict=True)
+        ):
+            raise InvalidTarMemberError(
+                "tar file member links outside the extraction dir",
+                member.name,
+                member.linkname,
+            )
+
+    resolved_dest_path = pathlib.Path(
+        os.path.join(dest_dir_path, member.name)
+    ).resolve()
+    if not resolved_dest_path.is_relative_to(
+        pathlib.Path(dest_dir_path).resolve(strict=True)
+    ):
+        raise InvalidTarMemberError(
+            "tar file memeber points out from the extraction dir", member.name
+        )
+
+    expected_first_part = None
+    if tarball_type == TarballType.DEBIAN:
+        expected_first_part = "debian"
+    elif tarball_type == TarballType.ORIG:
+        expected_first_part = f"{puavo_info.name}-{debian.debian_support.Version(puavo_info.version).upstream_version}"
+    else:
+        raise ValueError("invalid tarball_type", tarball_type)
+
+    if pathlib.Path(member.name).parts[0] != expected_first_part:
+        raise InvalidTarMemberError(
+            f"tar file member {member.name!r} of an {tarball_type} tarball has an invalid name, "
+            f"expected it to start with {expected_first_part!r}"
+        )
+
+
+def _strip_components(member: tarfile.TarInfo, n: int):
+    parts = pathlib.Path(member.name).parts[n:]
+    if not parts:
+        member.name = ""
+    else:
+        member.name = os.path.join(*parts)
+
+
+def _extract(puavo_info, tarball_filepath: str, tarball_type: str):
+    with tarfile.open(tarball_filepath) as tarball:
+        for member in tarball:
+            _check_tar_member(
+                puavo_info=puavo_info, member=member, tarball_type=tarball_type
+            )
+            if tarball_type == TarballType.ORIG:
+                _strip_components(member, 1)
+            if not member.name:
+                continue
+            tarball.extract(member)
+
+
+def _main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Download source tarballs.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("TARBALL_TYPE", choices=[str(v) for v in TarballType])
+    parser.add_argument(
+        "--download-only",
+        action="store_true",
+        default=False,
+        help="do not extract the tarball, just download",
+    )
+    args = parser.parse_args()
+
+    try:
+        puavo_info = _read_puavo_info()
+    except FileNotFoundError:
+        print(
+            "ERROR: current directory is not a package directory, puavo/info.json is not found",
+            file=sys.stderr,
+        )
+        return 1
+
+    tarball_filepath = _download(puavo_info, args.TARBALL_TYPE)
+    if args.download_only:
+        return 0
+
+    _extract(puavo_info, tarball_filepath, args.TARBALL_TYPE)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(_main())

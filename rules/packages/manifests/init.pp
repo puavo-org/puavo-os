@@ -274,6 +274,7 @@ class packages {
     , 'manpages-dev'
     , 'perl-doc'
     , 'pinfo'
+    , 'python3-pydantic'
     , 'shellcheck'
     , 'sloccount'
     , 'tcl8.6-doc'
