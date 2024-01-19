@@ -4,9 +4,15 @@
 import argparse
 import collections
 import enum
+import logging
+import logging.handlers
 import re
 import subprocess
 import sys
+
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.INFO)
+_LOGGER.addHandler(logging.handlers.SysLogHandler("/dev/log"))
 
 
 class _State(str, enum.Enum):
@@ -216,18 +222,12 @@ def _main():
     try:
         desired_max_bpc = int(args.MAX_BPC, 10)
     except ValueError:
-        print(
-            f"error: invalid max bpc {args.MAX_BPC!r}, expected 10base integer",
-            file=sys.stderr,
-        )
+        _LOGGER.error("invalid max bpc %r, expected 10base integer", args.MAX_BPC)
         sys.exit(1)
 
     for output_name, output in _xrandr_get_prop().items():
         if "max bpc" in output["props"]:
-            print(
-                f"desired max bpc of {output_name!r} is {desired_max_bpc}",
-                file=sys.stderr,
-            )
+            _LOGGER.info("desired max bpc of %r is %d", output_name, desired_max_bpc)
 
             max_bpc_prop = output["props"]["max bpc"]
             current_value = max_bpc_prop["value"]
@@ -236,16 +236,22 @@ def _main():
 
             new_value = min(max(value_min, desired_max_bpc), value_max)
             if new_value != desired_max_bpc:
-                print(
-                    f"adjusted desired max bpc of {output_name!r} from {desired_max_bpc} to {new_value} to "
-                    f"match the supported range ({value_min}, {value_max})",
-                    file=sys.stderr,
+                _LOGGER.info(
+                    "adjusted desired max bpc of %r from %d to %d to "
+                    "match the supported range (%d, %d)",
+                    output_name,
+                    desired_max_bpc,
+                    new_value,
+                    value_min,
+                    value_max,
                 )
 
             _xrandr_set_max_bpc(output_name, new_value)
-            print(
-                f"set max bpc of {output_name!r} from {current_value} to {new_value}",
-                file=sys.stderr,
+            _LOGGER.info(
+                "set max bpc of %r from %d to %d",
+                output_name,
+                current_value,
+                new_value,
             )
 
 
