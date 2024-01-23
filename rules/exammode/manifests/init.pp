@@ -3,6 +3,10 @@ class exammode {
   # The examination mode requires this for security.
   # XXX Note that Wayland may need something like this as well?
 
+  $puavo_examuser_homedir = '/var/lib/puavo-exammode/user'
+  $puavo_examuser_gid     = '989'
+  $puavo_examuser_uid     = '989'
+
   file {
     '/etc/dbus-1/system.d/org.puavo.Exam.conf':
       source => 'puppet:///modules/exammode/org.puavo.Exam.conf';
@@ -21,6 +25,35 @@ class exammode {
     '/usr/share/X11/xorg.conf.d/90-disable-vtswitch.conf':
       require => Package['xserver-xorg-core'],
       source  => 'puppet:///modules/exammode/90-disable-vtswitch.conf';
+
+    '/var/lib/puavo-exammode':
+      ensure => directory;
+
+    $puavo_examuser_homedir:
+      ensure  => directory,
+      group   => 'puavo-examuser',
+      mode    => '0700',
+      owner   => 'puavo-examuser',
+      require => User['puavo-examuser'];
+  }
+
+  group {
+    'puavo-examuser':
+      ensure => present,
+      gid    => $puavo_examuser_gid,
+      system => true;
+  }
+
+  user {
+    'puavo-examuser':
+      ensure     => present,
+      comment    => 'Puavo Exam User',
+      gid        => $puavo_examuser_gid,
+      home       => $puavo_examuser_homedir,
+      require    => Group['puavo-examuser'],
+      shell      => '/bin/bash',
+      system     => true,
+      uid        => $puavo_examuser_uid;
   }
 
   Package <| title == 'xserver-xorg-core' |>
