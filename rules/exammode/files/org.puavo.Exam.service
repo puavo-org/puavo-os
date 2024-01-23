@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.puavo.Exam
+Exec=/usr/local/sbin/puavo-exammode-manager
+User=root

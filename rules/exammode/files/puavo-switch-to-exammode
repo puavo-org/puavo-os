@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+dbus-send --dest=org.puavo.Exam \
+          --print-reply=literal \
+          --reply-timeout=30000 \
+          --system              \
+          /exammode             \
+          org.puavo.Exam.exammode.Enable
