@@ -4,6 +4,11 @@ class nodm {
   file {
     '/etc/pam.d/nodm':
       source => 'puppet:///modules/nodm/etc_pam.d_nodm';
+
+    # We want nodm to be able to co-exist with gdm (for examination mode),
+    # remove the /etc/X11/default-display-manager test.
+    '/etc/systemd/system/nodm.service.d/override.conf':
+      content => "[Service]\nExecStartPre=\n";
   }
 
   # nodm configuration file for infotv sessions
