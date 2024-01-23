@@ -2,6 +2,9 @@ class nodm {
   include ::puavo_conf
 
   file {
+    '/etc/default/nodm':
+      source => 'puppet:///modules/nodm/etc_default_nodm';
+
     '/etc/pam.d/nodm':
       source => 'puppet:///modules/nodm/etc_pam.d_nodm';
 
