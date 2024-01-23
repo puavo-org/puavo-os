@@ -1,0 +1,33 @@
+#!/usr/bin/ruby
+
+require 'dbus'
+require 'syslog'
+
+EXAMUSER_UID = 990
+EXAMUSER_USERNAME = 'puavo-examuser'
+
+class PuavoExammode < DBus::Object
+  dbus_interface 'org.puavo.Exam.exammode' do
+    dbus_method :Enable, '' do
+      system('loginctl', 'lock-sessions')
+    end
+  end
+end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+begin
+  bus = DBus::SystemBus.instance
+  service = bus.request_service('org.puavo.Exam')
+  service.export( PuavoExammode.new('/exammode') )
+
+  mainloop = DBus::Main.new
+  mainloop << bus
+  mainloop.run
+rescue StandardError => e
+  Syslog.log(Syslog::LOG_ERR,
+             'Error when running puavo-exammode-manager dbus service: %s',
+             e.message)
+end
+
+Syslog.close()
