@@ -2,14 +2,21 @@
 
 set -eu
 
-# This is not necessary if puavo.xsessions.display_manager != "nodm",
-# but this should be fast so we will do this anyway.
+xsession=${1:-}
+if [ -z "$xsession" ]; then
+  xsession=$(puavo-conf puavo.xsessions.default)
+fi
 
-case "$(puavo-conf puavo.xsessions.default)" in
+case "$xsession" in
   puavo-ers)
     desktop_session_name='puavo-desktop'
     nodm_user='puavo-ers'
     xsession='desktop-session'
+    ;;
+  puavo-exammode)
+    desktop_session_name='puavo-exammode'
+    nodm_user='puavo-examuser'
+    xsession='exammode-session'
     ;;
   puavo-infotv)
     desktop_session_name='puavo-infotv'

@@ -1,4 +1,6 @@
 class exammode {
+  include ::nodm
+
   # Disable VT switching from keyboard.
   # The examination mode requires this for security.
   # XXX Note that Wayland may need something like this as well?
@@ -11,13 +13,19 @@ class exammode {
     '/etc/dbus-1/system.d/org.puavo.Exam.conf':
       source => 'puppet:///modules/exammode/org.puavo.Exam.conf';
 
+    '/usr/lib/puavo-ltsp-client/exammode-session':
+      mode    => '0755',
+      require => Package['puavo-ltsp-client'],
+      source  => 'puppet:///modules/exammode/exammode-session';
+
     '/usr/local/bin/puavo-switch-to-exammode':
       mode   => '0755',
       source => 'puppet:///modules/exammode/puavo-switch-to-exammode';
 
     '/usr/local/sbin/puavo-exammode-manager':
-      mode   => '0755',
-      source => 'puppet:///modules/exammode/puavo-exammode-manager';
+      mode    => '0755',
+      require => ::Puavo_conf::Script['setup_nodm'],
+      source  => 'puppet:///modules/exammode/puavo-exammode-manager';
 
     '/usr/share/dbus-1/system-services/org.puavo.Exam.service':
       source => 'puppet:///modules/exammode/org.puavo.Exam.service';
@@ -56,5 +64,8 @@ class exammode {
       uid        => $puavo_examuser_uid;
   }
 
-  Package <| title == 'xserver-xorg-core' |>
+  Package <|
+       title == 'puavo-ltsp-client'
+    or title == 'xserver-xorg-core'
+  |>
 }

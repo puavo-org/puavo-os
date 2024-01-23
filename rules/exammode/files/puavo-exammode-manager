@@ -9,7 +9,15 @@ EXAMUSER_USERNAME = 'puavo-examuser'
 class PuavoExammode < DBus::Object
   dbus_interface 'org.puavo.Exam.exammode' do
     dbus_method :Enable, '' do
-      system('loginctl', 'lock-sessions')
+      if !system('loginctl', 'lock-sessions') then
+        raise 'error in locking desktop sessions'
+      end
+      if ! system('/etc/puavo-conf/scripts/setup_nodm', 'puavo-exammode') then
+        raise 'could not configure nodm for exam mode'
+      end
+      if ! system('service nodm start') then
+        raise 'error in starting up nodm'
+      end
     end
   end
 end
