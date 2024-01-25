@@ -1,7 +1,13 @@
 #!/bin/sh
 
 if [ "$(tty)" = '/dev/tty42' ]; then
-  exec startx /usr/lib/puavo-ltsp-client/exammode-session > /dev/null 2>&1
+  exec env HOME=/var/lib/puavo-exammode/user      \
+    bwrap --dev-bind / /                          \
+          --tmpfs    /home                        \
+          --tmpfs    /tmp                         \
+          --tmpfs    /var/lib/puavo-exammode/user \
+          --tmpfs    /var/tmp                     \
+      startx /usr/lib/puavo-ltsp-client/exammode-session > /dev/null 2>&1
 fi
 
 exec /bin/bash

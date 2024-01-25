@@ -41,12 +41,10 @@ class exammode {
     '/var/lib/puavo-exammode':
       ensure => directory;
 
+    # intentionally owned by root:root
     $puavo_examuser_homedir:
-      ensure  => directory,
-      group   => 'puavo-examuser',
-      mode    => '0700',
-      owner   => 'puavo-examuser',
-      require => User['puavo-examuser'];
+      ensure => directory,
+      mode   => '0700';
   }
 
   group {
