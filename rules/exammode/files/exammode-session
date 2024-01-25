@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+# XXX perhaps should do something different
+# XXX should activate tomoyo as well
+# XXX we probably also want Xorg inside our restrictions
+exec bwrap --dev-bind / /      \
+           --tmpfs    /home    \
+           --tmpfs    /tmp     \
+           --tmpfs    /var/tmp \
+  env DESKTOP_SESSION=puavo-desktop \
+      /usr/bin/gnome-session "$@"
