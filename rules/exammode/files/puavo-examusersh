@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ "$(tty)" = '/dev/tty42' ]; then
+  exec startx /usr/lib/puavo-ltsp-client/exammode-session > /dev/null 2>&1
+fi
+
+exec /bin/bash

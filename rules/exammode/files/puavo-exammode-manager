@@ -9,7 +9,20 @@ EXAMUSER_USERNAME = 'puavo-examuser'
 class PuavoExammode < DBus::Object
   dbus_interface 'org.puavo.Exam.exammode' do
     dbus_method :Enable, '' do
-      system('loginctl', 'lock-sessions')
+      if ! system('loginctl', 'lock-sessions') then
+        raise 'error in locking sessions'
+      end
+
+      # XXX what if this is already running?
+      if ! system('systemctl', 'start', 'puavo-exammode-tty.service') then
+        raise 'could not start puavo-exammode session'
+      end
+
+      # XXX should use the actual known vt instead of guessing
+      # XXX probably this dbus call takes too long
+      if ! system('chvt', '2') then
+        raise 'could not start puavo-exammode session'
+      end
     end
   end
 end

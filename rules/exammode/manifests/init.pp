@@ -11,9 +11,21 @@ class exammode {
     '/etc/dbus-1/system.d/org.puavo.Exam.conf':
       source => 'puppet:///modules/exammode/org.puavo.Exam.conf';
 
+    '/etc/systemd/system/puavo-exammode-tty.service':
+      require => Package['systemd'],
+      source  => 'puppet:///modules/exammode/puavo-exammode-tty.service';
+
+    '/usr/lib/puavo-ltsp-client/exammode-session':
+      mode   => '0755',
+      source => 'puppet:///modules/exammode/exammode-session';
+
     '/usr/local/bin/puavo-switch-to-exammode':
       mode   => '0755',
       source => 'puppet:///modules/exammode/puavo-switch-to-exammode';
+
+    '/usr/local/bin/puavo-examusersh':
+      mode   => '0755',
+      source => 'puppet:///modules/exammode/puavo-examusersh';
 
     '/usr/local/sbin/puavo-exammode-manager':
       mode   => '0755',
@@ -50,11 +62,15 @@ class exammode {
       comment    => 'Puavo Exam User',
       gid        => $puavo_examuser_gid,
       home       => $puavo_examuser_homedir,
-      require    => Group['puavo-examuser'],
-      shell      => '/bin/bash',
+      require    => [ File['/usr/local/bin/puavo-examusersh']
+                    , Group['puavo-examuser'], ],
+      shell      => '/usr/local/bin/puavo-examusersh',
       system     => true,
       uid        => $puavo_examuser_uid;
   }
 
-  Package <| title == 'xserver-xorg-core' |>
+  Package <|
+       title == 'systemd'
+    or title == 'xserver-xorg-core'
+  |>
 }
