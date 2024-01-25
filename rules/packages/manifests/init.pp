@@ -226,6 +226,7 @@ class packages {
     , 'pm-utils'
     , 'rng-tools-debian'
     , 'systemd'
+    , 'tomoyo-tools'
     , 'udev'
     , 'udisks2'
     , 'vlan' ]:
