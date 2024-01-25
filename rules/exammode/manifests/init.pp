@@ -69,6 +69,7 @@ class exammode {
 
   Package <|
        title == 'systemd'
+    or title == 'tomoyo-tools'
     or title == 'xserver-xorg-core'
   |>
 }
