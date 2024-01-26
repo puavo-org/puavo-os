@@ -180,6 +180,10 @@ for os_target in "${os_targets[@]}"; do
       do_reset_puavo_os=true
       ;;
     Windows)
+      if [ ! -e '/images/boot/.puavo_windows_partition' ]; then
+        logerr 'Windows is not installed'
+        exit 1
+      fi
       do_reset_windows=true
       ;;
     *)
