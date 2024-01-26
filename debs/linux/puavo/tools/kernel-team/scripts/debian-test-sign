@@ -1,0 +1,258 @@
+#!/usr/bin/python3
+
+# Script to sign code with test keys.  This can be used to simulate
+# the code signing service and then test the second stage build,
+# without having to set up the code signing service properly.
+#
+# This doesn't validate its input quite as strictly as the real code
+# signing service, and is not safe to use with untrusted input.
+
+import debian.deb822
+import glob
+import json
+import os
+import os.path
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
+
+class TemporaryUnpackDirectory:
+    def __init__(self, deb_path):
+        self._dir = tempfile.TemporaryDirectory()
+        try:
+            subprocess.check_call(
+                ['dpkg-deb', '-x', deb_path, self._dir.name])
+        except:
+            self._dir.cleanup()
+            raise
+        self.name = self._dir.name
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self._dir.cleanup()
+
+
+class CodeSigningKey:
+    _linux_sign_file = None
+
+    # Look for Linux sign-file executable.  Assume any version will work
+    # (it hasn't changed in any interesting way for a long time).
+    @staticmethod
+    def _find_linux_sign_file():
+        if CodeSigningKey._linux_sign_file is None:
+            for dir_path in glob.glob('/usr/lib/linux-kbuild-*'):
+                if os.path.isdir(dir_path):
+                    name = os.path.join(dir_path, 'scripts/sign-file')
+                    if os.path.isfile(name):
+                        CodeSigningKey._linux_sign_file = name
+                        break
+            else:
+                raise RuntimeError('missing sign-file')
+        return CodeSigningKey._linux_sign_file
+
+    def __init__(self, key_path=None, cert_path=None):
+        self._dir = tempfile.TemporaryDirectory()
+        if key_path and cert_path:
+            self._key_path = key_path
+            self._cert_path = cert_path
+        elif not key_path and not cert_path:
+            self._key_path = os.path.join(self._dir.name, 'sign.key.pem')
+            self._cert_path = os.path.join(self._dir.name, 'sign.cer.pem')
+            try:
+                self._gen_key_cert()
+            except:
+                self._dir.cleanup()
+                raise
+        else:
+            raise ValueError(
+                'must specify both or neither of key and cert paths')
+
+    def _gen_key_cert(self):
+        # Override default configuration so no interaction is needed
+        conf_path = os.path.join(self._dir.name, 'openssl.cnf')
+        with open(conf_path, 'w') as conf:
+            conf.write('''\
+[ req ]
+encrypt_key = no
+x509_extensions = v3_ca
+prompt= no
+distinguished_name = req_distinguished_name
+
+[ req_distinguished_name ]
+CN = Test Signer CA
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical,CA:true
+''')
+        env = os.environ.copy()
+        env['OPENSSL_CONF'] = conf_path
+
+        subprocess.check_call(
+            ['openssl', 'req', '-new', '-x509', '-newkey', 'rsa:2048',
+             '-keyout', self._key_path, '-out', self._cert_path],
+            stdin=subprocess.DEVNULL,
+            env=env)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self._dir.cleanup()
+
+    def sign_efi(self, image_path, sig_path):
+        subprocess.check_call(
+            ['sbsign', '--detached', '--key', self._key_path,
+             '--cert', self._cert_path, '--output', sig_path, image_path],
+            stdin=subprocess.DEVNULL)
+
+    def sign_kmod(self, image_path, sig_path):
+        sign_file = self._find_linux_sign_file()
+
+        # This always generates detached signatures as input name
+        # with '.p7s' suffix.  Put them both in the temporary
+        # directory.
+        image_temp_path = os.path.join(self._dir.name, 'module.ko')
+        sig_temp_path = image_temp_path + '.p7s'
+        os.symlink(os.path.abspath(image_path), image_temp_path)
+        try:
+            subprocess.check_call(
+                [sign_file, '-d', 'sha256', self._key_path, self._cert_path,
+                 image_temp_path])
+            shutil.copyfile(sig_temp_path, sig_path)
+        finally:
+            os.unlink(image_temp_path)
+
+
+def main(changes_path, *args):
+    with open(changes_path) as f:
+        changes = debian.deb822.Changes(f)
+
+    changes_dir = os.path.dirname(changes_path) or '.'
+
+    # Find binary packages and specifically "signed-template" packages.
+    # dak actually identifies these based on its configuration, not name.
+    deb_file_names = {}
+    template_ids = []
+    for item in changes['Files']:
+        match = re.match(r'([^_]+)_[^_]+_([^_]+).deb$', item['name'])
+        if not match:
+            continue
+        name, arch = match.group(1, 2)
+        deb_file_names[(name, arch)] = item['name']
+        if name.endswith('-signed-template'):
+            print('I: Found signed-template package %s:%s' % (name, arch))
+            template_ids.append((name, arch))
+
+    if not template_ids:
+        print('E: No signed-template packages found', file=sys.stderr)
+        sys.exit(1)
+
+    with CodeSigningKey(*args) as csk:
+        for template_name, arch in template_ids:
+            print('I: Processing signed-template package %s:%s'
+                  % (template_name, arch))
+            with TemporaryUnpackDirectory(
+                    os.path.join(changes_dir,
+                                 deb_file_names[(template_name, arch)])) \
+                 as template_unpack_dir:
+                # Find the template directories
+                template_top_dir = os.path.join(
+                    template_unpack_dir.name, 'usr/share/code-signing',
+                    template_name)
+                template_source_dir = os.path.join(
+                    template_top_dir, 'source-template')
+
+                # Load the signing metadata
+                with open(os.path.join(template_top_dir, 'files.json')) as f:
+                    all_files = json.load(f)
+
+                for code_name in all_files['packages']:
+                    deb_file_name = deb_file_names.get((code_name, arch))
+                    if not deb_file_name:
+                        print('I: Ignoring missing code package %s:%s'
+                              % (code_name, arch))
+                        continue
+
+                    print('I: Processing code package %s:%s'
+                          % (code_name, arch))
+                    with TemporaryUnpackDirectory(
+                            os.path.join(changes_dir, deb_file_name)) \
+                         as code_unpack_dir:
+                        for file in all_files['packages'][code_name]['files']:
+                            # Find image and signature names
+                            image_path = os.path.join(
+                                code_unpack_dir.name, file['file'])
+                            sig_path = os.path.join(
+                                template_source_dir, 'debian/signatures',
+                                code_name, file['file'] + '.sig')
+
+                            # Create the output directory and then the
+                            # signature
+                            os.makedirs(os.path.dirname(sig_path),
+                                        exist_ok=True)
+                            if file['sig_type'] == 'efi':
+                                csk.sign_efi(image_path, sig_path)
+                            elif file['sig_type'] == 'linux-module':
+                                csk.sign_kmod(image_path, sig_path)
+                            else:
+                                print('E: Unknown signature type "%s"'
+                                      % file['sig_type'],
+                                      file=sys.stderr)
+
+                subprocess.check_call(
+                    ['dpkg-source', '-b', '.'],
+                    cwd=template_source_dir)
+
+                source_package_name = subprocess.check_output(
+                    ["dpkg-parsechangelog", "-S", "Source"],
+                    cwd=template_source_dir).decode('ascii').strip()
+                source_package_version = subprocess.check_output(
+                    ["dpkg-parsechangelog", "-S", "Version"],
+                    cwd=template_source_dir).decode('ascii').strip()
+
+                # Generate source.changes file
+                changes_path = os.path.join(
+                    changes_dir,
+                    '%s_%s_source.changes'
+                    % (source_package_name, source_package_version))
+                with open(changes_path, 'wb') as changes:
+                    subprocess.check_call(
+                        ['dpkg-genchanges', '-S'],
+                        cwd=template_source_dir,
+                        stdout=changes)
+
+                # Move source package next to changes
+                for source_path_ext in ['.dsc', '.tar.xz']:
+                    source_path = os.path.join(
+                        template_top_dir,
+                        '%s_%s%s'
+                        % (source_package_name, source_package_version,
+                           source_path_ext))
+                    shutil.move(source_path, changes_dir)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) not in [2, 4]:
+        print('''\
+Usage: %s changes-file [key-file cert-file]
+
+The signed-template and code binary packages must be in the same
+directory as changes-file.  A source package and changes file will be
+generated in that directory.
+
+If no key and certificate files are specified, a temporary key and
+certificate will be used.  It won't be possible to verify the signed
+binaries, but you can test that the complete source package is
+buildable.
+''' % sys.argv[0],
+              file=sys.stderr)
+        sys.exit(2)
+
+    main(*sys.argv[1:])

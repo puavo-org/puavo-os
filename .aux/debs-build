@@ -12,6 +12,7 @@ srcpkgname=$1
 workdir=$2
 pooldir=$3
 
+thisscriptdir=$(dirname $(readlink -e "$0"))
 checksum_file="${workdir}/.checksum.${srcpkgname}.build"
 
 export EMAIL='Puavo Org <dev@opinsys.fi>'
@@ -58,8 +59,9 @@ echo "Building ${srcpkgname}"
 (
   cd "${pkgworkdir}/${srcpkgname}"
 
-  if [ -x puavo/get-orig-source ]; then
-    puavo/get-orig-source
+  if [ -e puavo/info.json ]; then
+    "${thisscriptdir}/debs-reset-debian"
+    "${thisscriptdir}/debs-get-tarball" orig
   else
     debian/scripts/get-orig-source
   fi

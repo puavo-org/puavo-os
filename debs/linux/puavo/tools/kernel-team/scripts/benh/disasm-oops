@@ -1,0 +1,88 @@
+#!/usr/bin/python3
+
+# Copyright 2012,2014,2022 Ben Hutchings
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+import os
+import struct
+import sys
+import tempfile
+
+machine_format = {
+    'i386': 'B',
+    'x86_64': 'B',
+    'arm': '<I',
+    'thumb': '<H',
+    'sparc': '>I',
+    'sparc64': '>I',
+    'm68k': '>H',
+    'ppc64': '>I',
+    'ppc64le': '<I',
+    }
+
+if len(sys.argv) == 1 or sys.argv[1] == '--help':
+    print('''\
+Usage: %s arch code...
+
+The code must be grouped as in the oops message, but may be a single or
+multiple arguments.  The disassembly assumes that the faulting instruction
+(marked by <> or ()) is at 0x10000.
+
+Supported architectures: %s''' % \
+          (sys.argv[0], ' '.join(sorted(machine_format.keys()))),
+          file=sys.stderr)
+    sys.exit(2)
+
+machine = sys.argv[1]
+code_format = machine_format[machine]
+if machine == 'x86_64':
+    machine_opts = ['-m', 'i386', '-M', 'x86-64']
+elif machine == 'sparc':
+    machine_opts = ['-m', 'sparc:v9b', '-EB']
+elif machine == 'sparc64':
+    machine_opts = ['-m', 'sparc:v9b', '-EB']
+elif machine == 'ppc64':
+    machine_opts = ['-m', 'powerpc:common64', '-EB']
+elif machine == 'ppc64le':
+    machine_opts = ['-m', 'powerpc:common64', '-EL']
+elif machine == 'thumb':
+    machine_opts = ['-m', 'arm', '--disassembler-options=force-thumb']
+else:
+    machine_opts = ['-m', machine]
+
+code = []
+start = 0
+offset = 0
+for arg in sys.argv[2:]:
+    for b in arg.split():
+        if (b[:1] == '<' and b[-1:] == '>' or
+            b[:1] == '(' and b[-1:] == ')'):
+            start = 0x10000 - offset
+            b = b[1:-1]
+        code_unit = struct.pack(code_format, int(b, 16))
+        offset = offset + len(code_unit)
+        code.append(code_unit)
+
+t = tempfile.NamedTemporaryFile()
+try:
+    t.write(b''.join(code))
+    t.flush()
+    argv = ['objdump', '-b', 'binary', '--adjust-vma', str(start)]
+    argv.extend(machine_opts)
+    argv.extend(['-D', t.name])
+    os.spawnvp(os.P_WAIT, argv[0], argv)
+finally:
+    t.close()

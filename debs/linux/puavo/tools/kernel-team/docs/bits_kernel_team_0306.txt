@@ -1,0 +1,97 @@
+Hi,
+
+Half-way between the sarge release and the etch freeze the Debian kernel
+team takes a look back at what already happened after the sarge release
+and what you should expect for etch.
+
+linux-2.6
+~~~~~~~~~
+As of 2.6, we have a unified source package from which kernel images
+and headers for every architecture are built.  This change to a unified
+package since the linux-2.6.12 release makes it easier to keep up with
+upstream.  We expect that it will also allow much easier security builds
+for etch.  All Debian architectures are supported in 2.6, with mips/mipsel
+joining with the release of 2.6.16.
+
+The most user visible change is that kernel-image-2.6-$flavour has been
+renamed to linux-image-2.6-$flavour. We provide transition packages using
+the old naming scheme to allow upgrades from sarge.
+
+As mentioned above, we are tracking upstream closely.  Usually, the latest
+upstream release reaches unstable almost on the day of its release.
+Experimental acts as staging area, where the -rcX kernels are built.  If
+you want to be on the cutting edge, Bastian Blank provides daily builds
+out of the debian-kernel repository [1].
+
+There has been lots of excitement around the x86 SMP alternatives patch,
+which would allow to reduce the current number of flavors. SMP hardware
+would just be a special case of hotplug CPUs. The uniprocessor flavors
+would also support SMP and the SMP ones could be dropped. On the feature
+side there is work going on to add VServer, Xen and UML flavors to
+linux-2.6.  Most legacy Debian specific patches have been cleared, the
+bulk of the current patchset is arch specific. 2.6 arch support is growing
+from release to release, so those patchsets should be of no concern.
+
+2.6 Linux features initramfs, which contains the boot-relevant drivers.
+Currently there are two different supported tools for generating the
+initramfs: initramfs-tools and yaird. initramfs-tools allows a more
+generic boot image by design and thus is the default. See for details [2].
+
+Bug reporting
+~~~~~~~~~~~~~
+Since newer kernels still fix more bugs than they create we encourage
+testing of latest -rcX kernels in experimental. If the bug you are seeing
+is fixed in them there is no need to open a bug report against previous
+2.6 as we will rebase every new upstream release. If your bug is
+reproducible in the latest -rcX use reportbug and don't forget to add the
+relevant details like latest known good (full dmesg, lspci, ..). This will
+allow upstream to be made aware of regressions.
+
+If you have an old open bug against an earlier 2.6 revision please test
+against the latest version and provide feedback of your findings.
+
+Security
+~~~~~~~~
+Dann Frazier, Simon Horman, and Moritz Muehlenhoff are doing a marvelous
+job in scanning and testing all CVEs (Common Vulnerabilities and
+Exposures, a unique ID for security issues) which get issued against the
+Linux kernel.  The second round of the sarge Debian kernel is prepared [3]
+and has been submitted to the stable security team. You won't believe it,
+but there is even a round for woody prepared [4].
+
+End of line
+~~~~~~~~~~~
+linux-2.4 is officially deprecated.  After having several releases where
+your Linux kernel choice was as wide as stretching between 2.2 - 2.6 it is
+finally time to concentrate on 2.6 only.  Currently Simon Horman does a
+bulk of linux-2.4 upstream security support and testing against latest
+CVEs.  Almost no other vendor provides 2.4 security support and it is
+unreasonable to even think about that burden in the etch time frame.
+
+As of linux-2.6.12 the i386 flavor and support has been dropped and the
+386 flavor got renamed to 486. Sarge has no official 386 support,
+although it should mostly work there.
+
+Documentation
+~~~~~~~~~~~~~
+The Debian Linux kernel handbook [5] contains lots of information about
+the Debian Linux kernel packages, recommended procedures, and other
+Debian-specific kernel-related information.  There you'll also find some
+practical chapters like "Filing a bug against a kernel package".  The
+kernel-handbook is currently a "work in progress", so any contributions,
+suggestions and corrections are very welcome.  They should be submitted to
+the kernel-handbook mailing list [6].
+
+Cheers,
+
+
+--
+Debian Kernel Team
+
+
+[1] deb http://kernel-archive.buildserver.net/debian-kernel trunk main
+[2] http://wiki.debian.org/InitrdReplacementOptions
+[3] http://wiki.debian.org/DebianKernelSargeUpdateStatus
+[4] http://wiki.debian.org/DebianKernelWoodyUpdateStatus
+[5] http://kernel-handbook.alioth.debian.org/
+[6] kernel-handbook-general@lists.alioth.debian.org

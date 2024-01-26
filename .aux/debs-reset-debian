@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+if [ $# -ne 0 ]; then
+  echo "ERROR: invalid number of arguments ($#), expected 0" >&2
+  exit 1
+fi
+
+thisscriptdir=$(dirname $(readlink -e "$0"))
+
+[ -e puavo/info.json ] || {
+  echo "ERROR: current directory is not a package directory, puavo/info.json is not found" >&2
+  exit 1
+}
+
+srcpkgname=$(jq -r .name puavo/info.json)
+
+find . -mindepth 1 -maxdepth 1 -not -name puavo -exec rm -rf {} \;
+
+"${thisscriptdir}/debs-get-tarball" debian
+"${thisscriptdir}/debs-get-tarball" orig
+"${thisscriptdir}/debs-import-patches"
+
+quilt push -a
+
+puavo_version=$(jq -r .version puavo/info.json)
+
+# Exported to make it easy for puavo/modify-debian script to add its
+# own changelog entries.
+export DEBEMAIL='Puavo Org <dev@opinsys.fi>'
+
+dch -v "${puavo_version}" -D puavo-bookworm --force-distribution ''
+
+if [ -e puavo/modify-debian ]; then
+  puavo/modify-debian
+fi
+
+find . -mindepth 1 -maxdepth 1 -not \( -name debian -or -name puavo \) -exec rm -rf {} \;

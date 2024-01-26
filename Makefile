@@ -65,7 +65,7 @@ endif
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
 
-_debootstrap_packages      := apt-utils,git,jq,locales,lsb-release,make,puppet,puppet-module-puppetlabs-sshkeys-core,sudo,wget
+_debootstrap_packages      := apt-utils,git,jq,locales,lsb-release,make,puppet,puppet-module-puppetlabs-sshkeys-core,python3-pydantic,sudo,wget
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid/squid.conf \
 			 && echo true || echo false)
