@@ -51,7 +51,7 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
-		gdm/greeter/autostart/puavo-run-xrandr.desktop
+		gdm/greeter/autostart/puavo-display-manager.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-conf-parameters.json
