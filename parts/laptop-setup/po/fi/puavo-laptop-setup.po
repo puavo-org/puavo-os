@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-laptop-setup:259
+#: puavo-laptop-setup:261
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
@@ -18,7 +18,7 @@ msgstr ""
 "käynnistysvalikkoon. Käynnistysvalikko tulee näkyviin aina tietokoneen "
 "uudelleen käynnistyksen yhteydessä."
 
-#: puavo-laptop-setup:263
+#: puavo-laptop-setup:265
 msgid ""
 "Abitti-compatible eExam-system is not updated when running Windows, you have "
 "to boot into the current system to update it."
@@ -29,50 +29,35 @@ msgstr ""
 "käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt "
 "käytössä olevaan Opinsys OS -käyttöjärjestelmään."
 
-#: puavo-laptop-setup:405
+#: puavo-laptop-setup:403
 msgid "error saving changes"
 msgstr "virhe tallennuksessa"
 
-#: puavo-laptop-setup:428
-msgid "DANGER! DANGER!"
-msgstr "VAARA! VAARA!"
-
-#: puavo-laptop-setup:430
-msgid ""
-"THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!  IT WILL DESTROY "
-"ALL YOUR DATA IN YOUR HOME DIRECTORY, AND MORE!  WHEN IN DOUBT, TURN OFF THE "
-"MACHINE, PANIC AND RUN AWAY!  (press OK and provide your password if you "
-"still want to do this.)"
-msgstr ""
-"TÄMÄ TOIMENPIDE PALAUTTAA TÄMÄN TIETOKONEEN TEHDASASETUKSILLE! SE TUHOAA "
-"KAIKEN DATAN KOTIHAKEMISTOSSASI, JA ENEMMÄNKIN! JOS EPÄILET OLLENKAAN, "
-"SAMMUTA KONE, PANIKOI JA JUOKSE KARKUUN! (paina OK ja anna salasanasi jos "
-"haluat kuitenkin tehdä tämän.)"
-
-#: puavo-laptop-setup:453
+#: puavo-laptop-setup:438
 msgid "Factory reset is running step"
 msgstr "Tehdasasetusten palautus on käynnissä vaiheessa"
 
-#: puavo-laptop-setup:466
+#: puavo-laptop-setup:451
 msgid "Factory reset is running"
 msgstr "Tehdasasetusten palautus on käynnissä"
 
-#: puavo-laptop-setup:474
+#: puavo-laptop-setup:459
 msgid "Failed to start factory reset"
 msgstr "Tehdasasetusten palautuksen käynnistys epäonnistui"
 
-#: puavo-laptop-setup:477 puavo-laptop-setup:505
+#: puavo-laptop-setup:462 puavo-laptop-setup:493
 msgid "Factory reset failed"
 msgstr "Tehdasasetusten palautus epäonnistui"
 
-#: puavo-laptop-setup:495
-msgid ""
-"Factory reset succeeded. The system is going to reboot in few seconds..."
-msgstr ""
-"Tehdasasetusten palautus onnistui. Järjestelmä käynnistyy uudestaan muutaman "
-"sekunnin kuluessa..."
+#: puavo-laptop-setup:480
+msgid "Factory reset succeeded."
+msgstr "Tehdasasetusten palautus onnistui."
 
-#: puavo-laptop-setup:507
+#: puavo-laptop-setup:482
+msgid "The system is going to reboot in few seconds..."
+msgstr "Järjestelmä käynnistyy uudestaan muutaman sekunnin kuluessa..."
+
+#: puavo-laptop-setup:495
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -80,15 +65,15 @@ msgstr ""
 "Tarkemmat tiedot virheestä löytyvät tehdasasetusten palautuslokista. Olkaa "
 "hyvä ja ottakaa yhteyttä tukeen ongelman selvittämiseksi."
 
-#: puavo-laptop-setup:572 puavo-laptop-setup:602
+#: puavo-laptop-setup:580 puavo-laptop-setup:626
 msgid "Laptop setup"
 msgstr "Kannettavan asetukset"
 
-#: puavo-laptop-setup:592
+#: puavo-laptop-setup:616
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
 
-#: puavo-laptop-setup:602
+#: puavo-laptop-setup:626
 msgid "is already running"
 msgstr "on jo käynnissä"
 
@@ -124,7 +109,7 @@ msgstr ""
 msgid "eExam-system"
 msgstr "Koejärjestelmä"
 
-#: puavo-laptop-setup.glade:176
+#: puavo-laptop-setup.glade:176 puavo-laptop-setup.glade:340
 msgid "Windows"
 msgstr ""
 
@@ -134,22 +119,70 @@ msgid "Start using Windows"
 msgstr "Ota Windows käyttöön"
 
 #: puavo-laptop-setup.glade:231
-msgid ""
-"Destroy all user data and reset laptop to factory state (requires password)"
-msgstr ""
-"Tuhoa kaikki tiedot ja palauta tietokone tehdastilaan (vaatii salasanan)"
+msgid "Factory reset..."
+msgstr "Tehdasasetusten palautus..."
 
 #: puavo-laptop-setup.glade:257
+msgid "Confirmation of factory reset"
+msgstr "Vahvistus tehdasasetusten palautukselle"
+
+#: puavo-laptop-setup.glade:275
+msgid "Cancel"
+msgstr "Peruuta"
+
+#: puavo-laptop-setup.glade:291
+msgid "Reset"
+msgstr "Palauta tehdasasetuksille"
+
+#: puavo-laptop-setup.glade:314
+msgid "Select operating systems to reset:"
+msgstr "Valitse tehdasasetuksille palautettavat käyttöjärjestelmät:"
+
+#: puavo-laptop-setup.glade:324
+msgid "Puavo OS"
+msgstr ""
+
+#: puavo-laptop-setup.glade:360
+msgid ""
+"<big>Factory reset <span foreground=\"red\" size=\"x-large\">erases all user "
+"data</span> from selected operating systems and restores their state to "
+"factory settings!</big>"
+msgstr ""
+"<big>Tehdasasetusten palautus <span foreground=\"red\" size=\"x-"
+"large\">tuhoaa kaiken datan</span> valituista käyttöjärjestelmistä ja "
+"palauttaa ne takaisin tehdasasetuksille!</big>"
+
+#: puavo-laptop-setup.glade:375
 msgid "Factory reset"
 msgstr "Tehdasasetusten palautus"
 
-#: puavo-laptop-setup.glade:272
+#: puavo-laptop-setup.glade:390
 msgid "Close"
 msgstr "Sulje"
 
-#: puavo-laptop-setup.glade:317
+#: puavo-laptop-setup.glade:435
 msgid "Factory reset log"
 msgstr "Tehdaasetusten palautusloki"
+
+#~ msgid "DANGER! DANGER!"
+#~ msgstr "VAARA! VAARA!"
+
+#~ msgid ""
+#~ "THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!  IT WILL "
+#~ "DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY, AND MORE!  WHEN IN DOUBT, "
+#~ "TURN OFF THE MACHINE, PANIC AND RUN AWAY!  (press OK and provide your "
+#~ "password if you still want to do this.)"
+#~ msgstr ""
+#~ "TÄMÄ TOIMENPIDE PALAUTTAA TÄMÄN TIETOKONEEN TEHDASASETUKSILLE! SE TUHOAA "
+#~ "KAIKEN DATAN KOTIHAKEMISTOSSASI, JA ENEMMÄNKIN! JOS EPÄILET OLLENKAAN, "
+#~ "SAMMUTA KONE, PANIKOI JA JUOKSE KARKUUN! (paina OK ja anna salasanasi jos "
+#~ "haluat kuitenkin tehdä tämän.)"
+
+#~ msgid ""
+#~ "Destroy all user data and reset laptop to factory state (requires "
+#~ "password)"
+#~ msgstr ""
+#~ "Tuhoa kaikki tiedot ja palauta tietokone tehdastilaan (vaatii salasanan)"
 
 #~ msgid "latest"
 #~ msgstr "viimeisin"
