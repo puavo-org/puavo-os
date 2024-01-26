@@ -198,7 +198,7 @@ def set_max_bpc_only_once()
     return
   end
 
-  system('/usr/lib/puavo-ltsp-client/set-max-bpc')
+  system('/usr/lib/puavo-displays/set-max-bpc')
   set_max_bpc_status = $?.exitstatus
 
   # One attempt is enough, no matter if it failed or not. Subsequent

@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger("puavo-display-manager")
 def _call_run_xrandr(run_xrandr_args: typing.List[str]) -> int:
     _LOGGER.info("Calling run-xrandr...")
     _LOGGER.debug("run-xrandr arguments: %r", run_xrandr_args)
-    run_xrandr_args.insert(0, "/usr/lib/puavo-ltsp-client/run-xrandr")
+    run_xrandr_args.insert(0, "/usr/lib/puavo-displays/run-xrandr")
     run_xrandr_status = subprocess.call(run_xrandr_args)
     _LOGGER.info("run-xrandr exited with status %d", run_xrandr_status)
 

@@ -127,7 +127,10 @@ Description: Puavo developer tools
 Package: puavo-displays
 Architecture: all
 Depends: ${misc:Depends},
+ puavo-conf,
  python3,
+ ruby,
+ ruby-json,
  x11-xserver-utils
 Description: Puavo Displays
   Includes various tools for taking care of your displays.
