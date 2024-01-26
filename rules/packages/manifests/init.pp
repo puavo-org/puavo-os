@@ -28,6 +28,7 @@ class packages {
     , 'puavo-core'
     , 'puavo-desktop-applet'
     , 'puavo-devscripts'
+    , 'puavo-displays'
     , 'puavo-ers'
     , 'puavo-laptop-setup'
     , 'puavo-ltsp-client'
