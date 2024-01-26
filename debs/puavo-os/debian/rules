@@ -39,6 +39,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-devscripts
 
+	$(MAKE) -C displays				        \
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/puavo-displays
+
 	$(MAKE) -C ers				        \
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-ers

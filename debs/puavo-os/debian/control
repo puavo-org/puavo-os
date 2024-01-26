@@ -124,6 +124,15 @@ Description: Puavo developer tools
  Scripts to make the life of a Opinsys developer easier
  .
 
+Package: puavo-displays
+Architecture: all
+Depends: ${misc:Depends},
+ python3,
+ x11-xserver-utils
+Description: Puavo Displays
+  Includes various tools for taking care of your displays.
+ .
+
 Package: puavo-ers
 Architecture: all
 Depends: ${misc:Depends},
