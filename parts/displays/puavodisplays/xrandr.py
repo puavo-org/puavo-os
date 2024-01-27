@@ -8,9 +8,24 @@ import subprocess
 
 
 __all__ = [
+    "CallError",
+    "Error",
+    "UnexpectedOutputError",
     "get_prop",
     "set_max_bpc",
 ]
+
+
+class Error(Exception):
+    """Baseclass for all errors raised from this module"""
+
+
+class CallError(Error):
+    """Raised when xrandr call fails"""
+
+
+class UnexpectedOutputError(Error):
+    """Raised when xrandr output is unexpected"""
 
 
 class _State(str, enum.Enum):
@@ -88,7 +103,7 @@ def _tokenize(line):
         token_match = re.match(token_regex, line)
         if token_match is not None:
             return token_id, token_match.groupdict()
-    raise ValueError("invalid line", line)
+    raise UnexpectedOutputError("invalid output line", line)
 
 
 class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
@@ -146,7 +161,7 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         state,
     ):
         if name in self.__displays:
-            raise RuntimeError("output is already defined", name)
+            raise UnexpectedOutputError("display is a duplicate", name)
         self.__displays[name] = self.__last_output = {"name": name, "state": state}
 
     def __action_create_prop(
@@ -206,9 +221,18 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         return self.__displays
 
 
+def _call_xrandr(xrandr_args) -> str:
+    xrandr_args.insert(0, "xrandr")
+
+    try:
+        return subprocess.check_output(xrandr_args).decode("utf-8")
+    except subprocess.CalledProcessError as called_process_error:
+        raise CallError() from called_process_error
+
+
 def get_prop() -> dict:
     """Get properties of all display outputs."""
-    xrandr_prop_output = subprocess.check_output(["xrandr", "--prop"]).decode("utf-8")
+    xrandr_prop_output = _call_xrandr(["--prop"])
     xrandr_prop_output_parser = _XRandrPropOutputParser()
 
     return xrandr_prop_output_parser.parse(xrandr_prop_output)
@@ -216,9 +240,8 @@ def get_prop() -> dict:
 
 def set_max_bpc(output_name: str, max_bpc: int):
     """Set max bpc of a display output"""
-    subprocess.check_call(
+    _call_xrandr(
         [
-            "xrandr",
             "--output",
             output_name,
             "--set",
