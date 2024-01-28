@@ -20,7 +20,8 @@ installdirs :
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t '$(DESTDIR)$(bindir)'	\
-		puavo-display-manager
+		puavo-display-manager 			\
+		puavo-set-max-bpc
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-displays \
 		lib/*
