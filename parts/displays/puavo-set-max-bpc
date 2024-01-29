@@ -10,10 +10,10 @@ Set max bpc of all displays.
 import argparse
 import logging
 import logging.handlers
-import subprocess
 import sys
 
 # Internal imports
+import puavodisplays.puavoconf
 import puavodisplays.xrandr
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,10 +22,8 @@ _LOGGER.addHandler(logging.handlers.SysLogHandler("/dev/log"))
 
 
 def _main() -> int:
-    puavo_displays_max_bpc_str = (
-        subprocess.check_output(["puavo-conf", "puavo.displays.max_bpc"])
-        .decode("utf-8")
-        .strip()
+    puavo_displays_max_bpc_str = puavodisplays.puavoconf.get_as(
+        "puavo.displays.max_bpc", int
     )
 
     argparser = argparse.ArgumentParser(
