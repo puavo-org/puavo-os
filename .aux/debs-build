@@ -41,6 +41,14 @@ if [ "$current_srctree_checksum" = "$old_srctree_checksum" ]; then
 fi
 
 (
+  cd "${pkgworkdir}/${srcpkgname}"
+  if [ -e puavo/info.json ]; then
+    echo "Resetting debian dir for ${srcpkgname}"
+    "${thisscriptdir}/debs-reset-debian"
+  fi
+)
+
+(
   echo "Installing build dependencies for ${srcpkgname}"
   cd "$pkgworkdir"
 
@@ -60,7 +68,6 @@ echo "Building ${srcpkgname}"
   cd "${pkgworkdir}/${srcpkgname}"
 
   if [ -e puavo/info.json ]; then
-    "${thisscriptdir}/debs-reset-debian"
     "${thisscriptdir}/debs-get-tarball" orig
   else
     debian/scripts/get-orig-source
