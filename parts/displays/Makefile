@@ -11,7 +11,7 @@ scripts := puavo-display-manager puavo-set-max-bpc
 check_mypy_targets := $(scripts:%=check-mypy-%)
 
 .PHONY: all
-all:
+all: check test
 
 .PHONY : installdirs
 installdirs :
