@@ -5,7 +5,7 @@ import collections
 import enum
 import re
 import subprocess
-
+import typing
 
 __all__ = [
     "CallError",
@@ -36,10 +36,10 @@ class _State(str, enum.Enum):
     OUTPUT_MODE = "OUTPUT_MODE"
     OUTPUT_PROP = "OUTPUT_PROP"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.value)
 
 
@@ -53,10 +53,10 @@ class _TokenId(str, enum.Enum):
     PROP_HEAD = "PROP_HEAD"
     SCREEN = "SCREEN"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.value)
 
 
@@ -98,7 +98,7 @@ _TOKEN_REGEXES = collections.OrderedDict(
 )
 
 
-def _tokenize(line):
+def _tokenize(line: str) -> typing.Tuple[_TokenId, typing.Dict[str, str]]:
     for token_id, token_regex in _TOKEN_REGEXES.items():
         token_match = re.match(token_regex, line)
         if token_match is not None:
@@ -107,7 +107,7 @@ def _tokenize(line):
 
 
 class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
-    def __init__(self):
+    def __init__(self) -> None:
         self.__transitions = {
             # (Current state, Input token): (Action, Next state)
             (_State.INIT, _TokenId.SCREEN): (None, _State.NO_OUTPUTS),
@@ -149,28 +149,28 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
             (_State.OUTPUT_MODE, _TokenId.EOF): (None, _State.DONE),
         }
         self.__current_state = _State.INIT
-        self.__displays = {}
-        self.__last_output = None
-        self.__last_prop = None
+        self.__displays: typing.Dict[str, typing.Dict[str, typing.Any]] = {}
+        self.__last_output: typing.Dict[str, typing.Any] = {}
+        self.__last_prop: typing.Dict[str, typing.Any] = {}
 
     def __action_create_output(
         self,
-        token_id,  # pylint: disable=unused-argument
+        token_id: _TokenId,  # pylint: disable=unused-argument
         *,
-        name,
-        state,
-    ):
+        name: str,
+        state: str,
+    ) -> None:
         if name in self.__displays:
             raise UnexpectedOutputError("display is a duplicate", name)
         self.__displays[name] = self.__last_output = {"name": name, "state": state}
 
     def __action_create_prop(
         self,
-        token_id,  # pylint: disable=unused-argument
+        token_id: _TokenId,  # pylint: disable=unused-argument
         *,
-        name,
-        value,
-    ):
+        name: str,
+        value: str,
+    ) -> None:
         self.__last_output.setdefault("props", {})[name] = self.__last_prop = {
             "name": name,
             "value": value,
@@ -178,19 +178,19 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
 
     def __action_append_prop_value(
         self,
-        token_id,  # pylint: disable=unused-argument
+        token_id: _TokenId,  # pylint: disable=unused-argument
         *,
-        value,
-    ):
+        value: str,
+    ) -> None:
         self.__last_prop["value"] += value
 
     def __action_add_prop_attr_range(
         self,
-        token_id,  # pylint: disable=unused-argument
+        token_id: _TokenId,  # pylint: disable=unused-argument
         *,
-        value_min,
-        value_max,
-    ):
+        value_min: str,
+        value_max: str,
+    ) -> None:
         # Because this property has range attribute, it must be int.
         self.__last_prop["value"] = int(self.__last_prop["value"], 10)
         self.__last_prop["value_min"] = int(value_min, 10)
@@ -198,30 +198,34 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
 
     def __action_add_prop_attr_supported(
         self,
-        token_id,  # pylint: disable=unused-argument
-        supported_values,
-    ):
+        token_id: _TokenId,  # pylint: disable=unused-argument
+        supported_values: str,
+    ) -> None:
         self.__last_prop["supported_values"] = [
             v.strip() for v in supported_values.split(",")
         ]
 
-    def __push(self, token_id, token_groupdict):
+    def __push(
+        self, token_id: _TokenId, token_groupdict: typing.Dict[str, str]
+    ) -> None:
         action, next_state = self.__transitions[(self.__current_state, token_id)]
         if action is not None:
             action(token_id, **token_groupdict)
         self.__current_state = next_state
 
-    def parse(self, xrandr_prop_output: str) -> dict:
+    def parse(
+        self, xrandr_prop_output: str
+    ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         """Parse xrandr output."""
         for line in xrandr_prop_output.splitlines():
             token_id, token_groupdict = _tokenize(line)
             self.__push(token_id, token_groupdict)
-        self.__push(_TokenId.EOF, "")
+        self.__push(_TokenId.EOF, {})
 
         return self.__displays
 
 
-def _call_xrandr(xrandr_args) -> str:
+def _call_xrandr(xrandr_args: typing.List[str]) -> str:
     xrandr_args.insert(0, "xrandr")
 
     try:
@@ -230,7 +234,7 @@ def _call_xrandr(xrandr_args) -> str:
         raise CallError() from called_process_error
 
 
-def get_prop() -> dict:
+def get_prop() -> typing.Dict[str, typing.Dict[str, typing.Any]]:
     """Get properties of all display outputs."""
     xrandr_prop_output = _call_xrandr(["--prop"])
     xrandr_prop_output_parser = _XRandrPropOutputParser()
@@ -238,7 +242,7 @@ def get_prop() -> dict:
     return xrandr_prop_output_parser.parse(xrandr_prop_output)
 
 
-def set_max_bpc(output_name: str, max_bpc: int):
+def set_max_bpc(output_name: str, max_bpc: int) -> None:
     """Set max bpc of a display output"""
     _call_xrandr(
         [

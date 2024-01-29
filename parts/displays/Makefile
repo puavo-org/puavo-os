@@ -7,6 +7,9 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
+scripts := puavo-display-manager puavo-set-max-bpc
+check_mypy_targets := $(scripts:%=check-mypy-%)
+
 .PHONY: all
 all:
 
@@ -31,3 +34,13 @@ install: installdirs
 
 .PHONY: clean
 clean:
+
+.PHONY: $(check_mypy_targets)
+$(check_mypy_targets): check-mypy-%: %
+	mypy --strict $<
+
+.PHONY:
+check-mypy: $(check_mypy_targets)
+
+.PHONY: check
+check: check-mypy
