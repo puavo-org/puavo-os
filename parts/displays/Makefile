@@ -44,3 +44,7 @@ check-mypy: $(check_mypy_targets)
 
 .PHONY: check
 check: check-mypy
+
+.PHONY: test
+test:
+	cd tests && pytest -rA -vvv
