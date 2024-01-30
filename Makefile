@@ -65,7 +65,10 @@ endif
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
 
-_debootstrap_packages      := apt-utils,git,jq,locales,lsb-release,make,puppet,puppet-module-puppetlabs-sshkeys-core,python3-jinja2,python3-pydantic,quilt,sudo,wget
+# needed by linux build to prepare debian-directory
+_pkgbuild_dependencies := kernel-wedge,python3-jinja2,python3-pydantic,quilt
+
+_debootstrap_packages  := apt-utils,git,jq,locales,lsb-release,make,puppet,puppet-module-puppetlabs-sshkeys-core,sudo,wget,$(_pkgbuild_dependencies)
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid/squid.conf \
 			 && echo true || echo false)
