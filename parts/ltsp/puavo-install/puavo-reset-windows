@@ -410,8 +410,8 @@ choose_wim_image_to_use()
 
 reset_win()
 {
-    local wim_file_path win_language win_primary_partition_devpath \
-          win_product_name
+    local wim_image_baseurl wim_image_name win_language \
+          win_primary_partition_devpath win_product_name
 
     win_product_name=$1
     shift
@@ -447,7 +447,7 @@ reset_win()
     loginfo "Re-created NTFS filesystem on '${win_primary_partition_devpath}'."
 
     loginfo "Applying WIM image to '${win_primary_partition_devpath}'..."
-    wimapply "${wim_file_path}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
+    wimapply "${wim_image_name}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
         logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_file_path}' to '${win_primary_partition_devpath}'."
         return 1
     }
