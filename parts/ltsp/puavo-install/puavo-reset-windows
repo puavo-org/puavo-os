@@ -372,7 +372,8 @@ get_wim_catalogue()
 
 choose_wim_image_to_use()
 {
-    local win_language win_product_name win_version
+    local preferred_version_count preferred_versions win_language \
+          win_product_name win_version
 
     win_language=$1
     win_product_name=$2
@@ -386,20 +387,25 @@ choose_wim_image_to_use()
             ;;
     esac
 
-    preferred_versions_json=$(
+    preferred_versions=$(
       jq -r --arg language "$win_language" \
             --arg version "$win_version" '
         .images | map_values(select(.language == $language
                                       and .version == $version))
-      ' wim.json)
+                | to_entries | map(.key) | .[]
+      ' wim.json) || re
 
-    # In case there are several entries, pick the version with the
-    # largest subversion (in a string comparison).
-    # XXX We probably need a smarter mechanism to pick the version we
-    # XXX need in case there are matching entries.  Asking from a user
-    # XXX is probably not a feasible option.
-    printf "%s\n" "$preferred_versions_json" \
-      | jq -r 'to_entries | sort_by(.value.subversion) | last | .key'
+    preferred_version_count="$(printf "%s\n" "$preferred_versions" | wc -l)"
+
+    if [ "$preferred_version_count" -gt 1 ]; then
+        logerr "Multiple image options with ${win_version} and ${win_language}"
+        return 1
+    elif [ "$preferred_version_count" -lt 1 ]; then
+        logerr "No image available with ${win_version} and ${win_language}"
+        return 1
+    fi
+
+    printf "%s\n" "$preferred_versions"
 }
 
 reset_win()
