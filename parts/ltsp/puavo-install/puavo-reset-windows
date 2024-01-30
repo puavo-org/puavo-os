@@ -363,8 +363,8 @@ get_wim_catalogue()
             continue
         fi
 
-        mv "$wim_tmppath" "$WIM_CATALOGUE_PATH"
-        printf "%s/images" "${url%/*}"
+        mv "$wim_tmppath" "$WIM_CATALOGUE_PATH" || return 1
+        printf "%s/images" "${url%/*}"          || return 1
         return 0
     done
 
