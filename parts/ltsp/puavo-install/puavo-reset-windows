@@ -17,6 +17,7 @@ exitval=1                             # Premature exit is an error by default.
 use_force=false                       # --force sets to true
 use_secure_delete=false               # --secure-delete sets to true
 lockfd=                               # Will be set when lockfile is opened
+RESET_STATE_DIR=/state/var/cache/puavo-reset-windows
 WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
 WIM_CATALOGUE_PATH="${WORK_DIR}/wim.json"
 PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
@@ -85,7 +86,34 @@ print0_win_primary_partition_devpaths()
     }
 }
 
-print0_win_language()
+# Use parameter cache to store the Windows installation product name and
+# language.  This is because in case Windows reset gets interrupted or
+# fails when it is in progress, without cache we can not recover the
+# previous information and subsequent reset attempts will fail.
+load_cached_param()
+{
+    local key value
+    key=$1
+
+    if ! value=$(cat "${RESET_STATE_DIR}/${key}" 2>/dev/null); then
+        logerr "Could not load '${key}' parameter from cache"
+        return 1
+    fi
+
+    printf '%s' "$value"
+}
+
+save_cached_param()
+{
+    local key value
+    key=$1
+    value=$2
+    mkdir -p "$RESET_STATE_DIR" || return 1
+    printf "%s\n" "$value" > "${RESET_STATE_DIR}/${key}.tmp" || return 1
+    mv "${RESET_STATE_DIR}/${key}.tmp" "${RESET_STATE_DIR}/${key}" || return 1
+}
+
+get_win_language_from_partition()
 {
     local win_language_id win_language win_primary_partition_devpath
 
@@ -130,10 +158,28 @@ print0_win_language()
             ;;
     esac
 
-    printf '%s' "${win_language}"
+    save_cached_param language "$win_language" || {
+        logerr 'Could not save Windows language name to cache'
+        return 1
+    }
+
+    printf '%s' "$win_language"
 }
 
-print0_win_product_name()
+get_win_language()
+{
+    local win_primary_partition_devpath
+    win_primary_partition_devpath=$1
+
+    if ! get_win_language_from_partition "$win_primary_partition_devpath"; then
+        load_cached_param language || return 1
+        loginfo 'Loaded Windows language from reset cache'
+    fi
+
+    return 0
+}
+
+get_win_product_name_from_partition()
 {
     local win_build_number \
           win_primary_partition_devpath \
@@ -168,7 +214,25 @@ print0_win_product_name()
         win_product_name=$(echo -n "${win_product_name}" | sed -r 's/^Windows 10/Windows 11/')
     fi
 
+    save_cached_param product_name "$win_product_name" || {
+        logerr 'Could not save Windows product name to cache'
+        return 1
+    }
+
     printf '%s' "${win_product_name}"
+}
+
+get_win_product_name()
+{
+    local win_primary_partition_devpath
+    win_primary_partition_devpath=$1
+
+    if ! get_win_product_name_from_partition "$win_primary_partition_devpath"; then
+        load_cached_param product_name || return 1
+        loginfo 'Loaded Windows product name from reset cache'
+    fi
+
+    return 0
 }
 
 print0_wim_image_index()
@@ -453,7 +517,7 @@ reset_win()
 
     loginfo "Applying WIM image to '${win_primary_partition_devpath}'..."
     wimapply "${wim_image_name}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
-        logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_file_path}' to '${win_primary_partition_devpath}'."
+        logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_image_name}' to '${win_primary_partition_devpath}'."
         return 1
     }
     loginfo "Applied WIM image to '${win_primary_partition_devpath}'."
@@ -481,13 +545,13 @@ reset_all_wins()
     returnval=0
 
     while IFS= read -r -d $'\0' win_primary_partition_devpath; do
-        win_product_name=$(print0_win_product_name "${win_primary_partition_devpath}") || {
+        win_product_name=$(get_win_product_name "${win_primary_partition_devpath}") || {
             logerr "Failed to get the product name of Windows on '${win_primary_partition_devpath}'."
             returnval=1
             continue
         }
 
-        win_language=$(print0_win_language "${win_primary_partition_devpath}") || {
+        win_language=$(get_win_language "${win_primary_partition_devpath}") || {
             logerr "Failed to get the language tag of Windows on '${win_primary_partition_devpath}'."
             returnval=1
             continue
