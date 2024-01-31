@@ -6,7 +6,6 @@
 ## default, asks user for a confirmation to reset.
 ##
 ## --force              no questions asked
-## --secure-delete      wipe unused data from Windows partitions after reset
 ##
 
 set -eu
@@ -15,7 +14,6 @@ set -o pipefail
 ## Globals
 exitval=1                             # Premature exit is an error by default.
 use_force=false                       # --force sets to true
-use_secure_delete=false               # --secure-delete sets to true
 lockfd=                               # Will be set when lockfile is opened
 RESET_STATE_DIR=/state/windows
 WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
@@ -63,10 +61,9 @@ logerr() {
 
 usage() {
   cat <<EOF
-$(basename "$0") [--force] [--secure-delete]
+$(basename "$0") [--force]
 
   --force               no questions asked
-  --secure-delete       wipe unused data of the Windows primary partition
 EOF
   exit 1
 }
@@ -522,16 +519,6 @@ reset_win()
     }
     loginfo "Applied WIM image to '${win_primary_partition_devpath}'."
 
-    if $use_secure_delete; then
-        loginfo "Wiping all unused data from '${win_primary_partition_devpath}'..."
-        # Wipes all unused data from the partition.
-        ntfswipe -a "${win_primary_partition_devpath}" || {
-            logerr "Failed to wipe '${win_primary_partition_devpath}'."
-            return 1
-        }
-        loginfo "Wiped all unused data from '${win_primary_partition_devpath}'."
-    fi
-
     loginfo "Reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}' to factory settings successfully."
 
     return 0
@@ -599,10 +586,6 @@ while [ $# -ne 0 ]; do
     case "$1" in
         --force)
             use_force=true
-            shift
-            ;;
-        --secure-delete)
-            use_secure_delete=true
             shift
             ;;
         --)

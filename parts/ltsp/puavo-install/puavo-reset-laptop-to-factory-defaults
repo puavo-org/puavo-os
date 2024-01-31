@@ -201,9 +201,6 @@ if $do_reset_windows; then
   if ! $request_confirmation; then
     prwflags+=('--force')
   fi
-  if $use_secure_delete; then
-    prwflags+=('--secure-delete')
-  fi
   logmsg notice 'starting Windows reset'
   puavo-reset-windows "${prwflags[@]}"
 else
