@@ -340,7 +340,7 @@ fetch_wim_image_from_server()
     loginfo "Fetching WIM image from ${wim_image_url}"
 
     if ! wget_with_certauth --output-document "$wim_tmppath" \
-      -q --show-progress "$wim_image_url"; then
+      -q --progress=dot:giga --show-progress "$wim_image_url"; then
         logerr "Failed to fetch WIM image ${wim_image_name}"
         return 1
     fi
