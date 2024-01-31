@@ -1,14 +1,50 @@
-openjdk-11 (11.0.21+9-1~deb11u1+puavo1) bullseye; urgency=medium
+openjdk-11 (11.0.22+7-1~deb11u1) bullseye-security; urgency=medium
 
-  * Build with our patches.
+  * Rebuild for bullseye
 
- -- Puavo Org <dev@opinsys.fi>  Fri, 15 Sep 2023 14:24:12 +0300
+ -- Moritz Mühlenhoff <jmm@debian.org>  Fri, 19 Jan 2024 16:46:52 +0100
 
-openjdk-11 (11.0.21+9-1~deb11u1) bullseye-security; urgency=medium
+openjdk-11 (11.0.22+7-1) unstable; urgency=high
 
-  * Backport to bullseye.
+  * OpenJDK 11.0.22 release, build 7.
+    - CVEs:
+      + CVE-2024-20918
+      + CVE-2024-20919
+      + CVE-2024-20921
+      + CVE-2024-20945
+      + CVE-2024-20952
+    - Security fixes:
+      + JDK-8308204: Enhanced certificate processing.
+      + JDK-8314295: Enhance verification of verifier.
+      + JDK-8314307: Improve loop handling.
+      + JDK-8314468: Improve Compiler loops.
+      + JDK-8316976: Improve signature handling.
+      + JDK-8317547: Enhance TLS connection support.
+      + JDK-8314284: Enhance Nashorn performance (CVE-2024-20926).
 
- -- Emilio Pozuelo Monfort <pochu@debian.org>  Fri, 27 Oct 2023 08:54:07 +0200
+  [ Vladimir Petko ]
+  * Generate d/watch to cope with early access and release builds.
+  * d/rules: Trim trailing whitespaces from debian/control.
+
+  [ Pushkar Kulkarni ]
+  * Minor improvements to the copyright-generator.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 17 Jan 2024 16:28:29 +0100
+
+openjdk-11 (11.0.22~6ea-1) unstable; urgency=medium
+
+  * OpenJDK 11.0.22+6 build (early access).
+
+  [ Pushkar Kulkarni ]
+  * debian/copyright: Update copyrights and notices, using a generator script.
+
+  [ Vladimir Petko ]
+  * d/copyright: Fix lintian warning.
+
+  [ Matthias Klose ]
+  * d/copyright: Fix source location.
+
+ -- Matthias Klose <doko@ubuntu.com>  Tue, 26 Dec 2023 13:23:50 +0100
 
 openjdk-11 (11.0.21+9-1) unstable; urgency=high
 

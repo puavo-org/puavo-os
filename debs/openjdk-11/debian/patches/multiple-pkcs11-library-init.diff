@@ -7,7 +7,7 @@ Allow multiple PKCS11 library initialisation to be a non-critical error.
 
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/Config.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/Config.java
-@@ -52,6 +52,7 @@
+@@ -52,6 +52,7 @@ final class Config {
      static final int ERR_HALT       = 1;
      static final int ERR_IGNORE_ALL = 2;
      static final int ERR_IGNORE_LIB = 3;
@@ -15,7 +15,7 @@ Allow multiple PKCS11 library initialisation to be a non-critical error.
  
      // same as allowSingleThreadedModules but controlled via a system property
      // and applied to all providers. if set to false, no SunPKCS11 instances
-@@ -1030,6 +1031,8 @@
+@@ -1030,6 +1031,8 @@ final class Config {
              handleStartupErrors = ERR_IGNORE_LIB;
          } else if (val.equals("halt")) {
              handleStartupErrors = ERR_HALT;
@@ -26,7 +26,7 @@ Allow multiple PKCS11 library initialisation to be a non-critical error.
          }
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
-@@ -176,26 +176,37 @@
+@@ -177,26 +177,37 @@ public final class SunPKCS11 extends Aut
                  String nssLibraryDirectory = config.getNssLibraryDirectory();
                  String nssSecmodDirectory = config.getNssSecmodDirectory();
                  boolean nssOptimizeSpace = config.getNssOptimizeSpace();

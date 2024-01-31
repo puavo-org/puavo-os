@@ -1,7 +1,6 @@
 version=4
 opts=\
 repack,\
-compression=xz,\
-dversionmangle=s/~\d*\~us\d*$/\+\d*/, \
- https://github.com/openjdk/jdk11u/tags \
-   (?:.*?/)?jdk-(\d[\d.]*\+\d[\d]*)\.tar\.gz
+compression=xz, \
+    https://github.com/openjdk/jdk11u/tags \
+    (?:.*?/)?jdk-(11[\+\.\d]*)\.tar\.gz

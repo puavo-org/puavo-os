@@ -78,7 +78,6 @@ else
 endif
 
 is_upstream_release = yes
-#is_upstream_release =
 
 srcdir		= .
 builddir	= build
@@ -236,8 +235,7 @@ dpkg_buildflags_hs += dpkg-buildflags
 export EXTRA_CPPFLAGS_HS := $(shell $(dpkg_buildflags_hs) --get CPPFLAGS)
 export EXTRA_CFLAGS_HS   := $(shell $(dpkg_buildflags_hs) --get CFLAGS; $(dpkg_buildflags_hs) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_HS := $(shell $(dpkg_buildflags_hs) --get CXXFLAGS) -Wno-deprecated-declarations
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_HS  := $(shell $(dpkg_buildflags_hs) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_HS  := $(shell $(dpkg_buildflags_hs) --get LDFLAGS)
 
 dpkg_buildflags_zero = \
 	DEB_BUILD_MAINT_OPTIONS="optimize=-lto" \
@@ -253,8 +251,7 @@ dpkg_buildflags_zero += dpkg-buildflags
 export EXTRA_CPPFLAGS_ZERO := $(shell $(dpkg_buildflags_zero) --get CPPFLAGS)
 export EXTRA_CFLAGS_ZERO   := $(shell $(dpkg_buildflags_zero) --get CFLAGS; $(dpkg_buildflags_zero) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_ZERO := $(shell $(dpkg_buildflags_zero) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_ZERO  := $(shell $(dpkg_buildflags_zero) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_ZERO  := $(shell $(dpkg_buildflags_zero) --get LDFLAGS)
 
 ifeq ($(DEB_HOST_ARCH),alpha)
   export EXTRA_LDFLAGS_ZERO += -Wl,--no-relax
@@ -271,8 +268,7 @@ dpkg_buildflags_jdk += dpkg-buildflags
 export EXTRA_CPPFLAGS_JDK := $(shell $(dpkg_buildflags_jdk) --get CPPFLAGS)
 export EXTRA_CFLAGS_JDK   := $(shell $(dpkg_buildflags_jdk) --get CFLAGS) $(shell $(dpkg_buildflags_jdk) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_JDK := $(shell $(dpkg_buildflags_jdk) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_JDK  := $(shell $(dpkg_buildflags_jdk) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_JDK  := $(shell $(dpkg_buildflags_jdk) --get LDFLAGS)
 
 #for IcedTea
 dpkg_buildflags_it = \
@@ -285,8 +281,7 @@ dpkg_buildflags_it += dpkg-buildflags
 export EXTRA_CPPFLAGS_IT := $(shell $(dpkg_buildflags_it) --get CPPFLAGS)
 export EXTRA_CFLAGS_IT   := $(shell $(dpkg_buildflags_it) --get CFLAGS)
 export EXTRA_CXXFLAGS_IT := $(shell $(dpkg_buildflags_it) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_IT  := $(shell $(dpkg_buildflags_it) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_IT  := $(shell $(dpkg_buildflags_it) --get LDFLAGS)
 
 # This section should be in sync with "bd_gcc" definition
 ifneq (,$(filter $(distrel),saucy))
@@ -873,7 +868,7 @@ ifneq ($(with_debugedit),yes)
   control_vars += '-Vdbg:Conflicts=openjdk-12-dbg, openjdk-13-dbg, openjdk-14-dbg, openjdk-15-dbg, openjdk-16-dbg, openjdk-17-dbg'
 endif
 
-debian/control: debian/control.in debian/tests/control debian/rules
+debian/control: debian/control.in debian/tests/control debian/rules debian/watch
 	@cp -p debian/control debian/control.old
 	sed \
 	      -e 's/@basename@/$(basename)/g' \
@@ -901,6 +896,7 @@ debian/control: debian/control.in debian/tests/control debian/rules
 	    $(if $(altzero_archs), debian/control.zero-jre) \
 	    $(if $(DEB_HOST_MULTIARCH),,| grep -v '^Multi-Arch') \
 		> debian/control
+	sed -i 's/[[:blank:]]*$$//' debian/control
 	@if cmp -s debian/control debian/control.old; then \
 	  rm -f debian/control.old; \
 	else \
@@ -929,7 +925,7 @@ gen-autopkgtests: debian/tests/jtdiff-autopkgtest.sh debian/tests/jtreg-autopkgt
 
 packaging-files:
 	for f in debian/*.in; do \
-	  case "$$f" in debian/control.in) continue; esac; \
+	  case "$$f" in debian/control.in|debian/watch.in) continue; esac; \
 	  f2=$$(echo $$f | sed 's/JB/$(basename)/;s/\.in$$//'); \
 	  sed -e 's/@JRE@/$(p_jre)/g' \
 	      -e 's/@JDK@/$(p_jdk)/g' \
@@ -1234,7 +1230,7 @@ debian-clean:
 	dh_prep
 	for f in debian/*.in; do \
 	  f2=$$(echo $$f | sed 's/JB/$(basename)/;s/\.in$$//'); \
-	  case "$$f2" in debian/control) continue; esac; \
+	  case "$$f2" in debian/control|debian/watch) continue; esac; \
 	  rm -f $$f2; \
 	done
 	rm -f debian/*.install debian/*.links debian/*.debhelper.log
@@ -1886,18 +1882,27 @@ endif
 	NO_PKG_MANGLE=1 \
 	dh_builddeb -a $(nodemo) $(nojrez) #$(bd_options)
 
-is_release		= yes
-#is_release		=
 git_project		= jdk11u
-git_tag			= jdk-11.0.21+9
+git_tag			= jdk-11.0.22+7
 package_version		= $(subst jdk-,,$(git_tag))
 package_version		= $(shell echo $(PKGVERSION) | sed 's/-[^-][^-]*$$//')
-ifneq ($(is_release),yes)
+ifneq ($(is_upstream_release),yes)
   package_version	:= $(subst +,~,$(package_version))
 endif
 git_url			= https://github.com/openjdk/$(git_project)
 origdir = ../$(basename)-$(package_version).orig
 topdir = $(basename)-$(package_version)
+
+debian/watch: debian/watch.in debian/rules
+	sed \
+		-e 's|@git_url@|$(git_url)/tags|g' \
+		-e 's|@shortver@|$(shortver)|g' \
+		debian/watch.in > debian/watch
+# disable version mangling for the release version
+ifeq ($(is_upstream_release),yes)
+	sed -i 's|repack.*\\|repack,\\|g' debian/watch
+endif
+
 get-orig:
 	mkdir $(origdir)
 	wget -O $(origdir)/jdk.tar.gz $(git_url)/archive/$(git_tag).tar.gz

@@ -1,0 +1,6 @@
+version=4
+opts=\
+repack,repacksuffix=ea,oversionmangle=s/\+(\d+)/\~$1/,dversionmangle=s/\~(\d*)ea$/\+$1/,\
+compression=xz, \
+    @git_url@ \
+    (?:.*?/)?jdk-(@shortver@[\+\.\d]*)\.tar\.gz
