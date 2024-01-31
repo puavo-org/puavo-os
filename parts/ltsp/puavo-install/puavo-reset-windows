@@ -436,6 +436,13 @@ reset_win()
 
     wim_image_index=$(print0_wim_image_index "$wim_image_name" "$win_product_name")
 
+    loginfo "Securely erasing Windows on '${win_primary_partition_devpath}'"
+    blkdiscard "${win_primary_partition_devpath}" || {
+        logerr "Failed to run blkdiscard to '${win_primary_partition_devpath}'"
+        return 1
+    }
+    loginfo "Secure erase done."
+
     loginfo "Re-creating NTFS filesystem on '${win_primary_partition_devpath}'..."
     # Force needed to overwrite the existing filesystem without questions.
     mkfs.ntfs -f "${win_primary_partition_devpath}" || {
