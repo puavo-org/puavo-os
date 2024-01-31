@@ -99,6 +99,9 @@
     "description": "If true, pass --force-extra-removable argument to grub-install",
     "typehint": "bool"
   },
+  "puavo.grub.timeout": {
+    "default": "5"
+  },
   "puavo.grub.windows.enabled": {
     "default": "true",
     "description": "If true and Windows is installed, show it in Grub boot menu",

@@ -1,31 +1,55 @@
-require 'ldap'
-require 'socket'
+require 'net/ldap'
 
 class PuavoLdap
   attr_reader :base, :dn, :password
 
-  Puavodomain        = File.read('/etc/puavo/domain').chomp
-  Default_ldapserver = "#{ Socket.gethostname }.#{ Puavodomain }"
+  Puavodomain   = File.read('/etc/puavo/domain').chomp
+  Puavohostname = File.read('/etc/puavo/hostname').chomp
+  My_FQDN       = "#{ Puavohostname }.#{ Puavodomain }"
 
-  def initialize(ldapserver='localhost')
-    @base     = File.read('/etc/puavo/ldap/base'    ).chomp
-    @dn       = File.read('/etc/puavo/ldap/dn'      ).chomp
-    @password = File.read('/etc/puavo/ldap/password').chomp
+  def initialize
+    @base = File.read('/etc/puavo/ldap/base'    ).chomp
 
-    if ldapserver == 'localhost' then
-      ldapserver = Default_ldapserver
+    dn       = File.read('/etc/puavo/ldap/dn'      ).chomp
+    password = File.read('/etc/puavo/ldap/password').chomp
+
+    connection_args = {
+      :auth => {
+        :method   => :simple,
+        :username => dn,
+        :password => password,
+      },
+      :host => My_FQDN,
+      :port => 389,
+      :encryption => {
+        :method => :start_tls,
+        :tls_options => {
+          :ca_file     => '/etc/puavo-conf/rootca.pem',
+          :verify_mode => OpenSSL::SSL::VERIFY_PEER,
+        },
+      }
+    }
+
+    @ldap = Net::LDAP.new(connection_args)
+  end
+
+  def escape(string)
+    Net::LDAP::Filter.escape(string)
+  end
+
+  def filter_by_schools_served_by_this_server
+    this_server_schools = []
+    search("(puavoHostname=#{ escape(Puavohostname) })") do |entry|
+      this_server_schools += Array(entry['puavoSchool'])
     end
 
-    if ldapserver
-      @conn = LDAP::Conn.new(ldapserver)
-      @conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
-      @conn.start_tls
-      @conn.bind(@dn, @password)
-
-      @my_fqdn = "#{ Socket.gethostname }.#{ Puavodomain }"
-    else
-      @conn = nil
+    school_entries = []
+    search('(objectClass=puavoSchool)') do |entry|
+      next unless this_server_schools.include?(entry.dn)
+      school_entries << entry
     end
+
+    school_entries
   end
 
   def search(filter, &block)
@@ -33,16 +57,10 @@ class PuavoLdap
   end
 
   def search_with_base(base, filter, &block)
-    return [] unless @conn
-    @conn.search(base, LDAP::LDAP_SCOPE_SUBTREE, filter, &block)
+    @ldap.search(:base => base, :filter => filter, &block)
   end
 
   def search_with_baseprefix(baseprefix, filter, &block)
     search_with_base("#{ baseprefix },#{ @base }", filter, &block)
-  end
-
-  def unbind
-    @conn.unbind if @conn
-    @conn = nil
   end
 end

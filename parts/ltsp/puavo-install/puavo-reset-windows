@@ -17,16 +17,17 @@ exitval=1                             # Premature exit is an error by default.
 use_force=false                       # --force sets to true
 use_secure_delete=false               # --secure-delete sets to true
 lockfd=                               # Will be set when lockfile is opened
-WORK_DIR=/home/.puavo-reset-windows   # Where Windows ISO files will be downloaded, mounted etc.
+WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
+WIM_CATALOGUE_PATH="${WORK_DIR}/wim.json"
 PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
 
 on_exit()
 {
     set +e
 
-    loginfo 'Unmounting ISO files...'
+    loginfo 'Unmounting WIM files...'
     find "${WORK_DIR}" -type d -name '*.mountpoint' -exec umount -q {} \;
-    loginfo 'Unmounted ISO files.'
+    loginfo 'Unmounted WIM files.'
 
     loginfo "Removing working directory '${WORK_DIR}'..."
     rm -rf "${WORK_DIR}"
@@ -84,11 +85,9 @@ print0_win_primary_partition_devpaths()
     }
 }
 
-print0_win_language_tag()
+print0_win_language()
 {
-    local win_language_id \
-          win_language_tag \
-          win_primary_partition_devpath
+    local win_language_id win_language win_primary_partition_devpath
 
     win_primary_partition_devpath=$1
     shift
@@ -108,22 +107,22 @@ print0_win_language_tag()
     ## https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-LCID/%5bMS-LCID%5d.pdf
     case "${win_language_id}" in
         '0407')
-            win_language_tag='de-DE'
+            win_language='German'
             ;;
         '0409')
-            win_language_tag='en-US'
+            win_language='English'
             ;;
         '040b')
-            win_language_tag='fi-FI'
+            win_language='Finnish'
             ;;
         '041d')
-            win_language_tag='sv-SE'
+            win_language='Swedish'
             ;;
         '0419')
-            win_language_tag='ru-RU'
+            win_language='Russian'
             ;;
         '0422')
-            win_language_tag='uk-UA'
+            win_language='Ukrainian'
             ;;
         *)
             logerr "Unsupported language ID '${win_language_id}'"
@@ -131,7 +130,7 @@ print0_win_language_tag()
             ;;
     esac
 
-    printf '%s' "${win_language_tag}"
+    printf '%s' "${win_language}"
 }
 
 print0_win_product_name()
@@ -203,80 +202,31 @@ print0_wim_image_index()
     printf "%d" "${wim_image_index}"
 }
 
-print0_win_iso_file_name()
+verify_wim_image()
 {
-    local win_iso_file_name \
-          win_iso_file_name_suffix \
-          win_language_tag \
-          win_product_name
+    local wim_image_name
 
-    win_product_name=$1
-    shift
+    wim_image_name=$1
 
-    win_language_tag=$1
-    shift
-
-    case "${win_language_tag}" in
-        'fi-FI')
-            win_iso_file_name_suffix='_fi'
-            ;;
-        *)
-            win_iso_file_name_suffix=''
-            ;;
-    esac
-
-    case "${win_product_name}" in
-        'Windows 10 '*)
-            win_iso_file_name="win10x64${win_iso_file_name_suffix}.iso"
-            ;;
-        'Windows 11 '*)
-            win_iso_file_name="win11x64${win_iso_file_name_suffix}.iso"
-            ;;
-        *)
-            logerr "Unexpected Windows product name '${win_product_name}'"
-            return 1
-            ;;
-    esac
-
-    printf "%s" "${win_iso_file_name}"
-}
-
-verify_win_iso()
-{
-    local win_iso_file_name
-
-    win_iso_file_name=$1
-    shift
-
-    loginfo "Verifying ISO file '${win_iso_file_name}'..."
-    {
-        # Windows 10 22H2 May 2023 Update English
-        echo a6f470ca6d331eb353b815c043e327a347f594f37ff525f17764738fe812852e  win10x64.iso
-
-        # Windows 10 22H2 May 2023 Update Finnish
-        echo c17f3cfa9ec971dcd64b4a1152a7b563ade165fb9deb941f7c791e0f722d2d2f  win10x64_fi.iso
-
-        # Windwws 11 22H2 May 2023 Update English
-        echo 8059a99b8902906a90afe068ac00465c52588c2bd54f5d9d96c1297f88ef1076  win11x64.iso
-
-        # Windwws 11 22H2 May 2023 Update Finnish
-        echo ed5dd98addd6ae42c9eba993bbec17a199028e34e73e6a12c1574dec33942fb2  win11x64_fi.iso
-    } | awk -v "file_name=${win_iso_file_name}" '$2 == file_name' | sha256sum --strict --status -c || {
-        logerr "Failed to verify ISO file '${win_iso_file_name}'."
+    loginfo "Verifying WIM file '${wim_image_name}'..."
+    jq -r --arg wim_image "$wim_image_name" '
+          .images[$wim_image].sha512sum + " " + $wim_image
+        ' "$WIM_CATALOGUE_PATH" \
+      | sha512sum --strict --status -c || {
+        logerr "Failed to verify WIM file '${wim_image_name}'."
         return 1
     }
-    loginfo "Verified ISO file '${win_iso_file_name}'."
+    loginfo "Verified WIM file '${wim_image_name}'."
 }
 
-fetch_win_iso_from_filesystem()
+fetch_wim_image_from_filesystem()
 {
-    local win_iso_file_name \
-          target_win_iso_file_path
+    local target_wim_file_path wim_image_name
 
-    win_iso_file_name=$1
+    wim_image_name=$1
     shift
 
-    target_win_iso_file_path=$(readlink -f "${win_iso_file_name}")
+    target_wim_file_path=$(readlink -f "$wim_image_name")
 
     while read -r json_string_mountpoint; do
         ## This is the moment when I wish I had used Python instead.
@@ -288,10 +238,10 @@ fetch_win_iso_from_filesystem()
         ## splitting. I don't know how this could be done easier (jq
         ## does not have printf, it does not have nul-delimited
         ## output).
-        mountpoint=$(jq -j -n "${json_string_mountpoint}")
+        mountpoint=$(jq -j -n "$json_string_mountpoint")
 
-        while IFS= read -r -d $'\0' source_win_iso_file_path; do
-            if [ "${source_win_iso_file_path}" = "${target_win_iso_file_path}" ]; then
+        while IFS= read -r -d $'\0' source_wim_file_path; do
+            if [ "$source_wim_file_path" = "$target_wim_file_path" ]; then
                 continue
             fi
             ## A bit optimistic approach: assume the source file is
@@ -301,137 +251,192 @@ fetch_win_iso_from_filesystem()
             ## could just go on and look for other files, but I don't
             ## know if it's worth the effort. In practice, there will
             ## be just one win10x64.iso out there, if any.
-            loginfo "Fetching ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'..."
-            install -m 0644 "${source_win_iso_file_path}" "${target_win_iso_file_path}" || {
-                logerr "Failed to fetch ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'."
+            loginfo "Fetching WIM file '${wim_image_name}' from '${source_wim_file_path}'..."
+            install -m 0644 "$source_wim_file_path" "$target_wim_file_path" || {
+                logerr "Failed to fetch WIM file '${wim_image_name}' from '${source_wim_file_path}'."
                 return 1
             }
-            loginfo "Fetched ISO file '${win_iso_file_name}' from '${source_win_iso_file_path}'."
+            loginfo "Fetched WIM file '${wim_image_name}' from '${source_wim_file_path}'."
             return 0
-        done < <(find "${mountpoint}" -type f -name "${win_iso_file_name}" -print0)
+        done < <(find "$mountpoint" -type f -name "$wim_image_name" -print0)
 
     done < <(lsblk -J -o MOUNTPOINT,FSTYPE \
                  | jq '.blockdevices[] | select(.mountpoint and (.fstype == "exfat" or .fstype == "ext4" or .fstype == "ntfs")).mountpoint')
+
+    return 1
 }
 
-fetch_win_iso_from_microsoft()
+fetch_wim_image_from_server()
 {
-    local win_iso_file_name \
-          win_iso_file_name_without_ext
+    local wim_image_baseurl wim_image_name wim_image_url wim_tmppath
 
-    win_iso_file_name=$1
-    shift
+    wim_image_baseurl=$1
+    wim_image_name=$2
 
-    loginfo "Fetching ISO file '${win_iso_file_name}' from Microsoft..."
+    wim_image_url="${wim_image_baseurl}/${wim_image_name}"
+    wim_tmppath="${wim_image_name}.tmp"
 
-    ## Mido.sh has a quite special "feature": it changes cwd to the
-    ## directory where the script is, UNLESS it's in PATH. But I
-    ## didn't want to install Mido.sh to a dir in PATH, somehow that
-    ## didn't feel right; Mido.sh is just for puavo-reset-windows, I
-    ## don't want to pollute the command namespace unnecessarily.
-    ##
-    ## And I didn't want to tweak Mido.sh either. I think copying it
-    ## to our WORK_DIR is quite robust solution. Symlinking would have
-    ## worked fine too, but I feel having a full copy is better.
-    install -m 0755 /usr/lib/puavo-ltsp-install/Mido.sh .
+    loginfo "Fetching WIM image from ${wim_image_url}"
 
-    win_iso_file_name_without_ext=$(basename "${win_iso_file_name}" .iso)
-    ./Mido.sh "${win_iso_file_name_without_ext}" || {
-        logerr "Failed to fetch ISO file '${win_iso_file_name}' with Mido.sh."
+    if ! wget_with_certauth --output-document "$wim_tmppath" \
+      -q --show-progress "$wim_image_url"; then
+        logerr "Failed to fetch WIM image ${wim_image_name}"
         return 1
-    }
-
-    loginfo "Fetched ISO file '${win_iso_file_name}' from Microsoft."
-}
-
-fetch_win_iso()
-{
-    local win_iso_file_name
-
-    win_iso_file_name=$1
-    shift
-
-    loginfo "Fetching ISO file '${win_iso_file_name}'..."
-
-    if [ -f "${win_iso_file_name}" ]; then
-        loginfo "ISO file '${win_iso_file_name}' already exists."
-        if verify_win_iso "${win_iso_file_name}"; then
-            return 0
-        fi
-        loginfo "Existing ISO file '${win_iso_file_name}' is invalid. Re-fetching it."
     fi
 
-    if fetch_win_iso_from_filesystem "${win_iso_file_name}"; then
-        if verify_win_iso "${win_iso_file_name}"; then
-            loginfo "Fetched ISO file '${win_iso_file_name}'."
+    mv "$wim_tmppath" "$wim_image_name" || return 1
+
+    loginfo "Fetched WIM image from ${wim_image_name}"
+}
+
+fetch_wim_image()
+{
+    local wim_image_baseurl wim_image_name
+
+    wim_image_baseurl=$1
+    wim_image_name=$2
+
+    loginfo "Fetching WIM file '${wim_image_name}'..."
+
+    if [ -f "$wim_image_name" ]; then
+        loginfo "WIM file '${wim_image_name}' already exists."
+        if verify_wim_image "$wim_image_name"; then
             return 0
         fi
+        loginfo "Existing WIM file '${wim_image_name}' is invalid.  Re-fetching it."
+    fi
+
+    if fetch_wim_image_from_filesystem "$wim_image_name"; then
+        loginfo "Fetched WIM file '${wim_image_name}' from a local filesystem."
+        if verify_wim_image "$wim_image_name"; then
+            return 0
+        fi
+    else
+        loginfo "Could not find '${wim_image_name}' from local filesystems."
     fi
 
     ## TODO: Implement other fetch functions:
     ## - from bootserver
-    ## - from cdn.opinsys.fi
 
-    fetch_win_iso_from_microsoft "${win_iso_file_name}" || {
-        logerr "Failed to fetch ISO file '${win_iso_file_name}'."
+    fetch_wim_image_from_server "$wim_image_baseurl" "$wim_image_name" || {
+        logerr "Failed to fetch WIM file '${wim_image_name}'."
         return 1
     }
 
-    loginfo "Fetched ISO file '${win_iso_file_name}'."
+    loginfo "Fetched WIM file '${wim_image_name}'."
 
-    verify_win_iso "${win_iso_file_name}"
+    verify_wim_image "$wim_image_name"
+}
+
+wget_with_certauth()
+{
+   wget --ca-certificate=/etc/puavo-conf/rootca.pem        \
+        --certificate=/etc/puavo/certs/hostorgcabundle.pem \
+        --private-key=/etc/puavo/certs/host.key            \
+        "$@"
+}
+
+get_wim_catalogue()
+{
+    local gnupg_dir wim_image_source_urls wim_gpg_tmppath wim_path \
+          wim_server wim_tmppath
+
+    wim_image_source_urls=$(puavo-conf puavo.windows.image.sources)
+
+    wim_gpg_tmppath="${WIM_CATALOGUE_PATH}.gpg.tmp"
+    wim_tmppath="${WIM_CATALOGUE_PATH}.tmp"
+
+    for url in $wim_image_source_urls; do
+        if ! wget_with_certauth -q \
+          --output-document "$wim_gpg_tmppath" "$url"; then
+            echo "error fetching $url" >&2
+            continue
+        fi
+
+        wim_server=$(dirname "${url#https://}")
+        gnupg_dir="/root/.puavo/gnupg/${wim_server}/wim"
+        if ! gpg --decrypt --homedir "$gnupg_dir" "$wim_gpg_tmppath" \
+          2>/dev/null > "$wim_tmppath"; then
+            echo "GPG verification failed for ${url}" >&2
+            continue
+        fi
+
+        mv "$wim_tmppath" "$WIM_CATALOGUE_PATH" || return 1
+        printf "%s/images" "${url%/*}"          || return 1
+        return 0
+    done
+
+    echo 'could not fetch any source in puavo.windows.image.sources' >&2
+    return 1
+}
+
+choose_wim_image_to_use()
+{
+    local preferred_version_count preferred_versions win_language \
+          win_product_name win_version
+
+    win_language=$1
+    win_product_name=$2
+
+    case "$win_product_name" in
+        'Windows 10 '*) win_version="Win10" ;;
+        'Windows 11 '*) win_version="Win11" ;;
+        *)
+            logerr "Unexpected Windows product name '${win_product_name}'"
+            return 1
+            ;;
+    esac
+
+    preferred_versions=$(
+      jq -r --arg language "$win_language" \
+            --arg version "$win_version" '
+        .images | map_values(select(.language == $language
+                                      and .version == $version))
+                | to_entries | map(.key) | .[]
+      ' wim.json) || re
+
+    preferred_version_count="$(printf "%s\n" "$preferred_versions" | wc -l)"
+
+    if [ "$preferred_version_count" -gt 1 ]; then
+        logerr "Multiple image options with ${win_version} and ${win_language}"
+        return 1
+    elif [ "$preferred_version_count" -lt 1 ]; then
+        logerr "No image available with ${win_version} and ${win_language}"
+        return 1
+    fi
+
+    printf "%s\n" "$preferred_versions"
 }
 
 reset_win()
 {
-    local wim_file_path \
-          win_iso_file_name \
-          win_iso_mountpoint \
-          win_language_tag \
-          win_primary_partition_devpath \
-          win_product_name
+    local wim_image_baseurl wim_image_name win_language \
+          win_primary_partition_devpath win_product_name
 
     win_product_name=$1
     shift
 
-    win_language_tag=$1
+    win_language=$1
     shift
 
     win_primary_partition_devpath=$1
     shift
 
-    loginfo "Reseting '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'..."
+    wim_image_baseurl=$(get_wim_catalogue) || return 1
 
-    win_iso_file_name=$(print0_win_iso_file_name "${win_product_name}" "${win_language_tag}") || {
-        logerr "Failed to get ISO file name for '${win_product_name} (${win_language_tag})'"
+    wim_image_name=$(choose_wim_image_to_use "$win_language" \
+                                             "$win_product_name")
+    echo "got wim_image_name=${wim_image_name} this is the image we will use for reset"
+    exit 1
+
+    loginfo "Reseting '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'..."
+
+    fetch_wim_image "$wim_image_baseurl" "$wim_image_name" || {
+        logerr "Failed to fetch WIM file for '${win_product_name} (${win_language})'."
         return 1
     }
 
-    fetch_win_iso "${win_iso_file_name}" || {
-        logerr "Failed to fetch ISO file for '${win_product_name} (${win_language_tag})'."
-        return 1
-    }
-
-    loginfo "Mounting ISO file '${win_iso_file_name}'..."
-
-    win_iso_mountpoint="${win_iso_file_name}.mountpoint"
-
-    if ! mountpoint -q "${win_iso_mountpoint}"; then
-        mkdir -p "${win_iso_mountpoint}" || {
-            logerr "Something is crooked! Failed to ensure '${win_iso_mountpoint}' exists."
-            return 1
-        }
-        # Files will be unmounted on exit (on_exit()).
-        mount -oro,loop "${win_iso_file_name}" "${win_iso_mountpoint}" || {
-            logerr "Failed to mount ISO file '${win_iso_file_name}' to '${win_iso_mountpoint}'."
-            return 1
-        }
-    fi
-    loginfo "Mounted ISO file '${win_iso_file_name}' to '${win_iso_mountpoint}'."
-
-    wim_file_path="${win_iso_mountpoint}/sources/install.wim"
-
-    wim_image_index=$(print0_wim_image_index "${wim_file_path}" "${win_product_name}")
+    wim_image_index=$(print0_wim_image_index "$wim_image_name" "$win_product_name")
 
     loginfo "Re-creating NTFS filesystem on '${win_primary_partition_devpath}'..."
     # Force needed to overwrite the existing filesystem without questions.
@@ -442,7 +447,7 @@ reset_win()
     loginfo "Re-created NTFS filesystem on '${win_primary_partition_devpath}'."
 
     loginfo "Applying WIM image to '${win_primary_partition_devpath}'..."
-    wimapply "${wim_file_path}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
+    wimapply "${wim_image_name}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
         logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_file_path}' to '${win_primary_partition_devpath}'."
         return 1
     }
@@ -458,7 +463,7 @@ reset_win()
         loginfo "Wiped all unused data from '${win_primary_partition_devpath}'."
     fi
 
-    loginfo "Reset '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}' to factory settings successfully."
+    loginfo "Reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}' to factory settings successfully."
 
     return 0
 }
@@ -466,9 +471,7 @@ reset_win()
 
 reset_all_wins()
 {
-    local returnval \
-          win_language_tag \
-          win_product_name
+    local returnval win_language win_product_name
 
     returnval=0
 
@@ -479,13 +482,13 @@ reset_all_wins()
             continue
         }
 
-        win_language_tag=$(print0_win_language_tag "${win_primary_partition_devpath}") || {
+        win_language=$(print0_win_language "${win_primary_partition_devpath}") || {
             logerr "Failed to get the language tag of Windows on '${win_primary_partition_devpath}'."
             returnval=1
             continue
         }
 
-        loginfo "Detected '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'."
+        loginfo "Detected '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
 
         case "${win_product_name}" in
             'Windows 10 Home' | 'Windows 10 Pro' | 'Windows 11 Home' | 'Windows 11 Pro')
@@ -498,19 +501,19 @@ reset_all_wins()
         esac
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               "Reset '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'?" 5 100 || {
-            loginfo "Skipping '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'."
+               "Reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'?" 5 100 || {
+            loginfo "Skipping '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
             continue
         }
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
                "All data will be lost on '${win_primary_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
-            loginfo "Skipping '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'."
+            loginfo "Skipping '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
             continue
         }
 
-        reset_win "${win_product_name}" "${win_language_tag}" "${win_primary_partition_devpath}" || {
-            logerr "Failed to reset '${win_product_name} (${win_language_tag})' on '${win_primary_partition_devpath}'."
+        reset_win "${win_product_name}" "${win_language}" "${win_primary_partition_devpath}" || {
+            logerr "Failed to reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
             returnval=1
             continue
         }

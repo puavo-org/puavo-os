@@ -311,7 +311,6 @@ class PuavoErsApplet:
   PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
   CONFIG_PATH = os.path.join(PUAVO_ERS_DIR, 'config.json')
   NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
-  SERVER_VERSION_PATH  = os.path.join(COMM_DIR, '.server_version')
 
   def __init__(self):
     self.indicator \
@@ -342,7 +341,6 @@ class PuavoErsApplet:
     self.exam_sync = PuavoErsExamSync(self.exam_server, self.exam_sorter,
                                       self.exam_sync_active)
     self.exam_control = PuavoErsExamControl(self.exam_server)
-    self.exam_server_helper = PuavoErsServerHelper()
     self.exam_scheduler = PuavoErsExamScheduler(self.exam_control)
 
     self.exam_server.add_other_threads(self.exam_scheduler, self.exam_sync)
@@ -351,7 +349,6 @@ class PuavoErsApplet:
     self.exam_sync.start()
     self.exam_sorter.start()
     self.exam_control.start()
-    self.exam_server_helper.start()
     self.exam_scheduler.start()
 
 
@@ -677,50 +674,6 @@ class PuavoErsApplet:
       self.automation_active = True
       self.save_configuration()
 
-    current_automation_server_version = None
-    current_server_version = None
-
-    try:
-      with open(self.SERVER_VERSION_PATH) as f:
-        current_automation_server_version = f.read().rstrip()
-    except Exception as e:
-      pass
-
-    try:
-      cmd = [ 'VBoxManage', 'guestproperty', 'get', 'NaksuAbittiKTP',
-              'boxVersion' ]
-      vbox_output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL) \
-                              .rstrip().decode('utf-8')
-      match = re.match('^Value: (.*)$', vbox_output)
-      if match:
-        current_server_version = match.group(1)
-    except Exception as e:
-      pass
-
-    syslog.syslog(syslog.LOG_NOTICE,
-                  'current automation version (for server version): %s' \
-                    % current_automation_server_version)
-    syslog.syslog(syslog.LOG_NOTICE,
-                  'current exam server version: %s' \
-                    % current_server_version)
-
-    matching_versions \
-      = current_server_version and current_automation_server_version \
-          and current_server_version == current_automation_server_version
-    if not matching_versions:
-      errmsg = 'server automation version does not exist or does not' \
-                 + ' match the current server version, will not enable' \
-                 + ' the exam scheduler'
-      syslog.syslog(syslog.LOG_ERR, errmsg)
-
-      summary = _tr('Install automation helper')
-      body = _tr('No trace of exam automation helper could be found,' \
-                   + ' please install it into the virtual server' \
-                   + ' (execute /media/usb1/ktpapu-asennin in the virtual' \
-                   + ' server).')
-      Notify.Notification.new(summary, body).show()
-      return
-
     is_enabled = self.exam_scheduler.exam_scheduler_enabled
     self.exam_scheduler.exam_scheduler_enabled = True
     if is_enabled != self.exam_scheduler.exam_scheduler_enabled:
@@ -988,11 +941,13 @@ class PuavoErsExamControl (threading.Thread):
       raise Exception('could not send status update to server')
 
 
-  def update_status(self, new_abitti_status, monitoring_passphrase):
+  def update_status(self, new_abitti_status, monitoring_passphrase,
+                    server_version):
     self.send_status_update_lock.acquire()
 
     new_status = {
       'monitoring_passphrase': monitoring_passphrase,
+      'server_version':        server_version,
       'status':                new_abitti_status,
     }
 
@@ -1319,41 +1274,6 @@ class PuavoErsExamSorter (threading.Thread):
     os.rename(tmpfile, DECRYPT_CODES_PATH)
 
 
-class PuavoErsServerHelper (threading.Thread):
-  MGMT_INSTALL_SOURCE_PATH = '/opt/abitti-ktpapi/ktpapu-asennin'
-  MGMT_INSTALL_TARGET_PATH = os.path.join(KTP_JAKO_DIR, 'ktpapu-asennin')
-
-  def run(self):
-    while True:
-      try:
-        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsServerHelper run() loop')
-
-        update = False
-        try:
-          if os.path.exists(self.MGMT_INSTALL_SOURCE_PATH):
-            if not filecmp.cmp(self.MGMT_INSTALL_SOURCE_PATH,
-                               self.MGMT_INSTALL_TARGET_PATH):
-              update = True
-        except OSError as e:
-          if e.errno != errno.ENOENT:
-            raise e
-          update = True
-
-        if update:
-          syslog.syslog(syslog.LOG_NOTICE,
-                        'copying/updating %s to %s' \
-                          % (self.MGMT_INSTALL_SOURCE_PATH,
-                             self.MGMT_INSTALL_TARGET_PATH))
-          shutil.copy2(self.MGMT_INSTALL_SOURCE_PATH,
-                       self.MGMT_INSTALL_TARGET_PATH)
-
-      except Exception as e:
-        syslog.syslog(syslog.LOG_ERR,
-                      'error when managing exams dir: %s' % e)
-
-      time.sleep(60)
-
-
 class PuavoErsExamScheduler (threading.Thread):
   CMD_IN_PROGRESS_PATH = os.path.join(COMM_DIR, '.cmd-in-progress')
   CMD_PATH             = os.path.join(COMM_DIR, 'cmd')
@@ -1364,6 +1284,7 @@ class PuavoErsExamScheduler (threading.Thread):
   EXAMS_PATH           = os.path.join(COMM_DIR, 'exams')
   OUTPUT_PATH          = os.path.join(COMM_DIR, 'output')
   STATS_PATH           = os.path.join(COMM_DIR, 'stats')
+  SERVER_VERSION_PATH  = os.path.join(COMM_DIR, '.server_version')
 
 
   def __init__(self, exam_control):
@@ -1377,6 +1298,7 @@ class PuavoErsExamScheduler (threading.Thread):
     self.finish_time               = self.end_of_today()
     self.has_started               = False
     self.monitoring_passphrase     = None
+    self.server_version            = None
 
     self.keycode_change_request_lock = threading.Lock()
 
@@ -1544,9 +1466,12 @@ class PuavoErsExamScheduler (threading.Thread):
           output = self.ping()
           if output['error'] == False:
             comm_ok = True
+            self.server_version = self.get_server_version()
             if old_comm_state != comm_ok:
               syslog.syslog(syslog.LOG_NOTICE,
                             'communication link to exam server is ok')
+              syslog.syslog(syslog.LOG_NOTICE,
+                            'exam server version is %s' % self.server_version)
           else:
             comm_ok = False
             if old_comm_state != comm_ok:
@@ -1630,11 +1555,29 @@ class PuavoErsExamScheduler (threading.Thread):
     return False
 
 
+  def has_student_finished(self, student):
+    server_versions_where_finished_means_finished = [
+      'SERVER2202E', 'SERVER2216L', 'SERVER2226A', 'SERVER22436',
+      'SERVER2244T', 'SERVER2245K', 'SERVER2302X', 'SERVER2307S',
+      'SERVER2318U', 'SERVER2332I'
+    ]
+
+    if self.server_version in server_versions_where_finished_means_finished:
+      if ('examFinished' in student) and (student['examFinished'] != None):
+        return True
+
+    if ('studentStatus' in student) \
+      and (student['studentStatus'] == 'logged_out'):
+        return True
+
+    return False
+
+
   def there_are_still_active_students(self, status):
     now = datetime.datetime.now()
 
     for student in status['students']:
-      if ('examFinished' in student) and (student['examFinished'] != None):
+      if self.has_student_finished(student):
         # this student has finished the exam, does not count
         continue
 
@@ -1739,7 +1682,9 @@ class PuavoErsExamScheduler (threading.Thread):
     self.log_status(status)
 
     self.update_monitoring_passphrase()
-    self.exam_control.update_status(status, self.monitoring_passphrase)
+    self.exam_control.update_status(status,
+                                    self.monitoring_passphrase,
+                                    self.server_version)
 
     if not self.exam_scheduler_enabled:
       raise ExamSchedulerNotActive
@@ -1806,6 +1751,15 @@ class PuavoErsExamScheduler (threading.Thread):
       return self.try_server_cmd(cmd, timeout_seconds)
     except Exception as e:
       raise Exception('error with "%s": %s' % (cmd, e))
+
+
+  def get_server_version(self):
+    try:
+      with open(self.SERVER_VERSION_PATH) as f:
+        return f.read().rstrip()
+    except Exception as e:
+      syslog.syslog(syslog.LOG_WARNING, 'could not read server version')
+      return None
 
 
   def try_server_cmd(self, cmd, timeout_seconds):

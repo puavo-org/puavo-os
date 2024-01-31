@@ -80,8 +80,16 @@ if loadfont unicode ; then
   insmod gettext
 fi
 terminal_output gfxterm
-set timeout=5
-### END /usr/local/etc/grub.d/00_header ###
+
+if keystatus --shift; then
+  set timeout=-1
+else
+  if test -n "$puavo_grub_timeout"; then
+    set timeout="$puavo_grub_timeout"
+  else
+    set timeout=5
+  fi
+fi
 
 function get_imagename { regexp -s 2:"$2" '^(\(.*\)/)?(.*)$' "$1"; }
 function get_pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }

@@ -64,6 +64,15 @@ setup_optional_grub_config() {
   fi
 }
 
+setup_timeout() {
+  grub_timeout=$(puavo-conf puavo.grub.timeout)
+  if [ -n "$grub_timeout" ]; then
+    grubedit set "puavo_grub_timeout=${grub_timeout}"
+  else
+    grubedit unset puavo_grub_timeout
+  fi
+}
+
 setup_windows_enabled() {
   if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
     grubedit set "puavo_grub_windows_enabled=true"
@@ -105,6 +114,7 @@ setup_kernel_arguments     || status=1
 setup_kernel_version       || status=1
 setup_locale               || status=1
 setup_optional_grub_config || status=1
+setup_timeout              || status=1
 setup_windows_enabled      || status=1
 
 exit $status

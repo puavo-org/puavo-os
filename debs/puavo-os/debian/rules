@@ -99,9 +99,9 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-vpn-client
 
-	$(MAKE) -C webkiosk-language-selector		\
+	$(MAKE) -C webkiosk		                \
 		install prefix=/usr sysconfdir=/etc	\
-		DESTDIR=$(CURDIR)/debian/webkiosk-language-selector
+		DESTDIR=$(CURDIR)/debian/puavo-webkiosk
 
 	$(MAKE) -C webwindow				\
 		install prefix=/usr sysconfdir=/etc	\

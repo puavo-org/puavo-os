@@ -27,6 +27,10 @@ Languages             = %w(de en fi sv)
 ShareDirBase          = '/home/share'
 ShareDirBaseFileStore = "#{ ShareDirBase }/.share"
 
+def is_parent_of?(subpath, dir)
+  subpath[0, dir.length] == dir
+end
+
 class PuavoShareSpec
   attr_accessor :automatic_acls,
                 :group,
@@ -65,6 +69,17 @@ class PuavoShare
     @wanted_file_acls      = make_wanted_acls('rw-', 'r--', '---', false)
   end
 
+  def self.delete_link(path)
+    # delete link in a somewhat safe way
+    if not path.match(/^#{ ShareDirBase }/) then
+      raise "An internal error, trying to delete '#{ path }' (link)"
+    end
+    begin
+      File.delete(path)
+    rescue Errno::ENOENT
+    end
+  end
+
   def automatic_acls
     @spec.automatic_acls
   end
@@ -78,27 +93,18 @@ class PuavoShare
       begin
         PuavoShare.mkdir(File.dirname(link_path), 0755)
 
-        prev_linktarget = File.readlink(link_path) rescue ''
-        if @spec.sharepath != prev_linktarget then
-          self.class.delete(link_path)
-          link_dir = Pathname(link_path).dirname()
-          link_dest = Pathname(@spec.sharepath).relative_path_from(link_dir)
-          File.symlink(link_dest, link_path)
-          Syslog.notice('%s',
-            "Made link from '#{ link_path }' to '#{ @spec.sharepath }'.")
-        end
-      end 
-    end
-  end
+        current_linkdest = File.readlink(link_path) rescue nil
+        link_dir = Pathname(link_path).dirname()
+        expected_linkdest = Pathname(@spec.sharepath) \
+                              .relative_path_from(link_dir).to_s
 
-  def self.delete(path)
-    # delete path in a somewhat safe way
-    if not path.match(/^#{ ShareDirBase }/)
-      raise "An internal error, trying to delete '#{ path }'"
-    end
-    begin
-      File.delete(path)
-    rescue Errno::ENOENT
+        next if current_linkdest == expected_linkdest
+
+        self.class.delete_link(link_path)
+        File.symlink(expected_linkdest, link_path)
+        Syslog.notice('%s',
+          "Made link from '#{ link_path }' to '#{ expected_linkdest }'.")
+      end 
     end
   end
 
@@ -116,11 +122,11 @@ class PuavoShare
 
     # getfacl() returns empty in case of symbolic links, only change their
     # ownerships (permissions on symbolic links do not matter).
-    if actual_acls.empty?
+    if actual_acls.empty? then
       begin
-        if File.symlink?(path)
+        if File.symlink?(path) then
           lstat = File.lstat(path)
-          if lstat.uid != 0 or lstat.gid != 0
+          if lstat.uid != 0 or lstat.gid != 0 then
             File.lchown(0, 0, path)
           end
         end
@@ -147,7 +153,7 @@ class PuavoShare
     Open3.popen3(*cmd) do |stdin, stdout, stderr|
       acls = stdout.readlines.select { |l| not l =~ /^# file:/ }.join('')
       errormsg = stderr.read
-      if not errormsg.empty?
+      if !errormsg.empty? then
         raise "Could not get ACLs for #{ path }: #{ errormsg }"
       end
     end
@@ -155,7 +161,7 @@ class PuavoShare
   end
 
   def get_wanted_acls(filename)
-    if File.directory?(filename)
+    if File.directory?(filename) then
       @wanted_directory_acls
     else
       @wanted_file_acls
@@ -208,14 +214,14 @@ class PuavoShare
   end
 
   def parent_of?(path)
-    path.to_s[0, @spec.sharepath.length] == @spec.sharepath
+    is_parent_of?(path.to_s, @spec.sharepath)
   end
 
   def reset_acls(filename, wanted_acls)
     raise 'This should never be called unless automatic_acls is set' \
       unless @spec.automatic_acls
 
-    if parent_of?(filename)
+    if parent_of?(filename) then
       begin
         uid = File.stat(filename).uid
         Syslog.info('%s', "Reset ACLs for #{ filename } (uid=#{ uid }).")
@@ -248,7 +254,7 @@ class PuavoShare
       stdin.write(wanted_acls)
       stdin.close
       errormsg = stderr.read
-      if not errormsg.empty?
+      if !errormsg.empty? then
         raise "Could not set ACLs for #{ path }: #{ errormsg }"
       end
     end
@@ -280,10 +286,10 @@ class ShareBox
 
   def fix_acls(path)
     @shares.values.each do |share|
-      if share.parent_of?(path)
+      if share.parent_of?(path) then
         # in case of a directory, it might have been moved from another
         # directory, in which case we need to traverse it
-        if File.directory?(path)
+        if File.directory?(path) then
           share.fix_acls_recursively(path)
         else
           share.fix_acls(path)
@@ -333,37 +339,26 @@ class PuavoShareLDAP
   def find_groups(filter)
     groups = []
     @puavoldap.search_with_baseprefix('ou=Groups', filter) do |entry|
-      groups << PuavoGroup.new(entry.to_hash)
+      groups << PuavoGroup.new(entry)
     end
     groups
   end
 
   def find_groups_by_school(school)
-    schoolfilter = "(&(objectClass=puavoSchool)(cn=#{ school.cn }))"
+    cn_escaped = @puavoldap.escape(school.cn)
+    schoolfilter = "(&(objectClass=puavoSchool)(cn=#{ cn_escaped }))"
     schooldn     = ''
     @puavoldap.search_with_baseprefix('ou=Groups', schoolfilter) do |entry|
       schooldn = entry.dn
     end
 
-    find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ schooldn }))")
+    dn_escaped = @puavoldap.escape(schooldn)
+    find_groups("(&(objectClass=puavoEduGroup)(puavoSchool=#{ dn_escaped }))")
   end
 
-  def find_locale(school)
-    school_language = (school.preferredLanguage rescue nil)
-
-    if school_language
-      return school_language
-    else
-      @puavoldap.search('(objectClass=puavoEduOrg)') do |entry|
-        return Array(entry['preferredLanguage']).first
-      end
-    end
-
-    raise "No language can be found for '#{ Array(school['cn']).first }'"
-  end
-
-  def find_school_groups()
-    find_groups('(objectClass=puavoSchool)')
+  def find_schools_served_by_this_server()
+    @puavoldap.filter_by_schools_served_by_this_server() \
+              .map { |e| PuavoGroup.new(e) }
   end
 
   def find_teacher_groups()
@@ -371,18 +366,16 @@ class PuavoShareLDAP
     # XXX we need something smarter here than regexp
     groups.select { |group| group.cn =~ /(-ope|opettajat)/ }
   end
-
-  def unbind
-    @puavoldap.unbind
-  end
 end
 
 class Control
   def initialize_shares_from_ldap
     shareldap = PuavoShareLDAP.new
 
+    @managed_schooldirs = []
+
     admins   = shareldap.find_teacher_groups()
-    @schools = shareldap.find_school_groups()
+    @schools = shareldap.find_schools_served_by_this_server()
 
     @box = ShareBox.new(admins)
 
@@ -397,12 +390,11 @@ class Control
     @schools.each do |school|
       add_directory(shareldap, school)
     end
-
-    shareldap.unbind
   end
 
   def add_directory(shareldap, school)
     school_sharedir = "#{ ShareDirBaseFileStore }/#{ school.puavoId }"
+    @managed_schooldirs << school_sharedir
 
     PuavoShare.mkdir(school_sharedir, 0755)
 
@@ -418,18 +410,18 @@ class Control
                                  :writeonlygroups => [])
 
 
-    ss                = ss_tmpl.clone
+    ss = ss_tmpl.clone
     ss.automatic_acls = false
-    ss.sharepath      = "#{ school_sharedir }/programs"
+    ss.sharepath = "#{ school_sharedir }/programs"
     @box.add_dir(ss)
 
-    ss            = ss_tmpl.clone
+    ss = ss_tmpl.clone
     ss.readgroups = [ school.cn ]
-    ss.sharepath  = "#{ school_sharedir }/material"
+    ss.sharepath = "#{ school_sharedir }/material"
     @box.add_dir(ss)
 
-    ss             = ss_tmpl.clone
-    ss.sharepath   = "#{ school_sharedir }/all"
+    ss = ss_tmpl.clone
+    ss.sharepath = "#{ school_sharedir }/all"
     ss.writegroups = [ school.cn ]
     @box.add_dir(ss)
 
@@ -437,22 +429,22 @@ class Control
 
     writeonlygroups = school_groups.map { |group| group.cn }
 
-    ss             = ss_tmpl.clone
-    ss.sharepath   = "#{ school_sharedir }/returnbox"
+    ss = ss_tmpl.clone
+    ss.sharepath = "#{ school_sharedir }/returnbox"
     ss.writeonlygroups = writeonlygroups
     @box.add_dir(ss)
 
-    ss             = ss_tmpl.clone
-    ss.sharepath   = "#{ school_sharedir }/returns"
+    ss = ss_tmpl.clone
+    ss.sharepath = "#{ school_sharedir }/returns"
     @box.add_dir(ss)
 
     school_groups.each do |group|
       group_sharedir \
         = "#{ ShareDirBaseFileStore }/#{ school.puavoId }/#{ group.puavoId }"
 
-      ss             = ss_tmpl.clone
-      ss.group       = group
-      ss.sharepath   = group_sharedir
+      ss = ss_tmpl.clone
+      ss.group = group
+      ss.sharepath = group_sharedir
       ss.writegroups = [ group.cn ]
 
       @box.add_dir(ss)
@@ -485,9 +477,9 @@ class Control
 
             # :recursive does not work reliably due to some race condition,
             # so we must help it a bit for freshly created directories
-            if File.directory?(path)
+            if File.directory?(path) then
               notifier.watch(path, *events)
-            elsif File.dirname(path).end_with?('/returnbox') && event.flags.include?(:create)
+            elsif File.dirname(path).end_with?('/returnbox') && event.flags.include?(:create) then
               targetpathbase="#{File.dirname(File.dirname(path))}/returns/#{Etc.getpwuid(
                 File.stat(path).uid).name}-#{File.basename(path)}"
               targetpath=targetpathbase
@@ -501,7 +493,7 @@ class Control
           end
         end
 
-        while IO.select([ notifier.to_io ], [], [], seconds_left)
+        while IO.select([ notifier.to_io ], [], [], seconds_left) do
           notifier.process
           seconds_left = [ max_time - Time.new.to_i, 0 ].max
           break if seconds_left == 0
@@ -518,6 +510,54 @@ class Control
     end
   end
 
+  def self.delete_if_an_empty_dir(path)
+    if not path.match(/^#{ ShareDirBase }/) then
+      raise "An internal error, trying to delete '#{ path }' (dir)"
+    end
+    begin
+      Dir.rmdir(path)
+      Syslog.info('Deleted directory %s as it was empty', path)
+    rescue Errno::ENOTEMPTY, Errno::ENOTDIR, Errno::ENOENT
+    rescue StandardError => e
+      Syslog.warning('Error in removing a possible directory %s', path)
+    end
+  end
+
+  def delete_unmanaged_paths
+    # Delete links that do not point to school directories
+    # that are managed by us.
+    Find.find(ShareDirBase).each do |path|
+      begin
+        linkdest = File.readlink(path)
+      rescue Errno::EINVAL
+        next
+      end
+
+      target = Pathname.new(File.join(path, '..', linkdest)).cleanpath.to_s
+      next if @managed_schooldirs.any? { |dir| is_parent_of?(target, dir) }
+
+      PuavoShare.delete_link(path)
+      Syslog.info('Deleted link %s as it should not be managed by us', path)
+    end
+
+    # Delete school directories that we should not be managing.
+    Dir.glob(File.join(ShareDirBase, '*', '*')).each do |path|
+      self.class.delete_if_an_empty_dir(path)
+    end
+
+    # Delete unmanaged empty dirs under /home/share/.share, run twice
+    # because the first run may empty a directory we can delete later.
+    # Does not remove files!  Link structures to files can be recreated
+    # later in case those are needed.
+    2.times do
+      Find.find(ShareDirBaseFileStore).each do |path|
+        Find.prune if @managed_schooldirs.include?(path)
+        next if path == ShareDirBaseFileStore
+        self.class.delete_if_an_empty_dir(path)
+      end
+    end
+  end
+
   def run_notifier_but_breakout_at_nighttime
     # Run run_notifier for (25 - Time.new.hour) hours, so we will break out
     # to searching LDAP and fixing all file permissions once a night,
@@ -529,10 +569,7 @@ class Control
 end
 
 loop do
-  Syslog.open(File.basename($0), Syslog::LOG_DAEMON \
-                                 | Syslog::LOG_CONS \
-                                 | Syslog::LOG_PERROR \
-                                 | Syslog::LOG_PID)
+  Syslog.open(File.basename($0), Syslog::LOG_DAEMON|Syslog::LOG_PID)
 
   exception_msg = nil
   begin
@@ -540,18 +577,17 @@ loop do
     control.initialize_shares_from_ldap
 
     notifier_pid = fork { control.run_notifier_but_breakout_at_nighttime }
-    control.fix_acls_recursively
+    control.fix_acls_recursively()
+    control.delete_unmanaged_paths()
     Process.waitpid(notifier_pid)
 
-  rescue LDAP::ResultError => e
-    exception_msg = \
-      "Error in accessing LDAP: #{ e.message }: #{ e.backtrace.inspect }."
+  rescue Net::LDAP::LdapError => e
+    exception_msg = "Error in accessing LDAP: #{ e.message }"
   rescue StandardError => e
-    exception_msg = \
-      "Unknown error: #{ e.message }: #{ e.backtrace.inspect }."
+    exception_msg = "Unknown error: #{ e.message }"
   end
 
-  if exception_msg
+  if exception_msg then
     Syslog.err('%s', exception_msg)
     sleep 60    # wait a while in case errors just repeat and repeat...
   end

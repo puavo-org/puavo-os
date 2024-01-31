@@ -1,0 +1,91 @@
+#!/bin/sh
+
+set -eu
+
+logmsg() { logger -t puavo-webkiosk-screensaver "$@"; }
+
+if [ "$(whoami)" != "guest" ]; then
+  exit 1
+fi
+
+language=${1:-en}
+
+case "$language" in
+  de|en|fi|sv) ;;
+  *) logmsg -p user.err "unsupported language: '${language}'" ;;
+esac
+
+idle_timeout=$(puavo-conf puavo.webkiosk.idle_timeout)
+
+run_screensaver=false
+case "$idle_timeout" in
+  '') ;;
+  [0-9]|[0-5][0-9]|60)
+    if [ "$idle_timeout" -gt 0 ]; then
+      run_screensaver=true
+    fi
+    ;;
+  *) logmsg -p user.err "unsupported idle timeout: '${idle_timeout}'" ;;
+esac
+
+if ! $run_screensaver; then
+  logmsg -p user.notice \
+            "not activating screensaver (idle timeout '${idle_timeout}')"
+  exit 0
+fi
+
+timeout=$(printf "0:%02d:15" "$(($idle_timeout - 1))")
+
+# Write xscreensaver configuration file
+cat << EOF > ~/.xscreensaver
+authWarningSlack:               20
+chooseRandomImages:	        True
+cycle:			        0:10:00
+demoCommand:	                xscreensaver-settings
+dpmsEnabled:	                False
+dpmsOff:		        23:59:59
+dpmsQuickOff:	                False
+dpmsStandby:	                23:59:59
+dpmsSuspend:	                23:59:59
+fadeSeconds:	                0:00:01
+fade:			        True
+grabDesktopImages:	        False
+grabVideoFrames:	        False
+ignoreUninstalledPrograms:	False
+imageDirectory:                 /usr/share/puavo-webkiosk/screensaver/${language}
+installColormap:	        True
+lockTimeout:	                0:00:45
+lock:			        True
+mode:		                one
+nice:			        10
+passwdTimeout:	                0:00:01
+pointerHysteresis:              10
+programs:                       - GL: glslideshow -root -delay 20000 -duration 600 -zoom 75 -pan 16 -fade 1 -no-letterbox
+selected:	                0
+splashDuration:	                0:00:05
+splash:			        False
+timeout:		        ${timeout}
+unfade:			        True
+verbose:		        False
+visualID:		        default
+EOF
+
+logmsg -p user.notice "activating screensaver with timeout ${idle_timeout}"
+
+pkill -U guest -x xscreensaver || true
+xscreensaver -nosplash &
+
+xscreensaver-command -watch | while read event eventparams; do
+  case "$event" in
+    BLANK)
+      logmsg -p user.info 'showing session timeout warning'
+      ;;
+    LOCK)
+      logmsg -p user.info 'killing webkiosk session'
+      pkill -9 -U guest
+      ;;
+    UNBLANK)
+      logmsg -p user.info 'user session active'
+      ;;
+  esac
+done
