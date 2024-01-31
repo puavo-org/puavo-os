@@ -98,7 +98,7 @@ msgstr "Schulversion"
 msgid "this version:"
 msgstr "Diese Version:"
 
-#: puavo-laptop-setup.glade:144
+#: puavo-laptop-setup.glade:144 puavo-laptop-setup.glade:324
 msgid "Puavo OS (Linux)"
 msgstr "Puavo OS (Linux)"
 
@@ -135,10 +135,6 @@ msgstr "Zurücksetzen"
 msgid "Select operating systems to reset:"
 msgstr "Wählen Sie die Betriebssysteme zum Zurücksetzen aus:"
 
-#: puavo-laptop-setup.glade:324
-msgid "Puavo OS"
-msgstr ""
-
 #: puavo-laptop-setup.glade:360
 msgid ""
 "<big>Factory reset <span foreground=\"red\" size=\"x-large\">erases all user "
@@ -148,7 +144,8 @@ msgstr ""
 "<big>Beim Zurücksetzen auf die Werkseinstellungen <span foreground=\"red\" "
 "size=\"x-large\"> werden alle Benutzerdaten</span> von ausgewählten "
 "Betriebssystemen <span foreground=\"red\" size=\"x-large\">gelöscht</span> "
-"und \nderen Zustand auf die Werkseinstellungen zurückgesetzt!</big>"
+"und \n"
+"deren Zustand auf die Werkseinstellungen zurückgesetzt!</big>"
 
 #: puavo-laptop-setup.glade:375
 msgid "Factory reset"
