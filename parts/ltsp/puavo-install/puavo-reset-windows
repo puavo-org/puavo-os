@@ -426,8 +426,6 @@ reset_win()
 
     wim_image_name=$(choose_wim_image_to_use "$win_language" \
                                              "$win_product_name")
-    echo "got wim_image_name=${wim_image_name} this is the image we will use for reset"
-    exit 1
 
     loginfo "Reseting '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'..."
 
