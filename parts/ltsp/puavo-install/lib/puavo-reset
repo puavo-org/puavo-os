@@ -27,7 +27,13 @@ request_time=$(get_key request-time)
 
 request_time_for_tz=$(date --date="$request_time")
 
+has_windows() {
+  [ -e /images/boot/.puavo_windows_partition ]
+}
+
 show_info() {
+  local reset_operation_msg
+  reset_operation_msg=$1
   cat <<EOF
   >>> PUAVO RESET MODE <<<
   >>> ================ <<<
@@ -36,20 +42,24 @@ This host has been marked for reset in Puavo.
 User home directories will be wiped out
 and system will be returned to factory defaults.
 
+${reset_operation_msg}
+
 Detailed request information:
-  operation:            $operation
-  request came from:    $from
-  request time:         $request_time_for_tz
+  operation:            ${operation}
+  request came from:    ${from}
+  request time:         ${request_time_for_tz}
 
 EOF
 }
 
 ask_pin_to_proceed() {
-  local pin_answer
+  local pin pin_answer reset_operation_msg
+  pin=$1
+  reset_operation_msg=$2
 
   while true; do
     clear
-    show_info
+    show_info "$reset_operation_msg"
     echo 'You must provide the correct PIN code to proceed with the operation.'
     read -p '  PIN CODE: ' pin_answer
     if [ "$pin_answer" = "$pin" ]; then
@@ -61,9 +71,42 @@ ask_pin_to_proceed() {
   done
 }
 
+reset_operation_msg=''
+case "$operation" in
+  reset)
+    if has_windows; then
+      prltfd_args='--force --os-targets=PuavoOS,Windows'
+      reset_operation_msg='Resetting both Puavo OS and Windows.'
+    else
+      prltfd_args='--force --os-targets=PuavoOS'
+      reset_operation_msg='Resetting Puavo OS only (Windows is not installed).'
+    fi
+    ;;
+  reset-puavo-os)
+    prltfd_args='--force --os-targets=PuavoOS'
+    if has_windows; then
+      reset_operation_msg='Resetting Puavo OS only (leaving Windows as is).'
+    else
+      reset_operation_msg='Resetting Puavo OS only (Windows is not installed).'
+    fi
+    ;;
+  reset-windows)
+    if ! has_windows; then
+      echo 'Requested Windows reset only but Windows is not installed' >&2
+      exit 1
+    fi
+    reset_operation_msg='Resetting Windows only.'
+    prltfd_args='--force --os-targets=Windows'
+    ;;
+  *)
+    echo "Unknown operation: '${operation}'" >&2
+    exit 1
+    ;;
+esac
+
 case "$mode" in
   ask_pin)
-    ask_pin_to_proceed "$pin"
+    ask_pin_to_proceed "$pin" "$reset_operation_msg"
     sleep 2
     ;;
   *)
@@ -72,21 +115,11 @@ case "$mode" in
     ;;
 esac
 
-case "$operation" in
-  fast-reset)
-    prltfd_args='--force --insecure'
-    ;;
-  reset)
-    prltfd_args='--force'
-    ;;
-  *)
-    echo "Unknown operation: '${operation}'" >&2
-    exit 1
-    ;;
-esac
-
 if ! puavo-reset-laptop-to-factory-defaults $prltfd_args; then
   echo 'DEVICE RESET FAILED, press ENTER to reboot.' >&2
   read answer
-  reboot
 fi
+
+# puavo-reset-laptop-to-factory-defaults will not reboot after a Windows-only
+# reset, but we must
+reboot
