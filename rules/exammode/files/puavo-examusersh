@@ -1,13 +1,38 @@
 #!/bin/sh
 
 if [ "$(tty)" = '/dev/tty42' ]; then
-  exec env HOME=/var/lib/puavo-exammode/user      \
-    bwrap --dev-bind / /                          \
-          --tmpfs    /home                        \
-          --tmpfs    /tmp                         \
-          --tmpfs    /var/lib/puavo-exammode/user \
-          --tmpfs    /var/tmp                     \
-      startx /usr/lib/puavo-ltsp-client/exammode-session > /dev/null 2>&1
+  # XXX should this be done elsewhere?
+  # XXX puavo-exam configuration should probably be setup by
+  # XXX puavo-exammode-manager under /var/lib/puavo-exammode/config
+  # XXX or something
+  firefox_policies_path=$(mktemp /tmp/firefox-policy.XXXXXX)
+  cat <<'EOF' > "$firefox_policies_path"
+{
+  "policies": {
+    "DisableAppUpdate": true,
+    "WebsiteFilter": {
+      "Block": [ "<all_urls>" ],
+      "Exceptions": [
+        "https://accounts.google.com",
+        "https://accounts.google.de",
+        "https://accounts.google.fi",
+        "https://docs.google.com/accounts",
+        "https://docs.google.com/forms"
+      ]
+    }
+  }
+}
+EOF
+  exec env HOME=/var/lib/puavo-exammode/user                   \
+    bwrap --dev-bind  / /                                       \
+          --bind-data 3 /etc/firefox/distribution/policies.json \
+          --tmpfs     /home                                     \
+          --tmpfs     /tmp                                      \
+          --tmpfs     /var/lib/puavo-exammode/user              \
+          --tmpfs     /var/tmp                                  \
+      startx /usr/lib/puavo-ltsp-client/exammode-session \
+        > /dev/null 2>&1 \
+    3< "$firefox_policies_path"
 fi
 
 exec /bin/bash
