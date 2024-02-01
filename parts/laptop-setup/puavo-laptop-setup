@@ -530,8 +530,7 @@ class PuavoLaptopSetup:
 
                 for line in cmd_process.stdout:
                     GLib.idle_add(text_buffer_write, line)
-
-                GLib.idle_add(text_view_scroll_to_bottom)
+                    GLib.idle_add(text_view_scroll_to_bottom)
             finally:
                 if cmd_process is not None:
                     ## Wait forever? Killing
