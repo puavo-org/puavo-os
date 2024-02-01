@@ -195,6 +195,15 @@ get_win_product_name_from_partition()
         return 1
     }
 
+    case "$win_product_name" in
+        'Windows 10 Home' | 'Windows 10 Pro' | 'Windows 11 Home' | 'Windows 11 Pro')
+            ;;
+        *)
+            logerr "Ignoring unsupported '${win_product_name}' on '${win_primary_partition_devpath}'."
+            return 1
+            ;;
+    esac
+
     win_build_number=$(hivexget software_hive 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"CurrentBuildNumber"="(.+)"$/\1/p') || {
         logerr "Failed to parse CurrentBuildNumber from SOFTWARE hive of '${win_primary_partition_devpath}'."
         return 1
@@ -545,16 +554,6 @@ reset_all_wins()
         }
 
         loginfo "Detected '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
-
-        case "${win_product_name}" in
-            'Windows 10 Home' | 'Windows 10 Pro' | 'Windows 11 Home' | 'Windows 11 Pro')
-                ;;
-            *)
-                logerr "Skipping unsupported '${win_product_name}' on '${win_primary_partition_devpath}'."
-                returnval=1
-                continue
-                ;;
-        esac
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
                "Reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'?" 5 100 || {
