@@ -65,34 +65,10 @@ def _main() -> int:
     else:
         desired_max_bpc = args.MAX_BPC
 
-    for output_name, output in puavodisplays.xrandr.get_prop().items():
-        if "max bpc" in output["props"]:
-            _LOGGER.info("desired max bpc of %r is %d", output_name, desired_max_bpc)
+    puavodisplays.xrandr.set_max_bpc_of_all_display_outputs(
+        desired_max_bpc, logger=_LOGGER
+    )
 
-            max_bpc_prop = output["props"]["max bpc"]
-            current_value = max_bpc_prop["value"]
-            value_min = max_bpc_prop["value_min"]
-            value_max = max_bpc_prop["value_max"]
-
-            new_value = min(max(value_min, desired_max_bpc), value_max)
-            if new_value != desired_max_bpc:
-                _LOGGER.info(
-                    "adjusted desired max bpc of %r from %d to %d to "
-                    "match the supported range (%d, %d)",
-                    output_name,
-                    desired_max_bpc,
-                    new_value,
-                    value_min,
-                    value_max,
-                )
-
-            puavodisplays.xrandr.set_max_bpc(output_name, new_value)
-            _LOGGER.info(
-                "set max bpc of %r from %d to %d",
-                output_name,
-                current_value,
-                new_value,
-            )
     return 0
 
 

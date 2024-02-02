@@ -3,6 +3,7 @@
 # Standard library imports
 import collections
 import enum
+import logging
 import re
 import subprocess
 import typing
@@ -13,6 +14,7 @@ __all__ = [
     "UnexpectedOutputError",
     "get_prop",
     "set_max_bpc",
+    "set_max_bpc_of_all_display_outputs",
 ]
 
 
@@ -253,3 +255,45 @@ def set_max_bpc(output_name: str, max_bpc: int) -> None:
             str(max_bpc),
         ]
     )
+
+
+def set_max_bpc_of_all_display_outputs(
+    desired_max_bpc: int, *, logger: typing.Optional[logging.Logger] = None
+) -> None:
+    """Set max bpc of all display outputs.
+
+    If logger is defined, it is used for logging the progress.
+    """
+
+    for output_name, output in get_prop().items():
+        if "max bpc" in output["props"]:
+            if logger:
+                logger.info("desired max bpc of %r is %d", output_name, desired_max_bpc)
+
+            max_bpc_prop = output["props"]["max bpc"]
+            current_value = max_bpc_prop["value"]
+            value_min = max_bpc_prop["value_min"]
+            value_max = max_bpc_prop["value_max"]
+
+            new_value = min(max(value_min, desired_max_bpc), value_max)
+            if new_value != desired_max_bpc:
+                if logger:
+                    logger.info(
+                        "adjusted desired max bpc of %r from %d to %d to "
+                        "match the supported range (%d, %d)",
+                        output_name,
+                        desired_max_bpc,
+                        new_value,
+                        value_min,
+                        value_max,
+                    )
+
+            set_max_bpc(output_name, new_value)
+
+            if logger:
+                logger.info(
+                    "set max bpc of %r from %d to %d",
+                    output_name,
+                    current_value,
+                    new_value,
+                )
