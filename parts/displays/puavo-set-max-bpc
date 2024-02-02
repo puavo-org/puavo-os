@@ -16,9 +16,7 @@ import sys
 import puavodisplays.puavoconf
 import puavodisplays.xrandr
 
-_LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.INFO)
-_LOGGER.addHandler(logging.handlers.SysLogHandler("/dev/log"))
+_LOGGER = logging.getLogger("puavo-set-max-bpc")
 
 
 def _int_10base(v: str) -> int:
@@ -26,6 +24,19 @@ def _int_10base(v: str) -> int:
 
 
 def _main() -> int:
+    logging_formatter = logging.Formatter(
+        fmt="%(name)s: %(levelname)s %(asctime)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+    )
+
+    logging_handler_stderr = logging.StreamHandler(sys.stderr)
+    logging_handler_stderr.setFormatter(logging_formatter)
+    _LOGGER.addHandler(logging_handler_stderr)
+
+    logging_handler_syslog = logging.handlers.SysLogHandler("/dev/log")
+    logging_handler_syslog.setFormatter(logging_formatter)
+    _LOGGER.addHandler(logging_handler_syslog)
+
     argparser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=__doc__,
@@ -37,8 +48,15 @@ def _main() -> int:
         type=_int_10base,
         default=None,
     )
+    argparser.add_argument(
+        "--log-level",
+        choices=logging.getLevelNamesMapping().keys(),
+        default=logging.getLevelName(logging.INFO),
+    )
 
     args = argparser.parse_args()
+
+    _LOGGER.setLevel(args.log_level)
 
     if args.MAX_BPC is None:
         desired_max_bpc = puavodisplays.puavoconf.get_as(
