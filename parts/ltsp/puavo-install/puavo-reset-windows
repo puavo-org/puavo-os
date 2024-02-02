@@ -6,7 +6,6 @@
 ## default, asks user for a confirmation to reset.
 ##
 ## --force              no questions asked
-## --secure-delete      wipe unused data from Windows partitions after reset
 ##
 
 set -eu
@@ -15,8 +14,8 @@ set -o pipefail
 ## Globals
 exitval=1                             # Premature exit is an error by default.
 use_force=false                       # --force sets to true
-use_secure_delete=false               # --secure-delete sets to true
 lockfd=                               # Will be set when lockfile is opened
+RESET_STATE_DIR=/state/windows
 WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
 WIM_CATALOGUE_PATH="${WORK_DIR}/wim.json"
 PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
@@ -62,10 +61,9 @@ logerr() {
 
 usage() {
   cat <<EOF
-$(basename "$0") [--force] [--secure-delete]
+$(basename "$0") [--force]
 
   --force               no questions asked
-  --secure-delete       wipe unused data of the Windows primary partition
 EOF
   exit 1
 }
@@ -73,7 +71,38 @@ EOF
 print0_win_primary_partition_devpaths()
 {
     while IFS= read -r -d $'\0' ntfs_partition_devpath; do
+        has_dirty_flag=false
+        was_dirty_flag_cleared=false
+
+        set +o pipefail # ntfsls is expected to fail, we are interested in its error output
+        if ntfsls -F "${ntfs_partition_devpath}" 2>&1 >/dev/null | head -n1 | grep -q -x 'Volume is scheduled for check.'; then
+            loginfo "NTFS volume in '${ntfs_partition_devpath}' is dirty."
+            has_dirty_flag=true
+        fi
+        set -o pipefail
+
+        if $use_force && $has_dirty_flag; then
+            loginfo "Clearing the dirty flag of NTFS volume in '${ntfs_partition_devpath}'..."
+            ntfsfix -d "${ntfs_partition_devpath}" >&2 || {
+                logerr "Failed clear the dirty flag of NTFS volume in '${ntfs_partition_devpath}'."
+                continue # To the next possible windows primary partition
+            }
+            was_dirty_flag_cleared=true
+        fi
+
         ntfsls -F "${ntfs_partition_devpath}" | grep -q -x 'Windows/' || {
+            if $was_dirty_flag_cleared; then
+                loginfo "Restoring the dirty flag of NTFS volume in '${ntfs_partition_devpath}'..."
+                ntfsfix "${ntfs_partition_devpath}" >&2 || {
+                    # Well, this really should not be possible in
+                    # practice. We have already succesfully cleared
+                    # the dirty bit just a moment ago, so surely
+                    # setting it back should work too, unless ntfsfix
+                    # is broken or something catastrophic has happened
+                    # in the filesystem or on the device.
+                    logerr "Failed to set the dirty flag of NTFS volume in '${ntfs_partition_devpath}'."
+                }
+            fi
             continue
         }
         printf '%s\0' "${ntfs_partition_devpath}"
@@ -85,7 +114,34 @@ print0_win_primary_partition_devpaths()
     }
 }
 
-print0_win_language()
+# Use parameter cache to store the Windows installation product name and
+# language.  This is because in case Windows reset gets interrupted or
+# fails when it is in progress, without cache we can not recover the
+# previous information and subsequent reset attempts will fail.
+load_cached_param()
+{
+    local key value
+    key=$1
+
+    if ! value=$(cat "${RESET_STATE_DIR}/${key}" 2>/dev/null); then
+        logerr "Could not load '${key}' parameter from cache"
+        return 1
+    fi
+
+    printf '%s' "$value"
+}
+
+save_cached_param()
+{
+    local key value
+    key=$1
+    value=$2
+    mkdir -p "$RESET_STATE_DIR" || return 1
+    printf "%s\n" "$value" > "${RESET_STATE_DIR}/${key}.tmp" || return 1
+    mv "${RESET_STATE_DIR}/${key}.tmp" "${RESET_STATE_DIR}/${key}" || return 1
+}
+
+get_win_language_from_partition()
 {
     local win_language_id win_language win_primary_partition_devpath
 
@@ -130,10 +186,28 @@ print0_win_language()
             ;;
     esac
 
-    printf '%s' "${win_language}"
+    save_cached_param language "$win_language" || {
+        logerr 'Could not save Windows language name to cache'
+        return 1
+    }
+
+    printf '%s' "$win_language"
 }
 
-print0_win_product_name()
+get_win_language()
+{
+    local win_primary_partition_devpath
+    win_primary_partition_devpath=$1
+
+    if ! get_win_language_from_partition "$win_primary_partition_devpath"; then
+        load_cached_param language || return 1
+        loginfo 'Loaded Windows language from reset cache'
+    fi
+
+    return 0
+}
+
+get_win_product_name_from_partition()
 {
     local win_build_number \
           win_primary_partition_devpath \
@@ -152,6 +226,15 @@ print0_win_product_name()
         return 1
     }
 
+    case "$win_product_name" in
+        'Windows 10 Home' | 'Windows 10 Pro' | 'Windows 11 Home' | 'Windows 11 Pro')
+            ;;
+        *)
+            logerr "Ignoring unsupported '${win_product_name}' on '${win_primary_partition_devpath}'."
+            return 1
+            ;;
+    esac
+
     win_build_number=$(hivexget software_hive 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"CurrentBuildNumber"="(.+)"$/\1/p') || {
         logerr "Failed to parse CurrentBuildNumber from SOFTWARE hive of '${win_primary_partition_devpath}'."
         return 1
@@ -168,7 +251,25 @@ print0_win_product_name()
         win_product_name=$(echo -n "${win_product_name}" | sed -r 's/^Windows 10/Windows 11/')
     fi
 
+    save_cached_param product_name "$win_product_name" || {
+        logerr 'Could not save Windows product name to cache'
+        return 1
+    }
+
     printf '%s' "${win_product_name}"
+}
+
+get_win_product_name()
+{
+    local win_primary_partition_devpath
+    win_primary_partition_devpath=$1
+
+    if ! get_win_product_name_from_partition "$win_primary_partition_devpath"; then
+        load_cached_param product_name || return 1
+        loginfo 'Loaded Windows product name from reset cache'
+    fi
+
+    return 0
 }
 
 print0_wim_image_index()
@@ -279,7 +380,7 @@ fetch_wim_image_from_server()
     loginfo "Fetching WIM image from ${wim_image_url}"
 
     if ! wget_with_certauth --output-document "$wim_tmppath" \
-      -q --show-progress "$wim_image_url"; then
+      -q --progress=dot:giga --show-progress "$wim_image_url"; then
         logerr "Failed to fetch WIM image ${wim_image_name}"
         return 1
     fi
@@ -426,8 +527,6 @@ reset_win()
 
     wim_image_name=$(choose_wim_image_to_use "$win_language" \
                                              "$win_product_name")
-    echo "got wim_image_name=${wim_image_name} this is the image we will use for reset"
-    exit 1
 
     loginfo "Reseting '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'..."
 
@@ -437,6 +536,13 @@ reset_win()
     }
 
     wim_image_index=$(print0_wim_image_index "$wim_image_name" "$win_product_name")
+
+    loginfo "Securely erasing Windows on '${win_primary_partition_devpath}'"
+    blkdiscard "${win_primary_partition_devpath}" || {
+        logerr "Failed to run blkdiscard to '${win_primary_partition_devpath}'"
+        return 1
+    }
+    loginfo "Secure erase done."
 
     loginfo "Re-creating NTFS filesystem on '${win_primary_partition_devpath}'..."
     # Force needed to overwrite the existing filesystem without questions.
@@ -448,20 +554,10 @@ reset_win()
 
     loginfo "Applying WIM image to '${win_primary_partition_devpath}'..."
     wimapply "${wim_image_name}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
-        logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_file_path}' to '${win_primary_partition_devpath}'."
+        logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_image_name}' to '${win_primary_partition_devpath}'."
         return 1
     }
     loginfo "Applied WIM image to '${win_primary_partition_devpath}'."
-
-    if $use_secure_delete; then
-        loginfo "Wiping all unused data from '${win_primary_partition_devpath}'..."
-        # Wipes all unused data from the partition.
-        ntfswipe -a "${win_primary_partition_devpath}" || {
-            logerr "Failed to wipe '${win_primary_partition_devpath}'."
-            return 1
-        }
-        loginfo "Wiped all unused data from '${win_primary_partition_devpath}'."
-    fi
 
     loginfo "Reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}' to factory settings successfully."
 
@@ -476,29 +572,19 @@ reset_all_wins()
     returnval=0
 
     while IFS= read -r -d $'\0' win_primary_partition_devpath; do
-        win_product_name=$(print0_win_product_name "${win_primary_partition_devpath}") || {
+        win_product_name=$(get_win_product_name "${win_primary_partition_devpath}") || {
             logerr "Failed to get the product name of Windows on '${win_primary_partition_devpath}'."
             returnval=1
             continue
         }
 
-        win_language=$(print0_win_language "${win_primary_partition_devpath}") || {
+        win_language=$(get_win_language "${win_primary_partition_devpath}") || {
             logerr "Failed to get the language tag of Windows on '${win_primary_partition_devpath}'."
             returnval=1
             continue
         }
 
         loginfo "Detected '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
-
-        case "${win_product_name}" in
-            'Windows 10 Home' | 'Windows 10 Pro' | 'Windows 11 Home' | 'Windows 11 Pro')
-                ;;
-            *)
-                logerr "Skipping unsupported '${win_product_name}' on '${win_primary_partition_devpath}'."
-                returnval=1
-                continue
-                ;;
-        esac
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
                "Reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'?" 5 100 || {
@@ -530,10 +616,6 @@ while [ $# -ne 0 ]; do
     case "$1" in
         --force)
             use_force=true
-            shift
-            ;;
-        --secure-delete)
-            use_secure_delete=true
             shift
             ;;
         --)

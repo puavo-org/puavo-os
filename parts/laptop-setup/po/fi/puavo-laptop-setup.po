@@ -65,15 +65,15 @@ msgstr ""
 "Tarkemmat tiedot virheestä löytyvät tehdasasetusten palautuslokista. Olkaa "
 "hyvä ja ottakaa yhteyttä tukeen ongelman selvittämiseksi."
 
-#: puavo-laptop-setup:580 puavo-laptop-setup:626
+#: puavo-laptop-setup:583 puavo-laptop-setup:629
 msgid "Laptop setup"
 msgstr "Kannettavan asetukset"
 
-#: puavo-laptop-setup:616
+#: puavo-laptop-setup:619
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
 
-#: puavo-laptop-setup:626
+#: puavo-laptop-setup:629
 msgid "is already running"
 msgstr "on jo käynnissä"
 
@@ -101,7 +101,7 @@ msgstr "koulun versio"
 msgid "this version:"
 msgstr "tämä versio:"
 
-#: puavo-laptop-setup.glade:144
+#: puavo-laptop-setup.glade:144 puavo-laptop-setup.glade:324
 msgid "Puavo OS (Linux)"
 msgstr ""
 
@@ -138,19 +138,15 @@ msgstr "Palauta tehdasasetuksille"
 msgid "Select operating systems to reset:"
 msgstr "Valitse tehdasasetuksille palautettavat käyttöjärjestelmät:"
 
-#: puavo-laptop-setup.glade:324
-msgid "Puavo OS"
-msgstr ""
-
 #: puavo-laptop-setup.glade:360
 msgid ""
 "<big>Factory reset <span foreground=\"red\" size=\"x-large\">erases all user "
 "data</span> from selected operating systems and restores their state to "
 "factory settings!</big>"
 msgstr ""
-"<big>Tehdasasetusten palautus <span foreground=\"red\" size=\"x-"
-"large\">tuhoaa kaiken datan</span> valituista käyttöjärjestelmistä ja "
-"palauttaa ne takaisin tehdasasetuksille!</big>"
+"<big>Tehdasasetusten palautus <span foreground=\"red\" size=\"x-large"
+"\">tuhoaa kaiken datan</span> valituista käyttöjärjestelmistä ja palauttaa "
+"ne takaisin tehdasasetuksille!</big>"
 
 #: puavo-laptop-setup.glade:375
 msgid "Factory reset"

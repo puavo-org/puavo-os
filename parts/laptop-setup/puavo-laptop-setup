@@ -528,10 +528,13 @@ class PuavoLaptopSetup:
                 GLib.idle_add(on_cmd_start)
                 cmd_process.stdout.reconfigure(line_buffering=True)
 
+                previous_line = None
                 for line in cmd_process.stdout:
-                    GLib.idle_add(text_buffer_write, line)
+                    if line != previous_line:
+                        GLib.idle_add(text_buffer_write, line)
+                        GLib.idle_add(text_view_scroll_to_bottom)
+                    previous_line = line
 
-                GLib.idle_add(text_view_scroll_to_bottom)
             finally:
                 if cmd_process is not None:
                     ## Wait forever? Killing
