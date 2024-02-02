@@ -33,12 +33,6 @@ def _parse_args() -> argparse.Namespace:
         description=__doc__,
     )
     parser.add_argument(
-        "--only-set-max-bpc",
-        action="store_true",
-        default=False,
-        help="Only set max bpc and exit",
-    )
-    parser.add_argument(
         "--log-level",
         choices=logging.getLevelNamesMapping().keys(),
         default=logging.getLevelName(logging.INFO),
@@ -66,8 +60,6 @@ def _main() -> int:
     _LOGGER.setLevel(args.log_level)
 
     run_xrandr_args = []
-    if args.only_set_max_bpc:
-        run_xrandr_args.append("--only-set-max-bpc")
 
     return _call_run_xrandr(run_xrandr_args)
 

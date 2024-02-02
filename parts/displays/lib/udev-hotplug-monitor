@@ -44,17 +44,16 @@ MUTTER_ALLOW_CONFIGURATION=$(
   lookup_env_for_pid MUTTER_ALLOW_CONFIGURATION "$current_session_pid") \
     || true
 
-puavo_display_manager_args=''
-if echo "$MUTTER_ALLOW_CONFIGURATION" | grep -Eqw '(default|user)'; then
-  # mutter is taking care of monitors, or might be if user has configured
-  # it to do so... do not step on its tows, but still set max bpc
-
-  puavo_display_manager_args='--only-set-max-bpc'
-fi
-
 DISPLAY=$(lookup_env_for_pid DISPLAY "$current_session_pid")
 XAUTHORITY=$(lookup_env_for_pid XAUTHORITY "$current_session_pid")
 
 export DISPLAY XAUTHORITY
 
-/usr/bin/puavo-display-manager ${puavo_display_manager_args}
+if echo "$MUTTER_ALLOW_CONFIGURATION" | grep -Eqw '(default|user)'; then
+  # mutter is taking care of monitors, or might be if user has configured
+  # it to do so... do not step on its tows, but still set max bpc
+  /usr/bin/puavo-set-max-bpc
+  exit 0
+fi
+
+/usr/bin/puavo-display-manager
