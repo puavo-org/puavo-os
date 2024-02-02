@@ -21,11 +21,11 @@ _LOGGER.setLevel(logging.INFO)
 _LOGGER.addHandler(logging.handlers.SysLogHandler("/dev/log"))
 
 
-def _main() -> int:
-    puavo_displays_max_bpc_str = puavodisplays.puavoconf.get_as(
-        "puavo.displays.max_bpc", int
-    )
+def _int_10base(v: str) -> int:
+    return int(v, 10)
 
+
+def _main() -> int:
     argparser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=__doc__,
@@ -34,15 +34,18 @@ def _main() -> int:
         "MAX_BPC",
         nargs="?",
         help="If not given, puavo.displays.max_bpc value is used instead.",
-        default=puavo_displays_max_bpc_str,
+        type=_int_10base,
+        default=None,
     )
+
     args = argparser.parse_args()
 
-    try:
-        desired_max_bpc = int(args.MAX_BPC, 10)
-    except ValueError:
-        _LOGGER.error("invalid max bpc %r, expected 10base integer", args.MAX_BPC)
-        return 1
+    if args.MAX_BPC is None:
+        desired_max_bpc = puavodisplays.puavoconf.get_as(
+            "puavo.displays.max_bpc", _int_10base
+        )
+    else:
+        desired_max_bpc = args.MAX_BPC
 
     for output_name, output in puavodisplays.xrandr.get_prop().items():
         if "max bpc" in output["props"]:
