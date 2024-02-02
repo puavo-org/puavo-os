@@ -32,6 +32,10 @@ logstep() {
     logmsg info "step ${step}/${max_steps}" || true
 }
 
+has_windows() {
+  [ -e '/images/boot/.puavo_windows_partition' ]
+}
+
 destroy_in_dir() {
   local delete_file_cmd directory force_insecure message preserve_etc_puavo
 
@@ -180,7 +184,7 @@ for os_target in "${os_targets[@]}"; do
       do_reset_puavo_os=true
       ;;
     Windows)
-      if [ ! -e '/images/boot/.puavo_windows_partition' ]; then
+      if ! has_windows; then
         logerr 'Windows is not installed'
         exit 1
       fi
@@ -204,7 +208,11 @@ if $do_reset_windows; then
   logmsg notice 'starting Windows reset'
   puavo-reset-windows "${prwflags[@]}"
 else
-  logmsg notice 'skipped Windows reset'
+  if has_windows; then
+    logmsg notice 'skipped Windows reset (Windows is left intact)'
+  else
+    logmsg notice 'skipped Windows reset (no Windows installation on this host)'
+  fi
 fi
 
 if ! $do_reset_puavo_os; then
