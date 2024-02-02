@@ -2,9 +2,16 @@
 
 set -eu
 
-if ! mountpoint -q /state; then
-  echo 'puavo-reset can not be run unless /state is mounted' >&2
+# As this is normally run under a tmux session, the error messages disappear
+# after exit, and as those might be informative we help user to see them:
+exit_error_after_enter() {
+  printf '%s\n' "$1" >&2
+  read -p '  (Press Enter to continue) ' answer
   exit 1
+}
+
+if ! mountpoint -q /state; then
+  exit_error_after_enter 'puavo-reset can not be run unless /state is mounted'
 fi
 
 reset_override_path='/state/etc/puavo/reset_override'
@@ -13,8 +20,8 @@ if ! reset_state=$(jq -r .reset /etc/puavo/device.json) \
   || [ -z "$reset_state" -o "$reset_state" = 'null' ]; then
     # no reset state
     rm -f "$reset_override_path"
-    echo 'No reset request even though puavo-reset is run, exiting..,' >&2
-    exit 1
+    exit_error_after_enter \
+      'No reset request even though puavo-reset is run'
 fi
 
 get_key() { printf "%s\n" "$reset_state" | jq -r --arg key "$1" '.[$key]'; }
@@ -92,15 +99,14 @@ case "$operation" in
     ;;
   reset-windows)
     if ! has_windows; then
-      echo 'Requested Windows reset only but Windows is not installed' >&2
-      exit 1
+      exit_error_after_enter \
+        'Requested Windows reset only but Windows is not installed'
     fi
     reset_operation_msg='Resetting Windows only.'
     prltfd_args='--force --os-targets=Windows'
     ;;
   *)
-    echo "Unknown operation: '${operation}'" >&2
-    exit 1
+    exit_error_after_enter "Unknown operation: '${operation}'"
     ;;
 esac
 
@@ -110,14 +116,12 @@ case "$mode" in
     sleep 2
     ;;
   *)
-    echo "Unsupported mode '${mode}'" >&2
-    exit 1
+    exit_error_after_enter "Unsupported mode '${mode}'"
     ;;
 esac
 
 if ! puavo-reset-laptop-to-factory-defaults $prltfd_args; then
-  echo 'DEVICE RESET FAILED, press ENTER to reboot.' >&2
-  read answer
+  exit_error_after_enter 'Device reset failed'
 fi
 
 # puavo-reset-laptop-to-factory-defaults will not reboot after a Windows-only
