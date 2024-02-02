@@ -2,6 +2,7 @@ prefix=/usr/local
 bindir=$(prefix)/bin
 libdir=$(prefix)/lib
 pylibdir=$(prefix)/lib/python3/dist-packages
+sysconfdir = $(prefix)/etc
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -17,8 +18,9 @@ all: check test
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)/puavo-displays
+	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(pylibdir)/puavodisplays
-
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d
 
 .PHONY: install
 install: installdirs
@@ -29,8 +31,14 @@ install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-displays \
 		lib/*
 
+	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
+		udev/rules.d/95-monitor-hotplug.rules
+
 	$(INSTALL_DATA) -t '$(DESTDIR)$(pylibdir)/puavodisplays'	\
 		puavodisplays/*.py
+
+	$(INSTALL_DATA) -t '$(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d' \
+		etc/systemd/system/systemd-udevd.service.d/puavo-displays.conf
 
 .PHONY: clean
 clean:

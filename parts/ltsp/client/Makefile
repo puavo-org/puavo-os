@@ -31,7 +31,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
-	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
@@ -91,15 +90,11 @@ install : installdirs
 		etc/puavo-vpn-client/scripts/route-up/10-puavo-vpn-client-dnsmasq \
 		etc/puavo-vpn-client/scripts/route-up/30-sntp
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d \
-		etc/systemd/system/systemd-udevd.service.d/puavo-ltsp-client.conf
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		etc/xdg/autostart/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
-		udev/rules.d/80-puavo-printers.rules \
-		udev/rules.d/95-monitor-hotplug.rules
+		udev/rules.d/80-puavo-printers.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-ltsp-client
