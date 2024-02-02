@@ -244,17 +244,18 @@ def get_prop() -> typing.Dict[str, typing.Dict[str, typing.Any]]:
     return xrandr_prop_output_parser.parse(xrandr_prop_output)
 
 
-def set_max_bpc(output_name: str, max_bpc: int) -> None:
-    """Set max bpc of a display output"""
-    _call_xrandr(
-        [
-            "--output",
-            output_name,
-            "--set",
-            "max bpc",
-            str(max_bpc),
-        ]
-    )
+def set_max_bpc(max_bpc_per_output: typing.Dict[str, int]) -> None:
+    """Set max bpc of display outputs."""
+    xrandr_args = []
+
+    for output_name, max_bpc in max_bpc_per_output.items():
+        xrandr_args.append("--output")
+        xrandr_args.append(output_name)
+        xrandr_args.append("--set")
+        xrandr_args.append("max bpc")
+        xrandr_args.append(str(max_bpc))
+
+    _call_xrandr(xrandr_args)
 
 
 def set_max_bpc_of_all_display_outputs(
@@ -264,6 +265,8 @@ def set_max_bpc_of_all_display_outputs(
 
     If logger is defined, it is used for logging the progress.
     """
+
+    max_bpc_per_output = {}
 
     for output_name, output in get_prop().items():
         if "max bpc" in output["props"]:
@@ -287,13 +290,13 @@ def set_max_bpc_of_all_display_outputs(
                         value_min,
                         value_max,
                     )
-
-            set_max_bpc(output_name, new_value)
-
             if logger:
                 logger.info(
-                    "set max bpc of %r from %d to %d",
+                    "setting max bpc of %r from %d to %d",
                     output_name,
                     current_value,
                     new_value,
                 )
+            max_bpc_per_output[output_name] = new_value
+
+    set_max_bpc(max_bpc_per_output)
