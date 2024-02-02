@@ -39,4 +39,4 @@ if [ "$MUTTER_ALLOW_CONFIGURATION" = 'auto' ]; then
 fi
 export MUTTER_ALLOW_CONFIGURATION
 
-/usr/bin/puavo-display-manager
+/usr/bin/puavo-display-manager --ignore-mutter

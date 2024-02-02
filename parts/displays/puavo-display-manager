@@ -8,23 +8,24 @@ Puavo Display Manager
 
 # Standard library imports
 import argparse
+import collections
 import logging
 import logging.handlers
+import os
 import subprocess
 import sys
 import typing
 
+# Internal imports
+import puavodisplays.puavoconf
+import puavodisplays.xrandr
+
 _LOGGER = logging.getLogger("puavo-display-manager")
 
 
-def _call_run_xrandr(run_xrandr_args: typing.List[str]) -> int:
+def _call_run_xrandr() -> None:
     _LOGGER.info("Calling run-xrandr...")
-    _LOGGER.debug("run-xrandr arguments: %r", run_xrandr_args)
-    run_xrandr_args.insert(0, "/usr/lib/puavo-displays/run-xrandr")
-    run_xrandr_status = subprocess.call(run_xrandr_args)
-    _LOGGER.info("run-xrandr exited with status %d", run_xrandr_status)
-
-    return run_xrandr_status
+    subprocess.check_call(["/usr/lib/puavo-displays/run-xrandr"])
 
 
 def _parse_args() -> argparse.Namespace:
@@ -37,8 +38,62 @@ def _parse_args() -> argparse.Namespace:
         choices=logging.getLevelNamesMapping().keys(),
         default=logging.getLevelName(logging.INFO),
     )
+    parser.add_argument(
+        "--ignore-mutter",
+        action="store_true",
+        default=False,
+        help="manage displays when Mutter is configured to be in charge",
+    )
+    parser.add_argument(
+        "--best",
+        action="store_true",
+        default=False,
+        help="do everything to setup the best display configuration",
+    )
 
     return parser.parse_args()
+
+
+def _int_10base(v: str) -> int:
+    return int(v, 10)
+
+
+def _set_max_bpc() -> None:
+    desired_max_bpc = puavodisplays.puavoconf.get_as(
+        "puavo.displays.max_bpc", _int_10base
+    )
+
+    _LOGGER.info("Setting max bpc of all display outputs to %d.", desired_max_bpc)
+    puavodisplays.xrandr.set_max_bpc_of_all_display_outputs(
+        desired_max_bpc, logger=_LOGGER
+    )
+
+
+def _check_required_env_vars() -> None:
+    for env_var in ("DISPLAY", "XAUTHORITY", "MUTTER_ALLOW_CONFIGURATION"):
+        if env_var not in os.environ:
+            raise RuntimeError("Required environment variable is not set", env_var)
+
+
+def _is_mutter_in_charge() -> bool:
+    return not set(os.environ["MUTTER_ALLOW_CONFIGURATION"].split(",")).isdisjoint(
+        {"default", "user"}
+    )
+
+
+def _does_puavo_have_xrandr_configurations() -> bool:
+    # Comparing values to knownx defaults. If values differ, it means
+    # "Puavo has some xrandr configurations".
+    if puavodisplays.puavoconf.get("puavo.xrandr.apply_presets") != "":
+        return True
+
+    if puavodisplays.puavoconf.get("puavo.xrandr.args") != "[]":
+        return True
+
+    if puavodisplays.puavoconf.get("puavo.xrandr.extra_modes") != "auto":
+        return True
+
+    return False
 
 
 def _main() -> int:
@@ -59,10 +114,67 @@ def _main() -> int:
 
     _LOGGER.setLevel(args.log_level)
 
-    run_xrandr_args = []
+    _LOGGER.info("Starting to manage all displays.")
 
-    return _call_run_xrandr(run_xrandr_args)
+    _check_required_env_vars()
+
+    # Models the runtime setup Puavo Display Manager has to deal with.
+    Setup = collections.namedtuple(
+        "Setup",
+        [
+            "args_best",
+            "args_ignore_mutter",
+            "mutter_in_charge",
+            "puavo_has_confs",
+        ],
+    )
+
+    setup = Setup(
+        args_best=args.best,
+        args_ignore_mutter=args.ignore_mutter,
+        mutter_in_charge=_is_mutter_in_charge(),
+        puavo_has_confs=_does_puavo_have_xrandr_configurations(),
+    )
+    _LOGGER.info("%s", setup)
+
+    # fmt: off
+    # All actions Puavo Display Manager takes are determined by the runtime setup. (2**4 definitions; 4 boolean flags)
+    action_map: typing.Dict[Setup, typing.List[typing.Callable[[], None]]] = {
+        # Hotplug case:
+        Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=True  , puavo_has_confs=False) : [_set_max_bpc],
+        Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=True  , puavo_has_confs=True)  : [_set_max_bpc],
+        Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc],
+        Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
+
+        # Session start case:
+        Setup(args_best=False , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=False) : [],
+        Setup(args_best=False , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
+        Setup(args_best=False , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=False) : [],
+        Setup(args_best=False , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
+
+        # Greeter start case:
+        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=False) : [_set_max_bpc],
+        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
+        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc],
+        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
+
+        # Default case:
+        Setup(args_best=False , args_ignore_mutter=False , mutter_in_charge=True  , puavo_has_confs=False) : [],
+        Setup(args_best=False , args_ignore_mutter=False , mutter_in_charge=True  , puavo_has_confs=True)  : [],
+        Setup(args_best=False , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=False) : [],
+        Setup(args_best=False , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
+    }
+    # fmt: on
+
+    for action in action_map[setup]:
+        action()
+
+    _LOGGER.info("I have done everything I can.")
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(_main())
+    try:
+        sys.exit(_main())
+    finally:
+        _LOGGER.info("Bye.")
