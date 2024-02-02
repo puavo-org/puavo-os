@@ -71,7 +71,38 @@ EOF
 print0_win_primary_partition_devpaths()
 {
     while IFS= read -r -d $'\0' ntfs_partition_devpath; do
+        has_dirty_flag=false
+        was_dirty_flag_cleared=false
+
+        set +o pipefail # ntfsls is expected to fail, we are interested in its error output
+        if ntfsls -F "${ntfs_partition_devpath}" 2>&1 >/dev/null | head -n1 | grep -q -x 'Volume is scheduled for check.'; then
+            loginfo "NTFS volume in '${ntfs_partition_devpath}' is dirty."
+            has_dirty_flag=true
+        fi
+        set -o pipefail
+
+        if $use_force && $has_dirty_flag; then
+            loginfo "Clearing the dirty flag of NTFS volume in '${ntfs_partition_devpath}'..."
+            ntfsfix -d "${ntfs_partition_devpath}" >&2 || {
+                logerr "Failed clear the dirty flag of NTFS volume in '${ntfs_partition_devpath}'."
+                continue # To the next possible windows primary partition
+            }
+            was_dirty_flag_cleared=true
+        fi
+
         ntfsls -F "${ntfs_partition_devpath}" | grep -q -x 'Windows/' || {
+            if $was_dirty_flag_cleared; then
+                loginfo "Restoring the dirty flag of NTFS volume in '${ntfs_partition_devpath}'..."
+                ntfsfix "${ntfs_partition_devpath}" >&2 || {
+                    # Well, this really should not be possible in
+                    # practice. We have already succesfully cleared
+                    # the dirty bit just a moment ago, so surely
+                    # setting it back should work too, unless ntfsfix
+                    # is broken or something catastrophic has happened
+                    # in the filesystem or on the device.
+                    logerr "Failed to set the dirty flag of NTFS volume in '${ntfs_partition_devpath}'."
+                }
+            fi
             continue
         }
         printf '%s\0' "${ntfs_partition_devpath}"
