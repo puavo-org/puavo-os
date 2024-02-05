@@ -54,6 +54,11 @@ loginfo() {
   logmsg info "$1"
 }
 
+logwarning() {
+  printf "> %s\n" "$1" >&2
+  logmsg warning "$1"
+}
+
 logerr() {
   printf "> ERROR: %s\n" "$1" >&2
   logmsg error "$1"
@@ -322,12 +327,35 @@ verify_wim_image()
 
 fetch_wim_image_from_filesystem()
 {
-    local target_wim_file_path wim_image_name
+    local json_string_puavo_wim_images_fs_devpath \
+          puavo_wim_images_fs_devpath \
+          puavo_wim_images_mountpoint \
+          target_wim_file_path \
+          wim_image_name
 
     wim_image_name=$1
     shift
 
     target_wim_file_path=$(readlink -f "$wim_image_name")
+
+    while read -r json_string_puavo_wim_images_fs_devpath; do
+        puavo_wim_images_fs_devpath=$(jq -j -n "$json_string_puavo_wim_images_fs_devpath")
+        if [ -n "$puavo_wim_images_fs_devpath" ]; then
+            loginfo "Found Puavo WIM images filesystem from '${puavo_wim_images_fs_devpath}'. Mounting it..."
+
+            # .mountpoint dirs are automagically umounted on_exit
+            puavo_wim_images_mountpoint=$(mktemp -d -p . puavo_wim_images.XXXXXXXXXX.mountpoint) || {
+                logwarning 'Failed to create a mount point for Puavo WIM images filesystem! Really strange, but not fatal. Perhaps WIM images can be found elsewhere.'
+                continue
+            }
+            mount -oro "$puavo_wim_images_fs_devpath" "$puavo_wim_images_mountpoint" || {
+                logwarning 'Failed to mount Puavo WIM images filesystem. Not fatal, continuing the search for WIM images.'
+                continue # Perhaps there's another Puavo WIM images filesystem.
+            }
+            loginfo "Mounted Puavo WIM images filesystem from '${puavo_wim_images_fs_devpath}' to '${puavo_wim_images_mountpoint}'."
+        fi
+    done < <(lsblk -J -o LABEL,PATH,MOUNTPOINT,FSTYPE \
+                 | jq '.blockdevices[] | select(.label == "Puavo WIM images" and .mountpoint == null and .fstype == "ext4").path')
 
     while read -r json_string_mountpoint; do
         ## This is the moment when I wish I had used Python instead.
