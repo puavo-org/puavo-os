@@ -41,6 +41,7 @@ class docker {
     '/usr/local/sbin/puavo-docker':
       mode    => '0755',
       require => [ File['/etc/puavo-docker/docker-compose.yml.tmpl']
+                 , Package['puavo-sharedir-manager']
                  , Package['ruby-net-ldap'] ],
       source  => 'puppet:///modules/docker/puavo-docker';
 
@@ -58,6 +59,7 @@ class docker {
   Package <|
        title == 'docker-compose'
     or title == 'docker.io'
+    or title == 'puavo-sharedir-manager'
     or title == 'rsnapshot'
     or title == 'ruby-net-ldap'
     or title == 'systemd'
