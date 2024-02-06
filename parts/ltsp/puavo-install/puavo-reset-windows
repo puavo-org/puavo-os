@@ -348,7 +348,7 @@ fetch_wim_image_from_filesystem()
                 logwarning 'Failed to create a mount point for Puavo WIM images filesystem! Really strange, but not fatal. Perhaps WIM images can be found elsewhere.'
                 continue
             }
-            mount -oro "$puavo_wim_images_fs_devpath" "$puavo_wim_images_mountpoint" || {
+            mount -o ro,nodev,nosuid "$puavo_wim_images_fs_devpath" "$puavo_wim_images_mountpoint" || {
                 logwarning 'Failed to mount Puavo WIM images filesystem. Not fatal, continuing the search for WIM images.'
                 continue # Perhaps there's another Puavo WIM images filesystem.
             }
