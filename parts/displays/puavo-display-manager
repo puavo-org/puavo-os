@@ -138,6 +138,7 @@ def _main() -> int:
     _LOGGER.info("%s", setup)
 
     # fmt: off
+    # pylint: disable=line-too-long
     # All actions Puavo Display Manager takes are determined by the runtime setup. (2**4 definitions; 4 boolean flags)
     action_map: typing.Dict[Setup, typing.List[typing.Callable[[], None]]] = {
         # Hotplug case:
@@ -164,6 +165,7 @@ def _main() -> int:
         Setup(args_best=False , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=False) : [],
         Setup(args_best=False , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
     }
+    # pylint: enable=line-too-long
     # fmt: on
 
     for action in action_map[setup]:
