@@ -4,6 +4,7 @@ set -eu
 set -o pipefail
 
 device_supports_discard=false
+ignore_send_error=false
 request_confirmation=true
 use_secure_delete=true
 step=0
@@ -81,9 +82,10 @@ destroy_in_dir() {
 
 usage() {
   cat <<EOF
-$(basename $0) [--force] [--insecure] [--os-targets=OS_TARGETS}
+$(basename $0) [--force] [--ignore-send-error] [--insecure] [--os-targets=OS_TARGETS]
 
   --force                  no questions asked
+  --ignore-send-error      ignore errors when sending reset state to Puavo
   --insecure               be as fast as possible at the expense of security
   --os-targets=OS_TARGETS  comma-separated list of operating systems to reset,
                            defaults to '${os_targets}', available choices {PuavoOS, Windows}
@@ -159,15 +161,16 @@ if [ "$puavo_hosttype" != "laptop" ]; then
   exit 1
 fi
 
-if ! args=$(getopt -n "$0" -o + -l 'force,insecure,os-targets:' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'force,ignore-send-error,insecure,os-targets:' -- "$@"); then
   usage
 fi
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --force)    request_confirmation=false; shift ;;
-    --insecure) use_secure_delete=false;    shift ;;
+    --force)             request_confirmation=false; shift ;;
+    --ignore-send-error) ignore_send_error=true;     shift ;;
+    --insecure)          use_secure_delete=false;    shift ;;
     --os-targets)
       shift
       IFS=',' read -ra os_targets <<<"$1"
@@ -395,8 +398,12 @@ if [ "$resetstatus" -eq 0 ]; then
         echo 'but you may also remove it manually from the Puavo interface.'
         echo
       } >&2
-      logerr 'failed sending reset state to puavo'
-      resetstatus=1
+      if $ignore_send_error; then
+        logerr 'failed sending reset state to puavo (ignoring)'
+      else
+        logerr 'failed sending reset state to puavo'
+        resetstatus=1
+      fi
     fi
   else
     echo
