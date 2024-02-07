@@ -365,7 +365,7 @@ release: ${this_release}
 bios:            $(facter dmi.bios.vendor) / $(check_bios_version) $(firmwaremode)
 cpu:             ${colorized_cpu}
 $(list_disks)
-memory:          ${colorized_memory} ($(dmidecode -t 17 |grep Size | grep -v No | wc --lines)x)
+memory:          ${colorized_memory} (total of $(dmidecode -t 17 |grep Size | grep -v No | wc --lines) modules)
 display:         ${colorized_display_resolution} ${display_touch} ${display_safety}
 $(list_networks) $(is_wifi6_compatible)
 $(show_bluetooth)
