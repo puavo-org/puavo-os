@@ -515,6 +515,7 @@ class PuavoLaptopSetup:
             cmd = [ 'pkexec',
                     '/usr/sbin/puavo-reset-laptop-to-factory-defaults',
                     '--force',
+                    '--ignore-send-error',
                     '--os-targets',
                     ','.join(os_targets),
                    ]

@@ -54,9 +54,8 @@ fi
 
 location_countrycode=$(cat /puavo-nextcloud-config/location_countrycode \
                          2>/dev/null) || true
-
 office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
-
+sharedir_root=$(cat /puavo-nextcloud-config/sharedir_root 2>/dev/null) || true
 trusted_proxies=$(cat /puavo-nextcloud-config/trusted_proxies 2>/dev/null) \
                     || true
 
@@ -177,6 +176,7 @@ EOF
   occ files_external:import "$extfiles_config"
   rm -f "$extfiles_config"
 fi
+occ files_external:config 2 root "$sharedir_root"
 
 if [ -n "$office_domain" ]; then
   # Install and setup richdocuments

@@ -73,6 +73,42 @@ end
 
 def do_nothing(restclient); end
 
+def manage_local_puavoconf(conf)
+  local_puavoconf_path = '/state/etc/puavo/local/puavo_conf.json'
+  begin
+    local_puavoconf = JSON.parse( IO.read(local_puavoconf_path) )
+  rescue Errno::ENOENT
+    return
+  end
+
+  enableconfmap = {
+    'puavo.laptop-setup.enable_setting.abitti_version' \
+      => 'puavo.abitti.version',
+    'puavo.laptop-setup.enable_setting.boot_default' \
+      => 'puavo.grub.boot_default',
+    'puavo.laptop-setup.enable_setting.windows_enabled' \
+      => 'puavo.grub.windows.enabled',
+  }
+  enableconfmap.each do |enable_key, target_key|
+    enable_value = conf[enable_key] || puavoconf_get(enable_key)
+    next unless enable_value == 'false'
+    next unless local_puavoconf[target_key]
+    log(Syslog::LOG_INFO,
+        "Resetting local puavo-conf variable #{ target_key }\n")
+    run('puavo-conf-local', '-u', target_key)
+  end
+
+  removekeys = [ 'puavo.pkg.adobe-flashplugin',
+                 'puavo.pkg.adobe-pepperflashplugin' ]
+  removekeys.each do |target_key|
+    next unless local_puavoconf[target_key]
+    log(Syslog::LOG_INFO,
+        "Resetting local puavo-conf variable #{ target_key }\n")
+    # XXX this unsets only, could just as well remove
+    run('puavo-conf-local', '-u', target_key)
+  end
+end
+
 def update_device_json(restclient)
   log(Syslog::LOG_INFO, ">>> Updating device json\n")
 
@@ -132,6 +168,13 @@ def update_device_json(restclient)
     device['primary_user'] = primary_user_override
     device['conf'] ||= {}
     device['conf']['puavo.admin.primary_user'] = primary_user_override || ''
+  end
+
+  begin
+    manage_local_puavoconf(device['conf'])
+  rescue StandardError => e
+    log(Syslog::LOG_ERR, "Error when managing local puavo-conf: %s\n",
+                         e.message)
   end
 
   tmp_filepath = "#{ state_device_json_path }.tmp"

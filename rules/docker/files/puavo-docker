@@ -5,10 +5,11 @@ require 'json'
 require 'net/ldap'
 require 'open3'
 require 'puavo/conf'
+require 'puavo/sharedir/ldap'
+require 'puavo/sharedir/shared_directories'
 require 'socket'
 require 'yaml'
 
-DEVICE_JSON_PATH = '/state/etc/puavo/device.json'
 DOCKER_STATE_DIR = '/state/etc/docker'
 
 DEFAULT_CONTAINER_LIST = %w(postgres nextcloud collabora)
@@ -148,10 +149,12 @@ DEFAULT_CONTAINER_LIST.each do |container_name|
   end
 end
 
+server_locale = nil
 begin
-  locale = puavoconf.get('puavo.l10n.locale')
-  server_location = locale[0..1]
+  puavo_locale = puavoconf.get('puavo.l10n.locale')
+  server_location = puavo_locale[0..1]
   raise 'location not two letters' unless server_location.length == 2
+  server_locale = server_location
   write_config_file("#{ server_location }\n", 'location_countrycode')
 rescue StandardError => e
   warn("could not determine server location: #{ e.message }")
@@ -245,13 +248,14 @@ FileUtils.copy_file('/etc/krb5.conf',
                     File.join(CONFIG_DIR, 'krb5.conf'),
                     :preserve => true)
 
+school_cn_list = []
 begin
-  device_info = JSON.parse( IO.read(DEVICE_JSON_PATH) )
-  raise('device info is not a hash') unless device_info.kind_of?(Hash)
-  school_dns = device_info['school_dns']
-  raise('device info lacks school DNs') unless school_dns.kind_of?(Array)
+  puavoldap = PuavoLdap.new
+  schools_served = puavoldap.filter_by_schools_served_by_this_server
+  school_cn_list = schools_served.map { |s| Array(s.cn).first }
+  school_dn_list = schools_served.map { |s| s.dn }
 
-  if school_dns.empty? then
+  if school_dn_list.empty? then
     # use "false" filter, nothing should match
     # https://www.ietf.org/rfc/rfc4526.txt
     apache_login_filter = '(|)'
@@ -261,7 +265,7 @@ begin
     objectclass_filter = Net::LDAP::Filter.eq('objectClass', 'posixAccount')
     puavolocked_filter = Net::LDAP::Filter.eq('puavoLocked', 'FALSE')
     puavoschool_filters = \
-      school_dns.map do |school_dn|
+      school_dn_list.map do |school_dn|
         Net::LDAP::Filter.eq('puavoSchool', Net::LDAP::Filter.escape(school_dn))
       end
     apache_login_filter = (objectclass_filter & puavolocked_filter \
@@ -281,6 +285,25 @@ begin
 rescue StandardError => e
   warn("could not determine ldap user filter for this server: #{ e.message }")
   exit(1)
+end
+
+begin
+  if school_cn_list.empty? then
+    FileUtils.rm_f(File.join(CONFIG_DIR, 'sharedir_root'))
+  else
+    sharedir_base = PuavoSharedDirectories.dirname('base', server_locale)
+    raise "no sharedir base known for locale #{ server_locale }" \
+      unless sharedir_base
+    if school_cn_list.count == 1 then
+      sharedir_root = File.join(sharedir_base, school_cn_list.first)
+    else
+      sharedir_root = sharedir_base
+    end
+    write_config_file("#{ sharedir_root }\n", 'sharedir_root')
+  end
+rescue StandardError => e
+  warn("could not determine sharedir root: #{ e.message }")
+  FileUtils.rm_f(File.join(CONFIG_DIR, 'sharedir_root'))
 end
 
 collabora_enabled = false
