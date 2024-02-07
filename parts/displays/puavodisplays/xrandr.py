@@ -3,6 +3,7 @@
 # Standard library imports
 import collections
 import enum
+import fractions
 import logging
 import re
 import subprocess
@@ -74,7 +75,7 @@ _TOKEN_REGEXES = collections.OrderedDict(
         ),
         (
             _TokenId.MODE,
-            r"^   (?P<resolution>\d+x\d+) (?P<rates>.*?)\s*$",
+            r"^   (?P<resolution_x>\d+)x(?P<resolution_y>\d+) \s*(?P<refresh_rates>.*?)\s*$",
         ),
         (
             _TokenId.PROP_ATTR_RANGE,
@@ -106,6 +107,16 @@ def _tokenize(line: str) -> typing.Tuple[_TokenId, typing.Dict[str, str]]:
         if token_match is not None:
             return token_id, token_match.groupdict()
     raise UnexpectedOutputError("invalid output line", line)
+
+
+def _parse_refresh_rate(value: str) -> typing.Tuple[float, bool, bool]:
+    refresh_rate_part_match = re.match(r"^([0-9.]+)(\*)?(\+)?$", value)
+    if refresh_rate_part_match is None:
+        raise UnexpectedOutputError("Invalid refresh rate", value)
+
+    (refresh_rate, is_current, is_preferred) = refresh_rate_part_match.groups()
+
+    return float(refresh_rate), is_preferred is not None, is_current is not None
 
 
 class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
@@ -141,9 +152,15 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
                 self.__action_create_output,
                 _State.OUTPUT,
             ),
-            (_State.OUTPUT_PROP, _TokenId.MODE): (None, _State.OUTPUT_MODE),
+            (_State.OUTPUT_PROP, _TokenId.MODE): (
+                self.__action_add_mode,
+                _State.OUTPUT_MODE,
+            ),
             (_State.OUTPUT_PROP, _TokenId.EOF): (None, _State.DONE),
-            (_State.OUTPUT_MODE, _TokenId.MODE): (None, _State.OUTPUT_MODE),
+            (_State.OUTPUT_MODE, _TokenId.MODE): (
+                self.__action_add_mode,
+                _State.OUTPUT_MODE,
+            ),
             (_State.OUTPUT_MODE, _TokenId.CONNECTOR): (
                 self.__action_create_output,
                 _State.OUTPUT,
@@ -206,6 +223,57 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         self.__last_prop["supported_values"] = [
             v.strip() for v in supported_values.split(",")
         ]
+
+    def __set_current_mode(self, mode: typing.Dict[str, typing.Any]) -> None:
+        if "current_mode" in self.__last_output:
+            raise UnexpectedOutputError("Multiple current modes")
+        self.__last_output["current_mode"] = mode
+
+    def __set_preferred_mode(self, mode: typing.Dict[str, typing.Any]) -> None:
+        if "preferred_mode" in self.__last_output:
+            raise UnexpectedOutputError("Multiple preferred modes")
+        self.__last_output["preferred_mode"] = mode
+
+    def __action_add_mode(
+        self,
+        token_id: _TokenId,  # pylint: disable=unused-argument
+        resolution_x: str,
+        resolution_y: str,
+        refresh_rates: str,
+    ) -> None:
+        refresh_rate_parts = refresh_rates.split()
+        if len(refresh_rate_parts) == 0:
+            raise UnexpectedOutputError("Invalid refresh rates", refresh_rates)
+
+        modes = self.__last_output.setdefault("modes", [])
+        for refresh_rate_part in refresh_rate_parts:
+            if refresh_rate_part == "+":
+                # Lonely + marks the last refresh rate as the preferred.
+                self.__set_preferred_mode(modes[-1])
+                continue
+
+            refresh_rate, is_preferred, is_current = _parse_refresh_rate(
+                refresh_rate_part
+            )
+
+            resolution_x_int = int(resolution_x, 10)
+            resolution_y_int = int(resolution_y, 10)
+
+            mode = {
+                "resolution_x": resolution_x_int,
+                "resolution_y": resolution_y_int,
+                "refresh_rate": refresh_rate,
+                "aspect_ratio": str(
+                    fractions.Fraction(resolution_x_int, resolution_y_int)
+                ).replace("/", ":"),
+            }
+
+            modes.append(mode)
+
+            if is_preferred:
+                self.__set_preferred_mode(mode)
+            if is_current:
+                self.__set_current_mode(mode)
 
     def __push(
         self, token_id: _TokenId, token_groupdict: typing.Dict[str, str]
