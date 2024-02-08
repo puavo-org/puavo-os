@@ -35,6 +35,7 @@ class packages {
     , 'puavo-pam'
     , 'puavo-pkg'
     , 'puavo-sharedir-client'
+    , 'puavo-sharedir-manager'
     , 'puavo-usb-factory'
     , 'puavo-user-registration'
     , 'puavo-veyon-applet'

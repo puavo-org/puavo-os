@@ -1,6 +1,7 @@
 class docker {
   include ::docker::collabora
   include ::docker::nextcloud
+  include ::packages
 
   $docker_ip = '172.17.0.1'
   $docker_ip_with_cidr = "${docker_ip}/16"

@@ -6,6 +6,8 @@ set -eu
 
 status=0
 
+puavo-conf-update || status=1
+
 # XXX another hackish workaround for the primary_user.
 primary_user_override_path='/state/etc/puavo/primary_user_override'
 if [ -r "$primary_user_override_path" ]; then
