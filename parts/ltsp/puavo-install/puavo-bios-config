@@ -24,45 +24,52 @@ EOF
   (cd "$hp_utils_dir" && bash)
 }
 
-flash_latest() {
-  prepare_hp_utils
+check_hash() {
+  providedhash="$(xmllint --xpath "string(/BIOS/Rel[starts-with(@Bin,\"$hp_select_bios\")]/@Sha384)" "$mainboard_sysid.xml")"
+  calculatedhash=$(sha384sum "$hp_select_bios" | awk '{print $1}')
 
-  if [ $# -eq 0 ]; then
-    param=""
-  else
-    param="$1"
-    if [ "$param" != "-y" ]; then
-      echo "Invalid parameter: '$param'"
-      echo "Accepted parameters are: '-y'"
+  if [ -n "$providedhash" ]; then
+    echo "Cryptographic hash for the binary was found in the list. Comparing it now."
+    if [ "$(printf "%s" "$calculatedhash" | grep -iP "^${providedhash}$")" ] ; then
+      printf "${GREEN}The hash is a match, continuing.${NC}"
+    else
+      printf "${RED}The hash does NOT match, aborting.${NC}\n"
+      printf "Calculated hash: %s\nProvided hash: %s\n" "$calculatedhash" "$providedhash"
       return 1
     fi
+  else
+    printf "${YELLOW}WARNING: No cryptographic hash found for the binary. Proceed with caution.${NC}"
   fi
+}
 
+flash() {
+  prepare_hp_utils
+
+  param=""
+  version=""
   mainboard_sysid=$(dmidecode -s baseboard-product-name)
   hp_ftp_url="https://ftp.ext.hp.com/pub/pcbios"
+
   (cd "$hp_utils_dir" && \
-
     wget "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml" -O "$mainboard_sysid.xml" && \
-    hp_latest_bios="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" "$mainboard_sysid.xml")" && \
-    wget "$hp_ftp_url/$mainboard_sysid/$hp_latest_bios" -O "$hp_latest_bios" && \
-
-    providedhash="$(xmllint --xpath "string(/BIOS/Rel[starts-with(@Bin,\"$hp_latest_bios\")]/@Sha384)" "$mainboard_sysid.xml")"
-    calculatedhash=$(sha384sum "$hp_latest_bios" | awk '{print $1}')
-
-    if [ -n "$providedhash" ]; then
-      echo "Cryptographic hash for the binary was found in the list. Comparing it now."
-      if [ "$(printf "%s" "$calculatedhash" | grep -iP "^${providedhash}$")" ] ; then
-        printf "${GREEN}The hash is a match, continuing.${NC}"
-      else
-        printf "${RED}The hash does NOT match, aborting.${NC}\n"
-        printf "Calculated hash: %s\nProvided hash: %s\n" "$calculatedhash" "$providedhash"
-        return 1
-      fi
-    else
-      printf "${YELLOW}WARNING: No cryptographic hash found for the binary. Proceed with caution.${NC}"
+    if [ $# -le 2 ]; then
+      for i in "${@}"; do
+        if [ "$i" = "-y" ]; then
+          param="$i"
+        elif [ "$i" = "latest" ]; then
+          version="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" "$mainboard_sysid.xml")"
+        elif [ "$i" != "-y" -a "$i" != "latest" ]; then
+          echo "Invalid parameters!"
+          echo "Accepted parameters are: '-y' and 'latest'"
+          return 1
+        fi
+      done
     fi
 
-    hp-flash "$hp_latest_bios" $param)
+    hp_select_bios="$(xmllint --xpath "(/BIOS/Rel/@Bin)" "$mainboard_sysid.xml" | cut -d '"' -f 2 \
+     | fzf --query "$version" --select-1 --height=9 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
+    )" && wget "$hp_ftp_url/$mainboard_sysid/$hp_select_bios" -O "$hp_select_bios" && \
+    check_hash && hp-flash "$hp_select_bios" $param)
 }
 
 import_config() {
@@ -96,7 +103,8 @@ import_config() {
 
 ask_choice() {
   choices=$(cat <<'EOF'
-Flash latest BIOS (HP)
+Flash latest BIOS version (HP)
+Flash select BIOS version (HP)
 Import Student laptop BIOS Config
 Import Student laptop BIOS Config (UEFI)
 Import USB Stick factory BIOS Config
@@ -105,20 +113,18 @@ use HP BIOS utilities
 exit
 EOF
 )
-  printf "%s" "$choices" | fzf --height=9 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
+  printf "%s" "$choices" | fzf --height=10 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
 }
 
 printf "\n"
 printf ">>> Welcome to puavo-bios-config!\n"
 printf ">>> What do you want to do?\n\n"
 
-if [ $# -eq 1 ]; then
+if [ $# -ge 1 ] && [ $# -le 3 ]; then
   chosen="$1"
-  eval $chosen
-elif [ $# -eq 2 ]; then
-  chosen="$1"
-  config="$2"
-  eval $chosen $config
+  option2="${2:-}"
+  option3="${3:-}"
+  eval $chosen $option2 $option3
 else
   while chosen=$(ask_choice); do
     printf ">> You chose '${chosen}'\n"
@@ -127,8 +133,12 @@ else
       exit)
         exit 0
         ;;
-      'Flash latest BIOS (HP)')
-        flash_latest "$@"
+      'Flash latest BIOS version (HP)')
+        flash latest
+        sleep 3
+        ;;
+      'Flash select BIOS version (HP)')
+        flash
         sleep 3
         ;;
       'Import Student laptop BIOS Config')
