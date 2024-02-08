@@ -1,40 +1,54 @@
-diff -ruN gnome-shell/js/ui/status/network.js gnome-shell.3/js/ui/status/network.js
---- gnome-shell/js/ui/status/network.js	2023-02-14 02:11:32.000000000 +0200
-+++ gnome-shell/js/ui/status/network.js	2023-03-16 12:46:02.652531748 +0200
-@@ -476,7 +476,35 @@
+--- gnome-shell/js/ui/status/network.js	2023-09-16 12:57:40.000000000 +0300
++++ gnome-shell/js/ui/status/network.js	2024-02-08 13:19:47.206140153 +0200
+@@ -78,6 +78,33 @@
+     }
+ }
  
-     _autoConnect() {
-         let connection = new NM.SimpleConnection();
--        this._client.add_and_activate_connection_async(connection, this._device, null, null, null);
-+        this._addAndActivateNewConnection(null);
-+    }
++function getPuavoNMConnection() {
++  let connection = new NM.SimpleConnection();
 +
-+    _addAndActivateNewConnection(dbus_path) {
-+      let connection = new NM.SimpleConnection();
++  let cmd = '/usr/lib/puavo-ltsp-client/puavo-network-connections --ask-if-must-be-private';
++  let [res, out, err, status] = GLib.spawn_command_line_sync(cmd);
++  if (res && status == 0) {
++      // We do a similar trick as "nmcli"-utility does when given
++      // "private yes" as parameters.  Set the user of the network
++      // connection to the current user only so that network connection
++      // can be made with
++      // "org.freedesktop.NetworkManager.settings.modify.own" permission
++      // only and "org.freedesktop.NetworkManager.settings.modify.system"
++      // is not needed.  But this is intentionally coded so that if
++      // the above command is not found, the default behaviour of using
++      // system-level permission is retained.
++      let username = GLib.get_user_name();
++      if (username && username != "") {
++          let s_con = new NM.SettingConnection();
++          connection.add_setting(s_con);
 +
-+      let cmd = '/usr/lib/puavo-ltsp-client/puavo-network-connections --ask-if-must-be-private';
-+      let [res, out, err, status] = GLib.spawn_command_line_sync(cmd);
-+      if (res && status == 0) {
-+          // We do a similar trick as "nmcli"-utility does when given
-+          // "private yes" as parameters.  Set the user of the network
-+          // connection to the current user only so that network connection
-+          // can be made with
-+          // "org.freedesktop.NetworkManager.settings.modify.own" permission
-+          // only and "org.freedesktop.NetworkManager.settings.modify.system"
-+          // is not needed.  But this is intentionally coded so that if
-+          // the above command is not found, the default behaviour of using
-+          // system-level permission is retained.
-+          let username = GLib.get_user_name();
-+          if (username && username != "") {
-+              let s_con = new NM.SettingConnection();
-+              connection.add_setting(s_con);
-+
-+              s_con.add_permission("user", username, null);
-+          }
++          s_con.add_permission("user", username, null);
 +      }
++  }
 +
-+      this._client.add_and_activate_connection_async(connection, this._device,
-+          dbus_path, null, null);
++  return connection;
++}
++
+ class ItemSorter {
+     [Symbol.iterator] = this.items;
+ 
+@@ -475,7 +502,7 @@
      }
  
-     _activeConnectionChanged() {
+     _autoConnect() {
+-        let connection = new NM.SimpleConnection();
++        let connection = getPuavoNMConnection();
+         this._client.add_and_activate_connection_async(connection, this._device, null, null, null);
+     }
+ 
+@@ -924,7 +951,7 @@
+             launchSettingsPanel('wifi', 'connect-8021x-wifi',
+                 this._getDeviceDBusPath(), ap.get_path());
+         } else {
+-            conn = new NM.SimpleConnection();
++            conn = getPuavoNMConnection();
+             this._device.client.add_and_activate_connection_async(
+                 conn, this._device, ap.get_path(), null, null);
+         }
