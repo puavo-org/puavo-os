@@ -36,6 +36,83 @@ def _call_run_xrandr() -> None:
     subprocess.check_call(["/usr/lib/puavo-displays/run-xrandr"])
 
 
+def _get_npixels(mode: typing.Dict[str, typing.Any]) -> int:
+    return mode["resolution_x"] * mode["resolution_y"]
+
+
+def _is_worse_than(
+    output1: typing.Dict[str, typing.Any], output2: typing.Dict[str, typing.Any]
+) -> bool:
+    return _get_npixels(output1["modes"][0]) < _get_npixels(output2["modes"][0])
+
+
+def _get_worst_connected_output_and_others(
+    connected_outputs: typing.List[typing.Dict[str, typing.Any]],
+) -> typing.Tuple[
+    typing.Dict[str, typing.Any],
+    typing.List[typing.Dict[str, typing.Any]],
+]:
+    worst_connected_output = connected_outputs[0]
+    other_connected_outputs: typing.List[typing.Dict[str, typing.Any]] = []
+    for connected_output in connected_outputs[1:]:
+        if _is_worse_than(connected_output, worst_connected_output):
+            other_connected_outputs.append(worst_connected_output)
+            worst_connected_output = connected_output
+        else:
+            other_connected_outputs.append(connected_output)
+    return worst_connected_output, other_connected_outputs
+
+
+def _to_xrandr_mode_str(mode: typing.Dict[str, typing.Any]) -> str:
+    return f"{mode['resolution_x']}x{mode['resolution_y']}"
+
+
+def _ensure_no_black_borders() -> None:
+    _LOGGER.info("Ensuring none of the connected displays have black borders...")
+    connected_outputs = [
+        o for o in puavodisplays.xrandr.get_prop().values() if o["state"] == "connected"
+    ]
+
+    if len(connected_outputs) < 1:
+        _LOGGER.info("No connected displays.")
+        return
+
+    (
+        worst_connected_output,
+        other_connected_outputs,
+    ) = _get_worst_connected_output_and_others(connected_outputs)
+
+    xrandr_args = []
+    if len(connected_outputs) == 1:
+        _LOGGER.info("Clearing transformations from the only connected display.")
+        xrandr_args.append("--output")
+        xrandr_args.append(worst_connected_output["name"])
+        xrandr_args.append("--transform")
+        xrandr_args.append("none")
+    else:
+        xrandr_args.append("--output")
+        xrandr_args.append(worst_connected_output["name"])
+        xrandr_args.append("--mode")
+        xrandr_args.append(_to_xrandr_mode_str(worst_connected_output["modes"][0]))
+        xrandr_args.append("--transform")
+        xrandr_args.append("none")
+
+        for other_connected_output in other_connected_outputs:
+            xrandr_args.append("--output")
+            xrandr_args.append(other_connected_output["name"])
+            xrandr_args.append("--same-as")
+            xrandr_args.append(worst_connected_output["name"])
+            xrandr_args.append("--mode")
+            xrandr_args.append(
+                _to_xrandr_mode_str(other_connected_output["current_mode"])
+            )
+            xrandr_args.append("--scale-from")
+            xrandr_args.append(_to_xrandr_mode_str(worst_connected_output["modes"][0]))
+
+    _LOGGER.info("Calling xrandr: %r", xrandr_args)
+    puavodisplays.xrandr.call_xrandr(xrandr_args)
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -78,7 +155,7 @@ def _set_max_bpc() -> None:
 
 
 def _check_required_env_vars() -> None:
-    for env_var in ("DISPLAY", "XAUTHORITY", "MUTTER_ALLOW_CONFIGURATION"):
+    for env_var in ("DISPLAY", "XAUTHORITY"):
         if env_var not in os.environ:
             raise RuntimeError("Required environment variable is not set", env_var)
 
@@ -127,7 +204,7 @@ def _manage(setup: Setup) -> None:
         # Hotplug case:
         Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=True  , puavo_has_confs=False) : [_set_max_bpc],
         Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=True  , puavo_has_confs=True)  : [_set_max_bpc],
-        Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc],
+        Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc, _ensure_no_black_borders],
         Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
 
         # Session start case:
@@ -137,9 +214,9 @@ def _manage(setup: Setup) -> None:
         Setup(args_best=False , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
 
         # Greeter start case:
-        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=False) : [_set_max_bpc],
+        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=False) : [_set_max_bpc, _ensure_no_black_borders],
         Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
-        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc],
+        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc, _ensure_no_black_borders],
         Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
 
         # Default case:

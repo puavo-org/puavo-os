@@ -13,6 +13,7 @@ __all__ = [
     "CallError",
     "Error",
     "UnexpectedOutputError",
+    "call_xrandr",
     "get_prop",
     "set_max_bpc",
     "set_max_bpc_of_all_display_outputs",
@@ -300,7 +301,8 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         return self.__displays
 
 
-def _call_xrandr(xrandr_args: typing.List[str]) -> str:
+def call_xrandr(xrandr_args: typing.List[str]) -> str:
+    """Call xrandr"""
     xrandr_args.insert(0, "xrandr")
 
     try:
@@ -311,7 +313,7 @@ def _call_xrandr(xrandr_args: typing.List[str]) -> str:
 
 def get_prop() -> typing.Dict[str, typing.Dict[str, typing.Any]]:
     """Get properties of all display outputs."""
-    xrandr_prop_output = _call_xrandr(["--prop"])
+    xrandr_prop_output = call_xrandr(["--prop"])
     xrandr_prop_output_parser = _XRandrPropOutputParser()
 
     return xrandr_prop_output_parser.parse(xrandr_prop_output)
@@ -328,7 +330,7 @@ def set_max_bpc(max_bpc_per_output: typing.Dict[str, int]) -> None:
         xrandr_args.append("max bpc")
         xrandr_args.append(str(max_bpc))
 
-    _call_xrandr(xrandr_args)
+    call_xrandr(xrandr_args)
 
 
 def set_max_bpc_of_all_display_outputs(
