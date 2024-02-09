@@ -269,6 +269,8 @@ def set_max_bpc_of_all_display_outputs(
     max_bpc_per_output = {}
 
     for output_name, output in get_prop().items():
+        if output["state"] != "connected":
+            continue
         if "max bpc" in output["props"]:
             if logger:
                 logger.info("desired max bpc of %r is %d", output_name, desired_max_bpc)
