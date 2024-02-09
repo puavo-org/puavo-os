@@ -375,6 +375,7 @@ class packages {
     , 'krita'
     , 'krita-l10n'
     , 'libsane'
+    , 'meshlab'
     , 'mjpegtools'
     , 'mypaint'
     , 'nautilus-image-converter'
@@ -387,6 +388,7 @@ class packages {
     , 'pitivi'
     , 'python3-lxml'
     , 'sane-utils'
+    , 'view3dscene'
     , 'xsane' ]:
       tag => [ 'tag_graphics', 'tag_debian_desktop', ];
 
