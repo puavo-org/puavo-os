@@ -507,6 +507,9 @@
             "icon": "x-office-presentation",
             "tags": "default, education"
         },
+        "kantti": {
+            "tags": "default, education"
+        },
         "kenavision": {
             "type": "custom",
             "command": "/opt/av4kav/lib/av4.sh",
@@ -1997,7 +2000,8 @@
                 "openttd",
                 "gnubg",
                 "org.freeciv.gtk2",
-                "net.minetest.minetest"
+                "net.minetest.minetest",
+                "kantti"
             ]
         },
         "menu-games-personal": {
