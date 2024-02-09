@@ -67,7 +67,7 @@ _TOKEN_REGEXES = collections.OrderedDict(
     (
         (
             _TokenId.CONNECTOR,
-            r"^(?P<name>[^\s]+) (?P<state>connected|disconnected) .*$",
+            r"^(?P<name>[^\s]+) (?P<state>connected|disconnected) (?P<primary>primary|).*$",
         ),
         (
             _TokenId.EOF,
@@ -178,10 +178,15 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         *,
         name: str,
         state: str,
+        primary: str,
     ) -> None:
         if name in self.__displays:
             raise UnexpectedOutputError("display is a duplicate", name)
-        self.__displays[name] = self.__last_output = {"name": name, "state": state}
+        self.__displays[name] = self.__last_output = {
+            "name": name,
+            "state": state,
+            "is_primary": primary != "",
+        }
 
     def __action_create_prop(
         self,

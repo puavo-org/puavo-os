@@ -19,6 +19,7 @@ def test_prop_parser():
 
     assert prop == {
         "eDP-1": {
+            "is_primary": True,
             "name": "eDP-1",
             "state": "connected",
             "current_mode": {
@@ -746,6 +747,7 @@ def test_prop_parser():
             },
         },
         "DP-1": {
+            "is_primary": False,
             "name": "DP-1",
             "state": "disconnected",
             "props": {
@@ -828,6 +830,7 @@ def test_prop_parser():
             },
         },
         "HDMI-1": {
+            "is_primary": False,
             "name": "HDMI-1",
             "state": "disconnected",
             "props": {
@@ -912,6 +915,7 @@ def test_prop_parser():
             },
         },
         "DP-2": {
+            "is_primary": False,
             "name": "DP-2",
             "state": "disconnected",
             "props": {
@@ -994,6 +998,7 @@ def test_prop_parser():
             },
         },
         "HDMI-2": {
+            "is_primary": False,
             "name": "HDMI-2",
             "state": "disconnected",
             "props": {
@@ -1078,6 +1083,7 @@ def test_prop_parser():
             },
         },
         "DP-3": {
+            "is_primary": False,
             "name": "DP-3",
             "state": "disconnected",
             "props": {
@@ -1160,6 +1166,7 @@ def test_prop_parser():
             },
         },
         "HDMI-3": {
+            "is_primary": False,
             "name": "HDMI-3",
             "state": "disconnected",
             "props": {
