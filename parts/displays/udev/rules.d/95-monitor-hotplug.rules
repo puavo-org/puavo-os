@@ -1,1 +1,1 @@
-ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/lib/puavo-displays/udev-hotplug-monitor"
+# puavo-display-mananger listens on UDEV on it's own nowadays.

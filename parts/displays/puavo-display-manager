@@ -16,6 +16,14 @@ import subprocess
 import sys
 import typing
 
+# Third-party imports
+# pylint: disable=wrong-import-position
+import gi  # type: ignore[import]
+
+gi.require_version("GUdev", "1.0")
+
+from gi.repository import GUdev, GLib  # type: ignore[import]
+
 # Internal imports
 import puavodisplays.puavoconf
 import puavodisplays.xrandr
@@ -96,47 +104,22 @@ def _does_puavo_have_xrandr_configurations() -> bool:
     return False
 
 
-def _main() -> int:
-    logging_formatter = logging.Formatter(
-        fmt="%(name)s: %(levelname)s %(asctime)s %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S%z",
-    )
+# Models the runtime setup Puavo Display Manager has to deal with.
+Setup = collections.namedtuple(
+    "Setup",
+    [
+        "args_best",
+        "args_ignore_mutter",
+        "mutter_in_charge",
+        "puavo_has_confs",
+    ],
+)
 
-    logging_handler_stderr = logging.StreamHandler(sys.stderr)
-    logging_handler_stderr.setFormatter(logging_formatter)
-    _LOGGER.addHandler(logging_handler_stderr)
 
-    logging_handler_syslog = logging.handlers.SysLogHandler("/dev/log")
-    logging_handler_syslog.setFormatter(logging_formatter)
-    _LOGGER.addHandler(logging_handler_syslog)
-
-    args = _parse_args()
-
-    _LOGGER.setLevel(args.log_level)
-
-    _LOGGER.info("Starting to manage all displays.")
-
-    _check_required_env_vars()
-
-    # Models the runtime setup Puavo Display Manager has to deal with.
-    Setup = collections.namedtuple(
-        "Setup",
-        [
-            "args_best",
-            "args_ignore_mutter",
-            "mutter_in_charge",
-            "puavo_has_confs",
-        ],
-    )
-
-    setup = Setup(
-        args_best=args.best,
-        args_ignore_mutter=args.ignore_mutter,
-        mutter_in_charge=_is_mutter_in_charge(),
-        puavo_has_confs=_does_puavo_have_xrandr_configurations(),
-    )
-    _LOGGER.info("%s", setup)
-
+# This is called on start up and whenever DRM device configuration
+# changes (after Udev DRM stabilization timeout).
+def _manage(setup: Setup) -> None:
+    _LOGGER.info("Starting to manage displays.")
     # fmt: off
     # pylint: disable=line-too-long
     # All actions Puavo Display Manager takes are determined by the runtime setup. (2**4 definitions; 4 boolean flags)
@@ -171,7 +154,112 @@ def _main() -> int:
     for action in action_map[setup]:
         action()
 
-    _LOGGER.info("I have done everything I can.")
+    _LOGGER.info(
+        "I have done everything I can for now. I'll sleep until something happens again."
+    )
+
+
+# Udev events are bursty in nature; there are multiple consecutive
+# events for example when a DRM device is added. This timer is reset
+# on every DRM event and display management takes place after events
+# have "stabilized".
+_UEVENT_DRM_STABILIZATION_TIMEOUT_MS = 1000
+
+
+class _PuavoDisplayManager:  # pylint: disable=too-few-public-methods
+    def __init__(self, setup: Setup):
+        self.__setup = setup
+        self.__drm_connectors: typing.Set[str] = set()
+        self.__drm_stabilization_timer_id = None
+
+        self.__gudev_client = GUdev.Client.new(["drm"])
+        self.__gudev_client.connect("uevent", self.__on_uevent)
+
+    def __reset_drm_stabilization_timer(self) -> None:
+        if self.__drm_stabilization_timer_id is not None:
+            GLib.source_remove(self.__drm_stabilization_timer_id)
+        self.__drm_stabilization_timer_id = GLib.timeout_add(
+            _UEVENT_DRM_STABILIZATION_TIMEOUT_MS,
+            self.__on_drm_stabilization_timeout,
+        )
+
+    def __on_drm_stabilization_timeout(self) -> None:
+        self.__drm_stabilization_timer_id = None
+        _LOGGER.info("DRM connector setup has changed.")
+        _manage(self.__setup)
+
+    def on_start(self) -> None:
+        """Called from GLib mainloop when it has started."""
+
+        _LOGGER.info("Entered the wonderful world of displays.")
+        for device in self.__gudev_client.query_by_subsystem("drm"):
+            if device.get_devtype() != "drm_connector":
+                continue
+            self.__drm_connectors.add(device.get_name())
+        _LOGGER.info("Found following DRM connectors: %s", self.__drm_connectors)
+
+        _manage(self.__setup)
+
+    def __on_uevent(self, _: GUdev.Client, action: str, device: GUdev.Device) -> None:
+        if device.get_subsystem() != "drm":
+            return
+
+        if device.get_devtype() != "drm_connector":
+            return
+
+        self.__reset_drm_stabilization_timer()
+
+        _LOGGER.info(
+            "Udev event from drm subsystem: %s drm_connector %s",
+            action,
+            device.get_name(),
+        )
+
+        if action == "remove":
+            self.__drm_connectors.remove(device.get_name())
+            return
+
+        if action == "add":
+            self.__drm_connectors.add(device.get_name())
+            return
+
+
+def _main() -> int:
+    logging_formatter = logging.Formatter(
+        fmt="%(name)s: %(levelname)s %(asctime)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+    )
+
+    logging_handler_stderr = logging.StreamHandler(sys.stderr)
+    logging_handler_stderr.setFormatter(logging_formatter)
+    _LOGGER.addHandler(logging_handler_stderr)
+
+    logging_handler_syslog = logging.handlers.SysLogHandler("/dev/log")
+    logging_handler_syslog.setFormatter(logging_formatter)
+    _LOGGER.addHandler(logging_handler_syslog)
+
+    args = _parse_args()
+
+    _LOGGER.setLevel(args.log_level)
+
+    _LOGGER.info("Starting the journey...")
+
+    _check_required_env_vars()
+
+    setup = Setup(
+        args_best=args.best,
+        args_ignore_mutter=args.ignore_mutter,
+        mutter_in_charge=_is_mutter_in_charge(),
+        puavo_has_confs=_does_puavo_have_xrandr_configurations(),
+    )
+    _LOGGER.info("%s", setup)
+
+    pdm = _PuavoDisplayManager(setup)
+
+    GLib.timeout_add(0, pdm.on_start)
+
+    GLib.MainLoop().run()
+
     return 0
 
 
