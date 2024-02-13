@@ -93,7 +93,22 @@ def _parse_filename_part(url: pydantic.networks.HttpUrl) -> str:
 def _download(puavo_info, tarball_type) -> str:
     source_url = _get_source_url(puavo_info, tarball_type)
     source_filename = _parse_filename_part(source_url)
-    dest_filename = source_filename
+    if source_filename.endswith(".tgz"):
+        dest_filename_ext = ".gz"
+    else:
+        source_filename_prefix, source_filename_ext = os.path.splitext(source_filename)
+        if not source_filename_prefix.endswith(".tar"):
+            raise RuntimeError(
+                f"source file {source_filename} has unexpected tarball extension"
+            )
+        dest_filename_ext = source_filename_ext
+
+    upstream_version = debian.debian_support.Version(
+        puavo_info.version
+    ).upstream_version
+    dest_filename = (
+        f"{puavo_info.name}_{upstream_version}.{tarball_type}.tar{dest_filename_ext}"
+    )
     dest_filepath = os.path.join("..", dest_filename)
     sha256sum = puavo_info.tarballs.dict()[tarball_type]["sha256sum"]
 
