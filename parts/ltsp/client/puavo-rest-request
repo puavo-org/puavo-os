@@ -21,6 +21,16 @@ Usage:
 }
 }
 
+proc get_puavo_domain {} {
+  set f [open /etc/puavo/domain]
+  if {[catch { set puavo_domain [read $f] }]} {
+    close $f
+    error "could not read puavo domain from /etc/puavo/domain"
+  }
+  close $f
+  string trim $puavo_domain
+}
+
 proc make_request {curl_args {password ""}} {
   global debug_mode
 
@@ -141,6 +151,9 @@ if {[catch {
     error {could not parse command line parameters}
   }
 
+  set puavo_domain [get_puavo_domain]
+  lappend curl_args --header "Host: ${puavo_domain}"
+
   if $params(authoritative) {
     lappend curl_args --form-string authoritative=true
   }
@@ -214,12 +227,11 @@ if {[catch {
     lappend puavo_resolve_args --writable
   }
 
-  set r [catch {
-           set api_server [exec /usr/sbin/puavo-resolve-api-server \
-                                {*}$puavo_resolve_args] } ]
-  if {$r} {
-    error {Could not resolve Puavo API server}
-  }
+  set r [
+    catch { set api_server [exec /usr/sbin/puavo-resolve-api-server \
+                                 {*}$puavo_resolve_args] }
+  ]
+  if {$r} { error {Could not resolve Puavo API server} }
 
   set urls [lmap _ $urlpaths { format "%s%s" $api_server $_ }]
 
