@@ -11,15 +11,24 @@ fi
 
 rm -rf .pc
 
-# Ensure all upstream patches are applied.
-QUILT_PATCHES=debian/patches quilt push -a
+if [ -e debian/patches/series ]; then
+  # Ensure all upstream patches are applied.
+  QUILT_PATCHES=debian/patches quilt push -a
+fi
 
 while IFS= read -r -d $'\0' rel_patch_file_path; do
+  # Ensure patch mechanism is initialized, in case there are no
+  # previous patches.
+  mkdir -p debian/patches
+  touch debian/patches/series
+
   # Imported patches are put on top in the series.
   QUILT_PATCHES=debian/patches quilt import -P "${rel_patch_file_path}" "puavo/patches/${rel_patch_file_path}"
   # Push to ensure the patch applies correctly.
   QUILT_PATCHES=debian/patches quilt push
 done < <(find puavo/patches -type f -printf "%P\0" | sort -z -V)
 
-# Finally pop all patches to leave the source pristine.
-QUILT_PATCHES=debian/patches quilt pop -a
+if [ -e debian/patches/series ]; then
+    # Finally pop all patches to leave the source pristine.
+    QUILT_PATCHES=debian/patches quilt pop -a
+fi
