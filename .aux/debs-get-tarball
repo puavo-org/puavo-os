@@ -62,7 +62,7 @@ class PuavoInfo(pydantic.main.BaseModel):
     @pydantic.validator("name")
     @classmethod
     def _validate_name(cls, value):
-        if not re.match(r"^[0-9a-z]([0-9a-z-][0-9a-z])*$", value):
+        if not re.match(r"^[0-9a-z](-?[0-9a-z])*$", value):
             raise ValueError("invalid name", value)
         return value
 
