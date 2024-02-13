@@ -1,0 +1,51 @@
+From 36bfbfc525b1d1e97669c49847e3d94a393756f2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Tue, 13 Feb 2024 21:06:52 +0200
+Subject: [PATCH] Add BGRx video format
+
+---
+ dlls/winegstreamer/media_source.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/dlls/winegstreamer/media_source.c b/dlls/winegstreamer/media_source.c
+index 9cc54f8e146..205d7664158 100644
+--- a/dlls/winegstreamer/media_source.c
++++ b/dlls/winegstreamer/media_source.c
+@@ -391,7 +391,7 @@ static HRESULT stream_descriptor_set_tag(IMFStreamDescriptor *descriptor, wg_par
+     return hr;
+ }
+ 
+-static HRESULT init_video_media_types(struct wg_format *format, IMFMediaType *types[6], DWORD *types_count)
++static HRESULT init_video_media_types(struct wg_format *format, IMFMediaType *types[7], DWORD *types_count)
+ {
+     /* Try to prefer YUV formats over RGB ones. Most decoders output in the
+      * YUV color space, and it's generally much less expensive for
+@@ -402,6 +402,7 @@ static HRESULT init_video_media_types(struct wg_format *format, IMFMediaType *ty
+         WG_VIDEO_FORMAT_YV12,
+         WG_VIDEO_FORMAT_YUY2,
+         WG_VIDEO_FORMAT_I420,
++        WG_VIDEO_FORMAT_BGRx,
+     };
+     UINT count = *types_count, i;
+     GUID base_subtype;
+@@ -443,7 +444,7 @@ done:
+     return hr;
+ }
+ 
+-static HRESULT init_audio_media_types(struct wg_format *format, IMFMediaType *types[6], DWORD *types_count)
++static HRESULT init_audio_media_types(struct wg_format *format, IMFMediaType *types[7], DWORD *types_count)
+ {
+     /* Expose at least one PCM and one floating point type for the
+        consumer to pick from. */
+@@ -472,7 +473,7 @@ static HRESULT stream_descriptor_create(UINT32 id, struct wg_format *format, IMF
+ {
+     IMFStreamDescriptor *descriptor;
+     IMFMediaTypeHandler *handler;
+-    IMFMediaType *types[6];
++    IMFMediaType *types[7];
+     DWORD count = 0;
+     HRESULT hr;
+ 
+-- 
+2.39.2
+
