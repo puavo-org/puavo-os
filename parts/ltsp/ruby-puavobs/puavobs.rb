@@ -20,17 +20,6 @@ module PuavoBS
     "Basic #{basic_auth_creds}"
   end
 
-  def self.get_api_url(path)
-    uri = IO.popen([ 'puavo-resolve-api-server', '--writable' ]) do |io|
-      output = io.read().strip()
-      io.close()
-      $?.success? ? URI(output) : nil
-    end
-    raise "failed to resolve the address of the API server" if uri.nil?
-    uri.path = path
-    uri.to_s
-  end
-
   def self.get_puavo_url(path)
     server = File.read('/etc/puavo/domain').strip()
     uri = URI("https://#{server}")
@@ -67,7 +56,7 @@ module PuavoBS
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
-      .get(self.get_api_url("/v3/devices/#{hostname}"))
+      .get(self.get_puavo_url("/v3/devices/#{hostname}"))
     self.check_response_code(response.code)
     device_json = JSON.parse(response.body)
     school_id = Integer(/^puavoId=([0-9]+),/.match(device_json['school_dn'])[1])
@@ -79,7 +68,7 @@ module PuavoBS
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
-      .get(self.get_api_url("/v3/devices/#{hostname}"))
+      .get(self.get_puavo_url("/v3/devices/#{hostname}"))
     self.check_response_code(response.code)
     JSON.parse(response.body)
   end
@@ -183,7 +172,7 @@ module PuavoBS
       'username'   => testuser_username,
     }
 
-    url = self.get_api_url('/v3/users')
+    url = self.get_puavo_url('/v3/users')
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
@@ -196,7 +185,7 @@ module PuavoBS
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
-      .get(self.get_api_url("/v3/users/#{user_username}"))
+      .get(self.get_puavo_url("/v3/users/#{user_username}"))
     self.check_response_code(response.code)
     user_json = JSON.parse(response.body)
     Integer(/^puavoId=([0-9]+),/.match(user_json['dn'])[1])
@@ -205,7 +194,7 @@ module PuavoBS
   def self.remove_user(admin_username, admin_password, user_username)
     user_id = self.get_user_id(admin_username, admin_password, user_username)
 
-    url = self.get_api_url("/v3/users/#{ user_username }")
+    url = self.get_puavo_url("/v3/users/#{ user_username }")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .delete(url)
@@ -293,7 +282,7 @@ EOF
     response = HTTP
       .accept(:json)
       .auth(self.basic_auth(puavo_ldap_dn, puavo_ldap_password))
-      .get(self.get_api_url("/v3/organisations/#{puavo_domain}"))
+      .get(self.get_puavo_url("/v3/organisations/#{puavo_domain}"))
     self.check_response_code(response.code)
     JSON.parse(response.body)
   end
