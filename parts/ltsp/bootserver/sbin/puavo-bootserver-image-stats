@@ -70,7 +70,7 @@ cd "${tmpdir}"
 
 (
     puavo_hostname=$(cat /etc/puavo/hostname)
-    puavo_apiserver=$(puavo-resolve-api-server)
+    puavo_apiserver=$(puavo-resolve-api-server --no-cloud-fallback)
 
     curl --cacert /etc/puavo-conf/rootca.pem \
 	--header 'Authorization: Bootserver' \
