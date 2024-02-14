@@ -6,16 +6,26 @@ usage() {
   echo <<EOF
 Usage: $(basename "$0") [option]
 
-Resolve local puavo api server from dns.  If the device type is laptop and
-dns resolve fails it will return the public server.
+Resolve local puavo api server from dns.  If the device type is bootserver,
+laptop or wirelessaccesspoint, cloud fallback will be used by default,
+meaning that in case dns resolve fails it will return the address of cloud
+puavo-rest.
 
-  --cloud-fallback    Fallback to cloud puavo-rest if dns lookup fails
-  --writable          Search for writable puavo-rest instance
+  --cloud-fallback      Fallback to cloud puavo-rest if dns lookup fails
+  --no-cloud-fallback   Do not fallback to cloud puavo-rest
+  --writable            Search for writable puavo-rest instance
 EOF
 }
 
 opt_cloud_fallback=false
-opt_writable=false
+use_dns=true
+
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+if [    "$puavo_hosttype" = 'bootserver' \
+     -o "$puavo_hosttype" = 'laptop'     \
+     -o "$puavo_hosttype" = 'wirelessaccesspoint' ]; then
+  opt_cloud_fallback=true
+fi
 
 while true; do
   case "${1:-}" in
@@ -23,8 +33,14 @@ while true; do
       opt_cloud_fallback=true
       shift
       ;;
+    -n|--no-cloud-fallback)
+      opt_cloud_fallback=false
+      shift
+      ;;
     -w|--writable)
-      opt_writable=true
+      # at the moment only the cloud API server is writable
+      opt_cloud_fallback=true
+      use_dns=false
       shift
       ;;
     -h|--help)
@@ -64,9 +80,7 @@ lookup_puavo_apiserver() {
         }'
 }
 
-# At the moment only the cloud API server is writable, so we skip the
-# query and just fallback to cloud server if write access is requested.
-if ! $opt_writable; then
+if $use_dns; then
   puavo_apiserver=$(lookup_puavo_apiserver)
   if [ -n "$puavo_apiserver" ]; then
     printf "%s\n" "$puavo_apiserver"
@@ -74,17 +88,7 @@ if ! $opt_writable; then
   fi
 fi
 
-puavo_hosttype=$(cat /etc/puavo/hosttype)
-
-# Fallback for bootservers, laptops and wirelessaccesspoints
-# that are not in the school network.
-# (Normally bootservers should always resolve to itself,
-# but in case dns is down or bootserver is at an installation stage,
-# we can use the cloud api server).
-if [    "$puavo_hosttype" = 'bootserver'            \
-     -o "$puavo_hosttype" = 'laptop'                \
-     -o "$puavo_hosttype" = 'wirelessaccesspoint' ] \
-     || $opt_cloud_fallback || $opt_writable; then
+if $opt_cloud_fallback; then
   puavo_apiserver=$(puavo-conf puavo.www.apiserver)
   if [ -n "$puavo_apiserver" ]; then
     printf "%s\n" "$puavo_apiserver"
