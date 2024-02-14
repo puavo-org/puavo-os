@@ -14,10 +14,6 @@ class bootserver_ddns {
     '/usr/local/lib/puavo-update-ddns':
       mode   => '0755',
       source => 'puppet:///modules/bootserver_ddns/puavo-update-ddns';
-
-    '/usr/local/sbin/puavo-update-airprint-ddns':
-      mode   => '0755',
-      source => 'puppet:///modules/bootserver_ddns/puavo-update-airprint-ddns';
   }
 
   ::puavo_conf::definition {
