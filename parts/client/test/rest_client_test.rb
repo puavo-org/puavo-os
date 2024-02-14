@@ -34,7 +34,7 @@ describe PuavoRestClient do
 
   it "ignores dns responses that do not match with puavo domain" do
 
-    PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+    PuavoRestClient.stub :read_apiserver, "http://api.example.net" do
       Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
 
         stub_request(:get, "http://api.example.net/foo").
@@ -71,7 +71,7 @@ describe PuavoRestClient do
 
 
   it "can set custom headers" do
-    PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+    PuavoRestClient.stub :read_apiserver, "http://api.example.net" do
       Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
 
         stub_request(:get, "http://api.example.net/foo").
@@ -108,7 +108,7 @@ describe PuavoRestClient do
 
   it "can force skip dns" do
     Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
-      PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+      PuavoRestClient.stub :read_apiserver, "http://api.example.net" do
 
         stub_request(:get, "http://api.example.net/foo").
           with(:headers => {'Host'=>'hogwarts.opinsys.net', 'User-Agent'=>'puavo-rest-client'}).
@@ -129,7 +129,7 @@ describe PuavoRestClient do
 
   it "can retry on fallbacks" do
     Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
-      PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+      PuavoRestClient.stub :read_apiserver, "http://api.example.net" do
 
         stub_request(:get, "https://boot2.hogwarts.opinsys.net/foo").to_raise(Errno::ENETUNREACH)
 
@@ -157,7 +157,7 @@ describe PuavoRestClient do
 
   it "retry fallback is used on 502 status code" do
     Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
-      PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+      PuavoRestClient.stub :read_apiserver, "http://api.example.net" do
 
         stub_request(:get, "https://boot2.hogwarts.opinsys.net/foo").
           to_return(
@@ -190,7 +190,7 @@ describe PuavoRestClient do
 
   it "errors when all servers fail" do
     Resolv::DNS.stub_any_instance(:getresources, DNS_RES) do
-      PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+      PuavoRestClient.stub :read_apiserver, "http://api.example.net" do
 
         stub_request(:get, "https://boot2.hogwarts.opinsys.net/foo").to_raise(Errno::ENETUNREACH)
         stub_request(:get, "http://api.example.net/foo").to_raise(Errno::ENETUNREACH)
@@ -208,7 +208,7 @@ describe PuavoRestClient do
   end
 
   it "raises error on non 200 status code" do
-    PuavoRestClient.stub :read_apiserver_file, "http://api.example.net" do
+    PuavoRestClient.stub :read_apiserver, "http://api.example.net" do
 
       client = PuavoRestClient.new({
         :dns => :no,

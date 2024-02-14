@@ -16,9 +16,7 @@ def puavo_rest_client_cli
     Usage: #{script_name} [options] [SCHEME://HOST[:PORT]]<PATH>
 
     - If [SCHEME://HOST[:PORT]] is omitted it is automatically resolved from DNS
-    - If DNS resolving fails a fallback is read from /etc/puavo/apiserver
-    - If /etc/puavo/apiserver is not present puavo domain is used
-    - Puavo domain is read from /etc/puavo/domain
+    - If DNS resolving fails a fallback is read from puavo.www.apiserver
 
     Examples:
 
@@ -111,7 +109,7 @@ def puavo_rest_client_cli
       options[:dns] = :only
     end
 
-    opts.on("--retry-fallback", "When DNS resolving is used and the resolved server is unreachable retry the request using /etc/puavo/apiserver or puavo domain as the server") do
+    opts.on("--retry-fallback", "When DNS resolving is used and the resolved server is unreachable retry the request using puavo.www.apiserver") do
       options[:retry_fallback] = true
     end
 

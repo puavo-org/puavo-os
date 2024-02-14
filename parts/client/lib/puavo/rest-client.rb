@@ -68,7 +68,6 @@ class PuavoRestClient
     return ctx
   end
 
-
   def self.resolve_apiserver_dns(puavo_domain)
       begin
         puavoconf = Puavo::Conf.new
@@ -100,13 +99,11 @@ class PuavoRestClient
       return Addressable::URI.parse("https://#{ server_host }:#{ server_port }")
   end
 
-  def self.read_apiserver_file
-    server = File.open("/etc/puavo/apiserver").read.strip
-    if /^https?:\/\//.match(server)
-      return server
-    else
-      return "https://#{ server }"
-    end
+  def self.read_apiserver
+    puavoconf = Puavo::Conf.new
+    apiserver = puavoconf.get('puavo.www.apiserver')
+    puavoconf.close
+    return apiserver
   end
 
   def initialize(_options={})
@@ -145,11 +142,11 @@ class PuavoRestClient
       if @options[:dns] != :only
         begin
           @servers.push({
-            :uri => Addressable::URI.parse(self.class.read_apiserver_file),
+            :uri => Addressable::URI.parse(self.class.read_apiserver),
             :ssl_context => self.class.public_ssl
           })
-        rescue Errno::ENOENT
-          verbose("/etc/puavo/apiserver is missing. Using puavo domain instead")
+        rescue StandardError => e
+          verbose('Could not determine api server, using puavo domain instead')
           @servers.push({
             :uri => Addressable::URI.parse("https://#{ @options[:puavo_domain] }"),
             :ssl_context => self.class.public_ssl

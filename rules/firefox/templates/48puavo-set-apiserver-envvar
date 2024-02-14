@@ -1,4 +1,2 @@
-if [ -r /etc/puavo/apiserver ]; then
-  PUAVO_APISERVER="$(cat /etc/puavo/apiserver)"
-  export PUAVO_APISERVER
-fi
+PUAVO_APISERVER="$(puavo-conf puavo.www.apiserver)"
+export PUAVO_APISERVER
