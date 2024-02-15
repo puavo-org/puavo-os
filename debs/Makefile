@@ -30,6 +30,10 @@ _pkgs_ports_builddeps := sblim-sfcc openwsman
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
                $(_pkgs_parts) $(_pkgs_ports)
 
+_pkgs_web   := $(_pkgs_cloud_builddeps) $(_pkgs_cloud)
+
+debs_build_targets           := $(sort $(_pkgs_image:%=debs-build-%) $(_pkgs_web:%=debs-build-%))
+
 _dpkg_buildpackage_cloud     := $(_pkgs_cloud:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_parts     := $(_pkgs_parts:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_ports     := $(_pkgs_ports:%=.dpkg-buildpackage-%)
@@ -71,9 +75,13 @@ ports: $(_dpkg_buildpackage_ports)
 clean:
 	rm -rf .archive $(_workdir)
 
-.dpkg-buildpackage-%: %
+_sudo ?= sudo
+.PHONY: $(debs_build_targets)
+$(debs_build_targets): debs-build-%: %
 	@env PUAVOOS_SUDO='$(_sudo)' \
 	    ../.aux/debs-build "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
+
+.dpkg-buildpackage-%: debs-build-%
 	$(MAKE) update-repo
 	$(_sudo) apt-get update
 
