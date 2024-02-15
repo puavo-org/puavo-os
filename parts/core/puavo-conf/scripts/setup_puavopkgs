@@ -38,10 +38,6 @@ install_puavo_pkg_conf() {
   mv "${puavo_pkg_conf_path}.tmp" "$puavo_pkg_conf_path"
 }
 
-reconfigure_puavopkg() {
-  timeout -k 5 60 puavo-pkg reconfigure "$@"
-}
-
 reconfigure_upgrade_pkg() {
   timeout -k 5 60 puavo-pkg reconfigure-upgrade "$@"
 }
