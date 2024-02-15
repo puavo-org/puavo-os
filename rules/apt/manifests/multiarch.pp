@@ -11,7 +11,7 @@ class apt::multiarch {
     }
   }
 
-  if $architecture == 'amd64' {
+  if $deb_host_arch != 'i386' {
     ::apt::multiarch::addarch { 'i386': ; }
   }
 }
