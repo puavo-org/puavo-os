@@ -1,7 +1,7 @@
 From f6a78932cf9e137696e9bdff130e56293003065d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Fri, 16 Feb 2024 15:01:30 +0200
-Subject: [PATCH 3/3] winegstreamer/wg_format/h264: use "codec_value" instead
+Subject: [PATCH 3/4] winegstreamer/wg_format/h264: use "codec_value" instead
  of "streamheader"
 
 ---
