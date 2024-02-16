@@ -6,4 +6,17 @@ if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
   exit 0
 fi
 
-exec sudo -g puavo /usr/bin/puavo-ers-applet "$@"
+ers_mode="$(puavo-conf puavo.ers.mode)"
+case "$ers_mode" in
+  ers-applet)
+    exec sudo -g puavo /usr/bin/puavo-ers-applet "$@"
+    ;;
+  naksu)
+    exec /usr/bin/puavo-run-naksu
+    ;;
+  *)
+    logger -p user.err -t puavo-ers-startup \
+           "unsupported puavo.ers.mode value '${ers_mode}'"
+    exit 1
+    ;;
+esac

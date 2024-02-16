@@ -24,20 +24,20 @@ po/puavo-ers-applet.pot: puavo-ers-applet
 .PHONY: i18nupdate
 i18nupdate: po/puavo-ers-applet.pot po/de/puavo-ers-applet.po po/fi/puavo-ers-applet.po po/sv/puavo-ers-applet.po
 
-
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-ers-applet \
-		puavo-ers-startup
+		puavo-ers-startup puavo-run-naksu
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-ers-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
@@ -46,6 +46,8 @@ install: installdirs
 		po/fi/puavo-ers-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
 		po/sv/puavo-ers-applet.mo
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+		puavo-ers.json
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-ers-startup.desktop
 

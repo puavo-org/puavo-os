@@ -1,0 +1,8 @@
+{
+  "puavo.ers.mode": {
+    "choices": [ "ers-applet", "naksu" ],
+    "default": "ers-applet",
+    "description": "The mode for examination room server desktop session",
+    "typehint": "string"
+  }
+}

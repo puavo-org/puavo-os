@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -eu
+
+puavo_ers_dir="${HOME}/.puavo/puavo-ers"
+
+if ! mkdir -p "$puavo_ers_dir"; then
+  logger -p user.err -t puavo-run-naksu \
+         "could not create ${puavo_ers_dir}"
+  exit 1
+fi
+
+if ! install -m 755 /opt/abitti-naksu/naksu "${puavo_ers_dir}/naksu"; then
+  logger -p user.err -t puavo-run-naksu \
+         "could not install ${puavo_ers_dir}/naksu"
+  exit 1
+fi
+
+cd "$puavo_ers_dir"
+
+while true; do
+  logger -p user.notice -t puavo-run-naksu 'starting up naksu'
+  if ! /usr/bin/terminator -T 'naksu terminal' \
+         "--working-directory=${puavo_ers_dir}" -x ./naksu \
+         --self-update=enabled; then
+    logger -p user.err -t puavo-run-naksu 'error when running naksu'
+  fi
+  sleep 5
+done
