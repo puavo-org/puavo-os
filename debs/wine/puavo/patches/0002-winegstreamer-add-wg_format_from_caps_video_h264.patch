@@ -1,7 +1,7 @@
 From 9ab048e82be68ea2b9d969209444bfd0433ca85d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Fri, 16 Feb 2024 14:19:35 +0200
-Subject: [PATCH 2/2] winegstreamer: add wg_format_from_caps_video_h264()
+Subject: [PATCH 2/3] winegstreamer: add wg_format_from_caps_video_h264()
 
 ---
  dlls/winegstreamer/wg_format.c | 128 +++++++++++++++++++++++++++++++++
