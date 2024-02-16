@@ -219,7 +219,7 @@ module PuavoBS
   <currentMemory unit='KiB'>20971552</currentMemory>
   <vcpu placement='static'>1</vcpu>
   <os>
-    <type arch='x86_64' machine='pc-1.0'>hvm</type>
+    <type arch='x86_64' machine='pc'>hvm</type>
     <boot dev='network'/>
   </os>
   <features>
