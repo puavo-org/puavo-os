@@ -1,14 +1,14 @@
 {
     "name": "wine",
-    "version": "9.2-0puavo1+buildonce",
+    "version": "9.0-0puavo1+buildonce",
     "tarballs": {
         "debian": {
-            "sha256sum": "4e5afd6811c63d82846f845b605d60f4ee3aed620f7acdf8863b196cfef7e5ba",
-            "url": "https://dl.winehq.org/wine-builds/debian/dists/bookworm/main/source/wine_9.2~bookworm-1.debian.tar.xz"
+            "sha256sum": "b42b45fc7b6fd4727b9c93b5497f01b1362ba5417787b1d174d2d0091030c483",
+            "url": "https://dl.winehq.org/wine-builds/debian/dists/bookworm/main/source/wine_9.0.0~bookworm-1.debian.tar.xz"
         },
         "orig": {
-            "sha256sum": "d5faaafdf67d85cfcbbd08956d026384f9af9f8c87ae5e947d9c08d69bfa4927",
-            "url": "https://dl.winehq.org/wine-builds/debian/dists/bookworm/main/source/wine_9.2~bookworm.orig.tar.gz"
+            "sha256sum": "52b12d45732e4e6974fe5eea2cd28555bc21c8ea5ee900dc7d359f5fade92c5b",
+            "url": "https://dl.winehq.org/wine-builds/debian/dists/bookworm/main/source/wine_9.0.0~bookworm.orig.tar.gz"
         }
     }
 }
