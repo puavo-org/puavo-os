@@ -176,7 +176,6 @@ prepare_pkg() {
 
 maybe_remove_pkg() {
   puavo_pkg=$1
-  version_to_remove=$2
 
   installed_pkg_dir=$(
     readlink "${installed_links_dir}/${puavo_pkg}" 2> /dev/null) || true
@@ -185,44 +184,9 @@ maybe_remove_pkg() {
     return 0
   fi
 
-  if [ -z "$version_to_remove" ]; then
-    logmsg user.notice "removing ${puavo_pkg}"
-    puavo-pkg remove "$puavo_pkg"
-    reload_menudata=true
-    return 0
-  fi
-
-  if is_version_number "$version_to_remove"; then
-    installed_version_number=$(
-      awk '$1 == "version" { print $2 }' \
-        "${installed_pkg_dir}/.puavo-pkg-version" 2>/dev/null) || true
-    if [ -z "$installed_version_number" ]; then
-      logmsg user.err "could not determine installed package version for $puavo_pkg"
-      return 1
-    fi
-
-    if [ "$installed_version_number" -le "$version_to_remove" ]; then
-      logmsg user.notice "removing ${puavo_pkg} due to version number match"
-      puavo-pkg remove "$puavo_pkg"
-      reload_menudata=true
-    fi
-
-    return 0
-  fi
-
-  installed_pkg_id=$(awk '$1 == "package-id" { print $2 }' 2>/dev/null \
-                       "${installed_pkg_dir}/.puavo-pkg-version") || true
-  if [ -z "$installed_pkg_id" ]; then
-    logmsg user.err "could not determine installed package id for ${puavo_pkg}"
-    return 1
-  fi
-
-  if [ "$installed_pkg_id" = "$version_to_remove" ]; then
-    logmsg user.notice "removing ${puavo_pkg} due to exact version match"
-    puavo-pkg remove "$puavo_pkg"
-    reload_menudata=true
-    return 0
-  fi
+  logmsg user.notice "removing ${puavo_pkg}"
+  puavo-pkg remove "$puavo_pkg"
+  reload_menudata=true
 }
 
 logmsg user.notice 'puavo-pkg-update starting'
@@ -298,11 +262,7 @@ for pkgspec in $puavo_pkg_specs; do
       prepare_pkg "$puavo_pkg" "$version" || status=1
       ;;
     remove)
-      maybe_remove_pkg "$puavo_pkg" '' || status=1
-      ;;
-    remove:*)
-      version=${action#*:}
-      maybe_remove_pkg "$puavo_pkg" "$version" || status=1
+      maybe_remove_pkg "$puavo_pkg" || status=1
       ;;
     *)
       logmsg user.err "unsupported action on package ${puavo_pkg}: ${action}"
