@@ -38,9 +38,10 @@ g_log_level=${LOG_INFO}
 SUPPORTED_PKG_FORMAT=2
 
 ## Exit status codes:
-SC_OK=0       ## Success
-SC_ERR=1      ## Generic error
-SC_ERR_NET=2  ## Network failure
+SC_OK=0         ## Success
+SC_ERR=1        ## Generic error
+SC_ERR_NET=2    ## Network failure
+SC_ERR_NOPKG=3  ## Package does not exist
 
 g_sc=${SC_ERR} ## Prime with a generic error.
 
@@ -892,6 +893,85 @@ install_pkg_with_installer()
   fi
 }
 
+have_local_installations() {
+  [ "${g_puavo_pkg_rootdir}/installed" != "$g_puavo_pkg_installed_dir" ]
+}
+
+is_locally_in() {
+  local collection_dir pkg_name
+
+  pkg_name=$1
+  collection_dir=$2
+
+  if ! pkg_path="$(readlink "${collection_dir}/${pkg_name}")"; then
+    return 1
+  fi
+
+  if [ "${pkg_path#${g_puavo_pkg_rootdir}}" != "$pkg_path" ]; then
+    # $pkg_path is under $g_puavo_pkg_rootdir
+    return 0
+  fi
+
+  return 1
+}
+
+switch_to_system_pkg()
+{
+  local need_unconfigure pkg_dir pkg_name
+
+  pkg_name=$1
+
+  if ! have_local_installations; then
+    return 0
+  fi
+
+  need_unconfigure=true
+
+  if is_locally_in "$pkg_name" "$g_puavo_pkg_installed_dir"; then
+    for pkg_dir in ${g_puavo_pkg_readonly_rootdir}/packages/${pkg_name}/*; do
+      test -d "$pkg_dir" || break
+      log_notice "found system version for ${pkg_name}, reconfiguring"
+      reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || {
+        log_error "could not switch to image version for ${pkg_name}"
+        return 1
+      }
+      need_unconfigure=false
+      break
+    done
+    if $need_unconfigure; then
+      if ! unconfigure_pkg "$pkg_name"; then
+        log_warning "failed to unconfigure package ${pkg_name}"
+      fi
+    fi
+  fi
+
+  purge_local_pkg "$pkg_name" || return 1
+}
+
+purge_local_pkg()
+{
+  local pkg_name
+
+  pkg_name=$1
+
+  if ! have_local_installations; then
+    return 0
+  fi
+
+  if is_locally_in "$pkg_name" "$g_puavo_pkg_available_dir"; then
+    rm -f "${g_puavo_pkg_available_dir}/${pkg_name}"
+  fi
+
+  if [ -d "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}" \
+       -o -d "${g_puavo_pkg_rootdir}/packages/${pkg_name}" ]; then
+    rm -rf "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}" \
+           "${g_puavo_pkg_rootdir}/packages/${pkg_name}" || return 1
+    log_info "purged locally installed package ${pkg_name}"
+  fi
+
+  return 0
+}
+
 remove_pkg()
 {
   local pkg_name pkg_dir pkg_id
@@ -899,18 +979,24 @@ remove_pkg()
   pkg_name=$1
 
   pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
-  if [ -n "${pkg_id}" ]; then
+  if [ -n "$pkg_id" ]; then
     unconfigure_pkg "$pkg_name" || {
       log_error "failed to unconfigure package '${pkg_name}'"
       return 1
     }
     pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
-    rm -rf "${pkg_dir}/.installed" "${pkg_dir}/.prepared" "${pkg_dir}/upstream" || return 1
+    rm -rf "${pkg_dir}/.installed" \
+           "${pkg_dir}/.prepared"  \
+           "${pkg_dir}/upstream" || return 1
+    purge_local_pkg "$pkg_name" || return 1
     log_info "removed package '${pkg_name}'"
     return 0
   fi
 
-  log_error "package '${pkg_name}' is not installed"
+  purge_local_pkg "$pkg_name" || return 1
+
+  g_sc=${SC_ERR_NOPKG}
+  log_warning "requested to remove package '${pkg_name}' that does not exist"
   return 1
 }
 
@@ -1150,6 +1236,9 @@ case "${command}" in
     else
       remove_pkg "$1"
     fi
+    ;;
+  switch-to-system)
+    switch_to_system_pkg "$1"
     ;;
   show)
     assert_args_count -ge 1 "$@"

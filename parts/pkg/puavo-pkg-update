@@ -174,18 +174,21 @@ prepare_pkg() {
   puavo-pkg prepare "$installer_fullpath"
 }
 
-maybe_remove_pkg() {
+remove_pkg() {
   puavo_pkg=$1
 
-  installed_pkg_dir=$(
-    readlink "${installed_links_dir}/${puavo_pkg}" 2> /dev/null) || true
-
-  if [ ! -e "$installed_pkg_dir" ]; then
+  puavo_pkg_status=0
+  SC_ERR_NOPKG=3
+  puavo-pkg remove "$puavo_pkg" || puavo_pkg_status=$?
+  if [ "$puavo_pkg_status" -eq "$SC_ERR_NOPKG" ]; then
     return 0
+  elif [ "$puavo_pkg_status" -ne 0 ]; then
+    logmsg user.err "error in removing ${puavo_pkg}"
+    return 1
   fi
 
-  logmsg user.notice "removing ${puavo_pkg}"
-  puavo-pkg remove "$puavo_pkg"
+  logmsg user.notice "removed ${puavo_pkg}"
+
   reload_menudata=true
 }
 
@@ -231,8 +234,7 @@ for pkgspec in $puavo_pkg_specs; do
   fi
 
   if [ -z "$action" ]; then
-    logmsg user.info "installation directive on ${puavo_pkg} is not set, doing nothing"
-    action='do-nothing'
+    action='switch-to-system'
   else
     logmsg user.info "installation directive on ${puavo_pkg} is: $action"
   fi
@@ -262,7 +264,10 @@ for pkgspec in $puavo_pkg_specs; do
       prepare_pkg "$puavo_pkg" "$version" || status=1
       ;;
     remove)
-      maybe_remove_pkg "$puavo_pkg" || status=1
+      remove_pkg "$puavo_pkg" || status=1
+      ;;
+    switch-to-system)
+      puavo-pkg switch-to-system "$puavo_pkg" || status=1
       ;;
     *)
       logmsg user.err "unsupported action on package ${puavo_pkg}: ${action}"
