@@ -89,6 +89,9 @@ Commands:
   show INSTALLER|PACKAGE         show package details
   show -F|--field FIELD PACKAGE  show specific FIELD
 
+  switch-to-system PACKAGE       switch to image puavo-pkg version (if exists)
+                                 and purge the local versions (if those exist)
+
   unconfigure PACKAGE            unconfigure installed PACKAGE
 
 Files:
