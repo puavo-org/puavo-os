@@ -139,6 +139,15 @@ log_warning()
   fi
 }
 
+check_puavopkg_name() {
+  if ! printf "%s" "$1" | grep -Eqx '[a-z0-9_-]+'; then
+    log_error "bad puavo-pkg package name: '$1'"
+    g_sc=${SC_ERR}
+    return 1
+  fi
+  return 0
+}
+
 gc_installations() {
   local currently_available_link currently_installed_link gc_status msg \
         pkg_dir pkg_installation pkg_name
@@ -149,6 +158,8 @@ gc_installations() {
     test -d "$pkg_dir" || continue
 
     pkg_name="$(basename "$pkg_dir")"
+    check_puavopkg_name "$pkg_name" || continue
+
     currently_available_link="${g_puavo_pkg_available_dir}/${pkg_name}"
     currently_installed_link="${g_puavo_pkg_installed_dir}/${pkg_name}"
 
@@ -330,12 +341,15 @@ get_installed_pkg_id()
 
 get_pkg_name()
 {
-  local pkg_dir pkg_basedir
+  local pkg_basedir pkg_dir pkg_name
 
   pkg_dir=$1
   pkg_basedir=$(dirname "$pkg_dir") || return 1
 
-  basename "$pkg_basedir"
+  pkg_name=$(basename "$pkg_basedir")
+  check_puavopkg_name "$pkg_name" || return 1
+
+  printf %s "$pkg_name"
 }
 
 get_pkg_id()
@@ -353,6 +367,7 @@ configure_pkg()
 
   pkg_name=$1
   pkg_id=$2
+  check_puavopkg_name "$pkg_name" || return 1
   pkg_dir=$(get_pkg_dir "$pkg_name" "$pkg_id") || return 1
 
   if [ ! -e "${pkg_dir}/.puavo-pkg-version" ]; then
@@ -393,6 +408,7 @@ reconfigure_pkg()
   local pkg_name pkg_id
 
   pkg_name=$1
+  check_puavopkg_name "$pkg_name" || return 1
   pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
 
   configure_pkg "$pkg_name" "$pkg_id"
@@ -417,6 +433,7 @@ unconfigure_pkg()
   local pkg_name pkg_link pkg_dir upstream_dir
 
   pkg_name=$1
+  check_puavopkg_name "$pkg_name" || return 1
 
   pkg_link=$(get_pkg_link "$pkg_name") || return 1
   pkg_dir=$(readlink -e "$pkg_link") || true
@@ -730,8 +747,9 @@ extract_installer()
     return 1
   fi
 
-  pkg_name=$(get_pkg_field_from_installer 'name' "$installer") || return 1
-  pkg_id=$(get_pkg_field_from_installer 'package-id' "$installer") \
+  pkg_name=$(get_pkg_field_from_installer name "$installer") || return 1
+  check_puavopkg_name "$pkg_name" || return 1
+  pkg_id=$(get_pkg_field_from_installer package-id "$installer") \
             || return 1
 
   pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id")
@@ -746,8 +764,8 @@ extract_installer()
 
   tar --no-same-owner --no-same-permissions --strip-components=1 \
     -z -x -f "$installer" -C "$pkg_tmpdir" || {
-    rm -rf "$pkg_tmpdir"
-    return 1
+      rm -rf "$pkg_tmpdir"
+      return 1
   }
 
   mv -T "$pkg_tmpdir" "$pkg_dir" || {
@@ -776,6 +794,7 @@ prepare_pkg_from_dir()
   fi
 
   pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+  check_puavopkg_name "$pkg_name" || return 1
   pkg_id=$(get_pkg_id "$pkg_dir") || return 1
 
   download_upstream_pack "$pkg_name" "$pkg_id" || {
@@ -920,6 +939,7 @@ switch_to_system_pkg()
   local need_unconfigure pkg_dir pkg_name
 
   pkg_name=$1
+  check_puavopkg_name "$pkg_name" || return 1
 
   if ! have_local_installations; then
     return 0
@@ -953,6 +973,7 @@ purge_local_pkg()
   local pkg_name
 
   pkg_name=$1
+  check_puavopkg_name "$pkg_name" || return 1
 
   if ! have_local_installations; then
     return 0
@@ -977,6 +998,7 @@ remove_pkg()
   local pkg_name pkg_dir pkg_id
 
   pkg_name=$1
+  check_puavopkg_name "$pkg_name" || return 1
 
   pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
   if [ -n "$pkg_id" ]; then
@@ -1034,6 +1056,7 @@ show_pkg()
   fi
 
   pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+  check_puavopkg_name "$pkg_name" || return 1
   pkg_id=$(get_pkg_id "$pkg_dir") || return 1
   if [ -z "${pkg_id}" ]; then
     log_error "package ${pkg_name} is not installed"
