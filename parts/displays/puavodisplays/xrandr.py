@@ -2,6 +2,7 @@
 
 # Standard library imports
 import collections
+import dataclasses
 import enum
 import fractions
 import logging
@@ -11,7 +12,13 @@ import typing
 
 __all__ = [
     "CallError",
+    "EnumProp",
     "Error",
+    "IntRangeProp",
+    "Mode",
+    "Output",
+    "OutputState",
+    "Prop",
     "UnexpectedOutputError",
     "call_xrandr",
     "get_prop",
@@ -120,6 +127,63 @@ def _parse_refresh_rate(value: str) -> typing.Tuple[float, bool, bool]:
     return float(refresh_rate), is_preferred is not None, is_current is not None
 
 
+class OutputState(str, enum.Enum):
+    """Possible states of a display output"""
+
+    CONNECTED = "connected"
+    DISCONNECTED = "disconnected"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+@dataclasses.dataclass(kw_only=True)
+class Mode:
+    """Display output mode"""
+
+    aspect_ratio: str
+    resolution_x: int
+    resolution_y: int
+    refresh_rate: float
+
+
+@dataclasses.dataclass(kw_only=True)
+class Prop:
+    """Property of a display output"""
+
+    name: str
+    value: str
+
+
+@dataclasses.dataclass(kw_only=True)
+class EnumProp(Prop):
+    """Enum property of a display output"""
+
+    supported_values: typing.List[str]
+
+
+@dataclasses.dataclass(kw_only=True)
+class IntRangeProp(Prop):
+    """Integer range property of a display output"""
+
+    int_value: int
+    int_value_min: int
+    int_value_max: int
+
+
+@dataclasses.dataclass(kw_only=True)
+class Output:
+    """Dispaly output"""
+
+    is_primary: bool
+    name: str
+    state: OutputState
+    modes: typing.List[Mode] = dataclasses.field(default_factory=list)
+    props: typing.Dict[str, Prop] = dataclasses.field(default_factory=dict)
+    current_mode: typing.Optional[Mode] = None
+    preferred_mode: typing.Optional[Mode] = None
+
+
 class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
     def __init__(self) -> None:
         self.__transitions = {
@@ -169,9 +233,9 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
             (_State.OUTPUT_MODE, _TokenId.EOF): (None, _State.DONE),
         }
         self.__current_state = _State.INIT
-        self.__displays: typing.Dict[str, typing.Dict[str, typing.Any]] = {}
-        self.__last_output: typing.Dict[str, typing.Any] = {}
-        self.__last_prop: typing.Dict[str, typing.Any] = {}
+        self.__displays: typing.Dict[str, Output] = {}
+        self.__last_output: typing.Optional[Output] = None
+        self.__last_prop: typing.Optional[Prop] = None
 
     def __action_create_output(
         self,
@@ -183,11 +247,11 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
     ) -> None:
         if name in self.__displays:
             raise UnexpectedOutputError("display is a duplicate", name)
-        self.__displays[name] = self.__last_output = {
-            "name": name,
-            "state": state,
-            "is_primary": primary != "",
-        }
+        self.__displays[name] = self.__last_output = Output(
+            name=name,
+            state=OutputState(state),
+            is_primary=primary != "",
+        )
 
     def __action_create_prop(
         self,
@@ -196,10 +260,12 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         name: str,
         value: str,
     ) -> None:
-        self.__last_output.setdefault("props", {})[name] = self.__last_prop = {
-            "name": name,
-            "value": value,
-        }
+        if self.__last_output is None:
+            raise UnexpectedOutputError("initial output line is missing")
+        self.__last_output.props[name] = self.__last_prop = Prop(
+            name=name,
+            value=value,
+        )
 
     def __action_append_prop_value(
         self,
@@ -207,7 +273,9 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         *,
         value: str,
     ) -> None:
-        self.__last_prop["value"] += value
+        if self.__last_prop is None:
+            raise UnexpectedOutputError("initial prop line is missing")
+        self.__last_prop.value += value
 
     def __action_add_prop_attr_range(
         self,
@@ -216,29 +284,49 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         value_min: str,
         value_max: str,
     ) -> None:
+        if self.__last_output is None:
+            raise UnexpectedOutputError("initial output line is missing")
+        if self.__last_prop is None:
+            raise UnexpectedOutputError("initial prop line is missing")
         # Because this property has range attribute, it must be int.
-        self.__last_prop["value"] = int(self.__last_prop["value"], 10)
-        self.__last_prop["value_min"] = int(value_min, 10)
-        self.__last_prop["value_max"] = int(value_max, 10)
+        self.__last_output.props[
+            self.__last_prop.name
+        ] = self.__last_prop = IntRangeProp(
+            name=self.__last_prop.name,
+            value=self.__last_prop.value,
+            int_value=int(self.__last_prop.value, 10),
+            int_value_min=int(value_min, 10),
+            int_value_max=int(value_max, 10),
+        )
 
     def __action_add_prop_attr_supported(
         self,
         token_id: _TokenId,  # pylint: disable=unused-argument
         supported_values: str,
     ) -> None:
-        self.__last_prop["supported_values"] = [
-            v.strip() for v in supported_values.split(",")
-        ]
+        if self.__last_output is None:
+            raise UnexpectedOutputError("initial output line is missing")
+        if self.__last_prop is None:
+            raise UnexpectedOutputError("initial prop line is missing")
+        self.__last_output.props[self.__last_prop.name] = self.__last_prop = EnumProp(
+            name=self.__last_prop.name,
+            value=self.__last_prop.value,
+            supported_values=[v.strip() for v in supported_values.split(",")],
+        )
 
-    def __set_current_mode(self, mode: typing.Dict[str, typing.Any]) -> None:
-        if "current_mode" in self.__last_output:
+    def __set_current_mode(self, mode: Mode) -> None:
+        if self.__last_output is None:
+            raise UnexpectedOutputError("initial output line is missing")
+        if self.__last_output.current_mode is not None:
             raise UnexpectedOutputError("Multiple current modes")
-        self.__last_output["current_mode"] = mode
+        self.__last_output.current_mode = mode
 
-    def __set_preferred_mode(self, mode: typing.Dict[str, typing.Any]) -> None:
-        if "preferred_mode" in self.__last_output:
+    def __set_preferred_mode(self, mode: Mode) -> None:
+        if self.__last_output is None:
+            raise UnexpectedOutputError("initial output line is missing")
+        if self.__last_output.preferred_mode is not None:
             raise UnexpectedOutputError("Multiple preferred modes")
-        self.__last_output["preferred_mode"] = mode
+        self.__last_output.preferred_mode = mode
 
     def __action_add_mode(
         self,
@@ -247,15 +335,17 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         resolution_y: str,
         refresh_rates: str,
     ) -> None:
+        if self.__last_output is None:
+            raise UnexpectedOutputError("initial output line is missing")
+
         refresh_rate_parts = refresh_rates.split()
         if len(refresh_rate_parts) == 0:
             raise UnexpectedOutputError("Invalid refresh rates", refresh_rates)
 
-        modes = self.__last_output.setdefault("modes", [])
         for refresh_rate_part in refresh_rate_parts:
             if refresh_rate_part == "+":
                 # Lonely + marks the last refresh rate as the preferred.
-                self.__set_preferred_mode(modes[-1])
+                self.__set_preferred_mode(self.__last_output.modes[-1])
                 continue
 
             refresh_rate, is_preferred, is_current = _parse_refresh_rate(
@@ -265,16 +355,16 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
             resolution_x_int = int(resolution_x, 10)
             resolution_y_int = int(resolution_y, 10)
 
-            mode = {
-                "resolution_x": resolution_x_int,
-                "resolution_y": resolution_y_int,
-                "refresh_rate": refresh_rate,
-                "aspect_ratio": str(
+            mode = Mode(
+                resolution_x=resolution_x_int,
+                resolution_y=resolution_y_int,
+                refresh_rate=refresh_rate,
+                aspect_ratio=str(
                     fractions.Fraction(resolution_x_int, resolution_y_int)
                 ).replace("/", ":"),
-            }
+            )
 
-            modes.append(mode)
+            self.__last_output.modes.append(mode)
 
             if is_preferred:
                 self.__set_preferred_mode(mode)
@@ -289,9 +379,7 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
             action(token_id, **token_groupdict)
         self.__current_state = next_state
 
-    def parse(
-        self, xrandr_prop_output: str
-    ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
+    def parse(self, xrandr_prop_output: str) -> typing.Dict[str, Output]:
         """Parse xrandr output."""
         for line in xrandr_prop_output.splitlines():
             token_id, token_groupdict = _tokenize(line)
@@ -311,7 +399,7 @@ def call_xrandr(xrandr_args: typing.List[str]) -> str:
         raise CallError() from called_process_error
 
 
-def get_prop() -> typing.Dict[str, typing.Dict[str, typing.Any]]:
+def get_prop() -> typing.Dict[str, Output]:
     """Get properties of all display outputs."""
     xrandr_prop_output = call_xrandr(["--prop"])
     xrandr_prop_output_parser = _XRandrPropOutputParser()
@@ -344,16 +432,17 @@ def set_max_bpc_of_all_display_outputs(
     max_bpc_per_output = {}
 
     for output_name, output in get_prop().items():
-        if output["state"] != "connected":
+        if output.state != OutputState.CONNECTED:
             continue
-        if "max bpc" in output["props"]:
+        if "max bpc" in output.props:
             if logger:
                 logger.info("desired max bpc of %r is %d", output_name, desired_max_bpc)
 
-            max_bpc_prop = output["props"]["max bpc"]
-            current_value = max_bpc_prop["value"]
-            value_min = max_bpc_prop["value_min"]
-            value_max = max_bpc_prop["value_max"]
+            max_bpc_prop = output.props["max bpc"]
+            max_bpc_prop = typing.cast(IntRangeProp, max_bpc_prop)
+            current_value = max_bpc_prop.int_value
+            value_min = max_bpc_prop.int_value_min
+            value_max = max_bpc_prop.int_value_max
 
             new_value = min(max(value_min, desired_max_bpc), value_max)
             if new_value != desired_max_bpc:
