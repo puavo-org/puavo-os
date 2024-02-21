@@ -953,7 +953,7 @@ switch_to_system_pkg()
   if is_locally_in "$pkg_name" "$g_puavo_pkg_installed_dir"; then
     for pkg_dir in ${g_puavo_pkg_readonly_rootdir}/packages/${pkg_name}/*; do
       test -d "$pkg_dir" || break
-      log_notice "found system version for ${pkg_name}, reconfiguring"
+      log_info "found system version for ${pkg_name}, reconfiguring"
       reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || {
         log_error "could not switch to image version for ${pkg_name}"
         return 1
