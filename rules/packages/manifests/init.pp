@@ -55,6 +55,8 @@ class packages {
     [ 'bind9'
     , 'bind9utils'
     , 'cifs-utils'
+    , 'cryptsetup'
+    , 'cryptsetup-initramfs'
     , 'dbus'
     , 'dnsmasq'
     , 'docker-compose'
