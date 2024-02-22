@@ -4,6 +4,13 @@
 import subprocess
 import typing
 
+__all__ = [
+    "Error",
+    "ValueConversionError",
+    "get",
+    "get_as",
+]
+
 
 class Error(Exception):
     """Baseclass for all exceptions raised from this module"""
