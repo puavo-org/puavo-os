@@ -75,7 +75,7 @@ _TOKEN_REGEXES = collections.OrderedDict(
     (
         (
             _TokenId.CONNECTOR,
-            r"^(?P<name>[^\s]+) (?P<state>connected|disconnected) (?P<primary>primary|).*$",
+            r"^(?P<name>[^\s]+) (?P<state>connected|disconnected) (?P<primary>primary|).*?((?P<width_mm>\d+)mm x (?P<height_mm>\d+)mm)?$",  # pylint: disable=line-too-long
         ),
         (
             _TokenId.EOF,
@@ -172,12 +172,14 @@ class IntRangeProp(Prop):
 
 
 @dataclasses.dataclass(kw_only=True)
-class Output:
+class Output:  # pylint: disable=too-many-instance-attributes
     """Dispaly output"""
 
     is_primary: bool
     name: str
     state: OutputState
+    width_mm: typing.Optional[int]
+    height_mm: typing.Optional[int]
     modes: typing.List[Mode] = dataclasses.field(default_factory=list)
     props: typing.Dict[str, Prop] = dataclasses.field(default_factory=dict)
     current_mode: typing.Optional[Mode] = None
@@ -244,6 +246,8 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
         name: str,
         state: str,
         primary: str,
+        width_mm: str,
+        height_mm: str,
     ) -> None:
         if name in self.__displays:
             raise UnexpectedOutputError("display is a duplicate", name)
@@ -251,6 +255,8 @@ class _XRandrPropOutputParser:  # pylint: disable=too-few-public-methods
             name=name,
             state=OutputState(state),
             is_primary=primary != "",
+            width_mm=int(width_mm) if width_mm else None,
+            height_mm=int(height_mm) if height_mm else None,
         )
 
     def __action_create_prop(
