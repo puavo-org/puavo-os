@@ -129,6 +129,7 @@ Description: Puavo developer tools
 Package: puavo-displays
 Architecture: all
 Depends: ${misc:Depends},
+ gir1.2-gudev-1.0,
  puavo-conf,
  python3,
  ruby,
