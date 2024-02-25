@@ -20,6 +20,7 @@ import typing
 
 # Third-party imports
 # pylint: disable=wrong-import-position
+import dbus.exceptions  # type: ignore[import]
 import gi  # type: ignore[import]
 
 gi.require_version("GUdev", "1.0")
@@ -388,8 +389,13 @@ class _PuavoDisplayManager:  # pylint: disable=too-few-public-methods
 
         self.__update_drm_connectors()
 
-        puavodisplays.mutter.reset_scale()
-        _LOGGER.info("Reset Mutter scaling.")
+        _LOGGER.info("Trying to reset Mutter scaling.")
+        try:
+            puavodisplays.mutter.reset_scale()
+        except dbus.exceptions.DBusException as dbus_exception:
+            _LOGGER.warning("Failed to reset Mutter scaling: %s", dbus_exception)
+        else:
+            _LOGGER.info("Reset Mutter scaling.")
 
         _manage(self.__setup)
 
