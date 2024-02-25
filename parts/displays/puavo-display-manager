@@ -263,6 +263,9 @@ class _DRMConnector:
     connected: bool
     edid: typing.Optional[bytes] = None
 
+    def __str__(self) -> str:
+        return self.name
+
 
 def _update_drm_connector_edid(drm_connector: _DRMConnector) -> bool:
     new_edid: typing.Optional[bytes] = None
