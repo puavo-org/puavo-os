@@ -124,6 +124,10 @@ def _ensure_no_black_borders() -> None:
     _LOGGER.info("Calling xrandr: %r", xrandr_args)
     puavodisplays.xrandr.call_xrandr(xrandr_args)
 
+    if len(connected_outputs) == 1:
+        puavodisplays.mutter.reset_scale()
+        _LOGGER.info("Reset Mutter scaling.")
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
