@@ -79,6 +79,9 @@ def _automatic_setup() -> None:
     ]
 
     if len(connected_outputs) < 1:
+        # TODO: we should check all DRM connectors if there are any  # pylint: disable=fixme
+        # connected, but not enabled and try to bring one of them
+        # alive. Unless this is truly headless setup of course.
         _LOGGER.info("No connected displays.")
         return
 
