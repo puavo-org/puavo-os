@@ -26,6 +26,7 @@ gi.require_version("GUdev", "1.0")
 from gi.repository import GUdev, GLib  # type: ignore[import]
 
 # Internal imports
+import puavodisplays.mutter
 import puavodisplays.puavoconf
 import puavodisplays.xrandr
 
@@ -378,6 +379,10 @@ class _PuavoDisplayManager:  # pylint: disable=too-few-public-methods
             self.__add_gudev_device_drm_connector(device)
 
         self.__update_drm_connectors()
+
+        puavodisplays.mutter.reset_scale()
+        _LOGGER.info("Reset Mutter scaling.")
+
         _manage(self.__setup)
 
     def __on_uevent(self, _: GUdev.Client, action: str, device: GUdev.Device) -> None:
