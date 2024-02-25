@@ -14,6 +14,7 @@ import logging
 import logging.handlers
 import os
 import subprocess
+import signal
 import sys
 import typing
 
@@ -441,7 +442,20 @@ def _main() -> int:
 
     GLib.timeout_add(0, pdm.on_start)
 
-    GLib.MainLoop().run()
+    mainloop = GLib.MainLoop()
+
+    def sighandler(signum: int, _: object) -> None:  # pylint: disable=unused-argument
+        _LOGGER.info("Signal %d caught, quitting the mainloop...", signum)
+        mainloop.quit()
+
+    signal.signal(signal.SIGINT, sighandler)
+    signal.signal(signal.SIGTERM, sighandler)
+    signal.signal(signal.SIGHUP, sighandler)
+    signal.signal(signal.SIGABRT, sighandler)
+    signal.signal(signal.SIGALRM, sighandler)
+    signal.signal(signal.SIGUSR1, sighandler)
+    signal.signal(signal.SIGUSR2, sighandler)
+    mainloop.run()
 
     return 0
 
