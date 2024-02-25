@@ -283,3 +283,17 @@ class Mutter:
             logical_monitors,
             monitors_config.properties,
         )
+
+
+def reset_scale() -> None:
+    """Reset scale of all logical displays"""
+    mutter = Mutter()
+
+    monitors_config = mutter.get_monitors_config()
+    for logical_monitor in monitors_config.logical_monitors:
+        logical_monitor.scale = 1
+
+    mutter.apply_monitors_config(
+        monitors_config,
+        method=Method.TEMPORARY,
+    )
