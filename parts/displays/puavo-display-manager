@@ -71,8 +71,7 @@ def _to_xrandr_mode_str(mode: puavodisplays.xrandr.Mode) -> str:
     return f"{mode.resolution_x}x{mode.resolution_y}"
 
 
-def _ensure_no_black_borders() -> None:
-    _LOGGER.info("Ensuring none of the connected displays have black borders...")
+def _automatic_setup() -> None:
     connected_outputs = [
         o
         for o in puavodisplays.xrandr.get_prop().values()
@@ -96,6 +95,7 @@ def _ensure_no_black_borders() -> None:
         xrandr_args.append("--transform")
         xrandr_args.append("none")
     else:
+        _LOGGER.info("Ensuring none of the connected displays have black borders...")
         xrandr_args.append("--output")
         xrandr_args.append(worst_connected_output.name)
         xrandr_args.append("--mode")
@@ -221,7 +221,7 @@ def _manage(setup: Setup) -> None:
         # Hotplug case:
         Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=True  , puavo_has_confs=False) : [_set_max_bpc],
         Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=True  , puavo_has_confs=True)  : [_set_max_bpc],
-        Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc, _ensure_no_black_borders],
+        Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc, _automatic_setup],
         Setup(args_best=True  , args_ignore_mutter=False , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
 
         # Session start case:
@@ -231,9 +231,9 @@ def _manage(setup: Setup) -> None:
         Setup(args_best=False , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
 
         # Greeter start case:
-        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=False) : [_set_max_bpc, _ensure_no_black_borders],
+        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=False) : [_set_max_bpc, _automatic_setup],
         Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=True  , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
-        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc, _ensure_no_black_borders],
+        Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=False) : [_set_max_bpc, _automatic_setup],
         Setup(args_best=True  , args_ignore_mutter=True  , mutter_in_charge=False , puavo_has_confs=True)  : [_set_max_bpc, _call_run_xrandr],
 
         # Default case:
