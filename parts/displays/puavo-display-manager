@@ -9,6 +9,7 @@ Puavo Display Manager
 # Standard library imports
 import argparse
 import collections
+import dataclasses
 import logging
 import logging.handlers
 import os
@@ -252,14 +253,85 @@ def _manage(setup: Setup) -> None:
 _UEVENT_DRM_STABILIZATION_TIMEOUT_MS = 1000
 
 
+@dataclasses.dataclass(kw_only=True)
+class _DRMConnector:
+    name: str
+    sysfs_path: str
+    enabled: bool
+    connected: bool
+    edid: typing.Optional[bytes] = None
+
+
+def _update_drm_connector_edid(drm_connector: _DRMConnector) -> bool:
+    new_edid: typing.Optional[bytes] = None
+
+    try:
+        with open(os.path.join(drm_connector.sysfs_path, "edid"), "rb") as edid_file:
+            new_edid = edid_file.read()
+    except FileNotFoundError:
+        new_edid = None
+
+    if drm_connector.edid != new_edid:
+        drm_connector.edid = new_edid
+        return True
+
+    return False
+
+
+def _update_drm_connector(drm_connector: _DRMConnector) -> bool:
+    changed: bool = False
+
+    with open(
+        os.path.join(drm_connector.sysfs_path, "status"), encoding="utf-8"
+    ) as status_file:
+        new_connected: bool = status_file.read() == "connected"
+
+    with open(
+        os.path.join(drm_connector.sysfs_path, "enabled"), encoding="utf-8"
+    ) as enabled_file:
+        new_enabled: bool = enabled_file.read() == "enabled"
+
+    if drm_connector.connected != new_connected:
+        drm_connector.connected = new_connected
+        changed = True
+
+    if drm_connector.enabled != new_enabled:
+        drm_connector.enabled = new_enabled
+        changed = True
+
+    changed |= _update_drm_connector_edid(drm_connector)
+
+    return changed
+
+
+def _gudev_device_to_drm_connector(device: GUdev.Device) -> _DRMConnector:
+    drm_connector = _DRMConnector(
+        name=device.get_name(),
+        sysfs_path=device.get_sysfs_path(),
+        enabled=device.get_sysfs_attr("enabled") == "enabled",
+        connected=device.get_sysfs_attr("status") == "connected",
+    )
+
+    _update_drm_connector_edid(drm_connector)
+
+    return drm_connector
+
+
 class _PuavoDisplayManager:  # pylint: disable=too-few-public-methods
     def __init__(self, setup: Setup):
         self.__setup = setup
-        self.__drm_connectors: typing.Set[str] = set()
+        self.__drm_connectors: typing.Dict[str, _DRMConnector] = {}
         self.__drm_stabilization_timer_id = None
 
         self.__gudev_client = GUdev.Client.new(["drm"])
         self.__gudev_client.connect("uevent", self.__on_uevent)
+
+    def __update_drm_connectors(self) -> bool:
+        changed: bool = False
+        for drm_connector in self.__drm_connectors.values():
+            changed |= _update_drm_connector(drm_connector)
+            _LOGGER.info("Updated DRM connector: %s", drm_connector)
+        return changed
 
     def __reset_drm_stabilization_timer(self) -> None:
         if self.__drm_stabilization_timer_id is not None:
@@ -271,42 +343,62 @@ class _PuavoDisplayManager:  # pylint: disable=too-few-public-methods
 
     def __on_drm_stabilization_timeout(self) -> None:
         self.__drm_stabilization_timer_id = None
-        _LOGGER.info("DRM connector setup has changed.")
+        self.__update_drm_connectors()
+        _LOGGER.info("DRM configuration has changed.")
         _manage(self.__setup)
+
+    def __remove_gudev_device_drm_connector(self, device: GUdev.Device) -> bool:
+        if device.get_devtype() != "drm_connector":
+            return False
+
+        drm_connector = self.__drm_connectors.pop(device.get_name())
+        _LOGGER.info("Removed the following DRM connector: %s", drm_connector)
+
+        return True
+
+    def __add_gudev_device_drm_connector(self, device: GUdev.Device) -> bool:
+        if device.get_devtype() != "drm_connector":
+            return False
+
+        drm_connector = _gudev_device_to_drm_connector(device)
+        if drm_connector.name in self.__drm_connectors:
+            _LOGGER.warning("DRM connector was already added: %s", drm_connector)
+            return False
+
+        self.__drm_connectors[drm_connector.name] = drm_connector
+        _LOGGER.info("Added the following DRM connector: %s", drm_connector)
+
+        return True
 
     def on_start(self) -> None:
         """Called from GLib mainloop when it has started."""
 
         _LOGGER.info("Entered the wonderful world of displays.")
         for device in self.__gudev_client.query_by_subsystem("drm"):
-            if device.get_devtype() != "drm_connector":
-                continue
-            self.__drm_connectors.add(device.get_name())
-        _LOGGER.info("Found following DRM connectors: %s", self.__drm_connectors)
+            self.__add_gudev_device_drm_connector(device)
 
+        self.__update_drm_connectors()
         _manage(self.__setup)
 
     def __on_uevent(self, _: GUdev.Client, action: str, device: GUdev.Device) -> None:
         if device.get_subsystem() != "drm":
             return
 
-        if device.get_devtype() != "drm_connector":
-            return
-
         self.__reset_drm_stabilization_timer()
 
         _LOGGER.info(
-            "Udev event from drm subsystem: %s drm_connector %s",
+            "Udev event from drm subsystem: devtype=%r action=%r name=%r",
+            device.get_devtype(),
             action,
             device.get_name(),
         )
 
         if action == "remove":
-            self.__drm_connectors.remove(device.get_name())
+            self.__remove_gudev_device_drm_connector(device)
             return
 
         if action == "add":
-            self.__drm_connectors.add(device.get_name())
+            self.__add_gudev_device_drm_connector(device)
             return
 
 
