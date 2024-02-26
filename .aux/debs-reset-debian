@@ -32,7 +32,8 @@ puavo_version=$(jq -r .version puavo/info.json)
 # own changelog entries.
 export DEBEMAIL='Puavo Org <dev@opinsys.fi>'
 
-dch -v "${puavo_version}" -D puavo-bookworm --force-distribution ''
+lsb_distribution=$(lsb_release -cs 2>/dev/null)
+dch -v "$puavo_version" -D "$lsb_distribution" --force-distribution ''
 
 if [ -e puavo/modify-debian ]; then
   puavo/modify-debian
