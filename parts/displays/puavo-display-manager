@@ -44,6 +44,26 @@ def _get_npixels(mode: puavodisplays.xrandr.Mode) -> int:
     return mode.resolution_x * mode.resolution_y
 
 
+def _get_dpi(resolution_y: int, height_mm: int) -> int:
+    return round(resolution_y / (height_mm / 25.4))
+
+
+def _get_mode_and_scale_for_dpi(
+    output: puavodisplays.xrandr.Output, target_dpi: int
+) -> typing.Tuple[puavodisplays.xrandr.Mode, int]:
+    if output.height_mm is None:
+        _LOGGER.warning(
+            "Cannot calculate optimal mode and scaling factor for output %r "
+            "because it's physical dimensions are unknown.",
+            output.name,
+        )
+        return output.modes[0], 1
+
+    return output.modes[0], round(
+        _get_dpi(output.modes[0].resolution_y, output.height_mm) / target_dpi
+    )
+
+
 def _is_worse_than(
     output1: puavodisplays.xrandr.Output, output2: puavodisplays.xrandr.Output
 ) -> bool:
@@ -85,52 +105,64 @@ def _automatic_setup() -> None:
         _LOGGER.info("No connected displays.")
         return
 
+    if len(connected_outputs) == 1:
+        _LOGGER.info(
+            "Preparing the best possible setup for the only connected display %r.",
+            connected_outputs[0].name,
+        )
+        mode, scale = _get_mode_and_scale_for_dpi(connected_outputs[0], 144)
+        xrandr_args = []
+        xrandr_args.append("--output")
+        xrandr_args.append(connected_outputs[0].name)
+        xrandr_args.append("--transform")
+        xrandr_args.append("none")
+        xrandr_args.append("--mode")
+        xrandr_args.append(_to_xrandr_mode_str(mode))
+
+        _LOGGER.info("Calling xrandr: %r", xrandr_args)
+        puavodisplays.xrandr.call_xrandr(xrandr_args)
+
+        puavodisplays.mutter.reset_scale(scale=scale)
+        _LOGGER.info("Set Mutter scaling to %d.", scale)
+
+        return
+
+    _LOGGER.info("Ensuring none of the connected displays have black borders...")
+    # _try_mutter_reset_scale()
     (
         worst_connected_output,
         other_connected_outputs,
     ) = _get_worst_connected_output_and_others(connected_outputs)
 
     xrandr_args = []
-    if len(connected_outputs) == 1:
-        _LOGGER.info("Clearing transformations from the only connected display.")
+    xrandr_args.append("--output")
+    xrandr_args.append(worst_connected_output.name)
+    xrandr_args.append("--mode")
+    xrandr_args.append(_to_xrandr_mode_str(worst_connected_output.modes[0]))
+    xrandr_args.append("--transform")
+    xrandr_args.append("none")
+
+    for other_connected_output in other_connected_outputs:
+        if other_connected_output.current_mode is None:
+            # Something strange, all connected outputs should have
+            # current mode.
+            _LOGGER.error(
+                "Connected output %r does not have current mode!",
+                other_connected_output.name,
+            )
+            continue
+
         xrandr_args.append("--output")
-        xrandr_args.append(worst_connected_output.name)
-        xrandr_args.append("--transform")
-        xrandr_args.append("none")
-    else:
-        _LOGGER.info("Ensuring none of the connected displays have black borders...")
-        xrandr_args.append("--output")
+        xrandr_args.append(other_connected_output.name)
+        xrandr_args.append("--same-as")
         xrandr_args.append(worst_connected_output.name)
         xrandr_args.append("--mode")
+        xrandr_args.append(_to_xrandr_mode_str(other_connected_output.current_mode))
+        xrandr_args.append("--scale-from")
         xrandr_args.append(_to_xrandr_mode_str(worst_connected_output.modes[0]))
-        xrandr_args.append("--transform")
-        xrandr_args.append("none")
-
-        for other_connected_output in other_connected_outputs:
-            if other_connected_output.current_mode is None:
-                # Something strange, all connected outputs should have
-                # current mode.
-                _LOGGER.error(
-                    "Connected output %r does not have current mode!",
-                    other_connected_output.name,
-                )
-                continue
-
-            xrandr_args.append("--output")
-            xrandr_args.append(other_connected_output.name)
-            xrandr_args.append("--same-as")
-            xrandr_args.append(worst_connected_output.name)
-            xrandr_args.append("--mode")
-            xrandr_args.append(_to_xrandr_mode_str(other_connected_output.current_mode))
-            xrandr_args.append("--scale-from")
-            xrandr_args.append(_to_xrandr_mode_str(worst_connected_output.modes[0]))
 
     _LOGGER.info("Calling xrandr: %r", xrandr_args)
     puavodisplays.xrandr.call_xrandr(xrandr_args)
-
-    if len(connected_outputs) == 1:
-        puavodisplays.mutter.reset_scale()
-        _LOGGER.info("Reset Mutter scaling.")
 
 
 def _parse_args() -> argparse.Namespace:
@@ -330,6 +362,16 @@ def _gudev_device_to_drm_connector(device: GUdev.Device) -> _DRMConnector:
     return drm_connector
 
 
+def _try_mutter_reset_scale():
+    _LOGGER.info("Trying to reset Mutter scaling.")
+    try:
+        puavodisplays.mutter.reset_scale()
+    except dbus.exceptions.DBusException as dbus_exception:
+        _LOGGER.warning("Failed to reset Mutter scaling: %s", dbus_exception)
+    else:
+        _LOGGER.info("Reset Mutter scaling.")
+
+
 class _PuavoDisplayManager:  # pylint: disable=too-few-public-methods
     def __init__(self, setup: Setup):
         self.__setup = setup
@@ -392,14 +434,7 @@ class _PuavoDisplayManager:  # pylint: disable=too-few-public-methods
 
         self.__update_drm_connectors()
 
-        _LOGGER.info("Trying to reset Mutter scaling.")
-        try:
-            puavodisplays.mutter.reset_scale()
-        except dbus.exceptions.DBusException as dbus_exception:
-            _LOGGER.warning("Failed to reset Mutter scaling: %s", dbus_exception)
-        else:
-            _LOGGER.info("Reset Mutter scaling.")
-
+        _try_mutter_reset_scale()
         _manage(self.__setup)
 
     def __on_uevent(self, _: GUdev.Client, action: str, device: GUdev.Device) -> None:
