@@ -1322,6 +1322,13 @@
                 "id": "skype"
             }
         },
+        "slack": {
+            "name": "Slack",
+            "tags": "default, network",
+            "puavopkg": {
+                "id": "slack"
+            }
+        },
         "smarttech-notebook": {
             "name": "Notebook-ohjelmisto",
             "tags": "default",
@@ -2151,6 +2158,7 @@
                 "jitsi",
                 "signal-desktop",
                 "skype",
+                "slack",
                 "teams",
                 "telegramdesktop",
                 "mattermost-desktop",
