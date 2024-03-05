@@ -1,4 +1,4 @@
-From 867a9da6c5c10488f127d5285deaf0b748c4a973 Mon Sep 17 00:00:00 2001
+From d82f678f3ab57bc30a52237389693b1084ac1e49 Mon Sep 17 00:00:00 2001
 From: Tsuchiya Yuto <kitakar@gmail.com>
 Date: Sun, 18 Oct 2020 16:42:44 +0900
 Subject: [PATCH] (surface3-oemb) add DMI matches for Surface 3 with broken DMI
@@ -58,10 +58,10 @@ index ca4602bcc7dea..490b9731068ae 100644
  	{ }
  };
 diff --git a/sound/soc/codecs/rt5645.c b/sound/soc/codecs/rt5645.c
-index fae04e9fae4e7..1eeff9e729e60 100644
+index 7938b52d741d8..2d5f83b0cdb0b 100644
 --- a/sound/soc/codecs/rt5645.c
 +++ b/sound/soc/codecs/rt5645.c
-@@ -3719,6 +3719,15 @@ static const struct dmi_system_id dmi_platform_data[] = {
+@@ -3746,6 +3746,15 @@ static const struct dmi_system_id dmi_platform_data[] = {
  		},
  		.driver_data = (void *)&intel_braswell_platform_data,
  	},
@@ -78,7 +78,7 @@ index fae04e9fae4e7..1eeff9e729e60 100644
  		/*
  		 * Match for the GPDwin which unfortunately uses somewhat
 diff --git a/sound/soc/intel/common/soc-acpi-intel-cht-match.c b/sound/soc/intel/common/soc-acpi-intel-cht-match.c
-index cdcbf04b8832f..958305779b125 100644
+index 5e2ec60e2954b..207868c699f29 100644
 --- a/sound/soc/intel/common/soc-acpi-intel-cht-match.c
 +++ b/sound/soc/intel/common/soc-acpi-intel-cht-match.c
 @@ -27,6 +27,14 @@ static const struct dmi_system_id cht_table[] = {
@@ -97,5 +97,5 @@ index cdcbf04b8832f..958305779b125 100644
  };
  
 -- 
-2.42.1
+2.43.0
 
