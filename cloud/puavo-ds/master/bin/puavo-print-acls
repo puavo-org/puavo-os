@@ -343,6 +343,16 @@ rule {
 
 rule {
   [dn subtree "ou=Kerberos Realms"]
+    [attrs krbExtraData        \
+           krbLastFailedAuth   \
+           krbLoginFailedCount \
+           krbLastSuccessfulAuth]
+      by [puavo_dn kdc] write
+      by *              none break
+}
+
+rule {
+  [dn subtree "ou=Kerberos Realms"]
       by [puavo_dn kadmin] write
       by [puavo_dn kdc]    read
       by *                 none break
@@ -818,6 +828,7 @@ rule {
            mail               \
            preferredLanguage  \
            puavoAcceptedTerms \
+           puavoCitrixId      \
            puavoLocale        \
            telephoneNumber]
       by self write

@@ -76,6 +76,9 @@
             },
             "tags": "default"
         },
+        "balena-etcher": {
+            "tags": "default"
+        },
         "bitwarden": {
             "name": {
                 "fi": "Bitwarden salasanojen hallintaohjelma",
@@ -1313,6 +1316,13 @@
                 "id": "skype"
             }
         },
+        "slack": {
+            "name": "Slack",
+            "tags": "default, network",
+            "puavopkg": {
+                "id": "slack"
+            }
+        },
         "smarttech-notebook": {
             "name": "Notebook-ohjelmisto",
             "tags": "default",
@@ -1690,6 +1700,7 @@
                 "mousepad",
                 "gucharmap",
                 "onboard",
+                "balena-etcher",
                 "brasero",
                 "org.gnome.SoundJuicer",
                 "org.gnome.FileRoller",
@@ -2008,6 +2019,7 @@
             "icon": "/usr/share/puavo-art/puavomenu-icons/games.svg",
             "condition": "personally_administered",
             "programs": [
+                "kantti",
                 "org.gnome.Klotski",
                 "org.gnome.Mines",
                 "org.gnome.Mahjongg",
@@ -2138,6 +2150,7 @@
                 "jitsi",
                 "signal-desktop",
                 "skype",
+                "slack",
                 "teams",
                 "telegramdesktop",
                 "mattermost-desktop",

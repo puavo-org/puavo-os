@@ -1439,7 +1439,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def store_exam_results(self, results_filepath):
-    self.server_cmd('store-exam-results')
+    self.server_cmd('store-exam-results', 180)
     syslog.syslog(syslog.LOG_INFO,
                   'storing exam answers to %s' % results_filepath)
     shutil.copy2(self.EXAM_ANSWERS_PATH, results_filepath)
