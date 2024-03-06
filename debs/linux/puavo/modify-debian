@@ -2,7 +2,7 @@
 
 set -eu
 
-rm debian/*0.deb12* # Remove old ABI files
+rm -f debian/*0.deb12* # Remove old ABI files
 sed -i -r 's/^abiname:.*$/abiname: 0.puavo1/' debian/config/defines # Define new ABI version
 debian/rules debian/control-real || true # Update control files
 
