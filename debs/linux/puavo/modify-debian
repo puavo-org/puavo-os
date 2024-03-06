@@ -4,10 +4,15 @@ set -eu
 
 rm -f debian/*0.deb12* # Remove old ABI files
 sed -i -r 's/^abiname:.*$/abiname: 0.puavo1/' debian/config/defines # Define new ABI version
+
+# must do this so that process.py below does not fail
+sed -i '/featureset-rt/{ n; s/enabled: true/enabled: false/}' \
+    debian/config/defines
+
 debian/rules debian/control-real || true # Update control files
 
 # Merge surface config
-cat puavo/surface-config >>debian/config/amd64/config
+cat puavo/surface-config >> debian/config/amd64/config
 puavo/tools/kernel-team/utils/kconfigeditor2/process.py .
 
 dch -a 'Add linux-surface patches.'
