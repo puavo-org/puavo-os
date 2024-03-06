@@ -4,5 +4,7 @@ class packages::backports {
   # package on this list does not trigger the installation of a package,
   # that has to be defined elsewhere.
 
-  $package_list = []
+  $package_list = [
+    'kernel-wedge'      # needed by bpo kernel build
+  ]
 }
