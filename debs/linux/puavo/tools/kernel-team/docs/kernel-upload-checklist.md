@@ -4,17 +4,16 @@ Things to remember when updating the Linux kernel in any suite.  This
 is intentionally kept outside of any source package as it applies to
 multiple suites.
 
-1. If there are important changes under `scripts/` or `tools/`, and
-   out-of-tree modules should be rebuilt using the new tools, then an
-   ABI bump will be needed to ensure this happens.
-
-1. If the upload includes an ABI bump, the `debian/abi` directory and
-   all patches in `debian/patches/debian/abi` should have been
-   deleted.
-
-1. Otherwise, if this is the upload after an ABI bump, the
-   `debian/abi` directory should be populated using
-   `debian/bin/abiupdate.py`.
+1. [< 6.6] ABI maintenance:
+   * If there are important changes under `scripts/` or `tools/`, and
+     out-of-tree modules should be rebuilt using the new tools, then
+     an ABI bump will be needed to ensure this happens.
+   * If the upload includes an ABI bump, the `debian/abi` directory
+     and all patches in `debian/patches/debian/abi` should have been
+     deleted.
+   * Otherwise, if this is the upload after an ABI bump, the
+     `debian/abi` directory should be populated using
+     `debian/bin/abiupdate.py`.
 
 1. [< 5.16] Run the coding style tests and fix any failures:
 
@@ -60,7 +59,8 @@ multiple suites.
 1. Upload the source package only.  dak is configured to not require
    binaries for linux even if NEW processing is required.
 
-1. If the upload includes an ABI bump:
+1. If the upload includes an ABI bump (this includes all
+   non-experimental uploads of 6.6 onward):
    * [*-security] Handling of NEW packages in security suites
      is awkward.  You may need to directly request the attention of
      the FTP team.
