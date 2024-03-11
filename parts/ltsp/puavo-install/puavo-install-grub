@@ -375,7 +375,7 @@ lookup_windows_boot_partition() {
     # "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" is Windows partition type
     windows_boot_partition=$(
       lsblk -n -l -o PARTTYPE,UUID "$diskdev" \
-        | awk -v efi_devpath="$efi_devpath" '
+        | awk '
             BEGIN { efi_uuid = ""; legacy_uuid = ""; has_windows = 0 }
             $1 == "0x7" {
               has_windows = 1
