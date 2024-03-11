@@ -3,7 +3,7 @@ Description=Puavo exammode session on tty
 
 [Service]
 ExecStartPre=/usr/bin/chvt 42
-ExecStart=-/sbin/agetty --autologin puavo-examuser --noclear - $TERM
+ExecStart=-/sbin/agetty --autologin puavo-examuser - $TERM
 Type=oneshot
 Restart=no
 StandardInput=tty
