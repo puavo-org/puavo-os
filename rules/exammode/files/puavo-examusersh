@@ -1,6 +1,7 @@
 #!/bin/sh
 
 if [ "$(tty)" = '/dev/tty42' ]; then
+  clear
   exec env HOME=/var/lib/puavo-exammode/user      \
     bwrap --dev-bind / /                          \
           --tmpfs    /home                        \

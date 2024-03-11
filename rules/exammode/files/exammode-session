@@ -2,4 +2,6 @@
 
 set -eu
 
+qiv -mx /usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg
+
 env DESKTOP_SESSION=puavo-desktop /usr/bin/gnome-session "$@"
