@@ -10,18 +10,44 @@ class PuavoExammode < DBus::Object
   dbus_interface 'org.puavo.Exam.exammode' do
     dbus_method :Enable, '' do
       if ! system('loginctl', 'lock-sessions') then
+        Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
         raise 'error in locking sessions'
       end
+      sleep 3   # give time for gnome lock to activate (XXX sleep is not nice)
 
-      # XXX what if this is already running?
-      if ! system('systemctl', 'start', 'puavo-exammode-tty.service') then
-        raise 'could not start puavo-exammode session'
+      begin
+        desktop_session_vt = %x(fgconsole).chomp
+        raise 'vt empty' if desktop_session_vt.empty?
+      rescue StandardError => e
+        errmsg = 'could not determine the current virtual console'
+        Syslog.log(Syslog::LOG_ERR, errmsg)
+        raise errmsg
       end
 
-      # XXX should use the actual known vt instead of guessing
-      # XXX probably this dbus call takes too long
-      if ! system('chvt', '2') then
-        raise 'could not start puavo-exammode session'
+      if @exammode_session then
+        Syslog.log(Syslog::LOG_ERR,
+          'tried to activate examination mode when it is already active')
+        raise 'exammode session is already active'
+      end
+
+      @exammode_session = Thread.new do
+        Syslog.log(Syslog::LOG_NOTICE, 'activating examination mode')
+        begin
+          # use restart in case it is active but not through us
+          if ! system('systemctl', 'restart', 'puavo-exammode-tty.service') then
+            Syslog.log(Syslog::LOG_ERR, 'error in activating examination mode')
+            raise 'could not start puavo-exammode session'
+          end
+
+          Syslog.log(Syslog::LOG_INFO, 'examination mode ended')
+
+          if ! system('chvt', desktop_session_vt) then
+            Syslog.log(Syslog::LOG_ERR, 'could not switch back to original vt')
+            raise 'could not return back to the original vt'
+          end
+        ensure
+          @exammode_session = nil
+        end
       end
     end
   end
