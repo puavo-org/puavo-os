@@ -7,6 +7,10 @@ puavo_dconf_profile_path="${puavo_session_dir}/dconf_profile"
 {
   echo "user-db:user"
 
+  if [ "${EXAMMODE_SESSION:-}" = 'true' ]; then
+    echo "system-db:puavo-exammode"
+  fi
+
   if [ -n "$LANGUAGE" ]; then
     locale_dconf_db="locale-$LANGUAGE"
   else
