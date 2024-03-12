@@ -15,6 +15,9 @@ class exammode {
       require => Package['systemd'],
       source  => 'puppet:///modules/exammode/puavo-exammode-tty.service';
 
+    '/etc/X11/Xsession.d/10puavo-set-exammode-session-quirks':
+      source => 'puppet:///modules/exammode/10puavo-set-exammode-session-quirks';
+
     '/usr/lib/puavo-ltsp-client/exammode-session':
       mode   => '0755',
       source => 'puppet:///modules/exammode/exammode-session';

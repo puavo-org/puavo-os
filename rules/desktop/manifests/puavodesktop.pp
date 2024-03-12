@@ -2,6 +2,7 @@ class desktop::puavodesktop {
   include ::art
   include ::desktop::dconf::disable_lidsuspend
   include ::desktop::dconf::disable_suspend
+  include ::desktop::dconf::exammode
   include ::desktop::dconf::laptop
   include ::desktop::dconf::nokeyboard
   include ::desktop::dconf::puavodesktop

@@ -116,6 +116,13 @@ class ChangelogNotifier(PuavoWidget):
     if getpass.getuser() == 'Debian-gdm':
       return
 
+    # do not show changelog notifier for exammode session
+    try:
+      if os.environ['EXAMMODE_SESSION'] == 'true':
+        return
+    except KeyError:
+      pass
+
     # do not show changelog notifier for guest users
     try:
       if os.environ['GUEST_SESSION'] == 'true':

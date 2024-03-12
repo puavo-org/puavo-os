@@ -1,0 +1,6 @@
+# disable lock screen option for exammode session
+# (it makes no sense to lock the screen if there is no password to open it)
+
+if [ "$USER" = 'puavo-examuser' ]; then
+  export EXAMMODE_SESSION=true
+fi
