@@ -2,9 +2,12 @@
 
 import dbus
 import dbus.mainloop.glib
+import getpass
 import gettext
 import gi
+import os
 import signal
+import sys
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
@@ -19,6 +22,8 @@ gettext.textdomain('puavo-exammode-applet')
 _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+# XXX some kind of logging to syslog would be nice
 
 class PuavoExamModeApplet:
   def __init__(self):
@@ -36,11 +41,32 @@ class PuavoExamModeApplet:
     self.available_exams = []
     self.update_menu()
 
+    self.register_to_exam_service()
+
 
   def get_dbus_iface(self):
     bus = dbus.SystemBus()
     dbusobj = bus.get_object('org.puavo.Exam', '/exammode')
     return dbus.Interface(dbusobj, dbus_interface='org.puavo.Exam.exammode')
+
+
+  def register_to_exam_service(self):
+    try:
+      username = getpass.getuser()
+      krb5ccname_env = os.environ['KRB5CCNAME']
+      lang_locale = os.environ['LANG']
+    except:
+      # XXX log error
+      sys.exit(1)
+
+    self.dbus_iface.Register(username, lang_locale, krb5ccname_env,
+                             reply_handler=lambda: None,
+                             error_handler=self.register_dbus_error_handler)
+
+
+  def register_dbus_error_handler(self, dbusexception):
+    # XXX
+    raise Exception('this is bad')
 
 
   def update_menu(self):
@@ -74,7 +100,8 @@ class PuavoExamModeApplet:
 
 
   def exams_available(self, examinfo):
-    pass
+    self.available_exams = examinfo
+    self.update_menu()
 
 
 applet = PuavoExamModeApplet()
