@@ -8,6 +8,16 @@ EXAMUSER_USERNAME = 'puavo-examuser'
 
 class PuavoExammode < DBus::Object
   dbus_interface 'org.puavo.Exam.exammode' do
+    dbus_method :Register, 'in username:s, in locale:s, in krb5ccname:s' do
+      |username, locale, krb5ccname|
+        @username   = username
+        @locale     = locale
+        @krb5ccname = krb5ccname
+
+        Syslog.log(Syslog::LOG_NOTICE, 'user %s (locale=%s) registered',
+                   username, locale)
+    end
+
     dbus_method :Enable, '' do
       if ! system('loginctl', 'lock-sessions') then
         Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
