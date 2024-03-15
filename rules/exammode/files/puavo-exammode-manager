@@ -1,13 +1,52 @@
 #!/usr/bin/ruby
 
 require 'dbus'
+require 'json'
+require 'puavo/conf'
 require 'syslog'
 
 EXAMUSER_UID = 990
 EXAMUSER_USERNAME = 'puavo-examuser'
 
+puavoconf = Puavo::Conf.new
+$examomatic_url = puavoconf.get('puavo.exammode.examomatic.url')
+puavoconf.close
+
+class ExamsListener
+  def initialize(dbus, username, krb5ccname)
+    @dbus = dbus
+    @available_exams = []
+    @listener = Thread.new { connect_and_wait(username, krb5ccname) }
+  end
+
+  def destroy
+    @listener.exit
+  end
+
+  def connect_and_wait(username, krb5ccname)
+    Syslog.log(Syslog::LOG_NOTICE, 'connecting websocket to %s',
+               $examomatic_url)
+    # XXX should open a websocket to $exammomatic_url
+    # XXX using username + krb5ccname and then receive current_exam from there
+    loop do
+      current_exams = [ { 'url' => 'https://localhost:7777' } ]
+      if @available_exams != current_exams then
+        @dbus.ExamsAvailable(current_exams.to_json)
+        @available_exams = current_exams
+      end
+    end
+  end
+end
+
 class PuavoExammode < DBus::Object
+  def initialize(*args)
+    @exams_listener = nil
+    super
+  end
+
   dbus_interface 'org.puavo.Exam.exammode' do
+    dbus_signal :ExamsAvailable, 'in exams:s'
+
     dbus_method :Register, 'in username:s, in locale:s, in krb5ccname:s' do
       |username, locale, krb5ccname|
         @username   = username
@@ -16,9 +55,12 @@ class PuavoExammode < DBus::Object
 
         Syslog.log(Syslog::LOG_NOTICE, 'user %s (locale=%s) registered',
                    username, locale)
+
+        @exams_listener.destroy if @exams_listener
+        @exams_listener = ExamsListener.new(self, @username, $krb5ccname)
     end
 
-    dbus_method :Enable, '' do
+    dbus_method :StartSession, '' do
       if ! system('loginctl', 'lock-sessions') then
         Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
         raise 'error in locking sessions'

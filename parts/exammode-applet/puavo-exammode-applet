@@ -5,6 +5,7 @@ import dbus.mainloop.glib
 import getpass
 import gettext
 import gi
+import json
 import os
 import signal
 import sys
@@ -14,6 +15,7 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 
 from gi.repository import AyatanaAppIndicator3
+from gi.repository import GLib
 from gi.repository import Gtk 
 from gi.repository import Notify
 
@@ -25,18 +27,20 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 # XXX some kind of logging to syslog would be nice
 
+ICON_PATH = '/usr/share/icons/Adwaita/64x64/legacy/text-editor-symbolic.symbolic.png'
+
 class PuavoExamModeApplet:
+
   def __init__(self):
     Notify.init('puavo-exammode-applet')
 
     self.dbus_iface = self.get_dbus_iface()
     self.dbus_iface.connect_to_signal('ExamsAvailable', self.exams_available)
 
-    icon_path = '/usr/share/icons/Adwaita/64x64/legacy/text-editor-symbolic.symbolic.png'
-
     self.indicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-exammode-applet',
-          icon_path, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+          ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+    self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
 
     self.available_exams = []
     self.update_menu()
@@ -65,34 +69,48 @@ class PuavoExamModeApplet:
 
 
   def register_dbus_error_handler(self, dbusexception):
-    # XXX
-    raise Exception('this is bad')
+    raise Exception('unexpected dbus error in register, that is bad')
 
 
   def update_menu(self):
     self.menu = Gtk.Menu()
 
     if len(self.available_exams) > 0:
-      menuitem = Gtk.MenuItem(label=_tr('Available exams:'))
-      menuitem.set_sensitive(False)
-      menuitem.show()
-      self.menu.append(menuitem)
+      header = Gtk.MenuItem(label=_tr('Available exams:'))
+      header.set_sensitive(False)
+      header.show()
+      self.menu.append(header)
 
       separator = Gtk.SeparatorMenuItem()
       separator.show()
       self.menu.append(separator)
 
+      self.menuitems = []
       for exam in self.available_exams:
-        # XXX add available exams to menu
-        pass
+        # XXX should pick some info from menu
+        exam_choice = Gtk.MenuItem(label=exam)
+        exam_choice.set_sensitive(True)
+        exam_choice.connect('activate', self.choose_exam)
+        exam_choice.show()
+        self.menu.append(exam_choice)
+
+      self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+      self.indicator.set_menu(self.menu)
 
       self.menu.show_all()
-      status = AyatanaAppIndicator3.IndicatorStatus.ACTIVE
     else:
-      status = AyatanaAppIndicator3.IndicatorStatus.PASSIVE
+      self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.PASSIVE)
 
-    self.indicator.set_menu(self.menu)
-    self.indicator.set_status(status)
+
+  def choose_exam(self, widget):
+    # XXX should pass exam id somehow (which one is chosen)
+    self.dbus_iface.StartSession(
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
+  def start_session_dbus_error_handler(self, dbusexception):
+    raise Exception('unexpected dbus error in start session, that is bad')
 
 
   def main(self):
@@ -100,7 +118,7 @@ class PuavoExamModeApplet:
 
 
   def exams_available(self, examinfo):
-    self.available_exams = examinfo
+    self.available_exams = json.loads(examinfo)
     self.update_menu()
 
 
