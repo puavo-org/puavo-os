@@ -22,10 +22,6 @@ class exammode {
       mode   => '0755',
       source => 'puppet:///modules/exammode/exammode-session';
 
-    '/usr/local/bin/puavo-switch-to-exammode':
-      mode   => '0755',
-      source => 'puppet:///modules/exammode/puavo-switch-to-exammode';
-
     '/usr/local/bin/puavo-examusersh':
       mode   => '0755',
       source => 'puppet:///modules/exammode/puavo-examusersh';
