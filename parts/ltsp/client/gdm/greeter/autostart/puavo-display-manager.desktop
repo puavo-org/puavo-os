@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
 Name=Run Puavo display manager
-Exec=/usr/bin/puavo-display-manager
+Exec=/usr/bin/puavo-display-manager --ignore-mutter --best
 NoDisplay=true
 X-GNOME-Autostart-Phase=Initialization

@@ -6,15 +6,10 @@ require 'puavo/conf'
 require 'shellwords'
 require 'syslog'
 
-$has_max_bpc_been_set = false
 $monitors_info = nil
-$options = {
-  :only_set_max_bpc => false
-}
 $status = 0
 
 class MonitorsXMLSet < StandardError; end
-class OnlySetMaxBPC < StandardError; end
 
 def update_monitors_info
   xrandr_output = %x(xrandr -q)
@@ -193,33 +188,7 @@ def apply_settings(settings_to_apply, xrandr_parsed_args_list)
   end
 end
 
-def set_max_bpc_only_once()
-  if $has_max_bpc_been_set then
-    return
-  end
-
-  system('puavo-set-max-bpc')
-  set_max_bpc_status = $?.exitstatus
-
-  # One attempt is enough, no matter if it failed or not. Subsequent
-  # invocations would not magically yield any better results.
-  $has_max_bpc_been_set = true
-
-  if set_max_bpc_status != 0 then
-    Syslog.log(Syslog::LOG_ERR, "puavo-set-max-bpc FAILED")
-    $status = 1
-  else
-    Syslog.log(Syslog::LOG_INFO, "puavo-set-max-bpc ok")
-  end
-
-  if $options[:only_set_max_bpc] then
-    raise OnlySetMaxBPC
-  end
-end
-
 def run_xrandr(xrandr_args)
-  set_max_bpc_only_once
-
   system('xrandr', *xrandr_args)
   xrandr_status = $?.exitstatus
 
@@ -246,10 +215,6 @@ OptionParser.new do |opts|
 
   Run xrandr if needed.
   "
-
-  opts.on("--only-set-max-bpc", "Only set max bpc and exit") do
-    $options[:only_set_max_bpc] = true
-  end
 
   opts.on_tail("-h", "--help", "Show this message") do
     STDERR.puts opts
@@ -307,9 +272,6 @@ begin
 rescue MonitorsXMLSet => e
   Syslog.log(Syslog::LOG_INFO,
              'not applying settings because monitors.xml is set in Puavo')
-rescue OnlySetMaxBPC => e
-  Syslog.log(Syslog::LOG_INFO,
-             'not applying settings because --only-set-max-bpc was used')
 rescue StandardError => e
   Syslog.log(Syslog::LOG_ERR, '%s', e.message)
   $status = 1

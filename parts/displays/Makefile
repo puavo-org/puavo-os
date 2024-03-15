@@ -8,8 +8,11 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
-scripts := puavo-display-manager puavo-set-max-bpc
-check_mypy_targets := $(scripts:%=check-mypy-%)
+mypy_targets := puavo-display-manager
+pylint_targets := puavo-display-manager puavodisplays
+
+check_mypy_targets := $(mypy_targets:%=check-mypy-%)
+check_pylint_targets := $(pylint_targets:%=check-pylint-%)
 
 .PHONY: all
 all: check test
@@ -25,8 +28,7 @@ installdirs :
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t '$(DESTDIR)$(bindir)'	\
-		puavo-display-manager 			\
-		puavo-set-max-bpc
+		puavo-display-manager
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-displays \
 		lib/*
@@ -50,8 +52,15 @@ $(check_mypy_targets): check-mypy-%: %
 .PHONY:
 check-mypy: $(check_mypy_targets)
 
+.PHONY: $(check_pylint_targets)
+$(check_pylint_targets): check-pylint-%: %
+	pylint $<
+
+.PHONY:
+check-pylint: $(check_pylint_targets)
+
 .PHONY: check
-check: check-mypy
+check: check-mypy check-pylint
 
 .PHONY: test
 test:
