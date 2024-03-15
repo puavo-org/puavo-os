@@ -18,9 +18,11 @@ Build-Depends: bundler | ruby-bundler,
  libsqlite3-dev,
  libssl-dev,
  libtool-bin,
+ mypy,
  pkg-config,
  pyqt5-dev-tools,
  python3,
+ python3-pytest,
  ruby,
  ruby-dev,
  ruby-minitest,
@@ -122,6 +124,18 @@ Depends: ${misc:Depends},
 Recommends: quilt
 Description: Puavo developer tools
  Scripts to make the life of a Opinsys developer easier
+ .
+
+Package: puavo-displays
+Architecture: all
+Depends: ${misc:Depends},
+ puavo-conf,
+ python3,
+ ruby,
+ ruby-json,
+ x11-xserver-utils
+Description: Puavo Displays
+  Includes various tools for taking care of your displays.
  .
 
 Package: puavo-ers
