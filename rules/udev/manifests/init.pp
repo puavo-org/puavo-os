@@ -4,6 +4,7 @@ class udev {
   include ::udev::hidraw
   include ::udev::hp_huawei_rules
   include ::udev::interface_renaming
+  include ::udev::pasco
   include ::udev::udevtrigger_workaround
   include ::udev::unblock_wifi
   include ::udev::vernier
