@@ -370,34 +370,33 @@ has_bios_boot_partition() {
 }
 
 lookup_windows_boot_partition() {
-  local diskdev windows_boot_partition
-  for diskdev in $(lsblk -d -n -l -o PATH); do
-    # "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" is Windows partition type
-    windows_boot_partition=$(
-      lsblk -n -l -o PARTTYPE,UUID "$diskdev" \
-        | awk '
-            BEGIN { efi_uuid = ""; legacy_uuid = ""; has_windows = 0 }
-            $1 == "0x7" {
-              has_windows = 1
-              if (!legacy_uuid) { legacy_uuid = $2 }
-            }
-            $1 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { efi_uuid = $2 }
-            $1 == "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" { has_windows = 1 }
-            END {
-              if (has_windows) {
-                if (efi_uuid && efi_uuid ~ /^[a-zA-Z0-9-]+$/) {
-                  print efi_uuid
-                } else if (legacy_uuid && legacy_uuid ~ /^[a-zA-Z0-9-]+$/) {
-                  print legacy_uuid
-                }
+  local diskdev
+  diskdev=$1
+
+  # "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" is Windows partition type.
+  # Restrict this check to $diskdev only, so that possible matching
+  # partitions in external drives do not mess up Windows boot.
+  # It might be nice to support dual boot with a separate disk for Windows,
+  # but this does do not do that.
+  lsblk -n -l -o PARTTYPE,UUID "$diskdev" \
+    | awk '
+        BEGIN { efi_uuid = ""; legacy_uuid = ""; has_windows = 0 }
+        $1 == "0x7" {
+          has_windows = 1
+          if (!legacy_uuid) { legacy_uuid = $2 }
+          }
+          $1 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { efi_uuid = $2 }
+          $1 == "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" { has_windows = 1 }
+          END {
+            if (has_windows) {
+              if (efi_uuid && efi_uuid ~ /^[a-zA-Z0-9-]+$/) {
+                print efi_uuid
+              } else if (legacy_uuid && legacy_uuid ~ /^[a-zA-Z0-9-]+$/) {
+                print legacy_uuid
               }
             }
-          ')
-    if [ -n "$windows_boot_partition" ]; then
-      printf "%s" "$windows_boot_partition"
-      return 0
-    fi
-  done
+          }
+        '
 }
 
 lookup_windows_chainloader() {
@@ -647,7 +646,8 @@ grub_m4_template                                              \
 
 windows_partition_path=/images/boot/.puavo_windows_partition
 if [ -n "$possible_windows_disk_dev" ]; then
-  windows_boot_partition=$(lookup_windows_boot_partition)
+  windows_boot_partition=$(
+    lookup_windows_boot_partition "$possible_windows_disk_dev")
   windows_chainloader=$(lookup_windows_chainloader "$possible_windows_disk_dev")
   if [ -n "$windows_boot_partition" -a -n "$windows_chainloader" ]; then
     printf "%s %s\n" "$windows_boot_partition" "$windows_chainloader" \
