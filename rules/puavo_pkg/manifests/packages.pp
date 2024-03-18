@@ -46,7 +46,6 @@ class puavo_pkg::packages {
 			, 'processing'
 			, 'puavo-firmware'
 			, 'robboscratch'
-			, 'robotmeshconnect'
 			, 'rustdesk'
 			, 'schoolstore-ti-widgets'
 			, 'scratux'
