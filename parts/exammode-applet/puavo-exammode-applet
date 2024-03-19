@@ -9,6 +9,7 @@ import json
 import os
 import signal
 import sys
+import syslog
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
@@ -25,9 +26,12 @@ _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-# XXX some kind of logging to syslog would be nice
-
 ICON_PATH = '/usr/share/icons/Adwaita/64x64/legacy/text-editor-symbolic.symbolic.png'
+
+def logmsg(priority, message):
+  print(message, file=sys.stderr)
+  syslog.syslog(priority, message)
+
 
 class PuavoExamModeApplet:
 
@@ -69,7 +73,8 @@ class PuavoExamModeApplet:
 
 
   def register_dbus_error_handler(self, dbusexception):
-    raise Exception('unexpected dbus error in register, that is bad')
+    raise Exception('unexpected dbus error in register, that is bad: %s' \
+                       % dbusexception)
 
 
   def update_menu(self):
@@ -111,7 +116,8 @@ class PuavoExamModeApplet:
 
 
   def start_session_dbus_error_handler(self, dbusexception):
-    raise Exception('unexpected dbus error in start session, that is bad')
+    raise Exception('unexpected dbus error in start session, that is bad: %s' \
+                       % dbusexception)
 
 
   def main(self):
@@ -144,10 +150,10 @@ class PuavoExamModeApplet:
           raise Exception('exam is missing a name')
         if type(e['name']) != str:
           raise Exception('exam name is not a string')
-        if not 'url' in e:
-          raise Exception('exam is missing an url')
-        if type(e['url']) != str:
-          raise Exception('exam url is not a string')
+        if not 'params' in e:
+          raise Exception('exam is missing exam parameters')
+        if type(e['params']) != dict:
+          raise Exception('exam parameters is not a dict')
 
       self.available_exams = examinfo['exams']
       self.update_menu()
@@ -158,8 +164,19 @@ class PuavoExamModeApplet:
       pass
 
 
+exitstatus = 0
+
+syslog.openlog('puavo-exammode-applet')
+
 applet = PuavoExamModeApplet()
 
-if __name__ == '__main__':
+try:
   signal.signal(signal.SIGINT, signal.SIG_DFL)
   applet.main()
+except Exception as e:
+  logmsg(syslog.LOG_ERR, 'unexpected error: %s' % e)
+  exitstatus = 1
+
+syslog.closelog()
+
+sys.exit(exitstatus)
