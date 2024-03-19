@@ -11,8 +11,12 @@ require 'uri'
 # XXX dependencies: ruby-gssapi ruby-http
 # XXX gssapi maybe through Gemfile?  (the deb package version has a bad bug)
 
+# XXX this should probably use some non-root account
+
+EXAMMODE_DIR = '/var/lib/puavo-exammode'
 EXAMUSER_UID = 990
 EXAMUSER_USERNAME = 'puavo-examuser'
+SESSION_JSON_PATH = File.join(EXAMMODE_DIR, 'session.json')
 
 puavoconf = Puavo::Conf.new
 $examomatic_url = puavoconf.get('puavo.exammode.examomatic.url')
@@ -23,8 +27,25 @@ $puavo_domain = IO.read('/etc/puavo/domain').chomp
 class ExamsListener
   def initialize(dbus, username, krb5ccname)
     @dbus = dbus
-    @available_exams = []
+    @available_exams = nil
     @listener = Thread.new { connect_and_wait(username, krb5ccname) }
+  end
+
+  # XXX
+  def fake_exams
+    {
+      'version' => '1.0',
+      'exams' => [
+        {
+          'id'   => 123,
+          'name' => 'An Exam On Puavo',
+          'params' => {
+            'url' => 'https://puavo.org',
+          },
+          'type' => 'single-window-webpage',
+        }
+      ]
+    }
   end
 
   def destroy
@@ -33,16 +54,7 @@ class ExamsListener
 
   def request_exams(username, krb5ccname)
     # XXX fake exams for now (we do not have a service yet for this)
-    return {
-      'version' => '1.0',
-      'exams' => [
-        {
-          'id'   => 123,
-          'name' => 'An Exam On Everything',
-          'url'  => 'https://puavo.org',
-        }
-      ]
-    }
+    return fake_exams
 
     ENV['KRB5CCNAME'] = krb5ccname
     headers = { 'Host' => $puavo_domain }
@@ -54,6 +66,14 @@ class ExamsListener
     http = http.auth("Negotiate #{ Base64.strict_encode64(token) }")
     r = http.get(uri)
     JSON.parse(r.body.to_s)
+
+    # XXX this should probably also check data validity
+  end
+
+  def get_exam_info_by_id(id)
+    valid_exam_list = @available_exams['exams'].select { |e| e['id'] == id }
+    raise 'could not find exam by id' unless valid_exam_list.count == 1
+    valid_exam_list.first
   end
 
   def connect_and_wait(username, krb5ccname)
@@ -72,9 +92,10 @@ class ExamsListener
         next
       end
 
+      # XXX this comparison should make a deep comparison of hash
       if @available_exams != current_exams then
-        @dbus.ExamsAvailable(current_exams.to_json)
         @available_exams = current_exams
+        @dbus.ExamsAvailable(current_exams.to_json)
       end
     end
   end
@@ -83,7 +104,49 @@ end
 class PuavoExammode < DBus::Object
   def initialize(*args)
     @exams_listener = nil
+    @locale = nil
+    @registration_done = false
     super
+  end
+
+  def write_exam_session_specs(exam_id)
+    raise 'session locale missing, has the user registered yet?' \
+      unless @locale && @registration_done
+
+    exam_info = @exams_listener.get_exam_info_by_id(exam_id)
+
+    session_data = {
+      'locale' => @locale,
+      'name'   => exam_info['name'],
+      'params' => exam_info['params'],
+      'type'   => exam_info['type'],
+    }
+
+    tmpfile = "#{ SESSION_JSON_PATH }.tmp"
+    File.write(tmpfile, session_data.to_json)
+    File.rename(tmpfile, SESSION_JSON_PATH)
+  end
+
+  def register(username, locale)
+    @locale = locale
+    @username = username
+    @registration_done = true
+    Syslog.log(Syslog::LOG_NOTICE, 'user %s (locale=%s) registered',
+               username, locale)
+  end
+
+  # XXX unclear if this can be used or if this is useful
+  # XXX puavo-exammode-applet could send Unregister message when it exits
+  def unregister()
+    unless @registration_done then
+      Syslog.log(Syslog::LOG_INFO, 'unregister called but no one is registered')
+      return
+    end
+
+    Syslog.log(Syslog::LOG_INFO, 'user %s (locale=%s) unregistered',
+               @username, @locale)
+    @locale = nil
+    @registration_done = false
   end
 
   dbus_interface 'org.puavo.Exam.exammode' do
@@ -91,16 +154,14 @@ class PuavoExammode < DBus::Object
 
     dbus_method :Register, 'in username:s, in locale:s, in krb5ccname:s' do
       |username, locale, krb5ccname|
-        @locale = locale
-
-        Syslog.log(Syslog::LOG_NOTICE, 'user %s (locale=%s) registered',
-                   username, locale)
-
+        register(username, locale)
         @exams_listener.destroy if @exams_listener
         @exams_listener = ExamsListener.new(self, username, krb5ccname)
     end
 
     dbus_method :StartSession, 'in examid:i' do |exam_id|
+      write_exam_session_specs(exam_id)
+
       if ! system('loginctl', 'lock-sessions') then
         Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
         raise 'error in locking sessions'
@@ -131,6 +192,11 @@ class PuavoExammode < DBus::Object
             raise 'could not start puavo-exammode session'
           end
 
+          begin
+            File.unlink(SESSION_JSON_PATH)
+          rescue Errno::ENOENT
+          end
+
           Syslog.log(Syslog::LOG_INFO, 'examination mode ended')
 
           if ! system('chvt', desktop_session_vt) then
@@ -141,6 +207,10 @@ class PuavoExammode < DBus::Object
           @exammode_session = nil
         end
       end
+    end
+
+    dbus_method :Unregister, '' do
+      unregister()
     end
   end
 end
