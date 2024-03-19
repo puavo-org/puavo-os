@@ -87,10 +87,11 @@ class PuavoExamModeApplet:
 
       self.menuitems = []
       for exam in self.available_exams:
-        # XXX should pick some info from menu
-        exam_choice = Gtk.MenuItem(label=exam)
+        exam_id = exam['id']
+        exam_name = exam['name']
+        exam_choice = Gtk.MenuItem(label=exam_name)
         exam_choice.set_sensitive(True)
-        exam_choice.connect('activate', self.choose_exam)
+        exam_choice.connect('activate', lambda w: self.choose_exam(exam_id, w))
         exam_choice.show()
         self.menu.append(exam_choice)
 
@@ -102,9 +103,9 @@ class PuavoExamModeApplet:
       self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.PASSIVE)
 
 
-  def choose_exam(self, widget):
+  def choose_exam(self, exam_id, widget):
     # XXX should pass exam id somehow (which one is chosen)
-    self.dbus_iface.StartSession(
+    self.dbus_iface.StartSession(exam_id,
       reply_handler=lambda: None,
       error_handler=self.start_session_dbus_error_handler)
 
@@ -117,9 +118,44 @@ class PuavoExamModeApplet:
     Gtk.main()
 
 
-  def exams_available(self, examinfo):
-    self.available_exams = json.loads(examinfo)
-    self.update_menu()
+  def exams_available(self, examinfo_json):
+    try:
+      examinfo = json.loads(examinfo_json)
+      if not 'version' in examinfo:
+        raise Exception('examinfo is missing version')
+      if type(examinfo['version']) != str:
+        raise Exception('examinfo version is not a string')
+      version = examinfo['version'].split('.')
+      if len(version) != 2:
+        raise Exception('examinfo version is not x.y')
+      if int(version[0]) > 1:
+       raise Exception('unsupported exams info version (%d | supported %d)' \
+                          % (version[0], 1))
+
+      if type(examinfo['exams']) != list:
+        raise Exception('no exams list')
+
+      for e in examinfo['exams']:
+        if not 'id' in e:
+          raise Exception('exam is missing an id')
+        if type(e['id']) != int:
+          raise Exception('exam id is not an integer')
+        if not 'name' in e:
+          raise Exception('exam is missing a name')
+        if type(e['name']) != str:
+          raise Exception('exam name is not a string')
+        if not 'url' in e:
+          raise Exception('exam is missing an url')
+        if type(e['url']) != str:
+          raise Exception('exam url is not a string')
+
+      self.available_exams = examinfo['exams']
+      self.update_menu()
+
+    except Exception as e:
+      print(e)
+      # XXX should log an error to syslog
+      pass
 
 
 applet = PuavoExamModeApplet()

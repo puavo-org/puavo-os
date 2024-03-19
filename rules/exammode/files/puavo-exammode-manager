@@ -1,9 +1,15 @@
 #!/usr/bin/ruby
 
 require 'dbus'
+require 'gssapi'
+require 'http'
 require 'json'
 require 'puavo/conf'
 require 'syslog'
+require 'uri'
+
+# XXX dependencies: ruby-gssapi ruby-http
+# XXX gssapi maybe through Gemfile?  (the deb package version has a bad bug)
 
 EXAMUSER_UID = 990
 EXAMUSER_USERNAME = 'puavo-examuser'
@@ -11,6 +17,8 @@ EXAMUSER_USERNAME = 'puavo-examuser'
 puavoconf = Puavo::Conf.new
 $examomatic_url = puavoconf.get('puavo.exammode.examomatic.url')
 puavoconf.close
+
+$puavo_domain = IO.read('/etc/puavo/domain').chomp
 
 class ExamsListener
   def initialize(dbus, username, krb5ccname)
@@ -23,13 +31,47 @@ class ExamsListener
     @listener.exit
   end
 
+  def request_exams(username, krb5ccname)
+    # XXX fake exams for now (we do not have a service yet for this)
+    return {
+      'version' => '1.0',
+      'exams' => [
+        {
+          'id'   => 123,
+          'name' => 'An Exam On Everything',
+          'url'  => 'https://puavo.org',
+        }
+      ]
+    }
+
+    ENV['KRB5CCNAME'] = krb5ccname
+    headers = { 'Host' => $puavo_domain }
+    uri = URI($examomatic_url)
+    http = HTTP.headers(headers)
+    gsscli = GSSAPI::Simple.new(uri.host, 'HTTP')
+    # XXX :delegate probably not needed with the examomatic
+    token = gsscli.init_context(nil, :delegate => true)
+    http = http.auth("Negotiate #{ Base64.strict_encode64(token) }")
+    r = http.get(uri)
+    JSON.parse(r.body.to_s)
+  end
+
   def connect_and_wait(username, krb5ccname)
     Syslog.log(Syslog::LOG_NOTICE, 'connecting websocket to %s',
                $examomatic_url)
-    # XXX should open a websocket to $exammomatic_url
+    # XXX should open a websocket to $exammomatic_url (instead of this)
     # XXX using username + krb5ccname and then receive current_exam from there
     loop do
-      current_exams = [ { 'url' => 'https://localhost:7777' } ]
+      # XXX instead of sleep, we should react to messages received on websocket
+      sleep 10
+      begin
+        current_exams = request_exams(username, krb5ccname)
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR, 'error in requesting exams information: %s',
+                   e.message)
+        next
+      end
+
       if @available_exams != current_exams then
         @dbus.ExamsAvailable(current_exams.to_json)
         @available_exams = current_exams
@@ -49,18 +91,16 @@ class PuavoExammode < DBus::Object
 
     dbus_method :Register, 'in username:s, in locale:s, in krb5ccname:s' do
       |username, locale, krb5ccname|
-        @username   = username
-        @locale     = locale
-        @krb5ccname = krb5ccname
+        @locale = locale
 
         Syslog.log(Syslog::LOG_NOTICE, 'user %s (locale=%s) registered',
                    username, locale)
 
         @exams_listener.destroy if @exams_listener
-        @exams_listener = ExamsListener.new(self, @username, $krb5ccname)
+        @exams_listener = ExamsListener.new(self, username, krb5ccname)
     end
 
-    dbus_method :StartSession, '' do
+    dbus_method :StartSession, 'in examid:i' do |exam_id|
       if ! system('loginctl', 'lock-sessions') then
         Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
         raise 'error in locking sessions'
