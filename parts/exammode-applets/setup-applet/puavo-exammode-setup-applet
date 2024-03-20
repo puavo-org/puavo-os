@@ -20,8 +20,8 @@ from gi.repository import GLib
 from gi.repository import Gtk 
 from gi.repository import Notify
 
-gettext.bindtextdomain('puavo-exammode-applet', '/usr/share/locale')
-gettext.textdomain('puavo-exammode-applet')
+gettext.bindtextdomain('puavo-exammode-setup-applet', '/usr/share/locale')
+gettext.textdomain('puavo-exammode-setup-applet')
 _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -33,16 +33,16 @@ def logmsg(priority, message):
   syslog.syslog(priority, message)
 
 
-class PuavoExamModeApplet:
+class PuavoExamModeSetupApplet:
 
   def __init__(self):
-    Notify.init('puavo-exammode-applet')
+    Notify.init('puavo-exammode-setup-applet')
 
     self.dbus_iface = self.get_dbus_iface()
     self.dbus_iface.connect_to_signal('ExamsAvailable', self.exams_available)
 
     self.indicator \
-      = AyatanaAppIndicator3.Indicator.new('puavo-exammode-applet',
+      = AyatanaAppIndicator3.Indicator.new('puavo-exammode-setup-applet',
           ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
     self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
 
@@ -166,9 +166,9 @@ class PuavoExamModeApplet:
 
 exitstatus = 0
 
-syslog.openlog('puavo-exammode-applet')
+syslog.openlog('puavo-exammode-setup-applet')
 
-applet = PuavoExamModeApplet()
+applet = PuavoExamModeSetupApplet()
 
 try:
   signal.signal(signal.SIGINT, signal.SIG_DFL)
