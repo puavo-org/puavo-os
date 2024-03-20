@@ -7,7 +7,7 @@ subdirs         := autopilot         \
                    desktop-applet    \
                    devscripts        \
                    ers               \
-                   exammode-applet   \
+                   exammode-applets  \
                    laptop-setup      \
                    ltsp              \
                    pam               \
