@@ -35,9 +35,10 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-desktop-applet
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-desktop-applet \
+		start-puavo-desktop-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		puavo-desktop-applet.desktop
+		start-puavo-desktop-applet.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
 		po/de/puavo-desktop-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
