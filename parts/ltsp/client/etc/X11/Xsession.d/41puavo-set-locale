@@ -4,6 +4,11 @@
 
 puavo_locale=''
 
+if [ "${EXAMMODE_SESSION:-}" = 'true' ]; then
+  puavo_locale=$(jq -r .locale /var/lib/puavo-exammode/session.json \
+                   2>/dev/null) || true
+fi
+
 # if a language specific Puavo Desktop session was chosen,
 # setup language and use the normal DESKTOP_SESSION
 case "$DESKTOP_SESSION" in
