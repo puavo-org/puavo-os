@@ -34,7 +34,6 @@ def logmsg(priority, message):
 
 
 class PuavoExamModeSetupApplet:
-
   def __init__(self):
     Notify.init('puavo-exammode-setup-applet')
 

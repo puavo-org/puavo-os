@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+if [ "${EXAMMODE_SESSION:-}" != 'true' ]; then
+  exit 0
+fi
+
+exec puavo-exammode-session-applet "$@"
