@@ -1,4 +1,4 @@
-SUBDIRS = setup-applet
+SUBDIRS = session-applet setup-applet
 
 .PHONY: all install clean
 all install clean:

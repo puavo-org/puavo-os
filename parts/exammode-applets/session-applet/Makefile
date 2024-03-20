@@ -9,12 +9,12 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: all
-all: po/fi/puavo-exammode-setup-applet.mo
+all: po/fi/puavo-exammode-session-applet.mo
 
-po/puavo-exammode-setup-applet.pot: puavo-exammode-setup-applet
+po/puavo-exammode-session-applet.pot: puavo-exammode-session-applet
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
 
-%.po: po/puavo-exammode-setup-applet.pot
+%.po: po/puavo-exammode-session-applet.pot
 	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
 	touch $@
 
@@ -22,7 +22,7 @@ po/puavo-exammode-setup-applet.pot: puavo-exammode-setup-applet
 	msgfmt $< --output-file $@
 
 .PHONY: i18nupdate
-i18nupdate: po/puavo-exammode-setup-applet.pot po/fi/puavo-exammode-setup-applet.po
+i18nupdate: po/puavo-exammode-session-applet.pot po/fi/puavo-exammode-session-applet.po
 
 .PHONY: installdirs
 installdirs:
@@ -32,12 +32,12 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-exammode-setup-applet \
-		start-puavo-exammode-setup-applet
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-exammode-session-applet \
+		start-puavo-exammode-session-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		start-puavo-exammode-setup-applet.desktop
+		start-puavo-exammode-session-applet.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
-		po/fi/puavo-exammode-setup-applet.mo
+		po/fi/puavo-exammode-session-applet.mo
 
 .PHONY: clean
 clean:
