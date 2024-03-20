@@ -2,12 +2,15 @@
 
 import dbus
 import dbus.mainloop.glib
+import fcntl
 import gettext
 import gi
 import json
+import os
 import signal
 import sys
 import syslog
+import time
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
@@ -24,12 +27,61 @@ _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-# XXX should change icon if we have a need for this
+# XXX should change icon if we have a need for this for the indicator
 ICON_PATH = '/usr/share/icons/Adwaita/64x64/legacy/text-editor-symbolic.symbolic.png'
+SESSION_PATH = '/var/lib/puavo-exammode/session.json'
 
 def logmsg(priority, message):
   print(message, file=sys.stderr)
   syslog.syslog(priority, message)
+
+
+class SingleWindowWebpage:
+  def __init__(self, params):
+    # XXX should verify parameters format?
+    self.url = params['url']
+    self.run_browser()
+
+
+  def run_browser(self):
+    logmsg(syslog.LOG_NOTICE, 'starting up browser to %s' % self.url)
+
+    cmd = [ '/usr/bin/chromium', '--app=%s' % self.url, '--start-maximized' ]
+
+    (pid, stdin, stdout, stderr) = GLib.spawn_async(cmd,
+      flags=GLib.SpawnFlags.DO_NOT_REAP_CHILD|GLib.SpawnFlags.STDERR_TO_DEV_NULL,
+      standard_input=True, standard_output=True)
+
+    self.browser_pid = pid
+
+    fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+    fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+    GLib.io_add_watch(stdout, GLib.IO_HUP|GLib.IO_IN,
+                      self.handle_browser, os.fdopen(stdout))
+
+
+  def handle_browser(self, fd, condition, channel):
+    try:
+      if condition & GLib.IO_IN:
+        channel.read()
+
+      if condition & GLib.IO_HUP:
+        channel.close()
+        (pid, status) = os.waitpid(self.browser_pid, 0)
+        if status != 0:
+          logmsg(syslog.LOG_ERR,
+                 'browser pid %d returned exit status %s' % (pid, status))
+        else:
+          logmsg(syslog.LOG_NOTICE, 'browser exited with success')
+
+        time.sleep(3)
+        self.run_browser()
+
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR, 'error when handling browser: %s' % e)
+      return False
+
+    return True
 
 
 class PuavoExamModeSessionApplet:
@@ -38,6 +90,11 @@ class PuavoExamModeSessionApplet:
 
     self.dbus_iface = self.get_dbus_iface()
 
+    # XXX should verify session format?
+    with open(SESSION_PATH) as file:
+      self.session = json.load(file)
+
+    # XXX is this needed?
     self.indicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-exammode-session-applet',
           ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
@@ -50,7 +107,15 @@ class PuavoExamModeSessionApplet:
     return dbus.Interface(dbusobj, dbus_interface='org.puavo.Exam.exammode')
 
 
+  def handle_session(self):
+    if self.session['type'] == 'single-window-webpage':
+      return SingleWindowWebpage(self.session['params'])
+
+    raise Exception('unsupported exam session type %s' % self.session['type'])
+
+
   def main(self):
+    self.session_handler = self.handle_session()
     Gtk.main()
 
 
