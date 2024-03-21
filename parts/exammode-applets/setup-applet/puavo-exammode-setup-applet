@@ -26,7 +26,7 @@ _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-ICON_PATH = '/usr/share/icons/Adwaita/64x64/legacy/text-editor-symbolic.symbolic.png'
+ICON_PATH = '/usr/share/icons/Adwaita/64x64/actions/document-edit-symbolic.symbolic.png'
 
 def logmsg(priority, message):
   print(message, file=sys.stderr)

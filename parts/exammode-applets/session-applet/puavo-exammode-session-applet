@@ -8,6 +8,7 @@ import gi
 import json
 import os
 import signal
+import subprocess
 import sys
 import syslog
 import time
@@ -27,8 +28,8 @@ _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-# XXX should change icon if we have a need for this for the indicator
-ICON_PATH = '/usr/share/icons/Adwaita/64x64/legacy/text-editor-symbolic.symbolic.png'
+ICON_PATH = '/usr/share/icons/Adwaita/64x64/actions/application-exit-symbolic.symbolic.png'
+
 SESSION_PATH = '/var/lib/puavo-exammode/session.json'
 
 def logmsg(priority, message):
@@ -95,11 +96,12 @@ class PuavoExamModeSessionApplet:
     with open(SESSION_PATH) as file:
       self.session = json.load(file)
 
-    # XXX is this needed?
     self.indicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-exammode-session-applet',
           ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
     self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+
+    self.setup_menu()
 
 
   def get_dbus_iface(self):
@@ -113,6 +115,26 @@ class PuavoExamModeSessionApplet:
       return SingleWindowWebpage(self.session['params'])
 
     raise Exception('unsupported exam session type %s' % self.session['type'])
+
+
+  def setup_menu(self):
+    self.menu = Gtk.Menu()
+
+    self.quit_button = Gtk.MenuItem(label=_tr('Quit exam'))
+    self.quit_button.set_sensitive(True)
+    self.quit_button.show()
+    self.quit_button.connect('activate', self.quit_session)
+    self.menu.append(self.quit_button)
+
+    self.indicator.set_menu(self.menu)
+    self.menu.show_all()
+
+
+  def quit_session(self, widget):
+    # XXX what if this fails?
+    # XXX should we communicate about this through dbus?
+    cmd = [ 'gnome-session-quit', '--force', '--logout' ]
+    subprocess.run(cmd)
 
 
   def main(self):
