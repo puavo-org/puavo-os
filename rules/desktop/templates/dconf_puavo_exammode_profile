@@ -9,6 +9,54 @@ show-desktop-icons=false
 enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm', 'dash-to-panel@jderose9.github.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-overview-search-entry@puavo.org', 'hide-panel-power-indicator@puavo.org', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'nohotcorner@azuri.free.fr', 'quickoverview@kirby_33@hotmail.fr', 'sound-output-device-chooser@kgshank.net', 'TopIcons@phocean.net', 'uparrows@puavo.org', 'user-theme@gnome-shell-extensions.gcampax.github.com']
 favorite-apps=@as []
 
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
+binding='<Super>space'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1]
+binding='<Alt>F1'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2]
+binding='<Primary><Alt>t'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3]
+binding='<Primary><Super>z'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4]
+binding='<Primary><Alt>l'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5]
+binding='Print'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6]
+binding='<Ctrl>Print'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7]
+binding='<Alt>Print'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom8]
+binding='<Ctrl><Alt>Print'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom9]
+binding='<Shift>Print'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10]
+binding='<Ctrl><Shift>Print'
+command='false'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom11]
+binding='<Meta>Print'
+command='false'
+
 [org/gnome/shell/extensions/dash-to-panel]
 animate-appicon-hover-animation-extent={'RIPPLE': 4, 'PLANK': 4, 'SIMPLE': 1}
 appicon-margin=0
