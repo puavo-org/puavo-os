@@ -8,3 +8,31 @@ show-desktop-icons=false
 [org/gnome/shell]
 enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm', 'dash-to-panel@jderose9.github.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-overview-search-entry@puavo.org', 'hide-panel-power-indicator@puavo.org', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'nohotcorner@azuri.free.fr', 'quickoverview@kirby_33@hotmail.fr', 'sound-output-device-chooser@kgshank.net', 'TopIcons@phocean.net', 'uparrows@puavo.org', 'user-theme@gnome-shell-extensions.gcampax.github.com']
 favorite-apps=@as []
+
+[org/gnome/shell/extensions/dash-to-panel]
+animate-appicon-hover-animation-extent={'RIPPLE': 4, 'PLANK': 4, 'SIMPLE': 1}
+appicon-margin=0
+appicon-padding=4
+available-monitors=[0]
+dot-position='BOTTOM'
+hide-overview-on-startup=true
+hotkeys-overlay-combo='TEMPORARILY'
+leftbox-padding=-1
+leftbox-size=0
+panel-anchors='{"0":"MIDDLE"}'
+panel-element-positions='{"0":[{"element":"showAppsButton","visible":false,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":false,"position":"stackedBR"},{"element":"systemMenu","visible":false,"position":"stackedBR"},{"element":"desktopButton","visible":false,"position":"stackedBR"}],"1":[{"element":"showAppsButton","visible":false,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":false,"position":"stackedBR"},{"element":"desktopButton","visible":false,"position":"stackedBR"}],"2":[{"element":"showAppsButton","visible":false,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":false,"position":"stackedBR"},{"element":"desktopButton","visible":false,"position":"stackedBR"}],"3":[{"element":"showAppsButton","visible":false,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":false,"position":"stackedBR"},{"element":"desktopButton","visible":false,"position":"stackedBR"}]}'
+panel-lengths='{"0":100}'
+panel-positions='{"0":"BOTTOM"}'
+panel-size=40
+panel-sizes='{"0":40}'
+primary-monitor=0
+show-show-apps-button=false
+show-showdesktop-button=false
+status-icon-padding=-1
+trans-dynamic-anim-target=0.94999999999999996
+trans-dynamic-distance=0
+trans-panel-opacity=0.40000000000000002
+trans-use-custom-opacity=true
+trans-use-dynamic-opacity=true
+tray-padding=-1
+window-preview-title-position='TOP'
