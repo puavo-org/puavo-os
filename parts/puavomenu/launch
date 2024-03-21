@@ -2,6 +2,10 @@
 
 set -eu
 
+if [ "${EXAMMODE_SESSION:-}" = 'true' ]; then
+  exit 0
+fi
+
 HOSTNAME=$(hostname)
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S.%N")
 CONF_DIR="${HOME}/.config/puavomenu"
