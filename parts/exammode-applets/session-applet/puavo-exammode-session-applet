@@ -101,8 +101,6 @@ class PuavoExamModeSessionApplet:
           ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
     self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
 
-    self.setup_menu()
-
 
   def get_dbus_iface(self):
     bus = dbus.SystemBus()
@@ -120,21 +118,10 @@ class PuavoExamModeSessionApplet:
   def setup_menu(self):
     self.menu = Gtk.Menu()
 
-    self.quit_button = Gtk.MenuItem(label=_tr('Quit exam'))
-    self.quit_button.set_sensitive(True)
-    self.quit_button.show()
-    self.quit_button.connect('activate', self.quit_session)
-    self.menu.append(self.quit_button)
+    # XXX add buttons here
 
     self.indicator.set_menu(self.menu)
     self.menu.show_all()
-
-
-  def quit_session(self, widget):
-    # XXX what if this fails?
-    # XXX should we communicate about this through dbus?
-    cmd = [ 'gnome-session-quit', '--force', '--logout' ]
-    subprocess.run(cmd)
 
 
   def main(self):
