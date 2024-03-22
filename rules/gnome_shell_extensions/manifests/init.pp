@@ -51,6 +51,7 @@ class gnome_shell_extensions {
     , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
+    , 'puavo-exammode@puavo.org'
     , 'puavomenu@puavo.org'
     , 'quick-settings-tweaks@qwreey'
     , 'screenkeyboardcontroller@puavo.org'

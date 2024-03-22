@@ -96,10 +96,11 @@ class PuavoExamModeSessionApplet:
     with open(SESSION_PATH) as file:
       self.session = json.load(file)
 
-    self.indicator \
-      = AyatanaAppIndicator3.Indicator.new('puavo-exammode-session-applet',
-          ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
-    self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+    # XXX not activating
+    # self.indicator \
+    #   = AyatanaAppIndicator3.Indicator.new('puavo-exammode-session-applet',
+    #       ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+    # self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
 
 
   def get_dbus_iface(self):
