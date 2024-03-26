@@ -1,15 +1,45 @@
 #!/bin/sh
 
-export DESKTOP_SESSION=puavo-desktop
+set -eu
 
-qiv -mx /usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg
+uid=$(id -u)
+run_dir="/run/user/${uid}"
+session_fifo="${run_dir}/exam-session-fifo"
 
-SYSSESSIONDIR=/etc/X11/Xsession.d
-SESSIONFILES=$(run-parts --list $SYSSESSIONDIR)
-if [ -n "$SESSIONFILES" ]; then
-  for SESSIONFILE in $SESSIONFILES; do
-    . $SESSIONFILE
-  done
+session_id=$(ps --no-headers -u "$uid" -o pid,sess \
+               | awk -v mypid="$$" '$1 == mypid { print $2; exit(0) }')
+if [ -z "$session_id" ]; then
+  echo 'could not determine session id' >&2
+  exit 1
 fi
 
-exec /usr/bin/gnome-session "$@"
+processes_to_kill() {
+  ps --no-headers -u puavo-examuser -o pid,sess \
+    | awk -v session_id="$session_id" '$2 != session_id { print $1 }'
+}
+
+mkfifo "$session_fifo"
+
+while true; do
+  session_action=$(cat "$session_fifo") || true
+  case "$session_action" in
+    prepare)
+      qiv -mx /usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg
+      ;;
+    start)
+      # XXX should check this is not already running
+      setsid /usr/lib/puavo-ltsp-client/exammode-gnome-session &
+      # XXX if we end up here unexpected we should make a note of that somehow
+      ;;
+    quit)
+      # XXX should send some message to exammode manager that exam session
+      # XXX is ending
+      processes_to_kill | xargs kill || true
+      sleep 4
+      processes_to_kill | xargs kill -9 || true
+      ;;
+    *)
+      echo "unknown session action ${session_action}" >&2
+      ;;
+  esac
+done
