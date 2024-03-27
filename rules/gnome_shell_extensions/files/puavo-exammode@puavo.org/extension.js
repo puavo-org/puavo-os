@@ -22,8 +22,11 @@ class ExamMenu extends PanelMenu.Button {
     this.add_child(icon);
 
     this.menu.addAction('Quit Exam', event => {
-      let cmd = [ '/usr/bin/gnome-session-quit', '--force', '--logout',
-                    '--no-prompt' ];
+      // XXX could there be a dbus-module to use instead of Util.spawn?
+      let cmd = [ '/usr/bin/dbus-send', '--dest=org.puavo.Exam',
+                    '--print-reply=literal', '--reply-timeout=30000',
+                    '--system', '/exammode',
+                    'org.puavo.Exam.exammode.QuitSession' ];
       Util.spawn(cmd);
     });
   }

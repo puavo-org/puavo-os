@@ -14,9 +14,14 @@ require 'uri'
 # XXX this should probably use some non-root account
 
 EXAMMODE_DIR = '/var/lib/puavo-exammode'
-EXAMUSER_UID = 990
+EXAMUSER_UID = 989
 EXAMUSER_USERNAME = 'puavo-examuser'
 SESSION_JSON_PATH = File.join(EXAMMODE_DIR, 'session.json')
+
+SESSION_CONTROL_PATH = File.join("/run/user/#{ EXAMUSER_UID }",
+                                 'exam-session-fifo')
+
+VT_NUMBER = 42
 
 puavoconf = Puavo::Conf.new
 $examomatic_url = puavoconf.get('puavo.exammode.examomatic.url')
@@ -109,6 +114,13 @@ class PuavoExammode < DBus::Object
     super
   end
 
+  def control_session(cmd)
+    # XXX what if this fails?
+    File.open(SESSION_CONTROL_PATH, 'w') do |ctrl_f|
+      ctrl_f.puts(cmd)
+    end
+  end
+
   def write_exam_session_specs(exam_id)
     raise 'session locale missing, has the user registered yet?' \
       unless @locale && @registration_done
@@ -121,7 +133,18 @@ class PuavoExammode < DBus::Object
       'params' => exam_info['params'],
       'type'   => exam_info['type'],
     }
+    write_session_specs(session_data)
+  end
 
+  def write_prepare_session_specs()
+    session_data = {
+      'locale' => @locale,
+      'type'   => 'prepare',
+    }
+    write_session_specs(session_data)
+  end
+
+  def write_session_specs(session_data)
     tmpfile = "#{ SESSION_JSON_PATH }.tmp"
     File.write(tmpfile, session_data.to_json)
     File.rename(tmpfile, SESSION_JSON_PATH)
@@ -149,14 +172,31 @@ class PuavoExammode < DBus::Object
     @registration_done = false
   end
 
+  def get_vt_number
+    begin
+      desktop_session_vt = %x(fgconsole).chomp
+      raise 'vt empty' if desktop_session_vt.empty?
+    rescue StandardError => e
+      errmsg = 'could not determine the current virtual console'
+      Syslog.log(Syslog::LOG_ERR, errmsg)
+      raise errmsg
+    end
+
+    return desktop_session_vt
+  end
+
   dbus_interface 'org.puavo.Exam.exammode' do
     dbus_signal :ExamsAvailable, 'in exams:s'
 
     dbus_method :Register, 'in username:s, in locale:s, in krb5ccname:s' do
       |username, locale, krb5ccname|
+        # XXX it should not be possible to do this in case there is an
+        # XXX ongoing exam session
         register(username, locale)
         @exams_listener.destroy if @exams_listener
         @exams_listener = ExamsListener.new(self, username, krb5ccname)
+        write_prepare_session_specs()
+        control_session('prepare')
     end
 
     dbus_method :StartSession, 'in examid:i' do |exam_id|
@@ -166,46 +206,39 @@ class PuavoExammode < DBus::Object
         Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
         raise 'error in locking sessions'
       end
-      sleep 3   # give time for gnome lock to activate (XXX sleep is not nice)
 
-      begin
-        desktop_session_vt = %x(fgconsole).chomp
-        raise 'vt empty' if desktop_session_vt.empty?
-      rescue StandardError => e
-        errmsg = 'could not determine the current virtual console'
-        Syslog.log(Syslog::LOG_ERR, errmsg)
-        raise errmsg
-      end
-
-      if @exammode_session then
+      if @desktop_session_vt then
         Syslog.log(Syslog::LOG_ERR,
           'tried to activate examination mode when it is already active')
         raise 'exammode session is already active'
       end
 
-      @exammode_session = Thread.new do
-        Syslog.log(Syslog::LOG_NOTICE, 'activating examination mode')
+      @desktop_session_vt = get_vt_number()
+      if ! system('/usr/bin/chvt', VT_NUMBER.to_s) then
+        Syslog.log(Syslog::LOG_ERR,
+                   'could not change virtual terminal to exam session')
+        raise 'error in switch terminal at exammode session start'
+      end
+      control_session('start')
+    end
+
+    dbus_method :QuitSession do
+      begin
+        control_session('quit')
+
         begin
-          # use restart in case it is active but not through us
-          if ! system('systemctl', 'restart', 'puavo-exammode-tty.service') then
-            Syslog.log(Syslog::LOG_ERR, 'error in activating examination mode')
-            raise 'could not start puavo-exammode session'
-          end
-
-          begin
-            File.unlink(SESSION_JSON_PATH)
-          rescue Errno::ENOENT
-          end
-
-          Syslog.log(Syslog::LOG_INFO, 'examination mode ended')
-
-          if ! system('chvt', desktop_session_vt) then
-            Syslog.log(Syslog::LOG_ERR, 'could not switch back to original vt')
-            raise 'could not return back to the original vt'
-          end
-        ensure
-          @exammode_session = nil
+          File.unlink(SESSION_JSON_PATH)
+        rescue Errno::ENOENT
         end
+
+        Syslog.log(Syslog::LOG_INFO, 'examination mode ended')
+
+        if ! system('chvt', @desktop_session_vt) then
+          Syslog.log(Syslog::LOG_ERR, 'could not switch back to original vt')
+          raise 'could not return back to the original vt'
+        end
+      ensure
+        @desktop_session_vt = nil
       end
     end
 

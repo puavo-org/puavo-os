@@ -24,6 +24,8 @@ while true; do
   session_action=$(cat "$session_fifo") || true
   case "$session_action" in
     prepare)
+      # XXX this might do nothing in case we have already prepared?
+      # XXX (with correct locale)
       qiv -mx /usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg
       ;;
     start)
@@ -32,8 +34,6 @@ while true; do
       # XXX if we end up here unexpected we should make a note of that somehow
       ;;
     quit)
-      # XXX should send some message to exammode manager that exam session
-      # XXX is ending
       processes_to_kill | xargs kill || true
       sleep 4
       processes_to_kill | xargs kill -9 || true
