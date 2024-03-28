@@ -38,6 +38,9 @@ class ExamsListener
 
   # XXX
   def fake_exams
+    return JSON.parse( IO.read('/state/fake_exams.json') )
+
+    # XXX should be something like this (in JSON)
     {
       'version' => '1.0',
       'exams' => [
