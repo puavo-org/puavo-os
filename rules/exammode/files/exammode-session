@@ -2,7 +2,7 @@
 
 set -eu
 
-loading_background_path='/usr/share/backgrounds/Night_lights_by_Alberto_Salvia_Novella.jpg'
+loading_background_path='/usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg'
 session_path='/var/lib/puavo-exammode/session.json'
 
 setup_loading_background() {
@@ -20,7 +20,7 @@ setup_loading_background() {
   convert "$loading_background_path" -pointsize 80 -font Verdana     \
           -fill white -undercolor 'rgba(0,0,0, 0.5)' -gravity center \
           -annotate 0 "$message" /tmp/exam_startup_background.jpg
-  qiv -x /tmp/exam_startup_background.jpg
+  qiv -mx /tmp/exam_startup_background.jpg
 }
 
 uid=$(id -u)
