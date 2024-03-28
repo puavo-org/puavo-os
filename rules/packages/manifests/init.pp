@@ -29,6 +29,7 @@ class packages {
     , 'puavo-desktop-applet'
     , 'puavo-devscripts'
     , 'puavo-ers'
+    , 'puavo-exammode-applets'
     , 'puavo-laptop-setup'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
