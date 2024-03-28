@@ -2,6 +2,27 @@
 
 set -eu
 
+loading_background_path='/usr/share/backgrounds/Night_lights_by_Alberto_Salvia_Novella.jpg'
+session_path='/var/lib/puavo-exammode/session.json'
+
+setup_loading_background() {
+  local lang message
+
+  lang=$(jq -r .locale "$session_path" | cut -c 1-2)
+  case "$lang" in
+    de) message='Beginn der Prüfung...'   ;;
+    en) message='Starting up the exam...' ;;
+    fi) message='Siirrytään koetilaan...' ;;
+    sv) message='Start av tentamen...'    ;;
+    *)  message='Starting up the exam...' ;;
+  esac
+
+  convert "$loading_background_path" -pointsize 80 -font Verdana     \
+          -fill white -undercolor 'rgba(0,0,0, 0.5)' -gravity center \
+          -annotate 0 "$message" /tmp/exam_startup_background.jpg
+  qiv -x /tmp/exam_startup_background.jpg
+}
+
 uid=$(id -u)
 run_dir="/run/user/${uid}"
 session_fifo="${run_dir}/exam-session-fifo"
@@ -24,9 +45,7 @@ while true; do
   session_action=$(cat "$session_fifo") || true
   case "$session_action" in
     prepare)
-      # XXX this might do nothing in case we have already prepared?
-      # XXX (with correct locale)
-      qiv -mx /usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg
+      setup_loading_background
       ;;
     start)
       # XXX should check this is not already running
