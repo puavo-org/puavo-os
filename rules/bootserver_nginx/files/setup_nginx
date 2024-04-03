@@ -104,3 +104,5 @@ mv /etc/nginx/sites-available/puavo-rest.tmp \
    /etc/nginx/sites-available/puavo-rest
 ln -fns /etc/nginx/sites-available/puavo-rest \
         /etc/nginx/sites-enabled/puavo-rest
+
+/usr/local/sbin/puavo-docker --setup-nginx-only
