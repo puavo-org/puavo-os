@@ -105,8 +105,12 @@ case "$nextcloud_running" in
     ;;
   false)
     ;;
+  null)
+    echo 'No Nextcloud container, skipping backup'
+    exit 0
+    ;;
   *)
-    echo "Could not determine Nextcloud container state" >&2
+    echo "Unknown Nextcloud container state: ${nextcloud_running}" >&2
     exit 1
     ;;
 esac
@@ -127,8 +131,8 @@ case "$postgres_running" in
     rm -f "$pg_dump_path"
     ;;
   *)
-    echo "Could not determine PostgreSQL container state" >&2
-    exit 1
+    echo 'Could not determine PostgreSQL state, presuming it is not running'
+    rm -f "$pg_dump_path"
     ;;
 esac
 
