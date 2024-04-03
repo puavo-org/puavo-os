@@ -82,7 +82,7 @@ end
 
 def setup_nginx_configuration(nextcloud_domain, collabora_domain, reload_nginx)
   cert_chain_path = File.join(CERTS_DIR, "#{ nextcloud_domain }-fullchain.pem")
-  cert_key_path = File.join(CERTS_DIR, "#{ nextcloud_domain }.key")
+  cert_key_path   = File.join(CERTS_DIR, "#{ nextcloud_domain }.key")
 
   raise "certificate file #{ cert_chain_path } is missing" \
     unless File.exists?(cert_chain_path)
@@ -90,10 +90,13 @@ def setup_nginx_configuration(nextcloud_domain, collabora_domain, reload_nginx)
   raise "certificate key #{ cert_key_path } is missing" \
     unless File.exists?(cert_key_path)
 
+  server_names = [ nextcloud_domain ]
+  server_names << collabora_domain if collabora_domain
+
   nginx_conf = <<EOF
 server {
     listen 80;
-    server_name #{ nextcloud_domain } #{ collabora_domain };
+    server_name #{ server_names.join(' ') };
 
     return 301 https://${host}${request_uri};
 }
@@ -127,6 +130,10 @@ server {
     access_log /var/log/nginx/nextcloud-access.log;
     error_log /var/log/nginx/nextcloud-error.log;
 }
+EOF
+
+  if collabora_domain then
+    nginx_conf += <<EOF
 
 server {
     listen 443 http2 ssl;
@@ -183,6 +190,8 @@ server {
     error_log /var/log/nginx/office-error.log;
 }
 EOF
+  end
+
   nginx_conf_path = '/etc/nginx/sites-available/nextcloud'
   tmp_nginx_conf_path = "#{ nginx_conf_path }.tmp"
   File.write(tmp_nginx_conf_path, nginx_conf)
@@ -235,9 +244,14 @@ status = 0
 collabora_domain = $puavoconf_values['puavo.collabora.domain']
 nextcloud_domain = $puavoconf_values['puavo.nextcloud.domain']
 
+if $puavoconf_values['puavo.docker.collabora.enabled'] != 'true' then
+  collabora_domain = nil
+end
+
 begin
   raise('no Nextcloud domain set') if nextcloud_domain.empty?
-  raise('no Collabora domain set') if collabora_domain.empty?
+  raise('no Collabora domain set') \
+    if !collabora_domain.nil? && collabora_domain.empty?
 rescue StandardError => e
   warn(e.message)
   exit(1)
@@ -367,14 +381,18 @@ rescue StandardError => e
   exit(1)
 end
 
-begin
-  collabora_env = docker_compose['services']['collabora']['environment'] || {}
-  collabora_env['server_name'] = collabora_domain
-  collabora_env['aliasgroup1'] = "https://#{ nextcloud_domain }"
-  docker_compose['services']['collabora']['environment'] = collabora_env
-rescue StandardError => e
-  warn("could not configure collabora for docker-compose: #{ e.message }")
-  exit(1)
+if collabora_domain then
+  begin
+    collabora_env = docker_compose['services']['collabora']['environment'] || {}
+    collabora_env['server_name'] = collabora_domain
+    collabora_env['aliasgroup1'] = "https://#{ nextcloud_domain }"
+    docker_compose['services']['collabora']['environment'] = collabora_env
+  rescue StandardError => e
+    warn("could not configure collabora for docker-compose: #{ e.message }")
+    exit(1)
+  end
+else
+  docker_compose['services'].delete('collabora')
 end
 
 begin
