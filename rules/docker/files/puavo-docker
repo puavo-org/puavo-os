@@ -435,7 +435,9 @@ begin
     user_filter         = '(|)'
   else
     objectclass_filter = Net::LDAP::Filter.eq('objectClass', 'posixAccount')
-    puavolocked_filter = Net::LDAP::Filter.eq('puavoLocked', 'FALSE')
+    # check that puavoLocked == FALSE or puavoLocked is missing
+    puavolocked_filter = Net::LDAP::Filter.eq('puavoLocked', 'FALSE') \
+                           | ~Net::LDAP::Filter.pres('puavoLocked')
     puavoschool_filters = \
       school_dn_list.map do |school_dn|
         Net::LDAP::Filter.eq('puavoSchool', Net::LDAP::Filter.escape(school_dn))
