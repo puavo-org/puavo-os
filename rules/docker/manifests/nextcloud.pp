@@ -22,6 +22,18 @@ class docker::nextcloud {
                  , File['/etc/puavo-docker/files/setup-nextcloud-docker'] ],
       source  => 'puppet:///modules/docker/Dockerfile.nextcloud';
 
+    '/etc/puavo-docker/files/art':
+      ensure => directory;
+
+    '/etc/puavo-docker/files/art/watercolorpaintingbluecloud_35649257.jpg':
+      source => 'puppet:///modules/docker/art/watercolorpaintingbluecloud_35649257.jpg';
+
+    '/etc/puavo-docker/files/icons':
+      ensure => directory;
+
+    '/etc/puavo-docker/files/icons/puavo-logo.png':
+      source => 'puppet:///modules/docker/icons/puavo-logo.png';
+
     '/etc/X11/Xsession.d/48puavo-set-nextcloud-topdomain':
       source => 'puppet:///modules/docker/48puavo-set-nextcloud-topdomain';
 

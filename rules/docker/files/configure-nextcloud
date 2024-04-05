@@ -55,6 +55,8 @@ fi
 location_countrycode=$(cat /puavo-nextcloud-config/location_countrycode \
                          2>/dev/null) || true
 office_domain=$(cat /puavo-nextcloud-config/office_domain 2>/dev/null) || true
+school_name=$(cat /puavo-nextcloud-config/school_name 2>/dev/null) || true
+school_url=$(cat /puavo-nextcloud-config/school_url 2>/dev/null) || true
 sharedir_root=$(cat /puavo-nextcloud-config/sharedir_root 2>/dev/null) || true
 trusted_proxies=$(cat /puavo-nextcloud-config/trusted_proxies 2>/dev/null) \
                     || true
@@ -79,6 +81,14 @@ occ app:enable user_ldap
 if ! occ app:getpath user_saml >/dev/null; then
   occ app:install user_saml
 fi
+
+# Make it clear this is not Nextcloud as is, this is Puavo Cloud.
+occ theming:config background /puavo-nextcloud/art/watercolorpaintingbluecloud_35649257.jpg
+occ theming:config logo       /puavo-nextcloud/icons/puavo-logo.png
+occ theming:config name       "$school_name"
+occ theming:config privacyUrl https://opinsys.fi/tietosuoja/
+occ theming:config slogan     'Puavo Cloud'
+occ theming:config url        "$school_url"
 
 # set server location
 occ config:app:set --value "$location_countrycode" privacy readableLocation

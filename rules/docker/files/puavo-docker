@@ -420,12 +420,20 @@ FileUtils.copy_file('/etc/krb5.conf',
                     File.join(CONFIG_DIR, 'krb5.conf'),
                     :preserve => true)
 
+school_name = 'No school'
+school_url  = 'https://puavo.org'
+
 school_cn_list = []
 begin
   puavoldap = PuavoLdap.new
   schools_served = puavoldap.filter_by_schools_served_by_this_server
-  school_cn_list = schools_served.map { |s| Array(s.cn).first }
-  school_dn_list = schools_served.map { |s| s.dn }
+  school_cn_list = schools_served.map { |s| Array(s.cn).first }.compact
+  school_dn_list = schools_served.map { |s| s.dn }.compact
+  school_names_list = schools_served.map { |s| Array(s.displayName).first } \
+                                    .compact
+  school_urls_list = schools_served.map do |s|
+                       Array(s.puavoSchoolHomePageURL).first
+                     end.compact
 
   if school_dn_list.empty? then
     # use "false" filter, nothing should match
@@ -434,6 +442,10 @@ begin
     login_filter        = '(|)'
     user_filter         = '(|)'
   else
+    school_name = school_names_list.join(' / ')
+    potential_school_url = school_urls_list.first
+    school_url = potential_school_url if potential_school_url
+
     objectclass_filter = Net::LDAP::Filter.eq('objectClass', 'posixAccount')
     # check that puavoLocked == FALSE or puavoLocked is missing
     puavolocked_filter = Net::LDAP::Filter.eq('puavoLocked', 'FALSE') \
@@ -458,6 +470,22 @@ begin
   write_config_file("#{ user_filter }\n",        'ldap_user_filter')
 rescue StandardError => e
   warn("could not determine ldap user filter for this server: #{ e.message }")
+  exit(1)
+end
+
+begin
+  write_config_file("#{ school_name }\n", 'school_name')
+rescue StandardError => e
+  warn("could not write school_name: #{ e.message }")
+  FileUtils.rm_f( File.join(CONFIG_DIR, 'school_name') )
+  exit(1)
+end
+
+begin
+  write_config_file("#{ school_url }\n", 'school_url')
+rescue StandardError => e
+  warn("could not write school_url: #{ e.message }")
+  FileUtils.rm_f( File.join(CONFIG_DIR, 'school_url') )
   exit(1)
 end
 
