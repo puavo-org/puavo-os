@@ -126,6 +126,7 @@ case "$(puavo-conf puavo.hosttype)" in
       /var/lib/bluetooth
       /var/lib/extrausers
       /var/lib/logrotate
+      /var/lib/munin
       /var/lib/puavo-desktop
       /var/lib/systemd
       /var/log
