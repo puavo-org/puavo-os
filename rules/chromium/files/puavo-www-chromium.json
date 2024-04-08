@@ -5,6 +5,9 @@
   "puavo.www.chromium.extensions": {
     "default": ""
   },
+  "puavo.www.chromium.extra_args": {
+    "default": "--enable-features=WebBluetooth"
+  },
   "puavo.www.chromium.pwa.forcelist": {
     "default": ""
   }
