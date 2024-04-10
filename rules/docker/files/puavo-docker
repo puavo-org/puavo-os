@@ -60,8 +60,155 @@ def get_container_versions()
   container_versions
 end
 
+def get_needed_puavoconf_values
+  # keep the puavo-conf database open only for a short time
+  puavoconf = Puavo::Conf.new
+  values_by_key = {}
+  keys = [ 'puavo.collabora.domain',
+           'puavo.hosttype',
+           'puavo.l10n.locale',
+           'puavo.nextcloud.domain',
+           'puavo.nextcloud.trusted_proxies' ]
+  keys += DEFAULT_CONTAINER_LIST.map { |c| "puavo.docker.#{ c }.enabled" }
+  keys += DEFAULT_CONTAINER_LIST.map { |c| "puavo.docker.#{ c }.version" }
+  keys.each { |k| values_by_key[k] = puavoconf.get(k) }
+  puavoconf.close()
+  values_by_key
+end
+
 def ldap_agent_dn(ldap_base)
   "uid=nextcloud,ou=System Accounts,#{ ldap_base }"
+end
+
+def setup_nginx_configuration(nextcloud_domain, collabora_domain, reload_nginx)
+  cert_chain_path = File.join(CERTS_DIR, "#{ nextcloud_domain }-fullchain.pem")
+  cert_key_path   = File.join(CERTS_DIR, "#{ nextcloud_domain }.key")
+
+  raise "certificate file #{ cert_chain_path } is missing" \
+    unless File.exists?(cert_chain_path)
+
+  raise "certificate key #{ cert_key_path } is missing" \
+    unless File.exists?(cert_key_path)
+
+  server_names = [ nextcloud_domain ]
+  server_names << collabora_domain if collabora_domain
+
+  nginx_conf = <<EOF
+server {
+    listen 80;
+    server_name #{ server_names.join(' ') };
+
+    return 301 https://${host}${request_uri};
+}
+
+server {
+    listen 443 http2 ssl;
+    server_name #{ nextcloud_domain };
+
+    ssl_certificate #{ cert_chain_path };
+    ssl_certificate_key #{ cert_key_path };
+
+    # https://docs.nextcloud.com/server/27/admin_manual/configuration_server/reverse_proxy_configuration.html
+
+    location / {
+        proxy_set_header HOST $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_pass http://#{ DOCKER_IP }:880$request_uri;
+
+        client_max_body_size 512M;
+    }
+
+    location /.well-known/carddav {
+        return 301 $scheme://$host/remote.php/dav;
+    }
+    location /.well-known/caldav {
+        return 301 $scheme://$host/remote.php/dav;
+    }
+
+    access_log /var/log/nginx/nextcloud-access.log;
+    error_log /var/log/nginx/nextcloud-error.log;
+}
+EOF
+
+  if collabora_domain then
+    nginx_conf += <<EOF
+
+server {
+    listen 443 http2 ssl;
+    server_name #{ collabora_domain };
+
+    ssl_certificate #{ cert_chain_path };
+    ssl_certificate_key #{ cert_key_path };
+
+    # static files
+    location ^~ /browser {
+        proxy_pass https://#{ DOCKER_IP }:9980;
+        proxy_set_header Host $http_host;
+    }
+
+    # WOPI discovery URL
+    location ^~ /hosting/discovery {
+        proxy_pass https://#{ DOCKER_IP }:9980;
+        proxy_set_header Host $http_host;
+    }
+
+    # Capabilities
+    location ^~ /hosting/capabilities {
+        proxy_pass https://#{ DOCKER_IP }:9980;
+        proxy_set_header Host $http_host;
+    }
+
+    # main websocket
+    location ~ ^/cool/(.*)/ws$ {
+        proxy_pass https://#{ DOCKER_IP }:9980;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $http_host;
+        proxy_read_timeout 36000s;
+    }
+
+    # download, presentation and image upload
+    location ~ ^/(c|l)ool {
+        proxy_pass https://#{ DOCKER_IP }:9980;
+        proxy_set_header Host $http_host;
+    }
+
+    # Admin Console websocket
+    location ^~ /cool/adminws {
+        proxy_pass https://#{ DOCKER_IP }:9980;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $http_host;
+        proxy_read_timeout 36000s;
+    }
+
+    location / { return 404; }
+
+    access_log /var/log/nginx/office-access.log;
+    error_log /var/log/nginx/office-error.log;
+}
+EOF
+  end
+
+  nginx_conf_path = '/etc/nginx/sites-available/nextcloud'
+  tmp_nginx_conf_path = "#{ nginx_conf_path }.tmp"
+  File.write(tmp_nginx_conf_path, nginx_conf)
+
+  if !File.exists?(nginx_conf_path) \
+    || !FileUtils.compare_file(nginx_conf_path, tmp_nginx_conf_path) then
+      File.rename(tmp_nginx_conf_path, nginx_conf_path)
+      File.unlink('/etc/nginx/sites-enabled/nextcloud') rescue Errno::ENOENT
+      File.symlink('../sites-available/nextcloud',
+                   '/etc/nginx/sites-enabled/nextcloud')
+      if reload_nginx then
+        system('service', 'nginx', 'reload') \
+          or raise('could not reload nginx configuration')
+      end
+  else
+    File.unlink(tmp_nginx_conf_path)
+  end
 end
 
 def write_config_file(data, name)
@@ -73,14 +220,52 @@ end
 
 raise('not running as root') unless Process.uid == 0
 
-puavoconf = Puavo::Conf.new
-hosttype = puavoconf.get('puavo.hosttype')
+begin
+  $puavoconf_values = get_needed_puavoconf_values()
+rescue StandardError => e
+  warn("could not lookup puavoconf value: #{ e.message }")
+  exit(1)
+end
 
 # Check hosttype to prevent some crazy accidents.
 # This really does require a bootserver.
-raise('hosttype is not bootserver') unless hosttype == 'bootserver'
+raise('hosttype is not bootserver') \
+  unless $puavoconf_values['puavo.hosttype'] == 'bootserver'
+
+reload_nginx = true
+setup_nginx_only = false
+if ARGV[0] == '--setup-nginx-only' then
+  reload_nginx = false
+  setup_nginx_only = true
+end
 
 status = 0
+
+collabora_domain = $puavoconf_values['puavo.collabora.domain']
+nextcloud_domain = $puavoconf_values['puavo.nextcloud.domain']
+
+if $puavoconf_values['puavo.docker.collabora.enabled'] != 'true' then
+  collabora_domain = nil
+end
+
+begin
+  raise('no Nextcloud domain set') if nextcloud_domain.empty?
+  raise('no Collabora domain set') \
+    if !collabora_domain.nil? && collabora_domain.empty?
+rescue StandardError => e
+  warn(e.message)
+  exit(1)
+end
+
+begin
+  setup_nginx_configuration(nextcloud_domain, collabora_domain, reload_nginx)
+rescue StandardError => e
+  warn("could not configure nginx: #{ e.message }")
+  exit(1)
+end
+
+exit(0) if setup_nginx_only == true
+
 status = 1 unless cleanup_docker_images()
 
 begin
@@ -121,7 +306,7 @@ end
 DEFAULT_CONTAINER_LIST.each do |container_name|
   begin
     puavoconf_var = "puavo.docker.#{ container_name }.version"
-    image_version = puavoconf.get(puavoconf_var)
+    image_version = $puavoconf_values[puavoconf_var]
     raise 'no image version set' if image_version.empty?
 
     if image_version != 'latest' \
@@ -151,7 +336,7 @@ end
 
 server_locale = nil
 begin
-  puavo_locale = puavoconf.get('puavo.l10n.locale')
+  puavo_locale = $puavoconf_values['puavo.l10n.locale']
   server_location = puavo_locale[0..1]
   raise 'location not two letters' unless server_location.length == 2
   server_locale = server_location
@@ -170,7 +355,7 @@ rescue StandardError => e
   exit(1)
 end
 
-def get_nextcloud_trusted_proxies(puavoconf)
+def get_nextcloud_trusted_proxies
   required_proxy_addresses \
     = Socket.getifaddrs.map do |iface|
         next unless iface.name.match(/^(inet|ltsp|wlan)\d+/) && iface.addr.ipv4?
@@ -178,14 +363,12 @@ def get_nextcloud_trusted_proxies(puavoconf)
       end.compact
 
   additional_trusted_proxies \
-    = puavoconf.get('puavo.nextcloud.trusted_proxies').split(' ')
+    = $puavoconf_values['puavo.nextcloud.trusted_proxies'].split(' ')
 
   required_proxy_addresses + additional_trusted_proxies
 end
 
 begin
-  nextcloud_domain = puavoconf.get('puavo.nextcloud.domain')
-  raise('no Nextcloud domain set') if nextcloud_domain.empty?
   nextcloud_env = docker_compose['services']['nextcloud']['environment']
   nextcloud_env['NEXTCLOUD_TRUSTED_DOMAINS'] = nextcloud_domain
   nextcloud_env['PUAVO_KERBEROS_REALM'] \
@@ -198,36 +381,25 @@ rescue StandardError => e
   exit(1)
 end
 
-begin
-  collabora_domain = puavoconf.get('puavo.collabora.domain')
-  raise('no Collabora domain set') if collabora_domain.empty?
-  collabora_env = docker_compose['services']['collabora']['environment'] || {}
-  collabora_env['server_name'] = collabora_domain
-  collabora_env['aliasgroup1'] = "https://#{ nextcloud_domain }"
-  docker_compose['services']['collabora']['environment'] = collabora_env
-rescue StandardError => e
-  warn("could not configure collabora for docker-compose: #{ e.message }")
-  exit(1)
+if collabora_domain then
+  begin
+    collabora_env = docker_compose['services']['collabora']['environment'] || {}
+    collabora_env['server_name'] = collabora_domain
+    collabora_env['aliasgroup1'] = "https://#{ nextcloud_domain }"
+    docker_compose['services']['collabora']['environment'] = collabora_env
+  rescue StandardError => e
+    warn("could not configure collabora for docker-compose: #{ e.message }")
+    exit(1)
+  end
+else
+  docker_compose['services'].delete('collabora')
 end
 
 begin
-  trusted_proxies = get_nextcloud_trusted_proxies(puavoconf).join(' ')
+  trusted_proxies = get_nextcloud_trusted_proxies().join(' ')
   write_config_file("#{ trusted_proxies }\n", 'trusted_proxies')
 rescue StandardError => e
   warn("could not write trusted proxies configuration file: #{ e.message }")
-  exit(1)
-end
-
-cert_chain_path = File.join(CERTS_DIR, "#{ nextcloud_domain }-fullchain.pem")
-cert_key_path = File.join(CERTS_DIR, "#{ nextcloud_domain }.key")
-
-unless File.exists?(cert_chain_path) then
-  warn("certificate file #{ cert_chain_path } is missing")
-  exit(1)
-end
-
-unless File.exists?(cert_key_path) then
-  warn("certificate key #{ cert_key_path } is missing")
   exit(1)
 end
 
@@ -248,12 +420,20 @@ FileUtils.copy_file('/etc/krb5.conf',
                     File.join(CONFIG_DIR, 'krb5.conf'),
                     :preserve => true)
 
+school_name = 'No school'
+school_url  = 'https://puavo.org'
+
 school_cn_list = []
 begin
   puavoldap = PuavoLdap.new
   schools_served = puavoldap.filter_by_schools_served_by_this_server
-  school_cn_list = schools_served.map { |s| Array(s.cn).first }
-  school_dn_list = schools_served.map { |s| s.dn }
+  school_cn_list = schools_served.map { |s| Array(s.cn).first }.compact
+  school_dn_list = schools_served.map { |s| s.dn }.compact
+  school_names_list = schools_served.map { |s| Array(s.displayName).first } \
+                                    .compact
+  school_urls_list = schools_served.map do |s|
+                       Array(s.puavoSchoolHomePageURL).first
+                     end.compact
 
   if school_dn_list.empty? then
     # use "false" filter, nothing should match
@@ -262,8 +442,14 @@ begin
     login_filter        = '(|)'
     user_filter         = '(|)'
   else
+    school_name = school_names_list.join(' / ')
+    potential_school_url = school_urls_list.first
+    school_url = potential_school_url if potential_school_url
+
     objectclass_filter = Net::LDAP::Filter.eq('objectClass', 'posixAccount')
-    puavolocked_filter = Net::LDAP::Filter.eq('puavoLocked', 'FALSE')
+    # check that puavoLocked == FALSE or puavoLocked is missing
+    puavolocked_filter = Net::LDAP::Filter.eq('puavoLocked', 'FALSE') \
+                           | ~Net::LDAP::Filter.pres('puavoLocked')
     puavoschool_filters = \
       school_dn_list.map do |school_dn|
         Net::LDAP::Filter.eq('puavoSchool', Net::LDAP::Filter.escape(school_dn))
@@ -288,6 +474,22 @@ rescue StandardError => e
 end
 
 begin
+  write_config_file("#{ school_name }\n", 'school_name')
+rescue StandardError => e
+  warn("could not write school_name: #{ e.message }")
+  FileUtils.rm_f( File.join(CONFIG_DIR, 'school_name') )
+  exit(1)
+end
+
+begin
+  write_config_file("#{ school_url }\n", 'school_url')
+rescue StandardError => e
+  warn("could not write school_url: #{ e.message }")
+  FileUtils.rm_f( File.join(CONFIG_DIR, 'school_url') )
+  exit(1)
+end
+
+begin
   if school_cn_list.empty? then
     FileUtils.rm_f(File.join(CONFIG_DIR, 'sharedir_root'))
   else
@@ -308,7 +510,7 @@ end
 
 collabora_enabled = false
 office_domain_path = File.join(CONFIG_DIR, 'office_domain')
-if puavoconf.get('puavo.docker.collabora.enabled') == 'true' \
+if $puavoconf_values['puavo.docker.collabora.enabled'] == 'true' \
   && !collabora_domain.empty? then
     tmp_office_domain_path = "#{ office_domain_path }.tmp"
     File.write(tmp_office_domain_path, "#{ collabora_domain }\n")
@@ -336,131 +538,6 @@ rescue StandardError => e
   exit(1)
 end
 
-# setup nginx configuration
-begin
-  nginx_conf = <<EOF
-server {
-    listen 80;
-    server_name #{ nextcloud_domain } #{ collabora_domain };
-
-    return 301 https://${host}${request_uri};
-}
-
-server {
-    listen 443 http2 ssl;
-    server_name #{ nextcloud_domain };
-
-    ssl_certificate #{ cert_chain_path };
-    ssl_certificate_key #{ cert_key_path };
-
-    # https://docs.nextcloud.com/server/27/admin_manual/configuration_server/reverse_proxy_configuration.html
-
-    location / {
-        proxy_set_header HOST $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
-        proxy_pass http://#{ DOCKER_IP }:880$request_uri;
-
-        client_max_body_size 512M;
-    }
-
-    location /.well-known/carddav {
-        return 301 $scheme://$host/remote.php/dav;
-    }
-    location /.well-known/caldav {
-        return 301 $scheme://$host/remote.php/dav;
-    }
-
-    access_log /var/log/nginx/nextcloud-access.log;
-    error_log /var/log/nginx/nextcloud-error.log;
-}
-
-server {
-    listen 443 http2 ssl;
-    server_name #{ collabora_domain };
-
-    ssl_certificate #{ cert_chain_path };
-    ssl_certificate_key #{ cert_key_path };
-
-    # static files
-    location ^~ /browser {
-	proxy_pass https://#{ DOCKER_IP }:9980;
-	proxy_set_header Host $http_host;
-    }
-
-    # WOPI discovery URL
-    location ^~ /hosting/discovery {
-	proxy_pass https://#{ DOCKER_IP }:9980;
-	proxy_set_header Host $http_host;
-    }
-
-    # Capabilities
-    location ^~ /hosting/capabilities {
-	proxy_pass https://#{ DOCKER_IP }:9980;
-	proxy_set_header Host $http_host;
-    }
-
-    # main websocket
-    location ~ ^/cool/(.*)/ws$ {
-	proxy_pass https://#{ DOCKER_IP }:9980;
-	proxy_set_header Upgrade $http_upgrade;
-	proxy_set_header Connection "Upgrade";
-	proxy_set_header Host $http_host;
-	proxy_read_timeout 36000s;
-    }
-
-    # download, presentation and image upload
-    location ~ ^/(c|l)ool {
-	proxy_pass https://#{ DOCKER_IP }:9980;
-	proxy_set_header Host $http_host;
-    }
-
-    # Admin Console websocket
-    location ^~ /cool/adminws {
-	proxy_pass https://#{ DOCKER_IP }:9980;
-	proxy_set_header Upgrade $http_upgrade;
-	proxy_set_header Connection "Upgrade";
-	proxy_set_header Host $http_host;
-	proxy_read_timeout 36000s;
-    }
-
-    location / { return 404; }
-
-    access_log /var/log/nginx/office-access.log;
-    error_log /var/log/nginx/office-error.log;
-}
-EOF
-  nginx_conf_path = '/etc/nginx/sites-available/nextcloud'
-  tmp_nginx_conf_path = "#{ nginx_conf_path }.tmp"
-  File.write(tmp_nginx_conf_path, nginx_conf)
-
-  if !File.exists?(nginx_conf_path) \
-    || !FileUtils.compare_file(nginx_conf_path, tmp_nginx_conf_path) then
-      File.rename(tmp_nginx_conf_path, nginx_conf_path)
-      File.unlink('/etc/nginx/sites-enabled/nextcloud') rescue Errno::ENOENT
-      File.symlink('../sites-available/nextcloud',
-                   '/etc/nginx/sites-enabled/nextcloud')
-      system('service', 'nginx', 'reload') \
-        or raise('could not reload nginx configuration')
-  else
-    File.unlink(tmp_nginx_conf_path)
-  end
-rescue StandardError => e
-  warn("could not configure nginx: #{ e.message }")
-  exit(1)
-end
-
-# Close puavoconf database before running operations that take a longer time.
-containers_expected_to_run = {}
-startup_container_list.each do |container_name|
-  puavoconf_var = "puavo.docker.#{ container_name }.enabled"
-  containers_expected_to_run[container_name] \
-    = (puavoconf.get(puavoconf_var) == 'true')
-end
-
-puavoconf.close()
-
 if backup_before_docker_ops then
   if !system('/usr/local/sbin/puavo-backup-docker') then
     warn('could not backup docker state before installing/updating')
@@ -469,7 +546,8 @@ if backup_before_docker_ops then
 end
 
 startup_container_list.each do |container_name|
-  if containers_expected_to_run[container_name] then
+  puavoconf_var = "puavo.docker.#{ container_name }.enabled"
+  if $puavoconf_values[puavoconf_var] == 'true' then
     puts("> starting up container #{ container_name }")
     unless system('docker-compose', '--file', DOCKER_COMPOSE_PATH,
                     '--project-name', 'puavo', 'up', '-d',

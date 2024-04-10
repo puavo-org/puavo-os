@@ -9,6 +9,9 @@
     "description": "A space-separated list of Chromium/Chrome extensions to setup",
     "typehint": "string"
   },
+  "puavo.www.chromium.extra_args": {
+    "default": "--enable-features=WebBluetooth"
+  },
   "puavo.www.chromium.pwa.forcelist": {
     "default": "",
     "description": "A space-separated list of Chromium/Chrome PWA urls to setup",
