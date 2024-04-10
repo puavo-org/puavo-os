@@ -1,30 +1,39 @@
-dn: olcDatabase=hdb,cn=config
+dn: olcDatabase=mdb,cn=config
 objectClass: olcDatabaseConfig
-objectClass: olcHdbConfig
-olcDatabase: hdb
+objectClass: olcMdbConfig
+olcDatabase: mdb
 olcSuffix: <%= @suffix %>
 olcRootDN: uid=admin,<%= @suffix %>
-olcDbConfig: set_cachesize 0 10485760 0
-olcDbConfig: set_lg_bsize 2097512
-olcDbConfig: set_flags DB_LOG_AUTOREMOVE
-olcDbIndex: sambaSID pres,eq
-olcDbIndex: sambaSIDList pres,eq
-olcDbIndex: sambaGroupType pres,eq
-olcDbIndex: member,memberUid pres,eq
-olcDbIndex: puavoSchool pres,eq
-olcDbIndex: puavoId pres,eq
-olcDbIndex: puavoTag pres,eq
-olcDbIndex: puavoDeviceType pres,eq
-olcDbIndex: puavoHostname pres,eq,sub
-olcDbIndex: displayName,puavoEduPersonReverseDisplayName pres,eq,sub
-olcDbIndex: uid pres,eq
-olcDbIndex: krbPrincipalName pres,eq
-olcDbIndex: cn,sn,mail,givenName pres,eq,approx,sub
-olcDbIndex: objectClass eq
-olcDbIndex: entryUUID eq
-olcDbIndex: entryCSN eq
 olcLastMod: TRUE
-olcDbCheckpoint: 512 30
+olcDbCheckpoint: 64 5
+olcDbMaxReaders: 4096
+olcDbMaxSize: 40000000000
+olcDbIndex: cn eq,sub
+olcDbIndex: creatorsName eq
+olcDbIndex: displayName sub
+olcDbIndex: entryCSN eq
+olcDbIndex: gidNumber eq
+olcDbIndex: givenName sub
+olcDbIndex: homeDirectory eq
+olcDbIndex: krbPrincipalName eq
+olcDbIndex: member eq
+olcDbIndex: memberUid eq
+olcDbIndex: objectClass eq
+olcDbIndex: puavoAdminOfSchool eq
+olcDbIndex: puavoDevicePrimaryUser eq
+olcDbIndex: puavoDeviceType eq
+olcDbIndex: puavoEduGroupType eq
+olcDbIndex: puavoEduPersonAffiliation eq
+olcDbIndex: puavoExternalId eq
+olcDbIndex: puavoHostname eq
+olcDbIndex: puavoId eq
+olcDbIndex: puavoPrinterQueue eq
+olcDbIndex: puavoSchoolAdmin eq
+olcDbIndex: puavoSchool eq
+olcDbIndex: puavoServiceDomain eq
+olcDbIndex: puavoWirelessPrinterQueue eq
+olcDbIndex: sn sub
+olcDbIndex: uid eq,sub
 olcSyncRepl: rid=<%= "%03d" % @rid %> provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist interval=00:00:00:05 retry="15 +" timeout=30 starttls=critical tls_cacert=/etc/ssl/certs/puavo-ca.crt schemachecking=off scope=sub
 olcUpdateRef: ldap://<%= @master_server %>
 olcDbNosync: TRUE
