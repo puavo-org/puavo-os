@@ -623,6 +623,7 @@ class packages {
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
+    , 'gnome-shell-extension-bluetooth-quick-connect'
     , 'gnome-sushi'
     , 'gnome-system-log'
     , 'gnome-system-monitor'
