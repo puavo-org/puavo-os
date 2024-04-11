@@ -821,7 +821,10 @@ class packages {
     [ 'arc-theme'
     , 'deepin-icon-theme'
     , 'faenza-icon-theme'
-    , 'obsidian-icon-theme' ]:
+    , 'obsidian-icon-theme'
+    , 'yaru-theme-gnome-shell'
+    , 'yaru-theme-gtk'
+    , 'yaru-theme-icon' ]:
       tag => [ 'tag_themes', 'tag_puavo', ];
 
    'openboard':
