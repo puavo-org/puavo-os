@@ -196,7 +196,7 @@ name='Yaru-blue'
 
 [org/gnome/shell/extensions/quick-settings-tweaks]
 input-always-show=true
-list-buttons='[{"name":"SystemItem","label":null,"visible":true},{"name":"OutputStreamSlider","label":null,"visible":false},{"name":"InputStreamSlider","la>
+list-buttons='[{"name":"SystemItem","label":null,"visible":true},{"name":"OutputStreamSlider","label":null,"visible":false},{"name":"InputStreamSlider","label":null,"visible":false},{"name":"St_BoxLayout","label":null,"visible":true},{"name":"BrightnessItem","label":null,"visible":true},{"name":"NMWiredToggle","label":null,"visible":true},{"name":"NMWirelessToggle","label":null,"visible":true},{"name":"NMModemToggle","label":null,"visible":true},{"name":"NMBluetoothToggle","label":null,"visible":true},{"name":"NMVpnToggle","label":null,"visible":true},{"name":"BluetoothToggle","label":null,"visible":false},{"name":"PowerProfilesToggle","label":null,"visible":false},{"name":"NightLightToggle","label":null,"visible":true},{"name":"DarkModeToggle","label":null,"visible":true},{"name":"RfkillToggle","label":null,"visible":false},{"name":"RotationToggle","label":null,"visible":false},{"name":"DndQuickToggle","label":null,"visible":true},{"name":"MediaSection","label":null,"visible":false},{"name":"Notifications","label":null,"visible":false}]'
 notifications-enabled=false
 user-removed-buttons=['DarkModeToggle']
 
