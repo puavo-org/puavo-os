@@ -180,7 +180,7 @@ overrides={'Gtk/ShellShowsAppMenu': <0>, 'Gtk/ShellShowsMenubar': <0>, 'Gtk/Deco
 antialiasing='rgba'
 
 [org/gnome/shell]
-enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'bluetooth-quick-connect@bjarosze.gmail.com', 'BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm', 'dash-to-panel@jderose9.github.com', 'ding@rastersoft.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-overview-search-entry@puavo.org', 'hide-panel-power-indicator@puavo.org', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'nohotcorner@azuri.free.fr', 'puavomenu@puavo.org', 'quickoverview@kirby_33@hotmail.fr', 'show-desktop@l300lvl.tk', 'sound-output-device-chooser@kgshank.net', 'TopIcons@phocean.net', 'uparrows@puavo.org', 'user-theme@gnome-shell-extensions.gcampax.github.com']
+enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'bluetooth-quick-connect@bjarosze.gmail.com', 'BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm', 'dash-to-panel@jderose9.github.com', 'ding@rastersoft.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-overview-search-entry@puavo.org', 'hide-panel-power-indicator@puavo.org', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'nohotcorner@azuri.free.fr', 'puavomenu@puavo.org', 'quickoverview@kirby_33@hotmail.fr', 'quick-settings-tweaks@qwreey', 'show-desktop@l300lvl.tk', 'sound-output-device-chooser@kgshank.net', 'TopIcons@phocean.net', 'uparrows@puavo.org', 'user-theme@gnome-shell-extensions.gcampax.github.com']
 
 [org/gnome/shell/extensions/ding]
 show-network-volumes=true
@@ -193,6 +193,12 @@ tray-pos='center'
 
 [org/gnome/shell/extensions/user-theme]
 name='Yaru-blue'
+
+[org/gnome/shell/extensions/quick-settings-tweaks]
+input-always-show=true
+list-buttons='[{"name":"SystemItem","label":null,"visible":true},{"name":"OutputStreamSlider","label":null,"visible":false},{"name":"InputStreamSlider","la>
+notifications-enabled=false
+user-removed-buttons=['DarkModeToggle']
 
 [org/gnome/shell/overrides]
 attach-modal-dialogs=false
