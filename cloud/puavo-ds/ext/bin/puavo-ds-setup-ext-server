@@ -82,6 +82,7 @@ conn.bind(@binddn, @bindpw) do
       end
     end
 
+    @db_index = 1
     rid = 1
 
     suffixes.each do |suffix|
@@ -99,8 +100,12 @@ conn.bind(@binddn, @bindpw) do
         e.vals("olcAccess").each do |acl|
           tempfile.puts "olcAccess: #{acl}"
         end
-
         tempfile.puts
+
+        tempfile.puts parse_erb('lastbind_overlay.ldif.erb')
+        tempfile.puts
+
+        @db_index += 1
 
         `mkdir -p #{@directory}`
         `chown openldap.openldap #{@directory}`

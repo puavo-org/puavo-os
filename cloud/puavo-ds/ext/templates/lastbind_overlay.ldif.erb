@@ -1,0 +1,7 @@
+dn: olcOverlay={0}lastbind,olcDatabase={<%= @db_index %>}mdb,cn=config
+objectClass: olcLastBindConfig
+objectClass: olcOverlayConfig
+objectClass: top
+olcOverlay: {0}lastbind
+olcLastBindPrecision: 3600
+olcLastBindForwardUpdates: TRUE
