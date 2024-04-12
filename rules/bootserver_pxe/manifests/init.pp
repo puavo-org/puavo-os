@@ -1,5 +1,6 @@
 class bootserver_pxe {
   include ::packages
+  include bootserver_pxe::generate_grub_pxe
 
   define tftpexport($filedir) {
     $filename = $title
@@ -51,6 +52,21 @@ class bootserver_pxe {
     'pxelinux.0':
       filedir => '/usr/lib/PXELINUX',
       require => Package['pxelinux'];
+
+    ### Grub ###
+
+    [ 'grub-pxe-i386.0' ]:
+      filedir => '/usr/lib/grub/pxe',
+      require => Package['grub-pc'];
+
+    [ 'efi32/grub-pxe-i386.efi' ]:
+      filedir => '/usr/lib/grub/pxe',
+      require => Package['grub-efi-ia32-bin'];
+
+    [ 'efi64/grub-pxe-x64.efi' ]:
+      filedir => '/usr/lib/grub/pxe',
+      require => Package['grub-efi-amd64-bin'];
+
   }
 
   file {
