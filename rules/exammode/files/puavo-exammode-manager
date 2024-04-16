@@ -1,15 +1,15 @@
 #!/usr/bin/ruby
 
+# XXX dependencies: ruby-gssapi ruby-http
+# XXX gssapi maybe through Gemfile?  (the deb package version has a bad bug)
+
 require 'dbus'
-require 'gssapi'
-require 'http'
+# XXX require 'gssapi'
+# XXX require 'http'
 require 'json'
 require 'puavo/conf'
 require 'syslog'
 require 'uri'
-
-# XXX dependencies: ruby-gssapi ruby-http
-# XXX gssapi maybe through Gemfile?  (the deb package version has a bad bug)
 
 # XXX this should probably use some non-root account
 
