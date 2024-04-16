@@ -29,6 +29,10 @@ class exammode {
     '/etc/X11/Xsession.d/10puavo-set-exammode-session-quirks':
       source => 'puppet:///modules/exammode/10puavo-set-exammode-session-quirks';
 
+    '/usr/lib/puavo-ltsp-client/exammode-gnome-session':
+      mode   => '0755',
+      source => 'puppet:///modules/exammode/exammode-gnome-session';
+
     '/usr/lib/puavo-ltsp-client/exammode-session':
       mode   => '0755',
       source => 'puppet:///modules/exammode/exammode-session';
