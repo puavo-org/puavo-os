@@ -33,7 +33,25 @@ puavo_version=$(jq -r .version puavo/info.json)
 export DEBEMAIL='Puavo Org <dev@opinsys.fi>'
 
 lsb_distribution=$(lsb_release -cs 2>/dev/null)
-dch -v "$puavo_version" -D "$lsb_distribution" --force-distribution ''
+dch -v "$puavo_version" -D "$lsb_distribution" --force-distribution '' \
+  "Automatic build for puavo-os."
+
+# +buildonce builds for different architectures (library packages)
+# must have matching timestamps in changelog file
+timestamp=$(jq -r .timestamp puavo/info.json)
+if [ -n "$timestamp" -a "$timestamp" != 'null' ]; then
+  awk -v timestamp="$timestamp" '
+    BEGIN { found = 0 }
+    /Puavo Org/ {
+      if (!found) {
+        $0 = " -- Puavo Org <dev@opinsys.fi>  " timestamp
+        found = 1
+      }
+    }
+    { print }
+  ' debian/changelog > debian/changelog.tmp
+  mv debian/changelog.tmp debian/changelog
+fi
 
 if [ -e puavo/modify-debian ]; then
   puavo/modify-debian
