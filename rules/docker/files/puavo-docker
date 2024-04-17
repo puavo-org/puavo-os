@@ -430,12 +430,16 @@ school_cn_list = []
 begin
   puavoldap = PuavoLdap.new
   schools_served = puavoldap.filter_by_schools_served_by_this_server
-  school_cn_list = schools_served.map { |s| Array(s.cn).first }.compact
+  school_cn_list \
+    = schools_served.map { |s| cn = s.cn rescue nil; Array(cn).first }.compact
   school_dn_list = schools_served.map { |s| s.dn }.compact
-  school_names_list = schools_served.map { |s| Array(s.displayName).first } \
-                                    .compact
+  school_names_list = schools_served.map do |s|
+                        displayName = s.displayName rescue nil
+                        Array(displayName).first
+                      end.compact
   school_urls_list = schools_served.map do |s|
-                       Array(s.puavoSchoolHomePageURL).first
+                       url = s.puavoSchoolHomePageURL rescue nil
+                       Array(url).first
                      end.compact
 
   if school_dn_list.empty? then
