@@ -581,7 +581,7 @@ loop do
     control.delete_unmanaged_paths()
     Process.waitpid(notifier_pid)
 
-  rescue Net::LDAP::LdapError => e
+  rescue Net::LDAP::Error => e
     exception_msg = "Error in accessing LDAP: #{ e.message }"
   rescue StandardError => e
     exception_msg = "Unknown error: #{ e.message }"
