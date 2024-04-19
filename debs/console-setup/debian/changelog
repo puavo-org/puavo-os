@@ -1,3 +1,10 @@
+console-setup (1.221-0+puavo1) bookworm; urgency=medium
+
+  * Fix console-setup tmpfile race,
+    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1050160.
+
+ -- Puavo Org <devk@opinsys.fi>  Fri, 19 Apr 2024 11:47:28 +0300
+
 console-setup (1.221) unstable; urgency=medium
 
   * Team upload.

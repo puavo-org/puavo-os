@@ -2,7 +2,8 @@
 
 _pkgs_cloud := krb5 openldap puavo-ds puavo-os
 _pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := cups                   \
+_pkgs_ports := console-setup          \
+               cups                   \
                cups-filters           \
                gnome-control-center   \
                gnome-network-displays \
