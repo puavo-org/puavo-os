@@ -80,9 +80,10 @@ def ldap_agent_dn(ldap_base)
   "uid=nextcloud,ou=System Accounts,#{ ldap_base }"
 end
 
-def setup_nginx_configuration(nextcloud_domain, collabora_domain, reload_nginx)
-  cert_chain_path = File.join(CERTS_DIR, "#{ nextcloud_domain }-fullchain.pem")
-  cert_key_path   = File.join(CERTS_DIR, "#{ nextcloud_domain }.key")
+def setup_nginx_configuration(primary_nc_domain, nc_domains_list,
+                              collabora_domain, reload_nginx)
+  cert_chain_path = File.join(CERTS_DIR, "#{ primary_nc_domain }-fullchain.pem")
+  cert_key_path   = File.join(CERTS_DIR, "#{ primary_nc_domain }.key")
 
   raise "certificate file #{ cert_chain_path } is missing" \
     unless File.exists?(cert_chain_path)
@@ -90,7 +91,7 @@ def setup_nginx_configuration(nextcloud_domain, collabora_domain, reload_nginx)
   raise "certificate key #{ cert_key_path } is missing" \
     unless File.exists?(cert_key_path)
 
-  server_names = [ nextcloud_domain ]
+  server_names = nc_domains_list
   server_names << collabora_domain if collabora_domain
 
   nginx_conf = <<EOF
@@ -103,7 +104,7 @@ server {
 
 server {
     listen 443 http2 ssl;
-    server_name #{ nextcloud_domain };
+    server_name #{ nc_domains_list.join(' ') };
 
     ssl_certificate #{ cert_chain_path };
     ssl_certificate_key #{ cert_key_path };
@@ -241,15 +242,16 @@ end
 
 status = 0
 
-collabora_domain = $puavoconf_values['puavo.collabora.domain']
-nextcloud_domain = $puavoconf_values['puavo.nextcloud.domain']
+collabora_domain  = $puavoconf_values['puavo.collabora.domain']
+nc_domains_list   = $puavoconf_values['puavo.nextcloud.domain'].split
+primary_nc_domain = nc_domains_list.first
 
 if $puavoconf_values['puavo.docker.collabora.enabled'] != 'true' then
   collabora_domain = nil
 end
 
 begin
-  raise('no Nextcloud domain set') if nextcloud_domain.empty?
+  raise('no Nextcloud domains set') if nc_domains_list.empty?
   raise('no Collabora domain set') \
     if !collabora_domain.nil? && collabora_domain.empty?
 rescue StandardError => e
@@ -258,7 +260,8 @@ rescue StandardError => e
 end
 
 begin
-  setup_nginx_configuration(nextcloud_domain, collabora_domain, reload_nginx)
+  setup_nginx_configuration(primary_nc_domain, nc_domains_list,
+                            collabora_domain, reload_nginx)
 rescue StandardError => e
   warn("could not configure nginx: #{ e.message }")
   exit(1)
@@ -370,7 +373,7 @@ end
 
 begin
   nextcloud_env = docker_compose['services']['nextcloud']['environment']
-  nextcloud_env['NEXTCLOUD_TRUSTED_DOMAINS'] = nextcloud_domain
+  nextcloud_env['NEXTCLOUD_TRUSTED_DOMAINS'] = nc_domains_list.join(' ')
   nextcloud_env['PUAVO_KERBEROS_REALM'] \
     = File.read('/etc/puavo/kerberos/realm').chomp
   nextcloud_env['PUAVO_LDAP_AGENT_DN'] = ldap_agent_dn(ldap_base)
@@ -385,7 +388,7 @@ if collabora_domain then
   begin
     collabora_env = docker_compose['services']['collabora']['environment'] || {}
     collabora_env['server_name'] = collabora_domain
-    collabora_env['aliasgroup1'] = "https://#{ nextcloud_domain }"
+    collabora_env['aliasgroup1'] = "https://#{ primary_nc_domain }"
     docker_compose['services']['collabora']['environment'] = collabora_env
   rescue StandardError => e
     warn("could not configure collabora for docker-compose: #{ e.message }")
@@ -427,12 +430,16 @@ school_cn_list = []
 begin
   puavoldap = PuavoLdap.new
   schools_served = puavoldap.filter_by_schools_served_by_this_server
-  school_cn_list = schools_served.map { |s| Array(s.cn).first }.compact
+  school_cn_list \
+    = schools_served.map { |s| cn = s.cn rescue nil; Array(cn).first }.compact
   school_dn_list = schools_served.map { |s| s.dn }.compact
-  school_names_list = schools_served.map { |s| Array(s.displayName).first } \
-                                    .compact
+  school_names_list = schools_served.map do |s|
+                        displayName = s.displayName rescue nil
+                        Array(displayName).first
+                      end.compact
   school_urls_list = schools_served.map do |s|
-                       Array(s.puavoSchoolHomePageURL).first
+                       url = s.puavoSchoolHomePageURL rescue nil
+                       Array(url).first
                      end.compact
 
   if school_dn_list.empty? then
@@ -528,13 +535,13 @@ begin
   unless File.exists?(nextcloud_keytab_path) then
     FileUtils.rm_f("#{ nextcloud_keytab_path }.tmp")
     system('kadmin.local', '-q',
-           "ktadd -norandkey -k #{ nextcloud_keytab_path }.tmp HTTP/#{ nextcloud_domain }")
+           "ktadd -norandkey -k #{ nextcloud_keytab_path }.tmp HTTP/#{ primary_nc_domain }")
     File.rename("#{ nextcloud_keytab_path }.tmp", nextcloud_keytab_path)
   end
   FileUtils.chmod(0600, nextcloud_keytab_path)
 rescue StandardError => e
   warn("could not write #{ nextcloud_keytab_path }: #{ e.message }")
-  warn("perhaps HTTP/#{ nextcloud_domain } principal does not exist?")
+  warn("perhaps HTTP/#{ primary_nc_domain } principal does not exist?")
   exit(1)
 end
 
