@@ -29,6 +29,7 @@ install: bin/thumb installdirs
 		bin/dpkg-diff-img \
 		bin/makethumbs \
 		bin/puavo-img-chroot \
+		bin/remove-usb-device \
 		bin/thumb
 
 .PHONY: clean
