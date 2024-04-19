@@ -283,6 +283,11 @@
     "description": "Enable/disable NetworkManager service",
     "typehint": "bool"
   },
+  "puavo.service.nfs-client.enabled": {
+    "default": "false",
+    "description": "Enable/disable nfs-client services",
+    "typehint": "bool"
+  },
   "puavo.service.nfs-server.enabled": {
     "default": "false",
     "description": "Enable/disable nfs-server service",

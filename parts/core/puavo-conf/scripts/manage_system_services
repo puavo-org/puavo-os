@@ -178,6 +178,15 @@ set services {
         -> /lib/systemd/system/NetworkManager-wait-online.service
     }}
 
+  { nfs-client {
+      /etc/systemd/system/multi-user.target.wants/nfs-client.target
+        -> /lib/systemd/system/nfs-client.target
+      /etc/systemd/system/multi-user.target.wants/rpcbind.service
+        -> /lib/systemd/system/rpcbind.service
+      /etc/systemd/system/remote-fs.target.wants/nfs-client.target
+        -> /lib/systemd/system/nfs-client.target
+    }}
+
   { nfs-server {
       /etc/systemd/system/multi-user.target.wants/nfs-server.service
         -> /lib/systemd/system/nfs-server.service
