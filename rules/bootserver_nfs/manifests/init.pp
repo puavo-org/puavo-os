@@ -7,6 +7,12 @@ class bootserver_nfs {
 
     '/etc/default/nfs-kernel-server':
       content => template('bootserver_nfs/etc_default_nfs-kernel-server');
+
+    '/etc/systemd/system/nfsdcld.service.d':
+      ensure => directory;
+
+    '/etc/systemd/system/nfsdcld.service.d/create_statedir.conf':
+      content => template('bootserver_nfs/create_statedir.conf');
   }
 
   ::puavo_conf::script {
