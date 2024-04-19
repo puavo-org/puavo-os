@@ -1,0 +1,1493 @@
+# THIS FILE IS GENERATED AUTOMATICALLY FROM THE D-I PO MASTER FILES
+# The master files can be found under packages/po/
+#
+# DO NOT MODIFY THIS FILE DIRECTLY: SUCH CHANGES WILL BE LOST
+#
+# Norwegian Nynorsk translation of debian-installer.
+# Copyright (C) 2003–2010 Software in the Public Interest, Inc.
+# This file is distributed under the same license as debian-installer.
+#
+# Håvard Korsvoll <korsvoll@skulelinux.no>, 2004, 2005, 2006, 2007, 2008.
+# Eirik U. Birkeland <eirbir@gmail.com>, 2010.
+# Allan Nordhøy <epost@anotheragency.no>, 2017.
+# Alexander Jansen <bornxlo@gmail.com>, 2018.
+# aujawindar <eivind.odegard@sogn.no>, 2022.
+#
+# Translations from iso-codes:
+#   Alastair McKinstry <mckinstry@computer.org>, 2001.
+#   Free Software Foundation, Inc., 2001, 2004.
+#   Håvard Korsvoll <korsvoll@gmail.com>, 2004,2006, 2007.
+#   Karl Ove Hufthammer <karl@huftis.org>, 2003-2004, 2006. (New translation done from scratch.).
+#   Kjartan Maraas  <kmaraas@gnome.org>, 2001.
+#   Roy-Magne Mo <rmo@sunnmore.net>, 2001.
+#   Tobias Quathamer <toddy@debian.org>, 2007.
+#     Translations taken from ICU SVN on 2007-09-09
+msgid ""
+msgstr ""
+"Project-Id-Version: nn\n"
+"Report-Msgid-Bugs-To: console-setup@packages.debian.org\n"
+"POT-Creation-Date: 2020-10-28 20:01+0000\n"
+"PO-Revision-Date: 2023-05-17 23:53+0000\n"
+"Last-Translator: Yngve Spjeld-Landro <l10n@landro.net>\n"
+"Language-Team: Norwegian Nynorsk <i18n-nn@lister.ping.uio.no>\n"
+"Language: nn\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#. Type: text
+#. Description
+#. :sl3:
+#: ../console-setup.templates:2001
+msgid "Do not change the boot/kernel font"
+msgstr "Endra ikkje oppstarts-/kjerneskrifta"
+
+#. Type: text
+#. Description
+#. :sl3:
+#: ../console-setup.templates:3001
+msgid "Let the system select a suitable font"
+msgstr "La systemet velje ein passande skrifttype"
+
+#. Type: text
+#. Description
+#. Used in the font size question like this: "12x24, framebuffer only"
+#. :sl3:
+#: ../console-setup.templates:4001
+msgid "framebuffer only"
+msgstr "berre framebuffer"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Arabic"
+msgstr ". Arabisk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Armenian"
+msgstr "# Armensk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Cyrillic - KOI8-R and KOI8-U"
+msgstr "# Kyrillisk – KOI8-R og KOI8-U"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Cyrillic - non-Slavic languages"
+msgstr "# Kyrillisk – ikkje-slaviske språk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Cyrillic - non-Slavic languages (for blind users)"
+msgstr ". Kyrillisk – ikkje-slaviske språk (for blinde brukarar)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Cyrillic - Slavic languages (also Bosnian and Serbian Latin)"
+msgstr ""
+"# Kyrillisk – slaviske språk (også bosnisk og serbisk med det latinske "
+"alfabetet)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Cyrillic - Slavic languages (for blind users)"
+msgstr ". Kyrillisk – slaviske språk (for blinde brukarar)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Ethiopic"
+msgstr ". Etiopisk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Georgian"
+msgstr "# Georgisk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Greek"
+msgstr "# Gresk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Greek (for blind users)"
+msgstr ". Gresk (for blinde brukarar)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Hebrew"
+msgstr "# Hebraisk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Lao"
+msgstr "# Laotisk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Latin1 and Latin5 - western Europe and Turkic languages"
+msgstr "# Latin1 og Latin5 – Vest-Europa og tyrkiske språk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Latin2 - central Europe and Romanian"
+msgstr "# Latin2 – Sentral-Europa og rumensk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Latin3 and Latin8 - Chichewa; Esperanto; Irish; Maltese and Welsh"
+msgstr "# Latin3 og Latin8 – chichewa, esperanto, irsk, maltesisk og walisisk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Latin7 - Lithuanian; Latvian; Maori and Marshallese"
+msgstr "# Latin7 – litauisk, latvisk, maori og marshallesisk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Latin - Vietnamese"
+msgstr ". Latin – vietnamesisk"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Thai"
+msgstr "# Thai"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Combined - Latin; Slavic Cyrillic; Hebrew; basic Arabic"
+msgstr ""
+". Kombinert – det latinske alfabetet, det slavisk-kyrilliske, det hebraiske "
+"og det grunnleggjande arabiske"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Combined - Latin; Slavic Cyrillic; Greek"
+msgstr ""
+". Kombinert – det latinske alfabetet, det slavisk-kyrilliske og det greske"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Combined - Latin; Slavic and non-Slavic Cyrillic"
+msgstr ""
+". Kombinert – det latinske alfabetet, det slavisk-kyrilliske og det ikkje-"
+"slavisk-kyrilliske"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "Guess optimal character set"
+msgstr "Giss optimalt teiknsett"
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:5002
+msgid "Character set to support:"
+msgstr "Teiknkodingar som skal støttast:"
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:5002
+msgid ""
+"Please choose the character set that should be supported by the console font."
+msgstr "Vel teiknkodinga som skrifta i konsollen skal støtta."
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:5002
+msgid ""
+"If you don't use a framebuffer, the choices that start with \".\" will "
+"reduce the number of available colors on the console."
+msgstr ""
+"Viss du ikkje brukar biletmellomlager, vil vala som byrjar med «.» minska "
+"talet på tilgjengelege fargar i konsollen."
+
+#. Type: select
+#. Description
+#. The languages with many non-ASCII letters should not use formatted
+#. lists.  If you decide to use formatted lists then keep the lines
+#. relatively short.
+#. :sl3:
+#: ../console-setup.templates:6001
+msgid "Font for the console:"
+msgstr "Skrift i konsollen:"
+
+#. Type: select
+#. Description
+#. The languages with many non-ASCII letters should not use formatted
+#. lists.  If you decide to use formatted lists then keep the lines
+#. relatively short.
+#. :sl3:
+#: ../console-setup.templates:6001
+msgid ""
+"\"VGA\" has a traditional appearance and has medium coverage of "
+"international scripts. \"Fixed\" has a simplistic appearance and has better "
+"coverage of international scripts. \"Terminus\" may help to reduce eye "
+"fatigue, though some symbols have a similar aspect which may be a problem "
+"for programmers."
+msgstr ""
+"«VGA» har ein tradisjonell utsjånad og middels dekning av internasjonale "
+"teikn. «Fixed» har ein enkel utsjånad og betre støtte for internasjonale "
+"teikn. «Terminus» kan gjera til at du ikkje så fort vert sliten i auga, men "
+"nokre teikn kan vera ganske like og såleis skapa problem for utviklarar."
+
+#. Type: select
+#. Description
+#. The languages with many non-ASCII letters should not use formatted
+#. lists.  If you decide to use formatted lists then keep the lines
+#. relatively short.
+#. :sl3:
+#: ../console-setup.templates:6001
+msgid ""
+"If you prefer a bold version of the Terminus font, choose either "
+"TerminusBold (if you use a framebuffer) or TerminusBoldVGA (otherwise)."
+msgstr ""
+"Viss du føretrekk ein halvfeit versjon av Terminus-skrifta, vel du anten "
+"TerminusBold (viss du brukar mellomlagring av bilete) eller TerminusBoldVGA "
+"(viss ikkje)."
+
+#. Type: select
+#. Description
+#. :sl3:
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:7001 ../console-setup.templates:8001
+msgid "Font size:"
+msgstr "Skriftstorleik:"
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:7001
+msgid ""
+"Please select the size of the font for the console. For reference, the font "
+"used when the computer boots has size 8x16."
+msgstr ""
+"Vel storleik på skrifta i konsollen. Til samanlikning har skrifta som vert "
+"brukt i maskinoppstarten storleik 8x16."
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:8001
+msgid ""
+"Please select the size of the font for the console.  Some font sizes require "
+"framebuffer."
+msgstr ""
+"Vel storleik på skrifta i konsollen. Somme skriftstorleikar krev framebuffer."
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:9001
+msgid "Encoding to use on the console:"
+msgstr "Teiknkoding som skal brukast i konsollen:"
+
+#. Type: text
+#. Description
+#. Main menu item. Please keep below 55 columns
+#. :sl1:
+#: ../keyboard-configuration.templates:2001
+msgid "Configure the keyboard"
+msgstr "Set opp tastaturet"
+
+#. Type: text
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:3001
+msgid "Other"
+msgstr "Anna"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:4001
+msgid "Keyboard model:"
+msgstr "Tastaturoppsett:"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:4001
+msgid "Please select the model of the keyboard of this machine."
+msgstr "Vel kva tastaturtype denne maskina har."
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:5001
+msgid "Country of origin for the keyboard:"
+msgstr "Opphavleg land for dette tastaturet:"
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:5001
+msgid ""
+"The layout of keyboards varies per country, with some countries having "
+"multiple common layouts. Please select the country of origin for the "
+"keyboard of this computer."
+msgstr ""
+"Tastaturutforminga varierer frå land til land, der nokre land har fleire "
+"vanlege oppsett. Vel opphavleg land for tastaturet på denne maskina."
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:6001
+msgid "Keyboard layout:"
+msgstr "Tastaturoppsett:"
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:6001
+msgid "Please select the layout matching the keyboard for this machine."
+msgstr "Vel utforminga som stemmer med tastaturet på denne maskina."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:7001
+msgid "Keep the current keyboard layout in the configuration file?"
+msgstr "Halde på noverande tastaturoppsett i konfigurasjonsfila?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:7001
+msgid ""
+"The current keyboard layout in the configuration file /etc/default/keyboard "
+"is defined as XKBLAYOUT=\"${XKBLAYOUT}\" and XKBVARIANT=\"${XKBVARIANT}\"."
+msgstr ""
+"Det gjeldande tastaturoppsettet i oppsettfila /etc/default/keyboard er "
+"definert som XKBLAYOUT=\"${XKBLAYOUT}\" og XKBVARIANT=\"${XKBVARIANT}\"."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:7001
+msgid ""
+"Please choose whether you want to keep it. If you choose this option, no "
+"questions about the keyboard layout will be asked and the current "
+"configuration will be preserved."
+msgstr ""
+"Vel om du vil behalda det. Om du vel dette, så vil du ikkje få nokon "
+"spørsmål om tastaturoppsettet og den gjeldande innstillinga vert teken vare "
+"på."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:8001
+msgid "Keep default keyboard layout (${XKBLAYOUTVARIANT})?"
+msgstr "Hald på standard tastaturoppsett (${XKBLAYOUTVARIANT})?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:8001
+msgid ""
+"The default value for the keyboard layout is XKBLAYOUT=\"${XKBLAYOUT}\" and "
+"XKBVARIANT=\"${XKBVARIANT}\".  This default value is based on the currently "
+"defined language/region and the settings in /etc/X11/xorg.conf."
+msgstr ""
+"Standardverdien for tastaturutforminga er XKBLAYOUT=\"${XKBLAYOUT}\" og "
+"XKBVARIANT=\"${XKBVARIANT}\". Denne standardverdien er basert på gjeldande "
+"definert språk/region og innstillingane i /etc/X11/xorg.conf."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:8001
+msgid ""
+"Please choose whether you want to keep it. If you choose this option, no "
+"questions about the keyboard layout will be asked."
+msgstr ""
+"Vel om du vil behalda det. Om du vel å behalda, så vil du ikkje få nokon "
+"spørsmål om tastaturoppsettet."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:9001
+msgid "Keep current keyboard options in the configuration file?"
+msgstr "Behalda noverande tastaturval i konfigurasjonsfila?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:9001
+msgid ""
+"The current keyboard options in the configuration file /etc/default/keyboard "
+"are defined as XKBOPTIONS=\"${XKBOPTIONS}\"."
+msgstr ""
+"Dei gjeldande tastaturvala i oppsettfila /etc/default/keyboard er definerte "
+"som XKBOPTIONS=\"${XKBOPTIONS}\"."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:9001
+msgid ""
+"If you choose to keep these options, no questions about the keyboard options "
+"will be asked."
+msgstr ""
+"Om du vel å behalda desse vala, så vil du ikkje få nokon spørsmål om "
+"tastaturvala."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:10001
+msgid "Keep default keyboard options (${XKBOPTIONS})?"
+msgstr "Hald på standard tastaturval (${XKBOPTIONS})?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:10001
+msgid ""
+"The default value for the options of the keyboard layout is XKBOPTIONS="
+"\"${XKBOPTIONS}\".  It is based on the currently defined language/region and "
+"the settings in /etc/X11/xorg.conf."
+msgstr ""
+"Standardverdien for vala for tastaturutforminga er XKBOPTIONS="
+"\"${XKBOPTIONS}\". Den er basert på gjeldande definert språk/region og "
+"innstillingane i /etc/X11/xorg.conf."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:10001
+msgid ""
+"If you choose to keep it, no questions about the keyboard options will be "
+"asked."
+msgstr ""
+"Om du vel å behalda det, så vil du ikkje få nokon spørsmål om tastaturvala."
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:14001
+msgid "Caps Lock"
+msgstr "Caps Lock"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Right Alt (AltGr)"
+msgstr "Høgre Alt (AltGr)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Right Control"
+msgstr "Høgre Ctrl"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Right Shift"
+msgstr "Høgre Shift"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Right Logo key"
+msgstr "Høgre logotast"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Menu key"
+msgstr "Menytast"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Alt+Shift"
+msgstr "Alt + Shift"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Control+Shift"
+msgstr "Ctrl + Shift"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Control+Alt"
+msgstr "Ctrl + Alt"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Alt+Caps Lock"
+msgstr "Alt + Caps Lock"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Left Control+Left Shift"
+msgstr "Venste Ctrl + Venstre Shift"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+msgid "Left Alt"
+msgstr "Venstre Alt"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Left Control"
+msgstr "Venstre Ctrl"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Left Shift"
+msgstr "Venstre Shift"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Left Logo key"
+msgstr "Venstre logotast"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Scroll Lock key"
+msgstr "Scroll Lock tast"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "No toggling"
+msgstr "Inga skifting"
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:11002
+msgid "Method for toggling between national and Latin mode:"
+msgstr "Metode for å skifte mellom nasjonal- og latin-modus:"
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:11002
+msgid ""
+"You will need a way to toggle the keyboard between the national layout and "
+"the standard Latin layout."
+msgstr ""
+"Du treng ein måte å skifte tastaturet mellom nasjonal utforming og standard "
+"latinsk utforming."
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:11002
+msgid ""
+"Right Alt or Caps Lock keys are often chosen for ergonomic reasons (in the "
+"latter case, use the combination Shift+Caps Lock for normal Caps toggle). Alt"
+"+Shift is also a popular combination; it will however lose its usual "
+"behavior in Emacs and other programs that use it for specific needs."
+msgstr ""
+"Høgre Alt eller Caps Lock blir ofte brukt av ergonomiske grunnar (i det "
+"siste tilfellet bruk kombinasjonen Shift + Caps Lock for vanleg Caps-"
+"oppførsel). Alt+Shift er òg ein vanleg kombinasjon, men den mister den "
+"vanlege oppførselen i Emacs og andre program som bruker den av særskilde "
+"grunnar."
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:11002
+msgid "Not all listed keys are present on all keyboards."
+msgstr "Ikkje alle oppgitte tastar finst på alle tastatur."
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:12001
+msgid "No temporary switch"
+msgstr "Ingen mellombels byte"
+
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+msgid "Both Logo keys"
+msgstr "Båe logotastane"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:12002
+msgid "Method for temporarily toggling between national and Latin input:"
+msgstr "Metode for å byte mellombels mellom nasjonal- og latin-modus:"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:12002
+msgid ""
+"When the keyboard is in national mode and one wants to type only a few Latin "
+"letters, it might be more appropriate to switch temporarily to Latin mode. "
+"The keyboard remains in that mode as long as the chosen key is kept pressed. "
+"That key may also be used to input national letters when the keyboard is in "
+"Latin mode."
+msgstr ""
+"Når tastaturet er sett til lokalt språk og du ønskjer å skriva nokre få "
+"latinske bokstavar, kan det enklaste vera å byte mellombels til latinske "
+"teikn. Tastaturet vil vera i latinsk modus så lenge den valde tasten vert "
+"halden nede. Denne tasten kan også brukast for å skriva inn lokale teikn når "
+"tastaturet er i latin-modus."
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:12002
+msgid "You can disable this feature by choosing \"No temporary switch\"."
+msgstr ""
+"Du kan deaktivere denne funksjonen ved å velje «Ingen mellombels byte»."
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:13001
+msgid "The default for the keyboard layout"
+msgstr "Standard tastaturoppsett"
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:13001
+msgid "No AltGr key"
+msgstr "Ingen AltGr-tast"
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:13001
+msgid "Keypad Enter key"
+msgstr "Enter-tasten på det numeriske tastaturet"
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:13001
+msgid "Both Alt keys"
+msgstr "Båe Alt-tastane"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:13002
+msgid "Key to function as AltGr:"
+msgstr "Tast som skal verka som AltGr-tast:"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:13002
+msgid ""
+"With some keyboard layouts, AltGr is a modifier key used to input some "
+"characters, primarily ones that are unusual for the language of the keyboard "
+"layout, such as foreign currency symbols and accented letters. These are "
+"often printed as an extra symbol on keys."
+msgstr ""
+"På nokre tastatur er AltGr ein endringstast som vert brukt for å skriva inn "
+"spesielle teikn, som oftast teikn som er uvanlege i det språket tastaturet "
+"er sett opp for. Dette kan vera valutasymbol for andre språk, aksentteikn og "
+"liknande. Desse er ofte merkte med eit ekstra symbol på tastane."
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:14001
+msgid "No compose key"
+msgstr "Ingen modifiseringstast"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:14002
+msgid "Compose key:"
+msgstr "Modifiseringstast:"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:14002
+msgid ""
+"The Compose key (known also as Multi_key) causes the computer to interpret "
+"the next few keystrokes as a combination in order to produce a character not "
+"found on the keyboard."
+msgstr ""
+"Modifiseringstasten gjer at dei neste få tastetrykka vert tolka som ei "
+"samansetjing for å laga eit teikn som ikkje finst på tastaturet."
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:14002
+msgid ""
+"On the text console the Compose key does not work in Unicode mode. If not in "
+"Unicode mode, regardless of what you choose here, you can always also use "
+"the Control+period combination as a Compose key."
+msgstr ""
+"Modifiseringstasten verkar ikkje i Unicode-modus på tekstkonsollen. Når "
+"Unicode-modus ikkje er sett, kan du alltid bruka kombinasjonen Ctrl + "
+"punktum som ein modifiseringstast uavhengig av kva du har vald her."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:15001
+msgid "Use Control+Alt+Backspace to terminate the X server?"
+msgstr "Vil du bruke Ctrl + Alt + Rettetast for å stoppe X-tenaren?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:15001
+msgid ""
+"By default the combination Control+Alt+Backspace does nothing.  If you want "
+"it can be used to terminate the X server."
+msgstr ""
+"Standardvalet er at kombinasjonen Ctrl + Alt + Rettetast ikkje gjer noko. "
+"Viss du vil, kan han brukast til å stoppe X-tenaren."
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "American English"
+msgstr "Engelsk (USA)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Albanian"
+msgstr "Albansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Arabic"
+msgstr "Arabisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Asturian"
+msgstr "Asturisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bangladesh"
+msgstr "Bangladesh"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Belarusian"
+msgstr "Belarusisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bengali"
+msgstr "Bengali"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Belgian"
+msgstr "Belgisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Berber (Latin)"
+msgstr "Berbersk (latin)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bosnian"
+msgstr "Bosnisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Brazilian"
+msgstr "Brasiliansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "British English"
+msgstr "Engelsk (Storbritannia)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bulgarian (BDS layout)"
+msgstr "Bulgarsk (BDS-oppsett)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bulgarian (phonetic layout)"
+msgstr "Bulgarsk (phonetic-oppsett)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Burmese"
+msgstr "Burmesisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Canadian French"
+msgstr "Fransk (Canada)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Canadian Multilingual"
+msgstr "Kanadisk, fleirspråkleg"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Catalan"
+msgstr "Katalansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Chinese"
+msgstr "Kinesisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Croatian"
+msgstr "Kroatisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Czech"
+msgstr "Tsjekkisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Danish"
+msgstr "Dansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Dutch"
+msgstr "Nederlandsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Dvorak"
+msgstr "Dvorak"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Dzongkha"
+msgstr "Dzongkha"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Esperanto"
+msgstr "Esperanto"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Estonian"
+msgstr "Estisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Ethiopian"
+msgstr "Etiopisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Finnish"
+msgstr "Finsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "French"
+msgstr "Fransk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Georgian"
+msgstr "Georgisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "German"
+msgstr "Tysk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Greek"
+msgstr "Gresk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Gujarati"
+msgstr "Gujarati"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Gurmukhi"
+msgstr "Gurmukhi"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Hebrew"
+msgstr "Hebraisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Hindi"
+msgstr "Hindi"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Hungarian"
+msgstr "Ungarsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Icelandic"
+msgstr "Islandsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Irish"
+msgstr "Irsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Italian"
+msgstr "Italiensk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Japanese"
+msgstr "Japansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kannada"
+msgstr "Kannada"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kazakh"
+msgstr "Kasakhisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Khmer"
+msgstr "Khmer"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kirghiz"
+msgstr "Kirgisisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Korean"
+msgstr "Koreansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kurdish (F layout)"
+msgstr "Kurdisk (F-oppsett)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kurdish (Q layout)"
+msgstr "Kurdisk (Q-oppsett)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Lao"
+msgstr "Laotisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Latin American"
+msgstr "Latinamerikansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Latvian"
+msgstr "Latvisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Lithuanian"
+msgstr "Litauisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Macedonian"
+msgstr "Makedonsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Malayalam"
+msgstr "Malayalam"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Nepali"
+msgstr "Nepali"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Northern Sami"
+msgstr "Nordsamisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Norwegian"
+msgstr "Norsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Persian"
+msgstr "Persisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Philippines"
+msgstr "Filipino"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Polish"
+msgstr "Polsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Portuguese"
+msgstr "Portugisisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Punjabi"
+msgstr "Panjabi"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Romanian"
+msgstr "Rumensk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Russian"
+msgstr "Russisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Serbian (Cyrillic)"
+msgstr "Serbisk (kyrillisk)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Sindhi"
+msgstr "Sindhi"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Sinhala"
+msgstr "Singalesisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Slovak"
+msgstr "Slovakisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Slovenian"
+msgstr "Slovensk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Spanish"
+msgstr "Spansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Swedish"
+msgstr "Svensk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Swiss French"
+msgstr "Fransk (Sveits)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Swiss German"
+msgstr "Tysk (Sveits)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Tajik"
+msgstr "Tadsjikisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Tamil"
+msgstr "Tamil"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Telugu"
+msgstr "Telugu"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Thai"
+msgstr "Thai"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Tibetan"
+msgstr "Tibetansk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Turkish (F layout)"
+msgstr "Tyrkisk (F-oppsett)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Turkish (Q layout)"
+msgstr "Tyrkisk (Q-oppsett)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Ukrainian"
+msgstr "Ukrainsk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Uyghur"
+msgstr "Uigurisk"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Vietnamese"
+msgstr "Vietnamesisk"
+
+#. Type: select
+#. Description
+#: ../keyboard-configuration.templates:16002
+msgid "Keymap to use:"
+msgstr "Tasteoppsett som skal brukast:"

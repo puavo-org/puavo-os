@@ -1,0 +1,1511 @@
+# THIS FILE IS GENERATED AUTOMATICALLY FROM THE D-I PO MASTER FILES
+# The master files can be found under packages/po/
+#
+# DO NOT MODIFY THIS FILE DIRECTLY: SUCH CHANGES WILL BE LOST
+#
+# translation of debian-installer_packages_po_sublevel1_he.po to Hebrew
+# Hebrew messages for debian-installer.
+# Copyright (C) 2003 Software in the Public Interest, Inc.
+# This file is distributed under the same license as debian-installer.
+# Translations from iso-codes:
+# Translations taken from ICU SVN on 2007-09-09
+# Translations taken from KDE:
+# Amit Dovev <debian.translator@gmail.com>, 2007.
+# Meital Bourvine <meitalbourvine@gmail.com>, 2007.
+# Omer Zak <w1@zak.co.il>, 2008, 2010, 2012, 2013.
+# Tobias Quathamer <toddy@debian.org>, 2007.
+# Free Software Foundation, Inc., 2002,2004.
+# Alastair McKinstry <mckinstry@computer.org>, 2002.
+# Meni Livne <livne@kde.org>, 2000.
+# Free Software Foundation, Inc., 2002,2003.
+# Meni Livne <livne@kde.org>, 2000.
+# Meital Bourvine <meitalbourvine@gmail.com>, 2007.
+# Lior Kaplan <kaplan@debian.org>, 2004-2007, 2008, 2010, 2011, 2015, 2017.
+# Yaron Shahrabani <sh.yaron@gmail.com>, 2018, 2019, 2020, 2021.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: debian-installer\n"
+"Report-Msgid-Bugs-To: console-setup@packages.debian.org\n"
+"POT-Creation-Date: 2020-10-28 20:01+0000\n"
+"PO-Revision-Date: 2021-12-03 23:44+0000\n"
+"Last-Translator: Yaron Shahrabani <sh.yaron@gmail.com>\n"
+"Language-Team: Hebrew (https://www.transifex.com/yaron/teams/79473/he/)\n"
+"Language: he\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Type: text
+#. Description
+#. :sl3:
+#: ../console-setup.templates:2001
+msgid "Do not change the boot/kernel font"
+msgstr "לא לשנות את גופן האתחול/ליבה"
+
+#. Type: text
+#. Description
+#. :sl3:
+#: ../console-setup.templates:3001
+msgid "Let the system select a suitable font"
+msgstr "לאפשר למערכת לבחור גופן מתאים"
+
+#. Type: text
+#. Description
+#. Used in the font size question like this: "12x24, framebuffer only"
+#. :sl3:
+#: ../console-setup.templates:4001
+msgid "framebuffer only"
+msgstr "מכלא חוזי בלבד"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Arabic"
+msgstr ". ערבית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Armenian"
+msgstr "# ארמנית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Cyrillic - KOI8-R and KOI8-U"
+msgstr "# כתב קירילי (KOI8-R ו־KOI8-U)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Cyrillic - non-Slavic languages"
+msgstr "# כתב קירילי - שפות לא סלביות"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Cyrillic - non-Slavic languages (for blind users)"
+msgstr ". כתב קירילי - שפות לא סלביות (ללקויי ראייה)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Cyrillic - Slavic languages (also Bosnian and Serbian Latin)"
+msgstr "# כתב קירילי - שפות סלביות (לרבות בוסנית וסרבית בכתב לטיני)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Cyrillic - Slavic languages (for blind users)"
+msgstr ". כתב קירילי - שפות סלביות (ללקויי ראייה)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Ethiopic"
+msgstr ". אתיופי"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Georgian"
+msgstr "# גאורגי"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Greek"
+msgstr "# יווני"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Greek (for blind users)"
+msgstr ". יווני (ללקויי ראייה)"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Hebrew"
+msgstr "# עברי"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Lao"
+msgstr "# לאו"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Latin1 and Latin5 - western Europe and Turkic languages"
+msgstr "# Latin1 ו־Latin5 - שפות טורקיות ושל מערב אירופה"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Latin2 - central Europe and Romanian"
+msgstr "# Latin2 - שפות מרכז אירופה ורומנית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Latin3 and Latin8 - Chichewa; Esperanto; Irish; Maltese and Welsh"
+msgstr "# Latin3 ו־Latin8 - צ׳יצ׳ווה, אספרנטו, אירית, מלטית וולשית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Latin7 - Lithuanian; Latvian; Maori and Marshallese"
+msgstr "# Latin7 - ליטאית, לטבית, מאורי ומרשלית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Latin - Vietnamese"
+msgstr ". Latin - וייטנאמית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "# Thai"
+msgstr "# תאית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Combined - Latin; Slavic Cyrillic; Hebrew; basic Arabic"
+msgstr ". משולב - כתב לטיני; כתב קירילי־סלבי; עברית; ערבית בסיסית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Combined - Latin; Slavic Cyrillic; Greek"
+msgstr ". משולב - כתב לטיני; כתב קירילי־סלבי; יוונית"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid ". Combined - Latin; Slavic and non-Slavic Cyrillic"
+msgstr ". משולב - כתב לטיני; כתב קירילי־סלבי ושאינו סלבי"
+
+#. Type: select
+#. Choices
+#. :sl3:
+#: ../console-setup.templates:5001
+msgid "Guess optimal character set"
+msgstr "ניחוש ערכת תווים מיטבית"
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:5002
+msgid "Character set to support:"
+msgstr "ערכת תווים לתמיכה:"
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:5002
+msgid ""
+"Please choose the character set that should be supported by the console font."
+msgstr "נא לבחור את ערכת התווים שעל גופן המסוף לתמוך בה."
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:5002
+msgid ""
+"If you don't use a framebuffer, the choices that start with \".\" will "
+"reduce the number of available colors on the console."
+msgstr ""
+"אם לא נעשה שימוש במכלא חוזי, האפשרויות המתחילות ב־„.” תצמצמנה את מספר הצבעים "
+"הזמינים במסוף."
+
+#. Type: select
+#. Description
+#. The languages with many non-ASCII letters should not use formatted
+#. lists.  If you decide to use formatted lists then keep the lines
+#. relatively short.
+#. :sl3:
+#: ../console-setup.templates:6001
+msgid "Font for the console:"
+msgstr "גופן עבור המסוף:"
+
+#. Type: select
+#. Description
+#. The languages with many non-ASCII letters should not use formatted
+#. lists.  If you decide to use formatted lists then keep the lines
+#. relatively short.
+#. :sl3:
+#: ../console-setup.templates:6001
+msgid ""
+"\"VGA\" has a traditional appearance and has medium coverage of "
+"international scripts. \"Fixed\" has a simplistic appearance and has better "
+"coverage of international scripts. \"Terminus\" may help to reduce eye "
+"fatigue, though some symbols have a similar aspect which may be a problem "
+"for programmers."
+msgstr ""
+"ל־„VGA” יש מראה מסורתי וכיסוי בינוני של סוגי כתב בינלאומיים. ל־„Fixed” יש "
+"מראה פשטני וכיסוי טוב יותר לשפות בינלאומיות. „Terminus” עשוי להקל על עייפות "
+"העיניים, למרות שלחלק מהסימנים עשויים להיות מאפיינים דומים, מה שעשוי להוות "
+"בעיה למתכנתים."
+
+#. Type: select
+#. Description
+#. The languages with many non-ASCII letters should not use formatted
+#. lists.  If you decide to use formatted lists then keep the lines
+#. relatively short.
+#. :sl3:
+#: ../console-setup.templates:6001
+msgid ""
+"If you prefer a bold version of the Terminus font, choose either "
+"TerminusBold (if you use a framebuffer) or TerminusBoldVGA (otherwise)."
+msgstr ""
+"אם עדיף לך להשתמש בגרסה עבה של הגופן Terminus, ניתן לבחור ב־TerminusBold "
+"(לשימוש עם מכלא חוזי) או ב־TerminusBoldVGA (לכל מקרה אחר)."
+
+#. Type: select
+#. Description
+#. :sl3:
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:7001 ../console-setup.templates:8001
+msgid "Font size:"
+msgstr "גודל גופן:"
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:7001
+msgid ""
+"Please select the size of the font for the console. For reference, the font "
+"used when the computer boots has size 8x16."
+msgstr ""
+"נא לבחור בגודל הגופן עבור המסוף. לשם השוואה, בזמן אתחול המחשב, גודל הגופן הוא"
+" ‎8×16."
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:8001
+msgid ""
+"Please select the size of the font for the console.  Some font sizes require "
+"framebuffer."
+msgstr "נא לבחור בגודל הגופן עבור המסוף.  חלק מגדלי הגופן דורשים מכלא חוזי."
+
+#. Type: select
+#. Description
+#. :sl3:
+#: ../console-setup.templates:9001
+msgid "Encoding to use on the console:"
+msgstr "קידוד לשימוש במסוף:"
+
+#. Type: text
+#. Description
+#. Main menu item. Please keep below 55 columns
+#. :sl1:
+#: ../keyboard-configuration.templates:2001
+msgid "Configure the keyboard"
+msgstr "הגדרת המקלדת"
+
+#. Type: text
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:3001
+msgid "Other"
+msgstr "אחר"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:4001
+msgid "Keyboard model:"
+msgstr "דגם המקלדת:"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:4001
+msgid "Please select the model of the keyboard of this machine."
+msgstr "נא לבחור את דגם המקלדת של מכונה זאת."
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:5001
+msgid "Country of origin for the keyboard:"
+msgstr "מדינת מוצאה של המקלדת:"
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:5001
+msgid ""
+"The layout of keyboards varies per country, with some countries having "
+"multiple common layouts. Please select the country of origin for the "
+"keyboard of this computer."
+msgstr ""
+"פריסת המקלדות משתנה מארץ לארץ, ויש ארצות שיש להן כמה פריסות מקלדות נפוצות. "
+"נא לבחור את ארץ המוצא של המקלדת של מחשב זה."
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:6001
+msgid "Keyboard layout:"
+msgstr "פריסת מקלדת:"
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:6001
+msgid "Please select the layout matching the keyboard for this machine."
+msgstr "נא לבחור את הפריסה שתואמת למקלדת של המכונה הזו."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:7001
+msgid "Keep the current keyboard layout in the configuration file?"
+msgstr "לשמור את הפריסה הנוכחית בקובץ ההגדרות?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:7001
+msgid ""
+"The current keyboard layout in the configuration file /etc/default/keyboard "
+"is defined as XKBLAYOUT=\"${XKBLAYOUT}\" and XKBVARIANT=\"${XKBVARIANT}\"."
+msgstr ""
+"הפריסה הנוכחית בקובץ ההגדרות ‎/etc/default/keyboard מוגדרת בתור XKBLAYOUT="
+"\"${XKBLAYOUT}\"‎ וגם XKBVARIANT=\"${XKBVARIANT}\"‎."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:7001
+msgid ""
+"Please choose whether you want to keep it. If you choose this option, no "
+"questions about the keyboard layout will be asked and the current "
+"configuration will be preserved."
+msgstr ""
+"נא לבחור האם לשמור פריסה זו. לאחר בחירה באפשרות זו לא תופענה שאלות על פריסת "
+"המקלדת וההגדרות הנוכחיות תישמרנה."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:8001
+msgid "Keep default keyboard layout (${XKBLAYOUTVARIANT})?"
+msgstr "להשאיר את פריסת המקלדת כבררת מחדל (${XKBLAYOUTVARIANT})?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:8001
+msgid ""
+"The default value for the keyboard layout is XKBLAYOUT=\"${XKBLAYOUT}\" and "
+"XKBVARIANT=\"${XKBVARIANT}\".  This default value is based on the currently "
+"defined language/region and the settings in /etc/X11/xorg.conf."
+msgstr ""
+"ערך פריסת המקלדת כבררת המחדל הוא XKBLAYOUT=\"${XKBLAYOUT}\"‎ ו־XKBVARIANT="
+"\"${XKBVARIANT}\"‎.  בררת מחדל זו מבוססת על הגדרת השפה/אזור הנוכחיים ועל "
+"ההגדרות ב־‎/etc/X11/xorg.conf."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:8001
+msgid ""
+"Please choose whether you want to keep it. If you choose this option, no "
+"questions about the keyboard layout will be asked."
+msgstr ""
+"נא לבחור האם לשמור פריסה זו. לאחר בחירה באפשרות זו לא תופענה שאלות על פריסת "
+"המקלדת."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:9001
+msgid "Keep current keyboard options in the configuration file?"
+msgstr "לשמור על הגדרות המקלדת הנוכחיות בקובץ ההגדרות?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:9001
+msgid ""
+"The current keyboard options in the configuration file /etc/default/keyboard "
+"are defined as XKBOPTIONS=\"${XKBOPTIONS}\"."
+msgstr ""
+"אפשרויות המקלדת הנוכחיות בקובץ ההגדרות ‎/etc/default/keyboard מוגדרות בתור "
+"XKBOPTIONS=\"${XKBOPTIONS}\"‎."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:9001
+msgid ""
+"If you choose to keep these options, no questions about the keyboard options "
+"will be asked."
+msgstr ""
+"עקב הבחירה לשמור אפשרויות אלו, לא תופענה שאלות נוספות על אפשרויות המקלדת."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:10001
+msgid "Keep default keyboard options (${XKBOPTIONS})?"
+msgstr "לשמור על אפשרויות בררת המחדל של המקלדת (${XKBOPTIONS})?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:10001
+msgid ""
+"The default value for the options of the keyboard layout is XKBOPTIONS="
+"\"${XKBOPTIONS}\".  It is based on the currently defined language/region and "
+"the settings in /etc/X11/xorg.conf."
+msgstr ""
+"ערך בררת המחדל של פריסת המקלדת הוא XKBOPTIONS=\"${XKBOPTIONS}\"‎.  הוא מבוסס "
+"על ההגדרה הנוכחית של שפה/אזור ועל ההגדרות ב־‎/etc/X11/xorg.conf."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:10001
+msgid ""
+"If you choose to keep it, no questions about the keyboard options will be "
+"asked."
+msgstr "אם בחרת לשמור עליהן, לא יישאלו שאלות על הגדרות המקלדת."
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:14001
+msgid "Caps Lock"
+msgstr "Caps Lock"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Right Alt (AltGr)"
+msgstr "Alt ימני (AltGr)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Right Control"
+msgstr "Control ימני"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Right Shift"
+msgstr "Shift ימני"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Right Logo key"
+msgstr "מקש לוגו ימני"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Menu key"
+msgstr "מקש תפריט"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Alt+Shift"
+msgstr "Alt+Shift"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Control+Shift"
+msgstr "Control+Shift"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Control+Alt"
+msgstr "Control+Alt"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Alt+Caps Lock"
+msgstr "Alt+Caps Lock"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Left Control+Left Shift"
+msgstr "Control שמאלי + Shift שמאלי"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+msgid "Left Alt"
+msgstr "Alt שמאלי"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Left Control"
+msgstr "Control שמאלי"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Left Shift"
+msgstr "Shift שמאלי"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:11001
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+#: ../keyboard-configuration.templates:14001
+msgid "Left Logo key"
+msgstr "מקש לוגו שמאלי"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "Scroll Lock key"
+msgstr "מקש Scroll Lock"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:11001
+msgid "No toggling"
+msgstr "ללא החלפה"
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:11002
+msgid "Method for toggling between national and Latin mode:"
+msgstr "שיטת מעבר בין מצב עבודה לאומי ומצב עבודה לטיני:"
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:11002
+msgid ""
+"You will need a way to toggle the keyboard between the national layout and "
+"the standard Latin layout."
+msgstr ""
+"חייבת להיות דרך עבורך להעביר את המקלדת בין הפריסה המקומית שלך לבין הפריסה "
+"הלטינית התקנית."
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:11002
+msgid ""
+"Right Alt or Caps Lock keys are often chosen for ergonomic reasons (in the "
+"latter case, use the combination Shift+Caps Lock for normal Caps toggle). Alt"
+"+Shift is also a popular combination; it will however lose its usual "
+"behavior in Emacs and other programs that use it for specific needs."
+msgstr ""
+"מקובל לבחור במקשים Alt ימני או ב־Caps Lock מסיבות ארגונומיות (במקרה השני, נא "
+"להשתמש בצירוף Shift+Caps Lock לטובת החלפת מצב אותיות גדולות). הצירוף Alt"
+"+Shift הוא גם כן צירוף מקובל, אך צירוף זה יאבד את התנהגותו הרגילה ב־Emacs "
+"ובתכניות אחרות שמשתמשות בצירוף למטרות מיוחדות."
+
+#. Type: select
+#. Description
+#. :sl1:
+#: ../keyboard-configuration.templates:11002
+msgid "Not all listed keys are present on all keyboards."
+msgstr "לא כל המקשים המופיעים נמצאים בכל המקלדות."
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:12001
+msgid "No temporary switch"
+msgstr "אין החלפה זמנית"
+
+#. Type: select
+#. Choices
+#. :sl2:
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:12001
+#: ../keyboard-configuration.templates:13001
+msgid "Both Logo keys"
+msgstr "שני מקשי הלוגו"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:12002
+msgid "Method for temporarily toggling between national and Latin input:"
+msgstr "שיטה להחלפה זמנית בין קלט מקומי לבין קלט לטיני:"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:12002
+msgid ""
+"When the keyboard is in national mode and one wants to type only a few Latin "
+"letters, it might be more appropriate to switch temporarily to Latin mode. "
+"The keyboard remains in that mode as long as the chosen key is kept pressed. "
+"That key may also be used to input national letters when the keyboard is in "
+"Latin mode."
+msgstr ""
+"כאשר המקלדת במצב מקומי וברצונך להקליד רק מספר מצומצם של תווים לטיניים, יכול "
+"להיות שעדיף במקרה כזה לעבור למצב לטיני באופן זמני. המקלדת נשארת במצב הזה כל "
+"עוד המקש נשאר לחוץ. המקש הזה יכול גם לשמש להקלדת תווים מקומיים כשהמקלדת במצב "
+"לטיני."
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:12002
+msgid "You can disable this feature by choosing \"No temporary switch\"."
+msgstr "ניתן להשבית תכונה זאת על ידי בחירה באפשרות „ללא החלפה זמנית”."
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:13001
+msgid "The default for the keyboard layout"
+msgstr "פריסת המקלדת כבררת המחדל"
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:13001
+msgid "No AltGr key"
+msgstr "אין מקש AltGr"
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:13001
+msgid "Keypad Enter key"
+msgstr "המקש Enter במקלדת הנומרית"
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:13001
+msgid "Both Alt keys"
+msgstr "שני מקשי Alt"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:13002
+msgid "Key to function as AltGr:"
+msgstr "מקש לשימוש כ־AltGr:"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:13002
+msgid ""
+"With some keyboard layouts, AltGr is a modifier key used to input some "
+"characters, primarily ones that are unusual for the language of the keyboard "
+"layout, such as foreign currency symbols and accented letters. These are "
+"often printed as an extra symbol on keys."
+msgstr ""
+"בחלק מפריסות המקלדת, נעשה שימוש במקש ההחלפה AltGr לצורך הקלדה של כל מיני "
+"תווים, בעיקר כאלו הזרים לפריסת המקלדת כגון סימני מטבע זרים ואותיות עם סימנים "
+"דיאקריטיים. אלו לרוב מודפסים כסמל נוסף על המקשים."
+
+#. Type: select
+#. Choices
+#. :sl2:
+#: ../keyboard-configuration.templates:14001
+msgid "No compose key"
+msgstr "אין מקש compose"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:14002
+msgid "Compose key:"
+msgstr "מקש compose:"
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:14002
+msgid ""
+"The Compose key (known also as Multi_key) causes the computer to interpret "
+"the next few keystrokes as a combination in order to produce a character not "
+"found on the keyboard."
+msgstr ""
+"מקש compose (ידוע גם בשם Multi_key) גורם למחשב לפרש את ההקלדות הבאות כצירוף "
+"כדי ליצור תו שלא נמצא על המקלדת."
+
+#. Type: select
+#. Description
+#. :sl2:
+#: ../keyboard-configuration.templates:14002
+msgid ""
+"On the text console the Compose key does not work in Unicode mode. If not in "
+"Unicode mode, regardless of what you choose here, you can always also use "
+"the Control+period combination as a Compose key."
+msgstr ""
+"במסוף הטקסט, מקש ה־Compose אינו עובד במצב Unicode. אם אינך במצב Unicode, ללא "
+"תלות בבחירתך כאן, תמיד ניתן להשתמש בצירוף Control+נקודה בתור Compose."
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:15001
+msgid "Use Control+Alt+Backspace to terminate the X server?"
+msgstr "להשתמש ב־Control+Alt+Backspace כדי לסגור את שרת ה־X?"
+
+#. Type: boolean
+#. Description
+#. :sl3:
+#: ../keyboard-configuration.templates:15001
+msgid ""
+"By default the combination Control+Alt+Backspace does nothing.  If you want "
+"it can be used to terminate the X server."
+msgstr ""
+"כבררת מחדל, צירוף המקשים Control+Alt+Backspace לא מבצע אף פעולה. אם רצונך "
+"בכך, ניתן להשתמש בצירוף זה כדי לסגור את שרת ה־X."
+
+# console-keymaps-acorn, American
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "American English"
+msgstr "אנגלית אמריקאית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Albanian"
+msgstr "אלבנית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Arabic"
+msgstr "ערבית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Asturian"
+msgstr "אסטורית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bangladesh"
+msgstr "בנגלית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Belarusian"
+msgstr "בלרוסית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bengali"
+msgstr "בנגלית"
+
+# console-keymaps-acorn, Belgian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Belgian"
+msgstr "בלגית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Berber (Latin)"
+msgstr "ברברית לטינית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bosnian"
+msgstr "בוסנית"
+
+# console-keymaps-acorn, Brazilian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Brazilian"
+msgstr "ברזילאית"
+
+# console-keymaps-acorn, British
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "British English"
+msgstr "אנגלית בריטית"
+
+# console-keymaps-acorn, Bulgarian (phonetic layout)
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bulgarian (BDS layout)"
+msgstr "בולגרית (פריסת BDS)"
+
+# console-keymaps-acorn, Bulgarian (phonetic layout)
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Bulgarian (phonetic layout)"
+msgstr "בולגרית (פריסה פונטית)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Burmese"
+msgstr "בורמזית"
+
+# console-keymaps-acorn, Canadian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Canadian French"
+msgstr "צרפתית קנדית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Canadian Multilingual"
+msgstr "מגוון שפות קנדיות"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Catalan"
+msgstr "קטלאנית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Chinese"
+msgstr "סינית"
+
+# console-keymaps-acorn, Croatian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Croatian"
+msgstr "קרואטית"
+
+# console-keymaps-acorn, Czech
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Czech"
+msgstr "צ׳כית"
+
+# console-keymaps-acorn, Danish
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Danish"
+msgstr "דנית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Dutch"
+msgstr "הולנדית"
+
+# console-keymaps-acorn, Dvorak
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Dvorak"
+msgstr "דבוראק"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Dzongkha"
+msgstr "דזונגקה"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Esperanto"
+msgstr "אספרנטו"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Estonian"
+msgstr "אסטונית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Ethiopian"
+msgstr "אתיופית"
+
+# console-keymaps-acorn, Finnish
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Finnish"
+msgstr "פינית"
+
+# console-keymaps-acorn, French
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "French"
+msgstr "צרפתית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Georgian"
+msgstr "גאורגית"
+
+# console-keymaps-acorn, German
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "German"
+msgstr "גרמנית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Greek"
+msgstr "יוונית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Gujarati"
+msgstr "גוג׳ראטית"
+
+# # Thanks Amir E. Aharoni for the Hebrew translation
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Gurmukhi"
+msgstr "גורמוקהי"
+
+# console-keymaps-acorn, Hebrew
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Hebrew"
+msgstr "עברית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Hindi"
+msgstr "הינדי"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Hungarian"
+msgstr "הונגרית"
+
+# console-keymaps-acorn, Icelandic
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Icelandic"
+msgstr "איסלנדית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Irish"
+msgstr "אירית"
+
+# console-keymaps-acorn, Italian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Italian"
+msgstr "איטלקית"
+
+# console-keymaps-acorn, Japanese
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Japanese"
+msgstr "יפנית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kannada"
+msgstr "קאנדה"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kazakh"
+msgstr "קזחית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Khmer"
+msgstr "קמרית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kirghiz"
+msgstr "קירגיזית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Korean"
+msgstr "קוריאנית"
+
+# console-keymaps-acorn, Russian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kurdish (F layout)"
+msgstr "כורדית (פריסת F)"
+
+# console-keymaps-acorn, Turkish
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Kurdish (Q layout)"
+msgstr "כורדית (פריסת Q)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Lao"
+msgstr "לאו"
+
+# console-keymaps-acorn, Swiss
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Latin American"
+msgstr "לטינית אמריקאית"
+
+# console-keymaps-acorn, Swiss
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Latvian"
+msgstr "לטבית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Lithuanian"
+msgstr "ליטאית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Macedonian"
+msgstr "מקדונית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Malayalam"
+msgstr "מלאיאלאם"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Nepali"
+msgstr "נפאלית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Northern Sami"
+msgstr "סאמי צפוני"
+
+# console-keymaps-acorn, Norwegian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Norwegian"
+msgstr "נורווגית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Persian"
+msgstr "פרסית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Philippines"
+msgstr "פיליפינית"
+
+# console-keymaps-acorn, Polish
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Polish"
+msgstr "פולנית"
+
+# console-keymaps-acorn, Portuguese
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Portuguese"
+msgstr "פורטוגלית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Punjabi"
+msgstr "פנג׳אבי"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Romanian"
+msgstr "רומנית"
+
+# console-keymaps-acorn, Russian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Russian"
+msgstr "רוסית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Serbian (Cyrillic)"
+msgstr "סרבית (קירילית)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Sindhi"
+msgstr "סינדהי"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Sinhala"
+msgstr "סינהלה"
+
+# console-keymaps-acorn, Slovakian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Slovak"
+msgstr "סלובקית"
+
+# console-keymaps-acorn, Slovakian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Slovenian"
+msgstr "סלובנית"
+
+# console-keymaps-acorn, Spanish
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Spanish"
+msgstr "ספרדית"
+
+# console-keymaps-acorn, Swedish
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Swedish"
+msgstr "שוודית"
+
+# console-keymaps-acorn, Swiss
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Swiss French"
+msgstr "צרפתית שוויצרית"
+
+# console-keymaps-acorn, Swiss
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Swiss German"
+msgstr "גרמנית שוויצרית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Tajik"
+msgstr "טג׳יקית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Tamil"
+msgstr "טמילית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Telugu"
+msgstr "טלוגו"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Thai"
+msgstr "תאית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Tibetan"
+msgstr "טיבטית"
+
+# console-keymaps-acorn, Russian
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Turkish (F layout)"
+msgstr "טורקית (פריסת F)"
+
+# console-keymaps-acorn, Turkish
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Turkish (Q layout)"
+msgstr "טורקית (פריסת Q)"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Ukrainian"
+msgstr "אוקראינית"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Uyghur"
+msgstr "אויגור"
+
+#. Type: select
+#. Choices
+#. :sl1:
+#: ../keyboard-configuration.templates:16001
+msgid "Vietnamese"
+msgstr "וייטנאמית"
+
+#. Type: select
+#. Description
+#: ../keyboard-configuration.templates:16002
+msgid "Keymap to use:"
+msgstr "מפת תווים לשימוש:"
