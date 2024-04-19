@@ -84,6 +84,8 @@ set services {
     }}
 
   { gpm {
+      /etc/systemd/system/multi-user.target.wants/gpm.service
+        -> /lib/systemd/system/gpm.service
       /etc/rc2.d/S01gpm -> /etc/init.d/gpm
       /etc/rc3.d/S01gpm -> /etc/init.d/gpm
       /etc/rc4.d/S01gpm -> /etc/init.d/gpm
