@@ -1,0 +1,177 @@
+From 310d3ecdb315de26b5043e931a560820b06e83f8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Sun, 21 Apr 2024 21:09:46 +0300
+Subject: [PATCH] appearance: make style switch change themes too
+
+---
+ panels/background/cc-background-panel.c | 101 +++++++++++++++++++++++-
+ 1 file changed, 100 insertions(+), 1 deletion(-)
+
+diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
+index f748e9a13..98238b209 100644
+--- a/panels/background/cc-background-panel.c
++++ b/panels/background/cc-background-panel.c
+@@ -47,6 +47,13 @@
+ #define INTERFACE_PATH_ID "org.gnome.desktop.interface"
+ #define INTERFACE_COLOR_SCHEME_KEY "color-scheme"
+ 
++#define INTERFACE_PATH_ID "org.gnome.desktop.interface"
++#define INTERFACE_COLOR_SCHEME_KEY "color-scheme"
++#define INTERFACE_GTK_THEME_KEY "gtk-theme"
++
++#define USER_THEME_PATH_ID "org.gnome.shell.extensions.user-theme"
++#define USER_THEME_NAME_KEY "name"
++
+ struct _CcBackgroundPanel
+ {
+   CcPanel parent_instance;
+@@ -56,6 +63,7 @@ struct _CcBackgroundPanel
+   GSettings *settings;
+   GSettings *lock_settings;
+   GSettings *interface_settings;
++  GSettings *maybe_user_theme_settings;
+ 
+   GnomeDesktopThumbnailFactory *thumb_factory;
+   GDBusProxy *proxy;
+@@ -125,18 +133,65 @@ transition_screen (CcBackgroundPanel *self)
+     g_warning ("Couldn't transition screen: %s", error->message);
+ }
+ 
++static gchar*
++get_default_theme(const gchar *theme)
++{
++  if (!theme)
++      return NULL;
++
++  /* If the theme is somehow just "-Dark", then it's not considered to
++   * be Dark version. Because would it be the Dark version of nothing?
++   * What is Darker than nothing? Nothing. So, "-Dark" cannot be Dark
++   * version, it's the default version. */
++  if (g_strcmp0 (theme, "-Dark") == 0)
++      return g_strdup(theme);
++
++  if (g_str_has_suffix (theme, "-Dark"))
++      return g_strndup (theme, strlen (theme) - 5);
++
++  return g_strdup (theme);
++}
++
++static gchar*
++get_next_theme (const gchar         *theme,
++                GDesktopColorScheme color_scheme)
++{
++  g_autofree gchar *default_theme = get_default_theme (theme);
++
++  if (!default_theme)
++      return NULL;
++
++  if (color_scheme == G_DESKTOP_COLOR_SCHEME_PREFER_DARK)
++      return g_strconcat (default_theme, "-Dark", NULL);
++
++  return g_strdup (default_theme);
++}
++
+ static void
+ set_color_scheme (CcBackgroundPanel   *self,
+                   GDesktopColorScheme  color_scheme)
+ {
++  g_autofree gchar *current_gtk_theme = NULL;
++  g_autofree gchar *current_shell_theme = NULL;
++  g_autofree gchar *next_theme = NULL;
+   GDesktopColorScheme scheme;
+ 
+   scheme = g_settings_get_enum (self->interface_settings,
+                                 INTERFACE_COLOR_SCHEME_KEY);
++  current_gtk_theme = g_settings_get_string (self->interface_settings,
++                                             INTERFACE_GTK_THEME_KEY);
++  if (self->maybe_user_theme_settings)
++  {
++    current_shell_theme = g_settings_get_string (self->maybe_user_theme_settings,
++                                                 USER_THEME_NAME_KEY);
++  }
++  next_theme = get_next_theme(current_gtk_theme, color_scheme);
+ 
+   /* We have to check the equality manually to avoid starting an unnecessary
+    * screen transition */
+-  if (color_scheme == scheme)
++  if (color_scheme == scheme
++      && g_strcmp0(current_gtk_theme, next_theme) == 0
++      && (self->maybe_user_theme_settings == NULL || g_strcmp0(current_shell_theme, next_theme) == 0))
+     return;
+ 
+   transition_screen (self);
+@@ -144,6 +199,22 @@ set_color_scheme (CcBackgroundPanel   *self,
+   g_settings_set_enum (self->interface_settings,
+                        INTERFACE_COLOR_SCHEME_KEY,
+                        color_scheme);
++
++  if (!next_theme)
++  {
++    g_warning ("Next theme is not defined, not changing theme");
++    return;
++  }
++
++  g_settings_set_string (self->interface_settings,
++                         INTERFACE_GTK_THEME_KEY,
++                         next_theme);
++  if (self->maybe_user_theme_settings)
++  {
++    g_settings_set_string (self->maybe_user_theme_settings,
++                           USER_THEME_NAME_KEY,
++                           next_theme);
++  }
+ }
+ 
+ /* Color schemes */
+@@ -355,6 +426,7 @@ cc_background_panel_dispose (GObject *object)
+   g_clear_object (&panel->settings);
+   g_clear_object (&panel->lock_settings);
+   g_clear_object (&panel->interface_settings);
++  g_clear_object (&panel->maybe_user_theme_settings);
+   g_clear_object (&panel->thumb_factory);
+   g_clear_object (&panel->proxy);
+ 
+@@ -406,6 +478,27 @@ on_settings_changed (CcBackgroundPanel *panel)
+   update_preview (panel);
+ }
+ 
++static GSettings*
++get_maybe_user_theme_settings()
++{
++  GSettingsSchemaSource *default_settings_schema_source = g_settings_schema_source_get_default ();
++  GSettingsSchema *user_theme_settings_schema;
++
++  if (!default_settings_schema_source)
++      return NULL;
++
++  user_theme_settings_schema = g_settings_schema_source_lookup (default_settings_schema_source,
++                                                                USER_THEME_PATH_ID,
++                                                                TRUE);
++  if (!user_theme_settings_schema)
++      return NULL;
++
++  /* Ok, the schema exists, user-theme extension is installed. */
++  g_settings_schema_unref (user_theme_settings_schema);
++
++  return g_settings_new (USER_THEME_PATH_ID);
++}
++
+ static void
+ cc_background_panel_init (CcBackgroundPanel *panel)
+ {
+@@ -425,6 +518,12 @@ cc_background_panel_init (CcBackgroundPanel *panel)
+ 
+   panel->interface_settings = g_settings_new (INTERFACE_PATH_ID);
+ 
++  panel->maybe_user_theme_settings = get_maybe_user_theme_settings();
++  if (panel->maybe_user_theme_settings == NULL)
++  {
++    g_warning ("failed to initialized settings for %s, shell theme switch is disabled", USER_THEME_PATH_ID);
++  }
++
+   /* Load the background */
+   reload_current_bg (panel);
+   update_preview (panel);
+-- 
+2.39.2
+
