@@ -422,6 +422,20 @@ class packages {
     , 'libuvc0' ]:              # needed by visualizer puavo-pkg
       tag => [ 'tag_libraries', 'tag_debian_desktop', ];
 
+    # Add the -dev packages for those libraries we build ourselves.
+    # These help Puavo developers in case these need installation.
+    [ 'libcimcclient0-dev'
+    , 'libcups2-dev'
+    , 'libcupsfilters-dev'
+    , 'libcupsimage2-dev'
+    , 'libfontembed-dev'
+    , 'libgail-3-dev'
+    , 'libgtk-3-dev'
+    , 'libmutter-11-dev'
+    , 'libopenwsman-dev'
+    , 'libwsman-clientpp-dev' ]:
+      tag => [ 'tag_lib_devel', 'tag_debian_desktop', ];
+
     [ 'goobox'
     , 'gstreamer1.0-clutter-3.0'
     , 'gstreamer1.0-libav'
