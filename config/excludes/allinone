@@ -56,6 +56,7 @@ usr/share/locale/ab
 usr/share/locale/ace
 usr/share/locale/ach
 usr/share/locale/af
+usr/share/locale/af_ZA
 usr/share/locale/ain
 usr/share/locale/ak
 usr/share/locale/aln
@@ -63,7 +64,6 @@ usr/share/locale/am
 usr/share/locale/am_ET
 usr/share/locale/an
 usr/share/locale/ang
-usr/share/locale/anp
 usr/share/locale/ar
 usr/share/locale/ar_SA
 usr/share/locale/as
@@ -117,6 +117,7 @@ usr/share/locale/dz
 usr/share/locale/ee
 usr/share/locale/el
 usr/share/locale/eo
+usr/share/locale/eo_UY
 usr/share/locale/es
 usr/share/locale/es_AR
 usr/share/locale/es_CL
@@ -136,7 +137,6 @@ usr/share/locale/es_SV
 usr/share/locale/es_UY
 usr/share/locale/es_VE
 usr/share/locale/et
-usr/share/locale/et_EE
 usr/share/locale/eu
 usr/share/locale/eu_ES
 usr/share/locale/fa
@@ -177,10 +177,10 @@ usr/share/locale/ie
 usr/share/locale/ig
 usr/share/locale/ilo
 usr/share/locale/io
+usr/share/locale/is
 usr/share/locale/iu
 usr/share/locale/ja
 usr/share/locale/ja_JP
-usr/share/locale/ja_KS
 usr/share/locale/jam
 usr/share/locale/jbo
 usr/share/locale/jv
@@ -192,6 +192,7 @@ usr/share/locale/kk
 usr/share/locale/kl
 usr/share/locale/km
 usr/share/locale/km_KH
+usr/share/locale/kmr
 usr/share/locale/kn
 usr/share/locale/ko
 usr/share/locale/kok
@@ -208,8 +209,6 @@ usr/share/locale/ku_IQ
 usr/share/locale/kv
 usr/share/locale/kw
 usr/share/locale/kw_GB
-usr/share/locale/kw@kkcor
-usr/share/locale/kw@uccor
 usr/share/locale/ky
 usr/share/locale/la
 usr/share/locale/languages
@@ -224,6 +223,7 @@ usr/share/locale/lt
 usr/share/locale/lt_LT
 usr/share/locale/lv
 usr/share/locale/lv_LV
+usr/share/locale/lzh
 usr/share/locale/mai
 usr/share/locale/mg
 usr/share/locale/mhr
@@ -239,7 +239,6 @@ usr/share/locale/mni@meiteimayek
 usr/share/locale/mo
 usr/share/locale/mr
 usr/share/locale/ms
-usr/share/locale/ms_Arab
 usr/share/locale/ms_MY
 usr/share/locale/mt
 usr/share/locale/my
@@ -249,9 +248,13 @@ usr/share/locale/nah
 usr/share/locale/nan
 usr/share/locale/nb
 usr/share/locale/nb_NO
+usr/share/locale/nds
 usr/share/locale/ne
 usr/share/locale/nl
+usr/share/locale/nl_BE
 usr/share/locale/nl_NL
+usr/share/locale/nn
+usr/share/locale/nn_NO
 usr/share/locale/no
 usr/share/locale/nr
 usr/share/locale/nso
@@ -260,8 +263,10 @@ usr/share/locale/oc
 usr/share/locale/oj
 usr/share/locale/om
 usr/share/locale/or
+usr/share/locale/or_IN
 usr/share/locale/os
 usr/share/locale/pa
+usr/share/locale/pa_PK
 usr/share/locale/pap
 usr/share/locale/pi
 usr/share/locale/pl
@@ -275,6 +280,7 @@ usr/share/locale/quz
 usr/share/locale/rm
 usr/share/locale/ro
 usr/share/locale/rom
+usr/share/locale/ro_MD
 usr/share/locale/ro_RO
 usr/share/locale/ru
 usr/share/locale/ru_RU
@@ -284,10 +290,10 @@ usr/share/locale/sat
 usr/share/locale/sat@deva
 usr/share/locale/sat@olchiki
 usr/share/locale/sc
-usr/share/locale/sco
 usr/share/locale/sd
 usr/share/locale/sd@deva
 usr/share/locale/sd@devanagari
+usr/share/locale/se
 usr/share/locale/shn
 usr/share/locale/shs
 usr/share/locale/si
@@ -296,6 +302,7 @@ usr/share/locale/sk
 usr/share/locale/sk_SK
 usr/share/locale/sl
 usr/share/locale/sl_SI
+usr/share/locale/sm
 usr/share/locale/sn
 usr/share/locale/so
 usr/share/locale/son
@@ -307,6 +314,7 @@ usr/share/locale/sr@ijekavian
 usr/share/locale/sr@ijekavianlatin
 usr/share/locale/sr@latin
 usr/share/locale/sr@Latn
+usr/share/locale/sr_Latn
 usr/share/locale/sr_RS
 usr/share/locale/sr_RS@latin
 usr/share/locale/st
@@ -314,6 +322,7 @@ usr/share/locale/su
 usr/share/locale/sw
 usr/share/locale/szl
 usr/share/locale/ta
+usr/share/locale/ta_IN
 usr/share/locale/te
 usr/share/locale/tg
 usr/share/locale/th
@@ -323,6 +332,7 @@ usr/share/locale/tig
 usr/share/locale/tk
 usr/share/locale/tl
 usr/share/locale/tlh
+usr/share/locale/tok
 usr/share/locale/tr
 usr/share/locale/ts
 usr/share/locale/tt
@@ -332,7 +342,6 @@ usr/share/locale/tyv
 usr/share/locale/tzm
 usr/share/locale/ug
 usr/share/locale/ur
-usr/share/locale/ur_PK
 usr/share/locale/uz
 usr/share/locale/uz@cyrillic
 usr/share/locale/ve
@@ -341,18 +350,18 @@ usr/share/locale/vi
 usr/share/locale/vi_VN
 usr/share/locale/wa
 usr/share/locale/wal
-usr/share/locale/wba
 usr/share/locale/wo
 usr/share/locale/xh
 usr/share/locale/yi
 usr/share/locale/yo
+usr/share/locale/yue
 usr/share/locale/zam
 usr/share/locale/zh
 usr/share/locale/zh_CN
 usr/share/locale/zh_CN.GB2312
+usr/share/locale/zh_Hans
 usr/share/locale/zh_Hant
 usr/share/locale/zh_HK
 usr/share/locale/zh_TW
 usr/share/locale/zh_TW.Big5
 usr/share/locale/zu
-
