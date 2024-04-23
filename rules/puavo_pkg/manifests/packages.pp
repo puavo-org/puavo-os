@@ -35,7 +35,6 @@ class puavo_pkg::packages {
 			, 'idid'
 			, 'kojo'
 			, 'launcherone'
-			, 'mafynetti'
 			, 'marvinsketch'
 			, 'musescore-appimage'
 			, 'msttcorefonts'
@@ -44,7 +43,6 @@ class puavo_pkg::packages {
                         , 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
 			, 'puavo-firmware'
-			, 'robboscratch'
 			, 'rustdesk'
 			, 'schoolstore-ti-widgets'
 			, 'scratux'
@@ -60,8 +58,7 @@ class puavo_pkg::packages {
 			, 'veracrypt'
                         , 'wine-gecko'
                         , 'wine-mono'
-                        , 'xournalpp'
-			, 'zoom' ]
+                        , 'xournalpp' ]
 
   @puavo_pkg::install { $available_packages: ; }
 
