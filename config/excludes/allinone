@@ -23,12 +23,12 @@ tmp/*
 tmp/.*
 usr/lib/x86_64-linux-gnu/avogadro2/staticplugins
 var/backups/*
-var/cache/apt/archives/*.deb
-var/cache/apt/archives/partial/*
+var/cache/apt/*
 var/cache/puavo-pkg/*
 var/cache/puppet/*
 var/crash/*
 var/lib/apt/lists/*
+var/lib/dkms/*
 var/lib/mysql/*
 var/lib/puavo-guestsetup/home
 var/lib/sudo/*
