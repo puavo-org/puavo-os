@@ -43,7 +43,6 @@ class puavo_pkg::packages {
 			, 'novoconnect'
                         , 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
-			, 'processing'
 			, 'puavo-firmware'
 			, 'robboscratch'
 			, 'rustdesk'
