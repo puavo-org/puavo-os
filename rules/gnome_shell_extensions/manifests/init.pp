@@ -36,7 +36,6 @@ class gnome_shell_extensions {
     , 'Move_Clock@rmy.pobox.com'
     , 'puavomenu@puavo.org'
     , 'quick-settings-tweaks@qwreey'
-    , 'sound-output-device-chooser@kgshank.net'
     , 'TopIcons@phocean.net'
     , 'uparrows@puavo.org'
     , 'user-theme@gnome-shell-extensions.gcampax.github.com' ]:
