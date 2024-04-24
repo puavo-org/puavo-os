@@ -1606,6 +1606,10 @@ class VeyonListenForMasters():
           self.client.remove_master(address)
 
 
+  def update_service(self, zeroconf, service_type, name):
+    pass
+
+
 class PuavoVeyonApplet:
   ICON_DIR = '/usr/share/icons/Faenza/status/scalable'
   ICON_CLOSED = os.path.join(ICON_DIR,
