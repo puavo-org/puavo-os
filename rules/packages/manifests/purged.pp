@@ -47,6 +47,9 @@ class packages::purged {
     , 'software-properties-gtk'
     , 'synaptic'
 
+    # not needed, probably
+    , 'switcheroo-control'
+
     , 'texlive-fonts-extra'
     , 'texlive-fonts-extra-doc'
     , 'texlive-fonts-recommended-doc'
