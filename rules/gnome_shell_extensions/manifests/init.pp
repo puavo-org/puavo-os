@@ -27,7 +27,6 @@ class gnome_shell_extensions {
 
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'bottompanel@tmoer93'
-    , 'BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm'
     , 'dash-to-panel@jderose9.github.com'
     , 'ding@rastersoft.com'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
