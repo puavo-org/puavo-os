@@ -7,7 +7,7 @@ class packages {
   include ::packages::purged
 
   # install packages by default
-  Package { ensure => present, }
+  Package { ensure => present, install_options => [ '--no-install-recommends' ] }
 
   #
   # Puavo OS packages
@@ -938,10 +938,4 @@ class packages {
       tag => [ 'tag_utils', 'tag_debian_nonfree', ];
   }
 
-  # For some reason installing "wireguards-tools" prefers
-  # to install some kernel packages we do not want.
-  # Prevent this from happening by using "--no-install-recommends".
-  Package['wireguard-tools'] {
-    install_options => [ '--no-install-recommends' ],
-  }
 }
