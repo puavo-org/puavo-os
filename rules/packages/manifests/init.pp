@@ -81,6 +81,7 @@ class packages {
     , 'nginx'
     , 'openbsd-inetd'
     , 'policykit-1'
+    , 'polkitd-pkla'
     , 'python3-certbot-nginx'
     , 'python3-numpy'
     , 'python3-redis'
@@ -108,7 +109,9 @@ class packages {
   }
 
   @package {
-    [ 'acpitool'
+    [ 'acpi-support-base'
+    , 'acpid'
+    , 'acpitool'
     , 'arandr'
     , 'atop'
     , 'avahi-utils'
@@ -116,6 +119,7 @@ class packages {
     , 'clusterssh'
     , 'console-setup'
     , 'dconf-cli'
+    , 'dosfstools'
     , 'elinks'
     , 'ethtool'
     , 'expect'
@@ -124,7 +128,9 @@ class packages {
     , 'gawk'
     , 'git'
     , 'htop'
+    , 'ifenslave'
     , 'iftop'
+    , 'ifupdown'
     , 'inetutils-traceroute'
     , 'initramfs-tools'
     , 'initramfs-tools-core'
@@ -146,6 +152,8 @@ class packages {
     , 'moreutils'
     , 'nmap'
     , 'nvme-cli'
+    , 'partclone' #needed by clonezilla
+    , 'partimage' #needed by clonezilla
     , 'powertop'
     , 'procps'
     , 'psensor'
@@ -207,6 +215,7 @@ class packages {
     [ 'bash'
     , 'bash-completion'
     , 'bridge-utils'
+    , 'dialog' #needed by puavo-test-hardware
     , 'efibootmgr'
     , 'gdebi-core'
     , 'grub-efi-amd64-bin'
