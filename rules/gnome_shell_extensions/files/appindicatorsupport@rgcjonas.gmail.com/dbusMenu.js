@@ -129,6 +129,11 @@ var DbusMenuItem = class AppIndicatorsDbusMenuItem {
         this.emit('property-changed', prop, this.propertyGetVariant(prop));
     }
 
+    resetProperties() {
+        Object.entries(PropertyStore.DefaultValues).forEach(([prop, value]) =>
+            this.propertySet(prop, value));
+    }
+
     getChildrenIds() {
         return this._children_ids.concat(); // clone it!
     }
@@ -296,6 +301,8 @@ var DBusClient = GObject.registerClass({
             let item = this._items.get(id);
             if (!item)
                 return;
+
+            item.resetProperties();
 
             for (let prop in properties)
                 item.propertySet(prop, properties[prop]);
