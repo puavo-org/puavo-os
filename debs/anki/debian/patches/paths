@@ -1,0 +1,47 @@
+Author: Andreas Bombe <aeb@debian.org>
+Description: Set file paths to the installed locations
+ Currently the locale files are diverted from the upstream location, so the
+ directory for the gettext files is simply set to /usr/share/locale.
+Forwarded: not-needed
+
+--- a/anki/lang.py
++++ b/anki/lang.py
+@@ -2,7 +2,7 @@
+ # Copyright: Ankitects Pty Ltd and contributors
+ # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+ 
+-import os, sys, re
++import re
+ import gettext
+ import threading
+ 
+@@ -79,17 +79,7 @@
+     return localTranslation().ngettext(single, plural, n)
+ 
+ def langDir():
+-    from anki.utils import isMac
+-    filedir = os.path.dirname(os.path.abspath(__file__))
+-    if isMac:
+-        dir = os.path.abspath(filedir + "/../../Resources/locale")
+-    else:
+-        dir = os.path.join(filedir, "locale")
+-    if not os.path.isdir(dir):
+-        dir = os.path.join(os.path.dirname(sys.argv[0]), "locale")
+-    if not os.path.isdir(dir):
+-        dir = os.path.abspath(os.path.join(filedir, "..", "locale"))
+-    return dir
++    return "/usr/share/locale"
+ 
+ def setLang(lang, local=True):
+     trans = gettext.translation(
+--- a/aqt/__init__.py
++++ b/aqt/__init__.py
+@@ -157,7 +157,7 @@
+         app.setLayoutDirection(Qt.LeftToRight)
+     # qt
+     _qtrans = QTranslator()
+-    if _qtrans.load("qt_" + lang, dir):
++    if _qtrans.load("qt_" + lang, "/usr/share/qt5/translations"):
+         app.installTranslator(_qtrans)
+ 
+ # App initialisation

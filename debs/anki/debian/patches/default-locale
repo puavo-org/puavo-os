@@ -1,0 +1,17 @@
+Author: Andreas Bombe <aeb@debian.org>
+Description: Use getlocale(LC_MESSAGES) for default interface locale
+ It will use LANG if LC_MESSAGES is not set and return no locale if neither is
+ set. Using getdefaultlocale() will yield possibly undesired locales if other
+ LC_* fields are set.
+
+--- a/aqt/profiles.py
++++ b/aqt/profiles.py
+@@ -373,7 +373,7 @@
+         d.rejected.connect(lambda: True)
+         # default to the system language
+         try:
+-            (lang, enc) = locale.getdefaultlocale()
++            (lang, enc) = locale.getlocale(locale.LC_MESSAGES)
+         except:
+             # fails on osx
+             lang = "en"

@@ -1,0 +1,28 @@
+Description: Fix mpv arguments to prevent failures
+ In mpv 0.31.0, it started interpreting its arguments strictly, such
+ that you must pass the option value after an equals sign.  As a
+ result of this, anki started incorrectly calling mpv and crashing
+ with a warning about the version of mpv being too old.  This patch,
+ backported from a newer version of anki, corrects this problem.
+Author: Harlan Lieberman-Berg <hlieberman@debian.org>
+Origin: https://github.com/ankitects/anki/commit/ccd715013609133c55e83924734efa78abc03326
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=950964
+--- a/anki/mpv.py
++++ b/anki/mpv.py
+@@ -104,9 +104,9 @@
+         """
+         self.argv = [self.executable]
+         self.argv += self.default_argv
+-        self.argv += ["--input-ipc-server", self._sock_filename]
++        self.argv += ["--input-ipc-server=" + self._sock_filename]
+         if self.window_id is not None:
+-            self.argv += ["--wid", str(self.window_id)]
++            self.argv += ["--wid=" + str(self.window_id)]
+ 
+     def _start_process(self):
+         """Start the mpv process.
+@@ -568,4 +568,3 @@
+         """Set the value of property `name`.
+         """
+         return self.command("set_property", name, value)
+-

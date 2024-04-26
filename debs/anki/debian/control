@@ -1,0 +1,42 @@
+Source: anki
+Maintainer: Laurin Hagemann <laurinhg@gmx.de>
+Section: education
+Priority: optional
+Build-Depends-Indep: python3, dh-python
+X-Python3-Version: >= 3.6
+Standards-Version: 4.6.2
+Homepage: https://apps.ankiweb.net/
+Vcs-Browser: https://salsa.debian.org/debian/anki
+Vcs-Git: https://salsa.debian.org/debian/anki.git
+Build-Depends: debhelper-compat (= 13)
+Rules-Requires-Root: no
+
+Package: anki
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends},
+	python3-pyqt5,
+	python3-pyqt5.qtwebengine,
+	python3-pyqt5.qtwebchannel,
+	libqt5core5a, python3-distutils,
+	python3-bs4, python3-pyaudio, python3-requests,
+	python3-send2trash, python3-decorator, python3-markdown,
+	python3-jsonschema, python3-distro,
+	libjs-jquery, libjs-jquery-ui, libjs-jquery-flot, libjs-mathjax
+Recommends: python3-matplotlib
+Suggests: dvipng, mpv | mplayer, lame
+Description: extensible flashcard learning program
+ Anki is a program designed to help you remember facts (such as words and
+ phrases in a foreign language) as easily, quickly and efficiently as possible.
+ To do this, it tracks how well you remember each fact, and uses that
+ information to optimally schedule review times.
+ .
+ Besides text, it supports sounds, images and rendering TeX snippets in the
+ cards.  It can synchronize card decks to a server so that you can review the
+ deck on other computers, a web interface or mobile devices, for which versions
+ of Anki are also available.  Complete card decks offered by other users can be
+ downloaded the same way.
+ .
+ Anki is extensible with plugins which can be downloaded and installed from
+ the menu.  While Anki can be used for studying anything, plugins are available
+ with special features designed to make studying Japanese and English easier:
+ integrated dictionary lookups, missing kanji reports, and more.
