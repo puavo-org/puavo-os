@@ -10,9 +10,7 @@ Package: puavo-ds-ext
 Architecture: all
 Depends: ${misc:Depends},
  ${shlibs:Depends},
- krb5-kdc-ldap,
  ldap-utils,
- libsasl2-modules-gssapi-mit,
  ruby,
  ruby-ldap,
  slapd
