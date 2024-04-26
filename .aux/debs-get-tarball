@@ -173,6 +173,8 @@ def _check_tar_member(
     tarball_type: str,
     dest_dir_path=os.path.curdir,
 ):
+    TarballType(tarball_type)  # Raises value error if tarball_type is unknown
+
     if member.type not in (tarfile.DIRTYPE, tarfile.SYMTYPE, tarfile.REGTYPE):
         raise InvalidTarMemberError(
             "tar file member is of invalid type", member.name, member.type
@@ -209,19 +211,12 @@ def _check_tar_member(
             "tar file memeber points out from the extraction dir", member.name
         )
 
-    expected_first_part = None
     if tarball_type == TarballType.DEBIAN:
-        expected_first_part = "debian"
-    elif tarball_type == TarballType.ORIG:
-        expected_first_part = f"{puavo_info.name}-{debian.debian_support.Version(puavo_info.version).upstream_version}"
-    else:
-        raise ValueError("invalid tarball_type", tarball_type)
-
-    if pathlib.Path(member.name).parts[0] != expected_first_part:
-        raise InvalidTarMemberError(
-            f"tar file member {member.name!r} of an {tarball_type} tarball has an invalid name, "
-            f"expected it to start with {expected_first_part!r}"
-        )
+        if pathlib.Path(member.name).parts[0] != "debian":
+            raise InvalidTarMemberError(
+                f"tar file member {member.name!r} of an debian tarball has an invalid name, "
+                f"expected it to start with 'debian'"
+            )
 
 
 def _strip_components(member: tarfile.TarInfo, n: int):
