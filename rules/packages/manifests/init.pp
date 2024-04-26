@@ -778,8 +778,8 @@ class packages {
     ]:
       tag => [ 'tag_puavopkg', 'tag_debian_desktop', ];
 
-    # [ 'anki'                  # XXX missing from Bookworm
-    [ 'bindfs'
+    [ 'anki'
+    , 'bindfs'
     , 'binfmt-support'
     , 'blueman'
     , 'desktop-file-utils'
