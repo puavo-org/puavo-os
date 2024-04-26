@@ -223,7 +223,7 @@ def _strip_components(member: tarfile.TarInfo, n: int):
         member.name = os.path.join(*parts)
 
 
-def _extract(puavo_info, tarball_filepath: str, tarball_type: str):
+def _extract(tarball_filepath: str, tarball_type: str):
     TarballType(tarball_type)  # Raises ValueError if tarball_type in unknown
 
     root_dir_name = None
@@ -275,7 +275,7 @@ def _main() -> int:
     if args.download_only:
         return 0
 
-    _extract(puavo_info, tarball_filepath, args.TARBALL_TYPE)
+    _extract(tarball_filepath, args.TARBALL_TYPE)
 
     return 0
 
