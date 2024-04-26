@@ -23,7 +23,7 @@ find . -mindepth 1 -maxdepth 1 -not -name puavo -exec rm -rf {} \;
 "${thisscriptdir}/debs-import-patches"
 
 if [ -e debian/patches/series ]; then
-  quilt push -a
+  QUILT_PATCHES=debian/patches quilt push -a
 fi
 
 puavo_version=$(jq -r .version puavo/info.json)
