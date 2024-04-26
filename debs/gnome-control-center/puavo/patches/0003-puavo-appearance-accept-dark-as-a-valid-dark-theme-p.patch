@@ -1,0 +1,101 @@
+From 647cd9487b42d9dc5d7e7e353ae2c0a1d0cc9bc0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Fri, 26 Apr 2024 14:18:07 +0300
+Subject: [PATCH 3/3] [puavo] appearance: accept -dark as a valid dark theme
+ prefix
+
+---
+ panels/background/cc-background-panel.c | 46 +++++++++++++++++++++----
+ 1 file changed, 40 insertions(+), 6 deletions(-)
+
+diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
+index 98238b209..b11ce6c2f 100644
+--- a/panels/background/cc-background-panel.c
++++ b/panels/background/cc-background-panel.c
+@@ -21,6 +21,7 @@
+ #include <config.h>
+ 
+ #include <string.h>
++#include <unistd.h>
+ #include <glib.h>
+ #include <glib/gi18n-lib.h>
+ #include <glib/gstdio.h>
+@@ -77,6 +78,9 @@ struct _CcBackgroundPanel
+   GtkToggleButton *dark_toggle;
+ };
+ 
++static const gchar *const DARK_SUFFIXES[] = {"-Dark", "-dark"};
++static const int DARK_SUFFIX_COUNT = sizeof(DARK_SUFFIXES) / sizeof(DARK_SUFFIXES[0]);
++
+ CC_PANEL_REGISTER (CcBackgroundPanel, cc_background_panel)
+ 
+ static void
+@@ -137,21 +141,42 @@ static gchar*
+ get_default_theme(const gchar *theme)
+ {
+   if (!theme)
+-      return NULL;
++    return NULL;
+ 
+   /* If the theme is somehow just "-Dark", then it's not considered to
+    * be Dark version. Because would it be the Dark version of nothing?
+    * What is Darker than nothing? Nothing. So, "-Dark" cannot be Dark
+    * version, it's the default version. */
+-  if (g_strcmp0 (theme, "-Dark") == 0)
+-      return g_strdup(theme);
++  for (int i = 0; i < DARK_SUFFIX_COUNT; ++i)
++    {
++      if (g_strcmp0 (theme, DARK_SUFFIXES[i]) == 0)
++        return g_strdup(theme);
++    }
+ 
+-  if (g_str_has_suffix (theme, "-Dark"))
+-      return g_strndup (theme, strlen (theme) - 5);
++  for (int i = 0; i < DARK_SUFFIX_COUNT; ++i)
++    {
++      if (g_str_has_suffix (theme, DARK_SUFFIXES[i]))
++        return g_strndup(theme, strlen (theme) - strlen(DARK_SUFFIXES[i]));
++    }
+ 
+   return g_strdup (theme);
+ }
+ 
++static gboolean
++does_theme_exist(const gchar *theme_name, const gchar *theme_name_suffix)
++{
++  gchar *theme_index_file_path;
++  gboolean retval = FALSE;
++
++  theme_index_file_path = g_strconcat ("/usr/share/themes/", theme_name, theme_name_suffix, "/index.theme", NULL);
++  if (g_access(theme_index_file_path, F_OK) == 0)
++    retval = TRUE;
++
++  g_free(theme_index_file_path);
++
++  return retval;
++}
++
+ static gchar*
+ get_next_theme (const gchar         *theme,
+                 GDesktopColorScheme color_scheme)
+@@ -162,7 +187,16 @@ get_next_theme (const gchar         *theme,
+       return NULL;
+ 
+   if (color_scheme == G_DESKTOP_COLOR_SCHEME_PREFER_DARK)
+-      return g_strconcat (default_theme, "-Dark", NULL);
++    {
++      for (int i = 0; i < DARK_SUFFIX_COUNT; ++i)
++        {
++          if (does_theme_exist(default_theme, DARK_SUFFIXES[i]))
++            return g_strconcat (default_theme, DARK_SUFFIXES[i], NULL);
++        }
++      g_warning("Dark theme does not exist for theme %s\n", theme);
++    }
++
++
+ 
+   return g_strdup (default_theme);
+ }
+-- 
+2.39.2
+
