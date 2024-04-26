@@ -168,9 +168,8 @@ class InvalidTarMemberError(Exception):
 
 def _check_tar_member(
     *,
-    puavo_info: PuavoInfo,
+    root_dir_name: str,
     member: tarfile.TarInfo,
-    tarball_type: str,
     dest_dir_path=os.path.curdir,
 ):
     if member.type not in (tarfile.DIRTYPE, tarfile.SYMTYPE, tarfile.REGTYPE):
@@ -209,18 +208,10 @@ def _check_tar_member(
             "tar file memeber points out from the extraction dir", member.name
         )
 
-    expected_first_part = None
-    if tarball_type == TarballType.DEBIAN:
-        expected_first_part = "debian"
-    elif tarball_type == TarballType.ORIG:
-        expected_first_part = f"{puavo_info.name}-{debian.debian_support.Version(puavo_info.version).upstream_version}"
-    else:
-        raise ValueError("invalid tarball_type", tarball_type)
-
-    if pathlib.Path(member.name).parts[0] != expected_first_part:
+    if pathlib.Path(member.name).parts[0] != root_dir_name:
         raise InvalidTarMemberError(
-            f"tar file member {member.name!r} of an {tarball_type} tarball has an invalid name, "
-            f"expected it to start with {expected_first_part!r}"
+            f"tar file member {member.name!r} has an invalid root dir name, "
+            f"expected it to be {root_dir_name!r}"
         )
 
 
@@ -233,10 +224,22 @@ def _strip_components(member: tarfile.TarInfo, n: int):
 
 
 def _extract(puavo_info, tarball_filepath: str, tarball_type: str):
+    TarballType(tarball_type)  # Raises ValueError if tarball_type in unknown
+
+    root_dir_name = None
+    if tarball_type == TarballType.DEBIAN:
+        # For debian tarballs, the root dir must be "debian", no questions.
+        root_dir_name = "debian"
+
     with tarfile.open(tarball_filepath) as tarball:
         for member in tarball:
+            if root_dir_name is None:
+                # Ensures that all members in the tarfile will be
+                # under the same root directory.
+                root_dir_name = pathlib.Path(member.name).parts[0]
             _check_tar_member(
-                puavo_info=puavo_info, member=member, tarball_type=tarball_type
+                root_dir_name=root_dir_name,
+                member=member,
             )
             if tarball_type == TarballType.ORIG:
                 _strip_components(member, 1)
