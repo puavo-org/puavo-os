@@ -33,6 +33,4 @@ install: install-dirs
 		bin/puavo-reset-kerberos-configurations \
 		bin/puavo-restore-all-databases
 
-	install -m 744 -t $(DESTDIR)/etc/init.d init/puavo-kadmind
-
 clean:
