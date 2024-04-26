@@ -1,6 +1,0 @@
-dir_to_symlink /usr/share/doc/libgtk-4-doc/gdk4 ../../gtk-doc/html/gdk4 3.96.0-1~
-dir_to_symlink /usr/share/doc/libgtk-4-doc/gsk4 ../../gtk-doc/html/gsk4 3.96.0-1~
-dir_to_symlink /usr/share/doc/libgtk-4-doc/gtk4 ../../gtk-doc/html/gtk4 3.96.0-1~
-symlink_to_dir /usr/share/gtk-doc/html/gdk4 ../../doc/libgtk-4-doc/gdk4 3.96.0-1~
-symlink_to_dir /usr/share/gtk-doc/html/gsk4 ../../doc/libgtk-4-doc/gsk4 3.96.0-1~
-symlink_to_dir /usr/share/gtk-doc/html/gtk4 ../../doc/libgtk-4-doc/gtk4 3.96.0-1~

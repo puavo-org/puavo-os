@@ -20,7 +20,6 @@ _pkgs_ports := anki                   \
                wsmancli
 
 # XXX disabled for bookworm
-# XXX gtk4 fails to build (even without our patch)
 #                gtk4                   \
 #                kde-spectacle          \
 
