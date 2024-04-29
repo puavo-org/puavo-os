@@ -157,7 +157,7 @@ def penWidthIcon(width, iconWidth=16, iconHeight=16):
     painter.setBrush(Qt.white)
     painter.drawRect(0, 0, iconWidth, iconHeight)
     painter.setBrush(Qt.black)
-    x = y = (max(iconWidth, iconHeight) - width) / 2
+    x = y = int((max(iconWidth, iconHeight) - width) / 2)
     painter.drawEllipse(x, y, width, width)
     painter.end()
 
