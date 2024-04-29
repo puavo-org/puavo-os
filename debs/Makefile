@@ -10,6 +10,7 @@ _pkgs_ports := anki                   \
                gnome-network-displays \
                gnome-shell            \
                gtk+3.0                \
+               gtk4                   \
                hooktftp               \
                libpam-ccreds          \
                linux                  \
@@ -20,7 +21,6 @@ _pkgs_ports := anki                   \
                wsmancli
 
 # XXX disabled for bookworm
-#                gtk4                   \
 #                kde-spectacle          \
 
 # sblim-sfcc openwsman are dependencies for wsmancli
