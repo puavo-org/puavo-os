@@ -1,0 +1,36 @@
+From 1d6951c9a938cbf18ef525b52bf030f8be8c924a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Mon, 29 Apr 2024 19:15:57 +0300
+Subject: [PATCH 6/7] [puavo] appearance: tighten icon chooser layout to fit
+ all 5 icon themes on the same row
+
+---
+ panels/background/cc-icon-theme-chooser.ui | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/panels/background/cc-icon-theme-chooser.ui b/panels/background/cc-icon-theme-chooser.ui
+index 7b201b1fb..c6c9e38fd 100644
+--- a/panels/background/cc-icon-theme-chooser.ui
++++ b/panels/background/cc-icon-theme-chooser.ui
+@@ -5,12 +5,12 @@
+ 
+     <child>
+       <object class="GtkFlowBox" id="flowbox">
+-        <property name="margin-top">12</property>
+-        <property name="margin-bottom">12</property>
+-        <property name="margin-start">12</property>
+-        <property name="margin-end">12</property>
+-        <property name="column-spacing">12</property>
+-        <property name="row-spacing">12</property>
++        <property name="margin-top">3</property>
++        <property name="margin-bottom">3</property>
++        <property name="margin-start">3</property>
++        <property name="margin-end">3</property>
++        <property name="column-spacing">3</property>
++        <property name="row-spacing">3</property>
+         <property name="homogeneous">True</property>
+         <property name="halign">center</property>
+         <property name="min-children-per-line">1</property>
+-- 
+2.39.2
+
