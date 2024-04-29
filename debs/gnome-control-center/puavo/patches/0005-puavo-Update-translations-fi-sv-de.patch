@@ -1,0 +1,74 @@
+From fd2d1c5dddd2994d4e3071a24aecf1e60d098b0e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Mon, 29 Apr 2024 18:42:03 +0300
+Subject: [PATCH 5/7] [puavo] Update translations fi, sv, de
+
+---
+ po/de.po | 6 +++++-
+ po/fi.po | 6 +++++-
+ po/sv.po | 6 +++++-
+ 3 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/po/de.po b/po/de.po
+index f6fea8c92..6d7a7fd8e 100644
+--- a/po/de.po
++++ b/po/de.po
+@@ -441,10 +441,14 @@ msgid "Dark"
+ msgstr "Dunkel"
+ 
+ #: panels/background/cc-background-panel.ui:98
++msgid "Icon theme"
++msgstr "Icon Thema"
++
++#: panels/background/cc-background-panel.ui:118
+ msgid "Background"
+ msgstr "Hintergrund"
+ 
+-#: panels/background/cc-background-panel.ui:104
++#: panels/background/cc-background-panel.ui:124
+ msgid "Add Picture…"
+ msgstr "Bild hinzufügen …"
+ 
+diff --git a/po/fi.po b/po/fi.po
+index 01a88c777..0b00148bb 100644
+--- a/po/fi.po
++++ b/po/fi.po
+@@ -438,10 +438,14 @@ msgid "Dark"
+ msgstr "Tumma"
+ 
+ #: panels/background/cc-background-panel.ui:98
++msgid "Icon theme"
++msgstr "Kuvaketeema"
++
++#: panels/background/cc-background-panel.ui:118
+ msgid "Background"
+ msgstr "Taustakuva"
+ 
+-#: panels/background/cc-background-panel.ui:104
++#: panels/background/cc-background-panel.ui:124
+ msgid "Add Picture…"
+ msgstr "Lisää kuva…"
+ 
+diff --git a/po/sv.po b/po/sv.po
+index def284af1..1fe298086 100644
+--- a/po/sv.po
++++ b/po/sv.po
+@@ -424,10 +424,14 @@ msgid "Dark"
+ msgstr "Mörk"
+ 
+ #: panels/background/cc-background-panel.ui:98
++msgid "Icon theme"
++msgstr "Ikon tema"
++
++#: panels/background/cc-background-panel.ui:118
+ msgid "Background"
+ msgstr "Bakgrund"
+ 
+-#: panels/background/cc-background-panel.ui:104
++#: panels/background/cc-background-panel.ui:124
+ msgid "Add Picture…"
+ msgstr "Lägg till bild…"
+ 
+-- 
+2.39.2
+

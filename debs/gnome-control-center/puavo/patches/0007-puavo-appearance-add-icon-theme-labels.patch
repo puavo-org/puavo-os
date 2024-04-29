@@ -1,0 +1,48 @@
+From d5d48282a3ffa3faee0059a0668ff35743bb8098 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Mon, 29 Apr 2024 19:16:44 +0300
+Subject: [PATCH 7/7] [puavo] appearance: add icon theme labels
+
+---
+ panels/background/cc-icon-theme-chooser.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/panels/background/cc-icon-theme-chooser.c b/panels/background/cc-icon-theme-chooser.c
+index 667f859d4..c5b8cf13e 100644
+--- a/panels/background/cc-icon-theme-chooser.c
++++ b/panels/background/cc-icon-theme-chooser.c
+@@ -92,6 +92,7 @@ create_flow_box_child(const gchar *const icon_theme_name)
+   GtkWidget *child;
+   GtkWidget *overlay;
+   GtkWidget *picture;
++  GtkWidget *grid;
+ 
+   picture = load_icon_theme_picture (icon_theme_name);
+ 
+@@ -106,10 +107,22 @@ create_flow_box_child(const gchar *const icon_theme_name)
+   gtk_overlay_set_child (GTK_OVERLAY (overlay), picture);
+   gtk_overlay_add_overlay (GTK_OVERLAY (overlay), check);
+ 
++  grid = gtk_grid_new ();
++  gtk_grid_set_column_homogeneous (GTK_GRID (grid), TRUE);
++  gtk_grid_set_column_spacing (GTK_GRID (grid), 3);
++  gtk_grid_set_row_spacing (GTK_GRID (grid), 3);
++  gtk_widget_set_margin_start (grid, 3);
++  gtk_widget_set_margin_end (grid, 3);
++  gtk_widget_set_margin_top (grid, 3);
++  gtk_widget_set_margin_bottom (grid, 3);
++  gtk_widget_set_hexpand (grid, TRUE);
++  gtk_grid_attach (GTK_GRID (grid), overlay, 0, 0, 1, 1);
++  gtk_grid_attach (GTK_GRID (grid), gtk_label_new (icon_theme_name), 0, 1, 1, 1);
++
+   child = gtk_flow_box_child_new ();
+   gtk_widget_set_halign (child, GTK_ALIGN_CENTER);
+   gtk_widget_set_valign (child, GTK_ALIGN_CENTER);
+-  gtk_flow_box_child_set_child (GTK_FLOW_BOX_CHILD (child), overlay);
++  gtk_flow_box_child_set_child (GTK_FLOW_BOX_CHILD (child), grid);
+ 
+   gtk_widget_set_tooltip_text (child, icon_theme_name);
+ 
+-- 
+2.39.2
+
