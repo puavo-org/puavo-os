@@ -24,9 +24,6 @@ install: bin/puavo-autopilot-env installdirs
 	$(INSTALL) -t $(DESTDIR)$(bindir) \
 		bin/*
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-autopilot \
-		lib/*
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-autopilot \
 		share/*.png
 
