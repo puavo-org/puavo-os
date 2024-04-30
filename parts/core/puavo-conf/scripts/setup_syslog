@@ -265,7 +265,7 @@ cat <<EOF
 
 # XXX Do not log message about missing ldap attribute indexed.
 # XXX We should perhaps look into this if we want to do add those indices...
-:msg, regex, "<= bdb_equality_candidates: \(.*\) not indexed" stop
+:msg, regex, "<= mdb_equality_candidates: \(.*\) not indexed" stop
 
 if (\$hostname == "${hostname}") then {
   # Put cron job runs to their own logfile.
