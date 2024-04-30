@@ -183,11 +183,6 @@
     "description": "Enable/disable avahi-daemon service",
     "typehint": "bool"
   },
-  "puavo.service.certbot.enabled": {
-    "default": "false",
-    "description": "Enable/disable certbot service",
-    "typehint": "bool"
-  },
   "puavo.service.collectd.enabled": {
     "default": "false",
     "description": "Enable/disable collectd service",

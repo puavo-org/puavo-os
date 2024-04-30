@@ -32,11 +32,6 @@ set services {
         -> /lib/systemd/system/avahi-daemon.socket
     }}
 
-  { certbot {
-      /etc/systemd/system/timers.target.wants/certbot.timer
-        -> /lib/systemd/system/certbot.timer
-    }}
-
   { collectd {
       /etc/systemd/system/multi-user.target.wants/collectd.service
         -> /lib/systemd/system/collectd.service
