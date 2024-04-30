@@ -24,3 +24,9 @@ find /etc/NetworkManager/system-connections/ -mindepth 1 -maxdepth 1 -type f \
         }
       ' \
     | xargs -0 rm -f
+
+# If guest was explicitly set, we are running as part of
+# guest user cleanup and should also clear NetworkManager state.
+if [ "$bad_user_list" = 'guest' ]; then
+  nmcli connection reload
+fi
