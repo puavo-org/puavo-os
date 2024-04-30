@@ -10,17 +10,14 @@ else
         RUBY_LIB_DIR = $(prefix)/lib/ruby/vendor_ruby
 endif
 
-all :
-	bundle install --standalone --path lib/puavobs-vendor
+all:
 
-installdirs :
+installdirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
 
-install : installdirs
-	$(INSTALL_DATA) -t $(DESTDIR)$(RUBY_LIB_DIR) \
-		puavobs.rb
-	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
+install: installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(RUBY_LIB_DIR) puavobs.rb
 
-clean :
+clean:
 
-.PHONY : all build installdirs install clean
+.PHONY: all installdirs install clean

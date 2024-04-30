@@ -437,10 +437,10 @@ Package: ruby-puavobs
 Architecture: any
 XS-Ruby-Versions: ruby
 Depends: ${shlibs:Depends}, ${misc:Depends},
- bundler | ruby-bundler,
- ruby-highline,
+ puavo-client,
  ruby,
- puavo-client
+ ruby-highline,
+ ruby-http
 Description: Puavo Bootserver library for Ruby
  This library provides helper functions for common operations done in
  Puavo Bootservers.

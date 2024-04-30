@@ -1,5 +1,3 @@
-require_relative 'puavobs-vendor/bundler/setup.rb'
-
 ## Standard libraries.
 require 'base64'
 require 'etc'
