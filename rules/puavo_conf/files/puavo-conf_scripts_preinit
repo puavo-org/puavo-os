@@ -18,7 +18,6 @@ set_machine_id
 setup_reset_host
 set_systemd_default_target
 setup_swap
-setup_preinstalled_mode
 setup_syslog
 setup_polkit
 setup_xorg
@@ -45,7 +44,6 @@ setup_networking
 setup_network_manager
 setup_xsessions
 setup_devilspie
-setup_preinstalled_mode
 setup_puavomenu
 setup_guestuser
 setup_nfs_client
