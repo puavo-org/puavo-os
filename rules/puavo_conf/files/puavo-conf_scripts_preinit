@@ -19,7 +19,6 @@ setup_reset_host
 set_systemd_default_target
 setup_swap
 setup_preinstalled_mode
-maybe_disable_acpi_wakeup
 setup_syslog
 setup_polkit
 setup_xorg
