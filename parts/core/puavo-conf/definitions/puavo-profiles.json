@@ -51,11 +51,6 @@
   "puavo.profile.nextcloud": {
     "default": "false"
   },
-  "puavo.profile.onlyfree": {
-    "default": "false",
-    "description": "Enable/disable the onlyfree puavo-conf profile",
-    "typehint": "bool"
-  },
   "puavo.profile.personal": {
     "default": "false",
     "description": "Enable/disable the personal device puavo-conf profile",
