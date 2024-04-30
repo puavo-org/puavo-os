@@ -183,11 +183,6 @@
     "description": "Enable/disable avahi-daemon service",
     "typehint": "bool"
   },
-  "puavo.service.collectd.enabled": {
-    "default": "false",
-    "description": "Enable/disable collectd service",
-    "typehint": "bool"
-  },
   "puavo.service.cron.cronjobs": {
     "default": "puavo-cleanup-old-users",
     "description": "A comma-separated list of puavo-specific cron jobs to run",

@@ -32,15 +32,6 @@ set services {
         -> /lib/systemd/system/avahi-daemon.socket
     }}
 
-  { collectd {
-      /etc/systemd/system/multi-user.target.wants/collectd.service
-        -> /lib/systemd/system/collectd.service
-      /etc/rc2.d/S01collectd -> /etc/init.d/collectd
-      /etc/rc3.d/S01collectd -> /etc/init.d/collectd
-      /etc/rc4.d/S01collectd -> /etc/init.d/collectd
-      /etc/rc5.d/S01collectd -> /etc/init.d/collectd
-    }}
-
   { cups-browsed {
       /etc/systemd/system/multi-user.target.wants/cups-browsed.service
         -> /lib/systemd/system/cups-browsed.service
