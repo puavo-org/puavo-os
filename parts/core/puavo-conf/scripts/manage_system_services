@@ -330,8 +330,8 @@ set enabled_services  [list]
 foreach service_def $services {
   foreach {service service_link_defs} $service_def {
     set puavo_conf_var "puavo.service.${service}.enabled"
-    set res [ catch { exec -ignorestderr puavo-conf $puavo_conf_var } \
-                           puavo_conf_res]
+    set res [catch { exec -ignorestderr puavo-conf $puavo_conf_var } \
+                   puavo_conf_res]
     if {$res} {
       puts stderr "No puavo-conf setting for $puavo_conf_var: $puavo_conf_res"
       set status 1
