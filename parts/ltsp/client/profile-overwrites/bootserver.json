@@ -9,6 +9,7 @@
   "puavo.guestlogin.enabled": "false",
   "puavo.networking.bootserver.interfaces.schools": "ltsp*,wlan*:*",
   "puavo.networking.ddns.dhcpd_interfaces": "ltsp*,wlan*",
+  "puavo.serialconsole.enabled": "true",
   "puavo.service.atop.enabled": "true",
   "puavo.service.cron.cronjobs": "fix-homedir-permissions,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-setup-bootserver-printer-restrictions,remove-cups-jobs",
   "puavo.service.cups-browsed.enabled": "false",
@@ -39,6 +40,5 @@
   "puavo.service.slapd.enabled": "true",
   "puavo.service.smbd.enabled": "true",
   "puavo.service.winbind.enabled": "true",
-  "puavo.serialconsole.enabled": "true",
   "puavo.xsessions.display_manager": "tty"
 }
