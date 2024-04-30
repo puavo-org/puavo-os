@@ -19,7 +19,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/logrotate.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/nginx/sites-available
-	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-bootserver
 	mkdir -p $(DESTDIR)/var/lib/puavo
 
@@ -27,9 +26,6 @@ installdirs :
 install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/logrotate.d \
 		etc/logrotate.d/hosts
-
-	$(INSTALL) -m 440 -t $(DESTDIR)$(sysconfdir)/sudoers.d \
-		etc/sudoers.d/puavo-bootserver
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/*
