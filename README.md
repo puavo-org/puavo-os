@@ -2,12 +2,12 @@
 
 To build images with these sources,
 your build environment should be a Debian GNU/Linux
-installation.  To build images with "Buster"-version,
-use the "buster"-branch.  To build images with "Bullseye"-version,
-use the "bullseye"-branch.  The build host should probably be
-of the same version your target image is.  As of March 2022,
-our main production version is Buster and Bullseye
-is under active development.
+installation.  To build images with "Bullseye"-version,
+use the "bullseye"-branch.  To build images with "Bookworm"-version,
+use the "bookworm"-branch.  The build host should probably be
+of the same version your target image is.  As of May 2024,
+our main production version is Bullseye and Bookworm
+is almost ready for widespread deployment.
 
 After cloning the repository, you should also update
 submodules (unless the repository was cloned with parameter --recursive):
@@ -33,7 +33,7 @@ Run `make help` to get help.
 Note: As the build process scouts some parameters from the runtime
 environment, building it under a puavo-os session might require
 some manual steps not yet documented here. Building in e.g. a
-fresh Debian Bullseye virtual machine works with the steps listed
+fresh Debian Bookworm virtual machine works with the steps listed
 above. Due to build process using a ramdisk /tmp, the virtual
 machine should have at least 16 GB of RAM for successful build.
 
