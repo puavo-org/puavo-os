@@ -25,8 +25,7 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-usb-factory \
-			   puavo-usb-writer
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-usb-factory
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-usb-factory \
 		${FLASHDRIVE_IMAGES}
 
