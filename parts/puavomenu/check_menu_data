@@ -13,6 +13,7 @@ import gi
 gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gio
 
+import constants
 import filters.tags
 import filters.conditionals
 import menudata
@@ -95,7 +96,7 @@ if icon_theme and icon_theme in dirs_config.theme_icon_dirs:
 
 icon_locator.scan_directories()
 
-icons = icons.IconCache(1024, 48)
+icons = icons.IconCache(1024, constants.PROGRAM_BUTTON_ICON_SIZE)
 
 # Locate and parse conditionals
 raw_conditional_files = loaders.menudata_loader.find_menu_files(

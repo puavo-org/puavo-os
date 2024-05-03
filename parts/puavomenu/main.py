@@ -150,9 +150,9 @@ class PuavoMenu(Gtk.Window):
 
         self.__in_search = False
 
-        # Storage for 48x48 -pixel program and menu icons. Maintained
+        # Storage for program and menu icons. Maintained
         # separately from the menu data.
-        self.__icons = icons.IconCache(1024, 48)
+        self.__icons = icons.IconCache(1024, PROGRAM_BUTTON_ICON_SIZE)
 
         # General-purpose "icon locator" system. Figuring out which icon
         # files to actually load is complicated.
@@ -525,8 +525,10 @@ class PuavoMenu(Gtk.Window):
             cache_stats = self.__icons.stats()
 
             logging.info(
-                "Cached %d 48x48-pixel icons in %d atlases",
+                "Cached %d %dx%d pixel icons in %d atlases",
                 cache_stats["num_icons"],
+                PROGRAM_BUTTON_ICON_SIZE,
+                PROGRAM_BUTTON_ICON_SIZE,
                 cache_stats["num_atlases"],
             )
 
