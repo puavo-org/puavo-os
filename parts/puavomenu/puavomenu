@@ -69,61 +69,69 @@ to English (en). Accepted language codes are:
     $LANGS
 """
 
-epilog = epilog.replace('$LANGS', ', '.join(LANGUAGES))
+epilog = epilog.replace("$LANGS", ", ".join(LANGUAGES))
 
 # ------------------------------------------------------------------------------
 # Parse the command-line arguments
 
 parser = argparse.ArgumentParser(
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-    epilog=epilog)
+    formatter_class=argparse.RawDescriptionHelpFormatter, epilog=epilog
+)
 
-parser.add_argument('--prod',
-                    action='store_true',
-                    required=False,
-                    help='enable production mode; by default PuavoMenu is always in development mode')
+parser.add_argument(
+    "--prod",
+    action="store_true",
+    required=False,
+    help="enable production mode; by default PuavoMenu is always in development mode",
+)
 
-parser.add_argument('--log',
-                    type=str,
-                    required=False,
-                    help='log file name (logs to console if omitted, required in production mode)')
+parser.add_argument(
+    "--log",
+    type=str,
+    required=False,
+    help="log file name (logs to console if omitted, required in production mode)",
+)
 
-parser.add_argument('--autohide',
-                    action='store_true',
-                    required=False,
-                    help='enable window autohide (not automatically implied in production mode!)')
+parser.add_argument(
+    "--autohide",
+    action="store_true",
+    required=False,
+    help="enable window autohide (not automatically implied in production mode!)",
+)
 
-parser.add_argument('--lang',
-                    type=str,
-                    required=False,
-                    default=None,   # force autodetection
-                    help='language code (see documentation)')
+parser.add_argument(
+    "--lang",
+    type=str,
+    required=False,
+    default=None,  # force autodetection
+    help="language code (see documentation)",
+)
 
-required = parser.add_argument_group('required arguments')
+required = parser.add_argument_group("required arguments")
 
-required.add_argument('--res_dir',
-                      required=True,
-                      type=str,
-                      help='location of PuavoMenu\'s own resources')
+required.add_argument(
+    "--res_dir", required=True, type=str, help="location of PuavoMenu's own resources"
+)
 
-required.add_argument('--menu_dir',
-                      required=True,
-                      type=str,
-                      help='location of the menu data')
+required.add_argument(
+    "--menu_dir", required=True, type=str, help="location of the menu data"
+)
 
-required.add_argument('--user_conf',
-                      required=True,
-                      type=str,
-                      help='location of user-specific configuration')
+required.add_argument(
+    "--user_conf",
+    required=True,
+    type=str,
+    help="location of user-specific configuration",
+)
 
-required.add_argument('--user_progs',
-                      required=False,
-                      type=str,
-                      help='directory where user-defined programs are loaded from')
+required.add_argument(
+    "--user_progs",
+    required=False,
+    type=str,
+    help="directory where user-defined programs are loaded from",
+)
 
-required.add_argument('--socket',
-                      required=True,
-                      help='IPC command socket name')
+required.add_argument("--socket", required=True, help="IPC command socket name")
 
 args = parser.parse_args()
 
@@ -131,16 +139,18 @@ args = parser.parse_args()
 # Setup logging
 
 if args.prod and not args.log:
-    print('\nERROR: You must use the --log switch in production mode!')
+    print("\nERROR: You must use the --log switch in production mode!")
     exit(1)
 
 import logging
 
 if args.log:
     # log to file
-    logging.basicConfig(filename=args.log,
-                        format='%(asctime)s %(levelname)s: %(message)s',
-                        level=logging.DEBUG)
+    logging.basicConfig(
+        filename=args.log,
+        format="%(asctime)s %(levelname)s: %(message)s",
+        level=logging.DEBUG,
+    )
 
     # don't let others see what you're doing
     try:
@@ -149,16 +159,21 @@ if args.log:
         pass
 else:
     # log to console
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
-                        level=logging.DEBUG)
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG
+    )
 
     # colored warnings and errors
     logging.addLevelName(
-        logging.WARNING, '\033[1;93m%s\033[0m' % logging.getLevelName(logging.WARNING))
+        logging.WARNING, "\033[1;93m%s\033[0m" % logging.getLevelName(logging.WARNING)
+    )
     logging.addLevelName(
-        logging.ERROR, '\033[1;91m%s\033[0m' % logging.getLevelName(logging.ERROR))
+        logging.ERROR, "\033[1;91m%s\033[0m" % logging.getLevelName(logging.ERROR)
+    )
     logging.addLevelName(
-        logging.CRITICAL, '\033[1;93;101m%s\033[0m' % logging.getLevelName(logging.CRITICAL))
+        logging.CRITICAL,
+        "\033[1;93;101m%s\033[0m" % logging.getLevelName(logging.CRITICAL),
+    )
 
 # ------------------------------------------------------------------------------
 # Create settings and detect the environment
@@ -169,13 +184,13 @@ settings = settings.Settings()
 
 settings.prod_mode = args.prod
 settings.autohide = args.autohide
-settings.res_dir = os.path.join(args.res_dir, '')
-settings.menu_dir = os.path.join(args.menu_dir, '')
-settings.user_conf = os.path.join(args.user_conf, '')
+settings.res_dir = os.path.join(args.res_dir, "")
+settings.menu_dir = os.path.join(args.menu_dir, "")
+settings.user_conf = os.path.join(args.user_conf, "")
 settings.socket = args.socket
 
-logging.info('Logging starts')
-logging.info('This is PuavoMenu v0.9 (c) Opinsys Oy 2017-2020')
+logging.info("Logging starts")
+logging.info("This is PuavoMenu v0.9 (c) Opinsys Oy 2017-2020")
 
 # Detect the non-configurable settings
 settings.detect_environment()
@@ -185,22 +200,21 @@ if args.lang:
     settings.language = args.lang.lower()
 else:
     # Autodetect from system
-    if 'LANG' in os.environ:
-        settings.language = os.environ['LANG'][0:2].lower()
-    elif 'GDM_LANG' in os.environ:
-        settings.language = os.environ['GDM_LANG'][0:2].lower()
+    if "LANG" in os.environ:
+        settings.language = os.environ["LANG"][0:2].lower()
+    elif "GDM_LANG" in os.environ:
+        settings.language = os.environ["GDM_LANG"][0:2].lower()
 
 # Regardless of where the language code comes from we validate it
 if settings.language not in LANGUAGES:
-    logging.error('Invalid language code "%s", defaulting to "en"',
-                  settings.language)
-    settings.language = 'en'
+    logging.error('Invalid language code "%s", defaulting to "en"', settings.language)
+    settings.language = "en"
 
 _tr.set_language(settings.language)
 
 # Set up the user programs directory, but only in certain sessions
 if args.user_progs and not (settings.is_guest or settings.is_webkiosk):
-    settings.user_programs_dir = os.path.join(args.user_progs, '')
+    settings.user_programs_dir = os.path.join(args.user_progs, "")
 
 logging.info('Language...........: "%s"', settings.language)
 
@@ -220,13 +234,13 @@ logging.info('Desktop directory..: "%s"', settings.desktop_dir)
 logging.info('User type..........: "%s"', settings.user_type)
 
 if not settings.prod_mode:
-    logging.info('Running in development mode')
+    logging.info("Running in development mode")
 
 if settings.autohide:
-    logging.info('Window autohide enabled')
+    logging.info("Window autohide enabled")
 
 if settings.is_personally_administered and settings.is_user_primary_user:
-    logging.info('Device primary user using their personally administered device')
+    logging.info("Device primary user using their personally administered device")
 
 # ------------------------------------------------------------------------------
 # Set up a domain socket
@@ -253,18 +267,20 @@ try:
     sock.listen(10)
 except Exception as exception:
     # Oh dear...
-    logging.error('Unable to create the domain socket for IPC!')
-    logging.error('Reason: %s', str(exception))
-    logging.error('This is a fatal error, stopping here.')
+    logging.error("Unable to create the domain socket for IPC!")
+    logging.error("Reason: %s", str(exception))
+    logging.error("This is a fatal error, stopping here.")
 
-    syslog.syslog(syslog.LOG_CRIT,
-                  'PuavoMenu IPC socket "{0}" creation failed: {1}'.format(
-                      settings.socket, str(exception)))
+    syslog.syslog(
+        syslog.LOG_CRIT,
+        'PuavoMenu IPC socket "{0}" creation failed: {1}'.format(
+            settings.socket, str(exception)
+        ),
+    )
 
-    syslog.syslog(syslog.LOG_CRIT,
-                  'PuavoMenu stops here. Contact Opinsys support.')
+    syslog.syslog(syslog.LOG_CRIT, "PuavoMenu stops here. Contact Opinsys support.")
 
-    logging.info('Logging ends')
+    logging.info("Logging ends")
     logging.shutdown()
     exit(1)
 
@@ -274,14 +290,15 @@ except Exception as exception:
 import traceback
 import utils
 
-logging.info('=' * 50)
+logging.info("=" * 50)
 
 try:
     import_start = time.perf_counter()
     import main
+
     import_end = time.perf_counter()
 
-    utils.log_elapsed_time('Main import time', import_start, import_end)
+    utils.log_elapsed_time("Main import time", import_start, import_end)
     main.run_puavomenu(settings, sock, program_start)
 except Exception as exception:
     # This is bad. Very bad. The exception bubbled all the way up to here,
@@ -290,16 +307,16 @@ except Exception as exception:
 
     if settings.prod_mode:
         # Log fatal exceptions to to syslog
-        syslog.syslog(syslog.LOG_CRIT, 'Top-level exception caught in puavomenu!')
+        syslog.syslog(syslog.LOG_CRIT, "Top-level exception caught in puavomenu!")
         syslog.syslog(syslog.LOG_CRIT, traceback.format_exc())
 
-logging.info('=' * 50)
+logging.info("=" * 50)
 
 # ------------------------------------------------------------------------------
 # Clean exit
 
-logging.info('Shutdown complete')
-logging.info('Logging ends')
+logging.info("Shutdown complete")
+logging.info("Logging ends")
 logging.shutdown()
 
 exit(0)

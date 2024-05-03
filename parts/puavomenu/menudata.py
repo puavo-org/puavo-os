@@ -31,7 +31,7 @@ class CategoryFlags(IntEnum):
 
 # Container for dirs.json
 class DirsConfig:
-    __slots__ = ('desktop_dirs', 'theme_icon_dirs', 'generic_icon_dirs')
+    __slots__ = ("desktop_dirs", "theme_icon_dirs", "generic_icon_dirs")
 
     def __init__(self):
         # Directories where to look for .desktop files
@@ -45,29 +45,28 @@ class DirsConfig:
         # icons could be found
         self.generic_icon_dirs = []
 
-
     def clear(self):
         self.desktop_dirs = []
         self.theme_icon_dirs = {}
         self.generic_icon_dirs = []
-
 
     def load_config(self, name):
         try:
             import logging
             import json
 
-            with open(name, 'r', encoding='utf-8') as df:
+            with open(name, "r", encoding="utf-8") as df:
                 dirs = json.load(df)
 
-                self.desktop_dirs = dirs.get('desktop_dirs', [])
-                icon_dirs = dirs.get('icon_dirs', {})
-                self.theme_icon_dirs = icon_dirs.get('themes', {})
-                self.generic_icon_dirs = icon_dirs.get('generic', [])
+                self.desktop_dirs = dirs.get("desktop_dirs", [])
+                icon_dirs = dirs.get("icon_dirs", {})
+                self.theme_icon_dirs = icon_dirs.get("themes", {})
+                self.generic_icon_dirs = icon_dirs.get("generic", [])
                 return True
         except BaseException as exc:
-            logging.fatal('Failed to load the directories config file "%s": %s',
-                          name, str(exc))
+            logging.fatal(
+                'Failed to load the directories config file "%s": %s', name, str(exc)
+            )
             self.clear()
             return False
 
@@ -75,15 +74,17 @@ class DirsConfig:
 # Base class for all program types
 class ProgramBase:
     __slots__ = (
-        'menudata_id', 'name', 'description', 'icon', 'keywords',
-        'flags', 'original_desktop_file', 'original_icon_name'
+        "menudata_id",
+        "name",
+        "description",
+        "icon",
+        "keywords",
+        "flags",
+        "original_desktop_file",
+        "original_icon_name",
     )
 
-    def __init__(self,
-                 name=None,
-                 description=None,
-                 icon=None):
-
+    def __init__(self, name=None, description=None, icon=None):
         # Internal ID (the name given to this program in menudata files)
         self.menudata_id = None
 
@@ -107,51 +108,42 @@ class ProgramBase:
         self.original_desktop_file = None
         self.original_icon_name = None
 
-
     def __str__(self):
-        return ''
+        return ""
 
 
 # Desktop and custom programs use both this, as the only difference
 # between them is that desktop programs have automatic .desktop file
 # loading, but custom programs don't.
 class Program(ProgramBase):
-    __slots__ = ['command']
+    __slots__ = ["command"]
 
-    def __init__(self,
-                 name=None,
-                 description=None,
-                 icon=None,
-                 command=None):
-
+    def __init__(self, name=None, description=None, icon=None, command=None):
         super().__init__(name, description, icon)
 
         # The actual command line to be executed
         self.command = command
 
-
     def __str__(self):
-        return '<Program, id="{id}", name="{name}", ' \
-               'description="{desc}" command="{cmd}", icon="{icon}" ' \
-               'keywords={kw}>'. \
-               format(id=self.menudata_id,
-                      name=self.name,
-                      desc=self.description,
-                      cmd=self.command,
-                      icon=self.icon,
-                      kw=self.keywords)
+        return (
+            '<Program, id="{id}", name="{name}", '
+            'description="{desc}" command="{cmd}", icon="{icon}" '
+            "keywords={kw}>".format(
+                id=self.menudata_id,
+                name=self.name,
+                desc=self.description,
+                cmd=self.command,
+                icon=self.icon,
+                kw=self.keywords,
+            )
+        )
 
 
 # A puavo-pkg program launcher/installer
 class PuavoPkgProgram(Program):
-    __slots__ = ('package_id', 'state', 'installer_icon', 'raw_menudata')
+    __slots__ = ("package_id", "state", "installer_icon", "raw_menudata")
 
-    def __init__(self,
-                 name=None,
-                 description=None,
-                 icon=None,
-                 command=None):
-
+    def __init__(self, name=None, description=None, icon=None, command=None):
         super().__init__(name, description, icon)
 
         self.package_id = None
@@ -164,7 +156,6 @@ class PuavoPkgProgram(Program):
         # empty, if there was nothing special configured for the program.
         self.raw_menudata = None
 
-
     def is_installer(self):
         # Can only install programs that aren't installed yet
         return self.state == PuavoPkgState.NOT_INSTALLED
@@ -172,14 +163,9 @@ class PuavoPkgProgram(Program):
 
 # User-defined programs
 class UserProgram(Program):
-    __slots__ = ('command', 'filename', 'modified', 'size')
+    __slots__ = ("command", "filename", "modified", "size")
 
-    def __init__(self,
-                 name=None,
-                 description=None,
-                 icon=None,
-                 command=None):
-
+    def __init__(self, name=None, description=None, icon=None, command=None):
         super().__init__(name, description, icon)
 
         # The actual command line to be executed
@@ -192,43 +178,34 @@ class UserProgram(Program):
 
 
 class WebLink(ProgramBase):
-    __slots__ = ['url']
+    __slots__ = ["url"]
 
-    def __init__(self,
-                 name=None,
-                 description=None,
-                 icon=None,
-                 url=None):
-
+    def __init__(self, name=None, description=None, icon=None, url=None):
         super().__init__(name, description, icon)
 
         # The URL to be opened
         self.url = url
 
-
     def __str__(self):
-        return '<WebLink, id="{id}", name="{name}", ' \
-               'description="{desc}" url="{url}", icon="{icon}" ' \
-               'keywords={kw}>'. \
-               format(id=self.menudata_id,
-                      name=self.name,
-                      desc=self.description,
-                      url=self.url,
-                      icon=self.icon,
-                      kw=self.keywords)
+        return (
+            '<WebLink, id="{id}", name="{name}", '
+            'description="{desc}" url="{url}", icon="{icon}" '
+            "keywords={kw}>".format(
+                id=self.menudata_id,
+                name=self.name,
+                desc=self.description,
+                url=self.url,
+                icon=self.icon,
+                kw=self.keywords,
+            )
+        )
 
 
 # Groups zero or more programs
 class Menu:
-    __slots__ = ('menudata_id', 'name', 'description', 'icon', 'flags',
-                 'program_ids')
+    __slots__ = ("menudata_id", "name", "description", "icon", "flags", "program_ids")
 
-    def __init__(self,
-                 name=None,
-                 description=None,
-                 icon=None,
-                 program_ids=None):
-
+    def __init__(self, name=None, description=None, icon=None, program_ids=None):
         # Internal ID (the name given to this menu in menudata files)
         self.menudata_id = None
 
@@ -250,14 +227,9 @@ class Menu:
 
 # Groups zero or more menus and programs
 class Category:
-    __slots__ = ('menudata_id', 'name', 'position', 'flags', 'menu_ids',
-                 'program_ids')
+    __slots__ = ("menudata_id", "name", "position", "flags", "menu_ids", "program_ids")
 
-    def __init__(self,
-                 name=None,
-                 menu_ids=None,
-                 program_ids=None):
-
+    def __init__(self, name=None, menu_ids=None, program_ids=None):
         # Internal ID (the name given to this category in menudata files)
         self.menudata_id = None
 
@@ -279,14 +251,13 @@ class Category:
 
 # Wraps (almost) all of the above in a handy structure
 class Menudata:
-    __slots__ = ('programs', 'menus', 'categories', 'category_index')
+    __slots__ = ("programs", "menus", "categories", "category_index")
 
     def __init__(self):
         self.programs = {}
         self.menus = {}
         self.categories = {}
         self.category_index = []
-
 
     # Searches for programs, returns them sorted by their names
     def search(self, key):
@@ -295,12 +266,13 @@ class Menudata:
         # Some programs are in multiple menus, show only the first match
         seen = set()
 
-        add_group = lambda category, menu, programs: \
-            grouped_matches.append({
-                'category': category,
-                'menu': menu,
-                'programs': sorted(programs, key=lambda p: p.name.lower())
-            })
+        add_group = lambda category, menu, programs: grouped_matches.append(
+            {
+                "category": category,
+                "menu": menu,
+                "programs": sorted(programs, key=lambda p: p.name.lower()),
+            }
+        )
 
         # Scan all categories and child menus for matching programs. Group the
         # results by category/menu, in the order they're defined.
@@ -328,13 +300,11 @@ class Menudata:
 
         return grouped_matches
 
-
     # Used by search() above. Curse you Python and your stubborn lambda limitations.
     def __add_program_if_match(self, key, pid, programs, seen):
         if (pid not in seen) and self.__program_matches(key, self.programs[pid]):
             programs.append(self.programs[pid])
             seen.add(pid)
-
 
     # Returns True if the program matches the search keyword
     def __program_matches(self, key, program):
@@ -352,7 +322,7 @@ class Menudata:
             return True
 
         if program.original_desktop_file is not None:
-            if key in program.original_desktop_file.replace('.desktop', '').casefold():
+            if key in program.original_desktop_file.replace(".desktop", "").casefold():
                 return True
 
         return False

@@ -19,10 +19,8 @@ class UserProgramsManager:
         self.__language = language
         self.__file_cache = {}
 
-
     def reset(self):
         self.__file_cache = {}
-
 
     # Scans the user programs directory and creates, removes and updates
     # user programs. Returns True if something actually changed.
@@ -32,20 +30,24 @@ class UserProgramsManager:
 
         start_time = time.perf_counter()
 
-        if not os.path.isdir(self.__base_dir) or not os.access(self.__base_dir, os.R_OK):
+        if not os.path.isdir(self.__base_dir) or not os.access(
+            self.__base_dir, os.R_OK
+        ):
             logging.warning(
-                "UserProgramsManager::update(): can't access directory \"%s\"", self.__base_dir)
+                'UserProgramsManager::update(): can\'t access directory "%s"',
+                self.__base_dir,
+            )
             return False
 
         # Get a list of current .desktop files
         new_files = {}
         seen = set()
 
-        for name in Path(self.__base_dir).rglob('*.desktop'):
+        for name in Path(self.__base_dir).rglob("*.desktop"):
             try:
                 # Generate a unique ID for this program
                 basename = os.path.splitext(name.name)[0]
-                program_id = 'user-program-' + basename
+                program_id = "user-program-" + basename
 
                 if program_id in seen:
                     # If you really want to duplicate a program, you have to rename
@@ -57,12 +59,12 @@ class UserProgramsManager:
                 stat = os.stat(name)
 
                 new_files[name] = {
-                    'modified': stat.st_mtime,
-                    'size': stat.st_size,
-                    'program_id': program_id,
+                    "modified": stat.st_mtime,
+                    "size": stat.st_size,
+                    "program_id": program_id,
                 }
             except Exception as exception:
-                logging.fatal('Error occurred when scanning for user programs:')
+                logging.fatal("Error occurred when scanning for user programs:")
                 logging.error(exception, exc_info=True)
 
         # Detect added, removed and changed files
@@ -80,8 +82,10 @@ class UserProgramsManager:
                 current.add(pid)
 
         for name in existing_keys.intersection(new_keys):
-            if self.__file_cache[name]['modified'] != new_files[name]['modified'] or \
-               self.__file_cache[name]['size'] != new_files[name]['size']:
+            if (
+                self.__file_cache[name]["modified"] != new_files[name]["modified"]
+                or self.__file_cache[name]["size"] != new_files[name]["size"]
+            ):
                 changed.add(name)
 
         something_changed = False
@@ -90,7 +94,7 @@ class UserProgramsManager:
         # program ID won't be a duplicate (the renamed program would appear on the next
         # update).
         for name in removed:
-            pid = self.__file_cache[name]['program_id']
+            pid = self.__file_cache[name]["program_id"]
 
             if pid in current:
                 current.remove(pid)
@@ -109,14 +113,14 @@ class UserProgramsManager:
 
         # Load new files
         for name in added:
-            pid = new_files[name]['program_id']
+            pid = new_files[name]["program_id"]
 
             program = menudata.UserProgram()
             program.menudata_id = pid
             program.original_desktop_file = os.path.basename(name)
             program.filename = name
-            program.modified = new_files[name]['modified']
-            program.size = new_files[name]['size']
+            program.modified = new_files[name]["modified"]
+            program.size = new_files[name]["size"]
 
             if self.__load_user_program(program, name, icon_locator, icon_cache):
                 programs[pid] = program
@@ -125,7 +129,7 @@ class UserProgramsManager:
 
         # Reload changed files
         for name in changed:
-            pid = new_files[name]['program_id']
+            pid = new_files[name]["program_id"]
 
             if pid not in programs:
                 # what did you do?!
@@ -161,31 +165,32 @@ class UserProgramsManager:
 
         end_time = time.perf_counter()
 
-        utils.log_elapsed_time('UserProgramsManager::update(): user programs update',
-                               start_time, end_time)
+        utils.log_elapsed_time(
+            "UserProgramsManager::update(): user programs update", start_time, end_time
+        )
 
         # Trigger a menu buttons rebuild if something actually changed
         return something_changed
 
-
     # Loads the .desktop file for a single program and builds
     # a program object out of it
-    def __load_user_program(self,
-                            program,            # a UserProgram instance
-                            filename,           # .desktop file name
-                            icon_locator,       # where to find icons
-                            icon_cache):        # the icon cache to use
-
+    def __load_user_program(
+        self,
+        program,  # a UserProgram instance
+        filename,  # .desktop file name
+        icon_locator,  # where to find icons
+        icon_cache,
+    ):  # the icon cache to use
         # Load the .desktop file
         try:
             desktop_data = loaders.dotdesktop_loader.load(filename)
 
-            if 'Desktop Entry' not in desktop_data:
+            if "Desktop Entry" not in desktop_data:
                 raise RuntimeError('missing "Desktop Entry" section')
         except Exception as exc:
             logging.error(
-                'Could not load the desktop file "%s" for user program:',
-                filename)
+                'Could not load the desktop file "%s" for user program:', filename
+            )
             logging.error(str(exc))
             return False
 
@@ -193,18 +198,21 @@ class UserProgramsManager:
         # otherwise we'd end up creating loops. If you edit an existing
         # .desktop file and add (or remove) this key, it WILL cause
         # problems, but then it'll be your own problem.
-        if 'X-Puavomenu-Created' in desktop_data['Desktop Entry']:
+        if "X-Puavomenu-Created" in desktop_data["Desktop Entry"]:
             logging.info(
                 '.desktop file "%s" was created by us, not adding it to the user programs list',
-                filename
+                filename,
             )
             return False
 
         # Honor "NoDisplay=true"
-        if 'NoDisplay' in desktop_data['Desktop Entry'] and \
-                desktop_data['Desktop Entry']['NoDisplay'] == 'true':
-            logging.info('.desktop file "%s" contains "NoDisplay=true", skipping it',
-                         filename)
+        if (
+            "NoDisplay" in desktop_data["Desktop Entry"]
+            and desktop_data["Desktop Entry"]["NoDisplay"] == "true"
+        ):
+            logging.info(
+                '.desktop file "%s" contains "NoDisplay=true", skipping it', filename
+            )
             return False
 
         # Normally this would contain all the data loaded from menudata JSON
@@ -212,20 +220,22 @@ class UserProgramsManager:
         final_data = {}
 
         menudata_loader.merge_json_and_desktop_data(
-            final_data, desktop_data['Desktop Entry'], self.__language)
+            final_data, desktop_data["Desktop Entry"], self.__language
+        )
 
-        if final_data.get('command', None) is None:
-            logging.warning('.desktop file "%s" does not specify a command to run',
-                            filename)
+        if final_data.get("command", None) is None:
+            logging.warning(
+                '.desktop file "%s" does not specify a command to run', filename
+            )
             return False
 
-        program.name = final_data.get('name', None)
-        program.command = final_data.get('command', None)
-        program.description = final_data.get('description', None)
-        program.keywords = final_data.get('keywords', frozenset())
+        program.name = final_data.get("name", None)
+        program.command = final_data.get("command", None)
+        program.description = final_data.get("description", None)
+        program.keywords = final_data.get("keywords", frozenset())
 
         # Locate the icon file
-        icon_name = final_data.get('icon', None)
+        icon_name = final_data.get("icon", None)
         icon_file, _ = icon_locator.locate_icon(icon_name)
 
         if program.original_icon_name:
@@ -242,22 +252,34 @@ class UserProgramsManager:
                 program.icon, usable = icon_cache.load_icon(icon_file)
             except BaseException as exc:
                 logging.error(
-                    'User program icon not loaded, load_icon() threw an exception: %s',
-                    str(exc))
+                    "User program icon not loaded, load_icon() threw an exception: %s",
+                    str(exc),
+                )
                 program.icon = None
                 usable = False
 
             if not usable:
-                logging.warning('Found icon "%s" for user program "%s" (file "%s"), ' \
-                                'but the icon could not be loaded',
-                                icon_name, program.name, filename)
+                logging.warning(
+                    'Found icon "%s" for user program "%s" (file "%s"), '
+                    "but the icon could not be loaded",
+                    icon_name,
+                    program.name,
+                    filename,
+                )
         else:
             if icon_name:
-                logging.warning('Unable to locate icon "%s" for user program "%s" (file "%s")',
-                                icon_name, program.name, filename)
+                logging.warning(
+                    'Unable to locate icon "%s" for user program "%s" (file "%s")',
+                    icon_name,
+                    program.name,
+                    filename,
+                )
             else:
-                logging.warning('User program "%s" (file "%s") has no icon defined for it',
-                                program.name, filename)
+                logging.warning(
+                    'User program "%s" (file "%s") has no icon defined for it',
+                    program.name,
+                    filename,
+                )
             program.icon = None
 
         program.original_icon_name = icon_name
@@ -272,8 +294,7 @@ class UpdaterThread(threading.Thread):
     def __init__(self, socket_file):
         super().__init__()
         self.socket_file = socket_file
-        logging.info('User programs update thread started')
-
+        logging.info("User programs update thread started")
 
     def run(self):
         while True:
@@ -284,7 +305,7 @@ class UpdaterThread(threading.Thread):
             try:
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 sock.connect(self.socket_file)
-                sock.send(b'reload-userprogs')
+                sock.send(b"reload-userprogs")
                 sock.close()
             except Exception as exception:
-                logging.error('Failed to update user programs: %s', str(exception))
+                logging.error("Failed to update user programs: %s", str(exception))

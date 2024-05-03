@@ -3,7 +3,8 @@
 import logging
 
 import gi
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+
+gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk, Pango
 
 import utils_gui
@@ -16,20 +17,13 @@ import utils_gui
 # class/-es that compute element sizes and positions if you want to
 # use this!
 class HoverIconButtonBase(Gtk.Button):
-    def __init__(self,
-                 parent,
-                 settings,
-                 label,
-                 icon=None,
-                 tooltip=None,
-                 data=None):
-
+    def __init__(self, parent, settings, label, icon=None, tooltip=None, data=None):
         super().__init__()
 
         # Setup signals
-        self.connect('enter-notify-event', self.on_mouse_enter)
-        self.connect('leave-notify-event', self.on_mouse_leave)
-        self.connect('draw', self.on_draw)
+        self.connect("enter-notify-event", self.on_mouse_enter)
+        self.connect("leave-notify-event", self.on_mouse_leave)
+        self.connect("draw", self.on_draw)
 
         (width, height) = self.get_preferred_button_size()
         self.set_size_request(width, height)
@@ -39,8 +33,12 @@ class HoverIconButtonBase(Gtk.Button):
 
         # The icon is a tuple containing a handle to the icon cache
         # and an icon index.
-        if not isinstance(icon, tuple) or len(icon) != 2 or \
-           icon[0] is None or icon[1] is None:
+        if (
+            not isinstance(icon, tuple)
+            or len(icon) != 2
+            or icon[0] is None
+            or icon[1] is None
+        ):
             self.icon_cache = None
             self.icon_handle = None
         else:
@@ -48,11 +46,11 @@ class HoverIconButtonBase(Gtk.Button):
             self.icon_handle = icon[1]
 
         if tooltip:
-            self.set_property('tooltip-text', tooltip)
+            self.set_property("tooltip-text", tooltip)
 
         self.data = data
 
-        self.get_style_context().add_class('pm_button')
+        self.get_style_context().add_class("pm_button")
 
         # Not disabled by default
         self.disabled = False
@@ -66,9 +64,9 @@ class HoverIconButtonBase(Gtk.Button):
             self.label_layout.set_wrap(Pango.WrapMode.WORD_CHAR)
             self.label_layout.set_width((width - 20) * Pango.SCALE)
         except BaseException as e:
-            logging.error('Unable to create a button text layout:')
+            logging.error("Unable to create a button text layout:")
             logging.error(e, exc_info=True)
-            logging.error('The label was:')
+            logging.error("The label was:")
             logging.error(label)
 
         # Hover state
@@ -81,20 +79,16 @@ class HoverIconButtonBase(Gtk.Button):
 
         self.compute_elements()
 
-
     def add_style_class(self, clazz):
         self.get_style_context().add_class(clazz)
-
 
     def get_preferred_button_size(self):
         # Implement this in derived classes
         pass
 
-
     def compute_elements(self):
         # Implement this in derived classes
         pass
-
 
     # Mouse enters the button area
     def on_mouse_enter(self, widget, event):
@@ -103,12 +97,10 @@ class HoverIconButtonBase(Gtk.Button):
 
         return False
 
-
     # Mouse leaves the button area
     def on_mouse_leave(self, widget, event):
         self.hover = False
         return False
-
 
     # Draw the button
     def on_draw(self, widget, ctx):
@@ -123,12 +115,10 @@ class HoverIconButtonBase(Gtk.Button):
             self.draw_icon(ctx)
             self.draw_label(ctx)
         except Exception as exception:
-            logging.error('Could not draw a HoverIconButton widget: %s',
-                          str(exception))
+            logging.error("Could not draw a HoverIconButton widget: %s", str(exception))
 
         # return True to prevent default event processing
         return True
-
 
     # Draw the button background
     def draw_background(self, ctx, rect):
@@ -136,28 +126,29 @@ class HoverIconButtonBase(Gtk.Button):
         Gtk.render_background(style, ctx, 0.0, 0.0, rect.width, rect.height)
         Gtk.render_frame(style, ctx, 0.0, 0.0, rect.width, rect.height)
 
-
     # Draw the icon
     def draw_icon(self, ctx):
         if self.icon_cache:
-            self.icon_cache.draw_icon(self.icon_handle,
-                                      ctx,
-                                      self.icon_pos[0], self.icon_pos[1])
+            self.icon_cache.draw_icon(
+                self.icon_handle, ctx, self.icon_pos[0], self.icon_pos[1]
+            )
         else:
-            utils_gui.draw_x(ctx,
-                             self.icon_pos[0], self.icon_pos[1],
-                             self.icon_size, self.icon_size)
-
+            utils_gui.draw_x(
+                ctx, self.icon_pos[0], self.icon_pos[1], self.icon_size, self.icon_size
+            )
 
     # Draw the label
     def draw_label(self, ctx):
         if not self.label_layout:
             return
 
-        Gtk.render_layout(self.get_style_context(), ctx,
-                          self.label_pos[0], self.label_pos[1],
-                          self.label_layout)
-
+        Gtk.render_layout(
+            self.get_style_context(),
+            ctx,
+            self.label_pos[0],
+            self.label_pos[1],
+            self.label_layout,
+        )
 
     # It's possible to disable buttons, but because it's so rare
     # occurrence, you cannot set the flag in the constructor.

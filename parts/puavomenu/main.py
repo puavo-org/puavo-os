@@ -12,7 +12,8 @@ import json
 import subprocess
 
 import gi
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+
+gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import Pango
@@ -50,7 +51,7 @@ class PuavoMenu(Gtk.Window):
             modal=True,
             message_type=Gtk.MessageType.ERROR,
             buttons=Gtk.ButtonsType.OK,
-            text=message
+            text=message,
         )
 
         if secondary_message:
@@ -61,11 +62,10 @@ class PuavoMenu(Gtk.Window):
         dialog.hide()
         self.enable_out_of_focus_hide()
 
-
     def __init__(self, settings, socket, program_start_time):
         start_time = time.perf_counter()
 
-        super().__init__(name='root')       # CSS ID
+        super().__init__(name="root")  # CSS ID
 
         self.__settings = settings
         self.__socket = socket
@@ -81,7 +81,7 @@ class PuavoMenu(Gtk.Window):
             self.set_type_hint(Gdk.WindowTypeHint.MENU)
             self.set_skip_taskbar_hint(True)
             self.set_skip_pager_hint(True)
-            self.set_deletable(False)       # no close button
+            self.set_deletable(False)  # no close button
             self.set_decorated(False)
             self.__exit_permitted = False
         else:
@@ -99,22 +99,22 @@ class PuavoMenu(Gtk.Window):
 
         # Don't mess with the real menu when running in development mode
         if self.__settings.prod_mode:
-            self.set_title('ProdPuavomenu')
+            self.set_title("ProdPuavomenu")
         else:
-            self.set_title('DevPuavomenu')
+            self.set_title("DevPuavomenu")
 
         # Enable transparent window magic. I'm not entirely sure what
         # this does, but it works.
         self.set_visual(self.get_screen().get_rgba_visual())
 
         # Setup custom CSS
-        css_file = os.path.join(self.__settings.res_dir, 'puavomenu.css')
+        css_file = os.path.join(self.__settings.res_dir, "puavomenu.css")
 
         if os.path.isfile(css_file):
             logging.info('CSS file "%s" exists, loading it', css_file)
 
             try:
-                css = bytes(utils.get_file_contents(css_file, ''), 'utf-8')
+                css = bytes(utils.get_file_contents(css_file, ""), "utf-8")
 
                 style_provider = Gtk.CssProvider()
                 style_provider.load_from_data(css)
@@ -122,17 +122,17 @@ class PuavoMenu(Gtk.Window):
                 Gtk.StyleContext.add_provider_for_screen(
                     Gdk.Screen.get_default(),
                     style_provider,
-                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
                 )
             except BaseException as e:
-                logging.error('CSS loading failed: %s', str(e))
-                logging.error('Custom styles disabled!')
+                logging.error("CSS loading failed: %s", str(e))
+                logging.error("Custom styles disabled!")
 
         # Setup some window-level events
-        self.connect('delete-event', self.__try_exit)
-        self.connect('key-press-event', self.__on_keypress)
-        self.connect('button-press-event', self.__on_mouse_click)
-        self.connect('show', self.__on_show)
+        self.connect("delete-event", self.__try_exit)
+        self.connect("key-press-event", self.__on_keypress)
+        self.connect("button-press-event", self.__on_mouse_click)
+        self.connect("show", self.__on_show)
 
         self.__focus_signal = None
 
@@ -162,9 +162,9 @@ class PuavoMenu(Gtk.Window):
         self.__user_programs_loaded = False
 
         # Cached data for user .desktop files
-        self.__user_programs = \
-            user_programs.UserProgramsManager(self.__settings.user_programs_dir,
-                                              self.__settings.language)
+        self.__user_programs = user_programs.UserProgramsManager(
+            self.__settings.user_programs_dir, self.__settings.language
+        )
 
         # Contents of dirs.json
         self.__dirs_config = menudata.DirsConfig()
@@ -176,21 +176,21 @@ class PuavoMenu(Gtk.Window):
         self.menu_fixed = Gtk.Fixed()
 
         # Category tabs
-        self.__category_buttons = Gtk.Notebook(name='category')
+        self.__category_buttons = Gtk.Notebook(name="category")
         self.__category_buttons.set_size_request(CATEGORIES_WIDTH, -1)
         self.__category_buttons.set_scrollable(True)
-        self.__category_buttons.connect('switch-page', self.__clicked_category)
+        self.__category_buttons.connect("switch-page", self.__clicked_category)
         self.menu_fixed.put(self.__category_buttons, 0, 0)
 
         # The back button
         self.__back_button = Gtk.Button()
-        self.__back_button.set_label('<<')
-        self.__back_button.connect('clicked', self.__clicked_back_button)
+        self.__back_button.set_label("<<")
+        self.__back_button.connect("clicked", self.__clicked_back_button)
         self.__back_button.set_size_request(BACK_BUTTON_WIDTH, 30)
         self.menu_fixed.put(self.__back_button, 0, BACK_BUTTON_Y)
 
         # Menu label and description
-        self.__menu_title = Gtk.Label(name='menu_title')
+        self.__menu_title = Gtk.Label(name="menu_title")
         self.__menu_title.set_size_request(375, -1)
         self.__menu_title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__menu_title.set_justify(Gtk.Justification.CENTER)
@@ -199,31 +199,32 @@ class PuavoMenu(Gtk.Window):
         self.__menu_title.set_use_markup(True)
 
         self.menu_fixed.put(
-            self.__menu_title,
-            BACK_BUTTON_WIDTH + MAIN_PADDING,
-            BACK_BUTTON_Y + 5)
+            self.__menu_title, BACK_BUTTON_WIDTH + MAIN_PADDING, BACK_BUTTON_Y + 5
+        )
 
         # The search box
         self.__search = Gtk.SearchEntry()
         self.__search.set_size_request(SEARCH_WIDTH, -1)
-        self.__search.set_max_length(10)    # you aren't going need more than this
+        self.__search.set_max_length(10)  # you aren't going need more than this
 
-        self.__search_changed_signal = \
-            self.__search.connect('changed', self.__do_search)
+        self.__search_changed_signal = self.__search.connect(
+            "changed", self.__do_search
+        )
 
-        self.__search_keypress_signal = \
-            self.__search.connect('key-press-event', self.__on_search_keypress)
+        self.__search_keypress_signal = self.__search.connect(
+            "key-press-event", self.__on_search_keypress
+        )
 
-        self.__search.set_placeholder_text(_tr('search_placeholder'))
+        self.__search.set_placeholder_text(_tr("search_placeholder"))
 
         self.menu_fixed.put(self.__search, PROGRAMS_WIDTH - (SEARCH_WIDTH + 10) - 9, 40)
 
         # The main programs list
-        self.__programs_container = Gtk.ScrolledWindow(name='programs')
-        self.__programs_container.set_size_request(PROGRAMS_WIDTH,
-                                                   PROGRAMS_HEIGHT)
-        self.__programs_container.set_policy(Gtk.PolicyType.NEVER,
-                                             Gtk.PolicyType.AUTOMATIC)
+        self.__programs_container = Gtk.ScrolledWindow(name="programs")
+        self.__programs_container.set_size_request(PROGRAMS_WIDTH, PROGRAMS_HEIGHT)
+        self.__programs_container.set_policy(
+            Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC
+        )
         self.__programs_container.set_shadow_type(Gtk.ShadowType.NONE)
 
         # Always show the scrollbar
@@ -237,7 +238,7 @@ class PuavoMenu(Gtk.Window):
         self.menu_fixed.put(self.__programs_container, 0, PROGRAMS_TOP)
 
         # Placeholder message for empty categories, menus and search results
-        self.__empty = Gtk.Label(name='empty')
+        self.__empty = Gtk.Label(name="empty")
         self.__empty.set_size_request(PROGRAMS_WIDTH, PROGRAMS_HEIGHT)
         self.__empty.set_justify(Gtk.Justification.CENTER)
         self.__empty.set_xalign(0.5)
@@ -246,19 +247,17 @@ class PuavoMenu(Gtk.Window):
 
         # Keep track of most frequently used programs
         self.__program_launch_counts = frequent_programs.ProgramLaunchesCounter(
-            self.__settings.user_conf,
-            self.__settings.save_usage_counters
+            self.__settings.user_conf, self.__settings.save_usage_counters
         )
 
         self.__frequent_sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
         self.__frequent_sep.set_size_request(PROGRAMS_WIDTH, 1)
 
-        self.menu_fixed.put(self.__frequent_sep,
-                            0,
-                            PROGRAMS_TOP + PROGRAMS_HEIGHT + MAIN_PADDING)
+        self.menu_fixed.put(
+            self.__frequent_sep, 0, PROGRAMS_TOP + PROGRAMS_HEIGHT + MAIN_PADDING
+        )
 
-        self.__frequent_list = \
-            frequent_programs.FrequentProgramsList(self)
+        self.__frequent_list = frequent_programs.FrequentProgramsList(self)
 
         self.__frequent_list.set_size_request(PROGRAMS_WIDTH, PROGRAM_BUTTON_HEIGHT)
 
@@ -267,7 +266,7 @@ class PuavoMenu(Gtk.Window):
         self.menu_fixed.show()
 
         # Main menu container
-        self.menu_box = Gtk.Box(name='menubox')
+        self.menu_box = Gtk.Box(name="menubox")
         self.menu_box.pack_start(self.menu_fixed, False, False, 0)
         self.menu_box.show()
 
@@ -277,7 +276,7 @@ class PuavoMenu(Gtk.Window):
         self.__sidebar = sidebar.Sidebar(self, self.__settings)
 
         # Main sidebar container
-        self.sidebar_box = Gtk.Box(name='sidebar')
+        self.sidebar_box = Gtk.Box(name="sidebar")
         self.sidebar_box.pack_start(self.__sidebar.container, False, False, 0)
         self.sidebar_box.show()
 
@@ -325,7 +324,7 @@ class PuavoMenu(Gtk.Window):
         GLib.io_add_watch(self.__socket, GLib.IO_IN, self.__socket_accept)
 
         win_init_time = time.perf_counter()
-        utils.log_elapsed_time('Window init time', start_time, win_init_time)
+        utils.log_elapsed_time("Window init time", start_time, win_init_time)
 
         # ----------------------------------------------------------------------
         # Load menu data
@@ -336,34 +335,36 @@ class PuavoMenu(Gtk.Window):
         # It will happen one day.
         if not self.menudata or not self.menudata.programs:
             if self.__settings.prod_mode:
-                self.__show_empty_message(_tr('menu_no_data_at_all_prod'))
+                self.__show_empty_message(_tr("menu_no_data_at_all_prod"))
             else:
-                self.__show_empty_message(_tr('menu_no_data_at_all_dev'))
+                self.__show_empty_message(_tr("menu_no_data_at_all_dev"))
 
         # Start monitoring the user programs directory
         try:
-            self.__userprogs_thread = user_programs.UpdaterThread(self.__settings.socket)
+            self.__userprogs_thread = user_programs.UpdaterThread(
+                self.__settings.socket
+            )
             self.__userprogs_thread.daemon = True
             self.__userprogs_thread.start()
         except Exception as exception:
-            logging.error('Could not create the user programs updater thread: %s',
-                          str(exception))
+            logging.error(
+                "Could not create the user programs updater thread: %s", str(exception)
+            )
 
         # ----------------------------------------------------------------------
 
         end_time = time.perf_counter()
-        utils.log_elapsed_time('Time from program start to usable state',
-                               program_start_time, end_time)
-
+        utils.log_elapsed_time(
+            "Time from program start to usable state", program_start_time, end_time
+        )
 
     # --------------------------------------------------------------------------
     # Menu data loading and handling
 
-
     # Loads menu data and sets up the UI. Returns false if
     # something fails.
     def load_menu_data(self):
-        logging.info('PuavoMenu::load_menu_data() starts')
+        logging.info("PuavoMenu::load_menu_data() starts")
 
         try:
             total_start_time = time.perf_counter()
@@ -371,19 +372,19 @@ class PuavoMenu(Gtk.Window):
 
             # A list of puavo-pkg programs that are NOT part of the desktop
             # image BUT can be installed/uninstalled dynamically
-            dynamic_puavopkg_ids = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
+            dynamic_puavopkg_ids = utils.puavo_conf("puavo.pkgs.ui.pkglist", "")
 
             puavopkg_states = puavopkg.detect_package_states(dynamic_puavopkg_ids)
 
             end_time = time.perf_counter()
-            utils.log_elapsed_time('puavopkg state detection', start_time, end_time)
+            utils.log_elapsed_time("puavopkg state detection", start_time, end_time)
 
             # ------------------------------------------------------------------
             # Load dirs.json
 
             start_time = time.perf_counter()
 
-            dirs_file = os.path.join(self.__settings.menu_dir, 'dirs.json')
+            dirs_file = os.path.join(self.__settings.menu_dir, "dirs.json")
             logging.info('Loading directory configuration file "%s"', dirs_file)
             self.__dirs_config.load_config(dirs_file)
 
@@ -395,7 +396,9 @@ class PuavoMenu(Gtk.Window):
                 logging.info('Current icon theme name: "%s"', icon_theme)
 
             if icon_theme and icon_theme in self.__dirs_config.theme_icon_dirs:
-                self.__icon_locator.set_theme_base_dirs(self.__dirs_config.theme_icon_dirs[icon_theme])
+                self.__icon_locator.set_theme_base_dirs(
+                    self.__dirs_config.theme_icon_dirs[icon_theme]
+                )
 
             generic_dirs = self.__dirs_config.generic_icon_dirs
 
@@ -410,7 +413,9 @@ class PuavoMenu(Gtk.Window):
             self.__icon_locator.scan_directories()
 
             end_time = time.perf_counter()
-            utils.log_elapsed_time('Theme icon dirs scanning time', start_time, end_time)
+            utils.log_elapsed_time(
+                "Theme icon dirs scanning time", start_time, end_time
+            )
 
             # ------------------------------------------------------------------
             # Load and evaluate conditionals
@@ -418,10 +423,12 @@ class PuavoMenu(Gtk.Window):
             start_time = time.perf_counter()
 
             raw_conditional_files = loaders.menudata_loader.find_menu_files(
-                os.path.join(self.__settings.menu_dir, 'conditions'))
+                os.path.join(self.__settings.menu_dir, "conditions")
+            )
 
             conditional_files = loaders.menudata_loader.sort_menu_files(
-                raw_conditional_files)
+                raw_conditional_files
+            )
 
             raw_conditionals = {}
 
@@ -429,17 +436,17 @@ class PuavoMenu(Gtk.Window):
                 logging.info('Loading conditional file "%s"', name)
 
                 try:
-                    with open(name, 'r', encoding='utf-8') as f:
+                    with open(name, "r", encoding="utf-8") as f:
                         contents = f.read()
 
                         if not contents:
                             # empty strings are invalid JSON,
                             # so manually "fix" empty files
-                            contents = '{}'
+                            contents = "{}"
 
                         data = json.loads(contents)
                 except BaseException as e:
-                    logging.error("Can't load conditionals file \"%s\":", name)
+                    logging.error('Can\'t load conditionals file "%s":', name)
                     logging.error(e, exc_info=True)
                     continue
 
@@ -451,26 +458,30 @@ class PuavoMenu(Gtk.Window):
             conditionals = filters.conditionals.evaluate(raw_conditionals)
 
             end_time = time.perf_counter()
-            utils.log_elapsed_time('Conditionals load time', start_time, end_time)
+            utils.log_elapsed_time("Conditionals load time", start_time, end_time)
 
             # ------------------------------------------------------------------
             # Load filters
 
             start_time = time.perf_counter()
 
-            tags = filters.tags.Filter(utils.puavo_conf('puavo.puavomenu.tags', ''))
+            tags = filters.tags.Filter(utils.puavo_conf("puavo.puavomenu.tags", ""))
 
             end_time = time.perf_counter()
 
-            utils.log_elapsed_time('Tag filter parsing time', start_time, end_time)
+            utils.log_elapsed_time("Tag filter parsing time", start_time, end_time)
 
             # Manually check the visibility of the user programs category.
             # (The category is created manually, so menudata checks don't
             # work with it.)
-            if tags.has_action_for(filters.tags.Action.HIDE,
-                                   filters.tags.Action.CATEGORY,
-                                   'category-user-programs'):
-                logging.info('The user programs category has been explicitly hidden/disabled')
+            if tags.has_action_for(
+                filters.tags.Action.HIDE,
+                filters.tags.Action.CATEGORY,
+                "category-user-programs",
+            ):
+                logging.info(
+                    "The user programs category has been explicitly hidden/disabled"
+                )
                 self.__settings.show_user_programs = False
 
             # ------------------------------------------------------------------
@@ -479,21 +490,27 @@ class PuavoMenu(Gtk.Window):
             start_time = time.perf_counter()
 
             raw_menu_files = loaders.menudata_loader.find_menu_files(
-                os.path.join(self.__settings.menu_dir, 'menudata'))
+                os.path.join(self.__settings.menu_dir, "menudata")
+            )
 
             menudata_files = loaders.menudata_loader.sort_menu_files(raw_menu_files)
 
             end_time = time.perf_counter()
-            utils.log_elapsed_time('Time to locate available menu data', start_time, end_time)
+            utils.log_elapsed_time(
+                "Time to locate available menu data", start_time, end_time
+            )
 
             self.menudata = loaders.menudata_loader.load(
-                menudata_files, self.__settings.language,
+                menudata_files,
+                self.__settings.language,
                 self.__dirs_config.desktop_dirs,
-                tags, conditionals,
+                tags,
+                conditionals,
                 puavopkg_states,
                 self.__icon_locator,
                 self.__icons,
-                self.__settings.sort_contents_alphabetically)
+                self.__settings.sort_contents_alphabetically,
+            )
 
             # (Re)load user programs
             if self.__settings.show_user_programs:
@@ -501,20 +518,24 @@ class PuavoMenu(Gtk.Window):
                     self.__setup_user_programs()
 
             total_end_time = time.perf_counter()
-            utils.log_elapsed_time('Total menudata load time',
-                                   total_start_time, total_end_time)
+            utils.log_elapsed_time(
+                "Total menudata load time", total_start_time, total_end_time
+            )
 
             cache_stats = self.__icons.stats()
 
-            logging.info('Cached %d 48x48-pixel icons in %d atlases',
-                         cache_stats['num_icons'], cache_stats['num_atlases'])
+            logging.info(
+                "Cached %d 48x48-pixel icons in %d atlases",
+                cache_stats["num_icons"],
+                cache_stats["num_atlases"],
+            )
 
         except Exception as exception:
-            logging.fatal('Could not load menu data!')
+            logging.fatal("Could not load menu data!")
             logging.error(exception, exc_info=True)
 
             if self.__settings.prod_mode:
-                syslog.syslog(syslog.LOG_CRIT, 'Could not load menu data!')
+                syslog.syslog(syslog.LOG_CRIT, "Could not load menu data!")
                 syslog.syslog(syslog.LOG_CRIT, traceback.format_exc())
 
             self.menudata = None
@@ -546,9 +567,8 @@ class PuavoMenu(Gtk.Window):
             self.__frequent_list.show()
             self.__search.show()
 
-        logging.info('PuavoMenu::load_menu_data() ends')
+        logging.info("PuavoMenu::load_menu_data() ends")
         return True
-
 
     # Completely removes all menu data. Hides everything programs-related
     # from the UI.
@@ -583,7 +603,6 @@ class PuavoMenu(Gtk.Window):
         self.__dirs_config.clear()
         self.__icons.clear()
 
-
     def __update_frequent_programs_list(self, force=False):
         # programs sorted by their launch counts
         all_ids = self.__program_launch_counts.get_frequent_programs()
@@ -600,14 +619,11 @@ class PuavoMenu(Gtk.Window):
         usable_ids = usable_ids[0:PROGRAMS_PER_ROW]
 
         self.__frequent_list.update(
-            usable_ids,
-            self.menudata.programs, self.__settings, self.__icons,
-            force)
-
+            usable_ids, self.menudata.programs, self.__settings, self.__icons, force
+        )
 
     # --------------------------------------------------------------------------
     # User programs handling
-
 
     # Rebuilds the category list. Called when user programs are
     # live-reloaded.
@@ -629,16 +645,14 @@ class PuavoMenu(Gtk.Window):
         self.__category_buttons.set_current_page(self.current_category)
         self.__category_buttons.show()
 
-
     # Creates and appends the user category at the end of the categories list
     def __create_user_category(self, category):
-        category.menudata_id = 'category-user-programs'
-        category.name = _tr('user_category')
+        category.menudata_id = "category-user-programs"
+        category.name = _tr("user_category")
         category.position = 999999
         category.flags |= menudata.CategoryFlags.USER_CATEGORY
         self.menudata.categories[category.menudata_id] = category
         self.menudata.category_index.append(category.menudata_id)
-
 
     # Initial scan for user programs
     def __setup_user_programs(self):
@@ -647,17 +661,15 @@ class PuavoMenu(Gtk.Window):
 
         temp_category = menudata.Category()
 
-        if self.__user_programs.update(self.menudata.programs,
-                                       temp_category,
-                                       self.__icon_locator,
-                                       self.__icons):
+        if self.__user_programs.update(
+            self.menudata.programs, temp_category, self.__icon_locator, self.__icons
+        ):
             # We got user programs! Manually create a new category for
             # them and tuck it at the end of the categories list
             self.__create_user_category(temp_category)
 
         # Permit live reloading of user programs
         self.__user_programs_loaded = True
-
 
     # Recreates the current menu view if it's in user programs.
     # Call if user programs have changed since the last update.
@@ -684,7 +696,9 @@ class PuavoMenu(Gtk.Window):
             # Invalid category index
             return
 
-        cat = self.menudata.categories[self.menudata.category_index[self.current_category]]
+        cat = self.menudata.categories[
+            self.menudata.category_index[self.current_category]
+        ]
 
         if not cat.flags & menudata.CategoryFlags.USER_CATEGORY:
             # Not a user category
@@ -693,10 +707,8 @@ class PuavoMenu(Gtk.Window):
         # The user category view is open, so we must do a live update
         self.__create_current_menu()
 
-
     # --------------------------------------------------------------------------
     # Menu view handling
-
 
     def __make_program_button(self, program):
         return buttons.program.ProgramButton(
@@ -705,8 +717,8 @@ class PuavoMenu(Gtk.Window):
             label=program.name,
             icon=(self.__icons, program.icon),
             tooltip=program.description,
-            data=program)
-
+            data=program,
+        )
 
     def __make_menu_button(self, menu):
         return buttons.menu.MenuButton(
@@ -715,8 +727,8 @@ class PuavoMenu(Gtk.Window):
             label=menu.name,
             icon=(self.__icons, menu.icon),
             tooltip=menu.description,
-            data=menu)
-
+            data=menu,
+        )
 
     # Returns True if puavo-pkg installer icons should be hidden
     # in this session
@@ -732,7 +744,6 @@ class PuavoMenu(Gtk.Window):
 
         return False
 
-
     # Shows an "empty" message in the main programs list. Used when a
     # menu/category is empty, or there are no search results.
     def __show_empty_message(self, msg):
@@ -741,7 +752,6 @@ class PuavoMenu(Gtk.Window):
 
         self.__empty.set_label(msg)
         self.__empty.show()
-
 
     # Replaces the existing menu and program buttons with new buttons
     # in the icons container widget
@@ -772,17 +782,16 @@ class PuavoMenu(Gtk.Window):
             self.__programs_icons.show()
             self.__programs_container.show()
 
-
     def __update_menu_title(self):
         if self.current_menu and not self.__in_search:
             self.__menu_title.set_markup(
-                '<big>{0}</big>'.format(self.current_menu.name))
+                "<big>{0}</big>".format(self.current_menu.name)
+            )
             self.__menu_title.show()
             self.__back_button.show()
         else:
             self.__menu_title.hide()
             self.__back_button.hide()
-
 
     # (Re-)Creates the current category or menu view
     def __create_current_menu(self):
@@ -798,66 +807,69 @@ class PuavoMenu(Gtk.Window):
 
         if self.current_menu is None:
             # Top-level category view
-            if self.menudata.category_index and \
-               self.current_category < len(self.menudata.category_index):
-
+            if self.menudata.category_index and self.current_category < len(
+                self.menudata.category_index
+            ):
                 # We have a valid category
                 cat = self.menudata.categories[
-                    self.menudata.category_index[self.current_category]]
+                    self.menudata.category_index[self.current_category]
+                ]
 
                 # Menus first...
                 for menu_id in cat.menu_ids:
                     menu = self.menudata.menus[menu_id]
 
                     button = self.__make_menu_button(menu)
-                    button.connect('clicked', self.__clicked_menu_button)
+                    button.connect("clicked", self.__clicked_menu_button)
                     new_buttons.append(button)
 
                 # ...then programs
                 for prog_id in cat.program_ids:
                     program = self.menudata.programs[prog_id]
 
-                    if hide_installers and \
-                        isinstance(program, menudata.PuavoPkgProgram) and \
-                        program.is_installer():
+                    if (
+                        hide_installers
+                        and isinstance(program, menudata.PuavoPkgProgram)
+                        and program.is_installer()
+                    ):
                         continue
 
                     button = self.__make_program_button(program)
-                    button.connect('clicked', self.clicked_program_button)
+                    button.connect("clicked", self.clicked_program_button)
                     new_buttons.append(button)
 
             # Handle special situations
             if not new_buttons:
-                self.__show_empty_message(_tr('menu_empty_category'))
+                self.__show_empty_message(_tr("menu_empty_category"))
 
         else:
             # Submenu view, have only programs (submenus not needed yet)
             for prog_id in self.current_menu.program_ids:
                 program = self.menudata.programs[prog_id]
 
-                if hide_installers and \
-                    isinstance(program, menudata.PuavoPkgProgram) and \
-                    program.is_installer():
+                if (
+                    hide_installers
+                    and isinstance(program, menudata.PuavoPkgProgram)
+                    and program.is_installer()
+                ):
                     continue
 
                 try:
                     button = self.__make_program_button(program)
-                    button.connect('clicked', self.clicked_program_button)
+                    button.connect("clicked", self.clicked_program_button)
                     new_buttons.append(button)
                 except BaseException as e:
                     logging.error(str(e))
 
             # Handle special situations
             if not self.current_menu.program_ids:
-                self.__show_empty_message(_tr('menu_empty_menu'))
+                self.__show_empty_message(_tr("menu_empty_menu"))
 
         self.__place_buttons_in_container(new_buttons)
         self.__update_menu_title()
 
-
     # --------------------------------------------------------------------------
     # Menu/category view navigation (button click handlers)
-
 
     # Change the category
     def __clicked_category(self, widget, frame, num):
@@ -867,7 +879,6 @@ class PuavoMenu(Gtk.Window):
         self.__clear_search_field()
         self.__create_current_menu()
 
-
     # Go back to top level
     def __clicked_back_button(self, button):
         self.__in_search = False
@@ -875,14 +886,12 @@ class PuavoMenu(Gtk.Window):
         self.__clear_search_field()
         self.__create_current_menu()
 
-
     # Enter a menu
     def __clicked_menu_button(self, button):
         self.__in_search = False
         self.current_menu = button.data
         self.__clear_search_field()
         self.__create_current_menu()
-
 
     # Resets the menu back to the default view
     def reset_view(self):
@@ -892,7 +901,6 @@ class PuavoMenu(Gtk.Window):
         self.__clear_search_field()
         self.__create_current_menu()
         self.__category_buttons.set_current_page(0)
-
 
     # Mouse click handler. React to mouse "back" button presses
     # and open the development menu in development mode.
@@ -915,10 +923,8 @@ class PuavoMenu(Gtk.Window):
 
         return self.__devtools_menu(widget, event)
 
-
     # --------------------------------------------------------------------------
     # Program and menu button click handlers
-
 
     # Launch a normal program
     def __launch_program(self, program):
@@ -943,8 +949,12 @@ class PuavoMenu(Gtk.Window):
                 # Spy the user and log what programs they use. This information
                 # is then sent to various TLAs around the world and used in all
                 # sorts of nefarious classified black operations.
-                syslog.syslog(syslog.LOG_INFO, 'Launching program "{0}", command="{1}"'.
-                              format(program.menudata_id, command))
+                syslog.syslog(
+                    syslog.LOG_INFO,
+                    'Launching program "{0}", command="{1}"'.format(
+                        program.menudata_id, command
+                    ),
+                )
 
                 # Just kidding. The reason program starts are logged to syslog
                 # is actually really simple: you can grep the log and count
@@ -965,7 +975,9 @@ class PuavoMenu(Gtk.Window):
                 # testing I noticed that if we leave it empty (*NOT* None
                 # because that triggers the unwanted behavior!) then these
                 # programs will use their own default titles.
-                Gio.AppInfo.create_from_commandline(command.replace('\\\\','\\'), '', 0).launch()
+                Gio.AppInfo.create_from_commandline(
+                    command.replace("\\\\", "\\"), "", 0
+                ).launch()
             else:
                 # The "command" is a URL for weblinks
                 Gio.AppInfo.launch_default_for_uri(command, None)
@@ -982,11 +994,10 @@ class PuavoMenu(Gtk.Window):
         except Exception as exception:
             logging.error('Could not launch program "%s":', program.command)
             logging.error(exception, exc_info=True)
-            self.error_message(_tr('program_launching_failed'), str(exception))
+            self.error_message(_tr("program_launching_failed"), str(exception))
             return False
 
         return True
-
 
     # Launch a program. This is a public method, it is called from other
     # files (buttons) to launch programs.
@@ -996,8 +1007,11 @@ class PuavoMenu(Gtk.Window):
         if isinstance(program, menudata.PuavoPkgProgram) and program.is_installer():
             # This puavo-pkg program has not been installed yet.
             # Launch puavo-pkgs-ui instead.
-            logging.info('Launching puavo-pkgs-ui for program "%s", package ID "%s"',
-                         program.name, program.package_id)
+            logging.info(
+                'Launching puavo-pkgs-ui for program "%s", package ID "%s"',
+                program.name,
+                program.package_id,
+            )
 
             self.autohide()
 
@@ -1006,16 +1020,17 @@ class PuavoMenu(Gtk.Window):
                 self.reset_view()
 
             # Fill in the --id param so puavo-pkgs-ui can do something with it
-            subprocess.Popen(['puavo-pkgs-ui', '--id', program.menudata_id],
-                             stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL)
+            subprocess.Popen(
+                ["puavo-pkgs-ui", "--id", program.menudata_id],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         else:
             self.__program_launch_counts.increment(program.menudata_id)
             self.__launch_program(program)
             self.__update_frequent_programs_list()
 
         return True
-
 
     # Launch a user-defined program. No puavo-pkg installers here and
     # no usage counting either.
@@ -1025,7 +1040,6 @@ class PuavoMenu(Gtk.Window):
         self.__launch_program(program)
         self.__update_frequent_programs_list()
         return True
-
 
     # Called directly from ProgramButton
     def add_program_to_desktop(self, program):
@@ -1040,19 +1054,21 @@ class PuavoMenu(Gtk.Window):
 
         # Create the link file
         # TODO: use the *original* .desktop file if it exists
-        name = os.path.join(self.__settings.desktop_dir, '{0}.desktop'.format(program.name))
+        name = os.path.join(
+            self.__settings.desktop_dir, "{0}.desktop".format(program.name)
+        )
 
-        logging.info('Adding program "%s" to the desktop, destination="%s"',
-                     program.name, name)
+        logging.info(
+            'Adding program "%s" to the desktop, destination="%s"', program.name, name
+        )
 
         try:
             utils_gui.create_desktop_link(name, program)
         except Exception as exception:
-            logging.error('Desktop link creation failed:')
+            logging.error("Desktop link creation failed:")
             logging.error(str(exception))
 
-            self.error_message(_tr('desktop_link_failed'), str(exception))
-
+            self.error_message(_tr("desktop_link_failed"), str(exception))
 
     # Called directly from ProgramButton
     def add_program_to_panel(self, program):
@@ -1060,17 +1076,19 @@ class PuavoMenu(Gtk.Window):
             # Nuh-uh
             return
 
-        logging.info('Adding program "%s" (id="%s") to the bottom panel',
-                     program.name, program.menudata_id)
+        logging.info(
+            'Adding program "%s" (id="%s") to the bottom panel',
+            program.name,
+            program.menudata_id,
+        )
 
         try:
             utils_gui.create_panel_link(program)
         except Exception as exception:
-            logging.error('Panel icon creation failed')
+            logging.error("Panel icon creation failed")
             logging.error(str(exception))
 
-            self.error_message(_tr('panel_link_failed'), str(exception))
-
+            self.error_message(_tr("panel_link_failed"), str(exception))
 
     # Called directly from ProgramButton
     def remove_program_from_faves(self, p):
@@ -1078,15 +1096,12 @@ class PuavoMenu(Gtk.Window):
         self.__program_launch_counts.remove(p.menudata_id)
         self.__update_frequent_programs_list()
 
-
     # --------------------------------------------------------------------------
     # Searching
-
 
     # Returns the current search term, filtered and cleaned
     def __get_search_text(self):
         return self.__search.get_text().strip().casefold()
-
 
     # Searches the programs list using a string, then replaces the menu list
     # with results
@@ -1108,7 +1123,7 @@ class PuavoMenu(Gtk.Window):
         if matches:
             self.__empty.hide()
         else:
-            self.__show_empty_message(_tr('search_no_results'))
+            self.__show_empty_message(_tr("search_no_results"))
 
         # Remove old contents
         self.__programs_icons.hide()
@@ -1124,27 +1139,28 @@ class PuavoMenu(Gtk.Window):
         for group in matches:
             # Create a label for this results group
             label = Gtk.Label()
-            label.get_style_context().add_class('search_group')
-            label.set_size_request(PROGRAMS_WIDTH - SCROLLBAR_WIDTH,
-                                   PROGRAMS_SEARCH_GROUP_HEIGHT)
+            label.get_style_context().add_class("search_group")
+            label.set_size_request(
+                PROGRAMS_WIDTH - SCROLLBAR_WIDTH, PROGRAMS_SEARCH_GROUP_HEIGHT
+            )
             label.set_ellipsize(Pango.EllipsizeMode.END)
             label.set_xalign(0)
             label.set_yalign(0.5)
             label.set_use_markup(False)
 
-            if group['menu']:
+            if group["menu"]:
                 label.set_text(f"{group['category']} / {group['menu']}")
             else:
-                label.set_text(group['category'])
+                label.set_text(group["category"])
 
             self.__programs_icons.put(label, 0, ypos)
 
             ypos += PROGRAMS_SEARCH_GROUP_HEIGHT + MAIN_PADDING
             xpos = 0
 
-            for index, program in enumerate(group['programs']):
+            for index, program in enumerate(group["programs"]):
                 button = self.__make_program_button(program)
-                button.connect('clicked', self.clicked_program_button)
+                button.connect("clicked", self.clicked_program_button)
 
                 self.__programs_icons.put(button, xpos, ypos)
 
@@ -1155,7 +1171,7 @@ class PuavoMenu(Gtk.Window):
                     xpos = 0
 
                     # Don't create a new line if there's nothing left
-                    if index + 1 < len(group['programs']):
+                    if index + 1 < len(group["programs"]):
                         ypos += PROGRAM_BUTTON_HEIGHT + PROGRAM_ROW_PADDING
 
             ypos += PROGRAM_BUTTON_HEIGHT + MAIN_PADDING
@@ -1168,7 +1184,6 @@ class PuavoMenu(Gtk.Window):
 
         self.__update_menu_title()
 
-
     # Clear the search box without triggering another search
     # TODO: The usefulness of this method is questionable. After commenting
     # out everything but set_text()... everything still works just fine.
@@ -1178,12 +1193,13 @@ class PuavoMenu(Gtk.Window):
     def __clear_search_field(self):
         self.__search.disconnect(self.__search_keypress_signal)
         self.__search.disconnect(self.__search_changed_signal)
-        self.__search.set_text('')
-        self.__search_keypress_signal = \
-            self.__search.connect('key-press-event', self.__on_search_keypress)
-        self.__search_changed_signal = \
-            self.__search.connect('changed', self.__do_search)
-
+        self.__search.set_text("")
+        self.__search_keypress_signal = self.__search.connect(
+            "key-press-event", self.__on_search_keypress
+        )
+        self.__search_changed_signal = self.__search.connect(
+            "changed", self.__do_search
+        )
 
     def __on_search_keypress(self, widget, key_event):
         text = self.__get_search_text()
@@ -1197,8 +1213,9 @@ class PuavoMenu(Gtk.Window):
                 self.__create_current_menu()
             else:
                 # The search field is empty, hide the window
-                logging.debug('Search field is empty and Esc pressed, '
-                              'hiding the window')
+                logging.debug(
+                    "Search field is empty and Esc pressed, " "hiding the window"
+                )
                 self.autohide()
         elif key_event.keyval == Gdk.KEY_Return:
             self.__in_search = False
@@ -1215,14 +1232,16 @@ class PuavoMenu(Gtk.Window):
 
         return False
 
-
     def __on_keypress(self, widget, key_event):
         if key_event.keyval == Gdk.KEY_Escape:
             # Esc -> hide the menu
             if self.get_focus() != self.__search:
                 self.autohide()
-        elif key_event.keyval == Gdk.KEY_Left and \
-             (key_event.state & Gdk.ModifierType.MOD1_MASK) == Gdk.ModifierType.MOD1_MASK:
+        elif (
+            key_event.keyval == Gdk.KEY_Left
+            and (key_event.state & Gdk.ModifierType.MOD1_MASK)
+            == Gdk.ModifierType.MOD1_MASK
+        ):
             if not self.__in_search and self.current_menu:
                 # Alt+Left -> exit submenu and go back to the main level
                 self.__clicked_back_button(None)
@@ -1246,10 +1265,8 @@ class PuavoMenu(Gtk.Window):
 
         return False
 
-
     # --------------------------------------------------------------------------
     # Window visibility management
-
 
     # Enables window out-of-focus autohiding. You need to call this
     # after a popup menu has been closed.
@@ -1258,9 +1275,9 @@ class PuavoMenu(Gtk.Window):
             return
 
         if not self.__focus_signal:
-            self.__focus_signal = \
-                self.connect('focus-out-event', self.__main_lost_focus)
-
+            self.__focus_signal = self.connect(
+                "focus-out-event", self.__main_lost_focus
+            )
 
     # Removes the out-of-focus autohiding. You need to call this before
     # displaying popup menus, because they trigger out-of-focus signals!
@@ -1276,11 +1293,9 @@ class PuavoMenu(Gtk.Window):
             self.disconnect(self.__focus_signal)
             self.__focus_signal = None
 
-
     # Handler for GTK focus-out-event
     def __main_lost_focus(self, *unused):
         self.autohide()
-
 
     # If autohiding is enabled, hides the window when it loses focus.
     # Public method, called from other files.
@@ -1289,8 +1304,7 @@ class PuavoMenu(Gtk.Window):
             self.set_keep_above(False)
             self.set_visible(False)
         else:
-            logging.debug('Not hiding the menu window in development mode')
-
+            logging.debug("Not hiding the menu window in development mode")
 
     # Something was clicked in the sidebar. We don't know what it is, and we
     # don't even care. We just need to do some state management.
@@ -1300,18 +1314,17 @@ class PuavoMenu(Gtk.Window):
         self.__clear_search_field()
         self.__create_current_menu()
 
-
     # Quits the program, if permitted. The signal handlers always call
     # this with "force=True" because they HAVE to kill the program.
     def go_away(self, force=False):
         if force or self.__exit_permitted:
-            logging.info('Shutdown initiated')
+            logging.info("Shutdown initiated")
             self.set_keep_above(False)
             self.set_visible(False)
             Gtk.main_quit()
             return True
 
-        logging.info('Exit not permitted')
+        logging.info("Exit not permitted")
         return True
 
     # Category buttons will receive the initial focus. Compared to
@@ -1327,10 +1340,8 @@ class PuavoMenu(Gtk.Window):
     def __try_exit(self, menu, event):
         return self.go_away()
 
-
     # --------------------------------------------------------------------------
     # IPC socket command handling
-
 
     # Extracts X/Y coordinates from a list
     def __parse_position(self, args):
@@ -1338,7 +1349,7 @@ class PuavoMenu(Gtk.Window):
             return None
 
         try:
-            if args[0] == 'center':
+            if args[0] == "center":
                 # Center the menu at the mouse cursor
                 from Xlib import display
 
@@ -1346,10 +1357,10 @@ class PuavoMenu(Gtk.Window):
                 data = display.Display().screen().root.query_pointer()._data
 
                 return (
-                    int(data['root_x']) - int(WINDOW_WIDTH / 2),
-                    int(data['root_y']) - int(WINDOW_HEIGHT / 2)
+                    int(data["root_x"]) - int(WINDOW_WIDTH / 2),
+                    int(data["root_y"]) - int(WINDOW_HEIGHT / 2),
                 )
-            elif args[0] == 'corner':
+            elif args[0] == "corner":
                 # Position the lower left corner at the specified
                 # coordinates
                 return (int(args[1]), int(args[2]))
@@ -1358,7 +1369,6 @@ class PuavoMenu(Gtk.Window):
 
         return None
 
-
     # Socket handler: explicitly hide the window
     def __socket_hide_window(self, data):
         if self.__settings.reset_view_after_start:
@@ -1366,17 +1376,16 @@ class PuavoMenu(Gtk.Window):
             self.reset_view()
 
         if self.is_visible():
-            logging.debug('Hiding the window')
+            logging.debug("Hiding the window")
             self.set_keep_above(False)
             self.set_visible(False)
         else:
-            logging.debug('Already hidden')
-
+            logging.debug("Already hidden")
 
     # Socket handler: explicitly show the window
     def __socket_show_window(self, data):
         if self.is_visible():
-            logging.debug('Already visible')
+            logging.debug("Already visible")
         else:
             if self.__settings.reset_view_after_start:
                 # Go back to the default view
@@ -1402,11 +1411,11 @@ class PuavoMenu(Gtk.Window):
             self.reset_view()
 
         if self.is_visible():
-            logging.debug('Toggling window visibility (hide)')
+            logging.debug("Toggling window visibility (hide)")
             self.set_keep_above(False)
             self.set_visible(False)
         else:
-            logging.debug('Toggling window visibility (show)')
+            logging.debug("Toggling window visibility (show)")
             coords = self.__parse_position(data)
 
             if coords:
@@ -1424,7 +1433,8 @@ class PuavoMenu(Gtk.Window):
     def __socket_update_puavopkg(self, data):
         if len(data) != 1:
             logging.warning(
-                '__socket_update_puavopkg(): malformed arguments ("%s")', data)
+                '__socket_update_puavopkg(): malformed arguments ("%s")', data
+            )
             return
 
         pkg_id = data[0]
@@ -1443,50 +1453,56 @@ class PuavoMenu(Gtk.Window):
         if not target_program:
             logging.error(
                 '__socket_update_puavopkg(): no valid puavo-pkg program with the ID "%s" found',
-                pkg_id)
+                pkg_id,
+            )
             return
 
         try:
             # Redetect all puavo-pkg program states
-            dynamic_puavopkg_ids = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
+            dynamic_puavopkg_ids = utils.puavo_conf("puavo.pkgs.ui.pkglist", "")
             puavopkg_states = puavopkg.detect_package_states(dynamic_puavopkg_ids)
 
             # Reload a *single* program
             logging.info('__socket_update_puavopkg(): reloading program "%s"', pkg_id)
 
-            if puavopkg.reload_program(target_program,
-                                       puavopkg_states,
-                                       self.__settings.language,
-                                       self.__dirs_config.desktop_dirs,
-                                       self.__icon_locator,
-                                       self.__icons):
-                logging.info('__socket_update_puavopkg(): program updated, updating the UI')
+            if puavopkg.reload_program(
+                target_program,
+                puavopkg_states,
+                self.__settings.language,
+                self.__dirs_config.desktop_dirs,
+                self.__icon_locator,
+                self.__icons,
+            ):
+                logging.info(
+                    "__socket_update_puavopkg(): program updated, updating the UI"
+                )
                 self.__create_current_menu()
                 self.__update_frequent_programs_list(True)
         except Exception as exception:
             logging.error(exception, exc_info=True)
 
-
     # Socket handler: reload menudata
     def __socket_reload_menudata(self, data):
-        logging.info('__socket_reload_menudata(): reloading all menudata')
+        logging.info("__socket_reload_menudata(): reloading all menudata")
         self.unload_menu_data()
         self.load_menu_data()
         self.current_category = 0
         self.current_menu = None
         self.__create_current_menu()
 
-
     def __socket_reload_user_programs(self, data):
         if not self.__settings.show_user_programs:
-            logging.warning('__socket_reload_user_programs(): user programs are disabled')
+            logging.warning(
+                "__socket_reload_user_programs(): user programs are disabled"
+            )
             return
 
         # Called too early?
         if not self.menudata or not self.__user_programs_loaded:
             logging.warning(
-                '__socket_reload_user_programs(): initial loading not done, ' \
-                'doing nothing')
+                "__socket_reload_user_programs(): initial loading not done, "
+                "doing nothing"
+            )
             return
 
         # TODO: The category creation/removal is a somewhat jarring experience,
@@ -1498,16 +1514,15 @@ class PuavoMenu(Gtk.Window):
         # special category does not exist yet. It must be created dynamically.
         create_new = False
 
-        if 'category-user-programs' in self.menudata.categories:
-            temp_category = self.menudata.categories['category-user-programs']
+        if "category-user-programs" in self.menudata.categories:
+            temp_category = self.menudata.categories["category-user-programs"]
         else:
             temp_category = menudata.Category()
             create_new = True
 
-        if self.__user_programs.update(self.menudata.programs,
-                                       temp_category,
-                                       self.__icon_locator,
-                                       self.__icons):
+        if self.__user_programs.update(
+            self.menudata.programs, temp_category, self.__icon_locator, self.__icons
+        ):
             if create_new:
                 # The user programs category does not exist yet, create it
                 self.__create_user_category(temp_category)
@@ -1525,18 +1540,20 @@ class PuavoMenu(Gtk.Window):
                         have_up = True
                         break
 
-                if (not have_up) and ('category-user-programs' in self.menudata.categories):
+                if (not have_up) and (
+                    "category-user-programs" in self.menudata.categories
+                ):
                     # We had user programs, but they're gone now.
                     # Remove the empty category.
                     new_index = []
 
                     for cid in self.menudata.category_index:
-                        if cid != 'category-user-programs':
+                        if cid != "category-user-programs":
                             new_index.append(cid)
 
                     self.menudata.category_index = new_index
 
-                    del self.menudata.categories['category-user-programs']
+                    del self.menudata.categories["category-user-programs"]
                     self.__rebuild_category_list()
 
             # Forcibly update the frequent programs list. We don't
@@ -1544,15 +1561,14 @@ class PuavoMenu(Gtk.Window):
             # to detect what actually does change, so just force it.
             self.__update_frequent_programs_list(force=True)
 
-
     # Responds to commands sent through the control socket
     def __socket_watcher(self, conn, *args):
         try:
             data = conn.recv(1024)
-            data = (data or b'').decode('utf-8').strip().split(' ')
+            data = (data or b"").decode("utf-8").strip().split(" ")
 
             if not data:
-                logging.debug('Received an empty command through the socket?')
+                logging.debug("Received an empty command through the socket?")
                 return False
 
             cmd = data[0]
@@ -1561,12 +1577,12 @@ class PuavoMenu(Gtk.Window):
             logging.debug('Socket command: "%s", arguments: "%s"', cmd, data)
 
             socket_handlers = {
-                'hide': self.__socket_hide_window,
-                'show': self.__socket_show_window,
-                'toggle': self.__socket_toggle_window,
-                'update-puavopkg': self.__socket_update_puavopkg,
-                'reload-menudata': self.__socket_reload_menudata,
-                'reload-userprogs': self.__socket_reload_user_programs,
+                "hide": self.__socket_hide_window,
+                "show": self.__socket_show_window,
+                "toggle": self.__socket_toggle_window,
+                "update-puavopkg": self.__socket_update_puavopkg,
+                "reload-menudata": self.__socket_reload_menudata,
+                "reload-userprogs": self.__socket_reload_user_programs,
             }
 
             if cmd in socket_handlers:
@@ -1574,12 +1590,11 @@ class PuavoMenu(Gtk.Window):
             else:
                 logging.error('Unknown socket command "%s"', cmd)
         except Exception as exception:
-            logging.error('Socket command processing failed!')
+            logging.error("Socket command processing failed!")
             logging.error(exception, exc_info=True)
 
         # MUST RETURN FALSE HERE, otherwise we get stuck in an infinite loop
         return False
-
 
     # Accepts incoming IPC socket connections
     def __socket_accept(self, sock, *args):
@@ -1588,10 +1603,8 @@ class PuavoMenu(Gtk.Window):
         GLib.io_add_watch(conn, GLib.IO_IN, self.__socket_watcher)
         return True
 
-
     # --------------------------------------------------------------------------
     # Development helpers
-
 
     # The devtools menu and its commands
     def __devtools_menu(self, widget, event):
@@ -1603,9 +1616,9 @@ class PuavoMenu(Gtk.Window):
 
         def purge(menuitem):
             if self.menudata:
-                logging.debug('=' * 20)
-                logging.debug('Purging all loaded menu data!')
-                logging.debug('=' * 20)
+                logging.debug("=" * 20)
+                logging.debug("Purging all loaded menu data!")
+                logging.debug("=" * 20)
                 self.unload_menu_data()
 
         def reload(menuitem):
@@ -1620,39 +1633,40 @@ class PuavoMenu(Gtk.Window):
                 if self.menudata.category_index and self.current_category != -1:
                     prev_cat = self.menudata.category_index[self.current_category]
 
-            logging.debug('=' * 20)
-            logging.debug('Reloading all menu data!')
-            logging.debug('=' * 20)
+            logging.debug("=" * 20)
+            logging.debug("Reloading all menu data!")
+            logging.debug("=" * 20)
 
             # TODO: get rid of this call, so we can retain the old data if
             # we can't load the new data (the loader already supports that)
             self.unload_menu_data()
 
             if not self.load_menu_data():
-                self.error_message('Failed to load menu data',
-                                   'See the console for more details')
+                self.error_message(
+                    "Failed to load menu data", "See the console for more details"
+                )
             else:
                 # Try to restore the previous menu and category
-                #print('Previous category: "{0}"'.format(prev_cat))
-                #print('Previous menu: "{0}"'.format(prev_menu))
+                # print('Previous category: "{0}"'.format(prev_cat))
+                # print('Previous menu: "{0}"'.format(prev_menu))
 
                 if prev_cat:
                     for index, cat in enumerate(self.menudata.category_index):
                         if cat == prev_cat:
-                            logging.debug('Restoring category "%s" after reload',
-                                          prev_cat)
+                            logging.debug(
+                                'Restoring category "%s" after reload', prev_cat
+                            )
                             self.current_category = index
                             self.__category_buttons.set_current_page(index)
                             break
 
                 if prev_menu and (prev_menu in self.menudata.menus):
-                    logging.debug('Restoring menu "%s" after reload',
-                                  prev_menu)
+                    logging.debug('Restoring menu "%s" after reload', prev_menu)
                     self.current_menu = self.menudata.menus[prev_menu]
                     self.__create_current_menu()
                     self.__back_button.show()
 
-            logging.debug('Menu data reload complete')
+            logging.debug("Menu data reload complete")
 
         def toggle_autohide(menuitem):
             self.__settings.autohide = not self.__settings.autohide
@@ -1661,35 +1675,35 @@ class PuavoMenu(Gtk.Window):
             self.__exit_permitted = not self.__exit_permitted
 
             if self.__exit_permitted:
-                logging.debug('Normal exiting ENABLED')
+                logging.debug("Normal exiting ENABLED")
             else:
-                logging.debug('Normal exiting DISABLED')
+                logging.debug("Normal exiting DISABLED")
 
         def force_exit(menuitem):
-            logging.debug('Devmenu force exit initiated!')
+            logging.debug("Devmenu force exit initiated!")
             self.go_away(True)
 
         def dump_program_uses(menuitem):
             by_launches = self.__program_launch_counts.get_frequent_programs()
 
             for i in by_launches:
-                print('%d %s' % (i[0], i[1]))
+                print("%d %s" % (i[0], i[1]))
 
         dev_menu = Gtk.Menu()
 
-        reload_item = Gtk.MenuItem('(Re)load menu data')
-        reload_item.connect('activate', reload)
+        reload_item = Gtk.MenuItem("(Re)load menu data")
+        reload_item.connect("activate", reload)
         reload_item.show()
         dev_menu.append(reload_item)
 
         if self.menudata:
-            remove_item = Gtk.MenuItem('Unload all menu data')
-            remove_item.connect('activate', purge)
+            remove_item = Gtk.MenuItem("Unload all menu data")
+            remove_item.connect("activate", purge)
             remove_item.show()
             dev_menu.append(remove_item)
 
-            dump_item = Gtk.MenuItem('Dump program usage counters')
-            dump_item.connect('activate', dump_program_uses)
+            dump_item = Gtk.MenuItem("Dump program usage counters")
+            dump_item.connect("activate", dump_program_uses)
             dump_item.show()
             dev_menu.append(dump_item)
 
@@ -1697,9 +1711,9 @@ class PuavoMenu(Gtk.Window):
         sep.show()
         dev_menu.append(sep)
 
-        autohide_item = Gtk.CheckMenuItem('Autohide window')
+        autohide_item = Gtk.CheckMenuItem("Autohide window")
         autohide_item.set_active(self.__settings.autohide)
-        autohide_item.connect('activate', toggle_autohide)
+        autohide_item.connect("activate", toggle_autohide)
         autohide_item.show()
         dev_menu.append(autohide_item)
 
@@ -1707,20 +1721,20 @@ class PuavoMenu(Gtk.Window):
         sep.show()
         dev_menu.append(sep)
 
-        permit_exit_item = Gtk.CheckMenuItem('Permit normal program exit')
+        permit_exit_item = Gtk.CheckMenuItem("Permit normal program exit")
         permit_exit_item.set_active(self.__exit_permitted)
-        permit_exit_item.connect('activate', permit_exit)
+        permit_exit_item.connect("activate", permit_exit)
         permit_exit_item.show()
         dev_menu.append(permit_exit_item)
 
-        force_exit_item = Gtk.MenuItem('Force program exit')
-        force_exit_item.connect('activate', force_exit)
+        force_exit_item = Gtk.MenuItem("Force program exit")
+        force_exit_item.connect("activate", force_exit)
         force_exit_item.show()
         dev_menu.append(force_exit_item)
 
         # Prevent autohide when the menu is open
         self.disable_out_of_focus_hide()
-        dev_menu.connect('deactivate', self.enable_out_of_focus_hide)
+        dev_menu.connect("deactivate", self.enable_out_of_focus_hide)
 
         dev_menu.popup(
             parent_menu_shell=None,
@@ -1728,7 +1742,8 @@ class PuavoMenu(Gtk.Window):
             func=None,
             data=None,
             button=1,
-            activate_time=0)
+            activate_time=0,
+        )
 
         return False
 
@@ -1743,7 +1758,7 @@ class PuavoMenu(Gtk.Window):
 # all sorts of X libraries and stuff and sometimes that fails and you can't
 # even see the help text!
 def run_puavomenu(settings, socket, program_start_time):
-    logging.info('Entering run_puavomenu()')
+    logging.info("Entering run_puavomenu()")
 
     try:
         PuavoMenu(settings, socket, program_start_time)
@@ -1760,4 +1775,4 @@ def run_puavomenu(settings, socket, program_start_time):
         logging.error(exception, exc_info=True)
 
     # We get here only in development mode
-    logging.info('Exiting run_puavomenu()')
+    logging.info("Exiting run_puavomenu()")

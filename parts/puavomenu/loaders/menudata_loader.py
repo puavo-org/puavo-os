@@ -25,7 +25,7 @@ import puavopkg
 
 
 # Pattern for menudata files ("XX-name.json" where XX is a two-digit number)
-MENU_FILE_PATTERN = re.compile(r'^\d\d')
+MENU_FILE_PATTERN = re.compile(r"^\d\d")
 
 
 # Finds menu JSON files. They must be sorted by priority and name.
@@ -43,7 +43,7 @@ MENU_FILE_PATTERN = re.compile(r'^\d\d')
 def find_menu_files(*where):
     files = []
 
-    for full_name in glob.iglob(os.path.join(*where, '*.json')):
+    for full_name in glob.iglob(os.path.join(*where, "*.json")):
         name = os.path.basename(full_name)
         number = MENU_FILE_PATTERN.search(name)
 
@@ -55,7 +55,7 @@ def find_menu_files(*where):
         # The first two elements are for sorting (numbers first, then
         # names), the third element is the actual name you want to use
         # after sorting.
-        files.append((number.group(0), name[number.end(0)+1:], full_name))
+        files.append((number.group(0), name[number.end(0) + 1 :], full_name))
 
     return files
 
@@ -90,7 +90,7 @@ def merge_dicts_intelligently(a, b):
     # that have a value, and delete those who have a None value.
     if b:
         for k, v in b.items():
-            if k == 'id':
+            if k == "id":
                 # never touch the ID
                 continue
 
@@ -142,127 +142,138 @@ def merge_json_and_desktop_data(json_data, desktop_data, language):
     # .desktop files, while still allowing .desktop files to specify data.
 
     # Load the program name
-    if 'name' not in json_data:
-        key = 'Name[%s]' % language
+    if "name" not in json_data:
+        key = "Name[%s]" % language
 
         if key not in desktop_data:
-            key = 'GenericName[%s]' % language
+            key = "GenericName[%s]" % language
 
             if key not in desktop_data:
-                key = 'Name'
+                key = "Name"
 
         if key in desktop_data:
-            json_data['name'] = desktop_data[key]
+            json_data["name"] = desktop_data[key]
 
     # Load the description
-    if 'description' not in json_data:
-        key = 'Comment[%s]' % language
+    if "description" not in json_data:
+        key = "Comment[%s]" % language
 
         if key in desktop_data:
-            json_data['description'] = desktop_data[key]
+            json_data["description"] = desktop_data[key]
         else:
             # Use a "generic" English description if "en" description does
             # not exist. Yes this is a hack, thanks for asking.
-            if language == 'en' and 'Comment' in desktop_data:
-                json_data['description'] = desktop_data['Comment']
+            if language == "en" and "Comment" in desktop_data:
+                json_data["description"] = desktop_data["Comment"]
 
     # Extract search keywords
     # TODO: Support per-language keywords in JSON files
-    key = 'Keywords[%s]' % language
+    key = "Keywords[%s]" % language
 
     if key not in desktop_data:
-        key = 'Keywords'
+        key = "Keywords"
 
     if key in desktop_data:
         temp = set(filter(None, desktop_data[key].split(";")))
     else:
         temp = set()
 
-    if 'keywords' in json_data:
-        json_data['keywords'].update(temp)
+    if "keywords" in json_data:
+        json_data["keywords"].update(temp)
     else:
-        json_data['keywords'] = temp
+        json_data["keywords"] = temp
 
     # Get the icon name. These can be localised too, but we ignore that
     # and plow through and hope it'll work.
-    if ('icon' not in json_data or json_data['icon'] is None) and \
-        ('Icon' in desktop_data):
-        json_data['icon'] = str(desktop_data['Icon'])
+    if ("icon" not in json_data or json_data["icon"] is None) and (
+        "Icon" in desktop_data
+    ):
+        json_data["icon"] = str(desktop_data["Icon"])
 
     # Command line / URL
-    if ('command' not in json_data or json_data['command'] is None) and \
-        ('Exec' in desktop_data):
-        json_data['command'] = str(desktop_data['Exec'])
+    if ("command" not in json_data or json_data["command"] is None) and (
+        "Exec" in desktop_data
+    ):
+        json_data["command"] = str(desktop_data["Exec"])
 
     # Store categories as tags
-    if 'Categories' in desktop_data:
+    if "Categories" in desktop_data:
         tags = set()
 
         # Annoyingly, .desktop files use semicolons here
         # but we use just spaces/commas
-        for raw_cat in filter(None, desktop_data['Categories'].split(';')):
+        for raw_cat in filter(None, desktop_data["Categories"].split(";")):
             cat = raw_cat.strip()
 
             if cat:
                 tags.add(cat.lower())
 
         if tags:
-            if 'tags' in json_data:
-                json_data['tags'].update(tags)
+            if "tags" in json_data:
+                json_data["tags"].update(tags)
             else:
-                json_data['tags'] = tags
+                json_data["tags"] = tags
 
 
 # Locates and loads .desktop files for desktop programs (including
 # puavo-pkg programs)
 def load_desktop_files(programs, desktop_dirs, language):
     for pid, program in programs.items():
-        if program['type'] != 'desktop':
+        if program["type"] != "desktop":
             continue
 
         # Skip puavopkg programs that aren't installed yet. Their .desktop
         # files don't exist in the filesystem.
-        if 'puavopkg' in program and 'state' in program['puavopkg'] and \
-           program['puavopkg']['state'] != menudata.PuavoPkgState.INSTALLED:
+        if (
+            "puavopkg" in program
+            and "state" in program["puavopkg"]
+            and program["puavopkg"]["state"] != menudata.PuavoPkgState.INSTALLED
+        ):
             continue
 
-        desktop_file = locate_desktop_file(desktop_dirs, pid + '.desktop')
+        desktop_file = locate_desktop_file(desktop_dirs, pid + ".desktop")
 
         if desktop_file is None:
             logging.warning(
-                'Can\'t find the desktop file for program "%s", program ignored',
-                pid)
+                'Can\'t find the desktop file for program "%s", program ignored', pid
+            )
 
-            program['flags'] |= menudata.ProgramFlags.BROKEN
+            program["flags"] |= menudata.ProgramFlags.BROKEN
             continue
 
         try:
             desktop_data = loaders.dotdesktop_loader.load(desktop_file)
 
-            if 'Desktop Entry' not in desktop_data:
+            if "Desktop Entry" not in desktop_data:
                 raise RuntimeError('missing "Desktop Entry" section')
         except Exception as exc:
             logging.error(
                 'Could not load the desktop file "%s" for program "%s":',
-                desktop_file, pid)
+                desktop_file,
+                pid,
+            )
             logging.error(str(exc))
 
-            program['flags'] |= menudata.ProgramFlags.BROKEN
+            program["flags"] |= menudata.ProgramFlags.BROKEN
             continue
 
         # Honor "NoDisplay=true"
-        if 'NoDisplay' in desktop_data['Desktop Entry'] and \
-                desktop_data['Desktop Entry']['NoDisplay'] == 'true':
-            logging.info('.desktop file "%s" contains "NoDisplay=true", skipping it',
-                         desktop_file)
+        if (
+            "NoDisplay" in desktop_data["Desktop Entry"]
+            and desktop_data["Desktop Entry"]["NoDisplay"] == "true"
+        ):
+            logging.info(
+                '.desktop file "%s" contains "NoDisplay=true", skipping it',
+                desktop_file,
+            )
             continue
 
         # Load the parts we don't have yet from the .desktop file
-        merge_json_and_desktop_data(program, desktop_data['Desktop Entry'], language)
+        merge_json_and_desktop_data(program, desktop_data["Desktop Entry"], language)
 
         # Keep track of the original desktop file name. We need it,
         # for example, when creating panel icons.
-        program['original_desktop_file'] = desktop_file
+        program["original_desktop_file"] = desktop_file
 
 
 # Locates and loads icon files for programs and menus
@@ -274,71 +285,81 @@ def load_icons(programs, menus, icon_locator, icon_cache):
 
     for menudata_id, program in programs.items():
         # Initially there are no icons
-        program['icon_handle'] = None
+        program["icon_handle"] = None
 
-        if program['flags'] & ProgramFlags.BROKEN:
+        if program["flags"] & ProgramFlags.BROKEN:
             continue
 
-        if not program['flags'] & ProgramFlags.USED:
+        if not program["flags"] & ProgramFlags.USED:
             continue
 
         # ----------------------------------------------------------------------
         # First deal with puavopkg programs that aren't installed yet. Their
         # icon names are always a full path to an icon file.
 
-        if 'puavopkg' in program and 'state' in program['puavopkg'] and \
-           program['puavopkg']['state'] != menudata.PuavoPkgState.INSTALLED:
-            icon_name = program['puavopkg']['icon']
+        if (
+            "puavopkg" in program
+            and "state" in program["puavopkg"]
+            and program["puavopkg"]["state"] != menudata.PuavoPkgState.INSTALLED
+        ):
+            icon_name = program["puavopkg"]["icon"]
 
-            program['icon_handle'], usable = icon_cache.load_icon(icon_name)
+            program["icon_handle"], usable = icon_cache.load_icon(icon_name)
 
             if not usable:
-                logging.error('Could not load the puavopkg installer icon "%s" for program "%s"',
-                              icon_name, menudata_id)
-                program['icon_handle'] = None
+                logging.error(
+                    'Could not load the puavopkg installer icon "%s" for program "%s"',
+                    icon_name,
+                    menudata_id,
+                )
+                program["icon_handle"] = None
                 num_missing_icons += 1
 
             continue
 
         # ----------------------------------------------------------------------
 
-        if 'icon' not in program:
+        if "icon" not in program:
             # This should never happen. Because if a .desktop file has
             # no icon (for some reason), then the menudata has been
             # patched to define an icon. But... everything can break.
             logging.error('Program "%s" has no icon at all', menudata_id)
-            program['icon_handle'] = None
+            program["icon_handle"] = None
             num_missing_icons += 1
             continue
 
         # Needed when creating desktop and panel icons. Let GNOME deal
         # with locating the icon file.
-        program['original_icon_name'] = program['icon']
+        program["original_icon_name"] = program["icon"]
 
         # ----------------------------------------------------------------------
         # Locate the icon file
 
-        icon_path, is_path = icon_locator.locate_icon(program['icon'], 48)
+        icon_path, is_path = icon_locator.locate_icon(program["icon"], 48)
 
         if icon_path is None:
-            logging.warning("Can't find icon \"%s\" for program \"%s\"",
-                            program['icon'], menudata_id)
-            program['icon_handle'] = None
+            logging.warning(
+                'Can\'t find icon "%s" for program "%s"', program["icon"], menudata_id
+            )
+            program["icon_handle"] = None
             num_missing_icons += 1
             continue
 
-        program['icon'] = icon_path
+        program["icon"] = icon_path
 
         # ----------------------------------------------------------------------
         # Load the icon
 
-        program['icon_handle'], usable = icon_cache.load_icon(icon_path)
+        program["icon_handle"], usable = icon_cache.load_icon(icon_path)
 
         # This is not a fatal error. The program will still work, it'll just
         # look ugly.
         if not usable:
-            logging.warning('Found icon "%s" for program "%s", but '
-                            'it could not be loaded', icon_path, menudata_id)
+            logging.warning(
+                'Found icon "%s" for program "%s", but ' "it could not be loaded",
+                icon_path,
+                menudata_id,
+            )
             num_missing_icons += 1
 
     # --------------------------------------------------------------------------
@@ -348,66 +369,70 @@ def load_icons(programs, menus, icon_locator, icon_cache):
     # the original icon name or anything like that.
     for menu_id, menu in menus.items():
         # No icons at all at first
-        menu['icon_handle'] = None
+        menu["icon_handle"] = None
 
-        if ('icon' not in menu) or (menu['icon'] is None):
+        if ("icon" not in menu) or (menu["icon"] is None):
             logging.warning('Menu "%s" has no icon defined', menu_id)
             num_missing_icons += 1
             continue
 
-        icon_path, is_path = icon_locator.locate_icon(menu['icon'], 48)
+        icon_path, is_path = icon_locator.locate_icon(menu["icon"], 48)
 
         if icon_path is None:
-            logging.warning("Can't find icon \"%s\" for menu \"%s\"",
-                            menu['icon'], menu_id)
-            menu['icon'] = None
+            logging.warning(
+                'Can\'t find icon "%s" for menu "%s"', menu["icon"], menu_id
+            )
+            menu["icon"] = None
             num_missing_icons += 1
             continue
 
-        menu['icon_handle'], usable = icon_cache.load_icon(icon_path)
+        menu["icon_handle"], usable = icon_cache.load_icon(icon_path)
 
         if not usable:
-            logging.warning('Found an icon "%s" for menu "%s", but '
-                            'it could not be loaded', menu['icon'], menu_id)
+            logging.warning(
+                'Found an icon "%s" for menu "%s", but ' "it could not be loaded",
+                menu["icon"],
+                menu_id,
+            )
             num_missing_icons += 1
 
     # --------------------------------------------------------------------------
 
     if num_missing_icons:
-        logging.info('Have %d missing or unloadable icons', num_missing_icons)
+        logging.info("Have %d missing or unloadable icons", num_missing_icons)
     else:
-        logging.info('No missing icons')
+        logging.info("No missing icons")
 
 
 # Finds the best translated string for the current language in progams,
 # menus and categrories
 def localize_entries(programs, menus, categories):
     for _, prog in programs.items():
-        if not prog['flags'] & menudata.ProgramFlags.USED:
+        if not prog["flags"] & menudata.ProgramFlags.USED:
             continue
 
-        if 'name' in prog:
-            prog['name'] = _tr.localize(prog['name'])
+        if "name" in prog:
+            prog["name"] = _tr.localize(prog["name"])
 
-        if 'description' in prog:
-            prog['description'] = _tr.localize(prog['description'])
+        if "description" in prog:
+            prog["description"] = _tr.localize(prog["description"])
 
     for _, menu in menus.items():
-        if not menu['flags'] & menudata.MenuFlags.USED:
+        if not menu["flags"] & menudata.MenuFlags.USED:
             continue
 
-        if 'name' in menu:
-            menu['name'] = _tr.localize(menu['name'])
+        if "name" in menu:
+            menu["name"] = _tr.localize(menu["name"])
 
-        if 'description' in menu:
-            menu['description'] = _tr.localize(menu['description'])
+        if "description" in menu:
+            menu["description"] = _tr.localize(menu["description"])
 
     for _, category in categories.items():
-        if not category['flags'] & menudata.CategoryFlags.USED:
+        if not category["flags"] & menudata.CategoryFlags.USED:
             continue
 
-        if 'name' in category:
-            category['name'] = _tr.localize(category['name'])
+        if "name" in category:
+            category["name"] = _tr.localize(category["name"])
 
 
 # Sort the categories by position, but if the positions are identical,
@@ -417,22 +442,24 @@ def sort_categories(categories):
     temp_index = []
 
     for cid, category in categories.items():
-        if category['flags'] & MenuFlags.BROKEN or \
-           category['flags'] & MenuFlags.HIDDEN:
+        if category["flags"] & MenuFlags.BROKEN or category["flags"] & MenuFlags.HIDDEN:
             continue
 
-        if not category['flags'] & MenuFlags.USED:
+        if not category["flags"] & MenuFlags.USED:
             continue
 
         position = 0
 
-        if 'position' in category:
+        if "position" in category:
             try:
-                position = int(category['position'])
+                position = int(category["position"])
             except Exception:
-                logging.warning('Cannot interpret "%s" as a position for '
-                                'category "%s", defaulting to 0',
-                                category['position'], cid)
+                logging.warning(
+                    'Cannot interpret "%s" as a position for '
+                    'category "%s", defaulting to 0',
+                    category["position"],
+                    cid,
+                )
 
         temp_index.append((position, cid))
 
@@ -453,15 +480,17 @@ def sort_programs_by_name(programs, unsorted_program_ids):
     return [i[0] for i in sorted(names, key=lambda p: p[1])]
 
 
-def load(menudata_files,        # data source
-         language,              # what language to use
-         desktop_dirs,          # directories for .desktop files
-         tags, conditionals,    # visibility filtering
-         puavopkg_states,       # current puavo-pkg program install states
-         icon_locator,          # icon file locator
-         icon_cache,            # cache for icons
-         sort_contents=False):  # if True, sort the menus and programs
-
+def load(
+    menudata_files,  # data source
+    language,  # what language to use
+    desktop_dirs,  # directories for .desktop files
+    tags,
+    conditionals,  # visibility filtering
+    puavopkg_states,  # current puavo-pkg program install states
+    icon_locator,  # icon file locator
+    icon_cache,  # cache for icons
+    sort_contents=False,
+):  # if True, sort the menus and programs
     programs = {}
     menus = {}
     categories = {}
@@ -475,7 +504,7 @@ def load(menudata_files,        # data source
         try:
             logging.info('Loading menudata file "%s"', name)
 
-            with open(name, mode='r', encoding='utf-8') as f:
+            with open(name, mode="r", encoding="utf-8") as f:
                 json_string = f.read()
 
             p, m, c = loaders.json_loader.load_raw_menudata(json_string, name)
@@ -490,7 +519,7 @@ def load(menudata_files,        # data source
             continue
 
     end_time = time.perf_counter()
-    utils.log_elapsed_time('Raw menudata loading time', start_time, end_time)
+    utils.log_elapsed_time("Raw menudata loading time", start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Deal with puavo-pkg program states. This must be done early, because
@@ -506,11 +535,11 @@ def load(menudata_files,        # data source
     # Duplicate raw program definitions for puavo-pkg programs, so they can
     # be merged with the .desktop file data when the program is intalled.
     for pid, program in programs.items():
-        if 'puavopkg' in program:
-            program['raw_menudata'] = dict(program)
+        if "puavopkg" in program:
+            program["raw_menudata"] = dict(program)
 
     end_time = time.perf_counter()
-    utils.log_elapsed_time('puavopkg state init time', start_time, end_time)
+    utils.log_elapsed_time("puavopkg state init time", start_time, end_time)
 
     # --------------------------------------------------------------------------
     # There could be programs that are defined, but not actually used in any
@@ -518,26 +547,26 @@ def load(menudata_files,        # data source
     # the unmarked programs when .desktop files are loaded.
 
     for cid, category in categories.items():
-        category['flags'] |= CategoryFlags.USED
+        category["flags"] |= CategoryFlags.USED
 
-        if 'menus' in category:
-            for mid in category['menus']:
+        if "menus" in category:
+            for mid in category["menus"]:
                 if mid in menus:
-                    menus[mid]['flags'] |= MenuFlags.USED
+                    menus[mid]["flags"] |= MenuFlags.USED
 
-        if 'programs' in category:
-            for pid in category['programs']:
+        if "programs" in category:
+            for pid in category["programs"]:
                 if pid in programs:
-                    programs[pid]['flags'] |= ProgramFlags.USED
+                    programs[pid]["flags"] |= ProgramFlags.USED
 
     for mid, menu in menus.items():
-        if not menu['flags'] & MenuFlags.USED:
+        if not menu["flags"] & MenuFlags.USED:
             continue
 
-        if 'programs' in menu:
-            for pid in menu['programs']:
+        if "programs" in menu:
+            for pid in menu["programs"]:
                 if pid in programs:
-                    programs[pid]['flags'] |= ProgramFlags.USED
+                    programs[pid]["flags"] |= ProgramFlags.USED
 
     # --------------------------------------------------------------------------
     # Localize names and descriptions
@@ -555,27 +584,27 @@ def load(menudata_files,        # data source
     load_desktop_files(programs, desktop_dirs, language)
 
     end_time = time.perf_counter()
-    utils.log_elapsed_time('.desktop file loading time', start_time, end_time)
+    utils.log_elapsed_time(".desktop file loading time", start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Find nameless entries
 
     for pid, program in programs.items():
-        if program.get('name', None) is None:
+        if program.get("name", None) is None:
             logging.error('Program "%s" has no name, skipping', pid)
-            program['flags'] |= ProgramFlags.BROKEN
+            program["flags"] |= ProgramFlags.BROKEN
             continue
 
     for mid, menu in menus.items():
-        if menu.get('name', None) is None:
+        if menu.get("name", None) is None:
             logging.error('Menu "%s" has no name, skipping', mid)
-            menu['flags'] |= MenuFlags.BROKEN
+            menu["flags"] |= MenuFlags.BROKEN
             continue
 
     for cid, category in categories.items():
-        if category.get('name', None) is None:
+        if category.get("name", None) is None:
             logging.error('Category "%s" has no name, skipping', cid)
-            category['flags'] |= CategoryFlags.BROKEN
+            category["flags"] |= CategoryFlags.BROKEN
             continue
 
     # --------------------------------------------------------------------------
@@ -588,56 +617,62 @@ def load(menudata_files,        # data source
 
     # All programs are hidden by default
     for name, program in programs.items():
-        program['flags'] |= ProgramFlags.HIDDEN
+        program["flags"] |= ProgramFlags.HIDDEN
 
     # Apply "hidden_by_default" flags
     for name, program in programs.items():
         # Programs can be made visible by default
-        if 'hidden_by_default' in program and program['hidden_by_default'] is False:
-            program['flags'] &= ~ProgramFlags.HIDDEN
+        if "hidden_by_default" in program and program["hidden_by_default"] is False:
+            program["flags"] &= ~ProgramFlags.HIDDEN
 
     for name, menu in menus.items():
         # Menus can be made hidden by default
-        if 'hidden_by_default' in menu and menu['hidden_by_default'] is True:
-            menu['flags'] |= MenuFlags.HIDDEN
+        if "hidden_by_default" in menu and menu["hidden_by_default"] is True:
+            menu["flags"] |= MenuFlags.HIDDEN
 
     for name, cat in categories.items():
         # Categories can be made hidden by default
-        if 'hidden_by_default' in cat and cat['hidden_by_default'] is True:
-            cat['flags'] |= CategoryFlags.HIDDEN
+        if "hidden_by_default" in cat and cat["hidden_by_default"] is True:
+            cat["flags"] |= CategoryFlags.HIDDEN
 
     # Process tags
     if tags.have_data():
         # Programs first
         for name, program in programs.items():
-            if program['flags'] & ProgramFlags.BROKEN:
+            if program["flags"] & ProgramFlags.BROKEN:
                 continue
 
             # No tags -> program is always hidden, no matter what
-            if 'tags' not in program or not program['tags']:
+            if "tags" not in program or not program["tags"]:
                 logging.warning('Program "%s" has no tags, forcibly hiding it', name)
-                program['flags'] |= ProgramFlags.HIDDEN
+                program["flags"] |= ProgramFlags.HIDDEN
                 continue
 
             for a in tags.actions:
                 # apply categorical tags
                 if a.target == filters.tags.Action.TAG:
-                    if a.name in program['tags']:
+                    if a.name in program["tags"]:
                         if a.action == filters.tags.Action.SHOW:
-                            program['flags'] &= ~ProgramFlags.HIDDEN
+                            program["flags"] &= ~ProgramFlags.HIDDEN
                         else:
-                            logging.debug('Tag "%s" hides program "%s"', a.original, name)
-                            program['flags'] |= ProgramFlags.HIDDEN
+                            logging.debug(
+                                'Tag "%s" hides program "%s"', a.original, name
+                            )
+                            program["flags"] |= ProgramFlags.HIDDEN
 
                 # apply per-program tags
                 elif a.target == filters.tags.Action.PROGRAM:
                     if a.name == name:
                         if a.action == filters.tags.Action.SHOW:
-                            logging.debug('Tag "%s" shows program "%s"', a.original, name)
-                            program['flags'] &= ~ProgramFlags.HIDDEN
+                            logging.debug(
+                                'Tag "%s" shows program "%s"', a.original, name
+                            )
+                            program["flags"] &= ~ProgramFlags.HIDDEN
                         else:
-                            logging.debug('Tag "%s" hides program "%s"', a.original, name)
-                            program['flags'] |= ProgramFlags.HIDDEN
+                            logging.debug(
+                                'Tag "%s" hides program "%s"', a.original, name
+                            )
+                            program["flags"] |= ProgramFlags.HIDDEN
 
         # Then menus
         for a in tags.actions:
@@ -649,15 +684,15 @@ def load(menudata_files,        # data source
 
             menu = menus[a.name]
 
-            if menu['flags'] & MenuFlags.BROKEN:
+            if menu["flags"] & MenuFlags.BROKEN:
                 continue
 
             if a.action == filters.tags.Action.SHOW:
                 logging.debug('Tag "%s" shows menu "%s"', a.original, a.name)
-                menu['flags'] &= ~MenuFlags.HIDDEN
+                menu["flags"] &= ~MenuFlags.HIDDEN
             else:
                 logging.debug('Tag "%s" hides menu "%s"', a.original, a.name)
-                menu['flags'] |= MenuFlags.HIDDEN
+                menu["flags"] |= MenuFlags.HIDDEN
 
         # Finally categories
         for a in tags.actions:
@@ -669,57 +704,54 @@ def load(menudata_files,        # data source
 
             cat = categories[a.name]
 
-            if cat['flags'] & CategoryFlags.BROKEN:
+            if cat["flags"] & CategoryFlags.BROKEN:
                 continue
 
             if a.action == filters.tags.Action.SHOW:
                 logging.debug('Tag "%s" shows category "%s"', a.original, a.name)
-                cat['flags'] &= ~CategoryFlags.HIDDEN
+                cat["flags"] &= ~CategoryFlags.HIDDEN
             else:
                 logging.debug('Tag "%s" hides category "%s"', a.original, a.name)
-                cat['flags'] |= CategoryFlags.HIDDEN
+                cat["flags"] |= CategoryFlags.HIDDEN
 
     # Apply conditionals. They can override tags, to allow per-user
     # customisations (we have no per-user puavoconf).
     if conditionals:
         for name, program in programs.items():
-            if program['flags'] & ProgramFlags.BROKEN:
+            if program["flags"] & ProgramFlags.BROKEN:
                 continue
 
-            if 'condition' in program:
-                if filters.conditionals.is_hidden(conditionals,
-                                                  program['condition'],
-                                                  name,
-                                                  'program'):
-                    program['flags'] |= ProgramFlags.HIDDEN
+            if "condition" in program:
+                if filters.conditionals.is_hidden(
+                    conditionals, program["condition"], name, "program"
+                ):
+                    program["flags"] |= ProgramFlags.HIDDEN
                 else:
-                    program['flags'] &= ~ProgramFlags.HIDDEN
+                    program["flags"] &= ~ProgramFlags.HIDDEN
 
         for name, menu in menus.items():
-            if menu['flags'] & MenuFlags.BROKEN:
+            if menu["flags"] & MenuFlags.BROKEN:
                 continue
 
-            if 'condition' in menu:
-                if filters.conditionals.is_hidden(conditionals,
-                                                  menu['condition'],
-                                                  name,
-                                                  'menu'):
-                    menu['flags'] |= MenuFlags.HIDDEN
+            if "condition" in menu:
+                if filters.conditionals.is_hidden(
+                    conditionals, menu["condition"], name, "menu"
+                ):
+                    menu["flags"] |= MenuFlags.HIDDEN
                 else:
-                    menu['flags'] &= ~MenuFlags.HIDDEN
+                    menu["flags"] &= ~MenuFlags.HIDDEN
 
         for name, cat in categories.items():
-            if cat['flags'] & CategoryFlags.BROKEN:
+            if cat["flags"] & CategoryFlags.BROKEN:
                 continue
 
-            if 'condition' in cat:
-                if filters.conditionals.is_hidden(conditionals,
-                                                  cat['condition'],
-                                                  name,
-                                                  'category'):
-                    cat['flags'] |= CategoryFlags.HIDDEN
+            if "condition" in cat:
+                if filters.conditionals.is_hidden(
+                    conditionals, cat["condition"], name, "category"
+                ):
+                    cat["flags"] |= CategoryFlags.HIDDEN
                 else:
-                    cat['flags'] &= ~CategoryFlags.HIDDEN
+                    cat["flags"] &= ~CategoryFlags.HIDDEN
 
     # Then find all used programs again. We've processed tags and
     # conditionals, so we know what menus and categories are actually
@@ -727,41 +759,41 @@ def load(menudata_files,        # data source
     # categories, go through all menus in every visible category and
     # mark them as "used". Then propagate this flag down to programs.
     for _, program in programs.items():
-        program['flags'] &= ~ProgramFlags.USED
+        program["flags"] &= ~ProgramFlags.USED
 
     for _, menu in programs.items():
-        menu['flags'] &= ~MenuFlags.USED
+        menu["flags"] &= ~MenuFlags.USED
 
     for cid, category in categories.items():
-        if category['flags'] & CategoryFlags.BROKEN or \
-           category['flags'] & CategoryFlags.HIDDEN:
+        if (
+            category["flags"] & CategoryFlags.BROKEN
+            or category["flags"] & CategoryFlags.HIDDEN
+        ):
             continue
 
-        if 'menus' in category:
-            for mid in category['menus']:
+        if "menus" in category:
+            for mid in category["menus"]:
                 if mid in menus:
-                    menus[mid]['flags'] |= MenuFlags.USED
+                    menus[mid]["flags"] |= MenuFlags.USED
 
-        if 'programs' in category:
-            for pid in category['programs']:
+        if "programs" in category:
+            for pid in category["programs"]:
                 if pid in programs:
-                    programs[pid]['flags'] |= ProgramFlags.USED
+                    programs[pid]["flags"] |= ProgramFlags.USED
 
     for mid, menu in menus.items():
-        if menu['flags'] & MenuFlags.BROKEN or \
-           menu['flags'] & MenuFlags.HIDDEN:
+        if menu["flags"] & MenuFlags.BROKEN or menu["flags"] & MenuFlags.HIDDEN:
             continue
 
         # If a menu isn't used by any category, remove it
-        if not menu['flags'] & MenuFlags.USED:
-            logging.info('Menu "%s" is not actually used in any visible category',
-                         mid)
+        if not menu["flags"] & MenuFlags.USED:
+            logging.info('Menu "%s" is not actually used in any visible category', mid)
             continue
 
-        if 'programs' in menu:
-            for pid in menu['programs']:
+        if "programs" in menu:
+            for pid in menu["programs"]:
                 if pid in programs:
-                    programs[pid]['flags'] |= ProgramFlags.USED
+                    programs[pid]["flags"] |= ProgramFlags.USED
 
     # Remove everyhing that's unused, hidden or missing
     removed_programs = set()
@@ -771,7 +803,7 @@ def load(menudata_files,        # data source
     temp = {}
 
     for pid, program in programs.items():
-        flags = program['flags']
+        flags = program["flags"]
 
         # remove broken programs (don't update 'removed_programs' here, as we
         # want warnings about references to broken programs to be visible)
@@ -785,8 +817,9 @@ def load(menudata_files,        # data source
 
         # remove unused programs
         if not flags & ProgramFlags.USED:
-            logging.info('Program "%s" is not actually used in any visible category or menu',
-                         pid)
+            logging.info(
+                'Program "%s" is not actually used in any visible category or menu', pid
+            )
             removed_programs.add(pid)
             continue
 
@@ -797,10 +830,10 @@ def load(menudata_files,        # data source
     temp = {}
 
     for mid, menu in menus.items():
-        flags = menu['flags']
+        flags = menu["flags"]
 
         # remove broken menus
-        if menu['flags'] & MenuFlags.BROKEN:
+        if menu["flags"] & MenuFlags.BROKEN:
             removed_menus.add(mid)
             continue
 
@@ -821,10 +854,10 @@ def load(menudata_files,        # data source
     temp = {}
 
     for cid, cat in categories.items():
-        flags = cat['flags']
+        flags = cat["flags"]
 
         # remove broken categories
-        if category['flags'] & CategoryFlags.BROKEN:
+        if category["flags"] & CategoryFlags.BROKEN:
             removed_categories.add(cid)
             continue
 
@@ -844,25 +877,25 @@ def load(menudata_files,        # data source
 
     # Weed out invalid entries from menu and category submenu/program lists
     for cid, category in categories.items():
-        if 'menus' in category:
+        if "menus" in category:
             good = []
 
-            for mid in category['menus']:
+            for mid in category["menus"]:
                 if mid in menus:
                     good.append(mid)
                     continue
 
                 if mid not in removed_menus:
                     logging.warning(
-                        'Category "%s" references to a non-existent menu "%s"',
-                        cid, mid)
+                        'Category "%s" references to a non-existent menu "%s"', cid, mid
+                    )
 
-            category['menus'] = good
+            category["menus"] = good
 
-        if 'programs' in category:
+        if "programs" in category:
             good = []
 
-            for pid in category['programs']:
+            for pid in category["programs"]:
                 if pid in programs:
                     good.append(pid)
                     continue
@@ -870,28 +903,30 @@ def load(menudata_files,        # data source
                 if pid not in removed_programs:
                     logging.warning(
                         'Category "%s" references to a non-existent program "%s"',
-                        cid, pid)
+                        cid,
+                        pid,
+                    )
 
-            category['programs'] = good
+            category["programs"] = good
 
     for mid, menu in menus.items():
-        if 'programs' in menu:
+        if "programs" in menu:
             good = []
 
-            for pid in menu['programs']:
+            for pid in menu["programs"]:
                 if pid in programs:
                     good.append(pid)
                     continue
 
                 if pid not in removed_programs:
                     logging.warning(
-                        'Menu "%s" references to a non-existent program "%s"',
-                        mid, pid)
+                        'Menu "%s" references to a non-existent program "%s"', mid, pid
+                    )
 
-            menu['programs'] = good
+            menu["programs"] = good
 
     end_time = time.perf_counter()
-    utils.log_elapsed_time('Filtering/conditionals time', start_time, end_time)
+    utils.log_elapsed_time("Filtering/conditionals time", start_time, end_time)
 
     # From this point on, all remaining categories, menus and programs are
     # valid, visible and can be used. Their icons are not yet loaded and
@@ -903,7 +938,7 @@ def load(menudata_files,        # data source
 
     category_index = sort_categories(categories)
 
-    logging.debug('Final category order: %s', ', '.join(category_index))
+    logging.debug("Final category order: %s", ", ".join(category_index))
 
     # --------------------------------------------------------------------------
     # Locate and load icons for programs and menus. This is one of the
@@ -914,11 +949,11 @@ def load(menudata_files,        # data source
     try:
         load_icons(programs, menus, icon_locator, icon_cache)
     except BaseException as e:
-        logging.error('Unable to load program icons!')
+        logging.error("Unable to load program icons!")
         logging.error(e, exc_info=True)
 
     end_time = time.perf_counter()
-    utils.log_elapsed_time('Icon loading time', start_time, end_time)
+    utils.log_elapsed_time("Icon loading time", start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Convert the dicts into nicer objects. Then we don't have to
@@ -932,68 +967,67 @@ def load(menudata_files,        # data source
         # No program that is hidden or unused should make it this far, because
         # they're removed in the above loops. But if they somehow get here,
         # this is the final "firewall" that makes them go away.
-        if src['flags'] & ProgramFlags.BROKEN or \
-           src['flags'] & ProgramFlags.HIDDEN:
+        if src["flags"] & ProgramFlags.BROKEN or src["flags"] & ProgramFlags.HIDDEN:
             continue
 
-        if not src['flags'] & ProgramFlags.USED:
+        if not src["flags"] & ProgramFlags.USED:
             continue
 
-        name = src.get('name', None)
-        desc = src.get('description', None)
-        icon = src.get('icon_handle', None)
+        name = src.get("name", None)
+        desc = src.get("description", None)
+        icon = src.get("icon_handle", None)
 
-        if src['type'] == 'desktop':
-            if 'puavopkg' in src and src['puavopkg'] is not None:
+        if src["type"] == "desktop":
+            if "puavopkg" in src and src["puavopkg"] is not None:
                 dst = menudata.PuavoPkgProgram(name, desc, icon)
-                dst.package_id = src['puavopkg']['id']
-                dst.state = src['puavopkg']['state']
+                dst.package_id = src["puavopkg"]["id"]
+                dst.state = src["puavopkg"]["state"]
 
-                if 'icon' in src['puavopkg']:
-                    dst.installer_icon = src['puavopkg']['icon']
+                if "icon" in src["puavopkg"]:
+                    dst.installer_icon = src["puavopkg"]["icon"]
 
-                dst.raw_menudata = dict(src['raw_menudata'])
+                dst.raw_menudata = dict(src["raw_menudata"])
             else:
                 dst = menudata.Program(name, desc, icon)
 
-            dst.command = src.get('command', None)
-        elif src['type'] == 'custom':
+            dst.command = src.get("command", None)
+        elif src["type"] == "custom":
             dst = menudata.Program(name, desc, icon)
-            dst.command = src.get('command', None)
-        elif src['type'] == 'web':
+            dst.command = src.get("command", None)
+        elif src["type"] == "web":
             dst = menudata.WebLink(name, icon=icon)
-            dst.url = src.get('url', None)
+            dst.url = src.get("url", None)
 
             # For web links, show the URL in the description tooltip
             if desc is not None:
-                dst.description = f'{desc}\n({dst.url})'
+                dst.description = f"{desc}\n({dst.url})"
             else:
                 dst.description = dst.url
 
         dst.menudata_id = pid
-        dst.keywords = frozenset(map(lambda k: k.casefold(), src.get('keywords', ())))
+        dst.keywords = frozenset(map(lambda k: k.casefold(), src.get("keywords", ())))
 
         # Needed when creating desktop icons and panel links
-        dst.original_desktop_file = src.get('original_desktop_file', None)
-        dst.original_icon_name = src.get('original_icon_name', None)
+        dst.original_desktop_file = src.get("original_desktop_file", None)
+        dst.original_icon_name = src.get("original_icon_name", None)
 
         md.programs[pid] = dst
 
     for mid, src in menus.items():
-        if src['flags'] & MenuFlags.BROKEN or \
-           src['flags'] & MenuFlags.HIDDEN:
+        if src["flags"] & MenuFlags.BROKEN or src["flags"] & MenuFlags.HIDDEN:
             continue
 
-        if not src['flags'] & MenuFlags.USED:
+        if not src["flags"] & MenuFlags.USED:
             continue
 
         dst = menudata.Menu(
-            name=src.get('name', '<No name>'),
-            description=src.get('description', None),
-            icon=src.get('icon_handle', None))
+            name=src.get("name", "<No name>"),
+            description=src.get("description", None),
+            icon=src.get("icon_handle", None),
+        )
 
         dst.menudata_id = mid
-        dst.program_ids = src.get('programs', [])
+        dst.program_ids = src.get("programs", [])
 
         if sort_contents:
             dst.program_ids = sort_programs_by_name(md.programs, dst.program_ids)
@@ -1001,22 +1035,21 @@ def load(menudata_files,        # data source
         md.menus[mid] = dst
 
     for cid, src in categories.items():
-        if src['flags'] & CategoryFlags.BROKEN or \
-           src['flags'] & CategoryFlags.HIDDEN:
+        if src["flags"] & CategoryFlags.BROKEN or src["flags"] & CategoryFlags.HIDDEN:
             continue
 
-        if not src['flags'] & CategoryFlags.USED:
+        if not src["flags"] & CategoryFlags.USED:
             continue
 
-        dst = menudata.Category(name=src.get('name', '<No name>'))
+        dst = menudata.Category(name=src.get("name", "<No name>"))
         dst.menudata_id = cid
 
-        dst.menu_ids = src.get('menus', [])
+        dst.menu_ids = src.get("menus", [])
 
         if sort_contents:
             dst.menu_ids = sort_menus_by_name(md.menus, dst.menu_ids)
 
-        dst.program_ids = src.get('programs', [])
+        dst.program_ids = src.get("programs", [])
 
         if sort_contents:
             dst.program_ids = sort_programs_by_name(md.programs, dst.program_ids)
@@ -1026,10 +1059,14 @@ def load(menudata_files,        # data source
     md.category_index = category_index
 
     end_time = time.perf_counter()
-    utils.log_elapsed_time('Final conversion time', start_time, end_time)
+    utils.log_elapsed_time("Final conversion time", start_time, end_time)
 
-    logging.info('Programs: %d  Menus: %d  Categories: %d',
-                 len(md.programs), len(md.menus), len(md.categories))
+    logging.info(
+        "Programs: %d  Menus: %d  Categories: %d",
+        len(md.programs),
+        len(md.menus),
+        len(md.categories),
+    )
 
     # --------------------------------------------------------------------------
 

@@ -5,7 +5,8 @@ import re
 import logging
 
 import gi
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+
+gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gio
 import cairo
 
@@ -15,12 +16,12 @@ import utils_gui
 # Accepted extensions for icon files, in the order we prefer them. Some
 # .desktop file "Icon" entries specify full paths, some only "generic"
 # names, so to tell them apart, we check if the name has an extension.
-ICON_EXTENSIONS = ('.svg', '.svgz', '.png', '.xpm', '.jpg', '.jpeg')
+ICON_EXTENSIONS = (".svg", ".svgz", ".png", ".xpm", ".jpg", ".jpeg")
 
 
 # Tracks unused and usable cells in a single atlas
 class AtlasCell:
-    __slots__ = ('free', 'usable')
+    __slots__ = ("free", "usable")
 
     def __init__(self):
         # Is this atlas grid cell used?
@@ -32,7 +33,7 @@ class AtlasCell:
 
 # Atlases cache and store one or more fixed-sized icons in a grid layout
 class Atlas:
-    __slots__ = ('cell', 'full', 'surface', 'context')
+    __slots__ = ("cell", "full", "surface", "context")
 
     def __init__(self, width, height, bitmap_size):
         # Create empty grid cells
@@ -43,14 +44,14 @@ class Atlas:
                 self.cell.append(AtlasCell())
 
         logging.info(
-            'Atlas::ctor(): initialized a new %dx%d grid of cells', width, height)
+            "Atlas::ctor(): initialized a new %dx%d grid of cells", width, height
+        )
 
         # Is this grid full? Used to speed up some lookup operations.
         self.full = False
 
         # Create a new backing bitmap
-        self.surface = cairo.ImageSurface(
-            cairo.FORMAT_ARGB32, bitmap_size, bitmap_size)
+        self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, bitmap_size, bitmap_size)
 
         self.context = cairo.Context(self.surface)
 
@@ -64,7 +65,6 @@ class Atlas:
         self.context.fill()
         self.context.restore()
 
-
     # Removes an icon from the backing bitmap
     def clear_surface_slot(self, y, x, icon_size):
         self.context.save()
@@ -77,16 +77,16 @@ class Atlas:
 
 # Reference-counted icon positions
 class IconLookup:
-    __slots__ = ('grid_index', 'uses', 'usable')
+    __slots__ = ("grid_index", "uses", "usable")
 
     def __init__(self, grid_index=-1, uses=0):
-        self.grid_index = grid_index    # icon's location (grid, y, x)
-        self.uses = uses                # refcount
-        self.usable = False             # copied from the grid slot for quick access
+        self.grid_index = grid_index  # icon's location (grid, y, x)
+        self.uses = uses  # refcount
+        self.usable = False  # copied from the grid slot for quick access
 
 
 class IconCache:
-    __slots__ = ('grid_size', 'icon_size', 'bitmap_size', 'atlases', 'filenames')
+    __slots__ = ("grid_size", "icon_size", "bitmap_size", "atlases", "filenames")
 
     def __init__(self, bitmap_size, icon_size):
         # Each atlas is a grid containing NxN slots, compute the N.
@@ -96,25 +96,29 @@ class IconCache:
 
         if self.grid_size > 255:
             raise RuntimeError(
-                'the grid size for {0}x{0} icons on an {1}x{1} bitmap is too big ' \
-                '({2}x{2}), reduce the bitmap size' \
-                .format(icon_size, bitmap_size, self.grid_size))
+                "the grid size for {0}x{0} icons on an {1}x{1} bitmap is too big "
+                "({2}x{2}), reduce the bitmap size".format(
+                    icon_size, bitmap_size, self.grid_size
+                )
+            )
 
         self.icon_size = icon_size
         self.bitmap_size = bitmap_size
         self.atlases = []
 
-        logging.info('IconCache::ctor(): bitmap_size=%d, icon_size=%d, grid_size=%d',
-                     self.bitmap_size, self.icon_size, self.grid_size)
+        logging.info(
+            "IconCache::ctor(): bitmap_size=%d, icon_size=%d, grid_size=%d",
+            self.bitmap_size,
+            self.icon_size,
+            self.grid_size,
+        )
 
         # filename -> IconLookup
         self.filenames = {}
 
-
     # Packs icon location in one 24-bit integer
     def pack_index(self, atlas, y, x):
         return ((atlas & 0xFF) << 16) | ((y & 0xFF) << 8) | (x & 0xFF)
-
 
     # Extracts icon location from a 24-bit integer
     def unpack_index(self, index):
@@ -124,7 +128,6 @@ class IconCache:
             logging.error(str(e))
             logging.error(index)
             return 0
-
 
     # Loads a new icon or returns a cached copy
     def load_icon(self, filename):
@@ -168,7 +171,9 @@ class IconCache:
             cell_x = 0
 
             if len(self.atlases) > 255:
-                raise RuntimeError('Created too many atlases. Increase the atlas bitmap size.')
+                raise RuntimeError(
+                    "Created too many atlases. Increase the atlas bitmap size."
+                )
         else:
             # Compute the X and Y coordinates of the free slot
             cell_y = cell_num // self.grid_size
@@ -181,7 +186,7 @@ class IconCache:
         # the atlas.
         atlas = self.atlases[atlas_num]
 
-        #print('Final index: %d  Entries: %d' % (cell_y * self.grid_size + cell_x, len(atlas.cell)))
+        # print('Final index: %d  Entries: %d' % (cell_y * self.grid_size + cell_x, len(atlas.cell)))
 
         cell = atlas.cell[cell_y * self.grid_size + cell_x]
 
@@ -195,12 +200,12 @@ class IconCache:
 
         try:
             icon_surface = utils_gui.load_image_at_size(
-                filename, self.icon_size, self.icon_size)
+                filename, self.icon_size, self.icon_size
+            )
 
             atlas.context.set_source_surface(
-                icon_surface,
-                cell_x * self.icon_size,
-                cell_y * self.icon_size)
+                icon_surface, cell_x * self.icon_size, cell_y * self.icon_size
+            )
 
             atlas.context.paint()
 
@@ -210,9 +215,9 @@ class IconCache:
         except Exception as e:
             msg = str(e)
 
-            if msg == '':
+            if msg == "":
                 # this actually has happened
-                msg = '<The exception has no message>'
+                msg = "<The exception has no message>"
 
             logging.error('Could not load icon "%s": %s', filename, msg)
 
@@ -220,7 +225,6 @@ class IconCache:
 
         # the returned value directly contains all three numbers
         return (index, cell.usable)
-
 
     # Does a reverse lookup and finds the original filename matching
     # the icon handle. This is a rarely used function and it isn't
@@ -234,7 +238,6 @@ class IconCache:
                 return name
 
         return None
-
 
     # Unloads a previously-loaded icon. If its reference count actually
     # drops to zero, the icon is cleared from its parent atlas.
@@ -264,7 +267,6 @@ class IconCache:
 
         atlas.full = False
 
-
     def draw_icon(self, index, ctx, x, y):
         # locate the icon
         atlas_num, cy, cx = self.unpack_index(index)
@@ -280,34 +282,26 @@ class IconCache:
 
         # https://www.cairographics.org/FAQ/#paint_from_a_surface
         ctx.set_source_surface(
-            atlas.surface,
-            x - cx * self.icon_size,
-            y - cy * self.icon_size)
+            atlas.surface, x - cx * self.icon_size, y - cy * self.icon_size
+        )
         ctx.rectangle(x, y, self.icon_size, self.icon_size)
         ctx.fill()
-
 
     # handle []
     def __getitem__(self, filename):
         return self.load_icon(filename)
 
-
     # handle del
     def __delitem__(self, filename):
         self.unload_icon(filename)
-
 
     # called in development mode when menudata is cleared/reloaded
     def clear(self):
         self.atlases = []
         self.filenames = {}
 
-
     def stats(self):
-        return {
-            'num_icons': len(self.filenames),
-            'num_atlases': len(self.atlases)
-        }
+        return {"num_icons": len(self.filenames), "num_atlases": len(self.atlases)}
 
 
 def get_user_icon_dirs():
@@ -320,10 +314,9 @@ def get_user_icon_dirs():
     # the icon directories listed in dirs.json are manually sorted by
     # preference.
 
-    user_icons_root = os.path.join(
-        os.path.expanduser('~'), '.local', 'share', 'icons')
+    user_icons_root = os.path.join(os.path.expanduser("~"), ".local", "share", "icons")
 
-    number_extractor = re.compile(r'\d+')
+    number_extractor = re.compile(r"\d+")
     dirs = []
 
     for dir_tuple in os.walk(user_icons_root):
@@ -342,7 +335,9 @@ def get_user_icon_dirs():
         except BaseException as e:
             logging.warning(
                 'list_user_icon_dirs(): could not extract icon size from "%s": %s',
-                name, str(e))
+                name,
+                str(e),
+            )
             size = -1
 
         dirs.append((size, name))
@@ -352,11 +347,12 @@ def get_user_icon_dirs():
 
 def detect_current_icon_theme_name():
     try:
-        gsettings = Gio.Settings.new('org.gnome.desktop.interface')
-        return gsettings.get_value('icon-theme').get_string()
+        gsettings = Gio.Settings.new("org.gnome.desktop.interface")
+        return gsettings.get_value("icon-theme").get_string()
     except BaseException as e:
-        logging.warning('Could not determine the name of the current icon theme: %s',
-                        str(e))
+        logging.warning(
+            "Could not determine the name of the current icon theme: %s", str(e)
+        )
         return None
 
 
@@ -388,15 +384,13 @@ class IconLocator:
     # Some icon themes contain all sorts of stuff we don't care about. We want
     # programs to use program icons, not emojis. So we skip all directories
     # that are on this list.
-    IGNORE_LIST = frozenset([
-        'actions', 'animations', 'applets', 'emblems', 'categories',
-        'emotes'
-    ])
+    IGNORE_LIST = frozenset(
+        ["actions", "animations", "applets", "emblems", "categories", "emotes"]
+    )
 
-    ICON_EXTENSIONS = ('.svg', '.svgz', '.png', '.xpm', '.jpg', '.jpeg')
+    ICON_EXTENSIONS = (".svg", ".svgz", ".png", ".xpm", ".jpg", ".jpeg")
 
-    number_extractor = re.compile(r'\d+')
-
+    number_extractor = re.compile(r"\d+")
 
     # Recursively scans directories for possible icon search directories
     def __scanner(self, level, directory, out):
@@ -408,7 +402,7 @@ class IconLocator:
 
         try:
             for d in os.scandir(directory):
-                if not d.is_dir() or '@' in d.name:
+                if not d.is_dir() or "@" in d.name:
                     continue
 
                 if d.name in self.IGNORE_LIST:
@@ -428,7 +422,7 @@ class IconLocator:
                         size = int(size.group(0), 10)
                     except:
                         continue
-                elif 'scalable' in full_path:
+                elif "scalable" in full_path:
                     # Prioritize SVG (scalable) directories
                     size = self.MAX_ACCEPTED_SIZE
                 else:
@@ -440,29 +434,26 @@ class IconLocator:
                     out.append((size, full_path))
 
         except BaseException as e:
-            logging.error('Unable to scan directory "%s": %s',
-                          directory, str(e))
+            logging.error('Unable to scan directory "%s": %s', directory, str(e))
             return
 
         # Precache apps directories
-        if 'apps' in directory:
+        if "apps" in directory:
             self.__cache_directory_contents(directory)
 
         # Recurse
         for d in subdirs:
             self.__scanner(level + 1, d[1], out)
 
-
     def __sorter(self, item):
         # If this is an "applications" directory, prioritize it higher, even
         # higher than non-application scalable directories. This way we check
         # all apps directories (of all sizes) first.
-        if 'apps' in item[1]:
+        if "apps" in item[1]:
             return item[0] * 99999
 
         # Otherwise just sort by icon pixel size
         return item[0]
-
 
     # Lists and caches the filenames in the given directory
     def __cache_directory_contents(self, path):
@@ -474,12 +465,10 @@ class IconLocator:
                     if not d.is_dir():
                         names.append(d.name)
         except BaseException as e:
-            logging.warning('Could not scan directory "%s": %s',
-                            path, str(e))
+            logging.warning('Could not scan directory "%s": %s', path, str(e))
             names = []
 
         self.dircache[path] = frozenset(names)
-
 
     def __init__(self):
         # What we scan
@@ -493,10 +482,8 @@ class IconLocator:
         self.cache = {}
         self.dircache = {}
 
-
     def set_generic_dirs(self, generic_dirs):
         self.generic_dirs = generic_dirs
-
 
     def set_theme_base_dirs(self, theme_base_dirs):
         if isinstance(theme_base_dirs, list):
@@ -504,11 +491,9 @@ class IconLocator:
         else:
             self.theme_base_dirs = [theme_base_dirs]
 
-
     def clear(self):
         self.theme_dirs = []
         self.cache = {}
-
 
     def scan_directories(self):
         self.clear()
@@ -522,7 +507,6 @@ class IconLocator:
 
         # Sort the directories
         self.theme_dirs = sorted(self.theme_dirs, key=self.__sorter, reverse=True)
-
 
     def locate_icon(self, name, preferred_size=-1):
         if name is None:

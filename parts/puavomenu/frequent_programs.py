@@ -4,7 +4,8 @@ import logging
 import os.path
 
 import gi
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+
+gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_COL_PADDING
@@ -13,18 +14,15 @@ import buttons.program
 
 
 class ProgramLaunchesCounter:
-    STATS_FILE = 'program_launches'
-
+    STATS_FILE = "program_launches"
 
     def __init__(self, directory, enabled):
         self.__launches = {}
         self.__directory = directory
         self.__enabled = enabled
 
-
     def clear(self):
         self.__launches = {}
-
 
     def increment(self, program_id):
         if program_id in self.__launches:
@@ -34,38 +32,32 @@ class ProgramLaunchesCounter:
 
         self.save()
 
-
     def remove(self, program_id):
         if program_id in self.__launches:
             del self.__launches[program_id]
             self.save()
 
-
     def get_frequent_programs(self):
         by_launches = [(ctr, pid) for pid, ctr in self.__launches.items()]
         return sorted(by_launches, key=lambda p: (p[0], p[1]), reverse=True)
-
 
     def save(self):
         if not self.__enabled:
             return
 
-        out = ''
+        out = ""
 
         # Whitespace is not permitted in program IDs, so this works
         for name, count in self.__launches.items():
-            out += '{0} {1}\n'.format(count, name)
+            out += "{0} {1}\n".format(count, name)
 
         filename = os.path.join(self.__directory, self.STATS_FILE)
 
         try:
-            with open(filename, 'w') as f:
+            with open(filename, "w") as f:
                 f.write(out)
         except Exception as exception:
-            logging.error(
-                'Could not save program usage counts: %s',
-                str(exception))
-
+            logging.error("Could not save program usage counts: %s", str(exception))
 
     def load(self):
         if not self.__enabled:
@@ -77,8 +69,8 @@ class ProgramLaunchesCounter:
             # no big deal
             return
 
-        for row in open(filename, 'r').readlines():
-            parts = row.strip().split(' ')
+        for row in open(filename, "r").readlines():
+            parts = row.strip().split(" ")
 
             if len(parts) != 2:
                 continue
@@ -89,13 +81,15 @@ class ProgramLaunchesCounter:
                 # the use count probably wasn't an integer...
                 logging.warning(
                     'Could not set the use count for program "%s": %s',
-                    parts[0], str(exception))
+                    parts[0],
+                    str(exception),
+                )
 
 
 # The most frequently used programs list
 class FrequentProgramsList(Gtk.ScrolledWindow):
     def __init__(self, parent):
-        super().__init__(name='frequent')
+        super().__init__(name="frequent")
 
         self.__parent = parent
 
@@ -110,10 +104,8 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
         self.__container = Gtk.Fixed()
         self.add_with_viewport(self.__container)
 
-
     def clear(self):
         self.__prev_items = []
-
 
     # Recreates the buttons on the list if its content have changed
     def update(self, current_items, all_programs, settings, icon_cache, force=False):
@@ -122,8 +114,11 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
             return
 
         # Something has changed, recreate the buttons
-        logging.info('Frequently-used programs order has changed (%s -> %s)',
-                     str(self.__prev_items), str(current_items))
+        logging.info(
+            "Frequently-used programs order has changed (%s -> %s)",
+            str(self.__prev_items),
+            str(current_items),
+        )
 
         self.__prev_items = current_items
 
@@ -145,13 +140,15 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
                     (icon_cache, program.icon),
                     program.description,
                     data=program,
-                    is_fave=True)
+                    is_fave=True,
+                )
 
-                button.connect('clicked', self.__parent.clicked_program_button)
+                button.connect("clicked", self.__parent.clicked_program_button)
                 self.__container.put(button, x, 0)
                 x += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
             except Exception as ex:
-                logging.error("Can't create a frequently-used program button: %s",
-                              str(ex))
+                logging.error(
+                    "Can't create a frequently-used program button: %s", str(ex)
+                )
 
         self.__container.show_all()

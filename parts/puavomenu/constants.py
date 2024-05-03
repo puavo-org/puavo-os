@@ -26,8 +26,11 @@ PROGRAM_COL_PADDING = 5
 PROGRAMS_TOP = 80
 
 # Size of the programs list
-PROGRAMS_WIDTH = (PROGRAM_BUTTON_WIDTH + PROGRAM_ROW_PADDING) * PROGRAMS_PER_ROW - \
-    PROGRAM_ROW_PADDING + SCROLLBAR_WIDTH
+PROGRAMS_WIDTH = (
+    (PROGRAM_BUTTON_WIDTH + PROGRAM_ROW_PADDING) * PROGRAMS_PER_ROW
+    - PROGRAM_ROW_PADDING
+    + SCROLLBAR_WIDTH
+)
 PROGRAMS_HEIGHT = 400
 
 # Frequently-used programs list
@@ -74,4 +77,4 @@ HOSTINFO_LABEL_HEIGHT = 36
 # Accepted languages. These are permitted for the --lang parameter and
 # environment variables, and we try to load strings from YAML/JSON/
 # .desktop files for each of these.
-LANGUAGES = frozenset(('en', 'fi', 'sv', 'de'))
+LANGUAGES = frozenset(("en", "fi", "sv", "de"))
