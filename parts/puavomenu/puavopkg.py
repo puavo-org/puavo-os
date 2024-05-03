@@ -3,6 +3,7 @@
 import logging
 import os.path
 
+import constants
 import utils
 import menudata
 import loaders.menudata_loader
@@ -16,7 +17,7 @@ PACKAGE_DIRECTORY = "/var/lib/puavo-pkg/installed"
 
 # A placeholder icon used for puavo-pkg programs that are not installed yet
 # *and* and don't specify a installer custom icon
-INSTALLER_ICON = "/usr/share/icons/Faenza/apps/48/system-installer.png"
+INSTALLER_ICON = f"/usr/share/icons/Faenza/apps/{constants.PROGRAM_BUTTON_ICON_SIZE}/system-installer.png"
 
 
 # Detect dynamic installed/not-installed states for every listed package

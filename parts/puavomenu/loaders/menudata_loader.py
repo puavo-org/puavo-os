@@ -8,6 +8,8 @@ import re
 import logging
 import time
 
+from constants import PROGRAM_BUTTON_ICON_SIZE
+
 import utils
 
 from strings import _tr
@@ -335,7 +337,9 @@ def load_icons(programs, menus, icon_locator, icon_cache):
         # ----------------------------------------------------------------------
         # Locate the icon file
 
-        icon_path, is_path = icon_locator.locate_icon(program["icon"], 48)
+        icon_path, is_path = icon_locator.locate_icon(
+            program["icon"], PROGRAM_BUTTON_ICON_SIZE
+        )
 
         if icon_path is None:
             logging.warning(
@@ -376,7 +380,9 @@ def load_icons(programs, menus, icon_locator, icon_cache):
             num_missing_icons += 1
             continue
 
-        icon_path, is_path = icon_locator.locate_icon(menu["icon"], 48)
+        icon_path, is_path = icon_locator.locate_icon(
+            menu["icon"], PROGRAM_BUTTON_ICON_SIZE
+        )
 
         if icon_path is None:
             logging.warning(
