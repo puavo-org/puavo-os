@@ -1,16 +1,6 @@
 # Custom menu button class
 
-import gi
-
-gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
-from gi.repository import Gtk, Gdk
-
-from constants import (
-    PROGRAM_BUTTON_WIDTH,
-    PROGRAM_BUTTON_HEIGHT,
-    PROGRAM_BUTTON_ICON_SIZE,
-)
-
+import constants
 import buttons.base
 
 
@@ -23,22 +13,9 @@ class MenuButton(buttons.base.HoverIconButtonBase):
             icon=icon,
             tooltip=tooltip,
             data=data,
+            layout="vertical",
+            width=constants.PROGRAM_BUTTON_WIDTH,
+            height=constants.PROGRAM_BUTTON_HEIGHT,
+            icon_size=constants.PROGRAM_BUTTON_ICON_SIZE,
+            style_class="button_menu",
         )
-
-        self.add_style_class("button_menu")
-
-    def get_preferred_button_size(self):
-        return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
-
-    def compute_elements(self):
-        self.icon_size = PROGRAM_BUTTON_ICON_SIZE
-
-        # Note the Y positions in icon_pos and label_pos, they must be
-        # shifted down by 5 pixels to "center" them on the button
-        self.icon_pos = [
-            (PROGRAM_BUTTON_WIDTH / 2) - (PROGRAM_BUTTON_ICON_SIZE / 2),
-            20,
-        ]
-
-        # Center the text horizontally
-        self.label_pos = [10, 25 + PROGRAM_BUTTON_ICON_SIZE]  # left padding

@@ -17,6 +17,7 @@ from constants import (
     MAIN_PADDING,
     SIDEBAR_WIDTH,
     SIDEBAR_HEIGHT,
+    SIDEBAR_BUTTON_ICON_SIZE,
     USER_AVATAR_SIZE,
     HOSTINFO_LABEL_HEIGHT,
     SEPARATOR_SIZE,
@@ -71,7 +72,7 @@ class Sidebar:
         self.container.set_size_request(SIDEBAR_WIDTH, SIDEBAR_HEIGHT)
 
         # Storage for the command button icons
-        self.__icons = icons.IconCache(128, 32)
+        self.__icons = icons.IconCache(128, SIDEBAR_BUTTON_ICON_SIZE)
 
         # Which sidebar elements are *unconditionally* hidden through puavo-conf?
         # These override EVERYTHING else!
@@ -159,8 +160,8 @@ class Sidebar:
         self.__avatar = buttons.avatar.AvatarButton(
             parent=self,
             settings=self.__settings,
-            user_name=self.__variables["user_name"],
-            initial_image=avatar_image,
+            label=self.__variables["user_name"],
+            icon=avatar_image,
             tooltip=avatar_tooltip,
         )
 
@@ -204,13 +205,18 @@ class Sidebar:
             utils_gui.create_separator(
                 container=self.container,
                 x=0,
-                y=MAIN_PADDING + USER_AVATAR_SIZE,
+                y=MAIN_PADDING + self.__avatar.get_size_request()[1],
                 w=SIDEBAR_WIDTH,
                 h=-1,
                 orientation=Gtk.Orientation.HORIZONTAL,
             )
 
-            ypos = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING + SEPARATOR_SIZE
+            ypos = (
+                MAIN_PADDING
+                + self.__avatar.get_size_request()[1]
+                + MAIN_PADDING
+                + SEPARATOR_SIZE
+            )
 
         something = False
 
@@ -456,10 +462,9 @@ class Sidebar:
             self.container.put(button, 0, ypos)
 
             # the next available Y coordinate
-            return ypos + button.get_preferred_button_size()[1]
-        except BaseException as exc:
-            logging.error("Cannot create a sidebar button!")
-            logging.error(exc, exc_info=True)
+            return ypos + button.get_size_request()[1]
+        except BaseException:
+            logging.exception("Cannot create a sidebar button!")
             return ypos
 
     # Creates a special sidebar separator
