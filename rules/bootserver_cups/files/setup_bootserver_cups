@@ -137,8 +137,7 @@ mv /etc/cups/cups-files.conf.tmp /etc/cups/cups-files.conf
 LogLevel warn
 PageLogFormat %p %u %C %T
 
-# Deactivate CUPS' internal logrotating, as we provide a better one, especially
-# LogLevel debug2 gets usable now
+# Specifies the maximum size of the log files before they are rotated.  The value "0" disables log rotation.
 MaxLogSize 0
 
 # Allow remote access
@@ -164,6 +163,9 @@ ServerAlias ${puavo_hostname}.${puavo_domain}
 
 # Web interface setting...
 WebInterface Yes
+
+# Timeout after cupsd exits if idle (applied only if cupsd runs on-demand - with -l)
+IdleExitTimeout 60
 
 # Restrict access to the server...
 <Location />
@@ -210,7 +212,7 @@ WebInterface Yes
     Order deny,allow
   </Limit>
 
-  <Limit Send-Document Send-URI Hold-Job Release-Job Restart-Job Purge-Jobs Set-Job-Attributes Create-Job-Subscription Renew-Subscription Cancel-Subscription Get-Notifications Reprocess-Job Cancel-Current-Job Suspend-Current-Job Resume-Job Cancel-My-Jobs Close-Job CUPS-Move-Job CUPS-Get-Document>
+  <Limit Send-Document Send-URI Hold-Job Release-Job Restart-Job Purge-Jobs Set-Job-Attributes Create-Job-Subscription Renew-Subscription Cancel-Subscription Get-Notifications Reprocess-Job Cancel-Current-Job Suspend-Current-Job Resume-Job Cancel-My-Jobs Close-Job CUPS-Move-Job>
     Require user @OWNER @SYSTEM
     Order deny,allow
   </Limit>
