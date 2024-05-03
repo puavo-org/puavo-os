@@ -8,29 +8,45 @@ import json
 # Other keys are simply stripped at load-time and the program never
 # sees them.
 
-VALID_PROGRAM_PROPERTIES = frozenset([
-    # Note the lack of "type" here. It is handled separately.
-    'name', 'description', 'icon', 'command', 'url', 'keywords', 'tags',
-    'condition', 'puavopkg', 'hidden_by_default'
-])
+VALID_PROGRAM_PROPERTIES = frozenset(
+    [
+        # Note the lack of "type" here. It is handled separately.
+        "name",
+        "description",
+        "icon",
+        "command",
+        "url",
+        "keywords",
+        "tags",
+        "condition",
+        "puavopkg",
+        "hidden_by_default",
+    ]
+)
 
-VALID_MENU_PROPERTIES = frozenset([
-    'name', 'position', 'description', 'icon', 'condition', 'programs',
-    'hidden_by_default'
-])
+VALID_MENU_PROPERTIES = frozenset(
+    [
+        "name",
+        "position",
+        "description",
+        "icon",
+        "condition",
+        "programs",
+        "hidden_by_default",
+    ]
+)
 
-VALID_CATEGORY_PROPERTIES = frozenset([
-    'name', 'position', 'menus', 'programs', 'condition', 'hidden_by_default'
-])
+VALID_CATEGORY_PROPERTIES = frozenset(
+    ["name", "position", "menus", "programs", "condition", "hidden_by_default"]
+)
 
 
 # Characters that can be used in program, menu and category IDs. For
 # desktop programs, these IDs are also filenames, so anything that's
 # allowed in filenames must also be allowed here. (Up to a point.)
-ALLOWED_CHARS = frozenset('ABCDEFGHIJKLMNOPQRSTUVWXYZ' \
-                          'abcdefghijklmnopqrstuvwxyz' \
-                          '0123456789' \
-                          '.-_')
+ALLOWED_CHARS = frozenset(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "abcdefghijklmnopqrstuvwxyz" "0123456789" ".-_"
+)
 
 
 def is_valid(string):
@@ -47,7 +63,7 @@ def convert_to_set(src):
 
     if isinstance(src, str):
         # support comma and whitespace -separated lists
-        return set(src.split(', '))
+        return set(src.split(", "))
 
     # assume it's iterable
     return set(src)
@@ -58,15 +74,16 @@ def convert_to_set(src):
 # definition was not valid.
 def convert_program(prog_id, src_program):
     # Used to denote automatically loaded user programs
-    if prog_id.startswith('user-program-'):
+    if prog_id.startswith("user-program-"):
         logging.error(
             'Program ID "%s" is not valid; "user-program-" is an internally-used reserved prefix',
-            prog_id)
+            prog_id,
+        )
         return None
 
-    prog_type = src_program.get('type', 'desktop')
+    prog_type = src_program.get("type", "desktop")
 
-    if prog_type not in ('desktop', 'custom', 'web'):
+    if prog_type not in ("desktop", "custom", "web"):
         logging.error('Program "%s" has an unknown type "%s"', prog_id, prog_type)
         return None
 
@@ -76,15 +93,15 @@ def convert_program(prog_id, src_program):
         if name in src_program:
             dst_program[name] = src_program[name]
 
-    dst_program['type'] = prog_type
+    dst_program["type"] = prog_type
 
-    if 'keywords' in dst_program:
-        dst_program['keywords'] = convert_to_set(dst_program['keywords'])
+    if "keywords" in dst_program:
+        dst_program["keywords"] = convert_to_set(dst_program["keywords"])
 
-    if 'tags' in dst_program:
-        dst_program['tags'] = convert_to_set(dst_program['tags'])
+    if "tags" in dst_program:
+        dst_program["tags"] = convert_to_set(dst_program["tags"])
 
-    dst_program['flags'] = 0
+    dst_program["flags"] = 0
 
     return dst_program
 
@@ -96,7 +113,7 @@ def convert_menu(src_menu):
         if name in src_menu:
             dst_menu[name] = src_menu[name]
 
-    dst_menu['flags'] = 0
+    dst_menu["flags"] = 0
 
     return dst_menu
 
@@ -108,7 +125,7 @@ def convert_category(src_category):
         if name in src_category:
             dst_category[name] = src_category[name]
 
-    dst_category['flags'] = 0
+    dst_category["flags"] = 0
 
     return dst_category
 
@@ -119,17 +136,16 @@ def load_raw_menudata(json_string, orig_filename):
     menus = {}
     categories = {}
 
-    data = json.loads(json_string or '{}')
+    data = json.loads(json_string or "{}")
 
     if data and isinstance(data, dict):
-        raw_programs = data.get('programs', {})
-        raw_menus = data.get('menus', {})
-        raw_categories = data.get('categories', {})
+        raw_programs = data.get("programs", {})
+        raw_menus = data.get("menus", {})
+        raw_categories = data.get("categories", {})
 
         for program_id in raw_programs:
             if not is_valid(program_id):
-                logging.error('Program ID "%s" contains invalid characters',
-                              program_id)
+                logging.error('Program ID "%s" contains invalid characters', program_id)
                 continue
 
             dst_program = convert_program(program_id, raw_programs[program_id])
@@ -139,8 +155,7 @@ def load_raw_menudata(json_string, orig_filename):
 
         for menu_id in raw_menus:
             if not is_valid(menu_id):
-                logging.error('Menu ID "%s" contains invalid characters',
-                              menu_id)
+                logging.error('Menu ID "%s" contains invalid characters', menu_id)
                 continue
 
             dst_menu = convert_menu(raw_menus[menu_id])
@@ -150,8 +165,9 @@ def load_raw_menudata(json_string, orig_filename):
 
         for category_id in raw_categories:
             if not is_valid(category_id):
-                logging.error('Category ID "%s" contains invalid characters',
-                              category_id)
+                logging.error(
+                    'Category ID "%s" contains invalid characters', category_id
+                )
                 continue
 
             dst_category = convert_category(raw_categories[category_id])
@@ -159,6 +175,8 @@ def load_raw_menudata(json_string, orig_filename):
             if dst_category:
                 categories[category_id] = dst_category
     else:
-        logging.warning('load_raw_menudata(): got no data from file "%s"', orig_filename)
+        logging.warning(
+            'load_raw_menudata(): got no data from file "%s"', orig_filename
+        )
 
     return programs, menus, categories

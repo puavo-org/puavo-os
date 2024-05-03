@@ -16,31 +16,27 @@ class Action:
     MENU = 2
     CATEGORY = 3
 
-    ACTIONS_FOR_LOGGER = {
-        HIDE: 'hide',
-        SHOW: 'show'
-    }
+    ACTIONS_FOR_LOGGER = {HIDE: "hide", SHOW: "show"}
 
     TARGETS_FOR_LOGGER = {
-        TAG: 'tag',
-        PROGRAM: 'program',
-        MENU: 'menu',
-        CATEGORY: 'category'
+        TAG: "tag",
+        PROGRAM: "program",
+        MENU: "menu",
+        CATEGORY: "category",
     }
-
 
     def __init__(self, action, target, name, original):
         self.action = action
         self.target = target
         self.name = name
-        self.original = original        # useful for logging purposes
-
+        self.original = original  # useful for logging purposes
 
     def __str__(self):
         return '<Filter action: {0} {1} "{2}">'.format(
             self.ACTIONS_FOR_LOGGER[self.action],
             self.TARGETS_FOR_LOGGER[self.target],
-            self.name)
+            self.name,
+        )
 
 
 # Zero or more actions that are applied to programs, menus,
@@ -52,14 +48,11 @@ class Filter:
         if initial:
             self.parse_string(initial, strict_reject)
 
-
     def have_data(self):
         return len(self.actions) > 0
 
-
     def reset(self):
         self.actions = []
-
 
     # Checks if a specific filter action exists. 'name' can be (optionally)
     # used to make the match even more exact.
@@ -76,14 +69,16 @@ class Filter:
 
         return False
 
-
     # If 'strict_reject' is True, the entire tag string is rejected
     # if it contains even one error. If it's False, mistakes are
     # simply ignored and the remaining parts are used.
     def parse_string(self, tag_string, strict_reject=True):
         logging.info('Filter::parse_string(): parsing "%s"', str(tag_string))
 
-        tags = [tag.strip() for tag in re.split(r',|;|\ ', str(tag_string) if tag_string else '')]
+        tags = [
+            tag.strip()
+            for tag in re.split(r",|;|\ ", str(tag_string) if tag_string else "")
+        ]
         tags = filter(None, tags)
         tags = [p.lower() for p in tags]
 
@@ -97,69 +92,80 @@ class Filter:
             target = Action.TAG
 
             # Show or hide?
-            if tag[0] == '+':
+            if tag[0] == "+":
                 action = Action.SHOW
                 tag = tag[1:]
-            elif tag[0] == '-':
+            elif tag[0] == "-":
                 action = Action.HIDE
                 tag = tag[1:]
 
             # What are we targeting?
-            namespace = 't'
-            sep = tag.find(':')
+            namespace = "t"
+            sep = tag.find(":")
 
             if sep != -1:
                 namespace = tag[:sep]
-                tag = tag[sep+1:]
+                tag = tag[sep + 1 :]
 
             if not namespace or not tag:
                 if strict_reject:
                     logging.error(
                         'Filter::parse_string(): rejecting filter string "%s" because "%s" '
-                        'is not a valid tag', tag_string, orig_tag)
+                        "is not a valid tag",
+                        tag_string,
+                        orig_tag,
+                    )
                     self.reset()
                     return
 
                 logging.warning(
                     'Filter::parse_string(): "%s" is not a valid tag, ignoring it',
-                    orig_tag)
+                    orig_tag,
+                )
                 continue
 
             # The tag can contain + and - characters, but it can't start
             # with them
-            if (tag.find('-') == 0) or (tag.find('+') == 0):
+            if (tag.find("-") == 0) or (tag.find("+") == 0):
                 if strict_reject:
                     logging.error(
                         'Filter::parse_string(): rejecting filter string "%s" because "%s" '
-                        'is not a valid tag', tag_string, orig_tag)
+                        "is not a valid tag",
+                        tag_string,
+                        orig_tag,
+                    )
                     self.reset()
                     return
 
                 logging.warning(
                     'Filter::parse_string(): "%s" is not a valid tag, ignoring it',
-                    orig_tag)
+                    orig_tag,
+                )
                 continue
 
-            if namespace in ('t', 'tag'):
+            if namespace in ("t", "tag"):
                 target = Action.TAG
-            elif namespace in ('p', 'prog', 'program'):
+            elif namespace in ("p", "prog", "program"):
                 target = Action.PROGRAM
-            elif namespace in ('m', 'menu'):
+            elif namespace in ("m", "menu"):
                 target = Action.MENU
-            elif namespace in ('c', 'cat', 'category'):
+            elif namespace in ("c", "cat", "category"):
                 target = Action.CATEGORY
             else:
                 if strict_reject:
                     logging.error(
                         'Filter::parse_string(): rejecting filter string "%s" because "%s" '
-                        'is not a valid tag namespace',
-                        tag_string, namespace)
+                        "is not a valid tag namespace",
+                        tag_string,
+                        namespace,
+                    )
                     self.reset()
                     return
 
                 logging.warning(
                     'Filter::parse_string(): "%s" is not a valid tag namespace, ignoring tag',
-                    orig_tag)
+                    orig_tag,
+                )
                 continue
 
             self.actions.append(Action(action, target, tag, orig_tag))
@@ -168,4 +174,5 @@ class Filter:
                 'Filter action: %s %s "%s"',
                 Action.ACTIONS_FOR_LOGGER[action],
                 Action.TARGETS_FOR_LOGGER[target],
-                tag)
+                tag,
+            )

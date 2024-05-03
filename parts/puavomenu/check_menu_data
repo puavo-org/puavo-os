@@ -9,7 +9,8 @@ import json
 import argparse
 
 import gi
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+
+gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gio
 
 import filters.tags
@@ -24,25 +25,24 @@ import utils
 # Parse the command-line arguments
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter)
 
-parser.add_argument('--lang',
-                    type=str,
-                    required=False,
-                    default='en',
-                    help='language code')
+parser.add_argument(
+    "--lang", type=str, required=False, default="en", help="language code"
+)
 
-parser.add_argument('--tags',
-                    type=str,
-                    required=False,
-                    default='default',
-                    help='tag filter string (if you need to use negation, ' \
-                         'put whitespace at the start, like " -default")')
+parser.add_argument(
+    "--tags",
+    type=str,
+    required=False,
+    default="default",
+    help="tag filter string (if you need to use negation, "
+    'put whitespace at the start, like " -default")',
+)
 
-required = parser.add_argument_group('required arguments')
+required = parser.add_argument_group("required arguments")
 
-required.add_argument('--base_dir',
-                      required=True,
-                      type=str,
-                      help='location of the menu data')
+required.add_argument(
+    "--base_dir", required=True, type=str, help="location of the menu data"
+)
 
 args = parser.parse_args()
 
@@ -50,29 +50,33 @@ if not os.path.isdir(args.base_dir):
     quit('ERROR: The directory "{0}" does not exist'.format(args.base_dir))
 
 print('Loading menudata from "{0}"'.format(args.base_dir))
-print('Pay attention to WARNING, ERROR and CRITICAL lines below')
-print('=' * 50)
+print("Pay attention to WARNING, ERROR and CRITICAL lines below")
+print("=" * 50)
 
-logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
-                    level=logging.DEBUG)
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG
+)
 
 logging.addLevelName(
-    logging.WARNING, '\033[1;93m%s\033[0m' % logging.getLevelName(logging.WARNING))
+    logging.WARNING, "\033[1;93m%s\033[0m" % logging.getLevelName(logging.WARNING)
+)
 logging.addLevelName(
-    logging.ERROR, '\033[1;91m%s\033[0m' % logging.getLevelName(logging.ERROR))
+    logging.ERROR, "\033[1;91m%s\033[0m" % logging.getLevelName(logging.ERROR)
+)
 logging.addLevelName(
-    logging.CRITICAL, '\033[1;93;101m%s\033[0m' % logging.getLevelName(logging.CRITICAL))
+    logging.CRITICAL, "\033[1;93;101m%s\033[0m" % logging.getLevelName(logging.CRITICAL)
+)
 
 start_time = time.perf_counter()
 
-dirs_file = os.path.join(args.base_dir, 'dirs.json')
+dirs_file = os.path.join(args.base_dir, "dirs.json")
 logging.info('Loading directory configuration file "%s"', dirs_file)
 
 desktop_dirs = []
 dirs_config = menudata.DirsConfig()
 
 if not dirs_config.load_config(dirs_file):
-    logging.info('Exiting due to errors')
+    logging.info("Exiting due to errors")
     exit(1)
 
 # Figure out the current icon theme name and prioritize it
@@ -95,7 +99,8 @@ icons = icons.IconCache(1024, 48)
 
 # Locate and parse conditionals
 raw_conditional_files = loaders.menudata_loader.find_menu_files(
-    os.path.join(args.base_dir, 'conditions'))
+    os.path.join(args.base_dir, "conditions")
+)
 
 conditional_files = loaders.menudata_loader.sort_menu_files(raw_conditional_files)
 
@@ -105,17 +110,17 @@ for name in conditional_files:
     logging.info('Loading conditional file "%s"', name)
 
     try:
-        with open(name, 'r', encoding='utf-8') as f:
+        with open(name, "r", encoding="utf-8") as f:
             contents = f.read()
 
             if not contents:
                 # empty strings are invalid JSON,
                 # so manually "fix" empty files
-                contents = '{}'
+                contents = "{}"
 
             data = json.loads(contents)
     except BaseException as e:
-        logging.error("Can't load conditionals file \"%s\":", name)
+        logging.error('Can\'t load conditionals file "%s":', name)
         logging.error(e, exc_info=True)
         continue
 
@@ -131,18 +136,22 @@ tags = filters.tags.Filter(args.tags)
 
 # Locate and load raw menudataf iles
 raw_menu_files = loaders.menudata_loader.find_menu_files(
-    os.path.join(args.base_dir, 'menudata'))
+    os.path.join(args.base_dir, "menudata")
+)
 
 menudata_files = loaders.menudata_loader.sort_menu_files(raw_menu_files)
 
 # Load menudata
 loaders.menudata_loader.load(
-    menudata_files, args.lang,
+    menudata_files,
+    args.lang,
     dirs_config.desktop_dirs,
-    tags, conditionals,
-    {},     # no puavopkg program states
+    tags,
+    conditionals,
+    {},  # no puavopkg program states
     icon_locator,
-    icons)
+    icons,
+)
 
 end_time = time.perf_counter()
-utils.log_elapsed_time('Total load time', start_time, end_time)
+utils.log_elapsed_time("Total load time", start_time, end_time)

@@ -1,6 +1,10 @@
 .PHONY: build
 build:
 
+.PHONY: format
+format:
+	black .
+
 .PHONY: clean
 clean:
 

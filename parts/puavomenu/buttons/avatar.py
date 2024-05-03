@@ -17,22 +17,12 @@ import buttons.base
 class AvatarButton(buttons.base.HoverIconButtonBase):
     ICON_SIZE = 48
 
+    def __init__(self, parent, settings, user_name, initial_image=None, tooltip=None):
+        super().__init__(
+            parent, settings, label=user_name, icon=None, tooltip=tooltip, data=None
+        )
 
-    def __init__(self,
-                 parent,
-                 settings,
-                 user_name,
-                 initial_image=None,
-                 tooltip=None):
-
-        super().__init__(parent,
-                         settings,
-                         label=user_name,
-                         icon=None,
-                         tooltip=tooltip,
-                         data=None)
-
-        self.add_style_class('button_avatar')
+        self.add_style_class("button_avatar")
 
         # Load the initial avatar image
         if initial_image:
@@ -46,10 +36,8 @@ class AvatarButton(buttons.base.HoverIconButtonBase):
 
         self.compute_elements()
 
-
     def get_preferred_button_size(self):
         return (SIDEBAR_WIDTH, self.ICON_SIZE)
-
 
     def compute_elements(self):
         self.icon_size = self.ICON_SIZE
@@ -62,9 +50,8 @@ class AvatarButton(buttons.base.HoverIconButtonBase):
 
         self.label_pos = [
             self.ICON_SIZE + 16,
-            (self.ICON_SIZE / 2) - ((ink.height / Pango.SCALE) / 2) - 5
+            (self.ICON_SIZE / 2) - ((ink.height / Pango.SCALE) / 2) - 5,
         ]
-
 
     # Must override the base method - the user avatar is not stored in
     # any icon cache and the base method is trying to draw it from a
@@ -75,24 +62,21 @@ class AvatarButton(buttons.base.HoverIconButtonBase):
             ctx.rectangle(0, 0, self.ICON_SIZE, self.ICON_SIZE)
             ctx.fill()
         else:
-            utils_gui.draw_x(ctx,
-                             self.icon_pos[0], self.icon_pos[1],
-                             self.icon_size, self.icon_size)
-
+            utils_gui.draw_x(
+                ctx, self.icon_pos[0], self.icon_pos[1], self.icon_size, self.icon_size
+            )
 
     # Loads and resizes the avatar icon
     def load_avatar(self, path):
         try:
             logging.info('Loading avatar image "%s"...', path)
 
-            self.icon = \
-                utils_gui.load_image_at_size(path,
-                                             self.ICON_SIZE,
-                                             self.ICON_SIZE)
+            self.icon = utils_gui.load_image_at_size(
+                path, self.ICON_SIZE, self.ICON_SIZE
+            )
 
             # trigger a redraw
             self.queue_draw()
         except Exception as exception:
-            logging.error('Could not load avatar image "%s": %s',
-                          path, str(exception))
+            logging.error('Could not load avatar image "%s": %s', path, str(exception))
             self.icon = None

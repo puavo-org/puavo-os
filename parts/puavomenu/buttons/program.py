@@ -4,11 +4,15 @@ import logging
 import math
 
 import gi
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+
+gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk, Gdk
 
-from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
-                      PROGRAM_BUTTON_ICON_SIZE
+from constants import (
+    PROGRAM_BUTTON_WIDTH,
+    PROGRAM_BUTTON_HEIGHT,
+    PROGRAM_BUTTON_ICON_SIZE,
+)
 import utils
 import utils_gui
 from strings import _tr
@@ -25,31 +29,26 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
     INDICATOR_DOT_RADIUS = 2
     INDICATOR_DOT_SPACING = 5.0
 
+    def __init__(
+        self,
+        parent,
+        settings,
+        label,
+        icon=None,
+        tooltip=None,
+        data=None,
+        is_fave=False,
+        enable_popup=True,
+    ):
+        super().__init__(parent, settings, label, icon, tooltip, data)
 
-    def __init__(self,
-                 parent,
-                 settings,
-                 label,
-                 icon=None,
-                 tooltip=None,
-                 data=None,
-                 is_fave=False,
-                 enable_popup=True):
-
-        super().__init__(parent,
-                         settings,
-                         label,
-                         icon,
-                         tooltip,
-                         data)
-
-        self.add_style_class('button_program')
+        self.add_style_class("button_program")
 
         self.is_fave = is_fave
 
         if is_fave:
             # permit additional styles
-            self.add_style_class('frequent_button')
+            self.add_style_class("frequent_button")
 
         if settings.desktop_dir is None:
             self.__have_desktop_dir = False
@@ -69,50 +68,46 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
             self.__is_installer = True
 
         if self.__is_installer:
-            self.add_style_class('installer')
+            self.add_style_class("installer")
 
             # No popup menus for installers, they are not going to work
             # from the panel or the desktop...
             self.__enable_popup = False
 
             # Append an installer identifier to the name
-            title = _tr('button_puavopkg_installer_suffix')
-            markup = '%s\n<small><i>[%s]</i></small>' % (label, title)
+            title = _tr("button_puavopkg_installer_suffix")
+            markup = "%s\n<small><i>[%s]</i></small>" % (label, title)
             self.label_layout.set_markup(markup)
 
-            self.set_property('tooltip-text', _tr('button_puavopkg_installer_tooltip'))
+            self.set_property("tooltip-text", _tr("button_puavopkg_installer_tooltip"))
 
         self.__menu = None
-        self.__menu_signal = self.connect('button-press-event', self.open_menu)
+        self.__menu_signal = self.connect("button-press-event", self.open_menu)
 
         # We want mouse motion events
         self.set_events(self.get_events() | Gdk.EventMask.POINTER_MOTION_MASK)
 
         # Setup the popup indicator box. Compute its coordinates.
-        self.__indicator_x1 = PROGRAM_BUTTON_WIDTH - self.INDICATOR_WIDTH - self.INDICATOR_EDGE
+        self.__indicator_x1 = (
+            PROGRAM_BUTTON_WIDTH - self.INDICATOR_WIDTH - self.INDICATOR_EDGE
+        )
         self.__indicator_x2 = self.__indicator_x1 + self.INDICATOR_WIDTH
         self.__indicator_y1 = self.INDICATOR_EDGE
         self.__indicator_y2 = self.__indicator_y1 + self.INDICATOR_HEIGHT
 
-
     def get_preferred_button_size(self):
         return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
-
 
     def compute_elements(self):
         self.icon_size = PROGRAM_BUTTON_ICON_SIZE
 
         self.icon_pos = [
             (PROGRAM_BUTTON_WIDTH / 2) - (PROGRAM_BUTTON_ICON_SIZE / 2),
-            20
+            20,
         ]
 
         # Center the text horizontally
-        self.label_pos = [
-            10,  # left padding
-            20 + PROGRAM_BUTTON_ICON_SIZE + 5
-        ]
-
+        self.label_pos = [10, 20 + PROGRAM_BUTTON_ICON_SIZE + 5]  # left padding
 
     # Mouse enters the button area
     def on_mouse_enter(self, widget, event):
@@ -121,11 +116,11 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
             if self.__enable_popup:
                 # Start tracking mouse movements inside the button
-                self.__hover_signal = \
-                    self.connect('motion-notify-event', self.__on_mouse_hover_move)
+                self.__hover_signal = self.connect(
+                    "motion-notify-event", self.__on_mouse_hover_move
+                )
 
         return False
-
 
     # Mouse leaves the button area
     def on_mouse_leave(self, widget, event):
@@ -139,7 +134,6 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
         return False
 
-
     # Track mouse movements and update the hover indicator box
     def __on_mouse_hover_move(self, widget, event):
         if not self.disabled:
@@ -148,17 +142,17 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
         return False
 
-
     # Track the "..." indicator hover state changes
     def __hover_check(self, mouse_x, mouse_y):
-        new_state = self.__indicator_x1 < mouse_x <= self.__indicator_x2 and \
-                    self.__indicator_y1 < mouse_y <= self.__indicator_y2
+        new_state = (
+            self.__indicator_x1 < mouse_x <= self.__indicator_x2
+            and self.__indicator_y1 < mouse_y <= self.__indicator_y2
+        )
 
         if new_state != self.__popup_hover:
             # Only redraw when the hover state actually changes
             self.__popup_hover = new_state
             self.queue_draw()
-
 
     def on_draw(self, widget, ctx):
         try:
@@ -183,12 +177,10 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
                 self.__draw_popup_indicator(ctx)
 
         except Exception as exception:
-            logging.error('Could not draw a ProgramButton widget: %s',
-                          str(exception))
+            logging.error("Could not draw a ProgramButton widget: %s", str(exception))
 
         # return True to prevent default event processing
         return True
-
 
     # Draw the popup menu indicator
     def __draw_popup_indicator(self, ctx):
@@ -206,7 +198,8 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
             y=self.__indicator_y1,
             width=self.INDICATOR_WIDTH,
             height=self.INDICATOR_HEIGHT,
-            radius=3.0)
+            radius=3.0,
+        )
 
         ctx.fill()
         ctx.restore()
@@ -232,7 +225,6 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
         ctx.restore()
 
-
     # Create and display the popup menu
     def open_menu(self, widget, event):
         if self.disabled:
@@ -247,31 +239,38 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
             if self.__have_desktop_dir:
                 # Can't do this without the desktop directory
-                desktop_item = Gtk.MenuItem(_tr('popup_add_to_desktop'))
-                desktop_item.connect('activate',
-                                     lambda x: self.__special_operation(
-                                         self.parent.add_program_to_desktop))
+                desktop_item = Gtk.MenuItem(_tr("popup_add_to_desktop"))
+                desktop_item.connect(
+                    "activate",
+                    lambda x: self.__special_operation(
+                        self.parent.add_program_to_desktop
+                    ),
+                )
                 desktop_item.show()
                 self.__menu.append(desktop_item)
 
-            panel_item = Gtk.MenuItem(_tr('popup_add_to_panel'))
-            panel_item.connect('activate',
-                               lambda x: self.__special_operation(
-                                   self.parent.add_program_to_panel))
+            panel_item = Gtk.MenuItem(_tr("popup_add_to_panel"))
+            panel_item.connect(
+                "activate",
+                lambda x: self.__special_operation(self.parent.add_program_to_panel),
+            )
             panel_item.show()
             self.__menu.append(panel_item)
 
             if self.is_fave:
                 # special entry for fave buttons
-                remove_fave = Gtk.MenuItem(_tr('popup_remove_from_faves'))
-                remove_fave.connect('activate',
-                                    lambda x: self.__special_operation(
-                                        self.parent.remove_program_from_faves))
+                remove_fave = Gtk.MenuItem(_tr("popup_remove_from_faves"))
+                remove_fave.connect(
+                    "activate",
+                    lambda x: self.__special_operation(
+                        self.parent.remove_program_from_faves
+                    ),
+                )
                 remove_fave.show()
                 self.__menu.append(remove_fave)
 
             # Need to do things when the menu closes...
-            self.__menu.connect('deactivate', self.__cancel_menu)
+            self.__menu.connect("deactivate", self.__cancel_menu)
 
             # ...and if autohiding is enabled (like it usually is) we
             # must NOT hide the window when the menu opens!
@@ -284,12 +283,12 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
                 func=None,
                 data=None,
                 button=event.button,
-                activate_time=event.time)
+                activate_time=event.time,
+            )
             return True
 
         # Clicked on something else
         return False
-
 
     # Nothing in the popup menu was clicked
     def __cancel_menu(self, menushell):
@@ -303,8 +302,7 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
         self.__hover_check(x, y)
 
         self.__menu = None
-        self.queue_draw()       # force redraw
-
+        self.queue_draw()  # force redraw
 
     # The ProgramButton does not know how to add the program on the
     # desktop or panel or anything else, but the PuavoMenu class does,
@@ -319,6 +317,6 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
         self.__popup_open = False
         self.__menu = None
         self.__popup_hover = False
-        self.queue_draw()       # force redraw
+        self.queue_draw()  # force redraw
 
         method(self.data)
