@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SAMBA_DHCP_CONF=/etc/samba/dhcp.conf
+SAMBA_DHCP_CONF=/var/lib/samba/dhcp.conf
 
 netbios_setup() {
 	# No need to continue if we're called with an unsupported option
@@ -77,8 +77,18 @@ netbios_setup() {
 
 	# reload the samba server
 	# We don't necessarily have the samba package installed. #414841
-	[ ! -x /etc/init.d/smbd ] || /usr/sbin/invoke-rc.d smbd reload
-
+	if [ -x /etc/init.d/smbd ]
+	then
+		if [ -d /run/systemd/system ]
+		then
+			if systemctl is-enabled smbd.service --quiet
+			then
+				systemctl try-reload-or-restart smbd.service
+			fi
+		else
+			/usr/sbin/invoke-rc.d smbd reload
+		fi
+	fi
 }
 
 netbios_setup
