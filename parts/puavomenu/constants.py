@@ -17,8 +17,14 @@ PROGRAMS_SEARCH_GROUP_HEIGHT = 25
 # Icons per row in program lists
 PROGRAMS_PER_ROW = 4
 
-PROGRAM_BUTTON_WIDTH = 150
-PROGRAM_BUTTON_HEIGHT = 110
+# Size of a program button
+PROGRAM_BUTTON_ICON_SIZE = 48
+
+# Size of the user avatar, in pixels
+USER_AVATAR_SIZE = 48
+
+PROGRAM_BUTTON_WIDTH = PROGRAM_BUTTON_ICON_SIZE + 2 * MAIN_PADDING + 82
+PROGRAM_BUTTON_HEIGHT = PROGRAM_BUTTON_ICON_SIZE + 2 * MAIN_PADDING + 42
 PROGRAM_ROW_PADDING = 5
 PROGRAM_COL_PADDING = 5
 
@@ -64,12 +70,6 @@ BACK_BUTTON_WIDTH = 50
 
 # Search box
 SEARCH_WIDTH = 150
-
-# Size of a program button
-PROGRAM_BUTTON_ICON_SIZE = 48
-
-# Size of the user avatar, in pixels
-USER_AVATAR_SIZE = 48
 
 # Height of the machine name and release info text
 HOSTINFO_LABEL_HEIGHT = 36
