@@ -17,7 +17,7 @@ import utils_gui
 # class/-es that compute element sizes and positions if you want to
 # use this!
 class HoverIconButtonBase(Gtk.Button):
-    def __init__(self, parent, settings, label, icon=None, tooltip=None, data=None):
+    def __init__(self, *, parent, settings, label, icon=None, tooltip=None, data=None):
         super().__init__()
 
         # Setup signals

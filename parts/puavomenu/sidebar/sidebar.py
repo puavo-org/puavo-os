@@ -157,11 +157,11 @@ class Sidebar:
             )
 
         self.__avatar = buttons.avatar.AvatarButton(
-            self,
-            self.__settings,
-            self.__variables["user_name"],
-            avatar_image,
-            avatar_tooltip,
+            parent=self,
+            settings=self.__settings,
+            user_name=self.__variables["user_name"],
+            initial_image=avatar_image,
+            tooltip=avatar_tooltip,
         )
 
         # No profile editing for guest users
@@ -443,12 +443,12 @@ class Sidebar:
 
         try:
             button = buttons.sidebar.SidebarButton(
-                self,
-                self.__settings,
-                _tr(data["title"]),
-                icon,
-                _tr(data.get("description", None)),
-                data["command"],
+                parent=self,
+                settings=self.__settings,
+                label=_tr(data["title"]),
+                icon=icon,
+                tooltip=_tr(data.get("description", None)),
+                data=data["command"],
             )
 
             button.connect("clicked", self.__clicked_sidebar_button)

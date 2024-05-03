@@ -134,11 +134,11 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
                 # use self.__parent as the parent, so popup menu handlers
                 # will call the correct methods from the main window class
                 button = buttons.program.ProgramButton(
-                    self.__parent,
-                    settings,
-                    program.name,
-                    (icon_cache, program.icon),
-                    program.description,
+                    parent=self.__parent,
+                    settings=settings,
+                    label=program.name,
+                    icon=(icon_cache, program.icon),
+                    tooltip=program.description,
                     data=program,
                     is_fave=True,
                 )
