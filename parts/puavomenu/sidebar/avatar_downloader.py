@@ -73,11 +73,13 @@ class AvatarDownloaderThread(threading.Thread):
                 # Wrap this in its own exception handler, so if it fails,
                 # we just return instead of redownloading the image
                 try:
-                    name = os.path.join(self.__destination, "avatar.jpg")
-                    logging.info('Saving the avatar image to "%s"', name)
+                    avatar_file_path = os.path.join(self.__destination, "avatar.jpg")
+                    logging.info("Saving the avatar image to %r", avatar_file_path)
 
-                    open(name, "wb").write(image)
-                    self.__avatar_object.load_avatar(name)
+                    with open(avatar_file_path, "wb") as avatar_file:
+                        avatar_file.write(image)
+                    logging.info("Loading avatar image %r...", avatar_file_path)
+                    self.__avatar_object.load_icon(avatar_file_path)
                 except Exception as exception:
                     # Why must everything fail?
                     logging.warning(

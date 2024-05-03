@@ -8,11 +8,7 @@ import gi
 gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk, Gdk
 
-from constants import (
-    PROGRAM_BUTTON_WIDTH,
-    PROGRAM_BUTTON_HEIGHT,
-    PROGRAM_BUTTON_ICON_SIZE,
-)
+import constants
 import utils
 import utils_gui
 from strings import _tr
@@ -39,19 +35,21 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
         tooltip=None,
         data=None,
         is_fave=False,
-        enable_popup=True,
+        enable_popup=True
     ):
         super().__init__(
             parent=parent,
             settings=settings,
             label=label,
+            layout="vertical",
+            width=constants.PROGRAM_BUTTON_WIDTH,
+            height=constants.PROGRAM_BUTTON_HEIGHT,
+            icon_size=constants.PROGRAM_BUTTON_ICON_SIZE,
             icon=icon,
             tooltip=tooltip,
             data=data,
+            style_class="button_program",
         )
-
-        self.add_style_class("button_program")
-
         self.is_fave = is_fave
 
         if is_fave:
@@ -85,7 +83,7 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
             # Append an installer identifier to the name
             title = _tr("button_puavopkg_installer_suffix")
             markup = "%s\n<small><i>[%s]</i></small>" % (label, title)
-            self.label_layout.set_markup(markup)
+            self.set_label_markup(markup)
 
             self.set_property("tooltip-text", _tr("button_puavopkg_installer_tooltip"))
 
@@ -97,25 +95,11 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
         # Setup the popup indicator box. Compute its coordinates.
         self.__indicator_x1 = (
-            PROGRAM_BUTTON_WIDTH - self.INDICATOR_WIDTH - self.INDICATOR_EDGE
+            constants.PROGRAM_BUTTON_WIDTH - self.INDICATOR_WIDTH - self.INDICATOR_EDGE
         )
         self.__indicator_x2 = self.__indicator_x1 + self.INDICATOR_WIDTH
         self.__indicator_y1 = self.INDICATOR_EDGE
         self.__indicator_y2 = self.__indicator_y1 + self.INDICATOR_HEIGHT
-
-    def get_preferred_button_size(self):
-        return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
-
-    def compute_elements(self):
-        self.icon_size = PROGRAM_BUTTON_ICON_SIZE
-
-        self.icon_pos = [
-            (PROGRAM_BUTTON_WIDTH / 2) - (PROGRAM_BUTTON_ICON_SIZE / 2),
-            20,
-        ]
-
-        # Center the text horizontally
-        self.label_pos = [10, 20 + PROGRAM_BUTTON_ICON_SIZE + 5]  # left padding
 
     # Mouse enters the button area
     def on_mouse_enter(self, widget, event):
