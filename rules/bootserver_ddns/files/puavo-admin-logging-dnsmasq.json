@@ -3,6 +3,6 @@
     "choices": [ "", "log-queries" ],
     "default": "",
     "description": "Dnsmasq logging policy",
-    "typehint": "bool"
+    "typehint": "string"
   }
 }
