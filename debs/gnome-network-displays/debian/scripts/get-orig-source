@@ -7,7 +7,7 @@ orig_tarball="../gnome-network-displays_${upstream_version}.orig.tar.bz2"
 
 if [ ! -e "${orig_tarball}" ]; then
   wget -O "${orig_tarball}.tmp" \
-       "https://gitlab.gnome.org/GNOME/gnome-network-displays/-/archive/738b3ec743fdee24c22b01f9553ef84f6a44d268/gnome-network-displays-738b3ec743fdee24c22b01f9553ef84f6a44d268.tar.bz2"
+       "https://gitlab.gnome.org/GNOME/gnome-network-displays/-/archive/a970c23478b76c6657f25c4be7d6f264e6f755a0/gnome-network-displays-a970c23478b76c6657f25c4be7d6f264e6f755a0.tar.bz2"
   tar -jxf "${orig_tarball}.tmp" --strip-components=1
   mv "${orig_tarball}.tmp" "$orig_tarball"
 fi
