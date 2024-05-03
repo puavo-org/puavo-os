@@ -78,12 +78,8 @@ EOF
 }
 
 for puavo_cert_version in $puavo_cert_version_list; do
-  if [ "$puavo_cert_version" = '20101001' ]; then
-    cdn_port=872
-  else
-    cdn_port="$puavo_cdn_server_port"
-    puavo_cdn_server_port=$(($puavo_cdn_server_port + 1))
-  fi
+  cdn_port="$puavo_cdn_server_port"
+  puavo_cdn_server_port=$(($puavo_cdn_server_port + 1))
   cdn_conf "$puavo_cert_version" "$cdn_port"
 done > /etc/nginx/sites-available/puavo-images.tmp
 mv /etc/nginx/sites-available/puavo-images.tmp \
@@ -92,12 +88,8 @@ ln -fns /etc/nginx/sites-available/puavo-images \
         /etc/nginx/sites-enabled/puavo-images
 
 for puavo_cert_version in $puavo_cert_version_list; do
-  if [ "$puavo_cert_version" = '20101001' ]; then
-    puavo_rest_port=443
-  else
-    puavo_rest_port="$puavo_api_server_port"
-    puavo_api_server_port=$(($puavo_api_server_port + 1))
-  fi
+  puavo_rest_port="$puavo_api_server_port"
+  puavo_api_server_port=$(($puavo_api_server_port + 1))
   puavo_rest_conf "$puavo_cert_version" "$puavo_rest_port"
 done > /etc/nginx/sites-available/puavo-rest.tmp
 mv /etc/nginx/sites-available/puavo-rest.tmp \
