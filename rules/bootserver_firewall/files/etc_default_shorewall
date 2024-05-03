@@ -1,5 +1,5 @@
 # prevent startup with default configuration
-# set the following varible to 1 in order to allow Shorewall to start
+# set the following variable to 1 in order to allow Shorewall to start
 
 startup=0
 
@@ -16,7 +16,7 @@ startup=0
 #    wait_interface=
 
 #
-# Global start/restart options
+# Global start/restart/reload/stop options
 #
 OPTIONS=""
 
@@ -28,12 +28,17 @@ STARTOPTIONS=""
 #
 # Restart options
 #
+RESTARTOPTIONS=""
+
+#
+# Reload options
+#
 RELOADOPTIONS=""
 
 #
-# Restart options
+# Stop options
 #
-RESTARTOPTIONS=""
+STOPOPTIONS=""
 
 #
 # Init Log -- if /dev/null, use the STARTUP_LOG defined in shorewall.conf
@@ -44,6 +49,6 @@ INITLOG=/dev/null
 # Set this to 1 to cause '/etc/init.d/shorewall stop' to place the firewall in
 # a safe state rather than to open it
 #
-SAFESTOP=0
+SAFESTOP=1
 
 # EOF

@@ -11,19 +11,9 @@ class bootserver_firewall {
       require => Package['ulogd2'],
       source  => 'puppet:///modules/bootserver_firewall/etc_logrotate.d_ulogd2';
 
-    '/etc/shorewall/Makefile':
-      require => Package['shorewall'],
-      source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/Makefile';
-
     '/etc/shorewall/shorewall.conf':
       require => Package['shorewall'],
-      source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/shorewall.conf';
-
-    '/etc/systemd/system/shorewall.service.d':
-      ensure => directory;
-
-    '/etc/systemd/system/shorewall.service.d/override.conf':
-      source => 'puppet:///modules/bootserver_firewall/shorewall_service_override.conf';
+      source  => 'puppet:///modules/bootserver_firewall/etc_shorewall_shorewall.conf';
 
     '/etc/ulogd.conf':
       mode    => '0600',
