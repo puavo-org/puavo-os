@@ -31,6 +31,7 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
     def __init__(
         self,
+        *,
         parent,
         settings,
         label,
@@ -40,7 +41,14 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
         is_fave=False,
         enable_popup=True,
     ):
-        super().__init__(parent, settings, label, icon, tooltip, data)
+        super().__init__(
+            parent=parent,
+            settings=settings,
+            label=label,
+            icon=icon,
+            tooltip=tooltip,
+            data=data,
+        )
 
         self.add_style_class("button_program")
 

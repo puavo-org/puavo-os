@@ -14,8 +14,15 @@ class SidebarButton(buttons.base.HoverIconButtonBase):
     PADDING = 4
     ICON_SIZE = 32
 
-    def __init__(self, parent, settings, label, icon=None, tooltip=None, data=None):
-        super().__init__(parent, settings, label, icon, tooltip, data)
+    def __init__(self, *, parent, settings, label, icon=None, tooltip=None, data=None):
+        super().__init__(
+            parent=parent,
+            settings=settings,
+            label=label,
+            icon=icon,
+            tooltip=tooltip,
+            data=data,
+        )
 
         self.add_style_class("button_sidebar")
 

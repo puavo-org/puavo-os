@@ -15,9 +15,16 @@ import buttons.base
 # HoverIconButtonBase; Gtk.Label cannot be easily made to receive click
 # events.
 class AvatarButton(buttons.base.HoverIconButtonBase):
-    def __init__(self, parent, settings, user_name, initial_image=None, tooltip=None):
+    def __init__(
+        self, *, parent, settings, user_name, initial_image=None, tooltip=None
+    ):
         super().__init__(
-            parent, settings, label=user_name, icon=None, tooltip=tooltip, data=None
+            parent=parent,
+            settings=settings,
+            label=user_name,
+            icon=None,
+            tooltip=tooltip,
+            data=None,
         )
 
         self.add_style_class("button_avatar")
