@@ -13,10 +13,8 @@ while true; do
 
   kill -0 "$lpstatpid" 2>/dev/null || continue
 
-  kill "$lpstatpid"
+  kill "$lpstatpid" || true
   service cups restart || true
 
   echo "$(date --rfc-3339=seconds) cups restarted" >&2
-  curl -d 'json={"msg": "cups restarted"}' \
-       http://localhost:8888/cups-watchdog || true
 done
