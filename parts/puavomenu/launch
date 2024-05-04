@@ -26,29 +26,47 @@ if [ $# -gt 0 ]; then
     fi
 fi
 
-if [ $DEV_MODE -eq 1 ]; then
-    # Development mode. Assume this is a local copy of the
-    # puavo-os/opinsys-os repo.
-    python3 ./puavomenu \
-        --res_dir "./res" \
-        --menu_dir "../../rules/puavomenu/templates" \
-        --user_conf "${CONF_DIR}" \
-        --user_progs "${USER_PROGS}" \
-        --socket "${XDG_RUNTIME_DIR}/puavomenu_dev" \
-        "$@" &
-
-    # No user programs monitoring here. If you want to monitor a specific
-    # directory, run monitor-userprogs yourself.
-else
-    # Production mode. Use real paths.
-    python3 /opt/puavomenu/puavomenu \
-        --prod \
-        --autohide \
-        --log "/tmp/puavomenu_${TIMESTAMP}.log" \
-        --res_dir "/opt/puavomenu/res" \
-        --menu_dir "/etc/puavomenu/" \
-        --user_conf "${CONF_DIR}" \
-        --user_progs "${USER_PROGS}" \
-        --socket "${XDG_RUNTIME_DIR}/puavomenu" \
-        &
-fi
+while true; do
+    if [ $DEV_MODE -eq 1 ]; then
+        # Development mode. Assume this is a local copy of the
+        # puavo-os/opinsys-os repo.
+        python3 ./puavomenu \
+            --res_dir "./res" \
+            --menu_dir "../../rules/puavomenu/templates" \
+            --user_conf "${CONF_DIR}" \
+            --user_progs "${USER_PROGS}" \
+            --socket "${XDG_RUNTIME_DIR}/puavomenu_dev" \
+            "$@" || {
+            status=$?
+            if [ $status -eq 2 ]; then
+                # Resolution has changed, relaunch. Dimensions might
+                # be different this time.
+                continue
+            fi
+            exit $status
+        }
+        break
+        # No user programs monitoring here. If you want to monitor a specific
+        # directory, run monitor-userprogs yourself.
+    else
+        # Production mode. Use real paths.
+        python3 /opt/puavomenu/puavomenu \
+            --prod \
+            --autohide \
+            --log "/tmp/puavomenu_${TIMESTAMP}.log" \
+            --res_dir "/opt/puavomenu/res" \
+            --menu_dir "/etc/puavomenu/" \
+            --user_conf "${CONF_DIR}" \
+            --user_progs "${USER_PROGS}" \
+            --socket "${XDG_RUNTIME_DIR}/puavomenu" || {
+            status=$?
+            if [ $status -eq 2 ]; then
+                # Resolution has changed, relaunch. Dimensions might
+                # be different this time.
+                continue
+            fi
+            exit $status
+        }
+        break
+    fi
+done

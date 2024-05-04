@@ -295,6 +295,8 @@ import utils
 
 logging.info("=" * 50)
 
+exitstatus = 0
+
 try:
     import_start = time.perf_counter()
     import main
@@ -302,7 +304,9 @@ try:
     import_end = time.perf_counter()
 
     utils.log_elapsed_time("Main import time", import_start, import_end)
-    main.run_puavomenu(settings, sock, program_start)
+    status = main.run_puavomenu(settings, sock, program_start)
+    if status.pop("has_resolution_changed", False):
+        exitstatus = 2
 except Exception as exception:
     # This is bad. Very bad. The exception bubbled all the way up to here,
     # so this is fatal.
@@ -322,4 +326,4 @@ logging.info("Shutdown complete")
 logging.info("Logging ends")
 logging.shutdown()
 
-exit(0)
+exit(exitstatus)

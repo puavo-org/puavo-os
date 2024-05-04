@@ -1794,7 +1794,17 @@ class PuavoMenu(Gtk.Window):
 def run_puavomenu(settings, socket, program_start_time):
     logging.info("Entering run_puavomenu()")
 
+    status = {}
+
+    def on_resolution_change(*args):
+        status["has_resolution_changed"] = True
+        Gtk.main_quit()
+
     try:
+        Gdk.Display.get_default().get_default_screen().connect(
+            "size-changed", on_resolution_change
+        )
+
         dims = dimensions.get_optimal_dims(
             utils_gui.get_default_display_primary_monitor_resolution()
         )
@@ -1813,3 +1823,5 @@ def run_puavomenu(settings, socket, program_start_time):
 
     # We get here only in development mode
     logging.info("Exiting run_puavomenu()")
+
+    return status
