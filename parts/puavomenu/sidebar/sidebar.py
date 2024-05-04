@@ -13,16 +13,6 @@ from gi.repository import Gtk
 from gi.repository import Pango
 from gi.repository import Gio
 
-from constants import (
-    MAIN_PADDING,
-    SIDEBAR_WIDTH,
-    SIDEBAR_HEIGHT,
-    SIDEBAR_BUTTON_ICON_SIZE,
-    USER_AVATAR_SIZE,
-    HOSTINFO_LABEL_HEIGHT,
-    SEPARATOR_SIZE,
-)
-
 import utils
 import utils_gui
 import icons
@@ -64,15 +54,16 @@ def get_changelog_url(lang):
 
 
 class Sidebar:
-    def __init__(self, parent, settings):
+    def __init__(self, parent, settings, dims):
         self.__parent = parent
         self.__settings = settings
+        self.__dims = dims
 
         self.container = Gtk.Fixed()
-        self.container.set_size_request(SIDEBAR_WIDTH, SIDEBAR_HEIGHT)
+        self.container.set_size_request(dims.sidebar_width, dims.sidebar_height)
 
         # Storage for the command button icons
-        self.__icons = icons.IconCache(128, SIDEBAR_BUTTON_ICON_SIZE)
+        self.__icons = icons.IconCache(128, dims.sidebar_button_icon_size)
 
         # Which sidebar elements are *unconditionally* hidden through puavo-conf?
         # These override EVERYTHING else!
@@ -163,6 +154,7 @@ class Sidebar:
             label=self.__variables["user_name"],
             icon=avatar_image,
             tooltip=avatar_tooltip,
+            dims=self.__dims,
         )
 
         # No profile editing for guest users
@@ -205,17 +197,17 @@ class Sidebar:
             utils_gui.create_separator(
                 container=self.container,
                 x=0,
-                y=MAIN_PADDING + self.__avatar.get_size_request()[1],
-                w=SIDEBAR_WIDTH,
+                y=self.__dims.main_padding + self.__avatar.get_size_request()[1],
+                w=self.__dims.sidebar_width,
                 h=-1,
                 orientation=Gtk.Orientation.HORIZONTAL,
             )
 
             ypos = (
-                MAIN_PADDING
+                self.__dims.main_padding
                 + self.__avatar.get_size_request()[1]
-                + MAIN_PADDING
-                + SEPARATOR_SIZE
+                + self.__dims.main_padding
+                + self.__dims.separator_size
             )
 
         something = False
@@ -287,19 +279,21 @@ class Sidebar:
         if not self.is_element_visible("hostinfo"):
             return
 
-        label_top = SIDEBAR_HEIGHT - HOSTINFO_LABEL_HEIGHT
+        label_top = self.__dims.sidebar_height - self.__dims.hostinfo_label_height
 
         utils_gui.create_separator(
             container=self.container,
             x=0,
-            y=label_top - MAIN_PADDING,
-            w=SIDEBAR_WIDTH,
+            y=label_top - self.__dims.main_padding,
+            w=self.__dims.sidebar_width,
             h=1,
             orientation=Gtk.Orientation.HORIZONTAL,
         )
 
         hostname_label = Gtk.Label(name="hostinfo")
-        hostname_label.set_size_request(SIDEBAR_WIDTH, HOSTINFO_LABEL_HEIGHT)
+        hostname_label.set_size_request(
+            self.__dims.sidebar_width, self.__dims.hostinfo_label_height
+        )
         hostname_label.set_ellipsize(Pango.EllipsizeMode.END)
         hostname_label.set_justify(Gtk.Justification.CENTER)
         hostname_label.set_xalign(0.5)
@@ -455,6 +449,7 @@ class Sidebar:
                 icon=icon,
                 tooltip=_tr(data.get("description", None)),
                 data=data["command"],
+                dims=self.__dims,
             )
 
             button.connect("clicked", self.__clicked_sidebar_button)
@@ -474,11 +469,11 @@ class Sidebar:
         utils_gui.create_separator(
             container=self.container,
             x=padding,
-            y=ypos + MAIN_PADDING,
-            w=SIDEBAR_WIDTH - padding * 2,
+            y=ypos + self.__dims.main_padding,
+            w=self.__dims.sidebar_width - padding * 2,
             h=-1,
             orientation=Gtk.Orientation.HORIZONTAL,
         )
 
         # the next available Y coordinate
-        return ypos + MAIN_PADDING * 2 + SEPARATOR_SIZE
+        return ypos + self.__dims.main_padding * 2 + self.__dims.separator_size

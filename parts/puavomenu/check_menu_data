@@ -10,10 +10,10 @@ import argparse
 
 import gi
 
-gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
-from gi.repository import Gio
+gi.require_version("Gdk", "3.0")  # explicitly require Gtk3, not Gtk2
+from gi.repository import Gio, Gdk
 
-import constants
+import dimensions
 import filters.tags
 import filters.conditionals
 import menudata
@@ -21,6 +21,7 @@ import loaders.json_loader
 import loaders.menudata_loader
 import icons
 import utils
+import utils_gui
 
 
 # Parse the command-line arguments
@@ -96,7 +97,10 @@ if icon_theme and icon_theme in dirs_config.theme_icon_dirs:
 
 icon_locator.scan_directories()
 
-icons = icons.IconCache(1024, constants.PROGRAM_BUTTON_ICON_SIZE)
+dims = dimensions.get_optimal_dims(
+    utils_gui.get_default_display_primary_monitor_resolution()
+)
+icons = icons.IconCache(1024, dims.program_button_icon_size)
 
 # Locate and parse conditionals
 raw_conditional_files = loaders.menudata_loader.find_menu_files(

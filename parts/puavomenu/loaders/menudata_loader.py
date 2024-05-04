@@ -8,8 +8,6 @@ import re
 import logging
 import time
 
-from constants import PROGRAM_BUTTON_ICON_SIZE
-
 import utils
 
 from strings import _tr
@@ -338,7 +336,7 @@ def load_icons(programs, menus, icon_locator, icon_cache):
         # Locate the icon file
 
         icon_path, is_path = icon_locator.locate_icon(
-            program["icon"], PROGRAM_BUTTON_ICON_SIZE
+            program["icon"], icon_cache.icon_size
         )
 
         if icon_path is None:
@@ -381,7 +379,7 @@ def load_icons(programs, menus, icon_locator, icon_cache):
             continue
 
         icon_path, is_path = icon_locator.locate_icon(
-            menu["icon"], PROGRAM_BUTTON_ICON_SIZE
+            menu["icon"], icon_cache.icon_size
         )
 
         if icon_path is None:
@@ -536,7 +534,7 @@ def load(
 
     start_time = time.perf_counter()
 
-    puavopkg.init_programs(programs, puavopkg_states)
+    puavopkg.init_programs(programs, puavopkg_states, icon_cache.icon_size)
 
     # Duplicate raw program definitions for puavo-pkg programs, so they can
     # be merged with the .desktop file data when the program is intalled.

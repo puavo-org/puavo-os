@@ -1,11 +1,12 @@
 # Custom menu button class
 
-import constants
 import buttons.base
 
 
 class MenuButton(buttons.base.HoverIconButtonBase):
-    def __init__(self, *, parent, settings, label, icon=None, tooltip=None, data=None):
+    def __init__(
+        self, *, parent, settings, label, dims, icon=None, tooltip=None, data=None
+    ):
         super().__init__(
             parent=parent,
             settings=settings,
@@ -13,9 +14,10 @@ class MenuButton(buttons.base.HoverIconButtonBase):
             icon=icon,
             tooltip=tooltip,
             data=data,
+            dims=dims,
             layout="vertical",
-            width=constants.PROGRAM_BUTTON_WIDTH,
-            height=constants.PROGRAM_BUTTON_HEIGHT,
-            icon_size=constants.PROGRAM_BUTTON_ICON_SIZE,
+            width=dims.program_button_width,
+            height=dims.program_button_height,
+            icon_size=dims.program_button_icon_size,
             style_class="button_menu",
         )

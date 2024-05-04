@@ -2,13 +2,13 @@
 
 import enum
 import logging
+import typing
 
 import gi
 
 gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk, Pango
 
-import constants
 import utils_gui
 
 
@@ -38,13 +38,17 @@ class HoverIconButtonBase(Gtk.Button):
         height: int,
         icon_size: int,
         style_class: str,
-        padding: int = constants.MAIN_PADDING,
+        dims,
+        padding: typing.Optional[int] = None,
         icon=None,
         tooltip=None,
         data=None,
         do_word_wrap: bool = True,
     ):
         super().__init__()
+
+        if padding is None:
+            padding = dims.main_padding
 
         # Private instance variables
         self.__do_word_wrap = do_word_wrap
