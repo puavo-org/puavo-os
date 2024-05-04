@@ -8,7 +8,6 @@ import gi
 gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk, Gdk
 
-import constants
 import utils
 import utils_gui
 from strings import _tr
@@ -31,6 +30,7 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
         parent,
         settings,
         label,
+        dims,
         icon=None,
         tooltip=None,
         data=None,
@@ -42,13 +42,14 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
             settings=settings,
             label=label,
             layout="vertical",
-            width=constants.PROGRAM_BUTTON_WIDTH,
-            height=constants.PROGRAM_BUTTON_HEIGHT,
-            icon_size=constants.PROGRAM_BUTTON_ICON_SIZE,
+            width=dims.program_button_width,
+            height=dims.program_button_height,
+            icon_size=dims.program_button_icon_size,
             icon=icon,
             tooltip=tooltip,
             data=data,
             style_class="button_program",
+            dims=dims,
         )
         self.is_fave = is_fave
 
@@ -95,7 +96,7 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
 
         # Setup the popup indicator box. Compute its coordinates.
         self.__indicator_x1 = (
-            constants.PROGRAM_BUTTON_WIDTH - self.INDICATOR_WIDTH - self.INDICATOR_EDGE
+            dims.program_button_width - self.INDICATOR_WIDTH - self.INDICATOR_EDGE
         )
         self.__indicator_x2 = self.__indicator_x1 + self.INDICATOR_WIDTH
         self.__indicator_y1 = self.INDICATOR_EDGE

@@ -7,11 +7,14 @@ import os.path
 import argparse
 import time
 
-from constants import LANGUAGES
 from strings import _tr
 
 program_start = time.perf_counter()
 
+# Accepted languages. These are permitted for the --lang parameter and
+# environment variables, and we try to load strings from YAML/JSON/
+# .desktop files for each of these.
+LANGUAGES = frozenset(("en", "fi", "sv", "de"))
 
 # Some kind of a help text
 epilog = """

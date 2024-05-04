@@ -8,8 +8,6 @@ import gi
 gi.require_version("Gtk", "3.0")  # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 
-from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_COL_PADDING
-
 import buttons.program
 
 
@@ -88,10 +86,11 @@ class ProgramLaunchesCounter:
 
 # The most frequently used programs list
 class FrequentProgramsList(Gtk.ScrolledWindow):
-    def __init__(self, parent):
+    def __init__(self, parent, dims):
         super().__init__(name="frequent")
 
         self.__parent = parent
+        self.__dims = dims
 
         # Usage count tracking
         self.__prev_items = []
@@ -141,11 +140,12 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
                     tooltip=program.description,
                     data=program,
                     is_fave=True,
+                    dims=self.__dims,
                 )
 
                 button.connect("clicked", self.__parent.clicked_program_button)
                 self.__container.put(button, x, 0)
-                x += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
+                x += self.__dims.program_button_width + self.__dims.program_col_padding
             except Exception as ex:
                 logging.error(
                     "Can't create a frequently-used program button: %s", str(ex)

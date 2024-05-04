@@ -9,6 +9,11 @@ from gi.repository import Gtk, GdkPixbuf, Gdk
 import cairo
 
 
+def get_default_display_primary_monitor_resolution():
+    geometry = Gdk.Display.get_default().get_primary_monitor().get_geometry()
+    return (geometry.width, geometry.height)
+
+
 def load_image_at_size(name, width, height):
     """Loads an image file at the specified size. Does NOT handle
     exceptions!"""

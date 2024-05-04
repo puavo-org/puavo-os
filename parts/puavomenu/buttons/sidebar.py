@@ -1,11 +1,12 @@
 # Custom sidebar button class
 
 import buttons.base
-import constants
 
 
 class SidebarButton(buttons.base.HoverIconButtonBase):
-    def __init__(self, *, parent, settings, label, icon=None, tooltip=None, data=None):
+    def __init__(
+        self, *, parent, settings, label, dims, icon=None, tooltip=None, data=None
+    ):
         super().__init__(
             parent=parent,
             settings=settings,
@@ -13,12 +14,12 @@ class SidebarButton(buttons.base.HoverIconButtonBase):
             icon=icon,
             tooltip=tooltip,
             data=data,
+            dims=dims,
             layout="horizontal",
-            width=constants.SIDEBAR_WIDTH,
-            height=constants.SIDEBAR_BUTTON_ICON_SIZE
-            + constants.SIDEBAR_BUTTON_PADDING * 2,
-            icon_size=constants.SIDEBAR_BUTTON_ICON_SIZE,
-            padding=constants.SIDEBAR_BUTTON_PADDING,
+            width=dims.sidebar_width,
+            height=dims.sidebar_button_icon_size + dims.sidebar_button_padding * 2,
+            icon_size=dims.sidebar_button_icon_size,
+            padding=dims.sidebar_button_padding,
             do_word_wrap=False,
             style_class="button_sidebar",
         )

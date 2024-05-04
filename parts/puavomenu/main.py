@@ -20,8 +20,7 @@ from gi.repository import Pango
 from gi.repository import GLib
 from gi.repository import Gio
 
-from constants import *
-
+import dimensions
 import utils
 import utils_gui
 
@@ -62,13 +61,14 @@ class PuavoMenu(Gtk.Window):
         dialog.hide()
         self.enable_out_of_focus_hide()
 
-    def __init__(self, settings, socket, program_start_time):
+    def __init__(self, settings, socket, program_start_time, dims):
         start_time = time.perf_counter()
 
         super().__init__(name="root")  # CSS ID
 
         self.__settings = settings
         self.__socket = socket
+        self.__dims = dims
 
         # ----------------------------------------------------------------------
         # Setup the window
@@ -93,7 +93,7 @@ class PuavoMenu(Gtk.Window):
             self.__exit_permitted = True
 
         self.set_resizable(False)
-        self.set_size_request(WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.set_size_request(dims.window_width, dims.window_height)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_gravity(Gdk.Gravity.SOUTH_WEST)
 
@@ -152,7 +152,7 @@ class PuavoMenu(Gtk.Window):
 
         # Storage for program and menu icons. Maintained
         # separately from the menu data.
-        self.__icons = icons.IconCache(1024, PROGRAM_BUTTON_ICON_SIZE)
+        self.__icons = icons.IconCache(1024, self.__dims.program_button_icon_size)
 
         # General-purpose "icon locator" system. Figuring out which icon
         # files to actually load is complicated.
@@ -177,7 +177,7 @@ class PuavoMenu(Gtk.Window):
 
         # Category tabs
         self.__category_buttons = Gtk.Notebook(name="category")
-        self.__category_buttons.set_size_request(CATEGORIES_WIDTH, -1)
+        self.__category_buttons.set_size_request(self.__dims.categories_width, -1)
         self.__category_buttons.set_scrollable(True)
         self.__category_buttons.connect("switch-page", self.__clicked_category)
         self.menu_fixed.put(self.__category_buttons, 0, 0)
@@ -186,8 +186,8 @@ class PuavoMenu(Gtk.Window):
         self.__back_button = Gtk.Button()
         self.__back_button.set_label("<<")
         self.__back_button.connect("clicked", self.__clicked_back_button)
-        self.__back_button.set_size_request(BACK_BUTTON_WIDTH, 30)
-        self.menu_fixed.put(self.__back_button, 0, BACK_BUTTON_Y)
+        self.__back_button.set_size_request(self.__dims.back_button_width, 30)
+        self.menu_fixed.put(self.__back_button, 0, self.__dims.back_button_y)
 
         # Menu label and description
         self.__menu_title = Gtk.Label(name="menu_title")
@@ -199,12 +199,14 @@ class PuavoMenu(Gtk.Window):
         self.__menu_title.set_use_markup(True)
 
         self.menu_fixed.put(
-            self.__menu_title, BACK_BUTTON_WIDTH + MAIN_PADDING, BACK_BUTTON_Y + 5
+            self.__menu_title,
+            self.__dims.back_button_width + self.__dims.main_padding,
+            self.__dims.back_button_y + 5,
         )
 
         # The search box
         self.__search = Gtk.SearchEntry()
-        self.__search.set_size_request(SEARCH_WIDTH, -1)
+        self.__search.set_size_request(self.__dims.search_width, -1)
         self.__search.set_max_length(10)  # you aren't going need more than this
 
         self.__search_changed_signal = self.__search.connect(
@@ -217,11 +219,17 @@ class PuavoMenu(Gtk.Window):
 
         self.__search.set_placeholder_text(_tr("search_placeholder"))
 
-        self.menu_fixed.put(self.__search, PROGRAMS_WIDTH - (SEARCH_WIDTH + 10) - 9, 40)
+        self.menu_fixed.put(
+            self.__search,
+            self.__dims.programs_width - (self.__dims.search_width + 10) - 9,
+            40,
+        )
 
         # The main programs list
         self.__programs_container = Gtk.ScrolledWindow(name="programs")
-        self.__programs_container.set_size_request(PROGRAMS_WIDTH, PROGRAMS_HEIGHT)
+        self.__programs_container.set_size_request(
+            self.__dims.programs_width, self.__dims.programs_height
+        )
         self.__programs_container.set_policy(
             Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC
         )
@@ -235,15 +243,17 @@ class PuavoMenu(Gtk.Window):
         self.__programs_icons = Gtk.Fixed()
         self.__programs_container.add_with_viewport(self.__programs_icons)
 
-        self.menu_fixed.put(self.__programs_container, 0, PROGRAMS_TOP)
+        self.menu_fixed.put(self.__programs_container, 0, self.__dims.programs_top)
 
         # Placeholder message for empty categories, menus and search results
         self.__empty = Gtk.Label(name="empty")
-        self.__empty.set_size_request(PROGRAMS_WIDTH, PROGRAMS_HEIGHT)
+        self.__empty.set_size_request(
+            self.__dims.programs_width, self.__dims.programs_height
+        )
         self.__empty.set_justify(Gtk.Justification.CENTER)
         self.__empty.set_xalign(0.5)
         self.__empty.set_yalign(0.5)
-        self.menu_fixed.put(self.__empty, 0, PROGRAMS_TOP)
+        self.menu_fixed.put(self.__empty, 0, self.__dims.programs_top)
 
         # Keep track of most frequently used programs
         self.__program_launch_counts = frequent_programs.ProgramLaunchesCounter(
@@ -251,17 +261,23 @@ class PuavoMenu(Gtk.Window):
         )
 
         self.__frequent_sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-        self.__frequent_sep.set_size_request(PROGRAMS_WIDTH, 1)
+        self.__frequent_sep.set_size_request(self.__dims.programs_width, 1)
 
         self.menu_fixed.put(
-            self.__frequent_sep, 0, PROGRAMS_TOP + PROGRAMS_HEIGHT + MAIN_PADDING
+            self.__frequent_sep,
+            0,
+            self.__dims.programs_top
+            + self.__dims.programs_height
+            + self.__dims.main_padding,
         )
 
-        self.__frequent_list = frequent_programs.FrequentProgramsList(self)
+        self.__frequent_list = frequent_programs.FrequentProgramsList(self, self.__dims)
 
-        self.__frequent_list.set_size_request(PROGRAMS_WIDTH, PROGRAM_BUTTON_HEIGHT)
+        self.__frequent_list.set_size_request(
+            self.__dims.programs_width, self.__dims.program_button_height
+        )
 
-        self.menu_fixed.put(self.__frequent_list, 0, FREQUENT_TOP)
+        self.menu_fixed.put(self.__frequent_list, 0, self.__dims.frequent_top)
 
         self.menu_fixed.show()
 
@@ -273,7 +289,7 @@ class PuavoMenu(Gtk.Window):
         # ----------------------------------------------------------------------
         # The sidebar: the user avatar, buttons, host infos
 
-        self.__sidebar = sidebar.Sidebar(self, self.__settings)
+        self.__sidebar = sidebar.Sidebar(self, self.__settings, self.__dims)
 
         # Main sidebar container
         self.sidebar_box = Gtk.Box(name="sidebar")
@@ -299,11 +315,17 @@ class PuavoMenu(Gtk.Window):
         # this is a bit convoluted, it works and makes the program fully
         # styleable with CSS.
         self.__main_container = Gtk.Fixed()
-        self.__main_container.set_size_request(WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.__main_container.set_size_request(
+            self.__dims.window_width, self.__dims.window_height
+        )
 
-        self.__main_container.put(self.menu_box, MAIN_PADDING, MAIN_PADDING)
+        self.__main_container.put(
+            self.menu_box, self.__dims.main_padding, self.__dims.main_padding
+        )
 
-        self.__main_container.put(self.sidebar_box, SIDEBAR_LEFT, SIDEBAR_TOP)
+        self.__main_container.put(
+            self.sidebar_box, self.__dims.sidebar_left, self.__dims.sidebar_top
+        )
 
         self.add(self.__main_container)
         self.__main_container.show()
@@ -527,8 +549,8 @@ class PuavoMenu(Gtk.Window):
             logging.info(
                 "Cached %d %dx%d pixel icons in %d atlases",
                 cache_stats["num_icons"],
-                PROGRAM_BUTTON_ICON_SIZE,
-                PROGRAM_BUTTON_ICON_SIZE,
+                self.__dims.program_button_icon_size,
+                self.__dims.program_button_icon_size,
                 cache_stats["num_atlases"],
             )
 
@@ -618,7 +640,7 @@ class PuavoMenu(Gtk.Window):
                 usable_ids.append(pid)
 
         # only show the N most often used programs
-        usable_ids = usable_ids[0:PROGRAMS_PER_ROW]
+        usable_ids = usable_ids[0 : self.__dims.programs_per_row]
 
         self.__frequent_list.update(
             usable_ids, self.menudata.programs, self.__settings, self.__icons, force
@@ -720,6 +742,7 @@ class PuavoMenu(Gtk.Window):
             icon=(self.__icons, program.icon),
             tooltip=program.description,
             data=program,
+            dims=self.__dims,
         )
 
     def __make_menu_button(self, menu):
@@ -730,6 +753,7 @@ class PuavoMenu(Gtk.Window):
             icon=(self.__icons, menu.icon),
             tooltip=menu.description,
             data=menu,
+            dims=self.__dims,
         )
 
     # Returns True if puavo-pkg installer icons should be hidden
@@ -772,11 +796,13 @@ class PuavoMenu(Gtk.Window):
         for index, button in enumerate(new_buttons):
             self.__programs_icons.put(button, xpos, ypos)
 
-            xpos += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
+            xpos += self.__dims.program_button_width + self.__dims.program_col_padding
 
-            if (index + 1) % PROGRAMS_PER_ROW == 0:
+            if (index + 1) % self.__dims.programs_per_row == 0:
                 xpos = 0
-                ypos += PROGRAM_BUTTON_HEIGHT + PROGRAM_ROW_PADDING
+                ypos += (
+                    self.__dims.program_button_height + self.__dims.program_row_padding
+                )
 
         self.__programs_icons.show_all()
 
@@ -1143,7 +1169,8 @@ class PuavoMenu(Gtk.Window):
             label = Gtk.Label()
             label.get_style_context().add_class("search_group")
             label.set_size_request(
-                PROGRAMS_WIDTH - SCROLLBAR_WIDTH, PROGRAMS_SEARCH_GROUP_HEIGHT
+                self.__dims.programs_width - self.__dims.scrollbar_width,
+                self.__dims.programs_search_group_height,
             )
             label.set_ellipsize(Pango.EllipsizeMode.END)
             label.set_xalign(0)
@@ -1157,7 +1184,7 @@ class PuavoMenu(Gtk.Window):
 
             self.__programs_icons.put(label, 0, ypos)
 
-            ypos += PROGRAMS_SEARCH_GROUP_HEIGHT + MAIN_PADDING
+            ypos += self.__dims.programs_search_group_height + self.__dims.main_padding
             xpos = 0
 
             for index, program in enumerate(group["programs"]):
@@ -1166,17 +1193,22 @@ class PuavoMenu(Gtk.Window):
 
                 self.__programs_icons.put(button, xpos, ypos)
 
-                xpos += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
+                xpos += (
+                    self.__dims.program_button_width + self.__dims.program_col_padding
+                )
 
-                if (index + 1) % PROGRAMS_PER_ROW == 0:
+                if (index + 1) % self.__dims.programs_per_row == 0:
                     # New line
                     xpos = 0
 
                     # Don't create a new line if there's nothing left
                     if index + 1 < len(group["programs"]):
-                        ypos += PROGRAM_BUTTON_HEIGHT + PROGRAM_ROW_PADDING
+                        ypos += (
+                            self.__dims.program_button_height
+                            + self.__dims.program_row_padding
+                        )
 
-            ypos += PROGRAM_BUTTON_HEIGHT + MAIN_PADDING
+            ypos += self.__dims.program_button_height + self.__dims.main_padding
 
         self.__programs_icons.show_all()
 
@@ -1359,8 +1391,8 @@ class PuavoMenu(Gtk.Window):
                 data = display.Display().screen().root.query_pointer()._data
 
                 return (
-                    int(data["root_x"]) - int(WINDOW_WIDTH / 2),
-                    int(data["root_y"]) - int(WINDOW_HEIGHT / 2),
+                    int(data["root_x"]) - int(self.__dims.window_width / 2),
+                    int(data["root_y"]) - int(self.__dims.window_height / 2),
                 )
             elif args[0] == "corner":
                 # Position the lower left corner at the specified
@@ -1763,7 +1795,10 @@ def run_puavomenu(settings, socket, program_start_time):
     logging.info("Entering run_puavomenu()")
 
     try:
-        PuavoMenu(settings, socket, program_start_time)
+        dims = dimensions.get_optimal_dims(
+            utils_gui.get_default_display_primary_monitor_resolution()
+        )
+        PuavoMenu(settings, socket, program_start_time, dims)
         Gtk.main()
 
         # Normal exit, try to remove the socket file but don't explode

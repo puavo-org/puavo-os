@@ -3,7 +3,6 @@
 import logging
 import os.path
 
-import constants
 import utils
 import menudata
 import loaders.menudata_loader
@@ -17,7 +16,8 @@ PACKAGE_DIRECTORY = "/var/lib/puavo-pkg/installed"
 
 # A placeholder icon used for puavo-pkg programs that are not installed yet
 # *and* and don't specify a installer custom icon
-INSTALLER_ICON = f"/usr/share/icons/Faenza/apps/{constants.PROGRAM_BUTTON_ICON_SIZE}/system-installer.png"
+def _get_installer_icon_file_path(icon_size):
+    return f"/usr/share/icons/Faenza/apps/{icon_size}/system-installer.png"
 
 
 # Detect dynamic installed/not-installed states for every listed package
@@ -36,7 +36,7 @@ def detect_package_states(id_string):
 
 # Sets up puavo-pkg program states (installed/not installed, etc.) and
 # deals with their icons and other things. Called from menudata_loader.py.
-def init_programs(programs, puavopkg_states):
+def init_programs(programs, puavopkg_states, icon_size):
     for pid, program in programs.items():
         if program["type"] != "desktop":
             continue
@@ -79,7 +79,7 @@ def init_programs(programs, puavopkg_states):
 
         if "icon" not in puavopkg:
             # No custom installer icon defined, use the stock icon
-            puavopkg["icon"] = INSTALLER_ICON
+            puavopkg["icon"] = _get_installer_icon_file_path(icon_size)
 
         if puavopkg_states[puavopkg["id"]]:
             # This program is already installed and can be used normally
@@ -108,7 +108,7 @@ def __program_uninstalled(program, icon_cache):
             icon_cache.unload_icon(old_icon)
 
     # Restore the old icon (either the stock installer icon, or the custom icon)
-    icon_name = INSTALLER_ICON
+    icon_name = _get_installer_icon_file_path(icon_cache.icon_size)
 
     if program.installer_icon:
         icon_name = program.installer_icon
