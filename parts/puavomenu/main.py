@@ -1819,7 +1819,8 @@ def run_puavomenu(settings, socket, program_start_time):
             pass
 
     except Exception as exception:
-        logging.error(exception, exc_info=True)
+        status["error"] = exception
+        logging.exception("Running PuavoMenu failed")
 
     # We get here only in development mode
     logging.info("Exiting run_puavomenu()")

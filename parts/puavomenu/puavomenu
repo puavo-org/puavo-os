@@ -307,9 +307,12 @@ try:
     status = main.run_puavomenu(settings, sock, program_start)
     if status.pop("has_resolution_changed", False):
         exitstatus = 2
+    elif "error" in status:
+        exitstatus = 1
 except Exception as exception:
     # This is bad. Very bad. The exception bubbled all the way up to here,
     # so this is fatal.
+    exitstatus = 1
     logging.fatal(str(exception), exc_info=True)
 
     if settings.prod_mode:
