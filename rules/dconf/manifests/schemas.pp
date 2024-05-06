@@ -21,9 +21,4 @@ class dconf::schemas {
        source => $srcfile;
     }
   }
-
-  ::dconf::schemas::schema {
-    'org.gnome.puavo.gschema.xml':
-      srcfile => 'puppet:///modules/dconf/org.gnome.puavo.gschema.xml';
-  }
 }
