@@ -52,7 +52,7 @@ fix_browser_lock() {
 
 browser_running() {
   # this checks browser activity on this host
-  pgrep -x -U "$USER" chromium >/dev/null
+  pgrep -U "$USER" -f /usr/lib/chromium/chromium >/dev/null
 }
 
 manage_preferences() {
