@@ -1,5 +1,4 @@
 class gnome_shell_extensions {
-  include ::dconf::schemas
   include ::packages
   include ::themes
 
@@ -15,9 +14,6 @@ class gnome_shell_extensions {
   }
 
   ::gnome_shell_extensions::add_extension {
-    'hide-panel-power-indicator@puavo.org':
-      require => ::Dconf::Schemas::Schema['org.gnome.puavo.gschema.xml'];
-
     'quickoverview@kirby_33@hotmail.fr':
       require => [ ::Themes::Iconlink['scalable/places/puavo-base-user-desktop.svg']
                  , ::Themes::Iconlink['scalable/places/puavo-hover-user-desktop.svg' ] ];
