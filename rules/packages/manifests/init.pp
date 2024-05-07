@@ -783,7 +783,6 @@ class packages {
     , 'blueman'
     , 'desktop-file-utils'
     , 'detox'
-    , 'devilspie2'
     , 'duplicity'
     , 'exfat-fuse'
     , 'flameshot'

@@ -25,9 +25,6 @@ desktop
 desktop_cups
     Configurations for cups for desktop hosts.
 
-devilspie
-    Special window management rules for devilspie.
-
 disable_accounts_service
     Accounts service daemon is not needed by our system and it seriously
     slows system down in Trusty, at login time and otherwise.  This module
