@@ -98,5 +98,25 @@
         giving up and going back to user selection.
       </description>
     </key>
+    <key name="enable-guestuser" type="b">
+      <default>true</default>
+      <summary>
+        Enable guestlogin feature
+      </summary>
+      <description>
+        Enable guestlogin feature.
+      </description>
+    </key>
+    <key name="accepted-usernames-for-userlist" type="s">
+      <default>''</default>
+      <summary>
+        Accepted usernames for userlist
+      </summary>
+      <description>
+        Comma-separated list of usernames (loginnames), that list the accepted
+        users on the userlist, when that is enabled.  If the list contains
+        "*", all usernames are accepted.
+      </description>
+    </key>
   </schema>
 </schemalist>
