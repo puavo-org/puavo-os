@@ -39,6 +39,5 @@ class desktop::puavodesktop {
   }
 
   Package <| title == faenza-icon-theme
-          or title == light-themes
           or title == puavomenu |>
 }
