@@ -25,7 +25,6 @@ class gnome_shell_extensions {
     , 'bottompanel@tmoer93'
     , 'dash-to-panel@jderose9.github.com'
     , 'ding@rastersoft.com'
-    , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
     , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
