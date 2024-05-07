@@ -56,7 +56,6 @@ class puavo_pkg::packages {
 			, 'rustdesk'
 			, 'schoolstore-ti-widgets'
 			, 'scratux'
-			, 'shotcut'
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'

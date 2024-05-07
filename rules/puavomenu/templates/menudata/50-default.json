@@ -1054,6 +1054,9 @@
         "org.qgis.qgis": {
             "tags": "default"
         },
+        "org.shotcut.Shotcut": {
+            "tags": "default"
+        },
         "org.stellarium.Stellarium": {
             "name": {
                 "fi": "Stellarium-planetaario",
@@ -1277,9 +1280,6 @@
                 "de": "Scribus Seitengestaltung"
             },
             "tags": "default, office"
-        },
-        "shotcut": {
-            "tags": "default"
         },
         "shotwell": {
             "name": {
@@ -1783,7 +1783,7 @@
                 "org.openshot.OpenShot",
                 "org.kde.kdenlive",
                 "org.pitivi.Pitivi",
-                "shotcut",
+                "org.shotcut.Shotcut",
                 "solfege",
                 "mscore3",
                 "musescore-appimage",

@@ -188,6 +188,7 @@ class packages {
     , 'pavucontrol'
     , 'pavumeter'
     , 'qstopmotion'
+    , 'shotcut'
     , 'simplescreenrecorder'
     , 'timidity' ]:
       tag => [ 'tag_audio', 'tag_debian_desktop', ];
