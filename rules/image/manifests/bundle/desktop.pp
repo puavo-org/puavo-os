@@ -8,7 +8,6 @@ class image::bundle::desktop {
   include ::disable_unclutter
   include ::exec_restrictions
   include ::firefox
-  include ::fontconfig
   include ::fuse
   include ::gdm
   include ::gnome_terminal
