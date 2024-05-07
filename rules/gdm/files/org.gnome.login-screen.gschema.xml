@@ -1,65 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist>
-  <schema path="/org/gnome/login-screen/" id="org.gnome.login-screen">
-    <key type="b" name="enable-fingerprint-authentication">
+<schemalist gettext-domain="gdm">
+  <schema id="org.gnome.login-screen" path="/org/gnome/login-screen/">
+    <key name="enable-fingerprint-authentication" type="b">
       <default>true</default>
-      <summary>Whether or not to allow fingerprint readers for login</summary>
-      <description>The login screen can optionally allow users who have enrolled their fingerprints to log in using those prints.</description>
+      <summary>
+        Whether or not to allow fingerprint readers for login
+      </summary>
+      <description>
+        The login screen can optionally allow users who have enrolled
+        their fingerprints to log in using those prints.
+      </description>
     </key>
-    <key type="b" name="enable-smartcard-authentication">
+    <key name="enable-smartcard-authentication" type="b">
       <default>true</default>
-      <summary>Whether or not to allow smartcard readers for login</summary>
-      <description>The login screen can optionally allow users who have smartcards to log in using those smartcards.</description>
+      <summary>
+        Whether or not to allow smartcard readers for login
+      </summary>
+      <description>
+        The login screen can optionally allow users who have smartcards
+        to log in using those smartcards.
+      </description>
     </key>
-    <key type="b" name="enable-password-authentication">
+    <key name="enable-password-authentication" type="b">
       <default>true</default>
-      <summary>Whether or not to allow passwords for login</summary>
-      <description>The login screen can be configured to disallow password authentication, forcing the user to use smartcard or fingerprint authentication.</description>
+      <summary>
+        Whether or not to allow passwords for login
+      </summary>
+      <description>
+        The login screen can be configured to disallow password authentication,
+        forcing the user to use smartcard or fingerprint authentication.
+      </description>
     </key>
-    <key type="s" name="logo">
+    <key name="logo" type="s">
       <default>''</default>
-      <summary>Path to small image at top of user list</summary>
-      <description>The login screen can optionally show a small image to provide site administrators and distributions a way to display branding.</description>
+      <summary>
+        Path to small image at top of user list
+      </summary>
+      <description>
+        The login screen can optionally show a small image to provide site
+        administrators and distributions a way to display branding.
+      </description>
     </key>
-    <key type="s" name="fallback-logo">
+    <key name="fallback-logo" type="s">
       <default>''</default>
-      <summary>Path to small image at top of user list</summary>
-      <description>The fallback login screen can optionally show a small image to provide site administrators and distributions a way to display branding.</description>
+      <summary>
+        Path to small image at top of user list
+      </summary>
+      <description>
+        The fallback login screen can optionally show a small image to provide
+        site administrators and distributions a way to display branding.
+      </description>
     </key>
-    <key type="b" name="disable-user-list">
+    <key name="disable-user-list" type="b">
       <default>false</default>
-      <summary>Avoid showing user list</summary>
-      <description>The login screen normally shows a list of available users to log in as. This setting can be toggled to disable showing the user list.</description>
+      <summary>
+        Avoid showing user list
+      </summary>
+      <description>
+        The login screen normally shows a list of available users to log in
+        as. This setting can be toggled to disable showing the user list.
+      </description>
     </key>
-    <key type="b" name="banner-message-enable">
+    <key name="banner-message-enable" type="b">
       <default>false</default>
-      <summary>Enable showing the banner message</summary>
-      <description>Set to true to show the banner message text.</description>
+      <summary>
+        Enable showing the banner message
+      </summary>
+      <description>
+        Set to true to show the banner message text.
+      </description>
     </key>
-    <key type="s" name="banner-message-text">
+    <key name="banner-message-text" type="s">
       <default>''</default>
-      <summary>Banner message text</summary>
-      <description>Text banner message to show in the login window.</description>
+      <summary>
+        Banner message text
+      </summary>
+      <description>
+        Text banner message to show in the login window.
+      </description>
     </key>
-    <key type="b" name="disable-restart-buttons">
+    <key name="disable-restart-buttons" type="b">
       <default>false</default>
-      <summary>Disable showing the restart buttons</summary>
-      <description>Set to true to disable showing the restart buttons in the login window.</description>
+      <summary>
+        Disable showing the restart buttons
+      </summary>
+      <description>
+        Set to true to disable showing the restart buttons in the login window.
+      </description>
     </key>
-    <key type="i" name="allowed-failures">
+    <key name="allowed-failures" type="i">
       <default>3</default>
-      <summary>Number of allowed authentication failures</summary>
-      <description>The number of times a user is allowed to attempt authentication, before giving up and going back to user selection.</description>
-    </key>
-    <key type="b" name="enable-guestuser">
-      <default>true</default>
-      <summary>Enable guestlogin feature.</summary>
-      <description>Enable guestlogin feature.</description>
-    </key>
-    <key type="s" name="accepted-usernames-for-userlist">
-      <default>''</default>
-      <summary>Accepted usernames for userlist.</summary>
-      <description>Comma-separated list of usernames (loginnames), that list the accepted users on the userlist, when that is enabled.  If the list contains "*", all usernames are accepted.</description>
+      <summary>
+        Number of allowed authentication failures
+      </summary>
+      <description>
+        The number of times a user is allowed to attempt authentication, before
+        giving up and going back to user selection.
+      </description>
     </key>
   </schema>
 </schemalist>
