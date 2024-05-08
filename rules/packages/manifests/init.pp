@@ -838,14 +838,14 @@ class packages {
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
   $nvidia_dkms_470_module   = 'nvidia-tesla-470/470.223.02'
   $nvidia_dkms_525_module   = 'nvidia-current/525.147.05'
-  $r8168_module             = 'r8168/8.050.03'
+  $r8168_module             = 'r8168/8.051.02'
   $virtualbox_module        = 'virtualbox/7.0.12'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
                       , $nvidia_dkms_470_module
                       , $nvidia_dkms_525_module
+		      , $r8168_module
 		      , $virtualbox_module      ]
-		    # , $r8168_module                   # XXX bookworm
 
   packages::kernels::kernel_package {
     '6.1.0-18-amd64':
