@@ -1,5 +1,12 @@
-# /etc/modules: kernel modules to load at boot time.
+# List of modules that you want to include in your initramfs.
+# They will be loaded at boot time in the order below.
 #
-# This file contains the names of kernel modules that should be loaded
-# at boot time, one per line. Lines beginning with "#" are ignored.
+# Syntax:  module_name [args ...]
+#
+# You must run update-initramfs(8) to effect this change.
+#
+# Examples:
+#
+# raid1
+# sd_mod
 r8152
