@@ -1,4 +1,0 @@
-@include puavo-cached-auth
-
-account required        pam_permit.so
-session required        pam_permit.so
