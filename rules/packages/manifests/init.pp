@@ -321,7 +321,7 @@ class packages {
     , 'firmware-b43-installer'
     , 'firmware-b43legacy-installer'
     , 'firmware-linux-free'
-    # , 'firmware-microbit-micropython' # XXX bookworm
+    , 'firmware-microbit-micropython'
     , 'firmware-tomu'
     , 'hdmi2usb-fx2-firmware'
     , 'isight-firmware-tools'
