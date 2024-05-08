@@ -183,7 +183,7 @@ class packages {
     , 'wavemon'
     , 'whois'
     , 'wireguard-tools'
-    # , 'wsmancli'                      # XXX bookworm
+    , 'wsmancli'
     , 'x11vnc'
     , 'xvfb'
     , 'xbacklight'
