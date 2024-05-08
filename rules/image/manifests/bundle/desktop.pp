@@ -16,7 +16,6 @@ class image::bundle::desktop {
   include ::ibus
   include ::image::bundle::basic
   include ::java
-  include ::keyutils
   include ::libdvdcss
   include ::network_manager
   include ::nextcloud
