@@ -411,10 +411,6 @@ class packages {
     , 'pidgin-plugin-pack' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
 
-    # XXX some issue on Debian
-    # [ 'kdump-tools' ]:
-    #   tag => [ 'tag_kernelutils', 'tag_debian_desktop', ];
-
     [ 'libportaudiocpp0'        # needed by xournalpp puavo-pkg
     , 'libuvc0' ]:              # needed by visualizer puavo-pkg
       tag => [ 'tag_libraries', 'tag_debian_desktop', ];
@@ -761,7 +757,6 @@ class packages {
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
-    # XXX bullseye , 'libqwt5-qt4'        # aseba
     , 'libusb-0.1-4'                      # mindplus
     , 'python3-bluez'                     # pyscrlink
     , 'python3-cffi'                      # pyscrlink
@@ -863,18 +858,6 @@ class packages {
       dkms_modules => [ $broadcom_sta_dkms_module, $virtualbox_module ],
       package_name => 'linux-image-6.6.13-amd64-unsigned';
   }
-
-  # Packages which are not restricted per se, but which are required by
-  # restricted packages. These need to be installed and distributed in
-  # the image to minimize the effort of installing restricted packages
-  # "during runtime".
-# XXX buster
-# @package {
-#   [ 'libnspr4-0d'    # spotify
-#   , 'libssl1.0.0'    # spotify
-#   , 'lsb-core' ]:    # google-earth
-#     tag => [ 'tag_debian_desktop', 'tag_required-by-restricted' ];
-# }
 
   # various contrib/non-free stuff, firmwares and such
   @package {
