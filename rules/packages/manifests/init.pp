@@ -380,13 +380,11 @@ class packages {
     , 'geeqie'
     , 'gimp'
     , 'gimp-data-extras'
-    # , 'gimp-gap'              # XXX bookworm
     , 'gimp-plugin-registry'
     , 'godot3'
     , 'gthumb'
     , 'inkscape'
     , 'kdenlive'
-    # , 'kino'                  # XXX missing from Bullseye
     , 'kolourpaint'
     , 'krita'
     , 'krita-l10n'
@@ -526,7 +524,6 @@ class packages {
     , 'python3-pip'
     , 'python3-pygame'
     , 'python-is-python3'
-    # , 'pythontracer'  # XXX missing from Bullseye
     , 'racket'
     , 'racket-doc'
     # , 'renpy'         # XXX missing from Bullseye
