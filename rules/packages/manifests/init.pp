@@ -526,7 +526,6 @@ class packages {
     , 'python-is-python3'
     , 'racket'
     , 'racket-doc'
-    # , 'renpy'         # XXX missing from Bullseye
     , 'sbcl'
     , 'scite'
     , 'scratch'
