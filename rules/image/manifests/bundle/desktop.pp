@@ -17,7 +17,6 @@ class image::bundle::desktop {
   include ::image::bundle::basic
   include ::java
   include ::keyutils
-  # include ::ktouch                    # XXX buster
   include ::libdvdcss
   include ::network_manager
   include ::nextcloud
