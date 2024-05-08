@@ -19,12 +19,19 @@ produce_tahoma() {
     echo "Tahoma already exists, doing nothing."
     return 0
   fi
-  if ! md5sum /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf | grep -q 'f59457d7ce48dd38a0c8aee8afc6f91a'; then
+  if ! md5sum /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf | grep -q '4cc160d1da14d4598cef75f69c3c6385'; then
     echo "Not a known source font file, doing nothing."
     return 0
   fi
 
-  echo -n "1sPEAAUCHWZlaWtraXRhaG9tYS50dGYvL3RhaG9tYS50dGYvBa6aVABkrppFAy8mBH0FhjMT/Td6WFoAAAD/EtlBAgAhAQwAAACPmEGcAQASVABhAGgAbwBtAGEAAFRhaG9tYQr9N3pYWgAAAP8S2UECACEBDAAAAI+YQZwBAAkTqbcKARMThOMoAKm3LA==" \
+  # What's up / how to update: Edit DejaVuSans.ttf with a hex editor. Replace two first instances of DejaVu
+  # Sans with Tahoma (first instance: 2-byte characters, second instance: 1-byte). Copy it to a wineprefix and
+  # verify it is valid by e.g. observing that Greek alphabet are rendered properly when font is Tahoma. Run
+  # xdelta3 -s /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf editedDejaVuSans.ttf diff-file
+  # to get the diff. Make it base64 with
+  # base64 diff-file
+  # and replace the echoed part below
+  echo -n "1sPEAAUCIWZha2V0YWhvbWEudHRmLy9ib29rd29ybXNhbnMudHRmLwWurygAZK6vGQMvJgTqhujQE/03elhaAAAA/xLZQQIAIQEMAAAAj5hBnAEAElQAYQBoAG8AbQBhAABUYWhvbWEK/Td6WFoAAAD/EtlBAgAhAQwAAACPmEGcAQAJE6nLXgETE4TjKACpzAA=" \
     | base64 --decode | xdelta3 -d -c -s /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf /dev/stdin > "${TAHOMAPATH}.tmp"
   mv "${TAHOMAPATH}.tmp" "${TAHOMAPATH}"
 }
