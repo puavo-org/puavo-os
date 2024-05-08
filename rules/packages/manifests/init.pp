@@ -485,8 +485,8 @@ class packages {
     , 'vym' ]:
       tag => [ 'tag_office', 'tag_debian_desktop', ];
 
-    [ 'eject'
-    , 'devede'
+    [ 'devede'
+    , 'eject'
     , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian_desktop', ];
 
@@ -768,6 +768,15 @@ class packages {
     ]:
       tag => [ 'tag_puavopkg', 'tag_debian_desktop', ];
 
+    [ 'arc-theme'
+    , 'deepin-icon-theme'
+    , 'faenza-icon-theme'
+    , 'obsidian-icon-theme'
+    , 'yaru-theme-gnome-shell'
+    , 'yaru-theme-gtk'
+    , 'yaru-theme-icon' ]:
+      tag => [ 'tag_themes', 'tag_debian_desktop', ];
+
     [ 'anki'
     , 'bindfs'
     , 'binfmt-support'
@@ -815,24 +824,9 @@ class packages {
     , 'php-sqlite3'
     , 'sqlite3' ]:
       tag => [ 'tag_web', 'tag_debian_desktop', ];
-  }
-
-  #
-  # packages from the (Opinsys) puavo repository
-  #
-
-  @package {
-    [ 'arc-theme'
-    , 'deepin-icon-theme'
-    , 'faenza-icon-theme'
-    , 'obsidian-icon-theme'
-    , 'yaru-theme-gnome-shell'
-    , 'yaru-theme-gtk'
-    , 'yaru-theme-icon' ]:
-      tag => [ 'tag_themes', 'tag_puavo', ];
 
    'openboard':
-     tag => [ 'tag_whiteboard', 'tag_puavo', ];
+     tag => [ 'tag_whiteboard', 'tag_debian_desktop', ];
   }
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
