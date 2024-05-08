@@ -21,7 +21,7 @@ find /tmp /var/tmp -mindepth 1 -maxdepth 1 -user "$guestuser" -print0 \
 
 rm -rf "$guesthome"
 
-cp -RT /etc/guest-session/skel "$guesthome"
+cp -RT /etc/skel "$guesthome"
 chown -R "${guestuser}:" "$guesthome"
 chmod 700 "$guesthome"
 
