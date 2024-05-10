@@ -63,11 +63,6 @@ class themes {
       target => 'Tela/scalable/places/purple-user-desktop.svg';
   }
 
-  ::puavo_conf::definition {
-    'puavo-themes.json':
-      source => 'puppet:///modules/themes/puavo-themes.json';
-  }
-
   Package <|
        title == arc-theme
     or title == qt5ct
