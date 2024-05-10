@@ -68,7 +68,11 @@ class themes {
       source => 'puppet:///modules/themes/puavo-themes.json';
   }
 
-  Package <| title == arc-theme and title == qt5ct and title == qt5-style-kvantum |>
+  Package <|
+       title == arc-theme
+    or title == qt5ct
+    or title == qt5-style-kvantum
+  |>
 
   Puavo_pkg::Install <| title == tela-icon-theme |>
 }
