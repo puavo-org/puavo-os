@@ -1,0 +1,50 @@
+#!/bin/sh
+
+set -eu
+
+# This is not necessary if puavo.xsessions.display_manager != "lightdm",
+# but this should be fast so we will do this anyway.
+
+case "$(puavo-conf puavo.xsessions.default)" in
+  puavo-ers)
+    desktop_session_name='puavo-desktop'
+    lightdm_user='puavo-ers'
+    xsession='desktop-session'
+    ;;
+  puavo-infotv)
+    desktop_session_name='puavo-infotv'
+    lightdm_user='puavo-infotv'
+    xsession='infotv-session'
+    ;;
+  puavo-usb-factory)
+    desktop_session_name='puavo-usb-factory'
+    lightdm_user='puavo-usb-factory'
+    xsession='usb-factory-session'
+    ;;
+  puavo-user-registration)
+    desktop_session_name='puavo-user-registration'
+    lightdm_user='guest'
+    xsession='desktop-session'
+    ;;
+  puavo-webkiosk)
+    desktop_session_name='puavo-webkiosk'
+    lightdm_user='guest'
+    xsession='desktop-session'
+    ;;
+  *)
+    exit 0
+    ;;
+esac
+
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat <<EOF > /etc/lightdm/conf.tmp
+
+[Seat:*]
+autologin-user=${lightdm_user}
+#session-wrapper=/usr/bin/env DESKTOP_SESSION=${desktop_session_name} /usr/lib/puavo-ltsp-client/run-lightdm-session #FIXME somewhy not working, TODO inspect later
+autologin-session=${xsession}
+
+
+EOF
+
+mv /etc/lightdm/cond.tmp /etc/lightdm/lightdm.conf.d/lightdm-autologin-greeter.conf

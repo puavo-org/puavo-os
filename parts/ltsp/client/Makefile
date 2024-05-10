@@ -113,6 +113,7 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
 		pam/puavo-can-do-local-login \
+		pam/puavo-lightdm-pam-setup \
 		pam/puavo-login \
 		pam/puavo-manage-homedir \
 		pam/puavo-manage-user-role-groups \

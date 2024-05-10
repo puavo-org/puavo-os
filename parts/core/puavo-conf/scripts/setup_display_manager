@@ -9,6 +9,11 @@ case "$dm" in
     default_dm='/usr/sbin/gdm3'
     dm_service='/lib/systemd/system/gdm3.service'
     ;;
+  lightdm)
+    # Activate the "lightdm" mode, replacement for nodm
+    default_dm='/usr/sbin/lightdm'
+    dm_service='/lib/systemd/system/lightdm.service'
+    ;;
   nodm)
     # Activate the "nodm"-mode
     default_dm='/usr/sbin/nodm'

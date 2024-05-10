@@ -26,7 +26,7 @@ is_netboot_exception() {
 dm=$(puavo-conf puavo.xsessions.display_manager)
 
 case "$dm" in
-  gdm|nodm)
+  gdm|lightdm|nodm)
     if is_netboot_exception; then
       puavo-conf puavo.xsessions.display_manager puavo-darkdm
     else

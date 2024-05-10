@@ -9,6 +9,7 @@ class desktop::puavodesktop {
   include ::desktop::mimedefaults
   include ::gnome_shell_extensions
   include ::gnome_shell_helper
+  include ::lightdm
   include ::nodm
   include ::packages
   include ::puavomenu

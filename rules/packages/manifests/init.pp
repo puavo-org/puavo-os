@@ -654,6 +654,7 @@ class packages {
     , 'libsasl2-modules'
     , 'libttspico-utils' #German and English TTS
     , 'libxcb-xtest0' #dependency for Zoom
+    , 'lightdm'                                 # for infotv
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'
