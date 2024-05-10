@@ -1,17 +1,19 @@
 Short explanations for puppet modules listed here (to know exactly what
 they do, you need to look inside):
 
+(Documentation for many modules here is missing.)
+
 avahi_daemon
     Configuration for avahi-daemon.
 
 backgrounds
     Some backgrounds for login screen and desktop.
 
-blueman
-    Remove autostart file for blueman.
-
 bigtouch
     Gnome 3 customizations for big touchscreens.
+
+blueman
+    Remove autostart file for blueman.
 
 chromium
     Setup some chromium configurations.
@@ -25,12 +27,7 @@ desktop
 desktop_cups
     Configurations for cups for desktop hosts.
 
-disable_accounts_service
-    Accounts service daemon is not needed by our system and it seriously
-    slows system down in Trusty, at login time and otherwise.  This module
-    disables it (while leaving the package intact).
-
-disable_hp_accel
+disable_hp_accel_module
     Disable HP accelerometer (triggers automatic screen rotation but does
     not work properly).
 
@@ -45,9 +42,6 @@ docker
 
 dpkg
     A helper module for dealing with dpkg.
-
-espon_scanner
-    Special udev- and sane-configurations for a particular Espon scanner.
 
 extra_boot_scripts
     Extra boot scripts -implementation.
@@ -84,21 +78,11 @@ install_hp_plugins
 java
     Our Java wrapper.
 
-kaffeine
-    Some tuning for kaffeine-dvd.desktop for watching DVDs.
-
 kernels
     Kernel related stuff.
 
-keyboard_hw_quirks
-    Additional quirks for keyboard hardware (udev hwdb-rules).
-
 libdvdcss
     Support for watching encrypted DVDs.
-
-libreoffice
-    Set default office formats to MS Office formats, and add a "sujutellaan"
-    font.
 
 locales
     Configure needed locales and language support.
@@ -143,9 +127,6 @@ rpcgssd
 
 themes
     Themes for desktop.
-
-ti_nspire_cx_cas
-    Module for installing TI-Nspire CX CAS and setting it up.
 
 tmux
     Tmux configurations.
