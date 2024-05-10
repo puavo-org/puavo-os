@@ -1,11 +1,10 @@
-# Configuration for the rng-tools initscript
-# $Id: rng-tools.default,v 1.1.2.5 2008-06-10 19:51:37 hmh Exp $
-
-# This is a POSIX shell fragment
+# -*- mode: sh -*-
+#-
+# Configuration for the rng-tools-debian initscript
 
 # Set to the input source for random data, leave undefined
 # for the initscript to attempt auto-detection.  Set to /dev/null
-# for the viapadlock and tpm drivers.
+# for the viapadlock driver.
 #HRNGDEVICE=/dev/hwrng
 #HRNGDEVICE=/dev/null
 HRNGDEVICE=/dev/urandom
@@ -16,4 +15,9 @@ HRNGDEVICE=/dev/urandom
 #RNGDOPTIONS="--hrng=intelfwh --fill-watermark=90% --feed-interval=1"
 #RNGDOPTIONS="--hrng=viakernel --fill-watermark=90% --feed-interval=1"
 #RNGDOPTIONS="--hrng=viapadlock --fill-watermark=90% --feed-interval=1"
-#RNGDOPTIONS="--hrng=tpm --fill-watermark=90% --feed-interval=1"
+# For TPM (also add tpm-rng to /etc/initramfs-tools/modules or /etc/modules):
+#RNGDOPTIONS="--fill-watermark=90% --feed-interval=1"
+
+# If you need to configure which RNG to use, do it here:
+#HRNGSELECT="virtio_rng.0"
+# Use this instead of sysfsutils, which starts too late.
