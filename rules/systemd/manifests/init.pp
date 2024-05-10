@@ -3,9 +3,6 @@ class systemd {
   include ::systemd::sysusers
 
   file {
-    '/etc/pam.d/systemd-user':
-      source  => 'puppet:///modules/systemd/etc_pam.d_systemd-user';
-
     '/etc/systemd/system.conf':
       require => Package['systemd'],
       source  => 'puppet:///modules/systemd/system.conf';
