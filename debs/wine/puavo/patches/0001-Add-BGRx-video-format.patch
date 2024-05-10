@@ -1,14 +1,14 @@
-From 699ca812a7e6ce1af5f495ecf7c9b8cfc8eba437 Mon Sep 17 00:00:00 2001
+From 6b3fc5c32d59973c02638913313ad22967931a16 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Tue, 13 Feb 2024 21:06:52 +0200
-Subject: [PATCH 1/6] Add BGRx video format
+Subject: [PATCH] Add BGRx video format
 
 ---
  dlls/winegstreamer/media_source.c | 7 ++++---
  1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/dlls/winegstreamer/media_source.c b/dlls/winegstreamer/media_source.c
-index 3b5469932f3..d72ecc92fcc 100644
+index d4b7e9a0051..bfbf4dd2338 100644
 --- a/dlls/winegstreamer/media_source.c
 +++ b/dlls/winegstreamer/media_source.c
 @@ -391,7 +391,7 @@ static HRESULT stream_descriptor_set_tag(IMFStreamDescriptor *descriptor, wg_par
