@@ -1,14 +1,18 @@
 class supplementary_groups {
   include ::packages
 
-  $groups = [ 'bluetooth'
+  $groups = [ 'audio'
+            , 'bluetooth'
             , 'cdrom'
             , 'dialout'
+            , 'dip'
             , 'floppy'
             , 'lp'
+            , 'netdev'
             , 'plugdev'
             , 'puavodesktop'
             , 'scanner'
+            , 'users'
             , 'vboxusers'
             , 'video' ]
 
