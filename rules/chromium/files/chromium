@@ -5,6 +5,19 @@ set -eu
 browser_dir=~/.config/chromium
 browser_name='Chromium'
 
+# workaround bug https://issues.chromium.org/issues/40936572
+apply_sso_workaround() {
+  local_state_path="${browser_dir}/Local State"
+  if [ -e "$local_state_path" ]; then
+    # "Local State" exists, we're too late and will not bother
+    return 0
+  fi
+
+  jq --null-input '.net.received_http_auth_negotiate_headers = true' \
+    > "${local_state_path}.tmp" || return 1
+  mv "${local_state_path}.tmp" "$local_state_path" || return 1
+}
+
 browser_is_active() {
   # this checks browser activity on any host sharing the home directory
   local browser_dir latest_modified
@@ -52,7 +65,7 @@ fix_browser_lock() {
 
 browser_running() {
   # this checks browser activity on this host
-  pgrep -x -U "$USER" chromium >/dev/null
+  pgrep -U "$USER" -f /usr/lib/chromium/chromium >/dev/null
 }
 
 manage_preferences() {
@@ -106,6 +119,8 @@ if ! browser_running; then
   fi
 
   manage_preferences '.browser.custom_chrome_frame = false' || true
+
+  apply_sso_workaround || true
 fi
 
 exec /usr/bin/chromium.distrib $default_args \

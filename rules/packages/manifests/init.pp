@@ -198,6 +198,7 @@ class packages {
     , 'pavucontrol'
     , 'pavumeter'
     , 'qstopmotion'
+    , 'shotcut'
     , 'simplescreenrecorder'
     , 'timidity'
     , 'vorbis-tools' ]:
