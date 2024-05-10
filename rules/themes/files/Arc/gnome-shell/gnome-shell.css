@@ -1000,7 +1000,7 @@ StScrollBar StButton#vhandle:active, StScrollBar StButton#hhandle:active { backg
 
 .user-icon:hover { color: #BAC3CF; }
 
-.user-icon StIcon { background-color: rgba(186, 195, 207, 0.25); border-radius: 99px; padding: 12px; width: 40px; height: 40px; }
+.user-icon StIcon { background-color: rgba(186, 195, 207, 0.55); border-radius: 99px; padding: 12px; width: 40px; height: 40px; }
 
 .login-dialog-user-list-item:selected .user-icon StIcon { background-color: rgba(255, 255, 255, 0.25); }
 
@@ -1100,7 +1100,7 @@ StScrollBar StButton#vhandle:active, StScrollBar StButton#hhandle:active { backg
 
 .login-dialog-timed-login-indicator { height: 2px; background-color: #BAC3CF; }
 
-.login-dialog-prompt-layout { padding-top: 24px; padding-bottom: 12px; spacing: 8px; width: 23em; }
+.login-dialog-prompt-layout { padding-top: 30px; padding-bottom: 20px; spacing: 8px; width: 23em; padding-left: 3em; padding-right: 3em; background-color: rgba(0, 0, 0, 0.5); border-radius: 5px; }
 
 .login-dialog-prompt-entry { height: 1.5em; }
 
