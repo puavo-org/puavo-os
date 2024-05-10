@@ -9,4 +9,5 @@ class udev {
   include ::udev::pbrick
   include ::udev::unblock_wifi
   include ::udev::vernier
+  include ::udev::wacom
 }

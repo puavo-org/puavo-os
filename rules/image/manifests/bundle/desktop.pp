@@ -38,7 +38,6 @@ class image::bundle::desktop {
   include ::udisks2
   include ::veyon
   include ::vym
-  include ::wacom
   include ::wine
   include ::xorg
 
