@@ -7,7 +7,6 @@ class udev {
   include ::udev::microbit
   include ::udev::pasco
   include ::udev::pbrick
-  include ::udev::udevtrigger_workaround
   include ::udev::unblock_wifi
   include ::udev::vernier
 }
