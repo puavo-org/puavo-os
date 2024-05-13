@@ -125,7 +125,7 @@ list_disks() {
     fi
     if [ -z "$disk_model" ]; then disk_model='unknown model'; fi
 
-    disk_label="${disk_model} / $(facter disks.${disk}.size)"
+    disk_label="$(facter disks.${disk}.size) / ${disk_model}"
     colorized_disk_info=$(colorize disk \
                                    128000000000 256000000000 512000000000 \
                                    "$(facter disks.${disk}.size_bytes)"   \
@@ -281,7 +281,7 @@ windows_license() {
   windows_product_key=$(
     strings /sys/firmware/acpi/tables/MSDM 2>/dev/null \
       | awk '$1 ~ /^[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}$/')
-  [ -z "$windows_product_key" ] && return 0
+  [ -z "$windows_product_key" ] && colorize license 1 1 1 "0" "No license"
   machine_build_id=$(strings /sys/firmware/dmi/tables/DMI 2>/dev/null \
                        | grep '^BUILDID')
   if [ -n "$machine_build_id" ]; then
@@ -354,18 +354,19 @@ darkdm_common_systeminfo()
                                     "$product_name")
 
   cat <<EOF
+bootserver: ${image_server}
 image:   ${this_image}
 release: ${this_release}
 
 bios:            $(facter dmi.bios.vendor) / $(check_bios_version) $(firmwaremode)
+product:         $(facter dmi.manufacturer) / ${colorized_product_name}
 cpu:             ${colorized_cpu}
-$(list_disks)
 memory:          ${colorized_memory} (total of $(dmidecode -t 17 |grep Size | grep -v No | wc --lines) modules)
+$(list_disks)
 display:         ${colorized_display_resolution} ${display_touch} ${display_safety}
 $(list_networks) $(is_wifi6_compatible)
 $(show_bluetooth)
 $(show_battery_status)
-product:         $(facter dmi.manufacturer) / ${colorized_product_name}
 serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board) / ${sku_number} (SKU)
 Windows license: $(windows_license)
 ${device_identifier}

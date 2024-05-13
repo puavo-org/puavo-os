@@ -840,7 +840,7 @@ class packages {
                       , $nvidia_dkms_470_module
                       , $nvidia_dkms_525_module
 		      , $r8168_module
-		      , $virtualbox_module      ]
+		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
     '6.1.0-18-amd64':

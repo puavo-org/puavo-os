@@ -6,4 +6,7 @@
 	notifempty
 	rotate 8
 	size 10M
+	postrotate
+		/usr/lib/rsyslog/rsyslog-rotate
+	endscript
 }
