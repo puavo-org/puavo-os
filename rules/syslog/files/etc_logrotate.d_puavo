@@ -6,4 +6,7 @@
 	delaycompress
 	notifempty
 	create 640 root adm
+	postrotate
+		/usr/lib/rsyslog/rsyslog-rotate
+	endscript
 }
