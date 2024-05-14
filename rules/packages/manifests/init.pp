@@ -194,7 +194,6 @@ class packages {
     , 'gnome-sound-recorder'
     , 'lame'
     , 'libasound2-plugins'
-    , 'linphone'
     , 'mumble'
     , 'pavucontrol'
     , 'pavumeter'
@@ -455,7 +454,6 @@ class packages {
 
     [ 'ardour'
     , 'audacity'
-    , 'denemo'
     , 'fmit'
     , 'hydrogen'
     , 'lmms'
@@ -487,8 +485,7 @@ class packages {
     , 'vym' ]:
       tag => [ 'tag_office', 'tag_debian_desktop', ];
 
-    [ 'devede'
-    , 'eject'
+    [ 'eject'
     , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian_desktop', ];
 
@@ -531,7 +528,6 @@ class packages {
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
     [ 'filezilla'
-    , 'gftp'
     , 'lftp'
     , 'remmina'
     , 'smbclient'
