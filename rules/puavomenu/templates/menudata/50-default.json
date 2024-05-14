@@ -1224,6 +1224,9 @@
         "rustdesk": {
             "tags": "default"
         },
+        "s4a": {
+            "tags": "default"
+        },
         "sanomapro": {
             "type": "web",
             "url": "https://www.sanomapro.fi/",
@@ -2342,6 +2345,7 @@
             "programs": [
                 "arduino",
                 "arduino-ide2",
+                "s4a",
                 "asebastudiothymio",
                 "org.mobsya.ThymioSuite",
                 "otto-blockly",

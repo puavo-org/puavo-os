@@ -39,8 +39,10 @@ has_windows() {
 }
 
 show_info() {
-  local reset_operation_msg
+  local requires_network reset_operation_msg
   reset_operation_msg=$1
+  requires_network=$2
+
   cat <<EOF
   >>> PUAVO RESET MODE <<<
   >>> ================ <<<
@@ -50,6 +52,13 @@ User home directories will be wiped out
 and system will be returned to factory defaults.
 
 ${reset_operation_msg}
+EOF
+
+  if $requires_network; then
+    echo 'Resetting the Windows operating system requires network access.'
+  fi
+
+  cat <<EOF
 
 Detailed request information:
   operation:            ${operation}
@@ -59,17 +68,49 @@ Detailed request information:
 EOF
 }
 
+connect_to_network() {
+  local answer force
+  force=$1
+  if ! $force; then
+    if [ "$(LANG=C nmcli networking connectivity)" = 'full' ]; then
+      echo 'You are connected to a network.'
+      echo
+      return 0
+    else
+      read -p 'You are NOT connected to a network, press ENTER to connect: ' \
+              answer
+    fi
+  fi
+
+  nmcli radio wifi on || true
+  nmtui || true
+
+  [ "$(LANG=C nmcli networking connectivity)" = 'full' ]
+}
+
 ask_pin_to_proceed() {
-  local pin pin_answer reset_operation_msg
+  local pin pin_answer reset_operation_msg requires_network
   pin=$1
   reset_operation_msg=$2
+  requires_network=$3
 
   while true; do
     clear
-    show_info "$reset_operation_msg"
+    show_info "$reset_operation_msg" "$requires_network"
+    if $requires_network; then
+      while ! connect_to_network false; do sleep 1; done
+    fi
+
     echo 'You must provide the correct PIN code to proceed with the operation.'
+    if $requires_network; then
+      echo 'You may also provide a special PIN "nmtui" to switch networks.'
+    fi
+
     read -p '  PIN CODE: ' pin_answer
-    if [ "$pin_answer" = "$pin" ]; then
+    if [ "$pin_answer" = 'nmtui' -o "$pin_answer" = 'TUITUI' ]; then
+      connect_to_network true || true
+      continue
+    elif [ "$pin_answer" = "$pin" ]; then
       echo '    PIN OK, continuing...'
       return 0
     fi
@@ -78,10 +119,13 @@ ask_pin_to_proceed() {
   done
 }
 
+requires_network=false
+
 reset_operation_msg=''
 case "$operation" in
   reset)
     if has_windows; then
+      requires_network=true
       prltfd_args='--force --os-targets=PuavoOS,Windows'
       reset_operation_msg='Resetting both Puavo OS and Windows.'
     else
@@ -102,6 +146,7 @@ case "$operation" in
       exit_error_after_enter \
         'Requested Windows reset only but Windows is not installed'
     fi
+    requires_network=true
     reset_operation_msg='Resetting Windows only.'
     prltfd_args='--force --os-targets=Windows'
     ;;
@@ -112,7 +157,7 @@ esac
 
 case "$mode" in
   ask_pin)
-    ask_pin_to_proceed "$pin" "$reset_operation_msg"
+    ask_pin_to_proceed "$pin" "$reset_operation_msg" "$requires_network"
     sleep 2
     ;;
   *)
