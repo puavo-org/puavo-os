@@ -1,14 +1,60 @@
-openjdk-11 (11.0.22+7-1~deb11u1+puavo1) bullseye; urgency=medium
-
-  * Build with our patches.
-
- -- Puavo Org <dev@opinsys.fi>  Fri, 15 Sep 2023 14:24:12 +0300
-
-openjdk-11 (11.0.22+7-1~deb11u1) bullseye-security; urgency=medium
+openjdk-11 (11.0.23+9-1~deb11u1) bullseye-security; urgency=medium
 
   * Rebuild for bullseye
 
- -- Moritz Mühlenhoff <jmm@debian.org>  Fri, 19 Jan 2024 16:46:52 +0100
+ -- Moritz Muehlenhoff <jmm@debian.org>  Fri, 19 Apr 2024 15:51:05 +0200
+
+openjdk-11 (11.0.23+9-1) unstable; urgency=high
+
+  * OpenJDK 11.0.23 release, build 9.
+    - CVE-2024-21011, 8319851: Improve exception logging.
+    - CVE-2024-21068, 8322122: Enhance generation of addresses.
+    - 8318340: Improve RSA key implementations.
+    - CVE-2024-21012, 8315708: Enhance HTTP/2 client usage.
+    - CVE-2024-21094, 8317507: Already fixed in November 2023:
+      C2 compilation fails with "Exceeded _node_regs array".
+    - CVE-2024-21085, 8322114: Improve Pack 200 handling.
+
+  [ Pushkar Kulkarni ]
+  * Use 64-bit clock_* function on archs like armhf.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 17 Apr 2024 15:39:11 +0200
+
+openjdk-11 (11.0.23~7ea-1) unstable; urgency=medium
+
+  * OpenJDK 11.0.23+7 build (early access).
+
+  [ Matthias Klose ]
+  * Update cups dependencies for time_t64.
+
+  [ Pushkar Kulkarni ]
+  * copyright-generator: Derive release from debian/rules.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 21 Mar 2024 01:56:26 +0100
+
+openjdk-11 (11.0.22+7-3) unstable; urgency=medium
+
+  * libcups2, libfontconfig1: Make it a recommends in jre-headless,
+    a dependency in jre.
+  * Make the dependencies for libfontmanager.so and libjsound.so
+    recommendations in jre-headless, and dependencies in jre.
+  * Drop build dependencies on libgtk2 | libgtk3.
+  * Disable running the tests for the time_t64 bootstrap.
+
+ -- Matthias Klose <doko@ubuntu.com>  Mon, 11 Mar 2024 16:32:39 +0100
+
+openjdk-11 (11.0.22+7-2) unstable; urgency=medium
+
+  [ Matthias Klose ]
+  * Add zero support for loong64 (Leslie Zhai). Closes: #1060821.
+  * d/changelog: Whitespace cleanup.
+  * Update build dependency on libfontconfig-dev.
+  * Apply proposed patch for JDK-8307977. Closes: #1034600.
+
+  [ Vladimir Petko ]
+  * d/t/jtreg-autopkgtest.*: Set jtreg home property correctly.
+
+ -- Matthias Klose <doko@ubuntu.com>  Fri, 26 Jan 2024 21:04:10 +0100
 
 openjdk-11 (11.0.22+7-1) unstable; urgency=high
 
@@ -493,7 +539,7 @@ openjdk-11 (11.0.9+11-1) unstable; urgency=medium
   [ Tiago Stürmer Daitx ]
   * debian/rules:
     - copy apport hook to source_$(PKGSOURCE).py, fixes apport on
-      Ubuntu where source name is openjdk-lts instead of openjdk-11. 
+      Ubuntu where source name is openjdk-lts instead of openjdk-11.
   * Refresh patches.
 
   [ Matthias Klose ]
@@ -2954,7 +3000,7 @@ openjdk-7 (7~u3-2.1.1-1) unstable; urgency=medium
     - debian/patches/gcc-4.7.diff
 
   [ James Page ]
-  * Cherry picked patch from openjdk-6 to fix handling of 
+  * Cherry picked patch from openjdk-6 to fix handling of
     ICC profiles (LP: #888123, #888129) (Closes: #676351).
 
   [ Damien Raude-Morvan ]
@@ -3039,7 +3085,7 @@ openjdk-7 (7~u3-2.1-2) unstable; urgency=low
 
   [ Matthias Klose ]
   * Use NanumMyeongjo as the preferred korean font. LP: #792471.
-  * Fix crash in java.net.NetworkInterface.getNetworkInterfaces() when 
+  * Fix crash in java.net.NetworkInterface.getNetworkInterfaces() when
     ifr_ifindex exceeds 255. LP: #925218. S7078386.
   * Use IPAfont as the preferred japanesse font. Closes: #646054.
   * Build using gcj on alpha and armel. Closes: #655750.
@@ -3935,7 +3981,7 @@ openjdk-6 (6b18-1.8-4) unstable; urgency=low
   * Fix Vcs-Bzr location. Closes: #530883.
   * Search for unversioned llvm-config tool.
   * Don't set XFILESEARCHPATH and NLSPATH on startup. LP: #586641.
-  * Fix chinese font metrics and prefer using 'WenQuanYi Micro Hei' font. 
+  * Fix chinese font metrics and prefer using 'WenQuanYi Micro Hei' font.
     LP: #472845.
   * Strip libjvm.so with --strip-debug instead of --strip-unneeded.
     LP: #574997.
@@ -4013,7 +4059,7 @@ openjdk-6 (6b18-1.8-0ubuntu1) lucid; urgency=low
     While libnss3.so gets loaded from /usr/lib, the dependent libraries
     are loaded from MOZILLA_FIVE_HOME (See #561216 for the wrong firefox
     config). LP: #561124.
-    Closes as well: LP: #551328, #554909, #560829, #549010, #553452. 
+    Closes as well: LP: #551328, #554909, #560829, #549010, #553452.
   * Always build shark with hs14.
 
  -- Matthias Klose <doko@ubuntu.com>  Wed, 14 Apr 2010 01:53:33 +0200
@@ -4918,7 +4964,7 @@ openjdk-6 (6b13~pre1-0ubuntu1) jaunty; urgency=low
   * Update IcedTea build infrastructure (20081111).
     - Fix freeze in midi app, LP: #275672.
     - Fixes in the IcedTeaPlugin: LP: #282570, LP: #282570, LP: #285729,
-      LP: #291377, LP: #37330, LP: #239533. 
+      LP: #291377, LP: #37330, LP: #239533.
     - Fix vertical text metrics with freetype scaler. LP: #289784.
   * Build-depend on ecj-gcj instead of ecj on architectures using
     gij/gcj as the bootstrap system.
@@ -4935,7 +4981,7 @@ openjdk-6 (6b12-1~exp1) experimental; urgency=low
 openjdk-6 (6b12-0ubuntu6) intrepid; urgency=low
 
   * Make the dependency on ca-certificates-java unversioned.
-  * Merge from IcedTea: 
+  * Merge from IcedTea:
     - plugin/icedtea/netscape/javascript/JSObject.java: Make
       long constructor public.
 
@@ -4951,7 +4997,7 @@ openjdk-6 (6b12-0ubuntu5) intrepid; urgency=low
   * Configure with --pkgversion=<package version> to encode the package
     version in the -version output and in vm dumps.
   * cacao: Handle VM options Xverify:all and Xverify:none.
-  
+
  -- Matthias Klose <doko@ubuntu.com>  Fri, 24 Oct 2008 13:39:29 +0200
 
 openjdk-6 (6b12-0) experimental; urgency=low
@@ -5478,7 +5524,7 @@ openjdk-6 (6b06-0ubuntu3) hardy; urgency=low
     tests taken from the Fedora package).
   * Keep a backup of the `generated' directory; some files are regenerated
     differently, increasing the size of the diff.
-  
+
  -- Matthias Klose <doko@ubuntu.com>  Thu, 06 Mar 2008 10:05:39 +0100
 
 openjdk-6 (6b06-0ubuntu2) hardy; urgency=low
@@ -5505,7 +5551,7 @@ openjdk-6 (6b05-0ubuntu1) hardy; urgency=low
 
 icedtea-java7 (7~b24-1.5+20080118-2) UNRELEASED; urgency=low
 
-  * Fix removal of alternatives. 
+  * Fix removal of alternatives.
 
  -- Matthias Klose <doko@ubuntu.com>  Sat, 26 Jan 2008 18:41:40 +0100
 
@@ -5591,7 +5637,7 @@ icedtea-java7 (7~b23-1.5~20071124-1) hardy; urgency=low
 
 icedtea-java7 (7~b22-1.5~20071018-0ubuntu3) hardy; urgency=low
 
-  * Revert the previous change, require 7~b22 versions again. 
+  * Revert the previous change, require 7~b22 versions again.
 
  -- Matthias Klose <doko@ubuntu.com>  Sat, 20 Oct 2007 14:33:26 +0000
 

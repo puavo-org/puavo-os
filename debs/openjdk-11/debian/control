@@ -7,11 +7,11 @@ Build-Depends: debhelper (>= 11),
   m4, lsb-release, zip, unzip,
   sharutils, gawk, cpio, pkg-config, procps, wdiff, fastjar (>= 2:0.96-0ubuntu2),
   time, strip-nondeterminism, debugedit (>= 4.16),
-  jtreg6 (>= 6+1-0~) <!nocheck>, xvfb <!nocheck>, xauth <!nocheck>, xfonts-base <!nocheck>, libgl1-mesa-dri [!x32] <!nocheck>, xfwm4 <!nocheck>, x11-xkb-utils <!nocheck>, dbus-x11 <!nocheck>, googletest <!nocheck>, google-mock <!nocheck>, xvfb  <!nocheck>,
+  file,
   autoconf, automake, autotools-dev, ant, ant-optional,
   g++-10 <!cross>,
   openjdk-11-jdk-headless:native | openjdk-10-jdk-headless:native,
-  libxtst-dev, libxi-dev, libxt-dev, libxaw7-dev, libxrender-dev, libcups2-dev, libasound2-dev, liblcms2-dev, libfreetype6-dev (>= 2.2.1), libxinerama-dev, libkrb5-dev, xsltproc, libpcsclite-dev, libxrandr-dev, libelf-dev, libfontconfig1-dev, libgtk2.0-0 | libgtk-3-0, libharfbuzz-dev,
+  libxtst-dev, libxi-dev, libxt-dev, libxaw7-dev, libxrender-dev, libcups2-dev, libasound2-dev, liblcms2-dev, libxinerama-dev, libkrb5-dev, xsltproc, libpcsclite-dev, libxrandr-dev, libelf-dev, libfontconfig-dev, libfreetype-dev, libharfbuzz-dev,
   libffi-dev,
   zlib1g-dev:native, zlib1g-dev, libattr1-dev, libpng-dev, libjpeg-dev, libgif-dev,
   libnss3-dev (>= 2:3.17.1),
@@ -24,7 +24,7 @@ Vcs-Browser: https://salsa.debian.org/openjdk-team/openjdk/tree/openjdk-11
 Vcs-Git: https://salsa.debian.org/openjdk-team/openjdk.git -b openjdk-11
 
 Package: openjdk-11-jdk-headless
-Architecture: alpha amd64 armel armhf arm64 i386 ia64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
+Architecture: alpha amd64 armel armhf arm64 i386 ia64 loong64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
 Multi-Arch: same
 Pre-Depends: ${dpkg:Depends}
 Depends: openjdk-11-jre-headless (= ${binary:Version}),
@@ -42,14 +42,15 @@ Description: OpenJDK Development Kit (JDK) (headless)
  applets, and components using the Java programming language.
 
 Package: openjdk-11-jre-headless
-Architecture: alpha amd64 armel armhf arm64 i386 ia64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
+Architecture: alpha amd64 armel armhf arm64 i386 ia64 loong64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
 Multi-Arch: same
 Pre-Depends: ${dpkg:Depends}
 Depends: ${jredefault:Depends}, ${cacert:Depends},
   ${jcommon:Depends}, ${dlopenhl:Depends},
   ${mountpoint:Depends},
   ${shlibs:Depends}, ${misc:Depends}
-Recommends: ${dlopenhl:Recommends}
+Recommends: ${dlopenhl:Recommends},
+  ${fontmanager:Recommends}, ${jsound:Recommends}
 Suggests: libnss-mdns,
   fonts-dejavu-extra,
   fonts-ipafont-gothic, fonts-ipafont-mincho, fonts-wqy-microhei | fonts-wqy-zenhei, fonts-indic,
@@ -67,7 +68,7 @@ Description: OpenJDK Java runtime, using ${vm:Name} (headless)
  using ${vm:Name}.
 
 Package: openjdk-11-jdk
-Architecture: alpha amd64 armel armhf arm64 i386 ia64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
+Architecture: alpha amd64 armel armhf arm64 i386 ia64 loong64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
 Multi-Arch: same
 Pre-Depends: ${dpkg:Depends}
 Depends: openjdk-11-jre (= ${binary:Version}),
@@ -85,11 +86,11 @@ Description: OpenJDK Development Kit (JDK)
  applets, and components using the Java programming language.
 
 Package: openjdk-11-jre
-Architecture: alpha amd64 armel armhf arm64 i386 ia64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
+Architecture: alpha amd64 armel armhf arm64 i386 ia64 loong64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
 Multi-Arch: same
 Pre-Depends: ${dpkg:Depends}
 Depends: openjdk-11-jre-headless (= ${binary:Version}),
-  ${xandsound:Depends}, ${dlopenjre:Depends},
+  ${dlopenjre:Depends}, ${fontmanager:Depends}, ${jsound:Depends},
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: ${dlopenjre:Recommends}, ${bridge:Recommends}, fonts-dejavu-extra
 Provides: java-runtime (= ${vm:Version}), java2-runtime,
@@ -104,7 +105,7 @@ Description: OpenJDK Java runtime, using ${vm:Name}
  programs, using ${vm:Name}.
 
 Package: openjdk-11-demo
-Architecture: alpha amd64 armel armhf arm64 i386 ia64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
+Architecture: alpha amd64 armel armhf arm64 i386 ia64 loong64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
 Priority: optional
 Pre-Depends: ${dpkg:Depends}
 Depends: openjdk-11-jre (= ${binary:Version}),
@@ -141,7 +142,7 @@ Description: OpenJDK Development Kit (JDK) documentation
  This package contains the API documentation.
 
 Package: openjdk-11-dbg
-Architecture: alpha amd64 armel armhf arm64 i386 ia64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
+Architecture: alpha amd64 armel armhf arm64 i386 ia64 loong64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
 Multi-Arch: same
 Priority: optional
 Section: debug

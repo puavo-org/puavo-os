@@ -49,7 +49,8 @@ Depends: ${jredefault:Depends}, ${cacert:Depends},
   ${jcommon:Depends}, ${dlopenhl:Depends},
   ${mountpoint:Depends},
   ${shlibs:Depends}, ${misc:Depends}
-Recommends: ${dlopenhl:Recommends}
+Recommends: ${dlopenhl:Recommends},
+  ${fontmanager:Recommends}, ${jsound:Recommends}
 Suggests: libnss-mdns,
   @core_fonts@,
   @cjk_fonts@
@@ -89,7 +90,7 @@ Architecture: @any_archs@
 Multi-Arch: same
 Pre-Depends: ${dpkg:Depends}
 Depends: @basename@-jre-headless (= ${binary:Version}),
-  ${xandsound:Depends}, ${dlopenjre:Depends},
+  ${dlopenjre:Depends}, ${fontmanager:Depends}, ${jsound:Depends},
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: ${dlopenjre:Recommends}, ${bridge:Recommends}, @core_fonts@
 Provides: java-runtime (= ${vm:Version}), java2-runtime,

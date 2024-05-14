@@ -169,11 +169,11 @@ with_docs = $(if $(findstring nodoc, $(DEB_BUILD_OPTIONS)),,yes)
 ifneq (,$(filter $(distrel), precise trusty))
   with_docs =
 endif
-# with_check = disabled for this upload
+with_check = disabled for this upload
 
 with_wqy_zenhai = $(if $(filter $(distrel),lenny),,yes)
 
-arch_map	:= alpha=alpha arm=arm armel=arm armhf=arm arm64=aarch64 amd64=amd64 hppa=parisc i386=i586 m68k=m68k mips=mips mipsel=mipsel mips64=mips64 mips64el=mips64el powerpc=ppc powerpcspe=ppc ppc64=ppc64 ppc64el=ppc64le riscv64=riscv64 sparc=sparc sparc64=sparcv9 sh4=sh s390x=s390x ia64=ia64 x32=x32
+arch_map	:= alpha=alpha arm=arm armel=arm armhf=arm arm64=aarch64 amd64=amd64 hppa=parisc i386=i586 loong64=loongarch64 m68k=m68k mips=mips mipsel=mipsel mips64=mips64 mips64el=mips64el powerpc=ppc powerpcspe=ppc ppc64=ppc64 ppc64el=ppc64le riscv64=riscv64 sparc=sparc sparc64=sparcv9 sh4=sh s390x=s390x ia64=ia64 x32=x32
 
 jvmarch		:= $(strip $(patsubst $(DEB_HOST_ARCH_CPU)=%, %, \
 			$(filter $(DEB_HOST_ARCH_CPU)=%, $(arch_map))))
@@ -183,7 +183,7 @@ endif
 
 default_vm = $(if $(filter $(DEB_HOST_ARCH), $(hotspot_archs)),hotspot,zero)
 
-any_archs = alpha amd64 armel armhf arm64 i386 ia64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
+any_archs = alpha amd64 armel armhf arm64 i386 ia64 loong64 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el m68k riscv64 sh4 sparc sparc64 s390x x32
 
 altzero_archs = $(hotspot_archs)
 ifneq (,$(filter $(distrel),trusty))
@@ -235,8 +235,7 @@ dpkg_buildflags_hs += dpkg-buildflags
 export EXTRA_CPPFLAGS_HS := $(shell $(dpkg_buildflags_hs) --get CPPFLAGS)
 export EXTRA_CFLAGS_HS   := $(shell $(dpkg_buildflags_hs) --get CFLAGS; $(dpkg_buildflags_hs) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_HS := $(shell $(dpkg_buildflags_hs) --get CXXFLAGS) -Wno-deprecated-declarations
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_HS  := $(shell $(dpkg_buildflags_hs) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_HS  := $(shell $(dpkg_buildflags_hs) --get LDFLAGS)
 
 dpkg_buildflags_zero = \
 	DEB_BUILD_MAINT_OPTIONS="optimize=-lto" \
@@ -252,8 +251,7 @@ dpkg_buildflags_zero += dpkg-buildflags
 export EXTRA_CPPFLAGS_ZERO := $(shell $(dpkg_buildflags_zero) --get CPPFLAGS)
 export EXTRA_CFLAGS_ZERO   := $(shell $(dpkg_buildflags_zero) --get CFLAGS; $(dpkg_buildflags_zero) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_ZERO := $(shell $(dpkg_buildflags_zero) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_ZERO  := $(shell $(dpkg_buildflags_zero) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_ZERO  := $(shell $(dpkg_buildflags_zero) --get LDFLAGS)
 
 ifeq ($(DEB_HOST_ARCH),alpha)
   export EXTRA_LDFLAGS_ZERO += -Wl,--no-relax
@@ -270,8 +268,7 @@ dpkg_buildflags_jdk += dpkg-buildflags
 export EXTRA_CPPFLAGS_JDK := $(shell $(dpkg_buildflags_jdk) --get CPPFLAGS)
 export EXTRA_CFLAGS_JDK   := $(shell $(dpkg_buildflags_jdk) --get CFLAGS) $(shell $(dpkg_buildflags_jdk) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_JDK := $(shell $(dpkg_buildflags_jdk) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_JDK  := $(shell $(dpkg_buildflags_jdk) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_JDK  := $(shell $(dpkg_buildflags_jdk) --get LDFLAGS)
 
 #for IcedTea
 dpkg_buildflags_it = \
@@ -284,8 +281,7 @@ dpkg_buildflags_it += dpkg-buildflags
 export EXTRA_CPPFLAGS_IT := $(shell $(dpkg_buildflags_it) --get CPPFLAGS)
 export EXTRA_CFLAGS_IT   := $(shell $(dpkg_buildflags_it) --get CFLAGS)
 export EXTRA_CXXFLAGS_IT := $(shell $(dpkg_buildflags_it) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_IT  := $(shell $(dpkg_buildflags_it) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_IT  := $(shell $(dpkg_buildflags_it) --get LDFLAGS)
 
 # This section should be in sync with "bd_gcc" definition
 ifneq (,$(filter $(distrel),saucy))
@@ -596,7 +592,7 @@ ifneq (,$(filter $(DEB_HOST_ARCH), amd64 arm64))
   all_tools	+= jaotc
   jdk_hl_tools	+= jaotc
 endif
-ifeq (,$(filter $(DEB_HOST_ARCH), alpha armel ia64 m68k mips mipsel mips64el powerpc riscv64 s390x sh4 x32))
+ifeq (,$(filter $(DEB_HOST_ARCH), alpha armel ia64 loong64 m68k mips mipsel mips64el powerpc riscv64 s390x sh4 x32))
   all_tools	+= jhsdb
   jdk_hl_tools	+= jhsdb
 endif
@@ -655,9 +651,22 @@ bd_syslibs += \
 	libgif-dev,
 bd_openjdk = \
 	libxtst-dev, libxi-dev, libxt-dev, libxaw7-dev, libxrender-dev, libcups2-dev, \
-	libasound2-dev, liblcms2-dev, libfreetype6-dev (>= 2.2.1), \
+	libasound2-dev, liblcms2-dev, \
 	libxinerama-dev, libkrb5-dev, xsltproc, libpcsclite-dev, libxrandr-dev, \
-	libelf-dev, libfontconfig1-dev, libgtk2.0-0 | libgtk-3-0,
+	libelf-dev,
+# not needed?
+#bd_openjdk += libgtk2.0-0 | libgtk-3-0,
+#bd_openjdk += libgtk2.0-0t64 | libgtk-3-0t64,
+ifneq (,$(filter $(distrel),jessie stretch buster precise trusty xenial bionic focal))
+  bd_openjdk += libfontconfig1-dev,
+else
+  bd_openjdk += libfontconfig-dev,
+endif
+ifneq (,$(filter $(distrel),jessie stretch buster precise trusty xenial bionic))
+  bd_openjdk += libfreetype6-dev (>= 2.2.1),
+else
+  bd_openjdk += libfreetype-dev,
+endif
 ifeq ($(with_system_hb),yes)
   bd_openjdk += libharfbuzz-dev,
 endif
@@ -715,8 +724,22 @@ else
   bd_check = file,
 endif
 
-dlopen_hl_depends = \
-	libcups2, liblcms2-2,
+ifeq (,$(filter $(distrel),squeeze wheezy jessie stretch buster bullseye bookworm lucid precise trusty xenial bionic focal jammy lunar mantic))
+  t64_suffix = t64
+endif
+
+dlopen_hl_depends =
+dlopen_hl_recommends =
+
+ifeq (,$(t64_suffix))
+  dlopen_hl_depends += libcups2,
+  dlopen_hl_depends += libfontconfig1,
+else
+  dlopen_hl_recommends += libcups2$(t64_suffix),
+  dlopen_hl_recommends += libfontconfig1,
+endif
+dlopen_hl_depends += liblcms2-2,
+
 ifeq ($(derivative),Ubuntu)
   ifneq (,$(filter $(distrel),lucid))
     dlopen_hl_depends += libjpeg62,
@@ -730,7 +753,6 @@ else
     dlopen_hl_depends += libjpeg62-turbo,
   endif
 endif
-dlopen_hl_depends += libfontconfig1,
 ifneq ($(with_nss),no)
   ifneq (,$(filter $(distrel),squeeze lucid precise))
     dlopen_hl_depends += , libnss3-1d (>= 3.12.3)
@@ -740,9 +762,17 @@ ifneq ($(with_nss),no)
     dlopen_hl_depends += , libnss3 (>= 2:3.17.1)
   endif
 endif
-dlopen_hl_recommends =
-dlopen_jre_depends = \
-	libglib2.0-0 (>= 2.24), libgtk2.0-0 | libgtk-3-0, libxrandr2, libxinerama1,
+
+dlopen_jre_depends =
+dlopen_jre_recommends =
+ifeq (,$(t64_suffix))
+  dlopen_jre_depends += libglib2.0-0 (>= 2.24),
+  dlopen_jre_depends += libgtk2.0-0 | libgtk-3-0,
+else
+  dlopen_jre_depends += libglib2.0-0t64 (>= 2.24),
+  dlopen_jre_depends += libgtk2.0-0t64 | libgtk-3-0t64,
+endif
+dlopen_jre_depends += libxrandr2, libxinerama1,
 ifneq (,$(filter $(distrel),squeeze wheezy jessie stretch lucid precise xenial))
   dlopen_jre_depends = libgl1-mesa-glx | libgl1,
 else
@@ -751,7 +781,12 @@ endif
 ifeq ($(with_system_hb),yes)
   dlopen_jre_depends += libharfbuzz0b,
 endif
-dlopen_jre_recommends =
+ifeq (,$(findstring libcups, $(dlopen_hl_depends)))
+  dlopen_jre_depends += libcups2$(t64_suffix),
+endif
+ifeq (,$(findstring libfontconfig, $(dlopen_hl_depends)))
+  dlopen_jre_depends += libfontconfig1,
+endif
 
 # .desktop files need to be multiarch installable
 java_launcher = /$(basedir)/bin/java
@@ -977,7 +1012,7 @@ stamps/configure: stamps/unpack
 
 	mkdir -p bin
 ifeq (0,1)
-ifeq (,$(filter $(DEB_HOST_ARCH), alpha amd64 arm64 hppa mips64 mips64el ppc64 ppc64el s390x sparc64 x32))
+ifeq (,$(filter $(DEB_HOST_ARCH), alpha amd64 arm64 hppa loong64 mips64 mips64el ppc64 ppc64el s390x sparc64 x32))
 	( \
 	  echo '#! /bin/sh'; \
 	  echo 'if [ -x /usr/bin/linux32 ]; then'; \
@@ -1084,7 +1119,7 @@ build: pre-build $(build_stamps)
 
 stamps/build: stamps/configure
 	@echo '========== $@ =========='
-ifneq (,$(filter $(DEB_HOST_ARCH), alpha armel armhf ia64 m68k mips mipsel mips64 mips64el powerpc powerpcspe riscv64 s390x sh4 sparc sparc64))
+ifneq (,$(filter $(DEB_HOST_ARCH), alpha armel armhf ia64 loong64 m68k mips mipsel mips64 mips64el powerpc powerpcspe riscv64 s390x sh4 sparc sparc64))
 	sh -c 'sh debian/buildwatch.sh $(CURDIR)/$(builddir) &'
 endif
 	if $(EXTRA_BUILD_ENV) $(MAKE) -C $(builddir) $(build_target); then \
@@ -1873,9 +1908,24 @@ endif
 	dh_compress -a $(nodemo) $(nojrez) -Xexamples -Xdemo -Xpackage-list
 	dh_fixperms -a $(nodemo) $(nojrez)
 	dh_makeshlibs -p$(p_jrehl) -p$(p_jre)
+ifneq (,$(filter $(distrel),squeeze wheezy jessie stretch buster bullseye bookworm lucid precise trusty xenial bionic focal jammy lunar mantic))
 	dh_shlibdeps -a $(nodemo) $(nojrez) -L $(p_jrehl) \
 		-l$(shlibdeps_ld_path) \
 		--
+else
+	dh_shlibdeps -a $(nodemo) $(nojrez) -L $(p_jrehl) \
+		-Xlibfontmanager -Xlibjsound \
+		-l$(shlibdeps_ld_path) \
+		--
+	dpkg-shlibdeps -pfontmanager -dRecommends -T$(d_jrehl).substvars \
+		$(d_jrehl)/$(basedir)/lib/libfontmanager.so
+	dpkg-shlibdeps -pfontmanager -T$(d_jre).substvars \
+		$(d_jrehl)/$(basedir)/lib/libfontmanager.so
+	dpkg-shlibdeps -pjsound -dRecommends -T$(d_jrehl).substvars \
+		$(d_jrehl)/$(basedir)/lib/libjsound.so
+	dpkg-shlibdeps -pjsound -T$(d_jre).substvars \
+		$(d_jrehl)/$(basedir)/lib/libjsound.so
+endif
 	find $(d_jrehl) $(d_jre) $(d_jrez) -type f -name '*.debuginfo'
 	dh_installdeb -a $(nodemo) $(nojrez)
 	dh_gencontrol -a $(nodemo) $(nojrez) \
@@ -1887,7 +1937,7 @@ endif
 	dh_builddeb -a $(nodemo) $(nojrez) #$(bd_options)
 
 git_project		= jdk11u
-git_tag			= jdk-11.0.22+7
+git_tag			= jdk-11.0.23+9
 package_version		= $(subst jdk-,,$(git_tag))
 package_version		= $(shell echo $(PKGVERSION) | sed 's/-[^-][^-]*$$//')
 ifneq ($(is_upstream_release),yes)

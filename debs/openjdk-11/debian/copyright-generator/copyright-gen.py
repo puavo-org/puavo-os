@@ -19,6 +19,7 @@
 # The script must be able to look into "debian/rules" and deduce these exclusions.
 
 import os
+import re
 import sys
 import textwrap
 
@@ -270,19 +271,23 @@ The following licenses for third party code are taken from 'legal' \ndirectories
     os.system(f"rm -rf *.debian.tar.xz *.orig.tar.xz *.dsc *googletest.tar.xz");
     
 
+
+def detect_version():
+  with open("debian/rules", 'r') as file:
+    content = file.read()
+    match = re.search(r'shortver\t=\s+(\d{2})', content)
+    if match:
+      return match.group(1)
+
 def main():
   global version
 
+  version = detect_version()
+
   sys.stdout = open('./debian/copyright', 'w')
   supported_versions = ["11", "17", "21", "22", "23"]
-  if (len(sys.argv) >= 1):
-    version = sys.argv[1]
 
-  if version == "" or version == "--help" or version == "-help" or version == "help":
-    print("Usage:\ndebian/copyright-generator/copyright-gen.py <version>", file=sys.stderr)
-    print("version - 11 | 17 | 21 | 22 | 23", file=sys.stderr)
-
-  elif version in supported_versions:
+  if version in supported_versions:
     generate_copyright()
   else:
     print("Version not supported.")

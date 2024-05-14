@@ -1,0 +1,76 @@
+Description: Dynamically link with *64 versions of clock_* functions
+  On 32-bit archs that implement a 64-bit time_t, clock_* functions
+  linked via dlsym() should be the *64 versions of them. For example,
+  on such archs, we should try to link with __clock_gettime64 first
+  and fallback to linking with clock_gettime if the *64 version is
+  not available.
+Author: Pushkar Kulkarni <pushkar.kulkarni@canonical.com>
+Forwarded: no
+
+--- a/src/hotspot/os/posix/os_posix.cpp
++++ b/src/hotspot/os/posix/os_posix.cpp
+@@ -1777,10 +1777,22 @@
+ 
+   _clock_gettime = NULL;
+ 
+-  int (*clock_getres_func)(clockid_t, struct timespec*) =
+-    (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_getres");
+-  int (*clock_gettime_func)(clockid_t, struct timespec*) =
+-    (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_gettime");
++  int (*clock_getres_func)(clockid_t, struct timespec*) = NULL;
++  int (*clock_gettime_func)(clockid_t, struct timespec*) = NULL;
++
++  if (sizeof(long) != sizeof(time_t)) {
++    // typically, 32-bit archs with 64-bit time_t
++    clock_getres_func = (int(*)(clockid_t, struct timespec*))dlsym(handle, "__clock_getres64");
++    clock_gettime_func = (int(*)(clockid_t, struct timespec*))dlsym(handle, "__clock_gettime64");
++  }
++
++  // Fallback for archs with sizeof(long) == sizeof(time_t),
++  // Also for archs with sizeof(long) != sizeof(time_t), but no *64 clock functions
++  if (clock_getres_func == NULL || clock_gettime_func == NULL) {
++    clock_getres_func = (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_getres");
++    clock_gettime_func = (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_gettime");
++  }
++
+   if (clock_getres_func != NULL && clock_gettime_func != NULL) {
+     // We assume that if both clock_gettime and clock_getres support
+     // CLOCK_MONOTONIC then the OS provides true high-res monotonic clock.
+--- a/src/hotspot/os/linux/os_linux.cpp
++++ b/src/hotspot/os/linux/os_linux.cpp
+@@ -1479,10 +1479,22 @@
+   }
+ 
+   if (handle) {
+-    int (*clock_getres_func)(clockid_t, struct timespec*) =
+-           (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_getres");
+-    int (*clock_gettime_func)(clockid_t, struct timespec*) =
+-           (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_gettime");
++    int (*clock_getres_func)(clockid_t, struct timespec*) = NULL;
++    int (*clock_gettime_func)(clockid_t, struct timespec*) = NULL;
++
++    if (sizeof(long) != sizeof(time_t)) {
++      // typically, 32-bit archs with 64-bit time_t
++      clock_getres_func = (int(*)(clockid_t, struct timespec*))dlsym(handle, "__clock_getres64");
++      clock_gettime_func = (int(*)(clockid_t, struct timespec*))dlsym(handle, "__clock_gettime64");
++    }
++
++    // Fallback for archs with sizeof(long) == sizeof(time_t),
++    // Also for archs with sizeof(long) != sizeof(time_t), but no *64 clock functions
++    if (clock_getres_func == NULL || clock_gettime_func == NULL) {
++      clock_getres_func = (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_getres");
++      clock_gettime_func = (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_gettime");
++    }
++
+     if (clock_getres_func && clock_gettime_func) {
+       // See if monotonic clock is supported by the kernel. Note that some
+       // early implementations simply return kernel jiffies (updated every
+@@ -1511,7 +1523,7 @@
+ 
+ #ifndef SYS_clock_getres
+   #if defined(X86) || defined(PPC64) || defined(S390)
+-    #define SYS_clock_getres AMD64_ONLY(229) IA32_ONLY(266) PPC64_ONLY(247) S390_ONLY(261)
++    #define SYS_clock_getres AMD64_ONLY(229) IA32_ONLY(sizeof(time_t) == 8 ? 406 : 266) PPC64_ONLY(247) S390_ONLY(261)
+     #define sys_clock_getres(x,y)  ::syscall(SYS_clock_getres, x, y)
+   #else
+     #warning "SYS_clock_getres not defined for this platform, disabling fast_thread_cpu_time"
