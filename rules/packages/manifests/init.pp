@@ -191,6 +191,7 @@ class packages {
       tag => [ 'tag_admin', 'tag_debian_desktop', ];
 
     [ 'espeak-ng'
+    , 'gnome-sound-recorder'
     , 'lame'
     , 'libasound2-plugins'
     , 'linphone'
