@@ -657,6 +657,7 @@ class packages {
     , 'libatk-adaptor'
     , 'libcamera-ipa'
     , 'libcamera-tools'
+    , 'libcamera-v4l2'
     , 'libcamera0.0.3'
     , 'libgail-common'
     , 'libnotify-bin'
