@@ -242,7 +242,6 @@ class packages {
 
     [ 'gdm3'
     , 'i3'
-    , 'nautilus-nextcloud'
     , 'network-manager-fortisslvpn-gnome'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
