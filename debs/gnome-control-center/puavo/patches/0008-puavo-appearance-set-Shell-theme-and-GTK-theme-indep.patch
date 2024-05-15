@@ -1,0 +1,83 @@
+From 89f920ff8041d09050dcdb65262f2b3c6f994d1c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Wed, 15 May 2024 23:07:40 +0300
+Subject: [PATCH 8/8] [puavo] appearance: set Shell theme and GTK theme
+ independently
+
+---
+ panels/background/cc-background-panel.c | 35 +++++++++++++------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
+index cae56ae30..9814f88a0 100644
+--- a/panels/background/cc-background-panel.c
++++ b/panels/background/cc-background-panel.c
+@@ -209,25 +209,28 @@ set_color_scheme (CcBackgroundPanel   *self,
+ {
+   g_autofree gchar *current_gtk_theme = NULL;
+   g_autofree gchar *current_shell_theme = NULL;
+-  g_autofree gchar *next_theme = NULL;
++  g_autofree gchar *next_gtk_theme = NULL;
++  g_autofree gchar *next_shell_theme = NULL;
+   GDesktopColorScheme scheme;
+ 
+   scheme = g_settings_get_enum (self->interface_settings,
+                                 INTERFACE_COLOR_SCHEME_KEY);
+   current_gtk_theme = g_settings_get_string (self->interface_settings,
+                                              INTERFACE_GTK_THEME_KEY);
++  next_gtk_theme = get_next_theme(current_gtk_theme, color_scheme);
++
+   if (self->maybe_user_theme_settings)
+   {
+     current_shell_theme = g_settings_get_string (self->maybe_user_theme_settings,
+                                                  USER_THEME_NAME_KEY);
++    next_shell_theme = get_next_theme(current_shell_theme, color_scheme);
+   }
+-  next_theme = get_next_theme(current_gtk_theme, color_scheme);
+ 
+   /* We have to check the equality manually to avoid starting an unnecessary
+    * screen transition */
+   if (color_scheme == scheme
+-      && g_strcmp0(current_gtk_theme, next_theme) == 0
+-      && (self->maybe_user_theme_settings == NULL || g_strcmp0(current_shell_theme, next_theme) == 0))
++      && g_strcmp0(current_gtk_theme, next_gtk_theme) == 0
++      && (self->maybe_user_theme_settings == NULL || g_strcmp0(current_shell_theme, next_shell_theme) == 0))
+     return;
+ 
+   transition_screen (self);
+@@ -236,21 +239,19 @@ set_color_scheme (CcBackgroundPanel   *self,
+                        INTERFACE_COLOR_SCHEME_KEY,
+                        color_scheme);
+ 
+-  if (!next_theme)
+-  {
+-    g_warning ("Next theme is not defined, not changing theme");
+-    return;
+-  }
++  if (next_gtk_theme)
++    g_settings_set_string (self->interface_settings, INTERFACE_GTK_THEME_KEY, next_gtk_theme);
++  else
++    g_warning ("Next GTK theme is not defined, not changing GTK theme");
++
+ 
+-  g_settings_set_string (self->interface_settings,
+-                         INTERFACE_GTK_THEME_KEY,
+-                         next_theme);
+   if (self->maybe_user_theme_settings)
+-  {
+-    g_settings_set_string (self->maybe_user_theme_settings,
+-                           USER_THEME_NAME_KEY,
+-                           next_theme);
+-  }
++    {
++      if (next_shell_theme)
++        g_settings_set_string (self->maybe_user_theme_settings, USER_THEME_NAME_KEY, next_shell_theme);
++      else
++        g_warning ("Next Shell theme is not defined, not changing Shell theme");
++    }
+ }
+ 
+ /* Color schemes */
+-- 
+2.39.2
+
