@@ -281,7 +281,11 @@ windows_license() {
   windows_product_key=$(
     strings /sys/firmware/acpi/tables/MSDM 2>/dev/null \
       | awk '$1 ~ /^[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}$/')
-  [ -z "$windows_product_key" ] && colorize license 1 1 1 "0" "No license"
+  if [ -z "$windows_product_key" ]; then
+    colorize license 1 1 1 0 'No license'
+    return 0
+  fi
+
   machine_build_id=$(strings /sys/firmware/dmi/tables/DMI 2>/dev/null \
                        | grep '^BUILDID')
   if [ -n "$machine_build_id" ]; then
@@ -353,10 +357,13 @@ darkdm_common_systeminfo()
   colorized_product_name=$(colorize product_name 0 0 0 "$product_name" \
                                     "$product_name")
 
+  if [ -n "$image_server" ]; then
+    echo "bootserver: ${image_server%:*}"
+  fi
+
   cat <<EOF
-bootserver: ${image_server}
-image:   ${this_image}
-release: ${this_release}
+image:      ${this_image}
+release:    ${this_release}
 
 bios:            $(facter dmi.bios.vendor) / $(check_bios_version) $(firmwaremode)
 product:         $(facter dmi.manufacturer) / ${colorized_product_name}
