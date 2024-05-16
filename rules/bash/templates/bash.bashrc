@@ -81,4 +81,6 @@ if [ "$(id -u)" = 0 ] || (groups | fgrep -qw puavo-os); then
   unset _puavo_host_profiles
   unset _puavo_image_name
   unset _puavo_prompt_colornum
+
+  _puavo_admin_shell=1
 fi
