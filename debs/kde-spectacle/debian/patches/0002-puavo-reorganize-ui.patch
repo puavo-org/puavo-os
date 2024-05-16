@@ -1,0 +1,262 @@
+From ac212972fe00f8501f34ce3e63834a432101b39c Mon Sep 17 00:00:00 2001
+From: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Date: Fri, 17 May 2024 11:02:18 +0300
+Subject: [PATCH 2/3] Spectacle UI part 2: Expand capture types to be a list
+
+---
+ po/fi/spectacle.po              |  2 +-
+ src/Gui/CaptureAreaComboBox.cpp | 78 ++++++++++++++++++---------------
+ src/Gui/CaptureAreaComboBox.h   | 25 +++++------
+ src/Gui/KSWidget.cpp            |  7 +--
+ src/Gui/KSWidget.h              |  2 +
+ 5 files changed, 59 insertions(+), 55 deletions(-)
+
+diff --git a/po/fi/spectacle.po b/po/fi/spectacle.po
+index 74d7a40c..b5e36a7c 100644
+--- a/po/fi/spectacle.po
++++ b/po/fi/spectacle.po
+@@ -211,7 +211,7 @@ msgstr "Koko näyttö (kaikki näytöt, skaalattu)"
+ #: src/Gui/CaptureAreaComboBox.cpp:137
+ #, kde-format
+ msgid "Rectangular Region"
+-msgstr "Suorakulmainen alue"
++msgstr "Valitse alue"
+ 
+ #: src/Gui/CaptureAreaComboBox.cpp:140
+ #, kde-format
+diff --git a/src/Gui/CaptureAreaComboBox.cpp b/src/Gui/CaptureAreaComboBox.cpp
+index 0fd40ecf..a5dd96d2 100644
+--- a/src/Gui/CaptureAreaComboBox.cpp
++++ b/src/Gui/CaptureAreaComboBox.cpp
+@@ -7,6 +7,7 @@
+ 
+ #include "CaptureAreaComboBox.h"
+ 
++#include "KSWidget.h"
+ #include "ShortcutActions.h"
+ 
+ #include <KColorScheme>
+@@ -17,8 +18,11 @@
+ #include <QApplication>
+ #include <QKeySequence>
+ #include <QPainter>
++#include <QRadioButton>
+ #include <QString>
+ #include <QStyledItemDelegate>
++#include <QTimer>
++#include <QVBoxLayout>
+ 
+ #include <unordered_map>
+ 
+@@ -120,57 +124,61 @@ public:
+ };
+ 
+ CaptureAreaComboBox::CaptureAreaComboBox(Platform::GrabModes grabModes, QWidget *parent)
+-    : QComboBox{parent}
++    : QWidget{parent}
+     , mGrabModes{grabModes}
+ {
++    mCaptureAreaGroup = new QButtonGroup(this);
++
++    QRadioButton *b0=nullptr, *b1=nullptr, *b2=nullptr, *b3=nullptr, *b4=nullptr, *b5=nullptr;
+     // Initialise the model
+     if (grabModes.testFlag(Platform::GrabMode::AllScreens)) {
+         QString lFullScreenLabel = QApplication::screens().count() == 1 ? i18n("Full Screen") : i18n("Full Screen (All Monitors)");
+-
+-        insertItem(0, lFullScreenLabel, Spectacle::CaptureMode::AllScreens);
++        mCaptureAreaGroup->addButton(b0 = new QRadioButton(lFullScreenLabel), 0);
++        b0->setProperty("selected", Spectacle::CaptureMode::AllScreens);
+     }
+     if (grabModes.testFlag(Platform::GrabMode::AllScreensScaled) && QApplication::screens().count() > 1) {
+         QString lFullScreenLabel = i18n("Full Screen (All Monitors, scaled)");
+-        insertItem(1, lFullScreenLabel, Spectacle::CaptureMode::AllScreensScaled);
++        mCaptureAreaGroup->addButton(b1 = new QRadioButton(lFullScreenLabel), 1);
++        b1->setProperty("selected", Spectacle::CaptureMode::AllScreensScaled);
+     }
+     if (grabModes.testFlag(Platform::GrabMode::PerScreenImageNative)) {
+-        insertItem(2, i18n("Rectangular Region"), Spectacle::CaptureMode::RectangularRegion);
++        mCaptureAreaGroup->addButton(b2 = new QRadioButton(i18n("Rectangular Region")), 2);
++        b2->setProperty("selected", Spectacle::CaptureMode::RectangularRegion);
+     }
+     if (grabModes.testFlag(Platform::GrabMode::CurrentScreen)) {
+-        insertItem(3, i18n("Current Screen"), Spectacle::CaptureMode::CurrentScreen);
+-    }
+-    if (grabModes.testFlag(Platform::GrabMode::ActiveWindow)) {
+-        insertItem(4, i18n("Active Window"), Spectacle::CaptureMode::ActiveWindow);
++        mCaptureAreaGroup->addButton(b3 = new QRadioButton(i18n("Current Screen")), 3);
++        b3->setProperty("selected", Spectacle::CaptureMode::CurrentScreen);
+     }
++    /*if (grabModes.testFlag(Platform::GrabMode::ActiveWindow)) {
++        mCaptureAreaGroup->addButton(b4 = new QRadioButton(i18n("Active Window")), 4);
++        b4->setProperty("selected", Spectacle::CaptureMode::ActiveWindow);
++    }*/
+     if (grabModes.testFlag(Platform::GrabMode::WindowUnderCursor)) {
+-        insertItem(5, i18n("Window Under Cursor"), Spectacle::CaptureMode::WindowUnderCursor);
++        mCaptureAreaGroup->addButton(b5 = new QRadioButton(i18n("Window Under Cursor")), 4);
++        b5->setProperty("selected", Spectacle::CaptureMode::WindowUnderCursor);
+     }
+-
+-    // Use our custom delegate with support for displaying shortcuts in the popup.
+-    mCaptureModeDelegate = new CaptureModeDelegate{this};
+-    setItemDelegate(mCaptureModeDelegate);
+-}
+-
+-void CaptureAreaComboBox::showPopup()
+-{
+-    mCaptureModeDelegate->updateShortcutTexts();
+-
+-    int widestTextWidth = 0;
+-    for (int i = 0; i < count(); ++i) {
+-        const int leftWidth = fontMetrics().horizontalAdvance(itemText(i));
+-
+-        auto captureMode = captureModeForIndex(i);
+-        if (mCaptureModeDelegate->m_shortcutTextsMap.count(captureMode) == 0) {
+-            continue; // There is no shortcutText for this captureMode.
++    connect(mCaptureAreaGroup, &QButtonGroup::idClicked, dynamic_cast<KSWidget*>(parent), &KSWidget::captureModeChanged);
++
++    QList<QRadioButton*> buttons;
++    buttons.append(b0);
++    buttons.append(b1);
++    buttons.append(b2);
++    buttons.append(b3);
++    // buttons.append(b4);  // seems to be broken on gnome
++    buttons.append(b5);
++    int index=0;
++    setLayout(new QVBoxLayout);
++    for(int i=0;i<buttons.length();i++)
++    {
++        if(!buttons[i])
++            continue;
++        layout()->addWidget(buttons[i]);
++        if(buttons[i] && buttons[i]->property("selected").toInt()==Settings::captureMode())
++        {
++            index=i;
+         }
+-        const int rightWidth = fontMetrics().horizontalAdvance(mCaptureModeDelegate->m_shortcutTextsMap.at(captureMode));
+-
+-        widestTextWidth = std::max(widestTextWidth, leftWidth + rightWidth);
+-    }
+-    constexpr int minimumSpacingBetweenLeftAndRightText = 10;
+-    if (width() < widestTextWidth + minimumSpacingBetweenLeftAndRightText) { // We widen the popup if the left and right text would overlap.
+-        view()->setMinimumWidth(widestTextWidth + minimumSpacingBetweenLeftAndRightText * 2);
+     }
+ 
+-    QComboBox::showPopup();
++    // We're still construting things, so select the capture mode after returning to event loop.
++    QTimer::singleShot(0, [=]() { mCaptureAreaGroup->button(index >= 0 ? index : 0)->click(); });
+ }
+diff --git a/src/Gui/CaptureAreaComboBox.h b/src/Gui/CaptureAreaComboBox.h
+index 25446d16..c0c2d132 100644
+--- a/src/Gui/CaptureAreaComboBox.h
++++ b/src/Gui/CaptureAreaComboBox.h
+@@ -10,18 +10,21 @@
+ 
+ #include "Platforms/Platform.h"
+ 
++#include "settings.h"
+ #include "SpectacleCommon.h"
+ 
+-#include <qcombobox.h>
++#include <qabstractbutton.h>
++#include <qbuttongroup.h>
++#include <qvariant.h>
++#include <qwidget.h>
+ 
+-class CaptureModeDelegate;
+ 
+ /**
+  * @brief The most prominent ComboBox of the Spectacle UI.
+  *
+  * This class exists so keyboard shortcuts for the actions can be drawn in the popup.
+  */
+-class CaptureAreaComboBox : public QComboBox
++class CaptureAreaComboBox : public QWidget
+ {
+ public:
+     /**
+@@ -31,25 +34,19 @@ public:
+ 
+     inline Spectacle::CaptureMode currentCaptureMode() const
+     {
+-        return static_cast<Spectacle::CaptureMode>(currentData().toInt());
++        return static_cast<Spectacle::CaptureMode>(mCaptureAreaGroup->checkedButton()->property("selected").toInt());
+     };
+     inline Spectacle::CaptureMode captureModeForIndex(int index) const
+     {
+-        return static_cast<Spectacle::CaptureMode>(itemData(index).toInt());
++        if(mCaptureAreaGroup->button(index))
++            return static_cast<Spectacle::CaptureMode>(mCaptureAreaGroup->button(index)->property("selected").toInt());
++        return currentCaptureMode();
+     };
+ 
+-protected:
+-    /**
+-     * Determines the current keyboard shortcuts to be displayed and the necessary width of the popup before calling the base method QComboBox::showPopup().
+-     */
+-    void showPopup() override;
+-
+ private:
+     /** @param grabModes The screenshotting modes which the current platform supports. */
+     Platform::GrabModes mGrabModes;
+-
+-    /** The QComboBox::itemDelegate() of this object. */
+-    CaptureModeDelegate *mCaptureModeDelegate;
++    QButtonGroup  *mCaptureAreaGroup { nullptr };
+ };
+ 
+ #endif // CAPTUREAREACOMBOBOX_H
+diff --git a/src/Gui/KSWidget.cpp b/src/Gui/KSWidget.cpp
+index 7e0ed2ea..d45df164 100644
+--- a/src/Gui/KSWidget.cpp
++++ b/src/Gui/KSWidget.cpp
+@@ -55,9 +55,6 @@ KSWidget::KSWidget(Platform::GrabModes theGrabModes, QWidget *parent)
+         mTransientWithParentAvailable = true;
+     }
+     mCaptureArea->setMinimumWidth(240);
+-    mCaptureArea->setObjectName(QStringLiteral("kcfg_captureMode"));
+-    mCaptureArea->setProperty("kcfg_property", QByteArray("currentData"));
+-    connect(mCaptureArea, qOverload<int>(&QComboBox::currentIndexChanged), this, &KSWidget::captureModeChanged);
+ 
+     mDelayMsec = new SmartSpinBox(this);
+     mDelayMsec->setDecimals(1);
+@@ -129,6 +126,7 @@ KSWidget::KSWidget(Platform::GrabModes theGrabModes, QWidget *parent)
+ 
+     // the take a new screenshot button
+     mTakeScreenshotButton = new ProgressButton(this);
++    mTakeScreenshotButton->setIconSize(QSize(100, 100));
+     mTakeScreenshotButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+     mTakeScreenshotButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+     setButtonState(State::TakeNewScreenshot);
+@@ -179,8 +177,6 @@ KSWidget::KSWidget(Platform::GrabModes theGrabModes, QWidget *parent)
+     mMainLayout->setColumnMinimumWidth(0, 320);
+     mMainLayout->setColumnMinimumWidth(1, 320);
+ 
+-    int index = mCaptureArea->findData(Settings::captureMode());
+-    mCaptureArea->setCurrentIndex(index >= 0 ? index : 0);
+     auto mConfigManager = new KConfigDialogManager(this, Settings::self());
+     connect(mConfigManager, &KConfigDialogManager::widgetModified, mConfigManager, &KConfigDialogManager::updateSettings);
+ 
+@@ -269,6 +265,7 @@ void KSWidget::onClickStateChanged(int theState)
+ void KSWidget::captureModeChanged(int theIndex)
+ {
+     auto captureMode = mCaptureArea->captureModeForIndex(theIndex);
++    Settings::setCaptureMode(captureMode);
+     switch (captureMode) {
+     case Spectacle::CaptureMode::WindowUnderCursor:
+         mWindowDecorations->setEnabled(true);
+diff --git a/src/Gui/KSWidget.h b/src/Gui/KSWidget.h
+index a29f7be1..307f7685 100644
+--- a/src/Gui/KSWidget.h
++++ b/src/Gui/KSWidget.h
+@@ -98,6 +98,8 @@ private:
+     QStackedLayout *mStack{nullptr};
+     QWidget *placeHolder{nullptr};
+ 
++    friend class CaptureAreaComboBox;
++
+ #ifdef KIMAGEANNOTATOR_FOUND
+     kImageAnnotator::KImageAnnotator *mAnnotator{nullptr};
+ #endif
+-- 
+2.39.2
+

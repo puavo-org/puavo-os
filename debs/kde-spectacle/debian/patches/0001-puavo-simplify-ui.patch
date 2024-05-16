@@ -1,0 +1,241 @@
+From 466dc8ea9571d186602f8902b6d084819b9c42fb Mon Sep 17 00:00:00 2001
+From: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Date: Fri, 17 May 2024 10:37:15 +0300
+Subject: [PATCH 1/3] Spectacle UI renovating part 1: Hide and simplify buttons
+
+---
+ src/Gui/KSMainWindow.cpp | 33 ++++++++++------------------
+ src/Gui/KSMainWindow.h   |  2 --
+ src/Gui/KSWidget.cpp     | 47 +++++++++++++++++++++++++++-------------
+ src/Gui/KSWidget.h       |  9 ++++----
+ 4 files changed, 47 insertions(+), 44 deletions(-)
+
+diff --git a/src/Gui/KSMainWindow.cpp b/src/Gui/KSMainWindow.cpp
+index 10bfd97a..63231764 100644
+--- a/src/Gui/KSMainWindow.cpp
++++ b/src/Gui/KSMainWindow.cpp
+@@ -65,9 +65,7 @@ KSMainWindow::KSMainWindow(Platform::GrabModes theGrabModes, Platform::ShutterMo
+     , mKSWidget(new KSWidget(theGrabModes, this))
+     , mDivider(new QFrame(this))
+     , mDialogButtonBox(new QDialogButtonBox(this))
+-    , mConfigureButton(new QToolButton(this))
+     , mToolsButton(new QPushButton(this))
+-    , mSendToButton(new QPushButton(this))
+     , mClipboardButton(new QToolButton(this))
+     , mClipboardMenu(new QMenu(this))
+     , mClipboardLocationAction(new QAction(this))
+@@ -144,22 +142,13 @@ void KSMainWindow::init()
+ 
+     // the Button Bar
+ 
+-    mDialogButtonBox->setStandardButtons(QDialogButtonBox::Help);
+-    mDialogButtonBox->button(QDialogButtonBox::Help)->setAutoDefault(false);
+-
+-    mConfigureButton->setDefaultAction(KStandardAction::preferences(this, SLOT(showPreferencesDialog()), this));
+-    mConfigureButton->setText(i18n("Configure..."));
+-    mConfigureButton->setToolTip(i18n("Change Spectacle's settings."));
+-    mConfigureButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+-    mDialogButtonBox->addButton(mConfigureButton, QDialogButtonBox::ResetRole);
+-
+ #ifdef KIMAGEANNOTATOR_FOUND
+     mAnnotateButton->setText(i18n("Annotate"));
+     mAnnotateButton->setToolTip(i18n("Add annotation to the screenshot"));
+     mAnnotateButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+     mAnnotateButton->setIcon(QIcon::fromTheme(QStringLiteral("edit-image"), QIcon::fromTheme(QStringLiteral("document-edit"))));
+     connect(mAnnotateButton, &QToolButton::clicked, this, &KSMainWindow::updateAnnotatorVisibility);
+-    mDialogButtonBox->addButton(mAnnotateButton, QDialogButtonBox::ActionRole);
++    mDialogButtonBox->addButton(mAnnotateButton, QDialogButtonBox::ResetRole);
+ #endif
+ 
+     KGuiItem::assign(mToolsButton, KGuiItem(i18n("Tools")));
+@@ -168,10 +157,6 @@ void KSMainWindow::init()
+     mDialogButtonBox->addButton(mToolsButton, QDialogButtonBox::ActionRole);
+     mToolsButton->setMenu(mToolsMenu);
+ 
+-    KGuiItem::assign(mSendToButton, KGuiItem(i18n("Export")));
+-    mSendToButton->setIcon(QIcon::fromTheme(QStringLiteral("document-share")));
+-    mSendToButton->setAutoDefault(false);
+-    mDialogButtonBox->addButton(mSendToButton, QDialogButtonBox::ActionRole);
+ 
+     mClipboardButton->setMenu(mClipboardMenu);
+     mClipboardButton->setPopupMode(QToolButton::MenuButtonPopup);
+@@ -183,9 +168,6 @@ void KSMainWindow::init()
+     mSaveButton->setPopupMode(QToolButton::MenuButtonPopup);
+     mDialogButtonBox->addButton(mSaveButton, QDialogButtonBox::ActionRole);
+ 
+-    // the help menu
+-    KHelpMenu *helpMenu = new KHelpMenu(this, KAboutData::applicationData(), true);
+-    mDialogButtonBox->button(QDialogButtonBox::Help)->setMenu(helpMenu->menu());
+ 
+     // the tools menu
+     mToolsMenu->addAction(QIcon::fromTheme(QStringLiteral("document-open-folder")),
+@@ -235,10 +217,19 @@ void KSMainWindow::init()
+     layout->addWidget(mDialogButtonBox);
+     mMessageWidget->hide();
+ 
++    mToolsMenu->addAction(KStandardAction::preferences(this, SLOT(showPreferencesDialog()), this));
++
+     // populate our send-to actions
+-    mSendToButton->setMenu(mExportMenu);
++    mExportMenu->setTitle(i18n("Export"));
++    mExportMenu->setIcon(QIcon::fromTheme(QStringLiteral("document-share")));
++    mToolsMenu->addMenu(mExportMenu);
++
+     connect(mExportMenu, &ExportMenu::imageShared, this, &KSMainWindow::showImageSharedFeedback);
+ 
++    // the help menu
++    KHelpMenu *helpMenu = new KHelpMenu(this, KAboutData::applicationData(), true);
++    mToolsMenu->addMenu(helpMenu->menu());
++
+     // lock down the onClick mode depending on available shutter modes
+     if (!mShutterModes.testFlag(Platform::ShutterMode::OnClick)) {
+         mKSWidget->lockOnClickDisabled();
+@@ -405,7 +396,6 @@ void KSMainWindow::setScreenshotAndShow(const QPixmap &pixmap, bool showAnnotato
+ #ifdef KIMAGEANNOTATOR_FOUND
+     mAnnotateButton->setEnabled(mPixmapExists);
+ #endif
+-    mSendToButton->setEnabled(mPixmapExists);
+     mClipboardButton->setEnabled(mPixmapExists);
+     mSaveButton->setEnabled(mPixmapExists);
+ 
+@@ -705,7 +695,6 @@ void KSMainWindow::updateAnnotatorVisibility()
+     }
+ 
+     mToolsButton->setEnabled(mAnnotatorActive);
+-    mSendToButton->setEnabled(mAnnotatorActive);
+     mClipboardButton->setEnabled(mAnnotatorActive);
+     mSaveButton->setEnabled(mAnnotatorActive);
+ 
+diff --git a/src/Gui/KSMainWindow.h b/src/Gui/KSMainWindow.h
+index 31666c30..a8e76e1e 100644
+--- a/src/Gui/KSMainWindow.h
++++ b/src/Gui/KSMainWindow.h
+@@ -84,9 +84,7 @@ private:
+     KSWidget *const mKSWidget;
+     QFrame *const mDivider;
+     QDialogButtonBox *const mDialogButtonBox;
+-    QToolButton *const mConfigureButton;
+     QPushButton *const mToolsButton;
+-    QPushButton *const mSendToButton;
+     QToolButton *const mClipboardButton;
+     QMenu *const mClipboardMenu;
+     QAction *mClipboardLocationAction = nullptr;
+diff --git a/src/Gui/KSWidget.cpp b/src/Gui/KSWidget.cpp
+index 82d7dec6..7e0ed2ea 100644
+--- a/src/Gui/KSWidget.cpp
++++ b/src/Gui/KSWidget.cpp
+@@ -17,11 +17,15 @@
+ 
+ #include <QAction>
+ #include <QApplication>
++#include <QButtonGroup>
+ #include <QCheckBox>
+ #include <QComboBox>
+ #include <QFormLayout>
+ #include <QGridLayout>
+ #include <QLabel>
++#include <QMenu>
++#include <QRadioButton>
++#include <QPushButton>
+ #include <QShortcut>
+ #include <QStackedLayout>
+ 
+@@ -79,35 +83,38 @@ KSWidget::KSWidget(Platform::GrabModes theGrabModes, QWidget *parent)
+     mCaptureModeForm->setContentsMargins(24, 0, 0, 0);
+ 
+     // options (mouse pointer, window decorations, quit after saving or copying)
+-    mContentOptionsLabel = new QLabel(this);
+-    mContentOptionsLabel->setText(i18n("<b>Options</b>"));
+ 
+-    mMousePointer = new QCheckBox(i18n("Include mouse pointer"), this);
++    mMousePointer = new QAction(i18n("Include mouse pointer"), this);
+     mMousePointer->setToolTip(i18n("Show the mouse cursor in the screenshot image"));
+     mMousePointer->setObjectName(QStringLiteral("kcfg_includePointer"));
++    mMousePointer->setCheckable(true);
++    mMousePointer->setChecked(Settings::includePointer());
++    connect(mMousePointer, &QAction::toggled, &Settings::setIncludePointer);
+ 
+-    mWindowDecorations = new QCheckBox(i18n("Include window titlebar and borders"), this);
++    mWindowDecorations = new QAction(i18n("Include window titlebar and borders"), this);
+     mWindowDecorations->setToolTip(i18n("Show the window title bar, the minimize/maximize/close buttons, and the window border"));
+     mWindowDecorations->setEnabled(false);
+     mWindowDecorations->setObjectName(QStringLiteral("kcfg_includeDecorations"));
++    mWindowDecorations->setCheckable(true);
++    mWindowDecorations->setChecked(Settings::includeDecorations());
++    connect(mWindowDecorations, &QAction::toggled, &Settings::includeDecorations);
+ 
+-    mCaptureTransientOnly = new QCheckBox(i18n("Capture the current pop-up only"), this);
++    mCaptureTransientOnly = new QAction(i18n("Capture the current pop-up only"), this);
+     mCaptureTransientOnly->setToolTip(
+         i18n("Capture only the current pop-up window (like a menu, tooltip etc).\n"
+              "If disabled, the pop-up is captured along with the parent window"));
+     mCaptureTransientOnly->setEnabled(false);
+     mCaptureTransientOnly->setObjectName(QStringLiteral("kcfg_transientOnly"));
++    mCaptureTransientOnly->setCheckable(true);
++    mCaptureTransientOnly->setChecked(Settings::transientOnly());
++    connect(mCaptureTransientOnly, &QAction::toggled, &Settings::setTransientOnly);
+ 
+-    mQuitAfterSaveOrCopy = new QCheckBox(i18n("Quit after manual Save or Copy"), this);
++    mQuitAfterSaveOrCopy = new QAction(i18n("Quit after manual Save or Copy"), this);
+     mQuitAfterSaveOrCopy->setToolTip(i18n("Quit Spectacle after manually saving or copying the image"));
+     mQuitAfterSaveOrCopy->setObjectName(QStringLiteral("kcfg_quitAfterSaveCopyExport"));
+-
+-    mContentOptionsForm = new QVBoxLayout;
+-    mContentOptionsForm->addWidget(mMousePointer);
+-    mContentOptionsForm->addWidget(mWindowDecorations);
+-    mContentOptionsForm->addWidget(mCaptureTransientOnly);
+-    mContentOptionsForm->addWidget(mQuitAfterSaveOrCopy);
+-    mContentOptionsForm->setContentsMargins(24, 0, 0, 0);
++    mQuitAfterSaveOrCopy->setCheckable(true);
++    mQuitAfterSaveOrCopy->setChecked(Settings::quitAfterSaveCopyExport());
++    connect(mQuitAfterSaveOrCopy, &QAction::toggled, &Settings::setQuitAfterSaveCopyExport);
+ 
+     mTakeNewScreenshotAction = new QAction(QIcon::fromTheme(QStringLiteral("spectacle")), i18n("Take a New Screenshot"), this);
+     mTakeNewScreenshotAction->setShortcut(QKeySequence::New);
+@@ -133,10 +140,20 @@ KSWidget::KSWidget(Platform::GrabModes theGrabModes, QWidget *parent)
+     mRightLayout->addWidget(mCaptureModeLabel);
+     mRightLayout->addLayout(mCaptureModeForm);
+     mRightLayout->addStretch(1);
+-    mRightLayout->addWidget(mContentOptionsLabel);
+-    mRightLayout->addLayout(mContentOptionsForm);
++     QString optlabel=i18n("<b>Options</b>");
++    optlabel.remove(0,3);
++    optlabel.chop(4);
++    QPushButton *optb=new QPushButton(optlabel);
++    QMenu *optmenu=new QMenu();
++    optmenu->addAction(mMousePointer);
++    optmenu->addAction(mWindowDecorations);
++    optmenu->addAction(mQuitAfterSaveOrCopy);
++    optmenu->addAction(mCaptureTransientOnly);
++    optb->setMenu(optmenu);
+     mRightLayout->addStretch(10);
+     mRightLayout->addWidget(mTakeScreenshotButton, 1, Qt::AlignHCenter);
++    mRightLayout->addStretch(10);
++    mRightLayout->addWidget(optb, 1, Qt::AlignHCenter);
+     mRightLayout->setContentsMargins(10, 0, 0, 10);
+ 
+     mPlaceholderLabel = new QLabel;
+diff --git a/src/Gui/KSWidget.h b/src/Gui/KSWidget.h
+index a6a4a287..a29f7be1 100644
+--- a/src/Gui/KSWidget.h
++++ b/src/Gui/KSWidget.h
+@@ -85,12 +85,11 @@ private:
+     CaptureAreaComboBox *mCaptureArea{nullptr};
+     SmartSpinBox *mDelayMsec{nullptr};
+     QCheckBox *mCaptureOnClick{nullptr};
+-    QCheckBox *mMousePointer{nullptr};
+-    QCheckBox *mWindowDecorations{nullptr};
+-    QCheckBox *mCaptureTransientOnly{nullptr};
+-    QCheckBox *mQuitAfterSaveOrCopy{nullptr};
++    QAction       *mMousePointer{ nullptr };
++    QAction       *mWindowDecorations{ nullptr };
++    QAction       *mCaptureTransientOnly{ nullptr };
++    QAction       *mQuitAfterSaveOrCopy{ nullptr };
+     QLabel *mCaptureModeLabel{nullptr};
+-    QLabel *mContentOptionsLabel{nullptr};
+     QLabel *mPlaceholderLabel { nullptr };
+     bool mTransientWithParentAvailable{false};
+     QAction *mTakeNewScreenshotAction{nullptr};
+-- 
+2.39.2
+
