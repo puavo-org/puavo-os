@@ -10,12 +10,12 @@ Description: Fix %T filename pattern in fullscreen captures
  See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=953536
 Forwarded: https://phabricator.kde.org/D27969
 Author: Aurélien COUDERC <coucouf@debian.org>
-Last-Update: 2020-03-10
+Last-Update: 2022-03-02
 
 --- a/src/ExportManager.cpp
 +++ b/src/ExportManager.cpp
-@@ -176,7 +176,9 @@
-         title = mWindowTitle.replace(QLatin1Char('/'), QLatin1String("_"));  // POSIX doesn't allow "/" in filenames
+@@ -167,7 +167,9 @@
+         title = mWindowTitle.replace(QLatin1Char('/'), QLatin1String("_")); // POSIX doesn't allow "/" in filenames
      } else {
          // Remove '%T' with separators around it
 -        const auto wordSymbol = QStringLiteral(R"(\p{L}\p{M}\p{N})");

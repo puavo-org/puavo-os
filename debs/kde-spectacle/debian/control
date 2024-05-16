@@ -1,43 +1,44 @@
 Source: kde-spectacle
 Section: kde
 Priority: optional
-Maintainer: Debian/Kubuntu Qt/KDE Maintainers <debian-qt-kde@lists.debian.org>
-Uploaders: Maximiliano Curia <maxy@debian.org>,
-           Aurélien COUDERC <coucouf@debian.org>
-Build-Depends: cmake (>= 3.5~),
+Maintainer: Debian Qt/KDE Maintainers <debian-qt-kde@lists.debian.org>
+Uploaders: Aurélien COUDERC <coucouf@debian.org>,
+Build-Depends: cmake (>= 3.16~),
                debhelper-compat (= 13),
-               extra-cmake-modules (>= 5.73.0~),
+               dh-sequence-kf5,
+               extra-cmake-modules (>= 5.90.0~),
                gettext,
                libkcolorpicker-dev,
-               libkimageannotator-dev,
-               libkf5config-dev (>= 5.73.0~),
-               libkf5coreaddons-dev (>= 5.73.0~),
-               libkf5dbusaddons-dev (>= 5.73.0~),
+               libkf5config-dev (>= 5.90.0~),
+               libkf5coreaddons-dev (>= 5.90.0~),
+               libkf5dbusaddons-dev (>= 5.90.0~),
                libkf5declarative-dev (>= 5.29.0~),
-               libkf5doctools-dev (>= 5.73.0~),
-               libkf5globalaccel-dev (>= 5.73.0~),
-               libkf5i18n-dev (>= 5.73.0~),
-               libkf5kio-dev (>= 5.73.0~),
+               libkf5doctools-dev (>= 5.90.0~),
+               libkf5globalaccel-dev (>= 5.90.0~),
+               libkf5guiaddons-dev (>= 5.90.0~),
+               libkf5i18n-dev (>= 5.90.0~),
+               libkf5kio-dev (>= 5.90.0~),
                libkf5kipi-dev,
-               libkf5newstuff-dev (>= 5.73.0~),
-               libkf5notifications-dev (>= 5.73.0~),
+               libkf5newstuff-dev (>= 5.90.0~),
+               libkf5notifications-dev (>= 5.90.0~),
                libkf5purpose-dev (>= 5.73.0~),
                libkf5screen-dev (>= 4:5.4.0~),
-               libkf5wayland-dev (>= 4:5.4.0~),
-               libkf5widgetsaddons-dev (>= 5.73.0~),
-               libkf5windowsystem-dev (>= 5.73.0~),
-               libkf5xmlgui-dev (>= 5.73.0~),
-               libqt5x11extras5-dev (>= 5.10.0~),
-               libqt5svg5-dev (>= 5.10.0~),
+               libkf5wayland-dev (>= 4:5.90.0~),
+               libkf5widgetsaddons-dev (>= 5.90.0~),
+               libkf5windowsystem-dev (>= 5.90.0~),
+               libkf5xmlgui-dev (>= 5.90.0~),
+               libkimageannotator-dev,
+               libqt5svg5-dev (>= 5.15.2~),
+               libqt5x11extras5-dev (>= 5.15.2~),
+               libx11-dev,
                libxcb-cursor-dev,
                libxcb-image0-dev,
                libxcb-util-dev,
                libxcb-xfixes0-dev,
                pkg-config,
-               pkg-kde-tools (>= 0.12),
-               qtbase5-dev (>= 5.10.0~),
-               qtdeclarative5-dev (>= 5.10.0~),
-Standards-Version: 4.5.1
+               qtbase5-dev (>= 5.15.2~),
+               qtdeclarative5-dev (>= 5.15.0~),
+Standards-Version: 4.6.2
 Homepage: https://apps.kde.org/en/spectacle
 Vcs-Browser: https://salsa.debian.org/qt-kde-team/kde/spectacle
 Vcs-Git: https://salsa.debian.org/qt-kde-team/kde/spectacle.git
@@ -46,9 +47,7 @@ Rules-Requires-Root: no
 Package: kde-spectacle
 Section: graphics
 Architecture: any
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-         qdbus-qt5 (>= 5.10.0~),
+Depends: qdbus-qt5 (>= 5.15.0~), ${misc:Depends}, ${shlibs:Depends},
 Description: Screenshot capture utility
  Spectacle captures images of the screen. It can capture the whole screen,
  a specified region, an individual window, or only part of a window.
