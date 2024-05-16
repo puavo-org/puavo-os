@@ -1,4 +1,115 @@
-kde-spectacle (20.12.3-1) bookworm; urgency=medium
+kde-spectacle (22.12.3-1) unstable; urgency=medium
+
+  [ Aurélien COUDERC ]
+  * New upstream release (22.12.3).
+  * Update build-deps and deps with the info from cmake.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Wed, 01 Mar 2023 11:58:27 +0100
+
+kde-spectacle (22.12.2-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Remove inactive Uploaders.
+  * Modernize building:
+    - add the dh-sequence-kf5 build dependency to use the kf5 addon
+      automatically, removing pkg-kde-tools
+    - drop all the manually specified addons and buildsystem for dh
+  * CI: enable again blhc, as it works fine now with blhc 0.13.
+
+ -- Pino Toscano <pino@debian.org>  Sun, 05 Feb 2023 10:36:35 +0100
+
+kde-spectacle (22.12.1-1) unstable; urgency=medium
+
+  [ Aurélien COUDERC ]
+  * New upstream release (22.12.1).
+  * Bump Standards-Version to 4.6.2, no change required.
+  * Add/update Albert Astals Cid’s master key in upstream signing keys.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Sat, 07 Jan 2023 00:07:25 +0100
+
+kde-spectacle (22.12.0-1) unstable; urgency=medium
+
+  [ Aurélien COUDERC ]
+  * New upstream release (22.11.90).
+  * Update build-deps and deps with the info from cmake.
+  * New upstream release (22.12.0).
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Sun, 11 Dec 2022 23:06:49 +0100
+
+kde-spectacle (22.08.1-1) unstable; urgency=medium
+
+  [ Aurélien COUDERC ]
+  * New upstream release (22.08.1).
+  * Update build-deps and deps with the info from cmake.
+  * Bump Standards-Version to 4.6.1, no change required.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Sat, 24 Sep 2022 18:41:01 +0200
+
+kde-spectacle (22.04.1-1) unstable; urgency=medium
+
+  [ Aurélien COUDERC ]
+  * New upstream release (22.04.1).
+  * Refresh copyright information.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Fri, 13 May 2022 23:17:50 +0200
+
+kde-spectacle (21.12.3-1) unstable; urgency=medium
+
+  [ Aurélien COUDERC ]
+  * New upstream release (21.12.3).
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Fri, 11 Mar 2022 21:53:51 +0100
+
+kde-spectacle (21.12.2-1) unstable; urgency=medium
+
+  [ Aurélien COUDERC ]
+  * New upstream release (21.12.2).
+  * Refresh patches.
+
+ -- Aurélien COUDERC <coucouf@debian.org>  Wed, 02 Mar 2022 23:18:19 +0100
+
+kde-spectacle (21.08.1-1) unstable; urgency=medium
+
+  [ Norbert Preining ]
+  * New upstream release (21.08.1).
+  * Bump Standards-Version to 4.6.0, no change required.
+
+ -- Norbert Preining <norbert@preining.info>  Fri, 03 Sep 2021 14:55:25 +0900
+
+kde-spectacle (21.08.0-1) unstable; urgency=medium
+
+  [ Norbert Preining ]
+  * New upstream release (21.08.0).
+
+ -- Norbert Preining <norbert@preining.info>  Mon, 16 Aug 2021 16:10:30 +0900
+
+kde-spectacle (21.04.3-1) experimental; urgency=medium
+
+  [ Norbert Preining ]
+  * New upstream release (21.04.3).
+
+ -- Norbert Preining <norbert@preining.info>  Fri, 09 Jul 2021 10:07:31 +0900
+
+kde-spectacle (21.04.2-1) experimental; urgency=medium
+
+  [ Norbert Preining ]
+  * New upstream release (21.04.2).
+
+ -- Norbert Preining <norbert@preining.info>  Thu, 10 Jun 2021 19:31:49 +0900
+
+kde-spectacle (21.04.0-1) experimental; urgency=medium
+
+  [ Norbert Preining ]
+  * New upstream release (21.04.0).
+  * Drop Kubuntu from maintainer name.
+  * Drop Max from uploaders, thanks for your work.
+  * Add myself to uploaders.
+  * Bump deps according to cmake.
+
+ -- Norbert Preining <norbert@preining.info>  Sat, 24 Apr 2021 21:29:58 +0900
+
+kde-spectacle (20.12.3-1) unstable; urgency=medium
 
   * New upstream release (20.12.3).
 

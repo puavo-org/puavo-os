@@ -12,6 +12,7 @@ _pkgs_ports := anki                   \
                gtk+3.0                \
                gtk4                   \
                hooktftp               \
+               kde-spectacle          \
                libpam-ccreds          \
                linux                  \
                mutter                 \
@@ -19,9 +20,6 @@ _pkgs_ports := anki                   \
                veyon                  \
                wine                   \
                wsmancli
-
-# XXX disabled for bookworm
-#                kde-spectacle          \
 
 # sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
