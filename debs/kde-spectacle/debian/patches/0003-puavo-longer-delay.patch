@@ -1,0 +1,29 @@
+From 2521b67543dd3dd0ff3ac19d3a8f9604d7808b6b Mon Sep 17 00:00:00 2001
+From: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Date: Fri, 17 May 2024 12:51:44 +0300
+Subject: [PATCH 3/3] Use longer delay when taking screenshot so window manages
+ to hide
+
+Although fixed by a484880c1d3ea7e5c762e739d5ea851c3decef09 for delayless
+case, the window still seems to fail to hide on time sometimes when using
+a delayed screenshot mode.
+---
+ src/SpectacleCore.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/SpectacleCore.cpp b/src/SpectacleCore.cpp
+index c36eb5f2..9fe7ea24 100644
+--- a/src/SpectacleCore.cpp
++++ b/src/SpectacleCore.cpp
+@@ -295,7 +295,7 @@ void SpectacleCore::takeNewScreenshot(Spectacle::CaptureMode theCaptureMode, int
+     // settings (and unless the user has set an extremely slow effect), 200
+     // milliseconds is a good amount of wait time.
+ 
+-    auto lMsec = KWindowSystem::compositingActive() ? 200 : 50;
++    auto lMsec = KWindowSystem::compositingActive() ? 300 : 300;
+     QTimer::singleShot(theTimeout + lMsec, this, [this, lGrabMode, theIncludePointer, theIncludeDecorations]() {
+         mPlatform->doGrab(Platform::ShutterMode::Immediate, lGrabMode, theIncludePointer, theIncludeDecorations);
+     });
+-- 
+2.39.2
+
