@@ -424,6 +424,7 @@ class packages {
     , 'libfontembed-dev'
     , 'libgail-3-dev'
     , 'libgtk-3-dev'
+    , 'libgtk-4-dev'
     , 'libmutter-11-dev'
     , 'libopenwsman-dev'
     , 'libwsman-clientpp-dev' ]:
