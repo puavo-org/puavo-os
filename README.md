@@ -2,11 +2,11 @@
 
 To build images with these sources,
 your build environment should be a Debian GNU/Linux
-installation.  To build images with "Buster"-version,
-use the "buster"-branch.  To build images with "Bullseye"-version,
-use the "bullseye"-branch.  The build host should probably be
-of the same version your target image is.  As of March 2022,
-our main production version is Buster and Bullseye
+installation.  To build images with "Bullseye"-version,
+use the "bullseye"-branch.  To build images with "Bookworm"-version,
+use the "bookworm"-branch.  The build host should probably be
+of the same version your target image is.  As of May 2024,
+our main production version is Bullseye and Bookworm
 is under active development.
 
 After cloning the repository, you should also update
