@@ -39,7 +39,7 @@ def _main():
         with open(
             os.path.join(sysfs_path, "removable"), encoding="ascii"
         ) as removable_file:
-            is_removable = removable_file.read().strip() == "removable"
+            is_removable = removable_file.read().strip() in ("fixed", "removable")
 
         if not is_removable:
             print(
