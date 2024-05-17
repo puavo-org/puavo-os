@@ -1,0 +1,44 @@
+From 5bd218aeb3a7c16c9a0488fead8942f42779f2cc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Fri, 17 May 2024 18:05:08 +0300
+Subject: [PATCH 10/11] [puavo] appearance: accept "Dark" and "dark" as valid
+ dark suffixes
+
+KvArc => KvArcDark
+---
+ panels/background/cc-background-panel.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
+index 844536b34..aa3c043ad 100644
+--- a/panels/background/cc-background-panel.c
++++ b/panels/background/cc-background-panel.c
+@@ -80,7 +80,7 @@ struct _CcBackgroundPanel
+   CcIconThemeChooser *icon_theme_chooser;
+ };
+ 
+-static const gchar *const DARK_SUFFIXES[] = {"-Dark", "-dark"};
++static const gchar *const DARK_SUFFIXES[] = {"Dark", "dark", "-Dark", "-dark"};
+ static const int DARK_SUFFIX_COUNT = sizeof(DARK_SUFFIXES) / sizeof(DARK_SUFFIXES[0]);
+ 
+ CC_PANEL_REGISTER (CcBackgroundPanel, cc_background_panel)
+@@ -145,10 +145,12 @@ get_default_theme(const gchar *theme)
+   if (!theme)
+     return NULL;
+ 
+-  /* If the theme is somehow just "-Dark", then it's not considered to
+-   * be Dark version. Because would it be the Dark version of nothing?
+-   * What is Darker than nothing? Nothing. So, "-Dark" cannot be Dark
+-   * version, it's the default version. */
++  /* If the theme name is somehow just the suffix, e.g. "-Dark", then
++   * it's not considered as a Dark version. Because then it would be
++   * the Dark version of nothing. But that does not make any sense.
++   * What is Darker than nothing? Nothing.
++   * So, "-Dark" cannot be Dark version, it's the default
++   * version. */
+   for (int i = 0; i < DARK_SUFFIX_COUNT; ++i)
+     {
+       if (g_strcmp0 (theme, DARK_SUFFIXES[i]) == 0)
+-- 
+2.39.2
+

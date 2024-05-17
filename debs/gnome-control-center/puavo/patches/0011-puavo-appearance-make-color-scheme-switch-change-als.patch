@@ -1,0 +1,173 @@
+From d21430fea0c97364b9f3d8d251ae987b78079598 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Fri, 17 May 2024 18:07:17 +0300
+Subject: [PATCH 11/11] [puavo] appearance: make color scheme switch change
+ also Qt Kvantum theme
+
+Note that Qt applications are not updated immediately, they need to be
+restarted to apply the color scheme change.
+
+I wonder if there's a DBus signal which we could emit?
+---
+ panels/background/cc-background-panel.c | 113 +++++++++++++++++++++++-
+ 1 file changed, 112 insertions(+), 1 deletion(-)
+
+diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
+index aa3c043ad..9aa6fb710 100644
+--- a/panels/background/cc-background-panel.c
++++ b/panels/background/cc-background-panel.c
+@@ -200,9 +200,110 @@ get_next_theme (const gchar         *theme,
+       g_warning("Dark theme does not exist for theme %s\n", theme);
+     }
+ 
++  return g_strdup (default_theme);
++}
+ 
++static GKeyFile*
++load_qt_config_key_file(const gchar *const config_file_path)
++{
++  g_autoptr(GError) error = NULL;
++  GKeyFile *key_file = g_key_file_new();
+ 
+-  return g_strdup (default_theme);
++  if (!g_key_file_load_from_file (key_file, config_file_path, G_KEY_FILE_NONE, &error))
++    {
++      if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
++        g_warning ("Failed to load Qt config file '%s': %s", config_file_path, error->message);
++      g_key_file_free(key_file);
++      return NULL;
++    }
++
++  return key_file;
++}
++
++static gchar*
++read_qt_config_theme(const gchar *const config_file_path)
++{
++  g_autoptr(GKeyFile) key_file = load_qt_config_key_file (config_file_path);
++
++  if (key_file == NULL)
++    return NULL;
++
++  return g_key_file_get_string (key_file, "General", "theme", NULL);
++}
++
++static gchar*
++get_qt_config_file_path(const gchar *const base_dir)
++{
++  return g_strconcat(base_dir, "/Kvantum/kvantum.kvconfig", NULL);
++}
++
++static gchar*
++get_qt_config_file_path_user()
++{
++  return get_qt_config_file_path (g_get_user_config_dir ());
++}
++
++static gchar*
++get_qt_theme_system()
++{
++  const gchar *const *dirs = g_get_system_config_dirs ();
++
++  for (int i = 0; dirs[i] != NULL; ++i)
++    {
++      gchar *config_file_path = get_qt_config_file_path (dirs[i]);
++      gchar *theme = read_qt_config_theme (config_file_path);
++
++      g_free (config_file_path);
++
++      if (theme)
++        return theme;
++    }
++
++  return NULL;
++}
++
++static gchar*
++get_qt_theme_user()
++{
++  g_autofree gchar *config_file_path = get_qt_config_file_path_user ();
++
++  return read_qt_config_theme (config_file_path);
++}
++
++static gchar*
++get_qt_theme ()
++{
++  gchar *theme;
++
++  theme = get_qt_theme_user ();
++  if (theme == NULL)
++    theme = get_qt_theme_system ();
++
++  return theme;
++}
++
++static void
++set_qt_theme (const gchar *theme)
++{
++  g_autoptr(GError) error = NULL;
++  g_autofree gchar *config_file_path = get_qt_config_file_path_user ();
++  g_autofree gchar *config_dir_path = g_path_get_dirname (config_file_path);
++  g_autoptr(GKeyFile) key_file = load_qt_config_key_file (config_file_path);
++
++  if (key_file == NULL)
++    key_file = g_key_file_new ();
++
++  g_key_file_set_string (key_file, "General", "theme", theme);
++
++  if (g_mkdir_with_parents (config_dir_path, 0755) < 0)
++    {
++      g_warning ("Failed to ensure configuration directory '%s' exists: %s",
++                 config_dir_path, g_strerror (errno));
++      return;
++    }
++
++  if (!g_key_file_save_to_file (key_file, config_file_path, &error))
++    g_warning ("Failed to save Qt config file '%s': %s", config_file_path, error->message);
+ }
+ 
+ static void
+@@ -210,8 +311,10 @@ set_color_scheme (CcBackgroundPanel   *self,
+                   GDesktopColorScheme  color_scheme)
+ {
+   g_autofree gchar *current_gtk_theme = NULL;
++  g_autofree gchar *current_qt_theme = NULL;
+   g_autofree gchar *current_shell_theme = NULL;
+   g_autofree gchar *next_gtk_theme = NULL;
++  g_autofree gchar *next_qt_theme = NULL;
+   g_autofree gchar *next_shell_theme = NULL;
+   GDesktopColorScheme scheme;
+ 
+@@ -221,6 +324,9 @@ set_color_scheme (CcBackgroundPanel   *self,
+                                              INTERFACE_GTK_THEME_KEY);
+   next_gtk_theme = get_next_theme(current_gtk_theme, color_scheme);
+ 
++  current_qt_theme = get_qt_theme();
++  next_qt_theme = get_next_theme(current_qt_theme, color_scheme);
++
+   if (self->maybe_user_theme_settings)
+   {
+     current_shell_theme = g_settings_get_string (self->maybe_user_theme_settings,
+@@ -232,6 +338,7 @@ set_color_scheme (CcBackgroundPanel   *self,
+    * screen transition */
+   if (color_scheme == scheme
+       && g_strcmp0(current_gtk_theme, next_gtk_theme) == 0
++      && g_strcmp0(current_qt_theme, next_qt_theme) == 0
+       && (self->maybe_user_theme_settings == NULL || g_strcmp0(current_shell_theme, next_shell_theme) == 0))
+     return;
+ 
+@@ -246,6 +353,10 @@ set_color_scheme (CcBackgroundPanel   *self,
+   else
+     g_warning ("Next GTK theme is not defined, not changing GTK theme");
+ 
++  if (next_qt_theme)
++    set_qt_theme(next_qt_theme);
++  else
++    g_warning ("Next Qt theme is not defined, not changing Qt theme");
+ 
+   if (self->maybe_user_theme_settings)
+     {
+-- 
+2.39.2
+
