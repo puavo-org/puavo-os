@@ -1,7 +1,7 @@
 From 2c4fcacd8ba6076f985f88b4587f123f10a8ceb5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Fri, 26 Apr 2024 11:01:01 +0300
-Subject: [PATCH 1/8] [puavo] Disable user-accounts
+Subject: [PATCH 01/11] [puavo] Disable user-accounts
 
 ---
  shell/cc-panel-loader.c | 1 -
