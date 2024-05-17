@@ -593,6 +593,30 @@ reset_win()
 }
 
 
+get_win_language_from_puavo_conf()
+{
+    local puavo_language win_language
+
+    puavo_language=$(puavo-conf puavo.l10n.locale | cut -c 1-2 || true)
+
+    case "${puavo_language}" in
+        'fi')
+            win_language='Finnish'
+            ;;
+        'sv')
+            win_language='Swedish'
+            ;;
+        'de')
+            win_language='German'
+            ;;
+        *)
+            win_language='English'
+            ;;
+    esac
+
+    printf '%s' "${win_language}"
+}
+
 reset_all_wins()
 {
     local returnval win_language win_product_name
@@ -602,14 +626,17 @@ reset_all_wins()
     while IFS= read -r -d $'\0' win_primary_partition_devpath; do
         win_product_name=$(get_win_product_name "${win_primary_partition_devpath}") || {
             logerr "Failed to get the product name of Windows on '${win_primary_partition_devpath}'."
-            returnval=1
-            continue
+            win_product_name='Windows 11 Pro'
+            logwarning "Using '${win_product_name}' as a fallback."
         }
 
         win_language=$(get_win_language "${win_primary_partition_devpath}") || {
             logerr "Failed to get the language tag of Windows on '${win_primary_partition_devpath}'."
-            returnval=1
-            continue
+            win_language="$(get_win_language_from_puavo_conf)" || {
+                logerr 'Failed to get fallback Windows language from Puavo configuration, which should never happen!'
+                win_language='English'
+            }
+            logwarning "Using '${win_language}' as a fallback."
         }
 
         loginfo "Detected '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
