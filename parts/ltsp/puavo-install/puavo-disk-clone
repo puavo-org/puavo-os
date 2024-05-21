@@ -50,6 +50,22 @@ case "$mode" in
     /usr/sbin/puavo-disk-erase --force --normal "$target_disk"
     ocs-sr -batch -g auto -e1 auto -e2 -r -j2 -scr -k1 -p true \
            restoredisk "$restore_image" "$target_disk"
+
+    # Resize LVM partition to match the physical partition size
+    # and extend puavo-home accordingly
+    lvm_part=$(lsblk -n -l -o NAME,PARTTYPENAME "/dev/$target_disk" | awk '/Linux LVM/ {print $1}')
+    restore_size=$(awk '$4 == "disk" && /^(nvme[0-9]+n[0-9]+|[sv]d[a-z]) / {print $3}' "$image_dir/$restore_image/blkdev.list")
+    target_size=$(lsblk -n -l -o SIZE,NAME "/dev/$target_disk" | awk '/'"$target_disk"'$/ {print $1}')
+
+    if [ "${restore_size}" != "${target_size}" ]; then
+      if [ -n "${lvm_part}" ]; then
+        printf "%s" "Linux LVM found, resizing to occupy unclaimed free space.."
+        pvresize "/dev/$lvm_part"
+        lvextend -l +100%FREE /dev/mapper/puavo-home
+        e2fsck -f /dev/mapper/puavo-home
+        resize2fs /dev/mapper/puavo-home
+      fi
+    fi
     ;;
   savedisk)
     product_name=$(dmidecode -s system-product-name | tr ' /.' ___)
