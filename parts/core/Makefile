@@ -57,7 +57,8 @@ install : $(install-subdirs) installdirs
 	$(INSTALL_PROGRAM) \
 		-t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount \
 		initramfs-tools/scripts/puavo-postmount/01-mount \
-		initramfs-tools/scripts/puavo-postmount/02-plymouth
+		initramfs-tools/scripts/puavo-postmount/02-plymouth \
+		initramfs-tools/scripts/puavo-postmount/03-crypthome
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin init-puavo
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/initramfs-tools/conf.d \
