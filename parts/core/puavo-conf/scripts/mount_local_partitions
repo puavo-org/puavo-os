@@ -86,7 +86,13 @@ if [ "$puavo_hosttype" = 'diskinstaller' ]; then
 fi
 
 if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
-  puavo_mount_partition puavo-home /home || status=1
+  if [ -e /dev/mapper/puavo-crypthome ]; then
+    cat <<'EOF' > /etc/crypttab
+puavo-home      /dev/mapper/puavo-crypthome     -       tpm2-device=auto
+EOF
+  else
+    puavo_mount_partition puavo-home /home || status=1
+  fi
 fi
 
 # These are needed for system updates when on NBD.
