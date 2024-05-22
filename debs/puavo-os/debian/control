@@ -86,10 +86,6 @@ Description: Puavo configuration
 Package: puavo-core
 Architecture: all
 Depends: ${misc:Depends},
- clevis,
- clevis-initramfs,
- clevis-luks,
- clevis-tpm2,
  coreutils,
  initramfs-tools,
  mawk,
