@@ -1,0 +1,9 @@
+{
+  "description": "Screen keyboard controller",
+  "gettext-domain": "ScreenKeyboardControllerExtension",
+  "name": "ScreenKeyboardController",
+  "session-modes": [ "gdm", "user" ],
+  "settings-schema": "org.gnome.shell.extensions.screenkeyboardcontroller",
+  "shell-version": [ "43" ],
+  "uuid": "screenkeyboardcontroller@puavo.org"
+}

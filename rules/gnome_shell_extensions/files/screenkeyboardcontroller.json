@@ -1,0 +1,8 @@
+{
+  "puavo.screenkeyboardcontroller.mode": {
+    "choices": [ "do_nothing", "force_hide", "auto_hide" ]
+    "default": "do_nothing",
+    "description": "In 'do_nothing' mode, screen keyboard is not controlled. In 'force_hide' mode, screen keyboard is always hidden. In 'auto_hide' mode, screen keyboard is hidden when a real keyboard is available.",
+    "typehint": "string"
+  }
+}

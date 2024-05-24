@@ -1,5 +1,7 @@
 class gnome_shell_extensions {
+  include ::dconf::schemas
   include ::packages
+  include ::puavo_conf
   include ::themes
 
   define add_extension () {
@@ -30,6 +32,7 @@ class gnome_shell_extensions {
     , 'Move_Clock@rmy.pobox.com'
     , 'puavomenu@puavo.org'
     , 'quick-settings-tweaks@qwreey'
+    , 'screenkeyboardcontroller@puavo.org'
     , 'user-theme@gnome-shell-extensions.gcampax.github.com' ]:
       ;
   }
@@ -46,6 +49,15 @@ class gnome_shell_extensions {
       source  => 'puppet:///modules/gnome_shell_extensions/ding@rastersoft.com/app/ding.js';
   }
 
+  ::puavo_conf::definition {
+    'screenkeyboardcontroller.json':
+      source => 'puppet:///modules/gnome_shell_extensions/screenkeyboardcontroller.json';
+  }
+
+  ::dconf::schemas::schema {
+    'org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml':
+      srcfile => 'puppet:///modules/gnome_shell_extensions/screenkeyboardcontroller@puavo.org/schemas/org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml';
+  }
 
   Package <| title == gnome-shell-extensions |>
 }
