@@ -40,9 +40,12 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(libdir)/puavo-core
+	mkdir -p $(DESTDIR)$(libdir)/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 
 .PHONY : install
 install : $(install-subdirs) installdirs
@@ -65,6 +68,8 @@ install : $(install-subdirs) installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts \
 		initramfs-tools/scripts/puavo
 
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-core lib/*
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-conf/definitions/*.json
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d/ \
@@ -73,6 +78,11 @@ install : $(install-subdirs) installdirs
 		puavo-conf/files/messages/*
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
 		puavo-conf/scripts/*
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/systemd/system systemd/*
+
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
+		/usr/lib/systemd/system/puavo-crypthome.service
 
 .PHONY : $(clean-subdirs)
 $(clean-subdirs) :

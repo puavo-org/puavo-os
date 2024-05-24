@@ -1,0 +1,62 @@
+#!/bin/sh
+
+set -eu
+
+if ! [ -e /dev/mapper/puavo-crypthome ]; then
+  exit 0
+fi
+
+# XXX is this check really correct?
+needs_pin() {
+  local tpm2_pin
+  tpm2_pin=$(
+    cryptsetup luksDump --dump-json-metadata /dev/mapper/puavo-crypthome \
+      | jq -r '
+          .tokens[] | if .type == "systemd-tpm2" then .["tpm2-pin"] else empty end
+        ')
+  [ "$tpm2_pin" = 'true' ]
+}
+
+status=0
+
+# XXX what if TPM chip is in locked mode?
+
+if needs_pin; then
+  prompt_text='GIVE ME THE PUAVO TPM PIN OR DIE!'
+  while true; do
+    pin=$(plymouth ask-for-password --prompt="$prompt_text") || true
+    if [ -z "$pin" ]; then
+      continue
+    fi
+    plymouth display-message --text='' || true
+    PIN="${pin}" /usr/lib/systemd/systemd-cryptsetup attach puavo-home \
+      /dev/mapper/puavo-crypthome - tpm2-device=auto,headless=true,tries=1 \
+        && break
+    plymouth display-message --text='BAD PIN' || true
+  done
+else
+  /usr/lib/systemd/systemd-cryptsetup attach puavo-home \
+    /dev/mapper/puavo-crypthome - tpm2-device=auto,headless=true,tries=1 \
+      || status=1
+fi
+
+if [ "$status" -ne 0 ]; then
+  plymouth display-message --text='ERROR IN DECRYPTING HOME' || true
+fi
+
+if ! /etc/puavo-conf/scripts/mount_local_partitions /home; then
+  plymouth display-message --text='ERROR IN MOUNTING HOME DIRECTORY' || true
+  status=1
+fi
+
+if [ "$status" -ne 0 ]; then
+  # XXX What should we done in this case?  If we allow system boot to continue
+  # XXX to the login screen, we should at least notify users that we have
+  # XXX serious issues (using guest-mode is still an option, because it does
+  # XXX not need /home).
+  while true; do
+    sleep 86400
+  done
+fi
+
+exit 0

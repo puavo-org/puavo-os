@@ -59,6 +59,13 @@ puavo_mount_partition() {
   mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
 }
 
+mount_path=${1:-}
+
+if [ "$mount_path" = '/home' ]; then
+  puavo_mount_partition puavo-home /home
+  exit 0
+fi
+
 # get rid of hosttype handling?
 puavo_hosttype=$(puavo-conf puavo.hosttype)
 
@@ -86,11 +93,8 @@ if [ "$puavo_hosttype" = 'diskinstaller' ]; then
 fi
 
 if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
-  if [ -e /dev/mapper/puavo-crypthome ]; then
-    cat <<'EOF' > /etc/crypttab
-puavo-home      /dev/mapper/puavo-crypthome     -       tpm2-device=auto
-EOF
-  else
+  # puavo-crypthome will be handled later by puavo-crypthome.service
+  if [ ! -e /dev/mapper/puavo-crypthome ]; then
     puavo_mount_partition puavo-home /home || status=1
   fi
 fi

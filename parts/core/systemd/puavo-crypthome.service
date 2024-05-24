@@ -1,0 +1,10 @@
+[Unit]
+Description=Decrypt and mount puavo crypthome
+Before=gdm.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/puavo-core/puavo-mount-crypthome
+
+[Install]
+WantedBy=multi-user.target
