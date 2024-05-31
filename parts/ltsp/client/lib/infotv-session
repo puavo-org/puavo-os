@@ -11,6 +11,11 @@ run_idid()
 
   # Start idid and keep it running
   while true; do
+    # idid does something funny with windows sometimes and minimizes itself
+    # after starting, failing to come up. add a safeguard to make sure it won't
+    # stay running minimized and leaving the screen empty oh so blue
+    sleep 20 && wmctrl -i -a `wmctrl -l | awk '{print $1;}'` &
+
     idid || true
     logger -p local0.err -t infotv \
            'The idid process has exited or crashed, restarting it...'
