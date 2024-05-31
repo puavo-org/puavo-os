@@ -3,8 +3,7 @@
 set -eu
 
 # must do this so that process.py below does not fail
-sed -i '/featureset-rt/{ n; s/enabled: true/enabled: false/}' \
-    debian/config/defines
+puavo/tools/modify-defines.py
 debian/rules debian/control-real || true # Update control files
 
 # Merge surface config
