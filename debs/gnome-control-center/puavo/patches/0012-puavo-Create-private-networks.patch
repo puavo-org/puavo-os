@@ -1,0 +1,38 @@
+From 71f21f6236116ea3bb93e2fb843cc5027eb33736 Mon Sep 17 00:00:00 2001
+From: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Date: Fri, 31 May 2024 16:43:35 +0300
+Subject: [PATCH] Create private network if no system permission in gnome-control-center
+
+---
+ panels/network/network-dialogs.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/panels/network/network-dialogs.c b/panels/network/network-dialogs.c
+index 83df99a72..05a0c2c71 100644
+--- a/panels/network/network-dialogs.c
++++ b/panels/network/network-dialogs.c
+@@ -156,6 +156,21 @@ wireless_dialog_response_cb (GtkDialog *foo,
+ 			g_object_set (G_OBJECT (s_con), NM_SETTING_CONNECTION_AUTOCONNECT, FALSE, NULL);
+ 		}
+ 
++		// similarly to gnome-shell patch 02-puavo-make-private-network-connections-possible.patch,
++		// check if we can add system connections; if not, just make it private
++		gint wait_status;
++		gboolean private_needed = g_spawn_command_line_sync("/usr/lib/puavo-ltsp-client/puavo-network-connections --ask-if-must-be-private",
++			NULL, NULL, wait_status, NULL);
++		if(private_needed && wait_status == 0) {
++			g_debug("puavo: system connections not allowed, creating private connection");
++			NMSetting *general_setting;
++			general_setting = nm_setting_connection_new ();
++			nm_setting_connection_add_permission(general_setting, "user", g_get_user_name(), NULL);
++			nm_connection_add_setting (connection, general_setting);
++		}
++		else
++			g_debug("puavo: all access, creating a system connection");
++
+ 		nm_client_add_and_activate_connection_async (closure->client,
+ 		                                             connection,
+ 		                                             device,
+-- 
+2.30.2
+
