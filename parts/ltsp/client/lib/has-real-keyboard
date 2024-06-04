@@ -3,17 +3,24 @@
 set -eu
 set -o pipefail
 
-while read -a handlers; do
-    for handler in "${handlers[@]}"; do
-        if [ "${handler}" = sysrq ]; then
-            # All real keyboards have sysrq handlers. An alternative
-            # would be to come up with a list of keys which we think
-            # all real keyboards have and test the set of keys
-            # instead. But, sysrq is way simpler and seems safe too.
-            echo yes
-            exit 0
-        fi
-    done
-done < <(sed -r -n 's/^H: Handlers=//p' /proc/bus/input/devices)
+real_keyboard_names=$(awk -F'=' -- '
+/^N: Name=/ { name = $2 }
+/^H: Handlers=/ { handlers = $2 }
+/^P: Phys=/ { phys = $2 }
+/^$/ {
+     if ( phys != "" ) {
+         split(handlers, handlers_array, " ")
+         for (v in handlers_array) {
+             if (handlers_array[v] == "sysrq") {
+                 printf "%s\n", name
+             }            
+         }
+    }
+}
+' /proc/bus/input/devices)
 
-echo no
+if [ -z "${real_keyboard_names}" ]; then
+    echo no
+else
+    echo yes
+fi
