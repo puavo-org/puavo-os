@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
+  exit 0
+fi
+
+ers_mode="$(puavo-conf puavo.ers.mode)"
+case "$ers_mode" in
+  ers-applet)
+    # Run automated vm startup
+    if vboxmanage list vms | grep -q 'NaksuAbittiKTP' ; then
+      logger -p user.info -t puavo-ers-startvm \
+        "Trying Automated Abitti vm startup"
+      if vboxmanage startvm NaksuAbittiKTP ; then
+        sleep 5
+        vboxmanage controlvm NaksuAbittiKTP keyboardputscancode 1C 9C
+        sleep 1
+        vboxmanage controlvm NaksuAbittiKTP keyboardputscancode 1C 9C
+        logger -p user.info -t puavo-ers-startvm \
+          "Abitti vm should now be running"
+      else
+        logger -p user.err -t puavo-ers-startvm \
+          "Automated Abitti vm startup failed"
+        exit 1
+      fi
+    else
+      logger -p user.err -t puavo-ers-startvm \
+        "Abitti vm not found"
+      exit 1
+    fi
+    ;;
+  naksu)
+    # Do not run automated vm startup
+    exit 0
+    ;;
+  *)
+    logger -p user.err -t puavo-ers-startvm \
+      "Unsupported puavo.ers.mode value '${ers_mode}'"
+    exit 1
+    ;;
+esac
