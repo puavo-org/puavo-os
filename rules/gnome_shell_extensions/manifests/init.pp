@@ -30,7 +30,6 @@ class gnome_shell_extensions {
     , 'Move_Clock@rmy.pobox.com'
     , 'puavomenu@puavo.org'
     , 'quick-settings-tweaks@qwreey'
-    , 'uparrows@puavo.org'
     , 'user-theme@gnome-shell-extensions.gcampax.github.com' ]:
       ;
   }

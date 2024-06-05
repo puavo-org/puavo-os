@@ -1,7 +1,7 @@
 diff -ruN gnome-shell.orig/js/ui/sessionMode.js gnome-shell/js/ui/sessionMode.js
 --- gnome-shell.orig/js/ui/sessionMode.js	2023-02-14 02:11:32.000000000 +0200
 +++ gnome-shell/js/ui/sessionMode.js	2023-03-16 18:55:55.741797217 +0200
-@@ -49,6 +49,12 @@
+@@ -49,6 +49,11 @@
      },
  
      'gdm': {
@@ -9,7 +9,6 @@ diff -ruN gnome-shell.orig/js/ui/sessionMode.js gnome-shell/js/ui/sessionMode.js
 +		             'bottompanel@tmoer93',
 +		             'hostinfo@puavo.org',
 +		             'Move_Clock@rmy.pobox.com',
-+		             'uparrows@puavo.org',
 +		             'user-theme@gnome-shell-extensions.gcampax.github.com' ],
          hasNotifications: true,
          isGreeter: true,
