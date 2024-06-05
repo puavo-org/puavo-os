@@ -417,6 +417,8 @@ class PuavoErsApplet:
 
     if self.automation_active and self.exam_sync_active:
       self.enable_exam_scheduler()
+      # Try to start vm
+      subprocess.run("puavo-ers-startvm")
 
     Gtk.main()
 
