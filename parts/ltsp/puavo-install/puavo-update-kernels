@@ -1,0 +1,100 @@
+#!/bin/sh
+
+set -eu
+
+puk_mountdir=$(mktemp -d /tmp/puavo-update-kernels.XXXXXX)
+
+get_system_images() {
+  local img label
+  (
+    cd /images
+    # must priorize the default and the backup images, so look for
+    # those first
+    for label in *.default *.backup; do
+      test -e "$label" || continue
+      img="${label%.default}.img"
+      test -e "$img" || continue
+      printf "%s\n" "$img"
+    done
+    for img in *.img; do
+      test -e "${img%.img}.default"   && continue
+      test -e "${img%.img}.backup"    && continue
+      test "$img" = 'ltsp.img'        && continue
+      test "$img" = 'ltsp-backup.img' && continue
+      printf "%s\n" "$img"
+    done
+  )
+}
+
+system_images=$(get_system_images)
+
+install_ukis() {
+  local efi_partition efi_status
+  efi_partition=$1
+
+  efi_status=0
+
+  mkdir -p "${puk_mountdir}/efi" || return 1
+  mount "$efi_partition" "${puk_mountdir}/efi" || return 1
+
+  for img in $system_images; do
+    install_all_ukis_for_image "$efi_partition" "$img" || efi_status=1
+  done
+
+  umount "${puk_mountdir}/efi" || return 1
+
+  return $efi_status
+}
+
+install_uki_for_image() {
+  local image initrd target_dir vmlinuz
+
+  vmlinuz=$1
+  image=$2
+
+  initrd="initrd.img-${vmlinuz#vmlinuz-}"
+  target_dir="${puk_mountdir}/efi/EFI/PuavoOS/${image}"
+
+  mkdir -p "$target_dir" || return 1
+
+  # XXX cmdline depends on context (for example bootserver vs laptop)
+  /usr/lib/systemd/ukify build --linux "${puk_mountdir}/image/boot/${vmlinuz}" \
+    --initrd "${puk_mountdir}/image/boot/${initrd}" \
+    --cmdline 'ro init=/sbin/init-puavo quiet loglevel=3 splash puavo.hosttype=laptop root=/dev/mapper/puavo-images loop=/ltsp.img puavo.image.path=/ltsp.img' \
+    --output "${target_dir}/${vmlinuz}.unsigned.efi.tmp" \
+      || return 1
+  mv "${target_dir}/${vmlinuz}.unsigned.efi.tmp" \
+     "${target_dir}/${vmlinuz}.unsigned.efi" || return 1
+}
+
+install_all_ukis_for_image() {
+  local all_status efi_partition image kernel
+  efi_partition=$1
+  image=$2
+
+  all_status=0
+
+  mkdir -p "${puk_mountdir}/image" || return 1
+  mount "/images/${image}" "${puk_mountdir}/image" || return 1
+  for vmlinuz_path in ${puk_mountdir}/image/boot/vmlinuz-*; do
+    test ! -h "$vmlinuz_path" || continue
+    vmlinuz=${vmlinuz_path##*/}
+    install_uki_for_image "$vmlinuz" "$image" || all_status=1
+  done
+  umount "${puk_mountdir}/image" || return 1
+
+  return $all_status
+}
+
+status=0
+
+# XXX this tool should also cleanup unused UKIs
+
+efi_partitions=$(puavo-install-grub --list-efi-partitions)
+for efi_partition in $efi_partitions; do
+  install_ukis "$efi_partition" || status=1
+done
+
+rm --one-file-system -rf "$puk_mountdir" || true
+
+exit $status
