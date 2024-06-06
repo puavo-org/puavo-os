@@ -1,0 +1,47 @@
+#!/bin/sh
+
+MINKVER="6.1.0"
+PREREQ=""
+
+# Output pre-requisites
+prereqs()
+{
+  echo "$PREREQ"
+}
+
+case "$1" in
+  prereqs)
+    prereqs
+    exit 0
+    ;;
+esac
+
+test "$BOOT" = "puavo" || exit 0
+
+# contains definition for "panic"
+. /scripts/functions
+
+# XXX how to find the correct device which to unlock?
+
+if [ ! -d /sys/firmware/efi ]; then
+  echo 'not an EFI boot' >&2
+  exit 1
+fi
+
+if ! mount -t efivarfs none /sys/firmware/efi/efivars; then
+  echo 'could not mount efivars' >&2
+  exit 1
+fi
+
+if ! /usr/lib/systemd/systemd-pcrphase enter-initrd; then
+  echo 'could not run systemd-pcrphase enter-initrd' >&2
+  exit 1
+fi
+
+status=1
+
+# XXX unlock cryptpuavo, if this fails set status=1
+
+/usr/lib/systemd/systemd-pcrphase leave-initrd || status=1
+
+exit $status
