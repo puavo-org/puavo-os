@@ -476,6 +476,7 @@ class packages {
     , 'impressive'
     , 'libreoffice'
     , 'libreoffice-base'
+    , 'libreoffice-librelogo'
     , 'retext'
     , 'scribus'
     , 'sent'
