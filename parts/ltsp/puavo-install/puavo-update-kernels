@@ -13,8 +13,14 @@ get_system_images() {
     for label in *.default *.backup; do
       test -e "$label" || continue
       img="${label%.default}.img"
-      test -e "$img" || continue
-      printf "%s\n" "$img"
+      if [ -e "$img" ]; then
+        printf "%s\n" "$img"
+        continue
+      fi
+      img="${label%.backup}.img"
+      if [ -e "$img" ]; then
+        printf "%s\n" "$img"
+      fi
     done
     for img in *.img; do
       test -e "${img%.img}.default"   && continue
@@ -26,11 +32,29 @@ get_system_images() {
   )
 }
 
-system_images=$(get_system_images)
+install_all_ukis_for_image() {
+  local all_status efi_partition image kernel
+  efi_partition=$1
+  image=$2
+
+  all_status=0
+
+  mkdir -p "${puk_mountdir}/image" || return 1
+  mount "/images/${image}" "${puk_mountdir}/image" || return 1
+  for vmlinuz_path in ${puk_mountdir}/image/boot/vmlinuz-*; do
+    test ! -h "$vmlinuz_path" || continue
+    vmlinuz=${vmlinuz_path##*/}
+    install_uki_for_image "$vmlinuz" "$image" || all_status=1
+  done
+  umount "${puk_mountdir}/image" || return 1
+
+  return $all_status
+}
 
 install_ukis() {
-  local efi_partition efi_status
+  local efi_partition efi_status system_images
   efi_partition=$1
+  system_images=$2
 
   efi_status=0
 
@@ -67,32 +91,16 @@ install_uki_for_image() {
      "${target_dir}/${vmlinuz}.unsigned.efi" || return 1
 }
 
-install_all_ukis_for_image() {
-  local all_status efi_partition image kernel
-  efi_partition=$1
-  image=$2
-
-  all_status=0
-
-  mkdir -p "${puk_mountdir}/image" || return 1
-  mount "/images/${image}" "${puk_mountdir}/image" || return 1
-  for vmlinuz_path in ${puk_mountdir}/image/boot/vmlinuz-*; do
-    test ! -h "$vmlinuz_path" || continue
-    vmlinuz=${vmlinuz_path##*/}
-    install_uki_for_image "$vmlinuz" "$image" || all_status=1
-  done
-  umount "${puk_mountdir}/image" || return 1
-
-  return $all_status
-}
-
 status=0
 
+system_images=$(get_system_images)
+
 # XXX this tool should also cleanup unused UKIs
+# XXX should cleanups happen first?  that is kind of needed but is also a risk
 
 efi_partitions=$(puavo-install-grub --list-efi-partitions)
 for efi_partition in $efi_partitions; do
-  install_ukis "$efi_partition" || status=1
+  install_ukis "$efi_partition" "$system_images" || status=1
 done
 
 rm --one-file-system -rf "$puk_mountdir" || true
