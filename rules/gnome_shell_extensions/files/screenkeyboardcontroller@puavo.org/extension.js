@@ -38,9 +38,9 @@ function _auto_hide() {
         logError(e);
     };
 
-    // If something goes wrong, it's better to show the screen keyboard
-    // than hide it to ensure the user has at least one keyboard.
-    return true;
+    // If something goes wrong, we fallback to the original logic,
+    // i.e. act like this extension is not enabled at all.
+    return _originalLastDeviceIsTouchscreen.call(this);
 }
 
 function _modifiedLastDeviceIsTouchscreen() {
