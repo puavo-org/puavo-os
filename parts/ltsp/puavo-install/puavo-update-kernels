@@ -5,26 +5,10 @@ set -eu
 puk_mountdir=$(mktemp -d /tmp/puavo-update-kernels.XXXXXX)
 
 get_system_images() {
-  local img label
+  local img
   (
     cd /images
-    # must priorize the default and the backup images, so look for
-    # those first
-    for label in *.default *.backup; do
-      test -e "$label" || continue
-      img="${label%.default}.img"
-      if [ -e "$img" ]; then
-        printf "%s\n" "$img"
-        continue
-      fi
-      img="${label%.backup}.img"
-      if [ -e "$img" ]; then
-        printf "%s\n" "$img"
-      fi
-    done
     for img in *.img; do
-      test -e "${img%.img}.default"   && continue
-      test -e "${img%.img}.backup"    && continue
       test "$img" = 'ltsp.img'        && continue
       test "$img" = 'ltsp-backup.img' && continue
       printf "%s\n" "$img"
