@@ -9,6 +9,7 @@ _pkgs_ports := anki                   \
                gnome-control-center   \
                gnome-network-displays \
                gnome-shell            \
+               grub2                  \
                gtk+3.0                \
                gtk4                   \
                hooktftp               \
