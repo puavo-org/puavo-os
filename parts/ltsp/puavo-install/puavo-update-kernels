@@ -35,6 +35,22 @@ install_all_ukis_for_image() {
   return $all_status
 }
 
+cleanup_unused_ukis() {
+  local imgdir imgdir_path system_images
+  system_images=$1
+
+  for imgdir_path in ${puk_mountdir}/efi/EFI/PuavoOS/*; do
+    test -d "$imgdir_path" || continue
+    rm -f ${imgdir_path}/*.tmp
+    img=${imgdir_path##*/}
+    if printf "%s\n" "$system_images" | grep -Fq "$img"; then
+      # this is something we want to keep
+      continue
+    fi
+    rm -rf "$imgdir_path"
+  done
+}
+
 install_ukis() {
   local efi_partition efi_status system_images
   efi_partition=$1
@@ -44,6 +60,8 @@ install_ukis() {
 
   mkdir -p "${puk_mountdir}/efi" || return 1
   mount "$efi_partition" "${puk_mountdir}/efi" || return 1
+
+  cleanup_unused_ukis "$system_images" || return 1
 
   for img in $system_images; do
     install_all_ukis_for_image "$efi_partition" "$img" || efi_status=1
@@ -66,11 +84,13 @@ install_uki_for_image() {
   mkdir -p "$target_dir" || return 1
 
   # XXX cmdline depends on context (for example bootserver vs laptop)
-  /usr/lib/systemd/ukify build --linux "${puk_mountdir}/image/boot/${vmlinuz}" \
+  if ! /usr/lib/systemd/ukify build --linux "${puk_mountdir}/image/boot/${vmlinuz}" \
     --initrd "${puk_mountdir}/image/boot/${initrd}" \
     --cmdline 'ro init=/sbin/init-puavo quiet loglevel=3 splash puavo.hosttype=laptop root=/dev/mapper/puavo-images loop=/ltsp.img puavo.image.path=/ltsp.img' \
-    --output "${target_dir}/${vmlinuz}.unsigned.efi.tmp" \
-      || return 1
+    --output "${target_dir}/${vmlinuz}.unsigned.efi.tmp"; then
+      rm -f "${target_dir}/${vmlinuz}.unsigned.efi.tmp"
+      return 1
+  fi
   mv "${target_dir}/${vmlinuz}.unsigned.efi.tmp" \
      "${target_dir}/${vmlinuz}.unsigned.efi" || return 1
 }
@@ -78,9 +98,6 @@ install_uki_for_image() {
 status=0
 
 system_images=$(get_system_images)
-
-# XXX this tool should also cleanup unused UKIs
-# XXX should cleanups happen first?  that is kind of needed but is also a risk
 
 efi_partitions=$(puavo-install-grub --list-efi-partitions)
 for efi_partition in $efi_partitions; do
