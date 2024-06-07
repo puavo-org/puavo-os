@@ -1,4 +1,4 @@
-# Generate dconf profile based on locale and host type.
+# Generate dconf profile based on locale, Puavo host type and Puavo configurations.
 #
 
 puavo_session_dir="$(mktemp -d /tmp/puavo-desktopsession-${USER}.XXXXXXX || return 1)"
@@ -30,6 +30,15 @@ puavo_dconf_profile_path="${puavo_session_dir}/dconf_profile"
 
   if [ "$(puavo-conf puavo.onscreenkeyboard.enabled)" = 'true' ]; then
     echo "system-db:nokeyboard"
+  else
+    puavo_screenkeyboardcontroller_mode="$(puavo-conf puavo.screenkeyboardcontroller.mode)"
+    case "${puavo_screenkeyboardcontroller_mode}" in
+      auto_hide|do_nothing|force_hide)
+        echo "system-db:screenkeyboardcontroller_${puavo_screenkeyboardcontroller_mode}"
+        ;;
+      *)
+        ;;
+    esac
   fi
 
   if [ "$(puavo-conf puavo.xsessions.default)" = 'puavo-ers' ]; then

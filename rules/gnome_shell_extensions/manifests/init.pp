@@ -1,5 +1,6 @@
 class gnome_shell_extensions {
   include ::dconf::schemas
+  include ::desktop::dconf
   include ::packages
   include ::puavo_conf
   include ::themes
@@ -12,6 +13,26 @@ class gnome_shell_extensions {
 	recurse => true,
 	require => Package['gnome-shell-extensions'],
 	source  => "puppet:///modules/gnome_shell_extensions/${extension}";
+    }
+  }
+
+  define screenkeyboardcontroller_dconf () {
+    $mode = $title
+
+    file {
+      [ "/etc/dconf/db/screenkeyboardcontroller_${mode}.d"
+      , "/etc/dconf/db/screenkeyboardcontroller_${mode}.d/locks" ]:
+        ensure => directory;
+
+    "/etc/dconf/db/screenkeyboardcontroller_${mode}.d/locks/screenkeyboardcontroller_${mode}_locks":
+      content => template('gnome_shell_extensions/dconf_screenkeyboardcontroller_locks'),
+      notify  => Exec['update dconf'],
+      require => ::Dconf::Schemas::Schema['org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml'];
+
+    "/etc/dconf/db/screenkeyboardcontroller_${mode}.d/locks/screenkeyboardcontroller_${mode}_profile":
+      content => template('gnome_shell_extensions/dconf_screenkeyboardcontroller_profile'),
+      notify  => Exec['update dconf'],
+      require => ::Dconf::Schemas::Schema['org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml'];
     }
   }
 
@@ -57,6 +78,13 @@ class gnome_shell_extensions {
   ::dconf::schemas::schema {
     'org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml':
       srcfile => 'puppet:///modules/gnome_shell_extensions/screenkeyboardcontroller@puavo.org/schemas/org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml';
+  }
+
+  ::gnome_shell_extensions::screenkeyboardcontroller_dconf {
+    [ 'auto_hide'
+    , 'do_nothing'
+    , 'force_hide' ]:
+      ;
   }
 
   Package <| title == gnome-shell-extensions |>
