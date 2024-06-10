@@ -62,12 +62,22 @@ get_grub_efi_arguments() {
 }
 
 grub_m4_template() {
-  local efi_partition_uuid using_secureboot
+  local efi_partition_uuid using_secureboot vmlinuz_name
   using_secureboot=$1
 
   if $using_secureboot; then
     if ! efi_partition_uuid=$(lookup_efi_partition_uuid "$diskdev"); then
       log err 'using SecureBoot but could not lookup EFI partition UUID'
+      return 1
+    fi
+
+    # XXX UFI boots should support kernel choices as well.
+    # XXX Also, this looks up the default kernel of the current image
+    # XXX where Grub is installed.  This is quite possibly wrong for
+    # XXX the backup image.
+    vmlinuz_name=$(readlink /boot/vmlinuz 2>/dev/null) || true
+    if [ -z "$vmlinuz_name" ]; then
+      log err 'could not determine the default kernel'
       return 1
     fi
   fi
@@ -203,11 +213,9 @@ function ltsp_image_entry {
 GRUB_CFG_EOF
 
   if $using_secureboot; then
-    # XXX kernel_version_suffix is typically not set, we need to figure out
-    # XXX the actual kernel version
     cat <<GRUB_CFG_EOF
     search --no-floppy --fs-uuid --set=root ${efi_partition_uuid}
-    chainloader /EFI/PuavoOS/\${image_alias_path}/vmlinuz-\${kernel_version_suffix}.unsigned.efi
+    chainloader /EFI/PuavoOS/\${image_alias_path}/${vmlinuz_name}.unsigned.efi
 GRUB_CFG_EOF
   else
     cat <<'GRUB_CFG_EOF'
