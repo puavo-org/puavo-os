@@ -91,8 +91,17 @@ install_uki_for_image() {
       rm -f "${target_dir}/${vmlinuz}.unsigned.efi.tmp"
       return 1
   fi
-  mv "${target_dir}/${vmlinuz}.unsigned.efi.tmp" \
-     "${target_dir}/${vmlinuz}.unsigned.efi" || return 1
+
+  # avoid making a change if nothing has changed
+  if ! cmp "${target_dir}/${vmlinuz}.unsigned.efi.tmp" \
+    "${target_dir}/${vmlinuz}.unsigned.efi" 2>/dev/null; then
+    sync || true
+    mv "${target_dir}/${vmlinuz}.unsigned.efi.tmp" \
+       "${target_dir}/${vmlinuz}.unsigned.efi" || return 1
+    sync || true
+  else
+    rm -f "${target_dir}/${vmlinuz}.unsigned.efi.tmp" || return 1
+  fi
 }
 
 status=0
