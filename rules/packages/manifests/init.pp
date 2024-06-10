@@ -210,6 +210,7 @@ class packages {
     , 'efibootmgr'
     , 'gdebi-core'
     , 'grub-efi-amd64-bin'
+    , 'grub-efi-amd64-signed'
     , 'grub-efi-ia32-bin'
     , 'grub-pc'
     , 'grub-pc-bin'

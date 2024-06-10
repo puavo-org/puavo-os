@@ -4,15 +4,6 @@ class packages::purged {
   # purge packages by default
   Package { ensure => purged, }
 
-  exec {
-    # Breaks UEFI Grub.  We need a solution to
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=959425
-    # before we can allow grub-efi-amd64-signed to be installed.
-    'force remove grub-efi-amd64-signed':
-      command => '/usr/bin/apt-get -y --allow-remove-essential purge grub-efi-amd64-signed',
-      onlyif  => '/usr/bin/test -e /var/lib/dpkg/info/grub-efi-amd64-signed.list';
-  }
-
   @package {
     [ 'asymptote-doc'           # asymptote not included in menus or anywhere, docs bigger than the main package
     , 'bzip2-doc'               # API docs, algorithm description, not needed in image
