@@ -62,7 +62,17 @@ get_grub_efi_arguments() {
 }
 
 grub_m4_template() {
-  cat <<'EOF'
+  local efi_partition_uuid using_secureboot
+  using_secureboot=$1
+
+  if $using_secureboot; then
+    if ! efi_partition_uuid=$(lookup_efi_partition_uuid "$diskdev"); then
+      log err 'using SecureBoot but could not lookup EFI partition UUID'
+      return 1
+    fi
+  fi
+
+  cat <<'GRUB_CFG_EOF'
 set default="0"
 load_env
 
@@ -190,9 +200,23 @@ function ltsp_image_entry {
     fi
 
     set kernelparameters="$4"
+GRUB_CFG_EOF
 
+  if $using_secureboot; then
+    # XXX kernel_version_suffix is typically not set, we need to figure out
+    # XXX the actual kernel version
+    cat <<GRUB_CFG_EOF
+    search --no-floppy --fs-uuid --set=root ${efi_partition_uuid}
+    chainloader /EFI/PuavoOS/\${image_alias_path}/vmlinuz-\${kernel_version_suffix}.unsigned.efi
+GRUB_CFG_EOF
+  else
+    cat <<'GRUB_CFG_EOF'
     linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
     initrd  /boot/initrd.img${kernel_version_suffix}
+GRUB_CFG_EOF
+  fi
+
+  cat <<'GRUB_CFG_EOF'
 
     loopback -d loop
   }
@@ -214,17 +238,18 @@ function ltsp_image_entry_superlaptop {
   fi
 }
 
-insmod gzio
-insmod part_msdos
-insmod ext2
-insmod squash4
 insmod biosdisk
-insmod regexp
-insmod loopback
-insmod usb_keyboard
-insmod lvm
+insmod ext2
+insmod gzio
 insmod jpeg
+insmod loopback
+insmod lvm
+insmod ntfs
+insmod part_msdos
 insmod png
+insmod regexp
+insmod squash4
+insmod usb_keyboard
 
 for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   for file in ${dev}/*.default; do
@@ -334,7 +359,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}" "" "${file}" "${os_icon}-devel"
   done
 done
-EOF
+GRUB_CFG_EOF
 }
 
 find_grub_target_devices_on_raid() {
@@ -355,7 +380,7 @@ find_grub_target_devices_on_raid() {
            }'
 }
 
-# also puavo puavo-update-kernels
+# also in puavo-update-kernels
 get_efi_devpath() {
   local diskdev
   diskdev=$1
@@ -375,6 +400,22 @@ has_bios_boot_partition() {
         BEGIN { status = 1 }
         $1 == "21686148-6449-6e6f-744e-656564454649" { status = 0 }
         END { exit(status) }
+      '
+}
+
+lookup_efi_partition_uuid() {
+  local diskdev
+  diskdev=$1
+
+  lsblk -n -l -o PARTTYPE,UUID "$diskdev" \
+    | awk '
+        BEGIN { efi_uuid = "" }
+        $1 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" && $2 ~ /^[a-zA-Z0-9-]+$/ {
+          efi_uuid = $2
+        }
+        END {
+          if (efi_uuid != "") { print efi_uuid } else { exit(1) }
+        }
       '
 }
 
@@ -507,7 +548,11 @@ if $list_efi_partitions; then
 fi
 
 using_secureboot=false
-if [ "$(mokutil --sb-state)" = 'SecureBoot enabled' ]; then
+if ! mokutil_output=$(mokutil --sb-state); then
+  log err 'mokutil returned error'
+  exit 1
+fi
+if [ "$mokutil_output" = 'SecureBoot enabled' ]; then
   using_secureboot=true
 fi
 
@@ -663,7 +708,7 @@ fi
 grub_cfg_path="${boot_dir}/grub/grub.cfg"
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
-grub_m4_template                                              \
+grub_m4_template "$using_secureboot"                          \
   | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
        -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
        -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
@@ -683,7 +728,6 @@ if [ -n "$possible_windows_disk_dev" ]; then
 
 if test "\${puavo_grub_windows_enabled}" = "true"; then
   menuentry --class="windows" "\${windows_boot_label}" {
-    insmod ntfs
     search --no-floppy --fs-uuid --set=root ${windows_boot_partition}
     chainloader ${windows_chainloader}
   }
