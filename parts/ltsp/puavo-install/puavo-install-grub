@@ -42,15 +42,13 @@ flush_caches() {
 }
 
 get_grub_efi_arguments() {
-  local vgname
+  local using_secureboot vgname
   vgname=$1
-
-  # XXX how to determine if we should use this?
-  use_secure_boot=false
+  using_secureboot=$2
 
   echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian'
 
-  if $use_secure_boot; then
+  if $using_secureboot; then
     echo '--uefi-secure-boot'
   else
     echo '--no-uefi-secure-boot'
@@ -508,6 +506,11 @@ if $list_efi_partitions; then
   exit 0
 fi
 
+using_secureboot=false
+if [ "$(mokutil --sb-state)" = 'SecureBoot enabled' ]; then
+  using_secureboot=true
+fi
+
 if [ ! -d "$images_dir" ]; then
   log err "'${images_dir}' is not a directory"
   exit 1
@@ -572,7 +575,7 @@ install_legacy_grub() {
 }
 
 install_efi_grub() {
-  local boot_dir efi_devpath grubdev grub_efi_arguments vgname
+  local boot_dir efi_devpath grubdev grub_efi_arguments using_secureboot vgname
 
   boot_dir=$1
   efi_devpath=$2
@@ -588,7 +591,7 @@ install_efi_grub() {
   # that prevent a successful bootloader installation. Clean them up first.
   rm -f /sys/firmware/efi/efivars/dump-*
 
-  grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
+  grub_efi_arguments=$(get_grub_efi_arguments "$vgname" "$using_secureboot")
   if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
                     $grub_efi_arguments "$grubdev" \
                     3>&- 4>&- 5>&- 2>&1); then
@@ -624,7 +627,7 @@ else
     if [ -n "$efi_devpath" ]; then
       grub_install_attempted=true
       if ! install_efi_grub "$boot_dir" "$efi_devpath" "$grubdev" \
-                            "$vgname"; then
+                            "$vgname" "$using_secureboot"; then
         exit 1
       fi
     fi
