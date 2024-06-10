@@ -284,7 +284,7 @@ module DiskHandler
   def self.raid_partition(device, partitioning_scheme)
     setup_partition(device, partitioning_scheme,
                     "n\np\n1\n\n\nt\nfd\na\np\nw\n",
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\nfd00\nw\ny\n",
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+1536M\nef00\nn\n3\n\n\nfd00\nw\ny\n",
                     "r\nh\n1 2 3\nn\n\ny\n\nn\n\nn\nw\ny\n")
   end
 
@@ -335,7 +335,7 @@ module DiskHandler
   def self.create_partitions(fs_conf, partitioning_scheme)
     setup_partition(fs_conf['device'], partitioning_scheme,
                     "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n",
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n",
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+1536M\nef00\nn\n3\n\n\n8e00\nw\ny\n",
                     "r\nh\n1 2 3\nn\n\ny\n\nn\n\nn\nw\ny\n")
   end
 
