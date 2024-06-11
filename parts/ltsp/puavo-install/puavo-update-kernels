@@ -2,6 +2,8 @@
 
 set -eu
 
+# XXX this should log something
+
 puk_mountdir=$(mktemp -d /tmp/puavo-update-kernels.XXXXXX)
 
 get_system_images() {
@@ -24,7 +26,7 @@ install_all_ukis_for_image() {
   all_status=0
 
   mkdir -p "${puk_mountdir}/image" || return 1
-  mount "/images/${image}" "${puk_mountdir}/image" || return 1
+  mount -o ro "/images/${image}" "${puk_mountdir}/image" || return 1
   for vmlinuz_path in ${puk_mountdir}/image/boot/vmlinuz-*; do
     test ! -h "$vmlinuz_path" || continue
     vmlinuz=${vmlinuz_path##*/}
@@ -87,7 +89,7 @@ install_uki_for_image() {
   if ! /usr/lib/systemd/ukify build --linux "${puk_mountdir}/image/boot/${vmlinuz}" \
     --initrd "${puk_mountdir}/image/boot/${initrd}" \
     --cmdline 'ro init=/sbin/init-puavo quiet loglevel=3 splash puavo.hosttype=laptop root=/dev/mapper/puavo-images loop=/ltsp.img puavo.image.path=/ltsp.img' \
-    --output "${target_dir}/${vmlinuz}.unsigned.efi.tmp"; then
+    --output "${target_dir}/${vmlinuz}.unsigned.efi.tmp" >/dev/null; then
       rm -f "${target_dir}/${vmlinuz}.unsigned.efi.tmp"
       return 1
   fi
