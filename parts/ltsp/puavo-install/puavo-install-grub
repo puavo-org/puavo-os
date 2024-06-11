@@ -219,7 +219,7 @@ GRUB_CFG_EOF
   if $with_uki_kernels; then
     cat <<GRUB_CFG_EOF
     search --no-floppy --fs-uuid --set=root ${efi_partition_uuid}
-    chainloader /EFI/PuavoOS/\${image_alias_path}/${vmlinuz_name}.unsigned.efi
+    chainloader /EFI/PuavoOS/\${image_alias_path}/${vmlinuz_name}.unsigned.efi ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ \${kernelparameters}
 GRUB_CFG_EOF
   else
     cat <<'GRUB_CFG_EOF'
