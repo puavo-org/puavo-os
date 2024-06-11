@@ -1,0 +1,126 @@
+#!/bin/sh
+
+set -eu
+
+find_grub_target_devices_on_raid() {
+  local diskdev
+
+  diskdev=$1
+  mdadm --detail "$diskdev" \
+    | awk '   $1 ~ /^[0-9]+$/ \
+           && $2 ~ /^[0-9]+$/ \
+           && $3 ~ /^[0-9]+$/ {
+             split($0, a)
+             for (i in a) {
+               if (a[i] ~ /^\/dev\/[a-z]+[0-9]+$/) {
+                  sub(/[0-9]+$/, "", a[i])
+                  print a[i]
+               }
+             }
+           }'
+}
+
+# also in puavo-install-grub
+get_efi_devpath() {
+  local diskdev lsblk_output
+  diskdev=$1
+  lsblk_output=$(lsblk -n -l -o PATH,PARTTYPE "$diskdev") || return 1
+  # c12a7328-f81f-11d2-ba4b-00a0c93ec93b == EFI partition type
+  printf "$lsblk_output" | awk '
+    $2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }
+  '
+}
+
+log() {
+  priority=$1
+  message=$2
+
+  printf "> %s\n" "$message" >&2
+
+  logger -p "$priority" -t puavo-list-install-devices "$message" || true
+}
+
+if ! args=$(getopt -n "$0" -o + -l 'list-uki-partitions,vgname:,windows' \
+              -- "$@"); then
+  log err 'bad usage'
+  exit 1
+fi
+
+list_uki_partitions=false
+lookup_windows_device=false
+vgname='puavo'
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --list-uki-partitions) list_uki_partitions=true;   shift;       ;;
+    --vgname)              vgname=$2;                  shift; shift ;;
+    --windows)             lookup_windows_device=true; shift        ;;
+    --) shift; break ;;
+    *) log err 'bad usage'; exit 1 ;;
+  esac
+done
+
+if $list_uki_partitions && $lookup_windows_device; then
+  log err 'can not specify both --list-uki-partitions and --windows'
+  exit 1
+fi
+
+# pvs and assorted utilities complain if we leak file descriptors, that is
+# why we do "3>&- 4>&- 5>&-" (same with grub-install)
+diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
+            | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
+            | sed -E '
+                /\/dev\/loop/   { s|p[0-9]+$|| }
+                /\/dev\/mmcblk/ { s|p[0-9]+$|| }
+                /\/dev\/md/     { s|p[0-9]+$|| }
+                /\/dev\/nvme/   { s|p[0-9]+$|| }
+                /\/dev\/[sv]d/  { s|[0-9]+$||  }
+                /\/dev\/xvd/    { s|[0-9]+$||  }
+              ')
+
+if [ -z "$diskdev" ]; then
+  log err "could not find the disk device where volume group '${vgname}' is"
+  exit 1
+fi
+
+if $lookup_windows_device; then
+  # This means only a device where Windows might possibly be located.
+  printf "%s\n" "$diskdev"
+  exit 0
+fi
+
+case "$diskdev" in
+  /dev/md*)
+    grub_target_devices=$(find_grub_target_devices_on_raid "$diskdev")
+    if [ -z "$grub_target_devices" ]; then
+      log err 'could not find grub target devices on RAID configuration'
+      exit 1
+    fi
+    ;;
+  *)
+    grub_target_devices="$diskdev"
+    ;;
+esac
+
+if $list_uki_partitions; then
+  for grubdev in $grub_target_devices; do
+    if ! efi_partition=$(get_efi_devpath "$grubdev"); then
+      log err "error looking up EFI partition from ${grubdev}"
+      exit 1
+    fi
+    test -n "$efi_partition" || continue # it is ok if there is not one
+    if ! efi_partition_size=$(lsblk -b -n -o SIZE "$efi_partition"); then
+      log err "could not determine ${efi_partition} size"
+      exit 1
+    fi
+    if [ "$efi_partition_size" -lt 1073741824 ]; then
+      # not big enough for UKI kernels
+      continue
+    fi
+    printf "%s\n" "$efi_partition"
+  done
+  exit 0
+fi
+
+printf "%s\n" "$grub_target_devices"

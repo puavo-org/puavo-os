@@ -55,6 +55,7 @@ install : installdirs
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-image-preinst \
+		lib/puavo-list-install-devices \
 		lib/puavo-reset \
 		lib/puavo-torrent-updated \
 		lib/puavo-torrent-download-complete \

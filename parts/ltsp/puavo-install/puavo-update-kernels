@@ -17,8 +17,8 @@ get_system_images() {
 }
 
 install_all_ukis_for_image() {
-  local all_status efi_partition image kernel
-  efi_partition=$1
+  local all_status uki_partition image kernel
+  uki_partition=$1
   image=$2
 
   all_status=0
@@ -52,19 +52,19 @@ cleanup_unused_ukis() {
 }
 
 install_ukis() {
-  local efi_partition efi_status system_images
-  efi_partition=$1
+  local uki_partition efi_status system_images
+  uki_partition=$1
   system_images=$2
 
   efi_status=0
 
   mkdir -p "${puk_mountdir}/efi" || return 1
-  mount "$efi_partition" "${puk_mountdir}/efi" || return 1
+  mount "$uki_partition" "${puk_mountdir}/efi" || return 1
 
   cleanup_unused_ukis "$system_images" || return 1
 
   for img in $system_images; do
-    install_all_ukis_for_image "$efi_partition" "$img" || efi_status=1
+    install_all_ukis_for_image "$uki_partition" "$img" || efi_status=1
   done
 
   umount "${puk_mountdir}/efi" || return 1
@@ -108,10 +108,23 @@ status=0
 
 system_images=$(get_system_images)
 
-efi_partitions=$(puavo-install-grub --list-efi-partitions)
-for efi_partition in $efi_partitions; do
-  install_ukis "$efi_partition" "$system_images" || status=1
+# XXX should this support other VG targets than "puavo"?  (puavoinstaller?)
+vgname='puavo'
+
+uki_partitions=$(/usr/lib/puavo-ltsp-install/puavo-list-install-devices \
+                   --list-uki-partitions --vgname "$vgname")
+
+uki_installed=false
+for uki_partition in $uki_partitions; do
+  install_ukis "$uki_partition" "$system_images" || status=1
+  uki_installed=true
 done
+
+if ! $uki_installed; then
+  # if we have not installed UKI kernels (nothing to install),
+  # return 2 as a special code
+  status=2
+fi
 
 rm --one-file-system -rf "$puk_mountdir" || true
 
