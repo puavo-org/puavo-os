@@ -187,7 +187,17 @@ function ltsp_image_entry {
 
     set imagefile="$2"
     set imagepath="$3"
+    set kernelparameters="$4"
 
+GRUB_CFG_EOF
+
+  if $with_uki_kernels; then
+    cat <<GRUB_CFG_EOF
+    search --no-floppy --fs-uuid --set=root ${partuuid}
+    chainloader /EFI/PuavoOS/\${image_alias_path}/${vmlinuz_name}.unsigned.efi ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ \${kernelparameters}
+GRUB_CFG_EOF
+  else
+    cat <<'GRUB_CFG_EOF'
     loopback loop "${imagefile}"
     set root='(loop)'
 
@@ -224,24 +234,14 @@ function ltsp_image_entry {
       fi
     fi
 
-    set kernelparameters="$4"
-GRUB_CFG_EOF
-
-  if $with_uki_kernels; then
-    cat <<GRUB_CFG_EOF
-    search --no-floppy --fs-uuid --set=root ${partuuid}
-    chainloader /EFI/PuavoOS/\${image_alias_path}/${vmlinuz_name}.unsigned.efi ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ \${kernelparameters}
-GRUB_CFG_EOF
-  else
-    cat <<'GRUB_CFG_EOF'
     linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
     initrd  /boot/initrd.img${kernel_version_suffix}
+
+    loopback -d loop
 GRUB_CFG_EOF
   fi
 
   cat <<'GRUB_CFG_EOF'
-
-    loopback -d loop
   }
 }
 
