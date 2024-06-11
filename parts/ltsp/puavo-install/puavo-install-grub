@@ -555,15 +555,6 @@ if $list_efi_partitions; then
   exit 0
 fi
 
-using_secureboot=false
-if ! mokutil_output=$(mokutil --sb-state); then
-  log err 'mokutil returned error'
-  exit 1
-fi
-if [ "$mokutil_output" = 'SecureBoot enabled' ]; then
-  using_secureboot=true
-fi
-
 if [ ! -d "$images_dir" ]; then
   log err "'${images_dir}' is not a directory"
   exit 1
@@ -658,6 +649,19 @@ install_efi_grub() {
 
   return 0
 }
+
+using_secureboot=false
+if ! mokutil_output=$(mokutil --sb-state); then
+  log err 'mokutil returned error'
+  exit 1
+fi
+if [ "$mokutil_output" = 'SecureBoot enabled' ]; then
+  using_secureboot=true
+  if ! puavo-update-kernels; then
+    log err 'could not update UKI kernels'
+    exit 1
+  fi
+fi
 
 grub_install_done=false
 
