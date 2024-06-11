@@ -42,15 +42,19 @@ flush_caches() {
 }
 
 get_grub_efi_arguments() {
-  local using_secureboot vgname
+  local vgname with_uki_kernels
   vgname=$1
-  using_secureboot=$2
+  with_uki_kernels=$2
 
   echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian'
 
-  if $using_secureboot; then
+  if $with_uki_kernels; then
     echo '--uefi-secure-boot'
   else
+    # In case we are not using UKI kernels, do not try to bother with
+    # SecureBoot.  Trying to boot a kernel from a system image is broken
+    # unless this argument is used for grub-install, due to bug
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=959425.
     echo '--no-uefi-secure-boot'
   fi
 
@@ -62,10 +66,10 @@ get_grub_efi_arguments() {
 }
 
 grub_m4_template() {
-  local efi_partition_uuid using_secureboot vmlinuz_name
-  using_secureboot=$1
+  local efi_partition_uuid vmlinuz_name with_uki_kernels
+  with_uki_kernels=$1
 
-  if $using_secureboot; then
+  if $with_uki_kernels; then
     if ! efi_partition_uuid=$(lookup_efi_partition_uuid "$diskdev"); then
       log err 'using SecureBoot but could not lookup EFI partition UUID'
       return 1
@@ -212,7 +216,7 @@ function ltsp_image_entry {
     set kernelparameters="$4"
 GRUB_CFG_EOF
 
-  if $using_secureboot; then
+  if $with_uki_kernels; then
     cat <<GRUB_CFG_EOF
     search --no-floppy --fs-uuid --set=root ${efi_partition_uuid}
     chainloader /EFI/PuavoOS/\${image_alias_path}/${vmlinuz_name}.unsigned.efi
@@ -619,7 +623,7 @@ install_legacy_grub() {
 }
 
 install_efi_grub() {
-  local boot_dir efi_devpath grubdev grub_efi_arguments using_secureboot vgname
+  local boot_dir efi_devpath grubdev grub_efi_arguments vgname with_uki_kernels
 
   boot_dir=$1
   efi_devpath=$2
@@ -635,7 +639,7 @@ install_efi_grub() {
   # that prevent a successful bootloader installation. Clean them up first.
   rm -f /sys/firmware/efi/efivars/dump-*
 
-  grub_efi_arguments=$(get_grub_efi_arguments "$vgname" "$using_secureboot")
+  grub_efi_arguments=$(get_grub_efi_arguments "$vgname" "$with_uki_kernels")
   if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
                     $grub_efi_arguments "$grubdev" \
                     3>&- 4>&- 5>&- 2>&1); then
@@ -650,13 +654,13 @@ install_efi_grub() {
   return 0
 }
 
-using_secureboot=false
+with_uki_kernels=false
 if ! mokutil_output=$(mokutil --sb-state); then
   log err 'mokutil returned error'
   exit 1
 fi
 if [ "$mokutil_output" = 'SecureBoot enabled' ]; then
-  using_secureboot=true
+  with_uki_kernels=true
   if ! puavo-update-kernels; then
     log err 'could not update UKI kernels'
     exit 1
@@ -684,7 +688,7 @@ else
     if [ -n "$efi_devpath" ]; then
       grub_install_attempted=true
       if ! install_efi_grub "$boot_dir" "$efi_devpath" "$grubdev" \
-                            "$vgname" "$using_secureboot"; then
+                            "$vgname" "$with_uki_kernels"; then
         exit 1
       fi
     fi
@@ -720,7 +724,7 @@ fi
 grub_cfg_path="${boot_dir}/grub/grub.cfg"
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
-grub_m4_template "$using_secureboot"                          \
+grub_m4_template "$with_uki_kernels"                          \
   | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
        -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
        -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
