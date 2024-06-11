@@ -104,6 +104,7 @@ case "$diskdev" in
 esac
 
 if $list_uki_partitions; then
+  efi_partition_devices=''
   for grubdev in $grub_target_devices; do
     if ! efi_partition=$(get_efi_devpath "$grubdev"); then
       log err "error looking up EFI partition from ${grubdev}"
@@ -115,11 +116,18 @@ if $list_uki_partitions; then
       exit 1
     fi
     if [ "$efi_partition_size" -lt 1073741824 ]; then
-      # not big enough for UKI kernels
-      continue
+      # This partition is not big enough for UKI kernels.
+      # Rather than giving a partial list of possible partitions,
+      # print nothing, we are not on a UKI capable host.
+      exit 0
     fi
-    printf "%s\n" "$efi_partition"
+    efi_partition_devices="${efi_partition_devices} ${efi_partition}"
   done
+
+  for part in $efi_partition_devices; do
+    printf "%s\n" "$part"
+  done
+
   exit 0
 fi
 
