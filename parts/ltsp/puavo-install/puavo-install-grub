@@ -617,7 +617,7 @@ install_efi_grub() {
 }
 
 with_uki_kernels=true
-if ! puavo-update-kernels; then
+if ! puavo-update-efi; then
   if [ $? -eq 2 ]; then
     # no EFI partitions big enough for UKI kernels
     with_uki_kernels=false
