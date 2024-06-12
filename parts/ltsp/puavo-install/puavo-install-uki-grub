@@ -577,6 +577,10 @@ write_grub_cfg_file() {
     return 1
   fi
 
+  # XXX perhaps Grub configuration should only read image specific
+  # XXX Grub environment files and there would container information
+  # XXX about image kernel versions and other such configurations?
+
   # XXX UFI boots should support kernel choices as well.
   # XXX Also, this looks up the default kernel of the current image
   # XXX where Grub is installed.  This is quite possibly wrong for
@@ -593,10 +597,10 @@ write_grub_cfg_file() {
   fi
 
   if ! printf "%s\n" "$grub_template" \
-    | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
+    | m4 -D__PUAVO_EFI_PARTUUID__="$puavo_efi_partuuid"         \
+         -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
          -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
          -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
-         -D__PUAVO_EFI_PARTUUID__="$puavo_efi_partuuid"         \
          -D__PUAVO_UKI_VMLINUZ__="${vmlinuz_name}.unsigned.efi" \
     > "$tmp_grub_cfg_path"; then
       log err "could not write  /boot/efi from ${efi_devpath}"
@@ -648,8 +652,20 @@ EOF
   return 0
 }
 
+setup_grubenv_for_image() {
+  local target_dir vmlinuz
+  vmlinuz=$1
+  target_dir=$2
+
+  grub_envfile="${target_dir}/grubenv"
+  grub-editenv "$grub_envfile" create "$grub_envfile"               || return 1
+  grub-editenv "$grub_envfile" set puavo_default_vmlinuz="$vmlinuz" || return 1
+
+  return 0
+}
+
 install_uki_for_image() {
-  local image initrd target_dir tmp_target_dir vmlinuz
+  local grub_envfile image initrd target_dir tmp_target_dir vmlinuz
 
   vmlinuz=$1
   image=$2
@@ -658,7 +674,7 @@ install_uki_for_image() {
 
   if [ -e "$target_dir" ]; then
     # nothing to do
-    # XXX BUT what if a newer version of puavo-update-efi does something
+    # XXX BUT what if a newer version of puavo-install-uki-grub does something
     # XXX differently and we should recreate the files here?
     return 0
   fi
@@ -666,6 +682,7 @@ install_uki_for_image() {
   initrd="initrd.img-${vmlinuz#vmlinuz-}"
   tmp_target_dir="${target_dir}.tmp"
 
+  rm -rf "$tmp_target_dir"
   mkdir -p "$tmp_target_dir" || return 1
 
   # XXX cmdline depends on context (for example bootserver vs laptop)
@@ -678,8 +695,15 @@ install_uki_for_image() {
       return 1
   fi
 
+  if ! setup_grubenv_for_image "$vmlinuz" "$tmp_target_dir"; then
+    log err "could not setup Grub environment for ${image}"
+    rm -rf "$tmp_target_dir"
+    return 1
+  fi
+
   sync || true
   if ! mv "$tmp_target_dir" "$target_dir" 2>/dev/null; then
+    log err "could not rename ${image} configurations dir"
     rm -rf "$tmp_target_dir"
     return 1
   fi
