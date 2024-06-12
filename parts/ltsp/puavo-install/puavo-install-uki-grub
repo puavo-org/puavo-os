@@ -2,6 +2,8 @@
 
 set -eu
 
+tmp_mountdir=''
+
 # XXX code should be shared between this and puavo-install-grub
 # XXX running puavo-install-grub should run this instead when needed
 
@@ -56,6 +58,18 @@ get_grub_efi_arguments() {
   elif [ "$(puavo-conf puavo.grub.efi.force_extra_removable)" = 'true' ]; then
     echo '--force-extra-removable'
   fi
+}
+
+get_system_images() {
+  local img
+  (
+    cd /images
+    for img in *.img; do
+      test "$img" = 'ltsp.img'        && continue
+      test "$img" = 'ltsp-backup.img' && continue
+      printf "%s\n" "$img"
+    done
+  )
 }
 
 # XXX the output of this function should be dependent on EFI partition
@@ -446,6 +460,7 @@ if [ -z "$hosttype" ]; then
   exit 1
 fi
 
+# XXX do not install boot information under /images anymore
 boot_dir="${images_dir}/boot"
 
 if [ "$hosttype" = 'diskinstaller' ]; then
@@ -478,7 +493,6 @@ mount_efi_partition() {
 
   mountpoint -q /boot/efi && return 0
 
-  fsck.fat -a "$efi_devpath" > /dev/null 2>&1 || true
   mount "$efi_devpath" /boot/efi || return 1
 }
 
@@ -534,13 +548,28 @@ install_efi_grub() {
   return 0
 }
 
-write_grub_configuration() {
-  local grubdev grub_cfg_path grub_template puavo_efi_partuuid \
-        tmp_grub_cfg_path
+cleanup_unused_bootconfs() {
+  local efidir imgdir_path system_images
+  efidir=$1
+  system_images=$2
 
-  grubdev=$1
+  for imgdir_path in ${efidir}/EFI/PuavoOS/*; do
+    test -d "$imgdir_path" || continue
+    rm -f ${imgdir_path}/*.tmp
+    img=${imgdir_path##*/}
+    if printf "%s\n" "$system_images" | grep -Fq "$img"; then
+      # this is something we want to keep
+      continue
+    fi
+    rm -rf "$imgdir_path"
+  done
+}
 
-  grub_cfg_path="${boot_dir}/grub/grub.cfg"
+write_grub_cfg_file() {
+  local grub_cfg_path grub_template puavo_efi_partuuid vmlinuz_name \
+        windows_boot_partition windows_chainloader windows_partition_path
+
+  grub_cfg_path=$1
   tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
   if ! puavo_efi_partuuid=$(lookup_efi_partition_uuid "$grubdev"); then
@@ -563,13 +592,17 @@ write_grub_configuration() {
     return 1
   fi
 
-  printf "%s\n" "$grub_template" \
+  if ! printf "%s\n" "$grub_template" \
     | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
          -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
          -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
          -D__PUAVO_EFI_PARTUUID__="$puavo_efi_partuuid"         \
          -D__PUAVO_UKI_VMLINUZ__="${vmlinuz_name}.unsigned.efi" \
-    > "$tmp_grub_cfg_path" || return 1
+    > "$tmp_grub_cfg_path"; then
+      log err "could not write  /boot/efi from ${efi_devpath}"
+      umount /boot/efi || true
+      return 1
+  fi
 
   windows_partition_path=/images/boot/.puavo_windows_partition
   if [ -n "$possible_windows_disk_dev" ]; then
@@ -614,6 +647,150 @@ EOF
 
   return 0
 }
+
+install_uki_for_image() {
+  local image initrd target_dir tmp_target_dir vmlinuz
+
+  vmlinuz=$1
+  image=$2
+
+  target_dir="${tmp_mountdir}/efi/EFI/PuavoOS/${image}"
+
+  if [ -e "$target_dir" ]; then
+    # nothing to do
+    # XXX BUT what if a newer version of puavo-update-efi does something
+    # XXX differently and we should recreate the files here?
+    return 0
+  fi
+
+  initrd="initrd.img-${vmlinuz#vmlinuz-}"
+  tmp_target_dir="${target_dir}.tmp"
+
+  mkdir -p "$tmp_target_dir" || return 1
+
+  # XXX cmdline depends on context (for example bootserver vs laptop)
+  if ! /usr/lib/systemd/ukify build \
+    --linux "${tmp_mountdir}/image/boot/${vmlinuz}" \
+    --initrd "${tmp_mountdir}/image/boot/${initrd}" \
+    --cmdline 'ro init=/sbin/init-puavo quiet loglevel=3 splash puavo.hosttype=laptop root=/dev/mapper/puavo-images loop=/ltsp.img puavo.image.path=/ltsp.img' \
+    --output "${tmp_target_dir}/${vmlinuz}.unsigned.efi" >/dev/null; then
+      rm -rf "$tmp_target_dir"
+      return 1
+  fi
+
+  sync || true
+  if ! mv "$tmp_target_dir" "$target_dir" 2>/dev/null; then
+    rm -rf "$tmp_target_dir"
+    return 1
+  fi
+  sync || true
+
+  return 0
+}
+
+install_all_ukis_for_image() {
+  local all_status efidir vmlinux_path
+  efidir=$1
+  image=$2
+
+  all_status=0
+
+  mkdir -p "${tmp_mountdir}/image" || return 1
+  mount -o ro "/images/${image}" "${tmp_mountdir}/image" || return 1
+  for vmlinuz_path in ${tmp_mountdir}/image/boot/vmlinuz-*; do
+    test ! -h "$vmlinuz_path" || continue
+    vmlinuz=${vmlinuz_path##*/}
+    install_uki_for_image "$vmlinuz" "$image" || all_status=1
+  done
+  umount "${tmp_mountdir}/image" || return 1
+
+  return $all_status
+}
+
+install_ukis() {
+  local efidir efi_status img system_images
+  efidir=$1
+  system_images=$2
+
+  efi_status=0
+
+  for img in $system_images; do
+    install_all_ukis_for_image "$efidir" "$img" || efi_status=1
+  done
+
+  return $efi_status
+}
+
+setup_efi() {
+  local efidir grubdev system_images
+  efidir=$1
+  system_images=$2
+  grubdev=$3
+
+  if ! cleanup_unused_bootconfs "$efidir" "$system_images"; then
+    log err "error cleaning up unused boot configurations on ${grubdev}"
+    return 1
+  fi
+
+  if ! install_ukis "$efidir" "$system_images"; then
+    log err "error in installing UKI kernels to ${grubdev}"
+    return 1
+  fi
+
+  grub_cfg_path="${efidir}/grub.cfg"
+  if ! write_grub_cfg_file "$grub_cfg_path"; then
+    log err "could not write grub configuration to ${grubdev}"
+    return 1
+  fi
+
+  return 0
+}
+
+setup_boot_to_grubdev() {
+  local efi_devpath grubdev grub_cfg_path system_images setup_efi_status
+
+  grubdev=$1
+  system_images=$2
+
+  setup_efi_status=0
+
+  if ! efi_devpath=$(get_efi_devpath "$grubdev") || [ -z "$efi_devpath" ]; then
+    log err "could not lookup EFI path for ${grubdev}"
+    return 1
+  fi
+
+  if ! mkdir -p "${tmp_mountdir}/efi"; then
+    log err "error mkdir ${tmp_mountdir}/efi"
+    return 1
+  fi
+
+  fsck.fat -a "$efi_devpath" > /dev/null 2>&1 || true
+  if ! mount "$efi_devpath" "${tmp_mountdir}/efi"; then
+    log err "error mounting ${efi_devpath}"
+    return 1
+  fi
+
+  if ! setup_efi "${tmp_mountdir}/efi" "$system_images" "$grubdev"; then
+    log err "error on operating to EFI partition ${efi_devpath}"
+    setup_efi_status=1
+  fi
+
+  umount "${tmp_mountdir}/efi" || true
+
+  return $setup_efi_status
+}
+
+cleanup() {
+  if [ -n "$tmp_mountdir" ]; then
+    rm --one-file-system -rf "$tmp_mountdir" || true
+  fi
+}
+
+trap cleanup 0 INT TERM
+
+tmp_mountdir=$(mktemp -d /tmp/puavo-install-uki-grub.XXXXXX)
+
+system_images=$(get_system_images)
 
 grub_install_done=false
 
@@ -670,8 +847,8 @@ else
 fi
 
 for grubdev in $grub_target_devices; do
-  if ! write_grub_configuration "$grubdev"; then
-    log err "error writing Grub configuration to ${grubdev}"
+  if ! setup_boot_to_grubdev "$grubdev" "$system_images"; then
+    log err "error setting up boot files to ${grubdev}"
     exitstatus=1
   fi
 done
@@ -679,7 +856,7 @@ done
 if $grub_install_done; then
   # Do an extra sleep in case we really installed grub (and have not only
   # updated the configuration), in case cache flushing was not adequate.
-  sleep 5
+  sleep 5 || true
 fi
 
 exit $exitstatus

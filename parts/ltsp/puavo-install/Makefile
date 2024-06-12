@@ -46,7 +46,6 @@ install : installdirs
 		puavo-set-root-password \
 		puavo-setup-filesystems \
 		puavo-update-client \
-		puavo-update-efi \
 		puavo-update-service-script
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
