@@ -2,7 +2,8 @@
 
 set -eu
 
-# XXX code should be shared between this and puavo-install-uki-grub
+# XXX code should be shared between this and puavo-install-grub
+# XXX running puavo-install-grub should run this instead when needed
 
 # This script is run on image updates from puavo-image-preinst so that only
 # /images is writable!  (and some other pseudo-filesystems such as /dev and
@@ -14,7 +15,7 @@ log() {
 
   printf "> %s\n" "$message" >&2
 
-  logger -p "$priority" -t puavo-install-grub "$message" || true
+  logger -p "$priority" -t puavo-install-uki-grub "$message" || true
 }
 
 flush_caches() {
@@ -44,21 +45,11 @@ flush_caches() {
 }
 
 get_grub_efi_arguments() {
-  local vgname with_uki_kernels
+  local vgname
   vgname=$1
-  with_uki_kernels=$2
 
-  echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian'
-
-  if $with_uki_kernels; then
-    echo '--uefi-secure-boot'
-  else
-    # In case we are not using UKI kernels, do not try to bother with
-    # SecureBoot.  Trying to boot a kernel from a system image is broken
-    # unless this argument is used for grub-install, due to bug
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=959425.
-    echo '--no-uefi-secure-boot'
-  fi
+  echo --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian \
+       --uefi-secure-boot
 
   if [ "$vgname" = 'puavoinstaller' ]; then
     echo '--removable'
@@ -67,37 +58,10 @@ get_grub_efi_arguments() {
   fi
 }
 
+# XXX the output of this function should be dependent on EFI partition
+# XXX (EFI UUID should be used here)
 grub_m4_template() {
-  local grubdev grub_target_devices partuuid uki_kernel_device vmlinuz_name \
-        with_uki_kernels
-  with_uki_kernels=$1
-  grub_target_devices=$2
-
-  if $with_uki_kernels; then
-    uki_kernel_device=
-    for grubdev in $grub_target_devices; do
-      if [ -z "$uki_kernel_device" ]; then
-        # pick the first Grub device to boot the UKI kernel from
-        # (XXX is this okay?)
-        uki_kernel_device="$grubdev"
-      fi
-    done
-
-    if ! partuuid=$(lookup_efi_partition_uuid "$uki_kernel_device"); then
-      log err 'using SecureBoot but could not lookup EFI partition UUID'
-      return 1
-    fi
-
-    # XXX UFI boots should support kernel choices as well.
-    # XXX Also, this looks up the default kernel of the current image
-    # XXX where Grub is installed.  This is quite possibly wrong for
-    # XXX the backup image.
-    vmlinuz_name=$(readlink /boot/vmlinuz 2>/dev/null) || true
-    if [ -z "$vmlinuz_name" ]; then
-      log err 'could not determine the default kernel'
-      return 1
-    fi
-  fi
+  # XXX this should not use loopback
 
   cat <<'GRUB_CFG_EOF'
 set default="0"
@@ -137,7 +101,7 @@ else
 fi
 
 function get_imagename { regexp -s 2:"$2" '^(\(.*\)/)?(.*)$' "$1"; }
-function get_pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }
+function get_pathname  { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }
 
 function get_puavoimage_release_name {
   set imagefile="$1"
@@ -191,60 +155,9 @@ function ltsp_image_entry {
     set imagepath="$3"
     set kernelparameters="$4"
 
-GRUB_CFG_EOF
-
-  if $with_uki_kernels; then
-    cat <<GRUB_CFG_EOF
-    search --no-floppy --fs-uuid --set=root ${partuuid}
-    chainloader /EFI/PuavoOS/\${image_alias_path}/${vmlinuz_name}.unsigned.efi ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ \${kernelparameters}
-GRUB_CFG_EOF
-  else
-    cat <<'GRUB_CFG_EOF'
-    loopback loop "${imagefile}"
-    set root='(loop)'
-
-    #
-    # this mirrors code in puavo-ltspboot-config
-    #
-
-    if test "$kernel_version" = ""; then
-      # ${puavo_kernel_version} comes from a grub environment file
-      # (if it is defined there)
-      set kernel_version="$puavo_kernel_version"
-    elif test "$kernel_version" = "default"; then
-      set kernel_version=""
-    fi
-
-    set kernel_version_suffix=''
-    if test -n "${kernel_version}"; then
-      if test -e "(loop)/boot/vmlinuz-${kernel_version}-amd64"; then
-        set kernel_version_suffix="-${kernel_version}-amd64"
-      elif test -e "(loop)/boot/vmlinuz-${kernel_version}"; then
-        set kernel_version_suffix="-${kernel_version}"
-      else
-        # requested kernel not found, use default
-        true
-      fi
-
-      # one more sanity test (also checks the corresponding initrd.img)
-      if test -e "(loop)/boot/initrd.img${kernel_version_suffix}" \
-           -a -e "(loop)/boot/vmlinuz${kernel_version_suffix}"; then
-        true      # all is okay
-      else
-        # something is wrong, use the default kernel
-        set kernel_version_suffix=''
-      fi
-    fi
-
-    linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
-    initrd  /boot/initrd.img${kernel_version_suffix}
-
-    loopback -d loop
-GRUB_CFG_EOF
+    search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTUUID__
+    chainloader /EFI/PuavoOS/${image_alias_path}/__PUAVO_UKI_VMLINUZ__ ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
   fi
-
-  cat <<'GRUB_CFG_EOF'
-  }
 }
 
 ## Superlaptop mode = persistent image changes + local admins
@@ -587,7 +500,7 @@ install_legacy_grub() {
 }
 
 install_efi_grub() {
-  local boot_dir efi_devpath grubdev grub_efi_arguments vgname with_uki_kernels
+  local boot_dir efi_devpath grubdev grub_efi_arguments vgname
 
   boot_dir=$1
   efi_devpath=$2
@@ -599,11 +512,14 @@ install_efi_grub() {
     return 1
   fi
 
+  # XXX here we should probably setup everything else in EFI partition
+  # XXX (UKI kernels, configurations and such)
+
   # We might actually have leftover nvram dumps from previous installations
   # that prevent a successful bootloader installation. Clean them up first.
   rm -f /sys/firmware/efi/efivars/dump-*
 
-  grub_efi_arguments=$(get_grub_efi_arguments "$vgname" "$with_uki_kernels")
+  grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
   if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
                     $grub_efi_arguments "$grubdev" \
                     3>&- 4>&- 5>&- 2>&1); then
@@ -618,15 +534,86 @@ install_efi_grub() {
   return 0
 }
 
-with_uki_kernels=true
-if ! puavo-update-efi; then
-  if [ $? -eq 2 ]; then
-    # no EFI partitions big enough for UKI kernels
-    with_uki_kernels=false
+write_grub_configuration() {
+  local grubdev grub_cfg_path grub_template puavo_efi_partuuid \
+        tmp_grub_cfg_path
+
+  grubdev=$1
+
+  grub_cfg_path="${boot_dir}/grub/grub.cfg"
+  tmp_grub_cfg_path="${grub_cfg_path}.tmp"
+
+  if ! puavo_efi_partuuid=$(lookup_efi_partition_uuid "$grubdev"); then
+    log err "but could not lookup EFI partition UUID:for ${grubdev}"
+    return 1
   fi
-  log err 'error updating UKI kernels'
-  exit 1
+
+  # XXX UFI boots should support kernel choices as well.
+  # XXX Also, this looks up the default kernel of the current image
+  # XXX where Grub is installed.  This is quite possibly wrong for
+  # XXX the backup image.
+  vmlinuz_name=$(readlink /boot/vmlinuz 2>/dev/null) || true
+  if [ -z "$vmlinuz_name" ]; then
+    log err 'could not determine the default kernel'
+    return 1
+  fi
+
+  if ! grub_template=$(grub_m4_template); then
+    log err 'error creating Grub configuration template'
+    return 1
+  fi
+
+  printf "%s\n" "$grub_template" \
+    | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
+         -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
+         -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
+         -D__PUAVO_EFI_PARTUUID__="$puavo_efi_partuuid"         \
+         -D__PUAVO_UKI_VMLINUZ__="${vmlinuz_name}.unsigned.efi" \
+    > "$tmp_grub_cfg_path" || return 1
+
+  windows_partition_path=/images/boot/.puavo_windows_partition
+  if [ -n "$possible_windows_disk_dev" ]; then
+    windows_boot_partition=$(
+      lookup_windows_boot_partition "$possible_windows_disk_dev") || return 1
+    windows_chainloader=$(lookup_windows_chainloader \
+                            "$possible_windows_disk_dev") || return 1
+    if [ -n "$windows_boot_partition" -a -n "$windows_chainloader" ]; then
+      printf "%s %s\n" "$windows_boot_partition" "$windows_chainloader" \
+        > "${windows_partition_path}.tmp" || return 1
+      mv "${windows_partition_path}.tmp" "$windows_partition_path" || return 1
+
+      cat <<EOF >> "$tmp_grub_cfg_path" || return 1
+
+if test "\${puavo_grub_windows_enabled}" = "true"; then
+  menuentry --class="windows" "\${windows_boot_label}" {
+    search --no-floppy --fs-uuid --set=root ${windows_boot_partition}
+    chainloader ${windows_chainloader}
+  }
+  if test "\${puavo_grub_boot_default}" = "windows"; then
+    set default="\${windows_boot_label}"
+  fi
 fi
+EOF
+    else
+      rm -f "$windows_partition_path" || return 1
+    fi
+  else
+    rm -f "$windows_partition_path" || return 1
+  fi
+
+  if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
+    log info 'no changes to Grub configuration'
+    rm -f "$tmp_grub_cfg_path" || return 1
+  else
+    mv "$tmp_grub_cfg_path" "$grub_cfg_path" || return 1
+    log notice 'new Grub configuration has been installed'
+    if ! flush_caches; then
+      log warn 'error in flushing caches after updating grub configuration'
+    fi
+  fi
+
+  return 0
+}
 
 grub_install_done=false
 
@@ -649,7 +636,7 @@ else
     if [ -n "$efi_devpath" ]; then
       grub_install_attempted=true
       if ! install_efi_grub "$boot_dir" "$efi_devpath" "$grubdev" \
-                            "$vgname" "$with_uki_kernels"; then
+                            "$vgname"; then
         exit 1
       fi
     fi
@@ -682,59 +669,12 @@ else
   fi
 fi
 
-grub_cfg_path="${boot_dir}/grub/grub.cfg"
-tmp_grub_cfg_path="${grub_cfg_path}.tmp"
-
-if ! grub_template=$(grub_m4_template "$with_uki_kernels" \
-                       "$grub_target_devices"); then
-  log err 'error creating Grub configuration template'
-  exit 1
-fi
-printf "%s\n" "$grub_template" \
-  | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
-       -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
-       -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
-  > "$tmp_grub_cfg_path"
-
-windows_partition_path=/images/boot/.puavo_windows_partition
-if [ -n "$possible_windows_disk_dev" ]; then
-  windows_boot_partition=$(
-    lookup_windows_boot_partition "$possible_windows_disk_dev")
-  windows_chainloader=$(lookup_windows_chainloader "$possible_windows_disk_dev")
-  if [ -n "$windows_boot_partition" -a -n "$windows_chainloader" ]; then
-    printf "%s %s\n" "$windows_boot_partition" "$windows_chainloader" \
-      > "${windows_partition_path}.tmp"
-    mv "${windows_partition_path}.tmp" "$windows_partition_path"
-
-    cat <<EOF >> "$tmp_grub_cfg_path"
-
-if test "\${puavo_grub_windows_enabled}" = "true"; then
-  menuentry --class="windows" "\${windows_boot_label}" {
-    search --no-floppy --fs-uuid --set=root ${windows_boot_partition}
-    chainloader ${windows_chainloader}
-  }
-  if test "\${puavo_grub_boot_default}" = "windows"; then
-    set default="\${windows_boot_label}"
+for grubdev in $grub_target_devices; do
+  if ! write_grub_configuration "$grubdev"; then
+    log err "error writing Grub configuration to ${grubdev}"
+    exitstatus=1
   fi
-fi
-EOF
-  else
-    rm -f "$windows_partition_path"
-  fi
-else
-  rm -f "$windows_partition_path"
-fi
-
-if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
-  log info 'no changes to Grub configuration'
-  rm -f "$tmp_grub_cfg_path"
-else
-  mv "$tmp_grub_cfg_path" "$grub_cfg_path"
-  log notice 'new Grub configuration has been installed'
-  if ! flush_caches; then
-    log warn 'error in flushing caches after updating grub configuration'
-  fi
-fi
+done
 
 if $grub_install_done; then
   # Do an extra sleep in case we really installed grub (and have not only
