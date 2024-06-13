@@ -26,6 +26,8 @@ if [ $# -gt 0 ]; then
     fi
 fi
 
+# use "&" in the end to put to background so that we register immediately
+# as being ready
 while true; do
     if [ $DEV_MODE -eq 1 ]; then
         # Development mode. Assume this is a local copy of the
@@ -69,4 +71,4 @@ while true; do
         }
         break
     fi
-done
+done &
