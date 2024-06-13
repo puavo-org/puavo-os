@@ -851,7 +851,7 @@ class PuavoErsExamSync (threading.Thread):
   def sync_one_exam(self, exam_file_name, exam):
     exam_file_path = os.path.join(EXAMS_DIR, exam_file_name)
 
-    exam_modified = exam['modified']
+    exam_modified = exam['modified_at']
     if type(exam_modified) != int:
       raise Exception('exam modified time is not an integer for %s' \
                         % exam_file_name)
@@ -1719,11 +1719,11 @@ class PuavoErsExamScheduler (threading.Thread):
 
     current_exam_uuids = []
     for exam in current_exams_set.exams:
-      if not 'uuid' in exam:
+      if not 'file_uuid' in exam:
         errmsg = 'no uuid set for exam "%s", can not check it is on server' \
                    % exam['file_name']
         raise Exception(errmsg)
-      current_exam_uuids.append(exam['uuid'])
+      current_exam_uuids.append(exam['file_uuid'])
 
     try:
       if set(currently_loaded_exam_uuids) != set(current_exam_uuids):
