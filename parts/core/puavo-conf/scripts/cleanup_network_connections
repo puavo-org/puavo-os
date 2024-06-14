@@ -2,6 +2,11 @@
 
 set -eu
 
+if [ -e /run/puavo/nbd-server ]; then
+  # NetworkManager not used in fatclients
+  exit 0
+fi
+
 # Clean up the network connections made in login screen
 # (made by "Debian-gdm"-user).  Normal users are allowed to have their
 # own networks and we want that information to persist.
