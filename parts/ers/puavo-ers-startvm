@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
+  exit 0
+fi
+
+# Run automated vm startup
+if vboxmanage list vms | grep -q 'NaksuAbittiKTP' ; then
+  logger -p user.info -t puavo-ers-startvm \
+    "Trying Automated Abitti vm startup"
+  if vboxmanage startvm NaksuAbittiKTP ; then
+    logger -p user.info -t puavo-ers-startvm \
+      "Abitti vm running"
+    sleep 5
+    logger -p user.info -t puavo-ers-startvm \
+      "Sending first enter key to Abitti vm"
+    if vboxmanage controlvm NaksuAbittiKTP keyboardputscancode 1C 9C ; then
+      sleep 1
+      logger -p user.info -t puavo-ers-startvm \
+        "Sending second enter key to Abitti vm"
+      if vboxmanage controlvm NaksuAbittiKTP keyboardputscancode 1C 9C ; then
+        logger -p user.info -t puavo-ers-startvm \
+          "Abitti vm should now be booting"
+        exit 0
+      fi
+    fi
+  fi
+  logger -p user.err -t puavo-ers-startvm \
+    "Automated Abitti vm startup failed"
+  exit 1
+else
+  logger -p user.err -t puavo-ers-startvm \
+    "Abitti vm not found"
+  exit 1
+fi

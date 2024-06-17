@@ -126,7 +126,7 @@ def update_device_json(restclient)
   begin
     device = restclient.get(uripath).parse()
   rescue PuavoRestClient::BadStatusCode => e
-    if e.response.code == 404 then
+    if e.response.code == 404 || e.response.code == 401 then
       FileUtils.touch('/state/etc/puavo/HOST_REMOVED_FROM_PUAVO')
     end
     raise e

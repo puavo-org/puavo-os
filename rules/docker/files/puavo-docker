@@ -91,7 +91,7 @@ def setup_nginx_configuration(primary_nc_domain, nc_domains_list,
   raise "certificate key #{ cert_key_path } is missing" \
     unless File.exists?(cert_key_path)
 
-  server_names = nc_domains_list
+  server_names = nc_domains_list.clone
   server_names << collabora_domain if collabora_domain
 
   nginx_conf = <<EOF

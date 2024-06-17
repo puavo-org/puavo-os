@@ -7,7 +7,7 @@ use the "bullseye"-branch.  To build images with "Bookworm"-version,
 use the "bookworm"-branch.  The build host should probably be
 of the same version your target image is.  As of May 2024,
 our main production version is Bullseye and Bookworm
-is almost ready for widespread deployment.
+is under active development.
 
 After cloning the repository, you should also update
 submodules (unless the repository was cloned with parameter --recursive):

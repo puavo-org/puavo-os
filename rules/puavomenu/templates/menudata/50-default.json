@@ -371,6 +371,9 @@
         "fritzing": {
             "tags": "default"
         },
+        "fr.handbrake.ghb": {
+            "tags": "default"
+        },
         "gdevelop": {
             "tags": "default"
         },
@@ -1050,6 +1053,19 @@
         },
         "org.mobsya.ThymioSuite": {
             "tags": "default"
+        },
+        "org.molview": {
+            "type": "web",
+            "url": "https://molview.org/",
+            "name": {
+                "fi": "MolView-molekyylimallinnus",
+                "en": "MolView molecular modelling",
+                "sv": "MolView - Molekylär modellering",
+                "de": "MolView - Molekulare Modellierung"
+            },
+            "icon": "/usr/share/icons/hicolor/48x48/apps/kalzium.png",
+            "tags": "default, education, science",
+            "keywords": "molview, marvin sketch"
         },
         "org.openshot.OpenShot": {
             "tags": "default"
@@ -1798,6 +1814,7 @@
                 "ardour",
                 "qsynth",
                 "qjackctl",
+                "fr.handbrake.ghb",
                 "winff"
             ]
         },
@@ -1826,6 +1843,7 @@
                 "avogadro2",
                 "MarvinSketch",
                 "MarvinView",
+                "org.molview",
                 "org.kde.kalzium",
                 "LoggerPro",
                 "LoggerPro3",
@@ -1944,6 +1962,7 @@
                 "org.kde.kalzium",
                 "MarvinSketch",
                 "MarvinView",
+                "org.molview",
                 "mandelbulber2",
                 "org.qgis.qgis",
                 "anki"
@@ -2462,6 +2481,7 @@
                 "makecode",
                 "kahoot",
                 "sanomapro",
+                "org.molview",
                 "otava-oppilas",
                 "otava-opiskelija",
                 "edison",
