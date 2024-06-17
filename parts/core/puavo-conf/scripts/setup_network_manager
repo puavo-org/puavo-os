@@ -21,6 +21,13 @@
 #     "password": "AkuAnkka"
 #   },
 #   {
+#     "type":     "psk",
+#     "ssid":     "Hanhivaara",
+#     "wlan_ap":  true,
+#     "hidden":   true,
+#     "password": "RoopeAnkka"
+#   },
+#   {
 #     "type":     "open",
 #     "ssid":     "Humppaajat",
 #     "wlan_ap":  null,
@@ -237,13 +244,14 @@ EOF
 end
 
 class Wlan < Network
-  def initialize(ssid, priority)
+  def initialize(ssid, priority, hidden)
     raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
 
     super(ssid.scan(/[[:alnum:]_-]/).join)
 
-    @ssid = ssid
+    @hidden   = (hidden == true)
     @priority = priority
+    @ssid     = ssid
   end
 
   def autoconnect_priority
@@ -264,7 +272,7 @@ class Wlan::Eap < Wlan
   def client_cert_path; "#{ certdir }/client_cert"; end
   def client_key_path;  "#{ certdir }/client_key";  end
 
-  def initialize(ssid, identity, password, certs, phase2_auth, priority)
+  def initialize(ssid, identity, password, certs, phase2_auth, priority, hidden)
     raise 'Wlan eap-tls ssid is not a non-empty string' \
       unless ssid.kind_of?(String) && !ssid.empty?
     raise 'Wlan eap-tls identity is not a non-empty string' \
@@ -297,7 +305,7 @@ class Wlan::Eap < Wlan
       end
     end
 
-    super(ssid, priority)
+    super(ssid, priority, hidden)
   end
 
   def config
@@ -310,7 +318,7 @@ permissions=
 autoconnect-priority=#{ autoconnect_priority }
 
 [wifi]
-mode=infrastructure
+#{ @hidden ? "hidden=true\n" : "" }mode=infrastructure
 ssid=#{ @ssid }
 
 [wifi-security]
@@ -410,7 +418,7 @@ permissions=
 autoconnect-priority=#{ autoconnect_priority }
 
 [wifi]
-mode=infrastructure
+#{ @hidden ? "hidden=true\n" : "" }mode=infrastructure
 ssid=#{ @ssid }
 
 [ipv4]
@@ -430,12 +438,12 @@ EOF
 end
 
 class Wlan::Psk < Wlan
-  def initialize(ssid, psk, priority)
+  def initialize(ssid, psk, priority, hidden)
     raise "Wlan password is not set for ssid=#{ ssid }" \
       if (psk.nil? || psk.empty?)
     @psk = psk
 
-    super(ssid, priority)
+    super(ssid, priority, hidden)
   end
 
   def config
@@ -448,7 +456,7 @@ permissions=
 autoconnect-priority=#{ autoconnect_priority }
 
 [wifi]
-mode=infrastructure
+#{ @hidden ? "hidden=true\n" : "" }mode=infrastructure
 ssid=#{ @ssid }
 
 [wifi-security]
@@ -487,7 +495,8 @@ networks_specs.each do |network_spec|
                                        network_spec['password'],
                                        network_spec['certs'],
                                        network_spec['phase2_auth'],
-                                       network_spec['priority'])
+                                       network_spec['priority'],
+                                       network_spec['hidden'])
                    end
 
   begin
@@ -507,11 +516,14 @@ networks_specs.each do |network_spec|
                     network_spec['number'],
                     network_spec['pin'])
           when 'open'
-            Wlan::Open.new(network_spec['ssid'], network_spec['priority'])
+            Wlan::Open.new(network_spec['ssid'],
+                           network_spec['priority'],
+                           network_spec['hidden'])
           when 'psk'
             Wlan::Psk.new(network_spec['ssid'],
                           network_spec['password'],
-                          network_spec['priority'])
+                          network_spec['priority'],
+                          network_spec['hidden'])
           else
             warn "Unsupported wlan type #{ network_spec['type'] }"
             nil
