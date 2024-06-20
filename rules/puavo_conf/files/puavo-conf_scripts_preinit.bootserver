@@ -39,6 +39,7 @@ setup_nagios
 setup_nfs_server
 setup_bootserver_nss
 setup_bootserver_cups
+fix_cups_certs
 setup_slapd
 setup_krb5kdc
 setup_samba

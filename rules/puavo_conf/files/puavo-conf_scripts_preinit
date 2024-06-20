@@ -49,6 +49,7 @@ setup_nfs_client
 setup_display_manager
 setup_cups_browsed
 setup_desktop_printer_restrictions
+fix_cups_certs
 setup_pulseaudio
 setup_gdm
 setup_nodm

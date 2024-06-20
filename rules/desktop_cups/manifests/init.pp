@@ -12,6 +12,9 @@ class desktop_cups {
   }
 
   ::puavo_conf::script {
+    'fix_cups_certs':
+      source => 'puppet:///modules/desktop_cups/fix_cups_certs';
+
     'setup_cups_browsed':
       source => 'puppet:///modules/desktop_cups/setup_cups_browsed';
 

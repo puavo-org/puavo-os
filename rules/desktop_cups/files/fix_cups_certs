@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -eu
+
+#
+# Early/unpatched Bookworm cups created invalid certificates (it base64-encoded
+# pem-certificates inside BEGIN/END-blocks).  Remove all certificates that
+# appear corrupt.  (This fix can be removed once we can believe there are no
+# corrupt certificates to remove).
+#
+
+find /etc/cups/ssl -name '*.crt' -print0 \
+  | xargs -0 --no-run-if-empty awk '
+      BEGIN { ORS = "\0" } FNR == 2 && $1 !~ /^MII/ { print FILENAME }
+    ' \
+  | xargs -0 rm -f
