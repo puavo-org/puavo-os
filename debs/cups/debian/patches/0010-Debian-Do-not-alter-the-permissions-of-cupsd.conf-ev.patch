@@ -1,0 +1,27 @@
+From: Martin Pitt <mpitt@debian.org>
+Date: Tue, 9 Aug 2016 18:11:41 +0200
+Subject: Debian: Do not alter the permissions of cupsd.conf, ever
+
+Origin: vendor
+Bug: https://github.com/OpenPrinting/cups/pull/36
+---
+ scheduler/conf.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/scheduler/conf.c b/scheduler/conf.c
+index 535d40f..cb49078 100644
+--- a/scheduler/conf.c
++++ b/scheduler/conf.c
+@@ -1132,10 +1132,12 @@ cupsdReadConfiguration(void)
+ 			     Group, 1, 1) < 0 ||
+        cupsdCheckPermissions(ServerRoot, "ssl", 0700, RunUser,
+ 			     Group, 1, 0) < 0 ||
++       /* Never alter permissions of central conffile
+        cupsdCheckPermissions(ConfigurationFile, NULL, ConfigFilePerm, RunUser,
+ 			     Group, 0, 0) < 0 ||
+        cupsdCheckPermissions(CupsFilesFile, NULL, ConfigFilePerm, RunUser,
+ 			     Group, 0, 0) < 0 ||
++       */
+        cupsdCheckPermissions(ServerRoot, "classes.conf", 0600, RunUser,
+ 			     Group, 0, 0) < 0 ||
+        cupsdCheckPermissions(ServerRoot, "printers.conf", 0600, RunUser,

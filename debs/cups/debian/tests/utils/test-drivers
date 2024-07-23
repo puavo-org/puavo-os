@@ -1,0 +1,100 @@
+#!/bin/sh
+
+set -e -u
+
+DUMMY_PRINTER_NAME=test-printer0
+DRIVER_REGEXP='^.*'
+PDFS_PATH=/usr/share/cups/data/
+LPINFO_RUN=true
+DRIVERS_LIST=''
+
+while getopts 'n:r:p:l:h' flag; do
+  case "${flag}" in
+    n) DUMMY_PRINTER_NAME="${OPTARG}" ;;
+    r) DRIVER_REGEXP="${OPTARG}" ;;
+    p) PDFS_PATH="${OPTARG}" ;;
+    l) LPINFO_RUN=false; DRIVERS_LIST=${OPTARG} ;;
+    h) echo "Usage: $0 [-n printer_name] [-r '^driver_regexp'] [-p ./pdf-path] [-l drivers_list]";
+       return 1;;
+  esac
+done
+
+if $LPINFO_RUN; then
+  # textonly, gen-brf, gen-ubrl and indexv[3,4] can't print PDF
+  # pdftoijs is currently buggy !?
+  DRIVERS_LIST=$(lpinfo -m | cut -f1 -d' ' | grep -Ev 'brf|everywhere|gen-ubrl|indexv[3,4]|pdftoijs|raw|textonly' | grep -E $DRIVER_REGEXP)
+fi
+
+cleanup() {
+    # Delete it
+    echo -n " - Interrupted (or finished), delete test printer:"
+    rm -f ${DUMMY_PRINTER_STDERR_FILE}
+    rm -f ${DUMMY_PRINTER_PRINT_FILE}
+    /usr/sbin/lpadmin -x $DUMMY_PRINTER_NAME 2>/dev/null || :
+    echo " done."
+}
+
+trap cleanup EXIT INT
+
+# Configure the running CUPS server to do debug2 logging
+sed -e 's/^.*LogLevel.*$/LogLevel debug2/g' -i /etc/cups/cupsd.conf
+# Configure the running CUPS server to set FileDevice to Yes
+sed -e 's/^.*FileDevice.*$/FileDevice Yes/g' -i /etc/cups/cups-files.conf
+# Configure the running CUPS server to allow root to do administrative tasks
+sed -e 's/^.*SystemGroup.*$/SystemGroup lpadmin root/g' -i /etc/cups/cups-files.conf
+service cups restart
+
+DUMMY_PRINTER_STDERR_FILE=`mktemp`
+DUMMY_PRINTER_PRINT_FILE=`mktemp`
+
+for driver in $DRIVERS_LIST; do
+
+    echo "* Driver $driver"
+
+    echo -n " - Create test printer:"
+    # Create dummy printer
+    /usr/sbin/lpadmin -p $DUMMY_PRINTER_NAME -E -m $driver -v file://${DUMMY_PRINTER_PRINT_FILE} 2> $DUMMY_PRINTER_STDERR_FILE
+    echo " done."
+    # Tell stderr whether some unknown lines have been seen
+    # Filter out the deprecation messages
+    # Both messages from systemv/lpadmin.c
+    cat "${DUMMY_PRINTER_STDERR_FILE}" | \
+        grep -v -E "lpadmin: (Raw queues|Printer drivers) are deprecated and will stop working in a future version of CUPS." \
+        || true \
+        1>&2
+    
+    for file in $(find $PDFS_PATH -name '*.pdf') ; do
+        echo -n " - Print $file: "
+        # Print the default testprint to it, get request id
+        rid=$(/usr/bin/lp -d $DUMMY_PRINTER_NAME $file | sed -e 's/^.*request id is \(.*\) (.*)$/\1/g')
+    
+        # Wait for the print to finish
+        while LPSTAT=`LANG=C /usr/bin/lpstat -l` && echo $LPSTAT | grep -q "^$rid "; do
+            # If the filter is failed; stop the waiting and give as much context as possible
+            if echo $LPSTAT | grep -A3 "^$rid" | grep -q "Filter failed"; then
+                echo " Filter failed, aborting!"
+                >&2 echo "$ lpstat -l"
+                >&2 echo "$LPSTAT"
+                # Get job-id from request-id; assume it's ${printer_name}-${job_id}
+                jobid=$(echo $rid | sed -e "s/^${DUMMY_PRINTER_NAME}-//g")
+                >&2 echo "$ grep "\[Job $jobid\]" /var/log/cups/error_log"
+                >&2 grep "\[Job $jobid\]" /var/log/cups/error_log
+                break
+            fi
+            /bin/sleep 1s
+            echo -n "."
+        done
+        # Make sure the resulting data is not empty
+        if [ ! -s "${DUMMY_PRINTER_PRINT_FILE}" ]; then
+            echo " Filter succeeded but resulting file is empty; aborting!"
+            false
+        fi
+        rm -f ${DUMMY_PRINTER_PRINT_FILE}
+        echo " done."
+    done
+
+    # Delete it
+    echo -n " - Delete test printer:"
+    /usr/sbin/lpadmin -x $DUMMY_PRINTER_NAME
+    echo " done."
+done

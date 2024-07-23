@@ -1,0 +1,7 @@
+cups-daemon: init.d-script-possible-missing-stop etc/init.d/cups 0 6
+# CUPS is WantedBy=printer.target
+cups-daemon: systemd-service-file-refers-to-unusual-wantedby-target lib/systemd/system/cups.service printer.target
+cups-daemon: spare-manual-page usr/share/man/*man8/cups-snmp.8.gz
+cups-daemon: executable-in-usr-lib usr/lib/cups/backend/*
+cups-daemon: executable-in-usr-lib usr/lib/cups/daemon/*
+cups-daemon: executable-in-usr-lib usr/lib/cups/notifier/*

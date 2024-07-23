@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -e -u
+
+/usr/share/cups/test-drivers -l 'raw' -p ./test/ 2>/dev/null

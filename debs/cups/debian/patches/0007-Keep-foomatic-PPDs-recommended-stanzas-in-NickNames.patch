@@ -1,0 +1,38 @@
+From: Till Kampetter <till.kampetter@gmail.com>
+Date: Tue, 9 Aug 2016 18:11:36 +0200
+Subject: Keep foomatic PPDs "(recommended)" stanzas in NickNames
+
+Bug-Upstream: https://github.com/OpenPrinting/cups/pull/33
+Forwarded: yes
+---
+ scheduler/cups-driverd.cxx | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/scheduler/cups-driverd.cxx b/scheduler/cups-driverd.cxx
+index 66c95cb..41f207e 100644
+--- a/scheduler/cups-driverd.cxx
++++ b/scheduler/cups-driverd.cxx
+@@ -241,7 +241,6 @@ add_ppd(const char *filename,		/* I - PPD filename */
+ 	const char *scheme)		/* I - PPD scheme */
+ {
+   ppd_info_t	*ppd;			/* PPD */
+-  char		*recommended;		/* Foomatic driver string */
+ 
+ 
+  /*
+@@ -279,15 +278,6 @@ add_ppd(const char *filename,		/* I - PPD filename */
+   strlcpy(ppd->record.device_id, device_id, sizeof(ppd->record.device_id));
+   strlcpy(ppd->record.scheme, scheme, sizeof(ppd->record.scheme));
+ 
+- /*
+-  * Strip confusing (and often wrong) "recommended" suffix added by
+-  * Foomatic drivers...
+-  */
+-
+-  if ((recommended = strstr(ppd->record.make_and_model,
+-                            " (recommended)")) != NULL)
+-    *recommended = '\0';
+-
+  /*
+   * Add the PPD to the PPD arrays...
+   */

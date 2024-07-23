@@ -1,0 +1,15 @@
+cups: executable-in-usr-lib usr/lib/cups/backend-available/*
+cups: executable-in-usr-lib usr/lib/cups/cgi-bin/*
+cups: executable-in-usr-lib usr/lib/cups/daemon/*
+cups: executable-in-usr-lib usr/lib/cups/filter/*
+cups: executable-in-usr-lib usr/lib/cups/monitor/*
+cups: non-standard-executable-perm usr/lib/cups/backend-available/* 0744 != 0755
+cups: package-contains-empty-directory usr/lib/cups/driver/
+cups: package-contains-empty-directory usr/share/ppd/custom/
+cups: package-contains-empty-directory usr/share/cups/ppd-updaters/
+cups: spare-manual-page usr/share/man/*man1/cups.1.gz
+cups: spare-manual-page usr/share/man/*man8/cups-deviced.8.gz
+cups: spare-manual-page usr/share/man/*man8/cups-driverd.8.gz
+cups: spare-manual-page usr/share/man/*man8/cups-exec.8.gz
+cups: spare-manual-page usr/share/man/*man8/cups-lpd.8.gz
+cups: spare-manual-page usr/share/man/*man8/cupsd-helper.8.gz

@@ -1,0 +1,50 @@
+# Debian moves this to /usr/share/cups/cupsd.conf.default
+etc/cups/cupsd.conf
+# Back from CUPS 1.5
+etc/dbus-1/system.d/cups.conf
+# Installed by dh_installpam (debian/cups-daemon.cups.pam)
+etc/pam.d/cups
+# Deprecated, not installed (use xinetd)
+lib/systemd/system/cups-lpd.socket
+lib/systemd/system/cups-lpd@.service
+# Not decided whether worth installing or not yet
+usr/bin/ippeveprinter
+usr/lib/cups/command/ippevepcl
+usr/lib/cups/command/ippeveps
+usr/share/man/man7/ippevepcl.7
+usr/share/man/man7/ippeveps.7
+# Ipptool utils
+usr/share/cups/ipptool/color.jpg
+usr/share/cups/ipptool/document-a4.pdf
+usr/share/cups/ipptool/document-a4.ps
+usr/share/cups/ipptool/document-letter.pdf
+usr/share/cups/ipptool/document-letter.ps
+usr/share/cups/ipptool/gray.jpg
+usr/share/cups/ipptool/onepage-a4.pdf
+usr/share/cups/ipptool/onepage-a4.ps
+usr/share/cups/ipptool/onepage-letter.pdf
+usr/share/cups/ipptool/onepage-letter.ps
+usr/share/cups/ipptool/testfile.jpg
+usr/share/cups/ipptool/testfile.pcl
+usr/share/cups/ipptool/testfile.pdf
+usr/share/cups/ipptool/testfile.ps
+usr/share/cups/ipptool/testfile.txt
+# CUPS "desktop" entry, to access the webinterface
+usr/share/applications/cups.desktop
+usr/share/icons/hicolor/*x*/apps/cups.png
+# Translated manpages only get installed if sufficiently translated
+usr/share/man/de/man1/*.1
+usr/share/man/de/man5/*.5
+usr/share/man/de/man7/*.7
+usr/share/man/de/man8/*.8
+usr/share/man/fr/man1/*.1
+usr/share/man/fr/man5/*.5
+usr/share/man/fr/man7/*.7
+usr/share/man/fr/man8/*.8
+usr/share/man/pt/man1/*.1
+usr/share/man/pt/man5/*.5
+usr/share/man/pt/man7/*.7
+usr/share/man/pt/man8/*.8
+#
+# temporary exclude
+usr/lib/pkgconfig/cups.pc

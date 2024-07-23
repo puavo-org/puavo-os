@@ -1,0 +1,2 @@
+# libcups2-dev's ppd.h depends on raster.h; libcupsimage2-dev's raster.h depends on cups.h
+intra-source-package-circular-dependency libcups2-dev libcupsimage2-dev

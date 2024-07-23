@@ -1,0 +1,141 @@
+#!/bin/bash
+
+set -e -u
+
+filter_stderr_from_file() {
+    cat $1 | \
+        grep -v -E "lpadmin: (Raw queues|Printer drivers) are deprecated and will stop working in a future version of CUPS." \
+        || true \
+        1>&2
+}
+
+# What follows is widely taken from https://src.fedoraproject.org/rpms/cups/blob/master/f/tests/basic-commands/runtest.sh , with small adaptations for Debian
+# runtest.sh - basic commands
+# Author: Yulia Kopkova <ykopkova@redhat.com>
+# Location: /CoreOS/cups/Sanity/basic_commands/Makefile
+# Description: Test for basic CUPS commands
+# Copyright (c) 2008 Red Hat, Inc. This copyrighted material
+# is made available to anyone wishing to use, modify, copy, or
+# redistribute it subject to the terms and conditions of the GNU General
+# Public License v.2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+# Make sure we can print to Files
+sed -e 's/^#.*FileDevice.*$/FileDevice Yes/g' -i /etc/cups/cups-files.conf
+service cups restart
+
+FILEPDF=/usr/share/cups/data/default-testpage.pdf
+FILEJPG=/usr/share/cups/doc-root/images/smiley.jpg
+NUMJOBS=50
+TIMEOUT=30
+TPRN1="test-printer1"
+TPRN2="test-printer2"
+ML="drv:///sample.drv/deskjet.ppd"
+STDERR_FILE=`mktemp`
+
+cleanup() {
+    # Delete it
+    echo -n " - Interrupted (or finished), delete test printers:"
+    lpadmin -x $TPRN1 2>/dev/null || :
+    lpadmin -x $TPRN2 2>/dev/null || :
+    rm -f $STDERR_FILE
+    echo " done."
+}
+
+trap cleanup EXIT INT
+
+
+# Configure the running CUPS server to do debug2 logging
+echo " - Setting CUPS into debug2 mode"
+sed -e 's/^.*LogLevel.*$/LogLevel debug2/g' -i /etc/cups/cupsd.conf
+# Configure the running CUPS server to allow root to do administrative tasks
+echo " - Setting CUPS to allow root to do administrative tasks"
+sed -e 's/^.*SystemGroup.*$/SystemGroup lpadmin root/g' -i /etc/cups/cups-files.conf
+# Restart CUPS
+echo " - Restarting CUPS to apply configuration changes"
+service cups restart
+
+echo " - Create printer $TPRN1"
+lpadmin -p $TPRN1 -v file:/dev/null -E -m $ML 2> $STDERR_FILE; filter_stderr_from_file $STDERR_FILE
+echo " - Set $TPRN1 default"
+lpadmin -d $TPRN1 
+echo " - Create printer $TPRN2"
+lpadmin -p $TPRN2 -v file:/dev/null -E -m $ML 2> $STDERR_FILE; filter_stderr_from_file $STDERR_FILE
+echo " - Print $FILEPDF with lp and default printer"
+lp $FILEPDF 
+echo " - Print $FILEJPG with lp and $TPRN2"
+lp -d $TPRN2 $FILEJPG 
+echo " - Print $FILEPDF with lp and $TPRN1"
+lp -d $TPRN1 -P 1-2 -o job-sheets=classified,classified $FILEPDF 
+
+for ((i=0; i < $NUMJOBS; i++)); do
+    lp -d $TPRN1 $FILEJPG &
+    sleep 0.02s
+    lp -d $TPRN2 $FILEJPG &
+    sleep 0.02s
+    lppid=$!
+done
+echo " - $NUMJOBS jobs queued"
+wait $lppid
+
+for ((i=$TIMEOUT; i>0; i-=5 )); do
+        jobs=$(lpstat)
+    [ "x$jobs" = "x" ] && break
+    sleep 5
+done
+echo " - Print $FILEPDF with lpr and default printer"
+lpr $FILEPDF 
+echo " - Print $FILEJPG with lpr and $TPRN2"
+lpr -P $TPRN2 $FILEJPG 
+echo " - Print $FILEPDF with lpr and $TPRN1"
+lpr -P $TPRN1 -o number-up=2 -o job-sheets=standard,none $FILEPDF 
+for ((i=0; i < $NUMJOBS ; i++)); do
+    lpr -P $TPRN1 $FILEJPG &
+    sleep 0.02s
+    lpr -P $TPRN2 $FILEJPG &
+    sleep 0.02s
+    lprpid=$!
+done
+echo " - $NUMJOBS jobs queued"
+wait $lprpid 
+for ((i=$TIMEOUT; i>0 ; i-=5)); do
+    jobs=$(lpstat)
+    [ "x$jobs" = "x" ] && break
+    sleep 5
+done
+job_id=$(lp -d $TPRN1 -o job-hold-until=indefinite $FILEJPG | sed "s/^.*$TPRN1-\([[:digit:]]*\).*/\1/g")
+echo " - Cancel $TPRN1-$job_id job"
+cancel $TPRN1-$job_id 
+echo " - Hold job on $TPRN1"
+lp -d $TPRN1 -o job-hold-until=indefinite $FILEJPG 
+echo " - Hold job on $TPRN2"
+lp -d $TPRN2 -o job-hold-until=indefinite $FILEJPG 
+echo " - Cancel all jobs"
+cancel -a 
+echo " - Show printers status"
+lpc status 
+echo " - Show printer queue status"
+lpq 
+echo " - Show all status information"
+lpstat -t 
+echo " - Show list of available drivers"
+lpinfo -m 
+echo " - Show list of available devices"
+lpinfo -v 
+echo " - Hold test file"
+lpr -o job-hold-until=indefinite $FILEJPG 
+echo " - Cancel current job on default printer"
+lprm 
+echo " - Hold test file"
+lpr -P $TPRN1 -o job-hold-until=indefinite $FILEJPG 
+echo " - Cancel current job on $TPRN1"
+lprm $TPRN1 
+echo " - Modify $TPRN1"
+lpadmin -p $TPRN1 -v file:/tmp/$TPRN1 -o PageSize=A4 

@@ -1,0 +1,15 @@
+# README for CUPS manpages translation
+
+As the manpage translations patch using po4a has not been accepted by
+upstream, they have been moved out of the patch to the
+debian/manpage-po4a/ directory. This should ease shared maintenance and
+enhance the visibility of these translations.
+
+## How to update .pot and .po files
+
+1. Checkout the branch you want to work on (usually 'debian/master').
+   It has the patches already applied.
+
+2. Launch po4a from the correct directory:
+
+	$ cd man; po4a ../debian/manpage-po4a/cups.cfg

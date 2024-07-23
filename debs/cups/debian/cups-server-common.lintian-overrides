@@ -1,0 +1,3 @@
+cups-server-common: package-contains-empty-directory usr/share/cups/data/
+cups-server-common: package-contains-empty-directory usr/share/cups/model/
+cups-server-common: package-contains-documentation-outside-usr-share-doc usr/share/cups/doc-root/*

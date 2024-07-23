@@ -1,0 +1,78 @@
+From: Thorsten Alteholz <debian@alteholz.de>
+Date: Sat, 2 Dec 2023 00:01:23 +0100
+Subject: dont override color settings from print dialoag
+
+---
+ cups/ppd-cache.c | 39 +++++++++++++++++++++++++++++++++++----
+ scheduler/ipp.c  |  3 +++
+ 2 files changed, 38 insertions(+), 4 deletions(-)
+
+diff --git a/cups/ppd-cache.c b/cups/ppd-cache.c
+index 8861813..f72d834 100644
+--- a/cups/ppd-cache.c
++++ b/cups/ppd-cache.c
+@@ -259,15 +259,46 @@ _cupsConvertOptions(
+ 
+   color_attr_name = print_color_mode_sup ? "print-color-mode" : "output-mode";
+ 
+-  if ((keyword = cupsGetOption("print-color-mode", num_options, options)) == NULL)
++ /*
++  * If we use PPD with standardized PPD option for color support - ColorModel,
++  * prefer it to don't break color/grayscale support for PPDs, either classic
++  * or the ones generated from IPP Get-Printer-Attributes response.
++  */
++
++  if ((keyword = cupsGetOption("ColorModel", num_options, options)) == NULL)
+   {
++   /*
++    * No ColorModel in options...
++    */
++
+     if ((choice = ppdFindMarkedChoice(ppd, "ColorModel")) != NULL)
+     {
+-      if (!_cups_strcasecmp(choice->choice, "Gray"))
+-	keyword = "monochrome";
++     /*
++      * ColorModel is taken from PPD as its default option.
++      */
++
++      if (!strcmp(choice->choice, "Gray") || !strcmp(choice->choice, "FastGray") || !strcmp(choice->choice, "DeviceGray"))
++        keyword = "monochrome";
+       else
+-	keyword = "color";
++        keyword = "color";
+     }
++    else
++     /*
++      * print-color-mode is a default option since 2.4.1, use it as a fallback if there is no
++      * ColorModel in options or PPD...
++      */
++      keyword = cupsGetOption("print-color-mode", num_options, options);
++  }
++  else
++  {
++   /*
++    * ColorModel found in options...
++    */
++
++    if (!strcmp(keyword, "Gray") || !strcmp(keyword, "FastGray") || !strcmp(keyword, "DeviceGray"))
++      keyword = "monochrome";
++    else
++      keyword = "color";
+   }
+ 
+   if (keyword && !strcmp(keyword, "monochrome"))
+diff --git a/scheduler/ipp.c b/scheduler/ipp.c
+index 14cadb0..d5b0f14 100644
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
+@@ -2937,6 +2937,9 @@ apply_printer_defaults(
+       if (!strcmp(option->name, "print-quality") && ippFindAttribute(job->attrs, "cupsPrintQuality", IPP_TAG_NAME))
+         continue;                     /* Don't override cupsPrintQuality */
+ 
++      if (!strcmp(option->name, "print-color-mode") && ippFindAttribute(job->attrs, "ColorModel", IPP_TAG_NAME))
++        continue;                     /* Don't override ColorModel */
++
+       cupsdLogJob(job, CUPSD_LOG_DEBUG, "Adding default %s=%s", option->name, option->value);
+ 
+       num_options = cupsAddOption(option->name, option->value, num_options, &options);
