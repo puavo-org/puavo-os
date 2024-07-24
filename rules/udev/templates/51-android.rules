@@ -1044,7 +1044,7 @@ ENV{adb_ptp}=="yes", ENV{adb_user}="yes", ATTR{bDeviceClass}=="00|02|06|ef|ff", 
 ENV{adb_mtp}=="yes", ENV{adb_user}="yes", SYMLINK+="libmtp-%k", ENV{ID_MTP_DEVICE}="1", ENV{ID_MEDIA_PLAYER}="1"
 
 # Enable device as a user device if found (add an "android" SYMLINK)
-ENV{adb_user}=="yes", MODE="0660", GROUP="adbusers", TAG+="uaccess", SYMLINK+="android", SYMLINK+="android%n"
+ENV{adb_user}=="yes", MODE="0660", GROUP="plugdev", TAG+="uaccess", SYMLINK+="android", SYMLINK+="android%n"
 
 # Devices listed here {begin...end} are connected by USB
 LABEL="android_usb_rules_end"
