@@ -1,0 +1,31 @@
+From b0f75dbb4b30879fcda8c25d3533737b7c2e7947 Mon Sep 17 00:00:00 2001
+From: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Date: Thu, 25 Jul 2024 10:29:18 +0300
+Subject: [PATCH] Fix enterprise network activation in panel network selector
+
+A static WirelessNetwork._securityTypes variable does exist, but the correct
+variable when checking autoconnect possibility is this._securityType;
+this._securityTypes is undefined, causing clicking an enterprise network name do
+nothing instead of properly opening GNOME Settings panel.
+
+---
+ js/ui/status/network.js | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/js/ui/status/network.js b/js/ui/status/network.js
+index 65cc1db6b..e57d0192c 100644
+--- a/js/ui/status/network.js
++++ b/js/ui/status/network.js
+@@ -937,8 +937,8 @@ const WirelessNetwork = GObject.registerClass({
+ 
+     canAutoconnect() {
+         const canAutoconnect =
+-            this._securityTypes !== NM.UtilsSecurityType.WPA_ENTERPRISE &&
+-            this._securityTypes !== NM.UtilsSecurityType.WPA2_ENTERPRISE;
++            this._securityType !== NM.UtilsSecurityType.WPA_ENTERPRISE &&
++            this._securityType !== NM.UtilsSecurityType.WPA2_ENTERPRISE;
+         return canAutoconnect;
+     }
+ 
+-- 
+2.39.2
