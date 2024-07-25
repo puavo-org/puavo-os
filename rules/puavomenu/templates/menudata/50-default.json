@@ -8,14 +8,6 @@
                 "id": "adobe-reader"
             }
         },
-        "amme": {
-            "type": "web",
-            "url": "https://www11.edu.fi/materiaali/index.php?id=2",
-            "name": "Amme",
-            "description": "Oppimateriaalia ammatilliseen erityisopetukseen",
-            "icon": "/usr/share/icons/Faenza/apps/96/gimp.png",
-            "tags": "default, internet, education"
-        },
         "anki": {
             "name": {
                 "fi": "Anki-muistikortit",
@@ -1252,6 +1244,14 @@
         "s4a": {
             "tags": "default"
         },
+        "sanapaja": {
+            "type": "web",
+            "url": "https://sanapaja.edu.fi/",
+            "name": "Sanapaja",
+            "description": "Sanapaja tukee opiskelua suomen kielellä.",
+            "icon": "/usr/share/icons/Faenza/apps/96/gimp.png",
+            "tags": "default, internet, education"
+        },
         "sanomapro": {
             "type": "web",
             "url": "https://www.sanomapro.fi/",
@@ -1902,7 +1902,7 @@
             "icon": "/opt/puavomenu/icons/applications-java.svg",
             "programs": [
                 "libreoffice-writer",
-                "amme",
+                "sanapaja",
                 "kahoot",
                 "youtube"
             ]
