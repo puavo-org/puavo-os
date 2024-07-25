@@ -256,13 +256,6 @@
         "eclipse-php": {
             "tags": "default"
         },
-        "edison": {
-            "type": "web",
-            "url": "https://app.edison.fi",
-            "name": "Edison",
-            "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
-            "tags": "default"
-        },
         "ekapeli": {
             "name": "Ekapeli",
             "tags": "default, education",
@@ -279,14 +272,6 @@
             }
         },
         "ekapeli-maahanmuuttaja": {
-            "tags": "default, education",
-            "condition": "!personally_administered"
-        },
-        "ekapeliweb": {
-            "type": "web",
-            "url": "http://www.lukimat.fi/lukeminen/materiaalit/ekapeli",
-            "name": "Ekapeli (websivu)",
-            "icon": "/usr/share/icons/Faenza/categories/96/gnome-joystick.png",
             "tags": "default, education",
             "condition": "!personally_administered"
         },
@@ -1558,13 +1543,6 @@
             },
             "tags": "default, graphics, education"
         },
-        "unelmakoulu": {
-            "type": "web",
-            "url": "http://dreamschool.fi",
-            "name": "Unelmakoulu",
-            "icon": "/opt/puavomenu/icons/unelmakoulu.png",
-            "tags": "default, education"
-        },
         "unityhub": {
             "tags": "default",
             "puavopkg": {
@@ -2484,8 +2462,6 @@
                 "org.molview",
                 "otava-oppilas",
                 "otava-opiskelija",
-                "edison",
-                "unelmakoulu",
                 "pedanet-frontpage",
                 "pedanet-workspace",
                 "viope"
