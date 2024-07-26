@@ -6,6 +6,19 @@ qiodevice_readline_memory.diff
 mime_globs.diff
 fix-invalid-pointer-return-with-QGridLayout.diff
 
+CVE-2024-25580.diff
+CVE-2023-32763.diff
+CVE-2022-25255.diff
+CVE-2023-24607.diff
+sql_odbc_fix_unicode_check.diff
+sql_odbc_more_unicode_checks.diff
+CVE-2023-32762.diff
+CVE-2023-51714.diff
+CVE-2023-37369.diff
+CVE-2023-38197.diff
+CVE-2023-34410.diff
+CVE-2023-33285.diff
+
 # Debian specific.
 gnukfreebsd.diff
 no_htmlinfo_example.diff
@@ -18,6 +31,3 @@ qdoc_default_incdirs.diff
 path_max.diff
 qstorageinfo_linux.diff
 cross_build_mysql.diff
-
-# Backported to puavo-os build
-puavo-clipboardfix.diff
