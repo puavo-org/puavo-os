@@ -1,283 +1,6 @@
-From c2d6692b776f0d082e204f153ee9cca409e6aa1d Mon Sep 17 00:00:00 2001
-From: Dorian Stoll <dorian.stoll@tmsp.io>
-Date: Thu, 30 Jul 2020 13:21:53 +0200
-Subject: [PATCH] mei: me: Add Icelake device ID for iTouch
-
-Signed-off-by: Dorian Stoll <dorian.stoll@tmsp.io>
-Patchset: ipts
----
- drivers/misc/mei/hw-me-regs.h | 1 +
- drivers/misc/mei/pci-me.c     | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/misc/mei/hw-me-regs.h b/drivers/misc/mei/hw-me-regs.h
-index c3a6657dcd4a2..82eef2f4eb0a8 100644
---- a/drivers/misc/mei/hw-me-regs.h
-+++ b/drivers/misc/mei/hw-me-regs.h
-@@ -92,6 +92,7 @@
- #define MEI_DEV_ID_CDF        0x18D3  /* Cedar Fork */
- 
- #define MEI_DEV_ID_ICP_LP     0x34E0  /* Ice Lake Point LP */
-+#define MEI_DEV_ID_ICP_LP_3   0x34E4  /* Ice Lake Point LP 3 (iTouch) */
- #define MEI_DEV_ID_ICP_N      0x38E0  /* Ice Lake Point N */
- 
- #define MEI_DEV_ID_JSP_N      0x4DE0  /* Jasper Lake Point N */
-diff --git a/drivers/misc/mei/pci-me.c b/drivers/misc/mei/pci-me.c
-index 6589635f8ba32..a1df48a434e2f 100644
---- a/drivers/misc/mei/pci-me.c
-+++ b/drivers/misc/mei/pci-me.c
-@@ -97,6 +97,7 @@ static const struct pci_device_id mei_me_pci_tbl[] = {
- 	{MEI_PCI_DEVICE(MEI_DEV_ID_CMP_H_3, MEI_ME_PCH8_ITOUCH_CFG)},
- 
- 	{MEI_PCI_DEVICE(MEI_DEV_ID_ICP_LP, MEI_ME_PCH12_CFG)},
-+	{MEI_PCI_DEVICE(MEI_DEV_ID_ICP_LP_3, MEI_ME_PCH12_CFG)},
- 	{MEI_PCI_DEVICE(MEI_DEV_ID_ICP_N, MEI_ME_PCH12_CFG)},
- 
- 	{MEI_PCI_DEVICE(MEI_DEV_ID_TGP_LP, MEI_ME_PCH15_CFG)},
--- 
-2.45.1
-
-From 070ffec42eb5b8e6c0403bbcaa86a6bd19323dea Mon Sep 17 00:00:00 2001
-From: Liban Hannan <liban.p@gmail.com>
-Date: Tue, 12 Apr 2022 23:31:12 +0100
-Subject: [PATCH] iommu: Use IOMMU passthrough mode for IPTS
-
-Adds a quirk so that IOMMU uses passthrough mode for the IPTS device.
-Otherwise, when IOMMU is enabled, IPTS produces DMAR errors like:
-
-DMAR: [DMA Read NO_PASID] Request device [00:16.4] fault addr
-0x104ea3000 [fault reason 0x06] PTE Read access is not set
-
-This is very similar to the bug described at:
-https://bugs.launchpad.net/bugs/1958004
-
-Fixed with the following patch which this patch basically copies:
-https://launchpadlibrarian.net/586396847/43255ca.diff
-
-Signed-off-by: Dorian Stoll <dorian.stoll@tmsp.io>
-Patchset: ipts
----
- drivers/iommu/intel/iommu.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index e4a03588a8a0f..61bc54299a591 100644
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -39,6 +39,11 @@
- #define IS_ISA_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_BRIDGE_ISA)
- #define IS_AZALIA(pdev) ((pdev)->vendor == 0x8086 && (pdev)->device == 0x3a3e)
- 
-+#define IS_IPTS(pdev) ( \
-+		((pdev)->vendor == PCI_VENDOR_ID_INTEL && (pdev)->device == 0x9D3E) || \
-+		((pdev)->vendor == PCI_VENDOR_ID_INTEL && (pdev)->device == 0x34E4) \
-+	)
-+
- #define IOAPIC_RANGE_START	(0xfee00000)
- #define IOAPIC_RANGE_END	(0xfeefffff)
- #define IOVA_START_ADDR		(0x1000)
-@@ -221,12 +226,14 @@ int intel_iommu_sm = IS_ENABLED(CONFIG_INTEL_IOMMU_SCALABLE_MODE_DEFAULT_ON);
- int intel_iommu_enabled = 0;
- EXPORT_SYMBOL_GPL(intel_iommu_enabled);
- 
-+static int dmar_map_ipts = 1;
- static int intel_iommu_superpage = 1;
- static int iommu_identity_mapping;
- static int iommu_skip_te_disable;
- static int disable_igfx_iommu;
- 
- #define IDENTMAP_AZALIA		4
-+#define IDENTMAP_IPTS		16
- 
- const struct iommu_ops intel_iommu_ops;
- static const struct iommu_dirty_ops intel_dirty_ops;
-@@ -2401,6 +2408,9 @@ static int device_def_domain_type(struct device *dev)
- 
- 		if ((iommu_identity_mapping & IDENTMAP_AZALIA) && IS_AZALIA(pdev))
- 			return IOMMU_DOMAIN_IDENTITY;
-+
-+		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
-+			return IOMMU_DOMAIN_IDENTITY;
- 	}
- 
- 	return 0;
-@@ -2701,6 +2711,9 @@ static int __init init_dmars(void)
- 		iommu_set_root_entry(iommu);
- 	}
- 
-+	if (!dmar_map_ipts)
-+		iommu_identity_mapping |= IDENTMAP_IPTS;
-+
- 	check_tylersburg_isoch();
- 
- 	ret = si_domain_init(hw_pass_through);
-@@ -4871,6 +4884,18 @@ static void quirk_iommu_igfx(struct pci_dev *dev)
- 	disable_igfx_iommu = 1;
- }
- 
-+static void quirk_iommu_ipts(struct pci_dev *dev)
-+{
-+	if (!IS_IPTS(dev))
-+		return;
-+
-+	if (risky_device(dev))
-+		return;
-+
-+	pci_info(dev, "Disabling IOMMU for IPTS\n");
-+	dmar_map_ipts = 0;
-+}
-+
- /* G4x/GM45 integrated gfx dmar support is totally busted. */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
-@@ -4906,6 +4931,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1632, quirk_iommu_igfx);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163A, quirk_iommu_igfx);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
- 
-+/* disable IPTS dmar support */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9D3E, quirk_iommu_ipts);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x34E4, quirk_iommu_ipts);
-+
- static void quirk_iommu_rwbf(struct pci_dev *dev)
- {
- 	if (risky_device(dev))
--- 
-2.45.1
-
-From 2e10f861a1556ad45bf1e4a7d5c81806653cdeb7 Mon Sep 17 00:00:00 2001
-From: Dorian Stoll <dorian.stoll@tmsp.io>
-Date: Sun, 11 Dec 2022 12:00:59 +0100
-Subject: [PATCH] hid: Add support for Intel Precise Touch and Stylus
-
-Based on linux-surface/intel-precise-touch@8abe268
-
-Signed-off-by: Dorian Stoll <dorian.stoll@tmsp.io>
-Patchset: ipts
----
- drivers/hid/Kconfig            |   2 +
- drivers/hid/Makefile           |   2 +
- drivers/hid/ipts/Kconfig       |  14 +
- drivers/hid/ipts/Makefile      |  16 ++
- drivers/hid/ipts/cmd.c         |  61 +++++
- drivers/hid/ipts/cmd.h         |  60 ++++
- drivers/hid/ipts/context.h     |  52 ++++
- drivers/hid/ipts/control.c     | 486 +++++++++++++++++++++++++++++++++
- drivers/hid/ipts/control.h     | 126 +++++++++
- drivers/hid/ipts/desc.h        |  80 ++++++
- drivers/hid/ipts/eds1.c        | 103 +++++++
- drivers/hid/ipts/eds1.h        |  35 +++
- drivers/hid/ipts/eds2.c        | 144 ++++++++++
- drivers/hid/ipts/eds2.h        |  35 +++
- drivers/hid/ipts/hid.c         | 225 +++++++++++++++
- drivers/hid/ipts/hid.h         |  24 ++
- drivers/hid/ipts/main.c        | 126 +++++++++
- drivers/hid/ipts/mei.c         | 188 +++++++++++++
- drivers/hid/ipts/mei.h         |  66 +++++
- drivers/hid/ipts/receiver.c    | 250 +++++++++++++++++
- drivers/hid/ipts/receiver.h    |  16 ++
- drivers/hid/ipts/resources.c   | 131 +++++++++
- drivers/hid/ipts/resources.h   |  41 +++
- drivers/hid/ipts/spec-data.h   | 100 +++++++
- drivers/hid/ipts/spec-device.h | 290 ++++++++++++++++++++
- drivers/hid/ipts/spec-hid.h    |  34 +++
- drivers/hid/ipts/thread.c      |  84 ++++++
- drivers/hid/ipts/thread.h      |  59 ++++
- 28 files changed, 2850 insertions(+)
- create mode 100644 drivers/hid/ipts/Kconfig
- create mode 100644 drivers/hid/ipts/Makefile
- create mode 100644 drivers/hid/ipts/cmd.c
- create mode 100644 drivers/hid/ipts/cmd.h
- create mode 100644 drivers/hid/ipts/context.h
- create mode 100644 drivers/hid/ipts/control.c
- create mode 100644 drivers/hid/ipts/control.h
- create mode 100644 drivers/hid/ipts/desc.h
- create mode 100644 drivers/hid/ipts/eds1.c
- create mode 100644 drivers/hid/ipts/eds1.h
- create mode 100644 drivers/hid/ipts/eds2.c
- create mode 100644 drivers/hid/ipts/eds2.h
- create mode 100644 drivers/hid/ipts/hid.c
- create mode 100644 drivers/hid/ipts/hid.h
- create mode 100644 drivers/hid/ipts/main.c
- create mode 100644 drivers/hid/ipts/mei.c
- create mode 100644 drivers/hid/ipts/mei.h
- create mode 100644 drivers/hid/ipts/receiver.c
- create mode 100644 drivers/hid/ipts/receiver.h
- create mode 100644 drivers/hid/ipts/resources.c
- create mode 100644 drivers/hid/ipts/resources.h
- create mode 100644 drivers/hid/ipts/spec-data.h
- create mode 100644 drivers/hid/ipts/spec-device.h
- create mode 100644 drivers/hid/ipts/spec-hid.h
- create mode 100644 drivers/hid/ipts/thread.c
- create mode 100644 drivers/hid/ipts/thread.h
-
-diff --git a/drivers/hid/Kconfig b/drivers/hid/Kconfig
-index 4c682c6507040..a263e49b2ae29 100644
---- a/drivers/hid/Kconfig
-+++ b/drivers/hid/Kconfig
-@@ -1351,4 +1351,6 @@ source "drivers/hid/amd-sfh-hid/Kconfig"
- 
- source "drivers/hid/surface-hid/Kconfig"
- 
-+source "drivers/hid/ipts/Kconfig"
-+
- endif # HID_SUPPORT
-diff --git a/drivers/hid/Makefile b/drivers/hid/Makefile
-index 082a728eac600..f4bad1b8d813f 100644
---- a/drivers/hid/Makefile
-+++ b/drivers/hid/Makefile
-@@ -170,3 +170,5 @@ obj-$(INTEL_ISH_FIRMWARE_DOWNLOADER)	+= intel-ish-hid/
- obj-$(CONFIG_AMD_SFH_HID)       += amd-sfh-hid/
- 
- obj-$(CONFIG_SURFACE_HID_CORE)  += surface-hid/
-+
-+obj-$(CONFIG_HID_IPTS)          += ipts/
-diff --git a/drivers/hid/ipts/Kconfig b/drivers/hid/ipts/Kconfig
-new file mode 100644
-index 0000000000000..297401bd388dd
---- /dev/null
-+++ b/drivers/hid/ipts/Kconfig
-@@ -0,0 +1,14 @@
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+
-+config HID_IPTS
-+	tristate "Intel Precise Touch & Stylus"
-+	depends on INTEL_MEI
-+	depends on HID
-+	help
-+	  Say Y here if your system has a touchscreen using Intels
-+	  Precise Touch & Stylus (IPTS) technology.
-+
-+	  If unsure say N.
-+
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called ipts.
-diff --git a/drivers/hid/ipts/Makefile b/drivers/hid/ipts/Makefile
-new file mode 100644
-index 0000000000000..883896f68e6ad
---- /dev/null
-+++ b/drivers/hid/ipts/Makefile
-@@ -0,0 +1,16 @@
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+#
-+# Makefile for the IPTS touchscreen driver
-+#
-+
-+obj-$(CONFIG_HID_IPTS) += ipts.o
-+ipts-objs := cmd.o
-+ipts-objs += control.o
-+ipts-objs += eds1.o
-+ipts-objs += eds2.o
-+ipts-objs += hid.o
-+ipts-objs += main.o
-+ipts-objs += mei.o
-+ipts-objs += receiver.o
-+ipts-objs += resources.o
-+ipts-objs += thread.o
-diff --git a/drivers/hid/ipts/cmd.c b/drivers/hid/ipts/cmd.c
-new file mode 100644
-index 0000000000000..63a4934bbc5fa
---- /dev/null
-+++ b/drivers/hid/ipts/cmd.c
+diff -ruN linux.orig/drivers/hid/ipts/cmd.c linux/drivers/hid/ipts/cmd.c
+--- linux.orig/drivers/hid/ipts/cmd.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/cmd.c	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,61 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -340,11 +63,9 @@ index 0000000000000..63a4934bbc5fa
 +	dev_dbg(ipts->dev, "Sending 0x%02X with %ld bytes payload\n", code, size);
 +	return ipts_mei_send(&ipts->mei, &cmd, sizeof(cmd.cmd) + size);
 +}
-diff --git a/drivers/hid/ipts/cmd.h b/drivers/hid/ipts/cmd.h
-new file mode 100644
-index 0000000000000..2b4079075b642
---- /dev/null
-+++ b/drivers/hid/ipts/cmd.h
+diff -ruN linux.orig/drivers/hid/ipts/cmd.h linux/drivers/hid/ipts/cmd.h
+--- linux.orig/drivers/hid/ipts/cmd.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/cmd.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,60 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -406,11 +127,9 @@ index 0000000000000..2b4079075b642
 +int ipts_cmd_send(struct ipts_context *ipts, enum ipts_command_code code, void *data, size_t size);
 +
 +#endif /* IPTS_CMD_H */
-diff --git a/drivers/hid/ipts/context.h b/drivers/hid/ipts/context.h
-new file mode 100644
-index 0000000000000..ba33259f1f7c5
---- /dev/null
-+++ b/drivers/hid/ipts/context.h
+diff -ruN linux.orig/drivers/hid/ipts/context.h linux/drivers/hid/ipts/context.h
+--- linux.orig/drivers/hid/ipts/context.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/context.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,52 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -464,11 +183,9 @@ index 0000000000000..ba33259f1f7c5
 +};
 +
 +#endif /* IPTS_CONTEXT_H */
-diff --git a/drivers/hid/ipts/control.c b/drivers/hid/ipts/control.c
-new file mode 100644
-index 0000000000000..5360842d260ba
---- /dev/null
-+++ b/drivers/hid/ipts/control.c
+diff -ruN linux.orig/drivers/hid/ipts/control.c linux/drivers/hid/ipts/control.c
+--- linux.orig/drivers/hid/ipts/control.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/control.c	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,486 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -956,11 +673,9 @@ index 0000000000000..5360842d260ba
 +
 +	return 0;
 +}
-diff --git a/drivers/hid/ipts/control.h b/drivers/hid/ipts/control.h
-new file mode 100644
-index 0000000000000..26629c5144edb
---- /dev/null
-+++ b/drivers/hid/ipts/control.h
+diff -ruN linux.orig/drivers/hid/ipts/control.h linux/drivers/hid/ipts/control.h
+--- linux.orig/drivers/hid/ipts/control.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/control.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,126 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -1088,11 +803,9 @@ index 0000000000000..26629c5144edb
 +int ipts_control_restart(struct ipts_context *ipts);
 +
 +#endif /* IPTS_CONTROL_H */
-diff --git a/drivers/hid/ipts/desc.h b/drivers/hid/ipts/desc.h
-new file mode 100644
-index 0000000000000..307438c7c80cd
---- /dev/null
-+++ b/drivers/hid/ipts/desc.h
+diff -ruN linux.orig/drivers/hid/ipts/desc.h linux/drivers/hid/ipts/desc.h
+--- linux.orig/drivers/hid/ipts/desc.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/desc.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,80 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -1174,12 +887,10 @@ index 0000000000000..307438c7c80cd
 +};
 +
 +#endif /* IPTS_DESC_H */
-diff --git a/drivers/hid/ipts/eds1.c b/drivers/hid/ipts/eds1.c
-new file mode 100644
-index 0000000000000..ecbb3a8bdaf60
---- /dev/null
-+++ b/drivers/hid/ipts/eds1.c
-@@ -0,0 +1,103 @@
+diff -ruN linux.orig/drivers/hid/ipts/eds1.c linux/drivers/hid/ipts/eds1.c
+--- linux.orig/drivers/hid/ipts/eds1.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/eds1.c	2024-07-26 10:23:16.931157729 +0300
+@@ -0,0 +1,104 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Copyright (c) 2023 Dorian Stoll
@@ -1196,6 +907,7 @@ index 0000000000000..ecbb3a8bdaf60
 +#include "context.h"
 +#include "control.h"
 +#include "desc.h"
++#include "eds1.h"
 +#include "spec-device.h"
 +
 +int ipts_eds1_get_descriptor(struct ipts_context *ipts, u8 **desc_buffer, size_t *desc_size)
@@ -1283,11 +995,9 @@ index 0000000000000..ecbb3a8bdaf60
 +
 +	return ret;
 +}
-diff --git a/drivers/hid/ipts/eds1.h b/drivers/hid/ipts/eds1.h
-new file mode 100644
-index 0000000000000..eeeb6575e3e89
---- /dev/null
-+++ b/drivers/hid/ipts/eds1.h
+diff -ruN linux.orig/drivers/hid/ipts/eds1.h linux/drivers/hid/ipts/eds1.h
+--- linux.orig/drivers/hid/ipts/eds1.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/eds1.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,35 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1324,12 +1034,10 @@ index 0000000000000..eeeb6575e3e89
 + */
 +int ipts_eds1_raw_request(struct ipts_context *ipts, u8 *buffer, size_t size, u8 report_id,
 +			  enum hid_report_type report_type, enum hid_class_request request_type);
-diff --git a/drivers/hid/ipts/eds2.c b/drivers/hid/ipts/eds2.c
-new file mode 100644
-index 0000000000000..198dc65d78876
---- /dev/null
-+++ b/drivers/hid/ipts/eds2.c
-@@ -0,0 +1,144 @@
+diff -ruN linux.orig/drivers/hid/ipts/eds2.c linux/drivers/hid/ipts/eds2.c
+--- linux.orig/drivers/hid/ipts/eds2.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/eds2.c	2024-07-26 10:23:16.931157729 +0300
+@@ -0,0 +1,145 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Copyright (c) 2023 Dorian Stoll
@@ -1347,6 +1055,7 @@ index 0000000000000..198dc65d78876
 +#include "context.h"
 +#include "control.h"
 +#include "desc.h"
++#include "eds2.h"
 +#include "spec-data.h"
 +
 +int ipts_eds2_get_descriptor(struct ipts_context *ipts, u8 **desc_buffer, size_t *desc_size)
@@ -1474,11 +1183,9 @@ index 0000000000000..198dc65d78876
 +	else
 +		return ipts_eds2_set_feature(ipts, buffer, size, report_id, feedback_type);
 +}
-diff --git a/drivers/hid/ipts/eds2.h b/drivers/hid/ipts/eds2.h
-new file mode 100644
-index 0000000000000..064e3716907ab
---- /dev/null
-+++ b/drivers/hid/ipts/eds2.h
+diff -ruN linux.orig/drivers/hid/ipts/eds2.h linux/drivers/hid/ipts/eds2.h
+--- linux.orig/drivers/hid/ipts/eds2.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/eds2.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,35 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1515,11 +1222,9 @@ index 0000000000000..064e3716907ab
 + */
 +int ipts_eds2_raw_request(struct ipts_context *ipts, u8 *buffer, size_t size, u8 report_id,
 +			  enum hid_report_type report_type, enum hid_class_request request_type);
-diff --git a/drivers/hid/ipts/hid.c b/drivers/hid/ipts/hid.c
-new file mode 100644
-index 0000000000000..e34a1a4f9fa77
---- /dev/null
-+++ b/drivers/hid/ipts/hid.c
+diff -ruN linux.orig/drivers/hid/ipts/hid.c linux/drivers/hid/ipts/hid.c
+--- linux.orig/drivers/hid/ipts/hid.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/hid.c	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,225 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1746,11 +1451,9 @@ index 0000000000000..e34a1a4f9fa77
 +
 +	return 0;
 +}
-diff --git a/drivers/hid/ipts/hid.h b/drivers/hid/ipts/hid.h
-new file mode 100644
-index 0000000000000..1ebe77447903a
---- /dev/null
-+++ b/drivers/hid/ipts/hid.h
+diff -ruN linux.orig/drivers/hid/ipts/hid.h linux/drivers/hid/ipts/hid.h
+--- linux.orig/drivers/hid/ipts/hid.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/hid.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,24 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -1776,11 +1479,27 @@ index 0000000000000..1ebe77447903a
 +int ipts_hid_free(struct ipts_context *ipts);
 +
 +#endif /* IPTS_HID_H */
-diff --git a/drivers/hid/ipts/main.c b/drivers/hid/ipts/main.c
-new file mode 100644
-index 0000000000000..fb5b5c13ee3ea
---- /dev/null
-+++ b/drivers/hid/ipts/main.c
+diff -ruN linux.orig/drivers/hid/ipts/Kconfig linux/drivers/hid/ipts/Kconfig
+--- linux.orig/drivers/hid/ipts/Kconfig	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/Kconfig	2024-07-26 10:23:16.931157729 +0300
+@@ -0,0 +1,14 @@
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++config HID_IPTS
++	tristate "Intel Precise Touch & Stylus"
++	depends on INTEL_MEI
++	depends on HID
++	help
++	  Say Y here if your system has a touchscreen using Intels
++	  Precise Touch & Stylus (IPTS) technology.
++
++	  If unsure say N.
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called ipts.
+diff -ruN linux.orig/drivers/hid/ipts/main.c linux/drivers/hid/ipts/main.c
+--- linux.orig/drivers/hid/ipts/main.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/main.c	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,126 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1908,11 +1627,29 @@ index 0000000000000..fb5b5c13ee3ea
 +MODULE_DESCRIPTION("IPTS touchscreen driver");
 +MODULE_AUTHOR("Dorian Stoll <dorian.stoll@tmsp.io>");
 +MODULE_LICENSE("GPL");
-diff --git a/drivers/hid/ipts/mei.c b/drivers/hid/ipts/mei.c
-new file mode 100644
-index 0000000000000..1e0395ceae4a4
---- /dev/null
-+++ b/drivers/hid/ipts/mei.c
+diff -ruN linux.orig/drivers/hid/ipts/Makefile linux/drivers/hid/ipts/Makefile
+--- linux.orig/drivers/hid/ipts/Makefile	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/Makefile	2024-07-26 10:23:16.931157729 +0300
+@@ -0,0 +1,16 @@
++# SPDX-License-Identifier: GPL-2.0-or-later
++#
++# Makefile for the IPTS touchscreen driver
++#
++
++obj-$(CONFIG_HID_IPTS) += ipts.o
++ipts-objs := cmd.o
++ipts-objs += control.o
++ipts-objs += eds1.o
++ipts-objs += eds2.o
++ipts-objs += hid.o
++ipts-objs += main.o
++ipts-objs += mei.o
++ipts-objs += receiver.o
++ipts-objs += resources.o
++ipts-objs += thread.o
+diff -ruN linux.orig/drivers/hid/ipts/mei.c linux/drivers/hid/ipts/mei.c
+--- linux.orig/drivers/hid/ipts/mei.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/mei.c	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,188 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -2102,11 +1839,9 @@ index 0000000000000..1e0395ceae4a4
 +
 +	return 0;
 +}
-diff --git a/drivers/hid/ipts/mei.h b/drivers/hid/ipts/mei.h
-new file mode 100644
-index 0000000000000..973bade6b0fdd
---- /dev/null
-+++ b/drivers/hid/ipts/mei.h
+diff -ruN linux.orig/drivers/hid/ipts/mei.h linux/drivers/hid/ipts/mei.h
+--- linux.orig/drivers/hid/ipts/mei.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/mei.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,66 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2174,12 +1909,10 @@ index 0000000000000..973bade6b0fdd
 +int ipts_mei_init(struct ipts_mei *mei, struct mei_cl_device *cldev);
 +
 +#endif /* IPTS_MEI_H */
-diff --git a/drivers/hid/ipts/receiver.c b/drivers/hid/ipts/receiver.c
-new file mode 100644
-index 0000000000000..ef66c3c9db807
---- /dev/null
-+++ b/drivers/hid/ipts/receiver.c
-@@ -0,0 +1,250 @@
+diff -ruN linux.orig/drivers/hid/ipts/receiver.c linux/drivers/hid/ipts/receiver.c
+--- linux.orig/drivers/hid/ipts/receiver.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/receiver.c	2024-07-26 10:23:16.931157729 +0300
+@@ -0,0 +1,251 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Copyright (c) 2020-2023 Dorian Stoll
@@ -2198,6 +1931,7 @@ index 0000000000000..ef66c3c9db807
 +#include "context.h"
 +#include "control.h"
 +#include "hid.h"
++#include "receiver.h"
 +#include "resources.h"
 +#include "spec-device.h"
 +#include "thread.h"
@@ -2430,11 +2164,9 @@ index 0000000000000..ef66c3c9db807
 +
 +	return 0;
 +}
-diff --git a/drivers/hid/ipts/receiver.h b/drivers/hid/ipts/receiver.h
-new file mode 100644
-index 0000000000000..3de7da62d40c1
---- /dev/null
-+++ b/drivers/hid/ipts/receiver.h
+diff -ruN linux.orig/drivers/hid/ipts/receiver.h linux/drivers/hid/ipts/receiver.h
+--- linux.orig/drivers/hid/ipts/receiver.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/receiver.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,16 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2452,11 +2184,9 @@ index 0000000000000..3de7da62d40c1
 +int ipts_receiver_stop(struct ipts_context *ipts);
 +
 +#endif /* IPTS_RECEIVER_H */
-diff --git a/drivers/hid/ipts/resources.c b/drivers/hid/ipts/resources.c
-new file mode 100644
-index 0000000000000..cc14653b2a9f5
---- /dev/null
-+++ b/drivers/hid/ipts/resources.c
+diff -ruN linux.orig/drivers/hid/ipts/resources.c linux/drivers/hid/ipts/resources.c
+--- linux.orig/drivers/hid/ipts/resources.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/resources.c	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,131 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -2589,11 +2319,9 @@ index 0000000000000..cc14653b2a9f5
 +
 +	return 0;
 +}
-diff --git a/drivers/hid/ipts/resources.h b/drivers/hid/ipts/resources.h
-new file mode 100644
-index 0000000000000..2068e13285f0e
---- /dev/null
-+++ b/drivers/hid/ipts/resources.h
+diff -ruN linux.orig/drivers/hid/ipts/resources.h linux/drivers/hid/ipts/resources.h
+--- linux.orig/drivers/hid/ipts/resources.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/resources.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,41 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2636,11 +2364,9 @@ index 0000000000000..2068e13285f0e
 +int ipts_resources_free(struct ipts_resources *res);
 +
 +#endif /* IPTS_RESOURCES_H */
-diff --git a/drivers/hid/ipts/spec-data.h b/drivers/hid/ipts/spec-data.h
-new file mode 100644
-index 0000000000000..e8dd98895a7ee
---- /dev/null
-+++ b/drivers/hid/ipts/spec-data.h
+diff -ruN linux.orig/drivers/hid/ipts/spec-data.h linux/drivers/hid/ipts/spec-data.h
+--- linux.orig/drivers/hid/ipts/spec-data.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/spec-data.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,100 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2742,11 +2468,9 @@ index 0000000000000..e8dd98895a7ee
 +static_assert(sizeof(struct ipts_data_header) == 64);
 +
 +#endif /* IPTS_SPEC_DATA_H */
-diff --git a/drivers/hid/ipts/spec-device.h b/drivers/hid/ipts/spec-device.h
-new file mode 100644
-index 0000000000000..41845f9d90257
---- /dev/null
-+++ b/drivers/hid/ipts/spec-device.h
+diff -ruN linux.orig/drivers/hid/ipts/spec-device.h linux/drivers/hid/ipts/spec-device.h
+--- linux.orig/drivers/hid/ipts/spec-device.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/spec-device.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,290 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -3038,11 +2762,9 @@ index 0000000000000..41845f9d90257
 +static_assert(sizeof(struct ipts_device_info) == 44);
 +
 +#endif /* IPTS_SPEC_DEVICE_H */
-diff --git a/drivers/hid/ipts/spec-hid.h b/drivers/hid/ipts/spec-hid.h
-new file mode 100644
-index 0000000000000..5a58d4a0a610f
---- /dev/null
-+++ b/drivers/hid/ipts/spec-hid.h
+diff -ruN linux.orig/drivers/hid/ipts/spec-hid.h linux/drivers/hid/ipts/spec-hid.h
+--- linux.orig/drivers/hid/ipts/spec-hid.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/spec-hid.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,34 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -3078,11 +2800,9 @@ index 0000000000000..5a58d4a0a610f
 +static_assert(sizeof(struct ipts_hid_header) == 7);
 +
 +#endif /* IPTS_SPEC_HID_H */
-diff --git a/drivers/hid/ipts/thread.c b/drivers/hid/ipts/thread.c
-new file mode 100644
-index 0000000000000..355e92bea26f8
---- /dev/null
-+++ b/drivers/hid/ipts/thread.c
+diff -ruN linux.orig/drivers/hid/ipts/thread.c linux/drivers/hid/ipts/thread.c
+--- linux.orig/drivers/hid/ipts/thread.c	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/thread.c	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,84 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -3168,11 +2888,9 @@ index 0000000000000..355e92bea26f8
 +
 +	return ret;
 +}
-diff --git a/drivers/hid/ipts/thread.h b/drivers/hid/ipts/thread.h
-new file mode 100644
-index 0000000000000..1f966b8b32c45
---- /dev/null
-+++ b/drivers/hid/ipts/thread.h
+diff -ruN linux.orig/drivers/hid/ipts/thread.h linux/drivers/hid/ipts/thread.h
+--- linux.orig/drivers/hid/ipts/thread.h	1970-01-01 02:00:00.000000000 +0200
++++ linux/drivers/hid/ipts/thread.h	2024-07-26 10:23:16.931157729 +0300
 @@ -0,0 +1,59 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -3233,59 +2951,125 @@ index 0000000000000..1f966b8b32c45
 +int ipts_thread_stop(struct ipts_thread *thread);
 +
 +#endif /* IPTS_THREAD_H */
--- 
-2.45.1
-
-From 1930dddc7cf94e188a3cf6e957b9bd8622ba4a6b Mon Sep 17 00:00:00 2001
-From: Jasmin Huber <jasmin@jasisonee.ch>
-Date: Mon, 15 Apr 2024 10:22:55 +0200
-Subject: [PATCH] Inlude headers to avoid compiler warnings 6.8 kernels compile
- with -Wmissing-prototypes.
-
-Signed-off-by: Dorian Stoll <dorian.stoll@tmsp.io>
-Patchset: ipts
----
- drivers/hid/ipts/eds1.c     | 1 +
- drivers/hid/ipts/eds2.c     | 1 +
- drivers/hid/ipts/receiver.c | 1 +
- 3 files changed, 3 insertions(+)
-
-diff --git a/drivers/hid/ipts/eds1.c b/drivers/hid/ipts/eds1.c
-index ecbb3a8bdaf60..7b9f54388a9f6 100644
---- a/drivers/hid/ipts/eds1.c
-+++ b/drivers/hid/ipts/eds1.c
-@@ -14,6 +14,7 @@
- #include "context.h"
- #include "control.h"
- #include "desc.h"
-+#include "eds1.h"
- #include "spec-device.h"
+diff -ruN linux.orig/drivers/hid/Kconfig linux/drivers/hid/Kconfig
+--- linux.orig/drivers/hid/Kconfig	2024-06-27 14:52:32.000000000 +0300
++++ linux/drivers/hid/Kconfig	2024-07-26 10:23:16.927157193 +0300
+@@ -1351,4 +1351,6 @@
  
- int ipts_eds1_get_descriptor(struct ipts_context *ipts, u8 **desc_buffer, size_t *desc_size)
-diff --git a/drivers/hid/ipts/eds2.c b/drivers/hid/ipts/eds2.c
-index 198dc65d78876..639940794615d 100644
---- a/drivers/hid/ipts/eds2.c
-+++ b/drivers/hid/ipts/eds2.c
-@@ -15,6 +15,7 @@
- #include "context.h"
- #include "control.h"
- #include "desc.h"
-+#include "eds2.h"
- #include "spec-data.h"
+ source "drivers/hid/surface-hid/Kconfig"
  
- int ipts_eds2_get_descriptor(struct ipts_context *ipts, u8 **desc_buffer, size_t *desc_size)
-diff --git a/drivers/hid/ipts/receiver.c b/drivers/hid/ipts/receiver.c
-index ef66c3c9db807..977724c728c3e 100644
---- a/drivers/hid/ipts/receiver.c
-+++ b/drivers/hid/ipts/receiver.c
-@@ -16,6 +16,7 @@
- #include "context.h"
- #include "control.h"
- #include "hid.h"
-+#include "receiver.h"
- #include "resources.h"
- #include "spec-device.h"
- #include "thread.h"
--- 
-2.45.1
-
++source "drivers/hid/ipts/Kconfig"
++
+ endif # HID_SUPPORT
+diff -ruN linux.orig/drivers/hid/Makefile linux/drivers/hid/Makefile
+--- linux.orig/drivers/hid/Makefile	2024-06-27 14:52:32.000000000 +0300
++++ linux/drivers/hid/Makefile	2024-07-26 10:23:16.931157729 +0300
+@@ -170,3 +170,5 @@
+ obj-$(CONFIG_AMD_SFH_HID)       += amd-sfh-hid/
+ 
+ obj-$(CONFIG_SURFACE_HID_CORE)  += surface-hid/
++
++obj-$(CONFIG_HID_IPTS)          += ipts/
+diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu.c
+--- linux.orig/drivers/iommu/intel/iommu.c	2024-07-26 10:18:38.000000000 +0300
++++ linux/drivers/iommu/intel/iommu.c	2024-07-26 10:25:01.046283102 +0300
+@@ -42,6 +42,11 @@
+ #define IS_ISA_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_BRIDGE_ISA)
+ #define IS_AZALIA(pdev) ((pdev)->vendor == 0x8086 && (pdev)->device == 0x3a3e)
+ 
++#define IS_IPTS(pdev) ( \
++		((pdev)->vendor == PCI_VENDOR_ID_INTEL && (pdev)->device == 0x9D3E) || \
++		((pdev)->vendor == PCI_VENDOR_ID_INTEL && (pdev)->device == 0x34E4) \
++	)
++
+ #define IOAPIC_RANGE_START	(0xfee00000)
+ #define IOAPIC_RANGE_END	(0xfeefffff)
+ #define IOVA_START_ADDR		(0x1000)
+@@ -225,6 +230,7 @@
+ EXPORT_SYMBOL_GPL(intel_iommu_enabled);
+ 
+ static int dmar_map_intgpu = IS_ENABLED(CONFIG_INTEL_IOMMU_DEFAULT_ON);
++static int dmar_map_ipts = 1;
+ static int intel_iommu_superpage = 1;
+ static int iommu_identity_mapping;
+ static int iommu_skip_te_disable;
+@@ -232,6 +238,7 @@
+ 
+ #define IDENTMAP_AZALIA		4
+ #define IDENTMAP_INTGPU		8
++#define IDENTMAP_IPTS		16
+ 
+ const struct iommu_ops intel_iommu_ops;
+ static const struct iommu_dirty_ops intel_dirty_ops;
+@@ -2413,6 +2420,9 @@
+ 
+ 		if ((iommu_identity_mapping & IDENTMAP_INTGPU) && IS_INTGPU_DEVICE(pdev))
+ 			return IOMMU_DOMAIN_IDENTITY;
++
++		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
+ 	}
+ 
+ 	return 0;
+@@ -2716,6 +2726,9 @@
+ 	if (!dmar_map_intgpu)
+ 		iommu_identity_mapping |= IDENTMAP_INTGPU;
+ 
++	if (!dmar_map_ipts)
++		iommu_identity_mapping |= IDENTMAP_IPTS;
++
+ 	check_tylersburg_isoch();
+ 
+ 	ret = si_domain_init(hw_pass_through);
+@@ -4886,6 +4899,18 @@
+ 	disable_igfx_iommu = 1;
+ }
+ 
++static void quirk_iommu_ipts(struct pci_dev *dev)
++{
++	if (!IS_IPTS(dev))
++		return;
++
++	if (risky_device(dev))
++		return;
++
++	pci_info(dev, "Disabling IOMMU for IPTS\n");
++	dmar_map_ipts = 0;
++}
++
+ /* G4x/GM45 integrated gfx dmar support is totally busted. */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
+@@ -4921,6 +4946,10 @@
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163A, quirk_iommu_igfx);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
+ 
++/* disable IPTS dmar support */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9D3E, quirk_iommu_ipts);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x34E4, quirk_iommu_ipts);
++
+ static void quirk_iommu_rwbf(struct pci_dev *dev)
+ {
+ 	if (risky_device(dev))
+diff -ruN linux.orig/drivers/misc/mei/hw-me-regs.h linux/drivers/misc/mei/hw-me-regs.h
+--- linux.orig/drivers/misc/mei/hw-me-regs.h	2024-06-27 14:52:32.000000000 +0300
++++ linux/drivers/misc/mei/hw-me-regs.h	2024-07-26 10:23:16.927157193 +0300
+@@ -92,6 +92,7 @@
+ #define MEI_DEV_ID_CDF        0x18D3  /* Cedar Fork */
+ 
+ #define MEI_DEV_ID_ICP_LP     0x34E0  /* Ice Lake Point LP */
++#define MEI_DEV_ID_ICP_LP_3   0x34E4  /* Ice Lake Point LP 3 (iTouch) */
+ #define MEI_DEV_ID_ICP_N      0x38E0  /* Ice Lake Point N */
+ 
+ #define MEI_DEV_ID_JSP_N      0x4DE0  /* Jasper Lake Point N */
+diff -ruN linux.orig/drivers/misc/mei/pci-me.c linux/drivers/misc/mei/pci-me.c
+--- linux.orig/drivers/misc/mei/pci-me.c	2024-06-27 14:52:32.000000000 +0300
++++ linux/drivers/misc/mei/pci-me.c	2024-07-26 10:23:16.927157193 +0300
+@@ -97,6 +97,7 @@
+ 	{MEI_PCI_DEVICE(MEI_DEV_ID_CMP_H_3, MEI_ME_PCH8_ITOUCH_CFG)},
+ 
+ 	{MEI_PCI_DEVICE(MEI_DEV_ID_ICP_LP, MEI_ME_PCH12_CFG)},
++	{MEI_PCI_DEVICE(MEI_DEV_ID_ICP_LP_3, MEI_ME_PCH12_CFG)},
+ 	{MEI_PCI_DEVICE(MEI_DEV_ID_ICP_N, MEI_ME_PCH12_CFG)},
+ 
+ 	{MEI_PCI_DEVICE(MEI_DEV_ID_TGP_LP, MEI_ME_PCH15_CFG)},
