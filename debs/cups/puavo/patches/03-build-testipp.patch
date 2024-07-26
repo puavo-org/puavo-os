@@ -1,0 +1,22 @@
+--- cups-2.4.2/cups/Makefile	2024-07-23 12:03:40.523573415 +0300
++++ cups-2.4.2/cups/Makefile	2024-07-23 12:09:34.900679974 +0300
+@@ -198,6 +198,7 @@
+ 		tlscheck
+ 
+ TARGETS	=	\
++		testipp \
+ 		$(LIBTARGETS)
+ 
+ 
+@@ -267,7 +268,10 @@
+ #
+ 
+ install-exec:
+-
++	echo Installing bins in $(BINDIR)...
++	$(INSTALL_DIR) -m 755 $(BINDIR)
++	$(INSTALL_BIN) testipp $(BINDIR)
++	$(CHMOD) 755 $(BINDIR)/testipp
+ 
+ #
+ # Install headers...

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+cat <<'EOF' | patch -p1
+--- a/debian/cups-ipp-utils.install	2024-07-26 12:48:28.121750291 +0300
++++ b/debian/cups-ipp-utils.install	2024-07-26 12:42:39.674630472 +0300
+@@ -3,4 +3,5 @@
+ tools/ippevepcl usr/sbin
+ usr/bin/ippfind
+ usr/bin/ipptool
++usr/bin/testipp
+ usr/share/cups/ipptool/*.test
+EOF
