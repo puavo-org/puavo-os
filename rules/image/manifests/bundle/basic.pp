@@ -29,6 +29,7 @@ class image::bundle::basic {
   include ::sysctl
   include ::syslog
   include ::systemd
+  include ::tlp
   include ::tmux
   include ::udev
   include ::use_urandom
