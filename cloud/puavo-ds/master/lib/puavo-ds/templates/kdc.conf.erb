@@ -12,5 +12,6 @@
         supported_enctypes = aes256-cts-hmac-sha384-192:normal aes256-cts-hmac-sha1-96:normal aes256-cts:normal des3-hmac-sha1:normal
         default_principal_flags = +preauth
         kadmind_port = <%= organisation['kadmin_port'] %>
+        disable_pac = true
   }
 <% end %>
