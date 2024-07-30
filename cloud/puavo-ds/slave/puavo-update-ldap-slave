@@ -1,0 +1,146 @@
+#!/usr/bin/ruby
+
+require 'erb'
+require 'open3'
+require 'syslog'
+require 'tempfile'
+
+force_update = (ARGV[0] == '--force')
+
+@binddn        = File.read('/etc/puavo/ldap/dn'      ).chomp
+@bindpw        = File.read('/etc/puavo/ldap/password').chomp
+@master_server = File.read('/etc/puavo/ldap/master'  ).chomp
+@suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
+
+Puavo_cn_config_path = '/state/etc/ldap/slapd.d/.puavo_cn_config'
+Slapd_d_dir = '/state/etc/ldap/slapd.d'
+Slapd_d_backup_dir = "#{ Slapd_d_dir }.backup"
+
+def get_acls()
+  acl_cmd = [
+    'ldapsearch', '-LLL', '-x', '-H', "ldap://#{ @master_server }",
+                  '-D', @binddn, '-w', @bindpw, '-Z', '-b', 'cn=config',
+                  "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))",
+                  'olcAccess'
+  ]
+
+  ldif_str, stderr_str, status = Open3.capture3(*acl_cmd)
+  unless status.success? then
+    Syslog.warning('ldapsearch returned error: %s', e.message)
+    raise 'ERROR: failed to get ACLs from the master server'
+  end
+
+  ldif_str.split("\n").select { |l| !l.match(/^dn:/) } \
+                      .map { |l| "#{ l }\n" }.join('')
+end
+
+def get_schemas()
+  acl_cmd = [
+    'ldapsearch', '-LLL', '-x', '-H', "ldap://#{ @master_server }",
+                  '-D', @binddn, '-w', @bindpw, '-Z', '-b',
+                  'cn=schema,cn=config'
+  ]
+
+  ldif_str, stderr_str, status = Open3.capture3(*acl_cmd)
+  unless status.success? then
+    Syslog.warning('ldapsearch returned error: %s', stderr_str)
+    raise 'ERROR: failed to get schemas from the master server'
+  end
+
+  ldif_str
+end
+
+def get_old_cn_config()
+  IO.read(Puavo_cn_config_path) rescue nil
+end
+
+def parse_new_cn_config()
+  erb_path = '/usr/share/puavo-ds-slave/init_ldap_slave.ldif.erb'
+  ldif_template = File.read(erb_path)
+  ERB.new(ldif_template, trim_mode: '%<>').result
+end
+
+def update_test_config(new_config)
+  Syslog.notice('stopping slapd')
+
+  unless system('service', 'slapd', 'stop') then
+    raise 'could not stop slapd'
+  end
+
+  begin
+    Syslog.info('%s', "cleaning up #{ Slapd_d_dir }")
+
+    FileUtils.rm_rf(Slapd_d_backup_dir)
+    FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir)
+    FileUtils.mkdir(Slapd_d_dir)
+
+    puavo_cn_config_path = Puavo_cn_config_path
+    File.open(puavo_cn_config_path, 'w') do |f|
+      f.puts(new_config)
+    end
+
+    begin
+      Tempfile.create('init_ldap_slave_cn_config_update') do |tmpfile|
+        tmpfile.puts(new_config)
+        tmpfile.close
+
+        Syslog.info('adding new cn=config configuration')
+        slapadd_cmd = [
+          'slapadd', '-l', tmpfile.path, '-F', '/state/etc/ldap/slapd.d',
+                     '-b', 'cn=config',
+        ]
+
+        stdout_str, stderr_str, status = Open3.capture3(*slapadd_cmd)
+        unless status.success? then
+          Syslog.warning('slapadd returned error: %s', stderr_str)
+          raise 'ERROR: failed to update the configuration of the database'
+        end
+
+        FileUtils.chown_R('openldap', 'openldap', Slapd_d_dir)
+      end
+    rescue StandardError => e
+      FileUtils.rm_rf(Slapd_d_dir)
+      FileUtils.mv(Slapd_d_backup_dir, Slapd_d_dir)
+      raise e
+    end
+  ensure
+    Syslog.notice('starting up slapd again')
+    unless system('service', 'slapd', 'start') then
+      raise 'could not start slapd'
+    end
+  end
+end
+
+Syslog.open('puavo-update-ldap-slave')
+
+begin
+  @acls = get_acls()
+  @schemas = get_schemas()
+rescue StandardError => e
+  Syslog.err('ERROR getting ACLs/schemas: %s', e.message)
+  exit(1)
+end
+
+old_cn_config = get_old_cn_config()
+new_cn_config = nil
+
+begin
+  new_cn_config = parse_new_cn_config()
+rescue StandardError => e
+  Syslog.err('ERROR parsing new cn=config: %s', e.message)
+  exit(1)
+end
+
+if !force_update && old_cn_config == new_cn_config then
+  Syslog.info('new cn=config matches the old one, not updating')
+  exit(0)
+end
+
+begin
+  update_test_config(new_cn_config)
+rescue StandardError => e
+  Syslog.err('ERROR updating cn=config: %s', e.message)
+  exit(1)
+end
+
+Syslog.close()

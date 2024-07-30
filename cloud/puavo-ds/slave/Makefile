@@ -30,7 +30,8 @@ install: bin/puavo-ds-installdirs installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-init-ds-slave \
 		puavo-init-ldap-slave \
-		puavo-init-kdc-slave
+		puavo-init-kdc-slave \
+		puavo-update-ldap-slave
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ds-slave \
 		init_ldap_slave.ldif.erb
