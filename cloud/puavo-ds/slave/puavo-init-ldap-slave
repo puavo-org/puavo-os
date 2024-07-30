@@ -18,17 +18,6 @@ def get_slapcat_datasize()
   datasize
 end
 
-def parse_erb(basename)
-  ldif_template = File.read("/usr/share/puavo-ds-slave/#{ basename }.ldif.erb")
-  ldif = ERB.new(ldif_template, trim_mode: '%<>')
-
-  tempfile = Tempfile.open(basename)
-  tempfile.puts ldif.result
-  tempfile.close
-
-  tempfile
-end
-
 use_force = false
 
 opts = GetoptLong.new(
@@ -59,9 +48,6 @@ if ARGV.length != 0 then
   exit(1)
 end
 
-ENV['LDAPTLS_REQCERT'] = 'demand'
-ENV['LDAPTLS_CACERT']  = '/etc/puavo-conf/rootca.pem'
-
 Sentinel_file = '/state/var/lib/ldap/init_ldap_slave_done'
 
 if File.exist?(Sentinel_file) && !use_force then
@@ -69,51 +55,17 @@ if File.exist?(Sentinel_file) && !use_force then
   exit(1)
 end
 
-puts 'Setting up ldap database for synchronization.'
-
-@binddn        = File.read('/etc/puavo/ldap/dn'      ).chomp
-@bindpw        = File.read('/etc/puavo/ldap/password').chomp
-@master_server = File.read('/etc/puavo/ldap/master'  ).chomp
-@suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
-
-@acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
-if $?.exitstatus != 0 then
-  warn 'error: failed to get ACLs from the master server'
-  exit(1)
-end
-
-@schemas = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=schema,cn=config`
-if $?.exitstatus != 0 then
-  warn 'error: failed to get schemas from the master server'
-  exit(1)
-end
-
-tempfile = parse_erb('init_ldap_slave')
-
-system('service slapd stop')
+system('service', 'slapd', 'stop')
 sleep 3
-system('pkill -9 -x slapd')
-
-FileUtils.mkdir_p '/state/etc/ldap/slapd.d'
-FileUtils.chmod(0750, '/state/etc/ldap/slapd.d')
-FileUtils.chown('openldap', 'openldap', '/state/etc/ldap/slapd.d')
+system('pkill', '-9', '-x', 'slapd')
 
 expected_datasize = get_slapcat_datasize() rescue nil
 
-if !system('rm -rf /state/etc/ldap/slapd.d/*') then
-  warn 'error: failed to remove old LDAP configuration'
-  exit(1)
-end
-
-if !system('slapadd', '-l', tempfile.path.to_s, '-F',
-           '/state/etc/ldap/slapd.d', '-b', 'cn=config',
-           { :out => '/dev/null', :err => '/dev/null' }) then
+unless system('/usr/sbin/puavo-update-ldap-slave', '--within-full-init') then
   warn 'error: failed to update the configuration of the database'
-  exit(1)
-end
-
-if !system('chown -R openldap:openldap /state/etc/ldap/slapd.d') then
-  warn 'error: failed to chown /state/etc/ldap/slapd.d to openldap'
+  # Try to start slapd because we might have a working configuration
+  # at this point despite a failed attempt.
+  system('service', 'slapd', 'start')
   exit(1)
 end
 

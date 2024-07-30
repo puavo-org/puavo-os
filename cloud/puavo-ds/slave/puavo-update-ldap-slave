@@ -5,7 +5,10 @@ require 'open3'
 require 'syslog'
 require 'tempfile'
 
-force_update = (ARGV[0] == '--force')
+full_init = (ARGV[0] == '--within-full-init')
+
+ENV['LDAPTLS_REQCERT'] = 'demand'
+ENV['LDAPTLS_CACERT']  = '/etc/puavo-conf/rootca.pem'
 
 @binddn        = File.read('/etc/puavo/ldap/dn'      ).chomp
 @bindpw        = File.read('/etc/puavo/ldap/password').chomp
@@ -60,19 +63,21 @@ def parse_new_cn_config()
   ERB.new(ldif_template, trim_mode: '%<>').result
 end
 
-def update_test_config(new_config)
-  Syslog.notice('stopping slapd')
-
-  unless system('service', 'slapd', 'stop') then
-    raise 'could not stop slapd'
+def update_test_config(new_config, full_init)
+  unless full_init then
+    Syslog.notice('stopping slapd')
+    unless system('service', 'slapd', 'stop') then
+      raise 'could not stop slapd'
+    end
   end
 
   begin
     Syslog.info('%s', "cleaning up #{ Slapd_d_dir }")
 
     FileUtils.rm_rf(Slapd_d_backup_dir)
-    FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir)
+    FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir) if File.exists?(Slapd_d_dir)
     FileUtils.mkdir(Slapd_d_dir)
+    FileUtils.chmod(0750, Slapd_d_dir)
 
     puavo_cn_config_path = Puavo_cn_config_path
     File.open(puavo_cn_config_path, 'w') do |f|
@@ -89,7 +94,6 @@ def update_test_config(new_config)
           'slapadd', '-l', tmpfile.path, '-F', '/state/etc/ldap/slapd.d',
                      '-b', 'cn=config',
         ]
-
         stdout_str, stderr_str, status = Open3.capture3(*slapadd_cmd)
         unless status.success? then
           Syslog.warning('slapadd returned error: %s', stderr_str)
@@ -104,9 +108,11 @@ def update_test_config(new_config)
       raise e
     end
   ensure
-    Syslog.notice('starting up slapd again')
-    unless system('service', 'slapd', 'start') then
-      raise 'could not start slapd'
+    unless full_init then
+      Syslog.notice('starting up slapd again')
+      unless system('service', 'slapd', 'start') then
+        raise 'could not start slapd'
+      end
     end
   end
 end
@@ -131,13 +137,13 @@ rescue StandardError => e
   exit(1)
 end
 
-if !force_update && old_cn_config == new_cn_config then
+if !full_init && old_cn_config == new_cn_config then
   Syslog.info('new cn=config matches the old one, not updating')
   exit(0)
 end
 
 begin
-  update_test_config(new_cn_config)
+  update_test_config(new_cn_config, full_init)
 rescue StandardError => e
   Syslog.err('ERROR updating cn=config: %s', e.message)
   exit(1)
