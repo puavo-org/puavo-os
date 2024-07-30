@@ -139,6 +139,10 @@ class Series
     end
   end
 
+  def all_diffs
+    @by_version.map{ |m| m[1].diffs }.flatten.uniq
+  end
+
   # Query puavo-rest for all devices and check used images.
   # Images and diffs are marked, required images returned.
   def get_images_used_by_puavo_devices(bootserver_data, managed_images)
@@ -310,6 +314,7 @@ class Series
 
     @image_list.each do |image|
       info(4, "Syncing #{ image.id }")
+      image.set_diff_list all_diffs
 
       if image.materialize(@series_name) then
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
@@ -480,7 +485,7 @@ class SyncFileWithMetadata < SyncFile
     @size   = size
     @urls   = urls
 
-    @in_use        = false
+    @in_use        = 0
     @mtime         = nil
     @state         = SyncState.new
     @verified      = false
@@ -600,7 +605,8 @@ class SyncFileWithMetadata < SyncFile
     raise 'unknown download error'
   end
 
-  def ensure_enough_diskspace
+  def free_diskspace
+    diskspace = -1
     directory = File.dirname(final_path)
 
     block_size, bs_status \
@@ -611,16 +617,21 @@ class SyncFileWithMetadata < SyncFile
     unless bs_status.success? && fb_status.success?
       warning(2, "Could not stat directory for #{ final_path }" \
                    + " when checking disk space")
-      return false
+      return -1
     end
 
     begin
       diskspace = Integer(block_size) * Integer(free_blocks)
     rescue StandardError => e
       warning(2, "Could not determine free disk space for #{ final_path }")
-      return false
+      return -1
     end
+    diskspace
+  end
 
+  def ensure_enough_diskspace
+    diskspace = free_diskspace
+    return false if diskspace == -1
     if @size > diskspace then
       warning(2, "Not enough available disk space for #{ final_path }:" \
                    + " needing #{ @size } bytes, #{ diskspace } available")
@@ -631,7 +642,7 @@ class SyncFileWithMetadata < SyncFile
   end
 
   def mark_in_use(series_name, managed_images)
-    @in_use = true
+    @in_use += 1
     managed_images.add_syncfile(series_name, self)
     return self
   end
@@ -737,6 +748,7 @@ class Image < SyncFileWithMetadata
 
     @id = id
     @version = version
+    @diff_list = []
 
     @diffs_from_by_version = Hash.new
   end
@@ -765,6 +777,38 @@ class Image < SyncFileWithMetadata
   def get_newest_diffs(limit=0)
     @diffs_from_by_version.sort.map { |version, diff| diff } \
                           .reverse.slice(0, limit).reverse
+  end
+
+  def set_diff_list list
+    @diff_list = list
+  end
+
+  def ensure_enough_diskspace
+    res = super
+    if !res
+      info(3, "Not enough space for #{self.id}, trying to clean up less important rdiffs")
+
+      # Magical AI priorization of the diff files
+      @diff_list.select!{|d| d.inplace?}.sort_by!{|d| d.in_use == 0 ? -99999999999 : -d.size / d.in_use }
+      if @size > @diff_list.map(&:size).reduce(&:+) + free_diskspace
+        info(3, "Deleting all wouldn't free enough (only #{@diff_list.map(&:size).reduce(&:+)}), so not even trying")
+        return false
+      end
+      @diff_list.each do |d|
+        str = "Trying to delete #{d.filename} (size #{d.size}, used by #{d.in_use})"
+        if !d.delete
+          info(2, str + "... Didn't work. Trying next one.")
+        elsif res = super
+          info(2, str)
+          info(3, "Good, got enough space now. Continuing.")
+          break
+        else
+          info(2, str + "... Still not enough space. Trying to delete next one.")
+        end
+      end
+      info(3, "All possible rdiffs deleted but still not enough space.") if !res
+    end
+    res
   end
 
   # Create the current image from an old image by using a patch.  First
