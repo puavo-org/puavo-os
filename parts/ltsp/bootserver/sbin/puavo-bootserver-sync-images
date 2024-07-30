@@ -329,24 +329,24 @@ class Series
 
     info(4, "Downloading client diffs")
 
-    images.each do |image|
-      image.diffs.each do |diff|
-        # We want only diffs that have been marked are in use.
-        next unless diff.in_use
-
-        if diff.materialize(@series_name) then
-          info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
-          begin
-            torrents.make(diff)
-          rescue StandardError => e
-            warning(3, "Could not make a torrent for #{ diff.filename }: " \
-                         + e.message)
-            all_syncs_ok = false
-          end
-        else
+    # We want only diffs that have been marked are in use.
+    diff_file_queue = images.map{ |m| m.diffs.select{ |d| d.in_use > 0 } }.flatten.uniq
+    # Priorities. Start with the best size / usage ratios as it is possible that we run
+    # out of space during this.
+    diff_file_queue.sort_by!{|d| d.size / d.in_use }
+    diff_file_queue.each do |diff|
+      if diff.materialize(@series_name) then
+        info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
+        begin
+          torrents.make(diff)
+        rescue StandardError => e
+          warning(3, "Could not make a torrent for #{ diff.filename }: " \
+                        + e.message)
           all_syncs_ok = false
-          warning(3, "Diff sync FAILED: #{ diff.statemsg }")
         end
+      else
+        all_syncs_ok = false
+        warning(3, "Diff sync FAILED: #{ diff.statemsg }")
       end
     end
 
