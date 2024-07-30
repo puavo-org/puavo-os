@@ -2,6 +2,15 @@
 
 set -eu
 
+# pick up a random day that is always the same in every host in an organisation
+get_organisation_weekday() {
+  hexdump -b /etc/puavo/domain \
+    | awk '
+        { for (i = 2; i <= NF; i++) { sum += $i } }
+        END { print ((sum % 5) + 1) }
+      '
+}
+
 # Disable most cronjobs (those mostly cause unnecessary load), but logrotate
 # is actually useful when /state is used.
 
@@ -139,6 +148,12 @@ cron_d_cond_enable puavo-setup-bootserver-printer-restrictions <<'EOF'
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 */5 * * * * root /etc/puavo-conf/scripts/setup_bootserver_printer_restrictions >/dev/null 2>&1
+EOF
+
+cron_d_cond_enable puavo-update-ldap-slave <<EOF
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+17 3 * * $(get_organisation_weekday) root /usr/sbin/puavo-update-ldap-slave >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable remove-cups-jobs <<'EOF'

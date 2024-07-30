@@ -11,7 +11,7 @@
   "puavo.networking.ddns.dhcpd_interfaces": "ltsp*,wlan*",
   "puavo.serialconsole.enabled": "true",
   "puavo.service.atop.enabled": "true",
-  "puavo.service.cron.cronjobs": "fix-homedir-permissions,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-setup-bootserver-printer-restrictions,remove-cups-jobs",
+  "puavo.service.cron.cronjobs": "fix-homedir-permissions,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-setup-bootserver-printer-restrictions,puavo-update-ldap-slave,remove-cups-jobs",
   "puavo.service.cups-browsed.enabled": "false",
   "puavo.service.cups-watchdog.enabled": "true",
   "puavo.service.dnsmasq.enabled": "true",
