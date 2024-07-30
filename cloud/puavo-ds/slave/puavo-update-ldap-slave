@@ -119,6 +119,12 @@ end
 
 Syslog.open('puavo-update-ldap-slave')
 
+myself = File.open($0, 'r')
+unless myself.flock(File::LOCK_NB|File::LOCK_EX) then
+  Syslog.err('could not get a lock')
+  exit(1)
+end
+
 begin
   @acls = get_acls()
   @schemas = get_schemas()
