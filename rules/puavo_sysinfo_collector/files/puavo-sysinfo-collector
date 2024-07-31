@@ -271,8 +271,8 @@ class SysInfo
       displays[disp] = xauthority
     end
 
-    last_display = displays.keys.sort.last
-    return unless last_display
+    # similar to adm-x: if no xauthorities found, likely in nodm and ":0" is our display
+    last_display = displays.keys.sort.last || ":0"
 
     xauthority = displays[last_display]
     cmd_env = { 'DISPLAY' => last_display, 'XAUTHORITY' => xauthority }
