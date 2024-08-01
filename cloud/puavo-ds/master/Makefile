@@ -29,6 +29,7 @@ install: install-dirs
 	install -m 744 -t $(DESTDIR)$(sbindir) \
 		bin/puavo-add-new-organisation \
 		bin/puavo-dump-all-databases \
+		bin/puavo-cleanup-kerberos-principals \
 		bin/puavo-init-ldap \
 		bin/puavo-reset-kerberos-configurations \
 		bin/puavo-restore-all-databases
