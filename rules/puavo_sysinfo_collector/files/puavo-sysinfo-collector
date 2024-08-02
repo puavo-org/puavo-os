@@ -265,20 +265,32 @@ class SysInfo
 
     Sys::ProcTable.ps.each do |p|
       disp = p.environ['DISPLAY']
+      next unless disp
+      unless displays.has_key?(disp) then
+        displays[disp] = nil
+      end
+
       xauthority = p.environ['XAUTHORITY']
-      next unless disp && xauthority
-      next if displays[disp]
-      displays[disp] = xauthority
+      if xauthority then
+        displays[disp] = xauthority
+      end
     end
 
     last_display = displays.keys.sort.last
     return unless last_display
 
-    xauthority = displays[last_display]
-    cmd_env = { 'DISPLAY' => last_display, 'XAUTHORITY' => xauthority }
-    IO.popen([ cmd_env, 'xrandr', '-q' ]) do |io|
-      @data[:xrandr] = io.read.strip
+    cmd_env = { 'DISPLAY' => last_display }
+    if displays[last_display] then
+      cmd_env['XAUTHORITY'] = displays[last_display]
     end
+    xrandr_output, status = Open3.capture2(cmd_env, 'xrandr', '-q')
+    unless status.success? then
+      warn "xrandr returned error code: #{ status.exitstatus }" \
+        unless status.success?
+      return
+    end
+
+    @data[:xrandr] = xrandr_output.strip
   end
 
   def update_battery_info
