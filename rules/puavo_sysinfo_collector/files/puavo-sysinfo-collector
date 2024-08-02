@@ -285,8 +285,7 @@ class SysInfo
     end
     xrandr_output, status = Open3.capture2(cmd_env, 'xrandr', '-q')
     unless status.success? then
-      warn "xrandr returned error code: #{ status.exitstatus }" \
-        unless status.success?
+      warn "xrandr returned error code: #{ status.exitstatus }"
       return
     end
 
