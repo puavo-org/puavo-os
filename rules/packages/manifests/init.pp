@@ -849,7 +849,9 @@ class packages {
     '6.9.7-amd64':
       # The current nvidia packages (470.199.02-1~deb12u1 and
       # 525.125.06-1~deb12u1) do not compile for 6.5.x.
-      dkms_modules => [ $broadcom_sta_dkms_module, $virtualbox_module ],
+      # The same is true for the current VirtualBox version in
+      # debian-fasttrack.
+      dkms_modules => [ $broadcom_sta_dkms_module ],
       package_name => 'linux-image-6.9.7-amd64-unsigned';
   }
 
