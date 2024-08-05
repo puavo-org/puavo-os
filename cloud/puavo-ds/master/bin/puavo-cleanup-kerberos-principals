@@ -1,0 +1,134 @@
+#!/usr/bin/ruby
+
+require 'net/ldap'
+require 'syslog'
+
+def usage
+  warn('Usage: puavo-cleanup-kerberos-principals ldap_base')
+end
+
+def get_ca_cert_path()
+  IO.readlines('/etc/ldap/ldap.conf').each do |line|
+    key, value = line.split()
+    return value if key == 'TLS_CACERT'
+  end
+
+  raise 'could not determine ldap server CA certificate path'
+end
+
+def main(master_hostname, ldap_base, admin_dn, admin_password, dry_run)
+  connection_args = {
+    :auth => {
+      :method   => :simple,
+      :username => admin_dn,
+      :password => admin_password,
+    },
+    :host => master_hostname,
+    :port => 389,
+    :encryption => {
+      :method => :start_tls,
+      :tls_options => {
+        :ca_file     => get_ca_cert_path(),
+        :verify_mode => OpenSSL::SSL::VERIFY_PEER,
+      },
+    }
+  }
+
+  ldap = Net::LDAP.new(connection_args)
+
+  expected_krb_realm = nil
+  ldap.search(:base => ldap_base,
+              :scope => Net::LDAP::SearchScope_BaseObject,
+              :attributes => %w(puavoKerberosRealm)) do |entry|
+    expected_krb_realm = Array(entry[:puavokerberosrealm]).first
+  end
+
+  if !expected_krb_realm || expected_krb_realm.empty? then
+    raise "could not lookup kerberos realm for ldap base: #{ ldap_base }"
+  end
+
+  ldap_uids = {}
+  ldap.search(:base => ldap_base,
+              :filter => '(objectClass=puavoEduPerson)',
+              :attributes => %w(uid)) do |entry|
+    uid = Array(entry[:uid]).first
+    raise 'uid missing' unless uid
+    ldap_uids[uid] = 1
+  end
+
+  kerberos_dns = {}
+  ldap.search(:base => ldap_base,
+              :filter => '(objectClass=krbPrincipal)',
+              :attributes => %w(krbPrincipalName)) do |entry|
+    krb_principal = Array(entry[:krbPrincipalName]).first
+    raise 'kerberos principal missing' unless krb_principal
+
+    krb_uid, krb_realm, the_rest = krb_principal.split('@')
+    raise 'kerberos principal is in bad format' if the_rest
+    raise 'bad realm in kerberos principal' \
+      unless krb_realm == expected_krb_realm
+    next if krb_uid.match(/\//)
+
+    krb_principal_dn = Array(entry[:dn]).first
+
+    kerberos_dns[ krb_uid ] = krb_principal_dn
+  end
+
+  kerberos_dns_to_remove = []
+
+  kerberos_dns.each do |krb_uid, krb_dn|
+    next if ldap_uids.has_key?(krb_uid)
+    kerberos_dns_to_remove << krb_dn
+  end
+
+  if kerberos_dns_to_remove.empty? then
+    Syslog.notice('no kerberos principals to remove on %s', ldap_base)
+    return
+  end
+
+  kerberos_dns_to_remove.each do |dn|
+    if dry_run then
+      Syslog.info('called with --dry-run, but would otherwise delete: %s', dn)
+      next
+    end
+
+    Syslog.info('deleting %s', dn)
+    ldap.delete(:dn => dn)
+  end
+
+  unless dry_run then
+    Syslog.notice('kerberos cleanup done for ldap base: %s', ldap_base)
+  end
+end
+
+Syslog.open('puavo-cleanup-kerberos-principals', Syslog::LOG_PERROR)
+
+dry_run = false
+if ARGV[0] == '--dry-run' then
+  dry_run = true
+  ARGV.shift()
+end
+
+ldap_base = ARGV[0]
+
+if !ldap_base || ldap_base !~ /^dc=edu,dc=.*,dc=.*$/ then
+  usage()
+  exit(1)
+end
+
+admin_dn        = IO.read('/etc/puavo/ldap/dn').chomp
+admin_password  = IO.read('/etc/puavo/ldap/password').chomp
+master_hostname = IO.read('/etc/puavo/ldap/master').chomp
+
+exitstatus = 0
+
+begin
+  main(master_hostname, ldap_base, admin_dn, admin_password, dry_run)
+rescue StandardError => e
+  Syslog.err('unexpected error: %s', e.message)
+  exitstatus = 1
+end
+
+Syslog.close()
+
+exit(exitstatus)

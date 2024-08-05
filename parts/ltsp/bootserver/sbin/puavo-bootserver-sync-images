@@ -92,6 +92,7 @@ def warning(level, msg)
   log(level, STDERR, Syslog::LOG_WARNING, "WARNING: #{ msg }", HighLine::RED)
 end
 
+
 class Series
   attr_reader :series_name
 
@@ -324,24 +325,30 @@ class Series
 
     info(4, "Downloading client diffs")
 
-    images.each do |image|
-      image.diffs.each do |diff|
-        # We want only diffs that have been marked are in use.
-        next unless diff.in_use
+    # We want only diffs that have been marked are in use.
+    diff_file_queue = images.map do |image|
+                        image.diffs.select { |diff| diff.in_use > 0 }
+                      end.flatten.uniq
 
-        if diff.materialize(@series_name) then
-          info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
-          begin
-            torrents.make(diff)
-          rescue StandardError => e
-            warning(3, "Could not make a torrent for #{ diff.filename }: " \
-                         + e.message)
-            all_syncs_ok = false
-          end
-        else
+    # Prioritize downloads, start with the best size / usage ratios
+    # as it is possible that we run out of space during this.  Smaller
+    # number means higher priority.
+    prioritized_diff_file_queue \
+      = diff_file_queue.sort_by { |diff| diff.size / diff.in_use }
+
+    prioritized_diff_file_queue.each do |diff|
+      if diff.materialize(@series_name) then
+        info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
+        begin
+          torrents.make(diff)
+        rescue StandardError => e
+          warning(3, "Could not make a torrent for #{ diff.filename }: " \
+                        + e.message)
           all_syncs_ok = false
-          warning(3, "Diff sync FAILED: #{ diff.statemsg }")
         end
+      else
+        all_syncs_ok = false
+        warning(3, "Diff sync FAILED: #{ diff.statemsg }")
       end
     end
 
@@ -351,6 +358,52 @@ class Series
     end
 
     return all_syncs_ok
+  end
+
+  def remove_diffs_to_free_diskspace(syncfile)
+    diffs_in_series = @by_id.values.map { |image| image.diffs }.flatten.uniq
+    diffs_in_series_cunsuming_diskspace \
+      = diffs_in_series.select { |d| d.inplace? }
+
+    current_free_diskspace = syncfile.lookup_free_diskspace()
+    return false unless current_free_diskspace
+
+    space_currently_taken_by_diffs \
+      = diffs_in_series_cunsuming_diskspace.map(&:size).sum
+
+    space_potentially_available \
+      = space_currently_taken_by_diffs + current_free_diskspace
+    if syncfile.size > space_potentially_available then
+      info(3, 'Deleting diffs would not free enough' \
+                + " (only #{ space_currently_taken_by_diffs } bytes)" \
+                + ' so not even trying')
+      return false
+    end
+
+    # Magical AI priorization of the diff files.  Files with the biggest
+    # priority number are to be deleted first.
+    diffs_sorted_by_priority \
+      = diffs_in_series_cunsuming_diskspace.select { |d| d.inplace? } \
+         .sort_by { |d| d.in_use == 0 ? 999999999999 : d.size / d.in_use } \
+         .reverse
+
+    diffs_sorted_by_priority.each do |d|
+      logmsg = "Deleting #{ d.filename } (size=#{ d.size } users=#{ d.in_use })"
+      unless d.delete() then
+        warning(2, "#{ logmsg } ... FAILED.")
+        next
+      end
+      info(2, "#{ logmsg } ... OK.")
+
+      enough, diskspace = syncfile.check_diskspace()
+      if enough then
+        info(3, 'Got enough space now, continuing')
+        return true
+      end
+    end
+
+    info(3, 'All possible rdiffs deleted but still not enough space')
+    return false
   end
 
   def cleanup_tempfiles
@@ -453,6 +506,31 @@ class SyncFile
     return all_deleted_ok
   end
 
+  def lookup_free_diskspace
+    diskspace = nil
+    directory = File.dirname(final_path)
+
+    block_size, bs_status \
+      = Open3.capture2("stat", "--file-system", "--format", "%S", directory)
+    free_blocks, fb_status \
+      = Open3.capture2("stat", "--file-system", "--format", "%a", directory)
+
+    unless bs_status.success? && fb_status.success?
+      warning(2, "Could not stat directory for #{ directory }" \
+                   + " when checking disk space")
+      return nil
+    end
+
+    begin
+      diskspace = Integer(block_size) * Integer(free_blocks)
+    rescue StandardError => e
+      warning(2, "Could not determine free disk space in #{ directory }")
+      return nil
+    end
+
+    return diskspace
+  end
+
   def cleanup_tempfiles
     tempfiles_to_delete = [ download_path, partial_unverified_path ]
     tempfiles_to_delete << unverified_path if inplace?
@@ -480,7 +558,7 @@ class SyncFileWithMetadata < SyncFile
     @size   = size
     @urls   = urls
 
-    @in_use        = false
+    @in_use        = 0
     @mtime         = nil
     @state         = SyncState.new
     @verified      = false
@@ -600,38 +678,23 @@ class SyncFileWithMetadata < SyncFile
     raise 'unknown download error'
   end
 
+  def check_diskspace
+    diskspace = lookup_free_diskspace()
+    return false unless diskspace
+    return [ @size <= diskspace, diskspace ]
+  end
+
   def ensure_enough_diskspace
-    directory = File.dirname(final_path)
+    enough, diskspace = check_diskspace()
+    return true if enough
 
-    block_size, bs_status \
-      = Open3.capture2("stat", "--file-system", "--format", "%S", directory)
-    free_blocks, fb_status \
-      = Open3.capture2("stat", "--file-system", "--format", "%a", directory)
-
-    unless bs_status.success? && fb_status.success?
-      warning(2, "Could not stat directory for #{ final_path }" \
-                   + " when checking disk space")
-      return false
-    end
-
-    begin
-      diskspace = Integer(block_size) * Integer(free_blocks)
-    rescue StandardError => e
-      warning(2, "Could not determine free disk space for #{ final_path }")
-      return false
-    end
-
-    if @size > diskspace then
-      warning(2, "Not enough available disk space for #{ final_path }:" \
-                   + " needing #{ @size } bytes, #{ diskspace } available")
-      return false
-    end
-
-    return true
+    warning(2, "Not enough available disk space for #{ final_path }:" \
+                 + " needing #{ @size } bytes, #{ diskspace } available")
+    return false
   end
 
   def mark_in_use(series_name, managed_images)
-    @in_use = true
+    @in_use += 1
     managed_images.add_syncfile(series_name, self)
     return self
   end
@@ -727,7 +790,7 @@ end
 class Image < SyncFileWithMetadata
   attr_reader :id, :version
 
-  def initialize(cksum, filename, id, sha256, size, urls, version)
+  def initialize(cksum, filename, id, sha256, size, urls, version, series)
     super(cksum, filename, sha256, size, urls)
 
     raise 'id is not set' \
@@ -736,6 +799,7 @@ class Image < SyncFileWithMetadata
       unless version && version.kind_of?(String) && !version.empty?
 
     @id = id
+    @series = series
     @version = version
 
     @diffs_from_by_version = Hash.new
@@ -765,6 +829,14 @@ class Image < SyncFileWithMetadata
   def get_newest_diffs(limit=0)
     @diffs_from_by_version.sort.map { |version, diff| diff } \
                           .reverse.slice(0, limit).reverse
+  end
+
+  def ensure_enough_diskspace
+    have_enough = super()
+    return true if have_enough
+
+    info(3, "Not enough space for #{ self.id }, cleaning up unimportant rdiffs")
+    return @series.remove_diffs_to_free_diskspace(self)
   end
 
   # Create the current image from an old image by using a patch.  First
@@ -1273,7 +1345,8 @@ module SeriesControl
                           imagedata["sha256"],
                           imagedata["size"],
                           imagedata["urls"],
-                          imagedata["version"])
+                          imagedata["version"],
+                          series)
         series.add_image(image)
       end
 
