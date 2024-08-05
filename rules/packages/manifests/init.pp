@@ -214,7 +214,6 @@ class packages {
     , 'grub-pc'
     , 'grub-pc-bin'
     , 'ksh'
-    , 'libc++1'        #needed by discord
     , 'libgconf-2-4'   #needed by mattermost-desktop
     , 'libjffi-jni'    #needed by cryptomator
     , 'libpam-ccreds'
