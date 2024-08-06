@@ -56,6 +56,12 @@ Usage: puavo-make-install-disk [--only-legacy-boot]
 EOF
 }
 
+if [ "$(id -u)" -ne 0 ]; then
+  # root is required for loopback mounts
+  echo 'Run me as root!' >&2
+  exit 1
+fi
+
 if ! args=$(getopt -n "$0" -o +hos:t:v \
               -l 'help,only-legacy-boot,only-uefi-boot,source-image:,target-image:,with-vdi' \
               -- "$@"); then
@@ -157,5 +163,14 @@ fi
 if $with_vdi; then
   vdi_image="${target_image%.*}.vdi"
   VBoxManage convertdd "$target_image" "${vdi_image}.tmp" --format VDI
+  chmod 644 "${vdi_image}.tmp"
   mv "${vdi_image}.tmp" "$vdi_image"
+fi
+
+#R fix output file ownership in case run through sudo
+if [ -n "$target_image" -a -n "${SUDO_USER:-}" ]; then
+  chown "${SUDO_USER}:" "$target_image"
+  if $with_vdi; then
+    chown "${SUDO_USER}:" "$vdi_image"
+  fi
 fi
