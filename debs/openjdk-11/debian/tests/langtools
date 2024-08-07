@@ -5,7 +5,7 @@ set -o pipefail
 set -o nounset
 
 problem_list=${AUTOPKGTEST_TMP}/problems.txt
-debian/tests/write-problems ${problem_list} test/langtools/ProblemList.txt langtools
+debian/tests/write-problems.sh ${problem_list} test/langtools/ProblemList.txt langtools
 
 debian/tests/jtreg-autopkgtest.sh langtools \
   -exclude:${problem_list} \

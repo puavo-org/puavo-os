@@ -5,10 +5,10 @@ Maintainer: OpenJDK Team <openjdk-11@packages.debian.org>
 Uploaders: Matthias Klose <doko@ubuntu.com>
 Build-Depends: debhelper (>= 11),
   m4, lsb-release, zip, unzip,
-  sharutils, gawk, cpio, pkg-config, procps, wdiff, fastjar (>= 2:0.96-0ubuntu2),
+  sharutils, gawk, cpio, procps, wdiff, pkg-config, fastjar (>= 2:0.96-0ubuntu2),
   time, strip-nondeterminism, debugedit (>= 4.16),
   file,
-  autoconf, automake, autotools-dev, ant, ant-optional,
+  autoconf, automake, ant, ant-optional,
   g++-10 <!cross>,
   openjdk-11-jdk-headless:native | openjdk-10-jdk-headless:native,
   libxtst-dev, libxi-dev, libxt-dev, libxaw7-dev, libxrender-dev, libcups2-dev, libasound2-dev, liblcms2-dev, libxinerama-dev, libkrb5-dev, xsltproc, libpcsclite-dev, libxrandr-dev, libelf-dev, libfontconfig-dev, libfreetype-dev, libharfbuzz-dev,

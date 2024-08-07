@@ -1,0 +1,68 @@
+Test,Bug,Comment,Packages,Arch,Release
+Error:  runtime/Unsafe/InternalErrorTest.java,JDK-8335238,"To investigate, not critical for security release – JDK-22 will expire before OO release",:openjdk-22,i386,:release-all
+Error:  serviceability/jvmti/vthread/SuspendResume1/SuspendResume1.java#default,,"Deadlock, new failure, not critical – JDK-22 will expire before OO release",:openjdk-22,ppc64el,:release-all
+FAILED: compiler/arguments/CheckCICompilerCount.java,,"Existing failure (exit code 0, expected 1)",:openjdk-17:openjdk-21:openjdk-22,i386,:release-all
+FAILED: compiler/codecache/MHIntrinsicAllocFailureTest.java,JDK-8298947,The issue only happens on armhf platform. ,:openjdk-17:openjdk-21,armhf,:release-all
+FAILED: gtest/GTestWrapper.java,,"17:UninitializedDoubleElementWorkerDataArrayTest.print_summary_on_test_vm, ",:openjdk-17:openjdk-21,i386,:release-all
+FAILED: java/foreign/critical/TestCritical.java,,"SEGSEGV in test, submit bug, not critical for security release",:openjdk-22,s390x,:release-all
+FAILED: java/foreign/StdLibTest.java,,Ignore test failure in the preview api,:openjdk-21,:i386,:release-all
+FAILED: java/foreign/TestAddressDereference.java,,Ignore test failure in the preview api,:openjdk-21,:i386,:release-all
+FAILED: java/foreign/TestIllegalLink.java,,Ignore test failure in the preview api,:openjdk-21,:i386,:release-all
+FAILED: java/foreign/TestLinker.java,,Ignore test failure in the preview api,:openjdk-21,:i386,:release-all
+FAILED: java/foreign/TestSegments.java,,Ignore test failure in the preview api,:openjdk-21,:i386,:release-all
+FAILED: java/foreign/TestUpcallHighArity.java,,Ignore test failure in the preview api,:openjdk-21,:i386,:release-all
+FAILED: java/foreign/TestUpcallStructScope.java,,Ignore test failure in the preview api,:openjdk-21,:i386,:release-all
+FAILED: java/io/File/createTempFile/TargetDirectory.java,JDK-8166162,Container issue,:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/io/File/GetXSpace.java,,"Container issue, disk space size exceeds 32 bit integer",:openjdk-17:openjdk-21:openjdk-22,i386,:release-all
+FAILED: java/nio/channels/FileChannel/directio/DirectIOTest.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/channels/FileChannel/directio/PreadDirect.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/channels/FileChannel/directio/PwriteDirect.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/channels/FileChannel/directio/ReadDirect.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/channels/FileChannel/directio/WriteDirect.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/attribute/AclFileAttributeView/Basic.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/attribute/BasicFileAttributeView/CreationTime.java,JDK-8166162,Container issue,:openjdk-22,i386,:release-all
+FAILED: java/nio/file/attribute/BasicFileAttributeView/SetTimesNanos.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/attribute/DosFileAttributeView/Basic.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/attribute/PosixFileAttributeView/Basic.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/attribute/UserDefinedFileAttributeView/Basic.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/Files/CheckPermissions.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/Files/CopyAndMove.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/Files/CopyMoveVariations.java,JDK-8166162,Container issue,:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/Files/FileAttributes.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/Files/InterruptCopy.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/Files/Misc.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/Files/TemporaryFiles.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: java/nio/file/FileStore/Basic.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: runtime/cds/appcds/jcmd/JCmdTestDynamicDump.java,,flaky test (?) existing comment,:openjdk-17,i386:arm64:amd64,:release-all
+FAILED: runtime/cds/appcds/jcmd/JCmdTestFileSafety.java,,flaky test (?) existing comment,:openjdk-17,i386:arm64:amd64:ppc64el,:release-all
+FAILED: runtime/cds/appcds/jcmd/JCmdTestStaticDump.java,,flaky test (?) existing comment,:openjdk-17,ppc64el,:release-all
+FAILED: runtime/ErrorHandling/MachCodeFramesInErrorFile.java,,java.lang.InternalError: a fault occurred in a recent unsafe memory access operation in compiled Java code at java.base/java.lang.Long.toHexString(Long.java:309) at,:openjdk-17:openjdk-21,armhf,:release-all
+FAILED: runtime/jni/nativeStack/TestNativeStack.java,JDK-8312016,"Backport fix (do not add patch, the fix just disables the test)",:openjdk-lts:openjdk-11:openjdk-17,armhf,:release-all
+FAILED: runtime/LoadClass/LongBCP.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11:openjdk-17:openjdk-21:openjdk-22,:arch-all,:release-all
+FAILED: runtime/Monitor/ConcurrentDeflation.java,,LockingMode == 0 (LM_MONITOR) is not fully implemented on this architectureError: Could not create the Java Virtual Machine.,:openjdk-21,armhf,:release-all
+FAILED: runtime/NMT/VirtualAllocCommitMerge.java,JDK-8309698,P4 bug (existing issue),:openjdk-21:openjdk-22,s390x,:release-all
+FAILED: serviceability/AsyncGetCallTrace/MyPackage/ASGCTBaseTest.java,JDK-8303168,Existing bug,:openjdk-21,armhf,:release-all
+FAILED: tools/jlink/JLinkTest.java,JDK-8240349,Bugfix failed for i386 (P4 bug),:openjdk-17:openjdk-21:openjdk-22,i386,:release-all
+FAILED: jdk/javadoc/doclet/dupThrowsTags/TestDupThrowsTags.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/T6735320/T6735320.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testBadHtml/TestBadHtml.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testBadPackageFileInJar/TestBadPackageFileInJar.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testHtmlTableStyles/TestHtmlTableStyles.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testLinkOption/TestLinkOption.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testNonInlineHtmlTagRemoval/TestNonInlineHtmlTagRemoval.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testPackageHtml/TestPackageHtml.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testParamTaglet/TestParamTaglet.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testRelativeLinks/TestRelativeLinks.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testSeeTag/TestSeeTag.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testStylesheet/TestStylesheet.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testSummaryTag/TestSummaryTag.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testSupplementary/TestSupplementary.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testValueTag/TestValueTag.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/doclet/testWarnings/TestWarnings.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/tool/doclint/DocLintTest.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: jdk/javadoc/tool/modules/Modules.java,,tests failing due to disable-doclint-by-default.diff (reproducible build maintainer patch),:openjdk-lts:openjdk-11,:arch-all,:release-all
+FAILED: sun/security/ec/TestEC.java,,"New failure in CI, passes locally",:openjdk-lts:openjdk-11,:amd64,:release-all
+FAILED: runtime/NMT/SafepointPollingPages.java,,ThreadLocalHandshakes not yet supported on this platform. Disable test,:openjdk-lts:openjdk-11,:armhf,:release-all
+FAILED: serviceability/attach/ConcAttachTest.java,,java.lang.RuntimeException: Process is still alive. Can't get its output.,:openjdk-lts:openjdk-11,:armhf,:release-all
+FAILED: serviceability/attach/RemovingUnixDomainSocketTest.java,,java.lang.RuntimeException: Process is still alive. Can't get its output.,:openjdk-lts:openjdk-11,:armhf,:release-all
+FAILED: runtime/cds/appcds/jcmd/JCmdTestStaticDump.java,,Lingered App not found (CI),:openjdk-17,:amd64,:release-all

@@ -3,6 +3,7 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
+include /usr/share/dpkg/buildflags.mk
 
 unexport LANG LC_ALL
 
@@ -152,16 +153,16 @@ ifneq (,$(filter parallel=%,$(subst $(COMMA), ,$(DEB_BUILD_OPTIONS))))
   NJOBS = $(subst parallel=,,$(filter parallel=%,$(subst $(COMMA), ,$(DEB_BUILD_OPTIONS))))
 endif
 
-jtreg_pkg = jtreg6
+jtreg_pkg = jtreg7
 testng_pkg= libtestng7-java
 
 with_check = $(if $(findstring nocheck, $(DEB_BUILD_OPTIONS)),,yes)
 # see Debian #920161
-ifneq (,$(filter $(DEB_HOST_ARCH), alpha))
+ifneq (,$(filter $(DEB_HOST_ARCH), alpha armel ia64 loong64 mipsel mips64el powerpc x32))
   with_check = disabled running check on $(DEB_HOST_ARCH)
 endif
 # no jtreg backport yet
-ifneq (,$(filter $(distrel), precise trusty xenial))
+ifneq (,$(filter $(distrel), precise trusty xenial bullseye))
   with_check = disabled for $(distrel)
 endif
 
@@ -169,7 +170,7 @@ with_docs = $(if $(findstring nodoc, $(DEB_BUILD_OPTIONS)),,yes)
 ifneq (,$(filter $(distrel), precise trusty))
   with_docs =
 endif
-with_check = disabled for this upload
+#with_check = disabled for this upload
 
 with_wqy_zenhai = $(if $(filter $(distrel),lenny),,yes)
 
@@ -235,8 +236,7 @@ dpkg_buildflags_hs += dpkg-buildflags
 export EXTRA_CPPFLAGS_HS := $(shell $(dpkg_buildflags_hs) --get CPPFLAGS)
 export EXTRA_CFLAGS_HS   := $(shell $(dpkg_buildflags_hs) --get CFLAGS; $(dpkg_buildflags_hs) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_HS := $(shell $(dpkg_buildflags_hs) --get CXXFLAGS) -Wno-deprecated-declarations
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_HS  := $(shell $(dpkg_buildflags_hs) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_HS  := $(shell $(dpkg_buildflags_hs) --get LDFLAGS)
 
 dpkg_buildflags_zero = \
 	DEB_BUILD_MAINT_OPTIONS="optimize=-lto" \
@@ -252,8 +252,7 @@ dpkg_buildflags_zero += dpkg-buildflags
 export EXTRA_CPPFLAGS_ZERO := $(shell $(dpkg_buildflags_zero) --get CPPFLAGS)
 export EXTRA_CFLAGS_ZERO   := $(shell $(dpkg_buildflags_zero) --get CFLAGS; $(dpkg_buildflags_zero) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_ZERO := $(shell $(dpkg_buildflags_zero) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_ZERO  := $(shell $(dpkg_buildflags_zero) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_ZERO  := $(shell $(dpkg_buildflags_zero) --get LDFLAGS)
 
 ifeq ($(DEB_HOST_ARCH),alpha)
   export EXTRA_LDFLAGS_ZERO += -Wl,--no-relax
@@ -270,8 +269,7 @@ dpkg_buildflags_jdk += dpkg-buildflags
 export EXTRA_CPPFLAGS_JDK := $(shell $(dpkg_buildflags_jdk) --get CPPFLAGS)
 export EXTRA_CFLAGS_JDK   := $(shell $(dpkg_buildflags_jdk) --get CFLAGS) $(shell $(dpkg_buildflags_jdk) --get CPPFLAGS)
 export EXTRA_CXXFLAGS_JDK := $(shell $(dpkg_buildflags_jdk) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_JDK  := $(shell $(dpkg_buildflags_jdk) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_JDK  := $(shell $(dpkg_buildflags_jdk) --get LDFLAGS)
 
 #for IcedTea
 dpkg_buildflags_it = \
@@ -284,8 +282,7 @@ dpkg_buildflags_it += dpkg-buildflags
 export EXTRA_CPPFLAGS_IT := $(shell $(dpkg_buildflags_it) --get CPPFLAGS)
 export EXTRA_CFLAGS_IT   := $(shell $(dpkg_buildflags_it) --get CFLAGS)
 export EXTRA_CXXFLAGS_IT := $(shell $(dpkg_buildflags_it) --get CXXFLAGS)
-# --no-as-needed to fix runtime problems in dlopen as described in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1031521
-export EXTRA_LDFLAGS_IT  := $(shell $(dpkg_buildflags_it) --get LDFLAGS) -Wl,--no-as-needed
+export EXTRA_LDFLAGS_IT  := $(shell $(dpkg_buildflags_it) --get LDFLAGS)
 
 # This section should be in sync with "bd_gcc" definition
 ifneq (,$(filter $(distrel),saucy))
@@ -327,11 +324,7 @@ else ifneq (,$(filter $(distrel),buster precise trusty xenial bionic cosmic disc
   ifneq (,$(filter $(distrel),buster bionic cosmic disco))
     bd_gcc = g++-8 <!cross>,
   endif
-else ifneq (,$(filter $(distrel),focal))
-  export CC = $(DEB_HOST_GNU_TYPE)-gcc-9
-  export CXX = $(DEB_HOST_GNU_TYPE)-g++-9
-  bd_gcc = g++-9 <!cross>,
-else ifneq (,$(filter $(distrel),bullseye groovy hirsute))
+else ifneq (,$(filter $(distrel),bullseye focal groovy hirsute))
   export CC = $(DEB_HOST_GNU_TYPE)-gcc-10
   export CXX = $(DEB_HOST_GNU_TYPE)-g++-10
   bd_gcc = g++-10 <!cross>,
@@ -343,10 +336,14 @@ else ifneq (,$(filter $(distrel),bookworm lunar))
   export CC = $(DEB_HOST_GNU_TYPE)-gcc-12
   export CXX = $(DEB_HOST_GNU_TYPE)-g++-12
   bd_gcc = g++-12 <!cross>,
-else
+else ifneq (,$(filter $(distrel),mantic noble))
   export CC = $(DEB_HOST_GNU_TYPE)-gcc-13
   export CXX = $(DEB_HOST_GNU_TYPE)-g++-13
   bd_gcc = g++-13 <!cross>,
+else
+  export CC = $(DEB_HOST_GNU_TYPE)-gcc-14
+  export CXX = $(DEB_HOST_GNU_TYPE)-g++-14
+  bd_gcc = g++-14 <!cross>,
 endif
 
 # until we are able to b-d on gcc-for-host ...
@@ -609,12 +606,6 @@ jre_hl_tools	:= $(filter-out $(jre_tools), $(all_jre_tools))
 
 # build dependencies
 ifneq (,$(filter $(distrel),precise))
-  bd_autotools = autoconf2.69, automake, autotools-dev,
-else
-  bd_autotools = autoconf, automake, autotools-dev,
-endif
-
-ifneq (,$(filter $(distrel),precise))
     bd_bootstrap = openjdk-10-jdk-headless | openjdk-11-jdk-headless,
 else ifneq (,$(filter $(distrel),squeeze wheezy jessie trusty xenial))
     bd_bootstrap = openjdk-10-jdk-headless:native | openjdk-11-jdk-headless:native,
@@ -637,6 +628,14 @@ else ifneq (,$(filter $(distrel), stretch xenial))
   bd_debhelper = debhelper (>= 9.20141010), dpkg-dev (>= 1.17.14),
 else
   bd_debhelper = debhelper (>= 11),
+endif
+
+ifneq (,$(filter $(distrel),precise))
+  bd_autotools = autoconf2.69, automake, autotools-dev,
+else ifneq (,$(filter $(old_debhelper), old veryold))
+  bd_autotools = autoconf, automake, autotools-dev,
+else
+  bd_autotools = autoconf, automake,
 endif
 
 ifneq (,$(filter $(distrel),precise))
@@ -685,6 +684,13 @@ bd_zero = \
 bd_ant = ant, ant-optional,
 
 bd_fastjar = fastjar (>= 2:0.96-0ubuntu2),
+
+ifneq (,$(filter $(distrel), wheezy jessie stretch buster bullseye bionic focal jammy))
+  bd_pkgconf = pkg-config,
+else
+  bd_pkgconf = pkgconf,
+endif
+
 ifeq ($(with_nss),yes)
   ifneq (,$(filter $(distrel),squeeze lucid precise quantal))
     bd_nss = libnss3-dev (>= 3.12.3),
@@ -713,7 +719,7 @@ ifeq (,$(filter $(distrel),precise))
 endif
 
 # look at all TEST.ROOT for the required jtreg version, sorted by newest
-min_jtreg_version := $(shell find test/ -name TEST.ROOT -exec grep -hr "^requiredVersion=" {} \; | sed -e 's:^requiredVersion=::' -e 's:$$:-0~:' | sort -uVr | head -n1 | tr ' ' '-')
+min_jtreg_version := $(shell find test/ -name TEST.ROOT -exec grep -hr "^requiredVersion=" {} \; | sed -e 's:^requiredVersion=::' -e 's:$$:~:' | sort -uVr | head -n1 | tr ' ' '-')
 
 ifeq ($(with_check),yes)
   bd_check = \
@@ -923,6 +929,7 @@ debian/control: debian/control.in debian/tests/control debian/rules debian/watch
 	      -e 's/@bd_zero@/$(bd_zero)/g' \
 	      -e 's/@bd_gcc@/$(bd_gcc)/g' \
 	      -e 's/@bd_syslibs@/$(bd_syslibs)/g' \
+	      -e 's/@bd_pkgconf@/$(bd_pkgconf)/g' \
 	      -e 's/@bd_fastjar@/$(bd_fastjar)/g' \
 	      -e 's/@bd_nss@/$(bd_nss)/g' \
 	      -e 's/@bd_systemtap@/$(bd_systemtap)/g' \
@@ -957,6 +964,7 @@ debian/tests/control: debian/tests/control.in debian/rules
 
 debian/tests/%.sh: debian/tests/%.in debian/rules
 	sed \
+		-e 's/@basename@/$(basename)/g' \
 		-e 's,@JDK_DIR@,/$(basedir),g' \
 		-e 's/@jtreg_pkg@/$(jtreg_pkg)/g' \
 		-e 's/@jtreg_archs@/$(jtreg_archs)/g' \
@@ -964,7 +972,9 @@ debian/tests/%.sh: debian/tests/%.in debian/rules
 		$< > $@;
 	chmod +x $@
 
-gen-autopkgtests: debian/tests/jtdiff-autopkgtest.sh debian/tests/jtreg-autopkgtest.sh
+gen-autopkgtests: debian/tests/jtdiff-autopkgtest.sh \
+	debian/tests/jtreg-autopkgtest.sh \
+	debian/tests/write-problems.sh
 
 packaging-files:
 	for f in debian/*.in; do \
@@ -1064,14 +1074,6 @@ stamps/zero-configure: stamps/build stamps/unpack
 	touch $@
 
 stamps/unpack:
-	: # apply some architecture specific patches ...
-#ifeq ($(DEB_HOST_ARCH),alpha)
-#	patch -p1 < debian/patches/alpha-float-const.diff
-#endif
-#ifeq ($(DEB_HOST_ARCH),powerpcspe)
-#	patch -p1 < debian/patches/powerpcspe-float-const.diff
-#endif
-
 	$(MAKE) -f debian/rules packaging-files
 
 	mkdir -p stamps
@@ -1941,7 +1943,7 @@ endif
 	dh_builddeb -a $(nodemo) $(nojrez) #$(bd_options)
 
 git_project		= jdk11u
-git_tag			= jdk-11.0.23+9
+git_tag			= jdk-11.0.24+8
 package_version		= $(subst jdk-,,$(git_tag))
 package_version		= $(shell echo $(PKGVERSION) | sed 's/-[^-][^-]*$$//')
 ifneq ($(is_upstream_release),yes)
@@ -1980,6 +1982,7 @@ get-orig:
 	  rm -v -rf $$d/src/java.smartcardio/unix/native/libj2pcsc/MUSCLE; \
 	  rm -v -rf $$d/.github; \
 	  rm -v -f $$d/.gitattributes; \
+	  rm -v -f $$d/test/jdk/sun/management/windows/revokeall.exe; \
 	esac; \
 	mv $$d $(topdir); \
 	XZ_OPT=-9v tar cfJ ../$(basename)_$(package_version).orig.tar.xz $(topdir); \

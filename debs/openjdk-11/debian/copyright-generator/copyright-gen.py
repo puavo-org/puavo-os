@@ -32,6 +32,7 @@ common_licenses = {};
 excluded_files = [
   ".github/*",
   ".gitattributes",
+  "test/jdk/sun/management/windows/revokeall.exe",
   "src/java.base/share/native/libzip/zlib/*",
   "src/java.desktop/share/native/libsplashscreen/giflib/*",
   "src/java.desktop/share/native/libsplashscreen/libpng/*",
@@ -79,7 +80,7 @@ openjdk_copyrights = [
 ]
 
 ## TODO: Can the script deduce this list?
-upstream_authors = [ 
+upstream_authors = [
   "Oracle and/or its affiliates",
   "Sun Microsystems, Inc",
   "Red Hat, Inc",
@@ -114,7 +115,7 @@ def print_header_stanza(format, files_excluded, source, comment):
 def print_file_stanza(files, copyrights, license, comments):
   print_field("Files", True, files)
   print_field("Copyright", False, copyrights)
-  print_field("License", True, license) 
+  print_field("License", True, license)
   if (comments is not None and len(comments) != 0):
     print_field("Comments", True, comments)
   print() # an empty line
@@ -129,7 +130,7 @@ def generate_comment_str():
       {upstream_authors_str}
     Packaged by:
       {packaged_by}"""
-    
+
 def generate_header_stanza():
   format = "https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/"
   excluded = generate_excluded_files_str()
@@ -148,7 +149,7 @@ def get_content(path):
         .replace("</pre>", ""))
 
   return lines[0], "".join(lines[1:])
-  
+
 
 def fill_with_dots_and_indent(text):
   indentation = " " * 2
@@ -179,7 +180,7 @@ def gen_license_text(license):
 
 ------------------------------------------------------------------------------"""
 
-    
+
 def gather_legal_dirs(path):
   legal_dirs = []
   for root, dirs, files in os.walk(path):
@@ -244,7 +245,7 @@ def generate_copyright():
     print("No source package found. Download also failed. Aborting.")
     exit(2)
   print(f"Using the source package at {rootdir}", file = sys.stderr)
-  srcdir = f"{rootdir}/src"; 
+  srcdir = f"{rootdir}/src";
 
   os.system(f"/bin/sh ./debian/copyright-generator/strip-common-licenses.sh {rootdir} {version}")
   generate_header_stanza();
@@ -269,7 +270,7 @@ The following licenses for third party code are taken from 'legal' \ndirectories
   # clean-up
   if needs_cleanup:
     os.system(f"rm -rf *.debian.tar.xz *.orig.tar.xz *.dsc *googletest.tar.xz");
-    
+
 
 
 def detect_version():
@@ -293,4 +294,4 @@ def main():
     print("Version not supported.")
 
 if __name__ == "__main__":
-  main()    
+  main()

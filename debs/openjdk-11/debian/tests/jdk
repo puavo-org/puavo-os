@@ -27,7 +27,7 @@ debian/tests/start-xvfb.sh 10 &
 sleep 3
 
 problem_list=${AUTOPKGTEST_TMP}/problems.txt
-debian/tests/write-problems ${problem_list} test/jdk/ProblemList.txt jdk
+debian/tests/write-problems.sh ${problem_list} test/jdk/ProblemList.txt jdk
 
 native_path=$(pwd)/build/images/test/jdk/jtreg/native
 debian/tests/jtreg-autopkgtest.sh jdk \

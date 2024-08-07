@@ -22,7 +22,7 @@ if [ -z "${BOOTJDK_HOME+x}" ]; then
   BOOTJDK_HOME=${JDK_TO_TEST}
 fi
 
-jtreg_version="$(dpkg-query -W jtreg6 | cut -f2)"
+jtreg_version="$(dpkg-query -W jtreg7 | cut -f2)"
 
 # set additional jtreg options
 jt_options="${JTREG_OPTIONS:-}"

@@ -1,14 +1,3 @@
---- a/test/jdk/sun/security/pkcs11/PKCS11Test.java
-+++ b/test/jdk/sun/security/pkcs11/PKCS11Test.java
-@@ -99,7 +99,7 @@
-     // NSS version info
-     public static enum ECCState { None, Basic, Extended };
-     static double nss_version = -1;
--    static ECCState nss_ecc_status = ECCState.Extended;
-+    static ECCState nss_ecc_status = ECCState.Basic;
- 
-     // The NSS library we need to search for in getNSSLibDir()
-     // Default is "libsoftokn3.so", listed as "softokn3"
 --- a/test/jdk/sun/security/pkcs11/ec/TestECDH.java
 +++ b/test/jdk/sun/security/pkcs11/ec/TestECDH.java
 @@ -124,8 +124,12 @@

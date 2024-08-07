@@ -20,7 +20,7 @@ Forwarded: no
 +            if (System.getenv("SOURCE_DATE_EPOCH") != null) {
 +                dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 +            }
-             tree.addContent(HtmlTree.META(
+             tree.add(HtmlTree.META(
                      (htmlVersion == HtmlVersion.HTML5) ? "dc.created" : "date",
                      dateFormat.format(now)));
 @@ -298,7 +304,14 @@

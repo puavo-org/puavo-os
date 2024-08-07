@@ -7,9 +7,9 @@ Depends: openjdk-11-jdk-headless
 Restrictions: superficial
 
 #Tests: hotspot, jaxp, langtools
-#Depends: @, default-jre-headless, jtreg6:native (>= 6+1-0~), testng:native, build-essential
+#Depends: @, default-jre-headless, jtreg7:native (>= 7.3.1+1~), testng:native, build-essential
 #Restrictions: allow-stderr, skippable, flaky
 
 #Tests: jdk
-#Depends: @, default-jre-headless, jtreg6:native (>= 6+1-0~), testng:native, build-essential, xfwm4:native, xvfb, dbus-x11, zip
+#Depends: @, default-jre-headless, jtreg7:native (>= 7.3.1+1~), testng:native, build-essential, xfwm4:native, xvfb, dbus-x11, zip
 #Restrictions: allow-stderr, skippable, flaky

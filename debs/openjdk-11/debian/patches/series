@@ -10,7 +10,6 @@ multiple-pkcs11-library-init.diff
 s390x-thread-stack-size.diff
 s390x-opt.diff
 jdk-getAccessibleValue.diff
-jtreg-location.diff
 jdk-i18n-pt_BR.diff
 disable-doclint-by-default.diff
 8199220.diff
@@ -40,5 +39,7 @@ ldap-timeout-test-use-ip.patch
 test-use-ip-address.patch
 nss-limited-ecc-tests.patch
 loong64-autoconf-config.diff
-8307977-proposed.diff
+jdk-8307977-proposed.patch
 use_clock64_fns_armhf.patch
+jdk-8334502.patch
+jdk-8336529-proposed.patch
