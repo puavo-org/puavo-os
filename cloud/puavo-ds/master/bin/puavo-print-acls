@@ -378,6 +378,16 @@ rule {
       by $admins     write
 }
 
+# Allow admins to read krbLastSuccessfulAuth and krbPrincipalName of
+# all users (but not of service principals).
+rule {
+  [dn subtree "ou=Kerberos Realms"]
+    filter="(!(krbPrincipalName=*/*@${kerberos_realm}))"
+    [attrs entry krbLastSuccessfulAuth krbPrincipalName objectClass]
+      by $org_owners read
+      by $admins     read
+}
+
 # rules for ou=Hosts (and subtrees)
 
 # give wide read access to these device-related puavo DNs
