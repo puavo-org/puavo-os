@@ -16,7 +16,7 @@ def get_ca_cert_path()
   raise 'could not determine ldap server CA certificate path'
 end
 
-def main(master_hostname, ldap_base, admin_dn, admin_password, dry_run)
+def main(master_hostname, ldap_base, admin_dn, admin_password)
   connection_args = {
     :auth => {
       :method   => :simple,
@@ -82,32 +82,42 @@ def main(master_hostname, ldap_base, admin_dn, admin_password, dry_run)
   end
 
   if kerberos_dns_to_remove.empty? then
-    Syslog.notice('no kerberos principals to remove on %s', ldap_base)
+    log(:notice, 'no kerberos principals to remove on %s' % ldap_base)
     return
   end
 
   kerberos_dns_to_remove.each do |dn|
-    if dry_run then
-      Syslog.info('called with --dry-run, but would otherwise delete: %s', dn)
+    if $dry_run then
+      log(:info, 'called with --dry-run, but would otherwise delete: %s' % dn)
       next
     end
 
-    Syslog.info('deleting %s', dn)
+    log(:info, 'deleting %s' % dn)
     ldap.delete(:dn => dn)
   end
 
-  unless dry_run then
-    Syslog.notice('kerberos cleanup done for ldap base: %s', ldap_base)
+  unless $dry_run then
+    log(:notice, 'kerberos cleanup done for ldap base: %s' % ldap_base)
   end
 end
 
-Syslog.open('puavo-cleanup-kerberos-principals', Syslog::LOG_PERROR)
-
-dry_run = false
+$dry_run = false
 if ARGV[0] == '--dry-run' then
-  dry_run = true
+  $dry_run = true
   ARGV.shift()
 end
+
+def log(method, msg)
+  if $dry_run then
+    warn(msg)
+    return
+  end
+
+  Syslog.send(method, '%s', msg)
+end
+
+Syslog.open('puavo-cleanup-kerberos-principals', Syslog::LOG_PERROR) \
+  unless $dry_run
 
 ldap_base = ARGV[0]
 
@@ -123,12 +133,12 @@ master_hostname = IO.read('/etc/puavo/ldap/master').chomp
 exitstatus = 0
 
 begin
-  main(master_hostname, ldap_base, admin_dn, admin_password, dry_run)
+  main(master_hostname, ldap_base, admin_dn, admin_password)
 rescue StandardError => e
-  Syslog.err('unexpected error: %s', e.message)
+  log(:err, 'unexpected error: %s' % e.message)
   exitstatus = 1
 end
 
-Syslog.close()
+Syslog.close() unless $dry_run
 
 exit(exitstatus)
