@@ -1,6 +1,5 @@
-This patch contains only some parts of the following commit in CUPS.
-We keep only the changes in cups/tls-gnutls.c because that is what
-affects Puavo and some other changes do not apply cleanly.
+This patch is from the following commit but is recreated to apply
+without a fuzz to the version in Bookworm.
 
 commit 23a7c82e56668709a3127730f95a83c72fcfdc2c
 Author: Michael R Sweet <michael.r.sweet@gmail.com>
@@ -8,11 +7,40 @@ Date:   Fri Sep 9 19:25:43 2022 -0400
 
     Fix certificate generation bugs that affect Chrome compatibility, among other things.
 
-diff --git a/cups/tls-gnutls.c b/cups/tls-gnutls.c
-index f87b4f4df..24f968d88 100644
---- a/cups/tls-gnutls.c
-+++ b/cups/tls-gnutls.c
-@@ -167,7 +167,7 @@ cupsMakeServerCredentials(
+
+diff -ruN cups.orig/cups/tls-darwin.c cups/cups/tls-darwin.c
+--- cups.orig/cups/tls-darwin.c	2022-05-26 09:17:21.000000000 +0300
++++ cups/cups/tls-darwin.c	2024-08-14 13:39:07.874367154 +0300
+@@ -1522,6 +1522,8 @@
+     if (isdigit(hostname[0] & 255) || hostname[0] == '[')
+       hostname[0] = '\0';		/* Don't allow numeric addresses */
+ 
++    _cupsMutexLock(&tls_mutex);
++
+     if (hostname[0])
+       http->tls_credentials = http_cdsa_copy_server(hostname);
+     else if (tls_common_name)
+@@ -1537,6 +1539,7 @@
+ 	http->error  = errno = EINVAL;
+ 	http->status = HTTP_STATUS_ERROR;
+ 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
++	_cupsMutexUnlock(&tls_mutex);
+ 
+ 	return (-1);
+       }
+@@ -1544,6 +1547,8 @@
+       http->tls_credentials = http_cdsa_copy_server(hostname[0] ? hostname : tls_common_name);
+     }
+ 
++    _cupsMutexUnlock(&tls_mutex);
++
+     if (!http->tls_credentials)
+     {
+       DEBUG_puts("4_httpTLSStart: Unable to find server credentials.");
+diff -ruN cups.orig/cups/tls-gnutls.c cups/cups/tls-gnutls.c
+--- cups.orig/cups/tls-gnutls.c	2022-05-26 09:17:21.000000000 +0300
++++ cups/cups/tls-gnutls.c	2024-08-14 13:39:07.874367154 +0300
+@@ -167,7 +167,7 @@
    gnutls_x509_crt_set_key(crt, key);
    gnutls_x509_crt_set_serial(crt, serial, sizeof(serial));
    gnutls_x509_crt_set_activation_time(crt, curtime);
@@ -21,7 +49,7 @@ index f87b4f4df..24f968d88 100644
    gnutls_x509_crt_set_ca_status(crt, 0);
    gnutls_x509_crt_set_subject_alt_name(crt, GNUTLS_SAN_DNSNAME, common_name, (unsigned)strlen(common_name), GNUTLS_FSAN_SET);
    if (!strchr(common_name, '.'))
-@@ -1368,6 +1368,8 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
+@@ -1368,6 +1368,8 @@
  
      char	crtfile[1024],		/* Certificate file */
  		keyfile[1024];		/* Private key file */
@@ -30,7 +58,7 @@ index f87b4f4df..24f968d88 100644
      int		have_creds = 0;		/* Have credentials? */
  
      if (http->fields[HTTP_FIELD_HOST])
-@@ -1405,61 +1407,21 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
+@@ -1405,61 +1407,21 @@
      if (isdigit(hostname[0] & 255) || hostname[0] == '[')
        hostname[0] = '\0';		/* Don't allow numeric addresses */
  
@@ -100,7 +128,7 @@ index f87b4f4df..24f968d88 100644
  
        if (access(crtfile, R_OK) || access(keyfile, R_OK))
        {
-@@ -1469,20 +1431,20 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
+@@ -1469,20 +1431,20 @@
  
          char cacrtfile[1024], cakeyfile[1024];	/* CA cert files */
  
@@ -128,7 +156,7 @@ index f87b4f4df..24f968d88 100644
            }
          }
  
-@@ -1500,16 +1462,17 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
+@@ -1500,16 +1462,17 @@
        have_creds = !access(crtfile, R_OK) && !access(keyfile, R_OK);
      }
  
@@ -149,7 +177,7 @@ index f87b4f4df..24f968d88 100644
  
  	return (-1);
        }
-@@ -1517,6 +1480,8 @@ _httpTLSStart(http_t *http)		/* I - Connection to server */
+@@ -1517,6 +1480,8 @@
  
      DEBUG_printf(("4_httpTLSStart: Using certificate \"%s\" and private key \"%s\".", crtfile, keyfile));
  
@@ -158,3 +186,241 @@ index f87b4f4df..24f968d88 100644
      status = gnutls_certificate_set_x509_key_file(*credentials, crtfile, keyfile, GNUTLS_X509_FMT_PEM);
    }
  
+diff -ruN cups.orig/cups/tls-openssl.c cups/cups/tls-openssl.c
+--- cups.orig/cups/tls-openssl.c	2022-05-26 09:17:21.000000000 +0300
++++ cups/cups/tls-openssl.c	2024-08-14 13:39:07.874367154 +0300
+@@ -35,6 +35,7 @@
+ static time_t		http_get_date(X509 *cert, int which);
+ //static void		http_load_crl(void);
+ static const char	*http_make_path(char *buffer, size_t bufsize, const char *dirname, const char *filename, const char *ext);
++static int		http_x509_add_ext(X509 *cert, int nid, const char *value);
+ static void		http_x509_add_san(X509 *cert, const char *name);
+ 
+ 
+@@ -79,6 +80,9 @@
+   cups_lang_t	*language;		// Default language info
+   time_t	curtime;		// Current time
+   X509_NAME	*name;			// Subject/issuer name
++  ASN1_INTEGER	*serial;		// Serial number
++  ASN1_TIME	*notBefore,		// Initial date
++		*notAfter;		// Expiration date
+   BIO		*bio;			// Output file
+   char		temp[1024],		// Temporary directory name
+  		crtfile[1024],		// Certificate filename
+@@ -104,7 +108,7 @@
+   // Create the encryption key...
+   DEBUG_puts("1cupsMakeServerCredentials: Creating key pair.");
+ 
+-  if ((rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL)) == NULL)
++  if ((rsa = RSA_generate_key(3072, RSA_F4, NULL, NULL)) == NULL)
+   {
+     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create key pair."), 1);
+     return (0);
+@@ -131,23 +135,40 @@
+     return (0);
+   }
+ 
+-  curtime  = time(NULL);
+-  language = cupsLangDefault();
++  curtime = time(NULL);
++
++  notBefore = ASN1_TIME_new();
++  ASN1_TIME_set(notBefore, curtime);
++  X509_set_notBefore(cert, notBefore);
++  ASN1_TIME_free(notBefore);
++
++  notAfter  = ASN1_TIME_new();
++  ASN1_TIME_set(notAfter, expiration_date);
++  X509_set_notAfter(cert, notAfter);
++  ASN1_TIME_free(notAfter);
++
++  serial = ASN1_INTEGER_new();
++  ASN1_INTEGER_set(serial, (int)curtime);
++  X509_set_serialNumber(cert, serial);
++  ASN1_INTEGER_free(serial);
+ 
+-  ASN1_TIME_set(X509_get_notBefore(cert), curtime);
+-  ASN1_TIME_set(X509_get_notAfter(cert), expiration_date);
+-  ASN1_INTEGER_set(X509_get_serialNumber(cert), (int)curtime);
+   X509_set_pubkey(cert, pkey);
+ 
+-  name = X509_get_subject_name(cert);
++  language = cupsLangDefault();
++  name     = X509_NAME_new();
+   if (strlen(language->language) == 5)
+-    X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned char *)language->language + 3, -1, -1, 0);
++    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)language->language + 3, -1, -1, 0);
+   else
+-    X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
+-  X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
+-  X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
++    X509_NAME_add_entry_by_txt(name, SN_countryName, MBSTRING_ASC, (unsigned char *)"US", -1, -1, 0);
++  X509_NAME_add_entry_by_txt(name, SN_commonName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
++  X509_NAME_add_entry_by_txt(name, SN_organizationName, MBSTRING_ASC, (unsigned char *)common_name, -1, -1, 0);
++  X509_NAME_add_entry_by_txt(name, SN_organizationalUnitName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
++  X509_NAME_add_entry_by_txt(name, SN_stateOrProvinceName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
++  X509_NAME_add_entry_by_txt(name, SN_localityName, MBSTRING_ASC, (unsigned char *)"Unknown", -1, -1, 0);
+ 
+   X509_set_issuer_name(cert, name);
++  X509_set_subject_name(cert, name);
++  X509_NAME_free(name);
+ 
+   http_x509_add_san(cert, common_name);
+   if ((common_ptr = strstr(common_name, ".local")) == NULL)
+@@ -175,6 +196,14 @@
+     }
+   }
+ 
++  // Add extensions that are required to make Chrome happy...
++  http_x509_add_ext(cert, NID_basic_constraints, "critical,CA:FALSE,pathlen:0");
++  http_x509_add_ext(cert, NID_key_usage, "critical,digitalSignature,keyEncipherment");
++  http_x509_add_ext(cert, NID_ext_key_usage, "1.3.6.1.5.5.7.3.1");
++  http_x509_add_ext(cert, NID_subject_key_identifier, "hash");
++  http_x509_add_ext(cert, NID_authority_key_identifier, "keyid,issuer");
++  X509_set_version(cert, 2); // v3
++
+   X509_sign(cert, pkey, EVP_sha256());
+ 
+   // Save them...
+@@ -1002,6 +1031,8 @@
+     else
+       cn = tls_common_name;
+ 
++    _cupsMutexLock(&tls_mutex);
++
+     if (cn)
+     {
+       // First look in the CUPS keystore...
+@@ -1042,18 +1073,21 @@
+     {
+       DEBUG_printf(("4_httpTLSStart: Auto-create credentials for \"%s\".", cn));
+ 
+-      if (!cupsMakeServerCredentials(tls_keypath, cn, 0, NULL, time(NULL) + 365 * 86400))
++      if (!cupsMakeServerCredentials(tls_keypath, cn, 0, NULL, time(NULL) + 3650 * 86400))
+       {
+ 	DEBUG_puts("4_httpTLSStart: cupsMakeServerCredentials failed.");
+ 	http->error  = errno = EINVAL;
+ 	http->status = HTTP_STATUS_ERROR;
+ 	_cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Unable to create server credentials."), 1);
+-        SSL_CTX_free(context);
++	SSL_CTX_free(context);
++        _cupsMutexUnlock(&tls_mutex);
+ 
+ 	return (-1);
+       }
+     }
+ 
++    _cupsMutexUnlock(&tls_mutex);
++
+     SSL_CTX_use_PrivateKey_file(context, keyfile, SSL_FILETYPE_PEM);
+     SSL_CTX_use_certificate_file(context, crtfile, SSL_FILETYPE_PEM);
+   }
+@@ -1564,6 +1598,46 @@
+ 
+ 
+ //
++// 'http_x509_add_ext()' - Add an extension to a certificate.
++//
++
++static int				// O - 1 on success, 0 on failure
++http_x509_add_ext(X509       *cert,	// I - Certificate
++                  int        nid,	// I - Extension ID
++                  const char *value)	// I - Value
++{
++  int			ret;		// Return value
++  X509_EXTENSION	*ex = NULL;	// Extension
++  X509V3_CTX		ctx;		// Certificate context
++
++
++  DEBUG_printf(("3http_x509_add_ext(cert=%p, nid=%d, value=\"%s\")", (void *)cert, nid, value));
++
++  // Don't use a configuration database...
++  X509V3_set_ctx_nodb(&ctx);
++
++  // Self-signed certificates use the same issuer and subject...
++  X509V3_set_ctx(&ctx, /*issuer*/cert, /*subject*/cert, /*req*/NULL, /*crl*/NULL, /*flags*/0);
++
++  // Create and add the extension...
++  if ((ex = X509V3_EXT_conf_nid(/*conf*/NULL, &ctx, nid, value)) == NULL)
++  {
++    DEBUG_puts("4http_x509_add_ext: Unable to create extension, returning false.");
++    return (0);
++  }
++
++  ret = X509_add_ext(cert, ex, -1) != 0;
++
++  DEBUG_printf(("4http_x509_add_ext: X509_add_ext returned %s.", ret ? "true" : "false"));
++
++  // Free the extension and return...
++  X509_EXTENSION_free(ex);
++
++  return (ret);
++}
++
++
++//
+ // 'http_x509_add_san()' - Add a subjectAltName extension to an X.509 certificate.
+ //
+ 
+@@ -1572,24 +1646,9 @@
+                   const char *name)	// I - Hostname
+ {
+   char		dns_name[1024];		// DNS: prefixed hostname
+-  X509_EXTENSION *san_ext;		// Extension for subjectAltName
+-  ASN1_OCTET_STRING *san_asn1;		// ASN1 string
+ 
+ 
+   // The subjectAltName value for DNS names starts with a DNS: prefix...
+-  snprintf(dns_name, sizeof(dns_name), "DNS: %s", name);
+-
+-  if ((san_asn1 = ASN1_OCTET_STRING_new()) == NULL)
+-    return;
+-
+-  ASN1_OCTET_STRING_set(san_asn1, (unsigned char *)dns_name, strlen(dns_name));
+-  if ((san_ext = X509_EXTENSION_create_by_NID(NULL, NID_subject_alt_name, 0, san_asn1)) == NULL)
+-  {
+-    ASN1_OCTET_STRING_free(san_asn1);
+-    return;
+-  }
+-
+-  X509_add_ext(cert, san_ext, -1);
+-  X509_EXTENSION_free(san_ext);
+-  ASN1_OCTET_STRING_free(san_asn1);
++  snprintf(dns_name, sizeof(dns_name), "DNS:%s", name);
++  http_x509_add_ext(cert, NID_subject_alt_name, dns_name);
+ }
+diff -ruN cups.orig/xcode/CUPS.xcodeproj/project.pbxproj cups/xcode/CUPS.xcodeproj/project.pbxproj
+--- cups.orig/xcode/CUPS.xcodeproj/project.pbxproj	2022-05-26 09:17:21.000000000 +0300
++++ cups/xcode/CUPS.xcodeproj/project.pbxproj	2024-08-14 13:39:07.878367154 +0300
+@@ -3309,10 +3309,11 @@
+ 		278C58E8136B64B000836530 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
+ 		279AE6F42395B80F004DD600 /* libpam.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpam.tbd; path = usr/lib/libpam.tbd; sourceTree = SDKROOT; };
+ 		27A0347B1A8BDB1300650675 /* lpadmin */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lpadmin; sourceTree = BUILT_PRODUCTS_DIR; };
+-		27C89C8F2613E7C300A58F43 /* cups-snap.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; name = "cups-snap.m4"; path = "../config-scripts/cups-snap.m4"; sourceTree = "<group>"; };
+ 		27C89C902613E7C300A58F43 /* cups-tls.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; name = "cups-tls.m4"; path = "../config-scripts/cups-tls.m4"; sourceTree = "<group>"; };
+ 		27D3037D134148CB00F022B1 /* libcups2.def */ = {isa = PBXFileReference; lastKnownFileType = text; name = libcups2.def; path = ../cups/libcups2.def; sourceTree = "<group>"; };
+ 		27F89DA21B3AC43B00E5A4B7 /* testraster.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = testraster.c; path = ../cups/testraster.c; sourceTree = "<group>"; };
++		27F9A76D28CBFC03002CCEE0 /* tls-openssl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "tls-openssl.c"; path = "../cups/tls-openssl.c"; sourceTree = "<group>"; };
++		27F9A76E28CBFC03002CCEE0 /* tls-darwin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "tls-darwin.h"; path = "../cups/tls-darwin.h"; sourceTree = "<group>"; };
+ 		720DD6C21358FD5F0064AA82 /* snmp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = snmp; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		720DD6D21358FDDE0064AA82 /* snmp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = snmp.c; path = ../backend/snmp.c; sourceTree = "<group>"; };
+ 		720E854120164E7A00C6C411 /* ipp-file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "ipp-file.c"; path = "../cups/ipp-file.c"; sourceTree = "<group>"; };
+@@ -4996,8 +4997,10 @@
+ 				72220F02133305BB00FCA411 /* string.c */,
+ 				72220F03133305BB00FCA411 /* tempfile.c */,
+ 				72220F05133305BB00FCA411 /* thread.c */,
++				27F9A76E28CBFC03002CCEE0 /* tls-darwin.h */,
+ 				270B267D17F5C06700C8A3A9 /* tls-darwin.c */,
+ 				270B267E17F5C06700C8A3A9 /* tls-gnutls.c */,
++				27F9A76D28CBFC03002CCEE0 /* tls-openssl.c */,
+ 				270B268117F5C5D600C8A3A9 /* tls-sspi.c */,
+ 				727AD5B619100A58009F6862 /* tls.c */,
+ 				72220F06133305BB00FCA411 /* transcode.c */,
+@@ -5273,7 +5276,6 @@
+ 				72E65BB018DC799B00097E89 /* cups-pam.m4 */,
+ 				72E65BB118DC799B00097E89 /* cups-poll.m4 */,
+ 				72E65BB318DC799B00097E89 /* cups-sharedlibs.m4 */,
+-				27C89C8F2613E7C300A58F43 /* cups-snap.m4 */,
+ 				72E65BB518DC799B00097E89 /* cups-threads.m4 */,
+ 				27C89C902613E7C300A58F43 /* cups-tls.m4 */,
+ 			);
