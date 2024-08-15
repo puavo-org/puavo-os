@@ -642,7 +642,12 @@
         "mathdemo-abitti": {
             "type": "web",
             "url": "https://math-demo.abitti.fi",
-            "name": "Abitin kaavaeditori",
+            "name": {
+                "fi": "Abitin kaavaeditori",
+                "de": "Abitti-Formeleditor",
+                "en": "Abitti Math editor",
+                "sv": "Abitti formeleditor"
+            },
             "description": "Abitti Mathdemo-kaavaeditori",
             "icon": "xournal",
             "tags": "default, internet, education"
