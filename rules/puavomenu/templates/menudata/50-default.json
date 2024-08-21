@@ -234,6 +234,19 @@
             "tags": "default, internet, education",
             "keywords": "etäopetus, etätyö, etä, remote, distance"
         },
+        "drawio": {
+            "name": "draw.io",
+            "description": {
+                "fi": "draw.io on helppokäyttöinen kaavioiden ja vuokaavioiden luontiohjelma.",
+                "en": "draw.io is a easy-to-use diagram and flowchart creation tool.",
+                "sv": "draw.io är ett lättanvänt verktyg för att skapa diagram och flödesscheman.",
+                "de": "draw.io ist ein benutzerfreundliches Werkzeug zur Erstellung von Diagrammen und Flussdiagrammen."
+            },
+            "tags": "default, graphics",
+            "puavopkg": {
+                "id": "drawio"
+            }
+        },
         "dropbox": {
             "name": "Dropbox",
             "tags": "default",
@@ -1700,7 +1713,8 @@
                 "libreoffice-impress",
                 "libreoffice-draw",
                 "libreoffice-base",
-                "libreoffice-math"
+                "libreoffice-math",
+                "drawio"
             ]
         },
         "menu-applications": {
@@ -1763,7 +1777,8 @@
                 "simple-scan",
                 "libreoffice-writer",
                 "kahoot",
-                "youtube"
+                "youtube",
+                "drawio"
             ]
         },
         "menu-audio": {
@@ -1873,7 +1888,8 @@
                 "teddybear",
                 "libreoffice-writer",
                 "kahoot",
-                "youtube"
+                "youtube",
+                "drawio"
             ]
         },
         "menu-econ": {
@@ -2119,7 +2135,8 @@
                 "freecad",
                 "qcad-cam",
                 "openscad",
-                "FlashPrint5"
+                "FlashPrint5",
+                "drawio"
             ]
         },
         "menu-health": {
