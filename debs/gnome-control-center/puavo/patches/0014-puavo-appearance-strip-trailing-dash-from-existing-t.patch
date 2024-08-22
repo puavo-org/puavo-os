@@ -1,0 +1,45 @@
+From b40586ac0a2f51afdd18be1428fe7d03d81e9bee Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
+Date: Tue, 20 Aug 2024 19:33:01 +0300
+Subject: [PATCH 14/14] [puavo] appearance: strip trailing dash from existing
+ themes
+
+This fixes existing invalid theme names when Appearance panel is
+loaded/activated.
+---
+ panels/background/cc-background-panel.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
+index e1ca58481..86ba48f51 100644
+--- a/panels/background/cc-background-panel.c
++++ b/panels/background/cc-background-panel.c
+@@ -185,7 +185,15 @@ static gchar*
+ get_next_theme (const gchar         *theme,
+                 GDesktopColorScheme color_scheme)
+ {
+-  g_autofree gchar *default_theme = get_default_theme (theme);
++  g_autofree gchar *fixed_theme = NULL;
++  g_autofree gchar *default_theme = NULL;
++
++  if (g_str_has_suffix (theme, "-"))
++    fixed_theme = g_strndup(theme, strlen (theme) - 1);
++  else
++    fixed_theme = g_strdup(theme);
++
++  default_theme = get_default_theme (fixed_theme);
+ 
+   if (!default_theme)
+       return NULL;
+@@ -197,7 +205,7 @@ get_next_theme (const gchar         *theme,
+           if (does_theme_exist(default_theme, DARK_SUFFIXES[i]))
+             return g_strconcat (default_theme, DARK_SUFFIXES[i], NULL);
+         }
+-      g_warning("Dark theme does not exist for theme %s\n", theme);
++      g_warning("Dark theme does not exist for theme %s\n", fixed_theme);
+     }
+ 
+   return g_strdup (default_theme);
+-- 
+2.39.2
+

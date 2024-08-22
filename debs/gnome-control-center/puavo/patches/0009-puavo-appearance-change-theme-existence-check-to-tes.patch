@@ -1,7 +1,7 @@
 From 9dd2bef9ed7e14e19d613852e37be7f2e8ba381d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Fri, 17 May 2024 18:04:39 +0300
-Subject: [PATCH 09/11] [puavo] appearance: change theme existence check to
+Subject: [PATCH 09/14] [puavo] appearance: change theme existence check to
  test only the existence of theme dir
 
 Not all themes have index.theme files, e.g KvArc.
