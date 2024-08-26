@@ -1,7 +1,20 @@
-diff -ruN cups-filters/utils/cups-browsed.c cups-filters/utils/cups-browsed.c
---- cups-filters/utils/cups-browsed.c	2023-03-28 13:06:25.000000000 +0300
-+++ cups-filters/utils/cups-browsed.c	2023-03-28 13:07:46.147111639 +0300
-@@ -7660,8 +7660,9 @@
+diff -ruN cups-filters-1.28.17/utils/cups-browsed.c cups-filters-1.28.17/utils/cups-browsed.c
+--- cups-filters-1.28.17/utils/cups-browsed.c	2023-01-25 03:38:24.000000000 +0200
++++ cups-filters-1.28.17/utils/cups-browsed.c	2024-08-26 12:58:52.583341471 +0300
+@@ -7255,9 +7255,11 @@
+     if (p->uri[0] != '\0') {
+       p->prattrs = get_printer_attributes(p->uri, NULL, 0, NULL, 0, 1);
+       debug_log_out(get_printer_attributes_log);
+-      if (p->prattrs == NULL)
++      if (p->prattrs == NULL) {
+ 	debug_printf("get-printer-attributes IPP call failed on printer %s (%s).\n",
+ 		     p->queue_name, p->uri);
++        goto fail;
++      }
+     }
+   } else {
+ #ifndef HAVE_CUPS_1_6
+@@ -7656,8 +7658,9 @@
    ipp_t         *request;
    time_t        current_time;
    int           i, ap_remote_queue_id_line_inserted,
@@ -13,7 +26,7 @@ diff -ruN cups-filters/utils/cups-browsed.c cups-filters/utils/cups-browsed.c
    char          *ppdfile, *ifscript;
    int           fd = 0;  /* Script file descriptor */
    char          tempfile[1024];  /* Temporary file */
-@@ -7694,6 +7695,10 @@
+@@ -7690,6 +7693,10 @@
    char          *default_pagesize = NULL;
    const char    *default_color = NULL;
    int           cups_queues_updated = 0;
@@ -24,20 +37,31 @@ diff -ruN cups-filters/utils/cups-browsed.c cups-filters/utils/cups-browsed.c
  
    /* Create dummy entry to point slaves at when their master is about to
       get removed now (if we point them to NULL, we would try to remove
-@@ -8507,68 +8512,37 @@
+@@ -8171,6 +8178,7 @@
+ 	  p->timeout = current_time + TIMEOUT_IMMEDIATELY;
+ 	  goto cannot_create;
+ 	}
++
+ 	if (IPPPrinterQueueType == PPD_YES) {
+ 	  num_cluster_printers = 0;
+ 	  for (s = (remote_printer_t *)cupsArrayFirst(remote_printers);
+@@ -8503,7 +8511,11 @@
  	     the PPD's NickName, so that automatic PPD updating by the
  	     distribution's package installation/update infrastructure
  	     is suppressed. */
 -	  /* Generating the ppd file for the remote cups queue */
--	  if (p->prattrs == NULL) {
--	    p->prattrs = get_printer_attributes(p->uri, NULL, 0, NULL, 0, 1);
--	    debug_log_out(get_printer_attributes_log);
--	  }
--	  if (p->prattrs == NULL) {
--	    debug_printf("get-printer-attributes IPP call failed on printer %s (%s).\n",
--			 p->queue_name, p->uri);
--	    goto cannot_create;
--	  }
++
++          /* Check that we get printer attributes here even though we get
++           * PPD-files from server.  The newer cups-browsed code generates
++           * PPD-files here and does it with printer attributes, and those
++           * are fetched here. */
+ 	  if (p->prattrs == NULL) {
+ 	    p->prattrs = get_printer_attributes(p->uri, NULL, 0, NULL, 0, 1);
+ 	    debug_log_out(get_printer_attributes_log);
+@@ -8513,58 +8525,38 @@
+ 			 p->queue_name, p->uri);
+ 	    goto cannot_create;
+ 	  }
 -	  num_cluster_printers = 0;
 -	  for (s = (remote_printer_t *)cupsArrayFirst(remote_printers);
 -	       s; s = (remote_printer_t *)cupsArrayNext(remote_printers)) {
@@ -90,6 +114,7 @@ diff -ruN cups-filters/utils/cups-browsed.c cups-filters/utils/cups-browsed.c
 -	    debug_printf("Generated Default Attributes for local queue %s\n",
 -			 p->queue_name);
 -	  }
++
 +	  if (p->netprinter == 0)
 +	    remote_cups_queue = strtok(p->queue_name,"@");
 +	  remote_http = httpConnectEncryptShortTimeout(p->ip ? p->ip : p->host,
@@ -124,7 +149,7 @@ diff -ruN cups-filters/utils/cups-browsed.c cups-filters/utils/cups-browsed.c
  	  if (ppdfile == NULL) {
  	    /* If we do not want CUPS-generated PPDs or we cannot obtain a
  	       CUPS-generated PPD, for example if CUPS does not create a
-@@ -8676,7 +8650,55 @@
+@@ -8672,7 +8664,55 @@
  		     buf);
  	ap_remote_queue_id_line_inserted = 0;
  	while (cupsFileGets(in, line, sizeof(line))) {
@@ -181,7 +206,7 @@ diff -ruN cups-filters/utils/cups-browsed.c cups-filters/utils/cups-browsed.c
  	    strncpy(keyword, line + 8, sizeof(keyword) - 1);
  	    if ((strlen(line) + 8) > 1023)
  	      keyword[1023] = '\0';
-@@ -8768,6 +8790,8 @@
+@@ -8764,6 +8804,8 @@
  	  }
  	}
  	cupsFilePrintf(out,"*cupsFilter2: \"application/vnd.cups-pdf application/pdf 0 -\"\n");
