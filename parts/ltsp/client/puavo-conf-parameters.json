@@ -143,6 +143,11 @@
     "description": "A space-separated list of printer removal rules, use printer_state:seconds for each item",
     "typehint": "string"
   },
+  "puavo.printing.debug.cups-browsed": {
+    "default": "false",
+    "description": "Enable/disable cups-browsed debug logging",
+    "typehint": "bool"
+  },
   "puavo.printing.default_printer": {
     "default": "",
     "description": "The default printer to use",
