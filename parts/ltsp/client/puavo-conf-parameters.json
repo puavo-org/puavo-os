@@ -80,6 +80,11 @@
   "puavo.printing.cleanup_printers": {
     "default": ""
   },
+  "puavo.printing.debug.cups-browsed": {
+    "default": "false",
+    "description": "Enable/disable cups-browsed debug logging",
+    "typehint": "bool"
+  },
   "puavo.printing.default_printer": {
     "default": ""
   },

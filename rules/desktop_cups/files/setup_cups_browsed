@@ -19,6 +19,11 @@ if [ "$(puavo-conf puavo.printing.airprint.enabled)" = 'false' ]; then
   remote_protocols='cups'
 fi
 
+debug_logging='# DebugLogging file'
+if [ "$(puavo-conf puavo.printing.debug.cups-browsed)" = 'true' ]; then
+  debug_logging='DebugLogging file'
+fi
+
 cat > /etc/cups/cups-browsed.conf.tmp <<EOF
 # All configuration options described here can also be supplied on the
 # command line of cups-browsed via the "-o" option. In case of
@@ -45,7 +50,7 @@ cat > /etc/cups/cups-browsed.conf.tmp <<EOF
 # /var/log/cups/cups-browsed_log ('file'), to stderr ('stderr'), or
 # not at all ('none')?
 
-# DebugLogging file
+${debug_logging}
 # DebugLogging stderr
 # DebugLogging file stderr
 # DebugLogging none
