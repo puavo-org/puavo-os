@@ -1,3 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+loglevel_conf='LogLevel warn'
+if [ "$(puavo-conf puavo.printing.debug.cups)" = 'true' ]; then
+  loglevel_conf='LogLevel debug'
+fi
+
+cat > /etc/cups/cupsd.conf.tmp <<EOF
 #
 # Configuration file for the CUPS scheduler.  See "man cupsd.conf" for a
 # complete description of this file.
@@ -5,7 +15,7 @@
 
 # Log general information in error_log - change "warn" to "debug"
 # for troubleshooting...
-LogLevel warn
+${loglevel_conf}
 PageLogFormat
 
 # Specifies the maximum size of the log files before they are rotated.  The value "0" disables log rotation.
@@ -196,3 +206,6 @@ WebInterface Yes
     Order deny,allow
   </Limit>
 </Policy>
+EOF
+
+mv /etc/cups/cupsd.conf.tmp /etc/cups/cupsd.conf
