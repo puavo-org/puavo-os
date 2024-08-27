@@ -3,6 +3,23 @@
 set -eu
 
 cat <<'EOF' | patch -p1
+--- a/debian/control	2023-12-01 21:35:27.000000000 +0200
++++ b/debian/control	2024-08-27 14:15:23.034745330 +0300
+@@ -13,10 +13,10 @@
+  libavahi-client-dev,
+  libavahi-common-dev,
+  libdbus-1-dev,
+- libgnutls28-dev,
+  libkrb5-dev,
+  libpam0g-dev,
+  libpaper-dev,
++ libssl-dev,
+  libsystemd-dev [linux-any],
+  libtool,
+  libusb-1.0-0-dev [!hurd-any],
+EOF
+
+cat <<'EOF' | patch -p1
 --- a/debian/cups-ipp-utils.install	2024-07-26 12:48:28.121750291 +0300
 +++ b/debian/cups-ipp-utils.install	2024-07-26 12:42:39.674630472 +0300
 @@ -3,4 +3,5 @@
