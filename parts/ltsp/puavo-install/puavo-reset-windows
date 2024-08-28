@@ -68,7 +68,7 @@ logerr() {
   logmsg error "$1"
 }
 
-print0_win_primary_partition_devpaths()
+print0_win_c_partition_devpaths()
 {
     while IFS= read -r -d $'\0' ntfs_partition_devpath; do
         has_dirty_flag=false
@@ -85,7 +85,7 @@ print0_win_primary_partition_devpaths()
             loginfo "Clearing the dirty flag of NTFS volume in '${ntfs_partition_devpath}'..."
             ntfsfix -d "${ntfs_partition_devpath}" >&2 || {
                 logerr "Failed clear the dirty flag of NTFS volume in '${ntfs_partition_devpath}'."
-                continue # To the next possible windows primary partition
+                continue # To the next possible Windows C partition
             }
             was_dirty_flag_cleared=true
         fi
@@ -143,20 +143,20 @@ save_cached_param()
 
 get_win_language_from_partition()
 {
-    local win_language_id win_language win_primary_partition_devpath
+    local win_language_id win_language win_c_partition_devpath
 
-    win_primary_partition_devpath=$1
+    win_c_partition_devpath=$1
     shift
 
-    ntfscat "${win_primary_partition_devpath}" 'Windows/System32/config/SYSTEM' >system_hive || {
-        logerr "Failed to get SYSTEM hive from '${win_primary_partition_devpath}'."
+    ntfscat "${win_c_partition_devpath}" 'Windows/System32/config/SYSTEM' >system_hive || {
+        logerr "Failed to get SYSTEM hive from '${win_c_partition_devpath}'."
         return 1
     }
 
     win_language_id=$(hivexget system_hive 'ControlSet001\Control\Nls\Language' \
                           | sed -r -n 's/"InstallLanguage"="([0-9A-Fa-f]{4})"$/\1/p' \
                           | tr '[:upper:]' '[:lower:]') || {
-        logerr "Failed to parse InstallLanguage from SYSTEM hive of '${win_primary_partition_devpath}'."
+        logerr "Failed to parse InstallLanguage from SYSTEM hive of '${win_c_partition_devpath}'."
         return 1
     }
 
@@ -196,10 +196,10 @@ get_win_language_from_partition()
 
 get_win_language()
 {
-    local win_primary_partition_devpath
-    win_primary_partition_devpath=$1
+    local win_c_partition_devpath
+    win_c_partition_devpath=$1
 
-    if ! get_win_language_from_partition "$win_primary_partition_devpath"; then
+    if ! get_win_language_from_partition "$win_c_partition_devpath"; then
         load_cached_param language || return 1
         loginfo 'Loaded Windows language from reset cache'
     fi
@@ -210,19 +210,19 @@ get_win_language()
 get_win_product_name_from_partition()
 {
     local win_build_number \
-          win_primary_partition_devpath \
+          win_c_partition_devpath \
           win_product_name
 
-    win_primary_partition_devpath=$1
+    win_c_partition_devpath=$1
     shift
 
-    ntfscat "${win_primary_partition_devpath}" 'Windows/System32/config/SOFTWARE' >software_hive || {
-        logerr "Failed to get SOFTWARE hive from '${win_primary_partition_devpath}'."
+    ntfscat "${win_c_partition_devpath}" 'Windows/System32/config/SOFTWARE' >software_hive || {
+        logerr "Failed to get SOFTWARE hive from '${win_c_partition_devpath}'."
         return 1
     }
 
     win_product_name=$(hivexget software_hive 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"ProductName"="(.+)"$/\1/p') || {
-        logerr "Failed to parse ProductName from SOFTWARE hive of '${win_primary_partition_devpath}'."
+        logerr "Failed to parse ProductName from SOFTWARE hive of '${win_c_partition_devpath}'."
         return 1
     }
 
@@ -230,13 +230,13 @@ get_win_product_name_from_partition()
         'Windows 10 Home' | 'Windows 10 Pro' | 'Windows 11 Home' | 'Windows 11 Pro')
             ;;
         *)
-            logerr "Ignoring unsupported '${win_product_name}' on '${win_primary_partition_devpath}'."
+            logerr "Ignoring unsupported '${win_product_name}' on '${win_c_partition_devpath}'."
             return 1
             ;;
     esac
 
     win_build_number=$(hivexget software_hive 'Microsoft\Windows NT\CurrentVersion' | sed -r -n 's/"CurrentBuildNumber"="(.+)"$/\1/p') || {
-        logerr "Failed to parse CurrentBuildNumber from SOFTWARE hive of '${win_primary_partition_devpath}'."
+        logerr "Failed to parse CurrentBuildNumber from SOFTWARE hive of '${win_c_partition_devpath}'."
         return 1
     }
 
@@ -261,10 +261,10 @@ get_win_product_name_from_partition()
 
 get_win_product_name()
 {
-    local win_primary_partition_devpath
-    win_primary_partition_devpath=$1
+    local win_c_partition_devpath
+    win_c_partition_devpath=$1
 
-    if ! get_win_product_name_from_partition "$win_primary_partition_devpath"; then
+    if ! get_win_product_name_from_partition "$win_c_partition_devpath"; then
         load_cached_param product_name || return 1
         loginfo 'Loaded Windows product name from reset cache'
     fi
@@ -535,7 +535,7 @@ choose_wim_image_to_use()
 reset_win()
 {
     local wim_image_baseurl wim_image_name win_language \
-          win_primary_partition_devpath win_product_name
+          win_c_partition_devpath win_product_name
 
     win_product_name=$1
     shift
@@ -543,7 +543,7 @@ reset_win()
     win_language=$1
     shift
 
-    win_primary_partition_devpath=$1
+    win_c_partition_devpath=$1
     shift
 
     wim_image_baseurl=$(get_wim_catalogue) || return 1
@@ -551,7 +551,7 @@ reset_win()
     wim_image_name=$(choose_wim_image_to_use "$win_language" \
                                              "$win_product_name")
 
-    loginfo "Reseting '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'..."
+    loginfo "Reseting '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'..."
 
     fetch_wim_image "$wim_image_baseurl" "$wim_image_name" || {
         logerr "Failed to fetch WIM file for '${win_product_name} (${win_language})'."
@@ -560,29 +560,29 @@ reset_win()
 
     wim_image_index=$(print0_wim_image_index "$wim_image_name" "$win_product_name")
 
-    loginfo "Securely erasing Windows on '${win_primary_partition_devpath}'"
-    blkdiscard "${win_primary_partition_devpath}" || {
-        logerr "Failed to run blkdiscard to '${win_primary_partition_devpath}'"
+    loginfo "Securely erasing Windows on '${win_c_partition_devpath}'"
+    blkdiscard "${win_c_partition_devpath}" || {
+        logerr "Failed to run blkdiscard to '${win_c_partition_devpath}'"
         return 1
     }
     loginfo "Secure erase done."
 
-    loginfo "Re-creating NTFS filesystem on '${win_primary_partition_devpath}'..."
+    loginfo "Re-creating NTFS filesystem on '${win_c_partition_devpath}'..."
     # Force needed to overwrite the existing filesystem without questions.
-    mkfs.ntfs -f "${win_primary_partition_devpath}" || {
-        logerr "Failed to create NTFS filesystem on '${win_primary_partition_devpath}'"
+    mkfs.ntfs -f "${win_c_partition_devpath}" || {
+        logerr "Failed to create NTFS filesystem on '${win_c_partition_devpath}'"
         return 1
     }
-    loginfo "Re-created NTFS filesystem on '${win_primary_partition_devpath}'."
+    loginfo "Re-created NTFS filesystem on '${win_c_partition_devpath}'."
 
-    loginfo "Applying WIM image to '${win_primary_partition_devpath}'..."
-    wimapply "${wim_image_name}" "${wim_image_index}" "${win_primary_partition_devpath}" || {
-        logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_image_name}' to '${win_primary_partition_devpath}'."
+    loginfo "Applying WIM image to '${win_c_partition_devpath}'..."
+    wimapply "${wim_image_name}" "${wim_image_index}" "${win_c_partition_devpath}" || {
+        logerr "Failed to apply WIM image '${wim_image_index}' from '${wim_image_name}' to '${win_c_partition_devpath}'."
         return 1
     }
-    loginfo "Applied WIM image to '${win_primary_partition_devpath}'."
+    loginfo "Applied WIM image to '${win_c_partition_devpath}'."
 
-    loginfo "Reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}' to factory settings successfully."
+    loginfo "Reset '${win_product_name} (${win_language})' on '${win_c_partition_devpath}' to factory settings successfully."
 
     return 0
 }
@@ -614,19 +614,19 @@ get_win_language_from_puavo_conf()
 
 reset_all_wins()
 {
-    local returnval win_language win_product_name
+    local returnval win_c_partition_devpath win_language win_product_name
 
     returnval=0
 
-    while IFS= read -r -d $'\0' win_primary_partition_devpath; do
-        win_product_name=$(get_win_product_name "${win_primary_partition_devpath}") || {
-            logerr "Failed to get the product name of Windows on '${win_primary_partition_devpath}'."
+    while IFS= read -r -d $'\0' win_c_partition_devpath; do
+        win_product_name=$(get_win_product_name "${win_c_partition_devpath}") || {
+            logerr "Failed to get the product name of Windows on '${win_c_partition_devpath}'."
             win_product_name='Windows 11 Pro'
             logwarning "Using '${win_product_name}' as a fallback."
         }
 
-        win_language=$(get_win_language "${win_primary_partition_devpath}") || {
-            logerr "Failed to get the language tag of Windows on '${win_primary_partition_devpath}'."
+        win_language=$(get_win_language "${win_c_partition_devpath}") || {
+            logerr "Failed to get the language tag of Windows on '${win_c_partition_devpath}'."
             win_language="$(get_win_language_from_puavo_conf)" || {
                 logerr 'Failed to get fallback Windows language from Puavo configuration, which should never happen!'
                 win_language='English'
@@ -634,27 +634,27 @@ reset_all_wins()
             logwarning "Using '${win_language}' as a fallback."
         }
 
-        loginfo "Detected '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
+        loginfo "Detected '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               "Reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'?" 5 100 || {
-            loginfo "Skipping '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
+               "Reset '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'?" 5 100 || {
+            loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
             continue
         }
 
         $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               "All data will be lost on '${win_primary_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
-            loginfo "Skipping '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
+               "All data will be lost on '${win_c_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
+            loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
             continue
         }
 
-        reset_win "${win_product_name}" "${win_language}" "${win_primary_partition_devpath}" || {
-            logerr "Failed to reset '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'."
+        reset_win "${win_product_name}" "${win_language}" "${win_c_partition_devpath}" || {
+            logerr "Failed to reset '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
             returnval=1
             continue
         }
 
-    done < <(print0_win_primary_partition_devpaths) || {
+    done < <(print0_win_c_partition_devpaths) || {
         logerr "Unexpected termination of Windows reset loop"
         returnval=1
     }
