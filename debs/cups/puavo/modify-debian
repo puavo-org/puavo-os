@@ -4,19 +4,15 @@ set -eu
 
 cat <<'EOF' | patch -p1
 --- a/debian/control	2023-12-01 21:35:27.000000000 +0200
-+++ b/debian/control	2024-08-27 14:15:23.034745330 +0300
-@@ -13,10 +13,10 @@
-  libavahi-client-dev,
-  libavahi-common-dev,
-  libdbus-1-dev,
-- libgnutls28-dev,
-  libkrb5-dev,
-  libpam0g-dev,
-  libpaper-dev,
-+ libssl-dev,
-  libsystemd-dev [linux-any],
-  libtool,
-  libusb-1.0-0-dev [!hurd-any],
++++ b/debian/control	2024-08-28 14:43:51.038966490 +0300
+@@ -30,6 +30,7 @@
+ # libgmp-dev is not GPL-2 compatible before it's 6 release, which makes it also GPL-2+
+ Build-Conflicts:
+  libgmp-dev (<< 2:6),
++ libssl-dev
+ Standards-Version: 4.6.0
+ Vcs-Browser: https://salsa.debian.org/printing-team/cups
+ Vcs-Git: https://salsa.debian.org/printing-team/cups.git
 EOF
 
 cat <<'EOF' | patch -p1
