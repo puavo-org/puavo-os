@@ -532,7 +532,7 @@ choose_wim_image_to_use()
     printf "%s\n" "$preferred_versions"
 }
 
-reset_win()
+install_win()
 {
     local wim_image_baseurl wim_image_name win_language \
           win_c_partition_devpath win_product_name
@@ -551,7 +551,7 @@ reset_win()
     wim_image_name=$(choose_wim_image_to_use "$win_language" \
                                              "$win_product_name")
 
-    loginfo "Reseting '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'..."
+    loginfo "Installing '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'..."
 
     fetch_wim_image "$wim_image_baseurl" "$wim_image_name" || {
         logerr "Failed to fetch WIM file for '${win_product_name} (${win_language})'."
@@ -560,20 +560,20 @@ reset_win()
 
     wim_image_index=$(print0_wim_image_index "$wim_image_name" "$win_product_name")
 
-    loginfo "Securely erasing Windows on '${win_c_partition_devpath}'"
+    loginfo "Securely erasing '${win_c_partition_devpath}'"
     blkdiscard "${win_c_partition_devpath}" || {
         logerr "Failed to run blkdiscard to '${win_c_partition_devpath}'"
         return 1
     }
     loginfo "Secure erase done."
 
-    loginfo "Re-creating NTFS filesystem on '${win_c_partition_devpath}'..."
+    loginfo "Creating NTFS filesystem on '${win_c_partition_devpath}'..."
     # Force needed to overwrite the existing filesystem without questions.
     mkfs.ntfs -f "${win_c_partition_devpath}" || {
         logerr "Failed to create NTFS filesystem on '${win_c_partition_devpath}'"
         return 1
     }
-    loginfo "Re-created NTFS filesystem on '${win_c_partition_devpath}'."
+    loginfo "Created NTFS filesystem on '${win_c_partition_devpath}'."
 
     loginfo "Applying WIM image to '${win_c_partition_devpath}'..."
     wimapply "${wim_image_name}" "${wim_image_index}" "${win_c_partition_devpath}" || {
@@ -582,7 +582,7 @@ reset_win()
     }
     loginfo "Applied WIM image to '${win_c_partition_devpath}'."
 
-    loginfo "Reset '${win_product_name} (${win_language})' on '${win_c_partition_devpath}' to factory settings successfully."
+    loginfo "Installed '${win_product_name} (${win_language})' on '${win_c_partition_devpath}' to factory settings successfully."
 
     return 0
 }
@@ -648,11 +648,13 @@ reset_all_wins()
             continue
         }
 
-        reset_win "${win_product_name}" "${win_language}" "${win_c_partition_devpath}" || {
-            logerr "Failed to reset '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+        install_win "${win_product_name}" "${win_language}" "${win_c_partition_devpath}" || {
+            logerr "Failed to install '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
             returnval=1
             continue
         }
+
+        loginfo "Windows '${win_product_name} (${win_language})' on '${win_c_partition_devpath}' reset to factory defaults."
 
     done < <(print0_win_c_partition_devpaths) || {
         logerr "Unexpected termination of Windows reset loop"
