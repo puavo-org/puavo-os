@@ -1,3 +1,9 @@
+cups (2.3.3op2-3+deb11u6+puavo2+buildonce) bullseye; urgency=medium
+
+  * Fix lpoptions.
+
+ -- Puavo Org <dev@opinsys.fi>  Wed, 28 Aug 2024 08:45:39 +0300
+
 cups (2.3.3op2-3+deb11u6+puavo1+buildonce) bullseye; urgency=medium
 
   * Add puavo-no-avahi-printers.patch to potentially suppress
