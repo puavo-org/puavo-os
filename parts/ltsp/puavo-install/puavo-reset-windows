@@ -612,50 +612,62 @@ get_win_language_from_puavo_conf()
     printf '%s' "${win_language}"
 }
 
+reset_win()
+{
+    local win_c_partition_devpath win_language win_product_name
+
+    win_c_partition_devpath=$1
+    shift
+
+    win_product_name=$(get_win_product_name "${win_c_partition_devpath}") || {
+        logerr "Failed to get the product name of Windows on '${win_c_partition_devpath}'."
+        win_product_name='Windows 11 Pro'
+        logwarning "Using '${win_product_name}' as a fallback."
+    }
+
+    win_language=$(get_win_language "${win_c_partition_devpath}") || {
+        logerr "Failed to get the language tag of Windows on '${win_c_partition_devpath}'."
+        win_language="$(get_win_language_from_puavo_conf)" || {
+            logerr 'Failed to get fallback Windows language from Puavo configuration, which should never happen!'
+            win_language='English'
+        }
+        logwarning "Using '${win_language}' as a fallback."
+    }
+
+    loginfo "Detected '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+
+    $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+           "Reset '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'?" 5 100 || {
+        loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+        return 0
+    }
+
+    $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+           "All data will be lost on '${win_c_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
+        loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+        return 0
+    }
+
+    install_win "${win_product_name}" "${win_language}" "${win_c_partition_devpath}" || {
+        logerr "Failed to install '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+        return 1
+    }
+
+    loginfo "Windows '${win_product_name} (${win_language})' on '${win_c_partition_devpath}' reset to factory defaults."
+
+    return 0
+}
+
 reset_all_wins()
 {
-    local returnval win_c_partition_devpath win_language win_product_name
+    local returnval win_c_partition_devpath
 
     returnval=0
 
     while IFS= read -r -d $'\0' win_c_partition_devpath; do
-        win_product_name=$(get_win_product_name "${win_c_partition_devpath}") || {
-            logerr "Failed to get the product name of Windows on '${win_c_partition_devpath}'."
-            win_product_name='Windows 11 Pro'
-            logwarning "Using '${win_product_name}' as a fallback."
-        }
-
-        win_language=$(get_win_language "${win_c_partition_devpath}") || {
-            logerr "Failed to get the language tag of Windows on '${win_c_partition_devpath}'."
-            win_language="$(get_win_language_from_puavo_conf)" || {
-                logerr 'Failed to get fallback Windows language from Puavo configuration, which should never happen!'
-                win_language='English'
-            }
-            logwarning "Using '${win_language}' as a fallback."
-        }
-
-        loginfo "Detected '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
-
-        $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               "Reset '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'?" 5 100 || {
-            loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
-            continue
-        }
-
-        $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
-               "All data will be lost on '${win_c_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
-            loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
-            continue
-        }
-
-        install_win "${win_product_name}" "${win_language}" "${win_c_partition_devpath}" || {
-            logerr "Failed to install '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+        reset_win "${win_c_partition_devpath}" || {
             returnval=1
-            continue
         }
-
-        loginfo "Windows '${win_product_name} (${win_language})' on '${win_c_partition_devpath}' reset to factory defaults."
-
     done < <(print0_win_c_partition_devpaths) || {
         logerr "Unexpected termination of Windows reset loop"
         returnval=1
