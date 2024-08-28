@@ -5,10 +5,12 @@ set -o pipefail
 
 usage() {
   cat <<EOF
-$(basename "$0") [--force]
+$(basename "$0") [--force] [WIN_C_PARTITION_DEVPATH]
 
 By default, scans all block devices for Windows C partitions and
-resets them. User is asked for confirmation unless --force is used.
+resets them. User is asked for confirmation on each one, unless
+--force is used. If WIN_C_PARTITION_DEVPATH is given, only it is
+reset, not all.
 
   --force               no questions asked
 EOF
@@ -19,6 +21,7 @@ EOF
 g_exitval=1                             # Premature exit is an error by default.
 g_use_force=false                       # --force sets to true
 g_lockfd=                               # Will be set when lockfile is opened
+g_win_c_partition_devpath=              # can be passed as arg, but if not given, all found C partitions will be reset
 G_RESET_STATE_DIR=/state/windows
 G_WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
 G_WIM_CATALOGUE_PATH="${G_WORK_DIR}/wim.json"
@@ -665,9 +668,11 @@ reset_all_wins()
     returnval=0
 
     while IFS= read -r -d $'\0' win_c_partition_devpath; do
-        reset_win "${win_c_partition_devpath}" || {
-            returnval=1
-        }
+        if [ -z "${g_win_c_partition_devpath}" -o "${g_win_c_partition_devpath}" = "${win_c_partition_devpath}" ]; then
+            reset_win "${win_c_partition_devpath}" || {
+                returnval=1
+            }
+        fi
     done < <(print0_win_c_partition_devpaths) || {
         logerr "Unexpected termination of Windows reset loop"
         returnval=1
@@ -686,11 +691,20 @@ while [ $# -ne 0 ]; do
             shift
             break
             ;;
-        *)
+        -*)
+            logerr "invalid argument '$1'"
             usage
+            ;;
+        *)
+            break
             ;;
     esac
 done
+
+if [ $# -eq 1 ]; then
+    g_win_c_partition_devpath=$1
+    shift
+fi
 
 [ $# -eq 0 ] || usage
 
