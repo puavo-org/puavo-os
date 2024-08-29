@@ -92,7 +92,7 @@ set_first_homepage() {
   '
 }
 
-default_args='--disable-infobars --no-default-browser-check --no-first-run'
+default_args='--disable-infobars --disable-search-engine-choice-screen --no-default-browser-check --no-first-run'
 extra_args=$(puavo-conf puavo.www.chromium.extra_args 2>/dev/null) || true
 
 if ! fix_browser_lock; then
