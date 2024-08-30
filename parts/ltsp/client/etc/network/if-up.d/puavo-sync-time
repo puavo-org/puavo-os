@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -eu
+
+if [ "${ADDRFAM:-}" != 'inet' ]; then
+  # we should support both "inet" and "inet6" but we do not want to run
+  # this twice (separately for both)
+  exit 0
+fi
+
+if [ "${IFACE:-}" = 'lo' -o "${IFACE:-}" = '--all' ]; then
+  # skip these interfaces
+  exit 0
+fi
+
+if [ "${PHASE:-}" != 'post-up' ]; then
+  # run when interface gets up
+  exit 0
+fi
+
+(
+  sleep 2
+
+  case "${IFACE:-}" in
+    vpn*)
+      ntp_server=$(awk -F= '$1 == "NTP" { print $2; exit(0) }' \
+                     /etc/systemd/timesyncd.conf.d/puavo.conf)
+      if [ -n "$ntp_server" ]; then
+        if ntpdig -Ss -M 10000 "$ntp_server"; then
+          exit 0
+        fi
+      fi
+      ;;
+  esac
+
+  fallback_ntp_servers=$(awk -F= '$1 ~ /FallbackNTP/ { print $2; exit(0) }' \
+			   /etc/systemd/timesyncd.conf)
+  for ntp_server in $fallback_ntp_servers; do
+    if ntpdig -Ss -M 10000 "$ntp_server"; then
+      exit 0
+    fi
+  done
+) &

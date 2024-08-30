@@ -22,18 +22,17 @@ installdirs :
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-client/pam
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
-	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
-	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
-	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/gdm/greeter/autostart
@@ -44,6 +43,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/sounds/puavo
 	mkdir -p $(DESTDIR)$(datarootdir)/wayland-sessions
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
+	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
@@ -86,10 +86,12 @@ install : installdirs
 		puavo-sysmerge-onedir \
 		puavo-test-hardware
 
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
+		etc/network/if-up.d/puavo-sync-time
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-bootserver-dnsmasq \
-		etc/puavo-vpn-client/scripts/route-up/10-puavo-vpn-client-dnsmasq \
-		etc/puavo-vpn-client/scripts/route-up/30-sntp
+		etc/puavo-vpn-client/scripts/route-up/10-puavo-vpn-client-dnsmasq
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d \
 		etc/systemd/system/systemd-udevd.service.d/puavo-ltsp-client.conf
