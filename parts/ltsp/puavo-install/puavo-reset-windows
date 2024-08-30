@@ -16,37 +16,37 @@ EOF
 }
 
 ## Globals
-exitval=1                             # Premature exit is an error by default.
-use_force=false                       # --force sets to true
-lockfd=                               # Will be set when lockfile is opened
-RESET_STATE_DIR=/state/windows
-WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
-WIM_CATALOGUE_PATH="${WORK_DIR}/wim.json"
-PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
+g_exitval=1                             # Premature exit is an error by default.
+g_use_force=false                       # --force sets to true
+g_lockfd=                               # Will be set when lockfile is opened
+G_RESET_STATE_DIR=/state/windows
+G_WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
+G_WIM_CATALOGUE_PATH="${G_WORK_DIR}/wim.json"
+G_PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
 
 on_exit()
 {
     set +e
 
     loginfo 'Unmounting WIM files...'
-    find "${WORK_DIR}" -type d -name '*.mountpoint' -exec umount -q {} \;
+    find "${G_WORK_DIR}" -type d -name '*.mountpoint' -exec umount -q {} \;
     loginfo 'Unmounted WIM files.'
 
-    loginfo "Removing working directory '${WORK_DIR}'..."
-    rm -rf "${WORK_DIR}"
-    loginfo "Removed working directory '${WORK_DIR}'."
+    loginfo "Removing working directory '${G_WORK_DIR}'..."
+    rm -rf "${G_WORK_DIR}"
+    loginfo "Removed working directory '${G_WORK_DIR}'."
 
-    loginfo "Removing PID file '${PID_FILE}'..."
-    rm -f "${PID_FILE}"
-    loginfo "Removed PID file '${PID_FILE}'."
+    loginfo "Removing PID file '${G_PID_FILE}'..."
+    rm -f "${G_PID_FILE}"
+    loginfo "Removed PID file '${G_PID_FILE}'."
 
-    if [ $exitval -ne 0 ]; then
+    if [ $g_exitval -ne 0 ]; then
         logerr 'Failed!'
     else
         loginfo 'Succeeded.'
     fi
 
-    exit $exitval
+    exit $g_exitval
 }
 
 logmsg() {
@@ -81,7 +81,7 @@ print0_win_c_partition_devpaths()
         fi
         set -o pipefail
 
-        if $use_force && $has_dirty_flag; then
+        if $g_use_force && $has_dirty_flag; then
             loginfo "Clearing the dirty flag of NTFS volume in '${ntfs_partition_devpath}'..."
             ntfsfix -d "${ntfs_partition_devpath}" >&2 || {
                 logerr "Failed clear the dirty flag of NTFS volume in '${ntfs_partition_devpath}'."
@@ -123,7 +123,7 @@ load_cached_param()
     local key value
     key=$1
 
-    if ! value=$(cat "${RESET_STATE_DIR}/${key}" 2>/dev/null); then
+    if ! value=$(cat "${G_RESET_STATE_DIR}/${key}" 2>/dev/null); then
         logerr "Could not load '${key}' parameter from cache"
         return 1
     fi
@@ -136,9 +136,9 @@ save_cached_param()
     local key value
     key=$1
     value=$2
-    mkdir -p "$RESET_STATE_DIR" || return 1
-    printf "%s\n" "$value" > "${RESET_STATE_DIR}/${key}.tmp" || return 1
-    mv "${RESET_STATE_DIR}/${key}.tmp" "${RESET_STATE_DIR}/${key}" || return 1
+    mkdir -p "$G_RESET_STATE_DIR" || return 1
+    printf "%s\n" "$value" > "${G_RESET_STATE_DIR}/${key}.tmp" || return 1
+    mv "${G_RESET_STATE_DIR}/${key}.tmp" "${G_RESET_STATE_DIR}/${key}" || return 1
 }
 
 get_win_language_from_partition()
@@ -312,7 +312,7 @@ verify_wim_image()
     loginfo "Verifying WIM file '${wim_image_name}'..."
     jq -r --arg wim_image "$wim_image_name" '
           .images[$wim_image].sha512sum + " " + $wim_image
-        ' "$WIM_CATALOGUE_PATH" \
+        ' "$G_WIM_CATALOGUE_PATH" \
       | sha512sum --strict --status -c || {
         logerr "Failed to verify WIM file '${wim_image_name}'."
         return 1
@@ -467,8 +467,8 @@ get_wim_catalogue()
 
     wim_image_source_urls=$(puavo-conf puavo.windows.image.sources)
 
-    wim_gpg_tmppath="${WIM_CATALOGUE_PATH}.gpg.tmp"
-    wim_tmppath="${WIM_CATALOGUE_PATH}.tmp"
+    wim_gpg_tmppath="${G_WIM_CATALOGUE_PATH}.gpg.tmp"
+    wim_tmppath="${G_WIM_CATALOGUE_PATH}.tmp"
 
     for url in $wim_image_source_urls; do
         if ! wget_with_certauth -q \
@@ -485,7 +485,7 @@ get_wim_catalogue()
             continue
         fi
 
-        mv "$wim_tmppath" "$WIM_CATALOGUE_PATH" || return 1
+        mv "$wim_tmppath" "$G_WIM_CATALOGUE_PATH" || return 1
         printf "%s/images" "${url%/*}"          || return 1
         return 0
     done
@@ -636,13 +636,13 @@ reset_win()
 
     loginfo "Detected '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
 
-    $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+    $g_use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
            "Reset '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'?" 5 100 || {
         loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
         return 0
     }
 
-    $use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+    $g_use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
            "All data will be lost on '${win_c_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
         loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
         return 0
@@ -679,7 +679,7 @@ reset_all_wins()
 while [ $# -ne 0 ]; do
     case "$1" in
         --force)
-            use_force=true
+            g_use_force=true
             shift
             ;;
         --)
@@ -699,21 +699,21 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-exec {lockfd}<> "${PID_FILE}"
-flock -x -n "${lockfd}" || {
+exec {g_lockfd}<> "${G_PID_FILE}"
+flock -x -n "${g_lockfd}" || {
     logerr "puavo-reset-windows is already running!"
     exit 1
 }
 
 trap on_exit EXIT
 
-echo "$$" >"${PID_FILE}"
+echo "$$" >"${G_PID_FILE}"
 
-install -d -m 0700 "${WORK_DIR}"
-cd "${WORK_DIR}"
-loginfo "Changed current working directory to '${WORK_DIR}'."
+install -d -m 0700 "${G_WORK_DIR}"
+cd "${G_WORK_DIR}"
+loginfo "Changed current working directory to '${G_WORK_DIR}'."
 
 reset_all_wins
 
 # Reached the end, everything is fine then.
-exitval=0
+g_exitval=0
