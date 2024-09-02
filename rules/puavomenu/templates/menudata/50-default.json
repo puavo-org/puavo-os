@@ -1,5 +1,9 @@
 {
     "programs": {
+        "abicus": {
+            "keywords": "abitti",
+            "tags": "default"
+        },
         "acroread": {
             "name": "Acrobat Reader",
             "tags": "default",
@@ -519,6 +523,14 @@
                 "id": "av4kav"
             }
         },
+        "ketcher-demo": {
+            "type": "web",
+            "url": "https://lifescience.opensource.epam.com/KetcherDemoSA/index.html",
+            "name": "Ketcher",
+            "description": "Ketcher Demo version",
+            "icon": "kalzium",
+            "tags": "abitti, default, education"
+        },
         "kojo": {
             "name": "Kojo",
             "tags": "default",
@@ -666,6 +678,9 @@
             "tags": "default, internet, education"
         },
         "mattermost-desktop": {
+            "tags": "default"
+        },
+        "MetaSearch9": {
             "tags": "default"
         },
         "meshlab": {
@@ -1687,6 +1702,7 @@
                 "geogebra",
                 "geogebra6",
                 "io.github.wxmaxima_developers.wxMaxima",
+                "abicus",
                 "org.kde.kcalc",
                 "speedcrunch",
                 "ti_nspire_cx_cas_ss",
@@ -1695,10 +1711,12 @@
                 "ti6_nspire_cx",
                 "ti6_nspire_cx_cas_ss",
                 "ClassPadManagerforClassPadII",
+                "mathdemo-abitti",
                 "LoggerPro",
                 "LoggerPro3",
                 "sparkvue",
                 "MarvinSketch",
+                "ketcher-demo",
                 "dia",
                 "mousepad",
                 "libreoffice-writer",
@@ -1721,6 +1739,7 @@
             "programs": [
                 "org.gnome.Calculator",
                 "speedcrunch",
+                "abicus",
                 "org.gnome.gedit",
                 "mousepad",
                 "gucharmap",
@@ -1839,6 +1858,7 @@
             "icon": "/usr/share/icons/hicolor/48x48/apps/kalzium.png",
             "programs": [
                 "avogadro2",
+                "ketcher-demo",
                 "MarvinSketch",
                 "MarvinView",
                 "org.molview",
@@ -1959,6 +1979,7 @@
                 "ClassPadManagerforClassPadII",
                 "avogadro2",
                 "org.kde.kalzium",
+                "ketcher-demo",
                 "MarvinSketch",
                 "MarvinView",
                 "org.molview",
@@ -2253,6 +2274,7 @@
                 "geogebra6",
                 "logicsim3",
                 "org.kde.kmplot",
+                "abicus",
                 "org.gnome.Calculator",
                 "mathdemo-abitti",
                 "teddybear",
@@ -2315,6 +2337,7 @@
                 "ica-word",
                 "ica-excel",
                 "ica-powerpoint",
+                "MetaSearch9",
                 "projectlibre",
                 "texmaker",
                 "com.github.xournalpp.xournalpp",

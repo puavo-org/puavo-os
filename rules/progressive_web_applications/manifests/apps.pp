@@ -7,8 +7,8 @@ class progressive_web_applications::apps {
       url    => 'https://graphicalanalysis.app';
 
     'teams':
-      app_id  => 'ibdmcfbponkigmniimeihhiafmeifncn',
+      app_id  => 'cifhbcnohmdccbgoicgdjpfamggdegmo',
       browser => 'chrome',
-      url     => 'https://teams.live.com/manifest.json';
+      url     => 'https://teams.microsoft.com/manifest.json';
   }
 }
