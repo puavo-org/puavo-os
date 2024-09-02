@@ -1,4 +1,6 @@
 class exammode {
+  include ::puavo_conf
+
   # Disable VT switching from keyboard.
   # The examination mode requires this for security.
   # XXX Note that Wayland may need something like this as well?
@@ -79,6 +81,11 @@ class exammode {
       shell      => '/usr/local/bin/puavo-examusersh',
       system     => true,
       uid        => $puavo_examuser_uid;
+  }
+
+  ::puavo_conf::definition {
+    'puavo-exammode.json':
+      source => 'puppet:///modules/exammode/puavo-exammode.json';
   }
 
   Package <|
