@@ -523,6 +523,14 @@
                 "id": "av4kav"
             }
         },
+        "ketcher-demo": {
+            "type": "web",
+            "url": "https://lifescience.opensource.epam.com/KetcherDemoSA/index.html",
+            "name": "Ketcher",
+            "description": "Ketcher Demo version",
+            "icon": "kalzium",
+            "tags": "abitti, default, education"
+        },
         "kojo": {
             "name": "Kojo",
             "tags": "default",
@@ -1710,10 +1718,12 @@
                 "ti6_nspire_cx",
                 "ti6_nspire_cx_cas_ss",
                 "ClassPadManagerforClassPadII",
+                "mathdemo-abitti",
                 "LoggerPro",
                 "LoggerPro3",
                 "sparkvue",
                 "MarvinSketch",
+                "ketcher-demo",
                 "dia",
                 "mousepad",
                 "libreoffice-writer",
@@ -1855,6 +1865,7 @@
             "icon": "/usr/share/icons/hicolor/48x48/apps/kalzium.png",
             "programs": [
                 "avogadro2",
+                "ketcher-demo",
                 "MarvinSketch",
                 "MarvinView",
                 "org.molview",
@@ -1976,6 +1987,7 @@
                 "ClassPadManagerforClassPadII",
                 "avogadro2",
                 "org.kde.kalzium",
+                "ketcher-demo",
                 "MarvinSketch",
                 "MarvinView",
                 "org.molview",
