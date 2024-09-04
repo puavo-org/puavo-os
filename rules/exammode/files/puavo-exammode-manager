@@ -5,6 +5,7 @@ require 'eventmachine'
 require 'faye/websocket'
 require 'json'
 require 'puavo/conf'
+require 'puavo/rest-client'
 require 'syslog'
 require 'uri'
 
@@ -43,9 +44,21 @@ class ExamsListener
     valid_exam_list.first
   end
 
+  def get_access_token_from_puavo_rest(krb5ccname)
+    ENV['KRB5CCNAME'] = krb5ccname
+    client = PuavoRestClient.new(:auth => :kerberos, :dns => :no)
+    # XXX not a real access token now, but should use a similar url
+    # XXX to retrieve it
+    r = client.get('/v3/whoami')
+    return 'FAKETOKEN'
+  end
+
   def connect_and_wait(username, krb5ccname)
     Syslog.log(Syslog::LOG_NOTICE, 'opening websocket to %s',
                $examomatic_url)
+
+    # XXX what if this fails?
+    access_token = get_access_token_from_puavo_rest(krb5ccname)
 
     EM.run do
       begin
@@ -53,7 +66,8 @@ class ExamsListener
 
         @websocket.on(:open) do |event|
           Syslog.log(Syslog::LOG_NOTICE, 'websocket connection established')
-          @websocket.send(username)
+          open_request = { :access_token => access_token }.to_json
+          @websocket.send(open_request)
         end
 
         @websocket.on(:message) do |event|
