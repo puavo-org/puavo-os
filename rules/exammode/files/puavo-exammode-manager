@@ -1,11 +1,8 @@
 #!/usr/bin/ruby
 
-# XXX dependencies: ruby-gssapi ruby-http
-# XXX gssapi maybe through Gemfile?  (the deb package version has a bad bug)
-
 require 'dbus'
-# XXX require 'gssapi'
-# XXX require 'http'
+require 'eventmachine'
+require 'faye/websocket'
 require 'json'
 require 'puavo/conf'
 require 'syslog'
@@ -36,34 +33,12 @@ class ExamsListener
     @listener = Thread.new { connect_and_wait(username, krb5ccname) }
   end
 
-  # XXX
-  def fake_exams
-    return JSON.parse( IO.read('/state/fake_exams.json') )
-
-    # XXX should be something like this (in JSON)
-    {
-      'version' => '1.0',
-      'exams' => [
-        {
-          'id'   => 123,
-          'name' => 'An Exam On Puavo',
-          'params' => {
-            'url' => 'https://puavo.org',
-          },
-          'type' => 'single-window-webpage',
-        }
-      ]
-    }
-  end
-
   def destroy
     @listener.exit
   end
 
-  def request_exams(username, krb5ccname)
-    # XXX fake exams for now (we do not have a service yet for this)
-    return fake_exams
-
+  def request_exams_kerberos(username, krb5ccname)
+    # XXX username not used here do we need it for anything?
     ENV['KRB5CCNAME'] = krb5ccname
     headers = { 'Host' => $puavo_domain }
     uri = URI($examomatic_url)
@@ -74,7 +49,6 @@ class ExamsListener
     http = http.auth("Negotiate #{ Base64.strict_encode64(token) }")
     r = http.get(uri)
     JSON.parse(r.body.to_s)
-
     # XXX this should probably also check data validity
   end
 
@@ -85,25 +59,35 @@ class ExamsListener
   end
 
   def connect_and_wait(username, krb5ccname)
-    Syslog.log(Syslog::LOG_NOTICE, 'connecting websocket to %s',
+    Syslog.log(Syslog::LOG_NOTICE, 'opening websocket to %s',
                $examomatic_url)
-    # XXX should open a websocket to $exammomatic_url (instead of this)
-    # XXX using username + krb5ccname and then receive current_exam from there
-    loop do
-      # XXX instead of sleep, we should react to messages received on websocket
-      sleep 10
-      begin
-        current_exams = request_exams(username, krb5ccname)
-      rescue StandardError => e
-        Syslog.log(Syslog::LOG_ERR, 'error in requesting exams information: %s',
-                   e.message)
-        next
-      end
 
-      # XXX this comparison should make a deep comparison of hash
-      if @available_exams != current_exams then
-        @available_exams = current_exams
-        @dbus.ExamsAvailable(current_exams.to_json)
+    EM.run do
+      begin
+        @websocket = Faye::WebSocket::Client.new($examomatic_url)
+
+        @websocket.on(:open) do |event|
+          Syslog.log(Syslog::LOG_NOTICE, 'websocket connection established')
+          @websocket.send(username)
+        end
+
+        @websocket.on(:message) do |event|
+          Syslog.log(Syslog::LOG_INFO, 'got message on websocket')
+          puts "> got message event #{ event.inspect }"
+          # current_exams = request_exams(username, krb5ccname)
+
+          # XXX this comparison should make a deep comparison of hash
+          # if @available_exams != current_exams then
+          #   @available_exams = current_exams
+          #   @dbus.ExamsAvailable(current_exams.to_json)
+          # end
+        end
+
+        @websocket.on(:close) do |event|
+          Syslog.log(Syslog::LOG_ERR, 'websocket closed')
+        end
+      rescue StandardError => e
+        Syslog.log(Syslog::LOG_ERR, 'error setting up websocket: %s', e.message)
       end
     end
   end
