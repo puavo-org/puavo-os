@@ -9,7 +9,7 @@ require 'puavo/rest-client'
 require 'syslog'
 require 'uri'
 
-# XXX this should probably use some non-root account
+# XXX this should probably use some non-root account as much as possible
 
 EXAMMODE_DIR = '/var/lib/puavo-exammode'
 EXAMUSER_UID = 989
@@ -53,39 +53,45 @@ class ExamsListener
     return 'FAKETOKEN'
   end
 
+  def handle_server_message(data)
+    # XXX error handling
+    server_msg = JSON.parse(data)
+    current_exams = server_msg
+
+    # XXX threads and synchronization?
+    if @available_exams != current_exams then
+      @available_exams = current_exams
+      @dbus.ExamsAvailable(current_exams.to_json)
+    end
+  end
+
   def connect_and_wait(username, krb5ccname)
     Syslog.log(Syslog::LOG_NOTICE, 'opening websocket to %s',
                $examomatic_url)
 
-    # XXX what if this fails?
+    # XXX what if this fails? ... should try again later
     access_token = get_access_token_from_puavo_rest(krb5ccname)
 
     EM.run do
       begin
         @websocket = Faye::WebSocket::Client.new($examomatic_url)
 
-        @websocket.on(:open) do |event|
+        @websocket.on(:open) do |msgevent|
           Syslog.log(Syslog::LOG_NOTICE, 'websocket connection established')
-          open_request = { :access_token => access_token }.to_json
-          @websocket.send(open_request)
+          reqdata = { :type => 'access_request', :access_token => access_token }
+          @websocket.send(reqdata.to_json)
         end
 
-        @websocket.on(:message) do |event|
+        @websocket.on(:message) do |msgevent|
           Syslog.log(Syslog::LOG_INFO, 'got message on websocket')
-          puts "> got message event #{ event.inspect }"
-          # current_exams = request_exams(username, krb5ccname)
-
-          # XXX this comparison should make a deep comparison of hash
-          # if @available_exams != current_exams then
-          #   @available_exams = current_exams
-          #   @dbus.ExamsAvailable(current_exams.to_json)
-          # end
+          handle_server_message(msgevent.data)
         end
 
-        @websocket.on(:close) do |event|
+        @websocket.on(:close) do |msgevent|
           Syslog.log(Syslog::LOG_ERR, 'websocket closed')
         end
       rescue StandardError => e
+        # XXX how to deal with this?
         Syslog.log(Syslog::LOG_ERR, 'error setting up websocket: %s', e.message)
       end
     end
