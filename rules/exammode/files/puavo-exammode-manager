@@ -37,21 +37,6 @@ class ExamsListener
     @listener.exit
   end
 
-  def request_exams_kerberos(username, krb5ccname)
-    # XXX username not used here do we need it for anything?
-    ENV['KRB5CCNAME'] = krb5ccname
-    headers = { 'Host' => $puavo_domain }
-    uri = URI($examomatic_url)
-    http = HTTP.headers(headers)
-    gsscli = GSSAPI::Simple.new(uri.host, 'HTTP')
-    # XXX :delegate probably not needed with the examomatic
-    token = gsscli.init_context(nil, :delegate => true)
-    http = http.auth("Negotiate #{ Base64.strict_encode64(token) }")
-    r = http.get(uri)
-    JSON.parse(r.body.to_s)
-    # XXX this should probably also check data validity
-  end
-
   def get_exam_info_by_id(id)
     valid_exam_list = @available_exams['exams'].select { |e| e['id'] == id }
     raise 'could not find exam by id' unless valid_exam_list.count == 1
