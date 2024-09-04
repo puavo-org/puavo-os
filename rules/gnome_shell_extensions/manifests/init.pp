@@ -71,8 +71,8 @@ class gnome_shell_extensions {
   }
 
   ::puavo_conf::definition {
-    'screenkeyboardcontroller.json':
-      source => 'puppet:///modules/gnome_shell_extensions/screenkeyboardcontroller.json';
+    'puavo-screenkeyboardcontroller.json':
+      source => 'puppet:///modules/gnome_shell_extensions/puavo-screenkeyboardcontroller.json';
   }
 
   ::dconf::schemas::schema {

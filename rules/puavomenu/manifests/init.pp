@@ -44,8 +44,8 @@ class puavomenu {
   }
 
   ::puavo_conf::definition {
-    'puavomenu.json':
-      source => 'puppet:///modules/puavomenu/puavomenu.json';
+    'puavo-menu.json':
+      source => 'puppet:///modules/puavomenu/puavo-menu.json';
   }
 
   ::puavo_conf::script {
