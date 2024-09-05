@@ -1,0 +1,33 @@
+#!/usr/bin/python3
+
+import sys
+
+import gi
+gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+gi.require_version('WebKit2', '4.1')    # explicitly require version 4
+from gi.repository import Gtk, WebKit2
+
+class PuavoExamBrowser(Gtk.Window):
+  def __init__(self, url):
+    super(PuavoExamBrowser, self).__init__()
+
+    self.connect('destroy', Gtk.main_quit)
+
+    self.set_title('Puavo Exam Browser')
+    self.set_position(Gtk.WindowPosition.CENTER)
+    self.maximize()
+
+    self.webview = WebKit2.WebView()
+    self.add(self.webview)
+    self.show_all()
+
+    self.webview.load_uri(url)
+
+
+if len(sys.argv) != 2:
+    print('Usage: puavo-exam-browser url', file=sys.stderr)
+    sys.exit(1)
+
+Gtk.init(sys.argv)
+webwindow = PuavoExamBrowser(sys.argv[1])
+Gtk.main()

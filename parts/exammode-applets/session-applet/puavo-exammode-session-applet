@@ -47,9 +47,7 @@ class SingleWindowWebpage:
   def run_browser(self):
     logmsg(syslog.LOG_NOTICE, 'starting up browser to %s' % self.url)
 
-    cmd = [ '/usr/bin/chromium', '--app=%s' % self.url, '--force-app-mode',
-              '--start-maximized' ]
-
+    cmd = [ '/usr/local/bin/puavo-exam-browser', self.url ]
     (pid, stdin, stdout, stderr) = GLib.spawn_async(cmd,
       flags=GLib.SpawnFlags.DO_NOT_REAP_CHILD|GLib.SpawnFlags.STDERR_TO_DEV_NULL,
       standard_input=True, standard_output=True)
