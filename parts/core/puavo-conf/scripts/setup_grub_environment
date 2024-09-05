@@ -73,12 +73,44 @@ setup_timeout() {
   fi
 }
 
+efibootmgr_set_windows() {
+  boot_entry_state=$1
+  shift
+
+  case "${boot_entry_state}" in
+    active)
+      efibootmgr_a_flag='-a'
+      ;;
+    inactive)
+      efibootmgr_a_flag='-A'
+      ;;
+    *)
+      echo "Invalid argument (${boot_entry_state}), expected 'active' or 'inactive'" >&2
+      return 1
+      ;;
+  esac
+
+  for boot_entry in $(efibootmgr | awk '/Windows/ {print substr($0,5,4)}'); do
+    efibootmgr -q ${efibootmgr_a_flag} -b "${boot_entry}" || return 1
+  done
+
+  return 0
+}
+
 setup_windows_enabled() {
   if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
-    grubedit set "puavo_grub_windows_enabled=true"
+    grubedit set "puavo_grub_windows_enabled=true" || return 1
+    efi_boot_state_windows=active
   else
-    grubedit unset puavo_grub_windows_enabled
+    grubedit unset puavo_grub_windows_enabled || return 1
+    efi_boot_state_windows=inactive
   fi
+
+  if grep -q '^efivarfs ' /proc/mounts; then
+      efibootmgr_set_windows "${efi_boot_state_windows}" || return 1
+  fi
+
+  return 0
 }
 
 get_puavoconf_value() {
