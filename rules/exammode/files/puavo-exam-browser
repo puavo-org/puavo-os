@@ -20,21 +20,41 @@ class PuavoExamBrowser(Gtk.Window):
     self.webview = WebKit2.WebView()
     self.disable_cert_checks()  # XXX perhaps not okay?
 
-    self.add(self.webview)
-    self.show_all()
+    if url == '':
+      self.vbox = Gtk.Box(orientation=Gtk.STYLE_CLASS_VERTICAL)
+      self.vbox.expand = True
+      self.vbox.set_spacing(10)
+
+      self.urlbar = Gtk.Entry()
+      self.urlbar.expand = True
+      self.urlbar.set_text(url)
+      self.urlbar.connect('activate', self.on_change_uri)
+      self.vbox.add(self.urlbar)
+      self.vbox.pack_start(self.webview, True, True, 0)
+      self.add(self.vbox)
+    else:
+      self.add(self.webview)
 
     self.webview.load_uri(url)
 
+    self.show_all()
 
+
+  def on_change_uri(self, widget):
+    new_uri = self.urlbar.get_text()
+    self.webview.load_uri(new_uri)
+
+
+  # XXX is this okay?
   def disable_cert_checks(self):
     web_context = self.webview.get_context()
     web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
 
 
-if len(sys.argv) != 2:
-    print('Usage: puavo-exam-browser url', file=sys.stderr)
-    sys.exit(1)
+url = ''
+if len(sys.argv) == 2:
+    url = sys.argv[1]
 
 Gtk.init(sys.argv)
-webwindow = PuavoExamBrowser(sys.argv[1])
+webwindow = PuavoExamBrowser(url)
 Gtk.main()
