@@ -18,10 +18,17 @@ class PuavoExamBrowser(Gtk.Window):
     self.maximize()
 
     self.webview = WebKit2.WebView()
+    self.disable_cert_checks()  # XXX perhaps not okay?
+
     self.add(self.webview)
     self.show_all()
 
     self.webview.load_uri(url)
+
+
+  def disable_cert_checks(self):
+    web_context = self.webview.get_context()
+    web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
 
 
 if len(sys.argv) != 2:
