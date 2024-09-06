@@ -40,14 +40,22 @@ def logmsg(priority, message):
 class SingleWindowWebpage:
   def __init__(self, params):
     # XXX should verify parameters format?
-    self.url = params['url']
+    if 'url' in params:
+      self.url = params['url']
+    else:
+      self.url = None
+
     self.run_browser()
 
 
   def run_browser(self):
     logmsg(syslog.LOG_NOTICE, 'starting up browser to %s' % self.url)
 
-    cmd = [ '/usr/local/bin/puavo-exam-browser', self.url ]
+    if self.url:
+      cmd = [ '/usr/local/bin/puavo-exam-browser', self.url ]
+    else:
+      cmd = [ '/usr/local/bin/puavo-exam-browser' ]
+
     (pid, stdin, stdout, stderr) = GLib.spawn_async(cmd,
       flags=GLib.SpawnFlags.DO_NOT_REAP_CHILD|GLib.SpawnFlags.STDERR_TO_DEV_NULL,
       standard_input=True, standard_output=True)
@@ -108,6 +116,8 @@ class PuavoExamModeSessionApplet:
 
 
   def handle_session(self):
+    if self.session['type'] == 'free-exammode-session':
+      return SingleWindowWebpage(self.session['params'])
     if self.session['type'] == 'single-window-webpage':
       return SingleWindowWebpage(self.session['params'])
 
