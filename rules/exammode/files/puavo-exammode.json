@@ -1,4 +1,9 @@
 {
+  "puavo.exammode.enabled": {
+    "default": "false",
+    "description": "Enable/disable all exam mode related functionality",
+    "typehint": "bool"
+  },
   "puavo.exammode.examomatic.url": {
     "default": "",
     "description": "URL to get information on available exams",

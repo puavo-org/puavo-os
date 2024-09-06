@@ -117,14 +117,23 @@ class PuavoExammode < DBus::Object
     raise 'session locale missing, has the user registered yet?' \
       unless @locale && @registration_done
 
-    exam_info = @exams_listener.get_exam_info_by_id(exam_id)
+    if exam_id == '' then
+      session_data = {
+        'locale' => @locale,
+        'name'   => 'Exam mode',
+        'params' => {},
+        'type'   => 'free-exammode-session',
+      }
+    else
+      exam_info = @exams_listener.get_exam_info_by_id(exam_id)
+      session_data = {
+        'locale' => @locale,
+        'name'   => exam_info['name'],
+        'params' => exam_info['params'],
+        'type'   => exam_info['type'],
+      }
+    end
 
-    session_data = {
-      'locale' => @locale,
-      'name'   => exam_info['name'],
-      'params' => exam_info['params'],
-      'type'   => exam_info['type'],
-    }
     write_session_specs(session_data)
   end
 

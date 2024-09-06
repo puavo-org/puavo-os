@@ -47,6 +47,10 @@ class exammode {
       mode   => '0755',
       source => 'puppet:///modules/exammode/puavo-examusersh';
 
+    '/usr/local/bin/puavo-exammode-ctrl':
+      mode   => '0755',
+      source => 'puppet:///modules/exammode/puavo-exammode-ctrl';
+
     '/usr/local/sbin/puavo-exammode-manager':
       mode   => '0755',
       source => 'puppet:///modules/exammode/puavo-exammode-manager';
