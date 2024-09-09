@@ -18,6 +18,9 @@ class PuavoExamBrowser(Gtk.Window):
     self.set_size_request(640, 480)
     self.maximize()
 
+    # if a fullscreen is good, how to control it on/off?
+    # XXX self.fullscreen()
+
     self.webview = WebKit2.WebView()
     self.disable_cert_checks()  # XXX perhaps not okay?
 
