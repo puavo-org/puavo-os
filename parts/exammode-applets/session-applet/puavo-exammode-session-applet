@@ -84,6 +84,7 @@ class SingleWindowWebpage:
 
         time.sleep(3)
         self.run_browser()
+        return False
 
     except Exception as e:
       syslog.syslog(syslog.LOG_ERR, 'error when handling browser: %s' % e)
