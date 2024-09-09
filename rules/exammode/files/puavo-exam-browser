@@ -15,6 +15,7 @@ class PuavoExamBrowser(Gtk.Window):
 
     self.set_title('Puavo Exam Browser')
     self.set_position(Gtk.WindowPosition.CENTER)
+    self.set_size_request(640, 480)
     self.maximize()
 
     self.webview = WebKit2.WebView()
@@ -23,7 +24,6 @@ class PuavoExamBrowser(Gtk.Window):
     if url == '':
       self.vbox = Gtk.Box(orientation=Gtk.STYLE_CLASS_VERTICAL)
       self.vbox.expand = True
-      self.vbox.set_spacing(10)
 
       self.urlbar = Gtk.Entry()
       self.urlbar.expand = True
