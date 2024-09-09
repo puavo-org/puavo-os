@@ -21,31 +21,44 @@ class PuavoExamBrowser(Gtk.Window):
     # if a fullscreen is good, how to control it on/off?
     # XXX self.fullscreen()
 
-    self.webview = WebKit2.WebView()
-    self.disable_cert_checks()  # XXX perhaps not okay?
+    self.urlbar = None
+    self.webview_shown = False
 
     if url == '':
-      self.vbox = Gtk.Box(orientation=Gtk.STYLE_CLASS_VERTICAL)
-      self.vbox.expand = True
-
       self.urlbar = Gtk.Entry()
       self.urlbar.expand = True
       self.urlbar.set_text(url)
       self.urlbar.connect('activate', self.on_change_uri)
-      self.vbox.add(self.urlbar)
-      self.vbox.pack_start(self.webview, True, True, 0)
-      self.add(self.vbox)
+      self.add(self.urlbar)
+      self.show_all()
     else:
-      self.add(self.webview)
-
-    self.webview.load_uri(url)
-
-    self.show_all()
+      self.start_browser(url)
 
 
   def on_change_uri(self, widget):
-    new_uri = self.urlbar.get_text()
-    self.webview.load_uri(new_uri)
+    self.start_browser( self.urlbar.get_text() )
+
+
+  def start_browser(self, url):
+    self.webview = WebKit2.WebView()
+    self.disable_cert_checks()  # XXX perhaps not okay?
+
+    self.webview.connect('load-changed', self.load_changed)
+    self.webview.load_uri(url)
+
+
+  def load_changed(self, widget, load_event):
+    if load_event != WebKit2.LoadEvent.FINISHED:
+      return
+
+    if self.urlbar:
+      self.urlbar.destroy()
+      self.urlbar = None
+
+    if not self.webview_shown:
+      self.add(self.webview)
+      self.show_all()
+      self.webview_shown = True
 
 
   # XXX is this okay?
