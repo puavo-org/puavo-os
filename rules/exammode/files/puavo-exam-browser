@@ -21,44 +21,55 @@ class PuavoExamBrowser(Gtk.Window):
     # if a fullscreen is good, how to control it on/off?
     # XXX self.fullscreen()
 
-    self.urlbar = None
+    self.address_entry = None
     self.webview_shown = False
 
+    self.webview = WebKit2.WebView()
+    self.disable_cert_checks()  # XXX perhaps not okay?
+    self.webview.connect('load-changed', self.on_load_changed)
+    self.webview.connect('load-failed',  self.on_load_failed)
+
+    self.load_failed = True
+
     if url == '':
-      self.urlbar = Gtk.Entry()
-      self.urlbar.expand = True
-      self.urlbar.set_text(url)
-      self.urlbar.connect('activate', self.on_change_uri)
-      self.add(self.urlbar)
+      self.address_entry = Gtk.Entry()
+      self.address_entry.expand = True
+      self.address_entry.set_text(url)
+      self.address_entry.connect('activate', self.on_change_uri)
+      self.add(self.address_entry)
       self.show_all()
     else:
-      self.start_browser(url)
+      self.load_failed = False
+      self.webview.load_uri(url)
 
 
   def on_change_uri(self, widget):
-    self.start_browser( self.urlbar.get_text() )
+    self.load_failed = False
+    self.webview.load_uri( self.address_entry.get_text() )
 
 
-  def start_browser(self, url):
-    self.webview = WebKit2.WebView()
-    self.disable_cert_checks()  # XXX perhaps not okay?
-
-    self.webview.connect('load-changed', self.load_changed)
-    self.webview.load_uri(url)
+  def on_load_failed(self, widget, load_event, failing_uri, error):
+    self.load_failed = True
+    return True
 
 
-  def load_changed(self, widget, load_event):
+  def on_load_changed(self, widget, load_event):
     if load_event != WebKit2.LoadEvent.FINISHED:
-      return
+      return True
 
-    if self.urlbar:
-      self.urlbar.destroy()
-      self.urlbar = None
+    if self.load_failed:
+      return True
+
+    if self.address_entry:
+      self.address_entry.destroy()
+      self.address_entry = None
 
     if not self.webview_shown:
       self.add(self.webview)
       self.show_all()
       self.webview_shown = True
+
+    return True
 
 
   # XXX is this okay?
