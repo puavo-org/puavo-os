@@ -9,5 +9,3 @@ if [ -n "$SESSIONFILES" ]; then
     . $SESSIONFILE
   done
 fi
-
-exec /usr/bin/gnome-session "$@"
