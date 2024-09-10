@@ -7,45 +7,60 @@ gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 gi.require_version('WebKit2', '4.1')    # explicitly require version 4
 from gi.repository import Gtk, WebKit2
 
-class PuavoExamBrowser(Gtk.Window):
-  def __init__(self, url):
-    super(PuavoExamBrowser, self).__init__()
 
-    self.connect('destroy', Gtk.main_quit)
+class UriRequestDialog():
+  def __init__(self, exam_browser):
+    self.exam_browser = exam_browser
 
-    self.set_title('Puavo Exam Browser')
-    self.set_position(Gtk.WindowPosition.CENTER)
-    self.set_size_request(640, 480)
-    self.maximize()
 
-    # if a fullscreen is good, how to control it on/off?
-    # XXX self.fullscreen()
+  def setup(self):
+    self.address_entry = Gtk.Entry()
+    self.address_entry.expand = True
+    self.address_entry.connect('activate', self.on_change_uri)
+    self.exam_browser.win.add(self.address_entry)
+    self.exam_browser.win.show_all()
 
-    self.address_entry = None
-    self.webview_shown = False
+
+  def on_change_uri(self, widget):
+    self.exam_browser.load_failed = False
+    self.exam_browser.webview.load_uri( self.address_entry.get_text() )
+
+
+  def remove(self):
+    self.address_entry.destroy()
+
+
+class PuavoExamBrowser():
+  def __init__(self, uri):
+    self.win = Gtk.Window()
+
+
+  def setup_ui(self, uri):
+    self.win.connect('destroy', Gtk.main_quit)
+
+    self.win.set_title('Puavo Exam Browser')
+    self.win.set_position(Gtk.WindowPosition.CENTER)
+    self.win.set_size_request(640, 480)
+    self.win.maximize()
 
     self.webview = WebKit2.WebView()
     self.disable_cert_checks()  # XXX perhaps not okay?
     self.webview.connect('load-changed', self.on_load_changed)
     self.webview.connect('load-failed',  self.on_load_failed)
 
-    self.load_failed = True
+    self.load_failed        = True
+    self.uri_request_dialog = None
+    self.webview_shown      = False
 
-    if url == '':
-      self.address_entry = Gtk.Entry()
-      self.address_entry.expand = True
-      self.address_entry.set_text(url)
-      self.address_entry.connect('activate', self.on_change_uri)
-      self.add(self.address_entry)
-      self.show_all()
+    # if a fullscreen is good, how to control it on/off?
+    # XXX self.fullscreen()
+
+    if uri == '':
+      self.uri_request_dialog = UriRequestDialog(exam_browser)
+      self.uri_request_dialog.setup()
     else:
       self.load_failed = False
-      self.webview.load_uri(url)
-
-
-  def on_change_uri(self, widget):
-    self.load_failed = False
-    self.webview.load_uri( self.address_entry.get_text() )
+      self.webview.load_uri(uri)
 
 
   def on_load_failed(self, widget, load_event, failing_uri, error):
@@ -60,13 +75,13 @@ class PuavoExamBrowser(Gtk.Window):
     if self.load_failed:
       return True
 
-    if self.address_entry:
-      self.address_entry.destroy()
-      self.address_entry = None
+    if self.uri_request_dialog:
+      self.uri_request_dialog.remove()
+      self.uri_request_dialog = None
 
     if not self.webview_shown:
-      self.add(self.webview)
-      self.show_all()
+      self.win.add(self.webview)
+      self.win.show_all()
       self.webview_shown = True
 
     return True
@@ -78,10 +93,11 @@ class PuavoExamBrowser(Gtk.Window):
     web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
 
 
-url = ''
+uri = ''
 if len(sys.argv) == 2:
-    url = sys.argv[1]
+    uri = sys.argv[1]
 
 Gtk.init(sys.argv)
-webwindow = PuavoExamBrowser(url)
+exam_browser = PuavoExamBrowser(uri)
+exam_browser.setup_ui(uri)
 Gtk.main()
