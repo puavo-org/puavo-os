@@ -3,9 +3,25 @@
 import sys
 
 import gi
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
-gi.require_version('WebKit2', '4.1')    # explicitly require version 4
-from gi.repository import Gtk, WebKit2
+gi.require_version('Gdk', '3.0')
+gi.require_version('Gtk', '3.0')
+gi.require_version('WebKit2', '4.1')
+from gi.repository import Gdk, Gtk, WebKit2
+
+CSS = b"""
+#request_uri {
+  font-size: 200%;
+}
+"""
+
+style_provider = Gtk.CssProvider()
+style_provider.load_from_data(CSS)
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(),
+    style_provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+)
 
 
 class UriRequestDialog():
@@ -14,20 +30,31 @@ class UriRequestDialog():
 
 
   def setup(self):
+    self.alignment = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0, name='request_uri')
+    self.vbox = Gtk.Box()
+    self.address_label = Gtk.Label.new('Exam server:')
     self.address_entry = Gtk.Entry()
-    self.address_entry.expand = True
+    self.address_entry.set_width_chars(40)
     self.address_entry.connect('activate', self.on_change_uri)
-    self.exam_browser.win.add(self.address_entry)
+    self.go_button = Gtk.Button.new_with_label('Go')
+    self.go_button.connect('clicked', self.on_change_uri)
+
+    self.vbox.pack_start(self.address_label, False, False, 10)
+    self.vbox.pack_start(self.address_entry, False, False, 10)
+    self.vbox.pack_start(self.go_button,     False, False, 10)
+    self.alignment.add(self.vbox)
+
+    self.exam_browser.win.add(self.alignment)
     self.exam_browser.win.show_all()
 
 
   def on_change_uri(self, widget):
-    self.exam_browser.load_failed = False
-    self.exam_browser.webview.load_uri( self.address_entry.get_text() )
+    uri = self.address_entry.get_text()
+    self.exam_browser.try_uri(uri)
 
 
   def remove(self):
-    self.address_entry.destroy()
+    self.alignment.destroy()
 
 
 class PuavoExamBrowser():
@@ -61,6 +88,11 @@ class PuavoExamBrowser():
     else:
       self.load_failed = False
       self.webview.load_uri(uri)
+
+
+  def try_uri(self, uri):
+    self.load_failed = False
+    self.webview.load_uri(uri)
 
 
   def on_load_failed(self, widget, load_event, failing_uri, error):
