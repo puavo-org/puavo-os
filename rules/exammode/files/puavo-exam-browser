@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import json
+import os
 import sys
 
 import gi
@@ -58,11 +60,43 @@ class UriRequestDialog():
 
 
 class PuavoExamBrowser():
+  BROWSER_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-exam-browser')
+  STATE_PATH  = os.path.join(BROWSER_DIR, 'state.json')
+
   def __init__(self):
+    os.makedirs(self.BROWSER_DIR, exist_ok=True)
+    self.server = None
+    self.load_state()
     self.win = Gtk.Window()
 
 
+  def load_state(self):
+    try:
+      with open(self.STATE_PATH) as f:
+        config = json.load(f)
+      if 'server' in config and type(config['server']) == str:
+        self.server = config['server']
+    except Exception as e:
+      # XXX could log error
+      pass
+
+
+  def save_state(self):
+    try:
+      data = { 'server': self.server }
+      tmpfile = '%s.tmp' % self.STATE_PATH
+      with open(tmpfile, 'w') as f:
+        json.dump(data, f)
+      os.rename(tmpfile, self.STATE_PATH)
+    except Exception as e:
+      # XXX could log error
+      pass
+
+
   def setup_ui(self, server):
+    if not server:
+      server = self.server
+
     self.win.connect('destroy', Gtk.main_quit)
 
     self.win.set_title('Puavo Exam Browser')
@@ -85,14 +119,17 @@ class PuavoExamBrowser():
     # if a fullscreen is good, how to control it on/off?
     # XXX self.fullscreen()
 
-    if server == '':
+    if server:
+      self.try_server(server)
+    else:
       self.uri_request_dialog = UriRequestDialog(exam_browser)
       self.uri_request_dialog.setup()
-    else:
-      self.try_server(server)
 
 
   def try_server(self, server):
+    self.server = server
+    self.save_state()
+
     if server.startswith('http://') or server.startswith('https://'):
       self.list_of_uris_to_try = [ server ]
     else:
@@ -156,7 +193,7 @@ class PuavoExamBrowser():
     web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
 
 
-server = ''
+server = None
 if len(sys.argv) == 2:
     server = sys.argv[1]
 
