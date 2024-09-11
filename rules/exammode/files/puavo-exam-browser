@@ -74,6 +74,7 @@ class PuavoExamBrowser():
 
     self.webview = WebKit2.WebView()
     self.disable_cert_checks()  # XXX perhaps not okay?
+    self.webview.connect('authenticate', self.on_authenticate)
     self.webview.connect('load-changed', self.on_load_changed)
     self.webview.connect('load-failed',  self.on_load_failed)
 
@@ -93,14 +94,12 @@ class PuavoExamBrowser():
 
 
   def try_server(self, server):
-    # XXX is this a proper way to help?
     if server.startswith('http://') or server.startswith('https://'):
       self.list_of_uris_to_try = [ server ]
     else:
       self.list_of_uris_to_try = [
-        'https://%s:8010' % server,  # special Abitti port, we try it first
-        'https://%s'      % server,
-        'http://%s'       % server,
+        'https://%s' % server,
+        'http://%s'  % server,
       ]
 
     self.try_next_uri()
@@ -114,6 +113,17 @@ class PuavoExamBrowser():
 
     self.load_failed = False
     self.webview.load_uri(next_uri)
+
+
+  def on_authenticate(self, webview, auth_request):
+    # If we get an authentication reqwest on this particular realm,
+    # we know we should be using port 8010 with https instead.
+    if auth_request.get_realm() == 'Koetilan palvelin':
+      abitti_uri = 'https://%s:8010' % '10.249.14.227' # auth_request.get_host()
+      self.list_of_uris_to_try = [ abitti_uri ]
+      self.webview.stop_loading()
+
+    return True
 
 
   def on_load_failed(self, widget, load_event, failing_uri, error):
