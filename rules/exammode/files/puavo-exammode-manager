@@ -16,9 +16,6 @@ EXAMUSER_UID = 989
 EXAMUSER_USERNAME = 'puavo-examuser'
 SESSION_JSON_PATH = File.join(EXAMMODE_DIR, 'session.json')
 
-SESSION_CONTROL_PATH = File.join("/run/user/#{ EXAMUSER_UID }",
-                                 'exam-session-fifo')
-
 VT_NUMBER = 42
 
 puavoconf = Puavo::Conf.new
@@ -106,13 +103,6 @@ class PuavoExammode < DBus::Object
     super
   end
 
-  def control_session(cmd)
-    # XXX what if this fails?
-    File.open(SESSION_CONTROL_PATH, 'w') do |ctrl_f|
-      ctrl_f.puts(cmd)
-    end
-  end
-
   def write_exam_session_specs(exam_id)
     raise 'session locale missing, has the user registered yet?' \
       unless @locale && @registration_done
@@ -197,7 +187,6 @@ class PuavoExammode < DBus::Object
         @exams_listener.destroy if @exams_listener
         @exams_listener = ExamsListener.new(self, username, krb5ccname)
         write_prepare_session_specs()
-        control_session('prepare')
     end
 
     dbus_method :StartSession, 'in examid:i' do |exam_id|
@@ -215,17 +204,24 @@ class PuavoExammode < DBus::Object
       end
 
       @desktop_session_vt = get_vt_number()
-      if ! system('/usr/bin/chvt', VT_NUMBER.to_s) then
-        Syslog.log(Syslog::LOG_ERR,
-                   'could not change virtual terminal to exam session')
-        raise 'error in switch terminal at exammode session start'
+      if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'start') then
+        Syslog.log(Syslog::LOG_ERR, 'could not start exammode')
+        raise 'error in starting puavo-exammode-tty service'
       end
-      control_session('start')
     end
 
     dbus_method :QuitSession do
       begin
-        control_session('quit')
+        unless @desktop_session_vt then
+          Syslog.log(Syslog::LOG_ERR,
+                     'got request to end exam session that is not active')
+          raise 'can not end exam session that is not active'
+        end
+
+        if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'stop') then
+          Syslog.log(Syslog::LOG_ERR, 'could not stop exammode')
+          raise 'error in stopping puavo-exammode-tty service'
+        end
 
         begin
           File.unlink(SESSION_JSON_PATH)
@@ -233,7 +229,6 @@ class PuavoExammode < DBus::Object
         end
 
         Syslog.log(Syslog::LOG_INFO, 'examination mode ended')
-
         if ! system('chvt', @desktop_session_vt) then
           Syslog.log(Syslog::LOG_ERR, 'could not switch back to original vt')
           raise 'could not return back to the original vt'

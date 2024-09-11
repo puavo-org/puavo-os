@@ -4,7 +4,7 @@ Description=Puavo exammode session on tty
 [Service]
 ExecStartPre=/usr/bin/chvt 42
 ExecStart=-/sbin/agetty --autologin puavo-examuser - $TERM
-Type=oneshot
+Type=simple
 Restart=no
 StandardInput=tty
 StandardOutput=tty

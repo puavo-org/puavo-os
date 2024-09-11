@@ -23,42 +23,10 @@ setup_loading_background() {
   qiv -mx /tmp/exam_startup_background.jpg
 }
 
+setup_loading_background
+/usr/lib/puavo-ltsp-client/exammode-gnome-session || true
+
 uid=$(id -u)
-run_dir="/run/user/${uid}"
-session_fifo="${run_dir}/exam-session-fifo"
-
-session_id=$(ps --no-headers -u "$uid" -o pid,sess \
-               | awk -v mypid="$$" '$1 == mypid { print $2; exit(0) }')
-if [ -z "$session_id" ]; then
-  echo 'could not determine session id' >&2
-  exit 1
-fi
-
-processes_to_kill() {
-  ps --no-headers -u puavo-examuser -o pid,sess \
-    | awk -v session_id="$session_id" '$2 != session_id { print $1 }'
-}
-
-mkfifo "$session_fifo"
-
-while true; do
-  session_action=$(cat "$session_fifo") || true
-  case "$session_action" in
-    prepare)
-      setup_loading_background
-      ;;
-    start)
-      # XXX should check this is not already running
-      setsid /usr/lib/puavo-ltsp-client/exammode-gnome-session &
-      # XXX if we end up here unexpected we should make a note of that somehow
-      ;;
-    quit)
-      processes_to_kill | xargs kill || true
-      sleep 4
-      processes_to_kill | xargs kill -9 || true
-      ;;
-    *)
-      echo "unknown session action ${session_action}" >&2
-      ;;
-  esac
-done
+pkill -U "$uid"
+sleep 1
+pkill -9 -U "$uid"
