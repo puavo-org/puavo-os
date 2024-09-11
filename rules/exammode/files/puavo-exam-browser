@@ -58,11 +58,11 @@ class UriRequestDialog():
 
 
 class PuavoExamBrowser():
-  def __init__(self, uri):
+  def __init__(self):
     self.win = Gtk.Window()
 
 
-  def setup_ui(self, uri):
+  def setup_ui(self, server):
     self.win.connect('destroy', Gtk.main_quit)
 
     self.win.set_title('Puavo Exam Browser')
@@ -85,12 +85,11 @@ class PuavoExamBrowser():
     # if a fullscreen is good, how to control it on/off?
     # XXX self.fullscreen()
 
-    if uri == '':
+    if server == '':
       self.uri_request_dialog = UriRequestDialog(exam_browser)
       self.uri_request_dialog.setup()
     else:
-      self.load_failed = False
-      self.webview.load_uri(uri)
+      self.try_server(server)
 
 
   def try_server(self, server):
@@ -157,11 +156,11 @@ class PuavoExamBrowser():
     web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
 
 
-uri = ''
+server = ''
 if len(sys.argv) == 2:
-    uri = sys.argv[1]
+    server = sys.argv[1]
 
 Gtk.init(sys.argv)
-exam_browser = PuavoExamBrowser(uri)
-exam_browser.setup_ui(uri)
+exam_browser = PuavoExamBrowser()
+exam_browser.setup_ui(server)
 Gtk.main()
