@@ -138,6 +138,7 @@ ask_preseed() {
     ask-imageoverlay-size    force-imageoverlay-size
     ask-install-without-raid force-install-without-raid
     ask-partition            force-partition
+    ask-setup-windows        force-setup-windows
     ask-unpartitioned-space  force-unpartitioned-space
     ask-wipe-partition       force-wipe-partition
     ask-write-partitions     force-write-partitions

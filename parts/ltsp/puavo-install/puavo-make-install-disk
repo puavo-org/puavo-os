@@ -133,13 +133,15 @@ if [ -n "$target_image" ]; then
 
   puavo-setup-filesystems --force-disk-device "${loopdev#/dev/}" \
                           --force-partition whole \
+                          --force-setup-windows no \
                           --force-wipe-partition no \
                           --force-write-partitions yes \
                           --hosttype diskinstaller \
                           --loopback-only \
                           --partition-label "$partition_label"
 else
-  puavo-setup-filesystems --hosttype diskinstaller \
+  puavo-setup-filesystems --force-setup-windows no \
+                          --hosttype diskinstaller \
                           --partition-label "$partition_label"
 fi
 
