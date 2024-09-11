@@ -66,6 +66,7 @@ class PuavoExamBrowser():
   def __init__(self):
     os.makedirs(self.BROWSER_DIR, exist_ok=True)
     self.server = None
+    self.server_candidate = None
     self.load_state()
     self.win = Gtk.Window()
 
@@ -127,8 +128,7 @@ class PuavoExamBrowser():
 
 
   def try_server(self, server):
-    self.server = server
-    self.save_state()
+    self.server_candidate = server
 
     if server.startswith('http://') or server.startswith('https://'):
       self.list_of_uris_to_try = [ server ]
@@ -183,6 +183,9 @@ class PuavoExamBrowser():
       self.win.add(self.webview)
       self.win.show_all()
       self.webview_shown = True
+
+    self.server = self.server_candidate
+    self.save_state()
 
     return True
 
