@@ -102,8 +102,12 @@ class PuavoExamBrowser():
 
     self.win.set_title('Puavo Exam Browser')
     self.win.set_position(Gtk.WindowPosition.CENTER)
-    self.win.set_size_request(640, 480)
+    self.win.set_size_request(1024, 768)
     self.win.maximize()
+    self.win.fullscreen()
+
+    self.win.connect('key-press-event', self.on_keypress)
+    self.win.connect('window-state-event', self.on_window_state)
 
     self.list_of_uris_to_try = []
 
@@ -117,14 +121,24 @@ class PuavoExamBrowser():
     self.uri_request_dialog = None
     self.webview_shown      = False
 
-    # if a fullscreen is good, how to control it on/off?
-    # XXX self.fullscreen()
-
     if server:
       self.try_server(server)
     else:
       self.uri_request_dialog = UriRequestDialog(exam_browser)
       self.uri_request_dialog.setup()
+
+
+  def on_keypress(self, widget, event):
+    if Gdk.keyval_name(event.keyval) == 'F11':
+      if self.is_fullscreen:
+        self.win.unfullscreen()
+      else:
+        self.win.fullscreen()
+
+
+  def on_window_state(self, widget, event):
+    self.is_fullscreen \
+      = bool(event.new_window_state & Gdk.WindowState.FULLSCREEN)
 
 
   def try_server(self, server):
