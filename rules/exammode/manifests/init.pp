@@ -16,14 +16,6 @@ class exammode {
     '/etc/systemd/system/gdm3.service.d':
       ensure => directory;
 
-    '/etc/systemd/system/gdm3.service.d/override.conf':
-      source => 'puppet:///modules/exammode/gdm3_service_override.conf';
-
-    '/etc/systemd/system/multi-user.target.wants/puavo-exammode-tty.service':
-      ensure  => link,
-      require => File['/etc/systemd/system/puavo-exammode-tty.service'],
-      target  => '/etc/systemd/system/puavo-exammode-tty.service';
-
     '/etc/systemd/system/puavo-exammode-tty.service':
       require => Package['systemd'],
       source  => 'puppet:///modules/exammode/puavo-exammode-tty.service';
