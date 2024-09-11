@@ -7,6 +7,16 @@ require 'getoptlong'
 require 'highline/import'
 require 'open3'
 
+GPT_PARTTYPE_LVM = 'e6d6d379-f507-44c2-a23c-238f2a3df928'
+GPT_PARTTYPE_EFI = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
+
+GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C = 'Puavo_Installed_Windows_C'
+
+# Why 20G: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/configure-uefigpt-based-hard-drive-partitions?view=windows-11#windows-partition
+DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G = 20
+DUALBOOT_LAPTOP_PUAVOOS_MIN_SIZE_G = 70 # ~60G + 10G home
+DUALBOOT_LAPTOP_DISK_MIN_SIZE_G = DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G + DUALBOOT_LAPTOP_PUAVOOS_MIN_SIZE_G
+
 # XXX this should be elsewhere, other scripts might find this useful
 module PuavoFacts
   Puavodir = '/etc/puavo'
@@ -288,17 +298,68 @@ module DiskHandler
                     "r\nh\n1 2 3\nn\n\ny\n\nn\n\nn\nw\ny\n")
   end
 
-  def self.get_partition(device, partitioning_scheme, numstart)
-    special_disk_regexp = %r{\A((loop|md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
-    part_prefix = device.match(special_disk_regexp) ? 'p' : ''
-    puavo_partnum = %w(UEFI/GPT UEFI/MBR+GPT).include?(partitioning_scheme) \
-                       ? (numstart + 2) \
-                       : numstart
-    [ device, part_prefix, puavo_partnum ].join
+  def self.get_partitions(device)
+    IO.popen([ 'lsblk', '-l', '-n', '-oTYPE,NAME', "/dev/#{ device }" ]).readlines.map do |line|
+      line.strip.split(' ')
+    end.select do |lineparts|
+      lineparts.length > 1 && lineparts[0].downcase == 'part'
+    end.map do |lineparts|
+      lineparts[1..].join(' ')
+    end
+  end
+
+  def self.get_partition_by_partnum(device, partnum)
+    partitions = get_partitions(device)
+
+    raise "Device '#{ device }' does not have any partitions" if partitions.empty?
+    raise "Partition number '#{ partnum }' not found on '#{ device }'" if partitions.length < partnum
+
+    partitions[partnum - 1]
+  end
+
+  def self.wait_partition_by_partnum(device, partnum, try_count:, try_interval: 1)
+    try_count.times do
+      warn "Looking for partition '#{ partnum }' on device '#{ device }'..."
+      return get_partition_by_partnum(device, partnum) rescue sleep(try_interval)
+    end
+    raise "Partition '#{ partnum }' not found on device '#{ device }'"
+  end
+
+  def self.get_gpt_partitions_by_parttype(device, parttype)
+    IO.popen([ 'lsblk', '-l', '-n', '-oPARTTYPE,NAME', "/dev/#{ device }" ]).readlines.map do |line|
+      line.strip.split(' ')
+    end.select do |lineparts|
+      lineparts.length > 1 && lineparts[0].downcase == parttype.downcase
+    end.map do |lineparts|
+      lineparts[1..].join(' ')
+    end
+  end
+
+  def self.get_one_gpt_partition_by_parttype(device, parttype)
+    partitions = get_gpt_partitions_by_parttype(device, parttype)
+
+    raise "GPT partition of type '#{ parttype }' not found on '#{ device }'" if partitions.empty?
+    raise "Multiple GPT partitions of type '#{ parttype }' found on '#{ device }'" if partitions.length > 1
+
+    partitions[0]
+  end
+
+  def self.wait_one_gpt_partition_by_parttype(device, parttype, try_count:, try_interval: 1)
+    try_count.times do
+      warn "Looking for GPT partition of type '#{ parttype }' on device '#{ device }'..."
+      return get_one_gpt_partition_by_parttype(device, parttype) rescue sleep(try_interval)
+    end
+    raise "GPT partition of type '#{ parttype }' not found on device '#{ device }'"
   end
 
   def self.get_puavo_partition(device, partitioning_scheme)
-    get_partition(device, partitioning_scheme, 1)
+    return get_partition_by_partnum(device, 1) if partitioning_scheme == 'BIOS/MBR'
+
+    # It should not be possible to have multiple LVM partitions,
+    # because at this stage, we have already created a new partition
+    # table. If partition is not found in 30secs, then it's most
+    # probably a progamming error; check gdisk/fdisk inputs.
+    return wait_one_gpt_partition_by_parttype(device, GPT_PARTTYPE_LVM, try_count: 30)
   end
 
   def self.do_fs_setup(conf, vgname, partitioning_scheme)
@@ -307,8 +368,6 @@ module DiskHandler
     fs_setup_phases = []
     if fs_conf['partition'] == 'whole' then
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
-      fs_conf['partition'] = get_puavo_partition(fs_conf['device'],
-                                                 partitioning_scheme)
       fs_setup_phases += [ :create_partitions, :puavo_filesystems ]
     else
       fs_setup_phases += [ :wipe_partition ] if conf['wipe']
@@ -333,10 +392,18 @@ module DiskHandler
   end
 
   def self.create_partitions(fs_conf, partitioning_scheme)
+    gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n"
+
+    unless fs_conf['windows_size'].nil? then
+      raise 'Windows can be setup only in UEFI/GPT partitioning scheme!' unless partitioning_scheme == 'UEFI/GPT'
+      gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n+16M\n0c01\nn\n4\n\n+#{ fs_conf['windows_size'] }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C}\nn5\n\n+626M\n2700\nn\n6\n\n\n8e00\nw\ny\n"
+    end
+
     setup_partition(fs_conf['device'], partitioning_scheme,
                     "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n",
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n",
+                    gpt_format,
                     "r\nh\n1 2 3\nn\n\ny\n\nn\n\nn\nw\ny\n")
+    fs_conf['partition'] = get_puavo_partition(fs_conf['device'], partitioning_scheme)
   end
 
   def self.non_swap_filesystems(hosttype)
@@ -345,7 +412,7 @@ module DiskHandler
   end
 
   def self.create_efi_filesystem(device)
-    efi_partition = get_partition(device, 'UEFI/GPT', 0)
+    efi_partition = wait_one_gpt_partition_by_parttype(device, GPT_PARTTYPE_EFI, try_count: 30)
     run('mkfs.fat', '-F32', "/dev/#{ efi_partition }")
   end
 
@@ -440,6 +507,15 @@ module QueryDiskInfo
     return devices_by_size[biggest_common_disksize].sort
   end
 
+  def self.get_blkdev_size_g(device)
+    IO.popen([ 'lsblk', '-d', '-b', '-l', '-n', '-oSIZE', "/dev/#{ device }" ]) do |io|
+      output = io.read
+      io.close
+      raise "lsblk failed" unless $?.success?
+      output.to_i / 1024 ** 3
+    end
+  end
+
   def self.ask_device()
     choosable_disk_devices = []
 
@@ -502,12 +578,62 @@ module QueryDiskInfo
     UI::ask_with_default(prompt, 'no', UI::WritePartitionsPrompt) == 'yes'
   end
 
+  def self.ask_windows_setup(hosttype, device, partition, partitioning_scheme)
+    30.times do # Invalid preseeds shall not cause infinite loops.
+      setup_windows_answer = UI::ask_with_default("\nSetup Windows partitions? (yes/no)", 'no', UI::SetupWindowsPrompt)
+      case setup_windows_answer
+      when 'yes'
+        unless partition == 'whole' then
+          UI::colormsg('Windows partitions can be setup only when partitioning the whole device.', HighLine::RED)
+          next
+        end
+
+        unless partitioning_scheme == 'UEFI/GPT' then
+          UI::colormsg('Windows partitions can be setup only in UEFI/GPT partitioning scheme.', HighLine::RED)
+          next
+        end
+
+        unless hosttype == 'laptop' then
+          UI::colormsg('Windows partitions can be setup only in laptops.', HighLine::RED)
+          next
+        end
+
+        disk_size_g = get_blkdev_size_g(device)
+        unless disk_size_g >= DUALBOOT_LAPTOP_DISK_MIN_SIZE_G then
+          UI::colormsg("Windows partitions can be setup only on #{ DUALBOOT_LAPTOP_DISK_MIN_SIZE_G }G or larger disks.", HighLine::RED)
+          next
+        end
+
+        windows_max_size_g = disk_size_g - DUALBOOT_LAPTOP_PUAVOOS_MIN_SIZE_G
+        windows_size_tuple = UI::ask_size_with_default("Size of Windows Local Disk (C:) partition:",
+                                                       "#{ [40, windows_max_size_g].min }G", UI::WindowsSizePrompt)
+
+        windows_size_g = Size::to_bytes(windows_size_tuple) / 1024 ** 3
+        unless windows_size_g >= DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G then
+          UI::colormsg("Minimum Windows Local Disk (C:) partition size is #{ DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G }G.", HighLine::RED)
+          next
+        end
+
+        unless windows_size_g <= windows_max_size_g then
+          UI::colormsg("Maximum Windows Local Disk (C:) partition size on this disk (#{ disk_size_g }G) is #{ windows_max_size_g }G.", HighLine::RED)
+          next
+        end
+
+        return windows_size_tuple.join()
+      when 'no'
+        return nil
+      end
+    end
+    raise 'Windows setup prompts exceeded.'
+  end
+
   def self.ask_device_and_partition_with_confirmation(hosttype,
              raid_setup_done, partitioning_scheme)
-    do_it        = false
     device       = nil
-    partition    = nil
+    do_it        = false
     first_sector = nil
+    partition    = nil
+    windows_size = nil
     wipe         = false
 
     until do_it do
@@ -538,6 +664,8 @@ module QueryDiskInfo
         end
       end
 
+      windows_size = QueryDiskInfo::ask_windows_setup(hosttype, device, partition, partitioning_scheme)
+
       msg = "\nIt is possible to wipe disk/partition before installing,\n" \
               + "but this can take a rather long time.\n"                  \
               + "Should we wipe the disk/partition before installing? (yes/no)"
@@ -557,11 +685,12 @@ module QueryDiskInfo
     end
 
     {
-      'device'       => device,
-      'first_sector' => first_sector,
-      'hosttype'     => hosttype,
-      'partition'    => partition,
-      'wipe'         => wipe,
+      'device'        => device,
+      'first_sector'  => first_sector,
+      'hosttype'      => hosttype,
+      'partition'     => partition,
+      'windows_size'  => windows_size,
+      'wipe'          => wipe,
     }
   end
 
@@ -688,10 +817,12 @@ module UI
   ImageoverlaySizePrompt,
   InstallWithoutRaidPrompt,
   PartitionPrompt,
+  SetupWindowsPrompt,
   UnpartitionedSpacePrompt,
+  WindowsSizePrompt,
   WipePartitionPrompt,
   WritePartitionsPrompt,
-    = *(1..7)
+    = *(1..9)
 
   @ask_forced      = {}
   @defaults        = {}
@@ -718,14 +849,18 @@ puavo-setup-filesystems [OPTIONS]
     --ask-imageoverlay-size       ask with default for imageoverlay size
     --ask-install-without-raid    ask with default for install without raid
     --ask-partition               ask with default for partition
+    --ask-setup-windows           ask with default for setup windows
     --ask-unpartitioned-space     ask with default for unpartitioned space
     --ask-wipe-partition          ask with default for wipe partition
+    --ask-windows-size            ask with default for windows size
     --ask-write-partitions        ask with default for write partitions
     --force-disk-device           force value for disk device
     --force-imageoverlay-size     force value for imageoverlay size
     --force-install-without-raid  force value for install without raid
     --force-partition             force value for partition
+    --force-setup-windows         force value for setup windows
     --force-unpartitioned-space   force value for unpartitioned space
+    --force-windows-size          force value for windows size
     --force-wipe-partition        force value for wipe partition
     --force-write-partitions      force value for write partitions
 
@@ -744,14 +879,18 @@ EOF
         [ '--ask-imageoverlay-size'     , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-install-without-raid'  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-partition'             , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--ask-setup-windows'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-unpartitioned-space'   , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--ask-windows-size'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-wipe-partition'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-write-partitions'      , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-disk-device'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-imageoverlay-size'   , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-install-without-raid', GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-partition'           , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--force-setup-windows'       , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-unpartitioned-space' , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--force-windows-size'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-wipe-partition'      , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-write-partitions'    , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--hosttype'                  , GetoptLong::REQUIRED_ARGUMENT ],
@@ -772,8 +911,12 @@ EOF
           @defaults[InstallWithoutRaidPrompt] = arg
         when '--ask-partition'
           @defaults[PartitionPrompt] = arg
+        when '--ask-setup-windows'
+          @defaults[SetupWindowsPrompt] = arg
         when '--ask-unpartitioned-space'
           @defaults[UnpartitionedSpacePrompt] = arg
+        when '--ask-windows-size'
+          @defaults[WindowsSizePrompt] = arg
         when '--ask-wipe-partition'
           @defaults[WipePartitionPrompt] = arg
         when '--ask-write-partitions'
@@ -790,9 +933,15 @@ EOF
         when '--force-partition'
           @defaults[PartitionPrompt] = arg
           @force_defaults[PartitionPrompt] = true
+        when '--force-setup-windows'
+          @defaults[SetupWindowsPrompt] = arg
+          @force_defaults[SetupWindowsPrompt] = true
         when '--force-unpartitioned-space'
           @defaults[UnpartitionedSpacePrompt] = arg
           @force_defaults[UnpartitionedSpacePrompt] = true
+        when '--force-windows-size'
+          @defaults[WindowsSizePrompt] = arg
+          @force_defaults[WindowsSizePrompt] = true
         when '--force-wipe-partition'
           @defaults[WipePartitionPrompt] = arg
           @force_defaults[WipePartitionPrompt] = true
