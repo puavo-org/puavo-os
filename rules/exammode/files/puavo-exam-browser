@@ -160,6 +160,9 @@ class PuavoExamBrowser():
 
 
   def adjust_zoom(self, is_plus):
+    if not self.webview_shown:
+      return
+
     if is_plus:
       next_zoom_level_index = self.zoom_level_index + 1
     else:
@@ -174,22 +177,25 @@ class PuavoExamBrowser():
 
   def on_keypress(self, widget, event):
     key = Gdk.keyval_name(event.keyval)
-    if event.type != Gdk.EventType.KEY_PRESS:
-      return True
+    has_control = (event.state & Gdk.ModifierType.CONTROL_MASK)
 
-    if (event.state & Gdk.ModifierType.CONTROL_MASK) and key == 'plus':
+    if has_control and key == 'plus':
       self.adjust_zoom(True)
-    if (event.state & Gdk.ModifierType.CONTROL_MASK) and key == 'minus':
+      return True
+    if has_control and key == 'minus':
       self.adjust_zoom(False)
+      return True
     if key == 'Escape':
       self.win.unfullscreen()
+      return True
     if key == 'F11':
       if self.is_fullscreen:
         self.win.unfullscreen()
       else:
         self.win.fullscreen()
+      return True
 
-    return True
+    return False
 
 
   def on_window_state(self, widget, event):
