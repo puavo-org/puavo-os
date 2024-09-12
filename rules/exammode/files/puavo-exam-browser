@@ -11,6 +11,10 @@ gi.require_version('WebKit2', '4.1')
 from gi.repository import Gdk, Gtk, WebKit2
 
 CSS = b"""
+#closing_dialog {
+  font-size: 200%;
+}
+
 #request_uri {
   font-size: 200%;
 }
@@ -114,6 +118,7 @@ class PuavoExamBrowser():
 
     self.is_fullscreen = False
 
+    self.win.connect('delete-event', self.on_delete)
     self.win.connect('key-press-event', self.on_keypress)
     self.win.connect('window-state-event', self.on_window_state)
 
@@ -134,6 +139,21 @@ class PuavoExamBrowser():
     else:
       self.uri_request_dialog = UriRequestDialog(exam_browser)
       self.uri_request_dialog.setup()
+
+
+  def on_delete(self, widget, event):
+    dialog = Gtk.MessageDialog(
+      transient_for=self.win,
+      flags=0,
+      message_type=Gtk.MessageType.QUESTION,
+      buttons=Gtk.ButtonsType.YES_NO,
+      text='Are you sure you want to close?',
+      name='closing_dialog')
+
+    dialog.format_secondary_text('To exit the exam use the rightmost button on the bottom panel.')
+    response = dialog.run()
+    dialog.destroy()
+    return (response == Gtk.ResponseType.NO)
 
 
   def on_keypress(self, widget, event):
