@@ -9,6 +9,7 @@ const exam_session_path = '/var/lib/puavo-exammode/session.json';
 const quit_icon_path = '/usr/share/icons/Adwaita/64x64/actions/application-exit-symbolic.symbolic.png'
 
 var exam_name_label;
+var fullscreen_info_label;
 
 class ExamMenu extends PanelMenu.Button {
   static { GObject.registerClass(this); }
@@ -44,11 +45,17 @@ function init() {
                       text:    exam_session_info['name'],
                       y_align: Clutter.ActorAlign.CENTER,
                     });
+
+  fullscreen_info_label = new St.Label({
+                            text: 'Press F11 to toggle fullscreen',
+                            y_align: Clutter.ActorAlign.CENTER,
+                          });
 }
 
 function enable() {
   exam_menu = new ExamMenu();
   Main.panel._centerBox.insert_child_at_index(exam_name_label, 0);
+  Main.panel._rightBox.insert_child_at_index(fullscreen_info_label, 0);
   Main.panel.addToStatusArea('exam-menu', exam_menu, -1, 'right');
 } 
 

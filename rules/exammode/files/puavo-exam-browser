@@ -94,17 +94,25 @@ class PuavoExamBrowser():
       pass
 
 
+  def set_window_size(self):
+    screen = self.win.get_screen()
+    height = screen.get_height()
+    width = screen.get_width()
+    self.win.set_size_request(1024, 720)
+    self.win.set_default_size(width, height)
+
+
   def setup_ui(self, server):
     if not server:
       server = self.server
 
     self.win.connect('destroy', Gtk.main_quit)
 
+    self.set_window_size()
     self.win.set_title('Puavo Exam Browser')
     self.win.set_position(Gtk.WindowPosition.CENTER)
-    self.win.set_size_request(1024, 768)
-    self.win.maximize()
-    self.win.fullscreen()
+
+    self.is_fullscreen = False
 
     self.win.connect('key-press-event', self.on_keypress)
     self.win.connect('window-state-event', self.on_window_state)
@@ -129,6 +137,8 @@ class PuavoExamBrowser():
 
 
   def on_keypress(self, widget, event):
+    if Gdk.keyval_name(event.keyval) == 'Escape':
+      self.win.unfullscreen()
     if Gdk.keyval_name(event.keyval) == 'F11':
       if self.is_fullscreen:
         self.win.unfullscreen()
