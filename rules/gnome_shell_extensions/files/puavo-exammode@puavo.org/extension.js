@@ -47,7 +47,7 @@ function init() {
                     });
 
   fullscreen_info_label = new St.Label({
-                            text: 'Press F11 to toggle fullscreen',
+                            text: 'adjust text scale with ctrl+ and ctrl-  |  press F11 to toggle fullscreen',
                             y_align: Clutter.ActorAlign.CENTER,
                           });
 }
