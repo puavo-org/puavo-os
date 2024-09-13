@@ -10,10 +10,13 @@ if ! mkdir -p "$puavo_ers_dir"; then
   exit 1
 fi
 
-if ! install -m 755 /opt/abitti-naksu/naksu "${puavo_ers_dir}/naksu"; then
-  logger -p user.err -t puavo-run-naksu \
-         "could not install ${puavo_ers_dir}/naksu"
-  exit 1
+# naksu is self-updating so do not overwrite in case it exists
+if [ ! -x "${puavo_ers_dir}/naksu" ]; then
+  if ! install -m 755 /opt/abitti-naksu/naksu "${puavo_ers_dir}/naksu"; then
+    logger -p user.err -t puavo-run-naksu \
+           "could not install ${puavo_ers_dir}/naksu"
+    exit 1
+  fi
 fi
 
 cd "$puavo_ers_dir"
