@@ -6,7 +6,7 @@ picture-uri='file:///usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg'
 show-desktop-icons=false
 
 [org/gnome/shell]
-enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com', 'puavo-exammode@puavo.org']
+enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com', 'puavo-exammode@puavo.org', 'quick-settings-tweaks@qwreey']
 favorite-apps=@as []
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
@@ -87,3 +87,7 @@ window-preview-title-position='TOP'
 
 [org/gnome/desktop/wm/preferences]
 button-layout='menu:maximize'
+
+[org/gnome/shell/extensions/quick-settings-tweaks]
+list-buttons='[{"name":"SystemItem","label":null,"visible":true},{"name":"OutputStreamSlider","label":null,"visible":false},{"name":"InputStreamSlider","label":null,"visible":false},{"name":"St_BoxLayout","label":null,"visible":true},{"name":"BrightnessItem","label":null,"visible":true},{"name":"NMWiredToggle","label":null,"visible":true},{"name":"NMWirelessToggle","label":null,"visible":true},{"name":"NMModemToggle","label":null,"visible":true},{"name":"NMBluetoothToggle","label":null,"visible":true},{"name":"NMVpnToggle","label":null,"visible":true},{"name":"BluetoothToggle","label":null,"visible":false},{"name":"PowerProfilesToggle","label":null,"visible":false},{"name":"NightLightToggle","label":null,"visible":true},{"name":"DarkModeToggle","label":null,"visible":true},{"name":"RfkillToggle","label":null,"visible":false},{"name":"RotationToggle","label":null,"visible":false},{"name":"DndQuickToggle","label":"Älä häiritse","visible":true},{"name":"MediaSection","label":null,"visible":false},{"name":"Notifications","label":null,"visible":false}]'
+user-removed-buttons=['SystemItem', 'DarkModeToggle', 'NightLightToggle', 'DndQuickToggle', 'Notifications', 'RfkillToggle']
