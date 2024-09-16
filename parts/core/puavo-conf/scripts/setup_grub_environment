@@ -73,41 +73,100 @@ setup_timeout() {
   fi
 }
 
-efibootmgr_set_windows() {
-  boot_entry_state=$1
+has_efi() {
+  grep -q '^efivarfs ' /proc/mounts
+}
+
+efibootmgr_windows() {
+  efibootmgr_flag=$1
   shift
 
-  case "${boot_entry_state}" in
-    active)
-      efibootmgr_a_flag='-a'
-      ;;
-    inactive)
-      efibootmgr_a_flag='-A'
-      ;;
-    *)
-      echo "Invalid argument (${boot_entry_state}), expected 'active' or 'inactive'" >&2
-      return 1
-      ;;
-  esac
-
   for boot_entry in $(efibootmgr | awk '/Windows/ {print substr($0,5,4)}'); do
-    efibootmgr -q ${efibootmgr_a_flag} -b "${boot_entry}" || return 1
+    efibootmgr -q "${efibootmgr_flag}" -b "${boot_entry}" || return 1
   done
 
   return 0
 }
 
-setup_windows_enabled() {
-  if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
-    grubedit set "puavo_grub_windows_enabled=true" || return 1
-    efi_boot_state_windows=active
-  else
-    grubedit unset puavo_grub_windows_enabled || return 1
-    efi_boot_state_windows=inactive
+mount_efi_system_partition() {
+  efi_system_partition_devpath=$(lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" {print $1}')
+
+  efi_system_partition_mountpath=$(mktemp -d -p / EFI_SYSTEM_PARTITION.XXXXXXXXXXXX)
+  mount -onodev,nosuid "${efi_system_partition_devpath}" "${efi_system_partition_mountpath}" || {
+    rm -rf "${efi_system_partition_mountpath}"
+    return 1
+  }
+
+  echo "${efi_system_partition_mountpath}"
+}
+
+efi_break_windows() {
+  efi_mount_path=$(mount_efi_system_partition) || return 1
+
+  if [ -d "${efi_mount_path}/EFI/Microsoft" ]; then
+    tar -C "${efi_mount_path}/EFI" -z -c -f "${efi_mount_path}/EFI/Puavo-defused-Microsoft.tar.gz" Microsoft || {
+      rm -rf "${efi_mount_path}/EFI/Puavo-defused-Microsoft.tar.gz" || true
+      umount "${efi_mount_path}" || return 1
+      rm -rf "${efi_mount_path}"
+      return 1
+    }
+    rm -rf "${efi_mount_path}/EFI/Microsoft" || {
+      umount "${efi_mount_path}" || return 1
+      rm -rf "${efi_mount_path}"
+      return 1
+    }
   fi
 
-  if grep -q '^efivarfs ' /proc/mounts; then
-      efibootmgr_set_windows "${efi_boot_state_windows}" || return 1
+  umount "${efi_mount_path}" || return 1
+  rm -rf "${efi_mount_path}"
+}
+
+efi_fix_windows() {
+  efi_mount_path=$(mount_efi_system_partition) || return 1
+
+  if [ -f "${efi_mount_path}/EFI/Puavo-defused-Microsoft.tar.gz" ]; then
+    tar -C "${efi_mount_path}/EFI" -z -x -f "${efi_mount_path}/EFI/Puavo-defused-Microsoft.tar.gz" || {
+      umount "${efi_mount_path}" || return 1
+      rm -rf "${efi_mount_path}"
+      return 1
+    }
+    rm -f "${efi_mount_path}/EFI/Puavo-defused-Microsoft.tar.gz" || {
+      umount "${efi_mount_path}" || return 1
+      rm -rf "${efi_mount_path}"
+      return 1
+    }
+  fi
+
+  umount "${efi_mount_path}" || return 1
+  rm -rf "${efi_mount_path}"
+}
+
+efi_disable_windows() {
+  if [ "$(puavo-conf puavo.grub.windows.defuse_efi_boot_when_disabled)" != 'true' ]; then
+    echo "puavo.grub.windows.defuse_efi_boot_when_disabled is not true, not disabling Windows EFI boot" >&2
+    return 0
+  fi
+
+  efibootmgr_windows -A || return 1
+  efi_break_windows
+}
+
+efi_enable_windows() {
+  efi_fix_windows || return 1
+  efibootmgr_windows -a
+}
+
+setup_windows_enabled() {
+  if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
+    if has_efi; then
+      efi_enable_windows || return 1
+    fi
+    grubedit set "puavo_grub_windows_enabled=true" || return 1
+  else
+    grubedit unset puavo_grub_windows_enabled || return 1
+    if has_efi; then
+      efi_disable_windows || return 1
+    fi
   fi
 
   return 0
