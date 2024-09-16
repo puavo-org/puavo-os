@@ -41,10 +41,10 @@ class gdm {
       require => [ File['/etc/guest-session'], Package['gdm3'], ],
       source  => 'puppet:///modules/gdm/PostSession_Default';
 
-    '/usr/share/gdm/greeter/autostart/puavo-desktop-applet.desktop':
+    '/usr/share/gdm/greeter/autostart/start-puavo-desktop-applet.desktop':
       ensure  => link,
       require => [ Package['gdm3'], Package['puavo-desktop-applet'], ],
-      target  => '/etc/xdg/autostart/puavo-desktop-applet.desktop';
+      target  => '/etc/xdg/autostart/start-puavo-desktop-applet.desktop';
   }
 
   ::dconf::schemas::schema {
