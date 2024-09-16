@@ -30,6 +30,9 @@ class grub {
     'puavo.grub.timeout':
       script => 'setup_grub_environment';
 
+    'puavo.grub.windows.defuse_efi_boot_when_disabled':
+      script => 'setup_grub_environment';
+
     'puavo.grub.windows.enabled':
       script => 'setup_grub_environment';
   }
