@@ -156,6 +156,8 @@ class packages {
     , 'read-edid'
     , 'rsnapshot'
     , 'rsyslog'
+    , 'ruby-eventmachine'
+    , 'ruby-faye-websocket'
     , 'ruby-sys-proctable'
     , 'screen'
     , 'secure-delete'
