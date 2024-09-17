@@ -2,9 +2,11 @@
 
 set -eu
 
-# XXX could also be conditional based on some puavo-conf
-
 if [ "${EXAMMODE_SESSION:-}" = 'true' -o "${GUEST_SESSION:-}" = 'true' ]; then
+  exit 0
+fi
+
+if [ "$(puavo-conf puavo.exammode.enabled)" != 'true' ]; then
   exit 0
 fi
 

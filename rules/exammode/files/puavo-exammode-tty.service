@@ -2,6 +2,7 @@
 Description=Puavo exammode session on tty
 
 [Service]
+ExecCondition=/bin/sh -c '[ "$(/usr/bin/puavo-conf puavo.exammode.enabled)" = "true" ]'
 ExecStartPre=/usr/bin/chvt 42
 ExecStart=-/sbin/agetty --autologin puavo-examuser - $TERM
 Type=simple

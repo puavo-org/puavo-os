@@ -6,4 +6,8 @@ if [ "${EXAMMODE_SESSION:-}" != 'true' ]; then
   exit 0
 fi
 
+if [ "$(puavo-conf puavo.exammode.enabled)" != 'true' ]; then
+  exit 0
+fi
+
 exec puavo-exammode-session-applet "$@"
