@@ -1,0 +1,28 @@
+diff -ruN gnome-shell.0/js/ui/backgroundMenu.js gnome-shell/js/ui/backgroundMenu.js
+--- gnome-shell.0/js/ui/backgroundMenu.js	2023-09-16 12:57:40.000000000 +0300
++++ gnome-shell/js/ui/backgroundMenu.js	2024-09-17 13:47:28.949905004 +0300
+@@ -1,16 +1,23 @@
+ // -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil -*-
+ /* exported addBackgroundMenu */
+ 
+-const { Clutter, St } = imports.gi;
++const { Clutter, Gio, St } = imports.gi;
+ 
+ const BoxPointer = imports.ui.boxpointer;
+ const Main = imports.ui.main;
+ const PopupMenu = imports.ui.popupMenu;
+ 
++const LOCKDOWN_SCHEMA = 'org.gnome.desktop.lockdown';
++const DISABLE_BACKGROUND_MENU_KEY = 'disable-background-menu';
++
+ var BackgroundMenu = class BackgroundMenu extends PopupMenu.PopupMenu {
+     constructor(layoutManager) {
+         super(layoutManager.dummyCursor, 0, St.Side.TOP);
+ 
++        let lockdownSettings = new Gio.Settings({ schema_id: LOCKDOWN_SCHEMA });
++        if (lockdownSettings.get_boolean(DISABLE_BACKGROUND_MENU_KEY))
++            return;
++
+         this.addSettingsAction(_("Change Background…"), 'gnome-background-panel.desktop');
+         this.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+         this.addSettingsAction(_("Display Settings"), 'gnome-display-panel.desktop');

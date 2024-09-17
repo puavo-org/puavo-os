@@ -217,8 +217,9 @@ class packages {
     , 'grub-pc'
     , 'grub-pc-bin'
     , 'ksh'
-    , 'libgconf-2-4'   #needed by mattermost-desktop
-    , 'libjffi-jni'    #needed by cryptomator
+    , 'libgconf-2-4'   # needed by mattermost-desktop
+    , 'libglib2.0-bin'
+    , 'libjffi-jni'    # needed by cryptomator
     , 'libpam-ccreds'
     , 'libpam-krb5'
     , 'libpam-ldapd'

@@ -1,4 +1,5 @@
 class exammode {
+  include ::dpkg
   include ::packages
   include ::puavo_conf
 
@@ -9,6 +10,17 @@ class exammode {
   $puavo_examuser_homedir = '/var/lib/puavo-exammode/user'
   $puavo_examuser_gid     = '989'
   $puavo_examuser_uid     = '989'
+
+  ::dconf::schemas::schema {
+    'org.gnome.desktop.lockdown.gschema.xml':
+      require => Dpkg::Simpledivert['/usr/share/glib-2.0/schemas/org.gnome.desktop.lockdown.gschema.xml'],
+      srcfile => 'puppet:///modules/exammode/org.gnome.desktop.lockdown.gschema.xml';
+  }
+
+  ::dpkg::simpledivert {
+    '/usr/share/glib-2.0/schemas/org.gnome.desktop.lockdown.gschema.xml':
+      require => Package['gsettings-desktop-schemas'];
+  }
 
   file {
     '/etc/dbus-1/system.d/org.puavo.Exam.conf':
@@ -92,7 +104,8 @@ class exammode {
   }
 
   Package <|
-       title == 'ruby-eventmachine'
+       title == 'gsettings-desktop-schemas'
+    or title == 'ruby-eventmachine'
     or title == 'ruby-faye-websocket'
     or title == 'systemd'
     or title == 'tomoyo-tools'

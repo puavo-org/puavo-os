@@ -1,10 +1,13 @@
 class dconf::schemas {
+  include ::packages
+
   $schemadir = '/usr/share/glib-2.0/schemas'
 
   exec {
     'compile glib schemas':
       command     => '/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas',
-      refreshonly => true;
+      refreshonly => true,
+      require     => Package['libglib2.0-bin'];
   }
 
   file {
@@ -21,4 +24,6 @@ class dconf::schemas {
        source => $srcfile;
     }
   }
+
+  Package <| title == "libglib2.0-bin" |>
 }
