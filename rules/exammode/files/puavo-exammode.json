@@ -1,4 +1,9 @@
 {
+  "puavo.exammode.developer-mode.enabled": {
+    "default": "false",
+    "description": "Enable/disable the exam mode development tools",
+    "typehint": "bool"
+  },
   "puavo.exammode.enabled": {
     "default": "false",
     "description": "Enable/disable all exam mode related functionality",
