@@ -130,7 +130,12 @@ efi_fix_windows() {
 
   if [ -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" ]; then
     echo 'Repriming Windows...' >&2
+    if [ -e  "${efi_mount_path}/EFI/Microsoft" ]; then
+      echo "Failed to reprime Windows: '${efi_mount_path}/EFI/Microsoft' already exists" >&2
+      return 1
+    fi
     tar -C "${efi_mount_path}/EFI" -z -x -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" || {
+      rm -rf "${efi_mount_path}/EFI/Microsoft" || true
       umount "${efi_mount_path}" || return 1
       rm -rf "${efi_mount_path}"
       return 1
