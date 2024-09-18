@@ -104,12 +104,14 @@ efi_break_windows() {
   efi_mount_path=$(mount_efi_system_partition) || return 1
 
   if [ -d "${efi_mount_path}/EFI/Microsoft" ]; then
-    tar -C "${efi_mount_path}/EFI" -z -c -f "${efi_mount_path}/EFI/Puavo-defused-Microsoft.tar.gz" Microsoft || {
-      rm -rf "${efi_mount_path}/EFI/Puavo-defused-Microsoft.tar.gz" || true
+    defused_windows_tmpfile=$(mktemp -p "${efi_mount_path}/EFI" 'Puavo-defused-Microsoft.tar.gz.tmp.XXXXXXXX')
+    tar -C "${efi_mount_path}/EFI" -z -c -f "${defused_windows_tmpfile}" Microsoft || {
+      rm -rf "${defused_windows_tmpfile}" || true
       umount "${efi_mount_path}" || return 1
       rm -rf "${efi_mount_path}"
       return 1
     }
+    mv "${defused_windows_tmpfile}" "${efi_mount_path}/EFI/Puavo-defused-Microsoft.tar.gz"
     rm -rf "${efi_mount_path}/EFI/Microsoft" || {
       umount "${efi_mount_path}" || return 1
       rm -rf "${efi_mount_path}"
