@@ -105,6 +105,11 @@ efi_break_windows() {
 
   if [ -d "${efi_mount_path}/EFI/Microsoft" ]; then
     echo 'Defusing Windows...' >&2
+    if [ -e "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" ]; then
+      echo "Failed to defuse Windows, '${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz' already exists" >&2
+      return 1
+    fi
+
     defused_windows_tmpfile=$(mktemp -p "${efi_mount_path}/EFI" 'Puavo-defused-Windows.tar.gz.tmp.XXXXXXXX')
     tar -C "${efi_mount_path}/EFI" -z -c -f "${defused_windows_tmpfile}" Microsoft || {
       rm -rf "${defused_windows_tmpfile}" || true
