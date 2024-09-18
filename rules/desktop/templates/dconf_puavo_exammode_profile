@@ -1,7 +1,15 @@
 [org/gnome/desktop/lockdown]
+disable-application-handlers=true
 disable-background-menu=true
 disable-command-line=true
 disable-lock-screen=true
+disable-log-out=true
+disable-printing=true
+disable-print-setup=true
+disable-save-to-disk=true
+disable-user-switching=true
+mount-removable-storage-devices-as-read-only=true
+user-administration-disabled=true
 
 [org/gnome/desktop/background]
 picture-uri='file:///usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg'

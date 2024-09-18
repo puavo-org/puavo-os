@@ -1,8 +1,17 @@
 /org/gnome/desktop/background/picture-uri
 /org/gnome/desktop/background/show-desktop-icons
+/org/gnome/desktop/lockdown/disable-application-handlers
+/org/gnome/desktop/lockdown/disable-background-menu
 /org/gnome/desktop/lockdown/disable-background-menu=true
 /org/gnome/desktop/lockdown/disable-command-line
 /org/gnome/desktop/lockdown/disable-lock-screen
+/org/gnome/desktop/lockdown/disable-log-out
+/org/gnome/desktop/lockdown/disable-printing
+/org/gnome/desktop/lockdown/disable-print-setup
+/org/gnome/desktop/lockdown/disable-save-to-disk
+/org/gnome/desktop/lockdown/disable-user-switching
+/org/gnome/desktop/lockdown/mount-removable-storage-devices-as-read-only
+/org/gnome/desktop/lockdown/user-administration-disabled
 /org/gnome/desktop/wm/preferences/button-layout
 /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/binding
 /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/command
