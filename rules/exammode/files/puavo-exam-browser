@@ -105,7 +105,7 @@ class PuavoExamBrowser():
     screen = self.win.get_screen()
     height = screen.get_height()
     width = screen.get_width()
-    self.win.set_size_request(1024, 720)
+    self.win.set_size_request(640, 480)
     self.win.set_default_size(width, height)
 
 
