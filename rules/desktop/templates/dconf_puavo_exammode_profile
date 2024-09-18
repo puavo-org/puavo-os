@@ -31,6 +31,10 @@ development-tools=false
 enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com', 'puavo-exammode@puavo.org', 'quick-settings-tweaks@qwreey']
 favorite-apps=@as []
 
+[org/gnome/shell/keybindings]
+toggle-application-view=@as []
+toggle-overview=@as []
+
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
 binding='<Super>space'
 command='false'
