@@ -12,24 +12,37 @@ var indicator;
 
 const QuitExamButton = GObject.registerClass(
 class QuitExamButton extends QuickMenuToggle {
-    _init() {
-        super._init({
+    constructor() {
+        super({
             label: _('Quit exam'),
             hasMenu: true,
             canFocus: true,
             accessible_name: _('Quit'),
         });
 
-        this.menu.addAction(_('Quit, because I am done now'), this.quit);
+        this.menu.addAction(_('Quit, because I am done now'),
+                            () => { this._quit(this); });
     }
 
-    // XXX do not use dbus-send
-    quit() {
-      let cmd = [ '/usr/bin/dbus-send', '--dest=org.puavo.Exam',
-                    '--print-reply=literal', '--reply-timeout=30000',
-                    '--system', '/exammode',
-                    'org.puavo.Exam.exammode.QuitSession' ];
-      Util.spawn(cmd);
+    // for some odd reason "this" is not available here
+    _quit(_this) {
+        try {
+            const dbus_call = Gio.DBus.system.call(
+                                'org.puavo.Exam',
+                                '/exammode',
+                                 'org.puavo.Exam.exammode',
+                                'QuitSession',
+                                (new GLib.Variant('()', [])),
+                                null, Gio.DBusCallFlags.NONE, -1, null);
+            dbus_call.then(() => {}, _this._quit_error);
+        } catch (e) {
+            console.log('Could not make dbus call to quit exam session: ' + e);
+            return;
+        }
+    }
+
+    _quit_error(e) {
+      console.log('error sending QuitSession dbus call:' + e);
     }
 });
 
