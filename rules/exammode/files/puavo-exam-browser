@@ -1,14 +1,21 @@
 #!/usr/bin/python3
 
+import gettext
 import json
 import os
+import signal
 import sys
+import syslog
 
 import gi
 gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.1')
 from gi.repository import Gdk, Gtk, WebKit2
+
+gettext.bindtextdomain('puavo-exam-browser', '/usr/share/locale')
+gettext.textdomain('puavo-exam-browser')
+_tr = gettext.gettext
 
 CSS = b"""
 #closing_dialog {
@@ -38,11 +45,11 @@ class UriRequestDialog():
   def setup(self):
     self.alignment = Gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0, name='request_uri')
     self.vbox = Gtk.Box()
-    self.address_label = Gtk.Label.new('Exam server:')
+    self.address_label = Gtk.Label.new(_tr('Exam server:'))
     self.address_entry = Gtk.Entry()
     self.address_entry.set_width_chars(40)
     self.address_entry.connect('activate', self.on_change_uri)
-    self.go_button = Gtk.Button.new_with_label('Go')
+    self.go_button = Gtk.Button.new_with_label(_tr('Go'))
     self.go_button.connect('clicked', self.on_change_uri)
 
     self.vbox.pack_start(self.address_label, False, False, 10)
@@ -67,7 +74,12 @@ class PuavoExamBrowser():
   BROWSER_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-exam-browser')
   STATE_PATH  = os.path.join(BROWSER_DIR, 'state.json')
 
-  ZOOM_LEVELS = [ 1/2, 9/16, 5/8, 5/7, 4/5, 8/9, 1, 9/8, 5/4, 7/5, 8/5, 16/9, 2, 2*9/8, 2*5/4, 2*7/5, 2*8/5, 2*16/9, 4 ]
+  # I liked the math of musical tunings as a kid.
+  ZOOM_LEVELS = [
+    1/2, 9/16, 5/8, 5/7, 4/5, 8/9,
+    1,   9/8,   5/4,   7/5,   8/5,   16/9,
+    2, 2*9/8, 2*5/4, 2*7/5, 2*8/5, 2*16/9, 4,
+  ]
 
   def __init__(self):
     os.makedirs(self.BROWSER_DIR, exist_ok=True)
@@ -85,8 +97,7 @@ class PuavoExamBrowser():
       if 'server' in config and type(config['server']) == str:
         self.server = config['server']
     except Exception as e:
-      # XXX could log error
-      pass
+      syslog.syslog(syslog.LOG_ERR, 'could not load state: %s' % e)
 
 
   def save_state(self):
@@ -97,8 +108,7 @@ class PuavoExamBrowser():
         json.dump(data, f)
       os.rename(tmpfile, self.STATE_PATH)
     except Exception as e:
-      # XXX could log error
-      pass
+      syslog.syslog(syslog.LOG_ERR, 'could not save state: %s' % e)
 
 
   def set_window_size(self):
@@ -116,7 +126,7 @@ class PuavoExamBrowser():
     self.win.connect('destroy', Gtk.main_quit)
 
     self.set_window_size()
-    self.win.set_title('Puavo Exam Browser')
+    self.win.set_title(_tr('Puavo Exam Browser'))
     self.win.set_position(Gtk.WindowPosition.CENTER)
 
     self.is_fullscreen = False
@@ -150,10 +160,10 @@ class PuavoExamBrowser():
       flags=0,
       message_type=Gtk.MessageType.QUESTION,
       buttons=Gtk.ButtonsType.YES_NO,
-      text='Are you sure you want to close?',
+      text=_tr('Are you sure you want to close?'),
       name='closing_dialog')
 
-    dialog.format_secondary_text('To exit the exam use the rightmost button on the bottom panel.')
+    dialog.format_secondary_text(_tr('To exit the exam use menu on the bottom panel.'))
     response = dialog.run()
     dialog.destroy()
     return (response == Gtk.ResponseType.NO)
@@ -231,6 +241,8 @@ class PuavoExamBrowser():
   def on_authenticate(self, webview, auth_request):
     # If we get an authentication reqwest on this particular realm,
     # we know we should be using port 8010 with https instead.
+    # This text "Koetilan palvelin" should *not* be translated here,
+    # it is used to identify a particular type of (Finnish) exam server.
     if auth_request.get_realm() == 'Koetilan palvelin':
       abitti_uri = 'https://%s:8010' % '10.249.14.227' # auth_request.get_host()
       self.list_of_uris_to_try = [ abitti_uri ]
@@ -273,11 +285,24 @@ class PuavoExamBrowser():
     web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
 
 
+exitstatus = 0
+
+syslog.openlog('puavo-exam-browser')
+
 server = None
 if len(sys.argv) == 2:
     server = sys.argv[1]
 
-Gtk.init(sys.argv)
-exam_browser = PuavoExamBrowser()
-exam_browser.setup_ui(server)
-Gtk.main()
+try:
+  signal.signal(signal.SIGINT, signal.SIG_DFL)
+  Gtk.init(sys.argv)
+  exam_browser = PuavoExamBrowser()
+  exam_browser.setup_ui(server)
+  Gtk.main()
+except Exception as e:
+  syslog.syslog(syslog.LOG_ERR, 'unexpected error: %s' % e)
+  exitstatus = 1
+
+syslog.closelog()
+
+sys.exit(exitstatus)
