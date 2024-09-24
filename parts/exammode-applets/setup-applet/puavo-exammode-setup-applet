@@ -28,11 +28,6 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 ICON_PATH = '/usr/share/icons/Adwaita/64x64/actions/document-edit-symbolic.symbolic.png'
 
-def logmsg(priority, message):
-  print(message, file=sys.stderr)
-  syslog.syslog(priority, message)
-
-
 class PuavoExamModeSetupApplet:
   def __init__(self):
     Notify.init('puavo-exammode-setup-applet')
@@ -63,7 +58,8 @@ class PuavoExamModeSetupApplet:
       krb5ccname_env = os.environ['KRB5CCNAME']
       lang_locale = os.environ['LANG']
     except:
-      # XXX log error
+      syslog.syslog(syslog.LOG_ERR,
+                    'error in looking up user information: %s' % e)
       sys.exit(1)
 
     self.dbus_iface.Register(username, lang_locale, krb5ccname_env,
@@ -108,7 +104,6 @@ class PuavoExamModeSetupApplet:
 
 
   def choose_exam(self, exam_id, widget):
-    # XXX should pass exam id somehow (which one is chosen)
     self.dbus_iface.StartSession(exam_id,
       reply_handler=lambda: None,
       error_handler=self.start_session_dbus_error_handler)
@@ -158,9 +153,8 @@ class PuavoExamModeSetupApplet:
       self.update_menu()
 
     except Exception as e:
-      print(e)
-      # XXX should log an error to syslog
-      pass
+      syslog.syslog(syslog.LOG_ERR,
+                    'error in checking exams info: %s' % e)
 
 
 exitstatus = 0
@@ -173,7 +167,7 @@ try:
   signal.signal(signal.SIGINT, signal.SIG_DFL)
   applet.main()
 except Exception as e:
-  logmsg(syslog.LOG_ERR, 'unexpected error: %s' % e)
+  syslog.syslog(syslog.LOG_ERR, 'unexpected error: %s' % e)
   exitstatus = 1
 
 syslog.closelog()
