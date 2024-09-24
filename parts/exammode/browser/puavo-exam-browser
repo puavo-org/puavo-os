@@ -163,7 +163,7 @@ class PuavoExamBrowser():
       text=_tr('Are you sure you want to close?'),
       name='closing_dialog')
 
-    dialog.format_secondary_text(_tr('To exit the exam use menu on the bottom panel.'))
+    dialog.format_secondary_text(_tr('To exit the exam use the menu on the right of the bottom panel.'))
     response = dialog.run()
     dialog.destroy()
     return (response == Gtk.ResponseType.NO)

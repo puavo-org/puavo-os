@@ -37,9 +37,9 @@ class SingleWindowWebpage:
     logmsg(syslog.LOG_NOTICE, 'starting up browser to %s' % self.url)
 
     if self.url:
-      cmd = [ '/usr/local/bin/puavo-exam-browser', self.url ]
+      cmd = [ '/usr/bin/puavo-exam-browser', self.url ]
     else:
-      cmd = [ '/usr/local/bin/puavo-exam-browser' ]
+      cmd = [ '/usr/bin/puavo-exam-browser' ]
 
     (pid, stdin, stdout, stderr) = GLib.spawn_async(cmd,
       flags=GLib.SpawnFlags.DO_NOT_REAP_CHILD|GLib.SpawnFlags.STDERR_TO_DEV_NULL,

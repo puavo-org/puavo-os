@@ -44,10 +44,6 @@ class exammode {
       mode   => '0755',
       source => 'puppet:///modules/exammode/exammode-session';
 
-    '/usr/local/bin/puavo-exam-browser':
-      mode   => '0755',
-      source => 'puppet:///modules/exammode/puavo-exam-browser';
-
     '/usr/local/bin/puavo-examusersh':
       mode   => '0755',
       source => 'puppet:///modules/exammode/puavo-examusersh';

@@ -1,4 +1,4 @@
-SUBDIRS = session-applet setup-applet
+SUBDIRS = browser session-applet setup-applet
 
 .PHONY: all install clean
 all install clean:
