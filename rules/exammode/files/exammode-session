@@ -6,7 +6,7 @@ loading_background_path='/usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.j
 session_path='/var/lib/puavo-exammode/session.json'
 
 setup_loading_background() {
-  local lang message
+  local lang message tmp_image_path
 
   lang=$(jq -r .locale "$session_path" | cut -c 1-2)
   case "$lang" in
@@ -17,10 +17,12 @@ setup_loading_background() {
     *)  message='Starting up the exam...' ;;
   esac
 
+  tmp_image_path=$(mktemp /tmp/puavo-exammode-bg-image.XXXXXX)
   convert "$loading_background_path" -fill black -font Verdana \
     -gravity center -pointsize 100 -weight bold -annotate 0 "$message" \
-    /tmp/exam_startup_background.jpg
-  qiv -mx /tmp/exam_startup_background.jpg
+    "$tmp_image_path"
+  qiv -mx "$tmp_image_path"
+  rm -f "$tmp_image_path"
 }
 
 setup_loading_background
