@@ -1,6 +1,37 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
+set -o pipefail
+
+g_exitval=1
+g_no_efi_is_ok=false
+g_cmd=
+PID_FILE=/run/puavo-manage-efi.pid # Locks this file to ensure only one puavo-manage-efi is running
+
+on_exit()
+{
+  set +e
+
+  rm -f "${PID_FILE}"
+
+  if [ ${g_exitval} -ne 0 ]; then
+    logerr 'Failed!'
+  fi
+
+  exit ${g_exitval}
+}
+
+loginfo() {
+  printf "INFO: %s\n" "$1" >&2
+}
+
+logwarning() {
+  printf "WARNING: %s\n" "$1" >&2
+}
+
+logerr() {
+  printf "ERROR: %s\n" "$1" >&2
+}
 
 efibootmgr_windows() {
   efibootmgr_flag=$1
@@ -29,9 +60,9 @@ efi_break_windows() {
   efi_mount_path=$(mount_efi_system_partition) || return 1
 
   if [ -d "${efi_mount_path}/EFI/Microsoft" ]; then
-    echo 'Defusing Windows...' >&2
+    loginfo 'Defusing Windows...'
     if [ -e "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" ]; then
-      echo "Failed to defuse Windows, '${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz' already exists" >&2
+      logerr "Failed to defuse Windows, '${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz' already exists"
       return 1
     fi
 
@@ -48,7 +79,9 @@ efi_break_windows() {
       rm -rf "${efi_mount_path}"
       return 1
     }
-    echo 'Windows defused.' >&2
+    loginfo 'Windows defused.'
+  else
+    loginfo 'Nothing to do.'
   fi
 
   umount "${efi_mount_path}" || return 1
@@ -59,9 +92,9 @@ efi_fix_windows() {
   efi_mount_path=$(mount_efi_system_partition) || return 1
 
   if [ -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" ]; then
-    echo 'Repriming Windows...' >&2
+    loginfo 'Repriming Windows...'
     if [ -e  "${efi_mount_path}/EFI/Microsoft" ]; then
-      echo "Failed to reprime Windows: '${efi_mount_path}/EFI/Microsoft' already exists" >&2
+      logerr "Failed to reprime Windows: '${efi_mount_path}/EFI/Microsoft' already exists"
       return 1
     fi
     tar -C "${efi_mount_path}/EFI" -z -x -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" || {
@@ -75,7 +108,9 @@ efi_fix_windows() {
       rm -rf "${efi_mount_path}"
       return 1
     }
-    echo 'Windows reprimed.' >&2
+    loginfo 'Windows reprimed.'
+  else
+    loginfo 'Nothing to do.'
   fi
 
   umount "${efi_mount_path}" || return 1
@@ -84,7 +119,7 @@ efi_fix_windows() {
 
 efi_disable_windows() {
   if [ "$(puavo-conf puavo.grub.windows.defuse_efi_boot_when_disabled)" != 'true' ]; then
-    echo "puavo.grub.windows.defuse_efi_boot_when_disabled is not true, not disabling Windows EFI boot" >&2
+    logwarning "puavo.grub.windows.defuse_efi_boot_when_disabled is not true, not disabling Windows EFI boot"
     return 0
   fi
 
@@ -101,6 +136,11 @@ has_efi() {
   grep -q '^efivarfs ' /proc/mounts
 }
 
+usage() {
+  echo "Usage: $0 [OPTIONS] COMMAND"
+  echo "       $0 --help"
+}
+
 usage_error() {
   local msg
 
@@ -108,23 +148,76 @@ usage_error() {
   shift
   
   echo "ERROR: ${msg}" >&2
-  echo "Usage: $0 enable-windows|disable-windows" >&2
+  usage >&2
 
   exit 1
 }
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+          shift
+          {
+            usage
+            echo
+            echo "Manage EFI boot. Modifies EFI boot order and ESP."
+            echo
+            echo "Commands:"
+            echo "    disable-windows              disable Windows"
+            echo "    enable-windows               enable Windows"
+            echo
+            echo "Options:"
+            echo "    --no-efi-is-ok               exit with status 0 if the system does not use EFI"
+            echo "    -h, --help                   print help and exit"
+            echo
+          } >&2
+          exit 0
+          ;;
+        --no-efi-is-ok)
+          shift
+          g_no_efi_is_ok=true
+          ;;
+        --)
+          shift
+          break
+          ;;
+        -*)
+          usage_error "invalid argument '$1'"
+          ;;
+        *)
+          break
+          ;;
+    esac
+done
 
 if [ $# -ne 1 ]; then
   usage_error "invalid number of arguments ($#), expected 1"
 fi
 
-cmd=$1
+g_cmd=$1
 shift
 
 if ! has_efi; then
-  exit 0
+  if ${g_no_efi_is_ok}; then
+    logwarning "this system does not have EFI"
+    exit 0
+  else
+    logerr "this system does not have EFI"
+    exit 1
+  fi
 fi
 
-case "${cmd}" in
+exec {lockfd}<> "${PID_FILE}"
+flock -x -n "${lockfd}" || {
+    logerr "puavo-manage-efi is already running!"
+    exit 1
+}
+
+trap on_exit EXIT
+
+echo "$$" >"${PID_FILE}"
+
+case "${g_cmd}" in
   enable-windows)
     efi_enable_windows
   ;;
@@ -132,5 +225,7 @@ case "${cmd}" in
     efi_disable_windows
   ;;
   *)
-    usage_error "invalid command '${cmd}'"
+    usage_error "invalid command '${g_cmd}'"
 esac
+
+g_exitval=0
