@@ -17,9 +17,9 @@ setup_loading_background() {
     *)  message='Starting up the exam...' ;;
   esac
 
-  convert "$loading_background_path" -pointsize 80 -font Verdana     \
-          -fill white -undercolor 'rgba(0,0,0, 0.5)' -gravity center \
-          -annotate 0 "$message" /tmp/exam_startup_background.jpg
+  convert "$loading_background_path" -fill black -font Verdana \
+    -gravity center -pointsize 100 -weight bold -annotate 0 "$message" \
+    /tmp/exam_startup_background.jpg
   qiv -mx /tmp/exam_startup_background.jpg
 }
 
