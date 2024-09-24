@@ -44,44 +44,44 @@ efibootmgr_windows() {
   return 0
 }
 
-mount_efi_system_partition() {
-  efi_system_partition_devpath=$(lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" {print $1}') || return 1
-  if [ -z "${efi_system_partition_devpath}" ]; then
+esp_mount() {
+  esp_devpath=$(lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" {print $1}') || return 1
+  if [ -z "${esp_devpath}" ]; then
     logerr 'EFI system partition not found'
     return 1
   fi
 
-  efi_system_partition_mountpath=$(awk "-vdev=${efi_system_partition_devpath}" '$1 == dev {print $2}' /proc/mounts) || return 1
+  esp_mountpath=$(awk "-vdev=${esp_devpath}" '$1 == dev {print $2}' /proc/mounts) || return 1
 
   # Mount only if not already mounted.
-  if [ -z "${efi_system_partition_mountpath}" ]; then
-    efi_system_partition_mountpath=/boot/efi
-    mkdir -p "${efi_system_partition_mountpath}" || return 1
-    mount -onodev,nosuid "${efi_system_partition_devpath}" "${efi_system_partition_mountpath}" || return 1
+  if [ -z "${esp_mountpath}" ]; then
+    esp_mountpath=/boot/efi
+    mkdir -p "${esp_mountpath}" || return 1
+    mount -onodev,nosuid "${esp_devpath}" "${esp_mountpath}" || return 1
   fi
 
-  echo "${efi_system_partition_mountpath}"
+  echo "${esp_mountpath}"
 }
 
-efi_break_windows() {
-  efi_mount_path=$(mount_efi_system_partition) || return 1
+esp_break_windows() {
+  esp_mountpath=$(esp_mount) || return 1
 
-  if [ -d "${efi_mount_path}/EFI/Microsoft" ]; then
+  if [ -d "${esp_mountpath}/EFI/Microsoft" ]; then
     loginfo 'Defusing Windows...'
-    if [ -e "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" ]; then
-      logerr "Failed to defuse Windows, '${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz' already exists"
+    if [ -e "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" ]; then
+      logerr "Failed to defuse Windows, '${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz' already exists"
       return 1
     fi
 
-    defused_windows_tmpfile=$(mktemp -p "${efi_mount_path}/EFI" 'Puavo-defused-Windows.tar.gz.tmp.XXXXXXXX')
-    tar -C "${efi_mount_path}/EFI" -z -c -f "${defused_windows_tmpfile}" Microsoft || {
+    defused_windows_tmpfile=$(mktemp -p "${esp_mountpath}/EFI" 'Puavo-defused-Windows.tar.gz.tmp.XXXXXXXX')
+    tar -C "${esp_mountpath}/EFI" -z -c -f "${defused_windows_tmpfile}" Microsoft || {
       rm -rf "${defused_windows_tmpfile}" || true
-      umount "${efi_mount_path}"
+      umount "${esp_mountpath}"
       return 1
     }
-    mv "${defused_windows_tmpfile}" "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz"
-    rm -rf "${efi_mount_path}/EFI/Microsoft" || {
-      umount "${efi_mount_path}"
+    mv "${defused_windows_tmpfile}" "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz"
+    rm -rf "${esp_mountpath}/EFI/Microsoft" || {
+      umount "${esp_mountpath}"
       return 1
     }
     loginfo 'Windows defused.'
@@ -89,25 +89,25 @@ efi_break_windows() {
     loginfo 'Nothing to do.'
   fi
 
-  umount "${efi_mount_path}"
+  umount "${esp_mountpath}"
 }
 
-efi_fix_windows() {
-  efi_mount_path=$(mount_efi_system_partition) || return 1
+esp_fix_windows() {
+  esp_mountpath=$(esp_mount) || return 1
 
-  if [ -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" ]; then
+  if [ -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" ]; then
     loginfo 'Repriming Windows...'
-    if [ -e  "${efi_mount_path}/EFI/Microsoft" ]; then
-      logerr "Failed to reprime Windows: '${efi_mount_path}/EFI/Microsoft' already exists"
+    if [ -e  "${esp_mountpath}/EFI/Microsoft" ]; then
+      logerr "Failed to reprime Windows: '${esp_mountpath}/EFI/Microsoft' already exists"
       return 1
     fi
-    tar -C "${efi_mount_path}/EFI" -z -x -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" || {
-      rm -rf "${efi_mount_path}/EFI/Microsoft" || true
-      umount "${efi_mount_path}"
+    tar -C "${esp_mountpath}/EFI" -z -x -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" || {
+      rm -rf "${esp_mountpath}/EFI/Microsoft" || true
+      umount "${esp_mountpath}"
       return 1
     }
-    rm -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" || {
-      umount "${efi_mount_path}"
+    rm -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" || {
+      umount "${esp_mountpath}"
       return 1
     }
     loginfo 'Windows reprimed.'
@@ -115,7 +115,7 @@ efi_fix_windows() {
     loginfo 'Nothing to do.'
   fi
 
-  umount "${efi_mount_path}"
+  umount "${esp_mountpath}"
 }
 
 efi_disable_windows() {
@@ -125,11 +125,11 @@ efi_disable_windows() {
   fi
 
   efibootmgr_windows -A || return 1
-  efi_break_windows
+  esp_break_windows
 }
 
 efi_enable_windows() {
-  efi_fix_windows || return 1
+  esp_fix_windows || return 1
   efibootmgr_windows -a
 }
 
