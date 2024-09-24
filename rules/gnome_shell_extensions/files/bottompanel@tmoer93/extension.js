@@ -6,7 +6,7 @@ let MonitorsChangedListener = null;
 let HeightNotifyListener = null;
 
 function _toTop() {
-   let monitor = Main.layoutManager.primaryMonitor;  
+   let monitor = Main.layoutManager.primaryMonitor;
    PanelBox.set_pivot_point(0,0);
    PanelBox.set_position(0,0);
 }
@@ -23,7 +23,7 @@ function enable() {
     MonitorsChangedListener = Main.layoutManager.connect("monitors-changed", _toBottom);
     HeightNotifyListener = PanelBox.connect("notify::height", _toBottom);
     _toBottom();
-    Main.panel.actor.add_style_class_name("popup-menu");
+    Main.panel.add_style_class_name("popup-menu");
 }
 
 function disable() {
@@ -34,5 +34,5 @@ function disable() {
         Main.layoutManager.disconnect(MonitorsChangedListener);
     }
     _toTop();
-    Main.panel.actor.remove_style_class_name("popup-menu");
+    Main.panel.remove_style_class_name("popup-menu");
 }
