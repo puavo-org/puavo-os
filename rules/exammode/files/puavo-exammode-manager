@@ -38,7 +38,8 @@ class ExamsListener
   def initialize(dbus, username, krb5ccname)
     @dbus = dbus
     @available_exams = nil
-    @listener = Thread.new { connect_and_wait(username, krb5ccname) }
+    # XXX disable for now as these mechanisms are not ready
+    # @listener = Thread.new { connect_and_wait(username, krb5ccname) }
   end
 
   def destroy
