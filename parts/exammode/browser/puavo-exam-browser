@@ -27,6 +27,8 @@ CSS = b"""
 }
 """
 
+ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
+
 style_provider = Gtk.CssProvider()
 style_provider.load_from_data(CSS)
 
@@ -128,6 +130,7 @@ class PuavoExamBrowser():
     self.set_window_size()
     self.win.set_title(_tr('Puavo Exam Browser'))
     self.win.set_position(Gtk.WindowPosition.CENTER)
+    self.win.set_icon_from_file(ICON_PATH)
 
     self.is_fullscreen = False
 

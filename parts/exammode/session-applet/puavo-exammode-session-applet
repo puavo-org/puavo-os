@@ -14,7 +14,6 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import GLib
 from gi.repository import Gtk 
 
-ICON_PATH = '/usr/share/icons/Adwaita/64x64/actions/application-exit-symbolic.symbolic.png'
 SESSION_PATH = '/var/lib/puavo-exammode/session.json'
 
 def logmsg(priority, message):
