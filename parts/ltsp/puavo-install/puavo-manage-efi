@@ -1,0 +1,136 @@
+#!/bin/sh
+
+set -eu
+
+efibootmgr_windows() {
+  efibootmgr_flag=$1
+  shift
+
+  for boot_entry in $(efibootmgr | awk '/Windows/ {print substr($0,5,4)}'); do
+    efibootmgr -q "${efibootmgr_flag}" -b "${boot_entry}" || return 1
+  done
+
+  return 0
+}
+
+mount_efi_system_partition() {
+  efi_system_partition_devpath=$(lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" {print $1}')
+
+  efi_system_partition_mountpath=$(mktemp -d -p / EFI_SYSTEM_PARTITION.XXXXXXXXXXXX)
+  mount -onodev,nosuid "${efi_system_partition_devpath}" "${efi_system_partition_mountpath}" || {
+    rm -rf "${efi_system_partition_mountpath}"
+    return 1
+  }
+
+  echo "${efi_system_partition_mountpath}"
+}
+
+efi_break_windows() {
+  efi_mount_path=$(mount_efi_system_partition) || return 1
+
+  if [ -d "${efi_mount_path}/EFI/Microsoft" ]; then
+    echo 'Defusing Windows...' >&2
+    if [ -e "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" ]; then
+      echo "Failed to defuse Windows, '${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz' already exists" >&2
+      return 1
+    fi
+
+    defused_windows_tmpfile=$(mktemp -p "${efi_mount_path}/EFI" 'Puavo-defused-Windows.tar.gz.tmp.XXXXXXXX')
+    tar -C "${efi_mount_path}/EFI" -z -c -f "${defused_windows_tmpfile}" Microsoft || {
+      rm -rf "${defused_windows_tmpfile}" || true
+      umount "${efi_mount_path}" || return 1
+      rm -rf "${efi_mount_path}"
+      return 1
+    }
+    mv "${defused_windows_tmpfile}" "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz"
+    rm -rf "${efi_mount_path}/EFI/Microsoft" || {
+      umount "${efi_mount_path}" || return 1
+      rm -rf "${efi_mount_path}"
+      return 1
+    }
+    echo 'Windows defused.' >&2
+  fi
+
+  umount "${efi_mount_path}" || return 1
+  rm -rf "${efi_mount_path}"
+}
+
+efi_fix_windows() {
+  efi_mount_path=$(mount_efi_system_partition) || return 1
+
+  if [ -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" ]; then
+    echo 'Repriming Windows...' >&2
+    if [ -e  "${efi_mount_path}/EFI/Microsoft" ]; then
+      echo "Failed to reprime Windows: '${efi_mount_path}/EFI/Microsoft' already exists" >&2
+      return 1
+    fi
+    tar -C "${efi_mount_path}/EFI" -z -x -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" || {
+      rm -rf "${efi_mount_path}/EFI/Microsoft" || true
+      umount "${efi_mount_path}" || return 1
+      rm -rf "${efi_mount_path}"
+      return 1
+    }
+    rm -f "${efi_mount_path}/EFI/Puavo-defused-Windows.tar.gz" || {
+      umount "${efi_mount_path}" || return 1
+      rm -rf "${efi_mount_path}"
+      return 1
+    }
+    echo 'Windows reprimed.' >&2
+  fi
+
+  umount "${efi_mount_path}" || return 1
+  rm -rf "${efi_mount_path}"
+}
+
+efi_disable_windows() {
+  if [ "$(puavo-conf puavo.grub.windows.defuse_efi_boot_when_disabled)" != 'true' ]; then
+    echo "puavo.grub.windows.defuse_efi_boot_when_disabled is not true, not disabling Windows EFI boot" >&2
+    return 0
+  fi
+
+  efibootmgr_windows -A || return 1
+  efi_break_windows
+}
+
+efi_enable_windows() {
+  efi_fix_windows || return 1
+  efibootmgr_windows -a
+}
+
+has_efi() {
+  grep -q '^efivarfs ' /proc/mounts
+}
+
+usage_error() {
+  local msg
+
+  msg=$1
+  shift
+  
+  echo "ERROR: ${msg}" >&2
+  echo "Usage: $0 enable-windows|disable-windows" >&2
+
+  exit 1
+}
+
+if [ $# -ne 1 ]; then
+  usage_error "invalid number of arguments ($#), expected 1"
+fi
+
+cmd=$1
+shift
+
+if ! has_efi; then
+  exit 0
+fi
+
+case "${cmd}" in
+  enable-windows)
+    efi_enable_windows
+  ;;
+  disable-windows)
+    efi_disable_windows
+  ;;
+  *)
+    usage_error "invalid command '${cmd}'"
+esac
