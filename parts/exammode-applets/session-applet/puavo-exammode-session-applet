@@ -1,35 +1,20 @@
 #!/usr/bin/env python3
 
-import dbus
-import dbus.mainloop.glib
 import fcntl
-import gettext
 import gi
 import json
 import os
 import signal
-import subprocess
 import sys
 import syslog
 import time
 
-gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
-gi.require_version('Notify', '0.7')
 
-from gi.repository import AyatanaAppIndicator3
 from gi.repository import GLib
 from gi.repository import Gtk 
-from gi.repository import Notify
-
-gettext.bindtextdomain('puavo-exammode-session-applet', '/usr/share/locale')
-gettext.textdomain('puavo-exammode-session-applet')
-_tr = gettext.gettext
-
-dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 ICON_PATH = '/usr/share/icons/Adwaita/64x64/actions/application-exit-symbolic.symbolic.png'
-
 SESSION_PATH = '/var/lib/puavo-exammode/session.json'
 
 def logmsg(priority, message):
@@ -93,27 +78,12 @@ class SingleWindowWebpage:
     return True
 
 
+# XXX currently this is actually not an applet, but might become one?
 class PuavoExamModeSessionApplet:
   def __init__(self):
-    Notify.init('puavo-exammode-session-applet')
-
-    self.dbus_iface = self.get_dbus_iface()
-
     # XXX should verify session format?
     with open(SESSION_PATH) as file:
       self.session = json.load(file)
-
-    # XXX not activating
-    # self.indicator \
-    #   = AyatanaAppIndicator3.Indicator.new('puavo-exammode-session-applet',
-    #       ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
-    # self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
-
-
-  def get_dbus_iface(self):
-    bus = dbus.SystemBus()
-    dbusobj = bus.get_object('org.puavo.Exam', '/exammode')
-    return dbus.Interface(dbusobj, dbus_interface='org.puavo.Exam.exammode')
 
 
   def handle_session(self):
@@ -125,24 +95,12 @@ class PuavoExamModeSessionApplet:
     raise Exception('unsupported exam session type %s' % self.session['type'])
 
 
-  def setup_menu(self):
-    self.menu = Gtk.Menu()
-
-    # XXX add buttons here
-
-    self.indicator.set_menu(self.menu)
-    self.menu.show_all()
-
-
   def main(self):
     self.session_handler = self.handle_session()
     Gtk.main()
 
 
 exitstatus = 0
-
-# XXX
-s = _tr('Available exams:')
 
 syslog.openlog('puavo-exammode-session-applet')
 
