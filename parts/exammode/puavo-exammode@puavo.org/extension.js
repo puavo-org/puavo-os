@@ -1,6 +1,8 @@
 const { Clutter, Gio, GLib, GObject, St } = imports.gi;
-const Main = imports.ui.main;
 const Dialog = imports.ui.dialog;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Gettext = imports.gettext;
+const Main = imports.ui.main;
 const ModalDialog = imports.ui.modalDialog;
 const Util = imports.misc.util;
 
@@ -8,8 +10,9 @@ const { QuickMenuToggle, SystemIndicator } = imports.ui.quickSettings;
 
 const exam_session_path = '/var/lib/puavo-exammode/session.json';
 
+const { gettext: _, ngettext, pgettext, } = ExtensionUtils;
+
 var control_info_label;
-var exam_name_label;
 var indicator;
 
 const QuitExamButton = GObject.registerClass(
@@ -19,10 +22,10 @@ class QuitExamButton extends QuickMenuToggle {
             label: _('Quit exam'),
             hasMenu: true,
             canFocus: true,
-            accessible_name: _('Quit'),
+            accessible_name: _('Quit exam'),
         });
 
-        this.menu.addAction(_('Quit, because I am done now'),
+        this.menu.addAction(_('Quit, I want to exit the exam'),
                             () => { this._do_confirm_quit(this) });
     }
 
@@ -37,16 +40,16 @@ class QuitExamButton extends QuickMenuToggle {
 
         let messageDialogContent = new Dialog.MessageDialogContent();
         messageDialogContent.title = _('Really quit exam?');
-        messageDialogContent.description = _('QUIT QUIT QUIT');
+        messageDialogContent.description = _('Press "Yes, I quit" to actually exit the exam');
         testDialog.contentLayout.add_child(messageDialogContent);
 
         testDialog.setButtons([
             {
-                label: _('No, get back'),
+                label: _('No'),
                 action: () => { testDialog.destroy(); },
             },
             {
-                label: _('Yes, quit'),
+                label: _('Yes, I quit'),
                 isDefault: true,
                 action: () => {
                   testDialog.close(global.get_current_time());
@@ -69,7 +72,7 @@ class QuitExamButton extends QuickMenuToggle {
                                 null, Gio.DBusCallFlags.NONE, -1, null);
             dbus_call.then(() => {}, this._quit_error);
         } catch (e) {
-            console.log('Could not make dbus call to quit exam session: ' + e);
+            console.log('could not make dbus call to quit exam session: ' + e);
             return;
         }
     }
@@ -90,6 +93,8 @@ class Indicator extends SystemIndicator {
 });
 
 function init() {
+  ExtensionUtils.initTranslations('puavo-exammode');
+
   let [ ok, exam_session_json ] = GLib.file_get_contents(exam_session_path);
   if (!ok) {
     throw new Error('could not read session information');
@@ -97,26 +102,20 @@ function init() {
   let utf8decoder = new TextDecoder();
   let exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
 
-  info_text = 'adjust text scale with ctrl+ and ctrl-'
-                + '  |  press F11 to toggle fullscreen';
+  control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
+                    '    |    ' + _('press F11 to toggle fullscreen');
   control_info_label = new St.Label({
-                         text: info_text,
+                         text: control_text,
                          y_align: Clutter.ActorAlign.CENTER,
                        });
-
-  exam_name_label = new St.Label({
-                      text:    exam_session_info['name'],
-                      y_align: Clutter.ActorAlign.CENTER,
-                    });
 
   indicator = new Indicator();
 }
 
 function enable() {
-  Main.panel._centerBox.insert_child_at_index(exam_name_label, 0);
-  Main.panel._rightBox.insert_child_at_index(control_info_label, 0);
+  Main.panel._centerBox.insert_child_at_index(control_info_label, 0);
 } 
 
 function disable() {
-  Main.panel._rightBox.remove_child(exam_name_label);
+  Main.panel._centerBox.remove_child(control_info_label);
 }
