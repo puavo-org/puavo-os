@@ -1,0 +1,18 @@
+[Unit]
+Description=Puavo exammode session on tty
+
+[Service]
+ExecCondition=/bin/sh -c '[ "$(/usr/bin/puavo-conf puavo.exammode.enabled)" = "true" ]'
+ExecStartPre=/usr/bin/chvt 42
+ExecStart=-/sbin/agetty --autologin puavo-examuser - $TERM
+Type=simple
+Restart=no
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty42
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+IgnoreSIGPIPE=no
+SendSIGHUP=yes
+UnsetEnvironment=LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION

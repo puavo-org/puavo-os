@@ -34,6 +34,14 @@ SB_BUTTONS = {
             "args": "puavo-laptop-setup",
         },
     },
+    "exam_mode": {
+        "title": "sb_exam_mode",
+        "icon": "/usr/share/icons/Adwaita/64x64/actions/document-edit-symbolic.symbolic.png",
+        "command": {
+            "type": "command",
+            "args": "puavo-exammode-ctrl start",
+        },
+    },
     "puavopkg_installer": {
         "title": "sb_puavopkg_installer",
         "icon": "/usr/share/icons/Tela/scalable/apps/system-software-install.svg",

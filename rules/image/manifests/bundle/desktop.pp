@@ -6,6 +6,7 @@ class image::bundle::desktop {
   include ::desktop
   include ::desktop_cups
   include ::disable_unclutter
+  include ::exammode
   include ::exec_restrictions
   include ::firefox
   include ::fuse

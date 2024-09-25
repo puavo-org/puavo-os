@@ -1,0 +1,11 @@
+#!/bin/sh
+
+export DESKTOP_SESSION=puavo-desktop
+
+SYSSESSIONDIR=/etc/X11/Xsession.d
+SESSIONFILES=$(run-parts --list $SYSSESSIONDIR)
+if [ -n "$SESSIONFILES" ]; then
+  for SESSIONFILE in $SESSIONFILES; do
+    . $SESSIONFILE
+  done
+fi

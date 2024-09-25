@@ -29,6 +29,7 @@ class packages {
     , 'puavo-desktop-applet'
     , 'puavo-devscripts'
     , 'puavo-ers'
+    , 'puavo-exammode'
     , 'puavo-laptop-setup'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
@@ -81,6 +82,7 @@ class packages {
     , 'nginx'
     , 'openbsd-inetd'
     , 'policykit-1'
+    , 'polkitd-pkla'
     , 'python3-numpy'
     , 'python3-redis'
     , 'pxelinux'
@@ -155,6 +157,8 @@ class packages {
     , 'read-edid'
     , 'rsnapshot'
     , 'rsyslog'
+    , 'ruby-eventmachine'
+    , 'ruby-faye-websocket'
     , 'ruby-sys-proctable'
     , 'screen'
     , 'secure-delete'
@@ -214,8 +218,9 @@ class packages {
     , 'grub-pc'
     , 'grub-pc-bin'
     , 'ksh'
-    , 'libgconf-2-4'   #needed by mattermost-desktop
-    , 'libjffi-jni'    #needed by cryptomator
+    , 'libgconf-2-4'   # needed by mattermost-desktop
+    , 'libglib2.0-bin'
+    , 'libjffi-jni'    # needed by cryptomator
     , 'libpam-ccreds'
     , 'libpam-krb5'
     , 'libpam-ldapd'
@@ -229,6 +234,7 @@ class packages {
     , 'pm-utils'
     , 'rng-tools-debian'
     , 'systemd'
+    , 'tomoyo-tools'
     , 'udev'
     , 'udisks2'
     , 'vlan' ]:
@@ -295,6 +301,7 @@ class packages {
     , 'nvidia-settings'
     , 'nvidia-settings-tesla-470'
     , 'update-glx'
+    , 'xserver-xorg-core'
     , 'xserver-xorg-input-all'
     , 'xserver-xorg-input-evdev'
     , 'xserver-xorg-video-all' ]:

@@ -1,0 +1,272 @@
+#!/usr/bin/ruby
+
+require 'dbus'
+require 'eventmachine'
+require 'faye/websocket'
+require 'json'
+require 'puavo/conf'
+require 'puavo/rest-client'
+require 'syslog'
+require 'uri'
+
+# XXX this should probably use some non-root account as much as possible
+
+EXAMMODE_DIR = '/var/lib/puavo-exammode'
+EXAMUSER_UID = 989
+EXAMUSER_USERNAME = 'puavo-examuser'
+SESSION_JSON_PATH = File.join(EXAMMODE_DIR, 'session.json')
+
+VT_NUMBER = 42
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+puavoconf = Puavo::Conf.new
+exammode_enabled = puavoconf.get('puavo.exammode.enabled')
+$examomatic_url = puavoconf.get('puavo.exammode.examomatic.url')
+puavoconf.close
+
+if exammode_enabled != 'true' then
+  msg = 'puavo.exammode.enabled is not set to true, not activing'
+  Syslog.log(Syslog::LOG_NOTICE, msg)
+  Syslog.close()
+  exit(0)
+end
+
+$puavo_domain = IO.read('/etc/puavo/domain').chomp
+
+class ExamsListener
+  def initialize(dbus, username, krb5ccname)
+    @dbus = dbus
+    @available_exams = nil
+    # XXX disable for now as these mechanisms are not ready
+    # @listener = Thread.new { connect_and_wait(username, krb5ccname) }
+  end
+
+  def destroy
+    @listener.exit
+  end
+
+  def get_exam_info_by_id(id)
+    valid_exam_list = @available_exams['exams'].select { |e| e['id'] == id }
+    raise 'could not find exam by id' unless valid_exam_list.count == 1
+    valid_exam_list.first
+  end
+
+  def get_access_token_from_puavo_rest(krb5ccname)
+    ENV['KRB5CCNAME'] = krb5ccname
+    client = PuavoRestClient.new(:auth => :kerberos, :dns => :no)
+    # XXX not a real access token now, but should use a similar url
+    # XXX to retrieve it
+    r = client.get('/v3/whoami')
+    return 'FAKETOKEN'
+  end
+
+  def handle_server_message(data)
+    # XXX error handling
+    server_msg = JSON.parse(data)
+    current_exams = server_msg
+
+    # XXX threads and synchronization?
+    if @available_exams != current_exams then
+      @available_exams = current_exams
+      @dbus.ExamsAvailable(current_exams.to_json)
+    end
+  end
+
+  def connect_and_wait(username, krb5ccname)
+    Syslog.log(Syslog::LOG_NOTICE, 'opening websocket to %s',
+               $examomatic_url)
+
+    # XXX what if this fails? ... should try again later
+    access_token = get_access_token_from_puavo_rest(krb5ccname)
+
+    EM.run do
+      begin
+        @websocket = Faye::WebSocket::Client.new($examomatic_url)
+
+        @websocket.on(:open) do |msgevent|
+          Syslog.log(Syslog::LOG_NOTICE, 'websocket connection established')
+          reqdata = { :type => 'access_request', :access_token => access_token }
+          @websocket.send(reqdata.to_json)
+        end
+
+        @websocket.on(:message) do |msgevent|
+          Syslog.log(Syslog::LOG_INFO, 'got message on websocket')
+          handle_server_message(msgevent.data)
+        end
+
+        @websocket.on(:close) do |msgevent|
+          Syslog.log(Syslog::LOG_ERR, 'websocket closed')
+        end
+      rescue StandardError => e
+        # XXX how to deal with this?
+        Syslog.log(Syslog::LOG_ERR, 'error setting up websocket: %s', e.message)
+      end
+    end
+  end
+end
+
+class PuavoExammode < DBus::Object
+  def initialize(*args)
+    @exams_listener = nil
+    @locale = nil
+    @registration_done = false
+    super
+  end
+
+  def write_exam_session_specs(exam_id)
+    raise 'session locale missing, has the user registered yet?' \
+      unless @locale && @registration_done
+
+    if exam_id == '' then
+      session_data = {
+        'locale' => @locale,
+        'name'   => 'Exam mode',
+        'params' => {},
+        'type'   => 'free-exammode-session',
+      }
+    else
+      exam_info = @exams_listener.get_exam_info_by_id(exam_id)
+      session_data = {
+        'locale' => @locale,
+        'name'   => exam_info['name'],
+        'params' => exam_info['params'],
+        'type'   => exam_info['type'],
+      }
+    end
+
+    write_session_specs(session_data)
+  end
+
+  def write_prepare_session_specs()
+    session_data = {
+      'locale' => @locale,
+      'type'   => 'prepare',
+    }
+    write_session_specs(session_data)
+  end
+
+  def write_session_specs(session_data)
+    tmpfile = "#{ SESSION_JSON_PATH }.tmp"
+    File.write(tmpfile, session_data.to_json)
+    File.rename(tmpfile, SESSION_JSON_PATH)
+  end
+
+  def register(username, locale)
+    @locale = locale
+    @username = username
+    @registration_done = true
+    Syslog.log(Syslog::LOG_NOTICE, 'user %s (locale=%s) registered',
+               username, locale)
+  end
+
+  # XXX unclear if this can be used or if this is useful
+  # XXX puavo-exammode-applet could send Unregister message when it exits
+  def unregister()
+    unless @registration_done then
+      Syslog.log(Syslog::LOG_INFO, 'unregister called but no one is registered')
+      return
+    end
+
+    Syslog.log(Syslog::LOG_INFO, 'user %s (locale=%s) unregistered',
+               @username, @locale)
+    @locale = nil
+    @registration_done = false
+  end
+
+  def get_vt_number
+    begin
+      desktop_session_vt = %x(fgconsole).chomp
+      raise 'vt empty' if desktop_session_vt.empty?
+    rescue StandardError => e
+      errmsg = 'could not determine the current virtual console'
+      Syslog.log(Syslog::LOG_ERR, errmsg)
+      raise errmsg
+    end
+
+    return desktop_session_vt
+  end
+
+  dbus_interface 'org.puavo.Exam.exammode' do
+    dbus_signal :ExamsAvailable, 'in exams:s'
+
+    dbus_method :Register, 'in username:s, in locale:s, in krb5ccname:s' do
+      |username, locale, krb5ccname|
+        # XXX it should not be possible to do this in case there is an
+        # XXX ongoing exam session
+        register(username, locale)
+        @exams_listener.destroy if @exams_listener
+        @exams_listener = ExamsListener.new(self, username, krb5ccname)
+        write_prepare_session_specs()
+    end
+
+    dbus_method :StartSession, 'in examid:i' do |exam_id|
+      write_exam_session_specs(exam_id)
+
+      if ! system('loginctl', 'lock-sessions') then
+        Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
+        raise 'error in locking sessions'
+      end
+
+      if @desktop_session_vt then
+        Syslog.log(Syslog::LOG_ERR,
+          'tried to activate examination mode when it is already active')
+        raise 'exammode session is already active'
+      end
+
+      @desktop_session_vt = get_vt_number()
+      if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'start') then
+        Syslog.log(Syslog::LOG_ERR, 'could not start exammode')
+        raise 'error in starting puavo-exammode-tty service'
+      end
+    end
+
+    dbus_method :QuitSession do
+      begin
+        unless @desktop_session_vt then
+          Syslog.log(Syslog::LOG_ERR,
+                     'got request to end exam session that is not active')
+          raise 'can not end exam session that is not active'
+        end
+
+        if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'stop') then
+          Syslog.log(Syslog::LOG_ERR, 'could not stop exammode')
+          raise 'error in stopping puavo-exammode-tty service'
+        end
+
+        begin
+          File.unlink(SESSION_JSON_PATH)
+        rescue Errno::ENOENT
+        end
+
+        Syslog.log(Syslog::LOG_INFO, 'examination mode ended')
+        if ! system('chvt', @desktop_session_vt) then
+          Syslog.log(Syslog::LOG_ERR, 'could not switch back to original vt')
+          raise 'could not return back to the original vt'
+        end
+      ensure
+        @desktop_session_vt = nil
+      end
+    end
+
+    dbus_method :Unregister, '' do
+      unregister()
+    end
+  end
+end
+
+begin
+  bus = DBus::SystemBus.instance
+  service = bus.request_service('org.puavo.Exam')
+  service.export( PuavoExammode.new('/exammode') )
+
+  mainloop = DBus::Main.new
+  mainloop << bus
+  mainloop.run
+rescue StandardError => e
+  Syslog.log(Syslog::LOG_ERR,
+             'Error when running puavo-exammode-manager dbus service: %s',
+             e.message)
+end
+
+Syslog.close()

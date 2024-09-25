@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+loading_background_path='/usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg'
+session_path='/var/lib/puavo-exammode/session.json'
+
+setup_loading_background() {
+  local lang message tmp_image_path
+
+  lang=$(jq -r .locale "$session_path" | cut -c 1-2)
+  case "$lang" in
+    de) message='Beginn der Prüfung...'   ;;
+    en) message='Starting up the exam...' ;;
+    fi) message='Siirrytään koetilaan...' ;;
+    sv) message='Start av tentamen...'    ;;
+    *)  message='Starting up the exam...' ;;
+  esac
+
+  tmp_image_path=$(mktemp /tmp/puavo-exammode-bg-image.XXXXXX)
+  convert "$loading_background_path" -fill black -font Verdana \
+    -gravity center -pointsize 100 -weight bold -annotate 0 "$message" \
+    "$tmp_image_path"
+  qiv -mx "$tmp_image_path"
+  rm -f "$tmp_image_path"
+}
+
+setup_loading_background
+/usr/lib/puavo-ltsp-client/exammode-gnome-session || true
+
+uid=$(id -u)
+pkill -U "$uid"
+sleep 1
+pkill -9 -U "$uid"

@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+
+import fcntl
+import gi
+import json
+import os
+import signal
+import sys
+import syslog
+import time
+
+gi.require_version('Gtk', '3.0')
+
+from gi.repository import GLib
+from gi.repository import Gtk 
+
+SESSION_PATH = '/var/lib/puavo-exammode/session.json'
+
+def logmsg(priority, message):
+  print(message, file=sys.stderr)
+  syslog.syslog(priority, message)
+
+
+class SingleWindowWebpage:
+  def __init__(self, params):
+    # XXX should verify parameters format?
+    if 'url' in params:
+      self.url = params['url']
+    else:
+      self.url = None
+
+    self.run_browser()
+
+
+  def run_browser(self):
+    logmsg(syslog.LOG_NOTICE, 'starting up browser to %s' % self.url)
+
+    if self.url:
+      cmd = [ '/usr/bin/puavo-exam-browser', self.url ]
+    else:
+      cmd = [ '/usr/bin/puavo-exam-browser' ]
+
+    (pid, stdin, stdout, stderr) = GLib.spawn_async(cmd,
+      flags=GLib.SpawnFlags.DO_NOT_REAP_CHILD|GLib.SpawnFlags.STDERR_TO_DEV_NULL,
+      standard_input=True, standard_output=True)
+
+    self.browser_pid = pid
+
+    fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+    fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+    GLib.io_add_watch(stdout, GLib.IO_HUP|GLib.IO_IN,
+                      self.handle_browser, os.fdopen(stdout))
+
+
+  def handle_browser(self, fd, condition, channel):
+    try:
+      if condition & GLib.IO_IN:
+        channel.read()
+
+      if condition & GLib.IO_HUP:
+        channel.close()
+        (pid, status) = os.waitpid(self.browser_pid, 0)
+        if status != 0:
+          logmsg(syslog.LOG_ERR,
+                 'browser pid %d returned exit status %s' % (pid, status))
+        else:
+          logmsg(syslog.LOG_NOTICE, 'browser exited with success')
+
+        time.sleep(3)
+        self.run_browser()
+        return False
+
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR, 'error when handling browser: %s' % e)
+      return False
+
+    return True
+
+
+# XXX currently this is actually not an applet, but might become one?
+class PuavoExamModeSessionApplet:
+  def __init__(self):
+    # XXX should verify session format?
+    with open(SESSION_PATH) as file:
+      self.session = json.load(file)
+
+
+  def handle_session(self):
+    if self.session['type'] == 'free-exammode-session':
+      return SingleWindowWebpage(self.session['params'])
+    if self.session['type'] == 'single-window-webpage':
+      return SingleWindowWebpage(self.session['params'])
+
+    raise Exception('unsupported exam session type %s' % self.session['type'])
+
+
+  def main(self):
+    self.session_handler = self.handle_session()
+    Gtk.main()
+
+
+exitstatus = 0
+
+syslog.openlog('puavo-exammode-session-applet')
+
+applet = PuavoExamModeSessionApplet()
+
+try:
+  signal.signal(signal.SIGINT, signal.SIG_DFL)
+  applet.main()
+except Exception as e:
+  logmsg(syslog.LOG_ERR, 'unexpected error: %s' % e)
+  exitstatus = 1
+
+syslog.closelog()
+
+sys.exit(exitstatus)

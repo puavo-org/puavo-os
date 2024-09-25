@@ -134,6 +134,12 @@ STRINGS = {
         "sv": "Laptop inställning",
         "de": "Laptop-Setup",
     },
+    "sb_exam_mode": {
+        "en": "Exam mode",
+        "fi": "Koemoodi",
+        "sv": "Examensläge",
+        "de": "Prüfungsmodus",
+    },
     "sb_puavopkg_installer": {
         "en": "Additional software installation",
         "fi": "Lisäohjelmistojen asennus",

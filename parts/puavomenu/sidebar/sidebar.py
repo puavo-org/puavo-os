@@ -251,6 +251,11 @@ class Sidebar:
                     ypos = self.__create_button(ypos, SB_BUTTONS["puavopkg_installer"])
                     something = True
 
+        if utils.puavo_conf("puavo.exammode.enabled", "false") == "true":
+            if self.is_element_visible("exam_mode"):
+                ypos = self.__create_button(ypos, SB_BUTTONS["exam_mode"])
+                something = True
+
         if something:
             ypos = self.__create_separator(ypos)
 

@@ -43,6 +43,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-ers
 
+	$(MAKE) -C exammode		        		\
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/puavo-exammode
+
 	$(MAKE) -C laptop-setup					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-laptop-setup

@@ -137,6 +137,18 @@ Description: Puavo Examination Room Server
  (currently Abitti KTP).
  .
 
+Package: puavo-exammode
+Architecture: all
+Depends: ${misc:Depends},
+ gir1.2-ayatanaappindicator3-0.1,
+ python3,
+ python3-dbus,
+ python3-gi
+Description: Puavo examination mode applets
+ Puavo examination mode contains one applet for examination mode
+ setup and another one for examination session.
+ .
+
 Package: puavo-laptop-setup
 Architecture: all
 Depends: ${misc:Depends},

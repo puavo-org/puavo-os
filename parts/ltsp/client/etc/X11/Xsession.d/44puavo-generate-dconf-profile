@@ -58,6 +58,13 @@ puavo_dconf_profile_path="${puavo_session_dir}/dconf_profile"
   if [ -r "/etc/dconf/db/${DESKTOP_SESSION}" ]; then
     echo "system-db:${DESKTOP_SESSION}"
   fi
+
+  if [ "${EXAMMODE_SESSION:-}" = 'true' ]; then
+    echo "system-db:puavo-exammode"
+    if [ "$(puavo-conf puavo.exammode.developer-mode.enabled)" = 'true' ]; then
+      echo "system-db:puavo-exammode-devel"
+    fi
+  fi
 } > $puavo_dconf_profile_path || return 1
 
 DCONF_PROFILE=$puavo_dconf_profile_path

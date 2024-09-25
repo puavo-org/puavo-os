@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -eu
+
+case "${1:-}" in
+  start)
+    dbus-send --dest=org.puavo.Exam \
+              --print-reply=literal \
+              --reply-timeout=30000 \
+              --system              \
+              /exammode org.puavo.Exam.exammode.StartSession string:
+    ;;
+  *)
+    echo "Usage: $(basename $0) start" >&2
+    exit 1
+    ;;
+esac
