@@ -26,6 +26,20 @@ autorun-x-content-start-app=@as []
 [org/gnome/mutter]
 overlay-key=''
 
+[org/gnome/mutter/wayland/keybindings]
+switch-to-session-1=@as []
+switch-to-session-2=@as []
+switch-to-session-3=@as []
+switch-to-session-4=@as []
+switch-to-session-5=@as []
+switch-to-session-6=@as []
+switch-to-session-7=@as []
+switch-to-session-8=@as []
+switch-to-session-9=@as []
+switch-to-session-10=@as []
+switch-to-session-11=@as []
+switch-to-session-12=@as []
+
 [org/gnome/shell]
 development-tools=false
 enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'dash-to-panel@jderose9.github.com', 'puavo-exammode@puavo.org', 'quick-settings-tweaks@qwreey']
