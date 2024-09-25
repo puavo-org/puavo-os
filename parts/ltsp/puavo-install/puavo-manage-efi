@@ -34,6 +34,8 @@ logerr() {
 }
 
 efibootmgr_windows() {
+  local efibootmgr_flag boot_entry
+
   efibootmgr_flag=$1
   shift
 
@@ -45,6 +47,8 @@ efibootmgr_windows() {
 }
 
 esp_mount() {
+  local esp_devpath esp_mountpath
+
   esp_devpath=$(lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" {print $1}') || return 1
   if [ -z "${esp_devpath}" ]; then
     logerr 'EFI system partition not found'
@@ -64,6 +68,8 @@ esp_mount() {
 }
 
 esp_break_windows() {
+  local esp_mountpath defused_windows_tmpfile
+
   esp_mountpath=$(esp_mount) || return 1
 
   if [ -d "${esp_mountpath}/EFI/Microsoft" ]; then
@@ -93,6 +99,8 @@ esp_break_windows() {
 }
 
 esp_fix_windows() {
+  local esp_mountpath
+
   esp_mountpath=$(esp_mount) || return 1
 
   if [ -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" ]; then
@@ -147,7 +155,7 @@ usage_error() {
 
   msg=$1
   shift
-  
+
   echo "ERROR: ${msg}" >&2
   usage >&2
 
