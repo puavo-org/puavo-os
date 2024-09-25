@@ -6,11 +6,16 @@ set -o pipefail
 g_exitval=1
 g_no_efi_is_ok=false
 g_cmd=
+g_umount_on_exit=
 PID_FILE=/run/puavo-manage-efi.pid # Locks this file to ensure only one puavo-manage-efi is running
 
 on_exit()
 {
   set +e
+
+  if [ -n "${g_umount_on_exit}" ]; then
+    umount "${g_umount_on_exit}" || logerr "Failed to umount '${g_umount_on_exit}'"
+  fi
 
   rm -f "${PID_FILE}"
 
@@ -62,6 +67,7 @@ esp_mount() {
     esp_mountpath=/boot/efi
     mkdir -p "${esp_mountpath}" || return 1
     mount -onodev,nosuid "${esp_devpath}" "${esp_mountpath}" || return 1
+    g_umount_on_exit="${esp_mountpath}"
   fi
 
   echo "${esp_mountpath}"
@@ -82,20 +88,15 @@ esp_break_windows() {
     defused_windows_tmpfile=$(mktemp -p "${esp_mountpath}/EFI" 'Puavo-defused-Windows.tar.gz.tmp.XXXXXXXX')
     tar -C "${esp_mountpath}/EFI" -z -c -f "${defused_windows_tmpfile}" Microsoft || {
       rm -rf "${defused_windows_tmpfile}" || true
-      umount "${esp_mountpath}"
       return 1
     }
     mv "${defused_windows_tmpfile}" "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz"
-    rm -rf "${esp_mountpath}/EFI/Microsoft" || {
-      umount "${esp_mountpath}"
-      return 1
-    }
+    rm -rf "${esp_mountpath}/EFI/Microsoft" || return 1
+
     loginfo 'Windows defused.'
   else
     loginfo 'Nothing to do.'
   fi
-
-  umount "${esp_mountpath}"
 }
 
 esp_fix_windows() {
@@ -111,19 +112,14 @@ esp_fix_windows() {
     fi
     tar -C "${esp_mountpath}/EFI" -z -x -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" || {
       rm -rf "${esp_mountpath}/EFI/Microsoft" || true
-      umount "${esp_mountpath}"
       return 1
     }
-    rm -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" || {
-      umount "${esp_mountpath}"
-      return 1
-    }
+    rm -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" || return 1
+
     loginfo 'Windows reprimed.'
   else
     loginfo 'Nothing to do.'
   fi
-
-  umount "${esp_mountpath}"
 }
 
 efi_disable_windows() {
