@@ -1,0 +1,6 @@
+[Do not allow GDM to take a low-level lock on power key]
+Identity=unix-user:Debian-gdm
+Action=org.freedesktop.login1.inhibit-handle-power-key
+ResultAny=no
+ResultInactive=no
+ResultActive=no

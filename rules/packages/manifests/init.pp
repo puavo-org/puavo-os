@@ -82,6 +82,7 @@ class packages {
     , 'nginx'
     , 'openbsd-inetd'
     , 'policykit-1'
+    , 'polkitd-pkla'
     , 'python3-numpy'
     , 'python3-redis'
     , 'pxelinux'
