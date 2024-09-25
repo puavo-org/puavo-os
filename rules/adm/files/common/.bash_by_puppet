@@ -6,3 +6,18 @@ export PATH
 # Puavo OS admins have a more relaxed umask to facilitate collaboration under
 # "/puavo-os"
 umask 002
+
+# Wrap sudo so that admins understand that using "passwd" is only
+# temporarily effective in our system.
+sudo() {
+  if [ "${1:-}" = 'passwd' ]; then
+    cat <<'EOF' >&2
+Using /usr/bin/passwd has only a temporary effect.  Use /usr/bin/passwd if
+that is what you want, or use puavo-set-root-password to set a persistent
+root password.
+EOF
+    return 1
+  fi
+
+  /usr/bin/sudo "$@"
+}
