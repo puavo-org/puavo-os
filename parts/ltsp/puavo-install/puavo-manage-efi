@@ -90,12 +90,12 @@ esp_break_windows() {
 
   log info 'defusing Windows...'
   tar -C "${esp_mountpath}/EFI" -z -c -f "$tmp_defused_windows_file" Microsoft || {
-    log err 'failed to defuse Windows (tar)'
+    log err 'failed to defuse Windows (tar error)'
     rm -f "$tmp_defused_windows_file" || true
     return 1
   }
   if ! mv "$tmp_defused_windows_file" "$defused_windows_file"; then
-    log err 'failed to defuse Windows (mv)'
+    log err 'failed to defuse Windows (mv error)'
     return 1
   fi
   if ! rm -rf "${esp_mountpath}/EFI/Microsoft"; then
@@ -116,26 +116,20 @@ esp_fix_windows() {
   tmp_defused_windows_file="${defused_windows_file}.tmp"
   rm -f "$tmp_defused_windows_file"
 
-  esp_mountpath=$(esp_mount) || return 1
-  defused_windows_tmpfile="${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz.tmp"
-  rm -f "$defused_windows_tmpfile"
-
-  if [ -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" ]; then
-    log info 'repriming Windows...'
-    if [ -e  "${esp_mountpath}/EFI/Microsoft" ]; then
-      log err "failed to reprime Windows: '${esp_mountpath}/EFI/Microsoft' already exists"
-      return 1
-    fi
-    tar -C "${esp_mountpath}/EFI" -z -x -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" || {
-      rm -rf "${esp_mountpath}/EFI/Microsoft" || true
-      return 1
-    }
-    rm -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" || return 1
-
-    log info 'Windows reprimed'
-  else
-    log info 'nothing to do'
+  if [ ! -e "$defused_windows_file" ]; then
+    # nothing to do
+    return 0
   fi
+
+  log info 'repriming Windows...'
+  tar -C "${esp_mountpath}/EFI" -z -x -f "$defused_windows_file" || {
+    log err 'error repriming Windows (tar error)'
+    rm -rf "${esp_mountpath}/EFI/Microsoft" || true
+    return 1
+  }
+  rm -f "$defused_windows_file" || return 1
+
+  log info 'Windows reprimed'
 }
 
 efi_disable_windows() {
