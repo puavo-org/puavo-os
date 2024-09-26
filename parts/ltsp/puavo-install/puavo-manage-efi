@@ -66,9 +66,11 @@ esp_mount() {
 }
 
 esp_break_windows() {
-  local esp_mountpath defused_windows_tmpfile
+  local defused_windows_tmpfile esp_mountpath
 
   esp_mountpath=$(esp_mount) || return 1
+  defused_windows_tmpfile="${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz.tmp"
+  rm -f "$defused_windows_tmpfile"
 
   if [ -d "${esp_mountpath}/EFI/Microsoft" ]; then
     log info 'Defusing Windows...'
@@ -77,7 +79,6 @@ esp_break_windows() {
       return 1
     fi
 
-    defused_windows_tmpfile=$(mktemp -p "${esp_mountpath}/EFI" 'Puavo-defused-Windows.tar.gz.tmp.XXXXXXXX')
     tar -C "${esp_mountpath}/EFI" -z -c -f "${defused_windows_tmpfile}" Microsoft || {
       rm -rf "${defused_windows_tmpfile}" || true
       return 1
@@ -92,9 +93,11 @@ esp_break_windows() {
 }
 
 esp_fix_windows() {
-  local esp_mountpath
+  local defused_windows_tmpfile esp_mountpath
 
   esp_mountpath=$(esp_mount) || return 1
+  defused_windows_tmpfile="${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz.tmp"
+  rm -f "$defused_windows_tmpfile"
 
   if [ -f "${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz" ]; then
     log info 'Repriming Windows...'
