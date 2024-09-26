@@ -152,7 +152,6 @@ esp_fix_windows() {
 
 efi_disable_windows() {
   if [ "$(puavo-conf puavo.grub.windows.defuse_efi_boot_when_disabled)" != 'true' ]; then
-    log warning "puavo.grub.windows.defuse_efi_boot_when_disabled is not true, not disabling Windows EFI boot"
     return 0
   fi
 
