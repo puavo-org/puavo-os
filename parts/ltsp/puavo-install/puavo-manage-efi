@@ -94,6 +94,7 @@ esp_break_windows() {
     rm -f "$tmp_defused_windows_file" || true
     return 1
   }
+  sync || true
   if ! mv "$tmp_defused_windows_file" "$defused_windows_file"; then
     log err 'failed to defuse Windows (mv error)'
     return 1
@@ -127,6 +128,7 @@ esp_fix_windows() {
     rm -rf "${esp_mountpath}/EFI/Microsoft" || true
     return 1
   }
+  sync || true
   rm -f "$defused_windows_file" || return 1
 
   log info 'Windows reprimed'
