@@ -30,14 +30,30 @@ on_exit()
   exit ${g_exitval}
 }
 
+get_windows_boot_entries_to_change() {
+  efibootmgr | awk -v flag="$1" '
+    /Windows/ {
+      is_active = (substr($0, 9, 1) == "*")
+      if ((flag == "-A" && is_active) || flag == "-a" && !is_active) {
+        print substr($0, 5, 4)
+      }
+    }
+  '
+}
+
 efibootmgr_windows() {
-  local efibootmgr_flag boot_entry
+  local boot_entry efibootmgr_flag enable_or_disable_msg
 
   efibootmgr_flag=$1
-  shift
+  case "$efibootmgr_flag" in
+    -A) enable_or_disable_msg='disabling' ;;
+    -a) enable_or_disable_msg='enabling'  ;;
+     *) return 1;;
+  esac
 
-  for boot_entry in $(efibootmgr | awk '/Windows/ {print substr($0,5,4)}'); do
-    efibootmgr -q "${efibootmgr_flag}" -b "${boot_entry}" || return 1
+  for boot_entry in $(get_windows_boot_entries_to_change "$efibootmgr_flag"); do
+    log notice "${enable_or_disable_msg} Windows boot entry ${boot_entry}"
+    efibootmgr -q "$efibootmgr_flag" -b "$boot_entry" || return 1
   done
 
   return 0
