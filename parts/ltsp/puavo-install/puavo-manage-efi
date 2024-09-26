@@ -75,7 +75,6 @@ esp_mount() {
     esp_mountpath=/boot/efi
     mkdir -p "${esp_mountpath}" || return 1
     mount -onodev,nosuid "${esp_devpath}" "${esp_mountpath}" || return 1
-    g_umount_on_exit="${esp_mountpath}"
   fi
 
   echo "${esp_mountpath}"
@@ -85,6 +84,7 @@ esp_break_windows() {
   local defused_windows_file esp_mountpath tmp_defused_windows_file
 
   esp_mountpath=$(esp_mount) || return 1
+  g_umount_on_exit="${esp_mountpath}"
   defused_windows_file="${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz"
   tmp_defused_windows_file="${defused_windows_file}.tmp"
   rm -f "$tmp_defused_windows_file"
@@ -129,6 +129,7 @@ esp_fix_windows() {
   local defused_windows_file esp_mountpath tmp_defused_windows_file
 
   esp_mountpath=$(esp_mount) || return 1
+  g_umount_on_exit="${esp_mountpath}"
   defused_windows_file="${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz"
   tmp_defused_windows_file="${defused_windows_file}.tmp"
   rm -f "$tmp_defused_windows_file"
