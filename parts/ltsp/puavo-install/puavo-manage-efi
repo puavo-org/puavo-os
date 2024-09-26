@@ -151,40 +151,40 @@ usage_error() {
 }
 
 while [ $# -gt 0 ]; do
-    case $1 in
-        -h|--help)
-          shift
-          {
-            usage
-            echo
-            echo "Manage EFI boot. Modifies EFI boot order and ESP."
-            echo
-            echo "Commands:"
-            echo "    disable-windows              disable Windows"
-            echo "    enable-windows               enable Windows"
-            echo
-            echo "Options:"
-            echo "    --no-efi-is-ok               exit with status 0 if the system does not use EFI"
-            echo "    -h, --help                   print help and exit"
-            echo
-          } >&2
-          exit 0
-          ;;
-        --no-efi-is-ok)
-          shift
-          g_no_efi_is_ok=true
-          ;;
-        --)
-          shift
-          break
-          ;;
-        -*)
-          usage_error "invalid argument '$1'"
-          ;;
-        *)
-          break
-          ;;
-    esac
+  case $1 in
+    -h|--help)
+      shift
+      {
+        usage
+        echo
+        echo "Manage EFI boot. Modifies EFI boot order and ESP."
+        echo
+        echo "Commands:"
+        echo "    disable-windows              disable Windows"
+        echo "    enable-windows               enable Windows"
+        echo
+        echo "Options:"
+        echo "    --no-efi-is-ok               exit with status 0 if the system does not use EFI"
+        echo "    -h, --help                   print help and exit"
+        echo
+      } >&2
+      exit 0
+      ;;
+    --no-efi-is-ok)
+      shift
+      g_no_efi_is_ok=true
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      usage_error "invalid argument '$1'"
+      ;;
+    *)
+      break
+      ;;
+  esac
 done
 
 if [ $# -ne 1 ]; then
@@ -211,8 +211,8 @@ fi
 
 exec {lockfd}<> "${PID_FILE}"
 flock -x -n "${lockfd}" || {
-    log err "puavo-manage-efi is already running!"
-    exit 1
+  log err "puavo-manage-efi is already running!"
+  exit 1
 }
 
 trap on_exit EXIT
@@ -222,12 +222,13 @@ echo "$$" >"${PID_FILE}"
 case "${g_cmd}" in
   enable-windows)
     efi_enable_windows
-  ;;
+    ;;
   disable-windows)
     efi_disable_windows
-  ;;
+    ;;
   *)
     usage_error "invalid command '${g_cmd}'"
+    ;;
 esac
 
 g_exitval=0
