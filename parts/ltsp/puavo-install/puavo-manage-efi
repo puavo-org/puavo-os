@@ -60,7 +60,7 @@ efibootmgr_windows() {
 }
 
 esp_mount() {
-  local esp_devpath esp_mountpath
+  local esp_devpath esp_boot_efi_mounts
 
   esp_devpath=$(lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" {print $1}') || return 1
   if [ -z "${esp_devpath}" ]; then
@@ -68,44 +68,43 @@ esp_mount() {
     return 1
   fi
 
-  esp_mountpath=$(awk "-vdev=${esp_devpath}" '$1 == dev {print $2}' /proc/mounts) || return 1
+  esp_boot_efi_mounts=$(awk "-vdev=${esp_devpath}" '$1 == dev && $2 == "/boot/efi" {print $2}' /proc/mounts) || return 1
 
-  # Mount only if not already mounted.
-  if [ -z "${esp_mountpath}" ]; then
-    esp_mountpath=/boot/efi
-    mkdir -p "${esp_mountpath}" || return 1
-    mount -onodev,nosuid "${esp_devpath}" "${esp_mountpath}" || return 1
+  # Umount if already mounted to /boot/efi to ensure we control mount options.
+  if [ -n "${esp_boot_efi_mounts}" ]; then
+    log warning '/boot/efi was already mounted, umounting it'
+    umount /boot/efi || return 1
   fi
 
-  echo "${esp_mountpath}"
+  mkdir -p /boot/efi || return 1
+  mount -onodev,nosuid "${esp_devpath}" /boot/efi || return 1
+  echo /boot/efi
 }
 
 esp_break_windows() {
-  local defused_windows_file esp_mountpath tmp_defused_windows_file
+  local defused_windows_file tmp_defused_windows_file
 
-  esp_mountpath=$(esp_mount) || return 1
-  g_umount_on_exit="${esp_mountpath}"
-  defused_windows_file="${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz"
+  defused_windows_file='/boot/efi/EFI/Puavo-defused-Windows.tar.gz'
   tmp_defused_windows_file="${defused_windows_file}.tmp"
   rm -f "$tmp_defused_windows_file"
 
   if [ -e "$defused_windows_file" ]; then
     # nothing to do
-    if [ -d "${esp_mountpath}/EFI/Microsoft" ]; then
-      log info "cleaning up ${esp_mountpath}/EFI/Microsoft that should not exist"
-      rm -rf "${esp_mountpath}/EFI/Microsoft" || true
+    if [ -d '/boot/efi/EFI/Microsoft' ]; then
+      log info "cleaning up /boot/efi/EFI/Microsoft that should not exist"
+      rm -rf '/boot/efi/EFI/Microsoft' || true
     fi
     return 0
   fi
 
-  if [ ! -d "${esp_mountpath}/EFI/Microsoft" ]; then
+  if [ ! -d '/boot/efi/EFI/Microsoft' ]; then
     # not doing/logging anything, perhaps we do not have Windows installed
     # and that should be normal
     return 0
   fi
 
   log info 'defusing Windows...'
-  tar -C "${esp_mountpath}/EFI" -z -c -f "$tmp_defused_windows_file" Microsoft || {
+  tar -C '/boot/efi/EFI' -z -c -f "$tmp_defused_windows_file" Microsoft || {
     log err 'failed to defuse Windows (tar error)'
     rm -f "$tmp_defused_windows_file" || true
     return 1
@@ -115,8 +114,8 @@ esp_break_windows() {
     log err 'failed to defuse Windows (mv error)'
     return 1
   fi
-  if ! rm -rf "${esp_mountpath}/EFI/Microsoft"; then
-    log warning "error cleaning up ${esp_mountpath}/EFI/Microsoft"
+  if ! rm -rf '/boot/efi/EFI/Microsoft'; then
+    log warning "error cleaning up /boot/efi/EFI/Microsoft"
     return 1
   fi
 
@@ -126,11 +125,9 @@ esp_break_windows() {
 }
 
 esp_fix_windows() {
-  local defused_windows_file esp_mountpath tmp_defused_windows_file
+  local defused_windows_file tmp_defused_windows_file
 
-  esp_mountpath=$(esp_mount) || return 1
-  g_umount_on_exit="${esp_mountpath}"
-  defused_windows_file="${esp_mountpath}/EFI/Puavo-defused-Windows.tar.gz"
+  defused_windows_file='/boot/efi/EFI/Puavo-defused-Windows.tar.gz'
   tmp_defused_windows_file="${defused_windows_file}.tmp"
   rm -f "$tmp_defused_windows_file"
 
@@ -140,9 +137,9 @@ esp_fix_windows() {
   fi
 
   log info 'repriming Windows...'
-  tar -C "${esp_mountpath}/EFI" -z -x -f "$defused_windows_file" || {
+  tar -C '/boot/efi/EFI' -z -x -f "$defused_windows_file" || {
     log err 'error repriming Windows (tar error)'
-    rm -rf "${esp_mountpath}/EFI/Microsoft" || true
+    rm -rf '/boot/efi/EFI/Microsoft' || true
     return 1
   }
   sync || true
@@ -254,6 +251,8 @@ flock -x -n "${lockfd}" || {
 trap on_exit EXIT
 
 echo "$$" >"${PID_FILE}"
+
+g_umount_on_exit=$(esp_mount)
 
 case "${g_cmd}" in
   enable-windows)
