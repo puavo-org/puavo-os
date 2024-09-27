@@ -11,7 +11,8 @@ class puavo_pkg::packages {
 
   # List some of the available puavo-pkg packages that we want to
   # install by default.  There may be other puavo-pkg packages available.
-  $available_packages = [ 'abitti-naksu'
+  $available_packages = [ 'abicus'
+			, 'abitti-naksu'
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-ottodiylib'
@@ -22,6 +23,7 @@ class puavo_pkg::packages {
 			, 'cmaptools'
 			, 'cnijfilter2'
 			, 'cura-appimage'
+			, 'drawio-desktop'
 			, 'dropbox'
 			, 'eclipse'
 			, 'ekapeli-alku'
