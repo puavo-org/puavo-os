@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+feature_list=$(puavo-conf puavo.wired.ethernet.features)
+
+if [ -z "$feature_list" ]; then
+  exit 0
+fi
+
+interfaces=$(ip -j link show | jq -r '.[] | select((.link_type == "ether")) | .ifname')
+
+status=0
+
+for feature_spec in $feature_list; do
+  matching_iface=${feature_spec%%:*}
+  value=${feature_spec##*:}
+  twopart=${feature_spec%:*}
+  feature=${twopart#*:}
+
+  for iface in $interfaces; do
+    if ! [ "$matching_iface" = '*' -o "$iface" = "$matching_iface" ]; then
+      continue
+    fi
+
+    if ! ethtool -K "$iface" "$feature" "$value"; then
+      echo -n "error in setting ${feature} to ${value} for ${iface} |" >&2
+      status=1
+    fi
+
+    echo -n "set ${feature} to ${value} for ${iface} | " >&2
+  done
+done
+
+exit $status

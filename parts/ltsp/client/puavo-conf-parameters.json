@@ -433,6 +433,11 @@
     "description": "A whitespace-separated list of urls to fetch Windows-image catalogues",
     "typehint": "string"
   },
+  "puavo.wired.ethernet.features": {
+    "default": "",
+    "description": "A whitespace-separated list of ethernet features such as eth0:feature:setting for ethtool (eth0 can be * which matches all ethernet interfaces)",
+    "typehint": "string"
+  },
   "puavo.wired.nm.shared.enabled": {
     "default": "false",
     "description": "Enable/disable network sharing on ethernet port",

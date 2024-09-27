@@ -5,6 +5,7 @@
   "puavo.pm.suspend.enabled": "false",
   "puavo.service.gpm.enabled": "false",
   "puavo.service.munin-node.enabled": "true",
+  "puavo.wired.ethernet.features": "*:tso:off",
   "puavo.xsessions.default": "puavo-ers",
   "puavo.xsessions.display_manager": "nodm"
 }
