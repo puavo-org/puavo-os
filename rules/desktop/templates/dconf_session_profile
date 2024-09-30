@@ -197,6 +197,9 @@ list-buttons='[{"name":"SystemItem","label":null,"visible":true},{"name":"Output
 notifications-enabled=false
 user-removed-buttons=['DarkModeToggle']
 
+[org/gnome/shell/keybindings]
+show-screenshot-ui=['<Super>Print']
+
 [org/gnome/shell/overrides]
 attach-modal-dialogs=false
 dynamic-workspaces=false
