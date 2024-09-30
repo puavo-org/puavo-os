@@ -771,7 +771,8 @@ class packages {
     , 'unionfs-fuse'    # Ekapeli might need this.
     , 'wimtools'
     , 'wmctrl'
-    , 'xinput' ]:
+    , 'xinput'
+    , 'zbarcam-gtk' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
     [ 'qemu-system-x86'
