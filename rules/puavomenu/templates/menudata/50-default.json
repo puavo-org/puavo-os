@@ -684,7 +684,13 @@
             "tags": "default"
         },
         "MetaSearch9": {
-            "tags": "default"
+            "type": "custom",
+            "name": "MetaSearch 9",
+            "description": "METACOM MetaSearch",
+            "command": "/opt/MetaSearch\\ 9/MetaSearch\\ 9 --metacomDirectory /opt/METACOM_Symbole",
+            "icon": "MetaSearch 9",
+            "hidden_by_default": true,
+            "tags": "metacom"
         },
         "meshlab": {
             "tags": "default"
