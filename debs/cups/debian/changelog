@@ -1,15 +1,29 @@
-cups (2.3.3op2-3+deb11u6+puavo2+buildonce) bullseye; urgency=medium
+cups (2.3.3op2-3+deb11u9) bullseye-security; urgency=medium
 
-  * Fix lpoptions.
+  * CVE-2024-47175
+    Fix CVE and upstream also added some extra hardening to patch
+    - validate URIs, attribute names, and capabilities
+      in cups/ppd-cache.c, scheduler/ipp.c
+    - sanitize make and model in cups/ppd-cache.c
+    - PPDize preset and template names in cups/ppd-cache.c
+    - quote PPD localized strings in  cups/ppd-cache.c
+    - fix warnings in cups/ppd-cache.c
 
- -- Puavo Org <dev@opinsys.fi>  Wed, 28 Aug 2024 08:45:39 +0300
+ -- Thorsten Alteholz <debian@alteholz.de>  Thu, 26 Sep 2024 23:45:05 +0200
 
-cups (2.3.3op2-3+deb11u6+puavo1+buildonce) bullseye; urgency=medium
+cups (2.3.3op2-3+deb11u8) bullseye; urgency=medium
 
-  * Add puavo-no-avahi-printers.patch to potentially suppress
-    printers appearing in UI dialogs.
+  * fix regression of CVE-2024-35235 in case only domain sockets
+    are used
 
- -- Puavo Org <dev@opinsys.fi>  Thu, 23 Nov 2023 15:56:37 +0100
+ -- Thorsten Alteholz <debian@alteholz.de>  Tue, 25 Jun 2024 22:16:49 +0200
+
+cups (2.3.3op2-3+deb11u7) bullseye; urgency=medium
+
+  * CVE-2024-35235 (Closes: #1073002)
+    fix domain socket handling
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Tue, 11 Jun 2024 22:16:49 +0200
 
 cups (2.3.3op2-3+deb11u6) bullseye; urgency=medium
 
