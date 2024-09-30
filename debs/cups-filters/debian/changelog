@@ -1,9 +1,22 @@
-cups-filters (1.28.7-1+deb11u2+puavo1) bullseye; urgency=medium
+cups-filters (1.28.7-1+deb11u3) bullseye-security; urgency=high
 
-  * Make some changes to cups-browsed.
-  * Add manually the incoming 1.28.7-1+deb11u2 (main) [bullseye-proposed-updates] patch
+  * CVE-2024-47076 (Closes: #1082827)
+    cfGetPrinterAttributes5(): Validate response attributes before return
+  * CVE-2024-47176 (Closes: #1082820)
+    Default BrowseRemoteProtocols should not include "cups" protocol
 
- -- Puavo Org <dev@opinsys.fi>  Wed, 29 Jun 2022 10:40:43 +0300
+ -- Thorsten Alteholz <debian@alteholz.de>  Thu, 26 Sep 2024 23:45:05 +0200
+
+cups-filters (1.28.7-1+deb11u2) bullseye-security; urgency=high
+
+  * CVE-2023-24805
+    prevent arbitrary command execution by escaping the quoting
+    of the arguments in a job with a forged job title
+    more information are available in the commit message at:
+    https://github.com/OpenPrinting/cups-filters/commit/93e60d3df35
+    (Closes: #1036224)
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Fri, 19 May 2023 18:25:20 +0200
 
 cups-filters (1.28.7-1+deb11u1) bullseye; urgency=medium
 
