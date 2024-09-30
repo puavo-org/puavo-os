@@ -389,6 +389,7 @@ class packages {
     , 'gimp-plugin-registry'
     , 'godot3'
     , 'gthumb'
+    , 'heif-gdk-pixbuf'         # Support for HEIF/HEIC Image formats
     , 'inkscape'
     , 'kdenlive'
     , 'kolourpaint'
@@ -811,7 +812,8 @@ class packages {
     , 'wimtools'
     , 'wmctrl'
     , 'xinput'
-    , 'xxd' ]:
+    , 'xxd'
+    , 'zbarcam-gtk' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
     [ 'qemu-system-x86'
