@@ -1,3 +1,10 @@
+cups-filters (1.28.7-1+deb11u3+puavo1) bullseye; urgency=medium
+
+  * Make some changes to cups-browsed.
+  * Add manually the incoming 1.28.7-1+deb11u2 (main) [bullseye-proposed-updates] patch
+
+ -- Puavo Org <dev@opinsys.fi>  Mon, 30 Sep 2024 11:47:41 +0300
+
 cups-filters (1.28.7-1+deb11u3) bullseye-security; urgency=high
 
   * CVE-2024-47076 (Closes: #1082827)
