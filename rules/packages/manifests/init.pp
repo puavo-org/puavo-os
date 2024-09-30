@@ -369,6 +369,7 @@ class packages {
     # , 'gimp-ufraw'            # XXX missing from Bullseye
     , 'godot3'
     , 'gthumb'
+    , 'heif-gdk-pixbuf'         # Support for HEIF/HEIC Image formats
     , 'inkscape'
     , 'kdenlive'
     # , 'kino'                  # XXX missing from Bullseye
