@@ -520,7 +520,10 @@ choose_wim_image_to_use()
         .images | map_values(select(.language == $language
                                       and .version == $version))
                 | to_entries | map(.key) | .[]
-      ' wim.json) || re
+      ' wim.json) || {
+      logerr 'Failed to parse version and language information from wim.json'
+      return 1
+    }
 
   preferred_version_count="$(printf "%s\n" "$preferred_versions" | wc -l)"
 
