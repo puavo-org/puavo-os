@@ -29,7 +29,7 @@ class gnome_shell_extensions {
       notify  => Exec['update dconf'],
       require => ::Dconf::Schemas::Schema['org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml'];
 
-    "/etc/dconf/db/screenkeyboardcontroller_${mode}.d/locks/screenkeyboardcontroller_${mode}_profile":
+    "/etc/dconf/db/screenkeyboardcontroller_${mode}.d/screenkeyboardcontroller_${mode}_profile":
       content => template('gnome_shell_extensions/dconf_screenkeyboardcontroller_profile'),
       notify  => Exec['update dconf'],
       require => ::Dconf::Schemas::Schema['org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml'];
