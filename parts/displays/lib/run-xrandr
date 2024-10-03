@@ -198,7 +198,7 @@ def set_max_bpc_only_once()
     return
   end
 
-  system('/usr/lib/puavo-ltsp-client/set-max-bpc')
+  system('puavo-set-max-bpc')
   set_max_bpc_status = $?.exitstatus
 
   # One attempt is enough, no matter if it failed or not. Subsequent
@@ -206,10 +206,10 @@ def set_max_bpc_only_once()
   $has_max_bpc_been_set = true
 
   if set_max_bpc_status != 0 then
-    Syslog.log(Syslog::LOG_ERR, "set-max-bpc FAILED")
+    Syslog.log(Syslog::LOG_ERR, "puavo-set-max-bpc FAILED")
     $status = 1
   else
-    Syslog.log(Syslog::LOG_INFO, "set-max-bpc ok")
+    Syslog.log(Syslog::LOG_INFO, "puavo-set-max-bpc ok")
   end
 
   if $options[:only_set_max_bpc] then
