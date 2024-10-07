@@ -1,0 +1,206 @@
+From 127515bdaa6606606c82688fc5d9e56a3560d1c6 Mon Sep 17 00:00:00 2001
+From: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Date: Wed, 12 Jun 2024 13:01:14 +0300
+Subject: [PATCH] Add "device deleted" warning to gnome-shell login screen
+
+---
+ .../gnome-shell-sass/widgets/_puavo.scss      | 16 ++++++++
+ js/gdm/authPrompt.js                          | 27 ++++++++++++
+ js/gdm/loginDialog.js                         | 41 +++++++++++++++++++
+ po/de.po                                      |  3 ++
+ po/fi.po                                      |  4 ++
+ po/sv.po                                      |  4 ++
+ 6 files changed, 95 insertions(+)
+
+diff --git a/data/theme/gnome-shell-sass/widgets/_puavo.scss b/data/theme/gnome-shell-sass/widgets/_puavo.scss
+index c5872a3b2..db07b451b 100644
+--- a/data/theme/gnome-shell-sass/widgets/_puavo.scss
++++ b/data/theme/gnome-shell-sass/widgets/_puavo.scss
+@@ -18,6 +18,22 @@
+   font-weight: bold;
+ }
+ 
++.login-dialog-deleted-box {
++  max-width: 23em;
++}
++
++.login-dialog-deleted-label {
++  margin-top: 1em;
++  margin-bottom: 1em;
++  color: #ff0000;
++  font-weight: bold;
++}
++
++.login-dialog-deleted-icon {
++  background-color: rgba(0,0,0,0.8);
++  border-radius: 1em;
++}
++
+ .login-dialog-forgot-label {
+   padding-right: 2em;
+   .login-dialog-forgot-button:focus &,
+diff --git a/js/gdm/authPrompt.js b/js/gdm/authPrompt.js
+index e8dc6f2c5..ca5721317 100644
+--- a/js/gdm/authPrompt.js
++++ b/js/gdm/authPrompt.js
+@@ -105,6 +105,33 @@ var AuthPrompt = GObject.registerClass({
+ 
+         this.connect('destroy', this._onDestroy.bind(this));
+ 
++        // NOTE: duplicated deleteWarningBox elements here and in loginDialog. Not the most pretty thing, but
++        // due to how layouting works here, might be the simplest solution
++        this._deletedWarningBox = new St.BoxLayout({
++            style_class: 'login-dialog-deleted-box',
++            x_align: Clutter.ActorAlign.CENTER,
++            y_align: Clutter.ActorAlign.CENTER,
++            x_expand: true,
++            vertical: false,
++            visible: true,
++        });
++
++        let deleteIcon = new St.Icon({
++            style_class: 'login-dialog-deleted-icon',
++            icon_name: "computer-fail-symbolic",
++            icon_size: 144,
++        });
++        let deleteLabel = new St.Label({
++            style_class: 'login-dialog-deleted-label',
++            text: _("An issue with device registration was detected. If the problem persists, please contact support."),
++        });
++        deleteLabel.clutter_text.line_wrap = true;
++        deleteLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
++
++        this._deletedWarningBox.add_child(deleteIcon);
++        this._deletedWarningBox.add_child(deleteLabel);
++
++        this.add_child(this._deletedWarningBox);
+         this._userWell = new St.Bin({
+             x_expand: true,
+             y_expand: true,
+diff --git a/js/gdm/loginDialog.js b/js/gdm/loginDialog.js
+index 30755943e..9540e13a6 100644
+--- a/js/gdm/loginDialog.js
++++ b/js/gdm/loginDialog.js
+@@ -451,6 +451,30 @@ var LoginDialog = GObject.registerClass({
+         this._textureCache.connectObject('texture-file-changed',
+             this._updateLogoTexture.bind(this), this);
+ 
++        // NOTE: duplicated deleteWarningBox elements here and in authPrompt. Not the most pretty thing, but
++        // due to how layouting works here, might be the simplest solution
++        this._deletedWarningBox = new St.BoxLayout({
++            style_class: 'login-dialog-deleted-box',
++            x_align: Clutter.ActorAlign.CENTER,
++            y_align: Clutter.ActorAlign.CENTER,
++            vertical: false,
++            visible: true,
++        });
++        let deleteIcon = new St.Icon({
++            style_class: 'login-dialog-deleted-icon',
++            icon_name: "computer-fail-symbolic",
++            icon_size: 144,
++        });
++        let deleteLabel = new St.Label({
++            style_class: 'login-dialog-deleted-label',
++            text: _("An issue with device registration was detected. If the problem persists, please contact support."),
++        });
++        deleteLabel.clutter_text.line_wrap = true;
++        deleteLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
++
++        this._deletedWarningBox.add_child(deleteIcon);
++        this._deletedWarningBox.add_child(deleteLabel);
++
+         this._userSelectionBox = new St.BoxLayout({
+             style_class: 'login-dialog-user-selection-box',
+             x_align: Clutter.ActorAlign.CENTER,
+@@ -459,6 +483,7 @@ var LoginDialog = GObject.registerClass({
+             visible: false,
+         });
+         this.add_child(this._userSelectionBox);
++        this._userSelectionBox.add_child(this._deletedWarningBox);
+ 
+         let accepted_users = this._settings.get_string('accepted-usernames-for-userlist');
+         this._userList = new UserList(accepted_users);
+@@ -468,8 +493,11 @@ var LoginDialog = GObject.registerClass({
+         this._authPrompt.connect('prompted', this._onPrompted.bind(this));
+         this._authPrompt.connect('reset', this._onReset.bind(this));
+         this._authPrompt.hide();
++
+         this.add_child(this._authPrompt);
+ 
++        this.checkIfDeleted()
++
+         // translators: this message is shown below the user list on the
+         // login screen. It can be activated to reveal an entry for
+         // manually entering the username.
+@@ -1280,6 +1308,7 @@ var LoginDialog = GObject.registerClass({
+         else
+             this._forgotButton.show();
+         this._userList.grab_key_focus();
++        this.checkIfDeleted();
+     }
+ 
+     _beginVerificationForItem(item) {
+@@ -1407,4 +1436,16 @@ var LoginDialog = GObject.registerClass({
+             }
+         }
+     }
++
++    checkIfDeleted() {
++        var file = Gio.file_new_for_path( '/state/etc/puavo/HOST_REMOVED_FROM_PUAVO' );
++        if( file.query_exists( null ) == true ) {
++            this._deletedWarningBox.show();
++            this._authPrompt._deletedWarningBox.show();
++        }
++        else {
++            this._deletedWarningBox.hide();
++            this._authPrompt._deletedWarningBox.hide();
++        }
++    }
+ });
+diff --git a/po/de.po b/po/de.po
+index 5fc745657..68b9dcdbc 100644
+--- a/po/de.po
++++ b/po/de.po
+@@ -3295,6 +3295,9 @@ msgstr "Passwort vergessen"
+ msgid "Return"
+ msgstr "Zurück"
+ 
++#: js/gdm/authPrompt.js
++msgid "An issue with device registration was detected. If the problem persists, please contact support."
++msgstr "Es wurde ein Problem bei der Geräteregistrierung festgestellt. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an den Support."
+ 
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Häufig genutzte Anwendungen erscheinen hier"
+diff --git a/po/fi.po b/po/fi.po
+index cdad5c486..19e92645d 100644
+--- a/po/fi.po
++++ b/po/fi.po
+@@ -3208,6 +3208,10 @@ msgstr "Unohdin salasanani"
+ msgid "Return"
+ msgstr "Palaa"
+ 
++#: js/gdm/authPrompt.js
++msgid "An issue with device registration was detected. If the problem persists, please contact support."
++msgstr "Laiterekisteröinnissä havaittiin vikatilanne. Jos ongelma jatkuu, ota yhteyttä tukeen."
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Usein käytetyt sovellukset ilmestyvät tänne"
+ 
+diff --git a/po/sv.po b/po/sv.po
+index f49227bc7..a942abe4a 100644
+--- a/po/sv.po
++++ b/po/sv.po
+@@ -3231,6 +3231,10 @@ msgstr "Glömt lösenord"
+ msgid "Return"
+ msgstr "Tillbaka"
+ 
++#: js/gdm/authPrompt.js
++msgid "An issue with device registration was detected. If the problem persists, please contact support."
++msgstr "Ett problem med enhetsregistreringen upptäcktes. Om problemet kvarstår, kontakta supporten."
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Ofta använda program kommer visas här"
+ 
+-- 
+2.39.2
+
