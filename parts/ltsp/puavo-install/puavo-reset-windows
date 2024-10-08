@@ -668,7 +668,7 @@ reset_all_wins()
   returnval=0
 
   while IFS= read -r -d $'\0' win_c_partition_devpath; do
-    if [ -z "${g_win_c_partition_devpath}" -o "${g_win_c_partition_devpath}" = "${win_c_partition_devpath}" ]; then
+    if [ -z "${g_win_c_partition_devpath}" ] || [ "${g_win_c_partition_devpath}" = "${win_c_partition_devpath}" ]; then
       reset_win "${win_c_partition_devpath}" || {
         returnval=1
       }
