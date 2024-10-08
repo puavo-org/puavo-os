@@ -465,7 +465,7 @@ wget_with_certauth()
 
 get_wim_catalogue()
 {
-  local gnupg_dir wim_image_source_urls wim_gpg_tmppath wim_path \
+  local gnupg_dir wim_image_source_urls wim_gpg_tmppath \
         wim_server wim_tmppath
 
   wim_image_source_urls=$(puavo-conf puavo.windows.image.sources)
