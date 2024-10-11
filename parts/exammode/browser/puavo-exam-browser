@@ -8,10 +8,11 @@ import sys
 import syslog
 
 import gi
-gi.require_version('Gdk', '3.0')
-gi.require_version('Gtk', '3.0')
-gi.require_version('WebKit2', '4.1')
-from gi.repository import Gdk, Gtk, WebKit2
+# gi.require_version('Gdk', '4.0')
+gi.require_version('Gtk', '4.0')
+gi.require_version('WebKit', '6.0')
+# from gi.repository import Gdk, Gtk, WebKit
+from gi.repository import Gtk, WebKit
 
 gettext.bindtextdomain('puavo-exam-browser', '/usr/share/locale')
 gettext.textdomain('puavo-exam-browser')
@@ -32,11 +33,11 @@ ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
 style_provider = Gtk.CssProvider()
 style_provider.load_from_data(CSS)
 
-Gtk.StyleContext.add_provider_for_screen(
-    Gdk.Screen.get_default(),
-    style_provider,
-    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-)
+# Gtk.StyleContext.add_provider_for_screen(
+#     Gdk.Screen.get_default(),
+#     style_provider,
+#     Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+# )
 
 
 class UriRequestDialog():
@@ -60,7 +61,7 @@ class UriRequestDialog():
     self.alignment.add(self.vbox)
 
     self.exam_browser.win.add(self.alignment)
-    self.exam_browser.win.show_all()
+    # XXX self.exam_browser.win.show_all()
 
 
   def on_change_uri(self, widget):
@@ -83,13 +84,17 @@ class PuavoExamBrowser():
     2, 2*9/8, 2*5/4, 2*7/5, 2*8/5, 2*16/9, 4,
   ]
 
-  def __init__(self):
+  def __init__(self, cmdline_server):
     os.makedirs(self.BROWSER_DIR, exist_ok=True)
+
+    self.app = Gtk.Application()
+    self.app.connect('activate', self.on_activate)
+
+    self.cmdline_server = cmdline_server
     self.server = None
     self.server_candidate = None
     self.zoom_level_index = 6
     self.load_state()
-    self.win = Gtk.Window()
 
 
   def load_state(self):
@@ -114,6 +119,8 @@ class PuavoExamBrowser():
 
 
   def set_window_size(self):
+    # XXX
+    return
     screen = self.win.get_screen()
     height = screen.get_height()
     width = screen.get_width()
@@ -121,26 +128,31 @@ class PuavoExamBrowser():
     self.win.set_default_size(width, height)
 
 
-  def setup_ui(self, server):
-    if not server:
+  def setup_ui(self):
+    self.win = Gtk.ApplicationWindow(application=self.app)
+
+    if self.cmdline_server:
+      server = self.cmdline_server
+    else:
       server = self.server
 
-    self.win.connect('destroy', Gtk.main_quit)
+    # XXX how to quit in Gtk4 ?  (main_quit is no more)
+    # self.win.connect('destroy', Gtk.main_quit)
 
     self.set_window_size()
     self.win.set_title(_tr('Puavo Exam Browser'))
-    self.win.set_position(Gtk.WindowPosition.CENTER)
-    self.win.set_icon_from_file(ICON_PATH)
+    # XXX self.win.set_position(Gtk.WindowPosition.CENTER)
+    # XXX self.win.set_icon_from_file(ICON_PATH)
 
     self.is_fullscreen = False
 
-    self.win.connect('delete-event', self.on_delete)
-    self.win.connect('key-press-event', self.on_keypress)
-    self.win.connect('window-state-event', self.on_window_state)
+    # XXX self.win.connect('delete-event', self.on_delete)
+    # XXX self.win.connect('key-press-event', self.on_keypress)
+    # XXX self.win.connect('window-state-event', self.on_window_state)
 
     self.list_of_uris_to_try = []
 
-    self.webview = WebKit2.WebView()
+    self.webview = WebKit.WebView()
     self.disable_cert_checks()  # XXX perhaps not okay?
     self.webview.connect('authenticate', self.on_authenticate)
     self.webview.connect('load-changed', self.on_load_changed)
@@ -155,6 +167,8 @@ class PuavoExamBrowser():
     else:
       self.uri_request_dialog = UriRequestDialog(exam_browser)
       self.uri_request_dialog.setup()
+
+    self.win.present()
 
 
   def on_delete(self, widget, event):
@@ -189,8 +203,9 @@ class PuavoExamBrowser():
 
 
   def on_keypress(self, widget, event):
-    key = Gdk.keyval_name(event.keyval)
-    has_control = (event.state & Gdk.ModifierType.CONTROL_MASK)
+    # key = Gdk.keyval_name(event.keyval)
+    return
+    # has_control = (event.state & Gdk.ModifierType.CONTROL_MASK)
 
     if has_control and key == 'plus':
       self.adjust_zoom(True)
@@ -212,9 +227,10 @@ class PuavoExamBrowser():
 
 
   def on_window_state(self, widget, event):
-    self.is_fullscreen \
-      = bool(event.new_window_state & Gdk.WindowState.FULLSCREEN)
-    return True
+    return
+    # self.is_fullscreen \
+    #   = bool(event.new_window_state & Gdk.WindowState.FULLSCREEN)
+    # return True
 
 
   def try_server(self, server):
@@ -260,7 +276,7 @@ class PuavoExamBrowser():
 
 
   def on_load_changed(self, widget, load_event):
-    if load_event != WebKit2.LoadEvent.FINISHED:
+    if load_event != WebKit.LoadEvent.FINISHED:
       return True
 
     if self.load_failed:
@@ -272,8 +288,8 @@ class PuavoExamBrowser():
       self.uri_request_dialog = None
 
     if not self.webview_shown:
-      self.win.add(self.webview)
-      self.win.show_all()
+      self.win.set_child(self.webview)
+      # XXX self.win.show_all()
       self.webview_shown = True
 
     self.server = self.server_candidate
@@ -282,10 +298,24 @@ class PuavoExamBrowser():
     return True
 
 
-  # XXX is this okay?
   def disable_cert_checks(self):
-    web_context = self.webview.get_context()
-    web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
+    network_session = self.webview.get_network_session()
+    network_session.set_tls_errors_policy(WebKit.TLSErrorsPolicy.IGNORE)
+
+
+  def on_activate(self, app):
+    try:
+      exam_browser.setup_ui()
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR, 'unexpected error during application setup: %s' % e)
+      # XXX you should you just quit here?
+      raise e
+
+    return
+
+
+  def run(self, server):
+    self.app.run()
 
 
 exitstatus = 0
@@ -298,10 +328,8 @@ if len(sys.argv) == 2:
 
 try:
   signal.signal(signal.SIGINT, signal.SIG_DFL)
-  Gtk.init(sys.argv)
-  exam_browser = PuavoExamBrowser()
-  exam_browser.setup_ui(server)
-  Gtk.main()
+  exam_browser = PuavoExamBrowser(server)
+  exam_browser.run(None)
 except Exception as e:
   syslog.syslog(syslog.LOG_ERR, 'unexpected error: %s' % e)
   exitstatus = 1
