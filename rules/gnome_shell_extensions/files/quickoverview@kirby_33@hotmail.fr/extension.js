@@ -11,9 +11,9 @@ const OverviewButton = new Lang.Class({
     _init: function() {
         this.parent(0.0,'QuickOverview');
         this.buttonIcon = new St.Icon({ style_class: 'system-status-icon', 'icon_size': 32 });
-        this.actor.add_actor(this.buttonIcon);
+        this.add_actor(this.buttonIcon);
         this.buttonIcon.icon_name='puavo-multitasking-view';
-        this.actor.connect('button-press-event', Lang.bind(this, this._refresh));
+        this.connect('button-press-event', Lang.bind(this, this._refresh));
         this.original_speed = St.Settings.get().slow_down_factor;
         this.modified_speed = HIGHT_SPEED;
     },
@@ -50,9 +50,9 @@ function enable() {
         if(indicator != null)
         indicator.container.hide();
     } else {
-        Main.panel._leftBox.insert_child_at_index(QuickOverviewButton.actor,0);
+        Main.panel._leftBox.insert_child_at_index(QuickOverviewButton,0);
         Main.panel._menus.addMenu(QuickOverviewButton.menu);
-        Main.panel._activitiesButton.actor.hide();
+        Main.panel._activitiesButton.hide();
     }
 
 }
@@ -66,7 +66,7 @@ function disable() {
         if(indicator != null)
         indicator.container.show();
     } else {
-        Main.panel._activitiesButton.actor.show();
+        Main.panel._activitiesButton.show();
     }
 
 }
