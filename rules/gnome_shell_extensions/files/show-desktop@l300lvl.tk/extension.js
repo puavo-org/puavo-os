@@ -57,10 +57,10 @@ function _showDesktop() {
                 }
             if (shouldrestore) {
                 //toggle icon to the opposite settings when windows are minimized
-                indicatorBox.actor.connect('enter-event', function() {
+                indicatorBox.connect('enter-event', function() {
                     _SetButtonIcon('hover');
                 });
-                indicatorBox.actor.connect('leave-event', function() {
+                indicatorBox.connect('leave-event', function() {
                     _SetButtonIcon('base');
                 });
                 //only check and hide overview when button clicked durp durp
@@ -81,10 +81,10 @@ function _showDesktop() {
             if (!windows[i].skip_taskbar){
                 if (!windows[i].minimized) {
                     //set dfault hover icon when no windows minimized
-                    indicatorBox.actor.connect('enter-event', function() {
+                    indicatorBox.connect('enter-event', function() {
                         _SetButtonIcon('base');
                     });
-                    indicatorBox.actor.connect('leave-event', function() {
+                    indicatorBox.connect('leave-event', function() {
                         _SetButtonIcon('hover');
                     });
                     //only check and hide overview when button clicked durp durp
@@ -104,7 +104,7 @@ function _showDesktop() {
 function ShowDesktopButton() {
     //create initial panel button
     indicatorBox = new PanelMenu.Button(0.0, null, true);
-    indicatorBox.actor.accessible_role = Atk.Role.TOGGLE_BUTTON;
+    indicatorBox.accessible_role = Atk.Role.TOGGLE_BUTTON;
     //get current status to create the right icon mode if we change panel positions and have already toggled
     if (_desktopShown == false) {
         //create base icon since we have not toggled
@@ -114,11 +114,11 @@ function ShowDesktopButton() {
             style_class: 'system-status-icon' //sets st icon to system style
         });
         //set icon on mouse over
-        indicatorBox.actor.connect('enter-event', function() {
+        indicatorBox.connect('enter-event', function() {
             _SetButtonIcon('hover');
         });
         //reverse mode when the cursor is no longer hovering
-        indicatorBox.actor.connect('leave-event', function() {
+        indicatorBox.connect('leave-event', function() {
             _SetButtonIcon('base');
         });
     } else {
@@ -129,20 +129,20 @@ function ShowDesktopButton() {
             style_class: 'system-status-icon' //sets st icon to system style
         });
         //set icon on mouse over
-        indicatorBox.actor.connect('enter-event', function() {
+        indicatorBox.connect('enter-event', function() {
             _SetButtonIcon('base');
         });
         //reverse mode when the cursor is no longer hovering
-        indicatorBox.actor.connect('leave-event', function() {
+        indicatorBox.connect('leave-event', function() {
             _SetButtonIcon('hover');
         });
     }
     //add icon to panel button
-    indicatorBox.actor.add_actor(icon);
+    indicatorBox.add_actor(icon);
     //sets key release event when icon is hovered via alt tab panel or selecting an item in panel
-    indicatorBox.actor.connect_after('key-release-event', _onKeyRelease);
+    indicatorBox.connect_after('key-release-event', _onKeyRelease);
     //calls the function to toggle desktop when clicked now works when click is released
-    indicatorBox.actor.connect('button-release-event', _showDesktop);
+    indicatorBox.connect('button-release-event', _showDesktop);
     //finally add panel button to statusArea todo allow settings position as well as box
     Main.panel.addToStatusArea("ShowDesktop", indicatorBox, 1, box);
 }
