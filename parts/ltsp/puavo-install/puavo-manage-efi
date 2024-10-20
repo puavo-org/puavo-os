@@ -7,7 +7,10 @@ g_exitval=1
 g_no_efi_is_ok=false
 g_cmd=
 g_umount_on_exit=
+g_win_c_partition_devpath=
 PID_FILE=/run/puavo-manage-efi.pid # Locks this file to ensure only one puavo-manage-efi is running
+ESP_WINDOWS_DIR='/boot/efi/EFI/Microsoft'
+GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C='Puavo_Installed_Windows_C'
 
 log() {
   logger -t puavo-manage-efi -p "user.${1}" "$2" || true
@@ -41,6 +44,97 @@ get_windows_boot_entries_to_change() {
   '
 }
 
+get_esp_devpaths()
+{
+  lsblk -n -l -o PATH,PARTTYPE | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" {print $1}'
+}
+
+get_one_esp_devpath()
+{
+  local esp_devpath esp_devpath_count line
+
+  esp_devpath_count=0
+
+  while read -r line; do
+    if [ -z "${line}" ]; then
+      continue
+    fi
+    esp_devpath="${line}"
+    log notice "Found ESP at '${esp_devpath}'"
+    esp_devpath_count=$((esp_devpath_count + 1))
+  done < <(get_esp_devpaths) || {
+    log err 'failed to find ESP'
+    return 1
+  }
+
+  if [ ${esp_devpath_count} -eq 0 ]; then
+    log err 'failed to find ESP'
+    return 1
+  elif [ ${esp_devpath_count} -gt 1 ]; then
+    log err 'found multiple ESPs'
+    return 1
+  fi
+
+  echo -n "${esp_devpath}"
+}
+
+get_esp_partnum()
+{
+  local esp_devpath partnum
+
+  esp_devpath="$1"
+  shift
+
+  partnum=$(stat --format %Lr "${esp_devpath}") || {
+    log err 'failed to get the partition number of ESP'
+    return 1
+  }
+
+  if [ "$partnum" -lt 1 ]; then
+    log err "file '${esp_devpath}' is not ESP (not a block device)"
+    return 1
+  fi
+
+  echo -n "$partnum"
+}
+
+get_esp_disk()
+{
+  local esp_devpath disk_devpath
+
+  esp_devpath=$1
+  shift
+
+  disk_devpath=$(lsblk -p -J -s "${esp_devpath}" | jq -r '.blockdevices[0].children[0] | select(.type == "disk").name') || {
+    log err "failed to find ESP disk for ESP '${esp_devpath}'"
+    return 1
+  }
+
+  if [ -z "${disk_devpath}" ]; then
+    log err 'failed to find ESP disk (jq empty output)'
+    return 1
+  fi
+
+  echo -n "${disk_devpath}"
+}
+
+efibootmgr_win_create() {
+  local esp_devpath esp_disk esp_partnum
+
+  log notice 'creating a Windows boot entry'
+
+  esp_devpath=$(get_one_esp_devpath) || return 1
+  esp_disk=$(get_esp_disk "${esp_devpath}") || return 1
+  esp_partnum=$(get_esp_partnum "${esp_devpath}") || return 1
+
+  efibootmgr -c -L "Puavo Installed Windows Boot Manager" -l "\EFI\Microsoft\Boot\bootmgfw.efi" -d "${esp_disk}" -p "${esp_partnum}" || {
+    log err 'failed to create a Windows boot entry'
+    return 1
+  }
+
+  log notice 'created a Windows boot entry'
+}
+
 efibootmgr_windows() {
   local boot_entry efibootmgr_flag enable_or_disable_msg
 
@@ -48,8 +142,13 @@ efibootmgr_windows() {
   case "$efibootmgr_flag" in
     -A) enable_or_disable_msg='disabling' ;;
     -a) enable_or_disable_msg='enabling'  ;;
+    -c)
+      efibootmgr_win_create
+      return $?
+      ;;
      *) return 1;;
   esac
+
 
   for boot_entry in $(get_windows_boot_entries_to_change "$efibootmgr_flag"); do
     log notice "${enable_or_disable_msg} Windows boot entry ${boot_entry}"
@@ -90,14 +189,14 @@ esp_break_windows() {
 
   if [ -e "$defused_windows_file" ]; then
     # nothing to do
-    if [ -d '/boot/efi/EFI/Microsoft' ]; then
-      log info "cleaning up /boot/efi/EFI/Microsoft that should not exist"
-      rm -rf '/boot/efi/EFI/Microsoft' || true
+    if [ -d "${ESP_WINDOWS_DIR}" ]; then
+      log info "cleaning up ${ESP_WINDOWS_DIR} that should not exist"
+      rm -rf "${ESP_WINDOWS_DIR}" || true
     fi
     return 0
   fi
 
-  if [ ! -d '/boot/efi/EFI/Microsoft' ]; then
+  if [ ! -d "${ESP_WINDOWS_DIR}" ]; then
     # not doing/logging anything, perhaps we do not have Windows installed
     # and that should be normal
     return 0
@@ -114,14 +213,62 @@ esp_break_windows() {
     log err 'failed to defuse Windows (mv error)'
     return 1
   fi
-  if ! rm -rf '/boot/efi/EFI/Microsoft'; then
-    log warning "error cleaning up /boot/efi/EFI/Microsoft"
+  if ! rm -rf "${ESP_WINDOWS_DIR}"; then
+    log warning "error cleaning up ${ESP_WINDOWS_DIR}"
     return 1
   fi
 
   log notice 'Windows defused'
 
   return 0
+}
+
+esp_install_windows() {
+  local defused_windows_file tmp_windows_dir win_c_partition_devpath
+
+  win_c_partition_devpath=$1
+  shift
+  
+  defused_windows_file='/boot/efi/EFI/Puavo-defused-Windows.tar.gz'
+  tmp_windows_dir="${ESP_WINDOWS_DIR}.tmp"
+  rm -rf "${tmp_windows_dir}"
+
+  if [ -e "${defused_windows_file}" ]; then
+    log err 'ESP already contains a defused Windows'
+    return 1
+  fi
+
+  if [ -e "${ESP_WINDOWS_DIR}" ]; then
+    log err 'ESP already contains Windows'
+    return 1
+  fi
+
+  log info 'installing Windows bootloader...'
+  mkdir "${tmp_windows_dir}" || {
+    log err 'failed to install Windows bootloader (mkdir)'
+    return 1
+  }
+  puavo-reset-windows --mode install-boot-dir "${win_c_partition_devpath}" "${tmp_windows_dir}" || {
+    log err 'failed to install Windows bootloader (puavo-reset-windows)'
+    rm -rf "${tmp_windows_dir}" || true
+    return 1
+  }
+  mv -n -T "${tmp_windows_dir}" "${ESP_WINDOWS_DIR}" || {
+    log err 'failed to install Windows bootloader (mv)'
+    rm -rf "${tmp_windows_dir}" || true
+    return 1
+  }
+  if [ -d "${tmp_windows_dir}" ]; then
+    # mv failed because the source dir still exists
+    log err 'failed to install Windows bootloader (mv)'
+    rm -rf "${ESP_WINDOWS_DIR}" || true
+    rm -rf "${tmp_windows_dir}" || true
+    return 1
+  fi
+
+  sync || true
+
+  log info 'Windows bootloader installed'
 }
 
 esp_fix_windows() {
@@ -139,7 +286,7 @@ esp_fix_windows() {
   log info 'repriming Windows...'
   tar -C '/boot/efi/EFI' -z -x -f "$defused_windows_file" || {
     log err 'error repriming Windows (tar error)'
-    rm -rf '/boot/efi/EFI/Microsoft' || true
+    rm -rf "${ESP_WINDOWS_DIR}" || true
     return 1
   }
   sync || true
@@ -162,12 +309,24 @@ efi_enable_windows() {
   efibootmgr_windows -a
 }
 
+efi_install_windows() {
+  local win_c_partition_devpath
+
+  win_c_partition_devpath=$1
+  shift
+
+  esp_install_windows "${win_c_partition_devpath}" || return 1
+  efibootmgr_windows -c
+}
+
 has_efi() {
   grep -q '^efivarfs ' /proc/mounts
 }
 
 usage() {
-  echo "Usage: $0 [OPTIONS] COMMAND"
+  echo "Usage: $0 [OPTIONS] disable-windows"
+  echo "       $0 [OPTIONS] enabled-windows"
+  echo "       $0 [OPTIONS] install-windows WIN_C_PARTITION_DEVPATH"
   echo "       $0 --help"
 }
 
@@ -195,6 +354,7 @@ while [ $# -gt 0 ]; do
         echo "Commands:"
         echo "    disable-windows              disable Windows"
         echo "    enable-windows               enable Windows"
+        echo "    install-windows              install Windows boot manager to ESP, lookup Windows version from WIN_C_PARTITION_DEVPATH"
         echo
         echo "Options:"
         echo "    --no-efi-is-ok               exit with status 0 if the system does not use EFI"
@@ -220,12 +380,24 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-if [ $# -ne 1 ]; then
-  usage_error "invalid number of arguments ($#), expected 1"
+if [ $# -lt 1 ]; then
+  usage_error 'COMMAND is missing'
 fi
 
 g_cmd=$1
 shift
+
+if [ "${g_cmd}" = 'install-windows' ]; then
+  if [ $# -lt 1 ]; then
+    usage_error 'WIN_C_PARTITION_DEVPATH is missing'
+  fi
+  g_win_c_partition_devpath=$1
+  shift
+fi
+
+if [ $# -ne 0 ]; then
+  usage_error 'too many arguments'
+fi
 
 if ! has_efi; then
   if ${g_no_efi_is_ok}; then
@@ -260,6 +432,9 @@ case "${g_cmd}" in
     ;;
   disable-windows)
     efi_disable_windows
+    ;;
+  install-windows)
+    efi_install_windows "${g_win_c_partition_devpath}"
     ;;
   *)
     usage_error "invalid command '${g_cmd}'"

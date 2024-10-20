@@ -51,7 +51,11 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
 		dbus-1/org.puavo.client.Daemon.service
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
+		lib/minimal-bcd
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
+		lib/create-bcd \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-image-preinst \

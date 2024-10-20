@@ -5,26 +5,35 @@ set -o pipefail
 
 usage() {
   cat <<EOF
-$(basename "$0") [--force] [WIN_C_PARTITION_DEVPATH]
+$(basename "$0") [--mode reset-c-partition] [--force] [WIN_C_PARTITION_DEVPATH]
+$(basename "$0") --mode install-boot-dir [--force] WIN_C_PARTITION_DEVPATH BOOT_DIR
 
-By default, scans all block devices for Windows C partitions and
-resets them. User is asked for confirmation on each one, unless
---force is used. If WIN_C_PARTITION_DEVPATH is given, only it is
-reset, not all.
+If --mode reset-c-partition is given, scans all block devices for
+Windows C partitions and resets them. User is asked for confirmation
+on each one, unless --force is used. If WIN_C_PARTITION_DEVPATH is
+given, only it is reset, not all.
 
+If --mode install-boot-dir is given, Windows bootmanager with all
+required files is installed to BOOT_DIR. Windows version is read form
+WIN_C_PARTITION_DEVPATH.
+
+  --mode MODE           set operation mode, choices: {reset-c-partition, install-boot-dir}, default: reset-c-partition
   --force               no questions asked
 EOF
   exit 1
 }
 
 ## Globals
+g_boot_dir=                             # Directory where Windows bootmanager is installed. Used only when --mode install-boot-dir.
 g_exitval=1                             # Premature exit is an error by default.
 g_use_force=false                       # --force sets to true
 g_lockfd=                               # Will be set when lockfile is opened
+g_mode='reset-c-partition'              # Operation mode
 g_win_c_partition_devpath=              # can be passed as arg, but if not given, all found C partitions will be reset
 G_RESET_STATE_DIR=/state/windows
 G_WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
-G_WIM_CATALOGUE_PATH="${G_WORK_DIR}/wim.json"
+#G_WIM_CATALOGUE_PATH="${G_WORK_DIR}/wim.json"
+G_WIM_CATALOGUE_PATH="/tmp/wim.json"
 G_PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
 
 on_exit()
@@ -290,7 +299,7 @@ print0_wim_image_index()
   loginfo "Finding WIM image for '${win_product_name}' from '${wim_file_path}'..."
 
   wim_image_index=$(wiminfo "${wim_file_path}" \
-                      | sed -r -n 's/^Display Name:\s+//p' \
+                      | sed -r -n 's/^Name:\s+//p' \
                       | grep -n -x "${win_product_name}" \
                       | cut -d: -f1) || {
     logerr "Failed to find WIM image for '${win_product_name}' from '${wim_file_path}'."
@@ -306,17 +315,47 @@ print0_wim_image_index()
   printf "%d" "${wim_image_index}"
 }
 
+image_type_to_jq_key()
+{
+  local image_type
+
+  image_type=$1
+  shift
+
+  case "${image_type}" in
+    boot)
+      echo -n bootimages
+      ;;
+    install)
+      echo -n images
+      ;;
+    *)
+      logerr "Invalid image type '${image_type}'"
+      return 1
+      ;;
+  esac
+
+  return 0
+}
+
 verify_wim_image()
 {
-  local wim_image_name
+  local image_type \
+        jq_key \
+        wim_image_name
 
   wim_image_name=$1
+  image_type=$2
+
+  jq_key=$(image_type_to_jq_key "$image_type") || return 1
 
   loginfo "Verifying WIM file '${wim_image_name}'..."
-  jq -r --arg wim_image "$wim_image_name" '
-          .images[$wim_image].sha512sum + " " + $wim_image
-        ' "$G_WIM_CATALOGUE_PATH" \
-          | sha512sum --strict --status -c || {
+  jq -r \
+     --arg key "$jq_key" \
+     --arg wim_image "$wim_image_name" \
+     '.[$key][$wim_image].sha512sum + " " + $wim_image' \
+     "$G_WIM_CATALOGUE_PATH" \
+    | sha512sum --strict --status -c || {
     logerr "Failed to verify WIM file '${wim_image_name}'."
     return 1
   }
@@ -418,16 +457,19 @@ fetch_wim_image_from_server()
 
 fetch_wim_image()
 {
-  local wim_image_baseurl wim_image_name
+  local image_type \
+        wim_image_baseurl \
+        wim_image_name
 
   wim_image_baseurl=$1
   wim_image_name=$2
+  image_type=$3
 
   loginfo "Fetching WIM file '${wim_image_name}'..."
 
   if [ -f "$wim_image_name" ]; then
     loginfo "WIM file '${wim_image_name}' already exists."
-    if verify_wim_image "$wim_image_name"; then
+    if verify_wim_image "$wim_image_name" "$image_type"; then
       return 0
     fi
     loginfo "Existing WIM file '${wim_image_name}' is invalid.  Re-fetching it."
@@ -435,7 +477,7 @@ fetch_wim_image()
 
   if fetch_wim_image_from_filesystem "$wim_image_name"; then
     loginfo "Fetched WIM file '${wim_image_name}' from a local filesystem."
-    if verify_wim_image "$wim_image_name"; then
+    if verify_wim_image "$wim_image_name" "$image_type"; then
       return 0
     fi
   else
@@ -452,7 +494,7 @@ fetch_wim_image()
 
   loginfo "Fetched WIM file '${wim_image_name}'."
 
-  verify_wim_image "$wim_image_name"
+  verify_wim_image "$wim_image_name" "$image_type"
 }
 
 wget_with_certauth()
@@ -474,6 +516,9 @@ get_wim_catalogue()
   wim_tmppath="${G_WIM_CATALOGUE_PATH}.tmp"
 
   for url in $wim_image_source_urls; do
+    printf "%s/images" "${url%/*}"          || return 1
+    return 0
+
     if ! wget_with_certauth -q \
          --output-document "$wim_gpg_tmppath" "$url"; then
       echo "error fetching $url" >&2
@@ -499,11 +544,17 @@ get_wim_catalogue()
 
 choose_wim_image_to_use()
 {
-  local preferred_version_count preferred_versions win_language \
-        win_product_name win_version
+  local image_type \
+        jq_key \
+        preferred_version_count \
+        preferred_versions \
+        win_language \
+        win_product_name \
+        win_version
 
   win_language=$1
   win_product_name=$2
+  image_type=$3
 
   case "$win_product_name" in
     'Windows 10 '*) win_version="Win10" ;;
@@ -514,13 +565,18 @@ choose_wim_image_to_use()
       ;;
   esac
 
+  jq_key=$(image_type_to_jq_key "${image_type}") || return 1
+
   preferred_versions=$(
-    jq -r --arg language "$win_language" \
-       --arg version "$win_version" '
-        .images | map_values(select(.language == $language
-                                      and .version == $version))
-                | to_entries | map(.key) | .[]
-      ' wim.json) || re
+    jq -r \
+       --arg key "$jq_key" \
+       --arg language "$win_language" \
+       --arg version "$win_version" \
+       '.[$key] | map_values(select(.language == $language and .version == $version)) | to_entries | map(.key) | .[]' \
+       "${G_WIM_CATALOGUE_PATH}") || {
+    logerr "Failed to parse version and language information from '${G_WIM_CATALOGUE_PATH}'"
+    return 1
+  }
 
   preferred_version_count="$(printf "%s\n" "$preferred_versions" | wc -l)"
 
@@ -552,11 +608,12 @@ install_win()
   wim_image_baseurl=$(get_wim_catalogue) || return 1
 
   wim_image_name=$(choose_wim_image_to_use "$win_language" \
-                                           "$win_product_name")
+                                           "$win_product_name" \
+                                           install)
 
   loginfo "Installing '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'..."
 
-  fetch_wim_image "$wim_image_baseurl" "$wim_image_name" || {
+  fetch_wim_image "$wim_image_baseurl" "$wim_image_name" install || {
     logerr "Failed to fetch WIM file for '${win_product_name} (${win_language})'."
     return 1
   }
@@ -681,11 +738,98 @@ reset_all_wins()
   return $returnval
 }
 
+install_boot_dir()
+{
+  local wim_image \
+        wim_image_baseurl \
+        wim_index \
+        win_language \
+        win_product_name
+
+  win_product_name=$(get_win_product_name "${g_win_c_partition_devpath}") || {
+    logerr "Failed to get the product name of Windows on '${g_win_c_partition_devpath}'."
+    return 1
+  }
+
+  win_language="$(get_win_language_from_puavo_conf)" || {
+    logerr 'Failed to get fallback Windows language from Puavo configuration, which should never happen!'
+    win_language='English'
+  }
+
+  wim_image_baseurl=$(get_wim_catalogue) || return 1
+
+  wim_image=$(choose_wim_image_to_use "$win_language" \
+                                      "${win_product_name}" \
+                                      boot)
+
+  loginfo "Installing '${win_product_name} (${win_language})' bootmanager to '${g_boot_dir}'..."
+
+  fetch_wim_image "$wim_image_baseurl" "$wim_image" boot || {
+    logerr "Failed to fetch boot WIM file for '${win_product_name} (${win_language})'."
+    return 1
+  }
+
+  wim_index=$(print0_wim_image_index "${wim_image}" 'Microsoft Windows Setup (amd64)') || return 1
+
+  wimextract "${wim_image}" "${wim_index}" /Windows/Boot/EFI/ --check --dest-dir "${g_boot_dir}" || {
+    logerr "Failed to extract Windows bootmanager from '${wim_image}' index '${wim_index}' to '${g_boot_dir}'"
+    return 1
+  }
+
+  /usr/lib/puavo-ltsp-install/create-bcd "${g_boot_dir}/BCD" "${g_win_c_partition_devpath}" || {
+    logerr "Failed to create '{g_boot_dir}/EFI/BCD'"
+    return 1
+  }
+
+  mv -n -T "${g_boot_dir}/EFI" "${g_boot_dir}/Boot" || {
+    logerr "Failed to rename '${g_boot_dir}/EFI' to '${g_boot_dir}/Boot'"
+    return 1
+  }
+
+  if [ -e "${g_boot_dir}/EFI" ]; then
+    # Something went wrong because the src dir still exists, most
+    # proabably the destination already existed.
+    logerr "Failed to rename '${g_boot_dir}/EFI' to '${g_boot_dir}/Boot'"
+    return 1
+  fi
+
+  return 0
+}
+
 while [ $# -ne 0 ]; do
   case "$1" in
     --force)
       g_use_force=true
       shift
+      ;;
+    --mode)
+      shift
+      case "$1" in
+        reset-c-partition)
+          g_mode='reset-c-partition'
+          shift
+          if [ $# -eq 1 ]; then
+            g_win_c_partition_devpath="$1"
+            shift
+          fi
+          ;;
+        install-boot-dir)
+          g_mode='install-boot-dir'
+          shift
+          if [ $# -ne 2 ]; then
+            logerr 'positional arguments WIN_C_PARTITION_DEVPATH and BOOT_DIR are required'
+            usage
+          fi
+          g_win_c_partition_devpath="$1"
+          shift
+          g_boot_dir="$1"
+          shift
+          ;;
+        *)
+          logerr "invalid --mode value '$1'"
+          usage
+          ;;
+      esac
       ;;
     --)
       shift
@@ -700,11 +844,6 @@ while [ $# -ne 0 ]; do
       ;;
   esac
 done
-
-if [ $# -eq 1 ]; then
-  g_win_c_partition_devpath=$1
-  shift
-fi
 
 [ $# -eq 0 ] || usage
 
@@ -727,7 +866,18 @@ install -d -m 0700 "${G_WORK_DIR}"
 cd "${G_WORK_DIR}"
 loginfo "Changed current working directory to '${G_WORK_DIR}'."
 
-reset_all_wins
+case "${g_mode}" in
+  reset-c-partition)
+    reset_all_wins
+    ;;
+  install-boot-dir)
+    install_boot_dir
+    ;;
+  *)
+    logerr "programming error, g_mode had invalid value '${g_mode}'"
+    exit 1
+    ;;
+esac
 
 # Reached the end, everything is fine then.
 g_exitval=0

@@ -4,6 +4,8 @@ set -eu
 deviceid_url=""
 chosen_preseed=""
 
+GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C='Puavo_Installed_Windows_C'
+
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
   while true; do
@@ -138,6 +140,7 @@ ask_preseed() {
     ask-imageoverlay-size    force-imageoverlay-size
     ask-install-without-raid force-install-without-raid
     ask-partition            force-partition
+    ask-setup-windows        force-setup-windows
     ask-unpartitioned-space  force-unpartitioned-space
     ask-wipe-partition       force-wipe-partition
     ask-write-partitions     force-write-partitions
@@ -203,6 +206,8 @@ do_preinstall() {
   echo
   puavo-setup-filesystems --hosttype "$puavo_install_target_hosttype" \
                           ${puavo_preseed_setup_filesystems_args[@]}
+
+  maybe_install_windows
 
   # Grub needs to be installed before images, because grub
   # configuration is updated during image installation by
@@ -274,6 +279,33 @@ get_preinstalled_hosttype() {
       return 1
       ;;
   esac
+}
+
+# Install Windows if a Windows filesystem exist.
+maybe_install_windows() {
+  local win_c_partition_devpath win_c_partition_devpath_count
+
+  win_c_partition_devpath_count=0
+
+  while read -r win_c_partition_devpath; do
+    win_c_partition_devpath_count=$((win_c_partition_devpath_count + 1))
+  done < <(lsblk -J -oPARTLABEL,PATH | jq -r --arg partlabel "${GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C}" '.blockdevices[] | select(.partlabel == $partlabel).path') || {
+    echo "Failed to check if there are ${GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C} partitions" >&2
+    return 1
+  }
+
+  if [ ${win_c_partition_devpath_count} -eq 0 ]; then
+    echo "INFO: Not installing Windows, ${GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C} partitions not found." >&2
+    return 0
+  elif [ ${win_c_partition_devpath_count} -gt 1 ]; then
+    echo "ERROR: Not installing Windows, multiple (${win_c_partition_devpath_count}) ${GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C} partitions found!" >&2
+    return 1
+  fi
+
+  puavo-reset-windows --force "${win_c_partition_devpath}" || return 1
+  puavo-manage-efi install-windows "${win_c_partition_devpath}" || return 1
+
+  return 0
 }
 
 install_grub() {
@@ -363,6 +395,7 @@ install_localbootdevice() {
     fi
   else
     puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args[@]}
+    maybe_install_windows
   fi
 
   setup_state "$puavo_hosttype"
