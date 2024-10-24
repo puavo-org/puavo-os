@@ -6,8 +6,9 @@ default_image_class	:= allinone
 image_dir		:= /srv/puavo-os-images
 mirror_dir		:= $(image_dir)/mirror
 mode                    := production
-remote_devel_mirror     := cdn.puavo.org
-remote_prod_mirror      := cdn.puavo.org
+topdomain               := puavo.org
+remote_devel_mirror     := cdn.$(topdomain)
+remote_prod_mirror      := cdn.$(topdomain)
 release_name            :=
 rootfs_dir_base         := /var/tmp/puavo-os/rootfs
 target_arch             := amd64
@@ -186,6 +187,10 @@ rootfs-debootstrap:
 
 	$(_sudo) ln -s '/puavo-os/.aux/policy-rc.d' \
 		'$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
+
+	$(_sudo) mkdir -p '$(rootfs_dir).tmp/etc/puavo'
+	$(_sudo) sh -c \
+	  'printf "%s\n" "$(topdomain)" > $(rootfs_dir).tmp/etc/puavo/topdomain'
 
 	$(_sudo) mkdir -p '$(rootfs_dir).tmp/etc/puavo-image'
 	$(_sudo) sh -c \
