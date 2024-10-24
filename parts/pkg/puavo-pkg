@@ -618,9 +618,16 @@ download_upstream_pack()
   log_info "${pkg_name}: downloaded upstream pack successfully"
 }
 
+wget_with_opts()
+{
+  wget --no-use-server-timestamps \
+       --no-cookies               \
+       --progress=dot:mega "$@" || return 1
+}
+
 download_upstream_pack_from_multiple_urls()
 {
-  local pkg_dir upstream_tmppack
+  local cdn_archive distfile_url pkg_dir upstream_tmppack
 
   pkg_dir=$1
   upstream_tmppack=$2
@@ -630,21 +637,21 @@ download_upstream_pack_from_multiple_urls()
   read upstream_pack_url < "${pkg_dir}/upstream_pack_url" || return 1
   upstream_pack_filename="${upstream_pack_url##*/}"
 
-  distfile_url_list=''
+  cdn_archive="cdn.$(cat /etc/puavo/topdomain)"
   for distfile_server in $(puavo-conf puavo.image.servers) \
-                         "cdn.$(cat /etc/puavo/topdomain)"; do
-    distfile_url_list="$distfile_url_list https://${distfile_server}/distfiles/${upstream_pack_filename}"
-  done
-  distfile_url_list="$distfile_url_list $upstream_pack_url"
-
-  for distfile_url in $distfile_url_list; do
-    if wget --no-use-server-timestamps            \
-            --no-cookies                          \
-            --output-document "$upstream_tmppack" \
-            --progress=dot:mega "$distfile_url"; then
+                         $cdn_archive; do
+    distfile_url="https://${distfile_server}/distfiles/${upstream_pack_filename}"
+    if wget_with_opts --ca-certificate=/etc/puavo-conf/rootca.pem \
+                      --output-document "$upstream_tmppack"       \
+                      "$distfile_url"; then
       return 0
     fi
   done
+
+  if wget_with_opts --output-document "$upstream_tmppack" \
+                    "$upstream_pack_url"; then
+    return 0
+  fi
 
   [ $? -eq 4 ] && g_sc=${SC_ERR_NET}
   return 1
