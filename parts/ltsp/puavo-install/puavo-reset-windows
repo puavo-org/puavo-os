@@ -6,6 +6,7 @@ set -o pipefail
 usage() {
   cat <<EOF
 $(basename "$0") [--mode reset-c-partition] [--force] [WIN_C_PARTITION_DEVPATH]
+$(basename "$0") --mode install-c-partition [--force] WIN_C_PARTITION_DEVPATH
 $(basename "$0") --mode install-boot-dir [--force] WIN_C_PARTITION_DEVPATH BOOT_DIR
 
 If --mode reset-c-partition is given, scans all block devices for
@@ -13,11 +14,14 @@ Windows C partitions and resets them. User is asked for confirmation
 on each one, unless --force is used. If WIN_C_PARTITION_DEVPATH is
 given, only it is reset, not all.
 
+If --mode install-c-partition is given, Windows Local Disk (C:)
+Partition is installed.
+
 If --mode install-boot-dir is given, Windows bootmanager with all
 required files is installed to BOOT_DIR. Windows version is read form
 WIN_C_PARTITION_DEVPATH.
 
-  --mode MODE           set operation mode, choices: {reset-c-partition, install-boot-dir}, default: reset-c-partition
+  --mode MODE           set operation mode, choices: {reset-c-partition, install-c-partition, install-boot-dir}, default: reset-c-partition
   --force               no questions asked
 EOF
   exit 1
@@ -672,6 +676,46 @@ get_win_language_from_puavo_conf()
   printf '%s' "${win_language}"
 }
 
+install_c_partition()
+{
+  local win_c_partition_devpath win_language win_product_name
+
+  if [ -z "${g_win_c_partition_devpath}" ]; then
+    logerr 'WIN_C_PARTITION_DEVPATH cannot be empty'
+    return 1
+  fi
+
+  win_c_partition_devpath="${g_win_c_partition_devpath}"
+  win_product_name='Windows 11 Pro' # Hard-coded product for all new installations.
+
+  win_language="$(get_win_language_from_puavo_conf)" || {
+    logwarning 'Failed to get fallback Windows language from Puavo configuration, which should never happen!'
+    win_language='English'
+    logwarning "Proceeding to install '${win_language}' Windows."
+  }
+
+  $g_use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+                         "Install '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'?" 5 100 || {
+      loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+      return 0
+    }
+
+  $g_use_force || dialog --no-lines --clear --erase-on-exit --defaultno --yesno \
+                         "All data will be lost on '${win_c_partition_devpath}'! Are you really sure you want to proceed?" 5 100 || {
+      loginfo "Skipping '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+      return 0
+    }
+
+  install_win "${win_product_name}" "${win_language}" "${win_c_partition_devpath}" || {
+    logerr "Failed to install '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'."
+    return 1
+  }
+
+  loginfo "Windows '${win_product_name} (${win_language})' on '${win_c_partition_devpath}' installed successfully."
+
+  return 0
+}
+
 reset_win()
 {
   local win_c_partition_devpath win_language win_product_name
@@ -813,6 +857,10 @@ while [ $# -ne 0 ]; do
           g_mode='install-boot-dir'
           shift
           ;;
+        install-c-partition)
+          g_mode='install-c-partition'
+          shift
+          ;;
         *)
           logerr "invalid --mode value '$1'"
           usage
@@ -850,6 +898,18 @@ case "${g_mode}" in
     g_boot_dir="$1"
     shift
     ;;
+  install-c-partition)
+    if [ $# -ne 1 ]; then
+      logerr 'positional argument WIN_C_PARTITION_DEVPATH is required'
+      usage
+    fi
+    if [ -z "$1" ]; then
+      logerr 'WIN_C_PARTITION_DEVPATH cannot be empty'
+      usage
+    fi
+    g_win_c_partition_devpath="$1"
+    shift
+    ;;
   *)
     logerr "programming error, g_mode had invalid value '${g_mode}'"
     exit 1
@@ -883,6 +943,9 @@ case "${g_mode}" in
     ;;
   install-boot-dir)
     install_boot_dir
+    ;;
+  install-c-partition)
+    install_c_partition
     ;;
   *)
     logerr "programming error, g_mode had invalid value '${g_mode}'"
