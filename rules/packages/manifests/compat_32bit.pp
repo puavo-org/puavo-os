@@ -4,7 +4,7 @@ class packages::compat_32bit {
   # i386-support packages for the amd64-architecture.
   # There are explicit or found-by-trial -dependencies of the following
   # software packages: adobereader-enu, skype, smartboard.
-  if $architecture == 'amd64' {
+  if $facts['os']['architecture'] == 'amd64' {
     @package {
       [ 'gstreamer1.0-gl:i386'           # needed for better media support in wine
       , 'gstreamer1.0-libav:i386'        # needed for better media support in wine
