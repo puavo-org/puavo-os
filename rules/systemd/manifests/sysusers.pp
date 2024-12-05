@@ -2,8 +2,8 @@ class systemd::sysusers {
   include ::dpkg
 
   dpkg::divert {
-    '/bin/systemd-sysusers':
-      dest => '/bin/systemd-sysusers.orig';
+    '/usr/bin/systemd-sysusers':
+      dest => '/usr/bin/systemd-sysusers.orig';
   }
 
   file {
@@ -15,7 +15,7 @@ class systemd::sysusers {
 
     '/bin/systemd-sysusers':
       mode    => '0755',
-      require => Dpkg::Divert['/bin/systemd-sysusers'],
+      require => Dpkg::Divert['/usr/bin/systemd-sysusers'],
       source  => 'puppet:///modules/systemd/systemd-sysusers';
   }
 }
