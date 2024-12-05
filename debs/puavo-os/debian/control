@@ -52,7 +52,7 @@ Description: Automatic Puavo Desktop testing tool
 
 Package: puavo-client
 Architecture: any
-Depends: ${misc:Depends}, ruby, ruby-ldap, dnsutils
+Depends: ${misc:Depends}, ruby, dnsutils
 Replaces: puavo-register
 Conflicts: puavo-register
 Provides: puavo-register
@@ -282,7 +282,6 @@ Depends: ${misc:Depends},
  ruby,
  ruby-dnsruby,
  ruby-json,
- ruby-ldap,
  ruby-rest-client,
  ruby-trollop,
  ruby-uuidtools,
