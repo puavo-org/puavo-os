@@ -2,7 +2,7 @@ class packages {
   require ::apt::multiarch
   include ::packages::backports
   include ::packages::compat_32bit
-  include ::packages::fasttrack
+  # include ::packages::fasttrack       # XXX Trixie
   include ::packages::pinned
   include ::packages::purged
 
