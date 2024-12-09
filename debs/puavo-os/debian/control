@@ -437,8 +437,8 @@ Package: puavo-webwindow
 Architecture: all
 Depends: ${misc:Depends},
  python3,
- libwebkit2gtk-4.0-37,
- gir1.2-webkit2-4.0
+ libwebkitgtk-6.0-4,
+ gir1.2-webkit-6.0
 Description: puavo-webwindow opens URLs in an  embedded browser window.
  puavo-webwindow opens URLs in a small embedded WebKit2 window. The URL,
  window size, title and some options can be controlled from the command
