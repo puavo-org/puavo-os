@@ -146,10 +146,10 @@ class packages {
     , 'lynx'
     , 'm4'
     , 'mesa-utils'
-    # , 'mlocate'                       # XXX missing from Trixie
     , 'moreutils'
     , 'nmap'
     , 'nvme-cli'
+    , 'plocate'
     , 'powertop'
     , 'procps'
     , 'psensor'
