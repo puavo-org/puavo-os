@@ -28,11 +28,21 @@ class kernels {
     }
   }
 
-  $default_kernel = '6.1.0-28-amd64'
-  $crisp_kernel   = '6.11.5-amd64'
+  # Our each Debian release has the backported kernel named with a different
+  # alias so that if a host is using a backported kernel, it will move on
+  # to the default kernel in the next major release.  Thus far we have used:
+  #   Ubuntu Trusty:   edge
+  #   Debian Stretch:  fresh
+  #   Debian Buster:   current
+  #   Debian Bullseye: recent
+  #   Debian Bookworm: crisp
+  #   Debian Trixie:   ?
+
+  $default_kernel = '6.11.10-amd64'
+  # XXX $crisp_kernel   = '6.11.5-amd64'        # XXX missing from Trixie
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
-    'crisp':   kernel => $crisp_kernel;
+    # 'crisp':   kernel => $crisp_kernel;       # XXX missing from Trixie
   }
 }
