@@ -1,6 +1,6 @@
 class packages::languages::sv {
   @package {
-    [ 'hunspell-sv-se'
+    [ 'hunspell-sv'
     , 'libreoffice-help-sv'
     , 'libreoffice-l10n-sv'
     , 'mythes-sv'

@@ -12,7 +12,7 @@ class image::bundle::desktop {
   include ::fuse
   include ::gdm
   include ::gnome_terminal
-  include ::graphics_drivers
+  # include ::graphics_drivers          # XXX missing from Trixie
   include ::homedir_management
   include ::ibus
   include ::image::bundle::basic
@@ -29,17 +29,17 @@ class image::bundle::desktop {
   include ::packages::languages::uk
   include ::picaxe_udev_rules
   include ::polkit_printers
-  include ::progressive_web_applications::apps
+  # include ::progressive_web_applications::apps        # XXX Trixie
   include ::puavo_pkg::packages
   include ::run_once_on_desktop_session
   include ::scribus
   include ::supplementary_groups
   include ::tts_setup
-  include ::tuxpaint
+  # include ::tuxpaint          # XXX missing from Trixie
   include ::udisks2
   include ::veyon
-  include ::vym
-  include ::wine
+  # include ::vym               # XXX missing from Trixie
+  # include ::wine              # XXX missing from Trixie
   include ::xorg
 
   Package <| tag == 'tag_debian_desktop'

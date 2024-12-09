@@ -12,16 +12,16 @@ class packages::compat_32bit {
       , 'gstreamer1.0-plugins-bad:i386'  # needed for better media support in wine
       , 'gstreamer1.0-plugins-good:i386' # needed for better media support in wine
       , 'gstreamer1.0-plugins-ugly:i386' # needed for better media support in wine
-      , 'libasound2:i386'
+      , 'libasound2t64:i386'
       , 'libasound2-plugins:i386'
-      , 'libatk1.0-0:i386'
+      , 'libatk1.0-0t64:i386'
       , 'libatkmm-1.6-1v5:i386'
       , 'libbluetooth3:i386'
       , 'libc6:i386'
       , 'libcairo2:i386'
-      , 'libcanberra-gtk-module:i386'
+      # , 'libcanberra-gtk-module:i386' # XXX missing from Trixie
       , 'libcap-ng0:i386'
-      , 'libcurl4:i386'
+      , 'libcurl4t64:i386'
       , 'libdbus-1-3:i386'
       , 'libdbus-glib-1-2:i386'
       , 'libfakekey0:i386'
@@ -29,22 +29,22 @@ class packages::compat_32bit {
       , 'libfreetype6:i386'
       , 'libgcc-s1:i386'
       , 'libgif7:i386'                  # needed by RobboScratch2
-      , 'libglib2.0-0:i386'
+      , 'libglib2.0-0t64:i386'
       , 'libgraphene-1.0-0:i386'             # needed for better media support in wine
       , 'libgstreamer-gl1.0-0:i386'          # needed for better media support in wine
       , 'libgstreamer-plugins-bad1.0-0:i386' # needed for better media support in wine
-      , 'libgtk2.0-0:i386'
+      , 'libgtk2.0-0t64:i386'
       , 'libice6:i386'
       , 'libltdl7:i386'
       , 'libmp3lame0:i386'
       , 'libnspr4:i386'
       , 'libnss3:i386'                  # needed by RobboScratch2
-      , 'libpango1.0-0:i386'
+      # , 'libpango1.0-0:i386'          # XXX missing from Trixie
       , 'libpangomm-1.4-1v5:i386'
       , 'libpulse0:i386'
       , 'libselinux1:i386'
       , 'libsm6:i386'
-      , 'libssl3:i386'
+      , 'libssl3t64:i386'
       , 'libstdc++6:i386'
       , 'libudev1:i386'
       , 'libusb-1.0-0:i386'
@@ -62,7 +62,7 @@ class packages::compat_32bit {
       , 'libxtst6:i386'
       , 'libxv1:i386'
       , 'vkd3d-compiler:i386'
-      , 'wine-devel-i386:i386'
+      # , 'wine-devel-i386:i386'        # XXX missing from Trixie
       , 'zlib1g:i386' ]:
         ensure => present,
         tag    => [ 'tag_debian_desktop', 'tag_i386' ];
