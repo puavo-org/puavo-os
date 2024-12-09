@@ -241,7 +241,6 @@ Package: puavo-ltsp-client
 Architecture: all
 Depends: ${misc:Depends},
  alsa-utils,
- autofs,
  cowsay,
  cwm,
  daemon,
@@ -288,7 +287,6 @@ Depends: ${misc:Depends},
  systemd-timesyncd,
  upower,
  wireless-tools,
- xautolock,
  xserver-xorg-core
 Suggests: puavo-webkiosk
 Description: Bits and pieces needed inside the LTSP chroot image.
