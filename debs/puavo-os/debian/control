@@ -86,6 +86,7 @@ Description: Puavo configuration
 Package: puavo-core
 Architecture: all
 Depends: ${misc:Depends},
+ btrfs-progs,
  coreutils,
  initramfs-tools,
  mawk,
