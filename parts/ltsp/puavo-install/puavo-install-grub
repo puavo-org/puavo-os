@@ -367,6 +367,32 @@ has_bios_boot_partition() {
       '
 }
 
+lookup_puavo_btrfs_diskdev() {
+  local label
+  label=$1
+  lsblk -n -l -o FSTYPE,LABEL,PKNAME \
+    | awk -v label="$label" '
+        $1 == "btrfs" && $2 == label { print "/dev/" $3; exit(0) }
+      '
+}
+
+lookup_puavo_vg_diskdev() {
+  local vgname
+  vgname=$1
+  # pvs and assorted utilities complain if we leak file descriptors, that is
+  # why we do "3>&- 4>&- 5>&-" (same with grub-install)
+  pvs 3>&- 4>&- 5>&-                                            \
+    | awk -v vgname="$label" '$2 == vgname { print $1; exit }' \
+    | sed -E '
+        /\/dev\/loop/   { s|p[0-9]+$|| }
+        /\/dev\/mmcblk/ { s|p[0-9]+$|| }
+        /\/dev\/md/     { s|p[0-9]+$|| }
+        /\/dev\/nvme/   { s|p[0-9]+$|| }
+        /\/dev\/[sv]d/  { s|[0-9]+$||  }
+        /\/dev\/xvd/    { s|[0-9]+$||  }
+      '
+}
+
 lookup_windows_boot_partition() {
   local diskdev
   diskdev=$1
@@ -463,19 +489,12 @@ fi
 
 boot_dir="${images_dir}/boot"
 
-# pvs and assorted utilities complain if we leak file descriptors, that is
-# why we do "3>&- 4>&- 5>&-" (same with grub-install)
-diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
-            | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
-            | sed -E '
-                /\/dev\/loop/   { s|p[0-9]+$|| }
-                /\/dev\/mmcblk/ { s|p[0-9]+$|| }
-                /\/dev\/md/     { s|p[0-9]+$|| }
-                /\/dev\/nvme/   { s|p[0-9]+$|| }
-                /\/dev\/[sv]d/  { s|[0-9]+$||  }
-                /\/dev\/xvd/    { s|[0-9]+$||  }
-              ')
-
+btrfs_diskdev=$(lookup_puavo_btrfs_diskdev "$vgname")
+if [ -n "$btrfs_diskdev" ]; then
+  diskdev="$btrfs_diskdev"
+else
+  diskdev=$(lookup_puavo_vg_diskdev "$vgname")
+fi
 if [ -z "$diskdev" ]; then
   log err "could not find the disk device where volume group '${vgname}' is"
   exit 1
