@@ -197,7 +197,7 @@ function ltsp_image_entry_superlaptop {
   set entry_superlaptop_os_icon="$5"
 
   if test "${puavo_show_imageoverlays}" = "true" \
-            -a -d (lvm/puavo-imageoverlays); then
+            -a -d __PUAVO_PARTITION_OVERLAYS__; then
     set kernelparameters="$kernelparameters puavo.image.overlay=personal"
 
     ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}" "developer" "${image_alias}" "${entry_superlaptop_os_icon}"
@@ -215,8 +215,14 @@ insmod usb_keyboard
 insmod lvm
 insmod jpeg
 insmod png
+insmod btrfs
 
-for dev in (lvm/__PUAVO_LVM_PARTITION__); do
+ifelse(__PUAVO_IMAGES_BTRFS_LABEL__, `',
+       `# using lvm',
+       `# using btrfs
+search --no-floppy --label --set puavobtrfsdev __PUAVO_IMAGES_BTRFS_LABEL__')
+
+for dev in __PUAVO_PARTITION_IMAGES__; do
   for file in ${dev}/*.default; do
     regexp -s default_alias_no_suffix '^(.*)\.default$' "${file}"
     break
@@ -382,7 +388,7 @@ lookup_puavo_vg_diskdev() {
   # pvs and assorted utilities complain if we leak file descriptors, that is
   # why we do "3>&- 4>&- 5>&-" (same with grub-install)
   pvs 3>&- 4>&- 5>&-                                            \
-    | awk -v vgname="$label" '$2 == vgname { print $1; exit }' \
+    | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
     | sed -E '
         /\/dev\/loop/   { s|p[0-9]+$|| }
         /\/dev\/mmcblk/ { s|p[0-9]+$|| }
@@ -502,7 +508,7 @@ $(basename $0) [optional arguments]
     --hosttype           hosttype
     --images-dir         imagesdir
     --only-update-config
-    --vgname             vgname
+    --vgname             vgname ("puavo" or "puavoinstaller")
 EOF
   exit 1
 }
@@ -535,6 +541,12 @@ while [ $# -ne 0 ]; do
 done
 
 [ $# -eq 0 ] || usage
+
+if ! [ "$vgname" = 'puavo' -o "$vgname" = 'puavoinstaller' ]; then
+  echo "vgname should be either 'puavo' or 'puavoinstaller'" >&2
+  usage
+  exit 1
+fi
 
 if [ ! -d "$images_dir" ]; then
   log err "'${images_dir}' is not a directory"
@@ -574,16 +586,35 @@ case "$diskdev" in
     ;;
 esac
 
-if [ "$hosttype" = 'diskinstaller' ]; then
+if [ "$vgname" = 'puavoinstaller' ]; then
   puavo_liveboot_option='true'
-  puavo_lvm_partition='puavoinstaller-installimages'
 else
   puavo_liveboot_option='false'
-  puavo_lvm_partition='puavo-images'
+fi
+
+if [ -n "$btrfs_diskdev" ]; then
+  puavo_images_btrfs_label="$vgname"
+  puavo_partition_dev="$btrfs_diskdev"
+  puavo_partition_grub_overlays='(${puavobtrfsdev})/imageoverlays'
+  if [ "$vgname" = 'puavoinstaller' ]; then
+    puavo_partition_grub_images='(${puavobtrfsdev})/installimages'
+  else
+    puavo_partition_grub_images='(${puavobtrfsdev})/images'
+  fi
+else
+  puavo_images_btrfs_label=''
+  if [ "$vgname" = 'puavoinstaller' ]; then
+    puavo_partition_dev='/dev/mapper/puavoinstaller-installimages'
+    puavo_partition_grub_images='(lvm/puavoinstaller-installimages)'
+  else
+    puavo_partition_dev='/dev/mapper/puavo-images'
+    puavo_partition_grub_images='(lvm/puavo-images)'
+  fi
+  puavo_partition_grub_overlays='(lvm/puavo-imageoverlays)'
 fi
 
 # loop= parameter is legacy and is meant for the old Trusty-based Puavo-systems.
-common_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\" puavo.image.path=\"\${imagepath}\""
+common_kernel_arguments="puavo.hosttype=${hosttype} root=${puavo_partition_dev} loop=\"\${imagepath}\" puavo.image.path=\"\${imagepath}\""
 
 case "$hosttype" in
   bootserver|diskinstaller|preinstalled|wirelessaccesspoint)
@@ -655,10 +686,12 @@ fi
 grub_cfg_path="${boot_dir}/grub/grub.cfg"
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
-grub_m4_template                                              \
-  | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
-       -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
-       -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
+grub_m4_template                                                       \
+  | m4 -D__PUAVO_IMAGES_BTRFS_LABEL__="$puavo_images_btrfs_label"      \
+       -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments"          \
+       -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"            \
+       -D__PUAVO_PARTITION_IMAGES__="$puavo_partition_grub_images"     \
+       -D__PUAVO_PARTITION_OVERLAYS__="$puavo_partition_grub_overlays" \
   > "$tmp_grub_cfg_path"
 
 windows_partition_path=/images/boot/.puavo_windows_partition
