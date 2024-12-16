@@ -35,14 +35,14 @@ for x in $(cat /proc/cmdline); do
                 PUAVO_IMAGE_PATH="${x#loop=}"
             fi
             ;;
-        puavo.image.path=*)
-            PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
+        puavo.image.fstype=*)
+            PUAVO_IMAGE_FSTYPE="${x#puavo.image.fstype=}"
             ;;
         puavo.image.overlay=*)
             PUAVO_IMAGE_OVERLAY="${x#puavo.image.overlay=}"
             ;;
-        puavo.image.fstype=*)
-            PUAVO_IMAGE_FSTYPE="${x#puavo.image.fstype=}"
+        puavo.image.path=*)
+            PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
             ;;
     esac
 done
@@ -119,21 +119,27 @@ do_union_mount_temporary()
 do_union_mount_persistent()
 {
     cow="/imageoverlays/${PUAVO_IMAGE_NAME}/${PUAVO_IMAGE_OVERLAY}"
-    mkdir -p "${cow}"
-
-    do_union_mount "${cow}"
+    mkdir -p "$cow"
+    do_union_mount "$cow"
 }
 
 mount_puavo_partition() {
     name=$1
 
-    if [ ! -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
+    if [ -n "$PUAVO_LVM_VG" \
+      -a ! -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
         return 0
     fi
 
     mkdir -p "/${name}"
 
-    OPTIONS="-o noatime"
+    if [ -z "$PUAVO_LVM_VG" ]; then
+        # XXX should -o noatime also used with btrfs?
+        mount -o "subvol=${name}" "$ROOT" "/${name}" || return 1
+        return 0
+    fi
+
+    OPTIONS='-o noatime'
 
     if mount $OPTIONS "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"; then
         return 0
@@ -168,15 +174,11 @@ else
 fi
 
 if [ "$loopmount_used" -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
-    if [ -n "$PUAVO_LVM_VG" ]; then
-        {
-            mount_puavo_partition imageoverlays \
-                && do_union_mount_persistent    \
-                && move_puavo_partition imageoverlays
-        } || panic "could not mount persistent overlay"
-    else
-        : # XXX what to do in btrfs case?
-    fi
+    {
+        mount_puavo_partition imageoverlays \
+            && do_union_mount_persistent    \
+            && move_puavo_partition imageoverlays
+    } || panic "could not mount persistent overlay"
 else
     do_union_mount_temporary
 fi
