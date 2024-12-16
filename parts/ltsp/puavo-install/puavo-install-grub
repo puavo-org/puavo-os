@@ -374,6 +374,9 @@ has_bios_boot_partition() {
 }
 
 lookup_puavo_btrfs_diskdev() {
+  # XXX this should make sure it is returning the correct one in case
+  # XXX two btrfs filesystems are both with a "puavo"-label (or can we do
+  # XXX anything about this?)
   local label
   label=$1
   lsblk -n -l -o FSTYPE,LABEL,PKNAME \
@@ -613,6 +616,8 @@ else
   puavo_partition_grub_overlays='(lvm/puavo-imageoverlays)'
 fi
 
+# XXX ${puavo_partition_dev} should use UUID at least in the btrfs case:
+# XXX root=UUID=${uuid}
 # loop= parameter is legacy and is meant for the old Trusty-based Puavo-systems.
 common_kernel_arguments="puavo.hosttype=${hosttype} root=${puavo_partition_dev} loop=\"\${imagepath}\" puavo.image.path=\"\${imagepath}\""
 
