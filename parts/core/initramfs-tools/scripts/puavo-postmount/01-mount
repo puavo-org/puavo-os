@@ -24,9 +24,6 @@ test "$BOOT" = "puavo" || exit 0
 PUAVO_IMAGE_PATH=
 PUAVO_IMAGE_FSTYPE=
 PUAVO_IMAGE_OVERLAY=
-PUAVO_LVM_VG="puavo"
-
-vgchange -a y "${PUAVO_LVM_VG}"
 
 for x in $(cat /proc/cmdline); do
     case "$x" in
@@ -49,6 +46,13 @@ for x in $(cat /proc/cmdline); do
             ;;
     esac
 done
+
+PUAVO_LVM_VG=''
+if [ "$rootmnt" = '/dev/mapper/puavo-images' \
+       -o "$rootmnt" = '/dev/mapper/puavoinstaller-installimages' ]; then
+  vgchange -a y "$PUAVO_LVM_VG"
+  PUAVO_LVM_VG='puavo'
+fi
 
 loopmount_image()
 {
@@ -122,24 +126,25 @@ do_union_mount_persistent()
 
 mount_puavo_partition() {
     name=$1
-    if [ -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
-        mkdir -p "/${name}"
 
-        OPTIONS="-o noatime"
-
-        if mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"; then
-            return 0
-        fi
-
-        # FORCE fsck if mount failed again (first try automatic, then -y)
-        if ! fsck -fpv "/dev/mapper/${PUAVO_LVM_VG}-${name}"; then
-            fsck -fvy "/dev/mapper/${PUAVO_LVM_VG}-${name}" || true
-        fi
-
-        mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}" || return 1
+    if [ ! -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
+        return 0
     fi
 
-    return 0
+    mkdir -p "/${name}"
+
+    OPTIONS="-o noatime"
+
+    if mount $OPTIONS "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"; then
+        return 0
+    fi
+
+    # FORCE fsck if mount failed again (first try automatic, then -y)
+    if ! fsck -fpv "/dev/mapper/${PUAVO_LVM_VG}-${name}"; then
+        fsck -fvy "/dev/mapper/${PUAVO_LVM_VG}-${name}" || true
+    fi
+
+    mount $OPTIONS "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}" || return 1
 }
 
 move_puavo_partition()
@@ -159,25 +164,34 @@ fi
 if [ -f "${rootmnt}/etc/puavo-image/name" ]; then
     PUAVO_IMAGE_NAME=$(cat "${rootmnt}/etc/puavo-image/name")
 else
-    PUAVO_IMAGE_NAME="default"
+    PUAVO_IMAGE_NAME='default'
 fi
 
 if [ "$loopmount_used" -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
-    {
-        mount_puavo_partition imageoverlays \
-            && do_union_mount_persistent      \
-            && move_puavo_partition imageoverlays
-    } || panic "could not mount persistent overlay"
+    if [ -n "$PUAVO_LVM_VG" ]; then
+        {
+            mount_puavo_partition imageoverlays \
+                && do_union_mount_persistent    \
+                && move_puavo_partition imageoverlays
+        } || panic "could not mount persistent overlay"
+    else
+        : # XXX what to do in btrfs case?
+    fi
 else
     do_union_mount_temporary
 fi
 
-# If using a loopmount image, move the /images partition under loop mounted root
-# and remount the partition as writable
+# If using a loopmount image, move the /images partition under loop mounted
+# root and remount the partition as writable
 if [ "$loopmount_used" -gt 0 ]; then
-    mkdir -p "${rootmnt}/images"
-    mount -o move /host "${rootmnt}/images"
-    mount -o remount,noatime,rw "${rootmnt}/images"
+    if [ -n "$PUAVO_LVM_VG" ]; then
+        target_dir="${rootmnt}/images"
+    else
+        target_dir="${rootmnt}/.btrfs"
+    fi
+    mkdir -p "$target_dir"
+    mount -o move /host "$target_dir"
+    mount -o remount,noatime,rw "$target_dir"
 fi
 
 [ -z "${rootmnt}" ] && panic "rootmnt unknown in init-bottom"
