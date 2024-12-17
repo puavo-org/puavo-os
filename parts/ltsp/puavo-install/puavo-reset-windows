@@ -569,6 +569,10 @@ reset_win()
     wim_image_index=$(print0_wim_image_index "$wim_image_name" "$win_product_name")
 
     loginfo "Securely erasing Windows on '${win_primary_partition_devpath}'"
+    wipefs -f -a "${win_primary_partition_devpath}" || {
+        logerr "Failed to run wipefs to '${win_primary_partition_devpath}'"
+        return 1
+    }
     blkdiscard "${win_primary_partition_devpath}" || {
         logerr "Failed to run blkdiscard to '${win_primary_partition_devpath}'"
         return 1
