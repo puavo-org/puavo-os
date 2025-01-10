@@ -41,7 +41,8 @@ g_win_c_partition_devpath=              # can be passed as arg, but if not given
 g_win_re_partition_devpath=
 G_RESET_STATE_DIR=/state/windows
 G_WORK_DIR=/home/.puavo-reset-windows   # Where WIM files will be downloaded, mounted etc.
-G_WIM_CATALOGUE_PATH="${G_WORK_DIR}/wim.json"
+#G_WIM_CATALOGUE_PATH="${G_WORK_DIR}/wim.json"
+G_WIM_CATALOGUE_PATH='/tmp/wim.json'
 G_PID_FILE=/run/puavo-reset-windows.pid # Locks this file to ensure only one puavo-reset-windows is running
 
 on_exit()
@@ -524,6 +525,9 @@ get_wim_catalogue()
   wim_tmppath="${G_WIM_CATALOGUE_PATH}.tmp"
 
   for url in $wim_image_source_urls; do
+    printf "%s/images" "${url%/*}"          || return 1
+    return 0
+
     if ! wget_with_certauth -q \
          --output-document "$wim_gpg_tmppath" "$url"; then
       echo "error fetching $url" >&2
