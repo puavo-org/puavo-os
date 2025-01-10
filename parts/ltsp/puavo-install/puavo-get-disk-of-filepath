@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+if [ $# -ne 1 ]; then
+  echo "ERROR: invalid number of args ($#), expected 1" >&2
+  echo "Usage: $0 FILEPATH" >&2
+  exit 1
+fi
+
+filepath=$1
+shift
+
+majmin=$(stat --format '%Hd:%Ld' "${filepath}") || {
+  echo 'ERROR: failed to find filesystem' >&2
+  exit 1
+}
+
+if [ -z "${majmin}" ]; then
+  echo 'ERROR: failed to find filesystem (empty stat output)' >&2
+  exit 1
+fi
+
+disk_devpath=$(lsblk -p -J -s | jq --arg majmin "${majmin}" -r '.. | select(."maj:min"? == $majmin) | .. | select(.type? == "disk").name') || {
+  echo "ERROR: failed to find disk (lsblk or jq failed)'" >&2
+  exit 1
+}
+
+if [ -z "${disk_devpath}" ]; then
+  echo 'ERROR: failed to find disk (empty jq output)' >&2
+  exit 1
+fi
+
+echo -n "${disk_devpath}"
