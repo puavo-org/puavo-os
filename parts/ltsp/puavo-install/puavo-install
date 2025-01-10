@@ -217,7 +217,10 @@ do_preinstall() {
 
   # Setup Grub environment for preinstalled so that Windows can be booted
   # even when we have Puavo OS only preinstalled.
-  /etc/puavo-conf/scripts/setup_grub_environment
+  /etc/puavo-conf/scripts/setup_grub_environment || {
+    echo 'ERROR: failed to setup grub environment' >&2
+    return 1
+  }
 
   install_image "$puavo_install_hosttype" --hosttype preinstalled
 
@@ -344,9 +347,10 @@ maybe_install_windows() {
 }
 
 install_grub() {
-  echo -n 'Doing grub installation: '
+  echo 'Starting grub installation...'
   puavo-install-grub "$@"
   sync
+  echo 'Finished grub installation.'
 }
 
 install_image() {
