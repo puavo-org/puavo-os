@@ -310,8 +310,8 @@ has_efi() {
 }
 
 usage() {
-  echo "Usage: $0 [OPTIONS] disable-windows"
-  echo "       $0 [OPTIONS] enabled-windows"
+  echo "Usage: $0 [OPTIONS] disable-windows WIN_DISK_DEVPATH"
+  echo "       $0 [OPTIONS] enabled-windows WIN_DISK_DEVPATH"
   echo "       $0 [OPTIONS] install-windows WIN_C_PARTITION_DEVPATH"
   echo "       $0 --help"
 }
@@ -338,8 +338,8 @@ while [ $# -gt 0 ]; do
         echo "Manage EFI boot. Modifies EFI boot order and ESP."
         echo
         echo "Commands:"
-        echo "    disable-windows              disable Windows"
-        echo "    enable-windows               enable Windows"
+        echo "    disable-windows              disable Windows installed on WIN_DISK_DEVPATH"
+        echo "    enable-windows               enable Windows installed on WIN_DISK_DEVPATH"
         echo "    install-windows              install Windows boot manager to ESP, lookup Windows version from WIN_C_PARTITION_DEVPATH"
         echo
         echo "Options:"
@@ -373,13 +373,25 @@ fi
 g_cmd=$1
 shift
 
-if [ "${g_cmd}" = 'install-windows' ]; then
-  if [ $# -lt 1 ]; then
-    usage_error 'WIN_C_PARTITION_DEVPATH is missing'
-  fi
-  g_win_c_partition_devpath=$1
-  shift
-fi
+case "${g_cmd}" in
+  'install-windows')
+    if [ $# -ne 1 ]; then
+      usage_error 'WIN_C_PARTITION_DEVPATH is missing'
+    fi
+    g_win_c_partition_devpath=$1
+    shift
+    ;;
+  'enable-windows'|'disable-windows')
+    if [ $# -ne 1 ]; then
+      usage_error 'WIN_DISK_DEVPATH is missing'
+    fi
+    g_win_disk=$1
+    shift
+    ;;
+  *)
+    usage_error "invalid command '${g_cmd}'"
+    ;;
+esac
 
 if [ $# -ne 0 ]; then
   usage_error 'too many arguments'
@@ -412,12 +424,12 @@ echo "$$" >"${PID_FILE}"
 
 case "${g_cmd}" in
   enable-windows)
-    g_esp_devpath=$(get_one_esp_devpath)
+    g_esp_devpath=$(get_one_esp_devpath "${g_win_disk}")
     g_esp_mount_path=$(esp_mount "${g_esp_devpath}")
     efi_enable_windows
     ;;
   disable-windows)
-    g_esp_devpath=$(get_one_esp_devpath)
+    g_esp_devpath=$(get_one_esp_devpath "${g_win_disk}")
     g_esp_mount_path=$(esp_mount "${g_esp_devpath}")
     efi_disable_windows
     ;;
