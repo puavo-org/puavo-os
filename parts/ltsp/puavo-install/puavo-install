@@ -5,6 +5,7 @@ deviceid_url=""
 chosen_preseed=""
 
 GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C='Puavo_Installed_Windows_C'
+GPT_PARTTYPE_WINDOWS_RE='de94bba4-06d1-4d40-a16a-bfd50179d6ac'
 
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
@@ -283,9 +284,10 @@ get_preinstalled_hosttype() {
 
 # Install Windows if Windows partitions created by us (puavo-setup-filesystems) exist.
 maybe_install_windows() {
-  local line win_c_partition_devpath win_c_partition_devpath_count
+  local line ptuuid win_c_partition_devpath win_c_partition_devpath_count win_re_partition_devpath win_re_partition_devpath_count
 
   win_c_partition_devpath_count=0
+  win_re_partition_devpath_count=0
 
   while read -r line; do
     if [ -z "${line}" ]; then
@@ -302,11 +304,40 @@ maybe_install_windows() {
     echo "INFO: Not installing Windows, ${GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C} partitions not found." >&2
     return 0
   elif [ ${win_c_partition_devpath_count} -gt 1 ]; then
+    # This is very unexpected case: it means the partition table
+    # contains multiple Windows RE partitions AND partitioning is made
+    # by puavo-setup-filesystem. This is certainly a bug in
+    # puavo-setup-filesystem!
     echo "ERROR: Not installing Windows, multiple (${win_c_partition_devpath_count}) ${GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C} partitions found!" >&2
     return 1
   fi
 
+  ptuuid=$(lsblk -n -oPTUUID "${win_c_partition_devpath}") || {
+    echo "ERROR: Failed to get PTUUID of '${win_c_partition_devpath}'" >&2
+    return 1
+  }
+
+  while read -r line; do
+    if [ -z "${line}" ]; then
+      continue
+    fi
+    win_re_partition_devpath="${line}"
+    win_re_partition_devpath_count=$((win_re_partition_devpath_count + 1))
+  done < <(lsblk -J -oPTUUID,PARTTYPE,PATH | jq -r --arg ptuuid "${ptuuid}" --arg parttype "${GPT_PARTTYPE_WINDOWS_RE}" '.blockdevices[] | select(.parttype == $parttype and .ptuuid == $ptuuid).path') || {
+    echo "Failed to check if there are Windows RE partitions" >&2
+    return 1
+  }
+
+  if [ ${win_re_partition_devpath_count} -eq 0 ]; then
+    echo "ERROR: Not installing Windows, because Windows RE partition is not found. It should exist though, because the Windows C partition '${win_c_partition_devpath}' is Puavo partitioned." >&2
+    return 1
+  elif [ ${win_re_partition_devpath_count} -gt 1 ]; then
+    echo "ERROR: Not installing Windows, because multiple (${win_re_partition_devpath_count}) Windows RE partitions were found! I'm not able to make an informed guess which one to actually use." >&2
+    return 1
+  fi
+
   puavo-reset-windows --mode install-c-partition --force "${win_c_partition_devpath}" || return 1
+  puavo-reset-windows --mode install-re-partition --force "${win_c_partition_devpath}" "${win_re_partition_devpath}" || return 1
   puavo-manage-efi install-windows "${win_c_partition_devpath}" || return 1
 
   return 0
