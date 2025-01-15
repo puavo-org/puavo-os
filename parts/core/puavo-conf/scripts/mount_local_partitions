@@ -7,11 +7,45 @@ set -eu
 # /dev/mapper/puavo-state and /dev/mapper/puavo-tmp and mounts those as
 # /home, /state or /tmp correspondingly.
 
-puavo_mount_partition() {
-  local puavo_partition puavo_mntpoint
+btrfs_root=0
+rootdev=''
+if mountpoint -q /.btrfs; then
+  btrfs_root=1
+  for x in $(cat /proc/cmdline); do
+    case "$x" in
+      root=*)
+        rootdev=${x#root=}
+        ;;
+    esac
+  done
+  if [ -z "$rootdev" ]; then
+    echo 'can not determine the root device from the kernel command line' >&2
+    exit 1
+  fi
+fi
 
-  puavo_partition=$1
-  puavo_mntpoint=$2
+puavo_mount_partition_on_btrfs() {
+  local partition puavo_mntpoint
+  partition=$1
+
+  puavo_mntpoint="/${partition}"
+
+  # presume, if $puavo_mntpoint is already mounted, there is nothing to do
+  if mountpoint -q "$puavo_mntpoint"; then
+    return 0
+  fi
+
+  mkdir -p "$puavo_mntpoint"
+  mount -o "subvol=${partition}" "$rootdev" "$puavo_mntpoint"
+}
+
+puavo_mount_partition_on_lvm() {
+  local partition puavo_mntpoint puavo_partition
+
+  partition=$1
+
+  puavo_partition="puavo-${partition}"
+  puavo_mntpoint="/${partition}"
 
   if ! [ -b "/dev/mapper/${puavo_partition}" ]; then
     return 1
@@ -59,40 +93,51 @@ puavo_mount_partition() {
   mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
 }
 
+puavo_mount_partition() {
+  if [ "$btrfs_root" = 1 ]; then
+    puavo_mount_partition_on_btrfs "$@"
+  else
+    puavo_mount_partition_on_lvm "$@"
+  fi
+}
+
 read puavo_hosttype < /etc/puavo/hosttype
 
-case "$puavo_hosttype" in
-  diskinstaller)
-    vgchange -a y puavoinstaller
-    ;;
-  fatclient)
-    # fatclients normally do not have a "puavo" volume group,
-    # so failing this is not an error and there is nothing more to do.
-    vgchange -a y puavo 2>/dev/null || exit 0
-    ;;
-  unregistered)
-    # Do not attach puavo VG when installing a new system.
-    ;;
-  *)
-    vgchange -a y puavo
-    ;;
-esac
+# activate puavo VG in case we are using LVM
+if [ "$btrfs_root" = 0 ]; then
+  case "$puavo_hosttype" in
+    diskinstaller)
+      vgchange -a y puavoinstaller
+      ;;
+    fatclient)
+      # fatclients normally do not have a "puavo" volume group,
+      # so failing this is not an error and there is nothing more to do.
+      vgchange -a y puavo 2>/dev/null || exit 0
+      ;;
+    unregistered)
+      # Do not attach puavo VG when installing a new system.
+      ;;
+    *)
+      vgchange -a y puavo
+      ;;
+  esac
+fi
 
 status=0
 
 if [ "$puavo_hosttype" = 'diskinstaller' ]; then
-  puavo_mount_partition puavoinstaller-installimages /installimages || status=1
+  puavo_mount_partition installimages || status=1
 fi
 
 if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
-  puavo_mount_partition puavo-home /home || status=1
+  puavo_mount_partition home || status=1
 fi
 
 # These are needed for system updates when on NBD.
 case "$puavo_hosttype" in
   bootserver|laptop|preinstalled|wirelessaccesspoint)
-    puavo_mount_partition puavo-images /images || status=1
-    puavo_mount_partition puavo-state  /state  || status=1
+    puavo_mount_partition images || status=1
+    puavo_mount_partition state  || status=1
     ;;
 esac
 
@@ -102,7 +147,7 @@ case "$puavo_hosttype" in
     ;;
   *)
     if [ -b /dev/mapper/puavo-tmp ]; then
-      { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || status=1
+      { puavo_mount_partition tmp && chmod 1777 /tmp; } || status=1
     fi
     ;;
 esac
