@@ -87,7 +87,7 @@ get_partnum()
   shift
 
   partnum=$(stat --format %Lr "${devpath}") || {
-    log err 'failed to get the partition number'
+    log err "failed to get the partition number of '${devpath}'"
     return 1
   }
 
@@ -122,7 +122,7 @@ get_disk()
 efibootmgr_windows_create() {
   local esp_partnum esp_partuuid
 
-  log notice 'creating a Windows boot entry'
+  log notice "creating EFI boot entry for Windows Boot Manager in ESP '${g_esp_devpath}'"
 
   esp_partnum=$(get_partnum "${g_esp_devpath}") || return 1
 
@@ -137,16 +137,16 @@ efibootmgr_windows_create() {
   fi
 
   if efibootmgr -v | sed -r -n 's|^Boot[0-9]+[* ] [^\t]+\tHD\([0-9]+,GPT,([^,]+),[^)]+\)/File\(\\EFI\\Microsoft\\Boot\\bootmgfw\.efi\).*$|\1|p' | grep -i -q -x "${esp_partuuid}"; then
-    log notice "not creating a Windows boot entry because at least one already exists for Windows Boot Manager in ESP '${g_esp_devpath}'"
+    log notice "not creating EFI boot entry for Windows Boot Manager in ESP '${g_esp_devpath}', because at least one already exists"
     return 0
   fi
 
   efibootmgr -q -c -L 'Windows Boot Manager' -l '\EFI\Microsoft\Boot\bootmgfw.efi' -d "${g_win_disk}" -p "${esp_partnum}" || {
-    log err 'failed to create a Windows boot entry'
+    log err "failed to create EFI boot entry for Windows Boot Manager in ESP '${g_esp_devpath}'"
     return 1
   }
 
-  log notice 'created a Windows boot entry'
+  log notice "created EFI boot entry for Windows Boot Manager in ESP '${g_esp_devpath}'"
 }
 
 efibootmgr_windows() {
@@ -183,6 +183,7 @@ esp_mount() {
 
   mkdir -p /boot/efi || return 1
   mount -onodev,nosuid "${esp_devpath}" /boot/efi || return 1
+  log info "mounted ESP '${esp_devpath}' to /boot/efi"
   echo -n /boot/efi
 }
 
@@ -209,7 +210,7 @@ esp_break_windows() {
     return 0
   fi
 
-  log info 'defusing Windows...'
+  log info "defusing Windows in ESP '${g_esp_devpath}' ..."
   tar -C "${g_esp_mount_path}/EFI" -z -c -f "$tmp_defused_windows_file" Microsoft || {
     log err 'failed to defuse Windows (tar error)'
     rm -f "$tmp_defused_windows_file" || true
@@ -289,7 +290,7 @@ esp_fix_windows() {
     return 0
   fi
 
-  log info 'repriming Windows...'
+  log info "repriming Windows in ESP '${g_esp_devpath}' ..."
   tar -C "${g_esp_mount_path}/EFI" -z -x -f "$defused_windows_file" || {
     log err 'error repriming Windows (tar error)'
     rm -rf "${esp_windows_dir}" || true
