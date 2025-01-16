@@ -120,11 +120,26 @@ get_disk()
 }
 
 efibootmgr_windows_create() {
-  local esp_partnum
+  local esp_partnum esp_partuuid
 
   log notice 'creating a Windows boot entry'
 
   esp_partnum=$(get_partnum "${g_esp_devpath}") || return 1
+
+  esp_partuuid=$(lsblk -n -oPARTUUID "${g_esp_devpath}") || {
+    log err "failed to query GPT partuuid of ESP '${g_esp_devpath}' (lsblk failed)"
+    return 1
+  }
+
+  if ! [[ "${esp_partuuid}" =~ ^[A-Fa-f0-9]{8}(-[A-Fa-f0-9]{4}){3}-[A-Fa-f0-9]{12}$ ]]; then
+    log err "failed to query GPT partuuid of ESP '${g_esp_devpath}' (lsblk printed invalid UUID: '${esp_partuuid}')"
+    return 1
+  fi
+
+  if efibootmgr -v | sed -r -n 's|^Boot[0-9]+[* ] [^\t]+\tHD\([0-9]+,GPT,([^,]+),[^)]+\)/File\(\\EFI\\Microsoft\\Boot\\bootmgfw\.efi\).*$|\1|p' | grep -i -q -x "${esp_partuuid}"; then
+    log notice "not creating a Windows boot entry because at least one already exists for Windows Boot Manager in ESP '${g_esp_devpath}'"
+    return 0
+  fi
 
   efibootmgr -q -c -L 'Windows Boot Manager' -l '\EFI\Microsoft\Boot\bootmgfw.efi' -d "${g_win_disk}" -p "${esp_partnum}" || {
     log err 'failed to create a Windows boot entry'
