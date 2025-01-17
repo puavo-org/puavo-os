@@ -385,6 +385,17 @@ lookup_puavo_btrfs_diskdev() {
       '
 }
 
+lookup_puavo_btrfs_partdev() {
+  local btrfs_diskdev btrfs_label
+  btrfs_diskdev=$1
+  btrfs_label=$2
+  lsblk -n -o FSTYPE,LABEL,UUID "$btrfs_diskdev" | awk -v label="$btrfs_label" '
+    BEGIN { status = 1 }
+    $1 == "btrfs" && $2 == label { print "UUID=" $3; status = 0; exit }
+    END { exit(status) }
+  '
+}
+
 lookup_puavo_vg_diskdev() {
   local vgname
   vgname=$1
@@ -597,7 +608,11 @@ fi
 
 if [ -n "$btrfs_diskdev" ]; then
   puavo_images_btrfs_label="$vgname"
-  puavo_partition_dev="$btrfs_diskdev"
+  if ! puavo_partition_dev="$(lookup_puavo_btrfs_partdev "$btrfs_diskdev" \
+                                "$puavo_images_btrfs_label")"; then
+    log err 'could not find puavo btrfs partition device UUID'
+    exit 1
+  fi
   puavo_partition_grub_overlays='(${puavobtrfsdev})/imageoverlays'
   if [ "$vgname" = 'puavoinstaller' ]; then
     puavo_partition_grub_images='(${puavobtrfsdev})/installimages'
