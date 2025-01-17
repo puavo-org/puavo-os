@@ -24,6 +24,8 @@ test "$BOOT" = "puavo" || exit 0
 PUAVO_IMAGE_PATH=
 PUAVO_IMAGE_FSTYPE=
 PUAVO_IMAGE_OVERLAY=
+PUAVO_LVM_VG='puavo'
+ROOT_IN_BTRFS=0
 
 for x in $(cat /proc/cmdline); do
     case "$x" in
@@ -44,20 +46,13 @@ for x in $(cat /proc/cmdline); do
         puavo.image.path=*)
             PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
             ;;
+        root=UUID=*)
+            ROOT_IN_BTRFS=1
+            ;;
     esac
 done
 
-PUAVO_LVM_VG=''
-case "$ROOT" in
-  UUID=*)
-    # puavo is on a btrfs partition
-    ;;
-  *)
-    PUAVO_LVM_VG='puavo'
-    ;;
-esac
-
-if [ -n "$PUAVO_LVM_VG" ]; then
+if [ "$ROOT_IN_BTRFS" = 0 ]; then
   vgchange -a y "$PUAVO_LVM_VG"
 fi
 
@@ -133,14 +128,14 @@ do_union_mount_persistent()
 mount_puavo_partition() {
     name=$1
 
-    if [ -n "$PUAVO_LVM_VG" \
+    if [ "$ROOT_IN_BTRFS" = 0 \
       -a ! -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
         return 0
     fi
 
     mkdir -p "/${name}"
 
-    if [ -z "$PUAVO_LVM_VG" ]; then
+    if [ "$ROOT_IN_BTRFS" = 1 ]; then
         # XXX should -o noatime also used with btrfs?
         mount -o "subvol=${name}" "$ROOT" "/${name}" || return 1
         return 0
@@ -193,10 +188,10 @@ fi
 # If using a loopmount image, move the /images partition under loop mounted
 # root and remount the partition as writable
 if [ "$loopmount_used" -gt 0 ]; then
-    if [ -n "$PUAVO_LVM_VG" ]; then
-        target_dir="${rootmnt}/images"
-    else
+    if [ "$ROOT_IN_BTRFS" = 1 ]; then
         target_dir="${rootmnt}/.btrfs"
+    else
+        target_dir="${rootmnt}/images"
     fi
     mkdir -p "$target_dir"
     mount -o move /host "$target_dir"
