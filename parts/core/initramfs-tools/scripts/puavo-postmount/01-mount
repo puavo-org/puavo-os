@@ -48,10 +48,17 @@ for x in $(cat /proc/cmdline); do
 done
 
 PUAVO_LVM_VG=''
-if [ "$rootmnt" = '/dev/mapper/puavo-images' \
-       -o "$rootmnt" = '/dev/mapper/puavoinstaller-installimages' ]; then
+case "$ROOT" in
+  UUID=*)
+    # puavo is on a btrfs partition
+    ;;
+  *)
+    PUAVO_LVM_VG='puavo'
+    ;;
+esac
+
+if [ -n "$PUAVO_LVM_VG" ]; then
   vgchange -a y "$PUAVO_LVM_VG"
-  PUAVO_LVM_VG='puavo'
 fi
 
 loopmount_image()
