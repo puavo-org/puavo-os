@@ -78,6 +78,16 @@ proc admins_with_permission {permission} {
   ]
 }
 
+proc this_school_teachers_with_permission {permission} {
+  ldapset [
+    format {([teacher,%s,] + this/puavoSchool)
+              & (user/puavoEduPersonAffiliation
+                  + [,] + user/puavoTeacherPermissions
+                  + [,] + user/puavoSchool)} \
+           $permission
+  ]
+}
+
 #
 # some constants
 #
@@ -261,12 +271,12 @@ rule {
 
 rule {
   # Allow teachers to change student passwords, but only if they belong
-  # to the same school.
+  # to the same school and have the "set_student_password" permission set.
   [dn children $People]
     filter="(puavoEduPersonAffiliation=student)"
     [attrs userPassword]
-      by $this_school_teachers =axz
-      by *                     none break
+      by [this_school_teachers_with_permission set_student_password] =axz
+      by *                                                           none break
 }
 
 rule {
