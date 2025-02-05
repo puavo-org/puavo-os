@@ -185,8 +185,6 @@ function ltsp_image_entry {
 
     linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
     initrd  /boot/initrd.img${kernel_version_suffix}
-
-    loopback -d loop
   }
 }
 
