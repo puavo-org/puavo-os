@@ -63,10 +63,12 @@ get_installed_version() {
 }
 
 get_dir_with_latest_installed_version() {
+  local marker_name
+
   other_pkg_dir=$1
   current_version=$2
   pkg_name=$3
-  installed_marker_name=$4
+  installed_marker_names=$4
   other_rootdir=$5
 
   latest_available_pkg_dir=
@@ -88,11 +90,13 @@ get_dir_with_latest_installed_version() {
       latest_available_pkg_dir="$pkgid_dir"
       latest_available_pkg_version="$pkg_version"
     fi
-    if [ "$latest_installed_pkg_version" -lt "$pkg_version" \
-         -a -e "${pkgid_dir}/${installed_marker_name}" ]; then
-      latest_installed_pkg_dir="$pkgid_dir"
-      latest_installed_pkg_version="$pkg_version"
-    fi
+    for marker_name in $installed_marker_names; do
+      if [ "$latest_installed_pkg_version" -lt "$pkg_version" \
+        -a -e "${pkgid_dir}/${marker_name}" ]; then
+          latest_installed_pkg_dir="$pkgid_dir"
+          latest_installed_pkg_version="$pkg_version"
+      fi
+    done
   done
 
   if [ -n "$latest_available_pkg_dir" ]; then
@@ -108,7 +112,7 @@ get_dir_with_latest_installed_version() {
 
 configure_latest_from() {
   other_rootdir=$1
-  installed_marker_name=$2
+  installed_marker_names=$2
 
   for other_pkgdir in ${other_rootdir}/packages/*; do
     test -d "$other_pkgdir" || continue
@@ -121,7 +125,7 @@ configure_latest_from() {
                         "$other_pkgdir"                     \
                         "$syspkg_version"                   \
                         "$pkg_name"                         \
-                        "$installed_marker_name"            \
+                        "$installed_marker_names"           \
                         "$other_rootdir")
 
     if [ -d "$other_pkgid_dir" ]; then
@@ -134,7 +138,10 @@ configure_latest_from() {
             install:*) echo "ignoring version in puavo.pkg.${pkg_name}" ;;
           esac
 
-          reconfigure_upgrade_pkg "$pkg_name" "$other_pkgid_dir" || status=1
+          # ignore unconfigure errors from old package, as we are booting
+          # and should be able to upgrade packages with broken unconfigure
+          reconfigure_upgrade_pkg --ignore-unconfigure-error "$pkg_name" \
+            "$other_pkgid_dir" || status=1
           ;;
       esac
   fi
@@ -152,7 +159,8 @@ setup_puavopkg_for_localboot_devices() {
                          "$system_cachedir" \
                          "$system_rootdir"
 
-  configure_latest_from "$local_rootdir" .installed
+  configure_latest_from "$local_rootdir" \
+    '.installed .upgrade_failed_due_to_old_pkg_unconfigure'
 }
 
 setup_puavopkg_for_netboot_devices() {

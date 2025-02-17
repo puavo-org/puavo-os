@@ -5,6 +5,7 @@ case $::puavoruleset {
   'prepare': {
     include ::apt::default_repositories
     include ::systemd::sysusers         # early so that this has an effect
+    include ::users                     # early so that this has an effect
   }
 
   'allinone': { include ::image::allinone }

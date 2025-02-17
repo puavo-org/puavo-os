@@ -104,7 +104,8 @@ install : installdirs
 		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
-		etc/sudoers.d/puavo-ltsp-client
+		etc/sudoers.d/puavo-ltsp-client \
+		etc/sudoers.d/puavo-role-admin
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
 		etc/X11/Xsession.d/*

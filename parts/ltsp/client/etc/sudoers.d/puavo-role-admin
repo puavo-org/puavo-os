@@ -1,0 +1,3 @@
+%puavo-role-admin       ALL = /usr/sbin/puavo-reset-laptop-to-factory-defaults
+%puavo-role-admin       ALL = NOPASSWD: /usr/sbin/puavo-pkg-update-from-gui
+%puavo-role-admin       ALL = NOPASSWD: /usr/sbin/puavo-conf-local

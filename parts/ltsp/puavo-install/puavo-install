@@ -94,6 +94,7 @@ ask_preseed() {
         echo 'Problem when choosing preseed' >&2
         return 1
     fi
+    printf "You have chosen preseed: %s\n" "$chosen_preseed"
   fi
 
   preseed_admin_user=$(get_preseed_variable admin_user "$chosen_preseed" \

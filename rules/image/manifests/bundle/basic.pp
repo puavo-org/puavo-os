@@ -32,6 +32,7 @@ class image::bundle::basic {
   include ::tlp
   include ::tmux
   include ::udev
+  include ::users
   include ::use_urandom
   include ::woeusb
   include ::zram_configuration

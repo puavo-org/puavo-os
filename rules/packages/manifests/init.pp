@@ -147,6 +147,7 @@ class packages {
     , 'm4'
     , 'mesa-utils'
     , 'moreutils'
+    , 'ncdu'
     , 'nmap'
     , 'nvme-cli'
     , 'plocate'
@@ -353,7 +354,6 @@ class packages {
 
     [ 'aisleriot'
     , 'dosbox'
-    # , 'freeciv-client-gtk'                    # XXX missing from Trixie
     , 'gcompris-qt'
     , 'gnome-games'
     , 'gnubg'
@@ -433,6 +433,7 @@ class packages {
     , 'libcupsimage2-dev'
     , 'libfontembed-dev'
     , 'libgail-3-dev'
+    , 'libgtk2.0-dev'           # needed by lazarus-ide puavo-pkg
     , 'libgtk-3-dev'
     , 'libgtk-4-dev' ]:
       tag => [ 'tag_lib_devel', 'tag_debian_desktop', ];
@@ -518,7 +519,6 @@ class packages {
     , 'idle'
     # , 'idle-python3.11'               # XXX missing from Trixie
     , 'kturtle'
-    , 'lazarus'
     , 'lokalize'
     , 'meld'
     , 'okteta'
@@ -558,7 +558,6 @@ class packages {
     , 'kgeography'
     , 'kmplot'
     , 'kstars'
-    , 'mandelbulber2'
     , 'marble-qt'
     , 'openbabel'
     , 'pspp'
@@ -798,14 +797,17 @@ class packages {
     , 'gnome-network-displays'
     , 'ideviceinstaller'
     , 'idevicerestore'
+    , 'jhead'
     , 'kamoso'
     , 'kde-spectacle'
+    , 'libheif-examples'  # CLI-tools for converting HEIF media.
     , 'mc'
     , 'mousepad'
     , 'p7zip-full'
     , 'pass'
     , 'password-gorilla'
     , 'pdfarranger'
+    , 'rename'
     , 'system-config-printer'
     , 'tlp'
     # , 'ubertooth'             # XXX missing from Trixie
@@ -842,9 +844,9 @@ class packages {
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
   $nvidia_dkms_470_module   = 'nvidia-tesla-470/470.256.02'
-  $nvidia_dkms_535_module   = 'nvidia-current/535.183.01'
+  $nvidia_dkms_535_module   = 'nvidia-current/535.216.01'
   $r8168_module             = 'r8168/8.051.02'
-  $virtualbox_module        = 'virtualbox/7.0.12'
+  $virtualbox_module        = 'virtualbox/7.0.20'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module ]
                       # , $nvidia_dkms_470_module       # XXX Trixie
@@ -856,15 +858,6 @@ class packages {
     '6.11.10-amd64':
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-6.11.10-amd64';
-
-# XXX missing from Trixie
-#   '6.11.5-amd64':
-#     # The current nvidia packages (470.199.02-1~deb12u1 and
-#     # 525.125.06-1~deb12u1) do not compile for 6.5.x.
-#     # The same is true for the current VirtualBox version in
-#     # debian-fasttrack.
-#     dkms_modules => [ $broadcom_sta_dkms_module ],
-#     package_name => 'linux-image-6.11.5-amd64-unsigned';
   }
 
   # various contrib/non-free stuff, firmwares and such

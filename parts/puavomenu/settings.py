@@ -30,9 +30,9 @@ class Settings:
         # Where user settings are saved (usually ~/.config/puavomenu)
         self.user_conf = ""
 
-        # The directory where user-defined programs are automatically loaded
-        # and updated from. Not always specified.
-        self.user_programs_dir = None
+        # One or more directories where user-defined programs are automatically
+        # loaded and updated from. Not always used.
+        self.user_programs_dir = []
 
         # Language code (en/fi/de/sv/etc.)
         self.language = "en"

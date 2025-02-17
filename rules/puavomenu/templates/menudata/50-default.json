@@ -4,6 +4,9 @@
             "keywords": "abitti",
             "tags": "default"
         },
+        "abitti-naksu": {
+            "tags": "abitti-naksu"
+        },
         "acroread": {
             "name": "Acrobat Reader",
             "tags": "default",
@@ -325,6 +328,9 @@
         "eshare": {
             "tags": "default"
         },
+        "eva-warenwirtschaft": {
+            "tags": "default"
+        },
         "filezilla": {
             "tags": "default"
         },
@@ -484,6 +490,15 @@
         "idle-python3.11": {
             "tags": "default"
         },
+        "inuvika-excel": {
+            "tags": "default"
+        },
+        "inuvika-powerpoint": {
+            "tags": "default"
+        },
+        "inuvika-word": {
+            "tags": "default"
+        },
         "io.github.wxmaxima_developers.wxMaxima": {
             "tags": "default",
             "keywords": "digabi"
@@ -540,6 +555,9 @@
             "puavopkg": {
                 "id": "kojo"
             }
+        },
+        "lazarus": {
+            "tags": "default, development, education"
         },
         "lazarus-2.0.10": {
             "tags": "default, development, education"
@@ -742,6 +760,13 @@
         },
         "nextcloud-desktop": {
             "tags": "default"
+        },
+        "nextcloud-talk": {
+            "name": "Nextcloud Talk",
+            "tags": "default, network",
+            "puavopkg": {
+                "id": "nextcloud-talk-desktop"
+            }
         },
         "Nightcode": {
             "name": "Nightcode",
@@ -1776,6 +1801,7 @@
                 "org.kde.kdeconnect.app",
                 "org.kde.spectacle",
                 "simplescreenrecorder",
+                "abitti-naksu",
                 "veyon-configurator",
                 "veyon-master",
                 "epson-easymp",
@@ -2229,6 +2255,7 @@
                 "google-meet",
                 "dropbox",
                 "nextcloud-desktop",
+                "nextcloud-talk",
                 "empathy",
                 "pidgin",
                 "gftp",
@@ -2356,6 +2383,10 @@
                 "ica-word",
                 "ica-excel",
                 "ica-powerpoint",
+                "inuvika-word",
+                "inuvika-excel",
+                "inuvika-powerpoint",
+                "eva-warenwirtschaft",
                 "MetaSearch9",
                 "projectlibre",
                 "texmaker",
@@ -2428,6 +2459,7 @@
                 "greenfoot",
                 "eclipse-php",
                 "eric6",
+                "lazarus",
                 "lazarus-2.0.10",
                 "lazarus-2.2.2",
                 "lazarus-2.2.4",

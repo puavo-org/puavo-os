@@ -6,6 +6,7 @@ import copy
 import datetime
 import errno
 import fcntl
+import filecmp
 import gettext
 import gi
 import glob
@@ -50,11 +51,45 @@ EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 
-PRELOAD_TIMEDELTA = datetime.timedelta(minutes=10)
+PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
 
+FORCELOAD_BEFORE_START_TIMEDELTA = datetime.timedelta(minutes=5)
+PRELOAD_TIMEDELTA = datetime.timedelta(minutes=15)
+
+# current_exam_package must be read/written only when exam_scheduler_lock
+# is taken (it is used by PuavoErsAnswerReturn, PuavoErsExamManager and
+# PuavoErsExamScheduler threads)
 exam_scheduler_lock = threading.Lock()
-current_exams_set = None
+current_exam_package = None
 current_zip_name = None
+
+
+class Logger:
+  def __init__(self, log_prefix):
+    self.log_prefix = log_prefix
+
+
+  def log(self, priority, message):
+    full_message = '%s: %s' % (self.log_prefix, message)
+    syslog.syslog(priority, full_message)
+
+
+def iso_as_timezone(isoformat_string, logger):
+  try:
+    return datetime.datetime.fromisoformat(isoformat_string).astimezone()
+  except Exception as e:
+    logger.log(syslog.LOG_WARNING,
+               'error converting %s to datetime object: %s' \
+                 % (isoformat_timestring, e))
+    raise e
+
+
+def iso_to_local_date(isoformat_string, logger):
+    return iso_as_timezone(isoformat_string, logger).date()
+
+
+def iso_to_local_datetime(isoformat_string, logger):
+    return iso_as_timezone(isoformat_string, logger).replace(tzinfo=None)
 
 
 def puavoconf_get(puavoconf_key):
@@ -62,33 +97,58 @@ def puavoconf_get(puavoconf_key):
                    .decode('utf-8')
 
 
-def rm_f(path, with_logging=True):
+def rm_f(path, logger=None):
   try:
     os.unlink(path)
-    if with_logging:
-      syslog.syslog(syslog.LOG_INFO, 'removed %s' % path)
+    if logger:
+      logger.log(syslog.LOG_INFO, 'removed %s' % path)
   except OSError as e:
     if e.errno != errno.ENOENT:
       raise e
 
 
-def timestring_with_strftime(timestring, format_string):
-  datetime_obj = to_datetime(timestring)
+def load_from_json(path):
+  with open(path) as file:
+    return json.load(file)
+
+
+def save_as_json(path, data):
+  # return True  when json on file has changed
+  # return False when there was nothing to do
+  # raise Exception when an error occurs
+  tmpfile = '%s.tmp' % path
+  with open(tmpfile, 'w') as f:
+    json.dump(data, f)
+    f.write("\n")
+  try:
+    if filecmp.cmp(tmpfile, path, False):
+      rm_f(tmpfile)
+      return False
+  except OSError as e:
+    if e.errno != errno.ENOENT:
+      raise e
+
+  os.rename(tmpfile, path)
+  return True
+
+
+def timestring_with_strftime(timestring, format_string, logger):
+  datetime_obj = to_datetime(timestring, logger)
   if not datetime_obj:
     return None
   return datetime_obj.strftime(format_string)
 
 
-def to_datetime(timestring):
+def to_datetime(timestring, logger):
   try:
     if not timestring:
       return None
     return datetime.datetime.strptime(timestring, '%Y-%m-%dT%H:%M:%S.%f%z') \
                             .astimezone()
   except Exception as e:
-    syslog.syslog(syslog.LOG_WARNING,
-                  'could not convert timestring %s to datetime object' \
-                    % timestring)
+    logger.log(syslog.LOG_WARNING,
+               'could not convert timestring %s to datetime object' \
+                  % timestring)
     return None
 
 
@@ -104,6 +164,7 @@ class PuavoExamServer (threading.Thread):
     threading.Thread.__init__(self)
 
     self.exam_server_name = puavoconf_get('puavo.abitti.exam_server')
+    self.logger = Logger('exam-server')
 
     with open('/etc/puavo/domain') as f:
       self.domain = f.read().rstrip()
@@ -127,7 +188,7 @@ class PuavoExamServer (threading.Thread):
   def run(self):
     while True:
       try:
-        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoExamServer run() loop')
+        self.logger.log(syslog.LOG_DEBUG, 'in PuavoExamServer run() loop')
 
         try:
           self.ws = self.open_connection()
@@ -143,11 +204,12 @@ class PuavoExamServer (threading.Thread):
           except websocket.WebSocketTimeoutException as e:
             self.ping()
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR,
-                      'error with websocket connection: %s' % e)
+        self.logger.log(syslog.LOG_ERR,
+          'error with websocket connection to exam-o-matic: %s' % e)
       finally:
         if self.ws:
-          syslog.syslog(syslog.LOG_INFO, 'closing websocket connection')
+          self.logger.log(syslog.LOG_INFO,
+                          'closing websocket connection to exam-o-matic')
           self.ws.close()
           self.ws = None
 
@@ -164,15 +226,15 @@ class PuavoExamServer (threading.Thread):
 
   def handle_message(self, msgjson):
     msg = json.loads(msgjson)
-    if type(msg) != dict:
+    if not isinstance(msg, dict):
       raise Exception('message is not a dict')
     if not 'type' in msg:
       raise Exception('message does not have a type')
-    if type(msg['type']) != str:
+    if not isinstance(msg['type'], str):
       raise Exception('message type is not a string')
     if not 'id' in msg:
       raise Exception('message does not have a id')
-    if type(msg['id']) != int:
+    if not isinstance(msg['id'], int):
       raise Exception('message id is not a integer')
 
     if msg['type'] == 'pong':
@@ -181,20 +243,21 @@ class PuavoExamServer (threading.Thread):
     self.send({ 'type': 'ack', 'id': msg['id'] })
 
     if msg['type'] == 'change_keycode':
-      syslog.syslog(syslog.LOG_INFO,
-                    'received change keycode message from exams controller')
+      self.logger.log(syslog.LOG_INFO,
+                      'received change keycode message from exam-o-matic')
       self.exam_scheduler.request_keycode_change()
       return
 
     if msg['type'] == 'refresh_exams':
-      syslog.syslog(syslog.LOG_INFO,
-                    'received refresh exams messages from exams controller')
+      self.logger.log(syslog.LOG_INFO,
+                      'received refresh exams messages from exam-o-matic')
       self.exam_sync.trigger_sync_exams()
       return
 
 
   def open_connection(self):
-    syslog.syslog(syslog.LOG_DEBUG, 'opening websocket connection')
+    self.logger.log(syslog.LOG_DEBUG,
+                    'opening websocket connection to exam-o-matic')
 
     ws = websocket.WebSocket()
 
@@ -214,15 +277,15 @@ class PuavoExamServer (threading.Thread):
                timeout=30)
     ws.settimeout(45)
 
-    syslog.syslog(syslog.LOG_INFO,
-                  'websocket connection opened to exam control server')
+    self.logger.log(syslog.LOG_INFO,
+                    'websocket connection opened to exam-o-matic')
 
     return ws
 
 
   def server_uri(self, path, websocket=False):
-    syslog.syslog(syslog.LOG_DEBUG,
-                  'using server name %s' % self.exam_server_name)
+    self.logger.log(syslog.LOG_DEBUG,
+                    'using exam-o-matic server name %s' % self.exam_server_name)
 
     if self.exam_server_name.startswith('http://'):
       server_name = self.exam_server_name.replace('http://', '')
@@ -249,7 +312,7 @@ class PuavoExamServer (threading.Thread):
   def get(self, path, params={}):
     uri = self.server_uri(path)
 
-    syslog.syslog(syslog.LOG_DEBUG, 'sending get request to %s' % uri)
+    self.logger.log(syslog.LOG_DEBUG, 'sending get request to %s' % uri)
 
     req_params = params
     req_params.update({
@@ -265,41 +328,48 @@ class PuavoExamServer (threading.Thread):
                               params=req_params,
                               timeout=20)
       if response.status_code != requests.codes.ok:
-        syslog.syslog(syslog.LOG_ERR,
-          'error on GET request to %s: code=%s' % (uri, response.status_code))
+        self.logger.log(syslog.LOG_ERR,
+          'error on GET request to %s: received status code %s' \
+             % (uri, response.status_code))
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR,
-                    'error on GET request to %s: %s' % (uri, e))
+      self.logger.log(syslog.LOG_ERR,
+                      'error on GET request to %s: %s' % (uri, e))
       return
 
     return response
 
 
-  def post(self, path, data):
+  def post(self, path, data, files=None):
     uri = self.server_uri(path)
 
-    syslog.syslog(syslog.LOG_DEBUG, 'sending post request to %s' % uri)
+    self.logger.log(syslog.LOG_DEBUG, 'sending post request to %s' % uri)
 
     req_params = {
                    'domain':   self.domain,
                    'hostname': self.hostname,
                    'id':       self.id,
                  }
-    json_data = json.dumps(data)
 
     try:
-      response = requests.post(uri,
-                              auth=HTTPBasicAuth(self.ldap_dn,
-                                                 self.ldap_password),
-                              params=req_params,
-                              data=json_data,
-                              timeout=20)
+      post_args = {
+        'auth':    HTTPBasicAuth(self.ldap_dn, self.ldap_password),
+        'params':  req_params,
+        'timeout': 20,
+      }
+      if files:
+        # file upload requires "multipart/form-data" so can not encode as json
+        post_args['data']  = data
+        post_args['files'] = files
+      else:
+        post_args['data'] = json.dumps(data)
+      response = requests.post(uri, **post_args)
       if response.status_code != requests.codes.ok:
-        syslog.syslog(syslog.LOG_ERR,
-          'error on POST request to %s: code=%s' % (uri, response.status_code))
+        self.logger.log(syslog.LOG_ERR,
+          'error on POST request to %s: received status code %s' \
+            % (uri, response.status_code))
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR,
-                    'error on POST request to %s: %s' % (uri, e))
+      self.logger.log(syslog.LOG_ERR,
+                      'error on POST request to %s: %s' % (uri, e))
       return
 
     return response
@@ -307,11 +377,11 @@ class PuavoExamServer (threading.Thread):
 
 class PuavoErsApplet:
   NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
-  PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
   CONFIG_PATH = os.path.join(PUAVO_ERS_DIR, 'config.json')
   NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
 
   def __init__(self):
+    self.logger = Logger('applet')
     self.indicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-ers-applet',
           '/usr/share/icons/Faenza/emblems/64/emblem-default.png',
@@ -322,7 +392,7 @@ class PuavoErsApplet:
 
     Notify.init('puavo-ers-applet')
 
-    os.makedirs(self.PUAVO_ERS_DIR, exist_ok=True)
+    os.makedirs(PUAVO_ERS_DIR, exist_ok=True)
 
     self.load_configuration()
 
@@ -336,20 +406,23 @@ class PuavoErsApplet:
     self.menu.show_all()
 
     self.exam_server = PuavoExamServer()
-    self.exam_sorter = PuavoErsExamSorter(self.exam_sync_active)
-    self.exam_sync = PuavoErsExamSync(self.exam_server, self.exam_sorter,
+    self.exam_manager = PuavoErsExamManager(self.exam_sync_active)
+    self.exam_sync = PuavoErsExamSync(self.exam_server, self.exam_manager,
                                       self.exam_sync_active)
     self.exam_control = PuavoErsExamControl(self.exam_server)
-    self.exam_scheduler = PuavoErsExamScheduler(self.exam_control)
+    self.answer_return = PuavoErsAnswerReturn(self.exam_server)
+    self.exam_scheduler = PuavoErsExamScheduler(self.exam_control,
+                                                self.answer_return)
+    self.answer_return.connect_exam_scheduler(self.exam_scheduler)
 
     self.exam_server.add_other_threads(self.exam_scheduler, self.exam_sync)
 
+    self.answer_return.start()
     self.exam_server.start()
     self.exam_sync.start()
-    self.exam_sorter.start()
+    self.exam_manager.start()
     self.exam_control.start()
     self.exam_scheduler.start()
-
 
     # Copy "naksu" to NAKSU_BIN_PATH only if it does not exist yet.
     # This is because "naksu" is self-updating and self.NAKSU_BIN_PATH
@@ -359,15 +432,14 @@ class PuavoErsApplet:
 
 
   def load_configuration(self):
-    syslog.syslog(syslog.LOG_DEBUG, 'loading configuration')
+    self.logger.log(syslog.LOG_DEBUG, 'loading configuration')
 
     self.automation_active = None
     self.exam_sync_active = None
 
     error = None
     try:
-      with open(self.CONFIG_PATH) as file:
-        config = json.load(file)
+      config = load_from_json(self.CONFIG_PATH)
       if 'automation_active' in config:
         self.automation_active = config['automation_active']
       if 'exam_sync_active' in config:
@@ -379,7 +451,8 @@ class PuavoErsApplet:
       error = e
 
     if error:
-      syslog.syslog(syslog.LOG_ERR, 'could not read configuration: %s' % error)
+      self.logger.log(syslog.LOG_ERR,
+                      'could not read configuration: %s' % error)
 
     create_defaults = False
 
@@ -395,19 +468,16 @@ class PuavoErsApplet:
 
 
   def save_configuration(self):
-    syslog.syslog(syslog.LOG_DEBUG, 'saving configuration')
+    self.logger.log(syslog.LOG_DEBUG, 'saving configuration')
 
     try:
       data = {
         'automation_active': self.automation_active,
         'exam_sync_active':  self.exam_sync_active,
       }
-      tmpfile = '%s.tmp' % self.CONFIG_PATH
-      with open(tmpfile, 'w') as f:
-        json.dump(data, f)
-      os.rename(tmpfile, self.CONFIG_PATH)
+      save_as_json(self.CONFIG_PATH, data)
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR, 'could not save configuration: %s' % e)
+      self.logger.log(syslog.LOG_ERR, 'could not save configuration: %s' % e)
 
 
   def main(self):
@@ -417,16 +487,16 @@ class PuavoErsApplet:
     if self.automation_active and self.exam_sync_active:
       self.enable_exam_scheduler()
       # Try to start vm
-      subprocess.run("puavo-ers-startvm")
+      subprocess.run('puavo-ers-startvm')
 
     Gtk.main()
 
 
   def run_naksu(self):
-    syslog.syslog(syslog.LOG_NOTICE, 'starting up naksu')
+    self.logger.log(syslog.LOG_NOTICE, 'starting up naksu')
 
     cmd = [ '/usr/bin/terminator', '-T', 'naksu terminal',
-            '--working-directory=' + self.PUAVO_ERS_DIR,
+            '--no-dbus', '--working-directory=' + PUAVO_ERS_DIR,
             '-x', './naksu', '--self-update=enabled' ]
     (pid, stdin, stdout, stderr) = GLib.spawn_async(cmd,
       flags=GLib.SpawnFlags.DO_NOT_REAP_CHILD|GLib.SpawnFlags.STDERR_TO_DEV_NULL,
@@ -442,8 +512,8 @@ class PuavoErsApplet:
 
   def handle_naksu(self, fd, condition, channel):
     try:
-      syslog.syslog(syslog.LOG_DEBUG,
-                    'some IO event with naksu: condition is %s' % condition)
+      self.logger.log(syslog.LOG_DEBUG,
+                      'some IO event with naksu: condition is %s' % condition)
 
       if condition & GLib.IO_IN:
         channel.read()
@@ -452,17 +522,17 @@ class PuavoErsApplet:
         channel.close()
         (pid, status) = os.waitpid(self.naksu_pid, 0)
         if status != 0:
-          syslog.syslog(syslog.LOG_ERR,
-                        'naksu pid %d returned exit status %s' % (pid, status))
+          self.logger.log(syslog.LOG_ERR,
+            'naksu pid %d returned exit status %s' % (pid, status))
         else:
-          syslog.syslog(syslog.LOG_NOTICE, 'naksu exited with success')
+          self.logger.log(syslog.LOG_NOTICE, 'naksu exited with success')
 
         time.sleep(3)
         self.run_naksu()
         return False
 
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR, 'error when handling naksu: %s' % e)
+      self.logger.log(syslog.LOG_ERR, 'error when handling naksu: %s' % e)
       return False
 
     return True
@@ -471,19 +541,21 @@ class PuavoErsApplet:
   def update_decrypt_codes(self, force_update=False):
     error = None
     try:
-      with open(EXAMS_JSON_FILE) as file:
-        error_no_exams = False
-        try:
-          new_exams = json.load(file)
-        except Exception as e:
-          error_no_exams = True
-          new_exams = []
-          syslog.syslog(syslog.LOG_ERR,
-                        'could not parse exams json: %s' % e)
+      error_no_exams = False
+      try:
+        exams_information = self.exam_manager.get_exams_information()
+        if not exams_information:
+          raise Exception('no exams information stored')
+        new_exams = exams_information['schedules']
+      except Exception as e:
+        error_no_exams = True
+        new_exams = []
+        self.logger.log(syslog.LOG_WARNING,
+                        'could not get exams from exam manager: %s' % e)
 
-        if (force_update or self.old_exams != new_exams):
-          self.update_decrypt_codes_in_ui(new_exams, error_no_exams)
-        self.old_exams = new_exams
+      if (force_update or self.old_exams != new_exams):
+        self.update_decrypt_codes_in_ui(new_exams, error_no_exams)
+      self.old_exams = new_exams
     except OSError as e:
       if e.errno != errno.ENOENT:
         error = e
@@ -491,8 +563,8 @@ class PuavoErsApplet:
       error = e
 
     if error:
-      syslog.syslog(syslog.LOG_ERR,
-                    'error when updating decrypt codes: %s' % error)
+      self.logger.log(syslog.LOG_ERR,
+                      'error when updating decrypt codes: %s' % error)
 
     return True
 
@@ -502,7 +574,7 @@ class PuavoErsApplet:
     # wants to try those out manually.  Showing them for old exams is probably
     # just a distraction.
 
-    syslog.syslog(syslog.LOG_INFO, 'updating decrypt codes in UI')
+    self.logger.log(syslog.LOG_INFO, 'updating decrypt codes in UI')
 
     self.exams_by_widgets = {}
     for menuitem in self.menuitems:
@@ -513,12 +585,12 @@ class PuavoErsApplet:
 
     for exam in new_exams:
       if not re.match('^exam_.*\.me(b|x)$', exam['file_name']):
-        syslog.syslog(syslog.LOG_WARNING,
+        self.logger.log(syslog.LOG_WARNING,
           'not showing password for exam %s' % exam['file_name'])
         continue
 
       # do not show passwords for old exams
-      exam_end_time = datetime.datetime.fromtimestamp(exam['end_time'])
+      exam_end_time = iso_to_local_datetime(exam['end_time'], self.logger)
       if exam_end_time < datetime.datetime.now():
         continue
 
@@ -630,11 +702,11 @@ class PuavoErsApplet:
     self.exam_sync_active = False
     self.save_configuration()
 
-    self.exam_sorter.exam_sorter_enabled = False
-    self.exam_sync.exam_sync_enabled     = False
+    self.exam_manager.exam_manager_enabled = False
+    self.exam_sync.exam_sync_enabled = False
     self.update_decrypt_codes(True)
 
-    syslog.syslog(syslog.LOG_INFO, 'exam sync is now disabled')
+    self.logger.log(syslog.LOG_INFO, 'exam sync is now disabled')
     Notify.Notification.new(_tr('Exam sync is NOT active')).show()
 
     self.disable_exam_scheduler()
@@ -646,11 +718,11 @@ class PuavoErsApplet:
 
     self.exam_sync.trigger_sync_exams()
 
-    self.exam_sorter.exam_sorter_enabled = True
-    self.exam_sync.exam_sync_enabled     = True
+    self.exam_manager.exam_manager_enabled = True
+    self.exam_sync.exam_sync_enabled = True
     self.update_decrypt_codes(True)
 
-    syslog.syslog(syslog.LOG_INFO, 'exam sync is now enabled')
+    self.logger.log(syslog.LOG_INFO, 'exam sync is now enabled')
     Notify.Notification.new(_tr('Exam sync is active')).show()
 
     if self.automation_active:
@@ -665,7 +737,7 @@ class PuavoErsApplet:
     is_enabled = self.exam_scheduler.exam_scheduler_enabled
     self.exam_scheduler.exam_scheduler_enabled = False
     if is_enabled != self.exam_scheduler.exam_scheduler_enabled:
-      syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now disabled')
+      self.logger.log(syslog.LOG_INFO, 'exam scheduler is now disabled')
       Notify.Notification.new(_tr('Exam session automation is NOT active')) \
                          .show()
     self.update_decrypt_codes(True)
@@ -680,7 +752,7 @@ class PuavoErsApplet:
     self.exam_scheduler.exam_scheduler_enabled = True
     if is_enabled != self.exam_scheduler.exam_scheduler_enabled:
       Notify.Notification.new(_tr('Exam session automation is active')).show()
-      syslog.syslog(syslog.LOG_INFO, 'exam scheduler is now enabled')
+      self.logger.log(syslog.LOG_INFO, 'exam scheduler is now enabled')
 
     self.update_decrypt_codes(True)
 
@@ -691,7 +763,7 @@ class PuavoErsApplet:
 
 
   def copy_password_to_clipboard(self, password):
-    syslog.syslog(syslog.LOG_INFO, 'copying password to clipboard')
+    self.logger.log(syslog.LOG_INFO, 'copying password to clipboard')
 
     self.clipboard.set_text(password, -1)
     self.latest_chosen_password = password
@@ -703,19 +775,20 @@ class PuavoErsApplet:
 class DecryptCodesWindow:
   def __init__(self, applet, labels_and_exams_list):
     self.applet = applet
+    self.logger = Logger('decrypt-codes-window')
     self.exams_by_widgets = {}
     self.labels_and_exams_list = labels_and_exams_list
     self.win = None
 
 
   def open(self, widget):
-    syslog.syslog(syslog.LOG_INFO, 'opening alternative crypt codes window')
+    self.logger.log(syslog.LOG_INFO, 'opening alternative crypt codes window')
 
     if self.win:
       self.win.present()
       return
 
-    syslog.syslog(syslog.LOG_DEBUG, 'creating a new crypt codes window')
+    self.logger.log(syslog.LOG_DEBUG, 'creating a new crypt codes window')
 
     self.win = Gtk.Window(title=_tr('Decrypt codes'))
     self.win.set_default_size(400, 700)
@@ -745,16 +818,17 @@ class DecryptCodesWindow:
 
 
   def window_closed(self, widget):
-    syslog.syslog(syslog.LOG_DEBUG, 'crypt codes window closed')
+    self.logger.log(syslog.LOG_DEBUG, 'crypt codes window closed')
     self.win = None
 
 
 class PuavoErsExamSync (threading.Thread):
-  def __init__(self, exam_server, exam_sorter, is_active):
+  def __init__(self, exam_server, exam_manager, is_active):
     threading.Thread.__init__(self)
 
+    self.logger = Logger('exam-sync')
     self.exam_server = exam_server
-    self.exam_sorter = exam_sorter
+    self.exam_manager = exam_manager
     self.exam_sync_enabled = is_active
     self.do_exam_sync = False
     self.sync_exams_lock = threading.Condition()
@@ -763,7 +837,7 @@ class PuavoErsExamSync (threading.Thread):
   def run(self):
     while True:
       try:
-        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsExamSync run() loop')
+        self.logger.log(syslog.LOG_DEBUG, 'in PuavoErsExamSync run() loop')
 
         self.sync_exams_lock.acquire()
         # we do not check with while, because periodically sync_exams()
@@ -776,15 +850,15 @@ class PuavoErsExamSync (threading.Thread):
         if self.exam_sync_enabled:
           self.sync_exams()
         else:
-          syslog.syslog(syslog.LOG_INFO, 'exam sync has been disabled')
+          self.logger.log(syslog.LOG_INFO, 'exam sync has been disabled')
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
+        self.logger.log(syslog.LOG_ERR, 'error when syncing exams: %s' % e)
 
       time.sleep(10)
 
 
   def trigger_sync_exams(self):
-    syslog.syslog(syslog.LOG_DEBUG, 'sync exams triggered')
+    self.logger.log(syslog.LOG_DEBUG, 'sync exams triggered')
     self.sync_exams_lock.acquire()
     self.do_exam_sync = True
     self.sync_exams_lock.notify()
@@ -792,19 +866,31 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def sync_exams(self):
-    syslog.syslog(syslog.LOG_INFO, 'requesting for new exams')
+    self.logger.log(syslog.LOG_INFO, 'requesting for new exams')
 
-    response = self.exam_server.get('/v1/schedules/query_exam_server_schedule')
+    response = self.exam_server.get('/v2/schedules/exam_packages')
     if not response or response.status_code != requests.codes.ok:
       raise Exception('could not get exam schedules from server')
 
-    exams_json = response.content.decode('utf-8')
-    self.update_exams_json_on_disk(exams_json)
+    exams_response_json = response.content.decode('utf-8')
+    exams_information = json.loads(exams_response_json)
+
+    if not 'packages' in exams_information:
+      raise Exception('packages information is missing')
+    if not isinstance(exams_information['packages'], dict):
+      raise Exception('packages is not a dict')
+    if not 'schedules' in exams_information:
+      raise Exception('schedules field is missing')
+    if not isinstance(exams_information['schedules'], list):
+      raise Exception('schedules is not a list')
+
+    self.update_exams_json_on_disk(exams_response_json)
 
     fatal_errors = False
 
     exam_name_list = []
-    for exam in json.loads(exams_json):
+    schedules_list = exams_information['schedules']
+    for exam in schedules_list:
       try:
         exam_file_name = exam['file_name']
         if not isinstance(exam_file_name, str):
@@ -818,7 +904,7 @@ class PuavoErsExamSync (threading.Thread):
         self.sync_one_exam(exam_file_name, exam)
         exam_name_list.append(exam_file_name)
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR, 'error in syncing one exam: %s' % e)
+        self.logger.log(syslog.LOG_ERR, 'error in syncing one exam: %s' % e)
         fatal_errors = True
 
     # clean up old exams that no longer belong to exams subdirectories
@@ -827,16 +913,16 @@ class PuavoErsExamSync (threading.Thread):
         # We check that file hard link count must be over 1, in which case
         # it has already been archived and we can delete it here.
         if os.stat(exam_path).st_nlink > 1:
-          rm_f(exam_path)
+          rm_f(exam_path, self.logger)
 
-    self.exam_sorter.trigger_sort_exams()
+    self.exam_manager.trigger_manage_exams()
 
     if fatal_errors:
       raise Exception('there were errors when syncing exams')
 
 
   def update_exams_json_on_disk(self, exams_json):
-    syslog.syslog(syslog.LOG_DEBUG, 'updating exams.json')
+    self.logger.log(syslog.LOG_DEBUG, 'updating exams.json')
 
     try:
       tmpfile = '%s.tmp' % EXAMS_JSON_FILE
@@ -844,31 +930,33 @@ class PuavoErsExamSync (threading.Thread):
         f.write(exams_json)
       os.rename(tmpfile, EXAMS_JSON_FILE)
     except Exception as e:
-      syslog.syslog(syslog.LOG_CRIT,
+      self.logger.log(syslog.LOG_CRIT,
         'error in writing exams (json) to %s: %s' % (EXAMS_JSON_FILE, e))
 
 
   def sync_one_exam(self, exam_file_name, exam):
     exam_file_path = os.path.join(EXAMS_DIR, exam_file_name)
 
-    exam_modified = exam['modified_at']
-    if type(exam_modified) != int:
-      raise Exception('exam modified time is not an integer for %s' \
-                        % exam_file_name)
+    try:
+      exam_modified = datetime.datetime.fromisoformat(exam['exam_modified_at']) \
+                              .timestamp()
+    except Exception as e:
+      raise Exception('could not interpret exam modified time for %s: %s' \
+                        % (exam_file_name, e))
 
     try:
       exam_file_modified = os.path.getmtime(exam_file_path)
       if exam_modified <= exam_file_modified:
         # no need to sync, we have an exam file that is up-to-date
         return
-      syslog.syslog(syslog.LOG_NOTICE,
-                    'exam %s is stale, syncing' % exam_file_name)
+      self.logger.log(syslog.LOG_NOTICE,
+                      'exam %s is stale, syncing' % exam_file_name)
     except OSError as e:
       if e.errno != errno.ENOENT:
         raise e
       # missing exam file, must proceed with syncing
 
-    syslog.syslog(syslog.LOG_NOTICE, 'syncing exam %s' % exam_file_name)
+    self.logger.log(syslog.LOG_NOTICE, 'syncing exam %s' % exam_file_name)
 
     exam_hash = exam['file_sha256']
     if not isinstance(exam_hash, str):
@@ -889,7 +977,7 @@ class PuavoErsExamSync (threading.Thread):
     os.utime(tmpfile, times=(exam_modified, exam_modified))
     os.rename(tmpfile, exam_file_path)
 
-    syslog.syslog(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
+    self.logger.log(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
 
 
 class PuavoErsExamControl (threading.Thread):
@@ -898,6 +986,7 @@ class PuavoErsExamControl (threading.Thread):
   def __init__(self, exam_server):
     threading.Thread.__init__(self)
 
+    self.logger = Logger('exam-control')
     self.exam_server = exam_server
 
     self.local_status_updated = False
@@ -910,7 +999,7 @@ class PuavoErsExamControl (threading.Thread):
 
     while True:
       try:
-        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsExamControl run() loop')
+        self.logger.log(syslog.LOG_DEBUG, 'in PuavoErsExamControl run() loop')
 
         self.send_status_update_lock.acquire()
 
@@ -929,167 +1018,193 @@ class PuavoErsExamControl (threading.Thread):
           status_send_error = True
           raise e
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR,
-                      'error when sending status update: %s' % e)
+        self.logger.log(syslog.LOG_ERR,
+                        'error when sending status update: %s' % e)
 
       time.sleep(10)
 
 
   def send_status(self, status):
-    syslog.syslog(syslog.LOG_INFO, 'sending status update to server')
+    self.logger.log(syslog.LOG_INFO, 'sending status update to exam-o-matic')
 
     response = self.exam_server.post('/v1/servers/status_update', status)
     if not response or response.status_code != requests.codes.ok:
       raise Exception('could not send status update to server')
 
 
-  def update_status(self, new_abitti_status, monitoring_passphrase,
-                    server_version):
+  def update_status(self, session_state, new_abitti_status,
+                    monitoring_passphrase, server_version):
     self.send_status_update_lock.acquire()
 
     self.status = {
       'monitoring_passphrase': monitoring_passphrase,
       'server_version':        server_version,
+      'session':               session_state,
       'status':                new_abitti_status,
     }
 
-    syslog.syslog(syslog.LOG_INFO,
-                  'received status update from exam scheduler')
+    self.logger.log(syslog.LOG_INFO,
+                    'received status update from exam scheduler')
     self.local_status_updated = True
     self.send_status_update_lock.notify()
     self.send_status_update_lock.release()
 
 
-class ExamSet:
-  def __init__(self, exams):
-    self.exams = exams
-
-    self.earliest_load_time  = None
-    self.earliest_start_time = None
-    self.latest_end_time     = None
-
-    self.update_earliest_and_latest()
-
-
-  def update_earliest_and_latest(self):
-    for exam in self.exams:
-      exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
-      exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
-      exam_load_time  = exam_start_time - PRELOAD_TIMEDELTA
-
-      if not self.earliest_load_time \
-        or exam_load_time < self.earliest_load_time:
-          self.earliest_load_time = exam_load_time
-      if not self.earliest_start_time \
-        or exam_start_time < self.earliest_start_time:
-          self.earliest_start_time = exam_start_time
-      if not self.latest_end_time or (exam_end_time < self.latest_end_time):
-        self.latest_end_time = exam_end_time
+class ExamPackage:
+  def __init__(self, package_id, package_info, start_time, end_time):
+    self.id         = package_id
+    self.info       = package_info
+    self.start_time = start_time
+    self.end_time   = end_time
+    self.exams      = {}
+    self.logger     = Logger('exam-package')
 
 
-  def add_overlapping_exams(self, candidate_exams_arg):
-    candidate_exams = candidate_exams_arg.copy()
-
-    if len(self.exams) == 0:
-      return
-
-    while len(candidate_exams) > 0:
-      syslog.syslog(syslog.LOG_DEBUG,
-                    'checking exam timetable overlaps, %d exams left' \
-                      % len(candidate_exams))
-
-      candidate_accepted = False
-      for exam in list(candidate_exams):
-        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
-        exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
-        exam_load_time  = exam_start_time - PRELOAD_TIMEDELTA
-
-        if exam_load_time <= self.latest_end_time \
-          and self.earliest_load_time <= exam_end_time:
-            candidate_accepted = True
-
-        if candidate_accepted:
-          candidate_exams.remove(exam)
-          if not exam in self.exams:
-            self.exams.append(exam)
-          if exam_load_time < self.earliest_load_time:
-            self.earliest_load_time = exam_load_time
-          if exam_start_time < self.earliest_start_time:
-            self.earliest_start_time = exam_start_time
-          if self.latest_end_time < exam_end_time:
-            self.latest_end_time = exam_end_time
-          break
-
-      # If we have not managed to remove any exam from the candidate list,
-      # there can no more exams to check.
-      if not candidate_accepted:
-        break
+  def get_exam_uuids(self):
+    return [ exam['file_uuid'] for exam in self.exams.values() ]
 
 
-class PuavoErsExamSorter (threading.Thread):
+  def has_a_duplicate_field(self, exams, exam_candidate, field):
+    already_recorded_values = [ e[field] for e in exams.values() ]
+    return exam_candidate[field] in already_recorded_values
+
+
+  def update_exams_from_schedules(self, exam_schedules):
+    if not 'schedules' in self.info:
+      raise Exception('schedules missing from package %s' % self.id)
+    if not isinstance(self.info['schedules'], list):
+      raise Exception('current exam schedules is not a list')
+
+    for exam in exam_schedules:
+      try:
+        if not 'id' in exam:
+          raise Exception('exam schedule missing an id')
+        if not isinstance(exam['id'], str):
+          raise Exception('exam schedule id is not a string')
+        if not 'file_name' in exam:
+          raise Exception('exam schedule is missing file_name field')
+        if not isinstance(exam['file_name'], str):
+          raise Exception('exam schedule file_name is not a string')
+        if not 'decrypt_code' in exam:
+          raise Exception('exam schedule is missing decrypt_code field')
+        if not isinstance(exam['decrypt_code'], str):
+          raise Exception('exam schedule decrypt_code is not a string')
+        if not 'file_uuid' in exam:
+          raise Exception('exam schedule is missing file_uuid field')
+        if not isinstance(exam['file_uuid'], str):
+          raise Exception('exam schedule file_uuid is not a string')
+
+        if exam['id'] in self.info['schedules']:
+          include_exam = True
+          for field in [ 'file_name', 'file_uuid' ]:
+            if self.has_a_duplicate_field(self.exams, exam, field):
+              errmsg = ('an exam schedule has a duplicate field %s,' \
+                          + ' ignoring schedule %s') % (field, exam['id'])
+              self.logger.log(syslog.LOG_ERR, errmsg)
+              include_exam = False
+
+          if include_exam:
+            self.exams[ exam['id'] ] = exam
+
+      except Exception as e:
+        self.logger.log(syslog.LOG_WARNING,
+                        'error in finding the current exam schedule: %s' % e)
+
+
+class PuavoErsExamManager (threading.Thread):
+  DECRYPT_CODES_PATH = os.path.join(KTP_JAKO_DIR, 'PURKUKOODIT.TXT')
+
   def __init__(self, is_active):
     threading.Thread.__init__(self)
 
-    self.exam_sorter_enabled    = is_active
+    self.exam_manager_enabled   = is_active
+    self.logger                 = Logger('exam-manager')
     self.previous_current_exams = None
     self.previous_todays_exams  = None
 
-    self.do_sort_exams = True
-    self.sort_exams_lock = threading.Condition()
+    self.do_manage_exams = True
+    self.manage_exams_lock = threading.Condition()
 
 
   def run(self):
-    self.sort_exams_lock.acquire()
+    self.manage_exams_lock.acquire()
 
     while True:
       try:
-        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsExamSorter run() loop')
+        self.logger.log(syslog.LOG_DEBUG, 'in PuavoErsExamManager run() loop')
 
         # we do not check with while, because this can be run periodically
-        if not self.do_sort_exams:
-          self.sort_exams_lock.wait(timeout=600)
+        if not self.do_manage_exams:
+          self.manage_exams_lock.wait(timeout=180)
 
-        if self.exam_sorter_enabled:
+        if self.exam_manager_enabled:
           with exam_scheduler_lock:
-            self.sort_exams_to_dirs()
+            self.logger.log(syslog.LOG_DEBUG, 'got exam scheduler lock')
+            self.manage_exams()
+          self.logger.log(syslog.LOG_DEBUG, 'released exam scheduler lock')
         else:
-          syslog.syslog(syslog.LOG_INFO, 'exam sorter has been disabled')
+          self.logger.log(syslog.LOG_INFO, 'exam manager has been disabled')
 
-        self.do_sort_exams = False
+        self.do_manage_exams = False
 
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR, 'error when sorting exams: %s' % e)
+        self.logger.log(syslog.LOG_ERR, 'error when managing exams: %s' % e)
 
       time.sleep(10)
 
 
-  def trigger_sort_exams(self):
-    syslog.syslog(syslog.LOG_DEBUG, 'sort exams triggered')
-    self.sort_exams_lock.acquire()
-    self.do_sort_exams = True
-    self.sort_exams_lock.notify()
-    self.sort_exams_lock.release()
-
-
-  def sort_exams_to_dirs(self):
-    global current_exams_set
-
-    syslog.syslog(syslog.LOG_INFO, 'sorting exams in filesystem')
-
-    self.current_day  = datetime.date.today()
-    self.current_time = datetime.datetime.now()
-
+  def get_exams_information(self):
     try:
-      with open(EXAMS_JSON_FILE) as file:
-        all_exams = json.load(file)
+      exams_information = load_from_json(EXAMS_JSON_FILE)
+      if not 'packages' in exams_information:
+        raise Exception('packages field is missing')
+      if not isinstance(exams_information['packages'], dict):
+        raise Exception('packages is not a dict')
+      if not 'schedules' in exams_information:
+        raise Exception('schedules field is missing')
+      if not isinstance(exams_information['schedules'], list):
+        raise Exception('schedules is not a list')
+
     except OSError as e:
       if e.errno != errno.ENOENT:
         raise e
+      return None
+
+    return exams_information
+
+
+  def trigger_manage_exams(self):
+    self.logger.log(syslog.LOG_DEBUG, 'manage exams triggered')
+    self.manage_exams_lock.acquire()
+    self.do_manage_exams = True
+    self.manage_exams_lock.notify()
+    self.manage_exams_lock.release()
+
+
+  def manage_exams(self):
+    self.current_day  = datetime.date.today()
+    self.current_time = datetime.datetime.now()
+
+    exams_information = self.get_exams_information()
+    if not exams_information:
       return
 
+    try:
+      self.sort_exams_to_dirs( exams_information['schedules'] )
+    except Exception as e:
+      self.logger.log(syslog.LOG_WARNING, 'error in sorting exams: %s' % e)
+
+    try:
+      self.setup_ongoing_exams(exams_information['packages'],
+                               exams_information['schedules'])
+    except Exception as e:
+      self.logger.log(syslog.LOG_WARNING, 'error in setting up exams: %s' % e)
+
+
+  def sort_exams_to_dirs(self, exam_schedules):
+    self.logger.log(syslog.LOG_INFO, 'sorting exams in filesystem')
+
     archived_exams_filenames = []
-    current_exams            = []
-    current_exams_filenames  = []
     todays_exams             = []
     todays_exams_filenames   = []
     upcoming_exams_filenames = []
@@ -1098,17 +1213,17 @@ class PuavoErsExamSorter (threading.Thread):
 
     fatal_errors = False
 
-    for exam in all_exams:
+    for exam in exam_schedules:
       try:
         if not re.match('^exam_.*\.me(b|x)$', exam['file_name']):
           raise Exception('ignoring exam with a file name %s' \
                             % exam['file_name'])
 
-        exam_start_day  = datetime.date.fromtimestamp(exam['start_time'])
-        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+        exam_start_day  = iso_to_local_date(exam['start_time'], self.logger)
+        exam_start_time = iso_to_local_datetime(exam['start_time'], self.logger)
 
-        exam_end_day    = datetime.date.fromtimestamp(exam['end_time'])
-        exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
+        exam_end_day    = iso_to_local_date(exam['end_time'], self.logger)
+        exam_end_time   = iso_to_local_datetime(exam['end_time'], self.logger)
 
         if exam_end_day < self.current_day:
           archived_exams_filenames.append(exam['file_name'])
@@ -1118,24 +1233,9 @@ class PuavoErsExamSorter (threading.Thread):
           todays_exams.append(exam)
           todays_exams_filenames.append(exam['file_name'])
 
-        # Load new exams to server 10 minutes before they are scheduled
-        # to start.  Note that if exams are scheduled to have less than
-        # 10 minutes between them, add_overlapping_exams() below will consider
-        # them to be part of the same exam set (session).
-        if (exam_start_time - PRELOAD_TIMEDELTA) <= self.current_time \
-          and self.current_time < exam_end_time:
-            current_exams.append(exam)
-
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
+        self.logger.log(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
         fatal_errors = True
-
-    current_exams_set = ExamSet(current_exams)
-    current_exams_set.add_overlapping_exams(todays_exams)
-
-    for exam in current_exams_set.exams:
-      current_exams_filenames.append(exam['file_name'])
-      decrypt_codes_list.append(exam['decrypt_code'])
 
     self.handle_archive(archived_exams_filenames)
 
@@ -1145,18 +1245,15 @@ class PuavoErsExamSorter (threading.Thread):
     self.cleanup_exams(EXAMS_UPCOMING_DIR, upcoming_exams_filenames)
     self.link_exams_to_dir(EXAMS_UPCOMING_DIR, upcoming_exams_filenames)
 
-    self.zip_exams(current_exams_filenames, todays_exams_filenames,
-        decrypt_codes_list)
-
     if fatal_errors:
       raise Exception('there were some problems when sorting exams')
 
 
   def cleanup_exams(self, linkdir, exam_filenames):
-    syslog.syslog(syslog.LOG_DEBUG, 'cleaning up exams')
     for path in glob.glob( os.path.join(linkdir, 'exam_*.me[bx]') ):
       if not os.path.basename(path) in exam_filenames:
-        rm_f(path)
+        self.logger.log(syslog.LOG_DEBUG, 'cleaning up exams')
+        rm_f(path, self.logger)
 
 
   def handle_archive(self, exam_filenames):
@@ -1167,13 +1264,13 @@ class PuavoErsExamSorter (threading.Thread):
         file_atime = os.stat(path).st_atime
         # keep archived files for two weeks
         if (file_atime + 60 * 60 * 24 * 14) < self.current_time.timestamp():
-          syslog.syslog(syslog.LOG_NOTICE,
-                        'removing from archive: %s' % path)
-          rm_f(path)
+          self.logger.log(syslog.LOG_NOTICE,
+                          'removing from archive: %s' % path)
+          rm_f(path, self.logger)
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR,
-                      'error in checking old archive file %s: %s' \
-                        % (path, e))
+        self.logger.log(syslog.LOG_ERR,
+                        'error in checking old archive file %s: %s' \
+                          % (path, e))
 
 
   def link_exams_to_dir(self, linkdir, exam_filenames):
@@ -1182,8 +1279,8 @@ class PuavoErsExamSorter (threading.Thread):
       try:
         target_path = os.path.join(linkdir, exam_name)
         os.link(exam_path, target_path)
-        syslog.syslog(syslog.LOG_INFO,
-                      'exam %s linked to %s' % (exam_path, linkdir))
+        self.logger.log(syslog.LOG_INFO,
+                        'exam %s linked to %s' % (exam_path, linkdir))
 
         # updates access time only when link has been made
         st = os.stat(target_path)
@@ -1193,24 +1290,60 @@ class PuavoErsExamSorter (threading.Thread):
         if e.errno == errno.EEXIST:
           pass
         elif e.errno == errno.ENOENT:
-          syslog.syslog(syslog.LOG_ERR, 'could not find exam %s' % exam_path)
+          self.logger.log(syslog.LOG_ERR, 'could not find exam %s' % exam_path)
         else:
           raise e
 
 
-  def zip_exams(self, current_exams_filenames, todays_exams_filenames,
-                decrypt_codes_list):
+  def setup_ongoing_exams(self, exam_packages, exam_schedules):
+    global current_exam_package
+
+    self.logger.log(syslog.LOG_INFO, 'checking the ongoing exams zip')
+
+    new_exam_package = None
+
+    if not isinstance(exam_packages, dict):
+      raise Exception('exam packages is not a dict')
+
+    for pkg_id, pkg_info in exam_packages.items():
+      start_time = iso_to_local_datetime(pkg_info['start_time'], self.logger)
+      end_time   = iso_to_local_datetime(pkg_info['end_time'], self.logger)
+      if (start_time - PRELOAD_TIMEDELTA) <= self.current_time \
+        and self.current_time < end_time:
+          new_exam_package = ExamPackage(pkg_id, pkg_info, start_time, end_time)
+          break
+
+    current_exams_filenames = []
+    decrypt_codes_list = []
+
+    if new_exam_package:
+      new_exam_package.update_exams_from_schedules(exam_schedules)
+      for exam_info in new_exam_package.exams.values():
+        try:
+          current_exams_filenames.append(exam_info['file_name'])
+          decrypt_codes_list.append(exam_info['decrypt_code'])
+        except Exception as e:
+          self.logger.log(syslog.LOG_WARNING,
+                          'error in looking up exam filename/codes: %s' % e)
+
+    # we should get here even when new_exam_package is empty so that
+    # the ongoing exams set gets removed
+    self.zip_exams(current_exams_filenames, decrypt_codes_list)
+
+    if new_exam_package and not new_exam_package.exams:
+      new_exam_package = None
+    current_exam_package = new_exam_package
+
+
+  def zip_exams(self, current_exams_filenames, decrypt_codes_list):
     global current_zip_name
 
     current_zip_name = 'Menossa-%s.zip' % self.current_day
-    todays_zip_name  = 'Kaikki-%s.zip'  % self.current_day
 
     current_exams_filenames.sort()
-    todays_exams_filenames.sort()
-
     current_zip_path = os.path.join(KTP_JAKO_DIR, current_zip_name)
-    todays_zip_path  = os.path.join(KTP_JAKO_DIR, todays_zip_name)
 
+    error_in_zipping = None
     try:
       if not os.path.exists(current_zip_path) \
         or current_exams_filenames != self.previous_current_exams:
@@ -1218,59 +1351,109 @@ class PuavoErsExamSorter (threading.Thread):
                                decrypt_codes_list)
           self.previous_current_exams = current_exams_filenames
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR,
+      error_in_zipping = Exception(
         'error when zipping current exams (or updating decrypt codes): %s' % e)
 
-    try:
-      if not os.path.exists(todays_zip_path) \
-        or todays_exams_filenames != self.previous_todays_exams:
-          self.zip_an_exam_set(todays_exams_filenames, todays_zip_path)
-          self.previous_todays_exams = todays_exams_filenames
-    except Exception as e:
-      syslog.syslog(syslog.LOG_ERR, 'error when zipping todays exams: %s' % e)
-
+    # XXX the code cleaning up todays_zip_files can be removed "later", those
+    # XXX are legacy files that are no longer useful (keep cleaning up
+    # XXX current_zip_files though!)
     current_zip_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'Menossa-*.zip') )
     todays_zip_files  = glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') )
     for zipfile in (current_zip_files + todays_zip_files):
-      if not zipfile in [ current_zip_path, todays_zip_path ]:
-        rm_f(zipfile)
+      if zipfile != current_zip_path:
+        rm_f(zipfile, self.logger)
+
+    if error_in_zipping:
+      raise error_in_zipping
 
 
-  def zip_an_exam_set(self, exams, zip_path, decrypt_codes_list=None):
+  def zip_an_exam_set(self, exams, zip_path, decrypt_codes_list):
+    self.update_decrypt_codes_in_file(decrypt_codes_list)
+
     if len(exams) == 0:
       if os.path.exists(zip_path):
-        rm_f(zip_path)
-        if decrypt_codes_list != None:
-          self.update_decrypt_codes_in_file(decrypt_codes_list)
+        rm_f(zip_path, self.logger)
       return
 
     exam_paths = [ os.path.join(KTP_JAKO_DIR, p) for p in exams ]
     unique_exam_paths = list( dict.fromkeys(exam_paths) )
-    syslog.syslog(syslog.LOG_INFO,
-                  'zipping exams %s into %s' % (exams, zip_path))
+    self.logger.log(syslog.LOG_INFO,
+                    'zipping exams %s into %s' % (exams, zip_path))
     tmpfile = "%s.tmp" % zip_path
-    rm_f(tmpfile, False)
+    rm_f(tmpfile)
     with zipfile.ZipFile(tmpfile, 'w') as zipObj:
       for filename in unique_exam_paths:
         zipObj.write(filename, os.path.basename(filename))
+      zipObj.write(self.DECRYPT_CODES_PATH, '.decryption_codes')
     os.rename(tmpfile, zip_path)
-
-    if decrypt_codes_list != None:
-     self.update_decrypt_codes_in_file(decrypt_codes_list)
 
 
   def update_decrypt_codes_in_file(self, decrypt_codes_list):
-    DECRYPT_CODES_PATH = os.path.join(KTP_JAKO_DIR, 'PURKUKOODIT.TXT')
+    self.logger.log(syslog.LOG_INFO,
+                    'updating decrypt codes in %s' % self.DECRYPT_CODES_PATH)
 
-    syslog.syslog(syslog.LOG_INFO,
-                  'updating decrypt codes in %s' % DECRYPT_CODES_PATH)
-
-    tmpfile = '%s.tmp' % DECRYPT_CODES_PATH
+    tmpfile = '%s.tmp' % self.DECRYPT_CODES_PATH
     with open(tmpfile, 'w') as f:
       decrypt_codes_list.sort()
       for decrypt_code in decrypt_codes_list:
         f.write("%s\n" % decrypt_code)
-    os.rename(tmpfile, DECRYPT_CODES_PATH)
+    os.rename(tmpfile, self.DECRYPT_CODES_PATH)
+
+
+class VirtualBoxControl:
+  def __init__(self):
+    self.logger = Logger('virtualbox-control')
+
+
+  def get_link_state(self):
+    is_up = None
+
+    try:
+      cmd = [ 'vboxmanage', 'showvminfo', 'NaksuAbittiKTP',
+                            '--machinereadable' ]
+      output = subprocess.check_output(cmd).decode('utf-8')
+      for line in output.splitlines():
+        match_result = re.match('^cableconnected1="(on|off)"$', line)
+        if match_result:
+          is_up = (match_result[1] == 'on')
+          break
+    except Exception as e:
+      errmsg = 'could not query VirtualBox host link state: %s' % e
+      self.logger.log(syslog.LOG_WARNING, errmsg)
+
+    return is_up
+
+
+  def ensure_virtualbox_link_up(self, is_requested_up):
+    try:
+      is_current_link_up = self.get_link_state()
+      if is_current_link_up != None:
+        if is_current_link_up == is_requested_up:
+          # requested state matches link state, doing nothing
+          return
+
+      if is_requested_up:
+        state = 'on'
+      else:
+        state = 'off'
+
+      cmd = [ 'vboxmanage', 'controlvm', 'NaksuAbittiKTP', 'setlinkstate1',
+              state ]
+      subprocess.run(cmd)
+      msg = 'set VirtualBox link state to %s' % state
+      self.logger.log(syslog.LOG_NOTICE, msg)
+
+    except Exception as e:
+      errmsg = 'error in setting VirtualBox link state to %s' % state
+      self.logger.log(syslog.LOG_WARNING, errmsg)
+
+
+  def link_up(self):
+    self.ensure_virtualbox_link_up(True)
+
+
+  def link_down(self):
+    self.ensure_virtualbox_link_up(False)
 
 
 class PuavoErsExamScheduler (threading.Thread):
@@ -1285,10 +1468,13 @@ class PuavoErsExamScheduler (threading.Thread):
   STATS_PATH           = os.path.join(COMM_DIR, 'stats')
   SERVER_VERSION_PATH  = os.path.join(COMM_DIR, '.server_version')
 
+  SESSION_STATE_PATH = os.path.join(PUAVO_ERS_DIR, 'session.json')
 
-  def __init__(self, exam_control):
+
+  def __init__(self, exam_control, answer_return):
     threading.Thread.__init__(self)
 
+    self.answer_return             = answer_return
     self.answers_stored_time       = None
     self.do_keycode_change_request = False
     self.exam_control              = exam_control
@@ -1298,6 +1484,10 @@ class PuavoErsExamScheduler (threading.Thread):
     self.has_started               = False
     self.monitoring_passphrase     = None
     self.server_version            = None
+    self.logger                    = Logger('exam-scheduler')
+    self.virtualboxcontrol         = VirtualBoxControl()
+
+    self.session_state = self.load_session_state_none_if_no_session()
 
     self.keycode_change_request_lock = threading.Lock()
 
@@ -1323,6 +1513,57 @@ class PuavoErsExamScheduler (threading.Thread):
       self.do_keycode_change_request = True
 
 
+  def handle_possible_shutdown(self):
+    if not 'XDG_RUNTIME_DIR' in os.environ:
+      self.logger.log(syslog.LOG_WARNING,
+                      'XDG_RUNTIME_DIR not set, reboot requests can not work')
+      return
+
+    reboot_request_path = os.path.join(os.environ['XDG_RUNTIME_DIR'],
+                                       '.reboot')
+    try:
+      try:
+        reboot_file_modified = datetime.datetime.fromtimestamp(
+                                 os.path.getmtime(reboot_request_path))
+      except OSError as e:
+        if e.errno == errno.ENOENT:
+          return
+        raise e
+    except Exception as e:
+      self.logger.log(syslog.LOG_WARNING,
+                      'error when checking %s' % reboot_request_path)
+      return
+
+    now = datetime.datetime.now()
+    if reboot_file_modified < (now - datetime.timedelta(minutes=15)):
+      self.logger.log(syslog.LOG_WARNING,
+                      'stale %s, removing' % reboot_request_path)
+      rm_f(reboot_request_path, self.logger)
+      return
+
+    self.logger.log(syslog.LOG_WARNING,
+      'found %s, activating reboot sequence' % reboot_request_path)
+    self.shutdown_server()
+    rm_f(reboot_request_path)
+
+    shutdown_counter = 10
+    while shutdown_counter > 0:
+      self.logger.log(syslog.LOG_INFO,
+        'in shutdown phase, waiting a bit (%d)' % shutdown_counter)
+      try:
+        self.ping()
+      except Exception as e:
+        # ping errors indicate server is down or going down
+        shutdown_counter -= 4
+      shutdown_counter -= 1
+      time.sleep(1)
+
+    self.logger.log(syslog.LOG_NOTICE, 'shutting down now')
+    cmd = [ '/usr/bin/gnome-session-quit',
+              '--force', '--no-prompt', '--reboot' ]
+    subprocess.run(cmd)
+
+
   def log_load_exams(self, output):
     try:
       exams_seen = {}
@@ -1332,31 +1573,32 @@ class PuavoErsExamScheduler (threading.Thread):
 
       for decrypt in output['decrypt']:
         if not 'mebs' in decrypt:
-          syslog.syslog(syslog.LOG_ERR,
-                       'exam decrypt missing a list of mebs')
+          errmsg = 'exam decrypt missing a list of mebs, we got: %s' % decrypt
+          self.logger.log(syslog.LOG_ERR, errmsg)
           continue
 
         for exam in decrypt['mebs']:
           if exam in exams_seen:
             continue
           if decrypt['wrongPassword']:
-            syslog.syslog(syslog.LOG_ERR,
-                         'exam "%s" load ERROR (bad password "%s")' \
-                           % (exam, decrypt['password']))
+            self.logger.log(syslog.LOG_ERR,
+                            'exam "%s" load ERROR (bad password "%s")' \
+                              % (exam, decrypt['password']))
           else:
-            syslog.syslog(syslog.LOG_INFO,
-                         'exam "%s" loaded OK (with password "%s")' \
-                           % (exam, decrypt['password']))
+            self.logger.log(syslog.LOG_INFO,
+                            'exam "%s" loaded OK (with password "%s")' \
+                               % (exam, decrypt['password']))
           exams_seen[exam] = 1
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR,
-                    'could not interpret load exams output: %s' % e)
+      self.logger.log(syslog.LOG_ERR,
+                      'could not interpret load exams output: %s' % e)
 
 
   def session_status_msg(self, status):
     start_time = None
     if status['hasStarted'] and 'startTime' in status:
-      start_time = timestring_with_strftime(status['startTime'], '%H:%M:%S')
+      start_time = timestring_with_strftime(status['startTime'], '%H:%M:%S',
+                                            self.logger)
 
     format_string = 'exam session status:'                                 \
                       + ' hasStarted={hasStarted}'                         \
@@ -1374,7 +1616,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def log_status_with_students(self, status):
     try:
-      syslog.syslog(syslog.LOG_INFO, self.session_status_msg(status))
+      self.logger.log(syslog.LOG_INFO, self.session_status_msg(status))
 
       by_exam = {}
       for student in status['students']:
@@ -1384,16 +1626,19 @@ class PuavoErsExamScheduler (threading.Thread):
         by_exam[exam_title].append(student)
 
       for exam_title, student_list in by_exam.items():
-        syslog.syslog(syslog.LOG_INFO, '  exam "%s" has %d students:' \
-                                          % (exam_title, len(student_list)))
+        self.logger.log(syslog.LOG_INFO, '  exam "%s" has %d students:' \
+                                           % (exam_title, len(student_list)))
 
         for student in student_list:
           exam_started  = timestring_with_strftime(student.get('examStarted'),
-                                                   '%H:%M:%S')
+                                                   '%H:%M:%S',
+                                                   self.logger)
           exam_finished = timestring_with_strftime(student.get('examFinished'),
-                                                   '%H:%M:%S')
+                                                   '%H:%M:%S',
+                                                   self.logger)
           update_time   = timestring_with_strftime(student.get('updateTime'),
-                                                   '%H:%M:%S')
+                                                   '%H:%M:%S',
+                                                   self.logger)
           format_string = '    studentUuid={studentUuid}'         \
                             + ' studentStatus={studentStatus}' \
                             + ' examStarted={examStarted}'     \
@@ -1408,18 +1653,18 @@ class PuavoErsExamScheduler (threading.Thread):
                                      updateTime=update_time,
                                      authorized=student.get('authorized'),
                                      pingError=student.get('pingError'))
-          syslog.syslog(syslog.LOG_INFO, msg)
+          self.logger.log(syslog.LOG_INFO, msg)
 
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR,
-                    'could not interpret status (with student information): %s' % e)
+      self.logger.log(syslog.LOG_ERR,
+        'could not interpret status (with student information): %s' % e)
 
 
   def log_status(self, status):
     try:
-      syslog.syslog(syslog.LOG_INFO, self.session_status_msg(status))
+      self.logger.log(syslog.LOG_INFO, self.session_status_msg(status))
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR, 'could not interpret status: %s' % e)
+      self.logger.log(syslog.LOG_ERR, 'could not interpret status: %s' % e)
 
 
   def load_exams(self):
@@ -1441,14 +1686,22 @@ class PuavoErsExamScheduler (threading.Thread):
     return self.server_cmd('reset-exam')
 
 
+  def shutdown_server(self):
+    # we do not expect response from this, except ping failure later
+    try:
+      self.server_cmd('shutdown-server')
+    except Exception as e:
+      pass
+
+
   def start_loaded_exams(self):
     return self.server_cmd('start-loaded-exam')
 
 
   def store_exam_results(self, results_filepath):
     self.server_cmd('store-exam-results', 180)
-    syslog.syslog(syslog.LOG_INFO,
-                  'storing exam answers to %s' % results_filepath)
+    self.logger.log(syslog.LOG_INFO,
+                    'storing exam answers to %s' % results_filepath)
     shutil.copy2(self.EXAM_ANSWERS_PATH, results_filepath)
 
 
@@ -1457,7 +1710,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def run(self):
-    global current_exams_set
+    global current_exam_package
 
     comm_ok = False
     is_enabled = None
@@ -1465,7 +1718,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
     while True:
       try:
-        syslog.syslog(syslog.LOG_DEBUG, 'in PuavoErsExamScheduler run() loop')
+        self.logger.log(syslog.LOG_DEBUG, 'in PuavoErsExamScheduler run() loop')
 
         if not comm_ok:
           self.monitoring_passphrase = None
@@ -1475,31 +1728,35 @@ class PuavoErsExamScheduler (threading.Thread):
             comm_ok = True
             self.server_version = self.get_server_version()
             if old_comm_state != comm_ok:
-              syslog.syslog(syslog.LOG_NOTICE,
-                            'communication link to exam server is ok')
-              syslog.syslog(syslog.LOG_NOTICE,
-                            'exam server version is %s' % self.server_version)
+              self.logger.log(syslog.LOG_NOTICE,
+                              'communication link to exam server is ok')
+              self.logger.log(syslog.LOG_NOTICE,
+                              'exam server version is %s' % self.server_version)
           else:
             comm_ok = False
             if old_comm_state != comm_ok:
-              syslog.syslog(syslog.LOG_INFO,
-                            'no communication link to exam server')
+              self.logger.log(syslog.LOG_INFO,
+                              'no communication link to exam server')
 
         old_comm_state = comm_ok
 
+        self.handle_possible_shutdown()
+
         if comm_ok:
           with exam_scheduler_lock:
-            self.schedule_exams(current_exams_set)
+            self.logger.log(syslog.LOG_DEBUG, 'got exam scheduler lock')
+            self.schedule_exams(current_exam_package)
+          self.logger.log(syslog.LOG_DEBUG, 'released exam scheduler lock')
 
       except ExamSchedulerNotActive as e:
         if is_enabled != self.exam_scheduler_enabled:
-          syslog.syslog(syslog.LOG_INFO, 'exam scheduler has been disabled')
+          self.logger.log(syslog.LOG_INFO, 'exam scheduler has been disabled')
         is_enabled = False
 
       except Exception as e:
         comm_ok = False
-        syslog.syslog(syslog.LOG_ERR,
-                      'error when scheduling exams: %s' % e)
+        self.logger.log(syslog.LOG_ERR,
+                        'error when scheduling exams: %s' % e)
 
       time.sleep(3)
 
@@ -1522,15 +1779,15 @@ class PuavoErsExamScheduler (threading.Thread):
         return
 
     if there_should_be_answers:
-      syslog.syslog(syslog.LOG_INFO,
-                    'logging status as we are taking out the answers')
+      self.logger.log(syslog.LOG_INFO,
+                      'logging status as we are taking out the answers')
       self.log_status_with_students(status)
       self.store_answers(currently_loaded_exams)
     else:
       # Trying to store answers when there are none returns an error.
       # Perhaps this logic could be such that it is left for abitti-ktpapi
       # to check if there are answers? (that might be less error-prone)
-      syslog.syslog(syslog.LOG_INFO, 'there are no answers, not storing them')
+      self.logger.log(syslog.LOG_INFO, 'there are no answers, not storing them')
 
     self.answers_stored_time = now
 
@@ -1549,16 +1806,24 @@ class PuavoErsExamScheduler (threading.Thread):
     answers_filename_fp = os.path.join(ANSWERS_DIR, answers_filename)
     self.store_exam_results(answers_filename_fp)
 
+    try:
+      self.answer_return.handle_new_answer_set(answers_filename,
+                                               self.session_state)
+    except Exception as e:
+      self.logger.log(syslog.LOG_WARNING,
+        'answers stored but could not connect package id to answers %s: %s' \
+           % (answers_filename, e))
+
 
   def exams_are_finished(self):
     if datetime.datetime.now() > self.finish_time:
-      syslog.syslog(syslog.LOG_INFO, 'exams finish time is past: %s' \
-                                       % self.finish_time)
+      self.logger.log(syslog.LOG_INFO, 'exams finish time is past: %s' \
+                                         % self.finish_time)
       return True
 
-    syslog.syslog(syslog.LOG_INFO,
-                  'we are waiting for exams to finish at: %s' \
-                    % self.finish_time)
+    self.logger.log(syslog.LOG_INFO,
+                    'we are waiting for exams to finish at: %s' \
+                      % self.finish_time)
     return False
 
 
@@ -1590,20 +1855,20 @@ class PuavoErsExamScheduler (threading.Thread):
 
       if ('pingError' in student) and (student['pingError'] == False):
         # someone still has a connection, we have at least one active student
-        syslog.syslog(syslog.LOG_DEBUG,
-                      'at least someone is connected and doing the exam')
+        self.logger.log(syslog.LOG_DEBUG,
+                        'at least someone is connected to the exam server')
         return True
 
       # this student has not finished, yet has no active connection
       if ('updateTime' in student) and (student['updateTime'] != None):
-        update_time = to_datetime(student['updateTime'])
+        update_time = to_datetime(student['updateTime'], self.logger)
         five_minutes_before_now = now - datetime.timedelta(minutes=5)
         if update_time >= five_minutes_before_now.astimezone():
           # but he/she has updated in the last five minutes, so still counts
           # as active
           msg = 'there is at least one student that has an ongoing exam' \
                   + ' with connection issues'
-          syslog.syslog(syslog.LOG_INFO, msg)
+          self.logger.log(syslog.LOG_INFO, msg)
           return True
 
     # no student is active
@@ -1614,39 +1879,85 @@ class PuavoErsExamScheduler (threading.Thread):
     last_finished_time = None
     for student in status['students']:
       if ('examFinished' in student) and (student['examFinished'] != None):
-        finish_time = to_datetime(student['examFinished'])
+        finish_time = to_datetime(student['examFinished'], self.logger)
         if not last_finished_time or last_finished_time < finish_time:
           last_finished_time = finish_time
 
     return last_finished_time
 
 
-  def update_exams_finished_time(self, status):
-    if self.there_are_still_active_students(status):
-      syslog.syslog(syslog.LOG_INFO, 'there are still active students')
-      self.finish_time = self.end_of_today()
-    else:
-      now = datetime.datetime.now()
+  def running_the_expected_exams(self, current_exam_package,
+                                 currently_loaded_exam_uuids):
+    if self.session_state:
+      return current_exam_package.id == self.session_state['package']['id']
 
+    # we should have had session state for this but in case something funky
+    # has happened we can also compare the running exam set (this funky might
+    # be that someone is loading exams by hand)
+    current_exam_uuids = current_exam_package.get_exam_uuids()
+    return set(current_exam_uuids) == set(currently_loaded_exam_uuids)
+
+
+  def update_exams_finished_time(self, status, current_exam_package,
+                                 currently_loaded_exam_uuids):
+    now = datetime.datetime.now()
+
+    if not self.there_are_still_active_students(status):
+      # no active students
       last_finished_time = self.get_last_finished_time(status)
       if last_finished_time:
         if self.finish_time.astimezone() < last_finished_time:
-          syslog.syslog(syslog.LOG_INFO, 'no active students, exams finished')
+          self.logger.log(syslog.LOG_INFO, 'no active students, exams finished')
           self.finish_time = now
 
       if self.finish_time > now:
         self.finish_time = now
+      return
+
+    # active students
+
+    self.logger.log(syslog.LOG_INFO, 'there are still connected students')
+    if not current_exam_package:
+      self.logger.log(syslog.LOG_INFO,
+                      'there are no upcoming exams, we let students continue')
+      self.finish_time = self.end_of_today()
+      return
+
+    # active students with an active exam package
+
+    if self.running_the_expected_exams(current_exam_package,
+                                       currently_loaded_exam_uuids):
+      # if running the expected exams we have time until the end of the day
+      self.finish_time = self.end_of_today()
+      return
+
+    # active students with a different, upcoming exam package
+
+    forceload_time \
+      = current_exam_package.start_time - FORCELOAD_BEFORE_START_TIMEDELTA
+    self.finish_time = forceload_time
+
+    if forceload_time <= now:
+      minutes_to_forceload_time = 0
+      explanation = 'previous exams will be forcefully finished now'
+    else:
+      minutes_to_forceload_time = int((forceload_time - now).seconds / 60)
+      explanation = 'students will be kicked out from the previous exams'
+
+    self.logger.log(syslog.LOG_INFO,
+                    'new exams will be loaded in %d minutes, %s' \
+                      % (minutes_to_forceload_time, explanation))
 
 
   def handle_keycode_change_request(self):
     with self.keycode_change_request_lock:
       try:
         if self.has_started and self.do_keycode_change_request:
-          syslog.syslog(syslog.LOG_INFO, 'handling keycode change request')
+          self.logger.log(syslog.LOG_INFO, 'handling keycode change request')
           self.change_keycode()
           self.do_keycode_change_request = False
       except Exception as e:
-        syslog.syslog(syslog.LOG_ERR, 'could not change keycode: %s' % e)
+        self.logger.log(syslog.LOG_ERR, 'could not change keycode: %s' % e)
 
 
   def update_monitoring_passphrase(self):
@@ -1660,22 +1971,33 @@ class PuavoErsExamScheduler (threading.Thread):
       answer = self.get_passphrase()
       if not 'get-passphrase' in answer:
         raise Exception('no get-passphrase key')
-      if type(answer['get-passphrase']) != dict:
+      if not isinstance(answer['get-passphrase'], dict):
         raise Exception('get-passphrase value is not a dict')
       if not 'passphrase' in answer['get-passphrase']:
         raise Exception('no passphrase key')
-      if type(answer['get-passphrase']['passphrase']) != str:
+      if not isinstance((answer['get-passphrase']['passphrase']), str):
         raise Exception('passphrase key is not a string')
       self.monitoring_passphrase = answer['get-passphrase']['passphrase']
-      syslog.syslog(syslog.LOG_INFO,
+      self.logger.log(syslog.LOG_INFO,
         "looked up monitoring passphrase: '%s'" % self.monitoring_passphrase)
     except Exception as e:
-      syslog.syslog(syslog.LOG_ERR,
-                    'could not get monitoring passphrase: %s' % e)
+      self.logger.log(syslog.LOG_ERR,
+                      'could not get monitoring passphrase: %s' % e)
 
 
-  def schedule_exams(self, current_exams_set):
-    syslog.syslog(syslog.LOG_DEBUG, 'running exam scheduler')
+  def update_status_to_control(self, status):
+    self.exam_control.update_status(status,
+                                    self.session_state,
+                                    self.monitoring_passphrase,
+                                    self.server_version)
+
+
+  def get_session_state(self):
+    return self.session_state
+
+
+  def schedule_exams(self, current_exam_package):
+    self.logger.log(syslog.LOG_DEBUG, 'running exam scheduler')
 
     self.handle_keycode_change_request()
 
@@ -1685,15 +2007,16 @@ class PuavoErsExamScheduler (threading.Thread):
       raise Exception('%s (maybe the server is not yet ready?)' % e)
 
     self.has_started = (status['hasStarted'] == True)
+    if self.has_started:
+      self.virtualboxcontrol.link_up()
 
     self.log_status(status)
 
     self.update_monitoring_passphrase()
-    self.exam_control.update_status(status,
-                                    self.monitoring_passphrase,
-                                    self.server_version)
+    self.update_status_to_control(status)
 
     if not self.exam_scheduler_enabled:
+      self.virtualboxcontrol.link_up()
       raise ExamSchedulerNotActive
 
     exams_response = self.get_exams()
@@ -1701,49 +2024,53 @@ class PuavoErsExamScheduler (threading.Thread):
     currently_loaded_exam_uuids \
       = [ exam['examUuid'] for exam in currently_loaded_exams ]
 
-    self.update_exams_finished_time(status)
+    self.update_exams_finished_time(status, current_exam_package,
+                                    currently_loaded_exam_uuids)
 
     exams_finished = self.exams_are_finished()
     if exams_finished:
       self.maybe_store_answers(currently_loaded_exams, status)
 
     if self.has_started and not exams_finished:
-      syslog.syslog(syslog.LOG_INFO,
-                    'examinations are in progress, not loading any exams')
+      self.logger.log(syslog.LOG_INFO,
+                      'examinations are in progress, not loading any exams')
       return
 
-    if len(current_exams_set.exams) == 0:
+    if not current_exam_package:
+      self.virtualboxcontrol.link_down()
       if self.has_started:
         msg = 'exams ongoing but should not be according to schedule,' \
                  + ' resetting server state'
-        syslog.syslog(syslog.LOG_INFO, msg)
+        self.logger.log(syslog.LOG_INFO, msg)
         self.reset_exam()
       else:
-        syslog.syslog(syslog.LOG_INFO, 'no exams to schedule')
+        self.logger.log(syslog.LOG_INFO, 'no exams to schedule')
+      self.save_session_state(None)
+      if self.has_started:
+        self.answer_return.trigger_returns()
       return
-
-    current_exam_uuids = []
-    for exam in current_exams_set.exams:
-      if not 'file_uuid' in exam:
-        errmsg = 'no uuid set for exam "%s", can not check it is on server' \
-                   % exam['file_name']
-        raise Exception(errmsg)
-      current_exam_uuids.append(exam['file_uuid'])
 
     try:
-      if set(currently_loaded_exam_uuids) != set(current_exam_uuids):
-        syslog.syslog(syslog.LOG_INFO, 'loading exams')
+      need_reload = not self.running_the_expected_exams(current_exam_package,
+                      currently_loaded_exam_uuids)
+      if need_reload:
+        self.logger.log(syslog.LOG_INFO, 'loading exams')
+        self.virtualboxcontrol.link_down()
+        self.answer_return.trigger_returns()
         self.load_exams()
-        self.finish_time = current_exams_set.latest_end_time
+        self.virtualboxcontrol.link_up()
+        self.finish_time = current_exam_package.end_time
         self.has_started = False
     except CurrentZipNotReady as e:
-      syslog.syslog(syslog.LOG_INFO,
-                    'exam scheduler is waiting for zip file to be ready')
+      self.logger.log(syslog.LOG_INFO,
+                      'exam scheduler is waiting for zip file to be ready')
       return
 
+    self.save_session_state(current_exam_package)
+
     if not self.has_started \
-      and current_exams_set.earliest_start_time <= datetime.datetime.now():
-        syslog.syslog(syslog.LOG_NOTICE, 'starting up exams')
+      and current_exam_package.start_time <= datetime.datetime.now():
+        self.logger.log(syslog.LOG_NOTICE, 'starting up exams')
         self.start_loaded_exams()
 
 
@@ -1751,6 +2078,44 @@ class PuavoErsExamScheduler (threading.Thread):
     now = datetime.datetime.now()
     start_of_today = datetime.datetime(now.year, now.month, now.day)
     return start_of_today + datetime.timedelta(days=1)
+
+
+  def load_session_state(self):
+    state = load_from_json(self.SESSION_STATE_PATH)
+    if not ('package' in state and 'id' in state['package']):
+      raise Exception('package id is missing from session state')
+    return state
+
+
+  def load_session_state_none_if_no_session(self):
+    state = None
+    try:
+      state = self.load_session_state()
+    except Exception as e:
+      pass
+    return state
+
+
+  def save_session_state(self, exam_package):
+    if exam_package:
+      exam_filenames = [
+        exam['file_name'] for exam in exam_package.exams.values()
+      ]
+      exams_information = 'exam package id %s contains exams: %s' \
+                            % (exam_package.id, ' '.join(exam_filenames))
+      logmsg = 'saved session state, %s' % exams_information
+      package_id = exam_package.id
+    else:
+      logmsg = 'saved session state, nulling package information'
+      package_id = None
+
+    try:
+      data = { 'package': { 'id': package_id } }
+      self.session_state = data
+      if save_as_json(self.SESSION_STATE_PATH, data):
+        self.logger.log(syslog.LOG_INFO, logmsg)
+    except Exception as e:
+      self.logger.log(syslog.LOG_ERR, 'could not save session state: %s' % e)
 
 
   def server_cmd(self, cmd, timeout_seconds=30):
@@ -1765,7 +2130,7 @@ class PuavoErsExamScheduler (threading.Thread):
       with open(self.SERVER_VERSION_PATH) as f:
         return f.read().rstrip()
     except Exception as e:
-      syslog.syslog(syslog.LOG_WARNING, 'could not read server version')
+      self.logger.log(syslog.LOG_WARNING, 'could not read server version')
       return None
 
 
@@ -1774,7 +2139,7 @@ class PuavoErsExamScheduler (threading.Thread):
                      self.DEBUG_OUTPUT_PATH, self.EXAMS_PATH, self.OUTPUT_PATH,
                      self.STATS_PATH ]
     for path in output_paths:
-      rm_f(path, False)
+      rm_f(path)
 
     try:
       if not os.path.isdir(COMM_DIR):
@@ -1785,8 +2150,8 @@ class PuavoErsExamScheduler (threading.Thread):
       with open(self.CMD_IN_PROGRESS_PATH, 'w') as f:
         pass
 
-      syslog.syslog(syslog.LOG_INFO,
-                    'sending command to exam server: "%s"' % cmd)
+      self.logger.log(syslog.LOG_DEBUG,
+                      'sending command to exam server: "%s"' % cmd)
 
       with open(self.CMD_PATH, 'w') as f:
         f.write("%s\n" % cmd)
@@ -1809,9 +2174,294 @@ class PuavoErsExamScheduler (threading.Thread):
 
         time.sleep(1)
     finally:
-      rm_f(self.CMD_IN_PROGRESS_PATH, False)
+      rm_f(self.CMD_IN_PROGRESS_PATH)
 
     raise Exception('timeout when reading server response')
+
+
+class PuavoErsAnswerReturn (threading.Thread):
+  ANSWERS_STATE_PATH = os.path.join(PUAVO_ERS_DIR, 'answers.json')
+  MAX_TRY_COUNT = 180
+
+  def __init__(self, exam_server):
+    threading.Thread.__init__(self)
+
+    self.logger = Logger('answer-return')
+    self.exam_server = exam_server
+    self.do_answer_return = False
+    self.answer_return_lock = threading.Condition()
+    self.answer_state_lock = threading.Lock()
+
+
+  def connect_exam_scheduler(self, exam_scheduler):
+    self.exam_scheduler = exam_scheduler
+
+
+  def run(self):
+    while True:
+      try:
+        self.logger.log(syslog.LOG_DEBUG, 'in PuavoErsAnswerReturn run() loop')
+
+        self.answer_return_lock.acquire()
+        # we do not check with while, because periodically answer_return()
+        # should be run, as clock ticks forward
+        if not self.do_answer_return:
+          self.answer_return_lock.wait(timeout=300)
+        self.do_answer_return = False
+        self.answer_return_lock.release()
+
+        # Run answer returns with exam scheduler lock, because exam
+        # scheduler may be adding answers that should be handled by
+        # this one and if this reads an answer file before answer state
+        # is updated, it will be missing a package id and that is not nice.
+        self.return_answers()
+      except Exception as e:
+        self.logger.log(syslog.LOG_ERR, 'error when returning answers: %s' % e)
+
+      time.sleep(60)
+
+
+  def handle_new_answer_set(self, answers_filename, session_state):
+    if 'package' in session_state and 'id' in session_state['package'] \
+         and isinstance(session_state['package']['id'], str):
+      package_id = session_state['package']['id']
+      self.update_latest_on_answers_state(package_id, answers_filename)
+    else:
+      self.logger.log(syslog.LOG_ERR,
+                      'no package id known for the latest answer set')
+
+
+  def trigger_returns(self):
+    self.answer_return_lock.acquire()
+    self.do_answer_return = True
+    self.answer_return_lock.notify()
+    self.answer_return_lock.release()
+
+
+  def load_answers_state(self):
+    all_answers_state = {}
+
+    try:
+      with self.answer_state_lock:
+        all_answers_state = load_from_json(self.ANSWERS_STATE_PATH)
+        if not isinstance(all_answers_state, dict):
+          raise Exception('answers state is not dict')
+        for filename in list(all_answers_state):
+          try:
+            if 'latest_try' in all_answers_state[filename] \
+              and all_answers_state[filename]['latest_try']:
+                all_answers_state[filename]['latest_try'] \
+                  = iso_as_timezone(all_answers_state[filename]['latest_try'],
+                                    self.logger)
+          except Exception as e:
+            self.logger.log(syslog.LOG_WARNING,
+              'removing answer state of %s because of errors: %s' \
+                % (filename, e))
+            del all_answers_state[filename]
+
+    except OSError as e:
+      if e.errno != errno.ENOENT:
+        self.logger.log(syslog.LOG_WARNING,
+                        'could not read answers state: %s' % e)
+
+    return all_answers_state
+
+
+  def mark_final_answers_as_final(self, all_answers_state):
+    currently_ongoing_session_package_id = None
+    session_state = self.exam_scheduler.get_session_state()
+    if session_state:
+      currently_ongoing_session_package_id = session_state['package']['id']
+
+    exams_by_package_id = {}
+    for filename, answerpackage_state in all_answers_state.items():
+      # when considering exam "finality", we do not bother with answer sets
+      # that lack a package id
+      package_id = answerpackage_state['package_id']
+      if not package_id:
+        continue
+      if not 'saved_at' in answerpackage_state:
+        continue
+      if not package_id in exams_by_package_id:
+        exams_by_package_id[package_id] = []
+      exams_by_package_id[package_id].append(filename)
+
+    for package_id, filename_list in exams_by_package_id.items():
+      answers = [ [ f, all_answers_state[f] ] for f in filename_list ]
+      sort_fn = lambda a: iso_as_timezone(a[1]['saved_at'], self.logger)
+      sorted_answers = sorted(answers, key=sort_fn)
+      *first_answer_sets, last_answer_set = sorted_answers
+      # if a package id has a newer answer set available, mark the older ones
+      # as "not final"
+      for a in first_answer_sets:
+        filename, answer_set = a
+        if answer_set['is_final'] != 'false':
+          self.logger.log(syslog.LOG_NOTICE,
+                          'marking answers %s as not final' % answer_set)
+          answer_set['is_final'] = 'false'
+
+      # the latest answer set is final in case the corresponding package id
+      # is not running in an active session (current session package
+      # id may be None here)
+      if package_id != currently_ongoing_session_package_id:
+          filename, answer_set = last_answer_set
+          if answer_set['is_final'] != 'true':
+            self.logger.log(syslog.LOG_NOTICE,
+                            'marking answers %s as final' % filename)
+            answer_set['is_final'] = 'true'
+
+
+  def load_answers_with_init(self):
+    self.logger.log(syslog.LOG_DEBUG,
+                    'checking if there are any new answers to return')
+
+    answer_files_fp = glob.glob( os.path.join(ANSWERS_DIR, '*.meb') )
+    answer_files = [ os.path.basename(p) for p in answer_files_fp ]
+    all_answers_state = self.load_answers_state()
+
+    for af_name in answer_files:
+      if not af_name in all_answers_state:
+        all_answers_state[af_name] = {}
+
+    for filename, answer_state in all_answers_state.items():
+      if not 'sent_at' in answer_state:
+        answer_state['sent_at'] = None
+      if not ('package_id' in answer_state \
+                and isinstance(answer_state['package_id'], str)):
+        answer_state['package_id'] = None
+        # Mark an answer set without a package id with is_final "unknown".
+        # Others will get "indeterminate" below.
+        answer_state['is_final'] = 'unknown'
+      if not ('latest_try' in answer_state \
+                and isinstance(answer_state['latest_try'], datetime.datetime)):
+        answer_state['latest_try'] = None
+      if not ('try_count' in answer_state \
+                and isinstance(answer_state['try_count'], int)):
+        answer_state['try_count'] = 0
+      if not ('is_final' in answer_state \
+                and isinstance(answer_state['is_final'], str)):
+        answer_state['is_final'] = 'indeterminate'
+
+    return all_answers_state
+
+
+  def return_answers(self):
+    # Take exam scheduler lock when checking out new answers, but release it
+    # for the sending phase so we do not interface with exam scheduler
+    # operations in case there are delays in sending the answers.
+    with exam_scheduler_lock:
+      self.logger.log(syslog.LOG_DEBUG, 'got exam scheduler lock')
+      all_answers_state = self.load_answers_with_init()
+    self.logger.log(syslog.LOG_DEBUG, 'released exam scheduler lock')
+    self.mark_final_answers_as_final(all_answers_state)
+
+    for filename, answerpackage_state in all_answers_state.items():
+      try:
+        self.handle_an_answer_return(filename, answerpackage_state)
+        try:
+          self.save_answers_state(all_answers_state)
+        except Exception as e:
+          raise Exception('error in saving the state of all answers: %s' % e)
+      except Exception as e:
+        self.logger.log(syslog.LOG_ERR,
+                        'error in handling an answer package return: %s' % e)
+
+
+  def handle_an_answer_return(self, filename, answer_state):
+    if answer_state['sent_at']:
+      return
+
+    if answer_state['try_count'] == self.MAX_TRY_COUNT:
+      self.logger.log(syslog.LOG_NOTICE,
+                      'giving up on sending answers %s' % filename)
+      answer_state['try_count'] += 1
+    if answer_state['try_count'] > self.MAX_TRY_COUNT:
+      return
+
+    now = datetime.datetime.now()
+    if answer_state['latest_try']:
+      minutes_to_wait_for \
+        = answer_state['try_count'] * datetime.timedelta(minutes=1)
+      next_retry_time = answer_state['latest_try'] + minutes_to_wait_for
+      if now.astimezone() < next_retry_time:
+        return
+
+    if answer_state['is_final'] == 'indeterminate':
+      # not returning yet, we will have to wait for proper "is_final" status
+      self.logger.log(syslog.LOG_NOTICE,
+        'not returning %s quite yet, we do not know if it is final' % filename)
+      return
+
+    answer_state['latest_try'] = now.replace(microsecond=0).astimezone()
+    answer_state['try_count'] += 1
+
+    msg = 'going to send answers %s' % filename
+    if answer_state['try_count'] > 1:
+      msg = '%s (retry=%d)' % (msg, answer_state['try_count']-1)
+    self.logger.log(syslog.LOG_NOTICE, msg)
+
+    sent_ok = False
+    try:
+      self.send_an_answer_package(answer_state['package_id'], filename,
+                                  answer_state['is_final'])
+      sent_ok = True
+      self.logger.log(syslog.LOG_NOTICE, 'sent %s to exam-o-matic' % filename)
+    except Exception as e:
+      msg = 'failed to send an answer package %s to exam-o-matic' % filename
+      self.logger.log(syslog.LOG_ERR, '%s: %s' % (msg, e))
+
+    if sent_ok:
+      answer_state['sent_at'] \
+        = datetime.datetime.now().replace(microsecond=0).astimezone() \
+                  .isoformat()
+
+
+  def send_an_answer_package(self, package_id, answers_filename, is_final):
+    answers_filename_path = os.path.join(ANSWERS_DIR, answers_filename)
+
+    with open(answers_filename_path, 'rb') as f:
+      files = { 'answers_file': f }
+      answers_file_contents = f.read()
+      f.seek(0)
+      answers_file_size = os.fstat( f.fileno() ).st_size
+      answers_file_sha256 = hashlib.sha256(answers_file_contents).hexdigest()
+
+      data = {
+        'answers_file': answers_filename,
+        'file_sha256':  answers_file_sha256,
+        'file_size':    answers_file_size,
+        'is_final':     is_final,
+        'package_id':   (package_id or ''),     # None drops out so use ''
+      }
+
+      response = self.exam_server.post('/v1/answers/upload', data, files)
+      if not response or response.status_code != requests.codes.ok:
+        raise Exception('sending answer package to exam-o-matic failed')
+
+
+  def save_answers_state(self, all_answers_state):
+    converted_all_answers_state = copy.deepcopy(all_answers_state)
+    for answer_state in converted_all_answers_state.values():
+      if 'latest_try' in answer_state and answer_state['latest_try']:
+        answer_state['latest_try'] = answer_state['latest_try'].isoformat()
+    with self.answer_state_lock:
+      save_as_json(self.ANSWERS_STATE_PATH, converted_all_answers_state)
+
+
+  def update_latest_on_answers_state(self, package_id, answers_filename):
+    state = self.load_answers_state()
+    saved_at = datetime.datetime.now().replace(microsecond=0) \
+                       .astimezone().isoformat()
+    state[answers_filename] = {
+      'is_final':   'indeterminate',
+      'package_id': package_id,
+      'saved_at':   saved_at,
+      'sent_at':    None,
+    }
+    self.save_answers_state(state)
+    msg = 'recorded new answer file %s is for package id %s' \
+            % (answers_filename, package_id)
+    self.logger.log(syslog.LOG_INFO, msg)
 
 
 syslog.openlog('puavo-ers-applet')

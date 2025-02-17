@@ -63,7 +63,7 @@ class Sidebar:
         self.container.set_size_request(dims.sidebar_width, dims.sidebar_height)
 
         # Storage for the command button icons
-        self.__icons = icons.IconCache(128, dims.sidebar_button_icon_size)
+        self.__icons = icons.IconCache(160, dims.sidebar_button_icon_size)
 
         # Which sidebar elements are *unconditionally* hidden through puavo-conf?
         # These override EVERYTHING else!
@@ -239,7 +239,7 @@ class Sidebar:
             ypos = self.__create_button(ypos, SB_BUTTONS["system_settings"])
             something = True
 
-        if self.__settings.is_user_primary_user:
+        if self.__settings.is_user_primary_user or self.__settings.user_type == "admin":
             if self.is_element_visible("laptop_settings"):
                 ypos = self.__create_button(ypos, SB_BUTTONS["laptop_settings"])
                 something = True

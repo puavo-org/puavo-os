@@ -18,7 +18,7 @@ rm -f "$primary_user_conf_path" "$user_registration_conf_path"
 superusers_mode=$(puavo-conf puavo.admin.superusers)
 
 case "$superusers_mode" in
-  primary-user)
+  limited-primary-user|primary-user-is-super)
     primary_user=$(puavo-conf puavo.admin.primary_user)
     if [ -z "$primary_user" -o \
          "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
@@ -32,11 +32,19 @@ case "$superusers_mode" in
       exit 1
     fi
 
-    cat <<EOF > "${primary_user_conf_path}.tmp"
+    if [ "$superusers_mode" = 'primary-user-is-super' ]; then
+      cat <<EOF > "${primary_user_conf_path}.tmp"
 ${primary_user} ALL=(ALL) ALL
 ${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-pkg-update-from-gui
 ${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-conf-local
 EOF
+    else
+      cat <<EOF > "${primary_user_conf_path}.tmp"
+${primary_user} ALL = /usr/sbin/puavo-reset-laptop-to-factory-defaults
+${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-pkg-update-from-gui
+${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-conf-local
+EOF
+    fi
     mv "${primary_user_conf_path}.tmp" "$primary_user_conf_path"
     ;;
 

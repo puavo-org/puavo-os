@@ -70,6 +70,16 @@ compares them to the list of known languages. If the environment
 variable(s) are missing, or the code is invalid, the language defaults
 to English (en). Accepted language codes are:
     $LANGS
+
+User programs
+-------------
+By default, PuavoMenu checks the presence of ~/.local/share/applications
+and ~/.local/share/flatpak directories. If they exist, PuavoMenu recursively
+scans them for .desktop files, and adds everything it finds to a custom
+category for user programs.
+
+You can use --user_progs argument to specify an additional direcfory that
+should be scanned for.
 """
 
 epilog = epilog.replace("$LANGS", ", ".join(LANGUAGES))
@@ -131,7 +141,7 @@ required.add_argument(
     "--user_progs",
     required=False,
     type=str,
-    help="directory where user-defined programs are loaded from",
+    help="directory for additional user-defined programs",
 )
 
 required.add_argument("--socket", required=True, help="IPC command socket name")
@@ -193,7 +203,7 @@ settings.user_conf = os.path.join(args.user_conf, "")
 settings.socket = args.socket
 
 logging.info("Logging starts")
-logging.info("This is PuavoMenu v0.9 (c) Opinsys Oy 2017-2020")
+logging.info("This is PuavoMenu v1.0 (c) Opinsys Oy 2017-2025")
 
 # Detect the non-configurable settings
 settings.detect_environment()
@@ -215,9 +225,22 @@ if settings.language not in LANGUAGES:
 
 _tr.set_language(settings.language)
 
-# Set up the user programs directory, but only in certain sessions
-if args.user_progs and not (settings.is_guest or settings.is_webkiosk):
-    settings.user_programs_dir = os.path.join(args.user_progs, "")
+# Additional directories for user programs, if the session allows them
+if not (settings.is_guest or settings.is_webkiosk):
+    home = os.path.expanduser('~')
+
+    # Autodetect the common places
+    try_paths = [
+        os.path.join(home, '.local', 'share', 'applications'),
+        os.path.join(home, '.local', 'share', 'flatpak')
+    ]
+
+    if args.user_progs:
+        try_paths.append(args.user_progs)
+
+    for path in try_paths:
+        if os.path.isdir(path) and os.access(path, os.R_OK):
+            settings.user_programs_dir.append(path)
 
 logging.info('Language...........: "%s"', settings.language)
 
@@ -229,7 +252,7 @@ logging.info('Menu data..........: "%s"', settings.menu_dir)
 logging.info('User config........: "%s"', settings.user_conf)
 
 if settings.user_programs_dir:
-    logging.info('User programs......: "%s"', settings.user_programs_dir)
+    logging.info('User programs......: %s', ' '.join(settings.user_programs_dir))
 
 logging.info('IPC socket.........: "%s"', settings.socket)
 logging.info('Desktop directory..: "%s"', settings.desktop_dir)

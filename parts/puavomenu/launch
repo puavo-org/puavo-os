@@ -40,7 +40,6 @@ while true; do
             --res_dir "./res" \
             --menu_dir "../../rules/puavomenu/templates" \
             --user_conf "${CONF_DIR}" \
-            --user_progs "${USER_PROGS}" \
             --socket "${XDG_RUNTIME_DIR}/puavomenu_dev" \
             "$@" || {
             status=$?
@@ -52,8 +51,6 @@ while true; do
             exit $status
         }
         break
-        # No user programs monitoring here. If you want to monitor a specific
-        # directory, run monitor-userprogs yourself.
     else
         # Production mode. Use real paths.
         python3 /opt/puavomenu/puavomenu \
@@ -63,7 +60,6 @@ while true; do
             --res_dir "/opt/puavomenu/res" \
             --menu_dir "/etc/puavomenu/" \
             --user_conf "${CONF_DIR}" \
-            --user_progs "${USER_PROGS}" \
             --socket "${XDG_RUNTIME_DIR}/puavomenu" || {
             status=$?
             if [ $status -eq 2 ]; then

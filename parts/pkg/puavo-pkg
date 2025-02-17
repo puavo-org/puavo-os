@@ -43,6 +43,7 @@ SC_OK=0         ## Success
 SC_ERR=1        ## Generic error
 SC_ERR_NET=2    ## Network failure
 SC_ERR_NOPKG=3  ## Package does not exist
+SC_ERR_BUSY=4   ## Software is busy, retry later
 
 g_sc=${SC_ERR} ## Prime with a generic error.
 
@@ -82,7 +83,9 @@ Commands:
   reconfigure PACKAGE            reconfigure installed PACKAGE
   reconfigure --all              reconfigure all installed packages
 
-  reconfigure-upgrade PKG DIR    reconfigure package from new directory
+  reconfigure-upgrade [--ignore-unconfigure-error] PKG DIR
+                                 reconfigure package from new directory
+                                 (optionally ignore old package unconfigure error)
 
   remove PACKAGE                 remove installed PACKAGE
   remove --all                   remove all installed packages
@@ -153,8 +156,8 @@ check_puavopkg_name() {
 }
 
 gc_installations() {
-  local currently_available_link currently_installed_link gc_status msg \
-        pkg_dir pkg_installation pkg_name
+  local currently_available_link currently_installed_link gc_status \
+        latest_prepared_time msg pkg_dir pkg_installation pkg_name
 
   gc_status=$SC_OK
 
@@ -290,7 +293,7 @@ list_installed_pkgs()
 
 list_installed_pkgs_with_dirs()
 {
-  local pkg_dir pkg_name col1_len
+  local col1_len pkg_dir pkg_name
 
   col1_len=$(awk 'BEGIN { max = 0 }
                         { max = (length($0) > max) ? length($0) : max }
@@ -305,7 +308,7 @@ list_installed_pkgs_with_dirs()
 
 get_license_url()
 {
-  local identifier INSTALLER_REGEX pkg_dir
+  local identifier pkg_dir INSTALLER_REGEX
 
   identifier=$1
   INSTALLER_REGEX='\.tar\.gz$'
@@ -345,7 +348,7 @@ get_pkg_dir()
 
 get_writable_pkg_dir()
 {
-  local pkg_name pkg_id
+  local pkg_id pkg_name
 
   pkg_name=$1
   pkg_id=$2
@@ -360,7 +363,7 @@ get_available_pkg_dir()
 
 get_installed_pkg_id()
 {
-  local pkg_name pkg_dir
+  local pkg_dir pkg_name
 
   pkg_name=$1
   pkg_dir=$(readlink -e "$(get_pkg_link "$1")") || true
@@ -394,7 +397,7 @@ get_pkg_version() {
 
 configure_pkg()
 {
-  local pkg_name pkg_id pkg_dir upstream_dir pkg_link
+  local pkg_dir pkg_id pkg_link pkg_name upstream_dir
 
   pkg_name=$1
   pkg_id=$2
@@ -402,17 +405,12 @@ configure_pkg()
   pkg_dir=$(get_pkg_dir "$pkg_name" "$pkg_id") || return 1
 
   if [ ! -e "${pkg_dir}/.puavo-pkg-version" ]; then
-    log_error "not configuring ${pkg_name}, it is missing version info"
+    log_error "${pkg_name}: not configuring, missing version info"
     return 1
   fi
 
   upstream_dir="${pkg_dir}/upstream"
-  installed_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
   pkg_link=$(get_pkg_link "$pkg_name") || return 1
-
-  if [ -n "$installed_pkg_id" -a "$installed_pkg_id" != "$pkg_id" ]; then
-    unconfigure_pkg "$pkg_name"
-  fi
 
   pushd "$pkg_dir" >/dev/null || return 1
   ./rules configure "$upstream_dir" || {
@@ -421,6 +419,11 @@ configure_pkg()
     return 1
   }
   popd > /dev/null 2>&1 || true
+
+  # test with -e for faster (typical) execution
+  if [ -e "${pkg_dir}/.upgrade_failed_due_to_old_pkg_unconfigure" ]; then
+    rm -f "${pkg_dir}/.upgrade_failed_due_to_old_pkg_unconfigure" || true
+  fi
 
   ln -fns "$pkg_dir" "${g_puavo_pkg_available_dir}/${pkg_name}" || {
     log_error "failed to create an available package link"
@@ -431,18 +434,25 @@ configure_pkg()
     return 1
   }
 
+  touch "${pkg_dir}/.installed" || true
+
   log_info "${pkg_name}: configured successfully" || true
 }
 
 reconfigure_pkg()
 {
-  local pkg_name pkg_id
+  local pkg_id pkg_name
 
   pkg_name=$1
   check_puavopkg_name "$pkg_name" || return 1
   pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
 
-  configure_pkg "$pkg_name" "$pkg_id"
+  if ! unconfigure_pkg "$pkg_name"; then
+    log_error "${pkg_name}: failed to unconfigure"
+    return 1
+  fi
+
+  configure_pkg "$pkg_name" "$pkg_id" || return 1
 }
 
 reconfigure_all_pkgs()
@@ -461,24 +471,34 @@ reconfigure_all_pkgs()
 
 unconfigure_pkg()
 {
-  local pkg_name pkg_link pkg_dir upstream_dir
+  local errorcode pkg_dir pkg_id pkg_link pkg_name upstream_dir
 
   pkg_name=$1
+  pkg_id=${2:-}
   check_puavopkg_name "$pkg_name" || return 1
 
   pkg_link=$(get_pkg_link "$pkg_name") || return 1
-  pkg_dir=$(readlink -e "$pkg_link") || true
+  if [ -n "$pkg_id" ]; then
+    pkg_dir=$(get_pkg_dir "$pkg_name" "$pkg_id") || return 1
+  else
+    pkg_dir=$(readlink -e "$pkg_link") || true
+  fi
   upstream_dir="${pkg_dir}/upstream"
 
   [ -n "$pkg_dir" ] || return 0
 
   pushd "$pkg_dir" >/dev/null || return 1
   ./rules unconfigure "$upstream_dir" >/dev/null || {
+    errorcode=$?
+    if [ "$errorcode" -eq "$SC_ERR_BUSY" ]; then
+      log_warning "${pkg_name}: application is busy, retry unconfigure later"
+    fi
     popd > /dev/null 2>&1 || true
-    log_error "failed to unconfigure package '${pkg_name}'"
-    return 1
+    return $errorcode
   }
   popd > /dev/null 2>&1 || true
+
+  rm -f "${pkg_dir}/.installed" || true
 
   rm -f "$pkg_link" || return 1
 
@@ -487,7 +507,7 @@ unconfigure_pkg()
 
 unpack_upstream_pack()
 {
-  local pkg_name pkg_id pkg_dir upstream_dir upstream_pack upstream_tmpdir
+  local pkg_dir pkg_id pkg_name upstream_dir upstream_pack upstream_tmpdir
 
   pkg_name=$1
   pkg_id=$2
@@ -520,7 +540,7 @@ unpack_upstream_pack()
 
 check_cksum()
 {
-  local cksum_file cksum_file_contents file actual_cksum_str expected_cksum_str
+  local actual_cksum_str cksum_file cksum_file_contents file expected_cksum_str
 
   cksum_file=$1
   file=$2
@@ -552,8 +572,8 @@ check_cksum()
 
 cache_load_upstream_pack()
 {
-  local pkg_name pkg_id pkg_dir upstream_pack cksum_file cksum_str \
-        cached_upstream_pack
+  local cached_readonly_upstream_pack cached_upstream_pack cksum_file \
+        cksum_str pkg_dir pkg_id pkg_name upstream_pack
 
   pkg_name=$1
   pkg_id=$2
@@ -582,7 +602,7 @@ cache_load_upstream_pack()
 
 cache_save_upstream_pack()
 {
-  local cachedir cachefile_path cksum_str pkg_name pkg_id pkg_dir \
+  local cachedir cachefile_path cksum_str pkg_dir pkg_id pkg_name \
         tmp_cachefile_path upstream_pack
 
   pkg_name=$1
@@ -615,7 +635,7 @@ cache_save_upstream_pack()
 
 download_upstream_pack()
 {
-  local pkg_name pkg_id pkg_dir upstream_pack upstream_tmppack
+  local pkg_dir pkg_id pkg_name upstream_pack upstream_tmppack
 
   pkg_name=$1
   pkg_id=$2
@@ -636,7 +656,7 @@ download_upstream_pack()
     ./rules download "${upstream_tmppack}" || {
       [ $? -eq 2 ] && g_sc=${SC_ERR_NET}
       popd > /dev/null 2>&1 || true
-      rm -rf "$upstream_tmppack" || true
+      rm -f "$upstream_tmppack" || true
       log_error "package downloader returned an error!"
       return 1
     }
@@ -644,19 +664,19 @@ download_upstream_pack()
   else
     if ! download_upstream_pack_from_multiple_urls "$pkg_dir" \
                                                    "$upstream_tmppack"; then
-      rm -rf "$upstream_tmppack"
+      rm -f "$upstream_tmppack"
       return 1
     fi
   fi
 
   if ! check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_tmppack}"; then
     log_error "downloaded upstream pack has incorrect checksum"
-    rm -rf "${upstream_tmppack}"
+    rm -f "${upstream_tmppack}"
     return 1
   fi
 
   if ! mv -T "$upstream_tmppack" "$upstream_pack"; then
-    rm -rf "$upstream_pack"
+    rm -f "$upstream_pack"
     return 1
   fi
 
@@ -676,7 +696,8 @@ wget_with_opts()
 
 download_upstream_pack_from_multiple_urls()
 {
-  local cdn_archive distfile_url pkg_dir upstream_tmppack
+  local cdn_archive distfile_server distfile_url pkg_dir upstream_pack_url \
+        upstream_tmppack
 
   pkg_dir=$1
   upstream_tmppack=$2
@@ -765,7 +786,7 @@ check_image_requirements_met() {
 
 extract_installer()
 {
-  local installer pkg_name pkg_id pkg_dir pkg_tmpdir pkg_format
+  local installer pkg_dir pkg_format pkg_id pkg_name pkg_tmpdir
 
   installer=$1
 
@@ -850,7 +871,7 @@ prepare_pkg_from_dir()
 
 prepare_pkg_with_installer()
 {
-  local installer upstream_dir upstream_tmpdir
+  local installer pkg_dir upstream_dir upstream_packdir upstream_tmpdir
 
   installer=$1
 
@@ -895,18 +916,24 @@ prepare_pkg_with_installer()
 }
 
 reconfigure_upgrade_pkg() {
-  local pkg_name pkg_dir pkg_id old_pkg_id
+  local ignore_unconfigure_error old_pkg_id pkg_dir pkg_id pkg_name
 
   pkg_name=$1
   pkg_dir=$2
+  ignore_unconfigure_error=$3
 
   pkg_id=$(get_pkg_id "$pkg_dir") || return 1
   old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
 
   if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
     if ! unconfigure_pkg "$pkg_name"; then
-      log_error "failed to unconfigure package '${pkg_name}'"
-      return 1
+      [ $? -eq "$SC_ERR_BUSY" ] && g_sc=${SC_ERR_BUSY}
+      touch "${pkg_dir}/.upgrade_failed_due_to_old_pkg_unconfigure" || true
+      if [ "$ignore_unconfigure_error" != 'true' ]; then
+        log_error "failed to unconfigure package '${pkg_name}'"
+        return 1
+      fi
+      log_warning "failed to unconfigure package '${pkg_name}' (but ignoring)"
     fi
   fi
 
@@ -914,6 +941,10 @@ reconfigure_upgrade_pkg() {
     # if configuration fails, try to reconfigure the old version again
     log_error "${pkg_name}: failed to configure package version '${pkg_id}'"
     if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
+      log_info "${pkg_name}: reverting to previous version '${old_pkg_id}'"
+      if ! unconfigure_pkg "$pkg_name" "$pkg_id"; then
+        log_warning "${pkg_name}: unconfiguring version '${pkg_id}' failed"
+      fi
       if ! configure_pkg "$pkg_name" "$old_pkg_id"; then
         log_error "${pkg_name}: failed to reconfigure the previous" \
                   "version '${old_pkg_id}'"
@@ -928,7 +959,7 @@ reconfigure_upgrade_pkg() {
 
 install_pkg_with_installer()
 {
-  local installer pkg_dir pkg_name pkg_id old_pkg_id old_pkg_dir
+  local installer old_pkg_id old_pkg_dir pkg_dir pkg_id pkg_name
 
   installer=$1
   pkg_dir=$(prepare_pkg_with_installer "$installer") || return 1
@@ -937,9 +968,7 @@ install_pkg_with_installer()
   pkg_id=$(get_pkg_id "$pkg_dir")                || return 1
   old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
 
-  reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || return 1
-
-  touch "${pkg_dir}/.installed"
+  reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" false || return 1
 
   log_info "${pkg_name}: installed successfully"
 
@@ -955,7 +984,7 @@ have_local_installations() {
 }
 
 is_locally_in() {
-  local collection_dir pkg_name
+  local collection_dir pkg_name pkg_path
 
   pkg_name=$1
   collection_dir=$2
@@ -989,7 +1018,7 @@ switch_to_system_pkg()
     for pkg_dir in ${g_puavo_pkg_readonly_rootdir}/packages/${pkg_name}/*; do
       test -d "$pkg_dir" || break
       log_info "found system version for ${pkg_name}, reconfiguring"
-      reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || {
+      reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" false || {
         log_error "could not switch to image version for ${pkg_name}"
         return 1
       }
@@ -998,7 +1027,9 @@ switch_to_system_pkg()
     done
     if $need_unconfigure; then
       if ! unconfigure_pkg "$pkg_name"; then
-        log_warning "failed to unconfigure package ${pkg_name}"
+        [ $? -eq "$SC_ERR_BUSY" ] && g_sc=${SC_ERR_BUSY}
+        log_error "failed to unconfigure package '${pkg_name}'"
+        return 1
       fi
     fi
   fi
@@ -1033,7 +1064,7 @@ purge_local_pkg()
 
 remove_pkg()
 {
-  local pkg_name pkg_dir pkg_id
+  local pkg_dir pkg_id pkg_name
 
   pkg_name=$1
   check_puavopkg_name "$pkg_name" || return 1
@@ -1041,12 +1072,14 @@ remove_pkg()
   pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
   if [ -n "$pkg_id" ]; then
     unconfigure_pkg "$pkg_name" || {
+      [ $? -eq "$SC_ERR_BUSY" ] && g_sc=${SC_ERR_BUSY}
       log_error "failed to unconfigure package '${pkg_name}'"
       return 1
     }
     pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
     rm -rf "${pkg_dir}/.installed" \
            "${pkg_dir}/.prepared"  \
+           "${pkg_dir}/.upgrade_failed_due_to_old_pkg_unconfigure" \
            "${pkg_dir}/upstream" || return 1
     purge_local_pkg "$pkg_name" || return 1
     log_info "removed package '${pkg_name}'"
@@ -1076,8 +1109,8 @@ remove_all_pkgs()
 
 show_pkg()
 {
-  local pkg_name pkg_dir pkg_id pkg_legend pkg_description pkg_field
-  local identifier INSTALLER_REGEX
+  local identifier pkg_description pkg_dir pkg_field pkg_id pkg_legend \
+        pkg_name pkg_version INSTALLER_REGEX
 
   identifier=$1
   pkg_field=$2
@@ -1290,8 +1323,13 @@ case "${command}" in
     fi
     ;;
   reconfigure-upgrade)
+    ignore_unconfigure_error=false
+    if [ "${1:-}" = '--ignore-unconfigure-error' ]; then
+      ignore_unconfigure_error=true
+      shift
+    fi
     assert_args_count -eq 2 "$@"
-    reconfigure_upgrade_pkg "$1" "$2"
+    reconfigure_upgrade_pkg "$1" "$2" "$ignore_unconfigure_error"
     ;;
   remove)
     assert_args_count -eq 1 "$@"
@@ -1320,7 +1358,11 @@ case "${command}" in
     ;;
   unconfigure)
     assert_args_count -eq 1 "$@"
-    unconfigure_pkg "$1"
+    if ! unconfigure_pkg "$1"; then
+      [ $? -eq "$SC_ERR_BUSY" ] && g_sc=${SC_ERR_BUSY}
+      log_error "failed to unconfigure package '${pkg_name}'"
+      exit 1
+    fi
     ;;
   *)
     usage_error "unknown command '${command}'"

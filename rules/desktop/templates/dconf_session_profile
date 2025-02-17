@@ -69,6 +69,7 @@ automatic-decompression=false
 executable-text-activation='ask'
 
 [org/gnome/shell]
+disable-user-extensions=false
 favorite-apps=['org.gnome.Nautilus.desktop', 'firefox.desktop', 'google-chrome.desktop', 'libreoffice-writer.desktop']
 
 [org/gnome/shell/extensions/brngout]

@@ -115,6 +115,7 @@ class HoverIconButtonBase(Gtk.Button):
                 self.__label_layout.set_width(
                     (width - 2 * self.__padding) * Pango.SCALE
                 )
+                self.__label_layout.set_alignment(Pango.Alignment.CENTER)
             else:
                 self.__label_layout.set_width(-1)
                 self.__label_layout.set_ellipsize(Pango.EllipsizeMode.END)
@@ -145,7 +146,7 @@ class HoverIconButtonBase(Gtk.Button):
 
             if label_width is not None:
                 self.__label_pos = (
-                    width / 2 - label_width / 2,
+                    self.__padding,
                     self.__icon_pos[1] + self.__icon_size + self.__padding,
                 )
 

@@ -50,10 +50,13 @@ polkit_primary_user_path='/etc/polkit-1/localauthority.conf.d/52-puavo-primary-u
 if [ -n "$primary_user" ]; then
   cat <<EOF > "${polkit_primary_user_path}.tmp"
 [Configuration]
-AdminIdentities=unix-user:${primary_user}
+AdminIdentities=unix-user:${primary_user};unix-group:puavo-role-admin
 EOF
-  mv "${polkit_primary_user_path}.tmp" \
-     "$polkit_primary_user_path"
 else
-  rm -f "$polkit_primary_user_path"
+  cat <<EOF > "${polkit_primary_user_path}.tmp"
+[Configuration]
+AdminIdentities=unix-group:puavo-role-admin
+EOF
 fi
+mv "${polkit_primary_user_path}.tmp" \
+   "$polkit_primary_user_path"

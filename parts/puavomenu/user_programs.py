@@ -14,8 +14,8 @@ import loaders.dotdesktop_loader
 
 
 class UserProgramsManager:
-    def __init__(self, base_dir, language):
-        self.__base_dir = base_dir
+    def __init__(self, base_dirs, language):
+        self.__base_dirs = base_dirs
         self.__language = language
         self.__file_cache = {}
 
@@ -25,47 +25,55 @@ class UserProgramsManager:
     # Scans the user programs directory and creates, removes and updates
     # user programs. Returns True if something actually changed.
     def update(self, programs, category, icon_locator, icon_cache):
-        if self.__base_dir is None:
+        if not self.__base_dirs:
             return False
 
         start_time = time.perf_counter()
 
-        if not os.path.isdir(self.__base_dir) or not os.access(
-            self.__base_dir, os.R_OK
-        ):
-            logging.warning(
-                'UserProgramsManager::update(): can\'t access directory "%s"',
-                self.__base_dir,
-            )
+        # Which of the specified directories exist and can be accessed?
+        working_paths = []
+
+        for path in self.__base_dirs:
+            if not os.path.isdir(path) or not os.access(path, os.R_OK):
+                logging.warning(
+                    'UserProgramsManager::update(): can\'t access directory "%s"',
+                    path,
+                )
+            else:
+                working_paths.append(path)
+
+        if not working_paths:
+            logging.info('UserProgramsManager::update(): no working paths, nothing to do')
             return False
 
         # Get a list of current .desktop files
         new_files = {}
         seen = set()
 
-        for name in Path(self.__base_dir).rglob("*.desktop"):
-            try:
-                # Generate a unique ID for this program
-                basename = os.path.splitext(name.name)[0]
-                program_id = "user-program-" + basename
+        for path in working_paths:
+            for name in Path(path).rglob("*.desktop"):
+                try:
+                    # Generate a unique ID for this program
+                    basename = os.path.splitext(name.name)[0]
+                    program_id = "user-program-" + basename
 
-                if program_id in seen:
-                    # If you really want to duplicate a program, you have to rename
-                    # the duplicate .desktop file
-                    continue
+                    if program_id in seen:
+                        # If you really want to duplicate a program, you have to rename
+                        # the duplicate .desktop file
+                        continue
 
-                seen.add(program_id)
+                    seen.add(program_id)
 
-                stat = os.stat(name)
+                    stat = os.stat(name)
 
-                new_files[name] = {
-                    "modified": stat.st_mtime,
-                    "size": stat.st_size,
-                    "program_id": program_id,
-                }
-            except Exception as exception:
-                logging.fatal("Error occurred when scanning for user programs:")
-                logging.error(exception, exc_info=True)
+                    new_files[name] = {
+                        "modified": stat.st_mtime,
+                        "size": stat.st_size,
+                        "program_id": program_id,
+                    }
+                except Exception as exception:
+                    logging.fatal("Error occurred when scanning for user programs:")
+                    logging.error(exception, exc_info=True)
 
         # Detect added, removed and changed files
         existing_keys = set(self.__file_cache.keys())

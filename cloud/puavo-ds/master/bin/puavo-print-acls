@@ -105,6 +105,11 @@ set selfadmins [
   ldapset {(user/puavoEduPersonAffiliation + [,] + this) & ([admin,] + user)}
 ]
 
+# "self" but only if self is a teacher
+set selfteachers [
+  ldapset {(user/puavoEduPersonAffiliation + [,] + this) & ([teacher,] + user)}
+]
+
 # this means: admins of the same school as
 # $this_thing (person, device, server) is in
 set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool"]
@@ -847,11 +852,23 @@ rule {
 
 rule {
   # Only organisation owners can modify admin user special permissions
-  # (and others can not even read them, except self if self is an admin).
+  # (and others can not even read them, except if self is an admin).
   [dn subtree $People]
     [attrs puavoAdminPermissions]
       by $org_owners write
       by $selfadmins read
+}
+
+rule {
+  # Only organisation owners and admins of the teacher's school can
+  # modify teacher user special permissions (and others can not even
+  # read them, except if self is a teacher).
+  [dn subtree $People]
+    [attrs puavoTeacherPermissions]
+      by $org_owners         write
+      by $this_school_admins write
+      by $selfteachers       read
+      by [puavo_dn puavo]    read
 }
 
 # Give hosts access to owner information (so that org.json can contain

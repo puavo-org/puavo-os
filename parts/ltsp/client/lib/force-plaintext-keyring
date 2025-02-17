@@ -35,4 +35,26 @@ EOF
   )
 fi
 
+# As we plan to delete the login keyring (because we can not properly use it),
+# backup these once and then delete these perpetually.  (The problem in using
+# the login keyring is that Puavo passwords are changed independently from
+# the keyring, and "can not open keyring" messages are pointless and
+# confusing to users.)
+keyring_backupdir=~/.local/share/keyrings.puavobackup1
+if [ ! -d "$keyring_backupdir" ]; then
+  mkdir -p "$keyring_backupdir"
+  cp -p "${keyringdir}/login.keyring" "$keyring_backupdir" 2>/dev/null || true
+  cp -p "${keyringdir}/user.keystore" "$keyring_backupdir" 2>/dev/null || true
+fi
+
+# For Trixie+: remove pam_gnome_keyring.so from PAM rules and replace the
+# logic above with this:
+# rm -f "${keyring_backupdir}/login.keyring" \
+#       "${keyring_backupdir}/user.keystore"
+# if [ -d "$keyring_backupdir" ]; then
+#   rmdir "$keyring_backupdir"
+# fi
+# keep this for Trixie:
+rm -f "${keyringdir}/login.keyring" "${keyringdir}/user.keystore"
+
 exit 0

@@ -19,6 +19,20 @@ import utils_gui
 ICON_EXTENSIONS = (".svg", ".svgz", ".png", ".xpm", ".jpg", ".jpeg")
 
 
+# For some reason, newer Cairo libraries do some kind of bilinear filtering
+# during surface->surface blits, even if there's no scaling of any kind in
+# use, and I can't turn this filtering off. This filtering can cause pixels
+# from nearby icons to bleed to unrelated icons (it's the same problem that
+# exists in game programming, when you have a texture atlas and you're using
+# any kind of filtering during drawing). So let's introduce a hack: leave
+# a few pixels of padding to right and bottom borders of every icon. This
+# removes the bleeding. I didn't notice any bleeding in icons stored on the
+# first row/column of the atlas, so there's no padding there. This is an ugly
+# hack and I do not like it, but I can't locate the source of the filtering.
+# The moment I figure out another solution, this hack gets deleted.
+ATLAS_PADDING = 2
+
+
 # Tracks unused and usable cells in a single atlas
 class AtlasCell:
     __slots__ = ("free", "usable")
@@ -92,7 +106,7 @@ class IconCache:
         # Each atlas is a grid containing NxN slots, compute the N.
         # We use 8-bit indexes for coordinates, so the maximum grid
         # size is 255x255.
-        self.grid_size = bitmap_size // icon_size
+        self.grid_size = bitmap_size // (icon_size + ATLAS_PADDING)
 
         if self.grid_size > 255:
             raise RuntimeError(
@@ -204,7 +218,9 @@ class IconCache:
             )
 
             atlas.context.set_source_surface(
-                icon_surface, cell_x * self.icon_size, cell_y * self.icon_size
+                icon_surface,
+                cell_x * (self.icon_size + ATLAS_PADDING),
+                cell_y * (self.icon_size + ATLAS_PADDING)
             )
 
             atlas.context.paint()
@@ -282,7 +298,9 @@ class IconCache:
 
         # https://www.cairographics.org/FAQ/#paint_from_a_surface
         ctx.set_source_surface(
-            atlas.surface, x - cx * self.icon_size, y - cy * self.icon_size
+            atlas.surface,
+            x - cx * (self.icon_size + ATLAS_PADDING),
+            y - cy * (self.icon_size + ATLAS_PADDING)
         )
         ctx.rectangle(x, y, self.icon_size, self.icon_size)
         ctx.fill()
@@ -314,33 +332,37 @@ def get_user_icon_dirs():
     # the icon directories listed in dirs.json are manually sorted by
     # preference.
 
-    user_icons_root = os.path.join(os.path.expanduser("~"), ".local", "share", "icons")
+    user_icons_root = [
+        os.path.join(os.path.expanduser("~"), ".local", "share", "icons"),
+        os.path.join(os.path.expanduser("~"), ".local", "share", "flatpak")
+    ]
 
     number_extractor = re.compile(r"\d+")
     dirs = []
 
-    for dir_tuple in os.walk(user_icons_root):
-        name = dir_tuple[0]
-        size = -1
-
-        try:
-            # extract SIZE from ".local/share/icons/SIZExSIZE/..."
-            result = number_extractor.search(name)
-
-            if result:
-                group = result.group(0)
-
-                if group:
-                    size = int(group)
-        except BaseException as e:
-            logging.warning(
-                'list_user_icon_dirs(): could not extract icon size from "%s": %s',
-                name,
-                str(e),
-            )
+    for roots in user_icons_root:
+        for dir_tuple in os.walk(roots):
+            name = dir_tuple[0]
             size = -1
 
-        dirs.append((size, name))
+            try:
+                # extract SIZE from ".local/share/icons/SIZExSIZE/..."
+                result = number_extractor.search(name)
+
+                if result:
+                    group = result.group(0)
+
+                    if group:
+                        size = int(group)
+            except BaseException as e:
+                logging.warning(
+                    'list_user_icon_dirs(): could not extract icon size from "%s": %s',
+                    name,
+                    str(e),
+                )
+                size = -1
+
+            dirs.append((size, name))
 
     return sorted(dirs, key=lambda i: i[0], reverse=True)
 
