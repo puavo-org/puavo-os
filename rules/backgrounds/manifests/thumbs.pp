@@ -20,13 +20,16 @@ class backgrounds::thumbs {
   $src_dirs.each |$dir| {
     $stamp = "${dst_dir}/.${dir['id']}.thumbs_done"
 
-    exec {
-      "/usr/bin/makethumbs ${dir['path']} ${dst_dir} && /usr/bin/touch ${stamp}":
-        creates   => $stamp,
-        logoutput => 'on_failure',
-        require   => [ File[$dst_dir]
-                     , Package['puavo-devscripts'] ];
-    }
+# XXX Can not be used in the image build (Trixie), Gnome bits run
+# XXX run bwrap underneath and bwrap does not have permissions to do what it
+# XXX wants.  Needs some capability added in the systemd-nspawn container?
+#   exec {
+#     "/usr/bin/makethumbs ${dir['path']} ${dst_dir} && /usr/bin/touch ${stamp}":
+#       creates   => $stamp,
+#       logoutput => 'on_failure',
+#       require   => [ File[$dst_dir]
+#                    , Package['puavo-devscripts'] ];
+#   }
   }
 
   file {
