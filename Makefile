@@ -89,6 +89,7 @@ _systemd_nspawn_machine_name := \
 _systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
 			 -M '$(_systemd_nspawn_machine_name)' \
 			 -u '$(_adm_user)'                    \
+			 --tmpfs=/tmp:size=8G                 \
 			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
 
 _sudo := sudo $(_proxywrap_cmd)
