@@ -38,7 +38,7 @@ class kernels {
   #   Debian Bookworm: crisp
   #   Debian Trixie:   ?
 
-  $default_kernel = '6.11.10-amd64'
+  $default_kernel = '6.12.12-amd64'
   # XXX $crisp_kernel   = '6.11.5-amd64'        # XXX missing from Trixie
 
   ::kernels::all_kernel_links {
