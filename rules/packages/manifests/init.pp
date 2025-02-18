@@ -63,7 +63,7 @@ class packages {
     , 'cryptsetup-initramfs'
     , 'dbus'
     , 'dnsmasq'
-    , 'docker-compose'
+    # , 'docker-compose'                # XXX missing from Trixie
     , 'docker.io'
     , 'freeradius'
     , 'freeradius-krb5'
@@ -202,7 +202,7 @@ class packages {
     , 'gnome-sound-recorder'
     , 'lame'
     , 'libasound2-plugins'
-    , 'mumble'
+    # , 'mumble'                # XXX missing from Trixie
     , 'pavucontrol'
     # , 'pavumeter'             # XXX missing from Trixie
     # , 'qstopmotion'           # XXX missing from Trixie
@@ -238,7 +238,7 @@ class packages {
     , 'pm-utils'
     , 'rng-tools-debian'
     , 'systemd'
-    , 'tomoyo-tools'
+    # , 'tomoyo-tools'  # XXX missing from Trixie
     , 'udev'
     , 'udisks2'
     , 'vlan' ]:
@@ -470,7 +470,7 @@ class packages {
     , 'lmms'
     , 'qsynth'
     , 'rosegarden'
-    , 'solfege'
+    # , 'solfege'                       # XXX missing from Trixie
     , 'soundconverter'
     , 'tuxguitar' ]:
       tag => [ 'tag_music_making', 'tag_debian_desktop', ];
@@ -549,8 +549,8 @@ class packages {
     , 'xtightvncviewer' ]:
       tag => [ 'tag_remote_access', 'tag_debian_desktop', ];
 
-    [ 'avogadro'
-    , 'gnucap'
+    # [ 'avogadro'                      # XXX missing from Trixie
+    [ 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
     , 'kalzium'

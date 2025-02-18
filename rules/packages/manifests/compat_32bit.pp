@@ -8,8 +8,8 @@ class packages::compat_32bit {
     @package {
       [ 'gstreamer1.0-gl:i386'           # needed for better media support in wine
       , 'gstreamer1.0-libav:i386'        # needed for better media support in wine
-      , 'gstreamer1.0-vaapi:i386'        # needed for better media support in wine
-      , 'gstreamer1.0-plugins-bad:i386'  # needed for better media support in wine
+      # , 'gstreamer1.0-vaapi:i386'        # needed for better media support in wine    # XXX missing from trixie
+      # , 'gstreamer1.0-plugins-bad:i386'  # needed for better media support in wine    # XXX missing from trixie
       , 'gstreamer1.0-plugins-good:i386' # needed for better media support in wine
       , 'gstreamer1.0-plugins-ugly:i386' # needed for better media support in wine
       , 'libasound2t64:i386'
@@ -32,7 +32,7 @@ class packages::compat_32bit {
       , 'libglib2.0-0t64:i386'
       , 'libgraphene-1.0-0:i386'             # needed for better media support in wine
       , 'libgstreamer-gl1.0-0:i386'          # needed for better media support in wine
-      , 'libgstreamer-plugins-bad1.0-0:i386' # needed for better media support in wine
+      # , 'libgstreamer-plugins-bad1.0-0:i386' # needed for better media support in wine        # XXX missing from Trixie
       , 'libgtk2.0-0t64:i386'
       , 'libice6:i386'
       , 'libltdl7:i386'
