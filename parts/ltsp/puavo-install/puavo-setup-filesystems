@@ -155,7 +155,7 @@ module DiskHandler
       run('mdadm', '--zero-superblock', '--force', raid_partition)
     end
     sleep(2)    # give some time for kernel
-    run('mdadm', '--remove', md_device_path) if File.exists?(md_device_path)
+    run('mdadm', '--remove', md_device_path) if File.exist?(md_device_path)
   end
 
   def self.setup_raid_if_possible(partitioning_scheme)
@@ -259,7 +259,7 @@ module DiskHandler
       partition_dev = "/dev/#{ device }2"
     end
     if partition_dev
-      until File.exists?(partition_dev) do
+      until File.exist?(partition_dev) do
         run('partprobe', "/dev/#{ device }")
         sleep(1)
         wait_iterations += 1
@@ -871,7 +871,7 @@ vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
 partitioning_scheme = UI::partition_label \
-  || (Dir.exists?('/sys/firmware/efi') ? 'UEFI/GPT' : 'BIOS/MBR')
+  || (Dir.exist?('/sys/firmware/efi') ? 'UEFI/GPT' : 'BIOS/MBR')
 
 raid_setup_done = false
 if hosttype == 'bootserver' then
