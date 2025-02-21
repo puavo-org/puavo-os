@@ -12,6 +12,23 @@ get_etc_puavo() {
   echo "$etc_puavo_data"
 }
 
+setup_dnsmasq_overrides() {
+  local dhcpd_iface dnsmasq_service_dir systemd_device
+
+  dnsmasq_service_dir='/etc/systemd/system/dnsmasq.service.d'
+
+  mkdir -p /etc/systemd/system/dnsmasq.service.d
+  {
+    printf "[Unit]\n"
+    for dhcpd_iface in $dhcpd_interfaces; do
+      printf "Requires=sys-subsystem-net-devices-%s.device\n" "$dhcpd_iface"
+      printf "After=sys-subsystem-net-devices-%s.device\n"    "$dhcpd_iface"
+    done
+  } > /etc/systemd/system/dnsmasq.service.d/override.conf.tmp
+  mv /etc/systemd/system/dnsmasq.service.d/override.conf.tmp \
+     /etc/systemd/system/dnsmasq.service.d/override.conf
+}
+
 validate_ip() {
   ipcalc $1 | \
     awk 'BEGIN{FS=":";is_invalid=0} /^INVALID/ {is_invalid=1} END{exit is_invalid}'
@@ -89,6 +106,8 @@ if [ -z "$dhcpd_interfaces" ]; then
   echo 'No dhcpd interfaces set for a bootserver, exiting...' >&2
   exit 1
 fi
+
+setup_dnsmasq_overrides
 
 dhcpd_subdomain_list=''
 for interf in $dhcpd_interfaces; do
@@ -339,5 +358,6 @@ no-resolv
 $(for ip in ${dns_upstream_servers}; do echo "server=${ip}"; done)
 EOF
   mv /etc/dnsmasq.d/01-upstream_servers.conf.tmp /etc/dnsmasq.d/01-upstream_servers.conf
-else rm -f /etc/dnsmasq.d/01-upstream_servers.conf
+else
+  rm -f /etc/dnsmasq.d/01-upstream_servers.conf
 fi

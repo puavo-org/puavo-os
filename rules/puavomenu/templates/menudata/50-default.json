@@ -221,9 +221,6 @@
         "designer-qt5": {
             "tags": "default"
         },
-        "dia": {
-            "tags": "default"
-        },
         "discord": {
             "tags": "default"
         },
@@ -531,6 +528,9 @@
         "kantti": {
             "tags": "default, education"
         },
+        "kdenlive-appimage": {
+            "tags": "default, education"
+        },
         "kenavision": {
             "type": "custom",
             "command": "/opt/av4kav/lib/av4.sh",
@@ -835,6 +835,9 @@
             "tags": "default"
         },
         "org.gnome.Cheese": {
+            "tags": "default"
+        },
+        "org.gnome.Dia": {
             "tags": "default"
         },
         "org.gnome.eog": {
@@ -1759,7 +1762,7 @@
                 "sparkvue",
                 "MarvinSketch",
                 "ketcher-demo",
-                "dia",
+                "org.gnome.Dia",
                 "mousepad",
                 "libreoffice-writer",
                 "libreoffice-calc",
@@ -1861,6 +1864,7 @@
                 "com.obsproject.Studio",
                 "org.openshot.OpenShot",
                 "org.kde.kdenlive",
+                "kdenlive-appimage",
                 "org.pitivi.Pitivi",
                 "org.shotcut.Shotcut",
                 "solfege",
@@ -2403,7 +2407,7 @@
                 "openboard",
                 "clevertouch-lynx",
                 "primusclient",
-                "dia",
+                "org.gnome.Dia",
                 "tilitin",
                 "t-lasku"
             ]

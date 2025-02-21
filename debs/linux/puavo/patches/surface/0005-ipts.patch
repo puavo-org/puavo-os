@@ -1,6 +1,6 @@
 diff -ruN linux.orig/drivers/hid/ipts/cmd.c linux/drivers/hid/ipts/cmd.c
 --- linux.orig/drivers/hid/ipts/cmd.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/cmd.c	2024-12-02 12:22:31.302294948 +0200
++++ linux/drivers/hid/ipts/cmd.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,61 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -65,7 +65,7 @@ diff -ruN linux.orig/drivers/hid/ipts/cmd.c linux/drivers/hid/ipts/cmd.c
 +}
 diff -ruN linux.orig/drivers/hid/ipts/cmd.h linux/drivers/hid/ipts/cmd.h
 --- linux.orig/drivers/hid/ipts/cmd.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/cmd.h	2024-12-02 12:22:31.302294948 +0200
++++ linux/drivers/hid/ipts/cmd.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,60 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -129,7 +129,7 @@ diff -ruN linux.orig/drivers/hid/ipts/cmd.h linux/drivers/hid/ipts/cmd.h
 +#endif /* IPTS_CMD_H */
 diff -ruN linux.orig/drivers/hid/ipts/context.h linux/drivers/hid/ipts/context.h
 --- linux.orig/drivers/hid/ipts/context.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/context.h	2024-12-02 12:22:31.302294948 +0200
++++ linux/drivers/hid/ipts/context.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,52 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -185,7 +185,7 @@ diff -ruN linux.orig/drivers/hid/ipts/context.h linux/drivers/hid/ipts/context.h
 +#endif /* IPTS_CONTEXT_H */
 diff -ruN linux.orig/drivers/hid/ipts/control.c linux/drivers/hid/ipts/control.c
 --- linux.orig/drivers/hid/ipts/control.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/control.c	2024-12-02 12:22:31.302294948 +0200
++++ linux/drivers/hid/ipts/control.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,486 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -675,7 +675,7 @@ diff -ruN linux.orig/drivers/hid/ipts/control.c linux/drivers/hid/ipts/control.c
 +}
 diff -ruN linux.orig/drivers/hid/ipts/control.h linux/drivers/hid/ipts/control.h
 --- linux.orig/drivers/hid/ipts/control.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/control.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/control.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,126 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -805,7 +805,7 @@ diff -ruN linux.orig/drivers/hid/ipts/control.h linux/drivers/hid/ipts/control.h
 +#endif /* IPTS_CONTROL_H */
 diff -ruN linux.orig/drivers/hid/ipts/desc.h linux/drivers/hid/ipts/desc.h
 --- linux.orig/drivers/hid/ipts/desc.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/desc.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/desc.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,80 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -889,7 +889,7 @@ diff -ruN linux.orig/drivers/hid/ipts/desc.h linux/drivers/hid/ipts/desc.h
 +#endif /* IPTS_DESC_H */
 diff -ruN linux.orig/drivers/hid/ipts/eds1.c linux/drivers/hid/ipts/eds1.c
 --- linux.orig/drivers/hid/ipts/eds1.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/eds1.c	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/eds1.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,104 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -997,7 +997,7 @@ diff -ruN linux.orig/drivers/hid/ipts/eds1.c linux/drivers/hid/ipts/eds1.c
 +}
 diff -ruN linux.orig/drivers/hid/ipts/eds1.h linux/drivers/hid/ipts/eds1.h
 --- linux.orig/drivers/hid/ipts/eds1.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/eds1.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/eds1.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,35 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1036,7 +1036,7 @@ diff -ruN linux.orig/drivers/hid/ipts/eds1.h linux/drivers/hid/ipts/eds1.h
 +			  enum hid_report_type report_type, enum hid_class_request request_type);
 diff -ruN linux.orig/drivers/hid/ipts/eds2.c linux/drivers/hid/ipts/eds2.c
 --- linux.orig/drivers/hid/ipts/eds2.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/eds2.c	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/eds2.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,145 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1185,7 +1185,7 @@ diff -ruN linux.orig/drivers/hid/ipts/eds2.c linux/drivers/hid/ipts/eds2.c
 +}
 diff -ruN linux.orig/drivers/hid/ipts/eds2.h linux/drivers/hid/ipts/eds2.h
 --- linux.orig/drivers/hid/ipts/eds2.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/eds2.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/eds2.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,35 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1224,7 +1224,7 @@ diff -ruN linux.orig/drivers/hid/ipts/eds2.h linux/drivers/hid/ipts/eds2.h
 +			  enum hid_report_type report_type, enum hid_class_request request_type);
 diff -ruN linux.orig/drivers/hid/ipts/hid.c linux/drivers/hid/ipts/hid.c
 --- linux.orig/drivers/hid/ipts/hid.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/hid.c	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/hid.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,225 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1453,7 +1453,7 @@ diff -ruN linux.orig/drivers/hid/ipts/hid.c linux/drivers/hid/ipts/hid.c
 +}
 diff -ruN linux.orig/drivers/hid/ipts/hid.h linux/drivers/hid/ipts/hid.h
 --- linux.orig/drivers/hid/ipts/hid.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/hid.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/hid.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,24 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -1481,7 +1481,7 @@ diff -ruN linux.orig/drivers/hid/ipts/hid.h linux/drivers/hid/ipts/hid.h
 +#endif /* IPTS_HID_H */
 diff -ruN linux.orig/drivers/hid/ipts/Kconfig linux/drivers/hid/ipts/Kconfig
 --- linux.orig/drivers/hid/ipts/Kconfig	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/Kconfig	2024-12-02 12:22:31.302294948 +0200
++++ linux/drivers/hid/ipts/Kconfig	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,14 @@
 +# SPDX-License-Identifier: GPL-2.0-or-later
 +
@@ -1499,7 +1499,7 @@ diff -ruN linux.orig/drivers/hid/ipts/Kconfig linux/drivers/hid/ipts/Kconfig
 +	  module will be called ipts.
 diff -ruN linux.orig/drivers/hid/ipts/main.c linux/drivers/hid/ipts/main.c
 --- linux.orig/drivers/hid/ipts/main.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/main.c	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/main.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,126 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1629,7 +1629,7 @@ diff -ruN linux.orig/drivers/hid/ipts/main.c linux/drivers/hid/ipts/main.c
 +MODULE_LICENSE("GPL");
 diff -ruN linux.orig/drivers/hid/ipts/Makefile linux/drivers/hid/ipts/Makefile
 --- linux.orig/drivers/hid/ipts/Makefile	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/Makefile	2024-12-02 12:22:31.302294948 +0200
++++ linux/drivers/hid/ipts/Makefile	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,16 @@
 +# SPDX-License-Identifier: GPL-2.0-or-later
 +#
@@ -1649,7 +1649,7 @@ diff -ruN linux.orig/drivers/hid/ipts/Makefile linux/drivers/hid/ipts/Makefile
 +ipts-objs += thread.o
 diff -ruN linux.orig/drivers/hid/ipts/mei.c linux/drivers/hid/ipts/mei.c
 --- linux.orig/drivers/hid/ipts/mei.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/mei.c	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/mei.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,188 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -1841,7 +1841,7 @@ diff -ruN linux.orig/drivers/hid/ipts/mei.c linux/drivers/hid/ipts/mei.c
 +}
 diff -ruN linux.orig/drivers/hid/ipts/mei.h linux/drivers/hid/ipts/mei.h
 --- linux.orig/drivers/hid/ipts/mei.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/mei.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/mei.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,66 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -1911,7 +1911,7 @@ diff -ruN linux.orig/drivers/hid/ipts/mei.h linux/drivers/hid/ipts/mei.h
 +#endif /* IPTS_MEI_H */
 diff -ruN linux.orig/drivers/hid/ipts/receiver.c linux/drivers/hid/ipts/receiver.c
 --- linux.orig/drivers/hid/ipts/receiver.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/receiver.c	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/receiver.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,251 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -2166,7 +2166,7 @@ diff -ruN linux.orig/drivers/hid/ipts/receiver.c linux/drivers/hid/ipts/receiver
 +}
 diff -ruN linux.orig/drivers/hid/ipts/receiver.h linux/drivers/hid/ipts/receiver.h
 --- linux.orig/drivers/hid/ipts/receiver.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/receiver.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/receiver.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,16 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2186,7 +2186,7 @@ diff -ruN linux.orig/drivers/hid/ipts/receiver.h linux/drivers/hid/ipts/receiver
 +#endif /* IPTS_RECEIVER_H */
 diff -ruN linux.orig/drivers/hid/ipts/resources.c linux/drivers/hid/ipts/resources.c
 --- linux.orig/drivers/hid/ipts/resources.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/resources.c	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/resources.c	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,131 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -2321,7 +2321,7 @@ diff -ruN linux.orig/drivers/hid/ipts/resources.c linux/drivers/hid/ipts/resourc
 +}
 diff -ruN linux.orig/drivers/hid/ipts/resources.h linux/drivers/hid/ipts/resources.h
 --- linux.orig/drivers/hid/ipts/resources.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/resources.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/resources.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,41 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2366,7 +2366,7 @@ diff -ruN linux.orig/drivers/hid/ipts/resources.h linux/drivers/hid/ipts/resourc
 +#endif /* IPTS_RESOURCES_H */
 diff -ruN linux.orig/drivers/hid/ipts/spec-data.h linux/drivers/hid/ipts/spec-data.h
 --- linux.orig/drivers/hid/ipts/spec-data.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/spec-data.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/spec-data.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,100 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2470,7 +2470,7 @@ diff -ruN linux.orig/drivers/hid/ipts/spec-data.h linux/drivers/hid/ipts/spec-da
 +#endif /* IPTS_SPEC_DATA_H */
 diff -ruN linux.orig/drivers/hid/ipts/spec-device.h linux/drivers/hid/ipts/spec-device.h
 --- linux.orig/drivers/hid/ipts/spec-device.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/spec-device.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/spec-device.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,290 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2764,7 +2764,7 @@ diff -ruN linux.orig/drivers/hid/ipts/spec-device.h linux/drivers/hid/ipts/spec-
 +#endif /* IPTS_SPEC_DEVICE_H */
 diff -ruN linux.orig/drivers/hid/ipts/spec-hid.h linux/drivers/hid/ipts/spec-hid.h
 --- linux.orig/drivers/hid/ipts/spec-hid.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/spec-hid.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/spec-hid.h	2025-02-20 09:23:55.657034624 +0200
 @@ -0,0 +1,34 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2802,7 +2802,7 @@ diff -ruN linux.orig/drivers/hid/ipts/spec-hid.h linux/drivers/hid/ipts/spec-hid
 +#endif /* IPTS_SPEC_HID_H */
 diff -ruN linux.orig/drivers/hid/ipts/thread.c linux/drivers/hid/ipts/thread.c
 --- linux.orig/drivers/hid/ipts/thread.c	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/thread.c	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/thread.c	2025-02-20 09:23:55.661034625 +0200
 @@ -0,0 +1,84 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -2890,7 +2890,7 @@ diff -ruN linux.orig/drivers/hid/ipts/thread.c linux/drivers/hid/ipts/thread.c
 +}
 diff -ruN linux.orig/drivers/hid/ipts/thread.h linux/drivers/hid/ipts/thread.h
 --- linux.orig/drivers/hid/ipts/thread.h	1970-01-01 02:00:00.000000000 +0200
-+++ linux/drivers/hid/ipts/thread.h	2024-12-02 12:22:31.306294948 +0200
++++ linux/drivers/hid/ipts/thread.h	2025-02-20 09:23:55.661034625 +0200
 @@ -0,0 +1,59 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
@@ -2952,9 +2952,9 @@ diff -ruN linux.orig/drivers/hid/ipts/thread.h linux/drivers/hid/ipts/thread.h
 +
 +#endif /* IPTS_THREAD_H */
 diff -ruN linux.orig/drivers/hid/Kconfig linux/drivers/hid/Kconfig
---- linux.orig/drivers/hid/Kconfig	2024-10-22 16:51:37.000000000 +0300
-+++ linux/drivers/hid/Kconfig	2024-12-02 12:22:31.302294948 +0200
-@@ -1367,4 +1367,6 @@
+--- linux.orig/drivers/hid/Kconfig	2025-01-09 14:33:55.000000000 +0200
++++ linux/drivers/hid/Kconfig	2025-02-20 09:23:55.657034624 +0200
+@@ -1373,4 +1373,6 @@
  
  source "drivers/hid/surface-hid/Kconfig"
  
@@ -2962,17 +2962,17 @@ diff -ruN linux.orig/drivers/hid/Kconfig linux/drivers/hid/Kconfig
 +
  endif # HID_SUPPORT
 diff -ruN linux.orig/drivers/hid/Makefile linux/drivers/hid/Makefile
---- linux.orig/drivers/hid/Makefile	2024-10-22 16:51:37.000000000 +0300
-+++ linux/drivers/hid/Makefile	2024-12-02 12:22:31.302294948 +0200
-@@ -169,3 +169,5 @@
+--- linux.orig/drivers/hid/Makefile	2025-01-09 14:33:55.000000000 +0200
++++ linux/drivers/hid/Makefile	2025-02-20 09:23:55.657034624 +0200
+@@ -170,3 +170,5 @@
  obj-$(CONFIG_AMD_SFH_HID)       += amd-sfh-hid/
  
  obj-$(CONFIG_SURFACE_HID_CORE)  += surface-hid/
 +
 +obj-$(CONFIG_HID_IPTS)          += ipts/
 diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu.c
---- linux.orig/drivers/iommu/intel/iommu.c	2024-12-02 12:21:51.000000000 +0200
-+++ linux/drivers/iommu/intel/iommu.c	2024-12-02 12:23:28.054296569 +0200
+--- linux.orig/drivers/iommu/intel/iommu.c	2025-02-20 09:21:44.000000000 +0200
++++ linux/drivers/iommu/intel/iommu.c	2025-02-20 09:24:40.265036752 +0200
 @@ -43,6 +43,11 @@
  #define IS_ISA_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_BRIDGE_ISA)
  #define IS_AZALIA(pdev) ((pdev)->vendor == 0x8086 && (pdev)->device == 0x3a3e)
@@ -2985,7 +2985,7 @@ diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu
  #define IOAPIC_RANGE_START	(0xfee00000)
  #define IOAPIC_RANGE_END	(0xfeefffff)
  #define IOVA_START_ADDR		(0x1000)
-@@ -221,6 +226,7 @@
+@@ -212,6 +217,7 @@
  EXPORT_SYMBOL_GPL(intel_iommu_enabled);
  
  static int dmar_map_intgpu = IS_ENABLED(CONFIG_INTEL_IOMMU_DEFAULT_ON);
@@ -2993,7 +2993,7 @@ diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu
  static int intel_iommu_superpage = 1;
  static int iommu_identity_mapping;
  static int iommu_skip_te_disable;
-@@ -228,6 +234,7 @@
+@@ -219,6 +225,7 @@
  
  #define IDENTMAP_AZALIA		4
  #define IDENTMAP_INTGPU		8
@@ -3001,7 +3001,7 @@ diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu
  
  const struct iommu_ops intel_iommu_ops;
  static const struct iommu_dirty_ops intel_dirty_ops;
-@@ -2168,6 +2175,9 @@
+@@ -2058,6 +2065,9 @@
  
  		if ((iommu_identity_mapping & IDENTMAP_INTGPU) && IS_INTGPU_DEVICE(pdev))
  			return IOMMU_DOMAIN_IDENTITY;
@@ -3011,7 +3011,7 @@ diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu
  	}
  
  	return 0;
-@@ -2471,6 +2481,9 @@
+@@ -2359,6 +2369,9 @@
  	if (!dmar_map_intgpu)
  		iommu_identity_mapping |= IDENTMAP_INTGPU;
  
@@ -3020,8 +3020,8 @@ diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu
 +
  	check_tylersburg_isoch();
  
- 	ret = si_domain_init(hw_pass_through);
-@@ -4716,6 +4729,18 @@
+ 	/*
+@@ -4666,6 +4679,18 @@
  	disable_igfx_iommu = 1;
  }
  
@@ -3040,7 +3040,7 @@ diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu
  /* G4x/GM45 integrated gfx dmar support is totally busted. */
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
-@@ -4751,6 +4776,10 @@
+@@ -4701,6 +4726,10 @@
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163A, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
  
@@ -3052,8 +3052,8 @@ diff -ruN linux.orig/drivers/iommu/intel/iommu.c linux/drivers/iommu/intel/iommu
  {
  	if (risky_device(dev))
 diff -ruN linux.orig/drivers/misc/mei/hw-me-regs.h linux/drivers/misc/mei/hw-me-regs.h
---- linux.orig/drivers/misc/mei/hw-me-regs.h	2024-10-22 16:51:37.000000000 +0300
-+++ linux/drivers/misc/mei/hw-me-regs.h	2024-12-02 12:22:31.302294948 +0200
+--- linux.orig/drivers/misc/mei/hw-me-regs.h	2025-01-09 14:33:55.000000000 +0200
++++ linux/drivers/misc/mei/hw-me-regs.h	2025-02-20 09:23:55.653034624 +0200
 @@ -92,6 +92,7 @@
  #define MEI_DEV_ID_CDF        0x18D3  /* Cedar Fork */
  
@@ -3063,8 +3063,8 @@ diff -ruN linux.orig/drivers/misc/mei/hw-me-regs.h linux/drivers/misc/mei/hw-me-
  
  #define MEI_DEV_ID_JSP_N      0x4DE0  /* Jasper Lake Point N */
 diff -ruN linux.orig/drivers/misc/mei/pci-me.c linux/drivers/misc/mei/pci-me.c
---- linux.orig/drivers/misc/mei/pci-me.c	2024-10-22 16:51:37.000000000 +0300
-+++ linux/drivers/misc/mei/pci-me.c	2024-12-02 12:22:31.302294948 +0200
+--- linux.orig/drivers/misc/mei/pci-me.c	2025-01-09 14:33:55.000000000 +0200
++++ linux/drivers/misc/mei/pci-me.c	2025-02-20 09:23:55.653034624 +0200
 @@ -97,6 +97,7 @@
  	{MEI_PCI_DEVICE(MEI_DEV_ID_CMP_H_3, MEI_ME_PCH8_ITOUCH_CFG)},
  
