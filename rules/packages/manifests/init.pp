@@ -137,8 +137,7 @@ class packages {
     , 'iperf'
     , 'jc'
     , 'jq'
-    # , 'libstdc++5'                    # XXX missing from Trixie
-    # , 'linssid'                       # XXX missing from Trixie
+    , 'linssid'
     , 'lm-sensors'
     , 'lshw'
     , 'lsof'
@@ -158,7 +157,7 @@ class packages {
     , 'pv'
     , 'pwgen'
     , 'pwman3'
-    # , 'read-edid'             # XXX missing from Trixie
+    , 'read-edid'
     , 'rsnapshot'
     , 'rsyslog'
     , 'ruby-eventmachine'
@@ -205,8 +204,8 @@ class packages {
     # , 'mumble'                # XXX missing from Trixie
     , 'pavucontrol'
     # , 'pavumeter'             # XXX missing from Trixie
-    # , 'qstopmotion'           # XXX missing from Trixie
-    # , 'shotcut'               # XXX missing from Trixie
+    , 'qstopmotion'
+    , 'shotcut'
     , 'simplescreenrecorder'
     , 'timidity'
     , 'vorbis-tools' ]:
@@ -222,7 +221,6 @@ class packages {
     , 'grub-pc'
     , 'grub-pc-bin'
     , 'ksh'
-    # , 'libgconf-2-4'   # XXX missing from Trixie, needed by mattermost-desktop
     , 'libglib2.0-bin'
     , 'libjffi-jni'    # needed by cryptomator
     , 'libpam-ccreds'
@@ -288,7 +286,7 @@ class packages {
     , 'kernel-wedge'
     , 'manpages-dev'
     , 'perl-doc'
-    # , 'pinfo'                 # XXX missing from Trixie
+    , 'pinfo'
     , 'python3-pydantic'
     , 'shellcheck'
     , 'sloccount'
@@ -321,9 +319,9 @@ class packages {
     # , 'virtualbox-guest-x11'          # XXX missing from Trixie
     # , 'virtualbox-qt'                 # XXX missing from Trixie
     , 'vkd3d-compiler'
-    # , 'wine-devel'            # XXX missing from Trixie
-    # , 'wine-devel-amd64'      # XXX missing from Trixie
-    # , 'winehq-devel'          # XXX missing from Trixie
+    # , 'wine-devel'                    # XXX missing from Trixie
+    # , 'wine-devel-amd64'              # XXX missing from Trixie
+    # , 'winehq-devel'                  # XXX missing from Trixie
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
@@ -332,8 +330,6 @@ class packages {
     , 'firmware-b43legacy-installer'
     , 'firmware-linux-free'
     # , 'firmware-microbit-micropython' # XXX missing from Trixie
-    # , 'firmware-tomu'                 # XXX missing from Trixie
-    # , 'hdmi2usb-fx2-firmware'         # XXX missing from Trixie
     , 'isight-firmware-tools'
     , 'iucode-tool'
     , 'sigrok-firmware-fx2lafw' ]:
@@ -357,7 +353,7 @@ class packages {
     , 'gcompris-qt'
     , 'gnome-games'
     , 'gnubg'
-    # , 'gnuchess'                              # XXX missing from Trixie
+    , 'gnuchess'
     , 'khangman'
     , 'ktouch'
     , 'kwordquiz'
@@ -367,9 +363,9 @@ class packages {
     # , 'openttd'                               # XXX missing from Trixie
     , 'qml-module-qtquick-dialogs'	        # needed by teamviewer
     , 'qml-module-qtquick-privatewidgets'	# needed by teamviewer
-    # , 'tuxmath'                               # XXX missing from Trixie
-    # , 'tuxpaint'                              # XXX missing from Trixie
-    # , 'tuxpaint-stamps-default'               # XXX missing from Trixie
+    , 'tuxmath'
+    , 'tuxpaint'
+    , 'tuxpaint-stamps-default'
     , 'xmoto' ]:
       tag => [ 'tag_games', 'tag_debian_desktop', ];
 
@@ -380,15 +376,15 @@ class packages {
     , 'notification-daemon' ]:
       tag => [ 'tag_gnome', 'tag_debian_desktop', ];
 
-    # [ 'blender'               # XXX missing from Trixie
-    [ 'breeze-icon-theme'	# wanted (not required) by kdenlive
+    [ 'blender'
+    , 'breeze-icon-theme'	# wanted (not required) by kdenlive
     , 'dia'
     , 'dvgrab'
     , 'feh'
     , 'freecad'
     , 'geeqie'
-    # , 'gimp'                  # XXX missing from Trixie
-    # , 'gimp-data-extras'      # XXX missing from Trixie
+    , 'gimp'                  # XXX missing from Trixie
+    , 'gimp-data-extras'      # XXX missing from Trixie
     # , 'gimp-plugin-registry'  # XXX missing from Trixie
     , 'godot3'
     , 'gthumb'
@@ -410,9 +406,9 @@ class packages {
     , 'pencil2d'
     , 'pitivi'
     , 'python3-lxml'
-    , 'sane-utils' ]:
-    # , 'view3dscene' ]:        # XXX missing from Trixie
-    # , 'xsane' ]:              # XXX missing from Trixie
+    , 'sane-utils'
+    , 'view3dscene'
+    , 'xsane' ]:
       tag => [ 'tag_graphics', 'tag_debian_desktop', ];
 
     [ 'irssi'
@@ -435,9 +431,9 @@ class packages {
     , 'libgail-3-dev'
     , 'libgtk2.0-dev'           # needed by lazarus-ide puavo-pkg
     , 'libgtk-3-dev'
-    , 'libgtk-4-dev' ]:
+    , 'libgtk-4-dev'
+    , 'libmutter-15-dev' ]:
       tag => [ 'tag_lib_devel', 'tag_debian_desktop', ];
-    # , 'libmutter-11-dev'              # XXX missing from Trixie
     # , 'libopenwsman-dev' ]:           # XXX missing from Trixie
     # , 'libwsman-clientpp-dev' ]:      # XXX missing from Trixie
 
@@ -470,7 +466,7 @@ class packages {
     , 'lmms'
     , 'qsynth'
     , 'rosegarden'
-    # , 'solfege'                       # XXX missing from Trixie
+    , 'solfege'
     , 'soundconverter'
     , 'tuxguitar' ]:
       tag => [ 'tag_music_making', 'tag_debian_desktop', ];
@@ -517,7 +513,7 @@ class packages {
     , 'gcc-avr'
     , 'geany'
     , 'idle'
-    # , 'idle-python3.11'               # XXX missing from Trixie
+    , 'idle-python3.13'
     , 'kturtle'
     , 'lokalize'
     , 'meld'
@@ -635,9 +631,7 @@ class packages {
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
-    # , 'gnome-shell-extension-bluetooth-quick-connect' # XXX missing from Trixie
     , 'gnome-sushi'
-    # , 'gnome-system-log'              # XXX missing from Trixie
     , 'gnome-system-monitor'
     , 'gnome-terminal'
     , 'gnome-themes-extra'
@@ -651,7 +645,7 @@ class packages {
     , 'gstreamer1.0-pulseaudio'
     , 'gucharmap'
     , 'gvfs-fuse'
-    # , 'hplip'                         # XXX missing from Trixie
+    , 'hplip'
     , 'hunspell-en-us'
     , 'ibus'
     , 'ibus-anthy'
@@ -667,7 +661,7 @@ class packages {
     , 'libcamera-ipa'
     , 'libcamera-tools'
     , 'libcamera-v4l2'
-    # , 'libcamera0.0.3'                # XXX missing from Trixie
+    , 'libcamera0.4'
     , 'libgail-common'
     , 'libnotify-bin'
     , 'libnss-extrausers'
@@ -707,7 +701,7 @@ class packages {
     , 'printer-driver-cups-pdf'
     , 'printer-driver-foo2zjs'
     # , 'printer-driver-gutenprint'             # XXX missing from Trixie
-    # , 'printer-driver-hpijs'                  # XXX missing from Trixie
+    , 'printer-driver-hpijs'
     , 'printer-driver-min12xxw'
     , 'printer-driver-pnm2ppa'
     , 'printer-driver-ptouch'
@@ -746,7 +740,6 @@ class packages {
     , 'yelp'
     , 'yelp-tools'
     , 'yelp-xsl'
-    # , 'youtube-dl'                            # XXX missing from Trixie
     , 'zenity'
     , 'zip' ]:
       tag => [ 'tag_gnome_desktop', 'tag_debian_desktop', ];
