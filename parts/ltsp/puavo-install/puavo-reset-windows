@@ -526,7 +526,7 @@ get_wim_catalogue()
   for url in $wim_image_source_urls; do
     if ! wget_with_certauth -q \
          --output-document "$wim_gpg_tmppath" "$url"; then
-      echo "error fetching $url" >&2
+      logwarning "error fetching ${url}"
       continue
     fi
 
@@ -534,7 +534,7 @@ get_wim_catalogue()
     gnupg_dir="/root/.puavo/gnupg/${wim_server}/wim"
     if ! gpg --decrypt --homedir "$gnupg_dir" "$wim_gpg_tmppath" \
          2>/dev/null > "$wim_tmppath"; then
-      echo "GPG verification failed for ${url}" >&2
+      logwarning "GPG verification failed for ${url}"
       continue
     fi
 
@@ -543,7 +543,7 @@ get_wim_catalogue()
     return 0
   done
 
-  echo 'could not fetch any source in puavo.windows.image.sources' >&2
+  logerr 'could not fetch any source in puavo.windows.image.sources'
   return 1
 }
 
