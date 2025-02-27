@@ -63,7 +63,11 @@ done
 puavo_domain=$(cat /etc/puavo/domain)
 
 lookup_puavo_apiserver() {
-  cert_version=$(puavo-conf puavo.admin.certs.versions | awk '{ print $1 }')
+  if [ -n "${PUAVO_CERT_VERSION:-}" ]; then
+    cert_version="$PUAVO_CERT_VERSION"
+  else
+    cert_version=$(puavo-conf puavo.admin.certs.versions | awk '{ print $1 }')
+  fi
 
   host -t SRV -W 1 "_puavo-api_${cert_version}._tcp.${puavo_domain}" \
     | awk -v puavo_domain="$puavo_domain" '

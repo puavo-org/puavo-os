@@ -2,8 +2,19 @@
 
 set -eu
 
-mkdir -p /etc/puavo
+for x in $(cat /proc/cmdline); do
+  case "$x" in
+    puavo.hosttype=*)
+      puavo_hosttype="${x#puavo.hosttype=}"
+      break
+      ;;
+  esac
+done
 
-# XXX get rid of hosttype handling?
-# (this is still needed by some old code)
-puavo-conf puavo.hosttype > /etc/puavo/hosttype
+if [ -z "$puavo_hosttype" ]; then
+  echo 'puavo hosttype not set, that is bad' >&2
+  exit 1
+fi
+
+mkdir -p /etc/puavo
+printf "%s\n" "$puavo_hosttype" > /etc/puavo/hosttype

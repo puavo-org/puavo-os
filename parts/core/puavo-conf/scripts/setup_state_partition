@@ -88,7 +88,8 @@ mountpoint -q /state || exit 0
 
 status=0
 
-case "$(puavo-conf puavo.hosttype)" in
+read puavo_hosttype < /etc/puavo/hosttype
+case "$puavo_hosttype" in
   bootserver)
     statedirlist='
       /etc/ldap/slapd.d
@@ -145,9 +146,13 @@ done
 
 puavo_setup_cups_dir || status=1
 
-if [ "$(puavo-conf puavo.admin.persistent_homedirs)" = 'true' ]; then
-  puavo_setup_admins || status=1
-fi
+for x in $(cat /proc/cmdline); do
+  case "$x" in
+    puavo.admin.persistent_homedirs=true)
+      puavo_setup_admins || status=1
+      ;;
+  esac
+done
 
 # clean up old systemd-journald files
 rm -rf /var/log/journal || status=1

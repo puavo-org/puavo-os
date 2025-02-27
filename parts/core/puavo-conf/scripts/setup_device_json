@@ -9,7 +9,17 @@ test -e /run/puavo/nbd-server || exit 0
 
 status=0
 
-url="$(puavo-resolve-api-server --no-cloud-fallback)/v3/devices/$(hostname -s)"
+# XXX we could also figure this out from another source?
+# XXX could this be asked from the boot server maybe?
+PUAVO_CERT_VERSION=$(jq -r '.["puavo.admin.certs.versions"]' \
+                       /etc/puavo-conf/image.json | awk '{ print $1 }')
+if [ -z "$PUAVO_CERT_VERSION" ]; then
+  echo 'could not figure out the admin cert version' >&2
+  exit 1
+fi
+
+url="$(env PUAVO_CERT_VERSION="$PUAVO_CERT_VERSION" \
+         puavo-resolve-api-server --no-cloud-fallback)/v3/devices/$(hostname -s)"
 
 # Get device settings.
 # Set --max-time to 30 seconds to allow the boot to continue in case of

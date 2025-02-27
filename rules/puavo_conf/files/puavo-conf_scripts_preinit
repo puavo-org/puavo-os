@@ -2,14 +2,14 @@ add_entropy
 set_puavo_hosttype
 mount_local_partitions
 setup_state_partition
+setup_resolv_conf_and_etc_puavo
+setup_device_json
+update_puavoconf_values
 setup_certs
 correct_file_ownership
 handle_utmp_logs
-setup_resolv_conf_and_etc_puavo
 setup_hostname
 sync_clock_from_server
-setup_device_json
-update_puavoconf_values
 map_special_puavoconf_values
 setup_cron
 setup_graphics_drivers

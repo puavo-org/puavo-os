@@ -59,8 +59,7 @@ puavo_mount_partition() {
   mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
 }
 
-# get rid of hosttype handling?
-puavo_hosttype=$(puavo-conf puavo.hosttype)
+read puavo_hosttype < /etc/puavo/hosttype
 
 case "$puavo_hosttype" in
   diskinstaller)
