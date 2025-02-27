@@ -39,27 +39,6 @@ copy_exec /sbin/fsck.ext4
 copy_exec /sbin/logsave
 
 #
-# puavo-conf
-#
-
-mkdir -p ${DESTDIR}/etc/puavo-conf/ \
-         ${DESTDIR}/usr/bin/        \
-         ${DESTDIR}/usr/sbin/       \
-         ${DESTDIR}/usr/share/
-
-cp -p /etc/puavo-conf/image.json ${DESTDIR}/etc/puavo-conf/
-
-copy_exec /usr/bin/lspci              /usr/bin
-copy_exec /usr/bin/lsusb              /usr/bin
-copy_exec /usr/bin/puavo-conf         /usr/bin
-copy_exec /usr/sbin/dmidecode         /usr/sbin
-copy_exec /usr/sbin/puavo-conf-update /usr/sbin
-
-cp -a /usr/share/puavo-conf ${DESTDIR}/usr/share/
-
-ln -s libpuavoconf.so.0 ${DESTDIR}/usr/lib/libpuavoconf.so
-
-#
 # nvidia graphics drivers
 #
 

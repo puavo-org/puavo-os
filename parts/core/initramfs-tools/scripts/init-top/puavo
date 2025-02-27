@@ -21,15 +21,38 @@ fi
 
 mkdir -p /run/puavo
 
+puavo_boot_plymouth_theme=''
+puavo_graphics_driver=''
+puavo_kernel_modules_blacklist=''
+puavo_pm_display_drrs_enabled=''
+puavo_wireless_broadcom_driver=''
+
 exec > /run/puavo/initrd.log 2>&1
 
-puavo-conf-update --init --verbose
-
-# apply kernel module configurations based on puavo-conf here
+# check out special puavo.* kernel command line options
+# that need (may need?) actions on the initrd-phase
+for x in $(cat /proc/cmdline); do
+    case "$x" in
+        puavo.boot.plymouth.theme=*)
+            puavo_boot_plymouth_theme="${x#puavo.boot.plymouth.theme=}"
+            ;;
+        puavo.graphics.driver=*)
+            puavo_graphics_driver="${x#puavo.graphics.driver=}"
+            ;;
+        puavo.kernel.modules.blacklist=*)
+            puavo_kernel_modules_blacklist="${x#puavo.kernel.modules.blacklist=}"
+            ;;
+        puavo.pm.display.drrs.enabled=*)
+            puavo_pm_display_drrs_enabled="${x#puavo.pm.display.drrs.enabled=}"
+            ;;
+        puavo.wireless.broadcom.driver=*)
+            puavo_wireless_broadcom_driver="${x#puavo.wireless.broadcom.driver=}"
+            ;;
+    esac
+done
 
 puavo_nvidia_driver=
-
-case "$(puavo-conf puavo.graphics.driver)" in
+case "$puavo_graphics_driver" in
   nvidia)
     puavo_nvidia_driver=current
     ;;
@@ -78,14 +101,11 @@ fi
 
 # Set kernel module blacklists.
 # This is similar to /etc/puavo-conf/scripts/manage_module_blacklist.
-
 r8169_blacklisted=false
-
-puavo_blacklist=$(puavo-conf puavo.kernel.modules.blacklist)
-if [ -n "$puavo_blacklist" ]; then
+if [ -n "$puavo_kernel_modules_blacklist" ]; then
   OLDIFS="$IFS"
   IFS=','
-  for module in $puavo_blacklist; do
+  for module in $puavo_kernel_modules_blacklist; do
     echo "blacklist $module" >> /etc/modprobe.d/blacklist-by-puavo-conf.conf
     if [ "$module" = 'r8169' ]; then
       r8169_blacklisted=true
@@ -94,13 +114,12 @@ if [ -n "$puavo_blacklist" ]; then
   IFS="$OLDIFS"
 fi
 
-if [ "$(puavo-conf puavo.pm.display.drrs.enabled)" != 'true' ]; then
+if [ "$puavo_pm_display_drrs_enabled" = 'false' ]; then
   echo 'applying enable_drrs=0 option to i915-module'
   echo 'options i915 enable_drrs=0' > /etc/modprobe.d/i915_disable_drrs.conf
 fi
 
 # duplicate code with /etc/puavo-conf/scripts/manage_module_blacklist
-puavo_wireless_broadcom_driver=$(puavo-conf puavo.wireless.broadcom.driver)
 case "$puavo_wireless_broadcom_driver" in
   b43)       blacklist_broadcom_modules='    b43legacy b44 brcmsmac wl' ;;
   b43legacy) blacklist_broadcom_modules='b43           b44 brcmsmac wl' ;;
@@ -113,11 +132,10 @@ for broadcom_module in $blacklist_broadcom_modules; do
   echo "blacklist $broadcom_module"
 done > /etc/modprobe.d/broadcom-sta-dkms.conf
 
-plymouth_theme=$(puavo-conf puavo.boot.plymouth.theme)
-if [ -n "$plymouth_theme" ]; then
+if [ -n "$puavo_boot_plymouth_theme" ]; then
   cat <<EOF > /etc/plymouth/plymouthd.conf
 [Daemon]
-Theme=${plymouth_theme}
+Theme=${puavo_boot_plymouth_theme}
 EOF
 fi
 
