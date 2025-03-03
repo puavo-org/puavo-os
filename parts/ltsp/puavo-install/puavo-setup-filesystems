@@ -6,6 +6,8 @@ require 'fileutils'
 require 'getoptlong'
 require 'highline/import'
 require 'open3'
+require 'securerandom'
+require 'tempfile'
 
 GPT_PARTTYPE_EFI   = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
 GPT_PARTTYPE_LINUX = '4f68bce3-e8cd-4db1-96e7-fbcaf984b709'
@@ -46,6 +48,137 @@ module PuavoFacts
   end
 end
 
+class LuksEnrollmentPolicy
+  # The format of these arguments follow the systemd-cryptenroll specifications.
+  # See "man systemd-cryptenroll" or "https://www.freedesktop.org/software/systemd/man/latest/systemd-cryptenroll.html".
+  attr_accessor :specific_pcrs, :public_key_pcrs, :public_key_path
+
+  def initialize(specific_pcrs, public_key_pcrs, public_key_path)
+    @specific_pcrs = specific_pcrs
+    @public_key_pcrs = public_key_pcrs
+    @public_key_path = public_key_path
+  end
+
+  def arguments()
+    specific_pcrs_option_value = @specific_pcrs.join("+")
+    public_key_pcrs_option_value = @public_key_pcrs.join("+")
+
+    [
+      "--tpm2-device=auto",
+      "--tpm2-pcrs=#{ specific_pcrs_option_value }",
+      "--tpm2-public-key-pcrs=#{ public_key_pcrs_option_value }",
+      "--tpm2-public-key=#{ public_key_path }"
+    ]
+  end
+end
+
+class LuksPartitionHandler
+  attr_accessor :partition, :encryption_device_name, :policy
+
+  def initialize(partition, encryption_device_name, policy)
+    @partition = partition
+    @encryption_device_name = encryption_device_name
+    @policy = policy
+  end
+
+  # Todo: Duplicated
+  def run(*cmd)
+    system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
+  end
+
+  def encryption_device()
+    "/dev/mapper/#{ @encryption_device_name }"
+  end
+
+  def generate_recovery_key()
+    SecureRandom.gen_random(64)
+  end
+
+  def enroll_with_recovery_key(recovery_key)
+    command = [ 'systemd-cryptenroll' ]
+    command += @policy.arguments
+    command += [ "--key-key=#{ recovery_key }", "/dev/#{ @partition }" ]
+
+    # Todo: Remove
+    puts command.join(' ')
+
+    self.run(*command)
+  end
+
+  def enroll_with_passphrase(passphrase)
+    command = [ 'systemd-cryptenroll' ]
+    command += @policy.arguments
+    command += [ "/dev/#{ @partition }" ]
+
+    # Todo: Remove
+    puts command.join(' ')
+
+    IO.popen(command, 'w') do |f|
+      f.print("#{ passphrase }\n")
+      f.close()
+    end
+
+    exit_status = $?
+    unless exit_status.success?
+      raise 'Failed to enroll LUKS encryption device'
+    end
+  end
+
+  def setup_with_recovery_key()
+    recovery_key_file = Tempfile.new('recovery-key', '/dev/shm')
+    recovery_key_file.binmode
+
+    begin
+      recovery_key = self.generate_recovery_key()
+      recovery_key_file.write(recovery_key)
+      recovery_key_file.flush
+
+      self.run('cryptsetup', 'luksFormat', '--batch-mode',
+        "--key-file=#{ recovery_key_file.path }", "/dev/#{ @partition }")
+
+      self.run('cryptsetup', 'luksOpen', "/dev/#{ @partition }",
+        @encryption_device_name, "--key-file=#{ recovery_key_file.path }")
+
+      self.enroll_with_recovery_key(recovery_key)
+
+      recovery_key
+    ensure
+      recovery_key_file.close
+      recovery_key_file.unlink
+    end
+  end
+
+  # Todo: Should the passphrase be part of fs_conf?
+  # Todo: Should the recovery key just be a passphrase, so that non-technical user could input it remotely?
+  def setup_with_passphrase(passphrase)
+    if passphrase.nil? || passphrase.empty? then
+      raise 'Encryption passphrase must be set'
+    end
+
+    IO.popen([ 'cryptsetup', 'luksFormat', '--batch-mode',
+               "--key-file=-", "/dev/#{ @partition }" ], 'w') do |f|
+      f.print(passphrase)
+    end
+
+    exit_status = $?
+    unless exit_status.success?
+      raise 'Failed to format LUKS encryption device'
+    end
+
+    IO.popen([ 'cryptsetup', 'luksOpen',
+               "/dev/#{ @partition }", @encryption_device_name ], 'w') do |f|
+      f.print(passphrase)
+    end
+
+    exit_status = $?
+    unless exit_status.success?
+      raise 'Failed to open the created LUKS encryption device'
+    end
+
+    self.enroll_with_passphrase(passphrase)
+  end
+end
+
 module DiskHandler
   Filesystems = {
     'bootserver' => {
@@ -76,7 +209,16 @@ module DiskHandler
     },
   }
 
+  EncryptionDeviceName = "puavo-cryptroot"
+  EnrollmentPolicy = LuksEnrollmentPolicy.new(
+    [ '15:sha256=0000000000000000000000000000000000000000000000000000000000000000' ],
+    [ '11:sha256' ],
+    "/etc/puavo/tpm2-pcr-public-key.pem"
+  )
+
   def self.cleanup_disk_environment(hosttype, vgname)
+    # Todo: Open LUKS devices intervene, also is there a better/generalized way to handle these conflicts?
+
     # Unmount filesystems, if those are mounted.
     btrfs_subvolumes(hosttype).each do |name, attrs|
       run('umount', '-f', "/#{ name }", { :err => '/dev/null' }) rescue true
@@ -317,6 +459,23 @@ module DiskHandler
     end
   end
 
+  def self.get_partition_by_partnum(device, partnum)
+    partitions = get_partitions(device)
+
+    raise "Device '#{ device }' does not have any partitions" if partitions.empty?
+    raise "Partition number '#{ partnum }' not found on '#{ device }'" if partitions.length < partnum
+
+    partitions[partnum - 1]
+  end
+
+  def self.wait_partition_by_partnum(device, partnum, try_count:, try_interval: 1)
+    try_count.times do
+      warn "Looking for partition '#{ partnum }' on device '#{ device }'..."
+      return get_partition_by_partnum(device, partnum) rescue sleep(try_interval)
+    end
+    raise "Partition '#{ partnum }' not found on device '#{ device }'"
+  end
+
   def self.get_one_gpt_partition_by_parttype(device, parttype)
     partitions = get_gpt_partitions_by_parttype(device, parttype)
 
@@ -343,13 +502,43 @@ module DiskHandler
                                               try_count: 30)
   end
 
+  def self.create_luks_partition_handler(fs_conf)
+    LuksPartitionHandler.new(fs_conf['partition'],
+      EncryptionDeviceName, EnrollmentPolicy)
+  end
+
+  def self.setup_luks_partition_with_passphrase(fs_conf)
+    handler = self.create_luks_partition_handler(fs_conf)
+    handler.setup_with_passphrase(fs_conf['passphrase'])
+
+    fs_conf['install-target'] = handler.encryption_device
+  end
+
+  def self.setup_luks_partition_with_recovery_key(fs_conf)
+    handler = self.create_luks_partition_handler(fs_conf)
+    handler.setup_with_recovery_key()
+
+    fs_conf['install-target'] = handler.encryption_device
+  end
+
   def self.do_fs_setup(conf, vgname, raid_setup_done)
     fs_conf = conf.clone
 
     fs_setup_phases = []
     fs_setup_phases += [ :wipe_device ] if conf['wipe']
-    fs_setup_phases += [ :create_partitions, :puavo_filesystems,
-                         :mount_filesystems ]
+    fs_setup_phases += [ :create_partitions ]
+
+    case fs_conf['encryption']
+      when 'passphrase'
+        fs_setup_phases += [ :setup_luks_partition_with_passphrase ]
+      when 'recovery-key'
+        fs_setup_phases += [ :setup_luks_partition_with_recovery_key ]
+    end
+
+    fs_setup_phases += [ :puavo_filesystems, :mount_filesystems ]
+
+    # Assign the install target, which might be overwritten by LUKS methods
+    fs_conf['install-target'] = fs_conf['device']
 
     fs_setup_phases.each do |fn_sym|
       args = case fn_sym
@@ -406,13 +595,13 @@ module DiskHandler
     # where the partitioning is the same)
     cleanup_disk_environment(fs_conf['hosttype'], vgname)
 
-    partition_dev = "/dev/#{ fs_conf['puavo_partition'] }"
+    install_target_dev = fs_conf['install-target']
 
     # clean up possible confusing mess from the partition
-    run('dd', 'if=/dev/zero', "of=#{ partition_dev }", 'count=2K',
-       { :err => '/dev/null' })
+    run('dd', 'if=/dev/zero', "of=#{ install_target_dev }", 'count=2K',
+        { :err => '/dev/null' })
 
-    run('mkfs.btrfs', '-L', vgname, partition_dev)
+    run('mkfs.btrfs', '-L', vgname, install_target_dev)
     btrfs_mount_dir = "/.#{ vgname }"
     begin
       FileUtils.mkdir_p(btrfs_mount_dir)
@@ -587,11 +776,12 @@ module QueryDiskInfo
     raise 'Windows setup prompts exceeded.'
   end
 
-  def self.ask_device_with_confirmation(hosttype, raid_setup_done)
+  def self.ask_device_with_confirmation(hosttype, raid_setup_done, encryption)
     device       = nil
     do_it        = false
     windows_size = nil
     wipe         = false
+    passphrase   = nil
 
     until do_it do
       UI::reset_questions()
@@ -632,13 +822,19 @@ module QueryDiskInfo
         end
       end
 
+      if encryption == 'passphrase' then
+        passphrase = UI::ask_passphrase('Enter the passphrase for encryption:')
+      end
+
       do_it = QueryDiskInfo::ask_confirmation(device)
     end
 
     {
       'device'       => device,
+      'encryption'   => encryption,
       'filesystems'  => DiskHandler::Filesystems[hosttype],
       'hosttype'     => hosttype,
+      'passphrase'   => passphrase,
       'windows_size' => windows_size,
       'wipe'         => wipe,
     }
@@ -705,10 +901,12 @@ module UI
 
   @ask_forced      = {}
   @defaults        = {}
+  @encryption      = 'none'
   @force_defaults  = {}
   @hosttype        = nil
   @loopback_only   = false
 
+  def self.encryption     ; @encryption      end
   def self.hosttype       ; @hosttype        end
   def self.loopback_only  ; @loopback_only   end
 
@@ -731,6 +929,8 @@ puavo-setup-filesystems [OPTIONS]
     --ask-wipe-partition          ask with default for wipe partition
     --ask-windows-size            ask with default for windows size
     --ask-write-partitions        ask with default for write partitions
+    --encrypt-with-passphrase     encrypt the installation with a passphrase
+    --encrypt-with-recovery-key   encrypt the installation with a recovery key
     --force-disk-device           force value for disk device
     --force-imageoverlay-size     force value for imageoverlay size
     --force-install-without-raid  force value for install without raid
@@ -759,6 +959,8 @@ EOF
         [ '--ask-windows-size'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-wipe-partition'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-write-partitions'      , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--encrypt-with-passphrase'   , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--encrypt-with-recovery-key' , GetoptLong::NO_ARGUMENT       ],
         [ '--force-disk-device'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-imageoverlay-size'   , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-install-without-raid', GetoptLong::REQUIRED_ARGUMENT ],
@@ -795,6 +997,10 @@ EOF
           @defaults[WipePartitionPrompt] = arg
         when '--ask-write-partitions'
           @defaults[WritePartitionsPrompt] = arg
+        when '--encrypt-with-passphrase'
+          @encryption = 'passphrase'
+        when '--encrypt-with-recovery-key'
+          @encryption = 'recovery-key'
         when '--force-disk-device'
           @defaults[DiskDevicePrompt] = arg
           @force_defaults[DiskDevicePrompt] = true
@@ -866,6 +1072,25 @@ EOF
     size
   end
 
+  def self.ask_passphrase(question, repeat_question="Repeat passphrase: ")
+    while true do
+      passphrase1 = HighLine.ask(question) { |q| q.echo = '*' }
+
+      if passphrase1.empty?
+        puts 'Passphrase can not be empty, try again.'
+        next
+      end
+
+      passphrase2 = HighLine.ask(repeat_question) { |q| q.echo = '*' }
+
+      if passphrase1 == passphrase2 then
+        return passphrase1
+      else
+        puts 'Passphrases do not match, try again.'
+      end
+    end
+  end
+
   def self.colormsg(msg, color)
     HighLine.say(HighLine.new.color(msg, color))
   end
@@ -890,10 +1115,12 @@ if hosttype == 'bootserver' then
   raid_setup_done = DiskHandler::setup_raid_if_possible()
 end
 
+encryption = UI::encryption
+
 case hosttype
   when 'bootserver', 'diskinstaller', 'exam', 'laptop'
     conf = QueryDiskInfo::ask_device_with_confirmation(hosttype,
-             raid_setup_done)
+             raid_setup_done, encryption)
     DiskHandler::do_fs_setup(conf, vgname, raid_setup_done)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
