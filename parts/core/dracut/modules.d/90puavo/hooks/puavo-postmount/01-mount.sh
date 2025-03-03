@@ -1,0 +1,195 @@
+#!/bin/sh
+
+# Todo: Duplicated
+for x in $(cat /proc/cmdline); do
+    if [ "$x" = "init=/sbin/init-puavo" ]; then
+        BOOT=puavo
+        break
+    fi
+done
+
+# Todo: Duplicated
+panic() {
+    echo "PANIC: $1" >&2
+    echo "Dropping to emergency shell..." >&2
+    emergency_shell -n "Panic occurred: $1"
+}
+
+test "$BOOT" = "puavo" || exit 0
+
+rootmnt="/sysroot"
+
+PUAVO_IMAGE_PATH=
+PUAVO_IMAGE_FSTYPE=
+PUAVO_IMAGE_OVERLAY=
+PUAVO_LVM_VG="puavo"
+PUAVO_ROOT_DEVICE=
+
+lvm vgchange -a y "${PUAVO_LVM_VG}"
+
+for x in $(cat /proc/cmdline); do
+    case "$x" in
+        loop=*)
+            # loop-parameter is legacy and is for compatibility with
+            # the old Trusty-based Puavo-systems and their grub
+            # configuration.
+            if [ -z "$PUAVO_IMAGE_PATH" ]; then
+                PUAVO_IMAGE_PATH="${x#loop=}"
+            fi
+            ;;
+        puavo.image.path=*)
+            PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
+            ;;
+        puavo.image.overlay=*)
+            PUAVO_IMAGE_OVERLAY="${x#puavo.image.overlay=}"
+            ;;
+        puavo.image.fstype=*)
+            PUAVO_IMAGE_FSTYPE="${x#puavo.image.fstype=}"
+            ;;
+        root=*)
+            PUAVO_ROOT_DEVICE="${x#root=}"
+            ;;
+    esac
+done
+
+# Mount the root device as Dracut unmounts it before calling us
+# Todo: Should we check if it's already mounted?
+# Todo: Might not be necessary as we now run these at pre-mount?
+if [ -n "${PUAVO_ROOT_DEVICE}" ]; then
+    mount "${PUAVO_ROOT_DEVICE}" "${rootmnt}"
+else
+    panic "Failed to detect the root device from kernel parameters"
+fi
+
+loopmount_image()
+{
+    if [ ! -f "${rootmnt}${PUAVO_IMAGE_PATH}" ]; then
+        panic "${rootmnt}${PUAVO_IMAGE_PATH} does not exist!"
+    fi
+
+    mkdir -p /host
+    mount -o move "${rootmnt}" /host
+
+    # Get the loop filesystem type if not set
+    # fstype command sets FSTYPE and FSSIZE variables
+    if [ -z "${PUAVO_IMAGE_FSTYPE}" ]; then
+        eval $(/bin/fstype < "/host/${PUAVO_IMAGE_PATH#/}")
+    else
+        FSTYPE="${PUAVO_IMAGE_FSTYPE}"
+    fi
+
+    if [ "$FSTYPE" = "unknown" -o "$FSTYPE" = "" ] && [ -x /sbin/blkid ]; then
+        FSTYPE=$(/sbin/blkid -s TYPE -o value "/host/${PUAVO_IMAGE_PATH#/}")
+    fi
+
+    [ -z "$FSTYPE" ] && FSTYPE="unknown"
+
+    modprobe loop
+    modprobe "${FSTYPE}"
+
+    mount -r -t "${FSTYPE}" -o loop "/host/${PUAVO_IMAGE_PATH#/}" "${rootmnt}"
+    ret=$?
+
+    if [ "$ret" -gt 0 ]; then
+        panic "Failed to loop mount /host/${PUAVO_IMAGE_PATH#/} to ${rootmnt}"
+    fi
+}
+
+do_union_mount()
+{
+    cow=$1
+
+    mkdir -p /rofs
+    mount -o move "$rootmnt" /rofs
+
+    modprobe overlay
+    mkdir "${cow}/rootdir" "${cow}/workdir"
+    mount -t overlay \
+          -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
+          overlay "$rootmnt"
+
+    mkdir -p "${rootmnt}/rofs"
+    mount -o move /rofs "${rootmnt}/rofs"
+}
+
+do_union_mount_temporary()
+{
+    mkdir -p /cow
+    mount -t tmpfs -o mode=0755 tmpfs /cow
+
+    do_union_mount /cow
+
+    mkdir -p "${rootmnt}/cow"
+    mount -o move /cow "${rootmnt}/cow"
+}
+
+do_union_mount_persistent()
+{
+    cow="/imageoverlays/${PUAVO_IMAGE_NAME}/${PUAVO_IMAGE_OVERLAY}"
+    mkdir -p "${cow}"
+
+    do_union_mount "${cow}"
+}
+
+mount_puavo_partition() {
+    name=$1
+    if [ -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
+        mkdir -p "/${name}"
+
+        OPTIONS="-o noatime"
+
+        if mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"; then
+            return 0
+        fi
+
+        # FORCE fsck if mount failed again (first try automatic, then -y)
+        if ! fsck -fpv "/dev/mapper/${PUAVO_LVM_VG}-${name}"; then
+            fsck -fvy "/dev/mapper/${PUAVO_LVM_VG}-${name}" || true
+        fi
+
+        mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}" || return 1
+    fi
+
+    return 0
+}
+
+move_puavo_partition()
+{
+    name=$1
+
+    mkdir -p "${rootmnt}/${name}"
+    mount -o move "/${name}" "${rootmnt}/${name}"
+}
+
+loopmount_used=0
+if [ -n "${PUAVO_IMAGE_PATH}" ]; then
+    loopmount_image
+    loopmount_used=1
+fi
+
+if [ -f "${rootmnt}/etc/puavo-image/name" ]; then
+    PUAVO_IMAGE_NAME=$(cat "${rootmnt}/etc/puavo-image/name")
+else
+    PUAVO_IMAGE_NAME="default"
+fi
+
+if [ "$loopmount_used" -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
+    {
+        mount_puavo_partition imageoverlays \
+            && do_union_mount_persistent      \
+            && move_puavo_partition imageoverlays
+    } || panic "could not mount persistent overlay"
+else
+    do_union_mount_temporary
+fi
+
+# If using a loopmount image, move the /images partition under loop mounted root
+# and remount the partition as writable
+if [ "$loopmount_used" -gt 0 ]; then
+    mkdir -p "${rootmnt}/images"
+    mount -o move /host "${rootmnt}/images"
+    mount -o remount,noatime,rw "${rootmnt}/images"
+fi
+
+[ -z "${rootmnt}" ] && panic "rootmnt unknown in init-bottom"
+[ -d "${rootmnt}/proc" ] || panic "rootmnt not mounted in init-bottom"
