@@ -168,7 +168,7 @@ module DiskHandler
     run('mdadm', '--remove', md_device_path) if File.exist?(md_device_path)
   end
 
-  def self.setup_raid_if_possible(partitioning_scheme)
+  def self.setup_raid_if_possible
     disks_for_mirroring = nil
 
     loop do
@@ -204,7 +204,7 @@ module DiskHandler
     maybe_wipe_current_raid_setups()
 
     disks_for_mirroring.each do |disk|
-      raid_partition(disk, partitioning_scheme)
+      raid_partition(disk)
     end
 
     # gdisk may activate a partial old RAID setup (!?!)
@@ -228,8 +228,7 @@ module DiskHandler
     return true
   end
 
-  def self.setup_partition(device, partitioning_scheme, gpt_format,
-                           hybrid_format)
+  def self.setup_partition(device, gpt_format)
     # clean up possible confusing mess from the device
     run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
         { :err => '/dev/null' })
@@ -266,21 +265,11 @@ module DiskHandler
     end
 
     create_efi_filesystem(device)
-
-    # hybrid partitioning apparently needs to be set up after normal
-    # partitioning, as is done here. one could think this is strange,
-    # running gdisk twice in this function, but everything is ok.
-    if partitioning_scheme == 'UEFI/MBR+GPT' then
-      IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
-        f.print(hybrid_format)
-      end
-    end
   end
 
-  def self.raid_partition(device, partitioning_scheme)
-    setup_partition(device, partitioning_scheme,
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\nfd00\nw\ny\n",
-                    "r\nh\n1 2 3\nn\n\ny\n\nn\n\nn\nw\ny\n")
+  def self.raid_partition(device)
+    setup_partition(device,
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\nfd00\nw\ny\n")
   end
 
   def self.get_partitions(device)
@@ -291,23 +280,6 @@ module DiskHandler
     end.map do |lineparts|
       lineparts[1..].join(' ')
     end
-  end
-
-  def self.get_partition_by_partnum(device, partnum)
-    partitions = get_partitions(device)
-
-    raise "Device '#{ device }' does not have any partitions" if partitions.empty?
-    raise "Partition number '#{ partnum }' not found on '#{ device }'" if partitions.length < partnum
-
-    partitions[partnum - 1]
-  end
-
-  def self.wait_partition_by_partnum(device, partnum, try_count:, try_interval: 1)
-    try_count.times do
-      warn "Looking for partition '#{ partnum }' on device '#{ device }'..."
-      return get_partition_by_partnum(device, partnum) rescue sleep(try_interval)
-    end
-    raise "Partition '#{ partnum }' not found on device '#{ device }'"
   end
 
   def self.get_gpt_partitions_by_parttype(device, parttype)
@@ -337,17 +309,16 @@ module DiskHandler
     raise "GPT partition of type '#{ parttype }' not found on device '#{ device }'"
   end
 
-  def self.get_puavo_partition(device, partitioning_scheme)
-    return get_partition_by_partnum(device, 1) if partitioning_scheme == 'BIOS/MBR'
-
+  def self.get_puavo_partition(device)
     # It should not be possible to have multiple LVM partitions,
     # because at this stage, we have already created a new partition
     # table. If partition is not found in 30secs, then it's most
     # probably a progamming error; check gdisk/fdisk inputs.
-    return wait_one_gpt_partition_by_parttype(device, GPT_PARTTYPE_LVM, try_count: 30)
+    return wait_one_gpt_partition_by_parttype(device, GPT_PARTTYPE_LVM,
+                                              try_count: 30)
   end
 
-  def self.do_fs_setup(conf, vgname, partitioning_scheme)
+  def self.do_fs_setup(conf, vgname)
     fs_conf = conf.clone
 
     fs_setup_phases = []
@@ -364,10 +335,9 @@ module DiskHandler
     fs_setup_phases.each do |fn_sym|
       args = [ :cleanup_disk_environment,
                :mount_filesystems,
-               :puavo_filesystems ].include?(fn_sym) ? [ fs_conf, vgname ] : \
-             :create_partitions == fn_sym                                \
-                ? [ fs_conf, partitioning_scheme ]                       \
-                : [ fs_conf ]
+               :puavo_filesystems ].include?(fn_sym) \
+                 ? [ fs_conf, vgname ] \
+                 : [ fs_conf ]
       method(fn_sym).call(*args)
     end
   end
@@ -376,18 +346,15 @@ module DiskHandler
     system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
   end
 
-  def self.create_partitions(fs_conf, partitioning_scheme)
+  def self.create_partitions(fs_conf)
     gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n"
 
     unless fs_conf['windows_size'].nil? then
-      raise 'Windows can be setup only in UEFI/GPT partitioning scheme!' unless partitioning_scheme == 'UEFI/GPT'
       gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n+16M\n0c01\nn\n4\n\n+#{ fs_conf['windows_size'] }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\nn\n5\n\n+768M\n2700\nn\n6\n\n\n8e00\nw\ny\n"
     end
 
-    setup_partition(fs_conf['device'], partitioning_scheme,
-                    gpt_format,
-                    "r\nh\n1 2 3\nn\n\ny\n\nn\n\nn\nw\ny\n")
-    fs_conf['partition'] = get_puavo_partition(fs_conf['device'], partitioning_scheme)
+    setup_partition(fs_conf['device'], gpt_format)
+    fs_conf['partition'] = get_puavo_partition(fs_conf['device'])
   end
 
   def self.non_swap_filesystems(hosttype)
@@ -562,18 +529,13 @@ module QueryDiskInfo
     UI::ask_with_default(prompt, 'no', UI::WritePartitionsPrompt) == 'yes'
   end
 
-  def self.ask_windows_setup(hosttype, device, partition, partitioning_scheme)
+  def self.ask_windows_setup(hosttype, device, partition)
     30.times do # Invalid preseeds shall not cause infinite loops.
       setup_windows_answer = UI::ask_with_default("\nSetup Windows partitions? (yes/no)", 'no', UI::SetupWindowsPrompt)
       case setup_windows_answer
       when 'yes'
         unless partition == 'whole' then
           UI::colormsg('Windows partitions can be setup only when partitioning the whole device.', HighLine::RED)
-          next
-        end
-
-        unless partitioning_scheme == 'UEFI/GPT' then
-          UI::colormsg('Windows partitions can be setup only in UEFI/GPT partitioning scheme.', HighLine::RED)
           next
         end
 
@@ -611,8 +573,7 @@ module QueryDiskInfo
     raise 'Windows setup prompts exceeded.'
   end
 
-  def self.ask_device_and_partition_with_confirmation(hosttype,
-             raid_setup_done, partitioning_scheme)
+  def self.ask_device_and_partition_with_confirmation(hosttype, raid_setup_done)
     device       = nil
     do_it        = false
     first_sector = nil
@@ -628,7 +589,7 @@ module QueryDiskInfo
         partition = 'whole'
       else
         device    = QueryDiskInfo::ask_device()
-        partition = QueryDiskInfo::ask_partition(device, partitioning_scheme)
+        partition = QueryDiskInfo::ask_partition(device)
       end
 
       if partition == 'whole'
@@ -648,7 +609,8 @@ module QueryDiskInfo
         end
       end
 
-      windows_size = QueryDiskInfo::ask_windows_setup(hosttype, device, partition, partitioning_scheme)
+      windows_size = QueryDiskInfo::ask_windows_setup(hosttype, device,
+                                                      partition)
 
       msg = "\nIt is possible to wipe disk/partition before installing,\n" \
               + "but this can take a rather long time.\n"                  \
@@ -678,7 +640,7 @@ module QueryDiskInfo
     }
   end
 
-  def self.ask_partition(disk_device, partitioning_scheme)
+  def self.ask_partition(disk_device)
     partitions = []
 
     chosen_partition = 'whole'
@@ -806,11 +768,9 @@ module UI
   @force_defaults  = {}
   @hosttype        = nil
   @loopback_only   = false
-  @partition_label = nil
 
   def self.hosttype       ; @hosttype        end
   def self.loopback_only  ; @loopback_only   end
-  def self.partition_label; @partition_label end
 
   def self.reset_questions
     @ask_forced = @force_defaults.clone
@@ -842,8 +802,6 @@ puavo-setup-filesystems [OPTIONS]
     --force-write-partitions      force value for write partitions
 
     --loopback-only               use only loopback devices
-    --partition-label             use partition label "UEFI/GPT"
-                                    or "UEFI/MBR+GPT"
 
 EOF
   end
@@ -872,7 +830,6 @@ EOF
         [ '--force-write-partitions'    , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--hosttype'                  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--loopback-only'             , GetoptLong::NO_ARGUMENT       ],
-        [ '--partition-label'           , GetoptLong::REQUIRED_ARGUMENT ],
       )
 
       opts.each do |opt, arg|
@@ -929,16 +886,6 @@ EOF
           @hosttype = arg
         when '--loopback-only'
           @loopback_only = true
-        when '--partition-label'
-          case arg
-            when 'UEFI/GPT', 'UEFI/MBR+GPT'
-              @partition_label = arg
-            else
-              warn "Unsupported partition label #{ arg }"
-              help_and_exit
-              exit(1)
-          end
-        end
       end
     rescue GetoptLong::InvalidOption => e
       help_and_exit
@@ -996,18 +943,16 @@ vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
-partitioning_scheme = UI::partition_label || 'UEFI/GPT'
-
 raid_setup_done = false
 if hosttype == 'bootserver' then
-  raid_setup_done = DiskHandler::setup_raid_if_possible(partitioning_scheme)
+  raid_setup_done = DiskHandler::setup_raid_if_possible()
 end
 
 case hosttype
   when 'bootserver', 'diskinstaller', 'laptop', 'wirelessaccesspoint'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype,
-             raid_setup_done, partitioning_scheme)
-    DiskHandler::do_fs_setup(conf, vgname, partitioning_scheme)
+             raid_setup_done)
+    DiskHandler::do_fs_setup(conf, vgname)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
 end

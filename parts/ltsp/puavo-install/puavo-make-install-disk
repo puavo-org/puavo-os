@@ -48,9 +48,7 @@ trap cleanup 0 INT TERM
 
 usage() {
   cat <<EOF
-Usage: puavo-make-install-disk [--only-legacy-boot]
-                               [--only-uefi-boot]
-                               [--source-image source]
+Usage: puavo-make-install-disk [--source-image source]
                                [--target-image target]
                                [--with-vdi] (only when using --target-image)
 EOF
@@ -63,15 +61,12 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 if ! args=$(getopt -n "$0" -o +hos:t:v \
-              -l 'help,only-legacy-boot,only-uefi-boot,source-image:,target-image:,with-vdi' \
+              -l 'help,source-image:,target-image:,with-vdi' \
               -- "$@"); then
   usage
   exit 1
 fi
 
-only_legacy_boot=false
-only_uefi_boot=false
-partition_label='UEFI/MBR+GPT'
 source_image=''
 target_image=''
 with_vdi=false
@@ -80,18 +75,6 @@ eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
     -h|--help) usage; exit 0;;
-    --only-legacy-boot)
-      only_legacy_boot=true
-      partition_label='BIOS/MBR'
-      shift
-      ;;
-    --only-uefi-boot)
-      # depending on hardware, legacy boot might work anyway, but as we create
-      # GPT only partitioning, there are no guarantees
-      only_uefi_boot=true
-      partition_label='UEFI/GPT'
-      shift
-      ;;
     -s|--source-image) source_image="$2"; shift; shift ;;
     -t|--target-image) target_image="$2"; shift; shift ;;
     -v|--with-vdi)     with_vdi=true;            shift ;;
@@ -99,11 +82,6 @@ while [ $# -ne 0 ]; do
     *)  usage; exit 1;;
    esac
 done
-
-if $only_legacy_boot && $only_uefi_boot; then
-  echo '--only-legacy-boot and --only-uefi-boot are mutually exclusive' >&2
-  exit 1
-fi
 
 if [ -n "$source_image" -a ! -e "$source_image" ]; then
   echo "source image $source_image does not exist!" >&2
@@ -137,12 +115,10 @@ if [ -n "$target_image" ]; then
                           --force-wipe-partition no \
                           --force-write-partitions yes \
                           --hosttype diskinstaller \
-                          --loopback-only \
-                          --partition-label "$partition_label"
+                          --loopback-only
 else
   puavo-setup-filesystems --force-setup-windows no \
-                          --hosttype diskinstaller \
-                          --partition-label "$partition_label"
+                          --hosttype diskinstaller
 fi
 
 puavo-install-grub --hosttype   diskinstaller  \
