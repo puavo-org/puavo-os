@@ -468,6 +468,16 @@ module DiskHandler
     raise "Partition '#{ partnum }' not found on device '#{ device }'"
   end
 
+  def self.get_gpt_partitions_by_parttype(device, parttype)
+    IO.popen([ 'lsblk', '-l', '-n', '-oPARTTYPE,NAME', "/dev/#{ device }" ]).readlines.map do |line|
+      line.strip.split(' ')
+    end.select do |lineparts|
+      lineparts.length > 1 && lineparts[0].downcase == parttype.downcase
+    end.map do |lineparts|
+      lineparts[1..].join(' ')
+    end
+  end
+
   def self.get_one_gpt_partition_by_parttype(device, parttype)
     partitions = get_gpt_partitions_by_parttype(device, parttype)
 
@@ -495,7 +505,7 @@ module DiskHandler
   end
 
   def self.create_luks_partition_handler(fs_conf)
-    LuksPartitionHandler.new(fs_conf['partition'],
+    LuksPartitionHandler.new(fs_conf['device'],
       EncryptionDeviceName, EnrollmentPolicy)
   end
 
@@ -520,6 +530,9 @@ module DiskHandler
     fs_setup_phases += [ :wipe_device ] if conf['wipe']
     fs_setup_phases += [ :create_partitions ]
 
+    # Assign the install target, which might be overwritten by LUKS methods
+    fs_setup_phases += [ :select_default_install_target ]
+
     case fs_conf['encryption']
       when 'passphrase'
         fs_setup_phases += [ :setup_luks_partition_with_passphrase ]
@@ -528,9 +541,6 @@ module DiskHandler
     end
 
     fs_setup_phases += [ :puavo_filesystems, :mount_filesystems ]
-
-    # Assign the install target, which might be overwritten by LUKS methods
-    fs_conf['install-target'] = fs_conf['device']
 
     fs_setup_phases.each do |fn_sym|
       args = case fn_sym
@@ -567,6 +577,10 @@ module DiskHandler
   def self.btrfs_subvolumes(hosttype)
     Filesystems[ hosttype ] \
       .select { |name, attrs| attrs['type'] == 'btrfssv' }
+  end
+
+  def self.select_default_install_target(fs_conf)
+    fs_conf['install-target'] = "/dev/#{ fs_conf['device'] }"
   end
 
   def self.create_efi_filesystem(device)
