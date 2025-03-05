@@ -208,9 +208,7 @@ module DiskHandler
     "/etc/puavo/tpm2-pcr-public-key.pem"
   )
 
-  def self.cleanup_disk_environment(hosttype, vgname)
-    # Todo: Open LUKS devices intervene, also is there a better/generalized way to handle these conflicts?
-
+  def self.cleanup_disk_environment(hosttype, vgname, close_luks_device)
     # Unmount filesystems, if those are mounted.
     btrfs_subvolumes(hosttype).each do |name, attrs|
       run('umount', '-f', "/#{ name }", { :err => '/dev/null' }) rescue true
@@ -249,8 +247,16 @@ module DiskHandler
 
     # switch off all volume groups that may interfere with following operations
     run('vgchange', '-a', 'n', vgname,
-	{ :close_others => :true, :err => '/dev/null' }) \
+        { :close_others => :true, :err => '/dev/null' }) \
       rescue true
+
+    # If there's a LUKS based installation, we should be able to close the
+    # LUKS device as the nested filesystems should be unmounted by now.
+    if close_luks_device then
+      run('cryptsetup', 'close', EncryptionDeviceName,
+          { :err => '/dev/null' }) \
+          rescue true
+    end
   end
 
   def self.maybe_wipe_current_raid_setups()
@@ -599,7 +605,7 @@ module DiskHandler
     # this is needed again, because gdisk may activate kernel with the
     # new partitions, with lvm activated as well (probably only in the case
     # where the partitioning is the same)
-    cleanup_disk_environment(fs_conf['hosttype'], vgname)
+    cleanup_disk_environment(fs_conf['hosttype'], vgname, false)
 
     install_target_dev = fs_conf['install-target']
 
@@ -1114,7 +1120,7 @@ end
 vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : \
          (hosttype == 'exam')          ? 'puavoexam'      : 'puavo'
 
-DiskHandler::cleanup_disk_environment(hosttype, vgname)
+DiskHandler::cleanup_disk_environment(hosttype, vgname, true)
 
 raid_setup_done = false
 if hosttype == 'bootserver' then
