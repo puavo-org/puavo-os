@@ -886,6 +886,7 @@ EOF
           @hosttype = arg
         when '--loopback-only'
           @loopback_only = true
+        end
       end
     rescue GetoptLong::InvalidOption => e
       help_and_exit
