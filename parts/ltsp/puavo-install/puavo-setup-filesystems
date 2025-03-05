@@ -48,23 +48,23 @@ end
 module DiskHandler
   Filesystems = {
     'bootserver' => {
-      'swap'          => { 'size' => '16G',      'type' => 'swap' },
-      'tmp'           => { 'size' => '16G',      'type' => 'ext4' },
-      'images'        => { 'size' => '128G',     'type' => 'ext4' },
-      'state'         => { 'size' => '32G',      'type' => 'ext4' },
-      'imageoverlays' => { 'size' => '5G',       'type' => 'ext4' },
-      'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
+      '.swap'         => { 'size' => '16G', 'type' => 'swap' },
+      'tmp'           => { 'size' => '16G'                   },
+      'images'        => { 'size' => '128G'                  },
+      'state'         => { 'size' => '32G'                   },
+      'imageoverlays' => { 'size' => '5G'                    },
+      'home'          => { 'size' => '100%FREE'              },
     },
     'diskinstaller' => {
-      'installimages' => { 'size' => '100%FREE', 'type' => 'ext4' },
+      'installimages' => { 'size' => '100%FREE' },
     },
     'laptop' => {
-      'swap'          => { 'size' => '4G',       'type' => 'swap' },
-      'tmp'           => { 'size' => '6G',       'type' => 'ext4' },
-      'images'        => { 'size' => '40G',      'type' => 'ext4' },
-      'state'         => { 'size' => '4G',       'type' => 'ext4' },
-      'imageoverlays' => { 'size' => '5G',       'type' => 'ext4' },
-      'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
+      '.swap'         => { 'size' => '4G', 'type' => 'swap' },
+      'tmp'           => { 'size' => '6G',                  },
+      'images'        => { 'size' => '40G',                 },
+      'state'         => { 'size' => '4G',                  },
+      'imageoverlays' => { 'size' => '5G',                  },
+      'home'          => { 'size' => '100%FREE',            },
     },
   }
 
@@ -271,9 +271,9 @@ module DiskHandler
     case partitioning_type
       when :basic_boot
         slices += boot_slices
-        slices << "n\n3\n\n\n8e00\n"            # puavo partition
+        slices << "n\n3\n\n\n8304\n"            # puavo partition
       when :on_raid
-        slices << "n\n1\n\n\n8e00\n"            # puavo partition
+        slices << "n\n1\n\n\n8304\n"            # puavo partition
       when :raid_boot
         slices += boot_slices
         slices << "n\n3\n\n\nfd00\n"            # RAID partition
@@ -282,7 +282,7 @@ module DiskHandler
         # Microsoft basic data partition:
         slices << "n\n4\n\n+#{ fs_conf['windows_size'] }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
         slices << "n\n5\n\n+768M\n2700\n"       # Windows RE partition
-        slices << "n\n6\n\n\n8e00\nw\ny\n"      # puavo partition
+        slices << "n\n6\n\n\n8304\nw\ny\n"      # puavo partition
     end
 
     slices << "w\ny\n"
@@ -400,37 +400,33 @@ module DiskHandler
     # where the partitioning is the same)
     cleanup_disk_environment(fs_conf['hosttype'], vgname)
 
+    partition_dev = "/dev/#{ fs_conf['partition'] }"
+
     # clean up possible confusing mess from the partition
-    run('dd', 'if=/dev/zero', "of=/dev/#{ fs_conf['partition'] }", 'count=2K',
+    run('dd', 'if=/dev/zero', "of=#{ partition_dev }", 'count=2K',
        { :err => '/dev/null' })
 
-    # create LVM volume groups
-    run('pvcreate', "/dev/#{ fs_conf['partition'] }", { :close_others => true })
-    run('vgcreate', '-s', '64M', vgname, "/dev/#{ fs_conf['partition'] }",
-	{ :close_others => true })
-
-    Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
-      mkfs(attrs['size'], name, attrs['type'], vgname)
-    end
-  end
-
-  def self.mkfs(size, name, type, vgname)
-    run('lvcreate',
-	(size.match(/%/) ? '--extents' : '--size'), size,
-	'--name', name,
-	'--yes',
-	vgname,
-	{ :close_others => true })
-
-    case type
-      when 'ext4'
-        run('mkfs.ext4', "/dev/mapper/#{ vgname }-#{ name }")
-      when 'swap'
-        run('mkswap', '-f', "/dev/mapper/#{ vgname }-#{ name }")
+    run('mkfs.btrfs', '-L', vgname, partition_dev)
+    btrfs_mount_dir = '/.btrfs'
+    begin
+      FileUtils.mkdir_p(btrfs_mount_dir)
+      begin
+        run('mount', partition_dev, btrfs_mount_dir)
+        Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
+          # XXX attrs dismissed
+          run('btrfs', 'subvolume', 'create', "#{ btrfs_mount_dir }/#{ name }")
+        end
+      ensure
+        run('umount', btrfs_mount_dir)
+      end
+    ensure
+      FileUtils.remove_dir(btrfs_mount_dir)
     end
   end
 
   def self.mount_filesystems(fs_conf, vgname)
+    partition_dev = "/dev/#{ fs_conf['partition'] }"
+
     non_swap_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
       # /tmp should not be mounted now,
       # otherwise things currently using it will break (for example tmux).
@@ -438,7 +434,7 @@ module DiskHandler
 
       mnt_path = "/#{ name }"
       FileUtils.mkdir_p(mnt_path)
-      run('mount', "/dev/mapper/#{ vgname }-#{ name }", mnt_path)
+      run('mount', '-o', "subvol=#{ name }", partition_dev, mnt_path)
     end
   end
 
