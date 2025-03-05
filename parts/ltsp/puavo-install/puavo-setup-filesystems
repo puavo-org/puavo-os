@@ -267,9 +267,37 @@ module DiskHandler
     create_efi_filesystem(device)
   end
 
+  def self.gpt_format(partitioning_type)
+    slices = []
+    slices << "2\no\ny\n"               # init
+    boot_slices = [
+      "n\n1\n\n+1M\nef02\n",            # legacy boot (just in case)
+      "n\n2\n\n+1536M\nef00\n",         # EFI boot partition
+    ]
+
+    case partitioning_type
+      when :basic_boot
+        slices += boot_slices
+        slices << "n\n3\n\n\n8e00\n"            # puavo partition
+      when :on_raid
+        slices << "n\n1\n\n\n8e00\n"            # puavo partition
+      when :raid_boot
+        slices += boot_slices
+        slices << "n\n3\n\n\nfd00\n"            # RAID partition
+      when :with_windows
+        slices << "n\n3\n\n+16M\n0c01\n"        # Microsoft reserved partition
+        # Microsoft basic data partition:
+        slices << "n\n4\n\n+#{ fs_conf['windows_size'] }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
+        slices << "n\n5\n\n+768M\n2700\n"       # Windows RE partition
+        slices << "n\n6\n\n\n8e00\nw\ny\n"      # puavo partition
+    end
+
+    slices << "w\ny\n"
+    return slices.join('')
+  end
+
   def self.raid_partition(device)
-    setup_partition(device,
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+1536M\nef00\nn\n3\n\n\nfd00\nw\ny\n")
+    setup_partition(device, gpt_format(:raid_boot))
   end
 
   def self.get_partitions(device)
@@ -318,7 +346,7 @@ module DiskHandler
                                               try_count: 30)
   end
 
-  def self.do_fs_setup(conf, vgname)
+  def self.do_fs_setup(conf, vgname, raid_setup_done)
     fs_conf = conf.clone
 
     fs_setup_phases = []
@@ -333,11 +361,16 @@ module DiskHandler
     fs_setup_phases += [ :mount_filesystems ]
 
     fs_setup_phases.each do |fn_sym|
-      args = [ :cleanup_disk_environment,
-               :mount_filesystems,
-               :puavo_filesystems ].include?(fn_sym) \
-                 ? [ fs_conf, vgname ] \
-                 : [ fs_conf ]
+      args = case fn_sym
+               when :cleanup_disk_environment,
+                    :mount_filesystems,
+                    :puavo_filesystems
+                 [ fs_conf, vgname ]
+               when :create_partitions
+                 [ fs_conf, raid_setup_done ]
+               else
+                 [ fs_conf ]
+             end
       method(fn_sym).call(*args)
     end
   end
@@ -346,14 +379,15 @@ module DiskHandler
     system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
   end
 
-  def self.create_partitions(fs_conf)
-    gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+1536M\nef00\nn\n3\n\n\n8e00\nw\ny\n"
-
-    unless fs_conf['windows_size'].nil? then
-      gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+1536M\nef00\nn\n3\n\n+16M\n0c01\nn\n4\n\n+#{ fs_conf['windows_size'] }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\nn\n5\n\n+768M\n2700\nn\n6\n\n\n8e00\nw\ny\n"
+  def self.create_partitions(fs_conf, raid_setup_done)
+    if fs_conf['windows_size'] then
+      # raid_setup_done == false because we must be on laptop
+      partitioning_type = :with_windows
+    else
+      partitioning_type = raid_setup_done ? :on_raid : :basic_boot
     end
 
-    setup_partition(fs_conf['device'], gpt_format)
+    setup_partition(fs_conf['device'], gpt_format(partitioning_type))
     fs_conf['partition'] = get_puavo_partition(fs_conf['device'])
   end
 
@@ -530,17 +564,14 @@ module QueryDiskInfo
   end
 
   def self.ask_windows_setup(hosttype, device, partition)
+    return nil unless hosttype == 'laptop'
+
     30.times do # Invalid preseeds shall not cause infinite loops.
       setup_windows_answer = UI::ask_with_default("\nSetup Windows partitions? (yes/no)", 'no', UI::SetupWindowsPrompt)
       case setup_windows_answer
       when 'yes'
         unless partition == 'whole' then
           UI::colormsg('Windows partitions can be setup only when partitioning the whole device.', HighLine::RED)
-          next
-        end
-
-        unless hosttype == 'laptop' then
-          UI::colormsg('Windows partitions can be setup only in laptops.', HighLine::RED)
           next
         end
 
@@ -953,7 +984,7 @@ case hosttype
   when 'bootserver', 'diskinstaller', 'laptop', 'wirelessaccesspoint'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype,
              raid_setup_done)
-    DiskHandler::do_fs_setup(conf, vgname)
+    DiskHandler::do_fs_setup(conf, vgname, raid_setup_done)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
 end
