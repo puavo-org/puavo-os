@@ -94,13 +94,11 @@ class LuksPartitionHandler
     SecureRandom.gen_random(64)
   end
 
+  # Todo: Should the recovery key just be a passphrase, so that non-technical user could input it remotely?
   def enroll_with_recovery_key(recovery_key)
     command = [ 'systemd-cryptenroll' ]
     command += @policy.arguments
     command += [ "--key-key=#{ recovery_key }", "/dev/#{ @partition }" ]
-
-    # Todo: Remove
-    puts command.join(' ')
 
     self.run(*command)
   end
@@ -110,18 +108,8 @@ class LuksPartitionHandler
     command += @policy.arguments
     command += [ "/dev/#{ @partition }" ]
 
-    # Todo: Remove
-    puts command.join(' ')
-
-    IO.popen(command, 'w') do |f|
-      f.print("#{ passphrase }\n")
-      f.close()
-    end
-
-    exit_status = $?
-    unless exit_status.success?
+    system({ "PASSWORD" => passphrase }, command.join(' ')) or
       raise 'Failed to enroll LUKS encryption device'
-    end
   end
 
   def setup_with_recovery_key()
@@ -133,12 +121,15 @@ class LuksPartitionHandler
       recovery_key_file.write(recovery_key)
       recovery_key_file.flush
 
+      puts 'Creating LUKS partition with recovery key...'
       self.run('cryptsetup', 'luksFormat', '--batch-mode',
         "--key-file=#{ recovery_key_file.path }", "/dev/#{ @partition }")
 
+      puts 'Opening the LUKS partition for installing the system...'
       self.run('cryptsetup', 'luksOpen', "/dev/#{ @partition }",
         @encryption_device_name, "--key-file=#{ recovery_key_file.path }")
 
+      puts 'Enrolling the LUKS partition for TPM-based unlocking...'
       self.enroll_with_recovery_key(recovery_key)
 
       recovery_key
@@ -148,13 +139,12 @@ class LuksPartitionHandler
     end
   end
 
-  # Todo: Should the passphrase be part of fs_conf?
-  # Todo: Should the recovery key just be a passphrase, so that non-technical user could input it remotely?
   def setup_with_passphrase(passphrase)
     if passphrase.nil? || passphrase.empty? then
       raise 'Encryption passphrase must be set'
     end
 
+    puts 'Creating a passphrase encrypted LUKS partition...'
     IO.popen([ 'cryptsetup', 'luksFormat', '--batch-mode',
                "--key-file=-", "/dev/#{ @partition }" ], 'w') do |f|
       f.print(passphrase)
@@ -165,6 +155,7 @@ class LuksPartitionHandler
       raise 'Failed to format LUKS encryption device'
     end
 
+    puts 'Opening the LUKS partition for installing the system...'
     IO.popen([ 'cryptsetup', 'luksOpen',
                "/dev/#{ @partition }", @encryption_device_name ], 'w') do |f|
       f.print(passphrase)
@@ -175,6 +166,7 @@ class LuksPartitionHandler
       raise 'Failed to open the created LUKS encryption device'
     end
 
+    puts 'Enrolling the LUKS partition for TPM-based unlocking...'
     self.enroll_with_passphrase(passphrase)
   end
 end
