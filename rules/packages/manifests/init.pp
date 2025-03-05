@@ -268,6 +268,7 @@ class packages {
     , 'build-essential'
     , 'bvi'
     , 'cdbs'
+    , 'cmake'
     , 'debconf-doc'
     , 'devscripts'
     , 'dh-make'
@@ -284,10 +285,12 @@ class packages {
     , 'glade'
     , 'gnupg'
     , 'kernel-wedge'
+    , 'libncurses5-dev'
     , 'manpages-dev'
     , 'perl-doc'
     , 'pinfo'
     , 'python3-pydantic'
+    , 'scdaemon'
     , 'shellcheck'
     , 'sloccount'
     , 'tcl8.6-doc'
@@ -309,7 +312,11 @@ class packages {
     , 'xserver-xorg-video-all' ]:
       tag => [ 'tag_drivers', 'tag_debian_desktop', ];
 
-    [ 'mutt' ]:
+    [ 'b4'
+    , 'git-email'
+    , 'isync'
+    , 'msmtp'
+    , 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
     [ 'libvkd3d-shader1'
@@ -816,7 +823,8 @@ class packages {
     , 'wmctrl'
     , 'xinput'
     , 'xxd'
-    , 'zbarcam-gtk' ]:
+    , 'zbarcam-gtk'
+    , 'zoxide' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
     [ 'qemu-system-x86'
