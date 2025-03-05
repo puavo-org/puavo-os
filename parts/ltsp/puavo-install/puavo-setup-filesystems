@@ -269,7 +269,7 @@ module DiskHandler
 
   def self.raid_partition(device)
     setup_partition(device,
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\nfd00\nw\ny\n")
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+1536M\nef00\nn\n3\n\n\nfd00\nw\ny\n")
   end
 
   def self.get_partitions(device)
@@ -347,10 +347,10 @@ module DiskHandler
   end
 
   def self.create_partitions(fs_conf)
-    gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n"
+    gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+1536M\nef00\nn\n3\n\n\n8e00\nw\ny\n"
 
     unless fs_conf['windows_size'].nil? then
-      gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n+16M\n0c01\nn\n4\n\n+#{ fs_conf['windows_size'] }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\nn\n5\n\n+768M\n2700\nn\n6\n\n\n8e00\nw\ny\n"
+      gpt_format = "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+1536M\nef00\nn\n3\n\n+16M\n0c01\nn\n4\n\n+#{ fs_conf['windows_size'] }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\nn\n5\n\n+768M\n2700\nn\n6\n\n\n8e00\nw\ny\n"
     end
 
     setup_partition(fs_conf['device'], gpt_format)
