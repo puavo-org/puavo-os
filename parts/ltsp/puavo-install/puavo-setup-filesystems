@@ -7,8 +7,8 @@ require 'getoptlong'
 require 'highline/import'
 require 'open3'
 
-GPT_PARTTYPE_LVM = 'e6d6d379-f507-44c2-a23c-238f2a3df928'
-GPT_PARTTYPE_EFI = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
+GPT_PARTTYPE_EFI   = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
+GPT_PARTTYPE_LINUX = '4f68bce3-e8cd-4db1-96e7-fbcaf984b709'
 
 GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C = 'Puavo_Installed_Windows_C'
 
@@ -335,7 +335,7 @@ module DiskHandler
     # because at this stage, we have already created a new partition
     # table. If partition is not found in 30secs, then it's most
     # probably a progamming error; check gdisk/fdisk inputs.
-    return wait_one_gpt_partition_by_parttype(device, GPT_PARTTYPE_LVM,
+    return wait_one_gpt_partition_by_parttype(device, GPT_PARTTYPE_LINUX,
                                               try_count: 30)
   end
 
