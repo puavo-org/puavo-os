@@ -432,7 +432,7 @@ class packages {
     , 'libgtk2.0-dev'           # needed by lazarus-ide puavo-pkg
     , 'libgtk-3-dev'
     , 'libgtk-4-dev'
-    , 'libmutter-15-dev' ]:
+    , 'libmutter-16-dev' ]:
       tag => [ 'tag_lib_devel', 'tag_debian_desktop', ];
     # , 'libopenwsman-dev' ]:           # XXX missing from Trixie
     # , 'libwsman-clientpp-dev' ]:      # XXX missing from Trixie
