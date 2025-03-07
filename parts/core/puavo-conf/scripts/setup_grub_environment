@@ -76,17 +76,28 @@ setup_timeout() {
 setup_windows_enabled() {
   local grubdisk
 
-  grubdisk=$(puavo-get-disk-of-filepath /images) || {
-    echo 'ERROR: failed to get disk of images' >&2
+  if [ "$(puavo-conf puavo.hosttype)" = 'bootserver' ]; then
+    # Bootservers should not have Windows at all and usually use RAID
+    # which has multiple boot disks (making this fail).
+    return 0
+  fi
+
+  if ! grubdisk=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks); then
+    echo 'ERROR: failed to get the Grub disk(s)' >&2
     return 1
-  }
+  fi
+
+  if [ "$(printf %s "$grubdisk" | wc -w)" -ne 1 ]; then
+    echo 'ERROR: there was not exactly one Grub disk' >&2
+    return 1
+  fi
 
   if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
-    puavo-manage-efi --no-efi-is-ok enable-windows "${grubdisk}" || return 1
+    puavo-manage-efi --no-efi-is-ok enable-windows "$grubdisk" || return 1
     grubedit set "puavo_grub_windows_enabled=true" || return 1
   else
     grubedit unset puavo_grub_windows_enabled || return 1
-    puavo-manage-efi --no-efi-is-ok disable-windows "${grubdisk}" || return 1
+    puavo-manage-efi --no-efi-is-ok disable-windows "$grubdisk" || return 1
   fi
 
   return 0

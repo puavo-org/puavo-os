@@ -36,7 +36,6 @@ install : installdirs
 		puavo-client-daemon \
 		puavo-disk-clone \
 		puavo-disk-erase \
-		puavo-get-disk-of-filepath \
 		puavo-install \
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
@@ -59,6 +58,7 @@ install : installdirs
 		lib/create-bcd \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
+		lib/puavo-get-boot-disks \
 		lib/puavo-image-preinst \
 		lib/puavo-reset \
 		lib/puavo-torrent-updated \

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -eu
+
+disk_devpaths=$(
+  lsblk -J -O | jq -r '
+    [
+      .blockdevices[]
+        | select(.type == "disk")
+        | { "mountpoints": [ (.. | (.mountpoints? // []) | flatten[] | values) ],
+            "path": .path }
+        | select(.mountpoints[] | contains("/images"))
+        | .path
+    ] | unique | .[]
+  ')
+
+if [ -z "$disk_devpaths" ]; then
+  echo 'ERROR: failed to find the boot disk(s)' >&2
+  exit 1
+fi
+
+printf "%s\n" "$disk_devpaths"
