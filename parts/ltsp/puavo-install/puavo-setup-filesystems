@@ -221,7 +221,7 @@ module DiskHandler
     return true
   end
 
-  def self.setup_partition(device, gpt_format)
+  def self.setup_partition(device, gpt_spec)
     # clean up possible confusing mess from the device
     run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
         { :err => '/dev/null' })
@@ -229,7 +229,7 @@ module DiskHandler
     # (we also create an EFI partition on a RAID device
     # even though it is pointless in that case)
     IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
-      f.print(gpt_format)
+      f.print(gpt_spec)
     end
 
     # when creating a disk image file (with puavo-make-install-disk)
@@ -260,7 +260,7 @@ module DiskHandler
     create_efi_filesystem(device)
   end
 
-  def self.gpt_format(partitioning_type)
+  def self.gpt_format(partitioning_type, windows_size=nil)
     slices = []
     slices << "2\no\ny\n"               # init
     boot_slices = [
@@ -278,9 +278,10 @@ module DiskHandler
         slices += boot_slices
         slices << "n\n3\n\n\nfd00\n"            # RAID partition
       when :with_windows
+        slices += boot_slices
         slices << "n\n3\n\n+16M\n0c01\n"        # Microsoft reserved partition
         # Microsoft basic data partition:
-        slices << "n\n4\n\n+#{ fs_conf['windows_size'] }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
+        slices << "n\n4\n\n+#{ windows_size }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
         slices << "n\n5\n\n+768M\n2700\n"       # Windows RE partition
         slices << "n\n6\n\n\n8304\nw\ny\n"      # puavo partition
     end
@@ -375,12 +376,13 @@ module DiskHandler
   def self.create_partitions(fs_conf, raid_setup_done)
     if fs_conf['windows_size'] then
       # raid_setup_done == false because we must be on laptop
-      partitioning_type = :with_windows
+      gpt_spec = gpt_format(:with_windows, fs_conf['windows_size'])
     else
-      partitioning_type = raid_setup_done ? :on_raid : :basic_boot
+      partitioning_scheme = raid_setup_done ? :on_raid : :basic_boot
+      gpt_spec = gpt_format(partitioning_scheme)
     end
 
-    setup_partition(fs_conf['device'], gpt_format(partitioning_type))
+    setup_partition(fs_conf['device'], gpt_spec)
     fs_conf['partition'] = get_puavo_partition(fs_conf['device'])
   end
 
