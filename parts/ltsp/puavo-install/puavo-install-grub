@@ -54,8 +54,9 @@ get_grub_efi_arguments() {
 }
 
 grub_m4_template() {
-  local hosttype
+  local hosttype uki
   hosttype=$1
+  uki=$2
 
   if [ "$hosttype" = 'exam' ]; then
     cat <<'EOF_GRUB_EXAM_CFG'
@@ -230,7 +231,14 @@ function ltsp_image_entry {
 
     set imagefile="$2"
     set imagepath="$3"
-
+EOF
+  if $uki; then
+    cat <<EOF
+    search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
+    chainloader /EFI/debian/uki.efi
+EOF
+  else
+    cat <<'EOF'
     loopback loop "${imagefile}"
     set root='(loop)'
 
@@ -271,6 +279,10 @@ function ltsp_image_entry {
 
     linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
     initrd  /boot/initrd.img${kernel_version_suffix}
+EOF
+  fi
+
+  cat <<'EOF'
   }
 }
 
@@ -454,6 +466,16 @@ get_efi_devpath() {
       '
 }
 
+get_efi_uuid() {
+  local diskdev
+  diskdev=$1
+  # c12a7328-f81f-11d2-ba4b-00a0c93ec93b == EFI partition type
+  lsblk -n -l -o UUID,PARTTYPE "$diskdev" \
+    | awk '
+        $2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }
+      '
+}
+
 has_bios_boot_partition() {
   local diskdev
   diskdev=$1
@@ -494,16 +516,7 @@ lookup_puavo_vg_diskdev() {
   vgname=$1
   # pvs and assorted utilities complain if we leak file descriptors, that is
   # why we do "3>&- 4>&- 5>&-" (same with grub-install)
-  pvs 3>&- 4>&- 5>&-                                            \
-    | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
-    | sed -E '
-        /\/dev\/loop/   { s|p[0-9]+$|| }
-        /\/dev\/mmcblk/ { s|p[0-9]+$|| }
-        /\/dev\/md/     { s|p[0-9]+$|| }
-        /\/dev\/nvme/   { s|p[0-9]+$|| }
-        /\/dev\/[sv]d/  { s|[0-9]+$||  }
-        /\/dev\/xvd/    { s|[0-9]+$||  }
-      '
+  pvs 3>&- 4>&- 5>&- | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }'
 }
 
 lookup_windows_boot_partition() {
@@ -606,6 +619,25 @@ install_efi_grub() {
   return 0
 }
 
+setup_uki_mode() {
+  local diskdev
+  diskdev=$1
+
+  # Mount the EFI partition, so we can copy the GRUB configuration there
+  efi_devpath=$(get_efi_devpath "$diskdev")
+
+  if [ -z "$efi_devpath" ]; then
+    log err "could not find the EFI partition from ${diskdev}"
+    return 1
+  fi
+
+  mount $efi_devpath /boot
+}
+
+teardown_uki_mode() {
+    umount /boot
+}
+
 usage() {
   cat <<EOF
 $(basename $0) [optional arguments]
@@ -627,10 +659,12 @@ exitstatus=0
 hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
 images_dir=/images
 only_update_config=false
+# Todo: Set to false once puavo-install-and-update-ltspimages passes uki parameter
+uki=true
 vgname=puavo
 
-if ! args=$(getopt -n "$0" -o +                                          \
-                   -l 'hosttype:,images-dir:,only-update-config,vgname:' \
+if ! args=$(getopt -n "$0" -o +                                              \
+                   -l 'hosttype:,images-dir:,only-update-config,uki,vgname:' \
                    -- "$@"); then
   usage
 fi
@@ -641,6 +675,7 @@ while [ $# -ne 0 ]; do
     --hosttype)           hosttype=$2;             shift; shift ;;
     --images-dir)         images_dir=$2;           shift; shift ;;
     --only-update-config) only_update_config=true; shift        ;;
+    --uki)                uki=true;                shift        ;;
     --vgname)             vgname=$2;               shift; shift ;;
     --) shift; break ;;
     *)  usage ;;
@@ -679,6 +714,27 @@ if [ -z "$diskdev" ]; then
   log err "could not find the disk device where volume group '${vgname}' is"
   exit 1
 fi
+
+# if the disk device is a luks device, we need to select the containing
+# partition device instead. we assume no nesting.
+if command -v cryptsetup > /dev/null 2>&1; then
+  parentdev=$(lsblk -n -l -p -o NAME,PKNAME \
+                | awk -v disk="$diskdev" '$1 == disk { print $2; exit }')
+  if cryptsetup isLuks "$parentdev" > /dev/null 2>&1; then
+    diskdev=$parentdev
+  fi
+fi
+
+# remove the partition number
+diskdev=$(echo $diskdev \
+    | sed -E '
+        /\/dev\/loop/   { s|p[0-9]+$|| }
+        /\/dev\/mmcblk/ { s|p[0-9]+$|| }
+        /\/dev\/md/     { s|p[0-9]+$|| }
+        /\/dev\/nvme/   { s|p[0-9]+$|| }
+        /\/dev\/[sv]d/  { s|[0-9]+$||  }
+        /\/dev\/xvd/    { s|[0-9]+$||  }
+    ')
 
 possible_windows_disk_dev=''
 case "$diskdev" in
@@ -753,6 +809,41 @@ case "$hosttype" in
     ;;
 esac
 
+# Todo: Remove once the full configuration works
+update_uki_grub_configuration() {
+  diskdev=$1
+  grub_cfg_path=$2
+
+  efi_partition_uuid=$(get_efi_uuid "$diskdev")
+
+  cat > "$grub_cfg_path" <<EOF
+menuentry "UKI System" {
+    search --no-floppy --fs-uuid --set=root $efi_partition_uuid
+    chainloader /EFI/debian/uki.efi
+}
+EOF
+}
+
+# if we're in UKI mode, we'll install everything on the EFI partition
+grub_cfg_path="${boot_dir}/grub/grub.cfg"
+puavo_efi_partition_uuid=''
+
+if $uki; then
+  boot_dir="/boot/EFI/debian"
+  grub_cfg_path="${boot_dir}/grub.cfg"
+
+  if ! setup_uki_mode "$diskdev" "$boot_dir"; then
+    log err 'Failed to setup UKI install mode'
+    exit 1
+  fi
+
+  # Ensure that we unmount the EFI partition on exit
+  trap 'teardown_uki_mode' EXIT
+
+  # Todo: What about raid configuration?
+  puavo_efi_partition_uuid=$(get_efi_uuid "$diskdev")
+fi
+
 grub_install_done=false
 
 if $only_update_config; then
@@ -807,10 +898,9 @@ else
   fi
 fi
 
-grub_cfg_path="${boot_dir}/grub/grub.cfg"
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
-grub_m4_template "$hosttype"                                  \
+grub_m4_template "$hosttype" "$uki"                                    \
   | m4 -D__PUAVO_HOSTTYPE__="$hosttype"                                \
        -D__PUAVO_IMAGES_BTRFS_LABEL__="$puavo_images_btrfs_label"      \
        -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments"          \
@@ -854,6 +944,11 @@ if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
   rm -f "$tmp_grub_cfg_path"
 else
   mv "$tmp_grub_cfg_path" "$grub_cfg_path"
+
+  if $uki; then
+    update_uki_grub_configuration "$diskdev" "$grub_cfg_path"
+  fi
+
   log notice 'new Grub configuration has been installed'
   if ! flush_caches; then
     log warn 'error in flushing caches after updating grub configuration'
