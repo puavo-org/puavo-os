@@ -359,9 +359,6 @@
             },
             "tags": "default, audio"
         },
-        "freecad": {
-            "tags": "default"
-        },
         "freeplane": {
             "tags": "default"
         },
@@ -825,6 +822,9 @@
         },
         "org.cryptomator.Cryptomator": {
             "icon": "org.cryptomator.Cryptomator256.png",
+            "tags": "default"
+        },
+        "org.freecadweb.FreeCAD": {
             "tags": "default"
         },
         "org.freeciv.gtk2": {
@@ -2192,7 +2192,7 @@
                 "cura-appimage",
                 "prusaslicer",
                 "sketchup",
-                "freecad",
+                "org.freecadweb.FreeCAD",
                 "qcad-cam",
                 "openscad",
                 "FlashPrint5",
