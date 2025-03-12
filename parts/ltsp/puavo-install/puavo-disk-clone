@@ -62,6 +62,7 @@ case "$mode" in
         printf "%s" "Linux LVM found, resizing to occupy unclaimed free space.."
         pvresize "/dev/$lvm_part"
         lvextend -l +100%FREE /dev/mapper/puavo-home
+        vgchange -a y puavo
         e2fsck -f /dev/mapper/puavo-home
         resize2fs /dev/mapper/puavo-home
       fi
