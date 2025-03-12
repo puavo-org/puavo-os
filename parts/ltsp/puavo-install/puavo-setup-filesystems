@@ -264,26 +264,25 @@ module DiskHandler
     slices = []
     slices << "2\no\ny\n"               # init
     boot_slices = [
-      "n\n1\n\n+1M\nef02\n",            # legacy boot (just in case)
-      "n\n2\n\n+1536M\nef00\n",         # EFI boot partition
+      "n\n1\n\n+1536M\nef00\n",         # EFI boot partition
     ]
 
     case partitioning_type
       when :basic_boot
         slices += boot_slices
-        slices << "n\n3\n\n\n8304\n"            # puavo partition
+        slices << "n\n2\n\n\n8304\n"            # puavo partition
       when :on_raid
         slices << "n\n1\n\n\n8304\n"            # puavo partition
       when :raid_boot
         slices += boot_slices
-        slices << "n\n3\n\n\nfd00\n"            # RAID partition
+        slices << "n\n2\n\n\nfd00\n"            # RAID partition
       when :with_windows
         slices += boot_slices
-        slices << "n\n3\n\n+16M\n0c01\n"        # Microsoft reserved partition
+        slices << "n\n2\n\n+16M\n0c01\n"        # Microsoft reserved partition
         # Microsoft basic data partition:
-        slices << "n\n4\n\n+#{ windows_size }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
-        slices << "n\n5\n\n+768M\n2700\n"       # Windows RE partition
-        slices << "n\n6\n\n\n8304\nw\ny\n"      # puavo partition
+        slices << "n\n3\n\n+#{ windows_size }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
+        slices << "n\n4\n\n+768M\n2700\n"       # Windows RE partition
+        slices << "n\n5\n\n\n8304\nw\ny\n"      # puavo partition
     end
 
     slices << "w\ny\n"
