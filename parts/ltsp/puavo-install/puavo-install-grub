@@ -812,15 +812,162 @@ esac
 # Todo: Remove once the full configuration works
 update_uki_grub_configuration() {
   diskdev=$1
-  grub_cfg_path=$2
+  boot_dir=$2
+  grub_cfg_path=$3
+
+  # let's copy puavo specific files into the efi partition.
+  # we assume grub installation has created the grub folder.
+  mkdir /run/ltsp 2>/dev/null || true
+
+  if ! mount -o loop,ro /images/ltsp.img /run/ltsp; then
+    log err 'failed to mount /images/ltsp.img for copying grub files'
+    umount /run/ltsp || true
+    return 1
+  fi
+
+  if ! cp -r /run/ltsp/boot/grub "$boot_dir"; then
+    log err 'failed to copy grub files to boot directory $boot_dir'
+    umount /run/ltsp || true
+    return 1
+  fi
+
+  # Todo: Remove once GRUB installs the x86_64 config in the boot directory
+  if ! cp -r /run/ltsp/boot/grub "/boot/debian"; then
+    log err 'failed to copy grub files to boot directory (x86_64) $boot_dir'
+    umount /run/ltsp || true
+    return 1
+  fi
+
+  umount /run/ltsp || true
 
   efi_partition_uuid=$(get_efi_uuid "$diskdev")
 
   cat > "$grub_cfg_path" <<EOF
-menuentry "UKI System" {
-    search --no-floppy --fs-uuid --set=root $efi_partition_uuid
-    chainloader /EFI/debian/uki.efi
+set default="0"
+load_env
+
+function load_video {
+  if [ x\$feature_all_video_module = xy ]; then
+    insmod all_video
+  else
+    insmod efi_gop
+    insmod efi_uga
+    insmod ieee1275_fb
+    insmod vbe
+    insmod vga
+    insmod video_bochs
+    insmod video_cirrus
+  fi
 }
+
+if loadfont unicode ; then
+  set gfxmode=auto
+  load_video
+  insmod gfxterm
+  set locale_dir=\$prefix/locale
+  insmod gettext
+fi
+terminal_output gfxterm
+
+if keystatus --shift; then
+  set timeout=-1
+else
+  if test -n "\$puavo_grub_timeout"; then
+    set timeout="\$puavo_grub_timeout"
+  else
+    set timeout=5
+  fi
+fi
+
+function load_puavo_config {
+  if test -z "\$config_name"; then
+    set config_name="default"
+  fi
+
+  set config_path="\$prefix/puavo/\${config_name}.cfg"
+
+  if test -e "\$config_path"; then
+    source "\$config_path"
+  fi
+
+  set theme_path="\$prefix/themes/\${puavo_grub_theme}/theme.txt"
+  if test -f "\$theme_path"; then
+    set theme="\${theme_path}"
+  fi
+}
+
+function add_boot_entry {
+  set image_path="\$1"
+  set description="\$2"
+  set icon="\$3"
+  echo "Adding boot entry: $image_path, $description, $icon"
+
+  menuentry "\$description" --class "\$icon" {
+    search --no-floppy --fs-uuid --set=root $efi_partition_uuid
+    chainloader "\$image_path"
+  }
+}
+
+function generate_boot_entry {
+  set image_path="\$1"
+
+  # Extract the folder where the image is
+  regexp -s 1:folder '^(.*/)[^/]+$' "\$image_path"
+
+  # Get basename without extension (e.g. /EFI/debian/foo.efi => foo)
+  regexp -s 1:name '\/([^\/]+)\.efi$' "\$image_path"
+
+  # Look for image specific metadata folder next to the image file
+  set metadata_folder="\${folder}\${name}.extra.d"
+
+  # If such folder exists, load the metadata
+  set metadata_file="\${metadata_folder}/metadata.cfg"
+
+  set description="\$name"
+  set icon="puavo-os"
+
+  if test -f "\$metadata_file"; then
+    echo "Executing metadata script $metadata_file"
+    source "\$metadata_file"
+  fi
+
+  add_boot_entry "\$image_path" "\$description" "\$icon"
+}
+
+function add_boot_options {
+  search --no-floppy --fs-uuid --set=root $efi_partition_uuid
+
+  for image_path in /EFI/debian/*.efi; do
+    echo "Found boot image \$image_path"
+    generate_boot_entry "\$image_path"
+  done
+
+  # Add entry for Windows if it exists
+  set windows_image_path="(efiroot)/EFI/Microsoft/Boot/bootmgfw.efi"
+
+  if test -z "\$windows_boot_label"; then
+    set windows_boot_label="Windows"
+  fi
+
+  if [ -f "\$windows_image_path" ]; then
+    echo "Found boot image \$windows_image_path"
+    add_boot_entry "\$windows_image_path" "\$windows_boot_label" "windows"
+  fi
+}
+
+insmod fat
+insmod search_fs_uuid
+insmod chain
+
+insmod part_gpt
+insmod fat
+insmod search_fs_uuid
+insmod chain
+insmod jpeg
+insmod png
+
+load_puavo_config
+add_boot_options
 EOF
 }
 
@@ -946,7 +1093,7 @@ else
   mv "$tmp_grub_cfg_path" "$grub_cfg_path"
 
   if $uki; then
-    update_uki_grub_configuration "$diskdev" "$grub_cfg_path"
+    update_uki_grub_configuration "$diskdev" "$boot_dir" "$grub_cfg_path"
   fi
 
   log notice 'new Grub configuration has been installed'
