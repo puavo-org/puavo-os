@@ -280,7 +280,7 @@ module DiskHandler
         slices += boot_slices
         slices << "n\n2\n\n+16M\n0c01\n"        # Microsoft reserved partition
         # Microsoft basic data partition:
-        slices << "n\n3\n\n+#{ windows_size }\n0700\nc\n4\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
+        slices << "n\n3\n\n+#{ windows_size }\n0700\nc\n3\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
         slices << "n\n4\n\n+768M\n2700\n"       # Windows RE partition
         slices << "n\n5\n\n\n8304\nw\ny\n"      # puavo partition
     end
