@@ -132,8 +132,6 @@ class packages {
     , 'htop'
     , 'iftop'
     , 'inetutils-traceroute'
-    , 'initramfs-tools'
-    , 'initramfs-tools-core'
     , 'inotify-tools'
     , 'iotop'
     , 'iperf'

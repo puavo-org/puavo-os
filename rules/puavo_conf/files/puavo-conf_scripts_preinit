@@ -39,7 +39,6 @@ cleanup_network_connections
 setup_autofs
 setup_extra_environment
 setup_tmux
-disable_update_initramfs
 setup_networking
 setup_network_manager
 setup_xsessions

@@ -20,7 +20,6 @@ set -e
 
 case "$1" in
     configure)
-	update-initramfs -u -k all
 	pam-auth-update --package
 	mkdir -p /var/cache/ccreds
     ;;
