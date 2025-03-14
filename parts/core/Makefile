@@ -34,6 +34,7 @@ $(install-subdirs) :
 installdirs :
 	mkdir -p $(DESTDIR)/sbin
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(libdir)/dracut/modules.d/90puavo
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
@@ -43,6 +44,8 @@ install : $(install-subdirs) installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin init-puavo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-conf/definitions/*.json
+	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/dracut/modules.d/90puavo \
+		dracut/modules.d/90puavo/*
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d/ \
 		puavo-conf/files/etc/pam.d/*
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages/ \
