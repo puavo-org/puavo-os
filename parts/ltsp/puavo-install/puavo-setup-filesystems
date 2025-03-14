@@ -20,6 +20,10 @@ DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G = 20
 DUALBOOT_LAPTOP_PUAVOOS_MIN_SIZE_G = 70 # ~60G + 10G home
 DUALBOOT_LAPTOP_DISK_MIN_SIZE_G = DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G + DUALBOOT_LAPTOP_PUAVOOS_MIN_SIZE_G
 
+def run(*cmd)
+  system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
+end
+
 # XXX this should be elsewhere, other scripts might find this useful
 module PuavoFacts
   Puavodir = '/etc/puavo'
@@ -81,11 +85,6 @@ class LuksPartitionHandler
     @policy = policy
   end
 
-  # Todo: Duplicated
-  def run(*cmd)
-    system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
-  end
-
   def encryption_device()
     "/dev/mapper/#{ @encryption_device_name }"
   end
@@ -94,13 +93,12 @@ class LuksPartitionHandler
     SecureRandom.gen_random(64)
   end
 
-  # Todo: Should the recovery key just be a passphrase, so that non-technical user could input it remotely?
   def enroll_with_recovery_key(recovery_key)
     command = [ 'systemd-cryptenroll' ]
     command += @policy.arguments
     command += [ "--key-key=#{ recovery_key }", "/dev/#{ @partition }" ]
 
-    self.run(*command)
+    run(*command)
   end
 
   def enroll_with_passphrase(passphrase)
@@ -122,11 +120,11 @@ class LuksPartitionHandler
       recovery_key_file.flush
 
       puts 'Creating LUKS partition with recovery key...'
-      self.run('cryptsetup', 'luksFormat', '--batch-mode',
+      run('cryptsetup', 'luksFormat', '--batch-mode',
         "--key-file=#{ recovery_key_file.path }", "/dev/#{ @partition }")
 
       puts 'Opening the LUKS partition for installing the system...'
-      self.run('cryptsetup', 'luksOpen', "/dev/#{ @partition }",
+      run('cryptsetup', 'luksOpen', "/dev/#{ @partition }",
         @encryption_device_name, "--key-file=#{ recovery_key_file.path }")
 
       puts 'Enrolling the LUKS partition for TPM-based unlocking...'
@@ -559,10 +557,6 @@ module DiskHandler
              end
       method(fn_sym).call(*args)
     end
-  end
-
-  def self.run(*cmd)
-    system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
   end
 
   def self.create_partitions(fs_conf, raid_setup_done)
