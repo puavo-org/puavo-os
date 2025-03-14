@@ -135,6 +135,10 @@ msgstr "Käyttäjätunnuksen on oltava vähintään kolme merkkiä pitkä"
 msgid "The login name must start with a letter"
 msgstr "Käyttäjätunnuksen täytyy alkaa kirjaimella"
 
+#: page_account.py:267
+msgid "The login name cannot end in a dot"
+msgstr "Käyttäjätunnus ei saa loppua pisteeseen"
+
 #: page_account.py:395
 msgid "Sending information to the server..."
 msgstr "Lähetetään tietoja palvelimelle..."

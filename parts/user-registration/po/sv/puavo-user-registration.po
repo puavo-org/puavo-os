@@ -139,6 +139,10 @@ msgstr "Användarnamnet måste vara minst tre tecken lång"
 msgid "The login name must start with a letter"
 msgstr "Användarnamnet måste börja med en bokstav"
 
+#: page_account.py:267
+msgid "The login name cannot end in a dot"
+msgstr "Användarnamnet får inte sluta med en punkt"
+
 #: page_account.py:395
 msgid "Sending information to the server..."
 msgstr "Informationen skickas till servern"
