@@ -1,4 +1,5 @@
 #!/bin/sh
+
 mkdir -p /run/puavo
 
 for netconf in /run/net-*.conf; do
