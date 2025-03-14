@@ -58,6 +58,17 @@ grub_m4_template() {
   hosttype=$1
   uki=$2
 
+  if $uki; then
+    uki_grub_m4_template "$hosttype"
+  else
+    default_grub_m4_template "$hosttype"
+  fi
+}
+
+default_grub_m4_template() {
+  local hosttype
+  hosttype=$1
+
   if [ "$hosttype" = 'exam' ]; then
     cat <<'EOF_GRUB_EXAM_CFG'
 set default="0"
@@ -231,14 +242,7 @@ function ltsp_image_entry {
 
     set imagefile="$2"
     set imagepath="$3"
-EOF
-  if $uki; then
-    cat <<EOF
-    search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
-    chainloader /EFI/debian/uki.efi
-EOF
-  else
-    cat <<'EOF'
+
     loopback loop "${imagefile}"
     set root='(loop)'
 
@@ -279,10 +283,6 @@ EOF
 
     linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
     initrd  /boot/initrd.img${kernel_version_suffix}
-EOF
-  fi
-
-  cat <<'EOF'
   }
 }
 
@@ -438,6 +438,143 @@ EOF_GRUB_DEFAULT_CFG
   fi
 }
 
+uki_grub_m4_template() {
+  # XXX hosttype not used yet
+  local hosttype
+  hosttype=$1
+
+  cat <<'EOF'
+set default="0"
+load_env
+
+function load_video {
+  if [ x$feature_all_video_module = xy ]; then
+    insmod all_video
+  else
+    insmod efi_gop
+    insmod efi_uga
+    insmod ieee1275_fb
+    insmod vbe
+    insmod vga
+    insmod video_bochs
+    insmod video_cirrus
+  fi
+}
+
+if loadfont unicode ; then
+  set gfxmode=auto
+  load_video
+  insmod gfxterm
+  set locale_dir=$prefix/locale
+  insmod gettext
+fi
+terminal_output gfxterm
+
+if keystatus --shift; then
+  set timeout=-1
+else
+  if test -n "$puavo_grub_timeout"; then
+    set timeout="$puavo_grub_timeout"
+  else
+    set timeout=5
+  fi
+fi
+
+function load_puavo_config {
+  if test -z "$config_name"; then
+    set config_name="default"
+  fi
+
+  set config_path="$prefix/puavo/${config_name}.cfg"
+
+  if test -e "$config_path"; then
+    source "$config_path"
+  fi
+
+  set theme_path="$prefix/themes/${puavo_grub_theme}/theme.txt"
+  if test -f "$theme_path"; then
+    set theme="${theme_path}"
+  fi
+}
+
+function add_boot_entry {
+  set image_path="$1"
+  set description="$2"
+  set icon="$3"
+  echo "Adding boot entry: $image_path, $description, $icon"
+
+  menuentry "$description" --class "$icon" {
+    search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
+    chainloader "$image_path"
+  }
+}
+
+function generate_boot_entry {
+  set image_path="$1"
+
+  # Extract the folder where the image is
+  regexp -s 1:folder '^(.*/)[^/]+$' "$image_path"
+
+  # Get basename without extension (e.g. /EFI/debian/foo.efi => foo)
+  regexp -s 1:name '\/([^\/]+)\.efi$' "$image_path"
+
+  # Look for image specific metadata folder next to the image file
+  set metadata_folder="${folder}${name}.extra.d"
+
+  # If such folder exists, load the metadata
+  set metadata_file="${metadata_folder}/metadata.cfg"
+
+  set description="$name"
+  set icon="puavo-os"
+
+  if test -f "$metadata_file"; then
+    echo "Executing metadata script $metadata_file"
+    source "$metadata_file"
+  fi
+
+  add_boot_entry "$image_path" "$description" "$icon"
+}
+
+function add_boot_options {
+  search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
+
+  for image_path in /EFI/debian/*.efi; do
+    # Skip the GRUB itself by checking if the basename starts with "grub"
+    regexp -s 1:basename '([^/]+)$' "$image_path"
+
+    if regexp "^grub" "$basename"; then
+      continue
+    fi
+
+    generate_boot_entry "$image_path"
+  done
+
+  # Add entry for Windows if it exists
+  set windows_image_path="(efiroot)/EFI/Microsoft/Boot/bootmgfw.efi"
+
+  if test -z "$windows_boot_label"; then
+    set windows_boot_label="Windows"
+  fi
+
+  if [ -f "$windows_image_path" ]; then
+    echo "Found boot image $windows_image_path"
+    add_boot_entry "$windows_image_path" "$windows_boot_label" "windows"
+  fi
+}
+
+insmod fat
+insmod search_fs_uuid
+insmod chain
+insmod part_gpt
+insmod jpeg
+insmod png
+insmod regexp
+
+load_puavo_config
+add_boot_options
+EOF
+}
+
 find_grub_target_devices_on_raid() {
   local diskdev
 
@@ -587,6 +724,20 @@ install_legacy_grub() {
   return 0
 }
 
+write_grub_version() {
+  local output_file
+  output_file=$1
+  new_grub_version=$(grub-install --version | awk '{ print $3 }')
+  if [ -z "$new_grub_version" ]; then
+    log err 'could not determine new grub version'
+    exitstatus=1
+  else
+    printf "%s\n" "$new_grub_version" > "${output_file}.tmp"
+    mv "${output_file}.tmp" "$output_file"
+    log notice "Grub version ${new_grub_version} has been installed"
+  fi
+}
+
 install_efi_grub() {
   local boot_dir efi_devpath grubdev grub_efi_arguments vgname
 
@@ -612,30 +763,20 @@ install_efi_grub() {
     umount /boot/efi || true
     return 1
   fi
+
+  if $uki; then
+    install_puavo_grub_files_to_efi_partition "$boot_dir" && \
+    write_grub_version "${boot_dir}/grub/version" || {
+      umount /boot/efi || true
+      return 1
+    }
+  fi
+
   umount /boot/efi || true
 
   log info "Grub (UEFI) installation to ${grubdev} was OK."
 
   return 0
-}
-
-setup_uki_mode() {
-  local diskdev
-  diskdev=$1
-
-  # Mount the EFI partition, so we can copy the GRUB configuration there
-  efi_devpath=$(get_efi_devpath "$diskdev")
-
-  if [ -z "$efi_devpath" ]; then
-    log err "could not find the EFI partition from ${diskdev}"
-    return 1
-  fi
-
-  mount $efi_devpath /boot
-}
-
-teardown_uki_mode() {
-    umount /boot
 }
 
 usage() {
@@ -809,11 +950,8 @@ case "$hosttype" in
     ;;
 esac
 
-# Todo: Remove once the full configuration works
-update_uki_grub_configuration() {
-  diskdev=$1
-  boot_dir=$2
-  grub_cfg_path=$3
+install_puavo_grub_files_to_efi_partition() {
+  boot_dir=$1
 
   # let's copy puavo specific files into the efi partition.
   # we assume grub installation has created the grub folder.
@@ -821,7 +959,6 @@ update_uki_grub_configuration() {
 
   if ! mount -o loop,ro /images/ltsp.img /run/ltsp; then
     log err 'failed to mount /images/ltsp.img for copying grub files'
-    umount /run/ltsp || true
     return 1
   fi
 
@@ -831,164 +968,15 @@ update_uki_grub_configuration() {
     return 1
   fi
 
-  # Todo: Remove once GRUB installs the x86_64 config in the boot directory
-  if ! cp -r /run/ltsp/boot/grub "/boot/debian"; then
-    log err 'failed to copy grub files to boot directory (x86_64) $boot_dir'
-    umount /run/ltsp || true
-    return 1
-  fi
-
   umount /run/ltsp || true
-
-  efi_partition_uuid=$(get_efi_uuid "$diskdev")
-
-  cat > "$grub_cfg_path" <<EOF
-set default="0"
-load_env
-
-function load_video {
-  if [ x\$feature_all_video_module = xy ]; then
-    insmod all_video
-  else
-    insmod efi_gop
-    insmod efi_uga
-    insmod ieee1275_fb
-    insmod vbe
-    insmod vga
-    insmod video_bochs
-    insmod video_cirrus
-  fi
-}
-
-if loadfont unicode ; then
-  set gfxmode=auto
-  load_video
-  insmod gfxterm
-  set locale_dir=\$prefix/locale
-  insmod gettext
-fi
-terminal_output gfxterm
-
-if keystatus --shift; then
-  set timeout=-1
-else
-  if test -n "\$puavo_grub_timeout"; then
-    set timeout="\$puavo_grub_timeout"
-  else
-    set timeout=5
-  fi
-fi
-
-function load_puavo_config {
-  if test -z "\$config_name"; then
-    set config_name="default"
-  fi
-
-  set config_path="\$prefix/puavo/\${config_name}.cfg"
-
-  if test -e "\$config_path"; then
-    source "\$config_path"
-  fi
-
-  set theme_path="\$prefix/themes/\${puavo_grub_theme}/theme.txt"
-  if test -f "\$theme_path"; then
-    set theme="\${theme_path}"
-  fi
-}
-
-function add_boot_entry {
-  set image_path="\$1"
-  set description="\$2"
-  set icon="\$3"
-  echo "Adding boot entry: $image_path, $description, $icon"
-
-  menuentry "\$description" --class "\$icon" {
-    search --no-floppy --fs-uuid --set=root $efi_partition_uuid
-    chainloader "\$image_path"
-  }
-}
-
-function generate_boot_entry {
-  set image_path="\$1"
-
-  # Extract the folder where the image is
-  regexp -s 1:folder '^(.*/)[^/]+$' "\$image_path"
-
-  # Get basename without extension (e.g. /EFI/debian/foo.efi => foo)
-  regexp -s 1:name '\/([^\/]+)\.efi$' "\$image_path"
-
-  # Look for image specific metadata folder next to the image file
-  set metadata_folder="\${folder}\${name}.extra.d"
-
-  # If such folder exists, load the metadata
-  set metadata_file="\${metadata_folder}/metadata.cfg"
-
-  set description="\$name"
-  set icon="puavo-os"
-
-  if test -f "\$metadata_file"; then
-    echo "Executing metadata script $metadata_file"
-    source "\$metadata_file"
-  fi
-
-  add_boot_entry "\$image_path" "\$description" "\$icon"
-}
-
-function add_boot_options {
-  search --no-floppy --fs-uuid --set=root $efi_partition_uuid
-
-  for image_path in /EFI/debian/*.efi; do
-    echo "Found boot image \$image_path"
-    generate_boot_entry "\$image_path"
-  done
-
-  # Add entry for Windows if it exists
-  set windows_image_path="(efiroot)/EFI/Microsoft/Boot/bootmgfw.efi"
-
-  if test -z "\$windows_boot_label"; then
-    set windows_boot_label="Windows"
-  fi
-
-  if [ -f "\$windows_image_path" ]; then
-    echo "Found boot image \$windows_image_path"
-    add_boot_entry "\$windows_image_path" "\$windows_boot_label" "windows"
-  fi
-}
-
-insmod fat
-insmod search_fs_uuid
-insmod chain
-
-insmod part_gpt
-insmod fat
-insmod search_fs_uuid
-insmod chain
-insmod jpeg
-insmod png
-
-load_puavo_config
-add_boot_options
-EOF
 }
 
 # if we're in UKI mode, we'll install everything on the EFI partition
 grub_cfg_path="${boot_dir}/grub/grub.cfg"
-puavo_efi_partition_uuid=''
 
 if $uki; then
-  boot_dir="/boot/EFI/debian"
+  boot_dir="/boot/efi/EFI/debian"
   grub_cfg_path="${boot_dir}/grub.cfg"
-
-  if ! setup_uki_mode "$diskdev" "$boot_dir"; then
-    log err 'Failed to setup UKI install mode'
-    exit 1
-  fi
-
-  # Ensure that we unmount the EFI partition on exit
-  trap 'teardown_uki_mode' EXIT
-
-  # Todo: What about raid configuration?
-  puavo_efi_partition_uuid=$(get_efi_uuid "$diskdev")
 fi
 
 grub_install_done=false
@@ -996,110 +984,157 @@ grub_install_done=false
 if $only_update_config; then
   log info 'only updating Grub configuration'
 else
-  for grubdev in $grub_target_devices; do
-    log info "installing grub to ${grubdev}"
+  # UKI-based Grub installation doesn't support legacy GRUB,
+  # because we'll install the Grub boot files on EFI partition
+  if $uki; then
+    for grubdev in $grub_target_devices; do
+      log info "installing grub to ${grubdev}"
 
-    grub_install_attempted=false
-
-    if has_bios_boot_partition "$grubdev"; then
-      grub_install_attempted=true
-      if ! install_legacy_grub "$boot_dir" "$grubdev"; then
+      efi_devpath=$(get_efi_devpath "$grubdev")
+      if [ -z "$efi_devpath" ]; then
+        log err "Failed to find EFI partition path for GRUB device"
         exit 1
       fi
-    fi
 
-    efi_devpath=$(get_efi_devpath "$grubdev")
-    if [ -n "$efi_devpath" ]; then
-      grub_install_attempted=true
-      if ! install_efi_grub "$boot_dir" "$efi_devpath" "$grubdev" \
-                            "$vgname"; then
+      if ! install_efi_grub "$boot_dir" "$efi_devpath" "$grubdev" "$vgname"; then
         exit 1
       fi
-    fi
 
-    if ! $grub_install_attempted; then
-      # Must be a legacy Grub installation in case neither bios boot
-      # partition nor EFI-partition was found.  Thus, we must try this:
-      if ! install_legacy_grub "$boot_dir" "$grubdev"; then
-        exit 1
+      log info "Grub installation to ${grubdev} was successful"
+    done
+  else
+    for grubdev in $grub_target_devices; do
+      log info "installing grub to ${grubdev}"
+
+      grub_install_attempted=false
+
+      if has_bios_boot_partition "$grubdev"; then
+        grub_install_attempted=true
+        if ! install_legacy_grub "$boot_dir" "$grubdev"; then
+          exit 1
+        fi
       fi
-    fi
 
-    log info "Grub installation to ${grubdev} was successful"
-  done
+      efi_devpath=$(get_efi_devpath "$grubdev")
+      if [ -n "$efi_devpath" ]; then
+        grub_install_attempted=true
+        if ! install_efi_grub "$boot_dir" "$efi_devpath" "$grubdev" "$vgname"; then
+          exit 1
+        fi
+      fi
+
+      if ! $grub_install_attempted; then
+        # Must be a legacy Grub installation in case neither bios boot
+        # partition nor EFI-partition was found.  Thus, we must try this:
+        if ! install_legacy_grub "$boot_dir" "$grubdev"; then
+          exit 1
+        fi
+      fi
+
+      log info "Grub installation to ${grubdev} was successful"
+    done
+
+    write_grub_version "${boot_dir}/grub/version"
+  fi
 
   grub_install_done=true
 
   if ! flush_caches; then
     log warn 'error in flushing caches after grub installation'
   fi
-
-  new_grub_version=$(grub-install --version | awk '{ print $3 }')
-  if [ -z "$new_grub_version" ]; then
-    log err 'could not determine new grub version'
-    exitstatus=1
-  else
-    printf "%s\n" "$new_grub_version" > "${boot_dir}/grub/version.tmp"
-    mv "${boot_dir}/grub/version.tmp" "${boot_dir}/grub/version"
-    log notice "Grub version ${new_grub_version} has been installed to: $(printf %s "$grub_target_devices")"
-  fi
 fi
 
+# Next, we'll install the Grub configuration
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
-grub_m4_template "$hosttype" "$uki"                                    \
-  | m4 -D__PUAVO_HOSTTYPE__="$hosttype"                                \
-       -D__PUAVO_IMAGES_BTRFS_LABEL__="$puavo_images_btrfs_label"      \
-       -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments"          \
-       -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"            \
-       -D__PUAVO_PARTITION_IMAGES__="$puavo_partition_grub_images"     \
-       -D__PUAVO_PARTITION_OVERLAYS__="$puavo_partition_grub_overlays" \
-  > "$tmp_grub_cfg_path"
+generate_grub_configuration() {
+  local puavo_efi_partition_uuid
+  puavo_efi_partition_uuid=$1
 
-windows_partition_path=/images/boot/.puavo_windows_partition
-if [ -n "$possible_windows_disk_dev" ]; then
-  windows_boot_partition=$(
-    lookup_windows_boot_partition "$possible_windows_disk_dev")
-  windows_chainloader=$(lookup_windows_chainloader "$possible_windows_disk_dev")
-  if [ -n "$windows_boot_partition" -a -n "$windows_chainloader" ]; then
-    printf "%s %s\n" "$windows_boot_partition" "$windows_chainloader" \
-      > "${windows_partition_path}.tmp"
-    mv "${windows_partition_path}.tmp" "$windows_partition_path"
+  grub_m4_template "$hosttype" "$uki"                                    \
+    | m4 -D__PUAVO_EFI_PARTITION_UUID__="$puavo_efi_partition_uuid"      \
+         -D__PUAVO_HOSTTYPE__="$hosttype"                                \
+         -D__PUAVO_IMAGES_BTRFS_LABEL__="$puavo_images_btrfs_label"      \
+         -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments"          \
+         -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"            \
+         -D__PUAVO_PARTITION_IMAGES__="$puavo_partition_grub_images"     \
+         -D__PUAVO_PARTITION_OVERLAYS__="$puavo_partition_grub_overlays" \
+    > "$tmp_grub_cfg_path"
 
-    cat <<EOF >> "$tmp_grub_cfg_path"
+  windows_partition_path=/images/boot/.puavo_windows_partition
+  if [ -n "$possible_windows_disk_dev" ]; then
+    windows_boot_partition=$(
+      lookup_windows_boot_partition "$possible_windows_disk_dev")
+    windows_chainloader=$(lookup_windows_chainloader "$possible_windows_disk_dev")
+    if [ -n "$windows_boot_partition" -a -n "$windows_chainloader" ]; then
+      printf "%s %s\n" "$windows_boot_partition" "$windows_chainloader" \
+        > "${windows_partition_path}.tmp"
+      mv "${windows_partition_path}.tmp" "$windows_partition_path"
 
-if test "\${puavo_grub_windows_enabled}" = "true"; then
-  menuentry --class="windows" "\${windows_boot_label}" {
-    insmod ntfs
-    search --no-floppy --fs-uuid --set=root ${windows_boot_partition}
-    chainloader ${windows_chainloader}
-  }
-  if test "\${puavo_grub_boot_default}" = "windows"; then
-    set default="\${windows_boot_label}"
+      cat <<EOF >> "$tmp_grub_cfg_path"
+
+  if test "\${puavo_grub_windows_enabled}" = "true"; then
+    menuentry --class="windows" "\${windows_boot_label}" {
+      insmod ntfs
+      search --no-floppy --fs-uuid --set=root ${windows_boot_partition}
+      chainloader ${windows_chainloader}
+    }
+    if test "\${puavo_grub_boot_default}" = "windows"; then
+      set default="\${windows_boot_label}"
+    fi
   fi
-fi
 EOF
+    else
+      rm -f "$windows_partition_path"
+    fi
   else
     rm -f "$windows_partition_path"
   fi
-else
-  rm -f "$windows_partition_path"
-fi
+}
 
-if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
-  log info 'no changes to Grub configuration'
+install_grub_configuration() {
+  if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
+    log info 'no changes to Grub configuration'
+  else
+    mv "$tmp_grub_cfg_path" "$grub_cfg_path"
+    log notice 'new Grub configuration has been installed'
+    if ! flush_caches; then
+      log warn 'error in flushing caches after updating grub configuration'
+    fi
+  fi
+
+  # We no longer need the temporary config file
   rm -f "$tmp_grub_cfg_path"
+}
+
+if $uki; then
+  # Install the grub config to all EFI partitions
+  for grubdev in $grub_target_devices; do
+    echo "> updating the Grub configuration on ${grubdev}"
+
+    efi_devpath=$(get_efi_devpath "$grubdev")
+    if [ -z "$efi_devpath" ]; then
+      log err "Failed to find EFI partition path for GRUB device"
+      exit 1
+    fi
+
+    # We need to mount the EFI partition, because the
+    # GRUB config will be installed there
+    if ! mount_efi_partition "$efi_devpath"; then
+      log err "could not mount /boot/efi from ${efi_devpath}"
+      return 1
+    fi
+
+    # We need separate GRUB configs for each EFI partition,
+    # because each config is dependent on the partition's UUID
+    efi_partition_uuid=$(get_efi_uuid "$grubdev")
+    generate_grub_configuration "$efi_partition_uuid"
+    install_grub_configuration
+    umount /boot/efi || true
+  done
 else
-  mv "$tmp_grub_cfg_path" "$grub_cfg_path"
-
-  if $uki; then
-    update_uki_grub_configuration "$diskdev" "$boot_dir" "$grub_cfg_path"
-  fi
-
-  log notice 'new Grub configuration has been installed'
-  if ! flush_caches; then
-    log warn 'error in flushing caches after updating grub configuration'
-  fi
+  generate_grub_configuration ""
+  install_grub_configuration
 fi
 
 if $grub_install_done; then
