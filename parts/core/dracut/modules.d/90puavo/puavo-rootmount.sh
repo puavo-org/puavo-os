@@ -27,14 +27,6 @@ PUAVO_ROOT_DEVICE=
 
 for x in $(cat /proc/cmdline); do
     case "$x" in
-        loop=*)
-            # loop-parameter is legacy and is for compatibility with
-            # the old Trusty-based Puavo-systems and their grub
-            # configuration.
-            if [ -z "$PUAVO_IMAGE_PATH" ]; then
-                PUAVO_IMAGE_PATH="${x#loop=}"
-            fi
-            ;;
         puavo.image.load_to_ram=true)
             PUAVO_IMAGE_LOAD_TO_RAM=1
             ;;
