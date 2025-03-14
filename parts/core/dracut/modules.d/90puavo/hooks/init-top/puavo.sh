@@ -20,9 +20,6 @@ mkdir -p /run/puavo
 
 exec > /run/puavo/initrd.log 2>&1
 
-# Todo: Remove? This isn't useful as the database is stored under /run and changes to it aren't overlayed after root switch.
-puavo-conf-update --init --verbose
-
 # apply kernel module configurations based on puavo-conf here
 
 puavo_nvidia_driver=
