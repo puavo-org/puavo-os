@@ -857,14 +857,14 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-6.1.0-31-amd64';
 
-    '6.12.9-amd64':
+    '6.12.9+bpo-amd64':
       # The current nvidia packages (470.199.02-1~deb12u1 and
       # 525.125.06-1~deb12u1) do not compile for 6.5.x.
       # The broadcom sta module does not compile for 6.12.x.
       # The same is true for the current VirtualBox version in
       # debian-fasttrack.
       dkms_modules => [],
-      package_name => 'linux-image-6.12.9-amd64-unsigned';
+      package_name => 'linux-image-6.12.9+bpo-amd64-unsigned';
   }
 
   # various contrib/non-free stuff, firmwares and such
