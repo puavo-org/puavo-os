@@ -1,36 +1,46 @@
 # parts, ports and some cloud packages go into puavo-os images
 
-# XXX do not build any custom packages in Trixie, these all need some work
-# _pkgs_cloud := krb5 openldap puavo-ds puavo-os
-# _pkgs_parts := puavo-ds puavo-os
-# _pkgs_ports := anki                   \
-#                console-setup          \
-#                cups                   \
-#                cups-filters           \
-#                gnome-control-center   \
-#                gnome-network-displays \
-#                gnome-shell            \
-#                gtk+3.0                \
-#                gtk4                   \
-#                hooktftp               \
-#                kde-spectacle          \
-#                libpam-ccreds          \
-#                linux                  \
-#                mutter                 \
-#                nbd                    \
-#                veyon                  \
-#                wine                   \
-#                wsmancli
-_pkgs_cloud := puavo-ds puavo-os
-_pkgs_parts := puavo-ds puavo-os
-_pkgs_ports :=
-
-# sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
 _pkgs_parts_builddeps :=
-# XXX Trixie
-# _pkgs_ports_builddeps := sblim-sfcc openwsman
-_pkgs_ports_builddeps :=
+
+ifeq "$(image_class)" "exam"
+  _pkgs_cloud :=
+  _pkgs_parts := puavo-os
+  # XXX Trixie _pkgs_ports := console-setup gnome-shell
+  _pkgs_ports :=
+  _pkgs_ports_builddeps :=
+else
+  # XXX do not build any custom packages in Trixie, these all need some work
+  # _pkgs_cloud := krb5 openldap puavo-ds puavo-os
+  # _pkgs_parts := puavo-ds puavo-os
+  # _pkgs_ports := anki                   \
+  #                console-setup          \
+  #                cups                   \
+  #                cups-filters           \
+  #                gnome-control-center   \
+  #                gnome-network-displays \
+  #                gnome-shell            \
+  #                gtk+3.0                \
+  #                gtk4                   \
+  #                hooktftp               \
+  #                kde-spectacle          \
+  #                libpam-ccreds          \
+  #                linux                  \
+  #                mutter                 \
+  #                nbd                    \
+  #                veyon                  \
+  #                wine                   \
+  #                wsmancli
+  # XXX Trixie
+  _pkgs_cloud := puavo-ds puavo-os
+  _pkgs_parts := puavo-ds puavo-os
+  _pkgs_ports :=
+
+  # sblim-sfcc openwsman are dependencies for wsmancli
+  # XXX Trixie
+  # _pkgs_ports_builddeps := sblim-sfcc openwsman
+  _pkgs_ports_builddeps :=
+endif
 
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
                $(_pkgs_parts) $(_pkgs_ports)
