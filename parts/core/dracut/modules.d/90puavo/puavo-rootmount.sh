@@ -37,6 +37,7 @@ for x in $(cat /proc/cmdline); do
             PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
             ;;
         root=UUID=*)
+            PUAVO_ROOT_DEVICE="/dev/disk/by-uuid/${x#root=UUID=}"
             ROOT_IN_BTRFS=1
             ;;
     esac
@@ -54,6 +55,18 @@ update_image_copy_progress() {
     plymouth system-update "--progress=${progress}"
   done
 }
+
+# We need to mount the root device manually in pre-mount stage.
+# You might attempt to execute this script during the mount stage
+# when you'd expect the root to be mounted for you.
+# However, it seems that Dracut unmounts the root device, because it's 
+# considered "unusable" in our case, likely due to missing folders (e.g. /dev).
+# See:
+# https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/init.sh#L234
+# https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/dracut-lib.sh#L750
+if [ -n "${PUAVO_ROOT_DEVICE}" ]; then
+    mount "$PUAVO_ROOT_DEVICE" "${rootmnt}"
+fi
 
 loopmount_image()
 {
@@ -114,7 +127,7 @@ do_union_mount()
     mount -o move "$rootmnt" /rofs
 
     modprobe overlay
-    mkdir "${cow}/rootdir" "${cow}/workdir"
+    mkdir -p "${cow}/rootdir" "${cow}/workdir"
     mount -t overlay \
           -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
           overlay "$rootmnt"
@@ -153,7 +166,7 @@ mount_puavo_partition() {
 
     if [ "$ROOT_IN_BTRFS" = 1 ]; then
         # XXX should -o noatime also used with btrfs?
-        mount -o "subvol=${name}" "$ROOT" "/${name}" || return 1
+        mount -o "subvol=${name}" "$PUAVO_ROOT_DEVICE" "/${name}" || return 1
         return 0
     fi
 
