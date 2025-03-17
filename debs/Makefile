@@ -1,30 +1,37 @@
 # parts, ports and some cloud packages go into puavo-os images
 
-_pkgs_cloud := krb5 openldap puavo-ds puavo-os
-_pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := anki                   \
-               console-setup          \
-               cups                   \
-               cups-filters           \
-               gnome-control-center   \
-               gnome-network-displays \
-               gnome-shell            \
-               gtk+3.0                \
-               gtk4                   \
-               hooktftp               \
-               kde-spectacle          \
-               libpam-ccreds          \
-               linux                  \
-               mutter                 \
-               nbd                    \
-               veyon                  \
-               wine                   \
-               wsmancli
-
-# sblim-sfcc openwsman are dependencies for wsmancli
 _pkgs_cloud_builddeps :=
 _pkgs_parts_builddeps :=
-_pkgs_ports_builddeps := sblim-sfcc openwsman
+
+ifeq "$(image_class)" "exam"
+  _pkgs_cloud :=
+  _pkgs_parts := puavo-os
+  _pkgs_ports := console-setup gnome-shell
+  _pkgs_ports_builddeps :=
+else
+  _pkgs_cloud := krb5 openldap puavo-ds puavo-os
+  _pkgs_parts := puavo-ds puavo-os
+  _pkgs_ports := anki                   \
+                 console-setup          \
+                 cups                   \
+                 cups-filters           \
+                 gnome-control-center   \
+                 gnome-network-displays \
+                 gnome-shell            \
+                 gtk+3.0                \
+                 gtk4                   \
+                 hooktftp               \
+                 kde-spectacle          \
+                 libpam-ccreds          \
+                 linux                  \
+                 mutter                 \
+                 nbd                    \
+                 veyon                  \
+                 wine                   \
+                 wsmancli
+  # sblim-sfcc openwsman are dependencies for wsmancli
+  _pkgs_ports_builddeps := sblim-sfcc openwsman
+endif
 
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
                $(_pkgs_parts) $(_pkgs_ports)

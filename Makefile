@@ -92,7 +92,7 @@ _systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
 			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
 
 _sudo := sudo $(_proxywrap_cmd)
-export _sudo
+export image_class _sudo
 
 .PHONY: build-all-images
 build-all-images: check-all-release-names $(patsubst %,build-%-image,$(all_image_classes))
