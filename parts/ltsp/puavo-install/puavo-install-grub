@@ -724,6 +724,18 @@ install_legacy_grub() {
   return 0
 }
 
+copy_grub_environment() {
+    # Scripts such as "setup_grub_environment" write the
+    # environment variables into /images/boot/grub/grubenv.
+    # Here we sync this file to the boot directory (EFI partition most likely).
+    if [ ! -f /images/boot/grub/grubenv ]; then
+        # Grub will create the default environment in the EFI partition
+        return 0
+    fi
+
+    cp /images/boot/grub/grubenv "${boot_dir}/grub/grubenv" || return 1
+}
+
 write_grub_version() {
   local output_file
   output_file=$1
@@ -766,7 +778,9 @@ install_efi_grub() {
 
   if $uki; then
     install_puavo_grub_files_to_efi_partition "$boot_dir" && \
+    copy_grub_environment && \
     write_grub_version "${boot_dir}/grub/version" || {
+      echo "Failed to install UKI files to EFI partition"
       umount /boot/efi || true
       return 1
     }

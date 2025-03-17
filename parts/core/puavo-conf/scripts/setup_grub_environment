@@ -3,6 +3,7 @@
 set -eu
 
 grubedit() {
+  mkdir -p /images/boot/grub
   grubenv_path='/images/boot/grub/grubenv'
   if ! grub-editenv "$grubenv_path" "$@"; then
     echo 'Creating new grubenv because of an error' >&2
