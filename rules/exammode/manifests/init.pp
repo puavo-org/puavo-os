@@ -1,4 +1,5 @@
 class exammode {
+  include ::dconf::schemas
   include ::dpkg
   include ::packages
   include ::puavo_conf
