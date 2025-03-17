@@ -1,4 +1,5 @@
 class image::exam {
+  include ::initramfs
   include ::kernels
   include ::packages
 
