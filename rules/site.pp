@@ -9,4 +9,5 @@ case $::puavoruleset {
   }
 
   'allinone': { include ::image::allinone }
+  'exam':     { include ::image::exam     }
 }
