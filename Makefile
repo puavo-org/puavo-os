@@ -1,5 +1,5 @@
 # Public, configurable variables
-all_image_classes       := allinone
+all_image_classes       := allinone exam
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= bookworm
 default_image_class	:= allinone
