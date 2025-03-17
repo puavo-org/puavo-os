@@ -626,7 +626,7 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf, vgname)
-    partition_dev = "/dev/#{ fs_conf['puavo_partition'] }"
+    install_target_dev = fs_conf['install-target']
 
     btrfs_subvolumes( fs_conf['hosttype'] ).each do |name, attrs|
       # /tmp should not be mounted now,
@@ -635,7 +635,7 @@ module DiskHandler
 
       mnt_path = "/#{ name }"
       FileUtils.mkdir_p(mnt_path)
-      run('mount', '-o', "subvol=#{ name }", partition_dev, mnt_path)
+      run('mount', '-o', "subvol=#{ name }", install_target_dev, mnt_path)
     end
   end
 
