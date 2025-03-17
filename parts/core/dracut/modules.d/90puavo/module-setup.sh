@@ -18,10 +18,6 @@ install() {
                   /sbin/logsave   \
                   /usr/bin/pv
 
-    # Todo: Remove lsof and fuser
-    inst $(which lsof)
-    inst $(which fuser)
-
     # Remove NVIDIA blacklist and configuration files
     rm -f "${initdir}/etc/modprobe.d/nvidia-blacklists-nouveau.conf" \
           "${initdir}/etc/modprobe.d/nvidia.conf"                    \
@@ -36,6 +32,6 @@ install() {
     # Install hooks
     inst_hook pre-udev  90 "${moddir}/puavo-kernel-module-setup.sh"
     inst_hook pre-mount 90 "${moddir}/puavo-rootmount.sh"
-    inst_hook pre-mount 90 "${moddir}/puavo-plymouth.sh"
+    inst_hook pre-mount 91 "${moddir}/puavo-plymouth.sh"
     inst_hook cleanup   20 "${moddir}/puavo-nbd-server.sh"
 }
