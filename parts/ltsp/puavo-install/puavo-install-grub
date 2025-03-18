@@ -120,8 +120,12 @@ function ltsp_image_entry {
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)
   set kernelparameters="${kernelparameters} ${puavo_kernel_arguments}"
-  if test "$boottype" = "liveboot"; then
+  if test "$boottype" = "exam"; then
+    set kernelparameters="${kernelparameters} puavo.hosttype=exam"
+  elif test "$boottype" = "liveboot"; then
     set kernelparameters="${kernelparameters} puavo.hosttype=laptop puavo.guestlogin.enabled=true"
+  else
+    set kernelparameters="${kernelparameters} puavo.hosttype=__PUAVO_HOSTTYPE__ puavo.guestlogin.enabled=true"
   fi
 
   get_puavoimage_release_name "$imagefile"
@@ -314,14 +318,20 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     ltsp_image_entry_superlaptop "${backup_image}" "${text_backup_developer_mode}" "" "${backup_image_alias}" "${os_icon}-devel"
   fi
 
-  for file in ${dev}/*.img; do
-    if test "${file}" = "${default_image}";       then continue; fi
-    if test "${file}" = "${backup_image}";        then continue; fi
-    if test "${file}" = "${default_image_alias}"; then continue; fi
-    if test "${file}" = "${backup_image_alias}";  then continue; fi
+  for systemimage in ${dev}/*.img; do
+    if test "${systemimage}" = "${default_image}";       then continue; fi
+    if test "${systemimage}" = "${backup_image}";        then continue; fi
+    if test "${systemimage}" = "${default_image_alias}"; then continue; fi
+    if test "${systemimage}" = "${backup_image_alias}";  then continue; fi
 
-    ltsp_image_entry "${file}" "${text_other_system_normal_startup}" "" "normal" "${file}" "${os_icon}-backup"
-    ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}" "" "${file}" "${os_icon}-devel"
+    ltsp_image_entry "${systemimage}" "${text_other_system_normal_startup}" "" "normal" "${systemimage}" "${os_icon}-backup"
+    ltsp_image_entry_superlaptop "${systemimage}" "${text_other_system_developer_mode}" "" "${systemimage}" "${os_icon}-devel"
+  done
+
+  for examimage in ${dev}/exam/*.img; do
+    if test -f "${examimage}"; then
+      ltsp_image_entry "${examimage}" "Exam environment" "" "exam"
+    fi
   done
 done
 EOF
@@ -505,7 +515,7 @@ else
 fi
 
 # loop= parameter is legacy and is meant for the old Trusty-based Puavo-systems.
-common_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\" puavo.image.path=\"\${imagepath}\""
+common_kernel_arguments="root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\" puavo.image.path=\"\${imagepath}\""
 
 case "$hosttype" in
   bootserver|diskinstaller|preinstalled|wirelessaccesspoint)
@@ -637,7 +647,8 @@ grub_cfg_path="${boot_dir}/grub/grub.cfg"
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 grub_m4_template                                              \
-  | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
+  | m4 -D__PUAVO_HOSTTYPE__="$hosttype"                       \
+       -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
        -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
        -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
   > "$tmp_grub_cfg_path"
