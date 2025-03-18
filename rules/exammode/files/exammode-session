@@ -2,6 +2,8 @@
 
 set -eu
 
+# the background image is from the "ubuntu-wallpapers-bullseye"
+# puavo-pkg package
 loading_background_path='/usr/share/backgrounds/Colored_Pencils_by_Jess_Bailey.jpg'
 session_path='/var/lib/puavo-exammode/session.json'
 

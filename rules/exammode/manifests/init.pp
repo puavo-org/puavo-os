@@ -3,6 +3,7 @@ class exammode {
   include ::dpkg
   include ::packages
   include ::puavo_conf
+  include ::puavo_pkg::packages
 
   # Disable VT switching from keyboard.
   # The examination mode requires this for security.
@@ -44,7 +45,8 @@ class exammode {
 
     '/usr/lib/puavo-ltsp-client/exammode-session':
       mode    => '0755',
-      require => Package['puavo-ltsp-client'],
+      require => [ Package['puavo-ltsp-client']
+                 , Puavo_pkg::Install['ubuntu-wallpapers-bullseye'] ],
       source  => 'puppet:///modules/exammode/exammode-session';
 
     '/usr/local/bin/puavo-examusersh':
@@ -112,4 +114,6 @@ class exammode {
     or title == 'xinit'
     or title == 'xserver-xorg-core'
   |>
+
+  Puavo_pkg::Install <| title == 'ubuntu-wallpapers-bullseye' |>
 }
