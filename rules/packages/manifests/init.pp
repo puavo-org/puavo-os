@@ -410,6 +410,7 @@ class packages {
     , 'python3-lxml'
     , 'sane-utils'
     , 'view3dscene'
+    , 'xinit'
     , 'xsane' ]:
       tag => [ 'tag_graphics', 'tag_debian_desktop', ];
 

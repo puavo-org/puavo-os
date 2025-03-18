@@ -109,6 +109,7 @@ class exammode {
     or title == 'ruby-faye-websocket'
     or title == 'systemd'
     or title == 'tomoyo-tools'
+    or title == 'xinit'
     or title == 'xserver-xorg-core'
   |>
 }
