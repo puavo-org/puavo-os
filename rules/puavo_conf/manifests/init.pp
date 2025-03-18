@@ -45,6 +45,10 @@ class puavo_conf {
     '/etc/puavo-conf/scripts/.preinit.bootserver':
       require => Package['puavo-conf'],
       source  => 'puppet:///modules/puavo_conf/puavo-conf_scripts_preinit.bootserver';
+
+    '/etc/puavo-conf/scripts/.preinit.exam':
+      require => Package['puavo-conf'],
+      source  => 'puppet:///modules/puavo_conf/puavo-conf_scripts_preinit.exam';
   }
 
   Package <| title == puavo-conf |>
