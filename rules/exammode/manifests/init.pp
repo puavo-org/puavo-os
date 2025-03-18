@@ -1,5 +1,6 @@
 class exammode {
   include ::dconf::schemas
+  include ::desktop::dconf::exammode
   include ::dpkg
   include ::packages
   include ::puavo_conf
