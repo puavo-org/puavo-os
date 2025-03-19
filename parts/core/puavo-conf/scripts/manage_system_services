@@ -224,6 +224,11 @@ set services {
         -> /etc/systemd/system/puavo-docker.timer
     }}
 
+  { puavo-exammode-tty {
+      /etc/systemd/system/multi-user.target.wants/puavo-exammode-tty.service
+        -> /etc/systemd/system/puavo-exammode-tty.service
+    }}
+
   { puavo-image-torrent-updated {
       /etc/systemd/system/multi-user.target.wants/puavo-image-torrent-updated.service
         -> /lib/systemd/system/puavo-image-torrent-updated.service
