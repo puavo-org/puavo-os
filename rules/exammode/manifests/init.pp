@@ -2,6 +2,7 @@ class exammode {
   include ::dconf::schemas
   include ::desktop::dconf::exammode
   include ::dpkg
+  include ::gnome_shell_extensions      # XXX only a subset of these are needed
   include ::packages
   include ::puavo_conf
   include ::puavo_pkg::packages
