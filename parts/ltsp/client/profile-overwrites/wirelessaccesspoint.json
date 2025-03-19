@@ -1,6 +1,7 @@
 {
   "puavo.admin.autoreboot.enabled": "true",
   "puavo.networking.dhcp.interfaces": "eth*",
+  "puavo.service.puavo-darkdm.enabled": "true",
   "puavo.service.puavo-vpn-client-openvpn.enabled": "true",
   "puavo.support.vino_network_interface": "vpn0",
   "puavo.xsessions.cowsay.message": "Moo, I am a Puavo wireless accesspoint!",
