@@ -42,12 +42,14 @@ puavo_mount_partition_on_btrfs() {
 puavo_mount_partition_on_lvm() {
   local partition puavo_mntpoint puavo_partition
 
-  partition=$1
+  vgname=$1
+  partition=$2
 
-  puavo_partition="puavo-${partition}"
+  puavo_partition="$vgname-${partition}"
   puavo_mntpoint="/${partition}"
 
   if ! [ -b "/dev/mapper/${puavo_partition}" ]; then
+    echo "Failed to find /dev/mapper/${puavo_partition}"
     return 1
   fi
 
@@ -126,18 +128,18 @@ fi
 status=0
 
 if [ "$puavo_hosttype" = 'diskinstaller' ]; then
-  puavo_mount_partition installimages || status=1
+  puavo_mount_partition puavoinstaller installimages || status=1
 fi
 
 if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
-  puavo_mount_partition home || status=1
+  puavo_mount_partition puavo home || status=1
 fi
 
 # These are needed for system updates when on NBD.
 case "$puavo_hosttype" in
   bootserver|laptop|preinstalled|wirelessaccesspoint)
-    puavo_mount_partition images || status=1
-    puavo_mount_partition state  || status=1
+    puavo_mount_partition puavo images || status=1
+    puavo_mount_partition puavo state  || status=1
     ;;
 esac
 
@@ -147,7 +149,7 @@ case "$puavo_hosttype" in
     ;;
   *)
     if [ -b /dev/mapper/puavo-tmp ]; then
-      { puavo_mount_partition tmp && chmod 1777 /tmp; } || status=1
+      { puavo_mount_partition puavo tmp && chmod 1777 /tmp; } || status=1
     fi
     ;;
 esac
