@@ -127,9 +127,6 @@ install : installdirs
 		systemd/*
 
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
-		/usr/lib/systemd/system/puavo-darkdm.service
-
-	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
 		/usr/lib/systemd/system/puavo-report-system-version.service
 
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
