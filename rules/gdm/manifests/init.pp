@@ -84,6 +84,7 @@ class gdm {
   Package <|
        title == gdm3
     or title == polkitd-pkla
+    or title == puavo-desktop-applet
     or title == puavo-ltsp-client
   |>
 
