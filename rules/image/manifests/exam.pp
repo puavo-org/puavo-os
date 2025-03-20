@@ -1,5 +1,5 @@
 class image::exam {
-  include ::exammode
+  include ::exammode::standalone
   include ::initramfs
   include ::kernels
   include ::packages

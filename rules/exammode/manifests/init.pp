@@ -11,7 +11,8 @@ class exammode {
   # The examination mode requires this for security.
   # XXX Note that Wayland may need something like this as well?
 
-  $puavo_examuser_homedir = '/var/lib/puavo-exammode/user'
+  $puavo_exammode_dir     = '/var/lib/puavo-exammode'
+  $puavo_examuser_homedir = "${puavo_exammode_dir}/user";
   $puavo_examuser_gid     = '989'
   $puavo_examuser_uid     = '989'
 
