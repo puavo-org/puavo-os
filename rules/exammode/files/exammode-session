@@ -28,7 +28,7 @@ setup_loading_background() {
 }
 
 setup_loading_background
-/usr/lib/puavo-ltsp-client/exammode-gnome-session || true
+/usr/local/lib/puavo-exammode/exammode-gnome-session || true
 
 uid=$(id -u)
 pkill -U "$uid"
