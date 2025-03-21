@@ -88,8 +88,14 @@ class exammode {
       source => 'puppet:///modules/exammode/puavo-exammode.json';
   }
 
+  ::puavo_conf::profile {
+    'exam.json':
+      source => 'puppet:///modules/exammode/exam-puavoconf-profile.json';
+  }
+
   Package <|
        title == 'gsettings-desktop-schemas'
+    or title == 'puavo-conf'
     or title == 'systemd'
     or title == 'tomoyo-tools'
     or title == 'xinit'
