@@ -31,9 +31,9 @@ class exammode::common {
       source => 'puppet:///modules/exammode/10puavo-set-exammode-session-quirks';
 
     '/usr/lib/puavo-ltsp-client/exammode-gnome-session':
-      mode   => '0755',
+      mode    => '0755',
       require => Package['puavo-ltsp-client'],
-      source => 'puppet:///modules/exammode/exammode-gnome-session';
+      source  => 'puppet:///modules/exammode/exammode-gnome-session';
 
     '/usr/lib/puavo-ltsp-client/exammode-session':
       mode    => '0755',
