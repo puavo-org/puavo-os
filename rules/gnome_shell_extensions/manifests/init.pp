@@ -1,6 +1,5 @@
 class gnome_shell_extensions {
   include ::packages
-  include ::themes
 
   define add_extension () {
     $extension = $title
