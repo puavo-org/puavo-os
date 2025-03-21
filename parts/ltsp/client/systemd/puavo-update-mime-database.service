@@ -2,7 +2,7 @@
 Description=Update MIME database
 
 [Service]
-ExecStart=/usr/lib/puavo-ltsp-client/update-mime-database
+ExecStart=/usr/lib/puavo-pkg/update-mime-database
 Type=oneshot
 
 [Install]

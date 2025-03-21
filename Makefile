@@ -210,10 +210,6 @@ $(image_dir):
 $(install_image_dir):
 	$(_sudo) mkdir -p '$(install_image_dir)'
 
-.PHONY: update-mime-database
-update-mime-database:
-	$(_sudo) /usr/lib/puavo-ltsp-client/update-mime-database
-
 # Using -comp lzo instead of gzip, because we prefer to optimize decompression
 # speed for faster boots, even though image sizes are slightly bigger than with
 # gzip.  Especially on some hosts the decompression stage of kernel/initrd is
@@ -231,7 +227,6 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update-mime-database
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
 		-ef 'config/excludes/$(image_class)'		        \
@@ -242,6 +237,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 .PHONY: prepare-for-squashfs
 prepare-for-squashfs:
 	$(_sudo) updatedb
+	$(_sudo) /usr/lib/puavo-pkg/update-mime-database
 
 # this target requires that this host is running a puavo-os system
 .PHONY: rootfs-install-image
