@@ -1,5 +1,5 @@
 class exammode::standalone {
-  include ::exammode::common
+  include ::exammode
 
   file {
     "${::exammode::puavo_exammode_dir}/session.json":
