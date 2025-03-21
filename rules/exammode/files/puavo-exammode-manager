@@ -121,18 +121,20 @@ class PuavoExammode < DBus::Object
 
     if exam_id == '' then
       session_data = {
-        'locale' => @locale,
-        'name'   => 'Exam mode',
-        'params' => {},
-        'type'   => 'free-exammode-session',
+        'locale'  => @locale,
+        'manager' => true,
+        'name'    => 'Exam mode',
+        'params'  => {},
+        'type'    => 'free-exammode-session',
       }
     else
       exam_info = @exams_listener.get_exam_info_by_id(exam_id)
       session_data = {
-        'locale' => @locale,
-        'name'   => exam_info['name'],
-        'params' => exam_info['params'],
-        'type'   => exam_info['type'],
+        'locale'  => @locale,
+        'manager' => true,
+        'name'    => exam_info['name'],
+        'params'  => exam_info['params'],
+        'type'    => exam_info['type'],
       }
     end
 
