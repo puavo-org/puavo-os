@@ -13,6 +13,7 @@ const exam_session_path = '/var/lib/puavo-exammode/session.json';
 const { gettext: _, ngettext, pgettext, } = ExtensionUtils;
 
 var control_info_label;
+var exam_session_info;
 var indicator;
 
 const QuitExamButton = GObject.registerClass(
@@ -61,7 +62,35 @@ class QuitExamButton extends QuickMenuToggle {
         testDialog.open(global.get_current_time(), true, false);
     }
 
+    _poweroff() {
+        try {
+            const dbus_call = Gio.DBus.system.call(
+                                'org.freedesktop.login1',
+                                '/org/freedesktop/login1',
+                                'org.freedesktop.login1.Manager',
+                                'PowerOff',
+                                (new GLib.Variant('(b)', [ false ])),
+                                null, Gio.DBusCallFlags.NONE, -1, null);
+            dbus_call.then(() => {}, this._poweroff_error);
+        } catch (e) {
+            console.log('could not make dbus call to quit exam session: ' + e);
+            return;
+        }
+    }
+
+    _poweroff_error(e) {
+      console.log('error sending PowerOff dbus call:' + e);
+    }
+
     _quit() {
+      if (exam_session_info.manager) {
+        this._quit_session();
+      } else {
+        this._poweroff();
+      }
+    }
+
+    _quit_session() {
         try {
             const dbus_call = Gio.DBus.system.call(
                                 'org.puavo.Exam',
@@ -70,14 +99,14 @@ class QuitExamButton extends QuickMenuToggle {
                                 'QuitSession',
                                 (new GLib.Variant('()', [])),
                                 null, Gio.DBusCallFlags.NONE, -1, null);
-            dbus_call.then(() => {}, this._quit_error);
+            dbus_call.then(() => {}, this._quit_session_error);
         } catch (e) {
             console.log('could not make dbus call to quit exam session: ' + e);
             return;
         }
     }
 
-    _quit_error(e) {
+    _quit_session_error(e) {
       console.log('error sending QuitSession dbus call:' + e);
     }
 });
@@ -100,7 +129,8 @@ function init() {
     throw new Error('could not read session information');
   }
   let utf8decoder = new TextDecoder();
-  let exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
+  // XXX should probably check exam_session_info contents in some way?
+  exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
 
   control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
                     '    |    ' + _('press F11 to toggle fullscreen');
