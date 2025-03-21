@@ -31,20 +31,21 @@ class exammode {
     '/etc/X11/Xsession.d/10puavo-set-exammode-session-quirks':
       source => 'puppet:///modules/exammode/10puavo-set-exammode-session-quirks';
 
-    '/usr/lib/puavo-ltsp-client/exammode-gnome-session':
-      mode    => '0755',
-      require => Package['puavo-ltsp-client'],
-      source  => 'puppet:///modules/exammode/exammode-gnome-session';
-
-    '/usr/lib/puavo-ltsp-client/exammode-session':
-      mode    => '0755',
-      require => [ Package['puavo-ltsp-client']
-                 , Puavo_pkg::Install['ubuntu-wallpapers-bullseye'] ],
-      source  => 'puppet:///modules/exammode/exammode-session';
-
     '/usr/local/bin/puavo-examusersh':
       mode   => '0755',
       source => 'puppet:///modules/exammode/puavo-examusersh';
+
+    '/usr/local/lib/puavo-exammode':
+      ensure => directory;
+
+    '/usr/local/lib/puavo-exammode/exammode-gnome-session':
+      mode   => '0755',
+      source => 'puppet:///modules/exammode/exammode-gnome-session';
+
+    '/usr/local/lib/puavo-exammode/exammode-session':
+      mode    => '0755',
+      require => Puavo_pkg::Install['ubuntu-wallpapers-bullseye'],
+      source  => 'puppet:///modules/exammode/exammode-session';
 
     # Disable VT switching from keyboard.
     # The examination mode requires this for security.
@@ -89,7 +90,6 @@ class exammode {
 
   Package <|
        title == 'gsettings-desktop-schemas'
-    or title == 'puavo-ltsp-client'
     or title == 'systemd'
     or title == 'tomoyo-tools'
     or title == 'xinit'
