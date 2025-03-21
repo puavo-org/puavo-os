@@ -17,7 +17,15 @@ install() {
                   /sbin/fsck.ext4 \
                   /sbin/logsave   \
                   /usr/bin/pv     \
-                  /usr/sbin/lvm
+                  /usr/sbin/lvm   \
+                  $(which lsblk)  \
+                  $(which blkid)  \
+                  $(which xxd)    \
+                  $(which find)   \
+                  $(which awk)    \
+                  $(which cut)
+
+    inst "$moddir/puavo-current-efi-boot-disk" /usr/bin/puavo-current-efi-boot-disk
 
     # Remove NVIDIA blacklist and configuration files
     rm -f "${initdir}/etc/modprobe.d/nvidia-blacklists-nouveau.conf" \

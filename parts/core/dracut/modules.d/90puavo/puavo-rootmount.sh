@@ -51,6 +51,33 @@ for x in $(cat /proc/cmdline); do
     esac
 done
 
+# If the root device was not set in kernel parameters, we have to find it
+# ourselves. However, we must consider there being multiple bootable disks
+# such as mirrored RAID devices.
+if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
+  echo "Root device is not set in kernel parameters. Attempting to find it..."
+
+  # Attempt to find out the boot disk using EFI variables
+  POTENTIAL_BOOT_DEVICE=$(puavo-current-efi-boot-disk)
+  echo "Boot device: ${POTENTIAL_BOOT_DEVICE:-unknown}"
+
+  # If we found out the boot device, search for the first bootable root
+  # partition and assign it as the root device.
+  # Otherwise, search for any bootable root partition.
+  for device in $(lsblk -pnl -o NAME "${POTENTIAL_BOOT_DEVICE}"); do
+    if blkid "$device" | grep -q 'TYPE="btrfs"'; then
+      PUAVO_ROOT_DEVICE=$device
+      ROOT_IN_BTRFS=1
+      echo "Selecting root device: $PUAVO_ROOT_DEVICE"
+      break
+    fi
+  done
+
+  if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
+    echo "ERROR: Failed to find the root device. Boot will likely fail."
+  fi
+fi
+
 if [ "$ROOT_IN_BTRFS" = 0 ]; then
   lvm vgchange -a y "$PUAVO_LVM_VG"
 fi
