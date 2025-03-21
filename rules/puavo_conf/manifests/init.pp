@@ -26,6 +26,16 @@ class puavo_conf {
     }
   }
 
+  define profile ($source) {
+    $definition_name = $title
+
+    file {
+      "/usr/share/puavo-conf/profile-overwrites/${definition_name}":
+        require => Package['puavo-conf'],
+        source  => $source;
+    }
+  }
+
   define script ($source) {
     $scriptname = $title
 
