@@ -48,7 +48,8 @@ install: installdirs
 		puavo-pkg-wine-helper
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-pkg \
-                lib/unpack-a-file-from-deb
+		lib/unpack-a-file-from-deb \
+		lib/update-mime-database
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-pkg \
