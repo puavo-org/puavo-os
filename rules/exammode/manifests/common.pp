@@ -31,12 +31,14 @@ class exammode::common {
       source => 'puppet:///modules/exammode/10puavo-set-exammode-session-quirks';
 
     '/usr/lib/puavo-ltsp-client/exammode-gnome-session':
-      mode   => '0755',
-      source => 'puppet:///modules/exammode/exammode-gnome-session';
+      mode    => '0755',
+      require => Package['puavo-ltsp-client'],
+      source  => 'puppet:///modules/exammode/exammode-gnome-session';
 
     '/usr/lib/puavo-ltsp-client/exammode-session':
       mode    => '0755',
-      require => Puavo_pkg::Install['ubuntu-wallpapers-bullseye'],
+      require => [ Package['puavo-ltsp-client']
+                 , Puavo_pkg::Install['ubuntu-wallpapers-bullseye'] ],
       source  => 'puppet:///modules/exammode/exammode-session';
 
     '/usr/local/bin/puavo-examusersh':
@@ -86,6 +88,7 @@ class exammode::common {
 
   Package <|
        title == 'gsettings-desktop-schemas'
+    or title == 'puavo-ltsp-client'
     or title == 'systemd'
     or title == 'tomoyo-tools'
     or title == 'xinit'
