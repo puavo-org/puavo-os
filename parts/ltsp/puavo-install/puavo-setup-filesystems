@@ -110,7 +110,7 @@ class LuksPartitionHandler
       raise 'Failed to enroll LUKS encryption device'
   end
 
-  def setup_with_recovery_key()
+  def setup_with_recovery_key(unlock_with_tpm)
     recovery_key_file = Tempfile.new('recovery-key', '/dev/shm')
     recovery_key_file.binmode
 
@@ -127,8 +127,10 @@ class LuksPartitionHandler
       run('cryptsetup', 'luksOpen', "/dev/#{ @partition }",
         @encryption_device_name, "--key-file=#{ recovery_key_file.path }")
 
-      puts 'Enrolling the LUKS partition for TPM-based unlocking...'
-      self.enroll_with_recovery_key(recovery_key)
+      if unlock_with_tpm then
+        puts 'Enrolling the LUKS partition for TPM-based unlocking...'
+        self.enroll_with_recovery_key(recovery_key)
+      end
 
       recovery_key
     ensure
@@ -137,7 +139,7 @@ class LuksPartitionHandler
     end
   end
 
-  def setup_with_passphrase(passphrase)
+  def setup_with_passphrase(passphrase, unlock_with_tpm)
     if passphrase.nil? || passphrase.empty? then
       raise 'Encryption passphrase must be set'
     end
@@ -164,8 +166,10 @@ class LuksPartitionHandler
       raise 'Failed to open the created LUKS encryption device'
     end
 
-    puts 'Enrolling the LUKS partition for TPM-based unlocking...'
-    self.enroll_with_passphrase(passphrase)
+    if unlock_with_tpm then
+      puts 'Enrolling the LUKS partition for TPM-based unlocking...'
+      self.enroll_with_passphrase(passphrase)
+    end
   end
 end
 
@@ -515,16 +519,17 @@ module DiskHandler
 
   def self.setup_luks_partition_with_passphrase(fs_conf)
     handler = self.create_luks_partition_handler(fs_conf)
-    handler.setup_with_passphrase(fs_conf['passphrase'])
+    handler.setup_with_passphrase(
+      fs_conf['passphrase'], fs_conf['unlock_with_tpm'])
 
-    fs_conf['install-target'] = handler.encryption_device
+    fs_conf['install_target'] = handler.encryption_device
   end
 
   def self.setup_luks_partition_with_recovery_key(fs_conf)
     handler = self.create_luks_partition_handler(fs_conf)
-    handler.setup_with_recovery_key()
+    handler.setup_with_recovery_key(fs_conf['unlock_with_tpm'])
 
-    fs_conf['install-target'] = handler.encryption_device
+    fs_conf['install_target'] = handler.encryption_device
   end
 
   def self.do_fs_setup(conf, vgname, raid_setup_done)
@@ -782,7 +787,7 @@ module QueryDiskInfo
     raise 'Windows setup prompts exceeded.'
   end
 
-  def self.ask_device_with_confirmation(hosttype, raid_setup_done, encryption)
+  def self.ask_device_with_confirmation(hosttype, raid_setup_done, encryption, unlock_with_tpm)
     device       = nil
     do_it        = false
     windows_size = nil
@@ -836,13 +841,14 @@ module QueryDiskInfo
     end
 
     {
-      'device'       => device,
-      'encryption'   => encryption,
-      'filesystems'  => DiskHandler::Filesystems[hosttype],
-      'hosttype'     => hosttype,
-      'passphrase'   => passphrase,
-      'windows_size' => windows_size,
-      'wipe'         => wipe,
+      'device'          => device,
+      'encryption'      => encryption,
+      'filesystems'     => DiskHandler::Filesystems[hosttype],
+      'hosttype'        => hosttype,
+      'passphrase'      => passphrase,
+      'unlock_with_tpm' => unlock_with_tpm,
+      'windows_size'    => windows_size,
+      'wipe'            => wipe,
     }
   end
 
@@ -911,10 +917,12 @@ module UI
   @force_defaults  = {}
   @hosttype        = nil
   @loopback_only   = false
+  @unlock_with_tpm = false
 
-  def self.encryption     ; @encryption      end
-  def self.hosttype       ; @hosttype        end
-  def self.loopback_only  ; @loopback_only   end
+  def self.encryption       ; @encryption       end
+  def self.hosttype         ; @hosttype         end
+  def self.loopback_only    ; @loopback_only    end
+  def self.unlock_with_tpm  ; @unlock_with_tpm  end
 
   def self.reset_questions
     @ask_forced = @force_defaults.clone
@@ -946,8 +954,8 @@ puavo-setup-filesystems [OPTIONS]
     --force-windows-size          force value for windows size
     --force-wipe-partition        force value for wipe partition
     --force-write-partitions      force value for write partitions
-
     --loopback-only               use only loopback devices
+    --unlock-with-tpm             unlocks encrypted installation automatically with tpm
 
 EOF
   end
@@ -965,7 +973,7 @@ EOF
         [ '--ask-windows-size'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-wipe-partition'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-write-partitions'      , GetoptLong::REQUIRED_ARGUMENT ],
-        [ '--encrypt-with-passphrase'   , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--encrypt-with-passphrase'   , GetoptLong::NO_ARGUMENT       ],
         [ '--encrypt-with-recovery-key' , GetoptLong::NO_ARGUMENT       ],
         [ '--force-disk-device'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-imageoverlay-size'   , GetoptLong::REQUIRED_ARGUMENT ],
@@ -978,6 +986,7 @@ EOF
         [ '--force-write-partitions'    , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--hosttype'                  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--loopback-only'             , GetoptLong::NO_ARGUMENT       ],
+        [ '--unlock-with-tpm'           , GetoptLong::NO_ARGUMENT       ],
       )
 
       opts.each do |opt, arg|
@@ -1038,6 +1047,8 @@ EOF
           @hosttype = arg
         when '--loopback-only'
           @loopback_only = true
+        when '--unlock-with-tpm'
+          @unlock_with_tpm = true
         end
       end
     rescue GetoptLong::InvalidOption => e
@@ -1122,11 +1133,12 @@ if hosttype == 'bootserver' then
 end
 
 encryption = UI::encryption
+unlock_with_tpm = UI::unlock_with_tpm
 
 case hosttype
   when 'bootserver', 'diskinstaller', 'exam', 'laptop'
     conf = QueryDiskInfo::ask_device_with_confirmation(hosttype,
-             raid_setup_done, encryption)
+             raid_setup_done, encryption, unlock_with_tpm))
     DiskHandler::do_fs_setup(conf, vgname, raid_setup_done)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
