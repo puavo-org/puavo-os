@@ -28,8 +28,8 @@ class kernels {
     }
   }
 
-  $default_kernel = '5.10.0-33-amd64'
-  $recent_kernel  = '6.1.0-0.deb11.28-amd64'
+  $default_kernel = '5.10.0-34-amd64'
+  $recent_kernel  = '6.1.0-0.deb11.31-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
