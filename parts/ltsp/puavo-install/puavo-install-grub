@@ -503,7 +503,9 @@ function add_boot_entry {
   set icon="$3"
   echo "Adding boot entry: $image_path, $description, $icon"
 
-  menuentry "$description" --class "$icon" {
+  menuentry "$description" --class "$icon" "$image_path" {
+    set image_path="$2"
+
     search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
     chainloader "$image_path"
   }
