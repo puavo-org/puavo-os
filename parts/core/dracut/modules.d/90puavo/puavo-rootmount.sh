@@ -44,6 +44,10 @@ for x in $(cat /proc/cmdline); do
         root=/dev/*)
             PUAVO_ROOT_DEVICE="${x#root=}"
             ;;
+        root=LABEL=*)
+            PUAVO_ROOT_DEVICE="/dev/disk/by-label/${x#root=LABEL=}"
+            ROOT_IN_BTRFS=1
+            ;;
         root=UUID=*)
             PUAVO_ROOT_DEVICE="/dev/disk/by-uuid/${x#root=UUID=}"
             ROOT_IN_BTRFS=1
@@ -57,14 +61,31 @@ done
 if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
   echo "Root device is not set in kernel parameters. Attempting to find it..."
 
+  # Todo: Can we get rid of this?
+  # It seems we have to wait for udevs to finish loading, because
+  # otherwise commands such as 'lsblk' fail to find block devices.
+  # You might consider running this hook later such as during
+  # mount instead of pre-mount phase, but I had trouble with that.
+  # Somehow this hook had no effect (not executed?) and systemd
+  # initrd-switch-root.service failed.
+  echo "Waiting for storage devices to become fully available..."
+  udevadm settle
+  echo "Going through storage devices in order to find the boot device..."
+
   # Attempt to find out the boot disk using EFI variables
   POTENTIAL_BOOT_DEVICE=$(puavo-current-efi-boot-disk)
-  echo "Boot device: ${POTENTIAL_BOOT_DEVICE:-unknown}"
+  echo "Potential boot device: ${POTENTIAL_BOOT_DEVICE:-unknown}"
 
   # If we found out the boot device, search for the first bootable root
   # partition and assign it as the root device.
   # Otherwise, search for any bootable root partition.
-  for device in $(lsblk -pnl -o NAME "${POTENTIAL_BOOT_DEVICE}"); do
+  if [ -n "${POTENTIAL_BOOT_DEVICE}" ]; then
+    DEVICE_LIST=$(lsblk -lnp -o NAME "${POTENTIAL_BOOT_DEVICE}")
+  else
+    DEVICE_LIST=$(lsblk -lnp -o NAME)
+  fi
+
+  for device in $DEVICE_LIST; do
     if blkid "$device" | grep -q 'TYPE="btrfs"'; then
       PUAVO_ROOT_DEVICE=$device
       ROOT_IN_BTRFS=1
@@ -74,9 +95,14 @@ if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
   done
 
   if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
-    echo "ERROR: Failed to find the root device. Boot will likely fail."
+    echo "Error: Failed to find the root device. Boot will likely fail."
+
+    # As a last resort, we try to find a device with a label 'puavo'
+    PUAVO_ROOT_DEVICE="/dev/disk/by-label/puavo"
   fi
 fi
+
+echo "Boot device: ${PUAVO_ROOT_DEVICE:-unknown}"
 
 if [ "$ROOT_IN_BTRFS" = 0 ]; then
   lvm vgchange -a y "$PUAVO_LVM_VG"
