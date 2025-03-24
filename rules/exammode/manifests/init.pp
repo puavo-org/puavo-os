@@ -39,8 +39,9 @@ class exammode {
       ensure => directory;
 
     '/usr/local/lib/puavo-exammode/exammode-gnome-session':
-      mode   => '0755',
-      source => 'puppet:///modules/exammode/exammode-gnome-session';
+      mode    => '0755',
+      require => Package['puavo-desktop'],
+      source  => 'puppet:///modules/exammode/exammode-gnome-session';
 
     '/usr/local/lib/puavo-exammode/exammode-session':
       mode    => '0755',
@@ -97,6 +98,7 @@ class exammode {
   Package <|
        title == 'gsettings-desktop-schemas'
     or title == 'puavo-conf'
+    or title == 'puavo-desktop'
     or title == 'qiv'
     or title == 'systemd'
     or title == 'tomoyo-tools'
