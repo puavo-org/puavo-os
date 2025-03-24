@@ -50,6 +50,8 @@ installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/dbus-1/interfaces
 	mkdir -p $(DESTDIR)$(datarootdir)/dbus-1/system-services
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(rubylibdir)/puavo
 	mkdir -p $(DESTDIR)$(sbindir)
