@@ -4,6 +4,7 @@ subdirs         := autopilot         \
                    client            \
                    conf              \
                    core              \
+                   desktop           \
                    desktop-applet    \
                    devscripts        \
                    ers               \

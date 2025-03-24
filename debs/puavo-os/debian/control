@@ -100,6 +100,14 @@ Description: Puavo Core Infrastructure
  Bolts and nuts for Puavo OS.
  .
 
+Package: puavo-desktop
+Architecture: all
+Depends: ${misc:Depends},
+ xdg-utils
+Description: Puavo Desktop
+ Puavo Desktop contains some basic Puavo OS desktop components.
+ .
+
 Package: puavo-desktop-applet
 Architecture: all
 Depends: ${misc:Depends},
@@ -277,6 +285,7 @@ Depends: ${misc:Depends},
  puavo-client,
  puavo-conf,
  puavo-core,
+ puavo-desktop,
  puavo-pam,
  puavo-pkg,
  puavo-vpn-client,

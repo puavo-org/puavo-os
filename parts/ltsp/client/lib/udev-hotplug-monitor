@@ -57,4 +57,4 @@ XAUTHORITY=$(lookup_env_for_pid XAUTHORITY "$current_session_pid")
 
 export DISPLAY XAUTHORITY
 
-/usr/lib/puavo-ltsp-client/run-xrandr ${run_xrandr_args}
+/usr/lib/puavo-desktop/run-xrandr ${run_xrandr_args}
