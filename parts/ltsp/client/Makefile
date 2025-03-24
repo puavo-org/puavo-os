@@ -32,27 +32,18 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d
-	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
-	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
-	mkdir -p $(DESTDIR)$(datarootdir)/gdm/greeter/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites
 	mkdir -p $(DESTDIR)$(datarootdir)/sounds/puavo
-	mkdir -p $(DESTDIR)$(datarootdir)/wayland-sessions
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system
-	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
-	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
 .PHONY : install
 install : installdirs
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
-		gdm/greeter/autostart/puavo-run-xrandr.desktop
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-conf-parameters.json
 
@@ -61,9 +52,6 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/sounds/puavo \
 		sounds/*
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/wayland-sessions \
-		wayland-sessions/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xsessions \
 		xsessions/*
@@ -96,9 +84,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d \
 		etc/systemd/system/systemd-udevd.service.d/puavo-ltsp-client.conf
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		etc/xdg/autostart/*
-
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
 		udev/rules.d/80-puavo-printers.rules \
 		udev/rules.d/95-monitor-hotplug.rules
@@ -106,9 +91,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-ltsp-client \
 		etc/sudoers.d/puavo-role-admin
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
-		etc/X11/Xsession.d/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		lib/*

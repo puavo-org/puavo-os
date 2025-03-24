@@ -1,5 +1,5 @@
 #!/bin/sh
-# postinst script for puavo-ltsp-client
+# postinst script for puavo-desktop
 #
 # see: dh_installdeb(1)
 
@@ -20,9 +20,16 @@ set -e
 
 case "$1" in
     configure)
-	update-initramfs -u -k all
-	pam-auth-update --package
-	mkdir -p /var/cache/ccreds
+	if ! getent passwd puavodesktop >/dev/null; then
+	    adduser --disabled-login    \
+		    --disabled-password \
+		    --group             \
+		    --no-create-home    \
+		    --system            \
+		    puavodesktop
+	fi
+	chown puavodesktop:puavodesktop /var/lib/puavo-desktop/shared
+	chmod 2775 /var/lib/puavo-desktop/shared
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
