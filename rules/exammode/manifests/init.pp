@@ -44,7 +44,8 @@ class exammode {
 
     '/usr/local/lib/puavo-exammode/exammode-session':
       mode    => '0755',
-      require => Puavo_pkg::Install['ubuntu-wallpapers-bullseye'],
+      require => [ Package['qiv']
+                 , Puavo_pkg::Install['ubuntu-wallpapers-bullseye'] ],
       source  => 'puppet:///modules/exammode/exammode-session';
 
     # Disable VT switching from keyboard.
@@ -96,6 +97,7 @@ class exammode {
   Package <|
        title == 'gsettings-desktop-schemas'
     or title == 'puavo-conf'
+    or title == 'qiv'
     or title == 'systemd'
     or title == 'tomoyo-tools'
     or title == 'xinit'
