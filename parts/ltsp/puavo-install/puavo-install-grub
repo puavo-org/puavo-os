@@ -54,11 +54,10 @@ get_grub_efi_arguments() {
 }
 
 grub_m4_template() {
-  local hosttype uki
+  local hosttype
   hosttype=$1
-  uki=$2
 
-  if $uki; then
+  if [ "${UKI_MODE:-}" = "1" ]; then
     uki_grub_m4_template "$hosttype"
   else
     default_grub_m4_template "$hosttype"
@@ -778,7 +777,7 @@ install_efi_grub() {
     return 1
   fi
 
-  if $uki; then
+  if [ "${UKI_MODE:-}" = "1" ]; then
     install_puavo_grub_files_to_efi_partition "$boot_dir" && \
     copy_grub_environment && \
     write_grub_version "${boot_dir}/grub/version" || {
@@ -816,12 +815,10 @@ exitstatus=0
 hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
 images_dir=/images
 only_update_config=false
-# Todo: Set to false once puavo-install-and-update-ltspimages passes uki parameter
-uki=true
 vgname=puavo
 
-if ! args=$(getopt -n "$0" -o +                                              \
-                   -l 'hosttype:,images-dir:,only-update-config,uki,vgname:' \
+if ! args=$(getopt -n "$0" -o +                                          \
+                   -l 'hosttype:,images-dir:,only-update-config,vgname:' \
                    -- "$@"); then
   usage
 fi
@@ -832,7 +829,6 @@ while [ $# -ne 0 ]; do
     --hosttype)           hosttype=$2;             shift; shift ;;
     --images-dir)         images_dir=$2;           shift; shift ;;
     --only-update-config) only_update_config=true; shift        ;;
-    --uki)                uki=true;                shift        ;;
     --vgname)             vgname=$2;               shift; shift ;;
     --) shift; break ;;
     *)  usage ;;
@@ -990,7 +986,7 @@ install_puavo_grub_files_to_efi_partition() {
 # if we're in UKI mode, we'll install everything on the EFI partition
 grub_cfg_path="${boot_dir}/grub/grub.cfg"
 
-if $uki; then
+if [ "${UKI_MODE:-}" = "1" ]; then
   boot_dir="/boot/efi/EFI/debian"
   grub_cfg_path="${boot_dir}/grub.cfg"
 fi
@@ -1002,7 +998,7 @@ if $only_update_config; then
 else
   # UKI-based Grub installation doesn't support legacy GRUB,
   # because we'll install the Grub boot files on EFI partition
-  if $uki; then
+  if [ "${UKI_MODE:-}" = "1" ]; then
     for grubdev in $grub_target_devices; do
       log info "installing grub to ${grubdev}"
 
@@ -1067,7 +1063,7 @@ generate_grub_configuration() {
   local puavo_efi_partition_uuid
   puavo_efi_partition_uuid=$1
 
-  grub_m4_template "$hosttype" "$uki"                                    \
+  grub_m4_template "$hosttype"                                           \
     | m4 -D__PUAVO_EFI_PARTITION_UUID__="$puavo_efi_partition_uuid"      \
          -D__PUAVO_HOSTTYPE__="$hosttype"                                \
          -D__PUAVO_IMAGES_BTRFS_LABEL__="$puavo_images_btrfs_label"      \
@@ -1123,7 +1119,7 @@ install_grub_configuration() {
   rm -f "$tmp_grub_cfg_path"
 }
 
-if $uki; then
+if [ "${UKI_MODE:-}" = "1" ]; then
   # Install the grub config to all EFI partitions
   for grubdev in $grub_target_devices; do
     echo "> updating the Grub configuration on ${grubdev}"
