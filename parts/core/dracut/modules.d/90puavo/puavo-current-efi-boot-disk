@@ -48,9 +48,7 @@ efi_guid="$g2$g1-$g3-$g4-$g5-$g6"
 
 # Finally, we have the UUID of the booted EFI partition.
 # We want to output the device path that contains this partition.
-parent_disk=$(lsblk -n -l -p -o PARTUUID,PKNAME \
-  | grep -i "^$efi_guid" \
-  | awk '{print $2}')
+parent_disk=$(lsblk -lnp -o PKNAME "/dev/disk/by-partuuid/$efi_guid")
 
 if [ -z "$parent_disk" ]; then
   echo "Error: Failed to find the disk containing the EFI partition" >&2
