@@ -408,6 +408,7 @@ class packages {
     , 'pencil2d'
     , 'pitivi'
     , 'python3-lxml'
+    , 'qiv'
     , 'sane-utils'
     , 'view3dscene'
     , 'xinit'
