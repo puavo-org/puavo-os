@@ -37,12 +37,14 @@ class exammode {
       source => 'puppet:///modules/exammode/10puavo-set-exammode-session-quirks';
 
     '/usr/lib/puavo-ltsp-client/exammode-gnome-session':
-      mode   => '0755',
-      source => 'puppet:///modules/exammode/exammode-gnome-session';
+      mode    => '0755',
+      require => Package['puavo-ltsp-client'],
+      source  => 'puppet:///modules/exammode/exammode-gnome-session';
 
     '/usr/lib/puavo-ltsp-client/exammode-session':
-      mode   => '0755',
-      source => 'puppet:///modules/exammode/exammode-session';
+      mode    => '0755',
+      require => Package['puavo-ltsp-client'],
+      source  => 'puppet:///modules/exammode/exammode-session';
 
     '/usr/local/bin/puavo-examusersh':
       mode   => '0755',
@@ -101,6 +103,7 @@ class exammode {
 
   Package <|
        title == 'gsettings-desktop-schemas'
+    or title == 'puavo-ltsp-client'
     or title == 'ruby-eventmachine'
     or title == 'ruby-faye-websocket'
     or title == 'systemd'
