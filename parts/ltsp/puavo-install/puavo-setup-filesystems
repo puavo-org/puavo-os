@@ -58,6 +58,9 @@ module DiskHandler
     'diskinstaller' => {
       'installimages' => { 'size' => '100%FREE' },
     },
+    'exam' => {
+      'examimages'    => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
     'laptop' => {
       '.swap'         => { 'size' => '4G', 'type' => 'swap' },
       'tmp'           => { 'size' => '6G',                  },
@@ -961,7 +964,8 @@ unless DiskHandler::Filesystems[hosttype] then
   exit(1)
 end
 
-vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
+vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : \
+         (hosttype == 'exam')          ? 'puavoexam'      : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
@@ -971,7 +975,7 @@ if hosttype == 'bootserver' then
 end
 
 case hosttype
-  when 'bootserver', 'diskinstaller', 'laptop'
+  when 'bootserver', 'diskinstaller', 'exam', 'laptop'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype,
              raid_setup_done)
     DiskHandler::do_fs_setup(conf, vgname, raid_setup_done)

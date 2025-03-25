@@ -610,7 +610,7 @@ case "$diskdev" in
     ;;
 esac
 
-if [ "$vgname" = 'puavoinstaller' ]; then
+if [ "$hosttype" = 'diskinstaller' ]; then
   puavo_liveboot_option='true'
 else
   puavo_liveboot_option='false'
@@ -624,20 +624,27 @@ if [ -n "$btrfs_diskdev" ]; then
     exit 1
   fi
   puavo_partition_grub_overlays='(${puavobtrfsdev})/imageoverlays'
-  if [ "$vgname" = 'puavoinstaller' ]; then
-    puavo_partition_grub_images='(${puavobtrfsdev})/installimages'
-  else
-    puavo_partition_grub_images='(${puavobtrfsdev})/images'
-  fi
+  case "$hosttype" in
+    diskinstaller) puavo_partition_grub_images='(${puavobtrfsdev})/installimages' ;;
+    exam)          puavo_partition_grub_images='(${puavobtrfsdev})/examimages'    ;;
+    *)             puavo_partition_grub_images='(${puavobtrfsdev})/images'        ;;
+  esac
 else
   puavo_images_btrfs_label=''
-  if [ "$vgname" = 'puavoinstaller' ]; then
-    puavo_partition_dev='/dev/mapper/puavoinstaller-installimages'
-    puavo_partition_grub_images='(lvm/puavoinstaller-installimages)'
-  else
-    puavo_partition_dev='/dev/mapper/puavo-images'
-    puavo_partition_grub_images='(lvm/puavo-images)'
-  fi
+  case "$hosttype" in
+    diskinstaller)
+      puavo_partition_dev='/dev/mapper/puavoinstaller-installimages'
+      puavo_partition_grub_images='(lvm/puavoinstaller-installimages)'
+      ;;
+    exam)
+      puavo_partition_dev='/dev/mapper/puavoexam-examimages'
+      puavo_partition_grub_images='(lvm/puavoexam-examimages)'
+      ;;
+    *)
+      puavo_partition_dev='/dev/mapper/puavo-images'
+      puavo_partition_grub_images='(lvm/puavo-images)'
+      ;;
+  esac
   puavo_partition_grub_overlays='(lvm/puavo-imageoverlays)'
 fi
 
@@ -650,7 +657,7 @@ case "$hosttype" in
   bootserver|diskinstaller|preinstalled|wirelessaccesspoint)
     puavo_kernel_arguments="nosplash ${common_kernel_arguments}"
     ;;
-  laptop)
+  exam|laptop)
     puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments}"
     ;;
   *)

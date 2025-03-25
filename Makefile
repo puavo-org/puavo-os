@@ -340,6 +340,12 @@ rdiffs: $(image_dir) $(mirror_dir)
 		images_urlbase="$(images_urlbase)" \
 		mirror_dir="$(mirror_dir)" mode="$(mode)" $(rdiff_targets)
 
+.PHONY: exam-image
+exam-image:
+	sudo env PATH=$(CURDIR)/parts/ltsp/puavo-install:${PATH} \
+	   .aux/make-exam-disk --source "${SOURCE_IMAGE}" \
+			       --target "${TARGET_IMAGE}"
+
 .PHONY: clean
 clean:
 	$(MAKE) -C debs clean
