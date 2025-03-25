@@ -5,7 +5,9 @@ class image::exam {
   include ::packages
 
   Package <|
-       tag   == 'tag_kernel'
+       tag   == 'tag_firmware_free'
+    or tag   == 'tag_firmware_nonfree'
+    or tag   == 'tag_kernel'
     or title == 'plocate'
     or title == 'puavo-conf'
     or title == 'puavo-core'
