@@ -1,0 +1,147 @@
+#!/bin/sh
+
+set -eu
+
+images_dir=/examimages
+loopdev=''
+
+cleanup() {
+  {
+    umount "$images_dir" || true
+    dmsetup remove puavoexam-examimages || true
+
+    # do not leak file descriptors to vgchange, hence "3>&- 4>&- 5>&-"
+    vgchange -a n puavoexam 3>&- 4>&- 5>&- || true
+
+    rmdir "$images_dir" || true
+
+    if [ -n "$loopdev" ]; then
+      losetup -d "$loopdev" || true
+    fi
+  } > /dev/null 2>&1
+}
+
+calc_required_imagefile_gigabytes() {
+  local source_image
+
+  source_image=$1
+
+  if [ -n "$source_image" ]; then
+    ls --block-size=950M -ds "$source_image" | awk '{ print $1 + 1 }'
+    return 0
+  fi
+
+  echo "$(($(df --block-size=950M --output=size /rofs | awk 'NR == 2') + 1))"
+}
+
+install_image() {
+  puavo-install-and-update-ltspimages --hosttype exam           \
+                                      --images-dir "$images_dir" \
+                                      --no-preinst-hook          \
+                                      "$@"
+}
+
+trap cleanup 0 INT TERM
+
+usage() {
+  cat <<EOF
+Usage: make-exam-disk --source-image source
+                      --target-image target
+                      [--with-vdi] (only when using --target-image)
+EOF
+}
+
+if [ "$(id -u)" -ne 0 ]; then
+  # root is required for loopback mounts
+  echo 'Run me as root!' >&2
+  exit 1
+fi
+
+if ! args=$(getopt -n "$0" -o +hos:t:v \
+              -l 'help,source-image:,target-image:,with-vdi' \
+              -- "$@"); then
+  usage
+  exit 1
+fi
+
+source_image=''
+target_image=''
+with_vdi=false
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    -h|--help) usage; exit 0;;
+    -s|--source-image) source_image="$2"; shift; shift ;;
+    -t|--target-image) target_image="$2"; shift; shift ;;
+    -v|--with-vdi)     with_vdi=true;            shift ;;
+    --) shift; break;;
+    *)  usage; exit 1;;
+   esac
+done
+
+if [ -z "$source_image" ]; then
+  echo 'source image must be set!' >&2
+  exit 1
+fi
+
+if [ -z "$target_image" ]; then
+  echo 'target image must be set!' >&2
+  exit 1
+fi
+
+if [ ! -e "$source_image" ]; then
+  echo "source image $source_image does not exist!" >&2
+  exit 1
+fi
+
+if $with_vdi; then
+  if [ -z "$target_image" ]; then
+    echo 'No target image set, yet using --with-vdi' >&2
+    exit 1
+  fi
+  if ! which VBoxManage >/dev/null 2>&1; then
+    echo 'could not find VBoxManage, yet using --with-vdi' >&2
+    exit 1
+  fi
+fi
+
+if [ -e "$target_image" ]; then
+  echo "target file $target_image exists, not overwriting" >&2
+  exit 1
+fi
+
+mkdir -p "$images_dir"
+
+dd if=/dev/null "of=${target_image}" bs=1M \
+   seek="$(calc_required_imagefile_gigabytes "$source_image")K"
+loopdev=$(losetup --show -P -f "$target_image")
+
+puavo-setup-filesystems --force-disk-device "${loopdev#/dev/}" \
+                        --force-partition whole \
+                        --force-wipe-partition no \
+                        --force-write-partitions yes \
+                        --hosttype exam \
+                        --loopback-only
+
+puavo-install-grub --hosttype   exam          \
+                   --images-dir "$images_dir" \
+                   --vgname     puavoexam
+
+install_image --install-from-file "$source_image" \
+              "$(basename "$source_image")"
+
+if $with_vdi; then
+  vdi_image="${target_image%.*}.vdi"
+  VBoxManage convertdd "$target_image" "${vdi_image}.tmp" --format VDI
+  chmod 644 "${vdi_image}.tmp"
+  mv "${vdi_image}.tmp" "$vdi_image"
+fi
+
+# fix output file ownership in case run through sudo
+if [ -n "$target_image" -a -n "${SUDO_USER:-}" ]; then
+  chown "${SUDO_USER}:" "$target_image"
+  if $with_vdi; then
+    chown "${SUDO_USER}:" "$vdi_image"
+  fi
+fi

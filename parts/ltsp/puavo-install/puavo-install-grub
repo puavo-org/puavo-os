@@ -506,13 +506,20 @@ case "$diskdev" in
     ;;
 esac
 
-if [ "$hosttype" = 'diskinstaller' ]; then
-  puavo_liveboot_option='true'
-  puavo_lvm_partition='puavoinstaller-installimages'
-else
-  puavo_liveboot_option='false'
-  puavo_lvm_partition='puavo-images'
-fi
+case "$hosttype" in
+  diskinstaller)
+    puavo_liveboot_option='true'
+    puavo_lvm_partition='puavoinstaller-installimages'
+    ;;
+  exam)
+    puavo_liveboot_option='false'
+    puavo_lvm_partition='puavoexam-examimages'
+    ;;
+  *)
+    puavo_liveboot_option='false'
+    puavo_lvm_partition='puavo-images'
+    ;;
+esac
 
 # loop= parameter is legacy and is meant for the old Trusty-based Puavo-systems.
 common_kernel_arguments="root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\" puavo.image.path=\"\${imagepath}\""
@@ -521,7 +528,7 @@ case "$hosttype" in
   bootserver|diskinstaller|preinstalled|wirelessaccesspoint)
     puavo_kernel_arguments="nosplash ${common_kernel_arguments}"
     ;;
-  laptop)
+  exam|laptop)
     puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments}"
     ;;
   *)
