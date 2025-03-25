@@ -337,7 +337,7 @@ class packages {
     , 'iucode-tool'
     , 'sigrok-firmware-fx2lafw' ]:
     # , 'ubertooth-firmware' ]:         # XXX missing from Trixie
-      tag => [ 'tag_firmware', 'tag_debian_desktop', ];
+      tag => [ 'tag_firmware_free', 'tag_debian_desktop', ];
 
     [ 'fontconfig'
     , 'fonts-motoya-l-cedar'
@@ -877,8 +877,6 @@ class packages {
     , 'firmware-brcm80211'
     , 'firmware-cavium'
     , 'firmware-intel-sound'
-    , 'firmware-ipw2x00'
-    , 'firmware-ivtv'
     , 'firmware-iwlwifi'
     , 'firmware-libertas'
     , 'firmware-linux'
@@ -899,7 +897,12 @@ class packages {
     , 'intel-microcode'
     , 'midisport-firmware' ]:
       ensure => present,
-      tag    => [ 'tag_firmware', 'tag_debian_nonfree', ];
+      tag    => [ 'tag_firmware_nonfree', 'tag_debian_nonfree', ];
+
+    [ 'firmware-ipw2x00'
+    , 'firmware-ivtv' ]:
+      ensure => present,
+      tag    => [ 'tag_firmware_nonfree_with_debconf', 'tag_debian_nonfree', ];
 
     'steam':
       tag => [ 'tag_games', 'tag_debian_desktop_nonfree', ];
