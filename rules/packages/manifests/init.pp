@@ -569,12 +569,19 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'tag_science', 'tag_debian_desktop', ];
 
-    [ 'gnome-icon-theme'
+    [ 'arc-theme'
+    , 'deepin-icon-theme'
+    , 'faenza-icon-theme'
+    , 'gnome-icon-theme'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
+    , 'obsidian-icon-theme'
     , 'oxygen-icon-theme'
     , 'xscreensaver-data'
-    , 'xscreensaver-gl' ]:
+    , 'xscreensaver-gl'
+    , 'yaru-theme-gnome-shell'
+    , 'yaru-theme-gtk'
+    , 'yaru-theme-icon' ]:
       tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     # desktop-packages relating to gnome and other, some of these
@@ -772,15 +779,6 @@ class packages {
     , 'qml-module-qtquick-templates2'     # mafynetti
     ]:
       tag => [ 'tag_puavopkg', 'tag_debian_desktop', ];
-
-    [ 'arc-theme'
-    , 'deepin-icon-theme'
-    , 'faenza-icon-theme'
-    , 'obsidian-icon-theme'
-    , 'yaru-theme-gnome-shell'
-    , 'yaru-theme-gtk'
-    , 'yaru-theme-icon' ]:
-      tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     [ 'anki'
     , 'bindfs'
