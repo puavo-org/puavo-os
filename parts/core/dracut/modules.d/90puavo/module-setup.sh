@@ -40,7 +40,7 @@ install() {
 
     # Install hooks
     inst_hook pre-udev  90 "${moddir}/puavo-kernel-module-setup.sh"
-    inst_hook pre-mount 90 "${moddir}/puavo-rootmount.sh"
-    inst_hook pre-mount 91 "${moddir}/puavo-plymouth.sh"
+    inst_hook pre-pivot 90 "${moddir}/puavo-rootmount.sh"
+    inst_hook pre-pivot 91 "${moddir}/puavo-plymouth.sh"
     inst_hook cleanup   20 "${moddir}/puavo-nbd-server.sh"
 }

@@ -17,8 +17,6 @@ panic() {
 
 test "$BOOT" = "puavo" || exit 0
 
-rootmnt="/sysroot"
-
 PUAVO_HOSTTYPE=''
 PUAVO_IMAGE_LOAD_TO_RAM=0
 PUAVO_IMAGE_PATH=
@@ -61,17 +59,6 @@ done
 if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
   echo "Root device is not set in kernel parameters. Attempting to find it..."
 
-  # Todo: Can we get rid of this?
-  # It seems we have to wait for udevs to finish loading, because
-  # otherwise commands such as 'lsblk' fail to find block devices.
-  # You might consider running this hook later such as during
-  # mount instead of pre-mount phase, but I had trouble with that.
-  # Somehow this hook had no effect (not executed?) and systemd
-  # initrd-switch-root.service failed.
-  echo "Waiting for storage devices to become fully available..."
-  udevadm settle
-  echo "Going through storage devices in order to find the boot device..."
-
   # Attempt to find out the boot disk using EFI variables
   POTENTIAL_BOOT_DEVICE=$(puavo-current-efi-boot-disk)
   echo "Potential boot device: ${POTENTIAL_BOOT_DEVICE:-unknown}"
@@ -96,9 +83,6 @@ if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
 
   if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
     echo "Error: Failed to find the root device. Boot will likely fail."
-
-    # As a last resort, we try to find a device with a label 'puavo'
-    PUAVO_ROOT_DEVICE="/dev/disk/by-label/puavo"
   fi
 fi
 
@@ -106,6 +90,12 @@ echo "Boot device: ${PUAVO_ROOT_DEVICE:-unknown}"
 
 if [ "$ROOT_IN_BTRFS" = 0 ]; then
   lvm vgchange -a y "$PUAVO_LVM_VG"
+fi
+
+# Mount the correct root device
+if [ -n "$PUAVO_ROOT_DEVICE" ]; then
+    umount "$NEWROOT" || true
+    mount "$PUAVO_ROOT_DEVICE" "$NEWROOT"
 fi
 
 update_image_copy_progress() {
@@ -117,28 +107,16 @@ update_image_copy_progress() {
   done
 }
 
-# We need to mount the root device manually in pre-mount stage.
-# You might attempt to execute this script during the mount stage
-# when you'd expect the root to be mounted for you.
-# However, it seems that Dracut unmounts the root device, because it's 
-# considered "unusable" in our case, likely due to missing folders (e.g. /dev).
-# See:
-# https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/init.sh#L234
-# https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/dracut-lib.sh#L750
-if [ -n "$PUAVO_ROOT_DEVICE" ]; then
-    mount "$PUAVO_ROOT_DEVICE" "$rootmnt"
-fi
-
 loopmount_image()
 {
     local image_fs_size image_fs_type imagepath tmpfs_imagepath tmpfs_size
 
-    if [ ! -f "${rootmnt}${PUAVO_IMAGE_PATH}" ]; then
-      panic "${rootmnt}${PUAVO_IMAGE_PATH} does not exist!"
+    if [ ! -f "${NEWROOT}${PUAVO_IMAGE_PATH}" ]; then
+        panic "${NEWROOT}${PUAVO_IMAGE_PATH} does not exist!"
     fi
 
     mkdir -p /host
-    mount -o move "$rootmnt" /host
+    mount -o move "$NEWROOT" /host
 
     imagepath="/host/${PUAVO_IMAGE_PATH#/}"
 
@@ -169,11 +147,11 @@ loopmount_image()
       imagepath="$tmpfs_imagepath"
     fi
 
-    mount -r -t "$image_fs_type" -o loop "$imagepath" "$rootmnt"
+    mount -r -t "$image_fs_type" -o loop "$imagepath" "$NEWROOT"
     ret=$?
 
     if [ "$ret" -gt 0 ]; then
-      panic "Failed to loop mount ${imagepath} to ${rootmnt}"
+      panic "Failed to loop mount ${imagepath} to ${NEWROOT}"
     fi
 }
 
@@ -182,16 +160,16 @@ do_union_mount()
     cow=$1
 
     mkdir -p /rofs
-    mount -o move "$rootmnt" /rofs
+    mount -o move "$NEWROOT" /rofs
 
     modprobe overlay
     mkdir -p "${cow}/rootdir" "${cow}/workdir"
     mount -t overlay \
           -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
-          overlay "$rootmnt"
+          overlay "$NEWROOT"
 
-    mkdir -p "${rootmnt}/rofs"
-    mount -o move /rofs "${rootmnt}/rofs"
+    mkdir -p "${NEWROOT}/rofs"
+    mount -o move /rofs "${NEWROOT}/rofs"
 }
 
 do_union_mount_temporary()
@@ -201,8 +179,8 @@ do_union_mount_temporary()
 
     do_union_mount /cow
 
-    mkdir -p "${rootmnt}/cow"
-    mount -o move /cow "${rootmnt}/cow"
+    mkdir -p "${NEWROOT}/cow"
+    mount -o move /cow "${NEWROOT}/cow"
 }
 
 do_union_mount_persistent()
@@ -246,8 +224,8 @@ move_puavo_partition()
 {
     name=$1
 
-    mkdir -p "${rootmnt}/${name}"
-    mount -o move "/${name}" "${rootmnt}/${name}"
+    mkdir -p "${NEWROOT}/${name}"
+    mount -o move "/${name}" "${NEWROOT}/${name}"
 }
 
 loopmount_used=0
@@ -256,8 +234,8 @@ if [ -n "$PUAVO_IMAGE_PATH" ]; then
     loopmount_used=1
 fi
 
-if [ -f "${rootmnt}/etc/puavo-image/name" ]; then
-    PUAVO_IMAGE_NAME=$(cat "${rootmnt}/etc/puavo-image/name")
+if [ -f "${NEWROOT}/etc/puavo-image/name" ]; then
+    PUAVO_IMAGE_NAME=$(cat "${NEWROOT}/etc/puavo-image/name")
 else
     PUAVO_IMAGE_NAME='default'
 fi
@@ -277,12 +255,12 @@ fi
 if [ "$loopmount_used" -gt 0 ]; then
     if [ "$ROOT_IN_BTRFS" = 1 ]; then
         if [ "$PUAVO_HOSTTYPE" = 'diskinstaller' ]; then
-            target_dir="${rootmnt}/.puavoinstaller"
+            target_dir="${NEWROOT}/.puavoinstaller"
         else
-            target_dir="${rootmnt}/.puavo"
+            target_dir="${NEWROOT}/.puavo"
         fi
     else
-        target_dir="${rootmnt}/images"
+        target_dir="${NEWROOT}/images"
     fi
     mkdir -p "$target_dir"
     # XXX what to do here when $PUAVO_IMAGE_LOAD_TO_RAM is used?
@@ -290,5 +268,5 @@ if [ "$loopmount_used" -gt 0 ]; then
     mount -o remount,noatime,rw "$target_dir"
 fi
 
-[ -z "${rootmnt}" ] && panic "rootmnt unknown in init-bottom"
-[ -d "${rootmnt}/proc" ] || panic "rootmnt not mounted in init-bottom"
+[ -z "${NEWROOT}" ] && panic "Failed to mount root filesystem"
+[ -d "${NEWROOT}/proc" ] || panic "Failed to mount root filesystem"
