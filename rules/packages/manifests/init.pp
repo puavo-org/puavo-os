@@ -288,6 +288,7 @@ class packages {
     , 'perl-doc'
     , 'pinfo'
     , 'python3-pydantic'
+    , 'scdaemon'
     , 'shellcheck'
     , 'sloccount'
     , 'tcl8.6-doc'
