@@ -1,21 +1,11 @@
 #!/bin/sh
 
-# Todo: Duplicated
-for x in $(cat /proc/cmdline); do
-    if [ "$x" = "init=/sbin/init-puavo" ]; then
-        BOOT=puavo
-        break
-    fi
-done
+grep -E -q '(^| )init=/sbin/init-puavo($| )' /proc/cmdline || exit 0
 
-# Todo: Duplicated
 panic() {
-    echo "PANIC: $1" >&2
-    echo "Dropping to emergency shell..." >&2
-    emergency_shell -n "Panic occurred: $1"
+    echo "Error: $1" >&2
+    exit 1
 }
-
-test "$BOOT" = "puavo" || exit 0
 
 PUAVO_HOSTTYPE=''
 PUAVO_IMAGE_LOAD_TO_RAM=0

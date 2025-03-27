@@ -1,14 +1,6 @@
 #!/bin/sh
 
-# Todo: Duplicated
-for x in $(cat /proc/cmdline); do
-    if [ "$x" = "init=/sbin/init-puavo" ]; then
-        BOOT=puavo
-        break
-    fi
-done
-
-test "$BOOT" = "puavo" || exit 0
+grep -E -q '(^| )init=/sbin/init-puavo($| )' /proc/cmdline || exit 0
 
 # Copy our plymouth theme configuration to /root,
 # because it is also used at shutdown.

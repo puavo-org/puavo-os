@@ -1,16 +1,6 @@
 #!/bin/sh
 
-# Todo: Duplicated
-for x in $(cat /proc/cmdline); do
-    if [ "$x" = "init=/sbin/init-puavo" ]; then
-        BOOT=puavo
-        break
-    fi
-done
-
-if [ "$BOOT" != "puavo" ]; then
-  exit 0
-fi
+grep -E -q '(^| )init=/sbin/init-puavo($| )' /proc/cmdline || exit 0
 
 # Make sure the initrd filesystem is private instead of shared 
 # as moving mounts (see puavo-postmount) within shared mount is not supported
