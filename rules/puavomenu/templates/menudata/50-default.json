@@ -1419,6 +1419,10 @@
             },
             "tags": "default, education"
         },
+        "sonobus": {
+            "name":"SonoBus",
+            "tags": "default, audio"
+        },
         "sparkvue": {
             "tags": "default"
         },
@@ -1858,6 +1862,7 @@
                 "org.pitivi.Pitivi",
                 "org.shotcut.Shotcut",
                 "solfege",
+                "sonobus",
                 "mscore3",
                 "musescore-appimage",
                 "org.hydrogenmusic.Hydrogen",
