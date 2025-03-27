@@ -1126,6 +1126,9 @@
         "org.shotcut.Shotcut": {
             "tags": "default"
         },
+        "org.thonny.Thonny": {
+            "tags": "default"
+        },
         "otava-opiskelija": {
             "type": "web",
             "url": "https://opiskelija.otava.fi/",
@@ -1415,6 +1418,10 @@
                 "de": "Hörbildung"
             },
             "tags": "default, education"
+        },
+        "sonobus": {
+            "name":"SonoBus",
+            "tags": "default, audio"
         },
         "sparkvue": {
             "tags": "default"
@@ -1868,6 +1875,7 @@
                 "org.pitivi.Pitivi",
                 "org.shotcut.Shotcut",
                 "solfege",
+                "sonobus",
                 "mscore3",
                 "musescore-appimage",
                 "org.hydrogenmusic.Hydrogen",
@@ -2469,7 +2477,12 @@
                 "lazarus-2.2.4",
                 "pycharm",
                 "spe",
+<<<<<<< HEAD
                 "idle-python3.11",
+=======
+                "idle-python3.9",
+                "org.thonny.Thonny",
+>>>>>>> origin/bullseye
                 "geany",
                 "code",
                 "org.kde.kturtle",
