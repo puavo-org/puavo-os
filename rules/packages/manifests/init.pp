@@ -57,7 +57,7 @@ class packages {
 
   @package {
     [ 'bind9'
-    , 'bind9utils'
+    , 'bind9-utils'
     , 'cifs-utils'
     , 'cryptsetup'
     , 'cryptsetup-initramfs'
