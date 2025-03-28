@@ -45,11 +45,11 @@ puavo_mount_partition_on_lvm() {
   vgname=$1
   partition=$2
 
-  puavo_partition="$vgname-${partition}"
+  puavo_partition="${vgname}-${partition}"
   puavo_mntpoint="/${partition}"
 
   if ! [ -b "/dev/mapper/${puavo_partition}" ]; then
-    echo "Failed to find /dev/mapper/${puavo_partition}"
+    echo "failed to find /dev/mapper/${puavo_partition}" >&2
     return 1
   fi
 
