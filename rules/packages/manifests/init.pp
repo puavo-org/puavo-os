@@ -728,7 +728,7 @@ class packages {
     , 'totem'
     , 'transmission-gtk'
     , 'unzip'
-    , 'vino'
+    # , 'vino'                                  # XXX Trixie
     , 'wireless-tools'
     , 'wpasupplicant'
     , 'xdg-user-dirs'
