@@ -2,12 +2,12 @@ class grub {
   include ::grub::themes
   include ::puavo_conf
 
-  $grub_version = '2.12-5'
+  $grub_version = '2.12-7'
 
   # Keep track of the "grub-efi-amd64-signed" package
   # version, even though currently installing that package
   # will break Grub in UEFI machines.
-  $grub_version_signed = '1+2.12-5'
+  $grub_version_signed = "1+${grub_version}"
 
   file {
     [ '/boot', '/boot/grub', '/boot/grub/puavo' ]:
