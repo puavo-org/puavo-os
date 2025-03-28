@@ -207,7 +207,7 @@ module DiskHandler
   EnrollmentPolicy = LuksEnrollmentPolicy.new(
     [ '15:sha256=0000000000000000000000000000000000000000000000000000000000000000' ],
     [ '11:sha256' ],
-    "/etc/puavo/tpm2-pcr-public-key.pem"
+    "/etc/puavo-conf/tpm2-pcr-public-key.pem"
   )
 
   def self.cleanup_disk_environment(hosttype, vgname, close_luks_device)
@@ -370,6 +370,14 @@ module DiskHandler
     puts ''
 
     return true
+  end
+
+  def self.check_tpm_enrollment_feasibility
+    unless File.exist?(EnrollmentPolicy.public_key_path)
+      warn 'Automatic TPM unlocking is not possible, because the public key ' \
+            + "does not exist at #{ EnrollmentPolicy.public_key_path }"
+      exit(1)
+    end
   end
 
   def self.setup_device(device, have_swap, gpt_spec)
@@ -1134,6 +1142,15 @@ end
 
 encryption = UI::encryption
 unlock_with_tpm = UI::unlock_with_tpm
+
+if unlock_with_tpm then
+  if encryption == 'none' then
+    warn 'Encryption method must be specified for TPM unlocking'
+    exit(1)
+  end
+
+  DiskHandler::check_tpm_enrollment_feasibility
+end
 
 case hosttype
   when 'bootserver', 'diskinstaller', 'exam', 'laptop'
