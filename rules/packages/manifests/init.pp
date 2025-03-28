@@ -849,9 +849,9 @@ class packages {
 		      # , $virtualbox_module ]          # XXX Trixie
 
   packages::kernels::kernel_package {
-    '6.12.12-amd64':
+    '6.12.19-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.12-amd64';
+      package_name => 'linux-image-6.12.19-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such
