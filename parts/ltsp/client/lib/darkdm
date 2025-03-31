@@ -371,7 +371,7 @@ release:    ${this_release}
 bios:            $(facter dmi.bios.vendor) / $(check_bios_version) $(firmwaremode)
 product:         $(facter dmi.manufacturer) / ${colorized_product_name}
 cpu:             ${colorized_cpu}
-memory:          ${colorized_memory} (total of $(dmidecode -t 17 |grep Size | grep -v No | wc --lines) modules)
+memory:          ${colorized_memory} (total of $(dmidecode -t 17 | awk '/\tSize: [[:digit:]]{1,3}/ {print $0}' | wc --lines) modules)
 $(list_disks)
 display:         ${colorized_display_resolution} ${display_touch} ${display_safety}
 $(list_networks) $(is_wifi6_compatible)
