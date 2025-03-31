@@ -543,7 +543,7 @@ puavo_preseed_setup_filesystems_args=()
 # Determine whether we're in UKI mode by checking if we have an UKI image
 export UKI_MODE=0
 
-if [ -e /images/*.efi ]; then
+if ls /boot/*.uki.efi >/dev/null 2>&1; then
   export UKI_MODE=1
 fi
 
