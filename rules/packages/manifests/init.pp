@@ -99,6 +99,7 @@ class packages {
     , 'slapd'
     , 'syslinux-common'
     , 'syslinux-efi'
+    , 'tpm2-tools'
     , 'winbind' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
   }
@@ -227,6 +228,7 @@ class packages {
     , 'pm-utils'
     , 'rng-tools-debian'
     , 'systemd'
+    , 'systemd-ukify'
     # , 'tomoyo-tools'  # XXX missing from Trixie
     , 'udev'
     , 'udisks2'
