@@ -64,7 +64,9 @@ ifeq "$(image_class)" ""
 endif
 
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
-_image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
+_image_name  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}
+_image_file  := $(_image_name).img
+_uki_file    := $(_image_name).uki.efi
 
 # needed by linux build to prepare debian-directory
 _pkgbuild_dependencies := kernel-wedge,python3-dacite,python3-jinja2,python3-pydantic,python3-toml,quilt
@@ -211,6 +213,10 @@ $(image_dir):
 $(install_image_dir):
 	$(_sudo) mkdir -p '$(install_image_dir)'
 
+.PHONY: rootfs-uki
+rootfs-uki: $(rootfs_dir)
+	$(_sudo) .aux/create-uki '$(rootfs_dir)/boot' '$(_uki_file)'
+
 # Using -comp lzo instead of gzip, because we prefer to optimize decompression
 # speed for faster boots, even though image sizes are slightly bigger than with
 # gzip.  Especially on some hosts the decompression stage of kernel/initrd is
@@ -221,7 +227,7 @@ $(install_image_dir):
 # May be removed only when sure that grub has been updated on all hosts
 # updating to images made with this.
 .PHONY: rootfs-image
-rootfs-image: $(rootfs_dir) $(image_dir)
+rootfs-image: $(rootfs_dir) $(image_dir) rootfs-uki
 	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' prepare-for-squashfs
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
@@ -289,8 +295,16 @@ setup-wim:
 	  exit 1; \
 	fi
 
+/etc/puavo-conf/tpm2-pcr-public-key.pem: config/boot_keys/tpm2-pcr-public-key.pem
+	$(_sudo) mkdir -p $(@D)
+	$(_sudo) cp $< $@
+
+/etc/puavo-conf/mok.pem: config/boot_keys/mok.pem
+	$(_sudo) mkdir -p $(@D)
+	$(_sudo) cp $< $@
+
 .PHONY: update
-update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
+update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/tpm2-pcr-public-key.pem /etc/puavo-conf/mok.pem
 	$(MAKE) build
 
 	$(_sudo) apt-get update
