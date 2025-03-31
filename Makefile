@@ -317,7 +317,8 @@ update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 prepare:
 	$(MAKE) -C debs prepare
 	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
-	    FACTER_puavoruleset=prepare .aux/apply-rules
+	    'FACTER_puavoimage_class=$(image_class)' \
+	    'FACTER_puavoruleset=prepare' .aux/apply-rules
 
 .PHONY: upload-debs
 upload-debs:
@@ -327,7 +328,9 @@ upload-debs:
 apply-rules: /etc/puavo-image/class
 	$(_sudo) .aux/setup-debconf
 	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
-	    'FACTER_puavoruleset=$(image_class)' .aux/apply-rules
+	    'FACTER_puavoimage_class=$(image_class)' \
+	    'FACTER_puavoruleset=$(image_class)' \
+	    .aux/apply-rules
 
 .PHONY: rdiffs
 rdiffs: $(image_dir) $(mirror_dir)
