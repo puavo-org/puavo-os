@@ -39,6 +39,7 @@ install : installdirs
 		puavo-install \
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \
+		puavo-install-uki \
 		puavo-make-install-disk \
 		puavo-manage-efi \
 		puavo-reset-laptop-to-factory-defaults \
