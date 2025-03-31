@@ -21,17 +21,12 @@ cleanup() {
   } > /dev/null 2>&1
 }
 
-calc_required_imagefile_gigabytes() {
+calc_required_imagefile_megabytes() {
   local source_image
-
   source_image=$1
-
-  if [ -n "$source_image" ]; then
-    ls --block-size=950M -ds "$source_image" | awk '{ print $1 + 1 }'
-    return 0
-  fi
-
-  echo "$(($(df --block-size=950M --output=size /rofs | awk 'NR == 2') + 1))"
+  # XXX 800 is chosen because it seems to work, but there should be better
+  # XXX logic behind this
+  ls --block-size=1024K -ds "$source_image" | awk '{ print $1 + 800 }'
 }
 
 install_image() {
@@ -45,9 +40,7 @@ trap cleanup 0 INT TERM
 
 usage() {
   cat <<EOF
-Usage: make-exam-disk --source-image source
-                      --target-image target
-                      [--with-vdi] (only when using --target-image)
+Usage: make-exam-disk [--with-vdi] source target
 EOF
 }
 
@@ -57,9 +50,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-if ! args=$(getopt -n "$0" -o +hos:t:v \
-              -l 'help,source-image:,target-image:,with-vdi' \
-              -- "$@"); then
+if ! args=$(getopt -n "$0" -o +hv -l 'help,with-vdi' -- "$@"); then
   usage
   exit 1
 fi
@@ -72,19 +63,19 @@ eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
     -h|--help) usage; exit 0;;
-    -s|--source-image) source_image="$2"; shift; shift ;;
-    -t|--target-image) target_image="$2"; shift; shift ;;
-    -v|--with-vdi)     with_vdi=true;            shift ;;
+    -v|--with-vdi) with_vdi=true; shift ;;
     --) shift; break;;
     *)  usage; exit 1;;
    esac
 done
 
+source_image=${1:-}
 if [ -z "$source_image" ]; then
   echo 'source image must be set!' >&2
   exit 1
 fi
 
+target_image=${2:-}
 if [ -z "$target_image" ]; then
   echo 'target image must be set!' >&2
   exit 1
@@ -92,6 +83,11 @@ fi
 
 if [ ! -e "$source_image" ]; then
   echo "source image $source_image does not exist!" >&2
+  exit 1
+fi
+
+if [ -e "$target_image" ]; then
+  echo "target file $target_image exists, not overwriting" >&2
   exit 1
 fi
 
@@ -106,15 +102,10 @@ if $with_vdi; then
   fi
 fi
 
-if [ -e "$target_image" ]; then
-  echo "target file $target_image exists, not overwriting" >&2
-  exit 1
-fi
-
 mkdir -p "$images_dir"
 
-dd if=/dev/null "of=${target_image}" bs=1M \
-   seek="$(calc_required_imagefile_gigabytes "$source_image")K"
+dd if=/dev/null "of=${target_image}" bs=1K \
+   seek="$(calc_required_imagefile_megabytes "$source_image")K"
 loopdev=$(losetup --show -P -f "$target_image")
 
 puavo-setup-filesystems --force-disk-device "${loopdev#/dev/}" \
@@ -122,7 +113,8 @@ puavo-setup-filesystems --force-disk-device "${loopdev#/dev/}" \
                         --force-wipe-partition no \
                         --force-write-partitions yes \
                         --hosttype exam \
-                        --loopback-only
+                        --loopback-only \
+                        --partition-label UEFI/GPT
 
 puavo-install-grub --hosttype   exam          \
                    --images-dir "$images_dir" \
@@ -139,7 +131,7 @@ if $with_vdi; then
 fi
 
 # fix output file ownership in case run through sudo
-if [ -n "$target_image" -a -n "${SUDO_USER:-}" ]; then
+if [ -n "${SUDO_USER:-}" ]; then
   chown "${SUDO_USER}:" "$target_image"
   if $with_vdi; then
     chown "${SUDO_USER}:" "$vdi_image"
