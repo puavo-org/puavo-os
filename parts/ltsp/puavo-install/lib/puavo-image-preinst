@@ -79,6 +79,11 @@ update_grub() {
   fi
 }
 
+install_uki() {
+    block_interrupts chroot "$new_mnt" \
+      /usr/sbin/puavo-install-uki
+}
+
 hosttype=
 
 # This should not fail even if we get parameters we do not understand.
@@ -114,5 +119,6 @@ done
 
 # update grub configuration from the new image
 update_grub --hosttype "$hosttype"
+install_uki
 
 exit 0
