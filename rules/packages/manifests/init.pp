@@ -843,11 +843,15 @@ class packages {
   $r8168_module             = 'r8168/8.051.02'
   $virtualbox_module        = 'virtualbox/7.0.20'
 
-  $all_dkms_modules = [ $broadcom_sta_dkms_module ]
-                      # , $nvidia_dkms_470_module       # XXX Trixie
-                      # , $nvidia_dkms_535_module       # XXX Trixie
-		      # , $r8168_module ]               # XXX Trixie
-		      # , $virtualbox_module ]          # XXX Trixie
+  $all_dkms_modules =
+    $::puavoimage_class ? {
+      'exam'  => [ $broadcom_sta_dkms_module ],
+      default => [ $broadcom_sta_dkms_module ]
+                 # , $nvidia_dkms_470_module    # XXX Trixie
+                 # , $nvidia_dkms_535_module    # XXX Trixie
+                 # , $r8168_module              # XXX Trixie
+                 # , $virtualbox_module ]       # XXX Trixie
+  }
 
   packages::kernels::kernel_package {
     '6.12.21-amd64':
