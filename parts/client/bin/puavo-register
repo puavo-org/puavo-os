@@ -64,6 +64,7 @@ class CmdLine
                    | force
                    | force-defaults
                    | install
+                   | no-config-write
                    | update
                    | nocolor )$/x
           params[$1] = true
@@ -523,6 +524,11 @@ class Control
     raise 'Did not receive host configuration from Puavo' \
         unless info['registration']['host_configuration']
 
+    if cmdline_params['no-config-write'] then
+      Tools.goodmsg('Not writing Puavo attributes to disk as run with --no-config-write')
+      return
+    end
+
     begin
       FileUtils.remove_entry_secure(Puavodir)
     rescue Errno::ENOENT
@@ -563,17 +569,22 @@ class Control
     PUAVO_ETC.write(:hostname, info['registration']["puavoHostname"])
 
     # Also run update to write the kernel stuff
-    update() if info['registration']['puavoDeviceType'] != "laptop"
+    update(cmdline_params) if info['registration']['puavoDeviceType'] != "laptop"
   end
 
   # Write updatable Puavo attributes to /etc/puavo
-  def self.update
+  def self.update(cmdline_params)
     puavo = Puavo::Client::Base.new
 
     if PUAVO_ETC.hosttype == 'bootserver' then
       device_info = puavo.servers.find_by_id(PUAVO_ETC.id)
     else
       device_info = puavo.devices.find_by_id(PUAVO_ETC.id)
+    end
+
+    if cmdline_params['no-config-write'] then
+      Tools.goodmsg('Not writing Puavo attributes to disk as run with --no-config-write')
+      return
     end
 
     PUAVO_ETC.write(:hostname, device_info.hostname)
@@ -589,7 +600,7 @@ cmdline_params = CmdLine.params(ARGV)
 if cmdline_params['authenticate-only']
   Control.authenticate_only(cmdline_params)
 elsif cmdline_params['update']
-  Control.update()
+  Control.update(cmdline_params)
 else
   Control.register(cmdline_params)
 end
