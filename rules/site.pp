@@ -6,6 +6,12 @@ case $::puavoruleset {
     include ::apt::default_repositories
     include ::systemd::sysusers         # early so that this has an effect
     include ::users                     # early so that this has an effect
+
+    case $::puavoimage_class {
+      'exam': {
+        include ::apt::no_install_recommends
+      }
+    }
   }
 
   'allinone': { include ::image::allinone }
