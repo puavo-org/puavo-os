@@ -1,4 +1,5 @@
 class image::exam {
+  include ::apt::no_install_recommends
   include ::exammode::standalone
   include ::initramfs
   include ::kernels
