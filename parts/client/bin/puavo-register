@@ -27,7 +27,6 @@ Puavodir            = '/etc/puavo'
 Puavo_hosttype_path = "#{ Puavodir }/hosttype"
 
 class Tools
-
   @@nocolor = false
 
   def self.nocolor
@@ -49,17 +48,9 @@ class Tools
   def self.errmsg(msg) ; colormsg(msg, 'ERROR', HighLine::RED)  ; end
   def self.goodmsg(msg); colormsg(msg, 'OK',    HighLine::GREEN); end
 
-  def self.mkdir(path, mode=0755)
-    begin
-      FileUtils.mkdir(path, :mode => mode)
-      rescue Errno::EEXIST
-    end
-  end
-
   def self.topdomain(domain)
     domain.match(/[^\.]+\.[^\.]+$/).to_s
   end
-
 end
 
 class CmdLine
