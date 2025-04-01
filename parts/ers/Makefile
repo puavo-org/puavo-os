@@ -2,7 +2,12 @@ prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
+
+ifeq ($(prefix), /usr/local)
 sysconfdir = $(prefix)/etc
+else
+sysconfdir = /etc
+endif
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
