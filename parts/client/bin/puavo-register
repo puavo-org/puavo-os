@@ -96,20 +96,20 @@ class RegisterUserInterface
         (@cmdline_params['accepted-devicetypes'] || '').split(',')
     }
 
-    @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
-    @username        = @cmdline_params['username']
-    @password        = @cmdline_params['password']
+    @puavoserver = @cmdline_params['puavoserver'] || default_puavoserver()
+    @username    = @cmdline_params['username']
+    @password    = @cmdline_params['password']
 
     Tools.nocolor = !!@cmdline_params['nocolor']
 
     facts = Facter.to_hash
 
     @system_defaults = {
-      'macAddress'               => lookup_macaddresses(facts),
-      'puavoDeviceManufacturer'  => facts['manufacturer'],
-      'puavoDeviceModel'         => facts['productname'],
-      'puavoHostname'            => facts['hostname'],
-      'serialNumber'             => facts['serialnumber'],
+      'macAddress'              => lookup_macaddresses(facts),
+      'puavoDeviceManufacturer' => facts['manufacturer'],
+      'puavoDeviceModel'        => facts['productname'],
+      'puavoHostname'           => facts['hostname'],
+      'serialNumber'            => facts['serialnumber'],
     }
 
     @host = {}
@@ -268,9 +268,9 @@ class RegisterUserInterface
 
   def puavo_connection_request()
     PuavoDevicesConnection.new(@puavoserver,
-			       @username,
-			       @password,
-			       @mode['accepted_devicetypes'])
+                               @username,
+                               @password,
+                               @mode['accepted_devicetypes'])
   end
 
   def register_to_server
@@ -375,7 +375,7 @@ class PuavoDevicesConnection
     @password = password
 
     @http              = Net::HTTP.new(@server, uri.port)
-    @http.use_ssl      = uri.scheme == "https"
+    @http.use_ssl      = uri.scheme == 'https'
     @http.ca_path      = '/etc/ssl/certs'
     @http.verify_mode  = OpenSSL::SSL::VERIFY_PEER
     @http.verify_depth = 5
@@ -415,11 +415,11 @@ class PuavoDevicesConnection
     default_devicetype = filtered_devicetypes['default']
     unless filtered_devicetypes['list'].has_key?(default_devicetype); then
       filtered_devicetypes['default'] \
-	= filtered_devicetypes['list'].keys \
-	    .sort_by do |devtype|
-	      filtered_devicetypes['list'][devtype]['order']
-	    end \
-	    .first
+        = filtered_devicetypes['list'].keys \
+            .sort_by do |devtype|
+              filtered_devicetypes['list'][devtype]['order']
+            end \
+            .first
     end
 
     filtered_devicetypes
