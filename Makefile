@@ -69,7 +69,7 @@ _image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -
 # needed by linux build to prepare debian-directory
 _pkgbuild_dependencies := kernel-wedge,python3-dacite,python3-jinja2,python3-pydantic,python3-toml,quilt
 
-_debootstrap_packages  := apt-utils,git,jq,locales,lsb-release,make,puppet,puppet-module-puppetlabs-sshkeys-core,sudo,wget,$(_pkgbuild_dependencies)
+_debootstrap_packages  := apt-utils,equivs,git,jq,locales,lsb-release,make,puppet,puppet-module-puppetlabs-sshkeys-core,python3-debian,python3-requests,sudo,wget,$(_pkgbuild_dependencies)
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid/squid.conf \
 			 && echo true || echo false)
