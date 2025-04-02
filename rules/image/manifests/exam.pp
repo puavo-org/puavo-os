@@ -16,5 +16,8 @@ class image::exam {
     or title == 'puavo-exammode'
     or title == 'puavo-pam'
     or title == 'puavo-pkg'
+    or title == 'xserver-xorg-core'
+    or title == 'xserver-xorg-input-all'
+    or title == 'xserver-xorg-video-all'
   |>
 }
