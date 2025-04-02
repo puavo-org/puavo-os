@@ -89,10 +89,13 @@ Package: puavo-core
 Architecture: all
 Depends: ${misc:Depends},
  btrfs-progs,
+ busybox,
  coreutils,
  initramfs-tools,
  lvm2,
  mawk,
+ nbd-client,
+ plymouth,
  puavo-conf,
  rdate,
  rsyslog-relp,
