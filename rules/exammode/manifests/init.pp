@@ -25,7 +25,8 @@ class exammode {
 
   file {
     '/etc/systemd/system/puavo-exammode-tty.service':
-      require => Package['systemd'],
+      require => [ Package['kbd']
+                 , Package['systemd'] ],
       source  => 'puppet:///modules/exammode/puavo-exammode-tty.service';
 
     '/etc/X11/Xsession.d/10puavo-set-exammode-session-quirks':
@@ -97,6 +98,7 @@ class exammode {
 
   Package <|
        title == 'gsettings-desktop-schemas'
+    or title == 'kbd'
     or title == 'puavo-conf'
     or title == 'puavo-desktop'
     or title == 'qiv'
