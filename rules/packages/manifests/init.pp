@@ -70,6 +70,7 @@ class packages {
     , 'incron'
     , 'ipcalc'
     , 'isc-dhcp-server'
+    , 'kbd'
     , 'krb5-admin-server'
     , 'krb5-kdc'
     , 'libudev1'
