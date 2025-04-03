@@ -97,7 +97,8 @@ class exammode {
   }
 
   Package <|
-       title == 'gsettings-desktop-schemas'
+       title == 'gnome-session'
+    or title == 'gsettings-desktop-schemas'
     or title == 'kbd'
     or title == 'puavo-conf'
     or title == 'puavo-desktop'
