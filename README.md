@@ -9,11 +9,28 @@ of the same version your target image is.  As of May 2024,
 our main production version is Bullseye and Bookworm
 is under active development.
 
-After cloning the repository, you should also update
-submodules (unless the repository was cloned with parameter --recursive):
+## Git submodules
 
-    git submodule init
-    git submodule update
+Puavo OS depends on [puavo-os-pkg](https://github.com/puavo-org/puavo-os-pkg)
+submodule, which pointed out by a relative path. Thus, if a fork is used, also
+this repository must be forked.
+
+After cloning the repository, the submodules must be initialized and updated
+(unless cloned with *--recursive*):
+
+    git submodule update --init
+
+When switching branches, the following might be observed:
+
+    $ git switch trixie-boot-security
+    M	parts/pkg/packages
+
+This can be resolved by reinitializing the submodules:
+
+    git submodule deinit -f --all
+    git submodule update --init
+
+## Building Puavo OS
 
 To setup build host, run (with sudo or as root):
 
