@@ -48,32 +48,36 @@ end
 module DiskHandler
   Filesystems = {
     'bootserver' => {
-      '.swap'         => { 'size' => '16G', 'type' => 'swap' },
-      'tmp'           => { 'size' => '16G'                   },
-      'images'        => { 'size' => '128G'                  },
-      'state'         => { 'size' => '32G'                   },
-      'imageoverlays' => { 'size' => '5G'                    },
-      'home'          => { 'size' => '100%FREE'              },
+      '.EFI'          => { 'size' => '512M',     'type' => 'fat'     },
+      '.swap'         => { 'size' => '16G',      'type' => 'swap'    },
+      'tmp'           => { 'size' => '16G',      'type' => 'btrfssv' },
+      'images'        => { 'size' => '128G',     'type' => 'btrfssv' },
+      'state'         => { 'size' => '32G',      'type' => 'btrfssv' },
+      'imageoverlays' => { 'size' => '5G',       'type' => 'btrfssv' },
+      'home'          => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
     'diskinstaller' => {
-      'installimages' => { 'size' => '100%FREE' },
+      '.EFI'          => { 'size' => '40M',      'type' => 'fat'     },
+      'installimages' => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
     'exam' => {
-      'examimages'    => { 'size' => '100%FREE', 'type' => 'ext4' },
+      '.EFI'          => { 'size' => '40M',      'type' => 'fat'     },
+      'examimages'    => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
     'laptop' => {
-      '.swap'         => { 'size' => '4G', 'type' => 'swap' },
-      'tmp'           => { 'size' => '6G',                  },
-      'images'        => { 'size' => '40G',                 },
-      'state'         => { 'size' => '4G',                  },
-      'imageoverlays' => { 'size' => '5G',                  },
-      'home'          => { 'size' => '100%FREE',            },
+      '.EFI'          => { 'size' => '512M',     'type' => 'fat'     },
+      '.swap'         => { 'size' => '4G',       'type' => 'swap'    },
+      'tmp'           => { 'size' => '6G',       'type' => 'btrfssv' },
+      'images'        => { 'size' => '40G',      'type' => 'btrfssv' },
+      'state'         => { 'size' => '4G',       'type' => 'btrfssv' },
+      'imageoverlays' => { 'size' => '5G',       'type' => 'btrfssv' },
+      'home'          => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
   }
 
   def self.cleanup_disk_environment(hosttype, vgname)
     # Unmount filesystems, if those are mounted.
-    non_swap_filesystems(hosttype).each do |name, attrs|
+    btrfs_subvolumes(hosttype).each do |name, attrs|
       run('umount', '-f', "/#{ name }", { :err => '/dev/null' }) rescue true
     end
 
@@ -93,8 +97,9 @@ module DiskHandler
           %w(puavoinstaller-installimages)
         else
           %w(swap0) \
-            + ((Filesystems[hosttype] || {}) \
-                .keys.map { |partname| "puavo-#{ partname }" })
+            + btrfs_subvolumes(hosttype).keys.map do |partname|
+                "puavo-#{ partname }"
+              end
       end
 
     # remove all dmsetup volumes which may exists on the target host
@@ -263,11 +268,11 @@ module DiskHandler
     create_efi_filesystem(device)
   end
 
-  def self.gpt_format(partitioning_type, windows_size=nil)
+  def self.gpt_format(partitioning_type, efi_size, windows_size=nil)
     slices = []
     slices << "2\no\ny\n"               # init
     boot_slices = [
-      "n\n1\n\n+1536M\nef00\n",         # EFI boot partition
+      "n\n1\n\n+#{ efi_size }\nef00\n",         # EFI boot partition
     ]
 
     case partitioning_type
@@ -293,7 +298,9 @@ module DiskHandler
   end
 
   def self.raid_partition(device)
-    setup_partition(device, gpt_format(:raid_boot))
+    # RAID EFI size hardcoded to 1536M
+    efi_size = '1536M'
+    setup_partition(device, gpt_format(:raid_boot, efi_size))
   end
 
   def self.get_partitions(device)
@@ -378,19 +385,20 @@ module DiskHandler
   def self.create_partitions(fs_conf, raid_setup_done)
     if fs_conf['windows_size'] then
       # raid_setup_done == false because we must be on laptop
-      gpt_spec = gpt_format(:with_windows, fs_conf['windows_size'])
+      gpt_spec = gpt_format(:with_windows, fs_conf['efi_size'],
+                            fs_conf['windows_size'])
     else
       partitioning_scheme = raid_setup_done ? :on_raid : :basic_boot
-      gpt_spec = gpt_format(partitioning_scheme)
+      gpt_spec = gpt_format(partitioning_scheme, fs_conf['efi_size'])
     end
 
     setup_partition(fs_conf['device'], gpt_spec)
     fs_conf['partition'] = get_puavo_partition(fs_conf['device'])
   end
 
-  def self.non_swap_filesystems(hosttype)
+  def self.btrfs_subvolumes(hosttype)
     Filesystems[ hosttype ] \
-      .select { |name, attrs| attrs['type'] != 'swap' }
+      .select { |name, attrs| attrs['type'] == 'btrfssv' }
   end
 
   def self.create_efi_filesystem(device)
@@ -416,7 +424,7 @@ module DiskHandler
       FileUtils.mkdir_p(btrfs_mount_dir)
       begin
         run('mount', partition_dev, btrfs_mount_dir)
-        Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
+        btrfs_subvolumes( fs_conf['hosttype'] ).each do |name, attrs|
           # XXX attrs dismissed
           run('btrfs', 'subvolume', 'create', "#{ btrfs_mount_dir }/#{ name }")
         end
@@ -431,7 +439,7 @@ module DiskHandler
   def self.mount_filesystems(fs_conf, vgname)
     partition_dev = "/dev/#{ fs_conf['partition'] }"
 
-    non_swap_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
+    btrfs_subvolumes( fs_conf['hosttype'] ).each do |name, attrs|
       # /tmp should not be mounted now,
       # otherwise things currently using it will break (for example tmux).
       next if name == 'tmp'
@@ -621,7 +629,7 @@ module QueryDiskInfo
 
         # Let the user set the size of the following filesystems:
         [
-          ['imageoverlays', UI::ImageoverlaySizePrompt],
+          [ 'imageoverlays', UI::ImageoverlaySizePrompt ],
         ].each do |fs_name, prompt_key|
           fs = DiskHandler::Filesystems[hosttype][fs_name]
           next if fs.nil?
@@ -654,8 +662,15 @@ module QueryDiskInfo
       do_it = QueryDiskInfo::ask_confirmation(device, partition)
     end
 
+    begin
+      efi_size = DiskHandler::Filesystems[hosttype]['.EFI']['size']
+    rescue StandardError => e
+      raise "unknown EFI size for hosttype '#{ hosttype }': #{ e.message }"
+    end
+
     {
       'device'        => device,
+      'efi_size'      => efi_size,
       'first_sector'  => first_sector,
       'hosttype'      => hosttype,
       'partition'     => partition,
