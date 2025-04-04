@@ -38,6 +38,7 @@ end
 module DiskHandler
   Filesystems = {
     'bootserver' => {
+      '.EFI'          => { 'size' => '512M',     'type' => 'fat'  },
       'swap'          => { 'size' => '16G',      'type' => 'swap' },
       'tmp'           => { 'size' => '16G',      'type' => 'ext4' },
       'images'        => { 'size' => '128G',     'type' => 'ext4' },
@@ -46,12 +47,15 @@ module DiskHandler
       'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
     },
     'diskinstaller' => {
+      '.EFI'          => { 'size' => '40M',       'type' => 'fat'  },
       'installimages' => { 'size' => '100%FREE', 'type' => 'ext4' },
     },
     'exam' => {
+      '.EFI'          => { 'size' => '40M',       'type' => 'fat'  },
       'examimages'    => { 'size' => '100%FREE', 'type' => 'ext4' },
     },
     'laptop' => {
+      '.EFI'          => { 'size' => '512M',     'type' => 'fat'  },
       'swap'          => { 'size' => '4G',       'type' => 'swap' },
       'tmp'           => { 'size' => '6G',       'type' => 'ext4' },
       'images'        => { 'size' => '40G',      'type' => 'ext4' },
@@ -60,6 +64,7 @@ module DiskHandler
       'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
     },
     'wirelessaccesspoint' => {
+      '.EFI'          => { 'size' => '512M',     'type' => 'fat'  },
       'swap'          => { 'size' => '2G',       'type' => 'swap' },
       'tmp'           => { 'size' => '3G',       'type' => 'ext4' },
       'state'         => { 'size' => '2G',       'type' => 'ext4' },
@@ -70,7 +75,7 @@ module DiskHandler
 
   def self.cleanup_disk_environment(hosttype, vgname)
     # Unmount filesystems, if those are mounted.
-    non_swap_filesystems(hosttype).each do |name, attrs|
+    ext4_filesystems(hosttype).each do |name, attrs|
       run('umount', '-f', "/#{ name }", { :err => '/dev/null' }) rescue true
     end
 
@@ -90,8 +95,9 @@ module DiskHandler
           %w(puavoinstaller-installimages)
         else
           %w(swap0) \
-            + ((Filesystems[hosttype] || {}) \
-                .keys.map { |partname| "puavo-#{ partname }" })
+            + ext4_filesystems(hosttype).keys.map do |partname|
+                "puavo-#{ partname }"
+              end
       end
 
     # remove all dmsetup volumes which may exists on the target host
@@ -285,6 +291,7 @@ module DiskHandler
   end
 
   def self.raid_partition(device, partitioning_scheme)
+    # RAID EFI size hardcoded to 512M
     setup_partition(device, partitioning_scheme,
                     "n\np\n1\n\n\nt\nfd\na\np\nw\n",
                     "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\nfd00\nw\ny\n",
@@ -338,13 +345,13 @@ module DiskHandler
   def self.create_partitions(fs_conf, partitioning_scheme)
     setup_partition(fs_conf['device'], partitioning_scheme,
                     "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n",
-                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+512M\nef00\nn\n3\n\n\n8e00\nw\ny\n",
+                    "2\no\ny\nn\n1\n\n+1M\nef02\nn\n2\n\n+#{ fs_conf['efi_size'] }\nef00\nn\n3\n\n\n8e00\nw\ny\n",
                     "r\nh\n1 2 3\nn\n\ny\n\nn\n\nn\nw\ny\n")
   end
 
-  def self.non_swap_filesystems(hosttype)
+  def self.ext4_filesystems(hosttype)
     Filesystems[ hosttype ] \
-      .select { |name, attrs| attrs['type'] != 'swap' }
+      .select { |name, attrs| attrs['type'] == 'ext4' }
   end
 
   def self.create_efi_filesystem(device)
@@ -367,7 +374,7 @@ module DiskHandler
     run('vgcreate', '-s', '64M', vgname, "/dev/#{ fs_conf['partition'] }",
 	{ :close_others => true })
 
-    Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
+    ext4_filesystems(fs_conf['hosttype']).each do |name, attrs|
       mkfs(attrs['size'], name, attrs['type'], vgname)
     end
   end
@@ -389,7 +396,7 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf, vgname)
-    non_swap_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
+    ext4_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
       # /tmp should not be mounted now,
       # otherwise things currently using it will break (for example tmux).
       next if name == 'tmp'
@@ -529,7 +536,7 @@ module QueryDiskInfo
 
         # Let the user set the size of the following filesystems:
         [
-          ['imageoverlays', UI::ImageoverlaySizePrompt],
+          [ 'imageoverlays', UI::ImageoverlaySizePrompt ],
         ].each do |fs_name, prompt_key|
           fs = DiskHandler::Filesystems[hosttype][fs_name]
           next if fs.nil?
@@ -559,8 +566,15 @@ module QueryDiskInfo
       do_it = QueryDiskInfo::ask_confirmation(device, partition)
     end
 
+    begin
+      efi_size = DiskHandler::Filesystems[hosttype]['.EFI']['size']
+    rescue StandardError => e
+      raise "unknown EFI size for hosttype '#{ hosttype }': #{ e.message }"
+    end
+
     {
       'device'       => device,
+      'efi_size'     => efi_size,
       'first_sector' => first_sector,
       'hosttype'     => hosttype,
       'partition'    => partition,
