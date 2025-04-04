@@ -54,7 +54,89 @@ get_grub_efi_arguments() {
 }
 
 grub_m4_template() {
-  cat <<'EOF'
+  local hosttype
+  hosttype=$1
+
+  if [ "$hosttype" = 'exam' ]; then
+    cat <<'EOF_GRUB_EXAM_CFG'
+set default="0"
+load_env
+
+function load_video {
+  if [ x$feature_all_video_module = xy ]; then
+    insmod all_video
+  else
+    insmod efi_gop
+    insmod efi_uga
+    insmod ieee1275_fb
+    insmod vbe
+    insmod vga
+    insmod video_bochs
+    insmod video_cirrus
+  fi
+}
+
+if loadfont unicode; then
+  set gfxmode=auto
+  load_video
+  insmod gfxterm
+  set locale_dir=$prefix/locale
+  insmod gettext
+fi
+terminal_output gfxterm
+
+set timeout=0
+
+function get_pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }
+
+function ltsp_image_entry {
+  set imagefile="$1"
+  set description="$2"
+
+  get_pathname $imagefile imagepath
+
+  # ${puavo_kernel_arguments} comes from a grub environment file
+  # (if it is defined there)
+  set kernelparameters="puavo.hosttype=exam"
+  set boot_label="${description}"
+
+  menuentry "${boot_label}" "$imagefile" "$imagepath" "$kernelparameters" {
+    set imagefile="$2"
+    set imagepath="$3"
+    set kernelparameters="$4"
+
+    set kernel_version_suffix=''
+
+    loopback loop "${imagefile}"
+    set root='(loop)'
+
+    linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
+    initrd  /boot/initrd.img${kernel_version_suffix}
+  }
+}
+
+insmod gzio
+insmod part_msdos
+insmod ext2
+insmod squash4
+insmod biosdisk
+insmod regexp
+insmod loopback
+insmod usb_keyboard
+insmod lvm
+insmod jpeg
+insmod png
+
+for dev in (lvm/puavoexam-examimages); do
+  for examimage in ${dev}/ltsp.img; do
+    if test -f "${examimage}"; then
+      ltsp_image_entry "${examimage}" "Puavo exam environment"
+    fi
+  done
+done
+EOF_GRUB_EXAM_CFG
+  else
+    cat <<'EOF_GRUB_DEFAULT_CFG'
 set default="0"
 load_env
 
@@ -340,7 +422,8 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
     fi
   done
 done
-EOF
+EOF_GRUB_DEFAULT_CFG
+  fi
 }
 
 find_grub_target_devices_on_raid() {
@@ -723,7 +806,7 @@ fi
 grub_cfg_path="${boot_dir}/grub/grub.cfg"
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
-grub_m4_template                                                       \
+grub_m4_template "$hosttype"                                  \
   | m4 -D__PUAVO_HOSTTYPE__="$hosttype"                                \
        -D__PUAVO_IMAGES_BTRFS_LABEL__="$puavo_images_btrfs_label"      \
        -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments"          \
