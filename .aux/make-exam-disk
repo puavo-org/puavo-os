@@ -22,11 +22,12 @@ cleanup() {
 }
 
 calc_required_imagefile_megabytes() {
-  local source_image
+  local padding_in_megabytes source_image
   source_image=$1
-  # XXX 800 is chosen because it seems to work, but there should be better
-  # XXX logic behind this
-  ls --block-size=1024K -ds "$source_image" | awk '{ print $1 + 800 }'
+  # XXX padding is chosen experimentally, there should be some logic behind it
+  padding_in_megabytes=160
+  ls --block-size=1024K -ds "$source_image" \
+    | awk -v padding="$padding_in_megabytes" '{ print $1 + padding }'
 }
 
 install_image() {
