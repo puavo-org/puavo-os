@@ -19,7 +19,7 @@ index 83df99a72..05a0c2c71 100644
 +		// similarly to gnome-shell patch 02-puavo-make-private-network-connections-possible.patch,
 +		// check if we can add system connections; if not, just make it private
 +		gint wait_status;
-+		gboolean private_needed = g_spawn_command_line_sync("/usr/lib/puavo-ltsp-client/puavo-network-connections --ask-if-must-be-private",
++		gboolean private_needed = g_spawn_command_line_sync("/usr/lib/puavo-desktop/puavo-network-connections --ask-if-must-be-private",
 +			NULL, NULL, wait_status, NULL);
 +		if(private_needed && wait_status == 0) {
 +			g_debug("puavo: system connections not allowed, creating private connection");
