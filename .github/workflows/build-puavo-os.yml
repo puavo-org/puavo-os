@@ -1,0 +1,40 @@
+name: Build Puavo OS
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Prepare build
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            debootstrap \
+            gcc \
+            git \
+            make \
+            mlocate \
+            puppet \
+            rsync \
+            squid \
+            sudo \
+            xz-utils
+          echo "PUAVO_ROOTFS=$RUNNER_TEMP/puavo-os-rootfs" >> $GITHUB_ENV
+          echo "PUAVO_IMAGES=$RUNNER_TEMP/puavo-os-images" >> $GITHUB_ENV
+      - name: Setup Build Host
+        run:
+          mkdir -p "$PUAVO_ROOTFS"
+          mkdir -p "$PUAVO_IMAGES"
+      - name: Build RootFS Deboostrap
+        run: |
+          make rootfs-debootstrap
+      - name: Build RootFS Update
+        run: |
+          make rootfs-update
+      - name: Build RootFS Image
+        run: |
+          make rootfs-image
