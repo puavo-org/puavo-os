@@ -47,12 +47,20 @@ module DiskHandler
       'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
     },
     'diskinstaller' => {
-      '.EFI'          => { 'size' => '40M',       'type' => 'fat'  },
-      'installimages' => { 'size' => '100%FREE', 'type' => 'ext4' },
+      '.EFI'          => { 'size' => '40M',      'type' => 'fat'  },
+      'installimages' => {
+        'reserved_percentage' => '0',
+        'size'                => '100%FREE',
+        'type'                => 'ext4',
+      },
     },
     'exam' => {
-      '.EFI'          => { 'size' => '40M',       'type' => 'fat'  },
-      'examimages'    => { 'size' => '100%FREE', 'type' => 'ext4' },
+      '.EFI'       => { 'size' => '40M',      'type' => 'fat'  },
+      'examimages' => {
+        'reserved_percentage' => '0',
+        'size'                => '100%FREE',
+        'type'                => 'ext4',
+      },
     },
     'laptop' => {
       '.EFI'          => { 'size' => '512M',     'type' => 'fat'  },
@@ -375,11 +383,12 @@ module DiskHandler
 	{ :close_others => true })
 
     ext4_filesystems(fs_conf['hosttype']).each do |name, attrs|
-      mkfs(attrs['size'], name, attrs['type'], vgname)
+      mkfs(attrs['size'], name, attrs['type'], vgname,
+           attrs['reserved_percentage'])
     end
   end
 
-  def self.mkfs(size, name, type, vgname)
+  def self.mkfs(size, name, type, vgname, reserved_percentage)
     run('lvcreate',
 	(size.match(/%/) ? '--extents' : '--size'), size,
 	'--name', name,
@@ -389,7 +398,10 @@ module DiskHandler
 
     case type
       when 'ext4'
-        run('mkfs.ext4', "/dev/mapper/#{ vgname }-#{ name }")
+        mkfs_args = []
+        mkfs_args += [ '-m', reserved_percentage ] if reserved_percentage
+        mkfs_args += [ "/dev/mapper/#{ vgname }-#{ name }" ]
+        run('mkfs.ext4', *mkfs_args)
       when 'swap'
         run('mkswap', '-f', "/dev/mapper/#{ vgname }-#{ name }")
     end
