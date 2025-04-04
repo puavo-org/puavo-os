@@ -9,6 +9,7 @@ class image::exam {
        tag   == 'tag_firmware_free'
     or tag   == 'tag_firmware_nonfree'
     or tag   == 'tag_kernel'
+    or title == 'gnome-keyring'
     or title == 'network-manager'
     or title == 'plocate'
     or title == 'puavo-conf'
