@@ -1,0 +1,56 @@
+#!/bin/sh
+# Unshare based lightweight nested build container.
+#
+# See: https://man7.org/linux/man-pages/man1/unshare.1.html
+
+set -eu
+
+usage() {
+  echo "Usage: $(basename "$0") [-p <proxy_address>] <rootfs> <machine> <user> <command> [args...]"
+  echo "Options:"
+  echo "  -p <proxy_address>  Specify the proxy address (e.g., http://proxy.example.com:8080)"
+  exit 1
+}
+
+PROXY=""
+while getopts ":p:" opt; do
+  case "$opt" in
+    p)
+      PROXY="$OPTARG"
+      ;;
+    \?)
+      echo "Unknown option: -$OPTARG" >&2
+      usage
+      ;;
+    :)
+      echo "-$OPTARG requires an argument." >&2
+      usage
+      ;;
+  esac
+done
+shift $((OPTIND - 1))
+if [ "$#" -le 3 ]; then
+  usage
+fi
+ROOTFS=$1
+MACHINE=$2
+USER=$3
+shift 3
+CMDLINE="$@"
+
+sudo unshare \
+  --mount \
+  --uts \
+  --root "$ROOTFS" \
+  sh -c "
+    mkdir -p /proc
+    mkdir -p /sys
+    mkdir -p /dev
+    mount -t sysfs /sys /sys
+    mount -t proc /proc /proc
+    mount -t devtmpfs /dev /dev
+    mount -t devpts /dev /dev/pts
+    hostname $MACHINE
+    export PUAVO_CACHE_PROXY=$PROXY
+    su -c '$CMDLINE' $USER
+  "
