@@ -1,16 +1,20 @@
-# Public, configurable variables
+# Environment
+PUAVO_ROOTFS		?= /var/tmp/puavo-os/rootfs
+PUAVO_IMAGES		?= /srv/puavo-os-images
+
+# Configurable variables
 all_image_classes       := allinone
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= bookworm
 default_image_class	:= allinone
-image_dir		:= /srv/puavo-os-images
+image_dir		:= $(PUAVO_IMAGES)
 mirror_dir		:= $(image_dir)/mirror
 mode                    := production
 topdomain               := puavo.org
 remote_devel_mirror     := cdn.$(topdomain)
 remote_prod_mirror      := cdn.$(topdomain)
 release_name            :=
-rootfs_dir_base         := /var/tmp/puavo-os/rootfs
+rootfs_dir_base         := $(PUAVO_ROOTFS)
 target_arch             := amd64
 upload_codename         := $(debootstrap_suite)
 upload_dir              :=
