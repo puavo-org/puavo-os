@@ -1,16 +1,20 @@
+# Environment
+PUAVO_ROOTFS		?= /var/tmp/puavo-os/rootfs
+PUAVO_IMAGES		?= /srv/puavo-os-images
+
 # Public, configurable variables
 all_image_classes       := allinone exam
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= trixie
 default_image_class	:= allinone
-image_dir		:= /srv/puavo-os-images
+image_dir		:= $(PUAVO_IMAGES)
 mirror_dir		:= $(image_dir)/mirror
 mode                    := production
 topdomain               := puavo.org
 remote_devel_mirror     := cdn.$(topdomain)
 remote_prod_mirror      := cdn.$(topdomain)
 release_name            :=
-rootfs_dir_base         := /var/tmp/puavo-os/rootfs
+rootfs_dir_base         := $(PUAVO_ROOTFS)
 target_arch             := amd64
 upload_codename         := $(debootstrap_suite)
 upload_dir              :=
@@ -83,14 +87,8 @@ _proxywrap_cmd := $(CURDIR)/.aux/proxywrap --with-proxy $(_proxy_address)
 else
 _proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
-
-_systemd_nspawn_machine_name := \
-  $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
-_systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
-			 -M '$(_systemd_nspawn_machine_name)' \
-			 -u '$(_adm_user)'                    \
-			 --tmpfs=/tmp:size=8G                 \
-			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
+_machine := $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
+_builder := $(CURDIR)/.aux/builder -p "${_proxy_address}" "$(rootfs_dir)" $(_machine) $(_adm_user)
 
 _sudo := sudo $(_proxywrap_cmd)
 export image_class _sudo
@@ -222,7 +220,7 @@ $(install_image_dir):
 # updating to images made with this.
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' prepare-for-squashfs
+	$(_builder) $(MAKE) -C '/puavo-os' prepare-for-squashfs
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
@@ -249,8 +247,7 @@ rootfs-install-image: rootfs-image $(install_image_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	$(_systemd_nspawn_cmd) '/puavo-os/.aux/proxywrap' \
-	   sh -c 'cd ~ && exec bash'
+	$(_builder) '/puavo-os/.aux/proxywrap' sh -c 'cd ~ && exec bash'
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
@@ -260,7 +257,7 @@ rootfs-sync-repo: $(rootfs_dir)
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update
+	$(_builder) $(MAKE) -C '/puavo-os' update
 
 .PHONY: setup-buildhost
 setup-buildhost:
