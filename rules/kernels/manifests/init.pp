@@ -3,6 +3,11 @@ class kernels {
   include ::kernels::grub_update
   include ::packages
 
+  $kernel_versions = {
+    'default' => '6.1.0-31-amd64',
+    'crisp'   => '6.12.9+bpo-amd64',
+  }
+
   define kernel_link ($kernel, $linkname, $linksuffix) {
     file {
       "/boot/${linkname}${linksuffix}":
@@ -28,11 +33,15 @@ class kernels {
     }
   }
 
-  $default_kernel = '6.1.0-31-amd64'
-  $crisp_kernel   = '6.12.9+bpo-amd64'
+  define install_kernel {
+    $kernel_alias = $title
 
-  ::kernels::all_kernel_links {
-    'default': kernel => $default_kernel;
-    'crisp':   kernel => $crisp_kernel;
+    ::kernels::all_kernel_links {
+      $kernel_alias:
+        kernel  => $kernel_versions[$kernel_alias],
+        require => Packages::Kernels::Kernel_package[$kernel_alias];
+    }
+
+    Packages::Kernels::Kernel_package <| title == $kernel_alias |>
   }
 }

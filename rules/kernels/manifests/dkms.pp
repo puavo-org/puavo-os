@@ -46,8 +46,11 @@ class kernels::dkms {
                    , Package[$kernel_packages] ];
     }
 
-    Package <| title == dkms
-            or title == $dkms_module_package
-            or title == $kernel_packages |>
+    Package <|
+         title == $dkms_module_package
+      or title == $kernel_packages
+    |>
   }
+
+  Package <| title == 'dkms' |>
 }
