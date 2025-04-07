@@ -12,6 +12,7 @@ class image::exam {
     or title == 'gnome-keyring'
     or title == 'network-manager'
     or title == 'plocate'
+    or title == 'plymouth-themes'
     or title == 'puavo-conf'
     or title == 'puavo-core'
     or title == 'puavo-exammode'
