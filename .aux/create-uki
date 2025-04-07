@@ -7,30 +7,24 @@ find_latest_version() {
 }
 
 boot_folder=$1
-output_name=$2
+output=$2
 
-if [ -z "$boot_folder" ]; then
-  echo "Usage: $0 <boot-folder> <output-name>"
+if [ -z "$boot_folder" ] || [ -z "$output" ]; then
+  echo "Usage: $0 <boot-folder> <output>"
   exit 1
 fi
 
-if [ -z "$output_name" ]; then
-  echo "Usage: $0 <boot-folder> <output-name>"
-  exit 1
-fi
-
-cd $boot_folder
-
-kernel_image=$(find_latest_version "vmlinuz*")
-initrd=$(find_latest_version "initrd*")
+output_basename=$(basename "$output")
+kernel_image=$(find_latest_version "$boot_folder/vmlinuz*")
+initrd=$(find_latest_version "$boot_folder/initrd*")
 
 ukify build \
   --linux=$kernel_image \
   --initrd=$initrd \
-  --os-release="$output_name" \
-  --cmdline="ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=preinstalled loop=/images/ltsp.img puavo.image.path=/images/ltsp.img" \
+  --os-release="$output_basename" \
+  --cmdline="" \
   --pcr-private-key=/etc/puavo-conf/tpm2-pcr-private-key.pem \
   --pcr-public-key=/etc/puavo-conf/tpm2-pcr-public-key.pem \
   --pcr-banks=sha1,sha256 \
-  --output "$output_name" \
+  --output "$output" \
   --measure

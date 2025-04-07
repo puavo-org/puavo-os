@@ -1,6 +1,13 @@
 #!/bin/sh
 set -eu
 
+hosttype=$1
+
+if [ -z "$hosttype" ]; then
+  echo "Usage: $0 <hosttype>"
+  exit 1
+fi
+
 if ! ls /boot/*.uki.efi >/dev/null 2>&1; then
   exit 0
 fi
@@ -41,6 +48,22 @@ for boot_disk in $boot_disks; do
     log err "Failed to mount EFI partition"
     continue
   fi
+
+  for uki in /boot/*.uki.efi; do
+    destination="/boot/efi/EFI/debian"
+    name=$(basename "$uki")
+    if ! cp "$uki" "$destination"; then
+      log err "Failed to copy UKIs to EFI partition"
+    fi
+
+    extra_directory="${destination}/${name}.extra.d"
+    if ! mkdir "$extra_directory"; then
+      log err "Failed to create the extra directory for UKI in EFI partition"
+    fi
+
+    # Install the host type specific command line
+    cp "/boot/addons/${hosttype}.addon.efi" "$extra_directory" || true
+  done
 
   if ! cp /boot/*.uki.efi /boot/efi/EFI/debian/; then
     log err "Failed to copy UKIs to EFI partition"
