@@ -4,6 +4,7 @@ class image::exam {
   include ::initramfs
   include ::kernels
   include ::packages
+  include ::plymouth
 
   Package <|
        tag   == 'tag_firmware_free'
@@ -23,6 +24,11 @@ class image::exam {
     or title == 'xserver-xorg-input-all'
     or title == 'xserver-xorg-video-all'
   |>
+
+  ::plymouth::set_default_theme {
+    'spinner':
+      require => Package['plymouth-themes'];
+  }
 
   Packages::Kernels::Kernel_package <| title == 'default' |>
 }
