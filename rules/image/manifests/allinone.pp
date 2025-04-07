@@ -3,6 +3,7 @@ class image::allinone {
   include ::image::bundle::basic
   include ::image::bundle::bootserver
   include ::image::bundle::desktop
+  include ::plymouth
 
   stage {
     'init':
@@ -16,6 +17,9 @@ class image::allinone {
     'apt::default_repositories':
       stage => pre-main;
   }
+
+  ::plymouth::install_theme     { 'kites': ; }
+  ::plymouth::set_default_theme { 'kites': ; }
 
   Package <| tag == 'tag_kernel'
           or tag == 'tag_puavo'  |>
