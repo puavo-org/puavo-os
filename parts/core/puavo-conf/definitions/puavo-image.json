@@ -9,6 +9,11 @@
     "description": "Image update download rate limit, as bytes per second, add k for kilobytes and m for megabytes",
     "typehint": "string"
   },
+  "puavo.image.load_to_ram": {
+    "default": "false",
+    "description": "If true, image is loaded to RAM at boot",
+    "typehint": "bool"
+  },
   "puavo.image.overlay": {
     "default": "",
     "description": "Image overlay name to use",

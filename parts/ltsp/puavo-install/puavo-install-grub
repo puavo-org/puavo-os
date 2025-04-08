@@ -110,7 +110,7 @@ function ltsp_image_entry {
     loopback loop "${imagefile}"
     set root='(loop)'
 
-    linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo quiet loglevel=3 splash root=/dev/mapper/puavoexam-examimages loop="${imagepath}" puavo.image.path="${imagepath}" ${kernelparameters}
+    linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo quiet loglevel=3 splash root=/dev/mapper/puavoexam-examimages loop="${imagepath}" puavo.image.load_to_ram=true puavo.image.path="${imagepath}" ${kernelparameters}
     initrd  /boot/initrd.img${kernel_version_suffix}
 
     loopback -d loop
