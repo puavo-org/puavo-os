@@ -26,7 +26,7 @@ class image::exam {
   |>
 
   ::plymouth::set_default_theme {
-    'spinner':
+    'spinfinity':
       require => Package['plymouth-themes'];
   }
 
