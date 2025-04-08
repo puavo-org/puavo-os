@@ -83,13 +83,9 @@ _proxywrap_cmd := $(CURDIR)/.aux/proxywrap --with-proxy $(_proxy_address)
 else
 _proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
-
-_systemd_nspawn_machine_name := \
+_machine_name := \
   $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
-_systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
-			 -M '$(_systemd_nspawn_machine_name)' \
-			 -u '$(_adm_user)'                    \
-			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
+_build_nspawn_cmd := $(CURDIR)/.aux/build-nspawn "$(rootfs_dir)" $(_machine_name) $(_adm_user) $(_proxy_address)
 
 _sudo := sudo $(_proxywrap_cmd)
 export _sudo
@@ -225,13 +221,14 @@ update-mime-database:
 # updating to images made with this.
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' prepare-for-squashfs
+	$(_build_nspawn_cmd) "$(MAKE) -C '/puavo-os' prepare-for-squashfs"
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update-mime-database
+	$(_build_nspawn_cmd) "$(MAKE) -C '/puavo-os' update-mime-database"
+
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
 		-ef 'config/excludes/$(image_class)'		        \
@@ -252,8 +249,8 @@ rootfs-install-image: rootfs-image $(install_image_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	$(_systemd_nspawn_cmd) '/puavo-os/.aux/proxywrap' \
-	   sh -c 'cd ~ && exec bash'
+	$(_build_nspawn_cmd) \
+		"'/puavo-os/.aux/proxywrap' sh -c 'cd ~ && exec bash'"
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
@@ -263,7 +260,7 @@ rootfs-sync-repo: $(rootfs_dir)
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update
+	$(_build_nspawn_cmd) "$(MAKE) -C '/puavo-os' update"
 
 .PHONY: setup-buildhost
 setup-buildhost:

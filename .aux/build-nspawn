@@ -1,0 +1,34 @@
+#!/bin/sh
+# A custom container wrapper based on unshare and chroot:
+#
+# 1. Process will get its own namespace for mounts.
+# 2. Within this namespace chroot is exercised.
+
+set -eu
+
+rootfs_dir=$1
+machine=$2
+adm_user=$3
+
+if [ "$#" -eq 4 ]; then
+  proxy_address=""
+  cmdline=$4
+elif [ "$#" -eq 5 ]; then
+  proxy_address=$4
+  cmdline=$5
+else
+  echo "Usage: $(basename $0) <rootfs> <machine> <user> [<proxy address>] <cmdline>"
+  exit 1
+fi
+
+sudo unshare --mount --uts --fork sh -c "
+  mount --bind /sys '$rootfs_dir/sys'
+  mount --bind /dev '$rootfs_dir/dev'
+  mount -t proc proc '$rootfs_dir/proc'
+  mount -t devpts devpts '$rootfs_dir/dev/pts'
+  chroot '$rootfs_dir' su - '$adm_user' -c '
+    export PUAVO_CACHE_PROXY=\"$proxy_address\"
+    hostname $machine
+    $cmdline
+  '
+"
