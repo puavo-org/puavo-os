@@ -37,6 +37,7 @@ copy_exec /sbin/fsck.ext2
 copy_exec /sbin/fsck.ext3
 copy_exec /sbin/fsck.ext4
 copy_exec /sbin/logsave
+copy_exec /usr/bin/pv
 
 #
 # nvidia graphics drivers

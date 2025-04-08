@@ -740,7 +740,10 @@ case "$hosttype" in
   bootserver|diskinstaller|preinstalled|wirelessaccesspoint)
     puavo_kernel_arguments="nosplash ${common_kernel_arguments}"
     ;;
-  exam|laptop)
+  exam)
+    puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments} puavo.image.load_to_ram=true"
+    ;;
+  laptop)
     puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments}"
     ;;
   *)
