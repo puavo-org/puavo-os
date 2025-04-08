@@ -18,9 +18,9 @@ class plymouth {
 
     exec {
       'plymouth::set-default-theme':
-        command     => "/usr/sbin/plymouth-set-default-theme -R ${default_theme}",
-        refreshonly => true,
-        require     => Package['plymouth'];
+        command  => "/usr/sbin/plymouth-set-default-theme -R ${default_theme}",
+        onlyif   => "/usr/bin/test \"$(/usr/sbin/plymouth-set-default-theme)\" != \"${default_theme}\"",
+        require  => Package['plymouth'];
     }
   }
 
