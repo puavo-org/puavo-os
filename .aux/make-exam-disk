@@ -25,7 +25,7 @@ calc_required_imagefile_megabytes() {
   local padding_in_megabytes source_image
   source_image=$1
   # XXX padding is chosen experimentally, there should be some logic behind it
-  padding_in_megabytes=160
+  padding_in_megabytes=200
   ls --block-size=1024K -ds "$source_image" \
     | awk -v padding="$padding_in_megabytes" '{ print $1 + padding }'
 }
