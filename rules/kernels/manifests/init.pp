@@ -7,29 +7,36 @@ class kernels {
     'default' => '6.1.0-31-amd64',
     'crisp'   => '6.12.9+bpo-amd64',
   }
+  $kernel_aliases = keys($kernel_versions)
 
-  define kernel_link ($kernel, $linkname, $linksuffix) {
+  define kernel_link ($kernel_alias, $linkname, $linksuffix, $version) {
     file {
       "/boot/${linkname}${linksuffix}":
         ensure  => link,
-        require => Packages::Kernels::Kernel_package[$kernel],
-        target  => "${linkname}-${kernel}";
+        require => Packages::Kernels::Kernel_package[$kernel_alias],
+        target  => "${linkname}-${version}";
     }
 
-    Packages::Kernels::Kernel_package <| title == $kernel |>
+    Packages::Kernels::Kernel_package <| title == $kernel_alias |>
   }
 
-  define all_kernel_links ($kernel='') {
+  define all_kernel_links ($kernel_alias, $version) {
     $subname = $title
 
     $linksuffix = $subname ? { 'default' => '', default => "-$subname", }
 
     ::kernels::kernel_link {
-      "initrd.img-${kernel}-${subname}":
-        kernel => $kernel, linkname => 'initrd.img', linksuffix => $linksuffix;
+      "initrd.img-${version}-${subname}":
+        kernel_alias => $kernel_alias,
+        linkname     => 'initrd.img',
+        linksuffix   => $linksuffix,
+        version      => $version;
 
-      "vmlinuz-${kernel}-${subname}":
-        kernel => $kernel, linkname => 'vmlinuz', linksuffix => $linksuffix;
+      "vmlinuz-${version}-${subname}":
+        kernel_alias => $kernel_alias,
+        linkname     => 'vmlinuz',
+        linksuffix   => $linksuffix,
+        version      => $version;
     }
   }
 
@@ -38,10 +45,13 @@ class kernels {
 
     ::kernels::all_kernel_links {
       $kernel_alias:
-        kernel  => $kernel_versions[$kernel_alias],
-        require => Packages::Kernels::Kernel_package[$kernel_alias];
+        kernel_alias => $kernel_alias,
+        require      => Packages::Kernels::Kernel_package[$kernel_alias],
+        version      => $::kernels::kernel_versions[$kernel_alias];
     }
 
     Packages::Kernels::Kernel_package <| title == $kernel_alias |>
   }
+
+  @::kernels::install_kernel { $kernel_aliases: ; }
 }

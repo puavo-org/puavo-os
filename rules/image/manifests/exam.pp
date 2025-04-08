@@ -30,5 +30,5 @@ class image::exam {
       require => Package['plymouth-themes'];
   }
 
-  Packages::Kernels::Kernel_package <| title == 'default' |>
+  Kernels::Install_kernel <| title == 'default' |>
 }

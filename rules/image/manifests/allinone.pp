@@ -24,5 +24,5 @@ class image::allinone {
   Package <| tag == 'tag_kernel'
           or tag == 'tag_puavo'  |>
 
-  Packages::Kernels::Kernel_package <| |>
+  Kernels::Install_kernel <| |>
 }
