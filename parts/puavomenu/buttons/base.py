@@ -241,9 +241,16 @@ class HoverIconButtonBase(Gtk.Button):
         self.disabled = True
 
     def load_icon(self, path):
-        icon_surface = utils_gui.load_image_at_size(
-            path, self.__icon_size, self.__icon_size
-        )
+        try:
+            icon_surface = utils_gui.load_image_at_size(
+                path, self.__icon_size, self.__icon_size
+            )
+        except Exception as e:
+            logging.error(
+                f'HoverIconButtonBase::load_icon(): unable to load file "{path}": {e}'
+            )
+            return
+
         icon_size = f"{icon_surface.get_width()}x{icon_surface.get_height()}"
         expected_icon_size = f"{self.__icon_size}x{self.__icon_size}"
         if expected_icon_size != icon_size:

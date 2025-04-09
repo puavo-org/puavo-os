@@ -359,9 +359,6 @@
             },
             "tags": "default, audio"
         },
-        "freecad": {
-            "tags": "default"
-        },
         "freeplane": {
             "tags": "default"
         },
@@ -827,6 +824,9 @@
             "icon": "org.cryptomator.Cryptomator256.png",
             "tags": "default"
         },
+        "org.freecadweb.FreeCAD": {
+            "tags": "default"
+        },
         "org.freeciv.gtk2": {
             "tags": "default"
         },
@@ -1126,6 +1126,9 @@
         "org.shotcut.Shotcut": {
             "tags": "default"
         },
+        "org.thonny.Thonny": {
+            "tags": "default"
+        },
         "otava-opiskelija": {
             "type": "web",
             "url": "https://opiskelija.otava.fi/",
@@ -1415,6 +1418,10 @@
                 "de": "Hörbildung"
             },
             "tags": "default, education"
+        },
+        "sonobus": {
+            "name":"SonoBus",
+            "tags": "default, audio"
         },
         "sparkvue": {
             "tags": "default"
@@ -1868,6 +1875,7 @@
                 "org.pitivi.Pitivi",
                 "org.shotcut.Shotcut",
                 "solfege",
+                "sonobus",
                 "mscore3",
                 "musescore-appimage",
                 "org.hydrogenmusic.Hydrogen",
@@ -2192,7 +2200,7 @@
                 "cura-appimage",
                 "prusaslicer",
                 "sketchup",
-                "freecad",
+                "org.freecadweb.FreeCAD",
                 "qcad-cam",
                 "openscad",
                 "FlashPrint5",
@@ -2470,6 +2478,7 @@
                 "pycharm",
                 "spe",
                 "idle-python3.11",
+                "org.thonny.Thonny",
                 "geany",
                 "code",
                 "org.kde.kturtle",

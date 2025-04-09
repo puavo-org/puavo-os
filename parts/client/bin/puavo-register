@@ -27,7 +27,6 @@ Puavodir            = '/etc/puavo'
 Puavo_hosttype_path = "#{ Puavodir }/hosttype"
 
 class Tools
-
   @@nocolor = false
 
   def self.nocolor
@@ -49,17 +48,9 @@ class Tools
   def self.errmsg(msg) ; colormsg(msg, 'ERROR', HighLine::RED)  ; end
   def self.goodmsg(msg); colormsg(msg, 'OK',    HighLine::GREEN); end
 
-  def self.mkdir(path, mode=0755)
-    begin
-      FileUtils.mkdir(path, :mode => mode)
-      rescue Errno::EEXIST
-    end
-  end
-
   def self.topdomain(domain)
     domain.match(/[^\.]+\.[^\.]+$/).to_s
   end
-
 end
 
 class CmdLine
@@ -73,6 +64,7 @@ class CmdLine
                    | force
                    | force-defaults
                    | install
+                   | no-config-write
                    | update
                    | nocolor )$/x
           params[$1] = true
@@ -104,20 +96,20 @@ class RegisterUserInterface
         (@cmdline_params['accepted-devicetypes'] || '').split(',')
     }
 
-    @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
-    @username        = @cmdline_params['username']
-    @password        = @cmdline_params['password']
+    @puavoserver = @cmdline_params['puavoserver'] || default_puavoserver()
+    @username    = @cmdline_params['username']
+    @password    = @cmdline_params['password']
 
     Tools.nocolor = !!@cmdline_params['nocolor']
 
     facts = Facter.to_hash
 
     @system_defaults = {
-      'macAddress'               => lookup_macaddresses(facts),
-      'puavoDeviceManufacturer'  => facts['manufacturer'],
-      'puavoDeviceModel'         => facts['productname'],
-      'puavoHostname'            => facts['hostname'],
-      'serialNumber'             => facts['serialnumber'],
+      'macAddress'              => lookup_macaddresses(facts),
+      'puavoDeviceManufacturer' => facts['manufacturer'],
+      'puavoDeviceModel'        => facts['productname'],
+      'puavoHostname'           => facts['hostname'],
+      'serialNumber'            => facts['serialnumber'],
     }
 
     @host = {}
@@ -276,9 +268,9 @@ class RegisterUserInterface
 
   def puavo_connection_request()
     PuavoDevicesConnection.new(@puavoserver,
-			       @username,
-			       @password,
-			       @mode['accepted_devicetypes'])
+                               @username,
+                               @password,
+                               @mode['accepted_devicetypes'])
   end
 
   def register_to_server
@@ -383,7 +375,7 @@ class PuavoDevicesConnection
     @password = password
 
     @http              = Net::HTTP.new(@server, uri.port)
-    @http.use_ssl      = uri.scheme == "https"
+    @http.use_ssl      = uri.scheme == 'https'
     @http.ca_path      = '/etc/ssl/certs'
     @http.verify_mode  = OpenSSL::SSL::VERIFY_PEER
     @http.verify_depth = 5
@@ -423,11 +415,11 @@ class PuavoDevicesConnection
     default_devicetype = filtered_devicetypes['default']
     unless filtered_devicetypes['list'].has_key?(default_devicetype); then
       filtered_devicetypes['default'] \
-	= filtered_devicetypes['list'].keys \
-	    .sort_by do |devtype|
-	      filtered_devicetypes['list'][devtype]['order']
-	    end \
-	    .first
+        = filtered_devicetypes['list'].keys \
+            .sort_by do |devtype|
+              filtered_devicetypes['list'][devtype]['order']
+            end \
+            .first
     end
 
     filtered_devicetypes
@@ -532,6 +524,11 @@ class Control
     raise 'Did not receive host configuration from Puavo' \
         unless info['registration']['host_configuration']
 
+    if cmdline_params['no-config-write'] then
+      Tools.goodmsg('Not writing Puavo attributes to disk as run with --no-config-write')
+      return
+    end
+
     begin
       FileUtils.remove_entry_secure(Puavodir)
     rescue Errno::ENOENT
@@ -572,17 +569,22 @@ class Control
     PUAVO_ETC.write(:hostname, info['registration']["puavoHostname"])
 
     # Also run update to write the kernel stuff
-    update() if info['registration']['puavoDeviceType'] != "laptop"
+    update(cmdline_params) if info['registration']['puavoDeviceType'] != "laptop"
   end
 
   # Write updatable Puavo attributes to /etc/puavo
-  def self.update
+  def self.update(cmdline_params)
     puavo = Puavo::Client::Base.new
 
     if PUAVO_ETC.hosttype == 'bootserver' then
       device_info = puavo.servers.find_by_id(PUAVO_ETC.id)
     else
       device_info = puavo.devices.find_by_id(PUAVO_ETC.id)
+    end
+
+    if cmdline_params['no-config-write'] then
+      Tools.goodmsg('Not writing Puavo attributes to disk as run with --no-config-write')
+      return
     end
 
     PUAVO_ETC.write(:hostname, device_info.hostname)
@@ -598,7 +600,7 @@ cmdline_params = CmdLine.params(ARGV)
 if cmdline_params['authenticate-only']
   Control.authenticate_only(cmdline_params)
 elsif cmdline_params['update']
-  Control.update()
+  Control.update(cmdline_params)
 else
   Control.register(cmdline_params)
 end

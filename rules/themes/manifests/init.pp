@@ -3,6 +3,7 @@ class themes {
   include ::gdm
   include ::puavo_conf
   include ::puavo_pkg::packages
+  include ::themes::yaru_theme_fix
 
   ::dpkg::simpledivert {
     '/usr/share/themes/Arc/gnome-shell/gnome-shell.css':

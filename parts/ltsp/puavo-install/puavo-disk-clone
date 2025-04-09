@@ -48,6 +48,14 @@ case "$mode" in
     echo "Chosen << ${target_disk} >>"
     echo "Secure Erasing the disk first, please wait."
     /usr/sbin/puavo-disk-erase --force --normal "$target_disk"
+
+    # XXX some patch to ocs-sr for this would be nice
+    # We must disable partition resizing to the LVM partitions because we
+    # want to keep that in our control, but we do like the resizing for the
+    # Windows partitions.  Thus disable the "ocs-expand-lvm" script in this
+    # crude way.
+    ln -fns /usr/bin/true /usr/sbin/ocs-expand-lvm
+    # Then run the actual restore:
     ocs-sr -batch -g auto -e1 auto -e2 -r -j2 -scr -k1 -p true \
            restoredisk "$restore_image" "$target_disk"
 
@@ -62,6 +70,7 @@ case "$mode" in
         printf "%s" "Linux LVM found, resizing to occupy unclaimed free space.."
         pvresize "/dev/$lvm_part"
         lvextend -l +100%FREE /dev/mapper/puavo-home
+        vgchange -a y puavo
         e2fsck -f /dev/mapper/puavo-home
         resize2fs /dev/mapper/puavo-home
       fi

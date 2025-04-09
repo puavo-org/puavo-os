@@ -194,7 +194,8 @@ class packages {
     , 'x11vnc'
     , 'xvfb'
     , 'xbacklight'
-    , 'xinput-calibrator' ]:
+    , 'xinput-calibrator'
+    , 'zsh' ]:
       tag => [ 'tag_admin', 'tag_debian_desktop', ];
 
     [ 'espeak-ng'
@@ -288,6 +289,7 @@ class packages {
     , 'perl-doc'
     , 'pinfo'
     , 'python3-pydantic'
+    , 'scdaemon'
     , 'shellcheck'
     , 'sloccount'
     , 'tcl8.6-doc'
@@ -565,12 +567,19 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'tag_science', 'tag_debian_desktop', ];
 
-    [ 'gnome-icon-theme'
+    [ 'arc-theme'
+    , 'deepin-icon-theme'
+    , 'faenza-icon-theme'
+    , 'gnome-icon-theme'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
+    , 'obsidian-icon-theme'
     , 'oxygen-icon-theme'
     , 'xscreensaver-data'
-    , 'xscreensaver-gl' ]:
+    , 'xscreensaver-gl'
+    , 'yaru-theme-gnome-shell'
+    , 'yaru-theme-gtk'
+    , 'yaru-theme-icon' ]:
       tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     # desktop-packages relating to gnome and other, some of these
@@ -685,8 +694,6 @@ class packages {
     , 'mutter'
     , 'nautilus'
     , 'network-manager'
-    , 'network-manager-l2tp'                    # needed by citrix
-    , 'network-manager-l2tp-gnome'              # needed by citrix
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
     , 'nodm'                                    # for infotv
@@ -768,15 +775,6 @@ class packages {
     , 'qml-module-qtquick-templates2'     # mafynetti
     ]:
       tag => [ 'tag_puavopkg', 'tag_debian_desktop', ];
-
-    [ 'arc-theme'
-    , 'deepin-icon-theme'
-    , 'faenza-icon-theme'
-    , 'obsidian-icon-theme'
-    , 'yaru-theme-gnome-shell'
-    , 'yaru-theme-gtk'
-    , 'yaru-theme-icon' ]:
-      tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     # [ 'anki'                          # XXX missing from Trixie
     [ 'bindfs'

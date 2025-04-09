@@ -263,6 +263,9 @@ class PageAccount(PageDefinition):
         elif username[0] not in 'abcdefghijklmnopqrstuvwxyz':
             message = _tr('The login name must start with a letter')
             is_good = False
+        elif len(username) > 0 and username[-1] == '.':
+            message = _tr('The login name cannot end in a dot')
+            is_good = False
         else:
             message = ''
             is_good = True
