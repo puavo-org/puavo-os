@@ -213,10 +213,6 @@ $(image_dir):
 $(install_image_dir):
 	$(_sudo) mkdir -p '$(install_image_dir)'
 
-.PHONY: rootfs-uki-files
-rootfs-uki-files: $(rootfs_dir)
-	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' '$(_uki_file)'
-
 # Using -comp lzo instead of gzip, because we prefer to optimize decompression
 # speed for faster boots, even though image sizes are slightly bigger than with
 # gzip.  Especially on some hosts the decompression stage of kernel/initrd is
@@ -227,12 +223,13 @@ rootfs-uki-files: $(rootfs_dir)
 # May be removed only when sure that grub has been updated on all hosts
 # updating to images made with this.
 .PHONY: rootfs-image
-rootfs-image: $(rootfs_dir) $(image_dir) rootfs-uki-files
+rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' prepare-for-squashfs
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
+	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' '$(_uki_file)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\

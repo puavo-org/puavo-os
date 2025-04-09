@@ -498,11 +498,11 @@ function load_puavo_config {
 
 function add_boot_entry {
   set image_path="$1"
-  set description="$2"
+  set label="$2"
   set icon="$3"
-  echo "Adding boot entry: $image_path, $description, $icon"
+  echo "Adding boot entry: $image_path, $label, $icon"
 
-  menuentry "$description" --class "$icon" "$image_path" {
+  menuentry "$label" --class "$icon" "$image_path" {
     set image_path="$2"
 
     search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
@@ -513,27 +513,24 @@ function add_boot_entry {
 function generate_boot_entry {
   set image_path="$1"
 
-  # Extract the folder where the image is
+  # Extract the folder and the basename of the image
   regexp -s 1:folder '^(.*/)[^/]+$' "$image_path"
-
-  # Get basename without extension (e.g. /EFI/debian/foo.efi => foo)
-  regexp -s 1:name '\/([^\/]+)\.efi$' "$image_path"
+  regexp -s 1:name '/([^/]+)$' "$image_path"
 
   # Look for image specific metadata folder next to the image file
   set metadata_folder="${folder}${name}.extra.d"
 
-  # If such folder exists, load the metadata
-  set metadata_file="${metadata_folder}/metadata.cfg"
+  # If such folder exists, load the image specific config
+  set image_environment_file="${metadata_folder}/grubenv"
 
-  set description="$name"
-  set icon="puavo-os"
+  set label="$name"
+  set class="puavo-os"
 
-  if test -f "$metadata_file"; then
-    echo "Executing metadata script $metadata_file"
-    source "$metadata_file"
+  if test -f "$image_environment_file"; then
+    load_env --file "$image_environment_file" --skip-sig label class
   fi
 
-  add_boot_entry "$image_path" "$description" "$icon"
+  add_boot_entry "$image_path" "$label" "$class"
 }
 
 function add_boot_options {

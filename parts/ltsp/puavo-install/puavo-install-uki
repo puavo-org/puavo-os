@@ -33,6 +33,55 @@ get_efi_devpath() {
       '
 }
 
+install_boot_entry_config() {
+  local extra_directory="$1"
+  local environment_file="${extra_directory}/grubenv"
+
+  if [ ! -r /etc/puavo-image/class ] || [ ! -r /etc/puavo-image/release ]; then
+    echo "Missing boot entry information" >&2
+    return 1
+  fi
+
+  local class release label
+  class=$(cat /etc/puavo-image/class)
+  release=$(cat /etc/puavo-image/release)
+  label="PuavoOS (${release})" # Todo: Decide how we generate the labels
+
+  [ -f "$environment_file" ] || grub-editenv "$environment_file" create || {
+    echo "Failed to create the GRUB environment of a boot entry" >&2
+    return 1
+  }
+
+  (grub-editenv "$environment_file" set "label=${label}" &&
+    grub-editenv "$environment_file" set "class=${class}") || {
+    echo "Failed to write the GRUB environment of a boot entry" >&2
+    return 1
+  }
+}
+
+install_uki() {
+  local uki="$1"
+  local destination="$2"
+  local name
+  name=$(basename "$uki")
+
+  if ! cp "$uki" "$destination"; then
+    echo "Failed to copy UKI to EFI partition" >&2
+    return 1
+  fi
+
+  local extra_directory="${destination}/${name}.extra.d"
+  if ! mkdir -p "$extra_directory"; then
+    echo "Failed to create the extra directory for UKI in EFI partition" >&2
+    return 1
+  fi
+
+  # Install the host type specific command line
+  cp "/boot/addons/${hosttype}.addon.efi" "$extra_directory" || true
+
+  install_boot_entry_config "$extra_directory"
+}
+
 boot_disks=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks)
 
 for boot_disk in $boot_disks; do
@@ -40,33 +89,22 @@ for boot_disk in $boot_disks; do
   efi_devpath=$(get_efi_devpath "$boot_disk")
 
   if [ -z "$efi_devpath" ]; then
-    log err "Failed to find EFI partition path for boot disk"
+    echo "Failed to find EFI partition path for boot disk" >&2
     continue
   fi
 
   if ! mount_efi_partition "$efi_devpath"; then
-    log err "Failed to mount EFI partition"
+    echo "Failed to mount EFI partition" >&2
     continue
   fi
 
   for uki in /boot/*.uki.efi; do
     destination="/boot/efi/EFI/debian"
-    name=$(basename "$uki")
-    if ! cp "$uki" "$destination"; then
-      log err "Failed to copy UKIs to EFI partition"
-    fi
-
-    extra_directory="${destination}/${name}.extra.d"
-    if ! mkdir "$extra_directory"; then
-      log err "Failed to create the extra directory for UKI in EFI partition"
-    fi
-
-    # Install the host type specific command line
-    cp "/boot/addons/${hosttype}.addon.efi" "$extra_directory" || true
+    install_uki "$uki" "$destination"
   done
 
   if ! cp /boot/*.uki.efi /boot/efi/EFI/debian/; then
-    log err "Failed to copy UKIs to EFI partition"
+    echo "Failed to copy UKIs to EFI partition" >&2
   fi
 
   umount /boot/efi || true
