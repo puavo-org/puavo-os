@@ -1,37 +1,17 @@
 #!/bin/sh
 set -eu
 
-hosttype=$1
+boot_directory=$1
 
-if [ -z "$hosttype" ]; then
-  echo "Usage: $0 <hosttype>"
+if [ -z "$boot_directory" ]; then
+  echo "Usage: $0 <boot_directory>"
   exit 1
 fi
 
-if ! ls /boot/*.uki.efi >/dev/null 2>&1; then
-  exit 0
+if [ ! -d "$boot_directory" ]; then
+  echo "Boot directory '$boot_directory' does not exist" >&2
+  exit 1
 fi
-
-# Todo: Duplicated from puavo-install-grub
-mount_efi_partition() {
-  local efi_devpath
-  efi_devpath=$1
-
-  mountpoint -q /boot/efi && return 0
-
-  fsck.fat -a "$efi_devpath" > /dev/null 2>&1 || true
-  mount "$efi_devpath" /boot/efi || return 1
-}
-
-get_efi_devpath() {
-  local diskdev
-  diskdev=$1
-  # c12a7328-f81f-11d2-ba4b-00a0c93ec93b == EFI partition type
-  lsblk -n -l -o PATH,PARTTYPE "$diskdev" \
-    | awk '
-        $2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }
-      '
-}
 
 install_boot_entry_config() {
   local extra_directory="$1"
@@ -76,36 +56,9 @@ install_uki() {
     return 1
   fi
 
-  # Install the host type specific command line
-  cp "/boot/addons/${hosttype}.addon.efi" "$extra_directory" || true
-
   install_boot_entry_config "$extra_directory"
 }
 
-boot_disks=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks)
-
-for boot_disk in $boot_disks; do
-  echo "Installing UKIs to boot disk: $boot_disk"
-  efi_devpath=$(get_efi_devpath "$boot_disk")
-
-  if [ -z "$efi_devpath" ]; then
-    echo "Failed to find EFI partition path for boot disk" >&2
-    continue
-  fi
-
-  if ! mount_efi_partition "$efi_devpath"; then
-    echo "Failed to mount EFI partition" >&2
-    continue
-  fi
-
-  for uki in /boot/*.uki.efi; do
-    destination="/boot/efi/EFI/debian"
-    install_uki "$uki" "$destination"
-  done
-
-  if ! cp /boot/*.uki.efi /boot/efi/EFI/debian/; then
-    echo "Failed to copy UKIs to EFI partition" >&2
-  fi
-
-  umount /boot/efi || true
+for uki in /boot/*.uki.efi; do
+  install_uki "$uki" "$boot_directory"
 done

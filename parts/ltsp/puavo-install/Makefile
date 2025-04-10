@@ -47,7 +47,8 @@ install : installdirs
 		puavo-set-root-password \
 		puavo-setup-filesystems \
 		puavo-update-client \
-		puavo-update-service-script
+		puavo-update-service-script \
+		puavo-update-uki-command-line
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
 		dbus-1/org.puavo.client.Daemon.service

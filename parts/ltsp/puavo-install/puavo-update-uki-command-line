@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+
+boot_directory=$1
+hosttype=$2
+
+if [ -z "$boot_directory" ] || [ -z "$hosttype" ]; then
+  echo "Usage: $0 <boot-directory> {host-type}"
+  exit 1
+fi
+
+if [ ! -d "$boot_directory" ]; then
+  echo "Boot directory '$boot_directory' does not exist" >&2
+  exit 1
+fi
+
+install_command_line() {
+  local uki="$1"
+  local destination="$2"
+  local name
+  name=$(basename "$uki")
+
+  local extra_directory="${destination}/${name}.extra.d"
+  if ! mkdir -p "$extra_directory"; then
+    echo "Failed to create the extra directory for UKI in EFI partition" >&2
+    return 1
+  fi
+
+  # Install the host type specific command line
+  cp "/boot/addons/${hosttype}.addon.efi" \
+     "$extra_directory/cmdline.addon.efi" || true
+}
+
+for uki in /boot/*.uki.efi; do
+  install_command_line "$uki" "$boot_directory"
+done
