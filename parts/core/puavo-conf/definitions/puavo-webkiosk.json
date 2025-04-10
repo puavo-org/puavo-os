@@ -1,7 +1,7 @@
 {
   "puavo.webkiosk.idle_timeout": {
     "default": "10",
-    "description": "User idle time before automatic logout on webkiosk mode",
+    "description": "User idle time in minutes before automatic logout on webkiosk mode",
     "typehint": "integer"
   }
 }
