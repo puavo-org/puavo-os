@@ -777,8 +777,9 @@ install_efi_grub() {
   if [ "${UKI_MODE:-}" = "1" ]; then
     install_puavo_grub_files_to_efi_partition "$boot_dir" && \
     copy_grub_environment && \
-    write_grub_version "${boot_dir}/grub/version" || {
-      echo "Failed to install UKI files to EFI partition"
+    write_grub_version "${boot_dir}/grub/version" && \
+    puavo-install-uki "$boot_dir" || {
+      echo "failed to install UKI files to EFI partition" >&2
       umount /boot/efi || true
       return 1
     }
@@ -1001,7 +1002,7 @@ else
 
       efi_devpath=$(get_efi_devpath "$grubdev")
       if [ -z "$efi_devpath" ]; then
-        log err "Failed to find EFI partition path for GRUB device"
+        log err "failed to find EFI partition path for GRUB device"
         exit 1
       fi
 
@@ -1139,6 +1140,13 @@ if [ "${UKI_MODE:-}" = "1" ]; then
     efi_partition_uuid=$(get_efi_uuid "$grubdev")
     generate_grub_configuration "$efi_partition_uuid"
     install_grub_configuration
+
+    if ! puavo-update-uki-command-line "$boot_dir" "$hosttype"; then
+      log err "failed to update the command line for UKI"
+      umount /boot/efi || true
+      exit 1
+    fi
+
     umount /boot/efi || true
   done
 else
