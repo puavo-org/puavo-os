@@ -5,7 +5,7 @@ check() {
 }
 
 depends() {
-    echo "base crypt dm overlay-root overlayfs systemd systemd-cryptsetup tpm2-tss"
+    echo "base crypt dm nbd overlay-root overlayfs systemd systemd-cryptsetup tpm2-tss"
     return 0
 }
 
