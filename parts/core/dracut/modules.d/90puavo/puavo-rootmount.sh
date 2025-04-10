@@ -24,6 +24,7 @@ PUAVO_IMAGE_PATH=
 PUAVO_IMAGE_OVERLAY=
 PUAVO_LVM_VG="puavo"
 PUAVO_ROOT_DEVICE=
+ROOT_IN_BTRFS=0
 
 for x in $(cat /proc/cmdline); do
     case "$x" in
