@@ -37,6 +37,9 @@ for x in $(cat /proc/cmdline); do
         puavo.image.path=*)
             PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
             ;;
+        root=/dev/*)
+            PUAVO_ROOT_DEVICE="${x#root=}"
+            ;;
         root=UUID=*)
             PUAVO_ROOT_DEVICE="/dev/disk/by-uuid/${x#root=UUID=}"
             ROOT_IN_BTRFS=1
@@ -65,8 +68,8 @@ update_image_copy_progress() {
 # See:
 # https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/init.sh#L234
 # https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/dracut-lib.sh#L750
-if [ -n "${PUAVO_ROOT_DEVICE}" ]; then
-    mount "$PUAVO_ROOT_DEVICE" "${rootmnt}"
+if [ -n "$PUAVO_ROOT_DEVICE" ]; then
+    mount "$PUAVO_ROOT_DEVICE" "$rootmnt"
 fi
 
 loopmount_image()
@@ -78,7 +81,7 @@ loopmount_image()
     fi
 
     mkdir -p /host
-    mount -o move "${rootmnt}" /host
+    mount -o move "$rootmnt" /host
 
     imagepath="/host/${PUAVO_IMAGE_PATH#/}"
 
