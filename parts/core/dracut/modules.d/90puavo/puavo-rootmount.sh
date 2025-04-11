@@ -45,7 +45,7 @@ for x in $(cat /proc/cmdline); do
 done
 
 if [ "$ROOT_IN_BTRFS" = 0 ]; then
-  vgchange -a y "$PUAVO_LVM_VG"
+  lvm vgchange -a y "$PUAVO_LVM_VG"
 fi
 
 update_image_copy_progress() {

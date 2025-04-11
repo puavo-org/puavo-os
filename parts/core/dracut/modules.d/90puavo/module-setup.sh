@@ -16,7 +16,8 @@ install() {
                   /sbin/fsck.ext3 \
                   /sbin/fsck.ext4 \
                   /sbin/logsave   \
-                  /usr/bin/pv
+                  /usr/bin/pv     \
+                  /usr/sbin/lvm
 
     # Remove NVIDIA blacklist and configuration files
     rm -f "${initdir}/etc/modprobe.d/nvidia-blacklists-nouveau.conf" \
