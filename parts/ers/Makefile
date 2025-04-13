@@ -44,6 +44,7 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		puavo-ers-abitti2server \
 		puavo-ers-abitti2server-networking \
 		puavo-ers-applet \
 		puavo-ers-startup \
