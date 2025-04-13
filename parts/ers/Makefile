@@ -2,6 +2,7 @@ prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
+pylibdir=$(prefix)/lib/python3/dist-packages
 
 ifeq ($(prefix), /usr/local)
 sysconfdir = $(prefix)/etc
@@ -36,6 +37,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(pylibdir)/puavo_ers
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
@@ -56,6 +58,9 @@ install: installdirs
 		puavo-ers.json
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-ers-startup.desktop
+	$(INSTALL_DATA) -t $(DESTDIR)$(pylibdir)/puavo_ers \
+		puavo_ers/*.py
+
 
 .PHONY: clean
 clean:
