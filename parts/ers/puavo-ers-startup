@@ -17,6 +17,9 @@ case "$ers_mode" in
   naksu2)
     exec /usr/bin/puavo-run-naksu2
     ;;
+  abitti2server)
+    exec /usr/bin/puavo-ers-abitti2server
+    ;;
   *)
     logger -p user.err -t puavo-ers-startup \
            "unsupported puavo.ers.mode value '${ers_mode}'"
