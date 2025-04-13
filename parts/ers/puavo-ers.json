@@ -4,5 +4,20 @@
     "default": "ers-applet",
     "description": "The mode for examination room server desktop session",
     "typehint": "string"
+  },
+  "puavo.ers.abitti2server.interface": {
+    "default": "eth1",
+    "description": "Network interface to the Abitti2 server. This interface must not have IP address.",
+    "typehint": "string"
+  },
+  "puavo.ers.abitti2server.network": {
+    "default": "10.171.0.0/16",
+    "description": "IPv4 network with CIDR prefix length. CIDR prefix len must be 16.",
+    "typehint": "string"
+  },
+  "puavo.ers.abitti2server.number": {
+    "default": "1",
+    "description": "Abitti2 server number, must be between 1 and 254. Each server on the same LAN must have a unique number.",
+    "typehint": "integer"
   }
 }
