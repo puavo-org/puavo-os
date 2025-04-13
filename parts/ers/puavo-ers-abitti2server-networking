@@ -1,0 +1,200 @@
+#!/usr/bin/env python3
+
+# This script is used for managing Abitti2 server networking. It reads
+# following Puavo conf options:
+#
+#   puavo.ers.abitti2server.interface
+#   puavo.ers.abitti2server.network
+#   puavo.ers.abitti2server.number
+#
+# Please see puavo-ers.json for more info about these conf options.
+#
+# Assuming aforementioned Puavo configuration is set, this script can
+# be used like so:
+#
+# To setup the network interface and start dnsmasq server, run:
+#   puavo-ers-abitti2server-networking start
+#
+# To stop the dnsmasq, run:
+#   puavo-ers-abitti2server-networking stop
+#
+# To set a A-record for the current host, run:
+#   puavo-ers-abitti2server-networking set_domain mydomain.example.invalid
+#
+# To delete the A-record, run:
+#   puavo-ers-abitti2server-networking del_domain
+#
+
+# Standard library imports
+import argparse
+import ipaddress
+import logging
+import os
+import os.path
+import signal
+import subprocess
+import time
+
+# Third-party imports
+import puavo_ers.conf
+import puavo_ers.net
+import puavo_ers.prog
+
+_THIS_NAME = os.path.basename(__file__)
+_LOGGER = logging.getLogger(_THIS_NAME)
+_DNSMASQ_PID_FILE = f"/run/{_THIS_NAME}-dnsmasq.pid"
+_DNSMASQ_LEASES_FILE = f"/var/lib/{_THIS_NAME}-dnsmasq.leases"
+_DNSMASQ_HOSTS_FILE = f"/var/lib/{_THIS_NAME}-dnsmasq.hosts"
+_LOCAL_DOMAIN = "puavo-ers-abitti2server.invalid"
+
+
+def _start_dhcp_dns_server(net: puavo_ers.net.Net) -> int:
+    args = [
+        "dnsmasq",
+        "--port=53",
+        f"--listen-address={net.host_address}",
+        f"--domain={_LOCAL_DOMAIN},{net.network},local",
+        "--domain-needed",
+        "--bogus-priv",
+        "--no-resolv",
+        "--no-hosts",
+        "--expand-hosts",
+        "--bind-interfaces",
+        f"--dhcp-leasefile={_DNSMASQ_LEASES_FILE}",
+        f"--dhcp-range={net.dhcp_hosts[0]},{net.dhcp_hosts[-1]},12h",
+        "--dhcp-option=option:router",  # Removes option:router from responses; there's no way out from this network
+        "--log-queries",
+        "--log-dhcp",
+        "--log-debug",
+        f"--pid-file={_DNSMASQ_PID_FILE}",
+        f"--addn-hosts={_DNSMASQ_HOSTS_FILE}",
+    ]
+    try:
+        user = os.environ["SUDO_USER"]
+    except KeyError:
+        # Let dnsmasq switch uid to it's default, normally nobody
+        pass
+    else:
+        # Ensure no tricks are being played, that the user actually exists.
+        user = subprocess.check_output(["id", "-un", user], timeout=2).decode().strip()
+        args.append(f"--user={user}")
+    _LOGGER.info("Spawning dnsmasq with args: %s", args)
+    subprocess.check_call(args)
+
+    return 0
+
+
+def _kill_dnsmasq(sig) -> bool:
+    with open(_DNSMASQ_PID_FILE, encoding="ascii") as dnsmasq_pid_file:
+        dnsmasq_pid = int(dnsmasq_pid_file.read().strip())
+
+    try:
+        os.kill(dnsmasq_pid, sig)
+    except ProcessLookupError:
+        os.unlink(_DNSMASQ_PID_FILE)
+        return True
+
+    return False
+
+
+def _stop_dhcp_dns_server() -> int:
+    # First gently.
+    if _kill_dnsmasq(15):
+        return 0
+
+    # Give it some time to die.
+    for _ in range(4):
+        time.sleep(0.5)
+        if _kill_dnsmasq(0):
+            return 0
+
+    # Then with force.
+    if _kill_dnsmasq(9):
+        _LOGGER.error("failed to kill dnsmasq gracefully!")
+        return 1
+
+    _LOGGER.critical("failed to kill dnsmasq!")
+    return 1
+
+
+def _command_start(interface, network, number, args):
+    net = puavo_ers.net.Net(interface, network, number)
+    net.up()
+
+    with open(_DNSMASQ_HOSTS_FILE, "w", encoding="utf-8"):
+        pass  # truncate before start
+
+    return _start_dhcp_dns_server(net)
+
+
+def _command_stop(interface, network, number, args) -> int:
+    net = puavo_ers.net.Net(interface, network, number)
+    try:
+        return _stop_dhcp_dns_server()
+    finally:
+        net.down()
+
+
+def _command_set_domain(interface, network, number, args) -> int:
+    ipv4_addr = ipaddress.IPv4Address(
+        puavo_ers.net.interface_addresses(interface)["AF_INET"][0]["addr"]
+    )
+    with open(_DNSMASQ_HOSTS_FILE, "w", encoding="utf-8") as dnsmasq_hosts_file:
+        dnsmasq_hosts_file.write(f"{ipv4_addr} {args.FQDN}\n")
+
+    return int(_kill_dnsmasq(signal.SIGHUP))
+
+
+def _command_del_domain(interface, network, number, args) -> int:
+    with open(_DNSMASQ_HOSTS_FILE, "w", encoding="utf-8"):
+        pass  # just truncate
+
+    return int(_kill_dnsmasq(signal.SIGHUP))
+
+
+def _main() -> int:
+    argparser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Setup networking for Abitti2 server",
+    )
+
+    subparsers = argparser.add_subparsers(dest="COMMAND", help="Available commands")
+
+    parser_start = subparsers.add_parser("start")
+    parser_start.set_defaults(func=_command_start)
+
+    parser_stop = subparsers.add_parser("stop")
+    parser_stop.set_defaults(func=_command_stop)
+
+    parser_set_domain = subparsers.add_parser("set_domain")
+    parser_set_domain.add_argument("FQDN")
+    parser_set_domain.set_defaults(func=_command_set_domain)
+
+    parser_del_domain = subparsers.add_parser("del_domain")
+    parser_del_domain.set_defaults(func=_command_del_domain)
+
+    args = argparser.parse_args()
+
+    try:
+        interface = puavo_ers.conf.get_ers_abitti2server_interface()
+        network = puavo_ers.conf.get_ers_abitti2server_network()
+        number = puavo_ers.conf.get_ers_abitti2server_number()
+    except puavo_ers.conf.ValidationError as validation_error:
+        _LOGGER.error("invalid configuration: %s", str(validation_error))
+        return 1
+
+    if os.getuid() != 0:
+        _LOGGER.error("must be root")
+        return 1
+
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    if hasattr(args, "func"):
+        return args.func(interface, network, number, args)
+
+    argparser.print_help()
+    return 1
+
+
+if __name__ == "__main__":
+    puavo_ers.prog.logging_singleton_app(_main, _LOGGER)
