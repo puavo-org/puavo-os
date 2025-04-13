@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+data_root_in_home=$(puavo-conf puavo.dockerd.data-root-in-home)
+
+if [ "${data_root_in_home}" = true ]; then
+  install -T -m0700 -oroot -groot -d /home/.dockerd-data-root
+  install -T -m0400 -oroot -groot /dev/null /etc/docker/daemon.json
+  cat >/etc/docker/daemon.json <<'EOF'
+{
+  "data-root": "/home/.dockerd-data-root"
+}
+EOF
+fi
