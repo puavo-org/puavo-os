@@ -25,10 +25,12 @@ if mountpoint -q /.btrfs; then
 fi
 
 puavo_mount_partition_on_btrfs() {
-  local partition puavo_mntpoint
-  partition=$1
+  local btrfs_label btrfs_subvol puavo_mntpoint
 
-  puavo_mntpoint="/${partition}"
+  btrfs_label=$1        # not checked or used here
+  btrfs_subvol=$2
+
+  puavo_mntpoint="/${btrfs_subvol}"
 
   # presume, if $puavo_mntpoint is already mounted, there is nothing to do
   if mountpoint -q "$puavo_mntpoint"; then
@@ -36,7 +38,7 @@ puavo_mount_partition_on_btrfs() {
   fi
 
   mkdir -p "$puavo_mntpoint"
-  mount -o "subvol=${partition}" "$rootdev" "$puavo_mntpoint"
+  mount -o "subvol=${btrfs_subvol}" "$rootdev" "$puavo_mntpoint"
 }
 
 puavo_mount_partition_on_lvm() {
