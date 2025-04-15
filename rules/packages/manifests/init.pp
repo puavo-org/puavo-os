@@ -122,6 +122,7 @@ class packages {
     , 'expect'
     , 'f2fs-tools'
     , 'fping'
+    , 'fwupd'
     , 'gawk'
     , 'git'
     , 'htop'
