@@ -22,4 +22,6 @@ class image::exam {
     or title == 'xserver-xorg-input-all'
     or title == 'xserver-xorg-video-all'
   |>
+
+  Packages::Kernels::Kernel_package <| title == 'default' |>
 }

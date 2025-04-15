@@ -854,10 +854,11 @@ class packages {
                  # , $virtualbox_module ]       # XXX Trixie
   }
 
-  packages::kernels::kernel_package {
-    '6.12.21-amd64':
+  @packages::kernels::kernel_package {
+    'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.21-amd64';
+      package_name => 'linux-image-6.12.21-amd64',
+      version      => '6.12.21-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such

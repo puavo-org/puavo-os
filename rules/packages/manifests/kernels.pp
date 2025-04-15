@@ -4,9 +4,10 @@ class packages::kernels {
 
   define kernel_package ($package_name='',
                          $package_tag='',
+                         $version,
                          $with_dbg=false,
                          $dkms_modules=[]) {
-    $version = $title
+    $kernel_alias = $title
 
     $dbg_packages = $with_dbg ? {
       true  => [ "linux-image-${version}-dbg" ],
