@@ -985,6 +985,14 @@ install_puavo_grub_files_to_efi_partition() {
 grub_cfg_path="${boot_dir}/grub/grub.cfg"
 
 if [ "${UKI_MODE:-}" = "1" ]; then
+  # Many scripts assume there's a GRUB boot bolder under images.
+  # For example, the GRUB environment is written there and then
+  # copied to all EFI partitions.
+  mkdir -p "$boot_dir"/grub || (
+    log err "failed to create boot directory at ${boot_dir}/grub"
+    exit 1
+  )
+
   boot_dir="/boot/efi/EFI/debian"
   grub_cfg_path="${boot_dir}/grub.cfg"
 fi
@@ -995,7 +1003,7 @@ if $only_update_config; then
   log info 'only updating Grub configuration'
 else
   # UKI-based Grub installation doesn't support legacy GRUB,
-  # because we'll install the Grub boot files on EFI partition
+  # because we'll install the GRUB boot files on EFI partition
   if [ "${UKI_MODE:-}" = "1" ]; then
     for grubdev in $grub_target_devices; do
       log info "installing grub to ${grubdev}"
@@ -1054,7 +1062,7 @@ else
   fi
 fi
 
-# Next, we'll install the Grub configuration
+# Next, we'll install the GRUB configuration
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 generate_grub_configuration() {
