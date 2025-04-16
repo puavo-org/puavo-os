@@ -2,10 +2,11 @@
 set -e
 
 boot_folder=$1
-output_name=$2
+image_file=$2
+output_name=$3
 
-if [ -z "$boot_folder" ] || [ -z "output_name" ]; then
-  echo "Usage: $0 <boot-folder> <output-name>"
+if [ -z "$boot_folder" ] || [ -z "image_file" ] || [ -z "output_name" ]; then
+  echo "Usage: $0 <boot-folder> <image-file> <output-name>"
   exit 1
 fi
 
@@ -14,5 +15,6 @@ fi
 addon_folder="$boot_folder/addons"
 mkdir -p "$addon_folder"
 
-.aux/create-cmdline-addon "ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=diskinstaller puavo.image.path=/images/ltsp.img" "$addon_folder/diskinstaller.addon.efi"
-.aux/create-cmdline-addon "ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=preinstalled puavo.image.path=/images/ltsp.img" "$addon_folder/preinstalled.addon.efi"
+.aux/create-cmdline-addon "ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}" "${addon_folder}/diskinstaller.addon.efi"
+.aux/create-cmdline-addon "ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}" "${addon_folder}/preinstalled.addon.efi"
+.aux/create-cmdline-addon "ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=laptop puavo.image.path=/images/${image_file}" "${addon_folder}/laptop.addon.efi"

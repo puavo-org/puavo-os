@@ -229,7 +229,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
-	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' '$(_uki_file)'
+	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' '$(_image_file)' '$(_uki_file)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
@@ -296,12 +296,12 @@ setup-wim:
 	$(_sudo) mkdir -p $(@D)
 	$(_sudo) cp $< $@
 
-/etc/puavo-conf/mok.pem: config/boot_keys/mok.pem
+/etc/puavo-conf/mok.der: config/boot_keys/mok.der
 	$(_sudo) mkdir -p $(@D)
 	$(_sudo) cp $< $@
 
 .PHONY: update
-update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/tpm2-pcr-public-key.pem /etc/puavo-conf/mok.pem
+update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/tpm2-pcr-public-key.pem /etc/puavo-conf/mok.der
 	$(MAKE) build
 
 	$(_sudo) apt-get update

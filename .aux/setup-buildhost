@@ -79,7 +79,7 @@ service squid restart
 if [ ! -d config/boot_keys ]; then
   mkdir -p config/boot_keys
   cp /etc/puavo-conf/tpm2-pcr-public-key.pem config/boot_keys
-  cp /etc/puavo-conf/mok.pem config/boot_keys
+  cp /etc/puavo-conf/mok.der config/boot_keys
 
   if [ -n "$SUDO_USER" ]; then
     chown -R "$SUDO_USER:" config/boot_keys
