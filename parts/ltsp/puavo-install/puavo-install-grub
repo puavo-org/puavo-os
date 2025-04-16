@@ -879,12 +879,12 @@ fi
 # remove the partition number
 diskdev=$(echo $diskdev \
     | sed -E '
-        /\/dev\/loop/   { s|p[0-9]+$|| }
-        /\/dev\/mmcblk/ { s|p[0-9]+$|| }
-        /\/dev\/md/     { s|p[0-9]+$|| }
-        /\/dev\/nvme/   { s|p[0-9]+$|| }
-        /\/dev\/[sv]d/  { s|[0-9]+$||  }
-        /\/dev\/xvd/    { s|[0-9]+$||  }
+        /\/dev\/loop[0-9]+p/   { s|p[0-9]+$|| }
+        /\/dev\/mmcblk/        { s|p[0-9]+$|| }
+        /\/dev\/md/            { s|p[0-9]+$|| }
+        /\/dev\/nvme/          { s|p[0-9]+$|| }
+        /\/dev\/[sv]d/         { s|[0-9]+$||  }
+        /\/dev\/xvd/           { s|[0-9]+$||  }
     ')
 
 possible_windows_disk_dev=''
