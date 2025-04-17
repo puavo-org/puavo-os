@@ -9,18 +9,12 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
-.PHONY: all
-all: bin/thumb
-
-bin/thumb:
-	gcc -s -O2 -Wall -Wextra -Wpedantic -o bin/thumb bin/thumb.c -std=c99 `pkg-config --cflags --libs gnome-desktop-3.0`
-
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 
 .PHONY: install
-install: bin/thumb installdirs
+install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/adm-x \
 		bin/adm-x11vnc \
@@ -30,7 +24,6 @@ install: bin/thumb installdirs
 		bin/makethumbs \
 		bin/puavo-img-chroot \
 		bin/remove-usb-device \
-		bin/thumb
 
 .PHONY: clean
 clean:
