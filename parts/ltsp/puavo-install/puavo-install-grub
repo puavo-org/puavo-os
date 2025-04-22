@@ -963,22 +963,10 @@ esac
 install_puavo_grub_files_to_efi_partition() {
   boot_dir=$1
 
-  # let's copy puavo specific files into the efi partition.
-  # we assume grub installation has created the grub folder.
-  mkdir /run/ltsp 2>/dev/null || true
-
-  if ! mount -o loop,ro /images/ltsp.img /run/ltsp; then
-    log err 'failed to mount /images/ltsp.img for copying grub files'
-    return 1
-  fi
-
-  if ! cp -r /run/ltsp/boot/grub "$boot_dir"; then
+  cp -r /boot/grub "$boot_dir" || (
     log err 'failed to copy grub files to boot directory $boot_dir'
-    umount /run/ltsp || true
     return 1
-  fi
-
-  umount /run/ltsp || true
+  )
 }
 
 # if we're in UKI mode, we'll install everything on the EFI partition
