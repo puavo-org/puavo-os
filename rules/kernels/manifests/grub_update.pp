@@ -12,7 +12,9 @@ class kernels::grub_update {
   file {
     $grub_update_files:
       ensure  => absent,
-      require => [ Package['grub-efi-ia32-bin']
+      require => [ Package['grub-efi-ia32-signed']
+                 , Package['grub-efi-amd64-signed']
+                 , Package['grub-efi-ia32-bin']
                  , Package['grub-efi-amd64-bin']
                  , Package['grub-pc']
                  , Package['grub-pc-bin'] ];
@@ -22,7 +24,9 @@ class kernels::grub_update {
     require +> File[ $grub_update_files ],
   }
 
-  Package <| title == grub-efi-ia32-bin
+  Package <| title == grub-efi-ia32-signed
+          or title == grub-efi-amd64-signed
+          or title == grub-efi-ia32-bin
           or title == grub-efi-amd64-bin
           or title == grub-pc
           or title == grub-pc-bin |>

@@ -3,11 +3,7 @@ class grub {
   include ::puavo_conf
 
   $grub_version = '2.12-7'
-
-  # Keep track of the "grub-efi-amd64-signed" package
-  # version, even though currently installing that package
-  # will break Grub in UEFI machines.
-  $grub_version_signed = "1+${grub_version}"
+  $grub_version_signed = "1+2.12+7"
 
   file {
     [ '/boot', '/boot/grub', '/boot/grub/puavo' ]:
@@ -44,5 +40,6 @@ class grub {
     or title == "grub-pc-bin"
   |> { ensure => $grub_version }
 
-  Package <| title == "grub-efi-amd64-signed" |> { ensure => purged }
+  Package <| title == "grub-efi-amd64-signed"
+    |> { ensure => $grub_version_signed }
 }

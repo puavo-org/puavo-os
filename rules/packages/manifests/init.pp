@@ -210,6 +210,8 @@ class packages {
     , 'bridge-utils'
     , 'efibootmgr'
     , 'gdebi-core'
+    , 'grub-efi-amd64-signed'
+    , 'grub-efi-ia32-signed'
     , 'grub-efi-amd64-bin'
     , 'grub-efi-ia32-bin'
     , 'grub-pc'
