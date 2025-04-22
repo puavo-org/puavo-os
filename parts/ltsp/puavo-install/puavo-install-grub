@@ -444,6 +444,12 @@ uki_grub_m4_template() {
 
   cat <<'EOF'
 set default="0"
+
+# Make sure the prefix is set correctly
+if test -e "${prefix}/grub/grubenv"; then
+  set prefix="${prefix}/grub"
+fi
+
 load_env
 
 function load_video {
