@@ -245,7 +245,7 @@ module DiskHandler
 
   EncryptionDeviceName = "puavo-cryptroot"
   EnrollmentPolicy = LuksEnrollmentPolicy.new(
-    [ '15:sha256=0000000000000000000000000000000000000000000000000000000000000000' ],
+    [ '15:sha256=0000000000000000000000000000000000000000000000000000000000000000', '7:sha256' ],
     [ '11:sha256' ],
     "/etc/puavo-conf/tpm2-pcr-public-key.pem"
   )
@@ -416,6 +416,12 @@ module DiskHandler
     unless File.exist?(EnrollmentPolicy.public_key_path)
       warn 'Automatic TPM unlocking is not possible, because the public key ' \
             + "does not exist at #{ EnrollmentPolicy.public_key_path }"
+      exit(1)
+    end
+
+    secure_boot_status = IO.popen(['mokutil', '--sb-state']).read
+    unless secure_boot_status.include?('SecureBoot enabled')
+      warn 'Secure Boot must be enabled for TPM unlocking'
       exit(1)
     end
   end
@@ -1031,8 +1037,8 @@ puavo-setup-filesystems [OPTIONS]
     --ask-partition               ask with default for partition
     --ask-setup-windows           ask with default for setup windows
     --ask-unpartitioned-space     ask with default for unpartitioned space
-    --ask-wipe-partition          ask with default for wipe partition
     --ask-windows-size            ask with default for windows size
+    --ask-wipe-partition          ask with default for wipe partition
     --ask-write-partitions        ask with default for write partitions
     --encrypt-with-passphrase     encrypt the installation with a passphrase
     --encrypt-with-recovery-key   encrypt the installation with a recovery key
@@ -1046,6 +1052,7 @@ puavo-setup-filesystems [OPTIONS]
     --force-windows-size          force value for windows size
     --force-wipe-partition        force value for wipe partition
     --force-write-partitions      force value for write partitions
+    --hosttype                    force value for hosttype
     --loopback-only               use only loopback devices
     --unlock-with-tpm             unlocks encrypted installation automatically with tpm
 
