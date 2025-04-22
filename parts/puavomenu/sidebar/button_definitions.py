@@ -42,6 +42,14 @@ SB_BUTTONS = {
             "args": "puavo-exammode-ctrl start",
         },
     },
+    "exam_mode_with_url": {
+        "title": "sb_exam_mode_with_url",
+        "icon": "/usr/share/icons/oxygen/base/64x64/actions/document-edit.png",
+        "command": {
+            "type": "command",
+            "args": "puavo-get-examurl-from-clipboard",
+        },
+    },
     "puavopkg_installer": {
         "title": "sb_puavopkg_installer",
         "icon": "/usr/share/icons/Tela/scalable/apps/system-software-install.svg",

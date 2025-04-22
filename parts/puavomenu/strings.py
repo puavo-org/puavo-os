@@ -140,6 +140,12 @@ STRINGS = {
         "sv": "Examensläge",
         "de": "Prüfungsmodus",
     },
+    "sb_exam_mode_with_url": {
+        "en": "Exam mode with URL",
+        "fi": "Koemoodi URLilla",
+        "sv": "Examensläge med URL",
+        "de": "Prüfungsmodus mit URL",
+    },
     "sb_puavopkg_installer": {
         "en": "Additional software installation",
         "fi": "Lisäohjelmistojen asennus",

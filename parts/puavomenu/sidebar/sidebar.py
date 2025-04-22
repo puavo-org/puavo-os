@@ -255,6 +255,9 @@ class Sidebar:
             if self.is_element_visible("exam_mode"):
                 ypos = self.__create_button(ypos, SB_BUTTONS["exam_mode"])
                 something = True
+            if self.is_element_visible("exam_mode_with_url"):
+                ypos = self.__create_button(ypos, SB_BUTTONS["exam_mode_with_url"])
+                something = True
 
         if something:
             ypos = self.__create_separator(ypos)

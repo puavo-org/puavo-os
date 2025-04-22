@@ -54,6 +54,10 @@ class exammode {
       mode   => '0755',
       source => 'puppet:///modules/exammode/puavo-exammode-ctrl';
 
+    '/usr/local/bin/puavo-get-examurl-from-clipboard':
+      mode   => '0755',
+      source => 'puppet:///modules/exammode/puavo-get-examurl-from-clipboard';
+
     '/usr/local/sbin/puavo-exammode-manager':
       mode    => '0755',
       require => [ Package['ruby-eventmachine']

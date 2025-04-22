@@ -1,0 +1,36 @@
+#!/usr/bin/wish
+
+set clipboard_text ""
+
+proc go_to_exam {} {
+  global clipboard_text
+  exec puavo-exammode-ctrl start-url $clipboard_text
+}
+
+proc update_go_to_exam_button {} {
+  global clipboard_text
+
+  catch {
+    set clipboard_text [clipboard get -type UTF8_STRING]
+    .go_to_exam_button configure -text $clipboard_text
+    if {[string trim $clipboard_text] eq ""} {
+      .go_to_exam_button configure -state disabled
+    } else {
+      .go_to_exam_button configure -state normal
+    }
+  }
+
+  after 500 update_go_to_exam_button
+}
+
+font create biggerFont -family Palatino -size 20
+font create biggerFontBold -family Palatino -size 20 -weight bold
+
+wm geometry . 800x80
+
+label .go_to_exam_label -font biggerFont -text "Go to exam URL:"
+button .go_to_exam_button -command go_to_exam -font biggerFontBold \
+                          -state disabled -text {(copy a URL to clipboard)}
+pack .go_to_exam_label .go_to_exam_button -expand true -fill both
+
+update_go_to_exam_button
