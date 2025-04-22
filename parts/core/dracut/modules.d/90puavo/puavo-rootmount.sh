@@ -260,3 +260,6 @@ fi
 
 [ -z "${NEWROOT}" ] && panic "Failed to mount root filesystem"
 [ -d "${NEWROOT}/proc" ] || panic "Failed to mount root filesystem"
+
+# Save the chosen root device for mounting subvolumes later
+echo "$PUAVO_ROOT_DEVICE" > "/run/puavo/root-device"
