@@ -1,57 +1,24 @@
 #!/bin/sh
-# Swap two byte pairs (e.g. "12ab" <=> "ab12").
-swap_pairs() {
-  b1=$(echo "$1" | cut -c1-2)
-  b2=$(echo "$1" | cut -c3-4)
-  echo "$b2$b1"
-}
+efi_variable=$(ls /sys/firmware/efi/efivars/LoaderDevicePartUUID-* 2>/dev/null)
 
-# Find the EFI variable that stores the corrent boot entry
-boot_current_file=$(find /sys/firmware/efi/efivars/ -name "BootCurrent*" 2>/dev/null)
-
-if [ -z "$boot_current_file" ]; then
-  echo "Error: Failed to find EFI variable BootCurrent" >&2
+if [ -z "$efi_variable" ]; then
+  echo "Failed to find the EFI variable for the loader device partition UUID. The boot process might not be using systemd-stub?" >&2
   exit 1
 fi
 
-# Extract the current boot entry number
-boot_entry_number=$(xxd --seek 4 --len 4 --plain "$boot_current_file" \
-  | awk '{print toupper($0)}')
-boot_entry_number=$(swap_pairs "$boot_entry_number")
+# Read the EFI partition UUID by filtering out all non-printable characters and converting it to lower case
+efi_partition_uuid=$(cat "$efi_variable" | tr -cd '\40-\176' | tr 'A-Z' 'a-z')
 
-# Find the corresponding Boot#### EFI variable
-boot_entry=$(find /sys/firmware/efi/efivars/ -name "Boot$boot_entry_number*" 2>/dev/null)
-
-if [ -z "$boot_entry" ]; then
-  echo "Error: Failed to find EFI variable Boot$boot_entry_number" >&2
+if [ -z "$efi_partition_uuid" ]; then
+  echo "Failed to extract the EFI partition UUID from $efi_variable" >&2
   exit 1
 fi
 
-# Extract 16 byte GUID (32 hex digits) starting at offset 48 (0x30)
-guid_hex=$(xxd --seek 48 --len 16 -p "$boot_entry")
-
-# Split the 16 byte GUID into 2 byte chunks
-g1=$(echo "$guid_hex" | cut -c1-4)
-g2=$(echo "$guid_hex" | cut -c5-8)
-g3=$(echo "$guid_hex" | cut -c9-12)
-g4=$(echo "$guid_hex" | cut -c13-16)
-g5=$(echo "$guid_hex" | cut -c17-20)
-g6=$(echo "$guid_hex" | cut -c21-32)
-
-# Reorder the GUID bytes into usable format
-g1=$(swap_pairs "$g1")
-g2=$(swap_pairs "$g2")
-g3=$(swap_pairs "$g3")
-g4=$(swap_pairs "$g4")
-
-efi_guid="$g2$g1-$g3-$g4-$g5-$g6"
-
-# Finally, we have the UUID of the booted EFI partition.
-# We want to output the device path that contains this partition.
-parent_disk=$(lsblk -lnp -o PKNAME "/dev/disk/by-partuuid/$efi_guid")
+# Find the parent disk for the EFI partition
+parent_disk=$(lsblk -lnp -o PKNAME "/dev/disk/by-partuuid/$efi_partition_uuid")
 
 if [ -z "$parent_disk" ]; then
-  echo "Error: Failed to find the disk containing the EFI partition" >&2
+  echo "Failed to find the disk containing the EFI partition with UUID $efi_partition_uuid" >&2
   exit 1
 fi
 
