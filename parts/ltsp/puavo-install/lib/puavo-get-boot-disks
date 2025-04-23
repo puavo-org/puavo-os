@@ -2,14 +2,68 @@
 
 set -eu
 
+# XXX Also check (upcoming) puavo-current-efi-boot-disk in case there is
+# XXX some duplication with this script.
+
+read cmdline < /proc/cmdline
+
+boot_device=''
+bootsystem_mountpoint=''
+lookup_image_path=false
+puavo_image_path=''
+
+for x in $cmdline; do
+  case "$x" in
+    puavo.image.path=*)
+      puavo_image_path="${x#puavo.image.path=}"
+      ;;
+    root=/dev/mapper/puavo-images)
+      bootsystem_mountpoint='/images'
+      ;;
+    root=/dev/mapper/puavoinstaller-installimages)
+      bootsystem_mountpoint='/installimages'
+      ;;
+    root=/dev/nbd*)
+      boot_device="${x#root=}"
+      ;;
+    root=UUID=*)
+      lookup_image_path=true
+      ;;
+  esac
+done
+
+if [ -n "$boot_device" ]; then
+  printf "%s\n" "$boot_device"
+  exit 0
+fi
+
+if $lookup_image_path; then
+  if [ -z "$puavo_image_path" ]; then
+    echo 'ERROR: no image path, can not lookup boot device' >&2
+    exit 1
+  fi
+
+  bootsystem_mountpoint=${puavo_image_path#/*}
+  bootsystem_mountpoint="/${bootsystem_mountpoint%%/*}"
+fi
+
+if [ -z "$bootsystem_mountpoint" ]; then
+  echo 'ERROR: boot system mountpoint is unknown' >&2
+  exit 1
+fi
+
 disk_devpaths=$(
-  lsblk -J -O | jq -r '
+  lsblk -J -O | jq --arg mntpoint "$bootsystem_mountpoint" -r '
     [
       .blockdevices[]
         | select(.type == "disk")
-        | { "mountpoints": [ (.. | (.mountpoints? // []) | flatten[] | values) ],
-            "path": .path }
-        | select(.mountpoints[] | contains("/images"))
+        | {
+            "mountpoints": [
+              (.. | (.mountpoints? // []) | flatten[] | values)
+            ],
+            "path": .path
+          }
+        | select(.mountpoints[] | contains($mntpoint))
         | .path
     ] | unique | .[]
   ')
