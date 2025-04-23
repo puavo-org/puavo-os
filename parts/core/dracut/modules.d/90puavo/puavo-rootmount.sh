@@ -74,7 +74,7 @@ fi
 
 loopmount_image()
 {
-    local FSSIZE FSTYPE imagepath tmpfs_imagepath tmpfs_size
+    local image_fs_size image_fs_type imagepath tmpfs_imagepath tmpfs_size
 
     if [ ! -f "${rootmnt}${PUAVO_IMAGE_PATH}" ]; then
       panic "${rootmnt}${PUAVO_IMAGE_PATH} does not exist!"
@@ -85,26 +85,23 @@ loopmount_image()
 
     imagepath="/host/${PUAVO_IMAGE_PATH#/}"
 
-    # Get the loop filesystem type if not set
-    # fstype command sets FSTYPE and FSSIZE variables
-    eval $(/usr/bin/fstype < "$imagepath")
-    modprobe loop
+    image_fs_type="squashfs"
+    image_fs_size=$(stat -c %s "$imagepath")
 
-    if [ -n "$FSTYPE" ]; then
-      modprobe "$FSTYPE"
-    else
-      FSTYPE='unknown'
-    fi
+    modprobe loop
+    modprobe "$image_fs_type"
 
     if [ "$PUAVO_IMAGE_LOAD_TO_RAM" -eq 1 ]; then
       mkdir -p /imagetmp
-      if [ -z "$FSSIZE" ]; then
-        panic 'could not determine filesystem size for tmpfs'
+
+      if [ -z "$image_fs_size" ]; then
+        panic 'could not determine filesystem size'
       fi
+
       # XXX is this extra allocation for tmpfs correct?
       # XXX why these numbers?
-      tmpfs_size=$(($FSSIZE + 32 * 1024 * 1024))
-      mount -t tmpfs -o size="$FSSIZE" none /imagetmp
+      tmpfs_size=$(($image_fs_size + 32 * 1024 * 1024))
+      mount -t tmpfs -o size="$image_fs_size" none /imagetmp
 
       plymouth display-message --text='Copying system to RAM'
 
@@ -115,7 +112,7 @@ loopmount_image()
       imagepath="$tmpfs_imagepath"
     fi
 
-    mount -r -t "$FSTYPE" -o loop "$imagepath" "$rootmnt"
+    mount -r -t "$image_fs_type" -o loop "$imagepath" "$rootmnt"
     ret=$?
 
     if [ "$ret" -gt 0 ]; then
