@@ -114,8 +114,7 @@ puavo-setup-filesystems --force-disk-device "${loopdev#/dev/}" \
                         --force-wipe-partition no \
                         --force-write-partitions yes \
                         --hosttype exam \
-                        --loopback-only \
-                        --partition-label UEFI/GPT
+                        --loopback-only
 
 puavo-install-grub --hosttype   exam          \
                    --images-dir "$images_dir" \
