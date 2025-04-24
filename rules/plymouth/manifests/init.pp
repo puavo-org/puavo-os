@@ -24,9 +24,5 @@ class plymouth {
     }
   }
 
-  ::plymouth::install_theme {
-    'kites': ;
-  }
-
   Package <| title == plymouth |>
 }
