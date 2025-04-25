@@ -419,7 +419,7 @@ module DiskHandler
        { :err => '/dev/null' })
 
     run('mkfs.btrfs', '-L', vgname, partition_dev)
-    btrfs_mount_dir = '/.btrfs'
+    btrfs_mount_dir = "/.#{ vgname }"
     begin
       FileUtils.mkdir_p(btrfs_mount_dir)
       begin

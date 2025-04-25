@@ -9,7 +9,7 @@ set -eu
 
 btrfs_root=0
 rootdev=''
-if mountpoint -q /.btrfs; then
+if mountpoint -q /.puavo || mountpoint -q /.puavoinstaller; then
   btrfs_root=1
   for x in $(cat /proc/cmdline); do
     case "$x" in

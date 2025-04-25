@@ -19,6 +19,7 @@ test "$BOOT" = "puavo" || exit 0
 
 rootmnt="/sysroot"
 
+PUAVO_HOSTTYPE=''
 PUAVO_IMAGE_LOAD_TO_RAM=0
 PUAVO_IMAGE_PATH=
 PUAVO_IMAGE_OVERLAY=
@@ -28,6 +29,9 @@ ROOT_IN_BTRFS=0
 
 for x in $(cat /proc/cmdline); do
     case "$x" in
+        puavo.hosttype=*)
+            PUAVO_HOSTTYPE="${x#puavo.hosttype=}"
+            ;;
         puavo.image.load_to_ram=true)
             PUAVO_IMAGE_LOAD_TO_RAM=1
             ;;
@@ -219,7 +223,11 @@ fi
 # root and remount the partition as writable
 if [ "$loopmount_used" -gt 0 ]; then
     if [ "$ROOT_IN_BTRFS" = 1 ]; then
-        target_dir="${rootmnt}/.btrfs"
+        if [ "$PUAVO_HOSTTYPE" = 'diskinstaller' ]; then
+            target_dir="${rootmnt}/.puavoinstaller"
+        else
+            target_dir="${rootmnt}/.puavo"
+        fi
     else
         target_dir="${rootmnt}/images"
     fi

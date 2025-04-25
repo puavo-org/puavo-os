@@ -10,8 +10,8 @@ list_swap_partitions() {
   sfdisk -l 2>/dev/null | awk '/swap/ && ($6 == 82 || $7 == 82) { print $1 }'
 }
 
-if mountpoint -q /.btrfs; then
-  swapfile_path='/.btrfs/.swap/swap'
+if mountpoint -q /.puavo; then
+  swapfile_path='/.puavo/.swap/swap'
   if [ ! -e "$swapfile_path" ]; then
     # XXX What about swapfile size?  We could change this based on something.
     # XXX Bootservers need 16G or perhaps even more?
