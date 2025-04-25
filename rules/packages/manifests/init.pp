@@ -104,16 +104,6 @@ class packages {
   }
 
   @package {
-    [ 'live-boot'
-    , 'live-boot-initramfs-tools'
-    , 'live-config'
-    , 'live-config-systemd'
-    , 'live-tools' ]:
-      ensure => present,
-      tag    => [ 'tag_abitti' ];
-  }
-
-  @package {
     [ 'acpitool'
     , 'arandr'
     , 'atop'
@@ -132,8 +122,6 @@ class packages {
     , 'htop'
     , 'iftop'
     , 'inetutils-traceroute'
-    , 'initramfs-tools'
-    , 'initramfs-tools-core'
     , 'inotify-tools'
     , 'iotop'
     , 'iperf'
@@ -857,8 +845,8 @@ class packages {
   @packages::kernels::kernel_package {
     'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.21-amd64',
-      version      => '6.12.21-amd64';
+      package_name => 'linux-image-6.12.22-amd64',
+      version      => '6.12.22-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such

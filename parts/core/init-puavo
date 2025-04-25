@@ -1,6 +1,8 @@
 #!/bin/sh
 
 {
+  umask 0022
+
   puavo_hosttype=''
 
   read cmdline < /proc/cmdline

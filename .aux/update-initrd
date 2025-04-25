@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+status=0
+
+for vmlinuz in /boot/vmlinuz-*; do
+  kver=${vmlinuz#/boot/vmlinuz-}
+  echo "Building initrd for kernel version ${kver}"
+  dracut --force --kver "$kver" || status=1
+done
+
+exit $status

@@ -33,40 +33,19 @@ $(install-subdirs) :
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)/sbin
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/conf.d
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(libdir)/dracut/modules.d/90puavo
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 
 .PHONY : install
 install : $(install-subdirs) installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks \
-		initramfs-tools/hooks/puavo
-	$(INSTALL_PROGRAM) \
-		-t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
-		initramfs-tools/scripts/init-bottom/puavo-nbd-server
-	$(INSTALL_PROGRAM) \
-		-t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top \
-		initramfs-tools/scripts/init-top/puavo
-	$(INSTALL_PROGRAM) \
-		-t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount \
-		initramfs-tools/scripts/puavo-postmount/01-mount \
-		initramfs-tools/scripts/puavo-postmount/02-plymouth
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin init-puavo
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/initramfs-tools/conf.d \
-		initramfs-tools/conf.d/puavo
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts \
-		initramfs-tools/scripts/puavo
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-conf/definitions/*.json
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/dracut/modules.d/90puavo \
+		dracut/modules.d/90puavo/*
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d/ \
 		puavo-conf/files/etc/pam.d/*
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages/ \

@@ -1,42 +1,33 @@
 #!/bin/sh
 
-MINKVER="2.6.17"
-PREREQ=""
+# Todo: Duplicated
+for x in $(cat /proc/cmdline); do
+    if [ "$x" = "init=/sbin/init-puavo" ]; then
+        BOOT=puavo
+        break
+    fi
+done
 
-# Output pre-requisites
-prereqs()
-{
-    echo "$PREREQ"
+# Todo: Duplicated
+panic() {
+    echo "PANIC: $1" >&2
+    echo "Dropping to emergency shell..." >&2
+    emergency_shell -n "Panic occurred: $1"
 }
-
-case "$1" in
-    prereqs)
-        prereqs
-        exit 0
-        ;;
-esac
 
 test "$BOOT" = "puavo" || exit 0
 
-# contains definition for "panic"
-. /scripts/functions
+rootmnt="/sysroot"
 
 PUAVO_IMAGE_LOAD_TO_RAM=0
-PUAVO_IMAGE_OVERLAY=
 PUAVO_IMAGE_PATH=
-PUAVO_LVM_VG='puavo'
+PUAVO_IMAGE_OVERLAY=
+PUAVO_LVM_VG="puavo"
+PUAVO_ROOT_DEVICE=
 ROOT_IN_BTRFS=0
 
 for x in $(cat /proc/cmdline); do
     case "$x" in
-        loop=*)
-            # loop-parameter is legacy and is for compatibility with
-            # the old Trusty-based Puavo-systems and their grub
-            # configuration.
-            if [ -z "$PUAVO_IMAGE_PATH" ]; then
-                PUAVO_IMAGE_PATH="${x#loop=}"
-            fi
-            ;;
         puavo.image.load_to_ram=true)
             PUAVO_IMAGE_LOAD_TO_RAM=1
             ;;
@@ -46,11 +37,19 @@ for x in $(cat /proc/cmdline); do
         puavo.image.path=*)
             PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
             ;;
+        root=/dev/*)
+            PUAVO_ROOT_DEVICE="${x#root=}"
+            ;;
         root=UUID=*)
+            PUAVO_ROOT_DEVICE="/dev/disk/by-uuid/${x#root=UUID=}"
             ROOT_IN_BTRFS=1
             ;;
     esac
 done
+
+if [ "$ROOT_IN_BTRFS" = 0 ]; then
+  lvm vgchange -a y "$PUAVO_LVM_VG"
+fi
 
 update_image_copy_progress() {
   # it is important this does not write to stdout or stderr
@@ -61,39 +60,48 @@ update_image_copy_progress() {
   done
 }
 
+# We need to mount the root device manually in pre-mount stage.
+# You might attempt to execute this script during the mount stage
+# when you'd expect the root to be mounted for you.
+# However, it seems that Dracut unmounts the root device, because it's 
+# considered "unusable" in our case, likely due to missing folders (e.g. /dev).
+# See:
+# https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/init.sh#L234
+# https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/dracut-lib.sh#L750
+if [ -n "$PUAVO_ROOT_DEVICE" ]; then
+    mount "$PUAVO_ROOT_DEVICE" "$rootmnt"
+fi
+
 loopmount_image()
 {
-    local FSSIZE FSTYPE imagepath tmpfs_imagepath tmpfs_size
+    local image_fs_size image_fs_type imagepath tmpfs_imagepath tmpfs_size
 
     if [ ! -f "${rootmnt}${PUAVO_IMAGE_PATH}" ]; then
       panic "${rootmnt}${PUAVO_IMAGE_PATH} does not exist!"
     fi
 
     mkdir -p /host
-    mount -o move "${rootmnt}" /host
+    mount -o move "$rootmnt" /host
 
     imagepath="/host/${PUAVO_IMAGE_PATH#/}"
 
-    # Get the loop filesystem type if not set
-    # fstype command sets FSTYPE and FSSIZE variables
-    eval $(/usr/bin/fstype < "$imagepath")
-    modprobe loop
+    image_fs_type="squashfs"
+    image_fs_size=$(stat -c %s "$imagepath")
 
-    if [ -n "$FSTYPE" ]; then
-      modprobe "$FSTYPE"
-    else
-      FSTYPE='unknown'
-    fi
+    modprobe loop
+    modprobe "$image_fs_type"
 
     if [ "$PUAVO_IMAGE_LOAD_TO_RAM" -eq 1 ]; then
       mkdir -p /imagetmp
-      if [ -z "$FSSIZE" ]; then
-        panic 'could not determine filesystem size for tmpfs'
+
+      if [ -z "$image_fs_size" ]; then
+        panic 'could not determine filesystem size'
       fi
+
       # XXX is this extra allocation for tmpfs correct?
       # XXX why these numbers?
-      tmpfs_size=$(($FSSIZE + 32 * 1024 * 1024))
-      mount -t tmpfs -o size="$FSSIZE" none /imagetmp
+      tmpfs_size=$(($image_fs_size + 32 * 1024 * 1024))
+      mount -t tmpfs -o size="$image_fs_size" none /imagetmp
 
       plymouth display-message --text='Copying system to RAM'
 
@@ -104,7 +112,7 @@ loopmount_image()
       imagepath="$tmpfs_imagepath"
     fi
 
-    mount -r -t "$FSTYPE" -o loop "$imagepath" "$rootmnt"
+    mount -r -t "$image_fs_type" -o loop "$imagepath" "$rootmnt"
     ret=$?
 
     if [ "$ret" -gt 0 ]; then
@@ -120,7 +128,7 @@ do_union_mount()
     mount -o move "$rootmnt" /rofs
 
     modprobe overlay
-    mkdir "${cow}/rootdir" "${cow}/workdir"
+    mkdir -p "${cow}/rootdir" "${cow}/workdir"
     mount -t overlay \
           -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
           overlay "$rootmnt"
@@ -159,7 +167,7 @@ mount_puavo_partition() {
 
     if [ "$ROOT_IN_BTRFS" = 1 ]; then
         # XXX should -o noatime also used with btrfs?
-        mount -o "subvol=${name}" "$ROOT" "/${name}" || return 1
+        mount -o "subvol=${name}" "$PUAVO_ROOT_DEVICE" "/${name}" || return 1
         return 0
     fi
 
@@ -185,10 +193,6 @@ move_puavo_partition()
     mount -o move "/${name}" "${rootmnt}/${name}"
 }
 
-if [ "$ROOT_IN_BTRFS" = 0 ]; then
-  vgchange -a y "$PUAVO_LVM_VG"
-fi
-
 loopmount_used=0
 if [ -n "$PUAVO_IMAGE_PATH" ]; then
     loopmount_image
@@ -210,7 +214,6 @@ if [ "$loopmount_used" -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OV
 else
     do_union_mount_temporary
 fi
-
 
 # If using a loopmount image, move the /images partition under loop mounted
 # root and remount the partition as writable

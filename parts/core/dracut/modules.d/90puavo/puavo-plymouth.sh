@@ -1,22 +1,17 @@
 #!/bin/sh
 
-MINKVER="2.6.17"
-PREREQ=""
-
-# Output pre-requisites
-prereqs()
-{
-    echo "$PREREQ"
-}
-
-case "$1" in
-    prereqs)
-        prereqs
-        exit 0
-        ;;
-esac
+# Todo: Duplicated
+for x in $(cat /proc/cmdline); do
+    if [ "$x" = "init=/sbin/init-puavo" ]; then
+        BOOT=puavo
+        break
+    fi
+done
 
 test "$BOOT" = "puavo" || exit 0
+
+# Todo: Duplicated
+rootmnt="/sysroot"
 
 # Copy our plymouth theme configuration to /root,
 # because it is also used at shutdown.

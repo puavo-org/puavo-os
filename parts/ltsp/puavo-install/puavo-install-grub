@@ -615,7 +615,7 @@ $(basename $0) [optional arguments]
     --hosttype           hosttype
     --images-dir         imagesdir
     --only-update-config
-    --vgname             vgname ("puavo" or "puavoinstaller")
+    --vgname             vgname ("puavo", "puavoexam", "puavoinstaller")
 EOF
   exit 1
 }
@@ -649,8 +649,10 @@ done
 
 [ $# -eq 0 ] || usage
 
-if ! [ "$vgname" = 'puavo' -o "$vgname" = 'puavoinstaller' ]; then
-  echo "vgname should be either 'puavo' or 'puavoinstaller'" >&2
+if [ "$vgname" != 'puavo' ] && \
+   [ "$vgname" != 'puavoexam' ] && \
+   [ "$vgname" != 'puavoinstaller' ]; then
+  echo "vgname should be 'puavo', 'puavoexam' or 'puavoinstaller'" >&2
   usage
   exit 1
 fi
@@ -733,8 +735,7 @@ fi
 
 # XXX ${puavo_partition_dev} should use UUID at least in the btrfs case:
 # XXX root=UUID=${uuid}
-# loop= parameter is legacy and is meant for the old Trusty-based Puavo-systems.
-common_kernel_arguments="root=${puavo_partition_dev} loop=\"\${imagepath}\" puavo.image.path=\"\${imagepath}\""
+common_kernel_arguments="puavo.hosttype=${hosttype} root=${puavo_partition_dev} puavo.image.path=\"\${imagepath}\""
 
 case "$hosttype" in
   bootserver|diskinstaller|preinstalled|wirelessaccesspoint)

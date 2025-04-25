@@ -1,23 +1,20 @@
 #!/bin/sh
 
-PREREQ=""
-
-prereqs()
-{
-    echo "$PREREQ"
-}
-
-case $1 in
-    # get pre-requisites
-    prereqs)
-        prereqs
-        exit 0
-        ;;
-esac
+# Todo: Duplicated
+for x in $(cat /proc/cmdline); do
+    if [ "$x" = "init=/sbin/init-puavo" ]; then
+        BOOT=puavo
+        break
+    fi
+done
 
 if [ "$BOOT" != "puavo" ]; then
   exit 0
 fi
+
+# Make sure the initrd filesystem is private instead of shared 
+# as moving mounts (see puavo-postmount) within shared mount is not supported
+mount --make-private /
 
 mkdir -p /run/puavo
 
