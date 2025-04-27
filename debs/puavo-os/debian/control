@@ -132,6 +132,7 @@ Depends: ${misc:Depends},
  python3-aionotify,
  python3-dbus,
  python3-gi,
+ python3-validators,
  python3-websocket
 Description: Puavo Examination Room Server
  A script for managing virtual machines for examination room servers
