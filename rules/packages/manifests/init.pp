@@ -851,9 +851,9 @@ class packages {
 		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
-    '6.1.0-32-amd64':
+    '6.1.0-34-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.1.0-32-amd64';
+      package_name => 'linux-image-6.1.0-34-amd64';
 
     '6.12.12-amd64':
       # The current nvidia packages (470.199.02-1~deb12u1 and
