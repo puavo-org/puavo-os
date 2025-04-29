@@ -49,7 +49,7 @@ module DiskHandler
   Filesystems = {
     'bootserver' => {
       '.EFI'          => { 'size' => '512M',     'type' => 'fat'     },
-      '.swap'         => { 'size' => '16G',      'type' => 'swap'    },
+      '.SWAP'         => { 'size' => '16G',      'type' => 'swap'    },
       'tmp'           => { 'size' => '16G',      'type' => 'btrfssv' },
       'images'        => { 'size' => '128G',     'type' => 'btrfssv' },
       'state'         => { 'size' => '32G',      'type' => 'btrfssv' },
@@ -66,7 +66,7 @@ module DiskHandler
     },
     'laptop' => {
       '.EFI'          => { 'size' => '512M',     'type' => 'fat'     },
-      '.swap'         => { 'size' => '4G',       'type' => 'swap'    },
+      '.SWAP'         => { 'size' => '4G',       'type' => 'swap'    },
       'tmp'           => { 'size' => '6G',       'type' => 'btrfssv' },
       'images'        => { 'size' => '40G',      'type' => 'btrfssv' },
       'state'         => { 'size' => '4G',       'type' => 'btrfssv' },
@@ -265,32 +265,51 @@ module DiskHandler
       end
     end
 
+    # XXX run "mkswap -f device" here or somewhere else
     create_efi_filesystem(device)
   end
 
-  def self.gpt_format(partitioning_type, efi_size, windows_size=nil)
-    slices = []
-    slices << "2\no\ny\n"               # init
-    boot_slices = [
-      "n\n1\n\n+#{ efi_size }\nef00\n",         # EFI boot partition
-    ]
+  def self.gpt_format(partitioning_type, filesystems, windows_size=nil)
+    begin
+      efi_size = filesystems['.EFI']['size']
+    rescue StandardError => e
+      raise "could not determine EFI size: #{ e.message }"
+    end
+
+    swap_size = nil
+    begin
+      if filesystems.has_key?('.SWAP') then
+        swap_size = filesystems['.SWAP']['size']
+      end
+    rescue StandardError => e
+      raise "could not determine swap size: #{ e.message }"
+    end
+
+    p_index = 0
+    slices = [ "2\no\ny\n" ]    # init
+
+    if partitioning_type != :on_raid then
+      # EFI boot partition
+      slices << "n\n#{ p_index+=1 }\n\n+#{ efi_size }\nef00\n"
+      if swap_size then
+        slices << "n\n#{ p_index+=1 }\n\n+#{ swap_size }\n8200\n"
+      end
+    end
 
     case partitioning_type
       when :basic_boot
-        slices += boot_slices
-        slices << "n\n2\n\n\n8304\n"            # puavo partition
+        slices << "n\n#{ p_index+=1 }\n\n\n8304\n"  # puavo partition
       when :on_raid
-        slices << "n\n1\n\n\n8304\n"            # puavo partition
+        slices << "n\n#{ p_index+=1 }\n\n\n8304\n"  # puavo partition
       when :raid_boot
-        slices += boot_slices
-        slices << "n\n2\n\n\nfd00\n"            # RAID partition
+        slices << "n\n#{ p_index+=1 }\n\n\nfd00\n"  # RAID partition
       when :with_windows
-        slices += boot_slices
-        slices << "n\n2\n\n+16M\n0c01\n"        # Microsoft reserved partition
+        # Microsoft reserved partition:
+        slices << "n\n#{ p_index+=1 }\n\n+16M\n0c01\n"
         # Microsoft basic data partition:
-        slices << "n\n3\n\n+#{ windows_size }\n0700\nc\n3\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
-        slices << "n\n4\n\n+768M\n2700\n"       # Windows RE partition
-        slices << "n\n5\n\n\n8304\nw\ny\n"      # puavo partition
+        slices << "n\n#{ p_index+=1 }n\n+#{ windows_size }\n0700\nc\n#{ p_index }\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
+        slices << "n\n#{ p_index+=1 }\n\n+768M\n2700\n"     # Windows RE
+        slices << "n\n#{ p_index+=1 }\n\n\n8304\nw\ny\n"    # puavo partition
     end
 
     slices << "w\ny\n"
@@ -385,11 +404,11 @@ module DiskHandler
   def self.create_partitions(fs_conf, raid_setup_done)
     if fs_conf['windows_size'] then
       # raid_setup_done == false because we must be on laptop
-      gpt_spec = gpt_format(:with_windows, fs_conf['efi_size'],
+      gpt_spec = gpt_format(:with_windows, fs_conf['filesystems'],
                             fs_conf['windows_size'])
     else
       partitioning_scheme = raid_setup_done ? :on_raid : :basic_boot
-      gpt_spec = gpt_format(partitioning_scheme, fs_conf['efi_size'])
+      gpt_spec = gpt_format(partitioning_scheme, fs_conf['filesystems'])
     end
 
     setup_partition(fs_conf['device'], gpt_spec)
@@ -657,20 +676,14 @@ module QueryDiskInfo
       do_it = QueryDiskInfo::ask_confirmation(device, partition)
     end
 
-    begin
-      efi_size = DiskHandler::Filesystems[hosttype]['.EFI']['size']
-    rescue StandardError => e
-      raise "unknown EFI size for hosttype '#{ hosttype }': #{ e.message }"
-    end
-
     {
-      'device'        => device,
-      'efi_size'      => efi_size,
-      'first_sector'  => first_sector,
-      'hosttype'      => hosttype,
-      'partition'     => partition,
-      'windows_size'  => windows_size,
-      'wipe'          => wipe,
+      'device'       => device,
+      'filesystems'  => DiskHandler::Filesystems[hosttype],
+      'first_sector' => first_sector,
+      'hosttype'     => hosttype,
+      'partition'    => partition,
+      'windows_size' => windows_size,
+      'wipe'         => wipe,
     }
   end
 
