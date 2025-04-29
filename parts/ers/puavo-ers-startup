@@ -15,7 +15,7 @@ case "$ers_mode" in
     exec /usr/bin/puavo-run-naksu
     ;;
   naksu2)
-    exec /usr/bin/puavo-ers-naksu2
+    exec /usr/bin/puavo-run-naksu2
     ;;
   *)
     logger -p user.err -t puavo-ers-startup \

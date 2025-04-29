@@ -42,7 +42,8 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-ers-applet \
-		puavo-ers-startup puavo-ers-startvm puavo-run-naksu puavo-ers-naksu2
+		puavo-ers-startup puavo-ers-startvm puavo-run-naksu \
+		puavo-run-naksu2
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-ers-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
