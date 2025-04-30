@@ -548,7 +548,7 @@ if ls /boot/*.uki.efi >/dev/null 2>&1; then
 fi
 
 install_mode=${1:-normal}
-shift
+shift || true
 
 # Process additional arguments
 uki_required=0
