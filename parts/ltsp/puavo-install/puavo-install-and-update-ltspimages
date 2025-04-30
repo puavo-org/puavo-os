@@ -244,14 +244,25 @@ cleanup_previous_runs() {
 
   # cleanup old images (and their possible temporary *.tmp files)
   # and rdiff-files too.  The ltsp-backup.img is going to go too...
-  old_imagesync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" \
-	                  "$images_dir" "$rdiffs_dir")
-  if [ -n "$old_imagesync_files" ]; then
-    printf %s "$old_imagesync_files" \
+  old_sync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" "${images_dir}" "${rdiffs_dir}")
+  if [ -n "$old_sync_files" ]; then
+    local uninstall_files=$(printf '%s\n' "$old_sync_files" \
       | fgrep -vx "${images_dir}/${preserve_imagefile}" \
       | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}" \
-      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp" \
-      | xargs -r -d'\n' -L1 rm -f
+      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp")
+
+    if [ "${UKI_MODE:-}" = "1" ]; then
+      local images=$(printf '%s\n' "$uninstall_files" | grep '\.img$' || true)
+
+      for image in $images; do
+        log info "removing UKI files installed from $image"
+        puavo-uninstall-uki-image "$image" "$images_dir" || true
+      done
+    fi
+
+    for file in $uninstall_files; do
+      rm -f "$file" || true
+    done
   fi
 
   if $use_torrents_for_rdiff_updates; then
