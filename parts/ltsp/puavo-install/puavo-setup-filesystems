@@ -238,31 +238,6 @@ module DiskHandler
       f.print(gpt_spec)
     end
 
-    # when creating a disk image file (with puavo-make-install-disk)
-    # we need to do this, otherwise this appears to be useless
-    # Edit: this seems to be the case for all creations of vfat partitions
-    # with # higher than the highest in the previous partition table.
-    # e.g. the typical usb stick with 1 partition fails when creating
-    # uefi booting stick, since two vfat partitions are to be created.
-    # this might also be the case in some installations; needs more
-    # inspecting however, as the error couldn't be reproduced at least
-    # with completely the same steps as with the usb sticks
-    wait_iterations = 0
-    partition_dev = nil
-    if UI::loopback_only then
-      partition_dev = "/dev/#{ device }p1"
-    elsif UI::hosttype == 'diskinstaller'
-      partition_dev = "/dev/#{ device }2"
-    end
-    if partition_dev
-      until File.exist?(partition_dev) do
-        run('partprobe', "/dev/#{ device }")
-        sleep(1)
-        wait_iterations += 1
-        raise "could not find #{ partition_dev }" if wait_iterations > 30
-      end
-    end
-
     # XXX run "mkswap -f device" here or somewhere else
     create_efi_filesystem(device)
   end
