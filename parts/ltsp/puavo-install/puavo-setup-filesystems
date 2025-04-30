@@ -9,6 +9,7 @@ require 'open3'
 
 GPT_PARTTYPE_EFI   = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
 GPT_PARTTYPE_LINUX = '4f68bce3-e8cd-4db1-96e7-fbcaf984b709'
+GPT_PARTTYPE_SWAP  = '0657fd6d-a4ab-43c4-84e5-0933c84b4f4f'
 
 GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C = 'Puavo_Installed_Windows_C'
 
@@ -229,7 +230,7 @@ module DiskHandler
     return true
   end
 
-  def self.setup_device(device, gpt_spec)
+  def self.setup_device(device, have_swap, gpt_spec)
     # clean up possible confusing mess from the device
     run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
         { :err => '/dev/null' })
@@ -238,8 +239,8 @@ module DiskHandler
       f.print(gpt_spec)
     end
 
-    # XXX run "mkswap -f device" here or somewhere else
     create_efi_filesystem(device)
+    initialize_swap_partition(device) if have_swap
   end
 
   def self.gpt_format(partitioning_type, filesystems, windows_size=nil)
@@ -290,9 +291,10 @@ module DiskHandler
   end
 
   def self.raid_partition(device)
-    # RAID EFI size hardcoded to 1536M
-    efi_size = '1536M'
-    setup_device(device, gpt_format(:raid_boot, efi_size))
+    # we only support bootserver hosttype with RAID
+    fs_conf = DiskHandler::Filesystems['bootserver']
+    efi_size = fs_conf['.EFI']['size']
+    setup_device(device, true, gpt_format(:raid_boot, efi_size))
   end
 
   def self.get_partitions(device)
@@ -376,7 +378,8 @@ module DiskHandler
       gpt_spec = gpt_format(partitioning_scheme, fs_conf['filesystems'])
     end
 
-    setup_device(fs_conf['device'], gpt_spec)
+    have_swap = fs_conf['filesystems'].has_key?('.SWAP')
+    setup_device(fs_conf['device'], have_swap, gpt_spec)
     fs_conf['puavo_partition'] = get_puavo_partition(fs_conf['device'])
   end
 
@@ -386,8 +389,15 @@ module DiskHandler
   end
 
   def self.create_efi_filesystem(device)
-    efi_partition = wait_one_gpt_partition_by_parttype(device, GPT_PARTTYPE_EFI, try_count: 30)
+    efi_partition = wait_one_gpt_partition_by_parttype(device,
+                      GPT_PARTTYPE_EFI, try_count: 30)
     run('mkfs.fat', '-F32', "/dev/#{ efi_partition }")
+  end
+
+  def self.initialize_swap_partition(device)
+    swap_partition = wait_one_gpt_partition_by_parttype(device,
+                       GPT_PARTTYPE_SWAP, try_count: 30)
+    run('mkswap', "/dev/#{ swap_partition }")
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
