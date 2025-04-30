@@ -229,7 +229,7 @@ module DiskHandler
     return true
   end
 
-  def self.setup_partition(device, gpt_spec)
+  def self.setup_device(device, gpt_spec)
     # clean up possible confusing mess from the device
     run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
         { :err => '/dev/null' })
@@ -292,7 +292,7 @@ module DiskHandler
   def self.raid_partition(device)
     # RAID EFI size hardcoded to 1536M
     efi_size = '1536M'
-    setup_partition(device, gpt_format(:raid_boot, efi_size))
+    setup_device(device, gpt_format(:raid_boot, efi_size))
   end
 
   def self.get_partitions(device)
@@ -345,21 +345,13 @@ module DiskHandler
     fs_conf = conf.clone
 
     fs_setup_phases = []
-    if fs_conf['partition'] == 'whole' then
-      fs_setup_phases += [ :wipe_device ] if conf['wipe']
-      fs_setup_phases += [ :create_partitions, :puavo_filesystems ]
-    else
-      fs_setup_phases += [ :wipe_partition ] if conf['wipe']
-      fs_setup_phases += [ :puavo_filesystems ]
-    end
-
-    fs_setup_phases += [ :mount_filesystems ]
+    fs_setup_phases += [ :wipe_device ] if conf['wipe']
+    fs_setup_phases += [ :create_partitions, :puavo_filesystems,
+                         :mount_filesystems ]
 
     fs_setup_phases.each do |fn_sym|
       args = case fn_sym
-               when :cleanup_disk_environment,
-                    :mount_filesystems,
-                    :puavo_filesystems
+               when :mount_filesystems, :puavo_filesystems
                  [ fs_conf, vgname ]
                when :create_partitions
                  [ fs_conf, raid_setup_done ]
@@ -384,8 +376,8 @@ module DiskHandler
       gpt_spec = gpt_format(partitioning_scheme, fs_conf['filesystems'])
     end
 
-    setup_partition(fs_conf['device'], gpt_spec)
-    fs_conf['partition'] = get_puavo_partition(fs_conf['device'])
+    setup_device(fs_conf['device'], gpt_spec)
+    fs_conf['puavo_partition'] = get_puavo_partition(fs_conf['device'])
   end
 
   def self.btrfs_subvolumes(hosttype)
@@ -404,7 +396,7 @@ module DiskHandler
     # where the partitioning is the same)
     cleanup_disk_environment(fs_conf['hosttype'], vgname)
 
-    partition_dev = "/dev/#{ fs_conf['partition'] }"
+    partition_dev = "/dev/#{ fs_conf['puavo_partition'] }"
 
     # clean up possible confusing mess from the partition
     run('dd', 'if=/dev/zero', "of=#{ partition_dev }", 'count=2K',
@@ -429,7 +421,7 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf, vgname)
-    partition_dev = "/dev/#{ fs_conf['partition'] }"
+    partition_dev = "/dev/#{ fs_conf['puavo_partition'] }"
 
     btrfs_subvolumes( fs_conf['hosttype'] ).each do |name, attrs|
       # /tmp should not be mounted now,
@@ -450,8 +442,7 @@ module DiskHandler
                  "/dev/#{ device }")
   end
 
-  def self.wipe_device(fs_conf)   ; wipe(fs_conf['device'])   ; end
-  def self.wipe_partition(fs_conf); wipe(fs_conf['partition']); end
+  def self.wipe_device(fs_conf); wipe(fs_conf['device']); end
 end
 
 module QueryDiskInfo
@@ -536,14 +527,13 @@ module QueryDiskInfo
     chosen_disk_device
   end
 
-  def self.ask_confirmation(device, partition)
-    if device.nil? || device.empty? || partition.nil? || partition.empty?
+  def self.ask_confirmation(device)
+    if device.nil? || device.empty? then
       return false
     end
 
-    puts %Q{\nYou are going to install to device "/dev/#{ device }", } \
-	 + %Q{partition "#{ partition }".}
-    UI::colormsg("IF YOU PROCEED, ALL DATA ON THAT PARTITION IS DESTROYED!\n",
+    puts %Q{\nYou are going to install to device "/dev/#{ device }":}
+    UI::colormsg("IF YOU PROCEED, ALL DATA ON THAT DEVICE IS DESTROYED!\n",
 		 HighLine::RED)
 
     prompt = %q{Are you sure you want to proceed (write "yes" if this is okay?)}
@@ -551,18 +541,13 @@ module QueryDiskInfo
     UI::ask_with_default(prompt, 'no', UI::WritePartitionsPrompt) == 'yes'
   end
 
-  def self.ask_windows_setup(hosttype, device, partition)
+  def self.ask_windows_setup(hosttype, device)
     return nil unless hosttype == 'laptop'
 
     30.times do # Invalid preseeds shall not cause infinite loops.
       setup_windows_answer = UI::ask_with_default("\nSetup Windows partitions? (yes/no)", 'no', UI::SetupWindowsPrompt)
       case setup_windows_answer
       when 'yes'
-        unless partition == 'whole' then
-          UI::colormsg('Windows partitions can be setup only when partitioning the whole device.', HighLine::RED)
-          next
-        end
-
         disk_size_g = get_blkdev_size_g(device)
         unless disk_size_g >= DUALBOOT_LAPTOP_DISK_MIN_SIZE_G then
           UI::colormsg("Windows partitions can be setup only on #{ DUALBOOT_LAPTOP_DISK_MIN_SIZE_G }G or larger disks.", HighLine::RED)
@@ -592,11 +577,9 @@ module QueryDiskInfo
     raise 'Windows setup prompts exceeded.'
   end
 
-  def self.ask_device_and_partition_with_confirmation(hosttype, raid_setup_done)
+  def self.ask_device_with_confirmation(hosttype, raid_setup_done)
     device       = nil
     do_it        = false
-    first_sector = nil
-    partition    = nil
     windows_size = nil
     wipe         = false
 
@@ -604,32 +587,25 @@ module QueryDiskInfo
       UI::reset_questions()
 
       if raid_setup_done then
-        device    = 'md0'
-        partition = 'whole'
+        device = 'md0'
       else
-        device    = QueryDiskInfo::ask_device()
-        partition = QueryDiskInfo::ask_partition(device)
+        device = QueryDiskInfo::ask_device()
       end
 
-      if partition == 'whole'
-        first_sector = 2048
+      # Let the user set the size of the following filesystems:
+      [
+        [ 'imageoverlays', UI::ImageoverlaySizePrompt ],
+      ].each do |fs_name, prompt_key|
+        fs = DiskHandler::Filesystems[hosttype][fs_name]
+        next if fs.nil?
+        fs_size =
+          UI::ask_size_with_default("Filesystem size of #{ fs_name }:",
+                                    fs['size'], prompt_key)
 
-        # Let the user set the size of the following filesystems:
-        [
-          [ 'imageoverlays', UI::ImageoverlaySizePrompt ],
-        ].each do |fs_name, prompt_key|
-          fs = DiskHandler::Filesystems[hosttype][fs_name]
-          next if fs.nil?
-          fs_size =
-            UI::ask_size_with_default("Filesystem size of #{ fs_name }:",
-                                      fs['size'], prompt_key)
-
-          fs['size'] = fs_size.join()
-        end
+        fs['size'] = fs_size.join()
       end
 
-      windows_size = QueryDiskInfo::ask_windows_setup(hosttype, device,
-                                                      partition)
+      windows_size = QueryDiskInfo::ask_windows_setup(hosttype, device)
 
       msg = "\nIt is possible to wipe disk/partition before installing,\n" \
               + "but this can take a rather long time.\n"                  \
@@ -646,51 +622,16 @@ module QueryDiskInfo
         end
       end
 
-      do_it = QueryDiskInfo::ask_confirmation(device, partition)
+      do_it = QueryDiskInfo::ask_confirmation(device)
     end
 
     {
       'device'       => device,
       'filesystems'  => DiskHandler::Filesystems[hosttype],
-      'first_sector' => first_sector,
       'hosttype'     => hosttype,
-      'partition'    => partition,
       'windows_size' => windows_size,
       'wipe'         => wipe,
     }
-  end
-
-  def self.ask_partition(disk_device)
-    partitions = []
-
-    chosen_partition = 'whole'
-    until partitions.include?(chosen_partition) do
-      if chosen_partition == 'gdisk' then
-        system('gdisk', "/dev/#{ disk_device }")
-        chosen_partition = 'whole'
-      end
-
-      puts '-----'
-      puts "The disk /dev/#{ disk_device } has the following partitions:\n"
-      show_disk_devices([ disk_device ])
-
-      partition_regexp = /\A#{ Regexp.quote(disk_device) }p?[0-9]+\z/
-
-      partitions \
-        = %w(whole) \
-          + IO.readlines('/proc/partitions') \
-              .map { |line| (line.split)[3] } \
-              .compact \
-              .select { |part| part.match(partition_regexp) }
-
-      puts "\nPossible partitions are: #{ partitions.join(' ') }"
-      puts "\nYou may choose 'gdisk' to partition this disk,"
-      puts "or choose 'whole' to use the whole disk.\n"
-      chosen_partition = UI::ask_with_default('Choose a partition:',
-                                              chosen_partition,
-                                              UI::PartitionPrompt)
-    end
-    chosen_partition
   end
 
   def self.get_current_system_devices
@@ -941,7 +882,7 @@ end
 
 case hosttype
   when 'bootserver', 'diskinstaller', 'exam', 'laptop'
-    conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype,
+    conf = QueryDiskInfo::ask_device_with_confirmation(hosttype,
              raid_setup_done)
     DiskHandler::do_fs_setup(conf, vgname, raid_setup_done)
   else
