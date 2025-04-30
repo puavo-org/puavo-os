@@ -1,12 +1,27 @@
 #!/bin/sh
 set -eu
 
-boot_directory=$1
+usage() {
+  echo "Usage: $0 <image-mountpoint> <uki-root>"
+  exit 1
+}
 
-if [ -z "$boot_directory" ]; then
-  echo "Usage: $0 <boot_directory>"
+[ $# -eq 2 ] || usage
+
+image_mountpoint="$1"
+uki_root="$2"
+
+if [ ! -d "$image_mountpoint" ]; then
+  echo "Image mountpoint '$image_mountpoint' does not exist" >&2
   exit 1
 fi
+
+if [ ! -d "$uki_root" ]; then
+  echo "UKI root '$uki_root' does not exist" >&2
+  exit 1
+fi
+
+boot_directory="${image_mountpoint}/boot"
 
 if [ ! -d "$boot_directory" ]; then
   echo "Boot directory '$boot_directory' does not exist" >&2
@@ -17,14 +32,17 @@ install_boot_entry_config() {
   local extra_directory="$1"
   local environment_file="${extra_directory}/grubenv"
 
-  if [ ! -r /etc/puavo-image/class ] || [ ! -r /etc/puavo-image/release ]; then
-    echo "Missing boot entry information" >&2
+  local class_file="${image_mountpoint}/etc/puavo-image/class"
+  local release_file="${image_mountpoint}/etc/puavo-image/release"
+
+  if [ ! -r "$class_file" ] || [ ! -r "$release_file" ]; then
+    echo "Missing boot entry information in image mountpoint" >&2
     return 1
   fi
 
   local class release label
-  class=$(cat /etc/puavo-image/class)
-  release=$(cat /etc/puavo-image/release)
+  class=$(cat "$class_file")
+  release=$(cat "$release_file")
   label="PuavoOS (${release})" # Todo: Decide how we generate the labels
 
   [ -f "$environment_file" ] || grub-editenv "$environment_file" create || {
@@ -59,6 +77,6 @@ install_uki() {
   install_boot_entry_config "$extra_directory"
 }
 
-for uki in /boot/*.uki.efi; do
-  install_uki "$uki" "$boot_directory"
+for uki in "$boot_directory"/*.uki.efi; do
+  install_uki "$uki" "$uki_root"
 done
