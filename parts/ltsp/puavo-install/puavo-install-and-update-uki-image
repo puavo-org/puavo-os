@@ -1,0 +1,72 @@
+#!/bin/sh
+set -eu
+
+usage() {
+  echo "Usage: $0 <install-image> <hosttype> <install-mountpoint>" >&2
+  exit 1
+}
+
+[ $# -eq 3 ] || usage
+install_image="$1"
+hosttype="$2"
+install_mountpoint="$3"
+
+if [ ! -f "$install_image" ]; then
+  echo "Install image '$install_image' does not exist" >&2
+  exit 1
+fi
+
+image_mountpoint="/images/mnt"
+mkdir -p "$image_mountpoint"
+
+cleanup() {
+  umount /boot/efi 2>/dev/null || true
+  umount "$image_mountpoint" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+mount -o ro "$install_image" "$image_mountpoint"
+
+install_uki_to_efi() {
+  local diskdev uki_root
+  uki_root="/boot/efi/EFI/debian"
+
+  diskdev="$1"
+
+  efi_devpath=$(lsblk -n -l -o PATH,PARTTYPE "$diskdev" \
+    | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }')
+  if [ -z "$efi_devpath" ]; then
+    echo "Failed to find EFI partition in $diskdev" >&2
+    return 1
+  fi
+
+  mount "$efi_devpath" /boot/efi
+
+  if [ ! -d "$uki_root" ]; then
+    echo "Device $diskdev does not have a valid EFI partition" >&2
+    umount /boot/efi
+    return 1
+  fi
+
+  puavo-install-uki "$image_mountpoint" "$uki_root" || {
+    echo "Failed to install UKI to EFI partition" >&2
+    umount /boot/efi
+    return 1
+  }
+
+  puavo-update-uki-command-line "$image_mountpoint/boot" "$uki_root" "$hosttype" || {
+    echo "Failed to update UKI command line" >&2
+    umount /boot/efi
+    return 1
+  }
+
+  umount /boot/efi
+}
+
+# Identify boot disks and install UKI files to their EFI partitions
+boot_disks=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks "$install_mountpoint")
+
+for diskdev in $boot_disks; do
+  echo "installing UKI files to boot device $diskdev"
+  install_uki_to_efi "$diskdev"
+done
