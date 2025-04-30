@@ -75,7 +75,7 @@ disk_devpaths=$(
             ],
             "path": .path
           }
-        | select(.mountpoints[] | contains($mntpoint))
+        | select(.mountpoints[] == $mntpoint)
         | .path
     ] | unique | .[]
   ')
