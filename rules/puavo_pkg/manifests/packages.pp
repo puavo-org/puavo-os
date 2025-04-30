@@ -58,7 +58,6 @@ class puavo_pkg::packages {
 			, 'rustdesk'
 			, 'schoolstore-ti-widgets'
 			, 'scratux'
-			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
 			, 'tela-icon-theme'

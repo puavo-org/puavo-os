@@ -1386,13 +1386,6 @@
             "icon": "/usr/share/icons/Faenza/apps/96/glade.png",
             "tags": "default, graphics"
         },
-        "skype": {
-            "name": "Skype",
-            "tags": "default, network",
-            "puavopkg": {
-                "id": "skype"
-            }
-        },
         "slack": {
             "name": "Slack",
             "tags": "default, network",
@@ -2247,7 +2240,6 @@
                 "discordweb",
                 "jitsi",
                 "signal-desktop",
-                "skype",
                 "slack",
                 "teams",
                 "telegramdesktop",
