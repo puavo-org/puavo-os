@@ -68,7 +68,7 @@ disk_devpaths=$(
   lsblk -J -O | jq --arg mntpoint "$bootsystem_mountpoint" -r '
     [
       .blockdevices[]
-        | select(.type == "disk")
+        | select(.type == "disk" or .type == "loop")
         | {
             "mountpoints": [
               (.. | (.mountpoints? // []) | flatten[] | values)
