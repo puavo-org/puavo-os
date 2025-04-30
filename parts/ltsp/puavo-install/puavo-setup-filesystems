@@ -234,8 +234,6 @@ module DiskHandler
     run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
         { :err => '/dev/null' })
 
-    # (we also create an EFI partition on a RAID device
-    # even though it is pointless in that case)
     IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
       f.print(gpt_spec)
     end
