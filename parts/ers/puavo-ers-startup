@@ -12,10 +12,10 @@ case "$ers_mode" in
     exec sudo -g puavo /usr/bin/puavo-ers-applet "$@"
     ;;
   naksu)
-    exec /usr/bin/puavo-run-naksu
+    exec /usr/bin/puavo-ers-naksu
     ;;
   naksu2)
-    exec /usr/bin/puavo-run-naksu2
+    exec /usr/bin/puavo-ers-naksu2
     ;;
   abitti2server)
     exec /usr/bin/puavo-ers-abitti2server
