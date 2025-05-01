@@ -47,10 +47,10 @@ install: installdirs
 		puavo-ers-abitti2server \
 		puavo-ers-abitti2server-networking \
 		puavo-ers-applet \
+		puavo-ers-naksu \
+		puavo-ers-naksu2 \
 		puavo-ers-startup \
-		puavo-ers-startvm \
-		puavo-run-naksu \
-		puavo-ers-naksu2
+		puavo-ers-startvm
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-ers-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
