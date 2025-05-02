@@ -10,16 +10,6 @@ list_swap_partitions() {
   sfdisk -l 2>/dev/null | awk '/swap/ && ($6 == 82 || $7 == 82) { print $1 }'
 }
 
-if mountpoint -q /.puavo; then
-  swapfile_path='/.puavo/.swap/swap'
-  if [ ! -e "$swapfile_path" ]; then
-    # XXX What about swapfile size?  We could change this based on something.
-    # XXX Bootservers need 16G or perhaps even more?
-    btrfs filesystem mkswapfile --size 4G "$swapfile_path"
-  fi
-  puavo_swap_devices="$swapfile_path"
-fi
-
 if [ "$(puavo-conf puavo.swap.local.enabled)" = 'true' ]; then
   # Enable local swap partition if found on local disk.
   for part in $(list_swap_partitions); do
