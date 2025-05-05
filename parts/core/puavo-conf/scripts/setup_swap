@@ -2,38 +2,23 @@
 
 set -eu
 
-status=0
-
-puavo_swap_devices=''
-
 list_swap_partitions() {
-  sfdisk -l 2>/dev/null | awk '/swap/ && ($6 == 82 || $7 == 82) { print $1 }'
+  lsblk --properties-by blkid -n -o PATH -Q 'FSTYPE == "swap"'
 }
 
-if [ "$(puavo-conf puavo.swap.local.enabled)" = 'true' ]; then
-  # Enable local swap partition if found on local disk.
-  for part in $(list_swap_partitions); do
-    puavo_swap_devices="${puavo_swap_devices} ${part}"
-  done
-
-  # Add puavo-swap as well, if it exists.
-  # (The above check does not catch it, because it is on an LVM partition.)
-  if [ -b /dev/mapper/puavo-swap ]; then
-    puavo_swap_devices="${puavo_swap_devices} /dev/mapper/puavo-swap"
-  fi
+if [ "$(puavo-conf puavo.swap.local.enabled)" != 'true' ]; then
+  exit 0
 fi
 
-for swap in $puavo_swap_devices; do
-  swapon "$swap" && continue
+status=0
 
-  # Debian Stretch does not accept swap partitions made in Ubuntu Trusty
-  # or before, so initialize the swap partition in case "swapon" failed.
-  # (This is slightly risky, but should be okay).
-  if mkswap "$swap"; then
-    swapon "$swap" && continue
+# Enable local swap partition if found on local disk.
+# XXX we should also make sure swap is encrypted
+for swap_partition in $(list_swap_partitions); do
+  if ! swapon "$swap_partition"; then
+    echo "error turning swap on device ${swap_partition}" >&2
+    status=1
   fi
-
-  status=1
 done
 
 exit $status
