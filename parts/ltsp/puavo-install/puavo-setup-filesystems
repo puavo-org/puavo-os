@@ -593,7 +593,7 @@ module DiskHandler
   end
 
   def self.select_default_install_target(fs_conf)
-    fs_conf['install-target'] = "/dev/#{ fs_conf['device'] }"
+    fs_conf['install_target'] = "/dev/#{ fs_conf['device'] }"
   end
 
   def self.create_efi_filesystem(device)
@@ -614,7 +614,7 @@ module DiskHandler
     # where the partitioning is the same)
     cleanup_disk_environment(fs_conf['hosttype'], vgname, false)
 
-    install_target_dev = fs_conf['install-target']
+    install_target_dev = fs_conf['install_target']
 
     # clean up possible confusing mess from the partition
     run('dd', 'if=/dev/zero', "of=#{ install_target_dev }", 'count=2K',
@@ -625,7 +625,7 @@ module DiskHandler
     begin
       FileUtils.mkdir_p(btrfs_mount_dir)
       begin
-        run('mount', partition_dev, btrfs_mount_dir)
+        run('mount', install_target_dev, btrfs_mount_dir)
         btrfs_subvolumes( fs_conf['hosttype'] ).each do |name, attrs|
           # XXX attrs dismissed
           run('btrfs', 'subvolume', 'create', "#{ btrfs_mount_dir }/#{ name }")
@@ -639,7 +639,7 @@ module DiskHandler
   end
 
   def self.mount_filesystems(fs_conf, vgname)
-    install_target_dev = fs_conf['install-target']
+    install_target_dev = fs_conf['install_target']
 
     btrfs_subvolumes( fs_conf['hosttype'] ).each do |name, attrs|
       # /tmp should not be mounted now,
@@ -1155,7 +1155,7 @@ end
 case hosttype
   when 'bootserver', 'diskinstaller', 'exam', 'laptop'
     conf = QueryDiskInfo::ask_device_with_confirmation(hosttype,
-             raid_setup_done, encryption, unlock_with_tpm))
+             raid_setup_done, encryption, unlock_with_tpm)
     DiskHandler::do_fs_setup(conf, vgname, raid_setup_done)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
