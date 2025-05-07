@@ -176,7 +176,7 @@ end
 module DiskHandler
   Filesystems = {
     'bootserver' => {
-      '.EFI'          => { 'size' => '512M',     'type' => 'fat'     },
+      '.EFI'          => { 'size' => '1536M',    'type' => 'fat'     },
       '.SWAP'         => { 'size' => '16G',      'type' => 'swap'    },
       'tmp'           => { 'size' => '16G',      'type' => 'btrfssv' },
       'images'        => { 'size' => '128G',     'type' => 'btrfssv' },
@@ -193,7 +193,7 @@ module DiskHandler
       'examimages'    => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
     'laptop' => {
-      '.EFI'          => { 'size' => '512M',     'type' => 'fat'     },
+      '.EFI'          => { 'size' => '1536M',    'type' => 'fat'     },
       '.SWAP'         => { 'size' => '4G',       'type' => 'swap'    },
       'tmp'           => { 'size' => '6G',       'type' => 'btrfssv' },
       'images'        => { 'size' => '40G',      'type' => 'btrfssv' },
