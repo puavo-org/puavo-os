@@ -443,8 +443,7 @@ module DiskHandler
   def self.raid_partition(device)
     # we only support bootserver hosttype with RAID
     fs_conf = DiskHandler::Filesystems['bootserver']
-    efi_size = fs_conf['.EFI']['size']
-    setup_device(device, true, gpt_format(:raid_boot, efi_size))
+    setup_device(device, true, gpt_format(:raid_boot, fs_conf))
   end
 
   def self.get_partitions(device)
