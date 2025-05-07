@@ -396,6 +396,8 @@ module DiskHandler
   def self.gpt_format(partitioning_type, filesystems, windows_size=nil)
     begin
       efi_size = filesystems['.EFI']['size']
+      raise "EFI size not found" \
+        unless efi_size.kind_of?(String) && !efi_size.empty?
     rescue StandardError => e
       raise "could not determine EFI size: #{ e.message }"
     end
@@ -404,6 +406,8 @@ module DiskHandler
     begin
       if filesystems.has_key?('.SWAP') then
         swap_size = filesystems['.SWAP']['size']
+        raise "unexpected swap size" \
+          unless swap_size.kind_of?(String) && !swap_size.empty?
       end
     rescue StandardError => e
       raise "could not determine swap size: #{ e.message }"
