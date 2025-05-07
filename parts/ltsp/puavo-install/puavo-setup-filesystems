@@ -447,7 +447,8 @@ module DiskHandler
   end
 
   def self.get_partitions(device)
-    IO.popen([ 'lsblk', '-l', '-n', '-oTYPE,NAME', "/dev/#{ device }" ]).readlines.map do |line|
+    cmd = [ 'lsblk', '-l', '-n', '-oTYPE,NAME', "/dev/#{ device }" ]
+    IO.popen(cmd).readlines.map do |line|
       line.strip.split(' ')
     end.select do |lineparts|
       lineparts.length > 1 && lineparts[0].downcase == 'part'
@@ -457,7 +458,8 @@ module DiskHandler
   end
 
   def self.get_gpt_partitions_by_parttype(device, parttype)
-    IO.popen([ 'lsblk', '-l', '-n', '-oPARTTYPE,NAME', "/dev/#{ device }" ]).readlines.map do |line|
+    cmd = [ 'lsblk', '-l', '-n', '-oPARTTYPE,NAME', "/dev/#{ device }" ]
+    IO.popen(cmd).readlines.map do |line|
       line.strip.split(' ')
     end.select do |lineparts|
       lineparts.length > 1 && lineparts[0].downcase == parttype.downcase
@@ -469,22 +471,27 @@ module DiskHandler
   def self.get_partition_by_partnum(device, partnum)
     partitions = get_partitions(device)
 
-    raise "Device '#{ device }' does not have any partitions" if partitions.empty?
-    raise "Partition number '#{ partnum }' not found on '#{ device }'" if partitions.length < partnum
+    raise "Device '#{ device }' does not have any partitions" \
+      if partitions.empty?
+    raise "Partition number '#{ partnum }' not found on '#{ device }'" \
+      if partitions.length < partnum
 
     partitions[partnum - 1]
   end
 
-  def self.wait_partition_by_partnum(device, partnum, try_count:, try_interval: 1)
+  def self.wait_partition_by_partnum(device, partnum, try_count:,
+                                     try_interval: 1)
     try_count.times do
       warn "Looking for partition '#{ partnum }' on device '#{ device }'..."
-      return get_partition_by_partnum(device, partnum) rescue sleep(try_interval)
+      return get_partition_by_partnum(device, partnum) \
+        rescue sleep(try_interval)
     end
     raise "Partition '#{ partnum }' not found on device '#{ device }'"
   end
 
   def self.get_gpt_partitions_by_parttype(device, parttype)
-    IO.popen([ 'lsblk', '-l', '-n', '-oPARTTYPE,NAME', "/dev/#{ device }" ]).readlines.map do |line|
+    cmd = [ 'lsblk', '-l', '-n', '-oPARTTYPE,NAME', "/dev/#{ device }" ]
+    IO.popen(cmd).readlines.map do |line|
       line.strip.split(' ')
     end.select do |lineparts|
       lineparts.length > 1 && lineparts[0].downcase == parttype.downcase
@@ -496,8 +503,10 @@ module DiskHandler
   def self.get_one_gpt_partition_by_parttype(device, parttype)
     partitions = get_gpt_partitions_by_parttype(device, parttype)
 
-    raise "GPT partition of type '#{ parttype }' not found on '#{ device }'" if partitions.empty?
-    raise "Multiple GPT partitions of type '#{ parttype }' found on '#{ device }'" if partitions.length > 1
+    raise "GPT partition of type '#{ parttype }' not found on '#{ device }'" \
+      if partitions.empty?
+    raise "Multiple GPT partitions of type '#{ parttype }' found on '#{ device }'" \
+      if partitions.length > 1
 
     partitions[0]
   end
@@ -505,7 +514,8 @@ module DiskHandler
   def self.wait_one_gpt_partition_by_parttype(device, parttype, try_count:, try_interval: 1)
     try_count.times do
       warn "Looking for GPT partition of type '#{ parttype }' on device '#{ device }'..."
-      return get_one_gpt_partition_by_parttype(device, parttype) rescue sleep(try_interval)
+      return get_one_gpt_partition_by_parttype(device, parttype) \
+        rescue sleep(try_interval)
     end
     raise "GPT partition of type '#{ parttype }' not found on device '#{ device }'"
   end
@@ -667,7 +677,8 @@ module QueryDiskInfo
     if UI::loopback_only then
       return /\Aloop[0-9]+\z/
     else
-      # possible choices here should sort so that "md0" is the first if it exists
+      # possible choices here should sort so that "md0" is the first
+      # if it exists
       return /\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z]|xvd[a-z])\z/
     end
   end
@@ -694,7 +705,8 @@ module QueryDiskInfo
   end
 
   def self.get_blkdev_size_g(device)
-    IO.popen([ 'lsblk', '-d', '-b', '-l', '-n', '-oSIZE', "/dev/#{ device }" ]) do |io|
+    cmd = [ 'lsblk', '-d', '-b', '-l', '-n', '-oSIZE', "/dev/#{ device }" ]
+    IO.popen(cmd) do |io|
       output = io.read
       io.close
       raise "lsblk failed" unless $?.success?
@@ -762,7 +774,9 @@ module QueryDiskInfo
     return nil unless hosttype == 'laptop'
 
     30.times do # Invalid preseeds shall not cause infinite loops.
-      setup_windows_answer = UI::ask_with_default("\nSetup Windows partitions? (yes/no)", 'no', UI::SetupWindowsPrompt)
+      prompt = "\nSetup Windows partitions? (yes/no)"
+      setup_windows_answer = UI::ask_with_default(prompt, 'no',
+                                                  UI::SetupWindowsPrompt)
       case setup_windows_answer
       when 'yes'
         disk_size_g = get_blkdev_size_g(device)
@@ -772,8 +786,10 @@ module QueryDiskInfo
         end
 
         windows_max_size_g = disk_size_g - DUALBOOT_LAPTOP_PUAVOOS_MIN_SIZE_G
-        windows_size_tuple = UI::ask_size_with_default("Size of Windows Local Disk (C:) partition:",
-                                                       "#{ [40, windows_max_size_g].min }G", UI::WindowsSizePrompt)
+        windows_size_tuple = UI::ask_size_with_default(
+                               "Size of Windows Local Disk (C:) partition:",
+                               "#{ [40, windows_max_size_g].min }G",
+                               UI::WindowsSizePrompt)
 
         windows_size_g = Size::to_bytes(windows_size_tuple) / 1024 ** 3
         unless windows_size_g >= DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G then
@@ -794,7 +810,8 @@ module QueryDiskInfo
     raise 'Windows setup prompts exceeded.'
   end
 
-  def self.ask_device_with_confirmation(hosttype, raid_setup_done, encryption, unlock_with_tpm)
+  def self.ask_device_with_confirmation(hosttype, raid_setup_done, encryption,
+                                        unlock_with_tpm)
     device       = nil
     do_it        = false
     windows_size = nil
