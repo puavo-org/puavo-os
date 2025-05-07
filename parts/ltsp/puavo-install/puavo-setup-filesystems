@@ -185,11 +185,11 @@ module DiskHandler
       'home'          => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
     'diskinstaller' => {
-      '.EFI'          => { 'size' => '40M',      'type' => 'fat'     },
+      '.EFI'          => { 'size' => '512M',     'type' => 'fat'     },
       'installimages' => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
     'exam' => {
-      '.EFI'          => { 'size' => '40M',      'type' => 'fat'     },
+      '.EFI'          => { 'size' => '256M',      'type' => 'fat'    },
       'examimages'    => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
     'laptop' => {
