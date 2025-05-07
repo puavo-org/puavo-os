@@ -606,7 +606,7 @@ module DiskHandler
   end
 
   def self.select_default_install_target(fs_conf)
-    fs_conf['install_target'] = "/dev/#{ fs_conf['device'] }"
+    fs_conf['install_target'] = "/dev/#{ fs_conf['puavo_partition'] }"
   end
 
   def self.create_efi_filesystem(device)
