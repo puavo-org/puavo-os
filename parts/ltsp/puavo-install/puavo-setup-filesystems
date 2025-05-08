@@ -534,7 +534,7 @@ module DiskHandler
   end
 
   def self.create_luks_partition_handler(fs_conf)
-    LuksPartitionHandler.new(fs_conf['device'],
+    LuksPartitionHandler.new(fs_conf['puavo_partition'],
       EncryptionDeviceName, EnrollmentPolicy)
   end
 
