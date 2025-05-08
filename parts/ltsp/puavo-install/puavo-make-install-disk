@@ -2,6 +2,8 @@
 
 set -eu
 
+export UKI_MODE=1
+
 images_dir=/installimages
 loopdev=''
 

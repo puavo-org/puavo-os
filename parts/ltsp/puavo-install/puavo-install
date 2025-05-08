@@ -540,12 +540,7 @@ preinstall_only=false
 puavo_preseed_register_args=()
 puavo_preseed_setup_filesystems_args=()
 
-# Determine whether we're in UKI mode by checking if we have an UKI image
-export UKI_MODE=0
-
-if ls /boot/*.uki.efi >/dev/null 2>&1; then
-  export UKI_MODE=1
-fi
+export UKI_MODE=1
 
 install_mode=${1:-normal}
 shift || true
@@ -561,9 +556,6 @@ while [ "$#" -gt 0 ]; do
       uki_required=1
       puavo_preseed_setup_filesystems_args+=("$1")
       ;;
-    --no-uki)
-      export UKI_MODE=0
-      ;;
     *)
       echo "ERROR: Unknown argument: $1" >&2
       exit 1
@@ -571,11 +563,6 @@ while [ "$#" -gt 0 ]; do
   esac
   shift
 done
-
-if [ "$UKI_MODE" -eq 0 -a "$uki_required" -eq 1 ]; then
-  echo "ERROR: UKI mode is required for this installation." >&2
-  exit 1
-fi
 
 case "$install_mode" in
   normal|preinstall)
