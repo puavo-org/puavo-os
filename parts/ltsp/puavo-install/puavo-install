@@ -546,14 +546,10 @@ install_mode=${1:-normal}
 shift || true
 
 # Process additional arguments
-uki_required=0
-
 while [ "$#" -gt 0 ]; do
   case "$1" in
     # Pass encryption related arguments forward
     --encrypt-with-passphrase|--encrypt-with-recovery-key|--unlock-with-tpm)
-      # We can't check UKI mode here, because the option below might disable it later
-      uki_required=1
       puavo_preseed_setup_filesystems_args+=("$1")
       ;;
     *)
