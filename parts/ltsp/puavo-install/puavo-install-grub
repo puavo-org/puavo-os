@@ -974,9 +974,6 @@ install_puavo_grub_files_to_efi_partition() {
   )
 }
 
-# if we're in UKI mode, we'll install everything on the EFI partition
-grub_cfg_path="${boot_dir}/grub/grub.cfg"
-
 if [ "${UKI_MODE:-}" = "1" ]; then
   # Many scripts assume there's a GRUB boot bolder under images.
   # For example, the GRUB environment is written there and then
@@ -987,8 +984,9 @@ if [ "${UKI_MODE:-}" = "1" ]; then
   )
 
   boot_dir="/boot/efi/EFI/debian"
-  grub_cfg_path="${boot_dir}/grub.cfg"
 fi
+
+grub_cfg_path="${boot_dir}/grub/grub.cfg"
 
 grub_install_done=false
 
