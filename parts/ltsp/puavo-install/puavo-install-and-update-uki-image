@@ -39,7 +39,7 @@ mount_disk_efi_partition() {
 
   efi_devpath=$(find_efi_device_path "$diskdev")
   if [ -z "$efi_devpath" ]; then
-    echo "Failed to find EFI partition in $diskdev" >&2
+    echo "Failed to find EFI partition in ${diskdev}" >&2
     return 1
   fi
 
@@ -90,7 +90,7 @@ install_uki_to_efi() {
     return 1
   }
 
-  puavo-update-uki-command-line "$image_mountpoint/boot" "$uki_root" "$hosttype" || {
+  puavo-update-uki-command-line "${image_mountpoint}/boot" "$uki_root" "$hosttype" || {
     echo "Failed to update UKI command line" >&2
     umount /boot/efi
     return 1

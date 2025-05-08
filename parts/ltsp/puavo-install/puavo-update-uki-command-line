@@ -35,8 +35,8 @@ install_command_line() {
   fi
 
   # Install the host type specific command line
-  cp "$boot_directory/addons/${hosttype}.addon.efi" \
-     "$extra_directory/cmdline.addon.efi" || true
+  cp "${boot_directory}/addons/${hosttype}.addon.efi" \
+     "${extra_directory}/cmdline.addon.efi" || true
 }
 
 for uki in "$boot_directory"/*.uki.efi; do
