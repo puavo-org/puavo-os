@@ -1,0 +1,71 @@
+#!/bin/sh
+set -eu
+
+usage() {
+  echo "Usage: $0 <install-image> <install-mountpoint>" >&2
+  exit 1
+}
+
+[ $# -eq 2 ] || usage
+
+install_image="$1"
+install_mountpoint="$2"
+
+if [ ! -f "$install_image" ]; then
+  echo "Install image '$install_image' does not exist" >&2
+  exit 1
+fi
+
+image_mountpoint="/images/mnt"
+mkdir -p "$image_mountpoint"
+
+cleanup() {
+  umount /boot/efi 2>/dev/null || true
+  umount "$image_mountpoint" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# Mount the image read-only
+mount -o ro "$install_image" "$image_mountpoint"
+
+boot_directory="${image_mountpoint}/boot"
+if [ ! -d "$boot_directory" ]; then
+  echo "Boot directory '$boot_directory' does not exist in image" >&2
+  exit 1
+fi
+
+# If the mounted image does not contain UKIs, return fast
+uki_files=$(find "$boot_directory" -maxdepth 1 -name '*.uki.efi' -type f)
+
+if [ -z "$uki_files" ]; then
+  exit 0
+fi
+
+# Identify boot disks and remove UKI files from their EFI partitions
+boot_disks=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks "$install_mountpoint")
+
+for diskdev in $boot_disks; do
+  efi_devpath=$(lsblk -n -l -o PATH,PARTTYPE "$diskdev" \
+    | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }')
+  [ -z "$efi_devpath" ] && continue
+
+  echo "removing old UKI files from boot device ${diskdev}"
+
+  efi_mount="/boot/efi"
+  mkdir -p "$efi_mount"
+  mount "$efi_devpath" "$efi_mount" || true
+
+  uki_root="${efi_mount}/EFI/debian"
+
+  if [ -d "$uki_root" ]; then
+    for uki in "$boot_directory"/*.uki.efi; do
+      name=$(basename "$uki")
+      rm -f "${uki_root}/${name}" 2>/dev/null || true
+      rm -rf "${uki_root}/${name}.extra.d" 2>/dev/null || true
+    done
+  fi
+
+  umount "$efi_mount" || true
+done
+
+exit 0

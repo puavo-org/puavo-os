@@ -99,6 +99,7 @@ class packages {
     , 'slapd'
     , 'syslinux-common'
     , 'syslinux-efi'
+    , 'tpm2-tools'
     , 'winbind' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
   }
@@ -227,6 +228,7 @@ class packages {
     , 'pm-utils'
     , 'rng-tools-debian'
     , 'systemd'
+    , 'systemd-ukify'
     # , 'tomoyo-tools'  # XXX missing from Trixie
     , 'udev'
     , 'udisks2'
@@ -845,8 +847,8 @@ class packages {
   @packages::kernels::kernel_package {
     'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.22-amd64',
-      version      => '6.12.22-amd64';
+      package_name => 'linux-image-6.12.25-amd64',
+      version      => '6.12.25-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such

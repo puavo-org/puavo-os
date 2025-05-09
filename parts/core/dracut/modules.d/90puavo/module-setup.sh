@@ -5,7 +5,7 @@ check() {
 }
 
 depends() {
-    echo "base overlay-root overlayfs"
+    echo "base crypt dm nbd overlay-root overlayfs systemd systemd-cryptsetup tpm2-tss"
     return 0
 }
 
@@ -17,7 +17,15 @@ install() {
                   /sbin/fsck.ext4 \
                   /sbin/logsave   \
                   /usr/bin/pv     \
-                  /usr/sbin/lvm
+                  /usr/sbin/lvm   \
+                  $(which lsblk)  \
+                  $(which blkid)  \
+                  $(which xxd)    \
+                  $(which find)   \
+                  $(which awk)    \
+                  $(which cut)
+
+    inst "$moddir/puavo-current-efi-boot-disk" /usr/bin/puavo-current-efi-boot-disk
 
     # Remove NVIDIA blacklist and configuration files
     rm -f "${initdir}/etc/modprobe.d/nvidia-blacklists-nouveau.conf" \
@@ -32,7 +40,7 @@ install() {
 
     # Install hooks
     inst_hook pre-udev  90 "${moddir}/puavo-kernel-module-setup.sh"
-    inst_hook pre-mount 90 "${moddir}/puavo-rootmount.sh"
-    inst_hook pre-mount 91 "${moddir}/puavo-plymouth.sh"
+    inst_hook pre-pivot 90 "${moddir}/puavo-rootmount.sh"
+    inst_hook pre-pivot 91 "${moddir}/puavo-plymouth.sh"
     inst_hook cleanup   20 "${moddir}/puavo-nbd-server.sh"
 }

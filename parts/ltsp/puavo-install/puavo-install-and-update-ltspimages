@@ -244,14 +244,25 @@ cleanup_previous_runs() {
 
   # cleanup old images (and their possible temporary *.tmp files)
   # and rdiff-files too.  The ltsp-backup.img is going to go too...
-  old_imagesync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" \
-	                  "$images_dir" "$rdiffs_dir")
-  if [ -n "$old_imagesync_files" ]; then
-    printf %s "$old_imagesync_files" \
+  old_sync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" "${images_dir}" "${rdiffs_dir}")
+  if [ -n "$old_sync_files" ]; then
+    local uninstall_files=$(printf '%s\n' "$old_sync_files" \
       | fgrep -vx "${images_dir}/${preserve_imagefile}" \
       | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}" \
-      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp" \
-      | xargs -r -d'\n' -L1 rm -f
+      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp")
+
+    if [ "${UKI_MODE:-}" = "1" ]; then
+      local images=$(printf '%s\n' "$uninstall_files" | grep '\.img$' || true)
+
+      for image in $images; do
+        log info "removing UKI files installed from $image"
+        puavo-uninstall-uki-image "$image" "$images_dir" || true
+      done
+    fi
+
+    for file in $uninstall_files; do
+      rm -f "$file" || true
+    done
   fi
 
   if $use_torrents_for_rdiff_updates; then
@@ -613,7 +624,8 @@ install_image() {
     query_update_confirmation "$current_ltspimage_name" "$imagename"
   fi
 
-  install_from_file_or_nbd "$imagename" "$type_opt" "$type_arg"
+  install_from_file_or_nbd   "$imagename" "$type_opt" "$type_arg"
+  install_uki_files          "$imagename"
   run_image_preinst_hook     "$imagename"
   set_image_as_default_image "$imagename"
 
@@ -742,6 +754,30 @@ but version $new_ltspimage_name is available.
 Press ENTER to proceed to update it.
 EOF
   read answer
+}
+
+install_uki_files() {
+  local imagename="$1"
+  local imagepath="${images_dir}/${imagename}"
+
+  if [ "${UKI_MODE:-}" != "1" ]; then
+    return 0
+  fi
+
+  # use the specified host type or find out the active one
+  local install_hosttype="$hosttype"
+
+  if [ -z "$install_hosttype" ]; then
+    install_hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
+
+    if [ -z "$install_hosttype" ]; then
+      echo 'Failed to determine host type for UKI installation' >&2
+      return 1
+    fi
+  fi
+
+  log info "installing UKI files from $imagepath"
+  puavo-install-and-update-uki-image "$imagepath" "$install_hosttype" "$images_dir"
 }
 
 run_image_preinst_hook() {
@@ -903,6 +939,7 @@ update_image() {
     log info "the requested ltsp image is already in place"
     update_stats uptodate 100
   else
+    install_uki_files          "$next_image"
     run_image_preinst_hook     "$next_image"
     set_image_as_default_image "$next_image"
   fi

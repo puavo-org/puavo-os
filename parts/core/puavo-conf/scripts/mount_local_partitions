@@ -11,15 +11,22 @@ btrfs_root=0
 rootdev=''
 if mountpoint -q /.puavo || mountpoint -q /.puavoinstaller; then
   btrfs_root=1
-  for x in $(cat /proc/cmdline); do
-    case "$x" in
-      root=*)
-        rootdev=${x#root=}
-        ;;
-    esac
-  done
+  # Attempt to read root device from /run/puavo/root-device
+  if [ -r /run/puavo/root-device ]; then
+    rootdev=$(cat /run/puavo/root-device)
+  fi
+  # If not found, fall back to parsing kernel parameters
   if [ -z "$rootdev" ]; then
-    echo 'can not determine the root device from the kernel command line' >&2
+    for parameter in $(cat /proc/cmdline); do
+      case "$parameter" in
+        root=*)
+          rootdev=${parameter#root=}
+          ;;
+      esac
+    done
+  fi
+  if [ -z "$rootdev" ]; then
+    echo 'can not determine the root device for mounting local partitions' >&2
     exit 1
   fi
 fi

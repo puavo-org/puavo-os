@@ -38,15 +38,19 @@ install : installdirs
 		puavo-disk-erase \
 		puavo-install \
 		puavo-install-and-update-ltspimages \
+		puavo-install-and-update-uki-image \
 		puavo-install-grub \
+		puavo-install-uki \
 		puavo-make-install-disk \
 		puavo-manage-efi \
 		puavo-reset-laptop-to-factory-defaults \
 		puavo-reset-windows \
 		puavo-set-root-password \
 		puavo-setup-filesystems \
+		puavo-uninstall-uki-image \
 		puavo-update-client \
-		puavo-update-service-script
+		puavo-update-service-script \
+		puavo-update-uki-command-line
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
 		dbus-1/org.puavo.client.Daemon.service

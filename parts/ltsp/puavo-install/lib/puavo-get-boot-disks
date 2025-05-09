@@ -2,14 +2,16 @@
 
 set -eu
 
-# XXX Also check (upcoming) puavo-current-efi-boot-disk in case there is
-# XXX some duplication with this script.
+mountpoint_override=''
+if [ $# -ge 1 ]; then
+  mountpoint_override="$1"
+fi
 
 read cmdline < /proc/cmdline
 
 boot_device=''
 bootsystem_mountpoint=''
-lookup_image_path=false
+lookup_image_path=true
 puavo_image_path=''
 
 for x in $cmdline; do
@@ -19,15 +21,14 @@ for x in $cmdline; do
       ;;
     root=/dev/mapper/puavo-images)
       bootsystem_mountpoint='/images'
+      lookup_image_path=false
       ;;
     root=/dev/mapper/puavoinstaller-installimages)
       bootsystem_mountpoint='/installimages'
+      lookup_image_path=false
       ;;
     root=/dev/nbd*)
       boot_device="${x#root=}"
-      ;;
-    root=UUID=*)
-      lookup_image_path=true
       ;;
   esac
 done
@@ -47,6 +48,17 @@ if $lookup_image_path; then
   bootsystem_mountpoint="/${bootsystem_mountpoint%%/*}"
 fi
 
+# If the mountpoint is overridden, we must look for that mountpoint explicitly.
+# Even if we know the current boot device, it might not have that mountpoint.
+if [ -n "$mountpoint_override" ]; then
+  bootsystem_mountpoint="$mountpoint_override"
+else
+  if [ -n "$boot_device" ]; then
+    printf "%s\n" "$boot_device"
+    exit 0
+  fi
+fi
+
 if [ -z "$bootsystem_mountpoint" ]; then
   echo 'ERROR: boot system mountpoint is unknown' >&2
   exit 1
@@ -56,14 +68,14 @@ disk_devpaths=$(
   lsblk -J -O | jq --arg mntpoint "$bootsystem_mountpoint" -r '
     [
       .blockdevices[]
-        | select(.type == "disk")
+        | select(.type == "disk" or .type == "loop")
         | {
             "mountpoints": [
               (.. | (.mountpoints? // []) | flatten[] | values)
             ],
             "path": .path
           }
-        | select(.mountpoints[] | contains($mntpoint))
+        | select(.mountpoints[] == $mntpoint)
         | .path
     ] | unique | .[]
   ')

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Generate a new TPM key pair if necessary (https://www.freedesktop.org/software/systemd/man/latest/systemd-measure.html)
+set -e
+mkdir -p /etc/puavo-conf
+cd /etc/puavo-conf
+
+if [ -e tpm2-pcr-private-key.pem ]; then
+    exit 0
+fi
+
+# Todo: Can we use RSA 4096?
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out tpm2-pcr-private-key.pem
+openssl rsa -pubout -in tpm2-pcr-private-key.pem -out tpm2-pcr-public-key.pem

@@ -64,7 +64,9 @@ ifeq "$(image_class)" ""
 endif
 
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
-_image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
+_image_name  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}
+_image_file  := $(_image_name).img
+_uki_file    := $(_image_name).uki.efi
 
 # needed by linux build to prepare debian-directory
 _pkgbuild_dependencies := kernel-wedge,python3-dacite,python3-jinja2,python3-pydantic,python3-toml,quilt
@@ -227,6 +229,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
+	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' '$(_image_file)' '$(_uki_file)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
@@ -289,8 +292,16 @@ setup-wim:
 	  exit 1; \
 	fi
 
+/etc/puavo-conf/tpm2-pcr-public-key.pem: config/boot_keys/tpm2-pcr-public-key.pem
+	$(_sudo) mkdir -p $(@D)
+	$(_sudo) cp $< $@
+
+/etc/puavo-conf/mok.der: config/boot_keys/mok.der
+	$(_sudo) mkdir -p $(@D)
+	$(_sudo) cp $< $@
+
 .PHONY: update
-update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
+update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/tpm2-pcr-public-key.pem /etc/puavo-conf/mok.der
 	$(MAKE) build
 
 	$(_sudo) apt-get update

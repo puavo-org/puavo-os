@@ -1,23 +1,11 @@
 #!/bin/sh
 
-# Todo: Duplicated
-for x in $(cat /proc/cmdline); do
-    if [ "$x" = "init=/sbin/init-puavo" ]; then
-        BOOT=puavo
-        break
-    fi
-done
+grep -E -q '(^| )init=/sbin/init-puavo($| )' /proc/cmdline || exit 0
 
-# Todo: Duplicated
 panic() {
-    echo "PANIC: $1" >&2
-    echo "Dropping to emergency shell..." >&2
-    emergency_shell -n "Panic occurred: $1"
+    echo "Error: $1" >&2
+    exit 1
 }
-
-test "$BOOT" = "puavo" || exit 0
-
-rootmnt="/sysroot"
 
 PUAVO_HOSTTYPE=''
 PUAVO_IMAGE_LOAD_TO_RAM=0
@@ -44,6 +32,10 @@ for x in $(cat /proc/cmdline); do
         root=/dev/*)
             PUAVO_ROOT_DEVICE="${x#root=}"
             ;;
+        root=LABEL=*)
+            PUAVO_ROOT_DEVICE="/dev/disk/by-label/${x#root=LABEL=}"
+            ROOT_IN_BTRFS=1
+            ;;
         root=UUID=*)
             PUAVO_ROOT_DEVICE="/dev/disk/by-uuid/${x#root=UUID=}"
             ROOT_IN_BTRFS=1
@@ -51,8 +43,49 @@ for x in $(cat /proc/cmdline); do
     esac
 done
 
+# If the root device was not set in kernel parameters, we have to find it
+# ourselves. However, we must consider there being multiple bootable disks
+# such as mirrored RAID devices.
+if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
+  echo "Root device is not set in kernel parameters. Attempting to find it..."
+
+  # Attempt to find out the boot disk using EFI variables
+  POTENTIAL_BOOT_DEVICE=$(puavo-current-efi-boot-disk)
+  echo "Potential boot device: ${POTENTIAL_BOOT_DEVICE:-unknown}"
+
+  # If we found out the boot device, search for the first bootable root
+  # partition and assign it as the root device.
+  # Otherwise, search for any bootable root partition.
+  if [ -n "${POTENTIAL_BOOT_DEVICE}" ]; then
+    DEVICE_LIST=$(lsblk -lnp -o NAME "${POTENTIAL_BOOT_DEVICE}")
+  else
+    DEVICE_LIST=$(lsblk -lnp -o NAME)
+  fi
+
+  for device in $DEVICE_LIST; do
+    if blkid "$device" | grep -q 'TYPE="btrfs"'; then
+      PUAVO_ROOT_DEVICE=$device
+      ROOT_IN_BTRFS=1
+      echo "Selecting root device: $PUAVO_ROOT_DEVICE"
+      break
+    fi
+  done
+
+  if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
+    echo "Error: Failed to find the root device. Boot will likely fail."
+  fi
+fi
+
+echo "Boot device: ${PUAVO_ROOT_DEVICE:-unknown}"
+
 if [ "$ROOT_IN_BTRFS" = 0 ]; then
   lvm vgchange -a y "$PUAVO_LVM_VG"
+fi
+
+# Mount the correct root device
+if [ -n "$PUAVO_ROOT_DEVICE" ]; then
+    umount "$NEWROOT" || true
+    mount "$PUAVO_ROOT_DEVICE" "$NEWROOT"
 fi
 
 update_image_copy_progress() {
@@ -64,28 +97,16 @@ update_image_copy_progress() {
   done
 }
 
-# We need to mount the root device manually in pre-mount stage.
-# You might attempt to execute this script during the mount stage
-# when you'd expect the root to be mounted for you.
-# However, it seems that Dracut unmounts the root device, because it's 
-# considered "unusable" in our case, likely due to missing folders (e.g. /dev).
-# See:
-# https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/init.sh#L234
-# https://github.com/dracutdevs/dracut/blob/5d2bda46f4e75e85445ee4d3bd3f68bf966287b9/modules.d/99base/dracut-lib.sh#L750
-if [ -n "$PUAVO_ROOT_DEVICE" ]; then
-    mount "$PUAVO_ROOT_DEVICE" "$rootmnt"
-fi
-
 loopmount_image()
 {
     local image_fs_size image_fs_type imagepath tmpfs_imagepath tmpfs_size
 
-    if [ ! -f "${rootmnt}${PUAVO_IMAGE_PATH}" ]; then
-      panic "${rootmnt}${PUAVO_IMAGE_PATH} does not exist!"
+    if [ ! -f "${NEWROOT}${PUAVO_IMAGE_PATH}" ]; then
+        panic "${NEWROOT}${PUAVO_IMAGE_PATH} does not exist!"
     fi
 
     mkdir -p /host
-    mount -o move "$rootmnt" /host
+    mount -o move "$NEWROOT" /host
 
     imagepath="/host/${PUAVO_IMAGE_PATH#/}"
 
@@ -116,11 +137,11 @@ loopmount_image()
       imagepath="$tmpfs_imagepath"
     fi
 
-    mount -r -t "$image_fs_type" -o loop "$imagepath" "$rootmnt"
+    mount -r -t "$image_fs_type" -o loop "$imagepath" "$NEWROOT"
     ret=$?
 
     if [ "$ret" -gt 0 ]; then
-      panic "Failed to loop mount ${imagepath} to ${rootmnt}"
+      panic "Failed to loop mount ${imagepath} to ${NEWROOT}"
     fi
 }
 
@@ -129,16 +150,16 @@ do_union_mount()
     cow=$1
 
     mkdir -p /rofs
-    mount -o move "$rootmnt" /rofs
+    mount -o move "$NEWROOT" /rofs
 
     modprobe overlay
     mkdir -p "${cow}/rootdir" "${cow}/workdir"
     mount -t overlay \
           -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
-          overlay "$rootmnt"
+          overlay "$NEWROOT"
 
-    mkdir -p "${rootmnt}/rofs"
-    mount -o move /rofs "${rootmnt}/rofs"
+    mkdir -p "${NEWROOT}/rofs"
+    mount -o move /rofs "${NEWROOT}/rofs"
 }
 
 do_union_mount_temporary()
@@ -148,8 +169,8 @@ do_union_mount_temporary()
 
     do_union_mount /cow
 
-    mkdir -p "${rootmnt}/cow"
-    mount -o move /cow "${rootmnt}/cow"
+    mkdir -p "${NEWROOT}/cow"
+    mount -o move /cow "${NEWROOT}/cow"
 }
 
 do_union_mount_persistent()
@@ -193,8 +214,8 @@ move_puavo_partition()
 {
     name=$1
 
-    mkdir -p "${rootmnt}/${name}"
-    mount -o move "/${name}" "${rootmnt}/${name}"
+    mkdir -p "${NEWROOT}/${name}"
+    mount -o move "/${name}" "${NEWROOT}/${name}"
 }
 
 loopmount_used=0
@@ -203,8 +224,8 @@ if [ -n "$PUAVO_IMAGE_PATH" ]; then
     loopmount_used=1
 fi
 
-if [ -f "${rootmnt}/etc/puavo-image/name" ]; then
-    PUAVO_IMAGE_NAME=$(cat "${rootmnt}/etc/puavo-image/name")
+if [ -f "${NEWROOT}/etc/puavo-image/name" ]; then
+    PUAVO_IMAGE_NAME=$(cat "${NEWROOT}/etc/puavo-image/name")
 else
     PUAVO_IMAGE_NAME='default'
 fi
@@ -224,12 +245,12 @@ fi
 if [ "$loopmount_used" -gt 0 ]; then
     if [ "$ROOT_IN_BTRFS" = 1 ]; then
         if [ "$PUAVO_HOSTTYPE" = 'diskinstaller' ]; then
-            target_dir="${rootmnt}/.puavoinstaller"
+            target_dir="${NEWROOT}/.puavoinstaller"
         else
-            target_dir="${rootmnt}/.puavo"
+            target_dir="${NEWROOT}/.puavo"
         fi
     else
-        target_dir="${rootmnt}/images"
+        target_dir="${NEWROOT}/images"
     fi
     mkdir -p "$target_dir"
     # XXX what to do here when $PUAVO_IMAGE_LOAD_TO_RAM is used?
@@ -237,5 +258,8 @@ if [ "$loopmount_used" -gt 0 ]; then
     mount -o remount,noatime,rw "$target_dir"
 fi
 
-[ -z "${rootmnt}" ] && panic "rootmnt unknown in init-bottom"
-[ -d "${rootmnt}/proc" ] || panic "rootmnt not mounted in init-bottom"
+[ -z "${NEWROOT}" ] && panic "Failed to mount root filesystem"
+[ -d "${NEWROOT}/proc" ] || panic "Failed to mount root filesystem"
+
+# Save the chosen root device for mounting subvolumes later
+echo "$PUAVO_ROOT_DEVICE" > "/run/puavo/root-device"

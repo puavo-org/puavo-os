@@ -540,7 +540,25 @@ preinstall_only=false
 puavo_preseed_register_args=()
 puavo_preseed_setup_filesystems_args=()
 
+export UKI_MODE=1
+
 install_mode=${1:-normal}
+shift || true
+
+# Process additional arguments
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    # Pass encryption related arguments forward
+    --encrypt-with-passphrase|--encrypt-with-recovery-key|--unlock-with-tpm)
+      puavo_preseed_setup_filesystems_args+=("$1")
+      ;;
+    *)
+      echo "ERROR: Unknown argument: $1" >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
 
 case "$install_mode" in
   normal|preinstall)
