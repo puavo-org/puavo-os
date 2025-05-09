@@ -1,0 +1,4 @@
+#!/bin/sh
+
+git submodule deinit -f --all
+git submodule update --init

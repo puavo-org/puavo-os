@@ -1,0 +1,7 @@
+#!/bin/sh
+
+GIT_HOOKS="${0%/*}/"
+
+if [ "$1" = "rebase" ]; then
+  exec "$GIT_HOOKS/post-merge"
+fi
