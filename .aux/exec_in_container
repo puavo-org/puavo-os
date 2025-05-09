@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+proxy_address=$1
+machine=$2
+user=$3
+shift 3
+
+mount -m -t sysfs    /sys     /sys
+mount -m -t proc     /proc    /proc
+mount -m -t devtmpfs /dev     /dev
+mount -m -t devpts   /dev/pts /dev/pts
+hostname "$machine"
+sudo -u "$user" env PUAVO_CACHE_PROXY="$proxy_address" "$@"

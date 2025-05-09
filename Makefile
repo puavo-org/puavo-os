@@ -90,10 +90,13 @@ else
 _proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
 _machine := $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
-_builder := $(CURDIR)/.aux/builder -p "${_proxy_address}" "$(rootfs_dir)" $(_machine) $(_adm_user)
 
 _sudo := sudo $(_proxywrap_cmd)
 export image_class _sudo
+
+_builder := sudo unshare --mount --uts --root "$(rootfs_dir)" \
+              /puavo-os/.aux/exec_in_container "$(_proxy_address)" \
+              "$(_machine)" "$(_adm_user)"
 
 .PHONY: build-all-images
 build-all-images: check-all-release-names $(patsubst %,build-%-image,$(all_image_classes))
@@ -250,7 +253,7 @@ rootfs-install-image: rootfs-image $(install_image_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	$(_builder) '/puavo-os/.aux/proxywrap' sh -c 'cd ~ && exec bash'
+	$(_builder) sh -c 'cd ~ && exec bash'
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
