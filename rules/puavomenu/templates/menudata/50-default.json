@@ -1,5 +1,14 @@
 {
     "programs": {
+        "abicode": {
+            "type": "web",
+            "url": "https://abicode.abitti.fi",
+            "name": "Abicode",
+            "description": "Abicode-ohjelmointi",
+            "icon": "www",
+            "keywords": "abitti",
+            "tags": "default"
+        },
         "abicus": {
             "keywords": "abitti",
             "tags": "default"
@@ -706,6 +715,9 @@
             "icon": "MetaSearch 9",
             "hidden_by_default": true,
             "tags": "metacom"
+        },
+        "measureapp": {
+            "tags": "default"
         },
         "meshlab": {
             "tags": "default"
@@ -1749,6 +1761,7 @@
             },
             "icon": "/usr/share/puavo-art/puavomenu-icons/highschool.svg",
             "programs": [
+                "abicode",
                 "gimp",
                 "org.inkscape.Inkscape",
                 "geogebra",
@@ -1921,6 +1934,7 @@
                 "org.kde.kalzium",
                 "LoggerPro",
                 "LoggerPro3",
+                "measureapp",
                 "libreoffice-writer",
                 "kahoot",
                 "youtube"
@@ -2017,6 +2031,7 @@
                 "celestia",
                 "stellarium-web",
                 "org.kde.kstars",
+                "measureapp",
                 "org.kde.step",
                 "tracker",
                 "LoggerPro",
@@ -2435,6 +2450,7 @@
                 "graphical_analysis",
                 "libreoffice-writer",
                 "phet",
+                "measureapp",
                 "youtube"
             ]
         },

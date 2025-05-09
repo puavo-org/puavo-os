@@ -2,7 +2,12 @@ prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
+
+ifeq ($(prefix), /usr/local)
 sysconfdir = $(prefix)/etc
+else
+sysconfdir = /etc
+endif
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -37,7 +42,8 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-ers-applet \
-		puavo-ers-startup puavo-ers-startvm puavo-run-naksu
+		puavo-ers-startup puavo-ers-startvm puavo-run-naksu \
+		puavo-run-naksu2
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-ers-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \

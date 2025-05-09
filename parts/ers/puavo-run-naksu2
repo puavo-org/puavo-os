@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+workdir="${HOME}/.puavo/puavo-ers/naksu2-working-directory"
+
+logger -p user.notice -t puavo-run-naksu2 \
+       "preparing to run naksu2 in '${workdir}'"
+
+if ! mkdir -p "${workdir}"; then
+  logger -p user.err -t puavo-run-naksu2 "could not create '${workdir}'"
+  exit 1
+fi
+
+if ! which naksu2 >/dev/null; then
+  logger -p user.err -t puavo-run-naksu2 'naksu2 not found'
+  exit 1
+fi
+
+if ! docker compose version; then
+  logger -p user.err -t puavo-run-naksu2 'docker compose'
+  exit 1
+fi
+
+cd "${workdir}"
+
+while true; do
+  logger -p user.notice -t puavo-run-naksu2 'starting up naksu2'
+  if ! /usr/bin/terminator -T 'naksu2 terminal' \
+       --no-dbus "--working-directory=${workdir}" -x naksu2; then
+    logger -p user.err -t puavo-run-naksu2 'naksu2 failed'
+  fi
+  sleep 5
+done

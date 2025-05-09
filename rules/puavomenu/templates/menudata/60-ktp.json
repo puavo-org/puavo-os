@@ -23,6 +23,12 @@
             "description": "Oma abitti",
             "icon": "web-browser",
             "tags": "default, internet, education"
+        },
+        "gnome-system-monitor": {
+            "tags": "default"
+        },
+        "virtualbox": {
+            "tags": "default"
         }
     },
     "categories": {
@@ -35,7 +41,9 @@
                 "firefox",
                 "oma-abitti",
                 "koejakaja",
-                "ktp-jako"
+                "ktp-jako",
+                "gnome-system-monitor",
+                "virtualbox"
             ]
         }
     }

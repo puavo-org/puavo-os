@@ -10,9 +10,9 @@ case "$(puavo-conf puavo.xsessions.default)" in
     ers_uid='992'
     ers_user='puavo-ers'
 
-    useradd --system --create-home --home-dir "$ers_home"      \
-            --comment Puavo-ERS --user-group --shell /bin/bash \
-            --uid "$ers_uid" "$ers_user"
+    useradd --system --create-home --home-dir "$ers_home"    \
+            --comment Puavo-ERS --groups docker --user-group \
+            --shell /bin/bash --uid "$ers_uid" "$ers_user"
     chmod 700 "$ers_home"
     ;;
 
