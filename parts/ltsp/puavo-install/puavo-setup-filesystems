@@ -93,10 +93,13 @@ class LuksPartitionHandler
     SecureRandom.gen_random(64)
   end
 
-  def enroll_with_recovery_key(recovery_key)
+  def enroll_with_recovery_key(recovery_key_file)
     command = [ 'systemd-cryptenroll' ]
     command += @policy.arguments
-    command += [ "--key-key=#{ recovery_key }", "/dev/#{ @partition }" ]
+    command += [
+      "--recovery-key=#{ recovery_key_file }",
+      "/dev/#{ @partition }"
+    ]
 
     run(*command)
   end
@@ -129,7 +132,7 @@ class LuksPartitionHandler
 
       if unlock_with_tpm then
         puts 'Enrolling the LUKS partition for TPM-based unlocking...'
-        self.enroll_with_recovery_key(recovery_key)
+        self.enroll_with_recovery_key(recovery_key_file.path)
       end
 
       recovery_key
