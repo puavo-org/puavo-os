@@ -60,3 +60,7 @@ install: installdirs
 .PHONY: clean
 clean:
 	rm -rf po/*/*.mo po/*.pot
+
+.PHONY: format
+format:
+	black puavo-ers-applet
