@@ -79,7 +79,9 @@ def iso_as_timezone(isoformat_string, logger):
     except Exception as e:
         logger.log(
             syslog.LOG_WARNING,
-            "error converting %s to datetime object: %s" % (isoformat_timestring, e),
+            "error converting %s to datetime object: %s",
+            isoformat_timestring,
+            e,
         )
         raise e
 
@@ -102,7 +104,7 @@ def rm_f(path, logger=None):
     try:
         os.unlink(path)
         if logger:
-            logger.log(syslog.LOG_INFO, "removed %s" % path)
+            logger.log(syslog.LOG_INFO, "removed %s", path)
     except OSError as e:
         if e.errno != errno.ENOENT:
             raise e
@@ -150,7 +152,8 @@ def to_datetime(timestring, logger):
     except Exception as e:
         logger.log(
             syslog.LOG_WARNING,
-            "could not convert timestring %s to datetime object" % timestring,
+            "could not convert timestring %s to datetime object",
+            timestring,
         )
         return None
 
@@ -208,7 +211,8 @@ class PuavoExamServer(threading.Thread):
             except Exception as e:
                 self.logger.log(
                     syslog.LOG_ERR,
-                    "error with websocket connection to exam-o-matic: %s" % e,
+                    "error with websocket connection to exam-o-matic: %s",
+                    e,
                 )
             finally:
                 if self.ws:
@@ -288,8 +292,7 @@ class PuavoExamServer(threading.Thread):
 
     def server_uri(self, path, websocket=False):
         self.logger.log(
-            syslog.LOG_DEBUG,
-            "using exam-o-matic server name %s" % self.exam_server_name,
+            syslog.LOG_DEBUG, "using exam-o-matic server name %s", self.exam_server_name
         )
 
         if self.exam_server_name.startswith("http://"):
@@ -316,7 +319,7 @@ class PuavoExamServer(threading.Thread):
     def get(self, path, params={}):
         uri = self.server_uri(path)
 
-        self.logger.log(syslog.LOG_DEBUG, "sending get request to %s" % uri)
+        self.logger.log(syslog.LOG_DEBUG, "sending get request to %s", uri)
 
         req_params = params
         req_params.update(
@@ -337,11 +340,12 @@ class PuavoExamServer(threading.Thread):
             if response.status_code != requests.codes.ok:
                 self.logger.log(
                     syslog.LOG_ERR,
-                    "error on GET request to %s: received status code %s"
-                    % (uri, response.status_code),
+                    "error on GET request to %s: received status code %s",
+                    uri,
+                    response.status_code,
                 )
         except Exception as e:
-            self.logger.log(syslog.LOG_ERR, "error on GET request to %s: %s" % (uri, e))
+            self.logger.log(syslog.LOG_ERR, "error on GET request to %s: %s", uri, e)
             return
 
         return response
@@ -349,7 +353,7 @@ class PuavoExamServer(threading.Thread):
     def post(self, path, data, files=None):
         uri = self.server_uri(path)
 
-        self.logger.log(syslog.LOG_DEBUG, "sending post request to %s" % uri)
+        self.logger.log(syslog.LOG_DEBUG, "sending post request to %s", uri)
 
         req_params = {
             "domain": self.domain,
@@ -373,13 +377,12 @@ class PuavoExamServer(threading.Thread):
             if response.status_code != requests.codes.ok:
                 self.logger.log(
                     syslog.LOG_ERR,
-                    "error on POST request to %s: received status code %s"
-                    % (uri, response.status_code),
+                    "error on POST request to %s: received status code %s",
+                    uri,
+                    response.status_code,
                 )
         except Exception as e:
-            self.logger.log(
-                syslog.LOG_ERR, "error on POST request to %s: %s" % (uri, e)
-            )
+            self.logger.log(syslog.LOG_ERR, "error on POST request to %s: %s", uri, e)
             return
 
         return response
@@ -463,7 +466,7 @@ class PuavoErsApplet:
             error = e
 
         if error:
-            self.logger.log(syslog.LOG_ERR, "could not read configuration: %s" % error)
+            self.logger.log(syslog.LOG_ERR, "could not read configuration: %s", error)
 
         create_defaults = False
 
@@ -487,7 +490,7 @@ class PuavoErsApplet:
             }
             save_as_json(self.CONFIG_PATH, data)
         except Exception as e:
-            self.logger.log(syslog.LOG_ERR, "could not save configuration: %s" % e)
+            self.logger.log(syslog.LOG_ERR, "could not save configuration: %s", e)
 
     def main(self):
         self.run_naksu()
@@ -532,8 +535,7 @@ class PuavoErsApplet:
     def handle_naksu(self, fd, condition, channel):
         try:
             self.logger.log(
-                syslog.LOG_DEBUG,
-                "some IO event with naksu: condition is %s" % condition,
+                syslog.LOG_DEBUG, "some IO event with naksu: condition is %s", condition
             )
 
             if condition & GLib.IO_IN:
@@ -545,7 +547,9 @@ class PuavoErsApplet:
                 if status != 0:
                     self.logger.log(
                         syslog.LOG_ERR,
-                        "naksu pid %d returned exit status %s" % (pid, status),
+                        "naksu pid %d returned exit status %s",
+                        pid,
+                        status,
                     )
                 else:
                     self.logger.log(syslog.LOG_NOTICE, "naksu exited with success")
@@ -555,7 +559,7 @@ class PuavoErsApplet:
                 return False
 
         except Exception as e:
-            self.logger.log(syslog.LOG_ERR, "error when handling naksu: %s" % e)
+            self.logger.log(syslog.LOG_ERR, "error when handling naksu: %s", e)
             return False
 
         return True
@@ -573,7 +577,7 @@ class PuavoErsApplet:
                 error_no_exams = True
                 new_exams = []
                 self.logger.log(
-                    syslog.LOG_WARNING, "could not get exams from exam manager: %s" % e
+                    syslog.LOG_WARNING, "could not get exams from exam manager: %s", e
                 )
 
             if force_update or self.old_exams != new_exams:
@@ -587,7 +591,7 @@ class PuavoErsApplet:
 
         if error:
             self.logger.log(
-                syslog.LOG_ERR, "error when updating decrypt codes: %s" % error
+                syslog.LOG_ERR, "error when updating decrypt codes: %s", error
             )
 
         return True
@@ -612,7 +616,8 @@ class PuavoErsApplet:
             if not re.match("^exam_.*\.me(b|x)$", exam["file_name"]):
                 self.logger.log(
                     syslog.LOG_WARNING,
-                    "not showing password for exam %s" % exam["file_name"],
+                    "not showing password for exam %s",
+                    exam["file_name"],
                 )
                 continue
 
@@ -869,7 +874,7 @@ class PuavoErsExamSync(threading.Thread):
                 else:
                     self.logger.log(syslog.LOG_INFO, "exam sync has been disabled")
             except Exception as e:
-                self.logger.log(syslog.LOG_ERR, "error when syncing exams: %s" % e)
+                self.logger.log(syslog.LOG_ERR, "error when syncing exams: %s", e)
 
             time.sleep(10)
 
@@ -920,7 +925,7 @@ class PuavoErsExamSync(threading.Thread):
                 self.sync_one_exam(exam_file_name, exam)
                 exam_name_list.append(exam_file_name)
             except Exception as e:
-                self.logger.log(syslog.LOG_ERR, "error in syncing one exam: %s" % e)
+                self.logger.log(syslog.LOG_ERR, "error in syncing one exam: %s", e)
                 fatal_errors = True
 
         # clean up old exams that no longer belong to exams subdirectories
@@ -947,7 +952,9 @@ class PuavoErsExamSync(threading.Thread):
         except Exception as e:
             self.logger.log(
                 syslog.LOG_CRIT,
-                "error in writing exams (json) to %s: %s" % (EXAMS_JSON_FILE, e),
+                "error in writing exams (json) to %s: %s",
+                EXAMS_JSON_FILE,
+                e,
             )
 
     def sync_one_exam(self, exam_file_name, exam):
@@ -969,14 +976,14 @@ class PuavoErsExamSync(threading.Thread):
                 # no need to sync, we have an exam file that is up-to-date
                 return
             self.logger.log(
-                syslog.LOG_NOTICE, "exam %s is stale, syncing" % exam_file_name
+                syslog.LOG_NOTICE, "exam %s is stale, syncing", exam_file_name
             )
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise e
             # missing exam file, must proceed with syncing
 
-        self.logger.log(syslog.LOG_NOTICE, "syncing exam %s" % exam_file_name)
+        self.logger.log(syslog.LOG_NOTICE, "syncing exam %s", exam_file_name)
 
         exam_hash = exam["file_sha256"]
         if not isinstance(exam_hash, str):
@@ -997,7 +1004,7 @@ class PuavoErsExamSync(threading.Thread):
         os.utime(tmpfile, times=(exam_modified, exam_modified))
         os.rename(tmpfile, exam_file_path)
 
-        self.logger.log(syslog.LOG_INFO, "exam %s synced okay" % exam_file_name)
+        self.logger.log(syslog.LOG_INFO, "exam %s synced okay", exam_file_name)
 
 
 class PuavoErsExamControl(threading.Thread):
@@ -1038,7 +1045,7 @@ class PuavoErsExamControl(threading.Thread):
                     raise e
             except Exception as e:
                 self.logger.log(
-                    syslog.LOG_ERR, "error when sending status update: %s" % e
+                    syslog.LOG_ERR, "error when sending status update: %s", e
                 )
 
             time.sleep(10)
@@ -1126,7 +1133,8 @@ class ExamPackage:
             except Exception as e:
                 self.logger.log(
                     syslog.LOG_WARNING,
-                    "error in finding the current exam schedule: %s" % e,
+                    "error in finding the current exam schedule: %s",
+                    e,
                 )
 
 
@@ -1166,7 +1174,7 @@ class PuavoErsExamManager(threading.Thread):
                 self.do_manage_exams = False
 
             except Exception as e:
-                self.logger.log(syslog.LOG_ERR, "error when managing exams: %s" % e)
+                self.logger.log(syslog.LOG_ERR, "error when managing exams: %s", e)
 
             time.sleep(10)
 
@@ -1207,14 +1215,14 @@ class PuavoErsExamManager(threading.Thread):
         try:
             self.sort_exams_to_dirs(exams_information["schedules"])
         except Exception as e:
-            self.logger.log(syslog.LOG_WARNING, "error in sorting exams: %s" % e)
+            self.logger.log(syslog.LOG_WARNING, "error in sorting exams: %s", e)
 
         try:
             self.setup_ongoing_exams(
                 exams_information["packages"], exams_information["schedules"]
             )
         except Exception as e:
-            self.logger.log(syslog.LOG_WARNING, "error in setting up exams: %s" % e)
+            self.logger.log(syslog.LOG_WARNING, "error in setting up exams: %s", e)
 
     def sort_exams_to_dirs(self, exam_schedules):
         self.logger.log(syslog.LOG_INFO, "sorting exams in filesystem")
@@ -1250,7 +1258,7 @@ class PuavoErsExamManager(threading.Thread):
                     todays_exams_filenames.append(exam["file_name"])
 
             except Exception as e:
-                self.logger.log(syslog.LOG_ERR, "could not handle an exam: %s" % e)
+                self.logger.log(syslog.LOG_ERR, "could not handle an exam: %s", e)
                 fatal_errors = True
 
         self.handle_archive(archived_exams_filenames)
@@ -1279,13 +1287,12 @@ class PuavoErsExamManager(threading.Thread):
                 # keep archived files for two weeks
                 if (file_atime + 60 * 60 * 24 * 14) < self.current_time.timestamp():
                     self.logger.log(
-                        syslog.LOG_NOTICE, "removing from archive: %s" % path
+                        syslog.LOG_NOTICE, "removing from archive: %s", path
                     )
                     rm_f(path, self.logger)
             except Exception as e:
                 self.logger.log(
-                    syslog.LOG_ERR,
-                    "error in checking old archive file %s: %s" % (path, e),
+                    syslog.LOG_ERR, "error in checking old archive file %s: %s", path, e
                 )
 
     def link_exams_to_dir(self, linkdir, exam_filenames):
@@ -1295,7 +1302,7 @@ class PuavoErsExamManager(threading.Thread):
                 target_path = os.path.join(linkdir, exam_name)
                 os.link(exam_path, target_path)
                 self.logger.log(
-                    syslog.LOG_INFO, "exam %s linked to %s" % (exam_path, linkdir)
+                    syslog.LOG_INFO, "exam %s linked to %s", exam_path, linkdir
                 )
 
                 # updates access time only when link has been made
@@ -1307,9 +1314,7 @@ class PuavoErsExamManager(threading.Thread):
                 if e.errno == errno.EEXIST:
                     pass
                 elif e.errno == errno.ENOENT:
-                    self.logger.log(
-                        syslog.LOG_ERR, "could not find exam %s" % exam_path
-                    )
+                    self.logger.log(syslog.LOG_ERR, "could not find exam %s", exam_path)
                 else:
                     raise e
 
@@ -1344,7 +1349,8 @@ class PuavoErsExamManager(threading.Thread):
                 except Exception as e:
                     self.logger.log(
                         syslog.LOG_WARNING,
-                        "error in looking up exam filename/codes: %s" % e,
+                        "error in looking up exam filename/codes: %s",
+                        e,
                     )
 
         # we should get here even when new_exam_package is empty so that
@@ -1547,21 +1553,22 @@ class PuavoErsExamScheduler(threading.Thread):
                 raise e
         except Exception as e:
             self.logger.log(
-                syslog.LOG_WARNING, "error when checking %s" % reboot_request_path
+                syslog.LOG_WARNING, "error when checking %s", reboot_request_path
             )
             return
 
         now = datetime.datetime.now()
         if reboot_file_modified < (now - datetime.timedelta(minutes=15)):
             self.logger.log(
-                syslog.LOG_WARNING, "stale %s, removing" % reboot_request_path
+                syslog.LOG_WARNING, "stale %s, removing", reboot_request_path
             )
             rm_f(reboot_request_path, self.logger)
             return
 
         self.logger.log(
             syslog.LOG_WARNING,
-            "found %s, activating reboot sequence" % reboot_request_path,
+            "found %s, activating reboot sequence",
+            reboot_request_path,
         )
         self.shutdown_server()
         rm_f(reboot_request_path)
@@ -1570,7 +1577,8 @@ class PuavoErsExamScheduler(threading.Thread):
         while shutdown_counter > 0:
             self.logger.log(
                 syslog.LOG_INFO,
-                "in shutdown phase, waiting a bit (%d)" % shutdown_counter,
+                "in shutdown phase, waiting a bit (%d)",
+                shutdown_counter,
             )
             try:
                 self.ping()
@@ -1603,19 +1611,21 @@ class PuavoErsExamScheduler(threading.Thread):
                     if decrypt["wrongPassword"]:
                         self.logger.log(
                             syslog.LOG_ERR,
-                            'exam "%s" load ERROR (bad password "%s")'
-                            % (exam, decrypt["password"]),
+                            'exam "%s" load ERROR (bad password "%s")',
+                            exam,
+                            decrypt["password"],
                         )
                     else:
                         self.logger.log(
                             syslog.LOG_INFO,
-                            'exam "%s" loaded OK (with password "%s")'
-                            % (exam, decrypt["password"]),
+                            'exam "%s" loaded OK (with password "%s")',
+                            exam,
+                            decrypt["password"],
                         )
                     exams_seen[exam] = 1
         except Exception as e:
             self.logger.log(
-                syslog.LOG_ERR, "could not interpret load exams output: %s" % e
+                syslog.LOG_ERR, "could not interpret load exams output: %s", e
             )
 
     def session_status_msg(self, status):
@@ -1655,7 +1665,9 @@ class PuavoErsExamScheduler(threading.Thread):
             for exam_title, student_list in by_exam.items():
                 self.logger.log(
                     syslog.LOG_INFO,
-                    '  exam "%s" has %d students:' % (exam_title, len(student_list)),
+                    '  exam "%s" has %d students:',
+                    exam_title,
+                    len(student_list),
                 )
 
                 for student in student_list:
@@ -1691,14 +1703,15 @@ class PuavoErsExamScheduler(threading.Thread):
         except Exception as e:
             self.logger.log(
                 syslog.LOG_ERR,
-                "could not interpret status (with student information): %s" % e,
+                "could not interpret status (with student information): %s",
+                e,
             )
 
     def log_status(self, status):
         try:
             self.logger.log(syslog.LOG_INFO, self.session_status_msg(status))
         except Exception as e:
-            self.logger.log(syslog.LOG_ERR, "could not interpret status: %s" % e)
+            self.logger.log(syslog.LOG_ERR, "could not interpret status: %s", e)
 
     def load_exams(self):
         global current_zip_name
@@ -1729,9 +1742,7 @@ class PuavoErsExamScheduler(threading.Thread):
 
     def store_exam_results(self, results_filepath):
         self.server_cmd("store-exam-results", 180)
-        self.logger.log(
-            syslog.LOG_INFO, "storing exam answers to %s" % results_filepath
-        )
+        self.logger.log(syslog.LOG_INFO, "storing exam answers to %s", results_filepath)
         shutil.copy2(self.EXAM_ANSWERS_PATH, results_filepath)
 
     def ping(self):
@@ -1762,7 +1773,8 @@ class PuavoErsExamScheduler(threading.Thread):
                             )
                             self.logger.log(
                                 syslog.LOG_NOTICE,
-                                "exam server version is %s" % self.server_version,
+                                "exam server version is %s",
+                                self.server_version,
                             )
                     else:
                         comm_ok = False
@@ -1788,7 +1800,7 @@ class PuavoErsExamScheduler(threading.Thread):
 
             except Exception as e:
                 comm_ok = False
-                self.logger.log(syslog.LOG_ERR, "error when scheduling exams: %s" % e)
+                self.logger.log(syslog.LOG_ERR, "error when scheduling exams: %s", e)
 
             time.sleep(3)
 
@@ -1843,20 +1855,22 @@ class PuavoErsExamScheduler(threading.Thread):
         except Exception as e:
             self.logger.log(
                 syslog.LOG_WARNING,
-                "answers stored but could not connect package id to answers %s: %s"
-                % (answers_filename, e),
+                "answers stored but could not connect package id to answers %s: %s",
+                answers_filename,
+                e,
             )
 
     def exams_are_finished(self):
         if datetime.datetime.now() > self.finish_time:
             self.logger.log(
-                syslog.LOG_INFO, "exams finish time is past: %s" % self.finish_time
+                syslog.LOG_INFO, "exams finish time is past: %s", self.finish_time
             )
             return True
 
         self.logger.log(
             syslog.LOG_INFO,
-            "we are waiting for exams to finish at: %s" % self.finish_time,
+            "we are waiting for exams to finish at: %s",
+            self.finish_time,
         )
         return False
 
@@ -1991,8 +2005,9 @@ class PuavoErsExamScheduler(threading.Thread):
 
         self.logger.log(
             syslog.LOG_INFO,
-            "new exams will be loaded in %d minutes, %s"
-            % (minutes_to_forceload_time, explanation),
+            "new exams will be loaded in %d minutes, %s",
+            minutes_to_forceload_time,
+            explanation,
         )
 
     def handle_keycode_change_request(self):
@@ -2003,7 +2018,7 @@ class PuavoErsExamScheduler(threading.Thread):
                     self.change_keycode()
                     self.do_keycode_change_request = False
             except Exception as e:
-                self.logger.log(syslog.LOG_ERR, "could not change keycode: %s" % e)
+                self.logger.log(syslog.LOG_ERR, "could not change keycode: %s", e)
 
     def update_monitoring_passphrase(self):
         # Assume that this does not change except when the virtual exam server
@@ -2025,11 +2040,12 @@ class PuavoErsExamScheduler(threading.Thread):
             self.monitoring_passphrase = answer["get-passphrase"]["passphrase"]
             self.logger.log(
                 syslog.LOG_INFO,
-                "looked up monitoring passphrase: '%s'" % self.monitoring_passphrase,
+                "looked up monitoring passphrase: '%s'",
+                self.monitoring_passphrase,
             )
         except Exception as e:
             self.logger.log(
-                syslog.LOG_ERR, "could not get monitoring passphrase: %s" % e
+                syslog.LOG_ERR, "could not get monitoring passphrase: %s", e
             )
 
     def update_status_to_control(self, status):
@@ -2164,7 +2180,7 @@ class PuavoErsExamScheduler(threading.Thread):
             if save_as_json(self.SESSION_STATE_PATH, data):
                 self.logger.log(syslog.LOG_INFO, logmsg)
         except Exception as e:
-            self.logger.log(syslog.LOG_ERR, "could not save session state: %s" % e)
+            self.logger.log(syslog.LOG_ERR, "could not save session state: %s", e)
 
     def server_cmd(self, cmd, timeout_seconds=30):
         try:
@@ -2204,7 +2220,7 @@ class PuavoErsExamScheduler(threading.Thread):
                 pass
 
             self.logger.log(
-                syslog.LOG_DEBUG, 'sending command to exam server: "%s"' % cmd
+                syslog.LOG_DEBUG, 'sending command to exam server: "%s"', cmd
             )
 
             with open(self.CMD_PATH, "w") as f:
@@ -2271,7 +2287,7 @@ class PuavoErsAnswerReturn(threading.Thread):
                 # is updated, it will be missing a package id and that is not nice.
                 self.return_answers()
             except Exception as e:
-                self.logger.log(syslog.LOG_ERR, "error when returning answers: %s" % e)
+                self.logger.log(syslog.LOG_ERR, "error when returning answers: %s", e)
 
             time.sleep(60)
 
@@ -2314,15 +2330,16 @@ class PuavoErsAnswerReturn(threading.Thread):
                     except Exception as e:
                         self.logger.log(
                             syslog.LOG_WARNING,
-                            "removing answer state of %s because of errors: %s"
-                            % (filename, e),
+                            "removing answer state of %s because of errors: %s",
+                            filename,
+                            e,
                         )
                         del all_answers_state[filename]
 
         except OSError as e:
             if e.errno != errno.ENOENT:
                 self.logger.log(
-                    syslog.LOG_WARNING, "could not read answers state: %s" % e
+                    syslog.LOG_WARNING, "could not read answers state: %s", e
                 )
 
         return all_answers_state
@@ -2358,7 +2375,8 @@ class PuavoErsAnswerReturn(threading.Thread):
                 if answer_set["is_final"] != "false":
                     self.logger.log(
                         syslog.LOG_NOTICE,
-                        "marking answers %s as not final" % answer_set,
+                        "marking answers %s as not final",
+                        answer_set,
                     )
                     answer_set["is_final"] = "false"
 
@@ -2369,7 +2387,7 @@ class PuavoErsAnswerReturn(threading.Thread):
                 filename, answer_set = last_answer_set
                 if answer_set["is_final"] != "true":
                     self.logger.log(
-                        syslog.LOG_NOTICE, "marking answers %s as final" % filename
+                        syslog.LOG_NOTICE, "marking answers %s as final", filename
                     )
                     answer_set["is_final"] = "true"
 
@@ -2433,7 +2451,7 @@ class PuavoErsAnswerReturn(threading.Thread):
                     raise Exception("error in saving the state of all answers: %s" % e)
             except Exception as e:
                 self.logger.log(
-                    syslog.LOG_ERR, "error in handling an answer package return: %s" % e
+                    syslog.LOG_ERR, "error in handling an answer package return: %s", e
                 )
 
     def handle_an_answer_return(self, filename, answer_state):
@@ -2442,7 +2460,7 @@ class PuavoErsAnswerReturn(threading.Thread):
 
         if answer_state["try_count"] == self.MAX_TRY_COUNT:
             self.logger.log(
-                syslog.LOG_NOTICE, "giving up on sending answers %s" % filename
+                syslog.LOG_NOTICE, "giving up on sending answers %s", filename
             )
             answer_state["try_count"] += 1
         if answer_state["try_count"] > self.MAX_TRY_COUNT:
@@ -2461,7 +2479,8 @@ class PuavoErsAnswerReturn(threading.Thread):
             # not returning yet, we will have to wait for proper "is_final" status
             self.logger.log(
                 syslog.LOG_NOTICE,
-                "not returning %s quite yet, we do not know if it is final" % filename,
+                "not returning %s quite yet, we do not know if it is final",
+                filename,
             )
             return
 
@@ -2479,10 +2498,10 @@ class PuavoErsAnswerReturn(threading.Thread):
                 answer_state["package_id"], filename, answer_state["is_final"]
             )
             sent_ok = True
-            self.logger.log(syslog.LOG_NOTICE, "sent %s to exam-o-matic" % filename)
+            self.logger.log(syslog.LOG_NOTICE, "sent %s to exam-o-matic", filename)
         except Exception as e:
             msg = "failed to send an answer package %s to exam-o-matic" % filename
-            self.logger.log(syslog.LOG_ERR, "%s: %s" % (msg, e))
+            self.logger.log(syslog.LOG_ERR, "%s: %s", msg, e)
 
         if sent_ok:
             answer_state["sent_at"] = (
