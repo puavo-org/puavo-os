@@ -439,11 +439,11 @@ install_localbootdevice() {
   setup_state "$puavo_hosttype"
 
   if is_preinstalled "$puavo_install_hosttype"; then
-    # If host was preinstalled, grub will boot the host as 'preinstalled' until
-    # we install a new grub configuration.  We also (re)install Grub because
+    # If host was preinstalled, the system will boot in 'preinstalled' mode
+    # until we install new configurations. We also (re)install Grub because
     # it handles the EFI label and it might be missing in case we have been
     # installed from a restoredisk image.
-    puavo-install-grub --hosttype "$puavo_hosttype"
+    puavo-update-boot-disks --hosttype "$puavo_hosttype"
     # From now on the host will boot as a fully installed host.
     rm -f /images/puavo_preinstalled
   else
