@@ -21,6 +21,13 @@ if [ ! -d "$uki_root" ]; then
   exit 1
 fi
 
+cleanup_temporary_files() {
+  find "$uki_root" -type f -name '*.tmp' -delete
+}
+
+cleanup_temporary_files || echo "Warning: Failed to remove temporary files" >&2
+trap 'cleanup_temporary_files' INT TERM EXIT
+
 boot_directory="${image_mountpoint}/boot"
 
 if [ ! -d "$boot_directory" ]; then
@@ -60,15 +67,22 @@ install_boot_entry_config() {
 install_uki() {
   local uki="$1"
   local destination="$2"
-  local name
-  name=$(basename "$uki")
+  local uki_destination="$destination/$(basename "$uki")"
+  local uki_temporary_destination="${uki_destination}.tmp"
 
-  if ! cp "$uki" "$destination"; then
-    echo "Failed to copy UKI to EFI partition" >&2
-    return 1
+  if [ ! -f "$uki_destination" ]; then
+    # If the copy is interrupted, the .tmp extension prevents the partial image
+    # from being used and it will be cleaned later
+    if ! cp "$uki" "$uki_temporary_destination" || \
+       ! mv "$uki_temporary_destination" "$uki_destination"; then
+      echo "Failed to copy UKI to EFI partition" >&2
+      return 1
+    fi
+  else
+    echo "UKI '$uki_destination' already exists, skipping copy"
   fi
 
-  local extra_directory="${destination}/${name}.extra.d"
+  local extra_directory="${uki_destination}.extra.d"
   if ! mkdir -p "$extra_directory"; then
     echo "Failed to create the extra directory for UKI in EFI partition" >&2
     return 1
