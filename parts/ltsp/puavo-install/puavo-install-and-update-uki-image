@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+UKI_ROOT="/boot/efi/EFI/debian"
+
 usage() {
   echo "Usage: $0 <install-image> <hosttype> <install-mountpoint>" >&2
   exit 1
@@ -47,11 +49,15 @@ mount_disk_efi_partition() {
 }
 
 estimate_required_disk_space() {
-  local image_size required_disk_space safety_margin
+  local image_size required_disk_space safety_margin uki_destination
   required_disk_space=0
 
   for uki in "$image_mountpoint"/boot/*.uki.efi; do
+    uki_destination="$UKI_ROOT/$(basename "$uki")"
     [ -e "$uki" ] || continue
+    # Files that are already installed won't take up additional space
+    [ -e "$uki_destination" ] && continue
+
     image_size=$(stat -c %s "$uki")
     required_disk_space=$((required_disk_space + image_size))
   done
@@ -65,32 +71,28 @@ estimate_required_disk_space() {
 has_enough_disk_space() {
   local diskdev="$1"
   local required_space="$2"
-
-  mount_disk_efi_partition "$diskdev" || return 1
-
   local available_space=$(df --output=avail -B1 /boot/efi | tail -n1)
   [ "$available_space" -ge "$required_space" ]
 }
 
 install_uki_to_efi() {
-  local diskdev uki_root
-  uki_root="/boot/efi/EFI/debian"
+  local diskdev="$1"
 
   mount_disk_efi_partition "$diskdev" || return 1
 
-  if [ ! -d "$uki_root" ]; then
+  if [ ! -d "$UKI_ROOT" ]; then
     echo "Device $diskdev does not have a valid EFI partition" >&2
     umount /boot/efi
     return 1
   fi
 
-  puavo-install-uki "$image_mountpoint" "$uki_root" || {
+  puavo-install-uki "$image_mountpoint" "$UKI_ROOT" || {
     echo "Failed to install UKI to EFI partition" >&2
     umount /boot/efi
     return 1
   }
 
-  puavo-update-uki-command-line "${image_mountpoint}/boot" "$uki_root" "$hosttype" || {
+  puavo-update-uki-command-line "${image_mountpoint}/boot" "$UKI_ROOT" "$hosttype" || {
     echo "Failed to update UKI command line" >&2
     umount /boot/efi
     return 1
@@ -108,18 +110,25 @@ if [ -z "$boot_disks" ]; then
 fi
 
 # Before installing, verify that the boot partitions have enough space
-required_space=$(estimate_required_disk_space "$install_image")
-
-if [ -z "$required_space" ]; then
-  echo "Failed to estimate required disk space" >&2
-  exit 1
-fi
-
 for diskdev in $boot_disks; do
+  if ! mount_disk_efi_partition "$diskdev"; then
+    echo "Failed to mount EFI partition on $diskdev" >&2
+    exit 1
+  fi
+
+  required_space=$(estimate_required_disk_space "$install_image")
+
+  if [ -z "$required_space" ]; then
+    echo "Failed to estimate required disk space" >&2
+    exit 1
+  fi
+
   has_enough_disk_space "$diskdev" "$required_space" || {
     echo "Disk $diskdev does not have enough space" >&2
     exit 1
   }
+
+  umount /boot/efi || true
 done
 
 for diskdev in $boot_disks; do
