@@ -848,8 +848,8 @@ class packages {
   @packages::kernels::kernel_package {
     'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.25-amd64',
-      version      => '6.12.25-amd64';
+      package_name => 'linux-image-6.12.27-amd64',
+      version      => '6.12.27-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such
