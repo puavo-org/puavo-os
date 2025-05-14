@@ -61,6 +61,7 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/create-bcd \
+		lib/is-uki-install \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-get-boot-disks \
