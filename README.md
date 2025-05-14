@@ -78,16 +78,6 @@ infrastructure, you should replace that with your own CA-certificate.
 The values in "config/puavo_conf.json" override default values
 for puavo-conf variables.
 
-## Trixie
-
-Build workaround:
-
-```
-sudo wget http://ftp.de.debian.org/debian/pool/main/q/qt5-style-kvantum/qt5-style-kvantum-themes_0.18.0+repack-1_all.deb
-sudo wget http://ftp.de.debian.org/debian/pool/main/q/qt5-style-kvantum/qt5-style-kvantum_0.18.0+repack-1_amd64.deb
-sudo apt install -y ./*.deb
-```
-
 ## Copyright
 
 Almost all files here are copyright (C) Opinsys Oy.  They are licensed
