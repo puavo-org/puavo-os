@@ -6,8 +6,8 @@ _pkgs_parts_builddeps :=
 ifeq "$(image_class)" "exam"
   _pkgs_cloud :=
   _pkgs_parts := puavo-os
-  # XXX Trixie _pkgs_ports := console-setup gnome-shell
-  _pkgs_ports :=
+  # XXX Trixie _pkgs_ports := console-setup
+  _pkgs_ports := gnome-shell
   _pkgs_ports_builddeps :=
 else
   # XXX do not build any custom packages in Trixie, these all need some work
@@ -19,7 +19,6 @@ else
   #                cups-filters           \
   #                gnome-control-center   \
   #                gnome-network-displays \
-  #                gnome-shell            \
   #                gtk+3.0                \
   #                gtk4                   \
   #                hooktftp               \
@@ -34,7 +33,7 @@ else
   # XXX Trixie
   _pkgs_cloud := puavo-ds puavo-os
   _pkgs_parts := puavo-ds puavo-os
-  _pkgs_ports :=
+  _pkgs_ports := gnome-shell
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   # XXX Trixie
