@@ -1,0 +1,49 @@
+diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
+--- gnome-shell/js/gdm/loginDialog.js	2025-05-14 13:02:13.437505908 +0300
++++ gnome-shell/js/gdm/loginDialog.js	2025-05-14 13:19:42.996809328 +0300
+@@ -169,7 +169,7 @@
+         'item-added': {param_types: [UserListItem.$gtype]},
+     },
+ }, class UserList extends St.ScrollView {
+-    _init() {
++    _init(accepted_users) {
+         super._init({
+             style_class: 'login-dialog-user-list-view',
+             x_expand: true,
+@@ -184,6 +184,8 @@
+ 
+         this.child = this._box;
+         this._items = {};
++
++        this._accepted_users = accepted_users.split(',');
+     }
+ 
+     vfunc_key_focus_in() {
+@@ -278,6 +280,17 @@
+ 
+         this.removeUser(user);
+ 
++        let is_accepted = false;
++        for (let i = 0; i < this._accepted_users.length; i++) {
++            if (this._accepted_users[i] == '*' ||
++              this._accepted_users[i] == userName) {
++                is_accepted = true;
++                break;
++            }
++        }
++        if (!is_accepted)
++            return;
++
+         let item = new UserListItem(user);
+         this._box.add_child(item);
+ 
+@@ -539,7 +552,8 @@
+         });
+         this.add_child(this._userSelectionBox);
+ 
+-        this._userList = new UserList();
++        let accepted_users = this._settings.get_string('accepted-usernames-for-userlist');
++        this._userList = new UserList(accepted_users);
+         this._userSelectionBox.add_child(this._userList);
+ 
+         this._authPrompt = new AuthPrompt.AuthPrompt(this._gdmClient, AuthPrompt.AuthPromptMode.UNLOCK_OR_LOG_IN);
