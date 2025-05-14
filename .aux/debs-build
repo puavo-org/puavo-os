@@ -95,7 +95,7 @@ echo "Building ${srcpkgname}"
   fi
 
   dpkg-buildpackage "${dpkg_buildpackage_options[@]}"
-  ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
+  do-debpool-changes -m "$pooldir"
 )
 
 echo "$current_srctree_checksum" > "$checksum_file"
