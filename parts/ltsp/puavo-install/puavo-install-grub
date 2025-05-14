@@ -858,6 +858,11 @@ if [ -z "$hosttype" ]; then
   exit 1
 fi
 
+if [ -z "${UKI_MODE:-}" ]; then
+  PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
+  export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
+fi
+
 boot_dir="${images_dir}/boot"
 
 btrfs_diskdev=$(lookup_puavo_btrfs_diskdev "$vgname")

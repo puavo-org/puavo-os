@@ -117,6 +117,11 @@ if [ -z "$next_image" ]; then
   usage
 fi
 
+if [ -z "${UKI_MODE:-}" ]; then
+  PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
+  export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
+fi
+
 #
 # functions related to exiting
 #
