@@ -1,18 +1,25 @@
 #!/bin/sh
 set -eu
 
-if [ -z "${UKI_MODE:-}" ]; then
-  export UKI_MODE=$(/usr/lib/puavo-ltsp-install/is-uki-boot && echo 1 || echo 0)
-fi
+find_default_image() {
+  local images_dir="$1"
+  local default_image_tag default_image_name
+
+  default_image_tag=$(find "$images_dir" -type f -name '*.default' | head -n 1)
+
+  if [ -z "$default_image_tag" ]; then
+    return 1
+  fi
+
+  default_image_name=$(basename "$default_image_tag" .default)
+  echo "${images_dir}/${default_image_name}.img"
+}
 
 puavo-install-grub "$@"
 
-if [ "$UKI_MODE" = 0 ]; then
-  exit 0
-fi
-
 hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
 images_dir=/images
+image_path=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -20,12 +27,33 @@ while [ $# -gt 0 ]; do
       hosttype="$2"; shift 2 ;;
     --images-dir)
       images_dir="$2"; shift 2 ;;
+    --image)
+      image_path="$2"; shift 2 ;;
     *)
       shift ;;
   esac
 done
 
+if [ -z "${UKI_MODE:-}" ]; then
+  PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
+  export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
+fi
+
+[ "$UKI_MODE" = "1" ] || exit 0
+
+if [ -z "$image_path" ]; then
+  image_path=$(find_default_image "$images_dir")
+
+  if [ -z "$image_path" ]; then
+    echo "Failed to find the default image in ${images_dir}" >&2
+    exit 1
+  fi
+fi
+
+if [ ! -f "$image_path" ]; then
+  echo "Image '$image_path' does not exist" >&2
+  exit 1
+fi
+
 # Update the UKI files on boot devices
-current_image_name=$(cat /etc/puavo-image/name)
-current_image="${images_dir}/${current_image_name}"
-puavo-install-and-update-uki-image "$current_image" "$hosttype" "$images_dir"
+puavo-install-and-update-uki-image "$image_path" "$hosttype" "$images_dir"
