@@ -48,9 +48,10 @@ class themes {
     '/etc/xdg/Kvantum':
       ensure => directory;
 
-    '/etc/xdg/Kvantum/kvantum.kvconfig':
-      require => Package['qt5-style-kvantum'],
-      source  => 'puppet:///modules/themes/kvantum.kvconfig';
+# XXX Trixie
+#   '/etc/xdg/Kvantum/kvantum.kvconfig':
+#     require => Package['qt5-style-kvantum'],
+#     source  => 'puppet:///modules/themes/kvantum.kvconfig';
   }
 
   ::themes::iconlink {
@@ -67,7 +68,7 @@ class themes {
   Package <|
        title == arc-theme
     or title == qt5ct
-    or title == qt5-style-kvantum
+    # XXX Trixie: or title == qt5-style-kvantum
   |>
 
   Puavo_pkg::Install <| title == tela-icon-theme |>
