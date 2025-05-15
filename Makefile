@@ -232,7 +232,11 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
-	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' '$(_image_file)' '$(_uki_file)'
+	$(_sudo) .aux/create-uki-files \
+		'$(rootfs_dir)/boot' \
+		'./config/boot_keys/' \
+		'$(_image_file)' \
+		'$(_uki_file)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\

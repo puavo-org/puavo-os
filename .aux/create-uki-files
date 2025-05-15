@@ -1,16 +1,21 @@
 #!/bin/sh
 set -e
 
-boot_folder=$1
-image_file=$2
-output_name=$3
-
-if [ -z "$boot_folder" ] || [ -z "image_file" ] || [ -z "output_name" ]; then
-  echo "Usage: $0 <boot-folder> <image-file> <output-name>"
+usage() {
+  echo "Usage: $0 <boot-folder> <key-folder> <image-file> <output-name>"
   exit 1
+}
+
+if [ "$#" -ne 4 ]; then
+  usage
 fi
 
-.aux/create-uki "$boot_folder" "${boot_folder}/${output_name}"
+boot_folder=$1
+key_folder=$2
+image_file=$3
+output_name=$4
+
+.aux/create-uki "$boot_folder" "$key_folder" "${boot_folder}/${output_name}"
 
 addon_folder="$boot_folder/addons"
 mkdir -p "$addon_folder"

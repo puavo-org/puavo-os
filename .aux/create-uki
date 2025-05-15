@@ -1,30 +1,35 @@
 #!/bin/sh
 set -e
 
+usage() {
+  echo "Usage: $0 <boot-folder> <key-folder> <output>"
+  exit 1
+}
+
+if [ "$#" -ne 3 ]; then
+  usage
+fi
+
+boot_folder=$1
+key_folder=$2
+output=$3
+
 find_latest_version() {
   latest=$(ls $1 | xargs -n1 | sort -V | tail -n 1)
   echo "$latest"
 }
-
-boot_folder=$1
-output=$2
-
-if [ -z "$boot_folder" ] || [ -z "$output" ]; then
-  echo "Usage: $0 <boot-folder> <output>"
-  exit 1
-fi
 
 output_basename=$(basename "$output")
 kernel_image=$(find_latest_version "$boot_folder/vmlinuz*")
 initrd=$(find_latest_version "$boot_folder/initrd*")
 
 ukify build \
-  --linux=$kernel_image \
-  --initrd=$initrd \
+  --linux="$kernel_image" \
+  --initrd="$initrd" \
   --os-release="$output_basename" \
   --cmdline="" \
-  --pcr-private-key=/etc/puavo-conf/tpm2-pcr-private-key.pem \
-  --pcr-public-key=/etc/puavo-conf/tpm2-pcr-public-key.pem \
+  --pcr-private-key="${key_folder}/tpm2-pcr-private-key.pem" \
+  --pcr-public-key="${key_folder}/tpm2-pcr-public-key.pem" \
   --pcr-banks=sha1,sha256 \
   --output "$output" \
   --measure

@@ -2,13 +2,31 @@
 
 # Generate a new MOK if it does not exit already (https://wiki.debian.org/SecureBoot)
 set -e
-mkdir -p /etc/puavo-conf
-cd /etc/puavo-conf
 
-if [ -e mok.pem ]; then
-    exit 0
+usage() {
+  echo "Usage: $0 <output-directory>" >&2
+  exit 1
+}
+
+if [ $# -ne 1 ]; then
+  usage
+fi
+
+output_directory="$1"
+
+if [ ! -d "$output_directory" ]; then
+  echo "error: output directory '$output_directory' does not exist" >&2
+  exit 1
+fi
+
+cd "$output_directory"
+
+if [ -e mok.priv ]; then
+  exit 0
 fi
 
 # Todo: Can we use RSA 4096?
-openssl req -nodes -new -x509 -newkey rsa:2048 -keyout mok.priv -outform DER -out mok.der -days 3650 -subj "/CN=Puavo/"
+openssl req -nodes -new -x509 -newkey rsa:2048 \
+  -keyout mok.priv -outform DER -out mok.der -days 3650 \
+  -subj "/CN=Puavo/"
 openssl x509 -inform der -in mok.der -out mok.pem
