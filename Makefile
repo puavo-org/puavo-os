@@ -22,7 +22,7 @@ upload_login            :=
 upload_pkgregex         :=
 upload_server           :=
 
-export PATH := $(CURDIR)/parts/devscripts/bin:$(PATH)
+export PATH := $(CURDIR)/parts/devscripts/bin:$(CURDIR)/parts/ltsp/puavo-install:$(PATH)
 
 include defaults.mk
 -include local_defaults.mk
@@ -355,8 +355,7 @@ rdiffs: $(image_dir) $(mirror_dir)
 
 .PHONY: exam-image
 exam-image:
-	sudo env PATH=$(CURDIR)/parts/ltsp/puavo-install:${PATH} \
-	   .aux/make-exam-disk "${SOURCE_IMAGE}" "${TARGET_IMAGE}"
+	sudo .aux/make-exam-disk "${SOURCE_IMAGE}" "${TARGET_IMAGE}"
 
 .PHONY: clean
 clean:
