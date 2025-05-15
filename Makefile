@@ -22,6 +22,8 @@ upload_login            :=
 upload_pkgregex         :=
 upload_server           :=
 
+export PATH := $(CURDIR)/parts/devscripts/bin:$(PATH)
+
 include defaults.mk
 -include local_defaults.mk
 
