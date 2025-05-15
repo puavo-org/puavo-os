@@ -729,15 +729,15 @@ install_legacy_grub() {
 }
 
 copy_grub_environment() {
-    # Scripts such as "setup_grub_environment" write the
-    # environment variables into /images/boot/grub/grubenv.
-    # Here we sync this file to the boot directory (EFI partition most likely).
-    if [ ! -f /images/boot/grub/grubenv ]; then
-        # Grub will create the default environment in the EFI partition
-        return 0
-    fi
+  # Scripts such as "setup_grub_environment" write the
+  # environment variables into /images/boot/grub/grubenv.
+  # Here we sync this file to the boot directory (EFI partition most likely).
+  if [ ! -f /images/boot/grub/grubenv ]; then
+    # Grub will create the default environment in the EFI partition
+    return 0
+  fi
 
-    cp /images/boot/grub/grubenv "${boot_dir}/grub/grubenv" || return 1
+  cp /images/boot/grub/grubenv "${boot_dir}/grub/grubenv" || return 1
 }
 
 write_grub_version() {
@@ -784,7 +784,7 @@ install_efi_grub() {
     install_puavo_grub_files_to_efi_partition "$boot_dir" && \
     copy_grub_environment && \
     write_grub_version "${boot_dir}/grub/version" || {
-      echo "failed to install UKI files to EFI partition" >&2
+      log err "failed to install UKI files to EFI partition"
       umount /boot/efi || true
       return 1
     }
@@ -902,7 +902,7 @@ case "$diskdev" in
   /dev/md*)
     grub_target_devices=$(find_grub_target_devices_on_raid "$diskdev")
     if [ -z "$grub_target_devices" ]; then
-      log err 'could not find grub target devices on RAID configuration'
+      log err 'could not find Grub target devices on RAID configuration'
       exit 1
     fi
     ;;
@@ -974,7 +974,7 @@ install_puavo_grub_files_to_efi_partition() {
   boot_dir=$1
 
   cp -r /boot/grub "$boot_dir" || (
-    log err 'failed to copy grub files to boot directory $boot_dir'
+    log err "failed to copy Grub files to boot directory ${boot_dir}"
     return 1
   )
 }
@@ -1002,11 +1002,11 @@ else
   # because we'll install the GRUB boot files on EFI partition
   if [ "${UKI_MODE:-}" = "1" ]; then
     for grubdev in $grub_target_devices; do
-      log info "installing grub to ${grubdev}"
+      log info "installing Grub to ${grubdev}"
 
       efi_devpath=$(get_efi_devpath "$grubdev")
       if [ -z "$efi_devpath" ]; then
-        log err "failed to find EFI partition path for GRUB device"
+        log err "failed to find EFI partition path for Grub device"
         exit 1
       fi
 
@@ -1018,7 +1018,7 @@ else
     done
   else
     for grubdev in $grub_target_devices; do
-      log info "installing grub to ${grubdev}"
+      log info "installing Grub to ${grubdev}"
 
       grub_install_attempted=false
 
@@ -1113,7 +1113,7 @@ install_grub_configuration() {
     mv "$tmp_grub_cfg_path" "$grub_cfg_path"
     log notice 'new Grub configuration has been installed'
     if ! flush_caches; then
-      log warn 'error in flushing caches after updating grub configuration'
+      log warn 'error in flushing caches after updating Grub configuration'
     fi
   fi
 
@@ -1128,7 +1128,7 @@ if [ "${UKI_MODE:-}" = "1" ]; then
 
     efi_devpath=$(get_efi_devpath "$grubdev")
     if [ -z "$efi_devpath" ]; then
-      log err "failed to find EFI partition path for GRUB device"
+      log err "failed to find EFI partition path for Grub device"
       exit 1
     fi
 

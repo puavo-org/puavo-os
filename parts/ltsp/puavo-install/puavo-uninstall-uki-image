@@ -12,7 +12,7 @@ install_image="$1"
 install_mountpoint="$2"
 
 if [ ! -f "$install_image" ]; then
-  echo "Install image '$install_image' does not exist" >&2
+  echo "error: install image '$install_image' does not exist" >&2
   exit 1
 fi
 
@@ -30,7 +30,7 @@ mount -o ro "$install_image" "$image_mountpoint"
 
 boot_directory="${image_mountpoint}/boot"
 if [ ! -d "$boot_directory" ]; then
-  echo "Boot directory '$boot_directory' does not exist in image" >&2
+  echo "error: boot directory '$boot_directory' does not exist in image" >&2
   exit 1
 fi
 
@@ -42,7 +42,8 @@ if [ -z "$uki_files" ]; then
 fi
 
 # Identify boot disks and remove UKI files from their EFI partitions
-boot_disks=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks "$install_mountpoint")
+PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
+boot_disks=$("$PUAVO_INSTALL_LIBDIR"/puavo-get-boot-disks "$install_mountpoint")
 
 for diskdev in $boot_disks; do
   efi_devpath=$(lsblk -n -l -o PATH,PARTTYPE "$diskdev" \

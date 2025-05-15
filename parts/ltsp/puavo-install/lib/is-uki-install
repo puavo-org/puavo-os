@@ -21,7 +21,7 @@ mount_disk_efi_partition() {
 
   efi_devpath=$(find_efi_device_path "$diskdev")
   if [ -z "$efi_devpath" ]; then
-    echo "Failed to find EFI partition in ${diskdev}" >&2
+    echo "error: failed to find EFI partition in ${diskdev}" >&2
     return 1
   fi
 
@@ -38,14 +38,14 @@ trap cleanup EXIT
 images_dir=$1
 
 if ! mountpoint -q "$images_dir"; then
-  echo "'${images_dir}' is not mounted" >&2
+  echo "error: '${images_dir}' is not mounted" >&2
   exit 1
 fi
 
 boot_disks=$("$PUAVO_INSTALL_LIBDIR"/puavo-get-boot-disks "$images_dir")
 
 if [ -z "$boot_disks" ]; then
-  echo "Failed to find boot disks" >&2
+  echo "error: failed to find boot disks" >&2
   exit 1
 fi
 
@@ -67,7 +67,7 @@ for diskdev in $boot_disks; do
   if [ -z "$is_uki_install" ]; then
     is_uki_install="$is_uki_disk"
   elif [ "$is_uki_install" != "$is_uki_disk" ]; then
-    echo "Inconsistent UKI installation state detected on $diskdev" >&2
+    echo "error: inconsistent UKI installation state detected on $diskdev" >&2
     exit 1
   fi
 done

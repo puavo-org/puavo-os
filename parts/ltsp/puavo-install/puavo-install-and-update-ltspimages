@@ -776,7 +776,7 @@ install_uki_files() {
     install_hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
 
     if [ -z "$install_hosttype" ]; then
-      echo 'Failed to determine host type for UKI installation' >&2
+      log err "failed to determine host type for UKI installation"
       return 1
     fi
   fi
