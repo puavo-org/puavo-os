@@ -162,6 +162,7 @@ Package: puavo-exammode
 Architecture: all
 Depends: ${misc:Depends},
  gir1.2-ayatanaappindicator3-0.1,
+ gir1.2-webkit2-4.1,
  oxygen-icon-theme,
  python3,
  python3-dbus,
