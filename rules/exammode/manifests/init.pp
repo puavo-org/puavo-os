@@ -46,7 +46,8 @@ class exammode {
 
     '/usr/local/lib/puavo-exammode/exammode-session':
       mode    => '0755',
-      require => [ Package['qiv']
+      require => [ Package['fonts-cantarell']
+                 , Package['qiv']
                  , Puavo_pkg::Install['ubuntu-wallpapers-bullseye'] ],
       source  => 'puppet:///modules/exammode/exammode-session';
 
@@ -97,7 +98,8 @@ class exammode {
   }
 
   Package <|
-       title == 'gnome-session'
+       title == 'fonts-cantarell'
+    or title == 'gnome-session'
     or title == 'gsettings-desktop-schemas'
     or title == 'kbd'
     or title == 'puavo-conf'

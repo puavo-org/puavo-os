@@ -20,7 +20,7 @@ setup_loading_background() {
   esac
 
   tmp_image_path=$(mktemp /tmp/puavo-exammode-bg-image.XXXXXX)
-  convert "$loading_background_path" -fill black -font Verdana \
+  convert "$loading_background_path" -fill black -font Cantarell-Bold \
     -gravity center -pointsize 100 -weight bold -annotate 0 "$message" \
     "$tmp_image_path"
   qiv -mx "$tmp_image_path"
