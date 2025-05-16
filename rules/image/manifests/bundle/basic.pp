@@ -3,6 +3,7 @@ class image::bundle::basic {
   include ::console
   include ::disable_drrs_conditionally
   include ::disable_hp_accel_module
+  include ::dracut
   include ::extra_boot_scripts
   include ::gdm
   include ::grub

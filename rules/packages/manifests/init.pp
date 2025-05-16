@@ -66,6 +66,7 @@ class packages {
     , 'dnsmasq'
     # , 'docker-compose'                # XXX missing from Trixie
     , 'docker.io'
+    , 'dracut'
     , 'freeradius'
     , 'freeradius-krb5'
     , 'freeradius-ldap'
