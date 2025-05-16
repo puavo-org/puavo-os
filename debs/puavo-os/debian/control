@@ -92,9 +92,9 @@ Depends: ${misc:Depends},
  btrfs-progs,
  busybox,
  coreutils,
- lvm2,
  dracut,
  dracut-network,
+ iproute2,
  lvm2,
  mawk,
  nbd-client,
@@ -103,7 +103,9 @@ Depends: ${misc:Depends},
  pv,
  rdate,
  rsyslog-relp,
- smartmontools
+ smartmontools,
+ systemd-cryptsetup,
+ tpm2-tools
 Description: Puavo Core Infrastructure
  Bolts and nuts for Puavo OS.
  .
