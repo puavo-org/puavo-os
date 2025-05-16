@@ -97,7 +97,7 @@ _sudo := sudo $(_proxywrap_cmd)
 export image_class _sudo
 
 _builder := sudo unshare --mount --uts --root "$(rootfs_dir)" \
-              /puavo-os/.aux/exec_in_container "$(_proxy_address)" \
+              /puavo-os/.aux/exec-in-container "$(_proxy_address)" \
               "$(_machine)" "$(_adm_user)"
 
 .PHONY: build-all-images
