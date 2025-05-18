@@ -58,6 +58,7 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-change-host-state \
+		puavo-pipewire \
 		puavo-pulseaudio-get-puavoconf \
 		puavo-pulseaudio-list \
 		puavo-pulseaudio-setup \

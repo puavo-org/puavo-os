@@ -1,0 +1,200 @@
+#!/bin/bash
+
+## This program launches pipewire, wireplumber and pipewire-pulse in
+## the correct order and relaunches them if they die. This program is
+## designed to be started at the beginning of an user session, for
+## example with XDG autostart mechanism. It can be used inplace of
+## systemd --user (pipewire.service, wireplumber.service and
+## pipewire-pulse.service are normally systemd user instance
+## services).
+
+set -euo pipefail
+
+## Global variables
+g_daemon_progs=()
+g_daemon_progs_count=0
+g_lock_fd=
+g_lock_file=
+
+acquire_lock() {
+  flock -n "$g_lock_fd" || {
+    echo "ERROR: Another instance of the script is already running (lock file: '$g_lock_file')." >&2
+    return 1
+  }
+  echo "Lock acquired." >&2
+}
+
+release_lock() {
+  flock -u "$g_lock_fd" || return 1
+  rm -f "$g_lock_file" || return 1
+  echo "Lock released." >&2
+}
+
+launch_daemon() {
+  local daemon_prog="$1"
+  shift
+  echo "Launching '${daemon_prog}'..." >&2
+  daemon --stderr=user.err --stdout=user.notice --name="puavo-${daemon_prog}" --chdir="$XDG_RUNTIME_DIR" "${daemon_prog}" -- "$@" || {
+    echo "ERROR: failed to launch '${daemon_prog}'" >&2
+    return 1
+  }
+  g_daemon_progs[g_daemon_progs_count++]="${daemon_prog}"
+  echo "Launched '${daemon_prog}'." >&2
+}
+
+stop_all_daemons() {
+  local retval=0
+
+  for daemon_prog in "${g_daemon_progs[@]}"; do
+    daemon --name="puavo-${daemon_prog}" --running || continue
+    echo "Stopping ${daemon_prog}..." >&2
+    daemon --name="puavo-${daemon_prog}" --stop || {
+      echo "ERROR: failed to stop '${daemon_prog}'" >&2
+      retval=1
+      continue # best effort for all
+    }
+  done
+
+  return $retval
+}
+
+kill_remaining_daemons() {
+  local retval=0
+
+  echo "Waiting at most 5 seconds for daemons to stop..." >&2
+  for i in $(seq 1 5); do
+    is_any_daemon_running || return 0
+    sleep 1
+  done
+  echo "Killing remaining daemons..." >&2
+  for daemon_prog in "${g_daemon_progs[@]}"; do
+    daemon --name="puavo-${daemon_prog}" --running || continue
+    echo "Daemon '${daemon_prog}' did not stop gracefully. Killing it..." >&2
+    daemon --name="puavo-${daemon_prog}" --signal=SIGKILL || {
+      echo "ERROR: failed to kill '${daemon_prog}'" >&2
+      retval=1
+      continue # best effort for all
+    }
+  done
+
+  return $retval
+}
+
+is_any_daemon_running() {
+  for daemon_prog in "${g_daemon_progs[@]}"; do
+    daemon --name="puavo-${daemon_prog}" --running || continue
+    return 0
+  done
+  return 1
+}
+
+are_all_daemons_running() {
+  for daemon_prog in "${g_daemon_progs[@]}"; do
+    daemon --name="puavo-${daemon_prog}" --running || {
+      echo "Daemon '${daemon_prog}' is not running" >&2
+      return 1
+    }
+  done
+  return 0
+}
+
+wait_file() {
+  local filepath="$1"
+  shift
+
+  while true; do
+    if [[ -e "$filepath" ]]; then
+      break
+    fi
+    sleep 0.5
+  done
+}
+
+on_exit() {
+  local exitval="$?"
+  set +e # Short-circuit exit is disabled because we are already exiting.
+  echo "Exiting..." >&2
+  stop_all_daemons || {
+    echo "ERROR: failed to stop all daemons on exit!" >&2
+    exitval=1
+  }
+  kill_remaining_daemons || {
+    echo "ERROR: failed to kill all remaining daemons on exit!" >&2
+    exitval=1
+  }
+  release_lock || {
+    echo "ERROR: failed to release lock on exit!" >&2
+    exitval=1
+  }
+  exit $exitval
+}
+
+g_is_enabled=$(puavo-conf puavo.pipewire.enabled)
+if [[ "${g_is_enabled}" != 'true' ]]; then
+  echo "Puavo PipeWire integration is not enabled (puavo.pipewire.enabled = '${g_is_enabled}')." >&2
+  exit 0
+fi
+
+if [[ -z "${XDG_RUNTIME_DIR:-}" ]]; then
+  echo "ERROR: XDG_RUNTIME_DIR is not set" >&2
+  exit 1
+fi
+
+if [[ ! "$XDG_RUNTIME_DIR" =~ ^/run/ ]]; then
+  echo "ERROR: XDG_RUNTIME_DIR '$XDG_RUNTIME_DIR' is not under /run, insane?" >&2
+  exit 1
+fi
+
+if [[ ! -d "$XDG_RUNTIME_DIR" ]]; then
+  echo "ERROR: directory '$XDG_RUNTIME_DIR' does not exist." >&2
+  exit 1
+fi
+
+if [[ -e "${XDG_RUNTIME_DIR}/pulse/native" ]]; then
+  echo "ERROR: pulseaudio socket file '${XDG_RUNTIME_DIR}/pulse/native' exists, is pulseaudio is running" >&2
+  exit 1
+fi
+
+if [[ -e "${XDG_RUNTIME_DIR}/pipewire-0" ]]; then
+  echo "ERROR: pipewire socket file '${XDG_RUNTIME_DIR}/pipewire-0' exists, is pipeweire already running?" >&2
+  exit 1
+fi
+
+# Cleanup everything on exit.
+trap on_exit EXIT
+
+# If this program is asked to terminate, it will do so gracefully and
+# exit with 0 if all goes well. And it's the only way to make this
+# program exit with zero status. All other terminating signals will
+# cause non-zero exit. All errors will cause non-zero exit.
+trap "exit 0" SIGTERM 
+
+g_lock_file="${XDG_RUNTIME_DIR}/puavo-pipewire.lock"
+exec {g_lock_fd}<> "${g_lock_file}" || {
+  echo "ERROR: Could not open lock file '$g_lock_file'." >&2
+  exit 1
+}
+
+acquire_lock
+
+# Main loop for launching and monitoring daemons
+while true; do
+  launch_daemon pipewire --config pipewire.conf
+  wait_file "${XDG_RUNTIME_DIR}/pipewire-0"
+  launch_daemon wireplumber
+  launch_daemon pipewire-pulse --config pipewire-pulse.conf
+
+  echo "Starting to monitor all daemons..." >&2
+  while true; do
+    sleep 2
+    if ! are_all_daemons_running; then
+      echo "Some of the daemons have died." >&2
+      stop_all_daemons
+      kill_remaining_daemons
+      echo "Restarting all daemons..." >&2
+      break
+    fi
+  done
+done
+
+exit 1
