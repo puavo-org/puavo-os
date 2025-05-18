@@ -68,7 +68,7 @@ on_exit()
 
         # Restore the original audio setup.
         while read orig_card orig_profile; do
-            pacmd set-card-profile "${orig_card}" "${orig_profile}" >/dev/null
+            pactl set-card-profile "${orig_card}" "${orig_profile}" >/dev/null
         done <"${orig_audio_setup}"
 
         rm "${orig_audio_setup}"
@@ -81,42 +81,17 @@ trap on_exit EXIT
 
 orig_audio_setup=$(mktemp)
 
-pacmd list-cards | while read line; do
+pactl --format=json list cards | jq -r '.[].name' | while read card; do
+  pactl --format=json list cards | jq -r --arg card "${card}" '.[] | select(.name == $card) | .profiles | keys | .[]' | while read profile; do
+    pactl set-card-profile "${card}" "${profile}" >/dev/null
+    sleep 0.2 # Be nice =).
 
-    # Get the name of the card.
-    match=$(sed -r -n 's/^name: <(.*)>$/\1/p' <<<"${line}")
-    if [ -n "${match}" ]; then
-        card="${match}"
-        continue
-    fi
+    pactl --format=json list sinks | jq -r .[].name | while read sink; do
+      printf "SINK   %s|%s|%s\n" "${card}" "${profile}" "${sink}"
+    done
 
-    # Enter profile list section.
-    egrep -q '^profiles:$' <<<"${line}" && {
-        profilesection=true
-        continue
-    }
-
-    # Leave profile list section.
-    match=$(sed -r -n 's/^active profile: <(.*)>$/\1/p' <<<"${line}")
-    if [ -n "${match}" ]; then
-        profilesection=false
-        echo "${card}" "${match}" >>"${orig_audio_setup}"
-        continue
-    fi
-
-    if $profilesection; then
-        profile=$(sed -r -n 's/^([^ ]+):.*$/\1/p' <<<"${line}")
-        if [ -n "${profile}" ]; then
-            pacmd set-card-profile "${card}" "${profile}" >/dev/null
-            sleep 0.2 # Be nice =).
-
-            pacmd list-sinks | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*)>$/\1/p' | while read sink; do
-                printf "SINK   %s|%s|%s\n" "${card}" "${profile}" "${sink}"
-            done
-
-            pacmd list-sources | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*)>$/\1/p' | while read source; do
-                printf "SOURCE %s|%s|%s\n" "${card}" "${profile}" "${source}"
-            done
-        fi
-    fi
+    pactl --format=json list sources | jq -r .[].name | while read source; do
+      printf "SOURCE %s|%s|%s\n" "${card}" "${profile}" "${source}"
+    done
+  done
 done | sort

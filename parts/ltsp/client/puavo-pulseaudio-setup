@@ -68,8 +68,7 @@ fi
 # Quirk for smartboards: if the default sink was not set in Puavo
 # and if smartboard audio is connected, set it as default.
 if [ -z "${sink}" ]; then
-    sink=$(pacmd list-sinks \
-        | sed -r -n '/^\s+index: [0-9]+$/ n; s/^\s+name: <(.*C-Media.*)>$/\1/p')
+    sink=$(pactl --format=json list sinks | jq -r '.[].name' | grep C-Media | head -n1)
 
     # Set the default sink volume level to 100% for this specific
     # model. By default, the volume level is 96% which is actually just
@@ -105,10 +104,10 @@ audio_setup()
 
         IFS='|' read card profile devname volume <<<"${devname}"
         [ -n "${card}" ] && [ -n "${profile}" ] \
-            && pacmd set-card-profile "${card}" "${profile}" >/dev/null
+            && pactl set-card-profile "${card}" "${profile}" >/dev/null
         [ -n "${volume}" ] && pactl "set-${devtype}-volume" "${devname}" "${volume}"
 
-        pacmd "set-default-${devtype}" "${devname}" >/dev/null
+        pactl "set-default-${devtype}" "${devname}" >/dev/null
     fi
 }
 
