@@ -7,6 +7,7 @@ import ipaddress
 import logging
 import os.path
 import subprocess
+import time
 import typing
 
 _LOGGER = logging.getLogger(os.path.basename(__file__))
@@ -19,6 +20,22 @@ __all__ = [
     "interface_addresses",
     "Net",
 ]
+
+
+def wait_interface(interface_name: str, *, timeout: float) -> bool:
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        addresses = netifaces.ifaddresses(interface_name)
+        if netifaces.AF_INET in addresses:
+            with open(
+                f"/sys/class/net/{interface_name}/operstate", encoding="ascii"
+            ) as operstate_file:
+                if operstate_file.read().strip().upper() == "UP":
+                    return True
+
+        time.sleep(0.5)
+
+    return False
 
 
 def interfaces() -> typing.List[str]:
