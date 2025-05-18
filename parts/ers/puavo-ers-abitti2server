@@ -162,10 +162,7 @@ def _main() -> int:
     naksu2_certs_dir_monitor = None
 
     _run_networking("start")
-    # TODO: the interface is not ready immediately and
-    # Naksu2 does not accept it. Small delay fixes it,
-    # so go find the real solution.
-    time.sleep(5)
+    puavo_ers.net.wait_interface(interface, timeout=5)
     try:
         _reset_abitti2server_domain_name()
         _launch_naksu2(interface)
