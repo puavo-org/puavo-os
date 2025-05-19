@@ -452,6 +452,18 @@ fi
 
 load_env
 
+# Load the Puavo configuration
+set text_normal_startup="Normal startup"
+set text_backup_normal_startup="Backup system, normal startup"
+set text_other_system_normal_startup="Other system, normal startup"
+
+if test -z "${puavo_optional_grub_conf}"; then
+  set puavo_optional_grub_conf="default"
+fi
+if test -e "${prefix}/puavo/${puavo_optional_grub_conf}.cfg"; then
+  source "${prefix}/puavo/${puavo_optional_grub_conf}.cfg"
+fi
+
 function load_video {
   if [ x$feature_all_video_module = xy ]; then
     insmod all_video
@@ -529,14 +541,37 @@ function generate_boot_entry {
   # If such folder exists, load the image specific config
   set image_environment_file="${metadata_folder}/grubenv"
 
-  set label="$name"
-  set class="puavo-os"
+  set enabled="true"
+  set image_name=""
+  set release=""
 
   if test -f "$image_environment_file"; then
-    load_env --file "$image_environment_file" --skip-sig label class
+    load_env --file "$image_environment_file" --skip-sig enabled image_name release
   fi
 
-  add_boot_entry "$image_path" "$label" "$class"
+  set label="${text_other_system_normal_startup} (${name})"
+  set icon="puavo-os"
+
+  # If the release is set, generate the label based on it
+  if test -n "$release"; then
+    if test "$image_name" = "${puavo_default_image}"; then
+      set label="${text_normal_startup} (${release})"
+      set icon="puavo-os"
+    elif test "$image_name" = "${puavo_backup_image}"; then
+      set label="${text_backup_normal_startup} (${release})"
+      set icon="puavo-os-backup"
+    else
+      set label="${text_other_system_normal_startup} (${release})"
+      set icon="puavo-os"
+    fi
+  fi
+
+  if test "$enabled" = "false"; then
+    echo "Boot entry for '$image_path' is disabled"
+    return
+  fi
+
+  add_boot_entry "$image_path" "$label" "$icon"
 }
 
 function add_boot_options {
@@ -731,13 +766,13 @@ install_legacy_grub() {
 copy_grub_environment() {
   # Scripts such as "setup_grub_environment" write the
   # environment variables into /images/boot/grub/grubenv.
-  # Here we sync this file to the boot directory (EFI partition most likely).
-  if [ ! -f /images/boot/grub/grubenv ]; then
+  # Here we sync this file to the boot directory in the EFI partition.
+  if [ ! -f "${images_dir}/boot/grub/grubenv" ]; then
     # Grub will create the default environment in the EFI partition
     return 0
   fi
 
-  cp /images/boot/grub/grubenv "${boot_dir}/grub/grubenv" || return 1
+  cp "${images_dir}/boot/grub/grubenv" "${boot_dir}/grub/grubenv" || return 1
 }
 
 write_grub_version() {
