@@ -5,7 +5,8 @@ find_default_image() {
   local images_dir="$1"
   local default_image_tag default_image_name
 
-  default_image_tag=$(find "$images_dir" -type f -name '*.default' | head -n 1)
+  default_image_tag=$(find "$images_dir" -maxdepth 1 -type f -name '*.default' \
+                        | head -n 1)
 
   if [ -z "$default_image_tag" ]; then
     return 1
