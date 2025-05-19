@@ -72,7 +72,7 @@ endif
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_name  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}
 _image_file  := $(_image_name).img
-_uki_file    := $(_image_name).uki.efi
+_uki_prefix  := $(_image_name)
 
 # needed by linux build to prepare debian-directory
 _pkgbuild_dependencies := kernel-wedge,python3-dacite,python3-jinja2,python3-pydantic,python3-toml,quilt
@@ -236,7 +236,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 		'$(rootfs_dir)/boot' \
 		'./config/boot_keys/' \
 		'$(_image_file)' \
-		'$(_uki_file)'
+		'$(_uki_prefix)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
