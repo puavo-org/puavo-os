@@ -27,7 +27,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mount -o ro "$install_image" "$image_mountpoint"
+mount -o ro "$install_image" "$image_mountpoint" 1>/dev/null
 
 find_efi_device_path() {
   local diskdev="$1"
@@ -45,7 +45,7 @@ mount_disk_efi_partition() {
     return 1
   fi
 
-  mount "$efi_devpath" /boot/efi
+  mount "$efi_devpath" /boot/efi 1>/dev/null
 }
 
 estimate_required_disk_space() {

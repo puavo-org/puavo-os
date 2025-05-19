@@ -182,7 +182,7 @@ esp_mount() {
   done < <(awk "-vdev=${esp_devpath}" '$1 == dev && $2 == "/boot/efi" { printf "%s" $2 }' /proc/mounts) || return 1
 
   mkdir -p /boot/efi || return 1
-  mount -onodev,nosuid "${esp_devpath}" /boot/efi || return 1
+  mount -onodev,nosuid "${esp_devpath}" /boot/efi 1>/dev/null || return 1
   log info "mounted ESP '${esp_devpath}' to /boot/efi"
   echo -n /boot/efi
 }

@@ -708,7 +708,7 @@ mount_efi_partition() {
   mountpoint -q /boot/efi && return 0
 
   fsck.fat -a "$efi_devpath" > /dev/null 2>&1 || true
-  mount "$efi_devpath" /boot/efi || return 1
+  mount "$efi_devpath" /boot/efi 1>/dev/null || return 1
 }
 
 install_legacy_grub() {

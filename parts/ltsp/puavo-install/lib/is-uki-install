@@ -25,7 +25,7 @@ mount_disk_efi_partition() {
     return 1
   fi
 
-  mount "$efi_devpath" /boot/efi
+  mount "$efi_devpath" /boot/efi 1>/dev/null
 }
 
 cleanup() {
