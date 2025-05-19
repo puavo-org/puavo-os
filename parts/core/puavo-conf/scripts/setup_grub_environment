@@ -2,12 +2,72 @@
 
 set -eu
 
+images_dir=/images
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --images-dir)
+      images_dir="$2"; shift 2 ;;
+    *)
+      shift ;;
+  esac
+done
+
+grubenv_path="${images_dir}/boot/grub/grubenv"
+
+PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
+UKI_ROOT="/boot/efi/EFI/debian"
+
+if [ -z "${UKI_MODE:-}" ]; then
+  export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
+fi
+
+# TODO: Duplicated code
+find_efi_device_path() {
+  local diskdev="$1"
+
+  lsblk -n -l -o PATH,PARTTYPE "$diskdev" \
+    | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }'
+}
+
+mount_disk_efi_partition() {
+  local diskdev="$1"
+
+  efi_devpath=$(find_efi_device_path "$diskdev")
+  if [ -z "$efi_devpath" ]; then
+    echo "error: failed to find EFI partition in ${diskdev}" >&2
+    return 1
+  fi
+
+  mount "$efi_devpath" /boot/efi 1>/dev/null
+}
+
 grubedit() {
-  grubenv_path='/images/boot/grub/grubenv'
   if ! grub-editenv "$grubenv_path" "$@"; then
     echo 'Creating new grubenv because of an error' >&2
     grub-editenv "$grubenv_path" create
     grub-editenv "$grubenv_path" "$@"
+  fi
+}
+
+setup_default_and_backup_images() {
+  default_image_tag=$(find "$images_dir" -maxdepth 1 -type f -name '*.default' \
+                        | head -n 1)
+  backup_image_tag=$(find "$images_dir" -maxdepth 1 -type f -name '*.backup' \
+                        | head -n 1)
+
+  if [ -n "$default_image_tag" ]; then
+    default_image_name=$(basename "$default_image_tag" .default)
+    grubedit set "puavo_default_image=${default_image_name}.img"
+  else
+    grubedit unset puavo_default_image
+  fi
+
+  if [ -n "$backup_image_tag" ]; then
+    backup_image_name=$(basename "$backup_image_tag" .backup)
+    grubedit set "puavo_backup_image=${backup_image_name}.img"
+  else
+    grubedit unset puavo_backup_image
   fi
 }
 
@@ -128,16 +188,36 @@ selected_puavo_conf_arguments_as_kernel_args() {
   done
 }
 
+update_boot_device_environments() {
+  if [ "$UKI_MODE" != '1' ]; then
+    return 0
+  fi
+
+  local boot_disks=$("$PUAVO_INSTALL_LIBDIR"/puavo-get-boot-disks "$images_dir")
+  local status=0
+
+  for diskdev in $boot_disks; do
+    echo "installing GRUB environment to boot device $diskdev"
+    mount_disk_efi_partition "$diskdev" || status=1
+    cp "$grubenv_path" "${UKI_ROOT}/grub/grubenv" || status=1
+    umount /boot/efi || true
+  done
+
+  return $status
+}
+
 status=0
 
-setup_developer_mode       || status=1
-setup_grub_theme           || status=1
-setup_kernel_arguments     || status=1
-setup_kernel_version       || status=1
-setup_locale               || status=1
-setup_optional_grub_config || status=1
-setup_timeout              || status=1
-# Todo: Crashes due to finding two Puavos
-# setup_windows_enabled      || status=1
+setup_default_and_backup_images  || status=1
+setup_developer_mode             || status=1
+setup_grub_theme                 || status=1
+setup_kernel_arguments           || status=1
+setup_kernel_version             || status=1
+setup_locale                     || status=1
+setup_optional_grub_config       || status=1
+setup_timeout                    || status=1
+setup_windows_enabled            || status=1
+
+update_boot_device_environments  || status=1
 
 exit $status
