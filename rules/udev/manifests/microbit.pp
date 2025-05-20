@@ -1,5 +1,5 @@
 class udev::microbit {
-  include packages
+  include ::packages
 
   file {
     '/etc/udev/rules.d/42-microbit.rules':

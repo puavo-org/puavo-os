@@ -1,5 +1,5 @@
 class udev::avoid_ac_unplug_sleep {
-  include packages
+  include ::packages
 
   file {
     '/etc/udev/rules.d/84-avoid-ac-unplug-sleep.rules':

@@ -1,5 +1,5 @@
 class udev::pasco {
-  include packages
+  include ::packages
 
   file {
     '/etc/udev/rules.d/41-pasco.rules':
