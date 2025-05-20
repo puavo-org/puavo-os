@@ -8,6 +8,7 @@ class udev {
   include ::udev::pasco
   include ::udev::pbrick
   include ::udev::unblock_wifi
+  include ::udev::usb_modeswitch
   include ::udev::vernier
   include ::udev::wacom
 }
