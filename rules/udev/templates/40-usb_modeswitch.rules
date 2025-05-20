@@ -65,8 +65,10 @@ ATTR{idVendor}=="03f0", ATTR{idProduct}=="9a1d", RUN+="usb_modeswitch '/%k'"
 # HP lt4120
 ATTR{idVendor}=="03f0", ATTR{idProduct}=="9d1d", RUN+="usb_modeswitch '/%k'"
 
+# DISABLED in Puavo, we see that this rule triggers issues in
+# HP EliteBook 840 G5 and this chip works much more reliably without this.
 # HP lt4132
-ATTR{idVendor}=="03f0", ATTR{idProduct}=="a31d", RUN+="usb_modeswitch '/%k'"
+# ATTR{idVendor}=="03f0", ATTR{idProduct}=="a31d", RUN+="usb_modeswitch '/%k'"
 
 # Quanta MU-Q101
 ATTR{idVendor}=="0408", ATTR{idProduct}=="1000", RUN+="usb_modeswitch '/%k'"
