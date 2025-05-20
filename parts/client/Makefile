@@ -18,7 +18,8 @@ else
 endif
 
 all:
-	bundle install --standalone --path lib/puavo-client-vendor
+	bundle config set path lib/puavo-client-vendor
+	bundle install --standalone
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
@@ -38,7 +39,8 @@ update-gemfile-lock: clean
 	rm -f Gemfile.lock
 	GEM_HOME=.tmpgem bundle install
 	rm -rf .tmpgem
-	bundle install --deployment
+	bundle config set deployment true
+	bundle install
 
 clean:
 	rm -rf .bundle
