@@ -14,53 +14,43 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-/* exported AppIndicatorProxy, AppIndicator IconActor */
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import GdkPixbuf from 'gi://GdkPixbuf';
+import Gio from 'gi://Gio';
+import St from 'gi://St';
 
-const Clutter = imports.gi.Clutter;
-const GdkPixbuf = imports.gi.GdkPixbuf;
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Gdk = imports.gi.Gdk;
-const Gtk = imports.gi.Gtk;
-const Meta = imports.gi.Meta;
-const St = imports.gi.St;
+import * as Params from 'resource:///org/gnome/shell/misc/params.js';
+import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
-const Signals = imports.signals;
+import * as IconCache from './iconCache.js';
+import * as Util from './util.js';
+import * as Interfaces from './interfaces.js';
+import * as PixmapsUtils from './pixmapsUtils.js';
+import * as PromiseUtils from './promiseUtils.js';
+import * as SettingsManager from './settingsManager.js';
+import {DBusProxy} from './dbusProxy.js';
 
-const IconCache = Extension.imports.iconCache;
-const Util = Extension.imports.util;
-const Interfaces = Extension.imports.interfaces;
-const Params = imports.misc.params;
-const PixmapsUtils = Extension.imports.pixmapsUtils;
-const PromiseUtils = Extension.imports.promiseUtils;
-const SettingsManager = Extension.imports.settingsManager;
-
-PromiseUtils._promisify(Gio.File.prototype, 'read_async', 'read_finish');
-PromiseUtils._promisify(Gio._LocalFilePrototype, 'read_async', 'read_finish');
-PromiseUtils._promisify(GdkPixbuf.Pixbuf, 'get_file_info_async', 'get_file_info_finish');
-PromiseUtils._promisify(GdkPixbuf.Pixbuf, 'new_from_stream_at_scale_async', 'new_from_stream_finish');
-PromiseUtils._promisify(Gio.DBusProxy.prototype, 'init_async', 'init_finish');
-
-if (St.IconInfo)
-    PromiseUtils._promisify(St.IconInfo.prototype, 'load_symbolic_async', 'load_symbolic_finish');
-else
-    PromiseUtils._promisify(Gtk.IconInfo.prototype, 'load_symbolic_async', 'load_symbolic_finish');
+Gio._promisify(Gio.File.prototype, 'read_async');
+Gio._promisify(GdkPixbuf.Pixbuf, 'get_file_info_async');
+Gio._promisify(GdkPixbuf.Pixbuf, 'new_from_stream_at_scale_async',
+    'new_from_stream_finish');
+Gio._promisify(St.IconInfo.prototype, 'load_symbolic_async');
+Gio._promisify(Gio.DBusConnection.prototype, 'call');
 
 const MAX_UPDATE_FREQUENCY = 30; // In ms
 const FALLBACK_ICON_NAME = 'image-loading-symbolic';
 const PIXMAPS_FORMAT = imports.gi.Cogl.PixelFormat.ARGB_8888;
 
-// eslint-disable-next-line no-unused-vars
-const SNICategory = Object.freeze({
+export const SNICategory = Object.freeze({
     APPLICATION: 'ApplicationStatus',
     COMMUNICATIONS: 'Communications',
     SYSTEM: 'SystemServices',
     HARDWARE: 'Hardware',
 });
 
-var SNIStatus = Object.freeze({
+export const SNIStatus = Object.freeze({
     PASSIVE: 'Passive',
     ACTIVE: 'Active',
     NEEDS_ATTENTION: 'NeedsAttention',
@@ -71,7 +61,7 @@ const SNIconType = Object.freeze({
     ATTENTION: 1,
     OVERLAY: 2,
 
-    toPropertyName: (iconType, params = { isPixbuf: false }) => {
+    toPropertyName: (iconType, params = {isPixbuf: false}) => {
         let propertyName = 'Icon';
 
         if (iconType === SNIconType.OVERLAY)
@@ -83,8 +73,8 @@ const SNIconType = Object.freeze({
     },
 });
 
-var AppIndicatorProxy = GObject.registerClass(
-class AppIndicatorProxy extends Util.DBusProxy {
+export const AppIndicatorProxy = GObject.registerClass(
+class AppIndicatorProxy extends DBusProxy {
     static get interfaceInfo() {
         if (!this._interfaceInfo) {
             this._interfaceInfo = Gio.DBusInterfaceInfo.new_for_xml(
@@ -116,7 +106,7 @@ class AppIndicatorProxy extends Util.DBusProxy {
     }
 
     _init(busName, objectPath) {
-        const { interfaceInfo } = AppIndicatorProxy;
+        const {interfaceInfo} = AppIndicatorProxy;
 
         super._init(busName, objectPath, interfaceInfo,
             Gio.DBusProxyFlags.GET_INVALIDATED_PROPERTIES);
@@ -204,16 +194,16 @@ class AppIndicatorProxy extends Util.DBusProxy {
                     });
                 } catch (e) {
                     if (!AppIndicatorProxy.OPTIONAL_PROPERTIES.includes(p) ||
-                        !e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_PROPERTY))
+                        !(e instanceof Gio.DBusError))
                         logError(e);
                 }
             }));
     }
 
-    _onSignal(...args) {
-        this._onSignalAsync(...args).catch(e => {
+    _onSignal(sender, signal, ...args) {
+        this._onSignalAsync(sender, signal, ...args).catch(e => {
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                logError(e);
+                logError(e, `Error while processing signal '${signal}'`);
         });
     }
 
@@ -318,11 +308,15 @@ class AppIndicatorProxy extends Util.DBusProxy {
 
             this._cancellables.delete(propertyName);
             await this._queuePropertyUpdate(propertyName, valueVariant,
-                Object.assign(params, { cancellable }));
+                Object.assign(params, {cancellable}));
         } catch (e) {
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
                 // the property may not even exist, silently ignore it
-                Util.Logger.debug(`While refreshing property ${propertyName}: ${e}`);
+                Util.Logger.debug(`Error when calling 'Get(${propertyName})' ` +
+                    `in ${this.gName}, ${this.gObjectPath}, ` +
+                    `org.freedesktop.DBus.Properties, ${this.gInterfaceName} ` +
+                    `while refreshing property ${propertyName}: ${e}\n` +
+                    `${e.stack}`);
                 this.set_cached_property(propertyName, null);
                 this._cancellables.delete(propertyName);
                 delete this._changedProperties[propertyName];
@@ -402,22 +396,18 @@ class AppIndicatorProxy extends Util.DBusProxy {
     }
 });
 
-if (imports.system.version < 17101) {
-    /* In old versions wrappers are not applied to sub-classes, so let's do it */
-    AppIndicatorProxy.prototype.init_async = Gio.DBusProxy.prototype.init_async;
-}
-
 /**
  * the AppIndicator class serves as a generic container for indicator information and functions common
  * for every displaying implementation (IndicatorMessageSource and IndicatorStatusIcon)
  */
-var AppIndicator = class AppIndicatorsAppIndicator {
-
+export class AppIndicator extends Signals.EventEmitter {
     static get NEEDED_PROPERTIES() {
         return ['Id', 'Menu'];
     }
 
     constructor(service, busName, object) {
+        super();
+
         this.isReady = false;
         this.busName = busName;
         this._uniqueId = Util.indicatorId(service, busName, object);
@@ -450,16 +440,38 @@ var AppIndicator = class AppIndicatorsAppIndicator {
             }
         }
 
+        // We try to lookup the activate method to see if the app supports it
+        try {
+            const introspectionVariant = await this._proxy.gConnection.call(
+                this._proxy.gNameOwner, this._proxy.gObjectPath,
+                'org.freedesktop.DBus.Introspectable', 'Introspect', null, null,
+                Gio.DBusCallFlags.NONE, -1, cancellable);
+            const [introspectionXml] = introspectionVariant.deep_unpack();
+            const nodeInfo = Gio.DBusNodeInfo.new_for_xml(introspectionXml);
+            const interfaceInfo = nodeInfo.lookup_interface(this._proxy.gInterfaceName);
+            this.supportsActivation = !!interfaceInfo.lookup_method('Activate');
+            this._hasAyatanaSecondaryActivate =
+                !!interfaceInfo.lookup_method('XAyatanaSecondaryActivate');
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
+                Util.Logger.debug(
+                    `${this.uniqueId}, check for Activation support: ${e.message}`);
+            }
+        }
+
         try {
             this._commandLine = await Util.getProcessName(this.busName,
                 cancellable, GLib.PRIORITY_LOW);
         } catch (e) {
-            Util.Logger.debug(`${this.uniqueId}, failed getting command line: ${e.message}`);
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
+                Util.Logger.debug(
+                    `${this.uniqueId}, failed getting command line: ${e.message}`);
+            }
         }
     }
 
     _checkIfReady() {
-        let wasReady = this.isReady;
+        const wasReady = this.isReady;
         let isReady = false;
 
         if (this.hasNameOwner && this.id && this.menuPath)
@@ -590,7 +602,7 @@ var AppIndicator = class AppIndicatorsAppIndicator {
     }
 
     get hasOverlayIcon() {
-        const { name, pixmap } = this.overlayIcon;
+        const {name, pixmap} = this.overlayIcon;
 
         return name || (pixmap && pixmap.n_children());
     }
@@ -651,8 +663,8 @@ var AppIndicator = class AppIndicatorsAppIndicator {
     }
 
     _onPropertiesChanged(_proxy, changed, _invalidated) {
-        let props = Object.keys(changed.unpack());
-        let signalsToEmit = new Set();
+        const props = Object.keys(changed.unpack());
+        const signalsToEmit = new Set();
         const checkIfReadyChanged = () => {
             if (checkIfReadyChanged.value === undefined)
                 checkIfReadyChanged.value = this._checkIfReady();
@@ -727,7 +739,7 @@ var AppIndicator = class AppIndicatorsAppIndicator {
 
     _getPixmapProperty(iconType) {
         const propertyName = SNIconType.toPropertyName(iconType,
-            { isPixbuf: true });
+            {isPixbuf: true});
         const pixmap = this._proxy.get_cached_property(propertyName);
         const wasInvalidated = this._invalidatedPixmapsIcons.delete(iconType);
 
@@ -746,7 +758,7 @@ var AppIndicator = class AppIndicatorsAppIndicator {
     invalidatePixmapProperty(iconType) {
         this._invalidatedPixmapsIcons.add(iconType);
         this._proxy.set_cached_property(
-            SNIconType.toPropertyName(iconType, { isPixbuf: true }), null);
+            SNIconType.toPropertyName(iconType, {isPixbuf: true}), null);
     }
 
     _getActivationToken(timestamp) {
@@ -846,37 +858,29 @@ var AppIndicator = class AppIndicatorsAppIndicator {
             Util.Logger.critical(`${this.id}, failed to scroll: ${e.message}`);
         }
     }
-};
-Signals.addSignalMethods(AppIndicator.prototype);
-
-let StTextureCacheSkippingFileIcon;
-
-if (imports.system.version >= 17501) {
-    try {
-        StTextureCacheSkippingFileIcon = GObject.registerClass({
-            Implements: [Gio.Icon],
-        }, class StTextureCacheSkippingFileIconImpl extends Gio.EmblemedIcon {
-            _init(params) {
-                // FIXME: We can't just inherit from Gio.FileIcon for some reason
-                super._init({ gicon: new Gio.FileIcon(params) });
-            }
-
-            vfunc_to_tokens() {
-                // Disables the to_tokens() vfunc so that the icon to_string()
-                // method won't work and thus can't be kept forever around by
-                // StTextureCache, see the awesome debugging session in this thread:
-                //   https://twitter.com/mild_sunrise/status/1458739604098621443
-                // upstream bug is at:
-                //   https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/4944
-                return [false, [], 0];
-            }
-        });
-    } catch (e) {}
 }
 
-var IconActor = GObject.registerClass(
-class AppIndicatorsIconActor extends St.Icon {
+const StTextureCacheSkippingFileIcon = GObject.registerClass({
+    Implements: [Gio.Icon],
+}, class StTextureCacheSkippingFileIconImpl extends Gio.EmblemedIcon {
+    _init(params) {
+        // FIXME: We can't just inherit from Gio.FileIcon for some reason
+        super._init({gicon: new Gio.FileIcon(params)});
+    }
 
+    vfunc_to_tokens() {
+        // Disables the to_tokens() vfunc so that the icon to_string()
+        // method won't work and thus can't be kept forever around by
+        // StTextureCache, see the awesome debugging session in this thread:
+        //   https://twitter.com/mild_sunrise/status/1458739604098621443
+        // upstream bug is at:
+        //   https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/4944
+        return [false, [], 0];
+    }
+});
+
+export const IconActor = GObject.registerClass(
+class AppIndicatorsIconActor extends St.Icon {
     static get DEFAULT_STYLE() {
         return 'padding: 0';
     }
@@ -911,7 +915,7 @@ class AppIndicatorsIconActor extends St.Icon {
         this.add_style_class_name('status-notifier-icon');
         this.set_style(AppIndicatorsIconActor.DEFAULT_STYLE);
 
-        let themeContext = St.ThemeContext.get_for_stage(global.stage);
+        const themeContext = St.ThemeContext.get_for_stage(global.stage);
         this.height = iconSize * themeContext.scale_factor;
 
         this._indicator     = indicator;
@@ -1101,7 +1105,7 @@ class AppIndicatorsIconActor extends St.Icon {
         if (!themeNode)
             return lookupFlags;
 
-        const lookupFlagsEnum = St.IconLookupFlags || Gtk.IconLookupFlags;
+        const lookupFlagsEnum = St.IconLookupFlags;
         const iconStyle = themeNode.get_icon_style();
         if (iconStyle === St.IconStyle.REGULAR)
             lookupFlags |= lookupFlagsEnum.FORCE_REGULAR;
@@ -1116,64 +1120,8 @@ class AppIndicatorsIconActor extends St.Icon {
         return lookupFlags;
     }
 
-    _getIconLoadingColors() {
-        const themeNode = this.get_theme_node();
-
-        if (!themeNode)
-            return null;
-
-        const iconColors = themeNode.get_icon_colors();
-        if (St.IconTheme)
-            return iconColors;
-
-        if (!iconColors)
-            return iconColors;
-
-        const rgbaFromClutter = color => new Gdk.RGBA({
-            red: color.red / 255.0,
-            green: color.green / 255.0,
-            blue: color.blue / 255.0,
-            alpha: color.alpha / 255.0,
-        });
-
-        return {
-            foreground: rgbaFromClutter(iconColors.foreground),
-            warning: rgbaFromClutter(iconColors.warning),
-            error: rgbaFromClutter(iconColors.error),
-            success: rgbaFromClutter(iconColors.success),
-        };
-    }
-
-    async _createIconByFile(file, iconSize, iconScaling, cancellable) {
-        try {
-            const inputStream = await file.read_async(GLib.PRIORITY_DEFAULT, cancellable);
-            return GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(inputStream,
-                -1, Math.ceil(iconSize * iconScaling), true, cancellable);
-        } catch (e) {
-            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
-                Util.Logger.warn(
-                    `${this.debugId}, Impossible to read image from path '${file.get_path()}': ${e}`);
-            }
-            throw e;
-        }
-    }
-
-    async _createIconByIconInfo(iconInfo, iconSize, iconScaling, iconColors, cancellable) {
-        if (iconColors) {
-            const args = St.IconInfo && iconInfo instanceof St.IconInfo
-                ? [iconColors] : [iconColors.foreground, iconColors.success,
-                    iconColors.warning, iconColors.error];
-
-            const [pixbuf] = await iconInfo.load_symbolic_async(...args, cancellable);
-            return pixbuf;
-        }
-
-        return this._createIconByFile(Gio.File.new_for_path(iconInfo.get_filename()),
-            iconSize, iconScaling, cancellable);
-    }
-
     async _createIconByIconData(iconData, iconSize, iconScaling, cancellable) {
-        const { file, iconInfo, name } = iconData;
+        const {file, name} = iconData;
 
         if (!file && !name) {
             if (this._createIconIdle) {
@@ -1199,13 +1147,13 @@ class AppIndicatorsIconActor extends St.Icon {
         }
 
         if (name)
-            return new Gio.ThemedIcon({ name });
+            return new Gio.ThemedIcon({name});
 
         if (!file)
             throw new Error('Neither file or name are set');
 
         if (!this._isFileInWritableArea(file))
-            return new Gio.FileIcon({ file });
+            return new Gio.FileIcon({file});
 
         try {
             const [format, width, height] = await GdkPixbuf.Pixbuf.get_file_info_async(
@@ -1221,31 +1169,10 @@ class AppIndicatorsIconActor extends St.Icon {
                 await this._loadCustomImage(file,
                     width, height, iconSize, iconScaling, cancellable);
                 return null;
-            } else if (StTextureCacheSkippingFileIcon) {
+            } else {
                 /* We'll wrap the icon so that it won't be cached forever by the shell */
-                return new StTextureCacheSkippingFileIcon({ file });
-            } else if (iconInfo) {
-                return this._createIconByIconInfo(iconInfo, iconSize,
-                    iconScaling, this._getIconLoadingColors(), cancellable);
-            } else if (format.name === 'svg') {
-                const iconColors = this._getIconLoadingColors();
-
-                if (iconColors) {
-                    const fileIcon = new Gio.FileIcon({ file });
-                    const iconTheme = this._iconTheme || this._createIconTheme();
-                    const fileIconInfo = iconTheme.lookup_by_gicon_for_scale(
-                        fileIcon, iconSize, iconScaling,
-                        this._getIconLookupFlags(this.get_theme_node()));
-
-                    if (fileIconInfo) {
-                        return this._createIconByIconInfo(fileIconInfo,
-                            iconSize, iconScaling, iconColors, cancellable);
-                    }
-                }
+                return new StTextureCacheSkippingFileIcon({file});
             }
-
-            return this._createIconByFile(file,
-                iconSize, iconScaling, cancellable);
         } catch (e) {
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
                 Util.Logger.warn(
@@ -1262,8 +1189,8 @@ class AppIndicatorsIconActor extends St.Icon {
             height, 1, iconScaling);
 
         const setCustomImageActor = imageActor => {
-            const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
-            const { content } = imageActor;
+            const {scaleFactor} = St.ThemeContext.get_for_stage(global.stage);
+            const {content} = imageActor;
             imageActor.content = null;
             imageActor.destroy();
 
@@ -1304,27 +1231,14 @@ class AppIndicatorsIconActor extends St.Icon {
     }
 
     _createIconTheme(searchPath = []) {
-        if (St.IconTheme) {
-            const iconTheme = new St.IconTheme();
-            iconTheme.set_search_path(searchPath);
-
-            return iconTheme;
-        }
-
-        const iconTheme = new Gtk.IconTheme();
+        const iconTheme = new St.IconTheme();
         iconTheme.set_search_path(searchPath);
-
-        if (!Meta.is_wayland_compositor()) {
-            const defaultScreen = Gdk.Screen.get_default();
-            if (defaultScreen)
-                iconTheme.set_screen(defaultScreen);
-        }
 
         return iconTheme;
     }
 
     _getIconData(name, themePath, size, scale) {
-        const emptyIconData = { iconInfo: null, file: null, name: null };
+        const emptyIconData = {iconInfo: null, file: null, name: null};
 
         if (!name) {
             delete this._iconTheme;
@@ -1337,7 +1251,7 @@ class AppIndicatorsIconActor extends St.Icon {
             delete this._iconTheme;
 
             const file = Gio.File.new_for_path(name);
-            return { file, iconInfo: null, name: null };
+            return {file, iconInfo: null, name: null};
         }
 
         if (name.includes('.')) {
@@ -1369,9 +1283,7 @@ class AppIndicatorsIconActor extends St.Icon {
             // try to look up the icon in the icon theme
             const iconInfo = this._iconTheme.lookup_icon_for_scale(`${name}`,
                 size, scale, this._getIconLookupFlags(this.get_theme_node()) |
-                (St.IconLookupFlags
-                    ? St.IconLookupFlags.GENERIC_FALLBACK
-                    : Gtk.IconLookupFlags.GENERIC_FALLBACK));
+                St.IconLookupFlags.GENERIC_FALLBACK);
 
             if (iconInfo) {
                 return {
@@ -1389,7 +1301,7 @@ class AppIndicatorsIconActor extends St.Icon {
         }
 
         delete this._iconTheme;
-        return { name, iconInfo: null, file: null };
+        return {name, iconInfo: null, file: null};
     }
 
     _setImageContent(content, width, height) {
@@ -1403,7 +1315,7 @@ class AppIndicatorsIconActor extends St.Icon {
     }
 
     async _createIconFromPixmap(iconType, iconSize, iconScaling, scaleFactor, pixmapsVariant) {
-        const { pixmapVariant, width, height, rowStride } =
+        const {pixmapVariant, width, height, rowStride} =
             PixmapsUtils.getBestPixmap(pixmapsVariant, iconSize * iconScaling);
 
         const id = `__PIXMAP_ICON_${width}x${height}`;
@@ -1413,8 +1325,13 @@ class AppIndicatorsIconActor extends St.Icon {
             preferredHeight: height,
         });
 
-        imageContent.set_bytes(pixmapVariant.get_data_as_bytes(), PIXMAPS_FORMAT,
-            width, height, rowStride);
+        // Remove this dynamic check when we depend on GNOME 48.
+        const coglContext = [];
+        const mutterBackend = global.stage?.context?.get_backend?.();
+        if (imageContent.set_bytes.length === 6 && mutterBackend?.get_cogl_context)
+            coglContext.push(mutterBackend.get_cogl_context());
+        imageContent.set_bytes(...coglContext, pixmapVariant.get_data_as_bytes(),
+            PIXMAPS_FORMAT, width, height, rowStride);
 
         if (iconType !== SNIconType.OVERLAY && !this._indicator.hasOverlayIcon) {
             const scaledSize = iconSize * scaleFactor;
@@ -1452,7 +1369,7 @@ class AppIndicatorsIconActor extends St.Icon {
                 if (gicon instanceof Gio.EmblemedIcon)
                     this.gicon = gicon;
                 else
-                    this.gicon = new Gio.EmblemedIcon({ gicon });
+                    this.gicon = new Gio.EmblemedIcon({gicon});
 
                 this._iconCache.updateActive(SNIconType.NORMAL, gicon,
                     this.gicon.get_icon() === gicon);
@@ -1460,7 +1377,7 @@ class AppIndicatorsIconActor extends St.Icon {
                 this.gicon = null;
             }
         } else if (gicon) {
-            this._emblem = new Gio.Emblem({ icon: gicon });
+            this._emblem = new Gio.Emblem({icon: gicon});
             this._iconCache.updateActive(iconType, gicon, true);
         } else {
             this._emblem = null;
@@ -1482,14 +1399,14 @@ class AppIndicatorsIconActor extends St.Icon {
             icon = this._indicator.attentionIcon;
             break;
         case SNIconType.NORMAL:
-            icon = this._indicator.icon;
+            ({icon} = this._indicator);
             break;
         case SNIconType.OVERLAY:
             icon = this._indicator.overlayIcon;
             break;
         }
 
-        const { theme, name, pixmap } = icon;
+        const {theme, name, pixmap} = icon;
         const commonArgs = [theme, iconType, iconSize];
 
         if (this._customIcons.size) {
@@ -1540,7 +1457,7 @@ class AppIndicatorsIconActor extends St.Icon {
 
     // updates the base icon
     async _createIcon(name, pixmap, theme, iconType, iconSize) {
-        const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
+        const {scaleFactor} = St.ThemeContext.get_for_stage(global.stage);
         const resourceScale = this._getResourceScale();
         const iconScaling = Math.ceil(resourceScale * scaleFactor);
 
@@ -1569,12 +1486,12 @@ class AppIndicatorsIconActor extends St.Icon {
             return;
 
         if (this.gicon instanceof Gio.EmblemedIcon) {
-            const { gicon } = this.gicon;
+            const {gicon} = this.gicon;
             this._iconCache.updateActive(SNIconType.NORMAL, gicon, false);
         }
 
         // we might need to use the AttentionIcon*, which have precedence over the normal icons
-        let iconType = this._indicator.status === SNIStatus.NEEDS_ATTENTION
+        const iconType = this._indicator.status === SNIStatus.NEEDS_ATTENTION
             ? SNIconType.ATTENTION : SNIconType.NORMAL;
 
         try {
@@ -1591,14 +1508,14 @@ class AppIndicatorsIconActor extends St.Icon {
             return;
 
         if (this._emblem) {
-            const { icon } = this._emblem;
+            const {icon} = this._emblem;
             this._iconCache.updateActive(SNIconType.OVERLAY, icon, false);
         }
 
         // KDE hardcodes the overlay icon size to 10px (normal icon size 16px)
         // we approximate that ratio for other sizes, too.
         // our algorithms will always pick a smaller one instead of stretching it.
-        let iconSize = Math.floor(this._iconSize / 1.6);
+        const iconSize = Math.floor(this._iconSize / 1.6);
 
         try {
             await this._updateIconByType(SNIconType.OVERLAY, iconSize);
@@ -1656,7 +1573,7 @@ class AppIndicatorsIconActor extends St.Icon {
         let iconStyle = AppIndicatorsIconActor.DEFAULT_STYLE;
 
         if (themeIconSize > 0) {
-            const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
+            const {scaleFactor} = St.ThemeContext.get_for_stage(global.stage);
 
             if (themeIconSize / scaleFactor !== this._iconSize) {
                 iconStyle = `${AppIndicatorsIconActor.DEFAULT_STYLE};` +

@@ -14,25 +14,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-/* exported StatusNotifierWatcher */
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
+import * as AppIndicator from './appIndicator.js';
+import * as IndicatorStatusIcon from './indicatorStatusIcon.js';
+import * as Interfaces from './interfaces.js';
+import * as PromiseUtils from './promiseUtils.js';
+import * as Util from './util.js';
+import * as DBusMenu from './dbusMenu.js';
 
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
-
-const AppIndicator = Extension.imports.appIndicator;
-const DBusMenu = Extension.imports.dbusMenu;
-const IndicatorStatusIcon = Extension.imports.indicatorStatusIcon;
-const Interfaces = Extension.imports.interfaces;
-const PromiseUtils = Extension.imports.promiseUtils;
-const Util = Extension.imports.util;
+import {DBusProxy} from './dbusProxy.js';
 
 
 // TODO: replace with org.freedesktop and /org/freedesktop when approved
 const KDE_PREFIX = 'org.kde';
 
-var WATCHER_BUS_NAME = `${KDE_PREFIX}.StatusNotifierWatcher`;
+export const WATCHER_BUS_NAME = `${KDE_PREFIX}.StatusNotifierWatcher`;
 const WATCHER_OBJECT = '/StatusNotifierWatcher';
 
 const DEFAULT_ITEM_OBJECT_PATH = '/StatusNotifierItem';
@@ -40,8 +38,7 @@ const DEFAULT_ITEM_OBJECT_PATH = '/StatusNotifierItem';
 /*
  * The StatusNotifierWatcher class implements the StatusNotifierWatcher dbus object
  */
-var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
-
+export class StatusNotifierWatcher {
     constructor(watchDog) {
         this._watchDog = watchDog;
         this._dbusImpl = Gio.DBusExportedObject.wrapJSObject(Interfaces.StatusNotifierWatcher, this);
@@ -131,7 +128,7 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
 
     async _ensureItemRegistered(service, busName, objPath) {
         const id = Util.indicatorId(service, busName, objPath);
-        let item = this._items.get(id);
+        const item = this._items.get(id);
 
         if (item) {
             // delete the old one and add the new indicator
@@ -158,7 +155,7 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
             const services = [...uniqueNames.get(name)];
 
             for await (const node of nodes) {
-                const { path } = node;
+                const {path} = node;
                 const ids = services.map(s => Util.indicatorId(s, name, path));
                 if (ids.every(id => !this._items.has(id))) {
                     const service = services.find(s =>
@@ -178,7 +175,7 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
         // it would be too easy if all application behaved the same
         // instead, ayatana patched gnome apps to send a path
         // while kde apps send a bus name
-        let [service] = params;
+        const [service] = params;
         let busName, objPath;
 
         if (service.charAt(0) === '/') { // looks like a path
@@ -195,7 +192,7 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
         }
 
         if (!busName || !objPath) {
-            let error = `Impossible to register an indicator for parameters '${
+            const error = `Impossible to register an indicator for parameters '${
                 service.toString()}'`;
             Util.Logger.warn(error);
 
@@ -216,7 +213,7 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
     }
 
     _onIndicatorDestroyed(indicator) {
-        const { uniqueId } = indicator;
+        const {uniqueId} = indicator;
         this._items.delete(uniqueId);
 
         try {
@@ -278,7 +275,7 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
 
         DBusMenu.DBusClient.destroy();
         AppIndicator.AppIndicatorProxy.destroy();
-        Util.DBusProxy.destroy();
+        DBusProxy.destroy();
         Util.destroyDefaultTheme();
 
         this._dbusImpl.run_dispose();
@@ -287,4 +284,4 @@ var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
         delete this._items;
         this._isDestroyed = true;
     }
-};
+}
