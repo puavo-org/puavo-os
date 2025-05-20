@@ -21,7 +21,6 @@ mount_disk_efi_partition() {
 
   efi_devpath=$(find_efi_device_path "$diskdev")
   if [ -z "$efi_devpath" ]; then
-    echo "error: failed to find EFI partition in ${diskdev}" >&2
     return 1
   fi
 
@@ -52,16 +51,16 @@ fi
 is_uki_install=""
 
 for diskdev in $boot_disks; do
-  mount_disk_efi_partition "$diskdev"
-
   # Check if the disk contains UKI installation
   is_uki_disk="0"
 
-  if find "$UKI_ROOT" -type f -name '*.uki.efi' | grep -q .; then
-    is_uki_disk="1"
-  fi
+  if mount_disk_efi_partition "$diskdev"; then
+    if find "$UKI_ROOT" -type f -name '*.uki.efi' | grep -q .; then
+      is_uki_disk="1"
+    fi
 
-  umount /boot/efi || true
+    umount /boot/efi || true
+  fi
 
   # Update the result and ensure it stays consistent
   if [ -z "$is_uki_install" ]; then
