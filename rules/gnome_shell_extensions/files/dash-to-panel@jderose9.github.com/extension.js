@@ -17,134 +17,198 @@
  *
  */
 
+import Gio from 'gi://Gio'
+import GLib from 'gi://GLib'
+import Shell from 'gi://Shell'
 
-const Main = imports.ui.main;
-const Meta = imports.gi.Meta;
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const Shell = imports.gi.Shell;
-const St = imports.gi.St;
-const WindowManager = imports.ui.windowManager;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Mainloop = imports.mainloop;
-const Signals = imports.signals;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js'
+import { EventEmitter } from 'resource:///org/gnome/shell/misc/signals.js'
+import {
+  Extension,
+  gettext as _,
+} from 'resource:///org/gnome/shell/extensions/extension.js'
+import * as PanelSettings from './panelSettings.js'
 
-const Me = ExtensionUtils.getCurrentExtension();
-const { PanelManager } = Me.imports.panelManager;
-const Utils = Me.imports.utils;
-const AppIcons = Me.imports.appIcons;
+import * as PanelManager from './panelManager.js'
+import * as AppIcons from './appIcons.js'
+import * as Utils from './utils.js'
 
-const UBUNTU_DOCK_UUID = 'ubuntu-dock@ubuntu.com';
+const UBUNTU_DOCK_UUID = 'ubuntu-dock@ubuntu.com'
 
-let panelManager;
-let extensionChangedHandler;
-let disabledUbuntuDock;
-let extensionSystem = (Main.extensionManager || imports.ui.extensionSystem);
+let panelManager
+let startupCompleteHandler
+let ubuntuDockDelayId = 0
 
-function init() {
-    this._realHasOverview = Main.sessionMode.hasOverview;
+export let DTP_EXTENSION = null
+export let SETTINGS = null
+export let DESKTOPSETTINGS = null
+export let TERMINALSETTINGS = null
+export let NOTIFICATIONSSETTINGS = null
+export let PERSISTENTSTORAGE = null
+export let EXTENSION_PATH = null
+export let tracker = null
 
-    ExtensionUtils.initTranslations(Utils.TRANSLATION_DOMAIN);
-    
+export default class DashToPanelExtension extends Extension {
+  constructor(metadata) {
+    super(metadata)
+
+    this._realHasOverview = Main.sessionMode.hasOverview
+
     //create an object that persists until gnome-shell is restarted, even if the extension is disabled
-    Me.persistentStorage = {};
-}
+    PERSISTENTSTORAGE = {}
+  }
 
-function enable() {
-    // The Ubuntu Dock extension might get enabled after this extension
-    extensionChangedHandler = extensionSystem.connect('extension-state-changed', (data, extension) => {
-        if (extension.uuid === UBUNTU_DOCK_UUID && extension.state === 1) {
-            _enable();
-        }
-    });
+  async enable() {
+    DTP_EXTENSION = this
+    SETTINGS = this.getSettings('org.gnome.shell.extensions.dash-to-panel')
+    DESKTOPSETTINGS = new Gio.Settings({
+      schema_id: 'org.gnome.desktop.interface',
+    })
+    TERMINALSETTINGS = new Gio.Settings({
+      schema_id: 'org.gnome.desktop.default-applications.terminal',
+    })
+    NOTIFICATIONSSETTINGS = new Gio.Settings({
+      schema_id: 'org.gnome.desktop.notifications',
+    })
+    EXTENSION_PATH = this.path
 
-    //create a global object that can emit signals and conveniently expose functionalities to other extensions 
-    global.dashToPanel = {};
-    Signals.addSignalMethods(global.dashToPanel);
-    
-    _enable();
-}
+    tracker = Shell.WindowTracker.get_default()
 
-function _enable() {
-    let ubuntuDock = Main.extensionManager ?
-                     Main.extensionManager.lookup(UBUNTU_DOCK_UUID) : //gnome-shell >= 3.33.4
-                     ExtensionUtils.extensions[UBUNTU_DOCK_UUID];
+    //create a global object that can emit signals and conveniently expose functionalities to other extensions
+    global.dashToPanel = new EventEmitter()
 
-    if (ubuntuDock && ubuntuDock.stateObj && ubuntuDock.stateObj.dockManager) {
-        // Disable Ubuntu Dock
-        let extensionOrder = (extensionSystem.extensionOrder || extensionSystem._extensionOrder);
+    // reset to be safe
+    SETTINGS.set_boolean('prefs-opened', false)
 
-        Utils.getStageTheme().get_theme().unload_stylesheet(ubuntuDock.stylesheet);
-        ubuntuDock.stateObj.disable();
-        disabledUbuntuDock = true;
-        ubuntuDock.state = 2; //ExtensionState.DISABLED
-        extensionOrder.splice(extensionOrder.indexOf(UBUNTU_DOCK_UUID), 1);
+    await PanelSettings.init(SETTINGS)
 
-        //reset to prevent conflicts with the ubuntu-dock
-        if (panelManager) {
-            disable(true);
-        }
-    }
+    // To remove later, try to map settings using monitor indexes to monitor ids
+    PanelSettings.adjustMonitorSettings(SETTINGS)
 
-    if (panelManager) return; //already initialized
-
-    Me.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.dash-to-panel');
-    Me.desktopSettings = ExtensionUtils.getSettings('org.gnome.desktop.interface');
-
-    Main.layoutManager.startInOverview = !Me.settings.get_boolean('hide-overview-on-startup');
-
-    if (Me.settings.get_boolean('hide-overview-on-startup') && Main.layoutManager._startingUp) {
-        Main.sessionMode.hasOverview = false;
-        Main.layoutManager.connect('startup-complete', () => {
-            Main.sessionMode.hasOverview = this._realHasOverview
-        });
-    }
-
-    panelManager = new PanelManager();
-
-    panelManager.enable();
-    
-    Utils.removeKeybinding('open-application-menu');
-    Utils.addKeybinding(
-        'open-application-menu',
-        new Gio.Settings({ schema_id: WindowManager.SHELL_KEYBINDINGS_SCHEMA }),
-        () => {
-            if(Me.settings.get_boolean('show-appmenu'))
-                Main.wm._toggleAppMenu();
-            else
-                panelManager.primaryPanel.taskbar.popupFocusedAppSecondaryMenu();
+    // if new version, display a notification linking to release notes
+    if (this.metadata.version != SETTINGS.get_int('extension-version')) {
+      Utils.notify(
+        _('Dash to Panel has been updated!'),
+        _('You are now running version') + ` ${this.metadata.version}.`,
+        'software-update-available-symbolic',
+        Gio.icon_new_for_string(
+          `${this.path}/img/dash-to-panel-logo-light.svg`,
+        ),
+        {
+          text: _(`See what's new`),
+          func: () =>
+            Gio.app_info_launch_default_for_uri(
+              `${this.metadata.url}/releases/tag/v${this.metadata.version}`,
+              global.create_app_launch_context(0, -1),
+            ),
         },
-        Shell.ActionMode.NORMAL | Shell.ActionMode.POPUP
-    );
-}
+      )
 
-function disable(reset) {
-    panelManager.disable();
-    Me.settings.run_dispose();
-    Me.desktopSettings.run_dispose();
-
-    delete Me.settings;
-    panelManager = null;
-    
-    Utils.removeKeybinding('open-application-menu');
-    Utils.addKeybinding(
-        'open-application-menu',
-        new Gio.Settings({ schema_id: WindowManager.SHELL_KEYBINDINGS_SCHEMA }),
-        Main.wm._toggleAppMenu.bind(Main.wm),
-        Shell.ActionMode.NORMAL | Shell.ActionMode.POPUP
-    );
-
-    if (!reset) {
-        extensionSystem.disconnect(extensionChangedHandler);
-        delete global.dashToPanel;
-
-        // Re-enable Ubuntu Dock if it was disabled by dash to panel
-        if (disabledUbuntuDock && Main.sessionMode.allowExtensions) {
-            (extensionSystem._callExtensionEnable || extensionSystem.enableExtension).call(extensionSystem, UBUNTU_DOCK_UUID);
-        }
-
-        AppIcons.resetRecentlyClickedApp();
+      SETTINGS.set_int('extension-version', this.metadata.version)
     }
 
-    Main.sessionMode.hasOverview = this._realHasOverview;
+    Main.layoutManager.startInOverview = !SETTINGS.get_boolean(
+      'hide-overview-on-startup',
+    )
+
+    if (
+      SETTINGS.get_boolean('hide-overview-on-startup') &&
+      Main.layoutManager._startingUp
+    ) {
+      Main.sessionMode.hasOverview = false
+      startupCompleteHandler = Main.layoutManager.connect(
+        'startup-complete',
+        () => (Main.sessionMode.hasOverview = this._realHasOverview),
+      )
+    }
+
+    this.enableGlobalStyles()
+
+    let completeEnable = () => {
+      panelManager = new PanelManager.PanelManager()
+      panelManager.enable()
+      ubuntuDockDelayId = 0
+
+      return GLib.SOURCE_REMOVE
+    }
+
+    // disable ubuntu dock if present
+    if (Main.extensionManager._extensionOrder.indexOf(UBUNTU_DOCK_UUID) >= 0) {
+      let disabled = global.settings.get_strv('disabled-extensions')
+
+      if (disabled.indexOf(UBUNTU_DOCK_UUID) < 0) {
+        disabled.push(UBUNTU_DOCK_UUID)
+        global.settings.set_strv('disabled-extensions', disabled)
+
+        // wait a bit so ubuntu dock can disable itself and restore the showappsbutton
+        ubuntuDockDelayId = GLib.timeout_add(
+          GLib.PRIORITY_DEFAULT,
+          200,
+          completeEnable,
+        )
+      }
+    } else completeEnable()
+  }
+
+  disable() {
+    if (ubuntuDockDelayId) GLib.Source.remove(ubuntuDockDelayId)
+
+    PanelSettings.disable(SETTINGS)
+    panelManager.disable()
+
+    DTP_EXTENSION = null
+    SETTINGS = null
+    DESKTOPSETTINGS = null
+    TERMINALSETTINGS = null
+    panelManager = null
+
+    delete global.dashToPanel
+
+    this.disableGlobalStyles()
+
+    AppIcons.resetRecentlyClickedApp()
+
+    if (startupCompleteHandler) {
+      Main.layoutManager.disconnect(startupCompleteHandler)
+      startupCompleteHandler = null
+    }
+
+    Main.sessionMode.hasOverview = this._realHasOverview
+  }
+
+  openPreferences() {
+    if (SETTINGS.get_boolean('prefs-opened')) {
+      let prefsWindow = Utils.getAllMetaWindows().find(
+        (w) =>
+          w.title == 'Dash to Panel' &&
+          w.wm_class == 'org.gnome.Shell.Extensions',
+      )
+
+      if (prefsWindow) Main.activateWindow(prefsWindow)
+
+      return
+    }
+
+    super.openPreferences()
+  }
+
+  resetGlobalStyles() {
+    this.disableGlobalStyles()
+    this.enableGlobalStyles()
+  }
+
+  enableGlobalStyles() {
+    let globalBorderRadius = SETTINGS.get_int('global-border-radius')
+
+    if (globalBorderRadius)
+      Main.layoutManager.uiGroup.add_style_class_name(
+        `br${globalBorderRadius * 4}`,
+      )
+  }
+
+  disableGlobalStyles() {
+    ;['br4', 'br8', 'br12', 'br16', 'br20'].forEach((c) =>
+      Main.layoutManager.uiGroup.remove_style_class_name(c),
+    )
+  }
 }
