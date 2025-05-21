@@ -8,7 +8,7 @@ class desktop::puavodesktop {
   include ::desktop::dconf::puavodesktop
   include ::desktop::dconf::puavo_ers
   include ::desktop::mimedefaults
-  # include ::gnome_shell_extensions            # XXX need work on Trixie
+  include ::gnome_shell_extensions::puavodesktop
   include ::gnome_shell_helper
   include ::nodm
   include ::packages
