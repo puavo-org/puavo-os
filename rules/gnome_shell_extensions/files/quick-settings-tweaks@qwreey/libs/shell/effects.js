@@ -1,3 +1,4 @@
+import Cogl from 'gi://Cogl';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
 import Global from '../../global.js';
@@ -6,7 +7,7 @@ export class RoundClipEffect extends Shell.GLSLEffect {
     static { this.uniforms = null; }
     vfunc_build_pipeline() {
         const [declarations, code] = Global.GetShader("media/rounded_corners.frag");
-        this.add_glsl_snippet(Shell.SnippetHook.FRAGMENT, declarations, code, false);
+        this.add_glsl_snippet(Cogl.SnippetHook.FRAGMENT, declarations, code, false);
     }
     vfunc_paint_target(node, ctx) {
         // Reset to default blend string.
