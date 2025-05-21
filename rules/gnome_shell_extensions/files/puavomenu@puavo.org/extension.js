@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2020 Opinsys Oy
+// Copyright (C) 2016-2025 Opinsys Oy
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -14,64 +14,64 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-const Main = imports.ui.main;
-const St = imports.gi.St;
-const Util = imports.misc.util;
-const Lang = imports.lang;
+import St from 'gi://St';
 
-let menu_button;
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-function make_button(icon_name, icon_size, spawn_command)
-{
-    let button = new St.Bin({
-        can_focus: true,
-        reactive: true,
-        style_class: 'panel-button-puavomenu',
-        track_hover: true,
-        x_expand: true,
-        y_expand: false
-    });
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 
-    let icon = new St.Icon({
-        icon_name: icon_name,
-        style_class: 'launcher-box-item-puavomenu',
-        icon_size: icon_size
-    });
+export default class DashToPanelExtension extends Extension {
+    constructor(metadata) {
+        super(metadata);
+        this._menu_button = this.make_button(
+            'start-here-debian-symbolic', '28',
+            [ '/opt/puavomenu/puavomenu-spawn' ]
+        );
+    }
 
-    button.set_child(icon);
+    make_button(icon_name, icon_size, spawn_command) {
+        let button = new St.Bin({
+            can_focus: true,
+            reactive: true,
+            style_class: 'panel-button-puavomenu',
+            track_hover: true,
+            x_expand: true,
+            y_expand: false
+        });
 
-    button.connect("button-press-event", Lang.bind(this, function() {
-        // The top-left corner of the panel button is the
-        // lower-right corner of the menu
-        let [x, y] = button.get_transformed_position();
+        let icon = new St.Icon({
+            icon_name: icon_name,
+            style_class: 'launcher-box-item-puavomenu',
+            icon_size: icon_size
+        });
 
-        let finalCmd = spawn_command.slice();  // slice=a new copy of the array
+        button.set_child(icon);
 
-        finalCmd.push("toggle");
-        finalCmd.push("corner");
-        finalCmd.push(Math.ceil(x).toString());
-        finalCmd.push(Math.ceil(y).toString());
+        button.connect("button-press-event", () => {
+            // The top-left corner of the panel button is the
+            // lower-right corner of the menu
+            let [x, y] = button.get_transformed_position();
 
-        Util.spawn(finalCmd);
-    }));
+            // slice=a new copy of the array
+            let finalCmd = spawn_command.slice();
 
-    return button;
-}
+            finalCmd.push("toggle");
+            finalCmd.push("corner");
+            finalCmd.push(Math.ceil(x).toString());
+            finalCmd.push(Math.ceil(y).toString());
 
-function init()
-{
-    menu_button = make_button(
-        'start-here-debian-symbolic', '28',
-        ['/opt/puavomenu/puavomenu-spawn' ]
-    );
-}
+            Util.spawn(finalCmd);
+        });
 
-function disable()
-{
-    Main.panel._leftBox.remove_child(menu_button);
-}
+        return button;
+    }
 
-function enable()
-{
-    Main.panel._leftBox.insert_child_at_index(menu_button, 0);
+    disable() {
+        Main.panel._leftBox.remove_child(this._menu_button);
+    }
+
+    enable() {
+        Main.panel._leftBox.insert_child_at_index(this._menu_button, 0);
+    }
 }
