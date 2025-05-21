@@ -3,7 +3,7 @@ class gnome_shell_extensions::screenkeyboardcontroller {
   include ::gnome_shell_extensions
   include ::puavo_conf
 
-  define screenkeyboardcontroller_dconf () {
+  define dconf () {
     $mode = $title
 
     file {
@@ -28,7 +28,7 @@ class gnome_shell_extensions::screenkeyboardcontroller {
       srcfile => 'puppet:///modules/gnome_shell_extensions/screenkeyboardcontroller@puavo.org/schemas/org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml';
   }
 
-  ::gnome_shell_extensions::puavodesktop::screenkeyboardcontroller_dconf {
+  ::gnome_shell_extensions::screenkeyboardcontroller::dconf {
     [ 'auto_hide'
     , 'do_nothing'
     , 'force_hide' ]:
