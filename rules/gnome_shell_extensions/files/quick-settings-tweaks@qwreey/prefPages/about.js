@@ -1,100 +1,143 @@
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-const { Adw, GObject, Gtk } = imports.gi
-
-const {
-    baseGTypeName,
-    makeRow
-} = Me.imports.libs.prefComponents
-
-var aboutPage = GObject.registerClass({
-    GTypeName: baseGTypeName+'aboutPage',
-}, class aboutPage extends Adw.PreferencesPage {
-    constructor(settings) {
-        // group config
-        super({
-            name: 'about',
-            title: 'About',
-            iconName: 'dialog-information-symbolic'
-        })
-
-        // description / enable
-        const group = new Adw.PreferencesGroup()
-        this.add(group)
-        makeRow({
-            parent: group,
-            title: "This extension is distributed with license GPL 3+",
-            subtitle: "excludes Third-party. Third party codes follow their license",
-        })
-        makeRow({
-            parent: group,
-            title: "Version",
-            suffix: new Gtk.Label({
-                label: Me.metadata.version?.toString() || "Unknown (Built from source)"
-            })
-        })
-
-        const links = new Adw.PreferencesGroup({
-            title: 'Links'
-        })
-        this.add(links)
-        makeRow({
-            uri: "https://extensions.gnome.org/extension/5446/quick-settings-tweaker/",
-            parent: links,
-            title: "Gnome Extension",
-            subtitle: "Rate and comment the extension!"
-        })
-        makeRow({
-            uri: "https://github.com/qwreey75/quick-settings-tweaks",
-            parent: links,
-            title: "Github Repository",
-            subtitle: "Add Star on Repository is helping me a lot!\nPlease, if you found bug from this extension, you can make issue to make me know that!"
-        })
-
-
-        const thirdLICENSE = new Adw.PreferencesGroup({
-            title: 'Third party LICENSE',
-            description: 'LICENSE OF CODES WHICH USED ON THIS EXTENSION'
-        })
-        this.add(thirdLICENSE)
-        makeRow({
-            uri: "https://github.com/mymindstorm/gnome-volume-mixer/blob/master/LICENSE",
-            parent: thirdLICENSE,
-            title: "gnome-volume-mixer",
-            subtitle: `
-https://github.com/mymindstorm/gnome-volume-mixer/blob/master/LICENSE
-
-Affected on files
-prefPages/volumeMixer.js
-libs/volumeMixerHandler.js
-features/volumeMixer.js
-schemas/org.gnome.shell.extensions.quick-settings-tweaks.gschema.xml
-
-original source code is in here
-https://github.com/mymindstorm/gnome-volume-mixer
-
-MIT License
-
-Copyright (c) 2020-2022 Brendan Early
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-            `
-        })
-    }
-})
+import Adw from "gi://Adw";
+import GObject from "gi://GObject";
+import { gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
+import Config from "../config.js";
+import { Group, Row, ContributorsRow, LicenseRow, LogoGroup, DialogRow, ChangelogDialog, fixPageScrollIssue, SwitchRow, DropdownRow, } from "../libs/prefs/components.js";
+export const AboutPage = GObject.registerClass({
+	GTypeName: Config.baseGTypeName + "AboutPage",
+}, class AboutPage extends Adw.PreferencesPage {
+	constructor(settings, prefs, window) {
+		super({
+			name: "about",
+			title: _("About"),
+			iconName: "dialog-information-symbolic"
+		});
+		fixPageScrollIssue(this);
+		// Logo
+		LogoGroup({
+			parent: this,
+			name: prefs.metadata.name,
+			icon: "qst-project-icon",
+			version: prefs.getVersionString(),
+			versionAction: () => ChangelogDialog({
+				window,
+				content: async () => prefs.getChangelog(),
+				currentBuildNumber: Config.buildNumber,
+				defaultPageBuildNumber: Config.buildNumber,
+			})
+		});
+		// About
+		Group({
+			parent: this,
+			title: _("About"),
+			description: _("Common extension informations"),
+		}, [
+			Row({
+				title: _("Changelogs"),
+				subtitle: _("View the change history for this extension"),
+				action: () => ChangelogDialog({
+					window,
+					title: _("Changelogs"),
+					subtitle: _("View the change history for this extension"),
+					content: async () => prefs.getChangelog(),
+					currentBuildNumber: Config.buildNumber,
+				}),
+				icon: "object-rotate-right-symbolic",
+			}),
+			DialogRow({
+				window,
+				title: _("License"),
+				subtitle: _("License of codes"),
+				dialogTitle: _("License"),
+				minHeight: 520,
+				icon: "document-open-recent-symbolic",
+				childrenRequest: _page => [
+					Group({
+						title: _("License"),
+						description: _("License of codes")
+					}, prefs.getLicenses().map(LicenseRow)),
+				],
+			}),
+			DialogRow({
+				window,
+				title: _("Contributors"),
+				subtitle: _("The creators of this extension"),
+				dialogTitle: _("Contributors"),
+				icon: "starred-symbolic",
+				childrenRequest: _page => [
+					Group({
+						title: _("Contributors"),
+						description: _("The creators of this extension"),
+					}, [
+						...prefs.getContributorRows().map(ContributorsRow),
+						Row({
+							title: _("More contributors"),
+							subtitle: _("See more contributors on github"),
+							uri: "https://github.com/qwreey/quick-settings-tweaks/graphs/contributors"
+						}),
+					])
+				]
+			})
+		]);
+		// Links
+		Group({
+			parent: this,
+			title: _("Link"),
+			description: _("External links about this extension")
+		}, [
+			Row({
+				uri: "https://github.com/sponsors/qwreey",
+				title: _("Donate via github sponsors"),
+				subtitle: _("Support development!"),
+				icon: "emblem-favorite-symbolic",
+			}),
+			Row({
+				uri: "https://extensions.gnome.org/extension/5446/quick-settings-tweaker/",
+				title: "Gnome Extension",
+				subtitle: _("Rate and comment the extension!"),
+				icon: "qst-gnome-extension-logo-symbolic",
+			}),
+			Row({
+				uri: "https://github.com/qwreey75/quick-settings-tweaks",
+				title: _("Github Repository"),
+				subtitle: _("Add Star on Repository is helping me a lot!\nPlease, if you found bug from this extension, you can make issue to make me know that!\nOr, you can create PR with wonderful features!"),
+				icon: "qst-github-logo-symbolic",
+			}),
+			Row({
+				uri: "https://weblate.paring.moe/projects/gs-quick-settings-tweaks/",
+				title: "Webslate",
+				subtitle: _("Add translation to this extension!"),
+				icon: "qst-weblate-logo-symbolic",
+			}),
+		]);
+		Group({
+			parent: this,
+			title: _("Debug"),
+			description: _("Extension debugging options"),
+		}, [
+			SwitchRow({
+				settings,
+				title: _("Expose environment"),
+				subtitle: _("Expose extension environment to globalThis.qst"),
+				bind: "debug-expose"
+			}),
+			SwitchRow({
+				settings,
+				title: _("Show layout border"),
+				subtitle: _("Show layout borders on Quick Settings"),
+				bind: "debug-show-layout-border"
+			}),
+			DropdownRow({
+				settings,
+				title: _("Log level"),
+				bind: "debug-log-level",
+				items: [
+					{ name: _("none"), value: -1 },
+					{ name: _("error"), value: 0 },
+					{ name: _("info"), value: 1 },
+					{ name: _("debug"), value: 2 },
+				],
+			}),
+		]);
+	}
+});

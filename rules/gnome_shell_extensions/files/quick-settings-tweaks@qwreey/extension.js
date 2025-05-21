@@ -1,83 +1,73 @@
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-const Features = Me.imports.features
-const { logger } = Me.imports.libs.utility
-const { QuickSettingsGrid } = Me.imports.libs.gnome
-const { GLib } = imports.gi
-
-class Extension {
-    constructor() {}
+/**
+ * Viewer Note:
+ * stylesheet and javascript files are compiled from scss and typescript.
+ * To modify this extension, please check original source-codes from repository
+ * https://github.com/qwreey/quick-settings-tweaks
+*/
+import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
+import Logger from "./libs/shared/logger.js";
+import Global from "./global.js";
+import Config from "./config.js";
+import { DndQuickToggleFeature } from "./features/toggle/dndQuickToggle.js";
+import { UnsafeQuickToggleFeature } from "./features/toggle/unsafeQuickToggle.js";
+import { MediaWidgetFeature } from "./features/widget/media.js";
+import { WeatherWidgetFeature } from "./features/widget/weather.js";
+import { NotificationsWidgetFeature } from "./features/widget/notifications.js";
+import { TogglesLayoutFeature } from "./features/layout/toggles.js";
+import { SystemItemsLayoutFeature } from "./features/layout/systemItems.js";
+import { DateMenuLayoutFeature } from "./features/layout/dateMenu.js";
+import { OverlayMenu } from "./features/overlayMenu.js";
+import { MenuAnimation } from "./features/menuAnimation.js";
+import { DebugFeature } from "./features/debug.js";
+import { VolumeMixerWidgetFeature } from "./features/widget/volumeMixer.js";
+import { SystemIndicatorLayoutFeature } from "./features/layout/systemIndicator.js";
+export default class QstExtension extends Extension {
     disable() {
-        logger("Unloading ...")
-        let start = +Date.now()
-
-        // unload menu open tracker
-        QuickSettingsGrid.disconnect(this.menuOpenTracker)
-        QuickSettingsGrid.disconnect(this.menuItemAddedTracker)
-
-        // unload features
+        Logger(`Extension ${this.metadata.name} deactivation started`);
+        let start = +Date.now();
+        // Unload debug feature
+        this.debug.unload();
+        this.debug = null;
+        // Unload features
         for (const feature of this.features) {
-            logger(`Unload feature '${feature.constructor.name}'`)
-            feature.unload()
-            feature.settings = null
+            Logger(`Unload feature '${feature.constructor.name}'`);
+            feature.unload();
         }
-
-        // Null out
-        this.menuItemAddedTracker = this.features = this.updating = this.menuOpenTracker = null
-
-        logger("Diabled. " + (+new Date() - start) + "ms taken")
+        this.features = null; // Null-out all features, loaded objects, arrays should be GC'd
+        // Unload global context
+        Global.unload();
+        Logger("Diabled. " + (+new Date() - start) + "ms taken");
     }
     enable() {
-        logger("Loading ...")
-        let start = +Date.now()
-
-        // load modules
+        // Load global context
+        Global.load(this);
+        // Create features
         this.features = [
-            new Features.dndQuickToggle.dndQuickToggleFeature(),
-            new Features.unsafeQuickToggle.unsafeQuickToggleFeature(),
-            new Features.notifications.notificationsFeature(),
-            new Features.volumeMixer.volumeMixerFeature(),
-            new Features.dateMenu.dateMenuFeature(),
-            new Features.buttonRemover.buttonRemoverFeature(),
-            new Features.inputOutput.inputOutputFeature(),
-        ]
-
-        // load settings
-        let settings = ExtensionUtils.getSettings(Me.metadata['settings-schema'])
-        ExtensionUtils.initTranslations(Me.metadata['gettext-domain'])
-
-        // load features
+            new DndQuickToggleFeature(),
+            new UnsafeQuickToggleFeature(),
+            // new InputOutputFeature(),
+            new NotificationsWidgetFeature(),
+            new MediaWidgetFeature(),
+            new VolumeMixerWidgetFeature(),
+            new DateMenuLayoutFeature(),
+            new WeatherWidgetFeature(),
+            new OverlayMenu(),
+            new MenuAnimation(),
+            new SystemItemsLayoutFeature(),
+            new TogglesLayoutFeature(),
+            new SystemIndicatorLayoutFeature(),
+        ];
+        // Load debug feature
+        this.debug = new DebugFeature();
+        this.debug.load();
+        Logger(`Extension activation started, version: ${Config.version}`);
+        // Load features
+        Logger.debug("Initializing features ...");
+        let start = +Date.now();
         for (const feature of this.features) {
-            logger(`Loading feature '${feature.constructor.name}'`)
-            feature.settings = settings
-            feature.load()
+            Logger.debug(() => `Loading feature '${feature.constructor.name}'`);
+            feature.load();
         }
-
-        // load menu open tracker
-        this.updating = false
-        this.menuOpenTracker = QuickSettingsGrid.connect("notify::mapped",()=>{
-            if (!QuickSettingsGrid.mapped) return
-            this.updating = true
-            for (const feature of this.features) {
-                if (feature.onMenuOpen) feature.onMenuOpen()
-            }
-            this.updating = false
-        })
-
-        // load menu item added tracker
-        this.menuItemAddedTracker = QuickSettingsGrid.connect("actor-added",()=>{
-            if (this.updating) return
-            this.updating = true
-            for (const feature of this.features) {
-                if (feature.onMenuItemAdded) feature.onMenuItemAdded()
-            }
-            this.updating = false
-        })
-
-        logger("Loaded. " + (+Date.now() - start) + "ms taken")
+        Logger(`Extension Loaded, ${+Date.now() - start}ms taken`);
     }
-}
-
-function init(meta) {
-    return new Extension()
 }
