@@ -87,23 +87,6 @@ export default class DashToPanelExtension extends Extension {
 
     // if new version, display a notification linking to release notes
     if (this.metadata.version != SETTINGS.get_int('extension-version')) {
-      Utils.notify(
-        _('Dash to Panel has been updated!'),
-        _('You are now running version') + ` ${this.metadata.version}.`,
-        'software-update-available-symbolic',
-        Gio.icon_new_for_string(
-          `${this.path}/img/dash-to-panel-logo-light.svg`,
-        ),
-        {
-          text: _(`See what's new`),
-          func: () =>
-            Gio.app_info_launch_default_for_uri(
-              `${this.metadata.url}/releases/tag/v${this.metadata.version}`,
-              global.create_app_launch_context(0, -1),
-            ),
-        },
-      )
-
       SETTINGS.set_int('extension-version', this.metadata.version)
     }
 
