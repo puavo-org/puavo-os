@@ -660,6 +660,12 @@ darkdm_menu()
       bios|b)
         puavo-bios-config || return 1
         ;;
+      crypt-install)
+        darkdm_install crypt-install || return 1
+        ;;
+      crypt-preinstall)
+        darkdm_install crypt-preinstall || return 1
+        ;;
       customdescription|cd)
         # try sending a custom description to inventory system
         read -e -p "Custom description? " customdesc || return 1
