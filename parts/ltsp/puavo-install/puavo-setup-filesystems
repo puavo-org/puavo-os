@@ -104,7 +104,7 @@ class LuksPartitionHandler
     command = [ 'systemd-cryptenroll' ]
     command += @policy.arguments
     command += [
-      "--recovery-key=#{ recovery_key_file }",
+      "--unlock-key-file=#{ recovery_key_file }",
       "/dev/#{ @partition }"
     ]
 
@@ -218,6 +218,29 @@ module DiskHandler
       'imageoverlays' => { 'size' => '5G',       'type' => 'btrfssv' },
       'home'          => { 'size' => '100%FREE', 'type' => 'btrfssv' },
     },
+  }
+
+  EncryptionPresets = {
+    'none' => {
+      'label' => 'No encryption',
+      'method' => 'none',
+      'unlock_with_tpm' => false,
+    },
+    'passphrase' => {
+      'label' => 'Passphrase',
+      'method' => 'passphrase',
+      'unlock_with_tpm' => false,
+    },
+    'tpm-with-fallback-passphrase' => {
+      'label' => 'Automatic TPM unlock with fallback passphrase',
+      'method' => 'passphrase',
+      'unlock_with_tpm' => true,
+    },
+    'tpm-with-recovery-key' => {
+      'label' => 'Automatic TPM unlock with recovery key',
+      'method' => 'recovery-key',
+      'unlock_with_tpm' => true,
+    }
   }
 
   EncryptionDeviceName = "puavo-cryptroot"
@@ -557,15 +580,17 @@ module DiskHandler
 
   def self.setup_luks_partition_with_passphrase(fs_conf)
     handler = self.create_luks_partition_handler(fs_conf)
+    encryption = fs_conf['encryption']
     handler.setup_with_passphrase(
-      fs_conf['passphrase'], fs_conf['unlock_with_tpm'])
+      encryption['passphrase'], encryption['unlock_with_tpm'])
 
     fs_conf['install_target'] = handler.encryption_device
   end
 
   def self.setup_luks_partition_with_recovery_key(fs_conf)
     handler = self.create_luks_partition_handler(fs_conf)
-    handler.setup_with_recovery_key(fs_conf['unlock_with_tpm'])
+    encryption = fs_conf['encryption']
+    handler.setup_with_recovery_key(encryption['unlock_with_tpm'])
 
     fs_conf['install_target'] = handler.encryption_device
   end
@@ -580,11 +605,17 @@ module DiskHandler
     # Assign the install target, which might be overwritten by LUKS methods
     fs_setup_phases += [ :select_default_install_target ]
 
-    case fs_conf['encryption']
+    encryption = fs_conf['encryption']
+
+    case encryption['method']
       when 'passphrase'
         fs_setup_phases += [ :setup_luks_partition_with_passphrase ]
       when 'recovery-key'
         fs_setup_phases += [ :setup_luks_partition_with_recovery_key ]
+    end
+
+    if encryption['unlock_with_tpm'] then
+      check_tpm_enrollment_feasibility
     end
 
     fs_setup_phases += [ :puavo_filesystems, :mount_filesystems ]
@@ -831,13 +862,34 @@ module QueryDiskInfo
     raise 'Windows setup prompts exceeded.'
   end
 
-  def self.ask_device_with_confirmation(hosttype, raid_setup_done, encryption,
-                                        unlock_with_tpm)
+  def self.ask_encryption_setup()
+    prompt = %q{Select the encryption preset:}
+    choices = DiskHandler::EncryptionPresets.map {
+      |key, preset| [key, preset['label']] }
+    preset_key = UI::ask_multiple_choices(
+      prompt, choices, UI::EncryptionPresetPrompt)
+
+    unless DiskHandler::EncryptionPresets.keys.include?(preset_key) then
+      raise "Unrecognized encryption preset '#{ preset_key }'"
+    end
+
+    preset = DiskHandler::EncryptionPresets[preset_key]
+    conf = preset.clone
+
+    if preset['method'] == 'passphrase' then
+      passphrase = UI::ask_passphrase('Enter the passphrase for encryption: ')
+      conf['passphrase'] = passphrase
+    end
+
+    return conf
+  end
+
+  def self.ask_device_with_confirmation(hosttype, raid_setup_done)
     device       = nil
     do_it        = false
+    encryption   = nil
     windows_size = nil
     wipe         = false
-    passphrase   = nil
 
     until do_it do
       UI::reset_questions()
@@ -878,9 +930,7 @@ module QueryDiskInfo
         end
       end
 
-      if encryption == 'passphrase' then
-        passphrase = UI::ask_passphrase('Enter the passphrase for encryption:')
-      end
+      encryption = QueryDiskInfo::ask_encryption_setup()
 
       do_it = QueryDiskInfo::ask_confirmation(device)
     end
@@ -890,8 +940,6 @@ module QueryDiskInfo
       'encryption'      => encryption,
       'filesystems'     => DiskHandler::Filesystems[hosttype],
       'hosttype'        => hosttype,
-      'passphrase'      => passphrase,
-      'unlock_with_tpm' => unlock_with_tpm,
       'windows_size'    => windows_size,
       'wipe'            => wipe,
     }
@@ -946,6 +994,7 @@ end
 
 module UI
   DiskDevicePrompt,
+  EncryptionPresetPrompt,
   ImageoverlaySizePrompt,
   InstallWithoutRaidPrompt,
   PartitionPrompt,
@@ -954,20 +1003,16 @@ module UI
   WindowsSizePrompt,
   WipePartitionPrompt,
   WritePartitionsPrompt,
-    = *(1..9)
+    = *(1..10)
 
   @ask_forced      = {}
   @defaults        = {}
-  @encryption      = 'none'
   @force_defaults  = {}
   @hosttype        = nil
   @loopback_only   = false
-  @unlock_with_tpm = false
 
-  def self.encryption       ; @encryption       end
   def self.hosttype         ; @hosttype         end
   def self.loopback_only    ; @loopback_only    end
-  def self.unlock_with_tpm  ; @unlock_with_tpm  end
 
   def self.reset_questions
     @ask_forced = @force_defaults.clone
@@ -980,6 +1025,7 @@ puavo-setup-filesystems [OPTIONS]
 -h, --help                        show help
 
     --ask-disk-device             ask with default for disk device
+    --ask-encryption              ask with default for encryption preset
     --ask-imageoverlay-size       ask with default for imageoverlay size
     --ask-install-without-raid    ask with default for install without raid
     --ask-partition               ask with default for partition
@@ -991,6 +1037,7 @@ puavo-setup-filesystems [OPTIONS]
     --encrypt-with-passphrase     encrypt the installation with a passphrase
     --encrypt-with-recovery-key   encrypt the installation with a recovery key
     --force-disk-device           force value for disk device
+    --force-encryption            force value for encryption preset
     --force-imageoverlay-size     force value for imageoverlay size
     --force-install-without-raid  force value for install without raid
     --force-partition             force value for partition
@@ -1010,6 +1057,7 @@ EOF
       opts = GetoptLong.new(
         [ '--help', '-h'                , GetoptLong::NO_ARGUMENT       ],
         [ '--ask-disk-device'           , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--ask-encryption'            , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-imageoverlay-size'     , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-install-without-raid'  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-partition'             , GetoptLong::REQUIRED_ARGUMENT ],
@@ -1018,9 +1066,8 @@ EOF
         [ '--ask-windows-size'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-wipe-partition'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-write-partitions'      , GetoptLong::REQUIRED_ARGUMENT ],
-        [ '--encrypt-with-passphrase'   , GetoptLong::NO_ARGUMENT       ],
-        [ '--encrypt-with-recovery-key' , GetoptLong::NO_ARGUMENT       ],
         [ '--force-disk-device'         , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--force-encryption'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-imageoverlay-size'   , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-install-without-raid', GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-partition'           , GetoptLong::REQUIRED_ARGUMENT ],
@@ -1031,7 +1078,6 @@ EOF
         [ '--force-write-partitions'    , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--hosttype'                  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--loopback-only'             , GetoptLong::NO_ARGUMENT       ],
-        [ '--unlock-with-tpm'           , GetoptLong::NO_ARGUMENT       ],
       )
 
       opts.each do |opt, arg|
@@ -1041,6 +1087,8 @@ EOF
           exit(0)
         when '--ask-disk-device'
           @defaults[DiskDevicePrompt] = arg
+        when '--ask-encryption'
+          @defaults[EncryptionPresetPrompt] = arg
         when '--ask-imageoverlay-size'
           @defaults[ImageoverlaySizePrompt] = arg
         when '--ask-install-without-raid'
@@ -1057,13 +1105,12 @@ EOF
           @defaults[WipePartitionPrompt] = arg
         when '--ask-write-partitions'
           @defaults[WritePartitionsPrompt] = arg
-        when '--encrypt-with-passphrase'
-          @encryption = 'passphrase'
-        when '--encrypt-with-recovery-key'
-          @encryption = 'recovery-key'
         when '--force-disk-device'
           @defaults[DiskDevicePrompt] = arg
           @force_defaults[DiskDevicePrompt] = true
+        when '--force-encryption'
+          @defaults[EncryptionPresetPrompt] = arg
+          @force_defaults[EncryptionPresetPrompt] = true
         when '--force-imageoverlay-size'
           @defaults[ImageoverlaySizePrompt] = arg
           @force_defaults[ImageoverlaySizePrompt] = true
@@ -1092,8 +1139,6 @@ EOF
           @hosttype = arg
         when '--loopback-only'
           @loopback_only = true
-        when '--unlock-with-tpm'
-          @unlock_with_tpm = true
         end
       end
     rescue GetoptLong::InvalidOption => e
@@ -1118,6 +1163,27 @@ EOF
     return answer.match(/\A\n\z/)  ? default \
          : answer.match(/\A\s+\z/) ? ''      \
          : answer.strip
+  end
+
+  def self.ask_multiple_choices(question, choices, prompt_key=nil)
+    default = nil
+    if @defaults.has_key?(prompt_key) && @defaults[prompt_key] != 'default'
+      default = @defaults[prompt_key]
+    end
+    if @ask_forced.has_key?(prompt_key) then
+      # Do not return forced twice... in case it did not work,
+      # we need user input.
+      @ask_forced.delete(prompt_key)
+      return default
+    end
+    cli = HighLine.new
+    answer = cli.choose do |menu|
+      menu.prompt = question
+      choices.each do |key, label|
+        menu.choice(label) { key }
+      end
+    end
+    answer
   end
 
   def self.ask_size_with_default(question, default, prompt_key=nil)
@@ -1177,22 +1243,9 @@ if hosttype == 'bootserver' then
   raid_setup_done = DiskHandler::setup_raid_if_possible()
 end
 
-encryption = UI::encryption
-unlock_with_tpm = UI::unlock_with_tpm
-
-if unlock_with_tpm then
-  if encryption == 'none' then
-    warn 'Encryption method must be specified for TPM unlocking'
-    exit(1)
-  end
-
-  DiskHandler::check_tpm_enrollment_feasibility
-end
-
 case hosttype
   when 'bootserver', 'diskinstaller', 'exam', 'laptop'
-    conf = QueryDiskInfo::ask_device_with_confirmation(hosttype,
-             raid_setup_done, encryption, unlock_with_tpm)
+    conf = QueryDiskInfo::ask_device_with_confirmation(hosttype, raid_setup_done)
     DiskHandler::do_fs_setup(conf, vgname, raid_setup_done)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
