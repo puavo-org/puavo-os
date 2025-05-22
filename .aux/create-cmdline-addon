@@ -1,12 +1,17 @@
 #!/bin/sh
-cmdline=$1
-output=$2
+set -e
 
-if [ -z "$cmdline" ] || [ -z "$output" ]; then
+usage() {
   echo "Usage: $0 <cmdline> <output>"
   exit 1
+}
+
+if [ "$#" -ne 2 ]; then
+  usage
 fi
 
+cmdline=$1
+output=$2
 output_basename=$(basename "$output")
 
 # Todo: Check SBAT

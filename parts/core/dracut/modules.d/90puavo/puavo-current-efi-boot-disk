@@ -2,7 +2,7 @@
 efi_variable=$(ls /sys/firmware/efi/efivars/LoaderDevicePartUUID-* 2>/dev/null)
 
 if [ -z "$efi_variable" ]; then
-  echo "Failed to find the EFI variable for the loader device partition UUID. The boot process might not be using systemd-stub?" >&2
+  echo "error: failed to find the EFI variable for the loader device partition UUID, the boot process might not be using systemd-stub?" >&2
   exit 1
 fi
 
@@ -10,7 +10,7 @@ fi
 efi_partition_uuid=$(cat "$efi_variable" | tr -cd '\40-\176' | tr 'A-Z' 'a-z')
 
 if [ -z "$efi_partition_uuid" ]; then
-  echo "Failed to extract the EFI partition UUID from $efi_variable" >&2
+  echo "error: failed to extract the EFI partition UUID from $efi_variable" >&2
   exit 1
 fi
 
@@ -18,7 +18,7 @@ fi
 parent_disk=$(lsblk -lnp -o PKNAME "/dev/disk/by-partuuid/$efi_partition_uuid")
 
 if [ -z "$parent_disk" ]; then
-  echo "Failed to find the disk containing the EFI partition with UUID $efi_partition_uuid" >&2
+  echo "error: failed to find the disk containing the EFI partition with UUID $efi_partition_uuid" >&2
   exit 1
 fi
 

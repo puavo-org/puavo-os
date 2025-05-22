@@ -1,16 +1,25 @@
 #!/bin/sh
 set -e
 
-boot_folder=$1
-image_file=$2
-output_name=$3
-
-if [ -z "$boot_folder" ] || [ -z "image_file" ] || [ -z "output_name" ]; then
-  echo "Usage: $0 <boot-folder> <image-file> <output-name>"
+usage() {
+  echo "Usage: $0 <boot-folder> <key-folder> <image-file> <uki-prefix>"
   exit 1
+}
+
+if [ "$#" -ne 4 ]; then
+  usage
 fi
 
-.aux/create-uki "$boot_folder" "${boot_folder}/${output_name}"
+boot_folder=$1
+key_folder=$2
+image_file=$3
+uki_prefix=$4
+
+for kernel_image in "$boot_folder"/vmlinuz-*; do
+  kernel_version=$(basename "$kernel_image" | sed 's/vmlinuz-//')
+  output_path="${boot_folder}/${uki_prefix}-${kernel_version}.uki.efi"
+  .aux/create-uki "$boot_folder" "$key_folder" "$kernel_version" "$output_path"
+done
 
 addon_folder="$boot_folder/addons"
 mkdir -p "$addon_folder"

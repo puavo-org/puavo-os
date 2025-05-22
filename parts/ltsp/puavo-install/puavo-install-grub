@@ -452,6 +452,18 @@ fi
 
 load_env
 
+# Load the Puavo configuration
+set text_normal_startup="Normal startup"
+set text_backup_normal_startup="Backup system, normal startup"
+set text_other_system_normal_startup="Other system, normal startup"
+
+if test -z "${puavo_optional_grub_conf}"; then
+  set puavo_optional_grub_conf="default"
+fi
+if test -e "${prefix}/puavo/${puavo_optional_grub_conf}.cfg"; then
+  source "${prefix}/puavo/${puavo_optional_grub_conf}.cfg"
+fi
+
 function load_video {
   if [ x$feature_all_video_module = xy ]; then
     insmod all_video
@@ -529,14 +541,37 @@ function generate_boot_entry {
   # If such folder exists, load the image specific config
   set image_environment_file="${metadata_folder}/grubenv"
 
-  set label="$name"
-  set class="puavo-os"
+  set enabled="true"
+  set image_name=""
+  set release=""
 
   if test -f "$image_environment_file"; then
-    load_env --file "$image_environment_file" --skip-sig label class
+    load_env --file "$image_environment_file" --skip-sig enabled image_name release
   fi
 
-  add_boot_entry "$image_path" "$label" "$class"
+  set label="${text_other_system_normal_startup} (${name})"
+  set icon="puavo-os"
+
+  # If the release is set, generate the label based on it
+  if test -n "$release"; then
+    if test "$image_name" = "${puavo_default_image}"; then
+      set label="${text_normal_startup} (${release})"
+      set icon="puavo-os"
+    elif test "$image_name" = "${puavo_backup_image}"; then
+      set label="${text_backup_normal_startup} (${release})"
+      set icon="puavo-os-backup"
+    else
+      set label="${text_other_system_normal_startup} (${release})"
+      set icon="puavo-os"
+    fi
+  fi
+
+  if test "$enabled" = "false"; then
+    echo "Boot entry for '$image_path' is disabled"
+    return
+  fi
+
+  add_boot_entry "$image_path" "$label" "$icon"
 }
 
 function add_boot_options {
@@ -708,7 +743,7 @@ mount_efi_partition() {
   mountpoint -q /boot/efi && return 0
 
   fsck.fat -a "$efi_devpath" > /dev/null 2>&1 || true
-  mount "$efi_devpath" /boot/efi || return 1
+  mount "$efi_devpath" /boot/efi 1>/dev/null || return 1
 }
 
 install_legacy_grub() {
@@ -729,15 +764,15 @@ install_legacy_grub() {
 }
 
 copy_grub_environment() {
-    # Scripts such as "setup_grub_environment" write the
-    # environment variables into /images/boot/grub/grubenv.
-    # Here we sync this file to the boot directory (EFI partition most likely).
-    if [ ! -f /images/boot/grub/grubenv ]; then
-        # Grub will create the default environment in the EFI partition
-        return 0
-    fi
+  # Scripts such as "setup_grub_environment" write the
+  # environment variables into /images/boot/grub/grubenv.
+  # Here we sync this file to the boot directory in the EFI partition.
+  if [ ! -f "${images_dir}/boot/grub/grubenv" ]; then
+    # Grub will create the default environment in the EFI partition
+    return 0
+  fi
 
-    cp /images/boot/grub/grubenv "${boot_dir}/grub/grubenv" || return 1
+  cp "${images_dir}/boot/grub/grubenv" "${boot_dir}/grub/grubenv" || return 1
 }
 
 write_grub_version() {
@@ -784,7 +819,7 @@ install_efi_grub() {
     install_puavo_grub_files_to_efi_partition "$boot_dir" && \
     copy_grub_environment && \
     write_grub_version "${boot_dir}/grub/version" || {
-      echo "failed to install UKI files to EFI partition" >&2
+      log err "failed to install UKI files to EFI partition"
       umount /boot/efi || true
       return 1
     }
@@ -902,7 +937,7 @@ case "$diskdev" in
   /dev/md*)
     grub_target_devices=$(find_grub_target_devices_on_raid "$diskdev")
     if [ -z "$grub_target_devices" ]; then
-      log err 'could not find grub target devices on RAID configuration'
+      log err 'could not find Grub target devices on RAID configuration'
       exit 1
     fi
     ;;
@@ -974,7 +1009,7 @@ install_puavo_grub_files_to_efi_partition() {
   boot_dir=$1
 
   cp -r /boot/grub "$boot_dir" || (
-    log err 'failed to copy grub files to boot directory $boot_dir'
+    log err "failed to copy Grub files to boot directory ${boot_dir}"
     return 1
   )
 }
@@ -1002,11 +1037,11 @@ else
   # because we'll install the GRUB boot files on EFI partition
   if [ "${UKI_MODE:-}" = "1" ]; then
     for grubdev in $grub_target_devices; do
-      log info "installing grub to ${grubdev}"
+      log info "installing Grub to ${grubdev}"
 
       efi_devpath=$(get_efi_devpath "$grubdev")
       if [ -z "$efi_devpath" ]; then
-        log err "failed to find EFI partition path for GRUB device"
+        log err "failed to find EFI partition path for Grub device"
         exit 1
       fi
 
@@ -1018,7 +1053,7 @@ else
     done
   else
     for grubdev in $grub_target_devices; do
-      log info "installing grub to ${grubdev}"
+      log info "installing Grub to ${grubdev}"
 
       grub_install_attempted=false
 
@@ -1113,7 +1148,7 @@ install_grub_configuration() {
     mv "$tmp_grub_cfg_path" "$grub_cfg_path"
     log notice 'new Grub configuration has been installed'
     if ! flush_caches; then
-      log warn 'error in flushing caches after updating grub configuration'
+      log warn 'error in flushing caches after updating Grub configuration'
     fi
   fi
 
@@ -1128,7 +1163,7 @@ if [ "${UKI_MODE:-}" = "1" ]; then
 
     efi_devpath=$(get_efi_devpath "$grubdev")
     if [ -z "$efi_devpath" ]; then
-      log err "failed to find EFI partition path for GRUB device"
+      log err "failed to find EFI partition path for Grub device"
       exit 1
     fi
 

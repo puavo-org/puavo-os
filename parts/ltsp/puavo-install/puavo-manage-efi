@@ -179,10 +179,10 @@ esp_mount() {
   while IFS= read -r -d $'\0' esp_or_boot_efi_mount; do
     log warning "'${esp_or_boot_efi_mount}' was already mounted, umounting it"
     umount "${esp_or_boot_efi_mount}" || return 1
-  done < <(awk "-vdev=${esp_devpath}" '$1 == dev && $2 == "/boot/efi" { printf "%s" $2 }' /proc/mounts) || return 1
+  done < <(awk "-vdev=${esp_devpath}" '$1 == dev && $2 == "/boot/efi" { printf "%s", $2 }' /proc/mounts) || return 1
 
   mkdir -p /boot/efi || return 1
-  mount -onodev,nosuid "${esp_devpath}" /boot/efi || return 1
+  mount -onodev,nosuid "${esp_devpath}" /boot/efi 1>/dev/null || return 1
   log info "mounted ESP '${esp_devpath}' to /boot/efi"
   echo -n /boot/efi
 }

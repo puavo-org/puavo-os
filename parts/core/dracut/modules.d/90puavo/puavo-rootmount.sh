@@ -3,7 +3,7 @@
 grep -E -q '(^| )init=/sbin/init-puavo($| )' /proc/cmdline || exit 0
 
 panic() {
-    echo "Error: $1" >&2
+    echo "error: $1" >&2
     exit 1
 }
 
@@ -47,11 +47,11 @@ done
 # ourselves. However, we must consider there being multiple bootable disks
 # such as mirrored RAID devices.
 if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
-  echo "Root device is not set in kernel parameters. Attempting to find it..."
+  echo "root device is not set in kernel parameters, attempting to find it..."
 
   # Attempt to find out the boot disk using EFI variables
   POTENTIAL_BOOT_DEVICE=$(puavo-current-efi-boot-disk)
-  echo "Potential boot device: ${POTENTIAL_BOOT_DEVICE:-unknown}"
+  echo "potential boot device: ${POTENTIAL_BOOT_DEVICE:-unknown}"
 
   # If we found out the boot device, search for the first bootable root
   # partition and assign it as the root device.
@@ -66,17 +66,17 @@ if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
     if blkid "$device" | grep -q 'TYPE="btrfs"'; then
       PUAVO_ROOT_DEVICE=$device
       ROOT_IN_BTRFS=1
-      echo "Selecting root device: $PUAVO_ROOT_DEVICE"
+      echo "selecting root device: $PUAVO_ROOT_DEVICE"
       break
     fi
   done
 
   if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
-    echo "Error: Failed to find the root device. Boot will likely fail."
+    echo "error: failed to find the root device, boot will likely fail"
   fi
 fi
 
-echo "Boot device: ${PUAVO_ROOT_DEVICE:-unknown}"
+echo "boot device: ${PUAVO_ROOT_DEVICE:-unknown}"
 
 if [ "$ROOT_IN_BTRFS" = 0 ]; then
   lvm vgchange -a y "$PUAVO_LVM_VG"
@@ -141,7 +141,7 @@ loopmount_image()
     ret=$?
 
     if [ "$ret" -gt 0 ]; then
-      panic "Failed to loop mount ${imagepath} to ${NEWROOT}"
+      panic "failed to loop mount ${imagepath} to ${NEWROOT}"
     fi
 }
 
@@ -258,8 +258,8 @@ if [ "$loopmount_used" -gt 0 ]; then
     mount -o remount,noatime,rw "$target_dir"
 fi
 
-[ -z "${NEWROOT}" ] && panic "Failed to mount root filesystem"
-[ -d "${NEWROOT}/proc" ] || panic "Failed to mount root filesystem"
+[ -z "${NEWROOT}" ] && panic "failed to mount root filesystem"
+[ -d "${NEWROOT}/proc" ] || panic "failed to mount root filesystem"
 
 # Save the chosen root device for mounting subvolumes later
 echo "$PUAVO_ROOT_DEVICE" > "/run/puavo/root-device"

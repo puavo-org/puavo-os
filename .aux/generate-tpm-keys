@@ -2,11 +2,27 @@
 
 # Generate a new TPM key pair if necessary (https://www.freedesktop.org/software/systemd/man/latest/systemd-measure.html)
 set -e
-mkdir -p /etc/puavo-conf
-cd /etc/puavo-conf
+
+usage() {
+  echo "Usage: $0 <output-directory>" >&2
+  exit 1
+}
+
+if [ $# -ne 1 ]; then
+  usage
+fi
+
+output_directory="$1"
+
+if [ ! -d "$output_directory" ]; then
+  echo "error: output directory '$output_directory' does not exist" >&2
+  exit 1
+fi
+
+cd "$output_directory"
 
 if [ -e tpm2-pcr-private-key.pem ]; then
-    exit 0
+  exit 0
 fi
 
 # Todo: Can we use RSA 4096?

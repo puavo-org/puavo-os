@@ -70,18 +70,10 @@ EOF
 
 service squid restart
 
+mkdir -p config/boot_keys
+
 # generate keys for signing tpm pcr values in uki builds
-.aux/generate-tpm-keys
+.aux/generate-tpm-keys ./config/boot_keys
 
 # generate mok for secure boot
-.aux/generate-mok
-
-if [ ! -d config/boot_keys ]; then
-  mkdir -p config/boot_keys
-  cp /etc/puavo-conf/tpm2-pcr-public-key.pem config/boot_keys
-  cp /etc/puavo-conf/mok.der config/boot_keys
-
-  if [ -n "$SUDO_USER" ]; then
-    chown -R "$SUDO_USER:" config/boot_keys
-  fi
-fi
+.aux/generate-mok ./config/boot_keys

@@ -1,30 +1,31 @@
 #!/bin/sh
 set -e
 
-find_latest_version() {
-  latest=$(ls $1 | xargs -n1 | sort -V | tail -n 1)
-  echo "$latest"
+usage() {
+  echo "Usage: $0 <boot-folder> <key-folder> <kernel-version> <output>"
+  exit 1
 }
 
-boot_folder=$1
-output=$2
-
-if [ -z "$boot_folder" ] || [ -z "$output" ]; then
-  echo "Usage: $0 <boot-folder> <output>"
-  exit 1
+if [ "$#" -ne 4 ]; then
+  usage
 fi
 
-output_basename=$(basename "$output")
-kernel_image=$(find_latest_version "$boot_folder/vmlinuz*")
-initrd=$(find_latest_version "$boot_folder/initrd*")
+boot_folder=$1
+key_folder=$2
+kernel_version=$3
+output=$4
+
+kernel_image="${boot_folder}/vmlinuz-${kernel_version}"
+initrd_image="${boot_folder}/initrd.img-${kernel_version}"
+os_release=$(basename "$output")
 
 ukify build \
-  --linux=$kernel_image \
-  --initrd=$initrd \
-  --os-release="$output_basename" \
+  --linux="$kernel_image" \
+  --initrd="$initrd_image" \
+  --os-release="$os_release" \
   --cmdline="" \
-  --pcr-private-key=/etc/puavo-conf/tpm2-pcr-private-key.pem \
-  --pcr-public-key=/etc/puavo-conf/tpm2-pcr-public-key.pem \
+  --pcr-private-key="${key_folder}/tpm2-pcr-private-key.pem" \
+  --pcr-public-key="${key_folder}/tpm2-pcr-public-key.pem" \
   --pcr-banks=sha1,sha256 \
   --output "$output" \
   --measure
