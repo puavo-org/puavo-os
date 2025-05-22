@@ -1,29 +1,32 @@
-const { Clutter, Gio, GLib, GObject, St } = imports.gi;
-const Dialog = imports.ui.dialog;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Gettext = imports.gettext;
-const Main = imports.ui.main;
-const ModalDialog = imports.ui.modalDialog;
-const Util = imports.misc.util;
+import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import St from 'gi://St';
 
-const { QuickMenuToggle, SystemIndicator } = imports.ui.quickSettings;
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { QuickMenuToggle, SystemIndicator } from "resource:///org/gnome/shell/ui/quickSettings.js";
+
+import * as Dialog from 'resource:///org/gnome/shell/ui/dialog.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js'
+import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
+import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 
 const exam_session_path = '/var/lib/puavo-exammode/session.json';
 
-const { gettext: _, ngettext, pgettext, } = ExtensionUtils;
+// XXX otherwise this works but translations may be broken
+// import * as ExtensionUtils from 'resource:///org/gnome/shell/misc/extensionUtils.js';
+// XXX const { gettext: _, ngettext, pgettext, } = ExtensionUtils;
 
-var control_info_label;
 var exam_session_info;
-var indicator;
 
 const QuitExamButton = GObject.registerClass(
 class QuitExamButton extends QuickMenuToggle {
     constructor() {
         super({
-            label: _('Quit exam'),
+            title: _('Quit exam'),
             hasMenu: true,
             canFocus: true,
-            accessible_name: _('Quit exam'),
         });
 
         this.menu.addAction(_('Quit, I want to exit the exam'),
@@ -113,39 +116,45 @@ class QuitExamButton extends QuickMenuToggle {
 
 var Indicator = GObject.registerClass(
 class Indicator extends SystemIndicator {
-    _init() {
-        super._init();
-        this.quickSettingsItems.push(new QuitExamButton());
-        let qs = Main.panel.statusArea.quickSettings;
-        qs._addItems(this.quickSettingsItems, 2);
-    }
+  _init() {
+    super._init();
+    let quit_exam_button = new QuitExamButton();
+    this.quickSettingsItems.push(quit_exam_button);
+    let qs = Main.panel.statusArea.quickSettings;
+    qs.menu.addItem(quit_exam_button, 2);
+  }
 });
 
-function init() {
-  ExtensionUtils.initTranslations('puavo-exammode');
+export default class DashToPanelExtension extends Extension {
+  constructor(metadata) {
+    super(metadata);
 
-  let [ ok, exam_session_json ] = GLib.file_get_contents(exam_session_path);
-  if (!ok) {
-    throw new Error('could not read session information');
+    // XXX translations?
+    // ExtensionUtils.initTranslations('puavo-exammode');
+
+    let [ ok, exam_session_json ] = GLib.file_get_contents(exam_session_path);
+    if (!ok) {
+      throw new Error('could not read session information');
+    }
+    let utf8decoder = new TextDecoder();
+    // XXX should probably check exam_session_info contents in some way?
+    exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
+
+    let control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
+                           '    |    ' + _('press F11 to toggle fullscreen');
+    this.control_info_label = new St.Label({
+                                text: control_text,
+                                y_align: Clutter.ActorAlign.CENTER,
+                              });
+
+    this.indicator = new Indicator();
   }
-  let utf8decoder = new TextDecoder();
-  // XXX should probably check exam_session_info contents in some way?
-  exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
 
-  control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
-                    '    |    ' + _('press F11 to toggle fullscreen');
-  control_info_label = new St.Label({
-                         text: control_text,
-                         y_align: Clutter.ActorAlign.CENTER,
-                       });
+  enable() {
+    Main.panel._centerBox.insert_child_at_index(this.control_info_label, 0);
+  } 
 
-  indicator = new Indicator();
-}
-
-function enable() {
-  Main.panel._centerBox.insert_child_at_index(control_info_label, 0);
-} 
-
-function disable() {
-  Main.panel._centerBox.remove_child(control_info_label);
+  disable() {
+    Main.panel._centerBox.remove_child(this.control_info_label);
+  }
 }
