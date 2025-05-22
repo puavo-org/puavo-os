@@ -818,8 +818,8 @@ class packages {
     , 'epiphany-browser'
     , 'icedtea-netx'
     , 'liferea'
-    , 'openjdk-17-jdk'
-    , 'openjdk-17-jre'
+    , 'openjdk-25-jdk'
+    , 'openjdk-25-jre'
     , 'php-cli'
     , 'php-sqlite3'
     , 'sqlite3' ]:
