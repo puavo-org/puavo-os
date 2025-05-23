@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+command -v mokutil >/dev/null 2>&1 || exit 0
+status=0
+
+# NOTE: mokutil exits with zero when MOK is not enrolled
+if mokutil --test-key /etc/puavo-conf/mok.der >/dev/null 2>&1; then
+  echo "Enrolling Secure Boot MOK..."
+  # TODO: Is there a better way to automate this?
+  password="0"
+  password_input="${password}\n${password}" 
+  echo "$password_input" | mokutil --import /etc/puavo-conf/mok.der 1>/dev/null
+  echo "Please reboot and complete the enrollment with password: ${password}"
+  status=1
+fi
+
+secure_boot_state=$(mokutil --sb-state 2>&1)
+if echo "$secure_boot_state" | grep -q 'SecureBoot disabled'; then
+  echo "Secure Boot is disabled."
+  echo "Please enable Secure Boot in BIOS settings."
+  status=1
+fi
+
+exit $status
