@@ -191,18 +191,29 @@ is_wifi6_compatible() {
   fi
 }
 
-get_safetydisplay_status() {
-  local display
-  display=$(hexdump -v /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
+inspect_efivars() {
+  local check_for
+  check_for="$1"
+  efivardump=$(hexdump -v /sys/firmware/efi/efivars/MiscMobileKBCBuiltInConfig-fb3b9ece-4aba-4933-b49d-b4d67d892351 \
         2>/dev/null || echo -n 2)
-  dlen=`echo -n $display | wc -c`
-  # The hexdump length on EliteBook G3-G6 is 50, on G7+ it's 73.
-  if [ $dlen -eq "50" ]; then
-    echo $display | tail -c 17 | head -c 1
-  elif [ $dlen -eq "73" ]; then
-    echo $display | tail -c 40 | head -c 1
-  else
-    echo -n "2" # we're not familliar with this variable format, do nothing
+  dlen=$(echo -n $efivardump | wc -c)
+  # The length of this hexdump is 50 on EliteBook G5/G6 and 73 on G7+
+  if [ $check_for = "--displaytype" ]; then
+    if [ $dlen -eq "50" ]; then
+      echo $efivardump | tail -c 17 | head -c 1
+    elif [ $dlen -eq "73" ]; then
+      echo $efivardump | tail -c 40 | head -c 1
+    else
+      echo -n "2" # we're not familliar with this variable format, do nothing
+    fi
+  elif [ $check_for = "--kblight" ]; then
+    if [ $dlen -eq "50" ]; then
+      echo $efivardump | tail -c 22 | head -c 1
+    elif [ $dlen -eq "73" ]; then
+      echo $efivardump | tail -c 45 | head -c 1
+    else
+      echo -n "2"
+    fi
   fi
 }
 
@@ -354,7 +365,7 @@ darkdm_common_systeminfo()
   fi
 
   display_safety=""
-  if [ $(get_safetydisplay_status) = "1" ]; then
+  if [ $(inspect_efivars --displaytype) = "1" ]; then
     display_safety=$(colorize safety 1 50 100 "1" "|| SAFETY")
   fi
 
@@ -827,10 +838,11 @@ if image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
     dbus-send --system --dest=org.puavo.client.systeminfocollectordaemon \
               --print-reply=literal /systeminfocollector \
               org.puavo.client.systeminfocollector.CollectSysinfo \
-              | jq --arg nresolution "`cat /sys/class/graphics/fb0/virtual_size`" \
-                --arg hastouchscreen "`udevadm info --export-db | grep -c ID_INPUT_TOUCHSCREEN=1`" \
-                --arg hassafety "$(get_safetydisplay_status)" \
-              '. + {"resolution": $nresolution, "touchscreen": $hastouchscreen, "safety": $hassafety}' | jq '{"hw_info": .}'); then
+              | jq --arg nresolution "$(cat /sys/class/graphics/fb0/virtual_size)" \
+                --arg hastouchscreen "$(udevadm info --export-db | grep -c ID_INPUT_TOUCHSCREEN=1)" \
+                --arg hassafety "$(inspect_efivars --displaytype)" \
+                --arg hasbacklight "$(inspect_efivars --kblight)" \
+              '. + {"resolution": $nresolution, "touchscreen": $hastouchscreen, "safety": $hassafety, "keyboard_backlight": $hasbacklight}' | jq '{"hw_info": .}'); then
         if ! device_identifier=$(curl --cacert /etc/puavo-conf/rootca.pem  \
                             -d "${sysinfo_json}" --fail  -H "Content-Type: application/json" --max-time 5 --silent \
                             -X POST "$deviceid_url"); then
