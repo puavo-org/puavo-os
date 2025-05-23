@@ -22,6 +22,7 @@ os_release=$(basename "$output")
 ukify build \
   --linux="$kernel_image" \
   --initrd="$initrd_image" \
+  --uname="${kernel_version}" \
   --os-release="$os_release" \
   --cmdline="" \
   --pcr-private-key="${key_folder}/tpm2-pcr-private-key.pem" \
