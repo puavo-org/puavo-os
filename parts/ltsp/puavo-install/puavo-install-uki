@@ -113,7 +113,7 @@ if [ -z "$kernel_version" ]; then
   exit 1
 fi
 
-enabled_uki=$(find "$boot_directory" -type f -name "*${kernel_version}.uki.efi")
+enabled_uki=$(find "$boot_directory" -type f -name "*${kernel_version}.uki.efi" | head -n 1)
 
 if [ -z "$enabled_uki" ]; then
   echo "error: failed to find UKI with kernel version ${kernel_version}" >&2
@@ -122,7 +122,9 @@ fi
 
 for uki in "$boot_directory"/*.uki.efi; do
   enabled="false"
-  [ "$uki" = "$enabled_uki" ] && enabled="true"
+  if [ "$(realpath "$uki")" = "$(realpath "$enabled_uki")" ]; then
+    enabled="true"
+  fi
 
   install_uki "$uki" "$uki_root" "$enabled" || {
     echo "error: failed to install UKI '$uki' to EFI partition" >&2
