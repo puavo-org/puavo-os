@@ -1,22 +1,18 @@
 import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
+import Gio     from 'gi://Gio';
+import GLib    from 'gi://GLib';
 import GObject from 'gi://GObject';
-import St from 'gi://St';
+import St      from 'gi://St';
 
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 import { QuickMenuToggle, SystemIndicator } from "resource:///org/gnome/shell/ui/quickSettings.js";
 
-import * as Dialog from 'resource:///org/gnome/shell/ui/dialog.js';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js'
-import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
-import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+import * as Dialog         from 'resource:///org/gnome/shell/ui/dialog.js';
+import * as Main           from 'resource:///org/gnome/shell/ui/main.js'
+import * as ModalDialog    from 'resource:///org/gnome/shell/ui/modalDialog.js';
+import * as Util           from 'resource:///org/gnome/shell/misc/util.js';
 
 const exam_session_path = '/var/lib/puavo-exammode/session.json';
-
-// XXX otherwise this works but translations may be broken
-// import * as ExtensionUtils from 'resource:///org/gnome/shell/misc/extensionUtils.js';
-// XXX const { gettext: _, ngettext, pgettext, } = ExtensionUtils;
 
 var exam_session_info;
 
@@ -128,10 +124,9 @@ class Indicator extends SystemIndicator {
 export default class DashToPanelExtension extends Extension {
   constructor(metadata) {
     super(metadata);
+  }
 
-    // XXX translations?
-    // ExtensionUtils.initTranslations('puavo-exammode');
-
+  enable() {
     let [ ok, exam_session_json ] = GLib.file_get_contents(exam_session_path);
     if (!ok) {
       throw new Error('could not read session information');
@@ -148,13 +143,15 @@ export default class DashToPanelExtension extends Extension {
                               });
 
     this.indicator = new Indicator();
-  }
 
-  enable() {
     Main.panel._centerBox.insert_child_at_index(this.control_info_label, 0);
   } 
 
   disable() {
     Main.panel._centerBox.remove_child(this.control_info_label);
+    this.control_info_label.destroy();
+    this.control_info_label = null;
+    this.indicator.destroy();
+    this.indicator = null;
   }
 }
