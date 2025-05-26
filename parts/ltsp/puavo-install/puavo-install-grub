@@ -987,7 +987,7 @@ fi
 
 # XXX ${puavo_partition_dev} should use UUID at least in the btrfs case:
 # XXX root=UUID=${uuid}
-common_kernel_arguments="puavo.hosttype=${hosttype} root=${puavo_partition_dev} puavo.image.path=\"\${imagepath}\""
+common_kernel_arguments="root=${puavo_partition_dev} puavo.image.path=\"\${imagepath}\""
 
 case "$hosttype" in
   bootserver|diskinstaller|preinstalled|wirelessaccesspoint)
