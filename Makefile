@@ -359,7 +359,7 @@ rdiffs: $(image_dir) $(mirror_dir)
 
 .PHONY: exam-image
 exam-image:
-	sudo .aux/make-exam-disk "${SOURCE_IMAGE}" "${TARGET_IMAGE}"
+	sudo env PATH="${PATH}" .aux/make-exam-disk "${SOURCE_IMAGE}" "${TARGET_IMAGE}"
 
 .PHONY: clean
 clean:
