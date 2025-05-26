@@ -2,11 +2,17 @@
 
 set -eu
 
+puavo_hosttype=''
+
 for x in $(cat /proc/cmdline); do
   case "$x" in
     puavo.hosttype=*)
       puavo_hosttype="${x#puavo.hosttype=}"
-      break
+      # Do not break here but choose the last puavo.hosttype= from the kernel
+      # command line.  There should not be many but the last one is probably
+      # the correct one.  Note that this also allows overriding the hosttype.
+      # That can be useful but also dangerous.  This is also consistent with
+      # puavo-conf-update behaviour.
       ;;
   esac
 done
