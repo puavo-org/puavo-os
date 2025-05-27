@@ -79,6 +79,13 @@ end
 class LuksPartitionHandler
   attr_accessor :partition, :encryption_device_name, :policy
 
+  LUKS_FORMAT_OPTIONS = [
+    '--type=luks2',
+    '--cipher=aes-xts-plain64',
+    '--key-size=256',
+    '--batch-mode'
+  ].freeze
+
   def initialize(partition, encryption_device_name, policy)
     @partition = partition
     @encryption_device_name = encryption_device_name
@@ -123,12 +130,16 @@ class LuksPartitionHandler
       recovery_key_file.flush
 
       puts 'Creating LUKS partition with recovery key...'
-      run('cryptsetup', 'luksFormat', '--batch-mode',
-        "--key-file=#{ recovery_key_file.path }", "/dev/#{ @partition }")
+      run('cryptsetup', 'luksFormat',
+          *LUKS_FORMAT_OPTIONS,
+          "--key-file=#{ recovery_key_file.path }",
+          "/dev/#{ @partition }")
 
       puts 'Opening the LUKS partition for installing the system...'
-      run('cryptsetup', 'luksOpen', "/dev/#{ @partition }",
-        @encryption_device_name, "--key-file=#{ recovery_key_file.path }")
+      run('cryptsetup', 'luksOpen',
+          "/dev/#{ @partition }",
+          @encryption_device_name,
+          "--key-file=#{ recovery_key_file.path }")
 
       if unlock_with_tpm then
         puts 'Enrolling the LUKS partition for TPM-based unlocking...'
@@ -148,8 +159,10 @@ class LuksPartitionHandler
     end
 
     puts 'Creating a passphrase encrypted LUKS partition...'
-    IO.popen([ 'cryptsetup', 'luksFormat', '--batch-mode',
-               "--key-file=-", "/dev/#{ @partition }" ], 'w') do |f|
+    IO.popen([ 'cryptsetup', 'luksFormat',
+               *LUKS_FORMAT_OPTIONS,
+               "--key-file=-",
+               "/dev/#{ @partition }" ], 'w') do |f|
       f.print(passphrase)
     end
 
@@ -160,7 +173,8 @@ class LuksPartitionHandler
 
     puts 'Opening the LUKS partition for installing the system...'
     IO.popen([ 'cryptsetup', 'luksOpen',
-               "/dev/#{ @partition }", @encryption_device_name ], 'w') do |f|
+               "/dev/#{ @partition }",
+               @encryption_device_name ], 'w') do |f|
       f.print(passphrase)
     end
 
