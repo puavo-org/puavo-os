@@ -130,15 +130,16 @@ insmod gzio
 insmod part_msdos
 insmod ext2
 insmod squash4
-insmod biosdisk
 insmod regexp
 insmod loopback
 insmod usb_keyboard
-insmod lvm
 insmod jpeg
 insmod png
+insmod btrfs
 
-for dev in (lvm/puavoexam-examimages); do
+search --no-floppy --label --set puavobtrfsdev __PUAVO_IMAGES_BTRFS_LABEL__
+
+for dev in __PUAVO_PARTITION_IMAGES__; do
   for examimage in ${dev}/ltsp.img; do
     if test -f "${examimage}"; then
       ltsp_image_entry "${examimage}" "Puavo exam environment"
