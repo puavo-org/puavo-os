@@ -19,12 +19,13 @@ kernel_image="${boot_folder}/vmlinuz-${kernel_version}"
 initrd_image="${boot_folder}/initrd.img-${kernel_version}"
 os_release=$(basename "$output")
 
+# NOTE: By default, halt on emergency instead of dropping to shell for security
 ukify build \
   --linux="$kernel_image" \
   --initrd="$initrd_image" \
   --uname="${kernel_version}" \
   --os-release="$os_release" \
-  --cmdline="" \
+  --cmdline="rd.emergency=halt" \
   --pcr-private-key="${key_folder}/tpm2-pcr-private-key.pem" \
   --pcr-public-key="${key_folder}/tpm2-pcr-public-key.pem" \
   --pcr-banks=sha1,sha256 \
