@@ -45,7 +45,9 @@ get_grub_efi_arguments() {
   local vgname
   vgname=$1
 
-  echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian'
+  # XXX when using SecureBoot, the "--no-uefi-secure-boot" option
+  # XXX should be "--uefi-secure-boot" instead
+  echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --no-uefi-secure-boot'
   if [ "$vgname" = 'puavoinstaller' ]; then
     echo '--removable'
   elif [ "$(puavo-conf puavo.grub.efi.force_extra_removable)" = 'true' ]; then
