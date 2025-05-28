@@ -297,7 +297,6 @@ class packages {
     , 'glx-alternative-mesa'
     # , 'libgl1-mesa-glx'               # XXX missing from Trixie
     , 'nvidia-settings'
-    , 'nvidia-settings-tesla-470'
     , 'update-glx'
     , 'xserver-xorg-core'
     , 'xserver-xorg-input-all'
@@ -831,7 +830,6 @@ class packages {
   }
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-  $nvidia_dkms_470_module   = 'nvidia-tesla-470/470.256.02'
   $nvidia_dkms_535_module   = 'nvidia-current/535.216.01'
   $r8168_module             = 'r8168/8.051.02'
   $virtualbox_module        = 'virtualbox/7.0.20'
@@ -840,7 +838,6 @@ class packages {
     $::puavoimage_class ? {
       'exam'  => [ $broadcom_sta_dkms_module ],
       default => [ $broadcom_sta_dkms_module ]
-                 # , $nvidia_dkms_470_module    # XXX Trixie
                  # , $nvidia_dkms_535_module    # XXX Trixie
                  # , $r8168_module              # XXX Trixie
                  # , $virtualbox_module ]       # XXX Trixie
@@ -861,10 +858,8 @@ class packages {
     [ 'broadcom-sta-dkms'
     , 'intel-media-va-driver-non-free' # the free version seems to cause crashes in bullseye
     , 'nvidia-kernel-dkms'
-    , 'nvidia-tesla-470-kernel-dkms'
     , 'r8168-dkms'
-    , 'xserver-xorg-video-nvidia'
-    , 'xserver-xorg-video-nvidia-tesla-470' ]:
+    , 'xserver-xorg-video-nvidia' ]:
       tag => [ 'tag_drivers', 'tag_debian_desktop_nonfree', ];
 
     [ 'amd64-microcode'

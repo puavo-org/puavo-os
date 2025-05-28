@@ -22,10 +22,6 @@ class kernels::dkms {
         $dkms_module_package = 'nvidia-kernel-dkms'
       }
 
-      /^nvidia-tesla-470\//: {
-        $dkms_module_package = 'nvidia-tesla-470-kernel-dkms'
-      }
-
       /^r8168\//: { $dkms_module_package = 'r8168-dkms' }
 
       /^virtualbox\//: { $dkms_module_package = 'virtualbox-dkms' }
