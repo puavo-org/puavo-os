@@ -70,19 +70,11 @@ if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'true' ]; then
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanPowerOff"/>
-
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanReboot"/>
-
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanHalt"/>
-
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
                        send_member="CanSuspend"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanSuspendThenHibernate"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
@@ -92,9 +84,6 @@ if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'true' ]; then
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanHybridSleep"/>
 
-                <allow send_destination="org.freedesktop.login1"
-                       send_interface="org.freedesktop.login1.Manager"
-                       send_member="CanSuspendThenHibernate"/>
 '
 else
   suspend_enabled=''
@@ -252,7 +241,19 @@ cat > /etc/dbus-1/system.d/org.freedesktop.login1.conf.tmp <<EOF
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="HaltWithFlags"/>
-${suspend_enabled}
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanPowerOff"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanReboot"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="CanHalt"/>
+
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="ScheduleShutdown"/>
@@ -304,6 +305,10 @@ ${suspend_enabled}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="FlushDevices"/>
+
+                <allow send_destination="org.freedesktop.login1"
+                       send_interface="org.freedesktop.login1.Manager"
+                       send_member="ReleaseSession"/>
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Seat"
