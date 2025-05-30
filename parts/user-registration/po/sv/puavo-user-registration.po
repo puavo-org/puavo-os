@@ -2,6 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: puavo-user-registration\n"
+"PO-Revision-Date: 2023-06-08 16:34+0300\n"
 "Last-Translator: Hannu Järvistö <hannu.jarvisto@opinsys.fi>\n"
 "Language-Team: \n"
 "Language: sv\n"
@@ -9,7 +10,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"PO-Revision-Date: 2023-06-08 16:34+0300\n"
 "X-Generator: Lokalize 20.12.0\n"
 
 #: puavo-user-registration:296
@@ -21,8 +21,8 @@ msgid ""
 "Are you sure you do not want to create a user account?  Without a user "
 "account, your files will be lost after your desktop session ends."
 msgstr ""
-"Är du säker att du inte vill skapa ett användarnamn? Utan ett användarkonto,"
-" ska dina filer bortkastas när du stänger datorn."
+"Är du säker att du inte vill skapa ett användarnamn? Utan ett användarkonto, "
+"ska dina filer bortkastas när du stänger datorn."
 
 #: puavo-user-registration:341
 msgid "internal error: username and password missing"
@@ -35,14 +35,14 @@ msgid ""
 "username \"%s\" and password for the first login.  Contact support if there "
 "are problems."
 msgstr ""
-"Kunde inte ĺogga in med det nya användarnamnet. Kom ihåg ditt användarnamn \""
-"%s\" och lösenord för första inloggning. Kontakta stödtjänst om det finns ett"
-" problem."
+"Kunde inte ĺogga in med det nya användarnamnet. Kom ihåg ditt användarnamn "
+"\"%s\" och lösenord för första inloggning. Kontakta stödtjänst om det finns "
+"ett problem."
 
 #: puavo-user-registration:395 puavo-user-registration:405
-#: puavo-user-registration:432 puavo-user-registration:438 page_account.py:416
-#: page_account.py:506 page_account.py:540 page_account.py:573
-#: page_account.py:588 page_account.py:610 page_account.py:647
+#: puavo-user-registration:432 puavo-user-registration:438 page_account.py:432
+#: page_account.py:522 page_account.py:556 page_account.py:589
+#: page_account.py:604 page_account.py:626 page_account.py:663
 msgid "Error"
 msgstr "Fel"
 
@@ -75,230 +75,230 @@ msgstr "Du har inte behörigheter att använda det här verktyget."
 msgid "No permissions"
 msgstr "Inga behörigheter"
 
-#: page_account.py:27
+#: page_account.py:28
 msgid "Finnish"
 msgstr "Finska"
 
-#: page_account.py:28
+#: page_account.py:29
 msgid "Swedish"
 msgstr "Svenska"
 
-#: page_account.py:29
+#: page_account.py:30
 msgid "English"
 msgstr "Engelska"
 
-#: page_account.py:30
+#: page_account.py:31
 msgid "German"
 msgstr "Tyska"
 
-#: page_account.py:35
+#: page_account.py:36
 msgid "first name"
 msgstr "förnamn"
 
-#: page_account.py:36
+#: page_account.py:37
 msgid "last name"
 msgstr "efternamn"
 
-#: page_account.py:37
+#: page_account.py:38
 msgid "login name"
 msgstr "användarnamn"
 
-#: page_account.py:38
+#: page_account.py:39
 msgid "email address"
 msgstr "e-postadress"
 
-#: page_account.py:39
+#: page_account.py:40
 msgid "phone number"
 msgstr "telefonnummer"
 
-#: page_account.py:42
+#: page_account.py:43
 msgid "is empty"
 msgstr "är tom"
 
-#: page_account.py:43
+#: page_account.py:44
 msgid "contains bad characters"
 msgstr "innehåller ogiltiga tecken"
 
-#: page_account.py:44
+#: page_account.py:45
 msgid "is too long"
 msgstr "är för lång"
 
-#: page_account.py:122
+#: page_account.py:135
 msgid "Account Setup"
 msgstr "Kontoinställningar"
 
-#: page_account.py:258
+#: page_account.py:271
 msgid "The login name contains invalid characters"
 msgstr "Användarnamnet innehåller ogiltiga tecken"
 
-#: page_account.py:261
+#: page_account.py:274
 msgid "The login name must be at least three characters long"
 msgstr "Användarnamnet måste vara minst tre tecken lång"
 
-#: page_account.py:264
+#: page_account.py:277
 msgid "The login name must start with a letter"
 msgstr "Användarnamnet måste börja med en bokstav"
 
-#: page_account.py:267
+#: page_account.py:280
 msgid "The login name cannot end in a dot"
 msgstr "Användarnamnet får inte sluta med en punkt"
 
-#: page_account.py:395
+#: page_account.py:411
 msgid "Sending information to the server..."
 msgstr "Informationen skickas till servern"
 
-#: page_account.py:417
+#: page_account.py:433
 msgid "Something went wrong on the server end."
 msgstr "Någonting gick fel på serversidan"
 
-#: page_account.py:418 page_account.py:457 page_account.py:466
-#: page_account.py:476 page_account.py:509 page_account.py:522
-#: page_account.py:531
+#: page_account.py:434 page_account.py:473 page_account.py:482
+#: page_account.py:492 page_account.py:525 page_account.py:538
+#: page_account.py:547
 msgid "Please contact support and give them this code:"
 msgstr "Kontakta stödtjänsten och ge dem den här koden:"
 
-#: page_account.py:427
+#: page_account.py:443
 msgid ""
 "Something is wrong on the following form fields.  Check their contents and "
 "try again."
 msgstr "Det finns fel på följande fält. Kontrollera dem och försök igen."
 
-#: page_account.py:448 page_account.py:455
+#: page_account.py:464 page_account.py:471
 msgid "Bad Information"
 msgstr "Felaktig information"
 
-#: page_account.py:456
+#: page_account.py:472
 msgid "This registration program sent bad information to the server."
 msgstr ""
 "Det här registreringsprogramm skickade felaktig information till servern."
 
-#: page_account.py:463
+#: page_account.py:479
 msgid "Invalid organisation"
 msgstr "Ogiltig organisation"
 
-#: page_account.py:464
+#: page_account.py:480
 msgid "This machine has been registered to an invalid organisation."
 msgstr "Den här datorn har registrerats till en fel organisation."
 
-#: page_account.py:473
+#: page_account.py:489
 msgid "Missing information"
 msgstr "Informationen saknas"
 
-#: page_account.py:474
+#: page_account.py:490
 msgid "Registration program did not send all required information to server."
 msgstr "Registreringsprogrammet skickade inte all data som krävs till servern."
 
-#: page_account.py:482 page_account.py:488 page_account.py:494
-#: page_account.py:500
+#: page_account.py:498 page_account.py:504 page_account.py:510
+#: page_account.py:516
 msgid "Invalid input"
 msgstr "Felaktig input"
 
-#: page_account.py:483
+#: page_account.py:499
 msgid "The login name contains invalid characters."
 msgstr "Användarnamnet innehåller ogiltiga tecken."
 
-#: page_account.py:489
+#: page_account.py:505
 msgid "The email address is not valid."
 msgstr "Det här e-postaddressen är ogiltig."
 
-#: page_account.py:495
+#: page_account.py:511
 msgid "The password and its confirmation do not match."
 msgstr "Lösenordet och bekräftelsen matchar inte."
 
-#: page_account.py:501
+#: page_account.py:517
 msgid "The selected language is not valid."
 msgstr "Valt språk är ogiltig."
 
-#: page_account.py:507 page_account.py:574
+#: page_account.py:523 page_account.py:590
 msgid "An unknown error occurred when handling user information."
 msgstr "Ett okänt fel uppstod när användarinformationen hanterades."
 
-#: page_account.py:520
+#: page_account.py:536
 msgid "Unregistered host"
 msgstr "Oregistrerad dator"
 
-#: page_account.py:521
+#: page_account.py:537
 msgid "This host was not found on the database."
 msgstr "Datorn hittades inte i databasen."
 
-#: page_account.py:529
+#: page_account.py:545
 msgid "Host is already in use"
 msgstr "Datorn har redan tagits i bruk"
 
-#: page_account.py:530
+#: page_account.py:546
 msgid "User registration has already been done on this host."
 msgstr "Användarregistrationen har redan gjorts på den här datorn."
 
-#: page_account.py:541
+#: page_account.py:557
 msgid "An unknown error occurred when handling host information."
 msgstr "Ett okänt fel uppstod när datorinformationen hanterades."
 
-#: page_account.py:551
+#: page_account.py:567
 msgid "Login name already in use"
 msgstr "Användarnamnet är redan i bruk"
 
-#: page_account.py:552
+#: page_account.py:568
 msgid ""
 "The login name you have chosen is already in use.  Please choose another."
 msgstr "Användarnamnet som du har valt är redan i bruk. Välj ett nytt."
 
-#: page_account.py:557
+#: page_account.py:573
 msgid "Too short login name"
 msgstr "Användarnamnet är för kort"
 
-#: page_account.py:558
+#: page_account.py:574
 msgid "Your login name is too short.  It must have at least three characters."
 msgstr "Ditt användarnamn är för kort. Det måste bestå av minst tre tecken."
 
-#: page_account.py:563
+#: page_account.py:579
 msgid "Email address is already in use"
 msgstr "E-postadressen är redan i bruk"
 
-#: page_account.py:564
+#: page_account.py:580
 msgid "This email address is already in use.  Please use another address."
 msgstr "Det här e-postadressen är redan i bruk. Använd en annan adress."
 
-#: page_account.py:566
+#: page_account.py:582
 msgid ""
 "If using another email address is not possible, please contact support and "
 "give them this code:"
 msgstr ""
-"Om det är inte möjligt att använda en annan e-postadress, vänligen ta kontakt"
-" med kundtjänsten och ge dem den här koden:"
+"Om det är inte möjligt att använda en annan e-postadress, vänligen ta "
+"kontakt med kundtjänsten och ge dem den här koden:"
 
-#: page_account.py:589
+#: page_account.py:605
 msgid "Could not contact the server:"
 msgstr "Kunde inte hitta servern:"
 
-#: page_account.py:590
+#: page_account.py:606
 msgid "Check the network connection and try again."
 msgstr "Kontrollera nätverksanslutningen och försök igen."
 
-#: page_account.py:591
+#: page_account.py:607
 msgid "If the problem persists, contact support."
 msgstr "Om problemet består kontakta stödtjänsten"
 
-#: page_account.py:611
+#: page_account.py:627
 msgid ""
 "The server is not responding.  Try again after a while.  If the problem "
 "persists, contact support."
 msgstr ""
-"Servern svarar inte. Försök om igen om en stund. Om problemet består kontakta"
-" stödtjänsten."
+"Servern svarar inte. Försök om igen om en stund. Om problemet består "
+"kontakta stödtjänsten."
 
-#: page_account.py:648 page_account.py:695
+#: page_account.py:664 page_account.py:711
 msgid "Could not interpret the response sent by the server."
 msgstr "Kunde inte tolka svaret från servern."
 
-#: page_account.py:650 page_account.py:696 page_account.py:704
+#: page_account.py:666 page_account.py:712 page_account.py:720
 msgid "Please contact support."
 msgstr "Vänligen kontakta stödtjänsten."
 
-#: page_account.py:694 page_account.py:702
+#: page_account.py:710 page_account.py:718
 msgid "Something went wrong"
 msgstr "Någonting gick fel"
 
-#: page_account.py:703
+#: page_account.py:719
 msgid ""
 "This situation should never happen, something has gone very badly wrong."
 msgstr "Det här situationen borde inte hända, någonting har gått riktigt fel."
@@ -394,8 +394,8 @@ msgid ""
 "In case you can not connect to a wireless network right now, you can do that "
 "later and use this host temporarily in guest-mode by clicking the"
 msgstr ""
-"I fallet du inte kan kontakta till ett trådlöst nätverk nu, kan du göra det"
-" senare och använda temporärt gästläge genom att klicka"
+"I fallet du inte kan kontakta till ett trådlöst nätverk nu, kan du göra det "
+"senare och använda temporärt gästläge genom att klicka"
 
 #: page_welcome.py:34 data/main_window.glade:59
 msgid "Go to desktop"
@@ -442,16 +442,16 @@ msgid ""
 "The phone number is optional. It is used only for technical support.\n"
 "Please enter only digits, + and - -signs."
 msgstr ""
-"Telefonnummern är frivillig. Det används bara för teknisk stöd.\n "
-"Ange bara siffror, + och - -tecken"
+"Telefonnummern är frivillig. Det används bara för teknisk stöd.\n"
+" Ange bara siffror, + och - -tecken"
 
 #: data/account.glade:290
 msgid ""
 "You will receive a confirmation to your email.  The address is also used for "
 "password resets."
 msgstr ""
-"Du ska få bekräftelsen till ditt e-post. Adressen används också för att"
-" återställa lösenord."
+"Du ska få bekräftelsen till ditt e-post. Adressen används också för att "
+"återställa lösenord."
 
 #: data/account.glade:355 data/login.glade:123
 msgid "Previous"

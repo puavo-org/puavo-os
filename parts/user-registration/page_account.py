@@ -3,6 +3,7 @@
 import gettext
 import gi
 import json
+import os
 import re
 import threading
 import time
@@ -77,10 +78,20 @@ class PageAccount(PageDefinition):
         self.account_previous_page = self.builder.get_object('account_previous_page')
         self.submit_button = self.builder.get_object('submit')
 
-        for lang in LANGUAGES:
-            self.language_combo.insert(-1, lang[0], lang[1])
+        user_default_language = 'en_US.UTF-8'
+        try:
+            if 'LANG' in os.environ:
+                lang = os.environ['LANG']
+                available_languages = [ a[0] for a in LANGUAGES ]
+                if lang in available_languages:
+                    user_default_language = lang
+        except Exception as e:
+            log.warning('using en_US.UTF-8 as user default language: %s' % e)
 
-        self.language_combo.set_active(0)
+        for i, lang in enumerate(LANGUAGES):
+            self.language_combo.insert(-1, lang[0], lang[1])
+            if user_default_language == lang[0]:
+                self.language_combo.set_active(i)
 
         # Setup event handling
         handlers = {
@@ -111,8 +122,10 @@ class PageAccount(PageDefinition):
         self.user_email = ''
         self.user_password = ''
         self.user_password_confirm = ''
-        self.user_language = 'fi_FI.UTF-8'
         self.user_phone = ''
+
+        # sets self.user_language to the default
+        self.on_language_changed(self.language_combo)
 
         self.update_username_hint(True)
         self.set_submit_state()
