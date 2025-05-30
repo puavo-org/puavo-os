@@ -34,9 +34,7 @@ class PageComplete(PageDefinition):
         else:
             status_text = _tr('Login with your user account was successful.')
 
-        text = status_text + '  ' \
-                 + _tr('Have a nice time with your studies!') + '\n\n' \
-                 + _tr('System must be rebooted.')
+        text = status_text + '  ' + _tr('System must be rebooted.')
 
         self.builder.get_object('complete_text').set_markup(text)
 
