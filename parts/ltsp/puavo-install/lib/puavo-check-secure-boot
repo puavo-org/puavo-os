@@ -2,17 +2,75 @@
 set -eu
 
 command -v mokutil >/dev/null 2>&1 || exit 0
+
+MOK_PASSWORD="0"
+PUAVO_MOK_PATH="/etc/puavo-conf/mok.der"
+
 status=0
 
-# NOTE: mokutil exits with zero when MOK is not enrolled
-if mokutil --test-key /etc/puavo-conf/mok.der >/dev/null 2>&1; then
-  echo "Enrolling Secure Boot MOK..."
+enroll_mok() {
+  local mok_path="$1"
+  echo "Enrolling ${mok_path}..."
   # TODO: Is there a better way to automate this?
-  password="0"
-  password_input="${password}\n${password}" 
-  echo "$password_input" | mokutil --import /etc/puavo-conf/mok.der 1>/dev/null
-  echo "Please reboot and complete the enrollment with password: ${password}"
+  password_input="${MOK_PASSWORD}\n${MOK_PASSWORD}"
+  echo "$password_input" | mokutil --import "$mok_path" 1>/dev/null
+}
+
+images_dir="/installimages"
+addons_directory="${images_dir}/boot/addons"
+
+mok_private_key="${addons_directory}/mok.priv"
+mok_der="${addons_directory}/mok.der"
+mok_pem="${addons_directory}/mok.pem"
+
+create_device_specific_files() {
+  mkdir -p "$addons_directory"
+
+  # Generate private key and certificate
+  if [ ! -f "$mok_pem" ]; then
+    echo "Generating device MOK..."
+    openssl req -nodes -new -x509 -newkey rsa:2048 \
+      -keyout "$mok_private_key" -outform DER -out "$mok_der" -days 36500 \
+      -subj "/CN=Puavo Device MOK/"
+    openssl x509 -inform der -in "$mok_der" -out "$mok_pem"
+  fi
+
+  # The guard addon is responsible for keeping the device-specific
+  # MOK active even if there are no device-specific modifications.
+  # Without this, installing or uninstalling modifications would
+  # alter the Secure Boot state (PCR 7), which would break automatic
+  # TPM-based disk unlocking.
+  guard_addon="${addons_directory}/KEEP.addon.efi"
+  if [ ! -f "$guard_addon" ]; then
+    echo "Creating the guard UKI addon..."
+    ukify build \
+      --secureboot-private-key="${mok_private_key}" \
+      --secureboot-certificate="${mok_pem}" \
+      --cmdline="puavo.guard" \
+      --output="$guard_addon"
+  fi
+}
+
+create_device_specific_files || {
+  echo "failed to create device-specific MOK files" >&2
+  exit 1
+}
+
+# Enroll Puavo MOK
+if mokutil --test-key "$PUAVO_MOK_PATH" >/dev/null 2>&1; then
+  enroll_mok "$PUAVO_MOK_PATH"
   status=1
+fi
+
+# Enroll device MOK
+if mokutil --test-key "$mok_der" >/dev/null 2>&1; then
+  enroll_mok "$mok_der"
+  status=1
+fi
+
+if [ "$status" != 0 ]; then
+  puavo-update-boot-disks --images-dir "$images_dir" --vgname puavoinstaller
+  echo "Please reboot and complete the enrollment with password: ${MOK_PASSWORD}"
 fi
 
 secure_boot_state=$(mokutil --sb-state 2>&1)
