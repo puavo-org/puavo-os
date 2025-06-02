@@ -344,8 +344,10 @@ Depends: ${misc:Depends},
  rdiff,
  ruby-dbus,
  ruby-highline,
+ sbsigntool,
  secure-delete,
  sudo,
+ systemd-ukify,
  util-linux,
  wget
 Description: Bits and pieces needed inside the LTSP chroot image.
