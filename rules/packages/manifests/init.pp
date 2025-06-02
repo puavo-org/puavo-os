@@ -922,6 +922,11 @@ class packages {
       tag => [ 'tag_utils', 'tag_debian_nonfree', ];
   }
 
+  # Grant realtime priorities by creating /etc/security/limits.d/audio.conf.
+  Package['jackd2'] {
+    install_options => [ '--yes' ],
+  }
+
   # For some reason installing "wireguards-tools" prefers
   # to install some kernel packages we do not want.
   # Prevent this from happening by using "--no-install-recommends".
