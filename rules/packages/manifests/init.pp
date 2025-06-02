@@ -232,6 +232,7 @@ class packages {
     , 'openssh-server'
     , 'pm-utils'
     , 'rng-tools-debian'
+    , 'sbsigntool'
     , 'systemd'
     , 'systemd-ukify'
     # , 'tomoyo-tools'  # XXX missing from Trixie
