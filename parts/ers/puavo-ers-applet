@@ -1817,11 +1817,11 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def exams_are_finished(self):
     if datetime.datetime.now() > self.finish_time:
-      self.logger.log(syslog.LOG_INFO, 'exams finish time is past: %s' \
-                                         % self.finish_time)
+      self.logger.log(syslog.LOG_DEBUG, 'exams finish time is past: %s' \
+                                          % self.finish_time)
       return True
 
-    self.logger.log(syslog.LOG_INFO,
+    self.logger.log(syslog.LOG_DEBUG,
                     'we are waiting for exams to finish at: %s' \
                       % self.finish_time)
     return False
