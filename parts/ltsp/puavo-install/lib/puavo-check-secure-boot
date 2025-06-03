@@ -74,7 +74,7 @@ if mokutil --test-key "$mok_der" >/dev/null 2>&1; then
 fi
 
 if [ "$status" != 0 ]; then
-  puavo-update-boot-disks --images-dir "$images_dir" --vgname puavoinstaller
+  puavo-install-and-update-uki-images --images-dir "$images_dir"
   echo
   printf "${YELLOW}> Please reboot and complete the enrollment with password: ${GREEN}${MOK_PASSWORD}${RESET}\n"
 fi
