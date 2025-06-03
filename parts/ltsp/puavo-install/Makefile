@@ -39,6 +39,7 @@ install : installdirs
 		puavo-install \
 		puavo-install-and-update-ltspimages \
 		puavo-install-and-update-uki-image \
+		puavo-install-and-update-uki-images \
 		puavo-install-grub \
 		puavo-install-uki \
 		puavo-make-install-disk \
