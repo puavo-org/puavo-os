@@ -1888,14 +1888,30 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def running_the_expected_exams(self, current_exam_package,
                                  currently_loaded_exam_uuids):
+    # We can determine if we are running the expected exams by comparing
+    # the current package id and the session package id.  And also we can
+    # compare the actually running exams with the expected ones.
+    # These should always provide the same result, but for example in case
+    # that someone has loaded the exams manually there might be a mismatch
+    # between these methods.  We should enforce that the session package id
+    # matches the expected package id (mainly for answer returns), but also
+    # that the actually running exams are what we expect.
     if self.session_state:
-      return current_exam_package.id == self.session_state['package']['id']
+      if current_exam_package.id != self.session_state['package']['id']:
+        self.logger.log(syslog.LOG_INFO,
+                        'exam package id and session package id does not match')
+        return False
 
-    # we should have had session state for this but in case something funky
-    # has happened we can also compare the running exam set (this funky might
-    # be that someone is loading exams by hand)
     current_exam_uuids = current_exam_package.get_exam_uuids()
-    return set(current_exam_uuids) == set(currently_loaded_exam_uuids)
+    currently_running_set_matched \
+      = (set(current_exam_uuids) == set(currently_loaded_exam_uuids))
+
+    if self.session_state and not currently_running_set_matched:
+      msg = 'mismatch between expected exams and actually running ones,' \
+             + ' even though expected package id matched the session package id'
+      self.logger.log(syslog.LOG_INFO, msg)
+
+    return currently_running_set_matched
 
 
   def update_exams_finished_time(self, status, current_exam_package,
