@@ -1,0 +1,35 @@
+#!/bin/sh
+set -eu
+
+hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
+images_dir=/images
+image_path=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --hosttype)
+      hosttype="$2"; shift 2 ;;
+    --images-dir)
+      images_dir="$2"; shift 2 ;;
+    --image)
+      image_path="$2"; shift 2 ;;
+    *)
+      shift ;;
+  esac
+done
+
+if [ -z "${UKI_MODE:-}" ]; then
+  PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
+  export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
+fi
+
+[ "$UKI_MODE" = "1" ] || exit 0
+
+for image_path in "$images_dir"/*.img; do
+  [ -f "$image_path" ] || continue
+  # Skip "ltsp" images as they are hardlinks to other images
+  case "$(basename "$image_path")" in
+    ltsp*) continue ;;
+  esac
+  puavo-install-and-update-uki-image "$image_path" "$hosttype" "$images_dir"
+done
