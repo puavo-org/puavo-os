@@ -3,6 +3,11 @@ set -eu
 
 command -v mokutil >/dev/null 2>&1 || exit 0
 
+RED='\033[1;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RESET='\033[0m'
+
 MOK_PASSWORD="0"
 PUAVO_MOK_PATH="/etc/puavo-conf/mok.der"
 
@@ -10,10 +15,10 @@ status=0
 
 enroll_mok() {
   local mok_path="$1"
-  echo "Enrolling ${mok_path}..."
+  echo "enrolling MOK ${mok_path}..."
   # TODO: Is there a better way to automate this?
   password_input="${MOK_PASSWORD}\n${MOK_PASSWORD}"
-  echo "$password_input" | mokutil --import "$mok_path" 1>/dev/null
+  echo "$password_input" | mokutil --import "$mok_path" >/dev/null 2>&1
 }
 
 images_dir="/installimages"
@@ -28,11 +33,11 @@ create_device_specific_files() {
 
   # Generate private key and certificate
   if [ ! -f "$mok_pem" ]; then
-    echo "Generating device MOK..."
+    echo "generating device MOK..."
     openssl req -nodes -new -x509 -newkey rsa:2048 \
       -keyout "$mok_private_key" -outform DER -out "$mok_der" -days 36500 \
-      -subj "/CN=Puavo Device MOK/"
-    openssl x509 -inform der -in "$mok_der" -out "$mok_pem"
+      -subj "/CN=Puavo Device MOK/" >/dev/null 2>&1
+    openssl x509 -inform der -in "$mok_der" -out "$mok_pem" >/dev/null 2>&1
   fi
 
   # The guard addon is responsible for keeping the device-specific
@@ -42,12 +47,12 @@ create_device_specific_files() {
   # TPM-based disk unlocking.
   guard_addon="${addons_directory}/KEEP.addon.efi"
   if [ ! -f "$guard_addon" ]; then
-    echo "Creating the guard UKI addon..."
+    echo "creating the guard UKI addon..."
     ukify build \
       --secureboot-private-key="${mok_private_key}" \
       --secureboot-certificate="${mok_pem}" \
       --cmdline="puavo.guard" \
-      --output="$guard_addon"
+      --output="$guard_addon" >/dev/null 2>&1
   fi
 }
 
@@ -70,13 +75,15 @@ fi
 
 if [ "$status" != 0 ]; then
   puavo-update-boot-disks --images-dir "$images_dir" --vgname puavoinstaller
-  echo "Please reboot and complete the enrollment with password: ${MOK_PASSWORD}"
+  echo
+  printf "${YELLOW}> Please reboot and complete the enrollment with password: ${GREEN}${MOK_PASSWORD}${RESET}\n"
 fi
 
 secure_boot_state=$(mokutil --sb-state 2>&1)
 if echo "$secure_boot_state" | grep -q 'SecureBoot disabled'; then
-  echo "Secure Boot is disabled."
-  echo "Please enable Secure Boot in BIOS settings."
+  echo
+  printf "${RED}Secure Boot is disabled.${RESET}\n"
+  printf "${YELLOW}> Please enable Secure Boot in BIOS settings.${RESET}\n"
   status=1
 fi
 
