@@ -1394,8 +1394,8 @@ class PuavoErsExamManager (threading.Thread):
 
     tmpfile = '%s.tmp' % self.DECRYPT_CODES_PATH
     with open(tmpfile, 'w') as f:
-      decrypt_codes_list.sort()
-      for decrypt_code in decrypt_codes_list:
+      sorted_and_unique_codes_list = sorted(set(decrypt_codes_list))
+      for decrypt_code in sorted_and_unique_codes_list:
         f.write("%s\n" % decrypt_code)
     os.rename(tmpfile, self.DECRYPT_CODES_PATH)
 
