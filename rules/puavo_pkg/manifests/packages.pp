@@ -46,7 +46,6 @@ class puavo_pkg::packages {
 			, 'musescore-appimage'
 			, 'msttcorefonts'
 			, 'netbeans'
-			, 'nextcloud-desktop'
 			, 'nightcode'
 			, 'novoconnect'
                         , 'obsidian-icons'

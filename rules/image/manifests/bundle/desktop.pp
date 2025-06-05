@@ -22,7 +22,7 @@ class image::bundle::desktop {
   # include ::ktouch                    # XXX buster
   include ::libdvdcss
   include ::network_manager
-  include ::nextcloud
+  # include ::nextcloud                 # XXX dropped from Bullseye
   include ::password_expiration
   include ::packages::languages::de
   include ::packages::languages::en
