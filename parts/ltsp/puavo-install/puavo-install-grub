@@ -48,9 +48,7 @@ get_grub_efi_arguments() {
   echo '--target=x86_64-efi --efi-directory=/boot/efi'
 
   if [ "$UKI_MODE" = '1' ]; then
-    # XXX enable secure boot once ready
-    # XXX echo '--bootloader-id=puavo --uefi-secure-boot'
-    echo '--bootloader-id=puavo'
+    echo '--bootloader-id=puavo --uefi-secure-boot'
   else
     echo '--bootloader-id=debian --no-uefi-secure-boot'
   fi
