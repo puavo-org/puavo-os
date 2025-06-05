@@ -11,8 +11,7 @@ class puavo_pkg::packages {
 
   # List some of the available puavo-pkg packages that we want to
   # install by default.  There may be other puavo-pkg packages available.
-  $available_packages = [ 'abicus'
-			, 'abitti-naksu'
+  $available_packages = [ 'abitti-naksu'
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-ottodiylib'
