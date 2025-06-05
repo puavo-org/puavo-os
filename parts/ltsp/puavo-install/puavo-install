@@ -582,6 +582,10 @@ accepted_hosttypes=$(get_accepted_hosttypes "$puavo_install_hosttype")
 puavo-register --accepted-devicetypes "$accepted_hosttypes" \
                "${puavo_preseed_register_args[@]}"
 
+# Encrypt device MOK keys on the server after successful registration.
+# This removes local access to those private keys.
+/usr/lib/puavo-ltsp-install/puavo-encrypt-device-mok-keys
+
 if [ "$chosen_preseed" != "" ]; then
   curl --cacert /etc/puavo-conf/rootca.pem \
     -d "$(jq -n --arg sn "$(facter dmi.product.serial_number)" --arg preseed "$chosen_preseed" '.serialnumber = $sn | .preseed = $preseed')" \

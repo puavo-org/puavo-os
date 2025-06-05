@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import json
+import requests
+
+def main():
+    images_directory = "/installimages"
+    encrypted_file = f"{images_directory}/boot/addons/mok.encrypted.json"
+    private_key_file = f"{images_directory}/boot/addons/mok.priv"
+    public_key_file = f"{images_directory}/boot/addons/mok.pem"
+
+    # If encrypted MOK data already exists, we are done
+    if os.path.exists(encrypted_file):
+        print("encrypted MOK keys already exist")
+        return 0
+
+    # Verify both key files exist
+    if not os.path.exists(private_key_file):
+        print(f"error: failed to find private key: {private_key_file}",
+              file=sys.stderr)
+        return 1
+
+    if not os.path.exists(public_key_file):
+        print(f"error: failed to find public key: {public_key_file}",
+              file=sys.stderr)
+        return 1
+
+    try:
+        # Read the key files
+        with open(private_key_file, 'r') as file:
+            private_key = file.read().strip()
+
+        with open(public_key_file, 'r') as file:
+            public_key = file.read().strip()
+
+        # Package keys in JSON and request them to be encrypted
+        payload = {
+            "private_key": private_key,
+            "public_key": public_key
+        }
+
+        # TODO: Use the correct service
+        response = requests.post("http://localhost:8080/encrypt-keys",
+                                 json=payload)
+        response.raise_for_status()
+
+        # Save encrypted MOK data
+        os.makedirs(os.path.dirname(encrypted_file), exist_ok=True)
+        with open(encrypted_file, 'w') as file:
+            json.dump(response.json(), file)
+
+        # Remove the private key
+        os.remove(private_key_file)
+
+        print("successfully stored MOK data")
+        return 0
+
+    except Exception as exception:
+        print(f"error: {exception}", file=sys.stderr)
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())
+
