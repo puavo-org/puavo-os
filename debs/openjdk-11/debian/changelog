@@ -1,8 +1,34 @@
-openjdk-11 (11.0.26+4-1~deb11u1+puavo1) bullseye; urgency=medium
+openjdk-11 (11.0.27+6-1~deb11u1) bullseye-security; urgency=medium
 
-  * Build with our patches.
+  * Non-maintainer upload by the LTS Team.
+  * Backport to bullseye.
 
- -- Puavo Org <dev@opinsys.fi>  Tue, 18 Feb 2025 14:55:22 +0200
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Mon, 19 May 2025 12:21:49 +0200
+
+openjdk-11 (11.0.27+6-1) unstable; urgency=high
+
+  * OpenJDK 11.0.27 release, build 6.
+    - Addresses CVE-2025-30698, CVE-2025-30691, CVE-2025-21587.
+
+  [ Vladimir Petko ]
+  * d/t/problems.csv: Disable tests failing due to upstream bugs.
+
+  [ Matthias Klose ]
+  * Honour DEB_BUILD_OPTIONS=parallel=N while running jtreg tests (Helmut
+    Grohne). Addresses: #1095920.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 24 Apr 2025 02:53:57 +0200
+
+openjdk-11 (11.0.27~4ea-1) unstable; urgency=medium
+
+  * OpenJDK 11.0.27+4 build (early access).
+
+  [ Vladimir Petko ]
+  * d/rules: point --with-jtreg to /usr/share/jtreg.
+  * d/rules: Disable dtrace on jammy armhf (was not enabled before and cannot
+    be built due to a GCC ICE (see LP #2091225).
+
+ -- Matthias Klose <doko@ubuntu.com>  Sat, 15 Mar 2025 10:22:40 +0100
 
 openjdk-11 (11.0.26+4-1~deb11u1) bullseye-security; urgency=medium
 

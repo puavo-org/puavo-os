@@ -30,7 +30,13 @@ if [[ "armel" == *"${host_arch}"* ]]; then
   jt_options+=" -Xmx256M"
 fi
 if dpkg --compare-versions ${jtreg_version} ge 4.2; then
-  jt_options+=" -conc:auto"
+  njobs=auto
+  for opt in ${DEB_BUILD_OPTIONS:-}; do
+    if test "${opt#parallel=}" != "$opt"; then
+      njobs="${opt#parallel=}"
+    fi
+  done
+  jt_options+=" -conc:$njobs"
 fi
 
 # check java binary

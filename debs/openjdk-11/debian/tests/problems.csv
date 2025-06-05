@@ -33,6 +33,7 @@ FAILED: java/nio/file/Files/InterruptCopy.java,JDK-8166162,Container issue,:open
 FAILED: java/nio/file/Files/Misc.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22:openjdk-23:openjdk-24:openjdk-25:,:arch-all,:release-all
 FAILED: java/nio/file/Files/TemporaryFiles.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22:openjdk-23:openjdk-24:openjdk-25:,:arch-all,:release-all
 FAILED: java/nio/file/FileStore/Basic.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22:openjdk-23:openjdk-24:openjdk-25:,:arch-all,:release-all
+FAILED: com/sun/net/httpserver/simpleserver/RootDirPermissionsTest.java,JDK-8166162,Container issue,:openjdk-lts:openjdk-11::openjdk-17:openjdk-21:openjdk-22:openjdk-23:openjdk-24:openjdk-25:,:arch-all,:release-all
 FAILED: runtime/cds/appcds/jcmd/JCmdTestDynamicDump.java,,flaky test (?) existing comment,:openjdk-17,:arch-all,:release-all
 FAILED: runtime/cds/appcds/jcmd/JCmdTestFileSafety.java,,flaky test (?) existing comment,:openjdk-17,i386:arm64:amd64:ppc64el,:release-all
 FAILED: runtime/cds/appcds/jcmd/JCmdTestStaticDump.java,,flaky test (?) existing comment,:openjdk-17,:arch-all,:release-all
@@ -74,6 +75,7 @@ FAILED: java/foreign/TestDowncallStack.java,, asserts due to the invalid structu
 FAILED: java/foreign/TestDowncallScope.java,, asserts due to the invalid structure size. Ignore as this is a preview API and the issue does not occur in openjdk-22. I will add it to the problemlist.,:openjdk-21,:armhf,:release-all
 FAILED: java/foreign/TestSegments.java,, asserts due to the invalid structure size. Ignore as this is a preview API and the issue does not occur in openjdk-22. I will add it to the problemlist.,:openjdk-21,:armhf,:release-all
 FAILED: java/foreign/TestLinker.java,, asserts due to the invalid structure size. Ignore as this is a preview API and the issue does not occur in openjdk-22. I will add it to the problemlist.,:openjdk-21,:armhf,:release-all
+FAILED: java/foreign/nested/TestNested.java,CODETOOLS-7903948, test is compiled without --enable-preview flag,:openjdk-21,:arch-all,:release-all
 FAILED: java/foreign/TestAddressDereference.java,, asserts due to the invalid structure size. Ignore as this is a preview API and the issue does not occur in openjdk-22. I will add it to the problemlist.,:openjdk-21,:armhf,:release-all
 FAILED: java/foreign/TestUpcallHighArity.java,, asserts due to the invalid structure size. Ignore as this is a preview API and the issue does not occur in openjdk-22. I will add it to the problemlist.,:openjdk-21,:armhf,:release-all
 FAILED: java/foreign/TestUpcallStructScope.java,, asserts due to the invalid structure size. Ignore as this is a preview API and the issue does not occur in openjdk-22. I will add it to the problemlist.,:openjdk-21,:armhf,:release-all
@@ -84,3 +86,4 @@ FAILED: java/foreign/TestVarArgs.java,, asserts due to the invalid structure siz
 FAILED: runtime/os/TestTrimNative.java#trimNative,, java.lang.RuntimeException: We found fewer (periodic) trim lines in UL log than expected (expected at least 13  found 11). This looks like a flaky test - it asserts number of lines from the periodic trimmer  e.g. src/hotspot/share/runtime/trimNativeHeap.hpp:56 which causes the test to fail due to the slow VM. Test passes locally.,:openjdk-21,:armhf,:release-all
 FAILED: jdk/sun/security/util/Debug/DebugOptions.java,JDK-8339713,Stack overflow error on 32-bit platforms,:openjdk-17:openjdk-21:openjdk-23:openjdk-24:openjdk-25:,:armhf:i386:s390x,:release-all
 Error: jdk/jshell/TerminalNoExecTest.java,,BackingStoreException: Couldn't get file lock - possibly because the LP (non-root) container has no home directory,:openjdk-23:openjdk-24:openjdk-25:,:arch-all,:release-all
+FAILED: applications/ctw/modules/jdk_jfr.java,JDK-8352567, Unimplemented SharedRuntime::generate_jfr_write_checkpoint for S390x, :openjdk-25:,:s390x,:release-all
