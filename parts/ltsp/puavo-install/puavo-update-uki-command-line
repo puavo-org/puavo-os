@@ -2,18 +2,22 @@
 set -eu
 
 usage() {
-  echo "Usage: $0 <image-mountpoint> <uki-root> <host-type>" >&2
+  echo "Usage: $0 <image-mountpoint> <images-dir> <uki-root> <host-type>" >&2
   exit 1
 }
 
-[ $# -eq 3 ] || usage
+[ $# -eq 4 ] || usage
 
 image_mountpoint="$1"
-uki_root="$2"
-hosttype="$3"
+images_dir="$2"
+addons_dir="${images_dir}/boot/addons"
+uki_root="$3"
+hosttype="$4"
 
-if [ ! -d "$image_mountpoint" ]; then
-  echo "error: image mountpoint '$image_mountpoint' does not exist" >&2
+boot_directory="${image_mountpoint}/boot"
+
+if [ ! -d "$boot_directory" ]; then
+  echo "error: boot directory '$boot_directory' does not exist" >&2
   exit 1
 fi
 
@@ -37,8 +41,14 @@ install_command_line() {
   fi
 
   # Install the host type specific command line
-  cp -p "${image_mountpoint}/boot/addons/${hosttype}.addon.efi" \
-        "${extra_directory}/cmdline.addon.efi" || true
+  cp "${boot_directory}/addons/${hosttype}.addon.efi" \
+     "${extra_directory}/cmdline.addon.efi"
+
+  # Install device-specific addons
+  if [ -d "${addons_dir}" ]; then
+    find "${addons_dir}" -maxdepth 1 -name "*.addon.efi" -type f \
+      -exec cp {} "${extra_directory}/" \;
+  fi
 }
 
 if ! image_name="$(cat "${image_mountpoint}/etc/puavo-image/name")" \
@@ -48,6 +58,9 @@ if ! image_name="$(cat "${image_mountpoint}/etc/puavo-image/name")" \
 fi
 image_name_no_suffix=${image_name%.img}
 
-for uki in "${image_mountpoint}/boot"/*.uki.efi; do
-  install_command_line "$uki" "$uki_root" "$image_name_no_suffix"
+for uki in "$boot_directory"/*.uki.efi; do
+  install_command_line "$uki" "$uki_root" "$image_name_no_suffix" || {
+    echo "error: failed to install command line for UKI '$uki'" >&2
+    exit 1
+  }
 done
