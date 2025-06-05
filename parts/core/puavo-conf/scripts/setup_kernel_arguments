@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import json
+import subprocess
+import http.client
+import shutil
+
+images_directory = "/images"
+
+def log_info(message: str):
+    print(message)
+
+def log_error(message: str):
+    print(f"error: {message}", file=sys.stderr)
+
+def puavo_conf_get(key: str):
+    try:
+        result = subprocess.run(['puavo-conf', key], 
+                                capture_output=True, text=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
+
+def run_command(*arguments):
+    """Run a system command and raise exception on failure"""
+    try:
+        return subprocess.run(arguments,
+                              check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as exception:
+        log_error(f"command {arguments} failed with exit code {exception.returncode}")
+        raise Exception(f"running command {arguments} returned failure: {exception}")
+
+def is_uki_mode_set(images_directory: str):
+    uki_mode = os.environ.get('UKI_MODE')
+    if uki_mode is not None:
+        return uki_mode == "1"
+
+    puavo_install_libdir = "/usr/lib/puavo-ltsp-install"
+    is_uki_install_path = os.path.join(puavo_install_libdir, "is-uki-install")
+
+    try:
+        result = subprocess.run([is_uki_install_path, images_directory],
+                                capture_output=True, text=True, check=True)
+        return result.stdout.strip() == "1"
+    except subprocess.CalledProcessError:
+        return False
+
+def replace_if_changed(destination: str, source: str):
+    """Replace destination with source only if they differ, otherwise remove source"""
+    try:
+        import filecmp
+        if filecmp.cmp(destination, source, shallow=False):
+            os.remove(source)
+        else:
+            shutil.move(source, destination)
+    except (OSError, IOError):
+        # If we run into issues with file comparison, we just move the file
+        shutil.move(source, destination)
+
+def clean_temporary_files():
+    """Clean up temporary files"""
+    addon_path = '/images/boot/addons/extra.cmdline.addon.efi'
+    installed_arguments_path = '/images/boot/addons/cmdline'
+
+    for file in [f"{addon_path}.tmp", f"{installed_arguments_path}.tmp"]:
+        try:
+            os.remove(file)
+        except FileNotFoundError:
+            pass
+
+def update_kernel_arguments(images_directory: str):
+    """Update kernel arguments by requesting a new signed UKI addon"""
+
+    # Get updated arguments from puavo-conf
+    updated_arguments = puavo_conf_get('puavo.kernel.arguments') or ''
+    updated_arguments = updated_arguments.strip()
+
+    # Read currently installed arguments
+    installed_arguments_path = f"{images_directory}/boot/addons/cmdline"
+    installed_arguments = ''
+    try:
+        with open(installed_arguments_path, 'r') as file:
+            installed_arguments = file.read().strip()
+    except FileNotFoundError:
+        # If the file does not exist, we assume no arguments are set
+        pass
+
+    if updated_arguments == installed_arguments:
+        log_info("kernel arguments unchanged, skipping update")
+        return 0
+
+    log_info("kernel arguments changed, requesting new command line")
+    log_info(f"installed arguments: {installed_arguments}")
+    log_info(f"updated arguments: {updated_arguments}")
+
+    try:
+        # Load encrypted device-specific MOK data for signing the command line
+        mok_data_path = f"{images_directory}/boot/addons/mok.encrypted.json"
+        try:
+            with open(mok_data_path, 'r') as file:
+                mok_data = json.load(file)
+        except FileNotFoundError:
+            raise Exception(f"failed to load MOK data: {mok_data_path}")
+        except json.JSONDecodeError as exception:
+            raise Exception(f"failed to parse MOK data: {exception}")
+
+        # Request new signed UKI addon with updated command line
+        payload = {
+            'keys': mok_data['keys'],
+            # TODO: Remove once server loads the device command line. Device should not determine the command line.
+            'command_line': updated_arguments
+        }
+
+        data = json.dumps(payload).encode('utf-8')
+
+        # TODO: Use the correct service
+        host = "localhost:8080"
+        connection = http.client.HTTPConnection(host, timeout=60)
+
+        try:
+            connection.request('POST', '/create-command-line-addon', data, {
+                'Content-Type': 'application/json',
+                'Content-Length': str(len(data))
+            })
+
+            response = connection.getresponse()
+            if response.status != 200:
+                raise Exception(
+                    f"HTTP request failed: {response.status} {response.reason}")
+
+            response_data = response.read()
+        finally:
+            connection.close()
+
+        # Save the UKI addon to temporary file
+        addon_path = f"{images_directory}/boot/addons/extra.cmdline.addon.efi"
+        os.makedirs(os.path.dirname(addon_path), exist_ok=True)
+
+        with open(f"{addon_path}.tmp", 'wb') as file:
+            file.write(response_data)
+
+        # Update the kernel arguments file
+        with open(f"{installed_arguments_path}.tmp", 'w') as file:
+            file.write(updated_arguments)
+
+        replace_if_changed(addon_path, f"{addon_path}.tmp")
+        replace_if_changed(
+            installed_arguments_path, f"{installed_arguments_path}.tmp")
+
+        # Transfer the updated command line to boot disks
+        run_command('puavo-install-and-update-uki-images')
+
+        log_info("kernel arguments updated successfully")
+        return 0
+
+    except Exception as exception:
+        log_error(f"failed to update kernel arguments: {exception}")
+        clean_temporary_files()
+        return 1
+
+def main():
+    try:
+        if not is_uki_mode_set(images_directory):
+            log_info("not in UKI mode, skipping kernel arguments update")
+            return 0
+        return update_kernel_arguments(images_directory)
+    except Exception as exception:
+        log_error(f"unexpected error: {exception}")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())
