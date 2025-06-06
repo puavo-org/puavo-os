@@ -183,7 +183,7 @@ $(rootfs_dir):
 	@false
 
 .PHONY: rootfs-debootstrap
-rootfs-debootstrap:
+rootfs-debootstrap: check-buildhost
 	@[ ! -e '$(rootfs_dir)' ] || \
 		{ echo ERROR: rootfs directory '$(rootfs_dir)' already exists >&2; false; }
 	$(_sudo) debootstrap					\
@@ -228,7 +228,7 @@ $(install_image_dir):
 # May be removed only when sure that grub has been updated on all hosts
 # updating to images made with this.
 .PHONY: rootfs-image
-rootfs-image: $(rootfs_dir) $(image_dir)
+rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 	$(_builder) $(MAKE) -C '/puavo-os' prepare-for-squashfs
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
@@ -254,24 +254,36 @@ prepare-for-squashfs:
 
 # this target requires that this host is running a puavo-os system
 .PHONY: rootfs-install-image
-rootfs-install-image: rootfs-image $(install_image_dir)
+rootfs-install-image: check-buildhost rootfs-image $(install_image_dir)
 	puavo-make-install-disk --source-image '$(image_dir)/$(_image_file)' \
 	    --target-image '$(install_image_dir)/install-$(_image_file)' \
 	    --with-vdi
 
 .PHONY: rootfs-shell
-rootfs-shell: $(rootfs_dir)
+rootfs-shell: check-buildhost $(rootfs_dir)
 	$(_builder) sh -c 'cd ~ && exec bash'
 
 .PHONY: rootfs-sync-repo
-rootfs-sync-repo: $(rootfs_dir)
+rootfs-sync-repo: check-buildhost $(rootfs_dir)
 	$(_sudo) rsync "--chown=$(_adm_uid):$(_adm_gid)" --chmod=Dg+s,ug+w \
 	    -glopr --exclude debs/.archive --exclude debs/.workdir \
 	    . '$(rootfs_dir)/puavo-os/'
 
 .PHONY: rootfs-update
-rootfs-update: rootfs-sync-repo
+rootfs-update: check-buildhost rootfs-sync-repo
 	$(_builder) $(MAKE) -C '/puavo-os' update
+
+.PHONY: check-buildhost
+check-buildhost:
+	@if [ ! -e "$(PUAVO_ROOTFS)/.is_puavo_buildhost" ]; then \
+           echo 'This host has not been setup as a Puavo OS build host.' >&2; \
+           echo 'Run target "setup-buildhost" first.' >&2; \
+           exit 1; \
+        fi
+	@if [ ! -e /etc/puavo/.is_puavo_buildhost ]; then \
+	    echo 'running target setup-buildhost to setup build host'; \
+	    $(MAKE) setup-buildhost; \
+        fi
 
 .PHONY: setup-buildhost
 setup-buildhost:

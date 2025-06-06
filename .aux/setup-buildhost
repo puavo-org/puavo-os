@@ -85,3 +85,12 @@ mkdir -p config/boot_keys
 
 # generate mok for secure boot
 .aux/generate-mok ./config/boot_keys
+
+touch "${puavo_rootfs}/.is_puavo_buildhost"
+
+if [ -e /etc/puavo ]; then
+  # Mark this host as buildhost also here, because on a Puavo OS host
+  # this will disappear after an update, which tells us that we should run
+  # this script again.
+  touch "/etc/puavo/.is_puavo_buildhost"
+fi
