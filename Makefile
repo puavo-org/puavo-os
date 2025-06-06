@@ -1,6 +1,8 @@
 # Environment
-PUAVO_ROOTFS		?= /var/tmp/puavo-os/rootfs
-PUAVO_IMAGES		?= /srv/puavo-os-images
+PUAVO_BUILDS_BASEDIR	?= /home
+PUAVO_IMAGES		?= $(PUAVO_BUILDS_BASEDIR)/puavo-os-images
+PUAVO_ROOTFS		?= $(PUAVO_BUILDS_BASEDIR)/imagebuilds
+PUAVO_SQUID_CACHE_DIR	?= $(PUAVO_BUILDS_BASEDIR)/var_spool_squid
 
 # Public, configurable variables
 all_image_classes       := allinone exam
@@ -273,7 +275,8 @@ rootfs-update: rootfs-sync-repo
 
 .PHONY: setup-buildhost
 setup-buildhost:
-	.aux/setup-buildhost
+	sudo .aux/setup-buildhost "$(PUAVO_IMAGES)" "$(PUAVO_ROOTFS)" \
+	    "$(PUAVO_SQUID_CACHE_DIR)"
 
 .PHONY: setup-wim
 setup-wim:
