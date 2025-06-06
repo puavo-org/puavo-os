@@ -114,7 +114,7 @@
                 "fi": "Bluefish HTML-editori",
                 "en": "Bluefish HTML-editor",
                 "sv": "Bluefish HTML-redigerare",
-                "de": "Bluefish HTML-editor"
+                "de": "Bluefish HTML-Editor"
             },
             "tags": "default"
         },
@@ -156,7 +156,7 @@
                 "fi": "Chromium-selain",
                 "en": "Chromium-browser",
                 "sv": "Chromium",
-                "de": "Chromium-Browser"
+                "de": "Chromium"
             },
             "icon": "/usr/share/icons/hicolor/64x64/apps/chromium.png",
             "tags": "default"
@@ -241,7 +241,7 @@
                 "fi": "Pelaajille suunnattu puhe- ja tekstichat, joka on palveluna monelle oppilaalle tuttu. Tunnuksen luominen edellyttää suostumusta vanhemmilta.",
                 "en": "Discord is an app to communicate over voice, video, and text.",
                 "sv": "Discord is an app to communicate over voice, video, and text.",
-                "de": "Discord is an app to communicate over voice, video, and text."
+                "de": "Discord ist eine App zur Kommunikation über Sprache, Video und Text."
             },
             "icon": "config-users",
             "tags": "default, internet, education",
@@ -412,10 +412,10 @@
         },
         "gimp": {
             "name": {
-                "fi": "Gimp-kuvankäsittely",
-                "en": "Gimp - GNU Image Manipulation Program",
-                "sv": "Gimp",
-                "de": "Gimp"
+                "fi": "GIMP-kuvankäsittely",
+                "en": "GIMP - GNU Image Manipulation Program",
+                "sv": "GIMP",
+                "de": "GIMP"
             },
             "tags": "default, graphics",
             "keywords": "photoshop, digabi"
@@ -578,7 +578,7 @@
             "name": {
                 "fi": "LibreOffice Tietokanta",
                 "en": "LibreOffice Base",
-                "de": "LibreOffice Basis"
+                "de": "LibreOffice Datenbank"
             },
             "tags": "default, office, education",
             "keywords": "libreoffice"
@@ -587,7 +587,7 @@
             "name": {
                 "fi": "LibreOffice Taulukkolaskenta",
                 "en": "LibreOffice Calc",
-                "de": "LibreOffice Tabellenkalculation"
+                "de": "LibreOffice Tabellenkalkulation"
             },
             "tags": "default, office, education",
             "keywords": "calc, spreadsheet, libreoffice, excel"
@@ -614,7 +614,7 @@
             "name": {
                 "fi": "LibreOffice Kaava",
                 "en": "LibreOffice Math",
-                "de": "LibreOffice Math"
+                "de": "LibreOffice Formeleditor"
             },
             "tags": "default, office, education",
             "keywords": "equation, libreoffice"
@@ -671,7 +671,7 @@
         },
         "makecode": {
             "type": "web",
-            "url": "https://makecode.mindstorms.com/",
+            "url": "https://makecode.com/",
             "name": "Makecode (Web)",
             "description": "Makecode -ohjelmointi",
             "icon": "/usr/share/icons/Faenza/mimetypes/96/text-html.png",
@@ -994,7 +994,7 @@
                 "fi": "KGeography-maantieto",
                 "en": "KGeography-geography",
                 "sv": "KGeography-geografi",
-                "de": "Kgeography"
+                "de": "KGeography"
             },
             "tags": "default, education, science",
             "condition": "!personally_administered"
@@ -1050,7 +1050,7 @@
                 "fi": "KTurtle - logo-ohjelmointi",
                 "en": "KTurtle - logo programming",
                 "sv": "KTurtle - logoprogrammering",
-                "de": "KTurtle - Programieren mit Logo"
+                "de": "KTurtle - Programmieren mit Logo"
             },
             "tags": "default, education"
         },
@@ -1398,13 +1398,6 @@
             "icon": "/usr/share/icons/Faenza/apps/96/glade.png",
             "tags": "default, graphics"
         },
-        "skype": {
-            "name": "Skype",
-            "tags": "default, network",
-            "puavopkg": {
-                "id": "skype"
-            }
-        },
         "slack": {
             "name": "Slack",
             "tags": "default, network",
@@ -1626,7 +1619,7 @@
                 "fi": "TuxMath-matikkapeli",
                 "en": "TuxMath-math game",
                 "sv": "TuxMath-matematikspel",
-                "de": "Tuxmath Mathespiel"
+                "de": "TuxMath Mathespiel"
             },
             "tags": "default, education",
             "condition": "!personally_administered"
@@ -2273,7 +2266,6 @@
                 "discordweb",
                 "jitsi",
                 "signal-desktop",
-                "skype",
                 "slack",
                 "teams",
                 "telegramdesktop",

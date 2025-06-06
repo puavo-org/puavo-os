@@ -472,7 +472,8 @@ class packages {
 
     [ 'amtterm'
     , 'etherwake'
-    , 'nload' ]:
+    , 'nload'
+    , 'usb-modeswitch-data' ]:
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
     [ 'calibre'

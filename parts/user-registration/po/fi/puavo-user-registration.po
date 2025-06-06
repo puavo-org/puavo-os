@@ -37,9 +37,9 @@ msgstr ""
 "ongelmatilanteissa yhteys tukeen."
 
 #: puavo-user-registration:395 puavo-user-registration:405
-#: puavo-user-registration:432 puavo-user-registration:438 page_account.py:416
-#: page_account.py:506 page_account.py:540 page_account.py:573
-#: page_account.py:588 page_account.py:610 page_account.py:647
+#: puavo-user-registration:432 puavo-user-registration:438 page_account.py:432
+#: page_account.py:522 page_account.py:556 page_account.py:589
+#: page_account.py:604 page_account.py:626 page_account.py:663
 msgid "Error"
 msgstr "Virhe"
 
@@ -71,89 +71,89 @@ msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
 msgid "No permissions"
 msgstr "Ei oikeuksia"
 
-#: page_account.py:27
+#: page_account.py:28
 msgid "Finnish"
 msgstr "Suomi"
 
-#: page_account.py:28
+#: page_account.py:29
 msgid "Swedish"
 msgstr "Ruotsi"
 
-#: page_account.py:29
+#: page_account.py:30
 msgid "English"
 msgstr "Englanti"
 
-#: page_account.py:30
+#: page_account.py:31
 msgid "German"
 msgstr "Saksa"
 
-#: page_account.py:35
+#: page_account.py:36
 msgid "first name"
 msgstr "etunimi"
 
-#: page_account.py:36
+#: page_account.py:37
 msgid "last name"
 msgstr "sukunimi"
 
-#: page_account.py:37
+#: page_account.py:38
 msgid "login name"
 msgstr "käyttäjätunnus"
 
-#: page_account.py:38
+#: page_account.py:39
 msgid "email address"
 msgstr "sähköpostiosoite"
 
-#: page_account.py:39
+#: page_account.py:40
 msgid "phone number"
 msgstr "puhelinnumero"
 
-#: page_account.py:42
+#: page_account.py:43
 msgid "is empty"
 msgstr "on tyhjä"
 
-#: page_account.py:43
+#: page_account.py:44
 msgid "contains bad characters"
 msgstr "sisältää virheellisiä merkkejä"
 
-#: page_account.py:44
+#: page_account.py:45
 msgid "is too long"
 msgstr "on liian pitkä"
 
-#: page_account.py:122
+#: page_account.py:135
 msgid "Account Setup"
 msgstr "Rekisteröinti"
 
-#: page_account.py:258
+#: page_account.py:271
 msgid "The login name contains invalid characters"
 msgstr "Käyttäjätunnus sisältää virheellisiä merkkejä"
 
-#: page_account.py:261
+#: page_account.py:274
 msgid "The login name must be at least three characters long"
 msgstr "Käyttäjätunnuksen on oltava vähintään kolme merkkiä pitkä"
 
-#: page_account.py:264
+#: page_account.py:277
 msgid "The login name must start with a letter"
 msgstr "Käyttäjätunnuksen täytyy alkaa kirjaimella"
 
-#: page_account.py:267
+#: page_account.py:280
 msgid "The login name cannot end in a dot"
 msgstr "Käyttäjätunnus ei saa loppua pisteeseen"
 
-#: page_account.py:395
+#: page_account.py:411
 msgid "Sending information to the server..."
 msgstr "Lähetetään tietoja palvelimelle..."
 
-#: page_account.py:417
+#: page_account.py:433
 msgid "Something went wrong on the server end."
 msgstr "Jokin meni pieleen palvelinpäässä"
 
-#: page_account.py:418 page_account.py:457 page_account.py:466
-#: page_account.py:476 page_account.py:509 page_account.py:522
-#: page_account.py:531
+#: page_account.py:434 page_account.py:473 page_account.py:482
+#: page_account.py:492 page_account.py:525 page_account.py:538
+#: page_account.py:547
 msgid "Please contact support and give them this code:"
 msgstr "Ole hyvä ja ota yhteys tukeen, anna tämä koodi:"
 
-#: page_account.py:427
+#: page_account.py:443
 msgid ""
 "Something is wrong on the following form fields.  Check their contents and "
 "try again."
@@ -161,103 +161,103 @@ msgstr ""
 "Näiden kenttien sisällössä on jotain vikaa.  Tarkista niiden sisältö ja "
 "yritä uudelleen."
 
-#: page_account.py:448 page_account.py:455
+#: page_account.py:464 page_account.py:471
 msgid "Bad Information"
 msgstr "Epäkelpoa tietoa"
 
-#: page_account.py:456
+#: page_account.py:472
 msgid "This registration program sent bad information to the server."
 msgstr "Tämä rekisteröintiohjelma lähetti epäkelpoa tietoa palvelimelle."
 
-#: page_account.py:463
+#: page_account.py:479
 msgid "Invalid organisation"
 msgstr "Virheellinen organisaatio"
 
-#: page_account.py:464
+#: page_account.py:480
 msgid "This machine has been registered to an invalid organisation."
 msgstr "Tämä laite on rekisteröity virheelliseen organisaatioon."
 
-#: page_account.py:473
+#: page_account.py:489
 msgid "Missing information"
 msgstr "Puutteelliset tiedot"
 
-#: page_account.py:474
+#: page_account.py:490
 msgid "Registration program did not send all required information to server."
 msgstr "Rekisteröintiohjelma lähetti palvelimelle puutteellisia tietoja."
 
-#: page_account.py:482 page_account.py:488 page_account.py:494
-#: page_account.py:500
+#: page_account.py:498 page_account.py:504 page_account.py:510
+#: page_account.py:516
 msgid "Invalid input"
 msgstr "Virheellinen tieto"
 
-#: page_account.py:483
+#: page_account.py:499
 msgid "The login name contains invalid characters."
 msgstr "Käyttäjätunnus sisältää virheellisiä merkkejä."
 
-#: page_account.py:489
+#: page_account.py:505
 msgid "The email address is not valid."
 msgstr "Sähköpostiosoite ei ole kelvollinen."
 
-#: page_account.py:495
+#: page_account.py:511
 msgid "The password and its confirmation do not match."
 msgstr "Salasana ja sen varmistus eivät täsmää."
 
-#: page_account.py:501
+#: page_account.py:517
 msgid "The selected language is not valid."
 msgstr "Valittu kieli on virheellinen."
 
-#: page_account.py:507 page_account.py:574
+#: page_account.py:523 page_account.py:590
 msgid "An unknown error occurred when handling user information."
 msgstr "Käyttäjätietojen käsittelyssä tapahtui tuntematon virhe."
 
-#: page_account.py:520
+#: page_account.py:536
 msgid "Unregistered host"
 msgstr "Rekisteröimätön kone"
 
-#: page_account.py:521
+#: page_account.py:537
 msgid "This host was not found on the database."
 msgstr "Koneesi tietoja ei löydy tietokannasta."
 
-#: page_account.py:529
+#: page_account.py:545
 msgid "Host is already in use"
 msgstr "Kone on jo käytössä."
 
-#: page_account.py:530
+#: page_account.py:546
 msgid "User registration has already been done on this host."
 msgstr "Tältä koneelta on jo suoritettu käyttäjän luonti."
 
-#: page_account.py:541
+#: page_account.py:557
 msgid "An unknown error occurred when handling host information."
 msgstr "Laitetietojen käsittelyssä tapahtui tuntematon virhe."
 
-#: page_account.py:551
+#: page_account.py:567
 msgid "Login name already in use"
 msgstr "Käyttäjätunnus on jo käytössä"
 
-#: page_account.py:552
+#: page_account.py:568
 msgid ""
 "The login name you have chosen is already in use.  Please choose another."
 msgstr ""
 "Valitsemasi käyttäjätunnus on jo käytössä.  Valitse toinen käyttäjätunnus."
 
-#: page_account.py:557
+#: page_account.py:573
 msgid "Too short login name"
 msgstr "Liian lyhyt käyttäjänimi"
 
-#: page_account.py:558
+#: page_account.py:574
 msgid "Your login name is too short.  It must have at least three characters."
 msgstr ""
 "Käyttäjänimesi on liian lyhyt.  Sen on oltava vähintään kolme merkkiä pitkä."
 
-#: page_account.py:563
+#: page_account.py:579
 msgid "Email address is already in use"
 msgstr "Sähköpostiosoite on jo käytössä"
 
-#: page_account.py:564
+#: page_account.py:580
 msgid "This email address is already in use.  Please use another address."
 msgstr "Tämä sähköpostiosoite on jo käytössä.  Käytä toista osoitetta."
 
-#: page_account.py:566
+#: page_account.py:582
 msgid ""
 "If using another email address is not possible, please contact support and "
 "give them this code:"
@@ -265,19 +265,19 @@ msgstr ""
 "Jos toisen osoitteen käyttö ei ole mahdollista, ota yhteys tukeen.  Anna "
 "heille tämä koodi:"
 
-#: page_account.py:589
+#: page_account.py:605
 msgid "Could not contact the server:"
 msgstr "Ei yhteyttä palvelimeen:"
 
-#: page_account.py:590
+#: page_account.py:606
 msgid "Check the network connection and try again."
 msgstr "Tarkista verkkoyhteyden tila ja yritä uudelleen."
 
-#: page_account.py:591
+#: page_account.py:607
 msgid "If the problem persists, contact support."
 msgstr "Jos ongelma toistuu, ota yhteys tukeen."
 
-#: page_account.py:611
+#: page_account.py:627
 msgid ""
 "The server is not responding.  Try again after a while.  If the problem "
 "persists, contact support."
@@ -285,19 +285,19 @@ msgstr ""
 "Palvelin ei vastaa pyyntöön.  Yritä lähetystä uudelleen hetken kuluttua.  "
 "Jos tilanne toistuu, ota yhteys tukeen."
 
-#: page_account.py:648 page_account.py:695
+#: page_account.py:664 page_account.py:711
 msgid "Could not interpret the response sent by the server."
 msgstr "Palvelimen palauttamaa viestiä ei pystytty tulkitsemaan."
 
-#: page_account.py:650 page_account.py:696 page_account.py:704
+#: page_account.py:666 page_account.py:712 page_account.py:720
 msgid "Please contact support."
 msgstr "Ole hyvä ja ota yhteys tukeen."
 
-#: page_account.py:694 page_account.py:702
+#: page_account.py:710 page_account.py:718
 msgid "Something went wrong"
 msgstr "Jokin meni pieleen"
 
-#: page_account.py:703
+#: page_account.py:719
 msgid ""
 "This situation should never happen, something has gone very badly wrong."
 msgstr "Tätä ei pitäisi koskaan tapahtua, jokin on pahasti pielessä."
@@ -314,11 +314,7 @@ msgstr "Tunnuksesi on luotu."
 msgid "Login with your user account was successful."
 msgstr "Kirjautuminen käyttäjätunnuksellasi onnistui."
 
-#: page_complete.py:38
-msgid "Have a nice time with your studies!"
-msgstr "Mukavaa opiskeluaikaa!"
-
-#: page_complete.py:39
+#: page_complete.py:37
 msgid "System must be rebooted."
 msgstr "Tietokoneesi täytyy käynnistää uudelleen."
 

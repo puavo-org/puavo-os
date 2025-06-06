@@ -8,6 +8,8 @@ zip_file='/state/external_files/background_images'
 if [ -e "$zip_file" ]; then
   if [ ! -d "$target_dir" -o "$zip_file" -nt "$target_dir" ]; then
     unzip -o -q -d "$target_dir" "$zip_file"
+    find "$target_dir" -type d -print0 | xargs -0 chmod 755
+    find "$target_dir" -type f -print0 | xargs -0 chmod 644
     touch "$target_dir"
   fi
 fi

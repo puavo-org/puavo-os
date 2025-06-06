@@ -1,5 +1,5 @@
 class udev::pbrick {
-  include packages
+  include ::packages
 
   file {
     '/etc/udev/rules.d/50-pbrick.rules':

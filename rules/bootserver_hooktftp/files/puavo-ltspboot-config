@@ -90,7 +90,7 @@ label ltsp-NBD-${image}
   menu label ${image}
   menu default
   kernel ltsp/${image}/vmlinuz
-  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0 netroot="nbd:${server_ip}:${image}"
+  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0 netroot="nbd:${server_ip}:${image}" ${kernel_arguments}
   ipappend 2
 
 DEFAULT_IMAGE_EOF
@@ -103,7 +103,7 @@ DEFAULT_IMAGE_EOF
 label ltsp-NBD-${image}
   menu label ${image}
   kernel ltsp/${image}/vmlinuz
-  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0 netroot="nbd:${server_ip}:${image}"
+  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0 netroot="nbd:${server_ip}:${image}" ${kernel_arguments}
   ipappend 2
 
 EOF
@@ -160,7 +160,7 @@ case "$hosttype" in
     kernel_arguments="$kernel_arguments usbcore.autosuspend=-1 stack_guard_gap=1"
     ;;
   laptop|unregistered|wirelessaccesspoint)
-    kernel_arguments=''
+    kernel_arguments='iomem=relaxed'
     ;;
   thinclient)
     kernel_arguments="$kernel_arguments usbcore.autosuspend=-1"

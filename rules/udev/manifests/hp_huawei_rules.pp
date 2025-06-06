@@ -1,5 +1,5 @@
 class udev::hp_huawei_rules {
-  include packages
+  include ::packages
 
   # fix suggested in
   # https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/1725513

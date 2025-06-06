@@ -21,7 +21,7 @@ esac
 
 cat <<EOF > /etc/tmux.conf.tmp
 set -g status-right-length 68
-set -g status-right '#{?#{!=:#{battery_percentage},},batt:,}#{battery_percentage} #H.${org} %H:%M %d-%b'
+set -g status-right 'ip:#(facter networking.ip) #{?#{!=:#{battery_percentage},},batt:,}#{battery_percentage} #H.${org} %H:%M %d-%b'
 set -g status-style bg=${bg_color}
 set -ag status-style fg=${fg_color}
 

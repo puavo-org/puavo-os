@@ -1394,8 +1394,8 @@ class PuavoErsExamManager (threading.Thread):
 
     tmpfile = '%s.tmp' % self.DECRYPT_CODES_PATH
     with open(tmpfile, 'w') as f:
-      decrypt_codes_list.sort()
-      for decrypt_code in decrypt_codes_list:
+      sorted_and_unique_codes_list = sorted(set(decrypt_codes_list))
+      for decrypt_code in sorted_and_unique_codes_list:
         f.write("%s\n" % decrypt_code)
     os.rename(tmpfile, self.DECRYPT_CODES_PATH)
 
@@ -1564,34 +1564,64 @@ class PuavoErsExamScheduler (threading.Thread):
     subprocess.run(cmd)
 
 
-  def log_load_exams(self, output):
-    try:
-      exams_seen = {}
+  def get_load_exams_status(self, output, current_exam_package):
+    exams_status = {
+      'errors':        [],
+      'exams':         {},
+      'missing_exams': [],
+      'status':        'OK',
+    }
 
+    examfiles_to_look_for = {
+      exam['file_name']: 1 for exam in current_exam_package.exams.values()
+    }
+
+    try:
       if not 'decrypt' in output:
         raise Exception('decrypt field is missing from response')
 
       for decrypt in output['decrypt']:
         if not 'mebs' in decrypt:
           errmsg = 'exam decrypt missing a list of mebs, we got: %s' % decrypt
+          exams_status['errors'].append(errmsg)
+          exams_status['status'] = 'ERROR'
           self.logger.log(syslog.LOG_ERR, errmsg)
           continue
 
         for exam in decrypt['mebs']:
-          if exam in exams_seen:
+          if exam in examfiles_to_look_for:
+            del examfiles_to_look_for[exam]
+          if exam in exams_status['exams']:
             continue
           if decrypt['wrongPassword']:
-            self.logger.log(syslog.LOG_ERR,
-                            'exam "%s" load ERROR (bad password "%s")' \
-                              % (exam, decrypt['password']))
+            exams_status['exams'][exam] = 'WRONG_PASSWORD'
+            errmsg = 'exam "%s" load ERROR (bad password "%s")' \
+                       % (exam, decrypt['password'])
+            exams_status['errors'].append(errmsg)
+            exams_status['status'] = 'ERROR'
+            self.logger.log(syslog.LOG_ERR, errmsg)
           else:
+            exams_status['exams'][exam] = 'OK'
             self.logger.log(syslog.LOG_INFO,
                             'exam "%s" loaded OK (with password "%s")' \
                                % (exam, decrypt['password']))
-          exams_seen[exam] = 1
+
+      if examfiles_to_look_for:
+        missing_exams = sorted(examfiles_to_look_for.keys())
+        exams_status['missing_exams'] = missing_exams
+        exams_status['status'] = 'ERROR'
+        examfiles_as_string = ' '.join(missing_exams)
+        msg = 'the following exam files were not listed in load exams' \
+                + (' decrypt output: %s' % examfiles_as_string)
+        self.logger.log(syslog.LOG_WARNING, msg)
+
     except Exception as e:
-      self.logger.log(syslog.LOG_ERR,
-                      'could not interpret load exams output: %s' % e)
+      msg = 'could not interpret load exams output: %s' % e
+      self.logger.log(syslog.LOG_ERR, msg)
+      exams_status['errors'].append(msg)
+      exams_status['status'] = 'ERROR'
+
+    return exams_status
 
 
   def session_status_msg(self, status):
@@ -1667,7 +1697,7 @@ class PuavoErsExamScheduler (threading.Thread):
       self.logger.log(syslog.LOG_ERR, 'could not interpret status: %s' % e)
 
 
-  def load_exams(self):
+  def load_exams(self, current_exam_package):
     global current_zip_name
 
     if current_zip_name == None:
@@ -1678,8 +1708,7 @@ class PuavoErsExamScheduler (threading.Thread):
 
     cmd = 'load-exam %s %s' % (current_zip_name, 'PURKUKOODIT.TXT')
     output = self.server_cmd(cmd, load_exams_timeout_in_seconds)
-    self.log_load_exams(output)
-    return output
+    return self.get_load_exams_status(output, current_exam_package)
 
 
   def reset_exam(self):
@@ -1817,11 +1846,11 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def exams_are_finished(self):
     if datetime.datetime.now() > self.finish_time:
-      self.logger.log(syslog.LOG_INFO, 'exams finish time is past: %s' \
-                                         % self.finish_time)
+      self.logger.log(syslog.LOG_DEBUG, 'exams finish time is past: %s' \
+                                          % self.finish_time)
       return True
 
-    self.logger.log(syslog.LOG_INFO,
+    self.logger.log(syslog.LOG_DEBUG,
                     'we are waiting for exams to finish at: %s' \
                       % self.finish_time)
     return False
@@ -1888,14 +1917,39 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def running_the_expected_exams(self, current_exam_package,
                                  currently_loaded_exam_uuids):
+    # We can determine if we are running the expected exams by comparing
+    # the current package id and the session package id.  And also we can
+    # compare the actually running exams with the expected ones.
+    # These should always provide the same result, but for example in case
+    # that someone has loaded the exams manually there might be a mismatch
+    # between these methods.  We should enforce that the session package id
+    # matches the expected package id (mainly for answer returns), but also
+    # that the actually running exams are what we expect.
     if self.session_state:
-      return current_exam_package.id == self.session_state['package']['id']
+      if current_exam_package.id != self.session_state['package']['id']:
+        self.logger.log(syslog.LOG_INFO,
+                        'exam package id and session package id does not match')
+        return False
 
-    # we should have had session state for this but in case something funky
-    # has happened we can also compare the running exam set (this funky might
-    # be that someone is loading exams by hand)
     current_exam_uuids = current_exam_package.get_exam_uuids()
-    return set(current_exam_uuids) == set(currently_loaded_exam_uuids)
+    currently_running_set_matched \
+      = (set(current_exam_uuids) == set(currently_loaded_exam_uuids))
+
+    if self.session_state and not currently_running_set_matched:
+      msg = 'mismatch between expected exams and actually running ones,' \
+             + ' even though expected package id matched the session package id'
+      self.logger.log(syslog.LOG_WARNING, msg)
+      if 'load_exams_status' in self.session_state \
+           and (self.session_state['load_exams_status']['status'] != 'OK'):
+        # The point of this is to prevent a load exams loop.  If there were
+        # issues in loading the exams, things will likely not be better if
+        # retry again and again.
+        msg = 'however, exam load status was not OK so we expect that' \
+                + ' we got as a good set as we can'
+        self.logger.log(syslog.LOG_WARNING, msg)
+        return True
+
+    return currently_running_set_matched
 
 
   def update_exams_finished_time(self, status, current_exam_package,
@@ -2045,10 +2099,12 @@ class PuavoErsExamScheduler (threading.Thread):
         self.reset_exam()
       else:
         self.logger.log(syslog.LOG_INFO, 'no exams to schedule')
-      self.save_session_state(None)
+      self.save_session_state(None, None)
       if self.has_started:
         self.answer_return.trigger_returns()
       return
+
+    load_exams_status = None
 
     try:
       need_reload = not self.running_the_expected_exams(current_exam_package,
@@ -2057,7 +2113,7 @@ class PuavoErsExamScheduler (threading.Thread):
         self.logger.log(syslog.LOG_INFO, 'loading exams')
         self.virtualboxcontrol.link_down()
         self.answer_return.trigger_returns()
-        self.load_exams()
+        load_exams_status = self.load_exams(current_exam_package)
         self.virtualboxcontrol.link_up()
         self.finish_time = current_exam_package.end_time
         self.has_started = False
@@ -2066,7 +2122,7 @@ class PuavoErsExamScheduler (threading.Thread):
                       'exam scheduler is waiting for zip file to be ready')
       return
 
-    self.save_session_state(current_exam_package)
+    self.save_session_state(current_exam_package, load_exams_status)
 
     if not self.has_started \
       and current_exam_package.start_time <= datetime.datetime.now():
@@ -2082,8 +2138,11 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def load_session_state(self):
     state = load_from_json(self.SESSION_STATE_PATH)
+    if not ('load_exams_status' in state \
+              and 'status' in state['load_exams_status']):
+        raise Exception('load exams status is missing from the session state')
     if not ('package' in state and 'id' in state['package']):
-      raise Exception('package id is missing from session state')
+      raise Exception('package id is missing from the session state')
     return state
 
 
@@ -2096,7 +2155,9 @@ class PuavoErsExamScheduler (threading.Thread):
     return state
 
 
-  def save_session_state(self, exam_package):
+  def save_session_state(self, exam_package, load_exams_status):
+    exams_status_to_save = None
+
     if exam_package:
       exam_filenames = [
         exam['file_name'] for exam in exam_package.exams.values()
@@ -2109,8 +2170,18 @@ class PuavoErsExamScheduler (threading.Thread):
       logmsg = 'saved session state, nulling package information'
       package_id = None
 
+    if load_exams_status:
+      exams_status_to_save = load_exams_status
+    elif (self.session_state and 'load_exams_status' in self.session_state):
+      exams_status_to_save = self.session_state['load_exams_status']
+    else:
+      exams_status_to_save = None
+
     try:
-      data = { 'package': { 'id': package_id } }
+      data = {
+        'load_exams_status': exams_status_to_save,
+        'package': { 'id': package_id },
+      }
       self.session_state = data
       if save_as_json(self.SESSION_STATE_PATH, data):
         self.logger.log(syslog.LOG_INFO, logmsg)

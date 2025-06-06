@@ -1,5 +1,5 @@
 class udev::vernier {
-  include packages
+  include ::packages
 
   file {
     '/etc/udev/rules.d/40-vstlibusb.rules':

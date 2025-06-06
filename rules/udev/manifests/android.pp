@@ -1,5 +1,5 @@
 class udev::android {
-  include packages
+  include ::packages
 
   file {
     '/etc/udev/rules.d/51-android.rules':
