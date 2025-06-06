@@ -2,22 +2,21 @@
 set -e
 
 usage() {
-  echo "Usage: $0 <boot-folder> <key-folder> <image-file> <uki-prefix>"
+  echo "Usage: $0 <boot-folder> <key-folder> <image-file>"
   exit 1
 }
 
-if [ "$#" -ne 4 ]; then
+if [ "$#" -ne 3 ]; then
   usage
 fi
 
 boot_folder=$1
 key_folder=$2
 image_file=$3
-uki_prefix=$4
 
 for kernel_image in "$boot_folder"/vmlinuz-*; do
   kernel_version=$(basename "$kernel_image" | sed 's/vmlinuz-//')
-  output_path="${boot_folder}/${uki_prefix}-${kernel_version}.uki.efi"
+  output_path="${boot_folder}/kernel-${kernel_version}.uki.efi"
   .aux/create-uki "$boot_folder" "$key_folder" "$kernel_version" "$output_path"
 done
 
