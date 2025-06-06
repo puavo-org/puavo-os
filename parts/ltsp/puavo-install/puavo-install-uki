@@ -44,24 +44,11 @@ determine_selected_kernel_version() {
 
 install_boot_entry_config() {
   local extra_directory="$1"
-  local enabled="$2"
+  local class="$2"
+  local image_name="$3"
+  local release="$4"
+  local enabled="$5"
   local environment_file="${extra_directory}/grubenv"
-
-  local class_file="${image_mountpoint}/etc/puavo-image/class"
-  local image_name_file="${image_mountpoint}/etc/puavo-image/name"
-  local release_file="${image_mountpoint}/etc/puavo-image/release"
-
-  if [ ! -r "$class_file" ] || \
-     [ ! -r "$image_name_file" ] || \
-     [ ! -r "$release_file" ]; then
-    echo "error: missing boot entry information in image mountpoint" >&2
-    return 1
-  fi
-
-  local class release
-  class=$(cat "$class_file")
-  image_name=$(cat "$image_name_file")
-  release=$(cat "$release_file")
 
   [ -f "$environment_file" ] || grub-editenv "$environment_file" create || {
     echo "error: failed to create the GRUB environment of a boot entry" >&2
@@ -82,9 +69,31 @@ install_uki() {
   local destination="$2"
   local enabled="$3"
 
-  local uki_destination="$destination/$(basename "$uki")"
+  local class_file="${image_mountpoint}/etc/puavo-image/class"
+  local image_name_file="${image_mountpoint}/etc/puavo-image/name"
+  local release_file="${image_mountpoint}/etc/puavo-image/release"
+
+  local class image_name release
+
+  if ! class=$(cat "$class_file") || [ -z "$class" ]; then
+    echo "error: image class missing in image mountpoint" >&2
+    return 1
+  fi
+  if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
+    echo "error: image name missing in image mountpoint" >&2
+    return 1
+  fi
+  if ! release=$(cat "$release_file") || [ -z "$release" ]; then
+    echo "error: release missing in image mountpoint" >&2
+    return 1
+  fi
+  local image_name_no_suffix=${image_name%.img}
+
+  local uki_destination_dir="${destination}/${image_name_no_suffix}"
+  local uki_destination="${uki_destination_dir}/$(basename "$uki")"
   local uki_temporary_destination="${uki_destination}.tmp"
 
+  mkdir -p "$uki_destination_dir"
   if [ ! -f "$uki_destination" ]; then
     # If the copy is interrupted, the .tmp extension prevents the partial image
     # from being used and it will be cleaned later
@@ -103,7 +112,8 @@ install_uki() {
     return 1
   fi
 
-  install_boot_entry_config "$extra_directory" "$enabled"
+  install_boot_entry_config "$extra_directory" "$class" \
+                            "$image_name" "$release" "$enabled"
 }
 
 kernel_version=$(determine_selected_kernel_version)
