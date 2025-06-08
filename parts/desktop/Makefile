@@ -27,7 +27,8 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
-		gdm/greeter/autostart/puavo-run-xrandr.desktop
+		gdm/greeter/autostart/puavo-run-xrandr.desktop \
+		etc/xdg/autostart/puavo-pipewire.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/wayland-sessions \
 		wayland-sessions/*
