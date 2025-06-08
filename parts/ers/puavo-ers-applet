@@ -574,7 +574,7 @@ class PuavoErsApplet:
     # wants to try those out manually.  Showing them for old exams is probably
     # just a distraction.
 
-    self.logger.log(syslog.LOG_INFO, 'updating decrypt codes in UI')
+    self.logger.log(syslog.LOG_INFO, 'updating decrypt codes for %d exams in UI' % len(new_exams))
 
     self.exams_by_widgets = {}
     for menuitem in self.menuitems:
@@ -1378,7 +1378,7 @@ class PuavoErsExamManager (threading.Thread):
     exam_paths = [ os.path.join(KTP_JAKO_DIR, p) for p in exams ]
     unique_exam_paths = list( dict.fromkeys(exam_paths) )
     self.logger.log(syslog.LOG_INFO,
-                    'zipping exams %s into %s' % (exams, zip_path))
+                    'zipping %d exams %s into %s' % (len(exams), exams, zip_path))
     tmpfile = "%s.tmp" % zip_path
     rm_f(tmpfile)
     with zipfile.ZipFile(tmpfile, 'w') as zipObj:
@@ -1390,7 +1390,7 @@ class PuavoErsExamManager (threading.Thread):
 
   def update_decrypt_codes_in_file(self, decrypt_codes_list):
     self.logger.log(syslog.LOG_INFO,
-                    'updating decrypt codes in %s' % self.DECRYPT_CODES_PATH)
+                    'updating %d decrypt codes in %s' % (len(decrypt_codes_list), self.DECRYPT_CODES_PATH))
 
     tmpfile = '%s.tmp' % self.DECRYPT_CODES_PATH
     with open(tmpfile, 'w') as f:
