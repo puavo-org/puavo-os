@@ -33,8 +33,9 @@ release_lock() {
 launch_daemon() {
   local daemon_prog="$1"
   shift
+  local uid=$(id -u)
   echo "Launching '${daemon_prog}'..." >&2
-  daemon --stderr=user.err --stdout=user.notice --name="puavo-${daemon_prog}" --chdir="$XDG_RUNTIME_DIR" "${daemon_prog}" -- "$@" || {
+  daemon --stderr=user.err --stdout=user.notice --name="puavo-${daemon_prog}-${uid}" --chdir="$XDG_RUNTIME_DIR" "${daemon_prog}" -- "$@" || {
     echo "ERROR: failed to launch '${daemon_prog}'" >&2
     return 1
   }
@@ -44,11 +45,12 @@ launch_daemon() {
 
 stop_all_daemons() {
   local retval=0
+  local uid=$(id -u)
 
   for daemon_prog in "${g_daemon_progs[@]}"; do
-    daemon --name="puavo-${daemon_prog}" --running || continue
+    daemon --name="puavo-${daemon_prog}-${uid}" --running || continue
     echo "Stopping ${daemon_prog}..." >&2
-    daemon --name="puavo-${daemon_prog}" --stop || {
+    daemon --name="puavo-${daemon_prog}-${uid}" --stop || {
       echo "ERROR: failed to stop '${daemon_prog}'" >&2
       retval=1
       continue # best effort for all
@@ -60,6 +62,7 @@ stop_all_daemons() {
 
 kill_remaining_daemons() {
   local retval=0
+  local uid=$(id -u)
 
   echo "Waiting at most 5 seconds for daemons to stop..." >&2
   for i in $(seq 1 5); do
@@ -68,9 +71,9 @@ kill_remaining_daemons() {
   done
   echo "Killing remaining daemons..." >&2
   for daemon_prog in "${g_daemon_progs[@]}"; do
-    daemon --name="puavo-${daemon_prog}" --running || continue
+    daemon --name="puavo-${daemon_prog}-${uid}" --running || continue
     echo "Daemon '${daemon_prog}' did not stop gracefully. Killing it..." >&2
-    daemon --name="puavo-${daemon_prog}" --signal=SIGKILL || {
+    daemon --name="puavo-${daemon_prog}-${uid}" --signal=SIGKILL || {
       echo "ERROR: failed to kill '${daemon_prog}'" >&2
       retval=1
       continue # best effort for all
@@ -81,16 +84,20 @@ kill_remaining_daemons() {
 }
 
 is_any_daemon_running() {
+  local uid=$(id -u)
+
   for daemon_prog in "${g_daemon_progs[@]}"; do
-    daemon --name="puavo-${daemon_prog}" --running || continue
+    daemon --name="puavo-${daemon_prog}-${uid}" --running || continue
     return 0
   done
   return 1
 }
 
 are_all_daemons_running() {
+  local uid=$(id -u)
+
   for daemon_prog in "${g_daemon_progs[@]}"; do
-    daemon --name="puavo-${daemon_prog}" --running || {
+    daemon --name="puavo-${daemon_prog}-${uid}" --running || {
       echo "Daemon '${daemon_prog}' is not running" >&2
       return 1
     }
