@@ -580,14 +580,7 @@ function generate_boot_entry {
 function add_boot_options {
   search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
 
-  for image_path in /EFI/debian/*.uki.efi; do
-    # Skip the GRUB itself by checking if the basename starts with "grub"
-    regexp -s 1:basename '([^/]+)$' "$image_path"
-
-    if regexp "^grub" "$basename"; then
-      continue
-    fi
-
+  for image_path in /EFI/debian/*/*.uki.efi; do
     generate_boot_entry "$image_path"
   done
 
