@@ -55,24 +55,27 @@ end
 class LuksEnrollmentPolicy
   # The format of these arguments follow the systemd-cryptenroll specifications.
   # See "man systemd-cryptenroll" or "https://www.freedesktop.org/software/systemd/man/latest/systemd-cryptenroll.html".
-  attr_accessor :specific_pcrs, :public_key_pcrs, :public_key_path
+  attr_accessor :specific_pcrs, :public_key_pcrs, :public_key_path, :specific_arguments
 
-  def initialize(specific_pcrs, public_key_pcrs, public_key_path)
+  def initialize(specific_pcrs, public_key_pcrs, public_key_path, specific_arguments=[])
     @specific_pcrs = specific_pcrs
     @public_key_pcrs = public_key_pcrs
     @public_key_path = public_key_path
+    @specific_arguments = specific_arguments
   end
 
-  def arguments()
+  def arguments
     specific_pcrs_option_value = @specific_pcrs.join("+")
     public_key_pcrs_option_value = @public_key_pcrs.join("+")
 
-    [
-      "--tpm2-device=auto",
+    base_arguments = [
+      '--tpm2-device=auto',
       "--tpm2-pcrs=#{ specific_pcrs_option_value }",
       "--tpm2-public-key-pcrs=#{ public_key_pcrs_option_value }",
       "--tpm2-public-key=#{ public_key_path }"
     ]
+
+    base_arguments + @specific_arguments
   end
 end
 
@@ -97,73 +100,34 @@ class LuksPartitionHandler
   end
 
   def generate_recovery_key()
-    SecureRandom.gen_random(64)
+    # Generate a recovery key using alphanumeric characters
+    # excluding ambiguous characters like 0, O, I, l, 1
+    charset = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+    key_length = 32 # ~186 bits of entropy
+
+    (1..key_length)
+      .map { charset[SecureRandom.random_number(charset.length)] }
+      .join
   end
 
-  def enroll_with_recovery_key(recovery_key_file)
-    command = [ 'systemd-cryptenroll' ]
-    command += @policy.arguments
-    command += [
-      "--unlock-key-file=#{ recovery_key_file }",
-      "/dev/#{ @partition }"
-    ]
-
-    run(*command)
-  end
-
-  def enroll_with_passphrase(passphrase)
+  def enroll(recovery_key)
     command = [ 'systemd-cryptenroll' ]
     command += @policy.arguments
     command += [ "/dev/#{ @partition }" ]
 
-    system({ "PASSWORD" => passphrase }, command.join(' ')) or
+    system({ "PASSWORD" => recovery_key }, command.join(' ')) or
       raise 'Failed to enroll LUKS encryption device'
   end
 
-  def setup_with_recovery_key(unlock_with_tpm)
-    recovery_key_file = Tempfile.new('recovery-key', '/dev/shm')
-    recovery_key_file.binmode
+  def setup()
+    recovery_key = self.generate_recovery_key()
 
-    begin
-      recovery_key = self.generate_recovery_key()
-      recovery_key_file.write(recovery_key)
-      recovery_key_file.flush
-
-      puts 'Creating LUKS partition with recovery key...'
-      run('cryptsetup', 'luksFormat',
-          *LUKS_FORMAT_OPTIONS,
-          "--key-file=#{ recovery_key_file.path }",
-          "/dev/#{ @partition }")
-
-      puts 'Opening the LUKS partition for installing the system...'
-      run('cryptsetup', 'luksOpen',
-          "/dev/#{ @partition }",
-          @encryption_device_name,
-          "--key-file=#{ recovery_key_file.path }")
-
-      if unlock_with_tpm then
-        puts 'Enrolling the LUKS partition for TPM-based unlocking...'
-        self.enroll_with_recovery_key(recovery_key_file.path)
-      end
-
-      recovery_key
-    ensure
-      recovery_key_file.close
-      recovery_key_file.unlink
-    end
-  end
-
-  def setup_with_passphrase(passphrase, unlock_with_tpm)
-    if passphrase.nil? || passphrase.empty? then
-      raise 'Encryption passphrase must be set'
-    end
-
-    puts 'Creating a passphrase encrypted LUKS partition...'
+    puts 'Creating LUKS partition with recovery key...'
     IO.popen([ 'cryptsetup', 'luksFormat',
                *LUKS_FORMAT_OPTIONS,
                "--key-file=-",
                "/dev/#{ @partition }" ], 'w') do |f|
-      f.print(passphrase)
+      f.print(recovery_key)
     end
 
     exit_status = $?
@@ -175,7 +139,7 @@ class LuksPartitionHandler
     IO.popen([ 'cryptsetup', 'luksOpen',
                "/dev/#{ @partition }",
                @encryption_device_name ], 'w') do |f|
-      f.print(passphrase)
+      f.print(recovery_key)
     end
 
     exit_status = $?
@@ -183,10 +147,8 @@ class LuksPartitionHandler
       raise 'Failed to open the created LUKS encryption device'
     end
 
-    if unlock_with_tpm then
-      puts 'Enrolling the LUKS partition for TPM-based unlocking...'
-      self.enroll_with_passphrase(passphrase)
-    end
+    puts 'Enrolling the LUKS partition for TPM-based unlocking...'
+    self.enroll(recovery_key)
   end
 end
 
@@ -220,35 +182,34 @@ module DiskHandler
     },
   }
 
+  EncryptionPolicyPublicKeyPath = "/etc/puavo-conf/tpm2-pcr-public-key.pem"
+
   EncryptionPresets = {
     'none' => {
       'label' => 'No encryption',
-      'method' => 'none',
-      'unlock_with_tpm' => false,
+      'policy' => nil,
     },
-    'passphrase' => {
-      'label' => 'Passphrase',
-      'method' => 'passphrase',
-      'unlock_with_tpm' => false,
-    },
-    'tpm-with-fallback-passphrase' => {
-      'label' => 'Automatic TPM unlock with fallback passphrase',
-      'method' => 'passphrase',
-      'unlock_with_tpm' => true,
+    'tpm-with-pin' => {
+      'label' => 'TPM Unlock + PIN + Recovery Key',
+      'policy' => LuksEnrollmentPolicy.new(
+        [ '7:sha256' ],
+        [ '11:sha256' ],
+        EncryptionPolicyPublicKeyPath,
+        [ '--tpm2-with-pin=yes' ]
+      )
     },
     'tpm-with-recovery-key' => {
-      'label' => 'Automatic TPM unlock with recovery key',
-      'method' => 'recovery-key',
-      'unlock_with_tpm' => true,
+      'label' => 'Automatic TPM Unlock + Recovery Key',
+      'policy' => LuksEnrollmentPolicy.new(
+        [ '15:sha256=0000000000000000000000000000000000000000000000000000000000000000', '7:sha256' ],
+        [ '11:sha256' ],
+        EncryptionPolicyPublicKeyPath,
+        [ '--tpm2-with-pin=no' ]
+      )
     }
   }
 
   EncryptionDeviceName = "puavo-cryptroot"
-  EnrollmentPolicy = LuksEnrollmentPolicy.new(
-    [ '15:sha256=0000000000000000000000000000000000000000000000000000000000000000' ],
-    [ '11:sha256' ],
-    "/etc/puavo-conf/tpm2-pcr-public-key.pem"
-  )
 
   def self.cleanup_disk_environment(hosttype, vgname, close_luks_device)
     # Unmount filesystems, if those are mounted.
@@ -573,24 +534,11 @@ module DiskHandler
                                               try_count: 30)
   end
 
-  def self.create_luks_partition_handler(fs_conf)
-    LuksPartitionHandler.new(fs_conf['puavo_partition'],
-      EncryptionDeviceName, EnrollmentPolicy)
-  end
-
-  def self.setup_luks_partition_with_passphrase(fs_conf)
-    handler = self.create_luks_partition_handler(fs_conf)
+  def self.setup_luks_partition(fs_conf)
     encryption = fs_conf['encryption']
-    handler.setup_with_passphrase(
-      encryption['passphrase'], encryption['unlock_with_tpm'])
-
-    fs_conf['install_target'] = handler.encryption_device
-  end
-
-  def self.setup_luks_partition_with_recovery_key(fs_conf)
-    handler = self.create_luks_partition_handler(fs_conf)
-    encryption = fs_conf['encryption']
-    handler.setup_with_recovery_key(encryption['unlock_with_tpm'])
+    handler = LuksPartitionHandler.new(
+      fs_conf['puavo_partition'], EncryptionDeviceName, encryption['policy'])
+    recovery_key = handler.setup()
 
     fs_conf['install_target'] = handler.encryption_device
   end
@@ -607,15 +555,9 @@ module DiskHandler
 
     encryption = fs_conf['encryption']
 
-    case encryption['method']
-      when 'passphrase'
-        fs_setup_phases += [ :setup_luks_partition_with_passphrase ]
-      when 'recovery-key'
-        fs_setup_phases += [ :setup_luks_partition_with_recovery_key ]
-    end
-
-    if encryption['unlock_with_tpm'] then
+    if encryption && encryption['policy'] then
       check_tpm_enrollment_feasibility
+      fs_setup_phases += [ :setup_luks_partition ]
     end
 
     fs_setup_phases += [ :puavo_filesystems, :mount_filesystems ]
@@ -873,15 +815,7 @@ module QueryDiskInfo
       raise "Unrecognized encryption preset '#{ preset_key }'"
     end
 
-    preset = DiskHandler::EncryptionPresets[preset_key]
-    conf = preset.clone
-
-    if preset['method'] == 'passphrase' then
-      passphrase = UI::ask_passphrase('Enter the passphrase for encryption: ')
-      conf['passphrase'] = passphrase
-    end
-
-    return conf
+    return DiskHandler::EncryptionPresets[preset_key]
   end
 
   def self.ask_device_with_confirmation(hosttype, raid_setup_done)
@@ -1031,8 +965,8 @@ puavo-setup-filesystems [OPTIONS]
     --ask-partition               ask with default for partition
     --ask-setup-windows           ask with default for setup windows
     --ask-unpartitioned-space     ask with default for unpartitioned space
-    --ask-wipe-partition          ask with default for wipe partition
     --ask-windows-size            ask with default for windows size
+    --ask-wipe-partition          ask with default for wipe partition
     --ask-write-partitions        ask with default for write partitions
     --encrypt-with-passphrase     encrypt the installation with a passphrase
     --encrypt-with-recovery-key   encrypt the installation with a recovery key
@@ -1046,8 +980,8 @@ puavo-setup-filesystems [OPTIONS]
     --force-windows-size          force value for windows size
     --force-wipe-partition        force value for wipe partition
     --force-write-partitions      force value for write partitions
+    --hosttype                    force value for hosttype
     --loopback-only               use only loopback devices
-    --unlock-with-tpm             unlocks encrypted installation automatically with tpm
 
 EOF
   end
@@ -1198,25 +1132,6 @@ EOF
       break
     end
     size
-  end
-
-  def self.ask_passphrase(question, repeat_question="Repeat passphrase: ")
-    while true do
-      passphrase1 = HighLine.ask(question) { |q| q.echo = '*' }
-
-      if passphrase1.empty?
-        puts 'Passphrase can not be empty, try again.'
-        next
-      end
-
-      passphrase2 = HighLine.ask(repeat_question) { |q| q.echo = '*' }
-
-      if passphrase1 == passphrase2 then
-        return passphrase1
-      else
-        puts 'Passphrases do not match, try again.'
-      end
-    end
   end
 
   def self.colormsg(msg, color)
