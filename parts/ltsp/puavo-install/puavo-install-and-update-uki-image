@@ -92,7 +92,7 @@ install_uki_to_efi() {
     return 1
   }
 
-  puavo-update-uki-command-line "${image_mountpoint}/boot" "$UKI_ROOT" "$hosttype" || {
+  puavo-update-uki-command-line "$image_mountpoint" "$UKI_ROOT" "$hosttype" || {
     echo "error: failed to update UKI command line" >&2
     umount /boot/efi
     return 1
