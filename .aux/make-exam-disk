@@ -110,6 +110,7 @@ dd if=/dev/null "of=${target_image}" bs=1K \
 loopdev=$(losetup --show -P -f "$target_image")
 
 puavo-setup-filesystems --force-disk-device "${loopdev#/dev/}" \
+                        --force-encryption none \
                         --force-partition whole \
                         --force-wipe-partition no \
                         --force-write-partitions yes \

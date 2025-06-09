@@ -112,6 +112,7 @@ if [ -n "$target_image" ]; then
   loopdev=$(losetup --show -P -f "$target_image")
 
   puavo-setup-filesystems --force-disk-device "${loopdev#/dev/}" \
+                          --force-encryption none \
                           --force-partition whole \
                           --force-setup-windows no \
                           --force-wipe-partition no \
@@ -119,7 +120,8 @@ if [ -n "$target_image" ]; then
                           --hosttype diskinstaller \
                           --loopback-only
 else
-  puavo-setup-filesystems --force-setup-windows no \
+  puavo-setup-filesystems --force-encryption none \
+                          --force-setup-windows no \
                           --hosttype diskinstaller
 fi
 
