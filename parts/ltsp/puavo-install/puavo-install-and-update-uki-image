@@ -1,7 +1,8 @@
 #!/bin/sh
+
 set -eu
 
-UKI_ROOT="/boot/efi/EFI/debian"
+UKI_ROOT='/boot/efi/EFI/puavo'
 
 usage() {
   echo "Usage: $0 <install-image> <hosttype> <install-mountpoint>" >&2

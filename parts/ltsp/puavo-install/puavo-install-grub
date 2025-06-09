@@ -45,9 +45,16 @@ get_grub_efi_arguments() {
   local vgname
   vgname=$1
 
-  # XXX when using SecureBoot, the "--no-uefi-secure-boot" option
-  # XXX should be "--uefi-secure-boot" instead
-  echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --no-uefi-secure-boot'
+  echo '--target=x86_64-efi --efi-directory=/boot/efi'
+
+  if [ "$UKI_MODE" = '1' ]; then
+    # XXX enable secure boot once ready
+    # XXX echo '--bootloader-id=puavo --uefi-secure-boot'
+    echo '--bootloader-id=puavo'
+  else
+    echo '--bootloader-id=debian --no-uefi-secure-boot'
+  fi
+
   if [ "$vgname" = 'puavoinstaller' ]; then
     echo '--removable'
   elif [ "$(puavo-conf puavo.grub.efi.force_extra_removable)" = 'true' ]; then
@@ -580,7 +587,7 @@ function generate_boot_entry {
 function add_boot_options {
   search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
 
-  for image_path in /EFI/debian/*/*.uki.efi; do
+  for image_path in /EFI/puavo/*/*.uki.efi; do
     generate_boot_entry "$image_path"
   done
 
@@ -1019,7 +1026,7 @@ if [ "${UKI_MODE:-}" = "1" ]; then
     exit 1
   )
 
-  boot_dir="/boot/efi/EFI/debian"
+  boot_dir='/boot/efi/EFI/puavo'
 fi
 
 grub_cfg_path="${boot_dir}/grub/grub.cfg"

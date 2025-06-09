@@ -57,7 +57,7 @@ for diskdev in $boot_disks; do
     continue
   fi
 
-  uki_root="${efi_mount}/EFI/debian"
+  uki_root="${efi_mount}/EFI/puavo"
   uki_kernels_dir="${uki_root}/${image_name_no_suffix}"
   if ! rm --one-file-system -rf "$uki_kernels_dir"; then
     echo "error in removing ${uki_kernels_dir}" >&2

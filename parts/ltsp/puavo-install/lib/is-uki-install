@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-UKI_ROOT="/boot/efi/EFI/debian"
-PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
+UKI_ROOT='/boot/efi/EFI/puavo'
+PUAVO_INSTALL_LIBDIR='/usr/lib/puavo-ltsp-install'
 
 usage() {
   echo "Usage: $0 <images-dir>" >&2

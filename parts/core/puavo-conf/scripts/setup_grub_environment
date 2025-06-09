@@ -15,8 +15,8 @@ done
 
 grubenv_path="${images_dir}/boot/grub/grubenv"
 
-PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
-UKI_ROOT="/boot/efi/EFI/debian"
+PUAVO_INSTALL_LIBDIR='/usr/lib/puavo-ltsp-install'
+UKI_ROOT='/boot/efi/EFI/puavo'
 
 if [ -z "${UKI_MODE:-}" ]; then
   export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
