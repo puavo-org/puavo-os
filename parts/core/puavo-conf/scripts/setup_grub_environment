@@ -39,7 +39,7 @@ mount_disk_efi_partition() {
     return 1
   fi
 
-  mount "$efi_devpath" /boot/efi 1>/dev/null
+  mount "$efi_devpath" /boot/efi >/dev/null
 }
 
 grubedit() {
@@ -198,8 +198,15 @@ update_boot_device_environments() {
 
   for diskdev in $boot_disks; do
     echo "installing GRUB environment to boot device $diskdev"
-    mount_disk_efi_partition "$diskdev" || status=1
-    cp "$grubenv_path" "${UKI_ROOT}/grub/grubenv" || status=1
+    if ! mount_disk_efi_partition "$diskdev"; then
+      echo "failed to mount ${diskdev}" >&2
+      status=1
+      continue
+    fi
+    if ! cp -p "$grubenv_path" "${UKI_ROOT}/grub/grubenv"; then
+      echo "failed to copy Grub environment to ${diskdev}" >&2
+      status=1
+    fi
     umount /boot/efi || true
   done
 
@@ -217,7 +224,6 @@ setup_locale                     || status=1
 setup_optional_grub_config       || status=1
 setup_timeout                    || status=1
 setup_windows_enabled            || status=1
-
 update_boot_device_environments  || status=1
 
 exit $status
