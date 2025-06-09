@@ -1,8 +1,8 @@
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 910a2bb07a52..b8a2a17c4542 100644
+index d5ded2bf76cc..619dbff9c4f3 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3068,6 +3068,11 @@
+@@ -3070,6 +3070,11 @@
  			to extract confidential information from the kernel
  			are also disabled.
  
@@ -31,7 +31,7 @@ index b5c79f43359b..a1bbedd989e4 100644
  	.long	0				# SizeOfStackReserve
  	.long	0				# SizeOfStackCommit
 diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 4efecac49863..c58f26918b17 100644
+index 63adda8a143f..2b35bb58b0e2 100644
 --- a/arch/x86/kernel/acpi/boot.c
 +++ b/arch/x86/kernel/acpi/boot.c
 @@ -22,6 +22,7 @@
@@ -40,9 +40,9 @@ index 4efecac49863..c58f26918b17 100644
  #include <linux/pgtable.h>
 +#include <linux/dmi.h>
  
- #include <asm/e820/api.h>
- #include <asm/irqdomain.h>
-@@ -1132,6 +1133,24 @@ static void __init mp_config_acpi_legacy_irqs(void)
+ #include <xen/xen.h>
+ 
+@@ -1174,6 +1175,24 @@ static void __init mp_config_acpi_legacy_irqs(void)
  	}
  }
  
@@ -67,7 +67,7 @@ index 4efecac49863..c58f26918b17 100644
  /*
   * Parse IOAPIC related entries in MADT
   * returns 0 on success, < 0 on error
-@@ -1187,6 +1206,11 @@ static int __init acpi_parse_madt_ioapic_entries(void)
+@@ -1229,6 +1248,11 @@ static int __init acpi_parse_madt_ioapic_entries(void)
  		acpi_sci_ioapic_setup(acpi_gbl_FADT.sci_interrupt, 0, 0,
  				      acpi_gbl_FADT.sci_interrupt);
  
@@ -179,7 +179,7 @@ index 7ecc401fb97f..e35185de1902 100644
  	 * Do not enumerate devices with enumeration_by_parent flag set as
  	 * they will be enumerated by their respective parents.
 diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-index 0c85c981a833..a74b395c4b6a 100644
+index 151054a71852..f395606b591e 100644
 --- a/drivers/bluetooth/btusb.c
 +++ b/drivers/bluetooth/btusb.c
 @@ -65,6 +65,7 @@ static struct usb_driver btusb_driver;
@@ -198,7 +198,7 @@ index 0c85c981a833..a74b395c4b6a 100644
  
  	/* Intel Bluetooth devices */
  	{ USB_DEVICE(0x8087, 0x0025), .driver_info = BTUSB_INTEL_COMBINED },
-@@ -3850,6 +3852,19 @@ static int btusb_probe(struct usb_interface *intf,
+@@ -3866,6 +3868,19 @@ static int btusb_probe(struct usb_interface *intf,
  	if (id->driver_info & BTUSB_MARVELL)
  		hdev->set_bdaddr = btusb_set_bdaddr_marvell;
  
@@ -219,10 +219,10 @@ index 0c85c981a833..a74b395c4b6a 100644
  	    (id->driver_info & BTUSB_MEDIATEK)) {
  		hdev->setup = btusb_mtk_setup;
 diff --git a/drivers/hid/Kconfig b/drivers/hid/Kconfig
-index f8a56d631242..76ad7d9143c7 100644
+index 95a4ede27099..d23316df4f5d 100644
 --- a/drivers/hid/Kconfig
 +++ b/drivers/hid/Kconfig
-@@ -1373,4 +1373,8 @@ source "drivers/hid/amd-sfh-hid/Kconfig"
+@@ -1388,4 +1388,8 @@ source "drivers/hid/amd-sfh-hid/Kconfig"
  
  source "drivers/hid/surface-hid/Kconfig"
  
@@ -232,10 +232,10 @@ index f8a56d631242..76ad7d9143c7 100644
 +
  endif # HID_SUPPORT
 diff --git a/drivers/hid/Makefile b/drivers/hid/Makefile
-index 496dab54c73a..1ea3d2e0d4e9 100644
+index 27ee02bf6f26..fcbc18ceb521 100644
 --- a/drivers/hid/Makefile
 +++ b/drivers/hid/Makefile
-@@ -170,3 +170,6 @@ obj-$(INTEL_ISH_FIRMWARE_DOWNLOADER)	+= intel-ish-hid/
+@@ -170,3 +170,6 @@ obj-$(CONFIG_INTEL_ISH_HID)	+= intel-ish-hid/
  obj-$(CONFIG_AMD_SFH_HID)       += amd-sfh-hid/
  
  obj-$(CONFIG_SURFACE_HID_CORE)  += surface-hid/
@@ -243,7 +243,7 @@ index 496dab54c73a..1ea3d2e0d4e9 100644
 +obj-$(CONFIG_HID_IPTS)          += ipts/
 +obj-$(CONFIG_HID_ITHC)          += ithc/
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index d1b7ccfb3e05..bd03326734a0 100644
+index 93b5c648ef82..546e15a2a0fd 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
 @@ -34,7 +34,10 @@
@@ -458,7 +458,7 @@ index d1b7ccfb3e05..bd03326734a0 100644
  	default:
  		suffix = "UNKNOWN";
  		break;
-@@ -1750,6 +1859,46 @@ static void mt_expired_timeout(struct timer_list *t)
+@@ -1753,6 +1862,46 @@ static void mt_expired_timeout(struct timer_list *t)
  	clear_bit_unlock(MT_IO_FLAGS_RUNNING, &td->mt_io_flags);
  }
  
@@ -505,7 +505,7 @@ index d1b7ccfb3e05..bd03326734a0 100644
  static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
  {
  	int ret, i;
-@@ -1773,6 +1922,9 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
+@@ -1776,6 +1925,9 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
  	td->inputmode_value = MT_INPUTMODE_TOUCHSCREEN;
  	hid_set_drvdata(hdev, td);
  
@@ -515,7 +515,7 @@ index d1b7ccfb3e05..bd03326734a0 100644
  	INIT_LIST_HEAD(&td->applications);
  	INIT_LIST_HEAD(&td->reports);
  
-@@ -1811,8 +1963,10 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
+@@ -1814,8 +1966,10 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
  	timer_setup(&td->release_timer, mt_expired_timeout, 0);
  
  	ret = hid_parse(hdev);
@@ -527,7 +527,7 @@ index d1b7ccfb3e05..bd03326734a0 100644
  
  	if (mtclass->quirks & MT_QUIRK_FIX_CONST_CONTACT_ID)
  		mt_fix_const_fields(hdev, HID_DG_CONTACTID);
-@@ -1821,8 +1975,10 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
+@@ -1824,8 +1978,10 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
  		hdev->quirks |= HID_QUIRK_NOGET;
  
  	ret = hid_hw_start(hdev, HID_CONNECT_DEFAULT);
@@ -539,7 +539,7 @@ index d1b7ccfb3e05..bd03326734a0 100644
  
  	ret = sysfs_create_group(&hdev->dev.kobj, &mt_attribute_group);
  	if (ret)
-@@ -1850,13 +2006,24 @@ static int mt_suspend(struct hid_device *hdev, pm_message_t state)
+@@ -1853,13 +2009,24 @@ static int mt_suspend(struct hid_device *hdev, pm_message_t state)
  
  static int mt_reset_resume(struct hid_device *hdev)
  {
@@ -564,7 +564,7 @@ index d1b7ccfb3e05..bd03326734a0 100644
  	/* Some Elan legacy devices require SET_IDLE to be set on resume.
  	 * It should be safe to send it to other devices too.
  	 * Tested on 3M, Stantum, Cypress, Zytronic, eGalax, and Elan panels. */
-@@ -1865,13 +2032,33 @@ static int mt_resume(struct hid_device *hdev)
+@@ -1868,13 +2035,33 @@ static int mt_resume(struct hid_device *hdev)
  
  	mt_set_modes(hdev, HID_LATENCY_NORMAL, true, true);
  
@@ -598,7 +598,7 @@ index d1b7ccfb3e05..bd03326734a0 100644
  	del_timer_sync(&td->release_timer);
  
  	sysfs_remove_group(&hdev->dev.kobj, &mt_attribute_group);
-@@ -2295,6 +2482,11 @@ static const struct hid_device_id mt_devices[] = {
+@@ -2298,6 +2485,11 @@ static const struct hid_device_id mt_devices[] = {
  		MT_USB_DEVICE(USB_VENDOR_ID_XIROKU,
  			USB_DEVICE_ID_XIROKU_CSR2) },
  
@@ -6277,10 +6277,10 @@ index 000000000000..aec320d4e945
 +int ithc_reset(struct ithc *ithc);
 +
 diff --git a/drivers/i2c/i2c-core-acpi.c b/drivers/i2c/i2c-core-acpi.c
-index 14ae0cfc325e..6197c5252d2a 100644
+index d2499f302b50..77ce5ec3dd9e 100644
 --- a/drivers/i2c/i2c-core-acpi.c
 +++ b/drivers/i2c/i2c-core-acpi.c
-@@ -639,6 +639,27 @@ static int acpi_gsb_i2c_write_bytes(struct i2c_client *client,
+@@ -661,6 +661,27 @@ static int acpi_gsb_i2c_write_bytes(struct i2c_client *client,
  	return (ret == 1) ? 0 : -EIO;
  }
  
@@ -6308,7 +6308,7 @@ index 14ae0cfc325e..6197c5252d2a 100644
  static acpi_status
  i2c_acpi_space_handler(u32 function, acpi_physical_address command,
  			u32 bits, u64 *value64,
-@@ -740,6 +761,19 @@ i2c_acpi_space_handler(u32 function, acpi_physical_address command,
+@@ -762,6 +783,19 @@ i2c_acpi_space_handler(u32 function, acpi_physical_address command,
  		}
  		break;
  
@@ -6382,7 +6382,7 @@ index 5c5d407fe965..4e1bfe90e730 100644
  
  /*
 diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index 995d86ed2030..a69c821e0f64 100644
+index 1cbc97e883d9..42780a3982ca 100644
 --- a/drivers/iommu/intel/iommu.c
 +++ b/drivers/iommu/intel/iommu.c
 @@ -43,6 +43,18 @@
@@ -6417,7 +6417,7 @@ index 995d86ed2030..a69c821e0f64 100644
  
  #define IDENTMAP_AZALIA		4
  #define IDENTMAP_INTGPU		8
-+#define IDENTMAP_IPU		16	/* puavo: 8 ->16 */
++#define IDENTMAP_IPU		16	/* puavo: 8 -> 16 */
 +#define IDENTMAP_IPTS		32	/* puavo: 16 -> 32 */
  
  const struct iommu_ops intel_iommu_ops;
@@ -6448,7 +6448,7 @@ index 995d86ed2030..a69c821e0f64 100644
  	check_tylersburg_isoch();
  
  	/*
-@@ -4666,6 +4694,30 @@ static void quirk_iommu_igfx(struct pci_dev *dev)
+@@ -4672,6 +4700,30 @@ static void quirk_iommu_igfx(struct pci_dev *dev)
  	disable_igfx_iommu = 1;
  }
  
@@ -6479,7 +6479,7 @@ index 995d86ed2030..a69c821e0f64 100644
  /* G4x/GM45 integrated gfx dmar support is totally busted. */
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
-@@ -4701,6 +4753,13 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1632, quirk_iommu_igfx);
+@@ -4707,6 +4759,13 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1632, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163A, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
  
@@ -6494,10 +6494,10 @@ index 995d86ed2030..a69c821e0f64 100644
  {
  	if (risky_device(dev))
 diff --git a/drivers/iommu/intel/irq_remapping.c b/drivers/iommu/intel/irq_remapping.c
-index 7a6d188e3bea..0179baee4596 100644
+index 71b3383b7115..8409824b5157 100644
 --- a/drivers/iommu/intel/irq_remapping.c
 +++ b/drivers/iommu/intel/irq_remapping.c
-@@ -389,6 +389,22 @@ static int set_msi_sid(struct irte *irte, struct pci_dev *dev)
+@@ -381,6 +381,22 @@ static int set_msi_sid(struct irte *irte, struct pci_dev *dev)
  	data.busmatch_count = 0;
  	pci_for_each_dma_alias(dev, set_msi_sid_cb, &data);
  
@@ -6761,10 +6761,10 @@ index c626ed845928..0094cfda57ea 100644
  	cci_write(dw9719->regmap, DW9719_CONTROL, 1, &ret);
  
 diff --git a/drivers/media/i2c/ov7251.c b/drivers/media/i2c/ov7251.c
-index 30f61e04ecaf..9c1292ca8552 100644
+index 3226888d77e9..3bfe45b764f7 100644
 --- a/drivers/media/i2c/ov7251.c
 +++ b/drivers/media/i2c/ov7251.c
-@@ -1051,7 +1051,7 @@ static int ov7251_s_ctrl(struct v4l2_ctrl *ctrl)
+@@ -1053,7 +1053,7 @@ static int ov7251_s_ctrl(struct v4l2_ctrl *ctrl)
  	case V4L2_CID_EXPOSURE:
  		ret = ov7251_set_exposure(ov7251, ctrl->val);
  		break;
@@ -6773,7 +6773,7 @@ index 30f61e04ecaf..9c1292ca8552 100644
  		ret = ov7251_set_gain(ov7251, ctrl->val);
  		break;
  	case V4L2_CID_TEST_PATTERN:
-@@ -1572,7 +1572,7 @@ static int ov7251_init_ctrls(struct ov7251 *ov7251)
+@@ -1574,7 +1574,7 @@ static int ov7251_init_ctrls(struct ov7251 *ov7251)
  	ov7251->exposure = v4l2_ctrl_new_std(&ov7251->ctrls, &ov7251_ctrl_ops,
  					     V4L2_CID_EXPOSURE, 1, 32, 1, 32);
  	ov7251->gain = v4l2_ctrl_new_std(&ov7251->ctrls, &ov7251_ctrl_ops,
@@ -6813,7 +6813,7 @@ index f19c8adf2c61..923ed1b5ab8b 100644
  	if (ret < 0)
  		goto out_cleanup;
 diff --git a/drivers/misc/mei/hw-me-regs.h b/drivers/misc/mei/hw-me-regs.h
-index c3a6657dcd4a..82eef2f4eb0a 100644
+index bc40b940ae21..45fbd856d416 100644
 --- a/drivers/misc/mei/hw-me-regs.h
 +++ b/drivers/misc/mei/hw-me-regs.h
 @@ -92,6 +92,7 @@
@@ -6825,7 +6825,7 @@ index c3a6657dcd4a..82eef2f4eb0a 100644
  
  #define MEI_DEV_ID_JSP_N      0x4DE0  /* Jasper Lake Point N */
 diff --git a/drivers/misc/mei/pci-me.c b/drivers/misc/mei/pci-me.c
-index 6589635f8ba3..a1df48a434e2 100644
+index 3f9c60b579ae..853a67753333 100644
 --- a/drivers/misc/mei/pci-me.c
 +++ b/drivers/misc/mei/pci-me.c
 @@ -97,6 +97,7 @@ static const struct pci_device_id mei_me_pci_tbl[] = {
@@ -7111,10 +7111,10 @@ index 35270172c833..529779994ef6 100644
  
  	if (drv && drv->shutdown)
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8103bc24a54e..e8fa8d810925 100644
+index 064067d9c8b5..c15dc8048f8a 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -6301,3 +6301,39 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+@@ -6314,3 +6314,39 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
  #endif
@@ -7429,11 +7429,11 @@ index 2755601f979c..4240c98ca226 100644
  
  
 diff --git a/drivers/platform/x86/intel/int3472/discrete.c b/drivers/platform/x86/intel/int3472/discrete.c
-index 3de463c3d13b..0a012eeed30a 100644
+index 9e69ac9cfb92..2647f694796c 100644
 --- a/drivers/platform/x86/intel/int3472/discrete.c
 +++ b/drivers/platform/x86/intel/int3472/discrete.c
-@@ -80,12 +80,27 @@ static int skl_int3472_map_gpio_to_sensor(struct int3472_discrete_device *int347
- 					  const char *func, u32 polarity)
+@@ -81,12 +81,27 @@ static int skl_int3472_map_gpio_to_sensor(struct int3472_discrete_device *int347
+ 					  const char *func, unsigned long gpio_flags)
  {
  	int ret;
 +	const struct acpi_device_id ov7251_ids[] = {
@@ -7458,10 +7458,10 @@ index 3de463c3d13b..0a012eeed30a 100644
 +	}
 +
  	ret = skl_int3472_fill_gpiod_lookup(&int3472->gpios.table[int3472->n_sensor_gpios],
- 					    agpio, func, polarity);
+ 					    agpio, func, gpio_flags);
  	if (ret)
 diff --git a/drivers/platform/x86/intel/int3472/tps68470.c b/drivers/platform/x86/intel/int3472/tps68470.c
-index 1e107fd49f82..423dc555093f 100644
+index 81ac4c691963..b8ad6b413e8b 100644
 --- a/drivers/platform/x86/intel/int3472/tps68470.c
 +++ b/drivers/platform/x86/intel/int3472/tps68470.c
 @@ -17,7 +17,7 @@
@@ -7487,7 +7487,7 @@ index 1e107fd49f82..423dc555093f 100644
  	dev_info(dev, "TPS68470 REVID: 0x%02x\n", version);
  
  	return 0;
-@@ -193,7 +200,8 @@ static int skl_int3472_tps68470_probe(struct i2c_client *client)
+@@ -196,7 +203,8 @@ static int skl_int3472_tps68470_probe(struct i2c_client *client)
  		cells[1].name = "tps68470-regulator";
  		cells[1].platform_data = (void *)board_data->tps68470_regulator_pdata;
  		cells[1].pdata_size = sizeof(struct tps68470_regulator_platform_data);
@@ -7498,7 +7498,7 @@ index 1e107fd49f82..423dc555093f 100644
  		for (i = 0; i < board_data->n_gpiod_lookups; i++)
  			gpiod_add_lookup_table(board_data->tps68470_gpio_lookup_tables[i]);
 diff --git a/drivers/usb/core/quirks.c b/drivers/usb/core/quirks.c
-index 13171454f959..a83beefd25f3 100644
+index 4903c733d37a..fa607685b8b1 100644
 --- a/drivers/usb/core/quirks.c
 +++ b/drivers/usb/core/quirks.c
 @@ -223,6 +223,9 @@ static const struct usb_device_id usb_quirk_list[] = {
@@ -7533,10 +7533,10 @@ index 7807fa329db0..2d2abb25b944 100644
 +
  #endif /* __LINUX_MFD_TPS68470_H */
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4e77c4230c0a..a4b0e6ef6cfe 100644
+index ade889ded4e1..85920cdddcd3 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -467,6 +467,7 @@ struct pci_dev {
+@@ -469,6 +469,7 @@ struct pci_dev {
  	unsigned int	no_command_memory:1;	/* No PCI_COMMAND_MEMORY */
  	unsigned int	rom_bar_overlap:1;	/* ROM BAR disable broken */
  	unsigned int	rom_attr_enabled:1;	/* Display of ROM attribute enabled? */
@@ -7545,7 +7545,7 @@ index 4e77c4230c0a..a4b0e6ef6cfe 100644
  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
  
 diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-index e35829d36039..6d54eb03b63d 100644
+index d8bad1eeedd3..5973e8463e70 100644
 --- a/kernel/power/hibernate.c
 +++ b/kernel/power/hibernate.c
 @@ -37,6 +37,7 @@
@@ -7565,7 +7565,7 @@ index e35829d36039..6d54eb03b63d 100644
  		!secretmem_active() && !cxl_mem_active();
  }
  
-@@ -1426,6 +1427,12 @@ static int __init nohibernate_setup(char *str)
+@@ -1431,6 +1432,12 @@ static int __init nohibernate_setup(char *str)
  	return 1;
  }
  
@@ -7578,7 +7578,7 @@ index e35829d36039..6d54eb03b63d 100644
  static const char * const comp_alg_enabled[] = {
  #if IS_ENABLED(CONFIG_CRYPTO_LZO)
  	COMPRESSION_ALGO_LZO,
-@@ -1484,3 +1491,4 @@ __setup("hibernate=", hibernate_setup);
+@@ -1489,3 +1496,4 @@ __setup("hibernate=", hibernate_setup);
  __setup("resumewait", resumewait_setup);
  __setup("resumedelay=", resumedelay_setup);
  __setup("nohibernate", nohibernate_setup);
