@@ -7429,11 +7429,15 @@ index 2755601f979c..4240c98ca226 100644
  
  
 diff --git a/drivers/platform/x86/intel/int3472/discrete.c b/drivers/platform/x86/intel/int3472/discrete.c
-index 9e69ac9cfb92..2647f694796c 100644
+index 9e69ac9cfb92..98904a45c7b3 100644
 --- a/drivers/platform/x86/intel/int3472/discrete.c
 +++ b/drivers/platform/x86/intel/int3472/discrete.c
-@@ -81,12 +81,27 @@ static int skl_int3472_map_gpio_to_sensor(struct int3472_discrete_device *int347
- 					  const char *func, unsigned long gpio_flags)
+@@ -78,17 +78,32 @@ static int skl_int3472_fill_gpiod_lookup(struct gpiod_lookup *table_entry,
+ 
+ static int skl_int3472_map_gpio_to_sensor(struct int3472_discrete_device *int3472,
+ 					  struct acpi_resource_gpio *agpio,
+-					  const char *func, unsigned long gpio_flags)
++					  const char *func, unsigned long polarity)
  {
  	int ret;
 +	const struct acpi_device_id ov7251_ids[] = {
@@ -7458,8 +7462,11 @@ index 9e69ac9cfb92..2647f694796c 100644
 +	}
 +
  	ret = skl_int3472_fill_gpiod_lookup(&int3472->gpios.table[int3472->n_sensor_gpios],
- 					    agpio, func, gpio_flags);
+-					    agpio, func, gpio_flags);
++					    agpio, func, polarity);
  	if (ret)
+ 		return ret;
+ 
 diff --git a/drivers/platform/x86/intel/int3472/tps68470.c b/drivers/platform/x86/intel/int3472/tps68470.c
 index 81ac4c691963..b8ad6b413e8b 100644
 --- a/drivers/platform/x86/intel/int3472/tps68470.c
