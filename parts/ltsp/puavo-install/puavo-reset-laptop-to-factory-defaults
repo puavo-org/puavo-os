@@ -124,8 +124,10 @@ write_reset_override() {
   jq -r --arg current_time "$current_time" \
         --arg operation    "$operation"    \
         --arg user         "$user" '
-    if (.|has("reset")) and (.reset|type == "object") then
-      .reset
+    if (.|has("reset")) and (.reset|type == "object")
+      and ((.reset|has("request-fulfilled")|not)
+              or (.reset["request-fulfilled"] == null)) then
+        .reset
     else
       {
         "from":         $user,
