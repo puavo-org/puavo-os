@@ -44,7 +44,8 @@ class ExamsListener
   end
 
   def destroy
-    @listener.exit
+    # XXX add once enabled
+    # @listener.exit
   end
 
   def get_exam_info_by_id(id)
