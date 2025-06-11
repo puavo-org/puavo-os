@@ -120,7 +120,7 @@ class PuavoExammode < DBus::Object
     raise 'session locale missing, has the user registered yet?' \
       unless @locale && @registration_done
 
-    if exam_id == '' then
+    if exam_id == -1 then
       session_data = {
         'locale' => @locale,
         'name'   => 'Exam mode',

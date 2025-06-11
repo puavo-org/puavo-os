@@ -2,6 +2,7 @@
 
 import dbus
 import dbus.mainloop.glib
+import dbus.service
 import getpass
 import gettext
 import gi
@@ -17,7 +18,7 @@ gi.require_version('Notify', '0.7')
 
 from gi.repository import AyatanaAppIndicator3
 from gi.repository import GLib
-from gi.repository import Gtk 
+from gi.repository import Gtk
 from gi.repository import Notify
 
 gettext.bindtextdomain('puavo-exammode-setup-applet', '/usr/share/locale')
@@ -28,12 +29,27 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
 
+
+class ExamSetup(dbus.service.Object):
+  def __init__(self, bus, applet):
+    object_path = '/org/puavo/ExamSetup'
+    super().__init__(bus, object_path)
+    self.applet = applet
+
+  @dbus.service.method('org.puavo.ExamSetup', in_signature='', out_signature='')
+  def Start(self):
+    self.applet.start_session(-1)
+
+
 class PuavoExamModeSetupApplet:
   def __init__(self):
     Notify.init('puavo-exammode-setup-applet')
 
-    self.dbus_iface = self.get_dbus_iface()
-    self.dbus_iface.connect_to_signal('ExamsAvailable', self.exams_available)
+    self.user_service_dbus_name = self.get_user_dbus_service()
+
+    self.sys_dbus_iface = self.get_sys_dbus_iface()
+    self.sys_dbus_iface.connect_to_signal('ExamsAvailable',
+                                          self.exams_available)
 
     self.indicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-exammode-setup-applet',
@@ -46,7 +62,14 @@ class PuavoExamModeSetupApplet:
     self.register_to_exam_service()
 
 
-  def get_dbus_iface(self):
+  def get_user_dbus_service(self):
+    bus = dbus.SessionBus()
+    dbus_name = dbus.service.BusName('org.puavo.ExamSetup', bus=bus)
+    ExamSetup(bus, self)
+    return dbus_name
+
+
+  def get_sys_dbus_iface(self):
     bus = dbus.SystemBus()
     dbusobj = bus.get_object('org.puavo.Exam', '/exammode')
     return dbus.Interface(dbusobj, dbus_interface='org.puavo.Exam.exammode')
@@ -66,9 +89,9 @@ class PuavoExamModeSetupApplet:
                     'error in looking up user information: %s' % e)
       sys.exit(1)
 
-    self.dbus_iface.Register(username, lang_locale, krb5ccname_env,
-                             reply_handler=lambda: None,
-                             error_handler=self.register_dbus_error_handler)
+    self.sys_dbus_iface.Register(username, lang_locale, krb5ccname_env,
+                                 reply_handler=lambda: None,
+                                 error_handler=self.register_dbus_error_handler)
 
 
   def register_dbus_error_handler(self, dbusexception):
@@ -107,10 +130,14 @@ class PuavoExamModeSetupApplet:
       self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.PASSIVE)
 
 
-  def choose_exam(self, exam_id, widget):
-    self.dbus_iface.StartSession(exam_id,
+  def start_session(self, exam_id):
+    self.sys_dbus_iface.StartSession(exam_id,
       reply_handler=lambda: None,
       error_handler=self.start_session_dbus_error_handler)
+
+
+  def choose_exam(self, exam_id, widget):
+    self.start_session(exam_id)
 
 
   def start_session_dbus_error_handler(self, dbusexception):

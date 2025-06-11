@@ -4,11 +4,12 @@ set -eu
 
 case "${1:-}" in
   start)
-    dbus-send --dest=org.puavo.Exam \
-              --print-reply=literal \
-              --reply-timeout=30000 \
-              --system              \
-              /exammode org.puavo.Exam.exammode.StartSession string:
+    dbus-send --session                  \
+              --dest=org.puavo.ExamSetup \
+              --print-reply=literal      \
+              --type=method_call         \
+              /org/puavo/ExamSetup       \
+              org.puavo.ExamSetup.Start
     ;;
   *)
     echo "Usage: $(basename $0) start" >&2
