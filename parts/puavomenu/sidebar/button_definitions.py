@@ -39,7 +39,7 @@ SB_BUTTONS = {
         "icon": "/usr/share/icons/oxygen/base/64x64/actions/document-edit.png",
         "command": {
             "type": "command",
-            "args": "puavo-exammode-ctrl start",
+            "args": "puavo-exammode-ctrl start-ui",
         },
     },
     "puavopkg_installer": {

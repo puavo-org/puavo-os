@@ -101,8 +101,7 @@ class ExamChooser():
 
     if response == Gtk.ResponseType.OK:
       self.window.hide()
-      # should pass the parsed URL
-      self.applet.start_session(-1)
+      self.applet.start_url_session(self.parsed_url)
 
 
 class ExamSetup(dbus.service.Object):
@@ -112,8 +111,8 @@ class ExamSetup(dbus.service.Object):
     self.applet = applet
 
   @dbus.service.method('org.puavo.ExamSetup', in_signature='', out_signature='')
-  def Start(self):
-    self.applet.start_session(-1)
+  def StartFree(self):
+    self.applet.start_free_session()
 
   @dbus.service.method('org.puavo.ExamSetup', in_signature='', out_signature='')
   def StartUI(self):
@@ -215,8 +214,14 @@ class PuavoExamModeSetupApplet:
     self.chooser.show()
 
 
-  def start_session(self, exam_id):
-    self.sys_dbus_iface.StartSession(exam_id,
+  def start_free_session(self):
+    self.sys_dbus_iface.StartFreeSession(
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
+  def start_url_session(self, url):
+    self.sys_dbus_iface.StartSessionWithUrl(url,
       reply_handler=lambda: None,
       error_handler=self.start_session_dbus_error_handler)
 

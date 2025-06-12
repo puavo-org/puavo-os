@@ -2,17 +2,24 @@
 
 set -eu
 
+method=''
+
 case "${1:-}" in
-  start)
-    dbus-send --session                  \
-              --dest=org.puavo.ExamSetup \
-              --print-reply=literal      \
-              --type=method_call         \
-              /org/puavo/ExamSetup       \
-              org.puavo.ExamSetup.StartUI
+  start-free)
+    method='org.puavo.ExamSetup.StartFree'
+    ;;
+  start-ui)
+    method='org.puavo.ExamSetup.StartUI'
     ;;
   *)
-    echo "Usage: $(basename $0) start" >&2
+    echo "Usage: $(basename $0) start-free|start-ui" >&2
     exit 1
     ;;
 esac
+
+dbus-send --session                  \
+          --dest=org.puavo.ExamSetup \
+          --print-reply=literal      \
+          --type=method_call         \
+          /org/puavo/ExamSetup       \
+          "$method"

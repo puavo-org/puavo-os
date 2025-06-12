@@ -116,31 +116,41 @@ class PuavoExammode < DBus::Object
     super
   end
 
-  def write_exam_session_specs(exam_id)
+  def write_exam_session_specs(mode, exam_info)
     raise 'session locale missing, has the user registered yet?' \
       unless @locale && @registration_done
 
-    if exam_id == -1 then
-      session_data = {
-        'locale' => @locale,
-        'name'   => 'Exam mode',
-        'params' => {},
-        'type'   => 'free-exammode-session',
-      }
-    else
-      exam_info = @exams_listener.get_exam_info_by_id(exam_id)
-      session_data = {
-        'locale' => @locale,
-        'name'   => exam_info['name'],
-        'params' => exam_info['params'],
-        'type'   => exam_info['type'],
-      }
-    end
+    session_data =
+      case mode
+        when :examomatic
+          {
+            'locale' => @locale,
+            'name'   => exam_info['name'],
+            'params' => exam_info['params'],
+            'type'   => exam_info['type'],
+          }
+        when :free
+          {
+            'locale' => @locale,
+            'name'   => 'Free exam mode',
+            'params' => {},
+            'type'   => 'free-exammode-session',
+          }
+        when :url
+          {
+            'locale' => @locale,
+            'name'   => 'Exam mode with URL',
+            'params' => exam_info['params'],
+            'type'   => 'single-window-webpage',
+          }
+        else
+          raise "unknown mode: '#{ mode }'"
+      end
 
     write_session_specs(session_data)
   end
 
-  def write_prepare_session_specs()
+  def write_prepare_session_specs
     session_data = {
       'locale' => @locale,
       'type'   => 'prepare',
@@ -164,7 +174,7 @@ class PuavoExammode < DBus::Object
 
   # XXX unclear if this can be used or if this is useful
   # XXX puavo-exammode-applet could send Unregister message when it exits
-  def unregister()
+  def unregister
     unless @registration_done then
       Syslog.log(Syslog::LOG_INFO, 'unregister called but no one is registered')
       return
@@ -189,6 +199,25 @@ class PuavoExammode < DBus::Object
     return desktop_session_vt
   end
 
+  def start_session
+    if ! system('loginctl', 'lock-sessions') then
+      Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
+      raise 'error in locking sessions'
+    end
+
+    if @desktop_session_vt then
+      Syslog.log(Syslog::LOG_ERR,
+        'tried to activate examination mode when it is already active')
+      raise 'exammode session is already active'
+    end
+
+    @desktop_session_vt = get_vt_number()
+    if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'start') then
+      Syslog.log(Syslog::LOG_ERR, 'could not start exammode')
+      raise 'error in starting puavo-exammode-tty service'
+    end
+  end
+
   dbus_interface 'org.puavo.Exam.exammode' do
     dbus_signal :ExamsAvailable, 'in exams:s'
 
@@ -202,25 +231,22 @@ class PuavoExammode < DBus::Object
         write_prepare_session_specs()
     end
 
+    dbus_method :StartFreeSession, '' do
+      write_exam_session_specs(:free, {})
+      start_session()
+    end
+
     dbus_method :StartSession, 'in examid:i' do |exam_id|
-      write_exam_session_specs(exam_id)
+      raise 'no registration done yet' unless @exams_listener
+      exam_info = @exams_listener.get_exam_info_by_id(exam_id)
+      write_exam_session_specs(:examomatic, exam_info)
+      start_session()
+    end
 
-      if ! system('loginctl', 'lock-sessions') then
-        Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
-        raise 'error in locking sessions'
-      end
-
-      if @desktop_session_vt then
-        Syslog.log(Syslog::LOG_ERR,
-          'tried to activate examination mode when it is already active')
-        raise 'exammode session is already active'
-      end
-
-      @desktop_session_vt = get_vt_number()
-      if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'start') then
-        Syslog.log(Syslog::LOG_ERR, 'could not start exammode')
-        raise 'error in starting puavo-exammode-tty service'
-      end
+    dbus_method :StartSessionWithUrl, 'in exam_url:s' do |exam_url|
+      exam_info = { 'params' => { 'url' => exam_url } }
+      write_exam_session_specs(:url, exam_info)
+      start_session()
     end
 
     dbus_method :QuitSession do
