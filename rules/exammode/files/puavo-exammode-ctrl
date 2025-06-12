@@ -9,7 +9,7 @@ case "${1:-}" in
               --print-reply=literal      \
               --type=method_call         \
               /org/puavo/ExamSetup       \
-              org.puavo.ExamSetup.Start
+              org.puavo.ExamSetup.StartUI
     ;;
   *)
     echo "Usage: $(basename $0) start" >&2
