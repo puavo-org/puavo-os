@@ -1,0 +1,54 @@
+{
+  "name": "puavo-exam-browser",
+  "version": "1.0.0",
+  "description": "Puavo Exam Browser",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && electron dist/main.js",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "check-all": "npm run type-check && npm run lint && npm run format:check",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder --linux"
+  },
+  "build": {
+    "appId": "org.puavo.puavo-exam-browser",
+    "productName": "puavo-exam-browser",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "ajv": "^8.17.1",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.1",
+    "minimatch": "^10.0.3",
+    "prettier": "^3.5.3",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dbus-next": "^0.10.2"
+  }
+}
