@@ -40,8 +40,15 @@ class ExamChooser():
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
                        margin=12)
 
+    url_grid = Gtk.Grid()
+    url_grid.set_column_spacing(6)
+    url_grid.set_row_spacing(6)
+    url_grid.set_margin_top(6)
+    url_grid.set_margin_bottom(6)
+    url_grid.set_margin_start(6)
+    url_grid.set_margin_end(6)
+
     # XXX Abitti box could be conditional, depending on a puavo-conf setting
-    abitti_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
     abitti_label = Gtk.Label(label=_tr('Abitti code:'))
     self.abitti_target_url = None
     self.abitti_entry = Gtk.Entry(placeholder_text=_tr('Input Abitti code'))
@@ -53,11 +60,10 @@ class ExamChooser():
                                       sensitive=False)
     self.abitti_join_button.connect('clicked', self.on_abitti_join_clicked)
 
-    abitti_box.add(abitti_label)
-    abitti_box.add(self.abitti_entry)
-    abitti_box.add(self.abitti_join_button)
+    url_grid.attach(abitti_label, 0, 0, 1, 1)
+    url_grid.attach(self.abitti_entry, 1, 0, 1, 1)
+    url_grid.attach(self.abitti_join_button, 2, 0, 1, 1)
 
-    url_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
     url_label = Gtk.Label(label=_tr('Exam URL:'))
     self.url_target_url = None
     self.url_entry = Gtk.Entry(placeholder_text=_tr('Input exam url'))
@@ -69,15 +75,15 @@ class ExamChooser():
                                       sensitive=False)
     self.url_join_button.connect('clicked', self.on_url_join_clicked)
 
-    url_box.add(url_label)
-    url_box.add(self.url_entry)
-    url_box.add(self.url_join_button)
+    url_grid.attach(url_label, 0, 1, 1, 1)
+    url_grid.attach(self.url_entry, 1, 1, 1, 1)
+    url_grid.attach(self.url_join_button, 2, 1, 1, 1)
 
 #   self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+#   self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
 #   self.clipboard.connect('owner-change', self.on_clipboard_change)
 
-    main_box.add(abitti_box)
-    main_box.add(url_box)
+    main_box.add(url_grid)
 
     self.window.add(main_box)
 
