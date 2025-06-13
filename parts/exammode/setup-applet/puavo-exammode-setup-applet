@@ -17,7 +17,7 @@ gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 
-from gi.repository import AyatanaAppIndicator3, GLib, Gtk, Notify
+from gi.repository import AyatanaAppIndicator3, Gdk, GLib, Gtk, Notify
 
 gettext.bindtextdomain('puavo-exammode-setup-applet', '/usr/share/locale')
 gettext.textdomain('puavo-exammode-setup-applet')
@@ -34,19 +34,51 @@ class ExamChooser():
     self.window = Gtk.Window()
     self.window.connect('delete-event', self.on_delete_event)
     self.window.set_default_size(800, 40)
+    self.window.set_resizable(False)
+    self.window.set_title(_tr('Join an exam'))
 
-    main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12, margin=12)
+    main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                       margin=12)
+
+    # XXX Abitti box could be conditional, depending on a puavo-conf setting
+    abitti_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+    abitti_label = Gtk.Label(label=_tr('Abitti code:'))
+    self.abitti_target_url = None
+    self.abitti_entry = Gtk.Entry(placeholder_text=_tr('Input Abitti code'))
+    self.abitti_entry.set_hexpand(True)
+    self.abitti_entry.connect('activate', self.on_abitti_join_clicked)
+    self.abitti_entry.connect('changed', self.on_abitti_changed)
+    self.abitti_entry.set_tooltip_text(_tr('Enter the Abitti code here'))
+    self.abitti_join_button = Gtk.Button(label=_tr('Join the Abitti exam'),
+                                      sensitive=False)
+    self.abitti_join_button.connect('clicked', self.on_abitti_join_clicked)
+
+    abitti_box.add(abitti_label)
+    abitti_box.add(self.abitti_entry)
+    abitti_box.add(self.abitti_join_button)
+
     url_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-
-    self.url_entry = Gtk.Entry(placeholder_text=_tr('Input exam url or Abitti code'))
+    url_label = Gtk.Label(label=_tr('Exam URL:'))
+    self.url_target_url = None
+    self.url_entry = Gtk.Entry(placeholder_text=_tr('Input exam url'))
     self.url_entry.set_hexpand(True)
+    self.url_entry.connect('activate', self.on_url_join_clicked)
     self.url_entry.connect('changed', self.on_url_changed)
-    self.join_button = Gtk.Button(label=_tr('Join the exam'), sensitive=False)
-    self.join_button.connect('clicked', self.on_join_clicked)
+    self.url_entry.set_tooltip_text(_tr('Enter the exam URL here'))
+    self.url_join_button = Gtk.Button(label=_tr('Join the URL exam'),
+                                      sensitive=False)
+    self.url_join_button.connect('clicked', self.on_url_join_clicked)
 
+    url_box.add(url_label)
     url_box.add(self.url_entry)
-    url_box.add(self.join_button)
+    url_box.add(self.url_join_button)
+
+#   self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+#   self.clipboard.connect('owner-change', self.on_clipboard_change)
+
+    main_box.add(abitti_box)
     main_box.add(url_box)
+
     self.window.add(main_box)
 
 
@@ -55,32 +87,71 @@ class ExamChooser():
     return True  # Prevents the window from being destroyed
 
 
+  # XXX work in progress
+  # XXX this could show the clipboard in the other label and not overwrite
+  # XXX the url entry
+  def on_clipboard_change(self, clipboard, event):
+    """Check if clipboard has text and update the URL entry."""
+    print('Clipboard changed, checking for text...')
+    if clipboard.wait_is_text_available():
+      text = clipboard.wait_for_text()
+      if text:
+        self.url_entry.set_text( text.strip() )
+        self.on_url_changed(self.url_entry)
+    else:
+      self.url_entry.set_text('')
+      self.url_join_button.set_sensitive(False)
+
+    return True
+
+
   def show(self):
     self.window.show_all()
     self.window.present()
 
 
-  def on_url_changed(self, entry):
+  def on_abitti_changed(self, entry):
     text = entry.get_text().strip()
-    self.parsed_url = self.parse_exam_url(text)
-    self.join_button.set_sensitive( bool(self.parsed_url) )
+    self.abitti_target_url = self.convert_abitti_code_to_url(text)
+    self.abitti_join_button.set_sensitive( bool(self.abitti_target_url) )
 
 
-  def parse_exam_url(self, text):
-    if re.match(r'^https?://', text):
-      return text
+  def on_abitti_join_clicked(self, button):
+    if not self.abitti_target_url:
+      return
+    exam_type = _tr('Abitti exam')
+    if self.show_confirmation(exam_type, self.abitti_target_url):
+      self.applet.start_url_session(self.abitti_target_url)
 
-    if re.match(r'^[a-z]+ [a-z]+$', text):
-      words = text.split()
-      return f'http://{ words[0] }-{ words[1] }.abitti.net:8010'
+
+  def convert_abitti_code_to_url(self, text):
+    match = re.match(r'^([a-z]+) ([a-z]+)$', text)
+    if match:
+      return f'http://{ match.group(1) }-{ match.group(2) }.abitti.net:8010'
 
     return None
 
 
-  def on_join_clicked(self, button):
-    if self.parsed_url:
-      exam_type = _tr('Abitti exam')    # XXX ?
-      self.show_confirmation(exam_type, self.parsed_url)
+  def on_url_changed(self, entry):
+    text = entry.get_text().strip()
+    self.url_target_url = self.parse_exam_url(text)
+    self.url_join_button.set_sensitive( bool(self.url_target_url) )
+
+
+  def on_url_join_clicked(self, button):
+    if not self.parsed_url:
+      return
+    exam_type = _tr('URL')
+    if self.show_confirmation(exam_type, self.parsed_url):
+      self.applet.start_url_session(self.parsed_url)
+
+
+  def parse_exam_url(self, text):
+    # check that text contains something other than whitespace
+    stripped_text = text.strip()
+    if not stripped_text:
+      return None
+    return stripped_text
 
 
   def show_confirmation(self, exam_type, exam_detail):
@@ -101,7 +172,9 @@ class ExamChooser():
 
     if response == Gtk.ResponseType.OK:
       self.window.hide()
-      self.applet.start_url_session(self.parsed_url)
+      return True
+
+    return False
 
 
 class ExamSetup(dbus.service.Object):
