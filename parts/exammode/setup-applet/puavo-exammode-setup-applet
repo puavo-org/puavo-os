@@ -155,7 +155,7 @@ class ExamChooser():
   def convert_abitti_code_to_url(self, text):
     match = re.match(r'^([a-z]+) ([a-z]+)$', text)
     if match:
-      return f'http://{ match.group(1) }-{ match.group(2) }.abitti.net:8010'
+      return f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010'
 
     return None
 
@@ -167,11 +167,11 @@ class ExamChooser():
 
 
   def on_url_join_clicked(self, button):
-    if not self.parsed_url:
+    if not self.url_target_url:
       return
     exam_type = _tr('URL')
-    if self.show_confirmation(exam_type, self.parsed_url):
-      self.applet.start_url_session(self.parsed_url)
+    if self.show_confirmation(exam_type, self.url_target_url):
+      self.applet.start_url_session(self.url_target_url)
 
 
   def parse_exam_url(self, text):
@@ -183,6 +183,8 @@ class ExamChooser():
 
 
   def parse_exam_url_require_http(self, text):
+    if not text:
+      return None
     stripped_text = text.strip()
     if re.match(r'^https?://', stripped_text):
        return stripped_text
