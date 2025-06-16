@@ -30,6 +30,16 @@ trap cleanup EXIT
 
 mount -o ro "$install_image" "$image_mountpoint" 1>/dev/null
 
+# Load the image name without suffix for determining the installation location
+image_name_file="${image_mountpoint}/etc/puavo-image/name"
+
+if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
+  echo "error: image name missing in image mountpoint" >&2
+  return 1
+fi
+
+image_name_no_suffix=${image_name%.img}
+
 find_efi_device_path() {
   local diskdev="$1"
 
@@ -50,11 +60,12 @@ mount_disk_efi_partition() {
 }
 
 estimate_required_disk_space() {
-  local image_size required_disk_space safety_margin uki_destination
+  local image_size required_disk_space safety_margin uki_destination uki_kernels_dir
   required_disk_space=0
 
   for uki in "$image_mountpoint"/boot/*.uki.efi; do
-    uki_destination="$UKI_ROOT/$(basename "$uki")"
+    uki_kernels_dir="${UKI_ROOT}/${image_name_no_suffix}"
+    uki_destination="${uki_kernels_dir}/$(basename "$uki")"
     [ -e "$uki" ] || continue
     # Files that are already installed won't take up additional space
     [ -e "$uki_destination" ] && continue
