@@ -18,8 +18,9 @@ os.environ['GDK_DPI_SCALE'] = '1.5'
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
+gi.require_version('Soup', '2.4')
 
-from gi.repository import AyatanaAppIndicator3, Gdk, GLib, Gtk, Notify
+from gi.repository import AyatanaAppIndicator3, Gdk, GLib, Gtk, Notify, Soup
 
 gettext.bindtextdomain('puavo-exammode-setup-applet', '/usr/share/locale')
 gettext.textdomain('puavo-exammode-setup-applet')
@@ -52,6 +53,10 @@ class ExamChooser():
 
     # XXX Abitti box could be conditional, depending on a puavo-conf setting
     abitti_label = Gtk.Label(label=_tr('Abitti code:'))
+    self.abitti_checked = False
+    self.abitti_joinability_id = None
+    self.abitti_soup_message = None
+    self.abitti_soup_session = Soup.Session()
     self.abitti_target_url = None
     self.abitti_entry = Gtk.Entry(placeholder_text=_tr('Input Abitti code'))
     self.abitti_entry.set_hexpand(True)
@@ -131,8 +136,9 @@ class ExamChooser():
       self.clipboard_target_url = parsed_url
       self.clipboard_content_label.set_text(parsed_url)
       self.clipboard_join_button.set_sensitive(True)
-    # do not do else here, as we want to keep the previous clipboard URL
-    # in this case (main clipboard is preferred over primary clipboard)
+    # do not have an "else"-clause here, as we want to keep the previous
+    # clipboard URL in this case (main clipboard is preferred over primary
+    # clipboard)
 
 
   def show(self):
@@ -140,14 +146,43 @@ class ExamChooser():
     self.window.present()
 
 
+  def check_url(self, url):
+    if self.abitti_soup_message:
+      self.abitti_soup_session.cancel_message(self.abitti_soup_message,
+                                              Soup.KnownStatusCode.CANCELLED)
+      self.abitti_soup_message = None
+    msg = Soup.Message.new('HEAD', url)
+    self.abitti_soup_message = msg
+    self.abitti_soup_session.queue_message(msg, self.on_url_checked, url)
+
+
+  def on_url_checked(self, session, msg, url):
+    if msg.status_code != Soup.KnownStatusCode.OK:
+      return
+    self.abitti_checked = True
+    self.abitti_join_button.set_sensitive(True)
+
+
   def on_abitti_changed(self, entry):
-    text = entry.get_text().strip()
+    self.abitti_checked = False
+    self.abitti_join_button.set_sensitive(False)
+    text = self.abitti_entry.get_text().strip()
     self.abitti_target_url = self.convert_abitti_code_to_url(text)
-    self.abitti_join_button.set_sensitive( bool(self.abitti_target_url) )
+    if self.abitti_joinability_id:
+      GLib.source_remove(self.abitti_joinability_id)
+      self.abitti_joinability_id = None
+    if self.abitti_target_url:
+      self.abitti_joinability_id \
+        = GLib.timeout_add(500, self.check_abitti_joinability)
+
+
+  def check_abitti_joinability(self):
+    self.abitti_joinability_id = None
+    self.check_url(self.abitti_target_url)
 
 
   def on_abitti_join_clicked(self, button):
-    if not self.abitti_target_url:
+    if not self.abitti_checked:
       return
     exam_type = _tr('Abitti exam')
     if self.show_confirmation(exam_type, self.abitti_target_url):
