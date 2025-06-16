@@ -13,6 +13,8 @@ import signal
 import sys
 import syslog
 
+os.environ['GDK_DPI_SCALE'] = '1.5'
+
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
@@ -33,7 +35,7 @@ class ExamChooser():
     self.applet = applet
     self.window = Gtk.Window()
     self.window.connect('delete-event', self.on_delete_event)
-    self.window.set_default_size(800, 40)
+    self.window.set_default_size(1000, 40)
     self.window.set_resizable(False)
     self.window.set_title(_tr('Join an exam'))
 
