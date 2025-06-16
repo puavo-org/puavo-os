@@ -89,11 +89,11 @@ install_uki() {
   fi
   local image_name_no_suffix=${image_name%.img}
 
-  local uki_destination_dir="${destination}/${image_name_no_suffix}"
-  local uki_destination="${uki_destination_dir}/$(basename "$uki")"
+  local uki_kernels_dir="${destination}/${image_name_no_suffix}"
+  local uki_destination="${uki_kernels_dir}/$(basename "$uki")"
   local uki_temporary_destination="${uki_destination}.tmp"
 
-  mkdir -p "$uki_destination_dir"
+  mkdir -p "$uki_kernels_dir"
   if [ ! -f "$uki_destination" ]; then
     # If the copy is interrupted, the .tmp extension prevents the partial image
     # from being used and it will be cleaned later
