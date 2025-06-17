@@ -120,9 +120,9 @@ class UrlInterface():
 
   def show_confirmation(self, url):
     """Show a confirmation dialog before joining an exam."""
-    primary_text = _tr('Do you want to join the exam?' + ' ' \
-                         + f'{ self.EXAM_TYPE } – { url }')
-    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session')
+    primary_text = _tr('Do you want to join the exam?') + ' ' \
+                         + f'{ self.EXAM_TYPE } – { url }'
+    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session.')
 
     win = self.chooser.window
     dialog = Gtk.MessageDialog(transient_for=win, modal=True,
