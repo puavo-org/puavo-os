@@ -30,7 +30,7 @@
       "package.json"
     ],
     "linux": {
-      "target": "AppImage",
+      "target": ["dir"],
       "category": "Utility"
     }
   },

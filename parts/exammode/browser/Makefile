@@ -1,7 +1,6 @@
 prefix = /usr
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
-libdir = $(prefix)/lib
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -10,18 +9,18 @@ INSTALL_PROGRAM = $(INSTALL)
 all: build
 
 .PHONY: build
-build:
+build: release/linux-unpacked/puavo-exam-browser
+
+release/linux-unpacked/puavo-exam-browser: package.json
 	npm ci
 	npm run dist
 
 .PHONY: install
 install: build
-	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(libdir)/puavo-exam-browser
-	$(INSTALL_PROGRAM) release/puavo-exam-browser-*.AppImage $(DESTDIR)$(libdir)/puavo-exam-browser/puavo-exam-browser.AppImage
-	echo '#!/bin/bash' > $(DESTDIR)$(bindir)/puavo-exam-browser
-	echo 'exec $(libdir)/puavo-exam-browser/puavo-exam-browser.AppImage "$$@"' >> $(DESTDIR)$(bindir)/puavo-exam-browser
-	chmod +x $(DESTDIR)$(bindir)/puavo-exam-browser
+	mkdir -p $(DESTDIR)/opt/puavo-exam-browser
+	cp -RT release/linux-unpacked/ $(DESTDIR)/opt/puavo-exam-browser/
+	ln -fns /opt/puavo-exam-browser/puavo-exam-browser \
+	    $(DESTDIR)$(bindir)
 
 .PHONY: clean
 clean:
