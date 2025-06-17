@@ -36,7 +36,7 @@ class SingleWindowWebpage:
     logmsg(syslog.LOG_NOTICE, 'starting up browser to %s' % self.url)
 
     if self.url:
-      cmd = [ '/usr/bin/puavo-exam-browser', '--url', self.url ]
+      cmd = [ '/usr/bin/puavo-exam-browser', '--url=%s' % self.url ]
     else:
       cmd = [ '/usr/bin/puavo-exam-browser' ]
 
