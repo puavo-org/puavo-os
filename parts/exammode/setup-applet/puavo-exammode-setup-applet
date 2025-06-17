@@ -31,6 +31,198 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
 
 
+class UrlInterface():
+  ENTRY_ENABLED = True
+
+  def __init__(self, chooser):
+    self.chooser = chooser
+
+    self.checked = False
+    self.joinability_id = None
+    self.soup_message = None
+    self.soup_session = Soup.Session()
+    self.target_url = None
+    self.label = Gtk.Label(label=self.URL_LABEL)
+
+    self.entry = Gtk.Entry(placeholder_text=self.ENTRY_PLACEHOLDER)
+    if not self.ENTRY_ENABLED:
+      self.entry.set_editable(False)
+      self.entry.set_sensitive(False)
+    self.entry.set_hexpand(True)
+    self.entry.connect('activate', self.on_join_clicked)
+    self.entry.connect('changed', self.on_changed)
+    self.entry.set_tooltip_text(self.TOOLTIP_TEXT)
+    self.join_button = Gtk.Button(label=self.BUTTON_LABEL, sensitive=False)
+    self.join_button.connect('clicked', self.on_join_clicked)
+
+
+  def attach_to_grid(self, grid, row):
+    grid.attach(self.label,       0, row, 1, 1)
+    grid.attach(self.entry,       1, row, 1, 1)
+    grid.attach(self.join_button, 2, row, 1, 1)
+
+
+  def on_join_clicked(self, button):
+    if not self.checked:
+      return
+    if self.show_confirmation(self.target_url):
+      self.chooser.start_url_session(self.target_url)
+
+
+  def on_changed(self, entry):
+    self.checked = False
+    self.join_button.set_sensitive(False)
+    text = self.entry.get_text().strip()
+    self.target_url = self.convert_entry_to_url(text)
+    if self.joinability_id:
+      GLib.source_remove(self.joinability_id)
+      self.joinability_id = None
+    if self.target_url:
+      self.joinability_id = GLib.timeout_add(500, self.check_joinability)
+
+
+  def check_joinability(self):
+    self.joinability_id = None
+    self.check_url(self.target_url)
+
+
+  def check_url(self, url):
+    if self.soup_message:
+      self.soup_session.cancel_message(self.soup_message,
+                                       Soup.KnownStatusCode.CANCELLED)
+      self.soup_message = None
+
+    try:
+      msg = Soup.Message.new('GET', url)
+      self.soup_message = msg
+      self.soup_session.queue_message(msg, self.on_url_checked, url)
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'error in starting url check with URL %s: %s' % (url, e))
+
+
+  def on_url_checked(self, session, msg, url):
+    if msg.status_code != Soup.KnownStatusCode.OK:
+      syslog.syslog(syslog.LOG_INFO,
+                    'url %s failed a check: %s' % (url, msg.reason_phrase))
+      return
+    self.checked = True
+    self.join_button.set_sensitive(True)
+
+
+  def show_confirmation(self, url):
+    """Show a confirmation dialog before joining an exam."""
+    primary_text = _tr('Do you want to join the exam?' + ' ' \
+                         + f'{ self.EXAM_TYPE } – { url }')
+    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session')
+
+    win = self.chooser.window
+    dialog = Gtk.MessageDialog(transient_for=win, modal=True,
+        message_type=Gtk.MessageType.QUESTION,
+        buttons=Gtk.ButtonsType.OK_CANCEL, text=primary_text)
+    dialog.format_secondary_text(secondary_text)
+    label = dialog.get_message_area().get_children()[0]
+    label.set_line_wrap(False)
+    label.set_max_width_chars(-1)
+
+    response = dialog.run()
+    dialog.destroy()
+
+    if response == Gtk.ResponseType.OK:
+      win.hide()
+      return True
+
+    return False
+
+
+
+class AbittiUrl(UrlInterface):
+  BUTTON_LABEL      = _tr('Join the Abitti exam')
+  ENTRY_PLACEHOLDER = _tr('Input Abitti code')
+  EXAM_TYPE         = _tr('Abitti Exam')
+  TOOLTIP_TEXT      = _tr('Enter the Abitti code here')
+  URL_LABEL         = _tr('Abitti code:')
+
+
+  def convert_entry_to_url(self, text):
+    if not text:
+      return None
+    match = re.match(r'^([a-z]+) ([a-z]+)$', text)
+    if match:
+      return f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010'
+
+    return None
+
+
+class FreeUrl(UrlInterface):
+  BUTTON_LABEL      = _tr('Join the URL exam')
+  ENTRY_PLACEHOLDER = _tr('Input exam URL')
+  EXAM_TYPE         = _tr('URL')
+  TOOLTIP_TEXT      = _tr('Enter the exam URL here')
+  URL_LABEL         = _tr('Exam URL:')
+
+
+  def convert_entry_to_url(self, text):
+    # check that text contains something other than whitespace
+    url = text.strip()
+    if not url:
+      return None
+    url_with_scheme \
+      = ('https://%s' % url) if not re.match(r'^https?://', url) else url
+    return url_with_scheme
+
+
+class ClipboardUrl(UrlInterface):
+  BUTTON_LABEL      = _tr('Join the exam on a clipboard URL')
+  ENTRY_ENABLED     = False
+  ENTRY_PLACEHOLDER = _tr('Use the clipboard to get an URL here')
+  EXAM_TYPE         = _tr('URL')
+  TOOLTIP_TEXT      = ENTRY_PLACEHOLDER
+  URL_LABEL         = _tr('URL from clipboard:')
+
+  def __init__(self, chooser):
+    super().__init__(chooser)
+    self.clipboard_main = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+    self.clipboard_main.connect('owner-change', self.on_clipboard_main_change)
+    self.clipboard_primary = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
+    self.clipboard_primary.connect('owner-change',
+                                   self.on_clipboard_primary_change)
+
+
+  def convert_entry_to_url(self, text):
+    if not text:
+      return None
+    stripped_text = text.strip()
+    if re.match(r'^https?://', stripped_text):
+       return stripped_text
+    return None
+
+
+  def set_url_active(self, clipboard, event, can_set_empty):
+    clipboard_text = clipboard.wait_for_text()
+    url = self.convert_entry_to_url(clipboard_text)
+    if url:
+      self.target_url = url
+      self.entry.set_text(url)
+      self.join_button.set_sensitive(True)
+    elif can_set_empty:
+      self.target_url = None
+      self.entry.set_text('')
+      self.join_button.set_sensitive(False)
+
+
+  def on_clipboard_main_change(self, clipboard, event):
+    self.set_url_active(clipboard, event, True)
+
+
+  def on_clipboard_primary_change(self, clipboard, event):
+    # Use False for can_set_empty, as we want to keep the previous
+    # clipboard URL in this case (main clipboard is preferred over primary
+    # clipboard).
+    self.set_url_active(clipboard, event, False)
+
+
+
 class ExamChooser():
   def __init__(self, applet):
     self.applet = applet
@@ -51,60 +243,20 @@ class ExamChooser():
     url_grid.set_margin_start(6)
     url_grid.set_margin_end(6)
 
+    next_row = 0
+
     # XXX Abitti box could be conditional, depending on a puavo-conf setting
-    abitti_label = Gtk.Label(label=_tr('Abitti code:'))
-    self.abitti_checked = False
-    self.abitti_joinability_id = None
-    self.abitti_soup_message = None
-    self.abitti_soup_session = Soup.Session()
-    self.abitti_target_url = None
-    self.abitti_entry = Gtk.Entry(placeholder_text=_tr('Input Abitti code'))
-    self.abitti_entry.set_hexpand(True)
-    self.abitti_entry.connect('activate', self.on_abitti_join_clicked)
-    self.abitti_entry.connect('changed', self.on_abitti_changed)
-    self.abitti_entry.set_tooltip_text(_tr('Enter the Abitti code here'))
-    self.abitti_join_button = Gtk.Button(label=_tr('Join the Abitti exam'),
-                                      sensitive=False)
-    self.abitti_join_button.connect('clicked', self.on_abitti_join_clicked)
+    self.abitti = AbittiUrl(self)
+    self.abitti.attach_to_grid(url_grid, next_row)
+    next_row += 1
 
-    url_grid.attach(abitti_label, 0, 0, 1, 1)
-    url_grid.attach(self.abitti_entry, 1, 0, 1, 1)
-    url_grid.attach(self.abitti_join_button, 2, 0, 1, 1)
+    self.free_url = FreeUrl(self)
+    self.free_url.attach_to_grid(url_grid, next_row)
+    next_row += 1
 
-    url_label = Gtk.Label(label=_tr('Exam URL:'))
-    self.url_target_url = None
-    self.url_entry = Gtk.Entry(placeholder_text=_tr('Input exam url'))
-    self.url_entry.set_hexpand(True)
-    self.url_entry.connect('activate', self.on_url_join_clicked)
-    self.url_entry.connect('changed', self.on_url_changed)
-    self.url_entry.set_tooltip_text(_tr('Enter the exam URL here'))
-    self.url_join_button = Gtk.Button(label=_tr('Join the URL exam'),
-                                      sensitive=False)
-    self.url_join_button.connect('clicked', self.on_url_join_clicked)
-
-    url_grid.attach(url_label, 0, 1, 1, 1)
-    url_grid.attach(self.url_entry, 1, 1, 1, 1)
-    url_grid.attach(self.url_join_button, 2, 1, 1, 1)
-
-    clipboard_label = Gtk.Label(label=_tr('URL from clipboard:'))
-    self.clipboard_target_url = None
-    self.clipboard_content_label = Gtk.Entry()
-    self.clipboard_content_label.set_editable(False)
-    self.clipboard_content_label.set_sensitive(False)
-    self.clipboard_join_button \
-      = Gtk.Button(label=_tr('Join the exam on a clipboard URL'),
-                   sensitive=False)
-    self.clipboard_join_button.connect('clicked',
-                                       self.on_clipboard_join_clicked)
-
-    url_grid.attach(clipboard_label, 0, 2, 1, 1)
-    url_grid.attach(self.clipboard_content_label, 1, 2, 1, 1)
-    url_grid.attach(self.clipboard_join_button, 2, 2, 1, 1)
-    self.clipboard_main = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-    self.clipboard_main.connect('owner-change', self.on_clipboard_main_change)
-    self.clipboard_primary = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
-    self.clipboard_primary.connect('owner-change',
-                                   self.on_clipboard_primary_change)
+    self.clipboard_url = ClipboardUrl(self)
+    self.clipboard_url.attach_to_grid(url_grid, next_row)
+    next_row += 1
 
     main_box.add(url_grid)
 
@@ -116,146 +268,13 @@ class ExamChooser():
     return True  # Prevents the window from being destroyed
 
 
-  def on_clipboard_main_change(self, clipboard, event):
-    clipboard_text = clipboard.wait_for_text()
-    parsed_url = self.parse_exam_url_require_http(clipboard_text)
-    if parsed_url:
-      self.clipboard_target_url = parsed_url
-      self.clipboard_content_label.set_text(parsed_url)
-      self.clipboard_join_button.set_sensitive(True)
-    else:
-      self.clipboard_target_url = None
-      self.clipboard_content_label.set_text('')
-      self.clipboard_join_button.set_sensitive(False)
-
-
-  def on_clipboard_primary_change(self, clipboard, event):
-    clipboard_text = clipboard.wait_for_text()
-    parsed_url = self.parse_exam_url_require_http(clipboard_text)
-    if parsed_url:
-      self.clipboard_target_url = parsed_url
-      self.clipboard_content_label.set_text(parsed_url)
-      self.clipboard_join_button.set_sensitive(True)
-    # do not have an "else"-clause here, as we want to keep the previous
-    # clipboard URL in this case (main clipboard is preferred over primary
-    # clipboard)
+  def start_url_session(self, url):
+    self.applet.start_url_session(url)
 
 
   def show(self):
     self.window.show_all()
     self.window.present()
-
-
-  def check_url(self, url):
-    if self.abitti_soup_message:
-      self.abitti_soup_session.cancel_message(self.abitti_soup_message,
-                                              Soup.KnownStatusCode.CANCELLED)
-      self.abitti_soup_message = None
-    msg = Soup.Message.new('HEAD', url)
-    self.abitti_soup_message = msg
-    self.abitti_soup_session.queue_message(msg, self.on_url_checked, url)
-
-
-  def on_url_checked(self, session, msg, url):
-    if msg.status_code != Soup.KnownStatusCode.OK:
-      return
-    self.abitti_checked = True
-    self.abitti_join_button.set_sensitive(True)
-
-
-  def on_abitti_changed(self, entry):
-    self.abitti_checked = False
-    self.abitti_join_button.set_sensitive(False)
-    text = self.abitti_entry.get_text().strip()
-    self.abitti_target_url = self.convert_abitti_code_to_url(text)
-    if self.abitti_joinability_id:
-      GLib.source_remove(self.abitti_joinability_id)
-      self.abitti_joinability_id = None
-    if self.abitti_target_url:
-      self.abitti_joinability_id \
-        = GLib.timeout_add(500, self.check_abitti_joinability)
-
-
-  def check_abitti_joinability(self):
-    self.abitti_joinability_id = None
-    self.check_url(self.abitti_target_url)
-
-
-  def on_abitti_join_clicked(self, button):
-    if not self.abitti_checked:
-      return
-    exam_type = _tr('Abitti exam')
-    if self.show_confirmation(exam_type, self.abitti_target_url):
-      self.applet.start_url_session(self.abitti_target_url)
-
-
-  def convert_abitti_code_to_url(self, text):
-    match = re.match(r'^([a-z]+) ([a-z]+)$', text)
-    if match:
-      return f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010'
-
-    return None
-
-
-  def on_url_changed(self, entry):
-    text = entry.get_text().strip()
-    self.url_target_url = self.parse_exam_url(text)
-    self.url_join_button.set_sensitive( bool(self.url_target_url) )
-
-
-  def on_url_join_clicked(self, button):
-    if not self.url_target_url:
-      return
-    exam_type = _tr('URL')
-    if self.show_confirmation(exam_type, self.url_target_url):
-      self.applet.start_url_session(self.url_target_url)
-
-
-  def parse_exam_url(self, text):
-    # check that text contains something other than whitespace
-    stripped_text = text.strip()
-    if not stripped_text:
-      return None
-    return stripped_text
-
-
-  def parse_exam_url_require_http(self, text):
-    if not text:
-      return None
-    stripped_text = text.strip()
-    if re.match(r'^https?://', stripped_text):
-       return stripped_text
-    return None
-
-  def on_clipboard_join_clicked(self, button):
-    if not self.clipboard_target_url:
-      return
-    exam_type = _tr('URL')
-    if self.show_confirmation(exam_type, self.clipboard_target_url):
-      self.applet.start_url_session(self.clipboard_target_url)
-
-
-  def show_confirmation(self, exam_type, exam_detail):
-    """Show a confirmation dialog before joining an exam."""
-    primary_text = _tr('Do you want to join the exam?' + ' ' \
-                         + f'{ exam_type } – { exam_detail }')
-    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session')
-    dialog = Gtk.MessageDialog(transient_for=self.window, modal=True,
-        message_type=Gtk.MessageType.QUESTION,
-        buttons=Gtk.ButtonsType.OK_CANCEL, text=primary_text)
-    dialog.format_secondary_text(secondary_text)
-    label = dialog.get_message_area().get_children()[0]
-    label.set_line_wrap(False)
-    label.set_max_width_chars(-1)
-
-    response = dialog.run()
-    dialog.destroy()
-
-    if response == Gtk.ResponseType.OK:
-      self.window.hide()
-      return True
-
-    return False
 
 
 class ExamSetup(dbus.service.Object):
@@ -333,6 +352,12 @@ class PuavoExamModeSetupApplet:
                        % dbusexception)
 
 
+  def start_url_session(self, url):
+    self.sys_dbus_iface.StartSessionWithUrl(url,
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
   def update_menu(self):
     self.menu = Gtk.Menu()
 
@@ -370,12 +395,6 @@ class PuavoExamModeSetupApplet:
 
   def start_free_session(self):
     self.sys_dbus_iface.StartFreeSession(
-      reply_handler=lambda: None,
-      error_handler=self.start_session_dbus_error_handler)
-
-
-  def start_url_session(self, url):
-    self.sys_dbus_iface.StartSessionWithUrl(url,
       reply_handler=lambda: None,
       error_handler=self.start_session_dbus_error_handler)
 
