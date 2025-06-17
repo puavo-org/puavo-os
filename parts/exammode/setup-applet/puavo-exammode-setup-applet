@@ -32,7 +32,8 @@ ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
 
 
 class UrlInterface():
-  ENTRY_ENABLED = True
+  BUTTON_TOOLTIP = _tr('Use the Alt key to override the URL check')
+  ENTRY_ENABLED  = True
 
   def __init__(self, chooser):
     self.chooser = chooser
@@ -49,10 +50,11 @@ class UrlInterface():
       self.entry.set_editable(False)
       self.entry.set_sensitive(False)
     self.entry.set_hexpand(True)
+    self.entry.set_tooltip_text(self.ENTRY_TOOLTIP)
     self.entry.connect('activate', self.on_join_clicked)
-    self.entry.connect('changed', self.on_changed)
-    self.entry.set_tooltip_text(self.TOOLTIP_TEXT)
+    self.entry.connect('changed', self.on_entry_changed)
     self.join_button = Gtk.Button(label=self.BUTTON_LABEL, sensitive=False)
+    self.join_button.set_tooltip_text(self.BUTTON_TOOLTIP)
     self.join_button.connect('clicked', self.on_join_clicked)
 
 
@@ -62,14 +64,20 @@ class UrlInterface():
     grid.attach(self.join_button, 2, row, 1, 1)
 
 
+  def join_button_override(self, override_state):
+    """Override the join button state based on the Alt key."""
+    if override_state:
+      self.join_button.set_sensitive(bool(self.target_url))
+    else:
+      self.join_button.set_sensitive(self.checked)
+
+
   def on_join_clicked(self, button):
-    if not self.checked:
-      return
     if self.show_confirmation(self.target_url):
       self.chooser.start_url_session(self.target_url)
 
 
-  def on_changed(self, entry):
+  def on_entry_changed(self, entry):
     self.checked = False
     self.join_button.set_sensitive(False)
     text = self.entry.get_text().strip()
@@ -93,7 +101,7 @@ class UrlInterface():
       self.soup_message = None
 
     try:
-      msg = Soup.Message.new('GET', url)
+      msg = Soup.Message.new('HEAD', url)
       self.soup_message = msg
       self.soup_session.queue_message(msg, self.on_url_checked, url)
     except Exception as e:
@@ -128,6 +136,8 @@ class UrlInterface():
     response = dialog.run()
     dialog.destroy()
 
+    self.chooser.check_joins(False)
+
     if response == Gtk.ResponseType.OK:
       win.hide()
       return True
@@ -139,8 +149,8 @@ class UrlInterface():
 class AbittiUrl(UrlInterface):
   BUTTON_LABEL      = _tr('Join the Abitti exam')
   ENTRY_PLACEHOLDER = _tr('Input Abitti code')
+  ENTRY_TOOLTIP     = _tr('Enter the Abitti code here')
   EXAM_TYPE         = _tr('Abitti Exam')
-  TOOLTIP_TEXT      = _tr('Enter the Abitti code here')
   URL_LABEL         = _tr('Abitti code:')
 
 
@@ -157,8 +167,8 @@ class AbittiUrl(UrlInterface):
 class FreeUrl(UrlInterface):
   BUTTON_LABEL      = _tr('Join the URL exam')
   ENTRY_PLACEHOLDER = _tr('Input exam URL')
+  ENTRY_TOOLTIP     = _tr('Enter the exam URL here')
   EXAM_TYPE         = _tr('URL')
-  TOOLTIP_TEXT      = _tr('Enter the exam URL here')
   URL_LABEL         = _tr('Exam URL:')
 
 
@@ -176,8 +186,8 @@ class ClipboardUrl(UrlInterface):
   BUTTON_LABEL      = _tr('Join the exam on a clipboard URL')
   ENTRY_ENABLED     = False
   ENTRY_PLACEHOLDER = _tr('Use the clipboard to get an URL here')
+  ENTRY_TOOLTIP     = ENTRY_PLACEHOLDER
   EXAM_TYPE         = _tr('URL')
-  TOOLTIP_TEXT      = ENTRY_PLACEHOLDER
   URL_LABEL         = _tr('URL from clipboard:')
 
   def __init__(self, chooser):
@@ -202,13 +212,13 @@ class ClipboardUrl(UrlInterface):
     clipboard_text = clipboard.wait_for_text()
     url = self.convert_entry_to_url(clipboard_text)
     if url:
-      self.target_url = url
       self.entry.set_text(url)
-      self.join_button.set_sensitive(True)
     elif can_set_empty:
-      self.target_url = None
       self.entry.set_text('')
-      self.join_button.set_sensitive(False)
+    else:
+      return
+
+    self.on_entry_changed(self.entry)
 
 
   def on_clipboard_main_change(self, clipboard, event):
@@ -231,6 +241,8 @@ class ExamChooser():
     self.window.set_default_size(1000, 40)
     self.window.set_resizable(False)
     self.window.set_title(_tr('Join an exam'))
+    self.window.connect('key-press-event',   self.on_key_event)
+    self.window.connect('key-release-event', self.on_key_event)
 
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
                        margin=12)
@@ -261,6 +273,18 @@ class ExamChooser():
     main_box.add(url_grid)
 
     self.window.add(main_box)
+
+
+  def check_joins(self, alt_pressed):
+    for url_interface in [self.abitti, self.free_url, self.clipboard_url]:
+      url_interface.join_button_override(alt_pressed)
+
+
+  def on_key_event(self, widget, event):
+    if not event.keyval in [ Gdk.KEY_Alt_L, Gdk.KEY_Alt_R ]:
+      return
+    alt_pressed = (event.type == Gdk.EventType.KEY_PRESS)
+    self.check_joins(alt_pressed)
 
 
   def on_delete_event(self, widget, event):
