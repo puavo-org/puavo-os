@@ -13,5 +13,10 @@
     "default": "",
     "description": "URL to get information on available exams",
     "typehint": "string"
+  },
+  "puavo.exammode.setup.features": {
+    "default": "abitti2-code free_url clipboard_url",
+    "description": "A whitespace separated list of features to enable in puavo-exammode-setup-applet",
+    "typehint": "string"
   }
 }

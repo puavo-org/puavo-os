@@ -10,6 +10,7 @@ import json
 import os
 import re
 import signal
+import subprocess
 import sys
 import syslog
 
@@ -29,6 +30,11 @@ _tr = gettext.gettext
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
+
+
+def puavoconf_get(puavoconf_key):
+  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                   .decode('utf-8')
 
 
 class UrlInterface():
@@ -235,7 +241,32 @@ class ClipboardUrl(UrlInterface):
 
 class ExamChooser():
   def __init__(self, applet):
-    self.applet = applet
+    self.applet      = applet
+    self.url_objects = []
+    self.window      = None
+
+    setup_features = puavoconf_get('puavo.exammode.setup.features').split()
+
+    for feature in setup_features:
+      if feature == 'abitti2-code':
+        self.abitti = AbittiUrl(self)
+        self.url_objects.append(self.abitti)
+      elif feature == 'free_url':
+        self.free_url = FreeUrl(self)
+        self.url_objects.append(self.free_url)
+      elif feature == 'clipboard_url':
+        self.clipboard_url = ClipboardUrl(self)
+        self.url_objects.append(self.clipboard_url)
+      else:
+        syslog.syslog(syslog.LOG_WARNING,
+                      'unknown feature in puavo.exammode.setup.features: %s' \
+                        % feature)
+
+    if not self.url_objects:
+      syslog.syslog(syslog.LOG_ERR,
+                    'no features enabled, not creating a chooser window')
+      return
+
     self.window = Gtk.Window()
     self.window.connect('delete-event', self.on_delete_event)
     self.window.set_default_size(1000, 40)
@@ -256,27 +287,16 @@ class ExamChooser():
     url_grid.set_margin_end(6)
 
     next_row = 0
-
-    # XXX Abitti box could be conditional, depending on a puavo-conf setting
-    self.abitti = AbittiUrl(self)
-    self.abitti.attach_to_grid(url_grid, next_row)
-    next_row += 1
-
-    self.free_url = FreeUrl(self)
-    self.free_url.attach_to_grid(url_grid, next_row)
-    next_row += 1
-
-    self.clipboard_url = ClipboardUrl(self)
-    self.clipboard_url.attach_to_grid(url_grid, next_row)
-    next_row += 1
+    for url_object in self.url_objects:
+      url_object.attach_to_grid(url_grid, next_row)
+      next_row += 1
 
     main_box.add(url_grid)
-
     self.window.add(main_box)
 
 
   def check_joins(self, alt_pressed):
-    for url_interface in [self.abitti, self.free_url, self.clipboard_url]:
+    for url_interface in self.url_objects:
       url_interface.join_button_override(alt_pressed)
 
 
@@ -297,6 +317,10 @@ class ExamChooser():
 
 
   def show(self):
+    if not self.window:
+      syslog.syslog(syslog.LOG_ERR,
+                    'ExamChooser window is not initialized, cannot show it')
+      return
     self.window.show_all()
     self.window.present()
 
