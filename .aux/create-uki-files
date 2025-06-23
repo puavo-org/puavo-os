@@ -23,6 +23,10 @@ done
 addon_folder="$boot_folder/addons"
 mkdir -p "$addon_folder"
 
-.aux/create-cmdline-addon "ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}" "${addon_folder}/diskinstaller.addon.efi"
-.aux/create-cmdline-addon "ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}" "${addon_folder}/preinstalled.addon.efi"
-.aux/create-cmdline-addon "ro splash loglevel=3 rd.auto=1 init=/sbin/init-puavo puavo.hosttype=laptop puavo.image.path=/images/${image_file}" "${addon_folder}/laptop.addon.efi"
+common_arguments='ro rd.auto=1 init=/sbin/init-puavo'
+.aux/create-cmdline-addon "nosplash ${common_arguments} puavo.hosttype=bootserver puavo.image.path=/images/${image_file}"                                           "${addon_folder}/bootserver.addon.efi"
+.aux/create-cmdline-addon "nosplash ${common_arguments} puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}"                                 "${addon_folder}/diskinstaller.addon.efi"
+.aux/create-cmdline-addon "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=exam puavo.image.path=/examimages/${image_file} puavo.image.load_to_ram=true" "${addon_folder}/exam.addon.efi"
+.aux/create-cmdline-addon "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=laptop puavo.image.path=/images/${image_file}"                                "${addon_folder}/laptop.addon.efi"
+.aux/create-cmdline-addon "nosplash ${common_arguments} puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}"                                         "${addon_folder}/preinstalled.addon.efi"
+.aux/create-cmdline-addon "nosplash ${common_arguments} puavo.hosttype=wirelessaccesspoint puavo.image.path=/images/${image_file}"                                  "${addon_folder}/wirelessaccesspoint.addon.efi"
