@@ -1,5 +1,6 @@
 class desktop::puavodesktop {
   include ::art
+  include ::desktop::autologin
   include ::desktop::dconf::disable_lidsuspend
   include ::desktop::dconf::disable_suspend
   include ::desktop::dconf::exammode
@@ -10,7 +11,6 @@ class desktop::puavodesktop {
   include ::desktop::mimedefaults
   include ::gnome_shell_extensions
   include ::gnome_shell_helper
-  include ::nodm
   include ::packages
   include ::puavomenu
   include ::puavo_suspend_tricks

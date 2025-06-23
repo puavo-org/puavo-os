@@ -693,6 +693,7 @@ class packages {
     , 'libsasl2-modules'
     , 'libttspico-utils' #German and English TTS
     , 'libxcb-xtest0' #dependency for Zoom
+    , 'lightdm'                                # for various autologin needs, such as infotv, ers, etc.
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'
@@ -701,7 +702,6 @@ class packages {
     , 'network-manager'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
-    , 'nodm'                                    # for infotv
     , 'openprinting-ppds'
     , 'orca'
     , 'pcmciautils'
