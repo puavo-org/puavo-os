@@ -75,11 +75,6 @@ class JoinChoice():
     return False
 
 
-  def start_session_dbus_error_handler(self, dbusexception):
-    raise Exception('unexpected dbus error in start session, that is bad: %s' \
-                       % dbusexception)
-
-
 
 class UrlInterface(JoinChoice):
   BUTTON_TOOLTIP = _tr('Use the Alt key to override the URL check')
@@ -264,6 +259,10 @@ class NextExam(JoinChoice):
   EXAM_TYPE      = 'Next-Exam'
   JOIN_LABEL     = _tr('Next-Exam')
 
+  def __init__(self, chooser):
+    super().__init__(chooser)
+    self.join_button.set_hexpand(True)
+
 
   def attach_to_grid(self, grid, row):
     grid.attach(self.label,       0, row, 1, 1)
@@ -277,12 +276,6 @@ class NextExam(JoinChoice):
   def on_join_clicked(self, button):
     if self.show_confirmation(''):
       self.chooser.start_nextexam_session()
-
-
-  def start_nextexam_session(self):
-    self.sys_dbus_iface.StartNextExamSession(
-      reply_handler=lambda: None,
-      error_handler=self.start_session_dbus_error_handler)
 
 
 class ExamChooser():
@@ -311,11 +304,14 @@ class ExamChooser():
                       'unknown feature in puavo.exammode.setup.features: %s' \
                         % feature)
 
-    # XXX Next-Exam can be the only option, in this case we could move
-    # XXX directly to the exam mode
-    if not self.url_objects:
+    if not (self.url_objects or self.next_exam):
       syslog.syslog(syslog.LOG_ERR,
                     'no features enabled, not creating a chooser window')
+      return
+
+    if self.next_exam and not self.url_objects:
+      # if Next-Exam is the only option, we can skip the chooser window
+      self.start_nextexam_session()
       return
 
     self.window = Gtk.Window()
@@ -329,23 +325,26 @@ class ExamChooser():
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
                        margin=12)
 
-    url_grid = Gtk.Grid()
-    url_grid.set_column_spacing(6)
-    url_grid.set_row_spacing(6)
-    url_grid.set_margin_top(6)
-    url_grid.set_margin_bottom(6)
-    url_grid.set_margin_start(6)
-    url_grid.set_margin_end(6)
+    join_grid = Gtk.Grid()
+    join_grid.set_column_spacing(6)
+    join_grid.set_row_spacing(6)
+    join_grid.set_margin_top(6)
+    join_grid.set_margin_bottom(6)
+    join_grid.set_margin_start(6)
+    join_grid.set_margin_end(6)
 
     next_row = 0
     for url_object in self.url_objects:
-      url_object.attach_to_grid(url_grid, next_row)
+      url_object.attach_to_grid(join_grid, next_row)
       next_row += 1
 
     if self.next_exam:
-      self.next_exam.attach_to_grid(url_grid, next_row)
+      separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+      join_grid.attach(separator, 0, next_row, 3, 1)
+      next_row += 1
+      self.next_exam.attach_to_grid(join_grid, next_row)
 
-    main_box.add(url_grid)
+    main_box.add(join_grid)
     self.window.add(main_box)
 
 
@@ -364,6 +363,10 @@ class ExamChooser():
   def on_delete_event(self, widget, event):
     self.window.hide()
     return True  # Prevents the window from being destroyed
+
+
+  def start_nextexam_session(self):
+    self.applet.start_nextexam_session()
 
 
   def start_url_session(self, url):
@@ -455,10 +458,27 @@ class PuavoExamModeSetupApplet:
                        % dbusexception)
 
 
+  def start_free_session(self):
+    self.sys_dbus_iface.StartFreeSession(
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
+  def start_nextexam_session(self):
+    self.sys_dbus_iface.StartNextExamSession(
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
   def start_url_session(self, url):
     self.sys_dbus_iface.StartSessionWithUrl(url,
       reply_handler=lambda: None,
       error_handler=self.start_session_dbus_error_handler)
+
+
+  def start_session_dbus_error_handler(self, dbusexception):
+    raise Exception('unexpected dbus error in start session, that is bad: %s' \
+                       % dbusexception)
 
 
   def update_menu(self):
@@ -494,12 +514,6 @@ class PuavoExamModeSetupApplet:
 
   def show_chooser(self):
     self.chooser.show()
-
-
-  def start_free_session(self):
-    self.sys_dbus_iface.StartFreeSession(
-      reply_handler=lambda: None,
-      error_handler=self.start_session_dbus_error_handler)
 
 
   def choose_exam(self, exam_id, widget):
