@@ -37,19 +37,62 @@ def puavoconf_get(puavoconf_key):
                    .decode('utf-8')
 
 
-class UrlInterface():
+class JoinChoice():
+  DEFAULT_JOIN_SENSITIVITY = False
+
+  def __init__(self, chooser):
+    self.chooser = chooser
+    self.label = Gtk.Label(label=self.JOIN_LABEL)
+    self.join_button = Gtk.Button(label=self.BUTTON_LABEL,
+                                  sensitive=self.DEFAULT_JOIN_SENSITIVITY)
+    self.join_button.set_tooltip_text(self.BUTTON_TOOLTIP)
+    self.join_button.connect('clicked', self.on_join_clicked)
+
+
+  def show_confirmation(self, info):
+    """Show a confirmation dialog before joining an exam."""
+    primary_text = self.join_info(info)
+    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session.')
+
+    win = self.chooser.window
+    dialog = Gtk.MessageDialog(transient_for=win, modal=True,
+        message_type=Gtk.MessageType.QUESTION,
+        buttons=Gtk.ButtonsType.OK_CANCEL, text=primary_text)
+    dialog.format_secondary_text(secondary_text)
+    label = dialog.get_message_area().get_children()[0]
+    label.set_line_wrap(False)
+    label.set_max_width_chars(-1)
+
+    response = dialog.run()
+    dialog.destroy()
+
+    self.chooser.check_joins(False)
+
+    if response == Gtk.ResponseType.OK:
+      win.hide()
+      return True
+
+    return False
+
+
+  def start_session_dbus_error_handler(self, dbusexception):
+    raise Exception('unexpected dbus error in start session, that is bad: %s' \
+                       % dbusexception)
+
+
+
+class UrlInterface(JoinChoice):
   BUTTON_TOOLTIP = _tr('Use the Alt key to override the URL check')
   ENTRY_ENABLED  = True
 
   def __init__(self, chooser):
-    self.chooser = chooser
+    super().__init__(chooser)
 
     self.checked = False
     self.joinability_id = None
     self.soup_message = None
     self.soup_session = Soup.Session()
     self.target_url = None
-    self.label = Gtk.Label(label=self.URL_LABEL)
 
     self.entry = Gtk.Entry(placeholder_text=self.ENTRY_PLACEHOLDER)
     if not self.ENTRY_ENABLED:
@@ -59,15 +102,17 @@ class UrlInterface():
     self.entry.set_tooltip_text(self.ENTRY_TOOLTIP)
     self.entry.connect('activate', self.on_join_clicked)
     self.entry.connect('changed', self.on_entry_changed)
-    self.join_button = Gtk.Button(label=self.BUTTON_LABEL, sensitive=False)
-    self.join_button.set_tooltip_text(self.BUTTON_TOOLTIP)
-    self.join_button.connect('clicked', self.on_join_clicked)
 
 
   def attach_to_grid(self, grid, row):
     grid.attach(self.label,       0, row, 1, 1)
     grid.attach(self.entry,       1, row, 1, 1)
     grid.attach(self.join_button, 2, row, 1, 1)
+
+
+  def join_info(self, url):
+    return _tr('Do you want to join the exam?') \
+             + ' ' + f'{ self.EXAM_TYPE } – { url }'
 
 
   def join_button_override(self, override_state):
@@ -124,40 +169,13 @@ class UrlInterface():
     self.join_button.set_sensitive(True)
 
 
-  def show_confirmation(self, url):
-    """Show a confirmation dialog before joining an exam."""
-    primary_text = _tr('Do you want to join the exam?') + ' ' \
-                         + f'{ self.EXAM_TYPE } – { url }'
-    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session.')
-
-    win = self.chooser.window
-    dialog = Gtk.MessageDialog(transient_for=win, modal=True,
-        message_type=Gtk.MessageType.QUESTION,
-        buttons=Gtk.ButtonsType.OK_CANCEL, text=primary_text)
-    dialog.format_secondary_text(secondary_text)
-    label = dialog.get_message_area().get_children()[0]
-    label.set_line_wrap(False)
-    label.set_max_width_chars(-1)
-
-    response = dialog.run()
-    dialog.destroy()
-
-    self.chooser.check_joins(False)
-
-    if response == Gtk.ResponseType.OK:
-      win.hide()
-      return True
-
-    return False
-
-
 
 class AbittiUrl(UrlInterface):
   BUTTON_LABEL      = _tr('Join the Abitti exam')
   ENTRY_PLACEHOLDER = _tr('Input Abitti code')
   ENTRY_TOOLTIP     = _tr('Enter the Abitti code here')
   EXAM_TYPE         = _tr('Abitti Exam')
-  URL_LABEL         = _tr('Abitti code:')
+  JOIN_LABEL        = _tr('Abitti code:')
 
 
   def convert_entry_to_url(self, text):
@@ -175,7 +193,7 @@ class FreeUrl(UrlInterface):
   ENTRY_PLACEHOLDER = _tr('Input exam URL')
   ENTRY_TOOLTIP     = _tr('Enter the exam URL here')
   EXAM_TYPE         = _tr('URL')
-  URL_LABEL         = _tr('Exam URL:')
+  JOIN_LABEL        = _tr('Exam URL:')
 
 
   def convert_entry_to_url(self, text):
@@ -194,7 +212,7 @@ class ClipboardUrl(UrlInterface):
   ENTRY_PLACEHOLDER = _tr('Use the clipboard to get an URL here')
   ENTRY_TOOLTIP     = ENTRY_PLACEHOLDER
   EXAM_TYPE         = _tr('URL')
-  URL_LABEL         = _tr('URL from clipboard:')
+  JOIN_LABEL        = _tr('URL from clipboard:')
 
   def __init__(self, chooser):
     super().__init__(chooser)
@@ -238,10 +256,39 @@ class ClipboardUrl(UrlInterface):
     self.set_url_active(clipboard, event, False)
 
 
+class NextExam(JoinChoice):
+  DEFAULT_JOIN_SENSITIVITY = True
+
+  BUTTON_LABEL   = _tr('Use Next-Exam to join the exam')
+  BUTTON_TOOLTIP = BUTTON_LABEL
+  EXAM_TYPE      = 'Next-Exam'
+  JOIN_LABEL     = _tr('Next-Exam')
+
+
+  def attach_to_grid(self, grid, row):
+    grid.attach(self.label,       0, row, 1, 1)
+    grid.attach(self.join_button, 1, row, 2, 1)
+
+
+  def join_info(self, info):
+    return _tr('Do you want to use Next-Exam to join the exam?')
+
+
+  def on_join_clicked(self, button):
+    if self.show_confirmation(''):
+      self.chooser.start_nextexam_session()
+
+
+  def start_nextexam_session(self):
+    self.sys_dbus_iface.StartNextExamSession(
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
 
 class ExamChooser():
   def __init__(self, applet):
     self.applet      = applet
+    self.next_exam   = None
     self.url_objects = []
     self.window      = None
 
@@ -257,11 +304,15 @@ class ExamChooser():
       elif feature == 'clipboard_url':
         self.clipboard_url = ClipboardUrl(self)
         self.url_objects.append(self.clipboard_url)
+      elif feature == 'next-exam':
+        self.next_exam = NextExam(self)
       else:
         syslog.syslog(syslog.LOG_WARNING,
                       'unknown feature in puavo.exammode.setup.features: %s' \
                         % feature)
 
+    # XXX Next-Exam can be the only option, in this case we could move
+    # XXX directly to the exam mode
     if not self.url_objects:
       syslog.syslog(syslog.LOG_ERR,
                     'no features enabled, not creating a chooser window')
@@ -290,6 +341,9 @@ class ExamChooser():
     for url_object in self.url_objects:
       url_object.attach_to_grid(url_grid, next_row)
       next_row += 1
+
+    if self.next_exam:
+      self.next_exam.attach_to_grid(url_grid, next_row)
 
     main_box.add(url_grid)
     self.window.add(main_box)
@@ -334,6 +388,7 @@ class ExamSetup(dbus.service.Object):
   @dbus.service.method('org.puavo.ExamSetup', in_signature='', out_signature='')
   def StartFree(self):
     self.applet.start_free_session()
+
 
   @dbus.service.method('org.puavo.ExamSetup', in_signature='', out_signature='')
   def StartUI(self):
@@ -449,11 +504,6 @@ class PuavoExamModeSetupApplet:
 
   def choose_exam(self, exam_id, widget):
     self.start_session(exam_id)
-
-
-  def start_session_dbus_error_handler(self, dbusexception):
-    raise Exception('unexpected dbus error in start session, that is bad: %s' \
-                       % dbusexception)
 
 
   def exams_available(self, examinfo_json):
