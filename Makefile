@@ -237,7 +237,7 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 	    './config/boot_keys/' '$(_image_file)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
-		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
+		-noappend -no-recovery -no-sparse -wildcards -comp zstd	\
 		-ef 'config/excludes/$(image_class)'		        \
 		|| { rm -f '$(image_dir)/$(_image_file).tmp'; false; }
 	$(_sudo) mv '$(image_dir)/$(_image_file).tmp' '$(image_dir)/$(_image_file)'
