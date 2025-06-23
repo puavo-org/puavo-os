@@ -251,6 +251,10 @@ class ClipboardUrl(UrlInterface):
     self.set_url_active(clipboard, event, False)
 
 
+class NextExamNotInstalled(Exception):
+  pass
+
+
 class NextExam(JoinChoice):
   DEFAULT_JOIN_SENSITIVITY = True
 
@@ -258,10 +262,25 @@ class NextExam(JoinChoice):
   BUTTON_TOOLTIP = BUTTON_LABEL
   EXAM_TYPE      = 'Next-Exam'
   JOIN_LABEL     = _tr('Next-Exam')
+  NEXTEXAM_PATH  = '/opt/next-exam-puavo-student'
 
   def __init__(self, chooser):
+    if not os.path.exists(self.NEXTEXAM_PATH):
+      raise NextExamNotInstalled(f'{ self.NEXTEXAM_PATH } not found')
+
     super().__init__(chooser)
     self.join_button.set_hexpand(True)
+
+
+  @classmethod
+  def create(cls, chooser):
+    try:
+      return NextExam(chooser)
+    except NextExamNotInstalled as e:
+      errmsg = 'Next Exam Student app not installed,' \
+                 + ' can not enable it as a feature'
+      syslog.syslog(syslog.LOG_WARNING, errmsg)
+      return None
 
 
   def attach_to_grid(self, grid, row):
@@ -298,7 +317,7 @@ class ExamChooser():
         self.clipboard_url = ClipboardUrl(self)
         self.url_objects.append(self.clipboard_url)
       elif feature == 'next-exam':
-        self.next_exam = NextExam(self)
+        self.next_exam = NextExam.create(self)
       else:
         syslog.syslog(syslog.LOG_WARNING,
                       'unknown feature in puavo.exammode.setup.features: %s' \
