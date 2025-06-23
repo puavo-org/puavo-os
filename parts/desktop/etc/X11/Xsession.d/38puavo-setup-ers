@@ -1,0 +1,5 @@
+if [ "$DESKTOP_SESSION" = 'puavo-ers' ]; then
+  export DESKTOP_SESSION=puavo-desktop
+  export GDMSESSION=puavo-desktop
+  export XDG_SESSION_DESKTOP=puavo-desktop
+fi

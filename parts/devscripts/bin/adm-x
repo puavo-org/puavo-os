@@ -18,8 +18,7 @@ declare -a choices user_ids
 xauthority_files=$(ls -rt /run/user/*/gdm/Xauthority 2>/dev/null || true)
 
 if [ -z "$xauthority_files" ]; then
-  # No Xauthority files found, we may be running "nodm".
-  # We are guessing DISPLAY (but in the nodm case it should always be :0).
+  # We are guessing DISPLAY
   exec env DISPLAY=:0 "$@"
 fi
 

@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+# This is not necessary if puavo.xsessions.display_manager != "lightdm",
+# but this should be fast so we will do this anyway.
+
+case "$(puavo-conf puavo.xsessions.default)" in
+  puavo-ers)
+    user='puavo-ers'
+    xsession='puavo-ers'
+    ;;
+  puavo-infotv)
+    user='puavo-infotv'
+    xsession='puavo-infotv'
+    ;;
+  puavo-usb-factory)
+    user='puavo-usb-factory'
+    xsession='puavo-usb-factory'
+    ;;
+  puavo-user-registration)
+    user='guest'
+    xsession='puavo-user-registration'
+    ;;
+  puavo-webkiosk)
+    user='guest'
+    xsession='puavo-webkiosk'
+    ;;
+  *)
+    exit 0
+    ;;
+esac
+
+cat <<EOF >/etc/lightdm/lightdm.conf.d/lightdm-autologin-greeter.conf.tmp
+[Seat:*]
+autologin-user=${user}
+autologin-session=${xsession}
+pam-autologin-service=puavo-lightdm-autologin
+EOF
+mv /etc/lightdm/lightdm.conf.d/lightdm-autologin-greeter.conf.tmp /etc/lightdm/lightdm.conf.d/lightdm-autologin-greeter.conf
