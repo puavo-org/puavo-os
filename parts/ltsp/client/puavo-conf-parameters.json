@@ -528,7 +528,7 @@
     "typehint": "string"
   },
   "puavo.xsessions.display_manager": {
-    "choices": [ "gdm", "nodm", "puavo-darkdm" ],
+    "choices": [ "gdm", "lightdm", "puavo-darkdm" ],
     "default": "puavo-darkdm",
     "description": "The display manager to use",
     "typehint": "string"

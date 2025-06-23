@@ -686,6 +686,8 @@ class packages {
     , 'libsasl2-modules'
     , 'libttspico-utils' #German and English TTS
     , 'libxcb-xtest0' #dependency for Zoom
+    , 'lightdm' # For all autologin sessions, such as InfoTV, ERS, USB Factory etc.
+    , 'lightdm-autologin-greeter'
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'
@@ -694,7 +696,6 @@ class packages {
     , 'network-manager'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
-    , 'nodm'                                    # for infotv
     , 'openprinting-ppds'
     , 'orca'
     , 'pcmciautils'
