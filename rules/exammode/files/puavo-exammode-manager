@@ -136,6 +136,13 @@ class PuavoExammode < DBus::Object
             'params' => {},
             'type'   => 'free-exammode-session',
           }
+        when :nextexam
+          {
+            'locale' => @locale,
+            'name'   => 'Exam mode with Next-Exam',
+            'params' => {},
+            'type'   => 'next-exam-session',
+          }
         when :url
           {
             'locale' => @locale,
@@ -233,6 +240,11 @@ class PuavoExammode < DBus::Object
 
     dbus_method :StartFreeSession, '' do
       write_exam_session_specs(:free, {})
+      start_session()
+    end
+
+    dbus_method :StartNextExamSession, '' do
+      write_exam_session_specs(:nextexam, {})
       start_session()
     end
 
