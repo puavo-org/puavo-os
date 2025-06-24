@@ -40,19 +40,21 @@ create_device_specific_files() {
     openssl x509 -inform der -in "$mok_der" -out "$mok_pem" >/dev/null 2>&1
   fi
 
-  # The guard addon is responsible for keeping the device-specific
-  # MOK active even if there are no device-specific modifications.
-  # Without this, installing or uninstalling modifications would
-  # alter the Secure Boot state (PCR 7), which would break automatic
+  # This command-line addon is responsible for keeping the
+  # device-specific MOK active. Removing it would alter the
+  # Secure Boot state (PCR 7), which would break automatic
   # TPM-based disk unlocking.
-  guard_addon="${addons_directory}/KEEP.addon.efi"
-  if [ ! -f "$guard_addon" ]; then
-    echo "creating the guard UKI addon..."
+  extra_command_line_addon="${addons_directory}/extra.cmdline.addon.efi"
+  if [ ! -f "$extra_command_line_addon" ]; then
+    echo "creating the extra command-line addon..."
+    # We have to create an "empty" command-line section manually, because the normal --cmdline
+    # switch refuses to create such a section. In addition, it can not be truly empty, because
+    # systemd-stub ignores empty sections and reports an error due to finding no sections.
     ukify build \
       --secureboot-private-key="${mok_private_key}" \
       --secureboot-certificate="${mok_pem}" \
-      --cmdline="puavo.guard" \
-      --output="$guard_addon" >/dev/null 2>&1
+      --section=.cmdline:' ' \
+      --output="$extra_command_line_addon" >/dev/null 2>&1
   fi
 }
 
