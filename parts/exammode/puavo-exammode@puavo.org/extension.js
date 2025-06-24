@@ -102,8 +102,12 @@ function init() {
   let utf8decoder = new TextDecoder();
   let exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
 
-  control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
-                    '    |    ' + _('press F11 to toggle fullscreen');
+  if (exam_session_info['type'] === 'next-exam-session') {
+    control_text = _('Next-Exam')
+  } else {
+    control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
+                      '    |    ' + _('press F11 to toggle fullscreen');
+  }
   control_info_label = new St.Label({
                          text: control_text,
                          y_align: Clutter.ActorAlign.CENTER,
