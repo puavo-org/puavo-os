@@ -14,7 +14,7 @@ class kernels {
   #   Debian Trixie:   ?
 
   $kernel_versions = {
-    'default' => '6.12.30-amd64',
+    'default' => '6.12.32-amd64',
     # XXX 'crisp'   => '6.12.9+bpo-amd64',
   }
   $kernel_aliases = keys($kernel_versions)
