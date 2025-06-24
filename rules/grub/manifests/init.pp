@@ -2,8 +2,8 @@ class grub {
   include ::grub::themes
   include ::puavo_conf
 
-  $grub_version = '2.12-7'
-  $grub_version_signed = "1+2.12+7"
+  $grub_version = '2.12-8'
+  $grub_version_signed = "1+2.12+8"
 
   file {
     [ '/boot', '/boot/grub', '/boot/grub/puavo' ]:
