@@ -39,7 +39,13 @@ colorize() {
     fi
   fi
 
-  if [ "$component" != 'product_name' ]; then
+  if [ "$component" = 'deviceid' ]; then
+    if [[ "$device_identifier" =~ [0-9] ]]; then
+      color=green
+    else
+      color=red
+    fi
+  elif [ "$component" != 'product_name' ]; then
     if [ "$value" -ge "$green_limit" ]; then
       color=green
     elif [ "$value" -ge "$grey_limit" ]; then
