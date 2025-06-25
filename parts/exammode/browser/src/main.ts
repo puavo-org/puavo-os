@@ -167,6 +167,8 @@ function createWindow(): BrowserWindow {
     }
   });
 
+  win.maximize();
+
   void win.loadURL(config.url);
 
   return win;
