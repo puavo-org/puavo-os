@@ -151,6 +151,18 @@ function createWindow(): BrowserWindow {
           event.preventDefault();
           win.webContents.setZoomLevel(0);
           break;
+        case "ArrowLeft":
+          event.preventDefault();
+          if (win.webContents.canGoBack()) {
+            win.webContents.goBack();
+          }
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          if (win.webContents.canGoForward()) {
+            win.webContents.goForward();
+          }
+          break;
       }
     }
   });
