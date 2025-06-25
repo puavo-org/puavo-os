@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -T
+#!/usr/bin/ruby
 
 require 'fileutils'
 require 'getoptlong'
@@ -12,8 +12,7 @@ def check_permissions
 
   return true if ENV['SUDO_USER'] == 'root'
 
-  sudo_user = "#{ ENV['SUDO_USER'] }".untaint
-  puavo_desktop_path = "/var/lib/puavo-desktop/users/#{ sudo_user }/puavo_session.json"
+  puavo_desktop_path = "/var/lib/puavo-desktop/users/#{ ENV['SUDO_USER'] }/puavo_session.json"
 
   begin
     parsed = JSON.parse( IO.read(puavo_desktop_path) )
