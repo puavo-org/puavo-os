@@ -156,23 +156,35 @@ class Settings:
                 raise Exception("PUAVO_SESSION_PATH not in environment variables")
 
             with open(
-                os.path.expandvars("$PUAVO_SESSION_PATH"),
+                os.environ["PUAVO_SESSION_PATH"],
                 mode="r",
                 encoding="utf-8",
             ) as session:
                 session_data = json.load(session)
 
-            self.user_primary_school = session_data["user"]["primary_school_id"]
-            self.user_puavo_id       = session_data["user"]["id"]
-            self.user_roles          = session_data["user"]["user_roles"]
+            try:
+                self.user_primary_school = int(session_data["user"]["primary_school_id"])
+            except Exception as e:
+                logging.error('cannot determine user primary school: %s' % e)
+                self.user_primary_school = -1
+
+            try:
+                self.user_puavo_id = int(session_data["user"]["id"])
+            except Exception as e:
+                logging.error('cannot determine user puavo ID: %s' % e)
+                self.user_puavo_id = -1
+
+            try:
+                self.user_roles = session_data["user"]["user_roles"]
+                if not (isinstance(self.user_roles, list) \
+                  and all(isinstance(role, str) for role in self.user_roles)):
+                    raise Exception("user_roles is not a list of strings")
+            except Exception as e:
+                logging.error('cannot determine user roles (assuming student): %s' % e)
+                self.user_roles = [ "student" ]
+
         except Exception as e:
-            logging.error(
-                'detect_environment(): cannot determine user roles, assuming "student" role:'
-            )
-            logging.error(str(e))
-            self.user_primary_school = -1
-            self.user_puavo_id       = -1
-            self.user_roles          = [ "student" ]
+            logging.error('problem in reading user information from session data: %s' % e)
 
         # Load the per-user config file, if it exists
         if not (self.is_guest or self.is_webkiosk):
