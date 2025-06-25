@@ -257,7 +257,7 @@ if settings.user_programs_dir:
 logging.info('IPC socket.........: "%s"', settings.socket)
 logging.info('Desktop directory..: "%s"', settings.desktop_dir)
 
-logging.info('User type..........: "%s"', settings.user_type)
+logging.info('User roles..........: %s', ' '.join(settings.user_roles))
 
 if not settings.prod_mode:
     logging.info("Running in development mode")

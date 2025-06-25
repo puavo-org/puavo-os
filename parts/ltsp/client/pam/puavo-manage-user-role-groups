@@ -14,19 +14,14 @@ fi
 
 puavodesktop_path="/var/lib/puavo-desktop/users/${PAM_USER}/puavo_session.json"
 
-user_type=$(jq -r .user.user_type "$puavodesktop_path" 2>/dev/null) || true
-
-rolegroup_name=''
-case "$user_type" in
-  admin)   rolegroup_name='puavo-role-admin'   ;;
-  student) rolegroup_name='puavo-role-student' ;;
-  teacher) rolegroup_name='puavo-role-teacher' ;;
-  *)                                           ;;
-esac
+user_role_groups_list=$(
+  jq -r '
+    .user.user_roles | map(select(IN("admin", "student", "teacher")) | "puavo-role-" + .) | .[]
+  ' "$puavodesktop_path" 2>/dev/null) || true
 
 user_group_list=$(
   awk -v current_user_groups_string="$current_user_groups" \
-      -v rolegroup_name="$rolegroup_name" '
+      -v user_role_groups_string="$user_role_groups_list" '
     BEGIN {
       groupcount = 0
       split(current_user_groups_string, current_user_groups)
@@ -35,8 +30,9 @@ user_group_list=$(
           groups[++groupcount] = current_user_groups[i]
         }
       }
-      if (rolegroup_name != "") {
-        groups[++groupcount] = rolegroup_name
+      split(user_role_groups_string, user_role_groups)
+      for (i in user_role_groups) {
+        groups[++groupcount] = user_role_groups[i]
       }
       for (i in groups) {
         if (int(i) < groupcount) {

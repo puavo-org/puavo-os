@@ -7,8 +7,9 @@ if [ -n "${X2GO_SESSION:-}" ]; then
     fi
 fi
 
-if [ "$(jq -r .user.user_type "$PUAVO_SESSION_PATH")" = 'admin' ]; then
-  export PUAVO_PERSISTENT_DISPLAY_MANAGEMENT=true
+if jq -e '.user.user_roles | any(. == "admin")' \
+  "$PUAVO_SESSION_PATH" >/dev/null; then
+    export PUAVO_PERSISTENT_DISPLAY_MANAGEMENT=true
 fi
 
 export MUTTER_MONITOR_FILENAME="monitors-$(hostname).xml"

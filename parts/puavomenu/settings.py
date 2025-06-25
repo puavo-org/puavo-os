@@ -66,9 +66,9 @@ class Settings:
         # The user's puavo ID
         self.user_puavo_id = -1
 
-        # User type (student, teacher, etc.). Some of the web services
-        # that are opened from the menu needs to know this.
-        self.user_type = "student"
+        # User roles (a list of "student", "teacher", etc.).  Some of the
+        # web services that are opened from the menu needs to know this.
+        self.user_roles = [ "student" ]
 
         # The primary school of the user, or -1 if unknown
         self.user_primary_school = -1
@@ -152,43 +152,27 @@ class Settings:
 
         # Load the user type and primary school from the session data generated during login
         try:
-            if "PUAVO_SESSION_PATH" in os.environ:
-                VALID_TYPES = frozenset(
-                    ("student", "teacher", "admin", "staff", "visitor", "guest")
-                )
+            if not "PUAVO_SESSION_PATH" in os.environ:
+                raise Exception("PUAVO_SESSION_PATH not in environment variables")
 
-                with open(
-                    os.path.expandvars("$PUAVO_SESSION_PATH"),
-                    mode="r",
-                    encoding="utf-8",
-                ) as session:
-                    session_data = json.load(session)
+            with open(
+                os.path.expandvars("$PUAVO_SESSION_PATH"),
+                mode="r",
+                encoding="utf-8",
+            ) as session:
+                session_data = json.load(session)
 
-                self.user_puavo_id = session_data["user"]["id"]
-                self.user_type = session_data["user"]["user_type"]
-
-                if self.user_type not in VALID_TYPES:
-                    logging.warning(
-                        'detect_environment(): unknown user type "%s", '
-                        'defaulting to "student"',
-                        self.user_type,
-                    )
-                    self.user_type = "student"
-
-                self.user_primary_school = session_data["user"]["primary_school_id"]
-            else:
-                logging.warning(
-                    'detect_environment(): "PUAVO_SESSION_PATH" not in environment '
-                    'variables, user type cannot be determined, assuming "student"'
-                )
-                self.user_type = "student"
+            self.user_primary_school = session_data["user"]["primary_school_id"]
+            self.user_puavo_id       = session_data["user"]["id"]
+            self.user_roles          = session_data["user"]["user_roles"]
         except Exception as e:
             logging.error(
-                'detect_environment(): cannot determine user type, assuming "student":'
+                'detect_environment(): cannot determine user roles, assuming "student" role:'
             )
             logging.error(str(e))
-            self.user_type = "student"
             self.user_primary_school = -1
+            self.user_puavo_id       = -1
+            self.user_roles          = [ "student" ]
 
         # Load the per-user config file, if it exists
         if not (self.is_guest or self.is_webkiosk):
