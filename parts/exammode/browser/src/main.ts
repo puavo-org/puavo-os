@@ -135,6 +135,26 @@ function createWindow(): BrowserWindow {
     logger.info(`Page finished loading: ${config.url}`);
   });
 
+  window.webContents.on("before-input-event", (event, input) => {
+    if (input.control) {
+      switch (input.key) {
+        case "+":
+        case "=":
+          event.preventDefault();
+          window.webContents.setZoomLevel(window.webContents.getZoomLevel() + 1);
+          break;
+        case "-":
+          event.preventDefault();
+          window.webContents.setZoomLevel(window.webContents.getZoomLevel() - 1);
+          break;
+        case "0":
+          event.preventDefault();
+          window.webContents.setZoomLevel(0);
+          break;
+      }
+    }
+  });
+
   void window.loadURL(config.url);
 
   return window;
