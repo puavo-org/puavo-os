@@ -39,13 +39,13 @@ const modules = [
 ];
 
 function dispatchClientNotification(
-  window: BrowserWindow,
+  win: BrowserWindow,
   type: string,
   ...args: any[]
 ): void {
   logger.debug(`Dispatching client notification: ${type}`);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  window.webContents.send(type, ...args);
+  win.webContents.send(type, ...args);
 }
 
 function registerNotifyHandlers(module: Module): void {
@@ -81,11 +81,11 @@ function registerQueryHandlers(module: Module): void {
   }
 }
 
-function registerModules(window: BrowserWindow): void {
+function registerModules(win: BrowserWindow): void {
   for (const module of modules) {
     module.dispatchClientNotification = dispatchClientNotification.bind(
       null,
-      window
+      win
     );
     registerNotifyHandlers(module);
     registerQueryHandlers(module);
@@ -93,7 +93,7 @@ function registerModules(window: BrowserWindow): void {
 }
 
 function createWindow(): BrowserWindow {
-  const window = new BrowserWindow({
+  const win = new BrowserWindow({
     width: config.width,
     height: config.height,
     frame: true,
@@ -114,7 +114,7 @@ function createWindow(): BrowserWindow {
     },
   });
 
-  window.webContents.on(
+  win.webContents.on(
     'console-message',
     (_event, _level, message, line, sourceId) =>
       logger.debug(
@@ -122,7 +122,7 @@ function createWindow(): BrowserWindow {
       )
   );
 
-  window.webContents.on(
+  win.webContents.on(
     'did-fail-load',
     (_event, errorCode, errorDescription, validatedURL) => {
       logger.error(
@@ -131,33 +131,33 @@ function createWindow(): BrowserWindow {
     }
   );
 
-  window.webContents.on('did-finish-load', () => {
+  win.webContents.on('did-finish-load', () => {
     logger.info(`Page finished loading: ${config.url}`);
   });
 
-  window.webContents.on("before-input-event", (event, input) => {
+  win.webContents.on("before-input-event", (event, input) => {
     if (input.control) {
       switch (input.key) {
         case "+":
         case "=":
           event.preventDefault();
-          window.webContents.setZoomLevel(window.webContents.getZoomLevel() + 1);
+          win.webContents.setZoomLevel(win.webContents.getZoomLevel() + 1);
           break;
         case "-":
           event.preventDefault();
-          window.webContents.setZoomLevel(window.webContents.getZoomLevel() - 1);
+          win.webContents.setZoomLevel(win.webContents.getZoomLevel() - 1);
           break;
         case "0":
           event.preventDefault();
-          window.webContents.setZoomLevel(0);
+          win.webContents.setZoomLevel(0);
           break;
       }
     }
   });
 
-  void window.loadURL(config.url);
+  void win.loadURL(config.url);
 
-  return window;
+  return win;
 }
 
 app.on(
