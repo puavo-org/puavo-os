@@ -26,6 +26,8 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
+bootserver_address=$(cat /run/puavo/nbd-server 2>/dev/null) || true
+
 usage() {
   cat <<EOF
 $(basename $0) [--force] [--normal] [device]
@@ -85,12 +87,21 @@ case "$target_disk" in
     fi
 
     if ("$useforce"); then
-      time --format "Time elapsed: %E" nvme format --force $erase_mode "$target_disk"
+      time --format "Time elapsed: %E" nvme format --force $erase_mode "$target_disk" || exit 2
     else
-      time --format "Time elapsed: %E" nvme format $erase_mode "$target_disk"
+      time --format "Time elapsed: %E" nvme format $erase_mode "$target_disk" || exit 2
     fi
     ;;
   *)
+    if [ -n "$bootserver_address" ]; then
+      if [ -n "$(lsusb | grep "ID 0bda:8153")" ]; then
+        ### Refuse to even try to erase a SATA disk when we are netbooted and have a certain Realtek USB NIC attached.
+        ### Exit with error code 3.
+        echo "Likely trying to erase SATA disk with a device combination that won't work. Aborting."
+        exit 3
+      fi
+    fi
+
     if udevadm info --query=all --name="$target_disk" | grep 'ID_BUS=usb'; then
       echo 'Selected disk is a USB device, I do not support them. Aborting..' >&2
       exit 1
@@ -137,6 +148,13 @@ case "$target_disk" in
       fi
 
       rtcwake -m mem -s 5
+
+      if ! hdparm -I "$target_disk" | grep -P "not\tfrozen" >&2; then
+        echo 'Disk is still in frozen state. Aborting Secure Erase.' >&2
+        echo 'You could either, run Secure Erase from device BIOS (if supported natively),\n' >&2
+        echo 'or use blkdiscard and then fill the drive with junk.' >&2
+        exit 2
+      fi
     fi
 
     echo 'Disk is not in frozen state, we can continue.'
