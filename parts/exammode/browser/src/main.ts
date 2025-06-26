@@ -28,14 +28,7 @@ const config: BrowserConfig = {
 // Configure logger based on debug switch
 logger.setDebugEnabled(config.debug);
 
-const modules = [
-  new AudioModule(),
-  new BrightnessModule(),
-  new EncryptionModule(),
-  new SessionModule(),
-  new ShutdownModule(),
-  new SurveillanceModule(),
-];
+const modules: Array<Module> = [];
 
 function dispatchClientNotification(
   win: BrowserWindow,
@@ -80,6 +73,21 @@ function registerQueryHandlers(module: Module): void {
 }
 
 function registerModules(win: BrowserWindow): void {
+  if (!config.kiosk) {
+    return;
+  }
+
+  logger.info('Registering modules...');
+
+  modules.push(
+    new AudioModule(),
+    new BrightnessModule(),
+    new EncryptionModule(),
+    new SessionModule(),
+    new ShutdownModule(),
+    new SurveillanceModule()
+  );
+
   for (const module of modules) {
     module.dispatchClientNotification = dispatchClientNotification.bind(
       null,
