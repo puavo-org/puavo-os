@@ -1,4 +1,4 @@
-export type ClientNotificationHandler = (type: string, ...args: any[]) => void;
+export type ClientNotificationHandler = (type: string, body: any) => void;
 export type NotifyHandler = (...args: any[]) => Promise<void>;
 export type QueryHandler = (...args: any[]) => Promise<any>;
 

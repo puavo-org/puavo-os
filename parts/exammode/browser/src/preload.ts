@@ -16,14 +16,11 @@ window.chrome.webview.hostObjects.windowsKioskAPI = api;
 
 logger.info('Kiosk API registered!');
 
-// TODO: Modularize
-ipcRenderer.on('brightnessChanged', (_event, brightness: number) => {
-  logger.debug('Brightness changed:', brightness);
-  api.emit(
-    'ClientNotification',
-    JSON.stringify({
-      Type: 'BrightnessChanged',
-      Body: brightness,
-    })
-  );
-});
+ipcRenderer.on(
+  'dispatchClientNotification',
+  (_event, type: string, body: any) => {
+    logger.debug('Dispatching client notification:', type);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    api.emit('ClientNotification', JSON.stringify({ Type: type, Body: body }));
+  }
+);

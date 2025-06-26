@@ -41,11 +41,10 @@ const modules = [
 function dispatchClientNotification(
   win: BrowserWindow,
   type: string,
-  ...args: any[]
+  body: any
 ): void {
-  logger.debug(`Dispatching client notification: ${type}`);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  win.webContents.send(type, ...args);
+  logger.debug(`Relaying client notification: ${type}`);
+  win.webContents.send('dispatchClientNotification', type, body);
 }
 
 function registerNotifyHandlers(module: Module): void {

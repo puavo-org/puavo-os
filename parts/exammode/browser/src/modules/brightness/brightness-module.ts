@@ -23,7 +23,7 @@ export class BrightnessModule implements Module {
       const brightness = await this.getBrightness();
       logger.debug(`Brightness changed externally: ${brightness}%`);
 
-      this.dispatchClientNotification('brightnessChanged', brightness);
+      this.dispatchClientNotification('BrightnessChanged', brightness);
     } catch (exception) {
       logger.error('Failed to notify brightness change:', exception);
     }
