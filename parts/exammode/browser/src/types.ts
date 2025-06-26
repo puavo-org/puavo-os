@@ -1,3 +1,11 @@
+export interface BrowserConfig {
+  url: string;
+  width: number;
+  height: number;
+  kiosk: boolean;
+  debug: boolean;
+}
+
 export type PulseAudioSinkState = 'RUNNING' | 'IDLE' | 'SUSPENDED';
 
 export type AudioDeviceFlow = 'input' | 'output';

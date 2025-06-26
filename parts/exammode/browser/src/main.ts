@@ -6,23 +6,22 @@ import { SessionModule } from './modules/session/session-module';
 import { AudioModule } from './modules/audio/audio-module';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import type { Module } from './modules/module';
+import type { BrowserConfig } from './types';
 import { logger } from './utils/logger';
-import * as path from 'path';
+import path from 'path';
 
 const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;
 const DEFAULT_PAGE_URL = 'https://example.com';
 
-const config = {
+const config: BrowserConfig = {
   // TODO: Redirect to a custom page
-  url:
-    (app.commandLine.getSwitchValue('url') || process.argv[2]) ??
-    DEFAULT_PAGE_URL,
+  url: app.commandLine.getSwitchValue('url') ?? DEFAULT_PAGE_URL,
   width:
     parseInt(app.commandLine.getSwitchValue('width')) || DEFAULT_WINDOW_WIDTH,
   height:
     parseInt(app.commandLine.getSwitchValue('height')) || DEFAULT_WINDOW_HEIGHT,
-  fullscreen: app.commandLine.hasSwitch('fullscreen'),
+  kiosk: app.commandLine.hasSwitch('kiosk'),
   debug: app.commandLine.hasSwitch('dev'),
 };
 
@@ -95,9 +94,9 @@ function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: config.width,
     height: config.height,
-    frame: true,
+    frame: !config.kiosk,
+    kiosk: config.kiosk,
     autoHideMenuBar: true,
-    fullscreen: config.fullscreen,
     webPreferences: {
       devTools: config.debug,
       // NOTE:
@@ -108,8 +107,8 @@ function createWindow(): BrowserWindow {
       // can be resolved, we can enable proper security (contextIsolation: true,
       // nodeIntegration: false) without major refactoring.
       nodeIntegration: true, // IPC access
-      contextIsolation: false, // For WebSocket fix
-      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: !config.kiosk, // For WebSocket fix
+      ...(config.kiosk ? { preload: path.join(__dirname, 'preload.js') } : {}),
     },
   });
 
