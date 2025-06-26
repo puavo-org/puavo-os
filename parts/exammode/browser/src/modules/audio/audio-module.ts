@@ -33,11 +33,24 @@ export class AudioModule implements Module {
     return parseFloat(volume_percent_string);
   }
 
-  createOutputDeviceFromSink(sink: PulseAudioSink): AudioDevice {
+  async getDefaultSinkName(): Promise<string> {
+    try {
+      const output = await run('pactl get-default-sink');
+      return output.trim();
+    } catch (error) {
+      logger.error('Failed to fetch the default sink:', error);
+      throw error;
+    }
+  }
+
+  createOutputDeviceFromSink(
+    sink: PulseAudioSink,
+    defaultSinkName: string
+  ): AudioDevice {
     return {
       id: sink.name,
       displayName: sink.description ?? sink.name,
-      active: sink.state === 'RUNNING',
+      active: sink.name === defaultSinkName,
       flow: 'output',
       volume: this.getSinkVolume(sink),
       mute: sink.mute || false,
@@ -46,10 +59,12 @@ export class AudioModule implements Module {
 
   async getAudioDevices(): Promise<AudioDevice[]> {
     const sinks = await this.getSinks();
+    const defaultSinkName = await this.getDefaultSinkName();
+    logger.debug('Default sink name:', defaultSinkName);
     const audioDevices: AudioDevice[] = [];
 
     for (const sink of sinks) {
-      audioDevices.push(this.createOutputDeviceFromSink(sink));
+      audioDevices.push(this.createOutputDeviceFromSink(sink, defaultSinkName));
     }
 
     logger.debug('Audio devices:', audioDevices);
