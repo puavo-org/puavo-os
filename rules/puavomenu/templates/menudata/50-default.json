@@ -777,6 +777,13 @@
                 "id": "nextcloud-talk-desktop"
             }
         },
+        "next-exam-puavo-teacher": {
+            "tags": "default, education",
+            "condition": "only_teacher_admin",
+            "puavopkg": {
+                "id": "next-exam-puavo-teacher"
+            }
+        },
         "Nightcode": {
             "name": "Nightcode",
             "tags": "default",
@@ -2049,7 +2056,8 @@
                 "org.molview",
                 "mandelbulber2",
                 "org.qgis.qgis",
-                "anki"
+                "anki",
+                "next-exam-puavo-teacher"
             ]
         },
         "menu-environment": {
