@@ -36,6 +36,8 @@ mode=${1:-}
 
 case "$mode" in
   restoredisk)
+    pde_error_code="0"
+    blkd_error_code="0"
     if ! restore_image=$(ask_restore_image); then
       echo 'No images to restore from' >&2
       exit 1
@@ -47,7 +49,22 @@ case "$mode" in
     fi
     echo "Chosen << ${target_disk} >>"
     echo "Secure Erasing the disk first, please wait."
-    /usr/sbin/puavo-disk-erase --force --normal "$target_disk"
+
+    # We want to try and maintain data security as well as possible, so erase disk first before writing, even if it's empty already.
+    # Always prefer the most secure way of erasing. In case that fails, fallback to less secure erasing, one at a time until something works.
+    # Try puavo-disk-erase first.
+    /usr/sbin/puavo-disk-erase --force --normal "$target_disk" || pde_error_code=$?
+
+    if [ "${pde_error_code}" -ne 0 ]; then
+      printf "%s\n%s\n" "puavo-disk-erase encountered some issue and exited with ${pde_error_code}." "Fallback to blkdiscard (Secure)"
+      # Try Secure blkdiscard, if that fails in any way, do a standard blkdiscard.
+      command time --format "Time elapsed: %E" /usr/sbin/blkdiscard --secure --force "/dev/$target_disk" || blkd_error_code=$?
+      if [ "${blkd_error_code}" -ne 0 ]; then
+        printf "%s\n%s\n" "blkdiscard (Secure) failed, error code ${blkd_error_code}." "Fallback to standard blkdiscard"
+        command time --format "Time elapsed: %E" /usr/sbin/blkdiscard --force "/dev/$target_disk"
+      fi
+      partprobe
+    fi
 
     # XXX some patch to ocs-sr for this would be nice
     # We must disable partition resizing to the LVM partitions because we
