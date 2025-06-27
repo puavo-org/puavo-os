@@ -104,6 +104,7 @@ function createWindow(): BrowserWindow {
     frame: !config.kiosk,
     kiosk: config.kiosk,
     autoHideMenuBar: true,
+    title: ' ', // Hide the title
     webPreferences: {
       devTools: config.debug,
       // NOTE:
