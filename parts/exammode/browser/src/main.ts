@@ -12,11 +12,10 @@ import path from 'path';
 
 const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;
-const DEFAULT_PAGE_URL = 'https://example.com';
+const DEFAULT_PAGE_URL = 'about:blank';
 
 const config: BrowserConfig = {
-  // TODO: Redirect to a custom page
-  url: app.commandLine.getSwitchValue('url') ?? DEFAULT_PAGE_URL,
+  url: app.commandLine.getSwitchValue('url') || DEFAULT_PAGE_URL,
   width:
     parseInt(app.commandLine.getSwitchValue('width')) || DEFAULT_WINDOW_WIDTH,
   height:
