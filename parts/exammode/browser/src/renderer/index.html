@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> </title>
+  <link rel="stylesheet" href="renderer.css">
+</head>
+
+<body class="browser">
+  <div class="toolbar">
+    <div class="navigation-buttons">
+      <button class="navigation-button" id="back-button" title="Go Back">
+        🡐
+      </button>
+      <button class="navigation-button" id="forward-button" title="Go Forward">
+        🡒
+      </button>
+    </div>
+
+    <button class="reload-button" id="reload-button" title="Reload Page">
+      ↻
+    </button>
+
+    <div class="address-bar-container">
+      <input
+        type="text"
+        class="address-bar"
+        id="address-bar"
+        placeholder="URL"
+        spellcheck="false"
+      />
+    </div>
+  </div>
+
+  <webview id='page' src='about:blank' allowpopups></webview>
+</body>
+
+</html>
