@@ -141,38 +141,6 @@ function createWindow(): BrowserWindow {
     logger.info(`Page finished loading: ${config.url}`);
   });
 
-  win.webContents.on('before-input-event', (event, input) => {
-    if (input.control) {
-      switch (input.key) {
-        case '+':
-        case '=':
-          event.preventDefault();
-          win.webContents.setZoomLevel(win.webContents.getZoomLevel() + 1);
-          break;
-        case '-':
-          event.preventDefault();
-          win.webContents.setZoomLevel(win.webContents.getZoomLevel() - 1);
-          break;
-        case '0':
-          event.preventDefault();
-          win.webContents.setZoomLevel(0);
-          break;
-        case 'ArrowLeft':
-          event.preventDefault();
-          if (win.webContents.canGoBack()) {
-            win.webContents.goBack();
-          }
-          break;
-        case 'ArrowRight':
-          event.preventDefault();
-          if (win.webContents.canGoForward()) {
-            win.webContents.goForward();
-          }
-          break;
-      }
-    }
-  });
-
   win.maximize();
 
   void win.loadURL(config.url);
