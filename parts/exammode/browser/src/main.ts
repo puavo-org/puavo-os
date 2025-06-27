@@ -6,6 +6,7 @@ import { SessionModule } from './modules/session/session-module';
 import { AudioModule } from './modules/audio/audio-module';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import type { BrowserConfig } from './types/types';
+import type { LoadFileOptions } from 'electron';
 import type { Module } from './modules/module';
 import { logger } from './utils/logger';
 import path from 'path';
@@ -116,6 +117,7 @@ function createWindow(): BrowserWindow {
       // nodeIntegration: false) without major refactoring.
       nodeIntegration: true, // IPC access
       contextIsolation: !config.kiosk, // For WebSocket fix
+      webviewTag: !config.kiosk,
       ...(config.kiosk ? { preload: path.join(__dirname, 'preload.js') } : {}),
     },
   });
@@ -143,7 +145,18 @@ function createWindow(): BrowserWindow {
 
   win.maximize();
 
-  void win.loadURL(config.url);
+  if (config.kiosk) {
+    void win.webContents.loadURL(config.url);
+  } else {
+    logger.info(`Loading renderer with URL: ${config.url}`);
+
+    const loadPath = path.resolve(__dirname, 'renderer', 'index.html');
+    const loadOptions: LoadFileOptions = {
+      query: { url: config.url },
+    };
+
+    void win.webContents.loadFile(loadPath, loadOptions);
+  }
 
   return win;
 }
