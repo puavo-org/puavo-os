@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -T
+#!/usr/bin/ruby
 
 require 'fileutils'
 require 'getoptlong'
@@ -12,8 +12,7 @@ def check_permissions
 
   return true if ENV['SUDO_USER'] == 'root'
 
-  sudo_user = "#{ ENV['SUDO_USER'] }".untaint
-  puavo_desktop_path = "/var/lib/puavo-desktop/users/#{ sudo_user }/puavo_session.json"
+  puavo_desktop_path = "/var/lib/puavo-desktop/users/#{ ENV['SUDO_USER'] }/puavo_session.json"
 
   begin
     parsed = JSON.parse( IO.read(puavo_desktop_path) )
@@ -28,12 +27,12 @@ def check_permissions
   end
 
   user = parsed['user']
-  unless user.has_key?('user_type') && user['user_type'].kind_of?(String) then
-    warn "No user type (String) found in #{ puavo_desktop_path }"
+  unless user.has_key?('user_roles') && user['user_roles'].kind_of?(Array) then
+    warn "No user roles found in #{ puavo_desktop_path }"
     return false
   end
 
-  return (user['user_type'] == 'admin')
+  return user['user_roles'].include?('admin')
 end
 
 unless check_permissions() then

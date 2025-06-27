@@ -135,8 +135,14 @@ export default class DashToPanelExtension extends Extension {
     // XXX should probably check exam_session_info contents in some way?
     exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
 
-    let control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
-                           '    |    ' + _('press F11 to toggle fullscreen');
+    if (exam_session_info['type'] === 'next-exam-session') {
+      let control_text = _('Next-Exam')
+    } else {
+      let control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
+                           '    |    ' + _('press F11 to toggle fullscreen') +
+                           '    |    ' + _('ctrl + arrow keys to go back/forward');
+    }
+
     this.control_info_label = new St.Label({
                                 text: control_text,
                                 y_align: Clutter.ActorAlign.CENTER,

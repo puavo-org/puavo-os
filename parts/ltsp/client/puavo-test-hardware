@@ -361,28 +361,41 @@ test_mouse() {
 }
 
 test_audio() {
-  local alsadev
+  local alsacard alsamicdev alsaspkdev alsavolume
+  alsacard='PCH'
+  alsamicdev='default'
+  alsaspkdev='default'
+
+  ### Some device model/gen specific configurations
   case "$(product_name)" in
-    ### Use different alsadev value if device is G1 or G2.
+    "HP EliteBook 830 G6"|"HP EliteBook 840 G6"|"HP EliteBook 850 G6" )
+      ### With these, speaker test works on G6 devices. Mic test doesn't work just yet, but maybe soon.
+      alsacard='0'
+      alsavolume="95%"
+      ;;
     "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
-      alsadev='hw:1,0'
-      ### Let's also raise the volume a bit, since G1/G2 speakers seem to be quieter than newer gen.
-      amixer --card 'PCH' set 'Master' 85%
+      alsaspkdev='hw:1,0'
+      alsavolume="85%"
       ;;
     *)
-      ### Let's just use the system default for all other models.
-      alsadev='default'
+      ### Use the defaults specified above for all other models + settings that don't need to be modified
       ;;
   esac
 
   clear
 
+  ### Use the default volume the system has (that usually works fine),
+  ### unless 'alsavolume' is set (when a device is known to have very low volume by default).
+  if [ -n "${alsavolume}" ]; then
+    amixer --card "${alsacard}" set 'Master' ${alsavolume}
+  fi
+
   ### On some devices, VUMeter does not register changes in audio levels if we play the test with normal sensitivity. Probably something to do with the microphones location.
   ### We do not want to break our ears by boosting the audio itself, so lets just boost microphone input by a couple levels (a few dozen dB).
-  amixer --card 'PCH' set 'Internal Mic Boost' 2
-  aplay --device="${alsadev}" \
+  amixer --card "${alsacard}" set 'Internal Mic Boost' 2
+  aplay --device="${alsaspkdev}" \
         /usr/share/sounds/puavo/speakertest.wav & \
-  arecord --vumeter=stereo -f cd -d 4 --device="${alsadev}" /dev/null && \
+  arecord --vumeter=stereo -f cd -d 4 --device="${alsamicdev}" /dev/null && \
   echo 'Recording finished.'
 
   sleep 2

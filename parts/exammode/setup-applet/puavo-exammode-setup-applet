@@ -2,23 +2,26 @@
 
 import dbus
 import dbus.mainloop.glib
+import dbus.service
 import getpass
 import gettext
 import gi
 import json
 import os
+import re
 import signal
+import subprocess
 import sys
 import syslog
+
+os.environ['GDK_DPI_SCALE'] = '1.5'
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
+gi.require_version('Soup', '2.4')
 
-from gi.repository import AyatanaAppIndicator3
-from gi.repository import GLib
-from gi.repository import Gtk 
-from gi.repository import Notify
+from gi.repository import AyatanaAppIndicator3, Gdk, GLib, Gtk, Notify, Soup
 
 gettext.bindtextdomain('puavo-exammode-setup-applet', '/usr/share/locale')
 gettext.textdomain('puavo-exammode-setup-applet')
@@ -28,17 +31,408 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
 
+
+def puavoconf_get(puavoconf_key):
+  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                   .decode('utf-8')
+
+
+class JoinChoice():
+  DEFAULT_JOIN_SENSITIVITY = False
+
+  def __init__(self, chooser):
+    self.chooser = chooser
+    self.label = Gtk.Label(label=self.JOIN_LABEL)
+    self.join_button = Gtk.Button(label=self.BUTTON_LABEL,
+                                  sensitive=self.DEFAULT_JOIN_SENSITIVITY)
+    self.join_button.set_tooltip_text(self.BUTTON_TOOLTIP)
+    self.join_button.connect('clicked', self.on_join_clicked)
+
+
+  def show_confirmation(self, info):
+    """Show a confirmation dialog before joining an exam."""
+    primary_text = self.join_info(info)
+    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session.')
+
+    win = self.chooser.window
+    dialog = Gtk.MessageDialog(transient_for=win, modal=True,
+        message_type=Gtk.MessageType.QUESTION,
+        buttons=Gtk.ButtonsType.OK_CANCEL, text=primary_text)
+    dialog.format_secondary_text(secondary_text)
+    label = dialog.get_message_area().get_children()[0]
+    label.set_line_wrap(False)
+    label.set_max_width_chars(-1)
+
+    response = dialog.run()
+    dialog.destroy()
+
+    self.chooser.check_joins(False)
+
+    if response == Gtk.ResponseType.OK:
+      win.hide()
+      return True
+
+    return False
+
+
+
+class UrlInterface(JoinChoice):
+  BUTTON_TOOLTIP = _tr('Use the Alt key to override the URL check')
+  ENTRY_ENABLED  = True
+
+  def __init__(self, chooser):
+    super().__init__(chooser)
+
+    self.checked = False
+    self.joinability_id = None
+    self.soup_message = None
+    self.soup_session = Soup.Session()
+    self.target_url = None
+
+    self.entry = Gtk.Entry(placeholder_text=self.ENTRY_PLACEHOLDER)
+    if not self.ENTRY_ENABLED:
+      self.entry.set_editable(False)
+      self.entry.set_sensitive(False)
+    self.entry.set_hexpand(True)
+    self.entry.set_tooltip_text(self.ENTRY_TOOLTIP)
+    self.entry.connect('activate', self.on_join_clicked)
+    self.entry.connect('changed', self.on_entry_changed)
+
+
+  def attach_to_grid(self, grid, row):
+    grid.attach(self.label,       0, row, 1, 1)
+    grid.attach(self.entry,       1, row, 1, 1)
+    grid.attach(self.join_button, 2, row, 1, 1)
+
+
+  def join_info(self, url):
+    return _tr('Do you want to join the exam?') \
+             + ' ' + f'{ self.EXAM_TYPE } – { url }'
+
+
+  def join_button_override(self, override_state):
+    """Override the join button state based on the Alt key."""
+    if override_state:
+      self.join_button.set_sensitive(bool(self.target_url))
+    else:
+      self.join_button.set_sensitive(self.checked)
+
+
+  def on_join_clicked(self, button):
+    if self.show_confirmation(self.target_url):
+      self.chooser.start_url_session(self.target_url)
+
+
+  def on_entry_changed(self, entry):
+    self.checked = False
+    self.join_button.set_sensitive(False)
+    text = self.entry.get_text().strip()
+    self.target_url = self.convert_entry_to_url(text)
+    if self.joinability_id:
+      GLib.source_remove(self.joinability_id)
+      self.joinability_id = None
+    if self.target_url:
+      self.joinability_id = GLib.timeout_add(500, self.check_joinability)
+
+
+  def check_joinability(self):
+    self.joinability_id = None
+    self.check_url(self.target_url)
+
+
+  def check_url(self, url):
+    if self.soup_message:
+      self.soup_session.cancel_message(self.soup_message,
+                                       Soup.KnownStatusCode.CANCELLED)
+      self.soup_message = None
+
+    try:
+      msg = Soup.Message.new('HEAD', url)
+      self.soup_message = msg
+      self.soup_session.queue_message(msg, self.on_url_checked, url)
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+                    'error in starting url check with URL %s: %s' % (url, e))
+
+
+  def on_url_checked(self, session, msg, url):
+    if msg.status_code != Soup.KnownStatusCode.OK:
+      syslog.syslog(syslog.LOG_INFO,
+                    'url %s failed a check: %s' % (url, msg.reason_phrase))
+      return
+    self.checked = True
+    self.join_button.set_sensitive(True)
+
+
+
+class AbittiUrl(UrlInterface):
+  BUTTON_LABEL      = _tr('Join the Abitti exam')
+  ENTRY_PLACEHOLDER = _tr('Input Abitti code')
+  ENTRY_TOOLTIP     = _tr('Enter the Abitti code here')
+  EXAM_TYPE         = _tr('Abitti Exam')
+  JOIN_LABEL        = _tr('Abitti code:')
+
+
+  def convert_entry_to_url(self, text):
+    if not text:
+      return None
+    match = re.match(r'^([a-z]+) ([a-z]+)$', text)
+    if match:
+      return f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010'
+
+    return None
+
+
+class FreeUrl(UrlInterface):
+  BUTTON_LABEL      = _tr('Join the URL exam')
+  ENTRY_PLACEHOLDER = _tr('Input exam URL')
+  ENTRY_TOOLTIP     = _tr('Enter the exam URL here')
+  EXAM_TYPE         = _tr('URL')
+  JOIN_LABEL        = _tr('Exam URL:')
+
+
+  def convert_entry_to_url(self, text):
+    # check that text contains something other than whitespace
+    url = text.strip()
+    if not url:
+      return None
+    url_with_scheme \
+      = ('https://%s' % url) if not re.match(r'^https?://', url) else url
+    return url_with_scheme
+
+
+class ClipboardUrl(UrlInterface):
+  BUTTON_LABEL      = _tr('Join the exam on a clipboard URL')
+  ENTRY_ENABLED     = False
+  ENTRY_PLACEHOLDER = _tr('Use the clipboard to get an URL here')
+  ENTRY_TOOLTIP     = ENTRY_PLACEHOLDER
+  EXAM_TYPE         = _tr('URL')
+  JOIN_LABEL        = _tr('URL from clipboard:')
+
+  def __init__(self, chooser):
+    super().__init__(chooser)
+    self.clipboard_main = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+    self.clipboard_main.connect('owner-change', self.on_clipboard_main_change)
+    self.clipboard_primary = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
+    self.clipboard_primary.connect('owner-change',
+                                   self.on_clipboard_primary_change)
+
+
+  def convert_entry_to_url(self, text):
+    if not text:
+      return None
+    stripped_text = text.strip()
+    if re.match(r'^https?://', stripped_text):
+       return stripped_text
+    return None
+
+
+  def set_url_active(self, clipboard, event, can_set_empty):
+    clipboard_text = clipboard.wait_for_text()
+    url = self.convert_entry_to_url(clipboard_text)
+    if url:
+      self.entry.set_text(url)
+    elif can_set_empty:
+      self.entry.set_text('')
+    else:
+      return
+
+    self.on_entry_changed(self.entry)
+
+
+  def on_clipboard_main_change(self, clipboard, event):
+    self.set_url_active(clipboard, event, True)
+
+
+  def on_clipboard_primary_change(self, clipboard, event):
+    # Use False for can_set_empty, as we want to keep the previous
+    # clipboard URL in this case (main clipboard is preferred over primary
+    # clipboard).
+    self.set_url_active(clipboard, event, False)
+
+
+class NextExamNotInstalled(Exception):
+  pass
+
+
+class NextExam(JoinChoice):
+  DEFAULT_JOIN_SENSITIVITY = True
+
+  BUTTON_LABEL   = _tr('Use Next-Exam to join the exam')
+  BUTTON_TOOLTIP = BUTTON_LABEL
+  EXAM_TYPE      = 'Next-Exam'
+  JOIN_LABEL     = _tr('Next-Exam')
+  NEXTEXAM_PATH  = '/opt/next-exam-puavo-student'
+
+  def __init__(self, chooser):
+    if not os.path.exists(self.NEXTEXAM_PATH):
+      raise NextExamNotInstalled(f'{ self.NEXTEXAM_PATH } not found')
+
+    super().__init__(chooser)
+    self.join_button.set_hexpand(True)
+
+
+  @classmethod
+  def create(cls, chooser):
+    try:
+      return NextExam(chooser)
+    except NextExamNotInstalled as e:
+      errmsg = 'Next Exam Student app not installed,' \
+                 + ' can not enable it as a feature'
+      syslog.syslog(syslog.LOG_WARNING, errmsg)
+      return None
+
+
+  def attach_to_grid(self, grid, row):
+    grid.attach(self.label,       0, row, 1, 1)
+    grid.attach(self.join_button, 1, row, 2, 1)
+
+
+  def join_info(self, info):
+    return _tr('Do you want to use Next-Exam to join the exam?')
+
+
+  def on_join_clicked(self, button):
+    if self.show_confirmation(''):
+      self.chooser.start_nextexam_session()
+
+
+class ExamChooser():
+  def __init__(self, applet):
+    self.applet      = applet
+    self.next_exam   = None
+    self.url_objects = []
+    self.window      = None
+
+    setup_features = puavoconf_get('puavo.exammode.setup.features').split()
+
+    for feature in setup_features:
+      if feature == 'abitti2-code':
+        self.abitti = AbittiUrl(self)
+        self.url_objects.append(self.abitti)
+      elif feature == 'free_url':
+        self.free_url = FreeUrl(self)
+        self.url_objects.append(self.free_url)
+      elif feature == 'clipboard_url':
+        self.clipboard_url = ClipboardUrl(self)
+        self.url_objects.append(self.clipboard_url)
+      elif feature == 'next-exam':
+        self.next_exam = NextExam.create(self)
+      else:
+        syslog.syslog(syslog.LOG_WARNING,
+                      'unknown feature in puavo.exammode.setup.features: %s' \
+                        % feature)
+
+    if not (self.url_objects or self.next_exam):
+      syslog.syslog(syslog.LOG_ERR,
+                    'no features enabled, not creating a chooser window')
+      return
+
+    if self.next_exam and not self.url_objects:
+      # if Next-Exam is the only option, we can skip the chooser window
+      self.start_nextexam_session()
+      return
+
+    self.window = Gtk.Window()
+    self.window.connect('delete-event', self.on_delete_event)
+    self.window.set_default_size(1000, 40)
+    self.window.set_resizable(False)
+    self.window.set_title(_tr('Join an exam'))
+    self.window.connect('key-press-event',   self.on_key_event)
+    self.window.connect('key-release-event', self.on_key_event)
+
+    main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                       margin=12)
+
+    join_grid = Gtk.Grid()
+    join_grid.set_column_spacing(6)
+    join_grid.set_row_spacing(6)
+    join_grid.set_margin_top(6)
+    join_grid.set_margin_bottom(6)
+    join_grid.set_margin_start(6)
+    join_grid.set_margin_end(6)
+
+    next_row = 0
+    for url_object in self.url_objects:
+      url_object.attach_to_grid(join_grid, next_row)
+      next_row += 1
+
+    if self.next_exam:
+      separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+      join_grid.attach(separator, 0, next_row, 3, 1)
+      next_row += 1
+      self.next_exam.attach_to_grid(join_grid, next_row)
+
+    main_box.add(join_grid)
+    self.window.add(main_box)
+
+
+  def check_joins(self, alt_pressed):
+    for url_interface in self.url_objects:
+      url_interface.join_button_override(alt_pressed)
+
+
+  def on_key_event(self, widget, event):
+    if not event.keyval in [ Gdk.KEY_Alt_L, Gdk.KEY_Alt_R ]:
+      return
+    alt_pressed = (event.type == Gdk.EventType.KEY_PRESS)
+    self.check_joins(alt_pressed)
+
+
+  def on_delete_event(self, widget, event):
+    self.window.hide()
+    return True  # Prevents the window from being destroyed
+
+
+  def start_nextexam_session(self):
+    self.applet.start_nextexam_session()
+
+
+  def start_url_session(self, url):
+    self.applet.start_url_session(url)
+
+
+  def show(self):
+    if not self.window:
+      syslog.syslog(syslog.LOG_ERR,
+                    'ExamChooser window is not initialized, cannot show it')
+      return
+    self.window.show_all()
+    self.window.present()
+
+
+class ExamSetup(dbus.service.Object):
+  def __init__(self, bus, applet):
+    object_path = '/org/puavo/ExamSetup'
+    super().__init__(bus, object_path)
+    self.applet = applet
+
+  @dbus.service.method('org.puavo.ExamSetup', in_signature='', out_signature='')
+  def StartFree(self):
+    self.applet.start_free_session()
+
+
+  @dbus.service.method('org.puavo.ExamSetup', in_signature='', out_signature='')
+  def StartUI(self):
+    self.applet.show_chooser()
+
+
 class PuavoExamModeSetupApplet:
   def __init__(self):
     Notify.init('puavo-exammode-setup-applet')
 
-    self.dbus_iface = self.get_dbus_iface()
-    self.dbus_iface.connect_to_signal('ExamsAvailable', self.exams_available)
+    self.user_service_dbus_name = self.get_user_dbus_service()
+
+    self.sys_dbus_iface = self.get_sys_dbus_iface()
+    self.sys_dbus_iface.connect_to_signal('ExamsAvailable',
+                                          self.exams_available)
 
     self.indicator \
       = AyatanaAppIndicator3.Indicator.new('puavo-exammode-setup-applet',
           ICON_PATH, AyatanaAppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
     self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+
+    self.chooser = ExamChooser(self)
 
     self.available_exams = []
     self.update_menu()
@@ -46,7 +440,14 @@ class PuavoExamModeSetupApplet:
     self.register_to_exam_service()
 
 
-  def get_dbus_iface(self):
+  def get_user_dbus_service(self):
+    bus = dbus.SessionBus()
+    dbus_name = dbus.service.BusName('org.puavo.ExamSetup', bus=bus)
+    ExamSetup(bus, self)
+    return dbus_name
+
+
+  def get_sys_dbus_iface(self):
     bus = dbus.SystemBus()
     dbusobj = bus.get_object('org.puavo.Exam', '/exammode')
     return dbus.Interface(dbusobj, dbus_interface='org.puavo.Exam.exammode')
@@ -66,13 +467,36 @@ class PuavoExamModeSetupApplet:
                     'error in looking up user information: %s' % e)
       sys.exit(1)
 
-    self.dbus_iface.Register(username, lang_locale, krb5ccname_env,
-                             reply_handler=lambda: None,
-                             error_handler=self.register_dbus_error_handler)
+    self.sys_dbus_iface.Register(username, lang_locale, krb5ccname_env,
+                                 reply_handler=lambda: None,
+                                 error_handler=self.register_dbus_error_handler)
 
 
   def register_dbus_error_handler(self, dbusexception):
     raise Exception('unexpected dbus error in register, that is bad: %s' \
+                       % dbusexception)
+
+
+  def start_free_session(self):
+    self.sys_dbus_iface.StartFreeSession(
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
+  def start_nextexam_session(self):
+    self.sys_dbus_iface.StartNextExamSession(
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
+  def start_url_session(self, url):
+    self.sys_dbus_iface.StartSessionWithUrl(url,
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
+  def start_session_dbus_error_handler(self, dbusexception):
+    raise Exception('unexpected dbus error in start session, that is bad: %s' \
                        % dbusexception)
 
 
@@ -83,11 +507,11 @@ class PuavoExamModeSetupApplet:
       header = Gtk.MenuItem(label=_tr('Available exams:'))
       header.set_sensitive(False)
       header.show()
-      self.menu.append(header)
+      self.menu.add(header)
 
       separator = Gtk.SeparatorMenuItem()
       separator.show()
-      self.menu.append(separator)
+      self.menu.add(separator)
 
       self.menuitems = []
       for exam in self.available_exams:
@@ -97,7 +521,7 @@ class PuavoExamModeSetupApplet:
         exam_choice.set_sensitive(True)
         exam_choice.connect('activate', lambda w: self.choose_exam(exam_id, w))
         exam_choice.show()
-        self.menu.append(exam_choice)
+        self.menu.add(exam_choice)
 
       self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
       self.indicator.set_menu(self.menu)
@@ -107,19 +531,12 @@ class PuavoExamModeSetupApplet:
       self.indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.PASSIVE)
 
 
+  def show_chooser(self):
+    self.chooser.show()
+
+
   def choose_exam(self, exam_id, widget):
-    self.dbus_iface.StartSession(exam_id,
-      reply_handler=lambda: None,
-      error_handler=self.start_session_dbus_error_handler)
-
-
-  def start_session_dbus_error_handler(self, dbusexception):
-    raise Exception('unexpected dbus error in start session, that is bad: %s' \
-                       % dbusexception)
-
-
-  def main(self):
-    Gtk.main()
+    self.start_session(exam_id)
 
 
   def exams_available(self, examinfo_json):
@@ -159,6 +576,10 @@ class PuavoExamModeSetupApplet:
     except Exception as e:
       syslog.syslog(syslog.LOG_ERR,
                     'error in checking exams info: %s' % e)
+
+
+  def main(self):
+    Gtk.main()
 
 
 exitstatus = 0

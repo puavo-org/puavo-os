@@ -103,14 +103,15 @@ class Sidebar:
             "puavo.support.new_bugreport_url", "https://tuki.opinsys.fi"
         )
 
-        if self.__settings.user_type not in ("teacher", "admin"):
-            # For non-teachers and non-admins, don't show the "change someone
-            # else's password" tab on the password form. Not a very good
+        if set(self.__settings.user_roles) & set(["teacher", "admin"]):
+            # If the user is a teacher or an admin, show the "change someone
+            # else's password" tab on the password form.
+            self.__variables["password_tabs"] = ""
+        else:
+            # For others, hide the password tab.  Not a very good
             # protection, but it's not the only one we have and it will
             # filter out the most basic hacker wannabes.
             self.__variables["password_tabs"] = "&hidetabs"
-        else:
-            self.__variables["password_tabs"] = ""
 
     # Creates the user avatar button
     def __handle_avatar(self):
@@ -239,7 +240,7 @@ class Sidebar:
             ypos = self.__create_button(ypos, SB_BUTTONS["system_settings"])
             something = True
 
-        if self.__settings.is_user_primary_user or self.__settings.user_type == "admin":
+        if self.__settings.is_user_primary_user or "admin" in self.__settings.user_roles:
             if self.is_element_visible("laptop_settings"):
                 ypos = self.__create_button(ypos, SB_BUTTONS["laptop_settings"])
                 something = True
