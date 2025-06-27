@@ -4,7 +4,11 @@ import type {
   NotifyHandler,
   QueryHandler,
 } from '../module';
-import type { AudioDevice, PulseAudioSink, AudioDeviceFlow } from '../../types';
+import type {
+  AudioDevice,
+  PulseAudioSink,
+  AudioDeviceFlow,
+} from '../../types/types';
 import { logger } from '../../utils/logger';
 import { run } from '../../utils/shell';
 

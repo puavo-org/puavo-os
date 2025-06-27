@@ -5,8 +5,8 @@ import { ShutdownModule } from './modules/shutdown/shutdown-module';
 import { SessionModule } from './modules/session/session-module';
 import { AudioModule } from './modules/audio/audio-module';
 import { app, BrowserWindow, ipcMain } from 'electron';
+import type { BrowserConfig } from './types/types';
 import type { Module } from './modules/module';
-import type { BrowserConfig } from './types';
 import { logger } from './utils/logger';
 import path from 'path';
 

@@ -48,7 +48,10 @@
     "preserveConstEnums": true,
     "removeComments": false,
     "experimentalDecorators": false,
-    "emitDecoratorMetadata": false
+    "emitDecoratorMetadata": false,
+    
+    // Module resolution
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": [
     "src/**/*"
