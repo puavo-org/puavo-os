@@ -36,6 +36,16 @@
   --address-bar-focus-border-color: #808080;
 }
 
+/* Rotation animation for reload button */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 html {
   height: 100%;
 }
@@ -137,6 +147,11 @@ body {
 
 .address-bar::placeholder {
   color: var(--address-bar-placeholder-color);
+}
+
+.reload-button.loading > div {
+  animation: spin 0.25s linear infinite;
+  animation-delay: 0.25s;
 }
 
 .browser .navigation-button,
