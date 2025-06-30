@@ -159,8 +159,9 @@ export class ToolbarController {
   }
 
   private setLoading(isLoading: boolean): void {
-    document.body.classList.toggle('loading', isLoading);
+    this.reloadButton.classList.toggle('loading', isLoading);
     this.reloadButton.disabled = isLoading;
+    document.body.classList.toggle('loading', isLoading);
   }
 
   private updateAddressBar(url: string): void {
@@ -205,5 +206,26 @@ export class ToolbarController {
   reload(): void {
     this.pageView.reload();
     this.setLoading(true);
+  }
+
+  setNavigationVisibility(show: boolean): void {
+    if (this.backButton) {
+      this.backButton.style.display = show ? 'flex' : 'none';
+    }
+    if (this.forwardButton) {
+      this.forwardButton.style.display = show ? 'flex' : 'none';
+    }
+  }
+
+  setReloadButtonVisibility(show: boolean): void {
+    if (this.reloadButton) {
+      this.reloadButton.style.display = show ? 'block' : 'none';
+    }
+  }
+
+  setAddressBarVisiblity(show: boolean): void {
+    if (this.addressBar) {
+      this.addressBar.style.display = show ? 'flex' : 'none';
+    }
   }
 }

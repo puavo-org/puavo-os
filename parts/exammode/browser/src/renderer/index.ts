@@ -9,5 +9,14 @@ document.addEventListener('DOMContentLoaded', () => {
     throw new Error('Failed to find the toolbar');
   }
 
-  new ToolbarController(themeMediaQuery, toolbarElement);
+  const config = new URLSearchParams(window.location.search);
+
+  const showNavigation = config.get('showNavigation') !== 'false';
+  const showReload = config.get('showReload') !== 'false';
+  const showAddressBar = config.get('showAddressBar') !== 'false';
+
+  const controller = new ToolbarController(themeMediaQuery, toolbarElement);
+  controller.setNavigationVisibility(showNavigation);
+  controller.setReloadButtonVisibility(showReload);
+  controller.setAddressBarVisiblity(showAddressBar);
 });

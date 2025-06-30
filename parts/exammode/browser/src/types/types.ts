@@ -1,9 +1,16 @@
+export interface ToolbarConfig {
+  showNavigation: boolean;
+  showReload: boolean;
+  showAddressBar: boolean;
+}
+
 export interface BrowserConfig {
   url: string;
   width: number;
   height: number;
   kiosk: boolean;
   debug: boolean;
+  toolbar: ToolbarConfig;
 }
 
 export type PulseAudioSinkState = 'RUNNING' | 'IDLE' | 'SUSPENDED';

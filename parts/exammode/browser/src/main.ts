@@ -23,6 +23,11 @@ const config: BrowserConfig = {
     parseInt(app.commandLine.getSwitchValue('height')) || DEFAULT_WINDOW_HEIGHT,
   kiosk: app.commandLine.hasSwitch('kiosk'),
   debug: app.commandLine.hasSwitch('dev'),
+  toolbar: {
+    showNavigation: !app.commandLine.hasSwitch('hide-navigation'),
+    showReload: !app.commandLine.hasSwitch('hide-reload'),
+    showAddressBar: !app.commandLine.hasSwitch('hide-address-bar'),
+  },
 };
 
 // Configure logger based on debug switch
@@ -152,7 +157,12 @@ function createWindow(): BrowserWindow {
 
     const loadPath = path.resolve(__dirname, 'renderer', 'index.html');
     const loadOptions: LoadFileOptions = {
-      query: { url: config.url },
+      query: {
+        url: config.url,
+        showNavigation: config.toolbar.showNavigation.toString(),
+        showReload: config.toolbar.showReload.toString(),
+        showAddressBar: config.toolbar.showAddressBar.toString(),
+      },
     };
 
     void win.webContents.loadFile(loadPath, loadOptions);
