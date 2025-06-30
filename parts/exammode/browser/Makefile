@@ -8,6 +8,11 @@ INSTALL_PROGRAM = $(INSTALL)
 .PHONY: all
 all: build
 
+.PHONY: installdirs
+installdirs:
+	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)/opt/puavo-exam-browser
+
 .PHONY: build
 build: release/linux-unpacked/puavo-exam-browser
 
@@ -16,8 +21,7 @@ release/linux-unpacked/puavo-exam-browser: package.json
 	npm run dist
 
 .PHONY: install
-install: build
-	mkdir -p $(DESTDIR)/opt/puavo-exam-browser
+install: build installdirs
 	cp -RT release/linux-unpacked/ $(DESTDIR)/opt/puavo-exam-browser/
 	ln -fns /opt/puavo-exam-browser/puavo-exam-browser \
 	    $(DESTDIR)$(bindir)
