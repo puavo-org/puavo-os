@@ -103,6 +103,21 @@ function registerModules(win: BrowserWindow): void {
   }
 }
 
+function disableLeavingFullscreen(win: BrowserWindow) {
+  win.webContents.on('before-input-event', (event, input) => {
+    switch (input.key) {
+      case 'F11':
+        event.preventDefault();
+        return;
+    }
+  });
+
+  // Even if we leave the fullscreen another way, we return to fullscreen immediately
+  win.on('leave-full-screen', () => {
+    win.setFullScreen(true);
+  });
+}
+
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: config.width,
@@ -147,6 +162,10 @@ function createWindow(): BrowserWindow {
   win.webContents.on('did-finish-load', () => {
     logger.info(`Page finished loading: ${config.url}`);
   });
+
+  if (config.kiosk) {
+    disableLeavingFullscreen(win);
+  }
 
   win.maximize();
 
