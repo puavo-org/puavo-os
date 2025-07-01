@@ -22,7 +22,11 @@ def update_schemas(linelist)
     matchdata = line.match(/^dn: cn={.*}(.*),cn=schema,cn=config/)
     if matchdata then
       schema = $1
-      new_lines << "include: file:///etc/ldap/schema/#{ schema }.ldif"
+      # The "ppolicy"-module has internal schema in recent OpenLDAP versions
+      # and we must drop it from our database.
+      if schema != 'ppolicy' then
+        new_lines << "include: file:///etc/ldap/schema/#{ schema }.ldif"
+      end
       filter_out = true
     end
 
