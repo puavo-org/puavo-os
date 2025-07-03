@@ -10,6 +10,7 @@ import type { LoadFileOptions } from 'electron';
 import type { Module } from './modules/module';
 import { logger } from './utils/logger';
 import path from 'path';
+import { ScreenshotModule } from './modules/screenshot/screenshot-module';
 
 const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;
@@ -88,6 +89,7 @@ function registerModules(win: BrowserWindow): void {
     new AudioModule(),
     new BrightnessModule(),
     new EncryptionModule(),
+    new ScreenshotModule(),
     new SessionModule(),
     new ShutdownModule(),
     new SurveillanceModule()
