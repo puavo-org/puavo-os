@@ -15,6 +15,29 @@ import { run } from '../../utils/shell';
 export class AudioModule implements Module {
   dispatchClientNotification: ClientNotificationHandler = () => {};
 
+  constructor() {
+    void this.unloadStreamRestoreModule();
+  }
+
+  async unloadStreamRestoreModule(): Promise<void> {
+    // Module description:
+    // Automatically restore the volume/mute/device state of streams
+    // (configuration is saved in a GDBM database).
+    // This module prevents proper audio routing when the default sink changes.
+    // Without unloading it, existing audio streams (like website audio) remain
+    // bound to the previous sink instead of switching to the new default sink.
+    try {
+      await run('pactl unload-module module-stream-restore');
+    } catch (exception) {
+      logger.error(
+        "Failed to unload 'module-stream-restore' from PulseAudio:",
+        exception
+      );
+    }
+
+    logger.info("Unloaded 'module-stream-restore' from PulseAudio");
+  }
+
   async getSinks(): Promise<PulseAudioSink[]> {
     try {
       const output = await run('pactl --format json list sinks');
