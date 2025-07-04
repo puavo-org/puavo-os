@@ -1,77 +1,109 @@
-#!/bin/sh
+#!/usr/bin/tclsh9.0
 
-set -eu
+set puavo_btrfs_root "/.puavo"
 
-get_btrfs_size() {
-  local size
-  size=$(LANG=C btrfs filesystem usage --raw /.puavo \
-           | awk '$1 == "Device" && $2 == "size:" && $3 ~ /^[0-9]+$/ {
-               print $3
-             }')
-  if [ -z "$size" ]; then
-    return 1
-  fi
+proc get_btrfs_size puavo_btrfs_root {
+  set btrfs_output [
+    exec env LANG=C btrfs filesystem usage --raw $puavo_btrfs_root
+  ]
 
-  printf "%s\n" "$size"
+  foreach line [split $btrfs_output "\n"] {
+    set columns [regexp -all -inline {\S+} $line]
+    if {[lindex $columns 0] eq "Device" && [lindex $columns 1] == "size:"
+      && [string is integer -strict [lindex $columns 2]]} {
+        return [lindex $columns 2]
+    }
+  }
+
+  error "could not determine btrfs size"
 }
 
-btrfs quota enable    /.puavo
-btrfs quota rescan -w /.puavo
+proc get_qgroupids_by_path puavo_btrfs_root {
+  set btrfs_output [
+    exec env LANG=C btrfs qgroup show --raw $puavo_btrfs_root
+  ]
 
-if ! btrfs_size=$(get_btrfs_size); then
-  echo 'could not determine /.puavo btrfs filesystem size' >&2
+  set qgroupids [dict create]
+
+  foreach line [split $btrfs_output "\n"] {
+    set columns [regexp -all -inline {\S+} $line]
+    set id   [lindex $columns 0]
+    set path [lindex $columns 3]
+    if {[regexp {^[0-9]+/[0-9]+$} $id]} {
+      dict set qgroupids $path $id
+    }
+  }
+
+  return $qgroupids
+}
+
+proc get_quota_limits {puavo_hosttype btrfs_size} {
+  set GB [expr { 1024 * 1024 * 1024 }]
+  # sizes are in GB
+  set quota_limits_by_hosttype {
+    bootserver {
+      tmp            16
+      images        128
+      state          32
+      imageoverlays   5
+    }
+    laptop {
+      tmp             6
+      images         40
+      state           4
+      imageoverlays   5
+    }
+  }
+
+  if {![dict exists $quota_limits_by_hosttype $puavo_hosttype]} {
+    error "unsupported puavo hosttype for quotas: '$puavo_hosttype'"
+  }
+
+  set raw_quota_limits [dict get $quota_limits_by_hosttype $puavo_hosttype]
+
+  set quota_limit_for_home $btrfs_size
+  set quota_limits [
+    dict map {path quota} $raw_quota_limits {
+      set quota [expr { $GB * $quota }]
+      set quota_limit_for_home [expr { $quota_limit_for_home - $quota }]
+      expr {$quota}
+    }
+  ]
+  dict set quota_limits home $quota_limit_for_home
+
+  return $quota_limits
+}
+
+# clear up previously configured quotas
+exec btrfs quota disable   $puavo_btrfs_root
+
+# enable and rescan quota
+exec btrfs quota enable    $puavo_btrfs_root
+exec btrfs quota rescan -w $puavo_btrfs_root
+
+# get btrfs size
+if {[catch { get_btrfs_size $puavo_btrfs_root } btrfs_size]} {
+  puts stderr "could not determine ${puavo_btrfs_root} btrfs filesystem size"
   exit 1
-fi
+}
 
-puavo_hosttype=$(puavo-conf puavo.hosttype)
-
-if [ "$puavo_hosttype" != 'bootserver' ] && [ "$puavo_hosttype" != 'laptop' ]; then
-  echo "unsupported puavo hosttype for quotas: '${puavo_hosttype}'" >&2
+# get host type
+if {[catch { exec puavo-conf puavo.hosttype } puavo_hosttype]} {
+  puts stderr "could not determine puavo hosttype"
   exit 1
-fi
+}
 
-btrfs qgroup show --raw /.puavo \
-  | awk -v btrfs_size="$btrfs_size" -v hosttype="$puavo_hosttype" '
-      BEGIN {
-        GB = 1024 * 1024 * 1024
+set paths_by_qgroupids [get_qgroupids_by_path $puavo_btrfs_root]
+set quota_limits [get_quota_limits $puavo_hosttype $btrfs_size]
 
-        if (hosttype == "bootserver") {
-          quota_limits["tmp"]           =  16*GB
-          quota_limits["images"]        = 128*GB
-          quota_limits["state"]         =  32*GB
-          quota_limits["imageoverlays"] =   5*GB
-        }
-        if (hosttype == "laptop") {
-          quota_limits["tmp"]           =  6*GB
-          quota_limits["images"]        = 40*GB
-          quota_limits["state"]         =  4*GB
-          quota_limits["imageoverlays"] =  5*GB
-        }
-        quota_limit_for_home = btrfs_size
-        for (i in quota_limits) {
-          quota_limit_for_home -= quota_limits[i]
-        }
-        if (quota_limit_for_home <= 0) {
-          print "calculated non-positive quota for /home, something is wrong" \
-            > "/dev/stderr"
-          exit 1
-        }
-        quota_limits["home"] = quota_limit_for_home
-      }
+dict for {path quota} $quota_limits {
+  set qgroupid [dict get $paths_by_qgroupids $path]
+  try {
+    exec btrfs qgroup limit $quota $qgroupid $puavo_btrfs_root
+  } on error errmsg {
+    puts stderr "error in setting quota limits: ${errmsg}"
+    exit 1
+  }
+}
 
-      $1 ~ /^[0-9]+\/[0-9]+$/ {
-        id = $1
-        path = $4
-        Qgroupids[path] = id
-      }
-
-      END {
-        for (path in quota_limits) {
-          limit = quota_limits[path]
-          if (path in Qgroupids) {
-            # XXX scary, should use something else than awk maybe?
-            system("btrfs qgroup limit " limit " " Qgroupids[path] " " "/.puavo")
-          }
-        }
-      }
-    '
+exit 0
