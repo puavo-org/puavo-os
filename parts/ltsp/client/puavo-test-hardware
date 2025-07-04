@@ -1,5 +1,5 @@
 #!/bin/bash
-
+shopt -s extglob
 set -eu
 
 cleanup() {
@@ -361,17 +361,22 @@ test_mouse() {
 }
 
 test_audio() {
-  local alsacard alsamicdev alsaspkdev alsavolume
+  local alsacard alsamicdev alsaspkctl alsaspkctl2 alsaspkdev alsavolume
   alsacard='PCH'
   alsamicdev='default'
+  alsaspkctrl='Master'
+  alsaspkctrl2=''
   alsaspkdev='default'
+  alsavolume=''
 
   ### Some device model/gen specific configurations
   case "$(product_name)" in
-    "HP EliteBook 830 G6"|"HP EliteBook 840 G6"|"HP EliteBook 850 G6" )
-      ### With these, speaker test works on G6 devices. Mic test doesn't work just yet, but maybe soon.
+    "HP EliteBook 8"[345]"0 G6" | "HP EliteBook 8"[345]"0 G"[78]" Notebook PC")
+      ### With these, speaker test works on G6-G8 devices. Mic test doesn't work just yet, but maybe soon.
       alsacard='0'
-      alsavolume="95%"
+      alsaspkctl='Master'
+      alsaspkctl2='Speaker'
+      alsavolume="85%"
       ;;
     "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
       alsaspkdev='hw:1,0'
@@ -387,7 +392,11 @@ test_audio() {
   ### Use the default volume the system has (that usually works fine),
   ### unless 'alsavolume' is set (when a device is known to have very low volume by default).
   if [ -n "${alsavolume}" ]; then
-    amixer --card "${alsacard}" set 'Master' ${alsavolume}
+    amixer --card "${alsacard}" set ${alsaspkctl} ${alsavolume}
+  fi
+
+  if [ -n "${alsaspkctl2}" ]; then
+    amixer --card "${alsacard}" set ${alsaspkctl2} ${alsavolume}
   fi
 
   ### On some devices, VUMeter does not register changes in audio levels if we play the test with normal sensitivity. Probably something to do with the microphones location.
