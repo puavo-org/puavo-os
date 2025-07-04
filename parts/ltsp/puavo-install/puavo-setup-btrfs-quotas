@@ -1,0 +1,77 @@
+#!/bin/sh
+
+set -eu
+
+get_btrfs_size() {
+  local size
+  size=$(LANG=C btrfs filesystem usage --raw /.puavo \
+           | awk '$1 == "Device" && $2 == "size:" && $3 ~ /^[0-9]+$/ {
+               print $3
+             }')
+  if [ -z "$size" ]; then
+    return 1
+  fi
+
+  printf "%s\n" "$size"
+}
+
+btrfs quota enable    /.puavo
+btrfs quota rescan -w /.puavo
+
+if ! btrfs_size=$(get_btrfs_size); then
+  echo 'could not determine /.puavo btrfs filesystem size' >&2
+  exit 1
+fi
+
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
+if [ "$puavo_hosttype" != 'bootserver' ] && [ "$puavo_hosttype" != 'laptop' ]; then
+  echo "unsupported puavo hosttype for quotas: '${puavo_hosttype}'" >&2
+  exit 1
+fi
+
+btrfs qgroup show --raw /.puavo \
+  | awk -v btrfs_size="$btrfs_size" -v hosttype="$puavo_hosttype" '
+      BEGIN {
+        GB = 1024 * 1024 * 1024
+
+        if (hosttype == "bootserver") {
+          quota_limits["tmp"]           =  16*GB
+          quota_limits["images"]        = 128*GB
+          quota_limits["state"]         =  32*GB
+          quota_limits["imageoverlays"] =   5*GB
+        }
+        if (hosttype == "laptop") {
+          quota_limits["tmp"]           =  6*GB
+          quota_limits["images"]        = 40*GB
+          quota_limits["state"]         =  4*GB
+          quota_limits["imageoverlays"] =  5*GB
+        }
+        quota_limit_for_home = btrfs_size
+        for (i in quota_limits) {
+          quota_limit_for_home -= quota_limits[i]
+        }
+        if (quota_limit_for_home <= 0) {
+          print "calculated non-positive quota for /home, something is wrong" \
+            > "/dev/stderr"
+          exit 1
+        }
+        quota_limits["home"] = quota_limit_for_home
+      }
+
+      $1 ~ /^[0-9]+\/[0-9]+$/ {
+        id = $1
+        path = $4
+        Qgroupids[path] = id
+      }
+
+      END {
+        for (path in quota_limits) {
+          limit = quota_limits[path]
+          if (path in Qgroupids) {
+            # XXX scary, should use something else than awk maybe?
+            system("btrfs qgroup limit " limit " " Qgroupids[path] " " "/.puavo")
+          }
+        }
+      }
+    '
