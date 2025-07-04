@@ -5,13 +5,13 @@ import type {
   QueryHandler,
 } from '../module';
 import { logger } from '../../utils/logger';
-import { sessionBus } from 'dbus-next';
+import { systemBus } from 'dbus-next';
 
 export class ShutdownModule implements Module {
   dispatchClientNotification: ClientNotificationHandler = () => {};
 
   async shutdown(): Promise<void> {
-    const bus = sessionBus();
+    const bus = systemBus();
 
     try {
       const proxyObject = await bus.getProxyObject(
