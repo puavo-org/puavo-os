@@ -47,13 +47,34 @@ export class AudioModule implements Module {
     }
   }
 
+  private isValidDisplayName(displayName: string | undefined): boolean {
+    const invalidDisplayNames = ['(null)', ''];
+
+    return (
+      displayName !== undefined &&
+      !invalidDisplayNames.includes(displayName.trim())
+    );
+  }
+
+  private getDisplayNameForSink(sink: PulseAudioSink): string {
+    const displayNames = [
+      sink.description,
+      sink.properties['device.product.name'],
+      sink.name,
+    ];
+
+    return (
+      displayNames.find(name => this.isValidDisplayName(name)) ?? 'Audio device'
+    );
+  }
+
   createOutputDeviceFromSink(
     sink: PulseAudioSink,
     defaultSinkName: string
   ): AudioDevice {
     return {
       id: sink.name,
-      displayName: sink.description ?? sink.name,
+      displayName: this.getDisplayNameForSink(sink),
       active: sink.name === defaultSinkName,
       flow: 'output',
       volume: this.getSinkVolume(sink),

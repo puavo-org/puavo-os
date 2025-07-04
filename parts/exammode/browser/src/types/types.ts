@@ -26,12 +26,17 @@ export interface AudioDevice {
   mute: boolean;
 }
 
+export interface PulseAudioSinkProperties {
+  'device.product.name'?: string;
+}
+
 export interface PulseAudioSink {
   name: string;
   description?: string;
   state: PulseAudioSinkState;
   volume?: Array<{ value_percent: string }>;
   mute: boolean;
+  properties: PulseAudioSinkProperties;
 }
 
 export interface NotificationBody {
