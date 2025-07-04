@@ -38,20 +38,26 @@ proc get_qgroupids_by_path puavo_btrfs_root {
 }
 
 proc get_quota_limits {puavo_hosttype btrfs_size} {
-  set GB [expr { 1024 * 1024 * 1024 }]
-  # sizes are in GB
   set quota_limits_by_hosttype {
     bootserver {
-      tmp            16
-      images        128
-      state          32
-      imageoverlays   5
+      home                 { free+20G 1/0 }
+      imageoverlays        {       5G 1/0 }
+      images               {     128G {}  }
+      images/puavo-pkg     {      20G 1/0 }
+      state                {      32G {}  }
+      state/var/lib/docker {      32G 1/0 }
+      state/var/log        {       4G 1/0 }
+      tmp                  {      16G 1/0 }
     }
     laptop {
-      tmp             6
-      images         40
-      state           4
-      imageoverlays   5
+      home                 { free+20G 1/0 }
+      imageoverlays        {       5G 1/0 }
+      images               {      40G {}  }
+      images/puavo-pkg     {      20G 1/0 }
+      state                {       4G {}  }
+      state/var/lib/docker {      16G 1/0 }
+      state/var/log        {       2G 1/0 }
+      tmp                  {       6G 1/0 }
     }
   }
 
@@ -61,15 +67,30 @@ proc get_quota_limits {puavo_hosttype btrfs_size} {
 
   set raw_quota_limits [dict get $quota_limits_by_hosttype $puavo_hosttype]
 
-  set quota_limit_for_home $btrfs_size
+  set free_space_available $btrfs_size
+  set free_path ""
+
+  set GB [expr { 1024 * 1024 * 1024 }]
   set quota_limits [
-    dict map {path quota} $raw_quota_limits {
-      set quota [expr { $GB * $quota }]
-      set quota_limit_for_home [expr { $quota_limit_for_home - $quota }]
+    dict map {path quotaspec} $raw_quota_limits {
+      # XXX is parentgroup the correct term?  this should be handled somehow!
+      lassign $quotaspec quota parentgroup
+      if {[regexp {^(.*?)([0-9]+)G$} $quota _ prespec gigabytes]} {
+        set quota "${prespec}[expr { $GB * $gigabytes }]"
+      }
+      if {[regexp {^free\+(\d+)$} $quota _ free_plus]} {
+        set free_path $path
+        continue
+      }
+      set free_space_available [expr { $free_space_available  - $quota }]
       expr {$quota}
     }
   ]
-  dict set quota_limits home $quota_limit_for_home
+  if {$free_path ne ""} {
+    dict set quota_limits $free_path [
+      expr { $free_space_available + $free_plus }
+    ]
+  }
 
   return $quota_limits
 }
@@ -97,6 +118,10 @@ set paths_by_qgroupids [get_qgroupids_by_path $puavo_btrfs_root]
 set quota_limits [get_quota_limits $puavo_hosttype $btrfs_size]
 
 dict for {path quota} $quota_limits {
+  if {![dict exists $paths_by_qgroupids $path]} {
+    # XXX this could be an error, or maybe not?
+    continue
+  }
   set qgroupid [dict get $paths_by_qgroupids $path]
   try {
     exec btrfs qgroup limit $quota $qgroupid $puavo_btrfs_root
