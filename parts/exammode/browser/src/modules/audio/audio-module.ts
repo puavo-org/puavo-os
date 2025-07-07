@@ -142,15 +142,35 @@ export class AudioModule implements Module {
   }
 
   getSinkVolume(sink: PulseAudioSink): number {
-    // Select the volume from the first channel
-    const channel = sink.volume?.[0];
-    if (!channel) {
-      const MAX_VOLUME = 100;
+    const MAX_VOLUME = 100;
+
+    // Select the volume from the first channel.
+    // Channels can have different volume levels,
+    // but 'pactl' sets the same volume for all
+    // channels in our case.
+    const channelNames = sink.channel_map.split(',');
+
+    if (channelNames.length === 0) {
+      logger.error('No channels found for sink:', sink.name);
       return MAX_VOLUME;
     }
 
-    const volume_percent_string = channel.value_percent;
-    return parseFloat(volume_percent_string);
+    const channelName = channelNames[0];
+
+    if (!this.isValidIdentifier(channelName)) {
+      logger.error('Invalid channel name for sink:', sink.name, channelName);
+      return MAX_VOLUME;
+    }
+
+    const channel = sink.volume[channelName];
+
+    if (!channel || !channel.value_percent) {
+      logger.error('Failed to get volume for sink:', sink.name);
+      return MAX_VOLUME;
+    }
+
+    const volumePercentString = channel.value_percent;
+    return parseFloat(volumePercentString);
   }
 
   async getDefaultSinkName(): Promise<string> {

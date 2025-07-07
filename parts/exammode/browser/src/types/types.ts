@@ -30,11 +30,20 @@ export interface PulseAudioSinkProperties {
   'device.product.name'?: string;
 }
 
+export interface PulseAudioChannelVolume {
+  value: number;
+  value_percent: string;
+  db: string;
+}
+
 export interface PulseAudioSink {
+  channel_map: string;
   name: string;
   description?: string;
   state: PulseAudioSinkState;
-  volume?: Array<{ value_percent: string }>;
+  volume: {
+    [channel_name: string]: PulseAudioChannelVolume;
+  };
   mute: boolean;
   properties: PulseAudioSinkProperties;
 }
