@@ -30,11 +30,14 @@
       "package.json"
     ],
     "linux": {
-      "target": ["dir"],
+      "target": [
+        "dir"
+      ],
       "category": "Utility"
     }
   },
   "devDependencies": {
+    "@types/concatjson": "^2.0.3",
     "@types/node": "^24.0.4",
     "@typescript-eslint/eslint-plugin": "^8.35.0",
     "@typescript-eslint/parser": "^8.35.0",
@@ -56,6 +59,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
+    "concatjson": "^2.0.1",
     "dbus-next": "^0.10.2"
   }
 }

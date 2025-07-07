@@ -39,6 +39,27 @@ export interface PulseAudioSink {
   properties: PulseAudioSinkProperties;
 }
 
+export type PulseAudioEventSource =
+  'card' |
+  'client' |
+  'module' |
+  'server' |
+  'sink' |
+  'sink-input' |
+  'source' |
+  'source-output';
+
+export type PulseAudioEventType =
+  'new' |
+  'change' |
+  'remove';
+
+export interface PulseAudioEvent {
+  index: number;
+  event: PulseAudioEventType;
+  on: PulseAudioEventSource;
+}
+
 export interface NotificationBody {
   Type: string;
   Body: string | number | any[];
