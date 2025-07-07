@@ -8,15 +8,108 @@ import type {
   AudioDevice,
   PulseAudioSink,
   AudioDeviceFlow,
+  PulseAudioEvent,
 } from '../../types/types';
+import { PulseAudioEventObserver } from './pulse-audio-event-observer';
+import { ChangeNotifier } from '../../utils/change-notifier';
 import { logger } from '../../utils/logger';
 import { run } from '../../utils/shell';
 
 export class AudioModule implements Module {
   dispatchClientNotification: ClientNotificationHandler = () => {};
+  private audioEventObserver: PulseAudioEventObserver;
+  private audioDevicesChangeNotifier: ChangeNotifier<AudioDevice[]>;
+  private activeDeviceChangeNotifier: ChangeNotifier<string>;
 
   constructor() {
+    this.audioEventObserver = new PulseAudioEventObserver(
+      this.onAudioEvent.bind(this)
+    );
+
+    // Use change notifiers to only dispatch notifications when
+    // actual changes occur. Change notififers should also prevent
+    // any infinite notification loops from occurring.
+    this.audioDevicesChangeNotifier = new ChangeNotifier(
+      () => this.getAudioDevices(),
+      this.notifyAudioDevicesChanged.bind(this),
+      (a, b) => JSON.stringify(a) === JSON.stringify(b) // Deep comparison for audio devices
+    );
+
+    this.activeDeviceChangeNotifier = new ChangeNotifier(
+      () => this.getDefaultSinkName().catch((error) => {
+        logger.error('Failed to get default sink name:', error);
+        return '';
+      }),
+      this.notifyActiveDeviceChanged.bind(this)
+    );
+
     void this.unloadStreamRestoreModule();
+    void this.registerAudioEventObserver();
+  }
+
+  private isValidIdentifier(identifier: string | undefined): identifier is string {
+    const invalidIdentifiers = ['(null)', ''];
+
+    return (
+      identifier !== undefined &&
+      !invalidIdentifiers.includes(identifier.trim())
+    );
+  }
+
+  private notifyAudioDevicesChanged(audioDevices: AudioDevice[]): void {
+    this.dispatchClientNotification('AudioDevicesChanged', audioDevices);
+  }
+
+  private async notifyActiveDeviceChanged(
+    activeDeviceId: string
+  ): Promise<void> {
+    if (!activeDeviceId) {
+      logger.error('Received empty active device ID');
+      return;
+    }
+
+    const audioDevices = await this.getAudioDevices();
+    const activeDevice = audioDevices.find(
+      device => device.id === activeDeviceId
+    );
+
+    if (activeDevice) {
+      this.dispatchClientNotification('ActiveAudioDeviceChanged', [
+        activeDevice.flow,
+        activeDevice.id,
+      ]);
+    }
+  }
+
+  async onSinkAddedOrRemoved(): Promise<void> {
+    try {
+      await this.audioDevicesChangeNotifier.checkAndNotify();
+      await this.activeDeviceChangeNotifier.checkAndNotify();
+    } catch (exception) {
+      logger.error('Failed to notify sink event:', exception);
+    }
+  }
+
+  async onAudioEvent(audioEvent: PulseAudioEvent): Promise<void> {
+    try {
+      const { event, on } = audioEvent;
+
+      if ((event === 'new' || event === 'remove') && on === 'sink') {
+        await this.onSinkAddedOrRemoved();
+      }
+    } catch (exception) {
+      logger.error('Failed to process audio event:', exception);
+    }
+  }
+
+  async registerAudioEventObserver(): Promise<void> {
+    logger.debug('Registering audio event observer');
+
+    try {
+      this.audioEventObserver.observe();
+    } catch (exception) {
+      logger.error('Failed to register audio event observer:', exception);
+    }
   }
 
   async unloadStreamRestoreModule(): Promise<void> {
@@ -115,7 +208,6 @@ export class AudioModule implements Module {
       audioDevices.push(this.createOutputDeviceFromSink(sink, defaultSinkName));
     }
 
-    logger.debug('Audio devices:', audioDevices);
     return audioDevices;
   }
 
