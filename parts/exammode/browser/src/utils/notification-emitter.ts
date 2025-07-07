@@ -28,11 +28,13 @@ export class NotificationEmitter {
     }
 
     for (const handler of handlers) {
-      try {
-        handler(this, data);
-      } catch (error) {
-        logger.error('Error in event handler:', error);
-      }
+      (async handler => {
+        try {
+          handler(this, data);
+        } catch (error) {
+          logger.error('Error in event handler:', error);
+        }
+      })(handler);
     }
   }
 }
