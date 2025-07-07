@@ -16,6 +16,8 @@ import { logger } from '../../utils/logger';
 import { run } from '../../utils/shell';
 
 export class AudioModule implements Module {
+  static readonly FALLBACK_DISPLAY_NAME = "Audio device";
+
   dispatchClientNotification: ClientNotificationHandler = () => {};
   private audioEventObserver: PulseAudioEventObserver;
   private audioDevicesChangeNotifier: ChangeNotifier<AudioDevice[]>;
@@ -183,15 +185,6 @@ export class AudioModule implements Module {
     }
   }
 
-  private isValidDisplayName(displayName: string | undefined): boolean {
-    const invalidDisplayNames = ['(null)', ''];
-
-    return (
-      displayName !== undefined &&
-      !invalidDisplayNames.includes(displayName.trim())
-    );
-  }
-
   private getDisplayNameForSink(sink: PulseAudioSink): string {
     const displayNames = [
       sink.description,
@@ -200,7 +193,8 @@ export class AudioModule implements Module {
     ];
 
     return (
-      displayNames.find(name => this.isValidDisplayName(name)) ?? 'Audio device'
+      displayNames.find(this.isValidIdentifier.bind(this))
+        ?? AudioModule.FALLBACK_DISPLAY_NAME
     );
   }
 
