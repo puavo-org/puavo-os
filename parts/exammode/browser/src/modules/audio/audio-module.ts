@@ -225,7 +225,9 @@ export class AudioModule implements Module {
       audioDevices.push(this.createOutputDeviceFromSink(sink, defaultSinkName));
     }
 
-    return audioDevices;
+    return audioDevices.sort((device1, device2) =>
+      device1.displayName.localeCompare(device2.displayName)
+    );
   }
 
   async changeAudioDeviceVolume(
