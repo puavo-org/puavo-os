@@ -49,19 +49,16 @@ export interface PulseAudioSink {
 }
 
 export type PulseAudioEventSource =
-  'card' |
-  'client' |
-  'module' |
-  'server' |
-  'sink' |
-  'sink-input' |
-  'source' |
-  'source-output';
+  | 'card'
+  | 'client'
+  | 'module'
+  | 'server'
+  | 'sink'
+  | 'sink-input'
+  | 'source'
+  | 'source-output';
 
-export type PulseAudioEventType =
-  'new' |
-  'change' |
-  'remove';
+export type PulseAudioEventType = 'new' | 'change' | 'remove';
 
 export interface PulseAudioEvent {
   index: number;

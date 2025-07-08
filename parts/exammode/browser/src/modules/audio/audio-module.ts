@@ -16,12 +16,12 @@ import { logger } from '../../utils/logger';
 import { run } from '../../utils/shell';
 
 export class AudioModule implements Module {
-  static readonly FALLBACK_DISPLAY_NAME = "Audio device";
+  static readonly FALLBACK_DISPLAY_NAME = 'Audio device';
 
   dispatchClientNotification: ClientNotificationHandler = () => {};
-  private audioEventObserver: PulseAudioEventObserver;
-  private audioDevicesChangeNotifier: ChangeNotifier<AudioDevice[]>;
-  private activeDeviceChangeNotifier: ChangeNotifier<string>;
+  private readonly audioEventObserver: PulseAudioEventObserver;
+  private readonly audioDevicesChangeNotifier: ChangeNotifier<AudioDevice[]>;
+  private readonly activeDeviceChangeNotifier: ChangeNotifier<string>;
 
   constructor() {
     this.audioEventObserver = new PulseAudioEventObserver(
@@ -38,10 +38,11 @@ export class AudioModule implements Module {
     );
 
     this.activeDeviceChangeNotifier = new ChangeNotifier(
-      () => this.getDefaultSinkName().catch((error) => {
-        logger.error('Failed to get default sink name:', error);
-        return '';
-      }),
+      () =>
+        this.getDefaultSinkName().catch(error => {
+          logger.error('Failed to get default sink name:', error);
+          return '';
+        }),
       this.notifyActiveDeviceChanged.bind(this)
     );
 
@@ -49,7 +50,9 @@ export class AudioModule implements Module {
     void this.registerAudioEventObserver();
   }
 
-  private isValidIdentifier(identifier: string | undefined): identifier is string {
+  private isValidIdentifier(
+    identifier: string | undefined
+  ): identifier is string {
     const invalidIdentifiers = ['(null)', ''];
 
     return (
@@ -104,7 +107,7 @@ export class AudioModule implements Module {
     }
   }
 
-  async registerAudioEventObserver(): Promise<void> {
+  registerAudioEventObserver(): void {
     logger.debug('Registering audio event observer');
 
     try {
@@ -166,7 +169,7 @@ export class AudioModule implements Module {
 
     const channel = sink.volume[channelName];
 
-    if (!channel || !channel.value_percent) {
+    if (!channel?.value_percent) {
       logger.error('Failed to get volume for sink:', sink.name);
       return MAX_VOLUME;
     }
@@ -193,8 +196,8 @@ export class AudioModule implements Module {
     ];
 
     return (
-      displayNames.find(this.isValidIdentifier.bind(this))
-        ?? AudioModule.FALLBACK_DISPLAY_NAME
+      displayNames.find(this.isValidIdentifier.bind(this)) ??
+      AudioModule.FALLBACK_DISPLAY_NAME
     );
   }
 
