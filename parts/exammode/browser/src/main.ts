@@ -14,10 +14,10 @@ import { ScreenshotModule } from './modules/screenshot/screenshot-module';
 
 const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;
-const DEFAULT_PAGE_URL = 'about:blank';
+const EMPTY_PAGE_URL = 'about:blank';
 
 const config: BrowserConfig = {
-  url: app.commandLine.getSwitchValue('url') || DEFAULT_PAGE_URL,
+  url: app.commandLine.getSwitchValue('url') || EMPTY_PAGE_URL,
   width:
     parseInt(app.commandLine.getSwitchValue('width')) || DEFAULT_WINDOW_WIDTH,
   height:
@@ -78,6 +78,10 @@ function registerQueryHandlers(module: Module): void {
   }
 }
 
+function onShutdown(win: BrowserWindow): void {
+  void win.webContents.loadURL(EMPTY_PAGE_URL);
+}
+
 function registerModules(win: BrowserWindow): void {
   if (!config.kiosk) {
     return;
@@ -91,7 +95,7 @@ function registerModules(win: BrowserWindow): void {
     new EncryptionModule(),
     new ScreenshotModule(),
     new SessionModule(),
-    new ShutdownModule(),
+    new ShutdownModule(() => onShutdown(win)),
     new SurveillanceModule()
   );
 
