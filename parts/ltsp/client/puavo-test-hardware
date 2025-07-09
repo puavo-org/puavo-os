@@ -364,8 +364,8 @@ test_audio() {
   local alsacard alsamicdev alsaspkctl alsaspkctl2 alsaspkdev alsavolume
   alsacard='PCH'
   alsamicdev='default'
-  alsaspkctrl='Master'
-  alsaspkctrl2=''
+  alsaspkctl='Master'
+  alsaspkctl2=''
   alsaspkdev='default'
   alsavolume=''
 
@@ -514,7 +514,7 @@ wifistderr=$(mktemp /tmp/puavo-test-hardware-wifi-stderr.XXXXXX)
 power1stdout=$(mktemp /tmp/puavo-test-hardware-power1-stdout.XXXXXX)
 power2stdout=$(mktemp /tmp/puavo-test-hardware-power2-stdout.XXXXXX)
 
-analyze_image
+analyze_image &
 
 hcitool scan > "$teststdout" 2> "$teststderr" &
 test_wifi > "$wifistdout" &
