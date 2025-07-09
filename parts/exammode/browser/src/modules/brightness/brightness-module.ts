@@ -49,16 +49,16 @@ export class BrightnessModule implements Module {
 
   async getBrightness(): Promise<number> {
     const brightnessString = await run('brightnessctl get');
-    const maxBrigtnessString = await run('brightnessctl max');
+    const maxBrightnessString = await run('brightnessctl max');
 
     const brightness = parseInt(brightnessString.trim());
-    const maxBrigtness = parseInt(maxBrigtnessString.trim());
+    const maxBrightness = parseInt(maxBrightnessString.trim());
 
-    if (isNaN(brightness) || isNaN(maxBrigtness) || maxBrigtness === 0) {
+    if (isNaN(brightness) || isNaN(maxBrightness) || maxBrightness === 0) {
       throw new Error('Invalid brightness values');
     }
 
-    return Math.round((brightness / maxBrigtness) * 100);
+    return Math.round((brightness / maxBrightness) * 100);
   }
 
   async setBrightness(brightness: number): Promise<void> {

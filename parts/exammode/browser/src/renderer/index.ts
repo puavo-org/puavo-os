@@ -18,5 +18,5 @@ document.addEventListener('DOMContentLoaded', () => {
   const controller = new ToolbarController(themeMediaQuery, toolbarElement);
   controller.setNavigationVisibility(showNavigation);
   controller.setReloadButtonVisibility(showReload);
-  controller.setAddressBarVisiblity(showAddressBar);
+  controller.setAddressBarVisibility(showAddressBar);
 });

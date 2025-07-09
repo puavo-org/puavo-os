@@ -26,8 +26,8 @@ export class PulseAudioEventObserver {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
-        LC_ALL: 'C'
-      }
+        LC_ALL: 'C',
+      },
     });
 
     if (!this.eventObserverProcess.stdout) {

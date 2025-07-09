@@ -223,7 +223,7 @@ export class ToolbarController {
     }
   }
 
-  setAddressBarVisiblity(show: boolean): void {
+  setAddressBarVisibility(show: boolean): void {
     if (this.addressBar) {
       this.addressBar.style.display = show ? 'flex' : 'none';
     }

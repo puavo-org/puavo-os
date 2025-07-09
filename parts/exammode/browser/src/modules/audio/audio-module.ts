@@ -29,7 +29,7 @@ export class AudioModule implements Module {
     );
 
     // Use change notifiers to only dispatch notifications when
-    // actual changes occur. Change notififers should also prevent
+    // actual changes occur. Change notifiers should also prevent
     // any infinite notification loops from occurring.
     this.audioDevicesChangeNotifier = new ChangeNotifier(
       () => this.getAudioDevices(),
