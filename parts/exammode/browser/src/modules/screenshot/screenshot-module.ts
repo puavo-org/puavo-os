@@ -8,14 +8,14 @@ import type {
 } from '../module';
 
 export class ScreenshotModule implements Module {
+  // Gnome screenshot utility has clipboard mode, but it does not seem to work
+  static readonly SCREENSHOT_COMMAND = 'gnome-screenshot --area --file /tmp/screenshot.png && cat /tmp/screenshot.png | xclip -i -selection clipboard -target image/png';
+
   dispatchClientNotification: ClientNotificationHandler = () => {};
 
   async takeScreenshot(): Promise<void> {
     try {
-      // Gnome screenshot utility has clipboard mode, but it does not seem to work
-      await run(
-        'gnome-screenshot --area --file /tmp/screenshot.png && cat /tmp/screenshot.png | xclip -i -selection clipboard -target image/png'
-      );
+      await run(ScreenshotModule.SCREENSHOT_COMMAND);
     } catch (exception) {
       logger.error(`Failed to take screenshot: ${exception}`);
     }
