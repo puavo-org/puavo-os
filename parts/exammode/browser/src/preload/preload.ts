@@ -1,6 +1,6 @@
-import { setupWebSocketOverride } from './utils/websocket-override';
-import { KioskAPI } from './api/kiosk-api';
-import { logger } from './utils/logger';
+import { setupWebSocketOverride } from './websocket-override';
+import { logger } from '../utils/logger';
+import { KioskAPI } from './kiosk-api';
 import { ipcRenderer } from 'electron';
 
 setupWebSocketOverride();

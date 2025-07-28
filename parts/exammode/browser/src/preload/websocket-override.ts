@@ -1,4 +1,4 @@
-import { logger } from './logger';
+import { logger } from '../utils/logger';
 
 export function setupWebSocketOverride(): void {
   logger.debug('Registering WebSocket override for', location.host);
