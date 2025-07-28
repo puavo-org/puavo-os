@@ -1,208 +1,104 @@
 import { SurveillanceModule } from './modules/surveillance/surveillance-module';
 import { EncryptionModule } from './modules/encryption/encryption-module';
 import { BrightnessModule } from './modules/brightness/brightness-module';
+import { ScreenshotModule } from './modules/screenshot/screenshot-module';
+import { InputEventInterceptor } from './core/input-event-interceptor';
 import { ShutdownModule } from './modules/shutdown/shutdown-module';
 import { SessionModule } from './modules/session/session-module';
 import { AudioModule } from './modules/audio/audio-module';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { ModuleManager } from './core/module-manager';
 import type { BrowserConfig } from './types/types';
-import type { LoadFileOptions } from 'electron';
-import type { Module } from './modules/module';
+import { app, WebContents } from 'electron';
+import { Browser } from './core/browser';
 import { logger } from './utils/logger';
-import path from 'path';
-import { ScreenshotModule } from './modules/screenshot/screenshot-module';
 
 const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;
 const EMPTY_PAGE_URL = 'about:blank';
 
 const config: BrowserConfig = {
+  debug: app.commandLine.hasSwitch('dev'),
+  forceFullscreen: app.commandLine.hasSwitch('force-fullscreen'),
+  height:
+    parseInt(app.commandLine.getSwitchValue('height')) || DEFAULT_WINDOW_HEIGHT,
+  locale: app.commandLine.getSwitchValue('locale') || 'en',
+  modules: app.commandLine.hasSwitch('modules'),
+  restrictKeybindings: app.commandLine.hasSwitch('restrict-keybindings'),
+  shell: {
+    show: !app.commandLine.hasSwitch('hide-shell'),
+    toolbar: {
+      showNavigation: !app.commandLine.hasSwitch('hide-navigation'),
+      showReload: !app.commandLine.hasSwitch('hide-reload'),
+      showAddressBar: !app.commandLine.hasSwitch('hide-address-bar'),
+    },
+  },
   url: app.commandLine.getSwitchValue('url') || EMPTY_PAGE_URL,
   width:
     parseInt(app.commandLine.getSwitchValue('width')) || DEFAULT_WINDOW_WIDTH,
-  height:
-    parseInt(app.commandLine.getSwitchValue('height')) || DEFAULT_WINDOW_HEIGHT,
-  kiosk: app.commandLine.hasSwitch('kiosk'),
-  debug: app.commandLine.hasSwitch('dev'),
-  toolbar: {
-    showNavigation: !app.commandLine.hasSwitch('hide-navigation'),
-    showReload: !app.commandLine.hasSwitch('hide-reload'),
-    showAddressBar: !app.commandLine.hasSwitch('hide-address-bar'),
-  },
 };
 
-// Configure logger based on debug switch
+if (app.commandLine.hasSwitch('kiosk')) {
+  config.forceFullscreen = true;
+  config.modules = true;
+  config.shell.show = false;
+  config.restrictKeybindings = true;
+}
+
 logger.setDebugEnabled(config.debug);
 
-const modules: Array<Module> = [];
-
-function dispatchClientNotification(
-  win: BrowserWindow,
-  type: string,
-  body: any
-): void {
-  logger.debug(`Relaying client notification: ${type}`);
-  win.webContents.send('dispatchClientNotification', type, body);
+function configureInputs(config: BrowserConfig): InputEventInterceptor {
+  type Handler = ((webContents: WebContents) => void) | null;
+  const keybindings = new Map<string, Handler>([
+    ['Alt+ArrowLeft', null],
+    ['Alt+ArrowRight', null],
+    ['Ctrl+r', null],
+    ['Ctrl+Shift+R', null],
+    ['Ctrl+q', null],
+    ['Ctrl+w', null],
+    ...((config.restrictKeybindings
+      ? ([
+          ['F11', null],
+          ['Ctrl+q', null],
+          ['Ctrl+w', null],
+          ['Ctrl++', null],
+          ['Ctrl+Shift+?', null],
+          ['Ctrl+-', null],
+          ['Ctrl+0', null],
+        ] as Array<[string, Handler]>)
+      : [
+          [
+            'Ctrl++',
+            contents => contents.setZoomLevel(contents.getZoomLevel() + 1),
+          ],
+          [
+            'Ctrl+Shift+?',
+            contents => contents.setZoomLevel(contents.getZoomLevel() + 1),
+          ],
+          [
+            'Ctrl+-',
+            contents => contents.setZoomLevel(contents.getZoomLevel() - 1),
+          ],
+          ['Ctrl+0', contents => contents.setZoomLevel(0)],
+        ]) as Array<[string, Handler]>),
+  ]);
+  return new InputEventInterceptor(keybindings);
 }
 
-function registerNotifyHandlers(module: Module): void {
-  const handlerDefinitions = module.getNotifyHandlerDefinitions();
+void app.whenReady().then(() => {
+  const browser = new Browser(config, configureInputs(config));
+  const moduleManager = new ModuleManager(browser.browserWindow);
 
-  for (const handlerDefinition of handlerDefinitions) {
-    const [name, handler] = handlerDefinition;
-    ipcMain.handle(name, async (_, ...args) => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        await handler(...args);
-      } catch (error) {
-        logger.error(`Error in notify handler "${name}":`, error);
-      }
-    });
+  if (config.modules) {
+    moduleManager.setModules([
+      new AudioModule(),
+      new BrightnessModule(),
+      new EncryptionModule(),
+      new ScreenshotModule(),
+      new SessionModule(),
+      new ShutdownModule(() => browser.onShutdown()),
+      new SurveillanceModule(),
+    ]);
+
+    moduleManager.registerModules();
   }
-}
-
-function registerQueryHandlers(module: Module): void {
-  const handlerDefinitions = module.getQueryHandlerDefinitions();
-
-  for (const handlerDefinition of handlerDefinitions) {
-    const [name, handler] = handlerDefinition;
-    ipcMain.handle(name, async (_, ...args) => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument
-        return await handler(...args);
-      } catch (error) {
-        logger.error(`Error in query handler "${name}":`, error);
-        throw error; // Re-throw to propagate the error to the renderer process
-      }
-    });
-  }
-}
-
-function onShutdown(win: BrowserWindow): void {
-  void win.webContents.loadURL(EMPTY_PAGE_URL);
-}
-
-function registerModules(win: BrowserWindow): void {
-  if (!config.kiosk) {
-    return;
-  }
-
-  logger.info('Registering modules...');
-
-  modules.push(
-    new AudioModule(),
-    new BrightnessModule(),
-    new EncryptionModule(),
-    new ScreenshotModule(),
-    new SessionModule(),
-    new ShutdownModule(() => onShutdown(win)),
-    new SurveillanceModule()
-  );
-
-  for (const module of modules) {
-    module.dispatchClientNotification = dispatchClientNotification.bind(
-      null,
-      win
-    );
-    registerNotifyHandlers(module);
-    registerQueryHandlers(module);
-  }
-}
-
-function disableLeavingFullscreen(win: BrowserWindow) {
-  win.webContents.on('before-input-event', (event, input) => {
-    switch (input.key) {
-      case 'F11':
-        event.preventDefault();
-        return;
-    }
-  });
-
-  // Even if we leave the fullscreen another way, we return to fullscreen immediately
-  win.on('leave-full-screen', () => {
-    win.setFullScreen(true);
-  });
-}
-
-function createWindow(): BrowserWindow {
-  const win = new BrowserWindow({
-    width: config.width,
-    height: config.height,
-    frame: !config.kiosk,
-    kiosk: config.kiosk,
-    autoHideMenuBar: true,
-    title: ' ', // Hide the title
-    webPreferences: {
-      devTools: config.debug,
-      // NOTE:
-      // This configuration allows websites to access Node.js APIs directly.
-      // Required for the WebSocket fix to work, but reduces security isolation
-      // between the web content and system resources.
-      // We maintain the IPC infrastructure so that when the WebSocket issue
-      // can be resolved, we can enable proper security (contextIsolation: true,
-      // nodeIntegration: false) without major refactoring.
-      nodeIntegration: true, // IPC access
-      contextIsolation: !config.kiosk, // For WebSocket fix
-      webviewTag: !config.kiosk,
-      ...(config.kiosk ? { preload: path.join(__dirname, 'preload.js') } : {}),
-    },
-  });
-
-  win.webContents.on(
-    'console-message',
-    (_event, _level, message, line, sourceId) =>
-      logger.debug(
-        `Console message: ${message} (source: ${sourceId}, line: ${line})`
-      )
-  );
-
-  win.webContents.on(
-    'did-fail-load',
-    (_event, errorCode, errorDescription, validatedURL) => {
-      logger.error(
-        `Failed to load the page: ${validatedURL} (${errorDescription}, error code: ${errorCode})`
-      );
-    }
-  );
-
-  win.webContents.on('did-finish-load', () => {
-    logger.info(`Page finished loading: ${config.url}`);
-  });
-
-  if (config.kiosk) {
-    disableLeavingFullscreen(win);
-  }
-
-  win.maximize();
-
-  if (config.kiosk) {
-    void win.webContents.loadURL(config.url);
-  } else {
-    logger.info(`Loading renderer with URL: ${config.url}`);
-
-    const loadPath = path.resolve(__dirname, 'renderer', 'index.html');
-    const loadOptions: LoadFileOptions = {
-      query: {
-        url: config.url,
-        showNavigation: config.toolbar.showNavigation.toString(),
-        showReload: config.toolbar.showReload.toString(),
-        showAddressBar: config.toolbar.showAddressBar.toString(),
-      },
-    };
-
-    void win.webContents.loadFile(loadPath, loadOptions);
-  }
-
-  return win;
-}
-
-app.on(
-  'certificate-error',
-  (event, _webContents, url, error, _certificate, callback) => {
-    logger.warn(`Certificate error bypassed: ${url} (${error})`);
-    event.preventDefault();
-    callback(true);
-  }
-);
-
-void app.whenReady().then(createWindow).then(registerModules);
+});

@@ -1,16 +1,24 @@
 export interface ToolbarConfig {
+  showAddressBar: boolean;
   showNavigation: boolean;
   showReload: boolean;
-  showAddressBar: boolean;
+}
+
+export interface ShellConfig {
+  show: boolean;
+  toolbar: ToolbarConfig;
 }
 
 export interface BrowserConfig {
+  debug: boolean;
+  forceFullscreen: boolean;
+  height: number;
+  locale: string;
+  modules: boolean;
+  restrictKeybindings: boolean;
+  shell: ShellConfig;
   url: string;
   width: number;
-  height: number;
-  kiosk: boolean;
-  debug: boolean;
-  toolbar: ToolbarConfig;
 }
 
 export type PulseAudioSinkState = 'RUNNING' | 'IDLE' | 'SUSPENDED';
