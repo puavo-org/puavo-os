@@ -9,7 +9,7 @@
   --toolbar-background: white;
   --toolbar-text-color: #333;
   --toolbar-border-color: #c0c0c0;
-  --button-background: rgba(0, 0, 0, 0.05);
+  --button-background: transparent;
   --button-hover-background: rgba(0, 0, 0, 0.1);
   --button-text-color: black;
   --address-bar-background: rgba(0, 0, 0, 0.05);
@@ -21,11 +21,11 @@
 }
 
 /* Dark theme */
-[data-theme="dark"] {
-  --toolbar-background: #2d2d2d;
+[data-theme='dark'] {
+  --toolbar-background: #2e2e32;
   --toolbar-text-color: #ffffff;
   --toolbar-border-color: #404040;
-  --button-background: rgba(255, 255, 255, 0.1);
+  --button-background: transparent;
   --button-hover-background: rgba(255, 255, 255, 0.2);
   --button-text-color: #ffffff;
   --address-bar-background: #404040;
@@ -51,7 +51,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Segoe UI', Roboto, sans-serif;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -137,7 +137,6 @@ body {
   outline: none;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
-  border: 1px solid var(--address-bar-border-color);
 }
 
 .address-bar:focus {
