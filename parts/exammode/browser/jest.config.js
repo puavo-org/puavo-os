@@ -18,7 +18,9 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
-  // Clear mocks between tests
-  clearMocks: true,
+  // Mock Electron modules
+  moduleNameMapper: {
+    '^electron$': '<rootDir>/tests/__mocks__/electron.ts',
+  },
   restoreMocks: true,
 };
