@@ -1,7 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import * as path from 'node:path';
 import { watch } from 'node:fs';
-import { logger } from '../../utils/logger';
 
 export class BacklightController {
   public readonly path: string;
@@ -33,8 +32,6 @@ export class BacklightControllerObserver {
   }
 
   observe(backlightController: BacklightController): void {
-    logger.debug(`${backlightController.path}/brightness`);
-
     watch(
       `${backlightController.path}/brightness`,
       () => void this.callback(backlightController)
