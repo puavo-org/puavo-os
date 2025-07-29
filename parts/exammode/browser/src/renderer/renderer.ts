@@ -1,13 +1,22 @@
 /* eslint-disable no-console */
 export class ToolbarController {
   private backButton!: HTMLButtonElement;
+  private errorPageUrl: string;
   private forwardButton!: HTMLButtonElement;
+  private locale: string;
   private reloadButton!: HTMLButtonElement;
   private addressBar!: HTMLInputElement;
   private pageView!: Electron.WebviewTag;
   private readonly themeMediaQuery: MediaQueryList;
 
-  constructor(themeMediaQuery: MediaQueryList, toolbarElement: HTMLElement) {
+  constructor(
+    errorPageUrl: string,
+    locale: string,
+    themeMediaQuery: MediaQueryList,
+    toolbarElement: HTMLElement
+  ) {
+    this.errorPageUrl = errorPageUrl;
+    this.locale = locale;
     this.themeMediaQuery = themeMediaQuery;
     this.initializeElements(toolbarElement);
     this.loadConfiguredURL();
@@ -76,6 +85,10 @@ export class ToolbarController {
     this.pageView.addEventListener(
       'did-navigate-in-page',
       this.handleNavigateInPage.bind(this)
+    );
+    this.pageView.addEventListener(
+      'did-fail-load',
+      this.handleFailLoad.bind(this)
     );
 
     window.addEventListener('focus', this.handleWindowFocus.bind(this));
@@ -165,12 +178,57 @@ export class ToolbarController {
   }
 
   private updateAddressBar(url: string): void {
-    if (url !== 'about:blank') {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
       this.addressBar.value = url;
     } else {
-      // Display the address bar as "blank"
+      // Display the address bar as "blank" for special sites (e.g. blank and error page)
       this.addressBar.value = '';
     }
+  }
+
+  private showErrorPage(failedUrl: string): void {
+    if (!this.pageView) {
+      console.error('Failed to show error page due to missing webview');
+      return;
+    }
+
+    const errorPageUrl = this.buildErrorPageUrl(failedUrl);
+
+    if (!errorPageUrl) {
+      console.error('Failed to build error page URL');
+      return;
+    }
+
+    // Load error page in the webview
+    void this.pageView.loadURL(errorPageUrl);
+    this.updateAddressBar(failedUrl);
+    this.setLoading(false);
+  }
+
+  private buildErrorPageUrl(failedUrl: string): string | null {
+    const urlParameters = new URLSearchParams({
+      url: failedUrl,
+      locale: this.locale,
+    });
+    return `${this.errorPageUrl}?${urlParameters.toString()}`;
+  }
+
+  private handleFailLoad(event: Electron.DidFailLoadEvent): void {
+    // Show the error page only if the actual page fails to load.
+    // Without this, other frames (e.g. iframes) could trigger the error page.
+    if (!event.isMainFrame) {
+      return;
+    }
+
+    // Don't show the error page for cancelled loads or if error code is acceptable (ERR_ABORTED or OK)
+    if (event.errorCode === -3 || event.errorCode === 0) {
+      return;
+    }
+
+    console.error(
+      `Failed to load page: ${event.validatedURL}, error: ${event.errorCode}`
+    );
+    this.showErrorPage(event.validatedURL);
   }
 
   goBack(): void {
