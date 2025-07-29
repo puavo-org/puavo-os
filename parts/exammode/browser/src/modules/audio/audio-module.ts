@@ -18,10 +18,11 @@ import { run } from '../../utils/shell';
 export class AudioModule implements Module {
   static readonly FALLBACK_DISPLAY_NAME = 'Audio device';
 
+  readonly audioEventObserver: PulseAudioEventObserver;
+  readonly audioDevicesChangeNotifier: ChangeNotifier<AudioDevice[]>;
+  readonly activeDeviceChangeNotifier: ChangeNotifier<string>;
+
   dispatchClientNotification: ClientNotificationHandler = () => {};
-  private readonly audioEventObserver: PulseAudioEventObserver;
-  private readonly audioDevicesChangeNotifier: ChangeNotifier<AudioDevice[]>;
-  private readonly activeDeviceChangeNotifier: ChangeNotifier<string>;
 
   constructor() {
     this.audioEventObserver = new PulseAudioEventObserver(
@@ -65,9 +66,7 @@ export class AudioModule implements Module {
     this.dispatchClientNotification('AudioDevicesChanged', audioDevices);
   }
 
-  private async notifyActiveDeviceChanged(
-    activeDeviceId: string
-  ): Promise<void> {
+  async notifyActiveDeviceChanged(activeDeviceId: string): Promise<void> {
     if (!activeDeviceId) {
       logger.error('Received empty active device ID');
       return;
@@ -155,7 +154,7 @@ export class AudioModule implements Module {
     // channels in our case.
     const channelNames = sink.channel_map.split(',');
 
-    if (channelNames.length === 0) {
+    if (channelNames.length === 1 && !channelNames[0]?.trim()) {
       logger.error('No channels found for sink:', sink.name);
       return MAX_VOLUME;
     }
@@ -163,7 +162,9 @@ export class AudioModule implements Module {
     const channelName = channelNames[0];
 
     if (!this.isValidIdentifier(channelName)) {
-      logger.error('Invalid channel name for sink:', sink.name, channelName);
+      logger.error(
+        `Invalid channel name '${channelName}' for sink '${sink.name}'`
+      );
       return MAX_VOLUME;
     }
 
