@@ -11,6 +11,8 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
+    '!src/main.ts', // Main is for configuration
+    '!src/preload/**/*.ts', // Exclude preload files for now
     '!src/renderer/**/*.ts', // Exclude renderer files that require DOM
   ],
   moduleFileExtensions: ['ts', 'js', 'json'],

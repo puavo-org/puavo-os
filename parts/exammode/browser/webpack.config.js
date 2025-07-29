@@ -48,7 +48,7 @@ module.exports = [
     ...common,
     name: 'preload',
     target: 'electron-preload',
-    entry: './src/preload.ts',
+    entry: './src/preload/preload.ts',
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: 'preload.js',
@@ -81,6 +81,37 @@ module.exports = [
       new HtmlWebpackPlugin({
         template: './src/renderer/index.html',
         filename: 'index.html',
+        inject: 'body',
+      }),
+    ],
+  },
+
+  // Error page
+  {
+    ...common,
+    name: 'error',
+    target: 'electron-renderer',
+    entry: './src/renderer/error.ts',
+    output: {
+      path: path.resolve(__dirname, 'dist', 'renderer'),
+      filename: 'error.js',
+    },
+    module: {
+      rules: [
+        ...common.module.rules,
+        {
+          test: /\.css$/,
+          use: [MiniCssExtractPlugin.loader, 'css-loader'],
+        },
+      ],
+    },
+    plugins: [
+      new MiniCssExtractPlugin({
+        filename: 'error.css',
+      }),
+      new HtmlWebpackPlugin({
+        template: './src/renderer/error.html',
+        filename: 'error.html',
         inject: 'body',
       }),
     ],
