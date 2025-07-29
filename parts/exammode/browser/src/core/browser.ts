@@ -20,8 +20,12 @@ export class Browser {
 
     this.browserWindow.webContents.on(
       'did-fail-load',
-      (_event, _errorCode, _errorDescription, validatedURL) => {
-        this.handlePageLoadFailure(validatedURL);
+      (_event, _errorCode, _errorDescription, validatedURL, isMainFrame) => {
+        // Show the error page only if the actual page fails to load.
+        // Without this, other frames (e.g. iframes) could trigger the error page.
+        if (isMainFrame) {
+          this.handlePageLoadFailure(validatedURL);
+        }
       }
     );
 

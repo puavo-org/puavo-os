@@ -29,38 +29,43 @@ export const ipcMain = {
   removeAllListeners: jest.fn(),
 };
 
+function createMockEventTarget() {
+  const eventListeners = new Map<string, Function[]>();
+
+  const on = jest
+    .fn()
+    .mockImplementation((event: string, listener: Function) => {
+      if (!eventListeners.has(event)) {
+        eventListeners.set(event, []);
+      }
+      eventListeners.get(event)!.push(listener);
+    });
+
+  const emit = jest.fn().mockImplementation((event: string, ...args: any[]) => {
+    const listeners = eventListeners.get(event) || [];
+    listeners.forEach(listener => listener(...args));
+  });
+
+  return { on, emit };
+}
+
 export const BrowserWindow = jest
   .fn()
   .mockImplementation((): MockBrowserWindow => {
-    const eventListeners = new Map<string, Function[]>();
-
-    const on = jest
-      .fn()
-      .mockImplementation((event: string, listener: Function) => {
-        if (!eventListeners.has(event)) {
-          eventListeners.set(event, []);
-        }
-        eventListeners.get(event)!.push(listener);
-      });
-
-    const emit = jest
-      .fn()
-      .mockImplementation((event: string, ...args: any[]) => {
-        const listeners = eventListeners.get(event) || [];
-        listeners.forEach(listener => listener(...args));
-      });
+    const windowEventTarget = createMockEventTarget();
+    const webContentsEventTarget = createMockEventTarget();
 
     return {
       webContents: {
         send: jest.fn(),
         loadURL: jest.fn().mockResolvedValue(undefined),
         loadFile: jest.fn().mockResolvedValue(undefined),
-        on: jest.fn(),
+        on: webContentsEventTarget.on,
         once: jest.fn(),
         removeAllListeners: jest.fn(),
-        emit: jest.fn(),
+        emit: webContentsEventTarget.emit,
       },
-      on,
+      on: windowEventTarget.on,
       once: jest.fn(),
       setFullScreen: jest.fn(),
       maximize: jest.fn(),
@@ -69,7 +74,7 @@ export const BrowserWindow = jest
       close: jest.fn(),
       destroy: jest.fn(),
       removeAllListeners: jest.fn(),
-      emit,
+      emit: windowEventTarget.emit,
     };
   });
 
