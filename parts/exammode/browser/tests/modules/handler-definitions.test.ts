@@ -7,21 +7,21 @@ import { SessionModule } from '../../src/modules/session/session-module';
 import { AudioModule } from '../../src/modules/audio/audio-module';
 import type { Module } from '../../src/modules/module';
 
-// Mock the 'run' function from the shell utility
+// Mock node:fs, because brightness module IO prevents Jest from exiting
+jest.mock('node:fs', () => ({
+  watch: jest.fn(),
+}));
+
 jest.mock('../../src/utils/shell', () => ({
   run: jest.fn().mockResolvedValue(''),
 }));
 
-// Mock the PulseAudioEventObserver
-jest.mock(
-  '../../src/modules/audio/pulse-audio-event-observer',
-  () => ({
-    PulseAudioEventObserver: jest.fn().mockImplementation(() => ({
-      observe: jest.fn(),
-      stop: jest.fn(),
-    })),
-  })
-);
+jest.mock('../../src/modules/audio/pulse-audio-event-observer', () => ({
+  PulseAudioEventObserver: jest.fn().mockImplementation(() => ({
+    observe: jest.fn(),
+    stop: jest.fn(),
+  })),
+}));
 
 describe('ModuleHandlerDefinitions', () => {
   it('all modules should have valid handler definitions', () => {
