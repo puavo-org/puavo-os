@@ -6,6 +6,7 @@ class packages::backports {
 
   $package_list = [
     'kernel-wedge'      # needed by bpo kernel build
+    , 'linux-base'      # needed by bpo kernel installation
 
     # firmware packages
     , 'firmware-iwlwifi'        # needed by crisp kernel (from 6.11 onwards)
