@@ -53,7 +53,7 @@ excluded_files = [
 
 ## TODO: Can the script deduce this list?
 openjdk_copyrights = [
-  "Copyright (c) 1996-2023 Oracle and/or its affiliates.",
+  "Copyright (c) 1996-2025 Oracle and/or its affiliates.",
   "Copyright (c) 1996-2003 Sun Microsystems, Inc.",
   "Copyright (c) 2009-2012 Red Hat, Inc.",
   "Copyright (c) 2012-2022 SAP SE.",

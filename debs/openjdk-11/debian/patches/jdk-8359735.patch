@@ -1,0 +1,63 @@
+Description: Process tests fail due to rust-coreutils
+ To accommodate systems like Ubuntu 25.10 that use Rust coreutils,
+ this PR updates tests that previously assumed busybox was the only
+ environment to use symlinks for core utilities.
+ - java/lang/ProcessBuilder/Basic.java: The test is updated to simply
+   verify that /bin/true and /bin/false are symlinks,
+   removing the hardcoded check for a /bin/busybox target.
+ - java/lang/ProcessHandle/InfoTest.java: The test logic is relaxed.
+   It now confirms that /bin/sleep is a symlink and then uses the
+   symlink's target as the expected executable name.
+Author: Vladimir Petko <vladimir.petko@canonical.com>
+Origin: upstream, https://github.com/openjdk/jdk/pull/25838
+Bug: https://bugs.openjdk.org/browse/JDK-8359735
+Reviewed-by: Roger Riggs <roger.riggs@oracle.com>
+Last-Update: 2025-06-19
+---
+
+--- a/test/jdk/java/lang/ProcessBuilder/Basic.java
++++ b/test/jdk/java/lang/ProcessBuilder/Basic.java
+@@ -678,7 +678,7 @@ public class Basic {
+         public static String path() { return path; }
+         private static final String path = path0();
+         private static String path0(){
+-            if (!Platform.isBusybox("/bin/true")) {
++            if (!Files.isSymbolicLink(Paths.get("/bin/true"))) {
+                 return "/bin/true";
+             } else {
+                 File trueExe = new File("true");
+@@ -693,7 +693,7 @@ public class Basic {
+         public static String path() { return path; }
+         private static final String path = path0();
+         private static String path0(){
+-            if (!Platform.isBusybox("/bin/false")) {
++            if (!Files.isSymbolicLink(Paths.get("/bin/false"))) {
+                 return "/bin/false";
+             } else {
+                 File falseExe = new File("false");
+--- a/test/jdk/java/lang/ProcessHandle/InfoTest.java
++++ b/test/jdk/java/lang/ProcessHandle/InfoTest.java
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2014, 2023, Oracle and/or its affiliates. All rights reserved.
++ * Copyright (c) 2014, 2025, Oracle and/or its affiliates. All rights reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+@@ -294,10 +294,12 @@ public class InfoTest {
+                     String expected = "sleep";
+                     if (Platform.isWindows()) {
+                         expected = "sleep.exe";
+-                    } else if (Platform.isBusybox("/bin/sleep")) {
+-                        // With busybox sleep is just a sym link to busybox.
+-                        // The busbox executable is seen as ProcessHandle.Info command.
+-                        expected = "busybox";
++                    } else if (Files.isSymbolicLink(Paths.get("/bin/sleep"))) {
++                        // Busybox sleep is a symbolic link to /bin/busybox.
++                        // Rust coreutils sleep is a symbolic link to coreutils
++                        // The busbox/coreutils executables are seen as ProcessHandle.Info command.
++                        Path executable = Files.readSymbolicLink(Paths.get("/bin/sleep"));
++                        expected = executable.getFileName().toString();
+                     }
+                     Assert.assertTrue(command.endsWith(expected), "Command: expected: \'" +
+                             expected + "\', actual: " + command);

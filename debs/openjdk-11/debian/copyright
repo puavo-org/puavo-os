@@ -41,7 +41,7 @@ Comment:
 
 Files: *
 Copyright:
-  Copyright (c) 1996-2023 Oracle and/or its affiliates.
+  Copyright (c) 1996-2025 Oracle and/or its affiliates.
   Copyright (c) 1996-2003 Sun Microsystems, Inc.
   Copyright (c) 2009-2012 Red Hat, Inc.
   Copyright (c) 2012-2022 SAP SE.
@@ -1348,7 +1348,7 @@ License:   GPL with Classpath exception
   --- end of LICENSE ---
   .
   ------------------------------------------------------------------------------
-  %% This notice is provided with respect to The FreeType Project: Freetype v2.13.2,
+  %% This notice is provided with respect to The FreeType Project: Freetype v2.13.3,
   which may be included with JRE 11, JDK 11 and OpenJDK 11
   .
   --- begin of LICENSE ---
@@ -1374,23 +1374,23 @@ License:   GPL with Classpath exception
   FreeType License
   .
   .
-  Copyright (C) 1996-2023 by David Turner, Robert Wilhelm, and Werner Lemberg.
-  Copyright (C) 2007-2023 by Dereg Clegg and Michael Toftdal.
-  Copyright (C) 1996-2023 by Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.
-  Copyright (C) 2022-2023 by David Turner, Robert Wilhelm, Werner Lemberg, George Williams, and
-  Copyright (C) 2004-2023 by Masatake YAMATO and Redhat K.K.
-  Copyright (C) 2007-2023 by Derek Clegg and Michael Toftdal.
-  Copyright (C) 2003-2023 by Masatake YAMATO, Red Hat K.K.,
-  Copyright (C) 1996-2023 by David Turner, Robert Wilhelm, Werner Lemberg, and Dominik Röttsches.
-  Copyright (C) 2007-2023 by David Turner.
-  Copyright (C) 2022-2023 by David Turner, Robert Wilhelm, Werner Lemberg, and Moazin Khatti.
-  Copyright (C) 2007-2023 by Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.
-  Copyright (C) 2008-2023 by David Turner, Robert Wilhelm, Werner Lemberg, and suzuki toshiya.
-  Copyright (C) 2013-2023 by Google, Inc.
-  Copyright (C) 2019-2023 by Nikhil Ramakrishnan, David Turner, Robert Wilhelm, and Werner Lemberg.
-  Copyright (C) 2009-2023 by Oran Agra and Mickey Gabel.
-  Copyright (C) 2018-2023 by David Turner, Robert Wilhelm, Dominik Röttsches, and Werner Lemberg.
-  Copyright (C) 2004-2023 by David Turner, Robert Wilhelm, Werner Lemberg, and George Williams.
+  Copyright (C) 1996-2024 by David Turner, Robert Wilhelm, and Werner Lemberg.
+  Copyright (C) 2007-2024 by Dereg Clegg and Michael Toftdal.
+  Copyright (C) 1996-2024 by Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.
+  Copyright (C) 2022-2024 by David Turner, Robert Wilhelm, Werner Lemberg, George Williams, and
+  Copyright (C) 2004-2024 by Masatake YAMATO and Redhat K.K.
+  Copyright (C) 2007-2024 by Derek Clegg and Michael Toftdal.
+  Copyright (C) 2003-2024 by Masatake YAMATO, Red Hat K.K.,
+  Copyright (C) 1996-2024 by David Turner, Robert Wilhelm, Werner Lemberg, and Dominik Röttsches.
+  Copyright (C) 2007-2024 by David Turner.
+  Copyright (C) 2022-2024 by David Turner, Robert Wilhelm, Werner Lemberg, and Moazin Khatti.
+  Copyright (C) 2007-2024 by Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.
+  Copyright (C) 2008-2024 by David Turner, Robert Wilhelm, Werner Lemberg, and suzuki toshiya.
+  Copyright (C) 2013-2024 by Google, Inc.
+  Copyright (C) 2019-2024 by Nikhil Ramakrishnan, David Turner, Robert Wilhelm, and Werner Lemberg.
+  Copyright (C) 2009-2024 by Oran Agra and Mickey Gabel.
+  Copyright (C) 2018-2024 by David Turner, Robert Wilhelm, Dominik Röttsches, and Werner Lemberg.
+  Copyright (C) 2004-2024 by David Turner, Robert Wilhelm, Werner Lemberg, and George Williams.
   .
   .
                       The FreeType Project LICENSE
@@ -1568,7 +1568,7 @@ License:   GPL with Classpath exception
   .
   .
   ---------------------------------
-  The below license applies to the following files:
+  The below applies to the following file(s):
   libfreetype/src/psaux/psarrst.c
   libfreetype/src/psaux/psarrst.h
   libfreetype/src/psaux/psblues.c
@@ -1591,7 +1591,7 @@ License:   GPL with Classpath exception
   libfreetype/src/psaux/psstack.h
   libfreetype/src/psaux/pstypes.h
   .
-  Copyright 2006-2014 Adobe Systems Incorporated.
+  Copyright (C) 2006-2014 Adobe Systems Incorporated.
   .
   This software, and all works of authorship, whether in source or
   object code form as indicated by the copyright notice(s) included
@@ -1627,12 +1627,12 @@ License:   GPL with Classpath exception
   .
   .
   ---------------------------------
-  The below license applies to the following files:
+  The below applies to the following file(s):
   libfreetype/include/freetype/internal/fthash.h
   libfreetype/src/base/fthash.c
   .
-  Copyright 2000 Computing Research Labs, New Mexico State University
-  Copyright 2001-2015
+  Copyright (C) 2000 Computing Research Labs, New Mexico State University
+  Copyright (C) 2001-2015
   .
     Francesco Zappa Nardelli
   .
@@ -1770,7 +1770,7 @@ License:   GPL with Classpath exception
   --- end of LICENSE ---
   .
   ------------------------------------------------------------------------------
-  %% This notice is provided with respect to Little Color Management System (LCMS) v2.16,
+  %% This notice is provided with respect to Little Color Management System (LCMS) v2.17,
   which may be included with JRE 11, JDK 11 and OpenJDK 11
   .
   --- begin of LICENSE ---
@@ -1780,7 +1780,7 @@ License:   GPL with Classpath exception
   .
   MIT License
   .
-  Copyright (C) 1998-2023 Marti Maria Saguer
+  Copyright (C) 1998-2025 Marti Maria Saguer
   .
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the "Software"),
@@ -1801,10 +1801,10 @@ License:   GPL with Classpath exception
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   .
   ---------------------------------
-  The below license applies to the following files:
+  The below applies to the following file(s):
   liblcms/cmssm.c
   .
-  Copyright 2001, softSurfer (www.softsurfer.com)
+  Copyright (C) 2001, softSurfer (www.softsurfer.com)
   .
   This code may be freely used and modified for any purpose
   providing that this copyright notice is included with it.
@@ -1874,8 +1874,7 @@ License:   GPL with Classpath exception
   Dimitrios Anastassakis
   Lemke Software
   Tim Zaman
-  .
-  .
+  Amir Montazery and Open Source Technology Improvement Fund (ostif.org), Google, for fuzzer fundings.
   .
   --- end of LICENSE ---
   .
@@ -2304,7 +2303,7 @@ License:   GPL with Classpath exception
   --- end of LICENSE ---
   .
   ------------------------------------------------------------------------------
-  %% This notice is provided with respect to OASIS PKCS #11 Cryptographic Token Interface v3.0,
+  %% This notice is provided with respect to OASIS PKCS #11 Cryptographic Token Interface v3.1,
   which may be included with JRE 11, JDK 11 and OpenJDK 11
   .
   --- begin of LICENSE ---
@@ -2312,14 +2311,14 @@ License:   GPL with Classpath exception
   OASIS PKCS #11 Cryptographic Token Interface License
   .
   .
-  Copyright © OASIS Open 2020. All Rights Reserved.
+  Copyright © OASIS Open 2023. All Rights Reserved.
   .
-      All capitalized terms in the following text have the meanings
+  All capitalized terms in the following text have the meanings
   assigned to them in the OASIS Intellectual Property Rights Policy (the
   "OASIS IPR Policy"). The full Policy may be found at the OASIS website:
-  [http://www.oasis-open.org/policies-guidelines/ipr]
+  [https://www.oasis-open.org/policies-guidelines/ipr/].
   .
-      This document and translations of it may be copied and furnished to
+  This document and translations of it may be copied and furnished to
   others, and derivative works that comment on or otherwise explain it or
   assist in its implementation may be prepared, copied, published, and
   distributed, in whole or in part, without restriction of any kind,
@@ -2332,10 +2331,10 @@ License:   GPL with Classpath exception
   forth in the OASIS IPR Policy, must be followed) or as required to
   translate it into languages other than English.
   .
-      The limited permissions granted above are perpetual and will not be
+  The limited permissions granted above are perpetual and will not be
   revoked by OASIS or its successors or assigns.
   .
-      This document and the information contained herein is provided on an
+  This document and the information contained herein is provided on an
   "AS IS" basis and OASIS DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED,
   INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE
   INFORMATION HEREIN WILL NOT INFRINGE ANY OWNERSHIP RIGHTS OR ANY IMPLIED
@@ -2344,7 +2343,11 @@ License:   GPL with Classpath exception
   CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THIS DOCUMENT OR ANY
   PART THEREOF.
   .
-      [OASIS requests that any OASIS Party or any other party that
+  As stated in the OASIS IPR Policy, the following three paragraphs in
+  brackets apply to OASIS Standards Final Deliverable documents (Committee
+  Specifications, OASIS Standards, or Approved Errata).
+  .
+  [OASIS requests that any OASIS Party or any other party that
   believes it has patent claims that would necessarily be infringed by
   implementations of this OASIS Standards Final Deliverable, to notify
   OASIS TC Administrator and provide an indication of its willingness to
@@ -2352,7 +2355,7 @@ License:   GPL with Classpath exception
   the IPR Mode of the OASIS Technical Committee that produced this
   deliverable.]
   .
-      [OASIS invites any party to contact the OASIS TC Administrator if it
+  [OASIS invites any party to contact the OASIS TC Administrator if it
   is aware of a claim of ownership of any patent claims that would
   necessarily be infringed by implementations of this OASIS Standards
   Final Deliverable by a patent holder that is not willing to provide a
@@ -2361,7 +2364,7 @@ License:   GPL with Classpath exception
   Final Deliverable. OASIS may include such claims on its website, but
   disclaims any obligation to do so.]
   .
-      [OASIS takes no position regarding the validity or scope of any
+  [OASIS takes no position regarding the validity or scope of any
   intellectual property or other rights that might be claimed to pertain
   to the implementation or use of the technology described in this OASIS
   Standards Final Deliverable or the extent to which any license under
@@ -3060,7 +3063,7 @@ License:   GPL with Classpath exception
   --- end of LICENSE ---
   .
   ------------------------------------------------------------------------------
-  %% This notice is provided with respect to JLine v3.22.0,
+  %% This notice is provided with respect to JLine v3.26.1,
   which may be included with JRE 11, JDK 11 and OpenJDK 11
   .
   --- begin of LICENSE ---
@@ -3068,7 +3071,7 @@ License:   GPL with Classpath exception
   JLine License
   .
   .
-  Copyright (c) 2002-2018, the original author or authors.
+  Copyright (c) 2002-2023, the original author or authors.
   All rights reserved.
   .
   https://opensource.org/licenses/BSD-3-Clause

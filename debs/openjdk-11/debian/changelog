@@ -1,8 +1,30 @@
-openjdk-11 (11.0.27+6-1~deb11u1+puavo1) bullseye; urgency=medium
+openjdk-11 (11.0.28+6-1~deb11u1) bullseye-security; urgency=medium
 
-  * Build with our patches.
+  * Non-maintainer upload by the LTS Team.
+  * Backport to bullseye.
 
- -- Puavo Org <dev@opinsys.fi>  Thu, 05 Jun 2025 11:52:21 +0300
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Mon, 21 Jul 2025 13:00:49 +0200
+
+openjdk-11 (11.0.28+6-1) unstable; urgency=high
+
+  * OpenJDK 11.0.28 release, build 6.
+    - Addresses CVE-2025-5010, CVE-2025-50059, CVE-2025-30754, CVE-2025-30749.
+      See https://openjdk.org/groups/vulnerability/advisories/2025-07-15.
+    - Release notes:
+      https://mail.openjdk.org/pipermail/jdk-updates-dev/2025-July/045612.html
+
+  [ Vladimir Petko ]
+  * d/p/jdk-8359735-proposed.patch: Fix process tests failing in Ubuntu 25.10.
+  * d/copyright-generator/copyright-gen.py: bump copyright year.
+  * d/copyright: regenerate.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sat, 19 Jul 2025 13:48:15 +0200
+
+openjdk-11 (11.0.28~3ea-1) unstable; urgency=medium
+
+  * OpenJDK 11.0.28+3 build (early access).
+
+ -- Matthias Klose <doko@ubuntu.com>  Tue, 03 Jun 2025 14:20:18 +0200
 
 openjdk-11 (11.0.27+6-1~deb11u1) bullseye-security; urgency=medium
 
