@@ -5,7 +5,9 @@ class desktop::dconf::exammode {
     [ '/etc/dconf/db/puavo-exammode.d'
     , '/etc/dconf/db/puavo-exammode.d/locks'
     , '/etc/dconf/db/puavo-exammode-devel.d'
-    , '/etc/dconf/db/puavo-exammode-devel.d/locks' ]:
+    , '/etc/dconf/db/puavo-exammode-devel.d/locks'
+    , '/etc/dconf/db/puavo-exammode-strict.d'
+    , '/etc/dconf/db/puavo-exammode-strict.d/locks' ]:
       ensure => directory;
 
     '/etc/dconf/db/puavo-exammode.d/locks/puavo_exammode_locks':
@@ -22,6 +24,14 @@ class desktop::dconf::exammode {
 
     '/etc/dconf/db/puavo-exammode-devel.d/puavo_exammode_devel_profile':
       content => template('desktop/dconf_puavo_exammode_devel_profile'),
+      notify  => Exec['update dconf'];
+
+    '/etc/dconf/db/puavo-exammode-strict.d/locks/puavo_exammode_strict_locks':
+      content => template('desktop/dconf_puavo_exammode_strict_locks'),
+      notify  => Exec['update dconf'];
+
+    '/etc/dconf/db/puavo-exammode-strict.d/puavo_exammode_strict_profile':
+      content => template('desktop/dconf_puavo_exammode_strict_profile'),
       notify  => Exec['update dconf'];
   }
 }
