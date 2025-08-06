@@ -2,5 +2,6 @@
 # (it makes no sense to lock the screen if there is no password to open it)
 
 if [ "$USER" = 'puavo-examuser' ]; then
-  export EXAMMODE_SESSION=true
+  EXAMMODE_SESSION="$(jq -r .type /var/lib/puavo-exammode/session.json)"
+  export EXAMMODE_SESSION
 fi

@@ -4,7 +4,7 @@
 
 puavo_locale=''
 
-if [ "${EXAMMODE_SESSION:-}" = 'true' ]; then
+if [ -n "${EXAMMODE_SESSION:-}" ]; then
   puavo_locale=$(jq -r .locale /var/lib/puavo-exammode/session.json \
                    2>/dev/null) || true
 fi
