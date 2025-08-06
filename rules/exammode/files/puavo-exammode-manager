@@ -238,6 +238,17 @@ class PuavoExammode < DBus::Object
         write_prepare_session_specs()
     end
 
+    dbus_method :StartAbitti2Session, 'in exam_url:s' do |exam_url|
+      exam_info = {
+        'params' => {
+          'abitti2' => true,
+          'url'     => exam_url,
+        }
+      }
+      write_exam_session_specs(:url, exam_info)
+      start_session()
+    end
+
     dbus_method :StartFreeSession, '' do
       write_exam_session_specs(:free, {})
       start_session()
