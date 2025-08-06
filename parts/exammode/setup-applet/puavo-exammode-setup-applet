@@ -152,6 +152,10 @@ class UrlInterface(JoinChoice):
 
     try:
       msg = Soup.Message.new('HEAD', url)
+      user_agent_string = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'   \
+                            + ' AppleWebKit/537.36 (KHTML, like Gecko)' \
+                            + ' Chrome/134.0.0.0 Safari/537.36'
+      msg.request_headers.append('User-Agent', user_agent_string)
       self.soup_message = msg
       self.soup_session.queue_message(msg, self.on_url_checked, url)
     except Exception as e:
