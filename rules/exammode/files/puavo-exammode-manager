@@ -122,6 +122,13 @@ class PuavoExammode < DBus::Object
 
     session_data =
       case mode
+        when :abitti2
+          {
+            'locale' => @locale,
+            'name'   => 'Abitti 2 exam',
+            'params' => exam_info['params'],
+            'type'   => 'abitti-2-exam',
+          }
         when :examomatic
           {
             'locale' => @locale,
@@ -239,13 +246,8 @@ class PuavoExammode < DBus::Object
     end
 
     dbus_method :StartAbitti2Session, 'in exam_url:s' do |exam_url|
-      exam_info = {
-        'params' => {
-          'abitti2' => true,
-          'url'     => exam_url,
-        }
-      }
-      write_exam_session_specs(:url, exam_info)
+      exam_info = { 'params' => { 'url' => exam_url } }
+      write_exam_session_specs(:abitti2, exam_info)
       start_session()
     end
 
