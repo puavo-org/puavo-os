@@ -1,3 +1,4 @@
+import { ControlPanelController } from './control-panel';
 import { ToolbarController } from './renderer';
 import './renderer.css';
 
@@ -18,14 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const showNavigation = config.get('showNavigation') !== 'false';
   const showReload = config.get('showReload') !== 'false';
   const showAddressBar = config.get('showAddressBar') !== 'false';
+  const showControlPanel = config.get('showControlPanel') !== 'false';
+
+  const pageView = document.getElementById('page') as Electron.WebviewTag;
+  const controlPanel = document.getElementById('control-panel');
+  const controlPanelOverlay = document.getElementById('control-panel-overlay');
+
+  if (!controlPanel || !controlPanelOverlay) {
+    throw new Error('Failed to find control panel elements');
+  }
+
+  const controlPanelController = new ControlPanelController(
+    pageView,
+    controlPanel,
+    controlPanelOverlay
+  );
 
   const controller = new ToolbarController(
     errorPageUrl,
     locale,
     themeMediaQuery,
-    toolbarElement
+    toolbarElement,
+    pageView,
+    controlPanelController
   );
   controller.setNavigationVisibility(showNavigation);
   controller.setReloadButtonVisibility(showReload);
   controller.setAddressBarVisibility(showAddressBar);
+  controller.setControlPanelButtonVisibility(showControlPanel);
 });
