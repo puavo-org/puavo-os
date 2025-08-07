@@ -1,23 +1,31 @@
 /* eslint-disable no-console */
+import { ControlPanelController } from './control-panel';
+
 export class ToolbarController {
   private backButton!: HTMLButtonElement;
   private errorPageUrl: string;
   private forwardButton!: HTMLButtonElement;
   private locale: string;
   private reloadButton!: HTMLButtonElement;
+  private controlPanelButton!: HTMLButtonElement;
   private addressBar!: HTMLInputElement;
   private pageView!: Electron.WebviewTag;
   private readonly themeMediaQuery: MediaQueryList;
+  private controlPanelController: ControlPanelController;
 
   constructor(
     errorPageUrl: string,
     locale: string,
     themeMediaQuery: MediaQueryList,
-    toolbarElement: HTMLElement
+    toolbarElement: HTMLElement,
+    pageView: Electron.WebviewTag,
+    controlPanelController: ControlPanelController
   ) {
     this.errorPageUrl = errorPageUrl;
     this.locale = locale;
+    this.pageView = pageView;
     this.themeMediaQuery = themeMediaQuery;
+    this.controlPanelController = controlPanelController;
     this.initializeElements(toolbarElement);
     this.loadConfiguredURL();
     this.attachEventListeners();
@@ -33,6 +41,9 @@ export class ToolbarController {
     ) as HTMLButtonElement;
     this.reloadButton = toolbarElement.querySelector(
       '#reload-button'
+    ) as HTMLButtonElement;
+    this.controlPanelButton = toolbarElement.querySelector(
+      '#control-panel-button'
     ) as HTMLButtonElement;
     this.addressBar = toolbarElement.querySelector(
       '#address-bar'
@@ -60,6 +71,10 @@ export class ToolbarController {
     this.backButton.addEventListener('click', this.goBack.bind(this));
     this.forwardButton.addEventListener('click', this.goForward.bind(this));
     this.reloadButton.addEventListener('click', this.reload.bind(this));
+    this.controlPanelButton.addEventListener(
+      'click',
+      this.openControlPanel.bind(this)
+    );
 
     this.addressBar.addEventListener(
       'keypress',
@@ -245,22 +260,6 @@ export class ToolbarController {
     this.updateButtonStates();
   }
 
-  zoomIn(): void {
-    this.pageView.setZoomLevel(this.pageView.getZoomLevel() + 1);
-  }
-
-  zoomOut(): void {
-    this.pageView.setZoomLevel(this.pageView.getZoomLevel() - 1);
-  }
-
-  resetZoom(): void {
-    this.pageView.setZoomLevel(1);
-  }
-
-  getZoomLevel(): number {
-    return this.pageView.getZoomLevel();
-  }
-
   reload(): void {
     this.pageView.reload();
     this.setLoading(true);
@@ -284,6 +283,16 @@ export class ToolbarController {
   setAddressBarVisibility(show: boolean): void {
     if (this.addressBar) {
       this.addressBar.style.display = show ? 'flex' : 'none';
+    }
+  }
+
+  openControlPanel(): void {
+    this.controlPanelController.toggle();
+  }
+
+  setControlPanelButtonVisibility(show: boolean): void {
+    if (this.controlPanelButton) {
+      this.controlPanelButton.style.display = show ? 'flex' : 'none';
     }
   }
 }
