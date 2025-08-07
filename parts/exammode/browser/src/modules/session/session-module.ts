@@ -10,13 +10,13 @@ export class SessionModule implements Module {
   dispatchClientNotification: ClientNotificationHandler = () => {};
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async setSessionSecret(): Promise<void> {
-    logger.warn('Session secret is not implemented');
+  async setSessionData(): Promise<void> {
+    logger.warn('Session data is not implemented');
   }
 
   getNotifyHandlerDefinitions(): Map<string, NotifyHandler> {
     return new Map<string, QueryHandler>([
-      ['setSessionSecret', this.setSessionSecret.bind(this)],
+      ['setSessionData', this.setSessionData.bind(this)],
     ]);
   }
 

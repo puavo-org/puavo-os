@@ -8,7 +8,7 @@ const notifyDispatchOverrideTable = new Map<string, string>([
   ['AudioDeviceVolumeChanged', 'changeAudioDeviceVolume'],
   ['BrightnessChanged', 'setBrightness'],
   ['ScreenshotRequested', 'takeScreenshot'],
-  ['SessionSecretChanged', 'setSessionSecret'],
+  ['SessionChanged', 'setSessionData'],
   ['ShutdownRequested', 'shutdown'],
   ['StartSurveillance', 'startSurveillance'],
 ]);
