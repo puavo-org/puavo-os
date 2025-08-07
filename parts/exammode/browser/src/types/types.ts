@@ -2,6 +2,7 @@ export interface ToolbarConfig {
   showAddressBar: boolean;
   showNavigation: boolean;
   showReload: boolean;
+  showControlPanel: boolean;
 }
 
 export interface ShellConfig {

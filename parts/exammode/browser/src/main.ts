@@ -30,6 +30,7 @@ const config: BrowserConfig = {
       showNavigation: !app.commandLine.hasSwitch('hide-navigation'),
       showReload: !app.commandLine.hasSwitch('hide-reload'),
       showAddressBar: !app.commandLine.hasSwitch('hide-address-bar'),
+      showControlPanel: !app.commandLine.hasSwitch('hide-control-panel'),
     },
   },
   url: app.commandLine.getSwitchValue('url') || EMPTY_PAGE_URL,

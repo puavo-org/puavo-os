@@ -77,6 +77,8 @@ export class Browser {
           showNavigation: this.config.shell.toolbar.showNavigation.toString(),
           showReload: this.config.shell.toolbar.showReload.toString(),
           showAddressBar: this.config.shell.toolbar.showAddressBar.toString(),
+          showControlPanel:
+            this.config.shell.toolbar.showControlPanel.toString(),
         },
       };
 
