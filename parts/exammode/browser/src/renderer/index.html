@@ -1,40 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> </title>
+    <link rel="stylesheet" href="renderer.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> </title>
-  <link rel="stylesheet" href="renderer.css">
-</head>
+  <body class="browser">
+    <div class="toolbar">
+      <div class="navigation-buttons">
+        <button class="button navigation" id="back-button" title="Go Back">
+          🡐
+        </button>
+        <button
+          class="button navigation"
+          id="forward-button"
+          title="Go Forward"
+        >
+          🡒
+        </button>
+      </div>
 
-<body class="browser">
-  <div class="toolbar">
-    <div class="navigation-buttons">
-      <button class="navigation-button" id="back-button" title="Go Back">
-        🡐
+      <button class="button reload" id="reload-button" title="Reload Page">
+        <div>↻</div>
       </button>
-      <button class="navigation-button" id="forward-button" title="Go Forward">
-        🡒
+
+      <div class="address-bar-container">
+        <input
+          type="text"
+          class="address-bar"
+          id="address-bar"
+          placeholder="URL"
+          spellcheck="false"
+        />
+      </div>
+
+      <button
+        class="button control-panel-button"
+        id="control-panel-button"
+        title="Control Panel"
+      >
+        <div>⚙</div>
       </button>
     </div>
 
-    <button class="reload-button" id="reload-button" title="Reload Page">
-      <div>↻</div>
-    </button>
+    <webview id="page" src="about:blank" allowpopups></webview>
 
-    <div class="address-bar-container">
-      <input
-        type="text"
-        class="address-bar"
-        id="address-bar"
-        placeholder="URL"
-        spellcheck="false"
-      />
+    <div class="control-panel" id="control-panel">
+      <div class="control-panel-header">
+        <button
+          class="control-panel-close"
+          id="control-panel-close"
+          title="Close"
+        >
+          ×
+        </button>
+      </div>
+      <div class="control-panel-content">
+        <div class="zoom-controls">
+          <label for="zoom-slider">Zoom</label>
+          <input
+            type="range"
+            id="zoom-slider"
+            min="0.5"
+            max="3"
+            step="0.1"
+            value="1"
+          />
+          <span id="zoom-level">100%</span>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <webview id='page' src='about:blank' allowpopups></webview>
-</body>
-
+    <div class="control-panel-overlay" id="control-panel-overlay"></div>
+  </body>
 </html>
