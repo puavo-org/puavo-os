@@ -110,9 +110,11 @@ end
 
 class PuavoExammode < DBus::Object
   def initialize(*args)
+    @desktop_session_vt = nil
     @exams_listener = nil
     @locale = nil
     @registration_done = false
+    @username = nil
     super
   end
 
@@ -186,21 +188,6 @@ class PuavoExammode < DBus::Object
                username, locale)
   end
 
-  # XXX unclear if this can be used or if this is useful
-  # XXX puavo-exammode-applet could send Unregister message when it exits
-  def unregister
-    unless @registration_done then
-      Syslog.log(Syslog::LOG_INFO, 'unregister called but no one is registered')
-      return
-    end
-
-    Syslog.log(Syslog::LOG_INFO, 'user %s (locale=%s) unregistered',
-               @username, @locale)
-    @locale = nil
-    @registration_done = false
-    @username = nil
-  end
-
   def get_vt_number
     begin
       desktop_session_vt = %x(fgconsole).chomp
@@ -215,6 +202,12 @@ class PuavoExammode < DBus::Object
   end
 
   def start_session
+    unless @username then
+      errmsg = 'username not known, can not activate exam session'
+      Syslog.log(Syslog::LOG_ERR, errmsg)
+      raise errmsg
+    end
+
     if ! system('loginctl', 'lock-sessions') then
       Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
       raise 'error in locking sessions'
@@ -236,7 +229,6 @@ class PuavoExammode < DBus::Object
     # (let normal desktop session processes react to lock-session)
     sleep(5)
 
-    # XXX should verify that @username is set
     Syslog.log(Syslog::LOG_NOTICE,
                "sending STOP signal to all user #{ @username } processes")
     if ! system('/usr/bin/pkill', '--signal', 'STOP', '-u', @username) then
@@ -249,11 +241,18 @@ class PuavoExammode < DBus::Object
   dbus_interface 'org.puavo.Exam.exammode' do
     dbus_signal :ExamsAvailable, 'in exams:s'
 
+    # XXX could double registering be prevented somehow?
     dbus_method :Register, 'in username:s, in locale:s, in krb5ccname:s' do
       |username, locale, krb5ccname|
-        # XXX it should not be possible to do this in case there is an
-        # XXX ongoing exam session
+        if @desktop_session_vt then
+          errmsg = 'registering a new user is not possible' \
+                     + ' as there is an ongoing exam session'
+          Syslog.log(Syslog::LOG_ERR, errmsg)
+          raise errmsg
+        end
+
         register(username, locale)
+
         @exams_listener.destroy if @exams_listener
         @exams_listener = ExamsListener.new(self, username, krb5ccname)
         write_prepare_session_specs()
@@ -291,9 +290,15 @@ class PuavoExammode < DBus::Object
     dbus_method :QuitSession do
       begin
         unless @desktop_session_vt then
-          Syslog.log(Syslog::LOG_ERR,
-                     'got request to end exam session that is not active')
-          raise 'can not end exam session that is not active'
+          errmsg = 'got request to end exam session that is not active'
+          Syslog.log(Syslog::LOG_ERR, errmsg)
+          raise errmsg
+        end
+
+        unless @username then
+          errmsg = 'username not known, can not quit exam session'
+          Syslog.log(Syslog::LOG_ERR, errmsg)
+          raise errmsg
         end
 
         if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'stop') then
@@ -306,7 +311,6 @@ class PuavoExammode < DBus::Object
         rescue Errno::ENOENT
         end
 
-        # XXX should verify that @username is set
         Syslog.log(Syslog::LOG_NOTICE,
                    "sending CONT signal to all user #{ @username } processes")
         if ! system('/usr/bin/pkill', '--signal', 'CONT', '-u', @username) then
@@ -322,10 +326,6 @@ class PuavoExammode < DBus::Object
       ensure
         @desktop_session_vt = nil
       end
-    end
-
-    dbus_method :Unregister, '' do
-      unregister()
     end
   end
 end
