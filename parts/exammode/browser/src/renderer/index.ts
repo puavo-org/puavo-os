@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const showReload = config.get('showReload') !== 'false';
   const showAddressBar = config.get('showAddressBar') !== 'false';
   const showControlPanel = config.get('showControlPanel') !== 'false';
+  const isAddressBarInitiallyEditable = config.get('isAddressBarInitiallyEditable') !== 'false';
+  const keepAddressBarEditable =
+    config.get('keepAddressBarEditable') !== 'false';
 
   const pageView = document.getElementById('page') as Electron.WebviewTag;
   const controlPanel = document.getElementById('control-panel');
@@ -47,4 +50,5 @@ document.addEventListener('DOMContentLoaded', () => {
   controller.setReloadButtonVisibility(showReload);
   controller.setAddressBarVisibility(showAddressBar);
   controller.setControlPanelButtonVisibility(showControlPanel);
+  controller.setAddressBarConfig(isAddressBarInitiallyEditable, keepAddressBarEditable);
 });

@@ -79,6 +79,10 @@ export class Browser {
           showAddressBar: this.config.shell.toolbar.showAddressBar.toString(),
           showControlPanel:
             this.config.shell.toolbar.showControlPanel.toString(),
+          isAddressBarInitiallyEditable:
+            this.config.shell.toolbar.isAddressBarInitiallyEditable.toString(),
+          keepAddressBarEditable:
+            this.config.shell.toolbar.keepAddressBarEditable.toString(),
         },
       };
 

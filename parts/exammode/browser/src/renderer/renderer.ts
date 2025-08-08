@@ -12,6 +12,7 @@ export class ToolbarController {
   private pageView!: Electron.WebviewTag;
   private readonly themeMediaQuery: MediaQueryList;
   private controlPanelController: ControlPanelController;
+  private keepAddressBarEditable: boolean = false;
 
   constructor(
     errorPageUrl: string,
@@ -105,6 +106,10 @@ export class ToolbarController {
       'did-fail-load',
       this.handleFailLoad.bind(this)
     );
+    this.pageView.addEventListener(
+      'did-stop-loading',
+      this.handleLoaded.bind(this)
+    );
 
     window.addEventListener('focus', this.handleWindowFocus.bind(this));
   }
@@ -134,6 +139,7 @@ export class ToolbarController {
     if (url) {
       const normalizedUrl = this.normalizeUrl(url);
       this.pageView.src = normalizedUrl;
+      this.addressBar.blur();
       this.updateAddressBar(normalizedUrl);
       this.setLoading(true);
     }
@@ -168,8 +174,8 @@ export class ToolbarController {
   }
 
   private normalizeUrl(url: string): string {
-    // Handle special case for about:blank
-    if (url === 'about:blank') {
+    // Handle special URLs
+    if (url === 'about:blank' || url.startsWith('file://')) {
       return url;
     }
 
@@ -192,8 +198,12 @@ export class ToolbarController {
     document.body.classList.toggle('loading', isLoading);
   }
 
+  private isContentPage(url: string): boolean {
+    return url.startsWith('http://') || url.startsWith('https://');
+  }
+
   private updateAddressBar(url: string): void {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (this.isContentPage(url)) {
       this.addressBar.value = url;
     } else {
       // Display the address bar as "blank" for special sites (e.g. blank and error page)
@@ -226,6 +236,21 @@ export class ToolbarController {
       locale: this.locale,
     });
     return `${this.errorPageUrl}?${urlParameters.toString()}`;
+  }
+
+  private handleLoaded(_event: DOMEvent): void {
+    const hasLockedAddressBar = this.addressBar.disabled;
+
+    if (hasLockedAddressBar) {
+      return;
+    }
+
+    // Lock the address bar after successful content page load, unless configured otherwise
+    if (this.isContentPage(this.pageView.src) && !this.keepAddressBarEditable) {
+      this.addressBar.disabled = true;
+      // Clear the history, so the user can't go back
+      this.pageView.clearHistory();
+    }
   }
 
   private handleFailLoad(event: Electron.DidFailLoadEvent): void {
@@ -294,5 +319,13 @@ export class ToolbarController {
     if (this.controlPanelButton) {
       this.controlPanelButton.style.display = show ? 'flex' : 'none';
     }
+  }
+
+  setAddressBarConfig(
+    isAddressBarInitiallyEditable: boolean,
+    keepAddressBarEditable: boolean
+  ) {
+    this.addressBar.disabled = !isAddressBarInitiallyEditable;
+    this.keepAddressBarEditable = keepAddressBarEditable;
   }
 }
