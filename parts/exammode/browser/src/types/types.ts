@@ -3,6 +3,8 @@ export interface ToolbarConfig {
   showNavigation: boolean;
   showReload: boolean;
   showControlPanel: boolean;
+  isAddressBarInitiallyEditable: boolean;
+  keepAddressBarEditable: boolean;
 }
 
 export interface ShellConfig {

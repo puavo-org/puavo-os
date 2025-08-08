@@ -31,6 +31,12 @@ const config: BrowserConfig = {
       showReload: !app.commandLine.hasSwitch('hide-reload'),
       showAddressBar: !app.commandLine.hasSwitch('hide-address-bar'),
       showControlPanel: !app.commandLine.hasSwitch('hide-control-panel'),
+      isAddressBarInitiallyEditable:
+        app.commandLine.hasSwitch('set-address-bar-editable') ||
+        !app.commandLine.hasSwitch('url'),
+      keepAddressBarEditable: app.commandLine.hasSwitch(
+        'set-address-bar-editable'
+      ),
     },
   },
   url: app.commandLine.getSwitchValue('url') || EMPTY_PAGE_URL,
