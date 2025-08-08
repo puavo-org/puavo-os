@@ -98,7 +98,8 @@ class ErrorPageController {
     const translations = getTranslations();
     this.retryButton.textContent = translations.error['error.loading'];
 
-    window.location.href = this.failedUrl;
+    window.history.back();
+    window.location.replace(this.failedUrl);
   }
 
   private handleExit(): void {
