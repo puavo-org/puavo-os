@@ -141,6 +141,10 @@ body {
   border: 1px solid var(--address-bar-focus-border-color);
 }
 
+.address-bar:disabled {
+  background: var(--toolbar-background);
+}
+
 .address-bar::placeholder {
   color: var(--address-bar-placeholder-color);
 }
