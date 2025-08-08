@@ -35,6 +35,9 @@ describe('Browser', () => {
         showNavigation: true,
         showReload: true,
         showAddressBar: true,
+        showControlPanel: true,
+        isAddressBarInitiallyEditable: true,
+        keepAddressBarEditable: true
       },
     },
     modules: false,

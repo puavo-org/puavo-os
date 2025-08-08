@@ -13,9 +13,9 @@ describe('SessionModule', () => {
 
   describe('setSessionSecret', () => {
     it('should log a warning', async () => {
-      await sessionModule.setSessionSecret();
+      await sessionModule.setSessionData();
       expect(logger.warn).toHaveBeenCalledWith(
-        'Session secret is not implemented'
+        'Session data is not implemented'
       );
     });
   });
