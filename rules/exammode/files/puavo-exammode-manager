@@ -180,8 +180,8 @@ class PuavoExammode < DBus::Object
 
   def register(username, locale)
     @locale = locale
-    @username = username
     @registration_done = true
+    @username = username
     Syslog.log(Syslog::LOG_NOTICE, 'user %s (locale=%s) registered',
                username, locale)
   end
@@ -198,6 +198,7 @@ class PuavoExammode < DBus::Object
                @username, @locale)
     @locale = nil
     @registration_done = false
+    @username = nil
   end
 
   def get_vt_number
@@ -229,6 +230,19 @@ class PuavoExammode < DBus::Object
     if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'start') then
       Syslog.log(Syslog::LOG_ERR, 'could not start exammode')
       raise 'error in starting puavo-exammode-tty service'
+    end
+
+    # give some time for things to settle
+    # (let normal desktop session processes react to lock-session)
+    sleep(5)
+
+    # XXX should verify that @username is set
+    Syslog.log(Syslog::LOG_NOTICE,
+               "sending STOP signal to all user #{ @username } processes")
+    if ! system('/usr/bin/pkill', '--signal', 'STOP', '-u', @username) then
+      errmsg = "error in sending STOP signal to user '#{ @username }' processes"
+      Syslog.log(Syslog::LOG_ERR, errmsg)
+      raise errmsg
     end
   end
 
@@ -290,6 +304,14 @@ class PuavoExammode < DBus::Object
         begin
           File.unlink(SESSION_JSON_PATH)
         rescue Errno::ENOENT
+        end
+
+        # XXX should verify that @username is set
+        Syslog.log(Syslog::LOG_NOTICE,
+                   "sending CONT signal to all user #{ @username } processes")
+        if ! system('/usr/bin/pkill', '--signal', 'CONT', '-u', @username) then
+          errmsg = "error in sending CONT signal to user '#{ @username }' processes"
+          Syslog.log(Syslog::LOG_ERR, errmsg)
         end
 
         Syslog.log(Syslog::LOG_INFO, 'examination mode ended')
