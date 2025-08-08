@@ -9,7 +9,7 @@ import type {
 
 export class ScreenshotModule implements Module {
   // Gnome screenshot utility has clipboard mode, but it does not seem to work
-  static readonly SCREENSHOT_COMMAND = 'gnome-screenshot --area --file /tmp/screenshot.png && cat /tmp/screenshot.png | xclip -i -selection clipboard -target image/png';
+  static readonly SCREENSHOT_COMMAND = 'tmpfile=$(mktemp /tmp/screenshot.XXXXXX.png) && gnome-screenshot --area --file "$tmpfile" && cat "$tmpfile" | xclip -i -selection clipboard -target image/png && rm -f "$tmpfile"';
 
   dispatchClientNotification: ClientNotificationHandler = () => {};
 
