@@ -7,7 +7,7 @@ import type {
 import {
   BacklightController,
   BacklightControllerObserver,
-} from './brightness-observer';
+} from './backlight-controller';
 import { logger } from '../../utils/logger';
 import { run } from '../../utils/shell';
 

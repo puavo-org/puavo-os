@@ -1,6 +1,6 @@
 import { ControlPanelController } from './control-panel';
-import { ToolbarController } from './renderer';
-import './renderer.css';
+import { ToolbarController } from './toolbar-controller';
+import './index.css';
 
 document.addEventListener('DOMContentLoaded', () => {
   const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
