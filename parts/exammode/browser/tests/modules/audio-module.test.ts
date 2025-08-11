@@ -311,11 +311,27 @@ describe('AudioModule', () => {
   });
 
   describe('changeAudioDeviceVolume', () => {
-    it('should call pactl to set sink volume', async () => {
+    it('should call pactl to set sink volume to non-zero and mute off', async () => {
       await audioModule.changeAudioDeviceVolume('sink1', 42);
       expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-volume sink1 42%');
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Volume set to 42% for device sink1'
+      );
+      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-mute sink1 0');
+      expect(mockedLogger.info).toHaveBeenCalledWith(
+        'Set mute off for device sink1'
+      );
+    });
+
+    it('should call pactl to set sink volume to zero and mute on', async () => {
+      await audioModule.changeAudioDeviceVolume('sink1', 0);
+      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-volume sink1 0%');
+      expect(mockedLogger.info).toHaveBeenCalledWith(
+        'Volume set to 0% for device sink1'
+      );
+      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-mute sink1 1');
+      expect(mockedLogger.info).toHaveBeenCalledWith(
+        'Set mute on for device sink1'
       );
     });
   });
