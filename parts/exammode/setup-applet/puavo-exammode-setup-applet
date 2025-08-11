@@ -184,7 +184,7 @@ class AbittiUrl(UrlInterface):
   def convert_entry_to_url(self, text):
     if not text:
       return None
-    match = re.match(r'^([a-z]+) ([a-z]+)$', text)
+    match = re.match(r'^([a-z]+)(?:\s+|-)([a-z]+)$', text)
     if match:
       return f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010'
 
