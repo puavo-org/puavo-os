@@ -5,6 +5,7 @@ import { ScreenshotModule } from '../../src/modules/screenshot/screenshot-module
 import { ShutdownModule } from '../../src/modules/shutdown/shutdown-module';
 import { SessionModule } from '../../src/modules/session/session-module';
 import { AudioModule } from '../../src/modules/audio/audio-module';
+import { createMockWebContents } from '../__mocks__/electron';
 import type { Module } from '../../src/modules/module';
 
 // Mock node:fs, because brightness module IO prevents Jest from exiting
@@ -31,7 +32,7 @@ describe('ModuleHandlerDefinitions', () => {
       new AudioModule(),
       new BrightnessModule(),
       new EncryptionModule(),
-      new ScreenshotModule(),
+      new ScreenshotModule(createMockWebContents() as any),
       new SessionModule(),
       new ShutdownModule(mockShutdownCallback),
       new SurveillanceModule(),

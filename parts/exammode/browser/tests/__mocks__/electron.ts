@@ -6,6 +6,7 @@ interface MockWebContents {
   once: jest.Mock;
   removeAllListeners: jest.Mock;
   emit: jest.Mock;
+  capturePage: jest.Mock;
 }
 
 interface MockBrowserWindow {
@@ -49,22 +50,27 @@ function createMockEventTarget() {
   return { on, emit };
 }
 
+export function createMockWebContents(): MockWebContents {
+  const eventTarget = createMockEventTarget();
+  return {
+    send: jest.fn(),
+    loadURL: jest.fn().mockResolvedValue(undefined),
+    loadFile: jest.fn().mockResolvedValue(undefined),
+    on: eventTarget.on,
+    once: jest.fn(),
+    removeAllListeners: jest.fn(),
+    emit: eventTarget.emit,
+    capturePage: jest.fn(),
+  };
+}
+
 export const BrowserWindow = jest
   .fn()
   .mockImplementation((): MockBrowserWindow => {
     const windowEventTarget = createMockEventTarget();
-    const webContentsEventTarget = createMockEventTarget();
 
     return {
-      webContents: {
-        send: jest.fn(),
-        loadURL: jest.fn().mockResolvedValue(undefined),
-        loadFile: jest.fn().mockResolvedValue(undefined),
-        on: webContentsEventTarget.on,
-        once: jest.fn(),
-        removeAllListeners: jest.fn(),
-        emit: webContentsEventTarget.emit,
-      },
+      webContents: createMockWebContents(),
       on: windowEventTarget.on,
       once: jest.fn(),
       setFullScreen: jest.fn(),
@@ -101,6 +107,10 @@ export const shell = {
   openExternal: jest.fn(),
   openPath: jest.fn(),
   showItemInFolder: jest.fn(),
+};
+
+export const clipboard = {
+  writeImage: jest.fn(),
 };
 
 // Create instances for testing

@@ -1,5 +1,5 @@
+import { clipboard, type WebContents } from 'electron';
 import { logger } from '../../utils/logger';
-import { run } from '../../utils/shell';
 import type {
   ClientNotificationHandler,
   Module,
@@ -8,16 +8,56 @@ import type {
 } from '../module';
 
 export class ScreenshotModule implements Module {
-  // Gnome screenshot utility has clipboard mode, but it does not seem to work
-  static readonly SCREENSHOT_COMMAND = 'tmpfile=$(mktemp /tmp/screenshot.XXXXXX.png) && gnome-screenshot --area --file "$tmpfile" && cat "$tmpfile" | xclip -i -selection clipboard -target image/png && rm -f "$tmpfile"';
-
   dispatchClientNotification: ClientNotificationHandler = () => {};
 
-  async takeScreenshot(): Promise<void> {
+  constructor(private readonly contents: WebContents) {}
+
+  async tryTakeScreenshot(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number
+  ): Promise<void> {
+    const hasFiniteArea =
+      Number.isFinite(startX) &&
+      Number.isFinite(startY) &&
+      Number.isFinite(endX) &&
+      Number.isFinite(endY);
+
+    if (!hasFiniteArea) {
+      throw new Error('Expected finite screenshot area coordinates');
+    }
+
+    const x = Math.max(0, Math.min(startX, endX));
+    const y = Math.max(0, Math.min(startY, endY));
+    const width = Math.max(0, Math.abs(endX - startX));
+    const height = Math.max(0, Math.abs(endY - startY));
+
+    if (width === 0 || height === 0) {
+      throw new Error('Expected valid screenshot area');
+    }
+
+    const image = await this.contents.capturePage({ x, y, width, height });
+
+    if (image.isEmpty()) {
+      throw new Error('Captured image was empty');
+    }
+
+    clipboard.writeImage(image);
+  }
+
+  async takeScreenshot(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number
+  ): Promise<void> {
     try {
-      await run(ScreenshotModule.SCREENSHOT_COMMAND);
-    } catch (exception) {
-      logger.error(`Failed to take screenshot: ${exception}`);
+      await this.tryTakeScreenshot(startX, startY, endX, endY);
+      this.dispatchClientNotification('ScreenshotTaken', true);
+    } catch (error) {
+      logger.error(`Failed to take screenshot: ${error}`);
+      this.dispatchClientNotification('ScreenshotTaken', false);
     }
   }
 

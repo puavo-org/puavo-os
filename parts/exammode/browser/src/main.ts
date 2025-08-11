@@ -100,7 +100,7 @@ void app.whenReady().then(() => {
       new AudioModule(),
       new BrightnessModule(),
       new EncryptionModule(),
-      new ScreenshotModule(),
+      new ScreenshotModule(browser.browserWindow.webContents),
       new SessionModule(),
       new ShutdownModule(() => browser.onShutdown()),
       new SurveillanceModule(),
