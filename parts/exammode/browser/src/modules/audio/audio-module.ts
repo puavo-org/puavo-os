@@ -235,14 +235,19 @@ export class AudioModule implements Module {
     deviceId: string,
     volume: number
   ): Promise<void> {
-    const command = `pactl set-sink-volume ${deviceId} ${volume}%`;
-    await run(command);
+    await run(`pactl set-sink-volume ${deviceId} ${volume}%`);
     logger.info(`Volume set to ${volume}% for device ${deviceId}`);
+    if (volume > 0) {
+      await run(`pactl set-sink-mute ${deviceId} 0`);
+      logger.info(`Set mute off for device ${deviceId}`);
+    } else {
+      await run(`pactl set-sink-mute ${deviceId} 1`);
+      logger.info(`Set mute on for device ${deviceId}`);
+    }
   }
 
   async changeActiveOutputDevice(deviceId: string): Promise<void> {
-    const command = `pactl set-default-sink ${deviceId}`;
-    await run(command);
+    await run(`pactl set-default-sink ${deviceId}`);
     logger.info(`Active output device changed to ${deviceId}`);
   }
 
