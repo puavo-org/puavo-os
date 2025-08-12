@@ -26,6 +26,7 @@ const mockSink1: PulseAudioSink = {
   mute: false,
   state: 'RUNNING',
   channel_map: 'front-left,front-right',
+  flags: [ 'HW_VOLUME_CTRL' ],
   volume: {
     'front-left': {
       value: 32768,
@@ -44,6 +45,7 @@ const mockSink2: PulseAudioSink = {
   mute: true,
   state: 'IDLE',
   channel_map: 'front-left,front-right',
+  flags: [ 'HW_VOLUME_CTRL' ],
   volume: {
     'front-left': {
       value: 49152,
@@ -62,6 +64,7 @@ const mockSink3: PulseAudioSink = {
   mute: false,
   state: 'RUNNING',
   channel_map: 'invalid-channel-name',
+  flags: [ 'HW_VOLUME_CTRL' ],
   volume: {
     'front-left': {
       value: 65536,
@@ -361,7 +364,7 @@ describe('AudioModule', () => {
 
   describe('getSinks', () => {
     it('should return sinks from pactl', async () => {
-      const mockSinks = [{ name: 'sink1' }];
+      const mockSinks = [{ name: 'sink1', flags: [ 'HW_VOLUME_CTRL'] }];
       mockedRun.mockResolvedValue(JSON.stringify(mockSinks));
       const sinks = await audioModule.getSinks();
       expect(mockedRun).toHaveBeenCalledWith('pactl --format json list sinks');
