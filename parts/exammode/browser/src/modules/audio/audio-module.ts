@@ -138,7 +138,11 @@ export class AudioModule implements Module {
   async getSinks(): Promise<PulseAudioSink[]> {
     try {
       const output = await run('pactl --format json list sinks');
-      return JSON.parse(output) as PulseAudioSink[];
+      const all_sinks = JSON.parse(output) as PulseAudioSink[];
+      return all_sinks.filter(
+        sink => 'flags' in sink
+                  && Array.isArray(sink['flags'])
+                  && sink['flags'].includes('HW_VOLUME_CTRL'));
     } catch (error) {
       logger.error('Failed to list sinks:', error);
       throw error;
