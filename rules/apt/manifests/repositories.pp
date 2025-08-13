@@ -1,7 +1,9 @@
 class apt::repositories {
   include ::apt
 
-  define setup ($fasttrackmirror,
+  define setup ($archivemirror,
+                $archivemirror_path='',
+                $fasttrackmirror,
                 $fasttrackmirror_path='',
                 $localmirror='',
                 $mirror,
