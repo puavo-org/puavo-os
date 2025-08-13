@@ -74,6 +74,12 @@ setup_timeout() {
 }
 
 setup_windows_enabled() {
+  if [ "$(puavo-conf puavo.hosttype)" = 'bootserver' ]; then
+    # Bootservers should not have Windows at all and usually use RAID
+    # which has multiple boot disks (making this fail).
+    return 0
+  fi
+
   if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
     puavo-manage-efi --no-efi-is-ok enable-windows || return 1
     grubedit set "puavo_grub_windows_enabled=true" || return 1
