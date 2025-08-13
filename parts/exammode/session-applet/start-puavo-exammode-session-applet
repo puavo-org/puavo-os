@@ -2,7 +2,7 @@
 
 set -eu
 
-if [ "${EXAMMODE_SESSION:-}" != 'true' ]; then
+if [ -z "${EXAMMODE_SESSION:-}" ]; then
   exit 0
 fi
 

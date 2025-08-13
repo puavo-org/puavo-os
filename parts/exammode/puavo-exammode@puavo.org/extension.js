@@ -138,9 +138,7 @@ export default class DashToPanelExtension extends Extension {
     if (exam_session_info['type'] === 'next-exam-session') {
       let control_text = _('Next-Exam')
     } else {
-      let control_text = _('adjust text scale with ctrl+ and ctrl- keys') +
-                           '    |    ' + _('press F11 to toggle fullscreen') +
-                           '    |    ' + _('ctrl + arrow keys to go back/forward');
+      let control_text = _('Exam mode');
     }
 
     this.control_info_label = new St.Label({

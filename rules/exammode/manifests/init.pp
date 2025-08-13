@@ -79,6 +79,7 @@ class exammode {
       ensure     => present,
       comment    => 'Puavo Exam User',
       gid        => $puavo_examuser_gid,
+      groups     => [ 'video' ],
       home       => $puavo_examuser_homedir,
       require    => [ File['/usr/local/bin/puavo-examusersh']
                     , Group['puavo-examuser'], ],

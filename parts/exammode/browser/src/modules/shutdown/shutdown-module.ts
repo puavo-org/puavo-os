@@ -5,28 +5,40 @@ import type {
   QueryHandler,
 } from '../module';
 import { logger } from '../../utils/logger';
-import { sessionBus } from 'dbus-next';
+import { systemBus } from 'dbus-next';
+
+export type ShutdownCallback = () => void;
 
 export class ShutdownModule implements Module {
   dispatchClientNotification: ClientNotificationHandler = () => {};
+  shutdownCallback: ShutdownCallback;
+
+  constructor(shutdownCallback: ShutdownCallback) {
+    this.shutdownCallback = shutdownCallback;
+  }
 
   async shutdown(): Promise<void> {
-    const bus = sessionBus();
-
     try {
+      try {
+        this.shutdownCallback();
+      } catch (error) {
+        logger.error('Error occurred during shutdown callback:', error);
+      }
+
+      const bus = systemBus();
+
       const proxyObject = await bus.getProxyObject(
         'org.puavo.Exam',
         '/exammode'
       );
       const examInterface = proxyObject.getInterface('org.puavo.Exam.exammode');
 
-      await examInterface['QuitSession']?.();
+      examInterface['QuitSession']?.();
     } catch (error) {
       logger.error('Failed to quit session via DBus:', error);
+    } finally {
+      process.exit(0);
     }
-
-    logger.info('Exiting the application...');
-    process.exit(0);
   }
 
   getNotifyHandlerDefinitions(): Map<string, NotifyHandler> {

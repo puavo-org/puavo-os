@@ -120,7 +120,11 @@ class UrlInterface(JoinChoice):
 
   def on_join_clicked(self, button):
     if self.show_confirmation(self.target_url):
-      self.chooser.start_url_session(self.target_url)
+      self.start_session()
+
+
+  def start_session(self):
+    self.chooser.start_url_session(self.target_url)
 
 
   def on_entry_changed(self, entry):
@@ -148,6 +152,10 @@ class UrlInterface(JoinChoice):
 
     try:
       msg = Soup.Message.new('HEAD', url)
+      user_agent_string = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'   \
+                            + ' AppleWebKit/537.36 (KHTML, like Gecko)' \
+                            + ' Chrome/134.0.0.0 Safari/537.36'
+      msg.request_headers.append('User-Agent', user_agent_string)
       self.soup_message = msg
       self.soup_session.queue_message(msg, self.on_url_checked, url)
     except Exception as e:
@@ -176,11 +184,15 @@ class AbittiUrl(UrlInterface):
   def convert_entry_to_url(self, text):
     if not text:
       return None
-    match = re.match(r'^([a-z]+) ([a-z]+)$', text)
+    match = re.match(r'^([a-z]+)(?:\s+|-)([a-z]+)$', text)
     if match:
       return f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010'
 
     return None
+
+
+  def start_session(self):
+    self.chooser.start_abitti2_session(self.target_url)
 
 
 class FreeUrl(UrlInterface):
@@ -294,7 +306,11 @@ class NextExam(JoinChoice):
 
   def on_join_clicked(self, button):
     if self.show_confirmation(''):
-      self.chooser.start_nextexam_session()
+      self.start_session()
+
+
+  def start_session(self):
+    self.chooser.start_nextexam_session()
 
 
 class ExamChooser():
@@ -382,6 +398,10 @@ class ExamChooser():
   def on_delete_event(self, widget, event):
     self.window.hide()
     return True  # Prevents the window from being destroyed
+
+
+  def start_abitti2_session(self, url):
+    self.applet.start_abitti2_session(url)
 
 
   def start_nextexam_session(self):
@@ -477,6 +497,12 @@ class PuavoExamModeSetupApplet:
                        % dbusexception)
 
 
+  def start_abitti2_session(self, url):
+    self.sys_dbus_iface.StartAbitti2Session(url,
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
   def start_free_session(self):
     self.sys_dbus_iface.StartFreeSession(
       reply_handler=lambda: None,
@@ -485,6 +511,12 @@ class PuavoExamModeSetupApplet:
 
   def start_nextexam_session(self):
     self.sys_dbus_iface.StartNextExamSession(
+      reply_handler=lambda: None,
+      error_handler=self.start_session_dbus_error_handler)
+
+
+  def start_session_by_exam_id(self, exam_id):
+    self.sys_dbus_iface.StartSession(exam_id,
       reply_handler=lambda: None,
       error_handler=self.start_session_dbus_error_handler)
 
@@ -536,7 +568,7 @@ class PuavoExamModeSetupApplet:
 
 
   def choose_exam(self, exam_id, widget):
-    self.start_session(exam_id)
+    self.start_session_by_exam_id(exam_id)
 
 
   def exams_available(self, examinfo_json):

@@ -110,9 +110,11 @@ end
 
 class PuavoExammode < DBus::Object
   def initialize(*args)
+    @desktop_session_vt = nil
     @exams_listener = nil
     @locale = nil
     @registration_done = false
+    @username = nil
     super
   end
 
@@ -122,6 +124,13 @@ class PuavoExammode < DBus::Object
 
     session_data =
       case mode
+        when :abitti2
+          {
+            'locale' => @locale,
+            'name'   => 'Abitti 2 exam',
+            'params' => exam_info['params'],
+            'type'   => 'abitti-2-exam',
+          }
         when :examomatic
           {
             'locale'  => @locale,
@@ -177,24 +186,10 @@ class PuavoExammode < DBus::Object
 
   def register(username, locale)
     @locale = locale
-    @username = username
     @registration_done = true
+    @username = username
     Syslog.log(Syslog::LOG_NOTICE, 'user %s (locale=%s) registered',
                username, locale)
-  end
-
-  # XXX unclear if this can be used or if this is useful
-  # XXX puavo-exammode-applet could send Unregister message when it exits
-  def unregister
-    unless @registration_done then
-      Syslog.log(Syslog::LOG_INFO, 'unregister called but no one is registered')
-      return
-    end
-
-    Syslog.log(Syslog::LOG_INFO, 'user %s (locale=%s) unregistered',
-               @username, @locale)
-    @locale = nil
-    @registration_done = false
   end
 
   def get_vt_number
@@ -211,6 +206,12 @@ class PuavoExammode < DBus::Object
   end
 
   def start_session
+    unless @username then
+      errmsg = 'username not known, can not activate exam session'
+      Syslog.log(Syslog::LOG_ERR, errmsg)
+      raise errmsg
+    end
+
     if ! system('loginctl', 'lock-sessions') then
       Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
       raise 'error in locking sessions'
@@ -227,19 +228,44 @@ class PuavoExammode < DBus::Object
       Syslog.log(Syslog::LOG_ERR, 'could not start exammode')
       raise 'error in starting puavo-exammode-tty service'
     end
+
+    # give some time for things to settle
+    # (let normal desktop session processes react to lock-session)
+    sleep(5)
+
+    Syslog.log(Syslog::LOG_NOTICE,
+               "sending STOP signal to all user #{ @username } processes")
+    if ! system('/usr/bin/pkill', '--signal', 'STOP', '-u', @username) then
+      errmsg = "error in sending STOP signal to user '#{ @username }' processes"
+      Syslog.log(Syslog::LOG_ERR, errmsg)
+      raise errmsg
+    end
   end
 
   dbus_interface 'org.puavo.Exam.exammode' do
     dbus_signal :ExamsAvailable, 'in exams:s'
 
+    # XXX could double registering be prevented somehow?
     dbus_method :Register, 'in username:s, in locale:s, in krb5ccname:s' do
       |username, locale, krb5ccname|
-        # XXX it should not be possible to do this in case there is an
-        # XXX ongoing exam session
+        if @desktop_session_vt then
+          errmsg = 'registering a new user is not possible' \
+                     + ' as there is an ongoing exam session'
+          Syslog.log(Syslog::LOG_ERR, errmsg)
+          raise errmsg
+        end
+
         register(username, locale)
+
         @exams_listener.destroy if @exams_listener
         @exams_listener = ExamsListener.new(self, username, krb5ccname)
         write_prepare_session_specs()
+    end
+
+    dbus_method :StartAbitti2Session, 'in exam_url:s' do |exam_url|
+      exam_info = { 'params' => { 'url' => exam_url } }
+      write_exam_session_specs(:abitti2, exam_info)
+      start_session()
     end
 
     dbus_method :StartFreeSession, '' do
@@ -268,9 +294,15 @@ class PuavoExammode < DBus::Object
     dbus_method :QuitSession do
       begin
         unless @desktop_session_vt then
-          Syslog.log(Syslog::LOG_ERR,
-                     'got request to end exam session that is not active')
-          raise 'can not end exam session that is not active'
+          errmsg = 'got request to end exam session that is not active'
+          Syslog.log(Syslog::LOG_ERR, errmsg)
+          raise errmsg
+        end
+
+        unless @username then
+          errmsg = 'username not known, can not quit exam session'
+          Syslog.log(Syslog::LOG_ERR, errmsg)
+          raise errmsg
         end
 
         if ! system('/usr/sbin/service', 'puavo-exammode-tty', 'stop') then
@@ -283,6 +315,13 @@ class PuavoExammode < DBus::Object
         rescue Errno::ENOENT
         end
 
+        Syslog.log(Syslog::LOG_NOTICE,
+                   "sending CONT signal to all user #{ @username } processes")
+        if ! system('/usr/bin/pkill', '--signal', 'CONT', '-u', @username) then
+          errmsg = "error in sending CONT signal to user '#{ @username }' processes"
+          Syslog.log(Syslog::LOG_ERR, errmsg)
+        end
+
         Syslog.log(Syslog::LOG_INFO, 'examination mode ended')
         if ! system('chvt', @desktop_session_vt) then
           Syslog.log(Syslog::LOG_ERR, 'could not switch back to original vt')
@@ -291,10 +330,6 @@ class PuavoExammode < DBus::Object
       ensure
         @desktop_session_vt = nil
       end
-    end
-
-    dbus_method :Unregister, '' do
-      unregister()
     end
   end
 end

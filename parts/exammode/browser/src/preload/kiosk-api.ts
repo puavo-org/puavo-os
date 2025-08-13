@@ -1,5 +1,5 @@
+import type { NotificationBody, WindowsKioskAPI } from '../types/types';
 import { NotificationEmitter } from '../utils/notification-emitter';
-import type { NotificationBody, WindowsKioskAPI } from '../types';
 import { logger } from '../utils/logger';
 import { ipcRenderer } from 'electron';
 
@@ -7,7 +7,8 @@ const notifyDispatchOverrideTable = new Map<string, string>([
   ['ActiveAudioDeviceChanged', 'changeActiveAudioDevice'],
   ['AudioDeviceVolumeChanged', 'changeAudioDeviceVolume'],
   ['BrightnessChanged', 'setBrightness'],
-  ['SessionSecretChanged', 'setSessionSecret'],
+  ['ScreenshotRequested', 'takeScreenshot'],
+  ['SessionChanged', 'setSessionData'],
   ['ShutdownRequested', 'shutdown'],
   ['StartSurveillance', 'startSurveillance'],
 ]);

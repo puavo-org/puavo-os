@@ -4,8 +4,8 @@ deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodena
 deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-updates main contrib non-free non-free-firmware
 deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-updates main contrib non-free non-free-firmware
 
-deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-backports main contrib non-free non-free-firmware
-deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-backports main contrib non-free non-free-firmware
-
 deb http://<%= @securitymirror %><%= @securitymirror_path %> <%= @debianversioncodename %>-security main contrib non-free non-free-firmware
 deb-src http://<%= @securitymirror %><%= @securitymirror_path %> <%= @debianversioncodename %>-security main contrib non-free non-free-firmware
+
+deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-backports main contrib non-free non-free-firmware
+deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-backports main contrib non-free non-free-firmware

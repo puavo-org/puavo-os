@@ -7,7 +7,7 @@ import type {
 import {
   BacklightController,
   BacklightControllerObserver,
-} from './brightness-observer';
+} from './backlight-controller';
 import { logger } from '../../utils/logger';
 import { run } from '../../utils/shell';
 
@@ -23,7 +23,7 @@ export class BrightnessModule implements Module {
       const brightness = await this.getBrightness();
       logger.debug(`Brightness changed externally: ${brightness}%`);
 
-      this.dispatchClientNotification('brightnessChanged', brightness);
+      this.dispatchClientNotification('BrightnessChanged', brightness);
     } catch (exception) {
       logger.error('Failed to notify brightness change:', exception);
     }
@@ -49,16 +49,16 @@ export class BrightnessModule implements Module {
 
   async getBrightness(): Promise<number> {
     const brightnessString = await run('brightnessctl get');
-    const maxBrigtnessString = await run('brightnessctl max');
+    const maxBrightnessString = await run('brightnessctl max');
 
     const brightness = parseInt(brightnessString.trim());
-    const maxBrigtness = parseInt(maxBrigtnessString.trim());
+    const maxBrightness = parseInt(maxBrightnessString.trim());
 
-    if (isNaN(brightness) || isNaN(maxBrigtness) || maxBrigtness === 0) {
+    if (isNaN(brightness) || isNaN(maxBrightness) || maxBrightness === 0) {
       throw new Error('Invalid brightness values');
     }
 
-    return Math.round((brightness / maxBrigtness) * 100);
+    return Math.round((brightness / maxBrightness) * 100);
   }
 
   async setBrightness(brightness: number): Promise<void> {
@@ -66,8 +66,12 @@ export class BrightnessModule implements Module {
       throw new Error('Brightness must be a number between 0 and 100');
     }
 
-    await run(`brightnessctl set ${brightness}%`);
-    logger.info(`Brightness set to ${brightness}%`);
+    // do not let brightness go below 3, because on some hosts/displays
+    // the display can go so dark that nothing can be seen
+    const limited_brightness = Math.max(3, brightness);
+
+    await run(`brightnessctl set ${limited_brightness}%`);
+    logger.info(`Brightness set to ${limited_brightness}%`);
   }
 
   getNotifyHandlerDefinitions(): Map<string, NotifyHandler> {

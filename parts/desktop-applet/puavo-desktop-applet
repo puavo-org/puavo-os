@@ -117,11 +117,8 @@ class ChangelogNotifier(PuavoWidget):
       return
 
     # do not show changelog notifier for exammode session
-    try:
-      if os.environ['EXAMMODE_SESSION'] == 'true':
-        return
-    except KeyError:
-      pass
+    if 'EXAMMODE_SESSION' in os.environ:
+      return
 
     # do not show changelog notifier for guest users
     try:

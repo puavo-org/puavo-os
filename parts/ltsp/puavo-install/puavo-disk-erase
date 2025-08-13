@@ -87,93 +87,94 @@ case "$target_disk" in
     fi
 
     if ("$useforce"); then
-      time --format "Time elapsed: %E" nvme format --force $erase_mode "$target_disk" || exit 2
+      command time --format "Time elapsed: %E" nvme format --force $erase_mode "$target_disk" || exit 2
     else
-      time --format "Time elapsed: %E" nvme format $erase_mode "$target_disk" || exit 2
+      command time --format "Time elapsed: %E" nvme format $erase_mode "$target_disk" || exit 2
     fi
     ;;
   *)
-    if [ -n "$bootserver_address" ]; then
-      if [ -n "$(lsusb | grep "ID 0bda:8153")" ]; then
-        ### Refuse to even try to erase a SATA disk when we are netbooted and have a certain Realtek USB NIC attached.
-        ### Exit with error code 3.
-        echo "Likely trying to erase SATA disk with a device combination that won't work. Aborting."
-        exit 3
-      fi
-    fi
-
-    if udevadm info --query=all --name="$target_disk" | grep 'ID_BUS=usb'; then
-      echo 'Selected disk is a USB device, I do not support them. Aborting..' >&2
-      exit 1
-    fi
-
-    if ! hdparm -I "$target_disk" | grep "SECURITY ERASE UNIT" >&2; then
-      echo 'Selected disk does not support Secure Erase!' >&2
-      exit 1
-    elif ("$enhanced") && hdparm -I "$target_disk" | grep "ENHANCED SECURITY ERASE UNIT" >&2; then
-      echo 'Disk supports Enhanced Secure Erase and override was not given. Running Enhanced Secure Erase.'
-      erase_mode="--security-erase-enhanced"
-    else
-      echo 'Disk either does not support Enhanced Secure Erase or override was given. Running Secure Erase.'
-      erase_mode="--security-erase"
-    fi
-
-    if ! hdparm -I "$target_disk" | grep -P "not\tfrozen" >&2; then
-      if ("$useforce"); then
-        echo 'Flag "--force" was given.'
-        echo 'Disk is in frozen state! Going to sleep now.'
-      else
-        echo 'Disk is in frozen state, cannot continue!' >&2
-        echo 'Please close the lid of the device for a few seconds, reopen it and try again.\n' >&2
-        echo 'If we are netbooted, closing the lid will not put the device to sleep.'
-        echo 'We can however put it to sleep and wake it up with the usage of rtcwake.\n'
-
-        read -p "Shall I run the command for you now? (y/n)[y] " gosleep
-        case "$gosleep" in
-          [yY]|"")
-            echo 'Going to sleep now.'
-            sleep 1
-            ;;
-          [nN])
-            echo 'Not going to sleep. You must close and reopen the lid, or run the command by hand. Then retry.'
-            sleep 1
-            exit 1
-            ;;
-          *)
-            echo 'Invalid answer, exiting.' >&2
-            sleep 1
-            exit 1
-            ;;
-        esac
-      fi
-
-      rtcwake -m mem -s 5
-
-      if ! hdparm -I "$target_disk" | grep -P "not\tfrozen" >&2; then
-        echo 'Disk is still in frozen state. Aborting Secure Erase.' >&2
-        echo 'You could either, run Secure Erase from device BIOS (if supported natively),\n' >&2
-        echo 'or use blkdiscard and then fill the drive with junk.' >&2
-        exit 2
-      fi
-    fi
-
-    echo 'Disk is not in frozen state, we can continue.'
     echo 'Preparing system for secure erase. This should not take long.'
     prepare_for_erase && echo 'Preparing finished, moving on..'
 
-    hdparm --user-master user --security-set-pass Pass "$target_disk"
-    if ! hdparm -I "$target_disk" | grep "Security level high" >&2; then
-      echo 'Failed setting user and password, exiting.' >&2
-      exit 1
-    fi
+    if [ -n "$bootserver_address" ]; then
+      if [ -n "$(lsusb | grep "ID 0bda:8153")" ]; then
+        blkd_error_code=0
+        ### Refuse to even try to erase a SATA disk when we are netbooted and have a certain Realtek USB NIC attached.
+        ### Exit with error code 3.
+        echo "Likely trying to erase SATA disk with a device combination that won't work. Fallback to blkdiscard (Secure)"
+        command time --format "Time elapsed: %E" /usr/sbin/blkdiscard --secure --force "$target_disk" || blkd_error_code=$?
+        if [ "${blkd_error_code}" -ne 0 ]; then
+          printf "%s\n%s\n" "blkdiscard (Secure) failed, error code ${blkd_error_code}." "Fallback to standard blkdiscard"
+          command time --format "Time elapsed: %E" /usr/sbin/blkdiscard --force "$target_disk"
+        fi
+      else
+        if ! hdparm -I "$target_disk" | grep "SECURITY ERASE UNIT" >&2; then
+          echo 'Selected disk does not support Secure Erase!' >&2
+          exit 1
+        elif ("$enhanced") && hdparm -I "$target_disk" | grep "ENHANCED SECURITY ERASE UNIT" >&2; then
+          echo 'Disk supports Enhanced Secure Erase and override was not given. Running Enhanced Secure Erase.'
+          erase_mode="--security-erase-enhanced"
+        else
+          echo 'Disk either does not support Enhanced Secure Erase or override was given. Running Secure Erase.'
+          erase_mode="--security-erase"
+        fi
 
-    echo 'User and password set, proceeding to Secure Erase.'
-    time --format "Time elapsed: %E" hdparm --user-master user "$erase_mode" Pass "$target_disk"
-    echo 'Command completed. You may check how long the erase took above.'
+        if ! hdparm -I "$target_disk" | grep -P "not\tfrozen" >&2; then
+          if ("$useforce"); then
+            echo 'Flag "--force" was given.'
+            echo 'Disk is in frozen state! Going to sleep now.'
+          else
+            echo 'Disk is in frozen state, cannot continue!' >&2
+            echo 'Please close the lid of the device for a few seconds, reopen it and try again.\n' >&2
+            echo 'If we are netbooted, closing the lid will not put the device to sleep.'
+            echo 'We can however put it to sleep and wake it up with the usage of rtcwake.\n'
 
-    if ! hdparm -I "$target_disk" | grep -P "not\tlocked"; then
-      echo 'Disk seems to be locked after erase. Unlocking now.'
-      hdparm --user-master user --security-unlock Pass "$target_disk"
+            read -p "Shall I run the command for you now? (y/n)[y] " gosleep
+            case "$gosleep" in
+              [yY]|"")
+                echo 'Going to sleep now.'
+                sleep 1
+                ;;
+              [nN])
+                echo 'Not going to sleep. You must close and reopen the lid, or run the command by hand. Then retry.'
+                sleep 1
+                exit 1
+                ;;
+              *)
+                echo 'Invalid answer, exiting.' >&2
+                sleep 1
+                exit 1
+                ;;
+            esac
+          fi
+
+          rtcwake -m mem -s 5
+
+          if ! hdparm -I "$target_disk" | grep -P "not\tfrozen" >&2; then
+            echo 'Disk is still in frozen state. Aborting Secure Erase.' >&2
+            echo 'You could either, run Secure Erase from device BIOS (if supported natively),\n' >&2
+            echo 'or use blkdiscard and then fill the drive with junk.' >&2
+            exit 2
+          fi
+        fi
+
+	echo 'Disk is not in frozen state, we can continue.'
+
+        hdparm --user-master user --security-set-pass Pass "$target_disk"
+        if ! hdparm -I "$target_disk" | grep "Security level high" >&2; then
+          echo 'Failed setting user and password, exiting.' >&2
+          exit 1
+        fi
+
+        echo 'User and password set, proceeding to Secure Erase.'
+        command time --format "Time elapsed: %E" hdparm --user-master user "$erase_mode" Pass "$target_disk"
+        echo 'Command completed. You may check how long the erase took above.'
+
+        if ! hdparm -I "$target_disk" | grep -P "not\tlocked"; then
+          echo 'Disk seems to be locked after erase. Unlocking now.'
+          hdparm --user-master user --security-unlock Pass "$target_disk"
+        fi
+      fi
     fi
     ;;
 esac
