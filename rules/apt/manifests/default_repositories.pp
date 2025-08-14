@@ -7,7 +7,7 @@ class apt::default_repositories {
   $archivemirror        = 'archive.debian.org'
   $archivemirror_path   = '/debian'
   $fasttrackmirror      = 'fasttrack.debian.net'
-  $fasttrackmirror_path = '/debian'
+  $fasttrackmirror_path = '/debian-fasttrack'
   $mirror               = 'httpredir.debian.org'
   $securitymirror       = 'security.debian.org'
   $securitymirror_path  = '/debian-security'
