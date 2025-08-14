@@ -1,6 +1,6 @@
 diff -ruN gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss
 --- gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	1970-01-01 02:00:00.000000000 +0200
-+++ gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	2025-05-14 13:25:49.716407439 +0300
++++ gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	2025-08-14 14:51:28.028427115 +0300
 @@ -0,0 +1,12 @@
 +/* Puavo */
 +
@@ -15,8 +15,8 @@ diff -ruN gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss gnome-shel
 +  color: #ffaa00;
 +}
 diff -ruN gnome-shell/data/theme/gnome-shell-sass/_widgets.scss gnome-shell/data/theme/gnome-shell-sass/_widgets.scss
---- gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2025-04-14 01:40:21.000000000 +0300
-+++ gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2025-05-14 13:39:46.974751804 +0300
+--- gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2025-06-29 13:35:41.000000000 +0300
++++ gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2025-08-14 14:51:28.028427115 +0300
 @@ -47,3 +47,5 @@
  @import 'widgets/looking-glass';
  // Lock / login screen
@@ -24,15 +24,15 @@ diff -ruN gnome-shell/data/theme/gnome-shell-sass/_widgets.scss gnome-shell/data
 +// Puavo customizations
 +@import 'widgets/puavo';
 diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
---- gnome-shell/js/gdm/authPrompt.js	2025-05-14 13:23:01.724610111 +0300
-+++ gnome-shell/js/gdm/authPrompt.js	2025-05-14 13:33:32.817259385 +0300
+--- gnome-shell/js/gdm/authPrompt.js	2025-08-14 14:48:19.000000000 +0300
++++ gnome-shell/js/gdm/authPrompt.js	2025-08-14 14:51:28.028427115 +0300
 @@ -1,4 +1,5 @@
  import Clutter from 'gi://Clutter';
 +import Gio from 'gi://Gio';
  import GLib from 'gi://GLib';
+ import Atk from 'gi://Atk';
  import GObject from 'gi://GObject';
- import Pango from 'gi://Pango';
-@@ -43,10 +44,17 @@
+@@ -44,10 +45,17 @@
      REUSE_USERNAME: 2,
  };
  
@@ -50,7 +50,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          'next': {},
          'prompted': {},
          'reset': {param_types: [GObject.TYPE_UINT]},
-@@ -68,6 +76,13 @@
+@@ -69,6 +77,13 @@
          this._defaultButtonWellActor = null;
          this._cancelledRetries = 0;
  
@@ -64,7 +64,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          let reauthenticationOnly;
          if (this._mode === AuthPromptMode.UNLOCK_ONLY)
              reauthenticationOnly = true;
-@@ -86,6 +101,11 @@
+@@ -87,6 +102,11 @@
          this._userVerifier.connect('credential-manager-authenticated', this._onCredentialManagerAuthenticated.bind(this));
          this.smartcardDetected = this._userVerifier.smartcardDetected;
  
@@ -76,7 +76,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          this.connect('destroy', this._onDestroy.bind(this));
  
          this._userWell = new St.Bin({
-@@ -94,10 +114,99 @@
+@@ -95,10 +115,99 @@
          });
          this.add_child(this._userWell);
  
@@ -176,7 +176,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          let capsLockPlaceholder = new St.Label();
          this.add_child(capsLockPlaceholder);
  
-@@ -219,6 +328,7 @@
+@@ -220,6 +329,7 @@
              entry.clutter_text.connect('text-changed', () => {
                  if (!this._userVerifier.hasPendingMessages)
                      this._fadeOutMessage();
@@ -184,7 +184,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
              });
  
              entry.clutter_text.connect('activate', () => {
-@@ -281,6 +391,13 @@
+@@ -282,6 +392,13 @@
          this.verificationStatus = AuthPromptStatus.VERIFICATION_IN_PROGRESS;
          this.updateSensitivity(false);
  
@@ -198,7 +198,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          if (shouldSpin)
              this.startSpinning();
  
-@@ -580,6 +697,17 @@
+@@ -582,6 +699,17 @@
          wiggle(this._message, wiggleParameters);
      }
  
@@ -216,7 +216,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
      updateSensitivity(sensitive) {
          if (this._entry.reactive === sensitive)
              return;
-@@ -626,6 +754,18 @@
+@@ -628,6 +756,18 @@
          this.cancelButton.can_focus = this._hasCancelButton;
          this._preemptiveAnswer = null;
  
@@ -236,8 +236,8 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
              this._userVerifier.cancel();
  
 diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
---- gnome-shell/js/gdm/loginDialog.js	2025-05-14 13:19:42.996809328 +0300
-+++ gnome-shell/js/gdm/loginDialog.js	2025-05-14 13:34:52.833537979 +0300
+--- gnome-shell/js/gdm/loginDialog.js	2025-08-14 14:48:19.000000000 +0300
++++ gnome-shell/js/gdm/loginDialog.js	2025-08-14 14:51:28.028427115 +0300
 @@ -566,7 +566,7 @@
          // login screen. It can be activated to reveal an entry for
          // manually entering the username.
@@ -264,8 +264,8 @@ diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
          let userName = item.user.get_user_name();
          let hold = new Batch.Hold();
 diff -ruN gnome-shell/js/gdm/util.js gnome-shell/js/gdm/util.js
---- gnome-shell/js/gdm/util.js	2025-04-14 01:40:21.000000000 +0300
-+++ gnome-shell/js/gdm/util.js	2025-05-14 13:38:25.906392780 +0300
+--- gnome-shell/js/gdm/util.js	2025-06-29 13:35:41.000000000 +0300
++++ gnome-shell/js/gdm/util.js	2025-08-14 14:51:28.028427115 +0300
 @@ -37,6 +37,7 @@
  export const BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
  export const BANNER_MESSAGE_PATH_KEY = 'banner-message-path';
@@ -287,8 +287,8 @@ diff -ruN gnome-shell/js/gdm/util.js gnome-shell/js/gdm/util.js
  
      async _verificationFailed(serviceName, shouldRetry) {
 diff -ruN gnome-shell/po/de.po gnome-shell/po/de.po
---- gnome-shell/po/de.po	2025-04-14 01:40:21.000000000 +0300
-+++ gnome-shell/po/de.po	2025-05-14 13:41:55.671350697 +0300
+--- gnome-shell/po/de.po	2025-06-29 13:35:41.000000000 +0300
++++ gnome-shell/po/de.po	2025-08-14 14:51:28.028427115 +0300
 @@ -692,8 +692,8 @@
  msgstr "Beenden erzwingen"
  
@@ -316,8 +316,8 @@ diff -ruN gnome-shell/po/de.po gnome-shell/po/de.po
  #~ msgstr "Häufig genutzte Anwendungen erscheinen hier"
  
 diff -ruN gnome-shell/po/fi.po gnome-shell/po/fi.po
---- gnome-shell/po/fi.po	2025-04-14 01:40:21.000000000 +0300
-+++ gnome-shell/po/fi.po	2025-05-14 13:42:24.051486850 +0300
+--- gnome-shell/po/fi.po	2025-06-29 13:35:41.000000000 +0300
++++ gnome-shell/po/fi.po	2025-08-14 14:51:28.032427098 +0300
 @@ -666,8 +666,8 @@
  msgstr "Pakota lopetus"
  
@@ -345,8 +345,8 @@ diff -ruN gnome-shell/po/fi.po gnome-shell/po/fi.po
  #~ msgstr "Usein käytetyt sovellukset ilmestyvät tänne"
  
 diff -ruN gnome-shell/po/fr.po gnome-shell/po/fr.po
---- gnome-shell/po/fr.po	2025-04-14 01:40:21.000000000 +0300
-+++ gnome-shell/po/fr.po	2025-05-14 13:46:25.956693797 +0300
+--- gnome-shell/po/fr.po	2025-06-29 13:35:41.000000000 +0300
++++ gnome-shell/po/fr.po	2025-08-14 14:51:28.032427098 +0300
 @@ -695,8 +695,8 @@
  msgstr "Forcer l’arrêt"
  
@@ -374,8 +374,8 @@ diff -ruN gnome-shell/po/fr.po gnome-shell/po/fr.po
  #~ msgstr "Les applications fréquemment utilisées apparaîtront ici"
  
 diff -ruN gnome-shell/po/sv.po gnome-shell/po/sv.po
---- gnome-shell/po/sv.po	2025-04-14 01:40:21.000000000 +0300
-+++ gnome-shell/po/sv.po	2025-05-14 13:42:57.023646670 +0300
+--- gnome-shell/po/sv.po	2025-06-29 13:35:41.000000000 +0300
++++ gnome-shell/po/sv.po	2025-08-14 14:51:28.032427098 +0300
 @@ -659,8 +659,8 @@
  msgstr "Tvinga avslut"
  
