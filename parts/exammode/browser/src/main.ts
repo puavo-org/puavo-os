@@ -16,12 +16,14 @@ const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;
 const EMPTY_PAGE_URL = 'about:blank';
 
+const determineLocale = () => process.env['LANG']?.split('_')[0] || 'en';
+
 const config: BrowserConfig = {
   debug: app.commandLine.hasSwitch('dev'),
   forceFullscreen: app.commandLine.hasSwitch('force-fullscreen'),
   height:
     parseInt(app.commandLine.getSwitchValue('height')) || DEFAULT_WINDOW_HEIGHT,
-  locale: app.commandLine.getSwitchValue('locale') || 'en',
+  locale: app.commandLine.getSwitchValue('locale') || determineLocale(),
   modules: app.commandLine.hasSwitch('modules'),
   restrictKeybindings: app.commandLine.hasSwitch('restrict-keybindings'),
   shell: {
