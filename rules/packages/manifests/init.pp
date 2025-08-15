@@ -477,7 +477,7 @@ class packages {
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
     [ 'calibre'
-    , 'freeplane'
+    # , 'freeplane'     # XXX Trixie
     , 'gummi'
     , 'impressive'
     , 'libreoffice'
