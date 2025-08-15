@@ -379,6 +379,12 @@ module DiskHandler
             + "does not exist at #{ EnrollmentPolicy.public_key_path }"
       exit(1)
     end
+
+    secure_boot_status = IO.popen(['mokutil', '--sb-state']).read
+    unless secure_boot_status.include?('SecureBoot enabled')
+      warn 'Secure Boot must be enabled for TPM unlocking'
+      exit(1)
+    end
   end
 
   def self.setup_device(device, have_swap, gpt_spec)

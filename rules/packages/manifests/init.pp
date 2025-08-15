@@ -216,6 +216,7 @@ class packages {
     , 'grub-efi-ia32-bin'
     , 'grub-pc'
     , 'grub-pc-bin'
+    , 'mokutil'
     , 'ksh'
     , 'libglib2.0-bin'
     , 'libjffi-jni'    # needed by cryptomator
