@@ -834,6 +834,23 @@ darkdm_main()
   darkdm_menu "$initial_command" "$forced" || return 1
 }
 
+if [ "$(cat /etc/puavo/hosttype 2>/dev/null)" = "diskinstaller" ]; then
+  echo 'Checking Secure Boot state...'
+
+  if ! /usr/lib/puavo-ltsp-install/puavo-check-secure-boot; then
+    echo
+    echo "> Rebooting into firmware setup in 10 seconds."
+    echo "Press R to restart now or any other key to cancel."
+
+    key=""
+    read -t 10 -n 1 key || true
+
+    if [ -z "$key" ] || [ "$key" = "R" ] || [ "$key" = "r" ]; then
+      systemctl reboot --firmware-setup
+    fi
+  fi
+fi
+
 # get preseed, we might need it
 echo -n 'Getting preseed and device identifier (if server can be found)... '
 preseed_json=''
