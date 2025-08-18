@@ -3,7 +3,7 @@ class desktop::autologin {
 
   file {
     '/etc/pam.d/puavo-lightdm-autologin':
-      source => 'puppet:///modules/lightdm/etc_pam.d_puavo-lightdm-autologin';
+      source => 'puppet:///modules/desktop/etc_pam.d_puavo-lightdm-autologin';
   }
 
   ::puavo_conf::script {
