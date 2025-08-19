@@ -29,5 +29,7 @@ ukify build \
   --pcr-private-key="${key_folder}/tpm2-pcr-private-key.pem" \
   --pcr-public-key="${key_folder}/tpm2-pcr-public-key.pem" \
   --pcr-banks=sha1,sha256 \
+  --secureboot-private-key="${key_folder}/mok.priv" \
+  --secureboot-certificate="${key_folder}/mok.pem" \
   --output "$output" \
   --measure

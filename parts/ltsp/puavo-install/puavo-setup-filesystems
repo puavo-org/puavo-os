@@ -374,9 +374,15 @@ module DiskHandler
   end
 
   def self.check_tpm_enrollment_feasibility
-    unless File.exist?(EnrollmentPolicy.public_key_path)
+    unless File.exist?(EncryptionPolicyPublicKeyPath)
       warn 'Automatic TPM unlocking is not possible, because the public key ' \
-            + "does not exist at #{ EnrollmentPolicy.public_key_path }"
+            + "does not exist at #{ EncryptionPolicyPublicKeyPath }"
+      exit(1)
+    end
+
+    secure_boot_status = IO.popen(['mokutil', '--sb-state']).read
+    unless secure_boot_status.include?('SecureBoot enabled')
+      warn 'Secure Boot must be enabled for TPM unlocking'
       exit(1)
     end
   end

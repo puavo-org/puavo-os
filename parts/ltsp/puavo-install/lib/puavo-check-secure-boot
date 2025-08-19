@@ -1,0 +1,92 @@
+#!/bin/sh
+set -eu
+
+command -v mokutil >/dev/null 2>&1 || exit 0
+
+RED='\033[1;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RESET='\033[0m'
+
+MOK_PASSWORD="0"
+PUAVO_MOK_PATH="/etc/puavo-conf/mok.der"
+
+status=0
+
+enroll_mok() {
+  local mok_path="$1"
+  echo "enrolling MOK ${mok_path}..."
+  # TODO: Is there a better way to automate this?
+  password_input="${MOK_PASSWORD}\n${MOK_PASSWORD}"
+  echo "$password_input" | mokutil --import "$mok_path" >/dev/null 2>&1
+}
+
+images_dir="/installimages"
+addons_directory="${images_dir}/boot/addons"
+
+mok_private_key="${addons_directory}/mok.priv"
+mok_der="${addons_directory}/mok.der"
+mok_pem="${addons_directory}/mok.pem"
+
+create_device_specific_files() {
+  mkdir -p "$addons_directory"
+
+  # Generate private key and certificate
+  if [ ! -f "$mok_pem" ]; then
+    echo "generating device MOK..."
+    openssl req -nodes -new -x509 -newkey rsa:2048 \
+      -keyout "$mok_private_key" -outform DER -out "$mok_der" -days 36500 \
+      -subj "/CN=Puavo Device MOK/" >/dev/null 2>&1
+    openssl x509 -inform der -in "$mok_der" -out "$mok_pem" >/dev/null 2>&1
+  fi
+
+  # This command-line addon is responsible for keeping the
+  # device-specific MOK active. Removing it would alter the
+  # Secure Boot state (PCR 7), which would break automatic
+  # TPM-based disk unlocking.
+  extra_command_line_addon="${addons_directory}/extra.cmdline.addon.efi"
+  if [ ! -f "$extra_command_line_addon" ]; then
+    echo "creating the extra command-line addon..."
+    # We have to create an "empty" command-line section manually, because the normal --cmdline
+    # switch refuses to create such a section. In addition, it can not be truly empty, because
+    # systemd-stub ignores empty sections and reports an error due to finding no sections.
+    ukify build \
+      --secureboot-private-key="${mok_private_key}" \
+      --secureboot-certificate="${mok_pem}" \
+      --section=.cmdline:' ' \
+      --output="$extra_command_line_addon" >/dev/null 2>&1
+  fi
+}
+
+create_device_specific_files || {
+  echo "failed to create device-specific MOK files" >&2
+  exit 1
+}
+
+# Enroll Puavo MOK
+if mokutil --test-key "$PUAVO_MOK_PATH" >/dev/null 2>&1; then
+  enroll_mok "$PUAVO_MOK_PATH"
+  status=1
+fi
+
+# Enroll device MOK
+if mokutil --test-key "$mok_der" >/dev/null 2>&1; then
+  enroll_mok "$mok_der"
+  status=1
+fi
+
+if [ "$status" != 0 ]; then
+  puavo-install-and-update-uki-images --images-dir "$images_dir"
+  echo
+  printf "${YELLOW}> Please reboot and complete the enrollment with password: ${GREEN}${MOK_PASSWORD}${RESET}\n"
+fi
+
+secure_boot_state=$(mokutil --sb-state 2>&1)
+if echo "$secure_boot_state" | grep -q 'SecureBoot disabled'; then
+  echo
+  printf "${RED}Secure Boot is disabled.${RESET}\n"
+  printf "${YELLOW}> Please enable Secure Boot in BIOS settings.${RESET}\n"
+  status=1
+fi
+
+exit $status

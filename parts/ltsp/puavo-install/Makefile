@@ -39,6 +39,7 @@ install : installdirs
 		puavo-install \
 		puavo-install-and-update-ltspimages \
 		puavo-install-and-update-uki-image \
+		puavo-install-and-update-uki-images \
 		puavo-install-grub \
 		puavo-install-uki \
 		puavo-make-install-disk \
@@ -64,6 +65,7 @@ install : installdirs
 		lib/is-uki-install \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
+		lib/puavo-check-secure-boot \
 		lib/puavo-get-boot-disks \
 		lib/puavo-image-preinst \
 		lib/puavo-reset \
