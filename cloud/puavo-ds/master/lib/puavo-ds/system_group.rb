@@ -14,6 +14,7 @@ class SystemGroup < LdapOrganisationBase
       { 'cn' => 'orginfo',       'description' => 'Organisation information' },
       { 'cn' => 'printerqueues', 'description' => 'Printer queues'           },
       { 'cn' => 'servers',       'description' => 'Server information'       },
+      { 'cn' => 'puavo2google',  'description' => 'Puavo to Google sync'     },
     ]
 
     group_specs.each do |system_group|
