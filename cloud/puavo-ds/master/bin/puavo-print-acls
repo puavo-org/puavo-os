@@ -585,13 +585,14 @@ rule {
 rule {
   [dn exact $Groups]
     [attrs children entry objectClass ou]
-      by $org_owners             read
-      by [puavo_dn puavo]        read
-      by [puavo_dn statistics]   read
-      by [dn children $People]   read
-      by [dn children $Hosts]    read
-      by [systemgroup getent]    read
-      by [systemgroup nextcloud] read
+      by $org_owners                read
+      by [puavo_dn puavo]           read
+      by [puavo_dn statistics]      read
+      by [dn children $People]      read
+      by [dn children $Hosts]       read
+      by [systemgroup getent]       read
+      by [systemgroup nextcloud]    read
+      by [systemgroup puavo2google] read
 }
 
 # deny $admins write access to some school attributes
@@ -633,6 +634,16 @@ rule {
 }
 
 rule {
+  # allow puavo2google to read some group information
+  [dn subtree $Groups]
+    [attrs cn displayName entry member memberUid objectClass \
+           puavoEduGroupType puavoExternalId puavoId puavoLocale puavoSchool \
+           puavoSchoolCode]
+      by [puavo_dn puavo2google] read
+      by *                       none break
+}
+
+rule {
   # allow statistics to read some group information
   [dn subtree $Groups]
     [attrs cn displayName entry objectClass puavoActiveService puavoConf \
@@ -668,18 +679,19 @@ rule {
 rule {
   [dn exact $People]
     [attrs children entry objectClass ou]
-      by [puavo_dn email-mgmt]     read
-      by [puavo_dn mfa-mgmt]       read
-      by [puavo_dn puavo]          read
-      by [puavo_dn pw-mgmt]        read
-      by [puavo_dn statistics]     read
-      by [systemgroup addressbook] read
-      by [systemgroup auth]        read
-      by [systemgroup getent]      read
-      by [systemgroup nextcloud]   read
-      by [dn children $People]     read
-      by [dn children $Hosts]      read
-      by anonymous                 auth
+      by [puavo_dn email-mgmt]      read
+      by [puavo_dn mfa-mgmt]        read
+      by [puavo_dn puavo]           read
+      by [puavo_dn pw-mgmt]         read
+      by [puavo_dn statistics]      read
+      by [systemgroup addressbook]  read
+      by [systemgroup auth]         read
+      by [systemgroup getent]       read
+      by [systemgroup nextcloud]    read
+      by [systemgroup puavo2google] read
+      by [dn children $People]      read
+      by [dn children $Hosts]       read
+      by anonymous                  auth
 }
 
 rule {
@@ -790,6 +802,29 @@ rule {
            uid]
       by [systemgroup nextcloud] read
       by *                       none break
+}
+
+# some permissions to "puavo2google"
+rule {
+  [dn subtree $People]
+    [attrs cn                                  \
+           entry                               \
+           givenName                           \
+           mail                                \
+           puavoDoNotDelete                    \
+           puavoEduPersonAccountExpirationTime \
+           puavoEduPersonAffiliation           \
+           puavoEduPersonPrimarySchool         \
+           puavoExternalId                     \
+           puavoId                             \
+           puavoLocale                         \
+           puavoLocked                         \
+           puavoRemovalRequestTime             \
+           puavoSchool                         \
+           sn                                  \
+           uid]
+      by [systemgroup puavo2google] read
+      by *                          none break
 }
 
 # rules needed by email-mgmt (email management user)
