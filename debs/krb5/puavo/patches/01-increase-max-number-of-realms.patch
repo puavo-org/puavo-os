@@ -1,0 +1,12 @@
+diff -ruN krb5/src/kdc/main.c krb5/src/kdc/main.c
+--- krb5/src/kdc/main.c	2024-06-26 23:00:35.000000000 +0300
++++ krb5/src/kdc/main.c	2025-08-25 14:30:10.512619353 +0300
+@@ -65,7 +65,7 @@
+ static volatile int signal_received = 0;
+ static volatile int sighup_received = 0;
+ 
+-#define KRB5_KDC_MAX_REALMS     32
++#define KRB5_KDC_MAX_REALMS     512
+ 
+ static const char *kdc_progname;
+ 
