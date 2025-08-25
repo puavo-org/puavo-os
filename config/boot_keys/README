@@ -1,0 +1,15 @@
+Here is an example TPM key pair and also an MOK key pair.
+
+The TPM key pair is generated with .aux/generate-tpm-keys and the MOK
+key pair is generated with .aux/generate-mok.
+
+It is not normal to have the private keys made public as is done here.
+Thus, systems built with these keys do not provide much actual security.
+However, while we use our own private keys for actual production systems,
+we are making these keys public so that their functionality can be tested
+by anyone.  As Puavo OS is a public project, it is fair that anyone can
+use these keys to create an actual Puavo OS system.
+
+However, you should know that in case you actually want to use SecureBoot
+and TPM to achieve some security, you should roll out your own keys and
+keep the private keys secret.
