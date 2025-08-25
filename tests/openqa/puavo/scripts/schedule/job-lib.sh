@@ -1,0 +1,216 @@
+#!/bin/bash
+
+MAX_RETRIES=${MAX_RETRIES:-3}
+POLL_INTERVAL=${POLL_INTERVAL:-30}
+RESTART_INTERVAL=${RESTART_INTERVAL:-30}
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RESET_COLOR='\033[0m'
+
+log() {
+  echo -e "[$(date '+%Y-%m-%d %H:%M:%S')]: $1"
+}
+
+log_error() {
+  log "${RED}error: $1${RESET_COLOR}"
+}
+
+log_success() {
+  log "${GREEN}success: $1${RESET_COLOR}"
+}
+
+log_warning() {
+  log "${YELLOW}warning: $1${RESET_COLOR}"
+}
+
+start_software_tpm() {
+  local reset=$1
+
+  pkill swtpm 2>/dev/null || true
+
+  if [ "$reset" = "true" ]; then
+    rm -rf /tmp/openqa-tpm 2>/dev/null || true
+  fi
+
+  mkdir -p /tmp/openqa-tpm
+  chown _openqa-worker:_openqa-worker /tmp/openqa-tpm
+
+  swtpm socket \
+      --runas _openqa-worker \
+      --tpm2 \
+      --tpmstate dir=/tmp/openqa-tpm \
+      --ctrl type=unixio,path=/tmp/openqa-tpm-socket &
+}
+
+setup_ovmf() {
+  log "setting up OVMF files..."
+  mkdir -p /var/lib/openqa/share/data/
+  cp /usr/share/qemu/ovmf-x86_64-ms-4m-vars.bin /var/lib/openqa/share/data/
+  cp /usr/share/qemu/ovmf-x86_64-ms-4m-code.bin /var/lib/openqa/share/data/
+  chown _openqa-worker:root /var/lib/openqa/share/data/ovmf-x86_64-ms-4m-code.bin
+  chown _openqa-worker:root /var/lib/openqa/share/data/ovmf-x86_64-ms-4m-vars.bin
+}
+
+wait_for_job() {
+  local job_id=$1
+  local attempt=$2
+  
+  log "waiting for job $job_id (attempt $attempt) to complete..."
+    
+  while true; do
+    local job_info
+    job_info=$(openqa-cli api jobs/$job_id 2>/dev/null || echo "")
+
+    if [ -z "$job_info" ]; then
+      log_error "failed to get job info for job $job_id"
+      return 1
+    fi
+
+    # Extract state from JSON response
+    local state
+    state=$(echo "$job_info" | jq --raw-output ".job.state")
+
+    case "$state" in
+      "done")
+        local result
+        result=$(echo "$job_info" | jq --raw-output ".job.result")
+        log "job $job_id completed with result: $result"
+
+        if [ "$result" = "passed" ]; then
+          return 0
+        else
+          log_error "job $job_id failed with result: $result"
+          return 1
+        fi
+        ;;
+      "cancelled"|"obsoleted")
+        log "job $job_id was $state"
+        return 1
+        ;;
+      *)
+        log "job $job_id is $state, continuing to wait..."
+        sleep $POLL_INTERVAL
+        ;;
+    esac
+  done
+}
+
+submit_job() {
+  local job_name=$1
+  local schedule=$2
+  local reset=$3
+  shift 3 # Remove first three parameters, rest are custom test module options
+  local attempt=1
+
+  log "submitting $job_name job..."
+
+  if [ "$reset" = "true" ]; then
+    setup_ovmf
+  fi
+
+  start_software_tpm "$reset"
+
+  # Decide the ISO file used for testing
+  local iso_directory="/var/lib/openqa/share/factory/iso"
+  local iso_path=""
+  if [ -n "${ISO:-}" ]; then
+    iso_path="$ISO"
+  else
+    # Pick the most recent ISO in the directory
+    iso_path=$(ls -1t "$iso_directory"/*.img 2>/dev/null | head -n1 || true)
+  fi
+
+  if [ -z "$iso_path" ]; then
+    log_error "failed to find ISO file in $iso_directory"
+    return 1
+  fi
+
+  local iso_name
+  iso_name=$(basename "$iso_path")
+
+  # Attempt to extract the build version:
+  # puavo-os-2025-05-05-123456-amd64.img => 2025-05-05-123456
+  local build
+  if [[ "$iso_name" =~ ([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}) ]]; then
+    build="${BASH_REMATCH[1]}"
+  else
+    build="$iso_name"
+  fi
+
+  # Build the command with base parameters
+  local command="openqa-cli api -X POST isos \
+    ISO=$iso_name \
+    DISTRI=puavo \
+    VERSION=generic \
+    FLAVOR=iso \
+    ARCH=x86_64 \
+    BUILD=$build \
+    SCHEDULE=\"$schedule\""
+
+  # Add custom test module options
+  for option in "$@"; do
+    command="$command $option"
+  done
+
+  # Submit job and capture response
+  local response
+  response=$(eval "$command" 2>&1)
+  
+  if [ $? -ne 0 ]; then
+    log_error "failed to submit job: $response"
+    return 1
+  fi
+
+  # Extract job ID from response
+  local job_id
+  job_id=$(echo "$response" | jq --raw-output '.ids[0]')
+
+  if [ -z "$job_id" ] || [ "$job_id" = "null" ]; then
+    log_error "failed to extract job id from response: $response"
+    return 1
+  fi
+  
+  log "job submitted successfully with id: $job_id"
+
+  while [ $attempt -le $MAX_RETRIES ]; do
+    # Wait for job completion
+    if wait_for_job "$job_id" "$attempt"; then
+      log_success "$job_name job completed successfully"
+      return 0
+    fi
+      
+    # Job failed, try to restart if we have retries left
+    if [ $attempt -lt $MAX_RETRIES ]; then
+      log "attempting to restart job $job_id in $RESTART_INTERVAL second(s)..."
+      sleep $RESTART_INTERVAL
+          
+      if [ "$reset" = "true" ]; then
+        setup_ovmf
+      fi
+          
+      # The software tpm must be restarted as well, because it exits when the test VM closes
+      start_software_tpm "$reset"
+
+      local restart_response
+      restart_response=$(openqa-cli api -X POST jobs/$job_id/restart 2>&1)
+
+      if [ $? -eq 0 ]; then
+        local new_job_id
+        new_job_id=$(echo "$restart_response" \
+                            | jq --raw-output ".result[0][\"$job_id\"]")
+        log "restarted job $job_id, new id is $new_job_id"
+        job_id=$new_job_id
+      else
+        log_error "failed to restart job $job_id: $restart_response"
+        return 1
+      fi
+    fi
+      
+    attempt=$((attempt + 1))
+  done
+
+  log_error "$job_name job failed after $MAX_RETRIES attempts"
+  return 1
+}

@@ -1,0 +1,11 @@
+{
+  "name": "qemu-machine-1",
+  "backend": "qemu",
+  "settings": {
+    "HDDSIZEGB": 150,
+    "QEMUCPUS": 4,
+    "QEMU_APPEND": "bios /var/lib/openqa/share/data/ovmf-x86_64-ms-4m-code.bin -global driver=cfi.pflash01,property=secure,value=off -drive if=pflash,format=raw,readonly=on,file=/var/lib/openqa/share/data/ovmf-x86_64-ms-4m-code.bin -drive if=pflash,format=raw,file=/var/lib/openqa/share/data/ovmf-x86_64-ms-4m-vars.bin -boot menu=on -enable-kvm -chardev socket,id=chrtpm,path=/tmp/openqa-tpm-socket -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0",
+    "USBBOOT": 1,
+    "VIRTIO_CONSOLE": "1"
+  }
+}

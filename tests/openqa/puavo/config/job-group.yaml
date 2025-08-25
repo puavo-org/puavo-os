@@ -1,0 +1,13 @@
+defaults:
+  x86_64:
+    machine: qemu-machine-1
+    priority: 1
+products:
+  medium-x86_64:
+    distri: puavo
+    version: generic
+    flavor: iso
+scenarios:
+  x86_64:
+    medium-x86_64:
+    - installation
