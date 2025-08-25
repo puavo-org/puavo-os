@@ -10,8 +10,8 @@ ifeq "$(image_class)" "exam"
   _pkgs_ports := gnome-shell
   _pkgs_ports_builddeps :=
 else
-  # XXX do not build any custom packages in Trixie, these all need some work
-  # _pkgs_cloud := krb5 openldap puavo-ds puavo-os
+  # XXX do not build these custom packages in Trixie, these all need some work
+  # _pkgs_cloud := krb5
   # _pkgs_parts := puavo-ds puavo-os
   # _pkgs_ports := anki                   \
   #                console-setup          \
@@ -31,7 +31,7 @@ else
   #                wine                   \
   #                wsmancli
   # XXX Trixie
-  _pkgs_cloud := puavo-ds puavo-os
+  _pkgs_cloud := puavo-ds puavo-os openldap
   _pkgs_parts := puavo-ds puavo-os
   _pkgs_ports := gnome-shell
 
