@@ -1,0 +1,12 @@
+diff -ruN openldap/libraries/librewrite/rewrite-int.h openldap/libraries/librewrite/rewrite-int.h
+--- openldap/libraries/librewrite/rewrite-int.h	2025-05-22 20:56:21.000000000 +0300
++++ openldap/libraries/librewrite/rewrite-int.h	2025-08-25 12:59:31.704554865 +0300
+@@ -57,7 +57,7 @@
+  */
+ 
+ #define REWRITE_MAX_MATCH	11	/* 0: overall string; 1-9: submatches */
+-#define REWRITE_MAX_PASSES	100
++#define REWRITE_MAX_PASSES	1000
+ 
+ /*
+  * Submatch escape char

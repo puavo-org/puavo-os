@@ -1,0 +1,12 @@
+diff -ruN openldap/libraries/libldap/tpool.c openldap/libraries/libldap/tpool.c
+--- openldap/libraries/libldap/tpool.c	2025-05-22 20:56:21.000000000 +0300
++++ openldap/libraries/libldap/tpool.c	2025-08-25 12:55:13.846499211 +0300
+@@ -49,7 +49,7 @@
+ /* Max number of thread-specific keys we store per thread.
+  * We don't expect to use many...
+  */
+-#define	MAXKEYS	32
++#define	MAXKEYS	512
+ 
+ /* Max number of threads */
+ #define	LDAP_MAXTHR	1024	/* must be a power of 2 */

@@ -1,0 +1,173 @@
+#!/bin/sh
+
+set -eu
+
+cat <<'EOF_CONTROL' > debian/control
+Source: openldap
+Section: net
+Priority: optional
+Maintainer: Debian OpenLDAP Maintainers <pkg-openldap-devel@lists.alioth.debian.org>
+Uploaders: Ryan Tandy <ryan@nardis.ca>,
+ Sergio Durigan Junior <sergiodj@debian.org>,
+ Michael Tokarev <mjt@tls.msk.ru>
+Build-Depends: debhelper-compat (= 13),
+               groff-base,
+               heimdal-multidev <!pkg.openldap.noslapd>,
+               krb5-multidev,
+               libargon2-dev <!pkg.openldap.noslapd>,
+               libcrack2-dev <!pkg.openldap.noslapd>,
+               libkrb5-dev,
+               libltdl-dev <!pkg.openldap.noslapd>,
+               libperl-dev <!pkg.openldap.noslapd>,
+               libsasl2-dev,
+               libssl-dev,
+               libwrap0-dev <!pkg.openldap.noslapd>,
+               openssl <!nocheck !pkg.openldap.noslapd>,
+               perl:any,
+               pkgconf,
+               po-debconf,
+               quilt,
+               time,
+               unixodbc-dev <!pkg.openldap.noslapd>,
+# Needed for SASL/GSSAPI tests
+               krb5-admin-server <!nocheck !pkg.openldap.noslapd>,
+               krb5-user <!nocheck !pkg.openldap.noslapd>,
+               krb5-kdc <!nocheck !pkg.openldap.noslapd>,
+               libsasl2-modules-gssapi-mit <!nocheck !pkg.openldap.noslapd>,
+               sasl2-bin <!nocheck !pkg.openldap.noslapd>,
+Build-Conflicts: libbind-dev, autoconf2.13
+Standards-Version: 4.7.2
+Homepage: https://www.openldap.org/
+Rules-Requires-Root: no
+Vcs-Git: https://salsa.debian.org/openldap-team/openldap.git
+Vcs-Browser: https://salsa.debian.org/openldap-team/openldap
+
+Package: slapd
+Architecture: any
+Build-Profiles: <!pkg.openldap.noslapd>
+Pre-Depends: debconf, ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, libldap2 (= ${binary:Version}),
+ psmisc,
+ adduser, ${misc:Depends}
+Recommends: ldap-utils
+Suggests: libsasl2-modules,
+ libsasl2-modules-gssapi-mit | libsasl2-modules-gssapi-heimdal
+Conflicts: ldap-server
+Provides: ldap-server, ${slapd:Provides}
+Description: OpenLDAP server (slapd)
+ This is the OpenLDAP (Lightweight Directory Access Protocol) server
+ (slapd). The server can be used to provide a standalone directory
+ service.
+
+Package: slapd-contrib
+Architecture: any
+Build-Profiles: <!pkg.openldap.noslapd>
+Depends: slapd (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Provides: slapd-smbk5pwd
+Breaks: slapd-smbk5pwd (<< 2.4.47+dfsg-2~), slapd (<< 2.5.4+dfsg-1~)
+Replaces: slapd-smbk5pwd (<< 2.4.47+dfsg-2~)
+Description: contributed plugins for OpenLDAP slapd
+ This package contains a number of slapd overlays and plugins contributed by
+ the OpenLDAP community. While distributed as part of OpenLDAP Software, they
+ are not necessarily supported by the OpenLDAP Project.
+
+Package: ldap-utils
+Architecture: any
+Depends: ${shlibs:Depends}, libldap2 (= ${binary:Version}), ${misc:Depends}
+Suggests: libsasl2-modules,
+ libsasl2-modules-gssapi-mit | libsasl2-modules-gssapi-heimdal
+Conflicts: ldap-client
+Provides: ldap-client, openldap-utils
+Description: OpenLDAP utilities
+ This package provides utilities from the OpenLDAP (Lightweight
+ Directory Access Protocol) package. These utilities can access a
+ local or remote LDAP server and contain all the client programs
+ required to access LDAP servers.
+
+Package: libldap2
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: libldap-common
+Description: OpenLDAP libraries
+ These are the run-time libraries for the OpenLDAP (Lightweight Directory
+ Access Protocol) servers and clients.
+
+Package: libldap-common
+Section: libs
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}
+Description: OpenLDAP common files for libraries
+ These are common files for the run-time libraries for the OpenLDAP
+ (Lightweight Directory Access Protocol) servers and clients.
+
+Package: libldap-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Provides: libldap2-dev
+Breaks: libldap2-dev (<< 2.5.4+dfsg-1~)
+Replaces: libldap2-dev (<< 2.5.4+dfsg-1~)
+Depends: libldap2 (= ${binary:Version}), ${misc:Depends}
+Description: OpenLDAP development libraries
+ This package allows development of LDAP applications using the OpenLDAP
+ libraries. It includes headers, libraries and links to allow static and
+ dynamic linking.
+
+Package: libldap2-dev
+Section: oldlibs
+Architecture: all
+Depends: libldap-dev, ${misc:Depends}
+Description: transitional package for libldap-dev
+ This is a transitional package from libldap2-dev to libldap-dev. It can be
+ safely removed.
+
+Package: slapi-dev
+Section: libdevel
+Architecture: any
+Build-Profiles: <!pkg.openldap.noslapd>
+Depends: slapd (= ${binary:Version}), ${misc:Depends}
+Description: development libraries for OpenLDAP SLAPI plugin interface
+ This package allows development of plugins for the OpenLDAP slapd server
+ using the SLAPI interface.  It includes the headers and libraries needed
+ to build such plugins.
+
+Package: slapd-smbkrb5pwd
+Section: net
+Priority: optional
+Architecture: any
+Pre-Depends: debconf (>= 0.5) | debconf-2.0
+Depends: ${shlibs:Depends}, libkrb5-3, slapd, ${misc:Depends}
+Description: Samba / MIT Kerberos password overlay module for slapd
+ smbkrb5pwd extends password change operations to synchronously change
+ passwords in MIT Kerberos and Samba.
+EOF_CONTROL
+
+cat <<'EOF_POSTINST' > debian/slapd.postinst
+#! /bin/sh 
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+# This will be replaced with debian/slapd.scripts-common which includes
+# various helper functions and $OLD_VERSION and $SLAPD_CONF
+#SCRIPTSCOMMON#
+
+# Create a new user.  Don't create the user, however, if the local
+# administrator has already customized slapd to run as a different user.
+if [ "$MODE" = "configure" ] || [ "$MODE" = "reconfigure" ] ; then
+	if [ "openldap" = "$SLAPD_USER" ] ; then
+		create_new_user
+	fi
+fi
+
+#DEBHELPER#
+
+exit 0
+
+# vim: set sw=8 foldmethod=marker: 
+EOF_POSTINST
