@@ -183,7 +183,7 @@ include /usr/share/dpkg/pkg-info.mk
 
 # Set this variable if you're building packages outside of Debian and don't
 # want the checks for DFSG-freeness.
-#DFSG_NONFREE = 1
+DFSG_NONFREE = 1
 
 # Expose maintainer address to build/mkversion (see debian/patches/set-maintainer-name)
 export DEB_MAINTAINER ?= $(shell sed -ne 's/^Maintainer:\s\+//p' debian/control)
@@ -208,7 +208,7 @@ ifneq ($(filter cross,$(DEB_BUILD_PROFILES)),)
 	CONFIG += --with-yielding-select=yes ac_cv_func_memcmp_working=yes
 endif
 
-CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 ppm smbk5pwd
+CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 ppm smbk5pwd smbkrb5pwd
 
 installdir	:= $(CURDIR)/debian/tmp
 builddir	:= $(CURDIR)/debian/build
@@ -366,3 +366,10 @@ ifeq (${noslapd},)
 	done
 endif
 EOF_RULES
+
+cat <<'EOF_SLAPD_SMBKRB5PWD_INSTALL' > debian/slapd-smbkrb5pwd.install
+usr/lib/ldap/smbkrb5pwd.so*
+usr/lib/ldap/smbkrb5pwd.la
+usr/lib/ldap/smbkrb5pwd_srv.so*
+usr/lib/ldap/smbkrb5pwd_srv.la
+EOF_SLAPD_SMBKRB5PWD_INSTALL
