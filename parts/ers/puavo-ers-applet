@@ -80,7 +80,7 @@ def iso_as_timezone(isoformat_string, logger):
   except Exception as e:
     logger.log(syslog.LOG_WARNING,
                'error converting %s to datetime object: %s' \
-                 % (isoformat_timestring, e))
+                 % (isoformat_string, e))
     raise e
 
 
@@ -481,6 +481,8 @@ class PuavoErsApplet:
 
 
   def main(self):
+    self.check_vboxdrv_exists()
+
     self.run_naksu()
     GLib.timeout_add_seconds(1, self.update_decrypt_codes)
 
@@ -491,6 +493,20 @@ class PuavoErsApplet:
 
     Gtk.main()
 
+  def check_vboxdrv_exists(self):
+    timeout = 300  # 5 minutes
+    interval = 20
+    elapsed = 0
+    while elapsed < timeout:
+      if os.path.exists('/dev/vboxdrv'):
+        self.logger.log(syslog.LOG_INFO, '/dev/vboxdrv found')
+        time.sleep(2)
+        return True
+      self.logger.log(syslog.LOG_WARNING, '/dev/vboxdrv not found, retrying...')
+      time.sleep(interval)
+      elapsed += interval
+    self.logger.log(syslog.LOG_ERR, '/dev/vboxdrv not found after 5 minutes')
+    raise FileNotFoundError('/dev/vboxdrv not found after 5 minutes')
 
   def run_naksu(self):
     self.logger.log(syslog.LOG_NOTICE, 'starting up naksu')
