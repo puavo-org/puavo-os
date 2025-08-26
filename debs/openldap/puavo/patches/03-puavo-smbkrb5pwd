@@ -461,7 +461,7 @@ diff -ruN openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/contri
 +#ifdef SMBKRB5PWD_KADM5_CLNT
 +	if (gethostname(hostname, HOST_NAME_MAX+1)     ||
 +	    getaddrinfo(hostname, NULL, NULL, &host_addr)) {
-+		Log0(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
 +		     "smbkrb5pwd : an error occurred in gethostname()"
 +		     " or getaddrinfo(), check your dns settings\n");
 +		goto error;
@@ -469,7 +469,7 @@ diff -ruN openldap/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c openldap/contri
 +
 +	if (getnameinfo(host_addr->ai_addr, host_addr->ai_addrlen, fqdn,
 +			NI_MAXHOST, NULL, 0, 0)) {
-+		Log0(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
++		Log(LDAP_DEBUG_ANY, LDAP_LEVEL_NOTICE,
 +		     "smbkrb5pwd : an error occurred in getnameinfo(),"
 +		     " check your dns settings\n");
 +		goto error_with_host_addr;
