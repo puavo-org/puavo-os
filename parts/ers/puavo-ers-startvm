@@ -14,20 +14,26 @@ if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
   exit 0
 fi
 
+# Wait for the VirtualBox kernel module to load
+for i in 4 8 16 32 64; do
+  if [ -e /dev/vboxdrv ]; then
+    break
+  fi
+  log warning 'waiting for vboxdrv to load in kernel'
+  sleep "$i"
+done
+
+if [ ! -e /dev/vboxdrv ]; then
+  log err '/dev/vboxdrv not found after waiting'
+  exit 1
+fi
+
 # Run automated VM startup
 
 if ! vboxmanage list vms | grep -q 'NaksuAbittiKTP'; then
   log err 'Abitti VM not found'
   exit 1
 fi
-
-for i in 4 8 16 32; do
-  if lsmod | grep -q vboxdrv; then
-    break
-  fi
-  log warning 'waiting for vboxdrv to load in kernel'
-  sleep "$i"
-done
 
 sleep 4
 log info 'trying Automated Abitti VM startup'

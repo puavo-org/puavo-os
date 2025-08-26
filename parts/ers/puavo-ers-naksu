@@ -19,6 +19,20 @@ if [ ! -x "${puavo_ers_dir}/naksu" ]; then
   fi
 fi
 
+# Wait for the VirtualBox kernel module to load
+for i in 4 8 16 32 64; do
+  if [ -e /dev/vboxdrv ]; then
+    break
+  fi
+  log warning 'waiting for vboxdrv to load in kernel'
+  sleep "$i"
+done
+
+if [ ! -e /dev/vboxdrv ]; then
+  log err '/dev/vboxdrv not found after waiting'
+  exit 1
+fi
+
 cd "$puavo_ers_dir"
 
 while true; do
