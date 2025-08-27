@@ -1,3 +1,8 @@
+#!/bin/sh
+
+set -eu
+
+cat <<'EOF_CONTROL' > debian/control
 Source: hooktftp
 Section: utils
 Priority: extra
@@ -12,3 +17,4 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Hook based tftp server
  Hook based tftp server originally written by epeli inspired by puavo-tftp.
  It's written in Go in the hope of being faster and more stable.
+EOF_CONTROL

@@ -20,7 +20,6 @@ else
   #                gnome-network-displays \
   #                gtk+3.0                \
   #                gtk4                   \
-  #                hooktftp               \
   #                kde-spectacle          \
   #                libpam-ccreds          \
   #                linux                  \
@@ -32,7 +31,7 @@ else
   # XXX Trixie
   _pkgs_cloud := puavo-ds puavo-os krb5 openldap
   _pkgs_parts := puavo-ds puavo-os
-  _pkgs_ports := gnome-shell
+  _pkgs_ports := gnome-shell hooktftp
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   # XXX Trixie

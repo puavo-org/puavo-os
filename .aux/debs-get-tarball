@@ -21,6 +21,7 @@ import pydantic.main
 import pydantic.networks
 import pydantic.types
 import requests
+import typing
 
 
 class TarballType(str, enum.Enum):
@@ -48,7 +49,7 @@ class Tarball(pydantic.main.BaseModel):
 class Tarballs(pydantic.main.BaseModel):
     """A set of downloadable tarballs"""
 
-    debian: Tarball
+    debian: typing.Optional[Tarball] = None
     orig: Tarball
 
 

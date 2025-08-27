@@ -67,9 +67,7 @@ echo "Building ${srcpkgname}"
 (
   cd "${pkgworkdir}/${srcpkgname}"
 
-  if [ -e puavo/info.json ]; then
-    "${thisscriptdir}/debs-get-tarball" orig
-  else
+  if [ ! -e puavo/info.json ]; then
     debian/scripts/get-orig-source
   fi
 
