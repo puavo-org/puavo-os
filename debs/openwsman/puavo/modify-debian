@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+# building with Ruby support is broken
+sed -i '/-DBUILD_RUBY_GEM=no/a\
+        -DBUILD_RUBY=no' debian/rules
