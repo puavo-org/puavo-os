@@ -75,7 +75,7 @@ class OverlayHandler < DBus::Object
       mntpath = '/imageoverlays'
 
       begin
-        # ruby-filesystem module might help here instead of this
+        # ruby-sys-filesystem module might help here instead of this
 
         if !system('mountpoint', '-q', mntpath)
           logerr(Syslog::LOG_ERR,

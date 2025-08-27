@@ -1121,8 +1121,7 @@ module SeriesControl
   end
 
   def self.lookup_free_diskspace
-    stat = FileSystem.stat($config[:download_path])
-    return stat.blocks_avail * stat.block_size
+    return Sys::Filesystem.stat($config[:download_path]).bytes_available
   end
 
   def self.parse_series_data(series_data)
