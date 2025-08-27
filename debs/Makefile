@@ -34,9 +34,7 @@ else
   _pkgs_ports := gnome-shell hooktftp
 
   # sblim-sfcc openwsman are dependencies for wsmancli
-  # XXX Trixie
-  # _pkgs_ports_builddeps := sblim-sfcc
-  _pkgs_ports_builddeps := openwsman
+  _pkgs_ports_builddeps := openwsman sblim-sfcc
 endif
 
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \

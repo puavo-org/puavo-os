@@ -1,0 +1,24 @@
+diff -ruN sblim-sfcc.orig/TEST/show.c sblim-sfcc/TEST/show.c
+--- sblim-sfcc.orig/TEST/show.c	2025-08-27 12:52:56.603109051 +0300
++++ sblim-sfcc/TEST/show.c	2025-08-27 12:53:48.055507324 +0300
+@@ -90,7 +90,7 @@
+             CIMCData data = objectpath->ft->getKeyAt(objectpath, i,
+                                                      &keyname, NULL);
+             printf("\t%s=%s\n", (char *)keyname->hdl,
+-                   cv=value2Chars(data.type, &data.value));
++                   cv=value2Chars(data.type, (CMPIValue *) &data.value));
+ 	 if(cv) free(cv);
+ 	 if(keyname) CMRelease(keyname);
+       }
+diff -ruN sblim-sfcc.orig/TEST/v2test_ec.c sblim-sfcc/TEST/v2test_ec.c
+--- sblim-sfcc.orig/TEST/v2test_ec.c	2025-08-27 12:52:56.603109051 +0300
++++ sblim-sfcc/TEST/v2test_ec.c	2025-08-27 12:54:30.491837038 +0300
+@@ -82,7 +82,7 @@
+        count = enm->ft->hasNext(enm, NULL) ;
+        while (count > 0) {
+           data = enm->ft->getNext(enm, NULL);
+-          showClass(data.value.cls);          
++          showClass((CMPIConstClass *) data.value.cls);          
+           /*
+            * see if we have any more
+            */
