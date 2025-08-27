@@ -23,6 +23,12 @@ class packages {
 # }
 
   @package {
+    [ 'puavo-rest' ]:
+      ensure => present,
+      tag    => [ 'tag_puavo_bootserver' ];
+  }
+
+  @package {
     [ 'puavo-autopilot'
     , 'puavo-autopoweroff'
     , 'puavo-blackboard'
