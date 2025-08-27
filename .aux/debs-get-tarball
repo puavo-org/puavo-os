@@ -173,7 +173,7 @@ def _check_tar_member(
     member: tarfile.TarInfo,
     dest_dir_path=os.path.curdir,
 ):
-    if member.type not in (tarfile.DIRTYPE, tarfile.SYMTYPE, tarfile.REGTYPE):
+    if not (member.isdir() or member.isfile() or member.issym()):
         raise InvalidTarMemberError(
             "tar file member is of invalid type", member.name, member.type
         )
