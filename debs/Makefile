@@ -35,8 +35,8 @@ else
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   # XXX Trixie
-  # _pkgs_ports_builddeps := sblim-sfcc openwsman
-  _pkgs_ports_builddeps :=
+  # _pkgs_ports_builddeps := sblim-sfcc
+  _pkgs_ports_builddeps := openwsman
 endif
 
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
