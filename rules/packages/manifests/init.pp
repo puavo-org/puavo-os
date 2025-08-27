@@ -15,7 +15,6 @@ class packages {
 
 # XXX missing from Trixie
 # @package {
-#   [ 'hooktftp'
 #   , 'puavo-ltsp-bootserver'
 #   , 'puavo-rest', ]:
 #     ensure => present,
@@ -23,7 +22,8 @@ class packages {
 # }
 
   @package {
-    [ 'puavo-rest' ]:
+    [ 'hooktftp'
+    , 'puavo-rest' ]:
       ensure => present,
       tag    => [ 'tag_puavo_bootserver' ];
   }
