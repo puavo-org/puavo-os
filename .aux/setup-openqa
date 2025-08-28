@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -eu
+
+packages='
+  openqa
+  openqa-doc
+  openqa-worker
+'
+
+apt-get update
+apt-get -y install $packages
+
+systemctl enable --now postgresql.service
+
+a2enmod expires headers proxy proxy_http proxy_wstunnel rewrite
+
+server_name=$(hostname -f)
+cat <<EOF > /etc/apache2/sites-available/openqa.conf
+<VirtualHost *:80>
+    ServerName ${server_name}
+    Include /etc/apache2/sites-available/openqa-common.inc
+</VirtualHost>
+EOF
+ln -fns ../sites-available/openqa.conf /etc/apache2/sites-enabled/openqa.conf
+rm -f /etc/apache2/sites-enabled/000-default.conf
+
+systemctl enable --now apache2.service openqa-webui openqa-scheduler openqa-worker@1

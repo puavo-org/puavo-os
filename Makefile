@@ -165,6 +165,7 @@ help:
 	@echo '    rootfs-sync-repo     sync Puavo OS rootfs repo with the current repo'
 	@echo '    rootfs-update        update Puavo OS rootfs'
 	@echo '    setup-buildhost      some optional setup for buildhost'
+	@echo '    setup-openqa         setup OpenQA on this host'
 	@echo '    setup-wim            setup wim images dir (optional)'
 	@echo '    update               update Puavo OS localhost'
 	@echo '    upload-debs          upload debs to remote archive'
@@ -285,6 +286,10 @@ check-buildhost:
 setup-buildhost:
 	sudo .aux/setup-buildhost "$(PUAVO_IMAGES)" "$(PUAVO_ROOTFS)" \
 	    "$(PUAVO_SQUID_CACHE_DIR)"
+
+.PHONY: setup-openqa
+setup-openqa:
+	sudo .aux/setup-openqa
 
 .PHONY: setup-wim
 setup-wim:
