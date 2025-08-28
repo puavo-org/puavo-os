@@ -13,16 +13,9 @@ class packages {
   # Puavo OS packages
   #
 
-# XXX missing from Trixie
-# @package {
-#   , 'puavo-ltsp-bootserver'
-#   , 'puavo-rest', ]:
-#     ensure => present,
-#     tag    => [ 'tag_puavo_bootserver' ];
-# }
-
   @package {
     [ 'hooktftp'
+    , 'puavo-ltsp-bootserver'
     , 'puavo-rest' ]:
       ensure => present,
       tag    => [ 'tag_puavo_bootserver' ];
