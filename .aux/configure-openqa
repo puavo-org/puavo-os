@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -eu
+
+echo 'Configuring OpenQA...'
+
+config_directory='tests/openqa/puavo/config'
+product_json="${config_directory}/product.json"
+machine_json="${config_directory}/machine.json"
+test_suites_json="${config_directory}/test-suites.json"
+job_group_name='puavo'
+job_group_config_file="${config_directory}/job-group.yaml"
+
+machines_count=$(openqa-cli api machines | jq -r '.Machines | length' || echo 0)
+if [ "$machines_count" -eq 0 ]; then
+  echo "creating machine from ${machine_json}"
+  openqa-cli api --data-file "$machine_json" --json -X POST machines
+fi
+
+products_count=$(openqa-cli api products | jq -r '.Products | length' || echo 0)
+if [ "$products_count" -eq 0 ]; then
+  product_name=$(jq -r '.name' "$product_json")
+  echo "creating product ${product_name}"
+  openqa-cli api --data-file "$product_json" --json -X POST products
+fi
+
+test_suite_count=$(openqa-cli api test_suites \
+                    | jq -r '.TestSuites | length' || echo 0)
+if [ "$test_suite_count" = "0" ]; then
+  echo "creating test suites from ${test_suites_json}"
+  jq -c '.[]' "$test_suites_json" | while read -r test_suite; do
+    temporary_test_suite=$(mktemp)
+    printf '%s' "$test_suite" > "$temporary_test_suite"
+    openqa-cli api --data-file "$temporary_test_suite" \
+      --json -X POST test_suites
+    rm -f "$temporary_test_suite"
+  done
+fi
+
+job_groups_count=$(openqa-cli api job_groups | jq length || echo 0)
+if [ "$job_groups_count" -eq 0 ]; then
+  echo "creating job group ${job_group_name}"
+  job_group_id=$(openqa-cli api -X POST job_groups name="$job_group_name" \
+                   | jq -r '.id')
+
+  echo "applying config to job group ${job_group_name}"
+  openqa-cli api \
+    -X POST "job_templates_scheduling/${job_group_id}" \
+    schema=JobTemplates-01.yaml \
+    template="$(cat "$job_group_config_file")"
+fi

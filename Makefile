@@ -290,6 +290,7 @@ setup-buildhost:
 .PHONY: setup-openqa
 setup-openqa:
 	sudo .aux/setup-openqa
+	.aux/configure-openqa
 
 .PHONY: setup-wim
 setup-wim:

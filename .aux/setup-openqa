@@ -26,3 +26,21 @@ ln -fns ../sites-available/openqa.conf /etc/apache2/sites-enabled/openqa.conf
 rm -f /etc/apache2/sites-enabled/000-default.conf
 
 systemctl enable --now apache2.service openqa-webui openqa-scheduler openqa-worker@1
+
+if ! grep -q puavo-generated /etc/openqa/client.conf; then
+  key=$(head -c 8 /dev/urandom | xxd -p -u)
+  secret=$(head -c 8 /dev/urandom | xxd -p -u)
+
+  sudo -u geekotest /usr/share/openqa/script/create_admin \
+    --fullname 'Puavo Org' --nickname Puavo --email dev@opinsys.fi \
+    --key "$key" --secret "$secret" puavo
+
+  cat > /etc/openqa/client.conf.tmp <<EOF
+# puavo-generated
+[localhost]
+key = ${key}
+secret = ${secret}
+EOF
+  install -o _openqa-worker -g root -m 640 /etc/openqa/client.conf.tmp /etc/openqa/client.conf
+  rm -f /etc/openqa/client.conf.tmp
+fi
