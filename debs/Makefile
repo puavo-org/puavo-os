@@ -26,12 +26,11 @@ else
   #                mutter                 \
   #                nbd                    \
   #                veyon                  \
-  #                wine                   \
-  #                wsmancli
+  #                wine
   # XXX Trixie
   _pkgs_cloud := puavo-ds puavo-os krb5 openldap
   _pkgs_parts := puavo-ds puavo-os
-  _pkgs_ports := gnome-shell hooktftp
+  _pkgs_ports := gnome-shell hooktftp wsmancli
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   _pkgs_ports_builddeps := sblim-sfcc openwsman
