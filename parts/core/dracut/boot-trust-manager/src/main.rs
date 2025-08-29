@@ -1,5 +1,6 @@
-use std::path::Path;
+use std::{path::Path, process::Command, time::Duration};
 
+use clap::Parser;
 use log::{debug, info, warn};
 use tempfile::Builder;
 use udev::Device;
@@ -11,16 +12,57 @@ use crate::{
         boot_vault::{BootVault, VAULT_PATH},
         efi_boot_device::EFIBootDevice,
     },
+    display::{
+        UserDisplay, console::ConsoleDisplay, plymouth::PlymouthDisplay,
+    },
     error::PuavoError,
     utils::{luks_tpm_token_manager::LuksTpmTokenManager, mount::MountGuard},
 };
 
 mod configurators;
 mod devices;
+mod display;
 mod error;
 mod utils;
 
+// How long to wait after showing a message with Plymouth?
+const DISPLAY_STOP_DURATION: u64 = 1000;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct CommandLineConfiguration {
+    /// Use console UI instead of Plymouth
+    #[arg(long)]
+    console: bool,
+
+    /// Do not reboot after running a configurator
+    #[arg(long = "no-reboot")]
+    no_reboot: bool,
+}
+
+fn build_display(use_console: bool) -> Box<dyn UserDisplay> {
+    let console_display =
+        Box::new(ConsoleDisplay::new()) as Box<dyn UserDisplay>;
+
+    if use_console {
+        return console_display;
+    }
+
+    PlymouthDisplay::new(Duration::from_millis(DISPLAY_STOP_DURATION))
+        .inspect_err(|error| {
+            warn!("Failed to initialize Plymouth display: {}", error)
+        })
+        .map(|plymouth| Box::new(plymouth) as Box<dyn UserDisplay>)
+        .unwrap_or(console_display) // Fallback
+}
+
+fn reboot_or_halt() {
+    let _ = Command::new("reboot").status();
+    loop {}
+}
+
 fn unlock_boot_vault_and_configure(
+    display: &Box<dyn UserDisplay>,
     efi_partition_mount_path: &Path,
     primary_partition_device_path: String,
     mut configurator: Box<dyn Configurator>,
@@ -48,35 +90,21 @@ fn unlock_boot_vault_and_configure(
         configurator
             .configure(&mut boot_vault, &mut primary_partition_manager)?;
         info!("Configuration completed");
+        let _ = display.show_message("Configuration completed");
     } else {
         info!("Configurator refused configuration");
+        let _ = display.show_message("Configuration refused");
     }
 
     Ok(())
+
+    // Boot vault is automatically unmounted once dropped
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let _ = env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or("info"),
-    )
-    .format_timestamp_secs()
-    .try_init();
-
-    // Run only the first successfully loaded configurator per boot.
-    // Each configurator must remove its own trigger file
-    // regardless of success to avoid reboot loops.
-    // If any configurator runs, reboot afterward as
-    // a safety precaution, because the boot vault is unlocked.
-    // If no configurator is available, exit immediately without rebooting.
-    let mut configurators = configurators()?;
-
-    if configurators.is_empty() {
-        info!("No configurator activated, exiting...");
-        return Ok(());
-    }
-
-    let configurator = configurators.remove(0);
-
+fn configure(
+    display: &Box<dyn UserDisplay>,
+    configurator: Box<dyn Configurator>,
+) -> Result<(), PuavoError> {
     let boot_device = EFIBootDevice::current()?;
     debug!("Located EFI boot device");
 
@@ -93,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let efi_partition = partitions
         .iter()
         .find(|device| filesystem_type(device) == Some("vfat"))
-        .ok_or("Failed to find EFI partition on boot device")?;
+        .ok_or(PuavoError::NoEFIPartition)?;
     info!("EFI partition found at {:?}", efi_partition.devpath());
 
     let primary_partition_device = partitions
@@ -135,6 +163,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _efi_mount_guard = MountGuard::new(efi_partition_mount_path);
 
     unlock_boot_vault_and_configure(
+        display,
         efi_partition_mount_path,
         primary_partition_device_path,
         configurator,
@@ -142,5 +171,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 
-    // Boot vault is automatically unmounted once dropped
+    // EFI partition is automatically unmounted once dropped
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = env_logger::Builder::from_env(
+        env_logger::Env::default().default_filter_or("info"),
+    )
+    .format_timestamp_secs()
+    .try_init();
+
+    let configuration = CommandLineConfiguration::parse();
+
+    // Run only the first successfully loaded configurator per boot.
+    // Each configurator must remove its own trigger file
+    // regardless of success to avoid reboot loops.
+    // If no configurator is available, exit immediately without rebooting.
+    let mut configurators = configurators()?;
+
+    if configurators.is_empty() {
+        info!("No configurator activated, exiting...");
+        return Ok(());
+    }
+
+    let display = build_display(configuration.console);
+    let _ = display.show_message("Configuring...");
+
+    let configurator = configurators.remove(0);
+
+    if let Err(error) = configure(&display, configurator) {
+        let _ =
+            display.show_message(&format!("Configuration failed: {}", error));
+    }
+
+    // If any configurator runs, reboot afterward as
+    // a safety precaution, because the boot vault was unlocked.
+    let reboot = !configuration.no_reboot;
+
+    if reboot {
+        let _ = display.show_message("Rebooting...");
+        reboot_or_halt();
+    }
+
+    Ok(())
 }
