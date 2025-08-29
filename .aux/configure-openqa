@@ -2,6 +2,11 @@
 
 set -eu
 
+while ! openqa-cli api machines >/dev/null 2>&1; do
+  echo 'Waiting for OpenQA to start...'
+  sleep 5
+done
+
 echo 'Configuring OpenQA...'
 
 config_directory='tests/openqa/puavo/config'
