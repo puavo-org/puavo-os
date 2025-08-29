@@ -26,6 +26,10 @@ EOF
 ln -fns ../sites-available/openqa.conf /etc/apache2/sites-enabled/openqa.conf
 rm -f /etc/apache2/sites-enabled/000-default.conf
 
+# setup Fake authentication (no username/password, this is not good
+# if OpenQA instance is reachable from a network)
+sed -i '/#method = Fake|OpenID|OAuth2/s/^.*$/method = Fake/' /etc/openqa/openqa.ini
+
 systemctl enable --now apache2.service openqa-webui openqa-scheduler openqa-worker@1
 
 if ! grep -q puavo-generated /etc/openqa/client.conf; then
