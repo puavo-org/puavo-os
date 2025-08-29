@@ -17,5 +17,7 @@ pub enum PuavoError {
     #[error("Invalid data: {0}")]
     InvalidData(String),
     #[error("Failed to find the primary LUKS partition")]
-    NoPrimaryLuksPartition
+    NoPrimaryLuksPartition,
+    #[error("Plymouth exited with code {0}")]
+    PlymouthError(i32),
 }
