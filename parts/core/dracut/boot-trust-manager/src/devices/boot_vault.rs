@@ -4,7 +4,7 @@ use std::{
 };
 
 use libcryptsetup_rs::{
-    CryptDevice, CryptInit, LibcryptErr,
+    CryptDevice, CryptInit,
     consts::{
         flags::{CryptActivate, CryptDeactivate},
         vals::EncryptionFormat,
@@ -52,70 +52,86 @@ impl BootVault {
         self.unlock_method
     }
 
+    fn try_unlock_with_fallback_key(
+        &mut self,
+        device: &mut CryptDevice,
+    ) -> Result<bool, PuavoError> {
+        // If the fallback key is not provided, we can not open this way
+        if !fs::exists(VAULT_FALLBACK_UNLOCK_KEY_PATH)? {
+            debug!(
+                "No fallback key found at {}, cannot unlock using it",
+                VAULT_FALLBACK_UNLOCK_KEY_PATH
+            );
+            return Ok(false);
+        }
+
+        // Load the fallback key and try to unlock using it
+        debug!(
+            "Attempting to unlock boot vault using recovery key at {}",
+            VAULT_FALLBACK_UNLOCK_KEY_PATH
+        );
+        let fallback_key = fs::read_to_string(VAULT_FALLBACK_UNLOCK_KEY_PATH)?;
+        device.activate_handle().activate_by_passphrase(
+            Some(VAULT_LUKS_DEVICE_NAME),
+            None,
+            fallback_key.as_bytes(),
+            CryptActivate::empty(),
+        )?;
+
+        info!(
+            "Boot vault unlocked using recovery key at {}",
+            VAULT_FALLBACK_UNLOCK_KEY_PATH
+        );
+        self.unlock_method = Some(BootVaultUnlockMethod::RecoveryKey);
+        Ok(true)
+    }
+
+    fn try_unlock_with_any_token(
+        &mut self,
+        device: &mut CryptDevice,
+    ) -> Result<(), PuavoError> {
+        debug!("Attempting to unlock boot vault using any available TPM token");
+
+        device.token_handle().activate_by_token::<()>(
+            Some(VAULT_LUKS_DEVICE_NAME),
+            None,
+            None,
+            CryptActivate::empty(),
+        )?;
+
+        debug!("LUKS device activated as {}", VAULT_LUKS_DEVICE_NAME);
+        self.unlock_method = Some(BootVaultUnlockMethod::TpmToken);
+        Ok(())
+    }
+
     fn open_luks_device(
         &mut self,
         loop_device_path: &PathBuf,
-    ) -> Result<CryptDevice, LibcryptErr> {
+    ) -> Result<CryptDevice, PuavoError> {
         debug!("Initializing LUKS device for loop path {:?}", loop_device_path);
         let mut device = CryptInit::init(&loop_device_path)?;
+
         debug!("Loading LUKS device from {}", loop_device_path.display());
         device
             .context_handle()
             .load::<()>(Some(EncryptionFormat::Luks2), None)?;
 
-        // We do not provide any specific token, but this way all tokens are attempted
-        debug!("Opening LUKS device {}", VAULT_LUKS_DEVICE_NAME);
-        match device.token_handle().activate_by_token::<()>(
-            Some(VAULT_LUKS_DEVICE_NAME),
-            None,
-            None,
-            CryptActivate::empty(),
-        ) {
-            Ok(_) => {
-                debug!("LUKS device activated as {}", VAULT_LUKS_DEVICE_NAME);
-                self.unlock_method = Some(BootVaultUnlockMethod::TpmToken);
-                Ok(device)
-            }
+        // Attempt to unlock with fallback key first if available,
+        // because fallback key grants full access (e.g. recovery).
+        let unlock_result = self.try_unlock_with_fallback_key(&mut device);
+
+        match unlock_result {
+            Ok(true) => return Ok(device), // Unlocked with fallback key
+            Ok(false) => {}
             Err(error) => {
-                warn!(
-                    "Token-based unlock failed ({}). Trying recovery key from {}",
-                    error, VAULT_FALLBACK_UNLOCK_KEY_PATH
-                );
-                // Try fallback: use passphrase from predefined path
-                match fs::read_to_string(VAULT_FALLBACK_UNLOCK_KEY_PATH) {
-                    Ok(passphrase) => {
-                        let passphrase =
-                            passphrase.trim_end_matches(['\n', '\r']);
-                        // Attempt unlocking using passphrase
-                        match device.activate_handle().activate_by_passphrase(
-                            Some(VAULT_LUKS_DEVICE_NAME),
-                            None,
-                            passphrase.as_bytes(),
-                            CryptActivate::empty(),
-                        ) {
-                            Ok(_) => {
-                                info!(
-                                    "Boot vault unlocked using recovery key at {}",
-                                    VAULT_FALLBACK_UNLOCK_KEY_PATH
-                                );
-                                self.unlock_method =
-                                    Some(BootVaultUnlockMethod::RecoveryKey);
-                                Ok(device)
-                            }
-                            Err(passphrase_error) => Err(passphrase_error),
-                        }
-                    }
-                    Err(read_error) => {
-                        // No fallback key present or unreadable, propagate original error context
-                        warn!(
-                            "Failed to read fallback key at {}: {}",
-                            VAULT_FALLBACK_UNLOCK_KEY_PATH, read_error
-                        );
-                        Err(error)
-                    }
-                }
+                warn!("Failed to unlock using fallback key: {}", error)
             }
-        }
+        };
+
+        debug!("No fallback key available, trying TPM token unlock");
+        self.try_unlock_with_any_token(&mut device)?;
+
+        Ok(device)
     }
 
     fn mount_luks_device(&mut self) -> io::Result<()> {
@@ -160,6 +176,8 @@ impl BootVault {
                 let _ = loop_device.detach();
                 error
             })?;
+
+        debug!("LUKS device activated as {}", VAULT_LUKS_DEVICE_NAME);
 
         self.mount_luks_device().map_err(|error| {
             let _ = loop_device.detach();
