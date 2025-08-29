@@ -35,7 +35,7 @@ start_software_tpm() {
   fi
 
   mkdir -p /tmp/openqa-tpm
-  chown _openqa-worker:_openqa-worker /tmp/openqa-tpm
+  chown _openqa-worker:root /tmp/openqa-tpm
 
   swtpm socket \
       --runas _openqa-worker \
