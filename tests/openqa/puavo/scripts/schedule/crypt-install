@@ -1,8 +1,9 @@
-#!/bin/sh
+#!/bin/bash
+
 set -eu
 
 SCRIPT_DIRECTORY="$(dirname "$0")"
-. "$SCRIPT_DIRECTORY/job-lib.sh"
+. "$SCRIPT_DIRECTORY/lib/jobs"
 
 submit_job "crypt_install" \
            "boot_crypt_preinstall,install" \
