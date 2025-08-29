@@ -16,6 +16,8 @@ pub enum PuavoError {
     LuksError(String),
     #[error("Invalid data: {0}")]
     InvalidData(String),
+    #[error("Failed to find the EFI partition")]
+    NoEFIPartition,
     #[error("Failed to find the primary LUKS partition")]
     NoPrimaryLuksPartition,
     #[error("Plymouth exited with code {0}")]
