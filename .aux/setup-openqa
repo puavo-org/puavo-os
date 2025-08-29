@@ -42,6 +42,6 @@ if ! grep -q puavo-generated /etc/openqa/client.conf; then
 key = ${key}
 secret = ${secret}
 EOF
-  install -o _openqa-worker -g root -m 640 /etc/openqa/client.conf.tmp /etc/openqa/client.conf
+  install -o _openqa-worker -g puavo-os -m 640 /etc/openqa/client.conf.tmp /etc/openqa/client.conf
   rm -f /etc/openqa/client.conf.tmp
 fi
