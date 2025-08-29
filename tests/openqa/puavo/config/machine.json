@@ -4,7 +4,7 @@
   "settings": {
     "HDDSIZEGB": 150,
     "QEMUCPUS": 4,
-    "QEMU_APPEND": "bios /usr/share/OVMF/OVMF_CODE_4M.ms.fd -global driver=cfi.pflash01,property=secure,value=off -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.ms.fd -drive if=pflash,format=raw,file=/usr/share/OVMF/OVMF_VARS_4M.ms.fd -boot menu=on -enable-kvm -chardev socket,id=chrtpm,path=/tmp/openqa-tpm-socket -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0",
+    "QEMU_APPEND": "machine q35 -bios /usr/share/OVMF/OVMF_CODE_4M.ms.fd -global driver=cfi.pflash01,property=secure,value=off -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.ms.fd -drive if=pflash,format=raw,file=/usr/share/OVMF/OVMF_VARS_4M.ms.fd -boot menu=on -enable-kvm -chardev socket,id=chrtpm,path=/tmp/openqa-tpm-socket -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0",
     "USBBOOT": 1,
     "VIRTIO_CONSOLE": "1"
   }
