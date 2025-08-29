@@ -44,15 +44,6 @@ start_software_tpm() {
       --ctrl type=unixio,path=/tmp/openqa-tpm-socket &
 }
 
-setup_ovmf() {
-  log "setting up OVMF files..."
-  mkdir -p /var/lib/openqa/share/data/
-  cp /usr/share/qemu/ovmf-x86_64-ms-4m-vars.bin /var/lib/openqa/share/data/
-  cp /usr/share/qemu/ovmf-x86_64-ms-4m-code.bin /var/lib/openqa/share/data/
-  chown _openqa-worker:root /var/lib/openqa/share/data/ovmf-x86_64-ms-4m-code.bin
-  chown _openqa-worker:root /var/lib/openqa/share/data/ovmf-x86_64-ms-4m-vars.bin
-}
-
 wait_for_job() {
   local job_id=$1
   local attempt=$2
@@ -105,10 +96,6 @@ submit_job() {
   local attempt=1
 
   log "submitting $job_name job..."
-
-  if [ "$reset" = "true" ]; then
-    setup_ovmf
-  fi
 
   start_software_tpm "$reset"
 
@@ -185,10 +172,6 @@ submit_job() {
     if [ $attempt -lt $MAX_RETRIES ]; then
       log "attempting to restart job $job_id in $RESTART_INTERVAL second(s)..."
       sleep $RESTART_INTERVAL
-          
-      if [ "$reset" = "true" ]; then
-        setup_ovmf
-      fi
           
       # The software tpm must be restarted as well, because it exits when the test VM closes
       start_software_tpm "$reset"
