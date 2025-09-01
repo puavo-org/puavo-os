@@ -10,7 +10,7 @@ use crate::{
     utils::luks_tpm_token_manager::LuksTpmTokenManager,
 };
 
-const CONFIGURATION_PATH: &str = "/run/puavo/recovery.json";
+const CONFIGURATION_PATH: &str = "/etc/puavo/recovery.json";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct RecoveryConfiguration {}

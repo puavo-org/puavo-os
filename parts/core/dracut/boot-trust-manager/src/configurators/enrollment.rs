@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-const CONFIGURATION_PATH: &str = "/run/puavo/enrollment.json";
+const CONFIGURATION_PATH: &str = "/etc/puavo/enrollment.json";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct EnrollmentConfiguration {
