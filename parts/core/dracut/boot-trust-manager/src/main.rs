@@ -75,12 +75,6 @@ fn unlock_boot_vault_and_configure(
     boot_vault.mount(&boot_vault_image_path)?;
     info!("Boot vault mounted");
 
-    if let Err(error) = boot_vault.write_recovery_key("1234".into()) {
-        warn!("Failed to write recovery key: {}", error);
-    } else {
-        info!("Recovery key written");
-    }
-
     let mut primary_partition_manager =
         LuksTpmTokenManager::from_device_path(primary_partition_device_path)?;
 
