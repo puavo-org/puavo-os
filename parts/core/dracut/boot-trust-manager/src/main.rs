@@ -99,6 +99,9 @@ fn configure(
     display: &Box<dyn UserDisplay>,
     configurator: Box<dyn Configurator>,
 ) -> Result<(), PuavoError> {
+    // Ensure the loop kernel module is loaded
+    let _ = Command::new("modprobe").arg("loop").status();
+
     let boot_device = EFIBootDevice::current()?;
     debug!("Located EFI boot device");
 
