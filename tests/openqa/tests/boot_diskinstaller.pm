@@ -7,16 +7,9 @@ sub run {
 
     # Press F2 every second until boot menu appear for maximum 5 minutes.
     # If the boot menu does not appear, this test fails.
-    send_key_until_needlematch('boot-menu', 'f2', 120);
-    record_info('UEFI', 'Boot menu reached, turning off Secure Boot...');
+    send_key_until_needlematch('bios', 'f2', 120);
 
-    # Turn off Secure Boot:
-    send_key('down', wait_screen_change => 1); # Skip the first boot option
-    send_key('ret', wait_screen_change => 1);  # Select firmware setup
-
-    assert_screen('bios', timeout => 10);
     record_info('UEFI', 'Firmware setup reached, turning off Secure Boot...');
-
     send_key('down', wait_screen_change => 1); # Skip language option
     send_key('ret', wait_screen_change => 1);  # Enter Device Manager
 
