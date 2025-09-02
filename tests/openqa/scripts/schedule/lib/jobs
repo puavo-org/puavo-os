@@ -86,9 +86,12 @@ wait_for_job() {
 }
 
 submit_job() {
-  local job_name=$1
-  local schedule=$2
-  local reset=$3
+  local build iso_directory iso_name iso_path job_id job_name response reset \
+        schedule
+
+  job_name=$1
+  schedule=$2
+  reset=$3
   shift 3 # Remove first three parameters, rest are custom test module options
 
   log "submitting ${job_name} job..."
@@ -96,8 +99,8 @@ submit_job() {
   start_software_tpm "$reset"
 
   # Decide the ISO file used for testing
-  local iso_directory='/var/lib/openqa/share/factory/iso'
-  local iso_path=''
+  iso_directory='/var/lib/openqa/share/factory/iso'
+  iso_path=''
   if [ -n "${ISO:-}" ]; then
     iso_path="$ISO"
   else
@@ -110,44 +113,32 @@ submit_job() {
     return 1
   fi
 
-  local iso_name
   iso_name=$(basename "$iso_path")
 
   # Attempt to extract the build version:
   # puavo-os-2025-05-05-123456-amd64.img => 2025-05-05-123456
-  local build
   if [[ "$iso_name" =~ ([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}) ]]; then
     build="${BASH_REMATCH[1]}"
   else
     build="$iso_name"
   fi
 
-  # Build the command with base parameters
-  local command="openqa-cli api -X POST isos \
-    ISO=$iso_name \
-    DISTRI=puavo \
-    VERSION=generic \
-    FLAVOR=iso \
-    ARCH=x86_64 \
-    BUILD=$build \
-    SCHEDULE=\"${schedule}\""
-
-  # Add custom test module options
-  for option in "$@"; do
-    command="${command} ${option}"
-  done
-
-  # Submit job and capture response
-  local response
-  response=$(eval "$command" 2>&1)
-  
-  if [ $? -ne 0 ]; then
+  qemu_append='machine q35 -bios /usr/share/OVMF/OVMF_CODE_4M.ms.fd -global driver=cfi.pflash01,property=secure,value=off -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.ms.fd -boot menu=on -enable-kvm'
+  if ! response=$(openqa-cli api -X POST isos  \
+                    ARCH=x86_64                \
+                    BUILD="$build"             \
+                    DISTRI=puavo               \
+                    FLAVOR=iso                 \
+                    ISO="$iso_name"            \
+                    QEMU_APPEND="$qemu_append" \
+                    SCHEDULE="$schedule"       \
+                    VERSION=generic            \
+                    "$@"); then
     log_error "failed to submit job: ${response}"
     return 1
   fi
 
   # Extract job ID from response
-  local job_id
   job_id=$(echo "$response" | jq --raw-output '.ids[0]')
 
   if [ -z "$job_id" ] || [ "$job_id" = "null" ]; then
