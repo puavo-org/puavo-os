@@ -1,0 +1,13 @@
+[Unit]
+Description=Puavo Boot Trust Manager
+DefaultDependencies=no
+Wants=cryptsetup-pre.target
+After=systemd-udev-trigger.service systemd-udevd.service keyboard-setup.service plymouth-start.service
+Before=cryptsetup-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/puavo-boot-trust-manager
+
+[Install]
+WantedBy=initrd.target
