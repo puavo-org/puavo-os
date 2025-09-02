@@ -23,25 +23,6 @@ log_warning() {
   log "${YELLOW}warning: $1${RESET_COLOR}"
 }
 
-start_software_tpm() {
-  local reset=$1
-
-  pkill swtpm 2>/dev/null || true
-
-  if [ "$reset" = "true" ]; then
-    rm -rf /tmp/openqa-tpm 2>/dev/null || true
-  fi
-
-  mkdir -p /tmp/openqa-tpm
-  chown _openqa-worker:root /tmp/openqa-tpm
-
-  swtpm socket \
-      --runas _openqa-worker \
-      --tpm2 \
-      --tpmstate dir=/tmp/openqa-tpm \
-      --ctrl type=unixio,path=/tmp/openqa-tpm-socket &
-}
-
 wait_for_job() {
   local job_id=$1
   
@@ -96,8 +77,6 @@ submit_job() {
 
   log "submitting ${job_name} job..."
 
-  start_software_tpm "$reset"
-
   # Decide the ISO file used for testing
   iso_directory='/var/lib/openqa/share/factory/iso'
   iso_path=''
@@ -138,6 +117,7 @@ submit_job() {
                     FLAVOR=iso                 \
                     ISO="$iso_name"            \
                     QEMU_APPEND="$qemu_append" \
+                    QEMUTPM=1                  \
                     SCHEDULE="$schedule"       \
                     VERSION=generic            \
                     "$@"); then
