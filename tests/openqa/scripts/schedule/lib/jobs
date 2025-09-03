@@ -79,12 +79,11 @@ submit_job() {
 
   # Decide the ISO file used for testing
   iso_directory='/var/lib/openqa/share/factory/iso'
-  iso_path=''
   if [ -n "${ISO:-}" ]; then
     iso_path="$ISO"
   else
-    # Pick the most recent ISO in the directory
-    iso_path=$(ls -1t "$iso_directory"/*.img 2>/dev/null | head -n1 || true)
+    # pick the ISO that sorts last (which is likely the latest)
+    iso_path=$(ls "$iso_directory"/*.img 2>/dev/null | sort | tail -n 1) || true
   fi
 
   if [ -z "$iso_path" ]; then
