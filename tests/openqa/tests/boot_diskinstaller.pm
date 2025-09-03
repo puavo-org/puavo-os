@@ -10,30 +10,31 @@ sub run {
     send_key_until_needlematch('bios', 'f2', 120);
 
     record_info('UEFI', 'Firmware setup reached, turning off Secure Boot...');
-    send_key('down', wait_screen_change => 1); # Skip language option
-    send_key('ret', wait_screen_change => 1);  # Enter Device Manager
+    send_key('down', wait_screen_change => 1);  # Skip language option
+    send_key('ret',  wait_screen_change => 1);  # Enter Device Manager
 
-    send_key('ret', wait_screen_change => 1);  # Secure Boot Configuration
+    # Move down from Driver Health Manager to RAM Disk Configuration
+    send_key('down', wait_screen_change => 1);
+    send_key('down', wait_screen_change => 1);  # Move down to Secure Boot Configuration
+    send_key('ret',  wait_screen_change => 1);  # Enter Secure Boot Configuration
 
-    send_key('down', wait_screen_change => 1); # Move down to Attempt Secure Boot
-    send_key('spc', wait_screen_change => 1);  # Toggle it off
-    send_key('esc', wait_screen_change => 1);  # Escape the dialog
-
-    send_key('esc', wait_screen_change => 1);  # Escape
-    send_key('esc', wait_screen_change => 1);  # Escape
-    send_key('esc', wait_screen_change => 0);  # Escape
+    send_key('down', wait_screen_change => 1);  # Move down to Attempt Secure Boot
+    send_key('spc',  wait_screen_change => 1);  # Toggle it off
+    send_key('esc',  wait_screen_change => 1);  # Escape the dialog
+    send_key('esc',  wait_screen_change => 1);  # Escape
+    send_key('esc',  wait_screen_change => 1);  # Escape
 
     send_key('down', wait_screen_change => 1);  # Move down to Continue
     send_key('down', wait_screen_change => 1);  # Move down to Continue
     send_key('down', wait_screen_change => 1);  # Move down to Continue
-    send_key('ret', wait_screen_change => 1);   # Reboot!
+    send_key('ret',  wait_screen_change => 1);  # Reboot!
 
-    send_key('ret', wait_screen_change => 1);   # Confirm reset
+    send_key('ret',  wait_screen_change => 1);  # Confirm reset
 
-    # Give the firmware a moment
+    # XXX Give the firmware a moment
     sleep 1;
 
-    send_key('ret', wait_screen_change => 1); # Select the first boot option
+    send_key('ret',  wait_screen_change => 1); # Select the first boot option
 
     # Wait until the disk installer UI shows up
     assert_screen('darkdm', timeout => 300);
