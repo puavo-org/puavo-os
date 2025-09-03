@@ -1,3 +1,5 @@
+OPENQA_ISO_DIR := /var/lib/openqa/share/factory/iso/
+
 .PHONY: all
 all: prepare-tests
 
@@ -6,9 +8,9 @@ prepare-tests: link-images sync-tests
 
 .PHONY: link-images
 link-images:
-	# XXX ltsp.img will not boot here.  We should link an installation
-	# image, but where could we get one?  Maybe we should prepare one here?
-	sudo ln -fns /images/ltsp.img /var/lib/openqa/share/factory/iso/ltsp.img
+	sudo ../../.aux/create-installer-images
+	sudo find /srv/puavo-os-images/install-images -type f -name '*.img' -exec ln -fns \{} "$(OPENQA_ISO_DIR)" \;
+	sudo find "$(OPENQA_ISO_DIR)" -type l -name '*.img' ! -exec test -e {} \; -delete
 
 .PHONY: sync-tests
 sync-tests:

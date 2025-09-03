@@ -1,0 +1,44 @@
+#!/bin/sh
+
+set -eu
+
+images_basedir='/srv/puavo-os-images'
+install_image_dir='/srv/puavo-os-images/install-images'
+
+if [ ! -d "$images_basedir" ]; then
+  mkdir -p /home/puavo-os-images
+  ln -fns /home/puavo-os-images "$images_basedir"
+fi
+
+mkdir -p "$install_image_dir"
+
+for img in /srv/puavo-os-images/*.img /images/*.img; do
+  if [ ! -e "$img" ] || [ "$img" = '/images/ltsp.img' ] \
+    || [ "$img" = '/images/ltsp-backup.img' ]; then
+      continue
+  fi
+
+  install_img_path="${install_image_dir}/install-${img##*/}"
+  if [ -e "$install_img_path" ]; then
+    continue
+  fi
+
+  rm -f "${install_img_path}.tmp"
+  echo ">> making installation disk from ${img} to ${install_img_path}"
+  # unset SUDO_USER so that puavo-make-install-disk does not change target
+  # file permissions to $SUDO_USER
+  if ! install_disk_output=$(
+         env -u SUDO_USER puavo-make-install-disk --source-image "$img" \
+           --target-image "${install_img_path}.tmp" 2>&1); then
+    echo ">> could not create ${install_img_path}" >&2
+    printf "> puavo-make-install output:\n%s\n" "$install_disk_output"
+    rm -f "${install_img_path}.tmp"
+    exit 1
+  fi
+
+  if ! mv "${install_img_path}.tmp" "$install_img_path"; then
+    echo ">> could not move ${install_img_path}.tmp to its proper place" >&2
+    rm -f "${install_img_path}.tmp"
+    exit 1
+  fi
+done
