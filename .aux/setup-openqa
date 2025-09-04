@@ -9,6 +9,9 @@ packages='
   ovmf
 '
 
+mkdir -p /home/var_lib_openqa
+ln -fns /home/var_lib_openqa /var/lib/openqa
+
 apt-get update
 apt-get -y install $packages
 
