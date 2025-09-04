@@ -2,39 +2,36 @@ use Mojo::Base 'basetest';
 use testapi;
 
 sub run {
-    select_console 'sut';
+  select_console 'sut';
 
-    # Start preinstall
-    type_string('preinstall');
-    send_key('ret', wait_screen_change => 1);
-    sleep 2;
+  # Start preinstall.
+  type_string('preinstall');
+  send_key('ret', wait_screen_change => 1);
+  send_key('ret', wait_screen_change => 1); # select laptop as the host type
+  send_key('ret', wait_screen_change => 1); # select the first disk as target
 
-    send_key('ret', wait_screen_change => 1); # Select laptop as the host type
-    sleep 30;
+  type_string('no'); # do not install Windows to another partition
+  send_key('ret', wait_screen_change => 1);
 
-    send_key('ret', wait_screen_change => 1); # Select the first disk as installation target
-    sleep 10;
+  # Confirm the installation.
+  type_string('yes');
+  send_key('ret', wait_screen_change => 1);
+  record_info('Puavo', 'Preinstalling...');
 
-    type_string('no'); # Do not install Windows to another partition
-    send_key('ret', wait_screen_change => 1);
-    sleep 5;
+  # XXX we should check out here that the installation completes successfully
+  # XXX before proceeding
 
-    # Confirm the installation
-    type_string('yes');
-    send_key('ret', wait_screen_change => 1);
-    record_info('Puavo', 'Preinstalling...');
+  # Press F2 every second until BIOS menu appears for maximum ten minutes.
+  # If the boot menu does not appear, this test fails.
+  send_key_until_needlematch('bios', 'f2', 600);
+  record_info('UEFI', 'BIOS setup reached, ready to boot into preinstallation');
 
-    # Press F2 every second until boot menu appear for maximum 5 minutes.
-    # If the boot menu does not appear, this test fails.
-    send_key_until_needlematch('boot-menu', 'f2', 300);
-    record_info('UEFI', 'Boot menu reached, ready to boot into preinstallation');
-
-    # We're done, in order to save the disk for other tests, we need to shutdown
-    power('off');
+  # We're done, in order to save the disk for other tests, we need to shutdown.
+  power('off');
 }
 
 sub test_flags {
-    return { fatal => 1, milestone => 1 };
+  return { fatal => 1, milestone => 1 };
 }
 
 1;

@@ -51,7 +51,7 @@ sub enroll_mok {
 sub run {
   select_console 'sut';
 
-  # Press F2 every second until boot menu appear for maximum 5 minutes.
+  # Press F2 every second until BIOS setup appears for maximum two minutes.
   # If the boot menu does not appear, this test fails.
   send_key_until_needlematch('bios', 'f2', 120);
   record_info('UEFI', 'BIOS setup reached, turning off Secure Boot...');
