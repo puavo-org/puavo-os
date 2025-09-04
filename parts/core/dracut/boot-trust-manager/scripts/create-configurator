@@ -1,0 +1,61 @@
+#!/bin/bash
+set -eu
+
+usage() {
+  echo "Usage: $0 <configurator-directory> <key-folder> <output>" >&2
+  exit 1
+}
+
+require() {
+  if ! command -v "$1" 2>/dev/null; then
+    echo "error: $1 is not installed" >&2
+    exit 4
+  fi
+}
+
+if [[ $# -ne 3 ]]; then
+  usage
+fi
+
+configurator_directory=$1
+key_folder=$2
+output=$3
+
+if [[ ! -d "$configurator_directory" ]]; then
+  echo "error: configurator directory does not exist" >&2
+  exit 2
+fi
+
+if [[ ! -f "${key_folder}/mok.priv" || ! -f "${key_folder}/mok.pem" ]]; then
+  echo "error: failed to find Secure Boot keys in ${key_folder}" >&2
+  exit 3
+fi
+
+require cpio
+require ukify
+
+working_directory=$(mktemp -d)
+trap 'rm -rf "$working_directory"' EXIT
+
+# Copy the configurator files to a temporary initrd root directory
+initrd_root_directory="${working_directory}/root"
+initrd_configurator_directory="${initrd_root_directory}/etc/puavo"
+mkdir -p "$initrd_configurator_directory"
+cp -r "${configurator_directory}/." "$initrd_configurator_directory"
+
+# Build initrd from the temporary root directory
+addon_initrd="${working_directory}/initrd.cpio"
+(
+  # Do this inside subshell to preserve the working directory
+  cd "$initrd_root_directory"
+  find . | cpio --create --format=newc > "$addon_initrd"
+)
+
+# Create a signed UKI addon that supplies the built initrd
+ukify build \
+  --initrd="$addon_initrd" \
+  --secureboot-private-key="${key_folder}/mok.priv" \
+  --secureboot-certificate="${key_folder}/mok.pem" \
+  --output "$output"
+
+echo "output: $output"
