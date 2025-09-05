@@ -4,6 +4,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum PuavoError {
+    #[error("{0} not found")]
+    NotFound(String),
     #[error(transparent)]
     IoError(#[from] io::Error),
     #[error(transparent)]
