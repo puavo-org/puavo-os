@@ -16,6 +16,8 @@ const CONFIGURATION_PATH: &str = "/etc/puavo/enrollment.json";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct EnrollmentConfiguration {
+    filename: String,
+
     #[serde(rename = "enrollment-policy")]
     enrollment_policy: LuksTpmEnrollmentPolicy,
 }
@@ -84,10 +86,8 @@ impl Configurator for EnrollmentConfigurator {
     ) -> Result<(), PuavoError> {
         self.enroll(boot_vault, primary_partition)
     }
-}
 
-impl Drop for EnrollmentConfigurator {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_file(CONFIGURATION_PATH);
+    fn filename(&self) -> Result<String, PuavoError> {
+        Ok(self.configuration.filename.clone())
     }
 }

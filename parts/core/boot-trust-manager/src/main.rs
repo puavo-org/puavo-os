@@ -1,4 +1,6 @@
-use std::{path::Path, process::Command, time::Duration};
+use std::{
+    env, fs, path::{Path, PathBuf}, process::Command, time::Duration
+};
 
 use clap::Parser;
 use log::{debug, info, warn};
@@ -95,10 +97,50 @@ fn unlock_boot_vault_and_configure(
     // Boot vault is automatically unmounted once dropped
 }
 
+fn find_configurator_from_loader_extra_directory(
+    loader_extra_directory: PathBuf,
+    configurator: &Box<dyn Configurator>,
+) -> Result<PathBuf, PuavoError> {
+    let configurator_filename = configurator.filename()?;
+    let configurator_path = loader_extra_directory.join(configurator_filename);
+
+    configurator_path.try_exists()?;
+    Ok(configurator_path)
+}
+
+fn find_configurator(
+    efi_partition_mount_path: &Path,
+    configurator: &Box<dyn Configurator>,
+) -> Result<PathBuf, PuavoError> {
+    let loader_path =
+        EFIBootDevice::loader_path(&efi_partition_mount_path.to_path_buf())?;
+    info!("EFI loader path: {:?}", loader_path);
+    let loader_extra_directory =
+        EFIBootDevice::loader_extra_directory_path(&loader_path)?;
+    info!("EFI loader extra directory path: {:?}", loader_extra_directory);
+    find_configurator_from_loader_extra_directory(
+        loader_extra_directory,
+        &configurator,
+    )
+}
+
+fn find_and_delete_configurator_file(
+    efi_partition_mount_path: &Path,
+    configurator: &Box<dyn Configurator>,
+) -> Result<(), PuavoError> {
+    let configurator_path =
+        find_configurator(efi_partition_mount_path, configurator)?;
+    info!(
+        "Disabling configurator by deleting its file: {:?}",
+        configurator_path
+    );
+    fs::remove_file(&configurator_path).map_err(|error| error.into())
+}
+
 fn configure(
     display: &Box<dyn UserDisplay>,
     configurator: Box<dyn Configurator>,
-) -> Result<(), PuavoError> {
+) -> Result<bool, PuavoError> {
     // Ensure the loop kernel module is loaded
     let _ = Command::new("modprobe").arg("loop").status();
 
@@ -159,14 +201,30 @@ fn configure(
     // Unmount the EFI partition automatically at the end of scope
     let _efi_mount_guard = MountGuard::new(efi_partition_mount_path);
 
+    // Delete the configurator file to avoid a reboot loop
+    let configurator_path_result = find_and_delete_configurator_file(
+        efi_partition_mount_path,
+        &configurator,
+    );
+
+    if let Err(error) = configurator_path_result {
+        let _ = display.show_message(
+            format!("Configuration canceled: {}", error).as_str(),
+        );
+        // We should not reboot as that would lead to a reboot loop.
+        // It should be safe to cancel now as we have only mounted EFI.
+        return Ok(false);
+    }
+
     unlock_boot_vault_and_configure(
         display,
         efi_partition_mount_path,
         primary_partition_device_path,
         configurator,
-    )?;
-
-    Ok(())
+    )
+    // If any configurator runs, reboot afterward as
+    // a safety precaution, because the boot vault was unlocked.
+    .map(|_| true)
 
     // EFI partition is automatically unmounted once dropped
 }
@@ -196,16 +254,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let configurator = configurators.remove(0);
 
-    if let Err(error) = configure(&display, configurator) {
-        let _ =
-            display.show_message(&format!("Configuration failed: {}", error));
-    }
+    let reboot = match configure(&display, configurator) {
+        Ok(configured) => configured,
+        Err(error) => {
+            let _ = display
+                .show_message(&format!("Configuration failed: {}", error));
+            true
+        }
+    };
 
-    // If any configurator runs, reboot afterward as
-    // a safety precaution, because the boot vault was unlocked.
-    let reboot = !configuration.no_reboot;
-
-    if reboot {
+    if reboot && !configuration.no_reboot {
         let _ = display.show_message("Rebooting...");
         reboot_or_halt();
     }

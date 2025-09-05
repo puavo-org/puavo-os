@@ -35,4 +35,5 @@ pub trait Configurator {
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
     ) -> Result<(), PuavoError>;
+    fn filename(&self) -> Result<String, PuavoError>;
 }
