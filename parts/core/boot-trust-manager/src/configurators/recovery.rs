@@ -13,7 +13,9 @@ use crate::{
 const CONFIGURATION_PATH: &str = "/etc/puavo/recovery.json";
 
 #[derive(Serialize, Deserialize, Debug)]
-struct RecoveryConfiguration {}
+struct RecoveryConfiguration {
+    filename: String,
+}
 
 pub struct RecoveryConfigurator {
     _configuration: RecoveryConfiguration,
@@ -76,9 +78,9 @@ impl Configurator for RecoveryConfigurator {
         self.recover(boot_vault)
     }
 }
+    }
 
-impl Drop for RecoveryConfigurator {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_file(CONFIGURATION_PATH);
+    fn filename(&self) -> Result<String, PuavoError> {
+        Ok(self.configuration.filename.clone())
     }
 }
