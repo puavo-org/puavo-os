@@ -1,6 +1,7 @@
 use crate::configurators::enrollment::EnrollmentConfigurator;
 use crate::configurators::recovery::RecoveryConfigurator;
 use crate::devices::boot_vault::BootVault;
+use crate::display::UserDisplay;
 use crate::error::PuavoError;
 use crate::{
     utils::luks_tpm_token_manager::LuksTpmTokenManager,
@@ -34,6 +35,7 @@ pub trait Configurator {
         &mut self,
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
+        display: &Box<dyn UserDisplay>
     ) -> Result<(), PuavoError>;
     fn filename(&self) -> Result<String, PuavoError>;
 }
