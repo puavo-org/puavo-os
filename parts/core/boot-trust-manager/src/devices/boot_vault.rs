@@ -164,12 +164,9 @@ impl BootVault {
         loop_device.attach_file(image_path)?;
         debug!("Attached image to loop device: {:?}", loop_device.path());
 
-        let loop_device_path = loop_device.path().ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::NotFound,
-                "Loop device path not found",
-            )
-        })?;
+        let loop_device_path = loop_device
+            .path()
+            .ok_or_else(|| PuavoError::NotFound("Loop device".into()))?;
 
         let luks_device =
             self.open_luks_device(&loop_device_path).map_err(|error| {
@@ -257,6 +254,12 @@ impl BootVault {
 
     pub fn device(&self) -> &LuksTpmTokenManager {
         self.luks_device.as_ref().expect(
+            "Attempted to use boot vault device when it was not mounted",
+        )
+    }
+
+    pub fn device_mut(&mut self) -> &mut LuksTpmTokenManager {
+        self.luks_device.as_mut().expect(
             "Attempted to use boot vault device when it was not mounted",
         )
     }
