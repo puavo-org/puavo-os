@@ -18,15 +18,17 @@ sub run {
   send_key('ret', wait_screen_change => 1);
   record_info('Puavo', 'Preinstalling...');
 
-  # XXX we should check out here that the installation completes successfully
-  # XXX before proceeding
+  assert_screen('preinstall-done', timeout => 300);
+  record_info('Puavo', 'Preinstallation done');
 
-  # Press F2 every second until BIOS menu appears for maximum ten minutes.
-  # If the boot menu does not appear, this test fails.
-  send_key_until_needlematch('bios', 'f2', 600);
-  record_info('UEFI', 'BIOS setup reached, ready to boot into preinstallation');
+  # System should now reboot itself.  Press F2 every second until BIOS menu
+  # appears for maximum three minutes.  If the boot menu does not appear,
+  # this test fails.
+  send_key_until_needlematch('bios', 'f2', 180);
+  record_info('UEFI', 'BIOS setup reached');
 
-  # We're done, in order to save the disk for other tests, we need to shutdown.
+  # Installation done.  In order to save the disk for other tests, we need
+  # to shutdown.
   power('off');
 }
 

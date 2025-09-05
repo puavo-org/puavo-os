@@ -4,12 +4,17 @@ use testapi;
 sub run {
   select_console 'sut';
 
-  # Wait until the disk installer UI shows up (DarkDM).
-  assert_screen('darkdm-preinstalled', timeout => 300);
-  record_info('Puavo', 'DarkDM reached');
+  while (1) {
+    record_info('screenshot', 'Just saving a screenshot');
+    save_screenshot();
+    sleep 1;
+  }
 
-  # XXX how to get rid of this sleep?
-  sleep 30;
+  # wait until the disk installer ui shows up (darkdm).
+  assert_screen('darkdm-preinstalled', timeout => 300);
+  record_info('puavo', 'darkdm reached');
+  assert_screen('darkdm-diskinstaller-ready', timeout => 300);
+  record_info('puavo', 'darkdm ready');
 
   # Switch keyboard layout to US.
   type_string('kbd us');

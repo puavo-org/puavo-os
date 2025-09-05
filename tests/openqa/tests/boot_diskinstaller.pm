@@ -55,7 +55,7 @@ sub run {
   toggle_secure_boot_and_reboot();
 
   # Wait until the disk installer UI shows up.
-  assert_screen('darkdm', timeout => 300);
+  assert_screen('darkdm-diskinstaller', timeout => 300);
   record_info('Puavo', 'DarkDM reached, expecting reboot...');
 
   # The installer will detect missing MOK keys and Secure Boot being off,
@@ -69,11 +69,11 @@ sub run {
   record_info('UEFI', 'SHIM reached, enrolling MOK keys...');
   enroll_mok();
 
-  assert_screen('darkdm', timeout => 300);
-  record_info('Puavo', 'DarkDM reached, checking Secure Boot and TPM...');
+  assert_screen('darkdm-diskinstaller', timeout => 300);
+  record_info('Puavo', 'DarkDM reached');
 
-  # XXX how to get rid of this sleep?
-  sleep 30;
+  assert_screen('darkdm-diskinstaller-ready', timeout => 300);
+  record_info('Puavo', 'DarkDM ready');
 
   # Switch keyboard layout to US.
   type_string('kbd us');
