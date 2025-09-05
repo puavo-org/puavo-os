@@ -83,8 +83,11 @@ fn unlock_boot_vault_and_configure(
     info!("Starting primary partition configuration");
     if configurator.allowed(&mut boot_vault, &mut primary_partition_manager)? {
         info!("Configurator allowed configuration, proceeding");
-        configurator
-            .configure(&mut boot_vault, &mut primary_partition_manager)?;
+        configurator.configure(
+            &mut boot_vault,
+            &mut primary_partition_manager,
+            display,
+        )?;
         info!("Configuration completed");
         let _ = display.show_message("Configuration completed");
     } else {

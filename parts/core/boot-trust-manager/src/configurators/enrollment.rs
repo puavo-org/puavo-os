@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     configurators::Configurator,
     devices::boot_vault::BootVault,
+    display::UserDisplay,
     error::PuavoError,
     utils::luks_tpm_token_manager::{
         LuksTpmEnrollmentPolicy, LuksTpmTokenManager,
@@ -90,6 +91,7 @@ impl Configurator for EnrollmentConfigurator {
         &mut self,
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
+        _display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
         self.enroll(boot_vault, primary_partition)
     }
