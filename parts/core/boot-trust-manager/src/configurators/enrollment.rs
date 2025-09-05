@@ -48,8 +48,8 @@ impl EnrollmentConfigurator {
 
     pub fn enroll(
         &mut self,
-        boot_vault: &BootVault,
-        primary_partition: &LuksTpmTokenManager,
+        boot_vault: &mut BootVault,
+        primary_partition: &mut LuksTpmTokenManager,
     ) -> Result<(), PuavoError> {
         info!(
             "Enrolling disk with new TPM policy: {:#?}",
@@ -57,7 +57,14 @@ impl EnrollmentConfigurator {
         );
         let recovery_key = boot_vault.read_recovery_key()?.clone();
 
-        // TODO: Test the recovery key on both devices (CryptVolumeKeyHandle::get?)
+        // Verify we have control over both devices before proceeding
+        boot_vault
+            .device_mut()
+            .test_passphrase(&recovery_key)
+            .map_err(|_| PuavoError::InvalidRecoveryKey)?;
+        primary_partition
+            .test_passphrase(&recovery_key)
+            .map_err(|_| PuavoError::InvalidRecoveryKey)?;
 
         // Enroll the boot vault first, because if it fails we have not touched
         // the primary partition.

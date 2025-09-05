@@ -157,4 +157,19 @@ impl LuksTpmTokenManager {
     pub fn device_mut(&mut self) -> &mut CryptDevice {
         &mut self.device
     }
+
+    pub fn test_passphrase(
+        &mut self,
+        passphrase: &String,
+    ) -> Result<(), PuavoError> {
+        let volume_key_size = self.device.status_handle().get_volume_key_size();
+        let mut volume_key_buffer = vec![0u8; volume_key_size as usize];
+
+        let passphrase_bytes = passphrase.as_bytes();
+
+        self.device.volume_key_handle()
+            .get(None, &mut volume_key_buffer, Some(&passphrase_bytes))?;
+
+        Ok(())
+    }
 }

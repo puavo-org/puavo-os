@@ -6,6 +6,8 @@ use thiserror::Error;
 pub enum PuavoError {
     #[error("{0} not found")]
     NotFound(String),
+    #[error("Stored recovery key is invalid and cannot control LUKS devices")]
+    InvalidRecoveryKey,
     #[error(transparent)]
     IoError(#[from] io::Error),
     #[error(transparent)]
