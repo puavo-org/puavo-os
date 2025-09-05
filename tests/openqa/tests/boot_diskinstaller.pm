@@ -1,4 +1,3 @@
-use Time::HiRes qw(usleep);
 use Mojo::Base 'basetest';
 use testapi;
 
@@ -33,9 +32,7 @@ sub enroll_mok {
 
   # there might be two keys to view, skip them
   send_key('down', wait_screen_change => 1);
-  # sleep 1; # waiting for screen change seems to be ineffective
   send_key('down', wait_screen_change => 1);
-  # sleep 1;
   send_key('ret',  wait_screen_change => 1);  # continue
 
   # enroll the key(s): go down and select "Yes"
@@ -75,15 +72,18 @@ sub run {
   assert_screen('darkdm', timeout => 300);
   record_info('Puavo', 'DarkDM reached, checking Secure Boot and TPM...');
 
+  # XXX how to get rid of this sleep?
+  sleep 30;
+
   # Switch keyboard layout to US.
   type_string('kbd us');
   send_key('ret', wait_screen_change => 1);
 
   # Switch to a new tmux console where we can type commands.
-  send_key('ctrl-b', wait_screen_change => 1);
-  send_key('c',      wait_screen_change => 1);
+  send_key('ctrl-b');
+  send_key('c', wait_screen_change => 1);
 
-  assert_script_run(q{dmesg | grep -q 'Secure boot enabled'}, timeout => 30);
+  assert_script_run(q{dmesg | grep 'Secure boot enabled'}, timeout => 30);
   record_info('Puavo', 'Secure Boot enabled');
 
   assert_script_run('grep -q 2 /sys/class/tpm/tpm0/tpm_version_major',
@@ -93,8 +93,8 @@ sub run {
   record_info('Puavo', 'TPM 2.x exists');
 
   # Return back to the primary console for the next test.
-  send_key('ctrl-b', wait_screen_change => 1);
-  send_key('0',      wait_screen_change => 1);
+  type_string('exit 0');
+  send_key('ret', wait_screen_change => 1);
 }
 
 sub test_flags {
