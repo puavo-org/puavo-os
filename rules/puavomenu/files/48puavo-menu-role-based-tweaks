@@ -1,0 +1,8 @@
+if jq -e '
+     .user.user_roles | map(select(. | IN("admin", "teacher"))) | length > 0
+   ' "$PUAVO_SESSION_PATH" >/dev/null; then
+  export PUAVO_MENU_IS_TEACHER_OR_ADMIN=1
+  if [ "$(puavo-conf puavo.puavomenu.show_my_school_users)" = 'true' ]; then
+    export PUAVO_MENU_SHOW_MY_SCHOOL_USERS=1
+  fi
+fi

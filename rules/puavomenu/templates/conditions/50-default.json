@@ -18,6 +18,14 @@
     "only_teacher_admin": {
         "function": "env_var",
         "params": {
+            "name": "PUAVO_MENU_IS_TEACHER_OR_ADMIN",
+            "value": "1"
+        }
+    },
+
+    "show_my_school_users": {
+        "function": "env_var",
+        "params": {
             "name": "PUAVO_MENU_SHOW_MY_SCHOOL_USERS",
             "value": "1"
         }

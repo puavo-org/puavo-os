@@ -1332,7 +1332,7 @@
             },
             "icon": "/usr/share/icons/Faenza/mimetypes/96/x-office-spreadsheet.png",
             "tags": "education",
-            "condition": "only_teacher_admin"
+            "condition": "show_my_school_users"
         },
         "scratch": {
             "tags": "default"
