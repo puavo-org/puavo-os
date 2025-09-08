@@ -1567,17 +1567,13 @@ class PuavoErsExamScheduler (threading.Thread):
     self.shutdown_server()
     rm_f(reboot_request_path)
 
-    shutdown_counter = 10
+    shutdown_counter = 180
     while shutdown_counter > 0:
       self.logger.log(syslog.LOG_INFO,
-        'in shutdown phase, waiting a bit (%d)' % shutdown_counter)
-      try:
-        self.ping()
-      except Exception as e:
-        # ping errors indicate server is down or going down
-        shutdown_counter -= 4
-      shutdown_counter -= 1
-      time.sleep(1)
+        'in shutdown phase, waiting for the server shutdown (%d seconds)' \
+          % shutdown_counter)
+      shutdown_counter -= 10
+      time.sleep(10)
 
     self.logger.log(syslog.LOG_NOTICE, 'shutting down now')
     cmd = [ '/usr/bin/gnome-session-quit',
