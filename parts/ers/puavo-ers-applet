@@ -493,10 +493,12 @@ class PuavoErsApplet:
 
     Gtk.main()
 
+
   def check_vboxdrv_exists(self):
-    timeout = 300  # 5 minutes
+    elapsed  = 0
     interval = 20
-    elapsed = 0
+    timeout  = 300  # 5 minutes
+
     while elapsed < timeout:
       if os.path.exists('/dev/vboxdrv'):
         self.logger.log(syslog.LOG_INFO, '/dev/vboxdrv found')
@@ -505,8 +507,11 @@ class PuavoErsApplet:
       self.logger.log(syslog.LOG_WARNING, '/dev/vboxdrv not found, retrying...')
       time.sleep(interval)
       elapsed += interval
-    self.logger.log(syslog.LOG_ERR, '/dev/vboxdrv not found after 5 minutes')
-    raise FileNotFoundError('/dev/vboxdrv not found after 5 minutes')
+
+    errmsg = '/dev/vboxdrv not found after 5 minutes'
+    self.logger.log(syslog.LOG_ERR, errmsg)
+    raise FileNotFoundError(errmsg)
+
 
   def run_naksu(self):
     self.logger.log(syslog.LOG_NOTICE, 'starting up naksu')
