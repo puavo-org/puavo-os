@@ -642,7 +642,10 @@ install_win()
 
   wim_image_name=$(choose_wim_image_to_use "$win_language" \
                                            "$win_product_name" \
-                                           install)
+                                           install) || {
+    logerr "Failed to choose WIM file for installing '${win_product_name} (${win_language})' system."
+    return 1
+  }
 
   loginfo "Installing '${win_product_name} (${win_language})' on '${win_c_partition_devpath}'..."
 
@@ -874,7 +877,10 @@ install_boot_dir()
 
   wim_image=$(choose_wim_image_to_use "$win_language" \
                                       "${win_product_name}" \
-                                      boot)
+                                      boot) || {
+    logerr "Failed to choose WIM file for installing '${win_product_name} (${win_language})' bootloader."
+    return 1
+  }
 
   loginfo "Installing '${win_product_name} (${win_language})' bootmanager to '${g_boot_dir}'..."
 
