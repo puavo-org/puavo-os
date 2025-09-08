@@ -557,7 +557,10 @@ reset_win()
     wim_image_baseurl=$(get_wim_catalogue) || return 1
 
     wim_image_name=$(choose_wim_image_to_use "$win_language" \
-                                             "$win_product_name")
+                                             "$win_product_name") || {
+      logerr "Failed to choose WIM file for '${win_product_name} (${win_language})'."
+      return 1
+    }
 
     loginfo "Reseting '${win_product_name} (${win_language})' on '${win_primary_partition_devpath}'..."
 
