@@ -4,7 +4,7 @@ use std::{
     process::Command,
 };
 
-use log::{debug, info};
+use log::{debug, error, info};
 use tempfile::Builder;
 
 use crate::{
@@ -33,16 +33,22 @@ impl BootTrustManager {
         Self { configuration }
     }
 
-    pub fn manage(&self) -> Result<(), PuavoError> {
+    pub fn manage(&self) {
         // Run only the first successfully loaded configurator per boot.
         // Each configurator must remove its own trigger file
         // regardless of success to avoid reboot loops.
         // If no configurator is available, exit immediately without rebooting.
-        let mut configurators = configurators()?;
+        let mut configurators = match configurators() {
+            Ok(configurators) => configurators,
+            Err(error) => {
+                error!("Failed to load configurators: {}", error);
+                return;
+            }
+        };
 
         if configurators.is_empty() {
             info!("No configurator activated, exiting...");
-            return Ok(());
+            return;
         }
 
         let display = choose_display(self.configuration.force_console);
@@ -63,8 +69,6 @@ impl BootTrustManager {
             let _ = display.show_message("Rebooting...");
             reboot_or_halt();
         }
-
-        Ok(())
     }
 
     fn unlock_boot_vault_and_configure(

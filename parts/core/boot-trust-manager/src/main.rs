@@ -23,7 +23,7 @@ struct ApplicationConfiguration {
     no_reboot: bool,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let _ = env_logger::Builder::from_env(
         env_logger::Env::default().default_filter_or("info"),
     )
@@ -36,6 +36,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     configuration.no_reboot = env::var("BOOT_TRUST_MANAGER_NO_REBOOT").is_ok();
 
     let manager = BootTrustManager::new(configuration);
-    manager.manage()?;
-    Ok(())
+    manager.manage();
 }
