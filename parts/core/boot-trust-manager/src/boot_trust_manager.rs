@@ -5,9 +5,8 @@ use std::{
     time::Duration,
 };
 
-use log::{debug, info, warn};
+use log::{debug, info};
 use tempfile::Builder;
-use udev::Device;
 
 use crate::{
     configurators::{Configurator, configurators},
@@ -22,7 +21,7 @@ use crate::{
     error::PuavoError,
     utils::{
         luks_tpm_token_manager::LuksTpmTokenManager, mount::MountGuard,
-        power::reboot_or_halt,
+        power::reboot_or_halt, udev::filesystem_type,
     },
 };
 
@@ -185,13 +184,6 @@ impl BootTrustManager {
 
         let partitions = boot_device.child_block_devices()?;
         debug!("Found {} child block devices", partitions.len());
-
-        fn filesystem_type(device: &Device) -> Option<&str> {
-            device
-                .property_value("ID_FS_TYPE")
-                .map(|property| property.to_str())
-                .flatten()
-        }
 
         let efi_partition = partitions
             .iter()
