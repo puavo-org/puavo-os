@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use libcryptsetup_rs::consts::vals::EncryptionFormat;
 use libcryptsetup_rs::{CryptDevice, CryptInit};
 use log::debug;
@@ -38,6 +37,9 @@ pub struct LuksTpmEnrollmentPolicy {
 
     #[serde(rename = "wipe-tpm2-slot", default)]
     wipe_tpm2_slot: bool,
+
+    #[serde(rename = "tpm2-public-key-path", default)]
+    public_key_path: Option<String>,
 }
 
 pub struct LuksTpmTokenManager {
@@ -119,10 +121,13 @@ impl LuksTpmTokenManager {
                     "--tpm2-public-key-pcrs={}",
                     expressions.join("+")
                 ));
-                // Always point to default public key path in initrd if public key PCRs are requested
                 arguments.push(format!(
                     "--tpm2-public-key={}",
-                    DEFAULT_TPM2_PUBLIC_KEY_PATH
+                    // Keep the current public key unless overridden
+                    policy
+                        .public_key_path
+                        .clone()
+                        .unwrap_or(DEFAULT_TPM2_PUBLIC_KEY_PATH.to_string())
                 ));
             }
         }
@@ -167,8 +172,11 @@ impl LuksTpmTokenManager {
 
         let passphrase_bytes = passphrase.as_bytes();
 
-        self.device.volume_key_handle()
-            .get(None, &mut volume_key_buffer, Some(&passphrase_bytes))?;
+        self.device.volume_key_handle().get(
+            None,
+            &mut volume_key_buffer,
+            Some(&passphrase_bytes),
+        )?;
 
         Ok(())
     }
