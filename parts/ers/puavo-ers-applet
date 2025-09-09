@@ -1929,7 +1929,8 @@ class PuavoErsExamScheduler (threading.Thread):
     last_finished_time = None
     for student in status['students']:
       if ('examFinished' in student) and (student['examFinished'] != None):
-        finish_time = to_datetime(student['examFinished'], self.logger)
+        finish_time = iso_to_local_datetime(student['examFinished'],
+                                            self.logger)
         if not last_finished_time or last_finished_time < finish_time:
           last_finished_time = finish_time
 
@@ -1975,16 +1976,36 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def update_exams_finished_time(self, status, current_exam_package,
                                  currently_loaded_exam_uuids):
+    # We update self.finish_time here.  This determines the time when we can
+    # take out the exam answers.  In case there are no active students, we
+    # look at the last finished exam time and use that.  In case of a clock
+    # drift between the host and the exam system, we might take the answers
+    # out a bit late, but that should be okay.
+    #
+    # In case there are active students, we set the finish time to the end
+    # of the day, except in case there is an upcoming new exam set, we set
+    # it to the next exam set start time minus
+    # FORCELOAD_BEFORE_START_TIMEDELTA.
+    #
+    # In case there are no students and finish time is in the future,
+    # we set it to now so that we can finish the exam and start a new one.
+
     now = datetime.datetime.now()
 
     if not self.there_are_still_active_students(status):
       # no active students
       last_finished_time = self.get_last_finished_time(status)
       if last_finished_time:
-        if self.finish_time.astimezone() < last_finished_time:
+        if now < last_finished_time:
+          self.logger.log(syslog.LOG_DEBUG,
+            'clock drift, last finished time is in the future')
+        if self.finish_time != last_finished_time:
           self.logger.log(syslog.LOG_INFO, 'no active students, exams finished')
-          self.finish_time = now
+          self.finish_time = last_finished_time
+        return
 
+      # if we are here, there should be no students are all, so set finish
+      # time to now in case it is in the future
       if self.finish_time > now:
         self.finish_time = now
       return
