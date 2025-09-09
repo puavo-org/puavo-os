@@ -15,8 +15,8 @@ mod utils;
 #[command(author, version, about, long_about = None)]
 struct ApplicationConfiguration {
     /// Use console UI instead of Plymouth
-    #[arg(long)]
-    console: bool,
+    #[arg(long = "force-console")]
+    force_console: bool,
 
     /// Do not reboot after running a configurator
     #[arg(long = "no-reboot")]
@@ -31,7 +31,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     .try_init();
 
     let mut configuration = ApplicationConfiguration::parse();
-    configuration.console = env::var("BOOT_TRUST_MANAGER_CONSOLE").is_ok();
+    configuration.force_console =
+        env::var("BOOT_TRUST_MANAGER_FORCE_CONSOLE").is_ok();
     configuration.no_reboot = env::var("BOOT_TRUST_MANAGER_NO_REBOOT").is_ok();
 
     let manager = BootTrustManager::new(configuration);
