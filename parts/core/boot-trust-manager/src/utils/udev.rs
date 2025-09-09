@@ -31,3 +31,10 @@ pub fn device_from_device_node_path<P: AsRef<Path>>(
 
     Ok(device)
 }
+
+pub fn filesystem_type(device: &Device) -> Option<&str> {
+    device
+        .property_value("ID_FS_TYPE")
+        .map(|property| property.to_str())
+        .flatten()
+}
