@@ -1,3 +1,5 @@
+use std::env;
+
 use clap::Parser;
 
 use crate::boot_trust_manager::BootTrustManager;
@@ -11,7 +13,7 @@ mod utils;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct CommandLineConfiguration {
+struct ApplicationConfiguration {
     /// Use console UI instead of Plymouth
     #[arg(long)]
     console: bool,
@@ -28,7 +30,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     .format_timestamp_secs()
     .try_init();
 
-    let configuration = CommandLineConfiguration::parse();
+    let mut configuration = ApplicationConfiguration::parse();
+    configuration.console = env::var("BOOT_TRUST_MANAGER_CONSOLE").is_ok();
+    configuration.no_reboot = env::var("BOOT_TRUST_MANAGER_NO_REBOOT").is_ok();
 
     let manager = BootTrustManager::new(configuration);
     manager.manage()?;

@@ -26,17 +26,17 @@ use crate::{
     },
 };
 
-use crate::CommandLineConfiguration;
+use crate::ApplicationConfiguration;
 
 // How long to wait after showing a message with Plymouth?
 const DISPLAY_STOP_DURATION: u64 = 1000;
 
 pub struct BootTrustManager {
-    configuration: CommandLineConfiguration,
+    configuration: ApplicationConfiguration,
 }
 
 impl BootTrustManager {
-    pub fn new(configuration: CommandLineConfiguration) -> Self {
+    pub fn new(configuration: ApplicationConfiguration) -> Self {
         Self { configuration }
     }
 
