@@ -1,18 +1,13 @@
-use std::{process::Command, time::Duration};
+use std::{process::Command, thread, time::Duration};
 
 use crate::{display::UserDisplay, error::PuavoError};
 
 pub struct PlymouthDisplay {
-    display_stop_duration: Duration
+    display_stop_duration: Duration,
 }
 
 impl PlymouthDisplay {
     pub fn new(display_stop_duration: Duration) -> Result<Self, PuavoError> {
-        // Start the plymouth daemon if not already running
-        if !Self::ping()? {
-            let _ = Command::new("plymouthd").spawn()?;
-        }
-
         Ok(Self { display_stop_duration })
     }
 
@@ -49,7 +44,7 @@ impl UserDisplay for PlymouthDisplay {
             return Err(PuavoError::PlymouthError(status.code().unwrap_or(-1)));
         }
 
-        std::thread::sleep(self.display_stop_duration);
+        thread::sleep(self.display_stop_duration);
 
         Ok(())
     }

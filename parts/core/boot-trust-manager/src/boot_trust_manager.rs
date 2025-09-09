@@ -2,7 +2,6 @@ use std::{
     fs,
     path::{Path, PathBuf},
     process::Command,
-    time::Duration,
 };
 
 use log::{debug, info};
@@ -15,9 +14,7 @@ use crate::{
         boot_vault::{BootVault, VAULT_PATH},
         efi_boot_device::EFIBootDevice,
     },
-    display::{
-        UserDisplay, console::ConsoleDisplay, plymouth::PlymouthDisplay,
-    },
+    display::{UserDisplay, choose_display},
     error::PuavoError,
     utils::{
         luks_tpm_token_manager::LuksTpmTokenManager, mount::MountGuard,
@@ -26,9 +23,6 @@ use crate::{
 };
 
 use crate::ApplicationConfiguration;
-
-// How long to wait after showing a message with Plymouth?
-const DISPLAY_STOP_DURATION: u64 = 1000;
 
 pub struct BootTrustManager {
     configuration: ApplicationConfiguration,
@@ -51,7 +45,7 @@ impl BootTrustManager {
             return Ok(());
         }
 
-        let display = Self::build_display(self.configuration.console);
+        let display = choose_display(self.configuration.force_console);
         let _ = display.show_message("Configuring...");
 
         let configurator = configurators.remove(0);
@@ -71,22 +65,6 @@ impl BootTrustManager {
         }
 
         Ok(())
-    }
-
-    fn build_display(use_console: bool) -> Box<dyn UserDisplay> {
-        let console_display =
-            Box::new(ConsoleDisplay::new()) as Box<dyn UserDisplay>;
-
-        if use_console {
-            return console_display;
-        }
-
-        PlymouthDisplay::new(Duration::from_millis(DISPLAY_STOP_DURATION))
-            .inspect_err(|error| {
-                warn!("Failed to initialize Plymouth display: {}", error)
-            })
-            .map(|plymouth| Box::new(plymouth) as Box<dyn UserDisplay>)
-            .unwrap_or(console_display) // Fallback
     }
 
     fn unlock_boot_vault_and_configure(
