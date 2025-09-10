@@ -6,24 +6,34 @@ use thiserror::Error;
 pub enum PuavoError {
     #[error("{0} not found")]
     NotFound(String),
+
     #[error("Stored recovery key is invalid and cannot control LUKS devices")]
     InvalidRecoveryKey,
+
     #[error(transparent)]
     IoError(#[from] io::Error),
+
     #[error(transparent)]
     LibcryptError(#[from] LibcryptErr),
+
     #[error("{0}")]
     ShellError(String),
+
     #[error("Boot vault is not mounted")]
     VaultNotMounted,
+
     #[error("LUKS error: {0}")]
     LuksError(String),
+
     #[error("Invalid data: {0}")]
     InvalidData(String),
+
     #[error("Failed to find the booted EFI partition")]
     NoEFIPartition,
+
     #[error("Failed to find the primary LUKS partition")]
     NoPrimaryLuksPartition,
+
     #[error("Plymouth exited with code {0}")]
     PlymouthError(i32),
 }

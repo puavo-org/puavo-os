@@ -24,16 +24,20 @@ use crate::{
 
 /// Relative path (within the EFI partition) to the boot vault image.
 pub const VAULT_PATH: &str = "EFI/puavo/vault.img";
+
 /// Device-mapper name used when activating the vault's LUKS device.
 /// This is the logical name visible under `/dev/mapper/` once the LUKS device
 /// is opened, see `VAULT_LUKS_DEVICE_PATH`.
 pub const VAULT_LUKS_DEVICE_NAME: &str = "puavo-boot-vault";
+
 /// Absolute path to the activated LUKS device for the vault.
 /// Created by cryptsetup when the vault is unlocked. This block device is then
 /// mounted to `VAULT_MOUNTPOINT`.
 pub const VAULT_LUKS_DEVICE_PATH: &str = "/dev/mapper/puavo-boot-vault";
+
 /// Mount point for the decrypted vault filesystem at runtime.
 pub const VAULT_MOUNTPOINT: &str = "/run/puavo/boot-vault";
+
 /// Filesystem type expected inside the vault image.
 pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 
