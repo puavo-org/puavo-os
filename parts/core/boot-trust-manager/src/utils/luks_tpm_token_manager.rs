@@ -12,46 +12,67 @@ const TPM_TOKEN_TYPE: &str = "systemd-tpm2";
 
 const DEFAULT_TPM2_PUBLIC_KEY_PATH: &str = "/.extra/tpm2-pcr-public-key.pem";
 
+/// Representation of a systemd TPM2 LUKS token stored in the LUKS header.
+///
+/// This mirrors the JSON structure returned by cryptsetup for tokens of type `systemd-tpm2`.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct LuksTpmToken {
+    /// PCR list for direct TPM binding (e.g. [7]).
     #[serde(rename = "tpm2-pcrs", default)]
     specific_pcrs: Vec<u8>,
 
+    /// PCR list to be verified using a TPM public key policy.
     #[serde(rename = "tpm2-pubkey_pcrs", default)]
     public_key_pcrs: Option<Vec<u8>>,
 
+    /// Whether a user PIN must be provided during unlock.
     #[serde(rename = "tpm2-pin", default)]
     use_pin: bool,
 }
 
+/// Enrollment policy used when creating a TPM2 token via `systemd-cryptenroll`.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LuksTpmEnrollmentPolicy {
+    /// PCR expressions for direct TPM binding (e.g. ["7:sha256", "15:sha256=<value>"]).
     #[serde(rename = "tpm2-pcrs")]
     specific_pcrs_expressions: Option<Vec<String>>,
 
+    /// PCR expressions to be validated using a TPM public key policy (e.g. ["11:sha256"]).
     #[serde(rename = "tpm2-public-key-pcrs")]
     public_key_pcrs_expressions: Option<Vec<String>>,
 
+    /// Require a PIN for unlock.
     #[serde(rename = "tpm2-pin", default)]
     use_pin: bool,
 
+    /// Wipe any existing TPM2 token slot before enrolling a new one.
     #[serde(rename = "wipe-tpm2-slot", default)]
     wipe_tpm2_slot: bool,
 
+    /// Optional path to a new TPM2 public key used for policy verification.
     #[serde(rename = "tpm2-public-key-path", default)]
     public_key_path: Option<String>,
 }
 
+/// Helper for interacting with a LUKS2 device to manage TPM2 tokens.
 pub struct LuksTpmTokenManager {
     device: CryptDevice,
     device_path: String,
 }
 
 impl LuksTpmTokenManager {
+    /// Construct a manager from an existing crypt device handle and its path.
     pub fn new(device: CryptDevice, device_path: String) -> Self {
         Self { device, device_path: device_path.into() }
     }
 
+    /// Construct a manager by initializing and loading a LUKS2 device from device path (e.g. `/dev/nvme0n1p3`).
+    /// 
+    /// Arguments:
+    /// * `device_path` - Path to the LUKS2 device (e.g. `/dev/nvme0n1p3`).
+    /// 
+    /// Errors:
+    /// Returns `PuavoError` if initialization or loading fails.
     pub fn from_device_path(device_path: String) -> Result<Self, PuavoError> {
         debug!("Initializing LUKS device from {}", device_path);
         let mut device = CryptInit::init(Path::new(&device_path))?;
@@ -63,6 +84,10 @@ impl LuksTpmTokenManager {
         Ok(manager)
     }
 
+    /// List all TPM tokens present in the LUKS2 header.
+    /// 
+    /// Errors:
+    /// Returns `PuavoError` if token retrieval or parsing fails.
     pub fn list_tokens(&mut self) -> Result<Vec<LuksTpmToken>, PuavoError> {
         let luks_device = &mut self.device;
 
@@ -95,6 +120,14 @@ impl LuksTpmTokenManager {
         Ok(tokens)
     }
 
+    /// Enroll a TPM2 token using `systemd-cryptenroll` according to `policy`.
+    ///
+    /// Arguments:
+    /// * `key` - The passphrase used to control the LUKS device.
+    /// * `policy` - The enrollment policy specifying PCRs, PIN usage, and other options.
+    /// 
+    /// Errors:
+    /// Returns `PuavoError` if enrollment fails.
     pub fn enroll(
         &self,
         key: &String,
@@ -155,14 +188,24 @@ impl LuksTpmTokenManager {
         Ok(())
     }
 
+    /// Access the underlying crypt device handle.
     pub fn device(&self) -> &CryptDevice {
         &self.device
     }
 
+    /// Mutable access to the underlying crypt device handle.
     pub fn device_mut(&mut self) -> &mut CryptDevice {
         &mut self.device
     }
 
+    /// Validate that a passphrase can unlock the device by attempting to derive
+    /// the volume key using the specified `passphrase`.
+    /// 
+    /// Arguments:
+    /// * `passphrase` - The passphrase to test.
+    /// 
+    /// Errors:
+    /// Returns `PuavoError` if the passphrase is invalid or internal errors occur.
     pub fn test_passphrase(
         &mut self,
         passphrase: &String,
