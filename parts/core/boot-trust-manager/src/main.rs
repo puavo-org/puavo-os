@@ -1,3 +1,18 @@
+/// Boot Trust Manager entry point.
+///
+/// Manages boot trust state by maintaining a shared LUKS recovery key stored
+/// inside a "boot vault" (a LUKS2 filesystem image on the EFI partition).
+/// The vault and the primary encrypted system partition share the
+/// same unlock policy (TPM-bound tokens and recovery key).
+///
+/// Configurators are small tasks discovered via JSON trigger
+/// configuration files. Each encapsulates a specific maintenance or recovery
+/// action such as TPM enrollment or displaying the recovery key.
+/// Each configurator removes its trigger file after execution to
+/// prevent repeated runs.
+///
+/// Initializes logging, parses configuration, and delegates management
+/// to the `BootTrustManager`.
 use std::env;
 
 use clap::Parser;

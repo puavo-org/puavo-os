@@ -20,7 +20,7 @@ pub enum PuavoError {
     LuksError(String),
     #[error("Invalid data: {0}")]
     InvalidData(String),
-    #[error("Failed to find the EFI partition")]
+    #[error("Failed to find the booted EFI partition")]
     NoEFIPartition,
     #[error("Failed to find the primary LUKS partition")]
     NoPrimaryLuksPartition,
