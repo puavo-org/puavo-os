@@ -22,14 +22,26 @@ use crate::{
     },
 };
 
+/// Relative path (within the EFI partition) to the boot vault image.
 pub const VAULT_PATH: &str = "EFI/puavo/vault.img";
+/// Device-mapper name used when activating the vault's LUKS device.
+/// This is the logical name visible under `/dev/mapper/` once the LUKS device
+/// is opened, see `VAULT_LUKS_DEVICE_PATH`.
 pub const VAULT_LUKS_DEVICE_NAME: &str = "puavo-boot-vault";
+/// Absolute path to the activated LUKS device for the vault.
+/// Created by cryptsetup when the vault is unlocked. This block device is then
+/// mounted to `VAULT_MOUNTPOINT`.
 pub const VAULT_LUKS_DEVICE_PATH: &str = "/dev/mapper/puavo-boot-vault";
+/// Mount point for the decrypted vault filesystem at runtime.
 pub const VAULT_MOUNTPOINT: &str = "/run/puavo/boot-vault";
+/// Filesystem type expected inside the vault image.
 pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 
+/// Path to the recovery key file within the mounted vault.
 pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
 
+/// Optional path on the root filesystem to a fallback passphrase for the vault.
+/// When present, this passphrase is tried before TPM token unlock to allow recovery.
 pub const VAULT_FALLBACK_UNLOCK_KEY_PATH: &str =
     "/.extra/puavo/vault-unlock.key";
 
@@ -39,6 +51,13 @@ pub enum BootVaultUnlockMethod {
     RecoveryKey,
 }
 
+/// Manages the lifecycle of the boot vault.
+///
+/// Responsibilities:
+/// - Attach the vault image as a loop device.
+/// - Open the embedded LUKS2 container using TPM token or fallback key.
+/// - Mount the decrypted filesystem and provide helpers to read/write data.
+/// - Cleanly unmount, deactivate, and detach on demand or on drop.
 #[derive(Default)]
 pub struct BootVault {
     loop_device: Option<LoopDevice>,
@@ -48,10 +67,20 @@ pub struct BootVault {
 }
 
 impl BootVault {
+    /// Return the method used to unlock the vault after a successful mount, if any.
     pub fn unlock_method(&self) -> Option<BootVaultUnlockMethod> {
         self.unlock_method
     }
 
+    /// Attempt to unlock the LUKS device using a fallback recovery key.
+    ///
+    /// Parameters:
+    /// - `device`: The crypt device handle to activate.
+    ///
+    /// Returns:
+    /// - `Ok(true)` if unlocked using the fallback key.
+    /// - `Ok(false)` if no fallback key was available.
+    /// - `Err(error)` if an error occurred during unlocking.
     fn try_unlock_with_fallback_key(
         &mut self,
         device: &mut CryptDevice,
@@ -86,6 +115,13 @@ impl BootVault {
         Ok(true)
     }
 
+    /// Attempt to unlock the LUKS device using any available TPM token.
+    ///
+    /// Parameters:
+    /// - `device`: The crypt device handle to activate.
+    /// 
+    /// Errors:
+    /// Propagates cryptsetup and IO errors.
     fn try_unlock_with_any_token(
         &mut self,
         device: &mut CryptDevice,
@@ -104,6 +140,13 @@ impl BootVault {
         Ok(())
     }
 
+    /// Initialize the LUKS device handle for the loop device and unlock it.
+    ///
+    /// Parameters:
+    /// - `loop_device_path`: Path to the loop device backing the vault image (e.g. `/dev/loop0`).
+    ///
+    /// Errors:
+    /// Propagates loop device control errors.
     fn open_luks_device(
         &mut self,
         loop_device_path: &PathBuf,
@@ -134,6 +177,10 @@ impl BootVault {
         Ok(device)
     }
 
+    /// Mount the decrypted LUKS device to the vault mountpoint.
+    ///
+    /// Errors:
+    /// Propagates IO and mount errors.
     fn mount_luks_device(&mut self) -> io::Result<()> {
         let luks_device = device_from_device_node_path(VAULT_LUKS_DEVICE_PATH)?;
 
@@ -151,6 +198,16 @@ impl BootVault {
         Ok(())
     }
 
+    /// Mount the boot vault image by attaching it to a loop device, unlocking
+    /// its LUKS container, and mounting the resulting device.
+    ///
+    /// Parameters:
+    /// - `image_path`: Path to the boot vault image file on the EFI partition.
+    ///
+    /// Errors:
+    /// - Loop device control errors.
+    /// - Cryptsetup errors while unlocking the LUKS container.
+    /// - IO or mount errors while mounting the filesystem.
     pub fn mount(&mut self, image_path: &PathBuf) -> Result<(), PuavoError> {
         info!(
             "Setting up loop device for boot vault image at {:?}",
@@ -193,6 +250,14 @@ impl BootVault {
         Ok(())
     }
 
+    /// Write a recovery key file into the mounted vault.
+    ///
+    /// Parameters:
+    /// - `recovery_key`: The key material to write.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if writing fails.
     pub fn write_recovery_key(
         &self,
         recovery_key: String,
@@ -209,7 +274,14 @@ impl BootVault {
             .map_err(|error| PuavoError::IoError(error))
     }
 
+    /// Read the recovery key from the mounted vault.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if reading fails.
     pub fn read_recovery_key(&self) -> Result<String, PuavoError> {
+        debug!("Reading recovery key from boot vault");
+
         let mountpoint =
             self.mountpoint.as_ref().ok_or(PuavoError::VaultNotMounted)?;
 
@@ -219,6 +291,8 @@ impl BootVault {
         fs::read_to_string(recovery_key_path).map_err(PuavoError::IoError)
     }
 
+    /// Unmount and tear down the vault, closing the LUKS device and detaching
+    /// the loop device.
     pub fn unmount(&mut self) -> Result<(), PuavoError> {
         // If any of the steps fails, the rest will likely also fail,
         // but we have to try and we will reboot anyway.
@@ -252,12 +326,14 @@ impl BootVault {
         Ok(())
     }
 
+    /// Returns an immutable reference to the LUKS token manager for the vault.
     pub fn device(&self) -> &LuksTpmTokenManager {
         self.luks_device.as_ref().expect(
             "Attempted to use boot vault device when it was not mounted",
         )
     }
 
+    /// Returns a mutable reference to the LUKS token manager for the vault.
     pub fn device_mut(&mut self) -> &mut LuksTpmTokenManager {
         self.luks_device.as_mut().expect(
             "Attempted to use boot vault device when it was not mounted",

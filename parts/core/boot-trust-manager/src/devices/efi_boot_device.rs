@@ -12,11 +12,23 @@ use crate::{
     utils::udev::device_from_device_node_path,
 };
 
+/// Path where the EFI variable filesystem (efivarfs) should be mounted.
 pub const EFI_VARIABLE_FILESYSTEM_PATH: &str = "/sys/firmware/efi/efivars";
 
+/// Represents the EFI boot device for the current boot.
+///
+/// Wraps the underlying `udev::Device` corresponding to the disk that
+/// provided the EFI partition used to boot this system.
+/// Provides helpers for resolving EFI loader related information.
 pub struct EFIBootDevice(Device);
 
 impl EFIBootDevice {
+    /// Return the block device corresponding to the currently booted EFI disk.
+    ///
+    /// Errors:
+    /// - `PuavoError::IoError` if invoking the helper command fails to run.
+    /// - `PuavoError::ShellError` if the helper exits non-zero.
+    /// - `PuavoError::IoError` in case of udev errors.
     pub fn current() -> Result<EFIBootDevice, PuavoError> {
         debug!("Locating the current EFI boot device");
 
@@ -36,6 +48,19 @@ impl EFIBootDevice {
         Ok(EFIBootDevice(boot_device))
     }
 
+    /// Determine the full path to the EFI loader binary in the mounted EFI partition.
+    /// 
+    /// Reads the `LoaderImageIdentifier-*` EFI variable to find the
+    /// relative path to the loader, normalizes path separators, and joins it
+    /// to the specified mountpoint.
+    ///
+    /// Parameters:
+    /// - `mountpoint`: Path where the EFI partition is mounted.
+    ///
+    /// Errors:
+    /// - `PuavoError::ShellError` if mounting the EFI variable filesystem fails.
+    /// - `PuavoError::IoError` if filesystem access fails.
+    /// - `PuavoError::NotFound` if the loader variable cannot be located.
     pub fn loader_path(mountpoint: &PathBuf) -> Result<PathBuf, PuavoError> {
         let efi_variables_directory = Self::mount_efi_variable_filesystem()?;
         let optional_loader_variable = efi_variables_directory
@@ -78,6 +103,13 @@ impl EFIBootDevice {
         Ok(loader_absolute_path)
     }
 
+    /// Verifies and returns the path to the EFI loader's ".extra.d" directory.
+    ///
+    /// Parameters:
+    /// - `loader_path`: Absolute path to the loader binary.
+    ///
+    /// Errors:
+    /// - Propagates `try_exists` IO errors.
     pub fn loader_extra_directory_path(
         loader_path: &PathBuf,
     ) -> Result<PathBuf, PuavoError> {
@@ -88,6 +120,11 @@ impl EFIBootDevice {
         Ok(extra_directory)
     }
 
+    /// Ensure the EFI variable filesystem is mounted and return its path.
+    ///
+    /// Errors:
+    /// - `PuavoError::ShellError` if the `mount` command fails.
+    /// - `PuavoError::IoError` if path checks fail.
     fn mount_efi_variable_filesystem() -> Result<PathBuf, PuavoError> {
         let efi_variables_directory = Path::new(EFI_VARIABLE_FILESYSTEM_PATH);
 
