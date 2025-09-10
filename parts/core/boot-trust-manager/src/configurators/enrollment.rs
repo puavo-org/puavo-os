@@ -23,11 +23,20 @@ struct EnrollmentConfiguration {
     enrollment_policy: LuksTpmEnrollmentPolicy,
 }
 
+/// Configurator that (re)enrolls LUKS TPM policies for the boot vault and
+/// primary partition using a shared LUKS key.
 pub struct EnrollmentConfigurator {
     configuration: EnrollmentConfiguration,
 }
 
 impl EnrollmentConfigurator {
+    /// Attempt to construct the configurator by reading and parsing the
+    /// enrollment configuration file.
+    ///
+    /// Returns:
+    /// - `Ok(Some(Self))` when the configuration file exists and is valid.
+    /// - `Ok(None)` when the file is absent (configurator disabled).
+    /// - `Err(error)` if the file exists but cannot be read or parsed.
     pub fn new() -> Result<Option<Self>, PuavoError> {
         let config_json = match fs::read_to_string(CONFIGURATION_PATH) {
             Ok(content) => content,
@@ -47,6 +56,23 @@ impl EnrollmentConfigurator {
         Ok(Some(Self { configuration }))
     }
 
+    /// Enroll (or re-enroll) TPM policies for both the boot vault and the
+    /// primary encrypted partition.
+    /// 
+    /// Behavior:
+    /// 1. Read recovery key from boot vault.
+    /// 2. Validate recovery key works on both devices.
+    /// 3. Enroll boot vault first (fail-fast before touching primary partition).
+    /// 4. Enroll primary partition with the same policy.
+    ///
+    /// Parameters:
+    /// - `boot_vault`: Mounted boot vault used to fetch the recovery key and to enroll its own device.
+    /// - `primary_partition`: Token manager for the primary encrypted partition.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted when reading the key.
+    /// - `PuavoError::InvalidRecoveryKey` if the recovery key does not unlock either device.
+    /// - Propagates internal errors from token enrollment operations.
     pub fn enroll(
         &mut self,
         boot_vault: &mut BootVault,
@@ -78,6 +104,7 @@ impl EnrollmentConfigurator {
 }
 
 impl Configurator for EnrollmentConfigurator {
+    /// Returns whether this configurator is permitted to execute.
     fn allowed(
         &self,
         _boot_vault: &mut BootVault,
@@ -87,6 +114,10 @@ impl Configurator for EnrollmentConfigurator {
         Ok(true)
     }
 
+    /// Execute TPM enrollment for the boot vault and primary partition.
+    ///
+    /// Errors:
+    /// Propagates internal errors.
     fn configure(
         &mut self,
         boot_vault: &mut BootVault,
@@ -96,6 +127,7 @@ impl Configurator for EnrollmentConfigurator {
         self.enroll(boot_vault, primary_partition)
     }
 
+    /// Return the trigger filename for this configurator.
     fn filename(&self) -> Result<String, PuavoError> {
         Ok(self.configuration.filename.clone())
     }
