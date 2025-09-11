@@ -92,7 +92,7 @@ impl BootTrustManager {
     /// reboot loops. The boot vault will be unmounted automatically when the
     /// guard is dropped.
     ///
-    /// Arguments:
+    /// Parameters:
     /// - `display`: display instance to show progress and messages.
     /// - `efi_partition_mount_path`: mount point of the EFI system partition.
     /// - `primary_partition_device_path`: path to the primary LUKS device (e.g. `/dev/nvme0n1p3`).
@@ -145,7 +145,7 @@ impl BootTrustManager {
     /// Resolve the full path to the configurator file inside the loader's
     /// extra directory and verify its existence.
     ///
-    /// Arguments:
+    /// Parameters:
     /// - `loader_extra_directory`: path to the loader's extra directory.
     /// - `configurator`: configurator to find.
     ///
@@ -166,7 +166,7 @@ impl BootTrustManager {
     /// Locate the configurator file on the EFI system partition by resolving
     /// the loader path and its "extra" directory.
     ///
-    /// Arguments:
+    /// Parameters:
     /// - `efi_partition_mount_path`: mount point of the EFI system partition.
     /// - `configurator`: configurator to find.
     ///
@@ -193,7 +193,7 @@ impl BootTrustManager {
     /// Delete the configurator trigger file from the EFI partition to prevent
     /// repeated runs across reboots.
     ///
-    /// Arguments:
+    /// Parameters:
     /// - `efi_partition_mount_path`: mount point of the EFI system partition.
     /// - `configurator`: configurator whose trigger file to delete.
     ///

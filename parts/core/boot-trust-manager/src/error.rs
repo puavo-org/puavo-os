@@ -1,5 +1,5 @@
 use libcryptsetup_rs::LibcryptErr;
-use std::io;
+use std::{io, num::ParseIntError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -36,4 +36,6 @@ pub enum PuavoError {
 
     #[error("Plymouth exited with code {0}")]
     PlymouthError(i32),
+    #[error(transparent)]
+    ParseIntError(#[from] ParseIntError),
 }
