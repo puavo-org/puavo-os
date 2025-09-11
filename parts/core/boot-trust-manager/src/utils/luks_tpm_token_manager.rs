@@ -68,7 +68,7 @@ impl LuksTpmTokenManager {
 
     /// Construct a manager by initializing and loading a LUKS2 device from device path (e.g. `/dev/nvme0n1p3`).
     /// 
-    /// Arguments:
+    /// Parameters:
     /// * `device_path` - Path to the LUKS2 device (e.g. `/dev/nvme0n1p3`).
     /// 
     /// Errors:
@@ -122,7 +122,7 @@ impl LuksTpmTokenManager {
 
     /// Enroll a TPM2 token using `systemd-cryptenroll` according to `policy`.
     ///
-    /// Arguments:
+    /// Parameters:
     /// * `key` - The passphrase used to control the LUKS device.
     /// * `policy` - The enrollment policy specifying PCRs, PIN usage, and other options.
     /// 
@@ -201,7 +201,7 @@ impl LuksTpmTokenManager {
     /// Validate that a passphrase can unlock the device by attempting to derive
     /// the volume key using the specified `passphrase`.
     /// 
-    /// Arguments:
+    /// Parameters:
     /// * `passphrase` - The passphrase to test.
     /// 
     /// Errors:
