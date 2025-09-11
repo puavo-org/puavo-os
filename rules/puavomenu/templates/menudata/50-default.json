@@ -199,6 +199,8 @@
         "com.github.xournalpp.xournalpp": {
             "tags": "default"
         },
+        "com.gitlab.tipp10.tipp10": {
+        },
         "cura-appimage": {
             "name": "Cura",
             "tags": "default",
@@ -1043,8 +1045,7 @@
             },
             "tags": "default, education, science"
         },
-        "org.kde.ktouch": {
-            "name": {
+        "org.kde.ktouch": { "name": {
                 "fi": "KTouch-konekirjoitus",
                 "en": "KTouch-touch typing",
                 "sv": "KTouch-maskinskrivning",
@@ -2036,6 +2037,7 @@
                 "org.kde.kwordquiz",
                 "org.kde.khangman",
                 "org.kde.ktouch",
+                "com.gitlab.tipp10.tipp10",
                 "celestia",
                 "stellarium-web",
                 "org.kde.kstars",
