@@ -1,7 +1,8 @@
 use libcryptsetup_rs::consts::vals::EncryptionFormat;
-use libcryptsetup_rs::{CryptDevice, CryptInit};
+use libcryptsetup_rs::{CryptDevice, CryptInit, TokenInput};
 use log::debug;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
@@ -15,7 +16,7 @@ const DEFAULT_TPM2_PUBLIC_KEY_PATH: &str = "/.extra/tpm2-pcr-public-key.pem";
 /// Representation of a systemd TPM2 LUKS token stored in the LUKS header.
 ///
 /// This mirrors the JSON structure returned by cryptsetup for tokens of type `systemd-tpm2`.
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct LuksTpmToken {
     /// PCR list for direct TPM binding (e.g. [7]).
     #[serde(rename = "tpm2-pcrs", default)]
@@ -67,10 +68,10 @@ impl LuksTpmTokenManager {
     }
 
     /// Construct a manager by initializing and loading a LUKS2 device from device path (e.g. `/dev/nvme0n1p3`).
-    /// 
+    ///
     /// Parameters:
     /// * `device_path` - Path to the LUKS2 device (e.g. `/dev/nvme0n1p3`).
-    /// 
+    ///
     /// Errors:
     /// Returns `PuavoError` if initialization or loading fails.
     pub fn from_device_path(device_path: String) -> Result<Self, PuavoError> {
@@ -85,19 +86,25 @@ impl LuksTpmTokenManager {
     }
 
     /// List all TPM tokens present in the LUKS2 header.
-    /// 
+    ///
     /// Errors:
     /// Returns `PuavoError` if token retrieval or parsing fails.
-    pub fn list_tokens(&mut self) -> Result<Vec<LuksTpmToken>, PuavoError> {
+    pub fn list_tokens(
+        &mut self,
+    ) -> Result<HashMap<u32, LuksTpmToken>, PuavoError> {
         let luks_device = &mut self.device;
 
         let token_jsons = (0..MAX_TOKENS).filter_map(|token_index| {
-            luks_device.token_handle().json_get(token_index).ok()
+            luks_device
+                .token_handle()
+                .json_get(token_index)
+                .ok()
+                .map(|json| (token_index, json))
         });
 
-        let mut tokens = Vec::new();
+        let mut tokens = HashMap::new();
 
-        for token_json in token_jsons {
+        for (token_index, token_json) in token_jsons {
             // Only consider systemd TPM2 tokens
             let token_type = token_json
                 .get("type")
@@ -114,7 +121,7 @@ impl LuksTpmTokenManager {
                     )
                 })?;
 
-            tokens.push(token);
+            tokens.insert(token_index, token);
         }
 
         Ok(tokens)
@@ -125,7 +132,7 @@ impl LuksTpmTokenManager {
     /// Parameters:
     /// * `key` - The passphrase used to control the LUKS device.
     /// * `policy` - The enrollment policy specifying PCRs, PIN usage, and other options.
-    /// 
+    ///
     /// Errors:
     /// Returns `PuavoError` if enrollment fails.
     pub fn enroll(
@@ -188,6 +195,38 @@ impl LuksTpmTokenManager {
         Ok(())
     }
 
+    /// Remove a TPM token by its ID.
+    ///
+    /// Parameters:
+    /// * `token_id` - The identifier of the token to remove.
+    ///
+    /// Errors:
+    /// Returns `PuavoError::LibcryptError` if the removal fails.
+    pub fn remove_token(&mut self, token_id: u32) -> Result<(), PuavoError> {
+        debug!("Removing TPM token with ID {}", token_id);
+        self.device
+            .token_handle()
+            .json_set(TokenInput::RemoveToken(token_id))?;
+        Ok(())
+    }
+
+    /// Removes the specified TPM tokens by their IDs.
+    ///
+    /// Parameters:
+    /// * `token_ids` - A list of token IDs to remove.
+    ///
+    /// Errors:
+    /// Returns `PuavoError::LibcryptError` if any removal fails.
+    pub fn remove_tokens(
+        &mut self,
+        token_ids: Vec<u32>,
+    ) -> Result<(), PuavoError> {
+        for token_id in token_ids {
+            self.remove_token(token_id)?;
+        }
+        Ok(())
+    }
+
     /// Access the underlying crypt device handle.
     pub fn device(&self) -> &CryptDevice {
         &self.device
@@ -198,12 +237,17 @@ impl LuksTpmTokenManager {
         &mut self.device
     }
 
+    /// Get the device path managed by this token manager.
+    pub fn device_path(&self) -> &String {
+        &self.device_path
+    }
+
     /// Validate that a passphrase can unlock the device by attempting to derive
     /// the volume key using the specified `passphrase`.
-    /// 
+    ///
     /// Parameters:
     /// * `passphrase` - The passphrase to test.
-    /// 
+    ///
     /// Errors:
     /// Returns `PuavoError` if the passphrase is invalid or internal errors occur.
     pub fn test_passphrase(
