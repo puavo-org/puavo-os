@@ -26,15 +26,15 @@ case "$LANG" in
     ;;
   fr*)
     summary='SUPPRESSION AUTOMATIQUE DES FICHIERS'
-    body="Enregistrez vos fichiers sur le réseau ou dans le cloud – L’espace disque est nettoyé automatiquement si nécessaire."
+    body="Enregistrez vos fichiers sur le réseau ou dans le cloud – l’espace disque est nettoyé automatiquement si nécessaire."
     ;;
   sv*)
     summary='AUTOMATISK RADERING AV FILER'
-    body='Spara dina filer på nätverksenheten eller i en molntjänst – Den här enhetens diskutrymme rensas automatiskt om det blir fullt.'
+    body='Spara dina filer på nätverksenheten eller i en molntjänst – den här enhetens diskutrymme rensas automatiskt om det blir fullt.'
     ;;
   *)
     summary='AUTOMATIC FILE DELETION'
-    body='Please save your files to the network drive or cloud – This device’s disk space is cleaned up automatically if it runs low.'
+    body='Please save your files to the network drive or cloud – this device’s disk space is cleaned up automatically if it runs low.'
     ;;
 esac
 
