@@ -467,6 +467,12 @@ darkdm_install()
 
   darkdm_send_sysinfo || true
 
+  for i in $(seq 5 -1 1); do
+    echo -n -e "\rRebooting in ${i}s. (Press Ctrl-C to cancel) "
+    sleep 1 || return 1
+  done
+  echo -e "\rRebooting now!                               "
+
   darkdm_reboot
 }
 
