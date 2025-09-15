@@ -204,12 +204,8 @@ rule {
   # Allow servers to write "puavoDeviceHWInfo" to all netbooting devices.
   # This is because they can act as proxies for fatclients.
   [dn children $Devices]
-    # XXX This is only needed by puavoNetbootDevices.
-    # XXX Unfortunately laptops on old versions try to write through
-    # XXX bootservers instead of directly to cloud puavo-rest/ldapmaster,
-    # XXX thus we can not yet filter by "(objectClass=puavoNetbootDevice)".
-    # XXX Apply the filter again maybe on year 2022.
-    # filter="(objectClass=puavoNetbootDevice)"
+    # This is only needed by puavoNetbootDevices.
+    filter="(objectClass=puavoNetbootDevice)"
     [attrs puavoDeviceHWInfo puavoDeviceMonitorsXML]
       by [dn children $Servers] write
       by *                      none break
@@ -432,9 +428,10 @@ rule {
   [dn exact $Devices]
     [attrs children entry objectClass ou]
       by $org_owners           read
-      by [systemgroup devices] read
       by [dn children $People] read
       by [dn children $Hosts]  read
+      by [puavo_dn examomatic] read
+      by [systemgroup devices] read
       by anonymous             auth
 }
 
@@ -461,6 +458,14 @@ rule {
       by $this_school_admins write
       by $admins             read
       by *                   none break
+}
+
+rule {
+  # Allow examomatic to read some device attributes.
+  [dn children $Devices]
+    [attrs entry objectClass puavoConf puavoDeviceType puavoDisplayName puavoHostname puavoId puavoSchool]
+      by [puavo_dn examomatic] read
+      by *                     none break
 }
 
 rule {
@@ -586,6 +591,7 @@ rule {
   [dn exact $Groups]
     [attrs children entry objectClass ou]
       by $org_owners                read
+      by [puavo_dn examomatic]      read
       by [puavo_dn puavo]           read
       by [puavo_dn statistics]      read
       by [dn children $People]      read
@@ -623,6 +629,15 @@ rule {
       by [dn children $People]  none
       by [dn children $Devices] none
       by *                      none break
+}
+
+rule {
+  # allow examomatic user to read some school information
+  [dn subtree $Groups]
+    filter="(objectClass=puavoSchool)"
+    [attrs cn displayName entry objectClass puavoId]
+      by [puavo_dn examomatic] read
+      by *                     none break
 }
 
 rule {
@@ -1060,6 +1075,14 @@ rule {
     [attrs entry objectClass puavoDomain puavoNextcloudDomain puavoOfficeDomain]
       by [puavo_dn cert-mgmt] read
       by *                    none break
+}
+
+rule {
+  # Allow examomatic to read only some organisation specific info.
+  [dn]
+    [attrs entry objectClass owner puavoOrganisationOID]
+      by [puavo_dn examomatic] read
+      by *                     none break
 }
 
 rule {

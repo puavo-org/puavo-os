@@ -18,23 +18,23 @@ fi
 case "$LANG" in
   de*)
     summary='AUTOMATISCHES LÖSCHEN VON DATEIEN'
-    body='Dateien auf diesem Computer werden möglicherweise automatisch gelöscht, wenn der verfügbare Speicherplatz knapp wird.'
+    body='Dateien bitte ins Netzlaufwerk oder in die Cloud speichern – Speicherplatz wird bei Bedarf automatisch bereinigt.'
     ;;
   fi*)
     summary='AUTOMAATTINEN TALLENNUSTILAN HALLINTA'
-    body='Tämän tietokoneen tiedostoja voidaan tarvittaessa poistaa automaattisesti, jos käytettävissä oleva levytila käy vähiin.'
+    body='Tallennathan tiedostosi verkkolevylle tai pilvipalveluun – tämän laitteen levytilaa siivotaan automaattisesti, jos se käy vähiin.'
     ;;
   fr*)
     summary='SUPPRESSION AUTOMATIQUE DES FICHIERS'
-    body="Les fichiers sur cet ordinateur peuvent être supprimés automatiquement si l'espace disque disponible devient insuffisant."
+    body="Enregistrez vos fichiers sur le réseau ou dans le cloud – l’espace disque est nettoyé automatiquement si nécessaire."
     ;;
   sv*)
     summary='AUTOMATISK RADERING AV FILER'
-    body='Filer på den här datorn kan raderas automatiskt om det tillgängliga diskutrymmet blir lågt.'
+    body='Spara dina filer på nätverksenheten eller i en molntjänst – den här enhetens diskutrymme rensas automatiskt om det blir fullt.'
     ;;
   *)
     summary='AUTOMATIC FILE DELETION'
-    body='Files on this computer may be deleted automatically if the available disk space becomes low.'
+    body='Please save your files to the network drive or cloud – this device’s disk space is cleaned up automatically if it runs low.'
     ;;
 esac
 

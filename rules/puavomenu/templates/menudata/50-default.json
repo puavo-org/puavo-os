@@ -199,6 +199,8 @@
         "com.github.xournalpp.xournalpp": {
             "tags": "default"
         },
+        "com.gitlab.tipp10.tipp10": {
+        },
         "cura-appimage": {
             "name": "Cura",
             "tags": "default",
@@ -464,6 +466,9 @@
         },
         "graphical_analysis": {
             "name": "Vernier Graphical Analysis",
+            "tags": "default"
+        },
+        "gnome-system-monitor": {
             "tags": "default"
         },
         "greenfoot": {
@@ -837,6 +842,9 @@
             "tags": "default"
         },
         "openttd": {
+            "tags": "default"
+        },
+        "org.gnome.baobab": {
             "tags": "default"
         },
         "org.cryptomator.Cryptomator": {
@@ -1332,7 +1340,7 @@
             },
             "icon": "/usr/share/icons/Faenza/mimetypes/96/x-office-spreadsheet.png",
             "tags": "education",
-            "condition": "only_teacher_admin"
+            "condition": "show_my_school_users"
         },
         "scratch": {
             "tags": "default"
@@ -1820,6 +1828,8 @@
                 "org.cryptomator.Cryptomator",
                 "veracrypt",
                 "system-config-printer",
+                "gnome-system-monitor",
+                "org.gnome.baobab",
                 "pavucontrol",
                 "org.kde.kdeconnect.app",
                 "org.kde.spectacle",
@@ -2028,6 +2038,7 @@
                 "org.kde.kwordquiz",
                 "org.kde.khangman",
                 "org.kde.ktouch",
+                "com.gitlab.tipp10.tipp10",
                 "celestia",
                 "stellarium-web",
                 "org.kde.kstars",

@@ -80,7 +80,7 @@ def iso_as_timezone(isoformat_string, logger):
   except Exception as e:
     logger.log(syslog.LOG_WARNING,
                'error converting %s to datetime object: %s' \
-                 % (isoformat_timestring, e))
+                 % (isoformat_string, e))
     raise e
 
 
@@ -481,6 +481,8 @@ class PuavoErsApplet:
 
 
   def main(self):
+    self.check_vboxdrv_exists()
+
     self.run_naksu()
     GLib.timeout_add_seconds(1, self.update_decrypt_codes)
 
@@ -490,6 +492,25 @@ class PuavoErsApplet:
       subprocess.run('puavo-ers-startvm')
 
     Gtk.main()
+
+
+  def check_vboxdrv_exists(self):
+    elapsed  = 0
+    interval = 20
+    timeout  = 300  # 5 minutes
+
+    while elapsed < timeout:
+      if os.path.exists('/dev/vboxdrv'):
+        self.logger.log(syslog.LOG_INFO, '/dev/vboxdrv found')
+        time.sleep(2)
+        return True
+      self.logger.log(syslog.LOG_WARNING, '/dev/vboxdrv not found, retrying...')
+      time.sleep(interval)
+      elapsed += interval
+
+    errmsg = '/dev/vboxdrv not found after 5 minutes'
+    self.logger.log(syslog.LOG_ERR, errmsg)
+    raise FileNotFoundError(errmsg)
 
 
   def run_naksu(self):
@@ -574,7 +595,9 @@ class PuavoErsApplet:
     # wants to try those out manually.  Showing them for old exams is probably
     # just a distraction.
 
-    self.logger.log(syslog.LOG_INFO, 'updating decrypt codes in UI')
+    self.logger.log(syslog.LOG_INFO,
+                    'updating decrypt codes for %d exams in UI' \
+                      % len(new_exams))
 
     self.exams_by_widgets = {}
     for menuitem in self.menuitems:
@@ -1378,7 +1401,8 @@ class PuavoErsExamManager (threading.Thread):
     exam_paths = [ os.path.join(KTP_JAKO_DIR, p) for p in exams ]
     unique_exam_paths = list( dict.fromkeys(exam_paths) )
     self.logger.log(syslog.LOG_INFO,
-                    'zipping exams %s into %s' % (exams, zip_path))
+                    'zipping %d exams %s into %s' \
+                      % (len(exams), exams, zip_path))
     tmpfile = "%s.tmp" % zip_path
     rm_f(tmpfile)
     with zipfile.ZipFile(tmpfile, 'w') as zipObj:
@@ -1390,7 +1414,8 @@ class PuavoErsExamManager (threading.Thread):
 
   def update_decrypt_codes_in_file(self, decrypt_codes_list):
     self.logger.log(syslog.LOG_INFO,
-                    'updating decrypt codes in %s' % self.DECRYPT_CODES_PATH)
+                    'updating %d decrypt codes in %s' \
+                      % (len(decrypt_codes_list), self.DECRYPT_CODES_PATH))
 
     tmpfile = '%s.tmp' % self.DECRYPT_CODES_PATH
     with open(tmpfile, 'w') as f:
@@ -1546,17 +1571,13 @@ class PuavoErsExamScheduler (threading.Thread):
     self.shutdown_server()
     rm_f(reboot_request_path)
 
-    shutdown_counter = 10
+    shutdown_counter = 180
     while shutdown_counter > 0:
       self.logger.log(syslog.LOG_INFO,
-        'in shutdown phase, waiting a bit (%d)' % shutdown_counter)
-      try:
-        self.ping()
-      except Exception as e:
-        # ping errors indicate server is down or going down
-        shutdown_counter -= 4
-      shutdown_counter -= 1
-      time.sleep(1)
+        'in shutdown phase, waiting for the server shutdown (%d seconds)' \
+          % shutdown_counter)
+      shutdown_counter -= 10
+      time.sleep(10)
 
     self.logger.log(syslog.LOG_NOTICE, 'shutting down now')
     cmd = [ '/usr/bin/gnome-session-quit',
@@ -1908,7 +1929,8 @@ class PuavoErsExamScheduler (threading.Thread):
     last_finished_time = None
     for student in status['students']:
       if ('examFinished' in student) and (student['examFinished'] != None):
-        finish_time = to_datetime(student['examFinished'], self.logger)
+        finish_time = iso_to_local_datetime(student['examFinished'],
+                                            self.logger)
         if not last_finished_time or last_finished_time < finish_time:
           last_finished_time = finish_time
 
@@ -1954,16 +1976,36 @@ class PuavoErsExamScheduler (threading.Thread):
 
   def update_exams_finished_time(self, status, current_exam_package,
                                  currently_loaded_exam_uuids):
+    # We update self.finish_time here.  This determines the time when we can
+    # take out the exam answers.  In case there are no active students, we
+    # look at the last finished exam time and use that.  In case of a clock
+    # drift between the host and the exam system, we might take the answers
+    # out a bit late, but that should be okay.
+    #
+    # In case there are active students, we set the finish time to the end
+    # of the day, except in case there is an upcoming new exam set, we set
+    # it to the next exam set start time minus
+    # FORCELOAD_BEFORE_START_TIMEDELTA.
+    #
+    # In case there are no students and finish time is in the future,
+    # we set it to now so that we can finish the exam and start a new one.
+
     now = datetime.datetime.now()
 
     if not self.there_are_still_active_students(status):
       # no active students
       last_finished_time = self.get_last_finished_time(status)
       if last_finished_time:
-        if self.finish_time.astimezone() < last_finished_time:
+        if now < last_finished_time:
+          self.logger.log(syslog.LOG_DEBUG,
+            'clock drift, last finished time is in the future')
+        if self.finish_time != last_finished_time:
           self.logger.log(syslog.LOG_INFO, 'no active students, exams finished')
-          self.finish_time = now
+          self.finish_time = last_finished_time
+        return
 
+      # if we are here, there should be no students are all, so set finish
+      # time to now in case it is in the future
       if self.finish_time > now:
         self.finish_time = now
       return

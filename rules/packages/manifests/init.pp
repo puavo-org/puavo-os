@@ -307,6 +307,9 @@ class packages {
     , 'xserver-xorg-video-all' ]:
       tag => [ 'tag_drivers', 'tag_debian_desktop', ];
 
+    [ 'tipp10' ]:
+      tag => [ 'tag_education', 'tag_debian_desktop', ];
+
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 

@@ -4,7 +4,7 @@ require 'digest'
 require 'fileutils'
 require 'json'
 
-SUPPORTED_LANGUAGES    = %w(English Finnish)
+SUPPORTED_LANGUAGES    = %w(English Finnish Swedish)
 SUPPORTED_WIN_VERSIONS = %w(Win10 Win11)
 
 def get_image_info(image_path)
@@ -45,14 +45,15 @@ wim_json_path = 'wim.json'
 begin
   wim = JSON.parse( IO.read(wim_json_path) )
 rescue Errno::ENOENT
-  wim = { 'images' => {} }
+  wim = { 'bootimages' => {}, 'images' => {} }
 end
 
 has_changes = false
 wim_image_files.sort.each do |image|
-  next if wim['images'][image]
   image_basename = File.basename(image)
-  wim['images'][image_basename] = get_image_info(image)
+  image_type = image_basename.match(/_Boot.wim$/) ? 'bootimages' : 'images'
+  next if wim[image_type][image_basename]
+  wim[image_type][image_basename] = get_image_info(image)
   has_changes = true
 end
 

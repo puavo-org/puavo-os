@@ -35,8 +35,8 @@ class puavomenu {
     '/etc/puavomenu/menudata/70-googleapps.json':
       content => template('puavomenu/menudata/70-googleapps.json');
 
-    '/etc/X11/Xsession.d/48puavo-menu-show-my-school-users':
-      source => 'puppet:///modules/puavomenu/48puavo-menu-show-my-school-users';
+    '/etc/X11/Xsession.d/48puavo-menu-role-based-tweaks':
+      source => 'puppet:///modules/puavomenu/48puavo-menu-role-based-tweaks';
 
     '/opt/puavomenu/icons':
       recurse => true,
