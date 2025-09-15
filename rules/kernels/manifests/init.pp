@@ -11,11 +11,11 @@ class kernels {
   #   Debian Buster:   current
   #   Debian Bullseye: recent
   #   Debian Bookworm: crisp
-  #   Debian Trixie:   ?
+  #   Debian Trixie:   modern
 
   $kernel_versions = {
-    'default' => '6.12.41+deb13-amd64',
-    # XXX 'crisp'   => '6.12.9+bpo-amd64',
+    'default' => '6.12.43+deb13-amd64',
+    'modern'  => '6.16.3+deb13-amd64',
   }
   $kernel_aliases = keys($kernel_versions)
 

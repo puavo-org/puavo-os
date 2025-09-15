@@ -854,8 +854,13 @@ class packages {
   @packages::kernels::kernel_package {
     'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.41+deb13-amd64',
-      version      => '6.12.41+deb13-amd64';
+      package_name => 'linux-image-6.12.43+deb13-amd64',
+      version      => '6.12.43+deb13-amd64';
+
+    'modern':
+      dkms_modules => [],  # XXX what could work with this?
+      package_name => 'linux-image-6.16.3+deb13-amd64',
+      version      => '6.16.3+deb13-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such
