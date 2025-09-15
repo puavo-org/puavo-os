@@ -1,3 +1,4 @@
+use libcryptsetup_rs::consts::flags::CryptActivate;
 use libcryptsetup_rs::consts::vals::EncryptionFormat;
 use libcryptsetup_rs::{CryptDevice, CryptInit, TokenInput};
 use log::debug;
@@ -193,6 +194,25 @@ impl LuksTpmTokenManager {
         }
 
         Ok(())
+    }
+
+    /// Tests the validity of the specified token.
+    ///
+    /// Parameters:
+    /// * `token_id` - The identifier of the token to test.
+    ///
+    /// Errors:
+    /// Returns `PuavoError` if the token is invalid or internal errors occur.
+    pub fn test_token(&mut self, token_id: u32) -> bool {
+        self.device
+            .token_handle()
+            .activate_by_token::<()>(
+                None,
+                Some(token_id),
+                None,
+                CryptActivate::empty(),
+            )
+            .is_ok()
     }
 
     /// Remove a TPM token by its ID.
