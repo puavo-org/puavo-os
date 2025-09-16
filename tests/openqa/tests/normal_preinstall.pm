@@ -18,17 +18,16 @@ sub run {
   send_key('ret', wait_screen_change => 1);
   record_info('Puavo', 'Preinstalling...');
 
-  assert_screen('preinstall-done', timeout => 300);
-  record_info('Puavo', 'Preinstallation done');
+  assert_screen('grub-installation-done', timeout => 300);
+  record_info('Puavo', 'Grub installation done.');
 
-  # System should now reboot itself.  Press F2 every second until BIOS menu
-  # appears for maximum three minutes.  If the boot menu does not appear,
-  # this test fails.
-  send_key_until_needlematch('bios', 'f2', 180);
-  record_info('UEFI', 'BIOS setup reached');
+  assert_screen('install-success', timeout => 300);
+  record_info('Puavo', 'Installation successful.');
 
-  # Installation done.  In order to save the disk for other tests, we need
-  # to shutdown.
+  assert_screen('rebooting-after-install', timeout => 300);
+  record_info('Puavo', 'Rebooting after installation.');
+
+  # In order to save the disk for other tests, we need to shutdown.
   power('off');
 }
 
