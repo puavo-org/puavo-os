@@ -5,6 +5,7 @@ set -eu
 status=0
 
 for vmlinuz in /boot/vmlinuz-*; do
+  test -h "$vmlinuz" && continue
   kver=${vmlinuz#/boot/vmlinuz-}
   echo "Building initrd for kernel version ${kver}"
   dracut --force --kver "$kver" || status=1
