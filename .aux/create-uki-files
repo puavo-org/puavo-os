@@ -15,6 +15,7 @@ key_folder=$2
 image_file=$3
 
 for kernel_image in "$boot_folder"/vmlinuz-*; do
+  test -h "$kernel_image" && continue
   kernel_version=$(basename "$kernel_image" | sed 's/vmlinuz-//')
   output_path="${boot_folder}/kernel-${kernel_version}.uki.efi"
   .aux/create-uki "$boot_folder" "$key_folder" "$kernel_version" "$output_path"
