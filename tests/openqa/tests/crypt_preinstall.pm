@@ -32,9 +32,9 @@ sub run {
   send_key_until_needlematch('boot-menu', 'f2', 300);
   record_info('UEFI', 'Boot menu reached, ready to boot into preinstallation');
 
-  # We're done, in order to save the disk for other tests,
-  # we need to shutdown.
-  power('off');
+  # In order to save the disk for other tests, we need to shutdown.
+  power('acpi');
+  assert_shutdown();
 }
 
 sub test_flags {

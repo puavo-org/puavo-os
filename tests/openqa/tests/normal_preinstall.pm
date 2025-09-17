@@ -28,7 +28,8 @@ sub run {
   record_info('Puavo', 'Rebooting after installation.');
 
   # In order to save the disk for other tests, we need to shutdown.
-  power('off');
+  power('acpi');
+  assert_shutdown();
 }
 
 sub test_flags {
