@@ -548,18 +548,7 @@ darkdm_update()
     return 1
   fi
 
-  if grep -qw puavo.hosttype=unregistered /proc/cmdline; then
-    # We have booted as unregistered, which means that we probably do
-    # not have booted the correct image (this can happen in case this
-    # is registered to a different organisation than the bootserver and
-    # the bootserver does not know about this host).
-    # Update in a "normal way".
-    if ! /usr/lib/puavo-ltsp-install/update-configuration; then
-      echo 'Configuration update errors, yet continuing...' >&2
-      update_status=1
-    fi
-    /usr/lib/puavo-ltsp-install/update-images false || update_status=1
-  elif image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
+  if image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
     if mountpoint -q /installimages; then
       /usr/sbin/puavo-install-and-update-ltspimages \
         --install-from-file "/installimages/${image_name}" "$image_name" \
