@@ -10,11 +10,20 @@ pub enum PuavoError {
     #[error("Stored recovery key is invalid and cannot control LUKS devices")]
     InvalidRecoveryKey,
 
+    #[error("Recovery key does not exist")]
+    NoRecoveryKey,
+
     #[error(transparent)]
     IoError(#[from] io::Error),
 
     #[error(transparent)]
     LibcryptError(#[from] LibcryptErr),
+
+    #[error("Configuration error: {0}")]
+    ConfigurationError(serde_json::Error),
+
+    #[error("Enrollment state error: {0}")]
+    EnrollmentStateError(serde_json::Error),
 
     #[error("{0}")]
     ShellError(String),
