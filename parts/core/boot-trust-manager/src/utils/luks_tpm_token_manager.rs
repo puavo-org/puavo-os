@@ -47,10 +47,6 @@ pub struct LuksTpmEnrollmentPolicy {
     #[serde(rename = "tpm2-pin", default)]
     use_pin: bool,
 
-    /// Wipe any existing TPM2 token slot before enrolling a new one.
-    #[serde(rename = "wipe-tpm2-slot", default)]
-    wipe_tpm2_slot: bool,
-
     /// Optional path to a new TPM2 public key used for policy verification.
     #[serde(rename = "tpm2-public-key-path", default)]
     public_key_path: Option<String>,
@@ -133,6 +129,7 @@ impl LuksTpmTokenManager {
     /// Parameters:
     /// * `key` - The passphrase used to control the LUKS device.
     /// * `policy` - The enrollment policy specifying PCRs, PIN usage, and other options.
+    /// * `wipe` - If true, any existing TPM token will be removed before enrolling the new one.
     ///
     /// Errors:
     /// Returns `PuavoError` if enrollment fails.
@@ -140,12 +137,13 @@ impl LuksTpmTokenManager {
         &self,
         key: &String,
         policy: &LuksTpmEnrollmentPolicy,
+        wipe: bool
     ) -> Result<(), PuavoError> {
         let mut arguments: Vec<String> = Vec::new();
         arguments.push(self.device_path.clone());
         arguments.push("--tpm2-device=auto".to_string());
 
-        if policy.wipe_tpm2_slot {
+        if wipe {
             arguments.push("--wipe-slot=tpm2".to_string());
         }
 
