@@ -104,7 +104,7 @@ pub struct EnrollmentConfigurator {
 }
 
 impl EnrollmentConfigurator {
-    pub fn load_all() -> Result<Vec<Self>, PuavoError> {
+    pub fn new() -> Result<Vec<Self>, PuavoError> {
         debug!("Loading enrollments from {}", CONFIGURATION_BASE_DIRECTORY);
 
         let directory_reader = match fs::read_dir(CONFIGURATION_BASE_DIRECTORY)
@@ -162,6 +162,7 @@ impl EnrollmentConfigurator {
 
         if tokens.is_empty() {
             // No tokens present, treat as invalid state
+            debug!("Device {} has no TPM tokens", token_manager.device_path());
             return Ok(true);
         }
 
@@ -238,10 +239,6 @@ impl EnrollmentConfigurator {
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
     ) -> Result<(), PuavoError> {
-        info!(
-            "Applying {} enrollment item(s)",
-            self.configuration.enrollments.len()
-        );
         let resources = boot_vault.resources().clone();
         let recovery_key = resources.read_recovery_key()?.clone();
 
@@ -254,6 +251,11 @@ impl EnrollmentConfigurator {
         primary_partition
             .test_passphrase(&recovery_key)
             .map_err(|_| PuavoError::InvalidRecoveryKey)?;
+
+        info!(
+            "Applying {} enrollment(s)",
+            self.configuration.enrollments.len()
+        );
 
         // Enroll to the boot vault first
         Self::wipe_and_enroll_to_device(
@@ -285,6 +287,7 @@ impl Configurator for EnrollmentConfigurator {
         let resources = boot_vault.resources();
 
         if self.any_configuration_changed(resources)? {
+            debug!("Enrollment configurations have changed");
             return Ok(true);
         }
 
@@ -299,8 +302,9 @@ impl Configurator for EnrollmentConfigurator {
         &mut self,
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
-        _display: &Box<dyn UserDisplay>,
+        display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
+        let _ = display.show_message("Enrolling...");
         self.enroll_all(boot_vault, primary_partition)
     }
 
