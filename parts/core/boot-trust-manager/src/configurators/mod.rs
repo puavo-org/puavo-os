@@ -3,9 +3,7 @@ use crate::configurators::recovery::RecoveryConfigurator;
 use crate::devices::boot_vault::BootVault;
 use crate::display::UserDisplay;
 use crate::error::PuavoError;
-use crate::{
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
-};
+use crate::utils::luks_tpm_token_manager::LuksTpmTokenManager;
 
 pub mod enrollment;
 pub mod recovery;
@@ -17,18 +15,18 @@ pub mod recovery;
 /// - `Ok(configurators)` containing configurators that are present and loaded.
 /// - `Err(error)` if any configurator failed to load due to internal errors.
 pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
-    fn configurator<'a, T: Configurator + 'a>(
-        configurator: Option<T>,
-    ) -> Option<Box<dyn Configurator + 'a>> {
-        configurator.map(|value| Box::new(value) as Box<dyn Configurator>)
+    fn configurators<'a, T: Configurator + 'a>(
+        configurators: Vec<T>,
+    ) -> impl Iterator<Item = Box<dyn Configurator + 'a>> {
+        configurators
+            .into_iter()
+            .map(|configurator| Box::new(configurator) as Box<dyn Configurator>)
     }
 
-    let configurators = vec![
-        configurator(EnrollmentConfigurator::new()?),
-        configurator(RecoveryConfigurator::new()?),
-    ];
+    let configurators = configurators(EnrollmentConfigurator::new()?)
+        .chain(configurators(RecoveryConfigurator::new()?));
 
-    Ok(configurators.into_iter().filter_map(|value| value).collect())
+    Ok(configurators.collect())
 }
 
 /// Trait implemented by all runtime configurators executed by the
@@ -70,7 +68,7 @@ pub trait Configurator {
         &mut self,
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
-        display: &Box<dyn UserDisplay>
+        display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError>;
 
     /// Return the filename of the trigger file corresponding to this configurator.
