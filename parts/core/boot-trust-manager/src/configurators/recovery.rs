@@ -67,7 +67,7 @@ impl RecoveryConfigurator {
         display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
         info!("Accessing recovery key from boot vault");
-        let recovery_key = boot_vault.read_recovery_key()?;
+        let recovery_key = boot_vault.resources().read_recovery_key()?;
         info!("Successfully read recovery key");
 
         let _ = display
