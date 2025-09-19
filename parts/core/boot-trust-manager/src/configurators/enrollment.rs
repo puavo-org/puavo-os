@@ -1,9 +1,4 @@
-use std::{
-    collections::HashMap,
-    fs,
-    hash::Hash,
-    io::ErrorKind,
-};
+use std::{collections::HashMap, fs, hash::Hash, io::ErrorKind};
 
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
@@ -166,19 +161,20 @@ impl EnrollmentConfigurator {
             return Ok(true);
         }
 
-        let token_failed = tokens
-            .keys()
-            .find(|token_id| !token_manager.test_token(**token_id))
-            .inspect(|token_id| {
-                debug!(
-                    "Token {} on device {} failed validation",
-                    token_id,
-                    token_manager.device_path()
-                )
-            })
-            .is_some();
+        debug!("Validating tokens on device {}", token_manager.device_path());
+        let mut any_invalid_token = false;
 
-        Ok(token_failed)
+        for token_id in tokens.keys() {
+            if token_manager.test_token(*token_id) {
+                debug!("Token {} is valid", token_id);
+                continue;
+            }
+
+            debug!("Token {} is invalid", token_id);
+            any_invalid_token = true;
+        }
+
+        Ok(any_invalid_token)
     }
 
     /// Compare the desired set (from configuration) with the stored state.
