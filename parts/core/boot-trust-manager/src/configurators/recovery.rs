@@ -35,24 +35,21 @@ impl RecoveryConfigurator {
     /// - `Ok(Some(Self))` when the configuration file exists and is valid.
     /// - `Ok(None)` when the file is absent (configurator disabled).
     /// - `Err(error)` if the file exists but cannot be read or parsed.
-    pub fn new() -> Result<Option<Self>, PuavoError> {
+    pub fn new() -> Result<Vec<Self>, PuavoError> {
         let config_json = match fs::read_to_string(CONFIGURATION_PATH) {
             Ok(content) => content,
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
                 // Configuration file not found, skip enrollment
-                return Ok(None);
+                return Ok(vec![]);
             }
             Err(error) => {
                 return Err(PuavoError::IoError(error));
             }
         };
         let configuration: RecoveryConfiguration =
-            serde_json::from_str(&config_json).map_err(|_| {
-                PuavoError::InvalidData(
-                    "Failed to parse recovery configuration".into(),
-                )
-            })?;
-        Ok(Some(Self { configuration }))
+            serde_json::from_str(&config_json)
+                .map_err(PuavoError::ConfigurationError)?;
+        Ok(vec![Self { configuration }])
     }
 
     /// Display the recovery key to the user for a fixed duration.
