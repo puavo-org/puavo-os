@@ -33,7 +33,7 @@ pub struct LuksTpmToken {
 }
 
 /// Enrollment policy used when creating a TPM2 token via `systemd-cryptenroll`.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash)]
 pub struct LuksTpmEnrollmentPolicy {
     /// PCR expressions for direct TPM binding (e.g. ["7:sha256", "15:sha256=<value>"]).
     #[serde(rename = "tpm2-pcrs")]

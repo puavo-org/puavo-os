@@ -67,6 +67,7 @@ pub struct BootVault {
     loop_device: Option<LoopDevice>,
     luks_device: Option<LuksTpmTokenManager>,
     mountpoint: Option<String>,
+    resources: Option<BootVaultResources>,
     unlock_method: Option<BootVaultUnlockMethod>,
 }
 
@@ -199,6 +200,7 @@ impl BootVault {
             .mount(VAULT_MOUNTPOINT, VAULT_FILESYSTEM_TYPE)?;
 
         self.mountpoint = Some(VAULT_MOUNTPOINT.into());
+        self.resources = Some(BootVaultResources::new(VAULT_MOUNTPOINT));
         Ok(())
     }
 
@@ -254,129 +256,6 @@ impl BootVault {
         Ok(())
     }
 
-    /// Write a property with the specified value into the mounted vault.
-    ///
-    /// Parameters:
-    /// - `key`: The name of the property to write.
-    /// - `value`: The value to write.
-    ///
-    /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
-    /// - `PuavoError::IoError` if writing fails.
-    fn write_property(
-        &self,
-        key: &str,
-        value: String,
-    ) -> Result<(), PuavoError> {
-        debug!("Writing property '{}' to boot vault", key);
-
-        let mountpoint =
-            self.mountpoint.as_ref().ok_or(PuavoError::VaultNotMounted)?;
-
-        let property_path = PathBuf::from(mountpoint).join(key);
-
-        fs::write(property_path, value)
-            .map_err(|error| PuavoError::IoError(error))
-    }
-
-    /// Read the specified property from the mounted vault.
-    ///
-    /// Parameters:
-    /// - `key`: The name of the property to read.
-    ///
-    /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
-    /// - `PuavoError::IoError` if reading fails.
-    fn read_property(&self, key: &str) -> Result<String, PuavoError> {
-        debug!("Reading property '{}' from boot vault", key);
-
-        let mountpoint =
-            self.mountpoint.as_ref().ok_or(PuavoError::VaultNotMounted)?;
-
-        let property_path = PathBuf::from(mountpoint).join(key);
-
-        fs::read_to_string(property_path).map_err(PuavoError::IoError)
-    }
-
-    /// Set whether a PIN code is required unlock.
-    ///
-    /// Parameters:
-    /// - `required`: Whether a PIN code is required.
-    ///
-    /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
-    /// - `PuavoError::IoError` if writing fails.
-    pub fn set_pin_required(&self, required: bool) -> Result<(), PuavoError> {
-        let value = if required { "1" } else { "0" }.to_string();
-        self.write_property("pin-required", value)
-    }
-
-    /// Check whether a PIN code is required to unlock.
-    ///
-    /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
-    /// - `PuavoError::IoError` if reading fails.
-    /// - `PuavoError::InvalidData` if the read value is not valid.
-    pub fn is_pin_required(&self) -> Result<bool, PuavoError> {
-        let value = self.read_property("pin-required")?;
-        match value.trim() {
-            "1" => Ok(true),
-            "0" => Ok(false),
-            other => Err(PuavoError::InvalidData(format!(
-                "Invalid PIN-required value: {}",
-                other
-            ))),
-        }
-    }
-
-    /// Write a recovery key file into the mounted vault.
-    ///
-    /// Parameters:
-    /// - `recovery_key`: The key material to write.
-    ///
-    /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
-    /// - `PuavoError::IoError` if writing fails.
-    pub fn write_recovery_key(
-        &self,
-        recovery_key: String,
-    ) -> Result<(), PuavoError> {
-        self.write_property(VAULT_RECOVERY_KEY, recovery_key)
-    }
-
-    /// Read the recovery key from the mounted vault.
-    ///
-    /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
-    /// - `PuavoError::IoError` if reading fails.
-    pub fn read_recovery_key(&self) -> Result<String, PuavoError> {
-        self.read_property(VAULT_RECOVERY_KEY)
-    }
-
-    /// Set the version of the boot vault image format.
-    ///
-    /// Parameters:
-    /// - `version`: The version string to write.
-    ///     
-    /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
-    /// - `PuavoError::IoError` if writing fails.
-    pub fn set_version(&self, version: usize) -> Result<(), PuavoError> {
-        self.write_property("version", version.to_string())
-    }
-
-    /// Get the version of the boot vault image format.
-    ///
-    /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
-    /// - `PuavoError::IoError` if reading fails.
-    /// - `PuavoError::ParseIntError` if the version string is not a valid integer.
-    pub fn get_version(&self) -> Result<usize, PuavoError> {
-        let version_string = self.read_property("version")?;
-        let version = version_string.trim().parse::<usize>()?;
-        Ok(version)
-    }
-
     /// Unmount and tear down the vault, closing the LUKS device and detaching
     /// the loop device.
     pub fn unmount(&mut self) -> Result<(), PuavoError> {
@@ -412,6 +291,13 @@ impl BootVault {
         Ok(())
     }
 
+    /// Returns a reference to the resources for interacting with the mounted vault.
+    pub fn resources(&self) -> &BootVaultResources {
+        self.resources.as_ref().expect(
+            "Attempted to use boot vault resources when it was not mounted",
+        )
+    }
+
     /// Returns an immutable reference to the LUKS token manager for the vault.
     pub fn device(&self) -> &LuksTpmTokenManager {
         self.luks_device.as_ref().expect(
@@ -424,6 +310,156 @@ impl BootVault {
         self.luks_device.as_mut().expect(
             "Attempted to use boot vault device when it was not mounted",
         )
+    }
+}
+
+/// Provides access to readable and writable properties within the boot vault.
+#[derive(Clone)]
+pub struct BootVaultResources {
+    mountpoint: PathBuf,
+}
+
+impl BootVaultResources {
+    /// Construct resource helper for the vault mounted at the specified path.
+    pub fn new<T: AsRef<Path>>(mountpoint: T) -> Self {
+        Self {
+            mountpoint: mountpoint.as_ref().to_path_buf()
+        }
+    }
+
+    /// Write a property with the specified value into the mounted vault.
+    ///
+    /// Parameters:
+    /// - `key`: The name of the property to write.
+    /// - `value`: The value to write.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if writing fails.
+    pub fn write_property(
+        &self,
+        key: &str,
+        value: String,
+    ) -> Result<(), PuavoError> {
+        debug!("Writing property '{}' to boot vault", key);
+
+        let property_path = self.mountpoint.join(key);
+
+        fs::write(property_path, value)
+            .map_err(|error| PuavoError::IoError(error))
+    }
+
+    /// Read the specified property from the mounted vault.
+    ///
+    /// Parameters:
+    /// - `key`: The name of the property to read.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if reading fails.
+    pub fn read_property(
+        &self,
+        key: &str,
+    ) -> Result<Option<String>, PuavoError> {
+        debug!("Reading property '{}' from boot vault", key);
+
+        let property_path = self.mountpoint.join(key);
+
+        match fs::read_to_string(property_path) {
+            Ok(value) => Ok(Some(value)),
+            Err(error) => {
+                if error.kind() == io::ErrorKind::NotFound {
+                    return Ok(None);
+                } else {
+                    Err(error.into())
+                }
+            }
+        }
+    }
+
+    /// Set whether a PIN code is required unlock.
+    ///
+    /// Parameters:
+    /// - `required`: Whether a PIN code is required.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if writing fails.
+    pub fn set_pin_required(&self, required: bool) -> Result<(), PuavoError> {
+        let value = if required { "1" } else { "0" }.to_string();
+        self.write_property("pin-required", value)
+    }
+
+    /// Check whether a PIN code is required to unlock.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if reading fails.
+    /// - `PuavoError::InvalidData` if the read value is not valid.
+    pub fn is_pin_required(&self) -> Result<bool, PuavoError> {
+        let value = self.read_property("pin-required")?.unwrap_or("0".into());
+        match value.trim() {
+            "1" => Ok(true),
+            "0" => Ok(false),
+            other => Err(PuavoError::InvalidData(format!(
+                "Invalid PIN-required value: {}",
+                other
+            ))),
+        }
+    }
+
+    /// Write a recovery key file into the mounted vault.
+    ///
+    /// Parameters:
+    /// - `recovery_key`: The key material to write.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if writing fails.
+    pub fn write_recovery_key(
+        &self,
+        recovery_key: String,
+    ) -> Result<(), PuavoError> {
+        self.write_property(VAULT_RECOVERY_KEY, recovery_key)
+    }
+
+    /// Read the recovery key from the mounted vault.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if reading fails.
+    pub fn read_recovery_key(&self) -> Result<String, PuavoError> {
+        self.read_property(VAULT_RECOVERY_KEY)?.ok_or(PuavoError::NoRecoveryKey)
+    }
+
+    /// Set the version of the boot vault image format.
+    ///
+    /// Parameters:
+    /// - `version`: The version string to write.
+    ///     
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if writing fails.
+    pub fn set_version(&self, version: usize) -> Result<(), PuavoError> {
+        self.write_property("version", version.to_string())
+    }
+
+    /// Get the version of the boot vault image format.
+    ///
+    /// Errors:
+    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::IoError` if reading fails.
+    /// - `PuavoError::ParseIntError` if the version string is not a valid integer.
+    pub fn get_version(&self) -> Result<usize, PuavoError> {
+        let version_string =
+            self.read_property("version")?.unwrap_or("0".into());
+        let version = version_string.trim().parse::<usize>()?;
+        Ok(version)
+    }
+
+    /// Return the mountpoint of the boot vault.
+    pub fn mountpoint(&self) -> &PathBuf {
+        &self.mountpoint
     }
 }
 
