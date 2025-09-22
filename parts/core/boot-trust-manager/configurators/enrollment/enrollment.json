@@ -1,8 +1,0 @@
-{
-  "enrollment-policy": {
-    "tpm2-pcrs": [ "15:sha256" ],
-    "tpm2-public-key-pcrs": [],
-    "tpm2-pin": false,
-    "wipe-tpm2-slot": false
-  }
-}
