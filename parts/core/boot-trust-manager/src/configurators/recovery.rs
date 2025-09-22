@@ -79,8 +79,7 @@ impl RecoveryConfigurator {
 }
 
 impl Configurator for RecoveryConfigurator {
-    /// Returns whether this configurator is permitted to execute.
-    fn allowed(
+    fn activate(
         &self,
         boot_vault: &mut BootVault,
         _primary_partition: &mut LuksTpmTokenManager,
@@ -113,8 +112,13 @@ impl Configurator for RecoveryConfigurator {
         self.recover(boot_vault, display)
     }
 
+    /// Return a friendly name for this configurator.
+    fn name(&self) -> &'static str {
+        "Recovery"
+    }
+
     /// Return the trigger filename for this configurator.
-    fn filename(&self) -> Result<String, PuavoError> {
-        Ok(self.configuration.filename.clone())
+    fn trigger_filename(&self) -> Option<String> {
+        Some(self.configuration.filename.clone())
     }
 }
