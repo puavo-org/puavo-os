@@ -28,9 +28,6 @@ pub enum PuavoError {
     #[error("{0}")]
     ShellError(String),
 
-    #[error("Boot vault is not mounted")]
-    VaultNotMounted,
-
     #[error("LUKS error: {0}")]
     LuksError(String),
 

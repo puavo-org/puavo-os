@@ -8,17 +8,17 @@ use log::{debug, error, info};
 use tempfile::Builder;
 
 use crate::{
-    configurators::{Configurator, configurators},
+    configurators::{configurators, Configurator},
     devices::{
         block_device::{BlockDevice, GenericBlockDevice},
         boot_vault::{BootVault, VAULT_PATH},
         efi_boot_device::EFIBootDevice,
     },
-    display::{UserDisplay, choose_display},
+    display::{choose_display, UserDisplay},
     error::PuavoError,
     utils::{
         luks_tpm_token_manager::LuksTpmTokenManager, mount::MountGuard,
-        power::reboot_or_halt, udev::filesystem_type,
+        udev::filesystem_type,
     },
 };
 
@@ -30,7 +30,6 @@ use crate::ApplicationConfiguration;
 /// - Detect an active configurator.
 /// - Safely mount and unmount the EFI partition and boot vault image.
 /// - Invoke configurators to manage LUKS TPM tokens.
-/// - Decide whether the system should reboot after configuration.
 ///
 /// Behavior is controlled via `ApplicationConfiguration`.
 pub struct BootTrustManager {
@@ -43,17 +42,15 @@ impl BootTrustManager {
         Self { configuration }
     }
 
-    /// Finds the first active configurator (if any), shows progress on the
-    /// selected display (console or Plymouth), executes the configurator, and
-    /// triggers a reboot unless `--no-reboot` was set.
+    /// Finds active configurators, shows progress on the
+    /// selected display (console or Plymouth), executes any activated
+    /// configurators sequentially.
     ///
-    /// If no configurators are active, this returns without rebooting.
+    /// If no configurators are active, this returns immediately.
     pub fn manage(&self) {
-        // Run only the first successfully loaded configurator per boot.
-        // Each configurator must remove its own trigger file
-        // regardless of success to avoid reboot loops.
-        // If no configurator is available, exit immediately without rebooting.
-        let mut configurators = match configurators() {
+        // Process all activated configurators sequentially.
+        // If no configurator is available, exit immediately.
+        let configurators = match configurators() {
             Ok(configurators) => configurators,
             Err(error) => {
                 error!("Failed to load configurators: {}", error);
@@ -62,50 +59,34 @@ impl BootTrustManager {
         };
 
         if configurators.is_empty() {
-            info!("No configurator activated, exiting...");
+            info!("No configurators found, exiting...");
             return;
         }
 
         let display = choose_display(self.configuration.force_console);
-        let _ = display.show_message("Configuring...");
 
-        let configurator = configurators.remove(0);
-
-        let reboot = match Self::configure(&display, configurator) {
-            Ok(configured) => configured,
-            Err(error) => {
-                let _ = display
-                    .show_message(&format!("Configuration failed: {}", error));
-                true
-            }
-        };
-
-        if reboot && !self.configuration.no_reboot {
-            let _ = display.show_message("Rebooting...");
-            reboot_or_halt();
-        }
+        let _ = Self::configure(&display, configurators).inspect_err(|error| {
+            let _ = display
+                .show_message(&format!("Configuration failed: {}", error));
+        });
     }
 
-    /// Mount the boot vault and delegate control to the given configurator.
-    ///
-    /// The configurator trigger file must have been deleted beforehand to avoid
-    /// reboot loops. The boot vault will be unmounted automatically when the
-    /// guard is dropped.
+    /// Mount the boot vault and delegate control to the given configurators.
     ///
     /// Parameters:
     /// - `display`: display instance to show progress and messages.
     /// - `efi_partition_mount_path`: mount point of the EFI system partition.
     /// - `primary_partition_device_path`: path to the primary LUKS device (e.g. `/dev/nvme0n1p3`).
-    /// - `configurator`: configurator instance to run.
+    /// - `configurators`: configurator instances to run.
     ///
     /// Errors:
     /// Returns `PuavoError` if the boot vault cannot be mounted, the LUKS TPM
-    /// managers cannot be created, or the configurator fails.
+    /// managers cannot be created, or a configurator fails.
     fn unlock_boot_vault_and_configure(
         display: &Box<dyn UserDisplay>,
         efi_partition_mount_path: &Path,
         primary_partition_device_path: String,
-        mut configurator: Box<dyn Configurator>,
+        configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
         let boot_vault_image_path = efi_partition_mount_path.join(VAULT_PATH);
         info!("Boot vault image path: {:?}", boot_vault_image_path);
@@ -120,11 +101,31 @@ impl BootTrustManager {
                 primary_partition_device_path,
             )?;
 
-        info!("Starting primary partition configuration");
-        if configurator
-            .allowed(&mut boot_vault, &mut primary_partition_manager)?
-        {
-            info!("Configurator allowed configuration, proceeding");
+        info!("Starting configuration...");
+        for mut configurator in configurators {
+            debug!("Processing configurator '{}'", configurator.name());
+
+            if let Some(trigger_filename) = configurator.trigger_filename() {
+                if let Err(error) = Self::find_and_delete_configurator_file(
+                    efi_partition_mount_path,
+                    &trigger_filename,
+                ) {
+                    error!(
+                        "Skipping configurator due to error deleting its trigger file '{}': {}",
+                        trigger_filename, error
+                    );
+                    continue;
+                }
+            }
+
+            if !configurator
+                .activate(&mut boot_vault, &mut primary_partition_manager)?
+            {
+                debug!("Configurator did not activate");
+                continue;
+            }
+
+            info!("Configurator activated");
             configurator.configure(
                 &mut boot_vault,
                 &mut primary_partition_manager,
@@ -132,9 +133,6 @@ impl BootTrustManager {
             )?;
             info!("Configuration completed");
             let _ = display.show_message("Configuration completed");
-        } else {
-            info!("Configurator refused configuration");
-            let _ = display.show_message("Configuration refused");
         }
 
         Ok(())
@@ -147,17 +145,15 @@ impl BootTrustManager {
     ///
     /// Parameters:
     /// - `loader_extra_directory`: path to the loader's extra directory.
-    /// - `configurator`: configurator to find.
+    /// - `filename`: configurator file to locate.
     ///
     /// Errors:
     /// Returns `PuavoError` if existence checks fail.
-    fn find_configurator_from_loader_extra_directory(
+    fn find_configurator_file_from_loader_extra_directory(
         loader_extra_directory: PathBuf,
-        configurator: &Box<dyn Configurator>,
+        filename: &String,
     ) -> Result<PathBuf, PuavoError> {
-        let configurator_filename = configurator.filename()?;
-        let configurator_path =
-            loader_extra_directory.join(configurator_filename);
+        let configurator_path = loader_extra_directory.join(filename);
 
         configurator_path.try_exists()?;
         Ok(configurator_path)
@@ -168,14 +164,14 @@ impl BootTrustManager {
     ///
     /// Parameters:
     /// - `efi_partition_mount_path`: mount point of the EFI system partition.
-    /// - `configurator`: configurator to find.
+    /// - `filename`: the configurator file to locate.
     ///
     /// Errors:
     /// Returns `PuavoError` if the loader or extra directory cannot be resolved
     /// or the configurator path cannot be found.
-    fn find_configurator(
+    fn find_configurator_file(
         efi_partition_mount_path: &Path,
-        configurator: &Box<dyn Configurator>,
+        filename: &String,
     ) -> Result<PathBuf, PuavoError> {
         let loader_path = EFIBootDevice::loader_path(
             &efi_partition_mount_path.to_path_buf(),
@@ -184,49 +180,44 @@ impl BootTrustManager {
         let loader_extra_directory =
             EFIBootDevice::loader_extra_directory_path(&loader_path)?;
         info!("EFI loader extra directory path: {:?}", loader_extra_directory);
-        Self::find_configurator_from_loader_extra_directory(
+        Self::find_configurator_file_from_loader_extra_directory(
             loader_extra_directory,
-            &configurator,
+            &filename,
         )
     }
 
-    /// Delete the configurator trigger file from the EFI partition to prevent
-    /// repeated runs across reboots.
+    /// Delete the configurator file from the EFI partition.
     ///
     /// Parameters:
     /// - `efi_partition_mount_path`: mount point of the EFI system partition.
-    /// - `configurator`: configurator whose trigger file to delete.
+    /// - `filename`: the configurator file to delete.
     ///
     /// Errors:
     /// Returns `PuavoError` if the file cannot be located or removed.
     fn find_and_delete_configurator_file(
         efi_partition_mount_path: &Path,
-        configurator: &Box<dyn Configurator>,
+        filename: &String,
     ) -> Result<(), PuavoError> {
-        let configurator_path =
-            Self::find_configurator(efi_partition_mount_path, configurator)?;
-        info!(
-            "Disabling configurator by deleting its file: {:?}",
-            configurator_path
-        );
-        fs::remove_file(&configurator_path).map_err(|error| error.into())
+        let configurator_file_path =
+            Self::find_configurator_file(efi_partition_mount_path, filename)?;
+        info!("Removing configurator file: {:?}", configurator_file_path);
+        fs::remove_file(&configurator_file_path).map_err(|error| error.into())
     }
 
     /// Find the current EFI boot device, mount its EFI partition, unlock the
-    /// boot vault, and run the given configurator if its trigger file is found.
+    /// boot vault, and run any activated configurators.
     ///
     /// Behavior:
     /// 1. Find the current EFI boot device and enumerate its partitions.
     /// 2. Identify the booted EFI and primary LUKS partitions.
     /// 3. Mount the EFI partition to a temporary directory.
-    /// 4. Remove the configurator trigger file to avoid reboot loops.
-    /// 5. Unlock the boot vault from EFI partition and run the configurator (see `unlock_boot_vault_and_configure`).
-    /// 6. Close the boot vault and unmount EFI partition.
+    /// 4. Locate and remove configurator trigger files.
+    /// 5. Unlock the boot vault and run all activated configurators sequentially (see `unlock_boot_vault_and_configure`).
+    /// 6. Close the boot vault and unmount the EFI partition.
     ///
     /// Returns:
-    /// - `Ok(true)` if a configurator ran and the system should reboot.
-    /// - `Ok(false)` if configuration was canceled early (e.g. unable to locate the trigger file) and no reboot is needed.
-    /// - `Err(error)` if a failure occurred after deleting the trigger file.
+    /// - `Ok(())` on success.
+    /// - `Err(error)` if a failure occurred during mounting, unlocking, or configuration.
     ///
     /// Safety:
     /// The temporary directory's recursive delete is disabled to avoid risking
@@ -234,8 +225,8 @@ impl BootTrustManager {
     /// `MountGuard` on drop.
     fn configure(
         display: &Box<dyn UserDisplay>,
-        configurator: Box<dyn Configurator>,
-    ) -> Result<bool, PuavoError> {
+        configurators: Vec<Box<dyn Configurator>>,
+    ) -> Result<(), PuavoError> {
         // Ensure the loop kernel module is loaded
         let _ = Command::new("modprobe").arg("loop").status();
 
@@ -290,30 +281,12 @@ impl BootTrustManager {
         // Unmount the EFI partition automatically at the end of scope
         let _efi_mount_guard = MountGuard::new(efi_partition_mount_path);
 
-        // Delete the configurator file to avoid a reboot loop
-        let configurator_path_result = Self::find_and_delete_configurator_file(
-            efi_partition_mount_path,
-            &configurator,
-        );
-
-        if let Err(error) = configurator_path_result {
-            let _ = display.show_message(
-                format!("Configuration canceled: {}", error).as_str(),
-            );
-            // We should not reboot as that would lead to a reboot loop.
-            // It should be safe to cancel now as we have only mounted EFI.
-            return Ok(false);
-        }
-
         Self::unlock_boot_vault_and_configure(
             display,
             efi_partition_mount_path,
             primary_partition_device_path,
-            configurator,
+            configurators,
         )
-        // If any configurator runs, reboot afterward as
-        // a safety precaution, because the boot vault was unlocked.
-        .map(|_| true)
 
         // EFI partition is automatically unmounted once dropped
     }

@@ -8,8 +8,6 @@
 /// Configurators are small tasks discovered via JSON trigger
 /// configuration files. Each encapsulates a specific maintenance or recovery
 /// action such as TPM enrollment or displaying the recovery key.
-/// Each configurator removes its trigger file after execution to
-/// prevent repeated runs.
 ///
 /// Initializes logging, parses configuration, and delegates management
 /// to the `BootTrustManager`.
