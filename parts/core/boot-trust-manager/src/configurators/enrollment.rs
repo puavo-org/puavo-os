@@ -17,10 +17,6 @@ use crate::{
 };
 
 const CONFIGURATION_BASE_DIRECTORY: &str = "/etc/puavo/enrollment";
-
-// Trigger file name for the aggregated enrollment configurator
-const CONFIGURATOR_FILENAME: &str = "enrollment.json";
-
 const STATE_FILENAME: &str = "enrollment.state.json";
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash)]
@@ -36,8 +32,6 @@ struct EnrollmentItemConfiguration {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct EnrollmentSetConfiguration {
-    /// Filename used to trigger the configurator
-    filename: String,
     /// All enrollment items to apply (order matters; first will wipe existing tokens)
     enrollments: Vec<EnrollmentItemConfiguration>,
 }
@@ -142,7 +136,6 @@ impl EnrollmentConfigurator {
         }
 
         let configuration = EnrollmentSetConfiguration {
-            filename: CONFIGURATOR_FILENAME.to_string(),
             enrollments,
         };
 
@@ -274,8 +267,7 @@ impl EnrollmentConfigurator {
 }
 
 impl Configurator for EnrollmentConfigurator {
-    /// Returns whether this configurator is permitted to execute.
-    fn allowed(
+    fn activate(
         &self,
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
@@ -304,8 +296,7 @@ impl Configurator for EnrollmentConfigurator {
         self.enroll_all(boot_vault, primary_partition)
     }
 
-    /// Return the trigger filename for this configurator.
-    fn filename(&self) -> Result<String, PuavoError> {
-        Ok(self.configuration.filename.clone())
+    fn name(&self) -> &'static str {
+        "Enrollment"
     }
 }
