@@ -22,8 +22,9 @@ create_configurator() {
   "${script_directory}/create-configurator" \
     "${configurator_directory}/${configurator_name}" \
     "$key_folder" \
-    "${output_directory}/${configurator_name}.addon.efi"
+    "${output_directory}/${configurator_name}.configurator.addon.efi"
 }
 
-create_configurator enrollment
+create_configurator fallback
+create_configurator primary
 create_configurator recovery

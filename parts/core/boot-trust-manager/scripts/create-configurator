@@ -2,7 +2,7 @@
 set -eu
 
 usage() {
-  echo "Usage: $0 <configurator-directory> <key-folder> <output>" >&2
+  echo "Usage: $0 <configurator-directory> <key-folder> <output-directory>" >&2
   exit 1
 }
 
