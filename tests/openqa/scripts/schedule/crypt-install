@@ -5,8 +5,8 @@ set -eu
 SCRIPT_DIRECTORY="$(dirname "$0")"
 . "$SCRIPT_DIRECTORY/lib/jobs"
 
-submit_job "crypt_install" \
-           "boot_crypt_preinstall,install" \
-           "false" \
-           "HDD_1=crypt-preinstall-%VERSION%-%ARCH%-%BUILD%@%MACHINE%.qcow2" \
-           "BOOTFROM=c"
+submit_job crypt_install                                                   \
+           boot_crypt_preinstall,install                                   \
+           false                                                           \
+           HDD_1=crypt-preinstall-%VERSION%-%ARCH%-%BUILD%@%MACHINE%.qcow2 \
+           BOOTFROM=c

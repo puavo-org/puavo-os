@@ -5,7 +5,9 @@ set -eu
 SCRIPT_DIRECTORY="$(dirname "$0")"
 . "$SCRIPT_DIRECTORY/lib/jobs"
 
-submit_job "crypt_preinstall" \
-           "boot_diskinstaller,crypt_preinstall" \
-           "true" \
-           "PUBLISH_HDD_1=crypt-preinstall-%VERSION%-%ARCH%-%BUILD%@%MACHINE%.qcow2"
+qcow2_name='crypt-preinstall-%VERSION%-%ARCH%-%BUILD%@%MACHINE%.qcow2'
+
+submit_job crypt_preinstall                    \
+           boot_diskinstaller,crypt_preinstall \
+           true                                \
+           "PUBLISH_HDD_1=${qcow2_name}"
