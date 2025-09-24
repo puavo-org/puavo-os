@@ -67,8 +67,9 @@ wait_for_job() {
 }
 
 submit_job() {
-  local build iso_directory iso_name iso_path job_id job_name \
-        machine_ovmf_vars_path machine_state_dir response reset schedule
+  local build iso_directory iso_name iso_name_no_suffix iso_path job_id \
+        job_name machine_ovmf_vars_path machine_state_dir ovmf_vars_file \
+        response reset schedule
 
   job_name=$1
   schedule=$2
@@ -101,12 +102,25 @@ submit_job() {
     build="$iso_name"
   fi
 
-  # XXX this should not require root
-  # XXX the equivalent code should be run by the _openqa-worker user?
-  machine_state_dir=$(mktemp -d /tmp/openqa.machine.XXXXXX)
-  chown _openqa-worker:root "$machine_state_dir"
-  machine_ovmf_vars_path="${machine_state_dir}/OVMF_VARS_4M.ms.fd"
-  install -o _openqa-worker -g root -m 644 /usr/share/OVMF/OVMF_VARS_4M.ms.fd "$machine_ovmf_vars_path"
+  machine_state_dir='/var/lib/openqa/share/data'
+  iso_name_no_suffix=${iso_name%.img}
+  ovmf_vars_file="OVMF_VARS_4M-${iso_name_no_suffix#install-}.ms.fd"
+  machine_ovmf_vars_path="${machine_state_dir}/${ovmf_vars_file}"
+  if $reset; then
+    # XXX this should not require root
+    # XXX the equivalent code should be run by the _openqa-worker user?
+    # XXX it should be possible to do tie this to a machine identity,
+    # XXX but where should that be determined?
+    mkdir -p "$machine_state_dir"
+    chown _openqa-worker:root "$machine_state_dir"
+    install -o _openqa-worker -g root -m 644 \
+            /usr/share/OVMF/OVMF_VARS_4M.ms.fd "$machine_ovmf_vars_path"
+  fi
+
+  if [ ! -e "$machine_ovmf_vars_path" ]; then
+    log_error "${machine_ovmf_vars_path} does not exist"
+    return 1
+  fi
 
   qemu_append="machine q35 -bios /usr/share/OVMF/OVMF_CODE_4M.ms.fd -global driver=cfi.pflash01,property=secure,value=off -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.ms.fd -drive if=pflash,format=raw,file=${machine_ovmf_vars_path} -boot menu=on -enable-kvm"
   if ! response=$(openqa-cli api -X POST isos  \
