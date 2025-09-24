@@ -23,7 +23,7 @@ sub run {
                     timeout => 30);
   record_info('Puavo', 'Host type is preinstalled');
 
-  assert_script_run(q{dmesg | grep -q 'Secure boot enabled'}, timeout => 30);
+  assert_script_run(q{dmesg | grep 'Secure boot enabled'}, timeout => 30);
   record_info('Puavo', 'Secure Boot is enabled');
 
   assert_script_run(q{mount -l | grep -q '/dev/mapper/root on /images'},

@@ -27,6 +27,7 @@ sub toggle_secure_boot_and_reboot {
 
 sub enroll_mok {
   send_key('spc',  wait_screen_change => 1);  # enter MOK management
+
   send_key('down', wait_screen_change => 1);  # Enroll MOK
   send_key('ret',  wait_screen_change => 1);
 
