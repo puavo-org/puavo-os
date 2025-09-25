@@ -314,16 +314,17 @@ setup-wim:
 	  exit 1; \
 	fi
 
-/etc/puavo-conf/tpm2-pcr-public-key.pem: config/boot_keys/tpm2-pcr-public-key.pem
-	$(_sudo) mkdir -p $(@D)
-	$(_sudo) cp $< $@
+.PHONY: install-pcr-public-keys
+install-pcr-public-keys:
+	$(_sudo) mkdir -p /etc/puavo-conf
+	-$(_sudo) cp config/boot_keys/tpm2-pcr-public-key*.pem /etc/puavo-conf/ 2>/dev/null || true
 
 /etc/puavo-conf/mok.der: config/boot_keys/mok.der
 	$(_sudo) mkdir -p $(@D)
 	$(_sudo) cp $< $@
 
 .PHONY: update
-update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/tpm2-pcr-public-key.pem /etc/puavo-conf/mok.der
+update: prepare install-pcr-public-keys /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/mok.der
 	$(MAKE) build
 
 	$(_sudo) apt-get update
