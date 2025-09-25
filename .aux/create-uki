@@ -19,6 +19,23 @@ kernel_image="${boot_folder}/vmlinuz-${kernel_version}"
 initrd_image="${boot_folder}/initrd.img-${kernel_version}"
 os_release=$(basename "$output")
 
+# Sign the PCR values with additional keys as well.
+# Primary PCR key pair: tpm2-pcr-private-key.pem and tpm2-pcr-public-key.pem
+# Additional PCR key pairs:
+# tpm2-pcr-private-key-<name>.pem and tpm2-pcr-public-key-<name>.pem
+pcr_key_arguments=""
+for private_key in "${key_folder}"/tpm2-pcr-private-key*.pem; do
+  [ -f "$private_key" ] || continue
+  public_key=$(echo "$private_key" |
+               sed 's/tpm2-pcr-private-key/tpm2-pcr-public-key/')
+  if [ -f "$public_key" ]; then
+    pcr_key_arguments="$pcr_key_arguments --pcr-private-key=${private_key} --pcr-public-key=${public_key}"
+  else
+    echo "error: corresponding public key not found for $private_key" >&2
+    exit 2
+  fi
+done
+
 # NOTE: By default, halt on emergency instead of dropping to shell for security
 ukify build \
   --linux="$kernel_image" \
@@ -26,8 +43,8 @@ ukify build \
   --uname="${kernel_version}" \
   --os-release="$os_release" \
   --cmdline="rd.emergency=halt rd.shell=0" \
-  --pcr-private-key="${key_folder}/tpm2-pcr-private-key.pem" \
-  --pcr-public-key="${key_folder}/tpm2-pcr-public-key.pem" \
+  $pcr_key_arguments \
+  --pcrpkey="${key_folder}/tpm2-pcr-public-key.pem" \
   --pcr-banks=sha1,sha256 \
   --secureboot-private-key="${key_folder}/mok.priv" \
   --secureboot-certificate="${key_folder}/mok.pem" \
