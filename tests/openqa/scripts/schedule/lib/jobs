@@ -68,8 +68,8 @@ wait_for_job() {
 
 submit_job() {
   local build iso_directory iso_name iso_name_no_suffix iso_path job_id \
-        job_name machine_ovmf_vars_path machine_state_dir ovmf_vars_file \
-        response reset schedule
+        job_name machine_id machine_ovmf_vars_path machine_state_basedir \
+        machine_state_dir ovmf_vars_file response reset schedule tpm_state_dir
 
   job_name=$1
   schedule=$2
@@ -102,10 +102,13 @@ submit_job() {
     build="$iso_name"
   fi
 
-  machine_state_dir='/var/lib/openqa/share/data'
-  iso_name_no_suffix=${iso_name%.img}
-  ovmf_vars_file="OVMF_VARS_4M-${iso_name_no_suffix#install-}.ms.fd"
-  machine_ovmf_vars_path="${machine_state_dir}/${ovmf_vars_file}"
+  machine_state_basedir='/var/lib/openqa/share/data'
+  # XXX machine_id should be something else
+  machine_id=${iso_name%.img}
+  machine_id=${machine_id#install-}
+  machine_state_dir="${machine_state_basedir}/${machine_id}"
+  machine_ovmf_vars_path="${machine_state_dir}/OVMF_VARS_4M.ms.fd"
+  tpm_state_dir="${machine_state_dir}/tpm"
   if $reset; then
     # XXX this should not require root
     # XXX the equivalent code should be run by the _openqa-worker user?
@@ -115,6 +118,7 @@ submit_job() {
     chown _openqa-worker:root "$machine_state_dir"
     install -o _openqa-worker -g root -m 644 \
             /usr/share/OVMF/OVMF_VARS_4M.ms.fd "$machine_ovmf_vars_path"
+    rm -rf "$tpm_state_dir"
   fi
 
   if [ ! -e "$machine_ovmf_vars_path" ]; then
@@ -124,15 +128,16 @@ submit_job() {
 
   qemu_append="machine q35 -bios /usr/share/OVMF/OVMF_CODE_4M.ms.fd -global driver=cfi.pflash01,property=secure,value=off -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.ms.fd -drive if=pflash,format=raw,file=${machine_ovmf_vars_path} -boot menu=on -enable-kvm"
   if ! response=$(openqa-cli api -X POST isos  \
-                    ARCH=x86_64                \
-                    BUILD="$build"             \
-                    DISTRI=puavo               \
-                    FLAVOR=iso                 \
-                    ISO="$iso_name"            \
-                    QEMU_APPEND="$qemu_append" \
-                    QEMUTPM=1                  \
-                    SCHEDULE="$schedule"       \
-                    VERSION=generic            \
+                    ARCH=x86_64                            \
+                    BUILD="$build"                         \
+                    DISTRI=puavo                           \
+                    FLAVOR=iso                             \
+                    ISO="$iso_name"                        \
+                    QEMU_APPEND="$qemu_append"             \
+                    QEMUTPM=1                              \
+                    "QEMUTPM_PATH_PREFIX=${tpm_state_dir}" \
+                    SCHEDULE="$schedule"                   \
+                    VERSION=generic                        \
                     "$@"); then
     log_error "failed to submit job: ${response}"
     return 1

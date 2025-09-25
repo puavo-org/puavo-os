@@ -7,7 +7,7 @@ sub run {
   # Wait until the disk installer UI shows up (DarkDM)
   assert_screen('darkdm-preinstalled', timeout => 300);
   record_info('Puavo', 'DarkDM reached');
-  assert_screen('darkdm-diskinstaller-ready', timeout => 300);
+  assert_screen('darkdm-preinstalled-ready', timeout => 300);
   record_info('Puavo', 'DarkDM ready');
 
   # Switch keyboard layout to US
