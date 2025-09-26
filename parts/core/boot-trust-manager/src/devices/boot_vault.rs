@@ -17,7 +17,8 @@ use crate::{
     devices::block_device::{BlockDevice, GenericBlockDevice},
     error::PuavoError,
     utils::{
-        luks_tpm_token_manager::LuksTpmTokenManager, mount::unmount,
+        luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS},
+        mount::unmount,
         udev::device_from_device_node_path,
     },
 };
@@ -133,16 +134,35 @@ impl BootVault {
     ) -> Result<(), PuavoError> {
         debug!("Attempting to unlock boot vault using any available TPM token");
 
-        device.token_handle().activate_by_token::<()>(
-            Some(VAULT_LUKS_DEVICE_NAME),
-            None,
-            None,
-            CryptActivate::empty(),
-        )?;
+        let unlocked_index = (0..MAX_TOKENS).find(|&token_index| match device
+            .token_handle()
+            .activate_by_token::<()>(
+                Some(VAULT_LUKS_DEVICE_NAME),
+                Some(token_index),
+                None,
+                CryptActivate::empty(),
+            ) {
+            Ok(_) => {
+                debug!("Unlocked with token {}", token_index);
+                true
+            }
+            Err(error) => {
+                debug!(
+                    "Failed to unlock using token {}: {}",
+                    token_index, error
+                );
+                false
+            }
+        });
 
-        debug!("LUKS device activated as {}", VAULT_LUKS_DEVICE_NAME);
-        self.unlock_method = Some(BootVaultUnlockMethod::TpmToken);
-        Ok(())
+        if let Some(_) = unlocked_index {
+            debug!("Boot vault activated as {}", VAULT_LUKS_DEVICE_NAME);
+            self.unlock_method = Some(BootVaultUnlockMethod::TpmToken);
+            Ok(())
+        } else {
+            debug!("Failed to unlock boot vault with TPM tokens");
+            Err(PuavoError::UnlockError)
+        }
     }
 
     /// Initialize the LUKS device handle for the loop device and unlock it.
@@ -322,9 +342,7 @@ pub struct BootVaultResources {
 impl BootVaultResources {
     /// Construct resource helper for the vault mounted at the specified path.
     pub fn new<T: AsRef<Path>>(mountpoint: T) -> Self {
-        Self {
-            mountpoint: mountpoint.as_ref().to_path_buf()
-        }
+        Self { mountpoint: mountpoint.as_ref().to_path_buf() }
     }
 
     /// Write a property with the specified value into the mounted vault.
