@@ -14,5 +14,5 @@ link-images:
 
 .PHONY: sync-tests
 sync-tests:
-	sudo rsync -a --delete --chown=root:root ./ /var/lib/openqa/share/tests/puavo/
-	sudo chown geekotest: /var/lib/openqa/share/tests/puavo/needles/
+	sudo rsync -a --delete --chown=root:root ./ /var/lib/openqa/share/tests/puavo-os/
+	sudo chown geekotest: /var/lib/openqa/share/tests/puavo-os/needles/

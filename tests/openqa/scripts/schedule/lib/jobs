@@ -130,7 +130,7 @@ submit_job() {
   if ! response=$(openqa-cli api -X POST isos  \
                     ARCH=x86_64                            \
                     BUILD="$build"                         \
-                    DISTRI=puavo                           \
+                    DISTRI=puavo-os                        \
                     FLAVOR=iso                             \
                     ISO="$iso_name"                        \
                     QEMU_APPEND="$qemu_append"             \

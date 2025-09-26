@@ -1,0 +1,13 @@
+defaults:
+  x86_64:
+    machine: puavo-qemu
+    priority: 1
+products:
+  debian-x86_64:
+    distri: debian
+    version: 12
+    flavor: cloud
+scenarios:
+  x86_64:
+    debian-x86_64:
+    - puavo-web
