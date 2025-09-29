@@ -6,6 +6,21 @@ all: prepare-tests
 .PHONY: prepare-tests
 prepare-tests: link-images sync-tests
 
+.PHONY: setup-openqa
+setup-openqa:
+	sudo ./bin/setup-openqa
+
+.PHONY: configure-openqa
+configure-openqa:
+	./bin/configure-openqa
+
+.PHONY: download-assets
+download-assets:
+	sudo -u geekotest ./bin/download-assets
+
+.PHONY: setup-openqa-full
+setup-openqa-full: setup-openqa configure-openqa download-assets
+
 .PHONY: link-images
 link-images:
 	sudo ../../.aux/create-installer-images

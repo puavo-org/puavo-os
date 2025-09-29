@@ -289,8 +289,7 @@ setup-buildhost:
 
 .PHONY: setup-openqa
 setup-openqa:
-	sudo .aux/setup-openqa
-	.aux/configure-openqa
+	(cd tests/openqa && $(MAKE) setup-openqa-full)
 
 .PHONY: setup-wim
 setup-wim:
