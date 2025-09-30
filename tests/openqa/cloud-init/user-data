@@ -1,0 +1,21 @@
+#cloud-config
+chpasswd:
+  list: |
+    debian:puavo
+  expire: false
+network:
+  version: 2
+  ethernets:
+    ens4:
+      dhcp4: no
+      addresses: [172.16.0.2/24]
+      gateway4: 172.16.0.1
+      nameservers:
+        addresses: [172.16.0.1]
+users:
+  - name: debian
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    ssh-authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA4vhZ5j9S5m1OSNKjOxM2uE99CMNEz4L77en/fY1sqH
