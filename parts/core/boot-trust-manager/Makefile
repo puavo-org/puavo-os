@@ -5,6 +5,9 @@ bindir = $(exec_prefix)/bin
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 
+BIN = target/release/puavo-boot-trust-manager
+SOURCE_FILES = $(shell find src -type f -name '*.rs')
+
 .PHONY: all
 all: build
 
@@ -13,14 +16,14 @@ install-directories:
 	mkdir -p $(DESTDIR)/usr/sbin/
 
 .PHONY: build
-build: target/release/puavo-boot-trust-manager
+build: $(BIN)
 
-target/release/puavo-boot-trust-manager: Cargo.toml
+$(BIN): Cargo.lock Cargo.toml $(SOURCE_FILES)
 	cargo build --release
 
 .PHONY: install
 install: build install-directories
-	cp target/release/puavo-boot-trust-manager $(DESTDIR)/usr/sbin/
+	cp $(BIN) $(DESTDIR)/usr/sbin/
 
 .PHONY: clean
 clean:
