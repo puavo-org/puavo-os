@@ -1,0 +1,24 @@
+#!/bin/bash
+set -eu
+
+usage() {
+  echo "Usage: $0 <output-directory>" >&2
+  exit 1
+}
+
+if [[ $# -ne 1 ]]; then
+  usage
+fi
+
+output_directory=$1
+
+script_directory=$(dirname "$0")
+configurator_directory="${script_directory}/../configurators/"
+
+install_configurator() {
+  local configurator_name=$1
+  cp -r "${configurator_directory}/${configurator_name}/." "$output_directory"
+}
+
+install_configurator fallback
+install_configurator primary

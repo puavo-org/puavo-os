@@ -18,6 +18,15 @@ install() {
     inst "${moddir}/puavo-boot-trust-manager.service" \
          "/usr/lib/systemd/system/puavo-boot-trust-manager.service"
 
+    # Install persistent configurators
+    mkdir -p "${initdir}/etc/puavo"
+    "${moddir}/scripts/install-persistent-configurators" "${initdir}/etc/puavo/"
+
+    # Install all public TPM PCR keys
+    mkdir -p "${initdir}/etc/puavo-conf"
+    cp /etc/puavo-conf/tpm2-pcr-public-key*.pem \
+       "${initdir}/etc/puavo-conf" || true
+
     # Enable the service in initrd
     mkdir -p "${initdir}/etc/systemd/system/initrd.target.wants"
     ln_r "/usr/lib/systemd/system/puavo-boot-trust-manager.service" \
