@@ -3,16 +3,18 @@ use libcryptsetup_rs::consts::vals::EncryptionFormat;
 use libcryptsetup_rs::{CryptDevice, CryptInit, TokenInput};
 use log::debug;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::path::Path;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::error::PuavoError;
 
-const MAX_TOKENS: u32 = 32;
-const TPM_TOKEN_TYPE: &str = "systemd-tpm2";
+pub const MAX_TOKENS: u32 = 32;
+pub const TPM_TOKEN_TYPE: &str = "systemd-tpm2";
 
-const DEFAULT_TPM2_PUBLIC_KEY_PATH: &str = "/.extra/tpm2-pcr-public-key.pem";
+pub const PCR_PUBLIC_KEY_PREFIX: &str = "tpm2-pcr-public-key";
 
 /// Representation of a systemd TPM2 LUKS token stored in the LUKS header.
 ///
@@ -40,16 +42,59 @@ pub struct LuksTpmEnrollmentPolicy {
     specific_pcrs_expressions: Option<Vec<String>>,
 
     /// PCR expressions to be validated using a TPM public key policy (e.g. ["11:sha256"]).
-    #[serde(rename = "tpm2-public-key-pcrs")]
-    public_key_pcrs_expressions: Option<Vec<String>>,
+    #[serde(rename = "tpm2-public-key-pcrs", default)]
+    public_key_pcrs_expressions: Vec<String>,
 
     /// Require a PIN for unlock.
     #[serde(rename = "tpm2-pin", default)]
     use_pin: bool,
 
-    /// Optional path to a new TPM2 public key used for policy verification.
-    #[serde(rename = "tpm2-public-key-path", default)]
-    public_key_path: Option<String>,
+    /// Directory containing TPM2 public keys to enroll.
+    #[serde(rename = "tpm2-public-key-directory", default)]
+    public_key_directory: Option<String>,
+
+    // List of public keys inside the directory and their digests.
+    // The digest is stored, because it affects the hash of this policy,
+    // which is used to detect changes.
+    #[serde(skip)]
+    pub public_keys: Vec<(PathBuf, String)>,
+}
+
+impl LuksTpmEnrollmentPolicy {
+    /// Finds the public keys in the configured directory and computes their digests.
+    pub fn find_public_keys(&mut self) -> Result<(), PuavoError> {
+        self.public_keys.clear();
+
+        let directory = match &self.public_key_directory {
+            Some(directory) => directory,
+            None => return Ok(()), // No directory configured
+        };
+
+        debug!("Looking for PCR public keys in directory: {}", directory);
+
+        // Collect the paths of each public key and compute its digest
+        for entry in fs::read_dir(&directory)? {
+            let entry = entry?;
+            let path = entry.path();
+            let is_pcr_public_key = path
+                .file_name()
+                .and_then(|file_name| file_name.to_str())
+                .map(|file_name| file_name.starts_with(PCR_PUBLIC_KEY_PREFIX))
+                .unwrap_or_default();
+
+            if is_pcr_public_key {
+                debug!("Found PCR public key: {}", path.display());
+                let key_data = fs::read(&path)?;
+                let key_digest = format!("{:X}", Sha256::digest(key_data));
+                self.public_keys.push((path, key_digest));
+            }
+        }
+
+        self.public_keys.sort_by(|key1, key2| key1.0.cmp(&key2.0));
+
+        debug!("Found {} public key(s) for enrollment", self.public_keys.len());
+        Ok(())
+    }
 }
 
 /// Helper for interacting with a LUKS2 device to manage TPM2 tokens.
@@ -129,6 +174,7 @@ impl LuksTpmTokenManager {
     /// Parameters:
     /// * `key` - The passphrase used to control the LUKS device.
     /// * `policy` - The enrollment policy specifying PCRs, PIN usage, and other options.
+    /// * `public_key_path` - Path to a TPM PCR public key.
     /// * `wipe` - If true, any existing TPM token will be removed before enrolling the new one.
     ///
     /// Errors:
@@ -137,7 +183,8 @@ impl LuksTpmTokenManager {
         &self,
         key: &String,
         policy: &LuksTpmEnrollmentPolicy,
-        wipe: bool
+        public_key_path: Option<&PathBuf>,
+        wipe: bool,
     ) -> Result<(), PuavoError> {
         let mut arguments: Vec<String> = Vec::new();
         arguments.push(self.device_path.clone());
@@ -154,19 +201,15 @@ impl LuksTpmTokenManager {
             }
         }
 
-        if let Some(expressions) = &policy.public_key_pcrs_expressions {
-            if !expressions.is_empty() {
+        if let Some(public_key_path) = public_key_path {
+            if !policy.public_key_pcrs_expressions.is_empty() {
                 arguments.push(format!(
                     "--tpm2-public-key-pcrs={}",
-                    expressions.join("+")
+                    policy.public_key_pcrs_expressions.join("+")
                 ));
                 arguments.push(format!(
                     "--tpm2-public-key={}",
-                    // Keep the current public key unless overridden
-                    policy
-                        .public_key_path
-                        .clone()
-                        .unwrap_or(DEFAULT_TPM2_PUBLIC_KEY_PATH.to_string())
+                    public_key_path.display()
                 ));
             }
         }

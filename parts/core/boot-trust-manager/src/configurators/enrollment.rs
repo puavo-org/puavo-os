@@ -125,9 +125,10 @@ impl EnrollmentConfigurator {
         for path in json_paths {
             debug!("Reading enrollment configuration file: {:?}", path);
             let data = fs::read_to_string(&path)?;
-            let enrollment =
+            let mut enrollment =
                 serde_json::from_str::<EnrollmentItemConfiguration>(&data)
                     .map_err(PuavoError::EnrollmentStateError)?;
+            enrollment.policy.find_public_keys()?;
             enrollments.push(enrollment);
         }
 
@@ -135,9 +136,7 @@ impl EnrollmentConfigurator {
             return Ok(Vec::new());
         }
 
-        let configuration = EnrollmentSetConfiguration {
-            enrollments,
-        };
+        let configuration = EnrollmentSetConfiguration { enrollments };
 
         Ok(vec![Self { configuration }])
     }
@@ -213,11 +212,27 @@ impl EnrollmentConfigurator {
         recovery_key: &String,
         items: &[EnrollmentItemConfiguration],
     ) -> Result<(), PuavoError> {
-        for (index, item) in items.iter().enumerate() {
+        let mut wipe = true;
+
+        for item in items {
             let policy = &item.policy;
-            let wipe = index == 0;
-            token_manager.enroll(recovery_key, policy, wipe)?;
+
+            if policy.public_keys.is_empty() {
+                token_manager.enroll(recovery_key, policy, None, wipe)?;
+                wipe = false;
+            } else {
+                for (public_key, _) in &policy.public_keys {
+                    token_manager.enroll(
+                        recovery_key,
+                        policy,
+                        Some(public_key),
+                        wipe,
+                    )?;
+                    wipe = false;
+                }
+            }
         }
+
         Ok(())
     }
 

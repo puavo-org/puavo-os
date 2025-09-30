@@ -40,6 +40,9 @@ pub enum PuavoError {
     #[error("Failed to find the primary LUKS partition")]
     NoPrimaryLuksPartition,
 
+    #[error("Failed to unlock device")]
+    UnlockError,
+
     #[error("Plymouth exited with code {0}")]
     PlymouthError(i32),
     #[error(transparent)]
