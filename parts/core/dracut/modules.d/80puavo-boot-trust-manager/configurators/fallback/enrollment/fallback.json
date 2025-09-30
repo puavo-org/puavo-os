@@ -7,7 +7,8 @@
       "15:sha256=0000000000000000000000000000000000000000000000000000000000000000"
     ],
     "tpm2-public-key-pcrs": ["11:sha256"],
-    "tpm2-pin": false
+    "tpm2-pin": false,
+    "tpm2-public-key-directory": "/etc/puavo-conf"
   },
   "version": 1
 }
