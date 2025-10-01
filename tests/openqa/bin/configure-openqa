@@ -9,7 +9,7 @@ done
 
 echo 'Configuring OpenQA...'
 
-config_directory='tests/openqa/config'
+config_directory='config'
 
 machines_count=$(openqa-cli api machines | jq -r '.Machines | length' || echo 0)
 if [ "$machines_count" -eq 0 ]; then

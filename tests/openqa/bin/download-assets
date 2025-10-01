@@ -6,7 +6,7 @@ get_image() {
   local filename url
   url=$1
   filename=${url##*/}
-  test -e "$filename" && continue
+  test -e "$filename" && return 0
   if ! wget -O "${filename}.tmp" "$url"; then
     echo "failed to fetch ${url}" >&2
     return 1
