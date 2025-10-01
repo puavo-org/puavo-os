@@ -442,7 +442,7 @@ module DiskHandler
         # Microsoft reserved partition:
         slices << "n\n#{ p_index+=1 }\n\n+16M\n0c01\n"
         # Microsoft basic data partition:
-        slices << "n\n#{ p_index+=1 }n\n+#{ windows_size }\n0700\nc\n#{ p_index }\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
+        slices << "n\n#{ p_index+=1 }\n\n+#{ windows_size }\n0700\nc\n#{ p_index }\n#{ GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C }\n"
         slices << "n\n#{ p_index+=1 }\n\n+768M\n2700\n"     # Windows RE
         slices << "n\n#{ p_index+=1 }\n\n\n8304\nw\ny\n"    # puavo partition
     end
