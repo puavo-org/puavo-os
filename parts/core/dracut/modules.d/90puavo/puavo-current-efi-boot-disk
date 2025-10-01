@@ -15,7 +15,11 @@ if [ -z "$efi_partition_uuid" ]; then
 fi
 
 # Find the parent disk for the EFI partition
-parent_disk=$(lsblk -lnp -o PKNAME "/dev/disk/by-partuuid/$efi_partition_uuid")
+efi_partition_device="/dev/disk/by-partuuid/${efi_partition_uuid}"
+# TODO(udev-settle): Wait for the boot partition device to show up in initrd.
+# See related TODO in boot-trust-manager.
+udevadm wait --timeout=30 "$efi_partition_device" || true
+parent_disk=$(lsblk -lnp -o PKNAME "$efi_partition_device")
 
 if [ -z "$parent_disk" ]; then
   echo "error: failed to find the disk containing the EFI partition with UUID $efi_partition_uuid" >&2

@@ -229,6 +229,13 @@ impl BootTrustManager {
     ) -> Result<(), PuavoError> {
         // Ensure the loop kernel module is loaded
         let _ = Command::new("modprobe").arg("loop").status();
+        // TODO(udev-settle): We currently wait for udev events to settle to
+        // guarantee access to storage block devices. This adds latency to boot.
+        // Ideally we should avoid global settles and instead wait only
+        // for the boot disk devices. This is related to the helper script
+        // puavo-current-efi-boot-disk which also waits for udev.
+        let _ =
+            Command::new("udevadm").arg("settle").arg("--timeout=30").status();
 
         let boot_device = EFIBootDevice::current()?;
         debug!("Located EFI boot device");
