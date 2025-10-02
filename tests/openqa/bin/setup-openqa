@@ -15,11 +15,52 @@ ln -fns /home/var_lib_openqa /var/lib/openqa
 apt-get update
 apt-get -y install $packages
 
+cat <<'EOF' > /etc/network/interfaces.d/br0
+auto br0
+allow-ovs br0
+iface br0 inet static
+    ovs_type OVSBridge
+    address 10.0.2.2
+    netmask 255.254.0.0
+
+auto tap0
+allow-br0 tap0
+iface tap0 inet manual
+    ovs_type OVSPort
+    ovs_bridge br0
+EOF
+ifup br0
+ifup tap0
+
+if ! [ -e /usr/local/lib/os-autoinst/os-autoinst-openvswitch ]; then
+  (
+    autoinst_version='4.6.1731418769.97d9a7fd'
+    tmpdir=$(mktemp -d /tmp/os-autoinst.sources.XXXXXX)
+    cd "$tmpdir"
+    apt source os-autoinst
+    mkdir -p /usr/local/lib/os-autoinst
+    install -o root -g root -m 644 \
+            "os-autoinst-${autoinst_version}/etc/dbus-1/system.d/org.opensuse.os_autoinst.switch.conf" \
+            /etc/dbus-1/system.d/org.opensuse.os_autoinst.switch.conf
+    sed 's|^ExecStart=.*|ExecStart=/usr/local/lib/os-autoinst/os-autoinst-openvswitch|' \
+        "os-autoinst-${autoinst_version}/systemd/os-autoinst-openvswitch.service.in" \
+      > /etc/systemd/system/os-autoinst-openvswitch.service
+#   ln -fns /etc/systemd/system/os-autoinst-openvswitch.service \
+#           /etc/systemd/system/multi-user.target.wants/os-autoinst-openvswitch.service
+    install -o root -g root -m 755 \
+            "os-autoinst-${autoinst_version}/script/os-autoinst-openvswitch" \
+            /usr/local/lib/os-autoinst/os-autoinst-openvswitch
+    cd /
+    rm -rf "$tmpdir"
+  )
+fi
+
 # XXX This should be fixed in upstream, perhaps some variable is needed when
 # XXX TPM state persistency is required?
 sed -i '/unlink.*permall/s/unlink /# XXX PUAVO disable tpm cleanup: unlink /' \
     /usr/lib/os-autoinst/backend/qemu.pm
 
+systemctl enable --now os-autoinst-openvswitch.service
 systemctl enable --now postgresql.service
 
 a2enmod expires headers proxy proxy_http proxy_wstunnel rewrite
@@ -37,6 +78,13 @@ rm -f /etc/apache2/sites-enabled/000-default.conf
 # setup Fake authentication (no username/password, this is not good
 # if OpenQA instance is reachable from a network)
 sed -i '/#method = Fake|OpenID|OAuth2/s/^.*$/method = Fake/' /etc/openqa/openqa.ini
+
+mkdir -p /etc/systemd/system/openqa-worker-plain@1.service.d
+cat <<'EOF' > /etc/systemd/system/openqa-worker-plain@1.service.d/override.conf
+[Service]
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_SYS_ADMIN CAP_NET_RAW
+EOF
 
 systemctl enable --now apache2.service openqa-webui openqa-scheduler openqa-worker@1
 
