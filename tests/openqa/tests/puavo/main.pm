@@ -1,6 +1,9 @@
 use Mojo::Base -strict;
 use autotest;
+use puavo_debian;
 use testapi;
+
+testapi::set_distribution(puavo_debian->new);
 
 my $schedule = get_var('SCHEDULE');
 unless ($schedule) {
