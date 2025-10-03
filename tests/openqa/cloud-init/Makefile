@@ -1,6 +1,6 @@
 all: debian-cloud-init.iso
 
-debian-cloud-init.iso: user-data meta-data
+debian-cloud-init.iso: user-data meta-data network-config
 	genisoimage -output $@ -volid cidata -input-charset utf-8 -joliet \
 	  -rock $^
 

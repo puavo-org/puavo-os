@@ -3,15 +3,6 @@ chpasswd:
   list: |
     debian:puavo
   expire: false
-network:
-  version: 2
-  ethernets:
-    ens4:
-      dhcp4: no
-      addresses: [10.0.2.5/24]
-      gateway4: 10.0.2.2
-      nameservers:
-        addresses: [10.0.2.2]
 users:
   - name: debian
     sudo: ALL=(ALL) NOPASSWD:ALL
