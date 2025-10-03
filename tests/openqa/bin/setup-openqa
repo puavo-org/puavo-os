@@ -15,22 +15,25 @@ ln -fns /home/var_lib_openqa /var/lib/openqa
 apt-get update
 apt-get -y install $packages
 
-if ! [ -e /usr/local/lib/os-autoinst/os-autoinst-openvswitch ]; then
+mkdir -p /usr/local/lib/os-autoinst
+install -o root -g root -m 755 lib/os-autoinst-openvswitch \
+        /usr/local/lib/os-autoinst/os-autoinst-openvswitch
+
+if ! [ -e /etc/systemd/system/os-autoinst-openvswitch.service ]; then
   (
     autoinst_version='4.6.1731418769.97d9a7fd'
     tmpdir=$(mktemp -d /tmp/os-autoinst.sources.XXXXXX)
     cd "$tmpdir"
     apt source os-autoinst
-    mkdir -p /usr/local/lib/os-autoinst
     install -o root -g root -m 644 \
             "os-autoinst-${autoinst_version}/etc/dbus-1/system.d/org.opensuse.os_autoinst.switch.conf" \
             /etc/dbus-1/system.d/org.opensuse.os_autoinst.switch.conf
     sed 's|^ExecStart=.*|ExecStart=/usr/local/lib/os-autoinst/os-autoinst-openvswitch|' \
         "os-autoinst-${autoinst_version}/systemd/os-autoinst-openvswitch.service.in" \
-      > /etc/systemd/system/os-autoinst-openvswitch.service
+      > /etc/systemd/system/os-autoinst-openvswitch.service.tmp
+    mv /etc/systemd/system/os-autoinst-openvswitch.service.tmp \
+       /etc/systemd/system/os-autoinst-openvswitch.service
     # this is our customized version:
-    install -o root -g root -m 755 lib/os-autoinst-openvswitch \
-            /usr/local/lib/os-autoinst/os-autoinst-openvswitch
     cd /
     rm -rf "$tmpdir"
   )
@@ -46,6 +49,7 @@ systemctl enable --now os-autoinst-openvswitch.service
 ovs-vsctl add-br br0
 ovs-vsctl add-port br0 tap0
 ip addr add 10.0.2.2/15 dev br0
+ip link set dev br0 up
 
 systemctl enable --now postgresql.service
 
