@@ -46,16 +46,56 @@ sed -i '/unlink.*permall/s/unlink /# XXX PUAVO disable tpm cleanup: unlink /' \
 
 systemctl enable --now os-autoinst-openvswitch.service
 
-ovs-vsctl add-br br0
-ovs-vsctl add-port br0 tap0
+ovs-vsctl --may-exist add-br br0
+ovs-vsctl --may-exist add-port br0 tap0
 mkdir -p /etc/systemd/system/os-autoinst-openvswitch.service.d
 cat <<'EOF' > /etc/systemd/system/os-autoinst-openvswitch.service.d/override.conf
 [Service]
 ExecStartPost=/sbin/ip link set br0 up
-ExecStartPost=/sbin/ip addr add 10.0.2.2/15 dev br0
+ExecStartPost=/sbin/ip addr replace 10.0.2.2/15 dev br0
 EOF
 systemctl daemon-reload
 systemctl restart os-autoinst-openvswitch.service
+
+cat <<'EOF' > /etc/nftables.conf.tmp
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+    chain forward {
+        type filter hook forward priority 0;
+
+        # allow established/related traffic back in
+        ct state established,related accept
+
+        # allow guests on br0 to reach the internet via wlan0
+        iifname "br0" oifname "wlan0" accept
+
+        # optionally allow forwarding back from wlan0 to br0
+        iifname "wlan0" oifname "br0" ct state established,related accept
+
+        # drop everything else by default
+        counter drop
+    }
+}
+
+table ip nat {
+    chain postrouting {
+        type nat hook postrouting priority 100;
+
+        # masquerade guest network going out via wlan0
+        oifname "wlan0" ip saddr 10.0.0.0/15 masquerade
+    }
+}
+EOF
+mv /etc/nftables.conf.tmp /etc/nftables.conf
+systemctl enable --now nftables.service
+
+sysctl -w net.ipv4.ip_forward=1
+cat <<'EOF' > /etc/sysctl.d/90-puavo-openqa-ip-forward.conf
+net.ipv4.ip_forward=1
+EOF
 
 systemctl enable --now postgresql.service
 
