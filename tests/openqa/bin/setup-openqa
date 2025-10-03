@@ -48,8 +48,14 @@ systemctl enable --now os-autoinst-openvswitch.service
 
 ovs-vsctl add-br br0
 ovs-vsctl add-port br0 tap0
-ip addr add 10.0.2.2/15 dev br0
-ip link set dev br0 up
+mkdir -p /etc/systemd/system/os-autoinst-openvswitch.service.d
+cat <<'EOF' > /etc/systemd/system/os-autoinst-openvswitch.service.d/override.conf
+[Service]
+ExecStartPost=/sbin/ip link set br0 up
+ExecStartPost=/sbin/ip addr add 10.0.2.2/15 dev br0
+EOF
+systemctl daemon-reload
+systemctl restart os-autoinst-openvswitch.service
 
 systemctl enable --now postgresql.service
 
