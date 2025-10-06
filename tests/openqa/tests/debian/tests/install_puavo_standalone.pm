@@ -10,7 +10,7 @@ sub run {
   assert_script_run('sudo apt -y update');
   assert_script_run('sudo apt -y dist-upgrade');
   assert_script_run('wget https://github.com/puavo-org/puavo-standalone/raw/master/setup.sh');
-  assert_script_run('sudo sh setup.sh');
+  assert_script_run('sudo sh setup.sh', timeout => 900);
 }
 
 sub test_flags {
