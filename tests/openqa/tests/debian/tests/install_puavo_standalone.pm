@@ -2,13 +2,12 @@ use Mojo::Base 'basetest';
 use testapi;
 
 sub run {
-  sleep 60;     # XXX should not be necessary!
+  assert_screen('debian-login', timeout => 300);
+  record_info('Debian', 'Login prompt reached');
+
   select_console 'ssh-serial';
 
-  # XXX just some random tests
-  sleep 30;
-  assert_script_run('ls -l /');
-  sleep 30;
+  # ...
 }
 
 sub test_flags {
