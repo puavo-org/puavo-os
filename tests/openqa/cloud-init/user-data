@@ -3,10 +3,9 @@ chpasswd:
   list: |
     debian:puavo
   expire: false
+ssh_pwauth: true
 users:
   - name: debian
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: users, admin
     shell: /bin/bash
-    ssh-authorized-keys:
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA4vhZ5j9S5m1OSNKjOxM2uE99CMNEz4L77en/fY1sqH

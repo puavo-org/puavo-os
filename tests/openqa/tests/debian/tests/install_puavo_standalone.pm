@@ -7,7 +7,8 @@ sub run {
 
   select_console 'ssh-serial';
 
-  # ...
+  assert_script_run('sudo apt -y update');
+  assert_script_run('sudo apt -y dist-upgrade');
 }
 
 sub test_flags {
