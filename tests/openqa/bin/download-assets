@@ -18,6 +18,31 @@ get_image() {
   return 0
 }
 
+resize_image() {
+  local filename target_size url
+  url=$1
+  target_size=$2
+
+  origin_filename=${url##*/}
+  target_filename="${origin_filename%.qcow2}-${target_size}.qcow2"
+
+  test -e "$target_filename" && return 0
+
+  if ! cp -p "$origin_filename" "${target_filename}.tmp"; then
+    echo "failed to copy to ${target_filename}.tmp" >&2
+    return 1
+  fi
+  if ! qemu-img resize "${target_filename}.tmp" "$target_size"; then
+    echo "failed to resize ${target_filename}.tmp" >&2
+    return 1
+  fi
+  if ! mv "${target_filename}.tmp" "$target_filename"; then
+    echo "failed to move ${target_filename}" >&2
+    return 1
+  fi
+  return 0
+}
+
 debian_cloud_image_urls='
   https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
   https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2
@@ -26,6 +51,7 @@ debian_cloud_image_urls='
 cd /var/lib/openqa/share/factory/hdd
 for url in $debian_cloud_image_urls; do
   get_image "$url"
+  resize_image "$url" 20G
 done
 
 # XXX should these be in public archives?
