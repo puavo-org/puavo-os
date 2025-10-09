@@ -484,6 +484,7 @@ class PuavoErsApplet:
     self.check_vboxdrv_exists()
 
     self.run_naksu()
+    self.make_automation_control_buttons()
     GLib.timeout_add_seconds(1, self.update_decrypt_codes)
 
     if self.automation_active and self.exam_sync_active:
