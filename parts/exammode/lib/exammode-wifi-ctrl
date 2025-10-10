@@ -8,37 +8,47 @@ lock_wifi() {
   local currently_active_wifi_network_uuid current_nmconnection_path \
         nm_statedir
 
+  nm_statedir='/state/etc/NetworkManager/system-connections'
+
   currently_active_wifi_network_uuid=$(
     env LANG=C nmcli -t -f TYPE,UUID connection show --active \
       | awk -F: '$1 == "802-11-wireless" { print $2; exit(0) }')
 
   if [ -z "$currently_active_wifi_network_uuid" ]; then
-    echo 'no currently active wifi network' >&2
-    return 1
-  fi
-
-  nm_statedir='/state/etc/NetworkManager/system-connections'
-  current_nmconnection_path=$(
-    awk -F= -v active_uuid="$currently_active_wifi_network_uuid" '
-      $1 == "uuid" && $2 == active_uuid { print FILENAME; exit 0 }
-    ' "$nm_statedir"/*)
-  if ! [ -e "$current_nmconnection_path" ]; then
-    echo 'could not find nm connection file' >&2
-    return 1
+    # In case there is no active Wi-Fi network, we still do locking but
+    # will not provide any network to join to.
+    echo 'no currently active wifi network'
+    current_nmconnection_path=''
+  else
+    current_nmconnection_path=$(
+      awk -F= -v active_uuid="$currently_active_wifi_network_uuid" '
+        $1 == "uuid" && $2 == active_uuid { print FILENAME; exit 0 }
+      ' "$nm_statedir"/*)
+    if ! [ -e "$current_nmconnection_path" ]; then
+      # error, but proceed to locking all
+      echo 'could not find nm connection file' >&2
+      current_nmconnection_path=''
+    fi
   fi
 
   rm -rf /etc/NetworkManager/system-connections.exammode
   mkdir -p /etc/NetworkManager/system-connections.exammode
-  cp -p "$current_nmconnection_path" \
-        /etc/NetworkManager/system-connections.exammode
+
+  if [ -n "$current_nmconnection_path" ]; then
+    cp -p "$current_nmconnection_path" \
+          /etc/NetworkManager/system-connections.exammode
+  fi
+
   ln -fns system-connections.exammode \
           /etc/NetworkManager/system-connections
 
   nmcli connection reload
-  nmcli connection modify "$currently_active_wifi_network_uuid" \
-                   connection.autoconnect yes
-  nmcli connection modify "$currently_active_wifi_network_uuid" \
-                   connection.autoconnect-priority 999
+  if [ -n "$currently_active_wifi_network_uuid" ]; then
+    nmcli connection modify "$currently_active_wifi_network_uuid" \
+                     connection.autoconnect yes
+    nmcli connection modify "$currently_active_wifi_network_uuid" \
+                     connection.autoconnect-priority 999
+  fi
 }
 
 unlock_wifi() {
