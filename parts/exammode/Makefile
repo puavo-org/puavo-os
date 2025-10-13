@@ -1,4 +1,4 @@
-SUBDIRS = browser puavo-exammode@puavo.org session-applet setup-applet
+SUBDIRS = browser lib puavo-exammode@puavo.org session-applet setup-applet
 
 .PHONY: all install clean
 all install clean:
