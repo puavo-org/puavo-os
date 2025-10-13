@@ -56,7 +56,8 @@ class exammode {
 
     '/usr/local/sbin/puavo-exammode-manager':
       mode    => '0755',
-      require => [ Package['ruby-eventmachine']
+      require => [ Package['puavo-exammode']
+                 , Package['ruby-eventmachine']
                  , Package['ruby-faye-websocket'] ],
       source  => 'puppet:///modules/exammode/puavo-exammode-manager';
 
@@ -104,6 +105,7 @@ class exammode {
 
   Package <|
        title == 'gsettings-desktop-schemas'
+    or title == 'puavo-exammode'
     or title == 'puavo-ltsp-client'
     or title == 'ruby-eventmachine'
     or title == 'ruby-faye-websocket'
