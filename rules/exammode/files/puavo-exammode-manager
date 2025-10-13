@@ -208,15 +208,15 @@ class PuavoExammode < DBus::Object
       raise errmsg
     end
 
-    if ! system('loginctl', 'lock-sessions') then
-      Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
-      raise 'error in locking sessions'
-    end
-
     if @desktop_session_vt then
       Syslog.log(Syslog::LOG_ERR,
         'tried to activate examination mode when it is already active')
       raise 'exammode session is already active'
+    end
+
+    if ! system('loginctl', 'lock-sessions') then
+      Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
+      raise 'error in locking sessions'
     end
 
     # lock the Wi-Fi network
