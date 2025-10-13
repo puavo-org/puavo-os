@@ -60,35 +60,22 @@ function configureInputs(config: BrowserConfig): InputEventInterceptor {
   const keybindings = new Map<string, Handler>([
     ['Alt+ArrowLeft', null],
     ['Alt+ArrowRight', null],
-    ['Ctrl+r', null],
-    ['Ctrl+Shift+R', null],
     ['Ctrl+q', null],
     ['Ctrl+w', null],
+    ['Ctrl++', contents => contents.setZoomLevel(contents.getZoomLevel() + 1)],
+    [
+      'Ctrl+Shift+?',
+      contents => contents.setZoomLevel(contents.getZoomLevel() + 1),
+    ],
+    ['Ctrl+-', contents => contents.setZoomLevel(contents.getZoomLevel() - 1)],
+    ['Ctrl+0', contents => contents.setZoomLevel(0)],
     ...((config.restrictKeybindings
       ? ([
           ['F11', null],
           ['Ctrl+q', null],
           ['Ctrl+w', null],
-          ['Ctrl++', null],
-          ['Ctrl+Shift+?', null],
-          ['Ctrl+-', null],
-          ['Ctrl+0', null],
         ] as Array<[string, Handler]>)
-      : [
-          [
-            'Ctrl++',
-            contents => contents.setZoomLevel(contents.getZoomLevel() + 1),
-          ],
-          [
-            'Ctrl+Shift+?',
-            contents => contents.setZoomLevel(contents.getZoomLevel() + 1),
-          ],
-          [
-            'Ctrl+-',
-            contents => contents.setZoomLevel(contents.getZoomLevel() - 1),
-          ],
-          ['Ctrl+0', contents => contents.setZoomLevel(0)],
-        ]) as Array<[string, Handler]>),
+      : []) as Array<[string, Handler]>),
   ]);
   return new InputEventInterceptor(keybindings);
 }
