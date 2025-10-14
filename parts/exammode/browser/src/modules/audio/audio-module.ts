@@ -239,6 +239,17 @@ export class AudioModule implements Module {
     deviceId: string,
     volume: number
   ): Promise<void> {
+    if (typeof deviceId !== 'string') {
+      throw new Error(`Invalid device ID: ${deviceId}`);
+    }
+
+    if (
+      typeof volume !== 'number' ||
+      !(volume >= 0 && volume <= 100)
+    ) {
+      throw new Error(`Volume must be between 0 and 100`);
+    }
+
     await run('pactl', ['set-sink-volume', deviceId, `${volume}%`]);
     logger.info(`Volume set to ${volume}% for device ${deviceId}`);
     if (volume > 0) {
@@ -251,6 +262,10 @@ export class AudioModule implements Module {
   }
 
   async changeActiveOutputDevice(deviceId: string): Promise<void> {
+    if (typeof deviceId !== 'string') {
+      throw new Error(`Invalid device ID: ${deviceId}`);
+    }
+
     await run('pactl', ['set-default-sink', deviceId]);
     logger.info(`Active output device changed to ${deviceId}`);
   }
