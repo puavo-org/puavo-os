@@ -118,6 +118,7 @@ export class Browser {
         // can be resolved, we can enable proper security (contextIsolation: true,
         // nodeIntegration: false) without major refactoring.
         nodeIntegration: true, // IPC access
+        nodeIntegrationInSubFrames: this.config.modules,
         contextIsolation: !this.config.modules, // For WebSocket fix
         webviewTag: !this.config.modules,
         ...(this.config.modules
