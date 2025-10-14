@@ -26,9 +26,6 @@ class exammode {
     '/etc/dbus-1/system.d/org.puavo.Exam.conf':
       source => 'puppet:///modules/exammode/org.puavo.Exam.conf';
 
-    '/etc/systemd/system/gdm3.service.d':
-      ensure => directory;
-
     '/etc/systemd/system/puavo-exammode-tty.service':
       require => Package['systemd'],
       source  => 'puppet:///modules/exammode/puavo-exammode-tty.service';
