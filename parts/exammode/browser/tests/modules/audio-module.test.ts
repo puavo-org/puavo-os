@@ -316,6 +316,11 @@ describe('AudioModule', () => {
   });
 
   describe('changeAudioDeviceVolume', () => {
+    beforeEach(() => {
+      mockedRun.mockClear();
+      mockedLogger.info.mockClear();
+    });
+
     it('should call pactl to set sink volume to non-zero and mute off', async () => {
       await audioModule.changeAudioDeviceVolume('sink1', 42);
       expect(mockedRun).toHaveBeenCalledWith('pactl', [
@@ -355,6 +360,30 @@ describe('AudioModule', () => {
         'Set mute on for device sink1'
       );
     });
+
+    it.each([
+      [-42],
+      [123],
+      [NaN],
+      ['50' as any],
+      [null as any],
+      [undefined as any],
+    ])(
+      'should throw an error for invalid volume value: %p',
+      async invalidValue => {
+        await expect(
+          audioModule.changeAudioDeviceVolume('sink1', -42)
+        ).rejects.toThrow('Volume must be between 0 and 100');
+        expect(mockedRun).not.toHaveBeenCalled();
+      }
+    );
+
+    it('should throw an error and not call pactl if deviceId is not a string', async () => {
+      await expect(
+        audioModule.changeAudioDeviceVolume(123 as any, 50)
+      ).rejects.toThrow('Invalid device ID: 123');
+      expect(mockedRun).not.toHaveBeenCalled();
+    });
   });
 
   describe('changeActiveAudioDevice', () => {
@@ -380,6 +409,13 @@ describe('AudioModule', () => {
       expect(mockedLogger.warn).toHaveBeenCalledWith(
         'Unsupported flow type: input'
       );
+    });
+
+    it('should throw an error and not call pactl if deviceId is not a string', async () => {
+      await expect(
+        audioModule.changeActiveAudioDevice('output', 123 as any)
+      ).rejects.toThrow('Invalid device ID: 123');
+      expect(mockedRun).not.toHaveBeenCalled();
     });
   });
 
