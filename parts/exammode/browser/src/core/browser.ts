@@ -11,10 +11,7 @@ export class Browser {
   public readonly browserWindow: BrowserWindow;
   private readonly config: BrowserConfig;
 
-  constructor(
-    config: BrowserConfig,
-    inputEventInterceptor?: InputEventInterceptor
-  ) {
+  constructor(config: BrowserConfig) {
     this.config = config;
     this.browserWindow = this.createWindow();
 
@@ -29,23 +26,27 @@ export class Browser {
       }
     );
 
-    // Attach keybinding interceptor to the main window
-    inputEventInterceptor?.attach(this.browserWindow.webContents);
-
-    // Also attach the same interceptor to any webview that gets attached
-    this.browserWindow.webContents.on(
-      'did-attach-webview',
-      (_event, webContents) => {
-        inputEventInterceptor?.attach(webContents);
-      }
-    );
-
     if (this.config.forceFullscreen) {
       this.disableLeavingFullscreen();
     }
 
     this.browserWindow.maximize();
     this.loadInitialPage();
+  }
+
+  public attachInputEventInterceptor(
+    inputEventInterceptor: InputEventInterceptor
+  ): void {
+    // Attach keybinding interceptor to the main window
+    inputEventInterceptor.attach(this.browserWindow.webContents);
+
+    // Also attach the same interceptor to any webview that gets attached
+    this.browserWindow.webContents.on(
+      'did-attach-webview',
+      (_event, webContents) => {
+        inputEventInterceptor.attach(webContents);
+      }
+    );
   }
 
   private disableLeavingFullscreen(): void {

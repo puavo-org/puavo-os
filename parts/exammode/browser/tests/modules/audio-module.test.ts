@@ -443,4 +443,166 @@ describe('AudioModule', () => {
       );
     });
   });
+
+  describe('adjustVolumeUp', () => {
+    beforeEach(() => {
+      mockedRun.mockClear();
+    });
+
+    it('should increase volume by 5% on active device', async () => {
+      const mockDevices = [
+        {
+          id: 'sink1',
+          displayName: 'Speaker',
+          active: true,
+          flow: 'output' as const,
+          volume: 50,
+          mute: false,
+        },
+        {
+          id: 'sink2',
+          displayName: 'Headphones',
+          active: false,
+          flow: 'output' as const,
+          volume: 30,
+          mute: false,
+        },
+      ];
+
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue(mockDevices);
+      mockedRun.mockResolvedValue('');
+
+      await audioModule.adjustVolumeUp();
+
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '55%',
+      ]);
+      expect(audioModule.dispatchClientNotification).toHaveBeenCalledWith(
+        'AudioDeviceVolumeChanged',
+        ['sink1', 55, false]
+      );
+    });
+
+    it('should cap volume at 100%', async () => {
+      const mockDevices = [
+        {
+          id: 'sink1',
+          displayName: 'Speaker',
+          active: true,
+          flow: 'output' as const,
+          volume: 98,
+          mute: false,
+        },
+      ];
+
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue(mockDevices);
+      mockedRun.mockResolvedValue('');
+
+      await audioModule.adjustVolumeUp();
+
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '100%',
+      ]);
+      expect(audioModule.dispatchClientNotification).toHaveBeenCalledWith(
+        'AudioDeviceVolumeChanged',
+        ['sink1', 100, false]
+      );
+    });
+
+    it('should warn if no active output device found', async () => {
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue([]);
+
+      await audioModule.adjustVolumeUp();
+
+      expect(mockedLogger.warn).toHaveBeenCalledWith(
+        'No active output device found for volume adjustment'
+      );
+      expect(mockedRun).not.toHaveBeenCalledWith(
+        'pactl',
+        expect.arrayContaining(['set-sink-volume'])
+      );
+      expect(audioModule.dispatchClientNotification).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('adjustVolumeDown', () => {
+    beforeEach(() => {
+      mockedRun.mockClear();
+    });
+
+    it('should decrease volume by 5% on active device', async () => {
+      const mockDevices = [
+        {
+          id: 'sink1',
+          displayName: 'Speaker',
+          active: true,
+          flow: 'output' as const,
+          volume: 50,
+          mute: false,
+        },
+      ];
+
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue(mockDevices);
+      mockedRun.mockResolvedValue('');
+
+      await audioModule.adjustVolumeDown();
+
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '45%',
+      ]);
+      expect(audioModule.dispatchClientNotification).toHaveBeenCalledWith(
+        'AudioDeviceVolumeChanged',
+        ['sink1', 45, false]
+      );
+    });
+
+    it('should cap volume at 0%', async () => {
+      const mockDevices = [
+        {
+          id: 'sink1',
+          displayName: 'Speaker',
+          active: true,
+          flow: 'output' as const,
+          volume: 3,
+          mute: false,
+        },
+      ];
+
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue(mockDevices);
+      mockedRun.mockResolvedValue('');
+
+      await audioModule.adjustVolumeDown();
+
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '0%',
+      ]);
+      expect(audioModule.dispatchClientNotification).toHaveBeenCalledWith(
+        'AudioDeviceVolumeChanged',
+        ['sink1', 0, true]
+      );
+    });
+
+    it('should warn if no active output device found', async () => {
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue([]);
+
+      await audioModule.adjustVolumeDown();
+
+      expect(mockedLogger.warn).toHaveBeenCalledWith(
+        'No active output device found for volume adjustment'
+      );
+      expect(mockedRun).not.toHaveBeenCalledWith(
+        'pactl',
+        expect.arrayContaining(['set-sink-volume'])
+      );
+      expect(audioModule.dispatchClientNotification).not.toHaveBeenCalled();
+    });
+  });
 });

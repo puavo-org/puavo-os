@@ -1,7 +1,7 @@
 import type { WebContents } from 'electron';
 import { logger } from '../utils/logger';
 
-type KeybindingAction = (webContents: WebContents) => void;
+type KeybindingAction = (webContents: WebContents) => void | Promise<void>;
 
 function generateKeyString(input: Electron.Input): string {
   const parts: string[] = [];
@@ -35,7 +35,7 @@ export class InputEventInterceptor {
 
         const action = this.keybindings.get(keyString);
         if (action) {
-          action(webContents);
+          void action(webContents);
         }
       }
     });

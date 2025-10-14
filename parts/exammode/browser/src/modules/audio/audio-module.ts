@@ -17,6 +17,7 @@ import { run } from '../../utils/shell';
 
 export class AudioModule implements Module {
   static readonly FALLBACK_DISPLAY_NAME = 'Audio device';
+  static readonly VOLUME_STEP = 5;
 
   readonly audioEventObserver: PulseAudioEventObserver;
   readonly audioDevicesChangeNotifier: ChangeNotifier<AudioDevice[]>;
@@ -243,10 +244,7 @@ export class AudioModule implements Module {
       throw new Error(`Invalid device ID: ${deviceId}`);
     }
 
-    if (
-      typeof volume !== 'number' ||
-      !(volume >= 0 && volume <= 100)
-    ) {
+    if (typeof volume !== 'number' || !(volume >= 0 && volume <= 100)) {
       throw new Error(`Volume must be between 0 and 100`);
     }
 
@@ -282,10 +280,62 @@ export class AudioModule implements Module {
     }
   }
 
+  async adjustVolumeUp(): Promise<void> {
+    const devices = await this.getAudioDevices();
+    const activeDevice = devices.find(
+      device => device.active && device.flow === 'output'
+    );
+
+    if (!activeDevice) {
+      logger.warn('No active output device found for volume adjustment');
+      return;
+    }
+
+    const newVolume = Math.min(
+      100,
+      activeDevice.volume + AudioModule.VOLUME_STEP
+    );
+    await this.changeAudioDeviceVolume(activeDevice.id, newVolume);
+
+    const isMuted = newVolume === 0;
+    this.dispatchClientNotification('AudioDeviceVolumeChanged', [
+      activeDevice.id,
+      newVolume,
+      isMuted,
+    ]);
+  }
+
+  async adjustVolumeDown(): Promise<void> {
+    const devices = await this.getAudioDevices();
+    const activeDevice = devices.find(
+      device => device.active && device.flow === 'output'
+    );
+
+    if (!activeDevice) {
+      logger.warn('No active output device found for volume adjustment');
+      return;
+    }
+
+    const newVolume = Math.max(
+      0,
+      activeDevice.volume - AudioModule.VOLUME_STEP
+    );
+    await this.changeAudioDeviceVolume(activeDevice.id, newVolume);
+
+    const isMuted = newVolume === 0;
+    this.dispatchClientNotification('AudioDeviceVolumeChanged', [
+      activeDevice.id,
+      newVolume,
+      isMuted,
+    ]);
+  }
+
   getNotifyHandlerDefinitions(): Map<string, NotifyHandler> {
     return new Map<string, NotifyHandler>([
       ['changeAudioDeviceVolume', this.changeAudioDeviceVolume.bind(this)],
       ['changeActiveAudioDevice', this.changeActiveAudioDevice.bind(this)],
+      ['adjustVolumeUp', this.adjustVolumeUp.bind(this)],
+      ['adjustVolumeDown', this.adjustVolumeDown.bind(this)],
     ]);
   }
 

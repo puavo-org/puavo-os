@@ -78,8 +78,28 @@ function resetZoom(contents: WebContents): void {
   contents.setZoomLevel(0);
 }
 
-function configureInputs(config: BrowserConfig): InputEventInterceptor {
-  type Handler = ((webContents: WebContents) => void) | null;
+function configureInputs(
+  config: BrowserConfig,
+  audioModule?: AudioModule
+): InputEventInterceptor {
+  type Handler = ((webContents: WebContents) => void | Promise<void>) | null;
+
+  const volumeUp = async (): Promise<void> => {
+    try {
+      await audioModule?.adjustVolumeUp();
+    } catch (error) {
+      logger.error('Failed to increase volume:', error);
+    }
+  };
+
+  const volumeDown = async (): Promise<void> => {
+    try {
+      await audioModule?.adjustVolumeDown();
+    } catch (error) {
+      logger.error('Failed to decrease volume:', error);
+    }
+  };
+
   const keybindings = new Map<string, Handler>([
     ['Alt+ArrowLeft', null],
     ['Alt+ArrowRight', null],
@@ -89,6 +109,8 @@ function configureInputs(config: BrowserConfig): InputEventInterceptor {
     ['Ctrl+Shift+?', zoomIn],
     ['Ctrl+-', zoomOut],
     ['Ctrl+0', resetZoom],
+    ['AudioVolumeUp', volumeUp],
+    ['AudioVolumeDown', volumeDown],
     ...((config.restrictKeybindings
       ? [
           ['F11', null],
@@ -101,12 +123,13 @@ function configureInputs(config: BrowserConfig): InputEventInterceptor {
 }
 
 void app.whenReady().then(() => {
-  const browser = new Browser(config, configureInputs(config));
+  const browser = new Browser(config);
   const moduleManager = new ModuleManager(browser.browserWindow);
 
   if (config.modules) {
+    const audioModule = new AudioModule();
     moduleManager.setModules([
-      new AudioModule(),
+      audioModule,
       new BrightnessModule(),
       new EncryptionModule(),
       new ScreenshotModule(browser.browserWindow.webContents),
@@ -116,5 +139,8 @@ void app.whenReady().then(() => {
     ]);
 
     moduleManager.registerModules();
+    browser.attachInputEventInterceptor(configureInputs(config, audioModule));
+  } else {
+    browser.attachInputEventInterceptor(configureInputs(config, undefined));
   }
 });
