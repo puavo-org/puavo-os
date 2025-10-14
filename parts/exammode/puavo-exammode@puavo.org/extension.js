@@ -116,9 +116,15 @@ function init() {
 }
 
 function enable() {
+  // disable gestures
+  global.stage.get_actions().forEach(action => { action.enabled = false })
+
   Main.panel._centerBox.insert_child_at_index(control_info_label, 0);
 } 
 
 function disable() {
   Main.panel._centerBox.remove_child(control_info_label);
+
+  // enable gestures
+  global.stage.get_actions().forEach(action => { action.enabled = true })
 }
