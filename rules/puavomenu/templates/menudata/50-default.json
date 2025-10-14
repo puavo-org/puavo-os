@@ -289,8 +289,7 @@
             "tags": "default, education",
             "puavopkg": {
                 "id": "ekapeli"
-            },
-            "condition": "!personally_administered"
+            }
         },
         "ekapeli-alku": {
             "name": "Ekapeli Alku",
@@ -300,8 +299,7 @@
             }
         },
         "ekapeli-maahanmuuttaja": {
-            "tags": "default, education",
-            "condition": "!personally_administered"
+            "tags": "default, education"
         },
         "elmo-imagemate": {
             "type": "custom",
