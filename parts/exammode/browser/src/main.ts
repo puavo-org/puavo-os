@@ -111,6 +111,12 @@ function configureInputs(
     ['Ctrl+0', resetZoom],
     ['AudioVolumeUp', volumeUp],
     ['AudioVolumeDown', volumeDown],
+    ...((config.shell.show
+      ? [
+          ['Ctrl+r', null],
+          ['Ctrl+Shift+R', null]
+        ]
+      : []) as Array<[string, Handler]>),
     ...((config.restrictKeybindings
       ? [
           ['F11', null],
