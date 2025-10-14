@@ -124,7 +124,7 @@ export class AudioModule implements Module {
     // Without unloading it, existing audio streams (like website audio) remain
     // bound to the previous sink instead of switching to the new default sink.
     try {
-      await run('pactl unload-module module-stream-restore');
+      await run('pactl', ['unload-module', 'module-stream-restore']);
     } catch (exception) {
       logger.error(
         "Failed to unload 'module-stream-restore' from PulseAudio:",
@@ -137,7 +137,7 @@ export class AudioModule implements Module {
 
   async getSinks(): Promise<PulseAudioSink[]> {
     try {
-      const output = await run('pactl --format json list sinks');
+      const output = await run('pactl', ['--format', 'json', 'list', 'sinks']);
       const all_sinks = JSON.parse(output) as PulseAudioSink[];
       return all_sinks.filter(
         sink => 'flags' in sink
@@ -185,7 +185,7 @@ export class AudioModule implements Module {
 
   async getDefaultSinkName(): Promise<string> {
     try {
-      const output = await run('pactl get-default-sink');
+      const output = await run('pactl', ['get-default-sink']);
       return output.trim();
     } catch (error) {
       logger.error('Failed to fetch the default sink:', error);
@@ -239,19 +239,19 @@ export class AudioModule implements Module {
     deviceId: string,
     volume: number
   ): Promise<void> {
-    await run(`pactl set-sink-volume ${deviceId} ${volume}%`);
+    await run('pactl', ['set-sink-volume', deviceId, `${volume}%`]);
     logger.info(`Volume set to ${volume}% for device ${deviceId}`);
     if (volume > 0) {
-      await run(`pactl set-sink-mute ${deviceId} 0`);
+      await run('pactl', ['set-sink-mute', deviceId, '0']);
       logger.info(`Set mute off for device ${deviceId}`);
     } else {
-      await run(`pactl set-sink-mute ${deviceId} 1`);
+      await run('pactl', ['set-sink-mute', deviceId, '1']);
       logger.info(`Set mute on for device ${deviceId}`);
     }
   }
 
   async changeActiveOutputDevice(deviceId: string): Promise<void> {
-    await run(`pactl set-default-sink ${deviceId}`);
+    await run('pactl', ['set-default-sink', deviceId]);
     logger.info(`Active output device changed to ${deviceId}`);
   }
 
