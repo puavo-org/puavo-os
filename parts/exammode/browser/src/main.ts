@@ -55,6 +55,29 @@ if (app.commandLine.hasSwitch('kiosk')) {
 
 logger.setDebugEnabled(config.debug);
 
+const ZOOM_MIN_LEVEL = -5;
+const ZOOM_MAX_LEVEL = 5;
+
+function clampZoomLevel(level: number): number {
+  return Math.max(ZOOM_MIN_LEVEL, Math.min(ZOOM_MAX_LEVEL, level));
+}
+
+function zoomIn(contents: WebContents): void {
+  const currentLevel = contents.getZoomLevel();
+  const newLevel = clampZoomLevel(currentLevel + 1);
+  contents.setZoomLevel(newLevel);
+}
+
+function zoomOut(contents: WebContents): void {
+  const currentLevel = contents.getZoomLevel();
+  const newLevel = clampZoomLevel(currentLevel - 1);
+  contents.setZoomLevel(newLevel);
+}
+
+function resetZoom(contents: WebContents): void {
+  contents.setZoomLevel(0);
+}
+
 function configureInputs(config: BrowserConfig): InputEventInterceptor {
   type Handler = ((webContents: WebContents) => void) | null;
   const keybindings = new Map<string, Handler>([
@@ -62,19 +85,16 @@ function configureInputs(config: BrowserConfig): InputEventInterceptor {
     ['Alt+ArrowRight', null],
     ['Ctrl+q', null],
     ['Ctrl+w', null],
-    ['Ctrl++', contents => contents.setZoomLevel(contents.getZoomLevel() + 1)],
-    [
-      'Ctrl+Shift+?',
-      contents => contents.setZoomLevel(contents.getZoomLevel() + 1),
-    ],
-    ['Ctrl+-', contents => contents.setZoomLevel(contents.getZoomLevel() - 1)],
-    ['Ctrl+0', contents => contents.setZoomLevel(0)],
+    ['Ctrl++', zoomIn],
+    ['Ctrl+Shift+?', zoomIn],
+    ['Ctrl+-', zoomOut],
+    ['Ctrl+0', resetZoom],
     ...((config.restrictKeybindings
-      ? ([
+      ? [
           ['F11', null],
           ['Ctrl+q', null],
           ['Ctrl+w', null],
-        ] as Array<[string, Handler]>)
+        ]
       : []) as Array<[string, Handler]>),
   ]);
   return new InputEventInterceptor(keybindings);
