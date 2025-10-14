@@ -902,7 +902,13 @@ var Panel = GObject.registerClass({
         let [stageX, stageY] = event.get_coords();
 
         if (button == 3 && global.stage.get_actor_at_pos(Clutter.PickMode.REACTIVE, stageX, stageY) == this.panel) {
-            //right click on an empty part of the panel, temporarily borrow and display the showapps context menu
+            let puavo_exammode_session = GLib.getenv('EXAMMODE_SESSION');
+            if (puavo_exammode_session && puavo_exammode_session !== '') {
+                // do not show the showapps menu in Puavo examination mode
+                return Clutter.EVENT_STOP;
+            }
+
+            // right click on an empty part of the panel, temporarily borrow and display the showapps context menu
             Main.layoutManager.setDummyCursorGeometry(stageX, stageY, 0, 0);
 
             this.showAppsIconWrapper.createMenu();
