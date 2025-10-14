@@ -183,7 +183,14 @@ describe('BrightnessModule', () => {
       expect(mockedLogger.info).toHaveBeenCalledWith('Brightness set to 50%');
     });
 
-    it.each([[-1], [101], ['50' as any], [null as any], [undefined as any]])(
+    it.each([
+      [-1],
+      [101],
+      [NaN],
+      ['50' as any],
+      [null as any],
+      [undefined as any],
+    ])(
       'should throw an error for invalid brightness value: %p',
       async invalidValue => {
         const brightnessModule = new BrightnessModule();

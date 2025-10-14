@@ -62,7 +62,10 @@ export class BrightnessModule implements Module {
   }
 
   async setBrightness(brightness: number): Promise<void> {
-    if (typeof brightness !== 'number' || brightness < 0 || brightness > 100) {
+    if (
+      typeof brightness !== 'number' ||
+      !(brightness >= 0 && brightness <= 100)
+    ) {
       throw new Error('Brightness must be a number between 0 and 100');
     }
 
