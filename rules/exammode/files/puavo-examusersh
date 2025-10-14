@@ -11,7 +11,7 @@ if [ "$(tty)" = '/dev/tty42' ]; then
           --tmpfs    /tmp                         \
           --tmpfs    /var/lib/puavo-exammode/user \
           --tmpfs    /var/tmp                     \
-      startx /usr/lib/puavo-ltsp-client/exammode-session > /dev/null 2>&1
+      startx /usr/lib/puavo-ltsp-client/exammode-session -- :42 > /dev/null 2>&1
 fi
 
 exec /bin/bash
