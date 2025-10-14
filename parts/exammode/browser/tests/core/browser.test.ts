@@ -37,7 +37,7 @@ describe('Browser', () => {
         showAddressBar: true,
         showControlPanel: true,
         isAddressBarInitiallyEditable: true,
-        keepAddressBarEditable: true
+        keepAddressBarEditable: true,
       },
     },
     modules: false,
@@ -48,7 +48,7 @@ describe('Browser', () => {
 
   beforeEach(() => {
     MockBrowserWindow.mockClear();
-    browser = new Browser(config, new InputEventInterceptor(new Map()));
+    browser = new Browser(config);
   });
 
   afterEach(() => {
@@ -72,7 +72,7 @@ describe('Browser', () => {
       ...config,
       shell: { ...config.shell, show: false },
     };
-    new Browser(kioskConfig, new InputEventInterceptor(new Map()));
+    new Browser(kioskConfig);
     expect(browser.browserWindow.webContents.loadURL).toHaveBeenCalledWith(
       kioskConfig.url
     );
@@ -83,17 +83,19 @@ describe('Browser', () => {
       ...config,
       shell: { ...config.shell, show: true },
     };
-    const browser = new Browser(
-      nonKioskConfig,
-      new InputEventInterceptor(new Map())
-    );
+    const browser = new Browser(nonKioskConfig);
     expect(browser.browserWindow.webContents.loadFile).toHaveBeenCalled();
   });
 
-  it('should prevent default on disabled keybindings', () => {
+  it('should attach input event interceptor to main window and webviews', () => {
     const mockInterceptor = new InputEventInterceptor(new Map());
-    new Browser(config, mockInterceptor);
-    expect(mockInterceptor.attach).toHaveBeenCalled();
+    const browser = new Browser(config);
+
+    browser.attachInputEventInterceptor(mockInterceptor);
+
+    expect(mockInterceptor.attach).toHaveBeenCalledWith(
+      browser.browserWindow.webContents
+    );
   });
 
   it('should re-enter fullscreen when left', () => {
@@ -101,10 +103,7 @@ describe('Browser', () => {
       ...config,
       forceFullscreen: true,
     };
-    const browser = new Browser(
-      fullscreenConfig,
-      new InputEventInterceptor(new Map())
-    );
+    const browser = new Browser(fullscreenConfig);
 
     browser.browserWindow.emit('leave-full-screen');
 
