@@ -48,8 +48,8 @@ export class BrightnessModule implements Module {
   }
 
   async getBrightness(): Promise<number> {
-    const brightnessString = await run('brightnessctl get');
-    const maxBrightnessString = await run('brightnessctl max');
+    const brightnessString = await run('brightnessctl', ['get']);
+    const maxBrightnessString = await run('brightnessctl', ['max']);
 
     const brightness = parseInt(brightnessString.trim());
     const maxBrightness = parseInt(maxBrightnessString.trim());
@@ -70,7 +70,7 @@ export class BrightnessModule implements Module {
     // the display can go so dark that nothing can be seen
     const limited_brightness = Math.max(3, brightness);
 
-    await run(`brightnessctl set ${limited_brightness}%`);
+    await run('brightnessctl', ['set', `${limited_brightness}%`]);
     logger.info(`Brightness set to ${limited_brightness}%`);
   }
 

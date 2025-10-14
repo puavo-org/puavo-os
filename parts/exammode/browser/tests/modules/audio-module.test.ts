@@ -26,7 +26,7 @@ const mockSink1: PulseAudioSink = {
   mute: false,
   state: 'RUNNING',
   channel_map: 'front-left,front-right',
-  flags: [ 'HW_VOLUME_CTRL' ],
+  flags: ['HW_VOLUME_CTRL'],
   volume: {
     'front-left': {
       value: 32768,
@@ -45,7 +45,7 @@ const mockSink2: PulseAudioSink = {
   mute: true,
   state: 'IDLE',
   channel_map: 'front-left,front-right',
-  flags: [ 'HW_VOLUME_CTRL' ],
+  flags: ['HW_VOLUME_CTRL'],
   volume: {
     'front-left': {
       value: 49152,
@@ -64,7 +64,7 @@ const mockSink3: PulseAudioSink = {
   mute: false,
   state: 'RUNNING',
   channel_map: 'invalid-channel-name',
-  flags: [ 'HW_VOLUME_CTRL' ],
+  flags: ['HW_VOLUME_CTRL'],
   volume: {
     'front-left': {
       value: 65536,
@@ -108,9 +108,10 @@ describe('AudioModule', () => {
       new AudioModule();
       await new Promise(process.nextTick);
 
-      expect(mockedRun).toHaveBeenCalledWith(
-        'pactl unload-module module-stream-restore'
-      );
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'unload-module',
+        'module-stream-restore',
+      ]);
       expect(mockedLogger.error).toHaveBeenCalledWith(
         "Failed to unload 'module-stream-restore' from PulseAudio:",
         error
@@ -149,9 +150,10 @@ describe('AudioModule', () => {
     });
 
     it('should unload stream restore module', () => {
-      expect(mockedRun).toHaveBeenCalledWith(
-        'pactl unload-module module-stream-restore'
-      );
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'unload-module',
+        'module-stream-restore',
+      ]);
     });
 
     it('should register audio event observer', async () => {
@@ -316,11 +318,19 @@ describe('AudioModule', () => {
   describe('changeAudioDeviceVolume', () => {
     it('should call pactl to set sink volume to non-zero and mute off', async () => {
       await audioModule.changeAudioDeviceVolume('sink1', 42);
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-volume sink1 42%');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '42%',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Volume set to 42% for device sink1'
       );
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-mute sink1 0');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-mute',
+        'sink1',
+        '0',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Set mute off for device sink1'
       );
@@ -328,11 +338,19 @@ describe('AudioModule', () => {
 
     it('should call pactl to set sink volume to zero and mute on', async () => {
       await audioModule.changeAudioDeviceVolume('sink1', 0);
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-volume sink1 0%');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '0%',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Volume set to 0% for device sink1'
       );
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-mute sink1 1');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-mute',
+        'sink1',
+        '1',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Set mute on for device sink1'
       );
@@ -347,7 +365,10 @@ describe('AudioModule', () => {
 
     it('should call pactl to set default sink for output flow', async () => {
       await audioModule.changeActiveAudioDevice('output', 'sink2');
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-default-sink sink2');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-default-sink',
+        'sink2',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Active output device changed to sink2'
       );
@@ -364,10 +385,15 @@ describe('AudioModule', () => {
 
   describe('getSinks', () => {
     it('should return sinks from pactl', async () => {
-      const mockSinks = [{ name: 'sink1', flags: [ 'HW_VOLUME_CTRL'] }];
+      const mockSinks = [{ name: 'sink1', flags: ['HW_VOLUME_CTRL'] }];
       mockedRun.mockResolvedValue(JSON.stringify(mockSinks));
       const sinks = await audioModule.getSinks();
-      expect(mockedRun).toHaveBeenCalledWith('pactl --format json list sinks');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        '--format',
+        'json',
+        'list',
+        'sinks',
+      ]);
       expect(sinks).toEqual(mockSinks);
     });
 

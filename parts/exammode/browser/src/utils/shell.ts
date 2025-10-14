@@ -1,8 +1,11 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 
-export async function run(command: string): Promise<string> {
+export async function run(
+  command: string,
+  args: string[] = []
+): Promise<string> {
   return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, _) => {
+    execFile(command, args, (error, stdout, _) => {
       if (error) {
         reject(error);
         return;
