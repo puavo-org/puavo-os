@@ -746,6 +746,7 @@ class packages {
     , 'vino'
     , 'wireless-tools'
     , 'wpasupplicant'
+    , 'xdg-desktop-portal-gnome'                # for Nautilus
     , 'xdg-user-dirs'
     , 'xdg-user-dirs-gtk'
     , 'xdg-utils'
