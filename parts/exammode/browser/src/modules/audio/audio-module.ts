@@ -17,6 +17,7 @@ import { run } from '../../utils/shell';
 
 export class AudioModule implements Module {
   static readonly FALLBACK_DISPLAY_NAME = 'Audio device';
+  static readonly VOLUME_STEP = 5;
 
   readonly audioEventObserver: PulseAudioEventObserver;
   readonly audioDevicesChangeNotifier: ChangeNotifier<AudioDevice[]>;
@@ -124,7 +125,7 @@ export class AudioModule implements Module {
     // Without unloading it, existing audio streams (like website audio) remain
     // bound to the previous sink instead of switching to the new default sink.
     try {
-      await run('pactl unload-module module-stream-restore');
+      await run('pactl', ['unload-module', 'module-stream-restore']);
     } catch (exception) {
       logger.error(
         "Failed to unload 'module-stream-restore' from PulseAudio:",
@@ -137,7 +138,7 @@ export class AudioModule implements Module {
 
   async getSinks(): Promise<PulseAudioSink[]> {
     try {
-      const output = await run('pactl --format json list sinks');
+      const output = await run('pactl', ['--format', 'json', 'list', 'sinks']);
       const all_sinks = JSON.parse(output) as PulseAudioSink[];
       return all_sinks.filter(
         sink => 'flags' in sink
@@ -185,7 +186,7 @@ export class AudioModule implements Module {
 
   async getDefaultSinkName(): Promise<string> {
     try {
-      const output = await run('pactl get-default-sink');
+      const output = await run('pactl', ['get-default-sink']);
       return output.trim();
     } catch (error) {
       logger.error('Failed to fetch the default sink:', error);
@@ -239,19 +240,31 @@ export class AudioModule implements Module {
     deviceId: string,
     volume: number
   ): Promise<void> {
-    await run(`pactl set-sink-volume ${deviceId} ${volume}%`);
+    if (typeof deviceId !== 'string') {
+      throw new Error(`Invalid device ID: ${deviceId}`);
+    }
+
+    if (typeof volume !== 'number' || !(volume >= 0 && volume <= 100)) {
+      throw new Error(`Volume must be between 0 and 100`);
+    }
+
+    await run('pactl', ['set-sink-volume', deviceId, `${volume}%`]);
     logger.info(`Volume set to ${volume}% for device ${deviceId}`);
     if (volume > 0) {
-      await run(`pactl set-sink-mute ${deviceId} 0`);
+      await run('pactl', ['set-sink-mute', deviceId, '0']);
       logger.info(`Set mute off for device ${deviceId}`);
     } else {
-      await run(`pactl set-sink-mute ${deviceId} 1`);
+      await run('pactl', ['set-sink-mute', deviceId, '1']);
       logger.info(`Set mute on for device ${deviceId}`);
     }
   }
 
   async changeActiveOutputDevice(deviceId: string): Promise<void> {
-    await run(`pactl set-default-sink ${deviceId}`);
+    if (typeof deviceId !== 'string') {
+      throw new Error(`Invalid device ID: ${deviceId}`);
+    }
+
+    await run('pactl', ['set-default-sink', deviceId]);
     logger.info(`Active output device changed to ${deviceId}`);
   }
 
@@ -267,10 +280,62 @@ export class AudioModule implements Module {
     }
   }
 
+  async adjustVolumeUp(): Promise<void> {
+    const devices = await this.getAudioDevices();
+    const activeDevice = devices.find(
+      device => device.active && device.flow === 'output'
+    );
+
+    if (!activeDevice) {
+      logger.warn('No active output device found for volume adjustment');
+      return;
+    }
+
+    const newVolume = Math.min(
+      100,
+      activeDevice.volume + AudioModule.VOLUME_STEP
+    );
+    await this.changeAudioDeviceVolume(activeDevice.id, newVolume);
+
+    const isMuted = newVolume === 0;
+    this.dispatchClientNotification('AudioDeviceVolumeChanged', [
+      activeDevice.id,
+      newVolume,
+      isMuted,
+    ]);
+  }
+
+  async adjustVolumeDown(): Promise<void> {
+    const devices = await this.getAudioDevices();
+    const activeDevice = devices.find(
+      device => device.active && device.flow === 'output'
+    );
+
+    if (!activeDevice) {
+      logger.warn('No active output device found for volume adjustment');
+      return;
+    }
+
+    const newVolume = Math.max(
+      0,
+      activeDevice.volume - AudioModule.VOLUME_STEP
+    );
+    await this.changeAudioDeviceVolume(activeDevice.id, newVolume);
+
+    const isMuted = newVolume === 0;
+    this.dispatchClientNotification('AudioDeviceVolumeChanged', [
+      activeDevice.id,
+      newVolume,
+      isMuted,
+    ]);
+  }
+
   getNotifyHandlerDefinitions(): Map<string, NotifyHandler> {
     return new Map<string, NotifyHandler>([
       ['changeAudioDeviceVolume', this.changeAudioDeviceVolume.bind(this)],
       ['changeActiveAudioDevice', this.changeActiveAudioDevice.bind(this)],
+      ['adjustVolumeUp', this.adjustVolumeUp.bind(this)],
+      ['adjustVolumeDown', this.adjustVolumeDown.bind(this)],
     ]);
   }
 

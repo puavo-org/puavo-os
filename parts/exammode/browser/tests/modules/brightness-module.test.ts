@@ -84,8 +84,8 @@ describe('BrightnessModule', () => {
       watchCallback();
       await new Promise(process.nextTick);
 
-      expect(mockedRun).toHaveBeenCalledWith('brightnessctl get');
-      expect(mockedRun).toHaveBeenCalledWith('brightnessctl max');
+      expect(mockedRun).toHaveBeenCalledWith('brightnessctl', ['get']);
+      expect(mockedRun).toHaveBeenCalledWith('brightnessctl', ['max']);
       expect(mockedLogger.debug).toHaveBeenCalledWith(
         'Brightness changed externally: 42%'
       );
@@ -137,8 +137,8 @@ describe('BrightnessModule', () => {
       const brightness = await brightnessModule.getBrightness();
 
       expect(brightness).toBe(25);
-      expect(mockedRun).toHaveBeenCalledWith('brightnessctl get');
-      expect(mockedRun).toHaveBeenCalledWith('brightnessctl max');
+      expect(mockedRun).toHaveBeenCalledWith('brightnessctl', ['get']);
+      expect(mockedRun).toHaveBeenCalledWith('brightnessctl', ['max']);
     });
 
     it('should throw an error for invalid brightness values', async () => {
@@ -179,11 +179,18 @@ describe('BrightnessModule', () => {
       await new Promise(process.nextTick);
       await brightnessModule.setBrightness(50);
 
-      expect(mockedRun).toHaveBeenCalledWith('brightnessctl set 50%');
+      expect(mockedRun).toHaveBeenCalledWith('brightnessctl', ['set', '50%']);
       expect(mockedLogger.info).toHaveBeenCalledWith('Brightness set to 50%');
     });
 
-    it.each([[-1], [101], ['50' as any], [null as any], [undefined as any]])(
+    it.each([
+      [-1],
+      [101],
+      [NaN],
+      ['50' as any],
+      [null as any],
+      [undefined as any],
+    ])(
       'should throw an error for invalid brightness value: %p',
       async invalidValue => {
         const brightnessModule = new BrightnessModule();

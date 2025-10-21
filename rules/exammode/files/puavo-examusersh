@@ -4,11 +4,14 @@ if [ "$(tty)" = '/dev/tty42' ]; then
   clear
   exec env HOME=/var/lib/puavo-exammode/user      \
     bwrap --dev-bind / /                          \
+          --tmpfs    /anon                        \
           --tmpfs    /home                        \
+          --tmpfs    /images                      \
+          --tmpfs    /state                       \
           --tmpfs    /tmp                         \
           --tmpfs    /var/lib/puavo-exammode/user \
           --tmpfs    /var/tmp                     \
-      startx /usr/local/lib/puavo-exammode/exammode-session > /dev/null 2>&1
+      startx /usr/local/lib/puavo-exammode/exammode-session -- :42 > /dev/null 2>&1
 fi
 
 exec /bin/bash

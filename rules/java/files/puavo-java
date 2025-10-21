@@ -2,10 +2,12 @@
 
 set -eu
 
-if [ "${PUAVO_JAVA:-}" = 'openjdk-11' ]; then
-  java_path='/usr/lib/jvm/java-11-openjdk-amd64/bin/java'
-else
+java_path='/usr/lib/jvm/default-java/bin/java'
+java_args=''
+
+if [ "${PUAVO_JAVA:-}" = 'openjdk-17-with-jdk-11-reflections' ]; then
   java_path='/usr/lib/jvm/java-17-openjdk-amd64/bin/java'
+  java_args='--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED --add-opens java.desktop/java.awt.font=ALL-UNNAMED'
 fi
 
-exec "$java_path" "$@"
+exec "$java_path" $java_args "$@"

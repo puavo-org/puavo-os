@@ -16,12 +16,14 @@ const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;
 const EMPTY_PAGE_URL = 'about:blank';
 
+const determineLocale = () => process.env['LANG']?.split('_')[0] || 'en';
+
 const config: BrowserConfig = {
   debug: app.commandLine.hasSwitch('dev'),
   forceFullscreen: app.commandLine.hasSwitch('force-fullscreen'),
   height:
     parseInt(app.commandLine.getSwitchValue('height')) || DEFAULT_WINDOW_HEIGHT,
-  locale: app.commandLine.getSwitchValue('locale') || 'en',
+  locale: app.commandLine.getSwitchValue('locale') || determineLocale(),
   modules: app.commandLine.hasSwitch('modules'),
   restrictKeybindings: app.commandLine.hasSwitch('restrict-keybindings'),
   shell: {
@@ -53,51 +55,87 @@ if (app.commandLine.hasSwitch('kiosk')) {
 
 logger.setDebugEnabled(config.debug);
 
-function configureInputs(config: BrowserConfig): InputEventInterceptor {
-  type Handler = ((webContents: WebContents) => void) | null;
+const ZOOM_MIN_LEVEL = -5;
+const ZOOM_MAX_LEVEL = 5;
+
+function clampZoomLevel(level: number): number {
+  return Math.max(ZOOM_MIN_LEVEL, Math.min(ZOOM_MAX_LEVEL, level));
+}
+
+function zoomIn(contents: WebContents): void {
+  const currentLevel = contents.getZoomLevel();
+  const newLevel = clampZoomLevel(currentLevel + 1);
+  contents.setZoomLevel(newLevel);
+}
+
+function zoomOut(contents: WebContents): void {
+  const currentLevel = contents.getZoomLevel();
+  const newLevel = clampZoomLevel(currentLevel - 1);
+  contents.setZoomLevel(newLevel);
+}
+
+function resetZoom(contents: WebContents): void {
+  contents.setZoomLevel(0);
+}
+
+function configureInputs(
+  config: BrowserConfig,
+  audioModule?: AudioModule
+): InputEventInterceptor {
+  type Handler = ((webContents: WebContents) => void | Promise<void>) | null;
+
+  const volumeUp = async (): Promise<void> => {
+    try {
+      await audioModule?.adjustVolumeUp();
+    } catch (error) {
+      logger.error('Failed to increase volume:', error);
+    }
+  };
+
+  const volumeDown = async (): Promise<void> => {
+    try {
+      await audioModule?.adjustVolumeDown();
+    } catch (error) {
+      logger.error('Failed to decrease volume:', error);
+    }
+  };
+
   const keybindings = new Map<string, Handler>([
     ['Alt+ArrowLeft', null],
     ['Alt+ArrowRight', null],
-    ['Ctrl+r', null],
-    ['Ctrl+Shift+R', null],
     ['Ctrl+q', null],
     ['Ctrl+w', null],
+    ['Ctrl++', zoomIn],
+    ['Ctrl+Shift+?', zoomIn],
+    ['Ctrl+-', zoomOut],
+    ['Ctrl+0', resetZoom],
+    ['AudioVolumeUp', volumeUp],
+    ['AudioVolumeDown', volumeDown],
+    ...((config.shell.show
+      ? [
+          ['Ctrl+r', null],
+          ['Ctrl+Shift+R', null]
+        ]
+      : []) as Array<[string, Handler]>),
     ...((config.restrictKeybindings
-      ? ([
+      ? [
           ['F11', null],
           ['Ctrl+q', null],
           ['Ctrl+w', null],
-          ['Ctrl++', null],
-          ['Ctrl+Shift+?', null],
-          ['Ctrl+-', null],
-          ['Ctrl+0', null],
-        ] as Array<[string, Handler]>)
-      : [
-          [
-            'Ctrl++',
-            contents => contents.setZoomLevel(contents.getZoomLevel() + 1),
-          ],
-          [
-            'Ctrl+Shift+?',
-            contents => contents.setZoomLevel(contents.getZoomLevel() + 1),
-          ],
-          [
-            'Ctrl+-',
-            contents => contents.setZoomLevel(contents.getZoomLevel() - 1),
-          ],
-          ['Ctrl+0', contents => contents.setZoomLevel(0)],
-        ]) as Array<[string, Handler]>),
+        ]
+      : []) as Array<[string, Handler]>),
   ]);
   return new InputEventInterceptor(keybindings);
 }
 
 void app.whenReady().then(() => {
-  const browser = new Browser(config, configureInputs(config));
+  const browser = new Browser(config);
   const moduleManager = new ModuleManager(browser.browserWindow);
 
   if (config.modules) {
+    const audioModule = new AudioModule();
     moduleManager.setModules([
-      new AudioModule(),
+      audioModule,
       new BrightnessModule(),
       new EncryptionModule(),
       new ScreenshotModule(browser.browserWindow.webContents),
@@ -107,5 +145,8 @@ void app.whenReady().then(() => {
     ]);
 
     moduleManager.registerModules();
+    browser.attachInputEventInterceptor(configureInputs(config, audioModule));
+  } else {
+    browser.attachInputEventInterceptor(configureInputs(config, undefined));
   }
 });

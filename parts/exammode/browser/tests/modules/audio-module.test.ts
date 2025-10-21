@@ -26,7 +26,7 @@ const mockSink1: PulseAudioSink = {
   mute: false,
   state: 'RUNNING',
   channel_map: 'front-left,front-right',
-  flags: [ 'HW_VOLUME_CTRL' ],
+  flags: ['HW_VOLUME_CTRL'],
   volume: {
     'front-left': {
       value: 32768,
@@ -45,7 +45,7 @@ const mockSink2: PulseAudioSink = {
   mute: true,
   state: 'IDLE',
   channel_map: 'front-left,front-right',
-  flags: [ 'HW_VOLUME_CTRL' ],
+  flags: ['HW_VOLUME_CTRL'],
   volume: {
     'front-left': {
       value: 49152,
@@ -64,7 +64,7 @@ const mockSink3: PulseAudioSink = {
   mute: false,
   state: 'RUNNING',
   channel_map: 'invalid-channel-name',
-  flags: [ 'HW_VOLUME_CTRL' ],
+  flags: ['HW_VOLUME_CTRL'],
   volume: {
     'front-left': {
       value: 65536,
@@ -108,9 +108,10 @@ describe('AudioModule', () => {
       new AudioModule();
       await new Promise(process.nextTick);
 
-      expect(mockedRun).toHaveBeenCalledWith(
-        'pactl unload-module module-stream-restore'
-      );
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'unload-module',
+        'module-stream-restore',
+      ]);
       expect(mockedLogger.error).toHaveBeenCalledWith(
         "Failed to unload 'module-stream-restore' from PulseAudio:",
         error
@@ -149,9 +150,10 @@ describe('AudioModule', () => {
     });
 
     it('should unload stream restore module', () => {
-      expect(mockedRun).toHaveBeenCalledWith(
-        'pactl unload-module module-stream-restore'
-      );
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'unload-module',
+        'module-stream-restore',
+      ]);
     });
 
     it('should register audio event observer', async () => {
@@ -314,13 +316,26 @@ describe('AudioModule', () => {
   });
 
   describe('changeAudioDeviceVolume', () => {
+    beforeEach(() => {
+      mockedRun.mockClear();
+      mockedLogger.info.mockClear();
+    });
+
     it('should call pactl to set sink volume to non-zero and mute off', async () => {
       await audioModule.changeAudioDeviceVolume('sink1', 42);
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-volume sink1 42%');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '42%',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Volume set to 42% for device sink1'
       );
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-mute sink1 0');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-mute',
+        'sink1',
+        '0',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Set mute off for device sink1'
       );
@@ -328,14 +343,46 @@ describe('AudioModule', () => {
 
     it('should call pactl to set sink volume to zero and mute on', async () => {
       await audioModule.changeAudioDeviceVolume('sink1', 0);
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-volume sink1 0%');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '0%',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Volume set to 0% for device sink1'
       );
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-sink-mute sink1 1');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-mute',
+        'sink1',
+        '1',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Set mute on for device sink1'
       );
+    });
+
+    it.each([
+      [-42],
+      [123],
+      [NaN],
+      ['50' as any],
+      [null as any],
+      [undefined as any],
+    ])(
+      'should throw an error for invalid volume value: %p',
+      async invalidValue => {
+        await expect(
+          audioModule.changeAudioDeviceVolume('sink1', -42)
+        ).rejects.toThrow('Volume must be between 0 and 100');
+        expect(mockedRun).not.toHaveBeenCalled();
+      }
+    );
+
+    it('should throw an error and not call pactl if deviceId is not a string', async () => {
+      await expect(
+        audioModule.changeAudioDeviceVolume(123 as any, 50)
+      ).rejects.toThrow('Invalid device ID: 123');
+      expect(mockedRun).not.toHaveBeenCalled();
     });
   });
 
@@ -347,7 +394,10 @@ describe('AudioModule', () => {
 
     it('should call pactl to set default sink for output flow', async () => {
       await audioModule.changeActiveAudioDevice('output', 'sink2');
-      expect(mockedRun).toHaveBeenCalledWith('pactl set-default-sink sink2');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-default-sink',
+        'sink2',
+      ]);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Active output device changed to sink2'
       );
@@ -360,14 +410,26 @@ describe('AudioModule', () => {
         'Unsupported flow type: input'
       );
     });
+
+    it('should throw an error and not call pactl if deviceId is not a string', async () => {
+      await expect(
+        audioModule.changeActiveAudioDevice('output', 123 as any)
+      ).rejects.toThrow('Invalid device ID: 123');
+      expect(mockedRun).not.toHaveBeenCalled();
+    });
   });
 
   describe('getSinks', () => {
     it('should return sinks from pactl', async () => {
-      const mockSinks = [{ name: 'sink1', flags: [ 'HW_VOLUME_CTRL'] }];
+      const mockSinks = [{ name: 'sink1', flags: ['HW_VOLUME_CTRL'] }];
       mockedRun.mockResolvedValue(JSON.stringify(mockSinks));
       const sinks = await audioModule.getSinks();
-      expect(mockedRun).toHaveBeenCalledWith('pactl --format json list sinks');
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        '--format',
+        'json',
+        'list',
+        'sinks',
+      ]);
       expect(sinks).toEqual(mockSinks);
     });
 
@@ -379,6 +441,168 @@ describe('AudioModule', () => {
         'Failed to list sinks:',
         error
       );
+    });
+  });
+
+  describe('adjustVolumeUp', () => {
+    beforeEach(() => {
+      mockedRun.mockClear();
+    });
+
+    it('should increase volume by 5% on active device', async () => {
+      const mockDevices = [
+        {
+          id: 'sink1',
+          displayName: 'Speaker',
+          active: true,
+          flow: 'output' as const,
+          volume: 50,
+          mute: false,
+        },
+        {
+          id: 'sink2',
+          displayName: 'Headphones',
+          active: false,
+          flow: 'output' as const,
+          volume: 30,
+          mute: false,
+        },
+      ];
+
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue(mockDevices);
+      mockedRun.mockResolvedValue('');
+
+      await audioModule.adjustVolumeUp();
+
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '55%',
+      ]);
+      expect(audioModule.dispatchClientNotification).toHaveBeenCalledWith(
+        'AudioDeviceVolumeChanged',
+        ['sink1', 55, false]
+      );
+    });
+
+    it('should cap volume at 100%', async () => {
+      const mockDevices = [
+        {
+          id: 'sink1',
+          displayName: 'Speaker',
+          active: true,
+          flow: 'output' as const,
+          volume: 98,
+          mute: false,
+        },
+      ];
+
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue(mockDevices);
+      mockedRun.mockResolvedValue('');
+
+      await audioModule.adjustVolumeUp();
+
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '100%',
+      ]);
+      expect(audioModule.dispatchClientNotification).toHaveBeenCalledWith(
+        'AudioDeviceVolumeChanged',
+        ['sink1', 100, false]
+      );
+    });
+
+    it('should warn if no active output device found', async () => {
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue([]);
+
+      await audioModule.adjustVolumeUp();
+
+      expect(mockedLogger.warn).toHaveBeenCalledWith(
+        'No active output device found for volume adjustment'
+      );
+      expect(mockedRun).not.toHaveBeenCalledWith(
+        'pactl',
+        expect.arrayContaining(['set-sink-volume'])
+      );
+      expect(audioModule.dispatchClientNotification).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('adjustVolumeDown', () => {
+    beforeEach(() => {
+      mockedRun.mockClear();
+    });
+
+    it('should decrease volume by 5% on active device', async () => {
+      const mockDevices = [
+        {
+          id: 'sink1',
+          displayName: 'Speaker',
+          active: true,
+          flow: 'output' as const,
+          volume: 50,
+          mute: false,
+        },
+      ];
+
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue(mockDevices);
+      mockedRun.mockResolvedValue('');
+
+      await audioModule.adjustVolumeDown();
+
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '45%',
+      ]);
+      expect(audioModule.dispatchClientNotification).toHaveBeenCalledWith(
+        'AudioDeviceVolumeChanged',
+        ['sink1', 45, false]
+      );
+    });
+
+    it('should cap volume at 0%', async () => {
+      const mockDevices = [
+        {
+          id: 'sink1',
+          displayName: 'Speaker',
+          active: true,
+          flow: 'output' as const,
+          volume: 3,
+          mute: false,
+        },
+      ];
+
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue(mockDevices);
+      mockedRun.mockResolvedValue('');
+
+      await audioModule.adjustVolumeDown();
+
+      expect(mockedRun).toHaveBeenCalledWith('pactl', [
+        'set-sink-volume',
+        'sink1',
+        '0%',
+      ]);
+      expect(audioModule.dispatchClientNotification).toHaveBeenCalledWith(
+        'AudioDeviceVolumeChanged',
+        ['sink1', 0, true]
+      );
+    });
+
+    it('should warn if no active output device found', async () => {
+      jest.spyOn(audioModule, 'getAudioDevices').mockResolvedValue([]);
+
+      await audioModule.adjustVolumeDown();
+
+      expect(mockedLogger.warn).toHaveBeenCalledWith(
+        'No active output device found for volume adjustment'
+      );
+      expect(mockedRun).not.toHaveBeenCalledWith(
+        'pactl',
+        expect.arrayContaining(['set-sink-volume'])
+      );
+      expect(audioModule.dispatchClientNotification).not.toHaveBeenCalled();
     });
   });
 });

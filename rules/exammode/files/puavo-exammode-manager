@@ -212,15 +212,22 @@ class PuavoExammode < DBus::Object
       raise errmsg
     end
 
+    if @desktop_session_vt then
+      Syslog.log(Syslog::LOG_ERR,
+        'tried to activate examination mode when it is already active')
+      raise 'exammode session is already active'
+    end
+
     if ! system('loginctl', 'lock-sessions') then
       Syslog.log(Syslog::LOG_ERR, 'could not lock desktop sessions')
       raise 'error in locking sessions'
     end
 
-    if @desktop_session_vt then
-      Syslog.log(Syslog::LOG_ERR,
-        'tried to activate examination mode when it is already active')
-      raise 'exammode session is already active'
+    # lock the Wi-Fi network
+    if ! system('/usr/lib/puavo-exammode/puavo-exammode-wifi-ctrl',
+                   '--lock') then
+      Syslog.log(Syslog::LOG_ERR, 'could not lock Wi-Fi network')
+      raise 'error in locking Wi-Fi network'
     end
 
     @desktop_session_vt = get_vt_number()
@@ -313,6 +320,12 @@ class PuavoExammode < DBus::Object
         begin
           File.unlink(SESSION_JSON_PATH)
         rescue Errno::ENOENT
+        end
+
+        # unlock the Wi-Fi network
+        if ! system('/usr/lib/puavo-exammode/puavo-exammode-wifi-ctrl',
+                       '--unlock') then
+          Syslog.log(Syslog::LOG_WARNING, 'could not unlock the Wi-Fi network')
         end
 
         Syslog.log(Syslog::LOG_NOTICE,

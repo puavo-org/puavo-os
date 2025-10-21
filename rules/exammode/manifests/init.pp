@@ -105,6 +105,7 @@ class exammode {
     or title == 'kbd'
     or title == 'puavo-conf'
     or title == 'puavo-desktop'
+    or title == 'puavo-exammode'
     or title == 'qiv'
     or title == 'systemd'
     or title == 'tomoyo-tools'

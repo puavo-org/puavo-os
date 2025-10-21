@@ -1,0 +1,121 @@
+#!/bin/sh
+
+set -eu
+
+log() {
+  logger -s -t puavo-exammode-wifi-ctrl -p "user.${1}" "$2" || true
+}
+
+lock_wifi() {
+  local currently_active_wifi_network_uuid current_nmconnection_path \
+        nm_statedir
+
+  log info 'locking the current wifi network'
+
+  nm_statedir='/state/etc/NetworkManager/system-connections'
+
+  currently_active_wifi_network_uuid=$(
+    env LANG=C nmcli -t -f TYPE,UUID connection show --active \
+      | awk -F: '$1 == "802-11-wireless" { print $2; exit(0) }')
+
+  if [ -z "$currently_active_wifi_network_uuid" ]; then
+    # In case there is no active Wi-Fi network, we still do locking but
+    # will not provide any network to join to.
+    log info 'no currently active wifi network'
+    current_nmconnection_path=''
+  else
+    current_nmconnection_path=$(
+      awk -F= -v active_uuid="$currently_active_wifi_network_uuid" '
+        $1 == "uuid" && $2 == active_uuid { print FILENAME; exit 0 }
+      ' "$nm_statedir"/*)
+    if ! [ -e "$current_nmconnection_path" ]; then
+      # error, but proceed to locking all
+      log err 'could not find NM connection file for the current network'
+      current_nmconnection_path=''
+    fi
+  fi
+
+  if ! rm -rf /etc/NetworkManager/system-connections.exammode; then
+    log err 'error cleaning up system-connections.exammode'
+    return 1
+  fi
+  if ! mkdir -p /etc/NetworkManager/system-connections.exammode; then
+    log err 'error mkdir system-connections.exammode'
+    return 1
+  fi
+
+  if [ -n "$current_nmconnection_path" ]; then
+    log info "locking to network in ${current_nmconnection_path}"
+    if ! cp -p "$current_nmconnection_path" \
+               /etc/NetworkManager/system-connections.exammode; then
+      log err 'error copying to system-connections.exammode'
+      return 1
+    fi
+  fi
+
+  if ! ln -fns system-connections.exammode \
+               /etc/NetworkManager/system-connections; then
+    log err 'error setting up system-connections.exammode'
+    return 1
+  fi
+
+  if ! nmcli connection reload; then
+    log err 'error in NetworkManager connection reload during locking'
+    return 1
+  fi
+
+  if [ -n "$currently_active_wifi_network_uuid" ]; then
+    if ! nmcli connection modify "$currently_active_wifi_network_uuid" \
+                          connection.autoconnect yes; then
+      log warn 'failure in enabling locked network autoconnect'
+    fi
+    if ! nmcli connection modify "$currently_active_wifi_network_uuid" \
+                          connection.autoconnect-priority 991; then
+      log warn 'failure in setting locked network autoconnect priority'
+    fi
+  fi
+}
+
+unlock_wifi() {
+  log info 'unlocking wifi networks'
+
+  if ! ln -fns /state/etc/NetworkManager/system-connections \
+               /etc/NetworkManager/system-connections; then
+    log err 'error in reverting back to normal NetworkManager connections'
+    return 1
+  fi
+
+  if ! nmcli connection reload; then
+    log err 'error in NetworkManager connection reload during unlock'
+    return 1
+  fi
+
+  rm -rf /etc/NetworkManager/system-connections.exammode
+}
+
+# nothing to do on netboot devices
+test -e /run/puavo/nbd-server && exit 0
+
+if ! mountpoint -q /state; then
+  # we expect a laptop-like environment
+  exit 1
+fi
+
+mode=${1:-}
+
+case "$mode" in
+  --lock)
+    lock_wifi
+    ;;
+  --unlock)
+    unlock_wifi
+    ;;
+  '')
+    log err "Usage: $(basename "$0") --lock|--unlock"
+    exit 1
+    ;;
+  *)
+    log err "unsupported mode '${mode}'"
+    exit 1
+    ;;
+esac

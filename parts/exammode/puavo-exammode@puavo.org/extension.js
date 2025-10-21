@@ -131,6 +131,10 @@ export default class DashToPanelExtension extends Extension {
     if (!ok) {
       throw new Error('could not read session information');
     }
+
+    // disable gestures
+    global.stage.get_actions().forEach(action => { action.enabled = false })
+
     let utf8decoder = new TextDecoder();
     // XXX should probably check exam_session_info contents in some way?
     exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
@@ -147,7 +151,6 @@ export default class DashToPanelExtension extends Extension {
                               });
 
     this.indicator = new Indicator();
-
     Main.panel._centerBox.insert_child_at_index(this.control_info_label, 0);
   } 
 
@@ -157,5 +160,8 @@ export default class DashToPanelExtension extends Extension {
     this.control_info_label = null;
     this.indicator.destroy();
     this.indicator = null;
+
+    // enable gestures
+    global.stage.get_actions().forEach(action => { action.enabled = true })
   }
 }

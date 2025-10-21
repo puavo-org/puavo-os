@@ -1158,6 +1158,12 @@ export const Panel = GObject.registerClass(
           stageY,
         ) == this.panel
       ) {
+        let puavo_exammode_session = GLib.getenv('EXAMMODE_SESSION');
+        if (puavo_exammode_session && puavo_exammode_session !== '') {
+            // do not show the showapps menu in Puavo examination mode
+            return Clutter.EVENT_STOP;
+        }
+
         //right click on an empty part of the panel, temporarily borrow and display the showapps context menu
         Main.layoutManager.setDummyCursorGeometry(stageX, stageY, 0, 0)
 
