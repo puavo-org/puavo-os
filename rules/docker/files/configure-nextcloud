@@ -224,30 +224,30 @@ occ db:convert-filecache-bigint
 #
 
 patch_nc apps/files_external/lib/Lib/Backend/SMB.php <<'EOF'
---- apps/files_external/lib/Lib/Backend/SMB.php	2025-05-15 09:19:05.000000000 +0000
-+++ apps/files_external/lib/Lib/Backend/SMB.php	2025-06-03 05:15:59.658202628 +0000
-@@ -64,7 +64,19 @@
- 	 */
- 	public function manipulateStorageConfig(StorageConfig &$storage, ?IUser $user = null) {
+--- apps/files_external/lib/Lib/Backend/SMB.php	2025-09-11 13:03:44.000000000 +0000
++++ apps/files_external/lib/Lib/Backend/SMB.php	2025-10-21 06:27:20.489956161 +0000
+@@ -61,7 +61,19 @@
+ 
+ 	public function manipulateStorageConfig(StorageConfig &$storage, ?IUser $user = null): void {
  		$auth = $storage->getAuthMechanism();
 -		if ($auth->getScheme() === AuthMechanism::SCHEME_PASSWORD) {
 +		if ($auth->getIdentifier() !== 'password::logincredentials') {
 +			throw new \RuntimeException('only password::logincredentials is supported with puavo');
 +		}
-+
-+		$kerbAuth = new KerberosApacheAuth();
++ 
++		$kerbAuth = new KerberosAuth();
 +		if ($user) {
 +			$user_uid = $user->getUID();
 +			$kerbAuth->lookupPuavoKerberosTicket($user_uid);
 +		}
-+
-+		if ($kerbAuth->checkTicket()) {
++ 
++		if ($kerbAuth->getTicket()?->isValid()) {
 +			$smbAuth = $kerbAuth;
 +		} else {
  			if (!is_string($storage->getBackendOption('user')) || !is_string($storage->getBackendOption('password'))) {
  				throw new \InvalidArgumentException('user or password is not set');
  			}
-@@ -74,51 +86,6 @@
+@@ -71,51 +83,6 @@
  				$storage->getBackendOption('domain'),
  				$storage->getBackendOption('password')
  			);
@@ -261,33 +261,33 @@ patch_nc apps/files_external/lib/Lib/Backend/SMB.php <<'EOF'
 -						throw new \InvalidArgumentException('invalid authentication backend');
 -					}
 -					$credentialsStore = $auth->getCredentialsStore();
--					$kerbAuth = new KerberosApacheAuth();
+-					$kerbAuth = new KerberosAuth();
+-					$kerbAuth->setTicket(KerberosTicket::fromEnv());
 -					// check if a kerberos ticket is available, else fallback to session credentials
--					if ($kerbAuth->checkTicket()) {
+-					if ($kerbAuth->getTicket()?->isValid()) {
 -						$smbAuth = $kerbAuth;
 -					} else {
 -						try {
 -							$credentials = $credentialsStore->getLoginCredentials();
--							$user = $credentials->getLoginName();
+-							$loginName = $credentials->getLoginName();
 -							$pass = $credentials->getPassword();
--							preg_match('/(.*)@(.*)/', $user, $matches);
+-							preg_match('/(.*)@(.*)/', $loginName, $matches);
 -							$realm = $storage->getBackendOption('default_realm');
 -							if (empty($realm)) {
 -								$realm = 'WORKGROUP';
 -							}
 -							if (count($matches) === 0) {
--								$username = $user;
+-								$username = $loginName;
 -								$workgroup = $realm;
 -							} else {
--								$username = $matches[1];
--								$workgroup = $matches[2];
+-								[, $username, $workgroup] = $matches;
 -							}
 -							$smbAuth = new BasicAuth(
 -								$username,
 -								$workgroup,
 -								$pass
 -							);
--						} catch (\Exception $e) {
+-						} catch (\Exception) {
 -							throw new InsufficientDataForMeaningfulAnswerException('No session credentials saved');
 -						}
 -					}
@@ -301,41 +301,33 @@ patch_nc apps/files_external/lib/Lib/Backend/SMB.php <<'EOF'
  		$storage->setBackendOption('auth', $smbAuth);
 EOF
 
-patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php <<'EOF'
---- apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2025-05-15 09:19:05.000000000 +0000
-+++ apps/files_external/3rdparty/icewind/smb/src/KerberosApacheAuth.php	2025-06-03 05:20:55.406018815 +0000
-@@ -42,6 +42,17 @@
- 	 * @return bool
- 	 */
- 	public function checkTicket(): bool {
--		return $this->getTicket()->isValid();
-+		try {
-+			return $this->getTicket()->isValid();
-+		} catch (InvalidTicket $e) {
-+			return false;
-+		}
-+	}
+patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosAuth.php <<'EOF'
+--- apps/files_external/3rdparty/icewind/smb/src/KerberosAuth.php	2025-09-11 13:03:44.000000000 +0000
++++ apps/files_external/3rdparty/icewind/smb/src/KerberosAuth.php	2025-10-21 06:32:46.523641245 +0000
+@@ -61,4 +61,11 @@
+ 			throw new Exception("Failed to set smbclient options for kerberos auth");
+ 		}
+ 	}
 +
 +	public function lookupPuavoKerberosTicket($user_uid): void {
 +		$ticket = KerberosTicket::fromPuavoEnv($user_uid);
 +		if ($ticket) {
 +			$this->ticket = $ticket;
 +		}
- 	}
++	}
  }
-
 EOF
 
 patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php <<'EOF'
---- apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php	2025-05-15 09:19:05.000000000 +0000
-+++ apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php	2025-06-03 05:16:44.196463060 +0000
+--- apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php	2025-09-11 13:03:44.000000000 +0000
++++ apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php	2025-10-21 06:34:22.773776978 +0000
 @@ -55,6 +55,30 @@
  		return new KerberosTicket($krb5, $ticketName);
  	}
  
 +	public static function fromPuavoEnv($user_uid): ?KerberosTicket {
 +		$ticketName = null;
-+
++ 
 +		$kerberos_realm = getenv('PUAVO_KERBEROS_REALM');
 +		$ccache_dir = getenv('PUAVO_KERBEROS_CCACHE_DIR');
 +		if (!is_null($user_uid) && $kerberos_realm !== false && $ccache_dir !== false) {
@@ -344,14 +336,14 @@ patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php <<'EOF'
 +				$ticketName = "FILE:{$ticketPath}";
 +			}
 +		}
-+
++ 
 +		if (!$ticketName) {
 +			$ticketName = getenv("KRB5CCNAME");
 +		}
 +		if (!$ticketName) {
 +			return null;
 +		}
-+
++ 
 +		$krb5 = new KRB5CCache();
 +		$krb5->open($ticketName);
 +		return new KerberosTicket($krb5, $ticketName);
@@ -360,18 +352,25 @@ patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php <<'EOF'
  	public static function load(string $ticket): KerberosTicket {
  		$tmpFilename = tempnam(sys_get_temp_dir(), "krb5cc_php_");
  		file_put_contents($tmpFilename, $ticket);
+@@ -82,4 +106,4 @@
+ 		}
+ 		return $ticket;
+ 	}
+-}
+\ No newline at end of file
++}
 EOF
 
 patch_nc lib/private/Authentication/LoginCredentials/Store.php <<'EOF'
---- lib/private/Authentication/LoginCredentials/Store.php	2025-05-15 09:19:06.000000000 +0000
-+++ lib/private/Authentication/LoginCredentials/Store.php	2025-06-03 05:17:28.650681486 +0000
+--- lib/private/Authentication/LoginCredentials/Store.php	2025-09-11 13:03:44.000000000 +0000
++++ lib/private/Authentication/LoginCredentials/Store.php	2025-10-21 06:35:28.308498437 +0000
 @@ -50,10 +50,22 @@
  	 * @param array $params
  	 */
  	public function authenticate(array $params) {
 +		$has_password = isset($params['password']);
  		if ($params['password'] !== null) {
- 			$params['password'] = $this->crypto->encrypt((string) $params['password']);
+ 			$params['password'] = $this->crypto->encrypt((string)$params['password']);
  		}
  		$this->session->set('login_credentials', json_encode($params));
 +
