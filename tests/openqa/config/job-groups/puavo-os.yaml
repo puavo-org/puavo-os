@@ -1,0 +1,13 @@
+defaults:
+  x86_64:
+    machine: puavo-qemu
+    priority: 1
+products:
+  puavo-x86_64:
+    distri: puavo-os
+    version: generic
+    flavor: iso
+scenarios:
+  x86_64:
+    puavo-x86_64:
+    - puavo-os

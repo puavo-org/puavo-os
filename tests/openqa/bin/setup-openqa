@@ -1,0 +1,143 @@
+#!/bin/sh
+
+set -eu
+
+packages='
+  openqa
+  openqa-doc
+  openqa-worker
+  ovmf
+'
+
+mkdir -p /home/var_lib_openqa
+ln -fns /home/var_lib_openqa /var/lib/openqa
+
+apt-get update
+apt-get -y install $packages
+
+mkdir -p /usr/local/lib/os-autoinst
+install -o root -g root -m 755 lib/os-autoinst-openvswitch \
+        /usr/local/lib/os-autoinst/os-autoinst-openvswitch
+
+if ! [ -e /etc/systemd/system/os-autoinst-openvswitch.service ]; then
+  (
+    autoinst_version='4.6.1731418769.97d9a7fd'
+    tmpdir=$(mktemp -d /tmp/os-autoinst.sources.XXXXXX)
+    cd "$tmpdir"
+    apt source os-autoinst
+    install -o root -g root -m 644 \
+            "os-autoinst-${autoinst_version}/etc/dbus-1/system.d/org.opensuse.os_autoinst.switch.conf" \
+            /etc/dbus-1/system.d/org.opensuse.os_autoinst.switch.conf
+    sed 's|^ExecStart=.*|ExecStart=/usr/local/lib/os-autoinst/os-autoinst-openvswitch|' \
+        "os-autoinst-${autoinst_version}/systemd/os-autoinst-openvswitch.service.in" \
+      > /etc/systemd/system/os-autoinst-openvswitch.service.tmp
+    mv /etc/systemd/system/os-autoinst-openvswitch.service.tmp \
+       /etc/systemd/system/os-autoinst-openvswitch.service
+    # this is our customized version:
+    cd /
+    rm -rf "$tmpdir"
+  )
+fi
+
+# XXX This should be fixed in upstream, perhaps some variable is needed when
+# XXX TPM state persistency is required?
+sed -i '/unlink.*permall/s/unlink /# XXX PUAVO disable tpm cleanup: unlink /' \
+    /usr/lib/os-autoinst/backend/qemu.pm
+
+systemctl enable --now os-autoinst-openvswitch.service
+
+ovs-vsctl --may-exist add-br br0
+ovs-vsctl --may-exist add-port br0 tap0
+mkdir -p /etc/systemd/system/os-autoinst-openvswitch.service.d
+cat <<'EOF' > /etc/systemd/system/os-autoinst-openvswitch.service.d/override.conf
+[Service]
+ExecStartPost=/sbin/ip link set br0 up
+ExecStartPost=/sbin/ip addr replace 10.0.2.2/15 dev br0
+EOF
+systemctl daemon-reload
+systemctl restart os-autoinst-openvswitch.service
+
+cat <<'EOF' > /etc/nftables.conf.tmp
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+    chain forward {
+        type filter hook forward priority 0;
+
+        # allow established/related traffic back in
+        ct state established,related accept
+
+        # allow guests on br0 to reach the internet via wlan0
+        iifname "br0" oifname "wlan0" accept
+
+        # optionally allow forwarding back from wlan0 to br0
+        iifname "wlan0" oifname "br0" ct state established,related accept
+
+        # drop everything else by default
+        counter drop
+    }
+}
+
+table ip nat {
+    chain postrouting {
+        type nat hook postrouting priority 100;
+
+        # masquerade guest network going out via wlan0
+        oifname "wlan0" ip saddr 10.0.0.0/15 masquerade
+    }
+}
+EOF
+mv /etc/nftables.conf.tmp /etc/nftables.conf
+systemctl enable --now nftables.service
+
+sysctl -w net.ipv4.ip_forward=1
+cat <<'EOF' > /etc/sysctl.d/90-puavo-openqa-ip-forward.conf
+net.ipv4.ip_forward=1
+EOF
+
+systemctl enable --now postgresql.service
+
+a2enmod expires headers proxy proxy_http proxy_wstunnel rewrite
+
+server_name=$(hostname -f)
+cat <<EOF > /etc/apache2/sites-available/openqa.conf
+<VirtualHost *:80>
+    ServerName ${server_name}
+    Include /etc/apache2/sites-available/openqa-common.inc
+</VirtualHost>
+EOF
+ln -fns ../sites-available/openqa.conf /etc/apache2/sites-enabled/openqa.conf
+rm -f /etc/apache2/sites-enabled/000-default.conf
+
+# setup Fake authentication (no username/password, this is not good
+# if OpenQA instance is reachable from a network)
+sed -i '/#method = Fake|OpenID|OAuth2/s/^.*$/method = Fake/' /etc/openqa/openqa.ini
+
+mkdir -p /etc/systemd/system/openqa-worker-plain@1.service.d
+cat <<'EOF' > /etc/systemd/system/openqa-worker-plain@1.service.d/override.conf
+[Service]
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_SYS_ADMIN CAP_NET_RAW
+EOF
+
+systemctl enable --now apache2.service openqa-webui openqa-scheduler openqa-worker@1
+
+if ! grep -q puavo-generated /etc/openqa/client.conf; then
+  key=$(head -c 8 /dev/urandom | xxd -p -u)
+  secret=$(head -c 8 /dev/urandom | xxd -p -u)
+
+  sudo -u geekotest /usr/share/openqa/script/create_admin \
+    --fullname 'Puavo Org' --nickname Puavo --email dev@opinsys.fi \
+    --key "$key" --secret "$secret" puavo
+
+  cat > /etc/openqa/client.conf.tmp <<EOF
+# puavo-generated
+[localhost]
+key = ${key}
+secret = ${secret}
+EOF
+  install -o _openqa-worker -g puavo-os -m 640 /etc/openqa/client.conf.tmp /etc/openqa/client.conf
+  rm -f /etc/openqa/client.conf.tmp
+fi

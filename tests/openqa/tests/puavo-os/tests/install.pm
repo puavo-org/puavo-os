@@ -1,0 +1,43 @@
+use Mojo::Base 'basetest';
+use testapi;
+
+sub run {
+  select_console 'sut';
+
+  # We assume we are currently in the primary console and US layout is enabled.
+
+  # Open a new tmux window to get a fresh shell
+  send_key('ctrl-b');
+  send_key('c', wait_screen_change => 1);
+
+  # TODO: This is a temporary hack around registration
+  type_string(q{echo 'echo laptop > /etc/puavo/hosttype' > /usr/sbin/puavo-register});
+  send_key('ret', wait_screen_change => 1);
+  type_string('echo puavo.qa.fake > /etc/puavo/domain');
+  send_key('ret', wait_screen_change => 1);
+
+  # Return back to the primary console
+  type_string('exit 0');
+  send_key('ret', wait_screen_change => 1);
+
+  # Start install
+  type_string('install');
+  send_key('ret', wait_screen_change => 1);
+
+  # XXX as our registration was totally faked, the installation returns
+  # XXX errors, but for now we go with that in this test
+  assert_screen('faked-installation-done', timeout => 30);
+  send_key('ret', wait_screen_change => 1);
+
+  type_string('reboot');
+  send_key('ret', wait_screen_change => 1);
+
+  assert_screen('login-screen', timeout => 300);
+  record_info('Puavo', 'Login screen reached');
+}
+
+sub test_flags {
+  return { fatal => 1 };
+}
+
+1;

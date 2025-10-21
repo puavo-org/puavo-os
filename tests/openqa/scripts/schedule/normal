@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -eu
+
+SCRIPT_DIRECTORY="$(dirname "$0")"
+cd "$SCRIPT_DIRECTORY"
+
+./normal-preinstall
+./normal-install

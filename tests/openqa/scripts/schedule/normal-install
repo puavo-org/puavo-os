@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -eu
+
+SCRIPT_DIRECTORY="$(dirname "$0")"
+. "$SCRIPT_DIRECTORY/lib/jobs"
+
+submit_job normal_install                                                   \
+           boot_preinstall,install                                          \
+           false                                                            \
+           HDD_1=normal-preinstall-%VERSION%-%ARCH%-%BUILD%@%MACHINE%.qcow2 \
+           BOOTFROM=c

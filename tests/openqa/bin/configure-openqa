@@ -1,0 +1,50 @@
+#!/bin/sh
+
+set -eu
+
+while ! openqa-cli api machines >/dev/null 2>&1; do
+  echo 'Waiting for OpenQA to start...'
+  sleep 5
+done
+
+echo 'Configuring OpenQA...'
+
+config_directory='config'
+
+machines_count=$(openqa-cli api machines | jq -r '.Machines | length' || echo 0)
+if [ "$machines_count" -eq 0 ]; then
+  for machine_json in ${config_directory}/machines/*.json; do
+    echo "creating machine from ${machine_json}"
+    openqa-cli api --data-file "$machine_json" --json -X POST machines
+  done
+fi
+
+products_count=$(openqa-cli api products | jq -r '.Products | length' || echo 0)
+if [ "$products_count" -eq 0 ]; then
+  for product_json in ${config_directory}/products/*.json; do
+    echo "creating product from ${product_json}"
+    openqa-cli api --data-file "$product_json" --json -X POST products
+  done
+fi
+
+test_suite_count=$(openqa-cli api test_suites \
+                    | jq -r '.TestSuites | length' || echo 0)
+if [ "$test_suite_count" = "0" ]; then
+  for test_suite_json in ${config_directory}/test-suites/*.json; do
+    echo "creating test suites from ${test_suite_json}"
+    openqa-cli api --data-file "$test_suite_json" --json -X POST test_suites
+  done
+fi
+
+job_groups_count=$(openqa-cli api job_groups | jq length || echo 0)
+if [ "$job_groups_count" -eq 0 ]; then
+  for job_groups_yaml in ${config_directory}/job-groups/*.yaml; do
+    job_group_name="$(basename "$job_groups_yaml" .yaml)"
+    echo "creating a new job group ${job_group_name}"
+    job_group_id=$(openqa-cli api -X POST job_groups name="$job_group_name" \
+                     | jq -r '.id')
+    openqa-cli api -X POST "job_templates_scheduling/${job_group_id}" \
+               schema=JobTemplates-01.yaml                            \
+               template="$(cat "$job_groups_yaml")"
+  done
+fi

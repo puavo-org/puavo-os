@@ -1,0 +1,11 @@
+#cloud-config
+chpasswd:
+  list: |
+    debian:puavo
+  expire: false
+ssh_pwauth: true
+users:
+  - name: debian
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash

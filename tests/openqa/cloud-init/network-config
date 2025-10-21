@@ -1,0 +1,10 @@
+version: 2
+ethernets:
+  ens4:
+    dhcp4: no
+    addresses:
+      - 10.0.2.5/24
+    gateway4: 10.0.2.2
+    nameservers:
+      addresses:
+        - 1.1.1.1
