@@ -1,6 +1,6 @@
 class apt::default_repositories {
   include ::apt::backports
-  # include ::apt::fasttrack            # XXX Trixie
+  include ::apt::fasttrack
   include ::apt::multiarch
   include ::apt::repositories
 

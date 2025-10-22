@@ -34,17 +34,16 @@ class apt::repositories {
         source => 'puppet:///modules/apt/opinsys.gpg';
     }
 
-# XXX Trixie
-#   file {
-#     '/etc/apt/sources.list.d/debian-fasttrack.list':
-#       content => template('apt/debian-fasttrack.list'),
-#       notify  => Exec['apt update'],
-#       require => Package['fasttrack-archive-keyring'];
-#   }
+    file {
+      '/etc/apt/sources.list.d/debian-fasttrack.sources':
+        content => template('apt/debian-fasttrack.sources'),
+        notify  => Exec['apt update'],
+        require => Package['fasttrack-archive-keyring'];
+    }
 
-#   package {
-#     'fasttrack-archive-keyring':
-#       ensure => present;
-#   }
+    package {
+      'fasttrack-archive-keyring':
+        ensure => present;
+    }
   }
 }

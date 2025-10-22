@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://<%= @fasttrackmirror %><%= @fasttrackmirror_path %>
+Suites: <%= @debianversioncodename %>-fasttrack
+Components: main contrib non-free
+Signed-By: /usr/share/keyrings/fasttrack-archive-keyring.gpg
