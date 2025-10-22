@@ -1,6 +1,6 @@
 diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
---- gnome-shell/js/gdm/loginDialog.js	2025-05-14 13:02:13.437505908 +0300
-+++ gnome-shell/js/gdm/loginDialog.js	2025-05-14 13:19:42.996809328 +0300
+--- gnome-shell/js/gdm/loginDialog.js	2025-10-22 09:25:46.360420683 +0300
++++ gnome-shell/js/gdm/loginDialog.js	2025-10-22 09:30:35.312043591 +0300
 @@ -169,7 +169,7 @@
          'item-added': {param_types: [UserListItem.$gtype]},
      },
@@ -13,13 +13,13 @@ diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
 @@ -184,6 +184,8 @@
  
          this.child = this._box;
-         this._items = {};
+         this._items = new Map();
 +
 +        this._accepted_users = accepted_users.split(',');
      }
  
      vfunc_key_focus_in() {
-@@ -278,6 +280,17 @@
+@@ -276,6 +278,17 @@
  
          this.removeUser(user);
  
@@ -37,7 +37,7 @@ diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
          let item = new UserListItem(user);
          this._box.add_child(item);
  
-@@ -539,7 +552,8 @@
+@@ -536,7 +549,8 @@
          });
          this.add_child(this._userSelectionBox);
  

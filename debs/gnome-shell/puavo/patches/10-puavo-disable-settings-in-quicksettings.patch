@@ -1,0 +1,24 @@
+diff -ruN gnome-shell/js/ui/popupMenu.js gnome-shell/js/ui/popupMenu.js
+--- gnome-shell/js/ui/popupMenu.js	2025-08-03 13:53:34.000000000 +0300
++++ gnome-shell/js/ui/popupMenu.js	2025-10-22 09:36:11.811267354 +0300
+@@ -1,6 +1,7 @@
+ import Atk from 'gi://Atk';
+ import Clutter from 'gi://Clutter';
+ import Gio from 'gi://Gio';
++import GLib from 'gi://GLib';
+ import GObject from 'gi://GObject';
+ import Graphene from 'gi://Graphene';
+ import Shell from 'gi://Shell';
+@@ -758,6 +759,12 @@
+     }
+ 
+     addSettingsAction(title, desktopFile) {
++        let puavo_exammode_session = GLib.getenv('EXAMMODE_SESSION');
++        if (puavo_exammode_session && puavo_exammode_session !== '') {
++            // do not allow settings actions in Puavo examination mode
++            return new PopupMenuItem(title);
++        }
++
+         let menuItem = this.addAction(title, () => {
+             let app = Shell.AppSystem.get_default().lookup_app(desktopFile);
+ 
