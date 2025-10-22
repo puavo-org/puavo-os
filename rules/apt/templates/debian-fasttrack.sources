@@ -1,4 +1,4 @@
-Types: deb
+Types: deb deb-src
 URIs: https://<%= @fasttrackmirror %><%= @fasttrackmirror_path %>
 Suites: <%= @debianversioncodename %>-fasttrack
 Components: main contrib non-free

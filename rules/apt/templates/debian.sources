@@ -1,0 +1,17 @@
+Types: deb deb-src
+URIs: http://<%= @mirror %><%= @mirror_path %>/debian
+Suites: <%= @debianversioncodename %>
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb deb-src
+URIs: http://<%= @mirror %><%= @mirror_path %>/debian
+Suites:  <%= @debianversioncodename %>-updates
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb deb-src
+URIs: http://<%= @securitymirror %><%= @securitymirror_path %>
+Suites: <%= @debianversioncodename %>-security
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

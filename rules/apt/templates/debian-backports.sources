@@ -1,0 +1,5 @@
+Types: deb deb-src
+URIs: https://<%= @mirror %><%= @mirror_path %>/debian
+Suites: <%= @debianversioncodename %>-backports
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

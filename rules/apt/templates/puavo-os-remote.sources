@@ -2,5 +2,8 @@
 # as the localmirror at "file://<%= @localmirror %> /" (above), but
 # possibly also the 32-bit builds such as wine32.  These have the origin
 # "puavo-os-remote".
-deb http://archive.opinsys.fi/puavo <%= @debianversioncodename %> main contrib non-free
-deb-src http://archive.opinsys.fi/puavo <%= @debianversioncodename %> main contrib non-free
+Types: deb deb-src
+URIs: http://archive.opinsys.fi/puavo
+Suites: <%= @debianversioncodename %>
+Components: main contrib non-free
+Signed-By: /etc/apt/trusted.gpg.d/opinsys.gpg

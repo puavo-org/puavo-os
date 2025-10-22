@@ -1,0 +1,5 @@
+# This has the origin "puavo-os-local".
+Types: deb
+URIs: file://<%= @localmirror %>
+Suites: /
+Trusted: yes
