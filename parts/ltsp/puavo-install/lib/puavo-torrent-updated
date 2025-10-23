@@ -352,7 +352,7 @@ def start_aria_seeding(torrent_url_path)
   return nil if seed_filename == ''
 
   seed_path = "#{ $target_dir }/#{ seed_filename }"
-  return nil unless File.exists?(seed_path)
+  return nil unless File.exist?(seed_path)
 
   host = URI(torrent_url).host
 

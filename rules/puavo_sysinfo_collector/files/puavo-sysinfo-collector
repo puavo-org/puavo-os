@@ -183,7 +183,7 @@ class SysInfo
   end
 
   def update_uefi_info
-    @data[:uefi] = File.exists?("/sys/firmware/efi")
+    @data[:uefi] = File.exist?("/sys/firmware/efi")
   end
 
   def convert_ramsize_to_bytes(size_str)
@@ -379,12 +379,12 @@ class SysInfo
     # XXX once Puavo understands it
 
     @data[:windows_license] = nil
-    if File.exists?('/sys/firmware/acpi/tables/MSDM') then
+    if File.exist?('/sys/firmware/acpi/tables/MSDM') then
       @data[:windows_license] = `strings /sys/firmware/acpi/tables/MSDM`
     end
 
     @data[:windows] = {
-      :is_installed => File.exists?('/images/boot/.puavo_windows_partition'),
+      :is_installed => File.exist?('/images/boot/.puavo_windows_partition'),
       # XXX :license => @data[:windows_license],
     }
   end
@@ -397,7 +397,7 @@ class SysInfo
 
   def update_local_puavoconf
     puavoconf_path = '/state/etc/puavo/local/puavo_conf.json'
-    return unless File.exists?(puavoconf_path)
+    return unless File.exist?(puavoconf_path)
 
     @data[:puavoconf] = { :local => JSON.parse( IO.read(puavoconf_path) ) }
   end

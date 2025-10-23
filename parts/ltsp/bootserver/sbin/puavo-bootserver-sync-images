@@ -167,9 +167,9 @@ class SyncFile
     all_deleted_ok = true
 
     filelist.each do |path|
-      next unless File.exists?(path)
+      next unless File.exist?(path)
 
-      if File.exists?("#{ path }.lock") then
+      if File.exist?("#{ path }.lock") then
         warning(infolevel, "Not deleting #{ path } because it has .lock")
         all_deleted_ok = false
         next
@@ -210,7 +210,7 @@ class SyncFile
   end
 
   def inplace?
-    return File.exists?(final_path)
+    return File.exist?(final_path)
   end
 
   def partial_unverified_path
@@ -737,7 +737,7 @@ class Torrents
 
     @torrent_paths[target_path] = 1
 
-    return if File.exists?(target_path)
+    return if File.exist?(target_path)
 
     tmpfile = "#{ target_path }.tmp"
 
@@ -1075,7 +1075,7 @@ module SeriesControl
   end
 
   def self.is_protected_file?(filepath)
-    return false unless File.exists?(filepath)
+    return false unless File.exist?(filepath)
 
     hardlinked_system_images = [
       File.join(Image.basedir, 'ltsp.img'),
@@ -1087,7 +1087,7 @@ module SeriesControl
     # we do not accidentally delete those.
     return hardlinked_system_images.include?(filepath) \
              || File.stat(filepath).nlink > 1 \
-             || File.exists?('%s.lock' % filepath)
+             || File.exist?('%s.lock' % filepath)
   end
 
   def self.log_files_in_priority_order(files_in_priority_order)

@@ -156,13 +156,13 @@ def shutdown_and_remove_databases
 
   backup_timestamp = Time.now.strftime('%FT%T%z')
 
-  if File.exists?('/etc/ldap/slapd.d') then
+  if File.exist?('/etc/ldap/slapd.d') then
     conf_target_dir = "/etc/ldap/slapd.d-backup.#{ backup_timestamp }"
     puts ">>> moving /etc/ldap/slapd.d to #{ conf_target_dir }"
     FileUtils.mv('/etc/ldap/slapd.d', conf_target_dir)
   end
 
-  if File.exists?('/var/lib/ldap') then
+  if File.exist?('/var/lib/ldap') then
     db_target_dir = "/var/lib/ldap-backup.#{ backup_timestamp }"
     puts ">>> moving /var/lib/ldap to #{ db_target_dir }"
     FileUtils.mv('/var/lib/ldap', db_target_dir)

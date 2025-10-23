@@ -484,7 +484,7 @@ class Control
                 File.stat(path).uid).name}-#{File.basename(path)}"
               targetpath=targetpathbase
               i=0
-              targetpath=targetpathbase+"-#{i+=1}" while File.exists?(targetpath)
+              targetpath=targetpathbase+"-#{i+=1}" while File.exist?(targetpath)
               File.link(path, targetpath)
             end
 

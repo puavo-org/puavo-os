@@ -175,7 +175,7 @@ tmpfile = "#{ cups_printer_restrictions_path }.tmp"
 
 status = 0
 
-File.exists?(cups_printer_restrictions_path) \
+File.exist?(cups_printer_restrictions_path) \
   or FileUtils.touch(cups_printer_restrictions_path)
 
 File.open(cups_printer_restrictions_path, 'r') do |lockfile|

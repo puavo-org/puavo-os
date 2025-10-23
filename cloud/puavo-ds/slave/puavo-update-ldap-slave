@@ -75,7 +75,7 @@ def update_test_config(new_config, full_init)
     Syslog.info('%s', "cleaning up #{ Slapd_d_dir }")
 
     FileUtils.rm_rf(Slapd_d_backup_dir)
-    FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir) if File.exists?(Slapd_d_dir)
+    FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir) if File.exist?(Slapd_d_dir)
     FileUtils.mkdir(Slapd_d_dir)
     FileUtils.chmod(0750, Slapd_d_dir)
 

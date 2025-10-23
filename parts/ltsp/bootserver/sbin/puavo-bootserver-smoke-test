@@ -148,7 +148,7 @@ class TestRun
     end
     raise error if !error.nil?
 
-    @testuser_has_old_homedir = File.exists?(homedir)
+    @testuser_has_old_homedir = File.exist?(homedir)
     if @testuser_has_old_homedir then
       raise TestRunError.new('home directory already exists')
     end
