@@ -2,9 +2,16 @@
 
 if [ "$(tty)" = '/dev/tty42' ]; then
   clear
+
+  additional_bwrap_args=''
+  # /anon exists only when guest user is enabled
+  if [ -d /anon ]; then
+    additional_bwrap_args='--tmpfs /anon'
+  fi
+
   exec env HOME=/var/lib/puavo-exammode/user      \
     bwrap --dev-bind / /                          \
-          --tmpfs    /anon                        \
+          $additional_bwrap_args                  \
           --tmpfs    /home                        \
           --tmpfs    /images                      \
           --tmpfs    /state                       \
