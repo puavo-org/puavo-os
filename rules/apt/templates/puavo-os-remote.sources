@@ -6,4 +6,4 @@ Types: deb deb-src
 URIs: http://archive.opinsys.fi/puavo
 Suites: <%= @debianversioncodename %>
 Components: main contrib non-free
-Signed-By: /etc/apt/trusted.gpg.d/opinsys.gpg
+Signed-By: /usr/local/share/keyrings/opinsys.gpg

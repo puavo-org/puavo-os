@@ -41,8 +41,10 @@ class apt::repositories {
         content => template('apt/puavo-os-remote.sources'),
         notify  => Exec['apt update'];
 
-      # XXX should not add to globally trusted GPG keys
-      '/etc/apt/trusted.gpg.d/opinsys.gpg':
+      '/usr/local/share/keyrings':
+        ensure => directory;
+
+      '/usr/local/share/keyrings/opinsys.gpg':
         before => Exec['apt update'],
         source => 'puppet:///modules/apt/opinsys.gpg';
     }
