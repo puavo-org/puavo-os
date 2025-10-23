@@ -451,8 +451,32 @@ darkdm_reboot()
   reboot
 }
 
+darkdm_reboot_to_firmware_setup()
+{
+  systemctl reboot --firmware-setup
+}
+
 darkdm_install()
 {
+  local key
+
+  echo 'Checking SecureBoot state...'
+  if ! /usr/lib/puavo-ltsp-install/puavo-check-secure-boot; then
+    echo
+    echo 'SecureBoot is not enabled on this host.'
+    echo 'Press SPACE to reboot into firmware setup' \
+           'or any other key to go back.'
+
+    key=''
+    IFS= read -n 1 -rs key || true
+    if [ "$key" != ' ' ]; then
+      echo 'Cancelling installation.'
+      return 1
+    fi
+
+    darkdm_reboot_to_firmware_setup
+  fi
+
   if ! /usr/sbin/puavo-install "$@"; then
     # give some time for users to read the error message, if there is any
     echo
@@ -500,6 +524,7 @@ Commands:
   preseed-install (pi)   install with a preseed
   preseed-preinstall     install without registering but with a preseed
   reboot                 reboot the system
+  reboot-to-firmware     reboot to firmware setup
   restoredisk            restore from bootserver (only on netboot devices)
   savedisk               save to bootserver (only on netboot devices)
   shell                  spawn a shell
@@ -751,6 +776,9 @@ darkdm_menu()
       reboot)
         darkdm_reboot || return 1
         ;;
+      reboot-to-firmware)
+        darkdm_reboot_to_firmware_setup || return 1
+        ;;
       restoredisk|r)
         # try running restoredisk and notify inventory system if successful
         puavo-disk-clone restoredisk || return 1
@@ -839,23 +867,6 @@ darkdm_main()
 
   darkdm_menu "$initial_command" "$forced" || return 1
 }
-
-if [ "$(cat /etc/puavo/hosttype 2>/dev/null)" = "diskinstaller" ]; then
-  echo 'Checking Secure Boot state...'
-
-  if ! /usr/lib/puavo-ltsp-install/puavo-check-secure-boot; then
-    echo
-    echo "> Rebooting into firmware setup in 10 seconds."
-    echo "Press R to restart now or any other key to cancel."
-
-    key=""
-    read -t 10 -n 1 key || true
-
-    if [ -z "$key" ] || [ "$key" = "R" ] || [ "$key" = "r" ]; then
-      systemctl reboot --firmware-setup
-    fi
-  fi
-fi
 
 # get preseed, we might need it
 echo -n 'Getting preseed and device identifier (if server can be found)... '
