@@ -139,10 +139,11 @@ export default class DashToPanelExtension extends Extension {
     // XXX should probably check exam_session_info contents in some way?
     exam_session_info = JSON.parse( utf8decoder.decode(exam_session_json) );
 
+    let control_text;
     if (exam_session_info['type'] === 'next-exam-session') {
-      let control_text = _('Next-Exam')
+      control_text = _('Next-Exam')
     } else {
-      let control_text = _('Exam mode');
+      control_text = _('Exam mode');
     }
 
     this.control_info_label = new St.Label({
