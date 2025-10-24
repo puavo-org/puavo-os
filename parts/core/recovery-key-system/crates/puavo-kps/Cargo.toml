@@ -1,0 +1,43 @@
+[package]
+name = "puavo-kps"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "puavo-kps"
+path = "src/main.rs"
+
+[dependencies]
+# Internal crates
+puavo-hsm = { path = "../puavo-hsm" }
+puavo-audit = { path = "../puavo-audit" }
+
+# CLI and configuration
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+# Cryptography
+rand.workspace = true
+hex.workspace = true
+sha2.workspace = true
+
+# Error handling and logging
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tracing-subscriber.features = ["env-filter"]
+
+# System interaction
+nix.workspace = true
+
+[dev-dependencies]
+
+[profile.release]
+strip = true
+panic = "abort"
+opt-level = "z"
+lto = true
+codegen-units = 1

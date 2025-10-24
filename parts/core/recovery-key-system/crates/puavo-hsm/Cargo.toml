@@ -1,0 +1,12 @@
+[package]
+name = "puavo-hsm"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+cryptoki.workspace = true
+hex.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]

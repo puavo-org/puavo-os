@@ -1,0 +1,49 @@
+[workspace]
+resolver = "3"
+
+members = [
+  "crates/puavo-hsm",
+  "crates/puavo-audit",
+  "crates/puavo-kps",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+
+[workspace.dependencies]
+# Cryptography
+cryptoki = "0.10.0"
+sha2 = "0.10"
+rand = "0.8"
+hex = "0.4"
+
+# CLI and configuration
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Async runtime (for HTTP server)
+tokio = { version = "1.48", features = ["full"] }
+axum = "0.7"
+tower = "0.4"
+
+# Logging and error handling
+thiserror = "1.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# System interaction
+nix = { version = "0.27", features = ["user", "fs"] }
+
+[profile.release]
+strip = true
+panic = "abort"
+opt-level = "z"
+lto = true
+codegen-units = 1
