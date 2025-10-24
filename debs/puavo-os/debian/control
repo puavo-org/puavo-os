@@ -3,9 +3,11 @@ Section: misc
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
 Build-Depends: bundler | ruby-bundler,
+ cargo,
  debhelper (>= 8),
  jq,
  libasound2-dev,
+ libcryptsetup-dev,
  libctpl-dev,
  libdb-dev,
  libglib2.0-dev,
