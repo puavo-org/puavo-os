@@ -3,8 +3,10 @@ resolver = "3"
 
 members = [
   "crates/puavo-hsm",
-  "crates/puavo-audit",
+  "crates/puavo-audit", 
   "crates/puavo-kps",
+  "crates/puavo-ipc",
+  "crates/puavo-kpsd",
 ]
 
 [workspace.package]
@@ -40,6 +42,9 @@ chrono = { version = "0.4", features = ["serde"] }
 
 # System interaction
 nix = { version = "0.27", features = ["user", "fs"] }
+
+# IPC and serialization
+bincode = "1.3"
 
 [profile.release]
 strip = true
