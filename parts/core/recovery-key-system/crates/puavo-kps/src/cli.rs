@@ -79,6 +79,12 @@ pub enum Commands {
         #[command(subcommand)]
         command: OperatorCommands,
     },
+
+    /// Daemon management commands
+    Daemon {
+        #[command(subcommand)]
+        command: DaemonCommands,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -160,6 +166,25 @@ pub enum OperatorCommands {
         /// Operator identifier
         #[arg(long)]
         id: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum DaemonCommands {
+    /// Get daemon status
+    Status,
+
+    /// Test daemon communication
+    Echo {
+        /// Message to echo
+        message: String,
+    },
+
+    /// Shutdown daemon
+    Shutdown {
+        /// Force shutdown without graceful cleanup
+        #[arg(long)]
+        force: bool,
     },
 }
 

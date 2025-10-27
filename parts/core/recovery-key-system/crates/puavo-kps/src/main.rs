@@ -1,12 +1,14 @@
 mod cli;
 mod commands;
 mod config;
+mod ipc_client;
 mod salt;
 
 use anyhow::Result;
 use tracing_subscriber::EnvFilter;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     // Parse CLI arguments first to get verbosity settings
     let cli = cli::parse_arguments();
 
@@ -27,5 +29,5 @@ fn main() -> Result<()> {
         .init();
 
     // Execute command
-    commands::execute(cli)
+    commands::execute(cli).await
 }
