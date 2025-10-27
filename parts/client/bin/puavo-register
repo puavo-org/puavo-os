@@ -228,13 +228,14 @@ class RegisterUserInterface
   def default_puavoserver
     begin
       Resolv::DNS.open do |dns|
-        r = dns.getresources( "_puavo._tcp",
-                              Resolv::DNS::Resource::IN::SRV )
-        r[0].target.to_s
+        r = dns.getresources('_puavo._tcp', Resolv::DNS::Resource::IN::SRV)
+        return r[0].target.to_s
       end
-    rescue
+    rescue StandardError => e
       Tools.errmsg('Could not lookup default puavoserver.')
     end
+
+    return nil
   end
 
   def lookup_macaddresses(facts)
