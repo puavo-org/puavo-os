@@ -13,7 +13,7 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    tracing::info!("Starting puavo-kpsd daemon");
+    tracing::info!("Starting KPS daemon");
 
     // Create and run daemon
     let daemon = daemon::Daemon::new().await?;
