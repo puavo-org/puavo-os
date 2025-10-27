@@ -27,7 +27,8 @@ impl EFIBootDevice {
     ///
     /// Errors:
     /// - `PuavoError::IoError` if invoking the helper command fails to run.
-    /// - `PuavoError::ShellError` if the helper exits non-zero.
+    /// - `PuavoError::NoEFIBootDisk` if the helper can not determine
+    ///                               the EFI boot disk.
     /// - `PuavoError::IoError` in case of udev errors.
     pub fn current() -> Result<EFIBootDevice, PuavoError> {
         debug!("Locating the current EFI boot device");
@@ -37,7 +38,7 @@ impl EFIBootDevice {
         if !output.status.success() {
             let error_message =
                 String::from_utf8_lossy(&output.stderr).to_string();
-            return Err(PuavoError::ShellError(error_message));
+            return Err(PuavoError::NoEFIBootDisk(error_message));
         }
 
         let boot_device_path =

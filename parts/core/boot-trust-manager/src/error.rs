@@ -34,6 +34,9 @@ pub enum PuavoError {
     #[error("Invalid data: {0}")]
     InvalidData(String),
 
+    #[error("Failed to find the current boot EFI device")]
+    NoEFIBootDisk(String),
+
     #[error("Failed to find the booted EFI partition")]
     NoEFIPartition,
 
@@ -45,6 +48,7 @@ pub enum PuavoError {
 
     #[error("Plymouth exited with code {0}")]
     PlymouthError(i32),
+
     #[error(transparent)]
     ParseIntError(#[from] ParseIntError),
 }

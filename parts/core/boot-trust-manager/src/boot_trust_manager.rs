@@ -4,7 +4,7 @@ use std::{
     process::Command,
 };
 
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use tempfile::Builder;
 
 use crate::{
@@ -66,8 +66,17 @@ impl BootTrustManager {
         let display = choose_display(self.configuration.force_console);
 
         let _ = Self::configure(&display, configurators).inspect_err(|error| {
-            let _ = display
-                .show_message(&format!("Configuration failed: {}", error));
+            if matches!(error,
+                        PuavoError::NoEFIBootDisk(_)
+                          | PuavoError::NoEFIPartition
+                          | PuavoError::NoPrimaryLuksPartition) {
+                // these conditions are normal and we need not tell user
+                warn!("Configuration failed: {} (this error condition is normal on some installation types)", error);
+                return;
+            }
+            error!("Configuration failed: {}", error);
+            let _ = display.show_message(&format!("Configuration failed: {}",
+                                                  error));
         });
     }
 
