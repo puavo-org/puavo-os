@@ -66,8 +66,15 @@ impl BootTrustManager {
         let display = choose_display(self.configuration.force_console);
 
         let _ = Self::configure(&display, configurators).inspect_err(|error| {
-            let _ = display
-                .show_message(&format!("Configuration failed: {}", error));
+            if !matches!(error,
+                         PuavoError::NoEFIPartition
+                           | PuavoError::NoPrimaryLuksPartition) {
+                // these are normal and we need not tell user about these
+                // conditions
+                return;
+            }
+            let _ = display.show_message(&format!("Configuration failed: {}",
+                                                  error));
         });
     }
 
