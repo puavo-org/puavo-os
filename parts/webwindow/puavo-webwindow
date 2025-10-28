@@ -18,12 +18,12 @@ def check_positive(value):
 
 
 epilog = """
-WebWindow opens the specified URL in a small embedded WebKit2 browser
+WebWindow opens the specified URL in a small embedded WebKit browser
 window.
 
-JavaScript and Java and other plugins are disabled and the right-click
-context menu is severely restricted. There are no tabs, history, cookies
-or address bar. No data is written on the disk.
+JavaScript is disabled and the right-click context menu is severely
+restricted.  There are no tabs, history, cookies
+or address bar.  No data is written on the disk.
 
 Links can be clicked and they work normally, so you should not use
 this to open pages that contain links to outside of the "sandbox".
@@ -67,12 +67,6 @@ parser.add_argument('--enable-js',
                     default=False,
                     help='enable JavaScript (be careful!)')
 
-parser.add_argument('--enable-plugins',
-                    action='store_true',
-                    required=False,
-                    default=False,
-                    help='enable plugins (be careful!)')
-
 required = parser.add_argument_group('required arguments')
 
 required.add_argument('--url',
@@ -83,41 +77,36 @@ required.add_argument('--url',
 args = parser.parse_args()
 
 import gi
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
-gi.require_version('WebKit2', '4.0')    # explicitly require version 4
-from gi.repository import Gtk, WebKit2
+gi.require_version('Gtk', '4.0')        # explicitly require Gtk3, not Gtk2
+gi.require_version('WebKit', '6.0')     # explicitly require version 4
+from gi.repository import Gtk, WebKit
 
-class WebWindow(Gtk.Window):
+class Browser(Gtk.Application):
     def __init__(self, params):
-        super(WebWindow, self).__init__()
+        super().__init__(application_id='puavo.webwindow')
+        self.params = params
 
-        self.connect("destroy", Gtk.main_quit)
 
-        self.set_title(params.title)
-        self.set_size_request(params.width, params.height)
+    def do_activate(self):
+        self.win = Gtk.ApplicationWindow(application=self)
+
+        self.win.set_title(self.params.title)
+        self.win.set_size_request(self.params.width, self.params.height)
 
         if args.fixed:
-            self.set_resizable(False)
-
-        self.set_position(Gtk.WindowPosition.CENTER)
+            self.win.set_resizable(False)
 
         # Create an ephemeral context. Ephemeral contexts don't cache
         # anything on disk. Or so the documentation says...
         # (If this caches something somewhere, I can't find it.)
-        manager = WebKit2.WebsiteDataManager.new_ephemeral()
-        context = WebKit2.WebContext.new_with_website_data_manager(manager)
-        self.webview = WebKit2.WebView.new_with_context(context)
+        session = WebKit.NetworkSession.new_ephemeral()
+        self.webview = WebKit.WebView(network_session=session)
 
-        settings = WebKit2.Settings()
+        settings = WebKit.Settings()
 
         if not args.enable_js:
             # Disable JavaScript
             settings.set_enable_javascript(False)
-
-        if not args.enable_plugins:
-            # Disable plugins (rarely needed)
-            settings.set_enable_java(False)
-            settings.set_enable_plugins(False)
 
         self.webview.set_settings(settings)
 
@@ -126,13 +115,13 @@ class WebWindow(Gtk.Window):
 
         # Listen for load events
         self.failed = False
-        self.webview.connect('load-failed', self.on_load_failed)
+        self.webview.connect('load-failed',  self.on_load_failed)
         self.webview.connect('load-changed', self.on_load_changed)
 
         self.webview.show()
-        self.add(self.webview)
+        self.win.set_child(self.webview)
 
-        self.show()
+        self.win.show()
 
         self.webview.load_uri(args.url)
 
@@ -143,7 +132,7 @@ class WebWindow(Gtk.Window):
 
 
     def on_load_changed(self, webview, event):
-        if event == WebKit2.LoadEvent.FINISHED and not self.failed:
+        if event == WebKit.LoadEvent.FINISHED and not self.failed:
             print('{"state":"ok","title":"' + str(webview.get_title()) + '"}')
 
 
@@ -156,6 +145,5 @@ class WebWindow(Gtk.Window):
         return True
 
 
-Gtk.init(sys.argv)
-webwindow = WebWindow(args)
-Gtk.main()
+webwindow = Browser(args)
+webwindow.run()
