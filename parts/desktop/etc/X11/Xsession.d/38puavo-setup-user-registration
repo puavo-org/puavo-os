@@ -4,7 +4,7 @@ if [ "$DESKTOP_SESSION" = 'puavo-user-registration' ]; then
   if [ -e /boot/grub/themes/Vimix/background.jpeg ]; then
     qiv -mz /boot/grub/themes/Vimix/background.jpeg || true
   fi
-  puavo-user-registration --at-session-startup || true
+  puavo-user-registration || true
 
   kill -9 "$cwm_pid"
 
