@@ -31,11 +31,11 @@ impl Default for KpsConfig {
         Self {
             hsm: HsmConfig {
                 module_path: PathBuf::from(DEFAULT_SOFTWARE_MODULE),
-                slot: 0
+                slot: 0,
             },
             audit: AuditConfig {
                 log_path: PathBuf::from("/var/log/puavo-kps/audit.log"),
-            }
+            },
         }
     }
 }

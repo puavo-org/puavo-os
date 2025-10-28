@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
+use std::path::PathBuf;
+use clap::Subcommand;
 
 /// Unique identifier for correlating requests and responses
 pub type MessageId = u64;
@@ -36,6 +38,150 @@ pub enum DaemonCommand {
 
     /// Echo command for testing IPC
     Echo { message: String },
+
+    /// Execute a command (KPS operations)
+    Execute(Commands),
+}
+
+/// Commands for KPS operations
+#[derive(Subcommand, Debug, Clone, Serialize, Deserialize)]
+pub enum Commands {
+    /// Initialize Key Provisioning Station
+    Initialize {
+        /// HSM slot number
+        #[arg(long, default_value = "0")]
+        hsm_slot: u64,
+
+        /// HSM user PIN (will prompt if not provided)
+        #[arg(long)]
+        hsm_pin: Option<String>,
+
+        /// Overwrite existing configuration
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Organization key management
+    Organization {
+        #[command(subcommand)]
+        command: OrganizationCommand,
+    },
+
+    /// Derive recovery bundles from device salts
+    Derive {
+        /// Custom shuttle mount point
+        #[arg(long)]
+        shuttle_path: Option<PathBuf>,
+
+        /// Operator identifier
+        #[arg(long)]
+        operator_id: Option<String>,
+
+        /// Process N devices at a time
+        #[arg(long, default_value = "0")]
+        batch_size: usize,
+
+        /// Show what would be done without doing it
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Audit log management
+    Audit {
+        #[command(subcommand)]
+        command: AuditCommand,
+    },
+
+    /// Operator management
+    Operator {
+        #[command(subcommand)]
+        command: OperatorCommand,
+    },
+}
+
+/// Organization key management commands
+#[derive(Subcommand, Debug, Clone, Serialize, Deserialize)]
+pub enum OrganizationCommand {
+    /// Initialize organization key in HSM
+    Initialize {
+        /// Organization identifier
+        #[arg(long)]
+        organization_id: String,
+
+        /// Generate new key (default: true)
+        #[arg(long, default_value = "true")]
+        generate: bool,
+    },
+
+    /// Rotate organization key
+    Rotate {
+        /// Organization identifier
+        #[arg(long)]
+        organization_id: String,
+    },
+}
+
+/// Audit log management commands
+#[derive(Subcommand, Debug, Clone, Serialize, Deserialize)]
+pub enum AuditCommand {
+    /// Display audit logs
+    Log {
+        /// Show logs since date (ISO 8601)
+        #[arg(long)]
+        since: Option<String>,
+
+        /// Show logs until date (ISO 8601)
+        #[arg(long)]
+        until: Option<String>,
+
+        /// Filter by operator ID
+        #[arg(long)]
+        operator: Option<String>,
+
+        /// Output format
+        #[arg(long, default_value = "text")]
+        format: String,
+
+        /// Show last N entries
+        #[arg(long)]
+        tail: Option<usize>,
+    },
+
+    /// Export audit logs
+    Export {
+        /// Output file path
+        #[arg(long)]
+        output: PathBuf,
+
+        /// Export format
+        #[arg(long, default_value = "jsonl")]
+        format: String,
+    },
+}
+
+/// Operator management commands
+#[derive(Subcommand, Debug, Clone, Serialize, Deserialize)]
+pub enum OperatorCommand {
+    /// Add a new operator
+    Add {
+        /// Operator identifier (email or username)
+        #[arg(long)]
+        id: String,
+
+        /// Full name
+        #[arg(long)]
+        name: String,
+    },
+
+    /// List authorized operators
+    List,
+
+    /// Revoke operator access
+    Revoke {
+        /// Operator identifier
+        #[arg(long)]
+        id: String,
+    },
 }
 
 /// Responses from daemon
