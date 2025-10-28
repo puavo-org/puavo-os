@@ -13,7 +13,7 @@ impl PlymouthDisplay {
     /// Parameters:
     /// - `display_stop_duration`: How long to sleep after displaying a message,
     ///   to ensure the user has time to read it.
-    /// 
+    ///
     /// Errors:
     /// This function never errors.
     pub fn new(display_stop_duration: Duration) -> Result<Self, PuavoError> {
@@ -25,7 +25,7 @@ impl PlymouthDisplay {
     /// Returns:
     /// - `Ok(true)` if Plymouth is running and reachable.
     /// - `Ok(false)` if Plymouth is not running.
-    /// 
+    ///
     /// Errors:
     /// Returns an `PuavoError::IoError` if invoking the command fails.
     pub fn ping() -> Result<bool, PuavoError> {

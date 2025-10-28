@@ -50,7 +50,7 @@ impl EFIBootDevice {
     }
 
     /// Determine the full path to the EFI loader binary in the mounted EFI partition.
-    /// 
+    ///
     /// Reads the `LoaderImageIdentifier-*` EFI variable to find the
     /// relative path to the loader, normalizes path separators, and joins it
     /// to the specified mountpoint.

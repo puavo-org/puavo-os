@@ -8,13 +8,13 @@ use log::{debug, error, info, warn};
 use tempfile::Builder;
 
 use crate::{
-    configurators::{configurators, Configurator},
+    configurators::{Configurator, configurators},
     devices::{
         block_device::{BlockDevice, GenericBlockDevice},
         boot_vault::{BootVault, VAULT_PATH},
         efi_boot_device::EFIBootDevice,
     },
-    display::{choose_display, UserDisplay},
+    display::{UserDisplay, choose_display},
     error::PuavoError,
     utils::{
         luks_tpm_token_manager::LuksTpmTokenManager, mount::MountGuard,
