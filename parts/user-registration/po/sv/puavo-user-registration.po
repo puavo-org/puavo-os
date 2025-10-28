@@ -12,11 +12,11 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Lokalize 20.12.0\n"
 
-#: puavo-user-registration:296
+#: puavo-user-registration:297
 msgid "Go to desktop?"
 msgstr "Gå till skrivbordet?"
 
-#: puavo-user-registration:299
+#: puavo-user-registration:300
 msgid ""
 "Are you sure you do not want to create a user account?  Without a user "
 "account, your files will be lost after your desktop session ends."
@@ -24,11 +24,11 @@ msgstr ""
 "Är du säker att du inte vill skapa ett användarnamn? Utan ett användarkonto, "
 "ska dina filer bortkastas när du stänger datorn."
 
-#: puavo-user-registration:341
+#: puavo-user-registration:342
 msgid "internal error: username and password missing"
 msgstr "internt fel: användarnamn och lösenord fattas"
 
-#: puavo-user-registration:391
+#: puavo-user-registration:392
 #, python-format
 msgid ""
 "Could not do initial login with new user credentials.  Please remember your "
@@ -39,39 +39,39 @@ msgstr ""
 "\"%s\" och lösenord för första inloggning. Kontakta stödtjänst om det finns "
 "ett problem."
 
-#: puavo-user-registration:395 puavo-user-registration:405
-#: puavo-user-registration:432 puavo-user-registration:438 page_account.py:432
+#: puavo-user-registration:396 puavo-user-registration:406
+#: puavo-user-registration:433 puavo-user-registration:439 page_account.py:432
 #: page_account.py:522 page_account.py:556 page_account.py:589
 #: page_account.py:604 page_account.py:626 page_account.py:663
 msgid "Error"
 msgstr "Fel"
 
-#: puavo-user-registration:406
+#: puavo-user-registration:407
 msgid "Could not disable the registration tool.  Please contact support."
 msgstr ""
 "Kunde inte inaktivera registreringsverktyg. Vänligen kontakta stödtjänsten."
 
-#: puavo-user-registration:419
+#: puavo-user-registration:420
 msgid "Reboot"
 msgstr "Starta om datorn"
 
-#: puavo-user-registration:420
+#: puavo-user-registration:421
 msgid "Could not reboot."
 msgstr "Kunde inte starta om datorn."
 
-#: puavo-user-registration:433
+#: puavo-user-registration:434
 msgid "Bad username and/or password"
 msgstr "Felaktig användarnamn och/eller lösenord"
 
-#: puavo-user-registration:439
+#: puavo-user-registration:440
 msgid "An unexpected error occurred"
 msgstr "Ett oväntad fel uppstod"
 
-#: puavo-user-registration:553
+#: puavo-user-registration:549
 msgid "You do not have the required permissions to use this tool."
 msgstr "Du har inte behörigheter att använda det här verktyget."
 
-#: puavo-user-registration:554
+#: puavo-user-registration:550
 msgid "No permissions"
 msgstr "Inga behörigheter"
 
@@ -393,7 +393,7 @@ msgstr ""
 "I fallet du inte kan kontakta till ett trådlöst nätverk nu, kan du göra det "
 "senare och använda temporärt gästläge genom att klicka"
 
-#: page_welcome.py:34 data/main_window.glade:59
+#: page_welcome.py:34 data/main_window.glade:58
 msgid "Go to desktop"
 msgstr "Gå till skrivbordet"
 
@@ -473,7 +473,7 @@ msgstr "Inget användarkonto? Skapa ett nytt!"
 msgid "New User Registration"
 msgstr "Användarregistrering"
 
-#: data/main_window.glade:77
+#: data/main_window.glade:76
 msgid "Privacy policy"
 msgstr "Integritetspolicy"
 

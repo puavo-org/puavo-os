@@ -14,6 +14,8 @@
         <property name="can-focus">False</property>
         <property name="row-spacing">10</property>
         <property name="column-spacing">10</property>
+        <property name="halign">fill</property>
+        <property name="position">0</property>
         <child>
           <object class="GtkLabel">
             <property name="visible">True</property>
@@ -21,14 +23,12 @@
             <property name="halign">end</property>
             <property name="valign">center</property>
             <property name="label" translatable="yes">Login name:</property>
+            <property name="left-attach">0</property>
+            <property name="top-attach">0</property>
             <style>
               <class name="login_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left-attach">0</property>
-            <property name="top-attach">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel">
@@ -36,27 +36,23 @@
             <property name="can-focus">False</property>
             <property name="halign">end</property>
             <property name="label" translatable="yes">Login password:</property>
+            <property name="left-attach">0</property>
+            <property name="top-attach">1</property>
             <style>
               <class name="login_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left-attach">0</property>
-            <property name="top-attach">1</property>
-          </packing>
         </child>
         <child>
           <object class="GtkEntry" id="username">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="max-length">32</property>
+            <property name="left-attach">1</property>
+            <property name="top-attach">0</property>
             <signal name="activate" handler="on_username_activated" swapped="no"/>
             <signal name="changed" handler="on_username_changed" swapped="no"/>
           </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkEntry" id="password">
@@ -65,13 +61,11 @@
             <property name="max-length">32</property>
             <property name="visibility">False</property>
             <property name="input-purpose">password</property>
+            <property name="left-attach">1</property>
+            <property name="top-attach">1</property>
             <signal name="activate" handler="on_password_activated" swapped="no"/>
             <signal name="changed" handler="on_password_changed" swapped="no"/>
           </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">1</property>
-          </packing>
         </child>
         <child>
           <object class="GtkButton" id="do_login">
@@ -80,13 +74,11 @@
             <property name="sensitive">False</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
-            <signal name="clicked" handler="on_login_clicked" swapped="no"/>
-          </object>
-          <packing>
             <property name="left-attach">0</property>
             <property name="top-attach">2</property>
             <property name="width">2</property>
-          </packing>
+            <signal name="clicked" handler="on_login_clicked" swapped="no"/>
+          </object>
         </child>
         <child>
           <object class="GtkLabel" id="primary_user_info">
@@ -94,30 +86,26 @@
             <property name="can-focus">False</property>
             <property name="label" translatable="yes"></property>
             <property name="justify">center</property>
+            <property name="left-attach">0</property>
+            <property name="top-attach">3</property>
+            <property name="width">2</property>
             <style>
               <class name="primary_user_info"/>
             </style>
           </object>
-          <packing>
-            <property name="left-attach">0</property>
-            <property name="top-attach">3</property>
-            <property name="width">2</property>
-          </packing>
         </child>
         <style>
           <class name="login_entry_box"/>
         </style>
       </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">0</property>
-      </packing>
     </child>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
+        <property name="padding">10</property>
+        <property name="pack-type">end</property>
+        <property name="position">1</property>
         <child>
           <object class="GtkButton" id="login_previous_page">
             <property name="label" translatable="yes">Previous</property>
@@ -125,13 +113,9 @@
             <property name="can-focus">False</property>
             <property name="receives-default">False</property>
             <property name="halign">start</property>
+            <property name="position">0</property>
             <signal name="clicked" handler="on_previous_clicked" swapped="no"/>
           </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkButton" id="no_account_button">
@@ -139,26 +123,15 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="halign">end</property>
-            <signal name="clicked" handler="on_no_account_clicked" swapped="no"/>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
             <property name="pack-type">end</property>
             <property name="position">1</property>
-          </packing>
+            <signal name="clicked" handler="on_no_account_clicked" swapped="no"/>
+          </object>
         </child>
         <style>
           <class name="login_button_box"/>
         </style>
       </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">False</property>
-        <property name="padding">10</property>
-        <property name="pack-type">end</property>
-        <property name="position">1</property>
-      </packing>
     </child>
     <style>
       <class name="login"/>

@@ -13,8 +13,8 @@ import sys
 import threading
 import time
 
-gi.require_version('Gdk', '3.0')
-gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '4.0')
+gi.require_version('Gtk', '4.0')
 from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
@@ -71,7 +71,8 @@ class NewUserRegistrationWindow:
         # clicking prev/next. I don't know why :-(
 
         try:
-            screen_width = Gdk.Screen.get_default().width()
+          screen_width = Gdk.Display.get_default().get_primary_monitor() \
+                                    .get_geometry().width
         except Exception as e:
             log.warning('unable to determine the screen width: %s', str(e))
             screen_width = 1366

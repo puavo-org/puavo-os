@@ -14,20 +14,20 @@
         <property name="can_focus">False</property>
         <property name="row_spacing">10</property>
         <property name="column_spacing">10</property>
+        <property name="halign">fill</property>
+        <property name="position">0</property>
         <child>
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
             <property name="label" translatable="yes">First name:</property>
+            <property name="left_attach">0</property>
+            <property name="top_attach">0</property>
             <style>
               <class name="account_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel">
@@ -35,14 +35,12 @@
             <property name="can_focus">False</property>
             <property name="halign">end</property>
             <property name="label" translatable="yes">Last name:</property>
+            <property name="left_attach">0</property>
+            <property name="top_attach">1</property>
             <style>
               <class name="account_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">1</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel">
@@ -51,14 +49,12 @@
             <property name="halign">end</property>
             <property name="valign">center</property>
             <property name="label" translatable="yes">Login name:</property>
+            <property name="left_attach">0</property>
+            <property name="top_attach">2</property>
             <style>
               <class name="account_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">2</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel">
@@ -66,14 +62,12 @@
             <property name="can_focus">False</property>
             <property name="halign">end</property>
             <property name="label" translatable="yes">Email address:</property>
+            <property name="left_attach">0</property>
+            <property name="top_attach">4</property>
             <style>
               <class name="account_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">4</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel">
@@ -81,14 +75,12 @@
             <property name="can_focus">False</property>
             <property name="halign">end</property>
             <property name="label" translatable="yes">Login password:</property>
+            <property name="left_attach">0</property>
+            <property name="top_attach">6</property>
             <style>
               <class name="account_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">6</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="password_confirm_label">
@@ -96,14 +88,12 @@
             <property name="can_focus">False</property>
             <property name="halign">end</property>
             <property name="label" translatable="yes">Password confirmation:</property>
+            <property name="left_attach">0</property>
+            <property name="top_attach">7</property>
             <style>
               <class name="account_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">7</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel">
@@ -111,14 +101,12 @@
             <property name="can_focus">False</property>
             <property name="halign">end</property>
             <property name="label" translatable="yes">Language:</property>
+            <property name="left_attach">0</property>
+            <property name="top_attach">8</property>
             <style>
               <class name="account_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">8</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel">
@@ -127,14 +115,12 @@
             <property name="halign">end</property>
             <property name="valign">center</property>
             <property name="label" translatable="yes">Phone number:</property>
+            <property name="left_attach">0</property>
+            <property name="top_attach">9</property>
             <style>
               <class name="account_label"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">9</property>
-          </packing>
         </child>
         <child>
           <object class="GtkEntry" id="first_name">
@@ -143,12 +129,10 @@
             <property name="max_length">32</property>
             <property name="caps_lock_warning">False</property>
             <property name="input_purpose">name</property>
-            <signal name="changed" handler="on_first_name_changed" swapped="no"/>
-          </object>
-          <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">0</property>
-          </packing>
+            <signal name="changed" handler="on_first_name_changed" swapped="no"/>
+          </object>
         </child>
         <child>
           <object class="GtkEntry" id="last_name">
@@ -156,23 +140,19 @@
             <property name="can_focus">True</property>
             <property name="max_length">32</property>
             <property name="input_purpose">password</property>
-            <signal name="changed" handler="on_last_name_changed" swapped="no"/>
-          </object>
-          <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">1</property>
-          </packing>
+            <signal name="changed" handler="on_last_name_changed" swapped="no"/>
+          </object>
         </child>
         <child>
           <object class="GtkEntry" id="username">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="max_length">32</property>
-          </object>
-          <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">2</property>
-          </packing>
+          </object>
         </child>
         <child>
           <object class="GtkEntry" id="email">
@@ -180,12 +160,10 @@
             <property name="can_focus">True</property>
             <property name="max_length">100</property>
             <property name="input_purpose">email</property>
-            <signal name="changed" handler="on_email_changed" swapped="no"/>
-          </object>
-          <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">4</property>
-          </packing>
+            <signal name="changed" handler="on_email_changed" swapped="no"/>
+          </object>
         </child>
         <child>
           <object class="GtkEntry" id="password">
@@ -194,12 +172,10 @@
             <property name="max_length">32</property>
             <property name="visibility">False</property>
             <property name="input_purpose">password</property>
-            <signal name="changed" handler="on_password_changed" swapped="no"/>
-          </object>
-          <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">6</property>
-          </packing>
+            <signal name="changed" handler="on_password_changed" swapped="no"/>
+          </object>
         </child>
         <child>
           <object class="GtkEntry" id="password_confirm">
@@ -208,12 +184,10 @@
             <property name="max_length">32</property>
             <property name="visibility">False</property>
             <property name="input_purpose">password</property>
-            <signal name="changed" handler="on_password_confirm_changed" swapped="no"/>
-          </object>
-          <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">7</property>
-          </packing>
+            <signal name="changed" handler="on_password_confirm_changed" swapped="no"/>
+          </object>
         </child>
         <child>
           <object class="GtkEntry" id="phone_number">
@@ -221,27 +195,23 @@
             <property name="can_focus">True</property>
             <property name="max_length">32</property>
             <property name="input_purpose">phone</property>
-            <signal name="changed" handler="on_phone_number_changed" swapped="no"/>
-          </object>
-          <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">9</property>
-          </packing>
+            <signal name="changed" handler="on_phone_number_changed" swapped="no"/>
+          </object>
         </child>
         <child>
           <object class="GtkComboBoxText" id="language">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="active">0</property>
+            <property name="left_attach">1</property>
+            <property name="top_attach">8</property>
             <signal name="changed" handler="on_language_changed" swapped="no"/>
             <style>
               <class name="language"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">8</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="username_hint">
@@ -252,14 +222,12 @@
             <property name="valign">start</property>
             <property name="use_markup">True</property>
             <property name="max_width_chars">50</property>
+            <property name="left_attach">1</property>
+            <property name="top_attach">3</property>
             <style>
               <class name="account_hint"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">3</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="phone_number_hint">
@@ -271,14 +239,12 @@
             <property name="label" translatable="yes">The phone number is optional. It is used only for technical support.
 Please enter only digits, + and - -signs.</property>
             <property name="max_width_chars">50</property>
+            <property name="left_attach">1</property>
+            <property name="top_attach">10</property>
             <style>
               <class name="account_hint"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">10</property>
-          </packing>
         </child>
         <child>
           <object class="GtkLabel" id="email_hint">
@@ -291,14 +257,12 @@ Please enter only digits, + and - -signs.</property>
             <property name="wrap">True</property>
             <property name="max_width_chars">50</property>
             <property name="xalign">0</property>
+            <property name="left_attach">1</property>
+            <property name="top_attach">5</property>
             <style>
               <class name="account_hint"/>
             </style>
           </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">5</property>
-          </packing>
         </child>
         <child>
           <object class="GtkGrid">
@@ -307,49 +271,40 @@ Please enter only digits, + and - -signs.</property>
             <property name="valign">end</property>
             <property name="margin_bottom">10</property>
             <property name="column_spacing">10</property>
+            <property name="left_attach">1</property>
+            <property name="top_attach">11</property>
             <child>
               <object class="GtkSpinner" id="registration_spinner">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="valign">center</property>
                 <property name="margin_left">5</property>
-              </object>
-              <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">0</property>
-              </packing>
+              </object>
             </child>
             <child>
               <object class="GtkLabel" id="status_message">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="valign">center</property>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
                 <style>
                   <class name="status_message"/>
                 </style>
               </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-              </packing>
             </child>
           </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">11</property>
-          </packing>
         </child>
       </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">0</property>
-      </packing>
     </child>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="padding">10</property>
+        <property name="position">1</property>
         <child>
           <object class="GtkButton" id="account_previous_page">
             <property name="label" translatable="yes">Previous</property>
@@ -357,13 +312,9 @@ Please enter only digits, + and - -signs.</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="halign">start</property>
+            <property name="position">0</property>
             <signal name="clicked" handler="on_previous_clicked" swapped="no"/>
           </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkButton" id="submit">
@@ -371,25 +322,15 @@ Please enter only digits, + and - -signs.</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <signal name="clicked" handler="on_submit_clicked" swapped="no"/>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
             <property name="pack_type">end</property>
             <property name="position">1</property>
-          </packing>
+            <signal name="clicked" handler="on_submit_clicked" swapped="no"/>
+          </object>
         </child>
         <style>
           <class name="account_button_box"/>
         </style>
       </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">False</property>
-        <property name="padding">10</property>
-        <property name="position">1</property>
-      </packing>
     </child>
     <style>
       <class name="register_user"/>
