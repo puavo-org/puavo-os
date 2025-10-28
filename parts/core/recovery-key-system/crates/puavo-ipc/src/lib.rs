@@ -3,6 +3,8 @@ use std::time::SystemTime;
 use std::path::PathBuf;
 use clap::Subcommand;
 
+pub mod salt;
+
 /// Unique identifier for correlating requests and responses
 pub type MessageId = u64;
 

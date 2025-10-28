@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use puavo_ipc::DEFAULT_SOCKET_PATH;
 use std::path::PathBuf;
 
 pub use puavo_ipc::Commands;
@@ -8,13 +9,9 @@ pub use puavo_ipc::Commands;
 #[command(about = "Puavo Key Provisioning Station", long_about = None)]
 #[command(version)]
 pub struct Cli {
-    /// Path to configuration file
-    #[arg(long, global = true, default_value = "/etc/puavo/kps/config.toml")]
-    pub config: PathBuf,
-
-    /// PKCS#11 module library path
-    #[arg(long, global = true)]
-    pub pkcs11_module: Option<PathBuf>,
+    /// Path to KPS daemon socket
+    #[arg(long, global = true, default_value = DEFAULT_SOCKET_PATH)]
+    pub socket_path: PathBuf,
 
     /// Enable verbose output
     #[arg(short, long, global = true)]
@@ -31,7 +28,7 @@ pub struct Cli {
 /// CLI-level commands (includes daemon management)
 #[derive(Subcommand, Debug)]
 pub enum CliCommands {
-    /// Daemon management commands (handled locally by CLI)
+    /// Daemon management commands
     Daemon {
         #[command(subcommand)]
         command: DaemonCommands,

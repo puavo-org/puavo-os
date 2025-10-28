@@ -1,9 +1,10 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use puavo_ipc::{
-    DEFAULT_SOCKET_PATH, DaemonCommand, DaemonResponse, IpcError, IpcMessage,
-    IpcPayload, MAX_MESSAGE_SIZE,
+    DaemonCommand, DaemonResponse, IpcError, IpcMessage, IpcPayload,
+    MAX_MESSAGE_SIZE,
 };
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
@@ -36,12 +37,13 @@ pub trait IpcClientTrait: Send + Sync {
 /// IPC client for communicating with daemon
 pub struct IpcClient {
     message_counter: AtomicU64,
+    socket_path: PathBuf,
 }
 
 impl IpcClient {
     /// Create new IPC client
-    pub fn new() -> Self {
-        Self { message_counter: AtomicU64::new(1) }
+    pub fn new(socket_path: PathBuf) -> Self {
+        Self { message_counter: AtomicU64::new(1), socket_path }
     }
 
     /// Send command to daemon and wait for response
@@ -62,7 +64,7 @@ impl IpcClient {
         let message = IpcMessage::new_command(message_id, command);
 
         // Connect to daemon
-        let mut stream = UnixStream::connect(DEFAULT_SOCKET_PATH)
+        let mut stream = UnixStream::connect(self.socket_path.clone())
             .await
             .map_err(|error| IpcError::ConnectionFailed(error.to_string()))?;
 

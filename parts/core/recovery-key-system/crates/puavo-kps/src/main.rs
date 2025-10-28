@@ -1,8 +1,6 @@
 mod cli;
 mod commands;
-mod config;
 mod ipc_client;
-mod salt;
 
 use anyhow::Result;
 use tracing_subscriber::EnvFilter;

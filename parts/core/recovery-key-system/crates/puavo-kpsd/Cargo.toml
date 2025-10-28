@@ -8,6 +8,14 @@ name = "puavo-kpsd"
 path = "src/main.rs"
 
 [dependencies]
+# Internal crates
+puavo-hsm = { path = "../puavo-hsm" }
+puavo-audit = { path = "../puavo-audit" }
+
+# CLI and configuration
+serde.workspace = true
+serde_json.workspace = true
+
 puavo-ipc = { path = "../puavo-ipc" }
 tokio = { version = "1.43", features = ["full"] }
 tracing = "0.1"
@@ -16,3 +24,4 @@ thiserror = "2.0"
 async-trait = "0.1"
 bincode = "1.3"
 anyhow = "1.0"
+toml.workspace = true

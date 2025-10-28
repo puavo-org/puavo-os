@@ -14,20 +14,18 @@ use puavo_ipc::{DaemonCommand, DaemonResponse, IpcError};
 /// Errors:
 /// Returns error if command execution fails
 pub async fn execute(cli: Cli) -> Result<()> {
-    tracing::debug!("Configuration file: {}", cli.config.display());
-    if let Some(module) = &cli.pkcs11_module {
-        tracing::debug!("PKCS#11 module override: {}", module.display());
-    }
+    tracing::debug!("Configuration file: {}", cli.socket_path.display());
+
+    let client = IpcClient::new(cli.socket_path);
 
     match cli.command {
-        // Handle daemon commands locally (for daemon management)
+        // Handle daemon commands locally for daemon management
         CliCommands::Daemon { command } => {
-            execute_daemon_command(command).await
+            execute_daemon_command_with_client(command, &client).await
         }
 
         // KPS commands are sent to daemon for execution via IPC
         CliCommands::Kps(command) => {
-            let client = IpcClient::new();
             let daemon_command = DaemonCommand::Execute(command);
             execute_command_via_daemon(&client, daemon_command).await
         }
@@ -41,11 +39,6 @@ async fn execute_command_via_daemon<T: IpcClientTrait>(
 ) -> Result<()> {
     let result = client.send_command(command).await;
     handle_daemon_response(result)
-}
-
-async fn execute_daemon_command(command: DaemonCommands) -> Result<()> {
-    let client = IpcClient::new();
-    execute_daemon_command_with_client(command, &client).await
 }
 
 /// Execute daemon command with provided client
