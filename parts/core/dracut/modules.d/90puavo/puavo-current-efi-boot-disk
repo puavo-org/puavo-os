@@ -1,29 +1,39 @@
 #!/bin/sh
-efi_variable=$(ls /sys/firmware/efi/efivars/LoaderDevicePartUUID-* 2>/dev/null)
 
-if [ -z "$efi_variable" ]; then
+set -eu
+
+efivar_path=''
+for path in /sys/firmware/efi/efivars/LoaderDevicePartUUID-*; do
+  if [ -e "$path" ]; then
+    efivar_path="$path"
+    break
+  fi
+done
+
+if [ -z "$efivar_path" ]; then
   echo "error: failed to find the EFI variable for the loader device partition UUID, the boot process might not be using systemd-stub?" >&2
   exit 1
 fi
 
-# Read the EFI partition UUID by filtering out all non-printable characters and converting it to lower case
-efi_partition_uuid=$(cat "$efi_variable" | tr -cd '\40-\176' | tr 'A-Z' 'a-z')
+# Read the EFI partition UUID by filtering out all non-printable characters
+# and converting it to lower case.
+efi_partition_uuid=$(tr -cd '\40-\176' < "$efivar_path" | tr A-Z a-z)
 
 if [ -z "$efi_partition_uuid" ]; then
-  echo "error: failed to extract the EFI partition UUID from $efi_variable" >&2
+  echo "error: failed to extract the EFI partition UUID from ${efivar_path}" >&2
   exit 1
 fi
 
-# Find the parent disk for the EFI partition
+# Find the parent disk for the EFI partition.
 efi_partition_device="/dev/disk/by-partuuid/${efi_partition_uuid}"
 # TODO(udev-settle): Wait for the boot partition device to show up in initrd.
 # See related TODO in boot-trust-manager.
 udevadm wait --timeout=30 "$efi_partition_device" || true
-parent_disk=$(lsblk -lnp -o PKNAME "$efi_partition_device")
 
-if [ -z "$parent_disk" ]; then
-  echo "error: failed to find the disk containing the EFI partition with UUID $efi_partition_uuid" >&2
-  exit 1
+if ! parent_disk=$(lsblk -lnp -o PKNAME "$efi_partition_device") \
+  || [ -z "$parent_disk" ]; then
+    echo "error: failed to find the disk containing the EFI partition with UUID ${efi_partition_uuid}" >&2
+    exit 1
 fi
 
-echo "$parent_disk"
+printf "%s\n" "$parent_disk"
