@@ -1,9 +1,11 @@
+use crate::commands::{CommandExecutor, DefaultCommandExecutor};
 use anyhow::Result;
 use puavo_ipc::{
-    DEFAULT_SOCKET_PATH, DaemonCommand, DaemonResponse, IpcMessage, IpcPayload,
-    MAX_MESSAGE_SIZE,
+    Commands, DEFAULT_SOCKET_PATH, DaemonCommand, DaemonResponse, IpcMessage,
+    IpcPayload, MAX_MESSAGE_SIZE,
 };
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::unix::SocketAddr;
@@ -84,21 +86,29 @@ impl Daemon {
 }
 
 /// Handles individual client connections
-struct ClientHandler {
+struct ClientHandler<E: CommandExecutor> {
     stream: UnixStream,
     shutdown: UnboundedSender<()>,
     start_time: Instant,
+    executor: Arc<E>,
 }
 
-impl ClientHandler {
+impl ClientHandler<DefaultCommandExecutor> {
     fn new(
         stream: UnixStream,
         shutdown: UnboundedSender<()>,
         start_time: Instant,
     ) -> Self {
-        Self { stream, shutdown, start_time }
+        Self {
+            stream,
+            shutdown,
+            start_time,
+            executor: Arc::new(DefaultCommandExecutor::new()),
+        }
     }
+}
 
+impl<E: CommandExecutor> ClientHandler<E> {
     /// Handle client communication
     async fn handle(mut self) -> Result<()> {
         let mut buffer = vec![0; MAX_MESSAGE_SIZE];
@@ -111,10 +121,12 @@ impl ClientHandler {
             }
 
             // Try to deserialize message
-            let message: IpcMessage =
-                bincode::deserialize(&buffer[..bytes_read]).map_err(|e| {
-                    anyhow::anyhow!("Failed to deserialize message: {}", e)
-                })?;
+            let message: IpcMessage = bincode::deserialize(
+                &buffer[..bytes_read],
+            )
+            .map_err(|error| {
+                anyhow::anyhow!("Failed to deserialize message: {}", error)
+            })?;
 
             tracing::debug!(
                 "Received message ID {}: {:?}",
@@ -161,6 +173,9 @@ impl ClientHandler {
             DaemonCommand::Shutdown { force } => {
                 self.handle_shutdown_command(force).await
             }
+            DaemonCommand::Execute(kps_command) => {
+                self.handle_kps_command(kps_command).await
+            }
         }
     }
 
@@ -183,5 +198,42 @@ impl ClientHandler {
         tracing::info!("Shutdown command received");
         let _ = self.shutdown.send(());
         DaemonResponse::Success { message: "Shutdown initiated".to_string() }
+    }
+
+    /// Handle KPS commands by delegating to command executor
+    async fn handle_kps_command(&self, command: Commands) -> DaemonResponse {
+        match command {
+            Commands::Initialize { hsm_slot, hsm_pin, force } => {
+                self.executor.execute_initialize(hsm_slot, hsm_pin, force).await
+            }
+
+            Commands::Organization { command } => {
+                self.executor.execute_organization(command).await
+            }
+
+            Commands::Derive {
+                shuttle_path,
+                operator_id,
+                batch_size,
+                dry_run,
+            } => {
+                self.executor
+                    .execute_derive(
+                        shuttle_path,
+                        operator_id,
+                        batch_size,
+                        dry_run,
+                    )
+                    .await
+            }
+
+            Commands::Audit { command } => {
+                self.executor.execute_audit(command).await
+            }
+
+            Commands::Operator { command } => {
+                self.executor.execute_operator(command).await
+            }
+        }
     }
 }

@@ -1,3 +1,4 @@
+mod commands;
 mod daemon;
 
 use anyhow::Result;

@@ -594,6 +594,7 @@ name = "puavo-ipc"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "clap",
  "serde",
  "thiserror 2.0.17",
 ]
@@ -627,6 +628,7 @@ name = "puavo-kpsd"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "bincode",
  "puavo-ipc",
  "thiserror 2.0.17",
