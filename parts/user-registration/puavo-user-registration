@@ -43,7 +43,7 @@ class NewUserRegistrationWindow:
         self.application = application
 
         self.data_dir = settings['data_dir']
-        self.prod_mode = settings['prod_mode']
+        self.devel_mode = settings['devel_mode']
         self.machine_password = settings['machine_password']
         self.organisation_domain = settings['organisation_domain']
         self.username = None
@@ -83,7 +83,7 @@ class NewUserRegistrationWindow:
             log.fatal('could not read /etc/puavo/hostname')
             return
 
-        if not self.prod_mode:
+        if self.devel_mode:
             screen_width = 1366
             screen_height = 768
 
@@ -158,14 +158,14 @@ class NewUserRegistrationWindow:
         self.main_window.set_application(self.application)
         self.main_window.set_icon_name('user-info')
 
-        if self.prod_mode:
+        if self.devel_mode:
+            self.main_window.set_size_request(screen_width, screen_height)
+        else:
             self.main_window.fullscreen()
             self.main_window.set_skip_taskbar_hint(True)
             self.main_window.set_skip_pager_hint(True)
             self.main_window.set_deletable(False)
             self.main_window.set_decorated(False)
-        else:
-            self.main_window.set_size_request(screen_width, screen_height)
 
         # If we have a privacy policy, show the button
         self.__privacy_policy_file = \
@@ -328,9 +328,9 @@ class NewUserRegistrationWindow:
 
 
     def login_locally(self):
-        if not self.prod_mode:
+        if self.devel_mode:
             log.info('skipping local login with username="%s", password="%s"' \
-                       ' due to non-production mode',
+                       ' due to devel mode',
                      self.username, self.password)
             return True
 
@@ -371,7 +371,7 @@ class NewUserRegistrationWindow:
 
         log.info('disabling registration window')
 
-        if self.prod_mode:
+        if not self.devel_mode:
             subprocess.check_call(cmd)
 
 
@@ -409,7 +409,7 @@ class NewUserRegistrationWindow:
     def reboot(self):
         try:
             log.info('rebooting now')
-            if self.prod_mode:
+            if not self.devel_mode:
                 subprocess.run(['systemctl', 'reboot', '-i'])
             self.main_window.destroy()
         except Exception as e:
@@ -447,13 +447,13 @@ class NewUserRegistrationWindow:
             'password': self.machine_password
         }
 
-        if self.prod_mode:
-            data['dn'] = open('/etc/puavo/ldap/dn', 'rb').read().decode('utf-8').strip()
-            data['hostname'] = self.hostname
-        else:
+        if self.devel_mode:
             # This machine does not exist anywhere, development purposes only
             data['dn'] = 'puavoId=37,ou=Devices,ou=Hosts,dc=edu,dc=hogwarts,dc=net'
             data['hostname'] = 'laptop1'
+        else:
+            data['dn'] = open('/etc/puavo/ldap/dn', 'rb').read().decode('utf-8').strip()
+            data['hostname'] = self.hostname
 
         return data
 
@@ -521,43 +521,38 @@ class UserRegistrationApplication(Gtk.Application):
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter)
 
-parser.add_argument('--prod',
+parser.add_argument('--devel',
                     action='store_true',
                     required=False,
-                    help='enable production mode')
-
-parser.add_argument('--at-session-startup',     # backwards compat only
-                    action='store_true',
-                    required=False,
-                    help='')
+                    help='enable development mode')
 
 args = parser.parse_args()
 
-prod_mode = args.prod or args.at_session_startup
+devel_mode = args.devel
 
 settings = {
-    'prod_mode': prod_mode,
+    'devel_mode': devel_mode,
 }
 
 try:
-    if prod_mode:
-        get_password_cmd = ['sudo', '-n', 'cat', '/etc/puavo/ldap/password']
-        settings['machine_password'] = subprocess.check_output(get_password_cmd).decode('utf-8').strip()
-        settings['organisation_domain'] = open('/etc/puavo/domain', 'rb').read().decode('utf-8').strip()
-    else:
+    if devel_mode:
         # This password is a randomly generated string, the "machine"
         # does not actually exist
         settings['machine_password'] = '7nj7am5d09kug3ed4g24z3zx3x6pek09ybrdbfrd'
         settings['organisation_domain'] = 'hogwarts.puavo.net'
+    else:
+        get_password_cmd = ['sudo', '-n', 'cat', '/etc/puavo/ldap/password']
+        settings['machine_password'] = subprocess.check_output(get_password_cmd).decode('utf-8').strip()
+        settings['organisation_domain'] = open('/etc/puavo/domain', 'rb').read().decode('utf-8').strip()
 except subprocess.CalledProcessError:
     errmsg = _tr('You do not have the required permissions to use this tool.')
     utils.show_error_message(None, _tr('No permissions'), errmsg)
     exit(1)
 
-if prod_mode:
-    settings['data_dir'] = '/usr/share/puavo-user-registration/data'
-else:
+if devel_mode:
     settings['data_dir'] = './data'
+else:
+    settings['data_dir'] = '/usr/share/puavo-user-registration/data'
 
 try:
     app = UserRegistrationApplication('opinsys.new_user_registration',
