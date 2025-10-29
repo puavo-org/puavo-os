@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
-use std::path::PathBuf;
 use clap::Subcommand;
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+use std::time::SystemTime;
 
 pub mod salt;
 
@@ -69,23 +69,30 @@ pub enum Commands {
         command: OrganizationCommand,
     },
 
-    /// Derive recovery bundles from device salts
-    Derive {
-        /// Custom shuttle mount point
-        #[arg(long)]
-        shuttle_path: Option<PathBuf>,
-
+    /// Generate new recovery bundles for devices
+    Generate {
         /// Operator identifier
         #[arg(long)]
         operator_id: Option<String>,
 
-        /// Process N devices at a time
-        #[arg(long, default_value = "0")]
-        batch_size: usize,
-
-        /// Show what would be done without doing it
+        /// Organization identifier
         #[arg(long)]
-        dry_run: bool,
+        organization_id: String,
+
+        /// Device serial number (can be specified multiple times)
+        #[arg(long)]
+        serial_number: Vec<String>,
+    },
+
+    /// Derive recovery bundles from device salt files
+    Derive {
+        /// Operator identifier
+        #[arg(long)]
+        operator_id: Option<String>,
+
+        /// Files containing serialized device salt source (can be specified multiple times)
+        #[arg(long)]
+        salt_file: Vec<PathBuf>,
     },
 
     /// Audit log management
@@ -109,10 +116,6 @@ pub enum OrganizationCommand {
         /// Organization identifier
         #[arg(long)]
         organization_id: String,
-
-        /// Generate new key (default: true)
-        #[arg(long, default_value = "true")]
-        generate: bool,
     },
 
     /// Rotate organization key
