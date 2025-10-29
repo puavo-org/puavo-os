@@ -197,15 +197,20 @@ update_boot_device_environments() {
   local status=0
 
   for diskdev in $boot_disks; do
-    echo "installing GRUB environment to boot device $diskdev"
+    echo "installing GRUB environment to boot device ${diskdev}"
     if ! mount_disk_efi_partition "$diskdev"; then
       echo "failed to mount ${diskdev}" >&2
       status=1
       continue
     fi
-    if ! cp -p "$grubenv_path" "${UKI_ROOT}/grub/grubenv"; then
-      echo "failed to copy Grub environment to ${diskdev}" >&2
-      status=1
+    if ! cmp "$grubenv_path" "${UKI_ROOT}/grub/grubenv" >/dev/null 2>&1; then
+      if ! cp -p "$grubenv_path" "${UKI_ROOT}/grub/grubenv.tmp"; then
+        echo "failed to copy Grub environment to ${diskdev} (temporary file)" >&2
+        status=1
+      elif ! mv "${UKI_ROOT}/grub/grubenv.tmp" "${UKI_ROOT}/grub/grubenv"; then
+        echo "failed to move the Grub environment file in ${diskdev}" >&2
+        status=1
+      fi
     fi
     umount /boot/efi || true
   done
