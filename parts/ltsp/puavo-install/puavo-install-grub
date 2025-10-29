@@ -583,8 +583,34 @@ function generate_boot_entry {
 function add_boot_options {
   search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
 
-  for image_path in /EFI/puavo/*/*.uki.efi; do
-    generate_boot_entry "$image_path"
+  set default_image_no_suffix=''
+  if test -n "$puavo_grub_puavo_os_default_image"; then
+    regexp -s default_image_no_suffix '^(.*)\.img$' \
+              "$puavo_grub_puavo_os_default_image"
+    for image_uki_path in /EFI/puavo/${default_image_no_suffix}/*.uki.efi; do
+      if ! test -f "$image_uki_path"; then continue; fi
+      generate_boot_entry "$image_uki_path"
+    done
+  fi
+
+  set backup_image_no_suffix=''
+  if test -n "$puavo_grub_puavo_os_backup_image"; then
+    regexp -s backup_image_no_suffix '^(.*)\.img$' \
+              "$puavo_grub_puavo_os_backup_image"
+    for image_uki_path in /EFI/puavo/${backup_image_no_suffix}/*.uki.efi; do
+      if ! test -f "$image_uki_path"; then continue; fi
+      generate_boot_entry "$image_uki_path"
+    done
+  fi
+
+  for image_uki_path in /EFI/puavo/*/*.uki.efi; do
+    if ! test -f "$image_uki_path"; then continue; fi
+    regexp -s 1:image_uki_dir '^(.*)/[^/]+$' "$image_uki_path"
+    if test "$image_uki_dir" = "/EFI/puavo/${default_image_no_suffix}" \
+         -o "$image_uki_dir" = "/EFI/puavo/${backup_image_no_suffix}"; then
+      continue  # already handled
+    fi
+    generate_boot_entry "$image_uki_path"
   done
 
   # Add entry for Windows if it exists
