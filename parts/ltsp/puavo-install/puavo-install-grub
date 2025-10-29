@@ -562,7 +562,7 @@ function generate_boot_entry {
 
   # If the release is set, generate the label based on it
   if test -n "$release"; then
-    if test "$image_name" = "${puavo_default_image}"; then
+    if test "$image_name" = "${puavo_grub_puavo_os_default_image}"; then
       set label="${text_normal_startup} (${release})"
       set icon="puavo-os"
     elif test "$image_name" = "${puavo_backup_image}"; then
