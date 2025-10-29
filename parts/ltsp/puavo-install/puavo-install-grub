@@ -526,7 +526,6 @@ function add_boot_entry {
   set image_path="$1"
   set label="$2"
   set icon="$3"
-  echo "Adding boot entry: $image_path, $label, $icon"
 
   menuentry "$label" --class "$icon" "$image_path" {
     set image_path="$2"
@@ -575,7 +574,6 @@ function generate_boot_entry {
   fi
 
   if test "$enabled" = "false"; then
-    echo "Boot entry for '$image_path' is disabled"
     return
   fi
 
@@ -597,7 +595,6 @@ function add_boot_options {
   fi
 
   if [ -f "$windows_image_path" ]; then
-    echo "Found boot image $windows_image_path"
     add_boot_entry "$windows_image_path" "$windows_boot_label" "windows"
   fi
 }
