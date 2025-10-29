@@ -538,15 +538,15 @@ function add_boot_entry {
 function generate_boot_entry {
   set image_path="$1"
 
-  # Extract the folder and the basename of the image
-  regexp -s 1:folder '^(.*/)[^/]+$' "$image_path"
-  regexp -s 1:name '/([^/]+)$' "$image_path"
+  # Extract the dir and the basename of the image
+  regexp -s 1:dir  '^(.*/)[^/]+$' "$image_path"
+  regexp -s 1:name '/([^/]+)$'    "$image_path"
 
-  # Look for image specific metadata folder next to the image file
-  set metadata_folder="${folder}${name}.extra.d"
+  # Look for image specific metadata directory next to the image file
+  set metadata_dir="${dir}${name}.extra.d"
 
-  # If such folder exists, load the image specific config
-  set image_environment_file="${metadata_folder}/grubenv"
+  # If such directory exists, load the image specific config
+  set image_environment_file="${metadata_dir}/grubenv"
 
   set enabled="true"
   set image_name=""
