@@ -65,9 +65,9 @@ setup_default_and_backup_images() {
 
   if [ -n "$backup_image_tag" ]; then
     backup_image_name=$(basename "$backup_image_tag" .backup)
-    grubedit set "puavo_backup_image=${backup_image_name}.img"
+    grubedit set "puavo_grub_puavo_os_backup_image=${backup_image_name}.img"
   else
-    grubedit unset puavo_backup_image
+    grubedit unset puavo_grub_puavo_os_backup_image
   fi
 }
 

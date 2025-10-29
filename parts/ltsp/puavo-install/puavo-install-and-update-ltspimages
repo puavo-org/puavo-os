@@ -967,6 +967,10 @@ update_image_labels_for_grub() {
                unset puavo_grub_puavo_os_default_image
   grub-editenv "${images_dir}/boot/grub/grubenv" \
                unset puavo_grub_puavo_os_default_mode
+  grub-editenv "${images_dir}/boot/grub/grubenv" \
+               unset puavo_grub_puavo_os_backup_image
+  grub-editenv "${images_dir}/boot/grub/grubenv" \
+               unset puavo_grub_puavo_os_backup_mode
 
   PUAVO_CONF_SCRIPTS='/etc/puavo-conf/scripts'
   "${PUAVO_CONF_SCRIPTS}"/setup_grub_environment --images-dir "$images_dir"
