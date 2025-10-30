@@ -961,17 +961,9 @@ update_image_labels_for_grub() {
   test -n "$backup_image"  \
     && touch "${images_dir}/${backup_image%.img}.backup"
 
-  # the system default is the new default now,
-  # irrespective of what user has booted to before
-  grub-editenv "${images_dir}/boot/grub/grubenv" \
-               unset puavo_grub_puavo_os_default_image
-  grub-editenv "${images_dir}/boot/grub/grubenv" \
-               unset puavo_grub_puavo_os_default_mode
-  grub-editenv "${images_dir}/boot/grub/grubenv" \
-               unset puavo_grub_puavo_os_backup_image
-  grub-editenv "${images_dir}/boot/grub/grubenv" \
-               unset puavo_grub_puavo_os_backup_mode
-
+  # This setup_grub_environment script updates the
+  # "puavo_grub_puavo_os_default_image" and "puavo_grub_puavo_os_backup_image"
+  # Grub environment variables to match the above default/backup images.
   PUAVO_CONF_SCRIPTS='/etc/puavo-conf/scripts'
   "${PUAVO_CONF_SCRIPTS}"/setup_grub_environment --images-dir "$images_dir"
 }
