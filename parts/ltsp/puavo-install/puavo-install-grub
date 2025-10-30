@@ -564,7 +564,7 @@ function generate_boot_entry {
     if test "$image_name" = "${puavo_grub_puavo_os_default_image}"; then
       set label="${text_normal_startup} (${release})"
       set icon="puavo-os"
-    elif test "$image_name" = "${puavo_backup_image}"; then
+    elif test "$image_name" = "${puavo_grub_puavo_os_backup_image}"; then
       set label="${text_backup_normal_startup} (${release})"
       set icon="puavo-os-backup"
     else
