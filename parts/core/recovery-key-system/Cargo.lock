@@ -585,6 +585,8 @@ version = "0.1.0"
 dependencies = [
  "cryptoki",
  "hex",
+ "rand",
+ "sha2",
  "thiserror 1.0.69",
  "tracing",
 ]
@@ -628,6 +630,9 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bincode",
+ "clap",
+ "cryptoki",
+ "hex",
  "puavo-audit",
  "puavo-hsm",
  "puavo-ipc",
