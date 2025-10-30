@@ -59,6 +59,3 @@ case "$boot_default" in
     echo "Unsupported boot mode '${boot_default}'" >&2
     ;;
 esac
-
-# XXX just cleanup old stuff
-grubedit unset default
