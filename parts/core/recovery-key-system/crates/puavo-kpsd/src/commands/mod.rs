@@ -4,10 +4,12 @@ pub mod initialize;
 pub mod operator;
 pub mod organization;
 
+use crate::context::DaemonContext;
 use async_trait::async_trait;
 use puavo_ipc::{
     AuditCommand, DaemonResponse, OperatorCommand, OrganizationCommand,
 };
+use std::{path::PathBuf, sync::Arc};
 
 /// Trait for executing KPS commands
 ///
@@ -17,6 +19,7 @@ pub trait CommandExecutor: Send + Sync {
     /// Execute initialize command
     async fn execute_initialize(
         &self,
+        context: Arc<DaemonContext>,
         hsm_slot: u64,
         hsm_pin: Option<String>,
         force: bool,
@@ -25,24 +28,38 @@ pub trait CommandExecutor: Send + Sync {
     /// Execute organization command
     async fn execute_organization(
         &self,
+        context: Arc<DaemonContext>,
         command: OrganizationCommand,
+    ) -> DaemonResponse;
+
+    /// Execute generate command
+    async fn execute_generate(
+        &self,
+        context: Arc<DaemonContext>,
+        operator_id: Option<String>,
+        organization_id: String,
+        serial_numbers: Vec<String>,
     ) -> DaemonResponse;
 
     /// Execute derive command
     async fn execute_derive(
         &self,
-        shuttle_path: Option<std::path::PathBuf>,
+        context: Arc<DaemonContext>,
         operator_id: Option<String>,
-        batch_size: usize,
-        dry_run: bool,
+        salts: Vec<PathBuf>,
     ) -> DaemonResponse;
 
     /// Execute audit command
-    async fn execute_audit(&self, command: AuditCommand) -> DaemonResponse;
+    async fn execute_audit(
+        &self,
+        context: Arc<DaemonContext>,
+        command: AuditCommand,
+    ) -> DaemonResponse;
 
     /// Execute operator command
     async fn execute_operator(
         &self,
+        context: Arc<DaemonContext>,
         command: OperatorCommand,
     ) -> DaemonResponse;
 }
@@ -60,6 +77,7 @@ impl DefaultCommandExecutor {
 impl CommandExecutor for DefaultCommandExecutor {
     async fn execute_initialize(
         &self,
+        _context: Arc<DaemonContext>,
         hsm_slot: u64,
         hsm_pin: Option<String>,
         force: bool,
@@ -69,27 +87,50 @@ impl CommandExecutor for DefaultCommandExecutor {
 
     async fn execute_organization(
         &self,
+        context: Arc<DaemonContext>,
         command: OrganizationCommand,
     ) -> DaemonResponse {
-        organization::execute(command).await
+        let hsm_session = context.hsm_session.lock().await;
+        organization::execute(&hsm_session, command)
+    }
+
+    async fn execute_generate(
+        &self,
+        context: Arc<DaemonContext>,
+        operator_id: Option<String>,
+        organization_id: String,
+        serial_numbers: Vec<String>,
+    ) -> DaemonResponse {
+        let hsm_session = context.hsm_session.lock().await;
+        derive::execute_generate(
+            &hsm_session,
+            operator_id,
+            organization_id,
+            serial_numbers,
+        )
     }
 
     async fn execute_derive(
         &self,
-        shuttle_path: Option<std::path::PathBuf>,
+        context: Arc<DaemonContext>,
         operator_id: Option<String>,
-        batch_size: usize,
-        dry_run: bool,
+        salts: Vec<PathBuf>,
     ) -> DaemonResponse {
-        derive::execute(shuttle_path, operator_id, batch_size, dry_run).await
+        let hsm_session = context.hsm_session.lock().await;
+        derive::execute_derive(&hsm_session, operator_id, salts)
     }
 
-    async fn execute_audit(&self, command: AuditCommand) -> DaemonResponse {
+    async fn execute_audit(
+        &self,
+        _context: Arc<DaemonContext>,
+        command: AuditCommand,
+    ) -> DaemonResponse {
         audit::execute(command).await
     }
 
     async fn execute_operator(
         &self,
+        _context: Arc<DaemonContext>,
         command: OperatorCommand,
     ) -> DaemonResponse {
         operator::execute(command).await
