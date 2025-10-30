@@ -1,4 +1,6 @@
 use crate::commands::{CommandExecutor, DefaultCommandExecutor};
+use crate::config::KpsConfig;
+use crate::context::DaemonContext;
 use anyhow::Result;
 use puavo_ipc::{
     Commands, DEFAULT_SOCKET_PATH, DaemonCommand, DaemonResponse, IpcMessage,
@@ -16,12 +18,14 @@ use tokio::sync::mpsc::{self, UnboundedSender};
 /// Main daemon structure
 pub struct Daemon {
     start_time: Instant,
+    context: Arc<DaemonContext>,
 }
 
 impl Daemon {
     /// Create new daemon instance
-    pub async fn new() -> Result<Self> {
-        Ok(Self { start_time: Instant::now() })
+    pub async fn new(config: KpsConfig) -> Result<Self> {
+        let context = Arc::new(DaemonContext::new(config)?);
+        Ok(Self { start_time: Instant::now(), context })
     }
 
     /// Run the daemon main loop
@@ -68,8 +72,12 @@ impl Daemon {
     ) {
         match result {
             Ok((stream, _address)) => {
-                let handler =
-                    ClientHandler::new(stream, shutdown, self.start_time);
+                let handler = ClientHandler::new(
+                    stream,
+                    shutdown,
+                    self.start_time,
+                    self.context.clone(),
+                );
 
                 // Spawn client handler
                 tokio::spawn(async move {
@@ -90,6 +98,7 @@ struct ClientHandler<E: CommandExecutor> {
     stream: UnixStream,
     shutdown: UnboundedSender<()>,
     start_time: Instant,
+    context: Arc<DaemonContext>,
     executor: Arc<E>,
 }
 
@@ -98,11 +107,13 @@ impl ClientHandler<DefaultCommandExecutor> {
         stream: UnixStream,
         shutdown: UnboundedSender<()>,
         start_time: Instant,
+        context: Arc<DaemonContext>,
     ) -> Self {
         Self {
             stream,
             shutdown,
             start_time,
+            context,
             executor: Arc::new(DefaultCommandExecutor::new()),
         }
     }
@@ -204,35 +215,55 @@ impl<E: CommandExecutor> ClientHandler<E> {
     async fn handle_kps_command(&self, command: Commands) -> DaemonResponse {
         match command {
             Commands::Initialize { hsm_slot, hsm_pin, force } => {
-                self.executor.execute_initialize(hsm_slot, hsm_pin, force).await
+                self.executor
+                    .execute_initialize(
+                        self.context.clone(),
+                        hsm_slot,
+                        hsm_pin,
+                        force,
+                    )
+                    .await
             }
 
             Commands::Organization { command } => {
-                self.executor.execute_organization(command).await
+                self.executor
+                    .execute_organization(self.context.clone(), command)
+                    .await
             }
 
-            Commands::Derive {
-                shuttle_path,
+            Commands::Generate {
                 operator_id,
-                batch_size,
-                dry_run,
+                organization_id,
+                serial_number,
             } => {
                 self.executor
-                    .execute_derive(
-                        shuttle_path,
+                    .execute_generate(
+                        self.context.clone(),
                         operator_id,
-                        batch_size,
-                        dry_run,
+                        organization_id,
+                        serial_number,
+                    )
+                    .await
+            }
+
+            Commands::Derive { operator_id, salt_file } => {
+                self.executor
+                    .execute_derive(
+                        self.context.clone(),
+                        operator_id,
+                        salt_file,
                     )
                     .await
             }
 
             Commands::Audit { command } => {
-                self.executor.execute_audit(command).await
+                self.executor.execute_audit(self.context.clone(), command).await
             }
 
             Commands::Operator { command } => {
-                self.executor.execute_operator(command).await
+                self.executor
+                    .execute_operator(self.context.clone(), command)
+                    .await
             }
         }
     }

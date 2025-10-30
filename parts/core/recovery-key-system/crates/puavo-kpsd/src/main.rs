@@ -1,6 +1,7 @@
 mod cli;
 mod commands;
 mod config;
+mod context;
 mod daemon;
 
 use anyhow::Result;

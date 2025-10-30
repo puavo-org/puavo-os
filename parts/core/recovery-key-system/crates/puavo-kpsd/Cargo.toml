@@ -13,6 +13,7 @@ puavo-hsm = { path = "../puavo-hsm" }
 puavo-audit = { path = "../puavo-audit" }
 
 # CLI and configuration
+clap = { version = "4.5", features = ["derive"] }
 serde.workspace = true
 serde_json.workspace = true
 
@@ -25,3 +26,7 @@ async-trait = "0.1"
 bincode = "1.3"
 anyhow = "1.0"
 toml.workspace = true
+
+# Cryptography
+cryptoki.workspace = true
+hex.workspace = true
