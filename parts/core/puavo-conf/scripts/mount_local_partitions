@@ -163,6 +163,17 @@ case "$puavo_hosttype" in
     ;;
 esac
 
+if [ "$btrfs_root" = 1 ]; then
+  additional_subvolumes='images/puavo-pkg state/var/lib/docker state/var/log'
+  case "$puavo_hosttype" in
+    bootserver|laptop|preinstalled)
+      for subvol in $additional_subvolumes; do
+        puavo_mount_partition_on_btrfs puavo "$subvol" || status=1
+      done
+      ;;
+  esac
+fi
+
 rm -f /images/forcefsck
 
 exit $status
