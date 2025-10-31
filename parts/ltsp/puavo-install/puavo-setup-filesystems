@@ -155,28 +155,34 @@ end
 module DiskHandler
   Filesystems = {
     'bootserver' => {
-      '.EFI'          => { 'size' => '1536M',    'type' => 'fat'     },
-      '.SWAP'         => { 'size' => '16G',      'type' => 'swap'    },
-      'images'        => { 'size' => '128G',     'type' => 'btrfssv' },
-      'state'         => { 'size' => '32G',      'type' => 'btrfssv' },
-      'imageoverlays' => { 'size' => '5G',       'type' => 'btrfssv' },
-      'home'          => { 'size' => '100%FREE', 'type' => 'btrfssv' },
+      '.EFI'                 => { 'size' => '1536M', 'type' => 'fat'     },
+      '.SWAP'                => { 'size' => '16G',   'type' => 'swap'    },
+      'home'                 => {                    'type' => 'btrfssv' },
+      'imageoverlays'        => {                    'type' => 'btrfssv' },
+      'images'               => {                    'type' => 'btrfssv' },
+      'images/puavo-pkg'     => {                    'type' => 'btrfssv' },
+      'state'                => {                    'type' => 'btrfssv' },
+      'state/var/lib/docker' => {                    'type' => 'btrfssv' },
+      'state/var/log'        => {                    'type' => 'btrfssv' },
     },
     'diskinstaller' => {
-      '.EFI'          => { 'size' => '512M',     'type' => 'fat'     },
-      'installimages' => { 'size' => '100%FREE', 'type' => 'btrfssv' },
+      '.EFI'                 => { 'size' => '512M',  'type' => 'fat'     },
+      'installimages'        => {                    'type' => 'btrfssv' },
     },
     'exam' => {
-      '.EFI'          => { 'size' => '256M',      'type' => 'fat'    },
-      'examimages'    => { 'size' => '100%FREE', 'type' => 'btrfssv' },
+      '.EFI'                 => { 'size' => '256M',  'type' => 'fat'     },
+      'examimages'           => {                    'type' => 'btrfssv' },
     },
     'laptop' => {
-      '.EFI'          => { 'size' => '1536M',    'type' => 'fat'     },
-      '.SWAP'         => { 'size' => '4G',       'type' => 'swap'    },
-      'images'        => { 'size' => '40G',      'type' => 'btrfssv' },
-      'state'         => { 'size' => '4G',       'type' => 'btrfssv' },
-      'imageoverlays' => { 'size' => '5G',       'type' => 'btrfssv' },
-      'home'          => { 'size' => '100%FREE', 'type' => 'btrfssv' },
+      '.EFI'                 => { 'size' => '1536M', 'type' => 'fat'     },
+      '.SWAP'                => { 'size' => '4G',    'type' => 'swap'    },
+      'home'                 => {                    'type' => 'btrfssv' },
+      'imageoverlays'        => {                    'type' => 'btrfssv' },
+      'images'               => {                    'type' => 'btrfssv' },
+      'images/puavo-pkg'     => {                    'type' => 'btrfssv' },
+      'state'                => {                    'type' => 'btrfssv' },
+      'state/var/lib/docker' => {                    'type' => 'btrfssv' },
+      'state/var/log'        => {                    'type' => 'btrfssv' },
     },
   }
 
@@ -633,9 +639,10 @@ module DiskHandler
       FileUtils.mkdir_p(btrfs_mount_dir)
       begin
         run('mount', install_target_dev, btrfs_mount_dir)
-        btrfs_subvolumes( fs_conf['hosttype'] ).each do |name, attrs|
-          # XXX attrs dismissed
-          run('btrfs', 'subvolume', 'create', "#{ btrfs_mount_dir }/#{ name }")
+        btrfs_subvolumes( fs_conf['hosttype'] ).keys.each do |name|
+          subvolume_path = File.join(btrfs_mount_dir, name)
+          FileUtils.mkdir_p( File.dirname(subvolume_path) )
+          run('btrfs', 'subvolume', 'create', subvolume_path)
         end
       ensure
         run('umount', btrfs_mount_dir)
@@ -834,19 +841,6 @@ module QueryDiskInfo
         device = QueryDiskInfo::ask_device()
       end
 
-      # Let the user set the size of the following filesystems:
-      [
-        [ 'imageoverlays', UI::ImageoverlaySizePrompt ],
-      ].each do |fs_name, prompt_key|
-        fs = DiskHandler::Filesystems[hosttype][fs_name]
-        next if fs.nil?
-        fs_size =
-          UI::ask_size_with_default("Filesystem size of #{ fs_name }:",
-                                    fs['size'], prompt_key)
-
-        fs['size'] = fs_size.join()
-      end
-
       windows_size = QueryDiskInfo::ask_windows_setup(hosttype, device)
 
       msg = "\nIt is possible to wipe disk/partition before installing,\n" \
@@ -929,7 +923,6 @@ end
 module UI
   DiskDevicePrompt,
   EncryptionPresetPrompt,
-  ImageoverlaySizePrompt,
   InstallWithoutRaidPrompt,
   PartitionPrompt,
   SetupWindowsPrompt,
@@ -1023,8 +1016,6 @@ EOF
           @defaults[DiskDevicePrompt] = arg
         when '--ask-encryption'
           @defaults[EncryptionPresetPrompt] = arg
-        when '--ask-imageoverlay-size'
-          @defaults[ImageoverlaySizePrompt] = arg
         when '--ask-install-without-raid'
           @defaults[InstallWithoutRaidPrompt] = arg
         when '--ask-partition'
@@ -1045,9 +1036,6 @@ EOF
         when '--force-encryption'
           @defaults[EncryptionPresetPrompt] = arg
           @force_defaults[EncryptionPresetPrompt] = true
-        when '--force-imageoverlay-size'
-          @defaults[ImageoverlaySizePrompt] = arg
-          @force_defaults[ImageoverlaySizePrompt] = true
         when '--force-install-without-raid'
           @defaults[InstallWithoutRaidPrompt] = arg
           @force_defaults[InstallWithoutRaidPrompt] = true
