@@ -157,7 +157,6 @@ module DiskHandler
     'bootserver' => {
       '.EFI'          => { 'size' => '1536M',    'type' => 'fat'     },
       '.SWAP'         => { 'size' => '16G',      'type' => 'swap'    },
-      'tmp'           => { 'size' => '16G',      'type' => 'btrfssv' },
       'images'        => { 'size' => '128G',     'type' => 'btrfssv' },
       'state'         => { 'size' => '32G',      'type' => 'btrfssv' },
       'imageoverlays' => { 'size' => '5G',       'type' => 'btrfssv' },
@@ -174,7 +173,6 @@ module DiskHandler
     'laptop' => {
       '.EFI'          => { 'size' => '1536M',    'type' => 'fat'     },
       '.SWAP'         => { 'size' => '4G',       'type' => 'swap'    },
-      'tmp'           => { 'size' => '6G',       'type' => 'btrfssv' },
       'images'        => { 'size' => '40G',      'type' => 'btrfssv' },
       'state'         => { 'size' => '4G',       'type' => 'btrfssv' },
       'imageoverlays' => { 'size' => '5G',       'type' => 'btrfssv' },
@@ -651,10 +649,6 @@ module DiskHandler
     install_target_dev = fs_conf['install_target']
 
     btrfs_subvolumes( fs_conf['hosttype'] ).each do |name, attrs|
-      # /tmp should not be mounted now,
-      # otherwise things currently using it will break (for example tmux).
-      next if name == 'tmp'
-
       mnt_path = "/#{ name }"
       FileUtils.mkdir_p(mnt_path)
       run('mount', '-o', "subvol=#{ name }", install_target_dev, mnt_path)
