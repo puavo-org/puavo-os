@@ -246,12 +246,12 @@ impl<E: CommandExecutor> ClientHandler<E> {
                     .await
             }
 
-            Commands::Derive { operator_id, salt_file } => {
+            Commands::Unwrap { operator_id, recovery_bundle } => {
                 self.executor
-                    .execute_derive(
+                    .execute_unwrap(
                         self.context.clone(),
                         operator_id,
-                        salt_file,
+                        recovery_bundle,
                     )
                     .await
             }

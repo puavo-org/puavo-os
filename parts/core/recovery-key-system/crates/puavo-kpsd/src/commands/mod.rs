@@ -1,8 +1,8 @@
 pub mod audit;
-pub mod derive;
 pub mod initialize;
 pub mod operator;
 pub mod organization;
+pub mod recovery;
 
 use crate::context::DaemonContext;
 use async_trait::async_trait;
@@ -41,12 +41,12 @@ pub trait CommandExecutor: Send + Sync {
         serial_numbers: Vec<String>,
     ) -> DaemonResponse;
 
-    /// Execute derive command
-    async fn execute_derive(
+    /// Execute unwrap command
+    async fn execute_unwrap(
         &self,
         context: Arc<DaemonContext>,
         operator_id: Option<String>,
-        salts: Vec<PathBuf>,
+        recovery_bundle_paths: Vec<PathBuf>,
     ) -> DaemonResponse;
 
     /// Execute audit command
@@ -102,7 +102,7 @@ impl CommandExecutor for DefaultCommandExecutor {
         serial_numbers: Vec<String>,
     ) -> DaemonResponse {
         let hsm_session = context.hsm_session.lock().await;
-        derive::execute_generate(
+        recovery::execute_generate(
             &hsm_session,
             operator_id,
             organization_id,
@@ -110,14 +110,18 @@ impl CommandExecutor for DefaultCommandExecutor {
         )
     }
 
-    async fn execute_derive(
+    async fn execute_unwrap(
         &self,
         context: Arc<DaemonContext>,
         operator_id: Option<String>,
-        salts: Vec<PathBuf>,
+        recovery_bundle_paths: Vec<PathBuf>,
     ) -> DaemonResponse {
         let hsm_session = context.hsm_session.lock().await;
-        derive::execute_derive(&hsm_session, operator_id, salts)
+        recovery::execute_unwrap(
+            &hsm_session,
+            operator_id,
+            recovery_bundle_paths,
+        )
     }
 
     async fn execute_audit(

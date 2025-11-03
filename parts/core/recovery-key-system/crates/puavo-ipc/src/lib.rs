@@ -14,6 +14,35 @@ pub const DEFAULT_SOCKET_PATH: &str = "/tmp/puavo-kps-daemon.sock";
 /// Maximum message buffer size for IPC communication
 pub const MAX_MESSAGE_SIZE: usize = 8192;
 
+/// Version of the recovery key data structure
+pub const RECOVERY_KEY_DATA_VERSION: u32 = 1;
+
+/// Recovery key data structure containing device information and recovery key
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecoveryKeyData {
+    /// Device serial number
+    pub serial_number: String,
+    /// Organization ID
+    pub organization_id: String,
+    /// Actual recovery key bytes
+    pub recovery_key: Vec<u8>,
+    // Version field for this structure
+    pub version: u32
+}
+
+/// Structure containing encrypted key data and the information for decrypting it
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecoveryBundle {
+    /// Device serial number
+    pub serial_number: String,
+    /// Organization ID
+    pub organization_id: String,
+    /// Version of the organization key used
+    pub organization_key_version: u32,
+    /// Encrypted recovery key bytes
+    pub encrypted_key_data: String
+}
+
 /// Top-level IPC message envelope
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IpcMessage {
@@ -84,15 +113,15 @@ pub enum Commands {
         serial_number: Vec<String>,
     },
 
-    /// Derive recovery bundles from device salt files
-    Derive {
+    /// Unwrap encrypted recovery key data
+    Unwrap {
         /// Operator identifier
         #[arg(long)]
         operator_id: Option<String>,
 
-        /// Files containing serialized device salt source (can be specified multiple times)
+        /// Files containing encrypted recovery key data (can be specified multiple times)
         #[arg(long)]
-        salt_file: Vec<PathBuf>,
+        recovery_bundle: Vec<PathBuf>,
     },
 
     /// Audit log management
