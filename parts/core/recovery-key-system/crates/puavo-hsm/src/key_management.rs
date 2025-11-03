@@ -1,10 +1,21 @@
 use std::fmt::{self, Display, Formatter};
 
 use crate::session::HsmSession;
-use cryptoki::object::{
-    Attribute, AttributeType, KeyType, ObjectClass, ObjectHandle,
+use cryptoki::{
+    mechanism::Mechanism,
+    object::{Attribute, AttributeType, KeyType, ObjectClass, ObjectHandle},
 };
-use rand::RngCore;
+use rsa::{BigUint, RsaPublicKey};
+
+/// RSA key size in bits
+const RSA_KEY_SIZE_BITS: u64 = 4096;
+
+/// This is the most commonly used public exponent for RSA keys. It provides
+/// a good balance between security and performance.
+const RSA_PUBLIC_EXPONENT: [u8; 3] = [0x01, 0x00, 0x01];
+
+/// Version separator used in key identifiers
+const VERSION_SEPARATOR: &str = ":v";
 
 /// Errors that can occur during key management
 #[derive(Debug, thiserror::Error)]
@@ -27,8 +38,17 @@ pub enum KeyManagementError {
     #[error("HSM operation error: {0}")]
     HsmError(String),
 
+    #[error("Failed to extract public key: {0}")]
+    PublicKeyExtractionFailed(String),
+
+    #[error("Invalid public key")]
+    InvalidPublicKey,
+
     #[error(transparent)]
     CryptoError(#[from] cryptoki::error::Error),
+
+    #[error("RSA error: {0}")]
+    RsaError(#[from] rsa::Error),
 }
 
 /// Label for HSM keys
@@ -50,6 +70,17 @@ impl KeyLabel {
         Self { label: label.into(), version }
     }
 
+    /// Base organization key label without version
+    ///
+    /// Parameters:
+    /// * `id` - Unique organization identifier
+    ///
+    /// Returns:
+    /// Base key label for the organization
+    pub fn organization_label(id: &str) -> String {
+        format!("puavo-organization-{}", id)
+    }
+
     /// Organization key label
     ///
     /// Parameters:
@@ -59,7 +90,35 @@ impl KeyLabel {
     /// Returns:
     /// Key label for the organization
     pub fn organization(id: &str, version: u32) -> Self {
-        Self { label: format!("puavo-organization-{}", id), version }
+        Self { label: Self::organization_label(id), version }
+    }
+
+    /// Generate the versioned identifier for HSM storage
+    ///
+    /// Returns:
+    /// Formatted string combining label and version for use as HSM key ID
+    pub fn versioned_id(&self) -> String {
+        format!("{}{}{}", self.label, VERSION_SEPARATOR, self.version)
+    }
+
+    /// Parse version from a versioned identifier
+    ///
+    /// Parameters:
+    /// * `versioned_id` - Versioned identifier string in format
+    ///
+    /// Returns:
+    /// Version number extracted from the identifier
+    ///
+    /// Errors:
+    /// Returns `KeyVersionNotFound` if version cannot be parsed
+    pub fn parse_version(
+        versioned_id: &str,
+    ) -> Result<u32, KeyManagementError> {
+        versioned_id
+            .split(VERSION_SEPARATOR)
+            .nth(1)
+            .and_then(|version_part| version_part.parse::<u32>().ok())
+            .ok_or(KeyManagementError::KeyVersionNotFound)
     }
 }
 
@@ -86,41 +145,52 @@ impl<'a> HsmKeyManager<'a> {
         Self { session }
     }
 
-    /// Generate a new key, store it in the HSM, and return the key value
+    /// Generate a new key pair, store it in the HSM, and return the handles
     ///
     /// Parameters:
     /// * `label` - Key label for identification
-    /// * `size` - Key size in bytes
     ///
     /// Errors:
     /// Returns `KeyManagementError` if key generation fails
     pub fn generate_key(
         &self,
         label: &KeyLabel,
-        size: usize,
-    ) -> Result<Vec<u8>, KeyManagementError> {
-        tracing::info!("Generating key with label: {}", label);
+    ) -> Result<(ObjectHandle, ObjectHandle), KeyManagementError> {
+        tracing::info!("Generating key pair with label: {}", label);
 
-        // Generate a random key value
-        let mut key_value = vec![0u8; size];
-        rand::thread_rng().fill_bytes(&mut key_value);
+        let versioned_id = label.versioned_id();
+        let public_exponent = RSA_PUBLIC_EXPONENT.to_vec();
 
-        // TODO: Fix attributes
-        let key_template = vec![
-            Attribute::Class(ObjectClass::SECRET_KEY),
-            Attribute::KeyType(KeyType::GENERIC_SECRET),
-            Attribute::Id(label.label.as_bytes().into()),
-            Attribute::Label(label.version.to_le_bytes().into()),
+        let public_key_template = vec![
+            Attribute::Class(ObjectClass::PUBLIC_KEY),
+            Attribute::KeyType(KeyType::RSA),
+            Attribute::ModulusBits(RSA_KEY_SIZE_BITS.into()),
+            Attribute::PublicExponent(public_exponent),
+            Attribute::Id(versioned_id.as_bytes().into()),
+            Attribute::Label(label.label.as_bytes().into()),
             Attribute::Token(true),
-            Attribute::Private(false),
-            Attribute::Sensitive(false),
-            Attribute::Extractable(true),
-            Attribute::Sign(true),
-            Attribute::Value(key_value.clone()),
         ];
 
-        self.session.session().create_object(&key_template)?;
-        Ok(key_value)
+        let private_key_template = vec![
+            Attribute::Class(ObjectClass::PRIVATE_KEY),
+            Attribute::KeyType(KeyType::RSA),
+            Attribute::Id(versioned_id.as_bytes().into()),
+            Attribute::Label(label.label.as_bytes().into()),
+            Attribute::Token(true),
+            Attribute::Private(true),
+            Attribute::Sensitive(true),
+            Attribute::Extractable(true),
+            Attribute::Decrypt(true),
+            Attribute::WrapWithTrusted(true),
+        ];
+
+        let key_handles = self.session.session().generate_key_pair(
+            &Mechanism::RsaPkcsKeyPairGen,
+            &public_key_template,
+            &private_key_template,
+        )?;
+
+        Ok(key_handles)
     }
 
     /// Returns the key associated with the specific label.
@@ -128,43 +198,50 @@ impl<'a> HsmKeyManager<'a> {
     /// Parameters:
     /// * `key` - Key label for identification
     ///
+    /// Returns:
+    /// Handle to the private key object
+    ///
     /// Errors:
-    /// Returns `KeyManagementError` if key is not found or multiple keys are found.
-    /// Returns `KeyNotFound` if no key matches the label.
+    /// Returns `KeyManagementError` if key is not found or multiple keys are
+    /// found.
     pub fn get_key_with_version(
         &self,
+        key_class: ObjectClass,
         key: &KeyLabel,
     ) -> Result<ObjectHandle, KeyManagementError> {
+        let versioned_id = key.versioned_id();
+
         let key_template = vec![
-            Attribute::Class(ObjectClass::SECRET_KEY),
-            Attribute::Id(key.label.as_bytes().into()),
-            Attribute::Label(key.version.to_le_bytes().into()),
+            Attribute::Class(key_class),
+            Attribute::Id(versioned_id.as_bytes().into()),
             Attribute::Token(true),
-            Attribute::Private(true),
         ];
         let keys = self.session.session().find_objects(&key_template)?;
 
         match keys[..] {
             [key] => Ok(key),
-            [] => Err(KeyManagementError::KeyNotFound(key.label.clone())),
-            _ => Err(KeyManagementError::MultipleKeysFound(key.label.clone())),
+            [] => Err(KeyManagementError::KeyNotFound(versioned_id.clone())),
+            _ => {
+                Err(KeyManagementError::MultipleKeysFound(versioned_id.clone()))
+            }
         }
     }
 
-    /// Returns all keys with the specified prefix.
+    /// Returns all keys with the specified label prefix.
     ///
     /// Parameters:
-    /// * `prefix` - Prefix string to filter keys
+    /// * `label_prefix` - Label prefix string to filter keys
     ///
     /// Returns:
-    /// List of matching key handles
+    /// List of matching private key handles with their versions
     pub fn filter_keys(
         &self,
-        prefix: &str,
+        key_class: ObjectClass,
+        label_prefix: &str,
     ) -> Result<Vec<ObjectHandle>, KeyManagementError> {
         let key_template = vec![
-            Attribute::Class(ObjectClass::SECRET_KEY),
-            Attribute::Id(prefix.as_bytes().into()),
+            Attribute::Class(key_class),
+            Attribute::Label(label_prefix.as_bytes().into()),
         ];
         let keys = self.session.session().find_objects(&key_template)?;
 
@@ -178,28 +255,54 @@ impl<'a> HsmKeyManager<'a> {
     ///
     /// Returns:
     /// Version number of the key
+    ///
+    /// Errors:
+    /// Returns `KeyVersionNotFound` if the version cannot be extracted
     pub fn get_key_version(
         &self,
         key_handle: &ObjectHandle,
     ) -> Result<u32, KeyManagementError> {
-        let application_attribute = self
+        let id_attribute = self
             .session
             .session()
-            .get_attributes(*key_handle, &[AttributeType::Label])?;
+            .get_attributes(*key_handle, &[AttributeType::Id])?;
 
-        match &application_attribute[..] {
-            [Attribute::Application(application_bytes)] => {
-                if application_bytes.len() != 4 {
-                    return Err(KeyManagementError::KeyVersionNotFound);
-                }
-
-                let version_bytes = &application_bytes[0..4];
-                let version =
-                    u32::from_le_bytes(version_bytes.try_into().unwrap());
-                Ok(version)
+        match &id_attribute[..] {
+            [Attribute::Id(id_bytes)] => {
+                let id_string = String::from_utf8_lossy(id_bytes);
+                KeyLabel::parse_version(&id_string)
             }
             _ => Err(KeyManagementError::KeyVersionNotFound),
         }
+    }
+
+    /// Returns the latest version of a key with the specified label.
+    ///
+    /// Parameters:
+    /// * `label` - Base label string without version
+    ///
+    /// Returns:
+    /// Tuple of the handle and version of the latest key, or None if no keys
+    ///
+    /// Errors:
+    /// Returns `KeyManagementError` if HSM operations fail
+    pub fn get_latest_key(
+        &self,
+        key_class: ObjectClass,
+        label: &str,
+    ) -> Result<Option<(ObjectHandle, u32)>, KeyManagementError> {
+        let keys = self.filter_keys(key_class, label)?;
+
+        keys.into_iter()
+            .map(|key_handle| {
+                let version = self.get_key_version(&key_handle)?;
+                Ok((key_handle, version))
+            })
+            .collect::<Result<Vec<_>, KeyManagementError>>()?
+            .into_iter()
+            .max_by_key(|(_, version)| *version)
+            .map(Ok)
+            .transpose()
     }
 
     /// Returns a reference to the underlying HSM session
@@ -208,6 +311,49 @@ impl<'a> HsmKeyManager<'a> {
     /// Reference to the HSM session
     pub fn session(&self) -> &HsmSession {
         self.session
+    }
+
+    /// Extract public key material from HSM for software-based encryption
+    ///
+    /// Parameters:
+    /// * `public_key_handle` - Handle to the public key object in HSM
+    ///
+    /// Returns:
+    /// RSA public key that can be used for software encryption
+    ///
+    /// Errors:
+    /// Returns error if key attributes cannot be retrieved or parsed
+    pub fn extract_public_key(
+        &self,
+        public_key_handle: &ObjectHandle,
+    ) -> Result<RsaPublicKey, KeyManagementError> {
+        let attributes = self.session.session().get_attributes(
+            *public_key_handle,
+            &[AttributeType::Modulus, AttributeType::PublicExponent],
+        )?;
+
+        let modulus_bytes =
+            attributes.iter().find_map(|attribute| match attribute {
+                Attribute::Modulus(bytes) => Some(bytes.to_vec()),
+                _ => None,
+            });
+        let exponent_bytes =
+            attributes.iter().find_map(|attribute| match attribute {
+                Attribute::PublicExponent(bytes) => Some(bytes.to_vec()),
+                _ => None,
+            });
+
+        let modulus =
+            modulus_bytes.ok_or(KeyManagementError::InvalidPublicKey)?;
+        let exponent =
+            exponent_bytes.ok_or(KeyManagementError::InvalidPublicKey)?;
+
+        let public_key = RsaPublicKey::new(
+            BigUint::from_bytes_be(&modulus),
+            BigUint::from_bytes_be(&exponent),
+        )?;
+
+        Ok(public_key)
     }
 }
 

@@ -1,9 +1,8 @@
+use cryptoki::object::ObjectClass;
 use puavo_hsm::{
     HsmKeyManager, HsmSession, KeyLabel, key_management::KeyManagementError,
 };
 use puavo_ipc::{DaemonResponse, OrganizationCommand};
-
-use crate::commands::derive::KEY_SIZE;
 
 /// Errors that can occur during organization commands
 #[derive(Debug, thiserror::Error)]
@@ -23,7 +22,8 @@ fn initialize(
     tracing::info!("Initializing organization key: {}", organization_id);
 
     let key_manager = HsmKeyManager::new(hsm_session);
-    let organization_keys = key_manager.filter_keys(&organization_id)?;
+    let organization_keys =
+        key_manager.filter_keys(ObjectClass::PRIVATE_KEY, &organization_id)?;
 
     if !organization_keys.is_empty() {
         tracing::error!("Organization key already exists");
@@ -32,7 +32,7 @@ fn initialize(
 
     tracing::info!("Generating new organization key: {}", organization_id);
     let key_label = KeyLabel::organization(&organization_id, 1);
-    let _ = key_manager.generate_key(&key_label, KEY_SIZE)?;
+    let _ = key_manager.generate_key(&key_label)?;
 
     Ok(())
 }
