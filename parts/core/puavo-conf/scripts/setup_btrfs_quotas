@@ -20,7 +20,8 @@ set_quotas() {
   # leave a small buffer so that btrfs does not run out of space
   btrfs_buffer_size=1073741824
 
-  awk -v btrfs_buffer_size="$btrfs_buffer_size" -v btrfs_size="$btrfs_size" '
+  awk -v btrfs_buffer_size="$btrfs_buffer_size" \
+      -v btrfs_size="$btrfs_size" '
     BEGIN {
       available_size = btrfs_size - btrfs_buffer_size
       cmd = "btrfs qgroup show /.puavo"
@@ -29,6 +30,8 @@ set_quotas() {
         qgroup_ids[$NF] = $1
       }
       close(cmd)
+      free_subvolume = ""
+      FS = ":"
     }
     {
       subvolume = $1
@@ -40,19 +43,29 @@ set_quotas() {
           exit 1
         }
       } else {
-        quota = available_size
-        available_size = 0
+        # can not be set twice
+        if (free_subvolume) {
+          print "free subvolume has already been set" > "/dev/stderr"
+          exit 1
+        }
+        free_subvolume = subvolume
       }
-      if (!(subvolume in qgroup_ids)) {
-        print "subvolume", subvolume, "quota group id not found" > "/dev/stderr"
-        exit(1)
-      }
-      limits[ qgroup_ids[subvolume] ] = quota
+      limits[subvolume] = quota
     }
     END {
-      for (qgroup_id in limits) {
+      if (free_subvolume) {
+        limits[free_subvolume] = available_size
+      }
+      for (subvolume in limits) {
+        if (!(subvolume in qgroup_ids)) {
+          print "subvolume=" subvolume, "quota group id not found" > "/dev/stderr"
+          exit(1)
+        }
+      }
+      for (subvolume in limits) {
+        qgroup_id = qgroup_ids[subvolume]
         limit_cmd = sprintf("btrfs qgroup limit %d %s /.puavo",
-                            limits[qgroup_id], qgroup_id)
+                            limits[subvolume], qgroup_id)
         if (system(limit_cmd) != 0) {
           printf "error settings limits for %s\n", qgroup_id > "/dev/stderr"
           exit(1)
@@ -69,12 +82,8 @@ fi
 
 btrfs quota enable /.puavo
 
-set_quotas "$btrfs_size" <<'EOF'
-imageoverlays            5368709120
-images                  42949672960
-images/puavo-pkg         8589934592
-state                    4294967296
-state/var/lib/docker     2147483648
-state/var/log            2147483648
-home                           FREE
-EOF
+{
+  puavo-conf puavo.admin.btrfs.quotas.base \
+    && puavo-conf puavo.admin.btrfs.quotas.mode \
+    && puavo-conf puavo.admin.btrfs.quotas.tweaks
+} | xargs -n 1 | set_quotas "$btrfs_size"
