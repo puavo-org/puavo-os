@@ -97,27 +97,6 @@ impl IpcClient {
             _ => Err(IpcError::ProtocolError("Expected response".to_string())),
         }
     }
-
-    /// Get daemon status
-    pub async fn get_status(&self) -> Result<DaemonResponse, IpcError> {
-        self.send_command(DaemonCommand::GetStatus).await
-    }
-
-    /// Send echo command for testing
-    pub async fn echo(
-        &self,
-        message: String,
-    ) -> Result<DaemonResponse, IpcError> {
-        self.send_command(DaemonCommand::Echo { message }).await
-    }
-
-    /// Shutdown daemon
-    pub async fn shutdown(
-        &self,
-        force: bool,
-    ) -> Result<DaemonResponse, IpcError> {
-        self.send_command(DaemonCommand::Shutdown { force }).await
-    }
 }
 
 #[async_trait]
