@@ -1,0 +1,80 @@
+#!/bin/sh
+
+set -eu
+
+mountpoint -q /.puavo || exit 0
+
+lookup_btrfs_size() {
+  btrfs filesystem usage -b /.puavo \
+    | awk '
+        BEGIN { status = 1; size = "" }
+        $1 == "Device" && $2 == "size:" { size = $3; status = 0 }
+        END { print(size); exit(status) }
+      '
+}
+
+set_quotas() {
+  local btrfs_buffer_size btrfs_size
+  btrfs_size=$1
+
+  # leave a small buffer so that btrfs does not run out of space
+  btrfs_buffer_size=1073741824
+
+  awk -v btrfs_buffer_size="$btrfs_buffer_size" -v btrfs_size="$btrfs_size" '
+    BEGIN {
+      available_size = btrfs_size - btrfs_buffer_size
+      cmd = "btrfs qgroup show /.puavo"
+      while (cmd | getline) {
+        if ($4 == "Path" || $4 == "----" || $4 == "<toplevel>" ) { continue }
+        qgroup_ids[$NF] = $1
+      }
+      close(cmd)
+    }
+    {
+      subvolume = $1
+      quota = $2
+      if (quota != "FREE") {
+        available_size -= quota
+        if (available_size < 0) {
+          print "btrfs filesystem is not big enough" > "/dev/stderr"
+          exit 1
+        }
+      } else {
+        quota = available_size
+        available_size = 0
+      }
+      if (!(subvolume in qgroup_ids)) {
+        print "subvolume", subvolume, "quota group id not found" > "/dev/stderr"
+        exit(1)
+      }
+      limits[ qgroup_ids[subvolume] ] = quota
+    }
+    END {
+      for (qgroup_id in limits) {
+        limit_cmd = sprintf("btrfs qgroup limit %d %s /.puavo",
+                            limits[qgroup_id], qgroup_id)
+        if (system(limit_cmd) != 0) {
+          printf "error settings limits for %s\n", qgroup_id > "/dev/stderr"
+          exit(1)
+        }
+      }
+    }
+  '
+}
+
+if ! btrfs_size=$(lookup_btrfs_size); then
+  echo 'Could not lookup /.puavo btrfs device size' >&2
+  exit 1
+fi
+
+btrfs quota enable /.puavo
+
+set_quotas "$btrfs_size" <<'EOF'
+imageoverlays            5368709120
+images                  42949672960
+images/puavo-pkg         8589934592
+state                    4294967296
+state/var/lib/docker     2147483648
+state/var/log            2147483648
+home                           FREE
+EOF
