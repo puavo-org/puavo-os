@@ -19,6 +19,7 @@ cryptoki = "0.10.0"
 sha2 = "0.10"
 rand = "0.8"
 hex = "0.4"
+rsa = { version = "0.9", features = ["sha2"] }
 
 # CLI and configuration
 clap = { version = "4.5", features = ["derive"] }
