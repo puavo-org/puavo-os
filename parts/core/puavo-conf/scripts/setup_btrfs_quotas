@@ -80,41 +80,76 @@ proc get_limits_by_subvolume btrfs_size {
   return $quota_limits
 }
 
-proc get_qgroupids_by_subvolume puavo_btrfs_root {
+proc get_current_quotas_by_path puavo_btrfs_root {
   set btrfs_output [
-    exec -ignorestderr env LANG=C btrfs qgroup show --raw $puavo_btrfs_root
+    exec -ignorestderr env LANG=C btrfs qgroup show -re --raw \
+      $puavo_btrfs_root 2>/dev/null
   ]
 
-  set qgroupids [dict create]
+  set quotas [dict create]
 
   foreach line [split $btrfs_output "\n"] {
     set columns [regexp -all -inline {\S+} $line]
-    set id   [lindex $columns 0]
-    set path [lindex $columns 3]
+    lassign $columns id referenced exclusive max_referenced max_exclusive path
+    if {$path eq "<toplevel>"} continue
     if {[regexp {^[0-9]+/[0-9]+$} $id]} {
-      dict set qgroupids $path $id
+      dict set quotas $path [
+        dict create id $id max_referenced $max_referenced
+      ]
     }
   }
 
-  return $qgroupids
+  return $quotas
 }
 
-set btrfs_size             [get_btrfs_size $puavo_btrfs_root]
-set limits_by_subvolume    [get_limits_by_subvolume $btrfs_size]
-set qgroupids_by_subvolume [get_qgroupids_by_subvolume $puavo_btrfs_root]
-
-dict for {subvolume limit} $limits_by_subvolume {
-  if {![dict exists $qgroupids_by_subvolume $subvolume]} {
-    error [format {quata group ID not found for subvolume "%s"} $subvolume]
+proc check_quotas {limits_by_subvolume quotas_by_path} {
+  dict for {path quotainfo} $quotas_by_path {
+    set current_limit [dict get $quotainfo max_referenced]
+    set expected_limit [dict getwithdefault $limits_by_subvolume $path 0]
+    if {$current_limit != $expected_limit} {
+      return false
+    }
   }
+
+  return true
 }
 
-dict for {subvolume limit} $limits_by_subvolume {
-  set qgroup_id [dict get $qgroupids_by_subvolume $subvolume]
+proc enable_quotas puavo_btrfs_root {
+  # Go through "disable" in case quotas have some state we are not handling
+  # but we are supposed to clear.
+  exec -ignorestderr btrfs quota disable   $puavo_btrfs_root
+  exec -ignorestderr btrfs quota enable    $puavo_btrfs_root
+  exec -ignorestderr btrfs quota rescan -w $puavo_btrfs_root
+}
+
+set btrfs_size          [get_btrfs_size $puavo_btrfs_root]
+set limits_by_subvolume [get_limits_by_subvolume $btrfs_size]
+
+try {
+  set quotas_by_path [get_current_quotas_by_path $puavo_btrfs_root]
+} on error {} {
+  # If we fail to get current quotas, perhaps quotas are not enabled yet?
+  # Enable quotas and retry.
+  enable_quotas $puavo_btrfs_root
+  set quotas_by_path [get_current_quotas_by_path $puavo_btrfs_root]
+}
+
+if {[check_quotas $limits_by_subvolume $quotas_by_path]} {
+  exit 0
+}
+
+puts "quotas are not as expected, re-applying quotas."
+enable_quotas $puavo_btrfs_root
+# re-read the quota information in case disable/enable changed the queue IDs
+set quotas_by_path [get_current_quotas_by_path $puavo_btrfs_root]
+
+dict for {path quotainfo} $quotas_by_path {
+  set limit [dict getwithdefault $limits_by_subvolume $path 0]
   try {
+    set qgroup_id [dict get $quotainfo id]
     exec -ignorestderr btrfs qgroup limit $limit $qgroup_id $puavo_btrfs_root
   } on error errmsg {
-    error [format {error setting quota limits for "%s"} $subvolume]
+    error [format {error setting quota limits for "%s": %s} $subvolume $errmsg]
   }
 }
 
