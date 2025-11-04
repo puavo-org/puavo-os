@@ -143,6 +143,11 @@
     "description": "List of network interfaces to use DHCP on (on systems without NetworkManager or manual configuration)",
     "typehint": "string"
   },
+  "puavo.pipewire.enabled": {
+    "default": "true",
+    "description": "Enable Puavo PipeWire integration",
+    "typehint": "bool"
+  },
   "puavo.printing.airprint.enabled": {
     "default": "true",
     "description": "Lookup Airprint printers with cups-browsed",

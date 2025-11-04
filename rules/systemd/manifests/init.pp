@@ -12,11 +12,6 @@ class systemd {
       ensure => link,
       target => '/dev/null';
 
-    # Pulseaudio needs help in case "systemd --user" is missing.
-    # This removes a link to /dev/null, masking autospawn activation.
-    '/usr/lib/systemd/system/pulseaudio-enable-autospawn.service':
-      ensure => absent;
-
     # no persistent journal logs by default (not useful on fatclients)
     '/var/log/journal':
       ensure => absent,

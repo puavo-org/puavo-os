@@ -1,0 +1,85 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.pipewire.enabled)" = "true" ]; then
+  echo 'Puavo PipeWire integration is enabled, using PipeWire' >&2
+
+  echo 'Disabling PulseAudio...' >&2
+  cat >/etc/pulse/client.conf.d/99-puavo.conf.tmp <<'EOF'
+autospawn=no
+enable-shm=no
+enable-memfd=no
+EOF
+  mv /etc/pulse/client.conf.d/99-puavo.conf.tmp /etc/pulse/client.conf.d/99-puavo.conf
+  echo 'PulseAudio disabled.' >&2
+
+  echo 'Configuring PipeWire...' >&2
+  mkdir -p /etc/pipewire/pipewire-pulse.conf.d
+  {
+    if [ -z "$(puavo-conf puavo.audio.pa.default_sink)" -a \
+         -z "$(puavo-conf puavo.audio.pa.default_source)" ]; then
+      cat <<'EOF'
+# Default sink and source are not set in Puavo configuration, using module-switch-on-connect.
+pulse.cmd = [
+    { cmd = "load-module" args = "module-switch-on-connect" flags = [ "nofail" ] }
+]
+EOF
+    fi
+
+    # TODO: Are these ALSA confs needed? If they are, figure out how
+    # to configure them. With pipewire, running following command:
+    #   pactl load-module module-alsa-{sink,source}
+    # fails with the following error:
+    #   Failure: No such entity
+    # Figure out how to use it properly. See https://docs.pipewire.org/page_pulse_module_alsa_sink.html
+    alsa_sink="$(puavo-conf puavo.audio.pa.alsa.sink)"
+    if [ -n "$alsa_sink" ]; then
+      echo 'WARNING: puavo.audio.pa.alsa.sink is not supported with PipeWire integration' >&2
+    fi
+
+    alsa_source="$(puavo-conf puavo.audio.pa.alsa.source)"
+    if [ -n "$alsa_source" ]; then
+      echo 'WARNING: puavo.audio.pa.alsa.source is not supported with PipeWire integration' >&2
+    fi
+  } > /etc/pipewire/pipewire-pulse.conf.d/puavo.conf.tmp
+
+  mv /etc/pipewire/pipewire-pulse.conf.d/puavo.conf.tmp /etc/pipewire/pipewire-pulse.conf.d/puavo.conf
+  echo 'PipeWire configured.' >&2
+else
+  echo 'Puavo PipeWire integration is disabled, using PulseAudio' >&2
+
+  echo 'Enabling PulseAudio...' >&2
+  cat >/etc/pulse/client.conf.d/99-puavo.conf.tmp <<'EOF'
+autospawn=yes
+EOF
+  mv /etc/pulse/client.conf.d/99-puavo.conf.tmp /etc/pulse/client.conf.d/99-puavo.conf
+  echo 'PulseAudio enabled.' >&2
+
+  echo 'Configuring PulseAudio...' <&2
+  {
+    if [ -z "$(puavo-conf puavo.audio.pa.default_sink)" -a \
+         -z "$(puavo-conf puavo.audio.pa.default_source)" ]; then
+      echo
+      echo '# no pulseaudio setup in puavo-conf, using module-switch-on-connect'
+      echo 'load-module module-switch-on-connect'
+    fi
+
+    alsa_sink="$(puavo-conf puavo.audio.pa.alsa.sink)"
+    if [ -n "$alsa_sink" ]; then
+      echo
+      echo '# alsa sink from puavo-conf'
+      echo "load-module module-alsa-sink ${alsa_sink}"
+    fi
+
+    alsa_source="$(puavo-conf puavo.audio.pa.alsa.source)"
+    if [ -n "$alsa_source" ]; then
+      echo
+      echo '# alsa source from puavo-conf'
+      echo "load-module module-alsa-source ${alsa_source}"
+    fi
+  } > /etc/pulse/default.pa.d/puavo.pa.tmp
+
+  mv /etc/pulse/default.pa.d/puavo.pa.tmp /etc/pulse/default.pa.d/puavo.pa
+  echo 'PulseAudio configured.' >&2
+fi
