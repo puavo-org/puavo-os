@@ -1,89 +1,121 @@
-#!/bin/sh
+#!/usr/bin/tclsh9.0
 
-set -eu
+set puavo_btrfs_root "/.puavo"
 
-mountpoint -q /.puavo || exit 0
-
-lookup_btrfs_size() {
-  btrfs filesystem usage -b /.puavo \
-    | awk '
-        BEGIN { status = 1; size = "" }
-        $1 == "Device" && $2 == "size:" { size = $3; status = 0 }
-        END { print(size); exit(status) }
-      '
+if {[catch { exec -ignorestderr mountpoint -q $puavo_btrfs_root }]} {
+  exit 0
 }
 
-set_quotas() {
-  local btrfs_buffer_size btrfs_size
-  btrfs_size=$1
+proc get_btrfs_size puavo_btrfs_root {
+  set btrfs_output [
+    exec -ignorestderr env LANG=C \
+         btrfs filesystem usage --raw $puavo_btrfs_root
+  ]
 
-  # leave a small buffer so that btrfs does not run out of space
-  btrfs_buffer_size=1073741824
+  foreach line [split $btrfs_output "\n"] {
+    set columns [regexp -all -inline {\S+} $line]
+    if {[lindex $columns 0] eq "Device" && [lindex $columns 1] == "size:"
+      && [string is integer -strict [lindex $columns 2]]} {
+        return [lindex $columns 2]
+    }
+  }
 
-  awk -v btrfs_buffer_size="$btrfs_buffer_size" \
-      -v btrfs_size="$btrfs_size" '
-    BEGIN {
-      available_size = btrfs_size - btrfs_buffer_size
-      cmd = "btrfs qgroup show /.puavo"
-      while (cmd | getline) {
-        if ($4 == "Path" || $4 == "----" || $4 == "<toplevel>" ) { continue }
-        qgroup_ids[$NF] = $1
-      }
-      close(cmd)
-      free_subvolume = ""
-      FS = ":"
-    }
-    {
-      subvolume = $1
-      quota = $2
-      if (quota != "FREE") {
-        available_size -= quota
-        if (available_size < 0) {
-          print "btrfs filesystem is not big enough" > "/dev/stderr"
-          exit 1
-        }
-      } else {
-        # can not be set twice
-        if (free_subvolume) {
-          print "free subvolume has already been set" > "/dev/stderr"
-          exit 1
-        }
-        free_subvolume = subvolume
-      }
-      limits[subvolume] = quota
-    }
-    END {
-      if (free_subvolume) {
-        limits[free_subvolume] = available_size
-      }
-      for (subvolume in limits) {
-        if (!(subvolume in qgroup_ids)) {
-          print "subvolume=" subvolume, "quota group id not found" > "/dev/stderr"
-          exit(1)
-        }
-      }
-      for (subvolume in limits) {
-        qgroup_id = qgroup_ids[subvolume]
-        limit_cmd = sprintf("btrfs qgroup limit %d %s /.puavo",
-                            limits[subvolume], qgroup_id)
-        if (system(limit_cmd) != 0) {
-          printf "error settings limits for %s\n", qgroup_id > "/dev/stderr"
-          exit(1)
-        }
-      }
-    }
-  '
+  error "could not determine btrfs size"
 }
 
-if ! btrfs_size=$(lookup_btrfs_size); then
-  echo 'Could not lookup /.puavo btrfs device size' >&2
-  exit 1
-fi
+proc get_limits_by_subvolume btrfs_size {
+  set btrfs_buffer_size 1073741824
+  set available_space [expr { $btrfs_size - $btrfs_buffer_size }]
 
-btrfs quota enable /.puavo
+  set puavo_conf_vars {
+    puavo.admin.btrfs.quotas.base
+    puavo.admin.btrfs.quotas.mode
+    puavo.admin.btrfs.quotas.tweaks
+  }
 
-{
-  puavo-conf puavo.admin.btrfs.quotas.base \
-    && puavo-conf puavo.admin.btrfs.quotas.mode \
-    && puavo-conf puavo.admin.btrfs.quotas.tweaks
-} | xargs -n 1 | set_quotas "$btrfs_size"
+  # get quota space from puavo-conf variables and put those to dict
+  # (if duplicates per subvolume, take the last one)
+  set puavo_quota_specs [
+    concat {*}[
+      lmap var $puavo_conf_vars {
+        split [exec -ignorestderr puavo-conf $var]
+      }
+    ]
+  ]
+
+  set free_subvolume ""
+  set quota_limits [dict create]
+  foreach subvolume_quota_spec $puavo_quota_specs {
+    try {
+      lassign [split $subvolume_quota_spec :] subvolume limit
+      if {$limit eq "FREE"} {
+        if {$free_subvolume ne ""} { error "free subvolume already set" }
+        set free_subvolume $subvolume
+        continue
+      }
+      if {![string is integer -strict $limit]} {
+        error "can not understand the quota limit"
+      }
+      set available_space [expr { $available_space - $limit }]
+      dict set quota_limits $subvolume $limit
+    } on error errmsg {
+      puts stderr [
+        format {error handling quota limit "%s": %s} \
+               $subvolume_quota_spec $errmsg
+      ]
+    }
+  }
+
+  if {$free_subvolume ne ""} {
+    if {$available_space < 0} {
+      puts stderr [
+        format {the btrfs filesystem is not big enough: %d bytes missing} \
+               [expr { - $available_bytes }]
+      ]
+      set available_space 0
+    }
+    dict set quota_limits $free_subvolume $available_space
+  }
+
+  return $quota_limits
+}
+
+proc get_qgroupids_by_subvolume puavo_btrfs_root {
+  set btrfs_output [
+    exec -ignorestderr env LANG=C btrfs qgroup show --raw $puavo_btrfs_root
+  ]
+
+  set qgroupids [dict create]
+
+  foreach line [split $btrfs_output "\n"] {
+    set columns [regexp -all -inline {\S+} $line]
+    set id   [lindex $columns 0]
+    set path [lindex $columns 3]
+    if {[regexp {^[0-9]+/[0-9]+$} $id]} {
+      dict set qgroupids $path $id
+    }
+  }
+
+  return $qgroupids
+}
+
+set btrfs_size             [get_btrfs_size $puavo_btrfs_root]
+set limits_by_subvolume    [get_limits_by_subvolume $btrfs_size]
+set qgroupids_by_subvolume [get_qgroupids_by_subvolume $puavo_btrfs_root]
+
+dict for {subvolume limit} $limits_by_subvolume {
+  if {![dict exists $qgroupids_by_subvolume $subvolume]} {
+    error [format {quata group ID not found for subvolume "%s"} $subvolume]
+  }
+}
+
+dict for {subvolume limit} $limits_by_subvolume {
+  set qgroup_id [dict get $qgroupids_by_subvolume $subvolume]
+  try {
+    exec -ignorestderr btrfs qgroup limit $limit $qgroup_id $puavo_btrfs_root
+  } on error errmsg {
+    error [format {error setting quota limits for "%s"} $subvolume]
+  }
+}
+
+exit 0
