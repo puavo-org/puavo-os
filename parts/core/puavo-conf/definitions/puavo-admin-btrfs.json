@@ -1,0 +1,27 @@
+{
+  "puavo.admin.btrfs.quotas.base": {
+    "default": "imageoverlays:0 images:42949672960 images/puavo-pkg:8589934592 state:2073741824 state/var/lib/docker:0 state/var/log:2073741824 home:FREE",
+    "description": "Base quotas for btrfs filesystem subvolumes",
+    "typehint": "string"
+  },
+  "puavo.admin.btrfs.quotas.bootserver": {
+    "default": "",
+    "description": "Btrfs quota tweaks for bootservers",
+    "typehint": "string"
+  },
+  "puavo.admin.btrfs.quotas.laptop": {
+    "default": "",
+    "description": "Btrfs quota tweaks for laptops",
+    "typehint": "string"
+  },
+  "puavo.admin.btrfs.quotas.mode": {
+    "default": "",
+    "description": "Btrfs quota tweaks for special operation modes",
+    "typehint": "string"
+  },
+  "puavo.admin.btrfs.quotas.tweaks": {
+    "default": "",
+    "description": "Custom btrfs quota tweaks for special situations",
+    "typehint": "string"
+  }
+}

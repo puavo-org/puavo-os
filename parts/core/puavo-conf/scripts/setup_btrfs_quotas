@@ -27,11 +27,13 @@ proc get_limits_by_subvolume btrfs_size {
   set btrfs_buffer_size 1073741824
   set available_space [expr { $btrfs_size - $btrfs_buffer_size }]
 
-  set puavo_conf_vars {
-    puavo.admin.btrfs.quotas.base
-    puavo.admin.btrfs.quotas.mode
-    puavo.admin.btrfs.quotas.tweaks
+  set puavo_conf_vars [list puavo.admin.btrfs.quotas.base]
+  set puavo_hosttype [exec -ignorestderr puavo-conf puavo.hosttype]
+  if {$puavo_hosttype in {bootserver laptop}} {
+    lappend puavo_conf_vars "puavo.admin.btrfs.quotas.${puavo_hosttype}"
   }
+  lappend puavo_conf_vars \
+          puavo.admin.btrfs.quotas.mode puavo.admin.btrfs.quotas.tweaks
 
   # get quota space from puavo-conf variables and put those to dict
   # (if duplicates per subvolume, take the last one)
