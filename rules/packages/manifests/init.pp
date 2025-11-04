@@ -289,9 +289,9 @@ class packages {
     , 'scdaemon'
     , 'shellcheck'
     , 'sloccount'
-    , 'tcl8.6-doc'
+    , 'tcl9.0-doc'
     , 'tcl-thread'
-    , 'tk8.6-doc'
+    , 'tk9.0-doc'
     , 'translate-toolkit'
     , 'vim-nox' ]:
       tag => [ 'tag_devel', 'tag_debian_desktop', ];
