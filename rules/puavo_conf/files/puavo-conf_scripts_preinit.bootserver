@@ -50,4 +50,5 @@ setup_puavopkgs
 setup_external_files
 setup_systemd
 setup_dockerd
+setup_btrfs_quotas
 run_extra_boot_scripts
