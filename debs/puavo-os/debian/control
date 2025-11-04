@@ -111,6 +111,7 @@ Depends: ${misc:Depends},
  rsyslog-relp,
  smartmontools,
  systemd-cryptsetup,
+ tcl9.0,
  tpm2-tools
 Description: Puavo Core Infrastructure
  Bolts and nuts for Puavo OS.
