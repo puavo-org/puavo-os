@@ -43,7 +43,7 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
-                puavo-pkgs-ui.json
+                puavo-pkgs.json
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-pkg-wine-helper
 

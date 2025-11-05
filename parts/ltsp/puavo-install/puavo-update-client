@@ -133,11 +133,15 @@ run_dbus() {
             "$@" > /dev/null
 }
 
-# trigger puavo-pkg-update
-if run_dbus /pkgupdater org.puavo.client.pkgupdater.StartUpdate; then
-  log notice 'triggered puavo-pkg updates'
+if [ "$(puavo-conf puavo.pkgs.update)" = 'manual' ]; then
+  log notice 'not updating puavo-pkgs as updates should be manual'
 else
-  log err 'error in triggering puavo-pkg updates'
+  # trigger puavo-pkg-update
+  if run_dbus /pkgupdater org.puavo.client.pkgupdater.StartUpdate; then
+    log notice 'triggered puavo-pkg updates'
+  else
+    log err 'error in triggering puavo-pkg updates'
+  fi
 fi
 
 if ! $do_image_update; then

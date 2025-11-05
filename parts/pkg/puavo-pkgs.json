@@ -1,0 +1,13 @@
+{
+  "puavo.pkgs.update": {
+    "default": "auto",
+    "description": "Puavo-pkg updating policy, automatically (auto) or manually (manual)",
+    "typehint": "string",
+    "choices": [ "auto", "manual" ]
+  },
+  "puavo.pkgs.ui.pkglist": {
+    "default": "",
+    "description": "A space-separated list of puavo-pkg packages to show in graphical puavo-pkg installer",
+    "typehint": "string"
+  }
+}
