@@ -34,12 +34,9 @@ def run_command(*args, check: bool = True, capture: bool = True):
   )
 
 
-def read_puavo_config(key: str):
-  try:
-    result = run_command('puavo-conf', key)
-    return result.stdout.strip()
-  except subprocess.CalledProcessError:
-    return None
+def puavoconf_get(puavoconf_key: str):
+  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                   .decode('utf-8')
 
 
 def is_uki_mode() -> bool:
@@ -106,8 +103,7 @@ def build_command_line_addon(command_line: str):
 
 
 def update_kernel_arguments() -> int:
-  new_kernel_arguments = read_puavo_config('puavo.kernel.arguments') or ''
-  new_kernel_arguments = new_kernel_arguments.strip()
+  new_kernel_arguments = puavoconf_get('puavo.kernel.arguments')
 
   current_kernel_arguments = ''
   try:
