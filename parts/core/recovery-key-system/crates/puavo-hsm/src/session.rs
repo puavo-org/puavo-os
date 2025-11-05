@@ -1,32 +1,61 @@
-use cryptoki::context::{CInitializeArgs, Pkcs11};
+use cryptoki::context::Pkcs11;
+use cryptoki::error::{Error, RvError};
 use cryptoki::session::{Session, UserType};
+use cryptoki::slot::Slot;
 use cryptoki::types::AuthPin;
 use std::path::Path;
+
+use crate::pkcs11;
 
 /// Errors that can occur during HSM operations
 #[derive(Debug, thiserror::Error)]
 pub enum HsmSessionError {
-    #[error("Failed to initialize PKCS#11 library: {0}")]
-    InitializationFailed(String),
+    #[error("Failed to initialize HSM: {0}")]
+    InitializationFailed(Error),
+
+    #[error("No free slots available for token initialization")]
+    NoFreeSlots,
+
+    #[error("Token with label '{0}' not found")]
+    TokenNotFound(String),
 
     #[error("Failed to open HSM session: {0}")]
-    SessionOpenFailed(String),
+    SessionOpenFailed(Error),
 
     #[error("Authentication failed: {0}")]
-    AuthenticationFailed(String),
-
-    #[error("HSM slot {0} not found")]
-    SlotNotFound(u64),
-
-    #[error("PKCS#11 library not found at path: {0}")]
-    LibraryNotFound(String),
+    AuthenticationFailed(Error),
 }
 
 /// HSM session handle with automatic cleanup
 pub struct HsmSession {
-    pkcs11: Pkcs11,
     session: Session,
     slot_id: u64,
+}
+
+/// Find slot by token label
+///
+/// Parameters:
+/// * `pkcs11` - PKCS#11 context
+/// * `slots` - Available slots to search
+/// * `token_label` - Label to match
+///
+/// Returns:
+/// Tuple of the slot and its ID if found
+fn find_slot_by_label(
+    pkcs11: &Pkcs11,
+    slots: &[Slot],
+    token_label: &str,
+) -> Option<(Slot, u64)> {
+    slots
+        .iter()
+        .enumerate()
+        .find(|(_, slot)| {
+            pkcs11
+                .get_token_info(**slot)
+                .map(|token_info| token_info.label().trim() == token_label)
+                .unwrap_or(false)
+        })
+        .map(|(index, slot)| (*slot, index as u64))
 }
 
 impl HsmSession {
@@ -34,58 +63,54 @@ impl HsmSession {
     ///
     /// Parameters:
     /// * `module_path` - Path to PKCS#11 module library
-    /// * `slot_id` - HSM slot number
+    /// * `token_label` - Token label to find
     /// * `pin` - User PIN for authentication
     ///
     /// Returns:
     /// Authenticated HSM session
     ///
     /// Errors:
-    /// Returns `HsmSessionError` if initialization, session opening, or
-    /// authentication fails
+    /// Returns `HsmSessionError` if token is not found or authentication fails
     pub fn new(
         module_path: &Path,
-        slot_id: u64,
+        token_label: &str,
         pin: &str,
     ) -> Result<Self, HsmSessionError> {
-        // Check if module exists
-        if !module_path.exists() {
-            return Err(HsmSessionError::LibraryNotFound(
-                module_path.display().to_string(),
-            ));
-        }
+        // Get or initialize the global PKCS#11 context
+        let pkcs11 = pkcs11(module_path);
 
-        // Initialize PKCS#11 library
-        let pkcs11 = Pkcs11::new(module_path).map_err(|error| {
-            HsmSessionError::InitializationFailed(error.to_string())
-        })?;
-
-        pkcs11.initialize(CInitializeArgs::OsThreads).map_err(|error| {
-            HsmSessionError::InitializationFailed(error.to_string())
-        })?;
-
-        // Get slot
-        let slot = pkcs11
+        // Find slot with matching token label
+        let slots = pkcs11
             .get_slots_with_initialized_token()
-            .map_err(|_error| HsmSessionError::SlotNotFound(slot_id))?
-            .into_iter()
-            .nth(slot_id as usize)
-            .ok_or(HsmSessionError::SlotNotFound(slot_id))?;
+            .map_err(HsmSessionError::InitializationFailed)?;
+
+        let (slot, slot_id) = find_slot_by_label(&pkcs11, &slots, token_label)
+            .ok_or(HsmSessionError::TokenNotFound(token_label.to_string()))?;
 
         // Open session
-        let session = pkcs11.open_rw_session(slot).map_err(|error| {
-            HsmSessionError::SessionOpenFailed(error.to_string())
-        })?;
+        let session = pkcs11
+            .open_rw_session(slot)
+            .map_err(HsmSessionError::SessionOpenFailed)?;
 
         // Authenticate
         let pin = AuthPin::new(pin.to_string());
-        session.login(UserType::User, Some(&pin)).map_err(|error| {
-            HsmSessionError::AuthenticationFailed(error.to_string())
-        })?;
+        session
+            .login(UserType::User, Some(&pin))
+            // If we are already logged in, ignore the error.
+            // Only one login is needed for multiple sessions to the same token.
+            .or_else(|error| match error {
+                Error::Pkcs11(RvError::UserAlreadyLoggedIn, ..) => Ok(()),
+                _ => Err(error),
+            })
+            .map_err(HsmSessionError::AuthenticationFailed)?;
 
-        tracing::info!("HSM session initialized for slot {}", slot_id);
+        tracing::info!(
+            "HSM session initialized for token '{}' on slot {}",
+            token_label,
+            slot_id
+        );
 
-        Ok(Self { pkcs11, session, slot_id })
+        Ok(Self { session, slot_id })
     }
 
     /// Get reference to the underlying PKCS#11 session
@@ -102,28 +127,5 @@ impl HsmSession {
     /// HSM slot identifier
     pub fn slot_id(&self) -> u64 {
         self.slot_id
-    }
-}
-
-impl Drop for HsmSession {
-    fn drop(&mut self) {
-        let _ = self.session.logout();
-        tracing::debug!("HSM session closed for slot {}", self.slot_id);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_library_not_found() {
-        let result = HsmSession::new(
-            Path::new("/nonexistent/path/libhsm.so"),
-            0,
-            "1234",
-        );
-
-        assert!(matches!(result, Err(HsmSessionError::LibraryNotFound(_))));
     }
 }
