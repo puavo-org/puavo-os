@@ -38,6 +38,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(libdir)/dracut/modules.d/90puavo
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/hooks
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 
 .PHONY : install
@@ -55,6 +56,8 @@ install : $(install-subdirs) installdirs
 		puavo-conf/files/messages/*
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
 		puavo-conf/scripts/*
+	ln -fns ../scripts/setup_btrfs_quotas \
+		$(DESTDIR)$(sysconfdir)/puavo-conf/hooks/puavo.image.overlay
 
 .PHONY : $(clean-subdirs)
 $(clean-subdirs) :

@@ -6,6 +6,8 @@ if {[catch { exec -ignorestderr mountpoint -q $puavo_btrfs_root }]} {
   exit 0
 }
 
+proc puavo_conf key { exec -ignorestderr puavo-conf $key }
+
 proc get_btrfs_size puavo_btrfs_root {
   set btrfs_output [
     exec -ignorestderr env LANG=C \
@@ -24,11 +26,13 @@ proc get_btrfs_size puavo_btrfs_root {
 }
 
 proc get_limits_by_subvolume btrfs_size {
+  set using_overlay [expr { [puavo_conf puavo.image.overlay] ne "" }]
+
   set btrfs_buffer_size 1073741824
   set available_space [expr { $btrfs_size - $btrfs_buffer_size }]
 
   set puavo_conf_vars [list puavo.admin.btrfs.quotas.base]
-  set puavo_hosttype [exec -ignorestderr puavo-conf puavo.hosttype]
+  set puavo_hosttype [puavo_conf puavo.hosttype]
   if {$puavo_hosttype in {bootserver laptop}} {
     lappend puavo_conf_vars "puavo.admin.btrfs.quotas.${puavo_hosttype}"
   }
@@ -39,9 +43,7 @@ proc get_limits_by_subvolume btrfs_size {
   # (if duplicates per subvolume, take the last one)
   set puavo_quota_specs [
     concat {*}[
-      lmap var $puavo_conf_vars {
-        split [exec -ignorestderr puavo-conf $var]
-      }
+      lmap var $puavo_conf_vars { split [puavo_conf $var] }
     ]
   ]
 
@@ -58,6 +60,15 @@ proc get_limits_by_subvolume btrfs_size {
       if {![string is integer -strict $limit]} {
         error "can not understand the quota limit"
       }
+
+      if {$subvolume eq "imageoverlays" && $limit == 0 && $using_overlay} {
+        # If using image overlay and imageoverlays quota is set to zero
+        # (the default), set it to 5G so it can actually be used.
+        # This is somewhat orthogonal but trying to imageoverlay with quota
+        # set to zero is not a good experience.
+        set limit 5368709120
+      }
+
       set available_space [expr { $available_space - $limit }]
       dict set quota_limits $subvolume $limit
     } on error errmsg {
