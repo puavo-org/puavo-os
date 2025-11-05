@@ -24,7 +24,7 @@ impl DaemonContext {
     pub fn new(config: KpsConfig) -> Result<Self, HsmSessionError> {
         let hsm_session = HsmSession::new(
             &config.hsm.module_path,
-            config.hsm.slot,
+            &config.hsm.token_label,
             DEFAULT_PIN,
         )?;
 

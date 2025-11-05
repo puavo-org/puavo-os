@@ -1,4 +1,4 @@
-use puavo_hsm::DEFAULT_SOFTWARE_MODULE;
+use puavo_hsm::{DEFAULT_SOFTWARE_MODULE, DEFAULT_TOKEN_LABEL};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -16,8 +16,8 @@ pub struct HsmConfig {
     /// PKCS#11 module library path
     pub module_path: PathBuf,
 
-    /// HSM slot number
-    pub slot: u64,
+    /// HSM token label
+    pub token_label: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,7 +31,7 @@ impl Default for KpsConfig {
         Self {
             hsm: HsmConfig {
                 module_path: PathBuf::from(DEFAULT_SOFTWARE_MODULE),
-                slot: 0,
+                token_label: DEFAULT_TOKEN_LABEL.to_string(),
             },
             audit: AuditConfig {
                 log_path: PathBuf::from("/var/log/puavo-kps/audit.log"),
