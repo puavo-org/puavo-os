@@ -222,7 +222,10 @@ pub enum OperatorCommand {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DaemonResponse {
     /// Successful operation with optional data
-    Success { message: String },
+    Success { 
+        #[serde(skip_serializing_if = "Option::is_none")]
+        data: Option<String> 
+    },
 
     /// Error occurred during operation
     Error { code: String, message: String },
@@ -267,5 +270,17 @@ impl IpcMessage {
             timestamp: SystemTime::now(),
             payload: IpcPayload::Response(response),
         }
+    }
+}
+
+impl DaemonResponse {
+    /// Create a success response without data
+    pub fn success() -> Self {
+        Self::Success { data: None }
+    }
+
+    /// Create a success response with data
+    pub fn success_with_data(data: String) -> Self {
+        Self::Success { data: Some(data) }
     }
 }

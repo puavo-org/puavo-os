@@ -201,14 +201,14 @@ impl<E: CommandExecutor> ClientHandler<E> {
 
     /// Handle echo command
     async fn handle_echo_command(&self, message: String) -> DaemonResponse {
-        DaemonResponse::Success { message: format!("Echo: {}", message) }
+        DaemonResponse::success_with_data(format!("Echo: {}", message))
     }
 
     /// Handle shutdown command
     async fn handle_shutdown_command(&self, _force: bool) -> DaemonResponse {
         tracing::info!("Shutdown command received");
         let _ = self.shutdown.send(());
-        DaemonResponse::Success { message: "Shutdown initiated".to_string() }
+        DaemonResponse::success()
     }
 
     /// Handle KPS commands by delegating to command executor

@@ -105,7 +105,7 @@ mod tests {
     async fn test_daemon_echo_command() {
         let test_message = "Hello, daemon!".to_string();
         let expected_response = DaemonResponse::Success {
-            message: format!("Echo: {}", test_message),
+            data: Some(format!("Echo: {}", test_message)),
         };
         let mock_client = MockIpcClient::new(vec![Ok(expected_response)]);
 
@@ -127,7 +127,7 @@ mod tests {
     #[tokio::test]
     async fn test_daemon_shutdown_command() {
         let expected_response = DaemonResponse::Success {
-            message: "Shutdown initiated".to_string(),
+            data: Some("Shutdown initiated".to_string()),
         };
         let mock_client = MockIpcClient::new(vec![Ok(expected_response)]);
 

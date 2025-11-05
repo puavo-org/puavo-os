@@ -74,12 +74,11 @@ fn execute_initialize(
     hsm_session: &HsmSession,
     organization_id: String,
 ) -> DaemonResponse {
-    tracing::info!("Initializing organization key: {}", organization_id);
-
     match initialize(hsm_session, organization_id) {
-        Ok(_) => DaemonResponse::Success {
-            message: "Organization key initialization completed".to_string(),
-        },
+        Ok(_) => {
+            tracing::info!("Organization key initialization completed");
+            DaemonResponse::success()
+        }
         Err(error) => organization_error_to_response(error),
     }
 }
@@ -87,13 +86,7 @@ fn execute_initialize(
 /// Execute organization key rotation
 fn execute_rotate(organization_id: String) -> DaemonResponse {
     tracing::info!("Rotating organization key: {}", organization_id);
-
-    DaemonResponse::Success {
-        message: format!(
-            "Organization key rotation completed for {}",
-            organization_id
-        ),
-    }
+    DaemonResponse::success()
 }
 
 #[cfg(test)]

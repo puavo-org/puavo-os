@@ -19,9 +19,7 @@ pub async fn execute(
     tracing::info!("Force: {}", force);
     tracing::debug!("HSM PIN provided: {}", hsm_pin.is_some());
 
-    DaemonResponse::Success {
-        message: "KPS initialization completed".to_string(),
-    }
+    DaemonResponse::success()
 }
 
 #[cfg(test)]
@@ -32,35 +30,20 @@ mod tests {
     async fn test_initialize_basic() {
         let response = execute(0, None, false).await;
 
-        match response {
-            DaemonResponse::Success { message } => {
-                assert!(message.contains("initialization completed"));
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 
     #[tokio::test]
     async fn test_initialize_with_pin() {
         let response = execute(0, Some("test-pin".to_string()), false).await;
 
-        match response {
-            DaemonResponse::Success { .. } => {
-                // Success expected
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 
     #[tokio::test]
     async fn test_initialize_force() {
         let response = execute(0, None, true).await;
 
-        match response {
-            DaemonResponse::Success { .. } => {
-                // Success expected
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 }

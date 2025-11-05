@@ -20,25 +20,21 @@ async fn execute_add(id: String, name: String) -> DaemonResponse {
     tracing::info!("Adding operator: {}", id);
     tracing::debug!("Operator name: {}", name);
 
-    DaemonResponse::Success {
-        message: format!("Operator {} added successfully", id),
-    }
+    DaemonResponse::success()
 }
 
 /// Execute operator listing
 async fn execute_list() -> DaemonResponse {
     tracing::info!("Listing operators");
 
-    DaemonResponse::Success { message: "Operator list retrieved".to_string() }
+    DaemonResponse::success()
 }
 
 /// Execute operator revocation
 async fn execute_revoke(id: String) -> DaemonResponse {
     tracing::info!("Revoking operator: {}", id);
 
-    DaemonResponse::Success {
-        message: format!("Operator {} revoked successfully", id),
-    }
+    DaemonResponse::success()
 }
 
 #[cfg(test)]
@@ -53,25 +49,14 @@ mod tests {
         })
         .await;
 
-        match response {
-            DaemonResponse::Success { message } => {
-                assert!(message.contains("operator@example.com"));
-                assert!(message.contains("added successfully"));
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 
     #[tokio::test]
     async fn test_list_operators() {
         let response = execute(OperatorCommand::List).await;
 
-        match response {
-            DaemonResponse::Success { message } => {
-                assert!(message.contains("list retrieved"));
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 
     #[tokio::test]
@@ -81,12 +66,6 @@ mod tests {
         })
         .await;
 
-        match response {
-            DaemonResponse::Success { message } => {
-                assert!(message.contains("operator@example.com"));
-                assert!(message.contains("revoked successfully"));
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 }

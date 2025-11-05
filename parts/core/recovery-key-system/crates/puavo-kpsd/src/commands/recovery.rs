@@ -306,20 +306,21 @@ pub fn execute_generate(
     let recovery_keys_result: Result<Vec<_>, RecoveryKeyError> = serial_numbers
         .into_iter()
         .map(|serial_number| {
-            let encrypted_recovery_key_data = generate_recovery_key(
+            let recovery_bundle = generate_recovery_key(
                 hsm_session,
                 organization_id.clone(),
                 serial_number,
             )?;
 
-            Ok(serde_json::to_string(&encrypted_recovery_key_data)?)
+            Ok(serde_json::to_string(&recovery_bundle)?)
         })
         .collect();
 
     match recovery_keys_result {
-        Ok(encrypted_recovery_keys) => DaemonResponse::Success {
-            message: encrypted_recovery_keys.join("\n"),
-        },
+        Ok(encrypted_recovery_keys) => {
+            tracing::info!("Successfully generated recovery bundles");
+            DaemonResponse::success_with_data(encrypted_recovery_keys.join("\n"))
+        }
         Err(error) => recovery_key_error_to_response(error),
     }
 }
@@ -349,7 +350,10 @@ pub fn execute_unwrap(
         .collect();
 
     match unwrap_result {
-        Ok(results) => DaemonResponse::Success { message: results.join("\n") },
+        Ok(results) => {
+            tracing::info!("Successfully unwrapped recovery bundles");
+            DaemonResponse::success_with_data(results.join("\n"))
+        }
         Err(error) => recovery_key_error_to_response(error),
     }
 }

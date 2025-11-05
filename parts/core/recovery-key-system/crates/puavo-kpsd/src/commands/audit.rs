@@ -43,9 +43,7 @@ async fn execute_log(
         tracing::debug!("Show last {} entries", tail_count);
     }
 
-    DaemonResponse::Success {
-        message: "Audit log display completed".to_string(),
-    }
+    DaemonResponse::success()
 }
 
 /// Execute audit log export
@@ -53,9 +51,7 @@ async fn execute_export(output: PathBuf, format: String) -> DaemonResponse {
     tracing::info!("Exporting audit logs to: {}", output.display());
     tracing::debug!("Export format: {}", format);
 
-    DaemonResponse::Success {
-        message: format!("Audit log export completed to {}", output.display()),
-    }
+    DaemonResponse::success()
 }
 
 #[cfg(test)]
@@ -73,12 +69,7 @@ mod tests {
         })
         .await;
 
-        match response {
-            DaemonResponse::Success { message } => {
-                assert!(message.contains("display completed"));
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 
     #[tokio::test]
@@ -89,12 +80,7 @@ mod tests {
         })
         .await;
 
-        match response {
-            DaemonResponse::Success { message } => {
-                assert!(message.contains("export completed"));
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 
     #[tokio::test]
@@ -108,11 +94,6 @@ mod tests {
         })
         .await;
 
-        match response {
-            DaemonResponse::Success { .. } => {
-                // Success expected
-            }
-            _ => panic!("Expected success response"),
-        }
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 }
