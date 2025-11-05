@@ -1,8 +1,8 @@
 use cryptoki::object::{Attribute, KeyType, ObjectClass, ObjectHandle};
 
 use crate::{
-    key_management::KeyManagementError, mechanisms::hash::HashAlgorithm,
-    HsmKeyManager,
+    HsmKeyManager, key_management::KeyManagementError,
+    mechanisms::hash::HashAlgorithm,
 };
 
 /// HSM mechanism for HKDF key derivation
@@ -244,9 +244,7 @@ impl<'a> HsmMechanismHkdf<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
-    use crate::{HsmSession, DEFAULT_PIN, DEFAULT_SOFTWARE_MODULE};
+    use crate::TestHsmSession;
 
     use super::*;
 
@@ -257,11 +255,10 @@ mod tests {
         info: &str,
         l: usize,
     ) -> Result<DerivationResult, KeyManagementError> {
-        let session =
-            HsmSession::new(Path::new(DEFAULT_SOFTWARE_MODULE), 0, DEFAULT_PIN)
-                .unwrap();
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
 
-        let manager = HsmKeyManager::new(&session);
+        let manager = HsmKeyManager::new(session);
         let hkdf = HsmMechanismHkdf::new(&manager, hash_algorithm);
 
         hkdf.derive(
