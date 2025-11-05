@@ -21,9 +21,10 @@ fn initialize(
 ) -> Result<(), OrganizationCommandError> {
     tracing::info!("Initializing organization key: {}", organization_id);
 
+    let key_label = KeyLabel::organization(&organization_id, 1);
     let key_manager = HsmKeyManager::new(hsm_session);
     let organization_keys =
-        key_manager.filter_keys(ObjectClass::PRIVATE_KEY, &organization_id)?;
+        key_manager.filter_keys(ObjectClass::PRIVATE_KEY, &key_label.label)?;
 
     if !organization_keys.is_empty() {
         tracing::error!("Organization key already exists");
@@ -31,7 +32,6 @@ fn initialize(
     }
 
     tracing::info!("Generating new organization key: {}", organization_id);
-    let key_label = KeyLabel::organization(&organization_id, 1);
     let _ = key_manager.generate_key(&key_label)?;
 
     Ok(())
