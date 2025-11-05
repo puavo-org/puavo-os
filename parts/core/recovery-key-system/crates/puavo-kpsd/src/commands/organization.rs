@@ -91,13 +91,65 @@ fn execute_rotate(organization_id: String) -> DaemonResponse {
 
 #[cfg(test)]
 mod tests {
+    use puavo_hsm::TestHsmSession;
+
+    use super::*;
+
     #[tokio::test]
     async fn test_initialize_organization_key() {
-        // TODO: Implement test
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-init".to_string();
+
+        let response = execute_initialize(session, organization_id.clone());
+        assert!(matches!(response, DaemonResponse::Success { .. }));
+
+        // Verify the key was created
+        let key_manager = HsmKeyManager::new(session);
+        let organization_keys = key_manager
+            .filter_keys(
+                ObjectClass::PRIVATE_KEY,
+                &KeyLabel::organization_label(&organization_id),
+            )
+            .unwrap();
+
+        assert_eq!(organization_keys.len(), 1);
+
+        let version =
+            key_manager.get_key_version(&organization_keys[0]).unwrap();
+        assert_eq!(version, 1);
+    }
+
+    #[tokio::test]
+    async fn test_initialize_organization_key_already_exists() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-exists".to_string();
+
+        // Initialize once
+        let response = execute_initialize(session, organization_id.clone());
+        assert!(matches!(response, DaemonResponse::Success { .. }));
+
+        // Try to initialize the same organization again
+        let response = execute_initialize(session, organization_id.clone());
+
+        match response {
+            DaemonResponse::Error { code, message } => {
+                assert_eq!(code, "ORGANIZATION_ERROR");
+                assert!(message.contains("already initialized"));
+            }
+            _ => panic!("Expected error response"),
+        }
     }
 
     #[tokio::test]
     async fn test_rotate_organization_key() {
-        // TODO: Implement test
+        let organization_id = "test-organization-rotate".to_string();
+
+        let response = execute_rotate(organization_id.clone());
+
+        assert!(matches!(response, DaemonResponse::Success { .. }));
     }
 }
