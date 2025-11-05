@@ -19,105 +19,105 @@ pub struct DerivationResult {
     pub okm: Vec<u8>,
 }
 
-/// From RFC 5869:
-/// 2.  HMAC-based Key Derivation Function (HKDF)
-///
-///     HMAC-Hash denotes the HMAC function [HMAC] instantiated with hash
-///     function 'Hash'.  HMAC always has two arguments: the first is a key
-///     and the second an input (or message).  (Note that in the extract
-///     step, 'IKM' is used as the HMAC input, not as the HMAC key.)
-/// ...
-/// 2.2.  Step 1: Extract
-///
-///    HKDF-Extract(salt, IKM) -> PRK
-///
-///    Options:
-///       Hash     a hash function; HashLen denotes the length of the
-///                hash function output in octets
-///
-///    Inputs:
-///       salt     optional salt value (a non-secret random value);
-///                if not provided, it is set to a string of HashLen zeros.
-///       IKM      input keying material
-///
-///    Output:
-///       PRK      a pseudorandom key (of HashLen octets)
-///
-///    The output PRK is calculated as follows:
-///
-///    PRK = HMAC-Hash(salt, IKM)
-///
-/// 2.3.  Step 2: Expand
-///
-///    HKDF-Expand(PRK, info, L) -> OKM
-///
-///    Options:
-///       Hash     a hash function; HashLen denotes the length of the
-///                hash function output in octets
-///
-///    Inputs:
-///       PRK      a pseudorandom key of at least HashLen octets
-///                (usually, the output from the extract step)
-///       info     optional context and application specific information
-///                (can be a zero-length string)
-///       L        length of output keying material in octets
-///                (<= 255*HashLen)
-///
-///    Output:
-///       OKM      output keying material (of L octets)
-///
-///    The output OKM is calculated as follows:
-///
-///    N = ceil(L/HashLen)
-///    T = T(1) | T(2) | T(3) | ... | T(N)
-///    OKM = first L octets of T
-///
-///    where:
-///    T(0) = empty string (zero length)
-///    T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
-///    T(2) = HMAC-Hash(PRK, T(1) | info | 0x02)
-///    T(3) = HMAC-Hash(PRK, T(2) | info | 0x03)
-///    ...
-///
-///    (where the constant concatenated to the end of each T(n) is a
-///    single octet.)
-/// ...
-/// 3.2.  The 'info' Input to HKDF
-///    While the 'info' value is optional in the definition of HKDF, it is
-///    often of great importance in applications.  Its main objective is to
-///    bind the derived key material to application- and context-specific
-///    information.  For example, 'info' may contain a protocol number,
-///    algorithm identifiers, user identities, etc.  In particular, it may
-///    prevent the derivation of the same keying material for different
-///    contexts (when the same input key material (IKM) is used in such
-///    different contexts).  It may also accommodate additional inputs to
-///    the key expansion part, if so desired (e.g., an application may want
-///    to bind the key material to its length L, thus making L part of the
-///    'info' field).  There is one technical requirement from 'info': it
-///    should be independent of the input key material value IKM.
-/// 3.3.  To Skip or not to Skip
-///    In some applications, the input key material IKM may already be
-///    present as a cryptographically strong key (for example, the premaster
-///    secret in TLS RSA cipher suites would be a pseudorandom string,
-///    except for the first two octets).  In this case, one can skip the
-///    extract part and use IKM directly to key HMAC in the expand step.  On
-///    the other hand, applications may still use the extract part for the
-///    sake of compatibility with the general case.
-/// ...
-/// End of RFC 5869
-///
-/// Discussion:
-/// The purpose of the extract part is to produce a fixed-length and
-/// high-entropy pseudorandom PRK to protect against weak IKM by using
-/// a high-entropy salt.
-///
-/// In our case organization key is IKM and is already high-entropy,
-/// therefore we may skip extract part and use it directly as key
-/// for expand part (section 3.3).
-///
-/// As section 3.2 states, the info value may contain user identities.
-/// In our case, we use the info value with user identity to derive
-/// user-specific keys.
+// From RFC 5869:
+// 2.  HMAC-based Key Derivation Function (HKDF)
+//
+//     HMAC-Hash denotes the HMAC function [HMAC] instantiated with hash
+//     function 'Hash'.  HMAC always has two arguments: the first is a key
+//     and the second an input (or message).  (Note that in the extract
+//     step, 'IKM' is used as the HMAC input, not as the HMAC key.)
+// ...
+// 2.2.  Step 1: Extract
+//
+//    HKDF-Extract(salt, IKM) -> PRK
+//
+//    Options:
+//       Hash     a hash function; HashLen denotes the length of the
+//                hash function output in octets
+//
+//    Inputs:
+//       salt     optional salt value (a non-secret random value);
+//                if not provided, it is set to a string of HashLen zeros.
+//       IKM      input keying material
+//
+//    Output:
+//       PRK      a pseudorandom key (of HashLen octets)
+//
+//    The output PRK is calculated as follows:
+//
+//    PRK = HMAC-Hash(salt, IKM)
+//
+// 2.3.  Step 2: Expand
+//
+//    HKDF-Expand(PRK, info, L) -> OKM
+//
+//    Options:
+//       Hash     a hash function; HashLen denotes the length of the
+//                hash function output in octets
+//
+//    Inputs:
+//       PRK      a pseudorandom key of at least HashLen octets
+//                (usually, the output from the extract step)
+//       info     optional context and application specific information
+//                (can be a zero-length string)
+//       L        length of output keying material in octets
+//                (<= 255*HashLen)
+//
+//    Output:
+//       OKM      output keying material (of L octets)
+//
+//    The output OKM is calculated as follows:
+//
+//    N = ceil(L/HashLen)
+//    T = T(1) | T(2) | T(3) | ... | T(N)
+//    OKM = first L octets of T
+//
+//    where:
+//    T(0) = empty string (zero length)
+//    T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
+//    T(2) = HMAC-Hash(PRK, T(1) | info | 0x02)
+//    T(3) = HMAC-Hash(PRK, T(2) | info | 0x03)
+//    ...
+//
+//    (where the constant concatenated to the end of each T(n) is a
+//    single octet.)
+// ...
+// 3.2.  The 'info' Input to HKDF
+//    While the 'info' value is optional in the definition of HKDF, it is
+//    often of great importance in applications.  Its main objective is to
+//    bind the derived key material to application- and context-specific
+//    information.  For example, 'info' may contain a protocol number,
+//    algorithm identifiers, user identities, etc.  In particular, it may
+//    prevent the derivation of the same keying material for different
+//    contexts (when the same input key material (IKM) is used in such
+//    different contexts).  It may also accommodate additional inputs to
+//    the key expansion part, if so desired (e.g., an application may want
+//    to bind the key material to its length L, thus making L part of the
+//    'info' field).  There is one technical requirement from 'info': it
+//    should be independent of the input key material value IKM.
+// 3.3.  To Skip or not to Skip
+//    In some applications, the input key material IKM may already be
+//    present as a cryptographically strong key (for example, the premaster
+//    secret in TLS RSA cipher suites would be a pseudorandom string,
+//    except for the first two octets).  In this case, one can skip the
+//    extract part and use IKM directly to key HMAC in the expand step.  On
+//    the other hand, applications may still use the extract part for the
+//    sake of compatibility with the general case.
+// ...
+// End of RFC 5869
+//
+// Discussion:
+// The purpose of the extract part is to produce a fixed-length and
+// high-entropy pseudorandom PRK to protect against weak IKM by using
+// a high-entropy salt.
+//
+// In our case organization key is IKM and is already high-entropy,
+// therefore we may skip extract part and use it directly as key
+// for expand part (section 3.3).
+//
+// As section 3.2 states, the info value may contain user identities.
+// In our case, we use the info value with user identity to derive
+// user-specific keys.
 impl<'a> HsmMechanismHkdf<'a> {
     /// Create a new helper for using HKDF with HSM.
     ///

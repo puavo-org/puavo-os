@@ -319,7 +319,9 @@ pub fn execute_generate(
     match recovery_keys_result {
         Ok(encrypted_recovery_keys) => {
             tracing::info!("Successfully generated recovery bundles");
-            DaemonResponse::success_with_data(encrypted_recovery_keys.join("\n"))
+            DaemonResponse::success_with_data(
+                encrypted_recovery_keys.join("\n"),
+            )
         }
         Err(error) => recovery_key_error_to_response(error),
     }

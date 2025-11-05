@@ -237,11 +237,11 @@ impl<'a> HsmKeyManager<'a> {
     pub fn filter_keys(
         &self,
         key_class: ObjectClass,
-        label_prefix: &str,
+        label: &str,
     ) -> Result<Vec<ObjectHandle>, KeyManagementError> {
         let key_template = vec![
             Attribute::Class(key_class),
-            Attribute::Label(label_prefix.as_bytes().into()),
+            Attribute::Label(label.as_bytes().into()),
         ];
         let keys = self.session.session().find_objects(&key_template)?;
 

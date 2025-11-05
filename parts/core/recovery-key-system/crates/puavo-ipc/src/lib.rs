@@ -27,7 +27,7 @@ pub struct RecoveryKeyData {
     /// Actual recovery key bytes
     pub recovery_key: Vec<u8>,
     // Version field for this structure
-    pub version: u32
+    pub version: u32,
 }
 
 /// Structure containing encrypted key data and the information for decrypting it
@@ -40,7 +40,7 @@ pub struct RecoveryBundle {
     /// Version of the organization key used
     pub organization_key_version: u32,
     /// Encrypted recovery key bytes
-    pub encrypted_key_data: String
+    pub encrypted_key_data: String,
 }
 
 /// Top-level IPC message envelope
@@ -222,9 +222,9 @@ pub enum OperatorCommand {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DaemonResponse {
     /// Successful operation with optional data
-    Success { 
+    Success {
         #[serde(skip_serializing_if = "Option::is_none")]
-        data: Option<String> 
+        data: Option<String>,
     },
 
     /// Error occurred during operation
