@@ -25,6 +25,14 @@ proc get_btrfs_size puavo_btrfs_root {
   error "could not determine btrfs size"
 }
 
+proc convert_limitspec_to_bytes limitspec {
+  if {![regexp {^([0-9]+)(B|K|M|G|T|P)$} $limitspec _ value suffix]} {
+    error "can not understand the quota limit"
+  }
+  set exp [lsearch { B K M G T P } $suffix]
+  expr { int($value * 1024**$exp) }
+}
+
 proc get_limits_by_subvolume btrfs_size {
   set using_overlay [expr { [puavo_conf puavo.image.overlay] ne "" }]
 
@@ -51,15 +59,13 @@ proc get_limits_by_subvolume btrfs_size {
   set quota_limits [dict create]
   foreach subvolume_quota_spec $puavo_quota_specs {
     try {
-      lassign [split $subvolume_quota_spec :] subvolume limit
-      if {$limit eq "FREE"} {
+      lassign [split $subvolume_quota_spec :] subvolume limitspec
+      if {$limitspec eq "FREE"} {
         if {$free_subvolume ne ""} { error "free subvolume already set" }
         set free_subvolume $subvolume
         continue
       }
-      if {![string is integer -strict $limit]} {
-        error "can not understand the quota limit"
-      }
+      set limit [convert_limitspec_to_bytes $limitspec]
 
       if {$subvolume eq "imageoverlays" && $limit == 0 && $using_overlay} {
         # If using image overlay and imageoverlays quota is set to zero

@@ -1,6 +1,6 @@
 {
   "puavo.admin.btrfs.quotas.base": {
-    "default": "imageoverlays:0 images:42949672960 images/puavo-pkg:8589934592 state:2073741824 state/var/lib/docker:0 state/var/log:2073741824 home:FREE",
+    "default": "imageoverlays:0 images:40G images/puavo-pkg:8G state:2G state/var/lib/docker:0B state/var/log:2G home:FREE",
     "description": "Base quotas for btrfs filesystem subvolumes",
     "typehint": "string"
   },
