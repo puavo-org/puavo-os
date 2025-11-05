@@ -1,9 +1,10 @@
 #!/usr/bin/tclsh9.0
 
+set exitstatus 0
 set puavo_btrfs_root "/.puavo"
 
 if {[catch { exec -ignorestderr mountpoint -q $puavo_btrfs_root }]} {
-  exit 0
+  exit $exitstatus
 }
 
 proc puavo_conf key { exec -ignorestderr puavo-conf $key }
@@ -34,6 +35,8 @@ proc convert_limitspec_to_bytes limitspec {
 }
 
 proc get_limits_by_subvolume btrfs_size {
+  global exitstatus
+
   set using_overlay [expr { [puavo_conf puavo.image.overlay] ne "" }]
 
   set btrfs_buffer_size 1073741824
@@ -82,6 +85,7 @@ proc get_limits_by_subvolume btrfs_size {
         format {error handling quota limit "%s": %s} \
                $subvolume_quota_spec $errmsg
       ]
+      set exitstatus 1
     }
   }
 
@@ -154,10 +158,10 @@ try {
 }
 
 if {[check_quotas $limits_by_subvolume $quotas_by_path]} {
-  exit 0
+  exit $exitstatus
 }
 
-puts "quotas are not as expected, re-applying quotas."
+puts "quotas are not as expected, re-applying quotas"
 enable_quotas $puavo_btrfs_root
 # re-read the quota information in case disable/enable changed the queue IDs
 set quotas_by_path [get_current_quotas_by_path $puavo_btrfs_root]
@@ -166,10 +170,12 @@ dict for {path quotainfo} $quotas_by_path {
   set limit [dict getwithdefault $limits_by_subvolume $path 0]
   try {
     set qgroup_id [dict get $quotainfo id]
+    puts "applying quota limit ${limit} bytes to ${path} (${qgroup_id})"
     exec -ignorestderr btrfs qgroup limit $limit $qgroup_id $puavo_btrfs_root
   } on error errmsg {
     error [format {error setting quota limits for "%s": %s} $subvolume $errmsg]
+    set exitstatus 1
   }
 }
 
-exit 0
+exit $exitstatus
