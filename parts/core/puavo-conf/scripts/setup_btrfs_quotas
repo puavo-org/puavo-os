@@ -39,9 +39,6 @@ proc get_limits_by_subvolume btrfs_size {
 
   set using_overlay [expr { [puavo_conf puavo.image.overlay] ne "" }]
 
-  set btrfs_buffer_size 1073741824
-  set available_space [expr { $btrfs_size - $btrfs_buffer_size }]
-
   set puavo_conf_vars [list puavo.admin.btrfs.quotas.base]
   set puavo_hosttype [puavo_conf puavo.hosttype]
   if {$puavo_hosttype in {bootserver laptop}} {
@@ -68,6 +65,7 @@ proc get_limits_by_subvolume btrfs_size {
         set free_subvolume $subvolume
         continue
       }
+
       set limit [convert_limitspec_to_bytes $limitspec]
 
       if {$subvolume eq "imageoverlays" && $limit == 0 && $using_overlay} {
@@ -78,7 +76,6 @@ proc get_limits_by_subvolume btrfs_size {
         set limit 5368709120
       }
 
-      set available_space [expr { $available_space - $limit }]
       dict set quota_limits $subvolume $limit
     } on error errmsg {
       puts stderr [
@@ -90,6 +87,11 @@ proc get_limits_by_subvolume btrfs_size {
   }
 
   if {$free_subvolume ne ""} {
+    set btrfs_spare_size 1073741824
+    set the_sum_of_limits [tcl::mathop::+ {*}[dict values $quota_limits]]
+    set available_space [
+      expr { $btrfs_size - $btrfs_spare_size - $the_sum_of_limits }
+    ]
     if {$available_space < 0} {
       puts stderr [
         format {the btrfs filesystem is not big enough: %d bytes missing} \
