@@ -36,6 +36,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(libdir)/dracut/modules.d/80puavo-boot-trust-manager
 	mkdir -p $(DESTDIR)$(libdir)/dracut/modules.d/90puavo
+	mkdir -p $(DESTDIR)$(libdir)/puavo-core
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/hooks
@@ -56,6 +57,8 @@ install : $(install-subdirs) installdirs
 		puavo-conf/files/messages/*
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
 		puavo-conf/scripts/*
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-core \
+		lib/puavo-install-uki-cmdline-addon
 	ln -fns ../scripts/setup_btrfs_quotas \
 		$(DESTDIR)$(sysconfdir)/puavo-conf/hooks/puavo.image.overlay
 

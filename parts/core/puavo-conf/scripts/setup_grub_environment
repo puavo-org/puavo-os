@@ -95,6 +95,11 @@ setup_kernel_arguments() {
   else
     grubedit unset puavo_kernel_arguments
   fi
+
+  if [ "$UKI_MODE" = 1 ]; then
+    /usr/lib/puavo-core/puavo-install-uki-cmdline-addon "$kernel_arguments" \
+      || return 1
+  fi
 }
 
 setup_kernel_version() {
@@ -172,6 +177,7 @@ get_puavoconf_value() {
 }
 
 selected_puavo_conf_arguments_as_kernel_args() {
+  local puavo_conf_to_kernel_args puavo_conf_value maybe_space
   puavo_conf_to_kernel_args='
     puavo.admin.persistent_homedirs
     puavo.boot.plymouth.theme
@@ -179,11 +185,13 @@ selected_puavo_conf_arguments_as_kernel_args() {
     puavo.image.overlay
   '
 
+  maybe_space=''
   for puavo_conf_key in $puavo_conf_to_kernel_args; do
     # "null" can not be a valid value for the above puavo-conf variables.
     puavo_conf_value=$(get_puavoconf_value "$puavo_conf_key")
     if [ "$puavo_conf_value" != 'null' ]; then
-      printf " %s" "${puavo_conf_key}=${puavo_conf_value}"
+      printf "%s%s" "$maybe_space" "${puavo_conf_key}=${puavo_conf_value}"
+      maybe_space=' '
     fi
   done
 }
