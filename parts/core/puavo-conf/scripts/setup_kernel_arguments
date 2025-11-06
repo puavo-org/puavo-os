@@ -95,8 +95,26 @@ def build_command_line_addon(command_line: str):
   replace_if_changed(ADDON_PATH, temporary_command_line_addon)
 
 
+def get_expected_kernel_arguments() -> str:
+  puavo_conf_keys_to_kernel_args = [
+    'puavo.admin.persistent_homedirs',
+    'puavo.boot.plymouth.theme',
+    'puavo.graphics.driver',
+    'puavo.image.overlay',
+    'puavo.kernel.arguments',
+  ]
+  kernel_args_list = []
+  for key in puavo_conf_keys_to_kernel_args:
+    value = puavoconf_get(key)
+    if value == '':
+      continue
+    kernel_args_list.append(f'{key}={value}')
+
+  return ' '.join(kernel_args_list)
+
+
 def update_kernel_arguments() -> int:
-  new_kernel_arguments = puavoconf_get('puavo.kernel.arguments')
+  expected_kernel_arguments = get_expected_kernel_arguments()
 
   current_kernel_arguments = ''
   try:
@@ -105,15 +123,15 @@ def update_kernel_arguments() -> int:
   except FileNotFoundError:
     pass
 
-  if new_kernel_arguments == current_kernel_arguments:
+  if expected_kernel_arguments == current_kernel_arguments:
     log_info("kernel arguments unchanged, nothing to do")
     return 0
 
   log_info("kernel arguments changed, rebuilding addon")
   log_info(f"old: {current_kernel_arguments}")
-  log_info(f"new: {new_kernel_arguments}")
+  log_info(f"new: {expected_kernel_arguments}")
 
-  build_command_line_addon(new_kernel_arguments)
+  build_command_line_addon(expected_kernel_arguments)
 
   # Install the new command-line addon
   try:
@@ -128,7 +146,7 @@ def update_kernel_arguments() -> int:
   # Update the command line file with the new arguments
   try:
     with open(KERNEL_ARGUMENTS_FILE, 'w') as file:
-      file.write(new_kernel_arguments)
+      file.write(expected_kernel_arguments)
   except IOError as error:
     log_error(f"failed to write kernel arguments file: {error}")
     return 1
