@@ -5,36 +5,46 @@
 set services {
   { atop {
       /etc/systemd/system/multi-user.target.wants/atop.service
-        -> /lib/systemd/system/atop.service
+        -> /usr/lib/systemd/system/atop.service
       /etc/systemd/system/multi-user.target.wants/atopacct.service
-        -> /lib/systemd/system/atopacct.service
-      /etc/rc2.d/S01atop -> /etc/init.d/atop
-      /etc/rc3.d/S01atop -> /etc/init.d/atop
-      /etc/rc4.d/S01atop -> /etc/init.d/atop
-      /etc/rc5.d/S01atop -> /etc/init.d/atop
-      /etc/rc2.d/S01atopacct -> /etc/init.d/atopacct
-      /etc/rc3.d/S01atopacct -> /etc/init.d/atopacct
-      /etc/rc4.d/S01atopacct -> /etc/init.d/atopacct
-      /etc/rc5.d/S01atopacct -> /etc/init.d/atopacct
+        -> /usr/lib/systemd/system/atopacct.service
+      /etc/systemd/system/timers.target.wants/atop-rotate.timer
+        -> /usr/lib/systemd/system/atop-rotate.timer
+      /etc/rc2.d/S01atop -> ../init.d/atop
+      /etc/rc3.d/S01atop -> ../init.d/atop
+      /etc/rc4.d/S01atop -> ../init.d/atop
+      /etc/rc5.d/S01atop -> ../init.d/atop
+      /etc/rc2.d/S01atopacct -> ../init.d/atopacct
+      /etc/rc3.d/S01atopacct -> ../init.d/atopacct
+      /etc/rc4.d/S01atopacct -> ../init.d/atopacct
+      /etc/rc5.d/S01atopacct -> ../init.d/atopacct
     }}
 
   { autofs {
       /etc/systemd/system/multi-user.target.wants/autofs.service
         -> /usr/lib/systemd/system/autofs.service
+      /etc/rc2.d/S01autofs -> ../init.d/autofs
+      /etc/rc3.d/S01autofs -> ../init.d/autofs
+      /etc/rc4.d/S01autofs -> ../init.d/autofs
+      /etc/rc5.d/S01autofs -> ../init.d/autofs
     }}
 
   { avahi-daemon {
       /etc/systemd/system/dbus-org.freedesktop.Avahi.service
-        -> /lib/systemd/system/avahi-daemon.service
+        -> /usr/lib/systemd/system/avahi-daemon.service
       /etc/systemd/system/multi-user.target.wants/avahi-daemon.service
-        -> /lib/systemd/system/avahi-daemon.service
+        -> /usr/lib/systemd/system/avahi-daemon.service
       /etc/systemd/system/sockets.target.wants/avahi-daemon.socket
-        -> /lib/systemd/system/avahi-daemon.socket
+        -> /usr/lib/systemd/system/avahi-daemon.socket
     }}
 
   { cups-browsed {
       /etc/systemd/system/multi-user.target.wants/cups-browsed.service
-        -> /lib/systemd/system/cups-browsed.service
+        -> /usr/lib/systemd/system/cups-browsed.service
+      /etc/rc2.d/S01cups-browsed -> ../init.d/cups-browsed
+      /etc/rc3.d/S01cups-browsed -> ../init.d/cups-browsed
+      /etc/rc4.d/S01cups-browsed -> ../init.d/cups-browsed
+      /etc/rc5.d/S01cups-browsed -> ../init.d/cups-browsed
     }}
 
   { cups-watchdog {
@@ -44,179 +54,241 @@ set services {
 
   { dnsmasq {
       /etc/systemd/system/multi-user.target.wants/dnsmasq.service
-        -> /lib/systemd/system/dnsmasq.service
+        -> /usr/lib/systemd/system/dnsmasq.service
+      /etc/rc2.d/S01dnsmasq -> ../init.d/dnsmasq
+      /etc/rc3.d/S01dnsmasq -> ../init.d/dnsmasq
+      /etc/rc4.d/S01dnsmasq -> ../init.d/dnsmasq
+      /etc/rc5.d/S01dnsmasq -> ../init.d/dnsmasq
     }}
 
   { docker {
       /etc/systemd/system/multi-user.target.wants/containerd.service
-        -> /lib/systemd/system/containerd.service
+        -> /usr/lib/systemd/system/containerd.service
       /etc/systemd/system/multi-user.target.wants/docker.service
-        -> /lib/systemd/system/docker.service
+        -> /usr/lib/systemd/system/docker.service
       /etc/systemd/system/sockets.target.wants/docker.socket
-        -> /lib/systemd/system/docker.socket
-      /etc/rc2.d/S01docker -> /etc/init.d/docker
-      /etc/rc3.d/S01docker -> /etc/init.d/docker
-      /etc/rc4.d/S01docker -> /etc/init.d/docker
-      /etc/rc5.d/S01docker -> /etc/init.d/docker
+        -> /usr/lib/systemd/system/docker.socket
+      /etc/rc2.d/S01docker -> ../init.d/docker
+      /etc/rc3.d/S01docker -> ../init.d/docker
+      /etc/rc4.d/S01docker -> ../init.d/docker
+      /etc/rc5.d/S01docker -> ../init.d/docker
     }}
 
   { freeradius {
       /etc/systemd/system/multi-user.target.wants/freeradius.service
-        -> /lib/systemd/system/freeradius.service
-      /etc/rc2.d/S01freeradius -> /etc/init.d/freeradius
-      /etc/rc3.d/S01freeradius -> /etc/init.d/freeradius
-      /etc/rc4.d/S01freeradius -> /etc/init.d/freeradius
-      /etc/rc5.d/S01freeradius -> /etc/init.d/freeradius
+        -> /usr/lib/systemd/system/freeradius.service
+      /etc/rc2.d/S01freeradius -> ../init.d/freeradius
+      /etc/rc3.d/S01freeradius -> ../init.d/freeradius
+      /etc/rc4.d/S01freeradius -> ../init.d/freeradius
+      /etc/rc5.d/S01freeradius -> ../init.d/freeradius
     }}
 
   { gpm {
       /etc/systemd/system/multi-user.target.wants/gpm.service
-        -> /lib/systemd/system/gpm.service
-      /etc/rc2.d/S01gpm -> /etc/init.d/gpm
-      /etc/rc3.d/S01gpm -> /etc/init.d/gpm
-      /etc/rc4.d/S01gpm -> /etc/init.d/gpm
-      /etc/rc5.d/S01gpm -> /etc/init.d/gpm
+        -> /usr/lib/systemd/system/gpm.service
+      /etc/rc2.d/S01gpm -> ../init.d/gpm
+      /etc/rc3.d/S01gpm -> ../init.d/gpm
+      /etc/rc4.d/S01gpm -> ../init.d/gpm
+      /etc/rc5.d/S01gpm -> ../init.d/gpm
     }}
 
   { hooktftp {
-      /etc/rc2.d/S01hooktftp -> /etc/init.d/hooktftp
-      /etc/rc3.d/S01hooktftp -> /etc/init.d/hooktftp
-      /etc/rc4.d/S01hooktftp -> /etc/init.d/hooktftp
-      /etc/rc5.d/S01hooktftp -> /etc/init.d/hooktftp
+      /etc/rc2.d/S01hooktftp -> ../init.d/hooktftp
+      /etc/rc3.d/S01hooktftp -> ../init.d/hooktftp
+      /etc/rc4.d/S01hooktftp -> ../init.d/hooktftp
+      /etc/rc5.d/S01hooktftp -> ../init.d/hooktftp
     }}
 
   { incron {
       /etc/systemd/system/multi-user.target.wants/incron.service
-        -> /lib/systemd/system/incron.service
+        -> /usr/lib/systemd/system/incron.service
+      /etc/rc2.d/S01incron -> ../init.d/incron
+      /etc/rc3.d/S01incron -> ../init.d/incron
+      /etc/rc4.d/S01incron -> ../init.d/incron
+      /etc/rc5.d/S01incron -> ../init.d/incron
     }}
 
   { inetd {
       /etc/systemd/system/multi-user.target.wants/inetd.service
-        -> /lib/systemd/system/inetd.service
-      /etc/rc2.d/S01openbsd-inetd -> /etc/init.d/openbsd-inetd
-      /etc/rc3.d/S01openbsd-inetd -> /etc/init.d/openbsd-inetd
-      /etc/rc4.d/S01openbsd-inetd -> /etc/init.d/openbsd-inetd
-      /etc/rc5.d/S01openbsd-inetd -> /etc/init.d/openbsd-inetd
+        -> /usr/lib/systemd/system/inetd.service
+      /etc/rc2.d/S01openbsd-inetd -> ../init.d/openbsd-inetd
+      /etc/rc3.d/S01openbsd-inetd -> ../init.d/openbsd-inetd
+      /etc/rc4.d/S01openbsd-inetd -> ../init.d/openbsd-inetd
+      /etc/rc5.d/S01openbsd-inetd -> ../init.d/openbsd-inetd
     }}
 
   { isc-dhcp-server {
-      /etc/rc2.d/S01isc-dhcp-server -> /etc/init.d/isc-dhcp-server
-      /etc/rc3.d/S01isc-dhcp-server -> /etc/init.d/isc-dhcp-server
-      /etc/rc4.d/S01isc-dhcp-server -> /etc/init.d/isc-dhcp-server
-      /etc/rc5.d/S01isc-dhcp-server -> /etc/init.d/isc-dhcp-server
+      /etc/rc2.d/S01isc-dhcp-server -> ../init.d/isc-dhcp-server
+      /etc/rc3.d/S01isc-dhcp-server -> ../init.d/isc-dhcp-server
+      /etc/rc4.d/S01isc-dhcp-server -> ../init.d/isc-dhcp-server
+      /etc/rc5.d/S01isc-dhcp-server -> ../init.d/isc-dhcp-server
     }}
 
   { krb5-kdc {
       /etc/systemd/system/multi-user.target.wants/krb5-kdc.service
-        -> /lib/systemd/system/krb5-kdc.service
+        -> /usr/lib/systemd/system/krb5-kdc.service
+      /etc/rc2.d/S01krb5-kdc -> ../init.d/krb5-kdc
+      /etc/rc3.d/S01krb5-kdc -> ../init.d/krb5-kdc
+      /etc/rc4.d/S01krb5-kdc -> ../init.d/krb5-kdc
+      /etc/rc5.d/S01krb5-kdc -> ../init.d/krb5-kdc
     }}
 
   { libvirtd {
       /etc/systemd/system/multi-user.target.wants/libvirtd.service
-        -> /lib/systemd/system/libvirtd.service
+        -> /usr/lib/systemd/system/libvirtd.service
       /etc/systemd/system/multi-user.target.wants/libvirt-guests.service
-        -> /lib/systemd/system/libvirt-guests.service
+        -> /usr/lib/systemd/system/libvirt-guests.service
+      /etc/systemd/system/multi-user.target.wants/virtlockd.service
+        -> /usr/lib/systemd/system/virtlockd.service
+      /etc/systemd/system/multi-user.target.wants/virtlogd.service
+        -> /usr/lib/systemd/system/virtlogd.service
+      /etc/systemd/system/sockets.target.wants/libvirtd-admin.socket
+        -> /usr/lib/systemd/system/libvirtd-admin.socket
+      /etc/systemd/system/sockets.target.wants/libvirtd-ro.socket
+        -> /usr/lib/systemd/system/libvirtd-ro.socket
+      /etc/systemd/system/sockets.target.wants/libvirtd.socket
+        -> /usr/lib/systemd/system/libvirtd.socket
+      /etc/systemd/system/sockets.target.wants/virtlockd-admin.socket
+        -> /usr/lib/systemd/system/virtlockd-admin.socket
       /etc/systemd/system/sockets.target.wants/virtlockd.socket
-        -> /lib/systemd/system/virtlockd.socket
+        -> /usr/lib/systemd/system/virtlockd.socket
+      /etc/systemd/system/sockets.target.wants/virtlogd-admin.socket
+        -> /usr/lib/systemd/system/virtlogd-admin.socket
       /etc/systemd/system/sockets.target.wants/virtlogd.socket
-        -> /lib/systemd/system/virtlogd.socket
+        -> /usr/lib/systemd/system/virtlogd.socket
+      /etc/rc2.d/S01libvirtd -> ../init.d/libvirtd
+      /etc/rc3.d/S01libvirtd -> ../init.d/libvirtd
+      /etc/rc4.d/S01libvirtd -> ../init.d/libvirtd
+      /etc/rc5.d/S01libvirtd -> ../init.d/libvirtd
+      /etc/rc2.d/S01libvirt-guests -> ../init.d/libvirt-guests
+      /etc/rc3.d/S01libvirt-guests -> ../init.d/libvirt-guests
+      /etc/rc4.d/S01libvirt-guests -> ../init.d/libvirt-guests
+      /etc/rc5.d/S01libvirt-guests -> ../init.d/libvirt-guests
     }}
 
   { ModemManager {
       /etc/systemd/system/dbus-org.freedesktop.ModemManager1.service
-        -> /lib/systemd/system/ModemManager.service
+        -> /usr/lib/systemd/system/ModemManager.service
       /etc/systemd/system/multi-user.target.wants/ModemManager.service
-        -> /lib/systemd/system/ModemManager.service
+        -> /usr/lib/systemd/system/ModemManager.service
     }}
 
   { munin-node {
       /etc/systemd/system/multi-user.target.wants/munin-node.service
-        -> /lib/systemd/system/munin-node.service
+        -> /usr/lib/systemd/system/munin-node.service
+      /etc/rc2.d/S01munin-node -> ../init.d/munin-node
+      /etc/rc3.d/S01munin-node -> ../init.d/munin-node
+      /etc/rc4.d/S01munin-node -> ../init.d/munin-node
+      /etc/rc5.d/S01munin-node -> ../init.d/munin-node
     }}
 
   { nagios-nrpe-server {
       /etc/systemd/system/multi-user.target.wants/nagios-nrpe-server.service
-        -> /lib/systemd/system/nagios-nrpe-server.service
+        -> /usr/lib/systemd/system/nagios-nrpe-server.service
+      /etc/rc2.d/S01nagios-nrpe-server -> ../init.d/nagios-nrpe-server
+      /etc/rc3.d/S01nagios-nrpe-server -> ../init.d/nagios-nrpe-server
+      /etc/rc4.d/S01nagios-nrpe-server -> ../init.d/nagios-nrpe-server
+      /etc/rc5.d/S01nagios-nrpe-server -> ../init.d/nagios-nrpe-server
     }}
 
   { named {
       /etc/systemd/system/multi-user.target.wants/named.service
-        -> /lib/systemd/system/named.service
-      /etc/rc2.d/S01named -> /etc/init.d/named
-      /etc/rc3.d/S01named -> /etc/init.d/named
-      /etc/rc4.d/S01named -> /etc/init.d/named
-      /etc/rc5.d/S01named -> /etc/init.d/named
+        -> /usr/lib/systemd/system/named.service
+      /etc/rc2.d/S01named -> ../init.d/named
+      /etc/rc3.d/S01named -> ../init.d/named
+      /etc/rc4.d/S01named -> ../init.d/named
+      /etc/rc5.d/S01named -> ../init.d/named
     }}
 
   { nbd-server {
-      /etc/rc2.d/S01nbd-server -> /etc/init.d/nbd-server
-      /etc/rc3.d/S01nbd-server -> /etc/init.d/nbd-server
-      /etc/rc4.d/S01nbd-server -> /etc/init.d/nbd-server
-      /etc/rc5.d/S01nbd-server -> /etc/init.d/nbd-server
+      /etc/systemd/system/multi-user.target.wants/nbd-server.service
+        -> /usr/lib/systemd/system/nbd-server.service
+      /etc/rc2.d/S01nbd-server -> ../init.d/nbd-server
+      /etc/rc3.d/S01nbd-server -> ../init.d/nbd-server
+      /etc/rc4.d/S01nbd-server -> ../init.d/nbd-server
+      /etc/rc5.d/S01nbd-server -> ../init.d/nbd-server
     }}
 
   { NetworkManager {
       /etc/systemd/system/dbus-org.freedesktop.nm-dispatcher.service
-        -> /lib/systemd/system/NetworkManager-dispatcher.service
+        -> /usr/lib/systemd/system/NetworkManager-dispatcher.service
       /etc/systemd/system/multi-user.target.wants/NetworkManager.service
-        -> /lib/systemd/system/NetworkManager.service
+        -> /usr/lib/systemd/system/NetworkManager.service
       /etc/systemd/system/network-online.target.wants/NetworkManager-wait-online.service
-        -> /lib/systemd/system/NetworkManager-wait-online.service
+        -> /usr/lib/systemd/system/NetworkManager-wait-online.service
     }}
 
   { nfs-client {
       /etc/systemd/system/multi-user.target.wants/nfs-client.target
-        -> /lib/systemd/system/nfs-client.target
+        -> /usr/lib/systemd/system/nfs-client.target
       /etc/systemd/system/multi-user.target.wants/rpcbind.service
-        -> /lib/systemd/system/rpcbind.service
+        -> /usr/lib/systemd/system/rpcbind.service
       /etc/systemd/system/remote-fs.target.wants/nfs-client.target
-        -> /lib/systemd/system/nfs-client.target
+        -> /usr/lib/systemd/system/nfs-client.target
     }}
 
   { nfs-server {
       /etc/systemd/system/multi-user.target.wants/nfs-server.service
-        -> /lib/systemd/system/nfs-server.service
+        -> /usr/lib/systemd/system/nfs-server.service
+      /etc/rc2.d/S01nfs-kernel-server -> ../init.d/nfs-kernel-server
+      /etc/rc3.d/S01nfs-kernel-server -> ../init.d/nfs-kernel-server
+      /etc/rc4.d/S01nfs-kernel-server -> ../init.d/nfs-kernel-server
+      /etc/rc5.d/S01nfs-kernel-server -> ../init.d/nfs-kernel-server
     }}
 
   { nginx {
       /etc/systemd/system/multi-user.target.wants/nginx.service
-        -> /lib/systemd/system/nginx.service
+        -> /usr/lib/systemd/system/nginx.service
+      /etc/rc2.d/S01nginx -> ../init.d/nginx
+      /etc/rc3.d/S01nginx -> ../init.d/nginx
+      /etc/rc4.d/S01nginx -> ../init.d/nginx
+      /etc/rc5.d/S01nginx -> ../init.d/nginx
     }}
 
   { nmbd {
       /etc/systemd/system/multi-user.target.wants/nmbd.service
-        -> /lib/systemd/system/nmbd.service
+        -> /usr/lib/systemd/system/nmbd.service
+      /etc/rc2.d/S01nmbd -> ../init.d/nmbd
+      /etc/rc3.d/S01nmbd -> ../init.d/nmbd
+      /etc/rc4.d/S01nmbd -> ../init.d/nmbd
+      /etc/rc5.d/S01nmbd -> ../init.d/nmbd
     }}
 
   { nscd {
       /etc/systemd/system/multi-user.target.wants/nscd.service
-        -> /lib/systemd/system/nscd.service
+        -> /usr/lib/systemd/system/nscd.service
+      /etc/rc2.d/S01nscd -> ../init.d/nscd
+      /etc/rc3.d/S01nscd -> ../init.d/nscd
+      /etc/rc4.d/S01nscd -> ../init.d/nscd
+      /etc/rc5.d/S01nscd -> ../init.d/nscd
     }}
 
   { nslcd {
-      /etc/rc2.d/S01nslcd -> /etc/init.d/nslcd
-      /etc/rc3.d/S01nslcd -> /etc/init.d/nslcd
-      /etc/rc4.d/S01nslcd -> /etc/init.d/nslcd
-      /etc/rc5.d/S01nslcd -> /etc/init.d/nslcd
+      /etc/systemd/system/multi-user.target.wants/nslcd.service
+        -> /usr/lib/systemd/system/nslcd.service
+      /etc/rc2.d/S01nslcd -> ../init.d/nslcd
+      /etc/rc3.d/S01nslcd -> ../init.d/nslcd
+      /etc/rc4.d/S01nslcd -> ../init.d/nslcd
+      /etc/rc5.d/S01nslcd -> ../init.d/nslcd
     }}
 
   { nvidia-persistenced {
-      /etc/rc2.d/S01nvidia-persistenced -> /etc/init.d/nvidia-persistenced
-      /etc/rc3.d/S01nvidia-persistenced -> /etc/init.d/nvidia-persistenced
-      /etc/rc4.d/S01nvidia-persistenced -> /etc/init.d/nvidia-persistenced
-      /etc/rc5.d/S01nvidia-persistenced -> /etc/init.d/nvidia-persistenced
       /etc/systemd/system/multi-user.target.wants/nvidia-persistenced.service
-        -> /lib/systemd/system/nvidia-persistenced.service
+        -> /usr/lib/systemd/system/nvidia-persistenced.service
+      /etc/rc2.d/S01nvidia-persistenced -> ../init.d/nvidia-persistenced
+      /etc/rc3.d/S01nvidia-persistenced -> ../init.d/nvidia-persistenced
+      /etc/rc4.d/S01nvidia-persistenced -> ../init.d/nvidia-persistenced
+      /etc/rc5.d/S01nvidia-persistenced -> ../init.d/nvidia-persistenced
     }}
 
   { puavo-autopoweroff {
       /etc/systemd/system/multi-user.target.wants/puavo-autopoweroff.service
-        -> /lib/systemd/system/puavo-autopoweroff.service
+        -> /usr/lib/systemd/system/puavo-autopoweroff.service
     }}
 
   { puavo-darkdm {
       /etc/systemd/system/multi-user.target.wants/puavo-darkdm.service
-        -> /lib/systemd/system/puavo-darkdm.service
+        -> /usr/lib/systemd/system/puavo-darkdm.service
     }}
 
   { puavo-docker {
@@ -231,81 +303,105 @@ set services {
 
   { puavo-image-torrent-updated {
       /etc/systemd/system/multi-user.target.wants/puavo-image-torrent-updated.service
-        -> /lib/systemd/system/puavo-image-torrent-updated.service
+        -> /usr/lib/systemd/system/puavo-image-torrent-updated.service
       /etc/systemd/system/sockets.target.wants/puavo-image-torrent-updated.socket
-        -> /lib/systemd/system/puavo-image-torrent-updated.socket
+        -> /usr/lib/systemd/system/puavo-image-torrent-updated.socket
     }}
 
   { puavo-rest {
       /etc/systemd/system/multi-user.target.wants/puavo-rest.service
-        -> /lib/systemd/system/puavo-rest.service
+        -> /usr/lib/systemd/system/puavo-rest.service
     }}
 
   { puavo-sharedir-manager {
       /etc/systemd/system/multi-user.target.wants/puavo-sharedir-manager.service
-        -> /lib/systemd/system/puavo-sharedir-manager.service
+        -> /usr/lib/systemd/system/puavo-sharedir-manager.service
     }}
 
   { puavo-veyon {
       /etc/systemd/system/multi-user.target.wants/puavo-veyon.service
-        -> /lib/systemd/system/puavo-veyon.service
+        -> /usr/lib/systemd/system/puavo-veyon.service
     }}
 
   { puavo-vpn-client-dnsmasq {
       /etc/systemd/system/multi-user.target.wants/puavo-vpn-client-dnsmasq.service
-        -> /lib/systemd/system/puavo-vpn-client-dnsmasq.service
+        -> /usr/lib/systemd/system/puavo-vpn-client-dnsmasq.service
     }}
 
   { puavo-vpn-client-openvpn {
       /etc/systemd/system/multi-user.target.wants/puavo-vpn-client-openvpn.service
-        -> /lib/systemd/system/puavo-vpn-client-openvpn.service
+        -> /usr/lib/systemd/system/puavo-vpn-client-openvpn.service
     }}
 
   { redis-server {
       /etc/systemd/system/multi-user.target.wants/redis-server.service
-        -> /lib/systemd/system/redis-server.service
+        -> /usr/lib/systemd/system/redis-server.service
+      /etc/rc2.d/S01redis-server -> ../init.d/redis-server
+      /etc/rc3.d/S01redis-server -> ../init.d/redis-server
+      /etc/rc4.d/S01redis-server -> ../init.d/redis-server
+      /etc/rc5.d/S01redis-server -> ../init.d/redis-server
     }}
 
   { rpc-gssd {
       /etc/systemd/system/multi-user.target.wants/rpc-gssd.service
-        -> /lib/systemd/system/rpc-gssd.service
+        -> /usr/lib/systemd/system/rpc-gssd.service
     }}
 
   { shorewall {
       /etc/systemd/system/basic.target.wants/shorewall.service
-        -> /lib/systemd/system/shorewall.service
+        -> /usr/lib/systemd/system/shorewall.service
     }}
 
   { slapd {
      /etc/systemd/system/multi-user.target.wants/slapd.service
        -> /etc/systemd/system/slapd.service
+      /etc/rc2.d/S01slapd -> ../init.d/slapd
+      /etc/rc3.d/S01slapd -> ../init.d/slapd
+      /etc/rc4.d/S01slapd -> ../init.d/slapd
+      /etc/rc5.d/S01slapd -> ../init.d/slapd
     }}
 
   { smbd {
       /etc/systemd/system/multi-user.target.wants/smbd.service
-        -> /lib/systemd/system/smbd.service
+        -> /usr/lib/systemd/system/smbd.service
+      /etc/rc2.d/S01smbd -> ../init.d/smbd
+      /etc/rc3.d/S01smbd -> ../init.d/smbd
+      /etc/rc4.d/S01smbd -> ../init.d/smbd
+      /etc/rc5.d/S01smbd -> ../init.d/smbd
     }}
 
   { tlp {
       /etc/systemd/system/multi-user.target.wants/tlp.service
-        -> /lib/systemd/system/tlp.service
+        -> /usr/lib/systemd/system/tlp.service
+      /etc/rc2.d/S01tlp -> ../init.d/tlp
+      /etc/rc3.d/S01tlp -> ../init.d/tlp
+      /etc/rc4.d/S01tlp -> ../init.d/tlp
+      /etc/rc5.d/S01tlp -> ../init.d/tlp
     }}
 
   { ulogd2 {
       /etc/systemd/system/multi-user.target.wants/ulogd2.service
-        -> /lib/systemd/system/ulogd2.service
+        -> /usr/lib/systemd/system/ulogd2.service
       /etc/systemd/system/ulogd.service
-        -> /lib/systemd/system/ulogd2.service
+        -> /usr/lib/systemd/system/ulogd2.service
+      /etc/rc2.d/S01ulogd2 -> ../init.d/ulogd2
+      /etc/rc3.d/S01ulogd2 -> ../init.d/ulogd2
+      /etc/rc4.d/S01ulogd2 -> ../init.d/ulogd2
+      /etc/rc5.d/S01ulogd2 -> ../init.d/ulogd2
     }}
 
   { veyon {
       /etc/systemd/system/multi-user.target.wants/veyon.service
-        -> /lib/systemd/system/veyon.service
+        -> /usr/lib/systemd/system/veyon.service
     }}
 
   { winbind {
       /etc/systemd/system/multi-user.target.wants/winbind.service
         -> /usr/lib/systemd/system/winbind.service
+      /etc/rc2.d/S01winbind -> ../init.d/winbind
+      /etc/rc3.d/S01winbind -> ../init.d/winbind
+      /etc/rc4.d/S01winbind -> ../init.d/winbind
+      /etc/rc5.d/S01winbind -> ../init.d/winbind
     }}
 
   { zram-config {
