@@ -58,7 +58,8 @@ fi
     mk_build_deps_options+=(--build-profiles "${build_profiles}")
   fi
   mk-build-deps "${mk_build_deps_options[@]}" "${srcpkgname}/debian/control"
-  ${PUAVOOS_SUDO:-} apt-get install -y "./${srcpkgname}-build-deps_"*.deb
+  ${PUAVOOS_SUDO:-} apt-get install --no-install-recommends --yes \
+    "./${srcpkgname}-build-deps_"*.deb
   rm -f "./${srcpkgname}-build-deps_"*.deb
 )
 
