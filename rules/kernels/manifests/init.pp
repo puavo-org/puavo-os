@@ -1,4 +1,5 @@
 class kernels {
+  include ::dracut
   include ::kernels::dkms
   include ::kernels::grub_update
   include ::packages
@@ -56,7 +57,10 @@ class kernels {
     ::kernels::all_kernel_links {
       $kernel_alias:
         kernel_alias => $kernel_alias,
-        require      => Packages::Kernels::Kernel_package[$kernel_alias],
+        # the Dracut-hook mechanism does not understand kernel links so
+        # remove it before creating links
+        require      => [ File['/etc/kernel/postinst.d/dracut']
+                        , Packages::Kernels::Kernel_package[$kernel_alias] ],
         version      => $::kernels::kernel_versions[$kernel_alias];
     }
 
