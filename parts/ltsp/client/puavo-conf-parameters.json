@@ -248,6 +248,11 @@
     "description": "Enable/disable isc-dhcp-server service",
     "typehint": "bool"
   },
+  "puavo.service.kps.enabled": {
+    "default": "false",
+    "description": "Enable/disable kps service",
+    "typehint": "bool"
+  },
   "puavo.service.krb5-kdc.enabled": {
     "default": "false",
     "description": "Enable/disable krb5-kdc service",
