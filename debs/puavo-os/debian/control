@@ -279,6 +279,7 @@ Package: puavo-ltsp-client
 Architecture: all
 Depends: ${misc:Depends},
  alsa-utils,
+ autofs,
  cowsay,
  cwm,
  daemon,
