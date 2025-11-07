@@ -63,7 +63,7 @@ class packages {
     , 'cryptsetup-initramfs'
     , 'dbus'
     , 'dnsmasq'
-    # , 'docker-compose'                # XXX missing from Trixie
+    , 'docker-compose'
     , 'docker.io'
     , 'dracut'
     , 'freeradius'
@@ -182,7 +182,7 @@ class packages {
     , 'wavemon'
     , 'whois'
     , 'wireguard-tools'
-    # , 'wsmancli'              # XXX missing from Trixie
+    , 'wsmancli'
     , 'x11vnc'
     , 'xvfb'
     , 'xbacklight'
@@ -194,7 +194,7 @@ class packages {
     , 'gnome-sound-recorder'
     , 'lame'
     , 'libasound2-plugins'
-    # , 'mumble'                # XXX missing from Trixie
+    , 'mumble'
     , 'pavucontrol'
     # , 'pavumeter'             # XXX missing from Trixie
     , 'qstopmotion'
@@ -333,8 +333,8 @@ class packages {
     # , 'firmware-microbit-micropython' # XXX missing from Trixie
     , 'isight-firmware-tools'
     , 'iucode-tool'
-    , 'sigrok-firmware-fx2lafw' ]:
-    # , 'ubertooth-firmware' ]:         # XXX missing from Trixie
+    , 'sigrok-firmware-fx2lafw'
+    , 'ubertooth-firmware' ]:
       tag => [ 'tag_firmware_free', 'tag_debian_desktop', ];
 
     [ 'fontconfig'
@@ -361,7 +361,7 @@ class packages {
     , 'luola'
     , 'minetest'
     , 'neverball'
-    # , 'openttd'                               # XXX missing from Trixie
+    , 'openttd'
     , 'qml-module-qtquick-dialogs'	        # needed by teamviewer
     , 'qml-module-qtquick-privatewidgets'	# needed by teamviewer
     , 'tuxmath'
@@ -384,8 +384,8 @@ class packages {
     , 'feh'
     , 'freecad'
     , 'geeqie'
-    , 'gimp'                  # XXX missing from Trixie
-    , 'gimp-data-extras'      # XXX missing from Trixie
+    , 'gimp'
+    , 'gimp-data-extras'
     # , 'gimp-plugin-registry'  # XXX missing from Trixie
     , 'godot3'
     , 'gthumb'
@@ -403,7 +403,7 @@ class packages {
     , 'obs-studio'
     , 'okular'
     , 'openscad'
-    # , 'openshot-qt'           # XXX missing from Trixie
+    , 'openshot-qt'
     , 'pencil2d'
     , 'pitivi'
     , 'python3-lxml'
@@ -426,8 +426,8 @@ class packages {
 
     # Add the -dev packages for those libraries we build ourselves.
     # These help Puavo developers in case these need installation.
-    # [ 'libcimcclient0-dev'            # XXX missing from Trixie
-    [ 'libcups2-dev'
+    [ 'libcimcclient0-dev'
+    , 'libcups2-dev'
     , 'libcupsfilters-dev'
     , 'libcupsimage2-dev'
     , 'libfontembed-dev'
@@ -435,10 +435,10 @@ class packages {
     , 'libgtk2.0-dev'           # needed by lazarus-ide puavo-pkg
     , 'libgtk-3-dev'
     , 'libgtk-4-dev'
-    , 'libmutter-16-dev' ]:
+    , 'libmutter-16-dev'
+    , 'libopenwsman-dev'
+    , 'libwsman-clientpp-dev' ]:
       tag => [ 'tag_lib_devel', 'tag_debian_desktop', ];
-    # , 'libopenwsman-dev' ]:           # XXX missing from Trixie
-    # , 'libwsman-clientpp-dev' ]:      # XXX missing from Trixie
 
     [ 'goobox'
     , 'gstreamer1.0-clutter-3.0'
@@ -549,8 +549,8 @@ class packages {
     , 'xtightvncviewer' ]:
       tag => [ 'tag_remote_access', 'tag_debian_desktop', ];
 
-    # [ 'avogadro'                      # XXX missing from Trixie
-    [ 'gnucap'
+    [ 'avogadro'
+    , 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
     , 'kalzium'
@@ -706,11 +706,11 @@ class packages {
     , 'pipewire-libcamera'
     , 'plymouth'
     , 'plymouth-themes'
-    # , 'printer-driver-all'                    # XXX missing from Trixie
+    , 'printer-driver-all'
     , 'printer-driver-c2esp'
     , 'printer-driver-cups-pdf'
     , 'printer-driver-foo2zjs'
-    # , 'printer-driver-gutenprint'             # XXX missing from Trixie
+    , 'printer-driver-gutenprint'
     , 'printer-driver-hpijs'
     , 'printer-driver-min12xxw'
     , 'printer-driver-pnm2ppa'
@@ -720,7 +720,7 @@ class packages {
     , 'printer-driver-splix'
     , 'pulseaudio'
     , 'pulseaudio-module-bluetooth'
-    # , 'qt5-style-kvantum'
+    , 'qt5-style-kvantum'
     , 'qt5ct'
     , 'rfkill'
     , 'rtmpdump'
