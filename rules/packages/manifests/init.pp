@@ -821,6 +821,7 @@ class packages {
       tag => [ 'tag_virtualization', 'tag_debian_desktop', ];
 
     [ 'bluefish'
+    , 'ca-certificates-java'
     , 'chromium'
     , 'chromium-l10n'
     , 'epiphany-browser'
@@ -919,6 +920,15 @@ class packages {
 
     'unrar':
       tag => [ 'tag_utils', 'tag_debian_nonfree', ];
+  }
+
+  # workaround Java installation bug that looked like
+  # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1042732
+  Package['ca-certificates-java'] {
+    before +> [ Package['icedtea-netx']
+              , Package['openjdk-25-jdk']
+              , Package['openjdk-25-jre']
+              , Package['tuxguitar'] ],
   }
 
   # For some reason installing "wireguards-tools" prefers
