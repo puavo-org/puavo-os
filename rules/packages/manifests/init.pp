@@ -834,9 +834,8 @@ class packages {
     , 'sqlite3' ]:
       tag => [ 'tag_web', 'tag_debian_desktop', ];
 
-# XXX missing from Trixie
-#  'openboard':
-#    tag => [ 'tag_whiteboard', 'tag_debian_desktop', ];
+    'openboard':
+      tag => [ 'tag_whiteboard', 'tag_debian_desktop', ];
   }
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
