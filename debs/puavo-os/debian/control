@@ -4,6 +4,7 @@ Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
 Build-Depends: bundler | ruby-bundler,
  cargo,
+ clang,
  debhelper (>= 8),
  jq,
  libasound2-dev,
