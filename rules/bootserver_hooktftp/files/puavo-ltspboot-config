@@ -182,48 +182,6 @@ if $tftpdir_missing; then
   pxe_error "Missing ${preferred_boot_image}"
 fi
 
-#
-# this mirrors code in puavo-install-grub (in puavo-ltsp-install)
-#
-
-use_if64cpu=false
-
-kernel_version_suffix=''
-if [ -n "$kernel_version" ]; then
-  if printf %s "$kernel_version" | grep -Eq -- '-(amd64|i386)$'; then
-    # kernel_version set to particular arch
-    if test -e "${tftpdir}/vmlinuz-${kernel_version}"; then
-      kernel_version_suffix="-$kernel_version"
-    else
-      : # ... but kernel not available, so just use default
-    fi
-  elif test -e "${tftpdir}/vmlinuz-${kernel_version}-amd64" \
-         -a -e "${tftpdir}/vmlinuz-${kernel_version}-i386"; then
-    use_if64cpu=true
-    kernel_version_suffix="-$kernel_version"
-  elif test -e "${tftpdir}/vmlinuz-${kernel_version}"; then
-    # no kernels for both archs, but some kernel exists, so use that
-    kernel_version_suffix="-$kernel_version"
-  else
-    : # requested kernel not found, use default
-  fi
-elif test -e "${tftpdir}/vmlinuz-amd64" -a -e "${tftpdir}/vmlinuz-i386"; then
-  use_if64cpu=true
-elif test -e "${tftpdir}/vmlinuz"; then
-  : # okay, use default kernel
-else
-  pxe_error 'No kernel found'
-fi
-
-# one more sanity test (also checks the corresponding initrd.img)
-if test -e "${tftpdir}/initrd.img${kernel_version_suffix}" \
-     -a -e "${tftpdir}/vmlinuz${kernel_version_suffix}"; then
-  : # all is okay
-else
-  # something is wrong, use the default kernel
-  kernel_version_suffix=''
-fi
-
 boot_header=''
 if [ "$boot_mode" = "dualboot" ]; then
   boot_header=$(cat <<'HEADER_EOF'
@@ -237,12 +195,6 @@ label local
   localboot 0
 HEADER_EOF
 )
-elif $use_if64cpu; then
-  boot_header=$(cat <<'HEADER_EOF'
-default ltsp-NBD-ifcpu64
-ontimeout ltsp-NBD-ifcpu64
-HEADER_EOF
-)
 else
   boot_header=$(cat <<'HEADER_EOF'
 default ltsp-NBD
@@ -251,23 +203,7 @@ HEADER_EOF
 )
 fi
 
-if $use_if64cpu; then
-  boot_labels=$(cat <<EOF
-label ltsp-NBD-ifcpu64
-  menu label LTSP, using NBD, autodetect 64-bit or 32-bit kernels
-  menu default
-  kernel ifcpu64.c32
-  append ltsp-NBD-amd64 -- ltsp-NBD-i386
-
-$(boot_label amd64 "$preferred_boot_image" "$kernel_version_suffix" \
-             "$kernel_arguments" "$hosttype")
-
-$(boot_label i386 "$preferred_boot_image" "$kernel_version_suffix" \
-             "$kernel_arguments" "$hosttype")
-EOF
-)
-else
-  boot_labels=$(cat <<EOF
+boot_labels=$(cat <<EOF
 label ltsp-NBD
   menu label LTSP, using NBD
   menu default
@@ -276,7 +212,6 @@ label ltsp-NBD
   ipappend 2
 EOF
 )
-fi
 
 printf "%s\n" "$boot_header"
 echo ""
