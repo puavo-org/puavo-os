@@ -921,16 +921,6 @@ class packages {
       tag => [ 'tag_utils', 'tag_debian_nonfree', ];
   }
 
-  # workaround Java installation bug that looked like
-  # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1042732
-  Package['ca-certificates-java'] {
-    before +> [ Package['icedtea-netx']
-              , Package['libreoffice']
-              , Package['openjdk-25-jdk']
-              , Package['openjdk-25-jre']
-              , Package['tuxguitar'] ],
-  }
-
   # For some reason installing "wireguards-tools" prefers
   # to install some kernel packages we do not want.
   # Prevent this from happening by using "--no-install-recommends".
