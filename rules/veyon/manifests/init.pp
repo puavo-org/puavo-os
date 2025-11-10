@@ -7,9 +7,9 @@ class veyon {
   file {
     '/etc/systemd/system/multi-user.target.wants/puavo-veyon.service':
       ensure  => 'link',
-      require => [ File['/lib/systemd/system/puavo-veyon.service']
+      require => [ File['/usr/lib/systemd/system/puavo-veyon.service']
                  , Package['systemd'] ],
-      target  => '/lib/systemd/system/puavo-veyon.service';
+      target  => '/usr/lib/systemd/system/puavo-veyon.service';
 
     '/etc/systemd/system/veyon.service.d':
       ensure => directory;
@@ -17,7 +17,7 @@ class veyon {
     '/etc/systemd/system/veyon.service.d/override.conf':
       source  => 'puppet:///modules/veyon/veyon_override.conf';
 
-    '/lib/systemd/system/puavo-veyon.service':
+    '/usr/lib/systemd/system/puavo-veyon.service':
       require => [ File['/usr/local/sbin/puavo-veyon']
                  , Package['systemd'] ],
       source  => 'puppet:///modules/veyon/puavo-veyon.service';

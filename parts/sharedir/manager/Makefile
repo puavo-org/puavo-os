@@ -21,16 +21,16 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
-	mkdir -p $(DESTDIR)/lib/systemd/system
+	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 
 install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sharedir-manager
 	cp -R lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-sharedir-manager.json
-	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
+	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system \
 		systemd/*
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
-		/lib/systemd/system/puavo-sharedir-manager.service
+		/usr/lib/systemd/system/puavo-sharedir-manager.service
 
 clean:

@@ -11,11 +11,11 @@ class puavo_sysinfo_collector {
 
     '/etc/systemd/system/multi-user.target.wants/puavo-sysinfo-collector.service':
       ensure  => 'link',
-      require => [ File['/lib/systemd/system/puavo-sysinfo-collector.service']
+      require => [ File['/usr/lib/systemd/system/puavo-sysinfo-collector.service']
                  , Package['systemd'] ],
-      target  => '/lib/systemd/system/puavo-sysinfo-collector.service';
+      target  => '/usr/lib/systemd/system/puavo-sysinfo-collector.service';
 
-    '/lib/systemd/system/puavo-sysinfo-collector.service':
+    '/usr/lib/systemd/system/puavo-sysinfo-collector.service':
       require => [ File['/usr/sbin/puavo-sysinfo-collector']
                  , Package['systemd'] ],
       source  => 'puppet:///modules/puavo_sysinfo_collector/puavo-sysinfo-collector.service';
@@ -31,11 +31,11 @@ class puavo_sysinfo_collector {
   file {
     '/etc/systemd/system/multi-user.target.wants/puavo-send-sysinfo-to-puavo.service':
       ensure  => 'link',
-      require => [ File['/lib/systemd/system/puavo-send-sysinfo-to-puavo.service']
+      require => [ File['/usr/lib/systemd/system/puavo-send-sysinfo-to-puavo.service']
                  , Package['systemd'] ],
-      target  => '/lib/systemd/system/puavo-send-sysinfo-to-puavo.service';
+      target  => '/usr/lib/systemd/system/puavo-send-sysinfo-to-puavo.service';
 
-    '/lib/systemd/system/puavo-send-sysinfo-to-puavo.service':
+    '/usr/lib/systemd/system/puavo-send-sysinfo-to-puavo.service':
       require => [ File['/usr/sbin/puavo-send-sysinfo-to-puavo']
                  , Package['systemd'] ],
       source  => 'puppet:///modules/puavo_sysinfo_collector/puavo-send-sysinfo-to-puavo.service';

@@ -9,7 +9,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 ifeq ($(prefix), /usr/local)
-	systemdsystemunitdir='$(prefix)/lib/systemd/system'
+	systemdsystemunitdir='$(prefix)/usr/lib/systemd/system'
 else
 	systemdsystemunitdir=$(shell pkg-config systemd --variable=systemdsystemunitdir)
 endif

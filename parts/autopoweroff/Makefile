@@ -13,16 +13,16 @@ all:
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(sbindir)
-	mkdir -p $(DESTDIR)/lib/systemd/system
+	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-autopoweroff
-	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
+	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system \
 		puavo-autopoweroff.service
-	ln -fns /lib/systemd/system/puavo-autopoweroff.service \
+	ln -fns /usr/lib/systemd/system/puavo-autopoweroff.service \
 		$(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants/puavo-autopoweroff.service
 
 .PHONY: clean

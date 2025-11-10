@@ -9,7 +9,7 @@ set -eu
 hwclock --systohc || true
 
 if [ ! -e /run/puavo/nbd-server ]; then
-  exec /lib/systemd/systemd-shutdown.distrib "$@"
+  exec /usr/lib/systemd/systemd-shutdown.distrib "$@"
 fi
 
 # If have root over nbd, systemd will mess up the connection by sending
@@ -49,4 +49,4 @@ case "$mode" in
 esac
 
 # Fallback to normal shutdown in case $mode was something else.
-exec /lib/systemd/systemd-shutdown.distrib "$@"
+exec /usr/lib/systemd/systemd-shutdown.distrib "$@"
