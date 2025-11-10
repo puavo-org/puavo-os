@@ -39,6 +39,7 @@ pub trait CommandExecutor: Send + Sync {
         operator_id: Option<String>,
         organization_id: String,
         serial_numbers: Vec<String>,
+        recovery_key_files: Vec<PathBuf>,
     ) -> DaemonResponse;
 
     /// Execute unwrap command
@@ -100,6 +101,7 @@ impl CommandExecutor for DefaultCommandExecutor {
         operator_id: Option<String>,
         organization_id: String,
         serial_numbers: Vec<String>,
+        recovery_key_files: Vec<PathBuf>,
     ) -> DaemonResponse {
         let hsm_session = context.hsm_session.lock().await;
         recovery::execute_generate(
@@ -107,6 +109,7 @@ impl CommandExecutor for DefaultCommandExecutor {
             operator_id,
             organization_id,
             serial_numbers,
+            recovery_key_files,
         )
     }
 

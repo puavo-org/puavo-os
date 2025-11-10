@@ -235,6 +235,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
                 operator_id,
                 organization_id,
                 serial_number,
+                recovery_key_file,
             } => {
                 self.executor
                     .execute_generate(
@@ -242,6 +243,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
                         operator_id,
                         organization_id,
                         serial_number,
+                        recovery_key_file,
                     )
                     .await
             }

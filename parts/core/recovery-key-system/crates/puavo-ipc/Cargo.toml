@@ -14,3 +14,4 @@ clap = { version = "4.5", features = ["derive"] }
 rand.workspace = true
 hex.workspace = true
 sha2.workspace = true
+rsa = { workspace = true, features = ["pem"] }

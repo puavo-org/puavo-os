@@ -147,22 +147,24 @@ fn decrypt_with_organization_key(
     decrypt(hsm_session, &key, encrypted_key_data)
 }
 
-/// Generate a new recovery key for a device
+/// Encrypt the specified recovery key for a device
 ///
 /// Parameters:
 /// * `hsm_session` - Active HSM session for key operations
 /// * `organization_id` - Organization identifier
 /// * `serial_number` - Device serial number
+/// * `recovery_key` - Raw recovery key bytes
 ///
 /// Returns:
 /// A recovery bundle with encrypted recovery key data
 ///
 /// Errors:
 /// Returns error if key version cannot be determined or encryption fails
-fn generate_recovery_key(
+fn create_recovery_bundle(
     hsm_session: &HsmSession,
     organization_id: String,
     serial_number: String,
+    recovery_key: Vec<u8>,
 ) -> Result<RecoveryBundle, RecoveryKeyError> {
     tracing::info!(
         "Generating recovery key for device {} in organization {}",
@@ -172,20 +174,20 @@ fn generate_recovery_key(
 
     let key_manager = HsmKeyManager::new(hsm_session);
 
+    // Find the latest organization public key and its version
     let organization_key_label =
         KeyLabel::organization_label(organization_id.as_str());
     let (organization_key, organization_key_version) = key_manager
         .get_latest_key(ObjectClass::PUBLIC_KEY, &organization_key_label)?
         .ok_or(RecoveryKeyError::NoOrganizationKeys)?;
 
-    // Generate random recovery key
-    let mut recovery_key = vec![0u8; RECOVERY_KEY_SIZE];
-    rand::thread_rng().fill_bytes(&mut recovery_key);
+    // Load the organization public key
+    let key_manager = HsmKeyManager::new(hsm_session);
+    let public_key = key_manager.extract_public_key(&organization_key)?;
 
     // Encrypt the recovery key and related information
     let encrypted_key_data = encrypt_recovery_key_data(
-        hsm_session,
-        &organization_key,
+        &public_key,
         serial_number.clone(),
         organization_id.clone(),
         recovery_key,
@@ -259,12 +261,7 @@ fn read_recovery_bundle(
 /// Returns:
 /// Formatted string with device, organization, and key information
 fn format_recovery_key_output(recovery_key_data: &RecoveryKeyData) -> String {
-    format!(
-        "Device: {} | Organization: {} | Key: {}",
-        recovery_key_data.serial_number,
-        recovery_key_data.organization_id,
-        hex::encode(&recovery_key_data.recovery_key)
-    )
+    format!("{}", String::from_utf8_lossy(&recovery_key_data.recovery_key))
 }
 
 /// Convert recovery key error to daemon response
@@ -282,6 +279,7 @@ fn recovery_key_error_to_response(error: RecoveryKeyError) -> DaemonResponse {
 /// * `operator_id` - Optional operator identifier
 /// * `organization_id` - Organization identifier
 /// * `serial_numbers` - List of device serial numbers
+/// * `recovery_key_files` - List of recovery key files (one per device)
 ///
 /// Returns:
 /// Daemon response with encrypted recovery key data (hex-encoded)
@@ -290,14 +288,27 @@ pub fn execute_generate(
     _operator_id: Option<String>,
     organization_id: String,
     serial_numbers: Vec<String>,
+    recovery_key_files: Vec<PathBuf>,
 ) -> DaemonResponse {
+    if serial_numbers.len() != recovery_key_files.len() {
+        return DaemonResponse::Error {
+            code: "PARAMETER_MISMATCH".into(),
+            message: "Number of serial numbers does not match number of recovery key files".into(),
+        };
+    }
+
     let recovery_keys_result: Result<Vec<_>, RecoveryKeyError> = serial_numbers
         .into_iter()
-        .map(|serial_number| {
-            let recovery_bundle = generate_recovery_key(
+        .zip(recovery_key_files.iter())
+        .map(|(serial_number, recovery_key_file)| {
+            let recovery_key = fs::read(&recovery_key_file)?;
+            // TODO(recovery-key-format): Validate recovery key format?
+
+            let recovery_bundle = create_recovery_bundle(
                 hsm_session,
                 organization_id.clone(),
                 serial_number,
+                recovery_key,
             )?;
 
             Ok(serde_json::to_string(&recovery_bundle)?)

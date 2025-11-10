@@ -43,6 +43,17 @@ pub struct RecoveryBundle {
     pub encrypted_key_data: String,
 }
 
+/// Structure containing exported organization public key data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OrganizationPublicKey {
+    /// Organization ID
+    pub organization_id: String,
+    /// Version of the organization key
+    pub version: u32,
+    /// Public key in PEM format
+    pub public_key_pem: String,
+}
+
 /// Top-level IPC message envelope
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IpcMessage {
@@ -111,6 +122,10 @@ pub enum Commands {
         /// Device serial number (can be specified multiple times)
         #[arg(long)]
         serial_number: Vec<String>,
+
+        /// Paths to recovery key files corresponding to the specified serial numbers (can be specified multiple times)
+        #[arg(long)]
+        recovery_key_file: Vec<PathBuf>,
     },
 
     /// Unwrap encrypted recovery key data
