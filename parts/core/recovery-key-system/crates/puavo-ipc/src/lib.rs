@@ -153,6 +153,21 @@ pub enum OrganizationCommand {
         #[arg(long)]
         organization_id: String,
     },
+
+    /// Export organization public key
+    Export {
+        /// Organization identifier
+        #[arg(long)]
+        organization_id: String,
+
+        /// Key version to export
+        #[arg(long)]
+        version: u32,
+
+        /// Output file path
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
 }
 
 /// Audit log management commands
