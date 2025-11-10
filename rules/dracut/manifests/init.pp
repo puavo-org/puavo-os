@@ -4,8 +4,9 @@ class dracut {
   file {
     # in Puavo OS we create these at image build in our own way
     '/etc/kernel/postinst.d/dracut':
-      ensure  => absent,
-      require => Package['dracut'];
+      ensure  => link,
+      require => Package['dracut'],
+      target  => '/usr/bin/true';
 
     '/etc/dracut.conf.d/puavo.conf':
       require => Package['dracut'],
