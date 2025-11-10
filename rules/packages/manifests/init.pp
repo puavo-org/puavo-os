@@ -925,6 +925,7 @@ class packages {
   # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1042732
   Package['ca-certificates-java'] {
     before +> [ Package['icedtea-netx']
+              , Package['libreoffice']
               , Package['openjdk-25-jdk']
               , Package['openjdk-25-jre']
               , Package['tuxguitar'] ],
