@@ -1,4 +1,5 @@
-use crate::cli::{Cli, CliCommands, DaemonCommands};
+use crate::cli::{Cli, CliCommands, DaemonCommands, DeviceCommands};
+use crate::device::generate_recovery_bundle_local;
 use crate::ipc_client::{IpcClient, IpcClientTrait};
 use anyhow::Result;
 use puavo_ipc::{DaemonCommand, DaemonResponse, IpcError};
@@ -16,18 +17,23 @@ use puavo_ipc::{DaemonCommand, DaemonResponse, IpcError};
 pub async fn execute(cli: Cli) -> Result<()> {
     tracing::debug!("Configuration file: {}", cli.socket_path.display());
 
-    let client = IpcClient::new(cli.socket_path);
-
     match cli.command {
         // Handle daemon commands locally for daemon management
         CliCommands::Daemon { command } => {
+            let client = IpcClient::new(cli.socket_path);
             execute_daemon_command_with_client(command, &client).await
         }
 
         // KPS commands are sent to daemon for execution via IPC
         CliCommands::Kps(command) => {
+            let client = IpcClient::new(cli.socket_path);
             let daemon_command = DaemonCommand::Execute(command);
             execute_command_via_daemon(&client, daemon_command).await
+        }
+
+        // Device commands are executed locally without daemon
+        CliCommands::Device { command } => {
+            execute_device_command(command).await
         }
     }
 }
@@ -64,13 +70,52 @@ fn handle_daemon_response(
 ) -> Result<()> {
     match result {
         Ok(response) => {
-            println!("Daemon response: {:?}", response);
+            match response {
+                DaemonResponse::Success { data } => {
+                    if let Some(message) = data {
+                        println!("{}", message);
+                    } else {
+                        println!("Success");
+                    }
+                }
+                _ => println!("Daemon response: {:?}", response)
+            };
             Ok(())
         }
         Err(error) => {
             let error_message =
                 format!("Failed to communicate with daemon: {}", error);
             Err(anyhow::anyhow!(error_message))
+        }
+    }
+}
+
+/// Execute device command locally without daemon
+///
+/// Parameters:
+/// * `command` - Device command to execute
+///
+/// Returns:
+/// Result indicating success or failure
+///
+/// Errors:
+/// Returns error if device command execution fails
+async fn execute_device_command(command: DeviceCommands) -> Result<()> {
+    match command {
+        DeviceCommands::Generate {
+            organization_id,
+            serial_number,
+            output,
+            recovery_key_file,
+        } => {
+            generate_recovery_bundle_local(
+                organization_id,
+                serial_number,
+                output,
+                recovery_key_file,
+            )
+            .await?;
+            Ok(())
         }
     }
 }

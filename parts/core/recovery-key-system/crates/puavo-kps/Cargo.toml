@@ -10,6 +10,7 @@ path = "src/main.rs"
 [dependencies]
 # Internal crates
 puavo-ipc = { path = "../puavo-ipc" }
+puavo-kpsd = { path = "../puavo-kpsd" }
 
 # CLI and configuration
 clap.workspace = true
@@ -30,5 +31,10 @@ nix.workspace = true
 tokio = { version = "1.43", features = ["full"] }
 bincode = "1.3"
 async-trait = "0.1"
+
+# Cryptography (for device-local recovery bundle generation)
+hex.workspace = true
+rand.workspace = true
+rsa = { workspace = true, features = ["pem"] }
 
 [dev-dependencies]

@@ -1,5 +1,6 @@
 mod cli;
 mod commands;
+mod device;
 mod ipc_client;
 
 use anyhow::Result;

@@ -6,7 +6,7 @@ pub use puavo_ipc::Commands;
 
 #[derive(Parser, Debug)]
 #[command(name = "puavo-kps")]
-#[command(about = "Puavo Key Provisioning Station", long_about = None)]
+#[command(about = "Puavo Device Recovery Key Tool", long_about = None)]
 #[command(version)]
 pub struct Cli {
     /// Path to KPS daemon socket
@@ -25,7 +25,7 @@ pub struct Cli {
     pub command: CliCommands,
 }
 
-/// CLI-level commands (includes daemon management)
+/// CLI-level commands
 #[derive(Subcommand, Debug)]
 pub enum CliCommands {
     /// Daemon management commands
@@ -37,6 +37,12 @@ pub enum CliCommands {
     /// KPS commands (forwarded to daemon for execution)
     #[command(flatten)]
     Kps(Commands),
+
+    /// Device-local operations
+    Device {
+        #[command(subcommand)]
+        command: DeviceCommands,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -55,6 +61,28 @@ pub enum DaemonCommands {
         /// Force shutdown without graceful cleanup
         #[arg(long)]
         force: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum DeviceCommands {
+    /// Generate recovery bundle locally on device
+    Generate {
+        /// Organization identifier
+        #[arg(long)]
+        organization_id: String,
+
+        /// Device serial number (defaults to system serial)
+        #[arg(long)]
+        serial_number: Option<String>,
+
+        /// Output file for recovery bundle
+        #[arg(long)]
+        output: PathBuf,
+
+        /// Path to file containing recovery key
+        #[arg(long)]
+        recovery_key_file: PathBuf,
     },
 }
 

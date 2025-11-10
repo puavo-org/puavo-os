@@ -8,9 +8,8 @@ use puavo_hsm::{
 use puavo_ipc::{
     DaemonResponse, RECOVERY_KEY_DATA_VERSION, RecoveryBundle, RecoveryKeyData,
 };
-use rand::RngCore;
-use rsa::Pkcs1v15Encrypt;
-use std::path::PathBuf;
+use rsa::{Pkcs1v15Encrypt, RsaPublicKey};
+use std::{fs, path::PathBuf};
 
 /// Errors that can occur during recovery key operations
 #[derive(Debug, thiserror::Error)]
@@ -30,9 +29,6 @@ pub enum RecoveryKeyError {
     #[error("Hex decoding error: {0}")]
     HexDecode(#[from] hex::FromHexError),
 }
-
-/// Recovery key size in bytes
-pub const RECOVERY_KEY_SIZE: usize = 32;
 
 /// Create recovery key data structure from components
 ///
@@ -59,8 +55,7 @@ fn create_recovery_key_data(
 /// Encrypt recovery key data with organization public key
 ///
 /// Parameters:
-/// * `hsm_session` - Active HSM session for key operations
-/// * `public_key_handle` - Handle to the organization public key
+/// * `public_key` - Public key for encryption
 /// * `serial_number` - Device serial number
 /// * `organization_id` - Organization identifier
 /// * `recovery_key` - Raw recovery key bytes
@@ -70,9 +65,8 @@ fn create_recovery_key_data(
 ///
 /// Errors:
 /// Returns error if serialization or encryption fails
-fn encrypt_recovery_key_data(
-    hsm_session: &HsmSession,
-    public_key_handle: &ObjectHandle,
+pub fn encrypt_recovery_key_data(
+    public_key: &RsaPublicKey,
     serial_number: String,
     organization_id: String,
     recovery_key: Vec<u8>,
@@ -80,31 +74,25 @@ fn encrypt_recovery_key_data(
     let key_data =
         create_recovery_key_data(serial_number, organization_id, recovery_key);
     let serialized_key_data = serde_json::to_vec(&key_data)?;
-    let encrypted_key_data_bytes =
-        encrypt(hsm_session, public_key_handle, &serialized_key_data)?;
+    let encrypted_key_data_bytes = encrypt(public_key, &serialized_key_data)?;
     Ok(hex::encode(&encrypted_key_data_bytes))
 }
 
 /// Encrypt data using RSA with software-based encryption
 ///
 /// Parameters:
-/// * `hsm_session` - Active HSM session for key operations
-/// * `public_key_handle` - Handle to public key in HSM
+/// * `public_key` - Public key for encryption
 /// * `key_data` - Data to encrypt
 ///
 /// Returns:
 /// Encrypted data
 ///
 /// Errors:
-/// Returns error if public key extraction or encryption fails
+/// Returns error if encryption fails
 fn encrypt(
-    hsm_session: &HsmSession,
-    public_key_handle: &ObjectHandle,
+    public_key: &RsaPublicKey,
     key_data: &[u8],
 ) -> Result<Vec<u8>, KeyManagementError> {
-    let key_manager = HsmKeyManager::new(hsm_session);
-    let public_key = key_manager.extract_public_key(public_key_handle)?;
-
     // TODO: Investigate support for OAEP padding
     let padding = Pkcs1v15Encrypt;
     let mut random_number_generator = rand::thread_rng();
