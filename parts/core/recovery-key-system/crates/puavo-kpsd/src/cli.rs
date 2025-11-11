@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::path::PathBuf;
 
-const DEFAULT_CONFIG_PATH: &str = "/etc/puavo/kps/config.toml";
+const DEFAULT_CONFIG_PATH: &str = "/etc/puavo-kps/config.toml";
 
 #[derive(Parser, Debug)]
 #[command(name = "puavo-kpsd")]

@@ -55,7 +55,7 @@ pub async fn generate_recovery_bundle_local(
 
     // Determine public key path
     let public_key_path = PathBuf::from(format!(
-        "/etc/puavo/kps/organizations/{}.public-key.json",
+        "/etc/puavo-kps/organizations/{}.public-key.json",
         organization_id
     ));
 
