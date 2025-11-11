@@ -6,6 +6,8 @@ use puavo_ipc::{
     Commands, DEFAULT_SOCKET_PATH, DaemonCommand, DaemonResponse, IpcMessage,
     IpcPayload, MAX_MESSAGE_SIZE,
 };
+use std::fs::Permissions;
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
@@ -36,6 +38,14 @@ impl Daemon {
         }
 
         let listener = UnixListener::bind(DEFAULT_SOCKET_PATH)?;
+
+        // Allow all users to connect to the socket
+        tokio::fs::set_permissions(
+            DEFAULT_SOCKET_PATH,
+            Permissions::from_mode(0o777),
+        )
+        .await?;
+
         tracing::info!("Daemon listening on {}", DEFAULT_SOCKET_PATH);
 
         let (shutdown_send, mut shutdown_receive) =
