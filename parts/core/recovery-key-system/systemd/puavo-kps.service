@@ -6,8 +6,6 @@ ExecStart=/usr/sbin/puavo-kpsd
 Type=simple
 Restart=always
 RestartSec=10
-StartLimitInterval=300
-StartLimitBurst=5
 
 [Install]
 WantedBy=multi-user.target
