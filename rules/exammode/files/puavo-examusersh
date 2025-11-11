@@ -1,24 +1,47 @@
 #!/bin/sh
 
-if [ "$(tty)" = '/dev/tty42' ]; then
-  clear
+set -eu
 
-  additional_bwrap_args=''
-  # /anon exists only when guest user is enabled
-  if [ -d /anon ]; then
-    additional_bwrap_args='--tmpfs /anon'
-  fi
-
-  exec env HOME=/var/lib/puavo-exammode/user      \
-    bwrap --dev-bind / /                          \
-          $additional_bwrap_args                  \
-          --tmpfs    /home                        \
-          --tmpfs    /images                      \
-          --tmpfs    /state                       \
-          --tmpfs    /tmp                         \
-          --tmpfs    /var/lib/puavo-exammode/user \
-          --tmpfs    /var/tmp                     \
-      startx /usr/local/lib/puavo-exammode/exammode-session -- :42 > /dev/null 2>&1
+if [ "$(tty)" != '/dev/tty42' ]; then
+  exec /bin/bash
 fi
 
-exec /bin/bash
+clear
+
+dirs_to_hide='
+  /anon
+  /home
+  /images
+  /state
+  /tmp
+  /var/lib/puavo-exammode/user
+  /var/tmp
+'
+
+allow_access_to_images=false
+if ! exam_session_type=$(jq -r .type /var/lib/puavo-exammode/session.json \
+                           2>/dev/null); then
+  echo 'could not lookup the exam session type' >&2
+  exit 1
+fi
+if [ "$exam_session_type" = 'next-exam-session' ]; then
+  allow_access_to_images=true
+fi
+
+# not all of the ${dirs_to_hide} directories actually exist (depending on
+# things), so check them before adding to --tmpfs arguments
+bwrap_tmpfs_args=''
+for dir in $dirs_to_hide; do
+  if [ "$dir" = '/images' ] && $allow_access_to_images; then
+    # the Next-Exam session cannot work without access to /images/puavo-pkg
+    continue
+  fi
+  if [ -d "$dir" ]; then
+    bwrap_tmpfs_args="${bwrap_tmpfs_args} --tmpfs ${dir}"
+  fi
+done
+
+exec env HOME=/var/lib/puavo-exammode/user \
+  bwrap --dev-bind / / $bwrap_tmpfs_args   \
+    startx /usr/local/lib/puavo-exammode/exammode-session -- :42 \
+      > /dev/null 2>&1
