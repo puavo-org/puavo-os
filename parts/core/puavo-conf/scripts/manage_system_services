@@ -427,15 +427,18 @@ set status 0
 
 set disabled_services [list]
 set enabled_services  [list]
+set missing_services  [list]
 
 foreach service_def $services {
   foreach {service service_link_defs} $service_def {
     set puavo_conf_var "puavo.service.${service}.enabled"
-    set res [catch { exec -ignorestderr puavo-conf $puavo_conf_var } \
+    # XXX It would be nice if puavo-conf returned a more exact error code.
+    # XXX Here we would like to separate the "key does not exist"-case from
+    # XXX other errors.
+    set res [catch { exec -ignorestderr puavo-conf $puavo_conf_var 2>/dev/null } \
                    puavo_conf_res]
     if {$res} {
-      puts stderr "No puavo-conf setting for $puavo_conf_var: $puavo_conf_res"
-      set status 1
+      lappend missing_services $service
       continue
     }
     set puavo_conf_value $puavo_conf_res
@@ -467,7 +470,11 @@ foreach service_def $services {
   }
 }
 
-puts -nonewline "((( disabled services (by puavo-conf): $disabled_services ))) ... "
-puts -nonewline "((( enabled services (by puavo-conf): $enabled_services ))) ... "
+puts -nonewline "((( disabled services (by puavo-conf): ${disabled_services} ))) ... "
+puts -nonewline "((( enabled services (by puavo-conf): ${enabled_services} ))) ... "
+
+if {[llength $missing_services] > 0} {
+  puts -nonewline "((( missing services (no puavo-conf variable): ${missing_services} ))) ... "
+}
 
 exit $status
