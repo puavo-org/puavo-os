@@ -2,7 +2,6 @@
 set -eu
 
 UKI_ROOT='/boot/efi/EFI/puavo'
-PUAVO_INSTALL_LIBDIR='/usr/lib/puavo-ltsp-install'
 
 usage() {
   echo "Usage: $0 <images-dir>" >&2
@@ -41,7 +40,7 @@ if ! mountpoint -q "$images_dir"; then
   exit 1
 fi
 
-boot_disks=$("$PUAVO_INSTALL_LIBDIR"/puavo-get-boot-disks "$images_dir")
+boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
 
 if [ -z "$boot_disks" ]; then
   echo "error: failed to find boot disks" >&2

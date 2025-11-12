@@ -16,7 +16,7 @@ cleanup() {
 mount_efi() {
   local boot_disk boot_disk_list efi_partition_dev
 
-  if ! boot_disk_list=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks); then
+  if ! boot_disk_list=$(/usr/lib/puavo-core/puavo-get-boot-disks); then
     echo 'could not lookup boot disks' >&2
     return 1
   fi

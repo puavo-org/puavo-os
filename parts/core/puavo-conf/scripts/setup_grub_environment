@@ -147,7 +147,7 @@ setup_windows_enabled() {
     return 0
   fi
 
-  if ! grubdisk=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks); then
+  if ! grubdisk=$(/usr/lib/puavo-core/puavo-get-boot-disks); then
     echo 'ERROR: failed to get the Grub disk(s)' >&2
     return 1
   fi
@@ -201,7 +201,7 @@ update_boot_device_environments() {
     return 0
   fi
 
-  local boot_disks=$("$PUAVO_INSTALL_LIBDIR"/puavo-get-boot-disks "$images_dir")
+  local boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
   local status=0
 
   for diskdev in $boot_disks; do

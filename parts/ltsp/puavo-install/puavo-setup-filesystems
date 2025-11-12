@@ -1023,7 +1023,7 @@ module QueryDiskInfo
   end
 
   def self.get_current_system_devices
-    cmd = '/usr/lib/puavo-ltsp-install/puavo-get-boot-disks'
+    cmd = '/usr/lib/puavo-core/puavo-get-boot-disks'
     stdout_str, stderr_str, status = Open3.capture3(cmd)
     raise stderr_str unless status.success?
     return stdout_str.split("\n").map { |s| s.delete_prefix('/dev/') }

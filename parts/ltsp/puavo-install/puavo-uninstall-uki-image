@@ -37,8 +37,7 @@ fi
 image_name_no_suffix=${image_name%.img}
 
 # Identify boot disks and remove UKI files from their EFI partitions
-PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
-boot_disks=$("$PUAVO_INSTALL_LIBDIR"/puavo-get-boot-disks "$install_mountpoint")
+boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$install_mountpoint")
 
 status=0
 

@@ -114,7 +114,7 @@ install_uki_to_efi() {
 }
 
 # Identify boot disks and install UKI files to their EFI partitions
-boot_disks=$(/usr/lib/puavo-ltsp-install/puavo-get-boot-disks "$images_dir")
+boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
 
 if [ -z "$boot_disks" ]; then
   echo "error: failed to find boot disks" >&2
