@@ -458,25 +458,6 @@ darkdm_reboot_to_firmware_setup()
 
 darkdm_install()
 {
-  local key
-
-  echo 'Setting up Secure Boot...'
-  if ! /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot; then
-    echo
-    echo 'SecureBoot is not enabled on this host.'
-    echo 'Press SPACE to reboot into firmware setup' \
-           'or any other key to go back.'
-
-    key=''
-    IFS= read -n 1 -rs key || true
-    if [ "$key" != ' ' ]; then
-      echo 'Cancelling installation.'
-      return 1
-    fi
-
-    darkdm_reboot_to_firmware_setup
-  fi
-
   if ! /usr/sbin/puavo-install "$@"; then
     # give some time for users to read the error message, if there is any
     echo

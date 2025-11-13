@@ -502,6 +502,9 @@ install_localbootdevice() {
         || update_configuration_retstatus=1
   fi
 
+  echo 'Setting up Secure Boot...'
+  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot
+
   if [ "$update_configuration_retstatus" -ne 0 ]; then
     return $update_configuration_retstatus
   fi
