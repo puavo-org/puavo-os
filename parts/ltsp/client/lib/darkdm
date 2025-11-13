@@ -460,8 +460,8 @@ darkdm_install()
 {
   local key
 
-  echo 'Checking SecureBoot state...'
-  if ! /usr/lib/puavo-ltsp-install/puavo-check-secure-boot; then
+  echo 'Setting up Secure Boot...'
+  if ! /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot; then
     echo
     echo 'SecureBoot is not enabled on this host.'
     echo 'Press SPACE to reboot into firmware setup' \
