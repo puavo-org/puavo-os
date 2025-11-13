@@ -109,7 +109,7 @@ impl LuksTpmTokenManager {
         Self { device, device_path: device_path.into() }
     }
 
-    /// Construct a manager by initializing and loading a LUKS2 device from device path (e.g. `/dev/nvme0n1p3`).
+    /// Construct a manager by initializing and loading a LUKS2 device from a device path (e.g. `/dev/nvme0n1p3`).
     ///
     /// Parameters:
     /// * `device_path` - Path to the LUKS2 device (e.g. `/dev/nvme0n1p3`).
@@ -128,9 +128,9 @@ impl LuksTpmTokenManager {
     }
 
     /// Construct a manager by attaching to an already opened LUKS2 device by its name.
-    /// 
+    ///
     /// Parameters:
-    /// * `name` - Name of the LUKS device mapping (/dev/mapper/<name>).
+    /// * `name` - Name of the LUKS device mapping (`/dev/mapper/<name>`).
     ///
     /// Errors:
     /// Returns `PuavoError` if initialization or loading fails.

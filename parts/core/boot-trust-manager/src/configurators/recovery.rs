@@ -59,7 +59,7 @@ impl RecoveryConfigurator {
     /// - `display`: Display instance to show progress and messages.
     ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::NoRecoveryKey` if the recovery key does not exist.
     /// - `PuavoError::IoError` if reading the recovery key fails.
     pub fn recover(
         &mut self,

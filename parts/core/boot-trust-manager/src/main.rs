@@ -1,6 +1,6 @@
-/// Boot Trust Manager entry point.
+/// Main entry point for the Boot Trust Manager application.
 ///
-/// Manages boot trust state by maintaining a shared LUKS recovery key stored
+/// This application manages boot trust state by maintaining a shared LUKS recovery key stored
 /// inside a "boot vault" (a LUKS2 filesystem image on the EFI partition).
 /// The vault and the primary encrypted system partition share the
 /// same unlock policy (TPM-bound tokens and recovery key).
@@ -9,7 +9,7 @@
 /// configuration files. Each encapsulates a specific maintenance or recovery
 /// action such as TPM enrollment or displaying the recovery key.
 ///
-/// Initializes logging, parses configuration, and delegates management
+/// This module initializes logging, parses configuration, and delegates management
 /// to the `BootTrustManager`.
 use std::env;
 

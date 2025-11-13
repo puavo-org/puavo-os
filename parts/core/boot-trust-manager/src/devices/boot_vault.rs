@@ -356,7 +356,6 @@ impl BootVaultResources {
     /// - `value`: The value to write.
     ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
     /// - `PuavoError::IoError` if writing fails.
     pub fn write_property(
         &self,
@@ -377,7 +376,6 @@ impl BootVaultResources {
     /// - `key`: The name of the property to read.
     ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
     /// - `PuavoError::IoError` if reading fails.
     pub fn read_property(
         &self,
@@ -405,7 +403,6 @@ impl BootVaultResources {
     /// - `required`: Whether a PIN code is required.
     ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
     /// - `PuavoError::IoError` if writing fails.
     pub fn set_pin_required(&self, required: bool) -> Result<(), PuavoError> {
         let value = if required { "1" } else { "0" }.to_string();
@@ -415,7 +412,6 @@ impl BootVaultResources {
     /// Check whether a PIN code is required to unlock.
     ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
     /// - `PuavoError::IoError` if reading fails.
     /// - `PuavoError::InvalidData` if the read value is not valid.
     pub fn is_pin_required(&self) -> Result<bool, PuavoError> {
@@ -436,7 +432,6 @@ impl BootVaultResources {
     /// - `recovery_key`: The key material to write.
     ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
     /// - `PuavoError::IoError` if writing fails.
     pub fn write_recovery_key(
         &self,
@@ -448,7 +443,7 @@ impl BootVaultResources {
     /// Read the recovery key from the mounted vault.
     ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
+    /// - `PuavoError::NoRecoveryKey` if the recovery key does not exist.
     /// - `PuavoError::IoError` if reading fails.
     pub fn read_recovery_key(&self) -> Result<String, PuavoError> {
         self.read_property(VAULT_RECOVERY_KEY)?.ok_or(PuavoError::NoRecoveryKey)
@@ -457,10 +452,9 @@ impl BootVaultResources {
     /// Set the version of the boot vault image format.
     ///
     /// Parameters:
-    /// - `version`: The version string to write.
-    ///     
+    /// - `version`: The version number to write.
+    ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
     /// - `PuavoError::IoError` if writing fails.
     pub fn set_version(&self, version: usize) -> Result<(), PuavoError> {
         self.write_property("version", version.to_string())
@@ -469,7 +463,6 @@ impl BootVaultResources {
     /// Get the version of the boot vault image format.
     ///
     /// Errors:
-    /// - `PuavoError::VaultNotMounted` if the vault is not mounted.
     /// - `PuavoError::IoError` if reading fails.
     /// - `PuavoError::ParseIntError` if the version string is not a valid integer.
     pub fn get_version(&self) -> Result<usize, PuavoError> {
