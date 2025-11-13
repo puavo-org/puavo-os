@@ -3,6 +3,7 @@ class image::exam {
   include ::dracut
   include ::exammode::standalone
   include ::kernels
+  include ::locales
   include ::packages
   include ::plymouth
 
