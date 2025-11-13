@@ -4,6 +4,12 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum PuavoError {
+    #[error("Boot vault is already open")]
+    BootVaultOpen,
+
+    #[error("Boot vault is not mounted at {0}")]
+    BootVaultNotMounted(String),
+
     #[error("{0} not found")]
     NotFound(String),
 
@@ -24,6 +30,9 @@ pub enum PuavoError {
 
     #[error("Enrollment state error: {0}")]
     EnrollmentStateError(serde_json::Error),
+
+    #[error("Partition setup error: {0}")]
+    PartitionSetupError(String),
 
     #[error("{0}")]
     ShellError(String),

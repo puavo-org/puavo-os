@@ -49,6 +49,22 @@ impl EFIBootDevice {
         Ok(EFIBootDevice(boot_device))
     }
 
+    /// Create an instance from a specific device node path.
+    ///
+    /// Parameters:
+    /// - `device_node_path`: Path to the device node (e.g., "/dev/sda").
+    ///
+    /// Errors:
+    /// - `PuavoError::IoError` if the device cannot be found or accessed.
+    pub fn from_device_node_path(
+        device_node_path: String,
+    ) -> Result<EFIBootDevice, PuavoError> {
+        debug!("Creating EFI boot device from path: {}", device_node_path);
+        let boot_device = device_from_device_node_path(device_node_path)
+            .map_err(|error| PuavoError::IoError(error))?;
+        Ok(EFIBootDevice(boot_device))
+    }
+
     /// Determine the full path to the EFI loader binary in the mounted EFI partition.
     ///
     /// Reads the `LoaderImageIdentifier-*` EFI variable to find the

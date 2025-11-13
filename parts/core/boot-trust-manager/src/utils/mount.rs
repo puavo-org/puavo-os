@@ -33,7 +33,7 @@ pub fn unmount(mountpoint: &PathBuf) -> io::Result<()> {
 
 /// Guard object that unmounts the given mountpoint when dropped.
 pub struct MountGuard {
-    mountpoint: PathBuf,
+    pub mountpoint: PathBuf,
 }
 
 impl MountGuard {

@@ -1,4 +1,4 @@
-use libcryptsetup_rs::consts::flags::CryptActivate;
+use libcryptsetup_rs::consts::flags::{CryptActivate, CryptDeactivate};
 use libcryptsetup_rs::consts::vals::EncryptionFormat;
 use libcryptsetup_rs::{CryptDevice, CryptInit, TokenInput};
 use log::debug;
@@ -123,6 +123,29 @@ impl LuksTpmTokenManager {
         device
             .context_handle()
             .load::<()>(Some(EncryptionFormat::Luks2), None)?;
+        let manager = Self::new(device, device_path);
+        Ok(manager)
+    }
+
+    /// Construct a manager by attaching to an already opened LUKS2 device by its name.
+    /// 
+    /// Parameters:
+    /// * `name` - Name of the LUKS device mapping (/dev/mapper/<name>).
+    ///
+    /// Errors:
+    /// Returns `PuavoError` if initialization or loading fails.
+    pub fn from_name(name: &str) -> Result<Self, PuavoError> {
+        debug!("Initializing LUKS device from name {}", name);
+        let mut device = CryptInit::init_by_name_and_header(name, None)?;
+        debug!("Loading LUKS device from name {}", name);
+        device
+            .context_handle()
+            .load::<()>(Some(EncryptionFormat::Luks2), None)?;
+        let device_path = device
+            .status_handle()
+            .get_device_path()?
+            .to_string_lossy()
+            .to_string();
         let manager = Self::new(device, device_path);
         Ok(manager)
     }
@@ -326,6 +349,21 @@ impl LuksTpmTokenManager {
             Some(&passphrase_bytes),
         )?;
 
+        Ok(())
+    }
+
+    /// Unmounts the device managed by this token manager.
+    ///
+    /// Parameters:
+    /// - `name` - The name of the LUKS device mapping to unmount.
+    ///
+    /// Errors:
+    /// Returns `PuavoError` if unmounting fails.
+    pub fn unmount(&mut self, name: &str) -> Result<(), PuavoError> {
+        debug!("Closing LUKS device: {}", name);
+        self.device
+            .activate_handle()
+            .deactivate(name, CryptDeactivate::empty())?;
         Ok(())
     }
 }
