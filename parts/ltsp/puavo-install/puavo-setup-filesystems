@@ -504,9 +504,8 @@ module DiskHandler
       exit(1)
     end
 
-    secure_boot_status = IO.popen(['mokutil', '--sb-state']).read
-    unless secure_boot_status.include?('SecureBoot enabled')
-      warn 'Secure Boot must be enabled for TPM unlocking'
+    unless system('grep', '-q', '2', '/sys/class/tpm/tpm0/tpm_version_major')
+      warn 'Automatic TPM unlocking is not possible, because TPM 2.x is not available'
       exit(1)
     end
   end
