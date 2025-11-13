@@ -73,6 +73,14 @@ pub struct BootVault {
 }
 
 impl BootVault {
+    /// Check if a boot vault is mounted at the specified path.
+    ///
+    /// Parameters:
+    /// - `mount_path`: Path where the boot vault should be mounted.
+    pub fn is_mounted<P: AsRef<Path>>(mount_path: P) -> io::Result<bool> {
+        mount_path.as_ref().join(VAULT_RECOVERY_KEY).try_exists()
+    }
+
     /// Return the method used to unlock the vault after a successful mount, if any.
     pub fn unlock_method(&self) -> Option<BootVaultUnlockMethod> {
         self.unlock_method
@@ -295,11 +303,7 @@ impl BootVault {
 
         // Close the LUKS device now that it is unmounted
         self.luks_device.take().map(|mut luks_device| {
-            debug!("Closing LUKS device: {}", VAULT_LUKS_DEVICE_NAME);
-            let _ = luks_device
-                .device_mut()
-                .activate_handle()
-                .deactivate(VAULT_LUKS_DEVICE_NAME, CryptDeactivate::empty());
+            let _ = luks_device.unmount(VAULT_LUKS_DEVICE_NAME);
         });
 
         // Detach the loop device from which the LUKS device was opened

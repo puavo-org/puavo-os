@@ -5,19 +5,21 @@ use std::{
 };
 
 use log::{debug, error, info, warn};
-use tempfile::Builder;
 
 use crate::{
-    configurators::{Configurator, configurators},
+    configurators::{configurators, Configurator},
     devices::{
         block_device::{BlockDevice, GenericBlockDevice},
-        boot_vault::{BootVault, VAULT_PATH},
+        boot_vault::{
+            BootVault, VAULT_LUKS_DEVICE_NAME, VAULT_MOUNTPOINT, VAULT_PATH,
+        },
         efi_boot_device::EFIBootDevice,
     },
-    display::{UserDisplay, choose_display},
+    display::{choose_display, UserDisplay},
     error::PuavoError,
     utils::{
-        luks_tpm_token_manager::LuksTpmTokenManager, mount::MountGuard,
+        luks_tpm_token_manager::LuksTpmTokenManager,
+        mount::{unmount, MountGuard},
         udev::filesystem_type,
     },
 };
@@ -47,25 +49,25 @@ impl BootTrustManager {
     /// configurators sequentially.
     ///
     /// If no configurators are active, this returns immediately.
-    pub fn manage(&self) {
+    pub fn manage(&self) -> Result<(), PuavoError> {
         // Process all activated configurators sequentially.
         // If no configurator is available, exit immediately.
         let configurators = match configurators() {
             Ok(configurators) => configurators,
             Err(error) => {
                 error!("Failed to load configurators: {}", error);
-                return;
+                return Err(error);
             }
         };
 
         if configurators.is_empty() {
             info!("No configurators found, exiting...");
-            return;
+            return Ok(());
         }
 
         let display = choose_display(self.configuration.force_console);
 
-        let _ = Self::configure(&display, configurators).inspect_err(|error| {
+        Self::configure(&display, configurators).inspect_err(|error| {
             if matches!(error,
                         PuavoError::NoEFIBootDisk(_)
                           | PuavoError::NoEFIPartition
@@ -77,39 +79,27 @@ impl BootTrustManager {
             error!("Configuration failed: {}", error);
             let _ = display.show_message(&format!("Configuration failed: {}",
                                                   error));
-        });
+        })
     }
 
-    /// Mount the boot vault and delegate control to the given configurators.
+    /// Run configurators with the specified resources.
     ///
     /// Parameters:
     /// - `display`: display instance to show progress and messages.
     /// - `efi_partition_mount_path`: mount point of the EFI system partition.
-    /// - `primary_partition_device_path`: path to the primary LUKS device (e.g. `/dev/nvme0n1p3`).
+    /// - `boot_vault`: mounted boot vault instance.
+    /// - `primary_partition_manager`: LUKS TPM token manager for the primary partition.
     /// - `configurators`: configurator instances to run.
     ///
     /// Errors:
-    /// Returns `PuavoError` if the boot vault cannot be mounted, the LUKS TPM
-    /// managers cannot be created, or a configurator fails.
-    fn unlock_boot_vault_and_configure(
+    /// Returns `PuavoError` if configurator execution fails.
+    fn run_configurators_with_vault(
         display: &Box<dyn UserDisplay>,
         efi_partition_mount_path: &Path,
-        primary_partition_device_path: String,
+        mut boot_vault: BootVault,
+        mut primary_partition_manager: LuksTpmTokenManager,
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
-        let boot_vault_image_path = efi_partition_mount_path.join(VAULT_PATH);
-        info!("Boot vault image path: {:?}", boot_vault_image_path);
-
-        let mut boot_vault = BootVault::default();
-        info!("Mounting boot vault");
-        boot_vault.mount(&boot_vault_image_path)?;
-        info!("Boot vault mounted");
-
-        let mut primary_partition_manager =
-            LuksTpmTokenManager::from_device_path(
-                primary_partition_device_path,
-            )?;
-
         info!("Starting configuration...");
         for mut configurator in configurators {
             debug!("Processing configurator '{}'", configurator.name());
@@ -236,6 +226,55 @@ impl BootTrustManager {
         display: &Box<dyn UserDisplay>,
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
+        let (efi_mount, primary_device_path) =
+            Self::setup(None).map_err(|error| {
+                PuavoError::PartitionSetupError(error.to_string())
+            })?;
+
+        // Setup boot vault using the EFI partition mount
+        let boot_vault_image_path = efi_mount.mountpoint.join(VAULT_PATH);
+        info!("Boot vault image path: {:?}", boot_vault_image_path);
+
+        let mut boot_vault = BootVault::default();
+        info!("Mounting boot vault");
+        boot_vault.mount(&boot_vault_image_path)?;
+        info!("Boot vault mounted");
+
+        let primary_partition_manager =
+            LuksTpmTokenManager::from_device_path(primary_device_path)?;
+
+        // Use the resources for configuration
+        Self::run_configurators_with_vault(
+            display,
+            &efi_mount.mountpoint,
+            boot_vault,
+            primary_partition_manager,
+            configurators,
+        )
+
+        // EFI partition is automatically unmounted when resources are dropped
+    }
+
+    /// Shared setup logic for both manage and open operations.
+    ///
+    /// This method handles:
+    /// 1. Loading kernel modules and settling udev
+    /// 2. Finding the EFI boot device and partitions
+    /// 3. Mounting the EFI partition
+    ///
+    /// Parameters:
+    /// - `device`: Optional device node path containing the EFI partition with boot vault and primary encrypted partition
+    ///
+    /// Returns:
+    /// A tuple containing:
+    /// - `MountGuard`: Guard for the mounted EFI partition that will unmount on drop.
+    /// - `String`: Path to the primary LUKS partition device.
+    ///
+    /// Errors:
+    /// Returns `PuavoError` if any setup step fails.
+    fn setup(
+        device: Option<String>,
+    ) -> Result<(MountGuard, String), PuavoError> {
         // Ensure the loop kernel module is loaded
         let _ = Command::new("modprobe").arg("loop").status();
         // TODO(udev-settle): We currently wait for udev events to settle to
@@ -246,7 +285,10 @@ impl BootTrustManager {
         let _ =
             Command::new("udevadm").arg("settle").arg("--timeout=30").status();
 
-        let boot_device = EFIBootDevice::current()?;
+        let boot_device = device
+            .map(EFIBootDevice::from_device_node_path)
+            .unwrap_or_else(EFIBootDevice::current)?;
+
         debug!("Located EFI boot device");
 
         let partitions = boot_device.child_block_devices()?;
@@ -272,20 +314,11 @@ impl BootTrustManager {
             primary_partition_device_path
         );
 
-        // Generate a temporary mountpoint for the EFI partition
-        let mut efi_partition_mount_directory =
-            Builder::new().prefix("puavo-efi-").tempdir_in("/tmp")?;
-        debug!(
-            "Created temporary mount directory {:?}",
-            efi_partition_mount_directory.path()
-        );
-
-        // Disable cleanup as recursive delete in the worst case it could destroy the EFI partition
-        efi_partition_mount_directory.disable_cleanup(true);
+        let efi_partition_mount_path = PathBuf::from("/boot/efi");
+        fs::create_dir_all(efi_partition_mount_path.as_path())?;
 
         let efi_partition_device =
             GenericBlockDevice::new(efi_partition.clone());
-        let efi_partition_mount_path = efi_partition_mount_directory.path();
         info!(
             "Mounting EFI partition {:?} to {:?}",
             efi_partition.devpath(),
@@ -294,16 +327,92 @@ impl BootTrustManager {
         efi_partition_device
             .mount(efi_partition_mount_path.to_str().unwrap(), "vfat")?;
 
-        // Unmount the EFI partition automatically at the end of scope
-        let _efi_mount_guard = MountGuard::new(efi_partition_mount_path);
+        // Create mount guard that will unmount the EFI partition automatically at the end of scope
+        let efi_mount_guard = MountGuard::new(efi_partition_mount_path.clone());
+        Ok((efi_mount_guard, primary_partition_device_path))
+    }
 
-        Self::unlock_boot_vault_and_configure(
-            display,
-            efi_partition_mount_path,
-            primary_partition_device_path,
-            configurators,
-        )
+    /// Attempts to open the boot vault and leave it available for external access
+    ///
+    /// Parameters:
+    /// - `device`: Optional device node path containing the EFI partition with boot vault and primary encrypted partition
+    ///
+    /// Returns:
+    /// The mount path of the opened boot vault on success.
+    pub fn try_open(
+        &self,
+        device: Option<String>,
+    ) -> Result<String, PuavoError> {
+        if BootVault::is_mounted(VAULT_MOUNTPOINT).unwrap_or(false) {
+            return Err(PuavoError::BootVaultOpen);
+        }
 
-        // EFI partition is automatically unmounted once dropped
+        let (efi_mount, _) = Self::setup(device).map_err(|error| {
+            PuavoError::PartitionSetupError(error.to_string())
+        })?;
+
+        // Setup boot vault using the EFI partition mount
+        let boot_vault_image_path = efi_mount.mountpoint.join(VAULT_PATH);
+        info!("Boot vault image path: {:?}", boot_vault_image_path);
+
+        let mut boot_vault = BootVault::default();
+        info!("Mounting boot vault");
+        boot_vault.mount(&boot_vault_image_path)?;
+        info!("Boot vault mounted at {}", VAULT_MOUNTPOINT);
+
+        // Prevent automatic cleanup by forgetting the resources
+        std::mem::forget(efi_mount);
+        std::mem::forget(boot_vault);
+
+        Ok(VAULT_MOUNTPOINT.into())
+    }
+
+    /// Open the boot vault and print its mount path
+    pub fn open(&self, device: Option<String>) -> Result<(), PuavoError> {
+        self.try_open(device)
+            .map(|mount_path| {
+                println!("{}", mount_path);
+            })
+            .inspect_err(|error| {
+                error!("Failed to open boot vault: {}", error);
+                println!("Failed to open boot vault: {}", error);
+            })
+    }
+
+    /// Attempts to close and clean up the boot vault that was previously opened
+    pub fn try_close(
+        &self,
+        vault_mount_path: String,
+    ) -> Result<(), PuavoError> {
+        info!("Closing boot vault at mount path: {}", vault_mount_path);
+
+        if !BootVault::is_mounted(&vault_mount_path).unwrap_or(false) {
+            return Err(PuavoError::BootVaultNotMounted(vault_mount_path));
+        }
+
+        // Unmount the boot vault
+        unmount(&PathBuf::from(&vault_mount_path))?;
+
+        // Unmount the LUKS device
+        LuksTpmTokenManager::from_name(VAULT_LUKS_DEVICE_NAME)?
+            .unmount(VAULT_LUKS_DEVICE_NAME)?;
+
+        // Automatically detach all unused loop devices
+        let _ = Command::new("losetup").arg("--detach-all").status();
+
+        // Unmount the EFI partition
+        let efi_mount_path = PathBuf::from("/boot/efi");
+        unmount(&efi_mount_path)?;
+
+        info!("Boot vault closed successfully");
+        Ok(())
+    }
+
+    /// Close the boot vault and display errors if any occur
+    pub fn close(&self, vault_mount_path: String) -> Result<(), PuavoError> {
+        self.try_close(vault_mount_path).inspect_err(|error| {
+            error!("Failed to close boot vault: {}", error);
+            println!("Failed to close boot vault: {}", error);
+        })
     }
 }
