@@ -2,6 +2,8 @@
 
 set -eu
 
+homepage=$(puavo-conf puavo.www.homepage | awk -F '|' '{ print $1 }')
+
 locale=$(puavo-conf puavo.l10n.locale)
 if [ -z "$locale" ]; then
   locale='en_GB.UTF-8'
@@ -9,11 +11,16 @@ fi
 
 session_path='/var/lib/puavo-exammode/session.json'
 
-jq --null-input --arg locale "$locale" '
-    .locale = $locale
+jq --null-input --arg homepage "$homepage" --arg locale "$locale" '
+    .locale  = $locale
   | .manager = false
-  | .name = "Exam mode"
-  | .params = {}
-  | .type = "free-exammode-session"
+  | .name    = "Exam mode"
+  | if ($homepage != "") then
+      .params.url = $homepage
+      | .type     = "single-window-webpage"
+    else
+      .params = {}
+      | .type = "free-exammode-session"
+    end
 ' > "${session_path}.tmp"
 mv "${session_path}.tmp" "$session_path"
