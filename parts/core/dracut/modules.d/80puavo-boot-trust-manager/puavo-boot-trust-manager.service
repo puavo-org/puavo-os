@@ -1,4 +1,6 @@
 [Unit]
+ConditionSecurity=uefi-secureboot
+ConditionSecurity=tpm2
 Description=Puavo Boot Trust Manager
 DefaultDependencies=no
 Wants=cryptsetup-pre.target
