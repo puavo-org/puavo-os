@@ -15,10 +15,10 @@ show-weekdate=true
 document-font-name='Sans 10'
 enable-hot-corners=false
 font-name='Cantarell 10'
-gtk-theme='Arc'
+gtk-theme='Adwaita'
 icon-theme='Tela'
 monospace-font-name='Monospace 10'
-cursor-theme='Obsidian'
+cursor-theme='bloom'
 
 [org/gnome/desktop/lockdown]
 disable-lock-screen=false
@@ -196,7 +196,7 @@ show-icon='When printing'
 tray-pos='center'
 
 [org/gnome/shell/extensions/user-theme]
-name='Yaru-blue'
+name='Adwaita'
 
 [org/gnome/shell/extensions/quick-settings-tweaks]
 input-always-show=true
