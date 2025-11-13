@@ -32,7 +32,7 @@ pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
 /// Trait implemented by all runtime configurators executed by the
 /// boot trust manager.
 ///
-/// A configurator is responsible for a self‑contained maintenance or
+/// A configurator is responsible for a self-contained maintenance or
 /// provisioning action (e.g. enrolling TPM policies).
 /// Configurators are activated when their configuration file is present
 /// in the filesystem. The configurators can be dynamically activated by

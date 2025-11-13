@@ -13,9 +13,6 @@ impl PlymouthDisplay {
     /// Parameters:
     /// - `display_stop_duration`: How long to sleep after displaying a message,
     ///   to ensure the user has time to read it.
-    ///
-    /// Errors:
-    /// This function never errors.
     pub fn new(display_stop_duration: Duration) -> Result<Self, PuavoError> {
         Ok(Self { display_stop_duration })
     }
@@ -27,7 +24,7 @@ impl PlymouthDisplay {
     /// - `Ok(false)` if Plymouth is not running.
     ///
     /// Errors:
-    /// Returns an `PuavoError::IoError` if invoking the command fails.
+    /// Returns `PuavoError::IoError` if invoking the command fails.
     pub fn ping() -> Result<bool, PuavoError> {
         let status = Command::new("plymouth").arg("--ping").status()?;
         Ok(status.success())
@@ -42,7 +39,7 @@ impl UserDisplay for PlymouthDisplay {
     ///
     /// Errors:
     /// Returns `PuavoError::PlymouthError` if the command exits non-zero,
-    /// or an `PuavoError::IoError` if invoking the command fails.
+    /// or `PuavoError::IoError` if invoking the command fails.
     fn ask_password(&self, prompt: &str) -> Result<String, PuavoError> {
         let output = Command::new("plymouth")
             .arg("ask-for-password")
@@ -68,7 +65,7 @@ impl UserDisplay for PlymouthDisplay {
     ///
     /// Errors:
     /// Returns `PuavoError::PlymouthError` if the command exits non-zero,
-    /// or an `PuavoError::IoError` if invoking the command fails.
+    /// or `PuavoError::IoError` if invoking the command fails.
     fn show_message(&self, text: &str) -> Result<(), PuavoError> {
         let status = Command::new("plymouth")
             .arg("display-message")
