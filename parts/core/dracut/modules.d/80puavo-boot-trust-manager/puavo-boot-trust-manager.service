@@ -7,7 +7,7 @@ Before=cryptsetup-pre.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/puavo-boot-trust-manager
+ExecStart=/usr/sbin/puavo-boot-trust-manager manage
 
 [Install]
 WantedBy=initrd.target
