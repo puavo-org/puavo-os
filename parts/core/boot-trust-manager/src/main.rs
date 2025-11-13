@@ -13,7 +13,7 @@
 /// to the `BootTrustManager`.
 use std::env;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 use crate::boot_trust_manager::BootTrustManager;
 
@@ -34,9 +34,29 @@ struct ApplicationConfiguration {
     /// Do not reboot after running a configurator
     #[arg(long = "no-reboot")]
     no_reboot: bool,
+
+    #[command(subcommand)]
+    command: Commands,
 }
 
-fn main() {
+#[derive(Subcommand, Debug, Clone)]
+enum Commands {
+    /// Closes the boot vault
+    Close {
+        /// Path to the boot vault mountpoint
+        mountpoint: String,
+    },
+    /// Run configurators and automatically unmount everything afterwards
+    Manage,
+    /// Unlock the boot vault and leave it open for external access
+    Open {
+        /// Device node path containing the EFI partition with boot vault and primary encrypted partition
+        #[arg(long = "device")]
+        device: Option<String>,
+    },
+}
+
+fn main() -> Result<(), i32> {
     let _ = env_logger::Builder::from_env(
         env_logger::Env::default().default_filter_or("debug"),
     )
@@ -48,6 +68,13 @@ fn main() {
         env::var("BOOT_TRUST_MANAGER_FORCE_CONSOLE").is_ok();
     configuration.no_reboot = env::var("BOOT_TRUST_MANAGER_NO_REBOOT").is_ok();
 
+    let command = configuration.command.clone();
     let manager = BootTrustManager::new(configuration);
-    manager.manage();
+
+    match command {
+        Commands::Close { mountpoint } => manager.close(mountpoint),
+        Commands::Manage => manager.manage(),
+        Commands::Open { device } => manager.open(device),
+    }
+    .map_err(|_| 1)
 }
