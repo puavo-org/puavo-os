@@ -1,9 +1,9 @@
 class exammode::standalone {
   include ::exammode
+  include ::puavo_conf
 
-  file {
-    "${::exammode::puavo_exammode_dir}/session.json":
-      require => User['puavo-examuser'],
-      source => 'puppet:///modules/exammode/standalone_session.json';
+  ::puavo_conf::script {
+    'setup_examhost_session':
+      source => 'puppet:///modules/exammode/setup_examhost_session';
   }
 }
