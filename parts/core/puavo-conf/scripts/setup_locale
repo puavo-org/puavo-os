@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# must be run before setup_gdm
+
 set -eu
 
 puavo_locale=$(puavo-conf puavo.l10n.locale)
@@ -15,21 +17,10 @@ puavo_locale=$(puavo-conf puavo.l10n.locale)
       echo "DCONF_PROFILE=${puavo_dconf_profile}"
     fi
   fi
+} > /etc/locale.conf.tmp
 
-  # XXX Remove this once we drop support for our old event/xrandr-based
-  # XXX display configuration system.  We do not want gnome-shell/mutter
-  # XXX to mess up xrandr-settings in login screen, when this old system
-  # XXX is used.
-  if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' \
-       -a '(' -n "$(puavo-conf puavo.xrandr.args | jq -r '.[]')" \
-              -o -n "$(puavo-conf puavo.xrandr.apply_presets)" ')' \
-       -a "$(jq '.monitors_xml != null' /etc/puavo/device.json)" != 'true' ]; then
-    echo MUTTER_ALLOW_CONFIGURATION=temporary
-  fi
-} > /etc/default/locale.tmp
-
-if [ -s /etc/default/locale.tmp ]; then
-  mv /etc/default/locale.tmp /etc/default/locale
+if [ -s /etc/locale.conf.tmp ]; then
+  mv /etc/locale.conf.tmp /etc/locale.conf
 else
-  rm -f /etc/default/locale.tmp
+  rm -f /etc/locale.conf.tmp
 fi

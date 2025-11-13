@@ -2,6 +2,8 @@
 
 set -eu
 
+# must be run after setup_locale
+
 status=0
 
 if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' ]; then
@@ -135,5 +137,17 @@ case "$monitors_xml" in
     printf "%s" "$monitors_xml" > "$monitors_xml_path"
     ;;
 esac
+
+# We do not want gnome-shell/mutter to mess up xrandr-settings in the
+# login screen when xrandr-settings are used.
+# XXX using /etc/locale.conf for this is dubious though
+# XXX because of this, this must be run after setup_locale
+if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' ] \
+     && { [ -n "$(puavo-conf puavo.xrandr.args | jq -r '.[]')" ] \
+            || [ -n "$(puavo-conf puavo.xrandr.apply_presets)" ]; } \
+     && [ "$(jq '.monitors_xml != null' /etc/puavo/device.json)" != 'true' ] \
+     && ! grep -qx MUTTER_ALLOW_CONFIGURATION=temporary /etc/locale.conf; then
+  echo MUTTER_ALLOW_CONFIGURATION=temporary >> /etc/locale.conf
+fi
 
 exit $status
