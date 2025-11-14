@@ -1,0 +1,47 @@
+diff -ruN gnome-shell/js/ui/main.js gnome-shell/js/ui/main.js
+--- gnome-shell/js/ui/main.js	2025-08-03 13:53:34.000000000 +0300
++++ gnome-shell/js/ui/main.js	2025-11-14 13:41:59.103944362 +0200
+@@ -370,10 +370,6 @@
+             }
+         }
+ 
+-        if (sessionMode.currentMode !== 'gdm' &&
+-            sessionMode.currentMode !== 'initial-setup')
+-            _handleLockScreenWarning();
+-
+         LoginManager.registerSessionWithGDM();
+ 
+         if (perfModule) {
+@@ -391,32 +387,6 @@
+     }
+ }
+ 
+-async function _handleLockScreenWarning() {
+-    const path = `${global.userdatadir}/lock-warning-shown`;
+-    const file = Gio.File.new_for_path(path);
+-
+-    const hasLockScreen = screenShield !== null;
+-    if (hasLockScreen) {
+-        try {
+-            await file.delete_async(0, null);
+-        } catch (e) {
+-            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.NOT_FOUND))
+-                logError(e);
+-        }
+-    } else {
+-        try {
+-            if (!await file.touch_async())
+-                return;
+-        } catch (e) {
+-            logError(e);
+-        }
+-
+-        notify(
+-            _('Screen Lock disabled'),
+-            _('Screen Locking requires the GNOME display manager'));
+-    }
+-}
+-
+ function _getStylesheet(name) {
+     let stylesheet;
+ 
