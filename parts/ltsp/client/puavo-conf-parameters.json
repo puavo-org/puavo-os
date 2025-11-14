@@ -133,16 +133,6 @@
     "description": "If true, do a double login, first to an external authentication service through Puavo, then normal login",
     "typehint": "string"
   },
-  "puavo.networking.bootserver.interfaces.schools": {
-    "default": "",
-    "description": "A space-separated list of network_interface:school pairs, where both sides may contain a comma-separated list",
-    "typehint": "string"
-  },
-  "puavo.networking.dhcp.interfaces": {
-    "default": "",
-    "description": "List of network interfaces to use DHCP on (on systems without NetworkManager or manual configuration)",
-    "typehint": "string"
-  },
   "puavo.printing.airprint.enabled": {
     "default": "true",
     "description": "Lookup Airprint printers with cups-browsed",
@@ -281,11 +271,6 @@
   "puavo.service.nbd-server.enabled": {
     "default": "false",
     "description": "Enable/disable nbd-server service",
-    "typehint": "bool"
-  },
-  "puavo.service.NetworkManager.enabled": {
-    "default": "false",
-    "description": "Enable/disable NetworkManager service",
     "typehint": "bool"
   },
   "puavo.service.nfs-client.enabled": {
@@ -443,26 +428,11 @@
     "description": "A whitespace-separated list of ethernet features such as eth0:feature:setting for ethtool (eth0 can be * which matches all ethernet interfaces)",
     "typehint": "string"
   },
-  "puavo.wired.nm.shared.enabled": {
-    "default": "false",
-    "description": "Enable/disable network sharing on ethernet port",
-    "typehint": "bool"
-  },
   "puavo.wireless.broadcom.driver": {
     "choices": [ "", "b43", "b43legacy", "b44", "brcm80211", "wl" ],
     "default": "wl",
     "description": "Set preferred driver for wireless Broadcom chips",
     "typehint": "string"
-  },
-  "puavo.wireless.nm.no_autoconnect_networks": {
-    "default": "[]",
-    "description": "A JSON array of network names to which NetworkManager should not automatically connect to",
-    "typehint": "json"
-  },
-  "puavo.wireless.nm.gsm.automatic.enabled": {
-    "default": "true",
-    "description": "Enable/disable automatic GSM network connection",
-    "typehint": "bool"
   },
   "puavo.www.apiserver": {
     "default": "",

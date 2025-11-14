@@ -19,9 +19,6 @@ class bootserver_ddns {
   ::puavo_conf::definition {
     'puavo-admin-logging-dnsmasq.json':
       source => 'puppet:///modules/bootserver_ddns/puavo-admin-logging-dnsmasq.json';
-
-    'puavo-networking.json':
-      source => 'puppet:///modules/bootserver_ddns/puavo-networking.json';
   }
 
   ::puavo_conf::script {
@@ -46,5 +43,6 @@ class bootserver_ddns {
           or title == 'ipcalc'
           or title == 'isc-dhcp-server'
           or title == 'moreutils'
+          or title == 'puavo-core'
           or title == 'ruby-ipaddress' |>
 }
