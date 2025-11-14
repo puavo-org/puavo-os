@@ -89,6 +89,7 @@ end
 
 auto_gsm = puavoconf.get('puavo.wireless.nm.gsm.automatic.enabled') == 'true'
 shared_wired = puavoconf.get('puavo.wired.nm.shared.enabled') == 'true'
+puavo_hosttype = puavoconf.get('puavo.hosttype')
 
 puavoconf.close
 
@@ -97,7 +98,9 @@ require 'fileutils'
 require 'json'
 require 'uuidtools'
 
-Nm_config_directory = '/state/etc/NetworkManager/system-connections'
+Nm_config_directory = puavo_hosttype == 'exam' \
+                        ? '/etc/NetworkManager/system-connections' \
+                        : '/state/etc/NetworkManager/system-connections'
 Puavo_network_label = '# automatically generated from Puavo'
 
 def read_network_specs(config_path)

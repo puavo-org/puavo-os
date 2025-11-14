@@ -32,10 +32,11 @@ if mountpoint -q /.puavo || mountpoint -q /.puavoinstaller; then
 fi
 
 puavo_mount_partition_on_btrfs() {
-  local btrfs_label btrfs_subvol puavo_mntpoint
+  local btrfs_label btrfs_subvol extra_mount_args puavo_mntpoint
 
   btrfs_label=$1        # not checked or used here
   btrfs_subvol=$2
+  extra_mount_args=${3:-}
 
   puavo_mntpoint="/${btrfs_subvol}"
 
@@ -45,14 +46,16 @@ puavo_mount_partition_on_btrfs() {
   fi
 
   mkdir -p "$puavo_mntpoint"
-  mount -o "subvol=${btrfs_subvol}" "$rootdev" "$puavo_mntpoint"
+  mount -o "subvol=${btrfs_subvol}" $extra_mount_args "$rootdev" \
+           "$puavo_mntpoint"
 }
 
 puavo_mount_partition_on_lvm() {
-  local partition puavo_mntpoint puavo_partition
+  local extra_mount_args mount_opts partition puavo_mntpoint puavo_partition
 
   vgname=$1
   partition=$2
+  extra_mount_args=${3:-}
 
   puavo_partition="${vgname}-${partition}"
   puavo_mntpoint="/${partition}"
@@ -83,7 +86,8 @@ puavo_mount_partition_on_lvm() {
     fi
   fi
 
-  if mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"; then
+  if mount $mount_opts $extra_mount_args "/dev/mapper/${puavo_partition}" \
+           "$puavo_mntpoint"; then
     return 0
   fi
 
@@ -92,7 +96,8 @@ puavo_mount_partition_on_lvm() {
     fsck -vy "/dev/mapper/${puavo_partition}" || true
   fi
 
-  if mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"; then
+  if mount $mount_opts $extra_mount_args "/dev/mapper/${puavo_partition}" \
+           "$puavo_mntpoint"; then
     return 0
   fi
 
@@ -101,7 +106,8 @@ puavo_mount_partition_on_lvm() {
     fsck -fvy "/dev/mapper/${puavo_partition}" || true
   fi
 
-  mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
+  mount $mount_opts $extra_mount_args "/dev/mapper/${puavo_partition}" \
+        "$puavo_mntpoint"
 }
 
 puavo_mount_partition() {
@@ -151,17 +157,15 @@ esac
 case "$puavo_hosttype" in
   bootserver|laptop|preinstalled|wirelessaccesspoint)
     puavo_mount_partition puavo images || status=1
+    puavo_mount_partition puavo state  || status=1
     ;;
 esac
 
-# The "exam" hosttype is included in case we want to lookup some
-# configurations from "/state".  In that case it is unmounted
-# later at boot.
-case "$puavo_hosttype" in
-  bootserver|exam|laptop|preinstalled|wirelessaccesspoint)
-    puavo_mount_partition puavo state || status=1
-    ;;
-esac
+# With the "exam" hosttype we want to lookup some configurations from "/state"
+# but need only a read-only mount.  It is unmounted later at boot.
+if [ "$puavo_hosttype" = 'exam' ]; then
+  puavo_mount_partition puavo state --read-only || status=1
+fi
 
 case "$puavo_hosttype" in
   diskinstaller|exam|unregistered)
