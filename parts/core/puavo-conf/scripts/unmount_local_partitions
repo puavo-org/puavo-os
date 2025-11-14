@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eu
+
+read puavo_hosttype < /etc/puavo/hosttype
+
+if [ "$puavo_hosttype" != 'exam' ]; then
+  exit 0
+fi
+
+status=0
+
+if mountpoint -q /boot/efi; then
+  umount /boot/efi || status=1
+fi
+
+umount /state || status=1
+
+exit $status

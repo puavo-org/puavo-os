@@ -5,54 +5,27 @@ set -eu
 read puavo_hosttype < /etc/puavo/hosttype
 test "$puavo_hosttype" = 'exam' || exit 0
 
-efi_partition_mount=''
-
-cleanup() {
-  if [ -n "$efi_partition_mount" ]; then
-    umount "$efi_partition_mount"
-  fi
-}
-
-mount_efi() {
-  local boot_disk boot_disk_list efi_partition_dev
-
-  if ! boot_disk_list=$(/usr/lib/puavo-core/puavo-get-boot-disks); then
-    echo 'could not lookup boot disks' >&2
-    return 1
-  fi
-
-  for boot_disk in $boot_disk_list; do
-    efi_partition_dev=$(
-      lsblk --properties-by blkid -n -l -o PATH,PARTTYPE "$boot_disk" \
-        | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" {
-                 print $1; exit(0)
-               }')
-    test -n "efi_partition_dev" && break
-  done
-
-  if [ -z "$efi_partition_dev" ]; then
-    echo 'did not find EFI partition' >&2
-    return 1
-  fi
-
-  mkdir -p /boot/efi
-  if ! mount "$efi_partition_dev" /boot/efi; then
-    echo 'could not mount the EFI partition to /boot/efi' >&2
-    return 1
-  fi
-}
-
-trap cleanup 0 INT TERM
-
-# XXX this should not be a requirement and using /state should also be fine
-# XXX (should it be preferred instead?)
-if ! mount_efi; then
-  echo 'mounting the EFI partition failed' >&2
-  exit 1
+if [ -e /boot/efi/puavo-exam.json ]; then
+  jq -r '{ "conf": . }' /boot/efi/puavo-exam.json \
+    > /etc/puavo/device.json.tmp
+  mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+  exit 0
 fi
-efi_partition_mount='/boot/efi'
 
-{ cat /boot/efi/puavo-exam.json 2>/dev/null || echo '{}'; } \
-  | jq -r '{ "conf": . }' \
+if [ -e /state/etc/puavo/device.json ]; then
+  jq -r '
+    [
+      "puavo.desktop.keyboard.layout",
+      "puavo.desktop.keyboard.variant",
+      "puavo.l10n.locale",
+      "puavo.www.homepage"
+    ] as $keys
+    | { conf: (.conf | with_entries(select(.key | IN($keys[])))) }
+  ' /state/etc/puavo/device.json \
   > /etc/puavo/device.json.tmp
+  mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+  exit 0
+fi
+
+jq --null-input '{ conf: {} }' > /etc/puavo/device.json.tmp
 mv /etc/puavo/device.json.tmp /etc/puavo/device.json

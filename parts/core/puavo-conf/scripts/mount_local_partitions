@@ -140,21 +140,33 @@ if [ "$puavo_hosttype" = 'diskinstaller' ]; then
   puavo_mount_partition puavoinstaller installimages || status=1
 fi
 
-if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
-  puavo_mount_partition puavo home || status=1
-fi
+case "$puavo_hosttype" in
+  bootserver|laptop)
+    puavo_mount_partition puavo home || status=1
+    ;;
+esac
 
-# These are needed for system updates when on NBD.
+# In the preinstalled case "images" and "state" should be mounted for
+# system updates in case of a network boot.
 case "$puavo_hosttype" in
   bootserver|laptop|preinstalled|wirelessaccesspoint)
     puavo_mount_partition puavo images || status=1
-    puavo_mount_partition puavo state  || status=1
+    ;;
+esac
+
+# The "exam" hosttype is included in case we want to lookup some
+# configurations from "/state".  In that case it is unmounted
+# later at boot.
+case "$puavo_hosttype" in
+  bootserver|exam|laptop|preinstalled|wirelessaccesspoint)
+    puavo_mount_partition puavo state || status=1
     ;;
 esac
 
 case "$puavo_hosttype" in
-  diskinstaller|unregistered)
+  diskinstaller|exam|unregistered)
     # do not mount from /dev/mapper/puavo-tmp when installing
+    # (or on the exam hosttype)
     ;;
   *)
     if [ -b /dev/mapper/puavo-tmp ]; then

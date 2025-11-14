@@ -1,8 +1,11 @@
 add_entropy
 set_puavo_hosttype
+mount_efi_partition
+mount_local_partitions
 prepare_exam_host
 update_puavoconf_values
 manage_system_services
 setup_keyboard
 setup_locale
 setup_examhost_session
+unmount_local_partitions
