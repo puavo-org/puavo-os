@@ -6,6 +6,7 @@ class image::exam {
   include ::locales
   include ::packages
   include ::plymouth
+  include ::systemd
 
   Package <|
        tag   == 'tag_firmware_free'

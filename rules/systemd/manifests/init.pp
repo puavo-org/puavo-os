@@ -7,10 +7,13 @@ class systemd {
       require => Package['systemd'],
       source  => 'puppet:///modules/systemd/system.conf';
 
-    # disable "systemd --user" service due to issues with it
+    # Disable "systemd --user" service due to issues with it.
+    # Require the "dbus-x11" package because Gnome does not work without
+    # either it or "systemd --user".
     '/etc/systemd/system/user@.service':
-      ensure => link,
-      target => '/dev/null';
+      ensure  => link,
+      require => Package['dbus-x11'],
+      target  => '/dev/null';
 
     # set graphical target as the default in case set_systemd_default_target
     # is not run (the exam hosttype should not need it)
@@ -29,5 +32,8 @@ class systemd {
       force  => true;
   }
 
-  Package <| title == systemd |>
+  Package <|
+      title == dbus-x11
+   or title == systemd
+  |>
 }
