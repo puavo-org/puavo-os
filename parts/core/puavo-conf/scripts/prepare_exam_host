@@ -5,27 +5,36 @@ set -eu
 read puavo_hosttype < /etc/puavo/hosttype
 test "$puavo_hosttype" = 'exam' || exit 0
 
-if [ -e /boot/efi/puavo-exam.json ]; then
-  jq -r '{ "conf": . }' /boot/efi/puavo-exam.json \
-    > /etc/puavo/device.json.tmp
-  mv /etc/puavo/device.json.tmp /etc/puavo/device.json
-  exit 0
-fi
+status=0
 
-if [ -e /state/etc/puavo/device.json ]; then
-  jq -r '
-    [
-      "puavo.desktop.keyboard.layout",
-      "puavo.desktop.keyboard.variant",
-      "puavo.l10n.locale",
-      "puavo.www.homepage"
-    ] as $keys
-    | { conf: (.conf | with_entries(select(.key | IN($keys[])))) }
-  ' /state/etc/puavo/device.json \
-  > /etc/puavo/device.json.tmp
-  mv /etc/puavo/device.json.tmp /etc/puavo/device.json
-  exit 0
-fi
+{
+  if [ -e /boot/efi/puavo-exam.json ]; then
+    jq -r '{ "conf": . }' /boot/efi/puavo-exam.json
+  elif [ -e /state/etc/puavo/device.json ]; then
+    jq -r '
+      [
+        "puavo.desktop.keyboard.layout",
+        "puavo.desktop.keyboard.variant",
+        "puavo.l10n.locale",
+        "puavo.www.homepage"
+      ] as $keys
+      | { conf: (.conf | with_entries(select(.key | IN($keys[])))) }
+    ' /state/etc/puavo/device.json
+  else
+    jq --null-input '{ conf: {} }'
+  fi
+} > /etc/puavo/device.json || status=1
 
-jq --null-input '{ conf: {} }' > /etc/puavo/device.json.tmp
-mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+# may contain secrets
+install -o root -g root -m 600 /dev/null /etc/puavo/wlan.json
+{
+  if [ -e /boot/efi/puavo-wlan.json ]; then
+    cat /boot/efi/puavo-wlan.json
+  elif [ -e /state/etc/puavo/wlan.json ]; then
+    cat /state/etc/puavo/wlan.json
+  else
+    jq --null-input '[]'
+  fi
+} > /etc/puavo/wlan.json || status=1
+
+exit $status
