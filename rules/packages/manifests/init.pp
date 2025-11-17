@@ -424,7 +424,8 @@ class packages {
     , 'pidgin-plugin-pack' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
 
-    [ 'libportaudiocpp0'        # needed by xournalpp puavo-pkg
+    [ 'libncurses5'             # needed by passmark-performance-test
+    , 'libportaudiocpp0'        # needed by xournalpp puavo-pkg
     , 'libuvc0' ]:              # needed by visualizer puavo-pkg
       tag => [ 'tag_libraries', 'tag_debian_desktop', ];
 
