@@ -173,6 +173,7 @@ Package: puavo-exammode
 Architecture: all
 Depends: ${misc:Depends},
  brightnessctl,
+ fonts-symbola,
  gir1.2-ayatanaappindicator3-0.1,
  gir1.2-soup-2.4,
  libasound2,
