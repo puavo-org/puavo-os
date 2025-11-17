@@ -194,6 +194,7 @@ class packages {
     , 'xvfb'
     , 'xbacklight'
     , 'xinput-calibrator'
+    , 'yq'
     , 'zsh' ]:
       tag => [ 'tag_admin', 'tag_debian_desktop', ];
 
