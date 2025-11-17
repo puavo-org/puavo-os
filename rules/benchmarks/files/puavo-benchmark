@@ -2,6 +2,8 @@
 
 set -eu
 
+export LANG=C
+
 if [ "$(id -u)" != '0' ]; then
   echo 'run me as root' >&2
   exit 1
@@ -16,3 +18,9 @@ rm -f results_all.yml
 results_filename="passmark-performance-test-$(date -Iseconds).json"
 yq . results_all.yml > "$results_filename"
 rm -f results_all.yml
+
+summ_cpu=$(jq .Results.SUMM_CPU "$results_filename")
+
+echo
+printf "        >>> PassMark Performance Test CPU score is %.0f <<<\n" "$summ_cpu"
+echo
