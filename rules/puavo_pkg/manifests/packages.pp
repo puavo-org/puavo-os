@@ -40,6 +40,7 @@ class puavo_pkg::packages {
 			, 'novoconnect'
                         , 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
+			, 'passmark-performance-test'
 			, 'puavo-firmware'
 			, 'rustdesk'
 			, 'schoolstore-ti-widgets'
