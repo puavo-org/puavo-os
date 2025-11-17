@@ -4,6 +4,7 @@ import { BrightnessModule } from './modules/brightness/brightness-module';
 import { ScreenshotModule } from './modules/screenshot/screenshot-module';
 import { InputEventInterceptor } from './core/input-event-interceptor';
 import { ShutdownModule } from './modules/shutdown/shutdown-module';
+import { KeyboardModule } from './modules/keyboard/keyboard-module';
 import { SessionModule } from './modules/session/session-module';
 import { AudioModule } from './modules/audio/audio-module';
 import { ModuleManager } from './core/module-manager';
@@ -138,6 +139,7 @@ void app.whenReady().then(() => {
       audioModule,
       new BrightnessModule(),
       new EncryptionModule(),
+      new KeyboardModule(),
       new ScreenshotModule(browser.browserWindow.webContents),
       new SessionModule(),
       new ShutdownModule(() => browser.onShutdown()),
