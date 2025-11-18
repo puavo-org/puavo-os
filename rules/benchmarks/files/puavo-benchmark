@@ -9,8 +9,7 @@ if [ "$(id -u)" != '0' ]; then
   exit 1
 fi
 
-mkdir -p /var/log/puavo/puavo-benchmark
-cd /var/log/puavo/puavo-benchmark
+cd /var/lib/puavo/benchmark
 
 rm -f results_all.yml
 /opt/PerformanceTest/PerformanceTest -d 1 -r 3
