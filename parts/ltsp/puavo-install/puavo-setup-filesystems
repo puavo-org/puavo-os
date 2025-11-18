@@ -1000,9 +1000,9 @@ module QueryDiskInfo
 
       # Ask for optional recovery key
       if encryption && encryption['policy']
-        add_key_answer = UI::ask_with_default("Add user recovery key? (yes/no)",
+        add_key_answer = UI::ask_with_default("Add user recovery key? (y/N)",
                                               'no', UI::UserRecoveryKeyPrompt)
-        if add_key_answer == 'yes'
+        if add_key_answer.downcase.start_with?('y')
           user_key = UI::ask_and_confirm_secret('Enter user recovery key:')
           encryption['user_recovery_key'] = user_key
         end
