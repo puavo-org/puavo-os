@@ -15,7 +15,7 @@ FIRMWARE_REBOOT_MARKER="/run/puavo-reboot-to-firmware"
 status=0
 
 enroll_mok() {
-  local mok_path="$1"
+  mok_path="$1"
   echo "enrolling MOK ${mok_path}..."
   # TODO: Is there a better way to automate this?
   password_input="${MOK_PASSWORD}\n${MOK_PASSWORD}"
@@ -79,14 +79,14 @@ fi
 if [ "$status" != 0 ]; then
   puavo-install-and-update-uki-images --images-dir "$images_dir"
   echo
-  printf "${YELLOW}> Please reboot and complete the enrollment with password: ${GREEN}${MOK_PASSWORD}${RESET}\n"
+  printf "%b\n" "${YELLOW}> Please reboot and complete the enrollment with password: ${GREEN}${MOK_PASSWORD}${RESET}\n"
 fi
 
 secure_boot_state=$(mokutil --sb-state 2>&1)
 if echo "$secure_boot_state" | grep -q 'SecureBoot disabled'; then
   echo
-  printf "${RED}Secure Boot is disabled.${RESET}\n"
-  printf "${YELLOW}> Please enable Secure Boot in BIOS settings.${RESET}\n"
+  printf "%b\n" "${RED}Secure Boot is disabled.${RESET}\n"
+  printf "%b\n" "${YELLOW}> Please enable Secure Boot in BIOS settings.${RESET}\n"
   touch "$FIRMWARE_REBOOT_MARKER"
   status=1
 fi
