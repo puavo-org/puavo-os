@@ -10,6 +10,7 @@ RESET='\033[0m'
 
 MOK_PASSWORD="0"
 PUAVO_MOK_PATH="/etc/puavo-conf/mok.der"
+FIRMWARE_REBOOT_MARKER="/run/puavo-reboot-to-firmware"
 
 status=0
 
@@ -86,6 +87,7 @@ if echo "$secure_boot_state" | grep -q 'SecureBoot disabled'; then
   echo
   printf "${RED}Secure Boot is disabled.${RESET}\n"
   printf "${YELLOW}> Please enable Secure Boot in BIOS settings.${RESET}\n"
+  touch "$FIRMWARE_REBOOT_MARKER"
   status=1
 fi
 
