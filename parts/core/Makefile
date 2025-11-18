@@ -43,6 +43,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
+	mkdir -p $(DESTDIR)/var/lib/puavo
 
 .PHONY : install
 install : $(install-subdirs) installdirs

@@ -430,8 +430,14 @@ is_preinstalled() { [ "$1" = 'preinstalled' ]; }
 setup_state() {
   mkdir -p /state
   mountpoint -q /state || mount /dev/mapper/puavo-state /state
+
+  # copy puavo dn/password and other information to state
   mkdir -p /state/etc
   cp -aT /etc/puavo /state/etc/puavo
+
+  # copy benchmark results (if any) to state
+  mkdir -p /state/var/lib/puavo
+  cp -aT /var/lib/puavo /state/var/lib/puavo
 }
 
 update_configuration() {
