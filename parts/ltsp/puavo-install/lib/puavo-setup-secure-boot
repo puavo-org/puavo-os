@@ -22,7 +22,7 @@ enroll_mok() {
   echo "$password_input" | mokutil --import "$mok_path" >/dev/null 2>&1
 }
 
-images_dir="/installimages"
+images_dir="/images"
 addons_directory="${images_dir}/boot/addons"
 
 mok_private_key="${addons_directory}/mok.priv"
