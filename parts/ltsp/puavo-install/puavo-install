@@ -360,13 +360,6 @@ install_image() {
     return 0
   fi
 
-  # Copy device-specific UKI addons and MOK data before image installation.
-  # This image installation below will copy them to target boot devices.
-  cp -r /installimages/boot/addons/. /images/boot/addons || {
-    echo 'Failed to copy UKI addons into new installation' >&2
-    return 1
-  }
-
   ltspimage_name=$(cat /etc/puavo-image/name 2>/dev/null || true)
   if [ -z "$ltspimage_name" ]; then
     echo 'Could not determine the current ltsp image' >&2
@@ -389,13 +382,6 @@ install_image() {
       return 1
       ;;
   esac
-
-  # The image installation is complete and the system is now bootable.
-  # Clean up device-specific files to prevent them from persisting
-  # in future installations from this installer image.
-  # These are unique to the target device and should not be propagated
-  # to newly installed systems for security reasons.
-  rm -rf /installimages/boot/addons
 
   sync
 }
