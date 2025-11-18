@@ -456,6 +456,15 @@ darkdm_reboot_to_firmware_setup()
   systemctl reboot --firmware-setup
 }
 
+darkdm_reboot_preferred()
+{
+  if [ -e "/run/puavo-reboot-to-firmware" ]; then
+    darkdm_reboot_to_firmware_setup
+  else
+    darkdm_reboot
+  fi
+}
+
 darkdm_install()
 {
   if ! /usr/sbin/puavo-install "$@"; then
@@ -478,7 +487,7 @@ darkdm_install()
   done
   echo -e "\rRebooting now!                               "
 
-  darkdm_reboot
+  darkdm_reboot_preferred
 }
 
 darkdm_print_help()
