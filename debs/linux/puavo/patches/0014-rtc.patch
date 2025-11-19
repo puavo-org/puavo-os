@@ -58,27 +58,6 @@ index b831cb8e53dc..78bd0f926505 100644
  };
  
  static ssize_t dc_alarm_store(struct device *dev, struct device_attribute *attr,
-@@ -565,13 +572,18 @@ static void acpi_tad_remove(struct platform_device *pdev)
- 
- 	pm_runtime_get_sync(dev);
- 
-+	if (dd->capabilities & ACPI_TAD_AC_WAKE)
-+		sysfs_remove_group(&dev->kobj, &acpi_tad_ac_attr_group);
-+
- 	if (dd->capabilities & ACPI_TAD_DC_WAKE)
- 		sysfs_remove_group(&dev->kobj, &acpi_tad_dc_attr_group);
- 
- 	sysfs_remove_group(&dev->kobj, &acpi_tad_attr_group);
- 
--	acpi_tad_disable_timer(dev, ACPI_TAD_AC_TIMER);
--	acpi_tad_clear_status(dev, ACPI_TAD_AC_TIMER);
-+	if (dd->capabilities & ACPI_TAD_AC_WAKE) {
-+		acpi_tad_disable_timer(dev, ACPI_TAD_AC_TIMER);
-+		acpi_tad_clear_status(dev, ACPI_TAD_AC_TIMER);
-+	}
- 	if (dd->capabilities & ACPI_TAD_DC_WAKE) {
- 		acpi_tad_disable_timer(dev, ACPI_TAD_DC_TIMER);
- 		acpi_tad_clear_status(dev, ACPI_TAD_DC_TIMER);
 @@ -613,12 +625,6 @@ static int acpi_tad_probe(struct platform_device *pdev)
  		goto remove_handler;
  	}

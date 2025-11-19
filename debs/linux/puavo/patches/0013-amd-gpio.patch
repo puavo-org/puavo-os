@@ -24,14 +24,6 @@ diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
 index 4efecac49863..88377bb0d137 100644
 --- a/arch/x86/kernel/acpi/boot.c
 +++ b/arch/x86/kernel/acpi/boot.c
-@@ -22,6 +22,7 @@
- #include <linux/efi-bgrt.h>
- #include <linux/serial_core.h>
- #include <linux/pgtable.h>
-+#include <linux/dmi.h>
- 
- #include <asm/e820/api.h>
- #include <asm/irqdomain.h>
 @@ -1132,6 +1133,17 @@ static void __init mp_config_acpi_legacy_irqs(void)
  	}
  }
