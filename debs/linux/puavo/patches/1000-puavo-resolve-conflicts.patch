@@ -1,104 +1,90 @@
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -213,12 +218,14 @@ int intel_iommu_sm = IS_ENABLED(CONFIG_INTEL_IOMMU_SCALABLE_MODE_DEFAULT_ON);
- int intel_iommu_enabled = 0;
+diff -ruN linux.0/arch/x86/kernel/acpi/boot.c linux.1/arch/x86/kernel/acpi/boot.c
+--- linux.0/arch/x86/kernel/acpi/boot.c	2025-11-19 11:57:36.000000000 +0200
++++ linux.1/arch/x86/kernel/acpi/boot.c	2025-11-19 12:01:39.313061903 +0200
+@@ -22,6 +22,7 @@
+ #include <linux/efi-bgrt.h>
+ #include <linux/serial_core.h>
+ #include <linux/pgtable.h>
++#include <linux/dmi.h>
+ 
+ #include <xen/xen.h>
+ 
+diff -ruN linux.0/drivers/acpi/acpi_tad.c linux.1/drivers/acpi/acpi_tad.c
+--- linux.0/drivers/acpi/acpi_tad.c	2025-11-19 11:57:36.000000000 +0200
++++ linux.1/drivers/acpi/acpi_tad.c	2025-11-19 12:01:39.313061903 +0200
+@@ -575,13 +575,18 @@
+ 	if (dd->capabilities & ACPI_TAD_RT)
+ 		sysfs_remove_group(&dev->kobj, &acpi_tad_time_attr_group);
+ 
++	if (dd->capabilities & ACPI_TAD_AC_WAKE)
++		sysfs_remove_group(&dev->kobj, &acpi_tad_ac_attr_group);
++
+ 	if (dd->capabilities & ACPI_TAD_DC_WAKE)
+ 		sysfs_remove_group(&dev->kobj, &acpi_tad_dc_attr_group);
+ 
+ 	sysfs_remove_group(&dev->kobj, &acpi_tad_attr_group);
+ 
+-	acpi_tad_disable_timer(dev, ACPI_TAD_AC_TIMER);
+-	acpi_tad_clear_status(dev, ACPI_TAD_AC_TIMER);
++	if (dd->capabilities & ACPI_TAD_AC_WAKE) {
++		acpi_tad_disable_timer(dev, ACPI_TAD_AC_TIMER);
++		acpi_tad_clear_status(dev, ACPI_TAD_AC_TIMER);
++	}
+ 	if (dd->capabilities & ACPI_TAD_DC_WAKE) {
+ 		acpi_tad_disable_timer(dev, ACPI_TAD_DC_TIMER);
+ 		acpi_tad_clear_status(dev, ACPI_TAD_DC_TIMER);
+diff -ruN linux.0/drivers/iommu/intel/iommu.c linux.1/drivers/iommu/intel/iommu.c
+--- linux.0/drivers/iommu/intel/iommu.c	2025-11-19 11:57:36.000000000 +0200
++++ linux.1/drivers/iommu/intel/iommu.c	2025-11-19 12:04:18.714206172 +0200
+@@ -224,6 +224,8 @@
  EXPORT_SYMBOL_GPL(intel_iommu_enabled);
  
+ static int dmar_map_intgpu = IS_ENABLED(CONFIG_INTEL_IOMMU_DEFAULT_ON);
 +static int dmar_map_ipts = 1;
++static int dmar_map_ipu = 1;
  static int intel_iommu_superpage = 1;
  static int iommu_identity_mapping;
  static int iommu_skip_te_disable;
- static int disable_igfx_iommu;
+@@ -231,6 +233,8 @@
  
  #define IDENTMAP_AZALIA		4
-+#define IDENTMAP_IPTS		16
+ #define IDENTMAP_INTGPU		8
++#define IDENTMAP_IPU		16	/* puavo:  8 -> 16 */
++#define IDENTMAP_IPTS		32	/* puavo: 16 -> 32 */
  
  const struct iommu_ops intel_iommu_ops;
  static const struct iommu_dirty_ops intel_dirty_ops;
-@@ -2046,6 +2053,9 @@ static int device_def_domain_type(struct device *dev)
+@@ -2090,6 +2094,12 @@
  
- 		if ((iommu_identity_mapping & IDENTMAP_AZALIA) && IS_AZALIA(pdev))
+ 		if ((iommu_identity_mapping & IDENTMAP_INTGPU) && IS_INTGPU_DEVICE(pdev))
  			return IOMMU_DOMAIN_IDENTITY;
++
++		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_INTEL_IPU(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
 +
 +		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
 +			return IOMMU_DOMAIN_IDENTITY;
  	}
  
  	return 0;
-@@ -2344,6 +2354,9 @@ static int __init init_dmars(void)
- 		iommu_set_root_entry(iommu);
- 	}
+@@ -2391,6 +2401,12 @@
+ 	if (!dmar_map_intgpu)
+ 		iommu_identity_mapping |= IDENTMAP_INTGPU;
  
++	if (!dmar_map_ipu)
++		iommu_identity_mapping |= IDENTMAP_IPU;
++
 +	if (!dmar_map_ipts)
 +		iommu_identity_mapping |= IDENTMAP_IPTS;
 +
  	check_tylersburg_isoch();
  
  	/*
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -214,12 +221,14 @@ int intel_iommu_enabled = 0;
- EXPORT_SYMBOL_GPL(intel_iommu_enabled);
- 
- static int dmar_map_ipts = 1;
-+static int dmar_map_ipu = 1;
- static int intel_iommu_superpage = 1;
- static int iommu_identity_mapping;
- static int iommu_skip_te_disable;
- static int disable_igfx_iommu;
- 
- #define IDENTMAP_AZALIA		4
-+#define IDENTMAP_IPU		8
- #define IDENTMAP_IPTS		16
- 
- const struct iommu_ops intel_iommu_ops;
-@@ -2054,6 +2063,9 @@ static int device_def_domain_type(struct device *dev)
- 		if ((iommu_identity_mapping & IDENTMAP_AZALIA) && IS_AZALIA(pdev))
- 			return IOMMU_DOMAIN_IDENTITY;
- 
-+		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_INTEL_IPU(pdev))
-+			return IOMMU_DOMAIN_IDENTITY;
-+
- 		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
- 			return IOMMU_DOMAIN_IDENTITY;
- 	}
-@@ -2354,6 +2366,9 @@ static int __init init_dmars(void)
- 		iommu_set_root_entry(iommu);
- 	}
- 
-+	if (!dmar_map_ipu)
-+		iommu_identity_mapping |= IDENTMAP_IPU;
-+
- 	if (!dmar_map_ipts)
- 		iommu_identity_mapping |= IDENTMAP_IPTS;
- 
-From 46806f2df854794beb466026561dc6446ec77632 Mon Sep 17 00:00:00 2001
-From: Daniel Scally <dan.scally@ideasonboard.com>
-Date: Thu, 2 Mar 2023 12:59:39 +0000
-Subject: [PATCH] platform/x86: int3472: Remap reset GPIO for INT347E
-
-ACPI _HID INT347E represents the OmniVision 7251 camera sensor. The
-driver for this sensor expects a single pin named "enable", but on
-some Microsoft Surface platforms the sensor is assigned a single
-GPIO who's type flag is INT3472_GPIO_TYPE_RESET.
-
-Remap the GPIO pin's function from "reset" to "enable". This is done
-outside of the existing remap table since it is a more widespread
-discrepancy than that method is designed for. Additionally swap the
-polarity of the pin to match the driver's expectation.
-
-Signed-off-by: Daniel Scally <dan.scally@ideasonboard.com>
-Patchset: cameras
----
- drivers/platform/x86/intel/int3472/discrete.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/drivers/platform/x86/intel/int3472/discrete.c b/drivers/platform/x86/intel/int3472/discrete.c
-index 3de463c3d13b..0a012eeed30a 100644
---- a/drivers/platform/x86/intel/int3472/discrete.c
-+++ b/drivers/platform/x86/intel/int3472/discrete.c
-@@ -80,12 +80,27 @@ static int skl_int3472_map_gpio_to_sensor(struct int3472_discrete_device *int347
- 					  const char *func, u32 polarity)
+diff -ruN linux.0/drivers/platform/x86/intel/int3472/discrete.c linux.1/drivers/platform/x86/intel/int3472/discrete.c
+--- linux.0/drivers/platform/x86/intel/int3472/discrete.c	2025-11-02 15:15:23.000000000 +0200
++++ linux.1/drivers/platform/x86/intel/int3472/discrete.c	2025-11-19 12:01:39.313061903 +0200
+@@ -81,12 +81,27 @@
+ 					  const char *func, unsigned long gpio_flags)
  {
  	int ret;
 +	const struct acpi_device_id ov7251_ids[] = {
@@ -123,41 +109,5 @@ index 3de463c3d13b..0a012eeed30a 100644
 +	}
 +
  	ret = skl_int3472_fill_gpiod_lookup(&int3472->gpios.table[int3472->n_sensor_gpios],
- 					    agpio, func, polarity);
+ 					    agpio, func, gpio_flags);
  	if (ret)
--- 
-2.47.1
-
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -22,6 +22,7 @@
- #include <linux/efi-bgrt.h>
- #include <linux/serial_core.h>
- #include <linux/pgtable.h>
-+#include <linux/dmi.h>
- 
- #include <asm/e820/api.h>
- #include <asm/irqdomain.h>
---- a/drivers/acpi/acpi_tad.c
-+++ b/drivers/acpi/acpi_tad.c
-@@ -565,13 +572,18 @@ static void acpi_tad_remove(struct platform_device *pdev)
- 
- 	pm_runtime_get_sync(dev);
- 
-+	if (dd->capabilities & ACPI_TAD_AC_WAKE)
-+		sysfs_remove_group(&dev->kobj, &acpi_tad_ac_attr_group);
-+
- 	if (dd->capabilities & ACPI_TAD_DC_WAKE)
- 		sysfs_remove_group(&dev->kobj, &acpi_tad_dc_attr_group);
- 
- 	sysfs_remove_group(&dev->kobj, &acpi_tad_attr_group);
- 
--	acpi_tad_disable_timer(dev, ACPI_TAD_AC_TIMER);
--	acpi_tad_clear_status(dev, ACPI_TAD_AC_TIMER);
-+	if (dd->capabilities & ACPI_TAD_AC_WAKE) {
-+		acpi_tad_disable_timer(dev, ACPI_TAD_AC_TIMER);
-+		acpi_tad_clear_status(dev, ACPI_TAD_AC_TIMER);
-+	}
- 	if (dd->capabilities & ACPI_TAD_DC_WAKE) {
- 		acpi_tad_disable_timer(dev, ACPI_TAD_DC_TIMER);
- 		acpi_tad_clear_status(dev, ACPI_TAD_DC_TIMER);
