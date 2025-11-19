@@ -1,0 +1,21 @@
+diff -ruN linux.0/drivers/platform/x86/intel/int3472/discrete.c linux.1/drivers/platform/x86/intel/int3472/discrete.c
+--- linux.0/drivers/platform/x86/intel/int3472/discrete.c	2025-11-19 13:01:35.000000000 +0200
++++ linux.1/drivers/platform/x86/intel/int3472/discrete.c	2025-11-19 13:04:40.599753935 +0200
+@@ -78,7 +78,7 @@
+ 
+ static int skl_int3472_map_gpio_to_sensor(struct int3472_discrete_device *int3472,
+ 					  struct acpi_resource_gpio *agpio,
+-					  const char *func, unsigned long gpio_flags)
++					  const char *func, unsigned long polarity)
+ {
+ 	int ret;
+ 	const struct acpi_device_id ov7251_ids[] = {
+@@ -103,7 +103,7 @@
+ 	}
+ 
+ 	ret = skl_int3472_fill_gpiod_lookup(&int3472->gpios.table[int3472->n_sensor_gpios],
+-					    agpio, func, gpio_flags);
++					    agpio, func, polarity);
+ 	if (ret)
+ 		return ret;
+ 
