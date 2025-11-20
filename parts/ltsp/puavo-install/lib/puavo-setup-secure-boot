@@ -1,0 +1,98 @@
+#!/bin/sh
+set -eu
+
+# Verify Secure Boot prerequisites
+/usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot
+
+certificates_directory="/etc/secure-boot/certificates"
+images_directory="/images"
+addons_directory="${images_directory}/boot/addons"
+
+pk_auth="${certificates_directory}/pk/PK.auth"
+kek_auth="${certificates_directory}/kek/KEK.auth"
+db_directory="${certificates_directory}/db"
+db_auth="${db_directory}/db.auth"
+dbx_bin="${certificates_directory}/dbx/dbx.bin"
+
+device_secure_boot_key_private_key="${addons_directory}/secure-boot.priv"
+device_secure_boot_key_der="${addons_directory}/secure-boot.der"
+device_secure_boot_key_pem="${addons_directory}/secure-boot.pem"
+
+panic() {
+  printf "%b\n" "error: $1" >&2
+  exit 1
+}
+
+create_device_specific_files() {
+  mkdir -p "$addons_directory"
+
+  # Generate private key and certificate
+  if [ ! -f "$device_secure_boot_key_pem" ]; then
+    echo "generating device Secure Boot key..."
+    openssl req -nodes -new -x509 -newkey rsa:4096 \
+      -keyout "$device_secure_boot_key_private_key" \
+      -outform DER -out "$device_secure_boot_key_der" -days 36500 \
+      -subj "/CN=Puavo Device Secure Boot Key/" >/dev/null 2>&1
+    openssl x509 -inform der -in "$device_secure_boot_key_der" \
+      -out "$device_secure_boot_key_pem" >/dev/null 2>&1
+  fi
+
+  # This command-line addon is responsible for keeping the
+  # device-specific Secure Boot key active. Removing it would alter the
+  # Secure Boot state (PCR 7), which would break automatic
+  # TPM-based disk unlocking.
+  extra_command_line_addon="${addons_directory}/extra.cmdline.addon.efi"
+  if [ ! -f "$extra_command_line_addon" ]; then
+    echo "creating the extra command-line addon..."
+    # We have to create an "empty" command-line section manually, because
+    # the normal --cmdline switch refuses to create such a section. In
+    # addition, it can not be truly empty, because systemd-stub ignores
+    # empty sections and reports an error due to finding no sections.
+    ukify build \
+      --secureboot-private-key="${device_secure_boot_key_private_key}" \
+      --secureboot-certificate="${device_secure_boot_key_pem}" \
+      --section=.cmdline:' ' \
+      --output="$extra_command_line_addon" >/dev/null 2>&1
+  fi
+}
+
+create_device_specific_files || {
+  echo "failed to create device-specific Secure Boot key files" >&2
+  exit 1
+}
+
+[ -f "$pk_auth" ] || panic "PK.auth not found"
+[ -f "$kek_auth" ] || panic "KEK.auth not found"
+[ -f "$db_auth" ] || panic "db.auth not found"
+[ -f "$dbx_bin" ] || panic "dbx.bin not found"
+
+# Remove immutability from Secure Boot variables to allow writing.
+# They become immutable after each write.
+chattr -i /sys/firmware/efi/efivars/dbx-* || true
+chattr -i /sys/firmware/efi/efivars/db-* || true
+chattr -i /sys/firmware/efi/efivars/KEK-* || true
+chattr -i /sys/firmware/efi/efivars/PK-* || true
+
+echo "enrolling Secure Boot keys..."
+
+efi-updatevar -a -f "$dbx_bin" dbx || panic "failed to append dbx"
+efi-updatevar -f "$db_auth" db || panic "failed to enroll db"
+
+# Trust all DER certificates in the db directory
+for der_file in "${db_directory}"/*.der; do
+  [ -f "$der_file" ] || continue
+  chattr -i /sys/firmware/efi/efivars/db-* || true
+  efi-updatevar -a -c "$der_file" db || \
+    panic "failed to append $(basename "$der_file") to db"
+done
+
+# Trust the device Secure Boot key
+chattr -i /sys/firmware/efi/efivars/db-* || true
+efi-updatevar -a -c "$device_secure_boot_key_der" db || \
+  panic "failed to append device Secure Boot key to db"
+
+efi-updatevar -f "$kek_auth" KEK || panic "failed to enroll KEK"
+efi-updatevar -f "$pk_auth" PK || panic "failed to enroll PK"
+
+echo "Secure Boot configured successfully"
+exit 0
