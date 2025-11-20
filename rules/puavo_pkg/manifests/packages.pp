@@ -27,6 +27,7 @@ class puavo_pkg::packages {
 			, 'filius'
 			, 'firefox'
 			, 'flashforge-flashprint'
+			, 'fonts-poppins'
 			, 'geogebra'
 			, 'geogebra6'
 			, 'google-chrome'
