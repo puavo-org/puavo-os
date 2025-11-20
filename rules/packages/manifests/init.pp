@@ -858,18 +858,18 @@ class packages {
 		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
-    '6.1.0-40-amd64':
+    '6.1.0-41-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.1.0-40-amd64';
+      package_name => 'linux-image-6.1.0-41-amd64';
 
-    '6.12.43+2-amd64':
+    '6.12.57+2-amd64':
       # The current nvidia packages (470.199.02-1~deb12u1 and
       # 525.125.06-1~deb12u1) do not compile for 6.5.x.
       # The broadcom sta module does not compile for 6.12.x.
       # The same is true for the current VirtualBox version in
       # debian-fasttrack.
       dkms_modules => [],
-      package_name => 'linux-image-6.12.43+2-amd64-unsigned';
+      package_name => 'linux-image-6.12.57+2-amd64-unsigned';
   }
 
   # various contrib/non-free stuff, firmwares and such
