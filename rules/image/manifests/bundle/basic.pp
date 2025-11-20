@@ -24,6 +24,7 @@ class image::bundle::basic {
   include ::puavomenu
   include ::puavo_shutdown
   include ::rpcgssd
+  include ::secure_boot
   include ::ssh_client
   include ::ssh_server
   include ::sysctl
