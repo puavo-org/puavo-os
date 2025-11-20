@@ -80,14 +80,6 @@ EOF
 systemctl enable squid.service
 service squid restart
 
-mkdir -p config/boot_keys
-
-# generate keys for signing tpm pcr values in uki builds
-.aux/generate-tpm-keys ./config/boot_keys
-
-# generate mok for secure boot
-.aux/generate-mok ./config/boot_keys
-
 touch "${puavo_rootfs}/.is_puavo_buildhost"
 
 if [ -e /etc/puavo ]; then
