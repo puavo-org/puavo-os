@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+YELLOW='\033[1;33m'
+RESET='\033[0m'
+
+panic() {
+  printf "%b\n" "error: $1" >&2
+  exit 1
+}
+
+show_setup_mode_instructions() {
+  printf "%b\n" "${YELLOW}Please clear Secure Boot keys in firmware settings to enter Setup Mode.${RESET}" >&2
+}
+
+require_setup_mode() {
+  if ! efi-readvar -v PK 2>&1 | grep -q "no entries"; then
+    show_setup_mode_instructions
+    panic "system is not in Setup Mode."
+  fi
+}
+
+require_setup_mode

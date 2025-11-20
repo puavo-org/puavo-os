@@ -599,6 +599,10 @@ case "$install_mode" in
     ;;
 esac
 
+# Check Secure Boot prerequisites such as Setup Mode status before
+# registration to avoid wasting the registration process.
+/usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot
+
 accepted_hosttypes=$(get_accepted_hosttypes "$puavo_install_hosttype")
 
 puavo-register --accepted-devicetypes "$accepted_hosttypes" \

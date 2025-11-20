@@ -67,6 +67,7 @@ install : installdirs
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-check-secure-boot \
 		lib/puavo-image-preinst \
+		lib/puavo-prepare-secure-boot \
 		lib/puavo-reset \
 		lib/puavo-torrent-updated \
 		lib/puavo-torrent-download-complete \

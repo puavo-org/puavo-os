@@ -210,6 +210,7 @@ class packages {
     , 'bash-completion'
     , 'bridge-utils'
     , 'efibootmgr'
+    , 'efitools'
     , 'gdebi-core'
     , 'grub-efi-amd64-signed'
     , 'grub-efi-ia32-signed'
