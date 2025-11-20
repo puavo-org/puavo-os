@@ -450,6 +450,9 @@ install_localbootdevice() {
     maybe_install_windows
   fi
 
+  echo 'Setting up Secure Boot...'
+  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot
+
   setup_state "$puavo_hosttype"
 
   if is_preinstalled "$puavo_install_hosttype"; then
