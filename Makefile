@@ -154,6 +154,7 @@ help:
 	@echo '    build-image          build image for the default class'
 	@echo '    build-parts          build all parts'
 	@echo '    clean                clean debs and parts'
+	@echo '    secure-boot-config   generate PK, KEK, db and dbx certificates'
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
 	@echo '    install-parts        install all parts'
@@ -299,6 +300,10 @@ setup-wim:
 	    /srv/wim-images/Makefile
 	sudo install -o puavo-os -g puavo-os -m 755 .aux/write-wim-json \
 	    /srv/wim-images/write-wim-json
+
+.PHONY: secure-boot-config
+secure-boot-config:
+	.aux/generate-secure-boot-certificates
 
 /etc/puavo-conf/image.json: config/puavo_conf/$(image_class).json
 	$(_sudo) mkdir -p $(@D)
