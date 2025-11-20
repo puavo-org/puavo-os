@@ -1,8 +1,38 @@
-openjdk-11 (11.0.28+6-1~deb11u1+puavo1) bullseye; urgency=medium
+openjdk-11 (11.0.29+6-1~deb11u1) bullseye-security; urgency=medium
 
-  * Build with our patches.
+  * Non-maintainer upload by the LTS Team.
+  * Backport to bullseye.
 
- -- Puavo Org <dev@opinsys.fi>  Tue, 05 Aug 2025 10:14:28 +0300
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Thu, 23 Oct 2025 13:36:48 +0200
+
+openjdk-11 (11.0.29+6-1) unstable; urgency=medium
+
+  * OpenJDK 11.0.29 release, build 6.
+    - CVEs:
+      + CVE-2025-53057, 8360937: Enhance certificate handling.
+      + CVE-2025-53066, 8356294: Enhance Path Factories.
+
+  [ Vladimir Petko ]
+  * d/t/problems.csv: Synchronize problem list.
+  * d/p/jdk-8354941-proposed.patch: Apply proposed patch to resolve ftbfs
+    with glibc 2.42.
+  * d/t/jtreg-autopkgtest.*: Force utf-8 encoding.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 22 Oct 2025 08:22:40 +0200
+
+openjdk-11 (11.0.29~4ea-2) unstable; urgency=medium
+
+  [ Vladimir Petko ]
+  * d/rules: Force C99 standard.
+
+ -- Matthias Klose <doko@ubuntu.com>  Mon, 01 Sep 2025 09:01:44 +0200
+
+openjdk-11 (11.0.29~4ea-1) unstable; urgency=medium
+
+  * OpenJDK 11.0.29+4 build (early access).
+  * Build using GCC 15 on development releases.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sun, 31 Aug 2025 06:28:46 +0200
 
 openjdk-11 (11.0.28+6-1~deb11u1) bullseye-security; urgency=medium
 
