@@ -1,7 +1,7 @@
-Here is an example TPM key pair and also an MOK key pair.
+Here is an example TPM key pair and also a Secure Boot key pair.
 
-The TPM key pair is generated with .aux/generate-tpm-keys and the MOK
-key pair is generated with .aux/generate-mok.
+The TPM key pair is generated with .aux/generate-tpm-keys and the Secure Boot
+key pair is generated with .aux/generate-secure-boot-certificates.
 
 It is not normal to have the private keys made public as is done here.
 Thus, systems built with these keys do not provide much actual security.

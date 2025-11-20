@@ -8,10 +8,10 @@ import sys
 IMAGES_DIRECTORY = '/images'
 ADDONS_DIRECTORY = f"{IMAGES_DIRECTORY}/boot/addons"
 
-ADDON_PATH            = f"{ADDONS_DIRECTORY}/extra.cmdline.addon.efi"
-KERNEL_ARGUMENTS_FILE = f"{ADDONS_DIRECTORY}/cmdline"
-MOK_PEM               = f"{ADDONS_DIRECTORY}/mok.pem"
-MOK_PRIVATE_KEY       = f"{ADDONS_DIRECTORY}/mok.priv"
+ADDON_PATH                     = f"{ADDONS_DIRECTORY}/extra.cmdline.addon.efi"
+KERNEL_ARGUMENTS_FILE          = f"{ADDONS_DIRECTORY}/cmdline"
+DEVICE_SECURE_BOOT_PRIVATE_KEY = f"{ADDONS_DIRECTORY}/secure-boot.pem"
+DEVICE_SECURE_BOOT_CERTIFICATE = f"{ADDONS_DIRECTORY}/secure-boot.priv"
 
 PUAVO_INSTALL_LIBDIR = '/usr/lib/puavo-ltsp-install'
 
@@ -52,9 +52,10 @@ def replace_if_changed(destination: str, source: str):
 def build_command_line_addon(command_line: str):
   os.makedirs(ADDONS_DIRECTORY, exist_ok=True)
 
-  if not (os.path.isfile(MOK_PRIVATE_KEY) and os.path.isfile(MOK_PEM)):
+  if not (os.path.isfile(DEVICE_SECURE_BOOT_CERTIFICATE) and \
+          os.path.isfile(DEVICE_SECURE_BOOT_PRIVATE_KEY)):
     raise RuntimeError(
-      f"device MOK files are missing: {MOK_PRIVATE_KEY}, {MOK_PEM}"
+      f"device Secure Boot files are missing: {DEVICE_SECURE_BOOT_CERTIFICATE}, {DEVICE_SECURE_BOOT_PRIVATE_KEY}"
     )
 
   # Systemd-stub rejects an actually empty section, use a single space
@@ -67,8 +68,8 @@ def build_command_line_addon(command_line: str):
   try:
     run_command(
       'ukify', 'build',
-      f'--secureboot-private-key={MOK_PRIVATE_KEY}',
-      f'--secureboot-certificate={MOK_PEM}',
+      f'--secureboot-private-key={DEVICE_SECURE_BOOT_CERTIFICATE}',
+      f'--secureboot-certificate={DEVICE_SECURE_BOOT_PRIVATE_KEY}',
       f'--section=.cmdline:{section_value}',
       f'--output={temporary_command_line_addon}'
     )

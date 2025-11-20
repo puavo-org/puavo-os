@@ -17,8 +17,8 @@ output_basename=$(basename "$output")
 
 # Todo: Check SBAT
 ukify build \
-  --secureboot-private-key="${key_folder}/mok.priv" \
-  --secureboot-certificate="${key_folder}/mok.pem" \
+  --secureboot-private-key="${key_folder}/secure-boot.priv" \
+  --secureboot-certificate="${key_folder}/secure-boot.pem" \
   --cmdline="$cmdline" \
   --sbat="sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
   $output_basename.puavo-os,1,kernel-command-line-addon,$output_basename.puavo-os,1,https://github.com/puavo-org/puavo-os" \

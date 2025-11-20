@@ -26,7 +26,8 @@ if [[ ! -d "$configurator_directory" ]]; then
   exit 2
 fi
 
-if [[ ! -f "${key_folder}/mok.priv" || ! -f "${key_folder}/mok.pem" ]]; then
+if [[ ! -f "${key_folder}/secure-boot.priv" || \
+      ! -f "${key_folder}/secure-boot.pem" ]]; then
   echo "error: failed to find Secure Boot keys in ${key_folder}" >&2
   exit 3
 fi
@@ -54,8 +55,8 @@ addon_initrd="${working_directory}/initrd.cpio"
 # Create a signed UKI addon that supplies the built initrd
 ukify build \
   --initrd="$addon_initrd" \
-  --secureboot-private-key="${key_folder}/mok.priv" \
-  --secureboot-certificate="${key_folder}/mok.pem" \
+  --secureboot-private-key="${key_folder}/secure-boot.priv" \
+  --secureboot-certificate="${key_folder}/secure-boot.pem" \
   --output "$output"
 
 echo "output: $output"

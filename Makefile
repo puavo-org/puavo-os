@@ -319,12 +319,12 @@ install-pcr-public-keys:
 	$(_sudo) mkdir -p /etc/puavo-conf
 	-$(_sudo) cp config/boot_keys/tpm2-pcr-public-key*.pem /etc/puavo-conf/ 2>/dev/null || true
 
-/etc/puavo-conf/mok.der: config/boot_keys/mok.der
+/etc/puavo-conf/secure-boot.der: config/boot_keys/secure-boot.der
 	$(_sudo) mkdir -p $(@D)
 	$(_sudo) cp $< $@
 
 .PHONY: update
-update: prepare install-pcr-public-keys /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/mok.der
+update: prepare install-pcr-public-keys /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/secure-boot.der
 	$(MAKE) build
 
 	$(_sudo) apt-get update
