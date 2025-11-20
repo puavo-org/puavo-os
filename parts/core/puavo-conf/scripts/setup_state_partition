@@ -123,6 +123,7 @@ case "$puavo_hosttype" in
       /var/lib/extrausers
       /var/lib/logrotate
       /var/lib/munin
+      /var/lib/puavo
       /var/lib/puavo-desktop
       /var/lib/systemd
       /var/log

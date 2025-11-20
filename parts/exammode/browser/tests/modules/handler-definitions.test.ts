@@ -2,6 +2,7 @@ import { SurveillanceModule } from '../../src/modules/surveillance/surveillance-
 import { BrightnessModule } from '../../src/modules/brightness/brightness-module';
 import { EncryptionModule } from '../../src/modules/encryption/encryption-module';
 import { ScreenshotModule } from '../../src/modules/screenshot/screenshot-module';
+import { KeyboardModule } from '../../src/modules/keyboard/keyboard-module';
 import { ShutdownModule } from '../../src/modules/shutdown/shutdown-module';
 import { SessionModule } from '../../src/modules/session/session-module';
 import { AudioModule } from '../../src/modules/audio/audio-module';
@@ -32,6 +33,7 @@ describe('ModuleHandlerDefinitions', () => {
       new AudioModule(),
       new BrightnessModule(),
       new EncryptionModule(),
+      new KeyboardModule(),
       new ScreenshotModule(createMockWebContents() as any),
       new SessionModule(),
       new ShutdownModule(mockShutdownCallback),

@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+require 'date'
 require 'dbus'
 require 'etc'
 require 'facter'
@@ -56,6 +57,7 @@ class SysInfo
       [ :update_puavopkg_info,   'installed puavo-pkg information'  ],
       [ :update_login_info,      'last user logged in'              ],
       [ :update_uptime,          'host uptime'                      ],
+      [ :update_benchmarks,      'benchmarks'                       ],
     ]
 
     update_functions.each do |update_item|
@@ -459,6 +461,35 @@ class SysInfo
     @data[:uptime] = nil
     uptime = (IO.read('/proc/uptime').split)[0].to_i
     @data[:uptime] = uptime if uptime > 0
+  end
+
+  def get_passmark_test_results
+    passmark_results_dir = '/var/lib/puavo/benchmark'
+    benchmarks_glob = File.join(passmark_results_dir,
+                                'passmark-performance-test-*.json')
+    results = Dir.glob(benchmarks_glob)
+    return nil if results.empty?
+    last_passmark_benchmark_path = results.sort.last
+
+    re_to_match = %r{\Apassmark-performance-test-(.*?).json\Z}
+    match = File.basename(last_passmark_benchmark_path).match(re_to_match)
+    raise 'could not parse passmark file name' unless match
+
+    benchmark_time = DateTime.parse(match[1]).new_offset(0).to_s
+    passmark_performance_test_data \
+      = JSON.parse( IO.read(last_passmark_benchmark_path) )
+
+    return {
+      :data => passmark_performance_test_data,
+      :time => benchmark_time,
+    }
+  end
+
+  def update_benchmarks
+    @data[:benchmarks] = nil
+    @data[:benchmarks] = {
+      :passmark_performance_test => get_passmark_test_results(),
+    }
   end
 end
 

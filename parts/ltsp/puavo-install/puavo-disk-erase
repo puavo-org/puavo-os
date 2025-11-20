@@ -182,7 +182,7 @@ esac
 partprobe
 
 if [ -e "/sys/firmware/efi" ]; then
-  efitable="$(efibootmgr | awk '/debian/ {print substr($0,5,4)} /Windows/ {print substr($0,5,4)}')"
+  efitable="$(efibootmgr | awk '/debian/ {print substr($0,5,4)} /Windows/ {print substr($0,5,4)} /Ubuntu/ {print substr($0,5,4)}')"
 
   if [ -n "$efitable" ]; then
     echo 'Removing leftover EFI boot entries.'

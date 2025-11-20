@@ -333,6 +333,15 @@ get_cpu_value() {
   esac
 }
 
+darkdm_benchmark() {
+  if [ ! -x /usr/local/sbin/puavo-benchmark ]; then
+    echo 'puavo-benchmark is not available on this host' >&2
+    return 1
+  fi
+  /usr/local/sbin/puavo-benchmark || return 1
+  read -p '> press ENTER to continue ' answer
+}
+
 darkdm_common_systeminfo()
 {
   local colorized_cpu colorized_display_resolution colorized_memory \
@@ -507,6 +516,7 @@ darkdm_print_help()
 Puavo OS Command Shell
 
 Commands:
+  benchmark              run some benchmarks (if available)
   bios                   configure BIOS (only on some supported machines)
   customdescription (cd) send a custom device description to inventory backend
   erase                  secure erase a disk (only on SSD's that support it)
@@ -535,7 +545,7 @@ EOF
 
 darkdm_print_short_help() {
   darkdm_print_help \
-    | awk '$1 !~ /bios|customdescription|erase|expert|mount|reboot|preinstall|savedisk/'
+    | awk '$1 !~ /benchmark|bios|customdescription|erase|expert|mount|preinstall|reboot|savedisk/'
 }
 
 darkdm_shell()
@@ -705,7 +715,10 @@ darkdm_menu()
     fi
 
     case "$command" in
-      bios|b)
+      benchmark|be|ben|bench)
+        darkdm_benchmark || return 1
+        ;;
+      bios|b|bi|bio)
         puavo-bios-config || return 1
         ;;
       crypt-install)

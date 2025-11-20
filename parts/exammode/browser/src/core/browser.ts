@@ -15,6 +15,13 @@ export class Browser {
     this.config = config;
     this.browserWindow = this.createWindow();
 
+    // Remove Electron from the user agent because
+    // it improves the behavior of some exam software
+    const userAgent = this.browserWindow.webContents
+      .getUserAgent()
+      .replace(/\sElectron\/\S+/g, '');
+    this.browserWindow.webContents.setUserAgent(userAgent);
+
     this.browserWindow.webContents.on(
       'did-fail-load',
       (_event, _errorCode, _errorDescription, validatedURL, isMainFrame) => {
@@ -119,7 +126,6 @@ export class Browser {
         // can be resolved, we can enable proper security (contextIsolation: true,
         // nodeIntegration: false) without major refactoring.
         nodeIntegration: true, // IPC access
-        nodeIntegrationInSubFrames: this.config.modules,
         contextIsolation: !this.config.modules, // For WebSocket fix
         webviewTag: !this.config.modules,
         ...(this.config.modules

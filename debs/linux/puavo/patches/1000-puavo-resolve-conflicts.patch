@@ -1,0 +1,113 @@
+diff -ruN linux.0/arch/x86/kernel/acpi/boot.c linux.1/arch/x86/kernel/acpi/boot.c
+--- linux.0/arch/x86/kernel/acpi/boot.c	2025-11-19 11:57:36.000000000 +0200
++++ linux.1/arch/x86/kernel/acpi/boot.c	2025-11-19 12:01:39.313061903 +0200
+@@ -22,6 +22,7 @@
+ #include <linux/efi-bgrt.h>
+ #include <linux/serial_core.h>
+ #include <linux/pgtable.h>
++#include <linux/dmi.h>
+ 
+ #include <xen/xen.h>
+ 
+diff -ruN linux.0/drivers/acpi/acpi_tad.c linux.1/drivers/acpi/acpi_tad.c
+--- linux.0/drivers/acpi/acpi_tad.c	2025-11-19 11:57:36.000000000 +0200
++++ linux.1/drivers/acpi/acpi_tad.c	2025-11-19 12:01:39.313061903 +0200
+@@ -575,13 +575,18 @@
+ 	if (dd->capabilities & ACPI_TAD_RT)
+ 		sysfs_remove_group(&dev->kobj, &acpi_tad_time_attr_group);
+ 
++	if (dd->capabilities & ACPI_TAD_AC_WAKE)
++		sysfs_remove_group(&dev->kobj, &acpi_tad_ac_attr_group);
++
+ 	if (dd->capabilities & ACPI_TAD_DC_WAKE)
+ 		sysfs_remove_group(&dev->kobj, &acpi_tad_dc_attr_group);
+ 
+ 	sysfs_remove_group(&dev->kobj, &acpi_tad_attr_group);
+ 
+-	acpi_tad_disable_timer(dev, ACPI_TAD_AC_TIMER);
+-	acpi_tad_clear_status(dev, ACPI_TAD_AC_TIMER);
++	if (dd->capabilities & ACPI_TAD_AC_WAKE) {
++		acpi_tad_disable_timer(dev, ACPI_TAD_AC_TIMER);
++		acpi_tad_clear_status(dev, ACPI_TAD_AC_TIMER);
++	}
+ 	if (dd->capabilities & ACPI_TAD_DC_WAKE) {
+ 		acpi_tad_disable_timer(dev, ACPI_TAD_DC_TIMER);
+ 		acpi_tad_clear_status(dev, ACPI_TAD_DC_TIMER);
+diff -ruN linux.0/drivers/iommu/intel/iommu.c linux.1/drivers/iommu/intel/iommu.c
+--- linux.0/drivers/iommu/intel/iommu.c	2025-11-19 11:57:36.000000000 +0200
++++ linux.1/drivers/iommu/intel/iommu.c	2025-11-19 12:04:18.714206172 +0200
+@@ -224,6 +224,8 @@
+ EXPORT_SYMBOL_GPL(intel_iommu_enabled);
+ 
+ static int dmar_map_intgpu = IS_ENABLED(CONFIG_INTEL_IOMMU_DEFAULT_ON);
++static int dmar_map_ipts = 1;
++static int dmar_map_ipu = 1;
+ static int intel_iommu_superpage = 1;
+ static int iommu_identity_mapping;
+ static int iommu_skip_te_disable;
+@@ -231,6 +233,8 @@
+ 
+ #define IDENTMAP_AZALIA		4
+ #define IDENTMAP_INTGPU		8
++#define IDENTMAP_IPU		16	/* puavo:  8 -> 16 */
++#define IDENTMAP_IPTS		32	/* puavo: 16 -> 32 */
+ 
+ const struct iommu_ops intel_iommu_ops;
+ static const struct iommu_dirty_ops intel_dirty_ops;
+@@ -2090,6 +2094,12 @@
+ 
+ 		if ((iommu_identity_mapping & IDENTMAP_INTGPU) && IS_INTGPU_DEVICE(pdev))
+ 			return IOMMU_DOMAIN_IDENTITY;
++
++		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_INTEL_IPU(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
++
++		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
+ 	}
+ 
+ 	return 0;
+@@ -2391,6 +2401,12 @@
+ 	if (!dmar_map_intgpu)
+ 		iommu_identity_mapping |= IDENTMAP_INTGPU;
+ 
++	if (!dmar_map_ipu)
++		iommu_identity_mapping |= IDENTMAP_IPU;
++
++	if (!dmar_map_ipts)
++		iommu_identity_mapping |= IDENTMAP_IPTS;
++
+ 	check_tylersburg_isoch();
+ 
+ 	/*
+diff -ruN linux.0/drivers/platform/x86/intel/int3472/discrete.c linux.1/drivers/platform/x86/intel/int3472/discrete.c
+--- linux.0/drivers/platform/x86/intel/int3472/discrete.c	2025-11-02 15:15:23.000000000 +0200
++++ linux.1/drivers/platform/x86/intel/int3472/discrete.c	2025-11-19 12:01:39.313061903 +0200
+@@ -81,12 +81,27 @@
+ 					  const char *func, unsigned long gpio_flags)
+ {
+ 	int ret;
++	const struct acpi_device_id ov7251_ids[] = {
++		{ "INT347E" },
++		{ }
++	};
+ 
+ 	if (int3472->n_sensor_gpios >= INT3472_MAX_SENSOR_GPIOS) {
+ 		dev_warn(int3472->dev, "Too many GPIOs mapped\n");
+ 		return -EINVAL;
+ 	}
+ 
++	/*
++	 * In addition to the function remap table we need to bulk remap the
++	 * "reset" GPIO for the OmniVision 7251 sensor, as the driver for that
++	 * expects its only GPIO pin to be called "enable" (and to have the
++	 * opposite polarity).
++	 */
++	if (!strcmp(func, "reset") && !acpi_match_device_ids(int3472->sensor, ov7251_ids)) {
++		func = "enable";
++		polarity ^= GPIO_ACTIVE_LOW;
++	}
++
+ 	ret = skl_int3472_fill_gpiod_lookup(&int3472->gpios.table[int3472->n_sensor_gpios],
+ 					    agpio, func, gpio_flags);
+ 	if (ret)

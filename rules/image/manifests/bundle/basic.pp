@@ -1,5 +1,6 @@
 class image::bundle::basic {
   include ::avahi_daemon
+  include ::benchmarks
   include ::console
   include ::disable_drrs_conditionally
   include ::disable_hp_accel_module
