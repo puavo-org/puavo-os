@@ -6,6 +6,10 @@ class syslog {
       require => Package['logrotate'],
       source  => 'puppet:///modules/syslog/etc_logrotate.d_martians';
 
+    '/etc/logrotate.d/messages':
+      require => Package['logrotate'],
+      source  => 'puppet:///modules/syslog/etc_logrotate.d_messages';
+
     '/etc/logrotate.d/puavo':
       require => Package['logrotate'],
       source  => 'puppet:///modules/syslog/etc_logrotate.d_puavo';
