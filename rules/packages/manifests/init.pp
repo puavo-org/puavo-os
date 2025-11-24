@@ -98,8 +98,6 @@ class packages {
     , 'samba'
     , 'shorewall'
     , 'slapd'
-    , 'syslinux-common'
-    , 'syslinux-efi'
     , 'tpm2-tools'
     , 'winbind' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
