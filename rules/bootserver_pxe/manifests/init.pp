@@ -14,47 +14,6 @@ class bootserver_pxe {
   }
 
   ::bootserver_pxe::tftpexport {
-    [ 'chain.c32'
-    , 'ifcpu64.c32'
-    , 'ldlinux.c32'
-    , 'libcom32.c32'
-    , 'libutil.c32'
-    , 'menu.c32' ]:
-      filedir => '/usr/lib/syslinux/modules/bios',
-      require => Package['syslinux-common'];
-
-    [ 'efi32/syslinux.efi' ]:
-      filedir => '/usr/lib/SYSLINUX.EFI',
-      require => Package['syslinux-efi'];
-
-    [ 'efi32/chain.c32'
-    , 'efi32/ifcpu64.c32'
-    , 'efi32/ldlinux.e32'
-    , 'efi32/libutil.c32'
-    , 'efi32/menu.c32'
-    , 'efi32/syslinux.c32' ]:
-      filedir => '/usr/lib/syslinux/modules',
-      require => Package['syslinux-efi'];
-
-    [ 'efi64/syslinux.efi' ]:
-      filedir => '/usr/lib/SYSLINUX.EFI',
-      require => Package['syslinux-efi'];
-
-    [ 'efi64/chain.c32'
-    , 'efi64/ifcpu64.c32'
-    , 'efi64/ldlinux.e64'
-    , 'efi64/libutil.c32'
-    , 'efi64/menu.c32'
-    , 'efi64/syslinux.c32' ]:
-      filedir => '/usr/lib/syslinux/modules',
-      require => Package['syslinux-efi'];
-
-    'pxelinux.0':
-      filedir => '/usr/lib/PXELINUX',
-      require => Package['pxelinux'];
-
-    ### Grub ###
-
     [ 'grub-pxe-i386.0' ]:
       filedir => '/usr/lib/grub/pxe',
       require => Package['grub-pc'];
@@ -82,7 +41,4 @@ class bootserver_pxe {
       target => '../ltsp';
   }
 
-  Package <| title == pxelinux
-          or title == syslinux-common
-          or title == syslinux-efi |>
 }
