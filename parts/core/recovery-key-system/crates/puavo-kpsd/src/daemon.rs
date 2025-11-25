@@ -188,9 +188,6 @@ impl<E: CommandExecutor> ClientHandler<E> {
     async fn execute_command(&self, command: DaemonCommand) -> DaemonResponse {
         match command {
             DaemonCommand::GetStatus => self.handle_status_command().await,
-            DaemonCommand::Echo { message } => {
-                self.handle_echo_command(message).await
-            }
             DaemonCommand::Shutdown { force } => {
                 self.handle_shutdown_command(force).await
             }
@@ -206,12 +203,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
         DaemonResponse::Status {
             uptime_seconds: uptime.as_secs(),
             version: env!("CARGO_PKG_VERSION").to_string(),
-        }
-    }
-
-    /// Handle echo command
-    async fn handle_echo_command(&self, message: String) -> DaemonResponse {
-        DaemonResponse::success_with_data(format!("Echo: {}", message))
+        })
     }
 
     /// Handle shutdown command

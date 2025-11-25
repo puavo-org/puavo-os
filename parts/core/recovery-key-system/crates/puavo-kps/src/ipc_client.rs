@@ -23,11 +23,6 @@ pub trait IpcClientTrait: Send + Sync {
         self.send_command(DaemonCommand::GetStatus).await
     }
 
-    /// Send echo command for testing
-    async fn echo(&self, message: String) -> Result<DaemonResponse, IpcError> {
-        self.send_command(DaemonCommand::Echo { message }).await
-    }
-
     /// Shutdown daemon
     async fn shutdown(&self, force: bool) -> Result<DaemonResponse, IpcError> {
         self.send_command(DaemonCommand::Shutdown { force }).await

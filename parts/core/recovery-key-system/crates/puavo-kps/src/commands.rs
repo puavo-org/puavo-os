@@ -54,7 +54,6 @@ pub async fn execute_daemon_command_with_client<T: IpcClientTrait>(
 ) -> Result<()> {
     let result = match command {
         DaemonCommands::Status => client.get_status().await,
-        DaemonCommands::Echo { message } => client.echo(message).await,
         DaemonCommands::Shutdown { force } => client.shutdown(force).await,
     };
 
@@ -144,29 +143,6 @@ mod tests {
         let received_commands = mock_client.received_commands();
         assert_eq!(received_commands.len(), 1);
         assert!(matches!(received_commands[0], DaemonCommand::GetStatus));
-    }
-
-    #[tokio::test]
-    async fn test_daemon_echo_command() {
-        let test_message = "Hello, daemon!".to_string();
-        let expected_response = DaemonResponse::Success {
-            data: Some(format!("Echo: {}", test_message)),
-        };
-        let mock_client = MockIpcClient::new(vec![Ok(expected_response)]);
-
-        let result = execute_daemon_command_with_client(
-            DaemonCommands::Echo { message: test_message.clone() },
-            &mock_client,
-        )
-        .await;
-
-        assert!(result.is_ok());
-        let received_commands = mock_client.received_commands();
-        assert_eq!(received_commands.len(), 1);
-        assert!(matches!(
-            received_commands[0],
-            DaemonCommand::Echo { ref message } if message == &test_message
-        ));
     }
 
     #[tokio::test]

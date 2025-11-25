@@ -78,9 +78,6 @@ pub enum DaemonCommand {
     /// Shutdown daemon gracefully
     Shutdown { force: bool },
 
-    /// Echo command for testing IPC
-    Echo { message: String },
-
     /// Execute a command (KPS operations)
     Execute(Commands),
 }

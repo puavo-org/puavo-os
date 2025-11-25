@@ -50,12 +50,6 @@ pub enum DaemonCommands {
     /// Get daemon status
     Status,
 
-    /// Test daemon communication
-    Echo {
-        /// Message to echo
-        message: String,
-    },
-
     /// Shutdown daemon
     Shutdown {
         /// Force shutdown without graceful cleanup
