@@ -11,12 +11,6 @@ import time
 import typing
 
 # Third-party imports
-import gi
-
-gi.require_version("Gdk", "4.0")
-from gi.repository import Gio
-from gi.repository import Gdk
-
 import validators
 
 import puavo_ers.asyncio
@@ -128,10 +122,7 @@ def _run_networking(*args):
 
 def _launch_naksu2(interface):
     _configure_naksu2(interface)
-
-    Gio.DesktopAppInfo.new("naksu2.desktop").launch(
-        context=Gdk.Display.open(os.environ["DISPLAY"]).get_app_launch_context()
-    )
+    subprocess.run('naksu2')
 
 
 def _start_naksu2_certs_dir_monitor(loop):
