@@ -13,6 +13,10 @@ pub struct Cli {
     #[arg(long, global = true, default_value = DEFAULT_SOCKET_PATH)]
     pub socket_path: PathBuf,
 
+    /// Output format
+    #[arg(long, global = true, default_value = "text")]
+    pub format: OutputFormat,
+
     /// Enable verbose output
     #[arg(short, long, global = true)]
     pub verbose: bool,

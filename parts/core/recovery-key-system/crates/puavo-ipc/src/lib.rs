@@ -1,9 +1,21 @@
-use clap::Subcommand;
+use clap::{Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::SystemTime;
 
 pub mod salt;
+
+/// Output format for CLI responses
+#[derive(Default, Clone, Copy, Debug, ValueEnum, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum OutputFormat {
+    /// Human-readable text output
+    #[default]
+    Text,
+
+    /// JSON output
+    Json,
+}
 
 /// Unique identifier for correlating requests and responses
 pub type MessageId = u64;
