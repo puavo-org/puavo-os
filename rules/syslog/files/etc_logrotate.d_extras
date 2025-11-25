@@ -1,0 +1,13 @@
+/var/log/daemon.log
+/var/log/messages {
+	rotate 4
+	weekly
+	missingok
+	notifempty
+	compress
+	delaycompress
+	create 640 root adm
+	postrotate
+		/usr/lib/rsyslog/rsyslog-rotate
+	endscript
+}

@@ -2,6 +2,10 @@ class syslog {
   include ::packages
 
   file {
+    '/etc/logrotate.d/extras':
+      require => Package['logrotate'],
+      source  => 'puppet:///modules/syslog/etc_logrotate.d_extras';
+
     '/etc/logrotate.d/martians':
       require => Package['logrotate'],
       source  => 'puppet:///modules/syslog/etc_logrotate.d_martians';
