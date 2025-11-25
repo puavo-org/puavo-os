@@ -237,9 +237,9 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' \
 	    './config/boot_keys/' '$(_image_file)'
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
-	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
-		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
-		-ef 'config/excludes/$(image_class)'		        \
+	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp' \
+		-noappend -no-recovery -no-sparse -wildcards -comp lzo        \
+		-ef config/squashfs_exclude_list                              \
 		|| { rm -f '$(image_dir)/$(_image_file).tmp'; false; }
 	$(_sudo) mv '$(image_dir)/$(_image_file).tmp' '$(image_dir)/$(_image_file)'
 	@echo Built '$(image_dir)/$(_image_file)' successfully.
