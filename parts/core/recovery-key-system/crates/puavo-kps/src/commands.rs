@@ -1,8 +1,9 @@
 use crate::cli::{Cli, CliCommands, DaemonCommands, DeviceCommands};
 use crate::device::generate_recovery_bundle_local;
+use crate::formatter;
 use crate::ipc_client::{IpcClient, IpcClientTrait};
-use anyhow::Result;
-use puavo_ipc::{DaemonCommand, DaemonResponse, IpcError};
+use anyhow::{Result, bail};
+use puavo_ipc::{DaemonCommand, DaemonResponse, IpcError, OutputFormat};
 
 /// Execute the specified CLI command
 ///
@@ -21,14 +22,16 @@ pub async fn execute(cli: Cli) -> Result<()> {
         // Handle daemon commands locally for daemon management
         CliCommands::Daemon { command } => {
             let client = IpcClient::new(cli.socket_path);
-            execute_daemon_command_with_client(command, &client).await
+            execute_daemon_command_with_client(command, &client, cli.format)
+                .await
         }
 
         // KPS commands are sent to daemon for execution via IPC
         CliCommands::Kps(command) => {
             let client = IpcClient::new(cli.socket_path);
             let daemon_command = DaemonCommand::Execute(command);
-            execute_command_via_daemon(&client, daemon_command).await
+            execute_command_via_daemon(&client, daemon_command, cli.format)
+                .await
         }
 
         // Device commands are executed locally without daemon
@@ -42,51 +45,50 @@ pub async fn execute(cli: Cli) -> Result<()> {
 async fn execute_command_via_daemon<T: IpcClientTrait>(
     client: &T,
     command: DaemonCommand,
+    output_format: OutputFormat,
 ) -> Result<()> {
     let result = client.send_command(command).await;
-    handle_daemon_response(result)
+    handle_daemon_response(result, output_format)
 }
 
 /// Execute daemon command with provided client
 pub async fn execute_daemon_command_with_client<T: IpcClientTrait>(
     command: DaemonCommands,
     client: &T,
+    output_format: OutputFormat,
 ) -> Result<()> {
     let result = match command {
         DaemonCommands::Status => client.get_status().await,
         DaemonCommands::Shutdown { force } => client.shutdown(force).await,
     };
 
-    handle_daemon_response(result)
+    handle_daemon_response(result, output_format)
 }
 
 /// Handle daemon response with common error handling
+///
+/// Parameters:
+/// * `result` - Result from daemon communication
+/// * `output_format` - Desired output format
 ///
 /// Returns:
 /// Result containing success or IPC communication error
 fn handle_daemon_response(
     result: Result<DaemonResponse, IpcError>,
+    output_format: OutputFormat,
 ) -> Result<()> {
-    match result {
-        Ok(response) => {
-            match response {
-                DaemonResponse::Success { data } => {
-                    if let Some(message) = data {
-                        println!("{}", message);
-                    } else {
-                        println!("Success");
-                    }
-                }
-                _ => println!("Daemon response: {:?}", response)
-            };
-            Ok(())
+    match result.map_err(|error| {
+        format!("Failed to communicate with daemon: {}", error)
+    }) {
+        Ok(DaemonResponse::Success { data: Some(data) }) => {
+            let formatted = formatter::format(&data, output_format)?;
+            println!("{}", formatted);
         }
-        Err(error) => {
-            let error_message =
-                format!("Failed to communicate with daemon: {}", error);
-            Err(anyhow::anyhow!(error_message))
-        }
+        Ok(DaemonResponse::Success { .. }) => {}
+        Ok(DaemonResponse::Error(error)) | Err(error) => bail!(error),
     }
+
+    Ok(())
 }
 
 /// Execute device command locally without daemon
@@ -137,6 +139,7 @@ mod tests {
         let result = execute_daemon_command_with_client(
             DaemonCommands::Status,
             &mock_client,
+            OutputFormat::Text,
         )
         .await;
 
@@ -154,6 +157,7 @@ mod tests {
         let result = execute_daemon_command_with_client(
             DaemonCommands::Shutdown { force: true },
             &mock_client,
+            OutputFormat::Text,
         )
         .await;
 
@@ -175,6 +179,7 @@ mod tests {
         let result = execute_daemon_command_with_client(
             DaemonCommands::Status,
             &mock_client,
+            OutputFormat::Text,
         )
         .await;
 
