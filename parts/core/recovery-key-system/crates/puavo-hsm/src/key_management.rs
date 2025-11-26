@@ -361,6 +361,57 @@ impl<'a> HsmKeyManager<'a> {
 
         Ok(public_key)
     }
+
+    /// List all organization keys stored in the HSM
+    ///
+    /// Returns:
+    /// List of all organization keys with their labels, versions, and handles
+    ///
+    /// Errors:
+    /// Returns error if HSM operations fail
+    pub fn list_all_organization_keys(
+        &self,
+    ) -> Result<Vec<(String, u32, ObjectHandle)>, KeyManagementError> {
+        let key_template = vec![
+            Attribute::Class(ObjectClass::PUBLIC_KEY),
+            Attribute::Token(true),
+        ];
+        let key_handles = self.session.session().find_objects(&key_template)?;
+
+        let mut organization_keys = Vec::new();
+
+        for key_handle in key_handles {
+            tracing::debug!("Inspecting key handle: {:?}", key_handle);
+
+            // Retrieve the ID attribute of the key
+            let attributes = self
+                .session
+                .session()
+                .get_attributes(key_handle, &[AttributeType::Id])?;
+
+            // Parse the key label and version from the ID attribute
+            let key_info_option = match attributes.first() {
+                Some(Attribute::Id(id_bytes)) => {
+                    let id = String::from_utf8_lossy(&id_bytes);
+                    KeyLabel::parse(&id)
+                        .inspect_err(|error| {
+                            tracing::error!("Failed to parse key: {}", error)
+                        })
+                        .ok()
+                }
+                _ => None,
+            };
+
+            // Add to results if parsing was successful
+            if let Some((label, version)) = key_info_option {
+                organization_keys.push((label, version, key_handle));
+            } else {
+                tracing::error!("Key did not have valid versioned ID");
+            }
+        }
+
+        Ok(organization_keys)
+    }
 }
 
 #[cfg(test)]
