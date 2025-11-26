@@ -4,7 +4,7 @@ use puavo_hsm::{
 };
 use puavo_ipc::{
     DaemonResponse, DaemonResponseData, OrganizationCommand,
-    OrganizationKeyVersion, OrganizationPublicKey,
+    OrganizationKeyListing, OrganizationKeyVersion, OrganizationPublicKey,
 };
 use rsa::pkcs1::EncodeRsaPublicKey;
 use sha2::{Digest, Sha256};
@@ -114,6 +114,73 @@ fn export_public_key(
     Ok(organization_public_key)
 }
 
+/// List organization keys
+///
+/// Parameters:
+/// * `hsm_session` - Active HSM session for key operations
+/// * `organization_id_filter` - Optional organization identifier to filter results
+///
+/// Returns:
+/// List of organization key listings or error
+///
+/// Errors:
+/// Returns error if keys cannot be listed
+fn list_keys(
+    hsm_session: &HsmSession,
+    organization_id_filter: Option<String>,
+) -> Result<Vec<OrganizationKeyListing>, OrganizationCommandError> {
+    tracing::info!("Listing organization keys");
+
+    let key_manager = HsmKeyManager::new(hsm_session);
+    let all_organization_keys = key_manager.list_all_organization_keys()?;
+
+    // Collect and group all keys by organization
+    let mut organizations: HashMap<String, Vec<OrganizationKeyVersion>> =
+        HashMap::new();
+
+    for (label, version, public_key_handle) in all_organization_keys {
+        let organization_id =
+            KeyLabel::organization_id_from_label(&label).unwrap_or(&label);
+
+        // Apply the organization ID filter if provided
+        if let Some(ref filter_id) = organization_id_filter {
+            if organization_id != filter_id {
+                continue;
+            }
+        }
+
+        // Compute the fingerprint of the public key
+        let public_key = key_manager.extract_public_key(&public_key_handle)?;
+        let public_key_pem =
+            public_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::LF)?;
+        let fingerprint = Sha256::digest(public_key_pem)
+            .iter()
+            .map(|byte| format!("{:02x}", byte))
+            .collect::<String>();
+
+        // Insert into the organizations map
+        organizations
+            .entry(organization_id.to_string())
+            .or_insert_with(Vec::new)
+            .push(OrganizationKeyVersion { version, fingerprint });
+    }
+
+    // Sort and prepare the listings
+    let mut listings: Vec<OrganizationKeyListing> = organizations
+        .into_iter()
+        .map(|(organization_id, mut versions)| {
+            versions.sort_by_key(|version| version.version);
+            OrganizationKeyListing { organization_id, versions }
+        })
+        .collect();
+
+    listings.sort_by(|first, second| {
+        first.organization_id.cmp(&second.organization_id)
+    });
+
+    Ok(listings)
+}
+
 /// Execute organization key management command
 ///
 /// Parameters:
@@ -136,6 +203,10 @@ pub fn execute(
 
         OrganizationCommand::Export { organization_id, version, output } => {
             execute_export(hsm_session, organization_id, version, output)
+        }
+
+        OrganizationCommand::List { organization_id } => {
+            execute_list(hsm_session, organization_id)
         }
     }
 }
@@ -170,6 +241,19 @@ fn execute_export(
         .map(|public_key_data| {
             tracing::info!("Organization public key export completed");
             DaemonResponseData::OrganizationPublicKey(public_key_data)
+        })
+        .into()
+}
+
+/// Execute organization key listing
+fn execute_list(
+    hsm_session: &HsmSession,
+    organization_id: Option<String>,
+) -> DaemonResponse {
+    list_keys(hsm_session, organization_id)
+        .map(|listings| {
+            tracing::info!("Organization key listing completed");
+            DaemonResponseData::OrganizationKeyListings(listings)
         })
         .into()
 }

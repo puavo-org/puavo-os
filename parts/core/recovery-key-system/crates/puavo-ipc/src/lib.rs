@@ -66,6 +66,24 @@ pub struct OrganizationPublicKey {
     pub public_key_pem: String,
 }
 
+/// Structure containing information about a single key version
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OrganizationKeyVersion {
+    /// Key version number
+    pub version: u32,
+    /// SHA-256 fingerprint of the public key (pem)
+    pub fingerprint: String,
+}
+
+/// Structure containing organization key listing information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OrganizationKeyListing {
+    /// Organization ID
+    pub organization_id: String,
+    /// List of key versions
+    pub versions: Vec<OrganizationKeyVersion>,
+}
+
 /// Top-level IPC message envelope
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IpcMessage {
@@ -192,6 +210,13 @@ pub enum OrganizationCommand {
         #[arg(long)]
         output: Option<PathBuf>,
     },
+
+    /// List organization keys
+    List {
+        /// Organization identifier
+        #[arg(long)]
+        organization_id: Option<String>,
+    },
 }
 
 /// Audit log management commands
@@ -259,6 +284,9 @@ pub enum OperatorCommand {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DaemonResponseData {
+    /// List of organization keys
+    OrganizationKeyListings(Vec<OrganizationKeyListing>),
+
     /// Exported organization public key
     OrganizationPublicKey(OrganizationPublicKey),
 

@@ -58,6 +58,8 @@ pub struct KeyLabel {
     pub version: u32,
 }
 
+const ORGANIZATION_KEY_PREFIX: &str = "puavo-organization-";
+
 impl KeyLabel {
     /// Create a new key label
     ///
@@ -78,7 +80,12 @@ impl KeyLabel {
     /// Returns:
     /// Base key label for the organization
     pub fn organization_label(id: &str) -> String {
-        format!("puavo-organization-{}", id)
+        format!("{}{}", ORGANIZATION_KEY_PREFIX, id)
+    }
+
+    /// Returns the organization id from the specified label
+    pub fn organization_id_from_label(label: &String) -> Option<&str> {
+        label.strip_prefix(ORGANIZATION_KEY_PREFIX)
     }
 
     /// Organization key label
