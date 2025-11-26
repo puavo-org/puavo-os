@@ -20,14 +20,14 @@ const VERSION_SEPARATOR: &str = ":v";
 /// Errors that can occur during key management
 #[derive(Debug, thiserror::Error)]
 pub enum KeyManagementError {
+    #[error("Invalid key format")]
+    InvalidKeyFormat,
+
     #[error("Key not found: {0}")]
     KeyNotFound(String),
 
     #[error("Found multiple keys with same ID: {0}")]
     MultipleKeysFound(String),
-
-    #[error("Key version not found")]
-    KeyVersionNotFound,
 
     #[error("Key generation failed: {0}")]
     GenerationFailed(String),
@@ -101,24 +101,30 @@ impl KeyLabel {
         format!("{}{}{}", self.label, VERSION_SEPARATOR, self.version)
     }
 
-    /// Parse version from a versioned identifier
+    /// Parse a versioned identifier
     ///
     /// Parameters:
-    /// * `versioned_id` - Versioned identifier string in format
+    /// * `versioned_id` - Versioned identifier
     ///
     /// Returns:
-    /// Version number extracted from the identifier
+    /// The organization label and version number
     ///
     /// Errors:
-    /// Returns `KeyVersionNotFound` if version cannot be parsed
-    pub fn parse_version(
+    /// Returns `InvalidKeyFormat` if the format is incorrect
+    pub fn parse(
         versioned_id: &str,
-    ) -> Result<u32, KeyManagementError> {
-        versioned_id
-            .split(VERSION_SEPARATOR)
-            .nth(1)
-            .and_then(|version_part| version_part.parse::<u32>().ok())
-            .ok_or(KeyManagementError::KeyVersionNotFound)
+    ) -> Result<(String, u32), KeyManagementError> {
+        let parts = versioned_id.split(VERSION_SEPARATOR).collect::<Vec<_>>();
+
+        match parts[..] {
+            [label, version] => {
+                let version = version
+                    .parse::<u32>()
+                    .map_err(|_| KeyManagementError::InvalidKeyFormat)?;
+                Ok((label.to_owned(), version))
+            }
+            _ => Err(KeyManagementError::InvalidKeyFormat),
+        }
     }
 }
 
@@ -270,9 +276,9 @@ impl<'a> HsmKeyManager<'a> {
         match &id_attribute[..] {
             [Attribute::Id(id_bytes)] => {
                 let id_string = String::from_utf8_lossy(id_bytes);
-                KeyLabel::parse_version(&id_string)
+                KeyLabel::parse(&id_string).map(|(_, version)| version)
             }
-            _ => Err(KeyManagementError::KeyVersionNotFound),
+            _ => Err(KeyManagementError::InvalidKeyFormat),
         }
     }
 
