@@ -3,8 +3,8 @@ use crate::config::KpsConfig;
 use crate::context::DaemonContext;
 use anyhow::Result;
 use puavo_ipc::{
-    Commands, DEFAULT_SOCKET_PATH, DaemonCommand, DaemonResponse, IpcMessage,
-    IpcPayload, MAX_MESSAGE_SIZE,
+    Commands, DEFAULT_SOCKET_PATH, DaemonCommand, DaemonResponse,
+    DaemonResponseData, IpcMessage, IpcPayload, MAX_MESSAGE_SIZE,
 };
 use std::fs::Permissions;
 use std::os::unix::fs::PermissionsExt;
@@ -175,10 +175,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
     async fn process_message(&self, message: IpcMessage) -> IpcMessage {
         let response = match message.payload {
             IpcPayload::Command(command) => self.execute_command(command).await,
-            _ => DaemonResponse::Error {
-                code: "invalid_message".to_string(),
-                message: "Expected command".to_string(),
-            },
+            _ => DaemonResponse::Error("Expected command".to_string()),
         };
 
         IpcMessage::new_response(message.id, response)
@@ -200,10 +197,10 @@ impl<E: CommandExecutor> ClientHandler<E> {
     /// Handle status command
     async fn handle_status_command(&self) -> DaemonResponse {
         let uptime = self.start_time.elapsed();
-        DaemonResponse::Status {
+        DaemonResponseData::Status {
             uptime_seconds: uptime.as_secs(),
             version: env!("CARGO_PKG_VERSION").to_string(),
-        })
+        }.into()
     }
 
     /// Handle shutdown command

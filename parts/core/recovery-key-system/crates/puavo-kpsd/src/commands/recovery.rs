@@ -6,7 +6,8 @@ use puavo_hsm::{
     HsmKeyManager, HsmSession, KeyLabel, key_management::KeyManagementError,
 };
 use puavo_ipc::{
-    DaemonResponse, RECOVERY_KEY_DATA_VERSION, RecoveryBundle, RecoveryKeyData,
+    DaemonResponse, DaemonResponseData, RECOVERY_KEY_DATA_VERSION,
+    RecoveryBundle, RecoveryKeyData,
 };
 use rsa::{Pkcs1v15Encrypt, RsaPublicKey};
 use std::{fs, path::PathBuf};
@@ -28,6 +29,17 @@ pub enum RecoveryKeyError {
 
     #[error("Hex decoding error: {0}")]
     HexDecode(#[from] hex::FromHexError),
+
+    #[error(
+        "Number of serial numbers does not match number of recovery key files"
+    )]
+    ParameterMismatch,
+}
+
+impl From<RecoveryKeyError> for DaemonResponse {
+    fn from(error: RecoveryKeyError) -> Self {
+        DaemonResponse::Error(error.to_string())
+    }
 }
 
 /// Create recovery key data structure from components
@@ -253,25 +265,6 @@ fn read_recovery_bundle(
     Ok(recovery_bundle)
 }
 
-/// Format recovery key data for display
-///
-/// Parameters:
-/// * `recovery_key_data` - Recovery key data to format
-///
-/// Returns:
-/// Formatted string with device, organization, and key information
-fn format_recovery_key_output(recovery_key_data: &RecoveryKeyData) -> String {
-    format!("{}", String::from_utf8_lossy(&recovery_key_data.recovery_key))
-}
-
-/// Convert recovery key error to daemon response
-fn recovery_key_error_to_response(error: RecoveryKeyError) -> DaemonResponse {
-    DaemonResponse::Error {
-        code: "RECOVERY_KEY_ERROR".into(),
-        message: error.to_string(),
-    }
-}
-
 /// Execute generate command to create new recovery keys
 ///
 /// Parameters:
@@ -291,39 +284,32 @@ pub fn execute_generate(
     recovery_key_files: Vec<PathBuf>,
 ) -> DaemonResponse {
     if serial_numbers.len() != recovery_key_files.len() {
-        return DaemonResponse::Error {
-            code: "PARAMETER_MISMATCH".into(),
-            message: "Number of serial numbers does not match number of recovery key files".into(),
-        };
+        return RecoveryKeyError::ParameterMismatch.into();
     }
 
-    let recovery_keys_result: Result<Vec<_>, RecoveryKeyError> = serial_numbers
-        .into_iter()
-        .zip(recovery_key_files.iter())
-        .map(|(serial_number, recovery_key_file)| {
-            let recovery_key = fs::read(&recovery_key_file)?;
-            // TODO(recovery-key-format): Validate recovery key format?
+    let recovery_bundles_result: Result<Vec<_>, RecoveryKeyError> =
+        serial_numbers
+            .into_iter()
+            .zip(recovery_key_files.iter())
+            .map(|(serial_number, recovery_key_file)| {
+                let recovery_key = fs::read(&recovery_key_file)?;
+                // TODO(recovery-key-format): Validate recovery key format?
 
-            let recovery_bundle = create_recovery_bundle(
-                hsm_session,
-                organization_id.clone(),
-                serial_number,
-                recovery_key,
-            )?;
+                return create_recovery_bundle(
+                    hsm_session,
+                    organization_id.clone(),
+                    serial_number,
+                    recovery_key,
+                );
+            })
+            .collect();
 
-            Ok(serde_json::to_string(&recovery_bundle)?)
-        })
-        .collect();
-
-    match recovery_keys_result {
-        Ok(encrypted_recovery_keys) => {
+    recovery_bundles_result
+        .map(|recovery_bundles| {
             tracing::info!("Successfully generated recovery bundles");
-            DaemonResponse::success_with_data(
-                encrypted_recovery_keys.join("\n"),
-            )
-        }
-        Err(error) => recovery_key_error_to_response(error),
-    }
+            DaemonResponseData::RecoveryBundles(recovery_bundles)
+        })
+        .into()
 }
 
 /// Execute unwrap command to decrypt recovery keys from encrypted files
@@ -340,23 +326,21 @@ pub fn execute_unwrap(
     _operator_id: Option<String>,
     recovery_bundle_paths: Vec<PathBuf>,
 ) -> DaemonResponse {
-    let unwrap_result: Result<Vec<_>, RecoveryKeyError> = recovery_bundle_paths
-        .iter()
-        .map(|path| {
-            let recovery_bundle = read_recovery_bundle(path)?;
-            let recovery_key_data =
-                unwrap_recovery_key(hsm_session, recovery_bundle)?;
-            Ok(format_recovery_key_output(&recovery_key_data))
-        })
-        .collect();
+    let recovery_key_datas_result: Result<Vec<_>, RecoveryKeyError> =
+        recovery_bundle_paths
+            .iter()
+            .map(|path| {
+                let recovery_bundle = read_recovery_bundle(path)?;
+                return unwrap_recovery_key(hsm_session, recovery_bundle);
+            })
+            .collect();
 
-    match unwrap_result {
-        Ok(results) => {
+    recovery_key_datas_result
+        .map(|recovery_key_datas| {
             tracing::info!("Successfully unwrapped recovery bundles");
-            DaemonResponse::success_with_data(results.join("\n"))
-        }
-        Err(error) => recovery_key_error_to_response(error),
-    }
+            DaemonResponseData::RecoveryKeyDatas(recovery_key_datas)
+        })
+        .into()
 }
 
 #[cfg(test)]
@@ -371,19 +355,5 @@ mod tests {
     #[tokio::test]
     async fn test_unwrap_recovery_key() {
         // TODO: Add proper test with mock HSM session
-    }
-
-    #[tokio::test]
-    async fn test_recovery_key_error_to_response() {
-        let error = RecoveryKeyError::NoOrganizationKeys;
-        let response = recovery_key_error_to_response(error);
-
-        match response {
-            DaemonResponse::Error { code, message } => {
-                assert_eq!(code, "RECOVERY_KEY_ERROR");
-                assert_eq!(message, "Organization has no keys");
-            }
-            _ => panic!("Expected error response"),
-        }
     }
 }

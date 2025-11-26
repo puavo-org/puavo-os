@@ -2,9 +2,13 @@ use cryptoki::object::ObjectClass;
 use puavo_hsm::{
     HsmKeyManager, HsmSession, KeyLabel, key_management::KeyManagementError,
 };
-use puavo_ipc::{DaemonResponse, OrganizationCommand, OrganizationPublicKey};
+use puavo_ipc::{
+    DaemonResponse, DaemonResponseData, OrganizationCommand,
+    OrganizationKeyVersion, OrganizationPublicKey,
+};
 use rsa::pkcs1::EncodeRsaPublicKey;
-use std::{fs, path::PathBuf};
+use sha2::{Digest, Sha256};
+use std::{collections::HashMap, fs, path::PathBuf};
 
 /// Errors that can occur during organization commands
 #[derive(Debug, thiserror::Error)]
@@ -15,14 +19,20 @@ pub enum OrganizationCommandError {
     #[error("Organization is already initialized")]
     OrganizationAlreadyInitialized,
 
-    #[error("Serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
-
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
     #[error("RSA encoding error: {0}")]
     RsaEncoding(#[from] rsa::pkcs1::Error),
+
+    #[error("Serialization error: {0}")]
+    Serialization(#[from] serde_json::Error),
+}
+
+impl From<OrganizationCommandError> for DaemonResponse {
+    fn from(error: OrganizationCommandError) -> Self {
+        DaemonResponse::Error(error.to_string())
+    }
 }
 
 /// Execute organization key initialization
@@ -130,28 +140,17 @@ pub fn execute(
     }
 }
 
-/// Convert organization command error to daemon response
-fn organization_error_to_response(
-    error: OrganizationCommandError,
-) -> DaemonResponse {
-    DaemonResponse::Error {
-        code: "ORGANIZATION_ERROR".into(),
-        message: error.to_string(),
-    }
-}
-
 /// Execute organization key initialization
 fn execute_initialize(
     hsm_session: &HsmSession,
     organization_id: String,
 ) -> DaemonResponse {
-    match initialize(hsm_session, organization_id) {
-        Ok(_) => {
+    initialize(hsm_session, organization_id)
+        .map(|_| {
             tracing::info!("Organization key initialization completed");
             DaemonResponse::success()
-        }
-        Err(error) => organization_error_to_response(error),
-    }
+        })
+        .into()
 }
 
 /// Execute organization key rotation
@@ -167,23 +166,18 @@ fn execute_export(
     version: u32,
     output: Option<PathBuf>,
 ) -> DaemonResponse {
-    match export_public_key(hsm_session, organization_id, version, output) {
-        Ok(public_key_data) => {
+    export_public_key(hsm_session, organization_id, version, output)
+        .map(|public_key_data| {
             tracing::info!("Organization public key export completed");
-            match serde_json::to_string(&public_key_data) {
-                Ok(json_data) => DaemonResponse::success_with_data(json_data),
-                Err(error) => organization_error_to_response(
-                    OrganizationCommandError::Serialization(error),
-                ),
-            }
-        }
-        Err(error) => organization_error_to_response(error),
-    }
+            DaemonResponseData::OrganizationPublicKey(public_key_data)
+        })
+        .into()
 }
 
 #[cfg(test)]
 mod tests {
     use puavo_hsm::TestHsmSession;
+    use puavo_ipc::DaemonResponseData;
 
     use super::*;
 
@@ -228,8 +222,7 @@ mod tests {
         let response = execute_initialize(session, organization_id.clone());
 
         match response {
-            DaemonResponse::Error { code, message } => {
-                assert_eq!(code, "ORGANIZATION_ERROR");
+            DaemonResponse::Error(message) => {
                 assert!(message.contains("already initialized"));
             }
             _ => panic!("Expected error response"),
@@ -261,9 +254,10 @@ mod tests {
             execute_export(session, organization_id.clone(), 1, None);
 
         match response {
-            DaemonResponse::Success { data: Some(json_data) } => {
-                let public_key_data: OrganizationPublicKey =
-                    serde_json::from_str(&json_data).unwrap();
+            DaemonResponse::Success {
+                data:
+                    Some(DaemonResponseData::OrganizationPublicKey(public_key_data)),
+            } => {
                 assert_eq!(public_key_data.organization_id, organization_id);
                 assert_eq!(public_key_data.version, 1);
                 assert!(

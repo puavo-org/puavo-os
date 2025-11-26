@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use puavo_ipc::DEFAULT_SOCKET_PATH;
+use puavo_ipc::{DEFAULT_SOCKET_PATH, OutputFormat};
 use std::path::PathBuf;
 
 pub use puavo_ipc::Commands;

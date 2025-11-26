@@ -257,20 +257,32 @@ pub enum OperatorCommand {
     },
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DaemonResponseData {
+    /// Exported organization public key
+    OrganizationPublicKey(OrganizationPublicKey),
+
+    /// List of recovery bundles
+    RecoveryBundles(Vec<RecoveryBundle>),
+
+    /// List of recovery key data
+    RecoveryKeyDatas(Vec<RecoveryKeyData>),
+
+    /// Daemon status information
+    Status { uptime_seconds: u64, version: String },
+}
+
 /// Responses from daemon
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DaemonResponse {
     /// Successful operation with optional data
     Success {
         #[serde(skip_serializing_if = "Option::is_none")]
-        data: Option<String>,
+        data: Option<DaemonResponseData>,
     },
 
     /// Error occurred during operation
-    Error { code: String, message: String },
-
-    /// Status information
-    Status { uptime_seconds: u64, version: String },
+    Error(String),
 }
 
 /// IPC-specific errors
@@ -319,7 +331,28 @@ impl DaemonResponse {
     }
 
     /// Create a success response with data
-    pub fn success_with_data(data: String) -> Self {
+    pub fn success_with_data(data: DaemonResponseData) -> Self {
         Self::Success { data: Some(data) }
+    }
+}
+
+/// Support conversion from DaemonResponseData to DaemonResponse
+impl From<DaemonResponseData> for DaemonResponse {
+    fn from(value: DaemonResponseData) -> Self {
+        DaemonResponse::success_with_data(value)
+    }
+}
+
+/// Support conversion from Result<T, E> to DaemonResponse
+impl<T, E> From<Result<T, E>> for DaemonResponse
+where
+    T: Into<DaemonResponse>,
+    E: Into<DaemonResponse>,
+{
+    fn from(value: Result<T, E>) -> Self {
+        match value {
+            Ok(success) => success.into(),
+            Err(error) => error.into(),
+        }
     }
 }

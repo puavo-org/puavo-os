@@ -123,14 +123,15 @@ async fn execute_device_command(command: DeviceCommands) -> Result<()> {
 mod tests {
     use super::*;
     use crate::ipc_client::test_utils::MockIpcClient;
-    use puavo_ipc::DaemonCommand;
+    use puavo_ipc::{DaemonCommand, DaemonResponseData};
 
     #[tokio::test]
     async fn test_daemon_status_command() {
-        let expected_response = DaemonResponse::Status {
+        let expected_response = DaemonResponseData::Status {
             uptime_seconds: 120,
             version: "0.1.0".to_string(),
-        };
+        }
+        .into();
         let mock_client = MockIpcClient::new(vec![Ok(expected_response)]);
 
         let result = execute_daemon_command_with_client(
@@ -147,9 +148,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_daemon_shutdown_command() {
-        let expected_response = DaemonResponse::Success {
-            data: Some("Shutdown initiated".to_string()),
-        };
+        let expected_response = DaemonResponse::success();
         let mock_client = MockIpcClient::new(vec![Ok(expected_response)]);
 
         let result = execute_daemon_command_with_client(
