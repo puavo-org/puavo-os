@@ -3,6 +3,7 @@ mod commands;
 mod config;
 mod context;
 mod daemon;
+mod error;
 
 use anyhow::Result;
 use tracing_subscriber::EnvFilter;
