@@ -165,12 +165,6 @@ pub enum Commands {
         #[arg(long)]
         recovery_bundle: Vec<PathBuf>,
     },
-
-    /// Operator management
-    Operator {
-        #[command(subcommand)]
-        command: OperatorCommand,
-    },
 }
 
 /// Organization key management commands
@@ -210,31 +204,6 @@ pub enum OrganizationCommand {
         /// Organization identifier
         #[arg(long)]
         organization_id: Option<String>,
-    },
-}
-
-/// Operator management commands
-#[derive(Subcommand, Debug, Clone, Serialize, Deserialize)]
-pub enum OperatorCommand {
-    /// Add a new operator
-    Add {
-        /// Operator identifier (email or username)
-        #[arg(long)]
-        id: String,
-
-        /// Full name
-        #[arg(long)]
-        name: String,
-    },
-
-    /// List authorized operators
-    List,
-
-    /// Revoke operator access
-    Revoke {
-        /// Operator identifier
-        #[arg(long)]
-        id: String,
     },
 }
 
