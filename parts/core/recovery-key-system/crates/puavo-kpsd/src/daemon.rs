@@ -7,12 +7,13 @@ use puavo_ipc::{
     DaemonResponseData, IpcMessage, IpcPayload, MAX_MESSAGE_SIZE,
 };
 use std::fs::Permissions;
+use std::io;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::unix::SocketAddr;
+use tokio::net::unix::{SocketAddr, UCred};
 use tokio::net::{UnixListener, UnixStream};
 use tokio::signal;
 use tokio::sync::mpsc::{self, UnboundedSender};
@@ -77,18 +78,21 @@ impl Daemon {
     /// Handle incoming client connection
     async fn handle_client_connection(
         &self,
-        result: std::io::Result<(UnixStream, SocketAddr)>,
+        connection_result: io::Result<(UnixStream, SocketAddr)>,
         shutdown: UnboundedSender<()>,
     ) {
-        match result {
-            Ok((stream, _address)) => {
-                let handler = ClientHandler::new(
+        let client_handler_result =
+            connection_result.and_then(|(stream, _address)| {
+                ClientHandler::new(
                     stream,
                     shutdown,
                     self.start_time,
                     self.context.clone(),
-                );
+                )
+            });
 
+        match client_handler_result {
+            Ok(handler) => {
                 // Spawn client handler
                 tokio::spawn(async move {
                     if let Err(error) = handler.handle().await {
@@ -110,6 +114,7 @@ struct ClientHandler<E: CommandExecutor> {
     start_time: Instant,
     context: Arc<DaemonContext>,
     executor: Arc<E>,
+    credentials: UCred,
 }
 
 impl ClientHandler<DefaultCommandExecutor> {
@@ -118,14 +123,18 @@ impl ClientHandler<DefaultCommandExecutor> {
         shutdown: UnboundedSender<()>,
         start_time: Instant,
         context: Arc<DaemonContext>,
-    ) -> Self {
-        Self {
+    ) -> io::Result<Self> {
+        let credentials = stream.peer_cred()?;
+        tracing::info!("New connection from {:?}", credentials);
+
+        Ok(Self {
             stream,
             shutdown,
             start_time,
             context,
             executor: Arc::new(DefaultCommandExecutor::new()),
-        }
+            credentials,
+        })
     }
 }
 
@@ -183,6 +192,12 @@ impl<E: CommandExecutor> ClientHandler<E> {
 
     /// Execute specific daemon command
     async fn execute_command(&self, command: DaemonCommand) -> DaemonResponse {
+        tracing::info!(
+            "Executing command from {:?}: {:?}",
+            self.credentials,
+            command
+        );
+
         match command {
             DaemonCommand::GetStatus => self.handle_status_command().await,
             DaemonCommand::Shutdown { force } => {
@@ -200,7 +215,8 @@ impl<E: CommandExecutor> ClientHandler<E> {
         DaemonResponseData::Status {
             uptime_seconds: uptime.as_secs(),
             version: env!("CARGO_PKG_VERSION").to_string(),
-        }.into()
+        }
+        .into()
     }
 
     /// Handle shutdown command
