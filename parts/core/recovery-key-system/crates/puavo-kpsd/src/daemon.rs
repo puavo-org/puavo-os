@@ -1,15 +1,14 @@
 use crate::commands::{CommandExecutor, DefaultCommandExecutor};
 use crate::config::KpsConfig;
 use crate::context::DaemonContext;
-use anyhow::Result;
+use crate::error::{Error, Result};
 use puavo_ipc::{
-    Commands, DEFAULT_SOCKET_PATH, DaemonCommand, DaemonResponse,
+    Commands, DEFAULT_SOCKET_MODE, DaemonCommand, DaemonResponse,
     DaemonResponseData, IpcMessage, IpcPayload, MAX_MESSAGE_SIZE,
 };
 use std::fs::Permissions;
 use std::io;
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -33,21 +32,23 @@ impl Daemon {
 
     /// Run the daemon main loop
     pub async fn run(&self) -> Result<()> {
+        let socket_path = &self.context.config().socket.path;
+
         // Remove existing socket file if it exists
-        if Path::new(DEFAULT_SOCKET_PATH).exists() {
-            tokio::fs::remove_file(DEFAULT_SOCKET_PATH).await?;
+        if socket_path.exists() {
+            tokio::fs::remove_file(&socket_path).await.map_err(|error| {
+                Error::SocketRemovalError(socket_path.clone(), error)
+            })?;
         }
 
-        let listener = UnixListener::bind(DEFAULT_SOCKET_PATH)?;
+        let listener = UnixListener::bind(&socket_path).map_err(|error| {
+            Error::SocketBindError(socket_path.clone(), error)
+        })?;
 
-        // Allow all users to connect to the socket
-        tokio::fs::set_permissions(
-            DEFAULT_SOCKET_PATH,
-            Permissions::from_mode(0o777),
-        )
-        .await?;
+        // Apply socket permissions and group ownership
+        self.apply_socket_permissions().await?;
 
-        tracing::info!("Daemon listening on {}", DEFAULT_SOCKET_PATH);
+        tracing::info!("Daemon listening on {}", socket_path.display());
 
         let (shutdown_send, mut shutdown_receive) =
             mpsc::unbounded_channel::<()>();
@@ -71,7 +72,44 @@ impl Daemon {
         }
 
         // Cleanup
-        let _ = tokio::fs::remove_file(DEFAULT_SOCKET_PATH).await;
+        let _ = tokio::fs::remove_file(&socket_path).await;
+        Ok(())
+    }
+
+    /// Apply socket permissions and group ownership
+    async fn apply_socket_permissions(&self) -> Result<()> {
+        let socket_config = &self.context.config().socket;
+
+        // Set file permissions
+        tokio::fs::set_permissions(
+            &socket_config.path,
+            Permissions::from_mode(DEFAULT_SOCKET_MODE),
+        )
+        .await
+        .map_err(|error| {
+            Error::SocketPermissionsError(socket_config.path.clone(), error)
+        })?;
+
+        tracing::debug!("Socket permissions set to {:o}", DEFAULT_SOCKET_MODE);
+
+        // Find the configured group ID and set ownership
+        let group_info = nix::unistd::Group::from_name(&socket_config.group)
+            .map_err(|error| {
+                Error::GroupLookupError(socket_config.group.clone(), error)
+            })?
+            .ok_or_else(|| Error::GroupNotFound(socket_config.group.clone()))?;
+
+        nix::unistd::chown(&socket_config.path, None, Some(group_info.gid))
+            .map_err(|error| {
+                Error::SocketOwnershipError(socket_config.path.clone(), error)
+            })?;
+
+        tracing::info!(
+            "Socket group ownership set to '{}' (gid: {})",
+            socket_config.group,
+            group_info.gid
+        );
+
         Ok(())
     }
 
@@ -144,7 +182,11 @@ impl<E: CommandExecutor> ClientHandler<E> {
         let mut buffer = vec![0; MAX_MESSAGE_SIZE];
 
         loop {
-            let bytes_read = self.stream.read(&mut buffer).await?;
+            let bytes_read = self
+                .stream
+                .read(&mut buffer)
+                .await
+                .map_err(Error::ClientReadError)?;
 
             if bytes_read == 0 {
                 break; // Client disconnected
@@ -154,9 +196,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
             let message: IpcMessage = bincode::deserialize(
                 &buffer[..bytes_read],
             )
-            .map_err(|error| {
-                anyhow::anyhow!("Failed to deserialize message: {}", error)
-            })?;
+            .map_err(|error| Error::DeserializationError(error.to_string()))?;
 
             tracing::debug!(
                 "Received message ID {}: {:?}",
@@ -170,10 +210,13 @@ impl<E: CommandExecutor> ClientHandler<E> {
             // Serialize and send response
             let response_bytes =
                 bincode::serialize(&response).map_err(|error| {
-                    anyhow::anyhow!("Failed to serialize response: {}", error)
+                    Error::SerializationError(error.to_string())
                 })?;
 
-            self.stream.write_all(&response_bytes).await?;
+            self.stream
+                .write_all(&response_bytes)
+                .await
+                .map_err(Error::ClientWriteError)?;
         }
 
         tracing::debug!("Client disconnected");

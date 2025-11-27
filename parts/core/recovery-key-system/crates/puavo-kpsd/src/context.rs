@@ -7,6 +7,9 @@ use crate::config::KpsConfig;
 
 /// Shared daemon context containing permanent objects
 pub struct DaemonContext {
+    /// KPS configuration
+    config: KpsConfig,
+
     /// HSM session that persists across requests.
     /// TODO: Investigate multiple sessions through a session manager
     pub hsm_session: Arc<Mutex<HsmSession>>,
@@ -28,6 +31,11 @@ impl DaemonContext {
             DEFAULT_PIN,
         )?;
 
-        Ok(Self { hsm_session: Arc::new(Mutex::new(hsm_session)) })
+        Ok(Self { config, hsm_session: Arc::new(Mutex::new(hsm_session)) })
+    }
+
+    /// Get reference to configuration
+    pub fn config(&self) -> &KpsConfig {
+        &self.config
     }
 }
