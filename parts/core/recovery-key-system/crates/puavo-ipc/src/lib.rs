@@ -166,12 +166,6 @@ pub enum Commands {
         recovery_bundle: Vec<PathBuf>,
     },
 
-    /// Audit log management
-    Audit {
-        #[command(subcommand)]
-        command: AuditCommand,
-    },
-
     /// Operator management
     Operator {
         #[command(subcommand)]
@@ -216,44 +210,6 @@ pub enum OrganizationCommand {
         /// Organization identifier
         #[arg(long)]
         organization_id: Option<String>,
-    },
-}
-
-/// Audit log management commands
-#[derive(Subcommand, Debug, Clone, Serialize, Deserialize)]
-pub enum AuditCommand {
-    /// Display audit logs
-    Log {
-        /// Show logs since date (ISO 8601)
-        #[arg(long)]
-        since: Option<String>,
-
-        /// Show logs until date (ISO 8601)
-        #[arg(long)]
-        until: Option<String>,
-
-        /// Filter by operator ID
-        #[arg(long)]
-        operator: Option<String>,
-
-        /// Output format
-        #[arg(long, default_value = "text")]
-        format: String,
-
-        /// Show last N entries
-        #[arg(long)]
-        tail: Option<usize>,
-    },
-
-    /// Export audit logs
-    Export {
-        /// Output file path
-        #[arg(long)]
-        output: PathBuf,
-
-        /// Export format
-        #[arg(long, default_value = "jsonl")]
-        format: String,
     },
 }
 

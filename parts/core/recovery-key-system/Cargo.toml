@@ -3,7 +3,6 @@ resolver = "3"
 
 members = [
   "crates/puavo-hsm",
-  "crates/puavo-audit", 
   "crates/puavo-kps",
   "crates/puavo-ipc",
   "crates/puavo-kpsd",

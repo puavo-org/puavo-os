@@ -1,4 +1,3 @@
-pub mod audit;
 pub mod initialize;
 pub mod operator;
 pub mod organization;
@@ -6,9 +5,7 @@ pub mod recovery;
 
 use crate::context::DaemonContext;
 use async_trait::async_trait;
-use puavo_ipc::{
-    AuditCommand, DaemonResponse, OperatorCommand, OrganizationCommand,
-};
+use puavo_ipc::{DaemonResponse, OperatorCommand, OrganizationCommand};
 use std::{path::PathBuf, sync::Arc};
 
 /// Trait for executing KPS commands
@@ -48,13 +45,6 @@ pub trait CommandExecutor: Send + Sync {
         context: Arc<DaemonContext>,
         operator_id: Option<String>,
         recovery_bundle_paths: Vec<PathBuf>,
-    ) -> DaemonResponse;
-
-    /// Execute audit command
-    async fn execute_audit(
-        &self,
-        context: Arc<DaemonContext>,
-        command: AuditCommand,
     ) -> DaemonResponse;
 
     /// Execute operator command
@@ -125,14 +115,6 @@ impl CommandExecutor for DefaultCommandExecutor {
             operator_id,
             recovery_bundle_paths,
         )
-    }
-
-    async fn execute_audit(
-        &self,
-        _context: Arc<DaemonContext>,
-        command: AuditCommand,
-    ) -> DaemonResponse {
-        audit::execute(command).await
     }
 
     async fn execute_operator(

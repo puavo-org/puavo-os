@@ -257,10 +257,6 @@ impl<E: CommandExecutor> ClientHandler<E> {
                     .await
             }
 
-            Commands::Audit { command } => {
-                self.executor.execute_audit(self.context.clone(), command).await
-            }
-
             Commands::Operator { command } => {
                 self.executor
                     .execute_operator(self.context.clone(), command)

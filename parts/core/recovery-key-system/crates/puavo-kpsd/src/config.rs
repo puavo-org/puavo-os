@@ -6,9 +6,6 @@ use std::path::{Path, PathBuf};
 pub struct KpsConfig {
     /// HSM configuration
     pub hsm: HsmConfig,
-
-    /// Audit logging configuration
-    pub audit: AuditConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,22 +17,13 @@ pub struct HsmConfig {
     pub token_label: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuditConfig {
-    /// Audit log file path
-    pub log_path: PathBuf,
-}
-
 impl Default for KpsConfig {
     fn default() -> Self {
         Self {
             hsm: HsmConfig {
                 module_path: PathBuf::from(DEFAULT_SOFTWARE_MODULE),
                 token_label: DEFAULT_TOKEN_LABEL.to_string(),
-            },
-            audit: AuditConfig {
-                log_path: PathBuf::from("/var/log/puavo-kps/audit.log"),
-            },
+            }
         }
     }
 }

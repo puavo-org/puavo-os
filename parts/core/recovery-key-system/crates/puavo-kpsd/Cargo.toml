@@ -10,7 +10,6 @@ path = "src/main.rs"
 [dependencies]
 # Internal crates
 puavo-hsm = { path = "../puavo-hsm" }
-puavo-audit = { path = "../puavo-audit" }
 
 # CLI and configuration
 clap = { version = "4.5", features = ["derive"] }
