@@ -1,4 +1,5 @@
 use puavo_hsm::{DEFAULT_SOFTWARE_MODULE, DEFAULT_TOKEN_LABEL};
+use puavo_ipc::{DEFAULT_SOCKET_GROUP, DEFAULT_SOCKET_PATH};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -6,6 +7,9 @@ use std::path::{Path, PathBuf};
 pub struct KpsConfig {
     /// HSM configuration
     pub hsm: HsmConfig,
+
+    /// Socket configuration
+    pub socket: SocketConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,13 +21,26 @@ pub struct HsmConfig {
     pub token_label: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SocketConfig {
+    /// Path to the UNIX domain socket
+    pub path: PathBuf,
+
+    /// UNIX group name for socket access control
+    pub group: String,
+}
+
 impl Default for KpsConfig {
     fn default() -> Self {
         Self {
             hsm: HsmConfig {
                 module_path: PathBuf::from(DEFAULT_SOFTWARE_MODULE),
                 token_label: DEFAULT_TOKEN_LABEL.to_string(),
-            }
+            },
+            socket: SocketConfig {
+                path: PathBuf::from(DEFAULT_SOCKET_PATH),
+                group: DEFAULT_SOCKET_GROUP.into(),
+            },
         }
     }
 }

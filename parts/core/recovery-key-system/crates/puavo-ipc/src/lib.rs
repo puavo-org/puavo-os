@@ -23,6 +23,12 @@ pub type MessageId = u64;
 /// Default socket path for daemon communication
 pub const DEFAULT_SOCKET_PATH: &str = "/tmp/puavo-kps-daemon.sock";
 
+// Default socket mode for daemon communication
+pub const DEFAULT_SOCKET_MODE: u32 = 0o660;
+
+/// Default socket group for daemon communication
+pub const DEFAULT_SOCKET_GROUP: &str = "puavo-role-admin";
+
 /// Maximum message buffer size for IPC communication
 pub const MAX_MESSAGE_SIZE: usize = 8192;
 
