@@ -4,7 +4,7 @@ set -eu
 # Verify Secure Boot prerequisites
 /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot
 
-certificates_directory="/etc/secure-boot/certificates"
+certificates_directory="/etc/puavo-secure-boot/certificates"
 images_directory="/images"
 addons_directory="${images_directory}/boot/addons"
 
