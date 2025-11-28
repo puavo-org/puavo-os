@@ -9,9 +9,9 @@ IMAGES_DIRECTORY = '/images'
 ADDONS_DIRECTORY = f"{IMAGES_DIRECTORY}/boot/addons"
 
 ADDON_PATH                     = f"{ADDONS_DIRECTORY}/extra.cmdline.addon.efi"
+DEVICE_SECURE_BOOT_CERTIFICATE = f"{ADDONS_DIRECTORY}/secure-boot.pem"
+DEVICE_SECURE_BOOT_PRIVATE_KEY = f"{ADDONS_DIRECTORY}/secure-boot.priv"
 KERNEL_ARGUMENTS_FILE          = f"{ADDONS_DIRECTORY}/cmdline"
-DEVICE_SECURE_BOOT_PRIVATE_KEY = f"{ADDONS_DIRECTORY}/secure-boot.pem"
-DEVICE_SECURE_BOOT_CERTIFICATE = f"{ADDONS_DIRECTORY}/secure-boot.priv"
 
 PUAVO_INSTALL_LIBDIR = '/usr/lib/puavo-ltsp-install'
 
@@ -68,8 +68,8 @@ def build_command_line_addon(command_line: str):
   try:
     run_command(
       'ukify', 'build',
-      f'--secureboot-private-key={DEVICE_SECURE_BOOT_CERTIFICATE}',
-      f'--secureboot-certificate={DEVICE_SECURE_BOOT_PRIVATE_KEY}',
+      f'--secureboot-private-key={DEVICE_SECURE_BOOT_PRIVATE_KEY}',
+      f'--secureboot-certificate={DEVICE_SECURE_BOOT_CERTIFICATE}',
       f'--section=.cmdline:{section_value}',
       f'--output={temporary_command_line_addon}'
     )
