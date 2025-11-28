@@ -1,10 +1,11 @@
 #!/bin/sh
+
 set -eu
 
 # Verify Secure Boot prerequisites
 /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot
 
-certificates_directory="/etc/puavo-secure-boot/certificates"
+certificates_directory="/etc/secure-boot/certificates"
 images_directory="/images"
 addons_directory="${images_directory}/boot/addons"
 
@@ -21,6 +22,14 @@ device_secure_boot_key_pem="${addons_directory}/secure-boot.pem"
 panic() {
   printf "%b\n" "error: $1" >&2
   exit 1
+}
+
+remove_immutability() {
+  local f
+  for f in "$@"; do
+    test -f "$f" || continue
+    chattr -i "$f" || return 1
+  done
 }
 
 create_device_specific_files() {
@@ -61,17 +70,17 @@ create_device_specific_files || {
   exit 1
 }
 
-[ -f "$pk_auth" ] || panic "PK.auth not found"
+[ -f "$pk_auth" ]  || panic "PK.auth not found"
 [ -f "$kek_auth" ] || panic "KEK.auth not found"
-[ -f "$db_auth" ] || panic "db.auth not found"
-[ -f "$dbx_bin" ] || panic "dbx.bin not found"
+[ -f "$db_auth" ]  || panic "db.auth not found"
+[ -f "$dbx_bin" ]  || panic "dbx.bin not found"
 
 # Remove immutability from Secure Boot variables to allow writing.
 # They become immutable after each write.
-chattr -i /sys/firmware/efi/efivars/dbx-* || true
-chattr -i /sys/firmware/efi/efivars/db-* || true
-chattr -i /sys/firmware/efi/efivars/KEK-* || true
-chattr -i /sys/firmware/efi/efivars/PK-* || true
+remove_immutability /sys/firmware/efi/efivars/dbx-* \
+                    /sys/firmware/efi/efivars/db-*  \
+                    /sys/firmware/efi/efivars/KEK-* \
+                    /sys/firmware/efi/efivars/PK-*
 
 echo "enrolling Secure Boot keys..."
 
@@ -81,13 +90,13 @@ efi-updatevar -f "$db_auth" db || panic "failed to enroll db"
 # Trust all DER certificates in the db directory
 for der_file in "${db_directory}"/*.der; do
   [ -f "$der_file" ] || continue
-  chattr -i /sys/firmware/efi/efivars/db-* || true
+  remove_immutability /sys/firmware/efi/efivars/db-*
   efi-updatevar -a -c "$der_file" db || \
     panic "failed to append $(basename "$der_file") to db"
 done
 
 # Trust the device Secure Boot key
-chattr -i /sys/firmware/efi/efivars/db-* || true
+remove_immutability /sys/firmware/efi/efivars/db-*
 efi-updatevar -a -c "$device_secure_boot_key_der" db || \
   panic "failed to append device Secure Boot key to db"
 
