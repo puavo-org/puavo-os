@@ -346,14 +346,396 @@ pub fn execute_unwrap(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use puavo_hsm::TestHsmSession;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
 
-    #[tokio::test]
-    async fn test_generate_recovery_key() {
-        // TODO: Add proper test with mock HSM session
+    /// Initialize organization key for testing
+    ///
+    /// Parameters:
+    /// * `hsm_session` - Active HSM session for key operations
+    /// * `organization_id` - Organization identifier
+    ///
+    /// Errors:
+    /// Returns error if key generation fails
+    fn initialize_organization_key_for_testing(
+        hsm_session: &HsmSession,
+        organization_id: &str,
+    ) -> Result<(), KeyManagementError> {
+        let key_label = KeyLabel::organization(organization_id, 1);
+        let key_manager = HsmKeyManager::new(hsm_session);
+        let _ = key_manager.generate_key(&key_label)?;
+        Ok(())
+    }
+
+    /// Create a temporary file with recovery key data
+    ///
+    /// Parameters:
+    /// * `recovery_key` - Recovery key bytes to write
+    ///
+    /// Returns:
+    /// Temporary file containing the recovery key
+    fn create_temporary_recovery_key_file(
+        recovery_key: &[u8],
+    ) -> NamedTempFile {
+        let mut temporary_file =
+            NamedTempFile::new().expect("Failed to create temporary file");
+        temporary_file
+            .write_all(recovery_key)
+            .expect("Failed to write recovery key");
+        temporary_file
+    }
+
+    /// Create a temporary file with recovery bundle data
+    ///
+    /// Parameters:
+    /// * `recovery_bundle` - Recovery bundle to write
+    ///
+    /// Returns:
+    /// Temporary file containing the recovery bundle
+    fn create_temporary_recovery_bundle_file(
+        recovery_bundle: &RecoveryBundle,
+    ) -> NamedTempFile {
+        let mut temporary_file =
+            NamedTempFile::new().expect("Failed to create temporary file");
+        let serialized_recovery_bundle = serde_json::to_string(recovery_bundle)
+            .expect("Failed to serialize recovery bundle");
+        temporary_file
+            .write_all(serialized_recovery_bundle.as_bytes())
+            .expect("Failed to write recovery bundle");
+        temporary_file
     }
 
     #[tokio::test]
-    async fn test_unwrap_recovery_key() {
-        // TODO: Add proper test with mock HSM session
+    async fn test_generate_recovery_bundle() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-generate".to_string();
+        let serial_number = "test-serial-123".to_string();
+        let recovery_key = b"test-recovery-key-data".to_vec();
+
+        // Initialize organization key first
+        initialize_organization_key_for_testing(session, &organization_id)
+            .expect("Failed to initialize organization key");
+
+        // Create temporary recovery key file
+        let recovery_key_file =
+            create_temporary_recovery_key_file(&recovery_key);
+
+        // Generate recovery bundle
+        let response = execute_generate(
+            session,
+            None,
+            organization_id.clone(),
+            vec![serial_number.clone()],
+            vec![recovery_key_file.path().to_path_buf()],
+        );
+
+        match response {
+            DaemonResponse::Success {
+                data: Some(DaemonResponseData::RecoveryBundles(bundles)),
+            } => {
+                assert_eq!(bundles.len(), 1);
+                let bundle = &bundles[0];
+                assert_eq!(bundle.serial_number, serial_number);
+                assert_eq!(bundle.organization_id, organization_id);
+                assert_eq!(bundle.organization_key_version, 1);
+                assert!(!bundle.encrypted_key_data.is_empty());
+            }
+            _ => panic!("Expected success response with recovery bundles"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_generate_multiple_recovery_bundles() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-generate-multiple".to_string();
+        let serial_number_first = "test-serial-456".to_string();
+        let serial_number_second = "test-serial-789".to_string();
+        let recovery_key_first = b"test-recovery-key-first".to_vec();
+        let recovery_key_second = b"test-recovery-key-second".to_vec();
+
+        // Initialize organization key first
+        initialize_organization_key_for_testing(session, &organization_id)
+            .expect("Failed to initialize organization key");
+
+        // Create temporary recovery key files
+        let recovery_key_file_first =
+            create_temporary_recovery_key_file(&recovery_key_first);
+        let recovery_key_file_second =
+            create_temporary_recovery_key_file(&recovery_key_second);
+
+        // Generate recovery bundles
+        let response = execute_generate(
+            session,
+            None,
+            organization_id.clone(),
+            vec![serial_number_first.clone(), serial_number_second.clone()],
+            vec![
+                recovery_key_file_first.path().to_path_buf(),
+                recovery_key_file_second.path().to_path_buf(),
+            ],
+        );
+
+        match response {
+            DaemonResponse::Success {
+                data: Some(DaemonResponseData::RecoveryBundles(bundles)),
+            } => {
+                assert_eq!(bundles.len(), 2);
+
+                let bundle_first = &bundles[0];
+                assert_eq!(bundle_first.serial_number, serial_number_first);
+                assert_eq!(bundle_first.organization_id, organization_id);
+                assert!(!bundle_first.encrypted_key_data.is_empty());
+
+                let bundle_second = &bundles[1];
+                assert_eq!(bundle_second.serial_number, serial_number_second);
+                assert_eq!(bundle_second.organization_id, organization_id);
+                assert!(!bundle_second.encrypted_key_data.is_empty());
+            }
+            _ => panic!("Expected success response with recovery bundles"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_generate_recovery_bundle_parameter_mismatch() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-mismatch".to_string();
+        let serial_number = "test-serial-mismatch".to_string();
+
+        // Try to generate with mismatched parameters
+        let response = execute_generate(
+            session,
+            None,
+            organization_id,
+            vec![serial_number],
+            vec![],
+        );
+
+        match response {
+            DaemonResponse::Error(message) => {
+                assert!(message.contains("does not match"));
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_generate_recovery_bundle_no_organization_key() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-no-key".to_string();
+        let serial_number = "test-serial-no-key".to_string();
+        let recovery_key = b"test-recovery-key".to_vec();
+
+        // Create temporary recovery key file
+        let recovery_key_file =
+            create_temporary_recovery_key_file(&recovery_key);
+
+        // Try to generate without initializing organization key first
+        let response = execute_generate(
+            session,
+            None,
+            organization_id,
+            vec![serial_number],
+            vec![recovery_key_file.path().to_path_buf()],
+        );
+
+        match response {
+            DaemonResponse::Error(message) => {
+                assert!(message.contains("no keys"));
+            }
+            _ => panic!("Expected error response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_unwrap_recovery_bundle() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-unwrap".to_string();
+        let serial_number = "test-serial-unwrap".to_string();
+        let recovery_key = b"test-recovery-key-unwrap".to_vec();
+
+        // Initialize organization key
+        initialize_organization_key_for_testing(session, &organization_id)
+            .expect("Failed to initialize organization key");
+
+        // Create and generate recovery bundle
+        let recovery_key_file =
+            create_temporary_recovery_key_file(&recovery_key);
+        let response = execute_generate(
+            session,
+            None,
+            organization_id.clone(),
+            vec![serial_number.clone()],
+            vec![recovery_key_file.path().to_path_buf()],
+        );
+
+        let recovery_bundle = match response {
+            DaemonResponse::Success {
+                data: Some(DaemonResponseData::RecoveryBundles(bundles)),
+            } => bundles[0].clone(),
+            _ => panic!("Expected success response with recovery bundles"),
+        };
+
+        // Create temporary recovery bundle file
+        let recovery_bundle_file =
+            create_temporary_recovery_bundle_file(&recovery_bundle);
+
+        // Unwrap the recovery bundle
+        let response = execute_unwrap(
+            session,
+            None,
+            vec![recovery_bundle_file.path().to_path_buf()],
+        );
+
+        match response {
+            DaemonResponse::Success {
+                data: Some(DaemonResponseData::RecoveryKeyDatas(key_datas)),
+            } => {
+                assert_eq!(key_datas.len(), 1);
+                let key_data = &key_datas[0];
+                assert_eq!(key_data.serial_number, serial_number);
+                assert_eq!(key_data.organization_id, organization_id);
+                assert_eq!(key_data.recovery_key, recovery_key);
+                assert_eq!(key_data.version, RECOVERY_KEY_DATA_VERSION);
+            }
+            _ => panic!("Expected success response with recovery key data"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_unwrap_multiple_recovery_bundles() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-unwrap-multiple".to_string();
+        let serial_number_first = "test-serial-unwrap-1".to_string();
+        let serial_number_second = "test-serial-unwrap-2".to_string();
+        let recovery_key_first = b"test-recovery-key-1".to_vec();
+        let recovery_key_second = b"test-recovery-key-2".to_vec();
+
+        // Initialize organization key
+        initialize_organization_key_for_testing(session, &organization_id)
+            .expect("Failed to initialize organization key");
+
+        // Create and generate recovery bundles
+        let recovery_key_file_first =
+            create_temporary_recovery_key_file(&recovery_key_first);
+        let recovery_key_file_second =
+            create_temporary_recovery_key_file(&recovery_key_second);
+
+        let response = execute_generate(
+            session,
+            None,
+            organization_id.clone(),
+            vec![serial_number_first.clone(), serial_number_second.clone()],
+            vec![
+                recovery_key_file_first.path().to_path_buf(),
+                recovery_key_file_second.path().to_path_buf(),
+            ],
+        );
+
+        let recovery_bundles = match response {
+            DaemonResponse::Success {
+                data: Some(DaemonResponseData::RecoveryBundles(bundles)),
+            } => bundles,
+            _ => panic!("Expected success response with recovery bundles"),
+        };
+
+        // Create temporary recovery bundle files
+        let recovery_bundle_file_first =
+            create_temporary_recovery_bundle_file(&recovery_bundles[0]);
+        let recovery_bundle_file_second =
+            create_temporary_recovery_bundle_file(&recovery_bundles[1]);
+
+        // Unwrap the recovery bundles
+        let response = execute_unwrap(
+            session,
+            None,
+            vec![
+                recovery_bundle_file_first.path().to_path_buf(),
+                recovery_bundle_file_second.path().to_path_buf(),
+            ],
+        );
+
+        match response {
+            DaemonResponse::Success {
+                data: Some(DaemonResponseData::RecoveryKeyDatas(key_datas)),
+            } => {
+                assert_eq!(key_datas.len(), 2);
+
+                let key_data_first = &key_datas[0];
+                assert_eq!(key_data_first.serial_number, serial_number_first);
+                assert_eq!(key_data_first.organization_id, organization_id);
+                assert_eq!(key_data_first.recovery_key, recovery_key_first);
+
+                let key_data_second = &key_datas[1];
+                assert_eq!(key_data_second.serial_number, serial_number_second);
+                assert_eq!(key_data_second.organization_id, organization_id);
+                assert_eq!(key_data_second.recovery_key, recovery_key_second);
+            }
+            _ => panic!("Expected success response with recovery key data"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_encrypt_and_decrypt_recovery_key_data() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id = "test-organization-encrypt-decrypt".to_string();
+        let serial_number = "test-serial-encrypt".to_string();
+        let recovery_key = b"test-recovery-key-encrypt".to_vec();
+
+        // Initialize organization key
+        initialize_organization_key_for_testing(session, &organization_id)
+            .expect("Failed to initialize organization key");
+
+        // Get the organization public key
+        let key_manager = HsmKeyManager::new(session);
+        let organization_key_label =
+            KeyLabel::organization_label(organization_id.as_str());
+        let (organization_key, _) = key_manager
+            .get_latest_key(ObjectClass::PUBLIC_KEY, &organization_key_label)
+            .unwrap()
+            .unwrap();
+        let public_key =
+            key_manager.extract_public_key(&organization_key).unwrap();
+
+        // Encrypt the recovery key data
+        let encrypted_data = encrypt_recovery_key_data(
+            &public_key,
+            serial_number.clone(),
+            organization_id.clone(),
+            recovery_key.clone(),
+        )
+        .unwrap();
+
+        assert!(!encrypted_data.is_empty());
+
+        // Create a recovery bundle and decrypt it
+        let recovery_bundle = RecoveryBundle {
+            serial_number: serial_number.clone(),
+            organization_id: organization_id.clone(),
+            organization_key_version: 1,
+            encrypted_key_data: encrypted_data,
+        };
+
+        let decrypted_data =
+            unwrap_recovery_key(session, recovery_bundle).unwrap();
+
+        assert_eq!(decrypted_data.serial_number, serial_number);
+        assert_eq!(decrypted_data.organization_id, organization_id);
+        assert_eq!(decrypted_data.recovery_key, recovery_key);
+        assert_eq!(decrypted_data.version, RECOVERY_KEY_DATA_VERSION);
     }
 }
