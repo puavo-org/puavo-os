@@ -1,5 +1,4 @@
 pub mod key_management;
-pub mod mechanisms;
 pub mod session;
 pub mod tests;
 

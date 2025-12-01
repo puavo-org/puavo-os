@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::SystemTime;
 
-pub mod salt;
-
 /// Output format for CLI responses
 #[derive(Default, Clone, Copy, Debug, ValueEnum, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
