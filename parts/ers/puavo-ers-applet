@@ -481,6 +481,8 @@ class PuavoErsApplet:
 
 
   def main(self):
+    print("\033[32mStarting Puavo Exam Room Server in ers-applet mode...\033[0m")
+
     self.check_vboxdrv_exists()
 
     self.run_naksu()
@@ -500,11 +502,15 @@ class PuavoErsApplet:
     interval = 20
     timeout  = 300  # 5 minutes
 
+    print("\033[32mChecking VirtualBox kernel module...\033[0m")
+
     while elapsed < timeout:
       if os.path.exists('/dev/vboxdrv'):
+        print("\033[32mVirtualBox kernel module loaded.\033[0m")
         self.logger.log(syslog.LOG_INFO, '/dev/vboxdrv found')
         time.sleep(2)
         return True
+      print("\033[33mWaiting for vboxdrv to load in kernel...\033[0m")
       self.logger.log(syslog.LOG_WARNING, '/dev/vboxdrv not found, retrying...')
       time.sleep(interval)
       elapsed += interval
@@ -515,11 +521,10 @@ class PuavoErsApplet:
 
 
   def run_naksu(self):
+    print("\033[32mStarting Naksu...\033[0m")
     self.logger.log(syslog.LOG_NOTICE, 'starting up naksu')
 
-    cmd = [ '/usr/bin/terminator', '-T', 'naksu terminal',
-            '--no-dbus', '--working-directory=' + PUAVO_ERS_DIR,
-            '-x', './naksu', '--self-update=enabled' ]
+    cmd = [ PUAVO_ERS_DIR + '/naksu', '--self-update=enabled' ]
     (pid, stdin, stdout, stderr) = GLib.spawn_async(cmd,
       flags=GLib.SpawnFlags.DO_NOT_REAP_CHILD|GLib.SpawnFlags.STDERR_TO_DEV_NULL,
       standard_input=True, standard_output=True)
@@ -538,7 +543,9 @@ class PuavoErsApplet:
                       'some IO event with naksu: condition is %s' % condition)
 
       if condition & GLib.IO_IN:
-        channel.read()
+        data = channel.read()
+        if data:
+          print(data, end='')  # Print to Python stdout
 
       if condition & GLib.IO_HUP:
         channel.close()

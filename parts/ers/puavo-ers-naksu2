@@ -2,8 +2,11 @@
 
 set -eu
 
+echo "\e[32mStarting Puavo Exam Room Server in Naksu2 mode...\e[0m"
+
 workdir="${HOME}/.puavo/puavo-ers/naksu2-working-directory"
 
+echo "\e[32mPreparing to run naksu2...\e[0m"
 logger -p user.notice -t puavo-ers-naksu2 \
        "preparing to run naksu2 in '${workdir}'"
 
@@ -22,12 +25,15 @@ if ! docker compose version; then
   exit 1
 fi
 
+echo "\e[32mEverything looks ok.\e[0m"
+
 cd "${workdir}"
 
 while true; do
+  echo "\e[32mStarting Naksu2...\e[0m"
   logger -p user.notice -t puavo-ers-naksu2 'starting up naksu2'
-  if ! /usr/bin/terminator -T 'naksu2 terminal' \
-       --no-dbus "--working-directory=${workdir}" -x naksu2; then
+  if ! naksu2; then
+    echo "\e[31mNaksu2 failed to start. Will try again in 5 seconds...\e[0m"
     logger -p user.err -t puavo-ers-naksu2 'naksu2 failed'
   fi
   sleep 5

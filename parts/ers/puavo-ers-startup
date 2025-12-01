@@ -6,19 +6,59 @@ if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
   exit 0
 fi
 
+puavo_ers_dir="${HOME}/.puavo/puavo-ers"
+
+if ! mkdir -p "$puavo_ers_dir"; then
+  logger -p user.err -t puavo-ers-startup \
+         "could not create ${puavo_ers_dir}"
+  exit 1
+fi
+
+# Create a customised terminator config
+cat <<EOF > "${puavo_ers_dir}/terminator.config"
+[global_config]
+[keybindings]
+[profiles]
+  [[default]]
+    foreground_color = "#ffffff"
+    scrollback_infinite = True
+[layouts]
+  [[default]]
+    [[[window0]]]
+      type = Window
+      parent = ""
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+[plugins]
+EOF
+
+open_in_terminal() {
+  local title
+  title=$1
+  shift
+  if ! /usr/bin/terminator -T "Puavo Exam Room Server: ${title}" \
+       --no-dbus "--working-directory=/home/puavo-ers" \
+       -g "${puavo_ers_dir}/terminator.config" \
+       -x "$@"; then
+    logger -p user.err -t puavo-ers-startup "Error when running ${title}"
+    exit 1
+  fi
+}
+
 ers_mode="$(puavo-conf puavo.ers.mode)"
 case "$ers_mode" in
   ers-applet)
-    exec sudo -g puavo /usr/bin/puavo-ers-applet "$@"
+    open_in_terminal "ers-applet" sudo -g puavo /usr/bin/puavo-ers-applet "$@"
     ;;
   naksu)
-    exec /usr/bin/puavo-ers-naksu
+    open_in_terminal "naksu" /usr/bin/puavo-ers-naksu
     ;;
   naksu2)
-    exec /usr/bin/puavo-ers-naksu2
+    open_in_terminal "naksu2" /usr/bin/puavo-ers-naksu2
     ;;
   abitti2server)
-    exec /usr/bin/puavo-ers-abitti2server
+    open_in_terminal "abitti2server" /usr/bin/puavo-ers-abitti2server
     ;;
   *)
     logger -p user.err -t puavo-ers-startup \

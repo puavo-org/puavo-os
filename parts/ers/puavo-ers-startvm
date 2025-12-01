@@ -10,22 +10,9 @@ log() {
 }
 
 if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
+  echo "\e[32mNot starting Abitti VM because puavo-ers-session is not enabled\e[0m"
   log err 'not starting Abitti VM because puavo-ers-session is not enabled'
   exit 0
-fi
-
-# Wait for the VirtualBox kernel module to load
-for i in 4 8 16 32 64; do
-  if [ -e /dev/vboxdrv ]; then
-    break
-  fi
-  log warning 'waiting for vboxdrv to load in kernel'
-  sleep "$i"
-done
-
-if [ ! -e /dev/vboxdrv ]; then
-  log err '/dev/vboxdrv not found after waiting'
-  exit 1
 fi
 
 # Run automated VM startup
@@ -36,15 +23,18 @@ if ! vboxmanage list vms | grep -q 'NaksuAbittiKTP'; then
 fi
 
 sleep 4
+echo "\e[32mStarting Abitti VM...\e[0m"
 log info 'trying Automated Abitti VM startup'
 if ! vboxmanage startvm NaksuAbittiKTP; then
   log err 'failed to start up Abitti VM'
   exit 1
 fi
 
+echo "\e[32mAbitti VM running.\e[0m"
 log info 'Abitti VM running'
 
 sleep 5
+echo "\e[32mSending ENTER keys to Abitti VM...\e[0m"
 log info 'sending first enter key to Abitti VM'
 
 if ! vboxmanage controlvm NaksuAbittiKTP keyboardputscancode 1C 9C; then
@@ -59,5 +49,6 @@ if ! vboxmanage controlvm NaksuAbittiKTP keyboardputscancode 1C 9C; then
   exit 1
 fi
 
+echo "\e[32mAbitti VM should now be booting up.\e[0m"
 log info 'Abitti VM should now be booting up'
 exit 0
