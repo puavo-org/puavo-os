@@ -353,4 +353,123 @@ mod tests {
             _ => panic!("Expected success response with data"),
         }
     }
+
+    #[tokio::test]
+    async fn test_list_organization_keys() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id_target = "test-organization-list".to_string();
+        let organization_id_other = "test-organization-list-other".to_string();
+
+        // Initialize two organization keys
+        let response =
+            execute_initialize(session, organization_id_target.clone());
+        assert!(matches!(response, DaemonResponse::Success { .. }));
+
+        let response =
+            execute_initialize(session, organization_id_other.clone());
+        assert!(matches!(response, DaemonResponse::Success { .. }));
+
+        // List only the target organization keys
+        let response =
+            execute_list(session, Some(organization_id_target.clone()));
+
+        match response {
+            DaemonResponse::Success {
+                data:
+                    Some(DaemonResponseData::OrganizationKeyListings(listings)),
+            } => {
+                assert_eq!(listings.len(), 1);
+                assert_eq!(listings[0].organization_id, organization_id_target);
+                assert_eq!(listings[0].versions.len(), 1);
+                assert_eq!(listings[0].versions[0].version, 1);
+                assert!(!listings[0].versions[0].fingerprint.is_empty());
+            }
+            _ => panic!("Expected success response with data"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_list_all_organization_keys() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id_first = "test-organization-list-all-1".to_string();
+        let organization_id_second = "test-organization-list-all-2".to_string();
+
+        // Initialize two organization keys
+        let response =
+            execute_initialize(session, organization_id_first.clone());
+        assert!(matches!(response, DaemonResponse::Success { .. }));
+
+        let response =
+            execute_initialize(session, organization_id_second.clone());
+        assert!(matches!(response, DaemonResponse::Success { .. }));
+
+        // List all organization keys
+        let response = execute_list(session, None);
+
+        match response {
+            DaemonResponse::Success {
+                data:
+                    Some(DaemonResponseData::OrganizationKeyListings(listings)),
+            } => {
+                assert!(listings.len() >= 2);
+
+                // Find both organizations in the listings
+                let first_listing = listings.iter().find(|listing| {
+                    listing.organization_id == organization_id_first
+                });
+                let second_listing = listings.iter().find(|listing| {
+                    listing.organization_id == organization_id_second
+                });
+
+                assert!(first_listing.is_some());
+                assert!(second_listing.is_some());
+
+                // Verify the structure of both listings
+                let first_listing = first_listing.unwrap();
+                assert_eq!(first_listing.versions.len(), 1);
+                assert_eq!(first_listing.versions[0].version, 1);
+                assert!(!first_listing.versions[0].fingerprint.is_empty());
+
+                let second_listing = second_listing.unwrap();
+                assert_eq!(second_listing.versions.len(), 1);
+                assert_eq!(second_listing.versions[0].version, 1);
+                assert!(!second_listing.versions[0].fingerprint.is_empty());
+            }
+            _ => panic!("Expected success response with data"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_list_non_existent_organization_keys() {
+        let test_session = TestHsmSession::new().unwrap();
+        let session = test_session.session();
+
+        let organization_id_existing = "test-organization-existing".to_string();
+
+        // Initialize an organization key
+        let response =
+            execute_initialize(session, organization_id_existing.clone());
+        assert!(matches!(response, DaemonResponse::Success { .. }));
+
+        let organization_id_non_existent =
+            "test-organization-non-existent".to_string();
+
+        // Attempt to list keys of a non-existent organization
+        let response =
+            execute_list(session, Some(organization_id_non_existent));
+
+        match response {
+            DaemonResponse::Success {
+                data:
+                    Some(DaemonResponseData::OrganizationKeyListings(listings)),
+            } => {
+                assert!(listings.is_empty());
+            }
+            _ => panic!("Expected success response with data"),
+        }
+    }
 }
