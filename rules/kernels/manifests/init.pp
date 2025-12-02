@@ -16,7 +16,7 @@ class kernels {
 
   $kernel_versions = {
     'default' => '6.12.57+deb13-amd64',
-    'modern'  => '6.16.3+deb13-amd64',
+    'modern'  => '6.16.12+deb13-amd64',
   }
   $kernel_aliases = keys($kernel_versions)
 
