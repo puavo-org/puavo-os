@@ -1,7 +1,22 @@
 use std::path::PathBuf;
 
+use puavo_hsm::HsmSessionError;
+use puavo_ipc::DaemonResponse;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("Please initialize KPS")]
+    SessionPoolNotInitialized,
+
+    #[error("Failed to acquire HSM session lock")]
+    SessionLockFailure,
+
+    #[error("Failed to initialize HSM session pool: {0}")]
+    SessionPoolInitializationFailed(String),
+
+    #[error("Failed to acquire HSM session")]
+    SessionAcquisitionTimeout,
+
     #[error("Failed to remove socket file {0}: {1}")]
     SocketRemovalError(PathBuf, std::io::Error),
 
@@ -33,7 +48,13 @@ pub enum Error {
     SerializationError(String),
 
     #[error("Context initialization failed: {0}")]
-    ContextError(#[from] puavo_hsm::HsmSessionError),
+    ContextError(#[from] HsmSessionError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+impl From<Error> for DaemonResponse {
+    fn from(error: Error) -> Self {
+        DaemonResponse::Error(error.to_string())
+    }
+}

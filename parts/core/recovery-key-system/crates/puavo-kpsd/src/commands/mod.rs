@@ -58,12 +58,10 @@ impl DefaultCommandExecutor {
 impl CommandExecutor for DefaultCommandExecutor {
     async fn execute_initialize(
         &self,
-        _context: Arc<DaemonContext>,
-        hsm_slot: u64,
-        hsm_pin: Option<String>,
-        force: bool,
+        context: Arc<DaemonContext>,
+        hsm_pin: String,
     ) -> DaemonResponse {
-        initialize::execute(hsm_slot, hsm_pin, force).await
+        initialize::execute(context, hsm_pin).await
     }
 
     async fn execute_organization(
@@ -71,8 +69,10 @@ impl CommandExecutor for DefaultCommandExecutor {
         context: Arc<DaemonContext>,
         command: OrganizationCommand,
     ) -> DaemonResponse {
-        let hsm_session = context.hsm_session.lock().await;
-        organization::execute(&hsm_session, command)
+        context
+            .get_hsm_session()
+            .map(|hsm_session| organization::execute(&hsm_session, command))
+            .into()
     }
 
     async fn execute_generate(
@@ -83,14 +83,18 @@ impl CommandExecutor for DefaultCommandExecutor {
         serial_numbers: Vec<String>,
         recovery_key_files: Vec<PathBuf>,
     ) -> DaemonResponse {
-        let hsm_session = context.hsm_session.lock().await;
-        recovery::execute_generate(
-            &hsm_session,
-            operator_id,
-            organization_id,
-            serial_numbers,
-            recovery_key_files,
-        )
+        context
+            .get_hsm_session()
+            .map(|hsm_session| {
+                recovery::execute_generate(
+                    &hsm_session,
+                    operator_id,
+                    organization_id,
+                    serial_numbers,
+                    recovery_key_files,
+                )
+            })
+            .into()
     }
 
     async fn execute_unwrap(
@@ -99,11 +103,15 @@ impl CommandExecutor for DefaultCommandExecutor {
         operator_id: Option<String>,
         recovery_bundle_paths: Vec<PathBuf>,
     ) -> DaemonResponse {
-        let hsm_session = context.hsm_session.lock().await;
-        recovery::execute_unwrap(
-            &hsm_session,
-            operator_id,
-            recovery_bundle_paths,
-        )
+        context
+            .get_hsm_session()
+            .map(|hsm_session| {
+                recovery::execute_unwrap(
+                    &hsm_session,
+                    operator_id,
+                    recovery_bundle_paths,
+                )
+            })
+            .into()
     }
 }
