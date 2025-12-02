@@ -37,4 +37,7 @@ hex.workspace = true
 rand.workspace = true
 rsa = { workspace = true, features = ["pem"] }
 
+# Password input
+rpassword = "7.2"
+
 [dev-dependencies]

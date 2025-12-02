@@ -272,14 +272,9 @@ impl<E: CommandExecutor> ClientHandler<E> {
     /// Handle KPS commands by delegating to command executor
     async fn handle_kps_command(&self, command: Commands) -> DaemonResponse {
         match command {
-            Commands::Initialize { hsm_slot, hsm_pin, force } => {
+            Commands::Initialize { hsm_pin } => {
                 self.executor
-                    .execute_initialize(
-                        self.context.clone(),
-                        hsm_slot,
-                        hsm_pin,
-                        force,
-                    )
+                    .execute_initialize(self.context.clone(), hsm_pin)
                     .await
             }
 

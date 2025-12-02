@@ -3,7 +3,35 @@ use crate::device::generate_recovery_bundle_local;
 use crate::formatter;
 use crate::ipc_client::{IpcClient, IpcClientTrait};
 use anyhow::{Result, bail};
-use puavo_ipc::{DaemonCommand, DaemonResponse, IpcError, OutputFormat};
+use puavo_ipc::{
+    Commands, DaemonCommand, DaemonResponse, IpcError, OutputFormat,
+};
+
+/// Prompt user for HSM PIN
+///
+/// Returns:
+/// Result containing the entered PIN or error
+///
+/// Errors:
+/// Returns error if password prompt fails
+fn prompt_for_hsm_pin() -> Result<String> {
+    rpassword::prompt_password("Enter HSM PIN: ")
+        .map_err(|error| anyhow::anyhow!("Failed to read PIN: {}", error))
+}
+
+/// Handle prompts for KPS commands that require them
+///
+/// Parameters:
+/// * `command` - The KPS command to process
+fn handle_command_prompts(command: Commands) -> Result<Commands> {
+    match command {
+        Commands::Initialize { .. } => {
+            let hsm_pin = prompt_for_hsm_pin()?;
+            Ok(Commands::Initialize { hsm_pin })
+        }
+        other => Ok(other),
+    }
+}
 
 /// Execute the specified CLI command
 ///
@@ -29,7 +57,8 @@ pub async fn execute(cli: Cli) -> Result<()> {
         // KPS commands are sent to daemon for execution via IPC
         CliCommands::Kps(command) => {
             let client = IpcClient::new(cli.socket_path);
-            let daemon_command = DaemonCommand::Execute(command);
+            let updated_command = handle_command_prompts(command)?;
+            let daemon_command = DaemonCommand::Execute(updated_command);
             execute_command_via_daemon(&client, daemon_command, cli.format)
                 .await
         }

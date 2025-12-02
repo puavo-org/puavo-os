@@ -16,9 +16,7 @@ pub trait CommandExecutor: Send + Sync {
     async fn execute_initialize(
         &self,
         context: Arc<DaemonContext>,
-        hsm_slot: u64,
-        hsm_pin: Option<String>,
-        force: bool,
+        hsm_pin: String,
     ) -> DaemonResponse;
 
     /// Execute organization command

@@ -121,17 +121,9 @@ pub enum DaemonCommand {
 pub enum Commands {
     /// Initialize Key Provisioning Station
     Initialize {
-        /// HSM slot number
-        #[arg(long, default_value = "0")]
-        hsm_slot: u64,
-
-        /// HSM user PIN (will prompt if not provided)
-        #[arg(long)]
-        hsm_pin: Option<String>,
-
-        /// Overwrite existing configuration
-        #[arg(long)]
-        force: bool,
+        /// HSM user PIN
+        #[arg(skip)]
+        hsm_pin: String,
     },
 
     /// Organization key management
@@ -234,7 +226,6 @@ pub enum DaemonResponseData {
 pub enum DaemonResponse {
     /// Successful operation with optional data
     Success {
-        #[serde(skip_serializing_if = "Option::is_none")]
         data: Option<DaemonResponseData>,
     },
 
