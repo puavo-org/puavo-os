@@ -1,6 +1,6 @@
 {
   "puavo.ers.mode": {
-    "choices": [ "ers-applet", "naksu", "naksu2", "abitti2server" ],
+    "choices": [ "ers-applet", "naksu" ],
     "default": "ers-applet",
     "description": "The mode for examination room server desktop session",
     "typehint": "string"
@@ -19,5 +19,10 @@
     "default": "1",
     "description": "Abitti2 server number, must be between 1 and 254. Each server on the same LAN must have a unique number.",
     "typehint": "integer"
+  },
+  "puavo.ers.services": {
+    "default": "",
+    "description": "A whitespace-separated list of Abitti2 related services, supported items include \"abitti2server\", \"ktp-controller\" and \"naksu2\"",
+    "typehint": "string"
   }
 }

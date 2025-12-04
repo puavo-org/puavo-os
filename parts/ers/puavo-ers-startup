@@ -6,23 +6,130 @@ if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
   exit 0
 fi
 
-ers_mode="$(puavo-conf puavo.ers.mode)"
-case "$ers_mode" in
-  ers-applet)
-    exec sudo -g puavo /usr/bin/puavo-ers-applet "$@"
-    ;;
-  naksu)
-    exec /usr/bin/puavo-ers-naksu
-    ;;
-  naksu2)
-    exec /usr/bin/puavo-ers-naksu2
-    ;;
-  abitti2server)
-    exec /usr/bin/puavo-ers-abitti2server
-    ;;
-  *)
-    logger -p user.err -t puavo-ers-startup \
-           "unsupported puavo.ers.mode value '${ers_mode}'"
-    exit 1
-    ;;
-esac
+ers_service_list="$(puavo-conf puavo.ers.services)"
+if [ -z "$ers_service_list" ]; then
+  # check the old Abitti 1 compatible system features
+  # XXX this can be removed once it is obsolete
+  ers_mode="$(puavo-conf puavo.ers.mode)"
+  case "$ers_mode" in
+    ers-applet)
+      exec sudo -g puavo /usr/bin/puavo-ers-applet "$@"
+      ;;
+    naksu)
+      exec /usr/bin/puavo-ers-naksu
+      ;;
+    *)
+      logger -p user.err -t puavo-ers-startup \
+             "unsupported puavo.ers.mode value '${ers_mode}'"
+      exit 1
+      ;;
+  esac
+fi
+
+abitti2server_service=false
+agent_service=false
+api_service=false
+naksu2_service=false
+redis_service=false
+
+for service in $ers_service_list; do
+  case "$service" in
+    abitti2server)
+      abitti2server_service=true
+      ;;
+    agent)
+      agent_service=true
+      ;;
+    api)
+      api_service=true
+      ;;
+    ktp-controller)
+      agent_service=true
+      api_service=true
+      redis_service=true
+      ;;
+    naksu2)
+      naksu2_service=true
+      ;;
+    redis)
+      redis_service=true
+      ;;
+    *)
+      echo "unknown ers service '${service}'" >&2
+      ;;
+  esac
+done
+
+ers_basedir="${HOME}/.puavo/puavo-ers"
+ktp_controller_dir="${ers_basedir}/ktp-controller"
+supervisor_dir="${ers_basedir}/supervisor"
+supervisor_logdir="${ers_basedir}/logs"
+
+mkdir -p "$ers_basedir" "$ktp_controller_dir" "$supervisor_dir" \
+         "$supervisor_logdir"
+
+supervisor_config_path="${supervisor_dir}/run.conf"
+
+cat <<EOF > "${supervisor_config_path}.tmp"
+[supervisord]
+logfile = ${supervisor_logdir}/supervisord.log
+pidfile = ${supervisor_dir}/supervisord.pid
+childlogdir = ${supervisor_logdir}
+nodaemon=True
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[unix_http_server]
+file=${ktp_controller_dir}/sock
+chmod=0700
+
+[supervisorctl]
+serverurl=unix://supervisor//sock
+
+[program:abitti2server]
+command=/usr/bin/puavo-ers-abitti2server
+autostart=${abitti2server_service}
+autorestart=true
+stopasgroup=true
+killasgroup=true
+startsecs=30
+
+[program:agent]
+command=sudo -g puavo /opt/ktp-controller/agent
+autostart=${agent_service}
+autorestart=true
+stopasgroup=true
+killasgroup=true
+startsecs=30
+
+[program:api]
+command=/opt/ktp-controller/api
+autostart=${api_service}
+autorestart=true
+stopasgroup=true
+killasgroup=true
+startsecs=30
+
+[program:naksu2]
+command=/usr/bin/puavo-ers-naksu2
+autostart=${naksu2_service}
+autorestart=true
+stopasgroup=true
+killasgroup=true
+startsecs=30
+
+[program:redis]
+command=redis-server
+autostart=${redis_service}
+autorestart=true
+stopasgroup=true
+killasgroup=true
+startsecs=30
+
+[group:ktp-controller]
+programs=api,agent,redis
+EOF
+mv "${supervisor_config_path}.tmp" "$supervisor_config_path"
+
+exec supervisord -c "$supervisor_config_path"
