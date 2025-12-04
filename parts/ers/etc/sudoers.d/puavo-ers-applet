@@ -1,3 +1,4 @@
 Defaults!/usr/bin/puavo-ers-applet env_keep+="DBUS_SESSION_BUS_ADDRESS XDG_RUNTIME_DIR"
 %puavo-ers      ALL = (:puavo) NOPASSWD: /usr/bin/puavo-ers-applet
 %puavo-ers      ALL =          NOPASSWD: /usr/bin/puavo-ers-abitti2server-networking
+%puavo-ers      ALL = (:puavo) NOPASSWD: /opt/ktp-controller/agent
