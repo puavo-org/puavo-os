@@ -1,0 +1,14 @@
+diff -ruN facter/lib/facter/util/linux/dhcp.rb facter/lib/facter/util/linux/dhcp.rb
+--- facter/lib/facter/util/linux/dhcp.rb	2024-10-11 01:05:24.000000000 +0300
++++ facter/lib/facter/util/linux/dhcp.rb	2025-12-05 12:28:46.110321374 +0200
+@@ -18,7 +18,9 @@
+             dhcp = search_systemd_netif_leases(interface_index, interface_name)
+             dhcp ||= search_dhclient_leases(interface_name)
+             dhcp ||= search_internal_leases(interface_name)
+-            dhcp ||= search_with_dhcpcd_command(interface_name)
++            ### puavo: disable this, this triggers log span, see
++            ### https://github.com/puppetlabs/facter/issues/2780
++            # dhcp ||= search_with_dhcpcd_command(interface_name)
+             dhcp
+           end
+ 
