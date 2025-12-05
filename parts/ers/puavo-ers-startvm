@@ -2,6 +2,17 @@
 
 set -eu
 
+readonly RED="\033[0;31m"
+readonly GREEN="\033[0;32m"
+readonly YELLOW="\033[0;33m"
+readonly NC="\033[0m"
+
+print_message() {
+    local color=$1
+    local message=$2
+    echo "${color}${message}${NC}"
+}
+
 log() {
   local priority
   priority=$1
@@ -10,7 +21,7 @@ log() {
 }
 
 if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
-  echo "\e[32mNot starting Abitti VM because puavo-ers-session is not enabled\e[0m"
+  print_message $GREEN "Not starting Abitti VM because puavo-ers-session is not enabled"
   log err 'not starting Abitti VM because puavo-ers-session is not enabled'
   exit 0
 fi
@@ -23,18 +34,19 @@ if ! vboxmanage list vms | grep -q 'NaksuAbittiKTP'; then
 fi
 
 sleep 4
-echo "\e[32mStarting Abitti VM...\e[0m"
+print_message $GREEN "Starting Abitti VM..."
+print_message $YELLOW "[$(date '+%Y-%m-%d %H:%M:%S')]"
 log info 'trying Automated Abitti VM startup'
 if ! vboxmanage startvm NaksuAbittiKTP; then
   log err 'failed to start up Abitti VM'
   exit 1
 fi
 
-echo "\e[32mAbitti VM running.\e[0m"
+print_message $GREEN "Abitti VM running."
 log info 'Abitti VM running'
 
 sleep 5
-echo "\e[32mSending ENTER keys to Abitti VM...\e[0m"
+print_message $GREEN "Sending ENTER keys to Abitti VM..."
 log info 'sending first enter key to Abitti VM'
 
 if ! vboxmanage controlvm NaksuAbittiKTP keyboardputscancode 1C 9C; then
@@ -49,6 +61,6 @@ if ! vboxmanage controlvm NaksuAbittiKTP keyboardputscancode 1C 9C; then
   exit 1
 fi
 
-echo "\e[32mAbitti VM should now be booting up.\e[0m"
+print_message $GREEN "Abitti VM should now be booting up."
 log info 'Abitti VM should now be booting up'
 exit 0
