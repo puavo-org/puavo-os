@@ -27,12 +27,12 @@ setup_naksu2_configuration() {
 
 network_interface=${1:-}
 
-workdir="${HOME}/.puavo/puavo-ers/naksu2-working-directory"
+workdir="${HOME}/.puavo/puavo-ers/naksu2"
 
 logger -p user.notice -t puavo-ers-naksu2 \
        "preparing to run naksu2 in '${workdir}'"
 
-if ! mkdir -p "${workdir}"; then
+if ! mkdir -p "$workdir"; then
   logger -p user.err -t puavo-ers-naksu2 "could not create '${workdir}'"
   exit 1
 fi
