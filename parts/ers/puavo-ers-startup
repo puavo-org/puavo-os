@@ -38,7 +38,7 @@ open_in_terminal() {
   title=$1
   shift
   if ! /usr/bin/terminator -T "Puavo Exam Room Server: ${title}" \
-       --no-dbus "--working-directory=/home/puavo-ers" \
+       --no-dbus "--working-directory=${puavo_ers_dir}" \
        -g "${puavo_ers_dir}/terminator.config" \
        -x "$@"; then
     logger -p user.err -t puavo-ers-startup "Error when running ${title}"
