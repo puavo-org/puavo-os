@@ -132,4 +132,15 @@ programs=api,agent,redis
 EOF
 mv "${supervisor_config_path}.tmp" "$supervisor_config_path"
 
+if $api_service; then
+  export KTP_CONTROLLER_DB_PATH="${ktp_controller_dir}/ktp_controller.sqlite"
+  (
+    cd /opt/ktp-controller
+    if ! alembic upgrade head; then
+      echo 'error in running Alembic database migration' >&2
+      exit 1
+    fi
+  )
+fi
+
 exec supervisord -c "$supervisor_config_path"
