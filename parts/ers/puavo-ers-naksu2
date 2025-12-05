@@ -2,6 +2,31 @@
 
 set -eu
 
+is_abitti2_server() {
+  puavo-conf puavo.ers.services | grep -qw abitti2server
+}
+
+setup_naksu2_configuration() {
+  local config_path interface naksu2dir
+  interface=$1
+  naksu2dir="${HOME}/.local/share/digabi/naksu2"
+  mkdir -p "$naksu2dir"
+  config_path="${naksu2dir}/naksu2-config.json"
+
+  {
+    cat "$config_path" 2>/dev/null \
+      || jq --null-input '.screen = "Settings"'
+  } | jq --arg interface "$interface" '
+      .networkInterface = {
+        iface: $interface,
+        ifaceName: $interface
+      }
+    ' > "${config_path}.tmp"
+  mv "${config_path}.tmp" "$config_path"
+}
+
+network_interface=${1:-}
+
 workdir="${HOME}/.puavo/puavo-ers/naksu2-working-directory"
 
 logger -p user.notice -t puavo-ers-naksu2 \
@@ -17,12 +42,22 @@ if ! which naksu2 >/dev/null; then
   exit 1
 fi
 
-if ! docker compose version; then
-  logger -p user.err -t puavo-ers-naksu2 'docker compose'
+if ! docker compose version >/dev/null; then
+  logger -p user.err -t puavo-ers-naksu2 'docker compose is missing'
   exit 1
 fi
 
-cd "${workdir}"
+if is_abitti2_server; then
+  if ! network_interface=$(puavo-conf puavo.ers.abitti2server.interface) \
+    || -z "$network_interface" ]; then
+      logger -p user.err -t puavo-ers-naksu2 \
+             'naksu2 is together with server but no known interface'
+      exit 1
+  fi
+  setup_naksu2_configuration "$network_interface"
+fi
+
+cd "$workdir"
 
 while true; do
   logger -p user.notice -t puavo-ers-naksu2 'starting up naksu2'
