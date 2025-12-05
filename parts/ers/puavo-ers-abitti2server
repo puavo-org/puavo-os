@@ -51,39 +51,6 @@ def _reset_abitti2server_domain_name():
         _run_networking("del_domain")
 
 
-def _configure_naksu2(interface: str):
-    try:
-        os.makedirs(_NAKSU2_CERTS_DIR_PATH)
-    except FileExistsError:
-        pass
-
-    try:
-        with open(
-            os.path.expanduser("~/.local/share/digabi/naksu2/naksu2-config.json"),
-            "r",
-            encoding="utf-8",
-        ) as config_file:
-            config = json.load(config_file)
-    except FileNotFoundError:
-        config = {
-            "screen": "Settings",
-        }
-
-    config.pop("networkInterface", None)
-
-    config["networkInterface"] = {
-        "iface": interface,
-        "ifaceName": interface,
-    }
-
-    with open(
-        os.path.expanduser("~/.local/share/digabi/naksu2/naksu2-config.json"),
-        "w",
-        encoding="utf-8",
-    ) as config_file:
-        json.dump(config, config_file)
-
-
 def _get_wd(name):
     if not re.match(r"^[a-z0-9]{1,32}$", name):
         raise ValueError("invalid working directory name", name)
@@ -120,11 +87,6 @@ def _run_networking(*args):
     )
 
 
-def _launch_naksu2(interface):
-    _configure_naksu2(interface)
-    subprocess.run('naksu2')
-
-
 def _start_naksu2_certs_dir_monitor(loop):
     naksu2_certs_dir_monitor = puavo_ers.asyncio.FileMonitor(
         loop,
@@ -156,7 +118,6 @@ def _main() -> int:
     puavo_ers.net.wait_interface(interface, timeout=5)
     try:
         _reset_abitti2server_domain_name()
-        _launch_naksu2(interface)
         naksu2_certs_dir_monitor = _start_naksu2_certs_dir_monitor(loop)
         loop.run_forever()
     finally:
