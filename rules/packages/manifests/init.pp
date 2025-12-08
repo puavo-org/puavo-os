@@ -60,8 +60,6 @@ class packages {
     , 'cryptsetup-initramfs'
     , 'dbus'
     , 'dnsmasq'
-    , 'docker-compose'
-    , 'docker.io'
     , 'freeradius'
     , 'freeradius-krb5'
     , 'freeradius-ldap'
@@ -935,5 +933,16 @@ class packages {
   # Prevent this from happening by using "--no-install-recommends".
   Package['wireguard-tools'] {
     install_options => [ '--no-install-recommends' ],
+  }
+
+  # Packages from the Docker repository
+  @package {
+    [ 'containerd.io'
+    , 'docker-buildx-plugin'
+    , 'docker-ce'
+    , 'docker-ce-cli'
+    , 'docker-ce-rootless-extras'
+    , 'docker-compose-plugin' ]:
+      ensure => present;
   }
 }

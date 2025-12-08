@@ -35,7 +35,7 @@ class docker {
     '/usr/local/sbin/puavo-backup-docker':
       mode    => '0755',
       require => [ File['/etc/puavo-docker/rsnapshot.conf']
-                 , Package['docker.io']
+                 , Package['docker-ce']
                  , Package['rsnapshot'], ],
       source  => 'puppet:///modules/docker/puavo-backup-docker';
 
@@ -48,7 +48,7 @@ class docker {
 
     '/usr/local/sbin/puavo-restore-docker':
       mode    => '0755',
-      require => Package['docker.io'],
+      require => Package['docker-ce'],
       source  => 'puppet:///modules/docker/puavo-restore-docker';
   }
 
@@ -58,8 +58,9 @@ class docker {
   }
 
   Package <|
-       title == 'docker-compose'
-    or title == 'docker.io'
+       title == 'docker-compose-plugin'
+    or title == 'docker-ce'
+    or title == 'docker-ce-cli'
     or title == 'puavo-sharedir-manager'
     or title == 'rsnapshot'
     or title == 'ruby-net-ldap'
