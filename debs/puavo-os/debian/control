@@ -158,6 +158,7 @@ Package: puavo-ers
 Architecture: all
 Depends: ${misc:Depends},
  gir1.2-ayatanaappindicator3-0.1,
+ ktp-controller,
  python3,
  python3-aionotify,
  python3-dbus,
