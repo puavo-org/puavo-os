@@ -39,7 +39,7 @@ install_puavo_pkg_conf() {
 }
 
 reconfigure_upgrade_pkg() {
-  timeout -k 5 60 puavo-pkg reconfigure-upgrade "$@"
+  timeout -k 5 60 /usr/sbin/puavo-pkg reconfigure-upgrade "$@"
 }
 
 test_puavopkg_system_installation() {
@@ -197,7 +197,7 @@ remove_puavopkgs() {
                                  }')
   for pkg_name in $puavopkgs_to_remove; do
     if [ -e "/var/lib/puavo-pkg/installed/${pkg_name}" ]; then
-      timeout -k 5 15 puavo-pkg remove "$pkg_name" || status=1
+      timeout -k 5 15 /usr/sbin/puavo-pkg remove "$pkg_name" || status=1
     fi
   done
 }
