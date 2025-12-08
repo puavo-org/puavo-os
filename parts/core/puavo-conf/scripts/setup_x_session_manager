@@ -10,10 +10,14 @@ case "$(puavo-conf puavo.xsessions.default)" in
     ers_uid='992'
     ers_user='puavo-ers'
 
-    useradd --system --create-home --home-dir "$ers_home"    \
-            --comment Puavo-ERS --groups docker --user-group \
-            --shell /bin/bash --uid "$ers_uid" "$ers_user"
+    if ! passwd -qS "$ers_user" >/dev/null 2>&1; then
+      useradd --system --create-home --home-dir "$ers_home"    \
+              --comment Puavo-ERS --groups docker --user-group \
+              --shell /bin/bash --uid "$ers_uid" "$ers_user"
+    fi
     chmod 700 "$ers_home"
+    # ensure ownership because Abitti 2 containers might mess that up
+    chown -R "${ers_uid}:${ers_uid}" "$ers_home"
     ;;
 
   puavo-infotv)
@@ -23,9 +27,11 @@ case "$(puavo-conf puavo.xsessions.default)" in
     infotv_uid='998'
     infotv_user='puavo-infotv'
 
-    useradd --system --create-home --home-dir "$infotv_home"      \
-            --comment Puavo-InfoTV --user-group --shell /bin/bash \
-            --uid "$infotv_uid" "$infotv_user"
+    if ! passwd -qS "$infotv_user" >/dev/null 2>&1; then
+      useradd --system --create-home --home-dir "$infotv_home"      \
+              --comment Puavo-InfoTV --user-group --shell /bin/bash \
+              --uid "$infotv_uid" "$infotv_user"
+    fi
     ;;
 
   puavo-usb-factory)
@@ -35,10 +41,12 @@ case "$(puavo-conf puavo.xsessions.default)" in
     usb_factory_home="/home/${usb_factory_user}"
     usb_factory_uid='997'
 
-    # XXX using --groups disk might be a risk
-    useradd --system --create-home --home-dir "$usb_factory_home"     \
-            --comment "Puavo USB Factory" --groups disk --user-group \
-            --shell /bin/bash --uid "$usb_factory_uid" "$usb_factory_user"
+    if ! passwd -qS "$usb_factory_user" >/dev/null 2>&1; then
+      # XXX using --groups disk might be a risk
+      useradd --system --create-home --home-dir "$usb_factory_home"     \
+              --comment "Puavo USB Factory" --groups disk --user-group \
+              --shell /bin/bash --uid "$usb_factory_uid" "$usb_factory_user"
+    fi
     ;;
 
   *)
