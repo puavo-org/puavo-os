@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+recovery_bundle_efi_variable_path=''
+
+for path in /sys/firmware/efi/efivars/RecoveryBundle-*; do
+  if [ -e "$path" ]; then
+    recovery_bundle_efi_variable_path="$path"
+    break
+  fi
+done
+
+if [ -z "$recovery_bundle_efi_variable_path" ]; then
+  echo "error: failed to find the EFI variable for the recovery bundle" >&2
+  exit 1
+fi
+
+# Skip the 4-byte header
+dd if="$recovery_bundle_efi_variable_path" bs=4 skip=1 2>/dev/null
