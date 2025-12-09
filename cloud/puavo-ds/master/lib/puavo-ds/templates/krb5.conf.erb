@@ -3,6 +3,9 @@
         default_tgs_enctypes = aes256-cts-hmac-sha384-192 aes256-cts-hmac-sha1-96 des3-hmac-sha1
         default_tkt_enctypes = aes256-cts-hmac-sha384-192 aes256-cts-hmac-sha1-96 des3-hmac-sha1
         allow_weak_crypto = true
+        # XXX allow_des3 may be removed once we do not need to support
+        # XXX Bullseye in any way
+        allow_des3 = true
 
 [realms]
 <% @organisations.each do |organisation| %>
