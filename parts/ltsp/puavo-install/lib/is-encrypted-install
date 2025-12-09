@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+usage() {
+  echo "Usage: $0 <images-dir>" >&2
+  exit 1
+}
+
+[ $# -eq 1 ] || usage
+
+images_dir=$1
+
+# Attempt to find a LUKS partition that has the images directory as mountpoint
+lsblk -J -O | jq --arg images_dir "$images_dir" '
+  [
+    .blockdevices[]
+      | select(.type == "disk")
+      | .children[]
+      | select(.fstype == "crypto_LUKS")
+      | .children[]?
+      | .mountpoints[]?
+  ] | any(. == $images_dir)
+'
