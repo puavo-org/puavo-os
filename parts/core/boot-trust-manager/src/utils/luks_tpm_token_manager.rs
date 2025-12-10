@@ -14,6 +14,9 @@ use crate::error::PuavoError;
 pub const MAX_TOKENS: u32 = 32;
 pub const TPM_TOKEN_TYPE: &str = "systemd-tpm2";
 
+// Name of the TPM token field defining whether PIN is required.
+pub const TPM_TOKEN_PIN_FIELD: &str = "tpm2-pin";
+
 pub const PCR_PUBLIC_KEY_PREFIX: &str = "tpm2-pcr-public-key";
 
 /// Representation of a systemd TPM2 LUKS token stored in the LUKS header.
@@ -104,6 +107,40 @@ pub struct LuksTpmTokenManager {
 }
 
 impl LuksTpmTokenManager {
+    /// Returns whether the specified token requires PIN
+    ///
+    /// Parameters:
+    /// - `device`: The crypt device handle used to inspect the token
+    /// - `token_index`: The index of token
+    ///
+    /// Errors:
+    /// Propagates cryptsetup errors.
+    pub fn is_pin_required(
+        device: &mut CryptDevice,
+        token_index: u32,
+    ) -> Result<bool, PuavoError> {
+        let token = match device.token_handle().json_get(token_index)? {
+            Value::Object(token) => token,
+            value => {
+                return Err(PuavoError::LuksError(format!(
+                    "Unexpected token format: {0}",
+                    value
+                )));
+            }
+        };
+
+        match token.get_key_value(TPM_TOKEN_PIN_FIELD) {
+            Some((_, Value::Bool(pin))) => Ok(*pin),
+            Some((_, value)) => {
+                return Err(PuavoError::LuksError(format!(
+                    "Unexpected token PIN value: {0}",
+                    value
+                )));
+            }
+            None => Ok(false),
+        }
+    }
+
     /// Construct a manager from an existing crypt device handle and its path.
     pub fn new(device: CryptDevice, device_path: String) -> Self {
         Self { device, device_path: device_path.into() }
