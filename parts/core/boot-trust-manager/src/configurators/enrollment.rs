@@ -144,6 +144,7 @@ impl EnrollmentConfigurator {
     /// Return true if any token on the specified device is invalid.
     fn any_invalid_token(
         token_manager: &mut LuksTpmTokenManager,
+        pin: Option<String>,
     ) -> Result<bool, PuavoError> {
         let tokens = token_manager.list_tokens()?;
 
@@ -157,7 +158,7 @@ impl EnrollmentConfigurator {
         let mut any_invalid_token = false;
 
         for token_id in tokens.keys() {
-            if token_manager.test_token(*token_id) {
+            if token_manager.test_token(*token_id, pin.as_ref()) {
                 debug!("Token {} is valid", token_id);
                 continue;
             }
@@ -210,6 +211,7 @@ impl EnrollmentConfigurator {
     fn wipe_and_enroll_to_device(
         token_manager: &mut LuksTpmTokenManager,
         recovery_key: &String,
+        pin: Option<String>,
         items: &[EnrollmentItemConfiguration],
     ) -> Result<(), PuavoError> {
         let mut wipe = true;
@@ -218,13 +220,20 @@ impl EnrollmentConfigurator {
             let policy = &item.policy;
 
             if policy.public_keys.is_empty() {
-                token_manager.enroll(recovery_key, policy, None, wipe)?;
+                token_manager.enroll(
+                    recovery_key,
+                    policy,
+                    pin.clone(),
+                    None,
+                    wipe,
+                )?;
                 wipe = false;
             } else {
                 for (public_key, _) in &policy.public_keys {
                     token_manager.enroll(
                         recovery_key,
                         policy,
+                        pin.clone(),
                         Some(public_key),
                         wipe,
                     )?;
@@ -261,10 +270,13 @@ impl EnrollmentConfigurator {
             self.configuration.enrollments.len()
         );
 
+        let pin = boot_vault.pin().cloned();
+
         // Enroll to the boot vault first
         Self::wipe_and_enroll_to_device(
             boot_vault.device_mut(),
             &recovery_key,
+            pin.clone(),
             &self.configuration.enrollments,
         )?;
 
@@ -272,6 +284,7 @@ impl EnrollmentConfigurator {
         Self::wipe_and_enroll_to_device(
             primary_partition,
             &recovery_key,
+            pin,
             &self.configuration.enrollments,
         )?;
 
@@ -294,9 +307,10 @@ impl Configurator for EnrollmentConfigurator {
             return Ok(true);
         }
 
+        let pin = boot_vault.pin().cloned();
         let any_invalid_token =
-            Self::any_invalid_token(boot_vault.device_mut())?
-                || Self::any_invalid_token(primary_partition)?;
+            Self::any_invalid_token(boot_vault.device_mut(), pin.clone())?
+                || Self::any_invalid_token(primary_partition, pin)?;
 
         Ok(any_invalid_token)
     }

@@ -3,6 +3,7 @@ use libcryptsetup_rs::consts::vals::EncryptionFormat;
 use libcryptsetup_rs::{CryptDevice, CryptInit, TokenInput};
 use log::debug;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
@@ -234,6 +235,7 @@ impl LuksTpmTokenManager {
     /// Parameters:
     /// * `key` - The passphrase used to control the LUKS device.
     /// * `policy` - The enrollment policy specifying PCRs, PIN usage, and other options.
+    /// * `pin` - Optional PIN used for unlocking the device.
     /// * `public_key_path` - Path to a TPM PCR public key.
     /// * `wipe` - If true, any existing TPM token will be removed before enrolling the new one.
     ///
@@ -243,6 +245,7 @@ impl LuksTpmTokenManager {
         &self,
         key: &String,
         policy: &LuksTpmEnrollmentPolicy,
+        pin: Option<String>,
         public_key_path: Option<&PathBuf>,
         wipe: bool,
     ) -> Result<(), PuavoError> {
@@ -255,10 +258,8 @@ impl LuksTpmTokenManager {
         }
 
         if let Some(expressions) = &policy.specific_pcrs_expressions {
-            if !expressions.is_empty() {
-                arguments
-                    .push(format!("--tpm2-pcrs={}", expressions.join("+")));
-            }
+            arguments
+                .push(format!("--tpm2-pcrs={}", expressions.join("+")));
         }
 
         if let Some(public_key_path) = public_key_path {
@@ -274,7 +275,7 @@ impl LuksTpmTokenManager {
             }
         }
 
-        if policy.use_pin {
+        if pin.is_some() {
             arguments.push("--tpm2-with-pin=yes".to_string());
         }
 
@@ -283,6 +284,7 @@ impl LuksTpmTokenManager {
         let output = Command::new("systemd-cryptenroll")
             .args(&arguments)
             .env("PASSWORD", key)
+            .env("NEWPIN", pin.clone().unwrap_or_default())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -301,19 +303,33 @@ impl LuksTpmTokenManager {
     ///
     /// Parameters:
     /// * `token_id` - The identifier of the token to test.
+    /// * `pin` - Optional PIN used for unlocking the token
     ///
     /// Errors:
     /// Returns `PuavoError` if the token is invalid or internal errors occur.
-    pub fn test_token(&mut self, token_id: u32) -> bool {
-        self.device
-            .token_handle()
-            .activate_by_token::<()>(
-                None,
-                Some(token_id),
-                None,
-                CryptActivate::empty(),
-            )
-            .is_ok()
+    pub fn test_token(&mut self, token_id: u32, pin: Option<&String>) -> bool {
+        if let Some(pin) = pin {
+            self.device
+                .token_handle()
+                .activate_by_token_with_pin::<()>(
+                    None,
+                    Some(token_id),
+                    pin.as_str(),
+                    None,
+                    CryptActivate::empty(),
+                )
+                .is_ok()
+        } else {
+            self.device
+                .token_handle()
+                .activate_by_token::<()>(
+                    None,
+                    Some(token_id),
+                    None,
+                    CryptActivate::empty(),
+                )
+                .is_ok()
+        }
     }
 
     /// Remove a TPM token by its ID.
