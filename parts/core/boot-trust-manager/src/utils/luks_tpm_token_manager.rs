@@ -49,10 +49,6 @@ pub struct LuksTpmEnrollmentPolicy {
     #[serde(rename = "tpm2-public-key-pcrs", default)]
     public_key_pcrs_expressions: Vec<String>,
 
-    /// Require a PIN for unlock.
-    #[serde(rename = "tpm2-pin", default)]
-    use_pin: bool,
-
     /// Directory containing TPM2 public keys to enroll.
     #[serde(rename = "tpm2-public-key-directory", default)]
     public_key_directory: Option<String>,
