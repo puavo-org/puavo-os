@@ -7,7 +7,7 @@ use std::{
 use log::{debug, error, info, warn};
 
 use crate::{
-    configurators::{configurators, Configurator},
+    configurators::{Configurator, configurators},
     devices::{
         block_device::{BlockDevice, GenericBlockDevice},
         boot_vault::{
@@ -15,11 +15,11 @@ use crate::{
         },
         efi_boot_device::EFIBootDevice,
     },
-    display::{choose_display, UserDisplay},
+    display::{UserDisplay, choose_display},
     error::PuavoError,
     utils::{
         luks_tpm_token_manager::LuksTpmTokenManager,
-        mount::{unmount, MountGuard},
+        mount::{MountGuard, unmount},
         udev::filesystem_type,
     },
 };
@@ -237,7 +237,7 @@ impl BootTrustManager {
 
         let mut boot_vault = BootVault::default();
         info!("Mounting boot vault");
-        boot_vault.mount(&boot_vault_image_path)?;
+        boot_vault.mount(&boot_vault_image_path, display)?;
         info!("Boot vault mounted");
 
         let primary_partition_manager =
@@ -357,7 +357,10 @@ impl BootTrustManager {
 
         let mut boot_vault = BootVault::default();
         info!("Mounting boot vault");
-        boot_vault.mount(&boot_vault_image_path)?;
+
+        let display = choose_display(self.configuration.force_console);
+        boot_vault.mount(&boot_vault_image_path, &display)?;
+
         info!("Boot vault mounted at {}", VAULT_MOUNTPOINT);
 
         // Prevent automatic cleanup by forgetting the resources

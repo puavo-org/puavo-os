@@ -4,17 +4,15 @@ use std::{
 };
 
 use libcryptsetup_rs::{
-    CryptDevice, CryptInit,
-    consts::{
-        flags::{CryptActivate, CryptDeactivate},
-        vals::EncryptionFormat,
-    },
+    CryptDevice, CryptInit, CryptTokenInfo,
+    consts::{flags::CryptActivate, vals::EncryptionFormat},
 };
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use loopdev::{LoopControl, LoopDevice};
 
 use crate::{
     devices::block_device::{BlockDevice, GenericBlockDevice},
+    display::UserDisplay,
     error::PuavoError,
     utils::{
         luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS},
@@ -36,6 +34,9 @@ pub const VAULT_LUKS_DEVICE_NAME: &str = "puavo-boot-vault";
 /// mounted to `VAULT_MOUNTPOINT`.
 pub const VAULT_LUKS_DEVICE_PATH: &str = "/dev/mapper/puavo-boot-vault";
 
+/// How many attempts for PIN based unlock?
+pub const MAX_UNLOCK_ATTEMPTS: usize = 5;
+
 /// Mount point for the decrypted vault filesystem at runtime.
 pub const VAULT_MOUNTPOINT: &str = "/run/puavo/boot-vault";
 
@@ -50,9 +51,9 @@ pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
 pub const VAULT_FALLBACK_UNLOCK_KEY_PATH: &str =
     "/.extra/puavo/vault-unlock.key";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BootVaultUnlockMethod {
-    TpmToken,
+    TpmToken(Option<String>),
     RecoveryKey,
 }
 
@@ -83,7 +84,7 @@ impl BootVault {
 
     /// Return the method used to unlock the vault after a successful mount, if any.
     pub fn unlock_method(&self) -> Option<BootVaultUnlockMethod> {
-        self.unlock_method
+        self.unlock_method.clone()
     }
 
     /// Attempt to unlock the LUKS device using a fallback recovery key.
@@ -133,56 +134,113 @@ impl BootVault {
     ///
     /// Parameters:
     /// - `device`: The crypt device handle to activate.
+    /// - `display`: Display instance to show progress and messages.
     ///
     /// Errors:
     /// Propagates cryptsetup and IO errors.
     fn try_unlock_with_any_token(
         &mut self,
         device: &mut CryptDevice,
+        display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
         debug!("Attempting to unlock boot vault using any available TPM token");
 
-        let unlocked_index = (0..MAX_TOKENS).find(|&token_index| match device
-            .token_handle()
-            .activate_by_token::<()>(
-                Some(VAULT_LUKS_DEVICE_NAME),
-                Some(token_index),
-                None,
-                CryptActivate::empty(),
-            ) {
-            Ok(_) => {
-                debug!("Unlocked with token {}", token_index);
-                true
-            }
-            Err(error) => {
-                debug!(
-                    "Failed to unlock using token {}: {}",
-                    token_index, error
-                );
-                false
-            }
-        });
+        for _ in 0..MAX_UNLOCK_ATTEMPTS {
+            let mut pin = None;
 
-        if let Some(_) = unlocked_index {
-            debug!("Boot vault activated as {}", VAULT_LUKS_DEVICE_NAME);
-            self.unlock_method = Some(BootVaultUnlockMethod::TpmToken);
-            Ok(())
-        } else {
-            debug!("Failed to unlock boot vault with TPM tokens");
-            Err(PuavoError::UnlockError)
+            for token_index in 0..MAX_TOKENS {
+                match device.token_handle().status(token_index) {
+                    Ok(CryptTokenInfo::Inactive) => {
+                        info!(
+                            "Token with id {} does not exist, skipping...",
+                            token_index
+                        );
+                        continue;
+                    }
+                    Err(error) => {
+                        error!(
+                            "Failed to determine if token with id {} exists: {}",
+                            token_index, error
+                        );
+                        continue;
+                    }
+                    _ => {}
+                }
+
+                let is_pin_required = match LuksTpmTokenManager::is_pin_required(
+                    device,
+                    token_index,
+                ) {
+                    Ok(is_pin_required) => is_pin_required,
+                    Err(error) => {
+                        error!(
+                            "Failed to determine PIN requirement: {}",
+                            error
+                        );
+                        false
+                    }
+                };
+
+                let unlock_result = if !is_pin_required {
+                    device.token_handle().activate_by_token::<()>(
+                        Some(VAULT_LUKS_DEVICE_NAME),
+                        Some(token_index),
+                        None,
+                        CryptActivate::empty(),
+                    )
+                } else {
+                    let pin = pin.get_or_insert_with(|| {
+                        display.ask_password("PIN").unwrap_or("".into())
+                    });
+                    device.token_handle().activate_by_token_with_pin::<()>(
+                        Some(VAULT_LUKS_DEVICE_NAME),
+                        Some(token_index),
+                        pin.as_str(),
+                        None,
+                        CryptActivate::empty(),
+                    )
+                };
+
+                match unlock_result {
+                    Ok(_) => {
+                        debug!("Unlocked with token {}", token_index);
+                        self.unlock_method =
+                            Some(BootVaultUnlockMethod::TpmToken(pin));
+                        return Ok(());
+                    }
+                    Err(error) => {
+                        debug!(
+                            "Failed to unlock using token {}: {}",
+                            token_index, error
+                        );
+                    }
+                }
+            }
+
+            // If a PIN is not required, attempting again is of no use
+            if pin.is_none() {
+                break;
+            } else {
+                let _ = display.show_message("Incorrect PIN");
+            }
         }
+
+        debug!("Failed to unlock boot vault with TPM tokens");
+        Err(PuavoError::UnlockError)
     }
 
     /// Initialize the LUKS device handle for the loop device and unlock it.
     ///
     /// Parameters:
     /// - `loop_device_path`: Path to the loop device backing the vault image (e.g. `/dev/loop0`).
+    /// - `display`: Display instance to show progress and messages.
     ///
     /// Errors:
     /// Propagates loop device control errors.
     fn open_luks_device(
         &mut self,
         loop_device_path: &PathBuf,
+        display: &Box<dyn UserDisplay>,
     ) -> Result<CryptDevice, PuavoError> {
         debug!("Initializing LUKS device for loop path {:?}", loop_device_path);
         let mut device = CryptInit::init(&loop_device_path)?;
@@ -205,7 +263,7 @@ impl BootVault {
         };
 
         debug!("No fallback key available, trying TPM token unlock");
-        self.try_unlock_with_any_token(&mut device)?;
+        self.try_unlock_with_any_token(&mut device, display)?;
 
         Ok(device)
     }
@@ -237,12 +295,17 @@ impl BootVault {
     ///
     /// Parameters:
     /// - `image_path`: Path to the boot vault image file on the EFI partition.
+    /// - `display`: Display instance to show progress and messages.
     ///
     /// Errors:
     /// - Loop device control errors.
     /// - Cryptsetup errors while unlocking the LUKS container.
     /// - IO or mount errors while mounting the filesystem.
-    pub fn mount(&mut self, image_path: &PathBuf) -> Result<(), PuavoError> {
+    pub fn mount(
+        &mut self,
+        image_path: &PathBuf,
+        display: &Box<dyn UserDisplay>,
+    ) -> Result<(), PuavoError> {
         info!(
             "Setting up loop device for boot vault image at {:?}",
             image_path
@@ -259,8 +322,9 @@ impl BootVault {
             .path()
             .ok_or_else(|| PuavoError::NotFound("Loop device".into()))?;
 
-        let luks_device =
-            self.open_luks_device(&loop_device_path).map_err(|error| {
+        let luks_device = self
+            .open_luks_device(&loop_device_path, display)
+            .map_err(|error| {
                 let _ = loop_device.detach();
                 error
             })?;
@@ -313,6 +377,14 @@ impl BootVault {
         }
 
         Ok(())
+    }
+
+    /// Returns the PIN used to unlock the boot vault, if any
+    pub fn pin(&self) -> Option<&String> {
+        match &self.unlock_method {
+            Some(BootVaultUnlockMethod::TpmToken(pin)) => pin.as_ref(),
+            _ => None,
+        }
     }
 
     /// Returns a reference to the resources for interacting with the mounted vault.
