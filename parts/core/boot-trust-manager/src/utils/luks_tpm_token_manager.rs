@@ -254,8 +254,7 @@ impl LuksTpmTokenManager {
         }
 
         if let Some(expressions) = &policy.specific_pcrs_expressions {
-            arguments
-                .push(format!("--tpm2-pcrs={}", expressions.join("+")));
+            arguments.push(format!("--tpm2-pcrs={}", expressions.join("+")));
         }
 
         if let Some(public_key_path) = public_key_path {
@@ -307,10 +306,11 @@ impl LuksTpmTokenManager {
         if let Some(pin) = pin {
             self.device
                 .token_handle()
-                .activate_by_token_with_pin::<()>(
+                .activate_by_token_pin::<()>(
+                    None,
                     None,
                     Some(token_id),
-                    pin.as_str(),
+                    pin.as_bytes(),
                     None,
                     CryptActivate::empty(),
                 )

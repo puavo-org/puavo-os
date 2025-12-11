@@ -192,10 +192,11 @@ impl BootVault {
                     let pin = pin.get_or_insert_with(|| {
                         display.ask_password("PIN").unwrap_or("".into())
                     });
-                    device.token_handle().activate_by_token_with_pin::<()>(
+                    device.token_handle().activate_by_token_pin::<()>(
                         Some(VAULT_LUKS_DEVICE_NAME),
+                        None,
                         Some(token_index),
-                        pin.as_str(),
+                        pin.as_bytes(),
                         None,
                         CryptActivate::empty(),
                     )
