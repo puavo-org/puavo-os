@@ -38,7 +38,7 @@ class image::bundle::desktop {
   include ::tuxpaint
   include ::udisks2
   include ::veyon
-  # include ::vym               # XXX missing from Trixie
+  include ::vym
   # include ::wine              # XXX missing from Trixie
   include ::xorg
 
