@@ -59,7 +59,7 @@ _TOKEN_REGEXES = collections.OrderedDict(
         ),
         (
             _TokenId.MODE,
-            r"^   (?P<resolution>\d+x\d+) (?P<rates>.*?)\s*$",
+            r"^   (?P<resolution>\d+x\d+[ip]?) (?P<rates>.*?)\s*$",
         ),
         (
             _TokenId.PROP_ATTR_RANGE,
