@@ -35,7 +35,7 @@ class image::bundle::desktop {
   include ::scribus
   include ::supplementary_groups
   include ::tts_setup
-  # include ::tuxpaint          # XXX missing from Trixie
+  include ::tuxpaint
   include ::udisks2
   include ::veyon
   # include ::vym               # XXX missing from Trixie
