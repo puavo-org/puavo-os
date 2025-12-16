@@ -1,6 +1,8 @@
 #!/bin/sh
 
 {
+  PATH=/sbin:/usr/sbin:/bin:/usr/bin
+  export PATH
   umask 0022
 
   puavo_hosttype=''
