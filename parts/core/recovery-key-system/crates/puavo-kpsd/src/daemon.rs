@@ -1,0 +1,315 @@
+use crate::commands::{CommandExecutor, DefaultCommandExecutor};
+use crate::config::KpsConfig;
+use crate::context::DaemonContext;
+use crate::error::{Error, Result};
+use puavo_ipc::{
+    Commands, DEFAULT_SOCKET_MODE, DaemonCommand, DaemonResponse,
+    DaemonResponseData, IpcMessage, IpcPayload, MAX_MESSAGE_SIZE,
+};
+use std::fs::Permissions;
+use std::io;
+use std::os::unix::fs::PermissionsExt;
+use std::sync::Arc;
+use std::time::Instant;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::unix::{SocketAddr, UCred};
+use tokio::net::{UnixListener, UnixStream};
+use tokio::signal;
+use tokio::sync::mpsc::{self, UnboundedSender};
+
+/// Main daemon structure
+pub struct Daemon {
+    start_time: Instant,
+    context: Arc<DaemonContext>,
+}
+
+impl Daemon {
+    /// Create new daemon instance
+    pub async fn new(config: KpsConfig) -> Result<Self> {
+        let context = Arc::new(DaemonContext::new(config)?);
+        Ok(Self { start_time: Instant::now(), context })
+    }
+
+    /// Run the daemon main loop
+    pub async fn run(&self) -> Result<()> {
+        let socket_path = &self.context.config().socket.path;
+
+        // Remove existing socket file if it exists
+        if socket_path.exists() {
+            tokio::fs::remove_file(&socket_path).await.map_err(|error| {
+                Error::SocketRemovalError(socket_path.clone(), error)
+            })?;
+        }
+
+        let listener = UnixListener::bind(&socket_path).map_err(|error| {
+            Error::SocketBindError(socket_path.clone(), error)
+        })?;
+
+        // Apply socket permissions and group ownership
+        self.apply_socket_permissions().await?;
+
+        tracing::info!("Daemon listening on {}", socket_path.display());
+
+        let (shutdown_send, mut shutdown_receive) =
+            mpsc::unbounded_channel::<()>();
+
+        loop {
+            tokio::select! {
+                result = listener.accept() => {
+                    self.handle_client_connection(result, shutdown_send.clone()).await;
+                }
+
+                _ = signal::ctrl_c() => {
+                    tracing::info!("Received terminal shutdown signal");
+                    break;
+                }
+
+                _ = shutdown_receive.recv() => {
+                    tracing::info!("Received shutdown signal");
+                    break;
+                },
+            }
+        }
+
+        // Cleanup
+        let _ = tokio::fs::remove_file(&socket_path).await;
+        Ok(())
+    }
+
+    /// Apply socket permissions and group ownership
+    async fn apply_socket_permissions(&self) -> Result<()> {
+        let socket_config = &self.context.config().socket;
+
+        // Set file permissions
+        tokio::fs::set_permissions(
+            &socket_config.path,
+            Permissions::from_mode(DEFAULT_SOCKET_MODE),
+        )
+        .await
+        .map_err(|error| {
+            Error::SocketPermissionsError(socket_config.path.clone(), error)
+        })?;
+
+        tracing::debug!("Socket permissions set to {:o}", DEFAULT_SOCKET_MODE);
+
+        // Find the configured group ID and set ownership
+        let group_info = nix::unistd::Group::from_name(&socket_config.group)
+            .map_err(|error| {
+                Error::GroupLookupError(socket_config.group.clone(), error)
+            })?
+            .ok_or_else(|| Error::GroupNotFound(socket_config.group.clone()))?;
+
+        nix::unistd::chown(&socket_config.path, None, Some(group_info.gid))
+            .map_err(|error| {
+                Error::SocketOwnershipError(socket_config.path.clone(), error)
+            })?;
+
+        tracing::info!(
+            "Socket group ownership set to '{}' (gid: {})",
+            socket_config.group,
+            group_info.gid
+        );
+
+        Ok(())
+    }
+
+    /// Handle incoming client connection
+    async fn handle_client_connection(
+        &self,
+        connection_result: io::Result<(UnixStream, SocketAddr)>,
+        shutdown: UnboundedSender<()>,
+    ) {
+        let client_handler_result =
+            connection_result.and_then(|(stream, _address)| {
+                ClientHandler::new(
+                    stream,
+                    shutdown,
+                    self.start_time,
+                    self.context.clone(),
+                )
+            });
+
+        match client_handler_result {
+            Ok(handler) => {
+                // Spawn client handler
+                tokio::spawn(async move {
+                    if let Err(error) = handler.handle().await {
+                        tracing::error!("Client handler error: {}", error);
+                    }
+                });
+            }
+            Err(error) => {
+                tracing::error!("Accept error: {}", error);
+            }
+        }
+    }
+}
+
+/// Handles individual client connections
+struct ClientHandler<E: CommandExecutor> {
+    stream: UnixStream,
+    shutdown: UnboundedSender<()>,
+    start_time: Instant,
+    context: Arc<DaemonContext>,
+    executor: Arc<E>,
+    credentials: UCred,
+}
+
+impl ClientHandler<DefaultCommandExecutor> {
+    fn new(
+        stream: UnixStream,
+        shutdown: UnboundedSender<()>,
+        start_time: Instant,
+        context: Arc<DaemonContext>,
+    ) -> io::Result<Self> {
+        let credentials = stream.peer_cred()?;
+        tracing::info!("New connection from {:?}", credentials);
+
+        Ok(Self {
+            stream,
+            shutdown,
+            start_time,
+            context,
+            executor: Arc::new(DefaultCommandExecutor::new()),
+            credentials,
+        })
+    }
+}
+
+impl<E: CommandExecutor> ClientHandler<E> {
+    /// Handle client communication
+    async fn handle(mut self) -> Result<()> {
+        let mut buffer = vec![0; MAX_MESSAGE_SIZE];
+
+        loop {
+            let bytes_read = self
+                .stream
+                .read(&mut buffer)
+                .await
+                .map_err(Error::ClientReadError)?;
+
+            if bytes_read == 0 {
+                break; // Client disconnected
+            }
+
+            // Try to deserialize message
+            let message: IpcMessage = bincode::deserialize(
+                &buffer[..bytes_read],
+            )
+            .map_err(|error| Error::DeserializationError(error.to_string()))?;
+
+            tracing::debug!(
+                "Received message ID {}: {:?}",
+                message.id,
+                message.payload
+            );
+
+            // Process the message
+            let response = self.process_message(message).await;
+
+            // Serialize and send response
+            let response_bytes =
+                bincode::serialize(&response).map_err(|error| {
+                    Error::SerializationError(error.to_string())
+                })?;
+
+            self.stream
+                .write_all(&response_bytes)
+                .await
+                .map_err(Error::ClientWriteError)?;
+        }
+
+        tracing::debug!("Client disconnected");
+        Ok(())
+    }
+
+    /// Process incoming message and generate response
+    async fn process_message(&self, message: IpcMessage) -> IpcMessage {
+        let response = match message.payload {
+            IpcPayload::Command(command) => self.execute_command(command).await,
+            _ => DaemonResponse::Error("Expected command".to_string()),
+        };
+
+        IpcMessage::new_response(message.id, response)
+    }
+
+    /// Execute specific daemon command
+    async fn execute_command(&self, command: DaemonCommand) -> DaemonResponse {
+        tracing::info!(
+            "Executing command from {:?}: {:?}",
+            self.credentials,
+            command
+        );
+
+        match command {
+            DaemonCommand::GetStatus => self.handle_status_command().await,
+            DaemonCommand::Shutdown { force } => {
+                self.handle_shutdown_command(force).await
+            }
+            DaemonCommand::Execute(kps_command) => {
+                self.handle_kps_command(kps_command).await
+            }
+        }
+    }
+
+    /// Handle status command
+    async fn handle_status_command(&self) -> DaemonResponse {
+        let uptime = self.start_time.elapsed();
+        DaemonResponseData::Status {
+            uptime_seconds: uptime.as_secs(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        }
+        .into()
+    }
+
+    /// Handle shutdown command
+    async fn handle_shutdown_command(&self, _force: bool) -> DaemonResponse {
+        tracing::info!("Shutdown command received");
+        let _ = self.shutdown.send(());
+        DaemonResponse::success()
+    }
+
+    /// Handle KPS commands by delegating to command executor
+    async fn handle_kps_command(&self, command: Commands) -> DaemonResponse {
+        match command {
+            Commands::Initialize { hsm_pin } => {
+                self.executor
+                    .execute_initialize(self.context.clone(), hsm_pin)
+                    .await
+            }
+
+            Commands::Organization { command } => {
+                self.executor
+                    .execute_organization(self.context.clone(), command)
+                    .await
+            }
+
+            Commands::Generate {
+                operator_id,
+                organization_id,
+                serial_number,
+                recovery_key_file,
+            } => {
+                self.executor
+                    .execute_generate(
+                        self.context.clone(),
+                        operator_id,
+                        organization_id,
+                        serial_number,
+                        recovery_key_file,
+                    )
+                    .await
+            }
+
+            Commands::Unwrap { operator_id, recovery_bundle } => {
+                self.executor
+                    .execute_unwrap(
+                        self.context.clone(),
+                        operator_id,
+                        recovery_bundle,
+                    )
+                    .await
+            }
+        }
+    }
+}

@@ -7,7 +7,7 @@ use std::{
 use log::{debug, error, info, warn};
 
 use crate::{
-    configurators::{Configurator, configurators},
+    configurators::{configurators, Configurator},
     devices::{
         block_device::{BlockDevice, GenericBlockDevice},
         boot_vault::{
@@ -15,7 +15,7 @@ use crate::{
         },
         efi_boot_device::EFIBootDevice,
     },
-    display::{UserDisplay, choose_display},
+    display::{choose_display, UserDisplay},
     error::PuavoError,
     utils::{
         luks_tpm_token_manager::LuksTpmTokenManager,

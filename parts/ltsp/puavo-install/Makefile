@@ -62,11 +62,13 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/create-bcd \
+		lib/is-encrypted-install \
 		lib/is-uki-install \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-image-preinst \
 		lib/puavo-prepare-secure-boot \
+		lib/puavo-read-recovery-bundle \
 		lib/puavo-reset \
 		lib/puavo-setup-secure-boot \
 		lib/puavo-torrent-updated \

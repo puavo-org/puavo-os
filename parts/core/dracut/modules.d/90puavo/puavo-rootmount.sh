@@ -263,3 +263,10 @@ fi
 
 # Save the chosen root device for mounting subvolumes later
 echo "$PUAVO_ROOT_DEVICE" > "/run/puavo/root-device"
+
+# Copy TPM PCR signature file to the real filesystem.
+# Post-boot tools like cryptsetup require this file to unlock
+# TPM-bound devices after the switch-root.
+tpm_pcr_signature_file=/.extra/tpm2-pcr-signature.json
+[ -f "$tpm_pcr_signature_file" ] && cp "$tpm_pcr_signature_file" \
+                                       "${NEWROOT}/usr/lib/systemd/" || true
