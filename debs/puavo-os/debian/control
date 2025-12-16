@@ -192,6 +192,7 @@ Architecture: all
 Depends: ${misc:Depends},
  python3,
  python3-gi
+ python3-qrcode
 Description: Puavo Laptop Setup
  Puavo Laptop Setup is a tool to set some laptop-specific puavo-conf
  settings to configure a machine.  This tool can be used by primary
