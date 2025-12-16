@@ -12,7 +12,7 @@ class image::bundle::desktop {
   include ::fuse
   include ::gdm
   include ::gnome_terminal
-  # include ::graphics_drivers          # XXX missing from Trixie
+  include ::graphics_drivers
   include ::homedir_management
   include ::ibus
   include ::image::bundle::basic

@@ -300,7 +300,8 @@ class packages {
 
     [ 'dkms'
     , 'glx-alternative-mesa'
-    # , 'libgl1-mesa-glx'               # XXX missing from Trixie
+    , 'glx-diversions'
+    , 'libglx-mesa0'
     , 'nvidia-settings'
     , 'update-glx'
     , 'xserver-xorg-core'

@@ -2,7 +2,9 @@ class graphics_drivers {
   include ::packages
   include ::puavo_conf
 
-  $glx_packages = [ 'glx-alternative-mesa', 'libgl1-mesa-glx', 'update-glx' ]
+  $glx_packages = [
+    'glx-alternative-mesa', 'glx-diversions', 'libglx-mesa0', 'update-glx',
+  ]
 
   $nvidia_packages = [ 'nvidia-kernel-dkms' ]
 
@@ -18,5 +20,11 @@ class graphics_drivers {
       unless  => '/usr/sbin/update-glx --query glx | grep -Fqx "Value: /usr/lib/mesa-diverted"';
   }
 
-  Package <| title == $glx_packages or title == $nvidia_packages |>
+  Package <|
+       title == 'glx-alternative-mesa'
+    or title == 'glx-diversions'
+    or title == 'libglx-mesa0'
+    or title == 'nvidia-kernel-dkms'
+    or title == 'update-glx'
+  |>
 }

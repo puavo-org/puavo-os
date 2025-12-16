@@ -11,11 +11,10 @@ nvidia_alternative=
 use_nvidia_persistenced=false
 
 case "$graphics_driver" in
-  nvidia|nvidia-535)
+  nvidia)
     glx_alternative=/usr/lib/nvidia
     nvidia_alternative=current
     use_nvidia_persistenced=true
-    ;;
     ;;
 esac
 
