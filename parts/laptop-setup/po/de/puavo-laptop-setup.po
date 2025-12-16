@@ -62,6 +62,10 @@ msgstr ""
 "Weitere Informationen können aus der Werkseinstellungslog gelesen werden. "
 "Bitte Kontakt mit Helpdesk aufnehmen."
 
+#: puavo-laptop-setup:574
+msgid "Failed to load recovery data"
+msgstr "Fehler beim Laden der Wiederherstellungsdaten"
+
 #: puavo-laptop-setup:584 puavo-laptop-setup:630
 msgid "Laptop setup"
 msgstr "Laptop Einstellungen"
@@ -119,9 +123,17 @@ msgstr "Windows aktivieren"
 msgid "Factory reset..."
 msgstr "Das Zurücksetzen der Werkseinstellungen..."
 
+#: puavo-laptop-setup.glade:238
+msgid "Show recovery QR code"
+msgstr "Festplatten-Wiederherstellungs-QR-Code anzeigen"
+
 #: puavo-laptop-setup.glade:257
 msgid "Confirmation of factory reset"
 msgstr "Bestätigung des Zurücksetzens auf die Werkseinstellungen"
+
+#: puavo-laptop-setup.glade:269
+msgid "Recovery QR code"
+msgstr "Festplatten-Wiederherstellungs-QR-Code"
 
 #: puavo-laptop-setup.glade:275
 msgid "Cancel"

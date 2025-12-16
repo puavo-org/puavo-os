@@ -62,6 +62,10 @@ msgstr ""
 "Ytterligare detaljer kan hittas från fabriksåterställningsloggen. Kontakta "
 "supporten för hjälp."
 
+#: puavo-laptop-setup:574
+msgid "Failed to load recovery data"
+msgstr "Misslyckades att ladda återställningsdata"
+
 #: puavo-laptop-setup:584 puavo-laptop-setup:630
 msgid "Laptop setup"
 msgstr "Laptop inställningar"
@@ -119,9 +123,17 @@ msgstr "Aktivera Windows"
 msgid "Factory reset..."
 msgstr "Fabriksåterställning..."
 
+#: puavo-laptop-setup.glade:238
+msgid "Show recovery QR code"
+msgstr "Visa diskåterställnings-QR-kod"
+
 #: puavo-laptop-setup.glade:257
 msgid "Confirmation of factory reset"
 msgstr "Bekräftelse på fabriksåterställning"
+
+#: puavo-laptop-setup.glade:269
+msgid "Recovery QR code"
+msgstr "Diskåterställnings-QR-kod"
 
 #: puavo-laptop-setup.glade:275
 msgid "Cancel"
