@@ -470,35 +470,6 @@ impl BootVaultResources {
         }
     }
 
-    /// Set whether a PIN code is required unlock.
-    ///
-    /// Parameters:
-    /// - `required`: Whether a PIN code is required.
-    ///
-    /// Errors:
-    /// - `PuavoError::IoError` if writing fails.
-    pub fn set_pin_required(&self, required: bool) -> Result<(), PuavoError> {
-        let value = if required { "1" } else { "0" }.to_string();
-        self.write_property("pin-required", value)
-    }
-
-    /// Check whether a PIN code is required to unlock.
-    ///
-    /// Errors:
-    /// - `PuavoError::IoError` if reading fails.
-    /// - `PuavoError::InvalidData` if the read value is not valid.
-    pub fn is_pin_required(&self) -> Result<bool, PuavoError> {
-        let value = self.read_property("pin-required")?.unwrap_or("0".into());
-        match value.trim() {
-            "1" => Ok(true),
-            "0" => Ok(false),
-            other => Err(PuavoError::InvalidData(format!(
-                "Invalid PIN-required value: {}",
-                other
-            ))),
-        }
-    }
-
     /// Write a recovery key file into the mounted vault.
     ///
     /// Parameters:
