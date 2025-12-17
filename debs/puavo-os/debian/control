@@ -193,7 +193,8 @@ Description: Puavo examination mode applets
 Package: puavo-kps
 Architecture: all
 Depends: ${misc:Depends},
- libsofthsm2
+ libsofthsm2,
+ opensc-pkcs11
 Description: Puavo Key Provisioning Station
  Puavo Key Provisioning Station consists of a client and a daemon,
  whose purpose is to provide data recovery for cases where
