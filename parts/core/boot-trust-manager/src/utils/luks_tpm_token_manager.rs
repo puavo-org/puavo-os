@@ -1,6 +1,6 @@
 use libcryptsetup_rs::consts::flags::{CryptActivate, CryptDeactivate};
 use libcryptsetup_rs::consts::vals::EncryptionFormat;
-use libcryptsetup_rs::{CryptDevice, CryptInit, TokenInput};
+use libcryptsetup_rs::{CryptDevice, CryptInit};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -326,38 +326,6 @@ impl LuksTpmTokenManager {
                 )
                 .is_ok()
         }
-    }
-
-    /// Remove a TPM token by its ID.
-    ///
-    /// Parameters:
-    /// * `token_id` - The identifier of the token to remove.
-    ///
-    /// Errors:
-    /// Returns `PuavoError::LibcryptError` if the removal fails.
-    pub fn remove_token(&mut self, token_id: u32) -> Result<(), PuavoError> {
-        debug!("Removing TPM token with ID {}", token_id);
-        self.device
-            .token_handle()
-            .json_set(TokenInput::RemoveToken(token_id))?;
-        Ok(())
-    }
-
-    /// Removes the specified TPM tokens by their IDs.
-    ///
-    /// Parameters:
-    /// * `token_ids` - A list of token IDs to remove.
-    ///
-    /// Errors:
-    /// Returns `PuavoError::LibcryptError` if any removal fails.
-    pub fn remove_tokens(
-        &mut self,
-        token_ids: Vec<u32>,
-    ) -> Result<(), PuavoError> {
-        for token_id in token_ids {
-            self.remove_token(token_id)?;
-        }
-        Ok(())
     }
 
     /// Access the underlying crypt device handle.
