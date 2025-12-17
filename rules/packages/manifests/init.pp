@@ -33,6 +33,7 @@ class packages {
     , 'puavo-devscripts'
     , 'puavo-ers'
     , 'puavo-exammode'
+    , 'puavo-kps'
     , 'puavo-laptop-setup'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'

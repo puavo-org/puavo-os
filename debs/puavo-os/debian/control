@@ -190,6 +190,17 @@ Description: Puavo examination mode applets
  setup and another one for examination session.
  .
 
+Package: puavo-kps
+Architecture: all
+Depends: ${misc:Depends},
+ libsofthsm2
+Description: Puavo Key Provisioning Station
+ Puavo Key Provisioning Station consists of a client and a daemon,
+ whose purpose is to provide data recovery for cases where
+ TPM-based encryption has failed (due to device malfunction or
+ some other similar reason).
+ .
+
 Package: puavo-laptop-setup
 Architecture: all
 Depends: ${misc:Depends},

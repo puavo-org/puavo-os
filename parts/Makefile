@@ -9,6 +9,7 @@ subdirs         := autopilot         \
                    devscripts        \
                    ers               \
                    exammode          \
+                   kps               \
                    laptop-setup      \
                    ltsp              \
                    pam               \

@@ -1,4 +1,4 @@
-subdirs = add_entropy boot-trust-manager recovery-key-system
+subdirs = add_entropy boot-trust-manager
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
 
