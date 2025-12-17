@@ -1,6 +1,6 @@
 use anyhow::Result;
 use puavo_ipc::{
-    DaemonResponseData, OrganizationKeyListing, OrganizationPublicKey,
+    DaemonResponseData, OrganisationKeyListing, OrganisationPublicKey,
     OutputFormat, RecoveryBundle, RecoveryKeyData,
 };
 use serde_json;
@@ -32,11 +32,11 @@ fn format_as_text(response_data: &DaemonResponseData) -> Result<String> {
         DaemonResponseData::Status { uptime_seconds, version } => {
             format!("Version: {}\nUptime: {}s", version, uptime_seconds)
         }
-        DaemonResponseData::OrganizationKeyListings(listings) => {
-            format_organization_key_listings_text(listings)
+        DaemonResponseData::OrganisationKeyListings(listings) => {
+            format_organisation_key_listings_text(listings)
         }
-        DaemonResponseData::OrganizationPublicKey(key) => {
-            format_organization_public_key_text(key)
+        DaemonResponseData::OrganisationPublicKey(key) => {
+            format_organisation_public_key_text(key)
         }
         DaemonResponseData::RecoveryBundles(bundles) => {
             format_recovery_bundles_text(bundles)
@@ -48,19 +48,19 @@ fn format_as_text(response_data: &DaemonResponseData) -> Result<String> {
     Ok(output)
 }
 
-/// Format organization key listings as text
-fn format_organization_key_listings_text(
-    listings: &[OrganizationKeyListing],
+/// Format organisation key listings as text
+fn format_organisation_key_listings_text(
+    listings: &[OrganisationKeyListing],
 ) -> String {
     if listings.is_empty() {
-        return "No organization keys found.".to_string();
+        return "No organisation keys found.".to_string();
     }
 
     let mut output = String::new();
 
     for listing in listings {
         output
-            .push_str(&format!("Organization: {}\n", listing.organization_id));
+            .push_str(&format!("Organisation: {}\n", listing.organisation_id));
         if listing.versions.is_empty() {
             output.push_str("  No keys found.\n");
         } else {
@@ -77,8 +77,8 @@ fn format_organization_key_listings_text(
     output.trim_end().to_string()
 }
 
-/// Format organization public key as text
-fn format_organization_public_key_text(key: &OrganizationPublicKey) -> String {
+/// Format organisation public key as text
+fn format_organisation_public_key_text(key: &OrganisationPublicKey) -> String {
     key.public_key_pem.trim_end().to_string()
 }
 
@@ -93,13 +93,13 @@ fn format_recovery_bundles_text(bundles: &[RecoveryBundle]) -> String {
         output.push_str(&format!(
             concat!(
                 "Device: {}\n",
-                "  Organization: {}\n",
+                "  Organisation: {}\n",
                 "  Key Version: {}\n",
                 "  Encrypted Key Data: {}\n\n"
             ),
             bundle.serial_number,
-            bundle.organization_id,
-            bundle.organization_key_version,
+            bundle.organisation_id,
+            bundle.organisation_key_version,
             bundle.encrypted_key_data
         ));
     }
@@ -117,11 +117,11 @@ fn format_recovery_key_datas_text(key_datas: &[RecoveryKeyData]) -> String {
         output.push_str(&format!(
             concat!(
                 "Device: {}\n",
-                "  Organization: {}\n",
+                "  Organisation: {}\n",
                 "  Recovery Key: {}\n\n"
             ),
             key_data.serial_number,
-            key_data.organization_id,
+            key_data.organisation_id,
             String::from_utf8_lossy(&key_data.recovery_key[..])
         ));
     }

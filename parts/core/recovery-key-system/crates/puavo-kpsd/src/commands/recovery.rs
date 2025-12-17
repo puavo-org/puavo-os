@@ -21,8 +21,8 @@ pub enum RecoveryKeyError {
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
 
-    #[error("Organization has no keys")]
-    NoOrganizationKeys,
+    #[error("Organisation has no keys")]
+    NoOrganisationKeys,
 
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
@@ -46,30 +46,30 @@ impl From<RecoveryKeyError> for DaemonResponse {
 ///
 /// Parameters:
 /// * `serial_number` - Device serial number
-/// * `organization_id` - Organization identifier
+/// * `organisation_id` - Organisation identifier
 /// * `recovery_key` - Raw recovery key bytes
 ///
 /// Returns:
 /// Recovery key data structure ready for serialization
 fn create_recovery_key_data(
     serial_number: String,
-    organization_id: String,
+    organisation_id: String,
     recovery_key: Vec<u8>,
 ) -> RecoveryKeyData {
     RecoveryKeyData {
         serial_number,
-        organization_id,
+        organisation_id,
         recovery_key,
         version: RECOVERY_KEY_DATA_VERSION,
     }
 }
 
-/// Encrypt recovery key data with organization public key
+/// Encrypt recovery key data with organisation public key
 ///
 /// Parameters:
 /// * `public_key` - Public key for encryption
 /// * `serial_number` - Device serial number
-/// * `organization_id` - Organization identifier
+/// * `organisation_id` - Organisation identifier
 /// * `recovery_key` - Raw recovery key bytes
 ///
 /// Returns:
@@ -80,11 +80,11 @@ fn create_recovery_key_data(
 pub fn encrypt_recovery_key_data(
     public_key: &RsaPublicKey,
     serial_number: String,
-    organization_id: String,
+    organisation_id: String,
     recovery_key: Vec<u8>,
 ) -> Result<String, RecoveryKeyError> {
     let key_data =
-        create_recovery_key_data(serial_number, organization_id, recovery_key);
+        create_recovery_key_data(serial_number, organisation_id, recovery_key);
     let serialized_key_data = serde_json::to_vec(&key_data)?;
     let encrypted_key_data_bytes = encrypt(public_key, &serialized_key_data)?;
     Ok(hex::encode(&encrypted_key_data_bytes))
@@ -142,16 +142,16 @@ fn decrypt(
     Ok(key_data)
 }
 
-fn decrypt_with_organization_key(
+fn decrypt_with_organisation_key(
     hsm_session: &HsmSession,
-    organization_id: &str,
-    organization_key_version: u32,
+    organisation_id: &str,
+    organisation_key_version: u32,
     encrypted_key_data: &[u8],
 ) -> Result<Vec<u8>, KeyManagementError> {
     tracing::info!("Decrypting recovery key data");
 
     let key_label =
-        KeyLabel::organization(organization_id, organization_key_version);
+        KeyLabel::organisation(organisation_id, organisation_key_version);
     let key_manager = HsmKeyManager::new(hsm_session);
     let key = key_manager
         .get_key_with_version(ObjectClass::PRIVATE_KEY, &key_label)?;
@@ -163,7 +163,7 @@ fn decrypt_with_organization_key(
 ///
 /// Parameters:
 /// * `hsm_session` - Active HSM session for key operations
-/// * `organization_id` - Organization identifier
+/// * `organisation_id` - Organisation identifier
 /// * `serial_number` - Device serial number
 /// * `recovery_key` - Raw recovery key bytes
 ///
@@ -174,41 +174,41 @@ fn decrypt_with_organization_key(
 /// Returns error if key version cannot be determined or encryption fails
 fn create_recovery_bundle(
     hsm_session: &HsmSession,
-    organization_id: String,
+    organisation_id: String,
     serial_number: String,
     recovery_key: Vec<u8>,
 ) -> Result<RecoveryBundle, RecoveryKeyError> {
     tracing::info!(
-        "Generating recovery key for device {} in organization {}",
+        "Generating recovery key for device {} in organisation {}",
         serial_number,
-        organization_id
+        organisation_id
     );
 
     let key_manager = HsmKeyManager::new(hsm_session);
 
-    // Find the latest organization public key and its version
-    let organization_key_label =
-        KeyLabel::organization_label(organization_id.as_str());
-    let (organization_key, organization_key_version) = key_manager
-        .get_latest_key(ObjectClass::PUBLIC_KEY, &organization_key_label)?
-        .ok_or(RecoveryKeyError::NoOrganizationKeys)?;
+    // Find the latest organisation public key and its version
+    let organisation_key_label =
+        KeyLabel::organisation_label(organisation_id.as_str());
+    let (organisation_key, organisation_key_version) = key_manager
+        .get_latest_key(ObjectClass::PUBLIC_KEY, &organisation_key_label)?
+        .ok_or(RecoveryKeyError::NoOrganisationKeys)?;
 
-    // Load the organization public key
+    // Load the organisation public key
     let key_manager = HsmKeyManager::new(hsm_session);
-    let public_key = key_manager.extract_public_key(&organization_key)?;
+    let public_key = key_manager.extract_public_key(&organisation_key)?;
 
     // Encrypt the recovery key and related information
     let encrypted_key_data = encrypt_recovery_key_data(
         &public_key,
         serial_number.clone(),
-        organization_id.clone(),
+        organisation_id.clone(),
         recovery_key,
     )?;
 
     Ok(RecoveryBundle {
         serial_number,
-        organization_id,
-        organization_key_version,
+        organisation_id,
+        organisation_key_version,
         encrypted_key_data,
     })
 }
@@ -234,10 +234,10 @@ fn unwrap_recovery_key(
     let encrypted_key_data_bytes =
         hex::decode(&recovery_bundle.encrypted_key_data)?;
     // Decrypt the recovery key data
-    let serialized_recovery_key_data = decrypt_with_organization_key(
+    let serialized_recovery_key_data = decrypt_with_organisation_key(
         hsm_session,
-        &recovery_bundle.organization_id,
-        recovery_bundle.organization_key_version,
+        &recovery_bundle.organisation_id,
+        recovery_bundle.organisation_key_version,
         &encrypted_key_data_bytes,
     )?;
     // Deserialize the recovery key data
@@ -270,7 +270,7 @@ fn read_recovery_bundle(
 /// Parameters:
 /// * `hsm_session` - Active HSM session for key operations
 /// * `operator_id` - Optional operator identifier
-/// * `organization_id` - Organization identifier
+/// * `organisation_id` - Organisation identifier
 /// * `serial_numbers` - List of device serial numbers
 /// * `recovery_key_files` - List of recovery key files (one per device)
 ///
@@ -279,7 +279,7 @@ fn read_recovery_bundle(
 pub fn execute_generate(
     hsm_session: &HsmSession,
     _operator_id: Option<String>,
-    organization_id: String,
+    organisation_id: String,
     serial_numbers: Vec<String>,
     recovery_key_files: Vec<PathBuf>,
 ) -> DaemonResponse {
@@ -297,7 +297,7 @@ pub fn execute_generate(
 
                 return create_recovery_bundle(
                     hsm_session,
-                    organization_id.clone(),
+                    organisation_id.clone(),
                     serial_number,
                     recovery_key,
                 );
@@ -350,19 +350,19 @@ mod tests {
     use std::io::Write;
     use tempfile::NamedTempFile;
 
-    /// Initialize organization key for testing
+    /// Initialize organisation key for testing
     ///
     /// Parameters:
     /// * `hsm_session` - Active HSM session for key operations
-    /// * `organization_id` - Organization identifier
+    /// * `organisation_id` - Organisation identifier
     ///
     /// Errors:
     /// Returns error if key generation fails
-    fn initialize_organization_key_for_testing(
+    fn initialize_organisation_key_for_testing(
         hsm_session: &HsmSession,
-        organization_id: &str,
+        organisation_id: &str,
     ) -> Result<(), KeyManagementError> {
-        let key_label = KeyLabel::organization(organization_id, 1);
+        let key_label = KeyLabel::organisation(organisation_id, 1);
         let key_manager = HsmKeyManager::new(hsm_session);
         let _ = key_manager.generate_key(&key_label)?;
         Ok(())
@@ -411,13 +411,13 @@ mod tests {
         let test_session = TestHsmSession::new().unwrap();
         let session = test_session.session();
 
-        let organization_id = "test-organization-generate".to_string();
+        let organisation_id = "test-organisation-generate".to_string();
         let serial_number = "test-serial-123".to_string();
         let recovery_key = b"test-recovery-key-data".to_vec();
 
-        // Initialize organization key first
-        initialize_organization_key_for_testing(session, &organization_id)
-            .expect("Failed to initialize organization key");
+        // Initialize organisation key first
+        initialize_organisation_key_for_testing(session, &organisation_id)
+            .expect("Failed to initialize organisation key");
 
         // Create temporary recovery key file
         let recovery_key_file =
@@ -427,7 +427,7 @@ mod tests {
         let response = execute_generate(
             session,
             None,
-            organization_id.clone(),
+            organisation_id.clone(),
             vec![serial_number.clone()],
             vec![recovery_key_file.path().to_path_buf()],
         );
@@ -439,8 +439,8 @@ mod tests {
                 assert_eq!(bundles.len(), 1);
                 let bundle = &bundles[0];
                 assert_eq!(bundle.serial_number, serial_number);
-                assert_eq!(bundle.organization_id, organization_id);
-                assert_eq!(bundle.organization_key_version, 1);
+                assert_eq!(bundle.organisation_id, organisation_id);
+                assert_eq!(bundle.organisation_key_version, 1);
                 assert!(!bundle.encrypted_key_data.is_empty());
             }
             _ => panic!("Expected success response with recovery bundles"),
@@ -452,15 +452,15 @@ mod tests {
         let test_session = TestHsmSession::new().unwrap();
         let session = test_session.session();
 
-        let organization_id = "test-organization-generate-multiple".to_string();
+        let organisation_id = "test-organisation-generate-multiple".to_string();
         let serial_number_first = "test-serial-456".to_string();
         let serial_number_second = "test-serial-789".to_string();
         let recovery_key_first = b"test-recovery-key-first".to_vec();
         let recovery_key_second = b"test-recovery-key-second".to_vec();
 
-        // Initialize organization key first
-        initialize_organization_key_for_testing(session, &organization_id)
-            .expect("Failed to initialize organization key");
+        // Initialize organisation key first
+        initialize_organisation_key_for_testing(session, &organisation_id)
+            .expect("Failed to initialize organisation key");
 
         // Create temporary recovery key files
         let recovery_key_file_first =
@@ -472,7 +472,7 @@ mod tests {
         let response = execute_generate(
             session,
             None,
-            organization_id.clone(),
+            organisation_id.clone(),
             vec![serial_number_first.clone(), serial_number_second.clone()],
             vec![
                 recovery_key_file_first.path().to_path_buf(),
@@ -488,12 +488,12 @@ mod tests {
 
                 let bundle_first = &bundles[0];
                 assert_eq!(bundle_first.serial_number, serial_number_first);
-                assert_eq!(bundle_first.organization_id, organization_id);
+                assert_eq!(bundle_first.organisation_id, organisation_id);
                 assert!(!bundle_first.encrypted_key_data.is_empty());
 
                 let bundle_second = &bundles[1];
                 assert_eq!(bundle_second.serial_number, serial_number_second);
-                assert_eq!(bundle_second.organization_id, organization_id);
+                assert_eq!(bundle_second.organisation_id, organisation_id);
                 assert!(!bundle_second.encrypted_key_data.is_empty());
             }
             _ => panic!("Expected success response with recovery bundles"),
@@ -505,14 +505,14 @@ mod tests {
         let test_session = TestHsmSession::new().unwrap();
         let session = test_session.session();
 
-        let organization_id = "test-organization-mismatch".to_string();
+        let organisation_id = "test-organisation-mismatch".to_string();
         let serial_number = "test-serial-mismatch".to_string();
 
         // Try to generate with mismatched parameters
         let response = execute_generate(
             session,
             None,
-            organization_id,
+            organisation_id,
             vec![serial_number],
             vec![],
         );
@@ -526,11 +526,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_generate_recovery_bundle_no_organization_key() {
+    async fn test_generate_recovery_bundle_no_organisation_key() {
         let test_session = TestHsmSession::new().unwrap();
         let session = test_session.session();
 
-        let organization_id = "test-organization-no-key".to_string();
+        let organisation_id = "test-organisation-no-key".to_string();
         let serial_number = "test-serial-no-key".to_string();
         let recovery_key = b"test-recovery-key".to_vec();
 
@@ -538,11 +538,11 @@ mod tests {
         let recovery_key_file =
             create_temporary_recovery_key_file(&recovery_key);
 
-        // Try to generate without initializing organization key first
+        // Try to generate without initializing organisation key first
         let response = execute_generate(
             session,
             None,
-            organization_id,
+            organisation_id,
             vec![serial_number],
             vec![recovery_key_file.path().to_path_buf()],
         );
@@ -560,13 +560,13 @@ mod tests {
         let test_session = TestHsmSession::new().unwrap();
         let session = test_session.session();
 
-        let organization_id = "test-organization-unwrap".to_string();
+        let organisation_id = "test-organisation-unwrap".to_string();
         let serial_number = "test-serial-unwrap".to_string();
         let recovery_key = b"test-recovery-key-unwrap".to_vec();
 
-        // Initialize organization key
-        initialize_organization_key_for_testing(session, &organization_id)
-            .expect("Failed to initialize organization key");
+        // Initialize organisation key
+        initialize_organisation_key_for_testing(session, &organisation_id)
+            .expect("Failed to initialize organisation key");
 
         // Create and generate recovery bundle
         let recovery_key_file =
@@ -574,7 +574,7 @@ mod tests {
         let response = execute_generate(
             session,
             None,
-            organization_id.clone(),
+            organisation_id.clone(),
             vec![serial_number.clone()],
             vec![recovery_key_file.path().to_path_buf()],
         );
@@ -604,7 +604,7 @@ mod tests {
                 assert_eq!(key_datas.len(), 1);
                 let key_data = &key_datas[0];
                 assert_eq!(key_data.serial_number, serial_number);
-                assert_eq!(key_data.organization_id, organization_id);
+                assert_eq!(key_data.organisation_id, organisation_id);
                 assert_eq!(key_data.recovery_key, recovery_key);
                 assert_eq!(key_data.version, RECOVERY_KEY_DATA_VERSION);
             }
@@ -617,15 +617,15 @@ mod tests {
         let test_session = TestHsmSession::new().unwrap();
         let session = test_session.session();
 
-        let organization_id = "test-organization-unwrap-multiple".to_string();
+        let organisation_id = "test-organisation-unwrap-multiple".to_string();
         let serial_number_first = "test-serial-unwrap-1".to_string();
         let serial_number_second = "test-serial-unwrap-2".to_string();
         let recovery_key_first = b"test-recovery-key-1".to_vec();
         let recovery_key_second = b"test-recovery-key-2".to_vec();
 
-        // Initialize organization key
-        initialize_organization_key_for_testing(session, &organization_id)
-            .expect("Failed to initialize organization key");
+        // Initialize organisation key
+        initialize_organisation_key_for_testing(session, &organisation_id)
+            .expect("Failed to initialize organisation key");
 
         // Create and generate recovery bundles
         let recovery_key_file_first =
@@ -636,7 +636,7 @@ mod tests {
         let response = execute_generate(
             session,
             None,
-            organization_id.clone(),
+            organisation_id.clone(),
             vec![serial_number_first.clone(), serial_number_second.clone()],
             vec![
                 recovery_key_file_first.path().to_path_buf(),
@@ -675,12 +675,12 @@ mod tests {
 
                 let key_data_first = &key_datas[0];
                 assert_eq!(key_data_first.serial_number, serial_number_first);
-                assert_eq!(key_data_first.organization_id, organization_id);
+                assert_eq!(key_data_first.organisation_id, organisation_id);
                 assert_eq!(key_data_first.recovery_key, recovery_key_first);
 
                 let key_data_second = &key_datas[1];
                 assert_eq!(key_data_second.serial_number, serial_number_second);
-                assert_eq!(key_data_second.organization_id, organization_id);
+                assert_eq!(key_data_second.organisation_id, organisation_id);
                 assert_eq!(key_data_second.recovery_key, recovery_key_second);
             }
             _ => panic!("Expected success response with recovery key data"),
@@ -692,30 +692,30 @@ mod tests {
         let test_session = TestHsmSession::new().unwrap();
         let session = test_session.session();
 
-        let organization_id = "test-organization-encrypt-decrypt".to_string();
+        let organisation_id = "test-organisation-encrypt-decrypt".to_string();
         let serial_number = "test-serial-encrypt".to_string();
         let recovery_key = b"test-recovery-key-encrypt".to_vec();
 
-        // Initialize organization key
-        initialize_organization_key_for_testing(session, &organization_id)
-            .expect("Failed to initialize organization key");
+        // Initialize organisation key
+        initialize_organisation_key_for_testing(session, &organisation_id)
+            .expect("Failed to initialize organisation key");
 
-        // Get the organization public key
+        // Get the organisation public key
         let key_manager = HsmKeyManager::new(session);
-        let organization_key_label =
-            KeyLabel::organization_label(organization_id.as_str());
-        let (organization_key, _) = key_manager
-            .get_latest_key(ObjectClass::PUBLIC_KEY, &organization_key_label)
+        let organisation_key_label =
+            KeyLabel::organisation_label(organisation_id.as_str());
+        let (organisation_key, _) = key_manager
+            .get_latest_key(ObjectClass::PUBLIC_KEY, &organisation_key_label)
             .unwrap()
             .unwrap();
         let public_key =
-            key_manager.extract_public_key(&organization_key).unwrap();
+            key_manager.extract_public_key(&organisation_key).unwrap();
 
         // Encrypt the recovery key data
         let encrypted_data = encrypt_recovery_key_data(
             &public_key,
             serial_number.clone(),
-            organization_id.clone(),
+            organisation_id.clone(),
             recovery_key.clone(),
         )
         .unwrap();
@@ -725,8 +725,8 @@ mod tests {
         // Create a recovery bundle and decrypt it
         let recovery_bundle = RecoveryBundle {
             serial_number: serial_number.clone(),
-            organization_id: organization_id.clone(),
-            organization_key_version: 1,
+            organisation_id: organisation_id.clone(),
+            organisation_key_version: 1,
             encrypted_key_data: encrypted_data,
         };
 
@@ -734,7 +734,7 @@ mod tests {
             unwrap_recovery_key(session, recovery_bundle).unwrap();
 
         assert_eq!(decrypted_data.serial_number, serial_number);
-        assert_eq!(decrypted_data.organization_id, organization_id);
+        assert_eq!(decrypted_data.organisation_id, organisation_id);
         assert_eq!(decrypted_data.recovery_key, recovery_key);
         assert_eq!(decrypted_data.version, RECOVERY_KEY_DATA_VERSION);
     }

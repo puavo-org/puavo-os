@@ -58,7 +58,7 @@ pub struct KeyLabel {
     pub version: u32,
 }
 
-const ORGANIZATION_KEY_PREFIX: &str = "puavo-organization-";
+const ORGANISATION_KEY_PREFIX: &str = "puavo-organisation-";
 
 impl KeyLabel {
     /// Create a new key label
@@ -72,32 +72,32 @@ impl KeyLabel {
         Self { label: label.into(), version }
     }
 
-    /// Base organization key label without version
+    /// Base organisation key label without version
     ///
     /// Parameters:
-    /// * `id` - Unique organization identifier
+    /// * `id` - Unique organisation identifier
     ///
     /// Returns:
-    /// Base key label for the organization
-    pub fn organization_label(id: &str) -> String {
-        format!("{}{}", ORGANIZATION_KEY_PREFIX, id)
+    /// Base key label for the organisation
+    pub fn organisation_label(id: &str) -> String {
+        format!("{}{}", ORGANISATION_KEY_PREFIX, id)
     }
 
-    /// Returns the organization id from the specified label
-    pub fn organization_id_from_label(label: &String) -> Option<&str> {
-        label.strip_prefix(ORGANIZATION_KEY_PREFIX)
+    /// Returns the organisation id from the specified label
+    pub fn organisation_id_from_label(label: &String) -> Option<&str> {
+        label.strip_prefix(ORGANISATION_KEY_PREFIX)
     }
 
-    /// Organization key label
+    /// Organisation key label
     ///
     /// Parameters:
-    /// * `id` - Unique organization identifier
-    /// * `version` - Organization key version
+    /// * `id` - Unique organisation identifier
+    /// * `version` - Organisation key version
     ///
     /// Returns:
-    /// Key label for the organization
-    pub fn organization(id: &str, version: u32) -> Self {
-        Self { label: Self::organization_label(id), version }
+    /// Key label for the organisation
+    pub fn organisation(id: &str, version: u32) -> Self {
+        Self { label: Self::organisation_label(id), version }
     }
 
     /// Generate the versioned identifier for HSM storage
@@ -114,7 +114,7 @@ impl KeyLabel {
     /// * `versioned_id` - Versioned identifier
     ///
     /// Returns:
-    /// The organization label and version number
+    /// The organisation label and version number
     ///
     /// Errors:
     /// Returns `InvalidKeyFormat` if the format is incorrect
@@ -369,14 +369,14 @@ impl<'a> HsmKeyManager<'a> {
         Ok(public_key)
     }
 
-    /// List all organization keys stored in the HSM
+    /// List all organisation keys stored in the HSM
     ///
     /// Returns:
-    /// List of all organization keys with their labels, versions, and handles
+    /// List of all organisation keys with their labels, versions, and handles
     ///
     /// Errors:
     /// Returns error if HSM operations fail
-    pub fn list_all_organization_keys(
+    pub fn list_all_organisation_keys(
         &self,
     ) -> Result<Vec<(String, u32, ObjectHandle)>, KeyManagementError> {
         let key_template = vec![
@@ -385,7 +385,7 @@ impl<'a> HsmKeyManager<'a> {
         ];
         let key_handles = self.session.session().find_objects(&key_template)?;
 
-        let mut organization_keys = Vec::new();
+        let mut organisation_keys = Vec::new();
 
         for key_handle in key_handles {
             tracing::debug!("Inspecting key handle: {:?}", key_handle);
@@ -411,13 +411,13 @@ impl<'a> HsmKeyManager<'a> {
 
             // Add to results if parsing was successful
             if let Some((label, version)) = key_info_option {
-                organization_keys.push((label, version, key_handle));
+                organisation_keys.push((label, version, key_handle));
             } else {
                 tracing::error!("Key did not have valid versioned ID");
             }
         }
 
-        Ok(organization_keys)
+        Ok(organisation_keys)
     }
 }
 
@@ -426,11 +426,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_key_label_organization() {
-        let label = KeyLabel::organization("example-organization", 1);
+    fn test_key_label_organisation() {
+        let label = KeyLabel::organisation("example-organisation", 1);
         assert_eq!(
             label.to_string(),
-            "puavo-organization-example-organization-v1"
+            "puavo-organisation-example-organisation-v1"
         );
     }
 }

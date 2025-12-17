@@ -91,7 +91,7 @@ module PuavoBS
 
   def self.ask_admin_credentials()
     puavo_domain = File.read('/etc/puavo/domain').strip()
-    say("Enter administrator credentials for organization #{puavo_domain}")
+    say("Enter administrator credentials for organisation #{puavo_domain}")
     username = ask('Username: ') { |q| q.default = Etc.getlogin }
     password = ask('Password: ') { |q| q.echo = '*' }
     [username, password]

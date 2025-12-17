@@ -38,8 +38,8 @@ pub const RECOVERY_KEY_DATA_VERSION: u32 = 1;
 pub struct RecoveryKeyData {
     /// Device serial number
     pub serial_number: String,
-    /// Organization ID
-    pub organization_id: String,
+    /// Organisation ID
+    pub organisation_id: String,
     /// Actual recovery key bytes
     pub recovery_key: Vec<u8>,
     // Version field for this structure
@@ -51,20 +51,20 @@ pub struct RecoveryKeyData {
 pub struct RecoveryBundle {
     /// Device serial number
     pub serial_number: String,
-    /// Organization ID
-    pub organization_id: String,
-    /// Version of the organization key used
-    pub organization_key_version: u32,
+    /// Organisation ID
+    pub organisation_id: String,
+    /// Version of the organisation key used
+    pub organisation_key_version: u32,
     /// Encrypted recovery key bytes
     pub encrypted_key_data: String,
 }
 
-/// Structure containing exported organization public key data
+/// Structure containing exported organisation public key data
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OrganizationPublicKey {
-    /// Organization ID
-    pub organization_id: String,
-    /// Version of the organization key
+pub struct OrganisationPublicKey {
+    /// Organisation ID
+    pub organisation_id: String,
+    /// Version of the organisation key
     pub version: u32,
     /// Public key in PEM format
     pub public_key_pem: String,
@@ -72,20 +72,20 @@ pub struct OrganizationPublicKey {
 
 /// Structure containing information about a single key version
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OrganizationKeyVersion {
+pub struct OrganisationKeyVersion {
     /// Key version number
     pub version: u32,
     /// SHA-256 fingerprint of the public key (pem)
     pub fingerprint: String,
 }
 
-/// Structure containing organization key listing information
+/// Structure containing organisation key listing information
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OrganizationKeyListing {
-    /// Organization ID
-    pub organization_id: String,
+pub struct OrganisationKeyListing {
+    /// Organisation ID
+    pub organisation_id: String,
     /// List of key versions
-    pub versions: Vec<OrganizationKeyVersion>,
+    pub versions: Vec<OrganisationKeyVersion>,
 }
 
 /// Top-level IPC message envelope
@@ -126,10 +126,10 @@ pub enum Commands {
         hsm_pin: String,
     },
 
-    /// Organization key management
-    Organization {
+    /// Organisation key management
+    Organisation {
         #[command(subcommand)]
-        command: OrganizationCommand,
+        command: OrganisationCommand,
     },
 
     /// Generate new recovery bundles for devices
@@ -138,9 +138,9 @@ pub enum Commands {
         #[arg(long)]
         operator_id: Option<String>,
 
-        /// Organization identifier
+        /// Organisation identifier
         #[arg(long)]
-        organization_id: String,
+        organisation_id: String,
 
         /// Device serial number (can be specified multiple times)
         #[arg(long)]
@@ -163,28 +163,28 @@ pub enum Commands {
     },
 }
 
-/// Organization key management commands
+/// Organisation key management commands
 #[derive(Subcommand, Debug, Clone, Serialize, Deserialize)]
-pub enum OrganizationCommand {
-    /// Initialize organization key in HSM
+pub enum OrganisationCommand {
+    /// Initialize organisation key in HSM
     Initialize {
-        /// Organization identifier
+        /// Organisation identifier
         #[arg(long)]
-        organization_id: String,
+        organisation_id: String,
     },
 
-    /// Rotate organization key
+    /// Rotate organisation key
     Rotate {
-        /// Organization identifier
+        /// Organisation identifier
         #[arg(long)]
-        organization_id: String,
+        organisation_id: String,
     },
 
-    /// Export organization public key
+    /// Export organisation public key
     Export {
-        /// Organization identifier
+        /// Organisation identifier
         #[arg(long)]
-        organization_id: String,
+        organisation_id: String,
 
         /// Key version to export
         #[arg(long)]
@@ -195,21 +195,21 @@ pub enum OrganizationCommand {
         output: Option<PathBuf>,
     },
 
-    /// List organization keys
+    /// List organisation keys
     List {
-        /// Organization identifier
+        /// Organisation identifier
         #[arg(long)]
-        organization_id: Option<String>,
+        organisation_id: Option<String>,
     },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DaemonResponseData {
-    /// List of organization keys
-    OrganizationKeyListings(Vec<OrganizationKeyListing>),
+    /// List of organisation keys
+    OrganisationKeyListings(Vec<OrganisationKeyListing>),
 
-    /// Exported organization public key
-    OrganizationPublicKey(OrganizationPublicKey),
+    /// Exported organisation public key
+    OrganisationPublicKey(OrganisationPublicKey),
 
     /// List of recovery bundles
     RecoveryBundles(Vec<RecoveryBundle>),

@@ -1,10 +1,10 @@
 pub mod initialize;
-pub mod organization;
+pub mod organisation;
 pub mod recovery;
 
 use crate::context::DaemonContext;
 use async_trait::async_trait;
-use puavo_ipc::{DaemonResponse, OrganizationCommand};
+use puavo_ipc::{DaemonResponse, OrganisationCommand};
 use std::{path::PathBuf, sync::Arc};
 
 /// Trait for executing KPS commands
@@ -19,11 +19,11 @@ pub trait CommandExecutor: Send + Sync {
         hsm_pin: String,
     ) -> DaemonResponse;
 
-    /// Execute organization command
-    async fn execute_organization(
+    /// Execute organisation command
+    async fn execute_organisation(
         &self,
         context: Arc<DaemonContext>,
-        command: OrganizationCommand,
+        command: OrganisationCommand,
     ) -> DaemonResponse;
 
     /// Execute generate command
@@ -31,7 +31,7 @@ pub trait CommandExecutor: Send + Sync {
         &self,
         context: Arc<DaemonContext>,
         operator_id: Option<String>,
-        organization_id: String,
+        organisation_id: String,
         serial_numbers: Vec<String>,
         recovery_key_files: Vec<PathBuf>,
     ) -> DaemonResponse;
@@ -64,14 +64,14 @@ impl CommandExecutor for DefaultCommandExecutor {
         initialize::execute(context, hsm_pin).await
     }
 
-    async fn execute_organization(
+    async fn execute_organisation(
         &self,
         context: Arc<DaemonContext>,
-        command: OrganizationCommand,
+        command: OrganisationCommand,
     ) -> DaemonResponse {
         context
             .get_hsm_session()
-            .map(|hsm_session| organization::execute(&hsm_session, command))
+            .map(|hsm_session| organisation::execute(&hsm_session, command))
             .into()
     }
 
@@ -79,7 +79,7 @@ impl CommandExecutor for DefaultCommandExecutor {
         &self,
         context: Arc<DaemonContext>,
         operator_id: Option<String>,
-        organization_id: String,
+        organisation_id: String,
         serial_numbers: Vec<String>,
         recovery_key_files: Vec<PathBuf>,
     ) -> DaemonResponse {
@@ -89,7 +89,7 @@ impl CommandExecutor for DefaultCommandExecutor {
                 recovery::execute_generate(
                     &hsm_session,
                     operator_id,
-                    organization_id,
+                    organisation_id,
                     serial_numbers,
                     recovery_key_files,
                 )

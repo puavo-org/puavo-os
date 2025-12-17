@@ -1,5 +1,5 @@
 use anyhow::Result;
-use puavo_ipc::{OrganizationPublicKey, RecoveryBundle};
+use puavo_ipc::{OrganisationPublicKey, RecoveryBundle};
 use puavo_kpsd::commands::recovery::encrypt_recovery_key_data;
 use rsa::{RsaPublicKey, pkcs1::DecodeRsaPublicKey, pkcs8::DecodePublicKey};
 use std::{fs, path::PathBuf};
@@ -26,7 +26,7 @@ pub enum DeviceRecoveryError {
 /// Generate recovery bundle locally on device.
 ///
 /// Parameters:
-/// * `organization_id` - Organization identifier
+/// * `organisation_id` - Organisation identifier
 /// * `serial_number` - Optional device serial number (uses system serial if None)
 /// * `output` - Output file path
 /// * `recovery_key_file` - Path to recovery key file
@@ -37,14 +37,14 @@ pub enum DeviceRecoveryError {
 /// Errors:
 /// Returns error if public key cannot be loaded or recovery bundle generation fails
 pub async fn generate_recovery_bundle_local(
-    organization_id: String,
+    organisation_id: String,
     serial_number: Option<String>,
     output: PathBuf,
     recovery_key_file: PathBuf,
 ) -> Result<RecoveryBundle, DeviceRecoveryError> {
     tracing::info!(
-        "Starting recovery bundle generation for organization: {}",
-        organization_id
+        "Starting recovery bundle generation for organisation: {}",
+        organisation_id
     );
 
     // Get device serial number
@@ -55,14 +55,14 @@ pub async fn generate_recovery_bundle_local(
 
     // Determine public key path
     let public_key_path = PathBuf::from(format!(
-        "/etc/puavo-kps/organizations/{}.public-key.json",
-        organization_id
+        "/etc/puavo-kps/organisations/{}.public-key.json",
+        organisation_id
     ));
 
-    // Load and parse organization public key from JSON file
+    // Load and parse organisation public key from JSON file
     tracing::info!("Loading public key from: {}", public_key_path.display());
     let public_key_data =
-        load_organization_public_key_json(&public_key_path).await?;
+        load_organisation_public_key_json(&public_key_path).await?;
     let public_key =
         parse_rsa_public_key_from_pem(&public_key_data.public_key_pem)?;
 
@@ -74,7 +74,7 @@ pub async fn generate_recovery_bundle_local(
     let encrypted_key_data = encrypt_recovery_key_data(
         &public_key,
         serial_number.clone(),
-        organization_id.clone(),
+        organisation_id.clone(),
         recovery_key,
     )
     .map_err(|error| {
@@ -83,8 +83,8 @@ pub async fn generate_recovery_bundle_local(
 
     let recovery_bundle = RecoveryBundle {
         serial_number,
-        organization_id,
-        organization_key_version: public_key_data.version,
+        organisation_id,
+        organisation_key_version: public_key_data.version,
         encrypted_key_data,
     };
 
@@ -120,19 +120,19 @@ fn get_system_serial_number() -> Result<String, DeviceRecoveryError> {
     Err(DeviceRecoveryError::SystemSerialNotAvailable)
 }
 
-/// Load organization public key data from JSON file
+/// Load organisation public key data from JSON file
 ///
 /// Parameters:
 /// * `path` - Path to JSON public key file
 ///
 /// Returns:
-/// Organization public key data structure
+/// Organisation public key data structure
 ///
 /// Errors:
 /// Returns error if file cannot be read or parsed
-async fn load_organization_public_key_json(
+async fn load_organisation_public_key_json(
     path: &PathBuf,
-) -> Result<OrganizationPublicKey, DeviceRecoveryError> {
+) -> Result<OrganisationPublicKey, DeviceRecoveryError> {
     let serialized_public_key = tokio::fs::read_to_string(path).await?;
 
     if serialized_public_key.trim().is_empty() {
@@ -141,7 +141,7 @@ async fn load_organization_public_key_json(
         ));
     }
 
-    let public_key: OrganizationPublicKey =
+    let public_key: OrganisationPublicKey =
         serde_json::from_str(&serialized_public_key)?;
     tracing::debug!("Loaded public key data from JSON file");
 

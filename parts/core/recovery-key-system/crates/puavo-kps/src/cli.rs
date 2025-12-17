@@ -66,9 +66,9 @@ pub enum DaemonCommands {
 pub enum DeviceCommands {
     /// Generate recovery bundle locally on device
     Generate {
-        /// Organization identifier
+        /// Organisation identifier
         #[arg(long)]
-        organization_id: String,
+        organisation_id: String,
 
         /// Device serial number (defaults to system serial)
         #[arg(long)]

@@ -278,15 +278,15 @@ impl<E: CommandExecutor> ClientHandler<E> {
                     .await
             }
 
-            Commands::Organization { command } => {
+            Commands::Organisation { command } => {
                 self.executor
-                    .execute_organization(self.context.clone(), command)
+                    .execute_organisation(self.context.clone(), command)
                     .await
             }
 
             Commands::Generate {
                 operator_id,
-                organization_id,
+                organisation_id,
                 serial_number,
                 recovery_key_file,
             } => {
@@ -294,7 +294,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
                     .execute_generate(
                         self.context.clone(),
                         operator_id,
-                        organization_id,
+                        organisation_id,
                         serial_number,
                         recovery_key_file,
                     )

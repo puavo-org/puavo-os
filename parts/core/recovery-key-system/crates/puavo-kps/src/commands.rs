@@ -133,13 +133,13 @@ fn handle_daemon_response(
 async fn execute_device_command(command: DeviceCommands) -> Result<()> {
     match command {
         DeviceCommands::Generate {
-            organization_id,
+            organisation_id,
             serial_number,
             output,
             recovery_key_file,
         } => {
             generate_recovery_bundle_local(
-                organization_id,
+                organisation_id,
                 serial_number,
                 output,
                 recovery_key_file,
