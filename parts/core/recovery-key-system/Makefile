@@ -31,7 +31,7 @@ $(BINS): Cargo.lock Cargo.toml $(SOURCE_FILES)
 install: build install-directories
 	$(INSTALL_PROGRAM) $(DAEMON_BIN) $(DESTDIR)$(sbindir)/
 	$(INSTALL_PROGRAM) $(CLIENT_BIN) $(DESTDIR)$(bindir)/
-	$(INSTALL_DATA) systemd/puavo-kps.service \
+	$(INSTALL_DATA) systemd/puavo-kpsd.service \
 		$(DESTDIR)$(prefix)/lib/systemd/system/
 
 .PHONY: clean
