@@ -1,6 +1,6 @@
 class apt::docker {
   file {
-    '/etc/apt/keysrings/docker.asc':
+    '/etc/apt/keyrings/docker.asc':
       source => 'puppet:///modules/apt/docker.asc';
 
     '/etc/apt/preferences.d/30-docker.pref':
@@ -8,6 +8,8 @@ class apt::docker {
 
     '/etc/apt/sources.list.d/docker.sources':
       content => template('apt/docker.sources'),
-      notify  => Exec['apt update'];
+      notify  => Exec['apt update'],
+      require => [ File['/etc/apt/keyrings/docker.asc']
+                 , File['/etc/apt/preferences.d/30-docker.pref'] ];
   }
 }
