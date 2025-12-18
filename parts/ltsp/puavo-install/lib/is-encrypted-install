@@ -10,8 +10,13 @@ usage() {
 
 images_dir=$1
 
+if [ ! -d "$images_dir" ]; then
+  echo "error: images directory does not exist: $images_dir" >&2
+  exit 1
+fi
+
 # Attempt to find a LUKS partition that has the images directory as mountpoint
-lsblk -J -O | jq --arg images_dir "$images_dir" '
+lsblk -J -O | jq --raw-output --arg images_dir "$images_dir" '
   [
     .blockdevices[]
       | select(.type == "disk")
@@ -20,4 +25,4 @@ lsblk -J -O | jq --arg images_dir "$images_dir" '
       | .children[]?
       | .mountpoints[]?
   ] | any(. == $images_dir)
-'
+' | tr --delete '\n'
