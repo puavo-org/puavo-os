@@ -18,6 +18,10 @@ install() {
     inst "${moddir}/puavo-boot-trust-manager.service" \
          "/usr/lib/systemd/system/puavo-boot-trust-manager.service"
 
+    # Install the service start script
+    inst "${moddir}/start-boot-trust-manager" \
+        "/usr/sbin/start-boot-trust-manager"
+
     # Install persistent configurators
     mkdir -p "${initdir}/etc/puavo"
     "${moddir}/scripts/install-persistent-configurators" "${initdir}/etc/puavo/"
