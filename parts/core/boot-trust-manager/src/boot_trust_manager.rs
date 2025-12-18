@@ -4,6 +4,7 @@ use std::{
     process::Command,
 };
 
+use efivar::efi;
 use log::{debug, error, info, warn};
 
 use crate::{
@@ -103,6 +104,15 @@ impl BootTrustManager {
         mut primary_partition_manager: LuksTpmTokenManager,
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
+        let secure_boot_enabled = efivar::system()
+            .read(&efi::Variable::new("SecureBoot"))
+            .map(|(value, _)| value.ends_with(&[1]))
+            .unwrap_or(false);
+        if !secure_boot_enabled {
+            info!("Secure Boot is disabled, skipping configuration...");
+            return Ok(());
+        }
+
         info!("Starting configuration...");
         for mut configurator in configurators {
             debug!("Processing configurator '{}'", configurator.name());
