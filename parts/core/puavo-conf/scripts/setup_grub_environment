@@ -89,7 +89,7 @@ setup_grub_theme() {
 }
 
 setup_kernel_arguments() {
-  kernel_arguments="$(puavo-conf puavo.kernel.arguments)$(selected_puavo_conf_arguments_as_kernel_args)"
+  kernel_arguments="$(puavo-conf puavo.kernel.arguments)$(selected_puavo_conf_arguments_as_kernel_args)" || return 1
   if [ -n "$kernel_arguments" ]; then
     grubedit set "puavo_kernel_arguments=${kernel_arguments}"
   else
@@ -177,7 +177,23 @@ get_puavoconf_value() {
 }
 
 selected_puavo_conf_arguments_as_kernel_args() {
-  local puavo_conf_to_kernel_args puavo_conf_value maybe_space
+  local maybe_space puavo_conf_to_kernel_args puavo_conf_value is_encrypted
+  maybe_space=''
+
+  # Specify the root device for encrypted installations.
+  # If the boot process requires user interaction (e.g. PIN),
+  # the auto-discovery (systemd) for the root device may timeout.
+  # By specifying the root device, we can bypass this timeout issue.
+  if ! is_encrypted=$("$PUAVO_INSTALL_LIBDIR"/is-encrypted-install "$images_dir"); then
+    echo "error: failed to detect installation encryption type" >&2
+    return 1
+  fi
+
+  if [ "$is_encrypted" = "true" ]; then
+    printf "%s" "root=/dev/mapper/root"
+    maybe_space=' '
+  fi
+
   puavo_conf_to_kernel_args='
     puavo.admin.persistent_homedirs
     puavo.boot.plymouth.theme
@@ -185,7 +201,6 @@ selected_puavo_conf_arguments_as_kernel_args() {
     puavo.image.overlay
   '
 
-  maybe_space=''
   for puavo_conf_key in $puavo_conf_to_kernel_args; do
     # "null" can not be a valid value for the above puavo-conf variables.
     puavo_conf_value=$(get_puavoconf_value "$puavo_conf_key")

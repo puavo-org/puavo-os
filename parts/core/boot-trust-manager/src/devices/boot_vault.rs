@@ -349,6 +349,23 @@ impl BootVault {
         Ok(())
     }
 
+    /// Activates the specified LUKS device with the specified name using boot vault keys.
+    pub fn activate(
+        &self,
+        device: &mut CryptDevice,
+        name: &str,
+    ) -> Result<(), PuavoError> {
+        info!("Activating LUKS device '{}' using boot vault", name);
+        let recovery_key = self.resources().read_recovery_key()?;
+        device.activate_handle().activate_by_passphrase(
+            Some(name),
+            None,
+            recovery_key.as_bytes(),
+            CryptActivate::empty(),
+        )?;
+        Ok(())
+    }
+
     /// Unmount and tear down the vault, closing the LUKS device and detaching
     /// the loop device.
     pub fn unmount(&mut self) -> Result<(), PuavoError> {

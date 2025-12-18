@@ -7,7 +7,7 @@ use std::{
 use log::{debug, error, info, warn};
 
 use crate::{
-    configurators::{configurators, Configurator},
+    configurators::{Configurator, configurators},
     devices::{
         block_device::{BlockDevice, GenericBlockDevice},
         boot_vault::{
@@ -15,7 +15,7 @@ use crate::{
         },
         efi_boot_device::EFIBootDevice,
     },
-    display::{choose_display, UserDisplay},
+    display::{UserDisplay, choose_display},
     error::PuavoError,
     utils::{
         luks_tpm_token_manager::LuksTpmTokenManager,
@@ -25,6 +25,9 @@ use crate::{
 };
 
 use crate::ApplicationConfiguration;
+
+/// LUKS device name for the root device
+pub const ROOT_DEVICE_NAME: &str = "root";
 
 /// Coordinates detection of configurators and execution of configurators.
 ///
@@ -131,7 +134,7 @@ impl BootTrustManager {
                 display,
             )?;
             info!("Configuration completed");
-            let _ = display.show_message("Configuration completed");
+            let _ = display.show_message(" ");
         }
 
         Ok(())
@@ -240,8 +243,13 @@ impl BootTrustManager {
         boot_vault.mount(&boot_vault_image_path, display)?;
         info!("Boot vault mounted");
 
-        let primary_partition_manager =
+        let mut primary_partition_manager =
             LuksTpmTokenManager::from_device_path(primary_device_path)?;
+
+        boot_vault.activate(
+            primary_partition_manager.device_mut(),
+            ROOT_DEVICE_NAME,
+        )?;
 
         // Use the resources for configuration
         Self::run_configurators_with_vault(
