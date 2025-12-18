@@ -4,7 +4,9 @@ Description=Puavo Boot Trust Manager
 DefaultDependencies=no
 Wants=cryptsetup-pre.target
 After=systemd-udev-trigger.service systemd-udevd.service keyboard-setup.service plymouth-start.service
-Before=cryptsetup-pre.target
+Before=cryptsetup-pre.target initrd-switch-root.target
+IgnoreOnIsolate=yes
+RefuseManualStop=yes
 
 [Service]
 Type=oneshot
