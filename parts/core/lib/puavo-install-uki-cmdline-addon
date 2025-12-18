@@ -81,7 +81,7 @@ def build_command_line_addon(command_line: str):
 
 
 def update_kernel_arguments(expected_kernel_arguments: str) -> int:
-  current_kernel_arguments = ''
+  current_kernel_arguments = None
   try:
     with open(KERNEL_ARGUMENTS_FILE, 'r') as file:
       current_kernel_arguments = file.read().strip()
