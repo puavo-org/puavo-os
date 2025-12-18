@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+output_directory="${1:-/images/boot/addons}"
+
+device_secure_boot_key_private_key="${output_directory}/secure-boot.priv"
+device_secure_boot_key_der="${output_directory}/secure-boot.der"
+device_secure_boot_key_pem="${output_directory}/secure-boot.pem"
+
+mkdir -p "$output_directory"
+
+echo "creating device Secure Boot keys in ${output_directory}..."
+openssl req -nodes -new -x509 -newkey rsa:4096 \
+    -keyout "$device_secure_boot_key_private_key" \
+    -outform DER -out "$device_secure_boot_key_der" -days 36500 \
+    -subj "/CN=Puavo Device Secure Boot Key/" >/dev/null 2>&1
+openssl x509 -inform der -in "$device_secure_boot_key_der" \
+    -out "$device_secure_boot_key_pem" >/dev/null 2>&1
+chmod 600 "$device_secure_boot_key_private_key" \
+           "$device_secure_boot_key_der" \
+           "$device_secure_boot_key_pem"
+echo "successfully created device Secure Boot keys"
