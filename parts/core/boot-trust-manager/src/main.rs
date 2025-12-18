@@ -15,7 +15,7 @@ use std::env;
 
 use clap::{Parser, Subcommand};
 
-use crate::boot_trust_manager::BootTrustManager;
+use crate::{boot_trust_manager::BootTrustManager, error::PuavoError};
 
 mod boot_trust_manager;
 mod configurators;
@@ -71,10 +71,15 @@ fn main() -> Result<(), i32> {
     let command = configuration.command.clone();
     let manager = BootTrustManager::new(configuration);
 
-    match command {
+    let result = match command {
         Commands::Close { mountpoint } => manager.close(mountpoint),
         Commands::Manage => manager.manage(),
         Commands::Open { device } => manager.open(device),
-    }
-    .map_err(|_| 1)
+    };
+
+    // Return with success code if the device is not encrypted or the boot vault is not installed
+    result.or_else(|error| match error {
+        PuavoError::NoBootVault | PuavoError::NoPrimaryLuksPartition => Ok(()),
+        _ => Err(1),
+    })
 }

@@ -307,6 +307,11 @@ impl BootVault {
         image_path: &PathBuf,
         display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
+        if !image_path.exists() {
+            info!("Boot vault is not installed");
+            return Err(PuavoError::NoBootVault);
+        }
+
         info!(
             "Setting up loop device for boot vault image at {:?}",
             image_path

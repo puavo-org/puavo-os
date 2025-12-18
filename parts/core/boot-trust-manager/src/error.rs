@@ -43,6 +43,9 @@ pub enum PuavoError {
     #[error("Invalid data: {0}")]
     InvalidData(String),
 
+    #[error("Boot vault is not installed")]
+    NoBootVault,
+
     #[error("Failed to find the current boot EFI device")]
     NoEFIBootDisk(String),
 
