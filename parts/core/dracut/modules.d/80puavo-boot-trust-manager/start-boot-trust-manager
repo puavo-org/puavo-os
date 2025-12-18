@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+# Boot trust manager service should not be terminated while it is running.
+# Because Dracut has boot timeout and the service may also
+# require user interaction (e.g. PIN), we can create a lock
+# file that causes Dracut to ignore the timeout while it exists.
+touch /run/systemd/ask-password/ask.lock
+# Remove the lock file after the service has finished.
+trap "rm -f /run/systemd/ask-password/ask.lock" EXIT
+/usr/sbin/puavo-boot-trust-manager manage
