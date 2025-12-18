@@ -65,6 +65,10 @@ msgstr ""
 "Tarkemmat tiedot virheestä löytyvät tehdasasetusten palautuslokista. Olkaa "
 "hyvä ja ottakaa yhteyttä tukeen ongelman selvittämiseksi."
 
+#: puavo-laptop-setup:574
+msgid "Failed to load recovery data"
+msgstr "Levynpalautustietojen lataus epäonnistui"
+
 #: puavo-laptop-setup:584 puavo-laptop-setup:630
 msgid "Laptop setup"
 msgstr "Kannettavan asetukset"
@@ -122,9 +126,17 @@ msgstr "Ota Windows käyttöön"
 msgid "Factory reset..."
 msgstr "Tehdasasetusten palautus..."
 
+#: puavo-laptop-setup.glade:238
+msgid "Show recovery QR code"
+msgstr "Näytä levynpalautuksen QR-koodi"
+
 #: puavo-laptop-setup.glade:257
 msgid "Confirmation of factory reset"
 msgstr "Vahvistus tehdasasetusten palautukselle"
+
+#: puavo-laptop-setup.glade:269
+msgid "Recovery QR code"
+msgstr "Levynpalautuksen QR-koodi"
 
 #: puavo-laptop-setup.glade:275
 msgid "Cancel"

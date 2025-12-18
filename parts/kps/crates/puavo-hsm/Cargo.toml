@@ -1,0 +1,18 @@
+[package]
+name = "puavo-hsm"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+cryptoki.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+# Cryptography
+rand.workspace = true
+hex.workspace = true
+sha2.workspace = true
+rsa.workspace = true
+r2d2 = "0.8.10"
+
+[dev-dependencies]

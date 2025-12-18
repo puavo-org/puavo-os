@@ -308,6 +308,11 @@ set services {
         -> /usr/lib/systemd/system/puavo-image-torrent-updated.socket
     }}
 
+  { puavo-kpsd {
+      /etc/systemd/system/multi-user.target.wants/puavo-kpsd.service
+        -> /lib/systemd/system/puavo-kpsd.service
+    }}
+
   { puavo-rest {
       /etc/systemd/system/multi-user.target.wants/puavo-rest.service
         -> /usr/lib/systemd/system/puavo-rest.service
