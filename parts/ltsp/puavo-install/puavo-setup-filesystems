@@ -21,6 +21,8 @@ DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G = 20
 DUALBOOT_LAPTOP_PUAVOOS_MIN_SIZE_G = 70 # ~60G + 10G home
 DUALBOOT_LAPTOP_DISK_MIN_SIZE_G = DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G + DUALBOOT_LAPTOP_PUAVOOS_MIN_SIZE_G
 
+SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY = '/tmp/puavo-secure-boot-keys'
+
 def run(*cmd)
   system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
 end
@@ -241,6 +243,9 @@ class BootVaultBuilder
 
           version_property = File.join(mountpoint, VERSION_PROPERTY)
           File.write(version_property, VERSION.to_s)
+
+          # Copy Secure Boot keys into the vault
+          copy_secure_boot_keys(mountpoint)
         ensure
           run('umount', mountpoint) rescue nil
         end
@@ -269,6 +274,13 @@ class BootVaultBuilder
         run('umount', mountpoint) rescue nil
       end
     end
+  end
+
+  def copy_secure_boot_keys(mountpoint)
+    # Copy all files from the temporary directory to the vault
+    return unless Dir.exist?(SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY)
+
+    run('cp', '-r', "#{SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY}/.", mountpoint)
   end
 end
 
@@ -692,6 +704,27 @@ module DiskHandler
     fs_conf['install_target'] = handler.encryption_device
   end
 
+  def self.create_device_secure_boot_key(fs_conf)
+    # Create keys in a fixed temporary directory
+    FileUtils.rm_rf(SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY) if Dir.exist?(SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY)
+
+    script_path = '/usr/lib/puavo-ltsp-install/puavo-create-device-secure-boot-keys'
+    run(script_path, SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY)
+  end
+
+  def self.finalize_secure_boot_keys(fs_conf)
+    # Copy all Secure Boot key files from temporary directory into the installation
+    final_addons_directory = '/images/boot/addons'
+
+    if Dir.exist?(SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY)
+      FileUtils.mkdir_p(final_addons_directory)
+      run('cp', '-r', "#{SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY}/.", final_addons_directory)
+
+      # Clean up temporary directory
+      FileUtils.rm_rf(SECURE_BOOT_KEYS_TEMPORARY_DIRECTORY) rescue nil
+    end
+  end
+
   def self.do_fs_setup(conf, vgname, raid_setup_done)
     fs_conf = conf.clone
 
@@ -702,6 +735,13 @@ module DiskHandler
     # Assign the install target, which might be overwritten by LUKS methods
     fs_setup_phases += [ :select_default_install_target ]
 
+    # Create Secure Boot keys for permanent installations.
+    # Boot vault also requires these keys to be present.
+    hosttype = fs_conf['hosttype']
+    if hosttype != 'diskinstaller' then
+      fs_setup_phases += [ :create_device_secure_boot_key ]
+    end
+
     encryption = fs_conf['encryption']
 
     if encryption && encryption['policy'] then
@@ -710,6 +750,11 @@ module DiskHandler
     end
 
     fs_setup_phases += [ :puavo_filesystems, :mount_filesystems ]
+
+    # Finalize secure boot keys after filesystems are mounted
+    if hosttype != 'diskinstaller' then
+      fs_setup_phases += [ :finalize_secure_boot_keys ]
+    end
 
     fs_setup_phases.each do |fn_sym|
       args = case fn_sym
