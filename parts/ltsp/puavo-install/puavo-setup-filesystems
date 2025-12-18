@@ -113,16 +113,19 @@ class LuksPartitionHandler
       .join
   end
 
-  def enroll(recovery_key)
+  def enroll(recovery_key, pin=nil)
     command = [ 'systemd-cryptenroll' ]
     command += @policy.arguments
     command += [ "/dev/#{ @partition }" ]
 
-    ok = system({ "PASSWORD" => recovery_key.to_s }, *command)
+    env = { "PASSWORD" => recovery_key.to_s }
+    env["NEWPIN"] = pin if pin
+
+    ok = system(env, *command)
     ok or raise 'Failed to enroll LUKS encryption device'
   end
 
-  def setup(predefined_recovery_key=nil)
+  def setup(predefined_recovery_key=nil, pin=nil)
     recovery_key = predefined_recovery_key || self.generate_recovery_key()
 
     puts 'Creating LUKS partition with recovery key...'
@@ -151,7 +154,7 @@ class LuksPartitionHandler
     end
 
     puts 'Enrolling the LUKS partition for TPM-based unlocking...'
-    self.enroll(recovery_key)
+    self.enroll(recovery_key, pin)
 
     return recovery_key
   end
@@ -188,9 +191,10 @@ class BootVaultBuilder
 
   VERSION = 1
 
-  def initialize(primary_key:, user_recovery_key:, encryption_policy:, device:, size: DEFAULT_SIZE, image_name: DEFAULT_IMAGE_NAME, luks_name: DEFAULT_LUKS_NAME)
+  def initialize(primary_key:, user_recovery_key:, encryption_policy:, device:, pin: nil, size: DEFAULT_SIZE, image_name: DEFAULT_IMAGE_NAME, luks_name: DEFAULT_LUKS_NAME)
     @primary_key = primary_key
     @user_recovery_key = user_recovery_key
+    @pin = pin
     @encryption_policy = encryption_policy
     @size = size
     @image_name = image_name
@@ -224,7 +228,7 @@ class BootVaultBuilder
         @luks_name,
         @encryption_policy
       )
-      handler.setup(@primary_key)
+      handler.setup(@primary_key, @pin)
 
       # If the user recovery key is set, add it
       if @user_recovery_key && !@user_recovery_key.empty?
@@ -681,7 +685,7 @@ module DiskHandler
     encryption = fs_conf['encryption']
     handler = LuksPartitionHandler.new(
       fs_conf['puavo_partition'], EncryptionDeviceName, encryption['policy'])
-    primary_key = handler.setup()
+    primary_key = handler.setup(nil, encryption['pin'])
 
     # If the user recovery key is set, add it
     if encryption && \
@@ -695,6 +699,7 @@ module DiskHandler
     vault = BootVaultBuilder.new(
       primary_key: primary_key,
       user_recovery_key: encryption['user_recovery_key'],
+      pin: encryption['pin'],
       encryption_policy: encryption['policy'],
       device: fs_conf['device']
     )
@@ -1006,8 +1011,27 @@ module QueryDiskInfo
       raise "Unrecognized encryption preset '#{ preset_key }'"
     end
 
-    # Return a clone so we can safely mutate
-    return DiskHandler::EncryptionPresets[preset_key].clone
+    # Use a clone so we can safely mutate
+    encryption = DiskHandler::EncryptionPresets[preset_key].clone
+
+    # If encryption is enabled, ask for optional credentials
+    if encryption['policy']
+      # If TPM with PIN is selected, ask for the PIN
+      if preset_key == 'tpm-with-pin'
+        pin = UI::ask_and_confirm_secret('Enter PIN:')
+        encryption['pin'] = pin
+      end
+
+      # Ask for optional user recovery key
+      add_key_answer = UI::ask_with_default("Add user recovery key? (y/N)",
+                                            'no', UI::UserRecoveryKeyPrompt)
+      if add_key_answer.downcase.start_with?('y')
+        user_key = UI::ask_and_confirm_secret('Enter user recovery key:')
+        encryption['user_recovery_key'] = user_key
+      end
+    end
+
+    return encryption
   end
 
   def self.ask_device_with_confirmation(hosttype, raid_setup_done)
@@ -1044,16 +1068,6 @@ module QueryDiskInfo
       end
 
       encryption = QueryDiskInfo::ask_encryption_setup()
-
-      # Ask for optional recovery key
-      if encryption && encryption['policy']
-        add_key_answer = UI::ask_with_default("Add user recovery key? (y/N)",
-                                              'no', UI::UserRecoveryKeyPrompt)
-        if add_key_answer.downcase.start_with?('y')
-          user_key = UI::ask_and_confirm_secret('Enter user recovery key:')
-          encryption['user_recovery_key'] = user_key
-        end
-      end
 
       do_it = QueryDiskInfo::ask_confirmation(device)
     end
