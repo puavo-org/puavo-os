@@ -1,15 +1,14 @@
 class polkit_printers {
   include ::packages
 
-# XXX Trixie
-# file {
-#   '/etc/polkit-1/localauthority/50-local.d/00.printer.settings.pkla':
-#     owner   => 'root',
-#     group   => 'root',
-#     mode    => '0644',
-#     require => Package['policykit-1'],
-#     source  => 'puppet:///modules/polkit_printers/00.printer.settings.pkla';
-# }
+  file {
+    '/etc/polkit-1/rules.d/90-allow-users-to-change-printers.rules':
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      require => Package['polkitd'],
+      source  => 'puppet:///modules/polkit_printers/90-allow-users-to-change-printers.rules';
+  }
 
-  Package <| title == "policykit-1" |>
+  Package <| title == "polkitd" |>
 }

@@ -1,0 +1,26 @@
+polkit.addRule(function(action, subject) {
+    // Only consider local users
+    if (!subject.local) {
+        return null;
+    }
+
+    const allowedActions = [
+        "org.opensuse.cupspkhelper.mechanism.all-edit",
+        "org.opensuse.cupspkhelper.mechanism.class-edit",
+        "org.opensuse.cupspkhelper.mechanism.devices-get",
+        "org.opensuse.cupspkhelper.mechanism.job-edit",
+        "org.opensuse.cupspkhelper.mechanism.job-not-owned-edit",
+        "org.opensuse.cupspkhelper.mechanism.printer-enable",
+        "org.opensuse.cupspkhelper.mechanism.printer-local-edit",
+        "org.opensuse.cupspkhelper.mechanism.printer-remote-edit",
+        "org.opensuse.cupspkhelper.mechanism.printer-set-default",
+        "org.opensuse.cupspkhelper.mechanism.printeraddremove",
+        "org.opensuse.cupspkhelper.mechanism.server-settings",
+    ];
+
+    if (allowedActions.indexOf(action.id) !== -1) {
+        return polkit.Result.YES;
+    }
+
+    return null;
+});
