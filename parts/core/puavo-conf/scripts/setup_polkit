@@ -7,10 +7,6 @@ deny_in_webkiosk_mode_path='/etc/polkit-1/rules.d/90-org-freedesktop-networkmana
 if [ "$(puavo-conf puavo.xsessions.default)" = 'puavo-webkiosk' ]; then
   cat <<'EOF' > "${deny_in_webkiosk_mode_path}.tmp"
 polkit.addRule(function(action, subject) {
-    if (!subject.isUnixUser) {
-        return null;
-    }
-
     if (action.id.startsWith("org.freedesktop.NetworkManager.")) {
         return polkit.Result.NO;
     }
@@ -60,17 +56,22 @@ else
   rm -f "$allow_modify_by_special_user_path"
 fi
 
-polkit_primary_user_path='/etc/polkit-1/localauthority.conf.d/52-puavo-primary-user.conf'
-if [ -n "$primary_user" ]; then
-  cat <<EOF > "${polkit_primary_user_path}.tmp"
-[Configuration]
-AdminIdentities=unix-user:${primary_user};unix-group:puavo-role-admin
+polkit_primary_user_path='/etc/polkit-1/rules.d/90-puavo-primary-user.rules'
+cat <<EOF > "${polkit_primary_user_path}.tmp"
+polkit.addRule(function(action, subject) {
+    if (action.id !== "org.freedesktop.policykit.exec") {
+        return null;
+    }
+
+    if (!subject.active || !subject.local) {
+        return polkit.Result.NO;
+    }
+
+    if (subject.user === "${primary_user}" || subject.isInGroup("puavo-role-admin")) {
+        return polkit.Result.AUTH_SELF;
+    }
+
+    return polkit.Result.NO;
+});
 EOF
-else
-  cat <<EOF > "${polkit_primary_user_path}.tmp"
-[Configuration]
-AdminIdentities=unix-group:puavo-role-admin
-EOF
-fi
-mv "${polkit_primary_user_path}.tmp" \
-   "$polkit_primary_user_path"
+mv "${polkit_primary_user_path}.tmp" "$polkit_primary_user_path"
