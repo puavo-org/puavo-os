@@ -2,23 +2,28 @@
 
 set -eu
 
-deny_in_webkiosk_mode_path='/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla'
+deny_in_webkiosk_mode_path='/etc/polkit-1/rules.d/90-org-freedesktop-networkmanager-deny-in-webkiosk-mode.rules'
 
 if [ "$(puavo-conf puavo.xsessions.default)" = 'puavo-webkiosk' ]; then
   cat <<'EOF' > "${deny_in_webkiosk_mode_path}.tmp"
-[Normal User Permissions]
-Identity=unix-user:*
-Action=org.freedesktop.NetworkManager.*
-ResultAny=no
-ResultInactive=no
-ResultActive=no
+polkit.addRule(function(action, subject) {
+    if (!subject.isUnixUser) {
+        return null;
+    }
+
+    if (action.id.startsWith("org.freedesktop.NetworkManager.")) {
+        return polkit.Result.NO;
+    }
+
+    return null;
+});
 EOF
   mv "${deny_in_webkiosk_mode_path}.tmp" "$deny_in_webkiosk_mode_path"
 else
   rm -f "$deny_in_webkiosk_mode_path"
 fi
 
-allow_modify_by_special_user_path='/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_special_user.pkla'
+allow_modify_by_special_user_path='/etc/polkit-1/rules.d/90-org-freedesktop-networkmanager-allow-modify-by-special-user.rules'
 
 primary_user=''
 user_for_system_network_permissions=''
@@ -33,12 +38,21 @@ fi
 
 if [ -n "$user_for_system_network_permissions" ]; then
   cat <<EOF > "${allow_modify_by_special_user_path}.tmp"
-[Primary user permissions]
-Identity=unix-user:${user_for_system_network_permissions}
-Action=org.freedesktop.NetworkManager.settings.modify.system
-ResultAny=no
-ResultInactive=no
-ResultActive=yes
+polkit.addRule(function(action, subject) {
+    if (subject.user !== "${user_for_system_network_permissions}") {
+        return null;
+    }
+
+    if (action.id !== "org.freedesktop.NetworkManager.settings.modify.system") {
+        return null;
+    }
+
+    if (subject.active) {
+        return polkit.Result.YES;
+    }
+
+    return polkit.Result.NO;
+});
 EOF
   mv "${allow_modify_by_special_user_path}.tmp" \
      "$allow_modify_by_special_user_path"
