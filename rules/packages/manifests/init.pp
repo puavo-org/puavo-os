@@ -324,9 +324,9 @@ class packages {
     # , 'virtualbox-guest-x11'          # XXX missing from Trixie
     # , 'virtualbox-qt'                 # XXX missing from Trixie
     , 'vkd3d-compiler'
-    # , 'wine-devel'                    # XXX missing from Trixie
-    # , 'wine-devel-amd64'              # XXX missing from Trixie
-    # , 'winehq-devel'                  # XXX missing from Trixie
+    , 'wine'
+    , 'wine32'
+    , 'wine64'
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 

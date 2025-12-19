@@ -39,7 +39,7 @@ class image::bundle::desktop {
   include ::udisks2
   include ::veyon
   include ::vym
-  # include ::wine              # XXX missing from Trixie
+  include ::wine
   include ::xorg
 
   Package <| tag == 'tag_debian_desktop'

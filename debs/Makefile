@@ -25,8 +25,7 @@ else
   #                linux                  \
   #                mutter                 \
   #                nbd                    \
-  #                veyon                  \
-  #                wine
+  #                veyon
   # XXX Trixie
   _pkgs_cloud := puavo-ds puavo-os krb5 openldap
   _pkgs_parts := puavo-ds puavo-os
