@@ -41,10 +41,9 @@ class gdm {
       require => [ File['/etc/guest-session'], Package['gdm3'], ],
       source  => 'puppet:///modules/gdm/PostSession_Default';
 
-# XXX Trixie
-#   '/etc/polkit-1/localauthority/50-local.d/90-disable-poweroff-inhibit-for-gdm.pkla':
-#     require => Package['polkitd-pkla'],
-#     source  => 'puppet:///modules/gdm/90-disable-poweroff-inhibit-for-gdm.pkla';
+    '/etc/polkit-1/rules.d/90-disable-poweroff-inhibit-for-gdm.rules':
+      require => Package['polkitd'],
+      source  => 'puppet:///modules/gdm/90-disable-poweroff-inhibit-for-gdm.rules';
 
     '/usr/share/gdm/greeter/autostart/start-puavo-desktop-applet.desktop':
       ensure  => link,
@@ -84,7 +83,7 @@ class gdm {
 
   Package <|
        title == gdm3
-    or title == polkitd-pkla
+    or title == polkitd
     or title == puavo-desktop-applet
     or title == puavo-ltsp-client
   |>

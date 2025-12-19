@@ -1,0 +1,8 @@
+// do not allow Debian-gdm to take a low-level inhibit on the power key
+polkit.addRule(function(action, subject) {
+    if (action.id === "org.freedesktop.login1.inhibit-handle-power-key" &&
+        subject.user === "Debian-gdm") {
+            return polkit.Result.NO;
+    }
+    return null; // let other rules / defaults apply
+});
