@@ -179,8 +179,12 @@ class XRandrPropOutputParser:
 
     def parse(self, xrandr_prop_output: str) -> dict:
         for line in xrandr_prop_output.splitlines():
-            token_id, token_groupdict = _tokenize(line)
-            self.__push(token_id, token_groupdict)
+            try:
+              token_id, token_groupdict = _tokenize(line)
+              self.__push(token_id, token_groupdict)
+            except Exception as e:
+              _LOGGER.warning("could not tokenize line: %s", e)
+
         self.__push(_TokenId.EOF, "")
 
         return self.__displays
