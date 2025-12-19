@@ -88,11 +88,11 @@ class packages {
     , 'nagios-nrpe-server'
     , 'nginx'
     , 'openbsd-inetd'
-    # , 'policykit-1'                   # XXX missing from Trixie
-    # , 'polkitd-pkla'                  # XXX missing from Trixie
+    , 'pkexec'
+    , 'polkitd'
+    , 'pxelinux'
     , 'python3-numpy'
     , 'python3-redis'
-    , 'pxelinux'
     , 'redis-server'
     , 'ruby-ipaddress'
     , 'ruby-net-ldap'
