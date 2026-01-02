@@ -6,14 +6,12 @@ _pkgs_parts_builddeps :=
 ifeq "$(image_class)" "exam"
   _pkgs_cloud :=
   _pkgs_parts := puavo-os
-  # XXX Trixie _pkgs_ports := console-setup
   _pkgs_ports := gnome-shell
   _pkgs_ports_builddeps :=
 else
   # XXX do not build these custom packages in Trixie, these all need some work
   # _pkgs_parts := puavo-ds puavo-os
   # _pkgs_ports := anki                   \
-  #                console-setup          \
   #                cups                   \
   #                cups-filters           \
   #                gnome-control-center   \
