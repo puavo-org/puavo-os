@@ -17,7 +17,6 @@ else
   #                cups                   \
   #                cups-filters           \
   #                gnome-control-center   \
-  #                gnome-network-displays \
   #                gtk+3.0                \
   #                gtk4                   \
   #                kde-spectacle          \
