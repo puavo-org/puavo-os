@@ -20,7 +20,6 @@ else
   #                kde-spectacle          \
   #                linux                  \
   #                mutter                 \
-  #                nbd                    \
   #                veyon
   # XXX Trixie
   _pkgs_cloud := puavo-ds puavo-os krb5 openldap
