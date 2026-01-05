@@ -214,6 +214,13 @@ def update_device_json(restclient)
   raise errmsg unless puavo_conf_update_exit_status == 0
 end
 
+def update_org_json(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating org json\n")
+  puavo_rest_request_and_replace(restclient,
+                                 'v3/current_organisation',
+                                 '/state/etc/puavo/org.json')
+end
+
 def update_external_files(restclient)
   log(Syslog::LOG_INFO, ">>> Updating external files\n")
 
@@ -318,6 +325,7 @@ is_a_device = ($puavo_hosttype != 'bootserver')
 # because others may depend on it.
 update_functions = [
                 :update_device_json,
+                :update_org_json,
   is_a_device ? :update_external_files       : :do_nothing,
   is_a_device ? :update_wlan_configurations  : :do_nothing,
                 :update_grub_environment,
