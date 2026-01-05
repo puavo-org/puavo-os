@@ -521,6 +521,7 @@ class packages {
     , 'eric-api-files'
     , 'fastboot'
     , 'fritzing'
+    , 'gambas3'
     , 'gcc-avr'
     , 'geany'
     , 'idle'
