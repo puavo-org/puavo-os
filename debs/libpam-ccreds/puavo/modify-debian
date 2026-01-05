@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+cat <<'EOF_CONTROL' > debian/control
+Source: libpam-ccreds
+Section: admin
+Priority: optional
+Maintainer: Guido Günther <agx@sigxcpu.org>
+Build-Depends:
+ debhelper (>= 11),
+ fakeroot,
+ libdb-dev,
+ libgcrypt20-dev,
+ libpam0g-dev,
+Rules-Requires-Root: binary-targets
+Standards-Version: 4.6.2
+Homepage: https://github.com/PADL/pam_ccreds
+Vcs-Browser: https://salsa.debian.org/agx/libpam-ccreds
+Vcs-Git: https://salsa.debian.org/agx/libpam-ccreds.git
+
+Package: libpam-ccreds
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: nss-updatedb
+Description: Pam module to cache authentication credentials
+ This package provides the means for Linux workstations to locally
+ authenticate using an enterprise identity when the network is unavailable.
+ Used in conjunction with the nss_updatedb utility, it provides a mechanism for
+ disconnected use of network directories. They are designed to work with
+ libpam-ldap and libnss-ldap.
+EOF_CONTROL
