@@ -84,6 +84,7 @@ class packages {
     , 'policykit-1'
     , 'polkitd-pkla'
     , 'python3-numpy'
+    , 'python3-pyscard'
     , 'python3-redis'
     , 'pxelinux'
     , 'redis-server'
