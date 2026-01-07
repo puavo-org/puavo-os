@@ -21,7 +21,7 @@ impl UserDisplay for ConsoleDisplay {
     /// Errors:
     /// Returns `PuavoError` if reading from the terminal fails.
     fn ask_password(&self, prompt: &str) -> Result<String, PuavoError> {
-        print!("{}", prompt);
+        print!("{}: ", prompt);
         io::stdout().flush().unwrap();
 
         let password = rpassword::read_password()?;
