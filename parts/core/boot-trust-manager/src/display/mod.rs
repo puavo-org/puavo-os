@@ -54,7 +54,7 @@ pub fn choose_display(force_console: bool) -> Box<dyn UserDisplay> {
     let console_display =
         Box::new(ConsoleDisplay::new()) as Box<dyn UserDisplay>;
 
-    let plymouth_available = PlymouthDisplay::ping().is_ok();
+    let plymouth_available = PlymouthDisplay::ping().unwrap_or(false);
     debug!("Plymouth available: {}", plymouth_available);
 
     if force_console || !plymouth_available {
