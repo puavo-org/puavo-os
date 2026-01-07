@@ -144,7 +144,7 @@ impl BootTrustManager {
                 display,
             )?;
             info!("Configuration completed");
-            let _ = display.show_message(" ");
+            let _ = display.clear();
         }
 
         Ok(())

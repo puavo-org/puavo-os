@@ -32,6 +32,12 @@ pub trait UserDisplay {
     /// Errors:
     /// Returns a `PuavoError` if the backend fails to render the message.
     fn show_message(&self, text: &str) -> Result<(), PuavoError>;
+
+    /// Clear any displayed messages.
+    ///
+    /// Errors:
+    /// Returns a `PuavoError` if the backend fails to clear the display.
+    fn clear(&self) -> Result<(), PuavoError>;
 }
 
 /// Pick a suitable display backend.

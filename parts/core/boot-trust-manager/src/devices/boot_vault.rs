@@ -192,6 +192,8 @@ impl BootVault {
                     let pin = pin.get_or_insert_with(|| {
                         display.ask_password("PIN").unwrap_or("".into())
                     });
+                    // Clear the display so error messages do not persist after successful unlock
+                    let _ = display.clear();
                     device.token_handle().activate_by_token_pin::<()>(
                         Some(VAULT_LUKS_DEVICE_NAME),
                         None,
