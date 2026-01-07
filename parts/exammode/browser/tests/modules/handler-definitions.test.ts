@@ -1,6 +1,5 @@
 import { SurveillanceModule } from '../../src/modules/surveillance/surveillance-module';
 import { BrightnessModule } from '../../src/modules/brightness/brightness-module';
-import { EncryptionModule } from '../../src/modules/encryption/encryption-module';
 import { ScreenshotModule } from '../../src/modules/screenshot/screenshot-module';
 import { KeyboardModule } from '../../src/modules/keyboard/keyboard-module';
 import { ShutdownModule } from '../../src/modules/shutdown/shutdown-module';
@@ -12,6 +11,13 @@ import type { Module } from '../../src/modules/module';
 // Mock node:fs, because brightness module IO prevents Jest from exiting
 jest.mock('node:fs', () => ({
   watch: jest.fn(),
+}));
+
+// Mock fs for SessionModule
+jest.mock('fs', () => ({
+  existsSync: jest.fn().mockReturnValue(false),
+  readFileSync: jest.fn(),
+  writeFileSync: jest.fn(),
 }));
 
 jest.mock('../../src/utils/shell', () => ({
@@ -32,7 +38,6 @@ describe('ModuleHandlerDefinitions', () => {
     const modules: Module[] = [
       new AudioModule(),
       new BrightnessModule(),
-      new EncryptionModule(),
       new KeyboardModule(),
       new ScreenshotModule(createMockWebContents() as any),
       new SessionModule(),
