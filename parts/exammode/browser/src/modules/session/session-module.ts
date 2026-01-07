@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { logger } from '../../utils/logger';
 import { run } from '../../utils/shell';
 import type {
@@ -122,6 +122,8 @@ export class SessionModule implements Module {
         format: 'pem',
       },
     });
+
+    mkdirSync(examBrowserDir, { recursive: true });
 
     // Save private key
     writeFileSync(PRIVATE_KEY_PATH, privateKey, { mode: 0o600 });

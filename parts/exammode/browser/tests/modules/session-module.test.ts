@@ -6,6 +6,21 @@ import {
 import { constants, createPublicKey, publicEncrypt } from 'crypto';
 import { logger } from '../../src/utils/logger';
 import { existsSync, unlinkSync } from 'fs';
+import { app } from 'electron';
+
+jest.mock('electron', () => {
+  const actual = jest.requireActual('electron');
+  return {
+    ...actual,
+    app: {
+      ...actual.app,
+      getPath: jest.fn((name: string) => {
+        if (name === 'home') return '/tmp/jest-home';
+        return actual.app.getPath(name);
+      }),
+    },
+  };
+});
 
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/utils/shell', () => ({

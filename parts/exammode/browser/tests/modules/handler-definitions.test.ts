@@ -11,6 +11,7 @@ import type { Module } from '../../src/modules/module';
 // Mock fs for SessionModule
 jest.mock('fs', () => ({
   existsSync: jest.fn().mockReturnValue(false),
+  mkdirSync: jest.fn(),
   readFileSync: jest.fn(),
   writeFileSync: jest.fn(),
   watch: jest.fn(),

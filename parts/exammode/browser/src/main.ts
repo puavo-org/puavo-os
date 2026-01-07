@@ -11,9 +11,8 @@ import type { BrowserConfig } from './types/types';
 import { app, WebContents } from 'electron';
 import { Browser } from './core/browser';
 import { logger } from './utils/logger';
-import { mkdir } from 'fs/promises';
 
-export const examBrowserDir = app.getPath('home') + '/.puavo/exam-browser';
+export const examBrowserDir = app.getPath('home') + '/.puavo/exam-browser/';
 
 const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;
@@ -60,10 +59,6 @@ logger.setDebugEnabled(config.debug);
 
 const ZOOM_MIN_LEVEL = -5;
 const ZOOM_MAX_LEVEL = 5;
-
-async function ensureDir(dirPath: string) {
-  await mkdir(dirPath, { recursive: true });
-}
 
 function clampZoomLevel(level: number): number {
   return Math.max(ZOOM_MIN_LEVEL, Math.min(ZOOM_MAX_LEVEL, level));
@@ -138,8 +133,6 @@ function configureInputs(
 void app.whenReady().then(() => {
   const browser = new Browser(config);
   const moduleManager = new ModuleManager(browser.browserWindow);
-
-  ensureDir(examBrowserDir).catch(console.error);
 
   if (config.modules) {
     const audioModule = new AudioModule();
