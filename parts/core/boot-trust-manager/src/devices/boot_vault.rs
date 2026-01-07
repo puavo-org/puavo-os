@@ -190,7 +190,12 @@ impl BootVault {
                     )
                 } else {
                     let pin = pin.get_or_insert_with(|| {
-                        display.ask_password("PIN").unwrap_or("".into())
+                        display
+                            .ask_password("PIN")
+                            .inspect_err(|error| {
+                                error!("Failed to ask for PIN: {}", error)
+                            })
+                            .unwrap_or("".into())
                     });
                     // Clear the display so error messages do not persist after successful unlock
                     let _ = display.clear();
