@@ -39,4 +39,12 @@ impl UserDisplay for ConsoleDisplay {
         println!("{}", text);
         Ok(())
     }
+
+    /// Clear the display (no-op).
+    ///
+    /// Errors:
+    /// This function never errors.
+    fn clear(&self) -> Result<(), PuavoError> {
+        Ok(())
+    }
 }

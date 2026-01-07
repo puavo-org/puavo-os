@@ -80,4 +80,14 @@ impl UserDisplay for PlymouthDisplay {
 
         Ok(())
     }
+
+    /// Clear all displayed messages via Plymouth.
+    /// This is done by displaying a whitespace message (unfortunately).
+    ///
+    /// Errors:
+    /// Returns `PuavoError::PlymouthError` if the command exits non-zero,
+    /// or `PuavoError::IoError` if invoking the command fails.
+    fn clear(&self) -> Result<(), PuavoError> {
+        self.show_message(" ")
+    }
 }
