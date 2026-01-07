@@ -239,10 +239,7 @@ impl BootTrustManager {
         display: &Box<dyn UserDisplay>,
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
-        let (efi_mount, primary_device_path) =
-            Self::setup(None).map_err(|error| {
-                PuavoError::PartitionSetupError(error.to_string())
-            })?;
+        let (efi_mount, primary_device_path) = Self::setup(None)?;
 
         // Setup boot vault using the EFI partition mount
         let boot_vault_image_path = efi_mount.mountpoint.join(VAULT_PATH);
@@ -365,9 +362,7 @@ impl BootTrustManager {
             return Err(PuavoError::BootVaultOpen);
         }
 
-        let (efi_mount, _) = Self::setup(device).map_err(|error| {
-            PuavoError::PartitionSetupError(error.to_string())
-        })?;
+        let (efi_mount, _) = Self::setup(device)?;
 
         // Setup boot vault using the EFI partition mount
         let boot_vault_image_path = efi_mount.mountpoint.join(VAULT_PATH);
