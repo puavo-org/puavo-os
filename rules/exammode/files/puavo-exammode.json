@@ -1,4 +1,9 @@
 {
+  "puavo.exammode.browser.sessions.enabled": {
+    "default": "true",
+    "description": "Enable/disable the exam mode browser sessions",
+    "typehint": "bool"
+  },
   "puavo.exammode.developer-mode.enabled": {
     "default": "false",
     "description": "Enable/disable the exam mode development tools",
