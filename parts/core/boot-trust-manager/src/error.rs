@@ -31,9 +31,6 @@ pub enum PuavoError {
     #[error("Enrollment state error: {0}")]
     EnrollmentStateError(serde_json::Error),
 
-    #[error("Partition setup error: {0}")]
-    PartitionSetupError(String),
-
     #[error("{0}")]
     ShellError(String),
 
