@@ -69,15 +69,8 @@ export class SessionModule implements Module {
    * Check if session module is enabled via configuration.
    */
   private async checkIfEnabled(): Promise<boolean> {
-    try {
-      const result = (
-        await run('puavo-conf', ['puavo.exammode.browser.sessions.enabled'])
-      ).trim();
-      return result === 'true' || result === '';
-    } catch (error) {
-      // The configuration key does not exist or an error occurred
-      return true;
-    }
+    const result = await run('puavo-conf', ['puavo.exammode.browser.sessions.enabled']);
+    return result === 'true';
   }
 
   /**
