@@ -576,6 +576,19 @@
             "icon": "kalzium",
             "tags": "abitti, default, education"
         },
+        "kleki": {
+            "type": "web",
+            "url": "https://kleki.com/",
+            "name": "Klecks (kleki.com)",
+            "description": {
+                "fi": "Yhteisörahoitteinen piirtotyökalu, joka perustuu Klecks-avoimen lähdekoodin projektiin",
+                "en": "Community-funded painting tool based on the Klecks open-source project",
+                "sv": "Gemenskapsfinansierat målarverktyg baserat på Klecks-projektet med öppen källkod",
+                "de": "Gemeinschaftsfinanziertes Malwerkzeug basierend auf dem Open-Source-Projekt Klecks"
+            },
+            "icon": "accessories-painting",
+            "tags": "abitti, default, education"
+        },
         "kojo": {
             "name": "Kojo",
             "tags": "default",
@@ -1808,6 +1821,7 @@
             "programs": [
                 "abicode",
                 "gimp",
+                "kleki",
                 "org.inkscape.Inkscape",
                 "geogebra",
                 "geogebra6",
