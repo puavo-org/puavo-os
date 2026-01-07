@@ -8,16 +8,12 @@ import { AudioModule } from '../../src/modules/audio/audio-module';
 import { createMockWebContents } from '../__mocks__/electron';
 import type { Module } from '../../src/modules/module';
 
-// Mock node:fs, because brightness module IO prevents Jest from exiting
-jest.mock('node:fs', () => ({
-  watch: jest.fn(),
-}));
-
 // Mock fs for SessionModule
 jest.mock('fs', () => ({
   existsSync: jest.fn().mockReturnValue(false),
   readFileSync: jest.fn(),
   writeFileSync: jest.fn(),
+  watch: jest.fn(),
 }));
 
 jest.mock('../../src/utils/shell', () => ({
