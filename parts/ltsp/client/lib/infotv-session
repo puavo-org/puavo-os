@@ -16,7 +16,18 @@ run_idid()
     # stay running minimized and leaving the screen empty oh so blue
     sleep 20 && wmctrl -i -a `wmctrl -l | awk '{print $1;}'` &
 
-    idid || true
+    logger -p local0.info -t infotv 'starting up idid'
+
+    # exit idid if it reports errors in loading URLs
+    expect -c '
+      set timeout -1
+      spawn idid
+      expect {
+        {Failed to load URL: https://idid2.fi/player/pwa?electron with error: ERR_INTERNET_DISCONNECTED} { exit 1 }
+        {Failed to load URL: https://idid2.fi/player/pwa?electron with error: ERR_NAME_NOT_RESOLVED}     { exit 1 }
+        eof { exit 0 }
+      }
+    ' || true
     logger -p local0.err -t infotv \
            'The idid process has exited or crashed, restarting it...'
     sleep 5

@@ -1,8 +1,10 @@
+import { SessionModule } from '../modules/session/session-module';
 import { InputEventInterceptor } from './input-event-interceptor';
+import type { LoadFileOptions, WebContents } from 'electron';
 import type { BrowserConfig } from '../types/types';
-import type { LoadFileOptions } from 'electron';
 import { logger } from '../utils/logger';
 import { BrowserWindow } from 'electron';
+import { createHmac } from 'crypto';
 import path from 'path';
 
 const EMPTY_PAGE_URL = 'about:blank';
@@ -14,6 +16,9 @@ export class Browser {
   constructor(config: BrowserConfig) {
     this.config = config;
     this.browserWindow = this.createWindow();
+
+    // Setup HTTP request header modification
+    this.setupRequestHeaders(this.browserWindow.webContents);
 
     // Remove Electron from the user agent because
     // it improves the behavior of some exam software
@@ -52,8 +57,47 @@ export class Browser {
       'did-attach-webview',
       (_event, webContents) => {
         inputEventInterceptor.attach(webContents);
+        this.setupRequestHeaders(webContents);
       }
     );
+  }
+
+  /**
+   * Add authentication headers to HTTP requests if session is authenticated.
+   */
+  private addAuthenticationHeaders(
+    details: Electron.OnBeforeSendHeadersListenerDetails,
+    callback: (response: Electron.BeforeSendResponse) => void
+  ): void {
+    const sessionModule = SessionModule.getInstance();
+
+    if (sessionModule.isAuthenticated()) {
+      const now = Math.floor(Date.now() / 1000);
+      const timestampHeader = now.toString();
+      const requestUrl = details.url;
+      const message = `${timestampHeader}:${requestUrl}`;
+
+      const authHeader = createHmac('sha256', sessionModule.getSessionSecret())
+        .update(message)
+        .digest('base64');
+
+      details.requestHeaders['X-App-Auth'] = authHeader;
+      details.requestHeaders['X-App-Timestamp'] = timestampHeader;
+      details.requestHeaders['X-Original-URL'] = requestUrl;
+    }
+
+    callback({ requestHeaders: details.requestHeaders });
+  }
+
+  /**
+   * Setup request header modification for the specified WebContents.
+   */
+  private setupRequestHeaders(webContents: WebContents): void {
+    const session = webContents.session;
+
+    session.webRequest.onBeforeSendHeaders((details, callback) => {
+      this.addAuthenticationHeaders(details, callback);
+    });
   }
 
   private disableLeavingFullscreen(): void {

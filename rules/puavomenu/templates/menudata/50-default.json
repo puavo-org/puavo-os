@@ -377,6 +377,9 @@
         "fr.handbrake.ghb": {
             "tags": "default"
         },
+        "gambas3": {
+            "tags": "default"
+        },
         "gdevelop": {
             "tags": "default"
         },
@@ -571,6 +574,19 @@
             "name": "Ketcher",
             "description": "Ketcher Demo version",
             "icon": "kalzium",
+            "tags": "abitti, default, education"
+        },
+        "kleki": {
+            "type": "web",
+            "url": "https://kleki.com/",
+            "name": "Klecks (kleki.com)",
+            "description": {
+                "fi": "Yhteisörahoitteinen piirtotyökalu, joka perustuu Klecks-avoimen lähdekoodin projektiin",
+                "en": "Community-funded painting tool based on the Klecks open-source project",
+                "sv": "Gemenskapsfinansierat målarverktyg baserat på Klecks-projektet med öppen källkod",
+                "de": "Gemeinschaftsfinanziertes Malwerkzeug basierend auf dem Open-Source-Projekt Klecks"
+            },
+            "icon": "accessories-painting",
             "tags": "abitti, default, education"
         },
         "kojo": {
@@ -1805,6 +1821,7 @@
             "programs": [
                 "abicode",
                 "gimp",
+                "kleki",
                 "org.inkscape.Inkscape",
                 "geogebra",
                 "geogebra6",
@@ -2532,6 +2549,7 @@
                 "greenfoot",
                 "eclipse-php",
                 "eric6",
+                "gambas3",
                 "lazarus",
                 "lazarus-2.0.10",
                 "lazarus-2.2.2",

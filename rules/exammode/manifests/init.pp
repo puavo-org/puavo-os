@@ -23,6 +23,16 @@ class exammode {
       require => Package['gsettings-desktop-schemas'];
   }
 
+  # Only puavo-examuser may use the puavo-exam-browser.
+  ::dpkg::statoverride {
+    '/opt/puavo-exam-browser/puavo-exam-browser':
+      owner => 'root',
+      group => 'puavo-examuser',
+      mode  => '0750',
+      require => [ Group['puavo-examuser']
+                 , Package['puavo-exammode'] ];
+  }
+
   file {
     '/etc/systemd/system/puavo-exammode-tty.service':
       require => [ Package['kbd']

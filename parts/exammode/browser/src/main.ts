@@ -1,5 +1,8 @@
+import * as path from 'path';
+import { app, WebContents } from 'electron';
+export const examBrowserDir = path.join(app.getPath('home'), '.puavo/exam-browser');
+
 import { SurveillanceModule } from './modules/surveillance/surveillance-module';
-import { EncryptionModule } from './modules/encryption/encryption-module';
 import { BrightnessModule } from './modules/brightness/brightness-module';
 import { ScreenshotModule } from './modules/screenshot/screenshot-module';
 import { InputEventInterceptor } from './core/input-event-interceptor';
@@ -9,7 +12,6 @@ import { SessionModule } from './modules/session/session-module';
 import { AudioModule } from './modules/audio/audio-module';
 import { ModuleManager } from './core/module-manager';
 import type { BrowserConfig } from './types/types';
-import { app, WebContents } from 'electron';
 import { Browser } from './core/browser';
 import { logger } from './utils/logger';
 
@@ -115,7 +117,7 @@ function configureInputs(
     ...((config.shell.show
       ? [
           ['Ctrl+r', null],
-          ['Ctrl+Shift+R', null]
+          ['Ctrl+Shift+R', null],
         ]
       : []) as Array<[string, Handler]>),
     ...((config.restrictKeybindings
@@ -138,10 +140,9 @@ void app.whenReady().then(() => {
     moduleManager.setModules([
       audioModule,
       new BrightnessModule(),
-      new EncryptionModule(),
       new KeyboardModule(),
       new ScreenshotModule(browser.browserWindow.webContents),
-      new SessionModule(),
+      SessionModule.getInstance(),
       new ShutdownModule(() => browser.onShutdown()),
       new SurveillanceModule(),
     ]);

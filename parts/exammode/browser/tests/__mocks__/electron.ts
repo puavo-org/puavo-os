@@ -7,6 +7,14 @@ interface MockWebContents {
   removeAllListeners: jest.Mock;
   emit: jest.Mock;
   capturePage: jest.Mock;
+  session: {
+    webRequest: {
+      onBeforeSendHeaders: jest.Mock;
+      onHeadersReceived: jest.Mock;
+    };
+  };
+  getUserAgent: jest.Mock;
+  setUserAgent: jest.Mock;
 }
 
 interface MockBrowserWindow {
@@ -61,6 +69,16 @@ export function createMockWebContents(): MockWebContents {
     removeAllListeners: jest.fn(),
     emit: eventTarget.emit,
     capturePage: jest.fn(),
+    session: {
+      webRequest: {
+        onBeforeSendHeaders: jest.fn(),
+        onHeadersReceived: jest.fn(),
+      },
+    },
+    getUserAgent: jest
+      .fn()
+      .mockReturnValue('Mozilla/1.0.0 Chrome/1.0.0 Electron/1.0.0'),
+    setUserAgent: jest.fn(),
   };
 }
 
