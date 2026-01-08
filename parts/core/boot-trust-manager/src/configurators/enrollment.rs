@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     configurators::Configurator,
-    devices::boot_vault::{BootVault, BootVaultResources},
+    devices::boot_vault::{
+        BootVault, BootVaultResources, BootVaultUnlockMethod,
+    },
     display::UserDisplay,
     error::PuavoError,
     utils::{
@@ -300,6 +302,18 @@ impl Configurator for EnrollmentConfigurator {
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
     ) -> Result<bool, PuavoError> {
+        // TODO: Consider resetting PIN here
+        if !matches!(
+            boot_vault.unlock_method(),
+            Some(BootVaultUnlockMethod::TpmToken(..))
+        ) {
+            info!(
+                "Skipping enrollments, because the device was not unlocked with TPM"
+            );
+            // NOTE: Enrollments might require the TPM PIN, which was not used for unlocking
+            return Ok(false);
+        }
+
         let resources = boot_vault.resources();
 
         if self.any_configuration_changed(resources)? {
