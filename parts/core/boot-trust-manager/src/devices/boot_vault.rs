@@ -34,8 +34,9 @@ pub const VAULT_LUKS_DEVICE_NAME: &str = "puavo-boot-vault";
 /// mounted to `VAULT_MOUNTPOINT`.
 pub const VAULT_LUKS_DEVICE_PATH: &str = "/dev/mapper/puavo-boot-vault";
 
-/// How many attempts for PIN based unlock?
-pub const MAX_UNLOCK_ATTEMPTS: usize = 5;
+/// Number of attempts before changing the prompt from "PIN" to "PIN or Recovery Key".
+/// This is purely aesthetic. Both unlock methods are always tried regardless of the prompt.
+pub const MAX_PIN_ONLY_ATTEMPTS: usize = 3;
 
 /// Mount point for the decrypted vault filesystem at runtime.
 pub const VAULT_MOUNTPOINT: &str = "/run/puavo/boot-vault";
@@ -45,11 +46,6 @@ pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 
 /// Path to the recovery key file within the mounted vault.
 pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
-
-/// Optional path on the root filesystem to a fallback passphrase for the vault.
-/// When present, this passphrase is tried before TPM token unlock to allow recovery.
-pub const VAULT_FALLBACK_UNLOCK_KEY_PATH: &str =
-    "/.extra/puavo/vault-unlock.key";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BootVaultUnlockMethod {
@@ -87,153 +83,175 @@ impl BootVault {
         self.unlock_method.clone()
     }
 
-    /// Attempt to unlock the LUKS device using a fallback recovery key.
+    /// Get a list of token indices that match the specified requirements.
+    ///
+    /// Parameters:
+    /// - `device`: The crypt device handle.
+    /// - `requires_pin`: If true, return tokens that require a PIN.
+    ///
+    /// Returns:
+    /// A vector of token indices that match the requirements.
+    fn filter_tokens(device: &mut CryptDevice, requires_pin: bool) -> Vec<u32> {
+        let mut tokens = Vec::new();
+
+        for token_index in 0..MAX_TOKENS {
+            match device.token_handle().status(token_index) {
+                Ok(CryptTokenInfo::Inactive) => continue,
+                Err(error) => {
+                    debug!("Failed to check token {}: {}", token_index, error);
+                    continue;
+                }
+                _ => {}
+            }
+
+            match LuksTpmTokenManager::is_pin_required(device, token_index) {
+                Ok(is_pin_required) if is_pin_required == requires_pin => {
+                    tokens.push(token_index);
+                }
+                Ok(_) => {}
+                Err(error) => {
+                    debug!(
+                        "Failed to determine PIN requirement for token {}: {}",
+                        token_index, error
+                    );
+                }
+            }
+        }
+
+        tokens
+    }
+
+    /// Attempt to unlock the LUKS device using automatic TPM tokens (no PIN required).
     ///
     /// Parameters:
     /// - `device`: The crypt device handle to activate.
     ///
     /// Returns:
-    /// - `Ok(true)` if unlocked using the fallback key.
-    /// - `Ok(false)` if no fallback key was available.
-    /// - `Err(error)` if an error occurred during unlocking.
-    fn try_unlock_with_fallback_key(
+    /// - `Ok(true)` if unlocked using an automatic TPM token.
+    /// - `Ok(false)` if no automatic unlock succeeded.
+    fn try_automatic_tpm_unlock(
         &mut self,
         device: &mut CryptDevice,
     ) -> Result<bool, PuavoError> {
-        // If the fallback key is not provided, we can not open this way
-        if !fs::exists(VAULT_FALLBACK_UNLOCK_KEY_PATH)? {
-            debug!(
-                "No fallback key found at {}, cannot unlock using it",
-                VAULT_FALLBACK_UNLOCK_KEY_PATH
-            );
-            return Ok(false);
+        debug!("Attempting automatic TPM unlock");
+
+        let tokens = Self::filter_tokens(device, false);
+
+        for token_index in tokens {
+            match device.token_handle().activate_by_token::<()>(
+                Some(VAULT_LUKS_DEVICE_NAME),
+                Some(token_index),
+                None,
+                CryptActivate::empty(),
+            ) {
+                Ok(_) => {
+                    info!("Unlocked with TPM token {} (no PIN)", token_index);
+                    self.unlock_method =
+                        Some(BootVaultUnlockMethod::TpmToken(None));
+                    return Ok(true);
+                }
+                Err(error) => {
+                    debug!(
+                        "Failed to unlock with token {} without PIN: {}",
+                        token_index, error
+                    );
+                }
+            }
         }
 
-        // Load the fallback key and try to unlock using it
-        debug!(
-            "Attempting to unlock boot vault using recovery key at {}",
-            VAULT_FALLBACK_UNLOCK_KEY_PATH
-        );
-        let fallback_key = fs::read_to_string(VAULT_FALLBACK_UNLOCK_KEY_PATH)?;
-        device.activate_handle().activate_by_passphrase(
-            Some(VAULT_LUKS_DEVICE_NAME),
-            None,
-            fallback_key.as_bytes(),
-            CryptActivate::empty(),
-        )?;
-
-        info!(
-            "Boot vault unlocked using recovery key at {}",
-            VAULT_FALLBACK_UNLOCK_KEY_PATH
-        );
-        self.unlock_method = Some(BootVaultUnlockMethod::RecoveryKey);
-        Ok(true)
+        Ok(false)
     }
 
-    /// Attempt to unlock the LUKS device using any available TPM token.
+    /// Attempt to unlock the LUKS device using user input (PIN or Recovery Key).
+    ///
+    /// This function loops indefinitely, prompting the user for input and trying:
+    /// 1. TPM token unlock with the input as PIN
+    /// 2. Standard LUKS passphrase unlock with the input as recovery key
     ///
     /// Parameters:
     /// - `device`: The crypt device handle to activate.
     /// - `display`: Display instance to show progress and messages.
-    ///
-    /// Errors:
-    /// Propagates cryptsetup and IO errors.
-    fn try_unlock_with_any_token(
+    fn try_unlock_with_user_input(
         &mut self,
         device: &mut CryptDevice,
         display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
-        debug!("Attempting to unlock boot vault using any available TPM token");
+        debug!("Attempting unlock with user input");
 
-        for _ in 0..MAX_UNLOCK_ATTEMPTS {
-            let mut pin = None;
+        // Find tokens that require a PIN
+        let tokens = Self::filter_tokens(device, true);
 
-            for token_index in 0..MAX_TOKENS {
-                match device.token_handle().status(token_index) {
-                    Ok(CryptTokenInfo::Inactive) => {
+        for attempt in 0.. {
+            let prompt = if tokens.is_empty() {
+                "Recovery Key"
+            } else if attempt < MAX_PIN_ONLY_ATTEMPTS {
+                // Reveal the option for recovery key after a few failed attempts (aesthetic choice)
+                "PIN"
+            } else {
+                "PIN or Recovery Key"
+            };
+
+            let user_input = match display.ask_password(prompt) {
+                Ok(input) => input,
+                Err(error) => {
+                    error!("Failed to ask for password: {}", error);
+                    let _ = display.show_message("Failed to read input");
+                    continue;
+                }
+            };
+
+            let _ = display.clear();
+
+            // Try TPM tokens with PIN
+            for token_index in &tokens {
+                match device.token_handle().activate_by_token_pin::<()>(
+                    Some(VAULT_LUKS_DEVICE_NAME),
+                    None,
+                    Some(*token_index),
+                    user_input.as_bytes(),
+                    None,
+                    CryptActivate::empty(),
+                ) {
+                    Ok(_) => {
                         info!(
-                            "Token with id {} does not exist, skipping...",
+                            "Unlocked with TPM token {} using PIN",
                             token_index
                         );
-                        continue;
-                    }
-                    Err(error) => {
-                        error!(
-                            "Failed to determine if token with id {} exists: {}",
-                            token_index, error
+                        self.unlock_method = Some(
+                            BootVaultUnlockMethod::TpmToken(Some(user_input)),
                         );
-                        continue;
-                    }
-                    _ => {}
-                }
-
-                let is_pin_required = match LuksTpmTokenManager::is_pin_required(
-                    device,
-                    token_index,
-                ) {
-                    Ok(is_pin_required) => is_pin_required,
-                    Err(error) => {
-                        error!(
-                            "Failed to determine PIN requirement: {}",
-                            error
-                        );
-                        false
-                    }
-                };
-
-                let unlock_result = if !is_pin_required {
-                    device.token_handle().activate_by_token::<()>(
-                        Some(VAULT_LUKS_DEVICE_NAME),
-                        Some(token_index),
-                        None,
-                        CryptActivate::empty(),
-                    )
-                } else {
-                    let pin = pin.get_or_insert_with(|| {
-                        display
-                            .ask_password("PIN")
-                            .inspect_err(|error| {
-                                error!("Failed to ask for PIN: {}", error)
-                            })
-                            .unwrap_or("".into())
-                    });
-                    // Clear the display so error messages do not persist after successful unlock
-                    let _ = display.clear();
-                    device.token_handle().activate_by_token_pin::<()>(
-                        Some(VAULT_LUKS_DEVICE_NAME),
-                        None,
-                        Some(token_index),
-                        pin.as_bytes(),
-                        None,
-                        CryptActivate::empty(),
-                    )
-                };
-
-                match unlock_result {
-                    Ok(_) => {
-                        debug!("Unlocked with token {}", token_index);
-                        self.unlock_method =
-                            Some(BootVaultUnlockMethod::TpmToken(pin));
                         return Ok(());
                     }
                     Err(error) => {
                         debug!(
-                            "Failed to unlock using token {}: {}",
+                            "Failed to unlock with token {} using PIN: {}",
                             token_index, error
                         );
                     }
                 }
             }
 
-            // If a PIN is not required, attempting again is of no use
-            if pin.is_none() {
-                break;
-            } else {
-                let _ = display.show_message("Incorrect PIN");
+            // Try recovery key
+            match device.activate_handle().activate_by_passphrase(
+                Some(VAULT_LUKS_DEVICE_NAME),
+                None,
+                user_input.as_bytes(),
+                CryptActivate::empty(),
+            ) {
+                Ok(_) => {
+                    info!("Unlocked with recovery key");
+                    self.unlock_method =
+                        Some(BootVaultUnlockMethod::RecoveryKey);
+                    return Ok(());
+                }
+                Err(error) => {
+                    debug!("Failed to unlock using passphrase: {}", error);
+                }
             }
+
+            let _ = display.show_message("Unlocking failed");
         }
 
-        debug!("Failed to unlock boot vault with TPM tokens");
         Err(PuavoError::UnlockError)
     }
 
@@ -258,20 +276,13 @@ impl BootVault {
             .context_handle()
             .load::<()>(Some(EncryptionFormat::Luks2), None)?;
 
-        // Attempt to unlock with fallback key first if available,
-        // because fallback key grants full access (e.g. recovery).
-        let unlock_result = self.try_unlock_with_fallback_key(&mut device);
+        // First try automatic TPM unlock (no PIN required)
+        if self.try_automatic_tpm_unlock(&mut device)? {
+            return Ok(device);
+        }
 
-        match unlock_result {
-            Ok(true) => return Ok(device), // Unlocked with fallback key
-            Ok(false) => {}
-            Err(error) => {
-                warn!("Failed to unlock using fallback key: {}", error)
-            }
-        };
-
-        debug!("No fallback key available, trying TPM token unlock");
-        self.try_unlock_with_any_token(&mut device, display)?;
+        // If automatic unlock failed, prompt for PIN or recovery key
+        self.try_unlock_with_user_input(&mut device, display)?;
 
         Ok(device)
     }
