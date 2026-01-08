@@ -70,8 +70,9 @@ export class SessionModule implements Module {
    * Check if session module is enabled via configuration.
    */
   private async checkIfEnabled(): Promise<boolean> {
-    const result = await run('puavo-conf', ['puavo.exammode.browser.sessions.enabled']);
-    return result === 'true';
+    const output = await run('puavo-conf', ['puavo.exammode.browser.sessions.enabled']);
+    const value = output.replace(/(\r?\n)+$/, ''); // strip newline at the end
+    return value === 'true';
   }
 
   /**
