@@ -1,3 +1,7 @@
+import * as path from 'path';
+import { app, WebContents } from 'electron';
+export const examBrowserDir = path.join(app.getPath('home'), '.puavo/exam-browser');
+
 import { SurveillanceModule } from './modules/surveillance/surveillance-module';
 import { BrightnessModule } from './modules/brightness/brightness-module';
 import { ScreenshotModule } from './modules/screenshot/screenshot-module';
@@ -8,11 +12,8 @@ import { SessionModule } from './modules/session/session-module';
 import { AudioModule } from './modules/audio/audio-module';
 import { ModuleManager } from './core/module-manager';
 import type { BrowserConfig } from './types/types';
-import { app, WebContents } from 'electron';
 import { Browser } from './core/browser';
 import { logger } from './utils/logger';
-
-export const examBrowserDir = app.getPath('home') + '/.puavo/exam-browser/';
 
 const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 768;

@@ -15,10 +15,11 @@ import {
   type KeyObject,
 } from 'crypto';
 import { examBrowserDir } from '../../main';
+import * as path from 'path';
 
 const RSA_KEY_SIZE = 4096;
-export const PRIVATE_KEY_PATH = examBrowserDir + 'session-private-key.pem';
-export const PUBLIC_KEY_PATH  = examBrowserDir + 'session-public-key.der';
+export const PRIVATE_KEY_PATH = path.join(examBrowserDir, 'session-private-key.pem');
+export const PUBLIC_KEY_PATH  = path.join(examBrowserDir, 'session-public-key.der');
 
 export class SessionModule implements Module {
   private static instance: SessionModule | null = null;
