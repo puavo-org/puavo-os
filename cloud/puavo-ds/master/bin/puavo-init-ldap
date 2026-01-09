@@ -143,6 +143,9 @@ puts
 @mfa_mgmt_dn = ask_puavo_attr("mfa-mgmt dn", :ds_mfa_mgmt_dn, "uid=mfa-mgmt,o=puavo")
 @mfa_mgmt_pw = ask_puavo_attr("mfa-mgmt password", :ds_mfa_mgmt_password)
 
+@accounts_dn = ask_puavo_attr("accounts dn", :ds_accounts_dn, "uid=accounts,o=puavo")
+@accounts_pw = ask_puavo_attr("accounts password", :ds_accounts_password)
+
 puts "Using #{@rootdn} as rootdn"
 
 @rootpw_hash=`slappasswd -h "{SSHA}" -s "#{@rootpw}"`.gsub(/\n/,"")
@@ -157,6 +160,7 @@ puts "Using #{@rootdn} as rootdn"
 @examomatic_pw_hash=`slappasswd -h "{SSHA}" -s "#{@examomatic_pw}"`.gsub(/\n/,"")
 @cert_mgmt_pw_hash=`slappasswd -h "{SSHA}" -s "#{@cert_mgmt_pw}"`.gsub(/\n/,"")
 @mfa_mgmt_pw_hash=`slappasswd -h "{SSHA}" -s "#{@mfa_mgmt_pw}"`.gsub(/\n/,"")
+@accounts_pw_hash=`slappasswd -h "{SSHA}" -s "#{@accounts_pw}"`.gsub(/\n/,"")
 
 print <<EOF
 I'm now going to initialize new LDAP databases on this machine.

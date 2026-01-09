@@ -101,6 +101,13 @@ uid: mfa-mgmt
 description: Account for managing multi-factor authentication
 userPassword: <%= @mfa_mgmt_pw_hash %>
 
+dn: <%= @accounts_dn %>
+objectClass: account
+objectClass: simpleSecurityObject
+uid: accounts
+description: Account for user account creation
+userPassword: <%= @accounts_pw_hash %>
+
 dn: ou=Services,o=puavo
 ou: Services
 objectClass: top
