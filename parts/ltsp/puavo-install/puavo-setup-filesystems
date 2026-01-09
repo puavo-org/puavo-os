@@ -6,6 +6,7 @@ require 'fileutils'
 require 'getoptlong'
 require 'highline/import'
 require 'open3'
+require 'pathname'
 require 'securerandom'
 require 'tempfile'
 require 'tmpdir'
@@ -280,7 +281,7 @@ class BootVaultBuilder
 
   def copy_secure_boot_keys(mountpoint, secure_boot_keys_tmpdir)
     # Copy all files from the temporary directory to the vault.
-    FileUtils.cp_r(secure_boot_keys_tmpdir, mountpoint)
+    FileUtils.cp_r(Pathname(secure_boot_keys_tmpdir).children, mountpoint)
   end
 end
 
@@ -714,7 +715,9 @@ module DiskHandler
     # Copy all Secure Boot key files from temporary directory into
     # the installation.
     final_addons_directory = '/images/boot/addons'
-    FileUtils.cp_r(secure_boot_keys_tmpdir, final_addons_directory)
+    FileUtils.mkdir_p(final_addons_directory)
+    FileUtils.cp_r(Pathname(secure_boot_keys_tmpdir).children,
+                   final_addons_directory)
   end
 
   def self.do_fs_setup(conf, vgname, raid_setup_done)
