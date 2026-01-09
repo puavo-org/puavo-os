@@ -35,7 +35,7 @@ mount_disk_efi_partition() {
 
   efi_devpath=$(find_efi_device_path "$diskdev")
   if [ -z "$efi_devpath" ]; then
-    echo "error: failed to find EFI partition in ${diskdev}" >&2
+    echo "failed to find EFI partition in ${diskdev}" >&2
     return 1
   fi
 
@@ -44,13 +44,15 @@ mount_disk_efi_partition() {
 
 grubedit() {
   if ! grub-editenv "$grubenv_path" "$@"; then
-    echo 'Creating new grubenv because of an error' >&2
+    echo 'creating new grubenv because of an error' >&2
     grub-editenv "$grubenv_path" create
     grub-editenv "$grubenv_path" "$@"
   fi
 }
 
 setup_default_and_backup_images() {
+  local backup_image_tag default_image_tag
+
   default_image_tag=$(find "$images_dir" -maxdepth 1 -type f -name '*.default' \
                         | head -n 1)
   backup_image_tag=$(find "$images_dir" -maxdepth 1 -type f -name '*.backup' \
@@ -80,6 +82,7 @@ setup_developer_mode() {
 }
 
 setup_grub_theme() {
+  local grub_theme
   grub_theme=$(puavo-conf puavo.grub.theme)
   if [ -n "$grub_theme" ]; then
     grubedit set "puavo_grub_theme=${grub_theme}"
@@ -89,7 +92,12 @@ setup_grub_theme() {
 }
 
 setup_kernel_arguments() {
-  kernel_arguments="$(puavo-conf puavo.kernel.arguments)$(selected_puavo_conf_arguments_as_kernel_args)" || return 1
+  local kernel_arguments
+  if ! kernel_arguments="$(puavo-conf puavo.kernel.arguments)$(selected_puavo_conf_arguments_as_kernel_args)"; then
+    echo 'failed to lookup additional kernel arguments from puavo-conf' >&2
+    return 1
+  fi
+
   if [ -n "$kernel_arguments" ]; then
     grubedit set "puavo_kernel_arguments=${kernel_arguments}"
   else
@@ -103,6 +111,7 @@ setup_kernel_arguments() {
 }
 
 setup_kernel_version() {
+  local kernel_version
   kernel_version=$(puavo-conf puavo.kernel.version)
   if [ -n "$kernel_version" ]; then
     grubedit set "puavo_kernel_version=${kernel_version}"
@@ -112,6 +121,7 @@ setup_kernel_version() {
 }
 
 setup_locale() {
+  local puavo_l10n_locale
   puavo_l10n_locale=$(puavo-conf puavo.l10n.locale)
   if [ -n "$puavo_l10n_locale" ]; then
     grubedit set "lang=${puavo_l10n_locale}"
@@ -121,6 +131,7 @@ setup_locale() {
 }
 
 setup_optional_grub_config() {
+  local puavo_optional_grub_conf
   puavo_optional_grub_conf=$(puavo-conf puavo.grub.config)
   if [ -n "$puavo_optional_grub_conf" ]; then
     grubedit set "puavo_optional_grub_conf=${puavo_optional_grub_conf}"
@@ -130,6 +141,7 @@ setup_optional_grub_config() {
 }
 
 setup_timeout() {
+  local grub_timeout
   grub_timeout=$(puavo-conf puavo.grub.timeout)
   if [ -n "$grub_timeout" ]; then
     grubedit set "puavo_grub_timeout=${grub_timeout}"
@@ -148,12 +160,12 @@ setup_windows_enabled() {
   fi
 
   if ! grubdisk=$(/usr/lib/puavo-core/puavo-get-boot-disks); then
-    echo 'ERROR: failed to get the Grub disk(s)' >&2
+    echo 'failed to get the Grub disk(s)' >&2
     return 1
   fi
 
   if [ "$(printf %s "$grubdisk" | wc -w)" -ne 1 ]; then
-    echo 'ERROR: there was not exactly one Grub disk' >&2
+    echo 'failed to find exactly one Grub disk' >&2
     return 1
   fi
 
@@ -185,7 +197,7 @@ selected_puavo_conf_arguments_as_kernel_args() {
   # the auto-discovery (systemd) for the root device may timeout.
   # By specifying the root device, we can bypass this timeout issue.
   if ! is_encrypted=$("$PUAVO_INSTALL_LIBDIR"/is-encrypted-install "$images_dir"); then
-    echo "error: failed to detect installation encryption type" >&2
+    echo "failed to detect installation encryption type" >&2
     return 1
   fi
 
@@ -212,12 +224,14 @@ selected_puavo_conf_arguments_as_kernel_args() {
 }
 
 update_boot_device_environments() {
+  local boot_disks status
+
   if [ "$UKI_MODE" != '1' ]; then
     return 0
   fi
 
-  local boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
-  local status=0
+  boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
+  status=0
 
   for diskdev in $boot_disks; do
     echo "installing GRUB environment to boot device ${diskdev}"
