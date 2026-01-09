@@ -16,13 +16,25 @@ if [ ! -d "$images_dir" ]; then
 fi
 
 # Attempt to find a LUKS partition that has the images directory as mountpoint
-lsblk -J -O | jq --raw-output --arg images_dir "$images_dir" '
-  [
-    .blockdevices[]
-      | select(.type == "disk")
-      | .children[]
-      | select(.fstype == "crypto_LUKS")
-      | .children[]?
-      | .mountpoints[]?
-  ] | any(. == $images_dir)
-' | tr --delete '\n'
+if ! lsblk_output=$(lsblk -J -O); then
+  echo 'lsblk error' >&2
+  exit 1
+fi
+
+if ! jq_output=$(
+  printf %s "$lsblk_output" \
+    | jq --raw-output --arg images_dir "$images_dir" '
+        [
+          .blockdevices[]
+            | select(.type == "disk")
+            | .children[]
+            | select(.fstype == "crypto_LUKS")
+            | .children[]?
+            | .mountpoints[]?
+        ] | any(. == $images_dir)
+      '); then
+  echo 'jq error' >&2
+  exit 1
+fi
+
+printf "%s\n" "$jq_output"
