@@ -7,8 +7,11 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
+use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use tempfile::NamedTempFile;
 
 use crate::error::PuavoError;
 
@@ -104,6 +107,20 @@ pub struct LuksTpmTokenManager {
 }
 
 impl LuksTpmTokenManager {
+    /// Creates a temporary file containing the password with restricted permissions.
+    ///
+    /// Returns the temporary file handle. The file is automatically deleted when dropped.
+    fn create_password_file(
+        password: &str,
+    ) -> Result<NamedTempFile, PuavoError> {
+        let mut file = NamedTempFile::new().map_err(PuavoError::IoError)?;
+        fs::set_permissions(file.path(), fs::Permissions::from_mode(0o600))
+            .map_err(PuavoError::IoError)?;
+        file.write_all(password.as_bytes()).map_err(PuavoError::IoError)?;
+        file.flush().map_err(PuavoError::IoError)?;
+        Ok(file)
+    }
+
     /// Returns whether the specified token requires PIN
     ///
     /// Parameters:
@@ -274,11 +291,20 @@ impl LuksTpmTokenManager {
             arguments.push("--tpm2-with-pin=yes".to_string());
         }
 
+        let password_file = Self::create_password_file(key)?;
+        arguments.push(format!(
+            "--unlock-key-file={}",
+            password_file.path().display()
+        ));
+
         debug!("Executing systemd-cryptenroll with: {:#?}", arguments);
 
         let output = Command::new("systemd-cryptenroll")
             .args(&arguments)
-            .env("PASSWORD", key)
+            // Security note: NEWPIN must be passed via environment variable as
+            // standard input does not work and there does not seem any other
+            // reliable way. While systemd erases the variable, it remains
+            // briefly visible via /proc.
             .env("NEWPIN", pin.clone().unwrap_or_default())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
