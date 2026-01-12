@@ -1,0 +1,58 @@
+#!/bin/sh
+set -eu
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+usage() {
+  echo "Usage: $0 <rootfs-directory> <key-directory>"
+  echo ""
+  echo "Signs GRUB and SHIM bootloaders with Secure Boot keys."
+  exit 1
+}
+
+if [ "$#" -ne 2 ]; then
+  usage
+fi
+
+rootfs_directory=$1
+key_directory=$2
+private_key="${key_directory}/secure-boot.priv"
+certificate="${key_directory}/secure-boot.pem"
+
+# Validate inputs
+[ -d "$rootfs_directory" ] || panic "rootfs directory '$rootfs_directory' does not exist"
+[ -d "$key_directory" ]    || panic "key directory '$key_directory' does not exist"
+[ -f "$private_key" ]      || panic "private key not found at '$private_key'"
+[ -f "$certificate" ]      || panic "certificate not found at '$certificate'"
+
+sign_grub_architecture_bootloaders() {
+  architecture=$1
+
+  # Use GRUB binaries from monolithic directory, because modules can not be loaded while Secure Boot is enabled
+  grub_monolithic_directory="${rootfs_directory}/usr/lib/grub/${architecture}/monolithic"
+  grub_signed_directory="${rootfs_directory}/usr/lib/grub/${architecture}-signed"
+  mkdir -p "$grub_signed_directory"
+
+  [ -d "$grub_monolithic_directory" ] || panic "directory '$grub_monolithic_directory' does not exist"
+  [ -d "$grub_signed_directory" ] || panic "directory '$grub_signed_directory' does not exist"
+
+  echo "signing GRUB binaries for ${architecture}..."
+  .aux/sign-efi-directory "$grub_monolithic_directory" "$private_key" "$certificate" "$grub_signed_directory"
+}
+
+for architecture in i386-efi x86_64-efi; do
+  sign_grub_architecture_bootloaders "$architecture"
+done
+
+shim_source_directory="${rootfs_directory}/usr/lib/shim"
+shim_output_directory="${rootfs_directory}/usr/lib/shim"
+mkdir -p "$shim_output_directory"
+
+[ -d "$shim_source_directory" ] || panic "directory '$shim_source_directory' does not exist"
+[ -d "$shim_output_directory" ] || panic "directory '$shim_output_directory' does not exist"
+
+echo "signing SHIM binaries..."
+.aux/sign-efi-directory "$shim_source_directory" "$private_key" "$certificate" "$shim_output_directory"

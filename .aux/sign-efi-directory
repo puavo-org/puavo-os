@@ -1,0 +1,54 @@
+#!/bin/sh
+set -eu
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+usage() {
+  echo "Usage: $0 <directory> <key-file> <certificate-file> <output-directory>"
+  echo ""
+  echo "Signs all EFI files in a specified directory with Secure Boot keys."
+  exit 1
+}
+
+if [ "$#" -ne 4 ]; then
+  usage
+fi
+
+input_directory=$1
+private_key=$2
+certificate=$3
+output_directory=$4
+
+# Validate inputs
+[ -d "$input_directory" ]  || panic "input directory '$input_directory' does not exist"
+[ -f "$private_key" ]      || panic "private key not found at '$private_key'"
+[ -f "$certificate" ]      || panic "certificate not found at '$certificate'"
+[ -d "$output_directory" ] || panic "output directory '$output_directory' does not exist"
+
+if ! command -v sbsign >/dev/null 2>&1; then
+  panic "sbsign command not found"
+fi
+
+# Sign all EFI files in the directory
+signed_any=false
+for efi_file in "$input_directory"/*.efi; do
+  [ -f "$efi_file" ] || continue
+
+  basename_efi=$(basename "$efi_file")
+  output_file="${output_directory}/${basename_efi}.signed"
+  temporary_output="${output_file}.tmp"
+
+  echo "signing ${basename_efi}..."
+  sbsign --key "$private_key" --cert "$certificate" \
+         --output "$temporary_output" "$efi_file"
+
+  mv "$temporary_output" "$output_file"
+  signed_any=true
+done
+
+if [ "$signed_any" = false ]; then
+  panic "no EFI files found in '$input_directory'"
+fi
