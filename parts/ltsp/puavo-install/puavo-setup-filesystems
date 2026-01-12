@@ -113,15 +113,27 @@ class LuksPartitionHandler
   end
 
   def enroll(recovery_key, pin=nil)
-    command = [ 'systemd-cryptenroll' ]
-    command += @policy.arguments
-    command += [ "/dev/#{ @partition }" ]
+    require 'tempfile'
 
-    env = { "PASSWORD" => recovery_key.to_s }
-    env["NEWPIN"] = pin if pin
+    Tempfile.create('luks-password', '/tmp') do |password_file|
+      password_file.chmod(0600)
+      password_file.write(recovery_key.to_s)
+      password_file.flush
 
-    ok = system(env, *command)
-    ok or raise 'Failed to enroll LUKS encryption device'
+      command = [ 'systemd-cryptenroll' ]
+      command += @policy.arguments
+      command += [ "--unlock-key-file=#{ password_file.path }" ]
+      command += [ "/dev/#{ @partition }" ]
+
+      # Security note: NEWPIN must be passed via environment variable as
+      # standard input does not work and there does not seem any other
+      # reliable way. While systemd erases the variable, it remains
+      # briefly visible via /proc.
+      environment = pin ? { "NEWPIN" => pin } : {}
+
+      ok = system(environment, *command)
+      ok or raise 'Failed to enroll LUKS encryption device'
+    end
   end
 
   def setup(predefined_recovery_key=nil, pin=nil)
