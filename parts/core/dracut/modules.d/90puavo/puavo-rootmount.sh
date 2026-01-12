@@ -34,11 +34,9 @@ for x in $(cat /proc/cmdline); do
             ;;
         root=LABEL=*)
             PUAVO_ROOT_DEVICE="/dev/disk/by-label/${x#root=LABEL=}"
-            ROOT_IN_BTRFS=1
             ;;
         root=UUID=*)
             PUAVO_ROOT_DEVICE="/dev/disk/by-uuid/${x#root=UUID=}"
-            ROOT_IN_BTRFS=1
             ;;
     esac
 done
@@ -73,6 +71,10 @@ if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
 
   if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
     echo "error: failed to find the root device, boot will likely fail"
+  fi
+else
+  if lsblk -noheadings --output FSTYPE "$PUAVO_ROOT_DEVICE" | grep -q "btrfs"; then
+    ROOT_IN_BTRFS=1
   fi
 fi
 
