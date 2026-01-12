@@ -3,7 +3,6 @@ class grub {
   include ::puavo_conf
 
   $grub_version = '2.12-9'
-  $grub_version_signed = "1+2.12+9"
 
   file {
     [ '/boot', '/boot/grub', '/boot/grub/puavo' ]:
@@ -40,6 +39,8 @@ class grub {
     or title == "grub-pc-bin"
   |> { ensure => $grub_version }
 
-  Package <| title == "grub-efi-amd64-signed"
-    |> { ensure => $grub_version_signed }
+  # Prevent overwriting Puavo-signed GRUB binaries
+  Package <| title == "grub-efi-ia32-signed"
+          or title == "grub-efi-amd64-signed"
+    |> { ensure => purged }
 }
