@@ -18,7 +18,7 @@ build: release/linux-unpacked/puavo-exam-browser
 
 release/linux-unpacked/puavo-exam-browser: package.json
 	npm ci
-	npm run dist
+	npm run pack
 
 .PHONY: install
 install: build installdirs
