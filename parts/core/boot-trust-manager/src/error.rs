@@ -37,9 +37,6 @@ pub enum PuavoError {
     #[error("LUKS error: {0}")]
     LuksError(String),
 
-    #[error("Invalid data: {0}")]
-    InvalidData(String),
-
     #[error("Boot vault is not installed")]
     NoBootVault,
 

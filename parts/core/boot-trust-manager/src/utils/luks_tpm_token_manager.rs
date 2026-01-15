@@ -354,11 +354,6 @@ impl LuksTpmTokenManager {
         }
     }
 
-    /// Access the underlying crypt device handle.
-    pub fn device(&self) -> &CryptDevice {
-        &self.device
-    }
-
     /// Mutable access to the underlying crypt device handle.
     pub fn device_mut(&mut self) -> &mut CryptDevice {
         &mut self.device

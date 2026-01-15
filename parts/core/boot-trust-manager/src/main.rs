@@ -11,8 +11,6 @@
 ///
 /// This module initializes logging, parses configuration, and delegates management
 /// to the `BootTrustManager`.
-use std::env;
-
 use clap::{Parser, Subcommand};
 
 use crate::{boot_trust_manager::BootTrustManager, error::PuavoError};
@@ -63,11 +61,7 @@ fn main() -> Result<(), i32> {
     .format_timestamp_secs()
     .try_init();
 
-    let mut configuration = ApplicationConfiguration::parse();
-    configuration.force_console =
-        env::var("BOOT_TRUST_MANAGER_FORCE_CONSOLE").is_ok();
-    configuration.no_reboot = env::var("BOOT_TRUST_MANAGER_NO_REBOOT").is_ok();
-
+    let configuration = ApplicationConfiguration::parse();
     let command = configuration.command.clone();
     let manager = BootTrustManager::new(configuration);
 

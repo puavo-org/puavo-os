@@ -435,13 +435,6 @@ impl BootVault {
         )
     }
 
-    /// Returns an immutable reference to the LUKS token manager for the vault.
-    pub fn device(&self) -> &LuksTpmTokenManager {
-        self.luks_device.as_ref().expect(
-            "Attempted to use boot vault device when it was not mounted",
-        )
-    }
-
     /// Returns a mutable reference to the LUKS token manager for the vault.
     pub fn device_mut(&mut self) -> &mut LuksTpmTokenManager {
         self.luks_device.as_mut().expect(
@@ -456,6 +449,8 @@ pub struct BootVaultResources {
     mountpoint: PathBuf,
 }
 
+/// Even though the version information is not currently used, it will likely be used in the future.
+#[allow(dead_code)]
 impl BootVaultResources {
     /// Construct resource helper for the vault mounted at the specified path.
     pub fn new<T: AsRef<Path>>(mountpoint: T) -> Self {
