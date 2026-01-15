@@ -42,7 +42,7 @@ ukify build \
   --initrd="$initrd_image" \
   --uname="${kernel_version}" \
   --os-release="$os_release" \
-  --cmdline="rd.emergency=halt rd.shell=0" \
+  --cmdline="rd.emergency=poweroff rd.shell=0" \
   $pcr_key_arguments \
   --pcrpkey="${key_folder}/tpm2-pcr-public-key.pem" \
   --pcr-banks=sha1,sha256 \
