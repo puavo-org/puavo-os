@@ -73,12 +73,4 @@ pub trait Configurator {
 
     /// Return a friendly name for this configurator.
     fn name(&self) -> &'static str;
-
-    /// Return the optional filename of the trigger file corresponding
-    /// to this configurator. If the filename is returned, it is expected
-    /// to be present in the loader extra directory. The trigger file
-    /// is removed before configuration.
-    fn trigger_filename(&self) -> Option<String> {
-        None
-    }
 }

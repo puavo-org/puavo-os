@@ -116,9 +116,4 @@ impl Configurator for RecoveryConfigurator {
     fn name(&self) -> &'static str {
         "Recovery"
     }
-
-    /// Return the trigger filename for this configurator.
-    fn trigger_filename(&self) -> Option<String> {
-        Some(self.configuration.filename.clone())
-    }
 }

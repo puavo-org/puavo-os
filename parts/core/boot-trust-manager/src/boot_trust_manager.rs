@@ -1,8 +1,4 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    process::Command,
-};
+use std::{fs, path::PathBuf, process::Command};
 
 use efivar::efi;
 use log::{debug, error, info, warn};
@@ -99,7 +95,6 @@ impl BootTrustManager {
     /// Returns `PuavoError` if configurator execution fails.
     fn run_configurators_with_vault(
         display: &Box<dyn UserDisplay>,
-        efi_partition_mount_path: &Path,
         mut boot_vault: BootVault,
         mut primary_partition_manager: LuksTpmTokenManager,
         configurators: Vec<Box<dyn Configurator>>,
@@ -116,19 +111,6 @@ impl BootTrustManager {
         info!("Starting configuration...");
         for mut configurator in configurators {
             debug!("Processing configurator '{}'", configurator.name());
-
-            if let Some(trigger_filename) = configurator.trigger_filename() {
-                if let Err(error) = Self::find_and_delete_configurator_file(
-                    efi_partition_mount_path,
-                    &trigger_filename,
-                ) {
-                    error!(
-                        "Skipping configurator due to error deleting its trigger file '{}': {}",
-                        trigger_filename, error
-                    );
-                    continue;
-                }
-            }
 
             if !configurator
                 .activate(&mut boot_vault, &mut primary_partition_manager)?
@@ -150,70 +132,6 @@ impl BootTrustManager {
         Ok(())
 
         // Boot vault is automatically unmounted once dropped
-    }
-
-    /// Resolve the full path to the configurator file inside the loader's
-    /// extra directory and verify its existence.
-    ///
-    /// Parameters:
-    /// - `loader_extra_directory`: path to the loader's extra directory.
-    /// - `filename`: configurator file to locate.
-    ///
-    /// Errors:
-    /// Returns `PuavoError` if existence checks fail.
-    fn find_configurator_file_from_loader_extra_directory(
-        loader_extra_directory: PathBuf,
-        filename: &String,
-    ) -> Result<PathBuf, PuavoError> {
-        let configurator_path = loader_extra_directory.join(filename);
-
-        configurator_path.try_exists()?;
-        Ok(configurator_path)
-    }
-
-    /// Locate the configurator file on the EFI system partition by resolving
-    /// the loader path and its "extra" directory.
-    ///
-    /// Parameters:
-    /// - `efi_partition_mount_path`: mount point of the EFI system partition.
-    /// - `filename`: the configurator file to locate.
-    ///
-    /// Errors:
-    /// Returns `PuavoError` if the loader or extra directory cannot be resolved
-    /// or the configurator path cannot be found.
-    fn find_configurator_file(
-        efi_partition_mount_path: &Path,
-        filename: &String,
-    ) -> Result<PathBuf, PuavoError> {
-        let loader_path = EFIBootDevice::loader_path(
-            &efi_partition_mount_path.to_path_buf(),
-        )?;
-        info!("EFI loader path: {:?}", loader_path);
-        let loader_extra_directory =
-            EFIBootDevice::loader_extra_directory_path(&loader_path)?;
-        info!("EFI loader extra directory path: {:?}", loader_extra_directory);
-        Self::find_configurator_file_from_loader_extra_directory(
-            loader_extra_directory,
-            &filename,
-        )
-    }
-
-    /// Delete the configurator file from the EFI partition.
-    ///
-    /// Parameters:
-    /// - `efi_partition_mount_path`: mount point of the EFI system partition.
-    /// - `filename`: the configurator file to delete.
-    ///
-    /// Errors:
-    /// Returns `PuavoError` if the file cannot be located or removed.
-    fn find_and_delete_configurator_file(
-        efi_partition_mount_path: &Path,
-        filename: &String,
-    ) -> Result<(), PuavoError> {
-        let configurator_file_path =
-            Self::find_configurator_file(efi_partition_mount_path, filename)?;
-        info!("Removing configurator file: {:?}", configurator_file_path);
-        fs::remove_file(&configurator_file_path).map_err(|error| error.into())
     }
 
     /// Find the current EFI boot device, mount its EFI partition, unlock the
@@ -261,7 +179,6 @@ impl BootTrustManager {
         // Use the resources for configuration
         Self::run_configurators_with_vault(
             display,
-            &efi_mount.mountpoint,
             boot_vault,
             primary_partition_manager,
             configurators,
