@@ -25,9 +25,6 @@ pub enum PuavoError {
     #[error(transparent)]
     LibcryptError(#[from] LibcryptErr),
 
-    #[error("Configuration error: {0}")]
-    ConfigurationError(serde_json::Error),
-
     #[error("Enrollment state error: {0}")]
     EnrollmentStateError(serde_json::Error),
 

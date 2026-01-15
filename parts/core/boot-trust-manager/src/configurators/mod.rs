@@ -1,12 +1,10 @@
 use crate::configurators::enrollment::EnrollmentConfigurator;
-use crate::configurators::recovery::RecoveryConfigurator;
 use crate::devices::boot_vault::BootVault;
 use crate::display::UserDisplay;
 use crate::error::PuavoError;
 use crate::utils::luks_tpm_token_manager::LuksTpmTokenManager;
 
 pub mod enrollment;
-pub mod recovery;
 
 /// Build and return all available configurator instances.
 /// Configurator becomes available when its configuration file is present.
@@ -23,8 +21,7 @@ pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
             .map(|configurator| Box::new(configurator) as Box<dyn Configurator>)
     }
 
-    let configurators = configurators(EnrollmentConfigurator::new()?)
-        .chain(configurators(RecoveryConfigurator::new()?));
+    let configurators = configurators(EnrollmentConfigurator::new()?);
 
     Ok(configurators.collect())
 }
