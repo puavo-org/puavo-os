@@ -1,0 +1,443 @@
+#!/usr/bin/env python3
+"""
+Verifies the boot components are correctly signed and match the specified manifest.
+
+Usage:
+  .aux/verify-boot-components --rootfs <rootfs-path> --key-directory <key-directory> --manifest <manifest-json>
+
+Exit codes:
+  0 success
+  1 verification failure
+  2 usage / input error
+"""
+
+import argparse
+import filecmp
+import hashlib
+import subprocess
+import sys
+from argparse import Namespace
+from pathlib import Path
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from pydantic import BaseModel, RootModel
+
+
+class Configuration:
+    """Holds paths provided via command line arguments."""
+
+    def __init__(self, rootfs: str, key_directory: str, manifest_path: str):
+        self.rootfs = rootfs
+        self.key_directory = key_directory
+        self.manifest_path = manifest_path
+
+
+class Manifest(BaseModel):
+    """
+    Boot manifest describing expected components and key patterns.
+
+    The patterns field is used to scan for all matching files to detect extraneous files
+    that shouldn't be present (e.g., old keys or UKIs left behind by the build system).
+    """
+
+    # Glob patterns to scan rootfs for boot-related files (detects extraneous files)
+    patterns: list[str]
+    # Exact list of expected boot component paths in rootfs (must match files found by patterns)
+    expected_components: list[str]
+    # Glob patterns to find Secure Boot certificates in key directory
+    secure_boot_certificate_patterns: list[str]
+    # Glob patterns to find TPM PCR public keys in key directory
+    tpm_pcr_public_key_patterns: list[str]
+    # Key filenames (in key directory) that should be installed in rootfs
+    installed_keys: list[str]
+
+    def list_files(self, rootfs: str) -> list[str]:
+        """List all files in rootfs matching the manifest patterns."""
+        files = []
+        for pattern in self.patterns:
+            for path in Path(rootfs).glob(pattern):
+                files.append(str(path))
+        return sorted(files)
+
+    def find_secure_boot_certificates(self, key_directory: str) -> list[Path]:
+        """Find Secure Boot certificates in the key directory."""
+        key_directory_path = Path(key_directory)
+        certificates = []
+        for pattern in self.secure_boot_certificate_patterns:
+            certificates.extend(key_directory_path.glob(pattern))
+        if not certificates:
+            panic(f"no secure boot certificates found in '{key_directory}'", code=2)
+        return sorted(certificates)
+
+    def find_tpm_pcr_public_keys(self, key_directory: str) -> list[Path]:
+        """Find TPM PCR public keys in the key directory."""
+        key_directory_path = Path(key_directory)
+        keys = []
+        for pattern in self.tpm_pcr_public_key_patterns:
+            keys.extend(key_directory_path.glob(pattern))
+        if not keys:
+            panic(f"no TPM PCR public keys found in '{key_directory}'", code=2)
+        return sorted(keys)
+
+    def find_installed_key(self, key_basename: str) -> str | None:
+        """Find an installed component matching the given key basename."""
+        for component in self.expected_components:
+            if Path(component).name == key_basename:
+                return component
+        return None
+
+
+class PcrSignatureEntry(BaseModel):
+    """A single PCR signature entry containing the public key fingerprint."""
+
+    pcrs: list[int]
+    pkfp: str
+    pol: str
+    sig: str
+
+
+class PcrSignature(RootModel[dict[str, list[PcrSignatureEntry]]]):
+    """PCR signature section from a UKI, keyed by hash algorithm (sha1, sha256, etc.)."""
+
+    def fingerprints(self) -> set[str]:
+        """Extract all unique public key fingerprints."""
+        return {entry.pkfp for entries in self.root.values() for entry in entries}
+
+
+def print_error(*args):
+    """Print to stderr."""
+    print(*args, file=sys.stderr)
+
+
+def panic(message: str, code: int = 1) -> None:
+    """Print error and exit."""
+    print_error(f"error: {message}")
+    raise SystemExit(code)
+
+
+def require_tool(name: str) -> None:
+    """Ensure a required command-line tool is available."""
+    from shutil import which
+
+    if which(name) is None:
+        panic(f"required command '{name}' not found", code=2)
+
+
+def compute_tpm_key_fingerprint_from_pem(pem_data: bytes) -> str:
+    """
+    Compute SHA256 fingerprint of a TPM PCR public key from PEM data.
+    Uses PKCS#1 DER encoding, equivalent to:
+      openssl rsa -pubin -in <pem> -RSAPublicKey_out -outform DER | sha256sum
+    """
+    try:
+        key = load_pem_public_key(pem_data)
+        der_pkcs1 = key.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.PKCS1,
+        )
+        return hashlib.sha256(der_pkcs1).hexdigest()
+    except Exception as error:
+        print_error(f"failed to compute TPM key fingerprint: {error}")
+        return ""
+
+
+def compute_tpm_key_fingerprint(pem_path: Path) -> str:
+    """Compute the fingerprint of a TPM PCR public key file."""
+    try:
+        pem_data = pem_path.read_bytes()
+        return compute_tpm_key_fingerprint_from_pem(pem_data)
+    except Exception as error:
+        print_error(f"failed to read TPM key '{pem_path}': {error}")
+        return ""
+
+
+def extract_uki_section(uki_path: Path, section: str) -> bytes | None:
+    """Extract a section from a UKI file."""
+    try:
+        result = subprocess.run(
+            [
+                "objcopy",
+                "--output-target",
+                "binary",
+                "--only-section",
+                section,
+                str(uki_path),
+                "/dev/stdout",
+            ],
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            print_error(
+                f"failed to extract {section} section: {result.stderr.decode()}"
+            )
+            return None
+        return result.stdout
+    except Exception as error:
+        print_error(f"failed to extract {section} section: {error}")
+        return None
+
+
+def extract_pcr_signature_section(uki_path: Path) -> PcrSignature | None:
+    """Extract and parse the '.pcrsig' section from a UKI file."""
+    data = extract_uki_section(uki_path, ".pcrsig")
+    if data is None:
+        return None
+    try:
+        return PcrSignature.model_validate_json(data)
+    except Exception as error:
+        print_error(f"failed to parse .pcrsig section: {error}")
+        return None
+
+
+def extract_pcr_public_key_section(uki_path: Path) -> bytes | None:
+    """Extract the '.pcrpkey' section from a UKI file."""
+    return extract_uki_section(uki_path, ".pcrpkey")
+
+
+def compute_expected_fingerprints(key_paths: list[Path]) -> set[str] | None:
+    """Compute fingerprints for all TPM PCR public keys."""
+    fingerprints = set()
+    for key_path in key_paths:
+        fingerprint = compute_tpm_key_fingerprint(key_path)
+        if not fingerprint:
+            print_error(f"failed to compute fingerprint for '{key_path}'")
+            return None
+        fingerprints.add(fingerprint)
+    return fingerprints
+
+
+def extract_uki_fingerprints(uki_path: Path) -> set[str] | None:
+    """Extract all unique public key fingerprints from a UKI's .pcrsig section."""
+    pcr_signature = extract_pcr_signature_section(uki_path)
+    if pcr_signature is None:
+        return None
+    return pcr_signature.fingerprints()
+
+
+def verify_efi_signature(efi_path: Path, certificate_paths: list[Path]) -> bool:
+    """Verify an EFI binary is signed with all specified certificates."""
+    for certificate_path in certificate_paths:
+        try:
+            result = subprocess.run(
+                ["sbverify", "--cert", str(certificate_path), str(efi_path)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                print_error(
+                    f"failed to verify EFI signature with certificate '{certificate_path}'"
+                )
+                return False
+        except subprocess.SubprocessError as error:
+            print_error(f"failed to verify EFI signature with sbverify: {error}")
+            return False
+    return True
+
+
+def verify_tpm_signature(uki_path: Path, expected_fingerprints: set[str]) -> bool:
+    """Verify the UKI's PCR signatures match the expected key fingerprints."""
+    actual_fingerprints = extract_uki_fingerprints(uki_path)
+    if actual_fingerprints is None:
+        return False
+
+    if expected_fingerprints != actual_fingerprints:
+        print_error(f"TPM PCR key fingerprints do not match for '{uki_path}'")
+        print_error("  expected fingerprints:")
+        for fingerprint in sorted(expected_fingerprints):
+            print_error(f"    {fingerprint}")
+        print_error("  actual fingerprints:")
+        for fingerprint in sorted(actual_fingerprints):
+            print_error(f"    {fingerprint}")
+        return False
+
+    return True
+
+
+def verify_uki_pcr_public_key(uki_path: Path, expected_fingerprints: set[str]) -> bool:
+    """Verify the UKI's embedded .pcrpkey fingerprint is in the expected set."""
+    pcrpkey_data = extract_pcr_public_key_section(uki_path)
+    if pcrpkey_data is None:
+        return False
+
+    fingerprint = compute_tpm_key_fingerprint_from_pem(pcrpkey_data)
+    if not fingerprint:
+        print_error(
+            f"failed to compute fingerprint for embedded PCR public key in '{uki_path}'"
+        )
+        return False
+
+    if fingerprint not in expected_fingerprints:
+        print_error(
+            f"embedded PCR public key fingerprint '{fingerprint}' not in expected fingerprints"
+        )
+        return False
+
+    return True
+
+
+def parse_command_line(args: list[str]) -> Namespace:
+    parser = argparse.ArgumentParser(description="Verify boot components")
+    parser.add_argument("--rootfs", required=True, help="Path to the root filesystem")
+    parser.add_argument(
+        "--key-directory", required=True, help="Path to the key directory"
+    )
+    parser.add_argument(
+        "--manifest", required=True, help="Path to the manifest JSON file"
+    )
+    return parser.parse_args(args)
+
+
+def load_configuration(arguments: Namespace) -> Configuration:
+    """Create configuration from parsed command line arguments."""
+    return Configuration(arguments.rootfs, arguments.key_directory, arguments.manifest)
+
+
+def load_manifest(manifest_path: str) -> Manifest:
+    """Load and validate manifest from JSON file."""
+    with open(manifest_path, "r") as file:
+        manifest = Manifest.model_validate_json(file.read())
+
+    # Sort for consistent comparison
+    manifest.patterns.sort()
+    manifest.expected_components.sort()
+
+    return manifest
+
+
+def verify_boot_component_files(
+    configuration: Configuration, manifest: Manifest
+) -> None:
+    """Verify the rootfs contains exactly the expected boot components."""
+    print("verifying boot component files")
+
+    # List all files that exist in the root filesystem
+    actual_components = manifest.list_files(configuration.rootfs)
+    expected_components = [
+        str(Path(configuration.rootfs, component))
+        for component in manifest.expected_components
+    ]
+
+    # If the expected components do not match the actual files, panic
+    if expected_components != actual_components:
+        print_error(
+            "root filesystem boot components do not match the expected components in the manifest."
+        )
+        print_error("expected components:")
+        for component in expected_components:
+            print_error(f"  {component}")
+        print_error("actual components:")
+        for component in actual_components:
+            print_error(f"  {component}")
+        panic(
+            f"please ensure the build is correctly configured or update the manifest at '{configuration.manifest_path}'"
+        )
+
+
+def verify_secure_boot_keys_and_signatures(
+    configuration: Configuration, manifest: Manifest
+) -> None:
+    """Verify all EFI binaries are signed with the expected Secure Boot certificates."""
+    print("verifying Secure Boot keys and signatures")
+
+    certificate_paths = manifest.find_secure_boot_certificates(
+        configuration.key_directory
+    )
+    for certificate_path in certificate_paths:
+        print(f"using certificate: {certificate_path}")
+
+    for component in manifest.expected_components:
+        if not component.endswith(".efi") and not component.endswith(".efi.signed"):
+            continue
+
+        efi_path = Path(configuration.rootfs) / component
+        print(f"verifying signature: {component}")
+
+        if not verify_efi_signature(efi_path, certificate_paths):
+            panic(f"signature verification failed for '{component}'")
+
+        print("  valid")
+
+
+def verify_tpm_keys_and_signatures(
+    configuration: Configuration, manifest: Manifest
+) -> None:
+    """Verify UKIs contain correct TPM PCR signatures and embedded public keys."""
+    print("verifying TPM keys and signatures")
+
+    # Find all TPM PCR public keys in the key directory
+    tpm_pcr_public_key_paths = manifest.find_tpm_pcr_public_keys(
+        configuration.key_directory
+    )
+
+    for key_path in tpm_pcr_public_key_paths:
+        print(f"using TPM PCR public key: {key_path}")
+
+    # Compute expected fingerprints once for all UKIs
+    expected_fingerprints = compute_expected_fingerprints(tpm_pcr_public_key_paths)
+    if expected_fingerprints is None:
+        panic("failed to compute expected TPM PCR key fingerprints")
+        return
+
+    # Verify the UKIs contain the correct TPM PCR public keys and signatures
+    for component in manifest.expected_components:
+        if not component.endswith(".uki.efi"):
+            continue
+
+        uki_path = Path(configuration.rootfs) / component
+        print(f"verifying TPM signatures: {component}")
+
+        if not verify_tpm_signature(uki_path, expected_fingerprints):
+            panic(f"TPM signature verification failed for '{component}'")
+
+        if not verify_uki_pcr_public_key(uki_path, expected_fingerprints):
+            panic(f"embedded PCR public key verification failed for '{component}'")
+
+        print("  valid")
+
+
+def verify_installed_keys(configuration: Configuration, manifest: Manifest) -> None:
+    """Verify keys from key directory are correctly installed in rootfs."""
+    print("verifying installed keys")
+
+    for key_filename in manifest.installed_keys:
+        key_path = Path(configuration.key_directory) / key_filename
+        if not key_path.exists():
+            panic(f"key '{key_filename}' not found in key directory")
+
+        installed_component = manifest.find_installed_key(key_path.name)
+        if installed_component is None:
+            panic(f"no installed component found matching key '{key_filename}'")
+            return
+
+        installed_path = Path(configuration.rootfs) / installed_component
+        if not filecmp.cmp(key_path, installed_path, shallow=False):
+            panic(
+                f"installed key '{installed_component}' does not match key directory key '{key_filename}'"
+            )
+        print(f"  key '{key_filename}' installed correctly at '{installed_component}'")
+
+
+def verify_boot_components(configuration: Configuration, manifest: Manifest) -> None:
+    """Run all boot component verifications."""
+    verify_boot_component_files(configuration, manifest)
+    verify_secure_boot_keys_and_signatures(configuration, manifest)
+    verify_tpm_keys_and_signatures(configuration, manifest)
+    verify_installed_keys(configuration, manifest)
+
+
+def main():
+    require_tool("sbverify")
+    require_tool("objcopy")
+
+    arguments = parse_command_line(sys.argv[1:])
+    configuration = load_configuration(arguments)
+    manifest = load_manifest(configuration.manifest_path)
+
+    verify_boot_components(configuration, manifest)
+
+    print("all boot components verified successfully")
+
+
+if __name__ == "__main__":
+    main()
