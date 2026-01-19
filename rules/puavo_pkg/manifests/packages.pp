@@ -34,6 +34,7 @@ class puavo_pkg::packages {
 			, 'google-earth'
 			, 'idid'
 			, 'kojo'
+			, 'ktp-controller'
 			, 'marvinsketch'
 			, 'musescore-appimage'
 			, 'msttcorefonts'
@@ -58,6 +59,11 @@ class puavo_pkg::packages {
                         , 'xournalpp' ]
 
   @puavo_pkg::install { $available_packages: ; }
+
+  # puavo-ers package requires the ktp-controller puavo-pkg
+  Puavo_pkg::Install['ktp-controller'] {
+    before +> [ Package['puavo-ers'] ],
+  }
 
   # "arduino-ottodiylib", "arduino-tm1637", "arduino-radiohead" and
   # "ohjelmointi-opetuksessa" require "arduino-ide" to be installed first.
