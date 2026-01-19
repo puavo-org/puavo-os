@@ -8,6 +8,9 @@ fi
 
 ers_mode="$(puavo-conf puavo.ers.mode)"
 case "$ers_mode" in
+  abitti2server)
+    exec /opt/ktp-controller/ktp-controller
+    ;;
   ers-applet)
     exec sudo -g puavo /usr/bin/puavo-ers-applet "$@"
     ;;
@@ -16,9 +19,6 @@ case "$ers_mode" in
     ;;
   naksu2)
     exec /usr/bin/puavo-ers-naksu2
-    ;;
-  abitti2server)
-    exec /usr/bin/puavo-ers-abitti2server
     ;;
   *)
     logger -p user.err -t puavo-ers-startup \
