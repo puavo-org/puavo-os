@@ -849,7 +849,7 @@ class packages {
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
   $nvidia_dkms_470_module   = 'nvidia-tesla-470/470.256.02'
-  $nvidia_dkms_535_module   = 'nvidia-current/535.247.01'
+  $nvidia_dkms_535_module   = 'nvidia-current/535.261.03'
   $r8168_module             = 'r8168/8.051.02'
   $virtualbox_module        = 'virtualbox/7.1.12'
 
