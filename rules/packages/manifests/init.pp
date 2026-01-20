@@ -934,15 +934,4 @@ class packages {
   Package['wireguard-tools'] {
     install_options => [ '--no-install-recommends' ],
   }
-
-  # Packages from the Docker repository
-  @package {
-    [ 'containerd.io'
-    , 'docker-buildx-plugin'
-    , 'docker-ce'
-    , 'docker-ce-cli'
-    , 'docker-ce-rootless-extras'
-    , 'docker-compose-plugin' ]:
-      ensure => present;
-  }
 }

@@ -1,0 +1,19 @@
+Package: containerd.io
+Pin: origin download.docker.com
+Pin: version <%= scope.lookupvar('docker::containerd_io_version') %>
+Pin-Priority: 1001
+
+Package: docker-buildx-plugin
+Pin: origin download.docker.com
+Pin: version <%= scope.lookupvar('docker::docker_buildx_plugin_version') %>
+Pin-Priority: 1001
+
+Package: docker-ce docker-ce-cli docker-ce-rootless-extras
+Pin: origin download.docker.com
+Pin: version <%= scope.lookupvar('docker::docker_deb_version') %>
+Pin-Priority: 1001
+
+Package: docker-compose-plugin
+Pin: origin download.docker.com
+Pin: version <%= scope.lookupvar('docker::docker_compose_plugin_version') %>
+Pin-Priority: 1001

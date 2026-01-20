@@ -21,7 +21,6 @@ class image::bundle::bootserver {
   include ::bootserver_pxe
   include ::bootserver_samba
   include ::bootserver_slapd
-  include ::docker
   include ::packages
 
   Package <| tag == tag_debian_bootserver

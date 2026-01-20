@@ -1,4 +1,5 @@
 class docker {
+  include ::apt::docker
   include ::docker::collabora
   include ::docker::nextcloud
   include ::packages
@@ -6,7 +7,18 @@ class docker {
   $docker_ip = '172.17.0.1'
   $docker_ip_with_cidr = "${docker_ip}/16"
 
+  $deb_version_suffix = "${facts['os']['distro']['release']['major']}~${facts['os']['distro']['codename']}"
+  $docker_version = '5:29.1.5-1'
+
+  $containerd_io_version         = "2.2.1-1~debian.${deb_version_suffix}"
+  $docker_buildx_plugin_version  = "0.30.1-1~debian.${deb_version_suffix}"
+  $docker_compose_plugin_version = "5.0.1-1~debian.${deb_version_suffix}"
+  $docker_deb_version            = "${docker_version}~debian.${deb_version_suffix}"
+
   file {
+    '/etc/apt/preferences.d/50-docker.pref':
+      content => template('docker/50-docker.pref');
+
     '/etc/puavo-docker':
       ensure => directory;
 
@@ -57,13 +69,13 @@ class docker {
       source => 'puppet:///modules/docker/puavo-docker.json';
   }
 
-  Package <|
-       title == 'docker-compose-plugin'
-    or title == 'docker-ce'
-    or title == 'docker-ce-cli'
-    or title == 'puavo-sharedir-manager'
-    or title == 'rsnapshot'
-    or title == 'ruby-net-ldap'
-    or title == 'systemd'
-  |>
+  # Packages from the Docker repository
+  package {
+    'containerd.io':              ensure => $containerd_io_version;
+    'docker-buildx-plugin':       ensure => $docker_buildx_plugin_version;
+    'docker-ce':                  ensure => $docker_deb_version;
+    'docker-ce-cli':              ensure => $docker_deb_version;
+    'docker-ce-rootless-extras':  ensure => $docker_deb_version;
+    'docker-compose-plugin':      ensure => $docker_compose_plugin_version;
+  }
 }
