@@ -215,7 +215,6 @@ class packages {
     , 'grub-efi-ia32-bin'
     , 'grub-pc'
     , 'grub-pc-bin'
-    , 'mokutil'
     , 'ksh'
     , 'libglib2.0-bin'
     , 'libjffi-jni'    # needed by cryptomator
@@ -232,6 +231,7 @@ class packages {
     , 'pm-utils'
     , 'rng-tools-debian'
     , 'sbsigntool'
+    , 'shim-unsigned'
     , 'systemd'
     , 'systemd-ukify'
     # , 'tomoyo-tools'  # XXX missing from Trixie
