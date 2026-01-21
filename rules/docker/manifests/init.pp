@@ -1,4 +1,5 @@
 class docker {
+  include ::apt::docker
   include ::docker::collabora
   include ::docker::nextcloud
   include ::packages
@@ -6,7 +7,23 @@ class docker {
   $docker_ip = '172.17.0.1'
   $docker_ip_with_cidr = "${docker_ip}/16"
 
+  # We follow the same Docker versions as YTL Linux
+  # (https://github.com/digabi/ytl-linux) uses, in order to remain
+  # as compatible as possible with it.  Hopefully this version is
+  # good for other Docker containers.
+  $deb_version_suffix = "${facts['os']['distro']['release']['major']}~${facts['os']['distro']['codename']}"
+  $docker_version = '5:28.5.2-1'
+
+  $containerd_io_version             = "1.7.28-1~debian.${deb_version_suffix}"
+  $docker_buildx_plugin_version      = "0.30.1-1~debian.${deb_version_suffix}"
+  $docker_ce_rootless_extras_version = "5:29.1.5-1~debian.${deb_version_suffix}"
+  $docker_compose_plugin_version     = "5.0.1-1~debian.${deb_version_suffix}"
+  $docker_deb_version                = "${docker_version}~debian.${deb_version_suffix}"
+
   file {
+    '/etc/apt/preferences.d/50-docker.pref':
+      content => template('docker/50-docker.pref');
+
     '/etc/puavo-docker':
       ensure => directory;
 
@@ -35,7 +52,7 @@ class docker {
     '/usr/local/sbin/puavo-backup-docker':
       mode    => '0755',
       require => [ File['/etc/puavo-docker/rsnapshot.conf']
-                 , Package['docker.io']
+                 , Package['docker-ce']
                  , Package['rsnapshot'], ],
       source  => 'puppet:///modules/docker/puavo-backup-docker';
 
@@ -48,7 +65,7 @@ class docker {
 
     '/usr/local/sbin/puavo-restore-docker':
       mode    => '0755',
-      require => Package['docker.io'],
+      require => Package['docker-ce'],
       source  => 'puppet:///modules/docker/puavo-restore-docker';
   }
 
@@ -57,12 +74,13 @@ class docker {
       source => 'puppet:///modules/docker/puavo-docker.json';
   }
 
-  Package <|
-       title == 'docker-compose'
-    or title == 'docker.io'
-    or title == 'puavo-sharedir-manager'
-    or title == 'rsnapshot'
-    or title == 'ruby-net-ldap'
-    or title == 'systemd'
-  |>
+  # Packages from the Docker repository
+  package {
+    'containerd.io':              ensure => $containerd_io_version;
+    'docker-buildx-plugin':       ensure => $docker_buildx_plugin_version;
+    'docker-ce':                  ensure => $docker_deb_version;
+    'docker-ce-cli':              ensure => $docker_deb_version;
+    'docker-ce-rootless-extras':  ensure => $docker_ce_rootless_extras_version;
+    'docker-compose-plugin':      ensure => $docker_compose_plugin_version;
+  }
 }

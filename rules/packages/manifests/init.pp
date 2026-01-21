@@ -64,8 +64,6 @@ class packages {
     , 'cryptsetup-initramfs'
     , 'dbus'
     , 'dnsmasq'
-    , 'docker-compose'
-    , 'docker.io'
     , 'dracut'
     , 'freeradius'
     , 'freeradius-krb5'
