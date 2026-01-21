@@ -844,15 +844,15 @@ class packages {
   }
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-  $nvidia_dkms_535_module   = 'nvidia-current/535.216.01'
+  $nvidia_dkms_535_module   = 'nvidia-current/550.163.01'
   $r8168_module             = 'r8168/8.051.02'
   $virtualbox_module        = 'virtualbox/7.1.12'
 
   $all_dkms_modules =
     $::puavoimage_class ? {
       'exam'  => [ $broadcom_sta_dkms_module ],
-      default => [ $broadcom_sta_dkms_module ]
-                 # , $nvidia_dkms_535_module    # XXX Trixie
+      default => [ $broadcom_sta_dkms_module
+                 , $nvidia_dkms_535_module ]
                  # , $r8168_module              # XXX Trixie
                  # , $virtualbox_module ]       # XXX Trixie
   }
