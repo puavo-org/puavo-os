@@ -15,9 +15,6 @@ case "$(puavo-conf puavo.xsessions.default)" in
               --comment Puavo-ERS --groups docker --user-group \
               --shell /bin/bash --uid "$ers_uid" "$ers_user"
     fi
-    chmod 700 "$ers_home"
-    # ensure ownership because Abitti 2 containers might mess that up
-    chown -R "${ers_uid}:${ers_uid}" "$ers_home"
     ;;
 
   puavo-infotv)
