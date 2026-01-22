@@ -54,4 +54,7 @@ pub enum PuavoError {
 
     #[error(transparent)]
     ParseIntError(#[from] ParseIntError),
+
+    #[error("TPM error: {0}")]
+    TpmError(String),
 }
