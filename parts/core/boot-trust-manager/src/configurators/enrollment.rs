@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs, hash::Hash, io::ErrorKind};
 
-use log::{debug, info};
+use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -15,6 +15,7 @@ use crate::{
         luks_tpm_token_manager::{
             LuksTpmEnrollmentPolicy, LuksTpmTokenManager,
         },
+        tpm::read_pcrs_as_string,
     },
 };
 
@@ -194,6 +195,52 @@ impl EnrollmentConfigurator {
         Ok(enrollment_hashes != installed_enrollment_hashes)
     }
 
+    /// Collect all unique PCR indices used by the all enrollment configurations.
+    fn collect_pcr_indices(&self) -> Vec<u32> {
+        let mut indices: Vec<u32> = self
+            .configuration
+            .enrollments
+            .iter()
+            .flat_map(|enrollment| enrollment.policy.pcr_indices())
+            .collect();
+
+        indices.sort();
+        indices.dedup();
+        indices
+    }
+
+    /// Check if the cached PCR state matches the current PCR values.
+    fn pcr_cache_matches(
+        &self,
+        resources: &BootVaultResources,
+    ) -> Result<bool, PuavoError> {
+        let pcr_indices = self.collect_pcr_indices();
+        let pcr_state = read_pcrs_as_string(&pcr_indices)?;
+        debug!("Current PCR state: {:?}", pcr_state);
+
+        let cached_pcr_state = resources.read_pcr_state()?.unwrap_or_default();
+        debug!("Cached PCR state: {:?}", cached_pcr_state);
+
+        let matches = cached_pcr_state == pcr_state;
+        debug!("PCR state unchanged: {}", matches);
+
+        Ok(matches)
+    }
+
+    /// Save the current PCR state to the boot vault cache.
+    fn save_pcr_cache(
+        &self,
+        resources: &BootVaultResources,
+    ) -> Result<(), PuavoError> {
+        let pcr_indices = self.collect_pcr_indices();
+        let pcr_state = read_pcrs_as_string(&pcr_indices)?;
+        debug!("Current PCR state: {:?}", pcr_state);
+
+        resources.write_pcr_state(pcr_state)?;
+        debug!("Saved PCR state");
+        Ok(())
+    }
+
     /// Builds the current enrollment state from the configuration.
     fn build_state_from_configurations(&self) -> EnrollmentSetState {
         let enrollments = self
@@ -292,6 +339,12 @@ impl EnrollmentConfigurator {
 
         self.build_state_from_configurations().save(&resources)?;
 
+        // Cache the PCR state after successful enrollment to skip token validation on future boots
+        // when PCR values remain unchanged.
+        if let Err(error) = self.save_pcr_cache(&resources) {
+            error!("Failed to save PCR cache: {}", error);
+        }
+
         Ok(())
     }
 }
@@ -319,6 +372,24 @@ impl Configurator for EnrollmentConfigurator {
         if self.any_configuration_changed(resources)? {
             debug!("Enrollment configurations have changed");
             return Ok(true);
+        }
+
+        // Check if PCR state matches the cache from last successful enrollment.
+        // If PCRs match, we can skip the slow token validation.
+        match self.pcr_cache_matches(resources) {
+            Ok(true) => {
+                debug!("PCR state matches cache, skipping token validation");
+                return Ok(false);
+            }
+            Ok(false) => {
+                debug!("PCR state differs from cache, will validate tokens");
+            }
+            Err(error) => {
+                error!(
+                    "Failed to check PCR cache: {}, falling back to token validation",
+                    error
+                );
+            }
         }
 
         let pin = boot_vault.pin().cloned();

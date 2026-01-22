@@ -64,6 +64,25 @@ pub struct LuksTpmEnrollmentPolicy {
 }
 
 impl LuksTpmEnrollmentPolicy {
+    /// Extract unique PCR indices used by this enrollment policy.
+    ///
+    /// Returns a sorted, deduplicated vector of PCR indices from both
+    /// specific PCR expressions and public key PCR expressions.
+    pub fn pcr_indices(&self) -> Vec<u32> {
+        let mut indices: Vec<u32> = self
+            .specific_pcrs_expressions
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .chain(self.public_key_pcrs_expressions.iter())
+            .filter_map(|expression| expression.split(':').next()?.parse().ok())
+            .collect();
+
+        indices.sort();
+        indices.dedup();
+        indices
+    }
+
     /// Finds the public keys in the configured directory and computes their digests.
     pub fn find_public_keys(&mut self) -> Result<(), PuavoError> {
         self.public_keys.clear();
