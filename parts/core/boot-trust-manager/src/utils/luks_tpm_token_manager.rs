@@ -303,6 +303,12 @@ impl LuksTpmTokenManager {
                     "--tpm2-public-key={}",
                     public_key_path.display()
                 ));
+
+                // Specify the signature file explicitly to enforce verification
+                arguments.push(
+                    "--tpm2-signature=/run/systemd/tpm2-pcr-signature.json"
+                        .to_string(),
+                );
             }
         }
 
