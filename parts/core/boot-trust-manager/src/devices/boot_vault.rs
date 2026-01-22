@@ -46,6 +46,7 @@ pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 
 /// Path to the recovery key file within the mounted vault.
 pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
+const PCR_STATE_FILENAME: &str = "pcr.state";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BootVaultUnlockMethod {
@@ -554,6 +555,29 @@ impl BootVaultResources {
     /// Return the mountpoint of the boot vault.
     pub fn mountpoint(&self) -> &PathBuf {
         &self.mountpoint
+    }
+
+    /// Write the current PCR state to the boot vault.
+    ///
+    /// Parameters:
+    /// - `pcr_state`: The PCR state to write.
+    ///
+    /// Errors:
+    /// - `PuavoError::IoError` if writing fails.
+    pub fn write_pcr_state(&self, pcr_state: String) -> Result<(), PuavoError> {
+        self.write_property(PCR_STATE_FILENAME, pcr_state)
+    }
+
+    /// Read the cached PCR state from the boot vault.
+    ///
+    /// Returns:
+    /// - `Ok(Some(state))` if a cached state exists.
+    /// - `Ok(None)` if no cached state exists.
+    ///
+    /// Errors:
+    /// - `PuavoError::IoError` if reading fails.
+    pub fn read_pcr_state(&self) -> Result<Option<String>, PuavoError> {
+        self.read_property(PCR_STATE_FILENAME)
     }
 }
 
