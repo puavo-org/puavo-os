@@ -77,6 +77,14 @@ print_message $GREEN "Everything looks ok."
 
 cd "$workdir"
 
+# Start Docker only right before Naksu2, because starting it too early
+# may cause issues with home directory hadling.
+# (Some Abitti2 containers update the certificate file inside puavo-ers
+# home directory, and if that is missing, it will end up having wrong
+# ownership).
+
+sudo -n /usr/bin/systemctl start docker.service
+
 while true; do
   print_message $GREEN "Starting Naksu2..."
   print_message $YELLOW "[$(date '+%Y-%m-%d %H:%M:%S')]"

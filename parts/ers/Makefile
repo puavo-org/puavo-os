@@ -52,7 +52,7 @@ install: installdirs
 		puavo-ers-startup \
 		puavo-ers-startvm
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
-		etc/sudoers.d/puavo-ers-applet
+		etc/sudoers.d/puavo-ers
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
 		po/de/puavo-ers-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
