@@ -11,6 +11,7 @@ depends() {
 
 install() {
     inst_multiple /usr/bin/systemd-cryptenroll \
+                  /usr/lib/systemd/systemd-pcrlock \
                   /usr/sbin/cryptsetup         \
                   /usr/sbin/puavo-boot-trust-manager
 
