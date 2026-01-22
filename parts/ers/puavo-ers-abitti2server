@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import os.path
+import pathlib
 import re
 import subprocess
 import time
@@ -80,6 +81,7 @@ def _run_networking(*args):
     return _run(
         [
             "sudo",
+            "-n",
             os.path.join(_THIS_DIR, "puavo-ers-abitti2server-networking"),
         ]
         + list(args),
@@ -88,6 +90,8 @@ def _run_networking(*args):
 
 
 def _start_naksu2_certs_dir_monitor(loop):
+    pathlib.Path(_NAKSU2_CERTS_DIR_PATH).mkdir(parents=True, exist_ok=True)
+
     naksu2_certs_dir_monitor = puavo_ers.asyncio.FileMonitor(
         loop,
         _NAKSU2_CERTS_DIR_PATH,
