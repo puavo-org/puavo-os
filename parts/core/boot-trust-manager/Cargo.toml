@@ -18,6 +18,9 @@ clap = { version = "4.5", features = ["derive"] }
 rpassword = "7"
 sha2 = "0.10.9"
 efivar = "2.0.0"
+tss-esapi = { version = "7.5.1", default-features = false }
+tss-esapi-sys = "0.5.0"
+hex = "0.4.3"
 
 [profile.release]
 strip = true
