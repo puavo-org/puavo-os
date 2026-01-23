@@ -1,6 +1,5 @@
 use std::{fs, path::PathBuf, process::Command};
 
-use efivar::efi;
 use log::{debug, error, info, warn};
 
 use crate::{
@@ -15,6 +14,7 @@ use crate::{
     display::{UserDisplay, choose_display},
     error::PuavoError,
     utils::{
+        efi,
         luks_tpm_token_manager::LuksTpmTokenManager,
         mount::{MountGuard, unmount},
         udev::filesystem_type,
@@ -102,11 +102,7 @@ impl BootTrustManager {
         mut primary_partition_manager: LuksTpmTokenManager,
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
-        let secure_boot_enabled = efivar::system()
-            .read(&efi::Variable::new("SecureBoot"))
-            .map(|(value, _)| value.ends_with(&[1]))
-            .unwrap_or(false);
-        if !secure_boot_enabled {
+        if !efi::is_secure_boot_enabled() {
             info!("Secure Boot is disabled, skipping configuration...");
             return Ok(());
         }

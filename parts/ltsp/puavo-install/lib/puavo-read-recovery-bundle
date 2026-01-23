@@ -3,7 +3,7 @@ set -eu
 
 recovery_bundle_efi_variable_path=''
 
-for path in /sys/firmware/efi/efivars/RecoveryBundle-*; do
+for path in /sys/firmware/efi/efivars/PuavoRecoveryBundle-*; do
   if [ -e "$path" ]; then
     recovery_bundle_efi_variable_path="$path"
     break
