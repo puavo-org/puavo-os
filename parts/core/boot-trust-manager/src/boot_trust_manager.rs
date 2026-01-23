@@ -18,6 +18,7 @@ use crate::{
         luks_tpm_token_manager::LuksTpmTokenManager,
         mount::{MountGuard, unmount},
         udev::filesystem_type,
+        unlock_info,
     },
 };
 
@@ -25,9 +26,6 @@ use crate::ApplicationConfiguration;
 
 /// LUKS device name for the root device
 pub const ROOT_DEVICE_NAME: &str = "root";
-
-/// Maximum size for the PCR log file
-const MAX_PCR_LOG_SIZE: usize = 2 * 1024 * 1024;
 
 /// Coordinates detection of configurators and execution of configurators.
 ///
@@ -175,9 +173,9 @@ impl BootTrustManager {
             ROOT_DEVICE_NAME,
         )?;
 
-        // Save the PCR log after successful unlock. If a future unlock fails,
-        // this log can be compared to identify what changed in the boot chain.
-        Self::save_pcr_log(&efi_mount.mountpoint);
+        // Save unlock info after successful unlock. If a future unlock fails,
+        // this info can be compared to identify what changed in the boot chain.
+        unlock_info::save_to_efi(&efi_mount.mountpoint);
 
         // Use the resources for configuration
         Self::run_configurators_with_vault(
@@ -188,48 +186,6 @@ impl BootTrustManager {
         )
 
         // EFI partition is automatically unmounted when resources are dropped
-    }
-
-    /// Save the current PCR log to the EFI partition.
-    fn save_pcr_log(efi_mount_path: &PathBuf) {
-        let output = match Command::new("/usr/lib/systemd/systemd-pcrlock")
-            .arg("cel")
-            .output()
-        {
-            Ok(output) => output,
-            Err(error) => {
-                warn!("Failed to run systemd-pcrlock for PCR log: {}", error);
-                return;
-            }
-        };
-
-        if !output.status.success() {
-            warn!(
-                "systemd-pcrlock exited with status {} while saving PCR log: {}",
-                output.status,
-                String::from_utf8_lossy(&output.stderr)
-            );
-            return;
-        }
-
-        let log_data = if output.stdout.len() > MAX_PCR_LOG_SIZE {
-            warn!(
-                "PCR log size ({} bytes) exceeds maximum ({} bytes), truncating",
-                output.stdout.len(),
-                MAX_PCR_LOG_SIZE
-            );
-            &output.stdout[..MAX_PCR_LOG_SIZE]
-        } else {
-            &output.stdout
-        };
-
-        let pcr_log_path = efi_mount_path.join("EFI/puavo/pcr.log");
-        if let Err(error) = fs::write(&pcr_log_path, log_data) {
-            warn!("Failed to write PCR log to {:?}: {}", pcr_log_path, error);
-            return;
-        }
-
-        info!("Saved PCR log to {:?}", pcr_log_path);
     }
 
     /// Shared setup logic for both manage and open operations.

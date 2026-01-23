@@ -4,3 +4,4 @@ pub mod luks_tpm_token_manager;
 pub mod mount;
 pub mod tpm;
 pub mod udev;
+pub mod unlock_info;
