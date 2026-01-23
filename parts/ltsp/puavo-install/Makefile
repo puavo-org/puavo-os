@@ -69,6 +69,7 @@ install : installdirs
 		lib/puavo-create-device-secure-boot-keys \
 		lib/puavo-image-preinst \
 		lib/puavo-prepare-secure-boot \
+		lib/puavo-prepare-tpm-configuration \
 		lib/puavo-read-recovery-bundle \
 		lib/puavo-reset \
 		lib/puavo-setup-secure-boot \

@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+# Require TPM 2.0 or exit silently
+[ -f /sys/class/tpm/tpm0/tpm_version_major ] || exit 0
+[ "$(cat /sys/class/tpm/tpm0/tpm_version_major)" = "2" ] || exit 0
+
+# Clear the TPM to ensure clean state for installation.
+# This resets all hierarchies and removes any existing lockout auth.
+tpm2_clear 2>/dev/null \
+  || panic "cannot clear TPM, please reset it in BIOS settings"
