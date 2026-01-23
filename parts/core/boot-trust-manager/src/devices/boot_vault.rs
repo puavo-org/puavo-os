@@ -63,6 +63,7 @@ pub enum BootVaultUnlockMethod {
 /// - Cleanly unmount, deactivate, and detach on demand or on drop.
 #[derive(Default)]
 pub struct BootVault {
+    enrollment_required: bool,
     loop_device: Option<LoopDevice>,
     luks_device: Option<LuksTpmTokenManager>,
     mountpoint: Option<String>,
@@ -427,6 +428,21 @@ impl BootVault {
             Some(BootVaultUnlockMethod::TpmToken(pin)) => pin.as_ref(),
             _ => None,
         }
+    }
+
+    /// Sets the PIN for TPM enrollment
+    pub fn set_pin(&mut self, pin: Option<String>) {
+        self.unlock_method = Some(BootVaultUnlockMethod::TpmToken(pin));
+    }
+
+    /// Returns whether TPM enrollment is required
+    pub fn is_enrollment_required(&self) -> bool {
+        self.enrollment_required
+    }
+
+    /// Sets the flag indicating that TPM enrollment is required
+    pub fn set_enrollment_required(&mut self, required: bool) {
+        self.enrollment_required = required;
     }
 
     /// Returns a reference to the resources for interacting with the mounted vault.

@@ -355,7 +355,12 @@ impl Configurator for EnrollmentConfigurator {
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
     ) -> Result<bool, PuavoError> {
-        // TODO: Consider resetting PIN here
+        // Check if enrollment is explicitly required (e.g. PIN change)
+        if boot_vault.is_enrollment_required() {
+            info!("Enrollment is explicitly required");
+            return Ok(true);
+        }
+
         if !matches!(
             boot_vault.unlock_method(),
             Some(BootVaultUnlockMethod::TpmToken(..))
