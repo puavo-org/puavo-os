@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+
+output_directory="${1:-/images/boot/addons}"
+tpm_lockout_auth_file="${output_directory}/tpm.lockout.auth"
+
+mkdir -p "$output_directory"
+
+# Generate random lockout auth
+umask 077 && dd if=/dev/urandom of="$tpm_lockout_auth_file" bs=32 count=1 2>/dev/null
+
+# Set lockout hierarchy authorization
+tpm2_changeauth --object-context=lockout "file:${tpm_lockout_auth_file}"
+
+# Configure dictionary attack lockout parameters
+tpm2_dictionarylockout \
+  --setup-parameters \
+  --max-tries=32 \
+  --recovery-time=60 \
+  --lockout-recovery-time=300 \
+  --auth="file:${tpm_lockout_auth_file}"
