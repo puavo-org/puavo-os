@@ -24,6 +24,19 @@ pub trait UserDisplay {
     /// Returns a `PuavoError` if the underlying backend fails.
     fn ask_password(&self, prompt: &str) -> Result<String, PuavoError>;
 
+    /// Ask the user a yes/no question.
+    ///
+    /// Parameters:
+    /// - `prompt`: The human-readable text shown before asking.
+    ///
+    /// Returns:
+    /// - `Ok(true)` if the user answered yes.
+    /// - `Ok(false)` if the user answered no.
+    ///
+    /// Errors:
+    /// Returns a `PuavoError` if the underlying backend fails.
+    fn ask_yes_no(&self, prompt: &str) -> Result<bool, PuavoError>;
+
     /// Show a message to the user.
     ///
     /// Parameters:

@@ -90,4 +90,34 @@ impl UserDisplay for PlymouthDisplay {
     fn clear(&self) -> Result<(), PuavoError> {
         self.show_message(" ")
     }
+
+    /// Ask a yes/no question via Plymouth.
+    ///
+    /// Parameters:
+    /// - `prompt`: Text to show in the Plymouth question dialog.
+    ///
+    /// Returns:
+    /// - `Ok(true)` if the user answered yes.
+    /// - `Ok(false)` if the user answered no.
+    ///
+    /// Errors:
+    /// Returns `PuavoError::PlymouthError` if the command exits non-zero,
+    /// or `PuavoError::IoError` if invoking the command fails.
+    fn ask_yes_no(&self, prompt: &str) -> Result<bool, PuavoError> {
+        let output = Command::new("plymouth")
+            .arg("ask-question")
+            .arg(format!("--prompt={} [y/n]", prompt))
+            .output()?;
+
+        if !output.status.success() {
+            return Err(PuavoError::PlymouthError(
+                output.status.code().unwrap_or(-1),
+            ));
+        }
+
+        let answer =
+            String::from_utf8_lossy(&output.stdout).trim().to_lowercase();
+
+        Ok(answer == "y" || answer == "yes")
+    }
 }

@@ -1,6 +1,6 @@
 use crate::{display::UserDisplay, error::PuavoError};
 
-use std::io::{self, Write};
+use std::io::{self, BufRead, Write};
 
 /// Console-backed `UserDisplay` implementation.
 pub struct ConsoleDisplay;
@@ -26,6 +26,36 @@ impl UserDisplay for ConsoleDisplay {
 
         let password = rpassword::read_password()?;
         Ok(password)
+    }
+
+    /// Ask a yes/no question on the controlling terminal.
+    ///
+    /// Parameters:
+    /// - `prompt`: Text printed before reading the answer.
+    ///
+    /// Returns:
+    /// - `Ok(true)` if the user answered yes.
+    /// - `Ok(false)` if the user answered no.
+    ///
+    /// Errors:
+    /// Returns `PuavoError` if reading from the terminal fails.
+    fn ask_yes_no(&self, prompt: &str) -> Result<bool, PuavoError> {
+        loop {
+            print!("{} [y/n]: ", prompt);
+            let _ = io::stdout().flush();
+
+            let mut input = String::new();
+            io::stdin().lock().read_line(&mut input)?;
+
+            match input.trim().to_lowercase().as_str() {
+                "y" | "yes" => return Ok(true),
+                "n" | "no" => return Ok(false),
+                _ => {
+                    println!("Please answer 'y' or 'n'");
+                    continue;
+                }
+            }
+        }
     }
 
     /// Print an informational message to the console.
