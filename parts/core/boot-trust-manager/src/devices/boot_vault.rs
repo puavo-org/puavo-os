@@ -48,6 +48,10 @@ pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
 const PCR_STATE_FILENAME: &str = "pcr.state";
 
+/// Path to the TPM lockout authorization file within the mounted vault.
+/// This file is used to reset the TPM dictionary attack lockout counter.
+pub const TPM_LOCKOUT_AUTH_FILENAME: &str = "tpm.lockout.auth";
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BootVaultUnlockMethod {
     TpmToken(Option<String>),
@@ -594,6 +598,11 @@ impl BootVaultResources {
     /// - `PuavoError::IoError` if reading fails.
     pub fn read_pcr_state(&self) -> Result<Option<String>, PuavoError> {
         self.read_property(PCR_STATE_FILENAME)
+    }
+
+    /// Return the path to the TPM lockout authorization file
+    pub fn tpm_lockout_auth_path(&self) -> PathBuf {
+        self.mountpoint.join(TPM_LOCKOUT_AUTH_FILENAME)
     }
 }
 

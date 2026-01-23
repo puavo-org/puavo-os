@@ -1,4 +1,6 @@
-use log::debug;
+use std::{path::Path, process::Command};
+
+use log::{debug, info};
 use tss_esapi::{
     Context,
     interface_types::algorithm::HashingAlgorithm,
@@ -92,4 +94,54 @@ pub fn read_pcrs_as_string(pcr_indices: &[u32]) -> Result<String, PuavoError> {
         .collect();
 
     Ok(lines.join("\n"))
+}
+
+/// Clear the TPM dictionary attack lockout using the lockout authorization file.
+///
+/// Parameters:
+/// - `lockout_auth_path`: Path to the lockout authorization file.
+///
+/// Returns:
+/// - `Ok(())` if the lockout was cleared successfully or if the auth file does not exist.
+/// - `Err(PuavoError)` if the command fails.
+pub fn clear_dictionary_lockout<P: AsRef<Path>>(
+    lockout_auth_path: P,
+) -> Result<(), PuavoError> {
+    let path = lockout_auth_path.as_ref();
+
+    if !path.exists() {
+        info!(
+            "TPM lockout auth file not found at {:?}, skipping lockout clear",
+            path
+        );
+        return Ok(());
+    }
+
+    debug!(
+        "Clearing TPM dictionary attack lockout using auth file: {:?}",
+        path
+    );
+
+    let auth_argument = format!("file:{}", path.display());
+    let output = Command::new("tpm2_dictionarylockout")
+        .arg("--clear-lockout")
+        .arg("--auth")
+        .arg(&auth_argument)
+        .output()
+        .map_err(|error| {
+            PuavoError::TpmError(format!(
+                "Failed to execute tpm2_dictionarylockout: {}",
+                error
+            ))
+        })?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(PuavoError::TpmError(format!(
+            "Failed to clear TPM dictionary lockout (exit code {:?}): {}",
+            output.status.code(),
+            String::from_utf8_lossy(&output.stderr)
+        )))
+    }
 }

@@ -17,6 +17,7 @@ use crate::{
         efi,
         luks_tpm_token_manager::LuksTpmTokenManager,
         mount::{MountGuard, unmount},
+        tpm,
         udev::filesystem_type,
         unlock_info,
     },
@@ -124,6 +125,15 @@ impl BootTrustManager {
             )?;
             info!("Configuration completed");
             let _ = display.clear();
+        }
+
+        // Clear TPM dictionary attack lockout if we have the auth file.
+        // This resets the lockout counter after configuration completes,
+        // which is helpful if the device was unlocked with a recovery key
+        // due to TPM lockout from failed PIN attempts.
+        let lockout_auth_path = boot_vault.resources().tpm_lockout_auth_path();
+        if let Err(error) = tpm::clear_dictionary_lockout(&lockout_auth_path) {
+            warn!("Failed to clear TPM dictionary lockout: {}", error);
         }
 
         Ok(())
