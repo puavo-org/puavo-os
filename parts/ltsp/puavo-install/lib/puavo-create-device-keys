@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+output_directory="${1:-/images/boot/addons}"
+script_directory="$(dirname "$0")"
+
+"${script_directory}/puavo-create-device-secure-boot-keys" "$output_directory"
+"${script_directory}/puavo-create-device-tpm-keys" "$output_directory"

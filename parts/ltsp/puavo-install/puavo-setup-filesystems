@@ -213,10 +213,10 @@ class BootVaultBuilder
     @device = device
   end
 
-  def build(secure_boot_keys_tmpdir)
+  def build(device_keys_temporary_directory)
     Dir.mktmpdir('puavo-boot-vault-build-') do |build_directory|
       image_path = create_image(build_directory)
-      setup_luks_container(image_path, secure_boot_keys_tmpdir)
+      setup_luks_container(image_path, device_keys_temporary_directory)
       move_to_efi(image_path)
     end
   end
@@ -230,7 +230,7 @@ class BootVaultBuilder
     image_path
   end
 
-  def setup_luks_container(image_path, secure_boot_keys_tmpdir)
+  def setup_luks_container(image_path, device_keys_temporary_directory)
     loop_device = IO.popen([ 'losetup', '--find', '--show', image_path ]).read.strip
     raise "Failed to allocate loop device" if loop_device.empty?
     begin
@@ -259,8 +259,8 @@ class BootVaultBuilder
           version_property = File.join(mountpoint, VERSION_PROPERTY)
           File.write(version_property, VERSION.to_s)
 
-          # Copy Secure Boot keys into the vault
-          copy_secure_boot_keys(mountpoint, secure_boot_keys_tmpdir)
+          # Copy all device keys (Secure Boot keys, TPM keys, etc.) into the vault
+          copy_device_keys(mountpoint, device_keys_temporary_directory)
         ensure
           run('umount', mountpoint) rescue nil
         end
@@ -291,9 +291,9 @@ class BootVaultBuilder
     end
   end
 
-  def copy_secure_boot_keys(mountpoint, secure_boot_keys_tmpdir)
-    # Copy all files from the temporary directory to the vault.
-    FileUtils.cp_r(Pathname(secure_boot_keys_tmpdir).children, mountpoint)
+  def copy_device_keys(mountpoint, device_keys_temporary_directory)
+    # Copy all device key files from the temporary directory to the vault
+    FileUtils.cp_r(Pathname(device_keys_temporary_directory).children, mountpoint)
   end
 end
 
@@ -690,7 +690,7 @@ module DiskHandler
                                               try_count: 30)
   end
 
-  def self.setup_luks_partition(fs_conf, secure_boot_keys_tmpdir)
+  def self.setup_luks_partition(fs_conf, device_keys_temporary_directory)
     encryption = fs_conf['encryption']
     handler = LuksPartitionHandler.new(
       fs_conf['puavo_partition'], EncryptionDeviceName, encryption['policy'])
@@ -713,29 +713,35 @@ module DiskHandler
       device: fs_conf['device']
     )
 
-    vault.build(secure_boot_keys_tmpdir)
+    vault.build(device_keys_temporary_directory)
 
     fs_conf['install_target'] = handler.encryption_device
   end
 
-  def self.create_device_secure_boot_key(secure_boot_keys_tmpdir)
-    script_path = '/usr/lib/puavo-ltsp-install/puavo-create-device-secure-boot-keys'
-    run(script_path, secure_boot_keys_tmpdir)
+  def self.create_device_keys(device_keys_temporary_directory)
+    script_path = '/usr/lib/puavo-ltsp-install/puavo-create-device-keys'
+    run(script_path, device_keys_temporary_directory)
   end
 
-  def self.finalize_secure_boot_keys(secure_boot_keys_tmpdir)
-    # Copy all Secure Boot key files from temporary directory into
-    # the installation.
+  def self.finalize_secure_boot_keys(device_keys_temporary_directory)
+    # Copy only Secure Boot key files from temporary directory into
+    # the installation. TPM keys remain only in the boot vault.
     final_addons_directory = '/images/boot/addons'
     FileUtils.mkdir_p(final_addons_directory)
-    FileUtils.cp_r(Pathname(secure_boot_keys_tmpdir).children,
-                   final_addons_directory)
+
+    secure_boot_files = ['secure-boot.priv', 'secure-boot.der', 'secure-boot.pem']
+    secure_boot_files.each do |filename|
+      src = File.join(device_keys_temporary_directory, filename)
+      if File.exist?(src)
+        FileUtils.cp(src, final_addons_directory)
+      end
+    end
   end
 
   def self.do_fs_setup(conf, vgname, raid_setup_done)
     fs_conf = conf.clone
 
-    Dir.mktmpdir do |secure_boot_keys_tmpdir|
+    Dir.mktmpdir('puavo-device-keys-') do |device_keys_temporary_directory|
       fs_setup_phases = []
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :create_partitions ]
@@ -743,11 +749,11 @@ module DiskHandler
       # Assign the install target, which might be overwritten by LUKS methods
       fs_setup_phases += [ :select_default_install_target ]
 
-      # Create Secure Boot keys for permanent installations.
+      # Create device keys (Secure Boot keys, TPM keys) for permanent installations.
       # Boot vault also requires these keys to be present.
       hosttype = fs_conf['hosttype']
       if hosttype != 'diskinstaller' then
-        fs_setup_phases += [ :create_device_secure_boot_key ]
+        fs_setup_phases += [ :create_device_keys ]
       end
 
       encryption = fs_conf['encryption']
@@ -768,13 +774,13 @@ module DiskHandler
         args = case fn_sym
                  when :mount_filesystems, :puavo_filesystems
                    [ fs_conf, vgname ]
-                 when :create_device_secure_boot_key,
+                 when :create_device_keys,
                       :finalize_secure_boot_keys
-                   [ secure_boot_keys_tmpdir ]
+                   [ device_keys_temporary_directory ]
                  when :create_partitions
                    [ fs_conf, raid_setup_done ]
                  when :setup_luks_partition
-                   [ fs_conf, secure_boot_keys_tmpdir ]
+                   [ fs_conf, device_keys_temporary_directory ]
                  else
                    [ fs_conf ]
                end
