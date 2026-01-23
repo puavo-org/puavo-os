@@ -10,7 +10,7 @@ use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Parse command line arguments
+    // Parse command-line arguments
     let arguments = cli::parse_arguments();
 
     // Initialize logging

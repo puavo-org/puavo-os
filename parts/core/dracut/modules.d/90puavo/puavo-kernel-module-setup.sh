@@ -2,7 +2,7 @@
 
 grep -E -q '(^| )init=/sbin/init-puavo($| )' /proc/cmdline || exit 0
 
-# Make sure the initrd filesystem is private instead of shared 
+# Make sure the initrd filesystem is private instead of shared
 # as moving mounts (see puavo-postmount) within shared mount is not supported
 mount --make-private /
 
@@ -16,7 +16,7 @@ puavo_wireless_broadcom_driver=''
 
 exec > /run/puavo/initrd.log 2>&1
 
-# check out special puavo.* kernel command line options
+# check out special puavo.* kernel command-line options
 # that need (may need?) actions on the initrd-phase
 for x in $(cat /proc/cmdline); do
     case "$x" in

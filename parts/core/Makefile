@@ -60,7 +60,7 @@ install : $(install-subdirs) installdirs
 		puavo-conf/scripts/*
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-core \
 		lib/puavo-get-boot-disks \
-		lib/puavo-install-uki-cmdline-addon
+		lib/puavo-install-uki-commandline-addon
 	ln -fns ../scripts/setup_btrfs_quotas \
 		$(DESTDIR)$(sysconfdir)/puavo-conf/hooks/puavo.image.overlay
 

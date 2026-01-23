@@ -8,10 +8,10 @@ import sys
 IMAGES_DIRECTORY = '/images'
 ADDONS_DIRECTORY = f"{IMAGES_DIRECTORY}/boot/addons"
 
-ADDON_PATH                     = f"{ADDONS_DIRECTORY}/extra.cmdline.addon.efi"
+ADDON_PATH                     = f"{ADDONS_DIRECTORY}/extra.commandline.addon.efi"
 DEVICE_SECURE_BOOT_CERTIFICATE = f"{ADDONS_DIRECTORY}/secure-boot.pem"
 DEVICE_SECURE_BOOT_PRIVATE_KEY = f"{ADDONS_DIRECTORY}/secure-boot.priv"
-KERNEL_ARGUMENTS_FILE          = f"{ADDONS_DIRECTORY}/cmdline"
+KERNEL_COMMANDLINE_FILE        = f"{ADDONS_DIRECTORY}/commandline"
 
 PUAVO_INSTALL_LIBDIR = '/usr/lib/puavo-ltsp-install'
 
@@ -49,7 +49,7 @@ def replace_if_changed(destination: str, source: str):
   shutil.move(source, destination)
 
 
-def build_command_line_addon(command_line: str):
+def build_commandline_addon(commandline: str):
   os.makedirs(ADDONS_DIRECTORY, exist_ok=True)
 
   if not (os.path.isfile(DEVICE_SECURE_BOOT_CERTIFICATE) and \
@@ -60,9 +60,9 @@ def build_command_line_addon(command_line: str):
 
   # Systemd-stub rejects an actually empty section, use a single space
   # in that case
-  section_value = command_line if command_line.strip() != '' else ' '
+  section_value = commandline if commandline.strip() != '' else ' '
 
-  temporary_command_line_addon = f"{ADDON_PATH}.tmp"
+  temporary_commandline_addon = f"{ADDON_PATH}.tmp"
 
   # Build UKI addon containing only a .cmdline section
   try:
@@ -71,32 +71,32 @@ def build_command_line_addon(command_line: str):
       f'--secureboot-private-key={DEVICE_SECURE_BOOT_PRIVATE_KEY}',
       f'--secureboot-certificate={DEVICE_SECURE_BOOT_CERTIFICATE}',
       f'--section=.cmdline:{section_value}',
-      f'--output={temporary_command_line_addon}'
+      f'--output={temporary_commandline_addon}'
     )
   except subprocess.CalledProcessError as error:
     log_error(f"failed to build command-line addon (exit code {error.returncode}): {error.stderr.strip()}")
     raise RuntimeError("failed to build command-line addon")
 
-  replace_if_changed(ADDON_PATH, temporary_command_line_addon)
+  replace_if_changed(ADDON_PATH, temporary_commandline_addon)
 
 
-def update_kernel_arguments(expected_kernel_arguments: str) -> int:
-  current_kernel_arguments = None
+def update_kernel_commandline(expected_kernel_commandline: str) -> int:
+  current_kernel_commandline = None
   try:
-    with open(KERNEL_ARGUMENTS_FILE, 'r') as file:
-      current_kernel_arguments = file.read().strip()
+    with open(KERNEL_COMMANDLINE_FILE, 'r') as file:
+      current_kernel_commandline = file.read().strip()
   except FileNotFoundError:
     pass
 
-  if expected_kernel_arguments == current_kernel_arguments:
-    log_info("kernel arguments unchanged, nothing to do")
+  if expected_kernel_commandline == current_kernel_commandline:
+    log_info("kernel command-line unchanged, nothing to do")
     return 0
 
-  log_info("kernel arguments changed, rebuilding addon")
-  log_info(f"old: {current_kernel_arguments}")
-  log_info(f"new: {expected_kernel_arguments}")
+  log_info("kernel command-line changed, rebuilding addon")
+  log_info(f"old: {current_kernel_commandline}")
+  log_info(f"new: {expected_kernel_commandline}")
 
-  build_command_line_addon(expected_kernel_arguments)
+  build_commandline_addon(expected_kernel_commandline)
 
   # Install the new command-line addon
   try:
@@ -108,12 +108,12 @@ def update_kernel_arguments(expected_kernel_arguments: str) -> int:
     log_error(error.stderr.strip() or "failed to install command line addon")
     return 1
 
-  # Update the command line file with the new arguments
+  # Update the command line file with the new commandline
   try:
-    with open(KERNEL_ARGUMENTS_FILE, 'w') as file:
-      file.write(expected_kernel_arguments)
+    with open(KERNEL_COMMANDLINE_FILE, 'w') as file:
+      file.write(expected_kernel_commandline)
   except IOError as error:
-    log_error(f"failed to write kernel arguments file: {error}")
+    log_error(f"failed to write kernel command-line file: {error}")
     return 1
 
   log_info("kernel command-line addon updated")
@@ -121,16 +121,16 @@ def update_kernel_arguments(expected_kernel_arguments: str) -> int:
 
 
 def clean_temporary_files():
-  for path in [f"{ADDON_PATH}.tmp", f"{KERNEL_ARGUMENTS_FILE}.tmp"]:
+  for path in [f"{ADDON_PATH}.tmp", f"{KERNEL_COMMANDLINE_FILE}.tmp"]:
     try:
       os.remove(path)
     except FileNotFoundError:
       pass
 
 
-def main(new_kernel_arguments) -> int:
+def main(new_kernel_commandline) -> int:
   try:
-    return update_kernel_arguments(new_kernel_arguments)
+    return update_kernel_commandline(new_kernel_commandline)
   except Exception as error:
     log_error(str(error))
     clean_temporary_files()
@@ -140,7 +140,7 @@ def main(new_kernel_arguments) -> int:
 if len(sys.argv) != 2:
   sys.exit(1)
 
-new_kernel_arguments = sys.argv[1]
+new_kernel_commandline = sys.argv[1]
 
 if __name__ == '__main__':
-  sys.exit(main(new_kernel_arguments))
+  sys.exit(main(new_kernel_commandline))

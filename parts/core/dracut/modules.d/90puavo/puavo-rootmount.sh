@@ -41,11 +41,11 @@ for x in $(cat /proc/cmdline); do
     esac
 done
 
-# If the root device was not set in kernel parameters, we have to find it
+# If the root device was not set in kernel command-line, we have to find it
 # ourselves. However, we must consider there being multiple bootable disks
 # such as mirrored RAID devices.
 if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
-  echo "root device is not set in kernel parameters, attempting to find it..."
+  echo "root device is not set in kernel command-line, attempting to find it..."
 
   # Attempt to find out the boot disk using EFI variables
   POTENTIAL_BOOT_DEVICE=$(puavo-current-efi-boot-disk)

@@ -26,7 +26,7 @@ if [ ! -d "$uki_root" ]; then
   exit 1
 fi
 
-install_command_line() {
+install_commandline() {
   local uki="$1"
   local destination="$2"
   local image_name_no_suffix="$3"
@@ -40,9 +40,9 @@ install_command_line() {
     return 1
   fi
 
-  # Install the host type specific command line
+  # Install the host type specific command-line
   cp "${boot_directory}/addons/${hosttype}.addon.efi" \
-     "${extra_directory}/cmdline.addon.efi"
+     "${extra_directory}/commandline.addon.efi"
 
   # Install device-specific addons
   if [ -d "${addons_dir}" ]; then
@@ -59,8 +59,8 @@ fi
 image_name_no_suffix=${image_name%.img}
 
 for uki in "$boot_directory"/*.uki.efi; do
-  install_command_line "$uki" "$uki_root" "$image_name_no_suffix" || {
-    echo "error: failed to install command line for UKI '$uki'" >&2
+  install_commandline "$uki" "$uki_root" "$image_name_no_suffix" || {
+    echo "error: failed to install command-line for UKI '$uki'" >&2
     exit 1
   }
 done

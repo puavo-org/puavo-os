@@ -2,7 +2,7 @@
 set -e
 
 usage() {
-  echo "Usage: $0 <key-folder> <cmdline> <output>"
+  echo "Usage: $0 <key-folder> <commandline> <output>"
   exit 1
 }
 
@@ -11,7 +11,7 @@ if [ "$#" -ne 3 ]; then
 fi
 
 key_folder=$1
-cmdline=$2
+commandline=$2
 output=$3
 output_basename=$(basename "$output")
 
@@ -19,7 +19,7 @@ output_basename=$(basename "$output")
 ukify build \
   --secureboot-private-key="${key_folder}/secure-boot.priv" \
   --secureboot-certificate="${key_folder}/secure-boot.pem" \
-  --cmdline="$cmdline" \
+  --cmdline="$commandline" \
   --sbat="sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
   $output_basename.puavo-os,1,kernel-command-line-addon,$output_basename.puavo-os,1,https://github.com/puavo-org/puavo-os" \
   --output="$output"

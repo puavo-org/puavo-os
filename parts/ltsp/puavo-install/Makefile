@@ -52,7 +52,7 @@ install : installdirs
 		puavo-update-boot-disks \
 		puavo-update-client \
 		puavo-update-service-script \
-		puavo-update-uki-command-line
+		puavo-update-uki-commandline
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
 		dbus-1/org.puavo.client.Daemon.service

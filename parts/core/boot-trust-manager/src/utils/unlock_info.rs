@@ -6,7 +6,7 @@ use serde::Serialize;
 /// Maximum size for the PCR log data
 const MAX_PCR_LOG_SIZE: usize = 1024 * 1024;
 
-/// Path to kernel command line
+/// Path to kernel command-line
 const COMMAND_LINE_PATH: &str = "/proc/cmdline";
 
 /// Base path for DMI information
@@ -60,9 +60,9 @@ impl FirmwareInfo {
 pub struct UnlockInfo {
     /// Firmware and BIOS information
     pub firmware: FirmwareInfo,
-    /// Kernel command line
+    /// Kernel command-line
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub kernel_command_line: Option<String>,
+    pub kernel_commandline: Option<String>,
     /// PCR event log
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pcr_log: Option<String>,
@@ -73,7 +73,7 @@ impl UnlockInfo {
     pub fn collect() -> Self {
         Self {
             firmware: FirmwareInfo::collect(),
-            kernel_command_line: read_kernel_command_line(),
+            kernel_commandline: read_kernel_commandline(),
             pcr_log: read_pcr_log(),
         }
     }
@@ -88,8 +88,8 @@ fn read_dmi_field(field: &str) -> Option<String> {
         .filter(|string| !string.is_empty())
 }
 
-/// Read the kernel command line
-fn read_kernel_command_line() -> Option<String> {
+/// Read the kernel command-line
+fn read_kernel_commandline() -> Option<String> {
     fs::read_to_string(COMMAND_LINE_PATH)
         .ok()
         .map(|string| string.trim().to_string())
