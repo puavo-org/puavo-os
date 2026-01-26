@@ -292,6 +292,7 @@ class packages {
     , 'shellcheck'
     , 'sloccount'
     , 'tcl9.0-doc'
+    , 'tcl-tclreadline'
     , 'tcl-thread'
     , 'tk9.0-doc'
     , 'translate-toolkit'
