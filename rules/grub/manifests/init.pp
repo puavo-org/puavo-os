@@ -38,9 +38,4 @@ class grub {
     or title == "grub-pc"
     or title == "grub-pc-bin"
   |> { ensure => $grub_version }
-
-  # Prevent overwriting Puavo-signed GRUB binaries
-  Package <| title == "grub-efi-ia32-signed"
-          or title == "grub-efi-amd64-signed"
-    |> { ensure => purged }
 }

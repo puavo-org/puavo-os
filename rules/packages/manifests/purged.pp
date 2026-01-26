@@ -4,6 +4,23 @@ class packages::purged {
   # purge packages by default
   Package { ensure => purged, }
 
+  define purge_essential_package () {
+    $package = $title
+
+    exec {
+      "force remove ${package}":
+        command => "/usr/bin/apt-get -y --allow-remove-essential purge ${package}",
+        onlyif  => "/usr/bin/test -e /var/lib/dpkg/info/${package}.list";
+    }
+  }
+
+  # Prevent overwriting Puavo-signed GRUB binaries as we sign the GRUB
+  # binaries ourselves.  As these are essential packages, we need a bit more
+  # force.
+  ::packages::purged::purge_essential_package {
+    [ 'grub-efi-amd64-signed', 'grub-efi-ia32-signed' ]: ;
+  }
+
   @package {
     [ 'asymptote-doc'           # asymptote not included in menus or anywhere, docs bigger than the main package
     , 'bzip2-doc'               # API docs, algorithm description, not needed in image
