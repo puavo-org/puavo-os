@@ -5,8 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     configurators::Configurator,
-    devices::boot_vault::{
-        BootVault, BootVaultResources, BootVaultUnlockMethod,
+    devices::{
+        boot_vault::{BootVault, BootVaultResources, BootVaultUnlockMethod},
+        unlock_restrictions::UnlockRestrictions,
     },
     display::UserDisplay,
     error::PuavoError,
@@ -338,6 +339,11 @@ impl EnrollmentConfigurator {
         )?;
 
         self.build_state_from_configurations().save(&resources)?;
+
+        let restrictions = UnlockRestrictions::from_current_state();
+        if let Err(error) = resources.write_unlock_restrictions(&restrictions) {
+            error!("Failed to save unlock restrictions: {}", error);
+        }
 
         // Cache the PCR state after successful enrollment to skip token validation on future boots
         // when PCR values remain unchanged.

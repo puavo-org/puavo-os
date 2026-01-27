@@ -11,7 +11,10 @@ use log::{debug, error, info, warn};
 use loopdev::{LoopControl, LoopDevice};
 
 use crate::{
-    devices::block_device::{BlockDevice, GenericBlockDevice},
+    devices::{
+        block_device::{BlockDevice, GenericBlockDevice},
+        unlock_restrictions::UnlockRestrictions,
+    },
     display::UserDisplay,
     error::PuavoError,
     utils::{
@@ -47,6 +50,7 @@ pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 /// Path to the recovery key file within the mounted vault.
 pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
 const PCR_STATE_FILENAME: &str = "pcr.state";
+const UNLOCK_RESTRICTIONS_FILENAME: &str = "unlock.restrictions.json";
 
 /// Path to the TPM lockout authorization file within the mounted vault.
 /// This file is used to reset the TPM dictionary attack lockout counter.
@@ -603,6 +607,38 @@ impl BootVaultResources {
     /// Return the path to the TPM lockout authorization file
     pub fn tpm_lockout_auth_path(&self) -> PathBuf {
         self.mountpoint.join(TPM_LOCKOUT_AUTH_FILENAME)
+    }
+
+    /// Save unlock restrictions to the boot vault.
+    pub fn write_unlock_restrictions(
+        &self,
+        restrictions: &UnlockRestrictions,
+    ) -> Result<(), PuavoError> {
+        let json = serde_json::to_string(restrictions)
+            .map_err(PuavoError::EnrollmentStateError)?;
+        self.write_property(UNLOCK_RESTRICTIONS_FILENAME, json)
+    }
+
+    /// Load unlock restrictions from the boot vault.
+    pub fn read_unlock_restrictions(
+        &self,
+    ) -> Result<Option<UnlockRestrictions>, PuavoError> {
+        match self.read_property(UNLOCK_RESTRICTIONS_FILENAME)? {
+            Some(json) => {
+                let restrictions = serde_json::from_str(&json)
+                    .map_err(PuavoError::EnrollmentStateError)?;
+                Ok(Some(restrictions))
+            }
+            None => Ok(None),
+        }
+    }
+
+    /// Check that all saved unlock restrictions are satisfied.
+    pub fn check_unlock_restrictions(&self) -> Result<(), PuavoError> {
+        match self.read_unlock_restrictions()? {
+            Some(restrictions) => restrictions.check(),
+            None => Ok(()),
+        }
     }
 }
 

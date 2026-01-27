@@ -57,4 +57,9 @@ pub enum PuavoError {
 
     #[error("TPM error: {0}")]
     TpmError(String),
+
+    #[error(
+        "Host type '{actual}' does not match the expected value of '{expected}'"
+    )]
+    HostTypeMismatch { expected: String, actual: String },
 }

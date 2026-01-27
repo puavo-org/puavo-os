@@ -175,6 +175,9 @@ impl BootTrustManager {
         boot_vault.mount(&boot_vault_image_path, display)?;
         info!("Boot vault mounted");
 
+        // Check unlock restrictions before unlocking the primary partition.
+        boot_vault.resources().check_unlock_restrictions()?;
+
         let mut primary_partition_manager =
             LuksTpmTokenManager::from_device_path(primary_device_path)?;
 
