@@ -103,7 +103,7 @@ install : installdirs
 		pam/puavo-manage-homedir \
 		pam/puavo-manage-user-role-groups \
 		pam/puavo-setup-primary-user \
-		pam/restrict-logins-if-personally-administered
+		pam/restrict-logins-if-with-ssh-controls
 
 	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system \
 		systemd/*

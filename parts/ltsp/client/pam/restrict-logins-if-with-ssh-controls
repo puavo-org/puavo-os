@@ -2,8 +2,12 @@
 
 set -eu
 
+allow() {
+  exit 0
+}
+
 deny() {
-  echo 'Access denied because of personally administered restrictions.' >&2
+  echo 'Access denied because user does not allow admins in.' >&2
   exit 1
 }
 
@@ -14,7 +18,11 @@ is_admin_user() {
 
 # Allow "root" and "Debian-gdm" always.
 if [ "$PAM_USER" = 'root' -o "$PAM_USER" = 'Debian-gdm' ]; then
-  exit 0
+  allow
+fi
+
+if ! is_admin_user; then
+  deny
 fi
 
 if [ -e /run/puavo/nbd-server ]; then
@@ -22,34 +30,22 @@ if [ -e /run/puavo/nbd-server ]; then
   # (laptops are in maintenance mode, and fatclients are... well,
   # user data is on servers anyway, and we do not know what
   # "personally administered" means on netbooting hosts).
-  exit 0
+  allow
 fi
 
-if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
-  # no special restrictions on hosts which are not personally administered
-  exit 0
+if ! puavo-conf puavo.support.show_accesscontrols_for | grep -qw ssh; then
+  # If a user can not specifically allow/deny ssh in, user has no control
+  # over whether admin should be allowed in, and thus we allow admin in.
+  allow
 fi
 
-#
-# this host is personally administered so special rules apply
-#
+# check if incoming is accepted
+incoming_accepted=$(
+  /usr/lib/puavo-ltsp-client/admin-remote-connections --is-incoming-accepted)
 
-if [ "$(puavo-conf puavo.xsessions.user_registration.enabled)" = 'true' ]; then
-  # If user registration is enabled, we can let the admins in (this is a
-  # special mode meaning that this host is not properly set up quite yet).
-  exit 0
-fi
-
-if is_admin_user; then
-  incoming_accepted=$(
-    /usr/lib/puavo-ltsp-client/admin-remote-connections --is-incoming-accepted)
-
-  if [ "$incoming_accepted" = 'yes' ]; then
-    exit 0
-  fi
-
+if [ "$incoming_accepted" != 'yes' ]; then
   deny
 fi
 
 # okay, we let you in
-exit 0
+allow
