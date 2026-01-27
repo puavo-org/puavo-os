@@ -959,7 +959,7 @@ class RemoteAssistance:
           if puavoconf_value == '':
             puavoconf_value = []
           else:
-            puavoconf_value = puavoconf_value.split(',')
+            puavoconf_value = puavoconf_value.split()
         elif config_key == 'ssh_access_timeout':
           if puavoconf_value == '':
             puavoconf_value = None

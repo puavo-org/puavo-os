@@ -405,7 +405,7 @@
   },
   "puavo.support.show_accesscontrols_for": {
     "default": "",
-    "description": "A comma-separated list of remote access methods to show access controls for, 'ssh' is a possible option",
+    "description": "A whitespace-separated list of remote access methods to show access controls for, 'ssh' is a possible option",
     "typehint": "string"
   },
   "puavo.support.ssh_access_timeout": {
