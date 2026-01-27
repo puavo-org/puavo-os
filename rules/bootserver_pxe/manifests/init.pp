@@ -18,10 +18,6 @@ class bootserver_pxe {
       filedir => '/usr/lib/grub/pxe',
       require => Package['grub-pc'];
 
-    [ 'efi32/grub-pxe-i386.efi' ]:
-      filedir => '/usr/lib/grub/pxe',
-      require => Package['grub-efi-ia32-bin'];
-
     [ 'efi64/grub-pxe-x64.efi' ]:
       filedir => '/usr/lib/grub/pxe',
       require => Package['grub-efi-amd64-bin'];
@@ -32,13 +28,8 @@ class bootserver_pxe {
     [ '/var'
     , '/var/lib'
     , '/var/lib/tftpboot'
-    , '/var/lib/tftpboot/efi32'
     , '/var/lib/tftpboot/efi64' ]:
       ensure => directory;
-
-    [ '/var/lib/tftpboot/efi32/ltsp', '/var/lib/tftpboot/efi64/ltsp' ]:
-      ensure => link,
-      target => '../ltsp';
   }
 
 }
