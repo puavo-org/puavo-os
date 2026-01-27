@@ -411,7 +411,7 @@ impl Configurator for EnrollmentConfigurator {
         primary_partition: &mut LuksTpmTokenManager,
         display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
-        let _ = display.show_message("Enrolling...");
+        let _ = display.show_message("Configuring disk encryption...");
         self.enroll_all(boot_vault, primary_partition)
     }
 
