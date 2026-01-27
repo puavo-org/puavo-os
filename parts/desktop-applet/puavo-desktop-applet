@@ -915,9 +915,6 @@ class RemoteAssistance:
     self.applet = applet
     self.config = self.parse_config()
 
-    # always disable vino remote access
-    self.disable_vino_remote_access()
-
     try:
       if 'ssh' in self.config['show_accesscontrols_for']:
         time_when_ssh_was_enabled = self.time_when_ssh_was_enabled()
@@ -936,17 +933,15 @@ class RemoteAssistance:
       self.config['show_accesscontrols_for'] \
         = filter(lambda x: x != 'ssh', self.config['show_accesscontrols_for'])
 
-    self.latest_vino_enabled = None
-    self.latest_ssh_enabled  = None
+    self.latest_ssh_enabled = None
 
 
   def parse_config(self):
     config = {
       'new_bugreport_browser':   'firefox',
       'new_bugreport_url':       None,
-      'show_accesscontrols_for': [ 'vino' ],
+      'show_accesscontrols_for': [],
       'ssh_access_timeout':      None,
-      'vino_network_interface':  None,
     }
 
     for config_key in config.keys():
@@ -992,32 +987,6 @@ class RemoteAssistance:
     self.call_puavo_admin_remote_connections([ '--accept-incoming' ])
 
 
-  def enable_vino_remote_access(self, network_interface):
-    dconf_values = {
-      '/org/gnome/desktop/remote-access/enabled':            "true",
-      '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
-      '/org/gnome/desktop/remote-access/notify-on-connect':  "true",
-      '/org/gnome/desktop/remote-access/prompt-enabled':     "true",
-      '/org/gnome/desktop/remote-access/require-encryption': "true",
-      '/org/gnome/desktop/remote-access/view-only':          "false",
-    }
-
-    # we may want to restrict remote access to a particular network
-    # interface
-    if network_interface:
-      network_interface_dconf_value = ("'%s'" % network_interface)
-    else:
-      network_interface_dconf_value = "''"
-
-    dconf_values['/org/gnome/desktop/remote-access/network-interface'] \
-      = network_interface_dconf_value
-
-    self.set_dconf_values(dconf_values)
-
-    subprocess.Popen([ '/usr/lib/vino/vino-server', '--sm-disable' ],
-                     close_fds=True)
-
-
   def check_ssh_remote_access(self):
     args = [ '--is-incoming-accepted' ]
     status = self.call_puavo_admin_remote_connections(args)
@@ -1025,33 +994,8 @@ class RemoteAssistance:
     return (status.rstrip(os.linesep) == 'yes')
 
 
-  def check_vino_remote_access(self):
-    dconf_key = '/org/gnome/desktop/remote-access/enabled'
-    out = subprocess.check_output([ 'dconf', 'read', dconf_key ]) \
-                    .decode('utf-8')
-
-    return (out.rstrip(os.linesep) == 'true')
-
-
   def disable_ssh_remote_access(self):
     self.call_puavo_admin_remote_connections([ '--reject-incoming' ])
-
-
-  def disable_vino_remote_access(self):
-    dconf_values = {
-      '/org/gnome/desktop/remote-access/enabled':            "false",
-      '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
-      '/org/gnome/desktop/remote-access/network-interface':  "''",
-      '/org/gnome/desktop/remote-access/notify-on-connect':  "true",
-      '/org/gnome/desktop/remote-access/prompt-enabled':     "true",
-      '/org/gnome/desktop/remote-access/require-encryption': "true",
-      '/org/gnome/desktop/remote-access/view-only':          "true",
-    }
-
-    self.set_dconf_values(dconf_values)
-
-    user = getpass.getuser()
-    subprocess.call([ 'pkill', '-x', '-U', user, 'vino-server' ])
 
 
   def disable_stale_ssh_remote_access(self, timeout_seconds, time_when_enabled):
@@ -1104,11 +1048,6 @@ class RemoteAssistance:
       if ssh_enabled == wanting_enabled_state:
         available_list.append('SSH')
 
-    if self.vino_controls_available():
-      vino_enabled = self.check_vino_remote_access()
-      if vino_enabled == wanting_enabled_state:
-        available_list.append('VNC')
-
     if len(available_list) == 0:
         return None
 
@@ -1125,14 +1064,7 @@ class RemoteAssistance:
       self.latest_ssh_enabled = self.check_ssh_remote_access()
       ssh_settings_changed = (old_latest_ssh_enabled != self.latest_ssh_enabled)
 
-    vino_settings_changed = False
-    if self.vino_controls_available():
-      old_latest_vino_enabled = self.latest_vino_enabled
-      self.latest_vino_enabled = self.check_vino_remote_access()
-      vino_settings_changed \
-        = (old_latest_vino_enabled != self.latest_vino_enabled)
-
-    return ssh_settings_changed or vino_settings_changed
+    return ssh_settings_changed
 
 
   def create_access_controls(self):
@@ -1178,19 +1110,12 @@ class RemoteAssistance:
     if self.ssh_controls_available():
       self.disable_ssh_remote_access()
 
-    if self.vino_controls_available():
-      self.disable_vino_remote_access()
-
     self.applet.create_menu()
 
 
   def enable_remote_access(self, widget):
     if self.ssh_controls_available():
       self.enable_ssh_remote_access()
-
-    if self.vino_controls_available():
-      interface = self.config['vino_network_interface']
-      self.enable_vino_remote_access(interface)
 
     self.applet.create_menu()
 
@@ -1220,14 +1145,6 @@ class RemoteAssistance:
 
   def ssh_controls_available(self):
     return ('ssh' in self.config['show_accesscontrols_for'])
-
-
-  def vino_controls_available(self):
-    # vino-server can not be started in login screen
-    if getpass.getuser() == 'Debian-gdm':
-      return False
-
-    return ('vino' in self.config['show_accesscontrols_for'])
 
 
   def append_items_to_menu(self):

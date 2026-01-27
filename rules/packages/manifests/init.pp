@@ -742,7 +742,6 @@ class packages {
     , 'totem'
     , 'transmission-gtk'
     , 'unzip'
-    # , 'vino'                                  # XXX Trixie
     , 'wireless-tools'
     , 'wpasupplicant'
     , 'xdg-desktop-portal-gnome'                # for Nautilus

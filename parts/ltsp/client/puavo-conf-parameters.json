@@ -404,19 +404,14 @@
     "typehint": "string"
   },
   "puavo.support.show_accesscontrols_for": {
-    "default": "vino",
-    "description": "A comma-separated list of remote access methods to show access controls for, 'ssh' and 'vino' and possible options",
+    "default": "",
+    "description": "A comma-separated list of remote access methods to show access controls for, 'ssh' is a possible option",
     "typehint": "string"
   },
   "puavo.support.ssh_access_timeout": {
     "default": "",
     "description": "Time in seconds for enabled remote ssh access, use 0 to disable remote ssh",
     "typehint": "integer"
-  },
-  "puavo.support.vino_network_interface": {
-    "default": "eth0",
-    "description": "The network interface where vino-server accepts connections",
-    "typehint": "string"
   },
   "puavo.swap.local.enabled": {
     "default": "true",
