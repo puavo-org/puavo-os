@@ -192,9 +192,7 @@ subnet #{ iface.subnet } netmask #{ iface.ip.netmask } {
     next-server                 #{ iface.ip };
 
     if substring(option vendor-class-identifier, 0, 9) = "PXEClient" {
-      if option architecture-type = 00:06 {
-        filename "/efi32/grub-pxe-i386.efi";
-      } elsif option architecture-type = 00:07 {
+      if option architecture-type = 00:07 {
         filename "/efi64/grub-pxe-x64.efi";
       } elsif option architecture-type = 00:09 {
         filename "/efi64/grub-pxe-x64.efi";
