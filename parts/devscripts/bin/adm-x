@@ -15,10 +15,15 @@ fi
 default_path=
 declare -a choices user_ids
 
-xauthority_files=$(ls -rt /run/user/*/gdm/Xauthority 2>/dev/null || true)
+gdm_xauthority_files=$(ls -rt /run/user/*/gdm/Xauthority 2>/dev/null || true)
 
-if [ -z "$xauthority_files" ]; then
-  # We are guessing DISPLAY
+if [ -z "$gdm_xauthority_files" ]; then
+  for xauthority in /run/lightdm/root/*; do
+    test -e "$xauthority" || continue
+    display=${xauthority#/run/lightdm/root/}
+    exec env "DISPLAY=${display}" "XAUTHORITY=${xauthority}" "$@"
+  done
+  # We are guessing DISPLAY without XAUTHORITY
   exec env DISPLAY=:0 "$@"
 fi
 
@@ -26,7 +31,7 @@ echo 'The following user sessions are available:'
 echo
 
 i=0
-for xauthority in $xauthority_files; do
+for xauthority in $gdm_xauthority_files; do
   test -e "$xauthority" || continue
   user_dir=${xauthority%/gdm/Xauthority}
   user_id=${user_dir#/run/user/}
