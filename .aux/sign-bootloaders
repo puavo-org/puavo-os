@@ -28,23 +28,43 @@ certificate="${key_directory}/secure-boot.pem"
 [ -f "$private_key" ]      || panic "private key not found at '$private_key'"
 [ -f "$certificate" ]      || panic "certificate not found at '$certificate'"
 
-sign_grub_architecture_bootloaders() {
+if ! command -v grub-mkstandalone >/dev/null 2>&1; then
+  panic "grub-mkstandalone not found"
+fi
+
+shared_build_directory=$(mktemp -d) || panic "failed to create shared build directory"
+cleanup_all() {
+  rm -rf -- "$shared_build_directory"
+}
+trap cleanup_all EXIT INT TERM
+
+create_grub_architecture_bootloader() {
   architecture=$1
 
-  # Use GRUB binaries from monolithic directory, because modules can not be loaded while Secure Boot is enabled
-  grub_monolithic_directory="${rootfs_directory}/usr/lib/grub/${architecture}/monolithic"
+  # Per-architecture build directory under the shared build directory
+  grub_build_directory="${shared_build_directory}/${architecture}"
+  mkdir -p "$grub_build_directory"
+
+  case "$architecture" in
+    x86_64-efi) grub_output_name=grubx64.efi ;;
+    i386-efi) grub_output_name=grubia32.efi ;;
+    *) panic "unsupported architecture '$architecture'"
+  esac
+  grub_output="${grub_build_directory}/${grub_output_name}"
+
+  echo "creating GRUB bootloader for ${architecture}..."
+  .aux/create-grub-bootloader "$architecture" "$grub_output"
+
+  # Create a directory for the signed bootloader
   grub_signed_directory="${rootfs_directory}/usr/lib/grub/${architecture}-signed"
   mkdir -p "$grub_signed_directory"
 
-  [ -d "$grub_monolithic_directory" ] || panic "directory '$grub_monolithic_directory' does not exist"
-  [ -d "$grub_signed_directory" ] || panic "directory '$grub_signed_directory' does not exist"
-
-  echo "signing GRUB binaries for ${architecture}..."
-  .aux/sign-efi-directory "$grub_monolithic_directory" "$private_key" "$certificate" "$grub_signed_directory"
+  echo "signing GRUB bootloader for ${architecture}..."
+  .aux/sign-efi-directory "$grub_build_directory" "$private_key" "$certificate" "$grub_signed_directory"
 }
 
 for architecture in i386-efi x86_64-efi; do
-  sign_grub_architecture_bootloaders "$architecture"
+  create_grub_architecture_bootloader "$architecture"
 done
 
 shim_source_directory="${rootfs_directory}/usr/lib/shim"

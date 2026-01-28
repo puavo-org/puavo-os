@@ -1,0 +1,80 @@
+#!/bin/sh
+set -eu
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+usage() {
+  echo "Usage: $0 <architecture> <output>"
+  exit 1
+}
+
+if [ $# -ne 2 ]; then
+  usage
+fi
+
+architecture="$1"
+output="$2"
+
+build_directory=$(mktemp -d)
+cleanup() {
+  rm -rf "${build_directory}"
+}
+trap cleanup EXIT INT TERM
+
+modules="
+  all_video
+  boot
+  btrfs
+  cat
+  chain
+  configfile
+  echo
+  fat
+  font
+  gettext
+  gfxmenu
+  gfxterm
+  gzio
+  jpeg
+  loadenv
+  loopback
+  linux
+  ls
+  lvm
+  normal
+  ntfs
+  part_msdos
+  part_gpt
+  png
+  probe
+  regexp
+  search
+  search_fs_uuid
+  search_fs_file
+  search_label
+  sleep
+  smbios
+  squash4
+  test
+  true
+  video
+  "
+
+sbat_file="${build_directory}/sbat"
+cat > "$sbat_file" <<EOF
+sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
+grub,5,Free Software Foundation,grub,2.12,https://www.gnu.org/software/grub/
+grub.puavo,1,Puavo,grub2,2.12,https://github.com/puavo-org/puavo-os
+EOF
+
+modules_directory="/usr/lib/grub/${architecture}/"
+
+grub-mkstandalone \
+  --directory "${modules_directory}" \
+  --format "${architecture}" \
+  --sbat="$sbat_file" \
+  --modules="$modules" \
+  --output="$output"
