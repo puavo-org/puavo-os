@@ -45,6 +45,9 @@ class pam {
     '/etc/pam.d/puavo-cached-auth':
       source => 'puppet:///modules/pam/puavo-cached-auth';
 
+    '/etc/pam.d/sshd':
+      source => 'puppet:///modules/pam/sshd';
+
     '/etc/pam.d/sudo':
       source => 'puppet:///modules/pam/sudo';
 

@@ -7,7 +7,7 @@ allow() {
 }
 
 deny() {
-  echo 'Access denied because user does not allow admins in.' >&2
+  echo 'Access denied because user(s) do not allow admins in.' >&2
   exit 1
 }
 
