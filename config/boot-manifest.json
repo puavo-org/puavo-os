@@ -12,14 +12,8 @@
     "etc/puavo-conf/secure-boot*.der"
   ],
   "expected_components": [
-    "usr/lib/grub/x86_64-efi-signed/gcdx64.efi.signed",
-    "usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed",
-    "usr/lib/grub/x86_64-efi-signed/grubnetx64-installer.efi.signed",
     "usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed",
-    "usr/lib/grub/i386-efi-signed/gcdia32.efi.signed",
     "usr/lib/grub/i386-efi-signed/grubia32.efi.signed",
-    "usr/lib/grub/i386-efi-signed/grubnetia32.efi.signed",
-    "usr/lib/grub/i386-efi-signed/grubnetia32-installer.efi.signed",
 
     "usr/lib/shim/fbx64.efi.signed",
     "usr/lib/shim/mmx64.efi.signed",
