@@ -1,6 +1,6 @@
 diff -ruN gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss
---- gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	1970-01-01 02:00:00.000000000 +0200
-+++ gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	2025-08-14 14:51:28.028427115 +0300
+--- gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	1970-01-01 01:00:00.000000000 +0100
++++ gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss	2026-01-28 08:06:26.368041551 +0100
 @@ -0,0 +1,12 @@
 +/* Puavo */
 +
@@ -15,8 +15,8 @@ diff -ruN gnome-shell/data/theme/gnome-shell-sass/widgets/_puavo.scss gnome-shel
 +  color: #ffaa00;
 +}
 diff -ruN gnome-shell/data/theme/gnome-shell-sass/_widgets.scss gnome-shell/data/theme/gnome-shell-sass/_widgets.scss
---- gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2025-06-29 13:35:41.000000000 +0300
-+++ gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2025-08-14 14:51:28.028427115 +0300
+--- gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2025-11-24 15:16:08.000000000 +0100
++++ gnome-shell/data/theme/gnome-shell-sass/_widgets.scss	2026-01-28 08:06:26.368041551 +0100
 @@ -47,3 +47,5 @@
  @import 'widgets/looking-glass';
  // Lock / login screen
@@ -24,8 +24,8 @@ diff -ruN gnome-shell/data/theme/gnome-shell-sass/_widgets.scss gnome-shell/data
 +// Puavo customizations
 +@import 'widgets/puavo';
 diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
---- gnome-shell/js/gdm/authPrompt.js	2025-08-14 14:48:19.000000000 +0300
-+++ gnome-shell/js/gdm/authPrompt.js	2025-08-14 14:51:28.028427115 +0300
+--- gnome-shell/js/gdm/authPrompt.js	2026-01-28 08:03:00.172035660 +0100
++++ gnome-shell/js/gdm/authPrompt.js	2026-01-28 08:06:26.368041551 +0100
 @@ -1,4 +1,5 @@
  import Clutter from 'gi://Clutter';
 +import Gio from 'gi://Gio';
@@ -176,7 +176,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          let capsLockPlaceholder = new St.Label();
          this.add_child(capsLockPlaceholder);
  
-@@ -220,6 +329,7 @@
+@@ -221,6 +330,7 @@
              entry.clutter_text.connect('text-changed', () => {
                  if (!this._userVerifier.hasPendingMessages)
                      this._fadeOutMessage();
@@ -184,7 +184,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
              });
  
              entry.clutter_text.connect('activate', () => {
-@@ -282,6 +392,13 @@
+@@ -283,6 +393,13 @@
          this.verificationStatus = AuthPromptStatus.VERIFICATION_IN_PROGRESS;
          this.updateSensitivity(false);
  
@@ -198,7 +198,7 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          if (shouldSpin)
              this.startSpinning();
  
-@@ -582,6 +699,17 @@
+@@ -594,6 +711,17 @@
          wiggle(this._message, wiggleParameters);
      }
  
@@ -214,9 +214,9 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 +    }
 +
      updateSensitivity(sensitive) {
-         if (this._entry.reactive === sensitive)
-             return;
-@@ -628,6 +756,18 @@
+         let authWidget;
+ 
+@@ -647,6 +775,18 @@
          this.cancelButton.can_focus = this._hasCancelButton;
          this._preemptiveAnswer = null;
  
@@ -236,8 +236,8 @@ diff -ruN gnome-shell/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
              this._userVerifier.cancel();
  
 diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
---- gnome-shell/js/gdm/loginDialog.js	2025-08-14 14:48:19.000000000 +0300
-+++ gnome-shell/js/gdm/loginDialog.js	2025-08-14 14:51:28.028427115 +0300
+--- gnome-shell/js/gdm/loginDialog.js	2026-01-28 08:03:00.160035660 +0100
++++ gnome-shell/js/gdm/loginDialog.js	2026-01-28 08:06:26.368041551 +0100
 @@ -566,7 +566,7 @@
          // login screen. It can be activated to reveal an entry for
          // manually entering the username.
@@ -264,9 +264,9 @@ diff -ruN gnome-shell/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
          let userName = item.user.get_user_name();
          let hold = new Batch.Hold();
 diff -ruN gnome-shell/js/gdm/util.js gnome-shell/js/gdm/util.js
---- gnome-shell/js/gdm/util.js	2025-06-29 13:35:41.000000000 +0300
-+++ gnome-shell/js/gdm/util.js	2025-08-14 14:51:28.028427115 +0300
-@@ -37,6 +37,7 @@
+--- gnome-shell/js/gdm/util.js	2025-11-24 15:16:08.000000000 +0100
++++ gnome-shell/js/gdm/util.js	2026-01-28 08:06:26.368041551 +0100
+@@ -38,6 +38,7 @@
  export const BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
  export const BANNER_MESSAGE_PATH_KEY = 'banner-message-path';
  export const ALLOWED_FAILURES_KEY = 'allowed-failures';
@@ -287,12 +287,12 @@ diff -ruN gnome-shell/js/gdm/util.js gnome-shell/js/gdm/util.js
  
      async _verificationFailed(serviceName, shouldRetry) {
 diff -ruN gnome-shell/po/de.po gnome-shell/po/de.po
---- gnome-shell/po/de.po	2025-06-29 13:35:41.000000000 +0300
-+++ gnome-shell/po/de.po	2025-08-14 14:51:28.028427115 +0300
-@@ -692,8 +692,8 @@
+--- gnome-shell/po/de.po	2025-11-24 15:16:08.000000000 +0100
++++ gnome-shell/po/de.po	2026-01-28 08:07:30.344043379 +0100
+@@ -691,8 +691,8 @@
  msgstr "Beenden erzwingen"
  
- #: js/gdm/loginDialog.js:542
+ #: js/gdm/loginDialog.js:554
 -msgid "Not listed?"
 -msgstr "Nicht aufgeführt?"
 +msgid "Login as another user"
@@ -300,7 +300,7 @@ diff -ruN gnome-shell/po/de.po gnome-shell/po/de.po
  
  #. Translators: this message is shown below the username entry field
  #. to clue the user in on how to login to the local network realm
-@@ -3986,6 +3986,14 @@
+@@ -3985,6 +3985,14 @@
  #~ msgid "Index of the currently selected view in the application picker."
  #~ msgstr "Index der aktuell gewählten Ansicht in der Anwendungsauswahl."
  
@@ -316,12 +316,12 @@ diff -ruN gnome-shell/po/de.po gnome-shell/po/de.po
  #~ msgstr "Häufig genutzte Anwendungen erscheinen hier"
  
 diff -ruN gnome-shell/po/fi.po gnome-shell/po/fi.po
---- gnome-shell/po/fi.po	2025-06-29 13:35:41.000000000 +0300
-+++ gnome-shell/po/fi.po	2025-08-14 14:51:28.032427098 +0300
-@@ -666,8 +666,8 @@
+--- gnome-shell/po/fi.po	2025-11-24 15:16:08.000000000 +0100
++++ gnome-shell/po/fi.po	2026-01-28 08:07:58.312044178 +0100
+@@ -624,8 +624,8 @@
  msgstr "Pakota lopetus"
  
- #: js/gdm/loginDialog.js:554
+ #: js/gdm/loginDialog.js:551
 -msgid "Not listed?"
 -msgstr "Ei luettelossa?"
 +msgid "Login as another user"
@@ -329,7 +329,7 @@ diff -ruN gnome-shell/po/fi.po gnome-shell/po/fi.po
  
  #. Translators: this message is shown below the username entry field
  #. to clue the user in on how to login to the local network realm
-@@ -3907,6 +3907,14 @@
+@@ -3811,6 +3811,14 @@
  #~ msgid "Index of the currently selected view in the application picker."
  #~ msgstr "Parhaillaan valitun näkymän indeksi sovellusvalitsimessa."
  
@@ -345,8 +345,8 @@ diff -ruN gnome-shell/po/fi.po gnome-shell/po/fi.po
  #~ msgstr "Usein käytetyt sovellukset ilmestyvät tänne"
  
 diff -ruN gnome-shell/po/fr.po gnome-shell/po/fr.po
---- gnome-shell/po/fr.po	2025-06-29 13:35:41.000000000 +0300
-+++ gnome-shell/po/fr.po	2025-08-14 14:51:28.032427098 +0300
+--- gnome-shell/po/fr.po	2025-11-24 15:16:08.000000000 +0100
++++ gnome-shell/po/fr.po	2026-01-28 08:06:26.372041551 +0100
 @@ -695,8 +695,8 @@
  msgstr "Forcer l’arrêt"
  
@@ -374,8 +374,8 @@ diff -ruN gnome-shell/po/fr.po gnome-shell/po/fr.po
  #~ msgstr "Les applications fréquemment utilisées apparaîtront ici"
  
 diff -ruN gnome-shell/po/sv.po gnome-shell/po/sv.po
---- gnome-shell/po/sv.po	2025-06-29 13:35:41.000000000 +0300
-+++ gnome-shell/po/sv.po	2025-08-14 14:51:28.032427098 +0300
+--- gnome-shell/po/sv.po	2025-11-24 15:16:08.000000000 +0100
++++ gnome-shell/po/sv.po	2026-01-28 08:06:26.372041551 +0100
 @@ -659,8 +659,8 @@
  msgstr "Tvinga avslut"
  
