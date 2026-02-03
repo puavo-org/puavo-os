@@ -236,8 +236,8 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
 	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' \
-	    './config/boot_keys/' '$(_image_file)'
-	$(_sudo) .aux/sign-bootloaders '$(rootfs_dir)' './config/boot_keys/'
+	    '$(rootfs_dir)/puavo-os/config/' '$(image_class)' '$(_image_file)'
+	$(_sudo) .aux/sign-bootloaders '$(rootfs_dir)' '$(rootfs_dir)/puavo-os/config/boot_keys/'
 	$(MAKE) verify-boot-components
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp' \
@@ -250,8 +250,8 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 .PHONY: verify-boot-components
 verify-boot-components: $(rootfs_dir)
 	$(_sudo) .aux/verify-boot-components --rootfs '$(rootfs_dir)' \
-	    --key-directory './config/boot_keys' \
-	    --manifest './config/boot-manifest.json'
+	    --key-directory '$(rootfs_dir)/puavo-os/config/boot_keys' \
+	    --manifest '$(rootfs_dir)/puavo-os/config/boot-manifest.json'
 
 .PHONY: prepare-for-squashfs
 prepare-for-squashfs:

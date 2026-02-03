@@ -2,31 +2,42 @@
 set -e
 
 usage() {
-  echo "Usage: $0 <boot-folder> <key-folder> <image-file>"
+  echo "Usage: $0 <boot-directory> <config-directory> <image-class> <image-file>"
   exit 1
 }
 
-if [ "$#" -ne 3 ]; then
+if [ "$#" -ne 4 ]; then
   usage
 fi
 
-boot_folder=$1
-key_folder=$2
-image_file=$3
+boot_directory=$1
+config_directory=$2
+image_class=$3
+image_file=$4
 
-for kernel_image in "$boot_folder"/vmlinuz-*; do
+key_directory="${config_directory}/boot_keys/"
+
+# Find the art directory based on the image class, otherwise use the default
+art_directory="${config_directory}/art/allinone/"
+image_class_art_directory="${config_directory}/art/${image_class}/"
+
+if [ -d "$image_class_art_directory" ]; then
+    art_directory="${image_class_art_directory}"
+fi
+
+for kernel_image in "$boot_directory"/vmlinuz-*; do
   test -h "$kernel_image" && continue
   kernel_version=$(basename "$kernel_image" | sed 's/vmlinuz-//')
-  output_path="${boot_folder}/kernel-${kernel_version}.uki.efi"
-  .aux/create-uki "$boot_folder" "$key_folder" "$kernel_version" "$output_path"
+  output_path="${boot_directory}/kernel-${kernel_version}.uki.efi"
+  .aux/create-uki "$boot_directory" "$art_directory" "$key_directory" "$kernel_version" "$output_path"
 done
 
-addon_folder="$boot_folder/addons"
-mkdir -p "$addon_folder"
+addon_directory="$boot_directory/addons"
+mkdir -p "$addon_directory"
 
 common_arguments='ro init=/sbin/init-puavo'
-.aux/create-commandline-addon "$key_folder" "nosplash ${common_arguments} puavo.hosttype=bootserver puavo.image.path=/images/${image_file}"                                           "${addon_folder}/bootserver.addon.efi"
-.aux/create-commandline-addon "$key_folder" "nosplash ${common_arguments} puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}"                                 "${addon_folder}/diskinstaller.addon.efi"
-.aux/create-commandline-addon "$key_folder" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=exam puavo.image.path=/examimages/${image_file} puavo.image.load_to_ram=true" "${addon_folder}/exam.addon.efi"
-.aux/create-commandline-addon "$key_folder" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=laptop puavo.image.path=/images/${image_file}"                                "${addon_folder}/laptop.addon.efi"
-.aux/create-commandline-addon "$key_folder" "nosplash ${common_arguments} puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}"                                         "${addon_folder}/preinstalled.addon.efi"
+.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=bootserver puavo.image.path=/images/${image_file}"                                           "${addon_directory}/bootserver.addon.efi"
+.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}"                                 "${addon_directory}/diskinstaller.addon.efi"
+.aux/create-commandline-addon "$key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=exam puavo.image.path=/examimages/${image_file} puavo.image.load_to_ram=true" "${addon_directory}/exam.addon.efi"
+.aux/create-commandline-addon "$key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=laptop puavo.image.path=/images/${image_file}"                                "${addon_directory}/laptop.addon.efi"
+.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}"                                         "${addon_folder}/preinstalled.addon.efi"
