@@ -43,10 +43,10 @@ class JoinChoice():
   def __init__(self, chooser):
     self.chooser = chooser
     self.label = Gtk.Label(label=self.JOIN_LABEL)
-    self.join_button = Gtk.Button(label=self.BUTTON_LABEL,
-                                  sensitive=self.DEFAULT_JOIN_SENSITIVITY)
-    self.join_button.set_tooltip_text(self.BUTTON_TOOLTIP)
-    self.join_button.connect('clicked', self.on_join_clicked)
+#   self.join_button = Gtk.Button(label=self.BUTTON_LABEL,
+#                                 sensitive=self.DEFAULT_JOIN_SENSITIVITY)
+#   self.join_button.set_tooltip_text(self.BUTTON_TOOLTIP)
+#   self.join_button.connect('clicked', self.on_join_clicked)
 
 
   def show_confirmation(self, info):
@@ -77,9 +77,18 @@ class JoinChoice():
 
 class ExamTab():
   def __init__(self):
-    grid = self.make_grid()
-    self.page = self.create_page(grid)
-    self.tab_label = self.create_tab_label()
+    self.label       = self.create_label()
+    self.join_button = self.create_join_button()
+    self.page        = self.create_page()
+
+
+  def create_join_button(self):
+    button = Gtk.Button(label=self.JOIN_BUTTON_LABEL)
+    button.set_hexpand(True)
+    button.set_halign(Gtk.Align.FILL)
+    button.get_style_context().add_class('suggested-action')
+    button.set_tooltip_text(self.JOIN_BUTTON_TOOLTIP_TEXT)
+    return button
 
 
   def make_grid(self):
@@ -93,38 +102,55 @@ class ExamTab():
     return grid
 
 
-  def create_tab_label(self):
+  def create_label(self):
      return Gtk.Label(label=self.TAB_LABEL)
 
 
+
+  def create_page(self, content):
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+    box.set_margin_top(6)
+    box.pack_start(content, False, False, 0)
+    box.pack_end(self.join_button, False, False, 0)
+    return box
+
+
 class AbittiTab(ExamTab):
-  TAB_LABEL = _tr('Abitti')
+  JOIN_BUTTON_LABEL        = _tr('Join the Abitti exam')
+  JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
+  TAB_LABEL                = _tr('Abitti')
 
   def __init__(self, abitti_url):
     self.abitti_url = abitti_url
     super().__init__()
 
 
-  def create_page(self, grid):
-    self.abitti_url.attach_to_grid(grid, 0)
-    return grid
+  def create_page(self):
+    choice_grid = self.make_grid()
+    self.abitti_url.attach_to_grid(choice_grid, 0)
+    return super().create_page(choice_grid)
 
 
 class NextExamTab(ExamTab):
-  TAB_LABEL = _tr('Next-Exam')
+  JOIN_BUTTON_LABEL        = _tr('Use Next-Exam to join the exam')
+  JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
+  TAB_LABEL                = _tr('Next-Exam')
 
   def __init__(self, next_exam):
     self.next_exam = next_exam
     super().__init__()
 
 
-  def create_page(self, grid):
-    self.next_exam.attach_to_grid(grid, 0)
-    return grid
+  def create_page(self):
+    choice_grid = self.make_grid()
+    self.next_exam.attach_to_grid(choice_grid, 0)
+    return super().create_page(choice_grid)
 
 
 class UrlTab(ExamTab):
-  TAB_LABEL = _tr('URL')
+  JOIN_BUTTON_LABEL        = _tr('Join the URL exam')
+  JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
+  TAB_LABEL                = _tr('URL')
 
   def __init__(self, url_first, url_second):
     self.url_first  = url_first
@@ -132,16 +158,16 @@ class UrlTab(ExamTab):
     super().__init__()
 
 
-  def create_page(self, grid):
-    self.url_first.attach_to_grid(grid, 0)
+  def create_page(self):
+    choice_grid = self.make_grid()
+    self.url_first.attach_to_grid(choice_grid, 0)
     if self.url_second:
-      self.url_second.attach_to_grid(grid, 1)
-    return grid
+      self.url_second.attach_to_grid(choice_grid, 1)
+    return super().create_page(choice_grid)
 
 
 class UrlInterface(JoinChoice):
-  BUTTON_TOOLTIP = _tr('Use the Alt key to override the URL check')
-  ENTRY_ENABLED  = True
+  ENTRY_ENABLED = True
 
   def __init__(self, chooser):
     super().__init__(chooser)
@@ -163,9 +189,8 @@ class UrlInterface(JoinChoice):
 
 
   def attach_to_grid(self, grid, row):
-    grid.attach(self.label,       0, row, 1, 1)
-    grid.attach(self.entry,       1, row, 1, 1)
-    grid.attach(self.join_button, 2, row, 1, 1)
+    grid.attach(self.label, 0, row, 1, 1)
+    grid.attach(self.entry, 1, row, 1, 1)
 
 
   def join_info(self, url):
@@ -173,13 +198,13 @@ class UrlInterface(JoinChoice):
              + ' ' + f'{ self.EXAM_TYPE } – { url }'
 
 
-  # XXX
-  def join_button_override(self, override_state):
-    """Override the join button state based on the Alt key."""
-    if override_state:
-      self.join_button.set_sensitive(bool(self.target_url))
-    else:
-      self.join_button.set_sensitive(self.checked)
+# XXX
+# def join_button_override(self, override_state):
+#   """Override the join button state based on the Alt key."""
+#   if override_state:
+#     self.join_button.set_sensitive(bool(self.target_url))
+#   else:
+#     self.join_button.set_sensitive(self.checked)
 
 
   def on_join_clicked(self, button):
@@ -238,7 +263,6 @@ class UrlInterface(JoinChoice):
 
 
 class AbittiUrl(UrlInterface):
-  BUTTON_LABEL      = _tr('Join the Abitti exam')
   ENTRY_PLACEHOLDER = _tr('Input Abitti code')
   ENTRY_TOOLTIP     = _tr('Enter the Abitti code here')
   EXAM_TYPE         = _tr('Abitti Exam')
@@ -261,7 +285,6 @@ class AbittiUrl(UrlInterface):
 
 
 class FreeUrl(UrlInterface):
-  BUTTON_LABEL      = _tr('Join the URL exam')
   ENTRY_PLACEHOLDER = _tr('Input exam URL')
   ENTRY_TOOLTIP     = _tr('Enter the exam URL here')
   EXAM_TYPE         = _tr('URL')
@@ -279,7 +302,6 @@ class FreeUrl(UrlInterface):
 
 
 class ClipboardUrl(UrlInterface):
-  BUTTON_LABEL      = _tr('Join the exam on a clipboard URL')
   ENTRY_ENABLED     = False
   ENTRY_PLACEHOLDER = _tr('Use the clipboard to get an URL here')
   ENTRY_TOOLTIP     = ENTRY_PLACEHOLDER
@@ -335,8 +357,6 @@ class NextExamNotInstalled(Exception):
 class NextExam(JoinChoice):
   DEFAULT_JOIN_SENSITIVITY = True
 
-  BUTTON_LABEL   = _tr('Use Next-Exam to join the exam')
-  BUTTON_TOOLTIP = BUTTON_LABEL
   EXAM_TYPE      = _tr('Next-Exam')
   JOIN_LABEL     = _tr('Next-Exam')
   NEXTEXAM_PATH  = '/opt/next-exam-puavo-student'
@@ -346,7 +366,6 @@ class NextExam(JoinChoice):
       raise NextExamNotInstalled(f'{ self.NEXTEXAM_PATH } not found')
 
     super().__init__(chooser)
-    self.join_button.set_hexpand(True)
 
 
   @classmethod
@@ -361,8 +380,7 @@ class NextExam(JoinChoice):
 
 
   def attach_to_grid(self, grid, row):
-    grid.attach(self.label,       0, row, 1, 1)
-    grid.attach(self.join_button, 1, row, 2, 1)
+    grid.attach(self.label, 0, row, 1, 1)
 
 
   def join_info(self, info):
@@ -459,7 +477,7 @@ class ExamChooser():
       tab_list.append(tab)
 
     for tab in tab_list:
-      notebook.append_page(tab.page, tab.tab_label)
+      notebook.append_page(tab.page, tab.label)
 
     main_box.add(notebook)
     self.window.add(main_box)
@@ -480,9 +498,9 @@ class ExamChooser():
 
 
   # XXX
-  def check_joins(self, alt_pressed):
-    for url_interface in self.url_objects:
-      url_interface.join_button_override(alt_pressed)
+# def check_joins(self, alt_pressed):
+#   for url_interface in self.url_objects:
+#     url_interface.join_button_override(alt_pressed)
 
 
   def on_key_event(self, widget, event):
