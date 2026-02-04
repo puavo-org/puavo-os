@@ -3,6 +3,14 @@ name = "puavo-boot-trust-manager"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "puavo_boot_trust_manager"
+path = "src/lib.rs"
+
+[[bin]]
+name = "puavo-boot-trust-manager"
+path = "src/main.rs"
+
 [dependencies]
 libcryptsetup-rs = "0.15.0"
 loopdev-3 = "0.5.2"
