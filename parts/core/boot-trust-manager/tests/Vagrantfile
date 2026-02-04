@@ -1,0 +1,40 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/trixie64"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder "..", "/project", type: "rsync", rsync__exclude: ["target/", ".git/"]
+
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.memory = 2048
+    libvirt.cpus = 2
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y \
+      build-essential \
+      clang \
+      cryptsetup \
+      curl \
+      libcryptsetup-dev \
+      libtss2-dev \
+      libudev-dev \
+      pkg-config \
+      systemd-cryptsetup \
+      swtpm \
+      swtpm-tools \
+      tpm2-tools
+
+    # Install Rust for root (tests need root for TPM/LUKS access)
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    # Add cargo to PATH system-wide
+    echo 'export PATH="/root/.cargo/bin:$PATH"' >> /etc/profile.d/cargo.sh
+
+    # Load vtpm-proxy kernel module
+    modprobe tpm_vtpm_proxy
+    echo tpm_vtpm_proxy >> /etc/modules
+  SHELL
+
+  # Script to start and reset swtpm before each test run
+  config.vm.provision "shell", path: "scripts/tpm.sh", run: "always"
+end
