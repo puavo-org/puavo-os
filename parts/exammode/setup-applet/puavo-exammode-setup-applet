@@ -75,6 +75,29 @@ class JoinChoice():
     return False
 
 
+class ExamTab():
+  def __init__(self):
+    self.page = self.create_page()
+    self.tab_label = self.create_tab_label()
+
+
+  def create_page(self):
+     # XXX
+     return Gtk.Grid()
+
+
+  def create_tab_label(self):
+     return Gtk.Label(label=self.TAB_LABEL)
+
+
+class UrlTab(ExamTab):
+  TAB_LABEL = _tr('URL')
+
+  def __init__(self, clipboard_url, free_url):
+    super().__init__()
+    self.clipboard_url = clipboard_url
+    self.free_url      = free_url
+
 
 class UrlInterface(JoinChoice):
   BUTTON_TOOLTIP = _tr('Use the Alt key to override the URL check')
@@ -99,6 +122,7 @@ class UrlInterface(JoinChoice):
     self.entry.connect('changed', self.on_entry_changed)
 
 
+  # XXX needed?
   def attach_to_grid(self, grid, row):
     grid.attach(self.label,       0, row, 1, 1)
     grid.attach(self.entry,       1, row, 1, 1)
@@ -173,6 +197,14 @@ class UrlInterface(JoinChoice):
 
 
 
+class AbittiTab(ExamTab):
+  TAB_LABEL = _tr('Abitti')
+
+  def __init__(self, abitti_url):
+    super().__init__()
+    self.abitti_url = abitti_url
+
+
 class AbittiUrl(UrlInterface):
   BUTTON_LABEL      = _tr('Join the Abitti exam')
   ENTRY_PLACEHOLDER = _tr('Input Abitti code')
@@ -193,6 +225,7 @@ class AbittiUrl(UrlInterface):
 
   def start_session(self):
     self.chooser.start_abitti2_session(self.target_url)
+
 
 
 class FreeUrl(UrlInterface):
@@ -267,12 +300,20 @@ class NextExamNotInstalled(Exception):
   pass
 
 
+class NextExamTab(ExamTab):
+  TAB_LABEL = _tr('Next-Exam')
+
+  def __init__(self, next_exam):
+    super().__init__()
+    self.next_exam = next_exam
+
+
 class NextExam(JoinChoice):
   DEFAULT_JOIN_SENSITIVITY = True
 
   BUTTON_LABEL   = _tr('Use Next-Exam to join the exam')
   BUTTON_TOOLTIP = BUTTON_LABEL
-  EXAM_TYPE      = 'Next-Exam'
+  EXAM_TYPE      = _tr('Next-Exam')
   JOIN_LABEL     = _tr('Next-Exam')
   NEXTEXAM_PATH  = '/opt/next-exam-puavo-student'
 
@@ -295,6 +336,7 @@ class NextExam(JoinChoice):
       return None
 
 
+  # XXX needed?
   def attach_to_grid(self, grid, row):
     grid.attach(self.label,       0, row, 1, 1)
     grid.attach(self.join_button, 1, row, 2, 1)
@@ -315,39 +357,11 @@ class NextExam(JoinChoice):
 
 class ExamChooser():
   def __init__(self, applet):
-    self.applet      = applet
-    self.next_exam   = None
-    self.url_objects = []
-    self.window      = None
-
-    setup_features = puavoconf_get('puavo.exammode.setup.features').split()
-
-    for feature in setup_features:
-      if feature == 'abitti2-code':
-        self.abitti = AbittiUrl(self)
-        self.url_objects.append(self.abitti)
-      elif feature == 'free_url':
-        self.free_url = FreeUrl(self)
-        self.url_objects.append(self.free_url)
-      elif feature == 'clipboard_url':
-        self.clipboard_url = ClipboardUrl(self)
-        self.url_objects.append(self.clipboard_url)
-      elif feature == 'next-exam':
-        self.next_exam = NextExam.create(self)
-      else:
-        syslog.syslog(syslog.LOG_WARNING,
-                      'unknown feature in puavo.exammode.setup.features: %s' \
-                        % feature)
-
-    if not (self.url_objects or self.next_exam):
-      syslog.syslog(syslog.LOG_ERR,
-                    'no features enabled, not creating a chooser window')
-      return
-
-    if self.next_exam and not self.url_objects:
-      # if Next-Exam is the only option, we can skip the chooser window
-      self.start_nextexam_session()
-      return
+    self.applet        = applet
+    self.abitti_tab    = None
+    self.next_exam_tab = None
+    self.url_objects   = None
+    self.url_tab       = None
 
     self.window = Gtk.Window()
     self.window.connect('delete-event', self.on_delete_event)
@@ -357,30 +371,98 @@ class ExamChooser():
     self.window.connect('key-press-event',   self.on_key_event)
     self.window.connect('key-release-event', self.on_key_event)
 
+    _tr('Your current desktop session will be locked and you will be moved to the exam session.')
+
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
                        margin=12)
 
-    join_grid = Gtk.Grid()
-    join_grid.set_column_spacing(6)
-    join_grid.set_row_spacing(6)
-    join_grid.set_margin_top(6)
-    join_grid.set_margin_bottom(6)
-    join_grid.set_margin_start(6)
-    join_grid.set_margin_end(6)
+    title = self.label_title(_tr('Join an exam'))
+    subtitle = self.label_subtitle(_tr('Choose a way to join an exam.'))
+    main_box.pack_start(title,    False, False, 0)
+    main_box.pack_start(subtitle, False, False, 0)
 
-    next_row = 0
-    for url_object in self.url_objects:
-      url_object.attach_to_grid(join_grid, next_row)
-      next_row += 1
+    notebook = Gtk.Notebook()
 
-    if self.next_exam:
-      separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-      join_grid.attach(separator, 0, next_row, 3, 1)
-      next_row += 1
-      self.next_exam.attach_to_grid(join_grid, next_row)
+    setup_features = puavoconf_get('puavo.exammode.setup.features').split()
 
-    main_box.add(join_grid)
+    abitti_url = None
+    clipboard_url = None
+    free_url = None
+    next_exam = None
+
+    joinchoice_list = []
+    for feature in setup_features:
+      if feature == 'abitti2-code':
+        joinchoice = abitti_url = AbittiUrl(self)
+      elif feature == 'clipboard_url':
+        joinchoice = clipboard_url = ClipboardUrl(self)
+      elif feature == 'free_url':
+        joinchoice = free_url = FreeUrl(self)
+      elif feature == 'next-exam':
+        joinchoice = next_exam = NextExam.create(self) # may return None
+      else:
+        syslog.syslog(syslog.LOG_WARNING,
+                      'unknown feature in puavo.exammode.setup.features: %s' \
+                        % feature)
+        continue
+
+      if joinchoice:
+        joinchoice_list.append(joinchoice)
+
+    if not joinchoice_list:
+        syslog.syslog(syslog.LOG_ERR,
+                      'no features enabled, not creating a chooser window')
+        return
+
+    if next_exam and len(joinchoice_list) == 1:
+      # if Next-Exam is the only option, we can skip the chooser window
+      self.start_nextexam_session()
+      return
+
+    tab_list = []
+    for joinchoice in joinchoice_list:
+      print('checking %s' % joinchoice)
+      if joinchoice == abitti_url:
+        tab = self.abitti_tab = AbittiTab(abitti_url)
+      elif joinchoice in [ clipboard_url, free_url ]:
+        if self.url_tab:
+          continue
+        tab = self.url_tab = UrlTab(clipboard_url, free_url)
+      elif joinchoice == next_exam:
+        tab = self.next_exam_tab = NextExamTab(next_exam)
+      tab_list.append(tab)
+
+    for tab in tab_list:
+      notebook.append_page(tab.page, tab.tab_label)
+
+    main_box.add(notebook)
     self.window.add(main_box)
+
+
+  def label_title(self, text):
+    w = Gtk.Label()
+    safe = GLib.markup_escape_text(text)
+    w.set_markup(f'<span size="x-large" weight="bold">{safe}</span>')
+    w.set_xalign(0)
+    return w
+
+
+  def label_subtitle(self, text):
+    w = Gtk.Label(label=text)
+    w.set_xalign(0)
+    return w
+
+
+  # XXX needed?
+  def make_grid(self):
+    grid = Gtk.Grid()
+    grid.set_column_spacing(6)
+    grid.set_row_spacing(6)
+    grid.set_margin_top(6)
+    grid.set_margin_bottom(6)
+    grid.set_margin_start(6)
+    grid.set_margin_end(6)
+    return grid
 
 
   def check_joins(self, alt_pressed):
