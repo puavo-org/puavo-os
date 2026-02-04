@@ -38,15 +38,14 @@ def puavoconf_get(puavoconf_key):
 
 
 class JoinChoice():
-  DEFAULT_JOIN_SENSITIVITY = False
-
   def __init__(self, chooser):
     self.chooser = chooser
-    self.label = Gtk.Label(label=self.JOIN_LABEL)
-#   self.join_button = Gtk.Button(label=self.BUTTON_LABEL,
-#                                 sensitive=self.DEFAULT_JOIN_SENSITIVITY)
-#   self.join_button.set_tooltip_text(self.BUTTON_TOOLTIP)
-#   self.join_button.connect('clicked', self.on_join_clicked)
+    self.label   = Gtk.Label(label=self.JOIN_LABEL)
+    self.tab     = None
+
+
+  def connect_tab(self, tab):
+    self.tab = tab
 
 
   def show_confirmation(self, info):
@@ -76,18 +75,23 @@ class JoinChoice():
 
 
 class ExamTab():
+  DEFAULT_JOIN_SENSITIVITY = False
+
   def __init__(self):
-    self.label       = self.create_label()
-    self.join_button = self.create_join_button()
-    self.page        = self.create_page()
+    self.join_button    = self.create_join_button()
+    self.label          = self.create_label()
+    self.page           = self.create_page()
 
 
   def create_join_button(self):
-    button = Gtk.Button(label=self.JOIN_BUTTON_LABEL)
+    button = Gtk.Button(label=self.JOIN_BUTTON_LABEL,
+                        sensitive=self.DEFAULT_JOIN_SENSITIVITY)
     button.set_hexpand(True)
     button.set_halign(Gtk.Align.FILL)
     button.get_style_context().add_class('suggested-action')
     button.set_tooltip_text(self.JOIN_BUTTON_TOOLTIP_TEXT)
+    button.connect('clicked', self.on_join_clicked)
+
     return button
 
 
@@ -125,6 +129,10 @@ class AbittiTab(ExamTab):
     super().__init__()
 
 
+  def on_join_clicked(self, button):
+    self.abitti_url.on_join_clicked(button)
+
+
   def create_page(self):
     choice_grid = self.make_grid()
     self.abitti_url.attach_to_grid(choice_grid, 0)
@@ -132,6 +140,7 @@ class AbittiTab(ExamTab):
 
 
 class NextExamTab(ExamTab):
+  DEFAULT_JOIN_SENSITIVITY = True
   JOIN_BUTTON_LABEL        = _tr('Use Next-Exam to join the exam')
   JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
   TAB_LABEL                = _tr('Next-Exam')
@@ -145,6 +154,10 @@ class NextExamTab(ExamTab):
     choice_grid = self.make_grid()
     self.next_exam.attach_to_grid(choice_grid, 0)
     return super().create_page(choice_grid)
+
+
+  def on_join_clicked(self, button):
+    self.next_exam.on_join_clicked(button)
 
 
 class UrlTab(ExamTab):
@@ -166,17 +179,22 @@ class UrlTab(ExamTab):
     return super().create_page(choice_grid)
 
 
+  def on_join_clicked(self, button):
+    # XXX should url_first or url_second be chosen?
+    self.url_first.on_join_clicked(button)
+
+
 class UrlInterface(JoinChoice):
   ENTRY_ENABLED = True
 
   def __init__(self, chooser):
     super().__init__(chooser)
 
-    self.checked = False
+    self.checked        = False
     self.joinability_id = None
-    self.soup_message = None
-    self.soup_session = Soup.Session()
-    self.target_url = None
+    self.soup_message   = None
+    self.soup_session   = Soup.Session()
+    self.target_url     = None
 
     self.entry = Gtk.Entry(placeholder_text=self.ENTRY_PLACEHOLDER)
     if not self.ENTRY_ENABLED:
@@ -198,13 +216,12 @@ class UrlInterface(JoinChoice):
              + ' ' + f'{ self.EXAM_TYPE } – { url }'
 
 
-# XXX
-# def join_button_override(self, override_state):
-#   """Override the join button state based on the Alt key."""
-#   if override_state:
-#     self.join_button.set_sensitive(bool(self.target_url))
-#   else:
-#     self.join_button.set_sensitive(self.checked)
+  def join_button_override(self, override_state):
+    """Override the join button state based on the Alt key."""
+    if override_state:
+      self.tab.join_button.set_sensitive(bool(self.target_url))
+    else:
+      self.tab.join_button.set_sensitive(self.checked)
 
 
   def on_join_clicked(self, button):
@@ -218,7 +235,7 @@ class UrlInterface(JoinChoice):
 
   def on_entry_changed(self, entry):
     self.checked = False
-    self.join_button.set_sensitive(False)
+    self.tab.join_button.set_sensitive(False)
     text = self.entry.get_text().strip()
     self.target_url = self.convert_entry_to_url(text)
     if self.joinability_id:
@@ -258,7 +275,7 @@ class UrlInterface(JoinChoice):
                     'url %s failed a check: %s' % (url, msg.reason_phrase))
       return
     self.checked = True
-    self.join_button.set_sensitive(True)
+    self.tab.join_button.set_sensitive(True)
 
 
 
@@ -355,8 +372,6 @@ class NextExamNotInstalled(Exception):
 
 
 class NextExam(JoinChoice):
-  DEFAULT_JOIN_SENSITIVITY = True
-
   EXAM_TYPE      = _tr('Next-Exam')
   JOIN_LABEL     = _tr('Next-Exam')
   NEXTEXAM_PATH  = '/opt/next-exam-puavo-student'
@@ -401,7 +416,7 @@ class ExamChooser():
     self.applet        = applet
     self.abitti_tab    = None
     self.next_exam_tab = None
-    self.url_objects   = None
+    self.url_objects   = []
     self.url_tab       = None
 
     self.window = Gtk.Window()
@@ -411,8 +426,6 @@ class ExamChooser():
     self.window.set_title(_tr('Join an exam'))
     self.window.connect('key-press-event',   self.on_key_event)
     self.window.connect('key-release-event', self.on_key_event)
-
-    _tr('Your current desktop session will be locked and you will be moved to the exam session.')
 
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
                        margin=12)
@@ -424,7 +437,9 @@ class ExamChooser():
 
     notebook = Gtk.Notebook()
 
-    setup_features = puavoconf_get('puavo.exammode.setup.features').split()
+    setup_features_conf = puavoconf_get('puavo.exammode.setup.features')
+    setup_features_no_duplicates_list \
+      = list( dict.fromkeys( setup_features_conf.split() ) )
 
     abitti_url = None
     clipboard_url = None
@@ -432,7 +447,7 @@ class ExamChooser():
     next_exam = None
 
     joinchoice_list = []
-    for feature in setup_features:
+    for feature in setup_features_no_duplicates_list:
       if feature == 'abitti2-code':
         joinchoice = abitti_url = AbittiUrl(self)
       elif feature == 'clipboard_url':
@@ -449,6 +464,8 @@ class ExamChooser():
 
       if joinchoice:
         joinchoice_list.append(joinchoice)
+        if isinstance(joinchoice, UrlInterface):
+          self.url_objects.append(joinchoice)
 
     if not joinchoice_list:
         syslog.syslog(syslog.LOG_ERR,
@@ -465,16 +482,20 @@ class ExamChooser():
       if joinchoice == abitti_url:
         tab = self.abitti_tab = AbittiTab(abitti_url)
       elif joinchoice == clipboard_url:
-        if self.url_tab:
-          continue
-        tab = self.url_tab = UrlTab(clipboard_url, free_url)
+        if not self.url_tab:
+          self.url_tab = UrlTab(clipboard_url, free_url)
+        tab = self.url_tab
       elif joinchoice == free_url:
-        if self.url_tab:
-          continue
-        tab = self.url_tab = UrlTab(free_url, clipboard_url)
+        if not self.url_tab:
+          self.url_tab = UrlTab(free_url, clipboard_url)
+        tab = self.url_tab
       elif joinchoice == next_exam:
         tab = self.next_exam_tab = NextExamTab(next_exam)
-      tab_list.append(tab)
+
+      joinchoice.connect_tab(tab)
+
+      if not tab in tab_list:
+        tab_list.append(tab)
 
     for tab in tab_list:
       notebook.append_page(tab.page, tab.label)
@@ -497,10 +518,9 @@ class ExamChooser():
     return w
 
 
-  # XXX
-# def check_joins(self, alt_pressed):
-#   for url_interface in self.url_objects:
-#     url_interface.join_button_override(alt_pressed)
+  def check_joins(self, alt_pressed):
+    for url_interface in self.url_objects:
+      url_interface.join_button_override(alt_pressed)
 
 
   def on_key_event(self, widget, event):
