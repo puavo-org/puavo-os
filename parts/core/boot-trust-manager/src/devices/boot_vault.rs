@@ -205,8 +205,7 @@ impl BootVault {
                 Ok(input) => input,
                 Err(error) => {
                     error!("Failed to ask for password: {}", error);
-                    let _ = display.show_message("Failed to read input");
-                    continue;
+                    return Err(error);
                 }
             };
 
