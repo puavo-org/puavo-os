@@ -77,26 +77,66 @@ class JoinChoice():
 
 class ExamTab():
   def __init__(self):
-    self.page = self.create_page()
+    grid = self.make_grid()
+    self.page = self.create_page(grid)
     self.tab_label = self.create_tab_label()
 
 
-  def create_page(self):
-     # XXX
-     return Gtk.Grid()
+  def make_grid(self):
+    grid = Gtk.Grid()
+    grid.set_column_spacing(6)
+    grid.set_row_spacing(6)
+    grid.set_margin_top(6)
+    grid.set_margin_bottom(6)
+    grid.set_margin_start(6)
+    grid.set_margin_end(6)
+    return grid
 
 
   def create_tab_label(self):
      return Gtk.Label(label=self.TAB_LABEL)
 
 
+class AbittiTab(ExamTab):
+  TAB_LABEL = _tr('Abitti')
+
+  def __init__(self, abitti_url):
+    self.abitti_url = abitti_url
+    super().__init__()
+
+
+  def create_page(self, grid):
+    self.abitti_url.attach_to_grid(grid, 0)
+    return grid
+
+
+class NextExamTab(ExamTab):
+  TAB_LABEL = _tr('Next-Exam')
+
+  def __init__(self, next_exam):
+    self.next_exam = next_exam
+    super().__init__()
+
+
+  def create_page(self, grid):
+    self.next_exam.attach_to_grid(grid, 0)
+    return grid
+
+
 class UrlTab(ExamTab):
   TAB_LABEL = _tr('URL')
 
-  def __init__(self, clipboard_url, free_url):
+  def __init__(self, url_first, url_second):
+    self.url_first  = url_first
+    self.url_second = url_second
     super().__init__()
-    self.clipboard_url = clipboard_url
-    self.free_url      = free_url
+
+
+  def create_page(self, grid):
+    self.url_first.attach_to_grid(grid, 0)
+    if self.url_second:
+      self.url_second.attach_to_grid(grid, 1)
+    return grid
 
 
 class UrlInterface(JoinChoice):
@@ -122,7 +162,6 @@ class UrlInterface(JoinChoice):
     self.entry.connect('changed', self.on_entry_changed)
 
 
-  # XXX needed?
   def attach_to_grid(self, grid, row):
     grid.attach(self.label,       0, row, 1, 1)
     grid.attach(self.entry,       1, row, 1, 1)
@@ -134,6 +173,7 @@ class UrlInterface(JoinChoice):
              + ' ' + f'{ self.EXAM_TYPE } – { url }'
 
 
+  # XXX
   def join_button_override(self, override_state):
     """Override the join button state based on the Alt key."""
     if override_state:
@@ -195,14 +235,6 @@ class UrlInterface(JoinChoice):
     self.checked = True
     self.join_button.set_sensitive(True)
 
-
-
-class AbittiTab(ExamTab):
-  TAB_LABEL = _tr('Abitti')
-
-  def __init__(self, abitti_url):
-    super().__init__()
-    self.abitti_url = abitti_url
 
 
 class AbittiUrl(UrlInterface):
@@ -300,14 +332,6 @@ class NextExamNotInstalled(Exception):
   pass
 
 
-class NextExamTab(ExamTab):
-  TAB_LABEL = _tr('Next-Exam')
-
-  def __init__(self, next_exam):
-    super().__init__()
-    self.next_exam = next_exam
-
-
 class NextExam(JoinChoice):
   DEFAULT_JOIN_SENSITIVITY = True
 
@@ -336,7 +360,6 @@ class NextExam(JoinChoice):
       return None
 
 
-  # XXX needed?
   def attach_to_grid(self, grid, row):
     grid.attach(self.label,       0, row, 1, 1)
     grid.attach(self.join_button, 1, row, 2, 1)
@@ -365,7 +388,7 @@ class ExamChooser():
 
     self.window = Gtk.Window()
     self.window.connect('delete-event', self.on_delete_event)
-    self.window.set_default_size(1000, 40)
+    self.window.set_default_size(1000, 320)
     self.window.set_resizable(False)
     self.window.set_title(_tr('Join an exam'))
     self.window.connect('key-press-event',   self.on_key_event)
@@ -421,13 +444,16 @@ class ExamChooser():
 
     tab_list = []
     for joinchoice in joinchoice_list:
-      print('checking %s' % joinchoice)
       if joinchoice == abitti_url:
         tab = self.abitti_tab = AbittiTab(abitti_url)
-      elif joinchoice in [ clipboard_url, free_url ]:
+      elif joinchoice == clipboard_url:
         if self.url_tab:
           continue
         tab = self.url_tab = UrlTab(clipboard_url, free_url)
+      elif joinchoice == free_url:
+        if self.url_tab:
+          continue
+        tab = self.url_tab = UrlTab(free_url, clipboard_url)
       elif joinchoice == next_exam:
         tab = self.next_exam_tab = NextExamTab(next_exam)
       tab_list.append(tab)
@@ -453,18 +479,7 @@ class ExamChooser():
     return w
 
 
-  # XXX needed?
-  def make_grid(self):
-    grid = Gtk.Grid()
-    grid.set_column_spacing(6)
-    grid.set_row_spacing(6)
-    grid.set_margin_top(6)
-    grid.set_margin_bottom(6)
-    grid.set_margin_start(6)
-    grid.set_margin_end(6)
-    return grid
-
-
+  # XXX
   def check_joins(self, alt_pressed):
     for url_interface in self.url_objects:
       url_interface.join_button_override(alt_pressed)
