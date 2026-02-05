@@ -31,6 +31,25 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
 
+css = b"""
+button {
+   transition: none;
+}
+
+.callout {
+  font-weight: bold;
+  min-width: 8em;
+}
+"""
+provider = Gtk.CssProvider()
+provider.load_from_data(css)
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(),
+    provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+)
+
 
 def puavoconf_get(puavoconf_key):
   return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
@@ -40,8 +59,12 @@ def puavoconf_get(puavoconf_key):
 class JoinChoice():
   def __init__(self, chooser):
     self.chooser = chooser
-    self.label   = Gtk.Label(label=self.JOIN_LABEL)
+    self.label   = self.create_join_label()
     self.tab     = None
+
+
+  def create_join_label(self):
+     return Gtk.Label(label=self.JOIN_LABEL)
 
 
   def connect_tab(self, tab):
@@ -79,7 +102,7 @@ class ExamTab():
 
   def __init__(self):
     self.join_button    = self.create_join_button()
-    self.label          = self.create_label()
+    self.label          = self.create_tab_label()
     self.page           = self.create_page()
 
 
@@ -106,9 +129,12 @@ class ExamTab():
     return grid
 
 
-  def create_label(self):
+  def create_tab_label(self):
      return Gtk.Label(label=self.TAB_LABEL)
-
+     label = Gtk.Label(label=self.TAB_LABEL)
+     label.set_sensitive(True)
+     label.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+     return label
 
 
   def create_page(self, content):
@@ -136,7 +162,12 @@ class AbittiTab(ExamTab):
   def create_page(self):
     choice_grid = self.make_grid()
     self.abitti_url.attach_to_grid(choice_grid, 0)
+    self.update_active_url_ui_element(self.abitti_url)
     return super().create_page(choice_grid)
+
+
+  def update_active_url_ui_element(self, active_url):
+    self.abitti_url.set_active()
 
 
 class NextExamTab(ExamTab):
@@ -165,23 +196,55 @@ class UrlTab(ExamTab):
   JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
   TAB_LABEL                = _tr('URL')
 
-  def __init__(self, url_first, url_second):
-    self.url_first  = url_first
-    self.url_second = url_second
+  def __init__(self, clipboard_url, free_url, clipboard_url_first):
+    self.clipboard_url       = clipboard_url
+    self.free_url            = free_url
+    self.clipboard_url_first = clipboard_url_first
+
+    if self.clipboard_url_first:
+      self.active_url = self.clipboard_url
+    else:
+      self.active_url = self.free_url
+
     super().__init__()
 
 
   def create_page(self):
     choice_grid = self.make_grid()
-    self.url_first.attach_to_grid(choice_grid, 0)
-    if self.url_second:
-      self.url_second.attach_to_grid(choice_grid, 1)
+
+    if self.clipboard_url_first:
+      first_url = self.clipboard_url
+      second_url = self.free_url
+    else:
+      first_url = self.free_url
+      second_url = self.clipboard_url
+
+    first_url.attach_to_grid(choice_grid, 0)
+    if second_url:
+      second_url.attach_to_grid(choice_grid, 1)
+
+    self.update_active_url_ui_element(first_url)
+
     return super().create_page(choice_grid)
 
 
+  def update_active_url_ui_element(self, active_url):
+    self.active_url = active_url
+
+    if not (self.clipboard_url and self.free_url):
+      return
+
+    if self.active_url == self.clipboard_url:
+      passive_url = self.free_url
+    else:
+      passive_url = self.clipboard_url
+
+    self.active_url.set_active()
+    passive_url.set_passive()
+
+
   def on_join_clicked(self, button):
-    # XXX should url_first or url_second be chosen?
-    self.url_first.on_join_clicked(button)
+    self.active_url.on_join_clicked(button)
 
 
 class UrlInterface(JoinChoice):
@@ -199,11 +262,15 @@ class UrlInterface(JoinChoice):
     self.entry = Gtk.Entry(placeholder_text=self.ENTRY_PLACEHOLDER)
     if not self.ENTRY_ENABLED:
       self.entry.set_editable(False)
-      self.entry.set_sensitive(False)
+      self.entry.set_can_focus(False)
+      self.entry.get_style_context().add_class('dim-label')
+    self.entry.set_sensitive(True)
     self.entry.set_hexpand(True)
     self.entry.set_tooltip_text(self.ENTRY_TOOLTIP)
-    self.entry.connect('activate', self.on_join_clicked)
-    self.entry.connect('changed', self.on_entry_changed)
+    self.entry.connect('activate',           self.on_join_clicked)
+    self.entry.connect('changed',            self.url_change_event)
+    self.entry.connect('button-press-event', self.url_change_event)
+    self.label.connect('button-press-event', self.url_change_event)
 
 
   def attach_to_grid(self, grid, row):
@@ -233,7 +300,19 @@ class UrlInterface(JoinChoice):
     self.chooser.start_url_session(self.target_url)
 
 
-  def on_entry_changed(self, entry):
+  def set_active(self):
+    self.label.get_style_context().add_class('callout')
+
+
+  def set_passive(self):
+    self.label.get_style_context().remove_class('callout')
+
+
+  def label_url_change_event(self, widget, param=None):
+    print('I AM HERE')
+
+
+  def url_change_event(self, widget, param=None):
     self.checked = False
     self.tab.join_button.set_sensitive(False)
     text = self.entry.get_text().strip()
@@ -243,6 +322,7 @@ class UrlInterface(JoinChoice):
       self.joinability_id = None
     if self.target_url:
       self.joinability_id = GLib.timeout_add(500, self.check_joinability)
+    self.tab.update_active_url_ui_element(self)
 
 
   def check_joinability(self):
@@ -318,6 +398,15 @@ class FreeUrl(UrlInterface):
     return url_with_scheme
 
 
+  # FreeUrl needs label which is actually clickable to choose
+  # between two ClipboardUrl and FreeUrl.
+  def create_join_label(self):
+     label = Gtk.Button(label=self.JOIN_LABEL)
+     label.set_relief(Gtk.ReliefStyle.NONE)
+     return label
+
+
+
 class ClipboardUrl(UrlInterface):
   ENTRY_ENABLED     = False
   ENTRY_PLACEHOLDER = _tr('Use the clipboard to get an URL here')
@@ -332,6 +421,14 @@ class ClipboardUrl(UrlInterface):
     self.clipboard_primary = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
     self.clipboard_primary.connect('owner-change',
                                    self.on_clipboard_primary_change)
+
+
+  # ClipboardUrl needs label which is actually clickable to choose
+  # between two ClipboardUrl and FreeUrl.
+  def create_join_label(self):
+     label = Gtk.Button(label=self.JOIN_LABEL)
+     label.set_relief(Gtk.ReliefStyle.NONE)
+     return label
 
 
   def convert_entry_to_url(self, text):
@@ -353,7 +450,7 @@ class ClipboardUrl(UrlInterface):
     else:
       return
 
-    self.on_entry_changed(self.entry)
+    self.url_change_event(self.entry)
 
 
   def on_clipboard_main_change(self, clipboard, event):
@@ -483,11 +580,11 @@ class ExamChooser():
         tab = self.abitti_tab = AbittiTab(abitti_url)
       elif joinchoice == clipboard_url:
         if not self.url_tab:
-          self.url_tab = UrlTab(clipboard_url, free_url)
+          self.url_tab = UrlTab(clipboard_url, free_url, True)
         tab = self.url_tab
       elif joinchoice == free_url:
         if not self.url_tab:
-          self.url_tab = UrlTab(free_url, clipboard_url)
+          self.url_tab = UrlTab(clipboard_url, free_url, False)
         tab = self.url_tab
       elif joinchoice == next_exam:
         tab = self.next_exam_tab = NextExamTab(next_exam)
