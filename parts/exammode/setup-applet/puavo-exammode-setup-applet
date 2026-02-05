@@ -193,7 +193,7 @@ class NextExamTab(ExamTab):
 
 class UrlTab(ExamTab):
   JOIN_BUTTON_LABEL        = _tr('Join the URL exam')
-  JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
+  JOIN_BUTTON_TOOLTIP_TEXT = _tr('Use the Alt key to override the URL check')
   TAB_LABEL                = _tr('URL')
 
   def __init__(self, clipboard_url, free_url, clipboard_url_first):
@@ -254,6 +254,7 @@ class UrlInterface(JoinChoice):
     super().__init__(chooser)
 
     self.checked        = False
+    self.is_active      = None
     self.joinability_id = None
     self.soup_message   = None
     self.soup_session   = Soup.Session()
@@ -285,6 +286,10 @@ class UrlInterface(JoinChoice):
 
   def join_button_override(self, override_state):
     """Override the join button state based on the Alt key."""
+    if not self.is_active:
+      # if we are not active, we do not affect the join button state
+      return
+
     if override_state:
       self.tab.join_button.set_sensitive(bool(self.target_url))
     else:
@@ -301,15 +306,19 @@ class UrlInterface(JoinChoice):
 
 
   def set_active(self):
+    self.is_active = True
+    self.entry.get_style_context().remove_class('dim-label')
+    self.label.get_style_context().remove_class('dim-label')
+    self.entry.get_style_context().add_class('callout')
     self.label.get_style_context().add_class('callout')
 
 
   def set_passive(self):
+    self.is_active = False
+    self.entry.get_style_context().remove_class('callout')
     self.label.get_style_context().remove_class('callout')
-
-
-  def label_url_change_event(self, widget, param=None):
-    print('I AM HERE')
+    self.entry.get_style_context().add_class('dim-label')
+    self.label.get_style_context().add_class('dim-label')
 
 
   def url_change_event(self, widget, param=None):
