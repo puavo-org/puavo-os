@@ -146,7 +146,7 @@ class ExamTab():
 
 
 class AbittiTab(ExamTab):
-  JOIN_BUTTON_LABEL        = _tr('Join the Abitti exam')
+  JOIN_BUTTON_LABEL        = _tr('Join the exam')
   JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
   TAB_LABEL                = _tr('Abitti')
 
@@ -172,7 +172,7 @@ class AbittiTab(ExamTab):
 
 class NextExamTab(ExamTab):
   DEFAULT_JOIN_SENSITIVITY = True
-  JOIN_BUTTON_LABEL        = _tr('Use Next-Exam to join the exam')
+  JOIN_BUTTON_LABEL        = _tr('Join the exam')
   JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
   TAB_LABEL                = _tr('Next-Exam')
 
@@ -192,7 +192,7 @@ class NextExamTab(ExamTab):
 
 
 class UrlTab(ExamTab):
-  JOIN_BUTTON_LABEL        = _tr('Join the URL exam')
+  JOIN_BUTTON_LABEL        = _tr('Join the exam')
   JOIN_BUTTON_TOOLTIP_TEXT = _tr('Use the Alt key to override the URL check')
   TAB_LABEL                = _tr('URL')
 
@@ -479,7 +479,7 @@ class NextExamNotInstalled(Exception):
 
 class NextExam(JoinChoice):
   EXAM_TYPE      = _tr('Next-Exam')
-  JOIN_LABEL     = _tr('Next-Exam')
+  JOIN_LABEL     = _tr('Use Next-Exam to join the exam')
   NEXTEXAM_PATH  = '/opt/next-exam-puavo-student'
 
   def __init__(self, chooser):
@@ -527,7 +527,7 @@ class ExamChooser():
 
     self.window = Gtk.Window()
     self.window.connect('delete-event', self.on_delete_event)
-    self.window.set_default_size(1000, 320)
+    self.window.set_default_size(760, 320)
     self.window.set_resizable(False)
     self.window.set_title(_tr('Join an exam'))
     self.window.connect('key-press-event',   self.on_key_event)
@@ -606,7 +606,7 @@ class ExamChooser():
     for tab in tab_list:
       notebook.append_page(tab.page, tab.label)
 
-    main_box.add(notebook)
+    main_box.pack_start(notebook, True, True, 0)
     self.window.add(main_box)
 
 
