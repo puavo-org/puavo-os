@@ -71,20 +71,83 @@ class JoinChoice():
     self.tab = tab
 
 
-  def show_confirmation(self, info):
+  def show_confirmation(self, exam_url):
     """Show a confirmation dialog before joining an exam."""
-    primary_text = self.join_info(info)
-    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session.')
-
     win = self.chooser.window
-    dialog = Gtk.MessageDialog(transient_for=win, modal=True,
-        message_type=Gtk.MessageType.QUESTION,
-        buttons=Gtk.ButtonsType.OK_CANCEL, text=primary_text)
-    dialog.format_secondary_text(secondary_text)
-    label = dialog.get_message_area().get_children()[0]
-    label.set_line_wrap(False)
-    label.set_max_width_chars(-1)
 
+    dialog = Gtk.Dialog(
+        title=_tr('Liitytäänkö kokeeseen?'),
+        transient_for=win,
+        modal=True
+    )
+    dialog.set_default_size(860, -1)
+    dialog.set_resizable(False)
+
+    content = dialog.get_content_area()
+    content.set_spacing(12)
+    content.set_margin_top(16)
+    content.set_margin_bottom(16)
+    content.set_margin_start(18)
+    content.set_margin_end(18)
+    
+    title = Gtk.Label()
+    title.set_xalign(0)
+    title.set_use_markup(True)
+    title.set_markup('<span size="x-large" weight="bold">%s</span>'
+                       % self.join_info())
+    content.add(title)
+
+    if exam_url:
+      url_title = Gtk.Label()
+      url_title.set_xalign(0)
+      url_title.set_use_markup(True)
+      url_title.set_markup('<b>%s</b>' % _tr('Kokeen osoite'))
+      content.add(url_title)
+
+      url_label = Gtk.Label()
+      url_label.set_xalign(0)
+      url_label.set_selectable(True)
+      url_label.set_use_markup(True)
+      url_label.set_line_wrap(True)
+      url_label.set_markup(
+        '<span font_family="monospace" alpha="70%%">%s</span>'
+          % GLib.markup_escape_text(exam_url))
+      content.add(url_label)
+
+    desc = Gtk.Label(
+      label=_tr('Your current desktop session will be locked and you'
+                  ' will be moved to the exam session.'))
+    desc.set_xalign(0)
+    desc.set_line_wrap(True)
+    content.add(desc)
+
+    notes_title = Gtk.Label()
+    notes_title.set_xalign(0)
+    notes_title.set_use_markup(True)
+    notes_title.set_markup('<b>%s</b>' % _tr('Huomioitavaa'))
+    content.add(notes_title)
+
+    notes = Gtk.Label()
+    notes.set_xalign(0)
+    notes.set_line_wrap(True)
+    notes.set_use_markup(True)
+    notes.set_markup(
+      "• %s\n"
+      "• %s\n"
+      "• %s"
+        % (_tr('Varmista, että olet verkossa, josta kokeeseen pääsee.'),
+            _tr('Liittymällä kokeeseen hyväksyt, että koesuoritusta '
+                'voidaan teknisesti valvoa vilpin estämiseksi.'),
+            _tr('Kokeen jälkeen poistut koeistunnosta ja palaat '
+                'normaalille työpöydälle näytön lukituksen kautta.')))
+    content.add(notes)
+
+    dialog.add_button(_tr('Peru'), Gtk.ResponseType.CANCEL)
+    join_button = dialog.add_button(_tr('Liity kokeeseen'), Gtk.ResponseType.OK)
+    join_button.get_style_context().add_class('suggested-action')
+    dialog.set_default_response(Gtk.ResponseType.OK)
+
+    dialog.show_all()
     response = dialog.run()
     dialog.destroy()
 
@@ -147,7 +210,7 @@ class ExamTab():
 
 class AbittiTab(ExamTab):
   JOIN_BUTTON_LABEL        = _tr('Join the exam')
-  JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
+  JOIN_BUTTON_TOOLTIP_TEXT = _tr('Use the Alt key to override the URL check')
   TAB_LABEL                = _tr('Abitti')
 
   def __init__(self, abitti_url):
@@ -279,9 +342,8 @@ class UrlInterface(JoinChoice):
     grid.attach(self.entry, 1, row, 1, 1)
 
 
-  def join_info(self, url):
-    return _tr('Do you want to join the exam?') \
-             + ' ' + f'{ self.EXAM_TYPE } – { url }'
+  def join_info(self):
+    return _tr('Do you want to join the exam?')
 
 
   def join_button_override(self, override_state):
@@ -479,7 +541,7 @@ class NextExamNotInstalled(Exception):
 
 class NextExam(JoinChoice):
   EXAM_TYPE      = _tr('Next-Exam')
-  JOIN_LABEL     = _tr('Use Next-Exam to join the exam')
+  JOIN_LABEL     = _tr('Use Next-Exam to join the exam.')
   NEXTEXAM_PATH  = '/opt/next-exam-puavo-student'
 
   def __init__(self, chooser):
@@ -504,12 +566,12 @@ class NextExam(JoinChoice):
     grid.attach(self.label, 0, row, 1, 1)
 
 
-  def join_info(self, info):
+  def join_info(self):
     return _tr('Do you want to use Next-Exam to join the exam?')
 
 
   def on_join_clicked(self, button):
-    if self.show_confirmation(''):
+    if self.show_confirmation(None):
       self.start_session()
 
 
