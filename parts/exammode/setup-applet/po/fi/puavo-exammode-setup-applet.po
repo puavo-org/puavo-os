@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"PO-Revision-Date: 2021-12-01 10:54+0200\n"
+"PO-Revision-Date: 2026-02-06 13:18+0200\n"
 "Last-Translator: Puavo Org <dev@opinsys.fi>\n"
 "Language-Team: none\n"
 "Language: fi\n"
@@ -13,11 +13,11 @@ msgstr ""
 
 #: puavo-exammode-setup-applet:79
 msgid "Join the exam?"
-msgstr ""
+msgstr "Liitytäänkö kokeeseen?"
 
 #: puavo-exammode-setup-applet:104
 msgid "The exam address is"
-msgstr ""
+msgstr "Kokeen osoite on"
 
 #: puavo-exammode-setup-applet:118
 msgid ""
@@ -27,32 +27,36 @@ msgstr "Nykyinen työpöytäistuntosi lukitaan ja siirryt kokeen istuntoon."
 
 #: puavo-exammode-setup-applet:127
 msgid "Notice"
-msgstr ""
+msgstr "Huomioita"
 
 #: puavo-exammode-setup-applet:138
 msgid "Make sure you are connected to a network, where the exam is accessible."
-msgstr ""
+msgstr "Varmista, että olet yhteydessä verkkoon, jossa koe on saatavilla."
 
 #: puavo-exammode-setup-applet:140
 msgid ""
 "By joining the exam you will accept that session might be technically "
 "monitored to prevent cheating."
 msgstr ""
+"Liittymällä kokeeseen hyväksyt, että istuntoa voidaan teknisesti "
+"valvoa vilpin estämiseksi."
 
 #: puavo-exammode-setup-applet:142
 msgid ""
 "After the exam you will exit the exam session and return to the normal "
 "desktop session through screen unlocking."
 msgstr ""
+"Kokeen jälkeen poistut koeistunnosta ja palaat normaaliin "
+"työpöytäistuntoon näytön lukituksen kautta."
 
 #: puavo-exammode-setup-applet:146
 msgid "Cancel"
-msgstr ""
+msgstr "Peruuta"
 
 #: puavo-exammode-setup-applet:147 puavo-exammode-setup-applet:213
 #: puavo-exammode-setup-applet:239 puavo-exammode-setup-applet:259
 msgid "Join the exam"
-msgstr ""
+msgstr "Liity kokeeseen"
 
 #: puavo-exammode-setup-applet:214 puavo-exammode-setup-applet:260
 msgid "Use the Alt key to override the URL check"
@@ -60,7 +64,7 @@ msgstr "Käytä Alt-näppäintä ohittaaksesi URL-tarkistuksen"
 
 #: puavo-exammode-setup-applet:215
 msgid "Abitti"
-msgstr ""
+msgstr "Abitti"
 
 #: puavo-exammode-setup-applet:241 puavo-exammode-setup-applet:544
 msgid "Next-Exam"
@@ -113,7 +117,7 @@ msgstr "Leikepöydän URL:"
 
 #: puavo-exammode-setup-applet:545
 msgid "Use Next-Exam to join the exam."
-msgstr ""
+msgstr "Käytä Next-Examia liittyäksesi kokeeseen."
 
 #: puavo-exammode-setup-applet:571
 msgid "Do you want to use Next-Exam to join the exam?"
@@ -125,20 +129,8 @@ msgstr "Liity kokeeseen"
 
 #: puavo-exammode-setup-applet:603
 msgid "Choose a way to join an exam."
-msgstr ""
+msgstr "Valitse tapa liittyä kokeeseen."
 
 #: puavo-exammode-setup-applet:843
 msgid "Available exams:"
 msgstr "Kokeita saatavilla:"
-
-#~ msgid "Use Next-Exam to join the exam"
-#~ msgstr "Käytä Next-Examia liittyäksesi kokeeseen"
-
-#~ msgid "Join the Abitti exam"
-#~ msgstr "Liity Abitti-kokeeseen"
-
-#~ msgid "Join the URL exam"
-#~ msgstr "Liity URL-kokeeseen"
-
-#~ msgid "Join the exam on a clipboard URL"
-#~ msgstr "Liity kokeeseen leikepöydän URL:llä"
