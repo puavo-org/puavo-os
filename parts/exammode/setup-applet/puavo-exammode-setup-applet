@@ -76,7 +76,7 @@ class JoinChoice():
     win = self.chooser.window
 
     dialog = Gtk.Dialog(
-        title=_tr('Liitytäänkö kokeeseen?'),
+        title=_tr('Join the exam?'),
         transient_for=win,
         modal=True
     )
@@ -101,7 +101,7 @@ class JoinChoice():
       url_title = Gtk.Label()
       url_title.set_xalign(0)
       url_title.set_use_markup(True)
-      url_title.set_markup('<b>%s</b>' % _tr('Kokeen osoite'))
+      url_title.set_markup('<b>%s</b>' % _tr('The exam address is'))
       content.add(url_title)
 
       url_label = Gtk.Label()
@@ -124,7 +124,7 @@ class JoinChoice():
     notes_title = Gtk.Label()
     notes_title.set_xalign(0)
     notes_title.set_use_markup(True)
-    notes_title.set_markup('<b>%s</b>' % _tr('Huomioitavaa'))
+    notes_title.set_markup('<b>%s</b>' % _tr('Notice'))
     content.add(notes_title)
 
     notes = Gtk.Label()
@@ -135,15 +135,16 @@ class JoinChoice():
       "• %s\n"
       "• %s\n"
       "• %s"
-        % (_tr('Varmista, että olet verkossa, josta kokeeseen pääsee.'),
-            _tr('Liittymällä kokeeseen hyväksyt, että koesuoritusta '
-                'voidaan teknisesti valvoa vilpin estämiseksi.'),
-            _tr('Kokeen jälkeen poistut koeistunnosta ja palaat '
-                'normaalille työpöydälle näytön lukituksen kautta.')))
+        % (_tr('Make sure you are connected to a network,'
+               ' where the exam is accessible.'),
+            _tr('By joining the exam you will accept that session'
+                ' might be technically monitored to prevent cheating.'),
+            _tr('After the exam you will exit the exam session and return to'
+                ' the normal desktop session through screen unlocking.')))
     content.add(notes)
 
-    dialog.add_button(_tr('Peru'), Gtk.ResponseType.CANCEL)
-    join_button = dialog.add_button(_tr('Liity kokeeseen'), Gtk.ResponseType.OK)
+    dialog.add_button(_tr('Cancel'), Gtk.ResponseType.CANCEL)
+    join_button = dialog.add_button(_tr('Join the exam'), Gtk.ResponseType.OK)
     join_button.get_style_context().add_class('suggested-action')
     dialog.set_default_response(Gtk.ResponseType.OK)
 

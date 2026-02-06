@@ -10,7 +10,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-exammode-setup-applet:55 puavo-exammode-setup-applet:374
+#: puavo-exammode-setup-applet:79
+msgid "Join the exam?"
+msgstr ""
+
+#: puavo-exammode-setup-applet:104
+msgid "The exam address is"
+msgstr ""
+
+#: puavo-exammode-setup-applet:118
 msgid ""
 "Your current desktop session will be locked and you will be moved to the "
 "exam session."
@@ -18,92 +26,120 @@ msgstr ""
 "Din nuvarande skrivbordssession kommer att låsas och du flyttas till "
 "provsessionen."
 
-#: puavo-exammode-setup-applet:94 puavo-exammode-setup-applet:235
-#: puavo-exammode-setup-applet:254
-msgid "URL"
-msgstr "URL"
+#: puavo-exammode-setup-applet:127
+msgid "Notice"
+msgstr ""
 
-#: puavo-exammode-setup-applet:103
+#: puavo-exammode-setup-applet:138
+msgid "Make sure you are connected to a network, where the exam is accessible."
+msgstr ""
+
+#: puavo-exammode-setup-applet:140
+msgid ""
+"By joining the exam you will accept that session might be technically "
+"monitored to prevent cheating."
+msgstr ""
+
+#: puavo-exammode-setup-applet:142
+msgid ""
+"After the exam you will exit the exam session and return to the normal "
+"desktop session through screen unlocking."
+msgstr ""
+
+#: puavo-exammode-setup-applet:146
+msgid "Cancel"
+msgstr ""
+
+#: puavo-exammode-setup-applet:147 puavo-exammode-setup-applet:213
+#: puavo-exammode-setup-applet:239 puavo-exammode-setup-applet:259
+msgid "Join the exam"
+msgstr ""
+
+#: puavo-exammode-setup-applet:214 puavo-exammode-setup-applet:260
 msgid "Use the Alt key to override the URL check"
 msgstr "Använd Alt-tangenten för att åsidosätta URL-kontrollen"
 
-#: puavo-exammode-setup-applet:133
-msgid "Do you want to join the exam?"
-msgstr "Vill du delta i provet?"
-
-#: puavo-exammode-setup-applet:201
+#: puavo-exammode-setup-applet:215
 msgid "Abitti"
 msgstr ""
 
-#: puavo-exammode-setup-applet:209
-msgid "Join the Abitti exam"
-msgstr "Gå med i Abitti-provet"
-
-#: puavo-exammode-setup-applet:210
-msgid "Input Abitti code"
-msgstr "Ange Abitti-kod"
-
-#: puavo-exammode-setup-applet:211
-msgid "Enter the Abitti code here"
-msgstr "Ange Abitti-koden här"
-
-#: puavo-exammode-setup-applet:212
-msgid "Abitti Exam"
-msgstr "Abitti-prov"
-
-#: puavo-exammode-setup-applet:213
-msgid "Abitti code:"
-msgstr "Abitti-kod:"
-
-#: puavo-exammode-setup-applet:232
-msgid "Join the URL exam"
-msgstr "Gå med i URL-provet"
-
-#: puavo-exammode-setup-applet:233
-msgid "Input exam URL"
-msgstr "Ange prov-URL"
-
-#: puavo-exammode-setup-applet:234
-msgid "Enter the exam URL here"
-msgstr "Ange prov-URL här"
-
-#: puavo-exammode-setup-applet:236
-msgid "Exam URL:"
-msgstr "Prov-URL:"
-
-#: puavo-exammode-setup-applet:250
-msgid "Join the exam on a clipboard URL"
-msgstr "Gå med i provet via en URL från urklipp"
-
-#: puavo-exammode-setup-applet:252
-msgid "Use the clipboard to get an URL here"
-msgstr "Använd urklipp för att få en URL här"
-
-#: puavo-exammode-setup-applet:255
-msgid "URL from clipboard:"
-msgstr "URL från urklipp:"
-
-#: puavo-exammode-setup-applet:304 puavo-exammode-setup-applet:316
-#: puavo-exammode-setup-applet:317
+#: puavo-exammode-setup-applet:241 puavo-exammode-setup-applet:544
 msgid "Next-Exam"
 msgstr "Next-Exam"
 
-#: puavo-exammode-setup-applet:314
-msgid "Use Next-Exam to join the exam"
-msgstr "Använd Next-Exam för att gå med i provet"
+#: puavo-exammode-setup-applet:261 puavo-exammode-setup-applet:459
+#: puavo-exammode-setup-applet:486
+msgid "URL"
+msgstr "URL"
 
-#: puavo-exammode-setup-applet:346
+#: puavo-exammode-setup-applet:347
+msgid "Do you want to join the exam?"
+msgstr "Vill du delta i provet?"
+
+#: puavo-exammode-setup-applet:435
+msgid "Input Abitti code"
+msgstr "Ange Abitti-kod"
+
+#: puavo-exammode-setup-applet:436
+msgid "Enter the Abitti code here"
+msgstr "Ange Abitti-koden här"
+
+#: puavo-exammode-setup-applet:437
+msgid "Abitti Exam"
+msgstr "Abitti-prov"
+
+#: puavo-exammode-setup-applet:438
+msgid "Abitti code:"
+msgstr "Abitti-kod:"
+
+#: puavo-exammode-setup-applet:457
+msgid "Input exam URL"
+msgstr "Ange prov-URL"
+
+#: puavo-exammode-setup-applet:458
+msgid "Enter the exam URL here"
+msgstr "Ange prov-URL här"
+
+#: puavo-exammode-setup-applet:460
+msgid "Exam URL:"
+msgstr "Prov-URL:"
+
+#: puavo-exammode-setup-applet:484
+msgid "Use the clipboard to get an URL here"
+msgstr "Använd urklipp för att få en URL här"
+
+#: puavo-exammode-setup-applet:487
+msgid "URL from clipboard:"
+msgstr "URL från urklipp:"
+
+#: puavo-exammode-setup-applet:545
+msgid "Use Next-Exam to join the exam."
+msgstr ""
+
+#: puavo-exammode-setup-applet:571
 msgid "Do you want to use Next-Exam to join the exam?"
 msgstr "Vill du använda Next-Exam för att gå med i provet?"
 
-#: puavo-exammode-setup-applet:370 puavo-exammode-setup-applet:379
+#: puavo-exammode-setup-applet:595 puavo-exammode-setup-applet:602
 msgid "Join an exam"
 msgstr "Gå med i ett prov"
 
-#: puavo-exammode-setup-applet:380
+#: puavo-exammode-setup-applet:603
 msgid "Choose a way to join an exam."
 msgstr ""
 
-#: puavo-exammode-setup-applet:621
+#: puavo-exammode-setup-applet:843
 msgid "Available exams:"
 msgstr "Tillgängliga prov:"
+
+#~ msgid "Use Next-Exam to join the exam"
+#~ msgstr "Använd Next-Exam för att gå med i provet"
+
+#~ msgid "Join the Abitti exam"
+#~ msgstr "Gå med i Abitti-provet"
+
+#~ msgid "Join the URL exam"
+#~ msgstr "Gå med i URL-provet"
+
+#~ msgid "Join the exam on a clipboard URL"
+#~ msgstr "Gå med i provet via en URL från urklipp"
