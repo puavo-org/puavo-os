@@ -1,5 +1,6 @@
 use efivar::efi::{Variable, VariableFlags, VariableVendor};
 use log::{debug, warn};
+use std::sync::RwLock;
 
 /// Puavo vendor GUID for custom EFI variables
 const PUAVO_VENDOR_GUID: &str = "7cb44677-9bb9-4504-bb8f-923def5fa3b1";
@@ -7,73 +8,121 @@ const PUAVO_VENDOR_GUID: &str = "7cb44677-9bb9-4504-bb8f-923def5fa3b1";
 /// EFI variable name for requesting a PIN change from the OS
 const PIN_CHANGE_REQUEST_VARIABLE: &str = "PuavoPinChangeRequest";
 
-/// Create a Puavo-namespaced EFI variable.
-fn puavo_variable(name: &str) -> Variable {
-    Variable::new_with_vendor(
-        name,
-        VariableVendor::Custom(PUAVO_VENDOR_GUID.parse().unwrap_or_default()),
-    )
+pub trait EfiProvider: Send + Sync {
+    /// Check if Secure Boot is enabled.
+    fn is_secure_boot_enabled(&self) -> bool;
+
+    /// Check if a PIN change has been requested via EFI variable.
+    fn is_pin_change_requested(&self) -> bool;
+
+    /// Clear the PIN change request EFI variable.
+    fn clear_pin_change_request(&self);
 }
 
-/// Read a boolean flag from a Puavo EFI variable.
-///
-/// Returns `true` if the variable exists and contains a non-zero value.
-fn read_bool_variable(name: &str) -> bool {
-    let variable = puavo_variable(name);
+/// Default EFI provider that interacts with real EFI variables.
+pub struct SystemEfiProvider;
 
-    match efivar::system().read(&variable) {
-        Ok((data, _)) => {
-            // Treat any non-zero value as true
-            let set = !data.is_empty() && data.iter().any(|&byte| byte != 0);
-            debug!("EFI variable '{}': {:?} -> {}", name, data, set);
-            set
+impl SystemEfiProvider {
+    /// Create a Puavo-namespaced EFI variable.
+    fn puavo_variable(name: &str) -> Variable {
+        Variable::new_with_vendor(
+            name,
+            VariableVendor::Custom(
+                PUAVO_VENDOR_GUID.parse().unwrap_or_default(),
+            ),
+        )
+    }
+
+    /// Read a boolean flag from a Puavo EFI variable.
+    fn read_bool_variable(name: &str) -> bool {
+        let variable = Self::puavo_variable(name);
+
+        match efivar::system().read(&variable) {
+            Ok((data, _)) => {
+                let set =
+                    !data.is_empty() && data.iter().any(|&byte| byte != 0);
+                debug!("EFI variable '{}': {:?} -> {}", name, data, set);
+                set
+            }
+            Err(error) => {
+                debug!("Failed to read EFI variable '{}': {}", name, error);
+                false
+            }
         }
-        Err(error) => {
-            debug!("Failed to read EFI variable '{}': {}", name, error);
-            false
+    }
+
+    /// Clear a Puavo EFI variable by writing a zero byte.
+    fn clear_variable(name: &str) {
+        let variable = Self::puavo_variable(name);
+        let flags = VariableFlags::NON_VOLATILE
+            | VariableFlags::BOOTSERVICE_ACCESS
+            | VariableFlags::RUNTIME_ACCESS;
+
+        if let Err(error) = efivar::system().write(&variable, flags, &[0]) {
+            warn!("Failed to clear EFI variable '{}': {}", name, error);
+        } else {
+            debug!("Cleared EFI variable '{}'", name);
         }
     }
 }
 
-/// Clear a Puavo EFI variable by writing a zero byte.
-///
-/// Deleting EFI variables directly often fails with permission errors,
-/// so we write a zero byte instead to effectively clear the variable.
-fn clear_variable(name: &str) {
-    let variable = puavo_variable(name);
-    let flags = VariableFlags::NON_VOLATILE
-        | VariableFlags::BOOTSERVICE_ACCESS
-        | VariableFlags::RUNTIME_ACCESS;
+impl EfiProvider for SystemEfiProvider {
+    fn is_secure_boot_enabled(&self) -> bool {
+        let variable = Variable::new("SecureBoot");
 
-    if let Err(error) = efivar::system().write(&variable, flags, &[0]) {
-        warn!("Failed to clear EFI variable '{}': {}", name, error);
-    } else {
-        debug!("Cleared EFI variable '{}'", name);
+        efivar::system()
+            .read(&variable)
+            .map(|(value, _)| value.ends_with(&[1]))
+            .unwrap_or(false)
     }
+
+    fn is_pin_change_requested(&self) -> bool {
+        Self::read_bool_variable(PIN_CHANGE_REQUEST_VARIABLE)
+    }
+
+    fn clear_pin_change_request(&self) {
+        Self::clear_variable(PIN_CHANGE_REQUEST_VARIABLE)
+    }
+}
+
+/// Global EFI provider instance.
+static EFI_PROVIDER: RwLock<Option<Box<dyn EfiProvider>>> = RwLock::new(None);
+
+/// Execute an operation with the current EFI provider.
+fn with_provider<F, R>(operation: F) -> R
+where
+    F: FnOnce(&dyn EfiProvider) -> R,
+{
+    let guard = EFI_PROVIDER.read().unwrap();
+    match guard.as_ref() {
+        Some(provider) => operation(provider.as_ref()),
+        None => operation(&SystemEfiProvider),
+    }
+}
+
+/// Set a custom EFI provider
+pub fn set_provider(provider: Box<dyn EfiProvider>) {
+    let mut guard = EFI_PROVIDER.write().unwrap();
+    *guard = Some(provider);
+}
+
+/// Reset to the default EFI provider.
+pub fn reset_provider() {
+    let mut guard = EFI_PROVIDER.write().unwrap();
+    *guard = None;
 }
 
 /// Check if Secure Boot is enabled.
-///
-/// Returns `true` if Secure Boot is enabled, `false` otherwise or on error.
 pub fn is_secure_boot_enabled() -> bool {
-    let variable = Variable::new("SecureBoot");
-
-    efivar::system()
-        .read(&variable)
-        .map(|(value, _)| value.ends_with(&[1]))
-        .unwrap_or(false)
+    with_provider(|provider| provider.is_secure_boot_enabled())
 }
 
 /// Check if a PIN change has been requested via EFI variable.
-///
-/// The OS can set this variable to request a PIN change at next boot.
 pub fn is_pin_change_requested() -> bool {
-    read_bool_variable(PIN_CHANGE_REQUEST_VARIABLE)
+    with_provider(|provider| provider.is_pin_change_requested())
 }
 
 /// Clear the PIN change request EFI variable.
-///
-/// Should be called after the PIN change request has been processed.
 pub fn clear_pin_change_request() {
-    clear_variable(PIN_CHANGE_REQUEST_VARIABLE)
+    with_provider(|provider| provider.clear_pin_change_request())
 }
