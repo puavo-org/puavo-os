@@ -334,7 +334,7 @@ class UrlInterface(JoinChoice):
     self.entry.set_sensitive(True)
     self.entry.set_hexpand(True)
     self.entry.set_tooltip_text(self.ENTRY_TOOLTIP)
-    self.entry.connect('activate',           self.on_join_clicked)
+    self.entry.connect('activate',           self.on_join_activated)
     self.entry.connect('changed',            self.url_change_event)
     self.entry.connect('button-press-event', self.url_change_event)
     self.label.connect('button-press-event', self.url_change_event)
@@ -359,6 +359,12 @@ class UrlInterface(JoinChoice):
       self.tab.join_button.set_sensitive(bool(self.target_url))
     else:
       self.tab.join_button.set_sensitive(self.checked)
+
+
+  def on_join_activated(self, button):
+    if not (self.checked and self.target_url):
+      return
+    self.on_join_clicked(button)
 
 
   def on_join_clicked(self, button):
