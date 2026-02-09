@@ -401,8 +401,6 @@ class UrlInterface(JoinChoice):
 
 
   def update_target_url(self, url):
-    if url != self.target_url:
-      syslog.syslog(syslog.LOG_INFO, f'updating target url to {url}')
     self.target_url = url
     if self.joinability_id:
       GLib.source_remove(self.joinability_id)
@@ -423,6 +421,8 @@ class UrlInterface(JoinChoice):
 
 
   def check_url(self, url):
+    syslog.syslog(syslog.LOG_INFO, f'checking if url {url} is reachable')
+
     if self.soup_message:
       self.soup_session.cancel_message(self.soup_message,
                                        Soup.KnownStatusCode.CANCELLED)
