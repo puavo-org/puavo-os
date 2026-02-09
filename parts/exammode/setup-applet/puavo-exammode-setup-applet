@@ -10,6 +10,7 @@ import json
 import os
 import re
 import signal
+import socket
 import subprocess
 import sys
 import syslog
@@ -17,11 +18,12 @@ import syslog
 os.environ['GDK_DPI_SCALE'] = '1.5'
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
+gi.require_version('Gio', '2.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 gi.require_version('Soup', '2.4')
 
-from gi.repository import AyatanaAppIndicator3, Gdk, GLib, Gtk, Notify, Soup
+from gi.repository import AyatanaAppIndicator3, Gdk, Gio, GLib, Gtk, Notify, Soup
 
 gettext.bindtextdomain('puavo-exammode-setup-applet', '/usr/share/locale')
 gettext.textdomain('puavo-exammode-setup-applet')
@@ -388,13 +390,25 @@ class UrlInterface(JoinChoice):
     self.checked = False
     self.tab.join_button.set_sensitive(False)
     text = self.entry.get_text().strip()
-    self.target_url = self.convert_entry_to_url(text)
+    self.target_url = None
+    self.update_target_url_from_text(text)
+
+
+  def update_target_url(self, url):
+    if url != self.target_url:
+      syslog.syslog(syslog.LOG_INFO, f'updating target url to {url}')
+    self.target_url = url
     if self.joinability_id:
       GLib.source_remove(self.joinability_id)
       self.joinability_id = None
     if self.target_url:
       self.joinability_id = GLib.timeout_add(500, self.check_joinability)
     self.tab.update_active_url_ui_element(self)
+
+
+  # AbittiUrl overrides this because this is more convoluted in that case
+  def update_target_url_from_text(self, text):
+    self.update_target_url( self.convert_entry_to_url(text) )
 
 
   def check_joinability(self):
@@ -438,19 +452,122 @@ class AbittiUrl(UrlInterface):
   JOIN_LABEL        = _tr('Abitti code:')
 
 
-  def convert_entry_to_url(self, text):
-    if not text:
-      return None
-    match = re.match(r'^([a-z]+)(?:\s+|-)([a-z]+)$', text)
-    if match:
-      return f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010'
+  def __init__(self, chooser):
+    super().__init__(chooser)
+    self.host_resolver = Gio.Resolver.get_default()
+    self.host_resolver_cancellable = None
+    self.addr_resolver = Gio.Resolver.get_default()
+    self.addr_resolver_cancellable = None
+    self.server_lookup_id = None
 
-    return None
+
+  def lookup_server_by_abitti_single_word(self, name):
+    local_name = f'{name}.local'
+    if self.host_resolver_cancellable:
+      self.host_resolver_cancellable.cancel()
+    self.host_resolver_cancellable = Gio.Cancellable()
+
+    if self.server_lookup_id:
+      GLib.source_remove(self.server_lookup_id)
+      self.server_lookup_id = None
+
+    lookup_fn = lambda: self.lookup_server_fqdn_async(local_name)
+    self.server_lookup_id = GLib.timeout_add(500, lookup_fn)
+
+
+  def lookup_server_fqdn_async(self, local_name):
+    self.server_lookup_id = None
+    self.host_resolver.lookup_by_name_async(local_name,
+                                            self.host_resolver_cancellable,
+                                            self.on_host_lookup_resolved,
+                                            local_name)
+
+
+  def on_host_lookup_resolved(self, resolver, result, hostname):
+    try:
+      inet_addrs = self.host_resolver.lookup_by_name_finish(result)
+      if len(inet_addrs) == 0:
+        syslog.syslog(syslog.LOG_WARNING,
+                      f"no addresses returned when looking up '{hostname}'")
+        self.update_target_url(None)
+        return
+      address = inet_addrs[0]
+      self.addr_resolver.lookup_by_address_async(address,
+                                                 self.addr_resolver_cancellable,
+                                                 self.on_addr_lookup_resolved,
+                                                 address)
+
+    except GLib.Error as e:
+      if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+        self.update_target_url(None)
+        return
+      if e.matches(Gio.resolver_error_quark(), Gio.ResolverError.NOT_FOUND):
+        syslog.syslog(syslog.LOG_WARNING,
+                      f"hostname '{hostname}' could not be found");
+        self.update_target_url(None)
+        return
+      syslog.syslog(syslog.LOG_WARNING, f"unexpected GLib error: {e.message}")
+    except Exception as e:
+      syslog.syslog(syslog.LOG_WARNING, f"unexpected error: {e}")
+      self.update_target_url(None)
+    finally:
+      self.host_resolver_cancellable = None
+
+
+  def on_addr_lookup_resolved(self, resolver, result, address):
+    target_url = None
+
+    try:
+      server_hostname = self.addr_resolver.lookup_by_address_finish(result)
+      if not server_hostname:
+        syslog.syslog(syslog.LOG_WARNING, 'no server hostname returned')
+      else:
+        target_url = f'http://{server_hostname}:8010'
+    except GLib.Error as e:
+      if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+        pass
+      elif e.matches(Gio.resolver_error_quark(), Gio.ResolverError.NOT_FOUND):
+        syslog.syslog(syslog.LOG_WARNING,
+                      f"address '{address}' could not be found");
+      else:
+        syslog.syslog(syslog.LOG_WARNING, f'unexpected GLib error: {e.message}')
+    except Exception as e:
+      syslog.syslog(syslog.LOG_WARNING, f'unexpected error: {e}')
+    finally:
+      self.addr_resolver_cancellable = None
+
+    self.update_target_url(target_url)
 
 
   def start_session(self):
     self.chooser.start_abitti2_session(self.target_url)
 
+
+  # override the default UrlInterface method in this
+  def update_target_url_from_text(self, text):
+    if not text:
+      self.update_target_url(None)
+      return
+
+    # check two word server identifier
+    match = re.match(r'^([a-z]+)(?:\s+|-)([a-z]+)$', text)
+    if match:
+      # two word abitti code means this is the URL
+      self.update_target_url(f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010')
+      return
+
+    # check one word server identifier
+    match = re.match(r'^([a-z0-9]+)$', text)
+    if match:
+      # One word abitti code means we have to resolve server name through dns.
+      # The callback chain should eventually call self.update_target_url().
+      self.lookup_server_by_abitti_single_word( match.group(1) )
+      return
+
+    # XXX check full server name identifier
+    # match = re.match(r'^([a-z0-9]+)$', text)
+
+    return
 
 
 class FreeUrl(UrlInterface):
@@ -476,7 +593,6 @@ class FreeUrl(UrlInterface):
      label = Gtk.Button(label=self.JOIN_LABEL)
      label.set_relief(Gtk.ReliefStyle.NONE)
      return label
-
 
 
 class ClipboardUrl(UrlInterface):
