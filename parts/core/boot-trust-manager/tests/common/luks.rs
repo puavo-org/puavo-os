@@ -1,11 +1,9 @@
 use std::fs;
 use std::process::{Command, Stdio};
 
-pub const TEST_ROOT: &str = "/tmp/boot-trust-manager-test-root";
-pub const BASE_DIRECTORY: &str = "/tmp/boot-trust-manager-test-root/base";
-pub const RECOVERY_KEY: &str = "test-key-12345";
+use crate::common::{TEST_ROOT, script};
 
-const SETUP_SCRIPT: &str = "/project/tests/scripts/luks.sh";
+pub const RECOVERY_KEY: &str = "test-key-12345";
 
 #[allow(dead_code)]
 pub struct TestImages {
@@ -24,18 +22,22 @@ impl TestImages {
     }
 }
 
+fn base_directory() -> String {
+    format!("{}/base", TEST_ROOT)
+}
+
 /// Ensure base images exist, creating them if needed.
 fn ensure_base_images() {
-    let base_vault = format!("{}/vault.img", BASE_DIRECTORY);
+    let base_vault = format!("{}/vault.img", base_directory());
     if fs::metadata(&base_vault).is_ok() {
         return;
     }
 
-    fs::create_dir_all(BASE_DIRECTORY)
+    fs::create_dir_all(base_directory())
         .expect("Failed to create base directory");
 
-    let status = Command::new(SETUP_SCRIPT)
-        .arg(BASE_DIRECTORY)
+    let status = Command::new(script("luks.sh"))
+        .arg(base_directory())
         .arg(RECOVERY_KEY)
         .status()
         .expect("Failed to execute setup script");
@@ -43,25 +45,26 @@ fn ensure_base_images() {
 }
 
 /// Create test images by copying from base images.
-pub fn setup(directory: &str) -> TestImages {
+pub fn setup(test_name: &str) -> TestImages {
     reset();
     ensure_base_images();
 
-    let _ = fs::remove_dir_all(directory);
-    fs::create_dir_all(directory).expect("Failed to create test directory");
+    let directory = format!("{}/{}", TEST_ROOT, test_name);
+    let _ = fs::remove_dir_all(&directory);
+    fs::create_dir_all(&directory).expect("Failed to create test directory");
 
     fs::copy(
-        format!("{}/vault.img", BASE_DIRECTORY),
+        format!("{}/vault.img", base_directory()),
         format!("{}/vault.img", directory),
     )
     .expect("Failed to copy vault image");
     fs::copy(
-        format!("{}/primary.img", BASE_DIRECTORY),
+        format!("{}/primary.img", base_directory()),
         format!("{}/primary.img", directory),
     )
     .expect("Failed to copy primary image");
 
-    TestImages::new(directory)
+    TestImages::new(directory.as_str())
 }
 
 /// Close any open test LUKS devices and detach loop devices.

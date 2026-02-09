@@ -1,14 +1,14 @@
 use std::path::PathBuf;
 
+use serial_test::serial;
+
 use crate::common::{display::TestDisplay, luks};
 use puavo_boot_trust_manager::{
     devices::boot_vault::BootVault, display::UserDisplay,
 };
 
-const TEST_DIRECTORY: &str = "/tmp/boot-trust-manager-test-root/vault";
-
 fn setup() -> luks::TestImages {
-    luks::setup(TEST_DIRECTORY)
+    luks::setup("vault")
 }
 
 fn display() -> Box<dyn UserDisplay> {

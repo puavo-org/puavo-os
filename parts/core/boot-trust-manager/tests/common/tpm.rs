@@ -1,12 +1,13 @@
 use std::process::Command;
 
-const SETUP_SCRIPT: &str = "/project/tests/scripts/tpm.sh";
+use crate::common::script;
 
 /// Reset TPM to fresh state.
 pub fn reset() {
-    let status = Command::new(SETUP_SCRIPT)
+    let setup_script = script("tpm.sh");
+    let status = Command::new(setup_script.as_str())
         .status()
-        .expect(format!("Failed to execute '{}'", SETUP_SCRIPT).as_str());
+        .expect(format!("Failed to execute '{}'", setup_script).as_str());
     assert!(status.success(), "TPM reset failed");
 }
 
