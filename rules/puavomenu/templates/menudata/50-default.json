@@ -834,6 +834,9 @@
                 "id": "nightcode"
             }
         },
+        "nm-connection-editor": {
+            "tags": "default"
+        },
         "novo_desktop_streamer": {
             "type": "custom",
             "command": "puavo-chromium-app run novo_desktop_streamer",
@@ -1883,6 +1886,7 @@
                 "org.cryptomator.Cryptomator",
                 "veracrypt",
                 "system-config-printer",
+                "nm-connection-editor",
                 "gnome-system-monitor",
                 "org.gnome.baobab",
                 "pavucontrol",
