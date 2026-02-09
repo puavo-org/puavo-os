@@ -182,6 +182,9 @@
         "code": {
             "tags": "default, development, education"
         },
+        "com.github.paolostivanin.OTPClient": {
+            "tags": "default"
+        },
         "com.obsproject.Studio": {
             "icon": "obs",
             "tags": "default"
@@ -1875,6 +1878,7 @@
                 "org.gnome.Terminal",
                 "gftp",
                 "filezilla",
+                "com.github.paolostivanin.OTPClient",
                 "org.gnome.seahorse.Application",
                 "org.cryptomator.Cryptomator",
                 "veracrypt",
