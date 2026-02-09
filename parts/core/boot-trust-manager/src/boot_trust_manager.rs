@@ -23,10 +23,15 @@ use crate::{
     },
 };
 
-use crate::ApplicationConfiguration;
-
 /// LUKS device name for the root device
 pub const ROOT_DEVICE_NAME: &str = "root";
+
+/// Configuration options for the boot trust manager.
+#[derive(Debug, Clone, Default)]
+pub struct BootTrustManagerConfiguration {
+    /// Use console UI instead of Plymouth
+    pub force_console: bool,
+}
 
 /// Coordinates detection of configurators and execution of configurators.
 ///
@@ -35,14 +40,14 @@ pub const ROOT_DEVICE_NAME: &str = "root";
 /// - Safely mount and unmount the EFI partition and boot vault image.
 /// - Invoke configurators to manage LUKS TPM tokens.
 ///
-/// Behavior is controlled via `ApplicationConfiguration`.
+/// Behavior is controlled via `BootTrustManagerConfiguration`.
 pub struct BootTrustManager {
-    configuration: ApplicationConfiguration,
+    configuration: BootTrustManagerConfiguration,
 }
 
 impl BootTrustManager {
-    /// Create a new `BootTrustManager` with the specified application configuration.
-    pub fn new(configuration: ApplicationConfiguration) -> Self {
+    /// Create a new `BootTrustManager` with the specified configuration.
+    pub fn new(configuration: BootTrustManagerConfiguration) -> Self {
         Self { configuration }
     }
 
@@ -84,6 +89,36 @@ impl BootTrustManager {
         })
     }
 
+    /// Run configurators with the specified resources, if Secure Boot is enabled.
+    ///
+    /// Parameters:
+    /// - `display`: display instance to show progress and messages.
+    /// - `efi_partition_mount_path`: mount point of the EFI system partition.
+    /// - `boot_vault`: mounted boot vault instance.
+    /// - `primary_partition_manager`: LUKS TPM token manager for the primary partition.
+    /// - `configurators`: configurator instances to run.
+    ///
+    /// Errors:
+    /// Returns `PuavoError` if configurator execution fails.
+    fn check_secure_boot_and_run_configurators(
+        display: &Box<dyn UserDisplay>,
+        boot_vault: BootVault,
+        primary_partition_manager: LuksTpmTokenManager,
+        configurators: Vec<Box<dyn Configurator>>,
+    ) -> Result<(), PuavoError> {
+        if !efi::is_secure_boot_enabled() {
+            info!("Secure Boot is disabled, skipping configuration...");
+            return Ok(());
+        }
+
+        Self::run_configurators(
+            display,
+            boot_vault,
+            primary_partition_manager,
+            configurators,
+        )
+    }
+
     /// Run configurators with the specified resources.
     ///
     /// Parameters:
@@ -95,17 +130,12 @@ impl BootTrustManager {
     ///
     /// Errors:
     /// Returns `PuavoError` if configurator execution fails.
-    fn run_configurators_with_vault(
+    pub fn run_configurators(
         display: &Box<dyn UserDisplay>,
         mut boot_vault: BootVault,
         mut primary_partition_manager: LuksTpmTokenManager,
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
-        if !efi::is_secure_boot_enabled() {
-            info!("Secure Boot is disabled, skipping configuration...");
-            return Ok(());
-        }
-
         info!("Starting configuration...");
         for mut configurator in configurators {
             debug!("Processing configurator '{}'", configurator.name());
@@ -166,13 +196,41 @@ impl BootTrustManager {
     ) -> Result<(), PuavoError> {
         let (efi_mount, primary_device_path) = Self::setup(None)?;
 
-        // Setup boot vault using the EFI partition mount
-        let boot_vault_image_path = efi_mount.mountpoint.join(VAULT_PATH);
+        Self::configure_with_paths(
+            display,
+            configurators,
+            &efi_mount.mountpoint.join(VAULT_PATH),
+            primary_device_path,
+            Some(&efi_mount.mountpoint),
+        )
+
+        // EFI partition is automatically unmounted here
+    }
+
+    /// Configure the boot trust manager using explicitly specified paths.
+    ///
+    /// Parameters:
+    /// - `display`: Display instance to show progress and messages.
+    /// - `configurators`: Configurator instances to run.
+    /// - `boot_vault_image_path`: Path to the boot vault LUKS image file.
+    /// - `primary_device_path`: Path to the primary LUKS partition device.
+    /// - `efi_mountpoint`: Optional EFI partition mount point for saving unlock info.
+    ///
+    /// Returns:
+    /// - `Ok(())` on success.
+    /// - `Err(error)` if configuration fails.
+    pub fn configure_with_paths(
+        display: &Box<dyn UserDisplay>,
+        configurators: Vec<Box<dyn Configurator>>,
+        boot_vault_image_path: &PathBuf,
+        primary_device_path: String,
+        efi_mountpoint: Option<&PathBuf>,
+    ) -> Result<(), PuavoError> {
         info!("Boot vault image path: {:?}", boot_vault_image_path);
 
         let mut boot_vault = BootVault::default();
         info!("Mounting boot vault");
-        boot_vault.mount(&boot_vault_image_path, display)?;
+        boot_vault.mount(boot_vault_image_path, display)?;
         info!("Boot vault mounted");
 
         // Check unlock restrictions before unlocking the primary partition.
@@ -188,17 +246,17 @@ impl BootTrustManager {
 
         // Save unlock info after successful unlock. If a future unlock fails,
         // this info can be compared to identify what changed in the boot chain.
-        unlock_info::save_to_efi(&efi_mount.mountpoint);
+        if let Some(efi_path) = efi_mountpoint {
+            unlock_info::save_to_efi(efi_path);
+        }
 
         // Use the resources for configuration
-        Self::run_configurators_with_vault(
+        Self::check_secure_boot_and_run_configurators(
             display,
             boot_vault,
             primary_partition_manager,
             configurators,
         )
-
-        // EFI partition is automatically unmounted when resources are dropped
     }
 
     /// Shared setup logic for both manage and open operations.

@@ -10,10 +10,6 @@ pub struct TestDisplay {
 }
 
 impl TestDisplay {
-    pub fn new() -> Self {
-        Self { password: None, max_attempts: u32::MAX, attempts: Cell::new(0) }
-    }
-
     pub fn with_password(password: &str) -> Self {
         Self {
             password: Some(password.to_string()),

@@ -13,14 +13,10 @@
 /// to the `BootTrustManager`.
 use clap::{Parser, Subcommand};
 
-use crate::{boot_trust_manager::BootTrustManager, error::PuavoError};
-
-mod boot_trust_manager;
-mod configurators;
-mod devices;
-mod display;
-mod error;
-mod utils;
+use puavo_boot_trust_manager::{
+    boot_trust_manager::{BootTrustManager, BootTrustManagerConfiguration},
+    error::PuavoError,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -28,10 +24,6 @@ struct ApplicationConfiguration {
     /// Use console UI instead of Plymouth
     #[arg(long = "force-console")]
     force_console: bool,
-
-    /// Do not reboot after running a configurator
-    #[arg(long = "no-reboot")]
-    no_reboot: bool,
 
     #[command(subcommand)]
     command: Commands,
@@ -63,7 +55,10 @@ fn main() -> Result<(), i32> {
 
     let configuration = ApplicationConfiguration::parse();
     let command = configuration.command.clone();
-    let manager = BootTrustManager::new(configuration);
+    let manager_config = BootTrustManagerConfiguration {
+        force_console: configuration.force_console,
+    };
+    let manager = BootTrustManager::new(manager_config);
 
     let result = match command {
         Commands::Close { mountpoint } => manager.close(mountpoint),
