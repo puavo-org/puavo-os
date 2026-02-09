@@ -38,7 +38,7 @@ pub struct LuksTpmToken {
 
     /// Whether a user PIN must be provided during unlock.
     #[serde(rename = "tpm2-pin", default)]
-    use_pin: bool,
+    pub use_pin: bool,
 }
 
 /// Enrollment policy used when creating a TPM2 token via `systemd-cryptenroll`.
@@ -46,15 +46,15 @@ pub struct LuksTpmToken {
 pub struct LuksTpmEnrollmentPolicy {
     /// PCR expressions for direct TPM binding (e.g. ["7:sha256", "15:sha256=<value>"]).
     #[serde(rename = "tpm2-pcrs")]
-    specific_pcrs_expressions: Option<Vec<String>>,
+    pub specific_pcrs_expressions: Option<Vec<String>>,
 
     /// PCR expressions to be validated using a TPM public key policy (e.g. ["11:sha256"]).
     #[serde(rename = "tpm2-public-key-pcrs", default)]
-    public_key_pcrs_expressions: Vec<String>,
+    pub public_key_pcrs_expressions: Vec<String>,
 
     /// Directory containing TPM2 public keys to enroll.
     #[serde(rename = "tpm2-public-key-directory", default)]
-    public_key_directory: Option<String>,
+    pub public_key_directory: Option<String>,
 
     // List of public keys inside the directory and their digests.
     // The digest is stored, because it affects the hash of this policy,
@@ -195,6 +195,18 @@ impl LuksTpmTokenManager {
             .load::<()>(Some(EncryptionFormat::Luks2), None)?;
         let manager = Self::new(device, device_path);
         Ok(manager)
+    }
+
+    /// Reload the LUKS2 device metadata from disk.
+    ///
+    /// Errors:
+    /// Returns `PuavoError` if reloading fails.
+    pub fn reload(&mut self) -> Result<(), PuavoError> {
+        debug!("Reloading LUKS device from {}", self.device_path);
+        self.device
+            .context_handle()
+            .load::<()>(Some(EncryptionFormat::Luks2), None)?;
+        Ok(())
     }
 
     /// Construct a manager by attaching to an already opened LUKS2 device by its name.

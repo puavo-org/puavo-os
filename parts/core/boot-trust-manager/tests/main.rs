@@ -1,4 +1,5 @@
 mod common;
+mod configurators;
 mod devices;
 mod utils;
 

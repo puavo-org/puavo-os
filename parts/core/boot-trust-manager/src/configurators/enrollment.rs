@@ -24,14 +24,14 @@ const CONFIGURATION_BASE_DIRECTORY: &str = "/etc/puavo/enrollment";
 const STATE_FILENAME: &str = "enrollment.state.json";
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash)]
-struct EnrollmentItemConfiguration {
+pub struct EnrollmentItemConfiguration {
     /// Name of the enrollment item
-    name: String,
+    pub name: String,
     /// Version of the enrollment item
-    version: u32,
+    pub version: u32,
     /// Enrollment policy
     #[serde(rename = "policy")]
-    policy: LuksTpmEnrollmentPolicy,
+    pub policy: LuksTpmEnrollmentPolicy,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -97,16 +97,32 @@ pub struct EnrollmentConfigurator {
 }
 
 impl EnrollmentConfigurator {
-    pub fn new() -> Result<Vec<Self>, PuavoError> {
-        debug!("Loading enrollments from {}", CONFIGURATION_BASE_DIRECTORY);
+    /// Returns the loaded enrollment configurations.
+    pub fn enrollments(&self) -> &[EnrollmentItemConfiguration] {
+        &self.configuration.enrollments
+    }
 
-        let directory_reader = match fs::read_dir(CONFIGURATION_BASE_DIRECTORY)
-        {
+    /// Load enrollment configurations from the default system directory.
+    pub fn new() -> Result<Vec<Self>, PuavoError> {
+        Self::from_directory(CONFIGURATION_BASE_DIRECTORY)
+    }
+
+    /// Load enrollment configurations from the specified directory.
+    ///
+    /// Parameters:
+    /// - `directory`: Path to directory containing enrollment JSON files.
+    ///
+    /// Returns:
+    /// A vector of configurators, one per enrollment set found.
+    pub fn from_directory(directory: &str) -> Result<Vec<Self>, PuavoError> {
+        debug!("Loading enrollments from {}", directory);
+
+        let directory_reader = match fs::read_dir(directory) {
             Ok(reader) => reader,
             Err(error) if error.kind() == ErrorKind::NotFound => {
                 debug!(
                     "Enrollment directory '{}' does not exist, skipping",
-                    CONFIGURATION_BASE_DIRECTORY
+                    directory
                 );
                 return Ok(Vec::new());
             }
