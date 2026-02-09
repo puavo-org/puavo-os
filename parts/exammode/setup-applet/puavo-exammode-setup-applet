@@ -452,11 +452,10 @@ class UrlInterface(JoinChoice):
 
 
 class AbittiUrl(UrlInterface):
-  ENTRY_PLACEHOLDER = _tr('Input Abitti code')
-  ENTRY_TOOLTIP     = _tr('Enter the Abitti code here')
+  ENTRY_PLACEHOLDER = _tr('Abitti server name')
+  ENTRY_TOOLTIP     = _tr('Enter the Abitti server name here')
   EXAM_TYPE         = _tr('Abitti Exam')
-  JOIN_LABEL        = _tr('Abitti code:')
-
+  JOIN_LABEL        = _tr('Exam server name:')
 
   def __init__(self, chooser):
     super().__init__(chooser)
