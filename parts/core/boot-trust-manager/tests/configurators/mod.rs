@@ -1,1 +1,2 @@
 mod enrollment;
+mod pin;
