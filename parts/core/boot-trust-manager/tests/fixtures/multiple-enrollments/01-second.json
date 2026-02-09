@@ -1,0 +1,7 @@
+{
+  "name": "second-enrollment",
+  "version": 2,
+  "policy": {
+    "tpm2-pcrs": ["8:sha256"]
+  }
+}

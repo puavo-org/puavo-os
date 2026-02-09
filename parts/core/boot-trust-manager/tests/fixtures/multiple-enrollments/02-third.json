@@ -1,0 +1,8 @@
+{
+  "name": "third-enrollment",
+  "version": 3,
+  "policy": {
+    "tpm2-pcrs": ["11:sha256"],
+    "tpm2-public-key-pcrs": ["4:sha256", "9:sha256"]
+  }
+}

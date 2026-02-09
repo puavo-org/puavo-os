@@ -1,0 +1,7 @@
+{
+  "name": "test-enrollment",
+  "version": 1,
+  "policy": {
+    "tpm2-pcrs": ["16:sha256"]
+  }
+}
