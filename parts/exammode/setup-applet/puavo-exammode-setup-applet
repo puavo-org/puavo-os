@@ -570,10 +570,8 @@ class AbittiUrl(UrlInterface):
       self.lookup_server_by_abitti_single_word( match.group(1) )
       return
 
-    # XXX check full server name identifier
-    # match = re.match(r'^([a-z0-9]+)$', text)
-
-    return
+    # try with the assumption that text is the full server name
+    self.update_target_url(f'http://{ text }:8010')
 
 
 class FreeUrl(UrlInterface):
