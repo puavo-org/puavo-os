@@ -1,4 +1,5 @@
 pub mod display;
+pub mod efi;
 pub mod luks;
 pub mod tpm;
 
