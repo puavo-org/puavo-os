@@ -1,7 +1,10 @@
+use serial_test::serial;
+
 use crate::common::tpm;
 use puavo_boot_trust_manager::utils::tpm::read_pcrs_as_string;
 
 #[test]
+#[serial]
 fn test_read_pcrs_matches_tpm2_tools() {
     tpm::reset();
 
@@ -26,6 +29,7 @@ fn test_read_pcrs_matches_tpm2_tools() {
 }
 
 #[test]
+#[serial]
 fn test_read_pcrs_sees_extended_value() {
     tpm::reset();
 

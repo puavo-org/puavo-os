@@ -16,6 +16,7 @@ fn display() -> Box<dyn UserDisplay> {
 }
 
 #[test]
+#[serial]
 fn mount_with_recovery_key() {
     let images = setup();
 
@@ -29,6 +30,7 @@ fn mount_with_recovery_key() {
 }
 
 #[test]
+#[serial]
 fn mount_with_wrong_key_fails() {
     let images = setup();
     let wrong_display: Box<dyn UserDisplay> =
@@ -40,6 +42,7 @@ fn mount_with_wrong_key_fails() {
 }
 
 #[test]
+#[serial]
 fn resources_read_write_property() {
     let images = setup();
 
