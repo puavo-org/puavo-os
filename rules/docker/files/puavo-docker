@@ -556,7 +556,7 @@ startup_container_list.each do |container_name|
   puavoconf_var = "puavo.docker.#{ container_name }.enabled"
   if $puavoconf_values[puavoconf_var] == 'true' then
     puts("> starting up container #{ container_name }")
-    unless system('docker-compose', '--file', DOCKER_COMPOSE_PATH,
+    unless system('docker', 'compose', '--file', DOCKER_COMPOSE_PATH,
                     '--project-name', 'puavo', 'up', '-d',
                     container_name) then
       warn("error in starting up #{ container_name }")
