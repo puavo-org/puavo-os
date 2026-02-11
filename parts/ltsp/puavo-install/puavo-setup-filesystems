@@ -732,9 +732,7 @@ module DiskHandler
     secure_boot_files = ['secure-boot.priv', 'secure-boot.der', 'secure-boot.pem']
     secure_boot_files.each do |filename|
       src = File.join(device_keys_temporary_directory, filename)
-      if File.exist?(src)
-        FileUtils.cp(src, final_addons_directory)
-      end
+      FileUtils.cp(src, final_addons_directory)
     end
   end
 
