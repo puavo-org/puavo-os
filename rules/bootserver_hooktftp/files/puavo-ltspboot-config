@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Get grub.cfg configuration data from th puavo-rest server.
+# Get grub.cfg configuration data from the puavo-rest server.
 #
 # Usage: puavo-ltspboot-config [PXE GET URL]
 #
@@ -102,8 +102,13 @@ EOF
   cat <<'EOF'
 menuentry 'Local OS' --class os --id local {
   insmod chain
-  search --set=root --file /EFI/debian/grubx64.efi
-  chainloader /EFI/debian/grubx64.efi
+  if [ $grub_platform = "efi" ] ; then
+    search --set=root --file /EFI/debian/grubx64.efi
+    chainloader /EFI/debian/grubx64.efi
+  else
+    set root=(hd0)
+    chainloader +1
+  fi
 }
 EOF
 }
@@ -181,8 +186,13 @@ timeout 5
 
 menuentry 'Local OS' --class os --id local {
   insmod chain
-  search --set=root --file /EFI/debian/grubx64.efi
-  chainloader /EFI/debian/grubx64.efi
+  if [ $grub_platform = "efi" ] ; then
+    search --set=root --file /EFI/debian/grubx64.efi
+    chainloader /EFI/debian/grubx64.efi
+  else
+    set root=(hd0)
+    chainloader +1
+  fi
 }
 HEADER_EOF
 )
