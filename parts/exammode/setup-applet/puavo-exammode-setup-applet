@@ -10,6 +10,7 @@ import json
 import os
 import re
 import signal
+import socket
 import subprocess
 import sys
 import syslog
@@ -17,11 +18,12 @@ import syslog
 os.environ['GDK_DPI_SCALE'] = '1.5'
 
 gi.require_version('AyatanaAppIndicator3', '0.1')
+gi.require_version('Gio', '2.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 gi.require_version('Soup', '2.4')
 
-from gi.repository import AyatanaAppIndicator3, Gdk, GLib, Gtk, Notify, Soup
+from gi.repository import AyatanaAppIndicator3, Gdk, Gio, GLib, Gtk, Notify, Soup
 
 gettext.bindtextdomain('puavo-exammode-setup-applet', '/usr/share/locale')
 gettext.textdomain('puavo-exammode-setup-applet')
@@ -31,6 +33,25 @@ dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
 
+css = b"""
+button {
+   transition: none;
+}
+
+.callout {
+  font-weight: bold;
+  min-width: 8em;
+}
+"""
+provider = Gtk.CssProvider()
+provider.load_from_data(css)
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(),
+    provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+)
+
 
 def puavoconf_get(puavoconf_key):
   return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
@@ -38,31 +59,98 @@ def puavoconf_get(puavoconf_key):
 
 
 class JoinChoice():
-  DEFAULT_JOIN_SENSITIVITY = False
-
   def __init__(self, chooser):
     self.chooser = chooser
-    self.label = Gtk.Label(label=self.JOIN_LABEL)
-    self.join_button = Gtk.Button(label=self.BUTTON_LABEL,
-                                  sensitive=self.DEFAULT_JOIN_SENSITIVITY)
-    self.join_button.set_tooltip_text(self.BUTTON_TOOLTIP)
-    self.join_button.connect('clicked', self.on_join_clicked)
+    self.label   = self.create_join_label()
+    self.tab     = None
 
 
-  def show_confirmation(self, info):
+  def create_join_label(self):
+     return Gtk.Label(label=self.JOIN_LABEL)
+
+
+  def connect_tab(self, tab):
+    self.tab = tab
+
+
+  def show_confirmation(self, exam_url):
     """Show a confirmation dialog before joining an exam."""
-    primary_text = self.join_info(info)
-    secondary_text = _tr('Your current desktop session will be locked and you will be moved to the exam session.')
-
     win = self.chooser.window
-    dialog = Gtk.MessageDialog(transient_for=win, modal=True,
-        message_type=Gtk.MessageType.QUESTION,
-        buttons=Gtk.ButtonsType.OK_CANCEL, text=primary_text)
-    dialog.format_secondary_text(secondary_text)
-    label = dialog.get_message_area().get_children()[0]
-    label.set_line_wrap(False)
-    label.set_max_width_chars(-1)
 
+    dialog = Gtk.Dialog(
+        title=_tr('Join the exam?'),
+        transient_for=win,
+        modal=True
+    )
+    dialog.set_default_size(860, -1)
+    dialog.set_resizable(False)
+
+    content = dialog.get_content_area()
+    content.set_spacing(12)
+    content.set_margin_top(16)
+    content.set_margin_bottom(16)
+    content.set_margin_start(18)
+    content.set_margin_end(18)
+    
+    title = Gtk.Label()
+    title.set_xalign(0)
+    title.set_use_markup(True)
+    title.set_markup('<span size="x-large" weight="bold">%s</span>'
+                       % self.join_info())
+    content.add(title)
+
+    if exam_url:
+      url_title = Gtk.Label()
+      url_title.set_xalign(0)
+      url_title.set_use_markup(True)
+      url_title.set_markup('<b>%s</b>' % _tr('The exam address is'))
+      content.add(url_title)
+
+      url_label = Gtk.Label()
+      url_label.set_xalign(0)
+      url_label.set_selectable(True)
+      url_label.set_use_markup(True)
+      url_label.set_line_wrap(True)
+      url_label.set_markup(
+        '<span font_family="monospace" alpha="70%%">%s</span>'
+          % GLib.markup_escape_text(exam_url))
+      content.add(url_label)
+
+    desc = Gtk.Label(
+      label=_tr('Your current desktop session will be locked and you'
+                  ' will be moved to the exam session.'))
+    desc.set_xalign(0)
+    desc.set_line_wrap(True)
+    content.add(desc)
+
+    notes_title = Gtk.Label()
+    notes_title.set_xalign(0)
+    notes_title.set_use_markup(True)
+    notes_title.set_markup('<b>%s</b>' % _tr('Notice'))
+    content.add(notes_title)
+
+    notes = Gtk.Label()
+    notes.set_xalign(0)
+    notes.set_line_wrap(True)
+    notes.set_use_markup(True)
+    notes.set_markup(
+      "• %s\n"
+      "• %s\n"
+      "• %s"
+        % (_tr('Make sure you are connected to a network,'
+               ' where the exam is accessible.'),
+            _tr('By joining the exam you will accept that session'
+                ' might be technically monitored to prevent cheating.'),
+            _tr('After the exam you will exit the exam session and return to'
+                ' the normal desktop session through screen unlocking.')))
+    content.add(notes)
+
+    dialog.add_button(_tr('Cancel'), Gtk.ResponseType.CANCEL)
+    join_button = dialog.add_button(_tr('Join the exam'), Gtk.ResponseType.OK)
+    join_button.get_style_context().add_class('suggested-action')
+    dialog.set_default_response(Gtk.ResponseType.OK)
+
+    dialog.show_all()
     response = dialog.run()
     dialog.destroy()
 
@@ -75,47 +163,208 @@ class JoinChoice():
     return False
 
 
+class ExamTab():
+  DEFAULT_JOIN_SENSITIVITY = False
+
+  def __init__(self):
+    self.join_button    = self.create_join_button()
+    self.label          = self.create_tab_label()
+    self.page           = self.create_page()
+
+
+  def create_join_button(self):
+    button = Gtk.Button(label=self.JOIN_BUTTON_LABEL,
+                        sensitive=self.DEFAULT_JOIN_SENSITIVITY)
+    button.set_hexpand(True)
+    button.set_halign(Gtk.Align.FILL)
+    button.get_style_context().add_class('suggested-action')
+    button.set_tooltip_text(self.JOIN_BUTTON_TOOLTIP_TEXT)
+    button.connect('clicked', self.on_join_clicked)
+
+    return button
+
+
+  def make_grid(self):
+    grid = Gtk.Grid()
+    grid.set_column_spacing(6)
+    grid.set_row_spacing(6)
+    grid.set_margin_top(6)
+    grid.set_margin_bottom(6)
+    grid.set_margin_start(6)
+    grid.set_margin_end(6)
+    return grid
+
+
+  def create_tab_label(self):
+     return Gtk.Label(label=self.TAB_LABEL)
+     label = Gtk.Label(label=self.TAB_LABEL)
+     label.set_sensitive(True)
+     label.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+     return label
+
+
+  def create_page(self, content):
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+    box.set_margin_top(6)
+    box.pack_start(content, False, False, 0)
+    box.pack_end(self.join_button, False, False, 0)
+    return box
+
+
+class AbittiTab(ExamTab):
+  JOIN_BUTTON_LABEL        = _tr('Join the exam')
+  JOIN_BUTTON_TOOLTIP_TEXT = _tr('Use the Alt key to override the URL check')
+  TAB_LABEL                = _tr('Abitti')
+
+  def __init__(self, abitti_url):
+    self.abitti_url = abitti_url
+    super().__init__()
+
+
+  def on_join_clicked(self, button):
+    self.abitti_url.on_join_clicked(button)
+
+
+  def create_page(self):
+    choice_grid = self.make_grid()
+    self.abitti_url.attach_to_grid(choice_grid, 0)
+    self.update_active_url_ui_element(self.abitti_url)
+    return super().create_page(choice_grid)
+
+
+  def update_active_url_ui_element(self, active_url):
+    self.abitti_url.set_active()
+
+
+class NextExamTab(ExamTab):
+  DEFAULT_JOIN_SENSITIVITY = True
+  JOIN_BUTTON_LABEL        = _tr('Join the exam')
+  JOIN_BUTTON_TOOLTIP_TEXT = JOIN_BUTTON_LABEL
+  TAB_LABEL                = _tr('Next-Exam')
+
+  def __init__(self, next_exam):
+    self.next_exam = next_exam
+    super().__init__()
+
+
+  def create_page(self):
+    choice_grid = self.make_grid()
+    self.next_exam.attach_to_grid(choice_grid, 0)
+    return super().create_page(choice_grid)
+
+
+  def on_join_clicked(self, button):
+    self.next_exam.on_join_clicked(button)
+
+
+class UrlTab(ExamTab):
+  JOIN_BUTTON_LABEL        = _tr('Join the exam')
+  JOIN_BUTTON_TOOLTIP_TEXT = _tr('Use the Alt key to override the URL check')
+  TAB_LABEL                = _tr('URL')
+
+  def __init__(self, clipboard_url, free_url, clipboard_url_first):
+    self.clipboard_url       = clipboard_url
+    self.free_url            = free_url
+    self.clipboard_url_first = clipboard_url_first
+
+    if self.clipboard_url_first:
+      self.active_url = self.clipboard_url
+    else:
+      self.active_url = self.free_url
+
+    super().__init__()
+
+
+  def create_page(self):
+    choice_grid = self.make_grid()
+
+    if self.clipboard_url_first:
+      first_url = self.clipboard_url
+      second_url = self.free_url
+    else:
+      first_url = self.free_url
+      second_url = self.clipboard_url
+
+    first_url.attach_to_grid(choice_grid, 0)
+    if second_url:
+      second_url.attach_to_grid(choice_grid, 1)
+
+    self.update_active_url_ui_element(first_url)
+
+    return super().create_page(choice_grid)
+
+
+  def update_active_url_ui_element(self, active_url):
+    self.active_url = active_url
+
+    if not (self.clipboard_url and self.free_url):
+      return
+
+    if self.active_url == self.clipboard_url:
+      passive_url = self.free_url
+    else:
+      passive_url = self.clipboard_url
+
+    self.active_url.set_active()
+    passive_url.set_passive()
+
+
+  def on_join_clicked(self, button):
+    self.active_url.on_join_clicked(button)
+
 
 class UrlInterface(JoinChoice):
-  BUTTON_TOOLTIP = _tr('Use the Alt key to override the URL check')
-  ENTRY_ENABLED  = True
+  ENTRY_ENABLED = True
 
   def __init__(self, chooser):
     super().__init__(chooser)
 
-    self.checked = False
+    self.checked        = False
+    self.is_active      = None
     self.joinability_id = None
-    self.soup_message = None
-    self.soup_session = Soup.Session()
-    self.target_url = None
+    self.soup_message   = None
+    self.soup_session   = Soup.Session()
+    self.target_url     = None
 
     self.entry = Gtk.Entry(placeholder_text=self.ENTRY_PLACEHOLDER)
     if not self.ENTRY_ENABLED:
       self.entry.set_editable(False)
-      self.entry.set_sensitive(False)
+      self.entry.set_can_focus(False)
+      self.entry.get_style_context().add_class('dim-label')
+    self.entry.set_sensitive(True)
     self.entry.set_hexpand(True)
     self.entry.set_tooltip_text(self.ENTRY_TOOLTIP)
-    self.entry.connect('activate', self.on_join_clicked)
-    self.entry.connect('changed', self.on_entry_changed)
+    self.entry.connect('activate',           self.on_join_activated)
+    self.entry.connect('changed',            self.url_change_event)
+    self.entry.connect('button-press-event', self.url_change_event)
+    self.label.connect('button-press-event', self.url_change_event)
 
 
   def attach_to_grid(self, grid, row):
-    grid.attach(self.label,       0, row, 1, 1)
-    grid.attach(self.entry,       1, row, 1, 1)
-    grid.attach(self.join_button, 2, row, 1, 1)
+    grid.attach(self.label, 0, row, 1, 1)
+    grid.attach(self.entry, 1, row, 1, 1)
 
 
-  def join_info(self, url):
-    return _tr('Do you want to join the exam?') \
-             + ' ' + f'{ self.EXAM_TYPE } – { url }'
+  def join_info(self):
+    return _tr('Do you want to join the exam?')
 
 
   def join_button_override(self, override_state):
     """Override the join button state based on the Alt key."""
+    if not self.is_active:
+      # if we are not active, we do not affect the join button state
+      return
+
     if override_state:
-      self.join_button.set_sensitive(bool(self.target_url))
+      self.tab.join_button.set_sensitive(bool(self.target_url))
     else:
-      self.join_button.set_sensitive(self.checked)
+      self.tab.join_button.set_sensitive(self.checked)
+
+
+  def on_join_activated(self, button):
+    if not (self.checked and self.target_url):
+      return
+    self.on_join_clicked(button)
 
 
   def on_join_clicked(self, button):
@@ -127,16 +376,43 @@ class UrlInterface(JoinChoice):
     self.chooser.start_url_session(self.target_url)
 
 
-  def on_entry_changed(self, entry):
+  def set_active(self):
+    self.is_active = True
+    self.entry.get_style_context().remove_class('dim-label')
+    self.label.get_style_context().remove_class('dim-label')
+    self.entry.get_style_context().add_class('callout')
+    self.label.get_style_context().add_class('callout')
+
+
+  def set_passive(self):
+    self.is_active = False
+    self.entry.get_style_context().remove_class('callout')
+    self.label.get_style_context().remove_class('callout')
+    self.entry.get_style_context().add_class('dim-label')
+    self.label.get_style_context().add_class('dim-label')
+
+
+  def url_change_event(self, widget, param=None):
     self.checked = False
-    self.join_button.set_sensitive(False)
+    self.tab.join_button.set_sensitive(False)
     text = self.entry.get_text().strip()
-    self.target_url = self.convert_entry_to_url(text)
+    self.target_url = None
+    self.update_target_url_from_text(text)
+
+
+  def update_target_url(self, url):
+    self.target_url = url
     if self.joinability_id:
       GLib.source_remove(self.joinability_id)
       self.joinability_id = None
     if self.target_url:
       self.joinability_id = GLib.timeout_add(500, self.check_joinability)
+    self.tab.update_active_url_ui_element(self)
+
+
+  # AbittiUrl overrides this because this is more convoluted in that case
+  def update_target_url_from_text(self, text):
+    self.update_target_url( self.convert_entry_to_url(text) )
 
 
   def check_joinability(self):
@@ -145,6 +421,8 @@ class UrlInterface(JoinChoice):
 
 
   def check_url(self, url):
+    syslog.syslog(syslog.LOG_INFO, f'checking if url {url} is reachable')
+
     if self.soup_message:
       self.soup_session.cancel_message(self.soup_message,
                                        Soup.KnownStatusCode.CANCELLED)
@@ -169,34 +447,133 @@ class UrlInterface(JoinChoice):
                     'url %s failed a check: %s' % (url, msg.reason_phrase))
       return
     self.checked = True
-    self.join_button.set_sensitive(True)
+    self.tab.join_button.set_sensitive(True)
 
 
 
 class AbittiUrl(UrlInterface):
-  BUTTON_LABEL      = _tr('Join the Abitti exam')
-  ENTRY_PLACEHOLDER = _tr('Input Abitti code')
-  ENTRY_TOOLTIP     = _tr('Enter the Abitti code here')
+  ENTRY_PLACEHOLDER = _tr('Abitti server name')
+  ENTRY_TOOLTIP     = _tr('Enter the Abitti server name here')
   EXAM_TYPE         = _tr('Abitti Exam')
-  JOIN_LABEL        = _tr('Abitti code:')
+  JOIN_LABEL        = _tr('Exam server name:')
+
+  def __init__(self, chooser):
+    super().__init__(chooser)
+    self.host_resolver = Gio.Resolver.get_default()
+    self.host_resolver_cancellable = None
+    self.addr_resolver = Gio.Resolver.get_default()
+    self.addr_resolver_cancellable = None
+    self.server_lookup_id = None
 
 
-  def convert_entry_to_url(self, text):
-    if not text:
-      return None
-    match = re.match(r'^([a-z]+)(?:\s+|-)([a-z]+)$', text)
-    if match:
-      return f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010'
+  def lookup_server_by_abitti_single_word(self, name):
+    local_name = f'{name}.local'
+    if self.host_resolver_cancellable:
+      self.host_resolver_cancellable.cancel()
+    self.host_resolver_cancellable = Gio.Cancellable()
 
-    return None
+    if self.server_lookup_id:
+      GLib.source_remove(self.server_lookup_id)
+      self.server_lookup_id = None
+
+    lookup_fn = lambda: self.lookup_server_fqdn_async(local_name)
+    self.server_lookup_id = GLib.timeout_add(500, lookup_fn)
+
+
+  def lookup_server_fqdn_async(self, local_name):
+    self.server_lookup_id = None
+    self.host_resolver.lookup_by_name_async(local_name,
+                                            self.host_resolver_cancellable,
+                                            self.on_host_lookup_resolved,
+                                            local_name)
+
+
+  def on_host_lookup_resolved(self, resolver, result, hostname):
+    try:
+      inet_addrs = self.host_resolver.lookup_by_name_finish(result)
+      if len(inet_addrs) == 0:
+        syslog.syslog(syslog.LOG_WARNING,
+                      f"no addresses returned when looking up '{hostname}'")
+        self.update_target_url(None)
+        return
+      address = inet_addrs[0]
+      self.addr_resolver.lookup_by_address_async(address,
+                                                 self.addr_resolver_cancellable,
+                                                 self.on_addr_lookup_resolved,
+                                                 address)
+
+    except GLib.Error as e:
+      if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+        self.update_target_url(None)
+        return
+      if e.matches(Gio.resolver_error_quark(), Gio.ResolverError.NOT_FOUND):
+        syslog.syslog(syslog.LOG_WARNING,
+                      f"hostname '{hostname}' could not be found");
+        self.update_target_url(None)
+        return
+      syslog.syslog(syslog.LOG_WARNING, f"unexpected GLib error: {e.message}")
+    except Exception as e:
+      syslog.syslog(syslog.LOG_WARNING, f"unexpected error: {e}")
+      self.update_target_url(None)
+    finally:
+      self.host_resolver_cancellable = None
+
+
+  def on_addr_lookup_resolved(self, resolver, result, address):
+    target_url = None
+
+    try:
+      server_hostname = self.addr_resolver.lookup_by_address_finish(result)
+      if not server_hostname:
+        syslog.syslog(syslog.LOG_WARNING, 'no server hostname returned')
+      else:
+        target_url = f'http://{server_hostname}:8010'
+    except GLib.Error as e:
+      if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+        pass
+      elif e.matches(Gio.resolver_error_quark(), Gio.ResolverError.NOT_FOUND):
+        syslog.syslog(syslog.LOG_WARNING,
+                      f"address '{address}' could not be found");
+      else:
+        syslog.syslog(syslog.LOG_WARNING, f'unexpected GLib error: {e.message}')
+    except Exception as e:
+      syslog.syslog(syslog.LOG_WARNING, f'unexpected error: {e}')
+    finally:
+      self.addr_resolver_cancellable = None
+
+    self.update_target_url(target_url)
 
 
   def start_session(self):
     self.chooser.start_abitti2_session(self.target_url)
 
 
+  # override the default UrlInterface method in this
+  def update_target_url_from_text(self, text):
+    if not text:
+      self.update_target_url(None)
+      return
+
+    # check two word server identifier
+    match = re.match(r'^([a-z]+)(?:\s+|-)([a-z]+)$', text)
+    if match:
+      # two word abitti code means this is the URL
+      self.update_target_url(f'http://{ match.group(1) }-{ match.group(2) }.koe.abitti.net:8010')
+      return
+
+    # check one word server identifier
+    match = re.match(r'^([a-z0-9]+)$', text)
+    if match:
+      # One word abitti code means we have to resolve server name through dns.
+      # The callback chain should eventually call self.update_target_url().
+      self.lookup_server_by_abitti_single_word( match.group(1) )
+      return
+
+    # try with the assumption that text is the full server name
+    self.update_target_url(f'http://{ text }:8010')
+
+
 class FreeUrl(UrlInterface):
-  BUTTON_LABEL      = _tr('Join the URL exam')
   ENTRY_PLACEHOLDER = _tr('Input exam URL')
   ENTRY_TOOLTIP     = _tr('Enter the exam URL here')
   EXAM_TYPE         = _tr('URL')
@@ -213,8 +590,15 @@ class FreeUrl(UrlInterface):
     return url_with_scheme
 
 
+  # FreeUrl needs label which is actually clickable to choose
+  # between two ClipboardUrl and FreeUrl.
+  def create_join_label(self):
+     label = Gtk.Button(label=self.JOIN_LABEL)
+     label.set_relief(Gtk.ReliefStyle.NONE)
+     return label
+
+
 class ClipboardUrl(UrlInterface):
-  BUTTON_LABEL      = _tr('Join the exam on a clipboard URL')
   ENTRY_ENABLED     = False
   ENTRY_PLACEHOLDER = _tr('Use the clipboard to get an URL here')
   ENTRY_TOOLTIP     = ENTRY_PLACEHOLDER
@@ -228,6 +612,14 @@ class ClipboardUrl(UrlInterface):
     self.clipboard_primary = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
     self.clipboard_primary.connect('owner-change',
                                    self.on_clipboard_primary_change)
+
+
+  # ClipboardUrl needs label which is actually clickable to choose
+  # between two ClipboardUrl and FreeUrl.
+  def create_join_label(self):
+     label = Gtk.Button(label=self.JOIN_LABEL)
+     label.set_relief(Gtk.ReliefStyle.NONE)
+     return label
 
 
   def convert_entry_to_url(self, text):
@@ -249,7 +641,7 @@ class ClipboardUrl(UrlInterface):
     else:
       return
 
-    self.on_entry_changed(self.entry)
+    self.url_change_event(self.entry)
 
 
   def on_clipboard_main_change(self, clipboard, event):
@@ -268,12 +660,8 @@ class NextExamNotInstalled(Exception):
 
 
 class NextExam(JoinChoice):
-  DEFAULT_JOIN_SENSITIVITY = True
-
-  BUTTON_LABEL   = _tr('Use Next-Exam to join the exam')
-  BUTTON_TOOLTIP = BUTTON_LABEL
-  EXAM_TYPE      = 'Next-Exam'
-  JOIN_LABEL     = _tr('Next-Exam')
+  EXAM_TYPE      = _tr('Next-Exam')
+  JOIN_LABEL     = _tr('Use Next-Exam to join the exam.')
   NEXTEXAM_PATH  = '/opt/next-exam-puavo-student'
 
   def __init__(self, chooser):
@@ -281,7 +669,6 @@ class NextExam(JoinChoice):
       raise NextExamNotInstalled(f'{ self.NEXTEXAM_PATH } not found')
 
     super().__init__(chooser)
-    self.join_button.set_hexpand(True)
 
 
   @classmethod
@@ -296,16 +683,15 @@ class NextExam(JoinChoice):
 
 
   def attach_to_grid(self, grid, row):
-    grid.attach(self.label,       0, row, 1, 1)
-    grid.attach(self.join_button, 1, row, 2, 1)
+    grid.attach(self.label, 0, row, 1, 1)
 
 
-  def join_info(self, info):
+  def join_info(self):
     return _tr('Do you want to use Next-Exam to join the exam?')
 
 
   def on_join_clicked(self, button):
-    if self.show_confirmation(''):
+    if self.show_confirmation(None):
       self.start_session()
 
 
@@ -315,43 +701,15 @@ class NextExam(JoinChoice):
 
 class ExamChooser():
   def __init__(self, applet):
-    self.applet      = applet
-    self.next_exam   = None
-    self.url_objects = []
-    self.window      = None
-
-    setup_features = puavoconf_get('puavo.exammode.setup.features').split()
-
-    for feature in setup_features:
-      if feature == 'abitti2-code':
-        self.abitti = AbittiUrl(self)
-        self.url_objects.append(self.abitti)
-      elif feature == 'free_url':
-        self.free_url = FreeUrl(self)
-        self.url_objects.append(self.free_url)
-      elif feature == 'clipboard_url':
-        self.clipboard_url = ClipboardUrl(self)
-        self.url_objects.append(self.clipboard_url)
-      elif feature == 'next-exam':
-        self.next_exam = NextExam.create(self)
-      else:
-        syslog.syslog(syslog.LOG_WARNING,
-                      'unknown feature in puavo.exammode.setup.features: %s' \
-                        % feature)
-
-    if not (self.url_objects or self.next_exam):
-      syslog.syslog(syslog.LOG_ERR,
-                    'no features enabled, not creating a chooser window')
-      return
-
-    if self.next_exam and not self.url_objects:
-      # if Next-Exam is the only option, we can skip the chooser window
-      self.start_nextexam_session()
-      return
+    self.applet        = applet
+    self.abitti_tab    = None
+    self.next_exam_tab = None
+    self.url_objects   = []
+    self.url_tab       = None
 
     self.window = Gtk.Window()
     self.window.connect('delete-event', self.on_delete_event)
-    self.window.set_default_size(1000, 40)
+    self.window.set_default_size(760, 320)
     self.window.set_resizable(False)
     self.window.set_title(_tr('Join an exam'))
     self.window.connect('key-press-event',   self.on_key_event)
@@ -360,27 +718,92 @@ class ExamChooser():
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
                        margin=12)
 
-    join_grid = Gtk.Grid()
-    join_grid.set_column_spacing(6)
-    join_grid.set_row_spacing(6)
-    join_grid.set_margin_top(6)
-    join_grid.set_margin_bottom(6)
-    join_grid.set_margin_start(6)
-    join_grid.set_margin_end(6)
+    title = self.label_title(_tr('Join an exam'))
+    subtitle = self.label_subtitle(_tr('Choose a way to join an exam.'))
+    main_box.pack_start(title,    False, False, 0)
+    main_box.pack_start(subtitle, False, False, 0)
 
-    next_row = 0
-    for url_object in self.url_objects:
-      url_object.attach_to_grid(join_grid, next_row)
-      next_row += 1
+    notebook = Gtk.Notebook()
 
-    if self.next_exam:
-      separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-      join_grid.attach(separator, 0, next_row, 3, 1)
-      next_row += 1
-      self.next_exam.attach_to_grid(join_grid, next_row)
+    setup_features_conf = puavoconf_get('puavo.exammode.setup.features')
+    setup_features_no_duplicates_list \
+      = list( dict.fromkeys( setup_features_conf.split() ) )
 
-    main_box.add(join_grid)
+    abitti_url = None
+    clipboard_url = None
+    free_url = None
+    next_exam = None
+
+    joinchoice_list = []
+    for feature in setup_features_no_duplicates_list:
+      if feature == 'abitti2-code':
+        joinchoice = abitti_url = AbittiUrl(self)
+      elif feature == 'clipboard_url':
+        joinchoice = clipboard_url = ClipboardUrl(self)
+      elif feature == 'free_url':
+        joinchoice = free_url = FreeUrl(self)
+      elif feature == 'next-exam':
+        joinchoice = next_exam = NextExam.create(self) # may return None
+      else:
+        syslog.syslog(syslog.LOG_WARNING,
+                      'unknown feature in puavo.exammode.setup.features: %s' \
+                        % feature)
+        continue
+
+      if joinchoice:
+        joinchoice_list.append(joinchoice)
+        if isinstance(joinchoice, UrlInterface):
+          self.url_objects.append(joinchoice)
+
+    if not joinchoice_list:
+        syslog.syslog(syslog.LOG_ERR,
+                      'no features enabled, not creating a chooser window')
+        return
+
+    if next_exam and len(joinchoice_list) == 1:
+      # if Next-Exam is the only option, we can skip the chooser window
+      self.start_nextexam_session()
+      return
+
+    tab_list = []
+    for joinchoice in joinchoice_list:
+      if joinchoice == abitti_url:
+        tab = self.abitti_tab = AbittiTab(abitti_url)
+      elif joinchoice == clipboard_url:
+        if not self.url_tab:
+          self.url_tab = UrlTab(clipboard_url, free_url, True)
+        tab = self.url_tab
+      elif joinchoice == free_url:
+        if not self.url_tab:
+          self.url_tab = UrlTab(clipboard_url, free_url, False)
+        tab = self.url_tab
+      elif joinchoice == next_exam:
+        tab = self.next_exam_tab = NextExamTab(next_exam)
+
+      joinchoice.connect_tab(tab)
+
+      if not tab in tab_list:
+        tab_list.append(tab)
+
+    for tab in tab_list:
+      notebook.append_page(tab.page, tab.label)
+
+    main_box.pack_start(notebook, True, True, 0)
     self.window.add(main_box)
+
+
+  def label_title(self, text):
+    w = Gtk.Label()
+    safe = GLib.markup_escape_text(text)
+    w.set_markup(f'<span size="x-large" weight="bold">{safe}</span>')
+    w.set_xalign(0)
+    return w
+
+
+  def label_subtitle(self, text):
+    w = Gtk.Label(label=text)
+    w.set_xalign(0)
+    return w
 
 
   def check_joins(self, alt_pressed):

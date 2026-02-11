@@ -182,6 +182,9 @@
         "code": {
             "tags": "default, development, education"
         },
+        "com.github.paolostivanin.OTPClient": {
+            "tags": "default"
+        },
         "com.obsproject.Studio": {
             "icon": "obs",
             "tags": "default"
@@ -830,6 +833,9 @@
             "puavopkg": {
                 "id": "nightcode"
             }
+        },
+        "nm-connection-editor": {
+            "tags": "default"
         },
         "novo_desktop_streamer": {
             "type": "custom",
@@ -1875,10 +1881,12 @@
                 "org.gnome.Terminal",
                 "gftp",
                 "filezilla",
+                "com.github.paolostivanin.OTPClient",
                 "org.gnome.seahorse.Application",
                 "org.cryptomator.Cryptomator",
                 "veracrypt",
                 "system-config-printer",
+                "nm-connection-editor",
                 "gnome-system-monitor",
                 "org.gnome.baobab",
                 "pavucontrol",

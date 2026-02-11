@@ -5,6 +5,9 @@ bindir = $(exec_prefix)/bin
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 
+BIN = release/linux-unpacked/puavo-exam-browser
+SOURCE_FILES = $(shell find src -type f -name '*')
+
 .PHONY: all
 all: build
 
@@ -14,11 +17,11 @@ installdirs:
 	mkdir -p $(DESTDIR)/opt/puavo-exam-browser
 
 .PHONY: build
-build: release/linux-unpacked/puavo-exam-browser
+build: $(BIN)
 
-release/linux-unpacked/puavo-exam-browser: package.json
+$(BIN): package.json package-lock.json $(SOURCE_FILES)
 	npm ci
-	npm run dist
+	npm run pack
 
 .PHONY: install
 install: build installdirs

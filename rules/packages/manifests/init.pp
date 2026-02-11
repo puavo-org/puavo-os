@@ -802,6 +802,7 @@ class packages {
     , 'libheif-examples'  # CLI-tools for converting HEIF media.
     , 'mc'
     , 'mousepad'
+    , 'otpclient'
     , 'p7zip-full'
     , 'pass'
     , 'password-gorilla'

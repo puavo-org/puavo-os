@@ -303,6 +303,8 @@ logstep
 ## Best-effort killing of some possibly interfering processes
 systemctl mask colord.service >/dev/null 2>&1 || true
 systemctl stop colord.service >/dev/null 2>&1 || true
+systemctl mask docker.service >/dev/null 2>&1 || true
+systemctl stop docker.service >/dev/null 2>&1 || true
 pkill -f /usr/libexec/tracker   || true
 pkill -f /usr/libexec/gvfs      || true
 pkill -f /usr/bin/pulseaudio    || true
