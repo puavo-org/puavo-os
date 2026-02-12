@@ -8,22 +8,32 @@ use puavo_boot_trust_manager::utils::tpm::read_pcrs_as_string;
 fn test_read_pcrs_matches_tpm2_tools() {
     tpm::reset();
 
-    let result =
-        read_pcrs_as_string(&[0, 7]).expect("Failed to read PCR values");
+    // Extend PCRs 16 and 23 to get non-zero values
+    tpm::extend(
+        16,
+        "1111111111111111111111111111111111111111111111111111111111111111",
+    );
+    tpm::extend(
+        23,
+        "2222222222222222222222222222222222222222222222222222222222222222",
+    );
 
-    let pcr0 = tpm::read(0);
-    let pcr7 = tpm::read(7);
+    let result =
+        read_pcrs_as_string(&[16, 23]).expect("Failed to read PCR values");
+
+    let pcr16 = tpm::read(16);
+    let pcr23 = tpm::read(23);
 
     assert!(
-        result.contains(&pcr0),
-        "Expected PCR 0 value {} not in {}",
-        pcr0,
+        result.contains(&pcr16),
+        "Expected PCR 16 value {} not in {}",
+        pcr16,
         result
     );
     assert!(
-        result.contains(&pcr7),
-        "Expected PCR 7 value {} not in {}",
-        pcr7,
+        result.contains(&pcr23),
+        "Expected PCR 23 value {} not in {}",
+        pcr23,
         result
     );
 }
