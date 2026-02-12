@@ -79,9 +79,15 @@ pub fn setup_primary_loop(images: &luks::TestImages) -> String {
 }
 
 /// Enroll with the specified configuration and then TPM unlock.
+///
+/// Parameters:
+/// - `images`: Test LUKS images
+/// - `enrollment_configuration`: Name of the enrollment fixture directory
+/// - `pin`: Optional PIN to protect the TPM tokens. None for automatic unlock.
 pub fn enroll_and_tpm_unlock(
     images: &luks::TestImages,
     enrollment_configuration: &str,
+    pin: Option<&str>,
 ) -> (BootVault, LuksTpmTokenManager) {
     let primary_device_path = setup_primary_loop(images);
 
@@ -96,7 +102,7 @@ pub fn enroll_and_tpm_unlock(
             LuksTpmTokenManager::from_device_path(primary_device_path.clone())
                 .expect("Failed to create primary manager");
 
-        boot_vault.set_pin(None);
+        boot_vault.set_pin(pin.map(|pin| pin.to_string()));
 
         let mut configurator = EnrollmentConfigurator::from_directory(
             fixture_directory(enrollment_configuration).as_str(),
@@ -111,21 +117,23 @@ pub fn enroll_and_tpm_unlock(
     // Vault unmounts on drop
 
     // Unlock the vault with TPM
-    let no_password_display: Box<dyn UserDisplay> =
-        Box::new(TestDisplay::with_password("").with_max_attempts(0));
+    let unlock_display: Box<dyn UserDisplay> = match pin {
+        Some(pin) => Box::new(TestDisplay::with_password(&pin)),
+        None => Box::new(TestDisplay::with_password("").with_max_attempts(0)),
+    };
 
     let mut boot_vault = BootVault::default();
     boot_vault
-        .mount(&PathBuf::from(&images.vault), &no_password_display)
+        .mount(&PathBuf::from(&images.vault), &unlock_display)
         .expect("TPM unlock should succeed");
 
-    assert!(
-        matches!(
-            boot_vault.unlock_method(),
-            Some(BootVaultUnlockMethod::TpmToken(None))
-        ),
-        "Expected automatic TPM unlock"
-    );
+    let expected_unlock_method = match pin {
+        Some(_) => {
+            BootVaultUnlockMethod::TpmToken(Some(pin.unwrap().to_string()))
+        }
+        None => BootVaultUnlockMethod::TpmToken(None),
+    };
+    assert_eq!(boot_vault.unlock_method(), Some(expected_unlock_method));
 
     let primary_manager =
         LuksTpmTokenManager::from_device_path(primary_device_path)
@@ -134,9 +142,9 @@ pub fn enroll_and_tpm_unlock(
     (boot_vault, primary_manager)
 }
 
-/// Enroll with the default simple-enrollment configuration and TPM unlock.
+/// Enroll with the default simple-enrollment configuration and automatic TPM unlock.
 pub fn enroll_and_tpm_unlock_default(
     images: &luks::TestImages,
 ) -> (BootVault, LuksTpmTokenManager) {
-    enroll_and_tpm_unlock(images, "simple-enrollment")
+    enroll_and_tpm_unlock(images, "simple-enrollment", None)
 }

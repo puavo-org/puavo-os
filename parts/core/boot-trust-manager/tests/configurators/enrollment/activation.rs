@@ -47,7 +47,7 @@ fn activation_triggered_when_token_invalid_due_to_pcr_change() {
 
     // Enroll with two TPM tokens (PCR 16 and 23)
     let (mut boot_vault, mut primary_manager) =
-        enroll_and_tpm_unlock(&images, "two-pcr-enrollment");
+        enroll_and_tpm_unlock(&images, "two-pcr-enrollment", None);
 
     // Clear PCR cache to force token validation
     boot_vault
