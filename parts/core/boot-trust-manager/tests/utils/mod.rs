@@ -1,1 +1,2 @@
+mod hashed;
 mod tpm;
