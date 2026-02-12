@@ -13,7 +13,7 @@ const COMMAND_LINE_PATH: &str = "/proc/cmdline";
 const DMI_PATH: &str = "/sys/class/dmi/id";
 
 /// Location where the unlock information file is stored
-const UNLOCK_INFO_PATH: &str = "EFI/puavo/unlock.info.json";
+pub const UNLOCK_INFO_PATH: &str = "EFI/puavo/unlock.info.json";
 
 /// Firmware information collected from DMI
 #[derive(Serialize)]
