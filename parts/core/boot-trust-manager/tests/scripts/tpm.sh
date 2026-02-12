@@ -22,6 +22,10 @@ for _ in $(seq 1 50); do
             ln -sf "$tpm_device" /dev/tpm0
             ln -sf "$tpmrm_device" /dev/tpmrm0
         }
+        # Configure TPM dictionary lockout to allow more auth failures
+        # Configure max tries, recovery time and lockout recovery time to five minutes
+        tpm2_dictionarylockout --setup-parameters \
+            --max-tries=8 --recovery-time=300 --lockout-recovery-time=300 --auth=''
         exit 0
     done
     sleep 0.1

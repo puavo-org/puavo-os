@@ -1,2 +1,2 @@
-mod enrollment;
-mod pin;
+pub mod enrollment;
+pub mod pin;

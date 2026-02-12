@@ -1,3 +1,3 @@
 mod activation;
-mod common;
+pub mod common;
 mod configuration;
