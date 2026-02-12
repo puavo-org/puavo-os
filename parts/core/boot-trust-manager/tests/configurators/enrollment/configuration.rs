@@ -4,68 +4,13 @@ use puavo_boot_trust_manager::{
     boot_trust_manager::BootTrustManager,
     configurators::{Configurator, enrollment::EnrollmentConfigurator},
     devices::boot_vault::BootVault,
-    display::UserDisplay,
     utils::luks_tpm_token_manager::LuksTpmTokenManager,
 };
 use serial_test::serial;
 
-use crate::common::{display::TestDisplay, fixture_directory, luks, tpm};
+use crate::common::fixture_directory;
 
-fn setup() -> luks::TestImages {
-    tpm::reset();
-    luks::setup("enrollment")
-}
-
-fn display() -> Box<dyn UserDisplay> {
-    Box::new(TestDisplay::with_password(luks::RECOVERY_KEY))
-}
-
-fn enrollment_configurator() -> EnrollmentConfigurator {
-    EnrollmentConfigurator::from_directory(
-        fixture_directory("simple-enrollment").as_str(),
-    )
-    .expect("Failed to create enrollment configurator")
-    .remove(0)
-}
-
-fn verify_no_tokens(token_managers: &mut [&mut LuksTpmTokenManager]) {
-    for manager in token_managers {
-        let tokens = manager.list_tokens().expect("Failed to list TPM tokens");
-        assert!(tokens.is_empty(), "Token manager has tokens");
-    }
-}
-
-/// Helper to mount the boot vault and return it along with the primary partition manager.
-fn mount_vault_and_primary(
-    images: &luks::TestImages,
-    display: &Box<dyn UserDisplay>,
-) -> (BootVault, LuksTpmTokenManager) {
-    // Set up loop device for primary partition
-    let primary_loop = std::process::Command::new("losetup")
-        .args(["--find", "--show", &images.primary])
-        .output()
-        .expect("Failed to set up loop device for primary");
-    assert!(
-        primary_loop.status.success(),
-        "Failed to create primary loop device"
-    );
-
-    let primary_device_path =
-        String::from_utf8_lossy(&primary_loop.stdout).trim().to_string();
-
-    // Mount the boot vault
-    let mut boot_vault = BootVault::default();
-    boot_vault
-        .mount(&PathBuf::from(&images.vault), display)
-        .expect("Failed to mount boot vault");
-
-    // Create primary partition manager
-    let primary_partition_manager =
-        LuksTpmTokenManager::from_device_path(primary_device_path)
-            .expect("Failed to create primary partition manager");
-
-    (boot_vault, primary_partition_manager)
-}
+use super::common::*;
 
 #[test]
 #[serial]
