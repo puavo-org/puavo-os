@@ -312,7 +312,7 @@ module DiskHandler
       'state/var/log'         => {                    'type' => 'btrfssv' },
     },
     'diskinstaller' => {
-      '.EFI'                  => { 'size' => '512M',  'type' => 'fat'     },
+      '.EFI'                  => { 'size' => '768M',  'type' => 'fat'     },
       'installimages'         => {                    'type' => 'btrfssv' },
     },
     'exam' => {
