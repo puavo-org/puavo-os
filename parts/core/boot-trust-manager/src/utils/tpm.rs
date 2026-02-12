@@ -3,12 +3,17 @@ use std::{path::Path, process::Command};
 use log::{debug, info};
 use tss_esapi::{
     Context,
+    constants::{CapabilityType, PropertyTag},
     interface_types::algorithm::HashingAlgorithm,
-    structures::{PcrSelectionListBuilder, PcrSlot},
+    structures::{
+        CapabilityData::TpmProperties, PcrSelectionListBuilder, PcrSlot,
+    },
     tcti_ldr::TctiNameConf,
 };
 
 use crate::error::PuavoError;
+
+const IN_LOCKOUT_FLAG: u32 = 1 << 9;
 
 /// Read PCR values from the TPM.
 ///
@@ -39,9 +44,14 @@ pub fn read_pcrs(
     let pcr_slots: Vec<PcrSlot> = pcr_indices
         .iter()
         .map(|&index| {
-            PcrSlot::try_from(1u32 << index).map_err(|_| {
-                PuavoError::TpmError(format!("Invalid PCR index {}", index))
-            })
+            let invalid_pcr_index_error =
+                || PuavoError::TpmError(format!("Invalid PCR index {}", index));
+
+            // Use checked shift to prevent overflow panic
+            let slot_mask =
+                1u32.checked_shl(index).ok_or_else(invalid_pcr_index_error)?;
+
+            PcrSlot::try_from(slot_mask).map_err(|_| invalid_pcr_index_error())
         })
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -144,4 +154,43 @@ pub fn clear_dictionary_lockout<P: AsRef<Path>>(
             String::from_utf8_lossy(&output.stderr)
         )))
     }
+}
+
+/// Check if the TPM is currently in dictionary attack lockout mode.
+///
+/// Returns:
+/// - `Ok(true)` if the TPM is in lockout mode.
+/// - `Ok(false)` if the TPM is not in lockout mode.
+/// - `Err(PuavoError)` if checking the status fails.
+pub fn is_in_lockout() -> Result<bool, PuavoError> {
+    let tcti = TctiNameConf::from_environment_variable()
+        .unwrap_or(TctiNameConf::Device(Default::default()));
+
+    let mut context = Context::new(tcti).map_err(|error| {
+        PuavoError::TpmError(format!("Failed to create TPM context: {}", error))
+    })?;
+
+    let (capability_data, _more_data) = context
+        .get_capability(
+            CapabilityType::TpmProperties,
+            PropertyTag::Permanent.into(),
+            1,
+        )
+        .map_err(|error| {
+            PuavoError::TpmError(format!(
+                "Failed to get TPM permanent flags: {}",
+                error
+            ))
+        })?;
+
+    if let TpmProperties(props) = capability_data {
+        return Ok(props
+            .iter()
+            .find(|property| property.property() == PropertyTag::Permanent)
+            .map(|property| (property.value() & IN_LOCKOUT_FLAG) != 0)
+            .unwrap_or(false));
+    }
+
+    // If we fail to find the permanent flags, assume not locked out
+    Ok(false)
 }
