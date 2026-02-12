@@ -1,4 +1,4 @@
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 
 use crate::{
     configurators::Configurator,
@@ -54,14 +54,7 @@ impl PinConfigurator {
 
             // Get new PIN
             let new_pin =
-                match display.ask_password("Enter new PIN (empty to remove)") {
-                    Ok(pin) => pin,
-                    Err(error) => {
-                        error!("Failed to read new PIN: {}", error);
-                        let _ = display.show_message("Failed to read input");
-                        continue;
-                    }
-                };
+                display.ask_password("Enter new PIN (empty to remove)")?;
 
             // Handle PIN removal (empty PIN)
             if new_pin.is_empty() {
@@ -73,14 +66,7 @@ impl PinConfigurator {
             }
 
             // Confirm new PIN
-            let confirmed_pin = match display.ask_password("Confirm new PIN") {
-                Ok(pin) => pin,
-                Err(error) => {
-                    error!("Failed to read PIN confirmation: {}", error);
-                    let _ = display.show_message("Failed to read input");
-                    continue;
-                }
-            };
+            let confirmed_pin = display.ask_password("Confirm new PIN")?;
 
             // Check if PINs match
             if new_pin != confirmed_pin {
@@ -149,13 +135,16 @@ impl Configurator for PinConfigurator {
         }
 
         // Prompt for new PIN
-        let new_pin = match self.prompt_for_new_pin(display)? {
-            Some(pin) => pin,
-            None => {
-                // User cancelled
-                return Ok(());
-            }
-        };
+        let new_pin =
+            match self.prompt_for_new_pin(display).map_err(|error| {
+                PuavoError::PinConfigurationError(error.to_string())
+            })? {
+                Some(pin) => pin,
+                None => {
+                    // User cancelled
+                    return Ok(());
+                }
+            };
 
         // Update the PIN state of boot vault
         boot_vault.set_pin(new_pin);

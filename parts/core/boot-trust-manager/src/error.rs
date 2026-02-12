@@ -62,4 +62,7 @@ pub enum PuavoError {
         "Host type '{actual}' does not match the expected value of '{expected}'"
     )]
     HostTypeMismatch { expected: String, actual: String },
+
+    #[error("PIN configuration error: {0}")]
+    PinConfigurationError(String),
 }
