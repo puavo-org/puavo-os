@@ -111,6 +111,7 @@ case "$puavo_hosttype" in
       /var/lib/shorewall
       /var/lib/tftpboot/ltsp
       /var/log
+      /var/log/journal
       /var/spool/anacron
     '
     ;;
@@ -130,6 +131,7 @@ case "$puavo_hosttype" in
       /var/lib/puavo-desktop
       /var/lib/systemd
       /var/log
+      /var/log/journal
       /var/spool/anacron
     '
     ;;
@@ -157,8 +159,5 @@ for x in $(cat /proc/cmdline); do
       ;;
   esac
 done
-
-# clean up old systemd-journald files
-rm -rf /var/log/journal || status=1
 
 exit $status
