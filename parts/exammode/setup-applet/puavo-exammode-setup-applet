@@ -974,7 +974,8 @@ class PuavoExamModeSetupApplet:
         exam_name = exam['name']
         exam_choice = Gtk.MenuItem(label=exam_name)
         exam_choice.set_sensitive(True)
-        exam_choice.connect('activate', lambda w: self.choose_exam(exam_id, w))
+        exam_choice.connect('activate',
+          lambda w, exam_id=exam_id: self.choose_exam(exam_id, w))
         exam_choice.show()
         self.menu.add(exam_choice)
 
