@@ -475,6 +475,9 @@ class AbittiUrl(UrlInterface):
     if self.host_resolver_cancellable:
       self.host_resolver_cancellable.cancel()
     self.host_resolver_cancellable = Gio.Cancellable()
+    if self.addr_resolver_cancellable:
+      self.addr_resolver_cancellable.cancel()
+    self.addr_resolver_cancellable = Gio.Cancellable()
 
     if self.server_lookup_id:
       GLib.source_remove(self.server_lookup_id)
