@@ -639,6 +639,7 @@ class ClipboardUrl(UrlInterface):
 
 
   def set_url_active(self, clipboard, event, can_set_empty):
+    # wait_for_text() is synchronous
     clipboard_text = clipboard.wait_for_text()
     url = self.convert_entry_to_url(clipboard_text)
     if url:
