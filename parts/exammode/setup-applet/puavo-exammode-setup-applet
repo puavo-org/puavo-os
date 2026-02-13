@@ -514,7 +514,6 @@ class AbittiUrl(UrlInterface):
       if len(inet_addrs) == 0:
         syslog.syslog(syslog.LOG_WARNING,
                       f"no addresses returned when looking up '{hostname}'")
-        self.update_target_url(None)
         return
       address = inet_addrs[0]
       self.addr_resolver.lookup_by_address_async(
@@ -525,17 +524,14 @@ class AbittiUrl(UrlInterface):
 
     except GLib.Error as e:
       if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
-        self.update_target_url(None)
         return
       if e.matches(Gio.resolver_error_quark(), Gio.ResolverError.NOT_FOUND):
         syslog.syslog(syslog.LOG_WARNING,
                       f"hostname '{hostname}' could not be found");
-        self.update_target_url(None)
         return
       syslog.syslog(syslog.LOG_WARNING, f"unexpected GLib error: {e.message}")
     except Exception as e:
       syslog.syslog(syslog.LOG_WARNING, f"unexpected error: {e}")
-      self.update_target_url(None)
     finally:
       self.host_resolver_cancellable = None
 
