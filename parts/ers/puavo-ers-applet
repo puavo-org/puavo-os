@@ -335,7 +335,7 @@ class PuavoExamServer (threading.Thread):
                               auth=HTTPBasicAuth(self.ldap_dn,
                                                  self.ldap_password),
                               params=req_params,
-                              timeout=20)
+                              timeout=120)
       if response.status_code != requests.codes.ok:
         self.logger.log(syslog.LOG_ERR,
           'error on GET request to %s: received status code %s' \
