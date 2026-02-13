@@ -363,7 +363,7 @@ class PuavoExamServer (threading.Thread):
       post_args = {
         'auth':    HTTPBasicAuth(self.ldap_dn, self.ldap_password),
         'params':  req_params,
-        'timeout': 20,
+        'timeout': 120,
       }
       if files:
         # file upload requires "multipart/form-data" so can not encode as json
