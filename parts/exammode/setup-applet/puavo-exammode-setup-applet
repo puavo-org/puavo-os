@@ -1005,9 +1005,10 @@ class PuavoExamModeSetupApplet:
       version = examinfo['version'].split('.')
       if len(version) != 2:
         raise Exception('examinfo version is not x.y')
-      if int(version[0]) > 1:
+      major_version = int(version[0])
+      if major_version > 1:
        raise Exception('unsupported exams info version (%d | supported %d)' \
-                          % (version[0], 1))
+                          % (major_version, 1))
 
       if type(examinfo['exams']) != list:
         raise Exception('no exams list')
