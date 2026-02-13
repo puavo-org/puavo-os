@@ -3,6 +3,10 @@ class systemd {
   include ::systemd::sysusers
 
   file {
+    '/etc/systemd/journald.conf':
+      require => Package['systemd'],
+      source  => 'puppet:///modules/systemd/journald.conf';
+
     '/etc/systemd/system.conf':
       require => Package['systemd'],
       source  => 'puppet:///modules/systemd/system.conf';
