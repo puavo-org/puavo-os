@@ -442,6 +442,10 @@ class UrlInterface(JoinChoice):
 
 
   def on_url_checked(self, session, msg, url):
+    # check that the callback is for the url we are checking
+    if not (msg == self.soup_message and url == self.target_url):
+      return
+
     if msg.status_code != Soup.KnownStatusCode.OK:
       syslog.syslog(syslog.LOG_INFO,
                     'url %s failed a check: %s' % (url, msg.reason_phrase))
