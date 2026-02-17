@@ -70,6 +70,44 @@ msgstr "Fehler beim Laden der Wiederherstellungsdaten"
 msgid "Laptop setup"
 msgstr "Laptop Einstellungen"
 
+#: puavo-laptop-setup
+msgid "Change PIN on next boot?"
+msgstr "PIN beim nächsten Start ändern?"
+
+#: puavo-laptop-setup
+msgid ""
+"The disk encryption PIN can only be changed during boot. A PIN change "
+"request will be stored and the system will prompt you to set a new PIN on "
+"the next boot."
+msgstr ""
+"Die Festplattenverschlüsselungs-PIN kann nur beim Starten geändert werden. "
+"Eine PIN-Änderungsanforderung wird gespeichert und das System fordert Sie "
+"beim nächsten Start auf, eine neue PIN festzulegen."
+
+#: puavo-laptop-setup
+msgid "Cancel"
+msgstr "Absagen"
+
+#: puavo-laptop-setup
+msgid "Request PIN change"
+msgstr "PIN-Änderung anfordern"
+
+#: puavo-laptop-setup
+msgid "Request and reboot now"
+msgstr "Anfordern und jetzt neu starten"
+
+#: puavo-laptop-setup
+msgid "Failed to request PIN change"
+msgstr "PIN-Änderungsanforderung fehlgeschlagen"
+
+#: puavo-laptop-setup
+msgid "PIN change requested"
+msgstr "PIN-Änderung angefordert"
+
+#: puavo-laptop-setup
+msgid "You will be prompted to change the PIN on the next boot."
+msgstr "Sie werden beim nächsten Start aufgefordert, die PIN zu ändern."
+
 #: puavo-laptop-setup:620
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sie haben nicht ausreichende Rechte um dieses Werkzeug zu verwenden"
@@ -123,9 +161,21 @@ msgstr "Windows aktivieren"
 msgid "Factory reset..."
 msgstr "Das Zurücksetzen der Werkseinstellungen..."
 
-#: puavo-laptop-setup.glade:238
+#: puavo-laptop-setup.glade
+msgid "Disk encryption..."
+msgstr "Festplattenverschlüsselung..."
+
+#: puavo-laptop-setup.glade
+msgid "Disk encryption"
+msgstr "Festplattenverschlüsselung"
+
+#: puavo-laptop-setup.glade
 msgid "Show recovery QR code"
 msgstr "Festplatten-Wiederherstellungs-QR-Code anzeigen"
+
+#: puavo-laptop-setup.glade
+msgid "Change PIN on next boot..."
+msgstr "PIN beim nächsten Start ändern..."
 
 #: puavo-laptop-setup.glade:257
 msgid "Confirmation of factory reset"

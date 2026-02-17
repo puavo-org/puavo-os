@@ -121,10 +121,22 @@ class PuavoLaptopSetup:
         self.reset_to_factory_settings.connect('clicked',
           self.confirm_reset_to_factory_settings)
 
-        self.show_recovery_qr_code_button \
-          = self.builder.get_object('show_recovery_qr_code')
-        self.show_recovery_qr_code_button.connect('clicked',
-          self.show_recovery_qr_code)
+        self.disk_encryption_button = self.builder.get_object("disk_encryption_button")
+        self.disk_encryption_button.connect("clicked", self.show_disk_encryption_dialog)
+
+        self.disk_encryption_show_qr_code_button = self.builder.get_object(
+            "disk_encryption_show_qr_code"
+        )
+        self.disk_encryption_show_qr_code_button.connect(
+            "clicked", self.show_recovery_qr_code
+        )
+
+        self.disk_encryption_change_pin_button = self.builder.get_object(
+            "disk_encryption_change_pin"
+        )
+        self.disk_encryption_change_pin_button.connect(
+            "clicked", self.request_pin_change
+        )
 
         self.abitti_version_latest_button.connect('toggled',
             self.abitti_version_latest_chosen)
@@ -571,6 +583,76 @@ class PuavoLaptopSetup:
         factory_reset_dialog.run()
         factory_reset_dialog.hide()
 
+    def show_disk_encryption_dialog(self, widget):
+        disk_encryption_dialog = self.builder.get_object("disk_encryption_dialog")
+        disk_encryption_dialog.run()
+        disk_encryption_dialog.hide()
+
+    def request_pin_change(self, widget):
+        # Show a confirmation dialog explaining that PIN change happens
+        # during boot, and ask whether to reboot now.
+        dialog = Gtk.MessageDialog(
+            parent=self.builder.get_object("disk_encryption_dialog"),
+            flags=0,
+            message_type=Gtk.MessageType.QUESTION,
+            text=_tr("Change PIN on next boot?"),
+        )
+        dialog.format_secondary_text(
+            _tr(
+                "The disk encryption PIN can only be changed during "
+                "boot. A PIN change request will be stored and the "
+                "system will prompt you to set a new PIN on the next "
+                "boot."
+            )
+        )
+
+        dialog.add_button(_tr("Cancel"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(_tr("Request PIN change"), Gtk.ResponseType.ACCEPT)
+        dialog.add_button(_tr("Request and reboot now"), Gtk.ResponseType.YES)
+
+        response = dialog.run()
+        dialog.destroy()
+
+        if response in (Gtk.ResponseType.ACCEPT, Gtk.ResponseType.YES):
+            try:
+                subprocess.check_output(
+                    ["pkexec", "/usr/lib/puavo-ltsp-install/puavo-change-unlock-pin"],
+                    stderr=subprocess.PIPE,
+                )
+            except subprocess.CalledProcessError as exception:
+                error_message = (
+                    exception.stderr.decode("utf-8")
+                    if exception.stderr
+                    else str(exception)
+                )
+                error_dialog = Gtk.MessageDialog(
+                    parent=self.builder.get_object("disk_encryption_dialog"),
+                    flags=0,
+                    message_type=Gtk.MessageType.ERROR,
+                    buttons=Gtk.ButtonsType.OK,
+                    text=_tr("Failed to request PIN change"),
+                )
+                error_dialog.format_secondary_text(error_message)
+                error_dialog.run()
+                error_dialog.destroy()
+                return
+
+            if response == Gtk.ResponseType.YES:
+                subprocess.Popen(["systemctl", "reboot"])
+            else:
+                info_dialog = Gtk.MessageDialog(
+                    parent=self.builder.get_object("disk_encryption_dialog"),
+                    flags=0,
+                    message_type=Gtk.MessageType.INFO,
+                    buttons=Gtk.ButtonsType.OK,
+                    text=_tr("PIN change requested"),
+                )
+                info_dialog.format_secondary_text(
+                    _tr("You will be prompted to change the PIN on the next boot.")
+                )
+                info_dialog.run()
+                info_dialog.destroy()
+
     def load_recovery_data(self):
         recovery_data = subprocess.check_output(
             ['/usr/lib/puavo-ltsp-install/puavo-read-recovery-bundle'],
@@ -698,9 +780,20 @@ recovery_qr_code_dialog.connect('delete-event', on_dialog_delete_event)
 recovery_qr_code_dialog_button_close = builder.get_object('recovery_qr_code_dialog_button_close')
 recovery_qr_code_dialog_button_close.connect('clicked', lambda _: recovery_qr_code_dialog.response(Gtk.ResponseType.CLOSE))
 
-show_recovery_qr_code_button = builder.get_object('show_recovery_qr_code')
+disk_encryption_dialog = builder.get_object("disk_encryption_dialog")
+disk_encryption_dialog.connect("delete-event", on_dialog_delete_event)
+
+disk_encryption_dialog_button_close = builder.get_object(
+    "disk_encryption_dialog_button_close"
+)
+disk_encryption_dialog_button_close.connect(
+    "clicked", lambda _: disk_encryption_dialog.response(Gtk.ResponseType.CLOSE)
+)
+
+disk_encryption_button = builder.get_object("disk_encryption_button")
+
 if not is_encrypted_installation():
-    show_recovery_qr_code_button.hide()
+    disk_encryption_button.hide()
 
 try:
     subprocess.check_call([ 'sudo', '-n', 'puavo-conf-local', '--check'])

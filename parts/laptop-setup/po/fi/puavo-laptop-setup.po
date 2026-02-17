@@ -73,6 +73,44 @@ msgstr "Levynpalautustietojen lataus epäonnistui"
 msgid "Laptop setup"
 msgstr "Kannettavan asetukset"
 
+#: puavo-laptop-setup
+msgid "Change PIN on next boot?"
+msgstr "Vaihda PIN-koodi seuraavan käynnistyksen yhteydessä?"
+
+#: puavo-laptop-setup
+msgid ""
+"The disk encryption PIN can only be changed during boot. A PIN change "
+"request will be stored and the system will prompt you to set a new PIN on "
+"the next boot."
+msgstr ""
+"Levysalauksen PIN-koodi voidaan vaihtaa vain käynnistyksen yhteydessä. "
+"PIN-koodin vaihtopyyntö tallennetaan ja järjestelmä pyytää sinua "
+"asettamaan uuden PIN-koodin seuraavan käynnistyksen yhteydessä."
+
+#: puavo-laptop-setup
+msgid "Cancel"
+msgstr "Peruuta"
+
+#: puavo-laptop-setup
+msgid "Request PIN change"
+msgstr "Pyydä PIN-koodin vaihtoa"
+
+#: puavo-laptop-setup
+msgid "Request and reboot now"
+msgstr "Pyydä ja käynnistä uudelleen nyt"
+
+#: puavo-laptop-setup
+msgid "Failed to request PIN change"
+msgstr "PIN-koodin vaihtopyynnön asettaminen epäonnistui"
+
+#: puavo-laptop-setup
+msgid "PIN change requested"
+msgstr "PIN-koodin vaihto pyydetty"
+
+#: puavo-laptop-setup
+msgid "You will be prompted to change the PIN on the next boot."
+msgstr "Sinua pyydetään vaihtamaan PIN-koodi seuraavan käynnistyksen yhteydessä."
+
 #: puavo-laptop-setup:620
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
@@ -126,9 +164,21 @@ msgstr "Ota Windows käyttöön"
 msgid "Factory reset..."
 msgstr "Tehdasasetusten palautus..."
 
-#: puavo-laptop-setup.glade:238
+#: puavo-laptop-setup.glade
+msgid "Disk encryption..."
+msgstr "Levysalaus..."
+
+#: puavo-laptop-setup.glade
+msgid "Disk encryption"
+msgstr "Levysalaus"
+
+#: puavo-laptop-setup.glade
 msgid "Show recovery QR code"
 msgstr "Näytä levynpalautuksen QR-koodi"
+
+#: puavo-laptop-setup.glade
+msgid "Change PIN on next boot..."
+msgstr "Vaihda PIN-koodi seuraavalla käynnistyksellä..."
 
 #: puavo-laptop-setup.glade:257
 msgid "Confirmation of factory reset"

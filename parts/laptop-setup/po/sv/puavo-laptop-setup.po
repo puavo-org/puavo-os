@@ -70,6 +70,44 @@ msgstr "Misslyckades att ladda återställningsdata"
 msgid "Laptop setup"
 msgstr "Laptop inställningar"
 
+#: puavo-laptop-setup
+msgid "Change PIN on next boot?"
+msgstr "Ändra PIN-kod vid nästa start?"
+
+#: puavo-laptop-setup
+msgid ""
+"The disk encryption PIN can only be changed during boot. A PIN change "
+"request will be stored and the system will prompt you to set a new PIN on "
+"the next boot."
+msgstr ""
+"Diskkrypteringens PIN-kod kan bara ändras vid uppstart. En begäran om "
+"PIN-ändring sparas och systemet uppmanar dig att ange en ny PIN-kod vid "
+"nästa start."
+
+#: puavo-laptop-setup
+msgid "Cancel"
+msgstr "Avbryt"
+
+#: puavo-laptop-setup
+msgid "Request PIN change"
+msgstr "Begär PIN-ändring"
+
+#: puavo-laptop-setup
+msgid "Request and reboot now"
+msgstr "Begär och starta om nu"
+
+#: puavo-laptop-setup
+msgid "Failed to request PIN change"
+msgstr "Misslyckades att begära PIN-ändring"
+
+#: puavo-laptop-setup
+msgid "PIN change requested"
+msgstr "PIN-ändring begärd"
+
+#: puavo-laptop-setup
+msgid "You will be prompted to change the PIN on the next boot."
+msgstr "Du kommer att uppmanas att ändra PIN-koden vid nästa start."
+
 #: puavo-laptop-setup:620
 msgid "You do not have the required permissions to use this tool."
 msgstr "Du har inte tillräckliga rättigheter att använda verktyget."
@@ -123,9 +161,21 @@ msgstr "Aktivera Windows"
 msgid "Factory reset..."
 msgstr "Fabriksåterställning..."
 
-#: puavo-laptop-setup.glade:238
+#: puavo-laptop-setup.glade
+msgid "Disk encryption..."
+msgstr "Diskkryptering..."
+
+#: puavo-laptop-setup.glade
+msgid "Disk encryption"
+msgstr "Diskkryptering"
+
+#: puavo-laptop-setup.glade
 msgid "Show recovery QR code"
 msgstr "Visa diskåterställnings-QR-kod"
+
+#: puavo-laptop-setup.glade
+msgid "Change PIN on next boot..."
+msgstr "Ändra PIN-kod vid nästa start..."
 
 #: puavo-laptop-setup.glade:257
 msgid "Confirmation of factory reset"
