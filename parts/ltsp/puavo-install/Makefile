@@ -66,6 +66,7 @@ install : installdirs
 		lib/is-uki-install \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
+		lib/puavo-change-unlock-pin \
 		lib/puavo-create-device-keys \
 		lib/puavo-create-device-secure-boot-keys \
 		lib/puavo-create-device-tpm-keys \
