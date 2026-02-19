@@ -46,6 +46,7 @@ _DNSMASQ_PID_FILE = f"/run/{_THIS_NAME}-dnsmasq.pid"
 _DNSMASQ_LEASES_FILE = f"/var/lib/{_THIS_NAME}-dnsmasq.leases"
 _DNSMASQ_HOSTS_FILE = f"/var/lib/{_THIS_NAME}-dnsmasq.hosts"
 _LOCAL_DOMAIN = "puavo-ers-abitti2server.invalid"
+_NM_CONF_FILE = "/etc/NetworkManager/dnsmasq.d/puavo-ers.conf"
 
 
 def _start_dhcp_dns_server(net: puavo_ers.net.Net) -> int:
@@ -117,6 +118,45 @@ def _stop_dhcp_dns_server() -> int:
     return 1
 
 
+def _reload_networkmanager():
+    completed_process = subprocess.run(
+        ["systemctl", "reload", "NetworkManager.service"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if completed_process.returncode != 0:
+        _LOGGER.warning("failed to reload NetworkManager: %s", completed_process.stderr.decode())
+
+
+def _configure_networkmanager():
+    """Best-effort inclusion of the domain record in the local DNS controlled by NetworkManager
+    """
+    try:
+        with open(f"{_NM_CONF_FILE}.tmp", "w", encoding="utf-8") as nm_conf_file:
+            print(f"addn-hosts={_DNSMASQ_HOSTS_FILE}", file=nm_conf_file)
+    except FileNotFoundError:
+        # This means that /etc/NetworkManager/dnsmasq.d does not
+        # exist, which tells us that NetworkManager is most probably
+        # not being used on this host. And that's fine, then we are
+        # not doing anything.
+        _LOGGER.warning(
+            "/etc/NetworkManager/dnsmasq.d/ does not exist, "
+            "not configuring NetworkManager", _NM_CONF_FILE)
+        return
+    os.rename(f"{_NM_CONF_FILE}.tmp", _NM_CONF_FILE)
+
+    _reload_networkmanager()
+
+
+def _unconfigure_networkmanager():
+    try:
+        os.unlink(_NM_CONF_FILE)
+    except FileNotFoundError:
+        return # A bit weird situation, but that's ok.
+
+    _reload_networkmanager()
+
+
 def _command_start(interface, network, number, args):
     net = puavo_ers.net.Net(interface, network, number)
     net.up()
@@ -124,15 +164,21 @@ def _command_start(interface, network, number, args):
     with open(_DNSMASQ_HOSTS_FILE, "w", encoding="utf-8"):
         pass  # truncate before start
 
-    return _start_dhcp_dns_server(net)
+    try:
+        _configure_networkmanager()
+    finally:
+        return _start_dhcp_dns_server(net)
 
 
 def _command_stop(interface, network, number, args) -> int:
     net = puavo_ers.net.Net(interface, network, number)
     try:
-        return _stop_dhcp_dns_server()
+        _unconfigure_networkmanager()
     finally:
-        net.down()
+        try:
+            return _stop_dhcp_dns_server()
+        finally:
+            net.down()
 
 
 def _command_set_domain(interface, network, number, args) -> int:
@@ -142,14 +188,20 @@ def _command_set_domain(interface, network, number, args) -> int:
     with open(_DNSMASQ_HOSTS_FILE, "w", encoding="utf-8") as dnsmasq_hosts_file:
         dnsmasq_hosts_file.write(f"{ipv4_addr} {args.FQDN}\n")
 
-    return int(_kill_dnsmasq(signal.SIGHUP))
+    try:
+        _reload_networkmanager()
+    finally:
+        return int(_kill_dnsmasq(signal.SIGHUP))
 
 
 def _command_del_domain(interface, network, number, args) -> int:
     with open(_DNSMASQ_HOSTS_FILE, "w", encoding="utf-8"):
         pass  # just truncate
 
-    return int(_kill_dnsmasq(signal.SIGHUP))
+    try:
+        _reload_networkmanager()
+    finally:
+        return int(_kill_dnsmasq(signal.SIGHUP))
 
 
 def _main() -> int:
