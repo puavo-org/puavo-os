@@ -330,7 +330,7 @@
             <child>
               <object class="GtkButton" id="disk_encryption_change_pin">
                 <property name="label" translatable="yes">Change PIN on next boot...</property>
-                <property name="visible">True</property>
+                <property name="visible">False</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
               </object>

@@ -138,6 +138,12 @@ class PuavoLaptopSetup:
             "clicked", self.request_pin_change
         )
 
+        try:
+            if puavoconf_get('puavo.laptop-setup.enable_setting.pin_change') == 'true':
+                self.disk_encryption_change_pin_button.show()
+        except subprocess.CalledProcessError:
+            pass
+
         self.abitti_version_latest_button.connect('toggled',
             self.abitti_version_latest_chosen)
         self.abitti_version_school_button.connect('toggled',

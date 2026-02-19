@@ -13,5 +13,10 @@
     "default": "true",
     "description": "Show/hide the Windows UI elements for puavo-laptop-setup",
     "typehint": "bool"
+  },
+  "puavo.laptop-setup.enable_setting.pin_change": {
+    "default": "false",
+    "description": "Show/hide the disk encryption PIN change button for puavo-laptop-setup",
+    "typehint": "bool"
   }
 }
