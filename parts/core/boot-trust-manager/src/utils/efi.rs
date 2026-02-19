@@ -1,5 +1,5 @@
 use efivar::efi::{Variable, VariableFlags, VariableVendor};
-use log::{debug, warn};
+use log::{debug, error, warn};
 use std::sync::RwLock;
 
 /// Puavo vendor GUID for custom EFI variables
@@ -36,8 +36,12 @@ impl SystemEfiProvider {
     /// Read a boolean flag from a Puavo EFI variable.
     fn read_bool_variable(name: &str) -> bool {
         let variable = Self::puavo_variable(name);
+        let Ok(manager) = efivar::system() else {
+            error!("EFI variables not available");
+            return false;
+        };
 
-        match efivar::system().read(&variable) {
+        match manager.read(&variable) {
             Ok((data, _)) => {
                 let set =
                     !data.is_empty() && data.iter().any(|&byte| byte != 0);
@@ -58,7 +62,12 @@ impl SystemEfiProvider {
             | VariableFlags::BOOTSERVICE_ACCESS
             | VariableFlags::RUNTIME_ACCESS;
 
-        if let Err(error) = efivar::system().write(&variable, flags, &[0]) {
+        let Ok(mut manager) = efivar::system() else {
+            error!("EFI variables not available");
+            return;
+        };
+
+        if let Err(error) = manager.write(&variable, flags, &[0]) {
             warn!("Failed to clear EFI variable '{}': {}", name, error);
         } else {
             debug!("Cleared EFI variable '{}'", name);
@@ -71,7 +80,8 @@ impl EfiProvider for SystemEfiProvider {
         let variable = Variable::new("SecureBoot");
 
         efivar::system()
-            .read(&variable)
+            .ok()
+            .and_then(|manager| manager.read(&variable).ok())
             .map(|(value, _)| value.ends_with(&[1]))
             .unwrap_or(false)
     }
