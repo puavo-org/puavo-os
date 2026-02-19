@@ -1,0 +1,47 @@
+#!/bin/sh
+set -eu
+
+# Create temporary directory and ensure cleanup
+working_directory=$(mktemp -d)
+trap 'rm -rf "$working_directory"' EXIT
+
+# Generate EK for a given algorithm and return public data as base64.
+# Returns empty string if generation fails.
+generate_ek() {
+  algorithm="$1"
+  name="$2"
+
+  echo "generating ${name} EK..." >&2
+
+  if tpm2_createek --key-algorithm="$algorithm" \
+    --ek-context="${working_directory}/ek.ctx" \
+    --public="${working_directory}/ek.pub" \
+    --format=tss 2>/dev/null; then
+    base64 --wrap=0 "${working_directory}/ek.pub"
+  else
+    echo "warning: failed to generate ${name} EK (algorithm may not be supported)" >&2
+    echo ""
+  fi
+}
+
+# Generate different EK types
+rsa_2048=$(generate_ek "rsa" "rsa-2048")
+ecc_nist_p256=$(generate_ek "ecc256" "ecc-nist-p256")
+ecc_nist_p384=$(generate_ek "ecc384" "ecc-nist-p384")
+
+# Check if at least one EK was generated
+if [ -z "$rsa_2048" ] && [ -z "$ecc_nist_p256" ] && [ -z "$ecc_nist_p384" ]; then
+  echo "error: failed to generate any EK public data" >&2
+  exit 1
+fi
+
+# Assemble JSON output
+jq --null-input --monochrome-output \
+  --arg rsa "$rsa_2048" \
+  --arg p256 "$ecc_nist_p256" \
+  --arg p384 "$ecc_nist_p384" \
+  '{
+    "rsa-2048": $rsa,
+    "ecc-nist-p256": $p256,
+    "ecc-nist-p384": $p384
+  } | with_entries(select(.value != ""))'

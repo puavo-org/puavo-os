@@ -69,6 +69,7 @@ install : installdirs
 		lib/puavo-create-device-keys \
 		lib/puavo-create-device-secure-boot-keys \
 		lib/puavo-create-device-tpm-keys \
+		lib/puavo-get-tpm-ek-public \
 		lib/puavo-image-preinst \
 		lib/puavo-prepare-secure-boot \
 		lib/puavo-prepare-tpm-configuration \
