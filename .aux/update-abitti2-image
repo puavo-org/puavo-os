@@ -9,10 +9,118 @@ require 'open-uri'
 Abitti2_image_dir = '/srv/abitti2-images'
 Abitti2_json_path = File.join(Abitti2_image_dir, 'abitti2.json')
 
-class MenuEntry
-  def initialize(title, kernel_arguments)
-    @title = title
-    @kernel_arguments = kernel_arguments
+class GrubCfg
+  def initialize(grub_cfg_text)
+    @orig_grub_cfg = grub_cfg_text
+  end
+
+  def label
+    @orig_grub_cfg.each_line do |line|
+      match = line.match(/linux.*root=live:LABEL=(.*?) /)
+      return match[1] if match
+    end
+
+    raise 'could not determine label in grub.cfg'
+  end
+
+  def get_open_output_submenu(title)
+    output = ''
+    output << %Q|submenu '#{ title }' "$abitti_iso_path" "$abitti_iso_file" {\n|
+    output << %Q|  set abitti_iso_path=$2\n|
+    output << %Q|  set abitti_iso_file=$3\n|
+    return output
+  end
+
+  def get_menuentry(prefix, title, kernel_args)
+    output = ''
+    output << %Q|#{ prefix }menuentry '#{ title }' "$abitti_iso_path" "$abitti_iso_file" --class fedora --class gnu-linux --class gnu --class os {\n|
+    output << %Q|#{ prefix }  set abitti_iso_path=$2\n|
+    output << %Q|#{ prefix }  set abitti_iso_file=$3\n|
+    output << %Q|#{ prefix }  loopback loop "$abitti_iso_path"\n|
+    output << %Q|#{ prefix }  linux (loop)/isolinux/vmlinuz0 iso-scan/filename=abitti2/${abitti_iso_file} #{ kernel_args }\n|
+    output << %Q|#{ prefix }  initrd (loop)/isolinux/initrd0.img\n|
+    output << %Q|#{ prefix }}\n|
+    return output
+  end
+
+  def get_close_output_submenu
+    return "}\n"
+  end
+
+  def for_puavo_os
+    menuentry_title = nil
+    kernel_arguments = nil
+
+    submenu_stack = []
+    brace_depth = 0
+    output_submenu_open = nil
+
+    puavo_grub_cfg = ''
+
+    @orig_grub_cfg.each_line do |line|
+      match = line.match(/^\s*submenu '(.*?)'/)
+      if match then
+        opens = line.count('{')
+        target_depth = brace_depth + opens
+        submenu_stack << { title: match[1], depth: target_depth }
+        next
+      end
+
+      match = line.match(/^\s*menuentry '(.*?)'/)
+      if match then
+        menuentry_title = match[1]
+        if menuentry_title.empty? then
+          raise 'an empty menuentry title found'
+        end
+        next
+      end
+
+      match = line.match(/^\s*linux.*vmlinuz0 (.*)$/)
+      if match then
+        unless menuentry_title then
+          raise 'got a linux command line without menuentry'
+        end
+        kernel_arguments = match[1].strip
+        unless !kernel_arguments.empty? then
+          raise 'kernel command line is empty, that can not be'
+        end
+
+        current_submenu = submenu_stack.last&.dig(:title)
+
+        if current_submenu then
+          if output_submenu_open != current_submenu then
+            puavo_grub_cfg << get_close_output_submenu if output_submenu_open
+            puavo_grub_cfg << get_open_output_submenu(current_submenu)
+            output_submenu_open = current_submenu
+          end
+          puavo_grub_cfg << get_menuentry('  ', menuentry_title, kernel_arguments)
+        else
+          if output_submenu_open then
+            puavo_grub_cfg << get_close_output_submenu
+            output_submenu_open = nil
+          end
+          puavo_grub_cfg << get_menuentry('', menuentry_title, kernel_arguments)
+          puavo_grub_cfg << "\n"
+        end
+
+        kernel_arguments = nil
+        menuentry_title  = nil
+      end
+
+      # update brace depth and pop submenu scopes we have exited
+      opens  = line.count('{')
+      closes = line.count('}')
+      brace_depth += opens - closes
+
+      while !submenu_stack.empty? && brace_depth < submenu_stack.last[:depth] do
+        submenu_stack.pop
+      end
+    end
+
+    # close any open output submenu at EOF
+    puavo_grub_cfg << get_close_output_submenu if output_submenu_open
+
+    return puavo_grub_cfg
   end
 end
 
@@ -20,7 +128,7 @@ class AbittiImage
   def initialize(source_url)
     @filename      = File.basename(source_url)
     @label         = nil
-    @orig_grub_cfg = nil
+    @grub_cfg      = nil
     @path          = File.join(Abitti2_image_dir, @filename)
     @sha256        = nil
     @source_url    = source_url
@@ -46,6 +154,7 @@ class AbittiImage
   def info
     {
       'filename':   @filename,
+      'grub_cfg':   grub_cfg.for_puavo_os,
       'label':      label,
       'sha256':     sha256,
       'size':       size,
@@ -54,32 +163,18 @@ class AbittiImage
   end
 
   def grub_cfg
-    submenutitle = nil
-    menuentries = []
-    @orig_grub_cfg.each_line do |line|
-      # XXX
-    done
-  end
-
-  def update_orig_grub_cfg
-    return if @orig_grub_cfg
+    return @grub_cfg if @grub_cfg
     run_as_mounted do |mntdir|
-      @orig_grub_cfg = File.read(File.join(mntdir, 'EFI', 'BOOT', 'grub.cfg'))
+      grub_cfg_text = File.read(File.join(mntdir, 'EFI', 'BOOT', 'grub.cfg'))
+      @grub_cfg = GrubCfg.new(grub_cfg_text)
+      return @grub_cfg
     end
+
+    raise 'could not find grub.cfg'
   end
 
   def label
-    return @label if @label
-    update_orig_grub_cfg
-    @orig_grub_cfg.each_line do |line|
-      m = line.match(/linux.*root=live:LABEL=(.*?) /)
-      if m
-        @label = m[1]
-        return @label
-      end
-    end
-
-    raise 'could not determine label from grub.cfg'
+    @grub_cfg.label
   end
 
   def run_as_mounted(&block)
