@@ -1,0 +1,120 @@
+#!/usr/bin/ruby
+
+require 'digest'
+require 'json'
+require 'open-uri'
+
+# example url: https://dl.abitti.fi/linux/abitti-candidate-1.0.0.iso
+
+Abitti2_image_dir = '/srv/abitti2-images'
+Abitti2_json_path = File.join(Abitti2_image_dir, 'abitti2.json')
+
+class MenuEntry
+  def initialize(title, kernel_arguments)
+    @title = title
+    @kernel_arguments = kernel_arguments
+  end
+end
+
+class AbittiImage
+  def initialize(source_url)
+    @filename      = File.basename(source_url)
+    @label         = nil
+    @orig_grub_cfg = nil
+    @path          = File.join(Abitti2_image_dir, @filename)
+    @sha256        = nil
+    @source_url    = source_url
+  end
+
+  def download
+    if File.exist?(@path) then
+      puts "File #{ @path } has already been downloaded"
+      return
+    end
+
+    tmp_abitti2_path = "#{ @path }.tmp"
+
+    puts "Downloading #{ @source_url } to #{ @path }"
+    URI.open(@source_url) do |remote|
+      File.open(tmp_abitti2_path, "wb") do |local|
+        IO.copy_stream(remote, local)
+      end
+    end
+    File.rename(tmp_abitti2_path, @path)
+  end
+
+  def info
+    {
+      'filename':   @filename,
+      'label':      label,
+      'sha256':     sha256,
+      'size':       size,
+      'source_url': @source_url,
+    }
+  end
+
+  def grub_cfg
+    submenutitle = nil
+    menuentries = []
+    @orig_grub_cfg.each_line do |line|
+      # XXX
+    done
+  end
+
+  def update_orig_grub_cfg
+    return if @orig_grub_cfg
+    run_as_mounted do |mntdir|
+      @orig_grub_cfg = File.read(File.join(mntdir, 'EFI', 'BOOT', 'grub.cfg'))
+    end
+  end
+
+  def label
+    return @label if @label
+    update_orig_grub_cfg
+    @orig_grub_cfg.each_line do |line|
+      m = line.match(/linux.*root=live:LABEL=(.*?) /)
+      if m
+        @label = m[1]
+        return @label
+      end
+    end
+
+    raise 'could not determine label from grub.cfg'
+  end
+
+  def run_as_mounted(&block)
+    mountdir = File.join(Abitti2_image_dir, 'mnt')
+    if !system('sudo', 'mount', '-r', '-o', 'loop', @path, mountdir) then
+      raise "failed to mount #{ @path } to #{ mountdir }"
+    end
+
+    begin
+      block.call(mountdir)
+    ensure
+      if !system('sudo', 'umount', mountdir) then
+        raise "failed to umount #{ mountdir }"
+      end
+    end
+  end
+
+  def sha256
+    return @sha256 if @sha256
+    @sha256 = Digest::SHA256.file(@path).hexdigest
+  end
+
+  def size
+    File.size(@path)
+  end
+end
+
+abitti2_release_url = ARGV[0]
+unless abitti2_release_url && !abitti2_release_url.empty? then
+  warn "usage: #{ File.basename($0) } next_release_url"
+  exit 1
+end
+
+abitti_img = AbittiImage.new(abitti2_release_url)
+abitti_img.download
+puts abitti_img.info.to_json
+
+exit 0
