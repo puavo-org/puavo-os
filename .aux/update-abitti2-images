@@ -31,7 +31,7 @@ class Abitti2Conf
   def update_config
     backup_old_config
     tmp_abitti2_json_path = "#{ ABITTI2_JSON_PATH }.tmp"
-    config_json = @config.to_json
+    config_json = JSON.pretty_generate(@config)
 
     File.open(tmp_abitti2_json_path, 'w') do |f|
       f.write(config_json)
@@ -39,15 +39,51 @@ class Abitti2Conf
     FileUtils.mv(tmp_abitti2_json_path, ABITTI2_JSON_PATH)
   end
 
+  def add_choice(abitti_choice)
+    choice_label = abitti_choice.label
+    if @config['choices'].has_key?(choice_label) then
+      raise "choice #{ choice_label } already exists!"
+    end
+    choice_info = abitti_choice.info
+    @config['choices'][choice_label] = choice_info
+  end
+
   def add_image(abitti_image)
-    abitti_image.download
     image_filename = abitti_image.filename
+    if @config['images'].has_key?(image_filename) then
+      raise "image #{ image_filename } already exists!"
+    end
+    abitti_image.download
+    image_label = abitti_image.label
     image_info = abitti_image.info
     @config['images'][image_filename] = image_info
+    choice = AbittiChoice.new(abitti_image)
+    add_choice(choice)
   end
 
   def self.get_image_path(filename)
     File.join(ABITTI2_IMAGES_DIR, filename)
+  end
+end
+
+class AbittiChoice
+  def initialize(image)
+    @image = image
+  end
+
+  def info
+    grub_cfg_for_puavo = @image.grub_cfg.for_puavo_os_with_confirm
+    grub_cfg_base64 = Base64.strict_encode64(grub_cfg_for_puavo)
+
+    return {
+      'grub_cfg': grub_cfg_base64,
+      'image': @image.filename,
+      'version': label,
+    }
+  end
+
+  def label
+    @image.label
   end
 end
 
@@ -76,15 +112,11 @@ class AbittiImage
   end
 
   def info
-    grub_cfg_for_puavo = grub_cfg.for_puavo_os_with_confirm
-    grub_cfg_base64 = Base64.strict_encode64(grub_cfg_for_puavo)
     {
-      'filename':   @filename,
-      'grub_cfg':   grub_cfg_base64,
-      'label':      label,
-      'sha256':     sha256,
-      'size':       size,
-      'source_url': @source_url,
+      'puavo_os_filename': @filename,
+      'sha256':            sha256,
+      'size':              size,
+      'source_url':        @source_url,
     }
   end
 
@@ -100,7 +132,7 @@ class AbittiImage
   end
 
   def label
-    @grub_cfg.label
+    grub_cfg.label
   end
 
   def run_as_mounted(&block)
