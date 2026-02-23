@@ -2,6 +2,9 @@
 
 set -eu
 
+abitti2_dir=/images/abitti2
+abitti2_json_path="${abitti2_dir}/abitti2.json"
+
 logmsg() {
   logger -s -t puavo-update-abitti2-image "$@" || true
 }
@@ -12,6 +15,45 @@ error() {
 
   errmsg=$1
   logmsg -p user.err "$1"
+}
+
+get_abitti2_catalogue() {
+  local abitti2_json_tmppath abitti2_server abitti2_sources gnupg_dir url
+
+  abitti2_json_tmppath="${abitti2_json_path}.tmp"
+  abitti2_sources=$(puavo-conf puavo.abitti2.image.sources)
+
+  for url in $abitti2_sources; do
+    if ! wget_with_certauth -q \
+      --output-document "$abitti2_json_tmppath" "$url"; then
+        echo "error fetching ${url}" >&2
+        continue
+    fi
+
+# XXX add GPG check later
+#   abitti2_server=$(dirname "${url#https://}")
+#   gnupg_dir="/root/.puavo/gnupg/${abitti2_server}/abitti2"
+#   if ! gpg --decrypt --homedir "$gnupg_dir" "$abitti2_gpg_tmppath" \
+#     2>/dev/null > "$wim_tmppath"; then
+#       echo "GPG verification failed for ${url}" >&2
+#       continue
+#   fi
+
+    mv "$abitti2_json_tmppath" "$abitti2_json_path" || return 1
+    printf "%s" "${url%/*}" || return 1
+    return 0
+  done
+
+  echo 'could not fetch any source in puavo.abitti2.image.sources' >&2
+  return 1
+}
+
+wget_with_certauth()
+{
+   wget --ca-certificate=/etc/puavo-conf/rootca.pem        \
+        --certificate=/etc/puavo/certs/hostorgcabundle.pem \
+        --private-key=/etc/puavo/certs/host.key            \
+        "$@"
 }
 
 # obtain an exclusive lock on myself...
@@ -55,7 +97,7 @@ post_update_actions() {
 
   # XXX it should be possible to have two
   # there can be only one!
-  find "$abitti2_images_dir" -name '*.iso' \
+  find "$abitti2_dir" -name '*.iso' \
     -and ! -name "${image_abitti2_version}.iso" -exec rm -f \{} \;
 
   edit_extra_system_contents --arg version "$human_abitti2_version" \
@@ -64,19 +106,6 @@ post_update_actions() {
   # XXX do we have to use Grub variables for this?
   grub-editenv /images/boot/grub/grubenv \
                set "abitti2_version_number=${human_abitti2_version}"
-
-  kernel_arguments=$(
-    jq -r --arg image_abitti2_version "$image_abitti2_version" \
-         '.images[$image_abitti2_version].kernel_arguments' \
-           "$abitti2_json_path")
-  [ "$kernel_arguments" = 'null' ] && kernel_arguments=''
-  if [ -n "$kernel_arguments" ]; then
-    grub-editenv /images/boot/grub/grubenv \
-                 set "abitti2_kernel_arguments=${kernel_arguments}"
-  else
-    grub-editenv /images/boot/grub/grubenv \
-                 unset 'abitti2_kernel_arguments'
-  fi
 }
 
 send_status_message() {
@@ -142,7 +171,7 @@ cleanup_previous_runs() {
   fi
 
   # remove temporary files (of non-matching versions).
-  find "$abitti2_images_dir" -type f -name '*.squashfs.tmp' \
+  find "$abitti2_dir" -type f -name '*.iso.tmp' \
     -a ! -name "${abitti2_image}.tmp" -exec rm -f \{} \;
 
   # clean up the rdiffs we do not need
@@ -169,7 +198,7 @@ ensure_enough_available_diskspace() {
                         "$rdiff_name" || true
 
   tmpimage_size=$(
-    stat -c %s "${abitti2_images_dir}/${abitti2_image}.tmp" 2>/dev/null || echo 0)
+    stat -c %s "${abitti2_dir}/${abitti2_image}.tmp" 2>/dev/null || echo 0)
   if [ -n "$rdiff_name" ]; then
     tmprdiff_size=$(
       stat -c %s "${abitti2_rdiffs_dir}/${rdiff_name}.tmp" 2>/dev/null || echo 0)
@@ -197,10 +226,10 @@ ensure_enough_available_diskspace() {
     return 1
   fi
 
-  available_diskspace=$(stat -f -c '%S * %a' "$abitti2_images_dir" \
+  available_diskspace=$(stat -f -c '%S * %a' "$abitti2_dir" \
                           | bc -l | xargs printf %.0f)
   if [ "$available_diskspace" -lt "$required_diskspace" ]; then
-    msg="only $available_diskspace bytes available on $abitti2_images_dir,"
+    msg="only $available_diskspace bytes available on $abitti2_dir,"
     msg="$msg need $required_diskspace bytes"
     error "$msg"
     return 1
@@ -286,21 +315,11 @@ try_torrent_rdiff_update() {
   return 0
 }
 
-# be_very nice
+# be very nice
 ionice -c 3  -p $$
 renice -n 20 -p $$ > /dev/null
 
-abitti2_images_dir=/images/abitti
-abitti2_rdiffs_dir="${abitti2_images_dir}/.rdiffs"
-abitti2_state_dir=/state/abitti
-
-image_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
-if [ -z "$image_server" ]; then
-  read topdomain < /etc/puavo/topdomain
-  image_server="cdn.${topdomain}"
-fi
-
-abitti2_mode=$(puavo-conf puavo.abitti.mode)
+abitti2_mode=$(puavo-conf puavo.abitti2.mode)
 case "$abitti2_mode" in
   do-nothing)
     exit 0
@@ -309,17 +328,16 @@ case "$abitti2_mode" in
     # just continue...
     ;;
   purge)
-    rm -rf "$abitti2_images_dir" "$abitti2_state_dir"
+    rm -rf "$abitti2_dir"
     exit 0
     ;;
   *)
-    error "unsupported abitti mode: '${abitti2_mode}'"
+    error "unsupported abitti2 mode: '${abitti2_mode}'"
     exit 1
     ;;
 esac
 
 download_rate_limit=''
-rsyncopts=''
 if [ "${1:-}" = '--use-rate-limit' ]; then
   download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
   if [ -n "$download_rate_limit" ]; then
@@ -327,46 +345,83 @@ if [ "${1:-}" = '--use-rate-limit' ]; then
       error "the rate limit was not understood, got '$download_rate_limit'"
       exit 1
     fi
-    rsyncopts="--bwlimit=${download_rate_limit}"
   fi
 fi
 
-mkdir -p "$abitti2_images_dir" "$abitti2_state_dir"
-install -d -D -o root -g puavo-update -m 775 "$abitti2_rdiffs_dir"
-
-abitti2_json_path="${abitti2_state_dir}/abitti.json"
-if ! wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
-          -O "${abitti2_json_path}.tmp" \
-          "https://${image_server}/abitti-images/abitti.json"; then
-  rm -f "${abitti2_json_path}.tmp"
-  error "could not download abitti.json from ${image_server}"
-  exit 1
-fi
-mv "${abitti2_json_path}.tmp" "$abitti2_json_path"
-
-puavo_abitti2_version=$(puavo-conf puavo.abitti.version)
+puavo_abitti2_version=$(puavo-conf puavo.abitti2.version)
 if [ -z "$puavo_abitti2_version" ]; then
-  error 'puavo.abitti.version is not set, doing nothing!'
+  error 'puavo.abitti2.version is not set, doing nothing!'
   exit 1
-fi
-if [ "$puavo_abitti2_version" = 'latest' ]; then
-  puavo_abitti2_version=$(jq -r .latest "$abitti2_json_path")
-  if [ -z "$puavo_abitti2_version" -o "$puavo_abitti2_version" = 'null' ]; then
-    error 'could not determine the latest abitti version'
-    exit 1
-  fi
 fi
 
-# XXX not understood in Abitti 2
-build_number=$(get_build_number "$puavo_abitti2_version" "$abitti2_json_path")
-if [ -z "$build_number" ]; then
-  error "could not determine Abitti build number from '${puavo_abitti2_version}'"
+install -d -D -o root -g puavo-update -m 775 "$abitti2_dir"
+
+if ! abitti2_server=$(get_abitti2_catalogue) || [ -z "$abitti2_server" ]; then
+  error 'error fetching the abitti2 catalogue'
   exit 1
 fi
+
+lookup_abitti2_choice() {
+  local abitti2_version
+  abitti2_version=$1
+
+  jq -r --arg abitti2_version "$abitti2_version" '
+    ($abitti2_version as $k | .aliases[$k] // $k) as $resolved
+      | .choices[$resolved] // error("no such choice")
+  ' "$abitti2_json_path"
+}
+
+lookup_var() {
+  local json_str value var
+  json_str=$1
+  var=$2
+
+  if ! value=$(
+    printf %s "$json_str" | jq -r --arg var "$var" '
+                              .[$var] // error("no such var")
+                            '); then
+      error "could not lookup ${var} from json"
+      return 1
+  fi
+
+  printf %s "$value"
+}
+
+lookup_abitti2_image_info() {
+  local abitti2_image
+  abitti2_image=$1
+
+  jq -r --arg abitti2_image "$abitti2_image" '
+    .images[$abitti2_image] // error("no such image")
+  ' "$abitti2_json_path"
+}
+
+if ! abitti2_choice=$(lookup_abitti2_choice "$puavo_abitti2_version"); then
+  error 'no such abitti2 version' >&2
+  exit 1
+fi
+
+abitti2_grub_cfg=$(lookup_var "$abitti2_choice" grub_cfg)
+abitti2_image=$(   lookup_var "$abitti2_choice" image)
+abitti2_version=$( lookup_var "$abitti2_choice" version)
+
+if ! abitti2_image_info=$(lookup_abitti2_image_info "$abitti2_image"); then
+  error 'no such abitti2 version' >&2
+  exit 1
+fi
+
+printf "%s\n" "$abitti2_image_info"
+
+abitti2_filename=$(lookup_var "$abitti2_image_info" puavo_os_filename)
+abitti2_sha256=$(  lookup_var "$abitti2_image_info" sha256)
+abitti2_size=$(    lookup_var "$abitti2_image_info" size)
+
+# XXX to be continued
+exit 1
 
 image_abitti2_version="abitti-v${build_number}"
 abitti2_image="${image_abitti2_version}.squashfs"
-abitti2_image_fp="${abitti2_images_dir}/${abitti2_image}"
+abitti2_image_fp="${abitti2_dir}/${abitti2_image}"
 
 human_abitti2_version=$(
   jq -r --arg image_abitti2_version "$image_abitti2_version" \
@@ -384,22 +439,6 @@ if [ -e "$abitti2_image_fp" ]; then
                       "$abitti2_json_path"
   exit 0
 fi
-
-# Just in case there are more than one squashfs file,
-# remove others (this should normally not happen)
-# to make space for new ones.  We also need the old image
-# build number for rdiff.
-old_squashfs_build_number=''
-old_squashfs_path=''
-for squashfs_file in ${abitti2_images_dir}/*.squashfs; do
-  test -e "$squashfs_file" || continue
-  if [ -n "$old_squashfs_build_number" ]; then
-    rm -f "$squashfs_file"
-    continue
-  fi
-  old_squashfs_build_number="$(basename "$squashfs_file" .squashfs | sed 's/^abitti-v//')"
-  old_squashfs_path="$squashfs_file"
-done
 
 # now we are going to update
 update_status='started'
