@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+# we get abitti2_version as the first argument, but we can ignore it because
+# puavo-update-abitti2-image looks it up anyway
+
+# Wait a bit in case user is in the middle of the process of typing/changing
+# the Abitti 2 version.
+sleep 7
+
+exec /usr/local/sbin/puavo-update-abitti2-image --use-rate-limit
