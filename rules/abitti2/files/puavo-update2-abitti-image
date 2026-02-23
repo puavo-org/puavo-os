@@ -1,0 +1,556 @@
+#!/bin/sh
+
+set -eu
+
+logmsg() {
+  logger -s -t puavo-update2-abitti-image "$@" || true
+}
+
+errmsg='unknown error'
+error() {
+  local errmsg
+
+  errmsg=$1
+  logmsg -p user.err "$1"
+}
+
+# obtain an exclusive lock on myself...
+# there should be only one instance of this program running
+#
+# WARNING UGLY CODE We use flock with timeout here, because this might
+# be run through puavo-conf-daemon extra-content-updates, which kills
+# this process group, and waits for only one pid which might not
+# be the only one holding this lock.  Because a new process might
+# be immediately starting, it should wait a bit before the lock
+# gets actually released.
+exec 3<$0
+flock -w 10 -x 3 || { error "did not get a lock, exiting"; exit 1; }
+
+if ! mountpoint -q /images; then
+  echo '/images is not its own partition, refusing to download abitti' >&2
+  exit 1
+fi
+
+get_build_number() {
+  local puavo_abitti_version abitti_json_path build_number
+
+  puavo_abitti_version=$1
+  abitti_json_path=$2
+
+  case "$puavo_abitti_version" in
+    abitti-v[0-9]*)
+      build_number="${puavo_abitti_version#abitti-v}"
+      ;;
+    *)
+      build_number=$(jq -r --arg puavo_abitti_version "$puavo_abitti_version" \
+                       '.build_numbers[$puavo_abitti_version]' \
+                         "$abitti_json_path")
+      ;;
+  esac
+
+  if [ -z "$build_number" -o "$build_number" = 'null' ]; then
+    build_number=''
+  fi
+
+  printf "%s" "$build_number"
+}
+
+edit_extra_system_contents() {
+  local esc_json_path tmpfile
+
+  # XXX should use flock in case there are ever
+  # XXX other updaters for this file
+  esc_json_path='/var/lib/puavo-desktop/extra_system_contents.json'
+  tmpfile="${esc_json_path}.tmp"
+  if [ -e "$esc_json_path" ]; then
+    jq "$@" "$esc_json_path" > "$tmpfile" || return 1
+  else
+    jq --null-input "$@" > "$tmpfile" || return 1
+  fi
+  mv "$tmpfile" "$esc_json_path"
+}
+
+post_update_actions() {
+  local human_abitti_version image_abitti_version persistent_fs \
+        persistent_fs_for_this_version abitti_json_path
+
+  human_abitti_version=$1
+  image_abitti_version=$2
+  persistent_fs=$3
+  persistent_fs_for_this_version=$4
+  abitti_json_path=$5
+
+  # there can be only one!
+  find "$abitti_images_dir" -name '*.squashfs' \
+    -and ! -name "${image_abitti_version}.squashfs" -exec rm -f \{} \;
+
+  edit_extra_system_contents --arg version "$human_abitti_version" \
+    '.Abitti = $version'
+
+  grub-editenv /images/boot/grub/grubenv \
+               set "abitti_version_number=${human_abitti_version}"
+
+  kernel_arguments=$(jq -r --arg image_abitti_version "$image_abitti_version" \
+                       '.images[$image_abitti_version].kernel_arguments' \
+                         "$abitti_json_path")
+  [ "$kernel_arguments" = 'null' ] && kernel_arguments=''
+  if [ -n "$kernel_arguments" ]; then
+    grub-editenv /images/boot/grub/grubenv \
+                 set "abitti_kernel_arguments=${kernel_arguments}"
+  else
+    grub-editenv /images/boot/grub/grubenv \
+                 unset 'abitti_kernel_arguments'
+  fi
+
+  if [ ! "$persistent_fs" -ef "$persistent_fs_for_this_version" ]; then
+    ln -f "$persistent_fs_for_this_version" "${persistent_fs}.tmp"
+    mv "${persistent_fs}.tmp" "$persistent_fs"
+  fi
+}
+
+send_status_message() {
+  local method
+  method=$1; shift
+
+  dbus-send --dest=org.puavo.client.Daemon              \
+            --reply-timeout=100                         \
+            --print-reply=literal                       \
+            --system                                    \
+            /contentupdates                             \
+            "org.puavo.client.contentupdates.${method}" \
+            "string:Abitti"                             \
+            "string:${human_abitti_version}"            \
+            "$@" \
+    || true
+}
+
+update_status='not_started'
+send_final_status() {
+  case "$update_status" in
+    not_started)
+      exit 0
+      ;;
+    started)
+      send_status_message SetUpdateFailed "string:$errmsg"
+      exit 1
+      ;;
+    success)
+      send_status_message SetUpdateCompleted
+      exit 0
+      ;;
+  esac
+  update_status='final_message_sent'
+}
+
+update_progress() {
+  local phase
+  phase=$1
+
+  while read progress; do
+    # rdiff/rsync goes only from 0 --> 90 %.
+    if [ "$phase" = 'rdiff' -o "$phase" = 'rsync' ]; then
+      progress=$(echo "$progress" | tr -d '\r')
+      progress=$(( 90 * $progress / 100 ))
+    fi
+    send_status_message SetUpdateProgress "int32:${progress}"
+  done
+}
+
+cleanup_previous_runs() {
+  local use_torrents_for_rdiff_updates abitti_image rdiff_name
+
+  use_torrents_for_rdiff_updates=$1
+  abitti_image=$2
+  rdiff_name=$3
+
+  if $use_torrents_for_rdiff_updates; then
+    # Ask puavo-abitti-torrent-updated to stop seeding (if it is doing
+    # anything).  This is relevant here only for disk space calculations.
+    echo stop | nc -N -U /run/puavo/puavo-abitti-torrent-updated.sock \
+      >/dev/null 2>&1 || true
+  fi
+
+  # remove temporary files (of non-matching versions).
+  find "$abitti_images_dir" -type f -name '*.squashfs.tmp' \
+    -a ! -name "${abitti_image}.tmp" -exec rm -f \{} \;
+
+  # clean up the rdiffs we do not need
+  find "$abitti_rdiffs_dir" -type f \
+         '(' -iname '*.rdiff' -or -iname '*.rdiff.tmp' ')' \
+         -and ! '(' -name "$rdiff_name" -or -name "${rdiff_name}.tmp" ')' \
+         -exec rm -f \{} \;
+
+}
+
+ensure_enough_available_diskspace() {
+  local use_torrents_for_rdiff_updates image_abitti_version \
+        rdiff_name abitti_image tmpimage_size tmprdiff_size \
+        required_diskspace available_diskspace msg
+
+  use_torrents_for_rdiff_updates=$1
+  image_abitti_version=$2
+  rdiff_name=$3
+
+  abitti_image="${image_abitti_version}.squashfs"
+
+  cleanup_previous_runs "$use_torrents_for_rdiff_updates" \
+                        "$abitti_image" \
+                        "$rdiff_name" || true
+
+  tmpimage_size=$(
+    stat -c %s "${abitti_images_dir}/${abitti_image}.tmp" 2>/dev/null || echo 0)
+  if [ -n "$rdiff_name" ]; then
+    tmprdiff_size=$(
+      stat -c %s "${abitti_rdiffs_dir}/${rdiff_name}.tmp" 2>/dev/null || echo 0)
+  else
+    tmprdiff_size=0
+  fi
+
+  if ! required_diskspace=$(
+         jq -r --arg new_version "$image_abitti_version" \
+               --arg rdiff_name "$rdiff_name" \
+               --arg tmpimage_size "$tmpimage_size" \
+               --arg tmprdiff_size "$tmprdiff_size" '
+           if .images[$new_version] | has("size") then
+             if .rdiffs[$rdiff_name] | has("size") then
+               .images[$new_version].size + .rdiffs[$rdiff_name].size
+                 - ($tmpimage_size|tonumber) - ($tmprdiff_size|tonumber)
+             else
+               .images[$new_version].size - ($tmpimage_size|tonumber)
+             end
+           else
+             error("no image size known")
+           end
+         ' "$abitti_json_path"); then
+    error 'could not determine the required diskspace'
+    return 1
+  fi
+
+  available_diskspace=$(stat -f -c '%S * %a' "$abitti_images_dir" \
+                          | bc -l | xargs printf %.0f)
+  if [ "$available_diskspace" -lt "$required_diskspace" ]; then
+    msg="only $available_diskspace bytes available on $abitti_images_dir,"
+    msg="$msg need $required_diskspace bytes"
+    error "$msg"
+    return 1
+  fi
+
+  msg="${required_diskspace} (required diskspace) <="
+  msg="${msg} ${available_diskspace} (available diskspace),"
+  msg="${msg} can proceed with Abitti update"
+  logmsg -p user.info "$msg"
+
+  return 0
+}
+
+try_torrent_rdiff_update() {
+  local download_rate_limit image_abitti_version rdiff_name image_server \
+        abitti_json_path old_squashfs_path tmp_abitti_image_fp
+
+  download_rate_limit=$1
+  image_abitti_version=$2
+  rdiff_name=$3
+  image_server=$4
+  abitti_json_path=$5
+  old_squashfs_path=$6
+  tmp_abitti_image_fp=$7
+
+  ensure_enough_available_diskspace true "$image_abitti_version" "$rdiff_name" \
+    || return 1
+
+  if [ -z "$rdiff_name" ]; then
+    logmsg -p user.info 'could not determine rdiff name'
+    return 1
+  fi
+
+  abitti_rdiff_path="${abitti_rdiffs_dir}/${rdiff_name}"
+
+  if [ ! -e "$abitti_rdiff_path" ]; then
+    expected_checksum=$(jq -r --arg rdiff_name "$rdiff_name" \
+                          '.rdiffs[$rdiff_name].sha256' "$abitti_json_path")
+    if [ -z "$expected_checksum" -o "$expected_checksum" = 'null' ]; then
+      logmsg -p user.info "no checksum found for rdiff ${rdiff_name}"
+      return 1
+    fi
+
+    url_to_download_with_torrent="https://${image_server}/abitti-images/rdiffs/${rdiff_name}"
+    torrent_status=$(
+      printf "%s\n%s\n" "$download_rate_limit" "$url_to_download_with_torrent" \
+        | nc -N -U /run/puavo/puavo-abitti-torrent-updated.sock \
+        | while read progress; do
+            if [ "$progress" = 'OK' ]; then
+              echo OK
+            else
+              echo "$progress" | update_progress rdiff
+            fi
+          done)
+    if [ "$torrent_status" != 'OK' ]; then
+      error "could not download $url_to_download_with_torrent with torrent"
+      return 1
+    fi
+
+    logmsg -p user.info "got $url_to_download_with_torrent with success"
+
+    tmp_abitti_rdiff_path="${abitti_rdiff_path}.tmp"
+    calculated_checksum="$(sha256sum "$tmp_abitti_rdiff_path" \
+                            | awk '{ print $1 }')"
+    if [ "$calculated_checksum" != "$expected_checksum" ]; then
+      error "calculated checksum for rdiff does not match the expected checksum, removing ${tmp_abitti_rdiff_path}"
+      rm -f "$tmp_abitti_rdiff_path"
+      return 1
+    fi
+
+    logmsg -p user.info "checksum for ${rdiff_name} is good"
+    mv "$tmp_abitti_rdiff_path" "$abitti_rdiff_path"
+  fi
+
+  rm -f "$tmp_abitti_image_fp"
+  if ! rdiff patch "$old_squashfs_path" "$abitti_rdiff_path" \
+                   "$tmp_abitti_image_fp"; then
+    error "error in patching ${tmp_abitti_image_fp} with ${rdiff_name}"
+    rm -f "$tmp_abitti_image_fp"
+    return 1
+  fi
+
+  return 0
+}
+
+# be_very nice
+ionice -c 3  -p $$
+renice -n 20 -p $$ > /dev/null
+
+abitti_images_dir=/images/abitti
+abitti_rdiffs_dir="${abitti_images_dir}/.rdiffs"
+abitti_state_dir=/state/abitti
+
+image_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
+if [ -z "$image_server" ]; then
+  read topdomain < /etc/puavo/topdomain
+  image_server="cdn.${topdomain}"
+fi
+
+abitti_mode=$(puavo-conf puavo.abitti.mode)
+case "$abitti_mode" in
+  do-nothing)
+    exit 0
+    ;;
+  install-and-update)
+    # just continue...
+    ;;
+  purge)
+    rm -rf "$abitti_images_dir" "$abitti_state_dir"
+    exit 0
+    ;;
+  *)
+    error "unsupported abitti mode: '${abitti_mode}'"
+    exit 1
+    ;;
+esac
+
+download_rate_limit=''
+rsyncopts=''
+if [ "${1:-}" = '--use-rate-limit' ]; then
+  download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
+  if [ -n "$download_rate_limit" ]; then
+    if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
+      error "the rate limit was not understood, got '$download_rate_limit'"
+      exit 1
+    fi
+    rsyncopts="--bwlimit=${download_rate_limit}"
+  fi
+fi
+
+mkdir -p "$abitti_images_dir" "$abitti_state_dir"
+install -d -D -o root -g puavo-update -m 775 "$abitti_rdiffs_dir"
+
+abitti_json_path="${abitti_state_dir}/abitti.json"
+if ! wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+          -O "${abitti_json_path}.tmp" \
+          "https://${image_server}/abitti-images/abitti.json"; then
+  rm -f "${abitti_json_path}.tmp"
+  error "could not download abitti.json from ${image_server}"
+  exit 1
+fi
+mv "${abitti_json_path}.tmp" "$abitti_json_path"
+
+puavo_abitti_version=$(puavo-conf puavo.abitti.version)
+if [ -z "$puavo_abitti_version" ]; then
+  error 'puavo.abitti.version is not set, doing nothing!'
+  exit 1
+fi
+if [ "$puavo_abitti_version" = 'latest' ]; then
+  puavo_abitti_version=$(jq -r .latest "$abitti_json_path")
+  if [ -z "$puavo_abitti_version" -o "$puavo_abitti_version" = 'null' ]; then
+    error 'could not determine the latest abitti version'
+    exit 1
+  fi
+fi
+
+build_number=$(get_build_number "$puavo_abitti_version" "$abitti_json_path")
+if [ -z "$build_number" ]; then
+  error "could not determine Abitti build number from '${puavo_abitti_version}'"
+  exit 1
+fi
+
+image_abitti_version="abitti-v${build_number}"
+abitti_image="${image_abitti_version}.squashfs"
+abitti_image_fp="${abitti_images_dir}/${abitti_image}"
+
+human_abitti_version=$(
+  jq -r --arg image_abitti_version "$image_abitti_version" \
+    '.images[$image_abitti_version].version' "$abitti_json_path")
+if [ -z "$human_abitti_version" -o "$human_abitti_version" = 'null' ]; then
+  error "human Abitti version for '${image_abitti_version}' not found"
+  human_abitti_version='?'
+fi
+
+# setup persistent storage filesystem for DigabiOS/Abitti
+
+persistent_fs="${abitti_state_dir}/persistent_abitti_fs"
+persistent_fs_for_this_version="${persistent_fs}.${build_number}"
+if [ ! -e "$persistent_fs_for_this_version" ]; then
+  # count=14336 (7M) is the DigabiOS default, but we put a bit bigger
+  # one in case it should ever grow (four times as much).
+  {
+    dd if=/dev/zero "of=${persistent_fs_for_this_version}.tmp" bs=512 \
+       count=57344 2>/dev/null \
+      && mkfs.ext4 -q -L DAT452CBDF0OGISG \
+                   "${persistent_fs_for_this_version}.tmp" \
+      && mv "${persistent_fs_for_this_version}.tmp" \
+            "$persistent_fs_for_this_version"
+  } || {
+    error 'could not create a persistent filesystem for Abitti'
+    exit 1
+  }
+
+  logmsg -p user.info 'created a new persistent filesystem for Abitti'
+fi
+
+# cleanup old persistent filesystems if they have not been used in 365 days
+find "$abitti_state_dir" -type f -name 'persistent_abitti_fs.*' \
+     -and '!' '(' -name 'persistent_abitti_fs' \
+                  -or -name "persistent_abitti_fs.${build_number}" ')' \
+     -and -mtime +365 -exec rm -f \{} \;
+
+if [ -e "$abitti_image_fp" ]; then
+  logmsg -p user.info \
+    "the requested abitti-image ${abitti_image} (${human_abitti_version}) is in place"
+  post_update_actions "$human_abitti_version"           \
+                      "$image_abitti_version"           \
+                      "$persistent_fs"                  \
+                      "$persistent_fs_for_this_version" \
+                      "$abitti_json_path"
+  exit 0
+fi
+
+# Just in case there are more than one squashfs file,
+# remove others (this should normally not happen)
+# to make space for new ones.  We also need the old image
+# build number for rdiff.
+old_squashfs_build_number=''
+old_squashfs_path=''
+for squashfs_file in ${abitti_images_dir}/*.squashfs; do
+  test -e "$squashfs_file" || continue
+  if [ -n "$old_squashfs_build_number" ]; then
+    rm -f "$squashfs_file"
+    continue
+  fi
+  old_squashfs_build_number="$(basename "$squashfs_file" .squashfs | sed 's/^abitti-v//')"
+  old_squashfs_path="$squashfs_file"
+done
+
+# now we are going to update
+update_status='started'
+
+# update_status and human_abitti_version must be set before this:
+trap send_final_status 0 INT TERM
+
+send_status_message SetUpdateStarted
+
+rdiff_name=''
+if [ -n "$old_squashfs_build_number" ]; then
+  rdiff_name="abitti-v${old_squashfs_build_number}-v${build_number}.rdiff"
+fi
+
+expected_image_sha256=$(jq -r --arg version "$image_abitti_version" \
+                          '.images[$version].sha256' "$abitti_json_path")
+if [ -z "$expected_image_sha256" -o "$expected_image_sha256" = 'null' ]; then
+  error "checksum missing for image ${image_abitti_version} (${human_abitti_version})"
+  exit 1
+fi
+
+logmsg -p user.info "downloading ${image_abitti_version} (${human_abitti_version}) from ${image_server}"
+
+echo 0 | update_progress starting
+
+tmp_abitti_image_fp="${abitti_image_fp}.tmp"
+
+torrent_update_ok=false
+if [ "$(puavo-conf puavo.service.puavo-abitti-torrent-updated.enabled)" = 'true' ]; then
+  logmsg -p user.info "trying torrent-based rdiff update"
+
+  if try_torrent_rdiff_update "$download_rate_limit" "$image_abitti_version" \
+        "$rdiff_name" "$image_server" "$abitti_json_path" "$old_squashfs_path" \
+        "$tmp_abitti_image_fp"; then
+    torrent_update_ok=true
+  fi
+fi
+
+if ! $torrent_update_ok; then
+  logmsg -p user.info 'trying with rsync'
+
+  ensure_enough_available_diskspace false "$image_abitti_version" ''
+
+  # progress trick from /usr/sbin/puavo-install-and-update-ltspimages
+  rsync_error_code=$(
+    {
+      {
+        rsync --fuzzy --inplace --progress -v $rsyncopts              \
+              "${image_server}::images/abitti-images/${abitti_image}" \
+              "$tmp_abitti_image_fp" 2>/dev/null                      \
+          || echo $? >&2
+      } | unbuffer -p awk '
+            BEGIN { progress = -1 }
+
+            {
+              if (match($2, /^([[:digit:]]+)%$/, a)) {
+                new_progress = a[1]
+                if (progress != new_progress) {
+                  progress = new_progress
+                  print progress
+                }
+              }
+            }
+          ' \
+        | update_progress rsync
+    } 2>&1 || true
+  )
+
+  if [ -n "$rsync_error_code" ]; then
+    error "rsync failed with error code $rsync_error_code"
+    exit 1
+  fi
+fi
+
+echo 90 | update_progress sha256
+
+logmsg -p user.info "checking sha256 checksum of ${image_abitti_version} (${human_abitti_version})"
+actual_image_sha256=$(sha256sum "$tmp_abitti_image_fp" | awk '{ print $1 }')
+if [ "$actual_image_sha256" != "$expected_image_sha256" ]; then
+  error "checksum mismatch for abitti-image ${image_abitti_version} (${human_abitti_version})"
+  exit 1
+fi
+
+echo 99 | update_progress sha256
+
+mv "$tmp_abitti_image_fp" "$abitti_image_fp"
+
+logmsg -p user.notice "new abitti-image ${image_abitti_version} (${human_abitti_version}) installed!"
+
+post_update_actions "$human_abitti_version"           \
+                    "$image_abitti_version"           \
+                    "$persistent_fs"                  \
+                    "$persistent_fs_for_this_version" \
+                    "$abitti_json_path"
+
+update_status='success'
