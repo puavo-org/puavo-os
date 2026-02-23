@@ -7,12 +7,28 @@ mountpoint -q /state || exit 0
 cert_version_list=$(puavo-conf puavo.admin.certs.versions)
 certificates_dir='/state/etc/puavo/certificates'
 
+status=0
+
+# Old versions of puavo-cert-tool created host keys with
+# permissions root:root 400.  Change this to root:puavo-update 440,
+# because we need our update systems to be able to read the host
+# certificate private key for authenticating to update servers.
+# XXX This tweak may be removed in 2030 or later.
+for cert_dir in ${certificates_dir}/*; do
+  if [ -h "$cert_dir" ] || [ ! -d "$cert_dir" ]; then continue; fi
+  host_key="${cert_dir}/host.key"
+  if ! { chgrp puavo-update "$host_key" && chmod 440 "$host_key"; }; then
+    echo "could not change file group for ${cert_dir}/host.key" >&2
+    status=1
+  fi
+done
+
 # use the first certificate version we have in $cert_version_list
 for cert_version in $cert_version_list; do
   cert_dir="${certificates_dir}/${cert_version}"
   if [ -d "$cert_dir" ]; then
     ln -fns "$cert_dir" /etc/puavo/certs
-    exit 0
+    exit $status
   fi
 done
 
@@ -24,8 +40,10 @@ for cert_dir in ${certificates_dir}/*; do
 done
 if [ -n "$last_cert_dir" ]; then
   ln -fns "$last_cert_dir" /etc/puavo/certs
-  exit 0
+  exit $status
 fi
 
+status=1
+
 echo "Could not put certificates from ${certificates_dir} into use" >&2
-exit 1
+exit $status
