@@ -5,6 +5,11 @@
     "description": "The Abitti 2 client installation/removal mode",
     "typehint": "string"
   },
+  "puavo.abitti2.image.sources": {
+    "default": "",
+    "description": "A whitespace-separated list of urls to fetch Abitti2-image catalogues",
+    "typehint": "string"
+  },
   "puavo.abitti2.version": {
     "default": "latest",
     "description": "The Abitti 2 client version, use latest for the latest version",
