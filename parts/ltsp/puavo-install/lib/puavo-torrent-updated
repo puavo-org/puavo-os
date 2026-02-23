@@ -55,6 +55,7 @@ class Aria
                   '--bt-enable-lpd=true',
                   '--bt-stop-timeout=300',
                   '--ca-certificate=/etc/puavo-conf/rootca.pem',
+                  '--certificate=/etc/puavo/certs/hostorgcabundle.pem',
                   '--check-integrity=true',
                   "--dir=#{ $target_dir }",
                   '--enable-color=false',
@@ -64,6 +65,7 @@ class Aria
                   "--index-out=1=#{ output_filename }",
                   '--no-conf=true',
                   "--on-bt-download-complete=#{ download_complete_path }",
+                  '--private-key=/etc/puavo/certs/host.key',
                   '--seed-ratio=0.0',
                   '--summary-interval=1' ]
 
