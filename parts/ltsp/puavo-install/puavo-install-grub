@@ -114,8 +114,25 @@ function ltsp_image_entry {
   set image_alias="$5"
   set entry_os_icon="$6"
 
+  set abitti=false
+
   get_imagename $image_alias image_alias_path
   get_pathname $imagefile imagepath
+  get_puavoimage_release_name "$imagefile"
+
+  if [ "$2" = "${abitti_boot_label}" ]; then
+    set abitti=true
+    set boot_label="${description} ($3)"
+    set kernelparameters=""
+    if test "${puavo_grub_boot_default}" = "abitti"; then
+      set default="${boot_label}"
+    fi
+    set entry_os_icon="abitti"
+  elif test -n "$puavoimage_release_name"; then
+    set boot_label="${description} (${puavoimage_release_name})"
+  else
+    set boot_label="${description} (${image_alias_path})"
+  fi
 
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)
@@ -124,19 +141,12 @@ function ltsp_image_entry {
     set kernelparameters="${kernelparameters} puavo.hosttype=laptop puavo.guestlogin.enabled=true"
   fi
 
-  get_puavoimage_release_name "$imagefile"
-  if test -n "$puavoimage_release_name"; then
-    set boot_label="${description} (${puavoimage_release_name})"
-  else
-    set boot_label="${description} (${image_alias_path})"
-  fi
-
   if test "$imagepath" = "/${puavo_grub_puavo_os_default_image}" \
        -a "$boottype" = "$puavo_grub_puavo_os_default_mode"; then
     set default="${boot_label}"
   fi
 
-  menuentry "${boot_label}" --class="$entry_os_icon" "$imagefile" "$imagepath" "$kernelparameters" {
+  menuentry "$boot_label" --class="$entry_os_icon" "$imagefile" "$imagepath" "$kernelparameters" "$abitti" {
     set kernel_version=''
     # --- remove "#" from the following if you need another kernel ---
     # set kernel_version='default'
@@ -182,9 +192,18 @@ function ltsp_image_entry {
     fi
 
     set kernelparameters="$4"
+    set abitti="$5"
 
-    linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
-    initrd  /boot/initrd.img${kernel_version_suffix}
+    if [ "$abitti" = "true" ]; then
+      if test "$abitti_kernel_arguments" = ""; then
+        set abitti_kernel_arguments="config digabidata digabi=syslinux union=overlay"
+      fi
+      linux /boot/vmlinuz${kernel_version_suffix} ro boot=live live-media=/dev/mapper/puavo-images live-media-path=/abitti puavo.abitti.boot=true puavo.boot.plymouth.theme=joy ${abitti_kernel_arguments} ${kernelparameters}
+    else
+      linux /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
+    fi
+
+    initrd /boot/initrd.img${kernel_version_suffix}
   }
 }
 
@@ -294,7 +313,11 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     set windows_boot_label="Windows"
   fi
 
-  set os_icon="puavo-os"
+  if test -z "$abitti_boot_label"; then
+    set abitti_boot_label="Koejärjestelmä"
+  fi
+
+  set os_icon="opinsys-os"
 
   if test -f "${default_image}"; then
     ltsp_image_entry "${default_image}" "${text_normal_startup}" "" "normal" "${default_image_alias}" "${os_icon}"
@@ -323,6 +346,26 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     ltsp_image_entry "${file}" "${text_other_system_normal_startup}" "" "normal" "${file}" "${os_icon}-backup"
     ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}" "" "${file}" "${os_icon}-devel"
   done
+
+  for file in ${dev}/abitti/abitti-v*.squashfs; do
+    # If there are two abitti-images, do not show the menuentry because we
+    # do not know what we get in the live-boot environment in this situation
+    # (because we have no mechanism to choose a particular image).
+    # This is mostly to stop admins doing unsupported things.
+    if test -n "$abitti_image"; then
+      set abitti_image=""
+      break
+    fi
+    set abitti_image="${file}"
+    if test -z "${abitti_version_number}"; then
+      regexp -s abitti_version_number 'abitti-v(.*)\.squashfs$' "${file}"
+    fi
+  done
+  if test -f "${abitti_image}"; then
+    ltsp_image_entry "${default_image}" \
+                     "${abitti_boot_label}"   \
+                     "Abitti-yhteensopiva, versio ${abitti_version_number}"
+  fi
 done
 EOF
 }
