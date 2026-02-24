@@ -541,11 +541,13 @@ update_images() {
 
 # main
 
-# Clear the TPM before installation and registeration,
-# because it might require going back to BIOS settings.
-/usr/lib/puavo-ltsp-install/puavo-prepare-tpm-configuration
-
 puavo_install_hosttype=$(get_install_hosttype)
+
+if [ "$puavo_install_hosttype" = "diskinstaller" ]; then
+  # Clear the TPM before installation and registeration,
+  # because it might require going back to BIOS settings.
+  /usr/lib/puavo-ltsp-install/puavo-prepare-tpm-configuration
+fi
 
 preinstall_only=false
 
