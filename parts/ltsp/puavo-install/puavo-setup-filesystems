@@ -88,6 +88,8 @@ class LuksPartitionHandler
     '--type=luks2',
     '--cipher=aes-xts-plain64',
     '--key-size=256',
+    '--pbkdf=argon2id',
+    '--iter-time=1000',
     '--batch-mode'
   ].freeze
 
