@@ -81,7 +81,7 @@ fn enroll_all_creates_tpm_tokens() {
     boot_vault.device_mut().reload().expect("Failed to reload vault device");
     primary_manager.reload().expect("Failed to reload primary device");
 
-    // Verify tokens were created on both devices
+    // Verify only the boot vault has TPM tokens
     let vault_tokens = boot_vault
         .device_mut()
         .list_tokens()
@@ -94,8 +94,8 @@ fn enroll_all_creates_tpm_tokens() {
         "Boot vault should have TPM tokens after enrollment"
     );
     assert!(
-        !primary_tokens.is_empty(),
-        "Primary partition should have TPM tokens after enrollment"
+        primary_tokens.is_empty(),
+        "Primary partition should not have TPM tokens after enrollment"
     );
 }
 
@@ -143,7 +143,7 @@ fn enrollment_with_pin_creates_pin_protected_tokens() {
 
 #[test]
 #[serial]
-fn run_configurators_enrolls_both_devices() {
+fn run_configurators_enrolls_only_boot_vault() {
     let images = setup();
 
     let configurators: Vec<Box<dyn Configurator>> =
@@ -188,15 +188,15 @@ fn run_configurators_enrolls_both_devices() {
     )
     .expect("Configuration failed");
 
-    // Verify enrollment by checking tokens on primary device
+    // Check tokens on primary device as well
     let mut verify_manager =
         LuksTpmTokenManager::from_device_path(primary_device_path)
             .expect("Failed to create verification manager");
     let tokens = verify_manager.list_tokens().expect("Failed to list tokens");
 
     assert!(
-        !tokens.is_empty(),
-        "Primary partition should have TPM tokens after configuration"
+        tokens.is_empty(),
+        "Primary partition should not have TPM tokens after configuration"
     );
 }
 

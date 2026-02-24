@@ -311,8 +311,7 @@ impl EnrollmentConfigurator {
         Ok(())
     }
 
-    /// Enroll (or re-enroll) all configured TPM policies for both the boot vault and the
-    /// primary encrypted partition.
+    /// Enroll all configured TPM policies for both the boot vault.
     pub fn enroll_all(
         &mut self,
         boot_vault: &mut BootVault,
@@ -338,17 +337,9 @@ impl EnrollmentConfigurator {
 
         let pin = boot_vault.pin().cloned();
 
-        // Enroll to the boot vault first
+        // Update the TPM policy of boot vault
         Self::wipe_and_enroll_to_device(
             boot_vault.device_mut(),
-            &recovery_key,
-            pin.clone(),
-            &self.configuration.enrollments,
-        )?;
-
-        // Then enroll to the primary partition
-        Self::wipe_and_enroll_to_device(
-            primary_partition,
             &recovery_key,
             pin,
             &self.configuration.enrollments,
@@ -375,7 +366,7 @@ impl Configurator for EnrollmentConfigurator {
     fn activate(
         &self,
         boot_vault: &mut BootVault,
-        primary_partition: &mut LuksTpmTokenManager,
+        _primary_partition: &mut LuksTpmTokenManager,
     ) -> Result<bool, PuavoError> {
         // Check if enrollment is explicitly required (e.g. PIN change)
         if boot_vault.is_enrollment_required() {
@@ -421,8 +412,7 @@ impl Configurator for EnrollmentConfigurator {
 
         let pin = boot_vault.pin().cloned();
         let any_invalid_token =
-            Self::any_invalid_token(boot_vault.device_mut(), pin.clone())?
-                || Self::any_invalid_token(primary_partition, pin)?;
+            Self::any_invalid_token(boot_vault.device_mut(), pin.clone())?;
 
         Ok(any_invalid_token)
     }

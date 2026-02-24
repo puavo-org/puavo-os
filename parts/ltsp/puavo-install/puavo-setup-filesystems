@@ -154,8 +154,10 @@ class LuksPartitionHandler
       raise 'Failed to open the created LUKS encryption device'
     end
 
-    puts 'Enrolling the LUKS partition for TPM based unlocking...'
-    self.enroll(control_key)
+    if @policy
+      puts 'Enrolling the LUKS partition for TPM based unlocking...'
+      self.enroll(control_key)
+    end
 
     return control_key
   end
@@ -682,8 +684,13 @@ module DiskHandler
 
   def self.setup_luks_partition(fs_conf, device_keys_temporary_directory)
     encryption = fs_conf['encryption']
+    # The primary partition does not get a TPM enrollment policy.
+    # It is unlocked exclusively via the control key stored in the
+    # boot vault, which has its own TPM policy. Enrolling TPM on the
+    # primary partition would weaken security by allowing it to be
+    # unlocked without the Boot Trust Manager.
     handler = LuksPartitionHandler.new(
-      fs_conf['puavo_partition'], EncryptionDeviceName, encryption['policy'])
+      fs_conf['puavo_partition'], EncryptionDeviceName, nil)
     control_key = handler.setup()
 
     # If the recovery key is set, add it
