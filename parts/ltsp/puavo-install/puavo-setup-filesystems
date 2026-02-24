@@ -106,7 +106,7 @@ class LuksPartitionHandler
     SecureRandom.hex(32) # 256 bits of entropy, 64 hex characters
   end
 
-  def enroll(control_key, pin=nil)
+  def enroll(control_key)
     require 'tempfile'
 
     Tempfile.create('puavo-luks-enroll-key', '/tmp') do |control_key_file|
@@ -119,18 +119,12 @@ class LuksPartitionHandler
       command += [ "--unlock-key-file=#{ control_key_file.path }" ]
       command += [ "/dev/#{ @partition }" ]
 
-      # Security note: NEWPIN must be passed via environment variable as
-      # standard input does not work and there does not seem any other
-      # reliable way. While systemd erases the variable, it remains
-      # briefly visible via /proc.
-      environment = pin ? { "NEWPIN" => pin } : {}
-
-      ok = system(environment, *command)
+      ok = system(*command)
       ok or raise 'Failed to enroll LUKS encryption device'
     end
   end
 
-  def setup(predefined_control_key=nil, pin=nil)
+  def setup(predefined_control_key=nil)
     control_key = predefined_control_key || self.generate_control_key()
 
     puts 'Creating LUKS partition...'
@@ -159,7 +153,7 @@ class LuksPartitionHandler
     end
 
     puts 'Enrolling the LUKS partition for TPM based unlocking...'
-    self.enroll(control_key, pin)
+    self.enroll(control_key)
 
     return control_key
   end
@@ -196,10 +190,9 @@ class BootVaultBuilder
 
   VERSION = 1
 
-  def initialize(control_key:, recovery_key:, encryption_policy:, device:, pin: nil, size: DEFAULT_SIZE, image_name: DEFAULT_IMAGE_NAME, luks_name: DEFAULT_LUKS_NAME)
+  def initialize(control_key:, recovery_key:, encryption_policy:, device:, size: DEFAULT_SIZE, image_name: DEFAULT_IMAGE_NAME, luks_name: DEFAULT_LUKS_NAME)
     @control_key = control_key
     @recovery_key = recovery_key
-    @pin = pin
     @encryption_policy = encryption_policy
     @size = size
     @image_name = image_name
@@ -233,7 +226,7 @@ class BootVaultBuilder
         @luks_name,
         @encryption_policy
       )
-      handler.setup(@control_key, @pin)
+      handler.setup(@control_key)
 
       # If the recovery key is set, add it
       if @recovery_key && !@recovery_key.empty?
@@ -336,11 +329,12 @@ module DiskHandler
     },
     'tpm-with-pin' => {
       'label' => 'PIN Based TPM Unlock',
+      'request_pin' => true,
       'policy' => LuksEnrollmentPolicy.new(
         [],
         [ '11:sha256' ],
         EncryptionPolicyPublicKeyPath,
-        [ '--tpm2-with-pin=yes' ]
+        []
       )
     },
     'tpm-with-recovery-key' => {
@@ -349,7 +343,7 @@ module DiskHandler
         [],
         [ '11:sha256' ],
         EncryptionPolicyPublicKeyPath,
-        [ '--tpm2-with-pin=no' ]
+        []
       )
     }
   }
@@ -688,7 +682,7 @@ module DiskHandler
     encryption = fs_conf['encryption']
     handler = LuksPartitionHandler.new(
       fs_conf['puavo_partition'], EncryptionDeviceName, encryption['policy'])
-    control_key = handler.setup(nil, encryption['pin'])
+    control_key = handler.setup()
 
     # If the recovery key is set, add it
     if encryption && \
@@ -702,7 +696,6 @@ module DiskHandler
     vault = BootVaultBuilder.new(
       control_key: control_key,
       recovery_key: encryption['recovery_key'],
-      pin: encryption['pin'],
       encryption_policy: encryption['policy'],
       device: fs_conf['device']
     )
@@ -728,6 +721,11 @@ module DiskHandler
       src = File.join(device_keys_temporary_directory, filename)
       FileUtils.cp(src, final_addons_directory)
     end
+  end
+
+  def self.request_pin_enrollment(fs_conf)
+    puts 'Requesting PIN enrollment on next boot...'
+    run('/usr/lib/puavo-ltsp-install/puavo-change-unlock-pin')
   end
 
   def self.do_fs_setup(conf, vgname, raid_setup_done)
@@ -760,6 +758,13 @@ module DiskHandler
       # Finalize secure boot keys after filesystems are mounted
       if hosttype != 'diskinstaller' then
         fs_setup_phases += [ :finalize_secure_boot_keys ]
+      end
+
+      # If PIN-based encryption was selected, request PIN enrollment
+      # on after installation instead of enrolling it now. This avoids
+      # requiring the PIN later during the installation process.
+      if encryption && encryption['request_pin'] then
+        fs_setup_phases += [ :request_pin_enrollment ]
       end
 
       fs_setup_phases.each do |fn_sym|
@@ -1023,12 +1028,6 @@ module QueryDiskInfo
 
     # If encryption is enabled, ask for optional credentials
     if encryption['policy']
-      # If TPM with PIN is selected, ask for the PIN
-      if preset_key == 'tpm-with-pin'
-        pin = UI::ask_and_confirm_secret('Enter PIN:')
-        encryption['pin'] = pin
-      end
-
       # Ask for optional recovery key
       add_key_answer = UI::ask_with_default("Add recovery key? (y/N)",
                                             'no', UI::RecoveryKeyPrompt)
