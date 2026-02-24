@@ -48,6 +48,41 @@ get_abitti2_catalogue() {
   return 1
 }
 
+lookup_abitti2_choice() {
+  local abitti2_version
+  abitti2_version=$1
+
+  jq -r --arg abitti2_version "$abitti2_version" '
+    ($abitti2_version as $k | .aliases[$k] // $k) as $resolved
+      | .choices[$resolved] // error("no such choice")
+  ' "$abitti2_json_path"
+}
+
+lookup_abitti2_image_info() {
+  local abitti2_image
+  abitti2_image=$1
+
+  jq -r --arg abitti2_image "$abitti2_image" '
+    .images[$abitti2_image] // error("no such image")
+  ' "$abitti2_json_path"
+}
+
+lookup_var() {
+  local json_str value var
+  json_str=$1
+  var=$2
+
+  if ! value=$(
+    printf %s "$json_str" | jq -r --arg var "$var" '
+                              .[$var] // error("no such var")
+                            '); then
+      error "could not lookup ${var} from json"
+      return 1
+  fi
+
+  printf %s "$value"
+}
+
 wget_with_certauth()
 {
    wget --ca-certificate=/etc/puavo-conf/rootca.pem        \
@@ -89,23 +124,24 @@ edit_extra_system_contents() {
 }
 
 post_update_actions() {
-  local human_abitti2_version image_abitti2_version abitti2_json_path
+  local abitti2_filename abitti2_version abitti2_json_path
 
-  human_abitti2_version=$1
-  image_abitti2_version=$2
+  abitti2_filename=$1
+  abitti2_version=$2
   abitti2_json_path=$3
 
-  # XXX it should be possible to have two
-  # there can be only one!
+  # XXX it should be possible to have two so this is not good
   find "$abitti2_dir" -name '*.iso' \
-    -and ! -name "${image_abitti2_version}.iso" -exec rm -f \{} \;
+    -and ! -name "$abitti2_filename" -exec rm -f \{} \;
 
-  edit_extra_system_contents --arg version "$human_abitti2_version" \
+  edit_extra_system_contents --arg version "$abitti2_version" \
     '.Abitti2 = $version'
 
   # XXX do we have to use Grub variables for this?
+  # XXX the old abitti variables should be cleaned up,
+  # XXX maybe Abitti 1 purge should do that, right?
   grub-editenv /images/boot/grub/grubenv \
-               set "abitti2_version_number=${human_abitti2_version}"
+               set "abitti2_version=${abitti2_version}"
 }
 
 send_status_message() {
@@ -119,7 +155,7 @@ send_status_message() {
             /contentupdates                             \
             "org.puavo.client.contentupdates.${method}" \
             "string:Abitti2"                            \
-            "string:${human_abitti2_version}"           \
+            "string:${abitti2_version}"                 \
             "$@" \
     || true
 }
@@ -131,7 +167,7 @@ send_final_status() {
       exit 0
       ;;
     started)
-      send_status_message SetUpdateFailed "string:$errmsg"
+      send_status_message SetUpdateFailed "string:${errmsg}"
       exit 1
       ;;
     success)
@@ -147,8 +183,8 @@ update_progress() {
   phase=$1
 
   while read progress; do
-    # rdiff/rsync goes only from 0 --> 90 %.
-    if [ "$phase" = 'rdiff' -o "$phase" = 'rsync' ]; then
+    # image_download goes only from 0 --> 90 %.
+    if [ "$phase" = 'image_download' ]; then
       progress=$(echo "$progress" | tr -d '\r')
       progress=$(( 90 * $progress / 100 ))
     fi
@@ -157,75 +193,33 @@ update_progress() {
 }
 
 cleanup_previous_runs() {
-  local use_torrents_for_rdiff_updates abitti2_image rdiff_name
+  local abitti2_filename
 
-  use_torrents_for_rdiff_updates=$1
-  abitti2_image=$2
-  rdiff_name=$3
+  abitti2_filename=$1
 
-  if $use_torrents_for_rdiff_updates; then
-    # Ask puavo-abitti-torrent-updated to stop seeding (if it is doing
-    # anything).  This is relevant here only for disk space calculations.
-    echo stop | nc -N -U /run/puavo/puavo-abitti-torrent-updated.sock \
-      >/dev/null 2>&1 || true
-  fi
+  # Ask puavo-abitti-torrent-updated to stop seeding (if it is doing
+  # anything).  This is relevant here only for disk space calculations.
+  echo stop | nc -N -U /run/puavo/puavo-abitti2-torrent-updated.sock \
+    >/dev/null 2>&1 || true
 
   # remove temporary files (of non-matching versions).
   find "$abitti2_dir" -type f -name '*.iso.tmp' \
-    -a ! -name "${abitti2_image}.tmp" -exec rm -f \{} \;
-
-  # clean up the rdiffs we do not need
-  find "$abitti2_rdiffs_dir" -type f \
-         '(' -iname '*.rdiff' -or -iname '*.rdiff.tmp' ')' \
-         -and ! '(' -name "$rdiff_name" -or -name "${rdiff_name}.tmp" ')' \
-         -exec rm -f \{} \;
-
+    -a ! -name "${abitti2_filename}.tmp" -exec rm -f \{} \;
 }
 
 ensure_enough_available_diskspace() {
-  local use_torrents_for_rdiff_updates image_abitti2_version \
-        rdiff_name abitti2_image tmpimage_size tmprdiff_size \
-        required_diskspace available_diskspace msg
+  local abitti2_filename abitti2_size available_diskspace msg \
+        required_diskspace tmpimage_size
 
-  use_torrents_for_rdiff_updates=$1
-  image_abitti2_version=$2
-  rdiff_name=$3
+  abitti2_filename=$1
+  abitti2_size=$2
 
-  abitti2_image="${image_abitti2_version}.squashfs"
-
-  cleanup_previous_runs "$use_torrents_for_rdiff_updates" \
-                        "$abitti2_image" \
-                        "$rdiff_name" || true
+  cleanup_previous_runs "$abitti2_filename" || true
 
   tmpimage_size=$(
-    stat -c %s "${abitti2_dir}/${abitti2_image}.tmp" 2>/dev/null || echo 0)
-  if [ -n "$rdiff_name" ]; then
-    tmprdiff_size=$(
-      stat -c %s "${abitti2_rdiffs_dir}/${rdiff_name}.tmp" 2>/dev/null || echo 0)
-  else
-    tmprdiff_size=0
-  fi
+    stat -c %s "${abitti2_dir}/${abitti2_filename}.tmp" 2>/dev/null || echo 0)
 
-  if ! required_diskspace=$(
-         jq -r --arg new_version "$image_abitti2_version" \
-               --arg rdiff_name "$rdiff_name" \
-               --arg tmpimage_size "$tmpimage_size" \
-               --arg tmprdiff_size "$tmprdiff_size" '
-           if .images[$new_version] | has("size") then
-             if .rdiffs[$rdiff_name] | has("size") then
-               .images[$new_version].size + .rdiffs[$rdiff_name].size
-                 - ($tmpimage_size|tonumber) - ($tmprdiff_size|tonumber)
-             else
-               .images[$new_version].size - ($tmpimage_size|tonumber)
-             end
-           else
-             error("no image size known")
-           end
-         ' "$abitti2_json_path"); then
-    error 'could not determine the required diskspace'
-    return 1
-  fi
-
+  required_diskspace=$(($abitti2_size - $tmpimage_size))
   available_diskspace=$(stat -f -c '%S * %a' "$abitti2_dir" \
                           | bc -l | xargs printf %.0f)
   if [ "$available_diskspace" -lt "$required_diskspace" ]; then
@@ -243,74 +237,34 @@ ensure_enough_available_diskspace() {
   return 0
 }
 
-try_torrent_rdiff_update() {
-  local download_rate_limit image_abitti2_version rdiff_name image_server \
-        abitti2_json_path old_squashfs_path tmp_abitti2_image_fp
+do_torrent_update() {
+    local abitti2_filename abitti2_size download_rate_limit \
+          tmp_abitti2_filename url_to_download_with_torrent
 
   download_rate_limit=$1
-  image_abitti2_version=$2
-  rdiff_name=$3
-  image_server=$4
-  abitti2_json_path=$5
-  old_squashfs_path=$6
-  tmp_abitti2_image_fp=$7
+  abitti2_filename=$2
+  abitti2_size=$3
+  url_to_download_with_torrent=$4
 
-  ensure_enough_available_diskspace true "$image_abitti2_version" "$rdiff_name" \
+  ensure_enough_available_diskspace "$abitti2_filename" "$abitti2_size" \
     || return 1
 
-  if [ -z "$rdiff_name" ]; then
-    logmsg -p user.info 'could not determine rdiff name'
+  torrent_status=$(
+    printf "%s\n%s\n" "$download_rate_limit" "$url_to_download_with_torrent" \
+      | nc -N -U /run/puavo/puavo-abitti2-torrent-updated.sock \
+      | while read progress; do
+          if [ "$progress" = 'OK' ]; then
+            printf "OK\n"
+          else
+            printf "%s\n" "$progress" | update_progress image_download
+          fi
+        done)
+  if [ "$torrent_status" != 'OK' ]; then
+    error "could not download ${url_to_download_with_torrent} with torrent"
     return 1
   fi
 
-  abitti2_rdiff_path="${abitti2_rdiffs_dir}/${rdiff_name}"
-
-  if [ ! -e "$abitti2_rdiff_path" ]; then
-    expected_checksum=$(jq -r --arg rdiff_name "$rdiff_name" \
-                          '.rdiffs[$rdiff_name].sha256' "$abitti2_json_path")
-    if [ -z "$expected_checksum" -o "$expected_checksum" = 'null' ]; then
-      logmsg -p user.info "no checksum found for rdiff ${rdiff_name}"
-      return 1
-    fi
-
-    url_to_download_with_torrent="https://${image_server}/abitti-images/rdiffs/${rdiff_name}"
-    torrent_status=$(
-      printf "%s\n%s\n" "$download_rate_limit" "$url_to_download_with_torrent" \
-        | nc -N -U /run/puavo/puavo-abitti-torrent-updated.sock \
-        | while read progress; do
-            if [ "$progress" = 'OK' ]; then
-              echo OK
-            else
-              echo "$progress" | update_progress rdiff
-            fi
-          done)
-    if [ "$torrent_status" != 'OK' ]; then
-      error "could not download $url_to_download_with_torrent with torrent"
-      return 1
-    fi
-
-    logmsg -p user.info "got $url_to_download_with_torrent with success"
-
-    tmp_abitti2_rdiff_path="${abitti2_rdiff_path}.tmp"
-    calculated_checksum="$(sha256sum "$tmp_abitti2_rdiff_path" \
-                            | awk '{ print $1 }')"
-    if [ "$calculated_checksum" != "$expected_checksum" ]; then
-      error "calculated checksum for rdiff does not match the expected checksum, removing ${tmp_abitti2_rdiff_path}"
-      rm -f "$tmp_abitti2_rdiff_path"
-      return 1
-    fi
-
-    logmsg -p user.info "checksum for ${rdiff_name} is good"
-    mv "$tmp_abitti2_rdiff_path" "$abitti2_rdiff_path"
-  fi
-
-  rm -f "$tmp_abitti2_image_fp"
-  if ! rdiff patch "$old_squashfs_path" "$abitti2_rdiff_path" \
-                   "$tmp_abitti2_image_fp"; then
-    error "error in patching ${tmp_abitti2_image_fp} with ${rdiff_name}"
-    rm -f "$tmp_abitti2_image_fp"
-    return 1
-  fi
+  logmsg -p user.info "got ${url_to_download_with_torrent} with success"
 
   return 0
 }
@@ -337,6 +291,14 @@ case "$abitti2_mode" in
     ;;
 esac
 
+if [ "$(puavo-conf puavo.service.puavo-abitti-torrent-updated.enabled)" \
+     != 'true' ]; then
+  errmsg='puavo-abitti-torrent-updated is not enabled (in puavo-conf)'
+  errmsg="${errmsg}, can not update Abitti 2"
+  error "$errmsg"
+  exit 1
+fi
+
 download_rate_limit=''
 if [ "${1:-}" = '--use-rate-limit' ]; then
   download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
@@ -361,41 +323,6 @@ if ! abitti2_server=$(get_abitti2_catalogue) || [ -z "$abitti2_server" ]; then
   exit 1
 fi
 
-lookup_abitti2_choice() {
-  local abitti2_version
-  abitti2_version=$1
-
-  jq -r --arg abitti2_version "$abitti2_version" '
-    ($abitti2_version as $k | .aliases[$k] // $k) as $resolved
-      | .choices[$resolved] // error("no such choice")
-  ' "$abitti2_json_path"
-}
-
-lookup_var() {
-  local json_str value var
-  json_str=$1
-  var=$2
-
-  if ! value=$(
-    printf %s "$json_str" | jq -r --arg var "$var" '
-                              .[$var] // error("no such var")
-                            '); then
-      error "could not lookup ${var} from json"
-      return 1
-  fi
-
-  printf %s "$value"
-}
-
-lookup_abitti2_image_info() {
-  local abitti2_image
-  abitti2_image=$1
-
-  jq -r --arg abitti2_image "$abitti2_image" '
-    .images[$abitti2_image] // error("no such image")
-  ' "$abitti2_json_path"
-}
-
 if ! abitti2_choice=$(lookup_abitti2_choice "$puavo_abitti2_version"); then
   error 'no such abitti2 version' >&2
   exit 1
@@ -410,126 +337,69 @@ if ! abitti2_image_info=$(lookup_abitti2_image_info "$abitti2_image"); then
   exit 1
 fi
 
-printf "%s\n" "$abitti2_image_info"
-
 abitti2_filename=$(lookup_var "$abitti2_image_info" puavo_os_filename)
 abitti2_sha256=$(  lookup_var "$abitti2_image_info" sha256)
 abitti2_size=$(    lookup_var "$abitti2_image_info" size)
 
-# XXX to be continued
-exit 1
+# "_fp" stands for "full path"
+abitti2_iso_fp="${abitti2_dir}/${abitti2_filename}"
 
-image_abitti2_version="abitti-v${build_number}"
-abitti2_image="${image_abitti2_version}.squashfs"
-abitti2_image_fp="${abitti2_dir}/${abitti2_image}"
-
-human_abitti2_version=$(
-  jq -r --arg image_abitti2_version "$image_abitti2_version" \
-    '.images[$image_abitti2_version].version' "$abitti2_json_path")
-if [ -z "$human_abitti2_version" -o "$human_abitti2_version" = 'null' ]; then
-  error "human Abitti version for '${image_abitti2_version}' not found"
-  human_abitti2_version='?'
-fi
-
-if [ -e "$abitti2_image_fp" ]; then
-  logmsg -p user.info \
-    "the requested abitti-image ${abitti2_image} (${human_abitti2_version}) is in place"
-  post_update_actions "$human_abitti2_version" \
-                      "$image_abitti2_version" \
+if [ -e "$abitti2_iso_fp" ]; then
+  msg="the requested abitti-image ${abitti2_filename} (${abitti2_version})"
+  msg="${msg} is in place"
+  logmsg -p user.info "$msg"
+  post_update_actions "$abitti2_filename" "$abitti2_version" \
                       "$abitti2_json_path"
   exit 0
 fi
 
+url_to_download_with_torrent="${abitti2_server}/${abitti2_filename}"
+
 # now we are going to update
 update_status='started'
 
-# update_status and human_abitti2_version must be set before this:
+# update_status and abitti2_version must be set before this:
 trap send_final_status 0 INT TERM
 
 send_status_message SetUpdateStarted
 
-rdiff_name=''
-if [ -n "$old_squashfs_build_number" ]; then
-  rdiff_name="abitti-v${old_squashfs_build_number}-v${build_number}.rdiff"
-fi
-
-expected_image_sha256=$(jq -r --arg version "$image_abitti2_version" \
-                          '.images[$version].sha256' "$abitti2_json_path")
-if [ -z "$expected_image_sha256" -o "$expected_image_sha256" = 'null' ]; then
-  error "checksum missing for image ${image_abitti2_version} (${human_abitti2_version})"
-  exit 1
-fi
-
-logmsg -p user.info "downloading ${image_abitti2_version} (${human_abitti2_version}) from ${image_server}"
+logmsg -p user.info "downloading ${url_to_download_with_torrent}"
 
 echo 0 | update_progress starting
 
-tmp_abitti2_image_fp="${abitti2_image_fp}.tmp"
+tmp_abitti2_iso_fp="${abitti2_iso_fp}.tmp"
 
-torrent_update_ok=false
-if [ "$(puavo-conf puavo.service.puavo-abitti-torrent-updated.enabled)" = 'true' ]; then
-  logmsg -p user.info "trying torrent-based rdiff update"
-
-  if try_torrent_rdiff_update "$download_rate_limit" "$image_abitti2_version" \
-        "$rdiff_name" "$image_server" "$abitti2_json_path" "$old_squashfs_path" \
-        "$tmp_abitti2_image_fp"; then
-    torrent_update_ok=true
-  fi
-fi
-
-if ! $torrent_update_ok; then
-  logmsg -p user.info 'trying with rsync'
-
-  ensure_enough_available_diskspace false "$image_abitti2_version" ''
-
-  # progress trick from /usr/sbin/puavo-install-and-update-ltspimages
-  rsync_error_code=$(
-    {
-      {
-        rsync --fuzzy --inplace --progress -v $rsyncopts              \
-              "${image_server}::images/abitti-images/${abitti2_image}" \
-              "$tmp_abitti2_image_fp" 2>/dev/null                      \
-          || echo $? >&2
-      } | unbuffer -p awk '
-            BEGIN { progress = -1 }
-
-            {
-              if (match($2, /^([[:digit:]]+)%$/, a)) {
-                new_progress = a[1]
-                if (progress != new_progress) {
-                  progress = new_progress
-                  print progress
-                }
-              }
-            }
-          ' \
-        | update_progress rsync
-    } 2>&1 || true
-  )
-
-  if [ -n "$rsync_error_code" ]; then
-    error "rsync failed with error code $rsync_error_code"
+if ! do_torrent_update "$download_rate_limit" "$abitti2_filename" \
+  "$abitti2_size" "$url_to_download_with_torrent"; then
+    error 'torrent update failed'
     exit 1
-  fi
 fi
 
 echo 90 | update_progress sha256
 
-logmsg -p user.info "checking sha256 checksum of ${image_abitti2_version} (${human_abitti2_version})"
-actual_image_sha256=$(sha256sum "$tmp_abitti2_image_fp" | awk '{ print $1 }')
-if [ "$actual_image_sha256" != "$expected_image_sha256" ]; then
-  error "checksum mismatch for abitti-image ${image_abitti2_version} (${human_abitti2_version})"
+logmsg -p user.info \
+       "checking sha256 checksum of ${abitti2_filename} (${abitti2_version})"
+
+calculated_sha256="$(sha256sum "$tmp_abitti2_iso_fp" \
+                       | awk '{ print $1 }')"
+if [ "$calculated_sha256" != "$abitti2_sha256" ]; then
+  errmsg="calculated checksum for ${abitti2_filename} does not match"
+  errmsg="${errmsg} the expected checksum, removing ${tmp_abitti2_iso_fp}"
+  error "$errmsg"
+  rm -f "$tmp_abitti2_iso_fp"
   exit 1
 fi
 
+logmsg -p user.info "checksum for ${abitti2_filename} is good"
+mv "$tmp_abitti2_filename" "$abitti2_filename"
+
 echo 99 | update_progress sha256
 
-mv "$tmp_abitti2_image_fp" "$abitti2_image_fp"
+mv "$tmp_abitti2_iso_fp" "$abitti2_iso_fp"
 
-logmsg -p user.notice "new abitti-image ${image_abitti2_version} (${human_abitti2_version}) installed!"
+logmsg -p user.notice \
+       "new Abitti2 image ${abitti2_filename} (${abitti2_version}) installed!"
 
-post_update_actions "$human_abitti2_version" \
-                    "$image_abitti2_version" \
-                    "$abitti2_json_path"
+post_update_actions "$abitti2_filename" "$abitti2_version" "$abitti2_json_path"
 
 update_status='success'
