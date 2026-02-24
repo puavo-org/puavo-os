@@ -366,6 +366,28 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
                      "${abitti_boot_label}"   \
                      "Abitti-yhteensopiva, versio ${abitti_version_number}"
   fi
+
+  for abitti_iso_path in (lvm/puavo-images)/abitti2/*.iso; do
+    if [ ! -e "$abitti_iso_path" ]; then
+      continue
+    fi
+
+    regexp -s abitti_iso_file '^.*/(.*\.iso)$' "${abitti_iso_path}"
+    regexp -s abitti_iso_path_no_suffix '^(.*)\.iso$' "${abitti_iso_path}"
+    set abitti_iso_cfg="${abitti_iso_path_no_suffix}.cfg"
+    if [ ! -e "$abitti_iso_cfg" ]; then
+      continue
+    fi
+
+    menuentry "Abitti 2 (${abitti_iso_file})" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
+      set abitti_iso_path=$2
+      set abitti_iso_file=$3
+      set abitti_iso_cfg=$4
+      export abitti_iso_path
+      export abitti_iso_file
+      configfile "$abitti_iso_cfg"
+    }
+  done
 done
 EOF
 }
