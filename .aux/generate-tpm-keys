@@ -28,3 +28,6 @@ fi
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
   -out tpm2-pcr-private-key.pem
 openssl rsa -pubout -in tpm2-pcr-private-key.pem -out tpm2-pcr-public-key.pem
+
+openssl req -new -x509 -key tpm2-pcr-private-key.pem -days 36500 \
+  -subj "/CN=TPM PCR Signing Key, O=Puavo/" -out tpm2-pcr-certificate.pem
