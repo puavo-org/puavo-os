@@ -54,15 +54,21 @@ lookup_abitti2_choice() {
 
   jq -r --arg abitti2_version "$abitti2_version" '
     ($abitti2_version as $k | .aliases[$k] // $k) as $resolved
-      | .choices[$resolved] // error("no such choice")
+      | if .choices[$resolved]
+        then $resolved
+        else error("Unknown choice: \($abitti2_version)")
+        end
+  ' "$abitti2_json_path"
+}
+
+lookup_abitti2_choice_info() {
+  jq -r --arg abitti2_choice "$1" '
+    .choices[$abitti2_choice] // error("no such choice")
   ' "$abitti2_json_path"
 }
 
 lookup_abitti2_image_info() {
-  local abitti2_image
-  abitti2_image=$1
-
-  jq -r --arg abitti2_image "$abitti2_image" '
+  jq -r --arg abitti2_image "$1" '
     .images[$abitti2_image] // error("no such image")
   ' "$abitti2_json_path"
 }
@@ -126,9 +132,10 @@ edit_extra_system_contents() {
 post_update_actions() {
   local abitti2_filename abitti2_version abitti2_json_path
 
-  abitti2_filename=$1
-  abitti2_version=$2
-  abitti2_json_path=$3
+  abitti2_choice=$1
+  abitti2_filename=$2
+  abitti2_version=$3
+  abitti2_grub_cfg_base64=$4
 
   # XXX it should be possible to have two so this is not good
   find "$abitti2_dir" -name '*.iso' \
@@ -136,6 +143,11 @@ post_update_actions() {
 
   edit_extra_system_contents --arg version "$abitti2_version" \
     '.Abitti2 = $version'
+
+  if ! update_grub_cfg "$abitti2_choice" "$abitti2_grub_cfg_base64"; then
+    error "could not update grub configuration for ${abitti2_choice}"
+    exit 1
+  fi
 
   # XXX do we have to use Grub variables for this?
   # XXX the old abitti variables should be cleaned up,
@@ -269,6 +281,39 @@ do_torrent_update() {
   return 0
 }
 
+update_grub_cfg() {
+  local abitti2_choice abitti2_grub_cfg abitti2_grub_cfg_base64 \
+        abitti2_grub_cfg_path tmp_abitti2_grub_cfg_path
+  abitti2_choice=$1
+  abitti2_grub_cfg_base64=$2
+  abitti2_grub_cfg_path="${abitti2_dir}/${abitti2_choice}.cfg"
+  tmp_abitti2_grub_cfg_path="${abitti2_grub_cfg_path}.tmp"
+
+  if ! abitti2_grub_cfg=$(printf "%s" "$abitti2_grub_cfg_base64" \
+                            | base64 -d); then
+    error 'could not decode abitti2 grub.cfg'
+    return 1
+  fi
+
+  if ! printf %s "$abitti2_grub_cfg" > "$tmp_abitti2_grub_cfg_path"; then
+    error 'could not write abitti2 grub.cfg'
+    return 1
+  fi
+
+  if cmp "$tmp_abitti2_grub_cfg_path" "$abitti2_grub_cfg_path" \
+         2>/dev/null; then
+    rm -f "$tmp_abitti2_grub_cfg_path" || true
+    return 0
+  fi
+
+  if ! mv "$tmp_abitti2_grub_cfg_path" "$abitti2_grub_cfg_path"; then
+    error 'could not move abitti2 grub.cfg into its place'
+    return 1
+  fi
+
+  logmsg -p user.info "updated the Grub configuration for ${abitti_choice}"
+}
+
 # be very nice
 ionice -c 3  -p $$
 renice -n 20 -p $$ > /dev/null
@@ -328,9 +373,14 @@ if ! abitti2_choice=$(lookup_abitti2_choice "$puavo_abitti2_version"); then
   exit 1
 fi
 
-abitti2_grub_cfg=$(lookup_var "$abitti2_choice" grub_cfg)
-abitti2_image=$(   lookup_var "$abitti2_choice" image)
-abitti2_version=$( lookup_var "$abitti2_choice" version)
+if ! abitti2_choice_info=$(lookup_abitti2_choice_info "$abitti2_choice"); then
+  error 'no such abitti2 choice' >&2
+  exit 1
+fi
+
+abitti2_grub_cfg_base64=$(lookup_var "$abitti2_choice_info" grub_cfg)
+abitti2_image=$(   lookup_var "$abitti2_choice_info" image)
+abitti2_version=$( lookup_var "$abitti2_choice_info" version)
 
 if ! abitti2_image_info=$(lookup_abitti2_image_info "$abitti2_image"); then
   error 'no such abitti2 version' >&2
@@ -348,8 +398,8 @@ if [ -e "$abitti2_iso_fp" ]; then
   msg="the requested abitti-image ${abitti2_filename} (${abitti2_version})"
   msg="${msg} is in place"
   logmsg -p user.info "$msg"
-  post_update_actions "$abitti2_filename" "$abitti2_version" \
-                      "$abitti2_json_path"
+  post_update_actions "$abitti2_choice" "$abitti2_filename" "$abitti2_version" \
+                      "$abitti2_grub_cfg_base64"
   exit 0
 fi
 
@@ -394,11 +444,19 @@ logmsg -p user.info "checksum for ${abitti2_filename} is good"
 
 echo 99 | update_progress sha256
 
-mv "$tmp_abitti2_iso_fp" "$abitti2_iso_fp"
+if ! chown root:root "$tmp_abitti2_iso_fp"; then
+  error "could not chown ${tmp_abitti2_iso_fp} to root"
+  exit 1
+fi
+if ! mv "$tmp_abitti2_iso_fp" "$abitti2_iso_fp"; then
+  error "error in moving ${abitti2_iso_fp} into its place"
+  exit 1
+fi
 
 logmsg -p user.notice \
        "new Abitti2 image ${abitti2_filename} (${abitti2_version}) installed!"
 
-post_update_actions "$abitti2_filename" "$abitti2_version" "$abitti2_json_path"
+post_update_actions "$abitti2_choice" "$abitti2_filename" "$abitti2_version" \
+                    "$abitti2_grub_cfg_base64"
 
 update_status='success'
