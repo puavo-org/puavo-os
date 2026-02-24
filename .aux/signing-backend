@@ -1,0 +1,86 @@
+#!/bin/sh
+# Signing backend abstraction.
+# Reads 'config/signing.conf' and allows environment variable overrides.
+#
+# In file mode, private keys are PEM files in the key directory.
+# In PKCS#11 mode, the key directory contains:
+#   secure-boot.uri              (Secure Boot private key URI)
+#   tpm2-pcr-private-key.uri     (Primary PCR private key UR)
+#   tpm2-pcr-private-key-*.uri   (Additional PCR private key URIs)
+#   tpm2-pcr-certificate.pem     (Primary PCR certificate (X.509))
+#   tpm2-pcr-certificate-*.pem   (Additional PCR certificates)
+
+_signing_config="$(dirname "$0")/../config/signing.conf"
+if [ -f "$_signing_config" ]; then
+  . "$_signing_config"
+fi
+
+SIGNING_BACKEND="${SIGNING_BACKEND:-file}"
+SIGNING_ENGINE="${SIGNING_ENGINE:-pkcs11}"
+SIGNING_PROVIDER="${SIGNING_PROVIDER:-}"
+
+signing_is_pkcs11() {
+  [ "$SIGNING_BACKEND" = "pkcs11" ]
+}
+
+# Read a PKCS#11 URI from a .uri file.
+signing_read_uri() {
+  if [ ! -f "$1" ]; then
+    echo "error: PKCS#11 URI file not found at '$1'" >&2
+    return 1
+  fi
+  cat "$1"
+}
+
+signing_secureboot_private_key() {
+  if signing_is_pkcs11; then
+    signing_read_uri "${1}/secure-boot.uri"
+  else
+    printf '%s' "${1}/secure-boot.priv"
+  fi
+}
+
+signing_secureboot_certificate() {
+  printf '%s' "${1}/secure-boot.pem"
+}
+
+# Resolve a PCR private key reference.
+# In file mode the argument is returned as-is.
+# In PKCS#11 mode the corresponding .uri file is read instead.
+signing_pcr_private_key() {
+  if signing_is_pkcs11; then
+    signing_read_uri "$(echo "$1" | sed 's/\.pem$/.uri/')"
+  else
+    printf '%s' "$1"
+  fi
+}
+
+signing_ukify_engine_arguments() {
+  if signing_is_pkcs11; then
+    if [ -n "$SIGNING_PROVIDER" ]; then
+      printf '%s' "--signing-provider=${SIGNING_PROVIDER}"
+    elif [ -n "$SIGNING_ENGINE" ]; then
+      printf '%s' "--signing-engine=${SIGNING_ENGINE}"
+    fi
+  fi
+}
+
+signing_sbsign_engine_arguments() {
+  if signing_is_pkcs11; then
+    printf '%s' "--engine ${SIGNING_ENGINE}"
+  fi
+}
+
+signing_require_private_key() {
+  if ! signing_is_pkcs11 && [ ! -f "$1" ]; then
+    echo "error: private key not found at '$1'" >&2
+    return 1
+  fi
+}
+
+signing_validate() {
+  if signing_is_pkcs11 && [ -z "$SIGNING_ENGINE" ] && [ -z "$SIGNING_PROVIDER" ]; then
+    echo "error: SIGNING_ENGINE or SIGNING_PROVIDER must be set for PKCS#11" >&2
+    return 1
+  fi
+}

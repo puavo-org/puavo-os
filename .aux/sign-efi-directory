@@ -22,11 +22,13 @@ private_key=$2
 certificate=$3
 output_directory=$4
 
-# Validate inputs
+. "$(dirname "$0")/signing-backend"
+engine_arguments=$(signing_sbsign_engine_arguments)
+
 [ -d "$input_directory" ]  || panic "input directory '$input_directory' does not exist"
-[ -f "$private_key" ]      || panic "private key not found at '$private_key'"
-[ -f "$certificate" ]      || panic "certificate not found at '$certificate'"
 [ -d "$output_directory" ] || panic "output directory '$output_directory' does not exist"
+[ -f "$certificate" ]      || panic "certificate not found at '$certificate'"
+signing_require_private_key "$private_key" || exit 1
 
 if ! command -v sbsign >/dev/null 2>&1; then
   panic "sbsign command not found"
@@ -37,13 +39,16 @@ signed_any=false
 for efi_file in "$input_directory"/*.efi; do
   [ -f "$efi_file" ] || continue
 
-  basename_efi=$(basename "$efi_file")
-  output_file="${output_directory}/${basename_efi}.signed"
+  efi_basename=$(basename "$efi_file")
+  output_file="${output_directory}/${efi_basename}.signed"
   temporary_output="${output_file}.tmp"
 
-  echo "signing ${basename_efi}..."
-  sbsign --key "$private_key" --cert "$certificate" \
-         --output "$temporary_output" "$efi_file"
+  echo "signing ${efi_basename}..."
+  sbsign $engine_arguments \
+        --key "$private_key" \
+        --cert "$certificate" \
+        --output "$temporary_output" \
+        "$efi_file"
 
   mv "$temporary_output" "$output_file"
   signed_any=true

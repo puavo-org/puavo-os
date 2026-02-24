@@ -2,7 +2,7 @@
 set -e
 
 usage() {
-  echo "Usage: $0 <key-folder> <commandline> <output>"
+  echo "Usage: $0 <key-directory> <commandline> <output>"
   exit 1
 }
 
@@ -10,15 +10,23 @@ if [ "$#" -ne 3 ]; then
   usage
 fi
 
-key_folder=$1
+key_directory=$1
 commandline=$2
 output=$3
 output_basename=$(basename "$output")
 
+. "$(dirname "$0")/signing-backend"
+signing_validate || exit 2
+
+secure_boot_private_key=$(signing_secureboot_private_key "$key_directory")
+secure_boot_certificate=$(signing_secureboot_certificate "$key_directory")
+engine_arguments=$(signing_ukify_engine_arguments)
+
 # Todo: Check SBAT
 ukify build \
-  --secureboot-private-key="${key_folder}/secure-boot.priv" \
-  --secureboot-certificate="${key_folder}/secure-boot.pem" \
+  $engine_arguments \
+  --secureboot-private-key="${secure_boot_private_key}" \
+  --secureboot-certificate="${secure_boot_certificate}" \
   --cmdline="$commandline" \
   --sbat="sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
   $output_basename.puavo-os,1,kernel-command-line-addon,$output_basename.puavo-os,1,https://github.com/puavo-org/puavo-os" \
