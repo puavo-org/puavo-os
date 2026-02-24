@@ -27,17 +27,28 @@ secure_boot_private_key=$(signing_secureboot_private_key "$key_directory")
 secure_boot_certificate=$(signing_secureboot_certificate "$key_directory")
 engine_arguments=$(signing_ukify_engine_arguments)
 
-# Build PCR key arguments by iterating over public key files. In file mode
-# private keys are PEM files, in PKCS#11 mode they are resolved from .uri files.
+# Build PCR key arguments by iterating over certificate or public key files.
+# Only certificates appear to work for PKCS#11 backend and public keys
+# for the file based backend.
 pcr_key_arguments=""
 
-for public_key in "${key_directory}"/tpm2-pcr-public-key*.pem; do
-  [ -f "$public_key" ] || continue
-  private_key_file=$(echo "$public_key" |
-                     sed 's/tpm2-pcr-public-key/tpm2-pcr-private-key/')
-  private_key=$(signing_pcr_private_key "$private_key_file")
-  pcr_key_arguments="$pcr_key_arguments --pcr-private-key=${private_key} --pcr-public-key=${public_key}"
-done
+if signing_is_pkcs11; then
+  for certificate in "${key_directory}"/tpm2-pcr-certificate*.pem; do
+    [ -f "$certificate" ] || continue
+    private_key_file=$(echo "$certificate" |
+                        sed 's/tpm2-pcr-certificate/tpm2-pcr-private-key/')
+    private_key=$(signing_pcr_private_key "$private_key_file")
+    pcr_key_arguments="$pcr_key_arguments --pcr-private-key=${private_key} --pcr-public-key=${certificate}"
+  done
+else
+  for public_key in "${key_directory}"/tpm2-pcr-public-key*.pem; do
+    [ -f "$public_key" ] || continue
+    private_key_file=$(echo "$public_key" |
+                        sed 's/tpm2-pcr-public-key/tpm2-pcr-private-key/')
+    private_key=$(signing_pcr_private_key "$private_key_file")
+    pcr_key_arguments="$pcr_key_arguments --pcr-private-key=${private_key} --pcr-public-key=${public_key}"
+  done
+fi
 
 bootsplash_image="${art_directory}/bootsplash.bmp"
 
