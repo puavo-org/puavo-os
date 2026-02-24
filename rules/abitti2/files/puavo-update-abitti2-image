@@ -391,7 +391,6 @@ if [ "$calculated_sha256" != "$abitti2_sha256" ]; then
 fi
 
 logmsg -p user.info "checksum for ${abitti2_filename} is good"
-mv "$tmp_abitti2_filename" "$abitti2_filename"
 
 echo 99 | update_progress sha256
 
