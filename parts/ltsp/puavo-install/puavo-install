@@ -564,7 +564,7 @@ case "$install_mode" in
     puavo_preseed_setup_filesystems_args+=('--force-unpartitioned-space' 'default')
     puavo_preseed_setup_filesystems_args+=('--force-wipe-partition'      'default')
     puavo_preseed_setup_filesystems_args+=('--force-encryption'          'none')
-    puavo_preseed_setup_filesystems_args+=('--force-user-recovery-key'   'no')
+    puavo_preseed_setup_filesystems_args+=('--force-recovery-key'   'yes')
     ;;
   crypt*)
     puavo_preseed_setup_filesystems_args+=('--force-imageoverlay-size'   'default')
@@ -572,7 +572,7 @@ case "$install_mode" in
     puavo_preseed_setup_filesystems_args+=('--force-unpartitioned-space' 'default')
     puavo_preseed_setup_filesystems_args+=('--force-wipe-partition'      'default')
     puavo_preseed_setup_filesystems_args+=('--force-encryption'          'tpm-with-recovery-key')
-    puavo_preseed_setup_filesystems_args+=('--force-user-recovery-key'   'no')
+    puavo_preseed_setup_filesystems_args+=('--force-recovery-key'   'no')
     ;;
   preseed-*)
     ask_preseed

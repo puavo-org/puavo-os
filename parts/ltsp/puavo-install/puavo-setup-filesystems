@@ -101,28 +101,22 @@ class LuksPartitionHandler
     "/dev/mapper/#{ @encryption_device_name }"
   end
 
-  def generate_recovery_key()
-    # Generate a recovery key using alphanumeric characters
-    # excluding ambiguous characters like 0, O, I, l, 1
-    charset = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
-    key_length = 32 # ~186 bits of entropy
-
-    (1..key_length)
-      .map { charset[SecureRandom.random_number(charset.length)] }
-      .join
+  def generate_control_key()
+    # Generate a control key as a hex string for UTF-8 safety.
+    SecureRandom.hex(32) # 256 bits of entropy, 64 hex characters
   end
 
-  def enroll(recovery_key, pin=nil)
+  def enroll(control_key, pin=nil)
     require 'tempfile'
 
-    Tempfile.create('luks-password', '/tmp') do |password_file|
-      password_file.chmod(0600)
-      password_file.write(recovery_key.to_s)
-      password_file.flush
+    Tempfile.create('puavo-luks-enroll-key', '/tmp') do |control_key_file|
+      control_key_file.chmod(0600)
+      control_key_file.write(control_key.to_s)
+      control_key_file.flush
 
       command = [ 'systemd-cryptenroll' ]
       command += @policy.arguments
-      command += [ "--unlock-key-file=#{ password_file.path }" ]
+      command += [ "--unlock-key-file=#{ control_key_file.path }" ]
       command += [ "/dev/#{ @partition }" ]
 
       # Security note: NEWPIN must be passed via environment variable as
@@ -136,15 +130,15 @@ class LuksPartitionHandler
     end
   end
 
-  def setup(predefined_recovery_key=nil, pin=nil)
-    recovery_key = predefined_recovery_key || self.generate_recovery_key()
+  def setup(predefined_control_key=nil, pin=nil)
+    control_key = predefined_control_key || self.generate_control_key()
 
-    puts 'Creating LUKS partition with recovery key...'
+    puts 'Creating LUKS partition...'
     IO.popen([ 'cryptsetup', 'luksFormat',
                *LUKS_FORMAT_OPTIONS,
                "--key-file=-",
                "/dev/#{ @partition }" ], 'w') do |f|
-      f.print(recovery_key)
+      f.print(control_key)
     end
 
     exit_status = $?
@@ -156,7 +150,7 @@ class LuksPartitionHandler
     IO.popen([ 'cryptsetup', 'luksOpen',
                "/dev/#{ @partition }",
                @encryption_device_name ], 'w') do |f|
-      f.print(recovery_key)
+      f.print(control_key)
     end
 
     exit_status = $?
@@ -164,19 +158,19 @@ class LuksPartitionHandler
       raise 'Failed to open the created LUKS encryption device'
     end
 
-    puts 'Enrolling the LUKS partition for TPM-based unlocking...'
-    self.enroll(recovery_key, pin)
+    puts 'Enrolling the LUKS partition for TPM based unlocking...'
+    self.enroll(control_key, pin)
 
-    return recovery_key
+    return control_key
   end
 
-  def add_key(primary_key, new_key)
+  def add_key(control_key, new_key)
     return if new_key.nil? || new_key.empty?
 
-    Tempfile.create('puavo-luks-primary-key-') do |primary_key_file|
-      primary_key_file.write(primary_key)
-      primary_key_file.flush
-      File.chmod(0600, primary_key_file.path) rescue nil
+    Tempfile.create('puavo-luks-control-key-') do |control_key_file|
+      control_key_file.write(control_key)
+      control_key_file.flush
+      File.chmod(0600, control_key_file.path) rescue nil
 
       Tempfile.create('puavo-luks-new-key-') do |new_key_file|
         new_key_file.write(new_key)
@@ -184,7 +178,7 @@ class LuksPartitionHandler
         File.chmod(0600, new_key_file.path) rescue nil
 
         run('cryptsetup', 'luksAddKey',
-            "--key-file=#{ primary_key_file.path }",
+            "--key-file=#{ control_key_file.path }",
             "--new-keyfile=#{ new_key_file.path }",
             "/dev/#{ @partition }")
       end
@@ -197,14 +191,14 @@ class BootVaultBuilder
   DEFAULT_IMAGE_NAME  = 'vault.img'
   DEFAULT_LUKS_NAME   = 'puavo-boot-vault'
 
-  RECOVERY_KEY_PROPERTY = 'recovery.key'
+  CONTROL_KEY_PROPERTY = 'recovery.key'
   VERSION_PROPERTY      = 'version'
 
   VERSION = 1
 
-  def initialize(primary_key:, user_recovery_key:, encryption_policy:, device:, pin: nil, size: DEFAULT_SIZE, image_name: DEFAULT_IMAGE_NAME, luks_name: DEFAULT_LUKS_NAME)
-    @primary_key = primary_key
-    @user_recovery_key = user_recovery_key
+  def initialize(control_key:, recovery_key:, encryption_policy:, device:, pin: nil, size: DEFAULT_SIZE, image_name: DEFAULT_IMAGE_NAME, luks_name: DEFAULT_LUKS_NAME)
+    @control_key = control_key
+    @recovery_key = recovery_key
     @pin = pin
     @encryption_policy = encryption_policy
     @size = size
@@ -239,11 +233,11 @@ class BootVaultBuilder
         @luks_name,
         @encryption_policy
       )
-      handler.setup(@primary_key, @pin)
+      handler.setup(@control_key, @pin)
 
-      # If the user recovery key is set, add it
-      if @user_recovery_key && !@user_recovery_key.empty?
-        handler.add_key(@primary_key, @user_recovery_key)
+      # If the recovery key is set, add it
+      if @recovery_key && !@recovery_key.empty?
+        handler.add_key(@control_key, @recovery_key)
       end
 
       run('mkfs.ext4', '-q', handler.encryption_device)
@@ -252,9 +246,9 @@ class BootVaultBuilder
         begin
           run('mount', handler.encryption_device, mountpoint)
 
-          recovery_key_property = File.join(mountpoint, RECOVERY_KEY_PROPERTY)
-          File.write(recovery_key_property, @primary_key)
-          File.chmod(0600, recovery_key_property) rescue nil
+          control_key_property = File.join(mountpoint, CONTROL_KEY_PROPERTY)
+          File.write(control_key_property, @control_key)
+          File.chmod(0600, control_key_property) rescue nil
 
           version_property = File.join(mountpoint, VERSION_PROPERTY)
           File.write(version_property, VERSION.to_s)
@@ -337,7 +331,7 @@ module DiskHandler
 
   EncryptionPresets = {
     'none' => {
-      'label' => 'No encryption',
+      'label' => 'No Encryption',
       'policy' => nil,
     },
     'tpm-with-pin' => {
@@ -694,20 +688,20 @@ module DiskHandler
     encryption = fs_conf['encryption']
     handler = LuksPartitionHandler.new(
       fs_conf['puavo_partition'], EncryptionDeviceName, encryption['policy'])
-    primary_key = handler.setup(nil, encryption['pin'])
+    control_key = handler.setup(nil, encryption['pin'])
 
-    # If the user recovery key is set, add it
+    # If the recovery key is set, add it
     if encryption && \
-       encryption['user_recovery_key'] && \
-       !encryption['user_recovery_key'].empty?
-      handler.add_key(primary_key, encryption['user_recovery_key'])
+       encryption['recovery_key'] && \
+       !encryption['recovery_key'].empty?
+      handler.add_key(control_key, encryption['recovery_key'])
     end
 
     # Create the encrypted boot vault that will store the LUKS key
     # for controlling the LUKS partition during the boot process.
     vault = BootVaultBuilder.new(
-      primary_key: primary_key,
-      user_recovery_key: encryption['user_recovery_key'],
+      control_key: control_key,
+      recovery_key: encryption['recovery_key'],
       pin: encryption['pin'],
       encryption_policy: encryption['policy'],
       device: fs_conf['device']
@@ -1035,12 +1029,12 @@ module QueryDiskInfo
         encryption['pin'] = pin
       end
 
-      # Ask for optional user recovery key
-      add_key_answer = UI::ask_with_default("Add user recovery key? (y/N)",
-                                            'no', UI::UserRecoveryKeyPrompt)
+      # Ask for optional recovery key
+      add_key_answer = UI::ask_with_default("Add recovery key? (y/N)",
+                                            'no', UI::RecoveryKeyPrompt)
       if add_key_answer.downcase.start_with?('y')
-        user_key = UI::ask_and_confirm_secret('Enter user recovery key:')
-        encryption['user_recovery_key'] = user_key
+        recovery_key = UI::ask_and_confirm_secret('Enter recovery key:')
+        encryption['recovery_key'] = recovery_key
       end
     end
 
@@ -1152,7 +1146,7 @@ module UI
   WindowsSizePrompt,
   WipePartitionPrompt,
   WritePartitionsPrompt,
-  UserRecoveryKeyPrompt,
+  RecoveryKeyPrompt,
     = *(1..11)
 
   @ask_forced      = {}
@@ -1184,7 +1178,7 @@ puavo-setup-filesystems [OPTIONS]
     --ask-windows-size            ask with default for windows size
     --ask-wipe-partition          ask with default for wipe partition
     --ask-write-partitions        ask with default for write partitions
-    --ask-user-recovery-key       ask with default for user recovery key
+    --ask-recovery-key            ask with default for recovery key
     --force-disk-device           force value for disk device
     --force-encryption            force value for encryption preset
     --force-imageoverlay-size     force value for imageoverlay size
@@ -1195,7 +1189,7 @@ puavo-setup-filesystems [OPTIONS]
     --force-windows-size          force value for windows size
     --force-wipe-partition        force value for wipe partition
     --force-write-partitions      force value for write partitions
-    --force-user-recovery-key     force value for user recovery key
+    --force-recovery-key          force value for recovery key
     --hosttype                    force value for hosttype
     --loopback-only               use only loopback devices
 
@@ -1216,7 +1210,7 @@ EOF
         [ '--ask-windows-size'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-wipe-partition'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-write-partitions'      , GetoptLong::REQUIRED_ARGUMENT ],
-        [ '--ask-user-recovery-key'     , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--ask-recovery-key'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-disk-device'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-encryption'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-imageoverlay-size'   , GetoptLong::REQUIRED_ARGUMENT ],
@@ -1227,7 +1221,7 @@ EOF
         [ '--force-windows-size'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-wipe-partition'      , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-write-partitions'    , GetoptLong::REQUIRED_ARGUMENT ],
-        [ '--force-user-recovery-key'   , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--force-recovery-key'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--hosttype'                  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--loopback-only'             , GetoptLong::NO_ARGUMENT       ],
       )
@@ -1255,8 +1249,8 @@ EOF
           @defaults[WipePartitionPrompt] = arg
         when '--ask-write-partitions'
           @defaults[WritePartitionsPrompt] = arg
-        when '--ask-user-recovery-key'
-          @defaults[UserRecoveryKeyPrompt] = arg
+        when '--ask-recovery-key'
+          @defaults[RecoveryKeyPrompt] = arg
         when '--force-disk-device'
           @defaults[DiskDevicePrompt] = arg
           @force_defaults[DiskDevicePrompt] = true
@@ -1284,9 +1278,9 @@ EOF
         when '--force-write-partitions'
           @defaults[WritePartitionsPrompt] = arg
           @force_defaults[WritePartitionsPrompt] = true
-        when '--force-user-recovery-key'
-          @defaults[UserRecoveryKeyPrompt] = arg
-          @force_defaults[UserRecoveryKeyPrompt] = true
+        when '--force-recovery-key'
+          @defaults[RecoveryKeyPrompt] = arg
+          @force_defaults[RecoveryKeyPrompt] = true
         when '--hosttype'
           @hosttype = arg
         when '--loopback-only'
