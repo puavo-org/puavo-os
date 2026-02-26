@@ -68,3 +68,9 @@ ukify build \
   --splash="${bootsplash_image}" \
   --output "$output" \
   --measure
+
+# Attach additional Secure Boot signatures if additional key pairs exist
+if signing_secureboot_has_additional_keys "$key_directory"; then
+  echo "attaching additional Secure Boot signatures to UKI..."
+  signing_secureboot_sign_additional "$output" "$key_directory"
+fi

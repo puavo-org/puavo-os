@@ -20,16 +20,8 @@ fi
 rootfs_directory=$1
 key_directory=$2
 
-. "$(dirname "$0")/signing-backend"
-signing_validate || exit 2
-
-private_key=$(signing_secureboot_private_key "$key_directory")
-certificate=$(signing_secureboot_certificate "$key_directory")
-
 [ -d "$rootfs_directory" ] || panic "rootfs directory '$rootfs_directory' does not exist"
 [ -d "$key_directory" ]    || panic "key directory '$key_directory' does not exist"
-[ -f "$certificate" ]      || panic "certificate not found at '$certificate'"
-signing_require_private_key "$private_key" || exit 1
 
 if ! command -v grub-mkstandalone >/dev/null 2>&1; then
   panic "grub-mkstandalone not found"
@@ -63,7 +55,7 @@ create_grub_architecture_bootloader() {
   mkdir -p "$grub_signed_directory"
 
   echo "signing GRUB bootloader for ${architecture}..."
-  .aux/sign-efi-directory "$grub_build_directory" "$private_key" "$certificate" "$grub_signed_directory"
+  .aux/sign-efi-directory "$grub_build_directory" "$key_directory" "$grub_signed_directory"
 }
 
 for architecture in i386-efi x86_64-efi; do
@@ -78,4 +70,4 @@ mkdir -p "$shim_output_directory"
 [ -d "$shim_output_directory" ] || panic "directory '$shim_output_directory' does not exist"
 
 echo "signing SHIM binaries..."
-.aux/sign-efi-directory "$shim_source_directory" "$private_key" "$certificate" "$shim_output_directory"
+.aux/sign-efi-directory "$shim_source_directory" "$key_directory" "$shim_output_directory"

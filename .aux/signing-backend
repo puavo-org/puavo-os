@@ -5,7 +5,10 @@
 # In file mode, private keys are PEM files in the key directory.
 # In PKCS#11 mode, the key directory contains:
 #   secure-boot.uri              (Secure Boot private key URI)
-#   tpm2-pcr-private-key.uri     (Primary PCR private key UR)
+#   secure-boot-*.uri            (Additional Secure Boot private key URIs)
+#   secure-boot.pem              (Primary Secure Boot certificate)
+#   secure-boot-*.pem            (Additional Secure Boot certificates)
+#   tpm2-pcr-private-key.uri     (Primary PCR private key URI)
 #   tpm2-pcr-private-key-*.uri   (Additional PCR private key URIs)
 #   tpm2-pcr-certificate.pem     (Primary PCR certificate (X.509))
 #   tpm2-pcr-certificate-*.pem   (Additional PCR certificates)
@@ -32,6 +35,20 @@ signing_read_uri() {
   cat "$1"
 }
 
+signing_validate() {
+  if signing_is_pkcs11 && [ -z "$SIGNING_ENGINE" ] && [ -z "$SIGNING_PROVIDER" ]; then
+    echo "error: SIGNING_ENGINE or SIGNING_PROVIDER must be set for PKCS#11" >&2
+    return 1
+  fi
+}
+
+signing_require_private_key() {
+  if ! signing_is_pkcs11 && [ ! -f "$1" ]; then
+    echo "error: private key not found at '$1'" >&2
+    return 1
+  fi
+}
+
 signing_secureboot_private_key() {
   if signing_is_pkcs11; then
     signing_read_uri "${1}/secure-boot.uri"
@@ -42,6 +59,62 @@ signing_secureboot_private_key() {
 
 signing_secureboot_certificate() {
   printf '%s' "${1}/secure-boot.pem"
+}
+
+# List additional Secure Boot key pairs.
+# Each line of output is: <private_key> <certificate>
+signing_secureboot_additional_keys() {
+  _key_directory="$1"
+
+  if signing_is_pkcs11; then
+    for _certificate in "${_key_directory}"/secure-boot-*.pem; do
+      [ -f "$_certificate" ] || continue
+      _uri_file=$(echo "$_certificate" | sed 's/\.pem$/.uri/')
+      _private_key=$(signing_read_uri "$_uri_file") || continue
+      echo "${_private_key} ${_certificate}"
+    done
+  else
+    for _certificate in "${_key_directory}"/secure-boot-*.pem; do
+      [ -f "$_certificate" ] || continue
+      _private_key=$(echo "$_certificate" | sed 's/\.pem$/.priv/')
+      [ -f "$_private_key" ] || continue
+      echo "${_private_key} ${_certificate}"
+    done
+  fi
+}
+
+# Check whether additional Secure Boot key pairs exist.
+signing_secureboot_has_additional_keys() {
+  _key_directory="$1"
+  _additional=$(signing_secureboot_additional_keys "$_key_directory")
+  [ -n "$_additional" ]
+}
+
+# Add an additional Secure Boot signature to an already-signed EFI binary.
+signing_secureboot_attach_signature() {
+  _efi_file="$1"
+  _private_key="$2"
+  _certificate="$3"
+
+  _engine_arguments=$(signing_sbsign_engine_arguments)
+
+  sbsign $_engine_arguments \
+    --key "$_private_key" \
+    --cert "$_certificate" \
+    --output "$_efi_file" \
+    "$_efi_file"
+}
+
+# Sign an EFI binary with all additional Secure Boot keys.
+signing_secureboot_sign_additional() {
+  _efi_file="$1"
+  _key_directory="$2"
+
+  signing_secureboot_additional_keys "$_key_directory" | while IFS=' ' read -r _private_key _certificate; do
+    [ -n "$_private_key" ] || continue
+    echo "  attaching additional signature: $(basename "$_certificate")"
+    signing_secureboot_attach_signature "$_efi_file" "$_private_key" "$_certificate"
+  done
 }
 
 # Resolve a PCR private key reference.
@@ -68,19 +141,5 @@ signing_ukify_engine_arguments() {
 signing_sbsign_engine_arguments() {
   if signing_is_pkcs11; then
     printf '%s' "--engine ${SIGNING_ENGINE}"
-  fi
-}
-
-signing_require_private_key() {
-  if ! signing_is_pkcs11 && [ ! -f "$1" ]; then
-    echo "error: private key not found at '$1'" >&2
-    return 1
-  fi
-}
-
-signing_validate() {
-  if signing_is_pkcs11 && [ -z "$SIGNING_ENGINE" ] && [ -z "$SIGNING_PROVIDER" ]; then
-    echo "error: SIGNING_ENGINE or SIGNING_PROVIDER must be set for PKCS#11" >&2
-    return 1
   fi
 }
