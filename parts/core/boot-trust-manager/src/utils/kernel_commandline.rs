@@ -14,25 +14,43 @@ pub fn read() -> Option<String> {
 }
 
 /// Parse a parameter value from a kernel command line string.
-pub fn parse_parameter(commandline: &str, key: &str) -> Option<String> {
+///
+/// Returns an error if the parameter is specified more than once.
+pub fn parse_parameter(
+    commandline: &str,
+    key: &str,
+) -> Result<Option<String>, String> {
     let prefix = format!("{}=", key);
+    let mut values = commandline
+        .split_whitespace()
+        .filter_map(|section| section.strip_prefix(&prefix));
 
-    for part in commandline.split_whitespace() {
-        if let Some(value) = part.strip_prefix(&prefix) {
-            return Some(value.to_string());
-        }
+    let value = values.next();
+
+    if values.next().is_some() {
+        Err(format!(
+            "Multiple values specified for '{}'",
+            key
+        ))
+    } else {
+        Ok(value.map(|string| string.to_string()))
     }
-
-    None
 }
 
 /// Get a kernel parameter from the current system's command line.
-pub fn get_parameter(key: &str) -> Option<String> {
-    read().and_then(|commandline| parse_parameter(&commandline, key))
+///
+/// Returns an error if the parameter is specified more than once.
+pub fn get_parameter(key: &str) -> Result<Option<String>, String> {
+    match read() {
+        Some(commandline) => parse_parameter(&commandline, key),
+        None => Ok(None),
+    }
 }
 
 /// Get the current Puavo host type from the kernel command line.
-pub fn get_host_type() -> Option<String> {
+///
+/// Returns an error if the host type is specified more than once.
+pub fn get_host_type() -> Result<Option<String>, String> {
     get_parameter(PUAVO_HOST_TYPE)
 }
 
@@ -45,23 +63,23 @@ mod tests {
         let commandline = "root=/dev/sda1 puavo.hosttype=laptop quiet splash";
         assert_eq!(
             parse_parameter(commandline, "puavo.hosttype"),
-            Some("laptop".to_string())
+            Ok(Some("laptop".to_string()))
         );
     }
 
     #[test]
     fn test_parse_parameter_not_found() {
         let commandline = "root=/dev/sda1 quiet splash";
-        assert_eq!(parse_parameter(commandline, "puavo.hosttype"), None);
+        assert_eq!(
+            parse_parameter(commandline, "puavo.hosttype"),
+            Ok(None)
+        );
     }
 
     #[test]
-    fn test_parse_parameter_first_match() {
+    fn test_parse_parameter_multiple_values_errors() {
         let commandline = "puavo.hosttype=first puavo.hosttype=second";
-        assert_eq!(
-            parse_parameter(commandline, "puavo.hosttype"),
-            Some("first".to_string())
-        );
+        assert!(parse_parameter(commandline, "puavo.hosttype").is_err());
     }
 
     #[test]
@@ -69,7 +87,7 @@ mod tests {
         let commandline = "puavo.hosttype2=wrong puavo.hosttype=correct";
         assert_eq!(
             parse_parameter(commandline, "puavo.hosttype"),
-            Some("correct".to_string())
+            Ok(Some("correct".to_string()))
         );
     }
 
@@ -78,7 +96,7 @@ mod tests {
         let commandline = "puavo.hosttype= other=value";
         assert_eq!(
             parse_parameter(commandline, "puavo.hosttype"),
-            Some("".to_string())
+            Ok(Some("".to_string()))
         );
     }
 
@@ -87,11 +105,11 @@ mod tests {
         let commandline = "root=UUID=abc-123 puavo.hosttype=laptop-v2";
         assert_eq!(
             parse_parameter(commandline, "puavo.hosttype"),
-            Some("laptop-v2".to_string())
+            Ok(Some("laptop-v2".to_string()))
         );
         assert_eq!(
             parse_parameter(commandline, "root"),
-            Some("UUID=abc-123".to_string())
+            Ok(Some("UUID=abc-123".to_string()))
         );
     }
 }

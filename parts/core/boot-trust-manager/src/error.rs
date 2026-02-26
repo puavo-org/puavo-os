@@ -63,6 +63,9 @@ pub enum PuavoError {
     )]
     HostTypeMismatch { expected: String, actual: String },
 
+    #[error("Multiple host type values specified in the kernel command-line")]
+    MultipleHostTypes,
+
     #[error("PIN configuration error: {0}")]
     PinConfigurationError(String),
 }
