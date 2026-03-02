@@ -180,6 +180,7 @@ send_status_message() {
 }
 
 g_exitstatus=0
+g_primary_abitti2_version='?'
 g_primary_update_status='not_started'
 send_status_at_exit() {
   case "$g_primary_update_status" in
@@ -369,10 +370,10 @@ update_abitti2_image() {
   url_to_download_with_torrent="${g_abitti2_server}/${abitti2_filename}"
 
   # now we are going to update
+
   if is_primary; then
+    g_primary_abitti2_version="$abitti2_version"
     g_primary_update_status='started'
-    # g_primary_abitti2_version and g_primary_update_status
-    # must be set before this:
     trap send_status_at_exit 0 INT TERM
   fi
 
@@ -488,13 +489,12 @@ if ! g_abitti2_server=$(get_abitti2_catalogue) \
     exit 1
 fi
 
-g_primary_abitti2_version=''
 for puavo_abitti2_version in $puavo_abitti2_version_list; do
-  if [ -z "$g_primary_abitti2_version" ]; then
-    g_primary_abitti2_version="$puavo_abitti2_version"
+  # the first one is primary
+  if is_primary; then
     update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
-  else
     g_update_mode='secondary'
+  else
     update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
   fi
 done
