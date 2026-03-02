@@ -18,26 +18,29 @@ error() {
 }
 
 get_abitti2_catalogue() {
-  local abitti2_json_tmppath abitti2_server abitti2_sources gnupg_dir url
+  local abitti2_json_gpg_tmppath abitti2_json_tmppath abitti2_server \
+        abitti2_sources gnupg_dir url
 
+  abitti2_json_gpg_tmppath="${abitti2_json_path}.gpg.tmp"
   abitti2_json_tmppath="${abitti2_json_path}.tmp"
   abitti2_sources=$(puavo-conf puavo.abitti2.image.sources)
 
   for url in $abitti2_sources; do
     if ! wget_with_certauth -q \
-      --output-document "$abitti2_json_tmppath" "$url"; then
+      --output-document "$abitti2_json_gpg_tmppath" "$url"; then
         echo "error fetching ${url}" >&2
+        rm -f "$abitti2_json_gpg_tmppath"
         continue
     fi
 
-# XXX add GPG check later
-#   abitti2_server=$(dirname "${url#https://}")
-#   gnupg_dir="/root/.puavo/gnupg/${abitti2_server}/abitti2"
-#   if ! gpg --decrypt --homedir "$gnupg_dir" "$abitti2_gpg_tmppath" \
-#     2>/dev/null > "$wim_tmppath"; then
-#       echo "GPG verification failed for ${url}" >&2
-#       continue
-#   fi
+    abitti2_server=$(dirname "${url#https://}")
+    gnupg_dir="/root/.puavo/gnupg/${abitti2_server}/digabios"
+    if ! gpg --decrypt --homedir "$gnupg_dir" "$abitti2_json_gpg_tmppath" \
+      2>/dev/null > "$abitti2_json_tmppath"; then
+        echo "GPG verification failed for ${url}" >&2
+        rm -f "$abitti2_json_gpg_tmppath" "$abitti2_json_tmppath"
+        continue
+    fi
 
     mv "$abitti2_json_tmppath" "$abitti2_json_path" || return 1
     printf "%s" "${url%/*}" || return 1
