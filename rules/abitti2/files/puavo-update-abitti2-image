@@ -414,6 +414,9 @@ update_status='started'
 # update_status and abitti2_version must be set before this:
 trap send_final_status 0 INT TERM
 
+# init the Abitti2 key in extra contents if it does not exist
+edit_extra_system_contents '.Abitti2 //= ""'
+
 send_status_message SetUpdateStarted
 
 logmsg -p user.info "downloading ${url_to_download_with_torrent}"
