@@ -55,6 +55,9 @@ pub enum PuavoError {
     #[error(transparent)]
     ParseIntError(#[from] ParseIntError),
 
+    #[error("Failed to parse property '{0}'")]
+    PropertyParseError(String),
+
     #[error("TPM error: {0}")]
     TpmError(String),
 

@@ -51,6 +51,15 @@ pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
 const PCR_STATE_FILENAME: &str = "pcr.state";
 const UNLOCK_RESTRICTIONS_FILENAME: &str = "unlock.restrictions.json";
+const DB_VERSION_PROPERTY: &str = "db.version";
+const DBX_VERSION_PROPERTY: &str = "dbx.version";
+
+const PK_PRIVATE_KEY_FILENAME: &str = "pk.priv";
+const PK_CERTIFICATE_FILENAME: &str = "pk.pem";
+const KEK_PRIVATE_KEY_FILENAME: &str = "kek.priv";
+const KEK_CERTIFICATE_FILENAME: &str = "kek.pem";
+const SECURE_BOOT_PRIVATE_KEY_FILENAME: &str = "secure-boot.priv";
+const SECURE_BOOT_CERTIFICATE_FILENAME: &str = "secure-boot.pem";
 
 /// Path to the TPM lockout authorization file within the mounted vault.
 /// This file is used to reset the TPM dictionary attack lockout counter.
@@ -606,6 +615,71 @@ impl BootVaultResources {
     /// Return the path to the TPM lockout authorization file
     pub fn tpm_lockout_auth_path(&self) -> PathBuf {
         self.mountpoint.join(TPM_LOCKOUT_AUTH_FILENAME)
+    }
+
+    /// Return the path to the device-specific PK private key within the vault.
+    pub fn pk_private_key_path(&self) -> PathBuf {
+        self.mountpoint.join(PK_PRIVATE_KEY_FILENAME)
+    }
+
+    /// Return the path to the device-specific PK certificate within the vault.
+    pub fn pk_certificate_path(&self) -> PathBuf {
+        self.mountpoint.join(PK_CERTIFICATE_FILENAME)
+    }
+
+    /// Return the path to the device-specific KEK private key within the vault.
+    pub fn kek_private_key_path(&self) -> PathBuf {
+        self.mountpoint.join(KEK_PRIVATE_KEY_FILENAME)
+    }
+
+    /// Return the path to the device-specific KEK certificate within the vault.
+    pub fn kek_certificate_path(&self) -> PathBuf {
+        self.mountpoint.join(KEK_CERTIFICATE_FILENAME)
+    }
+
+    /// Return the path to the device-specific Secure Boot private key within the vault.
+    pub fn secure_boot_private_key_path(&self) -> PathBuf {
+        self.mountpoint.join(SECURE_BOOT_PRIVATE_KEY_FILENAME)
+    }
+
+    /// Return the path to the device-specific Secure Boot certificate within the vault.
+    pub fn secure_boot_certificate_path(&self) -> PathBuf {
+        self.mountpoint.join(SECURE_BOOT_CERTIFICATE_FILENAME)
+    }
+
+    /// Read the installed Secure Boot db version from the boot vault.
+    ///
+    /// Returns `0` when no version has been recorded yet.
+    pub fn db_version(&self) -> Result<u32, PuavoError> {
+        self.read_version(DB_VERSION_PROPERTY)
+    }
+
+    /// Persist the installed Secure Boot db version in the boot vault.
+    pub fn set_db_version(&self, version: u32) -> Result<(), PuavoError> {
+        self.write_property(DB_VERSION_PROPERTY, version.to_string())
+    }
+
+    /// Read the installed Secure Boot dbx version from the boot vault.
+    ///
+    /// Returns `0` when no version has been recorded yet.
+    pub fn dbx_version(&self) -> Result<u32, PuavoError> {
+        self.read_version(DBX_VERSION_PROPERTY)
+    }
+
+    /// Persist the installed Secure Boot dbx version in the boot vault.
+    pub fn set_dbx_version(&self, version: u32) -> Result<(), PuavoError> {
+        self.write_property(DBX_VERSION_PROPERTY, version.to_string())
+    }
+
+    /// Read a version property, returning `0` when absent.
+    fn read_version(&self, key: &str) -> Result<u32, PuavoError> {
+        match self.read_property(key)? {
+            Some(value) => value
+                .trim()
+                .parse::<u32>()
+                .map_err(|_| PuavoError::PropertyParseError(key.to_string())),
+            None => Ok(0),
+        }
     }
 
     /// Save unlock restrictions to the boot vault.
