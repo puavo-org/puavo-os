@@ -13,12 +13,16 @@ fi
 output_directory=$1
 
 script_directory=$(dirname "$0")
-configurator_directory="${script_directory}/../configurators/"
+configurators_directory="${script_directory}/../configurators/"
 
 install_configurator() {
   local configurator_name=$1
-  cp -r "${configurator_directory}/${configurator_name}/." "$output_directory"
+  local configurator_directory="${configurators_directory}/${configurator_name}"
+  if [[ -d "${configurator_directory}" ]]; then
+    cp -r "${configurator_directory}/." "$output_directory"
+  fi
 }
 
 install_configurator fallback
 install_configurator primary
+install_configurator secure-boot-updates

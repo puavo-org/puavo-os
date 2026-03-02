@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 <boot-vault-mountpoint> <revocation-list>" >&2
+  exit 1
+fi
+
+boot_vault_mountpoint=$1
+revocation_list=$2
+
+kek_private_key="${boot_vault_mountpoint}/kek.priv"
+
+for file in "$kek_private_key" "$revocation_list"; do
+  if [ ! -f "$file" ]; then
+    echo "error: required file not found: ${file}" >&2
+    exit 2
+  fi
+done
+
+# Remove the immutable attribute from efivarfs entries for dbx.
+for entry in /sys/firmware/efi/efivars/dbx-*; do
+  [ -e "$entry" ] && chattr -i "$entry" 2>/dev/null || true
+done
+
+# Append the revocation list to dbx.
+efi-updatevar -a -f "$revocation_list" -k "$kek_private_key" dbx

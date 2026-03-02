@@ -1,5 +1,6 @@
 use crate::configurators::enrollment::EnrollmentConfigurator;
 use crate::configurators::pin::PinConfigurator;
+use crate::configurators::secure_boot_database::SecureBootDatabaseConfigurator;
 use crate::devices::boot_vault::BootVault;
 use crate::display::UserDisplay;
 use crate::error::PuavoError;
@@ -7,6 +8,7 @@ use crate::utils::luks_tpm_token_manager::LuksTpmTokenManager;
 
 pub mod enrollment;
 pub mod pin;
+pub mod secure_boot_database;
 
 /// Build and return all available configurator instances.
 /// Configurator becomes available when its configuration file is present.
@@ -24,7 +26,8 @@ pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
     }
 
     let configurators = configurators(PinConfigurator::new()?)
-        .chain(configurators(EnrollmentConfigurator::new()?));
+        .chain(configurators(EnrollmentConfigurator::new()?))
+        .chain(configurators(SecureBootDatabaseConfigurator::new()?));
 
     Ok(configurators.collect())
 }

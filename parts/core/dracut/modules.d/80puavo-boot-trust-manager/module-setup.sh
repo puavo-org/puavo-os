@@ -14,7 +14,16 @@ install() {
                   /usr/bin/tpm2_dictionarylockout \
                   /usr/lib/systemd/systemd-pcrlock \
                   /usr/sbin/cryptsetup         \
-                  /usr/sbin/puavo-boot-trust-manager
+                  /usr/sbin/puavo-boot-trust-manager \
+                  /usr/bin/efi-updatevar \
+                  /usr/bin/sign-efi-sig-list \
+                  /usr/bin/chattr
+
+    # Install Secure Boot update scripts
+    inst "${moddir}/scripts/update-secure-boot-db" \
+         "/usr/sbin/update-secure-boot-db"
+    inst "${moddir}/scripts/update-secure-boot-dbx" \
+         "/usr/sbin/update-secure-boot-dbx"
 
     # Install the service file
     inst "${moddir}/puavo-boot-trust-manager.service" \

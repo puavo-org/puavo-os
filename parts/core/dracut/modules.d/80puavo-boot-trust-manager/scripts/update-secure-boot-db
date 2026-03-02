@@ -1,0 +1,38 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 <boot-vault-mountpoint> <efi-signature-list>" >&2
+  exit 1
+fi
+
+boot_vault_mountpoint=$1
+efi_signature_list=$2
+
+kek_private_key="${boot_vault_mountpoint}/kek.priv"
+kek_certificate="${boot_vault_mountpoint}/kek.pem"
+device_certificate="${boot_vault_mountpoint}/secure-boot.pem"
+
+for file in "$kek_private_key" "$kek_certificate" "$device_certificate" "$efi_signature_list"; do
+  if [ ! -f "$file" ]; then
+    echo "error: required file not found: ${file}" >&2
+    exit 2
+  fi
+done
+
+# Remove the immutable attribute from efivarfs entries for db.
+for entry in /sys/firmware/efi/efivars/db-*; do
+  [ -e "$entry" ] && chattr -i "$entry" 2>/dev/null || true
+done
+
+# Sign the EFI signature list with the KEK to produce an authenticated variable update.
+signed_update=$(mktemp /tmp/db.auth.XXXXXX)
+trap 'rm -f "$signed_update"' EXIT
+
+sign-efi-sig-list -a -k "$kek_private_key" -c "$kek_certificate" db "$efi_signature_list" "$signed_update"
+
+# Enroll the device certificate, replacing db contents entirely.
+efi-updatevar -c "$device_certificate" -k "$kek_private_key" db
+
+# Append the new signed list to db.
+efi-updatevar -a -f "$signed_update" db
