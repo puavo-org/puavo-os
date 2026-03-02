@@ -223,7 +223,7 @@ cleanup_previous_runs() {
 }
 
 ensure_enough_available_diskspace() {
-  local abitti2_filename abitti2_size available_diskspace msg \
+  local abitti2_filename abitti2_size available_diskspace extra_space msg \
         required_diskspace tmpimage_size
 
   abitti2_filename=$1
@@ -234,12 +234,15 @@ ensure_enough_available_diskspace() {
   tmpimage_size=$(
     stat -c %s "${abitti2_dir}/${abitti2_filename}.tmp" 2>/dev/null || echo 0)
 
-  required_diskspace=$(($abitti2_size - $tmpimage_size))
+  # calculate required diskspace, add a bit of padding in case torrent files
+  # or some such raise actual space requirements
+  extra_space=262144
+  required_diskspace=$(($abitti2_size + $extra_space - $tmpimage_size))
   available_diskspace=$(stat -f -c '%S * %a' "$abitti2_dir" \
                           | bc -l | xargs printf %.0f)
   if [ "$available_diskspace" -lt "$required_diskspace" ]; then
-    msg="only $available_diskspace bytes available on $abitti2_dir,"
-    msg="$msg need $required_diskspace bytes"
+    msg="only ${available_diskspace} bytes available on ${abitti2_dir},"
+    msg="${msg} need ${required_diskspace} bytes"
     error "$msg"
     return 1
   fi
@@ -253,8 +256,8 @@ ensure_enough_available_diskspace() {
 }
 
 do_torrent_update() {
-    local abitti2_filename abitti2_size download_rate_limit \
-          tmp_abitti2_filename url_to_download_with_torrent
+    local abitti2_filename abitti2_size download_rate_limit torrent_status \
+          url_to_download_with_torrent
 
   download_rate_limit=$1
   abitti2_filename=$2
@@ -427,7 +430,7 @@ tmp_abitti2_iso_fp="${abitti2_iso_fp}.tmp"
 
 if ! do_torrent_update "$download_rate_limit" "$abitti2_filename" \
   "$abitti2_size" "$url_to_download_with_torrent"; then
-    error 'torrent update failed'
+    error 'downloading the abitti2 image failed'
     exit 1
 fi
 
