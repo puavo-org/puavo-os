@@ -2,14 +2,14 @@
 
 set -eu
 
-abitti2_dir=/images/abitti2
-abitti2_json_path="${abitti2_dir}/abitti2.json"
+g_abitti2_dir=/images/abitti2
+g_abitti2_json_path="${g_abitti2_dir}/abitti2.json"
 
 logmsg() {
   logger -s -t puavo-update-abitti2-image "$@" || true
 }
 
-errmsg='unknown error'
+g_errmsg='unknown error'
 error() {
   local errmsg
 
@@ -17,12 +17,15 @@ error() {
   logmsg -p user.err "$1"
 }
 
+g_update_mode='primary'
+is_primary() { [ "$g_update_mode" = 'primary' ]; }
+
 get_abitti2_catalogue() {
   local abitti2_json_gpg_tmppath abitti2_json_tmppath abitti2_server \
         abitti2_sources gnupg_dir url
 
-  abitti2_json_gpg_tmppath="${abitti2_json_path}.gpg.tmp"
-  abitti2_json_tmppath="${abitti2_json_path}.tmp"
+  abitti2_json_gpg_tmppath="${g_abitti2_json_path}.gpg.tmp"
+  abitti2_json_tmppath="${g_abitti2_json_path}.tmp"
   abitti2_sources=$(puavo-conf puavo.abitti2.image.sources)
 
   for url in $abitti2_sources; do
@@ -43,7 +46,7 @@ get_abitti2_catalogue() {
     fi
 
     rm -f "$abitti2_json_gpg_tmppath" || return 1
-    mv "$abitti2_json_tmppath" "$abitti2_json_path" || return 1
+    mv "$abitti2_json_tmppath" "$g_abitti2_json_path" || return 1
     printf "%s" "${url%/*}" || return 1
     return 0
   done
@@ -62,19 +65,19 @@ lookup_abitti2_choice() {
         then $resolved
         else error("Unknown choice: \($abitti2_version)")
         end
-  ' "$abitti2_json_path"
+  ' "$g_abitti2_json_path"
 }
 
 lookup_abitti2_choice_info() {
   jq -r --arg abitti2_choice "$1" '
     .choices[$abitti2_choice] // error("no such choice")
-  ' "$abitti2_json_path"
+  ' "$g_abitti2_json_path"
 }
 
 lookup_abitti2_image_info() {
   jq -r --arg abitti2_image "$1" '
     .images[$abitti2_image] // error("no such image")
-  ' "$abitti2_json_path"
+  ' "$g_abitti2_json_path"
 }
 
 lookup_var() {
@@ -134,7 +137,7 @@ edit_extra_system_contents() {
 }
 
 post_update_actions() {
-  local abitti2_filename abitti2_version abitti2_json_path
+  local abitti2_filename abitti2_version
 
   abitti2_choice=$1
   abitti2_filename=$2
@@ -142,21 +145,27 @@ post_update_actions() {
   abitti2_grub_cfg_base64=$4
 
   # XXX it should be possible to have two so this is not good
-  find "$abitti2_dir" -name '*.iso' \
-    -and ! -name "$abitti2_filename" -exec rm -f \{} \;
+  # find "$g_abitti2_dir" -name '*.iso' \
+  #   -and ! -name "$abitti2_filename" -exec rm -f \{} \;
 
-  edit_extra_system_contents --arg version "$abitti2_version" \
-    '.Abitti2 = $version'
+  if is_primary; then
+    edit_extra_system_contents --arg version "$abitti2_version" \
+      '.Abitti2 = $version'
+  fi
 
   if ! update_grub_cfg "$abitti2_choice" "$abitti2_grub_cfg_base64"; then
     error "could not update grub configuration for ${abitti2_choice}"
-    exit 1
+    return 1
   fi
 }
 
 send_status_message() {
   local method
   method=$1; shift
+
+  if ! is_primary; then
+    return 0
+  fi
 
   dbus-send --dest=org.puavo.client.Daemon              \
             --reply-timeout=100                         \
@@ -165,27 +174,24 @@ send_status_message() {
             /contentupdates                             \
             "org.puavo.client.contentupdates.${method}" \
             "string:Abitti2"                            \
-            "string:${abitti2_version}"                 \
+            "string:${g_primary_abitti2_version}"       \
             "$@" \
     || true
 }
 
-update_status='not_started'
-send_final_status() {
-  case "$update_status" in
-    not_started)
-      exit 0
+g_exitstatus=0
+g_primary_update_status='not_started'
+send_status_at_exit() {
+  case "$g_primary_update_status" in
+    not_started|success)
+      exit $g_exitstatus
       ;;
     started)
-      send_status_message SetUpdateFailed "string:${errmsg}"
+      send_status_message SetUpdateFailed "string:${g_errmsg}"
       exit 1
       ;;
-    success)
-      send_status_message SetUpdateCompleted
-      exit 0
-      ;;
   esac
-  update_status='final_message_sent'
+  g_primary_update_status='final_message_sent'
 }
 
 update_progress() {
@@ -213,7 +219,7 @@ cleanup_previous_runs() {
     >/dev/null 2>&1 || true
 
   # remove temporary files (of non-matching versions).
-  find "$abitti2_dir" -type f -name '*.iso.tmp' \
+  find "$g_abitti2_dir" -type f -name '*.iso.tmp' \
     -a ! -name "${abitti2_filename}.tmp" -exec rm -f \{} \;
 }
 
@@ -227,16 +233,16 @@ ensure_enough_available_diskspace() {
   cleanup_previous_runs "$abitti2_filename" || true
 
   tmpimage_size=$(
-    stat -c %s "${abitti2_dir}/${abitti2_filename}.tmp" 2>/dev/null || echo 0)
+    stat -c %s "${g_abitti2_dir}/${abitti2_filename}.tmp" 2>/dev/null || echo 0)
 
   # calculate required diskspace, add a bit of padding in case torrent files
   # or some such raise actual space requirements
   extra_space=262144
   required_diskspace=$(($abitti2_size + $extra_space - $tmpimage_size))
-  available_diskspace=$(stat -f -c '%S * %a' "$abitti2_dir" \
+  available_diskspace=$(stat -f -c '%S * %a' "$g_abitti2_dir" \
                           | bc -l | xargs printf %.0f)
   if [ "$available_diskspace" -lt "$required_diskspace" ]; then
-    msg="only ${available_diskspace} bytes available on ${abitti2_dir},"
+    msg="only ${available_diskspace} bytes available on ${g_abitti2_dir},"
     msg="${msg} need ${required_diskspace} bytes"
     error "$msg"
     return 1
@@ -251,19 +257,18 @@ ensure_enough_available_diskspace() {
 }
 
 do_torrent_update() {
-    local abitti2_filename abitti2_size download_rate_limit torrent_status \
+    local abitti2_filename abitti2_size torrent_status \
           url_to_download_with_torrent
 
-  download_rate_limit=$1
-  abitti2_filename=$2
-  abitti2_size=$3
-  url_to_download_with_torrent=$4
+  abitti2_filename=$1
+  abitti2_size=$2
+  url_to_download_with_torrent=$3
 
   ensure_enough_available_diskspace "$abitti2_filename" "$abitti2_size" \
     || return 1
 
   torrent_status=$(
-    printf "%s\n%s\n" "$download_rate_limit" "$url_to_download_with_torrent" \
+    printf "%s\n%s\n" "$g_download_rate_limit" "$url_to_download_with_torrent" \
       | nc -N -U /run/puavo/puavo-abitti2-torrent-updated.sock \
       | while read progress; do
           if [ "$progress" = 'OK' ]; then
@@ -287,7 +292,7 @@ update_grub_cfg() {
         abitti2_grub_cfg_path tmp_abitti2_grub_cfg_path
   abitti2_choice=$1
   abitti2_grub_cfg_base64=$2
-  abitti2_grub_cfg_path="${abitti2_dir}/${abitti2_choice}.cfg"
+  abitti2_grub_cfg_path="${g_abitti2_dir}/${abitti2_choice}.cfg"
   tmp_abitti2_grub_cfg_path="${abitti2_grub_cfg_path}.tmp"
 
   if ! abitti2_grub_cfg=$(printf "%s" "$abitti2_grub_cfg_base64" \
@@ -315,6 +320,119 @@ update_grub_cfg() {
   logmsg -p user.info "updated the Grub configuration for ${abitti2_choice}"
 }
 
+update_abitti2_image() {
+  local abitti2_choice abitti2_choice_info abitti2_filename \
+        abitti2_grub_cfg_base64 abitti2_image abitti2_iso_fp abitti2_sha256 \
+        abitti2_size abitti2_version calculated_sha256 msg \
+        puavo_abitti2_version tmp_abitti2_iso_fp url_to_download_with_torrent
+
+  puavo_abitti2_version=$1
+
+  if ! abitti2_choice=$(lookup_abitti2_choice "$puavo_abitti2_version"); then
+    error 'no such abitti2 version'
+    return 1
+  fi
+
+  if ! abitti2_choice_info=$(lookup_abitti2_choice_info "$abitti2_choice"); then
+    error 'no such abitti2 choice'
+    return 1
+  fi
+
+  abitti2_grub_cfg_base64=$(lookup_var "$abitti2_choice_info" grub_cfg) \
+    || return 1
+  abitti2_image=$(   lookup_var "$abitti2_choice_info" image)   || return 1
+  abitti2_version=$( lookup_var "$abitti2_choice_info" version) || return 1
+
+  if ! abitti2_image_info=$(lookup_abitti2_image_info "$abitti2_image"); then
+    error 'no such abitti2 version'
+    return 1
+  fi
+
+  abitti2_filename=$(lookup_var "$abitti2_image_info" puavo_os_filename) \
+    || return 1
+  abitti2_sha256=$(  lookup_var "$abitti2_image_info" sha256) || return 1
+  abitti2_size=$(    lookup_var "$abitti2_image_info" size)   || return 1
+
+  # "_fp" stands for "full path"
+  abitti2_iso_fp="${g_abitti2_dir}/${abitti2_filename}"
+
+  if [ -e "$abitti2_iso_fp" ]; then
+    msg="the requested abitti-image ${abitti2_filename} (${abitti2_version})"
+    msg="${msg} is in place"
+    logmsg -p user.info "$msg"
+    post_update_actions "$abitti2_choice" "$abitti2_filename" \
+                        "$abitti2_version" "$abitti2_grub_cfg_base64" \
+      || return 1
+    return 0
+  fi
+
+  url_to_download_with_torrent="${g_abitti2_server}/${abitti2_filename}"
+
+  # now we are going to update
+  if is_primary; then
+    g_primary_update_status='started'
+    # g_primary_abitti2_version and g_primary_update_status
+    # must be set before this:
+    trap send_status_at_exit 0 INT TERM
+  fi
+
+  # init the Abitti2 key in extra contents if it does not exist
+  edit_extra_system_contents '.Abitti2 //= ""' || return 1
+
+  send_status_message SetUpdateStarted
+
+  logmsg -p user.info "downloading ${url_to_download_with_torrent}"
+
+  echo 0 | update_progress starting
+
+  tmp_abitti2_iso_fp="${abitti2_iso_fp}.tmp"
+
+  if ! do_torrent_update "$abitti2_filename" "$abitti2_size" \
+    "$url_to_download_with_torrent"; then
+      error 'downloading the abitti2 image failed'
+      return 1
+  fi
+
+  echo 90 | update_progress sha256
+
+  logmsg -p user.info \
+         "checking sha256 checksum of ${abitti2_filename} (${abitti2_version})"
+
+  calculated_sha256="$(sha256sum "$tmp_abitti2_iso_fp" | awk '{ print $1 }')"
+  if [ "$calculated_sha256" != "$abitti2_sha256" ]; then
+    g_errmsg="calculated checksum for ${abitti2_filename} does not match"
+    g_errmsg="${f_errmsg} the expected checksum, removing ${tmp_abitti2_iso_fp}"
+    error "$g_errmsg"
+    rm -f "$tmp_abitti2_iso_fp"
+    return 1
+  fi
+
+  logmsg -p user.info "checksum for ${abitti2_filename} is good"
+
+  echo 99 | update_progress sha256
+
+  if ! chown root:root "$tmp_abitti2_iso_fp"; then
+    error "could not chown ${tmp_abitti2_iso_fp} to root"
+    return 1
+  fi
+  if ! mv "$tmp_abitti2_iso_fp" "$abitti2_iso_fp"; then
+    error "error in moving ${abitti2_iso_fp} into its place"
+    return 1
+  fi
+
+  logmsg -p user.notice \
+    "new Abitti2 image ${abitti2_filename} (${abitti2_version}) installed!"
+
+  post_update_actions "$abitti2_choice" "$abitti2_filename" \
+                      "$abitti2_version" "$abitti2_grub_cfg_base64" \
+    || return 1
+
+  send_status_message SetUpdateCompleted
+  if is_primary; then
+    g_primary_update_status='success'
+  fi
+}
+
 # be very nice
 ionice -c 3  -p $$
 renice -n 20 -p $$ > /dev/null
@@ -328,7 +446,7 @@ case "$abitti2_mode" in
     # just continue...
     ;;
   purge)
-    rm -rf "$abitti2_dir"
+    rm -rf "$g_abitti2_dir"
     exit 0
     ;;
   *)
@@ -339,128 +457,46 @@ esac
 
 if [ "$(puavo-conf puavo.service.puavo-abitti-torrent-updated.enabled)" \
      != 'true' ]; then
-  errmsg='puavo-abitti-torrent-updated is not enabled (in puavo-conf)'
-  errmsg="${errmsg}, can not update Abitti 2"
-  error "$errmsg"
+  g_errmsg='puavo-abitti-torrent-updated is not enabled (in puavo-conf)'
+  g_errmsg="${g_errmsg}, can not update Abitti 2"
+  error "$g_errmsg"
   exit 1
 fi
 
-download_rate_limit=''
+g_download_rate_limit=''
 if [ "${1:-}" = '--use-rate-limit' ]; then
-  download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
-  if [ -n "$download_rate_limit" ]; then
-    if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
-      error "the rate limit was not understood, got '$download_rate_limit'"
+  g_download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
+  if [ -n "$g_download_rate_limit" ]; then
+    if ! printf "%s\n" "$g_download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
+      error "the rate limit was not understood, got '$g_download_rate_limit'"
       exit 1
     fi
   fi
 fi
 
-puavo_abitti2_version=$(puavo-conf puavo.abitti2.version)
-if [ -z "$puavo_abitti2_version" ]; then
+puavo_abitti2_version_list=$(puavo-conf puavo.abitti2.version)
+if [ -z "$puavo_abitti2_version_list" ]; then
   error 'puavo.abitti2.version is not set, doing nothing!'
   exit 1
 fi
 
-install -d -D -o root -g puavo-update -m 775 "$abitti2_dir"
+install -d -D -o root -g puavo-update -m 775 "$g_abitti2_dir"
 
-if ! abitti2_server=$(get_abitti2_catalogue) || [ -z "$abitti2_server" ]; then
-  error 'error fetching the abitti2 catalogue'
-  exit 1
-fi
-
-if ! abitti2_choice=$(lookup_abitti2_choice "$puavo_abitti2_version"); then
-  error 'no such abitti2 version' >&2
-  exit 1
-fi
-
-if ! abitti2_choice_info=$(lookup_abitti2_choice_info "$abitti2_choice"); then
-  error 'no such abitti2 choice' >&2
-  exit 1
-fi
-
-abitti2_grub_cfg_base64=$(lookup_var "$abitti2_choice_info" grub_cfg)
-abitti2_image=$(   lookup_var "$abitti2_choice_info" image)
-abitti2_version=$( lookup_var "$abitti2_choice_info" version)
-
-if ! abitti2_image_info=$(lookup_abitti2_image_info "$abitti2_image"); then
-  error 'no such abitti2 version' >&2
-  exit 1
-fi
-
-abitti2_filename=$(lookup_var "$abitti2_image_info" puavo_os_filename)
-abitti2_sha256=$(  lookup_var "$abitti2_image_info" sha256)
-abitti2_size=$(    lookup_var "$abitti2_image_info" size)
-
-# "_fp" stands for "full path"
-abitti2_iso_fp="${abitti2_dir}/${abitti2_filename}"
-
-if [ -e "$abitti2_iso_fp" ]; then
-  msg="the requested abitti-image ${abitti2_filename} (${abitti2_version})"
-  msg="${msg} is in place"
-  logmsg -p user.info "$msg"
-  post_update_actions "$abitti2_choice" "$abitti2_filename" "$abitti2_version" \
-                      "$abitti2_grub_cfg_base64"
-  exit 0
-fi
-
-url_to_download_with_torrent="${abitti2_server}/${abitti2_filename}"
-
-# now we are going to update
-update_status='started'
-
-# update_status and abitti2_version must be set before this:
-trap send_final_status 0 INT TERM
-
-# init the Abitti2 key in extra contents if it does not exist
-edit_extra_system_contents '.Abitti2 //= ""'
-
-send_status_message SetUpdateStarted
-
-logmsg -p user.info "downloading ${url_to_download_with_torrent}"
-
-echo 0 | update_progress starting
-
-tmp_abitti2_iso_fp="${abitti2_iso_fp}.tmp"
-
-if ! do_torrent_update "$download_rate_limit" "$abitti2_filename" \
-  "$abitti2_size" "$url_to_download_with_torrent"; then
-    error 'downloading the abitti2 image failed'
+if ! g_abitti2_server=$(get_abitti2_catalogue) \
+  || [ -z "$g_abitti2_server" ]; then
+    error 'error fetching the abitti2 catalogue'
     exit 1
 fi
 
-echo 90 | update_progress sha256
+g_primary_abitti2_version=''
+for puavo_abitti2_version in $puavo_abitti2_version_list; do
+  if [ -z "$g_primary_abitti2_version" ]; then
+    g_primary_abitti2_version="$puavo_abitti2_version"
+    update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
+  else
+    g_update_mode='secondary'
+    update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
+  fi
+done
 
-logmsg -p user.info \
-       "checking sha256 checksum of ${abitti2_filename} (${abitti2_version})"
-
-calculated_sha256="$(sha256sum "$tmp_abitti2_iso_fp" \
-                       | awk '{ print $1 }')"
-if [ "$calculated_sha256" != "$abitti2_sha256" ]; then
-  errmsg="calculated checksum for ${abitti2_filename} does not match"
-  errmsg="${errmsg} the expected checksum, removing ${tmp_abitti2_iso_fp}"
-  error "$errmsg"
-  rm -f "$tmp_abitti2_iso_fp"
-  exit 1
-fi
-
-logmsg -p user.info "checksum for ${abitti2_filename} is good"
-
-echo 99 | update_progress sha256
-
-if ! chown root:root "$tmp_abitti2_iso_fp"; then
-  error "could not chown ${tmp_abitti2_iso_fp} to root"
-  exit 1
-fi
-if ! mv "$tmp_abitti2_iso_fp" "$abitti2_iso_fp"; then
-  error "error in moving ${abitti2_iso_fp} into its place"
-  exit 1
-fi
-
-logmsg -p user.notice \
-       "new Abitti2 image ${abitti2_filename} (${abitti2_version}) installed!"
-
-post_update_actions "$abitti2_choice" "$abitti2_filename" "$abitti2_version" \
-                    "$abitti2_grub_cfg_base64"
-
-update_status='success'
+exit $g_exitstatus
