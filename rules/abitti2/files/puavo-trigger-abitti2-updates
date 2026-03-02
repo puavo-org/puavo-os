@@ -2,9 +2,9 @@
 
 set -eu
 
-sleep 180
+sleep 150
 
 while true; do
   /etc/puavo-conf/scripts/trigger_abitti2_updates || true
-  sleep 4115
+  sleep 2855
 done
