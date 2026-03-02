@@ -42,6 +42,7 @@ get_abitti2_catalogue() {
         continue
     fi
 
+    rm -f "$abitti2_json_gpg_tmppath" || return 1
     mv "$abitti2_json_tmppath" "$abitti2_json_path" || return 1
     printf "%s" "${url%/*}" || return 1
     return 0
