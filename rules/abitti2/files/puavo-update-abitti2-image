@@ -314,7 +314,7 @@ update_grub_cfg() {
     return 1
   fi
 
-  logmsg -p user.info "updated the Grub configuration for ${abitti_choice}"
+  logmsg -p user.info "updated the Grub configuration for ${abitti2_choice}"
 }
 
 # be very nice
