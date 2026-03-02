@@ -2,21 +2,76 @@
 set -eu
 
 output_directory="${1:-/images/boot/addons}"
+secure_boot_directory="/etc/puavo-secure-boot"
 
-device_secure_boot_key_private_key="${output_directory}/secure-boot.priv"
-device_secure_boot_key_der="${output_directory}/secure-boot.der"
-device_secure_boot_key_pem="${output_directory}/secure-boot.pem"
+# Device Secure Boot key (DB)
+# The key is used for signing device-specific modifications (e.g. kernel command-line).
+db_private_key="${output_directory}/secure-boot.priv"
+db_pem="${output_directory}/secure-boot.pem"
+db_auth="${output_directory}/db.auth"
+db_version="${output_directory}/db.version"
+dbx_version="${output_directory}/dbx.version"
+
+# Device-specific Platform Key (PK)
+pk_private_key="${output_directory}/pk.priv"
+pk_pem="${output_directory}/pk.pem"
+pk_auth="${output_directory}/pk.auth"
+
+# Device-specific Key Exchange Key (KEK)
+kek_private_key="${output_directory}/kek.priv"
+kek_pem="${output_directory}/kek.pem"
+kek_auth="${output_directory}/kek.auth"
 
 mkdir -p "$output_directory"
 
 echo "creating device Secure Boot keys in ${output_directory}..."
+
+# Generate device-specific PK
 openssl req -nodes -new -x509 -newkey rsa:4096 \
-    -keyout "$device_secure_boot_key_private_key" \
-    -outform DER -out "$device_secure_boot_key_der" -days 36500 \
+    -keyout "$pk_private_key" \
+    -out "$pk_pem" -days 36500 \
+    -subj "/CN=Puavo Device Platform Key/" >/dev/null 2>&1
+chmod 600 "$pk_private_key" "$pk_pem"
+
+# Generate device-specific KEK
+openssl req -nodes -new -x509 -newkey rsa:4096 \
+    -keyout "$kek_private_key" \
+    -out "$kek_pem" -days 36500 \
+    -subj "/CN=Puavo Device Key Exchange Key/" >/dev/null 2>&1
+chmod 600 "$kek_private_key" "$kek_pem"
+
+# Generate device Secure Boot key (DB)
+openssl req -nodes -new -x509 -newkey rsa:4096 \
+    -keyout "$db_private_key" \
+    -out "$db_pem" -days 36500 \
     -subj "/CN=Puavo Device Secure Boot Key/" >/dev/null 2>&1
-openssl x509 -inform der -in "$device_secure_boot_key_der" \
-    -out "$device_secure_boot_key_pem" >/dev/null 2>&1
-chmod 600 "$device_secure_boot_key_private_key" \
-           "$device_secure_boot_key_der" \
-           "$device_secure_boot_key_pem"
+chmod 600 "$db_private_key" "$db_pem"
+
+scratch=$(mktemp -d)
+cleanup() { rm -rf "$scratch"; }
+trap cleanup EXIT INT TERM
+guid='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
+
+# Combine Puavo DB and device DB
+db_esl="${scratch}/db.esl"
+cert-to-efi-sig-list -g "$guid" "$db_pem" "$db_esl"
+puavo_db_esl="${secure_boot_directory}/db/db.esl"
+cat "$puavo_db_esl" >> "$db_esl"
+
+# Build signature list for the device KEK
+kek_esl="${scratch}/KEK.esl"
+cert-to-efi-sig-list -g "$guid" "$kek_pem" "$kek_esl"
+
+# Build signature list for the device PK
+pk_esl="${scratch}/PK.esl"
+cert-to-efi-sig-list -g "$guid" "$pk_pem" "$pk_esl"
+
+sign-efi-sig-list -k "$kek_private_key" -c "$kek_pem" db "$db_esl" "$db_auth"
+sign-efi-sig-list -k "$pk_private_key" -c "$pk_pem" KEK "$kek_esl" "$kek_auth"
+sign-efi-sig-list -k "$pk_private_key" -c "$pk_pem" PK "$pk_esl" "$pk_auth"
+
+# Save the DB and DBX version
+printf %s 1 > "$db_version"
+printf %s 1 > "$dbx_version"
+
 echo "successfully created device Secure Boot keys"
