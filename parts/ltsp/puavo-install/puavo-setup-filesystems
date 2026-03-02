@@ -725,7 +725,11 @@ module DiskHandler
     final_addons_directory = '/images/boot/addons'
     FileUtils.mkdir_p(final_addons_directory)
 
-    secure_boot_files = ['secure-boot.priv', 'secure-boot.der', 'secure-boot.pem']
+    secure_boot_files = [
+      'secure-boot.priv', 'secure-boot.pem', 'db.auth', # DB private key, certificate and auth file
+      'pk.pem', 'pk.auth',                              # PK certificate and auth file
+      'kek.pem', 'kek.auth',                            # KEK certificate and auth file
+    ]
     secure_boot_files.each do |filename|
       src = File.join(device_keys_temporary_directory, filename)
       FileUtils.cp(src, final_addons_directory)
