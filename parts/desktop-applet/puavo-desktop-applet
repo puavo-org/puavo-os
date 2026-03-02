@@ -372,6 +372,8 @@ class ContentUpdates(PuavoWidget):
   def translate_contentname(self, contentname):
     if contentname == 'Abitti':
       return _tr('eExam-system (Abitti-compatible)')
+    if contentname == 'Abitti2':
+      return _tr('Abitti 2')
 
     return contentname
 

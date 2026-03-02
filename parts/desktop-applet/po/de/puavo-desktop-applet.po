@@ -16,19 +16,19 @@ msgstr ""
 msgid "Hostname"
 msgstr "Hostname"
 
-#: puavo-desktop-applet:157
+#: puavo-desktop-applet:154
 msgid "Information on the latest system update"
 msgstr "Informationen zur Systemaktualisierung"
 
-#: puavo-desktop-applet:180
+#: puavo-desktop-applet:177
 msgid "Changelog"
 msgstr "Änderungen im Opinsys OS"
 
-#: puavo-desktop-applet:220
+#: puavo-desktop-applet:217
 msgid "New system version"
 msgstr "Neue Systemversion"
 
-#: puavo-desktop-applet:223
+#: puavo-desktop-applet:220
 msgid ""
 "The system has been updated to a new version. Click the info-button in the "
 "panel for more information."
@@ -36,172 +36,176 @@ msgstr ""
 "Das System wurde auf eine neue Version aktualisiert. Klicke auf den Info-"
 "Knopf für mehr Information."
 
-#: puavo-desktop-applet:377
+#: puavo-desktop-applet:374
 msgid "eExam-system (Abitti-compatible)"
 msgstr "eExam-System (Abitti-kompatibel)"
 
-#: puavo-desktop-applet:385 puavo-desktop-applet:409 puavo-desktop-applet:424
+#: puavo-desktop-applet:376
+msgid "Abitti 2"
+msgstr "Abitti 2"
+
+#: puavo-desktop-applet:386 puavo-desktop-applet:410 puavo-desktop-applet:425
 msgid "Update to version"
 msgstr "Aktualizierung zur Version"
 
-#: puavo-desktop-applet:385
+#: puavo-desktop-applet:386
 msgid "has started."
 msgstr "hat angefangen."
 
-#: puavo-desktop-applet:399
+#: puavo-desktop-applet:400
 msgid "is updating"
 msgstr "läuft"
 
-#: puavo-desktop-applet:411
+#: puavo-desktop-applet:412
 msgid "has completed successfully."
 msgstr "ist erfolgreich abgeschlossen."
 
-#: puavo-desktop-applet:426
+#: puavo-desktop-applet:427
 msgid "has failed."
 msgstr "ist missgelungen."
 
-#: puavo-desktop-applet:479
+#: puavo-desktop-applet:480
 msgid "(No system update progress.)"
 msgstr "(Kein Systemaktualisierungsvortschritt)"
 
-#: puavo-desktop-applet:497
+#: puavo-desktop-applet:498
 msgid "View system update log..."
 msgstr "Betrachte Log-Datei von Systemaktualisierung..."
 
-#: puavo-desktop-applet:587 puavo-desktop-applet:590
+#: puavo-desktop-applet:588 puavo-desktop-applet:591
 msgid "A new system update is available."
 msgstr "Eine Systemaktualisierung ist bereit."
 
-#: puavo-desktop-applet:599
+#: puavo-desktop-applet:600
 msgid "System update cancelled."
 msgstr "Systemaktualisierung abgebrochen"
 
-#: puavo-desktop-applet:602
+#: puavo-desktop-applet:603
 msgid "System update has been cancelled."
 msgstr "Die Systemaktualisierung wurde abgebrochen"
 
-#: puavo-desktop-applet:615
+#: puavo-desktop-applet:616
 msgid "System update completed, reboot required to finish the update."
 msgstr ""
 "Systemaktualisierung fertig, der Computer muss nun neu gestartet werden."
 
-#: puavo-desktop-applet:616
+#: puavo-desktop-applet:617
 msgid "System update is finished, reboot the computer."
 msgstr ""
 "Die Systemaktualisierung ist fertig. Der Computer muss nun neu gestartet "
 "werden."
 
-#: puavo-desktop-applet:618
+#: puavo-desktop-applet:619
 msgid "System update completed."
 msgstr "Systemaktualisierung ist fertig."
 
-#: puavo-desktop-applet:619
+#: puavo-desktop-applet:620
 msgid "System update is finished."
 msgstr "Die Systemaktualisierung ist fertig."
 
-#: puavo-desktop-applet:634 puavo-desktop-applet:666
+#: puavo-desktop-applet:635 puavo-desktop-applet:667
 msgid "System update failed."
 msgstr "Systemaktualisierung ist gescheitert."
 
-#: puavo-desktop-applet:637
+#: puavo-desktop-applet:638
 msgid "An error occurred when updating the system."
 msgstr "Bei der Aktualisierung des Systems ist ein Fehler aufgetreten."
 
-#: puavo-desktop-applet:669
+#: puavo-desktop-applet:670
 msgid "System update done, reboot required to finish the update."
 msgstr ""
 "Eine Systemaktualisierung ist fertig, der Computer muss nun neu gestartet "
 "werden."
 
-#: puavo-desktop-applet:672
+#: puavo-desktop-applet:673
 msgid "System update interrupted."
 msgstr "Systemaktualisierung unterbrochen."
 
-#: puavo-desktop-applet:675
+#: puavo-desktop-applet:676
 msgid "System is up-to-date."
 msgstr "Das System ist auf dem neuesten Stand."
 
-#: puavo-desktop-applet:712
+#: puavo-desktop-applet:713
 msgid "System update progress:"
 msgstr "Aktualisierungfortschritt:"
 
-#: puavo-desktop-applet:727 puavo-desktop-applet:730
+#: puavo-desktop-applet:728 puavo-desktop-applet:731
 msgid "System update has been started."
 msgstr "Systemaktualisierung wurde gestartet."
 
-#: puavo-desktop-applet:768
+#: puavo-desktop-applet:769
 msgid "Check for system updates"
 msgstr "Suche nach Systemaktualisierungen"
 
-#: puavo-desktop-applet:771
+#: puavo-desktop-applet:772
 msgid "(Checking for system updates.)"
 msgstr "(Systemaktualisierungen werden gesucht)"
 
-#: puavo-desktop-applet:776
+#: puavo-desktop-applet:777
 msgid "Update system"
 msgstr "Starte Systemaktualisierung"
 
-#: puavo-desktop-applet:780
+#: puavo-desktop-applet:781
 msgid "Cancel system update"
 msgstr "Breche die Systemaktualisierung ab"
 
-#: puavo-desktop-applet:797
+#: puavo-desktop-applet:798
 msgid "System update log"
 msgstr "Systemaktualisierungslog"
 
-#: puavo-desktop-applet:873
+#: puavo-desktop-applet:874
 msgid "Send display configuration"
 msgstr "Sende Bildschirmeinstellungen"
 
-#: puavo-desktop-applet:906
+#: puavo-desktop-applet:907
 msgid "ERROR"
 msgstr "FEHLER"
 
-#: puavo-desktop-applet:907
+#: puavo-desktop-applet:908
 msgid "Could not send display configuration."
 msgstr "Bildschirmeinstellungen konnten nicht gesendet werden."
 
-#: puavo-desktop-applet:909
+#: puavo-desktop-applet:910
 msgid "Success"
 msgstr "Erfolgreich"
 
-#: puavo-desktop-applet:910
+#: puavo-desktop-applet:911
 msgid "Display configuration sent successfully."
 msgstr "Bildschirmeinstellungen wurden erfolgreich gesendet."
 
-#: puavo-desktop-applet:1146
+#: puavo-desktop-applet:1147
 msgid "Remote access allowed"
 msgstr "Fernzugriff ist erlaubt"
 
-#: puavo-desktop-applet:1150
+#: puavo-desktop-applet:1151
 msgid "Remote access denied"
 msgstr "Fernzugriff ist nicht erlaubt"
 
-#: puavo-desktop-applet:1162
+#: puavo-desktop-applet:1163
 msgid "Enable remote access"
 msgstr "Erlaube Fernzugriff"
 
-#: puavo-desktop-applet:1169
+#: puavo-desktop-applet:1170
 msgid "Disable remote access"
 msgstr "Verbiete Fernzugriff"
 
-#: puavo-desktop-applet:1245
+#: puavo-desktop-applet:1246
 msgid "New support request"
 msgstr "Neue Supportanfrage"
 
-#: puavo-desktop-applet:1285
+#: puavo-desktop-applet:1286
 msgid "Reset development state is now done, rebooting the system."
 msgstr "Entwicklermodus ist zurückgesetzt. Das System wird neu gestartet."
 
-#: puavo-desktop-applet:1291
+#: puavo-desktop-applet:1292
 msgid "An error occurred when resetting development state"
 msgstr "Beim zurücksetzen des Entwicklermodus ist ein Fehler aufgetreten"
 
-#: puavo-desktop-applet:1302
+#: puavo-desktop-applet:1303
 msgid "Development state space utilization is"
 msgstr "Der Gebrauch des Aktualisierungszustand ist"
 
-#: puavo-desktop-applet:1304
+#: puavo-desktop-applet:1305
 msgid ""
 "Do you want to reset the development state? All your custom system changes "
 "will be lost. System will also reboot itself after this operation."
@@ -209,66 +213,13 @@ msgstr ""
 "Möchtest du den Entwicklermodus zurücksetzen? Alle deine Änderungen gehen "
 "verloren und das System wird neu gestartet."
 
-#: puavo-desktop-applet:1315 puavo-desktop-applet:1350
+#: puavo-desktop-applet:1316 puavo-desktop-applet:1351
 msgid "Reset development state"
 msgstr "Setze Entwicklermodus zurück"
 
-#: puavo-desktop-applet:1342
+#: puavo-desktop-applet:1343
 msgid ""
 "System updates are disabled in developer mode, boot to normal mode to update."
 msgstr ""
 "Im Entwicklermodus sind Systemaktualisierungen nicht möglich, starte neu in "
 "der normalen Modus um Aktualisierung durchzuführen."
-
-#~ msgid ""
-#~ "Updates are disabled in developer mode, boot to normal mode to update."
-#~ msgstr ""
-#~ "Im Entwicklermodus sind Aktualisierungen nicht möglich, starte neu in der "
-#~ "normalen Modus um Aktualisierung durchzuführen "
-
-#~ msgid "(No update progress.)"
-#~ msgstr "(Kein Aktualisierungsvortschritt)"
-
-#~ msgid "View log..."
-#~ msgstr "Betrachte Log-Datei ..."
-
-#~ msgid "Update cancelled."
-#~ msgstr "Aktualisierung wurde abgebrochen"
-
-#~ msgid "Update completed, reboot required to finish the update."
-#~ msgstr ""
-#~ "Aktualisierung ist fertig, ein Neustart ist nötig um diese abzuschliessen."
-
-#~ msgid "Update completed."
-#~ msgstr "Aktualisierung ist bereit."
-
-#~ msgid "Update failed."
-#~ msgstr "Aktualisierung ist gescheitert."
-
-#~ msgid "Update done, reboot required to finish the update."
-#~ msgstr ""
-#~ "Die Aktualisierung ist fertig. Der Computer muss nun neu gestartet werden"
-
-#~ msgid "Update interrupted."
-#~ msgstr "Aktualisierung unterbrochen."
-
-#~ msgid "Up to date."
-#~ msgstr "Das ist System ist auf dem neusten Stand."
-
-#~ msgid "Update progress:"
-#~ msgstr "Aktualisierungfortschritt:"
-
-#~ msgid "Check for updates"
-#~ msgstr "Suche nache Aktualisierungen"
-
-#~ msgid "(Checking for updates.)"
-#~ msgstr "(Aktualisierungen werden gesucht)"
-
-#~ msgid "Update"
-#~ msgstr "Aktualisieren"
-
-#~ msgid "Cancel update"
-#~ msgstr "Breche die Aktualisierung ab"
-
-#~ msgid "Update log"
-#~ msgstr "Aktualisierungslog"
