@@ -151,12 +151,6 @@ post_update_actions() {
     error "could not update grub configuration for ${abitti2_choice}"
     exit 1
   fi
-
-  # XXX do we have to use Grub variables for this?
-  # XXX the old abitti variables should be cleaned up,
-  # XXX maybe Abitti 1 purge should do that, right?
-  grub-editenv /images/boot/grub/grubenv \
-               set "abitti2_version=${abitti2_version}"
 }
 
 send_status_message() {
