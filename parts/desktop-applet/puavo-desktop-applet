@@ -377,6 +377,8 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_started(self, contentname, version):
+    self.get_contents()
+
     if administered_by_user():
       self.notify(self.translate_contentname(contentname),
                   '%s %s %s' % (_tr('Update to version'), version, _tr('has started.')))
