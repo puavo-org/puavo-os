@@ -12,7 +12,6 @@ logmsg() {
 g_errmsg='unknown error'
 error() {
   local errmsg
-
   errmsg=$1
   logmsg -p user.err "$1"
 }
@@ -137,7 +136,7 @@ edit_extra_system_contents() {
 }
 
 post_update_actions() {
-  local abitti2_filename abitti2_version
+  local abitti2_choice abitti2_filename abitti2_grub_cfg_base64 abitti2_version
 
   abitti2_choice=$1
   abitti2_filename=$2
@@ -402,7 +401,7 @@ update_abitti2_image() {
   calculated_sha256="$(sha256sum "$tmp_abitti2_iso_fp" | awk '{ print $1 }')"
   if [ "$calculated_sha256" != "$abitti2_sha256" ]; then
     g_errmsg="calculated checksum for ${abitti2_filename} does not match"
-    g_errmsg="${f_errmsg} the expected checksum, removing ${tmp_abitti2_iso_fp}"
+    g_errmsg="${g_errmsg} the expected checksum, removing ${tmp_abitti2_iso_fp}"
     error "$g_errmsg"
     rm -f "$tmp_abitti2_iso_fp"
     return 1
