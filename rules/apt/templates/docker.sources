@@ -2,4 +2,5 @@ Types: deb
 URIs: https://download.docker.com/linux/debian
 Suites: <%= @debianversioncodename %>
 Components: stable
+Architectures: amd64
 Signed-By: /etc/apt/keyrings/docker.asc
