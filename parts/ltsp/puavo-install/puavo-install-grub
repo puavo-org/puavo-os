@@ -367,7 +367,10 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
                      "Abitti-yhteensopiva, versio ${abitti_version_number}"
   fi
 
-  for abitti_iso_path in (lvm/puavo-images)/abitti2/*.iso; do
+  for abitti_iso_path_marker in (lvm/puavo-images)/abitti2/*.default \
+                                (lvm/puavo-images)/abitti2/*.backup; do
+    regexp -s abitti_iso_base '^(.*)\.(default|backup)$' $abitti_iso_path_marker
+    set abitti_iso_path="${abitti_iso_base}.iso"
     if [ ! -e "$abitti_iso_path" ]; then
       continue
     fi
