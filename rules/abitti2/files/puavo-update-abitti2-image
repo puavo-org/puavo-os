@@ -15,8 +15,8 @@ error() {
   logmsg -p user.err "$1"
 }
 
-g_update_mode='primary'
-is_primary() { [ "$g_update_mode" = 'primary' ]; }
+g_update_mode='default'
+is_default() { [ "$g_update_mode" = 'default' ]; }
 
 get_abitti2_catalogue() {
   local abitti2_json_gpg_tmppath abitti2_json_tmppath abitti2_server \
@@ -143,21 +143,18 @@ post_update_actions() {
   abitti2_version=$3
   abitti2_grub_cfg_base64=$4
 
-  # XXX it should be possible to have two so this is not good
-  # find "$g_abitti2_dir" -name '*.iso' \
-  #   -and ! -name "$abitti2_filename" -exec rm -f \{} \;
-
   backup_marker_path="${g_abitti2_dir}/${abitti2_filename%.iso}.backup"
   default_marker_path="${g_abitti2_dir}/${abitti2_filename%.iso}.default"
 
-  if is_primary; then
+  if is_default; then
     edit_extra_system_contents --arg version "$abitti2_version" \
       '.Abitti2 = $version'
-    mv "$backup_marker_path" "$default_marker_path" 2>/dev/null \
-      || touch "$default_marker_path"
+    rm -f ${g_abitti2_dir}/*.default || return 1
+    { mv "$backup_marker_path" "$default_marker_path" 2>/dev/null \
+        || touch "$default_marker_path"; } || return 1
   else
-    mv "$default_marker_path" "$backup_marker_path" 2>/dev/null \
-      || touch "$backup_marker_path"
+    rm -f ${g_abitti2_dir}/*.backup || return 1
+    touch "$backup_marker_path"
   fi
 
   if ! update_grub_cfg "$abitti2_choice" "$abitti2_grub_cfg_base64"; then
@@ -170,7 +167,7 @@ send_status_message() {
   local method
   method=$1; shift
 
-  if ! is_primary; then
+  if ! is_default; then
     return 0
   fi
 
@@ -181,17 +178,17 @@ send_status_message() {
             /contentupdates                             \
             "org.puavo.client.contentupdates.${method}" \
             "string:Abitti2"                            \
-            "string:${g_primary_abitti2_version}"       \
+            "string:${g_default_abitti2_version}"       \
             "$@" \
     || true
 }
 
 g_errmsg='unknown error'
 g_exitstatus=0
-g_primary_abitti2_version='?'
-g_primary_update_status='not_started'
+g_default_abitti2_version='?'
+g_default_update_status='not_started'
 send_status_at_exit() {
-  case "$g_primary_update_status" in
+  case "$g_default_update_status" in
     not_started|success)
       exit $g_exitstatus
       ;;
@@ -200,7 +197,7 @@ send_status_at_exit() {
       exit 1
       ;;
   esac
-  g_primary_update_status='final_message_sent'
+  g_default_update_status='final_message_sent'
 }
 
 update_progress() {
@@ -218,9 +215,9 @@ update_progress() {
 }
 
 cleanup_previous_runs() {
-  local abitti2_filename
+  local f upcoming_abitti2_filename
 
-  abitti2_filename=$1
+  upcoming_abitti2_filename=$1
 
   # Ask puavo-abitti-torrent-updated to stop seeding (if it is doing
   # anything).  This is relevant here only for disk space calculations.
@@ -229,7 +226,15 @@ cleanup_previous_runs() {
 
   # remove temporary files (of non-matching versions).
   find "$g_abitti2_dir" -type f -name '*.iso.tmp' \
-    -a ! -name "${abitti2_filename}.tmp" -exec rm -f \{} \;
+    -a ! -name "${upcoming_abitti2_filename}.tmp" -exec rm -f \{} \;
+
+  # remove old image stuff (anything not belonging to the default image)
+  for f in ${g_abitti2_dir}/*.backup ${g_abitti2_dir}/*.cfg ${g_abitti2_dir}/*.iso; do
+    if [ ! -e "$f" ]; then continue; fi
+    if [ ! -e "${f%.*}.default" ]; then
+      rm -f "$f" || true
+    fi
+  done
 }
 
 ensure_enough_available_diskspace() {
@@ -379,9 +384,9 @@ update_abitti2_image() {
 
   # now we are going to update
 
-  if is_primary; then
-    g_primary_abitti2_version="$abitti2_version"
-    g_primary_update_status='started'
+  if is_default; then
+    g_default_abitti2_version="$abitti2_version"
+    g_default_update_status='started'
     trap send_status_at_exit 0 INT TERM
   fi
 
@@ -437,8 +442,8 @@ update_abitti2_image() {
     || return 1
 
   send_status_message SetUpdateCompleted
-  if is_primary; then
-    g_primary_update_status='success'
+  if is_default; then
+    g_default_update_status='success'
   fi
 }
 
@@ -498,12 +503,16 @@ if ! g_abitti2_server=$(get_abitti2_catalogue) \
 fi
 
 for puavo_abitti2_version in $puavo_abitti2_version_list; do
-  # the first one is primary
-  if is_primary; then
+  # the first one is default
+  if [ "$g_update_mode" = 'default' ] ; then
     update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
-    g_update_mode='secondary'
+    g_update_mode='backup'
+  elif [ "$g_update_mode" = 'backup' ] ; then
+    update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
+    g_update_mode='deny'
   else
-    update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
+    error 'downloading only two Abitti2 images is supported'
+    g_exitstatus=1
   fi
 done
 
