@@ -9,7 +9,6 @@ logmsg() {
   logger -s -t puavo-update-abitti2-image "$@" || true
 }
 
-g_errmsg='unknown error'
 error() {
   local errmsg
   errmsg=$1
@@ -136,7 +135,8 @@ edit_extra_system_contents() {
 }
 
 post_update_actions() {
-  local abitti2_choice abitti2_filename abitti2_grub_cfg_base64 abitti2_version
+  local abitti2_choice abitti2_filename abitti2_grub_cfg_base64 abitti2_version \
+        backup_marker_path default_marker_path
 
   abitti2_choice=$1
   abitti2_filename=$2
@@ -147,9 +147,17 @@ post_update_actions() {
   # find "$g_abitti2_dir" -name '*.iso' \
   #   -and ! -name "$abitti2_filename" -exec rm -f \{} \;
 
+  backup_marker_path="${g_abitti2_dir}/${abitti2_filename%.iso}.backup"
+  default_marker_path="${g_abitti2_dir}/${abitti2_filename%.iso}.default"
+
   if is_primary; then
     edit_extra_system_contents --arg version "$abitti2_version" \
       '.Abitti2 = $version'
+    mv "$backup_marker_path" "$default_marker_path" 2>/dev/null \
+      || touch "$default_marker_path"
+  else
+    mv "$default_marker_path" "$backup_marker_path" 2>/dev/null \
+      || touch "$backup_marker_path"
   fi
 
   if ! update_grub_cfg "$abitti2_choice" "$abitti2_grub_cfg_base64"; then
@@ -178,6 +186,7 @@ send_status_message() {
     || true
 }
 
+g_errmsg='unknown error'
 g_exitstatus=0
 g_primary_abitti2_version='?'
 g_primary_update_status='not_started'
