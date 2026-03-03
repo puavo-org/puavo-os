@@ -135,13 +135,12 @@ edit_extra_system_contents() {
 }
 
 post_update_actions() {
-  local abitti2_choice abitti2_filename abitti2_grub_cfg_base64 abitti2_version \
+  local abitti2_filename abitti2_grub_cfg_base64 abitti2_version \
         backup_marker_path default_marker_path
 
-  abitti2_choice=$1
-  abitti2_filename=$2
-  abitti2_version=$3
-  abitti2_grub_cfg_base64=$4
+  abitti2_filename=$1
+  abitti2_version=$2
+  abitti2_grub_cfg_base64=$3
 
   backup_marker_path="${g_abitti2_dir}/${abitti2_filename%.iso}.backup"
   default_marker_path="${g_abitti2_dir}/${abitti2_filename%.iso}.default"
@@ -157,8 +156,8 @@ post_update_actions() {
     touch "$backup_marker_path"
   fi
 
-  if ! update_grub_cfg "$abitti2_choice" "$abitti2_grub_cfg_base64"; then
-    error "could not update grub configuration for ${abitti2_choice}"
+  if ! update_grub_cfg "$abitti2_filename" "$abitti2_grub_cfg_base64"; then
+    error "could not update grub configuration for ${abitti2_filename}"
     return 1
   fi
 }
@@ -302,11 +301,12 @@ do_torrent_update() {
 }
 
 update_grub_cfg() {
-  local abitti2_choice abitti2_grub_cfg abitti2_grub_cfg_base64 \
+  local abitti2_filename abitti2_grub_cfg abitti2_grub_cfg_base64 \
         abitti2_grub_cfg_path tmp_abitti2_grub_cfg_path
-  abitti2_choice=$1
+
+  abitti2_filename=$1
   abitti2_grub_cfg_base64=$2
-  abitti2_grub_cfg_path="${g_abitti2_dir}/${abitti2_choice}.cfg"
+  abitti2_grub_cfg_path="${g_abitti2_dir}/${abitti2_filename%.iso}.cfg"
   tmp_abitti2_grub_cfg_path="${abitti2_grub_cfg_path}.tmp"
 
   if ! abitti2_grub_cfg=$(printf "%s" "$abitti2_grub_cfg_base64" \
@@ -331,7 +331,7 @@ update_grub_cfg() {
     return 1
   fi
 
-  logmsg -p user.info "updated the Grub configuration for ${abitti2_choice}"
+  logmsg -p user.info "updated the Grub configuration for ${abitti2_filename}"
 }
 
 update_abitti2_image() {
@@ -374,8 +374,8 @@ update_abitti2_image() {
     msg="the requested abitti-image ${abitti2_filename} (${abitti2_version})"
     msg="${msg} is in place"
     logmsg -p user.info "$msg"
-    post_update_actions "$abitti2_choice" "$abitti2_filename" \
-                        "$abitti2_version" "$abitti2_grub_cfg_base64" \
+    post_update_actions "$abitti2_filename" "$abitti2_version" \
+                        "$abitti2_grub_cfg_base64"             \
       || return 1
     return 0
   fi
@@ -437,8 +437,8 @@ update_abitti2_image() {
   logmsg -p user.notice \
     "new Abitti2 image ${abitti2_filename} (${abitti2_version}) installed!"
 
-  post_update_actions "$abitti2_choice" "$abitti2_filename" \
-                      "$abitti2_version" "$abitti2_grub_cfg_base64" \
+  post_update_actions "$abitti2_filename" "$abitti2_version" \
+                      "$abitti2_grub_cfg_base64"             \
     || return 1
 
   send_status_message SetUpdateCompleted
