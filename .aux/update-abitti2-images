@@ -113,10 +113,9 @@ class AbittiImage
 
   def info
     {
-      'puavo_os_filename': @filename,
-      'sha256':            sha256,
-      'size':              size,
-      'source_url':        @source_url,
+      'sha256':     sha256,
+      'size':       size,
+      'source_url': @source_url,
     }
   end
 
