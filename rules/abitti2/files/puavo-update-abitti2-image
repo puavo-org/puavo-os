@@ -4,6 +4,7 @@ set -eu
 
 g_abitti2_dir=/images/abitti2
 g_abitti2_json_path="${g_abitti2_dir}/abitti2.json"
+g_default_abitti2_image_filename=''
 
 logmsg() {
   logger -s -t puavo-update-abitti2-image "$@" || true
@@ -337,18 +338,18 @@ update_grub_cfg() {
 update_abitti2_image() {
   local abitti2_choice abitti2_choice_info abitti2_filename \
         abitti2_grub_cfg_base64 abitti2_image abitti2_iso_fp abitti2_sha256 \
-        abitti2_size abitti2_version calculated_sha256 msg \
+        abitti2_size abitti2_version calculated_sha256 errmsg msg \
         puavo_abitti2_version tmp_abitti2_iso_fp url_to_download_with_torrent
 
   puavo_abitti2_version=$1
 
   if ! abitti2_choice=$(lookup_abitti2_choice "$puavo_abitti2_version"); then
-    error 'no such abitti2 version'
+    error "no such abitti2 version as '${puavo_abitti2_version}'"
     return 1
   fi
 
   if ! abitti2_choice_info=$(lookup_abitti2_choice_info "$abitti2_choice"); then
-    error 'no such abitti2 choice'
+    error "no such abitti2 choice as '${abitti2_choice}'"
     return 1
   fi
 
@@ -358,7 +359,7 @@ update_abitti2_image() {
   abitti2_version=$( lookup_var "$abitti2_choice_info" version) || return 1
 
   if ! abitti2_image_info=$(lookup_abitti2_image_info "$abitti2_image"); then
-    error 'no such abitti2 version'
+    error "no such abitti2 image as '${abitti2_image}'"
     return 1
   fi
 
@@ -366,6 +367,15 @@ update_abitti2_image() {
     || return 1
   abitti2_sha256=$(  lookup_var "$abitti2_image_info" sha256) || return 1
   abitti2_size=$(    lookup_var "$abitti2_image_info" size)   || return 1
+
+  if is_default; then
+    g_default_abitti2_image_filename="$abitti2_filename"
+  elif [ "$g_default_abitti2_image_filename" = "$abitti2_filename" ]; then
+    errmsg="abitti image ${abitti2_filename} has already been handled"
+    errmsg="${errmsg} as the default image"
+    error "$errmsg"
+    return 1
+  fi
 
   # "_fp" stands for "full path"
   abitti2_iso_fp="${g_abitti2_dir}/${abitti2_filename}"
@@ -384,14 +394,14 @@ update_abitti2_image() {
 
   # now we are going to update
 
+  # init the Abitti2 key in extra contents if it does not exist
+  edit_extra_system_contents '.Abitti2 //= ""' || return 1
+
   if is_default; then
     g_default_abitti2_version="$abitti2_version"
     g_default_update_status='started'
     trap send_status_at_exit 0 INT TERM
   fi
-
-  # init the Abitti2 key in extra contents if it does not exist
-  edit_extra_system_contents '.Abitti2 //= ""' || return 1
 
   send_status_message SetUpdateStarted
 
