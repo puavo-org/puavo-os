@@ -46,6 +46,7 @@ get_abitti2_catalogue() {
 
     rm -f "$abitti2_json_gpg_tmppath" || return 1
     mv "$abitti2_json_tmppath" "$g_abitti2_json_path" || return 1
+    logmsg -p user.info 'downloaded abitti2.json'
     printf "%s" "${url%/*}" || return 1
     return 0
   done
@@ -225,6 +226,8 @@ cleanup_previous_runs() {
   echo stop | nc -N -U /run/puavo/puavo-abitti2-torrent-updated.sock \
     >/dev/null 2>&1 || true
 
+  logmsg -p user.info 'cleaning up old Abitti 2 files'
+
   # remove temporary files (of non-matching versions).
   find "$g_abitti2_dir" -type f -name '*.iso.tmp' \
     -a ! -name "${upcoming_abitti2_image}.tmp" -exec rm -f \{} \;
@@ -234,6 +237,7 @@ cleanup_previous_runs() {
            ${g_abitti2_dir}/*.iso ${g_abitti2_dir}/*.label; do
     if [ ! -e "$f" ]; then continue; fi
     if [ ! -e "${f%.*}.default" ]; then
+      logmsg -p user.info "removing ${f}"
       rm -f "$f" || true
     fi
   done
@@ -283,6 +287,9 @@ do_torrent_update() {
   ensure_enough_available_diskspace "$abitti2_image" "$abitti2_size" \
     || return 1
 
+  logmsg -p user.info \
+         "starting torrent download from ${url_to_download_with_torrent}"
+
   torrent_status=$(
     printf "%s\n%s\n" "$g_download_rate_limit" "$url_to_download_with_torrent" \
       | nc -N -U /run/puavo/puavo-abitti2-torrent-updated.sock \
@@ -317,12 +324,12 @@ update_grub_cfg() {
 
   if ! abitti2_grub_cfg=$(printf "%s" "$abitti2_grub_cfg_base64" \
                             | base64 -d); then
-    error 'could not decode abitti2 grub.cfg'
+    error "could not decode abitti2 grub.cfg for ${abitti2_image}"
     return 1
   fi
 
   if ! printf %s "$abitti2_grub_cfg" > "$tmp_abitti2_grub_cfg_path"; then
-    error 'could not write abitti2 grub.cfg'
+    error "could not write abitti2 grub.cfg for ${abitti2_image}"
     rm -f "$tmp_abitti2_grub_cfg_path"
     return 1
   fi
@@ -331,7 +338,7 @@ update_grub_cfg() {
          >/dev/null 2>&1; then
     rm -f "$tmp_abitti2_grub_cfg_path" || true
   elif ! mv "$tmp_abitti2_grub_cfg_path" "$abitti2_grub_cfg_path"; then
-    error 'could not move abitti2 grub.cfg into its place'
+    error "could not move grub.cfg for ${abitti2_image} into its place"
     rm -f "$tmp_abitti2_grub_cfg_path"
     return 1
   else
@@ -344,7 +351,7 @@ update_grub_cfg() {
   if ! printf 'set abitti_label="%s"\nexport abitti_label\n' \
          "$(printf %s "$abitti2_version" | tr -cd '0-9A-Za-zåäöÅÄÖ.()_ -')" \
          > "$tmp_abitti2_grub_label_path"; then
-    error "could not write abitti2 grub label for '${abitti2_image}'"
+    error "could not write abitti2 grub label for ${abitti2_image}"
     rm -f "$tmp_abitti2_grub_label_path"
     return 1
   fi
@@ -356,13 +363,13 @@ update_grub_cfg() {
   fi
 
   if ! mv "$tmp_abitti2_grub_label_path" "$abitti2_grub_label_path"; then
-    error "could not write abitti2 grub label for '${abitti2_image}'"
+    error "could not write abitti2 grub label for ${abitti2_image}"
     rm -f "$tmp_abitti2_grub_label_path"
     return 1
   fi
 
   logmsg -p user.info \
-    "updated the Grub label for '${abitti2_image}' (${abitti2_version})"
+    "updated the Grub label for ${abitti2_image} (${abitti2_version})"
 }
 
 update_abitti2_image() {
@@ -433,15 +440,13 @@ update_abitti2_image() {
 
   send_status_message SetUpdateStarted
 
-  logmsg -p user.info "downloading ${url_to_download_with_torrent}"
-
   echo 0 | update_progress starting
 
   tmp_abitti2_iso_fp="${abitti2_iso_fp}.tmp"
 
   if ! do_torrent_update "$abitti2_image" "$abitti2_size" \
     "$url_to_download_with_torrent"; then
-      error 'downloading the abitti2 image failed'
+      error "downloading the abitti2 image ${abitti2_image} failed"
       return 1
   fi
 
@@ -498,7 +503,10 @@ case "$abitti2_mode" in
     # just continue...
     ;;
   purge)
-    rm -rf "$g_abitti2_dir"
+    if [ -e "$g_abitti2_dir" ]; then
+      logmsg -p user.notice 'purging the Abitti 2 client installation'
+      rm -rf "$g_abitti2_dir"
+    fi
     exit 0
     ;;
   *)
@@ -543,9 +551,13 @@ fi
 for puavo_abitti2_version in $puavo_abitti2_version_list; do
   # the first one is default
   if [ "$g_update_mode" = 'default' ] ; then
+    logmsg -p user.info \
+           "the default Abitti 2 choice is '${puavo_abitti2_version}'"
     update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
     g_update_mode='backup'
   elif [ "$g_update_mode" = 'backup' ] ; then
+    logmsg -p user.info \
+           "the backup Abitti 2 choice is '${puavo_abitti2_version}'"
     update_abitti2_image "$puavo_abitti2_version" || g_exitstatus=1
     g_update_mode='deny'
   else
