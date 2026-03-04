@@ -382,7 +382,17 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
       continue
     fi
 
-    menuentry "Abitti 2 (${abitti_iso_file})" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
+    # sourcing the "${abitti_iso_base}.label" file should set abitti_label,
+    # but fallback to $abitti_iso_file
+    set abitti_label=""
+    if [ -e "${abitti_iso_base}.label" ]; then
+      source "${abitti_iso_base}.label"
+    fi
+    if [ "$abitti_label" = "" ]; then
+      set abitti_label="$abitti_iso_file"
+    fi
+
+    menuentry "Abitti 2 (${abitti_label})" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
       set abitti_iso_path=$2
       set abitti_iso_file=$3
       set abitti_iso_cfg=$4

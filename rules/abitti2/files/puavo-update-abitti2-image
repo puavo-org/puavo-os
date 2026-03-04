@@ -157,7 +157,8 @@ post_update_actions() {
     touch "$backup_marker_path"
   fi
 
-  if ! update_grub_cfg "$abitti2_image" "$abitti2_grub_cfg_base64"; then
+  if ! update_grub_cfg "$abitti2_image" "$abitti2_version" \
+                       "$abitti2_grub_cfg_base64"; then
     error "could not update grub configuration for ${abitti2_image}"
     return 1
   fi
@@ -229,7 +230,8 @@ cleanup_previous_runs() {
     -a ! -name "${upcoming_abitti2_image}.tmp" -exec rm -f \{} \;
 
   # remove old image stuff (anything not belonging to the default image)
-  for f in ${g_abitti2_dir}/*.backup ${g_abitti2_dir}/*.cfg ${g_abitti2_dir}/*.iso; do
+  for f in ${g_abitti2_dir}/*.backup ${g_abitti2_dir}/*.cfg \
+           ${g_abitti2_dir}/*.iso ${g_abitti2_dir}/*.label; do
     if [ ! -e "$f" ]; then continue; fi
     if [ ! -e "${f%.*}.default" ]; then
       rm -f "$f" || true
@@ -303,10 +305,13 @@ do_torrent_update() {
 
 update_grub_cfg() {
   local abitti2_image abitti2_grub_cfg abitti2_grub_cfg_base64 \
-        abitti2_grub_cfg_path tmp_abitti2_grub_cfg_path
+        abitti2_grub_cfg_path abitti2_grub_label_path abitti2_version \
+        tmp_abitti2_grub_cfg_path tmp_abitti2_grub_label_path
 
   abitti2_image=$1
-  abitti2_grub_cfg_base64=$2
+  abitti2_version=$2
+  abitti2_grub_cfg_base64=$3
+
   abitti2_grub_cfg_path="${g_abitti2_dir}/${abitti2_image%.iso}.cfg"
   tmp_abitti2_grub_cfg_path="${abitti2_grub_cfg_path}.tmp"
 
@@ -318,21 +323,46 @@ update_grub_cfg() {
 
   if ! printf %s "$abitti2_grub_cfg" > "$tmp_abitti2_grub_cfg_path"; then
     error 'could not write abitti2 grub.cfg'
+    rm -f "$tmp_abitti2_grub_cfg_path"
     return 1
   fi
 
   if cmp "$tmp_abitti2_grub_cfg_path" "$abitti2_grub_cfg_path" \
-         2>/dev/null; then
+         >/dev/null 2>&1; then
     rm -f "$tmp_abitti2_grub_cfg_path" || true
-    return 0
+  elif ! mv "$tmp_abitti2_grub_cfg_path" "$abitti2_grub_cfg_path"; then
+    error 'could not move abitti2 grub.cfg into its place'
+    rm -f "$tmp_abitti2_grub_cfg_path"
+    return 1
+  else
+    logmsg -p user.info "updated the Grub configuration for ${abitti2_image}"
   fi
 
-  if ! mv "$tmp_abitti2_grub_cfg_path" "$abitti2_grub_cfg_path"; then
-    error 'could not move abitti2 grub.cfg into its place'
+  abitti2_grub_label_path="${g_abitti2_dir}/${abitti2_image%.iso}.label"
+  tmp_abitti2_grub_label_path="${abitti2_grub_label_path}.tmp"
+
+  if ! printf 'set abitti_label="%s"\nexport abitti_label\n' \
+         "$(printf %s "$abitti2_version" | tr -cd '0-9A-Za-zåäöÅÄÖ.()_ -')" \
+         > "$tmp_abitti2_grub_label_path"; then
+    error "could not write abitti2 grub label for '${abitti2_image}'"
+    rm -f "$tmp_abitti2_grub_label_path"
     return 1
   fi
 
-  logmsg -p user.info "updated the Grub configuration for ${abitti2_image}"
+  if cmp "$tmp_abitti2_grub_label_path" "$abitti2_grub_label_path" \
+         >/dev/null 2>&1; then
+    rm -f "$tmp_abitti2_grub_label_path"
+    return 0
+  fi
+
+  if ! mv "$tmp_abitti2_grub_label_path" "$abitti2_grub_label_path"; then
+    error "could not write abitti2 grub label for '${abitti2_image}'"
+    rm -f "$tmp_abitti2_grub_label_path"
+    return 1
+  fi
+
+  logmsg -p user.info \
+    "updated the Grub label for '${abitti2_image}' (${abitti2_version})"
 }
 
 update_abitti2_image() {
