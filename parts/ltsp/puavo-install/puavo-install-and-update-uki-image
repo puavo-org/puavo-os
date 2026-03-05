@@ -22,12 +22,21 @@ images_dir="$3"
 [ -f "$image_path" ] || panic "image '$image_path' does not exist"
 [ -d "$images_dir" ] || panic "images directory '$images_dir' does not exist"
 
+cleanup_temporary_files() {
+  find "$UKI_ROOT" -xdev -type d -name '*.tmp' -exec rm -rf {} + 2>/dev/null || true
+  find "$UKI_ROOT" -xdev -type f -name '*.tmp' -delete 2>/dev/null || true
+}
+
 image_mountpoint=$(mktemp -d)
 cleanup() {
+  if [ -d "$UKI_ROOT" ]; then
+    cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
+  fi
+
   umount /boot/efi 2>/dev/null || true
   umount "$image_mountpoint" 2>/dev/null || true
 }
-trap cleanup EXIT
+trap cleanup INT TERM EXIT
 
 mount -o ro "$image_path" "$image_mountpoint" 1>/dev/null
 
@@ -110,6 +119,7 @@ mount_efi_and_install_uki() {
   local status=0
   mount_disk_efi_partition "$diskdev" || return 1
   install_uki_to_efi "$diskdev" || status=1
+  cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
   umount /boot/efi || true
   return $status
 }
@@ -121,6 +131,7 @@ boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
 # Before installing, verify the boot partitions have enough space
 for diskdev in $boot_disks; do
   mount_disk_efi_partition "$diskdev" || panic "failed to mount EFI partition on $diskdev"
+  cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
 
   required_space=$(estimate_required_disk_space "$image_path")
 

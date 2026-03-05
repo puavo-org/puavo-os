@@ -21,7 +21,8 @@ image_mountpoint="$1"
 [ -d "$UKI_ROOT" ] || panic "UKI root '$UKI_ROOT' does not exist"
 
 cleanup_temporary_files() {
-  find "$UKI_ROOT" -type f -name '*.tmp' -delete
+  find "$UKI_ROOT" -xdev -type d -name '*.tmp' -exec rm -rf {} + 2>/dev/null || true
+  find "$UKI_ROOT" -xdev -type f -name '*.tmp' -delete 2>/dev/null || true
 }
 
 cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
