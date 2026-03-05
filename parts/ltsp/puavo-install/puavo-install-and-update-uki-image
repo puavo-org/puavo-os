@@ -69,18 +69,22 @@ mount_disk_efi_partition() {
 }
 
 estimate_required_disk_space() {
-  local image_size required_disk_space safety_margin uki_destination uki_kernels_dir
+  local existing_size image_size required_disk_space safety_margin uki_destination uki_kernels_dir
   required_disk_space=0
 
   for uki in "$image_mountpoint"/boot/*.uki.efi; do
     uki_kernels_dir="${UKI_ROOT}/${image_name_no_suffix}"
     uki_destination="${uki_kernels_dir}/$(basename "$uki")"
     [ -e "$uki" ] || continue
-    # Files that are already installed will not take up additional space
-    [ -e "$uki_destination" ] && continue
 
     image_size=$(stat -c %s "$uki")
-    required_disk_space=$((required_disk_space + image_size))
+
+    if [ -e "$uki_destination" ]; then
+      existing_size=$(stat -c %s "$uki_destination")
+      required_disk_space=$((required_disk_space + image_size - existing_size))
+    else
+      required_disk_space=$((required_disk_space + image_size))
+    fi
   done
 
   safety_margin=$((32 * 1024 * 1024)) # 32 MB
