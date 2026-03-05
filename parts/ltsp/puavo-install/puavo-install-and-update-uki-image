@@ -51,6 +51,12 @@ if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
   panic "failed to extract image name from '$image_name_file'"
 fi
 
+image_basename=$(basename "$image_path")
+if [ "$image_basename" != "$image_name" ]; then
+  # The boot process expects the image filename to match the internal image name (see UKI command-line generation)
+  panic "image filename '${image_basename}' does not match internal image name '${image_name}'"
+fi
+
 image_name_no_suffix=${image_name%.img}
 
 find_efi_device_path() {
