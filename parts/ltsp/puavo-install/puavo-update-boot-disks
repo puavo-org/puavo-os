@@ -1,4 +1,5 @@
 #!/bin/sh
 set -eu
 puavo-install-grub "$@"
+puavo-cleanup-uki-installations "$@"
 puavo-install-and-update-uki-images "$@"

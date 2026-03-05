@@ -1,0 +1,104 @@
+#!/bin/bash
+
+set -eu
+
+UKI_ROOT='/boot/efi/EFI/puavo'
+UKI_LOCK='/run/puavo-uki-image.lock'
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+images_dir=/images
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --images-dir)
+      images_dir="$2"; shift 2 ;;
+    *)
+      shift ;;
+  esac
+done
+
+[ -d "$images_dir" ] || panic "images directory '$images_dir' does not exist"
+
+if [ -z "${UKI_MODE:-}" ]; then
+  PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
+  export UKI_MODE
+  UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
+fi
+
+[ "$UKI_MODE" = "1" ] || exit 0
+
+exec {lockfd}<> "$UKI_LOCK"
+flock -nx "$lockfd" || panic "another UKI image operation is already running"
+
+find_efi_device_path() {
+  local diskdev="$1"
+
+  lsblk -n -l -o PATH,PARTTYPE "$diskdev" \
+    | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }'
+}
+
+mount_disk_efi_partition() {
+  local diskdev="$1"
+
+  efi_devpath=$(find_efi_device_path "$diskdev")
+  if [ -z "$efi_devpath" ]; then
+    echo "error: failed to find EFI partition in ${diskdev}" >&2
+    return 1
+  fi
+
+  mount "$efi_devpath" /boot/efi 1>/dev/null
+}
+
+cleanup_orphaned_uki_directories() {
+  [ -d "$UKI_ROOT" ] || return 0
+
+  local status=0
+
+  for uki_directory in "$UKI_ROOT"/*/; do
+    [ -d "$uki_directory" ] || continue
+
+    local image_name
+    image_name=$(basename "$uki_directory")
+
+    # Skip directories that are not UKI installation directories
+    if ! find "$uki_directory" -maxdepth 1 -name '*.uki.efi' -type f | grep -q .; then
+      continue
+    fi
+
+    local image_path="${images_dir}/${image_name}.img"
+    if [ -f "$image_path" ]; then
+      continue
+    fi
+
+    echo "removing orphaned UKI directory '${uki_directory}'"
+    if ! rm --one-file-system -rf "$uki_directory"; then
+      echo "error: failed to remove '${uki_directory}'" >&2
+      status=1
+    fi
+  done
+
+  return "$status"
+}
+
+boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
+[ -n "$boot_disks" ] || panic "failed to find boot disks"
+
+status=0
+
+for diskdev in $boot_disks; do
+  mount_disk_efi_partition "$diskdev" || {
+    echo "error: failed to mount EFI partition on ${diskdev}" >&2
+    status=1
+    continue
+  }
+
+  cleanup_orphaned_uki_directories || status=1
+
+  umount /boot/efi || true
+done
+
+exit $status

@@ -258,6 +258,9 @@ cleanup_previous_runs() {
       | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp")
 
     if [ "${UKI_MODE:-}" = "1" ]; then
+      log info "cleaning up orphaned UKI installations"
+      puavo-cleanup-uki-installations --images-dir "$images_dir" || true
+
       uninstall_images=$(printf '%s\n' "$uninstall_files" | grep '\.img$' || true)
 
       for uninstall_image in $uninstall_images; do

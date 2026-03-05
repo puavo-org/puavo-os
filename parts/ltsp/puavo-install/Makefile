@@ -35,6 +35,7 @@ install : installdirs
 		puavo-change-hostname \
 		puavo-client-daemon \
 		puavo-disk-clone \
+		puavo-cleanup-uki-installations \
 		puavo-disk-erase \
 		puavo-install \
 		puavo-install-and-update-ltspimages \
