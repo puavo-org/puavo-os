@@ -107,13 +107,8 @@ install_uki_to_efi() {
     return 1
   fi
 
-  puavo-install-uki "$image_mountpoint" || {
+  puavo-install-uki "$image_mountpoint" "$images_dir" "$hosttype" || {
     echo "error: failed to install UKI to EFI partition" >&2
-    return 1
-  }
-
-  puavo-update-uki-commandline "$image_mountpoint" "$images_dir" "$hosttype" || {
-    echo "error: failed to update UKI command-line" >&2
     return 1
   }
 }

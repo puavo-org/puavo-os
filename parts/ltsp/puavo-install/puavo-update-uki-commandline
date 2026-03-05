@@ -1,71 +1,43 @@
 #!/bin/bash
 set -eu
 
-UKI_ROOT='/boot/efi/EFI/puavo'
-
 panic() {
   echo "error: $1" >&2
   exit 1
 }
 
 usage() {
-  echo "Usage: $0 <image-mountpoint> <images-dir> <host-type>" >&2
+  echo "Usage: $0 <extra-directory> <image-mountpoint> <images-dir> <host-type>" >&2
   exit 1
 }
 
-[ $# -eq 3 ] || usage
+[ $# -eq 4 ] || usage
 
-image_mountpoint="$1"
-images_dir="$2"
+extra_directory="$1"
+image_mountpoint="$2"
+images_dir="$3"
+hosttype="$4"
+
 addons_dir="${images_dir}/boot/addons"
-hosttype="$3"
-
 boot_directory="${image_mountpoint}/boot"
 
 [ -d "$boot_directory" ] || panic "boot directory '$boot_directory' does not exist"
-[ -d "$UKI_ROOT" ] || panic "UKI root '$UKI_ROOT' does not exist"
 
-install_commandline() {
-  local uki="$1"
-  local destination="$2"
-  local image_name_no_suffix="$3"
-
-  local uki_name
-  uki_name=$(basename "$uki")
-
-  local extra_directory="${destination}/${image_name_no_suffix}/${uki_name}.extra.d"
-  if ! mkdir -p "$extra_directory"; then
-    echo "error: failed to create the extra directory for UKI in EFI partition" >&2
-    return 1
-  fi
-
-  # Install the host type specific command-line
-  cp "${boot_directory}/addons/${hosttype}.addon.efi" \
-     "${extra_directory}/commandline.addon.efi"
-
-  # Install device-specific addons
-  if [ -d "${addons_dir}" ]; then
-    find "${addons_dir}" -maxdepth 1 -name "*.addon.efi" -type f \
-      -exec cp {} "${extra_directory}/" \;
-  fi
-}
-
-
-image_name_file="${image_mountpoint}/etc/puavo-image/name"
-
-if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
-  panic "failed to extract image name from '$image_name_file'"
+if ! mkdir -p "$extra_directory"; then
+  panic "failed to create the extra directory '${extra_directory}'"
 fi
 
-image_name_no_suffix=${image_name%.img}
+# Install the host type specific command-line
+cp "${boot_directory}/addons/${hosttype}.addon.efi" \
+   "${extra_directory}/commandline.addon.efi.tmp"
 
-status=0
+# Install device-specific addons
+if [ -d "${addons_dir}" ]; then
+  for addon in "${addons_dir}"/*.addon.efi; do
+    [ -f "$addon" ] || continue
+    cp "$addon" "${extra_directory}/$(basename "$addon").tmp"
+  done
+fi
 
-for uki in "$boot_directory"/*.uki.efi; do
-  install_commandline "$uki" "$UKI_ROOT" "$image_name_no_suffix" || {
-    echo "error: failed to install command-line for UKI '$uki'" >&2
-    status=1
-  }
-done
-
-exit $status
+# Atomically rename all temporary files into place
+rename -f 's/\.tmp$//' "${extra_directory}"/*.tmp

@@ -9,13 +9,15 @@ panic() {
 }
 
 usage() {
-  echo "Usage: $0 <image-mountpoint>"
+  echo "Usage: $0 <image-mountpoint> <images-dir> <host-type>" >&2
   exit 1
 }
 
-[ $# -eq 1 ] || usage
+[ $# -eq 3 ] || usage
 
 image_mountpoint="$1"
+images_dir="$2"
+hosttype="$3"
 
 [ -d "$image_mountpoint" ] || panic "image mountpoint '$image_mountpoint' does not exist"
 [ -d "$UKI_ROOT" ] || panic "UKI root '$UKI_ROOT' does not exist"
@@ -29,7 +31,7 @@ cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
 trap 'cleanup_temporary_files' INT TERM EXIT
 
 boot_directory="${image_mountpoint}/boot"
-[ -d "$boot_directory" ] || panic "root directory '$boot_directory' does not exist"
+[ -d "$boot_directory" ] || panic "boot directory '$boot_directory' does not exist"
 
 determine_selected_kernel_version() {
   local kernel_image_symbolic_link="${boot_directory}/vmlinuz"
@@ -57,10 +59,9 @@ install_boot_entry_config() {
   mv "$temporary_environment_file" "$environment_file"
 }
 
-install_uki() {
-  local uki="$1"
-  local destination="$2"
-  local enabled="$3"
+install_ukis() {
+  local destination="$1"
+  local enabled_uki="$2"
 
   local class_file="${image_mountpoint}/etc/puavo-image/class"
   local image_name_file="${image_mountpoint}/etc/puavo-image/name"
@@ -82,35 +83,84 @@ install_uki() {
   fi
   local image_name_no_suffix=${image_name%.img}
 
-  local uki_kernels_dir="${destination}/${image_name_no_suffix}"
-  local uki_destination
-  uki_destination="${uki_kernels_dir}/$(basename "$uki")"
-  local uki_temporary_destination="${uki_destination}.tmp"
+  local uki_final_installation_directory="${destination}/${image_name_no_suffix}"
+  local uki_temporary_installation_directory="${uki_final_installation_directory}.tmp"
+  local uki_installation_directory="${uki_final_installation_directory}"
+  local is_new_installation=false
 
-  mkdir -p "$uki_kernels_dir"
-  if [ ! -f "$uki_destination" ]; then
-    # If the copy is interrupted, the .tmp extension prevents the partial image
-    # from being used and it will be cleaned later
-    if ! cp "$uki" "$uki_temporary_destination" || \
-       ! mv "$uki_temporary_destination" "$uki_destination"; then
-      echo "error: failed to copy UKI to EFI partition" >&2
+  if [ ! -d "$uki_installation_directory" ]; then
+    # If we are installing for the first time, use a temporary installation
+    # directory. Temporary files and directories are cleaned before and after
+    # each installation.
+    mkdir -p "$uki_temporary_installation_directory"
+    uki_installation_directory="$uki_temporary_installation_directory"
+    is_new_installation=true
+  fi
+
+  local status=0
+
+  for uki in "$boot_directory"/*.uki.efi; do
+    local enabled="false"
+
+    if [ "$(realpath "$uki")" = "$(realpath "$enabled_uki")" ]; then
+      enabled="true"
+    fi
+
+    local uki_destination
+    uki_destination="${uki_installation_directory}/$(basename "$uki")"
+
+    # If the copy is interrupted, a temporary file prevents the partial image
+    # from being used. Note that this is required when we are updating the UKI,
+    # because the destination directory is not a temporary directory.
+    local uki_temporary_destination="${uki_destination}.tmp"
+
+    if ! cmp --quiet "$uki" "$uki_destination" 2>/dev/null; then
+      # If the UKI already exists, it must differ from the new one
+      # (e.g. possibly broken). Remove the existing file before copying
+      # the new one, otherwise the transfer would require double the
+      # disk space.
+      rm -f "$uki_destination" || true
+
+      if ! cp "$uki" "$uki_temporary_destination" || \
+         ! mv "$uki_temporary_destination" "$uki_destination"; then
+        echo "error: failed to copy UKI '$uki' to EFI partition" >&2
+        status=1
+        continue
+      fi
+    else
+      echo "UKI '$uki_destination' is already installed, skipping copy"
+    fi
+
+    local extra_directory="${uki_destination}.extra.d"
+
+    puavo-update-uki-commandline "$extra_directory" \
+      "$image_mountpoint" "$images_dir" "$hosttype" || {
+      echo "error: failed to update UKI command-line for '$uki'" >&2
+      status=1
+      continue
+    }
+
+    install_boot_entry_config "$extra_directory" "$class" \
+      "$image_name" "$release" "$enabled" || {
+      echo "error: failed to install boot entry config for UKI '$uki'" >&2
+      status=1
+      continue
+    }
+  done
+
+  if [ "$status" -ne 0 ]; then
+    return "$status"
+  fi
+
+  # If we were installing for the first time and everything succeeded,
+  # rename the temporary directory to the final location.
+  if [ "$is_new_installation" = true ]; then
+    if ! mv "$uki_temporary_installation_directory" \
+            "$uki_final_installation_directory"; then
+      echo "error: failed to rename temporary installation directory" >&2
       return 1
     fi
-  else
-    echo "UKI '$uki_destination' already exists, skipping copy"
   fi
-
-  local extra_directory="${uki_destination}.extra.d"
-  if ! mkdir -p "$extra_directory"; then
-    echo "error: failed to create the extra directory for UKI in EFI partition" >&2
-    return 1
-  fi
-
-  install_boot_entry_config "$extra_directory" "$class" \
-    "$image_name" "$release" "$enabled" || {
-    echo "error: failed to install boot entry config for UKI '$uki'" >&2
-    return 1
-  }
 }
 
 kernel_version=$(determine_selected_kernel_version)
@@ -119,18 +169,7 @@ kernel_version=$(determine_selected_kernel_version)
 enabled_uki=$(find "$boot_directory" -type f -name "*${kernel_version}.uki.efi" | head -n 1)
 [ -n "$enabled_uki" ] || panic "failed to find UKI with kernel version ${kernel_version}"
 
-status=0
-
-for uki in "$boot_directory"/*.uki.efi; do
-  enabled="false"
-  if [ "$(realpath "$uki")" = "$(realpath "$enabled_uki")" ]; then
-    enabled="true"
-  fi
-
-  install_uki "$uki" "$UKI_ROOT" "$enabled" || {
-    echo "error: failed to install UKI '$uki' to EFI partition" >&2
-    status=1
-  }
-done
-
-exit $status
+install_ukis "$UKI_ROOT" "$enabled_uki" || {
+  echo "error: failed to install UKI files to EFI partition" >&2
+  exit 1
+}
