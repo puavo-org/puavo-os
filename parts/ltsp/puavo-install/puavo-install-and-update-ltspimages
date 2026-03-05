@@ -268,6 +268,10 @@ cleanup_previous_runs() {
       uninstall_images=$(printf '%s\n' "$uninstall_files" | grep '\.img$' || true)
 
       for uninstall_image in $uninstall_images; do
+        # Skip "ltsp" images as they are hardlinks to other images
+        case "$(basename "$uninstall_image")" in
+          ltsp*) continue ;;
+        esac
         log info "removing UKI files installed from $uninstall_image"
         systemd-inhibit --what=shutdown:sleep \
                         --who=puavo-install-and-update-ltspimages \
