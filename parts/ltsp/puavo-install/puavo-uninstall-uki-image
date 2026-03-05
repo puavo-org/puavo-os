@@ -1,69 +1,85 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 
+UKI_ROOT='/boot/efi/EFI/puavo'
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
 usage() {
-  echo "Usage: $0 <install-image> <install-mountpoint>" >&2
+  echo "Usage: $0 <image-path> <images-dir>" >&2
   exit 1
 }
 
 [ $# -eq 2 ] || usage
 
-install_image="$1"
-install_mountpoint="$2"
+image_path="$1"
+images_dir="$2"
 
-if [ ! -f "$install_image" ]; then
-  echo "error: install image '$install_image' does not exist" >&2
-  exit 1
-fi
+[ -f "$image_path" ] || panic "image '$image_path' does not exist"
 
-image_mountpoint='/images/mnt'
-mkdir -p "$image_mountpoint"
-
+image_mountpoint=$(mktemp -d)
 cleanup() {
   umount /boot/efi 2>/dev/null || true
   umount "$image_mountpoint" 2>/dev/null || true
 }
-trap cleanup EXIT
+trap 'cleanup' INT TERM EXIT
 
 # Mount the image read-only
-mount -o ro "$install_image" "$image_mountpoint"
+mount -o ro "$image_path" "$image_mountpoint"
 
-if ! image_name=$(cat "${image_mountpoint}/etc/puavo-image/name") \
-  || [ -z "$image_name" ]; then
-    echo 'error: could not lookup image name' >&2
-    exit 1
+# Load the image name without suffix for determining the installation location
+image_name_file="${image_mountpoint}/etc/puavo-image/name"
+
+if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
+  panic "failed to extract image name from '$image_name_file'"
 fi
+
 image_name_no_suffix=${image_name%.img}
 
+find_efi_device_path() {
+  local diskdev="$1"
+
+  lsblk -n -l -o PATH,PARTTYPE "$diskdev" \
+    | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }'
+}
+
+mount_disk_efi_partition() {
+  local diskdev="$1"
+
+  efi_devpath=$(find_efi_device_path "$diskdev")
+  if [ -z "$efi_devpath" ]; then
+    echo "error: failed to find EFI partition in ${diskdev}" >&2
+    return 1
+  fi
+
+  mount "$efi_devpath" /boot/efi 1>/dev/null
+}
+
 # Identify boot disks and remove UKI files from their EFI partitions
-boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$install_mountpoint")
+boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
+[ -n "$boot_disks" ] || panic "failed to find boot disks"
 
 status=0
 
 for diskdev in $boot_disks; do
-  efi_devpath=$(lsblk -n -l -o PATH,PARTTYPE "$diskdev" \
-    | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }')
-  [ -z "$efi_devpath" ] && continue
-
   echo "removing old UKI files from boot device ${diskdev}"
 
-  efi_mount='/boot/efi'
-  mkdir -p "$efi_mount"
-  if ! mount "$efi_devpath" "$efi_mount"; then
-    echo "could not mount ${efi_devpath} to ${efi_mount}" >&2
+  mount_disk_efi_partition "$diskdev" || {
     status=1
     continue
-  fi
+  }
 
-  uki_root="${efi_mount}/EFI/puavo"
-  uki_kernels_dir="${uki_root}/${image_name_no_suffix}"
+  uki_kernels_dir="${UKI_ROOT}/${image_name_no_suffix}"
   if ! rm --one-file-system -rf "$uki_kernels_dir"; then
-    echo "error in removing ${uki_kernels_dir}" >&2
+    echo "error: failed to remove UKI directory '${uki_kernels_dir}'" >&2
     status=1
   fi
 
-  umount "$efi_mount" || true
+  umount /boot/efi || true
 done
 
 exit $status

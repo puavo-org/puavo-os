@@ -1,7 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 set -eu
 
 UKI_ROOT='/boot/efi/EFI/puavo'
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
 
 usage() {
   echo "Usage: $0 <images-dir>" >&2
@@ -24,17 +29,10 @@ trap cleanup EXIT
 [ $# -eq 1 ] || usage
 images_dir=$1
 
-if ! mountpoint -q "$images_dir"; then
-  echo "error: '${images_dir}' is not mounted" >&2
-  exit 1
-fi
+mountpoint -q "$images_dir" || panic "images directory '${images_dir}' is not mounted"
 
 boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
-
-if [ -z "$boot_disks" ]; then
-  echo "error: failed to find boot disks" >&2
-  exit 1
-fi
+[ -n "$boot_disks" ] || panic "failed to find boot disks"
 
 is_uki_install=''
 
@@ -48,8 +46,7 @@ for diskdev in $boot_disks; do
 
   if [ -n "$efi_device_path" ]; then
     if ! mount "$efi_device_path" /boot/efi >/dev/null 2>&1; then
-        echo "error: failed to mount EFI partition of device ${diskdev}" >&2
-        exit 1
+      panic "failed to mount EFI partition of device ${diskdev}"
     fi
 
     if [ -d "$UKI_ROOT" ]; then
@@ -63,8 +60,7 @@ for diskdev in $boot_disks; do
   if [ -z "$is_uki_install" ]; then
     is_uki_install="$is_uki_disk"
   elif [ "$is_uki_install" != "$is_uki_disk" ]; then
-    echo "error: inconsistent UKI installation state detected on $diskdev" >&2
-    exit 1
+    panic "inconsistent UKI installation state detected on $diskdev"
   fi
 done
 

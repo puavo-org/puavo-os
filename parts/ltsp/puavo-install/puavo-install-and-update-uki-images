@@ -20,7 +20,8 @@ done
 
 if [ -z "${UKI_MODE:-}" ]; then
   PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
-  export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
+  export UKI_MODE
+  UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
 fi
 
 [ "$UKI_MODE" = "1" ] || exit 0

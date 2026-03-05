@@ -1,41 +1,41 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 
 UKI_ROOT='/boot/efi/EFI/puavo'
 
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
 usage() {
-  echo "Usage: $0 <install-image> <hosttype> <images-dir>" >&2
+  echo "Usage: $0 <image-path> <hosttype> <images-dir>" >&2
   exit 1
 }
 
 [ $# -eq 3 ] || usage
-install_image="$1"
+image_path="$1"
 hosttype="$2"
 images_dir="$3"
 
-if [ ! -f "$install_image" ]; then
-  echo "error: install image '$install_image' does not exist" >&2
-  exit 1
-fi
+[ -f "$image_path" ] || panic "image '$image_path' does not exist"
+[ -d "$images_dir" ] || panic "images directory '$images_dir' does not exist"
 
-image_mountpoint="/images/mnt"
-mkdir -p "$image_mountpoint"
-
+image_mountpoint=$(mktemp -d)
 cleanup() {
   umount /boot/efi 2>/dev/null || true
   umount "$image_mountpoint" 2>/dev/null || true
 }
 trap cleanup EXIT
 
-mount -o ro "$install_image" "$image_mountpoint" 1>/dev/null
+mount -o ro "$image_path" "$image_mountpoint" 1>/dev/null
 
 # Load the image name without suffix for determining the installation location
 image_name_file="${image_mountpoint}/etc/puavo-image/name"
 
 if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
-  echo "error: image name missing in image mountpoint" >&2
-  return 1
+  panic "failed to extract image name from '$image_name_file'"
 fi
 
 image_name_no_suffix=${image_name%.img}
@@ -67,7 +67,7 @@ estimate_required_disk_space() {
     uki_kernels_dir="${UKI_ROOT}/${image_name_no_suffix}"
     uki_destination="${uki_kernels_dir}/$(basename "$uki")"
     [ -e "$uki" ] || continue
-    # Files that are already installed won't take up additional space
+    # Files that are already installed will not take up additional space
     [ -e "$uki_destination" ] && continue
 
     image_size=$(stat -c %s "$uki")
@@ -83,67 +83,58 @@ estimate_required_disk_space() {
 has_enough_disk_space() {
   local diskdev="$1"
   local required_space="$2"
-  local available_space=$(df --output=avail -B1 /boot/efi | tail -n1)
+  local available_space
+  available_space=$(df --output=avail -B1 /boot/efi | tail -n1)
   [ "$available_space" -ge "$required_space" ]
 }
 
 install_uki_to_efi() {
-  local diskdev="$1"
-
-  mount_disk_efi_partition "$diskdev" || return 1
-
   if [ ! -d "$UKI_ROOT" ]; then
-    echo "error: device $diskdev does not have a valid EFI partition" >&2
-    umount /boot/efi
+    echo "error: boot device does not have a valid EFI partition" >&2
     return 1
   fi
 
-  puavo-install-uki "$image_mountpoint" "$UKI_ROOT" || {
+  puavo-install-uki "$image_mountpoint" || {
     echo "error: failed to install UKI to EFI partition" >&2
-    umount /boot/efi
     return 1
   }
 
-  puavo-update-uki-commandline "$image_mountpoint" "$images_dir" "$UKI_ROOT" "$hosttype" || {
+  puavo-update-uki-commandline "$image_mountpoint" "$images_dir" "$hosttype" || {
     echo "error: failed to update UKI command-line" >&2
-    umount /boot/efi
     return 1
   }
+}
 
-  umount /boot/efi
+mount_efi_and_install_uki() {
+  local diskdev="$1"
+  local status=0
+  mount_disk_efi_partition "$diskdev" || return 1
+  install_uki_to_efi "$diskdev" || status=1
+  umount /boot/efi || true
+  return $status
 }
 
 # Identify boot disks and install UKI files to their EFI partitions
 boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
+[ -n "$boot_disks" ] || panic "failed to find boot disks"
 
-if [ -z "$boot_disks" ]; then
-  echo "error: failed to find boot disks" >&2
-  exit 1
-fi
-
-# Before installing, verify that the boot partitions have enough space
+# Before installing, verify the boot partitions have enough space
 for diskdev in $boot_disks; do
-  if ! mount_disk_efi_partition "$diskdev"; then
-    echo "error: failed to mount EFI partition on $diskdev" >&2
-    exit 1
-  fi
+  mount_disk_efi_partition "$diskdev" || panic "failed to mount EFI partition on $diskdev"
 
-  required_space=$(estimate_required_disk_space "$install_image")
+  required_space=$(estimate_required_disk_space "$image_path")
 
-  if [ -z "$required_space" ]; then
-    echo "error: failed to estimate required disk space" >&2
-    exit 1
-  fi
-
-  has_enough_disk_space "$diskdev" "$required_space" || {
-    echo "error: disk $diskdev does not have enough space" >&2
-    exit 1
-  }
+  [ -n "$required_space" ] || panic "failed to estimate required disk space"
+  has_enough_disk_space "$diskdev" "$required_space" || panic "disk $diskdev does not have enough space"
 
   umount /boot/efi || true
 done
 
+status=0
+
 for diskdev in $boot_disks; do
   echo "installing UKI files to boot device $diskdev"
-  install_uki_to_efi "$diskdev"
+  mount_efi_and_install_uki "$diskdev" || status=1
 done
+
+exit $status

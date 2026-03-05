@@ -1,43 +1,39 @@
-#!/bin/sh
+#!/bin/bash
 set -eu
 
-usage() {
-  echo "Usage: $0 <image-mountpoint> <uki-root>"
+UKI_ROOT='/boot/efi/EFI/puavo'
+
+panic() {
+  echo "error: $1" >&2
   exit 1
 }
 
-[ $# -eq 2 ] || usage
+usage() {
+  echo "Usage: $0 <image-mountpoint>"
+  exit 1
+}
+
+[ $# -eq 1 ] || usage
 
 image_mountpoint="$1"
-uki_root="$2"
 
-if [ ! -d "$image_mountpoint" ]; then
-  echo "error: image mountpoint '$image_mountpoint' does not exist" >&2
-  exit 1
-fi
-
-if [ ! -d "$uki_root" ]; then
-  echo "error: UKI root '$uki_root' does not exist" >&2
-  exit 1
-fi
+[ -d "$image_mountpoint" ] || panic "image mountpoint '$image_mountpoint' does not exist"
+[ -d "$UKI_ROOT" ] || panic "UKI root '$UKI_ROOT' does not exist"
 
 cleanup_temporary_files() {
-  find "$uki_root" -type f -name '*.tmp' -delete
+  find "$UKI_ROOT" -type f -name '*.tmp' -delete
 }
 
 cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
 trap 'cleanup_temporary_files' INT TERM EXIT
 
 boot_directory="${image_mountpoint}/boot"
-
-if [ ! -d "$boot_directory" ]; then
-  echo "error: root directory '$boot_directory' does not exist" >&2
-  exit 1
-fi
+[ -d "$boot_directory" ] || panic "root directory '$boot_directory' does not exist"
 
 determine_selected_kernel_version() {
   local kernel_image_symbolic_link="${boot_directory}/vmlinuz"
-  local kernel_image=$(readlink -f "${kernel_image_symbolic_link}")
+  local kernel_image
+  kernel_image=$(readlink -f "${kernel_image_symbolic_link}")
 
   echo "${kernel_image#"${kernel_image_symbolic_link}-"}"
 }
@@ -49,19 +45,15 @@ install_boot_entry_config() {
   local release="$4"
   local enabled="$5"
   local environment_file="${extra_directory}/grubenv"
+  local temporary_environment_file="${environment_file}.tmp"
 
-  [ -f "$environment_file" ] || grub-editenv "$environment_file" create || {
-    echo "error: failed to create the GRUB environment of a boot entry" >&2
-    return 1
-  }
-
-  (grub-editenv "$environment_file" set "class=${class}" &&
-   grub-editenv "$environment_file" set "image_name=${image_name}" &&
-   grub-editenv "$environment_file" set "enabled=${enabled}" &&
-   grub-editenv "$environment_file" set "release=${release}") || {
-    echo "error: failed to write the GRUB environment of a boot entry" >&2
-    return 1
-  }
+  rm -f "$temporary_environment_file"
+  grub-editenv "$temporary_environment_file" create
+  grub-editenv "$temporary_environment_file" set "class=${class}"
+  grub-editenv "$temporary_environment_file" set "image_name=${image_name}"
+  grub-editenv "$temporary_environment_file" set "enabled=${enabled}"
+  grub-editenv "$temporary_environment_file" set "release=${release}"
+  mv "$temporary_environment_file" "$environment_file"
 }
 
 install_uki() {
@@ -90,7 +82,8 @@ install_uki() {
   local image_name_no_suffix=${image_name%.img}
 
   local uki_kernels_dir="${destination}/${image_name_no_suffix}"
-  local uki_destination="${uki_kernels_dir}/$(basename "$uki")"
+  local uki_destination
+  uki_destination="${uki_kernels_dir}/$(basename "$uki")"
   local uki_temporary_destination="${uki_destination}.tmp"
 
   mkdir -p "$uki_kernels_dir"
@@ -113,22 +106,19 @@ install_uki() {
   fi
 
   install_boot_entry_config "$extra_directory" "$class" \
-                            "$image_name" "$release" "$enabled"
+    "$image_name" "$release" "$enabled" || {
+    echo "error: failed to install boot entry config for UKI '$uki'" >&2
+    return 1
+  }
 }
 
 kernel_version=$(determine_selected_kernel_version)
-
-if [ -z "$kernel_version" ]; then
-  echo "error: failed to determine selected kernel version" >&2
-  exit 1
-fi
+[ -n "$kernel_version" ] || panic "failed to determine selected kernel version"
 
 enabled_uki=$(find "$boot_directory" -type f -name "*${kernel_version}.uki.efi" | head -n 1)
+[ -n "$enabled_uki" ] || panic "failed to find UKI with kernel version ${kernel_version}"
 
-if [ -z "$enabled_uki" ]; then
-  echo "error: failed to find UKI with kernel version ${kernel_version}" >&2
-  exit 1
-fi
+status=0
 
 for uki in "$boot_directory"/*.uki.efi; do
   enabled="false"
@@ -136,8 +126,10 @@ for uki in "$boot_directory"/*.uki.efi; do
     enabled="true"
   fi
 
-  install_uki "$uki" "$uki_root" "$enabled" || {
+  install_uki "$uki" "$UKI_ROOT" "$enabled" || {
     echo "error: failed to install UKI '$uki' to EFI partition" >&2
-    exit 1
+    status=1
   }
 done
+
+exit $status

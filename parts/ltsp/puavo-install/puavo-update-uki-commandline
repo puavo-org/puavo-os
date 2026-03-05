@@ -1,30 +1,29 @@
-#!/bin/sh
+#!/bin/bash
 set -eu
 
-usage() {
-  echo "Usage: $0 <image-mountpoint> <images-dir> <uki-root> <host-type>" >&2
+UKI_ROOT='/boot/efi/EFI/puavo'
+
+panic() {
+  echo "error: $1" >&2
   exit 1
 }
 
-[ $# -eq 4 ] || usage
+usage() {
+  echo "Usage: $0 <image-mountpoint> <images-dir> <host-type>" >&2
+  exit 1
+}
+
+[ $# -eq 3 ] || usage
 
 image_mountpoint="$1"
 images_dir="$2"
 addons_dir="${images_dir}/boot/addons"
-uki_root="$3"
-hosttype="$4"
+hosttype="$3"
 
 boot_directory="${image_mountpoint}/boot"
 
-if [ ! -d "$boot_directory" ]; then
-  echo "error: boot directory '$boot_directory' does not exist" >&2
-  exit 1
-fi
-
-if [ ! -d "$uki_root" ]; then
-  echo "error: UKI root '$uki_root' does not exist" >&2
-  exit 1
-fi
+[ -d "$boot_directory" ] || panic "boot directory '$boot_directory' does not exist"
+[ -d "$UKI_ROOT" ] || panic "UKI root '$UKI_ROOT' does not exist"
 
 install_commandline() {
   local uki="$1"
@@ -51,16 +50,22 @@ install_commandline() {
   fi
 }
 
-if ! image_name="$(cat "${image_mountpoint}/etc/puavo-image/name")" \
-  || [ -z "$image_name" ]; then
-    echo 'could not determine image name' >&2
-    exit 1
+
+image_name_file="${image_mountpoint}/etc/puavo-image/name"
+
+if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
+  panic "failed to extract image name from '$image_name_file'"
 fi
+
 image_name_no_suffix=${image_name%.img}
 
+status=0
+
 for uki in "$boot_directory"/*.uki.efi; do
-  install_commandline "$uki" "$uki_root" "$image_name_no_suffix" || {
+  install_commandline "$uki" "$UKI_ROOT" "$image_name_no_suffix" || {
     echo "error: failed to install command-line for UKI '$uki'" >&2
-    exit 1
+    status=1
   }
 done
+
+exit $status

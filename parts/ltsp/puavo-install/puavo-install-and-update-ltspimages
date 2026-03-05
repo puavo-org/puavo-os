@@ -119,7 +119,8 @@ fi
 
 if [ -z "${UKI_MODE:-}" ]; then
   PUAVO_INSTALL_LIBDIR="/usr/lib/puavo-ltsp-install"
-  export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
+  export UKI_MODE
+  UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
 fi
 
 #
@@ -251,17 +252,17 @@ cleanup_previous_runs() {
   # and rdiff-files too.  The ltsp-backup.img is going to go too...
   old_sync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" "${images_dir}" "${rdiffs_dir}")
   if [ -n "$old_sync_files" ]; then
-    local uninstall_files=$(printf '%s\n' "$old_sync_files" \
+    uninstall_files=$(printf '%s\n' "$old_sync_files" \
       | fgrep -vx "${images_dir}/${preserve_imagefile}" \
       | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}" \
       | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp")
 
     if [ "${UKI_MODE:-}" = "1" ]; then
-      local images=$(printf '%s\n' "$uninstall_files" | grep '\.img$' || true)
+      uninstall_images=$(printf '%s\n' "$uninstall_files" | grep '\.img$' || true)
 
-      for image in $images; do
-        log info "removing UKI files installed from $image"
-        puavo-uninstall-uki-image "$image" "$images_dir" || true
+      for uninstall_image in $uninstall_images; do
+        log info "removing UKI files installed from $uninstall_image"
+        puavo-uninstall-uki-image "$uninstall_image" "$images_dir" || true
       done
     fi
 
@@ -762,15 +763,13 @@ EOF
 }
 
 install_uki_files() {
-  local imagename="$1"
-  local imagepath="${images_dir}/${imagename}"
+  imagename="$1"
+  imagepath="${images_dir}/${imagename}"
 
-  if [ "${UKI_MODE:-}" != "1" ]; then
-    return 0
-  fi
+  [ "${UKI_MODE:-}" = "1" ] || return 0
 
   # use the specified host type or find out the active one
-  local install_hosttype="$hosttype"
+  install_hosttype="$hosttype"
 
   if [ -z "$install_hosttype" ]; then
     install_hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
