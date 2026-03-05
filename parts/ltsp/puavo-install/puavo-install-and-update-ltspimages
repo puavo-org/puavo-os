@@ -48,7 +48,7 @@ log() {
 usage() {
   cat <<EOF > /dev/stderr
 Usage:
-  $(basename $0) [--quiet] [--install-from-file path] next_ltsp_image_name"
+  $(basename $0) [--quiet] [--install-from-file path] [next_ltsp_image_name]"
   $(basename $0) [--quiet] [--install-from-nbd path]  next_ltsp_image_name"
   $(basename $0) [--quiet] [--rate-limit rate]        next_ltsp_image_name"
 
@@ -114,7 +114,11 @@ done
 
 next_image=${1:-}
 if [ -z "$next_image" ]; then
-  usage
+  if [ -n "$image_from_file" ]; then
+    next_image=$(basename "$image_from_file")
+  else
+    usage
+  fi
 fi
 
 if [ -z "${UKI_MODE:-}" ]; then
