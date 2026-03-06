@@ -1,6 +1,6 @@
 diff -ruN linux.0/arch/x86/kernel/acpi/boot.c linux.1/arch/x86/kernel/acpi/boot.c
---- linux.0/arch/x86/kernel/acpi/boot.c	2025-11-19 11:57:36.000000000 +0200
-+++ linux.1/arch/x86/kernel/acpi/boot.c	2025-11-19 12:01:39.313061903 +0200
+--- linux.0/arch/x86/kernel/acpi/boot.c	2026-03-06 09:54:54.000000000 +0200
++++ linux.1/arch/x86/kernel/acpi/boot.c	2026-03-06 09:58:32.998475464 +0200
 @@ -22,6 +22,7 @@
  #include <linux/efi-bgrt.h>
  #include <linux/serial_core.h>
@@ -10,8 +10,8 @@ diff -ruN linux.0/arch/x86/kernel/acpi/boot.c linux.1/arch/x86/kernel/acpi/boot.
  #include <xen/xen.h>
  
 diff -ruN linux.0/drivers/acpi/acpi_tad.c linux.1/drivers/acpi/acpi_tad.c
---- linux.0/drivers/acpi/acpi_tad.c	2025-11-19 11:57:36.000000000 +0200
-+++ linux.1/drivers/acpi/acpi_tad.c	2025-11-19 12:01:39.313061903 +0200
+--- linux.0/drivers/acpi/acpi_tad.c	2026-03-06 09:54:54.000000000 +0200
++++ linux.1/drivers/acpi/acpi_tad.c	2026-03-06 09:58:32.998475464 +0200
 @@ -575,13 +575,18 @@
  	if (dd->capabilities & ACPI_TAD_RT)
  		sysfs_remove_group(&dev->kobj, &acpi_tad_time_attr_group);
@@ -34,8 +34,8 @@ diff -ruN linux.0/drivers/acpi/acpi_tad.c linux.1/drivers/acpi/acpi_tad.c
  		acpi_tad_disable_timer(dev, ACPI_TAD_DC_TIMER);
  		acpi_tad_clear_status(dev, ACPI_TAD_DC_TIMER);
 diff -ruN linux.0/drivers/iommu/intel/iommu.c linux.1/drivers/iommu/intel/iommu.c
---- linux.0/drivers/iommu/intel/iommu.c	2025-11-19 11:57:36.000000000 +0200
-+++ linux.1/drivers/iommu/intel/iommu.c	2025-11-19 12:04:18.714206172 +0200
+--- linux.0/drivers/iommu/intel/iommu.c	2026-03-06 09:54:54.000000000 +0200
++++ linux.1/drivers/iommu/intel/iommu.c	2026-03-06 09:58:32.998475464 +0200
 @@ -224,6 +224,8 @@
  EXPORT_SYMBOL_GPL(intel_iommu_enabled);
  
@@ -81,8 +81,8 @@ diff -ruN linux.0/drivers/iommu/intel/iommu.c linux.1/drivers/iommu/intel/iommu.
  
  	/*
 diff -ruN linux.0/drivers/platform/x86/intel/int3472/discrete.c linux.1/drivers/platform/x86/intel/int3472/discrete.c
---- linux.0/drivers/platform/x86/intel/int3472/discrete.c	2025-11-02 15:15:23.000000000 +0200
-+++ linux.1/drivers/platform/x86/intel/int3472/discrete.c	2025-11-19 12:01:39.313061903 +0200
+--- linux.0/drivers/platform/x86/intel/int3472/discrete.c	2026-02-16 18:09:13.000000000 +0200
++++ linux.1/drivers/platform/x86/intel/int3472/discrete.c	2026-03-06 09:58:33.002477552 +0200
 @@ -81,12 +81,27 @@
  					  const char *func, unsigned long gpio_flags)
  {
