@@ -40,6 +40,14 @@ impl DaemonContext {
             pin,
         );
 
+        // Verify the PIN with a single session before building the pool
+        // to avoid burning multiple PIN retry attempts on incorrect PIN.
+        session_manager
+            .verify_pin()
+            .map_err(|error| {
+                Error::SessionPoolInitializationFailed(error.to_string())
+            })?;
+
         let session_pool = HsmSessionPool::builder()
             .build(session_manager)
             .map_err(|error| {

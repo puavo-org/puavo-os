@@ -158,6 +158,35 @@ impl HsmSessionManager {
         Self { module_path, token_label, pin }
     }
 
+    /// Verify the PIN by opening a single test session and authenticating.
+    ///
+    /// Errors:
+    /// Returns `HsmSessionError` if the token is not found or authentication fails
+    pub fn verify_pin(&self) -> Result<(), HsmSessionError> {
+        let pkcs11 = pkcs11(&self.module_path);
+        let (slot, slot_id) = self.get_slot(&pkcs11)?;
+
+        let session = pkcs11
+            .open_rw_session(slot)
+            .map_err(HsmSessionError::SessionOpenFailed)?;
+
+        let pin = AuthPin::new(self.pin.clone());
+        session
+            .login(UserType::User, Some(&pin))
+            .or_else(|error| match error {
+                Error::Pkcs11(RvError::UserAlreadyLoggedIn, ..) => Ok(()),
+                _ => Err(error),
+            })
+            .map_err(HsmSessionError::AuthenticationFailed)?;
+
+        tracing::info!(
+            "PIN verified successfully for token on slot {}",
+            slot_id
+        );
+
+        Ok(())
+    }
+
     /// Attempt to get the slot for the configured token label
     ///
     /// Parameters:
