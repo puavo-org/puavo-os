@@ -274,6 +274,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
       set text_backup_developer_mode="Backup-System, Entwicklermodus"
       set text_other_system_normal_startup="Anderes System, normaler Start"
       set text_other_system_developer_mode="Anderes System, Entwicklermodus"
+      set text_abitti2_exam_application="Abitti-2-Prüflingsanwendung"
     elif test "$lang" = "fi_FI.UTF-8"; then
       set text_normal_startup="Normaali käynnistys"
       set text_liveboot_startup="Liveboot-käynnistys"
@@ -282,6 +283,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
       set text_backup_developer_mode="Varajärjestelmä, kehittäjätila"
       set text_other_system_normal_startup="Muu järjestelmä, normaali käynnistys"
       set text_other_system_developer_mode="Muu järjestelmä, kehittäjätila"
+      set text_abitti2_exam_application="Abitti 2 -kokelassovellus"
     elif test "$lang" = "fr_CH.UTF-8"; then
       set text_normal_startup="Démarrage normal"
       set text_liveboot_startup="Démarrage live"
@@ -290,6 +292,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
       set text_backup_developer_mode="Système de secours, mode développeur"
       set text_other_system_normal_startup="Autre système, démarrage normal"
       set text_other_system_developer_mode="Autre système, mode développeur"
+      set text_abitti2_exam_application="Application candidat Abitti 2"
     elif test "$lang" = "sv_FI.UTF-8"; then
       set text_normal_startup="Normal start"
       set text_liveboot_startup="Start av liveboot"
@@ -298,6 +301,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
       set text_backup_developer_mode="Backup-system, utvecklarläge"
       set text_other_system_normal_startup="Annat system, normal start"
       set text_other_system_developer_mode="Annat system, utvecklarläge"
+      set text_abitti2_exam_application="Abitti 2-examinandapplikationen"
     else
       set text_normal_startup="Normal startup"
       set text_liveboot_startup="Liveboot startup"
@@ -306,6 +310,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
       set text_backup_developer_mode="Backup-system, developer mode"
       set text_other_system_normal_startup="Other system, normal startup"
       set text_other_system_developer_mode="Other system, developer mode"
+      set text_abitti2_exam_application="Abitti 2 Examinee Application"
     fi
   fi
 
@@ -392,7 +397,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
       set abitti_label="$abitti_iso_file"
     fi
 
-    menuentry "Abitti 2 (${abitti_label})" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
+    menuentry "${text_abitti2_exam_application} (${abitti_label})" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
       set abitti_iso_path=$2
       set abitti_iso_file=$3
       set abitti_iso_cfg=$4
