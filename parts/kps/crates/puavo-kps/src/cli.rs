@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
-use puavo_ipc::{DEFAULT_SOCKET_PATH, OutputFormat};
+use puavo_ipc::{
+    parse_absolute_path, parse_existing_path, DEFAULT_SOCKET_PATH, OutputFormat,
+};
 use std::path::PathBuf;
 
 pub use puavo_ipc::Commands;
@@ -75,11 +77,11 @@ pub enum DeviceCommands {
         serial_number: Option<String>,
 
         /// Output file for recovery bundle
-        #[arg(long)]
+        #[arg(long, value_parser = parse_absolute_path)]
         output: PathBuf,
 
         /// Path to file containing recovery key
-        #[arg(long)]
+        #[arg(long, value_parser = parse_existing_path)]
         recovery_key_file: PathBuf,
     },
 }

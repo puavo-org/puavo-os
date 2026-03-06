@@ -1,7 +1,28 @@
 use clap::{Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+
+/// Parse a path and convert relative paths to absolute paths.
+pub fn parse_absolute_path(path: &str) -> Result<PathBuf, String> {
+    let path = Path::new(path);
+
+    if path.is_absolute() {
+        return Ok(path.to_path_buf());
+    } else {
+        std::env::current_dir()
+            .map(|working_directory| working_directory.join(path))
+            .map_err(|error| format!("failed to resolve relative path: {error}"))
+    }
+}
+
+/// Parse a path, verify it exists, and resolve it to an absolute path.
+pub fn parse_existing_path(path: &str) -> Result<PathBuf, String> {
+    let path = Path::new(path);
+
+    std::fs::canonicalize(path)
+        .map_err(|error| format!("path '{}' does not exist or is not accessible: {error}", path.display()))
+}
 
 /// Output format for CLI responses
 #[derive(Default, Clone, Copy, Debug, ValueEnum, Serialize, Deserialize)]
@@ -147,7 +168,7 @@ pub enum Commands {
         serial_number: Vec<String>,
 
         /// Paths to recovery key files corresponding to the specified serial numbers (can be specified multiple times)
-        #[arg(long)]
+        #[arg(long, value_parser = parse_existing_path)]
         recovery_key_file: Vec<PathBuf>,
     },
 
@@ -158,7 +179,7 @@ pub enum Commands {
         operator_id: Option<String>,
 
         /// Files containing encrypted recovery key data (can be specified multiple times)
-        #[arg(long)]
+        #[arg(long, value_parser = parse_existing_path)]
         recovery_bundle: Vec<PathBuf>,
     },
 }
@@ -191,7 +212,7 @@ pub enum OrganisationCommand {
         version: u32,
 
         /// Output file path
-        #[arg(long)]
+        #[arg(long, value_parser = parse_absolute_path)]
         output: Option<PathBuf>,
     },
 
