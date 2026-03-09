@@ -41,39 +41,26 @@ for x in $(cat /proc/cmdline); do
   esac
 done
 
-# If the root device was not set in kernel command-line, we have to find it
-# ourselves. However, we must consider there being multiple bootable disks
-# such as mirrored RAID devices.
+# If the root device was not set in kernel command-line, we rely
+# on root partition auto-discovery (e.g. systemd-gpt-auto-generator).
+# Note that $NEWROOT is currently the root filesystem mount point,
+# which we can use to discover the root device.
+ROOT_FROM_COMMANDLINE=1
 if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
-  echo "root device is not set in kernel command-line, attempting to find it..."
-
-  # Attempt to find out the boot disk using EFI variables
-  POTENTIAL_BOOT_DEVICE=$(puavo-current-efi-boot-disk)
-  echo "potential boot device: ${POTENTIAL_BOOT_DEVICE:-unknown}"
-
-  # If we found out the boot device, search for the first bootable root
-  # partition and assign it as the root device.
-  # Otherwise, search for any bootable root partition.
-  if [ -n "${POTENTIAL_BOOT_DEVICE}" ]; then
-    DEVICE_LIST=$(lsblk -lnp -o NAME "${POTENTIAL_BOOT_DEVICE}")
-  else
-    DEVICE_LIST=$(lsblk -lnp -o NAME)
-  fi
-
-  for device in $DEVICE_LIST; do
-    if blkid "$device" | grep -q 'TYPE="btrfs"'; then
-      PUAVO_ROOT_DEVICE=$device
-      ROOT_IN_BTRFS=1
-      echo "selecting root device: $PUAVO_ROOT_DEVICE"
-      break
-    fi
-  done
+  ROOT_FROM_COMMANDLINE=0
+  echo "root device is not set in kernel command-line, querying from mount..."
+  PUAVO_ROOT_DEVICE=$(findmnt --noheadings --output SOURCE "$NEWROOT")
 
   if [ -z "${PUAVO_ROOT_DEVICE}" ]; then
     echo "error: failed to find the root device, boot will likely fail"
+  else
+    echo "discovered root device: $PUAVO_ROOT_DEVICE"
   fi
-else
-  if lsblk -noheadings --output FSTYPE "$PUAVO_ROOT_DEVICE" | grep -q "btrfs"; then
+fi
+
+# Detect btrfs on the root device
+if [ -n "${PUAVO_ROOT_DEVICE}" ]; then
+  if findmnt --noheadings --output FSTYPE "$NEWROOT" | grep -q "btrfs"; then
     ROOT_IN_BTRFS=1
   fi
 fi
@@ -84,8 +71,8 @@ if [ "$ROOT_IN_BTRFS" = 0 ]; then
   lvm vgchange -a y "$PUAVO_LVM_VG"
 fi
 
-# Mount the correct root device
-if [ -n "$PUAVO_ROOT_DEVICE" ]; then
+# Mount the root device if it was explicitly specified in the kernel command-line
+if [ -n "$PUAVO_ROOT_DEVICE" -a "$ROOT_FROM_COMMANDLINE" = 1 ]; then
   umount "$NEWROOT" || true
   mount "$PUAVO_ROOT_DEVICE" "$NEWROOT"
 fi
