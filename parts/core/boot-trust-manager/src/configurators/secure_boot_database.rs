@@ -109,7 +109,7 @@ fn discover_update(
 }
 
 /// Trait abstracting the shell commands needed for Secure Boot variable updates.
-trait SecureBootShell {
+pub trait SecureBootShell {
     /// Update the db variable using the device keys from the boot vault and
     /// the supplied EFI signature list.
     fn update_db(
@@ -127,7 +127,7 @@ trait SecureBootShell {
     ) -> Result<(), PuavoError>;
 }
 
-struct SystemSecureBootShell;
+pub struct SystemSecureBootShell;
 
 impl SecureBootShell for SystemSecureBootShell {
     fn update_db(
@@ -188,20 +188,15 @@ impl SecureBootShell for SystemSecureBootShell {
 }
 
 /// Configurator that detects and applies Secure Boot database (DB and DBX) updates.
-pub struct SecureBootDatabaseConfigurator {
+pub struct SecureBootDatabaseConfigurator<S: SecureBootShell> {
     pending: Vec<DiscoveredUpdate>,
-    shell: Box<dyn SecureBootShell>,
+    shell: S
 }
 
-impl SecureBootDatabaseConfigurator {
-    /// Construct instances using the real shell and the default update directory.
-    pub fn new() -> Result<Vec<Self>, PuavoError> {
-        Self::with_shell(Box::new(SystemSecureBootShell))
-    }
-
+impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
     /// Construct instance with the specified shell implementation.
-    fn with_shell(
-        shell: Box<dyn SecureBootShell>,
+    pub fn new(
+        shell: S,
     ) -> Result<Vec<Self>, PuavoError> {
         let update_directory = Path::new(UPDATE_DIRECTORY);
 
@@ -235,7 +230,7 @@ impl SecureBootDatabaseConfigurator {
     }
 }
 
-impl Configurator for SecureBootDatabaseConfigurator {
+impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
     fn activate(
         &self,
         boot_vault: &mut BootVault,
