@@ -4,7 +4,7 @@ use crate::formatter;
 use crate::ipc_client::{IpcClient, IpcClientTrait};
 use anyhow::{Result, bail};
 use puavo_ipc::{
-    Commands, DaemonCommand, DaemonResponse, IpcError, OutputFormat,
+    Commands, DaemonCommand, DaemonResponse, IpcError, OutputFormat, Secret,
 };
 
 /// Prompt user for HSM PIN
@@ -27,7 +27,7 @@ fn handle_command_prompts(command: Commands) -> Result<Commands> {
     match command {
         Commands::Initialize { .. } => {
             let hsm_pin = prompt_for_hsm_pin()?;
-            Ok(Commands::Initialize { hsm_pin })
+            Ok(Commands::Initialize { hsm_pin: Secret(hsm_pin) })
         }
         other => Ok(other),
     }

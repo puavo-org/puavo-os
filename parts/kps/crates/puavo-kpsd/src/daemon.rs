@@ -274,7 +274,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
         match command {
             Commands::Initialize { hsm_pin } => {
                 self.executor
-                    .execute_initialize(self.context.clone(), hsm_pin)
+                    .execute_initialize(self.context.clone(), hsm_pin.0)
                     .await
             }
 

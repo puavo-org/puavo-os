@@ -1,5 +1,6 @@
 use clap::{Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
@@ -34,6 +35,16 @@ pub enum OutputFormat {
 
     /// JSON output
     Json,
+}
+
+/// Stores a value that should be redacted from debug output
+#[derive(Clone, Default, Serialize, Deserialize)]
+pub struct Secret<T>(pub T);
+
+impl<T> fmt::Debug for Secret<T> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "<redacted>")
+    }
 }
 
 /// Unique identifier for correlating requests and responses
@@ -144,7 +155,7 @@ pub enum Commands {
     Initialize {
         /// HSM user PIN
         #[arg(skip)]
-        hsm_pin: String,
+        hsm_pin: Secret<String>,
     },
 
     /// Organisation key management
