@@ -2,6 +2,13 @@
 
 set -eu
 
+INSTALL_OPERATION_LOCK='/run/puavo-install.lock'
+exec 9<> "$INSTALL_OPERATION_LOCK"
+flock -n 9 || {
+  echo "error: another installation operation is already running" >&2
+  exit 1
+}
+
 # This script is run on image updates from puavo-image-preinst so that only
 # /images is writable!  (and some other pseudo-filesystems such as /dev and
 # /proc are accessible as well).

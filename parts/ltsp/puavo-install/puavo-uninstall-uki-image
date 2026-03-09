@@ -3,7 +3,7 @@
 set -eu
 
 UKI_ROOT='/boot/efi/EFI/puavo'
-UKI_LOCK='/run/puavo-uki-image.lock'
+INSTALL_OPERATION_LOCK='/run/puavo-install.lock'
 
 panic() {
   echo "error: $1" >&2
@@ -22,8 +22,8 @@ images_dir="$2"
 
 [ -f "$image_path" ] || panic "image '$image_path' does not exist"
 
-exec {lock_fd}<> "$UKI_LOCK"
-flock -nx "$lock_fd" || panic "another UKI image operation is already running"
+exec {lock_fd}<> "$INSTALL_OPERATION_LOCK"
+flock -nx "$lock_fd" || panic "another installation operation is already running"
 
 image_mountpoint=$(mktemp -d)
 cleanup() {
