@@ -189,8 +189,8 @@ mount_puavo_partition() {
   mkdir -p "/${name}"
 
   if [ "$ROOT_IN_BTRFS" = 1 ]; then
-    # XXX should -o noatime also used with btrfs?
-    mount -o "subvol=${name}" "$PUAVO_ROOT_DEVICE" "/${name}" || return 1
+    # Support access time updates, but use relatime to avoid excessive writes
+    mount -o "relatime,subvol=${name}" "$PUAVO_ROOT_DEVICE" "/${name}" || return 1
     return 0
   fi
 
