@@ -30,10 +30,10 @@ efi_partition_device="/dev/disk/by-partuuid/${efi_partition_uuid}"
 # See related TODO in boot-trust-manager.
 udevadm wait --timeout=30 "$efi_partition_device" || true
 
-if ! parent_disk=$(lsblk -lnp -o PKNAME "$efi_partition_device") \
-  || [ -z "$parent_disk" ]; then
-    echo "error: failed to find the disk containing the EFI partition with UUID ${efi_partition_uuid}" >&2
-    exit 1
+if ! parent_disk=$(lsblk -lnp -o PKNAME "$efi_partition_device") ||
+  [ -z "$parent_disk" ]; then
+  echo "error: failed to find the disk containing the EFI partition with UUID ${efi_partition_uuid}" >&2
+  exit 1
 fi
 
 printf "%s\n" "$parent_disk"

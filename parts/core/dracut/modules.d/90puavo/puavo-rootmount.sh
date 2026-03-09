@@ -3,8 +3,8 @@
 grep -E -q '(^| )init=/sbin/init-puavo($| )' /proc/cmdline || exit 0
 
 panic() {
-    echo "error: $1" >&2
-    exit 1
+  echo "error: $1" >&2
+  exit 1
 }
 
 PUAVO_HOSTTYPE=''
@@ -16,29 +16,29 @@ PUAVO_ROOT_DEVICE=
 ROOT_IN_BTRFS=0
 
 for x in $(cat /proc/cmdline); do
-    case "$x" in
-        puavo.hosttype=*)
-            PUAVO_HOSTTYPE="${x#puavo.hosttype=}"
-            ;;
-        puavo.image.load_to_ram=true)
-            PUAVO_IMAGE_LOAD_TO_RAM=1
-            ;;
-        puavo.image.overlay=*)
-            PUAVO_IMAGE_OVERLAY="${x#puavo.image.overlay=}"
-            ;;
-        puavo.image.path=*)
-            PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
-            ;;
-        root=/dev/*)
-            PUAVO_ROOT_DEVICE="${x#root=}"
-            ;;
-        root=LABEL=*)
-            PUAVO_ROOT_DEVICE="/dev/disk/by-label/${x#root=LABEL=}"
-            ;;
-        root=UUID=*)
-            PUAVO_ROOT_DEVICE="/dev/disk/by-uuid/${x#root=UUID=}"
-            ;;
-    esac
+  case "$x" in
+    puavo.hosttype=*)
+      PUAVO_HOSTTYPE="${x#puavo.hosttype=}"
+      ;;
+    puavo.image.load_to_ram=true)
+      PUAVO_IMAGE_LOAD_TO_RAM=1
+      ;;
+    puavo.image.overlay=*)
+      PUAVO_IMAGE_OVERLAY="${x#puavo.image.overlay=}"
+      ;;
+    puavo.image.path=*)
+      PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
+      ;;
+    root=/dev/*)
+      PUAVO_ROOT_DEVICE="${x#root=}"
+      ;;
+    root=LABEL=*)
+      PUAVO_ROOT_DEVICE="/dev/disk/by-label/${x#root=LABEL=}"
+      ;;
+    root=UUID=*)
+      PUAVO_ROOT_DEVICE="/dev/disk/by-uuid/${x#root=UUID=}"
+      ;;
+  esac
 done
 
 # If the root device was not set in kernel command-line, we have to find it
@@ -86,8 +86,8 @@ fi
 
 # Mount the correct root device
 if [ -n "$PUAVO_ROOT_DEVICE" ]; then
-    umount "$NEWROOT" || true
-    mount "$PUAVO_ROOT_DEVICE" "$NEWROOT"
+  umount "$NEWROOT" || true
+  mount "$PUAVO_ROOT_DEVICE" "$NEWROOT"
 fi
 
 update_image_copy_progress() {
@@ -99,165 +99,160 @@ update_image_copy_progress() {
   done
 }
 
-loopmount_image()
-{
-    local image_fs_size image_fs_type imagepath tmpfs_imagepath tmpfs_size
+loopmount_image() {
+  local image_fs_size image_fs_type imagepath tmpfs_imagepath tmpfs_size
 
-    if [ ! -f "${NEWROOT}${PUAVO_IMAGE_PATH}" ]; then
-        panic "${NEWROOT}${PUAVO_IMAGE_PATH} does not exist!"
+  if [ ! -f "${NEWROOT}${PUAVO_IMAGE_PATH}" ]; then
+    panic "${NEWROOT}${PUAVO_IMAGE_PATH} does not exist!"
+  fi
+
+  mkdir -p /host
+  mount -o move "$NEWROOT" /host
+
+  imagepath="/host/${PUAVO_IMAGE_PATH#/}"
+
+  image_fs_type="squashfs"
+  image_fs_size=$(stat -c %s "$imagepath")
+
+  modprobe loop
+  modprobe "$image_fs_type"
+
+  if [ "$PUAVO_IMAGE_LOAD_TO_RAM" -eq 1 ]; then
+    mkdir -p /imagetmp
+
+    if [ -z "$image_fs_size" ]; then
+      panic 'could not determine filesystem size'
     fi
 
-    mkdir -p /host
-    mount -o move "$NEWROOT" /host
+    # XXX is this extra allocation for tmpfs correct?
+    # XXX why these numbers?
+    tmpfs_size=$(($image_fs_size + 32 * 1024 * 1024))
+    mount -t tmpfs -o size="$image_fs_size" none /imagetmp
 
-    imagepath="/host/${PUAVO_IMAGE_PATH#/}"
+    plymouth display-message --text='Copying system to RAM'
 
-    image_fs_type="squashfs"
-    image_fs_size=$(stat -c %s "$imagepath")
+    tmpfs_imagepath="/imagetmp/${imagepath##*/}"
+    {
+      pv -n "$imagepath" 3>&1 1>&2 2>&3 3>&- | update_image_copy_progress
+    } > "$tmpfs_imagepath" 2>&1
+    imagepath="$tmpfs_imagepath"
+  fi
 
-    modprobe loop
-    modprobe "$image_fs_type"
+  mount -r -t "$image_fs_type" -o loop "$imagepath" "$NEWROOT"
+  ret=$?
 
-    if [ "$PUAVO_IMAGE_LOAD_TO_RAM" -eq 1 ]; then
-      mkdir -p /imagetmp
-
-      if [ -z "$image_fs_size" ]; then
-        panic 'could not determine filesystem size'
-      fi
-
-      # XXX is this extra allocation for tmpfs correct?
-      # XXX why these numbers?
-      tmpfs_size=$(($image_fs_size + 32 * 1024 * 1024))
-      mount -t tmpfs -o size="$image_fs_size" none /imagetmp
-
-      plymouth display-message --text='Copying system to RAM'
-
-      tmpfs_imagepath="/imagetmp/${imagepath##*/}"
-      {
-        pv -n "$imagepath" 3>&1 1>&2 2>&3 3>&- | update_image_copy_progress
-      } > "$tmpfs_imagepath" 2>&1
-      imagepath="$tmpfs_imagepath"
-    fi
-
-    mount -r -t "$image_fs_type" -o loop "$imagepath" "$NEWROOT"
-    ret=$?
-
-    if [ "$ret" -gt 0 ]; then
-      panic "failed to loop mount ${imagepath} to ${NEWROOT}"
-    fi
+  if [ "$ret" -gt 0 ]; then
+    panic "failed to loop mount ${imagepath} to ${NEWROOT}"
+  fi
 }
 
-do_union_mount()
-{
-    cow=$1
+do_union_mount() {
+  cow=$1
 
-    mkdir -p /rofs
-    mount -o move "$NEWROOT" /rofs
+  mkdir -p /rofs
+  mount -o move "$NEWROOT" /rofs
 
-    modprobe overlay
-    mkdir -p "${cow}/rootdir" "${cow}/workdir"
-    mount -t overlay \
-          -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
-          overlay "$NEWROOT"
+  modprobe overlay
+  mkdir -p "${cow}/rootdir" "${cow}/workdir"
+  mount -t overlay \
+    -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
+    overlay "$NEWROOT"
 
-    mkdir -p "${NEWROOT}/rofs"
-    mount -o move /rofs "${NEWROOT}/rofs"
+  mkdir -p "${NEWROOT}/rofs"
+  mount -o move /rofs "${NEWROOT}/rofs"
 }
 
-do_union_mount_temporary()
-{
-    mkdir -p /cow
-    mount -t tmpfs -o mode=0755 tmpfs /cow
+do_union_mount_temporary() {
+  mkdir -p /cow
+  mount -t tmpfs -o mode=0755 tmpfs /cow
 
-    do_union_mount /cow
+  do_union_mount /cow
 
-    mkdir -p "${NEWROOT}/cow"
-    mount -o move /cow "${NEWROOT}/cow"
+  mkdir -p "${NEWROOT}/cow"
+  mount -o move /cow "${NEWROOT}/cow"
 }
 
-do_union_mount_persistent()
-{
-    cow="/imageoverlays/${PUAVO_IMAGE_NAME}/${PUAVO_IMAGE_OVERLAY}"
-    mkdir -p "$cow"
-    do_union_mount "$cow"
+do_union_mount_persistent() {
+  cow="/imageoverlays/${PUAVO_IMAGE_NAME}/${PUAVO_IMAGE_OVERLAY}"
+  mkdir -p "$cow"
+  do_union_mount "$cow"
 }
 
 mount_puavo_partition() {
-    name=$1
+  name=$1
 
-    if [ "$ROOT_IN_BTRFS" = 0 \
-      -a ! -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
-        return 0
-    fi
+  if [ "$ROOT_IN_BTRFS" = 0 \
+    -a ! -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
+    return 0
+  fi
 
-    mkdir -p "/${name}"
+  mkdir -p "/${name}"
 
-    if [ "$ROOT_IN_BTRFS" = 1 ]; then
-        # XXX should -o noatime also used with btrfs?
-        mount -o "subvol=${name}" "$PUAVO_ROOT_DEVICE" "/${name}" || return 1
-        return 0
-    fi
+  if [ "$ROOT_IN_BTRFS" = 1 ]; then
+    # XXX should -o noatime also used with btrfs?
+    mount -o "subvol=${name}" "$PUAVO_ROOT_DEVICE" "/${name}" || return 1
+    return 0
+  fi
 
-    OPTIONS='-o noatime'
+  OPTIONS='-o noatime'
 
-    if mount $OPTIONS "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"; then
-        return 0
-    fi
+  if mount $OPTIONS "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"; then
+    return 0
+  fi
 
-    # FORCE fsck if mount failed again (first try automatic, then -y)
-    if ! fsck -fpv "/dev/mapper/${PUAVO_LVM_VG}-${name}"; then
-        fsck -fvy "/dev/mapper/${PUAVO_LVM_VG}-${name}" || true
-    fi
+  # FORCE fsck if mount failed again (first try automatic, then -y)
+  if ! fsck -fpv "/dev/mapper/${PUAVO_LVM_VG}-${name}"; then
+    fsck -fvy "/dev/mapper/${PUAVO_LVM_VG}-${name}" || true
+  fi
 
-    mount $OPTIONS "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}" || return 1
+  mount $OPTIONS "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}" || return 1
 }
 
-move_puavo_partition()
-{
-    name=$1
+move_puavo_partition() {
+  name=$1
 
-    mkdir -p "${NEWROOT}/${name}"
-    mount -o move "/${name}" "${NEWROOT}/${name}"
+  mkdir -p "${NEWROOT}/${name}"
+  mount -o move "/${name}" "${NEWROOT}/${name}"
 }
 
 loopmount_used=0
 if [ -n "$PUAVO_IMAGE_PATH" ]; then
-    loopmount_image
-    loopmount_used=1
+  loopmount_image
+  loopmount_used=1
 fi
 
 if [ -f "${NEWROOT}/etc/puavo-image/name" ]; then
-    PUAVO_IMAGE_NAME=$(cat "${NEWROOT}/etc/puavo-image/name")
+  PUAVO_IMAGE_NAME=$(cat "${NEWROOT}/etc/puavo-image/name")
 else
-    PUAVO_IMAGE_NAME='default'
+  PUAVO_IMAGE_NAME='default'
 fi
 
 if [ "$loopmount_used" -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
-    {
-        mount_puavo_partition imageoverlays \
-            && do_union_mount_persistent    \
-            && move_puavo_partition imageoverlays
-    } || panic "could not mount persistent overlay"
+  {
+    mount_puavo_partition imageoverlays &&
+      do_union_mount_persistent &&
+      move_puavo_partition imageoverlays
+  } || panic "could not mount persistent overlay"
 else
-    do_union_mount_temporary
+  do_union_mount_temporary
 fi
 
 # If using a loopmount image, move the /images partition under loop mounted
 # root and remount the partition as writable
 if [ "$loopmount_used" -gt 0 ]; then
-    if [ "$ROOT_IN_BTRFS" = 1 ]; then
-        if [ "$PUAVO_HOSTTYPE" = 'diskinstaller' ]; then
-            target_dir="${NEWROOT}/.puavoinstaller"
-        else
-            target_dir="${NEWROOT}/.puavo"
-        fi
+  if [ "$ROOT_IN_BTRFS" = 1 ]; then
+    if [ "$PUAVO_HOSTTYPE" = 'diskinstaller' ]; then
+      target_dir="${NEWROOT}/.puavoinstaller"
     else
-        target_dir="${NEWROOT}/images"
+      target_dir="${NEWROOT}/.puavo"
     fi
-    mkdir -p "$target_dir"
-    # XXX what to do here when $PUAVO_IMAGE_LOAD_TO_RAM is used?
-    mount -o move /host "$target_dir"
-    mount -o remount,noatime,rw "$target_dir"
+  else
+    target_dir="${NEWROOT}/images"
+  fi
+  mkdir -p "$target_dir"
+  # XXX what to do here when $PUAVO_IMAGE_LOAD_TO_RAM is used?
+  mount -o move /host "$target_dir"
+  mount -o remount,noatime,rw "$target_dir"
 fi
 
 [ -z "${NEWROOT}" ] && panic "failed to mount root filesystem"
@@ -271,4 +266,4 @@ echo "$PUAVO_ROOT_DEVICE" > "/run/puavo/root-device"
 # TPM-bound devices after the switch-root.
 tpm_pcr_signature_file=/.extra/tpm2-pcr-signature.json
 [ -f "$tpm_pcr_signature_file" ] && cp "$tpm_pcr_signature_file" \
-                                       "${NEWROOT}/usr/lib/systemd/" || true
+  "${NEWROOT}/usr/lib/systemd/" || true

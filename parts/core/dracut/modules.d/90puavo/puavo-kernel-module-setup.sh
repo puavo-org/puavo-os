@@ -19,23 +19,23 @@ exec > /run/puavo/initrd.log 2>&1
 # check out special puavo.* kernel command-line options
 # that need (may need?) actions on the initrd-phase
 for x in $(cat /proc/cmdline); do
-    case "$x" in
-        puavo.boot.plymouth.theme=*)
-            puavo_boot_plymouth_theme="${x#puavo.boot.plymouth.theme=}"
-            ;;
-        puavo.graphics.driver=*)
-            puavo_graphics_driver="${x#puavo.graphics.driver=}"
-            ;;
-        puavo.kernel.modules.blacklist=*)
-            puavo_kernel_modules_blacklist="${x#puavo.kernel.modules.blacklist=}"
-            ;;
-        puavo.pm.display.drrs.enabled=*)
-            puavo_pm_display_drrs_enabled="${x#puavo.pm.display.drrs.enabled=}"
-            ;;
-        puavo.wireless.broadcom.driver=*)
-            puavo_wireless_broadcom_driver="${x#puavo.wireless.broadcom.driver=}"
-            ;;
-    esac
+  case "$x" in
+    puavo.boot.plymouth.theme=*)
+      puavo_boot_plymouth_theme="${x#puavo.boot.plymouth.theme=}"
+      ;;
+    puavo.graphics.driver=*)
+      puavo_graphics_driver="${x#puavo.graphics.driver=}"
+      ;;
+    puavo.kernel.modules.blacklist=*)
+      puavo_kernel_modules_blacklist="${x#puavo.kernel.modules.blacklist=}"
+      ;;
+    puavo.pm.display.drrs.enabled=*)
+      puavo_pm_display_drrs_enabled="${x#puavo.pm.display.drrs.enabled=}"
+      ;;
+    puavo.wireless.broadcom.driver=*)
+      puavo_wireless_broadcom_driver="${x#puavo.wireless.broadcom.driver=}"
+      ;;
+  esac
 done
 
 puavo_nvidia_driver=
@@ -53,37 +53,37 @@ if [ -n "$puavo_nvidia_driver" ]; then
 
   if [ -e "${puavo_nvidia_dir}/nvidia-blacklists-nouveau.conf" ]; then
     echo "copying ${puavo_nvidia_dir}/nvidia-blacklists-nouveau.conf to" \
-         "/etc/modprobe.d/nvidia-blacklists-nouveau.conf"
+      "/etc/modprobe.d/nvidia-blacklists-nouveau.conf"
     cp "${puavo_nvidia_dir}/nvidia-blacklists-nouveau.conf" \
-       /etc/modprobe.d/nvidia-blacklists-nouveau.conf
+      /etc/modprobe.d/nvidia-blacklists-nouveau.conf
   elif [ -e /etc/nvidia/nvidia-blacklists-nouveau.conf ]; then
     echo "copying /etc/nvidia/nvidia-blacklists-nouveau.conf to" \
-         "/etc/modprobe.d/nvidia-blacklists-nouveau.conf"
+      "/etc/modprobe.d/nvidia-blacklists-nouveau.conf"
     cp /etc/nvidia/nvidia-blacklists-nouveau.conf \
-       /etc/modprobe.d/nvidia-blacklists-nouveau.conf
+      /etc/modprobe.d/nvidia-blacklists-nouveau.conf
   else
     echo 'ERROR: should blacklist nouveau,' \
-         "but ${puavo_nvidia_dir}/nvidia-blacklists-nouveau.conf is missing"
+      "but ${puavo_nvidia_dir}/nvidia-blacklists-nouveau.conf is missing"
   fi
 
   if [ -e "${puavo_nvidia_dir}/nvidia-modprobe.conf" ]; then
     echo "copying ${puavo_nvidia_dir}/nvidia-modprobe.conf to" \
-         "/etc/modprobe.d/nvidia.conf"
+      "/etc/modprobe.d/nvidia.conf"
     cp "${puavo_nvidia_dir}/nvidia-modprobe.conf" \
-       /etc/modprobe.d/nvidia.conf
+      /etc/modprobe.d/nvidia.conf
   elif [ -e "/etc/nvidia/nvidia-modprobe.conf" ]; then
     echo "copying /etc/nvidia/nvidia-modprobe.conf to" \
-         "/etc/modprobe.d/nvidia.conf"
+      "/etc/modprobe.d/nvidia.conf"
     cp /etc/nvidia/nvidia-modprobe.conf /etc/modprobe.d/nvidia.conf
   else
     echo 'ERROR: should use nvidia,' \
-         "but ${puavo_nvidia_dir}/nvidia-modprobe.conf is missing"
+      "but ${puavo_nvidia_dir}/nvidia-modprobe.conf is missing"
   fi
 else
   echo "removing /etc/modprobe.d/nvidia-blacklists-nouveau.conf and" \
-       "/etc/modprobe.d/nvidia.conf if they exist"
+    "/etc/modprobe.d/nvidia.conf if they exist"
   rm -fv /etc/modprobe.d/nvidia-blacklists-nouveau.conf \
-         /etc/modprobe.d/nvidia.conf
+    /etc/modprobe.d/nvidia.conf
 fi
 
 # Set kernel module blacklists.
