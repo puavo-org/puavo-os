@@ -8,7 +8,7 @@ use log::{debug, info};
 
 use crate::{
     configurators::Configurator,
-    devices::boot_vault::BootVault,
+    devices::boot_vault::{BootVault, BootVaultResources},
     display::UserDisplay,
     error::PuavoError,
     utils::luks_tpm_token_manager::LuksTpmTokenManager,
@@ -216,15 +216,13 @@ impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
 
         Ok(vec![Self { pending: discovered, shell }])
     }
-}
 
-impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
-    fn activate(
+    /// Check whether any pending update has a version newer than what is
+    /// recorded in the boot vault.
+    fn should_activate(
         &self,
-        boot_vault: &mut BootVault,
-        _primary_partition: &mut LuksTpmTokenManager,
+        resources: &BootVaultResources,
     ) -> Result<bool, PuavoError> {
-        let resources = boot_vault.resources();
         let db_version = resources.db_version()?;
         let dbx_version = resources.dbx_version()?;
 
@@ -244,19 +242,15 @@ impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
         Ok(activate)
     }
 
-    fn configure(
-        &mut self,
-        boot_vault: &mut BootVault,
-        _primary_partition: &mut LuksTpmTokenManager,
-        display: &Box<dyn UserDisplay>,
+    /// Apply all pending updates whose version exceeds the installed version
+    /// recorded in the boot vault.
+    fn apply_updates(
+        &self,
+        resources: &BootVaultResources,
     ) -> Result<(), PuavoError> {
-        let resources = boot_vault.resources().clone();
         let mountpoint = resources.mountpoint();
-
         let db_version = resources.db_version()?;
         let dbx_version = resources.dbx_version()?;
-
-        let _ = display.show_message("Updating Secure Boot...");
 
         for update in &self.pending {
             let current = match update.variable {
@@ -294,6 +288,26 @@ impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
 
         Ok(())
     }
+}
+
+impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
+    fn activate(
+        &self,
+        boot_vault: &mut BootVault,
+        _primary_partition: &mut LuksTpmTokenManager,
+    ) -> Result<bool, PuavoError> {
+        self.should_activate(boot_vault.resources())
+    }
+
+    fn configure(
+        &mut self,
+        boot_vault: &mut BootVault,
+        _primary_partition: &mut LuksTpmTokenManager,
+        display: &Box<dyn UserDisplay>,
+    ) -> Result<(), PuavoError> {
+        let _ = display.show_message("Updating Secure Boot...");
+        self.apply_updates(&boot_vault.resources().clone())
+    }
 
     fn name(&self) -> &'static str {
         "SecureBootDatabase"
@@ -303,11 +317,9 @@ impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::devices::boot_vault::BootVaultResources;
     use std::cell::RefCell;
     use tempfile::TempDir;
 
-    #[allow(dead_code)]
     struct MockSecureBootShell {
         update_db_calls:
             RefCell<Vec<(String, String)>>,
@@ -316,7 +328,6 @@ mod tests {
     }
 
     impl MockSecureBootShell {
-        #[allow(dead_code)]
         fn new() -> Self {
             Self {
                 update_db_calls: RefCell::new(Vec::new()),
@@ -363,16 +374,14 @@ mod tests {
         (directory, resources)
     }
 
-    #[test]
-    fn test_variable_names() {
-        assert_eq!(SecureBootVariable::Db.variable_name(), "db");
-        assert_eq!(SecureBootVariable::Dbx.variable_name(), "dbx");
-    }
-
-    #[test]
-    fn test_file_extension() {
-        assert_eq!(SecureBootVariable::Db.file_extension(), "esl");
-        assert_eq!(SecureBootVariable::Dbx.file_extension(), "bin");
+    /// Build a configurator directly from known pending updates.
+    fn make_configurator(
+        pending: Vec<DiscoveredUpdate>,
+    ) -> SecureBootDatabaseConfigurator<MockSecureBootShell> {
+        SecureBootDatabaseConfigurator {
+            pending,
+            shell: MockSecureBootShell::new(),
+        }
     }
 
     #[test]
@@ -385,55 +394,20 @@ mod tests {
     }
 
     #[test]
-    fn test_installed_version_defaults_to_zero() {
-        let (_directory, resources) = make_vault();
-        assert_eq!(resources.db_version().unwrap(), 0);
-        assert_eq!(resources.dbx_version().unwrap(), 0);
-    }
-
-    #[test]
-    fn test_version_round_trip() {
-        let (_directory, resources) = make_vault();
-        resources.set_dbx_version(42).unwrap();
-        assert_eq!(resources.dbx_version().unwrap(), 42);
-    }
-
-    #[test]
-    fn test_db_and_dbx_versions_are_independent() {
-        let (_directory, resources) = make_vault();
-        resources.set_db_version(10).unwrap();
-        resources.set_dbx_version(20).unwrap();
-
-        assert_eq!(resources.db_version().unwrap(), 10);
-        assert_eq!(resources.dbx_version().unwrap(), 20);
-    }
-
-    #[test]
-    fn test_discover_db_update() {
+    fn test_discover_finds_db_and_dbx_updates() {
         let directory = TempDir::new().unwrap();
         fs::create_dir(directory.path().join("db")).unwrap();
-        write_update_file(&directory.path().join("db"), "3.esl");
-
-        let update =
-            discover_update(directory.path(), &SecureBootVariable::Db);
-        assert!(update.is_some());
-        let update = update.unwrap();
-        assert_eq!(update.version, 3);
-        assert_eq!(update.variable, SecureBootVariable::Db);
-    }
-
-    #[test]
-    fn test_discover_dbx_update() {
-        let directory = TempDir::new().unwrap();
         fs::create_dir(directory.path().join("dbx")).unwrap();
+        write_update_file(&directory.path().join("db"), "3.esl");
         write_update_file(&directory.path().join("dbx"), "7.bin");
 
-        let update =
-            discover_update(directory.path(), &SecureBootVariable::Dbx);
-        assert!(update.is_some());
-        let update = update.unwrap();
-        assert_eq!(update.version, 7);
-        assert_eq!(update.variable, SecureBootVariable::Dbx);
+        let db = discover_update(directory.path(), &SecureBootVariable::Db).unwrap();
+        assert_eq!(db.version, 3);
+        assert_eq!(db.variable, SecureBootVariable::Db);
+
+        let dbx = discover_update(directory.path(), &SecureBootVariable::Dbx).unwrap();
+        assert_eq!(dbx.version, 7);
+        assert_eq!(dbx.variable, SecureBootVariable::Dbx);
     }
 
     #[test]
@@ -445,52 +419,130 @@ mod tests {
         write_update_file(&db_directory, "5.esl");
         write_update_file(&db_directory, "3.esl");
 
-        let update =
-            discover_update(directory.path(), &SecureBootVariable::Db);
-        assert!(update.is_some());
+        let update = discover_update(directory.path(), &SecureBootVariable::Db);
         assert_eq!(update.unwrap().version, 5);
     }
 
     #[test]
-    fn test_discover_ignores_wrong_extension() {
+    fn test_discover_returns_none_when_no_valid_files() {
         let directory = TempDir::new().unwrap();
         let db_directory = directory.path().join("db");
         fs::create_dir(&db_directory).unwrap();
+
+        // Wrong extension
         write_update_file(&db_directory, "1.bin");
+        assert!(discover_update(directory.path(), &SecureBootVariable::Db).is_none());
 
-        let update =
-            discover_update(directory.path(), &SecureBootVariable::Db);
-        assert!(update.is_none());
-    }
-
-    #[test]
-    fn test_discover_ignores_non_numeric_version() {
-        let directory = TempDir::new().unwrap();
-        let db_directory = directory.path().join("db");
-        fs::create_dir(&db_directory).unwrap();
+        // Non-numeric version
         write_update_file(&db_directory, "abc.esl");
+        assert!(discover_update(directory.path(), &SecureBootVariable::Db).is_none());
 
-        let update =
-            discover_update(directory.path(), &SecureBootVariable::Db);
-        assert!(update.is_none());
+        // Missing subdirectory
+        let empty = TempDir::new().unwrap();
+        assert!(discover_update(empty.path(), &SecureBootVariable::Db).is_none());
     }
 
     #[test]
-    fn test_discover_returns_none_for_empty_subdirectory() {
-        let directory = TempDir::new().unwrap();
-        fs::create_dir(directory.path().join("db")).unwrap();
+    fn test_should_activate_only_when_update_is_newer() {
+        let (_vault_dir, resources) = make_vault();
+        resources.set_db_version(5).unwrap();
 
-        let update =
-            discover_update(directory.path(), &SecureBootVariable::Db);
-        assert!(update.is_none());
+        let make = |version| {
+            make_configurator(vec![DiscoveredUpdate {
+                variable: SecureBootVariable::Db,
+                version,
+                path: PathBuf::from("/updates/db/x.esl"),
+            }])
+        };
+
+        assert!(make(6).should_activate(&resources).unwrap());
+        assert!(!make(5).should_activate(&resources).unwrap());
+        assert!(!make(3).should_activate(&resources).unwrap());
     }
 
     #[test]
-    fn test_discover_returns_none_for_missing_subdirectory() {
-        let directory = TempDir::new().unwrap();
+    fn test_should_activate_mixed_updates_one_newer() {
+        let (_vault_dir, resources) = make_vault();
+        resources.set_db_version(5).unwrap();
+        resources.set_dbx_version(1).unwrap();
 
-        let update =
-            discover_update(directory.path(), &SecureBootVariable::Db);
-        assert!(update.is_none());
+        let configurator = make_configurator(vec![
+            DiscoveredUpdate {
+                variable: SecureBootVariable::Db,
+                version: 5,
+                path: PathBuf::from("/updates/db/5.esl"),
+            },
+            DiscoveredUpdate {
+                variable: SecureBootVariable::Dbx,
+                version: 2,
+                path: PathBuf::from("/updates/dbx/2.bin"),
+            },
+        ]);
+
+        assert!(configurator.should_activate(&resources).unwrap());
+    }
+
+    #[test]
+    fn test_apply_updates_calls_correct_shell_and_records_versions() {
+        let (_vault_dir, resources) = make_vault();
+        let db_path = PathBuf::from("/updates/db/2.esl");
+        let dbx_path = PathBuf::from("/updates/dbx/3.bin");
+
+        let configurator = make_configurator(vec![
+            DiscoveredUpdate {
+                variable: SecureBootVariable::Db,
+                version: 2,
+                path: db_path.clone(),
+            },
+            DiscoveredUpdate {
+                variable: SecureBootVariable::Dbx,
+                version: 3,
+                path: dbx_path.clone(),
+            },
+        ]);
+
+        configurator.apply_updates(&resources).unwrap();
+
+        let mountpoint = resources.mountpoint().display().to_string();
+
+        let db_calls = configurator.shell.update_db_calls.borrow();
+        assert_eq!(db_calls.len(), 1);
+        assert_eq!(db_calls[0].0, mountpoint);
+        assert_eq!(db_calls[0].1, db_path.display().to_string());
+
+        let dbx_calls = configurator.shell.update_dbx_calls.borrow();
+        assert_eq!(dbx_calls.len(), 1);
+        assert_eq!(dbx_calls[0].0, mountpoint);
+        assert_eq!(dbx_calls[0].1, dbx_path.display().to_string());
+
+        assert_eq!(resources.db_version().unwrap(), 2);
+        assert_eq!(resources.dbx_version().unwrap(), 3);
+    }
+
+    #[test]
+    fn test_apply_updates_skips_outdated_updates() {
+        let (_vault_dir, resources) = make_vault();
+        resources.set_db_version(5).unwrap();
+
+        let configurator = make_configurator(vec![
+            DiscoveredUpdate {
+                variable: SecureBootVariable::Db,
+                version: 5,
+                path: PathBuf::from("/updates/db/5.esl"),
+            },
+            DiscoveredUpdate {
+                variable: SecureBootVariable::Dbx,
+                version: 1,
+                path: PathBuf::from("/updates/dbx/1.bin"),
+            },
+        ]);
+
+        configurator.apply_updates(&resources).unwrap();
+
+        assert_eq!(configurator.shell.update_db_calls.borrow().len(), 0);
+        assert_eq!(configurator.shell.update_dbx_calls.borrow().len(), 1);
+
+        assert_eq!(resources.db_version().unwrap(), 5);
+        assert_eq!(resources.dbx_version().unwrap(), 1);
     }
 }
