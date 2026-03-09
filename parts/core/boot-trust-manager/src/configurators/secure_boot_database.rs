@@ -14,14 +14,12 @@ use crate::{
     utils::luks_tpm_token_manager::LuksTpmTokenManager,
 };
 
-/// Directory where Secure Boot database update files are placed.
+/// Directory where Secure Boot database update subdirectories are placed.
 ///
-/// Expected filenames:
-/// - `db-<version>.esl`  (EFI signature list that replaces the db variable)
-/// - `dbx-<version>.bin` (Revocation list to append to the dbx variable)
-///
-/// Only one file per variable should be present at a time.
-const UPDATE_DIRECTORY: &str = "/etc/puavo/secure-boot-updates";
+/// Each variable has its own subdirectory:
+/// - `db/<version>.esl`
+/// - `dbx/<version>.bin`
+const UPDATE_BASE_DIRECTORY: &str = "/etc/puavo";
 
 /// Secure Boot variable that this configurator may update.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,19 +29,11 @@ enum SecureBootVariable {
 }
 
 impl SecureBootVariable {
-    /// UEFI variable name used by efi-updatevar.
+    /// UEFI variable name and subdirectory name.
     fn variable_name(&self) -> &'static str {
         match self {
             SecureBootVariable::Db => "db",
             SecureBootVariable::Dbx => "dbx",
-        }
-    }
-
-    /// Filename prefix used to discover update files.
-    fn file_prefix(&self) -> &'static str {
-        match self {
-            SecureBootVariable::Db => "db-",
-            SecureBootVariable::Dbx => "dbx-",
         }
     }
 
@@ -63,38 +53,36 @@ struct DiscoveredUpdate {
     path: PathBuf,
 }
 
-/// Extract the version number from a filename matching `<prefix><version>.<extension>`.
+/// Extract the version number from a filename matching `<version>.<extension>`.
 ///
 /// Returns `None` when the filename does not match the expected pattern or the
 /// version cannot be parsed as an integer.
 fn parse_version_from_filename(
     filename: &str,
-    prefix: &str,
     extension: &str,
 ) -> Option<u32> {
-    let without_prefix = filename.strip_prefix(prefix)?;
-    let version_string = without_prefix.strip_suffix(&format!(".{}", extension))?;
+    let version_string = filename.strip_suffix(&format!(".{}", extension))?;
     version_string.parse::<u32>().ok()
 }
 
-/// Scan the update directory for a file matching `<prefix><version>.<extension>`.
+/// Scan the variable's subdirectory for a file matching `<version>.<extension>`.
 ///
 /// Returns at most one update per variable.
-/// If multiple files match, the one with the latest version is returned.
+/// If multiple files match, the one with the highest version is returned.
 fn discover_update(
     directory: &Path,
     variable: &SecureBootVariable,
 ) -> Option<DiscoveredUpdate> {
-    let prefix = variable.file_prefix();
+    let subdirectory = directory.join(variable.variable_name());
     let extension = variable.file_extension();
 
-    let mut candidates: Vec<(PathBuf, u32)> = fs::read_dir(directory)
+    let mut candidates: Vec<(PathBuf, u32)> = fs::read_dir(&subdirectory)
         .ok()?
         .filter_map(|entry| entry.ok())
         .filter_map(|entry| {
             let path = entry.path();
             let filename = path.file_name()?.to_str()?;
-            let version = parse_version_from_filename(filename, prefix, extension)?;
+            let version = parse_version_from_filename(filename, extension)?;
             Some((path, version))
         })
         .collect();
@@ -198,12 +186,12 @@ impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
     pub fn new(
         shell: S,
     ) -> Result<Vec<Self>, PuavoError> {
-        let update_directory = Path::new(UPDATE_DIRECTORY);
+        let update_base_directory = Path::new(UPDATE_BASE_DIRECTORY);
 
-        if !update_directory.is_dir() {
+        if !update_base_directory.is_dir() {
             debug!(
                 "Secure Boot update directory '{}' does not exist, skipping",
-                UPDATE_DIRECTORY,
+                UPDATE_BASE_DIRECTORY,
             );
             return Ok(Vec::new());
         }
@@ -211,7 +199,7 @@ impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
         let mut discovered: Vec<DiscoveredUpdate> = Vec::new();
 
         for variable in &[SecureBootVariable::Db, SecureBootVariable::Dbx] {
-            if let Some(update) = discover_update(update_directory, variable) {
+            if let Some(update) = discover_update(update_base_directory, variable) {
                 debug!(
                     "Discovered {} update version {} at {:?}",
                     update.variable.variable_name(),
@@ -382,21 +370,18 @@ mod tests {
     }
 
     #[test]
-    fn test_file_prefix_and_extension() {
-        assert_eq!(SecureBootVariable::Db.file_prefix(), "db-");
+    fn test_file_extension() {
         assert_eq!(SecureBootVariable::Db.file_extension(), "esl");
-        assert_eq!(SecureBootVariable::Dbx.file_prefix(), "dbx-");
         assert_eq!(SecureBootVariable::Dbx.file_extension(), "bin");
     }
 
     #[test]
     fn test_parse_version_from_filename() {
-        assert_eq!(parse_version_from_filename("db-3.esl", "db-", "esl"), Some(3));
-        assert_eq!(parse_version_from_filename("dbx-42.bin", "dbx-", "bin"), Some(42));
-        assert_eq!(parse_version_from_filename("db-abc.esl", "db-", "esl"), None);
-        assert_eq!(parse_version_from_filename("db-3.bin", "db-", "esl"), None);
-        assert_eq!(parse_version_from_filename("dbx-3.esl", "db-", "esl"), None);
-        assert_eq!(parse_version_from_filename("unrelated.txt", "db-", "esl"), None);
+        assert_eq!(parse_version_from_filename("3.esl", "esl"), Some(3));
+        assert_eq!(parse_version_from_filename("42.bin", "bin"), Some(42));
+        assert_eq!(parse_version_from_filename("abc.esl", "esl"), None);
+        assert_eq!(parse_version_from_filename("3.bin", "esl"), None);
+        assert_eq!(parse_version_from_filename("unrelated.txt", "esl"), None);
     }
 
     #[test]
@@ -426,7 +411,8 @@ mod tests {
     #[test]
     fn test_discover_db_update() {
         let directory = TempDir::new().unwrap();
-        write_update_file(directory.path(), "db-3.esl");
+        fs::create_dir(directory.path().join("db")).unwrap();
+        write_update_file(&directory.path().join("db"), "3.esl");
 
         let update =
             discover_update(directory.path(), &SecureBootVariable::Db);
@@ -439,7 +425,8 @@ mod tests {
     #[test]
     fn test_discover_dbx_update() {
         let directory = TempDir::new().unwrap();
-        write_update_file(directory.path(), "dbx-7.bin");
+        fs::create_dir(directory.path().join("dbx")).unwrap();
+        write_update_file(&directory.path().join("dbx"), "7.bin");
 
         let update =
             discover_update(directory.path(), &SecureBootVariable::Dbx);
@@ -452,9 +439,11 @@ mod tests {
     #[test]
     fn test_discover_picks_highest_version() {
         let directory = TempDir::new().unwrap();
-        write_update_file(directory.path(), "db-1.esl");
-        write_update_file(directory.path(), "db-5.esl");
-        write_update_file(directory.path(), "db-3.esl");
+        let db_directory = directory.path().join("db");
+        fs::create_dir(&db_directory).unwrap();
+        write_update_file(&db_directory, "1.esl");
+        write_update_file(&db_directory, "5.esl");
+        write_update_file(&db_directory, "3.esl");
 
         let update =
             discover_update(directory.path(), &SecureBootVariable::Db);
@@ -465,17 +454,9 @@ mod tests {
     #[test]
     fn test_discover_ignores_wrong_extension() {
         let directory = TempDir::new().unwrap();
-        write_update_file(directory.path(), "db-1.bin");
-
-        let update =
-            discover_update(directory.path(), &SecureBootVariable::Db);
-        assert!(update.is_none());
-    }
-
-    #[test]
-    fn test_discover_ignores_wrong_prefix() {
-        let directory = TempDir::new().unwrap();
-        write_update_file(directory.path(), "dbx-1.esl");
+        let db_directory = directory.path().join("db");
+        fs::create_dir(&db_directory).unwrap();
+        write_update_file(&db_directory, "1.bin");
 
         let update =
             discover_update(directory.path(), &SecureBootVariable::Db);
@@ -485,7 +466,9 @@ mod tests {
     #[test]
     fn test_discover_ignores_non_numeric_version() {
         let directory = TempDir::new().unwrap();
-        write_update_file(directory.path(), "db-abc.esl");
+        let db_directory = directory.path().join("db");
+        fs::create_dir(&db_directory).unwrap();
+        write_update_file(&db_directory, "abc.esl");
 
         let update =
             discover_update(directory.path(), &SecureBootVariable::Db);
@@ -493,20 +476,21 @@ mod tests {
     }
 
     #[test]
-    fn test_discover_returns_none_for_empty_directory() {
+    fn test_discover_returns_none_for_empty_subdirectory() {
+        let directory = TempDir::new().unwrap();
+        fs::create_dir(directory.path().join("db")).unwrap();
+
+        let update =
+            discover_update(directory.path(), &SecureBootVariable::Db);
+        assert!(update.is_none());
+    }
+
+    #[test]
+    fn test_discover_returns_none_for_missing_subdirectory() {
         let directory = TempDir::new().unwrap();
 
         let update =
             discover_update(directory.path(), &SecureBootVariable::Db);
-        assert!(update.is_none());
-    }
-
-    #[test]
-    fn test_discover_returns_none_for_missing_directory() {
-        let update = discover_update(
-            Path::new("/nonexistent"),
-            &SecureBootVariable::Db,
-        );
         assert!(update.is_none());
     }
 }
