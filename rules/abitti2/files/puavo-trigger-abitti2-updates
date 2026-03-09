@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+sleep 150
+
+while true; do
+  /etc/puavo-conf/scripts/trigger_abitti2_updates || true
+  sleep 2855
+done

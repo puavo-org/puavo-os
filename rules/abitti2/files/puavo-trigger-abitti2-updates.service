@@ -1,0 +1,8 @@
+[Unit]
+Description=Trigger Abitti2-image updates
+
+[Service]
+ExecStart=/usr/local/lib/puavo-trigger-abitti2-updates
+
+[Install]
+WantedBy=multi-user.target

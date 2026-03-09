@@ -314,6 +314,16 @@ if (\$hostname == "${hostname}") then {
     stop
   }
 
+  if \$programname == "puavo-torrent-updated" then {
+    action(type="omfile" file="/var/log/puavo/puavo-torrent-updated.log")
+    stop
+  }
+
+  if \$programname == "puavo-update-abitti2-image" then {
+    action(type="omfile" file="/var/log/puavo/puavo-update-abitti2-image.log")
+    stop
+  }
+
   #
   # Some standard log files.  Log by facility.
   #

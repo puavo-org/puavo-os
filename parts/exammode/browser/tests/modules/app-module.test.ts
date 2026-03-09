@@ -20,8 +20,8 @@ describe('AppModule', () => {
     const info = await appModule.getAppInfo();
 
     expect(info).toEqual({
-      appPlatform: ['Linux'],
-      appVersion: 'v2.0.0',
+      appPlatform: 'Linux',
+      appVersion: '2.0.0',
     });
   });
 
@@ -39,8 +39,8 @@ describe('AppModule', () => {
 
     const result = await handler!();
     expect(result).toEqual({
-      appPlatform: ['Linux'],
-      appVersion: 'v2.0.0',
+      appPlatform: 'Linux',
+      appVersion: '2.0.0',
     });
   });
 

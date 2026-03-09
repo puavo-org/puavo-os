@@ -1,6 +1,6 @@
-diff -ruN linux.0/drivers/platform/x86/intel/int3472/discrete.c linux.1/drivers/platform/x86/intel/int3472/discrete.c
---- linux.0/drivers/platform/x86/intel/int3472/discrete.c	2025-11-19 13:01:35.000000000 +0200
-+++ linux.1/drivers/platform/x86/intel/int3472/discrete.c	2025-11-19 13:04:40.599753935 +0200
+diff -ruN linux.0/drivers/platform/x86/intel/int3472/discrete.c linux.2/drivers/platform/x86/intel/int3472/discrete.c
+--- linux.0/drivers/platform/x86/intel/int3472/discrete.c	2026-03-06 10:01:24.833763639 +0200
++++ linux.1/drivers/platform/x86/intel/int3472/discrete.c	2026-03-06 10:01:49.778499468 +0200
 @@ -78,7 +78,7 @@
  
  static int skl_int3472_map_gpio_to_sensor(struct int3472_discrete_device *int3472,

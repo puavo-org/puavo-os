@@ -183,7 +183,8 @@
             "tags": "default, development, education"
         },
         "com.github.paolostivanin.OTPClient": {
-            "tags": "default"
+            "tags": "default",
+            "condition": "personally_administered"
         },
         "com.obsproject.Studio": {
             "icon": "obs",

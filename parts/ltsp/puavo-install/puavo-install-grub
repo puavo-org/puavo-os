@@ -215,8 +215,25 @@ function ltsp_image_entry {
   set image_alias="$5"
   set entry_os_icon="$6"
 
+  set abitti=false
+
   get_imagename $image_alias image_alias_path
   get_pathname $imagefile imagepath
+  get_puavoimage_release_name "$imagefile"
+
+  if [ "$2" = "${abitti_boot_label}" ]; then
+    set abitti=true
+    set boot_label="${description} ($3)"
+    set kernelparameters=""
+    if test "${puavo_grub_boot_default}" = "abitti"; then
+      set default="${boot_label}"
+    fi
+    set entry_os_icon="abitti"
+  elif test -n "$puavoimage_release_name"; then
+    set boot_label="${description} (${puavoimage_release_name})"
+  else
+    set boot_label="${description} (${image_alias_path})"
+  fi
 
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)
@@ -229,19 +246,12 @@ function ltsp_image_entry {
     set kernelparameters="${kernelparameters} puavo.hosttype=__PUAVO_HOSTTYPE__ puavo.guestlogin.enabled=true"
   fi
 
-  get_puavoimage_release_name "$imagefile"
-  if test -n "$puavoimage_release_name"; then
-    set boot_label="${description} (${puavoimage_release_name})"
-  else
-    set boot_label="${description} (${image_alias_path})"
-  fi
-
   if test "$imagepath" = "/${puavo_grub_puavo_os_default_image}" \
        -a "$boottype" = "$puavo_grub_puavo_os_default_mode"; then
     set default="${boot_label}"
   fi
 
-  menuentry "${boot_label}" --class="$entry_os_icon" "$imagefile" "$imagepath" "$kernelparameters" {
+  menuentry "$boot_label" --class="$entry_os_icon" "$imagefile" "$imagepath" "$kernelparameters" "$abitti" {
     set kernel_version=''
     # --- remove "#" from the following if you need another kernel ---
     # set kernel_version='default'
@@ -287,9 +297,18 @@ function ltsp_image_entry {
     fi
 
     set kernelparameters="$4"
+    set abitti="$5"
 
-    linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
-    initrd  /boot/initrd.img${kernel_version_suffix}
+    if [ "$abitti" = "true" ]; then
+      if test "$abitti_kernel_arguments" = ""; then
+        set abitti_kernel_arguments="config digabidata digabi=syslinux union=overlay"
+      fi
+      linux /boot/vmlinuz${kernel_version_suffix} ro boot=live live-media=/dev/mapper/puavo-images live-media-path=/abitti puavo.abitti.boot=true puavo.boot.plymouth.theme=joy ${abitti_kernel_arguments} ${kernelparameters}
+    else
+      linux /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
+    fi
+
+    initrd /boot/initrd.img${kernel_version_suffix}
   }
 }
 
@@ -366,6 +385,7 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
       set text_backup_developer_mode="Backup-System, Entwicklermodus"
       set text_other_system_normal_startup="Anderes System, normaler Start"
       set text_other_system_developer_mode="Anderes System, Entwicklermodus"
+      set text_abitti2_exam_application="Abitti-2-Prüflingsanwendung"
     elif test "$lang" = "fi_FI.UTF-8"; then
       set text_normal_startup="Normaali käynnistys"
       set text_liveboot_startup="Liveboot-käynnistys"
@@ -374,6 +394,7 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
       set text_backup_developer_mode="Varajärjestelmä, kehittäjätila"
       set text_other_system_normal_startup="Muu järjestelmä, normaali käynnistys"
       set text_other_system_developer_mode="Muu järjestelmä, kehittäjätila"
+      set text_abitti2_exam_application="Abitti 2 -kokelassovellus"
     elif test "$lang" = "fr_CH.UTF-8"; then
       set text_normal_startup="Démarrage normal"
       set text_liveboot_startup="Démarrage live"
@@ -382,6 +403,7 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
       set text_backup_developer_mode="Système de secours, mode développeur"
       set text_other_system_normal_startup="Autre système, démarrage normal"
       set text_other_system_developer_mode="Autre système, mode développeur"
+      set text_abitti2_exam_application="Application candidat Abitti 2"
     elif test "$lang" = "sv_FI.UTF-8"; then
       set text_normal_startup="Normal start"
       set text_liveboot_startup="Start av liveboot"
@@ -390,6 +412,7 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
       set text_backup_developer_mode="Backup-system, utvecklarläge"
       set text_other_system_normal_startup="Annat system, normal start"
       set text_other_system_developer_mode="Annat system, utvecklarläge"
+      set text_abitti2_exam_application="Abitti 2-examinandapplikationen"
     else
       set text_normal_startup="Normal startup"
       set text_liveboot_startup="Liveboot startup"
@@ -398,6 +421,7 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
       set text_backup_developer_mode="Backup-system, developer mode"
       set text_other_system_normal_startup="Other system, normal startup"
       set text_other_system_developer_mode="Other system, developer mode"
+      set text_abitti2_exam_application="Abitti 2 Examinee Application"
     fi
   fi
 
@@ -405,7 +429,11 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
     set windows_boot_label="Windows"
   fi
 
-  set os_icon="puavo-os"
+  if test -z "$abitti_boot_label"; then
+    set abitti_boot_label="Koejärjestelmä"
+  fi
+
+  set os_icon="opinsys-os"
 
   if test -f "${default_image}"; then
     ltsp_image_entry "${default_image}" "${text_normal_startup}" "" "normal" "${default_image_alias}" "${os_icon}"
@@ -439,6 +467,61 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
     if test -f "${examimage}"; then
       ltsp_image_entry "${examimage}" "Exam environment" "" "exam"
     fi
+  done
+
+  for file in ${dev}/abitti/abitti-v*.squashfs; do
+    # If there are two abitti-images, do not show the menuentry because we
+    # do not know what we get in the live-boot environment in this situation
+    # (because we have no mechanism to choose a particular image).
+    # This is mostly to stop admins doing unsupported things.
+    if test -n "$abitti_image"; then
+      set abitti_image=""
+      break
+    fi
+    set abitti_image="${file}"
+    if test -z "${abitti_version_number}"; then
+      regexp -s abitti_version_number 'abitti-v(.*)\.squashfs$' "${file}"
+    fi
+  done
+  if test -f "${abitti_image}"; then
+    ltsp_image_entry "${default_image}" \
+                     "${abitti_boot_label}"   \
+                     "Abitti-yhteensopiva, versio ${abitti_version_number}"
+  fi
+
+  for abitti_iso_path_marker in (lvm/puavo-images)/abitti2/*.default \
+                                (lvm/puavo-images)/abitti2/*.backup; do
+    regexp -s abitti_iso_base '^(.*)\.(default|backup)$' $abitti_iso_path_marker
+    set abitti_iso_path="${abitti_iso_base}.iso"
+    if [ ! -e "$abitti_iso_path" ]; then
+      continue
+    fi
+
+    regexp -s abitti_iso_file '^.*/(.*\.iso)$' "${abitti_iso_path}"
+    regexp -s abitti_iso_path_no_suffix '^(.*)\.iso$' "${abitti_iso_path}"
+    set abitti_iso_cfg="${abitti_iso_path_no_suffix}.cfg"
+    if [ ! -e "$abitti_iso_cfg" ]; then
+      continue
+    fi
+
+    # sourcing the "${abitti_iso_base}.label" file should set abitti_label,
+    # but fallback to $abitti_iso_file
+    set abitti_label=""
+    if [ -e "${abitti_iso_base}.label" ]; then
+      source "${abitti_iso_base}.label"
+    fi
+    if [ "$abitti_label" = "" ]; then
+      set abitti_label="$abitti_iso_file"
+    fi
+
+    menuentry "${text_abitti2_exam_application} (${abitti_label})" --class="abitti2" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
+      set abitti_iso_path=$2
+      set abitti_iso_file=$3
+      set abitti_iso_cfg=$4
+      export abitti_iso_path
+      export abitti_iso_file
+      configfile "$abitti_iso_cfg"
+    }
   done
 done
 EOF_GRUB_DEFAULT_CFG

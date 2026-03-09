@@ -12,8 +12,8 @@ export class AppModule implements Module {
   async getAppInfo() {
     logger.info('App information requested');
     return {
-      appPlatform: ['Linux'],
-      appVersion: 'v2.0.0',
+      appPlatform: 'Linux',
+      appVersion: '2.0.0',
     };
   }
 

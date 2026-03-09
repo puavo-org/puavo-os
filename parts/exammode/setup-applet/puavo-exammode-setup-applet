@@ -417,6 +417,8 @@ class UrlInterface(JoinChoice):
 
   def check_joinability(self):
     self.joinability_id = None
+    if not self.target_url:
+      return
     self.check_url(self.target_url)
 
 
@@ -442,6 +444,10 @@ class UrlInterface(JoinChoice):
 
 
   def on_url_checked(self, session, msg, url):
+    # check that the callback is for the url we are checking
+    if not (msg == self.soup_message and url == self.target_url):
+      return
+
     if msg.status_code != Soup.KnownStatusCode.OK:
       syslog.syslog(syslog.LOG_INFO,
                     'url %s failed a check: %s' % (url, msg.reason_phrase))
@@ -463,63 +469,80 @@ class AbittiUrl(UrlInterface):
     self.host_resolver_cancellable = None
     self.addr_resolver = Gio.Resolver.get_default()
     self.addr_resolver_cancellable = None
+    self.resolver_lookup_seq = 0
     self.server_lookup_id = None
 
 
   def lookup_server_by_abitti_single_word(self, name):
-    local_name = f'{name}.local'
+    hostname = f'{name}.local'
     if self.host_resolver_cancellable:
       self.host_resolver_cancellable.cancel()
     self.host_resolver_cancellable = Gio.Cancellable()
+    if self.addr_resolver_cancellable:
+      self.addr_resolver_cancellable.cancel()
+    self.addr_resolver_cancellable = Gio.Cancellable()
 
     if self.server_lookup_id:
       GLib.source_remove(self.server_lookup_id)
       self.server_lookup_id = None
 
-    lookup_fn = lambda: self.lookup_server_fqdn_async(local_name)
+    lookup_fn = lambda: self.lookup_server_fqdn_async(hostname)
     self.server_lookup_id = GLib.timeout_add(500, lookup_fn)
 
 
-  def lookup_server_fqdn_async(self, local_name):
+  def lookup_server_fqdn_async(self, hostname):
+    self.resolver_lookup_seq += 1
     self.server_lookup_id = None
-    self.host_resolver.lookup_by_name_async(local_name,
-                                            self.host_resolver_cancellable,
-                                            self.on_host_lookup_resolved,
-                                            local_name)
+    self.host_resolver.lookup_by_name_async(
+      hostname,
+      self.host_resolver_cancellable,
+      self.on_host_lookup_resolved,
+      (hostname, self.resolver_lookup_seq))
 
 
-  def on_host_lookup_resolved(self, resolver, result, hostname):
+  def on_host_lookup_resolved(self, resolver, result, user_data):
+    hostname, resolver_lookup_seq = user_data
+
+    # old lookup, we are not interested in this
+    if resolver_lookup_seq != self.resolver_lookup_seq:
+      return
+
+    self.resolver_lookup_seq += 1
+
     try:
       inet_addrs = self.host_resolver.lookup_by_name_finish(result)
       if len(inet_addrs) == 0:
         syslog.syslog(syslog.LOG_WARNING,
                       f"no addresses returned when looking up '{hostname}'")
-        self.update_target_url(None)
         return
       address = inet_addrs[0]
-      self.addr_resolver.lookup_by_address_async(address,
-                                                 self.addr_resolver_cancellable,
-                                                 self.on_addr_lookup_resolved,
-                                                 address)
+      self.addr_resolver.lookup_by_address_async(
+        address,
+        self.addr_resolver_cancellable,
+        self.on_addr_lookup_resolved,
+        (address, self.resolver_lookup_seq))
 
     except GLib.Error as e:
       if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
-        self.update_target_url(None)
         return
       if e.matches(Gio.resolver_error_quark(), Gio.ResolverError.NOT_FOUND):
         syslog.syslog(syslog.LOG_WARNING,
                       f"hostname '{hostname}' could not be found");
-        self.update_target_url(None)
         return
       syslog.syslog(syslog.LOG_WARNING, f"unexpected GLib error: {e.message}")
     except Exception as e:
       syslog.syslog(syslog.LOG_WARNING, f"unexpected error: {e}")
-      self.update_target_url(None)
     finally:
       self.host_resolver_cancellable = None
 
 
-  def on_addr_lookup_resolved(self, resolver, result, address):
+  def on_addr_lookup_resolved(self, resolver, result, user_data):
+    address, resolver_lookup_seq = user_data
+
+    # old lookup, we are not interested in this
+    if resolver_lookup_seq != self.resolver_lookup_seq:
+      return
+
     target_url = None
 
     try:
@@ -548,7 +571,7 @@ class AbittiUrl(UrlInterface):
     self.chooser.start_abitti2_session(self.target_url)
 
 
-  # override the default UrlInterface method in this
+  # override the default UrlInterface method in AbittiUrl
   def update_target_url_from_text(self, text):
     if not text:
       self.update_target_url(None)
@@ -632,6 +655,7 @@ class ClipboardUrl(UrlInterface):
 
 
   def set_url_active(self, clipboard, event, can_set_empty):
+    # wait_for_text() is synchronous
     clipboard_text = clipboard.wait_for_text()
     url = self.convert_entry_to_url(clipboard_text)
     if url:
@@ -974,7 +998,8 @@ class PuavoExamModeSetupApplet:
         exam_name = exam['name']
         exam_choice = Gtk.MenuItem(label=exam_name)
         exam_choice.set_sensitive(True)
-        exam_choice.connect('activate', lambda w: self.choose_exam(exam_id, w))
+        exam_choice.connect('activate',
+          lambda w, exam_id=exam_id: self.choose_exam(exam_id, w))
         exam_choice.show()
         self.menu.add(exam_choice)
 
@@ -1004,9 +1029,10 @@ class PuavoExamModeSetupApplet:
       version = examinfo['version'].split('.')
       if len(version) != 2:
         raise Exception('examinfo version is not x.y')
-      if int(version[0]) > 1:
+      major_version = int(version[0])
+      if major_version > 1:
        raise Exception('unsupported exams info version (%d | supported %d)' \
-                          % (version[0], 1))
+                          % (major_version, 1))
 
       if type(examinfo['exams']) != list:
         raise Exception('no exams list')

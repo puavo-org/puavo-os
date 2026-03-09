@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+abitti2_version=$(puavo-conf puavo.abitti2.version)
+
+exec dbus-send --dest=org.puavo.client.Daemon                \
+               --reply-timeout=100                           \
+               --print-reply=literal                         \
+               --system                                      \
+               /contentupdates                               \
+               "org.puavo.client.contentupdates.StartUpdate" \
+               "string:Abitti2"                              \
+               "string:${abitti2_version}"
