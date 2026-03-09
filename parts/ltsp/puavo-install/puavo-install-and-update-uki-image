@@ -75,6 +75,7 @@ mount_disk_efi_partition() {
     return 1
   fi
 
+  fsck.fat -a "$efi_devpath" >/dev/null 2>&1 || true
   mount "$efi_devpath" /boot/efi 1>/dev/null
 }
 
