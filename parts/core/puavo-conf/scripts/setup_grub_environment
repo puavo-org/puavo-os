@@ -92,11 +92,19 @@ setup_grub_theme() {
 }
 
 setup_kernel_arguments() {
-  local kernel_arguments
-  if ! kernel_arguments="$(puavo-conf puavo.kernel.arguments)$(selected_puavo_conf_arguments_as_kernel_args)"; then
+  local kernel_arguments puavo_kernel_arguments selected_kernel_arguments
+
+  if ! puavo_kernel_arguments="$(puavo-conf puavo.kernel.arguments)"; then
+    echo 'failed to load puavo kernel arguments' >&2
+    return 1
+  fi
+
+  if ! selected_kernel_arguments="$(selected_puavo_conf_arguments_as_kernel_args)"; then
     echo 'failed to lookup additional kernel arguments from puavo-conf' >&2
     return 1
   fi
+
+  kernel_arguments="${puavo_kernel_arguments}${puavo_kernel_arguments:+ }${selected_kernel_arguments}"
 
   if [ -n "$kernel_arguments" ]; then
     grubedit set "puavo_kernel_arguments=${kernel_arguments}"

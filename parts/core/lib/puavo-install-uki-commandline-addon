@@ -128,9 +128,9 @@ def clean_temporary_files():
       pass
 
 
-def main(new_kernel_commandline) -> int:
+def main(new_kernel_commandline: str) -> int:
   try:
-    return update_kernel_commandline(new_kernel_commandline)
+    return update_kernel_commandline(new_kernel_commandline.strip())
   except Exception as error:
     log_error(str(error))
     clean_temporary_files()
