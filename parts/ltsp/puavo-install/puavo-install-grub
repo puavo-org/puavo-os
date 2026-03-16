@@ -1108,10 +1108,10 @@ case "$hosttype" in
     puavo_kernel_arguments="nosplash ${common_kernel_arguments}"
     ;;
   exam)
-    puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments} puavo.image.load_to_ram=true"
+    puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments} puavo.image.load_to_ram=true preempt=full"
     ;;
   laptop)
-    puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments}"
+    puavo_kernel_arguments="quiet loglevel=3 splash ${common_kernel_arguments} preempt=full"
     ;;
   *)
     log err "hosttype '${hosttype}' is not supported"

@@ -36,8 +36,8 @@ addon_directory="$boot_directory/addons"
 mkdir -p "$addon_directory"
 
 common_arguments='ro init=/sbin/init-puavo'
-.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=bootserver puavo.image.path=/images/${image_file}"                                           "${addon_directory}/bootserver.addon.efi"
-.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}"                                 "${addon_directory}/diskinstaller.addon.efi"
-.aux/create-commandline-addon "$key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=exam puavo.image.path=/examimages/${image_file} puavo.image.load_to_ram=true" "${addon_directory}/exam.addon.efi"
-.aux/create-commandline-addon "$key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=laptop puavo.image.path=/images/${image_file}"                                "${addon_directory}/laptop.addon.efi"
-.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}"                                         "${addon_directory}/preinstalled.addon.efi"
+.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=bootserver puavo.image.path=/images/${image_file}"                                                        "${addon_directory}/bootserver.addon.efi"
+.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}"                                              "${addon_directory}/diskinstaller.addon.efi"
+.aux/create-commandline-addon "$key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=exam puavo.image.path=/examimages/${image_file} puavo.image.load_to_ram=true preempt=full" "${addon_directory}/exam.addon.efi"
+.aux/create-commandline-addon "$key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=laptop puavo.image.path=/images/${image_file} preempt=full"                                "${addon_directory}/laptop.addon.efi"
+.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}"                                                      "${addon_directory}/preinstalled.addon.efi"
