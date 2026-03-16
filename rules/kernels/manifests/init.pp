@@ -15,7 +15,7 @@ class kernels {
   #   Debian Trixie:   modern
 
   $kernel_versions = {
-    'default' => '6.12.73+deb13-amd64',
+    'default' => '6.12.74+deb13-amd64',
     'modern'  => '6.18.12+deb13-amd64',
   }
   $kernel_aliases = keys($kernel_versions)
