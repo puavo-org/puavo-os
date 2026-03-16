@@ -65,6 +65,19 @@ pub const MAX_MESSAGE_SIZE: usize = 8192;
 /// Version of the recovery key data structure
 pub const RECOVERY_KEY_DATA_VERSION: u32 = 1;
 
+/// RSA encryption algorithm used to encrypt recovery key data
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EncryptionAlgorithm {
+    /// RSA-OAEP with SHA-1 hash.
+    /// See NOTE(recovery-bundle-rsa-oaep).
+    RsaOaepSha1,
+
+    /// RSA-OAEP with SHA-256 hash
+    #[default]
+    RsaOaepSha256,
+}
+
 /// Recovery key data structure containing device information and recovery key
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoveryKeyData {
@@ -87,8 +100,11 @@ pub struct RecoveryBundle {
     pub organisation_id: String,
     /// Version of the organisation key used
     pub organisation_key_version: u32,
-    /// Encrypted recovery key bytes
+    /// Encrypted recovery key bytes (hex-encoded)
     pub encrypted_key_data: String,
+    /// Algorithm used to encrypt the recovery key data.
+    #[serde(default)]
+    pub encryption_algorithm: EncryptionAlgorithm,
 }
 
 /// Structure containing exported organisation public key data

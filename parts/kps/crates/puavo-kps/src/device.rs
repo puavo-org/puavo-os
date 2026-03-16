@@ -71,7 +71,7 @@ pub async fn generate_recovery_bundle_local(
     // TODO(recovery-key-format): Validate recovery key format?
 
     // Generate recovery bundle using shared logic from recovery.rs
-    let encrypted_key_data = encrypt_recovery_key_data(
+    let (encrypted_key_data, encryption_algorithm) = encrypt_recovery_key_data(
         &public_key,
         serial_number.clone(),
         organisation_id.clone(),
@@ -86,6 +86,7 @@ pub async fn generate_recovery_bundle_local(
         organisation_id,
         organisation_key_version: public_key_data.version,
         encrypted_key_data,
+        encryption_algorithm,
     };
 
     tracing::info!("Writing recovery bundle to: {}", output.display());

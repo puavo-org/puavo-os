@@ -1,16 +1,30 @@
 use cryptoki::{
-    mechanism::Mechanism,
+    mechanism::{Mechanism, MechanismType},
+    mechanism::rsa::{PkcsMgfType, PkcsOaepParams, PkcsOaepSource},
     object::{ObjectClass, ObjectHandle},
 };
 use puavo_hsm::{
     HsmKeyManager, HsmSession, KeyLabel, key_management::KeyManagementError,
 };
 use puavo_ipc::{
-    DaemonResponse, DaemonResponseData, RECOVERY_KEY_DATA_VERSION,
-    RecoveryBundle, RecoveryKeyData,
+    DaemonResponse, DaemonResponseData, EncryptionAlgorithm,
+    RECOVERY_KEY_DATA_VERSION, RecoveryBundle, RecoveryKeyData,
 };
-use rsa::{Pkcs1v15Encrypt, RsaPublicKey};
+use rsa::{Oaep, RsaPublicKey};
+use sha1::Sha1;
+use sha2::Sha256;
 use std::{fs, path::PathBuf};
+
+/// Default encryption algorithm used when generating new recovery bundles.
+/// NOTE(recovery-bundle-rsa-oaep):
+/// SHA-1 OAEP is used in tests due to lack of SHA-256 OAEP support in SoftHSM (03/2026).
+#[cfg(not(test))]
+const DEFAULT_ENCRYPTION_ALGORITHM: EncryptionAlgorithm =
+    EncryptionAlgorithm::RsaOaepSha256;
+
+#[cfg(test)]
+const DEFAULT_ENCRYPTION_ALGORITHM: EncryptionAlgorithm =
+    EncryptionAlgorithm::RsaOaepSha1;
 
 /// Errors that can occur during recovery key operations
 #[derive(Debug, thiserror::Error)]
@@ -73,7 +87,7 @@ fn create_recovery_key_data(
 /// * `recovery_key` - Raw recovery key bytes
 ///
 /// Returns:
-/// Hex-encoded encrypted recovery key data
+/// Tuple of hex-encoded encrypted recovery key data and the algorithm used
 ///
 /// Errors:
 /// Returns error if serialization or encryption fails
@@ -82,36 +96,47 @@ pub fn encrypt_recovery_key_data(
     serial_number: String,
     organisation_id: String,
     recovery_key: Vec<u8>,
-) -> Result<String, RecoveryKeyError> {
+) -> Result<(String, EncryptionAlgorithm), RecoveryKeyError> {
     let key_data =
         create_recovery_key_data(serial_number, organisation_id, recovery_key);
     let serialized_key_data = serde_json::to_vec(&key_data)?;
-    let encrypted_key_data_bytes = encrypt(public_key, &serialized_key_data)?;
-    Ok(hex::encode(&encrypted_key_data_bytes))
+    let algorithm = DEFAULT_ENCRYPTION_ALGORITHM.clone();
+    let (encrypted_key_data_bytes, algorithm) =
+        encrypt(public_key, &serialized_key_data, algorithm)?;
+    Ok((hex::encode(&encrypted_key_data_bytes), algorithm))
 }
 
-/// Encrypt data using RSA with software-based encryption
+/// Encrypt data using RSA with the specified OAEP algorithm
 ///
 /// Parameters:
 /// * `public_key` - Public key for encryption
 /// * `key_data` - Data to encrypt
+/// * `algorithm` - OAEP algorithm to use
 ///
 /// Returns:
-/// Encrypted data
+/// Tuple of encrypted data and the algorithm used
 ///
 /// Errors:
-/// Returns error if encryption fails
+/// Returns error if encryption fails or an unsupported algorithm is requested
 fn encrypt(
     public_key: &RsaPublicKey,
     key_data: &[u8],
-) -> Result<Vec<u8>, KeyManagementError> {
-    // TODO: Investigate support for OAEP padding
-    let padding = Pkcs1v15Encrypt;
+    algorithm: EncryptionAlgorithm,
+) -> Result<(Vec<u8>, EncryptionAlgorithm), KeyManagementError> {
     let mut random_number_generator = rand::thread_rng();
-    let encrypted_key_data =
-        public_key.encrypt(&mut random_number_generator, padding, key_data)?;
-
-    Ok(encrypted_key_data)
+    let encrypted_key_data = match &algorithm {
+        EncryptionAlgorithm::RsaOaepSha256 => public_key.encrypt(
+            &mut random_number_generator,
+            Oaep::new::<Sha256>(),
+            key_data,
+        )?,
+        EncryptionAlgorithm::RsaOaepSha1 => public_key.encrypt(
+            &mut random_number_generator,
+            Oaep::new::<Sha1>(),
+            key_data,
+        )?,
+    };
+    Ok((encrypted_key_data, algorithm))
 }
 
 /// Decrypt data using RSA with HSM private key
@@ -120,6 +145,7 @@ fn encrypt(
 /// * `hsm_session` - Active HSM session for key operations
 /// * `private_key_handle` - Handle to private key in HSM
 /// * `encrypted_key_data` - Key data to decrypt
+/// * `algorithm` - Encryption algorithm used when the data was encrypted
 ///
 /// Returns:
 /// Decrypted key data
@@ -130,14 +156,36 @@ fn decrypt(
     hsm_session: &HsmSession,
     private_key_handle: &ObjectHandle,
     encrypted_key_data: &[u8],
+    algorithm: &EncryptionAlgorithm,
 ) -> Result<Vec<u8>, KeyManagementError> {
     let session = hsm_session.session();
 
-    let key_data = session.decrypt(
-        &Mechanism::RsaPkcs,
-        *private_key_handle,
-        encrypted_key_data,
-    )?;
+    let key_data = match algorithm {
+        EncryptionAlgorithm::RsaOaepSha1 => {
+            let params = PkcsOaepParams::new(
+                MechanismType::SHA1,
+                PkcsMgfType::MGF1_SHA1,
+                PkcsOaepSource::empty(),
+            );
+            session.decrypt(
+                &Mechanism::RsaPkcsOaep(params),
+                *private_key_handle,
+                encrypted_key_data,
+            )?
+        }
+        EncryptionAlgorithm::RsaOaepSha256 => {
+            let params = PkcsOaepParams::new(
+                MechanismType::SHA256,
+                PkcsMgfType::MGF1_SHA256,
+                PkcsOaepSource::empty(),
+            );
+            session.decrypt(
+                &Mechanism::RsaPkcsOaep(params),
+                *private_key_handle,
+                encrypted_key_data,
+            )?
+        }
+    };
 
     Ok(key_data)
 }
@@ -147,6 +195,7 @@ fn decrypt_with_organisation_key(
     organisation_id: &str,
     organisation_key_version: u32,
     encrypted_key_data: &[u8],
+    algorithm: &EncryptionAlgorithm,
 ) -> Result<Vec<u8>, KeyManagementError> {
     tracing::info!("Decrypting recovery key data");
 
@@ -156,7 +205,7 @@ fn decrypt_with_organisation_key(
     let key = key_manager
         .get_key_with_version(ObjectClass::PRIVATE_KEY, &key_label)?;
 
-    decrypt(hsm_session, &key, encrypted_key_data)
+    decrypt(hsm_session, &key, encrypted_key_data, algorithm)
 }
 
 /// Encrypt the specified recovery key for a device
@@ -198,7 +247,7 @@ fn create_recovery_bundle(
     let public_key = key_manager.extract_public_key(&organisation_key)?;
 
     // Encrypt the recovery key and related information
-    let encrypted_key_data = encrypt_recovery_key_data(
+    let (encrypted_key_data, encryption_algorithm) = encrypt_recovery_key_data(
         &public_key,
         serial_number.clone(),
         organisation_id.clone(),
@@ -210,6 +259,7 @@ fn create_recovery_bundle(
         organisation_id,
         organisation_key_version,
         encrypted_key_data,
+        encryption_algorithm,
     })
 }
 
@@ -233,12 +283,13 @@ fn unwrap_recovery_key(
     // Convert the hex-encoded encrypted key data to bytes
     let encrypted_key_data_bytes =
         hex::decode(&recovery_bundle.encrypted_key_data)?;
-    // Decrypt the recovery key data
+    // Decrypt the recovery key data using the algorithm stored in the bundle
     let serialized_recovery_key_data = decrypt_with_organisation_key(
         hsm_session,
         &recovery_bundle.organisation_id,
         recovery_bundle.organisation_key_version,
         &encrypted_key_data_bytes,
+        &recovery_bundle.encryption_algorithm,
     )?;
     // Deserialize the recovery key data
     let recovery_key_data: RecoveryKeyData =
@@ -712,7 +763,7 @@ mod tests {
             key_manager.extract_public_key(&organisation_key).unwrap();
 
         // Encrypt the recovery key data
-        let encrypted_data = encrypt_recovery_key_data(
+        let (encrypted_data, encryption_algorithm) = encrypt_recovery_key_data(
             &public_key,
             serial_number.clone(),
             organisation_id.clone(),
@@ -721,6 +772,8 @@ mod tests {
         .unwrap();
 
         assert!(!encrypted_data.is_empty());
+        // For details, see NOTE(recovery-bundle-rsa-oaep).
+        assert_eq!(encryption_algorithm, EncryptionAlgorithm::RsaOaepSha1);
 
         // Create a recovery bundle and decrypt it
         let recovery_bundle = RecoveryBundle {
@@ -728,6 +781,7 @@ mod tests {
             organisation_id: organisation_id.clone(),
             organisation_key_version: 1,
             encrypted_key_data: encrypted_data,
+            encryption_algorithm,
         };
 
         let decrypted_data =
