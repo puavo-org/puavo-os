@@ -34,6 +34,10 @@ install: build install-directories
 	$(INSTALL_DATA) systemd/puavo-kpsd.service \
 		$(DESTDIR)$(prefix)/lib/systemd/system/
 
+.PHONY: test
+test:
+	cargo test
+
 .PHONY: clean
 clean:
 	rm -rf target
