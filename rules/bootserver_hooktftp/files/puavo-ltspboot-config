@@ -153,19 +153,14 @@ fi
 # XXX Some hosttype specific special tricks... these are mostly hacks whose
 # XXX value should be re-evaluated or possibly solved through some other
 # XXX means.
-# XXX stack_guard_gap=1 should be removed (probably usbcore.autosuspend=-1 as
-# XXX well?) once we are on Debian Stretch or newer.
 case "$hosttype" in
   fatclient)
-    kernel_arguments="${kernel_arguments} preempt=full usbcore.autosuspend=-1 stack_guard_gap=1"
+    kernel_arguments="${kernel_arguments} preempt=full"
     ;;
   laptop)
     kernel_arguments='iomem=relaxed preempt=full puavo.service.tlp.enabled=true'
     ;;
-  thinclient)
-    kernel_arguments="$kernel_arguments usbcore.autosuspend=-1"
-    ;;
-  unregistered|wirelessaccesspoint)
+  unregistered)
     kernel_arguments='iomem=relaxed puavo.service.tlp.enabled=true'
     ;;
 esac
