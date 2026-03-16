@@ -316,11 +316,11 @@ class packages {
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
     [ 'libvkd3d-shader1'
-    # , 'virtualbox'                    # XXX missing from Trixie
-    # , 'virtualbox-dkms'               # XXX missing from Trixie
-    # , 'virtualbox-guest-utils'        # XXX missing from Trixie
-    # , 'virtualbox-guest-x11'          # XXX missing from Trixie
-    # , 'virtualbox-qt'                 # XXX missing from Trixie
+    , 'virtualbox'
+    , 'virtualbox-dkms'
+    , 'virtualbox-guest-utils'
+    , 'virtualbox-guest-x11'
+    , 'virtualbox-qt'
     , 'vkd3d-compiler'
     , 'wine'
     , 'wine32'
@@ -845,15 +845,15 @@ class packages {
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
   $nvidia_dkms_535_module   = 'nvidia-current/550.163.01'
   $r8168_module             = 'r8168/8.051.02'
-  $virtualbox_module        = 'virtualbox/7.1.12'
+  $virtualbox_module        = 'virtualbox/7.2.6'
 
   $all_dkms_modules =
     $::puavoimage_class ? {
       'exam'  => [ $broadcom_sta_dkms_module ],
       default => [ $broadcom_sta_dkms_module
-                 , $nvidia_dkms_535_module ]
+                 , $nvidia_dkms_535_module
+                 , $virtualbox_module ]
                  # , $r8168_module              # XXX Trixie
-                 # , $virtualbox_module ]       # XXX Trixie
   }
 
   @packages::kernels::kernel_package {
