@@ -21,11 +21,11 @@ class gnome_shell_extensions {
       require => ::Themes::Iconlink['scalable/apps/puavo-multitasking-view.svg'];
 
     [ 'appindicatorsupport@rgcjonas.gmail.com'
-    , 'bottompanel@tmoer93'
     , 'dash-to-panel@jderose9.github.com'
     , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
+    , 'panel-to-bottom@davron'
     , 'puavomenu@puavo.org'
     , 'quick-settings-tweaks@qwreey'
     , 'screenkeyboardcontroller@puavo.org'

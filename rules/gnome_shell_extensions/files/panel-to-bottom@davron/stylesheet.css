@@ -1,0 +1,8 @@
+.just-perfection-api-bottom-panel #overview {
+    margin-bottom: 24px;
+}
+
+/* Fix popup menu margins when panel is at bottom */
+.just-perfection-api-bottom-panel .popup-menu.panel-menu {
+    margin-bottom: 0;
+}
