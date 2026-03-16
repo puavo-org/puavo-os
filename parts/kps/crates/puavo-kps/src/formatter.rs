@@ -130,6 +130,25 @@ fn format_recovery_key_datas_text(key_datas: &[RecoveryKeyData]) -> String {
 
 /// Format response data as JSON
 fn format_as_json(response_data: &DaemonResponseData) -> Result<String> {
-    let json = serde_json::to_string_pretty(response_data)?;
+    let json = match response_data {
+        DaemonResponseData::Status { uptime_seconds, version } => {
+            serde_json::to_string_pretty(&serde_json::json!({
+                "uptime_seconds": uptime_seconds,
+                "version": version,
+            }))?
+        }
+        DaemonResponseData::OrganisationKeyListings(listings) => {
+            serde_json::to_string_pretty(listings)?
+        }
+        DaemonResponseData::OrganisationPublicKey(key) => {
+            serde_json::to_string_pretty(key)?
+        }
+        DaemonResponseData::RecoveryBundles(bundles) => {
+            serde_json::to_string_pretty(bundles)?
+        }
+        DaemonResponseData::RecoveryKeyDatas(datas) => {
+            serde_json::to_string_pretty(datas)?
+        }
+    };
     Ok(json)
 }
