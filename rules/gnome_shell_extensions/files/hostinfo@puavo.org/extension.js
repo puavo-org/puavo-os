@@ -1,6 +1,6 @@
 /*
 Login screen host information display
-Copyright (C) 2017-2021 Opinsys Oy
+Copyright (C) 2017-2026 Opinsys Oy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,73 +15,71 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-Version 0.9.9
+Version 1.0.0
 Author: Jarmo Pietiläinen (jarmo@opinsys.fi)
 */
 
-const St = imports.gi.St;
-const Main = imports.ui.main;
-const Lang = imports.lang;
-const Gtk = imports.gi.Gtk;
-const Shell = imports.gi.Shell;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const Clutter = imports.gi.Clutter;
-const Mainloop = imports.mainloop;
-const Gio = imports.gi.Gio;
-const GObject = imports.gi.GObject;
+import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
+import Shell from 'gi://Shell';
+import St from 'gi://St';
+import Gtk from 'gi://Gtk?version=4.0';
 
-var domain, hostName, hostType, releaseName;
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+
+let domain, hostName, hostType, releaseName;
 
 // remember to catch and handle exceptions if you call this
-function readTextFile(name)
-{
+function readTextFile(name) {
     return Shell.get_file_contents_utf8_sync(name);
 }
 
 // the [] operator cannot be overloaded, so we have to do it the hard way
-function jval(json, key, defaultValue = "<Unknown>")
-{
+function jval(json, key, defaultValue = '<Unknown>') {
     return (key in json && json[key] !== null) ? json[key] : defaultValue;
 }
 
 const HostInfoButton = GObject.registerClass(
 class HostInfoButton extends PanelMenu.Button {
      _init() {
-        super._init(0);
+        super._init(0, 'Host Info');
 
         /*
         Rough schematic of the containers and other elements we're creating:
 
-            +-baseMenuItem (PopupMenu.PopupBaseMenuItem)----------------------------------+
-            |                                                                             |
-            | +-mainContainer (St.BoxLayout)--------------------------------------------+ |
-            | |                                                                         | |
-            | | +-infoContainer (St.ScrollView)---------------------------------------+ | |
-            | | |                                                                     | | |
-            | | | +-infoTextBlock (St.BoxLayout)------------------------------------+ | | |
-            | | | | Category1                                                       | | | |
-            | | | |  Label1: Value1                                                 | | | |
-            | | | |  Label2: Value2                                                 | | | |
-            | | | |                                                                 | | | |
-            | | | | Category2                                                       | | | |
-            | | | |  Label3: Value3                                                 | | | |
-            | | | |  ...                                                            | | | |
-            | | | +-----------------------------------------------------------------+ | | |
-            | | |                                                                     | | |
-            | | +---------------------------------------------------------------------+ | |
-            | |                                                                         | |
-            | | +-buttonsContainer (St.BoxLayout)-------------------------------------+ | |
-            | | |                                                                     | | |
-            | | | +-updateButton (St.Button)-+                                        | | |
-            | | | | <...>                    |                                        | | |
-            | | | +--------------------------+                                        | | |
-            | | |                                                                     | | |
-            | | +---------------------------------------------------------------------+ | |
-            | |                                                                         | |
-            | +-------------------------------------------------------------------------+ |
-            |                                                                             |
-            +--+  +-----------------------------------------------------------------------+
+            +-baseMenuItem (PopupMenu.PopupBaseMenuItem)--------------------+
+            |                                                               |
+            | +-mainContainer (St.BoxLayout)------------------------------+ |
+            | |                                                           | |
+            | | +-infoContainer (St.ScrollView)-------------------------+ | |
+            | | |                                                       | | |
+            | | | +-infoTextBlock (St.BoxLayout)----------------------+ | | |
+            | | | | Category1                                         | | | |
+            | | | |  Label1: Value1                                   | | | |
+            | | | |  Label2: Value2                                   | | | |
+            | | | |                                                   | | | |
+            | | | | Category2                                         | | | |
+            | | | |  Label3: Value3                                   | | | |
+            | | | |  ...                                              | | | |
+            | | | +---------------------------------------------------+ | | |
+            | | |                                                       | | |
+            | | +-------------------------------------------------------+ | |
+            | |                                                           | |
+            | | +-buttonsContainer (St.BoxLayout)-----------------------+ | |
+            | | |                                                       | | |
+            | | | +-updateButton (St.Button)-+                          | | |
+            | | | | <...>                    |                          | | |
+            | | | +--------------------------+                          | | |
+            | | |                                                       | | |
+            | | +-------------------------------------------------------+ | |
+            | |                                                           | |
+            | +-----------------------------------------------------------+ |
+            |                                                               |
+            +--+  +---------------------------------------------------------+
                 \/
         +-buttonContainer (St.BoxLayout)--------------------------------+
         |                                                               |
@@ -91,40 +89,43 @@ class HostInfoButton extends PanelMenu.Button {
         |                                                               |
         +---------------------------------------------------------------+
 
-        The actual info texts are in a separate BoxLayout container, so we can destroy and
-        recreate it at will. The scrollview also works better (less jumpy scrolling) if its
-        content is just a single container box.
+        The actual info texts are in a separate BoxLayout container, so we
+        can destroy and recreate it at will.  The scrollview also works
+        better (less jumpy scrolling) if its content is just a single
+        container box.
         */
 
-        // -----------------------------------------------------------------------------------------
+        // ------------------------------------------------------------------
         // Create the panel button
 
-        let buttonContainer = new St.BoxLayout({ style_class: "panel-status-menu-box" });
+        const buttonContainer = new St.BoxLayout({
+            style_class: 'panel-status-menu-box',
+        });
 
         buttonContainer.add_child(new St.Label({
-            text: hostType + " | " + releaseName + " | " + hostName,
+            text: `${hostType} | ${releaseName} | ${hostName}`,
             y_expand: true,
-            y_align: Clutter.ActorAlign.CENTER
+            y_align: Clutter.ActorAlign.CENTER,
         }));
 
         buttonContainer.add_child(new PopupMenu.arrowIcon(St.Side.TOP));
+        this.add_child(buttonContainer);
 
-        this.add_actor(buttonContainer);
-
-        // -----------------------------------------------------------------------------------------
+        // ------------------------------------------------------------------
         // Construct the popup menu
 
-        // Top-level container for everything in the popup menu. This is a pseudo-
-        // menuitem; it cannot be clicked or interacted with in any way.
+        // Top-level container for everything in the popup menu.
+        // This is a pseudo- menuitem; it cannot be clicked or interacted
+        // with in any way.
         this.baseMenuItem = new PopupMenu.PopupBaseMenuItem({
-            style_class: "baseMenuItem",
-            reactive: false
+            style_class: 'baseMenuItem',
+            reactive: false,
         });
 
         // Main container for the info text block and the buttons at the button
         this.mainContainer = new St.BoxLayout({
-            style_class: "mainContainer",
-            vertical: true
+            style_class: 'mainContainer',
+            vertical: true,
         });
 
         // The system info text container, initially empty and hidden
@@ -132,15 +133,14 @@ class HostInfoButton extends PanelMenu.Button {
             hscrollbar_policy: Gtk.PolicyType.NEVER,
             vscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
             enable_mouse_scrolling: true,
-            style_class: "infoContainer",
+            style_class: 'infoContainer',
         });
-
         this.infoContainer.hide();
 
         // Container for the buttons at the bottom
         this.buttonsContainer = new St.BoxLayout({
-            style_class: "buttonsContainer",
-            vertical: false
+            style_class: 'buttonsContainer',
+            vertical: false,
         });
 
         // placeholder, will be created later
@@ -148,16 +148,16 @@ class HostInfoButton extends PanelMenu.Button {
 
         // The update button
         this.updateButton = new St.Button({
-            label: "Click to collect system information...",
-            style_class: "updateButton"
+            label: 'Click to collect system information...',
+            style_class: 'updateButton',
         });
 
-        this.buttonsContainer.add_actor(this.updateButton);
+        this.buttonsContainer.add_child(this.updateButton);
 
         // Build the final container hierarchy and finish the menu layout
-        this.mainContainer.add_actor(this.infoContainer);
-        this.mainContainer.add_actor(this.buttonsContainer);
-        this.baseMenuItem.add(this.mainContainer);
+        this.mainContainer.add_child(this.infoContainer);
+        this.mainContainer.add_child(this.buttonsContainer);
+        this.baseMenuItem.add_child(this.mainContainer);
         this.menu.addMenuItem(this.baseMenuItem);
 
         // Setup a D-Bus proxy for system info queries
@@ -165,14 +165,14 @@ class HostInfoButton extends PanelMenu.Button {
         try {
             this.proxy = new Gio.DBusProxy({
                 g_connection: Gio.DBus.system,
-                g_name: "org.puavo.client.systeminfocollectordaemon",
-                g_object_path: "/systeminfocollector",
-                g_interface_name: "org.puavo.client.systeminfocollector"
+                g_name: 'org.puavo.client.systeminfocollectordaemon',
+                g_object_path: '/systeminfocollector',
+                g_interface_name: 'org.puavo.client.systeminfocollector',
             });
 
             this.proxy.init(null);
         } catch (error) {
-            this.buttonsContainer.remove_actor(this.updateButton);
+            this.buttonsContainer.remove_child(this.updateButton);
             delete this.updateButton;
             this.updateButton = null;
             this.proxy = null;
@@ -183,12 +183,13 @@ class HostInfoButton extends PanelMenu.Button {
 
         // Setup info retrieval/update logic
         if (this.updateButton && this.proxy) {
-            this.updateButton.connect("clicked", this._updateButtonClicked.bind(this));
+            this.updateButton.connect('clicked',
+                                      this._updateButtonClicked.bind(this));
         }
     };
 
-    // ---------------------------------------------------------------------------------------------
-    // ---------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
 
     _updateButtonClicked() {
         this.updateButton.reactive = false;
@@ -197,42 +198,43 @@ class HostInfoButton extends PanelMenu.Button {
         try {
             // asynchronous D-Bus method call
             this.proxy.call(
-                "org.puavo.client.systeminfocollector.CollectSysinfo",
+                'org.puavo.client.systeminfocollector.CollectSysinfo',
                 null, 0, 5000, null,
-                Lang.bind(this, function(source, res, user_data) {
+                (source, res, user_data) => {
                     this.updateButton.reactive = true;
                     this.updateButton.opacity = 255;
 
                     if (this.infoTextBlock) {
                         // remove old contents first
                         this.infoContainer.hide();
-                        this.infoContainer.remove_actor(this.infoTextBlock);
+                        this.infoContainer.remove_child(this.infoTextBlock);
                         this.infoTextBlock = null;
                     }
 
-                    if (!this.createInfoText())
-                        this.updateButton.label = "Try again?";
-                    else this.updateButton.label = "Update";
+                    if (!this.createInfoText()) {
+                        this.updateButton.label = 'Try again?';
+                    } else this.updateButton.label = 'Update';
 
                     this.infoContainer.show();
-                    this.infoContainer.add_actor(this.infoTextBlock);
-                }),
+                    this.infoContainer.add_child(this.infoTextBlock);
+                },
                 null    // userdata
             );
         } catch (error) {
             // UNTESTED
             if (this.infoTextBlock) {
-                this.infoContainer.remove_actor(this.infoTextBlock);
+                this.infoContainer.remove_child(this.infoTextBlock);
                 this.infoTextBlock = null;
             }
 
-            this.errorText(this.infoContainer, "Failed :-(");
+            this.errorText(this.infoContainer, 'Failed :-(');
         }
     };
 
     createInfoText() {
         if (this.infoTextBlock) {
-            // if the block already exists, do nothing because something is wrong
+            // if the block already exists, do nothing because something
+            // is wrong
             return;
         }
 
@@ -249,17 +251,19 @@ class HostInfoButton extends PanelMenu.Button {
         }
 
         try {
-            // This JSON file is generated by /usr/sbin/puavo-sysinfo-collector when the button
-            // is clicked. We get the same JSON back through D-Bus, but at the moment this data
-            // is not used, because I don't know how to get the data from the async callback :-(
-            const json = JSON.parse(readTextFile("/run/puavo/puavo-sysinfo.json"));
+            // This JSON file is generated by /usr/sbin/puavo-sysinfo-collector
+            // when the button is clicked.  We get the same JSON back through
+            // D-Bus, but at the moment this data is not used, because
+            // I don't know how to get the data from the async callback :-(
+            const json = JSON.parse(
+                           readTextFile('/run/puavo/puavo-sysinfo.json'));
 
             // When was this information last updated? This is important!
-            var timestamp = jval(json, "timestamp", -1);
+            var timestamp = jval(json, 'timestamp', -1);
 
-            if (timestamp == -1)
-                timestamp = "<ERROR>";
-            else {
+            if (timestamp == -1) {
+                timestamp = '<ERROR>';
+            } else {
                 const d = new Date(timestamp * 1000);
 
                 timestamp = d.getUTCFullYear() + '-' +
@@ -272,186 +276,188 @@ class HostInfoButton extends PanelMenu.Button {
 
             let tsBox = new St.BoxLayout();
 
-            tsBox.add_actor(new St.Label({
-                text: "Last updated: " + timestamp,
-                style_class: "infoTextTimestamp"
+            tsBox.add_child(new St.Label({
+                text: 'Last updated: ' + timestamp,
+                style_class: 'infoTextTimestamp'
             }));
 
-            c.add_actor(tsBox);
+            c.add_child(tsBox);
             this.spacer(c);
 
             // General release info
-            this.category(c, "Release");
-            this.titleValue(c, "Image", jval(json, "this_image"));
-            this.titleValue(c, "Name", jval(json, "this_release"));
-            this.titleValue(c, "Kernel", jval(json, "kernelrelease"));
+            this.category(c, 'Release');
+            this.titleValue(c, 'Image', jval(json, 'this_image'));
+            this.titleValue(c, 'Name', jval(json, 'this_release'));
+            this.titleValue(c, 'Kernel', jval(json, 'kernelrelease'));
 
             // Machine
             this.spacer(c);
-            this.category(c, "Machine");
-            this.titleValue(c, "Product name", jval(json, "productname"));
-            this.titleValue(c, "BIOS",
-                jval(json, "bios_vendor") + ", " +
-                jval(json, "bios_version") + ", " +
-                jval(json, "bios_release_date"));
+            this.category(c, 'Machine');
+            this.titleValue(c, 'Product name', jval(json, 'productname'));
+            this.titleValue(c, 'BIOS',
+                jval(json, 'bios_vendor') + ', ' +
+                jval(json, 'bios_version') + ', ' +
+                jval(json, 'bios_release_date'));
 
             // CPU
-            this.titleValue(c, "Processor",
-                jval(json, "processorcount") + " CPU(s), " +
-                jval(json, "processor0"));
+            this.titleValue(c, 'Processor',
+                jval(json, 'processorcount') + ' CPU(s), ' +
+                jval(json, 'processor0'));
 
             // Memory
-            this.titleValue(c, "Memory",
-                (parseFloat(jval(json, "memorysize_mb", 0.0)) / 1024.0).toFixed(2) + " GiB");
+            this.titleValue(c, 'Memory',
+                (parseFloat(jval(json, 'memorysize_mb', 0.0)) / 1024.0)
+                  .toFixed(2) + ' GiB');
 
-            const memory = jval(json, "memory", null);
+            const memory = jval(json, 'memory', null);
 
             if (memory && memory.length > 0) {
                 for (var i = 0; i < memory.length; i++) {
                     const size = memory[i].size;
 
-                    // The texts here are indented using spaces, but we *really* should create
-                    // a new St.BoxLayout() element to indent them... maybe one day...
+                    // The texts here are indented using spaces, but
+                    // we *really* should create a new St.BoxLayout() element
+                    // to indent them... maybe one day...
 
-                    var text = "";
+                    var text = '';
 
-                    if (size === undefined || size == 0)
-                        text = "<empty>";
-                    else {
-                        text += "Size: " + size + " MiB; ";
-                        text += "Slot: " + memory[i].slot + "; ";
-                        text += "Product: " + memory[i].product + "; ";
-                        text += "Vendor: " + memory[i].vendor;
+                    if (size === undefined || size == 0) {
+                        text = '<empty>';
+                    } else {
+                        text += 'Size: ' + size + ' MiB; ';
+                        text += 'Slot: ' + memory[i].slot + '; ';
+                        text += 'Product: ' + memory[i].product + '; ';
+                        text += 'Vendor: ' + memory[i].vendor;
                     }
 
-                    this.titleValue(c, "    Slot #" + i, text);
+                    this.titleValue(c, '    Slot #' + i, text);
                 }
             }
 
             // Hard drive
-            var hdText = "";
+            var hdText = '';
 
-            if ("blockdevice_sda_model" in json && json["blockdevice_sda_model"]) {
-                hdText = jval(json, "blockdevice_sda_model");
+            if ('blockdevice_sda_model' in json && json['blockdevice_sda_model']) {
+                hdText = jval(json, 'blockdevice_sda_model');
 
-                hdText += ", ";
-                hdText += (parseFloat(jval(json, "blockdevice_sda_size", 0)) /
+                hdText += ', ';
+                hdText += (parseFloat(jval(json, 'blockdevice_sda_size', 0)) /
                             (1024.0 * 1024.0 * 1024.0)).toFixed(0);
-                hdText += " GiB";
+                hdText += ' GiB';
 
-                if (jval(json, "ssd") == "1")
-                    hdText += " [SSD]";
+                if (jval(json, 'ssd') == '1')
+                    hdText += ' [SSD]';
             } else {
                 // Juha's old Zotac helped me debug this path :-)
-                hdText = "(no hard drive)";
+                hdText = '(no hard drive)';
             }
 
-            this.titleValue(c, "Hard drive", hdText);
+            this.titleValue(c, 'Hard drive', hdText);
 
             // Network
             this.spacer(c);
-            this.category(c, "Network");
-            this.titleValue(c, "Domain", domain);
+            this.category(c, 'Network');
+            this.titleValue(c, 'Domain', domain);
 
-            const network = jval(json, "network_interfaces", null);
+            const network = jval(json, 'network_interfaces', null);
 
             if (network && network.length > 0) {
                 for (var i = 0; i < network.length; i++) {
-                    var text = "";
+                    var text = '';
 
-                    text += "MAC=" + network[i].mac + "; ";
-                    text += "IP=" + network[i].ip;
+                    text += 'MAC=' + network[i].mac + '; ';
+                    text += 'IP=' + network[i].ip;
 
                     if (network[i].prefix > 0)
-                        text += "/" + network[i].prefix.toString();
+                        text += '/' + network[i].prefix.toString();
 
-                    this.titleValue(c, "Interface " + network[i].name, text);
+                    this.titleValue(c, 'Interface ' + network[i].name, text);
                 }
             }
 
 
-            this.titleValue(c, "WiFi", jval(json, "wifi"));
+            this.titleValue(c, 'WiFi', jval(json, 'wifi'));
 
             // Serial numbers
             this.spacer(c);
-            this.category(c, "Serial numbers");
-            this.titleValue(c, "Machine", jval(json, "serialnumber"));
-            this.titleValue(c, "Mainboard", jval(json, "boardserialnumber"));
-            this.titleValue(c, "SKU", jval(json, "sku"));
+            this.category(c, 'Serial numbers');
+            this.titleValue(c, 'Machine', jval(json, 'serialnumber'));
+            this.titleValue(c, 'Mainboard', jval(json, 'boardserialnumber'));
+            this.titleValue(c, 'SKU', jval(json, 'sku'));
 
             // lspci values, if present
-            if ("lspci_values" in json && json["lspci_values"].length > 0) {
+            if ('lspci_values' in json && json['lspci_values'].length > 0) {
                 this.spacer(c);
-                this.category(c, "PCI devices");
+                this.category(c, 'PCI devices');
 
                 // get around JS's variable scoping weirdness
                 let self = this;
 
-                json["lspci_values"].forEach(function(e) {
+                json['lspci_values'].forEach(function(e) {
                     self.value(self.infoTextBlock, e);
                 });
             } else {
                 // this can happen, at least in theory...
                 this.spacer(c);
-                this.category(c, "No lspci output listed in the JSON");
+                this.category(c, 'No lspci output listed in the JSON');
             }
 
             // lsusb values, if present
-            if ("lsusb_values" in json && json["lsusb_values"].length > 0) {
+            if ('lsusb_values' in json && json['lsusb_values'].length > 0) {
                 this.spacer(c);
-                this.category(c, "USB devices");
+                this.category(c, 'USB devices');
 
                 // get around JS's variable scoping weirdness
                 let self = this;
 
-                json["lsusb_values"].forEach(function(e) {
+                json['lsusb_values'].forEach(function(e) {
                     self.value(self.infoTextBlock, e);
                 });
             } else {
                 // this can happen, at least in theory...
                 this.spacer(c);
-                this.category(c, "No lsusb output listed in the JSON");
+                this.category(c, 'No lsusb output listed in the JSON');
             }
 
             // xrandr, if present
-            if ("xrandr" in json) {
+            if ('xrandr' in json) {
                 this.spacer(c);
-                this.category(c, "Monitors");
+                this.category(c, 'Monitors');
 
                 // get around JS's variable scoping weirdness
                 let self = this;
 
-                self.value(self.infoTextBlock, json["xrandr"]);
+                self.value(self.infoTextBlock, json['xrandr']);
             } else {
                 // this can happen, at least in theory...
                 this.spacer(c);
-                this.category(c, "No xrandr output listed in the JSON");
+                this.category(c, 'No xrandr output listed in the JSON');
             }
 
-            if ("battery" in json) {
+            if ('battery' in json) {
                 this.spacer(c);
-                this.category(c, "Battery");
+                this.category(c, 'Battery');
 
                 // get around JS's variable scoping weirdness
                 let self = this;
 
-                this.titleValue(c, "Vendor", json['battery']['vendor'] || '?')
-                this.titleValue(c, "Model",  json['battery']['model']  || '?')
-                this.titleValue(c, "Serial", json['battery']['serial'] || '?')
-                this.titleValue(c, "State",  json['battery']['state']  || '?')
-                this.titleValue(c, "Warning level",
+                this.titleValue(c, 'Vendor', json['battery']['vendor'] || '?')
+                this.titleValue(c, 'Model',  json['battery']['model']  || '?')
+                this.titleValue(c, 'Serial', json['battery']['serial'] || '?')
+                this.titleValue(c, 'State',  json['battery']['state']  || '?')
+                this.titleValue(c, 'Warning level',
                                    json['battery']['warning-level']     || '?')
-                this.titleValue(c, "Energy",  json['battery']['energy'] || '?')
-                this.titleValue(c, "Energy when empty",
+                this.titleValue(c, 'Energy',  json['battery']['energy'] || '?')
+                this.titleValue(c, 'Energy when empty',
                                    json['battery']['energy-empty'] || '?')
-                this.titleValue(c, "Energy when full",
+                this.titleValue(c, 'Energy when full',
                                    json['battery']['energy-full'] || '?')
-                this.titleValue(c, "Energy when full by design",
+                this.titleValue(c, 'Energy when full by design',
                                    json['battery']['energy-full-design'] || '?')
-                this.titleValue(c, "Voltage", json['battery']['voltage']       || '?')
-                this.titleValue(c, "Percentage", json['battery']['percentage'] || '?')
-                this.titleValue(c, "Capacity", json['battery']['capacity']     || '?')
-                this.titleValue(c, "Technology", json['battery']['technology'] || '?')
+                this.titleValue(c, 'Voltage', json['battery']['voltage']       || '?')
+                this.titleValue(c, 'Percentage', json['battery']['percentage'] || '?')
+                this.titleValue(c, 'Capacity', json['battery']['capacity']     || '?')
+                this.titleValue(c, 'Technology', json['battery']['technology'] || '?')
             }
         } catch (e) {
             this.errorText(c,
@@ -464,97 +470,87 @@ class HostInfoButton extends PanelMenu.Button {
         return true;
     };
 
-    // Adds a text label in the container. "params" must contain the text value,
-    // style class and possibly other, optional, arguments.
+    // Adds a text label in the container. "params" must contain the text
+    // value, style class and possibly other, optional, arguments.
     addLabel(container, params) {
-        container.add_actor(new St.Label(params));
+        container.add_child(new St.Label(params));
     };
 
     // adds a category title
     category(where, value) {
-        let r = new St.BoxLayout();
-
-        this.addLabel(r, { text: value, style_class: "infoTextCategory" });
-        where.add_actor(r);
+        const r = new St.BoxLayout();
+        this.addLabel(r, { text: value, style_class: 'infoTextCategory' });
+        where.add_child(r);
     };
 
     // adds an empty spacer row (this used to be a CSS property,
     // but it was hard to control)
     spacer(where) {
-        let r = new St.BoxLayout();
-
-        this.addLabel(r, { text: " ", style_class: "infoTextSpacer" });
-        where.add_actor(r);
+        const r = new St.BoxLayout();
+        this.addLabel(r, { text: ' ', style_class: 'infoTextSpacer' });
+        where.add_child(r);
     };
 
     // add a value without title
     value(where, value) {
-        let r = new St.BoxLayout();
-
-        this.addLabel(r, { text: value, style_class: "infoTextPlainValue" });
-        where.add_actor(r);
+        const r = new St.BoxLayout();
+        this.addLabel(r, { text: value, style_class: 'infoTextPlainValue' });
+        where.add_child(r);
     };
 
     // add a title with value
     titleValue(where, title, value) {
-        let r = new St.BoxLayout();
-
-        this.addLabel(r, { text: title + ":", style_class: "infoTextKey" });
-        this.addLabel(r, { text: value, style_class: "infoTextValue" });
-
-        where.add_actor(r);
+        const r = new St.BoxLayout();
+        this.addLabel(r, { text: title + ':', style_class: 'infoTextKey' });
+        this.addLabel(r, { text: value, style_class: 'infoTextValue' });
+        where.add_child(r);
     };
 
     // adds an error text, used in error conditions
     errorText(where, text) {
-        where.add_actor(new St.Label({ text: text, style_class: "errorText" }));
+        where.add_child(new St.Label({ text: text, style_class: 'errorText' }));
     };
 });
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 
-function init()
-{
-    // These are displayed on the button, so they must be read before doing
-    // anything else. Fortunately they don't change during runtime.
-    try {
-        hostType = readTextFile("/etc/puavo/hosttype").trim();
-    } catch (e) {
-        hostType = "<Error>";
+export default class HostInfoExtension extends Extension {
+    enable() {
+        // These are displayed on the button, so they must be read before doing
+        // anything else.  Fortunately they don't change during runtime.
+        try {
+            hostType = readTextFile('/etc/puavo/hosttype').trim();
+        } catch (e) {
+            hostType = '<Error>';
+        }
+
+        try {
+            hostName = readTextFile('/etc/puavo/hostname').trim();
+        } catch (e) {
+            hostName = '<Error>';
+        }
+
+        try {
+            domain = readTextFile('/etc/puavo/domain').trim();
+        } catch (e) {
+            domain = '<Error>';
+        }
+
+        try {
+            releaseName = readTextFile('/etc/puavo-image/release').trim();
+        } catch (e) {
+            releaseName = '<Error>';
+        }
+
+        this._button = new HostInfoButton();
+        // the last argument indicates which panel box to use:
+        // left, center, right
+        Main.panel.addToStatusArea('hostInfoButton', this._button, 0, 'left');
     }
 
-    try {
-        hostName = readTextFile("/etc/puavo/hostname").trim();
-    } catch (e) {
-        hostName = "<Error>";
+    disable() {
+        this._button.destroy();
+        this._button = null;
     }
-
-    try {
-        domain = readTextFile("/etc/puavo/domain").trim();
-    } catch (e) {
-        domain = "<Error>";
-    }
-
-    try {
-        releaseName = readTextFile("/etc/puavo-image/release").trim();
-    } catch (e) {
-        releaseName = "<Error>";
-    }
-}
-
-let hostInfoMenuButton = null;
-
-function enable()
-{
-    hostInfoMenuButton = new HostInfoButton();
-
-    // the last argument indicates which panel box to use: left, center, right
-    Main.panel.addToStatusArea("hostInfoButton", hostInfoMenuButton, 0, "left");
-}
-
-function disable()
-{
-    hostInfoMenuButton.destroy();
-    hostInfoMenuButton = null;
 }
