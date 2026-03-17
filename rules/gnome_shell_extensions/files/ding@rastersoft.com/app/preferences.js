@@ -34,10 +34,10 @@ var nautilusCompression;
 var gtkSettings;
 var desktopSettings;
 var mutterSettings = null;
+var a11YKeyboard = null;
+var a11YApplications = null;
 // This is already in Nautilus settings, so it should not be made tweakable here
 var CLICK_POLICY_SINGLE = false;
-var prefsWindow;
-
 var prefsWindow;
 
 /**
@@ -45,10 +45,10 @@ var prefsWindow;
  * @param path
  */
 function init(path) {
-    let schemaSource = GioSSS.get_default();
-    let schemaGtk = schemaSource.lookup(Enums.SCHEMA_GTK, true);
+    const schemaSource = GioSSS.get_default();
+    const schemaGtk = schemaSource.lookup(Enums.SCHEMA_GTK, true);
     gtkSettings = new Gio.Settings({settings_schema: schemaGtk});
-    let schemaObj = schemaSource.lookup(Enums.SCHEMA_NAUTILUS, true);
+    const schemaObj = schemaSource.lookup(Enums.SCHEMA_NAUTILUS, true);
     if (!schemaObj) {
         nautilusSettings = null;
     } else {
@@ -62,9 +62,17 @@ function init(path) {
     } else {
         nautilusCompression = new Gio.Settings({settings_schema: compressionSchema});
     }
-    let schemaDarkSettings = schemaSource.lookup(Enums.SCHEMA_DARK_SETTINGS, true);
+    const schemaDarkSettings = schemaSource.lookup(Enums.SCHEMA_DARK_SETTINGS, true);
     if (schemaDarkSettings) {
         this.schemaGnomeDarkSettings = new Gio.Settings({ settings_schema: schemaDarkSettings });
+    }
+    const schemaA11YKeyboard = schemaSource.lookup(Enums.SCHEMA_A11Y_KEYBOARD, true);
+    if (schemaA11YKeyboard) {
+        a11YKeyboard = new Gio.Settings({ settings_schema: schemaA11YKeyboard});
+    }
+    const schemaA11YApplications = schemaSource.lookup(Enums.SCHEMA_A11Y_APPLICATIONS, true);
+    if (schemaA11YApplications) {
+        a11YApplications = new Gio.Settings({ settings_schema: schemaA11YApplications});
     }
 
     desktopSettings = PrefsWindow.get_schema(path, Enums.SCHEMA);

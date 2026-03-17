@@ -23,7 +23,9 @@
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
+const Atk = imports.gi.Atk;
 const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
 const Pango = imports.gi.Pango;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Cairo = imports.gi.cairo;
@@ -31,6 +33,7 @@ const DesktopIconsUtil = imports.desktopIconsUtil;
 
 const Prefs = imports.preferences;
 const Enums = imports.enums;
+const SignalManager = imports.signalManager;
 
 const ByteArray = imports.byteArray;
 const Signals = imports.signals;
@@ -38,9 +41,9 @@ const Gettext = imports.gettext.domain('ding');
 
 const _ = Gettext.gettext;
 
-var desktopIconItem = class desktopIconItem {
+var desktopIconItem = class desktopIconItem extends SignalManager.SignalManager {
     constructor(desktopManager, fileExtra) {
-        this._signalIds = [];
+        super();
         this._desktopManager = desktopManager;
         this._fileExtra = fileExtra;
         this._loadThumbnailDataCancellable = null;
@@ -50,6 +53,7 @@ var desktopIconItem = class desktopIconItem {
         this._lastClickButton = 0;
         this._clickCount = 0;
         this._isSelected = false;
+        this._isKeyboardSelected = false;
         this._isSpecial = false;
         this._primaryButtonPressed = false;
         this._savedCoordinates = null;
@@ -72,20 +76,20 @@ var desktopIconItem = class desktopIconItem {
     }
 
     _destroy() {
+        this._destroyed = true;
         /* Regular file data */
         if (this._queryFileInfoCancellable) {
             this._queryFileInfoCancellable.cancel();
+            this._queryFileInfoCancellable = null;
         }
 
         /* Thumbnailing */
         if (this._loadThumbnailDataCancellable) {
             this._loadThumbnailDataCancellable.cancel();
+            this._loadThumbnailDataCancellable = null;
         }
         /* Disconnect signals */
-        for (let [object, signalId] of this._signalIds) {
-            object.disconnect(signalId);
-        }
-        this._signalIds = [];
+        this.disconnectAllSignals();
         this.container.destroy();
         this.container = null;
         this._eventBox = null;
@@ -97,17 +101,20 @@ var desktopIconItem = class desktopIconItem {
         this._label = null;
         this._labelContainer = null;
         this.iconRectangle = null;
+        if (this._grid) {
+            this._grid.removeItem(this);
+            this._grid = null;
+        }
+        this._desktopManager = null;
+        this._fileExtra = null;
+        this._savedCoordinates = null;
+        this._dropCoordinates = null;
     }
 
     _onDestroy() {
         if (!this._destroyed) {
             this._destroy();
-            this._destroyed = true;
         }
-    }
-
-    _connectSignal(object, signal, callback) {
-        this._signalIds.push([object, object.connect(signal, callback)]);
     }
 
     /** *********************
@@ -116,7 +123,6 @@ var desktopIconItem = class desktopIconItem {
 
     _createIconActor() {
         this.container = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, halign: Gtk.Align.CENTER});
-        this._connectSignal(this.container, 'destroy', () => this._onDestroy());
         this._eventBox = new Gtk.EventBox({visible: true, halign: Gtk.Align.CENTER});
         this._shieldEventBox = new Gtk.EventBox({visible: true, halign: Gtk.Align.CENTER});
         this._labelEventBox = new Gtk.EventBox({visible: true, halign: Gtk.Align.CENTER});
@@ -130,6 +136,8 @@ var desktopIconItem = class desktopIconItem {
         this._shieldEventBox.add(this._eventBox);
 
         this._label = new Gtk.Label();
+        this._containerAccessibility = this.container;
+        this._containerAccessibility.set_can_focus(true);
         this._labelContainer = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, halign: Gtk.Align.CENTER});
         let labelStyleContext = this._label.get_style_context();
         if (this._desktopManager.darkText) {
@@ -151,6 +159,7 @@ var desktopIconItem = class desktopIconItem {
         this.container.pack_start(this._shieldEventBox, false, false, 0);
         this.container.pack_start(this._shieldLabelEventBox, false, false, 0);
 
+        this._fullStyleContext = this.container.get_style_context();
         this._styleContext = this._iconContainer.get_style_context();
         this._labelStyleContext = this._labelContainer.get_style_context();
         this._styleContext.add_class('file-item');
@@ -164,43 +173,43 @@ var desktopIconItem = class desktopIconItem {
          * The solution is to allow them to pass in a EventBox, used both for detecting the events and the DnD, and block them
          * in a second EventBox, located outside.
          */
-        this._connectSignal(this._shieldEventBox, 'button-press-event', (actor, event) => {
+        this.connectSignal(this._shieldEventBox, 'button-press-event', (actor, event) => {
             return true;
         });
-        this._connectSignal(this._shieldLabelEventBox, 'button-press-event', (actor, event) => {
+        this.connectSignal(this._shieldLabelEventBox, 'button-press-event', (actor, event) => {
             return true;
         });
-        this._connectSignal(this._eventBox, 'button-press-event', (actor, event) => this._onPressButton(actor, event));
-        this._connectSignal(this._eventBox, 'enter-notify-event', (actor, event) => this._onEnter(this._eventBox));
-        this._connectSignal(this._eventBox, 'leave-notify-event', (actor, event) => this._onLeave(this._eventBox));
-        this._connectSignal(this._eventBox, 'button-release-event', (actor, event) => this._onReleaseButton(actor, event));
-        this._connectSignal(this._eventBox, 'drag-motion', (widget, context, x, y, time) => {
+        this.connectSignal(this._eventBox, 'button-press-event', (actor, event) => this._onPressButton(actor, event));
+        this.connectSignal(this._eventBox, 'enter-notify-event', (actor, event) => this._onEnter(this._eventBox));
+        this.connectSignal(this._eventBox, 'leave-notify-event', (actor, event) => this._onLeave(this._eventBox));
+        this.connectSignal(this._eventBox, 'button-release-event', (actor, event) => this._onReleaseButton(actor, event));
+        this.connectSignal(this._eventBox, 'drag-motion', (widget, context, x, y, time) => {
             this.highLightDropTarget(x, y);
             this._updateDragStatus(context, time);
         });
-        this._connectSignal(this._eventBox, 'drag-leave', () => {
+        this.connectSignal(this._eventBox, 'drag-leave', () => {
             this.unHighLightDropTarget();
         });
-        this._connectSignal(this._eventBox, 'size-allocate', () => this._calculateIconRectangle());
-        this._connectSignal(this._labelEventBox, 'button-press-event', (actor, event) => this._onPressButton(actor, event));
-        this._connectSignal(this._labelEventBox, 'enter-notify-event', (actor, event) => this._onEnter(this._labelEventBox));
-        this._connectSignal(this._labelEventBox, 'leave-notify-event', (actor, event) => this._onLeave(this._labelEventBox));
-        this._connectSignal(this._labelEventBox, 'button-release-event', (actor, event) => this._onReleaseButton(actor, event));
-        this._connectSignal(this._labelEventBox, 'drag-motion', (widget, context, x, y, time) => {
+        this.connectSignal(this._eventBox, 'size-allocate', () => this._calculateIconRectangle());
+        this.connectSignal(this._labelEventBox, 'button-press-event', (actor, event) => this._onPressButton(actor, event));
+        this.connectSignal(this._labelEventBox, 'enter-notify-event', (actor, event) => this._onEnter(this._labelEventBox));
+        this.connectSignal(this._labelEventBox, 'leave-notify-event', (actor, event) => this._onLeave(this._labelEventBox));
+        this.connectSignal(this._labelEventBox, 'button-release-event', (actor, event) => this._onReleaseButton(actor, event));
+        this.connectSignal(this._labelEventBox, 'drag-motion', (widget, context, x, y, time) => {
             this.highLightDropTarget(x, y);
             this._updateDragStatus(context, time);
         });
-        this._connectSignal(this._labelEventBox, 'drag-leave', () => {
+        this.connectSignal(this._labelEventBox, 'drag-leave', () => {
             this.unHighLightDropTarget();
         });
-        this._connectSignal(this._labelEventBox, 'size-allocate', () => {
+        this.connectSignal(this._labelEventBox, 'size-allocate', () => {
             this._doLabelSizeAllocated();
         });
-        this._connectSignal(this.container, 'drag-motion', (widget, context, x, y, time) => {
+        this.connectSignal(this.container, 'drag-motion', (widget, context, x, y, time) => {
             this.highLightDropTarget(x, y);
             this._updateDragStatus(context, time);
         });
-        this._connectSignal(this.container, 'drag-leave', () => {
+        this.connectSignal(this.container, 'drag-leave', () => {
             this.unHighLightDropTarget();
         });
 
@@ -455,12 +464,25 @@ var desktopIconItem = class desktopIconItem {
         if (this._isSelected && !this._styleContext.has_class('desktop-icons-selected')) {
             this._styleContext.add_class('desktop-icons-selected');
             this._labelStyleContext.add_class('desktop-icons-selected');
+            if (!this._isKeyboardSelected) {
+                this._containerAccessibility.grab_focus();
+            }
         }
         if (!this._isSelected && this._styleContext.has_class('desktop-icons-selected')) {
             this._styleContext.remove_class('desktop-icons-selected');
             this._labelStyleContext.remove_class('desktop-icons-selected');
         }
+        if (this._isKeyboardSelected && !this._fullStyleContext.has_class('desktop-icons-selected')) {
+            this._fullStyleContext.add_class('desktop-icons-selected');
+            this._containerAccessibility.grab_focus();
+        }
+        if (!this._isKeyboardSelected && this._fullStyleContext.has_class('desktop-icons-selected')) {
+            this._fullStyleContext.remove_class('desktop-icons-selected');
+        }
+        this.setAccessibleName(this._getVisibleName());
     }
+
+    setAccessibleName(name) {}
 
     _setDragSource(widget) {
         widget.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, null, Gdk.DragAction.MOVE | Gdk.DragAction.COPY);
@@ -477,7 +499,7 @@ var desktopIconItem = class desktopIconItem {
         }
         widget.drag_source_set_target_list(targets);
         targets = undefined; // prevent memory leaks
-        this._connectSignal(widget, 'drag-begin', (w, context) => {
+        this.connectSignal(widget, 'drag-begin', (w, context) => {
             const scale = this._icon.get_scale_factor();
             let surf = new Cairo.ImageSurface(Cairo.SurfaceType.IMAGE, this.container.get_allocated_width() * scale, this.container.get_allocated_height() * scale);
             // setDeviceScale was introduced to GJS in version 1.69.2
@@ -519,14 +541,14 @@ var desktopIconItem = class desktopIconItem {
             this._desktopManager.onDragBegin(this);
             cr.$dispose();
         });
-        this._connectSignal(widget, 'drag-data-get', (w, context, data, info, time) => {
+        this.connectSignal(widget, 'drag-data-get', (w, context, data, info, time) => {
             let dragData = this._desktopManager.fillDragDataGet(info);
             if (dragData != null) {
                 let list = ByteArray.fromString(dragData[1]);
                 data.set(dragData[0], 8, list);
             }
         });
-        this._connectSignal(widget, 'drag-end', (w, context) => {
+        this.connectSignal(widget, 'drag-end', (w, context) => {
             this._desktopManager.onDragEnd();
         });
     }
@@ -548,7 +570,7 @@ var desktopIconItem = class desktopIconItem {
      ***********************/
 
     updateIcon() {
-        this._updateIcon();
+        return this._updateIcon();
     }
 
     async _updateIcon() {
@@ -770,6 +792,15 @@ var desktopIconItem = class desktopIconItem {
 
     get isSelected() {
         return this._isSelected;
+    }
+
+    get isKeyboardSelected() {
+        return this._isKeyboardSelected;
+    }
+
+    set isKeyboardSelected(status) {
+        this._isKeyboardSelected = status;
+        this._setSelectedStatus();
     }
 
     get isSpecial() {

@@ -50,6 +50,11 @@ var Selection = {
     RELEASE: 5,
 };
 
+var DBusBus = {
+    SYSTEM: true,
+    SESSION: false,
+};
+
 /* From NautilusFileUndoManagerState */
 var UndoStatus = {
     NONE: 0,
@@ -98,6 +103,8 @@ var DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*,time::modified,unix:
 var TERMINAL_SCHEMA = 'org.gnome.desktop.default-applications.terminal';
 var SCHEMA_NAUTILUS = 'org.gnome.nautilus.preferences';
 var SCHEMA_NAUTILUS_COMPRESSION = 'org.gnome.nautilus.compression';
+var SCHEMA_A11Y_KEYBOARD = 'org.gnome.desktop.a11y.keyboard';
+var SCHEMA_A11Y_APPLICATIONS = 'org.gnome.desktop.a11y.applications';
 var SCHEMA_GTK = 'org.gtk.Settings.FileChooser';
 var SCHEMA = 'org.gnome.shell.extensions.ding';
 var SCHEMA_MUTTER = 'org.gnome.mutter';

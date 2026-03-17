@@ -21,6 +21,7 @@ const {Gio, GLib, Gdk, Gtk} = imports.gi;
 const Signals = imports.signals;
 const DBusInterfaces = imports.dbusInterfaces;
 const DesktopIconsUtil = imports.desktopIconsUtil;
+const Enums = imports.enums;
 
 var NautilusFileOperations2 = null;
 var FreeDesktopFileManager = null;
@@ -157,13 +158,13 @@ class ProxyManager {
                             print(`DBus interface for ${this._programNeeded[2]} (${this._interfaceName}) is now available.`);
                             this.emit('changed-status', true);
                         } else {
-                            logError(error, `Error creating proxy, ${this._programNeeded[2]} (${this._interfaceName}); relaunching.\n`);
+                            console.error(error, `Error creating proxy, ${this._programNeeded[2]} (${this._interfaceName}); relaunching.\n`);
                             this.makeNewProxy(1000);
                         }
                     }
                 );
             } catch (e) {
-                logError(e, `Error creating proxy, ${this._programNeeded[0]}`);
+                console.error(e, `Error creating proxy, ${this._programNeeded[0]}`);
                 this._beingLaunched = false;
                 this.makeNewProxy(1000);
             }
@@ -223,7 +224,7 @@ class DBusManager {
             'org.freedesktop.DBus',
             '/org/freedesktop/DBus',
             'org.freedesktop.DBus',
-            true, // system bus
+            Enums.DBusBus.SYSTEM, // system bus
             true); // use DBus Introspection
         this._dbusSystemProxy = new Gio.DBusProxy.makeProxyWrapper(interfaceXML)(
             Gio.DBus.system,
@@ -238,7 +239,7 @@ class DBusManager {
             'org.freedesktop.DBus',
             '/org/freedesktop/DBus',
             'org.freedesktop.DBus',
-            false, // local bus
+            Enums.DBusBus.SESSION,
             true); // use DBus Introspection
         this._dbusLocalProxy = new Gio.DBusProxy.makeProxyWrapper(interfaceXML)(
             Gio.DBus.session,
@@ -270,7 +271,7 @@ class DBusManager {
             'org.freedesktop.Notifications',
             '/org/freedesktop/Notifications',
             'org.freedesktop.Notifications',
-            false, // local bus
+            Enums.DBusBus.SESSION,
             false); // get interface from local code
         this._notifyProxy = new Gio.DBusProxy.makeProxyWrapper(interfaceXML)(
             Gio.DBus.session,
@@ -417,7 +418,7 @@ class DBusManager {
         try {
             data = wraper.IntrospectSync()[0];
         } catch (e) {
-            logError(e, 'Error getting introspection data over Dbus.');
+            console.error(e, 'Error getting introspection data over Dbus.');
         }
         if (data == null) {
             return null;
@@ -433,7 +434,7 @@ class DBusManager {
          * The notification interface in GLib.Application requires a .desktop file, which
          * we can't have, so we must use directly the Notification DBus interface
          */
-        this._notifyProxy.NotifyRemote('', 0, '', header, text, [], {}, -1, () => {});
+        this._notifyProxy.NotifyRemote('Desktop Icons', 0, '', header, text, [], {}, -1, () => {});
     }
 }
 Signals.addSignalMethods(DBusManager.prototype);
@@ -455,7 +456,7 @@ class DbusOperationsManager {
         }
     }
 
-    ShowItemPropertiesRemote(selection, timestamp, callback = null) {
+    ShowItemPropertiesRemote(selection, timestamp, callback) {
         if (!this.freeDesktopFileManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -467,13 +468,13 @@ class DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error showing properties: ${error.message}`);
+                    console.log(`Error showing properties: ${error.message}`);
                 }
             }
         );
     }
 
-    ShowItemsRemote(showInFilesList, timestamp, callback = null) {
+    ShowItemsRemote(showInFilesList, timestamp, callback) {
         if (!this.freeDesktopFileManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -485,13 +486,13 @@ class DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error showing file on desktop: ${error.message}`);
+                    console.log(`Error showing file on desktop: ${error.message}`);
                 }
             }
         );
     }
 
-    ShowFileRemote(uri, integer, boolean, callback = null) {
+    ShowFileRemote(uri, integer, boolean, callback) {
         if (!this.gnomeNautilusPreviewManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -502,12 +503,12 @@ class DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error previewing file: ${error.message}`);
+                    console.log(`Error previewing file: ${error.message}`);
                 }
             });
     }
 
-    ExtractRemote(extractFileItem, folder, boolean, callback = null) {
+    ExtractRemote(extractFileItem, folder, boolean, callback) {
         if (!this.gnomeArchiveManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -518,12 +519,12 @@ class DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error extracting files: ${error.message}`);
+                    console.log(`Error extracting files: ${error.message}`);
                 }
             });
     }
 
-    CompressRemote(compressFileItems, folder, boolean, callback = null) {
+    CompressRemote(compressFileItems, folder, boolean, callback) {
         if (!this.gnomeArchiveManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -534,7 +535,7 @@ class DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error compressing files: ${error.message}`);
+                    console.log(`Error compressing files: ${error.message}`);
                 }
             }
         );
@@ -585,7 +586,7 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                         parentHandle = `wayland:${handle}`;
                     } */
                 } catch (e) {
-                    logError(e, 'Impossible to determine the parent window');
+                    console.error(e, 'Impossible to determine the parent window');
                 }
             }
 
@@ -611,13 +612,13 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error moving files: ${error.message}`);
+                    console.log(`Error moving files: ${error.message}`);
                 }
             }
         );
     }
 
-    CopyURIsRemote(fileList, uri, callback = null) {
+    CopyURIsRemote(fileList, uri, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -631,13 +632,13 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error copying files: ${error.message}`);
+                    console.log(`Error copying files: ${error.message}`);
                 }
             }
         );
     }
 
-    RenameURIRemote(fileList, uri, callback = null) {
+    RenameURIRemote(fileList, uri, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -651,13 +652,13 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error copying files: ${error.message}`);
+                    console.log(`Error copying files: ${error.message}`);
                 }
             }
         );
     }
 
-    TrashURIsRemote(fileList, callback = null) {
+    TrashURIsRemote(fileList, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -670,13 +671,13 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error moving files: ${error.message}`);
+                    console.log(`Error moving files: ${error.message}`);
                 }
             }
         );
     }
 
-    DeleteURIsRemote(fileList, callback = null) {
+    DeleteURIsRemote(fileList, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -689,13 +690,13 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                     callback(source, error);
                 }
                 if (error) {
-                    log(`Error deleting files on the desktop: ${error.message}`);
+                    console.log(`Error deleting files on the desktop: ${error.message}`);
                 }
             }
         );
     }
 
-    EmptyTrashRemote(askConfirmation, callback = null) {
+    EmptyTrashRemote(askConfirmation, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -708,13 +709,13 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                     callback(source, error);
                 }
                 if (error) {
-                    log(`Error trashing files on the desktop: ${error.message}`);
+                    console.log(`Error trashing files on the desktop: ${error.message}`);
                 }
             }
         );
     }
 
-    UndoRemote(callback = null) {
+    UndoRemote(callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -726,13 +727,13 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error performing undo: ${error.message}`);
+                    console.log(`Error performing undo: ${error.message}`);
                 }
             }
         );
     }
 
-    RedoRemote(callback = null) {
+    RedoRemote(callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -744,7 +745,7 @@ class RemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error performing redo: ${error.message}`);
+                    console.log(`Error performing redo: ${error.message}`);
                 }
             }
         );
@@ -775,13 +776,13 @@ class LegacyRemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error moving files: ${error.message}`);
+                    console.log(`Error moving files: ${error.message}`);
                 }
             }
         );
     }
 
-    CopyURIsRemote(fileList, uri, callback = null) {
+    CopyURIsRemote(fileList, uri, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -794,13 +795,13 @@ class LegacyRemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error copying files: ${error.message}`);
+                    console.log(`Error copying files: ${error.message}`);
                 }
             }
         );
     }
 
-    RenameURIRemote(fileList, uri, callback = null) {
+    RenameURIRemote(fileList, uri, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -813,13 +814,13 @@ class LegacyRemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error renaming files: ${error.message}`);
+                    console.log(`Error renaming files: ${error.message}`);
                 }
             }
         );
     }
 
-    TrashURIsRemote(fileList, callback = null) {
+    TrashURIsRemote(fileList, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -831,13 +832,13 @@ class LegacyRemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error moving files: ${error.message}`);
+                    console.log(`Error moving files: ${error.message}`);
                 }
             }
         );
     }
 
-    DeleteURIsRemote(fileList, callback = null) {
+    DeleteURIsRemote(fileList, callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -850,13 +851,13 @@ class LegacyRemoteFileOperationsManager extends DbusOperationsManager {
                     callback(source, error);
                 }
                 if (error) {
-                    log(`Error deleting files on the desktop: ${error.message}`);
+                    console.log(`Error deleting files on the desktop: ${error.message}`);
                 }
             }
         );
     }
 
-    EmptyTrashRemote(callback = null) {
+    EmptyTrashRemote(callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -867,13 +868,13 @@ class LegacyRemoteFileOperationsManager extends DbusOperationsManager {
                     callback(source, error);
                 }
                 if (error) {
-                    log(`Error trashing files on the desktop: ${error.message}`);
+                    console.log(`Error trashing files on the desktop: ${error.message}`);
                 }
             }
         );
     }
 
-    UndoRemote(callback = null) {
+    UndoRemote(callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -884,13 +885,13 @@ class LegacyRemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error performing undo: ${error.message}`);
+                    console.log(`Error performing undo: ${error.message}`);
                 }
             }
         );
     }
 
-    RedoRemote(callback = null) {
+    RedoRemote(callback) {
         if (!this.fileOperationsManager.proxy) {
             this._sendNoProxyError(callback);
             return;
@@ -901,7 +902,7 @@ class LegacyRemoteFileOperationsManager extends DbusOperationsManager {
                     callback(result, error);
                 }
                 if (error) {
-                    log(`Error performing redo: ${error.message}`);
+                    console.log(`Error performing redo: ${error.message}`);
                 }
             }
         );
@@ -922,7 +923,7 @@ function init() {
     let data = dbusManagerObject.getIntrospectionData(
         'org.gnome.Nautilus',
         '/org/gnome/Nautilus/FileOperations2',
-        false);
+        Enums.DBusBus.SESSION);
 
     if (data) {
         // NautilusFileOperations2
@@ -931,7 +932,7 @@ function init() {
             'org.gnome.Nautilus',
             '/org/gnome/Nautilus/FileOperations2',
             'org.gnome.Nautilus.FileOperations2',
-            false,
+            Enums.DBusBus.SESSION,
             'Nautilus'
         );
     } else {
@@ -942,7 +943,7 @@ function init() {
             'org.gnome.Nautilus',
             '/org/gnome/Nautilus',
             'org.gnome.Nautilus.FileOperations',
-            false,
+            Enums.DBusBus.SESSION,
             'Nautilus'
         );
     }
@@ -952,7 +953,7 @@ function init() {
         'org.freedesktop.FileManager1',
         '/org/freedesktop/FileManager1',
         'org.freedesktop.FileManager1',
-        false,
+        Enums.DBusBus.SESSION,
         'Nautilus'
     );
 
@@ -961,7 +962,7 @@ function init() {
         'org.gnome.NautilusPreviewer',
         '/org/gnome/NautilusPreviewer',
         'org.gnome.NautilusPreviewer',
-        false,
+        Enums.DBusBus.SESSION,
         'Nautilus-Sushi'
     );
 
@@ -970,7 +971,7 @@ function init() {
         'org.gnome.ArchiveManager1',
         '/org/gnome/ArchiveManager1',
         'org.gnome.ArchiveManager1',
-        false,
+        Enums.DBusBus.SESSION,
         'File-roller'
     );
 
@@ -979,7 +980,7 @@ function init() {
         'org.gtk.vfs.Metadata',
         '/org/gtk/vfs/metadata',
         'org.gtk.vfs.Metadata',
-        false,
+        Enums.DBusBus.SESSION,
         'Gvfs daemon'
     );
 
@@ -988,7 +989,7 @@ function init() {
         'net.hadess.SwitcherooControl',
         '/net/hadess/SwitcherooControl',
         'net.hadess.SwitcherooControl',
-        true,
+        Enums.DBusBus.SYSTEM,
         'Switcheroo control'
     );
     discreteGpuAvailable = SwitcherooControl.isAvailable;

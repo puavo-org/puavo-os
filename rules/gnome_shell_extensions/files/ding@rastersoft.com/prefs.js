@@ -17,31 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 'use strict';
-const Gtk = imports.gi.Gtk;
-const Gio = imports.gi.Gio;
+import Gio from 'gi://Gio'
+import Adw from 'gi://Adw';
 
-/**
- *
- */
-function init() {}
+import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-/**
- *
- */
-function buildPrefsWidget() {
-    let mainAppControl = Gio.DBusActionGroup.get(
-        Gio.DBus.session,
-        'com.rastersoft.ding',
-        '/com/rastersoft/ding'
-    );
-    mainAppControl.activate_action('changeDesktopIconSettings', null);
+export default class DingPreferences extends ExtensionPreferences {
+    fillPreferencesWindow(window) {
+        let mainAppControl = Gio.DBusActionGroup.get(
+            Gio.DBus.session,
+            'com.rastersoft.ding',
+            '/com/rastersoft/ding'
+        );
+        mainAppControl.activate_action('changeDesktopIconSettings', null);
 
-    return new Gtk.Box({
-        orientation: Gtk.Orientation.VERTICAL,
-        spacing: 10,
-        margin_top: 10,
-        margin_bottom: 10,
-        margin_start: 10,
-        margin_end: 10,
-    });;
+        const page = new Adw.PreferencesPage();
+
+        window.add(page);
+        window.connect_after('show', ()=>{window.close();});
+    }
 }

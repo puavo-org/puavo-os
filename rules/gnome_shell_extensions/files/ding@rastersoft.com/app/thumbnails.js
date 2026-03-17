@@ -15,26 +15,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 'use strict';
-imports.gi.versions.GnomeDesktop = '3.0';
-const GnomeDesktop = imports.gi.GnomeDesktop;
+var GnomeDesktop = null;
+const ShowErrorPopup = imports.showErrorPopup;
+try {
+    imports.gi.versions.GnomeDesktop = '3.0';
+    GnomeDesktop = imports.gi.GnomeDesktop;
+} catch(e) {}
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
+const Gettext = imports.gettext.domain('ding');
+
+const _ = Gettext.gettext;
 
 var ThumbnailLoader = class {
-    constructor(codePath) {
+    constructor(desktopManager, codePath) {
         this._timeoutValue = 5000;
         this._codePath = codePath;
         this._thumbList = [];
         this._thumbnailScriptWatch = null;
         this._running = false;
-        this._thumbnailFactoryNormal = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.NORMAL);
-        this._thumbnailFactoryLarge = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
-        if (this._thumbnailFactoryLarge.generate_thumbnail_async) {
-            this._useAsyncAPI = true;
-            print('Detected async api for thumbnails');
+        if (!GnomeDesktop) {
+                desktopManager.dbusManager.doNotify(_('GnomeDesktop-3.0 GIR file not found'),
+                                                    _('GnomeDesktop-3.0.gir file is missing. Please, install the required package in your system.'));
         } else {
-            this._useAsyncAPI = false;
-            print('Failed to detected async api for thumbnails');
+            this._thumbnailFactoryNormal = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.NORMAL);
+            this._thumbnailFactoryLarge = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
+            if (this._thumbnailFactoryLarge.generate_thumbnail_async) {
+                this._useAsyncAPI = true;
+                print('Detected async api for thumbnails');
+            } else {
+                this._useAsyncAPI = false;
+                print('Failed to detected async api for thumbnails');
+            }
         }
     }
 
@@ -159,6 +171,9 @@ var ThumbnailLoader = class {
     }
 
     getThumbnail(file, callback) {
+        if (!this._thumbnailFactoryLarge && !this._thumbnailFactoryNormal) {
+            return null;
+        }
         try {
             let thumbnail = this._thumbnailFactoryLarge.lookup(file.uri, file.modifiedTime);
             if (thumbnail == null) {

@@ -16,9 +16,10 @@
  */
 /* exported EmulateX11WindowType */
 'use strict';
-const GLib = imports.gi.GLib;
-const Meta = imports.gi.Meta;
-const Main = imports.ui.main;
+import GLib from 'gi://GLib'
+import Meta from 'gi://Meta'
+import * as Main from 'resource:///org/gnome/shell/ui/main.js'
+
 
 class ManageWindow {
     /* This class is added to each managed window, and it's used to
@@ -41,8 +42,9 @@ class ManageWindow {
        even to decorated windows.
     */
 
-    constructor(window, waylandClient, changedStatusCB) {
+    constructor(window, waylandClient, X11Emulator, changedStatusCB) {
         this._waylandClient = waylandClient;
+        this._X11Emulator = X11Emulator;
         this._window = window;
         this._signalIDs = [];
         this._changedStatusCB = changedStatusCB;
@@ -68,14 +70,30 @@ class ManageWindow {
             this._window.unminimize();
         }));
         this._signalIDs.push(window.connect('notify::maximized-vertically', () => {
-            if (!window.maximized_vertically) {
-                window.maximize(Meta.MaximizeFlags.VERTICAL);
+            if (window.is_maximized) {
+                // Gnome Shell >= 49 API
+                if (!window.is_maximized()) {
+                    window.maximize();
+                }
+            } else {
+                // Gnome Shell < 49 API
+                if (!window.maximized_vertically) {
+                    window.maximize(Meta.MaximizeFlags.VERTICAL);
+                }
             }
             this._moveIntoPlace();
         }));
         this._signalIDs.push(window.connect('notify::maximized-horizontally', () => {
-            if (!window.maximized_horizontally) {
-                window.maximize(Meta.MaximizeFlags.HORIZONTAL);
+            if (window.is_maximized) {
+                // Gnome Shell >= 49 API
+                if (!window.is_maximized()) {
+                    window.maximize();
+                }
+            } else {
+                // Gnome Shell < 49 API
+                if (!window.maximized_horizontally) {
+                    window.maximize(Meta.MaximizeFlags.HORIZONTAL);
+                }
             }
             this._moveIntoPlace();
         }));
@@ -93,6 +111,10 @@ class ManageWindow {
             this._moveIntoPlaceID = 0;
             return GLib.SOURCE_REMOVE;
         });
+    }
+
+    refreshWindowPosition() {
+        this._moveIntoPlace();
     }
 
     disconnect() {
@@ -144,7 +166,7 @@ class ManageWindow {
                     this._x = parseInt(coords[0]);
                     this._y = parseInt(coords[1]);
                 } catch (e) {
-                    global.log(`Exception ${e.message}.\n${e.stack}`);
+                    console.log(`Exception ${e.message}.\n${e.stack}`);
                 }
                 try {
                     let extraChars = title.substring(pos + 2).trim().toUpperCase();
@@ -170,7 +192,23 @@ class ManageWindow {
                         }
                     }
                 } catch (e) {
-                    global.log(`Exception ${e.message}.\n${e.stack}`);
+                    console.log(`Exception ${e.message}.\n${e.stack}`);
+                }
+            }
+            // This string must match the one at desktopManager.js
+            if (title.startsWith("Desktop Icons ")) {
+                this._keepAtBottom = true;
+                this._keepAtTop = false;
+                this._showInAllDesktops = true;
+                this._hideFromWindowList = true;
+                this._fixed = true;
+                try {
+                    const desktopIndex = parseInt(title.substring(14).trim());
+                    const desktopData = this._X11Emulator.getMonitorData(desktopIndex - 1);
+                    this._x = desktopData.x;
+                    this._y = desktopData.y;
+                } catch (e) {
+                    console.log(`Exception ${e.message}.\n${e.stack}`);
                 }
             }
             if (this._waylandClient) {
@@ -218,7 +256,7 @@ class ManageWindow {
     }
 }
 
-var EmulateX11WindowType = class {
+export class EmulateX11WindowType {
     /*
      This class makes all the heavy lifting for emulating WindowType.
      Just make one instance of it, call enable(), and whenever a window
@@ -226,10 +264,23 @@ var EmulateX11WindowType = class {
      "addWindow" method. That's all.
      */
     constructor() {
-        this._isX11 = !Meta.is_wayland_compositor();
+        this._isX11 = Meta.is_wayland_compositor !== undefined &&
+                      !Meta.is_wayland_compositor();
         this._windowList = [];
         this._enableRefresh = true;
         this._waylandClient = null;
+        this._monitorData = [];
+    }
+
+    setMonitorData(data) {
+        this._monitorData = data;
+    }
+
+    getMonitorData(idx) {
+        if (idx >= this._monitorData.length) {
+            return null;
+        }
+        return this._monitorData[idx];
     }
 
     setWaylandClient(client) {
@@ -323,7 +374,7 @@ var EmulateX11WindowType = class {
         if (window.get_meta_window) { // it is a MetaWindowActor
             window = window.get_meta_window();
         }
-        window.customJS_ding = new ManageWindow(window, this._waylandClient, () => {
+        window.customJS_ding = new ManageWindow(window, this._waylandClient, this, () => {
             this._refreshWindows(true);
         });
         this._windowList.push(window);
@@ -331,6 +382,10 @@ var EmulateX11WindowType = class {
             this._clearWindow(window);
             this._windowList = this._windowList.filter(item => item !== window);
         });
+    }
+
+    refreshWindowsPosition() {
+        this._windowList.forEach(window => {window.customJS_ding.refreshWindowPosition();});
     }
 
     _clearWindow(window) {

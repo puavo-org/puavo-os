@@ -25,6 +25,7 @@ const TemplatesScriptsManager = imports.templatesScriptsManager;
 const DesktopIconsUtil = imports.desktopIconsUtil;
 const Prefs = imports.preferences;
 const ShowErrorPopup = imports.showErrorPopup;
+const SignalManager = imports.signalManager;
 
 const Gettext = imports.gettext.domain('ding');
 
@@ -34,6 +35,7 @@ var FileItemMenu = class {
     constructor(desktopManager) {
         this._currentFileItem = null;
         this._menu = null;
+        this._menuSignals = new SignalManager.SignalManager();
         this._desktopManager = desktopManager;
         DBusUtils.GnomeArchiveManager.connect('changed-status', () => {
             // wait a second to ensure that everything has settled
@@ -56,7 +58,7 @@ var FileItemMenu = class {
                 DBusUtils.GnomeArchiveManager.proxy.GetSupportedTypesRemote('extract',
                     (result, error) => {
                         if (error) {
-                            logError(error, "Can't get the extractable types; ensure that File-Roller is installed.\n");
+                            console.error(error, "Can't get the extractable types; ensure that File-Roller is installed.\n");
                             return;
                         }
                         for (let key of result.values()) {
@@ -69,7 +71,7 @@ var FileItemMenu = class {
             }
             this._askedSupportedTypes = true;
         } catch (e) {
-            logError(e, 'Error while getting supported types.');
+            console.error(e, 'Error while getting supported types.');
         }
     }
 
@@ -99,6 +101,7 @@ var FileItemMenu = class {
         }
         this._currentFileItem = this._desktopManager.getFileItemFromURI(this._currentFileItem.uri);
         if (!this._currentFileItem) {
+            this._menuSignals.disconnectAllSignals();
             this._menu.destroy();
             this._menu = null;
         }
@@ -112,7 +115,7 @@ var FileItemMenu = class {
         let element = new Gtk.MenuItem({label});
         this._menu.add(element);
         if (action) {
-            element.connect('activate', action);
+            this._menuSignals.connectSignal(element, 'activate', action);
         }
         return element;
     }
@@ -124,6 +127,11 @@ var FileItemMenu = class {
         this._currentFileItem = fileItem;
 
         let selectedItemsNum = this._desktopManager.getNumberOfSelectedItems();
+
+        if (this._menu) {
+            this._menuSignals.disconnectAllSignals();
+            this._menu.destroy();
+        }
 
         this._menu = new Gtk.Menu();
         const menuStyleContext = this._menu.get_style_context();
@@ -137,10 +145,11 @@ var FileItemMenu = class {
             );
         }
 
-        this._menu.connect_after('selection-done', () => {
+        this._menuSignals.connectSignal(this._menu, 'selection-done', () => {
+            this._menuSignals.disconnectAllSignals();
             this._menu.destroy();
             this._menu = null;
-        });
+        }, {after: true});
 
         let keepStacked = Prefs.desktopSettings.get_boolean('keep-stacked');
         if (keepStacked && !fileItem.stackUnique) {
@@ -165,20 +174,18 @@ var FileItemMenu = class {
                 this._addSeparator();
             }
 
-            if (!fileItem.isDirectory) {
-                this._addElementToMenu(
-                    selectedItemsNum > 1 ? _('Open All With Other Application...') : _('Open With Other Application'),
-                    this._doOpenWith.bind(this)
-                ).set_sensitive(selectedItemsNum > 0);
+            this._addElementToMenu(
+                selectedItemsNum > 1 ? _('Open All With Other Application...') : _('Open With Other Application'),
+                this._doOpenWith.bind(this)
+            ).set_sensitive(selectedItemsNum > 0);
 
-                if (DBusUtils.discreteGpuAvailable && fileItem.trustedDesktopFile && (selectedItemsNum == 1)) {
-                    this._addElementToMenu(
-                        _('Launch using Dedicated Graphics Card'),
-                        () => {
-                            this._currentFileItem.doDiscreteGpu();
-                        }
-                    );
-                }
+            if (DBusUtils.discreteGpuAvailable && fileItem.trustedDesktopFile && (selectedItemsNum == 1)) {
+                this._addElementToMenu(
+                    _('Launch using Dedicated Graphics Card'),
+                    () => {
+                        this._currentFileItem.doDiscreteGpu();
+                    }
+                );
             }
 
             this._addSeparator();
@@ -385,7 +392,7 @@ var FileItemMenu = class {
                 }
                 return;
             } catch (err) {
-                logError(err, 'Error trying to launch Nemo.');
+                console.error(err, 'Error trying to launch Nemo.');
             }
         }
         const timestamp = Gtk.get_current_event_time();
@@ -405,14 +412,18 @@ var FileItemMenu = class {
             const context = Gdk.Display.get_default().get_app_launch_context();
             context.set_timestamp(Gtk.get_current_event_time());
             let mimetype = Gio.content_type_guess(fileItems[0].fileName, null)[0];
+            if (fileItems[0].isDirectory) {
+                mimetype = 'inode/directory';
+            }
             let chooser = Gtk.AppChooserDialog.new_for_content_type(null,
                 Gtk.DialogFlags.MODAL + Gtk.DialogFlags.USE_HEADER_BAR,
                 mimetype);
+            let signals = new SignalManager.SignalManager();
             chooser.show_all();
-            chooser.connect('close', () => {
+            signals.connectSignal(chooser, 'close', () => {
                 chooser.response(Gtk.ResponseType.CANCEL);
             });
-            chooser.connect('response', (actor, retval) => {
+            signals.connectSignal(chooser, 'response', (actor, retval) => {
                 if (retval == Gtk.ResponseType.OK) {
                     let appInfo = chooser.get_app_info();
                     if (appInfo) {
@@ -424,6 +435,9 @@ var FileItemMenu = class {
                     }
                 }
                 chooser.hide();
+                signals.disconnectAllSignals();
+                chooser = null;
+                signals = null;
             });
         }
     }

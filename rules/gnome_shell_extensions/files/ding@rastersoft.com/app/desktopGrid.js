@@ -23,6 +23,7 @@ const Gdk = imports.gi.Gdk;
 const Prefs = imports.preferences;
 const Enums = imports.enums;
 const DesktopIconsUtil = imports.desktopIconsUtil;
+const SignalManager = imports.signalManager;
 
 const Gettext = imports.gettext.domain('ding');
 
@@ -31,17 +32,13 @@ const _ = Gettext.gettext;
 
 var elementSpacing = 2;
 
-var DesktopGrid = class {
-    _connectSignal(object, signal, callback) {
-        this._signalIds.push([object, object.connect(signal, callback)]);
-    }
-
+var DesktopGrid = class extends SignalManager.SignalManager{
     constructor(desktopManager, desktopName, desktopDescription, asDesktop, premultiplied) {
+        super();
         this._signalIds = [];
         this._destroying = false;
         this._desktopManager = desktopManager;
         this._desktopName = desktopName;
-        this._asDesktop = asDesktop;
         this._premultiplied = premultiplied;
         this._asDesktop = asDesktop;
         this._desktopDescription = desktopDescription;
@@ -76,7 +73,7 @@ var DesktopGrid = class {
             this._windowContext.add_class('testwindow');
         }
         this._window.set_resizable(false);
-        this._connectSignal(this._window, 'delete-event', () => {
+        this.connectSignal(this._window, 'delete-event', () => {
             if (this._destroying) {
                 return false;
             }
@@ -98,7 +95,7 @@ var DesktopGrid = class {
         this.setDropDestination(this._eventBox);
 
         this._selectedList = null;
-        this._connectSignal(this._container, 'draw', (widget, cr) => {
+        this.connectSignal(this._container, 'draw', (widget, cr) => {
             this._doDrawRubberBand(cr);
             cr.$dispose();
         });
@@ -113,23 +110,28 @@ var DesktopGrid = class {
                                   Gdk.EventMask.BUTTON_PRESS_MASK |
                                   Gdk.EventMask.BUTTON_RELEASE_MASK |
                                   Gdk.EventMask.KEY_RELEASE_MASK);
-        this._connectSignal(this._eventBox, 'button-press-event', (actor, event) => {
+        this.connectSignal(this._eventBox, 'button-press-event', (actor, event) => {
             let [a, x, y] = event.get_coords();
             [x, y] = this.coordinatesLocalToGlobal(x, y);
             this._desktopManager.onPressButton(x, y, event, this);
             return false;
         });
-        this._connectSignal(this._eventBox, 'motion-notify-event', (actor, event) => {
+        this.connectSignal(this._eventBox, 'motion-notify-event', (actor, event) => {
             let [a, x, y] = event.get_coords();
             [x, y] = this.coordinatesLocalToGlobal(x, y);
             this._desktopManager.onMotion(x, y);
         });
-        this._connectSignal(this._eventBox, 'button-release-event', (actor, event) => {
+        this.connectSignal(this._eventBox, 'button-release-event', (actor, event) => {
             this._desktopManager.onReleaseButton(this);
         });
 
-        this._connectSignal(this._window, 'key-press-event', (actor, event) => {
+        this.connectSignal(this._window, 'key-press-event', (actor, event) => {
             this._desktopManager.onKeyPress(event, this);
+        });
+        // key-release-event must be used for the arrow keys to avoid conflicts
+        // with assistive technologies.
+        this.connectSignal(this._window, 'key-release-event', (actor, event) => {
+            this._desktopManager.onKeyRelease(event, this);
         });
         this.updateGridRectangle();
     }
@@ -198,8 +200,15 @@ var DesktopGrid = class {
     sizeEventBox() {
         this._eventBox.margin_top = this._marginTop;
         this._eventBox.margin_bottom = this._marginBottom;
-        this._eventBox.margin_start = this._marginLeft;
-        this._eventBox.margin_end = this._marginRight;
+        const leftToRight =
+            this._eventBox.get_direction() === Gtk.TextDirection.LTR;
+        if (leftToRight) {
+            this._eventBox.margin_start = this._marginLeft;
+            this._eventBox.margin_end = this._marginRight;
+        } else {
+            this._eventBox.margin_start = this._marginRight;
+            this._eventBox.margin_end = this._marginLeft;
+        }
     }
 
     setGridStatus() {
@@ -222,11 +231,7 @@ var DesktopGrid = class {
 
     destroy() {
         this._destroying = true;
-        /* Disconnect signals */
-        for (let [object, signalId] of this._signalIds) {
-            object.disconnect(signalId);
-        }
-        this._signalIds = [];
+        this.disconnectAllSignals();
         this._window.destroy();
     }
 
@@ -243,7 +248,7 @@ var DesktopGrid = class {
             Enums.DndTargetInfo.TEXT_PLAIN);
         dropDestination.drag_dest_set_target_list(targets);
         targets = undefined; // to avoid memory leaks
-        this._connectSignal(dropDestination, 'drag-motion', (widget, context, x, y, time) => {
+        this.connectSignal(dropDestination, 'drag-motion', (widget, context, x, y, time) => {
             this.receiveMotion(x, y);
 
             if (DesktopIconsUtil.getModifiersInDnD(context, Gdk.ModifierType.CONTROL_MASK)) {
@@ -252,10 +257,10 @@ var DesktopGrid = class {
                 Gdk.drag_status(context, Gdk.DragAction.MOVE, time);
             }
         });
-        this._connectSignal(this._eventBox, 'drag-leave', (widget, context, time) => {
+        this.connectSignal(this._eventBox, 'drag-leave', (widget, context, time) => {
             this.receiveLeave();
         });
-        this._connectSignal(dropDestination, 'drag-data-received', (widget, context, x, y, selection, info, time) => {
+        this.connectSignal(dropDestination, 'drag-data-received', (widget, context, x, y, selection, info, time) => {
             const forceCopy = context.get_selected_action() === Gdk.DragAction.COPY;
             this.receiveDrop(context, x, y, selection, info, false, forceCopy);
         });
@@ -388,23 +393,14 @@ var DesktopGrid = class {
         if (this._desktopManager.showDropPlace && (this._selectedList !== null)) {
             for (let [x, y] of this._selectedList) {
                 cr.rectangle(x + 0.5, y + 0.5, this._elementWidth, this._elementHeight);
-                Gdk.cairo_set_source_rgba(cr, new Gdk.RGBA({
-                    red: 1.0 - this._desktopManager.selectColor.red,
-                    green: 1.0 - this._desktopManager.selectColor.green,
-                    blue: 1.0 - this._desktopManager.selectColor.blue,
-                    alpha: 0.4,
-                })
-                );
+                let color = this._desktopManager.selectColor;
+                color.alpha = 0.4;
+                Gdk.cairo_set_source_rgba(cr, color);
                 cr.fill();
                 cr.setLineWidth(0.5);
                 cr.rectangle(x + 0.5, y + 0.5, this._elementWidth, this._elementHeight);
-                Gdk.cairo_set_source_rgba(cr, new Gdk.RGBA({
-                    red: 1.0 - this._desktopManager.selectColor.red,
-                    green: 1.0 - this._desktopManager.selectColor.green,
-                    blue: 1.0 - this._desktopManager.selectColor.blue,
-                    alpha: 1.0,
-                })
-                );
+                color.alpha = 1.0;
+                Gdk.cairo_set_source_rgba(cr, color);
                 cr.stroke();
             }
         }
@@ -510,8 +506,8 @@ var DesktopGrid = class {
         if (this._coordinatesBelongToThisGrid(x, y)) {
             [x, y] = this.coordinatesGlobalToLocal(x, y);
             if (globalCoordinates) {
-                x = this._elementWidth * Math.floor((x / this._elementWidth) + 0.5);
-                y = this._elementHeight * Math.floor((y / this._elementHeight) + 0.5);
+                x = this._elementWidth * Math.floor(x / this._elementWidth);
+                y = this._elementHeight * Math.floor(y / this._elementHeight);
                 [x, y] = this.coordinatesLocalToGlobal(x, y);
                 return [x, y];
             } else {
