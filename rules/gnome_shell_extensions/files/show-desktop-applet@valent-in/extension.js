@@ -15,6 +15,8 @@ let isHotkeySet = false;
 
 const baseGIcon = 'puavo-base-user-desktop';
 const hoverGIcon = 'puavo-hover-user-desktop';
+let panelIcon;
+let desktopShown;
 
 function toggleDesktop() {
 	let workspace = global.workspace_manager.get_active_workspace();
@@ -30,8 +32,10 @@ function toggleDesktop() {
 	}
 
 	if (tmpStoredWindows.length > 0) {
+                desktopShown = true;
 		storedWindows = tmpStoredWindows;
 	} else {
+                desktopShown = false;
 		// If nothing were minimized (desktop is alredy shown)
 		// try to restore previously minimized
 		let topWindow;
@@ -49,6 +53,8 @@ function toggleDesktop() {
 
 		storedWindows = [];
 	}
+
+        updateIcon();
 
 	if (Main.overview.visible) {
 		Main.overview.hide();
@@ -72,24 +78,34 @@ function shouldBeIgnored(window) {
 }
 
 
+function updateIcon(mode='leave') {
+  if (mode == 'enter') {
+    panelIcon.icon_name = desktopShown ? baseGIcon : hoverGIcon;
+  } else {
+    panelIcon.icon_name = desktopShown ? hoverGIcon : baseGIcon;
+  }
+}
+
 function createPanelButton() {
+        desktopShown = false;
+
 	panelButton = new PanelMenu.Button(0.0, `${ExtensionName}`, false);
 
-	let icon = new St.Icon({
+	panelIcon = new St.Icon({
 		icon_name: baseGIcon,
 		icon_size: 32,
 		style_class: 'system-status-icon',
 	});
 
-	panelButton.add_child(icon);
+	panelButton.add_child(panelIcon);
 
 	panelButton.connect('button-press-event', toggleDesktop);
 
         panelButton.connect('enter-event', (actor, event) => {
-            icon.icon_name = hoverGIcon;
+            updateIcon('enter');
         });
         panelButton.connect('leave-event', (actor, event) => {
-            icon.icon_name = baseGIcon;
+            updateIcon('leave');
         });
 
 	panelButton.connect_after('key-release-event', (actor, event) => {
