@@ -13,7 +13,7 @@ class gnome_shell_extensions {
   }
 
   @::gnome_shell_extensions::add_extension {
-    'quickoverview@kirby_33@hotmail.fr':
+    'quickoverview@puavo.org':
       require => [ ::Themes::Iconlink['scalable/places/puavo-base-user-desktop.svg']
                  , ::Themes::Iconlink['scalable/places/puavo-hover-user-desktop.svg' ] ];
 
