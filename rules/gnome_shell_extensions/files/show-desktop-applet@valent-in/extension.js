@@ -13,6 +13,8 @@ let panelButton;
 let storedWindows = [];
 let isHotkeySet = false;
 
+const baseGIcon = 'puavo-base-user-desktop';
+const hoverGIcon = 'puavo-hover-user-desktop';
 
 function toggleDesktop() {
 	let workspace = global.workspace_manager.get_active_workspace();
@@ -74,13 +76,21 @@ function createPanelButton() {
 	panelButton = new PanelMenu.Button(0.0, `${ExtensionName}`, false);
 
 	let icon = new St.Icon({
-		icon_name: 'computer-symbolic',
+		icon_name: baseGIcon,
+		icon_size: 32,
 		style_class: 'system-status-icon',
 	});
 
 	panelButton.add_child(icon);
 
 	panelButton.connect('button-press-event', toggleDesktop);
+
+        panelButton.connect('enter-event', (actor, event) => {
+            icon.icon_name = hoverGIcon;
+        });
+        panelButton.connect('leave-event', (actor, event) => {
+            icon.icon_name = baseGIcon;
+        });
 
 	panelButton.connect_after('key-release-event', (actor, event) => {
 		let symbol = event.get_key_symbol();
