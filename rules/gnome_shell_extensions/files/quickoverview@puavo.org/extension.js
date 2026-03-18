@@ -10,15 +10,12 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
-const HIGH_SPEED = 0.01;
-
 const OverviewButton = GObject.registerClass(
 class OverviewButton extends PanelMenu.Button{
     constructor(extension) {
         super(0.0, 'QuickOverview', false);
 
         this._extension = extension;
-        this._modifiedSpeed = HIGH_SPEED;
 
         // Load a custom icon directly from the extension directory
         const iconFile = Gio.File.new_for_path(
@@ -39,18 +36,10 @@ class OverviewButton extends PanelMenu.Button{
     }
 
     _toggleOverview() {
-        const originalSpeed = St.Settings.get().slow_down_factor;
-
-        try {
-            St.Settings.get().slow_down_factor = this._modifiedSpeed;
-
-            if (Main.overview.visible)
-                Main.overview.hide();
-            else
-                Main.overview.show();
-        } finally {
-            St.Settings.get().slow_down_factor = originalSpeed;
-        }
+        if (Main.overview.visible)
+            Main.overview.hide();
+        else
+            Main.overview.show();
     }
 });
 
