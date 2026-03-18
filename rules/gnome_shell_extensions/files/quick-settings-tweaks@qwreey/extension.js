@@ -12,12 +12,10 @@ import { DndQuickToggleFeature } from "./features/toggle/dndQuickToggle.js";
 import { UnsafeQuickToggleFeature } from "./features/toggle/unsafeQuickToggle.js";
 import { MediaWidgetFeature } from "./features/widget/media.js";
 import { WeatherWidgetFeature } from "./features/widget/weather.js";
-// XXX PUAVO disabled due to https://github.com/qwreey/quick-settings-tweaks/issues/197
-// import { NotificationsWidgetFeature } from "./features/widget/notifications.js";
+import { NotificationsWidgetFeature } from "./features/widget/notifications.js";
 import { TogglesLayoutFeature } from "./features/layout/toggles.js";
 import { SystemItemsLayoutFeature } from "./features/layout/systemItems.js";
-// XXX PUAVO disabled due to https://github.com/qwreey/quick-settings-tweaks/issues/197
-// import { DateMenuLayoutFeature } from "./features/layout/dateMenu.js";
+import { DateMenuLayoutFeature } from "./features/layout/dateMenu.js";
 import { OverlayMenu } from "./features/overlayMenu.js";
 import { MenuAnimation } from "./features/menuAnimation.js";
 import { DebugFeature } from "./features/debug.js";
@@ -48,12 +46,10 @@ export default class QstExtension extends Extension {
             new DndQuickToggleFeature(),
             new UnsafeQuickToggleFeature(),
             // new InputOutputFeature(),
-            // XXX PUAVO disabled due to https://github.com/qwreey/quick-settings-tweaks/issues/197
-            // new NotificationsWidgetFeature(),
+            new NotificationsWidgetFeature(),
             new MediaWidgetFeature(),
             new VolumeMixerWidgetFeature(),
-            // XXX PUAVO disabled due to https://github.com/qwreey/quick-settings-tweaks/issues/197
-            // new DateMenuLayoutFeature(),
+            new DateMenuLayoutFeature(),
             new WeatherWidgetFeature(),
             new OverlayMenu(),
             new MenuAnimation(),

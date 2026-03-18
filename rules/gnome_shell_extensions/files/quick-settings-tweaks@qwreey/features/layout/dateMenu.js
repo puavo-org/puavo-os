@@ -4,8 +4,6 @@ import Global from "../../global.js";
 import Logger from "../../libs/shared/logger.js";
 export class DateMenuLayoutFeature extends FeatureBase {
     loadSettings(loader) {
-        this.hideMediaControl = loader.loadBoolean("datemenu-hide-media-control");
-        this.hideNotifications = loader.loadBoolean("datemenu-hide-notifications");
         this.hideLeftBox = loader.loadBoolean("datemenu-hide-left-box");
         this.hideRightBox = loader.loadBoolean("datemenu-hide-right-box");
         this.disableMenu = loader.loadBoolean("datemenu-disable-menu");
@@ -13,14 +11,6 @@ export class DateMenuLayoutFeature extends FeatureBase {
     // #endregion settings
     onLoad() {
         const style = new StyleClass(Global.DateMenuBox.style_class);
-        // Hide media control from date menu
-        if (this.hideMediaControl) {
-            this.maid.hideJob(Global.MediaSection, () => true);
-        }
-        // Hide notifications from date menu
-        if (this.hideNotifications) {
-            this.maid.hideJob(Global.NotificationSection, () => true);
-        }
         // Hide left box from date menu
         if (this.hideLeftBox) {
             const leftBox = Global.DateMenuHolder.get_first_child();
@@ -56,10 +46,6 @@ export class DateMenuLayoutFeature extends FeatureBase {
         }
     }
     onUnload() {
-        if (Global.MediaSection._shouldShow())
-            Global.MediaSection.show();
-        if (Global.NotificationSection._shouldShow())
-            Global.NotificationSection.show();
         // Remove modified styles
         const style = new StyleClass(Global.DateMenuBox.style_class)
             .remove("QSTWEAKS-hide-right-box")

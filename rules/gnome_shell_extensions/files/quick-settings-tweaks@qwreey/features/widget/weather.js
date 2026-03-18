@@ -10,7 +10,6 @@ import { WeatherClient } from "resource:///org/gnome/shell/misc/weather.js";
 import GWeather from "gi://GWeather";
 import { FeatureBase } from "../../libs/shell/feature.js";
 import Global from "../../global.js";
-import { VerticalProp } from "../../libs/shell/compat.js";
 // #region Client
 class Client extends WeatherClient {
     getInfos(maxForecasts, intervalHour) {
@@ -112,7 +111,7 @@ class WeatherSection extends St.Button {
             x_expand: true,
         });
         const box = this.child = new St.BoxLayout({
-            ...VerticalProp,
+            orientation: Clutter.Orientation.VERTICAL,
             style_class: "weather-box",
             x_expand: true,
         });
@@ -233,7 +232,7 @@ class WeatherWidget extends St.BoxLayout {
         this._options = options;
         const client = this._client = new Client();
         super._init({
-            ...VerticalProp,
+            orientation: Clutter.Orientation.VERTICAL,
         });
         this.add_child(this._header = new Header(client, options));
         this.add_child(this._item = new WeatherSection(client, options));

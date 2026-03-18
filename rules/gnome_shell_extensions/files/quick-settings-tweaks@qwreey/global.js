@@ -27,12 +27,6 @@ export default class Global {
     static get MessageList() {
         return this.DateMenu._messageList;
     }
-    static get NotificationSection() {
-        return this.DateMenu._messageList._notificationSection;
-    }
-    static get MediaSection() {
-        return this.DateMenu._messageList._mediaSection;
-    }
     static get DateMenuIndicator() {
         return this.DateMenu._indicator;
     }

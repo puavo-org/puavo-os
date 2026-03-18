@@ -33,12 +33,22 @@ class Maid {
         return this.records;
     }
     patchJob(patchObject, patchName, handleFunc, priority = 0) {
+        // Check if patchObject is defined before accessing its properties
+        if (!patchObject) {
+            console.error('Maid.patchJob: patchObject is undefined');
+            return;
+        }
         const original = patchObject[patchName];
         this.getRecords().push([Maid.TaskType.Patch, priority, patchObject, patchName, original]);
         patchObject[patchName] = handleFunc(original);
     }
     // [ patchObject, connection, original, undo? ]
     hideJob(patchObject, undo, priority = 0) {
+        // Check if patchObject is defined
+        if (!patchObject) {
+            console.error('Maid.hideJob: patchObject is undefined');
+            return;
+        }
         const original = patchObject.visible;
         const connection = patchObject.connect("show", () => {
             patchObject.hide();
@@ -67,11 +77,17 @@ class Maid {
                     record[2].destroy();
                     break;
                 case Maid.TaskType.Patch:
-                    record[2][record[1]] = record[2];
+                    // Check if patchObject (record[2]) is defined
+                    if (record[2]) {
+                        record[2][record[3]] = record[4];
+                    }
                     break;
                 case Maid.TaskType.Hide:
                     {
                         const patchObject = record[2];
+                        // Check if patchObject is defined before using it
+                        if (!patchObject)
+                            break;
                         const original = record[4];
                         const undo = record[5];
                         patchObject.disconnect(record[3]);
