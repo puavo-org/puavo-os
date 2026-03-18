@@ -2,7 +2,6 @@
 // https://extensions.gnome.org/extension/614/quick-overview-launcher/
 
 import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
@@ -17,14 +16,10 @@ class OverviewButton extends PanelMenu.Button{
 
         this._extension = extension;
 
-        // Load a custom icon directly from the extension directory
-        const iconFile = Gio.File.new_for_path(
-            `${extension.path}/icons/quickoverview-symbolic.svg`);
-
         this._icon = new St.Icon({
-            gicon: new Gio.FileIcon({file: iconFile}),
-            style_class: 'system-status-icon',
+            icon_name: 'puavo-multitasking-view',
             icon_size: 32,
+            style_class: 'system-status-icon',
         });
 
         this.add_child(this._icon);
