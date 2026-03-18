@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="3.18"/>
+  <object class="GtkAdjustment" id="adjustment1">
+    <property name="lower">-60</property>
+    <property name="upper">60</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">2</property>
+  </object>
+  <object class="AdwPreferencesPage" id="main_prefs">
+    <property name="visible">True</property>
+    <property name="margin_start">32</property>
+    <property name="margin_end">32</property>
+    <property name="margin_top">32</property>
+    <property name="margin_bottom">32</property>
+    <property name="vexpand">1</property>
+    <child>
+      <object class="GtkFrame" id="frame1">
+        <property name="visible">True</property>
+        <property name="label-xalign">0</property>
+        <child>
+          <object class="GtkListBox" id="listbox1">
+            <property name="visible">True</property>
+            <property name="selection-mode">none</property>
+            <property name="hexpand">1</property>
+            <child>
+              <object class="GtkListBoxRow" id="listboxrow1">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="hexpand">1</property>
+                <child>
+                  <object class="GtkBox" id="combobox_box">
+                    <property name="visible">True</property>
+                    <property name="margin_start">16</property>
+                    <property name="margin_end">16</property>
+                    <property name="margin_top">16</property>
+                    <property name="margin_bottom">16</property>
+                    <property name="hexpand">1</property>
+                    <child>
+                      <object class="GtkLabel" id="panelButtonPosition">
+                        <property name="visible">True</property>
+                        <property name="tooltip-text" translatable="yes">Set the position of the button on the top panel</property>
+                        <property name="label" translatable="yes">Button position on panel</property>
+                        <property name="xalign">0</property>
+                        <property name="hexpand">1</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="panelButtonPosition_combobox">
+                        <property name="visible">True</property>
+                        <property name="active">4</property>
+                        <items>
+                          <item id="0" translatable="yes">Left end</item>
+                          <item id="1" translatable="yes">Left</item>
+                          <item id="2" translatable="yes">Center</item>
+                          <item id="3" translatable="yes">Right</item>
+                          <item id="4" translatable="yes">Right end</item>
+                        </items>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkListBoxRow" id="listboxrow2">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="hexpand">1</property>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin_start">16</property>
+                    <property name="margin_end">16</property>
+                    <property name="margin_top">16</property>
+                    <property name="margin_bottom">16</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">Enable hotkey</property>
+                            <property name="tooltip-text" translatable="yes">Enable &lt;Super&gt;d hotkey</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkSwitch" id="useHotkey_switch">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">WARNING: This will reset system keybinding
+for "Hide all normal windows"</property>
+                            <style>
+                              <class name="dim-label"/>
+                            </style>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="show-desktop-applet">
+
+	<enum id="org.gnome.shell.extensions.show-desktop-applet.panel-position">
+		<value value="0" nick="LEFT-END"/>
+		<value value="1" nick="LEFT"/>
+		<value value="2" nick="CENTER"/>
+		<value value="3" nick="RIGHT"/>
+		<value value="4" nick="RIGHT-END"/>
+	</enum>
+
+	<schema path="/org/gnome/shell/extensions/show-desktop-applet/" id="org.gnome.shell.extensions.show-desktop-applet">
+
+		<key name="button-position" enum="org.gnome.shell.extensions.show-desktop-applet.panel-position">
+			<default>'RIGHT-END'</default>
+			<summary>Position on panel.</summary>
+			<description>Sets the position of the extension on the panel.</description>
+		</key>
+
+		<key type="b" name="enable-hotkey">
+			<default>false</default>
+			<summary>Enable hotkey</summary>
+			<description>Enable hotkey for show-desktop</description>
+		</key>
+
+		<key type="as" name="show-desktop-hotkey">
+			<default><![CDATA[['<Super>d']]]></default>
+			<summary>The hotkey</summary>
+			<description>Hotkey for show-desktop</description>
+		</key>
+
+	</schema>
+
+</schemalist>
