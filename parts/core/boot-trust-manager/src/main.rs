@@ -66,9 +66,14 @@ fn main() -> Result<(), i32> {
         Commands::Open { device } => manager.open(device),
     };
 
-    // Return with success code if the device is not encrypted or the boot vault is not installed
+    // Return with success code if the device is not encrypted,
+    // the boot vault is not installed, or no EFI boot device
+    // is found, which is expected on legacy systems.
     result.or_else(|error| match error {
-        PuavoError::NoBootVault | PuavoError::NoPrimaryLuksPartition => Ok(()),
+        PuavoError::NoBootVault
+        | PuavoError::NoPrimaryLuksPartition
+        | PuavoError::NoEFIBootDisk(_)
+        | PuavoError::NoEFIPartition => Ok(()),
         _ => Err(1),
     })
 }

@@ -77,6 +77,7 @@ impl BootTrustManager {
         Self::configure(&display, configurators).inspect_err(|error| {
             if matches!(error,
                         PuavoError::NoEFIBootDisk(_)
+                          | PuavoError::NoBootVault
                           | PuavoError::NoEFIPartition
                           | PuavoError::NoPrimaryLuksPartition) {
                 // these conditions are normal and we need not tell user
