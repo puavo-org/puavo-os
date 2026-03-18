@@ -42,7 +42,7 @@ export default class QuickOverviewExtension extends Extension {
     enable() {
         this._button = new OverviewButton(this);
 
-        Main.panel.addToStatusArea(this.uuid, this._button, 1, 'left');
+        Main.panel.addToStatusArea(this.uuid, this._button, 2, 'left');
 
         this._activities = Main.panel.statusArea['activities'];
         this._activities.container.hide();

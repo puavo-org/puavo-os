@@ -96,6 +96,9 @@ trans-panel-opacity=0.8
 trans-dynamic-distance=0
 hide-overview-on-startup=true
 
+[org/gnome/shell/extensions/show-desktop-applet]
+button-position='LEFT'
+
 [org/gnome/settings-daemon/peripherals/touchpad]
 scroll-method='two-finger-scrolling'
 
