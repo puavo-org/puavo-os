@@ -646,6 +646,7 @@ class packages {
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
+    , 'gnome-shell-extension-user-theme'
     , 'gnome-sushi'
     , 'gnome-system-monitor'
     , 'gnome-terminal'

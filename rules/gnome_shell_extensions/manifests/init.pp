@@ -1,5 +1,11 @@
 class gnome_shell_extensions {
+  include ::dpkg
   include ::packages
+
+  dpkg::simpledivert {
+    '/usr/share/gnome-shell/extensions/user-theme@gnome-shell-extensions.gcampax.github.com/metadata.json':
+      require => Package['gnome-shell-extension-user-theme'];
+  }
 
   define add_extension () {
     $extension = $title
@@ -28,10 +34,15 @@ class gnome_shell_extensions {
     , 'panel-to-bottom@davron'
     , 'puavomenu@puavo.org'
     , 'quick-settings-tweaks@qwreey'
-    , 'screenkeyboardcontroller@puavo.org'
-    , 'user-theme@gnome-shell-extensions.gcampax.github.com' ]:
+    , 'screenkeyboardcontroller@puavo.org' ]:
       ;
+
+    'user-theme@gnome-shell-extensions.gcampax.github.com':
+      require => ::Dpkg::Simpledivert['/usr/share/gnome-shell/extensions/user-theme@gnome-shell-extensions.gcampax.github.com/metadata.json'];
   }
 
-  Package <| title == gnome-shell-extensions |>
+  Package <|
+      title == gnome-shell-extensions
+   or title == gnome-shell-extension-user-theme
+  |>
 }
