@@ -1,46 +1,46 @@
-// Copyright (C) 2011-2017 R M Yorston
+// Copyright (C) 2011-2024 R M Yorston
 // Licence: GPLv2+
 
-const Main = imports.ui.main;
-const SessionMode = imports.ui.sessionMode;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as SessionMode from 'resource:///org/gnome/shell/ui/sessionMode.js';
 
-function init() {
-}
+export default class FripperyMoveClock {
+    enable() {
+        // do nothing if the clock isn't centred in this mode
+        if ( Main.sessionMode.panel.center.indexOf('dateMenu') == -1 ) {
+            return;
+        }
 
-function enable() {
-    // do nothing if the clock isn't centred in this mode
-    if ( Main.sessionMode.panel.center.indexOf('dateMenu') == -1 ) {
-        return;
+        let centerBox = Main.panel._centerBox;
+        let rightBox = Main.panel._rightBox;
+        let dateMenu = Main.panel.statusArea['dateMenu'];
+        let children = centerBox.get_children();
+
+        // only move the clock if it's in the centre box
+        if ( children.indexOf(dateMenu.container) != -1 ) {
+            centerBox.remove_child(dateMenu.container);
+
+            children = rightBox.get_children();
+            rightBox.insert_child_at_index(dateMenu.container,
+                                            children.length-1);
+       }
     }
 
-    let centerBox = Main.panel._centerBox;
-    let rightBox = Main.panel._rightBox;
-    let dateMenu = Main.panel.statusArea['dateMenu'];
-    let children = centerBox.get_children();
+    disable() {
+        // do nothing if the clock isn't centred in this mode
+        if ( Main.sessionMode.panel.center.indexOf('dateMenu') == -1 ) {
+            return;
+        }
 
-    // only move the clock if it's in the centre box
-    if ( children.indexOf(dateMenu.container) != -1 ) {
-        centerBox.remove_actor(dateMenu.container);
+        let centerBox = Main.panel._centerBox;
+        let rightBox = Main.panel._rightBox;
+        let dateMenu = Main.panel.statusArea['dateMenu'];
+        let children = rightBox.get_children();
 
-        children = rightBox.get_children();
-        rightBox.insert_child_at_index(dateMenu.container, children.length-1);
-   }
-}
-
-function disable() {
-    // do nothing if the clock isn't centred in this mode
-    if ( Main.sessionMode.panel.center.indexOf('dateMenu') == -1 ) {
-        return;
-    }
-
-    let centerBox = Main.panel._centerBox;
-    let rightBox = Main.panel._rightBox;
-    let dateMenu = Main.panel.statusArea['dateMenu'];
-    let children = rightBox.get_children();
-
-    // only move the clock back if it's in the right box
-    if ( children.indexOf(dateMenu.container) != -1 ) {
-        rightBox.remove_actor(dateMenu.container);
-        centerBox.add_actor(dateMenu.container);
+        // only move the clock back if it's in the right box
+        if ( children.indexOf(dateMenu.container) != -1 ) {
+            rightBox.remove_child(dateMenu.container);
+            centerBox.add_child(dateMenu.container);
+        }
     }
 }
