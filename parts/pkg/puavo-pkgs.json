@@ -1,4 +1,10 @@
 {
+  "puavo.pkgs.branch": {
+    "default": "stable",
+    "description": "The puavo-pkg packages branch to follow",
+    "typehint": "string",
+    "choices": [ "stable", "devel" ]
+  },
   "puavo.pkgs.update": {
     "default": "auto",
     "description": "Puavo-pkg updating policy, automatically (auto) or manually (manual)",
