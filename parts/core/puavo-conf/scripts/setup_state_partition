@@ -111,7 +111,6 @@ case "$puavo_hosttype" in
       /var/lib/shorewall
       /var/lib/tftpboot/ltsp
       /var/log
-      /var/log/journal
       /var/spool/anacron
     '
     ;;
@@ -131,7 +130,6 @@ case "$puavo_hosttype" in
       /var/lib/puavo-desktop
       /var/lib/systemd
       /var/log
-      /var/log/journal
       /var/spool/anacron
     '
     ;;
