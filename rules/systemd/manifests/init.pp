@@ -3,6 +3,10 @@ class systemd {
   include ::systemd::sysusers
 
   file {
+    '/etc/pam.d/systemd-user':
+      require => Package['libpam-runtime'],
+      source  => 'puppet:///modules/systemd/etc_pam.d_systemd-user';
+
     '/etc/systemd/journald.conf':
       require => Package['systemd'],
       source  => 'puppet:///modules/systemd/journald.conf';
@@ -18,5 +22,8 @@ class systemd {
       target => '/usr/lib/systemd/system/graphical.target';
   }
 
-  Package <| title == systemd |>
+  Package <|
+       title == libpam-runtime
+    or title == systemd
+  |>
 }
