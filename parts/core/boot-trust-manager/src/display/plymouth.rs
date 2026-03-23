@@ -1,6 +1,18 @@
-use std::{process::Command, thread, time::Duration};
+use std::{
+    path::Path, process::Command, thread, time::Duration,
+};
+
+use log::info;
 
 use crate::{display::UserDisplay, error::PuavoError};
+
+/// Path where Plymouth script expects images to be placed.
+const PLYMOUTH_IMAGE_PATH: &str =
+    "/usr/share/plymouth/themes/image.png";
+
+/// Plymouth status string that tells the active theme to
+/// load and display an image from the expected location.
+const PLYMOUTH_STATUS_SHOW_IMAGE: &str = "show-image";
 
 /// Plymouth-backed `UserDisplay` implementation.
 pub struct PlymouthDisplay {
@@ -29,6 +41,40 @@ impl PlymouthDisplay {
         let status = Command::new("plymouth").arg("--ping").status()?;
         Ok(status.success())
     }
+}
+
+/// Send a status update to the Plymouth theme,
+/// which triggers a handler function in the theme's script.
+pub fn send_status_update(
+    status: &str,
+) -> Result<(), PuavoError> {
+    let result = Command::new("plymouth")
+        .arg("update")
+        .arg(format!("--status={}", status))
+        .status()?;
+
+    if !result.success() {
+        return Err(PuavoError::PlymouthError(
+            result.code().unwrap_or(-1),
+        ));
+    }
+
+    Ok(())
+}
+
+/// Displays the specified image using Plymouth.
+pub fn show_image(
+    source_path: &Path,
+) -> Result<(), PuavoError> {
+    let destination = Path::new(PLYMOUTH_IMAGE_PATH);
+    std::fs::copy(source_path, destination)?;
+
+    info!(
+        "Plymouth image copied to {}",
+        destination.display()
+    );
+
+    send_status_update(PLYMOUTH_STATUS_SHOW_IMAGE)
 }
 
 impl UserDisplay for PlymouthDisplay {
