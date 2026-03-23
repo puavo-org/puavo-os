@@ -26,6 +26,13 @@ def run(*cmd)
   system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
 end
 
+def tpm2_available?
+  system(
+    'grep', '-q', '2',
+    '/sys/class/tpm/tpm0/tpm_version_major'
+  )
+end
+
 # XXX this should be elsewhere, other scripts might find this useful
 module PuavoFacts
   Puavodir = '/etc/puavo'
@@ -518,13 +525,13 @@ module DiskHandler
 
   def self.check_tpm_enrollment_feasibility
     unless File.exist?(EncryptionPolicyPublicKeyPath)
-      warn 'Automatic TPM unlocking is not possible, because the public key ' \
+      warn 'TPM based unlocking is not possible, because the public key ' \
             + "does not exist at #{ EncryptionPolicyPublicKeyPath }"
       exit(1)
     end
 
-    unless system('grep', '-q', '2', '/sys/class/tpm/tpm0/tpm_version_major')
-      warn 'Automatic TPM unlocking is not possible, because TPM 2.x is not available'
+    unless tpm2_available?
+      warn 'TPM based unlocking is not possible, because TPM 2.x is not available'
       exit(1)
     end
   end
@@ -1026,6 +1033,11 @@ module QueryDiskInfo
   end
 
   def self.ask_encryption_setup()
+    unless tpm2_available?
+      warn 'TPM 2.x is not available, disk encryption is disabled'
+      return DiskHandler::EncryptionPresets['none'].clone
+    end
+
     prompt = %q{Select the encryption preset:}
     choices = DiskHandler::EncryptionPresets.map {
       |key, preset| [key, preset['label']] }
