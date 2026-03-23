@@ -1,6 +1,13 @@
 #!/bin/sh
 set -eu
 
+tpm_version_path="/sys/class/tpm/tpm0/tpm_version_major"
+
+if ! grep -q '2' "$tpm_version_path" 2>/dev/null; then
+  echo "TPM 2.0 is not available, skipping TPM key creation" >&2
+  exit 0
+fi
+
 output_directory="${1:-/images/boot/addons}"
 tpm_lockout_auth_file="${output_directory}/tpm.lockout.auth"
 
