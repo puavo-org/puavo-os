@@ -3,6 +3,7 @@ pub mod hashed;
 pub mod kernel_commandline;
 pub mod luks_tpm_token_manager;
 pub mod mount;
+pub mod recovery_qr;
 pub mod tpm;
 pub mod udev;
 pub mod unlock_info;

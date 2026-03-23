@@ -71,4 +71,7 @@ pub enum PuavoError {
 
     #[error("PIN configuration error: {0}")]
     PinConfigurationError(String),
+
+    #[error("Recovery QR error: {0}")]
+    RecoveryQrError(String),
 }
