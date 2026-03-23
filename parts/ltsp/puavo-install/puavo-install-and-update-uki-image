@@ -79,22 +79,38 @@ mount_disk_efi_partition() {
   mount "$efi_devpath" /boot/efi 1>/dev/null
 }
 
+estimate_uki_size() {
+  local file_sizes initrd_img_path kernel_version kernel_version_with_suffix \
+        uki_patch vmlinuz_path
+
+  uki_patch=$1
+  uki_dir=$(dirname "$uki_patch")
+  kernel_version_with_suffix=${uki_patch##*/kernel-}
+  kernel_version=${kernel_version_with_suffix%.uki.efi.bsdiff}
+
+  initrd_img_path="${uki_dir}/initrd.img-${kernel_version}"
+  vmlinuz_path="${uki_dir}/vmlinuz-${kernel_version}"
+
+  file_sizes=$(stat -c %s "$initrd_img_path" "$uki_patch" "$vmlinuz_path")
+  printf %s "$file_sizes" | awk '{ sum += $1 } END { print sum }'
+}
+
 estimate_required_disk_space() {
-  local existing_size image_size required_disk_space safety_margin uki_destination uki_kernels_dir
+  local existing_size required_disk_space safety_margin uki_destination \
+        uki_kernels_dir uki_patch uki_size_estimate
   required_disk_space=0
 
-  for uki in "$image_mountpoint"/boot/*.uki.efi; do
-    uki_kernels_dir="${UKI_ROOT}/${image_name_no_suffix}"
-    uki_destination="${uki_kernels_dir}/$(basename "$uki")"
-    [ -e "$uki" ] || continue
+  uki_kernels_dir="${UKI_ROOT}/${image_name_no_suffix}"
 
-    image_size=$(stat -c %s "$uki")
-
+  for uki_patch in "$image_mountpoint"/boot/*.uki.efi.bsdiff; do
+    test -e "$uki_patch" || continue
+    uki_size_estimate=$(estimate_uki_size "$uki_patch")
+    uki_destination="${uki_kernels_dir}/$(basename "$uki_patch" .bsdiff)"
     if [ -e "$uki_destination" ]; then
       existing_size=$(stat -c %s "$uki_destination")
-      required_disk_space=$((required_disk_space + image_size - existing_size))
+      required_disk_space=$((required_disk_space + uki_size_estimate - existing_size))
     else
-      required_disk_space=$((required_disk_space + image_size))
+      required_disk_space=$((required_disk_space + uki_size_estimate))
     fi
   done
 
