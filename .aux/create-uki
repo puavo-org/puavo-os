@@ -161,6 +161,12 @@ if signing_secureboot_has_additional_keys "$key_directory"; then
   signing_secureboot_sign_additional "$uki_file_path" "$key_directory"
 fi
 
+(
+  cd "$(dirname "$uki_file_path")"
+  sha256sum "$(basename "$uki_file_path")" > "${uki_file_path}.sha256.tmp"
+  mv "${uki_file_path}.sha256.tmp" "${uki_file_path}.sha256"
+)
+
 if ! create_bsdiff_file "$kernel_image" "$initrd_image" "$uki_file_path"; then
   echo "Could not create bsdiff file for UKI ${uki_file_path}" >&2
   exit 1
