@@ -15,6 +15,7 @@ ln -fns "$puavo_squid_cache_dir" /var/spool/squid
 #
 
 packages='
+  bsdiff
   dbus
   debootstrap
   devscripts

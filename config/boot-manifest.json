@@ -6,6 +6,7 @@
     "usr/lib/shim/*.efi.signed",
 
     "boot/kernel-*.uki.efi",
+    "boot/kernel-*.uki.efi.bsdiff",
     "boot/addons/*.efi",
 
     "etc/puavo-conf/tpm2-pcr-public-key*.pem",
@@ -20,7 +21,9 @@
     "usr/lib/shim/shimx64.efi.signed",
 
     "boot/kernel-6.12.74+deb13-amd64.uki.efi",
+    "boot/kernel-6.12.74+deb13-amd64.uki.efi.bsdiff",
     "boot/kernel-6.18.15+deb13-amd64.uki.efi",
+    "boot/kernel-6.18.15+deb13-amd64.uki.efi.bsdiff",
     "boot/addons/bootserver.addon.efi",
     "boot/addons/diskinstaller.addon.efi",
     "boot/addons/exam.addon.efi",

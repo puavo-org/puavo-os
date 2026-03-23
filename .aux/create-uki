@@ -1,8 +1,76 @@
 #!/bin/sh
-set -e
+
+set -eu
+
+tmpdir=''
+
+cleanup() {
+  if [ -n "$tmpdir" ]; then
+    rm -rf "$tmpdir" || true
+  fi
+}
+trap cleanup 0 INT TERM
+
+check_bsdiff_file() {
+  local initrd_image kernel_image tmp_ukibase_path tmp_uki_path uki_path \
+        uki_patch_path
+
+  kernel_image=$1
+  initrd_image=$2
+  uki_path=$3
+  uki_patch_path=$4
+
+  if [ ! -e "$uki_patch_path" ]; then
+    return 1
+  fi
+
+  tmp_ukibase_path="${tmpdir}/check_uki_base"
+  tmp_uki_path="${tmpdir}/check_uki_patched"
+
+  cat "$kernel_image" "$initrd_image" > "$tmp_ukibase_path"
+  if ! bspatch "$tmp_ukibase_path" "$tmp_uki_path" "$uki_patch_path"; then
+    echo 'Error when checking patch: bspatch returned error' >&2
+    rm -f "$tmp_ukibase_path" "$tmp_uki_path"
+    return 1
+  fi
+
+  if ! cmp "$tmp_uki_path" "$uki_path" > /dev/null 2>&1; then
+    echo 'The current UKI patch does not match the current UKI' >&2
+    rm -f "$tmp_ukibase_path" "$tmp_uki_path"
+    return 1
+  fi
+
+  return 0
+}
+
+create_bsdiff_file() {
+  local initrd_image kernel_image tmp_uki_patch_path tmp_uki_patch_base_path \
+        uki_patch_path uki_path
+
+  kernel_image=$1
+  initrd_image=$2
+  uki_path=$3
+
+  uki_patch_path="${uki_path}.bsdiff"
+  tmp_uki_patch_path="${uki_patch_path}.tmp"
+
+  if check_bsdiff_file "$kernel_image" "$initrd_image" "$uki_path"\
+                       "$uki_patch_path"; then
+    echo "The current bsdiff file ${uki_patch_file} is up-to-date."
+    return 0
+  fi
+
+  tmp_uki_patch_base_path="${tmpdir}/patching_uki_base"
+  cat "$kernel_image" "$initrd_image" > "$tmp_uki_patch_base_path" || return 1
+  echo -n "Creating bsdiff file from UKI ${uki_path}... "
+  bsdiff "$tmp_uki_patch_base_path" "$uki_path" "$tmp_uki_patch_path" \
+    || return 1
+  mv "$tmp_uki_patch_path" "$uki_patch_path" || return 1
+  echo DONE.
+}
 
 usage() {
-  echo "Usage: $0 <boot-directory> <art-directory> <key-directory> <kernel-version> <output>"
+  echo "Usage: $0 <boot-directory> <art-directory> <key-directory> <kernel-version> <uki_path>"
   exit 1
 }
 
@@ -14,14 +82,19 @@ boot_directory=$1
 art_directory=$2
 key_directory=$3
 kernel_version=$4
-output=$5
+uki_file_path=$5
+
+if ! tmpdir=$(mktemp -d "/tmp/create-uki.${uki_file_path##/*}.XXXXXX"); then
+  echo 'Error in creating a temporary directory' >&2
+  exit 1
+fi
 
 . "$(dirname "$0")/signing-backend"
 signing_validate || exit 2
 
 kernel_image="${boot_directory}/vmlinuz-${kernel_version}"
 initrd_image="${boot_directory}/initrd.img-${kernel_version}"
-os_release=$(basename "$output")
+os_release=$(basename "$uki_file_path")
 
 secure_boot_private_key=$(signing_secureboot_private_key "$key_directory")
 secure_boot_certificate=$(signing_secureboot_certificate "$key_directory")
@@ -52,7 +125,8 @@ fi
 
 bootsplash_image="${art_directory}/bootsplash.bmp"
 
-# NOTE: By default, power off on emergency instead of dropping to shell for security
+# NOTE: By default, power off on emergency instead of dropping to shell
+# NOTE: for security.
 ukify build \
   --linux="$kernel_image" \
   --initrd="$initrd_image" \
@@ -66,11 +140,16 @@ ukify build \
   --secureboot-private-key="${secure_boot_private_key}" \
   --secureboot-certificate="${secure_boot_certificate}" \
   --splash="${bootsplash_image}" \
-  --output "$output" \
+  --output "$uki_file_path" \
   --measure
 
 # Attach additional Secure Boot signatures if additional key pairs exist
 if signing_secureboot_has_additional_keys "$key_directory"; then
-  echo "attaching additional Secure Boot signatures to UKI..."
-  signing_secureboot_sign_additional "$output" "$key_directory"
+  echo 'Attaching additional Secure Boot signatures to UKI...'
+  signing_secureboot_sign_additional "$uki_file_path" "$key_directory"
+fi
+
+if ! create_bsdiff_file "$kernel_image" "$initrd_image" "$uki_file_path"; then
+  echo "Could not create bsdiff file for UKI ${uki_file_path}" >&2
+  exit 1
 fi
