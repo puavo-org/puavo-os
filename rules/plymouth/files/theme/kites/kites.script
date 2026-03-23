@@ -116,8 +116,30 @@ fun boot_progress_callback(elapsed, progress_value) {
 
 Plymouth.SetBootProgressFunction(boot_progress_callback);
 
+# Load an image from the shared Plymouth themes directory and display it.
+fun show_image() {
+	local.image;
+	# NOTE: Absolute paths do not appear to work
+	image = Image("../image.png");
+
+	if (image.GetWidth() == 0) {
+		return;
+	}
+
+	global.overlay_image.sprite = Sprite(image);
+	global.overlay_image.sprite.SetPosition(
+		Window.GetX(),
+		Window.GetY(),
+		20000
+	);
+	global.overlay_image.sprite.SetOpacity(1);
+}
+
 # Update status callback
 fun update_status_callback(status) {
+	if (status == "show-image") {
+		show_image();
+	}
 }
 
 Plymouth.SetUpdateStatusFunction(update_status_callback);
