@@ -39,6 +39,10 @@ impl EfiProvider for TestEfiProvider {
     fn clear_pin_change_request(&self) {
         self.pin_change_requested.store(false, Ordering::SeqCst);
     }
+
+    fn read_recovery_bundle(&self) -> Option<String> {
+        None
+    }
 }
 
 /// Set up the test EFI provider with default state (no secure boot, no PIN change requested).

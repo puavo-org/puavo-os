@@ -17,6 +17,10 @@ pub trait EfiProvider: Send + Sync {
 
     /// Clear the PIN change request EFI variable.
     fn clear_pin_change_request(&self);
+
+    /// Read the recovery bundle from the EFI variable.
+    /// Returns `None` if the variable does not exist.
+    fn read_recovery_bundle(&self) -> Option<String>;
 }
 
 /// Default EFI provider that interacts with real EFI variables.
@@ -75,6 +79,9 @@ impl SystemEfiProvider {
     }
 }
 
+/// EFI variable name for the recovery bundle.
+const RECOVERY_BUNDLE_VARIABLE: &str = "PuavoRecoveryBundle";
+
 impl EfiProvider for SystemEfiProvider {
     fn is_secure_boot_enabled(&self) -> bool {
         let variable = Variable::new("SecureBoot");
@@ -92,6 +99,18 @@ impl EfiProvider for SystemEfiProvider {
 
     fn clear_pin_change_request(&self) {
         Self::clear_variable(PIN_CHANGE_REQUEST_VARIABLE)
+    }
+
+    fn read_recovery_bundle(&self) -> Option<String> {
+        let variable =
+            Self::puavo_variable(RECOVERY_BUNDLE_VARIABLE);
+
+        efivar::system()
+            .ok()
+            .and_then(|manager| manager.read(&variable).ok())
+            .and_then(|(value, _)| String::from_utf8(value)
+                .inspect_err(|error| error!("Recovery bundle is not valid UTF-8: {:?}", error))
+                .ok())
     }
 }
 
@@ -135,4 +154,9 @@ pub fn is_pin_change_requested() -> bool {
 /// Clear the PIN change request EFI variable.
 pub fn clear_pin_change_request() {
     with_provider(|provider| provider.clear_pin_change_request())
+}
+
+/// Read the recovery bundle from the EFI variable.
+pub fn read_recovery_bundle() -> Option<String> {
+    with_provider(|provider| provider.read_recovery_bundle())
 }
