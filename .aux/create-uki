@@ -54,6 +54,8 @@ create_bsdiff_file() {
   uki_patch_path="${uki_path}.bsdiff"
   tmp_uki_patch_path="${uki_patch_path}.tmp"
 
+  # As UKI files are not deterministic, this is pointless, but I suppose
+  # (in theory) some day they could be, and this would be a nice speedup.
   if check_bsdiff_file "$kernel_image" "$initrd_image" "$uki_path"\
                        "$uki_patch_path"; then
     echo "The current bsdiff file ${uki_patch_file} is up-to-date."
@@ -67,6 +69,16 @@ create_bsdiff_file() {
     || return 1
   mv "$tmp_uki_patch_path" "$uki_patch_path" || return 1
   echo DONE.
+
+  # Check the resulting file to verify that patch generation produced
+  # a good patch.
+  if ! check_bsdiff_file "$kernel_image" "$initrd_image" "$uki_path"\
+                         "$uki_patch_path"; then
+    echo "The generated bsdiff file for ${uki_patch_file} is corrupt." >&2
+    return 1
+  fi
+
+  return 0
 }
 
 usage() {
