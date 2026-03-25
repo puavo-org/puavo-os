@@ -62,9 +62,6 @@ Description: Automatic Puavo Desktop testing tool
 Package: puavo-client
 Architecture: any
 Depends: ${misc:Depends}, ruby, dnsutils
-Replaces: puavo-register
-Conflicts: puavo-register
-Provides: puavo-register
 Description: Ruby lib for Puavo
  Simple ruby wrapper for the Puavo HTTP API
  .
@@ -257,7 +254,6 @@ Depends: ${misc:Depends},
  puavo-client,
  puavo-devscripts,
  puavo-ds-slave,
- puavo-register,
  puavo-sharedir-manager,
  qemu-kvm,
  rdiff,
