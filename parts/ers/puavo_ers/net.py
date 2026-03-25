@@ -55,7 +55,7 @@ class Net:
             raise ValueError("invalid interface_name", interface_name)
         self.__interface_name = interface_name
         self.__network = ipaddress.IPv4Network(network)
-        self.__dhcp_subnet = list(self.__network.subnets(8))[dhcp_subnet_number]
+        self.__dhcp_subnet = list(self.__network.subnets(5))[dhcp_subnet_number]
         self.__was_managed = False
 
     @property
