@@ -78,12 +78,16 @@ class AbittiChoice
     return {
       'grub_cfg': grub_cfg_base64,
       'image': @image.filename,
-      'version': label,
+      'version': version,
     }
   end
 
   def label
     @image.label
+  end
+
+  def version
+    label.delete_prefix('abitti-candidate-')
   end
 end
 
