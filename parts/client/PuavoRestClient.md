@@ -1,54 +1,4 @@
-
 # PuavoRestClient
-
-CLI tool and Ruby library
-
-## CLI
-
-    Curl like client for puavo-rest
-
-    Usage: puavo-rest-client [options] [SCHEME://HOST[:PORT]]<PATH>
-
-    - If [SCHEME://HOST[:PORT]] is omitted it is automatically resolved from DNS
-    - If DNS resolving fails a fallback is read from puavo.www.apiserver
-
-    Examples:
-
-    GET requests
-
-    puavo-rest-client /v3/about
-    puavo-rest-client https://api.puavo.org/v3/about
-    puavo-rest-client --user-krb /v3/whoami
-    puavo-rest-client --user-etc /v3/devices/laptop1
-    puavo-rest-client --user uid=admin,o=puavo /v3/users
-    puavo-rest-client --user uid=admin,o=puavo --domain other.opinsys.net --no-dns /v3/current_organisation
-
-    POST requests
-
-    puavo-rest-client --data current_image=the_running_image /v3/devices/laptop1
-    puavo-rest-client --data-json '{"available_images": ["img1", "img2"]}' /v3/boot_servers/boot2
-
-    Options:
-
-    -u, --user <user[:password]>     Use basic auth. If password is not set password prompt will be displayed. Password is also read from the PUAVO_REST_CLIENT_PASSWORD env
-        --user-etc                   Automatically load credendials from /etc/puavo/ldap
-        --user-krb                   Use kerberos authentication
-        --user-bootserver            Use bootserver authentication (aka no client authentication)
-        --cacert FILE                Tells puavo-rest-client to use the specified certificate file to verify the peer
-    -d, --data BODY                  Use POST method and use BODY as the request body using Content-type application/x-www-form-urlencoded.  Set - to read from standard input.
-        --data-json JSON             POST JSON string with Content-Type application/json.  Set - to read from standard input.
-    -H, --header HEADER              Add custom header. Can be set multiple times. Example: --header 'Content-Type: application/json'
-        --domain DOMAIN              Use custom puavo domain. By default the domain is read from /etc/puavo/domain
-        --no-dns                     Do not search for server from DNS
-        --dns-only                   Force use server from DNS. If not found puavo-rest-client exits with a loud error
-        --retry-fallback             When DNS resolving is used and the resolved server is unreachable retry the request using puavo.www.apiserver
-    -L, --location                   Follow location headers on 3XX status codes
-        --port PORT                  Force custom port
-        --scheme SCHEME              Force custom scheme (http or https)
-    -m  --max-time SEC               Maximum time in seconds that you allow the whole operation to take
-    -v, --verbose                    Be verbose. PUAVO_REST_CLIENT_VERBOSE=1 env can be also used
-    -h, --help                       Show this message
-
 
 ## Ruby library
 
@@ -76,7 +26,6 @@ The class constructor takes an options Hash with following keys (all optional):
 - `:port<FixNum>` Force custom port
 - `:scheme<String>` Force scheme (http or https)
 - `:timeout<Float>` Maximum time in seconds that you allow the whole operation to take
-
 
 The value returned from the `get` method is a [http.rb] response object.
 
@@ -114,6 +63,4 @@ client.post("/v3/boot_servers/laptop1", :json => {
 The second argument is passed directly to http.rb's post method. See their
 [docs](https://github.com/httprb/http.rb#post-requests).
 
-
 [http.rb]: https://github.com/httprb/http.rb
-

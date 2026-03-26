@@ -97,5 +97,3 @@ Test
 Create package
 
     make deb
-
-[Puavo registration]: https://github.com/opinsys/puavo-register

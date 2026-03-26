@@ -30,7 +30,6 @@ install: install-dirs
 		bin/puavo-cert-tool \
 		bin/puavo-register \
 		bin/puavo-resolve-api-server \
-		bin/puavo-rest-client \
 		bin/puavo-sync-external-files \
 		bin/puavo-sync-printers
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
