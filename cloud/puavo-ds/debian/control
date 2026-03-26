@@ -12,7 +12,6 @@ Depends: ${misc:Depends},
  ${shlibs:Depends},
  ldap-utils,
  ruby,
- ruby-ldap,
  slapd
 Recommends: rng-tools
 Description: Puavo LDAP setup tool
