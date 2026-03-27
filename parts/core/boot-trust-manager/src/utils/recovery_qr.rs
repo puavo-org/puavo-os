@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use image::Luma;
 use log::{info, warn};
@@ -47,7 +47,7 @@ pub fn generate_recovery_qr_code(
 /// Generate the recovery QR code and display it via
 /// Plymouth.
 pub fn show_recovery_qr() {
-    let temporary_qr_code = std::env::temp_dir().join("recovery_qr.png");
+    let temporary_qr_code = PathBuf::from("/run/recovery_qr.png");
 
     generate_recovery_qr_code(&temporary_qr_code)
         .and_then(|exists| {

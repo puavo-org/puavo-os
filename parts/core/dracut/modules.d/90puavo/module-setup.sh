@@ -43,4 +43,10 @@ install() {
   inst_hook pre-pivot 90 "${moddir}/puavo-rootmount.sh"
   inst_hook pre-pivot 91 "${moddir}/puavo-plymouth.sh"
   inst_hook cleanup 20 "${moddir}/puavo-nbd-server.sh"
+
+  # Plymouth themes support displaying an image at runtime.
+  # The initramfs filesystem is read-only,
+  # so create a symlink to a writable location.
+  ln -sf /run/plymouth-image.png \
+    "${initdir}/usr/share/plymouth/themes/image.png"
 }

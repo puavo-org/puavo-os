@@ -7,8 +7,7 @@ use log::info;
 use crate::{display::UserDisplay, error::PuavoError};
 
 /// Path where Plymouth script expects images to be placed.
-const PLYMOUTH_IMAGE_PATH: &str =
-    "/usr/share/plymouth/themes/image.png";
+const PLYMOUTH_IMAGE_PATH: &str = "/run/plymouth-image.png";
 
 /// Plymouth status string that tells the active theme to
 /// load and display an image from the expected location.
