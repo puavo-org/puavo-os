@@ -1,0 +1,25 @@
+Remove binutils-dev (bfd.h) dependency from sbsigntools.
+
+Replaces the bfd.h include with a minimal ATTRIBUTE_PACKED
+define and adds stub typedefs for bfd_vma and bfd_byte.
+
+--- a/src/image.h	2026-03-31 10:36:54.420074908 +0000
++++ src/image.h	2026-03-31 10:37:10.296204178 +0000
+@@ -34,7 +34,7 @@
+ 
+ #include <stdint.h>
+ 
+-#include <bfd.h>
++#define ATTRIBUTE_PACKED
+ #define DO_NOT_DEFINE_LINENO
+ 
+ #include "coff/external.h"
+--- a/src/coff/pe.h	2026-03-31 10:36:54.420074908 +0000
++++ src/coff/pe.h	2026-03-31 10:37:10.296204178 +0000
+@@ -1,3 +1,6 @@
++typedef uint64_t bfd_vma;
++typedef uint8_t bfd_byte;
++
+ /* pe.h  -  PE COFF header information 
+ 
+    Copyright 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2009, 2010

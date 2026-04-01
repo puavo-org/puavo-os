@@ -1,0 +1,132 @@
+#!/bin/sh
+#
+# (Re)loads the kernel module and provisions it with keys.
+#
+# Accepts standard PEM key files. Converts them to the
+# PKCS#1 DER format that the kernel crypto API expects
+# before sending them to the module.
+#
+# If the module is already loaded, it is unloaded first.
+#
+# Must be run as root.
+#
+# Usage:
+#   sudo scripts/load-kernel-module \
+#       <server-public-key.pem> \
+#       <secure-boot-private-key.pem>
+
+set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+MODULE_DIRECTORY="${PROJECT_DIR}/sign"
+MODULE_NAME="puavo_command_line_signer"
+DEVICE_PATH="/dev/puavo-command-line-signer"
+SIGN_BINARY="${PROJECT_DIR}/sign/puavo-command-line-sign"
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "error: must be run as root" >&2
+  exit 1
+fi
+
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <server-public-key.pem>" \
+    "<secure-boot-private-key.pem>" >&2
+  exit 1
+fi
+
+server_public_key_path=$1
+secure_boot_private_key_path=$2
+
+if [ ! -f "${server_public_key_path}" ]; then
+  echo "error: not found: ${server_public_key_path}" >&2
+  exit 1
+fi
+
+if [ ! -f "${secure_boot_private_key_path}" ]; then
+  echo "error: not found:" \
+    "${secure_boot_private_key_path}" >&2
+  exit 1
+fi
+
+if [ ! -f "${SIGN_BINARY}" ]; then
+  echo "error: sign binary not found at" \
+    "${SIGN_BINARY}" >&2
+  echo "Run 'make userspace' first." >&2
+  exit 1
+fi
+
+# Convert PEM keys to PKCS#1 DER format in a temporary
+# directory. The kernel crypto API expects:
+#   public key:  RSAPublicKey (SEQUENCE { n, e })
+#   private key: RSAPrivateKey (traditional format)
+temporary_directory=$(mktemp -d)
+cleanup() { rm -rf "${temporary_directory}"; }
+trap cleanup EXIT
+
+server_der="${temporary_directory}/server.pub.der"
+secure_boot_der="${temporary_directory}/secure-boot.key.der"
+
+echo "Converting PEM keys to PKCS#1 DER..."
+
+# Convert the server public key from PEM to PKCS#1
+# RSAPublicKey DER. The standard PEM public key format
+# (SubjectPublicKeyInfo) wraps the RSA key in an
+# AlgorithmIdentifier, but the kernel crypto API
+# expects the bare RSAPublicKey which is just
+# SEQUENCE { n INTEGER, e INTEGER }. The
+# -RSAPublicKey_out flag produces this format.
+openssl rsa -pubin -in "${server_public_key_path}" \
+  -RSAPublicKey_out -outform DER \
+  -out "${server_der}" 2>/dev/null
+
+# Convert the Secure Boot private key from PEM to
+# PKCS#1 RSAPrivateKey DER. Modern OpenSSL defaults
+# to PKCS#8 encoding for private keys, but the kernel
+# crypto API expects the traditional PKCS#1
+# RSAPrivateKey format. The -traditional flag forces
+# PKCS#1 output.
+openssl rsa -in "${secure_boot_private_key_path}" \
+  -traditional -outform DER \
+  -out "${secure_boot_der}" 2>/dev/null
+
+# Unload the module if it is already loaded
+if lsmod | grep -q "^${MODULE_NAME} "; then
+  echo "Unloading existing ${MODULE_NAME} module..."
+  rmmod "${MODULE_NAME}"
+fi
+
+# Find the kernel module
+kernel_version=$(uname -r)
+module_path="${MODULE_DIRECTORY}/modules/${kernel_version}/${MODULE_NAME}.ko"
+
+if [ ! -f "${module_path}" ]; then
+  echo "error: ${MODULE_NAME}.ko not found" >&2
+  echo "Run 'make modules' first." >&2
+  exit 1
+fi
+
+# Load the kernel module
+echo "Loading ${MODULE_NAME} from ${module_path}..."
+insmod "${module_path}"
+
+# Wait briefly for the device to appear
+if [ ! -c "${DEVICE_PATH}" ]; then
+  sleep 1
+fi
+
+if [ ! -c "${DEVICE_PATH}" ]; then
+  echo "error: ${DEVICE_PATH} did not appear" >&2
+  dmesg | tail -5
+  exit 1
+fi
+
+echo "${MODULE_NAME} loaded, ${DEVICE_PATH} ready."
+
+# Provision the keys for the kernel module
+echo "Provisioning keys..."
+"${SIGN_BINARY}" --load-keys \
+  "${server_der}" \
+  "${secure_boot_der}"
+
+echo "Keys loaded. Module is ready for signing."
