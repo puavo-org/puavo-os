@@ -1,3 +1,4 @@
+use crate::configurators::command_line_signer::CommandLineSignerConfigurator;
 use crate::configurators::enrollment::EnrollmentConfigurator;
 use crate::configurators::pin::PinConfigurator;
 use crate::configurators::secure_boot_database::{SecureBootDatabaseConfigurator, SystemSecureBootShell};
@@ -6,6 +7,7 @@ use crate::display::UserDisplay;
 use crate::error::PuavoError;
 use crate::utils::luks_tpm_token_manager::LuksTpmTokenManager;
 
+pub mod command_line_signer;
 pub mod enrollment;
 pub mod pin;
 pub mod secure_boot_database;
@@ -27,7 +29,8 @@ pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
 
     let configurators = configurators(PinConfigurator::new()?)
         .chain(configurators(EnrollmentConfigurator::new()?))
-        .chain(configurators(SecureBootDatabaseConfigurator::new(SystemSecureBootShell {})?));
+        .chain(configurators(SecureBootDatabaseConfigurator::new(SystemSecureBootShell {})?))
+        .chain(configurators(CommandLineSignerConfigurator::new()?));
 
     Ok(configurators.collect())
 }
