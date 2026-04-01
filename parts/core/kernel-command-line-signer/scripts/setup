@@ -1,0 +1,59 @@
+#!/bin/sh
+#
+# Fetches and patches sbsigntools for use as a build
+# dependency. The result is cached in the target
+# directory and only fetched once.
+#
+# Usage:
+#   setup-sbsigntools <target-directory> <patches-directory>
+
+set -eu
+
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <target-directory> <patches-directory>" >&2
+  exit 1
+fi
+
+target_directory=$1
+patches_directory=$2
+
+SBSIGNTOOLS_REPOSITORY="https://git.kernel.org/pub/scm/linux/kernel/git/jejb/sbsigntools.git"
+SBSIGNTOOLS_TAG="v0.9.5"
+
+# Skip if already fetched
+if [ -f "${target_directory}/.fetched" ]; then
+  exit 0
+fi
+
+echo "Fetching sbsigntools ${SBSIGNTOOLS_TAG}..."
+
+# Clone and checkout the pinned tag
+git clone "${SBSIGNTOOLS_REPOSITORY}" "${target_directory}"
+git -C "${target_directory}" checkout "${SBSIGNTOOLS_TAG}"
+
+# Initialize and update submodules (ccan library).
+git -C "${target_directory}" submodule init
+git -C "${target_directory}" config \
+  submodule.lib/ccan.git.url \
+  https://github.com/rustyrussell/ccan.git
+git -C "${target_directory}" submodule update
+
+# The ccan submodule checks out into lib/ccan.git/ but
+# the sbsigntools source includes from lib/ccan/. Create
+# a symlink to bridge this.
+if [ ! -e "${target_directory}/lib/ccan" ]; then
+  ln -s ccan.git "${target_directory}/lib/ccan"
+fi
+
+# Apply patches
+echo "Applying patches..."
+
+for patch_file in "${patches_directory}"/*.patch; do
+  if [ -f "${patch_file}" ]; then
+    echo "  Applying $(basename "${patch_file}")..."
+    patch -d "${target_directory}" -p1 < "${patch_file}"
+  fi
+done
+
+touch "${target_directory}/.fetched"
+echo "sbsigntools setup complete."

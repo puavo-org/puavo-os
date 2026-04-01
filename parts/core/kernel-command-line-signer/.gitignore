@@ -1,0 +1,23 @@
+# Fetched dependency
+.sbsigntools/
+
+# Built binaries
+prepare/puavo-command-line-sign-prepare
+request/puavo-command-line-sign-request
+sign/puavo-command-line-sign
+assemble/puavo-command-line-sign-assemble
+
+# Kernel module build artifacts
+sign/*.ko
+sign/*.o
+sign/*.mod
+sign/*.mod.c
+sign/*.mod.o
+sign/modules.order
+sign/Module.symvers
+sign/.*.cmd
+sign/.tmp_versions/
+sign/modules/
+
+# Persistent test keys
+keys/

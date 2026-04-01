@@ -1,0 +1,67 @@
+Add IDC_build_der function for standalone IDC DER generation.
+
+The upstream IDC code only provides IDC_set which embeds the
+IDC directly into a PKCS7 structure via BIO. We need a
+function that produces the raw DER bytes so the request and
+assemble programs can work with them independently.
+
+--- a/src/idc.h	2026-03-31 10:36:54.424074940 +0000
++++ src/idc.h	2026-03-31 10:37:10.300204211 +0000
+@@ -42,5 +42,7 @@
+ struct idc *IDC_get(PKCS7 *p7, BIO *bio);
+ int IDC_check_hash(struct idc *idc, struct image *image);
+ 
++int IDC_build_der(struct image *image, uint8_t **out_buf, int *out_len);
++
+ #endif /* IDC_H */
+ 
+--- a/src/idc.c	2026-03-31 10:36:54.424074940 +0000
++++ src/idc.c	2026-03-31 10:37:10.300204211 +0000
+@@ -307,3 +307,47 @@
+ 
+ 	return 0;
+ }
++
++int IDC_build_der(struct image *image, uint8_t **out_buf, int *out_len)
++{
++	uint8_t sha[SHA256_DIGEST_LENGTH];
++	int peid_nid;
++	IDC_PEID *peid;
++	IDC *idc;
++
++	peid_nid = OBJ_create("1.3.6.1.4.1.311.2.1.15",
++			"spcPEImageData",
++			"PE Image Data");
++
++	image_hash_sha256(image, sha);
++
++	idc = IDC_new();
++	peid = IDC_PEID_new();
++
++	peid->file = IDC_LINK_new();
++	peid->file->type = 2;
++	peid->file->value.file = IDC_STRING_new();
++	peid->file->value.file->type = 0;
++	peid->file->value.file->value.unicode = ASN1_STRING_new();
++	ASN1_STRING_set(peid->file->value.file->value.unicode,
++			obsolete, sizeof(obsolete));
++
++	idc->data->type = OBJ_nid2obj(peid_nid);
++	idc->data->value = ASN1_TYPE_new();
++	type_set_sequence(image, idc->data->value, peid,
++			ASN1_ITEM_rptr(IDC_PEID));
++
++	idc->digest->alg->parameter = ASN1_TYPE_new();
++	idc->digest->alg->algorithm = OBJ_nid2obj(NID_sha256);
++	idc->digest->alg->parameter->type = V_ASN1_NULL;
++	ASN1_OCTET_STRING_set(idc->digest->digest,
++			sha, sizeof(sha));
++
++	*out_len = i2d_IDC(idc, NULL);
++	uint8_t *buf = malloc(*out_len);
++	uint8_t *tmp = buf;
++	i2d_IDC(idc, &tmp);
++	*out_buf = buf;
++
++	return 0;
++}

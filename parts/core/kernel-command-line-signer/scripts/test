@@ -1,0 +1,271 @@
+#!/bin/sh
+#
+# End-to-end test for the split signing pipeline.
+#
+# By default, tests with the userspace sign backend.
+# Pass --kernel to test via the kernel module ioctl
+# client instead. In kernel module mode, the module
+# must already be loaded with the same keys (use
+# scripts/load-kernel-module to load it).
+#
+# Keys are stored persistently in keys/ and generated
+# on first run via scripts/generate-keys. This allows
+# the kernel module to be loaded once and tested
+# repeatedly with the same keys.
+#
+# Usage:
+#   scripts/test            # userspace backend
+#   scripts/test --kernel   # kernel module backend
+
+set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+WORKING_DIR="$(mktemp -d /tmp/command-line-sign-test.XXXXXX)"
+KEYS_DIR="${PROJECT_DIR}/keys"
+
+PREPARE="${PROJECT_DIR}/prepare/puavo-command-line-sign-prepare"
+REQUEST="${PROJECT_DIR}/request/puavo-command-line-sign-request"
+SIGN="${PROJECT_DIR}/sign/puavo-command-line-sign"
+ASSEMBLE="${PROJECT_DIR}/assemble/puavo-command-line-sign-assemble"
+
+USE_KERNEL=false
+DEVICE_PATH="/dev/puavo-command-line-signer"
+
+if [ "${1-}" = "--kernel" ]; then
+  USE_KERNEL=true
+fi
+
+cleanup() { rm -rf "${WORKING_DIR}"; }
+trap cleanup EXIT
+
+echo "Working directory: ${WORKING_DIR}"
+echo ""
+
+# Build userspace tools
+echo "=== Building ==="
+make -C "${PROJECT_DIR}" userspace 2>&1 \
+  | grep -v "warning:"
+echo ""
+
+# Generate persistent keys if they do not exist
+"${SCRIPT_DIR}/generate-keys"
+echo ""
+
+if [ ! -f "${KEYS_DIR}/server.key" ] \
+    || [ ! -f "${KEYS_DIR}/secure-boot.key" ]; then
+  echo "error: keys not found in ${KEYS_DIR}" >&2
+  exit 1
+fi
+
+build_unsigned_addon() {
+  local parameters="$1"
+  local output="$2"
+  ukify build \
+    --cmdline="${parameters}" \
+    --output="${output}"
+}
+
+# Call the sign program with the appropriate backend.
+run_sign() {
+  local pe_path="$1"
+  local parameters="$2"
+  local authorization_path="$3"
+  local server_pub_path="$4"
+  local secure_boot_key_path="$5"
+  local attributes_path="$6"
+  local idc_path="$7"
+  local signature_output="$8"
+
+  if $USE_KERNEL; then
+    "${SIGN}" --kernel \
+      "${pe_path}" "${parameters}" \
+      "${authorization_path}" \
+      "${attributes_path}" "${idc_path}" \
+      "${signature_output}"
+  else
+    "${SIGN}" --user \
+      "${pe_path}" "${parameters}" \
+      "${authorization_path}" \
+      "${server_pub_path}" \
+      "${secure_boot_key_path}" \
+      "${attributes_path}" "${idc_path}" \
+      "${signature_output}"
+  fi
+}
+
+if $USE_KERNEL; then
+  if [ ! -c "${DEVICE_PATH}" ]; then
+    echo "error: ${DEVICE_PATH} not found" >&2
+    echo "Load the module first:" >&2
+    echo "  sudo scripts/load-kernel-module" \
+      "${KEYS_DIR}/server.pub" \
+      "${KEYS_DIR}/secure-boot.key" >&2
+    exit 1
+  fi
+  echo "  ${DEVICE_PATH} found, using kernel module."
+fi
+
+echo ""
+
+PARAMETERS="lockdown=confidentiality rd.emergency=poweroff"
+
+# ========================================================
+# Test 1: Full pipeline
+# ========================================================
+echo "=========================================="
+if $USE_KERNEL; then
+  echo " Test 1: Full pipeline (kernel module)"
+else
+  echo " Test 1: Full pipeline (userspace)"
+fi
+echo "=========================================="
+echo ""
+
+"${PREPARE}" "${PARAMETERS}" \
+  "${KEYS_DIR}/server.key" \
+  "${WORKING_DIR}/authorization.sig"
+echo ""
+
+build_unsigned_addon "${PARAMETERS}" \
+  "${WORKING_DIR}/addon.efi"
+echo "Unsigned addon: $(wc -c < "${WORKING_DIR}/addon.efi") bytes"
+echo ""
+
+"${REQUEST}" "${WORKING_DIR}/addon.efi" \
+  "${KEYS_DIR}/secure-boot.crt" \
+  "${WORKING_DIR}/attributes.der" \
+  "${WORKING_DIR}/idc.dat"
+echo ""
+
+run_sign "${WORKING_DIR}/addon.efi" "${PARAMETERS}" \
+  "${WORKING_DIR}/authorization.sig" \
+  "${KEYS_DIR}/server.pub" \
+  "${KEYS_DIR}/secure-boot.key" \
+  "${WORKING_DIR}/attributes.der" \
+  "${WORKING_DIR}/idc.dat" \
+  "${WORKING_DIR}/raw.sig"
+echo ""
+
+"${ASSEMBLE}" "${WORKING_DIR}/addon.efi" \
+  "${KEYS_DIR}/secure-boot.crt" \
+  "${WORKING_DIR}/attributes.der" \
+  "${WORKING_DIR}/idc.dat" \
+  "${WORKING_DIR}/raw.sig" \
+  "${WORKING_DIR}/addon.signed.efi"
+echo ""
+
+if command -v sbverify >/dev/null 2>&1; then
+  sbverify --cert "${KEYS_DIR}/secure-boot.crt" \
+    "${WORKING_DIR}/addon.signed.efi" 2>&1
+fi
+
+echo "[PASS] Full pipeline succeeded"
+echo ""
+
+# ========================================================
+# Test 2: Tampered PE
+# ========================================================
+echo "=========================================="
+echo " Test 2: Tampered .cmdline"
+echo "=========================================="
+echo ""
+
+TAMPERED="lockdown=confidentiality break=mount"
+build_unsigned_addon "${TAMPERED}" \
+  "${WORKING_DIR}/tampered.efi"
+
+if run_sign "${WORKING_DIR}/tampered.efi" \
+    "${PARAMETERS}" \
+    "${WORKING_DIR}/authorization.sig" \
+    "${KEYS_DIR}/server.pub" \
+    "${KEYS_DIR}/secure-boot.key" \
+    "${WORKING_DIR}/attributes.der" \
+    "${WORKING_DIR}/idc.dat" \
+    "${WORKING_DIR}/tampered.sig" 2>&1; then
+  echo "[FAIL] Should have rejected"
+  exit 1
+else
+  echo ""
+  echo "[PASS] .cmdline mismatch rejected"
+fi
+echo ""
+
+# ========================================================
+# Test 3: Forged authorization
+# ========================================================
+echo "=========================================="
+echo " Test 3: Forged server authorization"
+echo "=========================================="
+echo ""
+
+openssl genrsa \
+  -out "${WORKING_DIR}/attacker.key" 2048 2>/dev/null
+"${PREPARE}" "${TAMPERED}" \
+  "${WORKING_DIR}/attacker.key" \
+  "${WORKING_DIR}/forged.sig"
+echo ""
+
+build_unsigned_addon "${TAMPERED}" \
+  "${WORKING_DIR}/tampered2.efi"
+"${REQUEST}" "${WORKING_DIR}/tampered2.efi" \
+  "${KEYS_DIR}/secure-boot.crt" \
+  "${WORKING_DIR}/tampered.attributes" \
+  "${WORKING_DIR}/tampered.idc"
+echo ""
+
+if run_sign "${WORKING_DIR}/tampered2.efi" \
+    "${TAMPERED}" \
+    "${WORKING_DIR}/forged.sig" \
+    "${KEYS_DIR}/server.pub" \
+    "${KEYS_DIR}/secure-boot.key" \
+    "${WORKING_DIR}/tampered.attributes" \
+    "${WORKING_DIR}/tampered.idc" \
+    "${WORKING_DIR}/forged.raw" 2>&1; then
+  echo "[FAIL] Should have rejected"
+  exit 1
+else
+  echo ""
+  echo "[PASS] Forged authorization rejected"
+fi
+echo ""
+
+# ========================================================
+# Test 4: Tampered IDC
+# ========================================================
+echo "=========================================="
+echo " Test 4: Tampered IDC"
+echo "=========================================="
+echo ""
+
+if run_sign "${WORKING_DIR}/addon.efi" \
+    "${PARAMETERS}" \
+    "${WORKING_DIR}/authorization.sig" \
+    "${KEYS_DIR}/server.pub" \
+    "${KEYS_DIR}/secure-boot.key" \
+    "${WORKING_DIR}/attributes.der" \
+    "${WORKING_DIR}/tampered.idc" \
+    "${WORKING_DIR}/bad.sig" 2>&1; then
+  echo "[FAIL] Should have rejected"
+  exit 1
+else
+  echo ""
+  echo "[PASS] IDC PE digest mismatch rejected"
+fi
+echo ""
+
+# ========================================================
+echo "==========================================="
+echo " ALL TESTS PASSED"
+echo "==========================================="
+echo ""
+echo " [PASS] Full pipeline (key/cert separated)"
+echo " [PASS] Tampered PE rejected"
+echo " [PASS] Forged authorization rejected"
+echo " [PASS] Tampered IDC rejected"
+echo ""
+if $USE_KERNEL; then
+  echo " Backend: kernel module (${DEVICE_PATH})"
+else
+  echo " Backend: userspace (OpenSSL)"
+fi

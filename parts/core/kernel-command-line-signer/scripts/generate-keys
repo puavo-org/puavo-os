@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# Generates persistent test keys for the signing
+# pipeline. Keys are stored in keys/ and reused across
+# test runs.
+#
+# Will not overwrite existing keys. Remove the keys/
+# directory to regenerate.
+#
+# Usage:
+#   scripts/generate-keys
+
+set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+KEYS_DIR="${PROJECT_DIR}/keys"
+
+if [ -d "${KEYS_DIR}" ]; then
+  echo "Keys already exist in ${KEYS_DIR}"
+  echo "Remove the directory to regenerate."
+  exit 0
+fi
+
+mkdir -p "${KEYS_DIR}"
+
+echo "Generating test keys in ${KEYS_DIR}..."
+
+# Server key pair (used to authorize parameter changes)
+openssl genrsa \
+  -out "${KEYS_DIR}/server.key" 2048 2>/dev/null
+openssl rsa -in "${KEYS_DIR}/server.key" -pubout \
+  -out "${KEYS_DIR}/server.pub" 2>/dev/null
+echo "  server.key       server private key"
+echo "  server.pub       server public key"
+
+# Secure Boot key pair (device signing key).
+# The certificate includes codeSigning extended key
+# usage, which is required for kernel module signing
+# under Secure Boot lockdown.
+openssl req -x509 -newkey rsa:2048 \
+  -keyout "${KEYS_DIR}/secure-boot.key" \
+  -out "${KEYS_DIR}/secure-boot.crt" \
+  -days 36500 -nodes \
+  -subj "/CN=Test Secure Boot Key" \
+  -addext "basicConstraints=critical,CA:FALSE" \
+  -addext "keyUsage=critical,digitalSignature" \
+  -addext "extendedKeyUsage=codeSigning" \
+  2>/dev/null
+echo "  secure-boot.key  secure boot private key"
+echo "  secure-boot.crt  secure boot certificate"
