@@ -258,7 +258,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   if test -e "(image)/boot/grub/puavo/${puavo_optional_grub_conf}.cfg"; then
     source "(image)/boot/grub/puavo/${puavo_optional_grub_conf}.cfg"
   fi
-  if [ "$locked" = "true" ] && [ -e "(image)/boot/grub/puavo/superusers.cfg"; then
+  if [ "$locked" = "true" -a -e "(image)/boot/grub/puavo/superusers.cfg" ]; then
     source "(image)/boot/grub/puavo/superusers.cfg"
   fi
   loopback -d image
