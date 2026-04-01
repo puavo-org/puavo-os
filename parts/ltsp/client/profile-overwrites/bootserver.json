@@ -9,6 +9,7 @@
   "puavo.guestlogin.enabled": "false",
   "puavo.networking.bootserver.interfaces.schools": "ltsp*,wlan*:*",
   "puavo.networking.ddns.dhcpd_interfaces": "ltsp*,wlan*",
+  "puavo.pkgs.update": "nightly",
   "puavo.serialconsole.enabled": "true",
   "puavo.service.atop.enabled": "true",
   "puavo.service.cron.cronjobs": "fix-homedir-permissions,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-setup-bootserver-printer-restrictions,puavo-update-ldap-slave,remove-cups-jobs",

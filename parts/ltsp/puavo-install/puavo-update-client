@@ -133,10 +133,24 @@ run_dbus() {
             "$@" > /dev/null
 }
 
-if [ "$(puavo-conf puavo.pkgs.update)" = 'manual' ]; then
-  log notice 'not updating puavo-pkgs as updates should be manual'
-else
-  # trigger puavo-pkg-update
+do_puavo_pkg_update=true
+case "$(puavo-conf puavo.pkgs.update)" in
+  manual)
+    log notice 'not updating puavo-pkgs as updates should be manual'
+    do_puavo_pkg_update=false
+    ;;
+  nightly)
+    hour=$(date +%H)
+    if [ "$hour" -ge 6 ] && [ "$hour" -lt 22 ]; then
+      log notice 'not updating puavo-pkgs, updates should happen only at night'
+      do_puavo_pkg_update=false
+    fi
+    ;;
+  *)
+    ;;
+esac
+
+if $do_puavo_pkg_update; then
   if run_dbus /pkgupdater org.puavo.client.pkgupdater.StartUpdate; then
     log notice 'triggered puavo-pkg updates'
   else
