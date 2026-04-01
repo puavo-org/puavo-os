@@ -37,9 +37,18 @@ install() {
     mkdir -p "${initdir}/etc/puavo"
     "${moddir}/scripts/install-persistent-configurators" "${initdir}/etc/puavo/"
 
-    # Install all public TPM PCR keys
+    # Install kernel command-line signer and related utilities
+    instmods puavo_command_line_signer
+    inst "${moddir}/scripts/initialize-command-line-signer" \
+         "/usr/sbin/puavo-command-line-signer-initialize"
+    inst_multiple /usr/sbin/puavo-command-line-sign
+
+    # Install all public TPM PCR keys and the server
+    # signing public key (if present)
     mkdir -p "${initdir}/etc/puavo-conf"
     cp /etc/puavo-conf/tpm2-pcr-public-key*.pem \
+       "${initdir}/etc/puavo-conf" || true
+    cp /etc/puavo-conf/server.pub \
        "${initdir}/etc/puavo-conf" || true
 
     # Enable the service in initrd

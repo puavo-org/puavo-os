@@ -1,0 +1,117 @@
+#!/bin/sh
+#
+# Loads the kernel command-line signer module and
+# provisions it with keys. Intended to be called by
+# Boot Trust Manager during early boot.
+#
+# Accepts standard PEM key files. Converts them to the
+# PKCS#1 DER format that the kernel crypto API expects
+# before sending them to the module.
+#
+# If a server public key is not available at the
+# configured path, generates a random key pair under
+# /run/puavo/ for testing.
+#
+# Usage:
+#   initialize-kernel-module \
+#       <server-public-key-pem> \
+#       <secure-boot-private-key-pem>
+
+set -eu
+
+MODULE_NAME="puavo_command_line_signer"
+DEVICE_PATH="/dev/puavo-command-line-signer"
+SIGN_BINARY="/usr/sbin/puavo-command-line-sign"
+
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <server-public-key-pem>" \
+    "<secure-boot-private-key-pem>" >&2
+  exit 1
+fi
+
+server_public_key_path=$1
+secure_boot_private_key_path=$2
+
+if [ ! -f "${secure_boot_private_key_path}" ]; then
+  echo "error: not found:" \
+    "${secure_boot_private_key_path}" >&2
+  exit 1
+fi
+
+# If the server public key does not exist, generate
+# a random key pair for testing. The private key is
+# stored alongside it so the test pipeline can use
+# it with the prepare tool.
+if [ ! -f "${server_public_key_path}" ]; then
+  echo "Server public key not found at" \
+    "${server_public_key_path}"
+  echo "Generating random server key pair" \
+    "under /run/puavo/..."
+
+  mkdir -p /run/puavo
+  openssl genrsa \
+    -out /run/puavo/server.key 2048 2>/dev/null
+  openssl rsa -in /run/puavo/server.key -pubout \
+    -out /run/puavo/server.pub 2>/dev/null
+
+  server_public_key_path="/run/puavo/server.pub"
+  echo "Using ${server_public_key_path}"
+fi
+
+# Convert PEM keys to PKCS#1 DER in a temporary
+# directory. The kernel crypto API expects:
+#   public key:  RSAPublicKey (SEQUENCE { n, e })
+#   private key: RSAPrivateKey (traditional format)
+temporary_directory=$(mktemp -d)
+cleanup() { rm -rf "${temporary_directory}"; }
+trap cleanup EXIT
+
+server_der="${temporary_directory}/server.pub.der"
+secure_boot_der="${temporary_directory}/secure-boot.key.der"
+
+# The standard PEM public key format
+# (SubjectPublicKeyInfo) wraps the RSA key in an
+# AlgorithmIdentifier, but the kernel crypto API
+# expects the bare RSAPublicKey which is just
+# SEQUENCE { n INTEGER, e INTEGER }. The -pubin flag
+# tells openssl the input is a public key, and
+# -RSAPublicKey_out produces the bare format.
+openssl rsa -pubin -in "${server_public_key_path}" \
+  -RSAPublicKey_out -outform DER \
+  -out "${server_der}" 2>/dev/null
+
+# Modern openssl defaults to PKCS#8 encoding for
+# private keys, but the kernel crypto API expects the
+# traditional PKCS#1 RSAPrivateKey format. The
+# -traditional flag forces PKCS#1 output.
+openssl rsa -in "${secure_boot_private_key_path}" \
+  -traditional -outform DER \
+  -out "${secure_boot_der}" 2>/dev/null
+
+# Load the kernel module if not already loaded
+if [ ! -c "${DEVICE_PATH}" ]; then
+  echo "Loading ${MODULE_NAME}..."
+  modprobe "${MODULE_NAME}" || {
+    echo "error: failed to load ${MODULE_NAME}" >&2
+    exit 1
+  }
+
+  # Wait briefly for the device to appear
+  # TODO: We need a more robust way
+  if [ ! -c "${DEVICE_PATH}" ]; then
+    sleep 1
+  fi
+
+  if [ ! -c "${DEVICE_PATH}" ]; then
+    echo "error: ${DEVICE_PATH} did not appear" >&2
+    exit 1
+  fi
+fi
+
+# Provision the keys
+echo "Provisioning keys for ${MODULE_NAME}..."
+"${SIGN_BINARY}" --load-keys \
+  "${server_der}" \
+  "${secure_boot_der}"
+
+echo "Kernel command-line signer initialized."
