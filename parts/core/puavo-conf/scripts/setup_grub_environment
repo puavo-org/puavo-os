@@ -55,6 +55,16 @@ setup_locale() {
   fi
 }
 
+setup_locked() {
+  local puavo_grub_locked
+  puavo_grub_locked=$(puavo-conf puavo.grub.locked)
+  if [ "$puavo_grub_locked" = 'true' ]; then
+    grubedit set 'locked=true'
+  else
+    grubedit unset locked
+  fi
+}
+
 setup_optional_grub_config() {
   puavo_optional_grub_conf=$(puavo-conf puavo.grub.config)
   if [ -n "$puavo_optional_grub_conf" ]; then
@@ -123,6 +133,7 @@ setup_grub_theme           || status=1
 setup_kernel_arguments     || status=1
 setup_kernel_version       || status=1
 setup_locale               || status=1
+setup_locked               || status=1
 setup_optional_grub_config || status=1
 setup_timeout              || status=1
 setup_windows_enabled      || status=1

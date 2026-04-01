@@ -16,6 +16,9 @@ class grub {
     '/boot/grub/puavo/default.cfg':
       source => 'puppet:///modules/grub/default.cfg';
 
+    '/boot/grub/puavo/superusers.cfg':
+      source => 'puppet:///modules/grub/superusers.cfg';
+
     '/etc/apt/preferences.d/50-grub.pref':
       content => template('grub/50-grub.pref');
   }
