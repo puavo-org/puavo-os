@@ -413,8 +413,8 @@ install_localbootdevice() {
   fi
 
   if [ "$puavo_hosttype" = 'laptop' \
-    -a -n "$(puavo-conf puavo.abitti.version 2>/dev/null || true)" ]; then
-      /usr/local/sbin/puavo-update-abitti-image \
+    -a -n "$(puavo-conf puavo.abitti2.version 2>/dev/null || true)" ]; then
+      /usr/local/sbin/puavo-update-abitti2-image \
         || update_configuration_retstatus=1
   fi
 
