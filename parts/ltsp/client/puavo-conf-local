@@ -47,7 +47,7 @@ else
 fi
 
 case "$key" in
-  puavo.abitti.version \
+  puavo.abitti2.version \
   | puavo.grub.boot_default \
   | puavo.grub.developer_mode.enabled \
   | puavo.grub.windows.enabled \
