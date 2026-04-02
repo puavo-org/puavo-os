@@ -9,11 +9,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-laptop-setup:210
+#: puavo-laptop-setup:217
 msgid "and"
 msgstr "und"
 
-#: puavo-laptop-setup:298
+#: puavo-laptop-setup:305
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
@@ -21,7 +21,7 @@ msgstr ""
 "Es ist jetzt möglich Windows beim Startmenü wählen. Das Menü wird kurz nach "
 "dem Einschalten von dem Computer gezeigt."
 
-#: puavo-laptop-setup:302
+#: puavo-laptop-setup:309
 msgid ""
 "Abitti 2 is not updated when running Windows, you have to boot into the "
 "current system to update it."
@@ -29,35 +29,35 @@ msgstr ""
 "Abitti 2 wird unter Windows nicht aktualisiert; du musst in das aktuelle "
 "System booten, um es zu aktualisieren."
 
-#: puavo-laptop-setup:441
+#: puavo-laptop-setup:448
 msgid "error saving changes"
 msgstr "Fehler beim Speichern der Veränderungen"
 
-#: puavo-laptop-setup:476
+#: puavo-laptop-setup:483
 msgid "Factory reset is running step"
 msgstr "Das Zurücksetzen der Werkseinstellungen Schritt"
 
-#: puavo-laptop-setup:489
+#: puavo-laptop-setup:496
 msgid "Factory reset is running"
 msgstr "Das Zurücksetzen der Werkseinstellungen wird durchgeführt"
 
-#: puavo-laptop-setup:497
+#: puavo-laptop-setup:504
 msgid "Failed to start factory reset"
 msgstr "Das Zurücksetzen der Werkseinstellungen konnte nicht gestartet werden"
 
-#: puavo-laptop-setup:500 puavo-laptop-setup:531
+#: puavo-laptop-setup:507 puavo-laptop-setup:538
 msgid "Factory reset failed"
 msgstr "Das Zurücksetzen der Werkseinstellungen ist gescheitert"
 
-#: puavo-laptop-setup:518
+#: puavo-laptop-setup:525
 msgid "Factory reset succeeded."
 msgstr "Das Zurücksetzen der Werkseinstellungen ist gefolgt."
 
-#: puavo-laptop-setup:520
+#: puavo-laptop-setup:527
 msgid "The system is going to reboot in few seconds..."
 msgstr "Das System wird in einigen Sekunden neugestartet."
 
-#: puavo-laptop-setup:533
+#: puavo-laptop-setup:540
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -65,15 +65,15 @@ msgstr ""
 "Weitere Informationen können aus der Werkseinstellungslog gelesen werden. "
 "Bitte Kontakt mit Helpdesk aufnehmen."
 
-#: puavo-laptop-setup:625 puavo-laptop-setup:671
+#: puavo-laptop-setup:632 puavo-laptop-setup:678
 msgid "Laptop setup"
 msgstr "Laptop Einstellungen"
 
-#: puavo-laptop-setup:661
+#: puavo-laptop-setup:668
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sie haben nicht ausreichende Rechte um dieses Werkzeug zu verwenden"
 
-#: puavo-laptop-setup:671
+#: puavo-laptop-setup:678
 msgid "is already running"
 msgstr "schon im Gang"
 
@@ -94,8 +94,8 @@ msgid "school versions"
 msgstr ""
 
 #: puavo-laptop-setup.glade:83
-msgid "latest version"
-msgstr "Die letzte version"
+msgid "floating version"
+msgstr ""
 
 #: puavo-laptop-setup.glade:108
 msgid "this version:"
@@ -161,6 +161,9 @@ msgstr "Schließen"
 #: puavo-laptop-setup.glade:444
 msgid "Factory reset log"
 msgstr "Protokoll zum Zurücksetzen der Werkseinstellungen"
+
+#~ msgid "latest version"
+#~ msgstr "Die letzte version"
 
 #~ msgid "school version"
 #~ msgstr "Schulversion"

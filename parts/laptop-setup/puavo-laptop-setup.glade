@@ -80,7 +80,7 @@
             </child>
             <child>
               <object class="GtkRadioButton" id="abitti_version_alias">
-                <property name="label" translatable="yes">latest version</property>
+                <property name="label" translatable="yes">floating version</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">False</property>
@@ -94,7 +94,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkComboBoxText" id="abitti_alias">
+              <object class="GtkComboBoxText" id="abitti_alias_box">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
               </object>
@@ -120,7 +120,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkComboBoxText" id="abitti_version">
+              <object class="GtkComboBoxText" id="abitti_version_box">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
               </object>

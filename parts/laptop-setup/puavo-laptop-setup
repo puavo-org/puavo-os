@@ -93,7 +93,7 @@ class PuavoLaptopSetup:
         self.puavo_conf_grid = builder.get_object('puavo_conf_grid')
 
         self.abitti_info = self.get_abitti_info()
-        self.abitti_alias_version = self.get_abitti_alias_version('latest')
+        self.abitti_alias_versions = self.get_abitti_alias_versions()
         self.abitti_school_versions = self.get_abitti_school_versions()
 
         self.abitti_version_alias_button \
@@ -102,20 +102,20 @@ class PuavoLaptopSetup:
           = builder.get_object('abitti_version_school')
         self.abitti_version_any_button \
           = builder.get_object('abitti_version_any')
-        self.abitti_version_box = builder.get_object('abitti_version')
+        self.abitti_alias_box = builder.get_object('abitti_alias_box')
+        self.abitti_version_box = builder.get_object('abitti_version_box')
 
-        for abitti_choice in self.get_list_of_abitti_choices():
-          self.abitti_version_box.append(abitti_choice['version'],
-                                         abitti_choice['version'])
-
-        if self.abitti_alias_version:
-            self.abitti_version_alias_button.set_label('%s (%s)' \
-                % (self.abitti_version_alias_button.get_label(),
-                   self.abitti_alias_version))
         if self.abitti_school_versions:
             self.abitti_version_school_button.set_label('%s: %s' \
                 % (self.abitti_version_school_button.get_label(),
                    self.abitti_school_versions))
+
+        for alias, version in sorted(self.abitti_alias_versions.items()):
+            self.abitti_alias_box.append(alias, '%s (%s)' % (alias, version))
+
+        for abitti_choice in self.get_list_of_abitti_choices():
+          self.abitti_version_box.append(abitti_choice['version'],
+                                         abitti_choice['version'])
 
         self.boot_abitti_button   = builder.get_object('boot_abitti')
         self.boot_puavo_os_button = builder.get_object('boot_puavo_os')
@@ -164,37 +164,44 @@ class PuavoLaptopSetup:
             return None
 
 
-    # XXX how to use this?
-    def get_abitti_alias_version(self, alias):
+    def lookup_abitti2_alias(self, alias):
         try:
-            if not 'choices' in self.abitti_info:
-                raise Exception('no choices')
-            if not isinstance(self.abitti_info['choices'], dict):
-                raise Exception('choices is not a dict')
-            choices = self.abitti_info['choices']
-
-            aliases_info = self.abitti_info['aliases']
-            if type(aliases_info) != dict:
-                raise Exception('aliases is not a dict')
-            if not alias in aliases_info:
-                raise Exception('no such alias')
-
-            candidate = aliases_info[alias]
-            if not candidate in choices:
-                raise Exception('no such choice available: %s' % candidate)
-            if not isinstance(choices[candidate], dict):
-                raise Exception('choice is not a dict')
-            if not 'version' in choices[candidate]:
-                raise Exception('no version set for choice')
-            if not isinstance(choices[candidate]['version'], str):
-                raise Exception('version set for choice is not a string')
-
-            return choices[candidate]['version']
+            versions_by_alias = self.get_abitti_alias_versions()
+            return versions_by_alias[alias]
         except Exception as e:
             print('could not read the Abitti version for alias %s: %s ' \
                     % (alias, e.message),
                   file=sys.stderr)
             return None
+
+
+    def get_abitti_alias_versions(self):
+        version_by_alias = {}
+
+        if not 'choices' in self.abitti_info:
+            raise Exception('no choices')
+        if not isinstance(self.abitti_info['choices'], dict):
+            raise Exception('choices is not a dict')
+        choices_map = self.abitti_info['choices']
+
+        aliases_info = self.abitti_info['aliases']
+        if type(aliases_info) != dict:
+            raise Exception('aliases is not a dict')
+
+        for alias, choice in aliases_info.items():
+            if not isinstance(choice, str):
+                raise Exception('choice is not a string')
+            if not choice in choices_map:
+                raise Exception('no such choice available: %s' % candidate)
+            if not isinstance(choices_map[choice], dict):
+                raise Exception('choice is not a dict')
+            if not 'version' in choices_map[choice]:
+                raise Exception('no version set for choice')
+            if not isinstance(choices_map[choice]['version'], str):
+                raise Exception('version set for choice is not a string')
+            version_by_alias[alias] = choices_map[choice]['version']
+
+        return version_by_alias
 
 
     def get_abitti_school_versions(self):
@@ -206,7 +213,7 @@ class PuavoLaptopSetup:
             versions = device['conf']['puavo.abitti2.version']
             if type(versions) != str:
                 raise Exception('puavo.abitti2.version puavo-conf is not a string')
-            alias_versions = [ self.get_abitti_alias_version(x) for x in versions.split() ]
+            alias_versions = [ self.lookup_abitti2_alias(x) for x in versions.split() ]
             join_str = ' ' + _tr('and') + ' '
             return join_str.join(alias_versions)
         except:
