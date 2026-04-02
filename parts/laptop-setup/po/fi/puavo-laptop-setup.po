@@ -9,7 +9,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-laptop-setup:263
+#: puavo-laptop-setup:210
+msgid "and"
+msgstr "ja"
+
+#: puavo-laptop-setup:298
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
@@ -18,46 +22,46 @@ msgstr ""
 "käynnistysvalikkoon. Käynnistysvalikko tulee näkyviin aina tietokoneen "
 "uudelleen käynnistyksen yhteydessä."
 
-#: puavo-laptop-setup:267
+#: puavo-laptop-setup:302
 msgid ""
 "Abitti 2 is not updated when running Windows, you have to boot into the "
 "current system to update it."
 msgstr ""
-"Huomioi, että Abitti 2 koejärjestelmää ei päivitetä silloin, "
-"kun tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi "
-"kannettavan koejärjestelmäversiota, sinun tulee valita tietokoneen "
-"käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt "
-"käytössä olevaan Opinsys OS -käyttöjärjestelmään."
+"Huomioi, että Abitti 2 koejärjestelmää ei päivitetä silloin, kun tietokone "
+"on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi kannettavan "
+"koejärjestelmäversiota, sinun tulee valita tietokoneen käynnistyksen "
+"yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt käytössä olevaan "
+"Opinsys OS -käyttöjärjestelmään."
 
-#: puavo-laptop-setup:405
+#: puavo-laptop-setup:441
 msgid "error saving changes"
 msgstr "virhe tallennuksessa"
 
-#: puavo-laptop-setup:440
+#: puavo-laptop-setup:476
 msgid "Factory reset is running step"
 msgstr "Tehdasasetusten palautus on käynnissä vaiheessa"
 
-#: puavo-laptop-setup:453
+#: puavo-laptop-setup:489
 msgid "Factory reset is running"
 msgstr "Tehdasasetusten palautus on käynnissä"
 
-#: puavo-laptop-setup:461
+#: puavo-laptop-setup:497
 msgid "Failed to start factory reset"
 msgstr "Tehdasasetusten palautuksen käynnistys epäonnistui"
 
-#: puavo-laptop-setup:464 puavo-laptop-setup:495
+#: puavo-laptop-setup:500 puavo-laptop-setup:531
 msgid "Factory reset failed"
 msgstr "Tehdasasetusten palautus epäonnistui"
 
-#: puavo-laptop-setup:482
+#: puavo-laptop-setup:518
 msgid "Factory reset succeeded."
 msgstr "Tehdasasetusten palautus onnistui."
 
-#: puavo-laptop-setup:484
+#: puavo-laptop-setup:520
 msgid "The system is going to reboot in few seconds..."
 msgstr "Järjestelmä käynnistyy uudestaan muutaman sekunnin kuluessa..."
 
-#: puavo-laptop-setup:497
+#: puavo-laptop-setup:533
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -65,15 +69,15 @@ msgstr ""
 "Tarkemmat tiedot virheestä löytyvät tehdasasetusten palautuslokista. Olkaa "
 "hyvä ja ottakaa yhteyttä tukeen ongelman selvittämiseksi."
 
-#: puavo-laptop-setup:589 puavo-laptop-setup:635
+#: puavo-laptop-setup:625 puavo-laptop-setup:671
 msgid "Laptop setup"
 msgstr "Kannettavan asetukset"
 
-#: puavo-laptop-setup:625
+#: puavo-laptop-setup:661
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
 
-#: puavo-laptop-setup:635
+#: puavo-laptop-setup:671
 msgid "is already running"
 msgstr "on jo käynnissä"
 
@@ -90,55 +94,55 @@ msgid "Default operating system at boot"
 msgstr "Oletuksena käynnistettävä järjestelmä"
 
 #: puavo-laptop-setup.glade:66
+msgid "school versions"
+msgstr ""
+
+#: puavo-laptop-setup.glade:83
 msgid "latest version"
 msgstr "viimeisin versio"
 
-#: puavo-laptop-setup.glade:82
-msgid "school version"
-msgstr "koulun versio"
-
-#: puavo-laptop-setup.glade:99
+#: puavo-laptop-setup.glade:108
 msgid "this version:"
 msgstr "tämä versio:"
 
-#: puavo-laptop-setup.glade:144 puavo-laptop-setup.glade:324
+#: puavo-laptop-setup.glade:153 puavo-laptop-setup.glade:333
 msgid "Puavo OS (Linux)"
 msgstr "Puavo OS (Linux)"
 
-#: puavo-laptop-setup.glade:160
+#: puavo-laptop-setup.glade:169
 msgid "Abitti 2"
 msgstr "Abitti 2"
 
-#: puavo-laptop-setup.glade:176 puavo-laptop-setup.glade:340
+#: puavo-laptop-setup.glade:185 puavo-laptop-setup.glade:349
 msgid "Windows"
 msgstr "Windows"
 
 # from puavo-laptop-setup.glade
-#: puavo-laptop-setup.glade:212
+#: puavo-laptop-setup.glade:221
 msgid "Start using Windows"
 msgstr "Ota Windows käyttöön"
 
-#: puavo-laptop-setup.glade:231
+#: puavo-laptop-setup.glade:240
 msgid "Factory reset..."
 msgstr "Tehdasasetusten palautus..."
 
-#: puavo-laptop-setup.glade:257
+#: puavo-laptop-setup.glade:266
 msgid "Confirmation of factory reset"
 msgstr "Vahvistus tehdasasetusten palautukselle"
 
-#: puavo-laptop-setup.glade:275
+#: puavo-laptop-setup.glade:284
 msgid "Cancel"
 msgstr "Peruuta"
 
-#: puavo-laptop-setup.glade:291
+#: puavo-laptop-setup.glade:300
 msgid "Reset"
 msgstr "Palauta tehdasasetuksille"
 
-#: puavo-laptop-setup.glade:314
+#: puavo-laptop-setup.glade:323
 msgid "Select operating systems to reset:"
 msgstr "Valitse tehdasasetuksille palautettavat käyttöjärjestelmät:"
 
-#: puavo-laptop-setup.glade:360
+#: puavo-laptop-setup.glade:369
 msgid ""
 "<big>Factory reset <span foreground=\"red\" size=\"x-large\">erases all user "
 "data</span> from selected operating systems and restores their state to "
@@ -148,14 +152,17 @@ msgstr ""
 "large\">tuhoaa kaiken datan</span> valituista käyttöjärjestelmistä ja "
 "palauttaa ne takaisin tehdasasetuksille!</big>"
 
-#: puavo-laptop-setup.glade:375
+#: puavo-laptop-setup.glade:384
 msgid "Factory reset"
 msgstr "Tehdasasetusten palautus"
 
-#: puavo-laptop-setup.glade:390
+#: puavo-laptop-setup.glade:399
 msgid "Close"
 msgstr "Sulje"
 
-#: puavo-laptop-setup.glade:435
+#: puavo-laptop-setup.glade:444
 msgid "Factory reset log"
 msgstr "Tehdasasetusten palautusloki"
+
+#~ msgid "school version"
+#~ msgstr "koulun versio"

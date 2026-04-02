@@ -52,9 +52,21 @@ class PuavoLaptopSetup:
         self.save_state_flag = True
 
 
+    # XXX how to use this?
+    def get_abitti_aliases(self):
+        try:
+            aliases = self.abitti_info['aliases']
+            if not isinstance(aliases, dict):
+                raise Exception('aliases is not a dict')
+            return aliases
+        except Exception as e:
+            print("could not determine Abitti 2 aliases: %s" % e,
+                    file=sys.stderr)
+            return {}
+
+
     def get_list_of_abitti_choices(self):
         try:
-            # XXX what about aliases?
             choices = self.abitti_info['choices']
             if not isinstance(choices, dict):
                 raise Exception('choices is not a dict')
@@ -81,11 +93,11 @@ class PuavoLaptopSetup:
         self.puavo_conf_grid = builder.get_object('puavo_conf_grid')
 
         self.abitti_info = self.get_abitti_info()
-        self.abitti_latest_version = self.get_abitti_latest_version()
-        self.abitti_school_version = self.get_abitti_school_version()
+        self.abitti_alias_version = self.get_abitti_alias_version('latest')
+        self.abitti_school_versions = self.get_abitti_school_versions()
 
-        self.abitti_version_latest_button \
-          = builder.get_object('abitti_version_latest')
+        self.abitti_version_alias_button \
+          = builder.get_object('abitti_version_alias')
         self.abitti_version_school_button \
           = builder.get_object('abitti_version_school')
         self.abitti_version_any_button \
@@ -96,14 +108,14 @@ class PuavoLaptopSetup:
           self.abitti_version_box.append(abitti_choice['version'],
                                          abitti_choice['version'])
 
-        if self.abitti_latest_version:
-            self.abitti_version_latest_button.set_label('%s (%s)' \
-                % (self.abitti_version_latest_button.get_label(),
-                   self.abitti_latest_version))
-        if self.abitti_school_version:
-            self.abitti_version_school_button.set_label('%s (%s)' \
+        if self.abitti_alias_version:
+            self.abitti_version_alias_button.set_label('%s (%s)' \
+                % (self.abitti_version_alias_button.get_label(),
+                   self.abitti_alias_version))
+        if self.abitti_school_versions:
+            self.abitti_version_school_button.set_label('%s: %s' \
                 % (self.abitti_version_school_button.get_label(),
-                   self.abitti_school_version))
+                   self.abitti_school_versions))
 
         self.boot_abitti_button   = builder.get_object('boot_abitti')
         self.boot_puavo_os_button = builder.get_object('boot_puavo_os')
@@ -117,8 +129,8 @@ class PuavoLaptopSetup:
         self.reset_to_factory_settings.connect('clicked',
           self.confirm_reset_to_factory_settings)
 
-        self.abitti_version_latest_button.connect('toggled',
-            self.abitti_version_latest_chosen)
+        self.abitti_version_alias_button.connect('toggled',
+            self.abitti_version_alias_chosen)
         self.abitti_version_school_button.connect('toggled',
             self.abitti_version_school_chosen)
 
@@ -152,38 +164,61 @@ class PuavoLaptopSetup:
             return None
 
 
-    def get_abitti_latest_version(self):
+    # XXX how to use this?
+    def get_abitti_alias_version(self, alias):
         try:
-            # XXX
-            latest_version = self.abitti_info['aliases']['latest']
-            if type(latest_version) != str:
-                raise Exception('latest version is not a string')
-            return latest_version
+            if not 'choices' in self.abitti_info:
+                raise Exception('no choices')
+            if not isinstance(self.abitti_info['choices'], dict):
+                raise Exception('choices is not a dict')
+            choices = self.abitti_info['choices']
+
+            aliases_info = self.abitti_info['aliases']
+            if type(aliases_info) != dict:
+                raise Exception('aliases is not a dict')
+            if not alias in aliases_info:
+                raise Exception('no such alias')
+
+            candidate = aliases_info[alias]
+            if not candidate in choices:
+                raise Exception('no such choice available: %s' % candidate)
+            if not isinstance(choices[candidate], dict):
+                raise Exception('choice is not a dict')
+            if not 'version' in choices[candidate]:
+                raise Exception('no version set for choice')
+            if not isinstance(choices[candidate]['version'], str):
+                raise Exception('version set for choice is not a string')
+
+            return choices[candidate]['version']
         except Exception as e:
-            print('could not read the latest Abitti version', file=sys.stderr)
+            print('could not read the Abitti version for alias %s: %s ' \
+                    % (alias, e.message),
+                  file=sys.stderr)
             return None
 
 
-    def get_abitti_school_version(self):
+    def get_abitti_school_versions(self):
         # The "school version" might also come from organisation or
         # device-specific settings.
         try:
             with open('/state/etc/puavo/device.json') as file:
                 device = json.load(file)
-            school_version = device['conf']['puavo.abitti2.version']
-            if type(school_version) != str:
-                raise Exception('school version is not a string')
-            return school_version
+            versions = device['conf']['puavo.abitti2.version']
+            if type(versions) != str:
+                raise Exception('puavo.abitti2.version puavo-conf is not a string')
+            alias_versions = [ self.get_abitti_alias_version(x) for x in versions.split() ]
+            join_str = ' ' + _tr('and') + ' '
+            return join_str.join(alias_versions)
         except:
-            print('could not read the school Abitti version', file=sys.stderr)
+            print('could not read the school Abitti versions', file=sys.stderr)
             return None
 
 
-    def abitti_version_latest_chosen(self, widget):
+    def abitti_version_alias_chosen(self, widget):
         if not widget.get_active():
             return
         widget.grab_focus()
-        self.set_abitti_version('latest')
+        self.set_abitti_version('alias')
 
 
     def abitti_version_school_chosen(self, widget):
@@ -197,8 +232,8 @@ class PuavoLaptopSetup:
         if version != None:
               version = version.strip()
               if version == '':
-                  version = 'latest'
-              elif version == 'latest':
+                  version = 'alias'
+              elif version == 'alias':
                   pass
               else:
                   try:
@@ -299,9 +334,10 @@ class PuavoLaptopSetup:
             remove_gui_elements['puavo.abitti2.version'] = True
 
         if 'puavo.abitti2.version' in self.puavo_conf \
-          and not self.abitti_school_version:
+          and not self.abitti_school_versions:
             self.abitti_version_school_button.hide()
             if not self.puavo_conf['puavo.abitti2.version']:
+                # XXX does this make any sense?
                 # old configuration value was "school", yet we do not
                 # have a GUI element for that, so change to the 'latest'
                 self.puavo_conf['puavo.abitti2.version'] = 'latest'
@@ -344,11 +380,11 @@ class PuavoLaptopSetup:
                     if(disabler_key=='puavo.laptop-setup.enable_setting.abitti_version'):
                         Gtk.Widget.set_visible(self.builder.get_object('puavo.abitti2.version.display'), True)
                         self.set_abitti_version(None) # default to school version
-                        if(self.abitti_school_version):
-                            self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_school_version)
+                        if(self.abitti_school_versions):
+                            self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_school_versions)
                         else:
                             try:
-                                self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_latest_version)
+                                self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_alias_version)
                             except TypeError: # weird case, nothing relevant to display available, leave blank
                                 self.builder.get_object('puavo.abitti2.version.number').set_text("")
             except subprocess.CalledProcessError:
@@ -362,8 +398,8 @@ class PuavoLaptopSetup:
                 if value == None:
                     self.abitti_version_school_button.set_active(True)
                     self.abitti_version_box.set_active(-1)
-                elif value == 'latest':
-                    self.abitti_version_latest_button.set_active(True)
+                elif value == 'alias':
+                    self.abitti_version_alias_button.set_active(True)
                     self.abitti_version_box.set_active(-1)
                 else:
                     self.abitti_version_box.set_active_id(value)
