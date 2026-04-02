@@ -33,13 +33,9 @@ def puavoconf_get(puavoconf_key):
         return default_value
 
 
-def strip_abitti_v(value):
-    if value.startswith('abitti-v'):
-        return value.replace('abitti-v', '')
-    return value
-
 def we_have_windows():
     return os.path.exists('/images/boot/.puavo_windows_partition')
+
 
 class PuavoLaptopSetup:
     def __init__(self, app_window, builder):
@@ -73,7 +69,8 @@ class PuavoLaptopSetup:
                     for k, v in choices.items()
             ]
 
-            return sorted(versions, key=lambda d: Version(d['version']))
+            return sorted(versions, key=lambda d: Version(d['version']),
+                                    reverse=True)
         except Exception as e:
             print("could not determine Abitti 2 versions: %s" % e,
                     file=sys.stderr)
@@ -155,27 +152,13 @@ class PuavoLaptopSetup:
             return None
 
 
-    def get_human_version(self, abitti_version):
-        stripped_version = strip_abitti_v(abitti_version)
-        if not re.match('^\d+$', stripped_version):
-          return stripped_version
-
-        version_with_abitti = 'abitti-v%s' % stripped_version
-        if version_with_abitti in self.abitti_info['images']:
-          version_info = self.abitti_info['images'][version_with_abitti]
-          if 'version' in version_info:
-            return version_info['version']
-
-        return abitti_version
-
-
     def get_abitti_latest_version(self):
         try:
             # XXX
             latest_version = self.abitti_info['aliases']['latest']
             if type(latest_version) != str:
                 raise Exception('latest version is not a string')
-            return self.get_human_version(latest_version)
+            return latest_version
         except Exception as e:
             print('could not read the latest Abitti version', file=sys.stderr)
             return None
@@ -190,7 +173,7 @@ class PuavoLaptopSetup:
             school_version = device['conf']['puavo.abitti2.version']
             if type(school_version) != str:
                 raise Exception('school version is not a string')
-            return self.get_human_version(school_version)
+            return school_version
         except:
             print('could not read the school Abitti version', file=sys.stderr)
             return None
@@ -345,6 +328,7 @@ class PuavoLaptopSetup:
             self.remove_grid_entry(self.puavo_conf_grid,
                                    self.builder.get_object(puavo_conf_key))
 
+
     def remove_disabled_entries(self):
         disableconfs = {
             'puavo.laptop-setup.enable_setting.abitti_version':  'puavo.abitti2.version',
@@ -371,6 +355,7 @@ class PuavoLaptopSetup:
                 print("could not get puavo-conf key for %s" % disabler_key,
                         file=sys.stderr)
 
+
     def update_gui_state_from_puavoconf(self):
         for key, value in self.puavo_conf.items():
             if key == 'puavo.abitti2.version':
@@ -381,7 +366,6 @@ class PuavoLaptopSetup:
                     self.abitti_version_latest_button.set_active(True)
                     self.abitti_version_box.set_active(-1)
                 else:
-                    value = strip_abitti_v(value)
                     self.abitti_version_box.set_active_id(value)
                     self.abitti_version_any_button.set_active(True)
             elif key == 'puavo.grub.boot_default':
@@ -583,15 +567,18 @@ def on_dialog_delete_event(dialog, event):
     dialog.hide()
     return True
 
+
 def on_target_chooser_dialog_show(_):
     target_checkbutton_windows.set_visible(we_have_windows())
     target_checkbutton_windows.set_active(False)
     target_checkbutton_puavo_os.set_active(False)
 
+
 def on_target_checkbutton_toggled(_):
     target_chooser_dialog_button_reset.set_sensitive(
         target_checkbutton_windows.get_active() or target_checkbutton_puavo_os.get_active()
     )
+
 
 builder = Gtk.Builder()
 builder.set_translation_domain('puavo-laptop-setup')
