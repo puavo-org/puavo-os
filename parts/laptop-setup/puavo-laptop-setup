@@ -10,6 +10,8 @@ import subprocess
 import sys
 import threading
 
+from packaging.version import Version
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, GObject, Gtk
 
@@ -54,15 +56,28 @@ class PuavoLaptopSetup:
         self.save_state_flag = True
 
 
-    def get_list_of_abitti_versions(self):
+    def get_list_of_abitti_choices(self):
         try:
-            versions = self.abitti_info['build_numbers'].keys()
-            student_versions = [ v for v in versions if v.startswith('ABITTI') ]
-        except:
-            return []
+            # XXX what about aliases?
+            choices = self.abitti_info['choices']
+            if not isinstance(choices, dict):
+                raise Exception('choices is not a dict')
+            for k, v in choices.items():
+                if not 'version' in v:
+                    raise Exception('no version in %s' % k)
+                if not isinstance(v['version'], str):
+                    raise Exception('version is not a string for %s' % k)
 
-        # pick the first eight versions
-        return (sorted(student_versions, reverse=True))[:8]
+            versions = [
+                { 'choice': k, 'version': v['version'] } \
+                    for k, v in choices.items()
+            ]
+
+            return sorted(versions, key=lambda d: Version(d['version']))
+        except Exception as e:
+            print("could not determine Abitti 2 versions: %s" % e,
+                    file=sys.stderr)
+            return []
 
 
     def prepare(self):
@@ -80,8 +95,9 @@ class PuavoLaptopSetup:
           = builder.get_object('abitti_version_any')
         self.abitti_version_box = builder.get_object('abitti_version')
 
-        for abitti_version in self.get_list_of_abitti_versions():
-          self.abitti_version_box.append(abitti_version, abitti_version)
+        for abitti_choice in self.get_list_of_abitti_choices():
+          self.abitti_version_box.append(abitti_choice['version'],
+                                         abitti_choice['version'])
 
         if self.abitti_latest_version:
             self.abitti_version_latest_button.set_label('%s (%s)' \
@@ -133,7 +149,7 @@ class PuavoLaptopSetup:
 
     def get_abitti_info(self):
         try:
-            with open('/state/abitti/abitti.json') as file:
+            with open('/images/abitti2/abitti2.json') as file:
                 return json.load(file)
         except:
             return None
