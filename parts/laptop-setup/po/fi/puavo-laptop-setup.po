@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-laptop-setup:261
+#: puavo-laptop-setup:263
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
@@ -18,46 +18,46 @@ msgstr ""
 "käynnistysvalikkoon. Käynnistysvalikko tulee näkyviin aina tietokoneen "
 "uudelleen käynnistyksen yhteydessä."
 
-#: puavo-laptop-setup:265
+#: puavo-laptop-setup:267
 msgid ""
-"Abitti-compatible eExam-system is not updated when running Windows, you have "
-"to boot into the current system to update it."
+"Abitti 2 is not updated when running Windows, you have to boot into the "
+"current system to update it."
 msgstr ""
-"Huomioi, että Abitti-yhteensopivaa koejärjestelmää ei päivitetä silloin, kun "
-"tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi "
+"Huomioi, että Abitti 2 koejärjestelmää ei päivitetä silloin, "
+"kun tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi "
 "kannettavan koejärjestelmäversiota, sinun tulee valita tietokoneen "
 "käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt "
 "käytössä olevaan Opinsys OS -käyttöjärjestelmään."
 
-#: puavo-laptop-setup:403
+#: puavo-laptop-setup:405
 msgid "error saving changes"
 msgstr "virhe tallennuksessa"
 
-#: puavo-laptop-setup:438
+#: puavo-laptop-setup:440
 msgid "Factory reset is running step"
 msgstr "Tehdasasetusten palautus on käynnissä vaiheessa"
 
-#: puavo-laptop-setup:451
+#: puavo-laptop-setup:453
 msgid "Factory reset is running"
 msgstr "Tehdasasetusten palautus on käynnissä"
 
-#: puavo-laptop-setup:459
+#: puavo-laptop-setup:461
 msgid "Failed to start factory reset"
 msgstr "Tehdasasetusten palautuksen käynnistys epäonnistui"
 
-#: puavo-laptop-setup:462 puavo-laptop-setup:493
+#: puavo-laptop-setup:464 puavo-laptop-setup:495
 msgid "Factory reset failed"
 msgstr "Tehdasasetusten palautus epäonnistui"
 
-#: puavo-laptop-setup:480
+#: puavo-laptop-setup:482
 msgid "Factory reset succeeded."
 msgstr "Tehdasasetusten palautus onnistui."
 
-#: puavo-laptop-setup:482
+#: puavo-laptop-setup:484
 msgid "The system is going to reboot in few seconds..."
 msgstr "Järjestelmä käynnistyy uudestaan muutaman sekunnin kuluessa..."
 
-#: puavo-laptop-setup:495
+#: puavo-laptop-setup:497
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -65,21 +65,21 @@ msgstr ""
 "Tarkemmat tiedot virheestä löytyvät tehdasasetusten palautuslokista. Olkaa "
 "hyvä ja ottakaa yhteyttä tukeen ongelman selvittämiseksi."
 
-#: puavo-laptop-setup:584 puavo-laptop-setup:630
+#: puavo-laptop-setup:589 puavo-laptop-setup:635
 msgid "Laptop setup"
 msgstr "Kannettavan asetukset"
 
-#: puavo-laptop-setup:620
+#: puavo-laptop-setup:625
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
 
-#: puavo-laptop-setup:630
+#: puavo-laptop-setup:635
 msgid "is already running"
 msgstr "on jo käynnissä"
 
 #: puavo-laptop-setup.glade:20 puavo-laptop-setup.glade:30
-msgid "eExam-system version (Abitti-compatible)"
-msgstr "Koejärjestelmäversio (Abitti-yhteensopiva)"
+msgid "Abitti 2 version"
+msgstr "Abitti 2 versio"
 
 #: puavo-laptop-setup.glade:41
 msgid "Show developer mode in boot menu"
@@ -103,15 +103,15 @@ msgstr "tämä versio:"
 
 #: puavo-laptop-setup.glade:144 puavo-laptop-setup.glade:324
 msgid "Puavo OS (Linux)"
-msgstr ""
+msgstr "Puavo OS (Linux)"
 
 #: puavo-laptop-setup.glade:160
-msgid "eExam-system"
-msgstr "Koejärjestelmä"
+msgid "Abitti 2"
+msgstr "Abitti 2"
 
 #: puavo-laptop-setup.glade:176 puavo-laptop-setup.glade:340
 msgid "Windows"
-msgstr ""
+msgstr "Windows"
 
 # from puavo-laptop-setup.glade
 #: puavo-laptop-setup.glade:212
@@ -144,9 +144,9 @@ msgid ""
 "data</span> from selected operating systems and restores their state to "
 "factory settings!</big>"
 msgstr ""
-"<big>Tehdasasetusten palautus <span foreground=\"red\" size=\"x-large"
-"\">tuhoaa kaiken datan</span> valituista käyttöjärjestelmistä ja palauttaa "
-"ne takaisin tehdasasetuksille!</big>"
+"<big>Tehdasasetusten palautus <span foreground=\"red\" size=\"x-"
+"large\">tuhoaa kaiken datan</span> valituista käyttöjärjestelmistä ja "
+"palauttaa ne takaisin tehdasasetuksille!</big>"
 
 #: puavo-laptop-setup.glade:375
 msgid "Factory reset"
@@ -159,26 +159,3 @@ msgstr "Sulje"
 #: puavo-laptop-setup.glade:435
 msgid "Factory reset log"
 msgstr "Tehdasasetusten palautusloki"
-
-#~ msgid "DANGER! DANGER!"
-#~ msgstr "VAARA! VAARA!"
-
-#~ msgid ""
-#~ "THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!  IT WILL "
-#~ "DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY, AND MORE!  WHEN IN DOUBT, "
-#~ "TURN OFF THE MACHINE, PANIC AND RUN AWAY!  (press OK and provide your "
-#~ "password if you still want to do this.)"
-#~ msgstr ""
-#~ "TÄMÄ TOIMENPIDE PALAUTTAA TÄMÄN TIETOKONEEN TEHDASASETUKSILLE! SE TUHOAA "
-#~ "KAIKEN DATAN KOTIHAKEMISTOSSASI, JA ENEMMÄNKIN! JOS EPÄILET OLLENKAAN, "
-#~ "SAMMUTA KONE, PANIKOI JA JUOKSE KARKUUN! (paina OK ja anna salasanasi jos "
-#~ "haluat kuitenkin tehdä tämän.)"
-
-#~ msgid ""
-#~ "Destroy all user data and reset laptop to factory state (requires "
-#~ "password)"
-#~ msgstr ""
-#~ "Tuhoa kaikki tiedot ja palauta tietokone tehdastilaan (vaatii salasanan)"
-
-#~ msgid "latest"
-#~ msgstr "viimeisin"

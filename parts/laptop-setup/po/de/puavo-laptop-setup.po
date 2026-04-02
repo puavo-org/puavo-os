@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-laptop-setup:261
+#: puavo-laptop-setup:263
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
@@ -17,44 +17,43 @@ msgstr ""
 "Es ist jetzt möglich Windows beim Startmenü wählen. Das Menü wird kurz nach "
 "dem Einschalten von dem Computer gezeigt."
 
-#: puavo-laptop-setup:265
+#: puavo-laptop-setup:267
 msgid ""
-"Abitti-compatible eExam-system is not updated when running Windows, you have "
-"to boot into the current system to update it."
+"Abitti 2 is not updated when running Windows, you have to boot into the "
+"current system to update it."
 msgstr ""
-"Achtung Abitti-kompatibles elektronisches Testsystem wird nicht aktualisiert "
-"bei Windows-Betriebssystem. Sie müssen zu diesem laufenden Betriebssystem "
-"booten um auch das Testsystem zu aktualisieren."
+"Abitti 2 wird unter Windows nicht aktualisiert; du musst in das aktuelle "
+"System booten, um es zu aktualisieren."
 
-#: puavo-laptop-setup:403
+#: puavo-laptop-setup:405
 msgid "error saving changes"
 msgstr "Fehler beim Speichern der Veränderungen"
 
-#: puavo-laptop-setup:438
+#: puavo-laptop-setup:440
 msgid "Factory reset is running step"
 msgstr "Das Zurücksetzen der Werkseinstellungen Schritt"
 
-#: puavo-laptop-setup:451
+#: puavo-laptop-setup:453
 msgid "Factory reset is running"
 msgstr "Das Zurücksetzen der Werkseinstellungen wird durchgeführt"
 
-#: puavo-laptop-setup:459
+#: puavo-laptop-setup:461
 msgid "Failed to start factory reset"
 msgstr "Das Zurücksetzen der Werkseinstellungen konnte nicht gestartet werden"
 
-#: puavo-laptop-setup:462 puavo-laptop-setup:493
+#: puavo-laptop-setup:464 puavo-laptop-setup:495
 msgid "Factory reset failed"
 msgstr "Das Zurücksetzen der Werkseinstellungen ist gescheitert"
 
-#: puavo-laptop-setup:480
+#: puavo-laptop-setup:482
 msgid "Factory reset succeeded."
 msgstr "Das Zurücksetzen der Werkseinstellungen ist gefolgt."
 
-#: puavo-laptop-setup:482
+#: puavo-laptop-setup:484
 msgid "The system is going to reboot in few seconds..."
 msgstr "Das System wird in einigen Sekunden neugestartet."
 
-#: puavo-laptop-setup:495
+#: puavo-laptop-setup:497
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -62,21 +61,21 @@ msgstr ""
 "Weitere Informationen können aus der Werkseinstellungslog gelesen werden. "
 "Bitte Kontakt mit Helpdesk aufnehmen."
 
-#: puavo-laptop-setup:584 puavo-laptop-setup:630
+#: puavo-laptop-setup:589 puavo-laptop-setup:635
 msgid "Laptop setup"
 msgstr "Laptop Einstellungen"
 
-#: puavo-laptop-setup:620
+#: puavo-laptop-setup:625
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sie haben nicht ausreichende Rechte um dieses Werkzeug zu verwenden"
 
-#: puavo-laptop-setup:630
+#: puavo-laptop-setup:635
 msgid "is already running"
 msgstr "schon im Gang"
 
 #: puavo-laptop-setup.glade:20 puavo-laptop-setup.glade:30
-msgid "eExam-system version (Abitti-compatible)"
-msgstr "Version des elektronischen Testsystems  (Abitti-kompatibel)"
+msgid "Abitti 2 version"
+msgstr "Abitti-2-Version"
 
 #: puavo-laptop-setup.glade:41
 msgid "Show developer mode in boot menu"
@@ -103,8 +102,8 @@ msgid "Puavo OS (Linux)"
 msgstr "Puavo OS (Linux)"
 
 #: puavo-laptop-setup.glade:160
-msgid "eExam-system"
-msgstr "Elektronisches Test-System (Abitti)"
+msgid "Abitti 2"
+msgstr "Abitti 2"
 
 #: puavo-laptop-setup.glade:176 puavo-laptop-setup.glade:340
 msgid "Windows"
@@ -158,27 +157,3 @@ msgstr "Schließen"
 #: puavo-laptop-setup.glade:435
 msgid "Factory reset log"
 msgstr "Protokoll zum Zurücksetzen der Werkseinstellungen"
-
-#~ msgid "DANGER! DANGER!"
-#~ msgstr "GEFAHR! GEFAHR!"
-
-#~ msgid ""
-#~ "THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!  IT WILL "
-#~ "DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY, AND MORE!  WHEN IN DOUBT, "
-#~ "TURN OFF THE MACHINE, PANIC AND RUN AWAY!  (press OK and provide your "
-#~ "password if you still want to do this.)"
-#~ msgstr ""
-#~ " DIESE PROZEDUR WIRD DIESEN COMPUTER ZU WERKSEINSTELLUNGEN ZURÛCKSETZEN!  "
-#~ "ES WIRD ALLE DATEN IN IHREM BENUTZERVERZEICHNIS LÖSCHEN UND MEHR! WENN "
-#~ "SIE ZÖGERN - BITTE DEN COMPUTER ZU MACHEN UND WEG RENNEN! (Bitte OK "
-#~ "drücken und Passwort eingeben, wenn Sie jedoch das machen wollen)"
-
-#~ msgid ""
-#~ "Destroy all user data and reset laptop to factory state (requires "
-#~ "password)"
-#~ msgstr ""
-#~ "Alle Benutzerdaten löschen und das System zu Werkseinstellungen "
-#~ "zurücksetzen. (Passwort erforderlich)"
-
-#~ msgid "latest"
-#~ msgstr "letzte"
