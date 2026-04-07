@@ -130,6 +130,8 @@ class PuavoLaptopSetup:
           = self.get_abitti_school_versions_string()
 
         self.abitti_version_school_button \
+          = builder.get_object('abitti_version_school_button')
+        self.abitti_version_school \
           = builder.get_object('abitti_version_school')
         self.abitti_version_alias_button \
           = builder.get_object('abitti_version_alias')
@@ -139,9 +141,8 @@ class PuavoLaptopSetup:
         self.abitti_any_version_box = builder.get_object('abitti_any_version_box')
 
         if self.abitti_school_versions_str:
-            self.abitti_version_school_button.set_label('%s: %s' \
-                % (self.abitti_version_school_button.get_label(),
-                   self.abitti_school_versions_str))
+            self.abitti_version_school.set_label(
+                self.abitti_school_versions_str)
 
         for alias, version in sorted(self.abitti_alias_versions.items()):
             label = '%s (%s)' % (_tr(alias), version)
