@@ -19,6 +19,12 @@ gettext.bindtextdomain('puavo-laptop-setup', '/usr/share/locale')
 gettext.textdomain('puavo-laptop-setup')
 _tr = gettext.gettext
 
+# these are translations for aliases and include these here so that
+# msgmerge knows we need these (needed_translations variable is not used)
+needed_translations = [
+  _tr('latest'), _tr('stable'), _tr('penultimate'), _tr('test')
+]
+
 def puavoconf_get(puavoconf_key):
     # We do this first to see if we get an error... if this puavo-conf
     # key does not exist, this raises an exception.
@@ -138,7 +144,8 @@ class PuavoLaptopSetup:
                    self.abitti_school_versions_str))
 
         for alias, version in sorted(self.abitti_alias_versions.items()):
-            self.abitti_alias_version_box.append(alias, '%s (%s)' % (alias, version))
+            label = '%s (%s)' % (_tr(alias), version)
+            self.abitti_alias_version_box.append(alias, label)
 
         for abitti_choice in self.get_list_of_abitti_choices():
             self.abitti_any_version_box.append(abitti_choice['choice'],
@@ -400,18 +407,15 @@ class PuavoLaptopSetup:
         for key, value in self.puavo_conf.items():
             if key == 'puavo.abitti2.version':
                 if value == None:
-                    print('ABITTI 2: none')
                     self.abitti_version_school_button.set_active(True)
                     self.abitti_alias_version_box.set_active(0)
                     self.abitti_any_version_box.set_active(0)
                     continue
                 if value in self.abitti_alias_versions:
-                    print('ABITTI 2: alias')
                     self.abitti_version_alias_button.set_active(True)
                     self.abitti_alias_version_box.set_active_id(value)
                     self.abitti_any_version_box.set_active(0)
                     continue
-                print('ABITTI 2: version')
                 self.abitti_version_any_button.set_active(True)
                 self.abitti_alias_version_box.set_active(0)
                 self.abitti_any_version_box.set_active_id(value)

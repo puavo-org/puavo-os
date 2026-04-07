@@ -9,11 +9,28 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: puavo-laptop-setup:217
+# translations for aliases
+#: puavo-laptop-setup:25
+msgid "latest"
+msgstr "senaste"
+
+#: puavo-laptop-setup:25
+msgid "stable"
+msgstr "stabil"
+
+#: puavo-laptop-setup:25
+msgid "penultimate"
+msgstr "näst senaste"
+
+#: puavo-laptop-setup:25
+msgid "test"
+msgstr "test"
+
+#: puavo-laptop-setup:229
 msgid "and"
 msgstr "och"
 
-#: puavo-laptop-setup:305
+#: puavo-laptop-setup:311
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
@@ -21,7 +38,7 @@ msgstr ""
 "Windows har nu tilläggats till startmenun. Menun syns alltid när man startar "
 "om datorn."
 
-#: puavo-laptop-setup:309
+#: puavo-laptop-setup:315
 msgid ""
 "Abitti 2 is not updated when running Windows, you have to boot into the "
 "current system to update it."
@@ -30,35 +47,35 @@ msgstr ""
 "byta / uppdatera din laptops Abitti 2 måste man välja normal start och välja "
 "det här Opinsys Os som används nu."
 
-#: puavo-laptop-setup:448
+#: puavo-laptop-setup:462
 msgid "error saving changes"
 msgstr "fel i sparning av ändringarna "
 
-#: puavo-laptop-setup:483
+#: puavo-laptop-setup:497
 msgid "Factory reset is running step"
 msgstr "Fabriksåterställning kör steg"
 
-#: puavo-laptop-setup:496
+#: puavo-laptop-setup:510
 msgid "Factory reset is running"
 msgstr "Fabriksåterställning pågår"
 
-#: puavo-laptop-setup:504
+#: puavo-laptop-setup:518
 msgid "Failed to start factory reset"
 msgstr "Fabriksåterställningen kunde inte börjas"
 
-#: puavo-laptop-setup:507 puavo-laptop-setup:538
+#: puavo-laptop-setup:521 puavo-laptop-setup:552
 msgid "Factory reset failed"
 msgstr "Fabriksåterställningen mislyckades"
 
-#: puavo-laptop-setup:525
+#: puavo-laptop-setup:539
 msgid "Factory reset succeeded."
 msgstr "Fabriksåterställningen lyckades."
 
-#: puavo-laptop-setup:527
+#: puavo-laptop-setup:541
 msgid "The system is going to reboot in few seconds..."
 msgstr "Systemet startar om i några sekunder..."
 
-#: puavo-laptop-setup:540
+#: puavo-laptop-setup:554
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -66,80 +83,80 @@ msgstr ""
 "Ytterligare detaljer kan hittas från fabriksåterställningsloggen. Kontakta "
 "supporten för hjälp."
 
-#: puavo-laptop-setup:632 puavo-laptop-setup:678
+#: puavo-laptop-setup:646 puavo-laptop-setup:692
 msgid "Laptop setup"
 msgstr "Laptop inställningar"
 
-#: puavo-laptop-setup:668
+#: puavo-laptop-setup:682
 msgid "You do not have the required permissions to use this tool."
 msgstr "Du har inte tillräckliga rättigheter att använda verktyget."
 
-#: puavo-laptop-setup:678
+#: puavo-laptop-setup:692
 msgid "is already running"
 msgstr "är redan igång"
 
-#: puavo-laptop-setup.glade:20 puavo-laptop-setup.glade:30
+#: puavo-laptop-setup.glade:20 puavo-laptop-setup.glade:31
 msgid "Abitti 2 version"
 msgstr "Abitti 2-version"
 
-#: puavo-laptop-setup.glade:41
+#: puavo-laptop-setup.glade:42
 msgid "Show developer mode in boot menu"
 msgstr "Visa utvecklarläge i startmenyn"
 
-#: puavo-laptop-setup.glade:52
+#: puavo-laptop-setup.glade:53
 msgid "Default operating system at boot"
 msgstr "Standardoperativsystem i starten"
 
-#: puavo-laptop-setup.glade:66
+#: puavo-laptop-setup.glade:67
 msgid "school versions"
-msgstr ""
+msgstr "skolversioner"
 
-#: puavo-laptop-setup.glade:83
-msgid "floating version"
-msgstr ""
+#: puavo-laptop-setup.glade:84
+msgid "flexible version"
+msgstr "flexibel version"
 
-#: puavo-laptop-setup.glade:108
+#: puavo-laptop-setup.glade:109
 msgid "this version:"
 msgstr "den här versionen:"
 
-#: puavo-laptop-setup.glade:153 puavo-laptop-setup.glade:333
+#: puavo-laptop-setup.glade:154 puavo-laptop-setup.glade:334
 msgid "Puavo OS (Linux)"
 msgstr "Puavo OS (Linux)"
 
-#: puavo-laptop-setup.glade:169
+#: puavo-laptop-setup.glade:170
 msgid "Abitti 2"
 msgstr "Abitti 2"
 
-#: puavo-laptop-setup.glade:185 puavo-laptop-setup.glade:349
+#: puavo-laptop-setup.glade:186 puavo-laptop-setup.glade:350
 msgid "Windows"
 msgstr "Windows"
 
 # from puavo-laptop-setup.glade
-#: puavo-laptop-setup.glade:221
+#: puavo-laptop-setup.glade:222
 msgid "Start using Windows"
 msgstr "Aktivera Windows"
 
-#: puavo-laptop-setup.glade:240
+#: puavo-laptop-setup.glade:241
 msgid "Factory reset..."
 msgstr "Fabriksåterställning..."
 
-#: puavo-laptop-setup.glade:266
+#: puavo-laptop-setup.glade:267
 msgid "Confirmation of factory reset"
 msgstr "Bekräftelse på fabriksåterställning"
 
-#: puavo-laptop-setup.glade:284
+#: puavo-laptop-setup.glade:285
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: puavo-laptop-setup.glade:300
+#: puavo-laptop-setup.glade:301
 msgid "Reset"
 msgstr "Återställa"
 
-#: puavo-laptop-setup.glade:323
+#: puavo-laptop-setup.glade:324
 msgid "Select operating systems to reset:"
 msgstr "Välj operativsystem som ska återställas:"
 
-#: puavo-laptop-setup.glade:369
+#: puavo-laptop-setup.glade:370
 msgid ""
 "<big>Factory reset <span foreground=\"red\" size=\"x-large\">erases all user "
 "data</span> from selected operating systems and restores their state to "
@@ -149,20 +166,14 @@ msgstr ""
 "all användardata</span> från valda operativsystem och återställer deras "
 "tillstånd till fabriksinställningarna!</big>"
 
-#: puavo-laptop-setup.glade:384
+#: puavo-laptop-setup.glade:385
 msgid "Factory reset"
 msgstr "Fabriksåterställning"
 
-#: puavo-laptop-setup.glade:399
+#: puavo-laptop-setup.glade:400
 msgid "Close"
 msgstr "Stäng"
 
-#: puavo-laptop-setup.glade:444
+#: puavo-laptop-setup.glade:445
 msgid "Factory reset log"
 msgstr "Fabriksåterställningslogg"
-
-#~ msgid "latest version"
-#~ msgstr "den senaste versionen"
-
-#~ msgid "school version"
-#~ msgstr "skolversion"
