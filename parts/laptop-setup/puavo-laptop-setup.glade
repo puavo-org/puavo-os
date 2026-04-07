@@ -26,6 +26,7 @@
         </child>
         <child>
           <object class="GtkLabel" id="puavo.abitti2.version.display">
+            <property name="visible">False</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Abitti 2 version</property>
           </object>
@@ -249,8 +250,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="puavo.abitti2.version.number">
-            <property name="visible">True</property>
+          <object class="GtkLabel" id="puavo.abitti2.version.name">
+            <property name="visible">False</property>
             <property name="can-focus">False</property>
           </object>
           <packing>

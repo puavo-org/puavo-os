@@ -75,37 +75,14 @@ class PuavoLaptopSetup:
                     file=sys.stderr)
             return []
 
-
     def prepare(self):
         self.puavo_conf_grid = builder.get_object('puavo_conf_grid')
 
-        # XXX if abitti is broken should other stuff be also broken?
-        self.abitti_info = self.get_abitti_info()
-        self.abitti_alias_versions = self.get_abitti_alias_versions()
-        self.abitti_school_versions = self.get_abitti_school_versions()
-
-        self.abitti_version_school_button \
-          = builder.get_object('abitti_version_school')
-        self.abitti_version_alias_button \
-          = builder.get_object('abitti_version_alias')
-        self.abitti_version_any_button \
-          = builder.get_object('abitti_version_any')
-        self.abitti_alias_version_box = builder.get_object('abitti_alias_version_box')
-        self.abitti_any_version_box = builder.get_object('abitti_any_version_box')
-
-        # XXX this should be hidden if school versions do not exist,
-        # XXX does that happen?
-        if self.abitti_school_versions:
-            self.abitti_version_school_button.set_label('%s: %s' \
-                % (self.abitti_version_school_button.get_label(),
-                   self.abitti_school_versions))
-
-        for alias, version in sorted(self.abitti_alias_versions.items()):
-            self.abitti_alias_version_box.append(alias, '%s (%s)' % (alias, version))
-
-        for abitti_choice in self.get_list_of_abitti_choices():
-            self.abitti_any_version_box.append(abitti_choice['choice'],
-                                               abitti_choice['version'])
+        try:
+            self.prepare_abitti()
+        except Exception as e:
+            print('could not initialize abitti UI: %s' % e,
+                  file=sys.stderr)
 
         self.boot_abitti_button   = builder.get_object('boot_abitti')
         self.boot_puavo_os_button = builder.get_object('boot_puavo_os')
@@ -119,13 +96,6 @@ class PuavoLaptopSetup:
         self.reset_to_factory_settings.connect('clicked',
           self.confirm_reset_to_factory_settings)
 
-        self.abitti_version_alias_button.connect('toggled',
-            self.abitti_version_alias_chosen)
-        self.abitti_version_school_button.connect('toggled',
-            self.abitti_version_school_chosen)
-        self.abitti_version_any_button.connect('toggled',
-            self.abitti_version_any_chosen)
-
         self.boot_abitti_button.connect(  'toggled', self.boot_abitti_chosen)
         self.boot_puavo_os_button.connect('toggled', self.boot_puavo_os_chosen)
         self.boot_windows_button.connect( 'toggled', self.boot_windows_chosen)
@@ -138,13 +108,55 @@ class PuavoLaptopSetup:
         self.remove_disabled_entries()
         self.update_gui_state_from_puavoconf()
 
+        GLib.timeout_add(500, self.save_state)
+        self.initializing_ui = False
+
+
+    def prepare_abitti(self):
+        self.abitti_ui_initialized = False
+
+        self.abitti_info = self.get_abitti_info()
+        if not self.abitti_info:
+            return
+
+        self.abitti_alias_versions = self.get_abitti_alias_versions()
+        self.abitti_school_versions_str \
+          = self.get_abitti_school_versions_string()
+
+        self.abitti_version_school_button \
+          = builder.get_object('abitti_version_school')
+        self.abitti_version_alias_button \
+          = builder.get_object('abitti_version_alias')
+        self.abitti_version_any_button \
+          = builder.get_object('abitti_version_any')
+        self.abitti_alias_version_box = builder.get_object('abitti_alias_version_box')
+        self.abitti_any_version_box = builder.get_object('abitti_any_version_box')
+
+        if self.abitti_school_versions_str:
+            self.abitti_version_school_button.set_label('%s: %s' \
+                % (self.abitti_version_school_button.get_label(),
+                   self.abitti_school_versions_str))
+
+        for alias, version in sorted(self.abitti_alias_versions.items()):
+            self.abitti_alias_version_box.append(alias, '%s (%s)' % (alias, version))
+
+        for abitti_choice in self.get_list_of_abitti_choices():
+            self.abitti_any_version_box.append(abitti_choice['choice'],
+                                               abitti_choice['version'])
+
+        self.abitti_version_alias_button.connect('toggled',
+            self.abitti_version_alias_chosen)
+        self.abitti_version_school_button.connect('toggled',
+            self.abitti_version_school_chosen)
+        self.abitti_version_any_button.connect('toggled',
+            self.abitti_version_any_chosen)
+
         self.abitti_alias_version_box.connect('changed',
             self.abitti_alias_version_box_changed)
         self.abitti_any_version_box.connect('changed',
             self.abitti_any_version_box_changed)
 
-        GLib.timeout_add(500, self.save_state)
-        self.initializing_ui = False
+        self.abitti_ui_initialized = True
 
 
     def get_abitti_info(self):
@@ -160,10 +172,10 @@ class PuavoLaptopSetup:
             versions_by_alias = self.get_abitti_alias_versions()
             return versions_by_alias[alias]
         except Exception as e:
-            print('could not read the Abitti version for alias %s: %s ' \
-                    % (alias, e.message),
+            print('could not read the Abitti version for alias %s: %s' \
+                    % (alias, e),
                   file=sys.stderr)
-            return None
+            raise e
 
 
     def get_abitti_alias_versions(self):
@@ -195,7 +207,7 @@ class PuavoLaptopSetup:
         return version_by_alias
 
 
-    def get_abitti_school_versions(self):
+    def get_abitti_school_versions_string(self):
         # The "school version" might also come from organisation or
         # device-specific settings.
         try:
@@ -204,14 +216,14 @@ class PuavoLaptopSetup:
             versions = device['conf']['puavo.abitti2.version']
             if type(versions) != str:
                 raise Exception('puavo.abitti2.version puavo-conf is not a string')
-            # XXX lookup_abitti2_alias() can return None
             alias_versions = [
               self.lookup_abitti2_alias(x) for x in versions.split()
             ]
             join_str = ' ' + _tr('and') + ' '
             return join_str.join(alias_versions)
-        except:
-            print('could not read the school Abitti versions', file=sys.stderr)
+        except Exception as e:
+            print('could not read the school Abitti versions: %s' % e,
+                  file=sys.stderr)
             return None
 
 
@@ -242,13 +254,15 @@ class PuavoLaptopSetup:
 
 
     def abitti_alias_version_box_changed(self, widget):
-        self.abitti_version_alias_button.set_active(True)
+        if not self.initializing_ui:
+            self.abitti_version_alias_button.set_active(True)
         self.set_abitti_version(
             self.abitti_alias_version_box.get_active_id())
 
 
     def abitti_any_version_box_changed(self, widget):
-        self.abitti_version_any_button.set_active(True)
+        if not self.initializing_ui:
+            self.abitti_version_any_button.set_active(True)
         self.set_abitti_version( self.abitti_any_version_box.get_active_id() )
 
 
@@ -307,14 +321,10 @@ class PuavoLaptopSetup:
         self.save_state_flag = True
 
 
-    def we_have_abitti(self):
-        return bool(self.abitti_info)
-
-
     def remove_entries_without_puavoconf(self):
         remove_gui_elements = {}
 
-        if not self.we_have_abitti():
+        if not self.abitti_ui_initialized:
             del self.puavo_conf['puavo.abitti2.version']
 
         if not we_have_windows():
@@ -326,13 +336,8 @@ class PuavoLaptopSetup:
             remove_gui_elements['puavo.abitti2.version'] = True
 
         if 'puavo.abitti2.version' in self.puavo_conf \
-          and not self.abitti_school_versions:
+          and not self.abitti_school_versions_str:
             self.abitti_version_school_button.hide()
-            if not self.puavo_conf['puavo.abitti2.version']:
-                # XXX does this make any sense?
-                # old configuration value was "school", yet we do not
-                # have a GUI element for that, so change to the 'latest'
-                self.puavo_conf['puavo.abitti2.version'] = 'latest'
 
         if not 'puavo.grub.windows.enabled' in self.puavo_conf:
             self.boot_windows_button.destroy()
@@ -347,7 +352,7 @@ class PuavoLaptopSetup:
             try:
                 self.puavo_conf[puavo_conf_key] = puavoconf_get(puavo_conf_key)
             except subprocess.CalledProcessError:
-                print("could not get puavo-conf key for %s" % puavo_conf_key,
+                print('could not get puavo-conf key for %s' % puavo_conf_key,
                       file=sys.stderr)
                 del self.puavo_conf[puavo_conf_key]
                 remove_gui_elements[puavo_conf_key] = True
@@ -377,39 +382,55 @@ class PuavoLaptopSetup:
                 self.builder.get_object(disableconfs[disabler_key]))
             if disabler_key != 'puavo.laptop-setup.enable_setting.abitti_version':
                 continue
-            Gtk.Widget.set_visible(self.builder.get_object('puavo.abitti2.version.display'), True)
+
             self.set_abitti_version(None) # default to school version
-            if self.abitti_school_versions:
-                self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_school_versions)
+
+            school_versions_str = self.abitti_school_versions_str
+            if not school_versions_str:
                 continue
-            try:
-                self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_alias_versions)
-            except TypeError: # weird case, nothing relevant to display available, leave blank
-                self.builder.get_object('puavo.abitti2.version.number').set_text('')
+
+            version_display_obj = self.builder.get_object('puavo.abitti2.version.display')
+            version_name_obj = self.builder.get_object('puavo.abitti2.version.name')
+            Gtk.Widget.set_visible(version_display_obj, True)
+            Gtk.Widget.set_visible(version_name_obj,    True)
+            version_name_obj.set_text(school_versions_str)
 
 
     def update_gui_state_from_puavoconf(self):
         for key, value in self.puavo_conf.items():
             if key == 'puavo.abitti2.version':
                 if value == None:
+                    print('ABITTI 2: none')
                     self.abitti_version_school_button.set_active(True)
-                    self.abitti_any_version_box.set_active(-1)
-                elif value == 'alias':
+                    self.abitti_alias_version_box.set_active(0)
+                    self.abitti_any_version_box.set_active(0)
+                    continue
+                if value in self.abitti_alias_versions:
+                    print('ABITTI 2: alias')
                     self.abitti_version_alias_button.set_active(True)
-                    self.abitti_any_version_box.set_active(-1)
-                else:
-                    self.abitti_any_version_box.set_active_id(value)
-                    self.abitti_version_any_button.set_active(True)
-            elif key == 'puavo.grub.boot_default':
+                    self.abitti_alias_version_box.set_active_id(value)
+                    self.abitti_any_version_box.set_active(0)
+                    continue
+                print('ABITTI 2: version')
+                self.abitti_version_any_button.set_active(True)
+                self.abitti_alias_version_box.set_active(0)
+                self.abitti_any_version_box.set_active_id(value)
+                continue
+
+            if key == 'puavo.grub.boot_default':
                 if value == 'windows' and self.boot_windows_button:
                     self.boot_windows_button.set_active(True)
                 elif value == 'abitti' and self.boot_abitti_button:
                     self.boot_abitti_button.set_active(True)
                 else:
                     self.boot_puavo_os_button.set_active(True)
-            elif key == 'puavo.grub.windows.enabled':
-                    self.use_windows_switch.set_state(value == 'true')
-            elif key == 'puavo.grub.developer_mode.enabled':
+                continue
+
+            if key == 'puavo.grub.windows.enabled':
+                self.use_windows_switch.set_state(value == 'true')
+                continue
+
+            if key == 'puavo.grub.developer_mode.enabled':
                 self.developer_mode_switch.set_state(value == 'true')
 
 
