@@ -94,7 +94,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkComboBoxText" id="abitti_alias_box">
+              <object class="GtkComboBoxText" id="abitti_alias_version_box">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
               </object>
@@ -120,7 +120,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkComboBoxText" id="abitti_version_box">
+              <object class="GtkComboBoxText" id="abitti_any_version_box">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
               </object>
