@@ -277,7 +277,7 @@ class PuavoLaptopSetup:
     def boot_abitti_chosen(self, widget):
         if not widget.get_active():
             return
-        self.puavo_conf['puavo.grub.boot_default'] = 'abitti'
+        self.puavo_conf['puavo.grub.boot_default'] = 'abitti2'
         self.save_state_flag = True
 
 
@@ -425,7 +425,7 @@ class PuavoLaptopSetup:
             if key == 'puavo.grub.boot_default':
                 if value == 'windows' and self.boot_windows_button:
                     self.boot_windows_button.set_active(True)
-                elif value == 'abitti' and self.boot_abitti_button:
+                elif value == 'abitti2' and self.boot_abitti_button:
                     self.boot_abitti_button.set_active(True)
                 else:
                     self.boot_puavo_os_button.set_active(True)

@@ -46,8 +46,8 @@ setup_puavo_os_boot_default() {
 
 boot_default="$(puavo-conf puavo.grub.boot_default)"
 case "$boot_default" in
-  abitti)
-    grubedit set "puavo_grub_boot_default=abitti"
+  abitti2)
+    grubedit set "puavo_grub_boot_default=abitti2"
     ;;
   puavo-os)
     setup_puavo_os_boot_default

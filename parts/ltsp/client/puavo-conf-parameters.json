@@ -89,7 +89,7 @@
     "typehint": "string"
   },
   "puavo.grub.boot_default": {
-    "choices": [ "abitti", "puavo-os", "windows" ],
+    "choices": [ "abitti2", "puavo-os", "windows" ],
     "default": "puavo-os",
     "description": "The operating system to boot by default",
     "typehint": "string"

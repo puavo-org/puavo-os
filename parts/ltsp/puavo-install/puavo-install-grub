@@ -375,6 +375,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
                      "Abitti-yhteensopiva, versio ${abitti_version_number}"
   fi
 
+  set is_default_abitti="true"
   for abitti_iso_path_marker in (lvm/puavo-images)/abitti2/*.default \
                                 (lvm/puavo-images)/abitti2/*.backup; do
     regexp -s abitti_iso_base '^(.*)\.(default|backup)$' $abitti_iso_path_marker
@@ -400,7 +401,12 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
       set abitti_label="$abitti_iso_file"
     fi
 
-    menuentry "${text_abitti2_exam_application} (${abitti_label})" --unrestricted --class="abitti2" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
+    set boot_label="${text_abitti2_exam_application} (${abitti_label})"
+    if test "${is_default_abitti}" = "true" -a "${puavo_grub_boot_default}" = "abitti2"; then
+      set default="$boot_label"
+    fi
+    set is_default_abitti="false"
+    menuentry "$boot_label" --unrestricted --class="abitti2" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
       set abitti_iso_path=$2
       set abitti_iso_file=$3
       set abitti_iso_cfg=$4
