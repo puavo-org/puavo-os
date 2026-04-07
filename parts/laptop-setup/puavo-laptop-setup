@@ -366,22 +366,26 @@ class PuavoLaptopSetup:
 
         for disabler_key in disableconfs:
             try:
-                if(puavoconf_get(disabler_key)=="false"):
-                    self.remove_grid_entry(self.puavo_conf_grid,
-                        self.builder.get_object(disableconfs[disabler_key]))
-                    if(disabler_key=='puavo.laptop-setup.enable_setting.abitti_version'):
-                        Gtk.Widget.set_visible(self.builder.get_object('puavo.abitti2.version.display'), True)
-                        self.set_abitti_version(None) # default to school version
-                        if(self.abitti_school_versions):
-                            self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_school_versions)
-                        else:
-                            try:
-                                self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_alias_version)
-                            except TypeError: # weird case, nothing relevant to display available, leave blank
-                                self.builder.get_object('puavo.abitti2.version.number').set_text("")
+                if puavoconf_get(disabler_key) != 'false':
+                    continue
             except subprocess.CalledProcessError:
                 print("could not get puavo-conf key for %s" % disabler_key,
                         file=sys.stderr)
+                continue
+
+            self.remove_grid_entry(self.puavo_conf_grid,
+                self.builder.get_object(disableconfs[disabler_key]))
+            if disabler_key != 'puavo.laptop-setup.enable_setting.abitti_version':
+                continue
+            Gtk.Widget.set_visible(self.builder.get_object('puavo.abitti2.version.display'), True)
+            self.set_abitti_version(None) # default to school version
+            if self.abitti_school_versions:
+                self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_school_versions)
+                continue
+            try:
+                self.builder.get_object('puavo.abitti2.version.number').set_text(self.abitti_alias_versions)
+            except TypeError: # weird case, nothing relevant to display available, leave blank
+                self.builder.get_object('puavo.abitti2.version.number').set_text('')
 
 
     def update_gui_state_from_puavoconf(self):
