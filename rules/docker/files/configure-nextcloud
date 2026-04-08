@@ -26,17 +26,20 @@ patch_nc() {
 
   if ! patch -o "$destpath_tmp" "$srcpath"; then
     echo "failed to patch ${destpath_tmp} from ${srcpath}" >&2
-    rm -f "$destpath_tmp" || return 1
+    rm -f "$destpath_tmp"
+    return 1
   fi
 
   if ! chmod 644 "$destpath_tmp"; then
     echo "failed to chmod $destpath_tmp to 644" >&2
-    rm -f "$destpath_tmp" || return 1
+    rm -f "$destpath_tmp"
+    return 1
   fi
 
   if ! mv "$destpath_tmp" "$destpath"; then
     echo "failed to move ${destpath_tmp} to ${destpath}" >&2
-    rm -f "$destpath_tmp" || return 1
+    rm -f "$destpath_tmp"
+    return 1
   fi
 
   return 0
