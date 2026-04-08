@@ -88,10 +88,10 @@ case "$target_disk" in
       if nvme id-ctrl "$target_disk" --vendor-specific -H | grep "Crypto Erase Supported as part of Secure Erase" >&2; then
         echo 'Disk supports Cryptographic Erase and override was not given. Running Cryptographic Erase.'
         erase_mode="-s2"
-      else
-        echo 'Disk either does not support Cryptographic Erase or override was given. Running Secure Erase.'
-        erase_mode="-s1"
       fi
+    else
+      echo 'Disk either does not support Cryptographic Erase or override was given. Running Secure Erase.'
+      erase_mode="-s1"
     fi
 
     if ("$useforce"); then

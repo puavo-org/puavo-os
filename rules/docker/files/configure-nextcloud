@@ -26,17 +26,20 @@ patch_nc() {
 
   if ! patch -o "$destpath_tmp" "$srcpath"; then
     echo "failed to patch ${destpath_tmp} from ${srcpath}" >&2
-    rm -f "$destpath_tmp" || return 1
+    rm -f "$destpath_tmp"
+    return 1
   fi
 
   if ! chmod 644 "$destpath_tmp"; then
     echo "failed to chmod $destpath_tmp to 644" >&2
-    rm -f "$destpath_tmp" || return 1
+    rm -f "$destpath_tmp"
+    return 1
   fi
 
   if ! mv "$destpath_tmp" "$destpath"; then
     echo "failed to move ${destpath_tmp} to ${destpath}" >&2
-    rm -f "$destpath_tmp" || return 1
+    rm -f "$destpath_tmp"
+    return 1
   fi
 
   return 0
@@ -301,9 +304,9 @@ patch_nc apps/files_external/lib/Lib/Backend/SMB.php <<'EOF'
  		$storage->setBackendOption('auth', $smbAuth);
 EOF
 
-patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosAuth.php <<'EOF'
---- apps/files_external/3rdparty/icewind/smb/src/KerberosAuth.php	2025-09-11 13:03:44.000000000 +0000
-+++ apps/files_external/3rdparty/icewind/smb/src/KerberosAuth.php	2025-10-21 06:32:46.523641245 +0000
+patch_nc 3rdparty/icewind/smb/src/KerberosAuth.php <<'EOF'
+--- 3rdparty/icewind/smb/src/KerberosAuth.php	2025-09-11 13:03:44.000000000 +0000
++++ 3rdparty/icewind/smb/src/KerberosAuth.php	2025-10-21 06:32:46.523641245 +0000
 @@ -61,4 +61,11 @@
  			throw new Exception("Failed to set smbclient options for kerberos auth");
  		}
@@ -318,9 +321,9 @@ patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosAuth.php <<'EOF'
  }
 EOF
 
-patch_nc apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php <<'EOF'
---- apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php	2025-09-11 13:03:44.000000000 +0000
-+++ apps/files_external/3rdparty/icewind/smb/src/KerberosTicket.php	2025-10-21 06:34:22.773776978 +0000
+patch_nc 3rdparty/icewind/smb/src/KerberosTicket.php <<'EOF'
+--- 3rdparty/icewind/smb/src/KerberosTicket.php	2025-09-11 13:03:44.000000000 +0000
++++ 3rdparty/icewind/smb/src/KerberosTicket.php	2025-10-21 06:34:22.773776978 +0000
 @@ -55,6 +55,30 @@
  		return new KerberosTicket($krb5, $ticketName);
  	}

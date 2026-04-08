@@ -49,6 +49,12 @@ _LOCAL_DOMAIN = "puavo-ers-abitti2server.invalid"
 _NM_CONF_FILE = "/etc/NetworkManager/dnsmasq.d/puavo-ers.conf"
 
 
+_KOE_ABITTI_NET_DNS_SERVERS = [
+    "9.9.9.9",
+    "1.1.1.1",
+    "8.8.8.8",
+]
+
 def _start_dhcp_dns_server(net: puavo_ers.net.Net) -> int:
     args = [
         "dnsmasq",
@@ -70,6 +76,12 @@ def _start_dhcp_dns_server(net: puavo_ers.net.Net) -> int:
         f"--pid-file={_DNSMASQ_PID_FILE}",
         f"--addn-hosts={_DNSMASQ_HOSTS_FILE}",
     ]
+
+    for koe_abitti_net_dns_server in _KOE_ABITTI_NET_DNS_SERVERS:
+        args.append(f"--server=/koe.abitti.net/{koe_abitti_net_dns_server}")
+    if len(_KOE_ABITTI_NET_DNS_SERVERS) > 0:
+        args.append("--all-servers")
+
     try:
         user = os.environ["SUDO_USER"]
     except KeyError:
@@ -134,6 +146,10 @@ def _configure_networkmanager():
     try:
         with open(f"{_NM_CONF_FILE}.tmp", "w", encoding="utf-8") as nm_conf_file:
             print(f"addn-hosts={_DNSMASQ_HOSTS_FILE}", file=nm_conf_file)
+            for koe_abitti_net_dns_server in _KOE_ABITTI_NET_DNS_SERVERS:
+                print(f"server=/koe.abitti.net/{koe_abitti_net_dns_server}", file=nm_conf_file)
+            if len(_KOE_ABITTI_NET_DNS_SERVERS) > 0:
+                print("all-servers", file=nm_conf_file)
     except FileNotFoundError:
         # This means that /etc/NetworkManager/dnsmasq.d does not
         # exist, which tells us that NetworkManager is most probably

@@ -89,7 +89,7 @@
     "typehint": "string"
   },
   "puavo.grub.boot_default": {
-    "choices": [ "abitti", "puavo-os", "windows" ],
+    "choices": [ "abitti2", "puavo-os", "windows" ],
     "default": "puavo-os",
     "description": "The operating system to boot by default",
     "typehint": "string"
@@ -104,8 +104,15 @@
     "description": "If true, pass --force-extra-removable argument to grub-install",
     "typehint": "bool"
   },
+  "puavo.grub.locked": {
+    "default": "false",
+    "description": "If true and superusers accounts are setup in the image, require password for editing Grub configurations",
+    "typehint": "bool"
+  },
   "puavo.grub.timeout": {
-    "default": "5"
+    "default": "5",
+    "description": "Grub timeout in seconds, before booting proceeds automatically",
+    "typehint": "integer"
   },
   "puavo.grub.windows.defuse_efi_boot_when_disabled": {
     "default": "false",

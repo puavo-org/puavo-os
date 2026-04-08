@@ -7,9 +7,9 @@
   },
   "puavo.pkgs.update": {
     "default": "auto",
-    "description": "Puavo-pkg updating policy, automatically (auto) or manually (manual)",
+    "description": "Puavo-pkg updating policy, automatically (auto), manually (manual) or nightly (nightly)",
     "typehint": "string",
-    "choices": [ "auto", "manual" ]
+    "choices": [ "auto", "manual", "nightly" ]
   },
   "puavo.pkgs.ui.pkglist": {
     "default": "",

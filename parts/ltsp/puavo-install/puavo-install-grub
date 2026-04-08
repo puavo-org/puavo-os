@@ -258,7 +258,7 @@ function ltsp_image_entry {
     set default="${boot_label}"
   fi
 
-  menuentry "$boot_label" --class="$entry_os_icon" "$imagefile" "$imagepath" "$kernelparameters" "$abitti" {
+  menuentry "$boot_label" --unrestricted --class="$entry_os_icon" "$imagefile" "$imagepath" "$kernelparameters" "$abitti" {
     set kernel_version=''
     # --- remove "#" from the following if you need another kernel ---
     # set kernel_version='default'
@@ -375,6 +375,9 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
   fi
   if test -e "(image)/boot/grub/puavo/${puavo_optional_grub_conf}.cfg"; then
     source "(image)/boot/grub/puavo/${puavo_optional_grub_conf}.cfg"
+  fi
+  if [ "$locked" = "true" -a -e "(image)/boot/grub/puavo/superusers.cfg" ]; then
+    source "(image)/boot/grub/puavo/superusers.cfg"
   fi
   loopback -d image
 
@@ -496,6 +499,7 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
                      "Abitti-yhteensopiva, versio ${abitti_version_number}"
   fi
 
+  set is_default_abitti="true"
   for abitti_iso_path_marker in (lvm/puavo-images)/abitti2/*.default \
                                 (lvm/puavo-images)/abitti2/*.backup; do
     regexp -s abitti_iso_base '^(.*)\.(default|backup)$' $abitti_iso_path_marker
@@ -521,7 +525,12 @@ for dev in __PUAVO_PARTITION_IMAGES__; do
       set abitti_label="$abitti_iso_file"
     fi
 
-    menuentry "${text_abitti2_exam_application} (${abitti_label})" --class="abitti2" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
+    set boot_label="${text_abitti2_exam_application} (${abitti_label})"
+    if test "${is_default_abitti}" = "true" -a "${puavo_grub_boot_default}" = "abitti2"; then
+      set default="$boot_label"
+    fi
+    set is_default_abitti="false"
+    menuentry "$boot_label" --unrestricted --class="abitti2" "$abitti_iso_path" "$abitti_iso_file" "$abitti_iso_cfg" {
       set abitti_iso_path=$2
       set abitti_iso_file=$3
       set abitti_iso_cfg=$4
@@ -1237,7 +1246,7 @@ generate_grub_configuration() {
       cat <<EOF >> "$tmp_grub_cfg_path"
 
   if test "\${puavo_grub_windows_enabled}" = "true"; then
-    menuentry --class="windows" "\${windows_boot_label}" {
+    menuentry "\${windows_boot_label}" --unrestricted --class="windows" {
       insmod ntfs
       search --no-floppy --fs-uuid --set=root ${windows_boot_partition}
       chainloader ${windows_chainloader}
