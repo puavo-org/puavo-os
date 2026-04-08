@@ -1,6 +1,6 @@
 {
   "puavo.ers.mode": {
-    "choices": [ "ers-applet", "naksu", "naksu2", "abitti2server" ],
+    "choices": [ "ers-applet", "naksu", "naksu2", "abitti2server", "abitti2server_examnet_unmanaged" ],
     "default": "ers-applet",
     "description": "The mode for examination room server desktop session",
     "typehint": "string"
