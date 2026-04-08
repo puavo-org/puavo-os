@@ -20,6 +20,10 @@ from gi.repository import Pango
 from gi.repository import GLib
 from gi.repository import Gio
 
+import cairo
+
+_is_wayland = os.environ.get("XDG_SESSION_TYPE") == "wayland"
+
 import dimensions
 import utils
 import utils_gui
@@ -78,7 +82,8 @@ class PuavoMenu(Gtk.Window):
 
         # Set window style
         if self.__settings.prod_mode:
-            self.set_type_hint(Gdk.WindowTypeHint.MENU)
+            if not _is_wayland:
+                self.set_type_hint(Gdk.WindowTypeHint.MENU)
             self.set_skip_taskbar_hint(True)
             self.set_skip_pager_hint(True)
             self.set_deletable(False)  # no close button
@@ -92,8 +97,27 @@ class PuavoMenu(Gtk.Window):
             self.set_decorated(True)
             self.__exit_permitted = True
 
-        self.set_resizable(False)
-        self.set_size_request(dims.window_width, dims.window_height)
+        if _is_wayland:
+            # On Wayland the window becomes a fullscreen transparent overlay,
+            # so do not lock it to the menu content size.  The overlay must
+            # be undecorated even in dev mode — a title bar would be visible
+            # and consume space on the transparent surface.
+            self.set_decorated(False)
+            self.set_name("root_overlay")
+            screen = self.get_screen()
+            visual = screen.get_rgba_visual()
+            if visual:
+                self.set_visual(visual)
+            self.set_app_paintable(True)
+            self.connect("draw", self.__on_draw_transparent)
+            monitor = utils_gui.get_primary_monitor()
+            if monitor:
+                geom = monitor.get_geometry()
+                self.set_default_size(geom.width, geom.height)
+        else:
+            self.set_resizable(False)
+            self.set_size_request(dims.window_width, dims.window_height)
+
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_gravity(Gdk.Gravity.SOUTH_WEST)
 
@@ -327,7 +351,30 @@ class PuavoMenu(Gtk.Window):
             self.sidebar_box, self.__dims.sidebar_left, self.__dims.sidebar_top
         )
 
-        self.add(self.__main_container)
+        if _is_wayland:
+            # Wrap content in an EventBox so it gets the #root CSS
+            # background (border, border-radius, background colour).
+            # The window itself is transparent ("root_overlay").
+            self.__content_wrapper = Gtk.EventBox(name="root")
+            self.__content_wrapper.set_size_request(
+                self.__dims.window_width, self.__dims.window_height)
+            self.__content_wrapper.add(self.__main_container)
+
+            self.__overlay_fixed = Gtk.Fixed()
+            monitor = utils_gui.get_primary_monitor()
+            if monitor:
+                geom = monitor.get_geometry()
+                panel_height = utils_gui.get_panel_height()
+                initial_y = geom.height - self.__dims.window_height \
+                    - panel_height
+            else:
+                initial_y = 0
+            self.__overlay_fixed.put(self.__content_wrapper, 0, initial_y)
+            self.add(self.__overlay_fixed)
+            self.__overlay_fixed.show()
+            self.__content_wrapper.show()
+        else:
+            self.add(self.__main_container)
         self.__main_container.show()
 
         # DO NOT CALL self.show_all() HERE, the window has hidden elements
@@ -933,6 +980,16 @@ class PuavoMenu(Gtk.Window):
     # Mouse click handler. React to mouse "back" button presses
     # and open the development menu in development mode.
     def __on_mouse_click(self, widget, event):
+        # On Wayland the window is fullscreen-transparent; clicks on the
+        # transparent area (outside the menu content) should dismiss it.
+        if _is_wayland and event.type == Gdk.EventType.BUTTON_PRESS:
+            alloc = self.__content_wrapper.get_allocation()
+            if not (alloc.x <= event.x <= alloc.x + alloc.width and
+                    alloc.y <= event.y <= alloc.y + alloc.height):
+                self.set_keep_above(False)
+                self.set_visible(False)
+                return True
+
         # I'm not sure where that 8 comes from. Only the first three mouse
         # buttons have standardized values. I tested this with two "multimedia"
         # mice that have forward/backward side buttons and on both mice,
@@ -1361,6 +1418,16 @@ class PuavoMenu(Gtk.Window):
         logging.info("Exit not permitted")
         return True
 
+    def __on_draw_transparent(self, widget, cr):
+        """Paint a fully transparent background for the Wayland fullscreen
+        overlay so only the menu content is visible."""
+        cr.save()
+        cr.set_source_rgba(0, 0, 0, 0)
+        cr.set_operator(cairo.OPERATOR_SOURCE)
+        cr.paint()
+        cr.restore()
+        return False
+
     # Category buttons will receive the initial focus. Compared to
     # giving the inital focus to the search field, this has a clear
     # benefit on touchscreen devices: the virtual keyboard does not
@@ -1368,11 +1435,37 @@ class PuavoMenu(Gtk.Window):
     # any symbol key already automatically focuses the search field,
     # the "fast search and spawn" behavior is not lost.
     def __on_show(self, _):
+        if _is_wayland:
+            monitor = utils_gui.get_primary_monitor()
+            if monitor:
+                geom = monitor.get_geometry()
+                self.resize(geom.width, geom.height)
         self.__category_buttons.grab_focus()
 
     # TODO: put this in a lambda
     def __try_exit(self, menu, event):
         return self.go_away()
+
+    def move(self, x, y):
+        """Position the window. On Wayland, reposition the content widget
+        inside the fullscreen transparent container instead."""
+        if not _is_wayland:
+            Gtk.Window.move(self, x, y)
+            return
+
+        # On Wayland the compositor controls window placement, so screen
+        # coordinates are meaningless for the overlay.  Use the monitor
+        # geometry to anchor the menu at the bottom-left, with the
+        # caller's y indicating the panel top (i.e. how far from the
+        # monitor bottom the menu must stay).
+        monitor = utils_gui.get_primary_monitor()
+        if monitor:
+            geom = monitor.get_geometry()
+            panel_height = geom.height - y
+            fixed_y = geom.height - self.__dims.window_height - panel_height
+        else:
+            fixed_y = y - self.__dims.window_height
+        self.__overlay_fixed.move(self.__content_wrapper, x, fixed_y)
 
     # --------------------------------------------------------------------------
     # IPC socket command handling
@@ -1385,6 +1478,20 @@ class PuavoMenu(Gtk.Window):
         try:
             if args[0] == "center":
                 # Center the menu at the mouse cursor
+                if _is_wayland:
+                    # Wayland forbids global pointer queries; use GDK seat.
+                    seat = Gdk.Display.get_default().get_default_seat()
+                    pointer = seat.get_pointer() if seat else None
+                    if pointer:
+                        _, x, y = pointer.get_position()
+                        if x == 0 and y == 0:
+                            return None
+                        return (
+                            int(x) - int(self.__dims.window_width / 2),
+                            int(y) - int(self.__dims.window_height / 2),
+                        )
+                    return None
+
                 from Xlib import display
 
                 # Get mouse position
@@ -1431,7 +1538,7 @@ class PuavoMenu(Gtk.Window):
                 logging.debug(coords)
                 self.move(coords[0], coords[1])
 
-            if self.__settings.prod_mode:
+            if self.__settings.prod_mode and not _is_wayland:
                 self.set_type_hint(Gdk.WindowTypeHint.MENU)
 
             self.set_keep_above(True)
@@ -1456,7 +1563,7 @@ class PuavoMenu(Gtk.Window):
                 logging.debug(coords)
                 self.move(coords[0], coords[1])
 
-            if self.__settings.prod_mode:
+            if self.__settings.prod_mode and not _is_wayland:
                 self.set_type_hint(Gdk.WindowTypeHint.MENU)
 
             self.set_keep_above(True)

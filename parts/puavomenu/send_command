@@ -18,7 +18,8 @@ echo "$@" | nc -U -w 1 "${socket}"
 # FIXME: This is an excessively ugly hack, but it works and
 # it fixes the keyboard focus problem. We can't use this
 # forever though...
-if [ "$cmd" = "show" -o "$cmd" = "toggle" ]; then
+if [ "$cmd" = "show" -o "$cmd" = "toggle" ] \
+     && [ "${XDG_SESSION_TYPE:-}" != "wayland" ]; then
     window=$(xdotool search --name ProdPuavomenu) || return 1
 
     if [ -n "$window" ]; then

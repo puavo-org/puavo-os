@@ -9,8 +9,48 @@ from gi.repository import Gtk, GdkPixbuf, Gdk
 import cairo
 
 
+def get_primary_monitor():
+    """Return the primary monitor, falling back to the first available."""
+    display = Gdk.Display.get_default()
+    monitor = display.get_primary_monitor()
+    # On Wayland, get_primary_monitor() can return None
+    if monitor is None and display.get_n_monitors() > 0:
+        monitor = display.get_monitor(0)
+    return monitor
+
+
+def get_panel_height():
+    """Return the bottom panel height via dconf, defaulting to 0."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["dconf", "read",
+             "/org/gnome/shell/extensions/dash-to-panel/panel-sizes"],
+            capture_output=True, text=True, timeout=2)
+        if result.returncode == 0 and result.stdout.strip():
+            # Format is like '{"0":48}' — extract the first value
+            import json
+            sizes = json.loads(result.stdout.strip().strip("'"))
+            if isinstance(sizes, dict) and sizes:
+                return next(iter(sizes.values()))
+        # Fallback: single panel-size key
+        result = subprocess.run(
+            ["dconf", "read",
+             "/org/gnome/shell/extensions/dash-to-panel/panel-size"],
+            capture_output=True, text=True, timeout=2)
+        if result.returncode == 0 and result.stdout.strip():
+            return int(result.stdout.strip())
+    except Exception:
+        pass
+    return 0
+
+
 def get_default_display_primary_monitor_resolution():
-    geometry = Gdk.Display.get_default().get_primary_monitor().get_geometry()
+    monitor = get_primary_monitor()
+    if monitor is None:
+        raise RuntimeError("No monitors available")
+
+    geometry = monitor.get_geometry()
     return (geometry.width, geometry.height)
 
 
