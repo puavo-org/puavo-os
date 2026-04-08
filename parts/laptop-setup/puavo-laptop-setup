@@ -434,6 +434,8 @@ class PuavoLaptopSetup:
 
             self.set_abitti_version(None) # default to school version
 
+            if not self.abitti_ui_initialized:
+                continue
             school_versions_str = self.abitti_school_versions_str
             if not school_versions_str:
                 continue
@@ -448,6 +450,8 @@ class PuavoLaptopSetup:
     def update_gui_state_from_puavoconf(self):
         for key, value in self.puavo_conf.items():
             if key == 'puavo.abitti2.version':
+                if not self.abitti_ui_initialized:
+                    continue
                 if value == None:
                     self.abitti_version_school_button.set_active(True)
                     self.abitti_alias_version_box.set_active(0)

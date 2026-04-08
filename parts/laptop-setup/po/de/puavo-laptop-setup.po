@@ -46,35 +46,35 @@ msgstr ""
 "Abitti 2 wird unter Windows nicht aktualisiert; du musst in das aktuelle "
 "System booten, um es zu aktualisieren."
 
-#: puavo-laptop-setup:504
+#: puavo-laptop-setup:508
 msgid "error saving changes"
 msgstr "Fehler beim Speichern der Veränderungen"
 
-#: puavo-laptop-setup:539
+#: puavo-laptop-setup:543
 msgid "Factory reset is running step"
 msgstr "Das Zurücksetzen der Werkseinstellungen Schritt"
 
-#: puavo-laptop-setup:552
+#: puavo-laptop-setup:556
 msgid "Factory reset is running"
 msgstr "Das Zurücksetzen der Werkseinstellungen wird durchgeführt"
 
-#: puavo-laptop-setup:560
+#: puavo-laptop-setup:564
 msgid "Failed to start factory reset"
 msgstr "Das Zurücksetzen der Werkseinstellungen konnte nicht gestartet werden"
 
-#: puavo-laptop-setup:563 puavo-laptop-setup:594
+#: puavo-laptop-setup:567 puavo-laptop-setup:598
 msgid "Factory reset failed"
 msgstr "Das Zurücksetzen der Werkseinstellungen ist gescheitert"
 
-#: puavo-laptop-setup:581
+#: puavo-laptop-setup:585
 msgid "Factory reset succeeded."
 msgstr "Das Zurücksetzen der Werkseinstellungen ist gefolgt."
 
-#: puavo-laptop-setup:583
+#: puavo-laptop-setup:587
 msgid "The system is going to reboot in few seconds..."
 msgstr "Das System wird in einigen Sekunden neugestartet."
 
-#: puavo-laptop-setup:596
+#: puavo-laptop-setup:600
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -82,11 +82,11 @@ msgstr ""
 "Weitere Informationen können aus der Werkseinstellungslog gelesen werden. "
 "Bitte Kontakt mit Helpdesk aufnehmen."
 
-#: puavo-laptop-setup:665
+#: puavo-laptop-setup:669
 msgid "Change PIN on next boot?"
 msgstr "PIN beim nächsten Start ändern?"
 
-#: puavo-laptop-setup:669
+#: puavo-laptop-setup:673
 msgid ""
 "The disk encryption PIN can only be changed during boot. A PIN change "
 "request will be stored and the system will prompt you to set a new PIN on "
@@ -96,43 +96,43 @@ msgstr ""
 "Eine PIN-Änderungsanforderung wird gespeichert und das System fordert Sie "
 "beim nächsten Start auf, eine neue PIN festzulegen."
 
-#: puavo-laptop-setup:676 puavo-laptop-setup.glade:452
+#: puavo-laptop-setup:680 puavo-laptop-setup.glade:452
 msgid "Cancel"
 msgstr "Absagen"
 
-#: puavo-laptop-setup:677
+#: puavo-laptop-setup:681
 msgid "Request PIN change"
 msgstr "PIN-Änderung anfordern"
 
-#: puavo-laptop-setup:678
+#: puavo-laptop-setup:682
 msgid "Request and reboot now"
 msgstr "Anfordern und jetzt neu starten"
 
-#: puavo-laptop-setup:700
+#: puavo-laptop-setup:704
 msgid "Failed to request PIN change"
 msgstr "PIN-Änderungsanforderung fehlgeschlagen"
 
-#: puavo-laptop-setup:715
+#: puavo-laptop-setup:719
 msgid "PIN change requested"
 msgstr "PIN-Änderung angefordert"
 
-#: puavo-laptop-setup:718
+#: puavo-laptop-setup:722
 msgid "You will be prompted to change the PIN on the next boot."
 msgstr "Sie werden beim nächsten Start aufgefordert, die PIN zu ändern."
 
-#: puavo-laptop-setup:737
+#: puavo-laptop-setup:741
 msgid "Failed to load recovery data"
 msgstr "Fehler beim Laden der Wiederherstellungsdaten"
 
-#: puavo-laptop-setup:815 puavo-laptop-setup:881
+#: puavo-laptop-setup:819 puavo-laptop-setup:885
 msgid "Laptop setup"
 msgstr "Laptop Einstellungen"
 
-#: puavo-laptop-setup:871
+#: puavo-laptop-setup:875
 msgid "You do not have the required permissions to use this tool."
 msgstr "Sie haben nicht ausreichende Rechte um dieses Werkzeug zu verwenden"
 
-#: puavo-laptop-setup:881
+#: puavo-laptop-setup:885
 msgid "is already running"
 msgstr "schon im Gang"
 
