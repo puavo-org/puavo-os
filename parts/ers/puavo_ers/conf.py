@@ -17,6 +17,7 @@ __all__ = [
     "get_ers_abitti2server_interface",
     "get_ers_abitti2server_network",
     "get_ers_abitti2server_number",
+    "get_ers_mode",
 ]
 
 
@@ -48,7 +49,7 @@ def _puavoconf_get(
 
 
 def validate_abitti2server_mode(s: str) -> str:
-    if s == "abitti2server":
+    if s.startswith("abitti2server"):
         return s
 
     raise ValidationError("invalid mode", s)
@@ -134,4 +135,10 @@ def get_ers_abitti2server_network() -> str:
 def get_ers_abitti2server_number() -> int:
     return _puavoconf_get(
         "puavo.ers.abitti2server.number", validate_abitti2server_number
+    )
+
+
+def get_ers_mode() -> str:
+    return _puavoconf_get(
+        "puavo.ers.mode", validate_abitti2server_mode
     )

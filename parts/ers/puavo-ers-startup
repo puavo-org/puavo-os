@@ -48,7 +48,7 @@ open_in_terminal() {
 
 ers_mode="$(puavo-conf puavo.ers.mode)"
 case "$ers_mode" in
-  abitti2server)
+  abitti2server*)
     open_in_terminal "abitti2server" /opt/ktp-controller/ktp-controller
     ;;
   ers-applet)

@@ -110,6 +110,15 @@ async def _naksu2_certs_changed(event):
 
 def _main() -> int:
     try:
+        ers_mode = puavo_ers.conf.get_ers_mode()
+    except puavo_ers.conf.ValidationError as validation_error:
+        return 1
+
+    if ers_mode == "abitti2server_examnet_unmanaged":
+        _LOGGER.info("Not managing exam network.")
+        return 0
+
+    try:
         interface = puavo_ers.conf.get_ers_abitti2server_interface()
     except puavo_ers.conf.ValidationError as validation_error:
         _LOGGER.error("invalid configuration: %s", str(validation_error))
