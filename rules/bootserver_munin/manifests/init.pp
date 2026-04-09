@@ -1,6 +1,7 @@
 class bootserver_munin {
   include ::bootserver_helpers
   include ::bootserver_nginx
+  include ::munin
   include ::puavo_conf
 
   define plugin ($wildcard = false) {
@@ -29,11 +30,6 @@ class bootserver_munin {
       require => Package['munin-node'],
       source  => 'puppet:///modules/bootserver_munin/cupsys_pages_conf';
 
-    '/etc/nginx/sites-available/munin':
-      mode    => '0644',
-      require => [ Package['munin'], Package['munin-node'] ],
-      source  => 'puppet:///modules/bootserver_munin/nginx_conf';
-
     '/usr/share/munin/plugins/puavo-bootserver-clients':
       mode    => '0755',
       require => [ File['/usr/local/bin/puavo-bootserver-list-clients']
@@ -57,8 +53,9 @@ class bootserver_munin {
       source => 'puppet:///modules/bootserver_munin/setup_munin';
   }
 
-  Package <| title == 'munin'
-          or title == 'munin-node'
-          or title == 'python3-numpy'
-          or title == 'python3-redis' |>
+  Package <|
+       title == 'munin-node'
+    or title == 'python3-numpy'
+    or title == 'python3-redis'
+  |>
 }

@@ -1,0 +1,110 @@
+#!/bin/bash
+
+if [ "$1" = "config" ]; then
+    echo "multigraph abitti_students"
+    echo "graph_title Abitti 2 Aktiiviset Opiskelijat"
+    echo "graph_vlabel kpl"
+    echo "graph_category abitti"
+    echo "students.label Aktiiviset"
+    echo "students.draw LINE2"
+
+    echo "multigraph abitti_exams"
+    echo "graph_title Abitti 2 Kaynnissa olevat kokeet"
+    echo "graph_vlabel kpl"
+    echo "graph_category abitti"
+    echo "exams.label Kokeita"
+    echo "exams.draw LINE2"
+
+    echo "multigraph abitti_answers"
+    echo "graph_title Abitti 2 Vastauksia"
+    echo "graph_vlabel kpl"
+    echo "graph_category abitti"
+    echo "answers.label Vastauksia"
+    echo "answers.draw LINE2"
+    exit 0
+fi
+
+export HOME=/tmp
+RAW_DATA=$(cd /opt/ktp-controller && ./ktp-controller cli status 2>/dev/null)
+
+if [ -z "$RAW_DATA" ]; then
+    echo "multigraph abitti_students"
+    echo "students.value 0"
+    echo "multigraph abitti_exams"
+    echo "exams.value 0"
+    echo "multigraph abitti_answers"
+    echo "answers.value 0"
+    exit 0
+fi
+
+RESULT=$(printf '%s\n' "$RAW_DATA" | awk '
+BEGIN {
+    in_abitti2 = 0
+    in_students = 0
+    in_exams = 0
+    students = 0
+    exams = 0
+    answers = 0
+}
+{
+    if ($0 ~ /^abitti2:[[:space:]]*$/) {
+        in_abitti2 = 1
+        in_students = 0
+        in_exams = 0
+        next
+    }
+
+    if (in_abitti2 && $0 ~ /^[^[:space:]]/ && $0 !~ /^abitti2:[[:space:]]*$/) {
+        in_abitti2 = 0
+        in_students = 0
+        in_exams = 0
+    }
+
+    if (!in_abitti2) {
+        next
+    }
+
+    if ($0 ~ /^[[:space:]]+answer_count:[[:space:]]*[0-9]+[[:space:]]*$/) {
+        sub(/.*answer_count:[[:space:]]*/, "", $0)
+        answers = $0 + 0
+        next
+    }
+
+    if ($0 ~ /^[[:space:]]+exams:[[:space:]]*$/) {
+        in_exams = 1
+        in_students = 0
+        next
+    }
+
+    if ($0 ~ /^[[:space:]]+students:[[:space:]]*$/) {
+        in_students = 1
+        in_exams = 0
+        next
+    }
+
+    if (in_exams && $0 ~ /^[[:space:]]*-[[:space:]]+uuid:[[:space:]]*/) {
+        exams++
+        next
+    }
+
+    if (in_students && $0 ~ /is_active:[[:space:]]*true/) {
+        students++
+        next
+    }
+}
+END {
+    print students, exams, answers
+}')
+
+STUDENTS=$(printf '%s\n' "$RESULT" | awk "{print \$1}")
+EXAMS=$(printf '%s\n' "$RESULT" | awk "{print \$2}")
+ANSWERS=$(printf '%s\n' "$RESULT" | awk "{print \$3}")
+
+echo "multigraph abitti_students"
+echo "students.value ${STUDENTS:-0}"
+
+echo "multigraph abitti_exams"
+echo "exams.value ${EXAMS:-0}"
+
+echo "multigraph abitti_answers"
+echo "answers.value ${ANSWERS:-0}"

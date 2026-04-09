@@ -7,7 +7,7 @@ server {
         }
 
         location /munin/ {
-                proxy_pass http://127.0.0.1:8089/;
+                proxy_pass http://127.0.0.1:6842/;
 
                 proxy_set_header HOST $host;
                 proxy_set_header X-Real-IP $remote_addr;
