@@ -865,8 +865,8 @@ class packages {
 
     'modern':
       dkms_modules => [],  # XXX what could work with this?
-      package_name => 'linux-image-6.18.15+deb13-amd64',
-      version      => '6.18.15+deb13-amd64';
+      package_name => 'linux-image-6.19.10+deb13-amd64',
+      version      => '6.19.10+deb13-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such
