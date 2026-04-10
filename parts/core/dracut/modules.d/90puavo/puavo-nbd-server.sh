@@ -2,11 +2,19 @@
 
 mkdir -p /run/puavo
 
-for netconf in /run/net-*.conf; do
-  test -e "$netconf" || continue
-  . "$netconf"
-  if [ -n "$ROOTSERVER" ]; then
-    printf "%s\n" "$ROOTSERVER" > /run/puavo/nbd-server
-    break
-  fi
+netroot=''
+for x in $(getargs netroot=); do
+  case "$x" in
+    nbd:*)
+      netroot="$x"
+      break
+      ;;
+  esac
 done
+
+[ -n "$netroot" ] || exit 0
+
+nroot=${netroot#nbd:}
+server=${nroot%%:*}
+
+printf "%s\n" "$server" > /run/puavo/nbd-server
