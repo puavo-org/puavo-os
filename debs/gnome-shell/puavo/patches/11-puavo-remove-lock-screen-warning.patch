@@ -1,7 +1,7 @@
 diff -ruN gnome-shell/js/ui/main.js gnome-shell/js/ui/main.js
---- gnome-shell/js/ui/main.js	2025-11-24 15:16:08.000000000 +0100
-+++ gnome-shell/js/ui/main.js	2026-01-28 08:24:59.992073367 +0100
-@@ -373,10 +373,6 @@
+--- gnome-shell/js/ui/main.js	2026-04-10 15:55:31.794556542 +0300
++++ gnome-shell/js/ui/main.js	2026-04-10 15:48:06.578123070 +0300
+@@ -371,10 +371,6 @@
              }
          }
  
@@ -9,9 +9,9 @@ diff -ruN gnome-shell/js/ui/main.js gnome-shell/js/ui/main.js
 -            sessionMode.currentMode !== 'initial-setup')
 -            _handleLockScreenWarning();
 -
+         LoginManager.registerSessionWithGDM();
+ 
          if (perfModule) {
-             let perfOutput = GLib.getenv('SHELL_PERF_OUTPUT');
-             Scripting.runPerfScript(perfModule, perfOutput);
 @@ -392,32 +388,6 @@
      }
  }
