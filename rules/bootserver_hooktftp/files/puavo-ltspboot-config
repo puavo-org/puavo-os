@@ -137,11 +137,13 @@ if ! host_bootparams=$(get_bootparams "$mac_address"); then
 fi
 
 boot_mode=$(printf %s "$host_bootparams" | jq -r .boot_mode)
+hostname=$(printf %s "$host_bootparams" | jq -r .hostname)
 hosttype=$(printf %s "$host_bootparams" | jq -r .type)
 kernel_arguments=$(printf %s "$host_bootparams" | jq -r .kernel_arguments)
 kernel_version=$(printf %s "$host_bootparams" | jq -r .kernel_version)
 preferred_boot_image=$(printf %s "$host_bootparams" | jq -r .preferred_boot_image)
 
+[ "$hostname" = "null" -o "$hostname" = '' ] && hostname='unknown'
 [ "$hosttype" = "null" -o "$hosttype" = '' ] && hosttype='unregistered'
 [ "$kernel_arguments" = "null" ] && kernel_arguments=''
 [ "$kernel_version"   = "null" ] && kernel_version=''
@@ -155,10 +157,10 @@ fi
 # XXX means.
 case "$hosttype" in
   fatclient)
-    kernel_arguments="${kernel_arguments} preempt=full"
+    kernel_arguments="${kernel_arguments} hostname=${hostname} preempt=full"
     ;;
   laptop)
-    kernel_arguments='iomem=relaxed preempt=full puavo.service.tlp.enabled=true'
+    kernel_arguments='iomem=relaxed hostname=${hostname} preempt=full puavo.service.tlp.enabled=true'
     ;;
   unregistered)
     kernel_arguments='iomem=relaxed puavo.service.tlp.enabled=true'
