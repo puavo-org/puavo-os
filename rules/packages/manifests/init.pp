@@ -528,6 +528,8 @@ class packages {
     , 'kturtle'
     , 'lokalize'
     , 'meld'
+    , 'nodejs'
+    , 'npm'
     , 'okteta'
     , 'pylint'
     , 'python3-doc'
