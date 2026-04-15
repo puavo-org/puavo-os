@@ -1,3 +1,5 @@
+require 'puavo-ds-master-vendor/bundler/setup'
+
 require 'active_ldap'
 require 'optparse'
 require 'readline'
