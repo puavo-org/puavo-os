@@ -34,4 +34,12 @@ install: install-dirs
 		bin/puavo-reset-kerberos-configurations \
 		bin/puavo-restore-all-databases
 
+update-gemfile-lock: clean
+	rm -f Gemfile.lock
+	GEM_HOME=.tmpgem bundle install
+	rm -rf .tmpgem
+	bundle config set deployment true
+	bundle install
+
 clean:
+	rm -rf .bundle
