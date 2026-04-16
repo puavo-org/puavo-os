@@ -12,7 +12,7 @@ endif
 
 build:
 	bundle config set path lib/puavo-ds-master-vendor
-	bundle install
+	bundle install --standalone
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
