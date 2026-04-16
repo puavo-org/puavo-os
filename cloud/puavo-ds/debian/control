@@ -2,7 +2,7 @@ Source: puavo-ds
 Section: admin
 Priority: extra
 Maintainer: Juha Erkkilä <Juha.Erkkila@opinsys.fi>
-Build-Depends: debhelper (>= 8), ruby, ruby-dev
+Build-Depends: debhelper (>= 8), libffi-dev, ruby, ruby-dev
 Standards-Version: 3.9.3
 Homepage: https://github.com/puavo-org/puavo-os/
 
