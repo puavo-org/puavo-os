@@ -1,0 +1,49 @@
+Source: collabora
+Section: editors
+Priority: optional
+Maintainer: Puavo Org <dev@opinsys.fi>
+Build-Depends:
+ autoconf,
+ automake,
+ build-essential,
+ cmake,
+ debhelper-compat (= 13),
+ file,
+ fontconfig,
+ gperf,
+ bison,
+ flex,
+ libcap-dev,
+ libcppunit-dev,
+ libfuse2,
+ libkrb5-dev,
+ libpam0g-dev,
+ libpng-dev,
+ libssl-dev,
+ libtool,
+ libzstd-dev,
+ meson,
+ nasm,
+ npm,
+ pkg-config,
+ python3-lxml,
+ python3-polib,
+ qt6-base-dev,
+ qt6-tools-dev,
+ qt6-tools-dev-tools,
+ qt6-webengine-dev,
+ rsync,
+ wget,
+ zip,
+Standards-Version: 4.6.2
+
+Package: collabora
+Architecture: amd64
+Depends:
+ ${misc:Depends},
+Description: Collabora Office desktop application
+ Collabora Office is a desktop document editor based on
+ LibreOffice technology and Collabora Online. It provides
+ editing support for text documents, spreadsheets, and
+ presentations through a Qt-based desktop application.
+

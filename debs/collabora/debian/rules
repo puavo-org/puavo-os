@@ -1,0 +1,130 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+source_directory = $(CURDIR)
+core_directory = $(source_directory)/core
+poco_directory = $(source_directory)/poco
+online_directory = $(source_directory)/online
+appdir = $(source_directory)/debian/CollaboraOffice.AppDir
+install_directory = $(source_directory)/debian/collabora
+
+lokit_directory = $(appdir)/usr/lib/collabora-office
+
+appimage_name = collabora-office.AppImage
+appimagetool_url = https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	# Configure LibreOffice core as a link-time optimized
+	# release build without symbols to reduce size.
+	cd $(core_directory) && ./autogen.sh \
+	  --with-distro=CPLinux-LOKit \
+	  --without-package-format \
+	  --disable-symbols \
+	  --disable-sal-log \
+	  --enable-lto \
+	  --disable-debug
+
+	# Configure Poco
+	mkdir -p $(poco_directory)/cmake-build
+	cd $(poco_directory)/cmake-build && cmake .. \
+	  -DCMAKE_INSTALL_PREFIX=/usr
+
+override_dh_auto_build:
+	# Reset Make state inherited from dpkg-buildpackage.
+	# The nested jobserver and make level variables break
+	# the NSS sub-build inside LibreOffice core.
+	unset MAKEFLAGS MFLAGS MAKELEVEL
+
+	# Build LibreOffice core
+	cd $(core_directory) && $(MAKE)
+
+	# Build Poco and install directly into AppDir
+	cd $(poco_directory)/cmake-build && $(MAKE)
+	cd $(poco_directory)/cmake-build && $(MAKE) install \
+	  DESTDIR=$(appdir)
+
+	# Copy LibreOffice core output into AppDir
+	mkdir -p $(lokit_directory)
+	cp -a $(core_directory)/instdir \
+	  $(lokit_directory)/instdir
+	cp -a $(core_directory)/include \
+	  $(lokit_directory)/include
+
+	# Configure and build Collabora Office desktop app
+	cd $(online_directory) && ./autogen.sh
+	cd $(online_directory) && ./configure \
+	  --enable-qtapp \
+	  --with-lo-path=$(lokit_directory)/instdir \
+	  --with-lokit-path=$(lokit_directory)/include \
+	  --with-poco-includes=$(appdir)/usr/include \
+	  --with-poco-libs=$(appdir)/usr/lib/x86_64-linux-gnu
+	cd $(online_directory) && $(MAKE)
+
+	# Install Collabora Office into AppDir
+	cd $(online_directory) && $(MAKE) install \
+	  DESTDIR=$(appdir) prefix=/usr
+
+	# Construct AppImage
+	cd $(source_directory) && $(MAKE) -f debian/rules build-appimage
+
+build-appimage:
+	# Fetch appimagetool, because it is not available
+	# in Debian repos. Extract it instead of running it
+	# directly, because the build environment does not
+	# have FUSE.
+	wget --quiet -O debian/appimagetool $(appimagetool_url)
+	chmod +x debian/appimagetool
+	debian/appimagetool --appimage-extract
+	mv squashfs-root debian/appimagetool-extracted
+
+	# License
+	install -Dm644 $(online_directory)/COPYING \
+	  $(appdir)/usr/share/licenses/collabora/LICENSE
+
+	# Remove bundled dictionaries, because system
+	# hunspell is used
+	rm -rf $(lokit_directory)/instdir/share/extensions/dict-*
+
+	# Remove bundled fonts, because system fontconfig
+	# is used
+	rm -rf $(lokit_directory)/instdir/share/fonts
+
+	# Remove build-time only files that are not needed
+	rm -rf $(lokit_directory)/include
+	rm -rf $(appdir)/usr/include
+	rm -rf $(appdir)/usr/lib/x86_64-linux-gnu/cmake
+
+	# AppRun launcher script
+	install -m 755 debian/AppRun $(appdir)/AppRun
+
+	# Desktop entry and icon from the source tree
+	install -m 644 \
+	  $(online_directory)/qt/com.collaboraoffice.Office.desktop \
+	  $(appdir)/collabora-office.desktop
+	install -Dm644 \
+	  $(online_directory)/qt/hicolor/scalable/apps/com.collaboraoffice.Office.startcenter.svg \
+	  $(appdir)/com.collaboraoffice.Office.startcenter.svg
+
+	# Build the AppImage
+	ARCH=x86_64 debian/appimagetool-extracted/AppRun \
+	  --no-appstream \
+	  $(appdir) debian/$(appimage_name)
+
+override_dh_auto_install:
+	mkdir -p $(install_directory)/opt/collaboraoffice
+	install -Dm755 debian/$(appimage_name) \
+	  $(install_directory)/opt/collaboraoffice/$(appimage_name)
+
+override_dh_auto_test:
+	# Skip tests during packaging
+
+override_dh_auto_clean:
+	# Clean is handled by the build system
+
+override_dh_shlibdeps:
+	# AppImage is self-contained, skip shared library
+	# dependency analysis
