@@ -183,7 +183,7 @@ include /usr/share/dpkg/pkg-info.mk
 
 # Set this variable if you're building packages outside of Debian and don't
 # want the checks for DFSG-freeness.
-DFSG_NONFREE = 1
+#DFSG_NONFREE = 1
 
 # Expose maintainer address to build/mkversion (see debian/patches/set-maintainer-name)
 export DEB_MAINTAINER ?= $(shell sed -ne 's/^Maintainer:\s\+//p' debian/control)
