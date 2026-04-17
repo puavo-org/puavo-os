@@ -29,7 +29,7 @@ class Organisation < ActiveLdap::Base
   end
 
   def create_remote_desktop_public_key
-    `/usr/bin/ssh-keygen -q -t dsa -N '' -f /tmp/#{self.cn}`
+    `/usr/bin/ssh-keygen -q -t ed25519 -N '' -f /tmp/#{self.cn}`
     self.puavoRemoteDesktopPrivateKey = File.open("/tmp/#{self.cn}").readlines.to_s
     self.puavoRemoteDesktopPublicKey = File.open("/tmp/#{self.cn}.pub").readlines.to_s
     self.save
