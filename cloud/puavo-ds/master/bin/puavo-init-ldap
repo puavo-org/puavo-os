@@ -181,6 +181,7 @@ FileUtils.rm_r Dir.glob('/var/lib/ldap/*')
 #
 # /var/lib/ldap/o=puavo
 
+FileUtils.mkdir_p '/etc/ldap/slapd.d'
 FileUtils.mkdir_p '/var/lib/ldap/o=puavo'
 
 FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/*')
