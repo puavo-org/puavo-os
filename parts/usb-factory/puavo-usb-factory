@@ -120,9 +120,9 @@ proc handle_image_download {content_id} {
     }
     fconfigure $fh -blocking 1
     if {[catch { close $fh }]} {
-      set wait_ms 30000         ; # failed, try again after 30 seconds
+      set wait_ms 30000         ;# failed, try again after 30 seconds
     } else {
-      set wait_ms 3600000       ; # success, try again after 1 hour
+      set wait_ms 3600000       ;# success, try again after 1 hour
     }
     dict set upcoming_download_events $content_id [
       after $wait_ms download_images
@@ -132,7 +132,6 @@ proc handle_image_download {content_id} {
 }
 
 proc update_background {image imagepath new_width new_height} {
-  # XXX it would be better to use standard output
   set tmpfile [exec mktemp /tmp/puavo-usb-factory-image.XXXXXXX]
   set img_size "${new_width}x${new_height}!"
   exec -ignorestderr convert $imagepath -resize $img_size png:$tmpfile
@@ -236,7 +235,6 @@ proc get_default_content_dir {} {
     error "no content directories"
   }
 
-  # get the the first one (alphabetically) in case there are many
   lindex $content_dirs 0
 }
 
@@ -308,7 +306,7 @@ proc start_preparation {devpath countdown} {
 }
 
 proc start_operating {devpath cmd} {
-  set fh [open "| $cmd"]
+  set fh [open "|$cmd"]
   fconfigure $fh -blocking 0
   fileevent $fh readable [list handle_fileevent $devpath]
   return $fh
@@ -325,8 +323,6 @@ proc start_verifying {devpath} {
     return ""
   }
 
-  # set access time of image file so that it can be used
-  # by other scripts to test if it is still in use (or may be removed?)
   catch { file atime $image_path [clock seconds] }
 
   set cmd "nice -n 20 ionice -c 3 pv -b -n $image_path | nice -n 20 ionice -c 3 cmp -n $image_size ${pci_path_dir}/${devpath} - 2>@1"
@@ -344,8 +340,6 @@ proc start_writing {devpath} {
     return ""
   }
 
-  # set access time of image file so that it can be used
-  # by other scripts to test if it is still in use (or may be removed?)
   catch { file atime $image_path [clock seconds] }
 
   set cmd "nice -n 20 ionice -c 3 pv -b -n $image_path | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
@@ -379,9 +373,6 @@ proc set_device_eta {devpath bytes_handled} {
   set percentage [expr { round(100.0 * $bytes_handled / $image_size) }]
 
   if {[dict get $diskdevices $devpath state] eq "writing"} {
-    # When we are in writing phase, we do some tricks in the ETA
-    # calculation, because the initial estimates are too optimistic
-    # and there will be a verification step afterwards.
     set eta_image_size [expr { int(1.17 * $image_size) }]
   } else {
     set eta_image_size $image_size
@@ -408,7 +399,6 @@ proc set_device_eta {devpath bytes_handled} {
 
 proc lookup_usbdevice_model {devpath} {
   set usbdevice_model "?"
-
   if {![regexp {usb-[0-9]+:(.*)-scsi-} $devpath _ usbport]} {
     return $usbdevice_model
   }
@@ -475,7 +465,6 @@ proc handle_fileevent {devpath} {
   if {$chars_returned <= 0} { return }
 
   set bytes_written [string trim $progressline]
-  # $bytes_written might be an error string, do not handle that
   if {[string is integer -strict $bytes_written]} {
     set_device_eta $devpath $bytes_written
   }
@@ -496,10 +485,6 @@ proc set_ui_status_to_nomedia {devpath} {
 
 proc quick_verify_check {devpath} {
   global diskdevices pci_path_dir
-
-  # A heuristic, not exact... check if first and last megabytes match
-  # on device with image.  If this succeeds we must verify the whole
-  # disk image on device, and if that fails we will start writing.
 
   set image_path [dict get $diskdevices $devpath image_path]
   set image_size [dict get $diskdevices $devpath image_size]
@@ -528,7 +513,6 @@ proc set_devstate {devpath state args} {
 
   set port_id [dict get $diskdevices $devpath port_id]
   if {($port_labels($port_id) eq "") && ($state ne "nomedia")} {
-    # do not act on devices that are not mapped to UI, except for "nomedia"
     return
   }
 
@@ -552,7 +536,7 @@ proc set_devstate {devpath state args} {
     nomedia {
       set current_state [dict get $diskdevices $devpath state]
       switch -- $current_state {
-        nomedia               {}
+        nomedia        {}
         verifying             -
         verifying_after_write -
         writing               {
@@ -561,7 +545,6 @@ proc set_devstate {devpath state args} {
         default {
           close_if_open $devpath
 
-          # preserve some of the attributes
           dict set diskdevices $devpath fh            ""
           dict set diskdevices $devpath image_path    ""
           dict set diskdevices $devpath image_size    ""
@@ -571,7 +554,6 @@ proc set_devstate {devpath state args} {
           dict set diskdevices $devpath version       ""
 
           if {$current_state eq "error"} {
-            # show error message for five seconds in UI
             after 5000 [list set_ui_status_to_nomedia $devpath]
           } else {
             set_ui_status_to_nomedia $devpath
@@ -622,7 +604,6 @@ proc set_devstate {devpath state args} {
           set_usbicon_state $devpath $state
         }
       } else {
-        # if image is not in disk, move on to start_writing
         logger -p user.warning \
                "quick verification check failed on [dev_logid $devpath]"
         set_devstate $devpath start_writing
@@ -753,11 +734,9 @@ proc check_files {} {
     set full_devpath "${pci_path_dir}/${devpath}"
     if {[file exists $full_devpath]} {
       if {[dict get $devstate state] eq "nomedia"} {
-        # new usb device has been inserted, do something
         add_new_port_if_calibrating [dict get $devstate port_id]
         dict set diskdevices $devpath model [lookup_usbdevice_model $devpath]
 
-        # set current device image information from $image_info
         dict set diskdevices $devpath image_path \
                  [dict get $image_info image_path]
         dict set diskdevices $devpath image_size \
@@ -767,7 +746,7 @@ proc check_files {} {
 
         if {[catch { check_for_space_in_device $devpath } res]} {
           logger -p user.warning \
-                 "error while checking for space on [dev_logid $devpath]: $res"
+                  "error while checking for space on [dev_logid $devpath]: $res"
           set_devstate $devpath error
         } elseif {$res} {
           set_devstate $devpath verifying
@@ -844,9 +823,9 @@ proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
 
   if {$writable_labels} {
     ttk::entry $port_ui -textvariable port_labels($port_id) \
-                        -font smallInfoFont -justify center -width 16 \
-           -validatecommand [list validate_label %P] \
-           -validate all
+               -font smallInfoFont -justify center -width 16 \
+               -validatecommand [list validate_label %P] \
+               -validate all
   } else {
     set bg_color [dict get $bg_image bg_color]
     canvas $port_ui -background $bg_color -height 42 -highlightthickness 0 \
@@ -889,8 +868,6 @@ proc set_usbicon_state {devpath state {percentage ""} {eta ""}} {
   set port_id [dict get $diskdevices $devpath port_id]
   set port_ui [dict get $diskdevices $devpath ui]
 
-  # Make writing progress go from 1/4 to 7/8,
-  # the rest is verification progress (and change colour to indicate that).
   set initial_offset [expr { 1.0/4 }]
   set cutpoint       [expr { 7.0/8 }]
 
@@ -986,7 +963,7 @@ proc update_new_usbports {} {
         }
 
         set usbport [string map [list {:} .$portname:] \
-                                $portbase]
+                                        $portbase]
         set port_id "${pci_id}/${usbport}"
         set devpath "pci-${pci_id}-usb-0:${usbport}-scsi-0:0:0:0"
         dict set _new_usbports $port_id $devpath
@@ -1029,19 +1006,14 @@ proc update_diskdevices {{force_ui_update false}} {
   set regrid false
 
   set diskdevices_in_hubs [dict create]
-  # list all diskdevices in new hubs
   foreach devpath [dict values $new_usbports] {
     dict set diskdevices_in_hubs $devpath 1
   }
 
-  # check all our current diskdevices and remove those
-  # that are not in current hubs
   foreach devpath [dict keys $diskdevices] {
     if {[dict exists $diskdevices_in_hubs $devpath]} {
       continue
     }
-
-    # $devpath is gone from usbports, remove it and its UI
 
     logger -p user.info \
            "removing [dev_logid $devpath] because it is no longer attached"
@@ -1066,9 +1038,6 @@ proc update_diskdevices {{force_ui_update false}} {
     set devpath [dict get $new_usbports $port_id]
     set port_ui ".f.disks.port_[string map {. _} $port_id]"
 
-    # Add UI for port and add it to diskdevices to manage.
-    # Test for diskdevice existence, because the same $devpath
-    # may be in two different products (USB2.0 vs. USB3.0).
     if {[dict exists $diskdevices $devpath]} {
       if {$force_ui_update} {
         set port_state [dict get $diskdevices $devpath state]
@@ -1148,7 +1117,6 @@ proc read_port_labels_from_disk {} {
   }
 
   dict for {port_id value} [dict get $config port_labels] {
-    # we have at least one port label, thus we do not need to force calibration
     set calibration_in_progress false
     set port_labels($port_id) $value
   }
@@ -1164,7 +1132,6 @@ proc write_file {path data} {
   close $fh
 
   file rename -force $tmpfile $path
-
 }
 
 proc update_port_labels_on_disk {} {
@@ -1192,6 +1159,14 @@ proc scroll_topbanner {} {
   .f.top_banner coords $topbanner_text_id $top_banner_pos 20
   after 50 scroll_topbanner
 }
+
+# --- UUSI LISÄYS: FUNKTIO CUSTOM-IMAGEN VALITSEMISELLE ---
+proc select_custom_image {content_dir filename} {
+  write_file "${content_dir}/LATEST_IMAGE" $filename
+  write_file "${content_dir}/VERSION" $filename
+  catch { update_image_info }
+}
+# ---------------------------------------------------------
 
 proc update_content_dir {} {
   global bg_image content_dir
@@ -1225,7 +1200,6 @@ proc update_requested_versions {content_dir content_id} {
   set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
   if {[array names requested_version_types -exact $content_id] eq ""} {
-    # values for $content_id is not yet set, initialize
     set requested_version ""
     catch { set requested_version [read_file $requested_version_path] }
     set requested_versions($content_id) $requested_version
@@ -1261,11 +1235,11 @@ proc update_requested_versions {content_dir content_id} {
 }
 
 proc setup_content_dir_version_ui {content_dir content_id} {
-  global bg_image requested_version_types requested_version_values
+  global bg_image requested_version_types requested_version_values custom_image_choice
 
   set bg_color [dict get $bg_image bg_color]
   set button_opts [list -background         $bg_color     \
-                        -font               smallInfoFont \
+                        -font              smallInfoFont \
                         -highlightthickness 0]
 
   set ui_frame .f.content_dirs.$content_id
@@ -1278,32 +1252,70 @@ proc setup_content_dir_version_ui {content_dir content_id} {
   ttk::frame $ui_frame.number -style Changes.TFrame
   ttk::frame $ui_frame.number.version
 
-  radiobutton $ui_frame.number.by_puavo_conf \
-              {*}$button_opts -value "by puavo-conf" \
-              -variable requested_version_types($content_id)
-  radiobutton $ui_frame.number.latest {*}$button_opts \
-              -text [ui_msg version latest] -value "latest" \
-              -variable requested_version_types($content_id)
-  radiobutton $ui_frame.number.version.button \
-              {*}$button_opts \
-              -text "[ui_msg version {this version}]:" \
-              -value "this version" \
-              -variable requested_version_types($content_id)
-  ttk::entry $ui_frame.number.version.number \
-             -justify center -font smallInfoFont -width 16 \
-             -textvariable requested_version_values($content_id)
   pack $ui_frame.label -anchor w
-  pack $ui_frame.number -anchor w
-  pack $ui_frame.number.by_puavo_conf \
-       $ui_frame.number.latest \
-       $ui_frame.number.version \
-       -anchor w
-  pack $ui_frame.number.version.button -anchor w -side left
-  pack $ui_frame.number.version.number -anchor w -side left
 
-  $ui_frame.number.by_puavo_conf  configure -background $bg_color
-  $ui_frame.number.latest         configure -background $bg_color
-  $ui_frame.number.version.button configure -background $bg_color
+  # --- UUSI LISÄYS: CUSTOM-KANSION KÄSITTELY ---
+  if {$content_id eq "custom"} {
+    pack $ui_frame.number -anchor w
+    
+    # Etsi kaikki imagetiedostot
+    set custom_files [glob -nocomplain -tails -directory $content_dir *.iso *.img *.usbimg]
+    set custom_image_choice ""
+    catch { set custom_image_choice [string trim [read_file "${content_dir}/LATEST_IMAGE"]] }
+
+    if {[llength $custom_files] > 0} {
+      set sorted_files [lsort -dictionary $custom_files]
+      
+      # Jos mitään ei ole valittu tai valittu tiedosto on poistettu, valitse automaattisesti ensimmäinen
+      if {$custom_image_choice eq "" || $custom_image_choice ni $sorted_files} {
+        set custom_image_choice [lindex $sorted_files 0]
+        select_custom_image $content_dir $custom_image_choice
+      }
+      
+      # Piirretään radionappulat jokaiselle löytyneelle tiedostolle
+      foreach filename $sorted_files {
+        # Tehdään nimestä turvallinen UI-elementin ID:tä varten
+        regsub -all {[^a-zA-Z0-9]} $filename "_" wname
+        radiobutton $ui_frame.number.rb_$wname {*}$button_opts \
+          -text $filename -value $filename -variable custom_image_choice \
+          -command [list select_custom_image $content_dir $filename]
+        pack $ui_frame.number.rb_$wname -anchor w
+      }
+    } else {
+      # Ilmoitus, jos kansio on tyhjä
+      ttk::label $ui_frame.number.nofiles -text "Ei image-tiedostoja (*.iso, *.img)" \
+                                          -background $bg_color -font smallInfoFont
+      pack $ui_frame.number.nofiles -anchor w
+    }
+  } else {
+    # --- VANHA ABITTI-LOGIIKKA MUIHIN KANSIOIHIN ---
+    radiobutton $ui_frame.number.by_puavo_conf \
+                {*}$button_opts -value "by puavo-conf" \
+                -variable requested_version_types($content_id)
+    radiobutton $ui_frame.number.latest {*}$button_opts \
+                -text [ui_msg version latest] -value "latest" \
+                -variable requested_version_types($content_id)
+    radiobutton $ui_frame.number.version.button \
+                {*}$button_opts \
+                -text "[ui_msg version {this version}]:" \
+                -value "this version" \
+                -variable requested_version_types($content_id)
+    ttk::entry $ui_frame.number.version.number \
+               -justify center -font smallInfoFont -width 16 \
+               -textvariable requested_version_values($content_id)
+               
+    pack $ui_frame.number -anchor w
+    pack $ui_frame.number.by_puavo_conf \
+         $ui_frame.number.latest \
+         $ui_frame.number.version \
+         -anchor w
+    pack $ui_frame.number.version.button -anchor w -side left
+    pack $ui_frame.number.version.number -anchor w -side left
+
+    $ui_frame.number.by_puavo_conf  configure -background $bg_color
+    $ui_frame.number.latest         configure -background $bg_color
+    $ui_frame.number.version.button configure -background $bg_color
+  }
 
   pack $ui_frame -anchor w -pady 10
 }
@@ -1359,38 +1371,42 @@ proc update_content_dirs_ui {visible} {
   }
 
   dict for {content_dir content_id} $content_ids {
-    .f.content_dirs.$content_id.number.by_puavo_conf  \
-      configure -background $bg_color
-    .f.content_dirs.$content_id.number.latest \
-      configure -background $bg_color
-    .f.content_dirs.$content_id.number.version.button \
-      configure -background $bg_color
-    .f.content_dirs.series.$content_id configure -background $bg_color
+    # Suoritetaan ohjaus napin painalluksille vain jos ei olla customissa
+    if {$content_id ne "custom"} {
+      .f.content_dirs.$content_id.number.by_puavo_conf  \
+        configure -background $bg_color
+      .f.content_dirs.$content_id.number.latest \
+        configure -background $bg_color
+      .f.content_dirs.$content_id.number.version.button \
+        configure -background $bg_color
 
-    set puavo_conf_requested_version ""
-    catch {
-      set puavo_conf_key [
-        string trim [read_file "${content_dir}/PUAVOCONF_KEY"]
-      ]
-      set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key]
-    }
+      set puavo_conf_requested_version ""
+      catch {
+        set puavo_conf_key [
+          string trim [read_file "${content_dir}/PUAVOCONF_KEY"]
+        ]
+        set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key]
+      }
 
-    set ui_frame .f.content_dirs.$content_id
+      set ui_frame .f.content_dirs.$content_id
 
-    set by_puavo_conf_msg \
-        "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
-    $ui_frame.number.by_puavo_conf configure -text $by_puavo_conf_msg
+      set by_puavo_conf_msg \
+          "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
+      $ui_frame.number.by_puavo_conf configure -text $by_puavo_conf_msg
 
-    switch -- $requested_versions($content_id) {
-      ""              -
-      {by puavo-conf} { $ui_frame.number.by_puavo_conf invoke }
-      latest { $ui_frame.number.latest invoke }
-      default {
-        $ui_frame.number.version.button invoke
-        set requested_version_values($content_dir) \
-            $requested_versions($content_id)
+      switch -- $requested_versions($content_id) {
+        ""              -
+        {by puavo-conf} { catch { $ui_frame.number.by_puavo_conf invoke } }
+        latest { catch { $ui_frame.number.latest invoke } }
+        default {
+          catch { $ui_frame.number.version.button invoke }
+          set requested_version_values($content_dir) \
+              $requested_versions($content_id)
+        }
       }
     }
+    
+    .f.content_dirs.series.$content_id configure -background $bg_color
   }
 
   pack .f.content_dirs.series -anchor w -pady 10
@@ -1452,22 +1468,15 @@ proc update_calibration_ui {show_calibration} {
 
 logger -p user.notice "starting up"
 
-#
-# setup UI
-#
-
 font create smallInfoFont  -family {Ubuntu Condensed} -size 12 -weight bold
 font create infoFont       -family {Ubuntu Condensed} -size 20 -weight bold
 font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
 
-# ui messages and background image
-
-# setup downloader and content dirs
 try {
   exec -ignorestderr puavo-download-usb-factory-images --setup
 } on error {errmsg} {
   logger -p user.err \
-         "error in running :: puavo-download-usb-factory-images --setup"
+          "error in running :: puavo-download-usb-factory-images --setup"
   exit 1
 }
 
@@ -1490,8 +1499,6 @@ try {
   logger -p user.err "could not read $paths(puavo_usb_factory_workdir)/UI.json"
   exit 1
 }
-
-# ui elements
 
 setup_styles
 
@@ -1526,7 +1533,7 @@ ttk::frame .f.version_status.version -style Status.TLabel
 ttk::frame .f.version_status.download -style Status.TLabel
 ttk::frame .f.version_status.hostname -style Status.TLabel
 
-ttk::label .f.version_status.version.label               \
+ttk::label .f.version_status.version.label                \
            -text [ui_msg "version label"] -font infoFont \
            -style Status.TLabel
 ttk::label .f.version_status.version.number -font infoFont \
