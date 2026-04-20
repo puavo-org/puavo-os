@@ -66,6 +66,7 @@ override_dh_auto_build:
 	cd $(online_directory) && ./autogen.sh
 	cd $(online_directory) && ./configure \
 		--enable-qtapp \
+		--with-app-name='Collabora Office' \
 		--with-lo-path=$(lokit_directory)/instdir \
 		--with-lokit-path=$(lokit_directory)/include \
 		--with-poco-includes=$(appdir)/usr/include \
