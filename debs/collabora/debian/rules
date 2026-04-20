@@ -2,6 +2,9 @@
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
+# See NOTE(build-issue)
+unexport CFLAGS CXXFLAGS CPPFLAGS LDFLAGS OBJCFLAGS FFLAGS
+
 source_directory = $(CURDIR)
 core_directory = $(source_directory)/core
 poco_directory = $(source_directory)/poco
@@ -20,15 +23,27 @@ appimagetool_extracted = debian/appimagetool-extracted
 	dh $@
 
 override_dh_auto_configure:
+	# Configuration is handled by the auto build
+
+override_dh_auto_build:
 	# Configure LibreOffice core as a link-time optimized
 	# release build without symbols to reduce size.
+	# NOTE(build-issue):
+	# Reset multiple environment variables that affect the build.
+	# Without unsetting them, the NSS sub-build appears to break
+	# inside. In addition, the build appears to include the
+	# symbols despite the configuration.
 	cd $(core_directory) && ./autogen.sh \
-	  --with-distro=CPLinux-LOKit \
-	  --without-package-format \
-	  --disable-symbols \
-	  --disable-sal-log \
-	  --enable-lto \
-	  --disable-debug
+		--with-distro=CPLinux-LOKit \
+		--without-package-format \
+		--disable-symbols \
+		--disable-sal-log \
+		--enable-lto \
+		--disable-debug \
+		&& unset MAKEFLAGS MFLAGS MAKELEVEL \
+		CFLAGS CXXFLAGS CPPFLAGS LDFLAGS OBJCFLAGS FFLAGS \
+		&& $(MAKE)
+
 	# Copy LibreOffice core output into AppDir
 	rm -rf $(lokit_directory)
 	mkdir -p $(lokit_directory)
