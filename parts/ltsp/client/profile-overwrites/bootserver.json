@@ -1,5 +1,6 @@
 {
   "puavo.admin.backup.modes": "rsync-backup-home-state",
+  "puavo.admin.btrfs.quotas.bootserver": "images:128G images/puavo-pkg:16G state:16G state/var/log:16G",
   "puavo.admin.logging.policy": "receive-as-bootserver",
   "puavo.admin.persistent_homedirs": "true",
   "puavo.admin.run_extra_boot_scripts": "false",
