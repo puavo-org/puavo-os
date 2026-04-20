@@ -74,3 +74,4 @@ Forwarded: not-needed
 +    return dataDirOverride ? dataDirOverride : COOLWSD_DATADIR;
  }
  } // namespace
+ 

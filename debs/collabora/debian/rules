@@ -124,9 +124,26 @@ build-appimage:
 		$(appdir) debian/$(appimage_name)
 
 override_dh_auto_install:
-	mkdir -p $(install_directory)/opt/collaboraoffice
+	# AppImage
 	install -Dm755 debian/$(appimage_name) \
-	  $(install_directory)/opt/collaboraoffice/$(appimage_name)
+		$(install_directory)/opt/collabora-office/$(appimage_name)
+
+	# Symlink for CLI invocation
+	mkdir -p $(install_directory)/usr/bin
+	ln -s /opt/collabora-office/$(appimage_name) \
+		$(install_directory)/usr/bin/collabora-office
+
+	# Desktop entry
+	install -Dm644 \
+		$(appdir)/collabora-office.desktop \
+		$(install_directory)/usr/share/applications/collabora-office.desktop
+	sed -i 's/Exec=coda-qt/Exec=collabora-office/g' \
+		$(install_directory)/usr/share/applications/collabora-office.desktop
+
+	# Icon
+	install -Dm644 \
+		$(appdir)/com.collaboraoffice.Office.startcenter.svg \
+		$(install_directory)/usr/share/icons/hicolor/scalable/apps/com.collaboraoffice.Office.startcenter.svg
 
 override_dh_auto_test:
 	# Skip tests during packaging
