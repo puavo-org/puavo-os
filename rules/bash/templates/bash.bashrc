@@ -76,6 +76,17 @@ if [ "$(id -u)" = 0 ] || (groups | fgrep -qw puavo-os); then
     _puavo_prompt_colornum=35
   fi
 
+  df() {
+    /usr/bin/df "$@"
+    if [ -e /.puavo ]; then
+      echo
+      echo 'Quotas in Puavo OS:'
+      echo '==================='
+      echo
+      sudo -n btrfs qgroup show -re /.puavo
+    fi
+  }
+
   PS1="\[\e[1;${_puavo_prompt_colornum}m\]> ${_puavo_image_name%.img} (${_puavo_host_profiles})\n\u@\h:\w\$\[\e[0m\] "
 
   unset _puavo_host_profiles
