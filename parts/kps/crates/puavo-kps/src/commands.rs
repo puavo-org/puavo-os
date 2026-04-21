@@ -137,12 +137,14 @@ async fn execute_device_command(command: DeviceCommands) -> Result<()> {
             serial_number,
             output,
             recovery_key_file,
+            public_key_file,
         } => {
             generate_recovery_bundle_local(
                 organisation_id,
                 serial_number,
                 output,
                 recovery_key_file,
+                public_key_file,
             )
             .await?;
             Ok(())
