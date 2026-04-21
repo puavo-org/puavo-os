@@ -26,7 +26,7 @@ tmpdir=''
 cleanup_temporary_files() {
   find "$UKI_ROOT" -xdev -type d -name '*.tmp' -exec rm -rf {} + 2>/dev/null || true
   find "$UKI_ROOT" -xdev -type f -name '*.tmp' -delete 2>/dev/null || true
-  test -n "$tmpdir" && rm -rf "$tmpdir"
+  test -z "$tmpdir" || rm -rf "$tmpdir"
 }
 
 cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
