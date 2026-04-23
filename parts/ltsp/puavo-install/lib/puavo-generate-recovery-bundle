@@ -17,7 +17,8 @@ panic() {
 
 cleanup() {
   if [ -n "$vault_mount_path" ]; then
-    puavo-boot-trust-manager close "$vault_mount_path" || true
+    RUST_LOG=info puavo-boot-trust-manager close \
+      "$vault_mount_path" || true
     vault_mount_path=''
   fi
   if [ -n "$temporary_directory" ]; then
@@ -59,7 +60,7 @@ install_target_disk=$(
   || panic 'expected exactly one boot disk'
 
 # Open the boot vault to access the recovery key
-vault_mount_path=$(puavo-boot-trust-manager open \
+vault_mount_path=$(RUST_LOG=info puavo-boot-trust-manager open \
                     --device "$install_target_disk")
 
 [ -n "$vault_mount_path" ] \
