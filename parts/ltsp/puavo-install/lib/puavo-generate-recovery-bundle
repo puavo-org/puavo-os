@@ -7,6 +7,9 @@ UKI_ROOT='/boot/efi/EFI/puavo'
 
 organisation_json_path='/etc/puavo/org.json'
 
+PUAVO_VENDOR_GUID='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
+RECOVERY_BUNDLE_EFI_VARIABLE_NAME='PuavoRecoveryBundle'
+
 vault_mount_path=''
 temporary_directory=''
 
@@ -83,6 +86,14 @@ puavo-kps device generate \
   --recovery-key-file="$recovery_key_path" \
   --public-key-file="$public_key_file" \
   --output="$recovery_bundle_path"
+
+# Store the recovery bundle in an EFI variable for access
+# at boot time without mounting the EFI partition
+efivar \
+  --name "${PUAVO_VENDOR_GUID}-${RECOVERY_BUNDLE_EFI_VARIABLE_NAME}" \
+  --write \
+  --attributes 7 \
+  --datafile "$recovery_bundle_path"
 
 cleanup
 trap - EXIT
