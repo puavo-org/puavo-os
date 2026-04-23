@@ -473,9 +473,9 @@ lookup_windows_boot_partition() {
         BEGIN { efi_uuid = ""; legacy_uuid = ""; has_windows = 0 }
         $1 == "0x7" {
           has_windows = 1
-          if (!legacy_uuid) { legacy_uuid = $2 }
+          if (!legacy_uuid) { legacy_uuid = $2 "" }
           }
-          $1 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { efi_uuid = $2 }
+          $1 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { efi_uuid = $2 "" }
           $1 == "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" { has_windows = 1 }
           END {
             if (has_windows) {
