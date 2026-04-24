@@ -20,7 +20,7 @@ pub fn render_qr_code_to_image(
     )
     .map_err(|error| PuavoError::RecoveryQrError(error.to_string()))?;
 
-    let image = code.render::<Luma<u8>>().build();
+    let image = code.render::<Luma<u8>>().module_dimensions(4, 4).build();
 
     image
         .save(output_path)
