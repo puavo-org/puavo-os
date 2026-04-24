@@ -11,9 +11,7 @@ pub struct UnlockRestrictions {
 impl UnlockRestrictions {
     /// Create restrictions from the current system state.
     pub fn from_current_state() -> Self {
-        Self {
-            host_type: kernel_commandline::get_host_type().unwrap_or(None),
-        }
+        Self { host_type: kernel_commandline::get_host_type().unwrap_or(None) }
     }
 
     /// Check that all restrictions are satisfied by the current system state.

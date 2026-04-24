@@ -102,15 +102,21 @@ impl EfiProvider for SystemEfiProvider {
     }
 
     fn read_recovery_bundle(&self) -> Option<String> {
-        let variable =
-            Self::puavo_variable(RECOVERY_BUNDLE_VARIABLE);
+        let variable = Self::puavo_variable(RECOVERY_BUNDLE_VARIABLE);
 
         efivar::system()
             .ok()
             .and_then(|manager| manager.read(&variable).ok())
-            .and_then(|(value, _)| String::from_utf8(value)
-                .inspect_err(|error| error!("Recovery bundle is not valid UTF-8: {:?}", error))
-                .ok())
+            .and_then(|(value, _)| {
+                String::from_utf8(value)
+                    .inspect_err(|error| {
+                        error!(
+                            "Recovery bundle is not valid UTF-8: {:?}",
+                            error
+                        )
+                    })
+                    .ok()
+            })
     }
 }
 

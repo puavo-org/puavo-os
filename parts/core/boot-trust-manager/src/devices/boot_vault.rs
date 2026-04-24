@@ -18,7 +18,10 @@ use crate::{
     display::UserDisplay,
     error::PuavoError,
     utils::{
-        luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS}, mount::unmount, recovery_qr, udev::device_from_device_node_path
+        luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS},
+        mount::unmount,
+        recovery_qr,
+        udev::device_from_device_node_path,
     },
 };
 
@@ -200,11 +203,8 @@ impl BootVault {
 
         // Show the recovery QR code when the recovery key
         // prompt first becomes visible.
-        let recovery_qr_attempt = if tokens.is_empty() {
-            0
-        } else {
-            MAX_PIN_ONLY_ATTEMPTS
-        };
+        let recovery_qr_attempt =
+            if tokens.is_empty() { 0 } else { MAX_PIN_ONLY_ATTEMPTS };
 
         for attempt in 0.. {
             if attempt == recovery_qr_attempt {

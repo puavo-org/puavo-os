@@ -25,6 +25,10 @@ $(BIN): Cargo.lock Cargo.toml $(SOURCE_FILES)
 install: build install-directories
 	cp $(BIN) $(DESTDIR)/usr/sbin/
 
+.PHONY: format
+format:
+	cargo fmt
+
 .PHONY: clean
 clean:
 	rm -rf target

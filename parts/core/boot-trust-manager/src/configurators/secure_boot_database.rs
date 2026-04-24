@@ -57,10 +57,7 @@ struct DiscoveredUpdate {
 ///
 /// Returns `None` when the filename does not match the expected pattern or the
 /// version cannot be parsed as an integer.
-fn parse_version_from_filename(
-    filename: &str,
-    extension: &str,
-) -> Option<u32> {
+fn parse_version_from_filename(filename: &str, extension: &str) -> Option<u32> {
     let version_string = filename.strip_suffix(&format!(".{}", extension))?;
     version_string.parse::<u32>().ok()
 }
@@ -123,10 +120,7 @@ impl SecureBootShell for SystemSecureBootShell {
         boot_vault_mountpoint: &Path,
         efi_signature_list: &Path,
     ) -> Result<(), PuavoError> {
-        info!(
-            "Updating Secure Boot db from {:?}",
-            efi_signature_list,
-        );
+        info!("Updating Secure Boot db from {:?}", efi_signature_list,);
 
         let output = Command::new("update-secure-boot-db")
             .arg(boot_vault_mountpoint)
@@ -151,10 +145,7 @@ impl SecureBootShell for SystemSecureBootShell {
         boot_vault_mountpoint: &Path,
         revocation_list: &Path,
     ) -> Result<(), PuavoError> {
-        info!(
-            "Updating Secure Boot dbx from {:?}",
-            revocation_list,
-        );
+        info!("Updating Secure Boot dbx from {:?}", revocation_list,);
 
         let output = Command::new("update-secure-boot-dbx")
             .arg(boot_vault_mountpoint)
@@ -178,14 +169,12 @@ impl SecureBootShell for SystemSecureBootShell {
 /// Configurator that detects and applies Secure Boot database (DB and DBX) updates.
 pub struct SecureBootDatabaseConfigurator<S: SecureBootShell> {
     pending: Vec<DiscoveredUpdate>,
-    shell: S
+    shell: S,
 }
 
 impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
     /// Construct instance with the specified shell implementation.
-    pub fn new(
-        shell: S,
-    ) -> Result<Vec<Self>, PuavoError> {
+    pub fn new(shell: S) -> Result<Vec<Self>, PuavoError> {
         let update_base_directory = Path::new(UPDATE_BASE_DIRECTORY);
 
         if !update_base_directory.is_dir() {
@@ -199,7 +188,9 @@ impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
         let mut discovered: Vec<DiscoveredUpdate> = Vec::new();
 
         for variable in &[SecureBootVariable::Db, SecureBootVariable::Dbx] {
-            if let Some(update) = discover_update(update_base_directory, variable) {
+            if let Some(update) =
+                discover_update(update_base_directory, variable)
+            {
                 debug!(
                     "Discovered {} update version {} at {:?}",
                     update.variable.variable_name(),
@@ -321,10 +312,8 @@ mod tests {
     use tempfile::TempDir;
 
     struct MockSecureBootShell {
-        update_db_calls:
-            RefCell<Vec<(String, String)>>,
-        update_dbx_calls:
-            RefCell<Vec<(String, String)>>,
+        update_db_calls: RefCell<Vec<(String, String)>>,
+        update_dbx_calls: RefCell<Vec<(String, String)>>,
     }
 
     impl MockSecureBootShell {
@@ -401,11 +390,13 @@ mod tests {
         write_update_file(&directory.path().join("db"), "3.esl");
         write_update_file(&directory.path().join("dbx"), "7.bin");
 
-        let db = discover_update(directory.path(), &SecureBootVariable::Db).unwrap();
+        let db =
+            discover_update(directory.path(), &SecureBootVariable::Db).unwrap();
         assert_eq!(db.version, 3);
         assert_eq!(db.variable, SecureBootVariable::Db);
 
-        let dbx = discover_update(directory.path(), &SecureBootVariable::Dbx).unwrap();
+        let dbx = discover_update(directory.path(), &SecureBootVariable::Dbx)
+            .unwrap();
         assert_eq!(dbx.version, 7);
         assert_eq!(dbx.variable, SecureBootVariable::Dbx);
     }
@@ -431,15 +422,23 @@ mod tests {
 
         // Wrong extension
         write_update_file(&db_directory, "1.bin");
-        assert!(discover_update(directory.path(), &SecureBootVariable::Db).is_none());
+        assert!(
+            discover_update(directory.path(), &SecureBootVariable::Db)
+                .is_none()
+        );
 
         // Non-numeric version
         write_update_file(&db_directory, "abc.esl");
-        assert!(discover_update(directory.path(), &SecureBootVariable::Db).is_none());
+        assert!(
+            discover_update(directory.path(), &SecureBootVariable::Db)
+                .is_none()
+        );
 
         // Missing subdirectory
         let empty = TempDir::new().unwrap();
-        assert!(discover_update(empty.path(), &SecureBootVariable::Db).is_none());
+        assert!(
+            discover_update(empty.path(), &SecureBootVariable::Db).is_none()
+        );
     }
 
     #[test]
