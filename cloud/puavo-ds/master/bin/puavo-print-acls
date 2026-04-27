@@ -292,7 +292,7 @@ rule {
     [attrs userPassword]
       by self                =axz
       by [puavo_dn pw-mgmt]  =axz
-      by $org_owners         =axz
+      by $org_owners         =acxz      # allow organisation owners to compare
       by $this_school_admins =axz
       by anonymous           auth
 }
