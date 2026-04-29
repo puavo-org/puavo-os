@@ -4,6 +4,12 @@ class themes {
   include ::puavo_pkg::packages
   include ::themes::yaru_theme_fix
 
+  file {
+    '/usr/share/themes/Adwaita':
+      ensure => directory;
+
+    '/usr/share/themes/Adwaita/gnome-shell':
+      ensure => directory;
   }
 
   define iconlink ($target) {
@@ -26,6 +32,9 @@ class themes {
   }
 
   file {
+    '/usr/share/themes/Adwaita/gnome-shell/gnome-shell.css':
+      require => File['/usr/share/themes/Adwaita/gnome-shell'],
+      source  => 'puppet:///modules/themes/Adwaita/gnome-shell/gnome-shell.css';
   }
 
   file {
