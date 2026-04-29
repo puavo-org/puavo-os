@@ -1,13 +1,9 @@
 class themes {
-  include ::dpkg
   include ::gdm
   include ::puavo_conf
   include ::puavo_pkg::packages
   include ::themes::yaru_theme_fix
 
-  ::dpkg::simpledivert {
-    '/usr/share/themes/Arc/gnome-shell/gnome-shell.css':
-      require => Package['arc-theme'];
   }
 
   define iconlink ($target) {
@@ -30,9 +26,6 @@ class themes {
   }
 
   file {
-    '/usr/share/themes/Arc/gnome-shell/gnome-shell.css':
-      require => ::Dpkg::Simpledivert['/usr/share/themes/Arc/gnome-shell/gnome-shell.css'],
-      source  => 'puppet:///modules/themes/Arc/gnome-shell/gnome-shell.css';
   }
 
   file {
@@ -65,8 +58,7 @@ class themes {
   }
 
   Package <|
-       title == arc-theme
-    or title == qt5ct
+       title == qt5ct
     or title == qt-style-kvantum
   |>
 

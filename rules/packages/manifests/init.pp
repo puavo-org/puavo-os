@@ -575,8 +575,7 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'tag_science', 'tag_debian_desktop', ];
 
-    [ 'arc-theme'
-    , 'deepin-icon-theme'
+    [ 'deepin-icon-theme'
     , 'faenza-icon-theme'
     , 'gnome-icon-theme'
     , 'gtk2-engines'
