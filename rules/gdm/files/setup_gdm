@@ -100,7 +100,7 @@ fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
 logo='$(puavo-conf puavo.greeter.logo)'
 
 [org/gnome/desktop/interface]
-gtk-theme='Arc'
+gtk-theme='Adwaita'
 cursor-theme='Obsidian'
 
 [org/gnome/desktop/peripherals/touchpad]
@@ -120,7 +120,7 @@ sleep-inactive-ac-type='nothing'
 enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'hostinfo@puavo.org', 'Move_Clock@rmy.pobox.com', 'panel-to-bottom@davron', 'screenkeyboardcontroller@puavo.org', 'user-theme@gnome-shell-extensions.gcampax.github.com']
 
 [org/gnome/shell/extensions/user-theme]
-name='Arc'
+name='Adwaita'
 EOF
 mv /etc/gdm3/greeter.dconf-defaults.tmp /etc/gdm3/greeter.dconf-defaults
 
