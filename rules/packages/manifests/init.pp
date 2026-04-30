@@ -118,6 +118,7 @@ class packages {
     , 'ethtool'
     , 'expect'
     , 'f2fs-tools'
+    , 'foot'
     , 'fping'
     , 'fwupd'
     , 'gawk'
@@ -312,7 +313,9 @@ class packages {
     [ 'tipp10' ]:
       tag => [ 'tag_education', 'tag_debian_desktop', ];
 
-    [ 'mutt' ]:
+    [ 'msmtp'
+    , `mutt`
+    ]:
       tag => [ 'tag_email', 'tag_debian_desktop', ];
 
     [ 'libvkd3d-shader1'
