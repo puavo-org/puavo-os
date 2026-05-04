@@ -28,6 +28,7 @@ array set port_labels ""
 set writable_labels false
 
 set content_ids [dict create]
+set custom_image_choice ""
 
 set images_downloader_fhs       [dict create]
 set images_downloading_versions [dict create]
@@ -120,9 +121,9 @@ proc handle_image_download {content_id} {
     }
     fconfigure $fh -blocking 1
     if {[catch { close $fh }]} {
-      set wait_ms 30000         ; # failed, try again after 30 seconds
+      set wait_ms 30000         ;# failed, try again after 30 seconds
     } else {
-      set wait_ms 3600000       ; # success, try again after 1 hour
+      set wait_ms 3600000       ;# success, try again after 1 hour
     }
     dict set upcoming_download_events $content_id [
       after $wait_ms download_images
@@ -308,7 +309,7 @@ proc start_preparation {devpath countdown} {
 }
 
 proc start_operating {devpath cmd} {
-  set fh [open "| $cmd"]
+  set fh [open "|$cmd"]
   fconfigure $fh -blocking 0
   fileevent $fh readable [list handle_fileevent $devpath]
   return $fh
@@ -845,8 +846,8 @@ proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
   if {$writable_labels} {
     ttk::entry $port_ui -textvariable port_labels($port_id) \
                         -font smallInfoFont -justify center -width 16 \
-           -validatecommand [list validate_label %P] \
-           -validate all
+                        -validatecommand [list validate_label %P] \
+                        -validate all
   } else {
     set bg_color [dict get $bg_image bg_color]
     canvas $port_ui -background $bg_color -height 42 -highlightthickness 0 \
@@ -1193,6 +1194,12 @@ proc scroll_topbanner {} {
   after 50 scroll_topbanner
 }
 
+proc select_custom_image {content_dir filename} {
+  write_file "${content_dir}/LATEST_IMAGE" $filename
+  write_file "${content_dir}/VERSION"      $filename
+  update_image_info
+}
+
 proc update_content_dir {} {
   global bg_image content_dir
 
@@ -1261,7 +1268,8 @@ proc update_requested_versions {content_dir content_id} {
 }
 
 proc setup_content_dir_version_ui {content_dir content_id} {
-  global bg_image requested_version_types requested_version_values
+  global bg_image custom_image_choice requested_version_types \
+         requested_version_values
 
   set bg_color [dict get $bg_image bg_color]
   set button_opts [list -background         $bg_color     \
@@ -1278,32 +1286,72 @@ proc setup_content_dir_version_ui {content_dir content_id} {
   ttk::frame $ui_frame.number -style Changes.TFrame
   ttk::frame $ui_frame.number.version
 
-  radiobutton $ui_frame.number.by_puavo_conf \
-              {*}$button_opts -value "by puavo-conf" \
-              -variable requested_version_types($content_id)
-  radiobutton $ui_frame.number.latest {*}$button_opts \
-              -text [ui_msg version latest] -value "latest" \
-              -variable requested_version_types($content_id)
-  radiobutton $ui_frame.number.version.button \
-              {*}$button_opts \
-              -text "[ui_msg version {this version}]:" \
-              -value "this version" \
-              -variable requested_version_types($content_id)
-  ttk::entry $ui_frame.number.version.number \
-             -justify center -font smallInfoFont -width 16 \
-             -textvariable requested_version_values($content_id)
-  pack $ui_frame.label -anchor w
-  pack $ui_frame.number -anchor w
-  pack $ui_frame.number.by_puavo_conf \
-       $ui_frame.number.latest \
-       $ui_frame.number.version \
-       -anchor w
-  pack $ui_frame.number.version.button -anchor w -side left
-  pack $ui_frame.number.version.number -anchor w -side left
+  if {$content_id eq "custom"} {
+    pack $ui_frame.number -anchor w
 
-  $ui_frame.number.by_puavo_conf  configure -background $bg_color
-  $ui_frame.number.latest         configure -background $bg_color
-  $ui_frame.number.version.button configure -background $bg_color
+    set custom_files [
+      glob -directory $content_dir -nocomplain -tails *.img *.iso *.usbimg
+    ]
+    set custom_image_choice ""
+    catch {
+      set custom_image_choice [
+        string trim [read_file "${content_dir}/LATEST_IMAGE"]
+      ]
+    }
+
+    if {[llength $custom_files] > 0} {
+      set sorted_files [lsort -dictionary $custom_files]
+
+      # if nothing has been chosen or the chosen file has been removed,
+      # choose the first one
+      if {$custom_image_choice eq "" || $custom_image_choice ni $sorted_files} {
+        set custom_image_choice [lindex $sorted_files 0]
+        select_custom_image $content_dir $custom_image_choice
+      }
+
+      # make radio buttons for each file
+      foreach filename $sorted_files {
+        regsub -all {[^a-zA-Z0-9]} $filename _ wname
+        radiobutton $ui_frame.number.rb_${wname} {*}$button_opts \
+          -text $filename -value $filename -variable custom_image_choice \
+          -command [list select_custom_image $content_dir $filename]
+        pack $ui_frame.number.rb_${wname} -anchor w
+      }
+    } else {
+      # notify if directory is empty
+      ttk::label $ui_frame.number.nofiles \
+                 -background $bg_color -font smallInfoFont \
+                 -text [ui_msg "No image-files (*.img, *.iso)"]
+      pack $ui_frame.number.nofiles -anchor w
+    }
+  } else {
+    radiobutton $ui_frame.number.by_puavo_conf \
+                {*}$button_opts -value "by puavo-conf" \
+                -variable requested_version_types($content_id)
+    radiobutton $ui_frame.number.latest {*}$button_opts \
+                -text [ui_msg version latest] -value "latest" \
+                -variable requested_version_types($content_id)
+    radiobutton $ui_frame.number.version.button \
+                {*}$button_opts \
+                -text "[ui_msg version {this version}]:" \
+                -value "this version" \
+                -variable requested_version_types($content_id)
+    ttk::entry $ui_frame.number.version.number \
+               -justify center -font smallInfoFont -width 16 \
+               -textvariable requested_version_values($content_id)
+    pack $ui_frame.label -anchor w
+    pack $ui_frame.number -anchor w
+    pack $ui_frame.number.by_puavo_conf \
+         $ui_frame.number.latest \
+         $ui_frame.number.version \
+         -anchor w
+    pack $ui_frame.number.version.button -anchor w -side left
+    pack $ui_frame.number.version.number -anchor w -side left
+
+    $ui_frame.number.by_puavo_conf  configure -background $bg_color
+    $ui_frame.number.latest         configure -background $bg_color
+    $ui_frame.number.version.button configure -background $bg_color
+  }
 
   pack $ui_frame -anchor w -pady 10
 }
@@ -1359,6 +1407,9 @@ proc update_content_dirs_ui {visible} {
   }
 
   dict for {content_dir content_id} $content_ids {
+    # XXX perché?
+    # if {$content_id eq "custom"} continue
+
     .f.content_dirs.$content_id.number.by_puavo_conf  \
       configure -background $bg_color
     .f.content_dirs.$content_id.number.latest \
