@@ -1,45 +1,52 @@
 # parts, ports and some cloud packages go into puavo-os images
+# extraports are build rules here but is not intended to be built with images
 
-_pkgs_cloud := krb5 openldap puavo-ds puavo-os
-_pkgs_parts := puavo-ds puavo-os
-_pkgs_ports := anki                   \
-               console-setup          \
-               cups                   \
-               cups-filters           \
-               gnome-control-center   \
-               gnome-network-displays \
-               gnome-shell            \
-               gtk+3.0                \
-               gtk4                   \
-               hooktftp               \
-               kde-spectacle          \
-               libpam-ccreds          \
-               linux                  \
-               mutter                 \
-               nbd                    \
-               veyon                  \
-               wine                   \
-               wsmancli
+_pkgs_cloud      := krb5 openldap puavo-ds puavo-os
+_pkgs_extraports := collabora
+_pkgs_parts      := puavo-ds puavo-os
+_pkgs_ports      := anki                   \
+                    console-setup          \
+                    cups                   \
+                    cups-filters           \
+                    gnome-control-center   \
+                    gnome-network-displays \
+                    gnome-shell            \
+                    gtk+3.0                \
+                    gtk4                   \
+                    hooktftp               \
+                    kde-spectacle          \
+                    libpam-ccreds          \
+                    linux                  \
+                    mutter                 \
+                    nbd                    \
+                    veyon                  \
+                    wine                   \
+                    wsmancli
 
 # sblim-sfcc openwsman are dependencies for wsmancli
-_pkgs_cloud_builddeps :=
-_pkgs_parts_builddeps :=
-_pkgs_ports_builddeps := sblim-sfcc openwsman
+_pkgs_cloud_builddeps      :=
+_pkgs_extraports_builddeps :=
+_pkgs_parts_builddeps      :=
+_pkgs_ports_builddeps      := sblim-sfcc openwsman
 
+_pkgs_extra := $(_pkgs_extraports_builddeps) $(_pkgs_extraports)
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
                $(_pkgs_parts) $(_pkgs_ports)
-
 _pkgs_web   := $(_pkgs_cloud_builddeps) $(_pkgs_cloud)
 
-debs_build_targets           := $(sort $(_pkgs_image:%=debs-build-%) $(_pkgs_web:%=debs-build-%))
+debs_build_targets           := $(sort $(_pkgs_extra:%=debs-build-%) $(_pkgs_image:%=debs-build-%) \
+                                       $(_pkgs_web:%=debs-build-%))
 
-_dpkg_buildpackage_cloud     := $(_pkgs_cloud:%=.dpkg-buildpackage-%)
-_dpkg_buildpackage_parts     := $(_pkgs_parts:%=.dpkg-buildpackage-%)
-_dpkg_buildpackage_ports     := $(_pkgs_ports:%=.dpkg-buildpackage-%)
-_dpkg_buildpackage           := $(_pkgs_image:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_cloud      := $(_pkgs_cloud:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_extraports := $(_pkgs_extraports:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_parts      := $(_pkgs_parts:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_ports      := $(_pkgs_ports:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage            := $(_pkgs_image:%=.dpkg-buildpackage-%)
 
 _dpkg_buildpackage_cloud_builddeps := \
   $(_pkgs_cloud_builddeps:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_extraports_builddeps := \
+  $(_pkgs_extraports_builddeps:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_parts_builddeps := \
   $(_pkgs_parts_builddeps:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_ports_builddeps := \
@@ -55,6 +62,9 @@ all: $(_dpkg_buildpackage)
 .PHONY: cloud-builddeps
 cloud-builddeps: $(_dpkg_buildpackage_cloud_builddeps)
 
+.PHONY: extraports-builddeps
+extraports-builddeps: $(_dpkg_buildpackage_extraports_builddeps)
+
 .PHONY: parts-builddeps
 parts-builddeps: $(_dpkg_buildpackage_parts_builddeps)
 
@@ -63,6 +73,9 @@ ports-builddeps: $(_dpkg_buildpackage_ports_builddeps)
 
 .PHONY: cloud
 cloud: $(_dpkg_buildpackage_cloud)
+
+.PHONY: extraports
+extraports: $(_dpkg_buildpackage_extraports)
 
 .PHONY: parts
 parts: $(_dpkg_buildpackage_parts)
