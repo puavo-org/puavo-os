@@ -96,7 +96,7 @@ get_abitti2_catalogue() {
   for url in $abitti2_sources; do
     if ! wget_with_certauth -q \
       --output-document "$abitti2_json_gpg_tmppath" "$url"; then
-        error "error fetching ${url}"
+        logmsg -p user.err "error fetching ${url}"
         rm -f "$abitti2_json_gpg_tmppath"
         continue
     fi
@@ -105,7 +105,7 @@ get_abitti2_catalogue() {
     gnupg_dir="/root/.puavo/gnupg/${abitti2_server}/digabios"
     if ! gpg --decrypt --homedir "$gnupg_dir" "$abitti2_json_gpg_tmppath" \
       2>/dev/null > "$abitti2_json_tmppath"; then
-        error "GPG verification failed for ${url}"
+        logmsg -p user.err "GPG verification failed for ${url}"
         rm -f "$abitti2_json_gpg_tmppath" "$abitti2_json_tmppath"
         continue
     fi
@@ -117,7 +117,7 @@ get_abitti2_catalogue() {
     return 0
   done
 
-  error 'could not fetch any source in puavo.abitti2.image.sources'
+  logmsg -p user.err 'could not fetch any source in puavo.abitti2.image.sources'
   return 1
 }
 
@@ -130,7 +130,7 @@ download_abitti2() {
   puavo_conf_key=$1
 
   requested_version=$(
-    cat "${g_abitti2_images_dir}/REQUESTED_VERSION" 2>/dev/null) || true)
+    cat "${g_abitti2_images_dir}/REQUESTED_VERSION" 2>/dev/null) || true
   if [ -z "$requested_version" ] \
     || [ "$requested_version" = "by puavo-conf" ]; then
       if ! requested_version_list=$(puavo-conf "$puavo_conf_key"); then
@@ -289,9 +289,9 @@ mkdir -p "$g_puavo_usb_factory_dir"
 
   exitstatus=0
 
-  for this_dir in "$g_abitti2_images_dir" "$g_custom_images_dir"; do
+  for this_dir in "$g_abitti2_client_images_dir" "$g_custom_images_dir"; do
     puavo_conf_key=''
-    if [ "$this_abitti_dir" = "$abitti2_images_dir" ]; then
+    if [ "$this_dir" = "$g_abitti2_client_images_dir" ]; then
       bg_color='#6392ac'
       image_type='abitti2'
       puavo_conf_key='puavo.abitti2.version'
