@@ -187,6 +187,10 @@ proc queue_background_resizing {ms {width ""} {height ""}} {
 
 proc ui_msg {args} {
   global ui_messages
+  if {![dict exists $ui_messages {*}$args]} {
+    logger -p user.warning "translation missing for $args"
+    return [join $args " "]
+  }
   dict get $ui_messages {*}$args
 }
 
