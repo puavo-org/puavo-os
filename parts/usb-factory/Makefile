@@ -3,6 +3,12 @@ exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
 
+ifeq ($(prefix), /usr/local)
+sysconfdir = $(prefix)/etc
+else
+sysconfdir = /etc
+endif
+
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 0644
@@ -22,12 +28,15 @@ all:
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-usb-factory
+	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-usb-factory
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-usb-factory \
 		${FLASHDRIVE_IMAGES}
+	$(INSTALL) -m 440 -t $(DESTDIR)$(sysconfdir)/sudoers.d \
+		etc/sudoers.d/puavo-usb-factory
 
 .PHONY: downscale-images
 downscale-images:
