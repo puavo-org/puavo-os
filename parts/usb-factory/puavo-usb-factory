@@ -1284,8 +1284,9 @@ proc setup_content_dir_version_ui {content_dir content_id} {
 
   ttk::frame $ui_frame -style Changes.TFrame
 
-  ttk::label $ui_frame.label -text [file tail $content_dir] \
-                             -font infoFont
+  ttk::label $ui_frame.label                            \
+    -font infoFont                                      \
+    -text [ui_msg content_dir [file tail $content_dir]]
 
   ttk::frame $ui_frame.number -style Changes.TFrame
   ttk::frame $ui_frame.number.version
@@ -1398,16 +1399,18 @@ proc update_content_dirs_ui {visible} {
     }
 
     ttk::frame .f.content_dirs.series -style Changes.TFrame
-    ttk::label .f.content_dirs.series.label -text [ui_msg "Current choice:"] \
-                                            -font infoFont
-    pack .f.content_dirs.series.label
+    if {[llength $content_dir_paths] > 1} {
+      ttk::label .f.content_dirs.series.label -text [ui_msg "Current choice:"] \
+                                              -font infoFont
+      pack .f.content_dirs.series.label
 
-    dict for {content_dir content_id} $content_ids {
-      radiobutton .f.content_dirs.series.$content_id \
-        -background $bg_color -font smallInfoFont -highlightthickness 0 \
-        -text [file tail $content_dir] -value $content_dir \
-        -variable content_dir -command update_content_dir
-      pack .f.content_dirs.series.$content_id -anchor w
+      dict for {content_dir content_id} $content_ids {
+        radiobutton .f.content_dirs.series.$content_id \
+          -background $bg_color -font smallInfoFont -highlightthickness 0 \
+          -text [ui_msg content_dir [file tail $content_dir]] \
+          -value $content_dir -variable content_dir -command update_content_dir
+        pack .f.content_dirs.series.$content_id -anchor w
+      }
     }
     set content_dir_paths $new_content_dir_paths
   }
@@ -1447,7 +1450,9 @@ proc update_content_dirs_ui {visible} {
       }
     }
 
-    .f.content_dirs.series.$content_id configure -background $bg_color
+    if {[llength $content_dir_paths] > 1} {
+      .f.content_dirs.series.$content_id configure -background $bg_color
+    }
   }
 
   pack .f.content_dirs.series -anchor w -pady 10
