@@ -1196,7 +1196,7 @@ proc scroll_topbanner {} {
 
 proc select_custom_image {content_dir filename} {
   write_file "${content_dir}/LATEST_IMAGE" $filename
-  write_file "${content_dir}/VERSION"      $filename
+  write_file "${content_dir}/VERSION" $filename
   update_image_info
 }
 
@@ -1286,9 +1286,12 @@ proc setup_content_dir_version_ui {content_dir content_id} {
   ttk::frame $ui_frame.number -style Changes.TFrame
   ttk::frame $ui_frame.number.version
 
+  pack $ui_frame.label -anchor w
+
   if {$content_id eq "custom"} {
     pack $ui_frame.number -anchor w
 
+    # look for all image files
     set custom_files [
       glob -directory $content_dir -nocomplain -tails *.img *.iso *.usbimg
     ]
@@ -1320,8 +1323,8 @@ proc setup_content_dir_version_ui {content_dir content_id} {
     } else {
       # notify if directory is empty
       ttk::label $ui_frame.number.nofiles \
-                 -background $bg_color -font smallInfoFont \
-                 -text [ui_msg "No image-files (*.img, *.iso)"]
+        -background $bg_color -font smallInfoFont \
+        -text [ui_msg "No image-files (*.img, *.iso)"]
       pack $ui_frame.number.nofiles -anchor w
     }
   } else {
@@ -1339,7 +1342,6 @@ proc setup_content_dir_version_ui {content_dir content_id} {
     ttk::entry $ui_frame.number.version.number \
                -justify center -font smallInfoFont -width 16 \
                -textvariable requested_version_values($content_id)
-    pack $ui_frame.label -anchor w
     pack $ui_frame.number -anchor w
     pack $ui_frame.number.by_puavo_conf \
          $ui_frame.number.latest \
@@ -1407,41 +1409,41 @@ proc update_content_dirs_ui {visible} {
   }
 
   dict for {content_dir content_id} $content_ids {
-    # XXX perché?
-    # if {$content_id eq "custom"} continue
+    if {$content_id ne "custom"} {
+      .f.content_dirs.$content_id.number.by_puavo_conf  \
+        configure -background $bg_color
+      .f.content_dirs.$content_id.number.latest \
+        configure -background $bg_color
+      .f.content_dirs.$content_id.number.version.button \
+        configure -background $bg_color
 
-    .f.content_dirs.$content_id.number.by_puavo_conf  \
-      configure -background $bg_color
-    .f.content_dirs.$content_id.number.latest \
-      configure -background $bg_color
-    .f.content_dirs.$content_id.number.version.button \
-      configure -background $bg_color
-    .f.content_dirs.series.$content_id configure -background $bg_color
+      set puavo_conf_requested_version ""
+      catch {
+        set puavo_conf_key [
+          string trim [read_file "${content_dir}/PUAVOCONF_KEY"]
+        ]
+        set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key]
+      }
 
-    set puavo_conf_requested_version ""
-    catch {
-      set puavo_conf_key [
-        string trim [read_file "${content_dir}/PUAVOCONF_KEY"]
-      ]
-      set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key]
-    }
+      set ui_frame .f.content_dirs.$content_id
 
-    set ui_frame .f.content_dirs.$content_id
+      set by_puavo_conf_msg \
+          "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
+      $ui_frame.number.by_puavo_conf configure -text $by_puavo_conf_msg
 
-    set by_puavo_conf_msg \
-        "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
-    $ui_frame.number.by_puavo_conf configure -text $by_puavo_conf_msg
-
-    switch -- $requested_versions($content_id) {
-      ""              -
-      {by puavo-conf} { $ui_frame.number.by_puavo_conf invoke }
-      latest { $ui_frame.number.latest invoke }
-      default {
-        $ui_frame.number.version.button invoke
-        set requested_version_values($content_dir) \
-            $requested_versions($content_id)
+      switch -- $requested_versions($content_id) {
+        ""              -
+        {by puavo-conf} { catch { $ui_frame.number.by_puavo_conf invoke } }
+        latest { catch { $ui_frame.number.latest invoke } }
+        default {
+          catch { $ui_frame.number.version.button invoke }
+          set requested_version_values($content_dir) \
+              $requested_versions($content_id)
+        }
       }
     }
+
+    .f.content_dirs.series.$content_id configure -background $bg_color
   }
 
   pack .f.content_dirs.series -anchor w -pady 10
