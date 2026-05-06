@@ -150,21 +150,21 @@ download_abitti2() {
       elif .choices[$req] then $req
       elif .choices["abitti-candidate-" + $req] then
         "abitti-candidate-" + $req
-      else error "no such version" end
+      else error("no such version") end
     ' "$g_abitti2_json_path"); then
       logmsg -p user.err "could not find '${requested_version}' in abitti2.json"
       return 1
   fi
 
   if ! choice_version=$(jq -r --arg choice "$choice" '
-                          .choices[$choice].version // error "no version"
+                          .choices[$choice].version // error("no version")
                         ' "$g_abitti2_json_path"); then
     logmsg -p user.err "no version for '${choice}' in abitti2.json"
     return 1
   fi
 
   if ! image_iso=$(jq -r --arg choice "$choice" '
-                     .choices[$choice].image // error "no image"
+                     .choices[$choice].image // error("no image")
                    ' "$g_abitti2_json_path"); then
     logmsg -p user.err "no image iso for '${choice}' in abitti2.json"
     return 1
@@ -180,10 +180,10 @@ download_abitti2() {
     return 1
   fi
 
-  if ! image_sha256=$(jq -r --arg image "$image" '
-                        .images[$image].sha256 // error "no sha256"
+  if ! image_sha256=$(jq -r --arg image_iso "$image_iso" '
+                        .images[$image_iso].sha256 // error("no sha256")
                       ' "$g_abitti2_json_path"); then
-    logmsg -p user.err "no sha256 for '${image}' in abitti2.json"
+    logmsg -p user.err "no sha256 for '${image_iso}' in abitti2.json"
     return 1
   fi
 
@@ -207,10 +207,10 @@ download_abitti2() {
 
   tmp_download_path="${incoming_dir}/${image_iso}.tmp"
 
-  printf "in progress %s\n" "$actual_version" \
+  printf "in progress %s\n" "$choice_version" \
     > "$(get_download_status_path "$g_abitti2_images_dir")"
 
-  url_to_download="${g_abitti2_server}/${image_iso}"
+  url_to_download="${g_abitti2_server}/images/${image_iso}"
   if ! wget_with_certauth -q -O "$tmp_download_path" "$url_to_download"
   then
     logmsg -p user.err "downloading ${url_to_download} failed"
