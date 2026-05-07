@@ -1169,7 +1169,6 @@ proc write_file {path data} {
   close $fh
 
   file rename -force $tmpfile $path
-
 }
 
 proc update_port_labels_on_disk {} {
@@ -1399,19 +1398,18 @@ proc update_content_dirs_ui {visible} {
     }
 
     ttk::frame .f.content_dirs.series -style Changes.TFrame
-    if {[llength $content_dir_paths] > 1} {
-      ttk::label .f.content_dirs.series.label -text [ui_msg "Current choice:"] \
-                                              -font infoFont
-      pack .f.content_dirs.series.label
+    ttk::label .f.content_dirs.series.label -text [ui_msg "Current choice:"] \
+                                            -font infoFont
+    pack .f.content_dirs.series.label
 
-      dict for {content_dir content_id} $content_ids {
-        radiobutton .f.content_dirs.series.$content_id \
-          -background $bg_color -font smallInfoFont -highlightthickness 0 \
-          -text [ui_msg content_dir [file tail $content_dir]] \
-          -value $content_dir -variable content_dir -command update_content_dir
-        pack .f.content_dirs.series.$content_id -anchor w
-      }
+    dict for {content_dir content_id} $content_ids {
+      radiobutton .f.content_dirs.series.$content_id \
+        -background $bg_color -font smallInfoFont -highlightthickness 0 \
+        -text [ui_msg content_dir [file tail $content_dir]] \
+        -value $content_dir -variable content_dir -command update_content_dir
+      pack .f.content_dirs.series.$content_id -anchor w
     }
+
     set content_dir_paths $new_content_dir_paths
   }
 
@@ -1450,12 +1448,13 @@ proc update_content_dirs_ui {visible} {
       }
     }
 
-    if {[llength $content_dir_paths] > 1} {
-      .f.content_dirs.series.$content_id configure -background $bg_color
-    }
+    .f.content_dirs.series.$content_id configure -background $bg_color
   }
 
-  pack .f.content_dirs.series -anchor w -pady 10
+  set show_content_dir_choices [expr { [llength $content_dir_paths] > 1 }]
+  if {$show_content_dir_choices} {
+    pack .f.content_dirs.series -anchor w -pady 10
+  }
   pack .f.content_dirs -after .f.disks -side right -anchor w -padx 10
 }
 
