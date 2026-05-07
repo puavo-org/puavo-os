@@ -102,7 +102,7 @@ proc download_images {} {
     logger -p user.warning "starting download for $content_dir"
 
     set fh [
-      open "|[list setsid -w sudo -n -g puavo /usr/local/bin/puavo-download-usb-factory-images $content_dir]"
+      open "|[list setsid -w sudo -n -g puavo-update /usr/local/bin/puavo-download-usb-factory-images $content_dir]"
     ]
     dict set images_downloader_fhs $content_id $fh
 
