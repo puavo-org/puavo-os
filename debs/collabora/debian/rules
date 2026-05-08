@@ -65,6 +65,7 @@ override_dh_auto_build:
 	# Configure and build Collabora Office desktop app
 	cd $(online_directory) && ./autogen.sh
 	cd $(online_directory) && ./configure \
+		MOC=/usr/lib/qt6/libexec/moc \
 		--enable-qtapp \
 		--with-app-name='Collabora Office' \
 		--with-lo-path=$(lokit_directory)/instdir \
