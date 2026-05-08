@@ -2,6 +2,16 @@
 
 set -eu
 
+# pick up a random minute that is always the same in every host in an
+# organisation
+get_organisation_minute() {
+  hexdump -b /etc/puavo/domain \
+    | awk '
+        { for (i = 2; i <= NF; i++) { sum += $i } }
+        END { printf "%02d", (sum % 60) }
+      '
+}
+
 # pick up a random day that is always the same in every host in an organisation
 get_organisation_weekday() {
   hexdump -b /etc/puavo/domain \
@@ -125,18 +135,18 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 30 07 * * * root /usr/local/lib/puavo-autopoweron >/dev/null 2>&1
 EOF
 
-cron_d_cond_enable puavo-autoreboot <<'EOF'
+cron_d_cond_enable puavo-autoreboot <<EOF
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-00 03 * * * root /usr/lib/puavo-ltsp-client/puavo-autoreboot >/dev/null 2>&1
+$(get_organisation_minute) 03 * * * root /usr/lib/puavo-ltsp-client/puavo-autoreboot >/dev/null 2>&1
 EOF
 
 # XXX keep this for Bookworm, some hosts have a manual puavo-conf
 # XXX setting using this (perhaps remove for post-Bookworm?)
-cron_d_cond_enable puavo-autoreboot-at-night <<'EOF'
+cron_d_cond_enable puavo-autoreboot-at-night <<EOF
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-00 03 * * * root /sbin/reboot >/dev/null 2>&1
+$(get_organisation_minute) 03 * * * root /sbin/reboot >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable puavo-bootserver-sync-images <<'EOF'

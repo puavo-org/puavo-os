@@ -372,8 +372,8 @@ test_audio() {
   ### Some device model/gen specific configurations
   case "$(product_name)" in
     "HP EliteBook 8"[345]"0 G6" | "HP EliteBook 8"[345]"0 G"[78]" Notebook PC")
-      ### With these, speaker test works on G6-G8 devices. Mic test doesn't work just yet, but maybe soon.
       alsacard='0'
+      alsamicdev='plughw:CARD=sofhdadsp,DEV=7'
       alsaspkctl='Master'
       alsaspkctl2='Speaker'
       alsavolume="85%"

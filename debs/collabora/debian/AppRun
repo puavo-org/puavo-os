@@ -1,0 +1,8 @@
+#!/bin/sh
+appdir="$(dirname "$(readlink -f "$0")")"
+# Use built-in libraries over system libraries
+export LD_LIBRARY_PATH="${appdir}/usr/lib/x86_64-linux-gnu:${appdir}/usr/lib/collabora-office/instdir/program${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+# Override hardcoded paths to point inside the AppImage
+export COLLABORA_LO_PATH="${appdir}/usr/lib/collabora-office/instdir"
+export COLLABORA_DATADIR="${appdir}/usr/share/coolwsd"
+exec "${appdir}/usr/bin/coda-qt" "$@"

@@ -1,0 +1,77 @@
+Description: Allow overriding hardcoded paths via environment variables
+ The coda-qt binary hardcodes LO_PATH and COOLWSD_DATADIR at
+ compile time. This prevents running from an AppImage where
+ files are at a temporary mount point. This patch adds optional
+ environment variables COLLABORA_LO_PATH and COLLABORA_DATADIR
+ that override the compiled-in defaults when set.
+Author: Puavo Org <dev@opinsys.fi>
+Forwarded: not-needed
+---
+--- a/online/kit/Kit.cpp
++++ b/online/kit/Kit.cpp
+@@ -3392,9 +3392,11 @@
+             {
+                 Util::setThreadName("lokit_runloop");
+                 setupKitEnvironment("notebookbar");
++                const char* loPathOverride = std::getenv("COLLABORA_LO_PATH");
++                std::string loPath = loPathOverride ? loPathOverride : LO_PATH;
+                 LibreOfficeKit* kit =
+ #if defined(QTAPP)
+-                    lok_init_2(LO_PATH "/program", nullptr);
++                    lok_init_2((loPath + "/program").c_str(), nullptr);
+ #elif defined(MACOS)
+                     lok_init_2((getBundlePath() + "/Contents/Frameworks").c_str(), getAppSupportURL().c_str());
+ #elif defined(_WIN32)
+--- a/online/wsd/COOLWSD.cpp
++++ b/online/wsd/COOLWSD.cpp
+@@ -766,7 +766,7 @@
+ std::unordered_map<std::string, std::chrono::steady_clock::time_point> COOLWSD::Uri2WasmModeMap;
+ #endif
+ std::string COOLWSD::SysTemplate;
+-std::string COOLWSD::LoTemplate = LO_PATH;
++std::string COOLWSD::LoTemplate = std::getenv("COLLABORA_LO_PATH") ? std::getenv("COLLABORA_LO_PATH") : LO_PATH;
+ std::string COOLWSD::CleanupChildRoot;
+ std::string COOLWSD::ChildRoot;
+ std::string COOLWSD::ServerName;
+--- a/online/qt/Bridge.cpp
++++ b/online/qt/Bridge.cpp
+@@ -11,6 +11,8 @@
+
+ #include <config.h>
+
++#include <cstdlib>
++
+ #include "bridge.hpp"
+
+ #include <qt/DBusService.hpp>
+@@ -447,7 +449,8 @@
+     }
+     else if (message == "LICENSE")
+     {
+-        const std::string licensePath = LO_PATH "/LICENSE.html";
++        const char* loPathOverride = std::getenv("COLLABORA_LO_PATH");
++        const std::string licensePath = std::string(loPathOverride ? loPathOverride : LO_PATH) + "/LICENSE.html";
+         struct stat st;
+         if (FileUtil::getStatOfFile(licensePath, st) == 0)
+         {
+--- a/online/qt/qt.hpp
++++ b/online/qt/qt.hpp
+@@ -7,6 +7,8 @@
+
+ #pragma once
+
++#include <cstdlib>
++
+ #include <QApplication>
+ #include <QWebEngineProfile>
+ #include "common/RecentFiles.hpp"
+@@ -37,7 +39,8 @@
+         dir.makeParent();
+         return dir.toString();
+     }
+-    return COOLWSD_DATADIR;
++    const char* dataDirOverride = std::getenv("COLLABORA_DATADIR");
++    return dataDirOverride ? dataDirOverride : COOLWSD_DATADIR;
+ }
+ } // namespace
+ 

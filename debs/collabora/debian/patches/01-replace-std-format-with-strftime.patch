@@ -1,0 +1,45 @@
+Description: Replace std::format with strftime for timestamp formatting
+ Bookworm ships GCC 12 which does not support std::format with
+ chrono types. Use a helper function based on gmtime_r and
+ strftime to produce the same ISO 8601 output.
+Author: Puavo Org <dev@opinsys.fi>
+Forwarded: not-needed
+---
+--- a/online/common/RecentFiles.cpp
++++ b/online/common/RecentFiles.cpp
+@@ -11,6 +11,7 @@
+
+ #include <cassert>
+ #include <cstdint>
++#include <ctime>
+ #include <sstream>
+
+ #include <common/FileUtil.hpp>
+@@ -20,6 +21,18 @@
+ #include <Poco/Path.h>
+ #include <Poco/URI.h>
+
++static std::string formatTimestamp(
++    const std::chrono::time_point<std::chrono::system_clock>&
++        timePoint)
++{
++    auto timeValue = std::chrono::system_clock::to_time_t(timePoint);
++    std::tm timeStruct{};
++    gmtime_r(&timeValue, &timeStruct);
++    char buffer[32];
++    std::strftime(buffer, sizeof(buffer), "%FT%TZ", &timeStruct);
++    return std::string(buffer);
++}
++
+ RecentFiles::RecentFiles()
+     : _initialised(false)
+ {
+@@ -97,7 +110,7 @@
+         result += "{ "
+             "\"uri\": \"" + _mostRecentlyUsed[i].uri + "\", "
+             "\"name\": \"" + JsonUtil::escapeJSONValue(segments.back()) + "\", "
+-            "\"timestamp\": \"" + std::format("{:%FT%TZ}", _mostRecentlyUsed[i].timestamp) + "\""
++            "\"timestamp\": \"" + formatTimestamp(_mostRecentlyUsed[i].timestamp) + "\""
+             " }";
+         if (i < _mostRecentlyUsed.size() - 1)
+             result += ", ";

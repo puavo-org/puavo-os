@@ -113,6 +113,12 @@ build-debs-cloud:
 	$(MAKE) -C debs cloud-builddeps
 	env DEB_BUILD_OPTIONS=nocheck $(MAKE) -C debs cloud
 
+.PHONY: build-debs-extraports
+build-debs-extraports:
+	$(_sudo) apt-get -y install devscripts
+	$(MAKE) -C debs extraports-builddeps
+	env DEB_BUILD_OPTIONS=nocheck $(MAKE) -C debs extraports
+
 .PHONY: build-debs-parts
 build-debs-parts:
 	$(_sudo) apt-get -y install devscripts

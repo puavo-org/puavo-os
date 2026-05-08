@@ -1,0 +1,349 @@
+#!/bin/sh
+
+set -eu
+
+g_puavo_usb_factory_dir=~/.puavo/usb-factory
+g_abitti2_client_images_dir="${g_puavo_usb_factory_dir}/Abitti2"
+g_custom_images_dir="${g_puavo_usb_factory_dir}/custom"
+
+g_abitti2_images_dir=${1:-}
+g_abitti2_json_path="${g_abitti2_images_dir}/abitti.json"
+g_abitti2_server=''
+
+logmsg() {
+  logger -s -t puavo-download-usb-factory-images "$@" || true
+}
+
+if [ -z "$g_abitti2_images_dir" ]; then
+  echo "Usage: $(basename "$0") abitti_image_dir" >&2
+  exit 1
+fi
+
+do_setup=false
+if [ "$g_abitti2_images_dir" = '--setup' ]; then
+  g_abitti2_images_dir=''
+  lock_directory="$g_puavo_usb_factory_dir"
+  do_setup=true
+else
+  lock_directory="$g_abitti2_images_dir"
+fi
+
+if ! $do_setup \
+     && [ "$g_abitti2_images_dir" != "$g_abitti2_client_images_dir" ] \
+     && [ "$g_abitti2_images_dir" != "$g_custom_images_dir" ]; then
+  logmsg -p user.err "content directory '${g_abitti2_images_dir}' not supported"
+  exit 1
+fi
+
+get_download_status_path()        { printf "%s/DOWNLOAD_STATUS" "$1"; }
+get_latest_abitti_filename_path() { printf "%s/LATEST_IMAGE"    "$1"; }
+
+cleanup() {
+  local cleanup_status download_status_path
+
+  cleanup_status=0
+  download_status_path=$(get_download_status_path "$g_abitti2_images_dir")
+  if grep -q 'in progress' "$download_status_path" 2>&1; then
+    echo failed > "$download_status_path"
+    cleanup_status=1
+  fi
+
+  exit "$cleanup_status"
+}
+
+if ! $do_setup; then
+  trap cleanup 0 INT TERM
+fi
+
+set_latest_image() {
+  local abitti_version latest_abitti_filename_path latest_abitti_version_path \
+        usbimg_filename
+
+  abitti_version=$1
+  usbimg_filename=$2
+
+  latest_abitti_filename_path=$(
+    get_latest_abitti_filename_path "$g_abitti2_images_dir")
+  latest_abitti_version_path="${g_abitti2_images_dir}/VERSION"
+
+  printf "%s\n" "$usbimg_filename" > "${latest_abitti_filename_path}.tmp" \
+    || return 1
+  printf "%s\n" "$abitti_version" > "${latest_abitti_version_path}.tmp" \
+    || return 1
+  mv "${latest_abitti_filename_path}.tmp" "$latest_abitti_filename_path" \
+    || return 1
+  mv "${latest_abitti_version_path}.tmp" "$latest_abitti_version_path" \
+    || return 1
+}
+
+wget_with_certauth()
+{
+   wget --ca-certificate=/etc/puavo-conf/rootca.pem        \
+        --certificate=/etc/puavo/certs/hostorgcabundle.pem \
+        --private-key=/etc/puavo/certs/host.key            \
+        "$@"
+}
+
+# this is mostly a duplicate from /usr/local/sbin/puavo-update-abitti2-image
+get_abitti2_catalogue() {
+  local abitti2_json_gpg_tmppath abitti2_json_tmppath abitti2_server \
+        abitti2_sources gnupg_dir url
+
+  abitti2_json_gpg_tmppath="${g_abitti2_json_path}.gpg.tmp"
+  abitti2_json_tmppath="${g_abitti2_json_path}.tmp"
+  abitti2_sources=$(puavo-conf puavo.abitti2.image.sources)
+
+  for url in $abitti2_sources; do
+    if ! wget_with_certauth -q \
+      --output-document "$abitti2_json_gpg_tmppath" "$url"; then
+        logmsg -p user.err "error fetching ${url}"
+        rm -f "$abitti2_json_gpg_tmppath"
+        continue
+    fi
+
+    abitti2_server=$(dirname "${url#https://}")
+    gnupg_dir="/etc/puavo-conf/gpg/${abitti2_server}/digabios"
+    if ! gpg --decrypt --homedir "$gnupg_dir" --no-permission-warning \
+      --trust-model always "$abitti2_json_gpg_tmppath" 2>/dev/null \
+      > "$abitti2_json_tmppath"; then
+        logmsg -p user.err "GPG verification failed for ${url}"
+        rm -f "$abitti2_json_gpg_tmppath" "$abitti2_json_tmppath"
+        continue
+    fi
+
+    rm -f "$abitti2_json_gpg_tmppath" || return 1
+    mv "$abitti2_json_tmppath" "$g_abitti2_json_path" || return 1
+    logmsg -p user.info 'downloaded abitti2.json'
+    printf "%s" "${url%/*}" || return 1
+    return 0
+  done
+
+  logmsg -p user.err 'could not fetch any source in puavo.abitti2.image.sources'
+  return 1
+}
+
+download_abitti2() {
+  local calculated_sha256 choice image_iso image_iso_fp image_sha256 \
+        incoming_dir latest_abitti_filename_path latest_image_name   \
+        puavo_conf_key requested_version requested_version_list      \
+        tmp_download_path url_to_download
+
+  puavo_conf_key=$1
+
+  requested_version=$(
+    cat "${g_abitti2_images_dir}/REQUESTED_VERSION" 2>/dev/null) || true
+  if [ -z "$requested_version" ] \
+    || [ "$requested_version" = "by puavo-conf" ]; then
+      if ! requested_version_list=$(puavo-conf "$puavo_conf_key"); then
+        logmsg -p user.err \
+               "could not lookup puavo-conf '${puavo_conf_key}' value"
+        return 1
+      fi
+      # we download on the the first one on the list (in case there are many)
+      requested_version=$(printf %s "$requested_version_list" \
+                            | awk '{ print $1 }')
+  fi
+
+  if ! choice=$(
+    jq -r --arg req "$requested_version" '
+      if .aliases[$req] then .aliases[$req]
+      elif .choices[$req] then $req
+      elif .choices["abitti-candidate-" + $req] then
+        "abitti-candidate-" + $req
+      else error("no such version") end
+    ' "$g_abitti2_json_path"); then
+      logmsg -p user.err "could not find '${requested_version}' in abitti2.json"
+      return 1
+  fi
+
+  if ! choice_version=$(jq -r --arg choice "$choice" '
+                          .choices[$choice].version // error("no version")
+                        ' "$g_abitti2_json_path"); then
+    logmsg -p user.err "no version for '${choice}' in abitti2.json"
+    return 1
+  fi
+
+  if ! image_iso=$(jq -r --arg choice "$choice" '
+                     .choices[$choice].image // error("no image")
+                   ' "$g_abitti2_json_path"); then
+    logmsg -p user.err "no image iso for '${choice}' in abitti2.json"
+    return 1
+  fi
+
+  # verify image_iso variable
+  if printf %s "$image_iso" | grep -q /; then
+    logmsg -p user.err 'image iso has "/"-character'
+    return 1
+  fi
+  if ! printf %s "$image_iso" | grep -q '.iso$'; then
+    logmsg -p user.err 'image iso is not *.iso'
+    return 1
+  fi
+
+  if ! image_sha256=$(jq -r --arg image_iso "$image_iso" '
+                        .images[$image_iso].sha256 // error("no sha256")
+                      ' "$g_abitti2_json_path"); then
+    logmsg -p user.err "no sha256 for '${image_iso}' in abitti2.json"
+    return 1
+  fi
+
+  latest_abitti_filename_path=$(get_latest_abitti_filename_path \
+                                  "$g_abitti2_client_images_dir")
+  latest_image_name=$(cat "$latest_abitti_filename_path" 2>/dev/null) || true
+  if [ -n "$latest_image_name" ]; then
+    find "$g_abitti2_images_dir" -name '*.iso' \
+      -and ! '(' -name "$image_iso" -or -name "$image_iso" ')' \
+      -exec rm -f {} \;
+  fi
+
+  image_iso_fp="${g_abitti2_images_dir}/${image_iso}"
+  if [ -e "$image_iso_fp" ]; then
+    set_latest_image "$choice_version" "$image_iso" || return 1
+    return 0
+  fi
+
+  incoming_dir="${g_abitti2_client_images_dir}/incoming"
+  mkdir -p "$incoming_dir"
+
+  tmp_download_path="${incoming_dir}/${image_iso}.tmp"
+
+  printf "in progress %s\n" "$choice_version" \
+    > "$(get_download_status_path "$g_abitti2_images_dir")"
+
+  url_to_download="${g_abitti2_server}/images/${image_iso}"
+  if ! wget_with_certauth -q -O "$tmp_download_path" "$url_to_download"
+  then
+    logmsg -p user.err "downloading ${url_to_download} failed"
+    rm -f "$tmp_download_path"
+    return 1
+  fi
+
+  calculated_sha256="$(sha256sum "$tmp_download_path" | awk '{ print $1 }')"
+  if [ "$calculated_sha256" != "$image_sha256" ]; then
+    errmsg="calculated checksum for ${image_iso} does not match"
+    errmsg="${errmsg} the expected checksum, removing ${tmp_download_path}"
+    logmsg -p user.err "$errmsg"
+    rm -f "$tmp_download_path"
+    return 1
+  fi
+
+  mv "${tmp_download_path}.tmp" "$image_iso_fp"   || return 1
+  set_latest_image "$choice_version" "$image_iso" || return 1
+  rm -rf "$incoming_dir"
+}
+
+write_ui_json() {
+  cat <<'EOF' > "${g_puavo_usb_factory_dir}/UI.json.tmp"
+{
+  "description": "HUOMIO!  Kun USB-tikku liitetään koneeseen, kaikki siinä oleva sisältö poistetaan!",
+  "instructions": "OHJEET\nAseta usb-tikku usb-jakajaan.\nOdota Abitti-tikun valmistumista.\nIrrota valmis tikku.",
+  "version label": "Abittiversio:",
+  "hostname label": "Koneen nimi:",
+  "download status label": "Päivitystilanne:",
+  "waiting usb drives": "Odotetaan USB-tikkuja...",
+  "Continue calibration by pressing Ctrl+R": "Jatka kalibrointia painamalla Ctrl+R",
+  "Stop calibration by pressing Ctrl+R": "Lopeta kalibrointi painamalla Ctrl+R",
+  "Recalibrate all by pressing Ctrl+Shift+R": "Kalibroi kaikki uudelleen painamalla Ctrl+Vaihto+R",
+  "Put the next usb drive into port:": "Laita seuraava usb-tikku porttiin:",
+  "Current choice:": "Tämänhetkinen valinta:",
+  "support info": "tuki@opinsys.fi\nTukipalvelu 014 4591 624",
+  "version": {
+    "by puavo-conf": "Puavon mukainen",
+    "latest": "Uusin versio",
+    "this version": "Versio"
+  },
+  "download state": {
+    "up-to-date": "Abitti on ajantasainen",
+    "in progress": "Tikkutehdas hakee versiota",
+    "failed": "Abitin haku epäonnistui",
+    "missing": "Abitti puuttuu",
+    "undefined": "Lataustila on epämääräinen"
+  },
+  "messages": {
+    "error": "virhe",
+    "finished": "valmis",
+    "nospaceondevice": "liian pieni tikku",
+    "start_writing": "aloitetaan",
+    "verifying": "tarkistaa",
+    "writing": "kirjoittaa"
+  }
+}
+EOF
+  mv "${g_puavo_usb_factory_dir}/UI.json.tmp" \
+     "${g_puavo_usb_factory_dir}/UI.json"
+}
+
+mkdir -p "$g_puavo_usb_factory_dir"
+
+(
+  if ! flock -n 9; then
+    logmsg -p user.err 'could not get a lock, exiting...'
+    return 1
+  fi
+
+  # remove old Abitti 1 stuff
+  rm -rf "${g_puavo_usb_factory_dir}/Abitti"     \
+         "${g_puavo_usb_factory_dir}/Abitti-KOE" \
+         "${g_puavo_usb_factory_dir}/Abitti-KTP"
+
+  write_ui_json
+
+  exitstatus=0
+
+  for this_dir in "$g_abitti2_client_images_dir" "$g_custom_images_dir"; do
+    puavo_conf_key=''
+    if [ "$this_dir" = "$g_abitti2_client_images_dir" ]; then
+      bg_color='#6392ac'
+      image_type='abitti2'
+      puavo_conf_key='puavo.abitti2.version'
+      ui_png='UI-blue.png'
+    else
+      bg_color='#5c5c5c'
+      image_type='custom'
+      ui_png='UI-purple.png'
+    fi
+
+    mkdir -p "$this_dir"
+
+    printf "%s\n" "$puavo_conf_key" > "${this_dir}/PUAVOCONF_KEY.tmp"
+    mv "${this_dir}/PUAVOCONF_KEY.tmp" "${this_dir}/PUAVOCONF_KEY"
+
+    if ! cmp "/usr/local/share/puavo-download-usb-factory-images/${ui_png}" \
+             "${this_dir}/UI.png" >/dev/null 2>&1; then
+      cp -p "/usr/local/share/puavo-download-usb-factory-images/${ui_png}" \
+            "${this_dir}/UI.png"
+    fi
+
+    printf "%s\n" "$bg_color" > "${this_dir}/UI.png.bg_color.tmp"
+    mv "${this_dir}/UI.png.bg_color.tmp" "${this_dir}/UI.png.bg_color"
+
+    if $do_setup || [ "$this_dir" != "$g_abitti2_images_dir" ]; then
+      continue
+    fi
+
+    download_status_path=$(get_download_status_path "$g_abitti2_images_dir")
+
+    if [ "$image_type" = 'custom' ]; then
+       echo up-to-date > "$download_status_path"
+       continue
+    fi
+
+    printf "in progress %s\n" ? > "$download_status_path"
+
+    if ! g_abitti2_server=$(get_abitti2_catalogue) \
+      || [ -z "$g_abitti2_server" ]; then
+        logmsg -p user.err "error in fetching abitti2.json"
+        return 1
+    fi
+
+    if ! download_abitti2 "$puavo_conf_key"; then
+      logmsg -p user.err "error downloading Abitti to ${g_abitti2_images_dir}"
+      echo failed > "$download_status_path"
+      exitstatus=1
+    else
+      echo up-to-date > "$download_status_path"
+    fi
+  done
+
+  exit $exitstatus
+) 9< "$lock_directory"

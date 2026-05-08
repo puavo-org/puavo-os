@@ -26,6 +26,11 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
+if ! [ "$(systemd-detect-virt)" = "none" ]; then
+  echo 'This is a virtual machine. Refusing to even attempt an erase.'
+  exit
+fi
+
 bootserver_address=$(cat /run/puavo/nbd-server 2>/dev/null) || true
 
 usage() {

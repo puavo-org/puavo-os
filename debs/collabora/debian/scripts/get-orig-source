@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version \
+  | sed -r -n 's/^(.*)-.*$/\1/p')
+orig_tarball="../collabora_${upstream_version}.orig.tar.gz"
+
+core_tag="coda-25.04.9.2-2"
+poco_tag="poco-1.14.2-release"
+online_tag="coda-25.04.9.2-2"
+
+if [ ! -e "${orig_tarball}" ]; then
+  temporary_directory=$(mktemp -d)
+  trap 'rm -rf "${temporary_directory}"' EXIT
+
+  source_directory="${temporary_directory}/collabora-${upstream_version}"
+  mkdir -p "${source_directory}"
+
+  echo "Cloning LibreOffice core at tag ${core_tag}..."
+  git -c advice.detachedHead=false clone \
+    --quiet --depth 1 -b "${core_tag}" \
+    https://gerrit.collaboraoffice.com/core \
+    "${source_directory}/core"
+
+  echo "Cloning Poco at tag ${poco_tag}..."
+  git -c advice.detachedHead=false clone \
+    --quiet --depth 1 -b "${poco_tag}" \
+    https://github.com/pocoproject/poco.git \
+    "${source_directory}/poco"
+
+  echo "Cloning Collabora Online at tag ${online_tag}..."
+  git -c advice.detachedHead=false clone \
+    --quiet --depth 1 -b "${online_tag}" \
+    https://github.com/CollaboraOnline/online.git \
+    "${source_directory}/online"
+
+  # Remove .git from Poco and Online since they do not
+  # need it during the build. Core keeps .git because the
+  # Makefile uses it to clone required submodules
+  # (translations and dictionaries) during the build.
+  rm -rf "${source_directory}/poco/.git"
+  rm -rf "${source_directory}/online/.git"
+
+  echo "Creating orig tarball..."
+  tar -czf "${orig_tarball}" \
+    -C "${temporary_directory}" \
+    "collabora-${upstream_version}"
+
+  tar -zxf "${orig_tarball}" --strip-components=1
+fi

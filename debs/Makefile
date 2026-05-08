@@ -1,12 +1,15 @@
 # parts, ports and some cloud packages go into puavo-os images
+# extraports are build rules here but is not intended to be built with images
 
-_pkgs_cloud_builddeps :=
-_pkgs_parts_builddeps :=
+_pkgs_cloud_builddeps      :=
+_pkgs_extraports_builddeps :=
+_pkgs_parts_builddeps      :=
 
 ifeq "$(image_class)" "exam"
-  _pkgs_cloud :=
-  _pkgs_parts := puavo-os
-  _pkgs_ports := gnome-shell
+  _pkgs_cloud           :=
+  _pkgs_extraports      :=
+  _pkgs_parts           := puavo-os
+  _pkgs_ports           := gnome-shell
   _pkgs_ports_builddeps :=
 else
   # XXX do not build these custom packages in Trixie, these all need some work
@@ -22,28 +25,33 @@ else
   #                mutter                 \
   #                veyon
   # XXX Trixie
-  _pkgs_cloud := puavo-ds puavo-os krb5 openldap
-  _pkgs_parts := puavo-ds puavo-os
-  _pkgs_ports := facter gnome-shell hooktftp libpam-ccreds wsmancli
+  _pkgs_cloud      := puavo-ds puavo-os krb5 openldap
+  _pkgs_extraports := collabora
+  _pkgs_parts      := puavo-ds puavo-os
+  _pkgs_ports      := facter gnome-shell hooktftp libpam-ccreds wsmancli
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   _pkgs_ports_builddeps := sblim-sfcc openwsman
 endif
 
+_pkgs_extra := $(_pkgs_extraports_builddeps) $(_pkgs_extraports)
 _pkgs_image := $(_pkgs_parts_builddeps) $(_pkgs_ports_builddeps) \
                $(_pkgs_parts) $(_pkgs_ports)
-
 _pkgs_web   := $(_pkgs_cloud_builddeps) $(_pkgs_cloud)
 
-debs_build_targets           := $(sort $(_pkgs_image:%=debs-build-%) $(_pkgs_web:%=debs-build-%))
+debs_build_targets           := $(sort $(_pkgs_extra:%=debs-build-%) $(_pkgs_image:%=debs-build-%) \
+                                       $(_pkgs_web:%=debs-build-%))
 
-_dpkg_buildpackage_cloud     := $(_pkgs_cloud:%=.dpkg-buildpackage-%)
-_dpkg_buildpackage_parts     := $(_pkgs_parts:%=.dpkg-buildpackage-%)
-_dpkg_buildpackage_ports     := $(_pkgs_ports:%=.dpkg-buildpackage-%)
-_dpkg_buildpackage           := $(_pkgs_image:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_cloud      := $(_pkgs_cloud:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_extraports := $(_pkgs_extraports:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_parts      := $(_pkgs_parts:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_ports      := $(_pkgs_ports:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage            := $(_pkgs_image:%=.dpkg-buildpackage-%)
 
 _dpkg_buildpackage_cloud_builddeps := \
   $(_pkgs_cloud_builddeps:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage_extraports_builddeps := \
+  $(_pkgs_extraports_builddeps:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_parts_builddeps := \
   $(_pkgs_parts_builddeps:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_ports_builddeps := \
@@ -59,6 +67,9 @@ all: $(_dpkg_buildpackage)
 .PHONY: cloud-builddeps
 cloud-builddeps: $(_dpkg_buildpackage_cloud_builddeps)
 
+.PHONY: extraports-builddeps
+extraports-builddeps: $(_dpkg_buildpackage_extraports_builddeps)
+
 .PHONY: parts-builddeps
 parts-builddeps: $(_dpkg_buildpackage_parts_builddeps)
 
@@ -67,6 +78,9 @@ ports-builddeps: $(_dpkg_buildpackage_ports_builddeps)
 
 .PHONY: cloud
 cloud: $(_dpkg_buildpackage_cloud)
+
+.PHONY: extraports
+extraports: $(_dpkg_buildpackage_extraports)
 
 .PHONY: parts
 parts: $(_dpkg_buildpackage_parts)
