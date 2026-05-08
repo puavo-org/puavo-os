@@ -13,6 +13,7 @@ class Aria
 
   def initialize(url, use_rate_limit, seed_filename=nil)
     @url = URI(url)
+    @control_file_path = nil
     @last_msgs = []
     @outmsg = ''
     @progress = nil
@@ -38,9 +39,20 @@ class Aria
     rate_limit
   end
 
+  def remove_corrupted_control_file
+    return unless @control_file_path
+    # aria2c refuses to do anything with a corrupt control file (which may be
+    # empty, truncated or something else), so remove the control file if
+    # there is any.
+    Syslog.log(Syslog::LOG_NOTICE,
+               'removing a corrupted control file: %s', @control_file_path)
+    FileUtils.rm_f(@control_file_path)
+  end
+
   def start_download(use_rate_limit, seed_filename)
     filename = File.basename(@url.to_s)
     output_filename = (seed_filename || "#{ filename }.tmp")
+    @control_file_path = File.join($target_dir, "#{ output_filename }.aria2")
 
     torrent_url = @url.clone
     torrent_url.path = "/torrents/#{ filename }.torrent"
@@ -57,6 +69,7 @@ class Aria
                   '--ca-certificate=/etc/puavo-conf/rootca.pem',
                   '--certificate=/etc/puavo/certs/hostorgcabundle.pem',
                   '--check-integrity=true',
+                  '--continue',
                   "--dir=#{ $target_dir }",
                   '--enable-color=false',
                   '--file-allocation=none',
@@ -288,9 +301,16 @@ class Server
                      + " seeding '%s'"
           Syslog.log(Syslog::LOG_ERR, errmsg, @aria.url)
         else
+          exitcode = @aria.status.exitstatus    # may be nil if signaled
+          messages = @aria.last_msgs.join
           errmsg = 'aria2c has exited with failure or terminated' \
-                     + ' by signal with messages: %s'
-          Syslog.log(Syslog::LOG_ERR, errmsg, @aria.last_msgs.join)
+                     + ' by signal with messages (exitcode=%s): %s'
+          Syslog.log(Syslog::LOG_ERR, errmsg, exitcode, messages)
+          if messages.match(/Failed to read from the segment file/) then
+            # We do not restart but the next time it should be better
+            # (because a corrupted control file makes aria2c non-functional).
+            @aria.remove_corrupted_control_file
+          end
         end
         @aria = nil
 
