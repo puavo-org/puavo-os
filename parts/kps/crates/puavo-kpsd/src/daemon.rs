@@ -37,13 +37,12 @@ impl Daemon {
         // Remove existing socket file if it exists
         if socket_path.exists() {
             tokio::fs::remove_file(&socket_path).await.map_err(|error| {
-                Error::SocketRemovalError(socket_path.clone(), error)
+                Error::SocketRemoval(socket_path.clone(), error)
             })?;
         }
 
-        let listener = UnixListener::bind(&socket_path).map_err(|error| {
-            Error::SocketBindError(socket_path.clone(), error)
-        })?;
+        let listener = UnixListener::bind(socket_path)
+            .map_err(|error| Error::SocketBind(socket_path.clone(), error))?;
 
         // Apply socket permissions and group ownership
         self.apply_socket_permissions().await?;
@@ -87,7 +86,7 @@ impl Daemon {
         )
         .await
         .map_err(|error| {
-            Error::SocketPermissionsError(socket_config.path.clone(), error)
+            Error::SocketPermissions(socket_config.path.clone(), error)
         })?;
 
         tracing::debug!("Socket permissions set to {:o}", DEFAULT_SOCKET_MODE);
@@ -95,13 +94,13 @@ impl Daemon {
         // Find the configured group ID and set ownership
         let group_info = nix::unistd::Group::from_name(&socket_config.group)
             .map_err(|error| {
-                Error::GroupLookupError(socket_config.group.clone(), error)
+                Error::GroupLookup(socket_config.group.clone(), error)
             })?
             .ok_or_else(|| Error::GroupNotFound(socket_config.group.clone()))?;
 
         nix::unistd::chown(&socket_config.path, None, Some(group_info.gid))
             .map_err(|error| {
-                Error::SocketOwnershipError(socket_config.path.clone(), error)
+                Error::SocketOwnership(socket_config.path.clone(), error)
             })?;
 
         tracing::info!(
@@ -186,7 +185,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
                 .stream
                 .read(&mut buffer)
                 .await
-                .map_err(Error::ClientReadError)?;
+                .map_err(Error::ClientRead)?;
 
             if bytes_read == 0 {
                 break; // Client disconnected
@@ -196,7 +195,7 @@ impl<E: CommandExecutor> ClientHandler<E> {
             let message: IpcMessage = bincode::deserialize(
                 &buffer[..bytes_read],
             )
-            .map_err(|error| Error::DeserializationError(error.to_string()))?;
+            .map_err(|error| Error::Deserialization(error.to_string()))?;
 
             tracing::debug!(
                 "Received message ID {}: {:?}",
@@ -208,15 +207,13 @@ impl<E: CommandExecutor> ClientHandler<E> {
             let response = self.process_message(message).await;
 
             // Serialize and send response
-            let response_bytes =
-                bincode::serialize(&response).map_err(|error| {
-                    Error::SerializationError(error.to_string())
-                })?;
+            let response_bytes = bincode::serialize(&response)
+                .map_err(|error| Error::Serialization(error.to_string()))?;
 
             self.stream
                 .write_all(&response_bytes)
                 .await
-                .map_err(Error::ClientWriteError)?;
+                .map_err(Error::ClientWrite)?;
         }
 
         tracing::debug!("Client disconnected");

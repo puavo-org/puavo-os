@@ -3,7 +3,6 @@ use puavo_ipc::{
     DaemonResponseData, OrganisationKeyListing, OrganisationPublicKey,
     OutputFormat, RecoveryBundle, RecoveryKeyData,
 };
-use serde_json;
 
 /// Format daemon response data according to specified output format
 ///

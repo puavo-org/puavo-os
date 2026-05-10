@@ -349,15 +349,15 @@ pub fn execute_generate(
             .into_iter()
             .zip(recovery_key_files.iter())
             .map(|(serial_number, recovery_key_file)| {
-                let recovery_key = fs::read(&recovery_key_file)?;
+                let recovery_key = fs::read(recovery_key_file)?;
                 // TODO(recovery-key-format): Validate recovery key format?
 
-                return create_recovery_bundle(
+                create_recovery_bundle(
                     hsm_session,
                     organisation_id.clone(),
                     serial_number,
                     recovery_key,
-                );
+                )
             })
             .collect();
 
@@ -388,7 +388,7 @@ pub fn execute_unwrap(
             .iter()
             .map(|path| {
                 let recovery_bundle = read_recovery_bundle(path)?;
-                return unwrap_recovery_key(hsm_session, recovery_bundle);
+                unwrap_recovery_key(hsm_session, recovery_bundle)
             })
             .collect();
 

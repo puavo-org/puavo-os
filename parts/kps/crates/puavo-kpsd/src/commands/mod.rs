@@ -54,6 +54,12 @@ impl DefaultCommandExecutor {
     }
 }
 
+impl Default for DefaultCommandExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait]
 impl CommandExecutor for DefaultCommandExecutor {
     async fn execute_initialize(

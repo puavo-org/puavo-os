@@ -52,7 +52,7 @@ pub async fn generate_recovery_bundle_local(
 
     // Get device serial number
     let serial_number =
-        serial_number.map(Ok).unwrap_or_else(|| get_system_serial_number())?;
+        serial_number.map(Ok).unwrap_or_else(get_system_serial_number)?;
 
     tracing::info!("Using device serial number: {}", serial_number);
 

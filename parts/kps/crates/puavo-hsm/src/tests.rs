@@ -180,26 +180,23 @@ impl TestHsmSession {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+#[test]
+fn test_create_session() {
+    let test_session = TestHsmSession::new().unwrap();
+    assert_eq!(test_session.token_label(), TEST_TOKEN_LABEL);
+    let _session = test_session.session();
+}
 
-    #[test]
-    fn test_create_session() {
-        let test_session = TestHsmSession::new().unwrap();
-        assert_eq!(test_session.token_label(), TEST_TOKEN_LABEL);
-        let _session = test_session.session();
-    }
+#[cfg(test)]
+#[test]
+fn test_multiple_sessions_same_token() {
+    let test_session1 = TestHsmSession::new().unwrap();
+    let test_session2 = TestHsmSession::new().unwrap();
 
-    #[test]
-    fn test_multiple_sessions_same_token() {
-        let test_session1 = TestHsmSession::new().unwrap();
-        let test_session2 = TestHsmSession::new().unwrap();
+    let session1 = test_session1.session();
+    let session2 = test_session2.session();
 
-        let session1 = test_session1.session();
-        let session2 = test_session2.session();
-
-        // They both should point to the same token, but be different sessions
-        assert_eq!(session1.slot_id(), session2.slot_id());
-        assert!(!std::ptr::eq(session1.session(), session2.session()));
-    }
+    // They both should point to the same token, but be different sessions
+    assert_eq!(session1.slot_id(), session2.slot_id());
+    assert!(!std::ptr::eq(session1.session(), session2.session()));
 }
