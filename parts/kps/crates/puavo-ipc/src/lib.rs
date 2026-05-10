@@ -9,7 +9,7 @@ pub fn parse_absolute_path(path: &str) -> Result<PathBuf, String> {
     let path = Path::new(path);
 
     if path.is_absolute() {
-        return Ok(path.to_path_buf());
+        Ok(path.to_path_buf())
     } else {
         std::env::current_dir()
             .map(|working_directory| working_directory.join(path))

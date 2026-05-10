@@ -57,12 +57,11 @@ impl KpsConfig {
     /// Errors:
     /// Returns `ConfigError` if file cannot be read or parsed
     pub fn load(path: &Path) -> Result<Self, ConfigError> {
-        let contents = std::fs::read_to_string(path).map_err(|error| {
-            ConfigError::ReadError(path.to_path_buf(), error)
-        })?;
+        let contents = std::fs::read_to_string(path)
+            .map_err(|error| ConfigError::Read(path.to_path_buf(), error))?;
 
         let config: Self = toml::from_str(&contents)
-            .map_err(|error| ConfigError::ParseError(error.to_string()))?;
+            .map_err(|error| ConfigError::Parse(error.to_string()))?;
 
         Ok(config)
     }
@@ -75,20 +74,18 @@ impl KpsConfig {
     /// Errors:
     /// Returns `ConfigError` if file cannot be written or serialized
     pub fn save(&self, path: &Path) -> Result<(), ConfigError> {
-        let contents = toml::to_string_pretty(self).map_err(|error| {
-            ConfigError::SerializationError(error.to_string())
-        })?;
+        let contents = toml::to_string_pretty(self)
+            .map_err(|error| ConfigError::Serialization(error.to_string()))?;
 
         // Create parent directory if it does not exist
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|error| {
-                ConfigError::WriteError(path.to_path_buf(), error)
+                ConfigError::Write(path.to_path_buf(), error)
             })?;
         }
 
-        std::fs::write(path, contents).map_err(|error| {
-            ConfigError::WriteError(path.to_path_buf(), error)
-        })?;
+        std::fs::write(path, contents)
+            .map_err(|error| ConfigError::Write(path.to_path_buf(), error))?;
 
         Ok(())
     }
@@ -97,14 +94,14 @@ impl KpsConfig {
 #[derive(Debug, thiserror::Error)]
 pub enum ConfigError {
     #[error("Failed to read configuration file {0}: {1}")]
-    ReadError(PathBuf, std::io::Error),
+    Read(PathBuf, std::io::Error),
 
     #[error("Failed to write configuration file {0}: {1}")]
-    WriteError(PathBuf, std::io::Error),
+    Write(PathBuf, std::io::Error),
 
     #[error("Failed to parse configuration: {0}")]
-    ParseError(String),
+    Parse(String),
 
     #[error("Failed to serialize configuration: {0}")]
-    SerializationError(String),
+    Serialization(String),
 }

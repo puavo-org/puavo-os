@@ -88,7 +88,7 @@ impl KeyLabel {
     }
 
     /// Returns the organisation id from the specified label
-    pub fn organisation_id_from_label(label: &String) -> Option<&str> {
+    pub fn organisation_id_from_label(label: &str) -> Option<&str> {
         label.strip_prefix(ORGANISATION_KEY_PREFIX)
     }
 
@@ -403,7 +403,7 @@ impl<'a> HsmKeyManager<'a> {
             // Parse the key label and version from the ID attribute
             let key_info_option = match attributes.first() {
                 Some(Attribute::Id(id_bytes)) => {
-                    let id = String::from_utf8_lossy(&id_bytes);
+                    let id = String::from_utf8_lossy(id_bytes);
                     KeyLabel::parse(&id)
                         .inspect_err(|error| {
                             tracing::error!("Failed to parse key: {}", error)

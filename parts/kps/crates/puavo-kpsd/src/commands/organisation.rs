@@ -7,7 +7,7 @@ use puavo_ipc::{
     DaemonResponse, DaemonResponseData, OrganisationCommand,
     OrganisationKeyListing, OrganisationKeyVersion, OrganisationPublicKey,
 };
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, fmt::Write as _, fs, path::PathBuf};
 
 /// Errors that can occur during organisation commands
 #[derive(Debug, thiserror::Error)]
@@ -155,13 +155,15 @@ fn list_keys(
         let public_key_pem = public_key.rsa()?.public_key_to_pem_pkcs1()?;
         let fingerprint = hash(MessageDigest::sha256(), &public_key_pem)?
             .iter()
-            .map(|byte| format!("{:02x}", byte))
-            .collect::<String>();
+            .fold(String::new(), |mut acc, byte| {
+                let _ = write!(acc, "{:02x}", byte);
+                acc
+            });
 
         // Insert into the organisations map
         organisations
             .entry(organisation_id.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(OrganisationKeyVersion { version, fingerprint });
     }
 

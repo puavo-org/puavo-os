@@ -88,8 +88,10 @@ impl HsmSession {
             .get_slots_with_initialized_token()
             .map_err(HsmSessionError::InitializationFailed)?;
 
-        let (slot, slot_id) = find_slot_by_label(&pkcs11, &slots, token_label)
-            .ok_or(HsmSessionError::TokenNotFound(token_label.to_string()))?;
+        let (slot, slot_id) = find_slot_by_label(pkcs11, &slots, token_label)
+            .ok_or(HsmSessionError::TokenNotFound(
+            token_label.to_string(),
+        ))?;
 
         // Open session
         let session = pkcs11
@@ -164,7 +166,7 @@ impl HsmSessionManager {
     /// Returns `HsmSessionError` if the token is not found or authentication fails
     pub fn verify_pin(&self) -> Result<(), HsmSessionError> {
         let pkcs11 = pkcs11(&self.module_path);
-        let (slot, slot_id) = self.get_slot(&pkcs11)?;
+        let (slot, slot_id) = self.get_slot(pkcs11)?;
 
         let session = pkcs11
             .open_rw_session(slot)
@@ -222,7 +224,7 @@ impl ManageConnection for HsmSessionManager {
     /// Attempts to create a new connection
     fn connect(&self) -> Result<Self::Connection, Self::Error> {
         let pkcs11 = pkcs11(&self.module_path);
-        let (slot, slot_id) = self.get_slot(&pkcs11)?;
+        let (slot, slot_id) = self.get_slot(pkcs11)?;
 
         let session = pkcs11
             .open_rw_session(slot)
