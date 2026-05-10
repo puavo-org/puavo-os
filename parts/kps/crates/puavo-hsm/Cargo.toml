@@ -9,10 +9,7 @@ thiserror.workspace = true
 tracing.workspace = true
 
 # Cryptography
-rand.workspace = true
-hex.workspace = true
-sha2.workspace = true
-rsa.workspace = true
+openssl.workspace = true
 r2d2 = "0.8.10"
 
 [dev-dependencies]

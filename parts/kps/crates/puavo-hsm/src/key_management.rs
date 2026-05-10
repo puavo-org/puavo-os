@@ -5,7 +5,11 @@ use cryptoki::{
     mechanism::Mechanism,
     object::{Attribute, AttributeType, KeyType, ObjectClass, ObjectHandle},
 };
-use rsa::{BigUint, RsaPublicKey};
+use openssl::{
+    bn::BigNum,
+    pkey::{PKey, Public},
+    rsa::Rsa,
+};
 
 /// RSA key size in bits
 const RSA_KEY_SIZE_BITS: u64 = 4096;
@@ -47,8 +51,8 @@ pub enum KeyManagementError {
     #[error(transparent)]
     CryptoError(#[from] cryptoki::error::Error),
 
-    #[error("RSA error: {0}")]
-    RsaError(#[from] rsa::Error),
+    #[error("OpenSSL error: {0}")]
+    OpenSslError(#[from] openssl::error::ErrorStack),
 }
 
 /// Label for HSM keys
@@ -339,7 +343,7 @@ impl<'a> HsmKeyManager<'a> {
     pub fn extract_public_key(
         &self,
         public_key_handle: &ObjectHandle,
-    ) -> Result<RsaPublicKey, KeyManagementError> {
+    ) -> Result<PKey<Public>, KeyManagementError> {
         let attributes = self.session.session().get_attributes(
             *public_key_handle,
             &[AttributeType::Modulus, AttributeType::PublicExponent],
@@ -347,12 +351,12 @@ impl<'a> HsmKeyManager<'a> {
 
         let modulus_bytes =
             attributes.iter().find_map(|attribute| match attribute {
-                Attribute::Modulus(bytes) => Some(bytes.to_vec()),
+                Attribute::Modulus(bytes) => Some(bytes.as_slice()),
                 _ => None,
             });
         let exponent_bytes =
             attributes.iter().find_map(|attribute| match attribute {
-                Attribute::PublicExponent(bytes) => Some(bytes.to_vec()),
+                Attribute::PublicExponent(bytes) => Some(bytes.as_slice()),
                 _ => None,
             });
 
@@ -361,10 +365,10 @@ impl<'a> HsmKeyManager<'a> {
         let exponent =
             exponent_bytes.ok_or(KeyManagementError::InvalidPublicKey)?;
 
-        let public_key = RsaPublicKey::new(
-            BigUint::from_bytes_be(&modulus),
-            BigUint::from_bytes_be(&exponent),
-        )?;
+        let n = BigNum::from_slice(modulus)?;
+        let e = BigNum::from_slice(exponent)?;
+        let rsa = Rsa::from_public_components(n, e)?;
+        let public_key = PKey::from_rsa(rsa)?;
 
         Ok(public_key)
     }

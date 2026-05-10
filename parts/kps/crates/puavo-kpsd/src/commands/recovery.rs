@@ -1,7 +1,13 @@
 use cryptoki::{
-    mechanism::{Mechanism, MechanismType},
     mechanism::rsa::{PkcsMgfType, PkcsOaepParams, PkcsOaepSource},
+    mechanism::{Mechanism, MechanismType},
     object::{ObjectClass, ObjectHandle},
+};
+use openssl::{
+    md::Md,
+    pkey::{PKey, Public},
+    pkey_ctx::PkeyCtx,
+    rsa::Padding,
 };
 use puavo_hsm::{
     HsmKeyManager, HsmSession, KeyLabel, key_management::KeyManagementError,
@@ -10,9 +16,6 @@ use puavo_ipc::{
     DaemonResponse, DaemonResponseData, EncryptionAlgorithm,
     RECOVERY_KEY_DATA_VERSION, RecoveryBundle, RecoveryKeyData,
 };
-use rsa::{Oaep, RsaPublicKey};
-use sha1::Sha1;
-use sha2::Sha256;
 use std::{fs, path::PathBuf};
 
 /// Default encryption algorithm used when generating new recovery bundles.
@@ -92,7 +95,7 @@ fn create_recovery_key_data(
 /// Errors:
 /// Returns error if serialization or encryption fails
 pub fn encrypt_recovery_key_data(
-    public_key: &RsaPublicKey,
+    public_key: &PKey<Public>,
     serial_number: String,
     organisation_id: String,
     recovery_key: Vec<u8>,
@@ -119,23 +122,25 @@ pub fn encrypt_recovery_key_data(
 /// Errors:
 /// Returns error if encryption fails or an unsupported algorithm is requested
 fn encrypt(
-    public_key: &RsaPublicKey,
+    public_key: &PKey<Public>,
     key_data: &[u8],
     algorithm: EncryptionAlgorithm,
 ) -> Result<(Vec<u8>, EncryptionAlgorithm), KeyManagementError> {
-    let mut random_number_generator = rand::thread_rng();
-    let encrypted_key_data = match &algorithm {
-        EncryptionAlgorithm::RsaOaepSha256 => public_key.encrypt(
-            &mut random_number_generator,
-            Oaep::new::<Sha256>(),
-            key_data,
-        )?,
-        EncryptionAlgorithm::RsaOaepSha1 => public_key.encrypt(
-            &mut random_number_generator,
-            Oaep::new::<Sha1>(),
-            key_data,
-        )?,
+    let md = match algorithm {
+        EncryptionAlgorithm::RsaOaepSha256 => Md::sha256(),
+        EncryptionAlgorithm::RsaOaepSha1 => Md::sha1(),
     };
+
+    let mut ctx = PkeyCtx::new(public_key)?;
+    ctx.encrypt_init()?;
+    ctx.set_rsa_padding(Padding::PKCS1_OAEP)?;
+    ctx.set_rsa_oaep_md(md)?;
+    ctx.set_rsa_mgf1_md(md)?;
+
+    let mut encrypted_key_data = vec![0u8; public_key.size()];
+    let len = ctx.encrypt(key_data, Some(encrypted_key_data.as_mut_slice()))?;
+    encrypted_key_data.truncate(len);
+
     Ok((encrypted_key_data, algorithm))
 }
 

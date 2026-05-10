@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use puavo_ipc::{
-    parse_absolute_path, parse_existing_path, DEFAULT_SOCKET_PATH, OutputFormat,
+    DEFAULT_SOCKET_PATH, OutputFormat, parse_absolute_path, parse_existing_path,
 };
 use std::path::PathBuf;
 
