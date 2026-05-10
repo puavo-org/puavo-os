@@ -33,9 +33,7 @@ bincode = "1.3"
 async-trait = "0.1"
 
 # Cryptography (for device-local recovery bundle generation)
-hex.workspace = true
-rand.workspace = true
-rsa = { workspace = true, features = ["pem"] }
+openssl.workspace = true
 
 # Password input
 rpassword = "7.2"

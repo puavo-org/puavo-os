@@ -13,7 +13,9 @@ pub fn parse_absolute_path(path: &str) -> Result<PathBuf, String> {
     } else {
         std::env::current_dir()
             .map(|working_directory| working_directory.join(path))
-            .map_err(|error| format!("failed to resolve relative path: {error}"))
+            .map_err(|error| {
+                format!("failed to resolve relative path: {error}")
+            })
     }
 }
 
@@ -21,8 +23,12 @@ pub fn parse_absolute_path(path: &str) -> Result<PathBuf, String> {
 pub fn parse_existing_path(path: &str) -> Result<PathBuf, String> {
     let path = Path::new(path);
 
-    std::fs::canonicalize(path)
-        .map_err(|error| format!("path '{}' does not exist or is not accessible: {error}", path.display()))
+    std::fs::canonicalize(path).map_err(|error| {
+        format!(
+            "path '{}' does not exist or is not accessible: {error}",
+            path.display()
+        )
+    })
 }
 
 /// Output format for CLI responses
@@ -273,9 +279,7 @@ pub enum DaemonResponseData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DaemonResponse {
     /// Successful operation with optional data
-    Success {
-        data: Option<DaemonResponseData>,
-    },
+    Success { data: Option<DaemonResponseData> },
 
     /// Error occurred during operation
     Error(String),

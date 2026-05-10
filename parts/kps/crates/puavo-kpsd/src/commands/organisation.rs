@@ -1,4 +1,5 @@
 use cryptoki::object::ObjectClass;
+use openssl::hash::{MessageDigest, hash};
 use puavo_hsm::{
     HsmKeyManager, HsmSession, KeyLabel, key_management::KeyManagementError,
 };
@@ -6,8 +7,6 @@ use puavo_ipc::{
     DaemonResponse, DaemonResponseData, OrganisationCommand,
     OrganisationKeyListing, OrganisationKeyVersion, OrganisationPublicKey,
 };
-use rsa::pkcs1::EncodeRsaPublicKey;
-use sha2::{Digest, Sha256};
 use std::{collections::HashMap, fs, path::PathBuf};
 
 /// Errors that can occur during organisation commands
@@ -22,8 +21,8 @@ pub enum OrganisationCommandError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
-    #[error("RSA encoding error: {0}")]
-    RsaEncoding(#[from] rsa::pkcs1::Error),
+    #[error("OpenSSL error: {0}")]
+    OpenSsl(#[from] openssl::error::ErrorStack),
 
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
@@ -93,8 +92,10 @@ fn export_public_key(
     // Extract the RSA public key
     let public_key = key_manager.extract_public_key(&public_key_handle)?;
 
-    // Convert to PEM format
-    let public_key_pem = public_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::LF)?;
+    // Convert to PKCS#1 PEM format
+    let public_key_pem_bytes = public_key.rsa()?.public_key_to_pem_pkcs1()?;
+    let public_key_pem = String::from_utf8(public_key_pem_bytes)
+        .expect("PKCS#1 PEM is always valid UTF-8");
 
     let organisation_public_key = OrganisationPublicKey {
         organisation_id: organisation_id.clone(),
@@ -151,9 +152,8 @@ fn list_keys(
 
         // Compute the fingerprint of the public key
         let public_key = key_manager.extract_public_key(&public_key_handle)?;
-        let public_key_pem =
-            public_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::LF)?;
-        let fingerprint = Sha256::digest(public_key_pem)
+        let public_key_pem = public_key.rsa()?.public_key_to_pem_pkcs1()?;
+        let fingerprint = hash(MessageDigest::sha256(), &public_key_pem)?
             .iter()
             .map(|byte| format!("{:02x}", byte))
             .collect::<String>();

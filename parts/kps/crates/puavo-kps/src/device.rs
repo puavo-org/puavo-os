@@ -1,7 +1,10 @@
 use anyhow::Result;
+use openssl::{
+    pkey::{PKey, Public},
+    rsa::Rsa,
+};
 use puavo_ipc::{OrganisationPublicKey, RecoveryBundle};
 use puavo_kpsd::commands::recovery::encrypt_recovery_key_data;
-use rsa::{RsaPublicKey, pkcs1::DecodeRsaPublicKey, pkcs8::DecodePublicKey};
 use std::{fs, path::PathBuf};
 
 /// Errors that can occur during device-local operations
@@ -161,12 +164,16 @@ async fn load_organisation_public_key_json(
 /// Returns error if PEM cannot be parsed
 fn parse_rsa_public_key_from_pem(
     pem_content: &str,
-) -> Result<RsaPublicKey, DeviceRecoveryError> {
-    RsaPublicKey::from_pkcs1_pem(pem_content)
-        .or_else(|_| RsaPublicKey::from_public_key_pem(pem_content))
+) -> Result<PKey<Public>, DeviceRecoveryError> {
+    let bytes = pem_content.as_bytes();
+    let rsa = Rsa::public_key_from_pem_pkcs1(bytes)
+        .or_else(|_| Rsa::public_key_from_pem(bytes))
         .map_err(|_| {
             DeviceRecoveryError::PublicKeyNotFound(
                 "Invalid PEM format".to_string(),
             )
-        })
+        })?;
+    PKey::from_rsa(rsa).map_err(|_| {
+        DeviceRecoveryError::PublicKeyNotFound("Invalid PEM format".to_string())
+    })
 }
