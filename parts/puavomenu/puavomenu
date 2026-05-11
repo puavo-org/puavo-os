@@ -7,6 +7,8 @@ import os.path
 import argparse
 import time
 
+os.environ['GDK_BACKEND'] = 'x11'
+
 from strings import _tr
 
 program_start = time.perf_counter()
