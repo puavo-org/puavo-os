@@ -182,6 +182,11 @@
         "code": {
             "tags": "default, development, education"
         },
+        "collabora-office": {
+            "tags": "default, office, education",
+            "keywords": "libreoffice",
+            "name": "Collabora"
+        },
         "com.github.paolostivanin.OTPClient": {
             "tags": "default",
             "condition": "personally_administered"
@@ -1856,6 +1861,7 @@
                 "libreoffice-draw",
                 "libreoffice-base",
                 "libreoffice-math",
+                "collabora-office",
                 "drawio"
             ]
         },
@@ -2477,6 +2483,7 @@
                 "libreoffice-draw",
                 "libreoffice-base",
                 "libreoffice-math",
+                "collabora-office",
                 "ica",
                 "ica-word",
                 "ica-excel",
