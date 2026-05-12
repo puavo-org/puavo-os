@@ -709,6 +709,7 @@ class packages {
     , 'openprinting-ppds'
     , 'orca'
     , 'pcmciautils'
+    , 'pipewire-jack'
     , 'pipewire-libcamera'
     , 'plymouth'
     , 'plymouth-themes'
