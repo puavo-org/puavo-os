@@ -1,0 +1,4 @@
+obj-m := puavo_command_line_signer.o
+puavo_command_line_signer-y := \
+	kernel_module.o core.o der.o authenticode.o
+
