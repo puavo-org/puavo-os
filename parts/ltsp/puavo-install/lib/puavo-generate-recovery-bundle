@@ -5,7 +5,7 @@ PUAVO_CORE_LIBDIR='/usr/lib/puavo-core'
 PUAVO_INSTALL_LIBDIR='/usr/lib/puavo-ltsp-install'
 UKI_ROOT='/boot/efi/EFI/puavo'
 
-organisation_json_path='/etc/puavo/org.json'
+organisation_json_path='/state/etc/puavo/org.json'
 
 PUAVO_VENDOR_GUID='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
 RECOVERY_BUNDLE_EFI_VARIABLE_NAME='PuavoRecoveryBundle'
