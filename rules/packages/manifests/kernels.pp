@@ -6,7 +6,8 @@ class packages::kernels {
                          $package_tag='',
                          $version,
                          $with_dbg=false,
-                         $dkms_modules=[]) {
+                         $dkms_modules=[],
+                         $extra_packages=[]) {
     $kernel_alias = $title
 
     $dbg_packages = $with_dbg ? {
@@ -21,7 +22,8 @@ class packages::kernels {
 
     $packages = [ "linux-headers-${version}"
                 , $image_package
-                , $dbg_packages ]
+                , $dbg_packages
+                , $extra_packages ]
 
     # Clunky tricks to retain compatibility the Puppet version (2.7.11)
     # in Precise, newer puppet versions could use iterations.

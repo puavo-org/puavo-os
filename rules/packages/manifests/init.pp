@@ -863,13 +863,14 @@ class packages {
   @packages::kernels::kernel_package {
     'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.74+deb13+1-amd64',
-      version      => '6.12.74+deb13+1-amd64';
+      package_name => 'linux-image-6.12.86+deb13-amd64-unsigned',
+      version      => '6.12.86+deb13-amd64';
 
     'modern':
-      package_name => 'linux-image-6.19.10+deb13-amd64',
-      version      => '6.19.10+deb13-amd64';
       dkms_modules   => [ $puavo_command_line_signer_module ],  # XXX what could work with this?
+      package_name   => 'linux-binary-unsigned-6.19.14+deb13-amd64',
+      extra_packages => [ 'linux-modules-6.19.14+deb13-amd64' ],
+      version        => '6.19.14+deb13-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such
