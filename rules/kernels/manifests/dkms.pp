@@ -9,6 +9,14 @@ class kernels::dkms {
     '/etc/dkms/no-autoinstall':
       before => Package['dkms'],
       ensure => present;
+
+    # Configure DKMS to sign all built modules with
+    # the build-time module signing key.
+    # This file is removed after the image is built.
+    '/etc/dkms/framework.conf':
+      before => Package['dkms'],
+      ensure => present,
+      source => 'puppet:///modules/kernels/dkms-framework.conf';
   }
 
   define install_dkms_module_for_kernel ($kernel_packages, $kernel_version) {
@@ -20,6 +28,10 @@ class kernels::dkms {
 
       /^nvidia-current\//: {
         $dkms_module_package = 'nvidia-kernel-dkms'
+      }
+
+      /^puavo-command-line-signer\//: {
+        $dkms_module_package = 'puavo-core'
       }
 
       /^r8168\//: { $dkms_module_package = 'r8168-dkms' }
