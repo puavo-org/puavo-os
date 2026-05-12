@@ -4,9 +4,13 @@ sbindir = $(exec_prefix)/sbin
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA = $(INSTALL) -m 644
 
 SBSIGNTOOLS_DIRECTORY = $(CURDIR)/.sbsigntools
-MODULES_ROOT ?= /lib/modules
+
+DKMS_NAME = puavo-command-line-signer
+DKMS_VERSION = 1.0
+DKMS_SOURCE_DIRECTORY = $(DESTDIR)/usr/src/$(DKMS_NAME)-$(DKMS_VERSION)
 
 SUBDIRECTORIES = prepare request sign assemble
 
@@ -24,11 +28,12 @@ $(SBSIGNTOOLS_DIRECTORY)/.fetched:
 setup: $(SBSIGNTOOLS_DIRECTORY)/.fetched
 
 #
-# Build
+# Build (userspace tools only, kernel module is
+# built by DKMS after kernel packages are installed)
 #
 
 .PHONY: all
-all: userspace modules
+all: userspace
 
 .PHONY: userspace
 userspace: setup
@@ -37,24 +42,6 @@ userspace: setup
 			$(MAKE) -C $$directory userspace; \
 		else \
 			$(MAKE) -C $$directory; \
-		fi; \
-	done
-
-.PHONY: modules
-modules: setup
-    # Build kernel modules for each kernel version in MODULES_ROOT
-	for version in $$(ls $(MODULES_ROOT)); do \
-		build_directory="$(MODULES_ROOT)/$$version/build"; \
-		if [ -d "$$build_directory" ]; then \
-			echo "Building module for kernel $$version..."; \
-			$(MAKE) -C sign modules \
-				KERNEL_BUILD_DIRECTORY="$$build_directory"; \
-			mkdir -p $(CURDIR)/sign/modules/$$version; \
-			mv sign/puavo_command_line_signer.ko \
-				$(CURDIR)/sign/modules/$$version/; \
-		else \
-			echo "Skipping kernel $$version" \
-				"(no build directory)"; \
 		fi; \
 	done
 
@@ -67,7 +54,7 @@ install-directories:
 	mkdir -p $(DESTDIR)$(sbindir)
 
 .PHONY: install
-install: all install-directories
+install: all install-directories install-dkms-source
 	$(INSTALL_PROGRAM) \
 		prepare/puavo-command-line-sign-prepare \
 		$(DESTDIR)$(sbindir)/
@@ -80,16 +67,35 @@ install: all install-directories
 	$(INSTALL_PROGRAM) \
 		assemble/puavo-command-line-sign-assemble \
 		$(DESTDIR)$(sbindir)/
-	# Install kernel modules for each kernel version in MODULES_ROOT
-	for version in $$(ls $(MODULES_ROOT)); do \
-		module="sign/modules/$$version/puavo_command_line_signer.ko"; \
-		if [ -f "$$module" ]; then \
-			mkdir -p \
-				$(DESTDIR)/lib/modules/$$version/extra/; \
-			$(INSTALL) -m 644 "$$module" \
-				$(DESTDIR)/lib/modules/$$version/extra/; \
-		fi; \
-	done
+
+# Install kernel module source for DKMS.
+.PHONY: install-dkms-source
+install-dkms-source:
+	mkdir -p $(DKMS_SOURCE_DIRECTORY)
+	$(INSTALL_DATA) sign/dkms.conf \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/Kbuild \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/kernel_module.c \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/core.c \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/core.h \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/der.c \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/der.h \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/authenticode.c \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/authenticode.h \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/pe.h \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/log.h \
+		$(DKMS_SOURCE_DIRECTORY)/
+	$(INSTALL_DATA) sign/ioctl.h \
+		$(DKMS_SOURCE_DIRECTORY)/
 
 #
 # Test
@@ -135,4 +141,4 @@ clean:
 		$(MAKE) -C $$directory clean; \
 	done
 	rm -rf $(SBSIGNTOOLS_DIRECTORY)
-	rm -rf sign/modules
+
