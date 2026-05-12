@@ -1,3 +1,6 @@
+# DKMS signing configuration (build-time only)
+etc/dkms/framework.conf
+
 boot/*.uki.efi
 cdrom/*
 cow
