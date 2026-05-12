@@ -374,12 +374,10 @@ static long handle_sign(unsigned long user_argument) {
   request.signature_out = signature_buffer;
   request.signature_out_size = MAX_SIGNATURE_SIZE;
 
+  LOG_INFO("server key %zu bytes, secure boot key %zu bytes\n",
+           server_public_key_size, secure_boot_private_key_size);
   LOG_INFO(
-      "server key %zu bytes, secure boot key %zu "
-      "bytes\n",
-      server_public_key_size, secure_boot_private_key_size);
-  LOG_INFO(
-      "pe %llu bytes, params %llu bytes, auth %llu "
+      "pe %llu bytes, request parameters %llu bytes, authorization %llu "
       "bytes\n",
       request_ioctl.pe_size, request_ioctl.parameters_size,
       request_ioctl.authorization_size);

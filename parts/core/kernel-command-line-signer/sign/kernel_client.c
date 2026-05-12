@@ -131,7 +131,8 @@ int run_kernel_mode(int argument_count, char** arguments) {
   if (ioctl_result < 0) {
     LOG_ERROR("ioctl failed: %s", strerror(errno));
   } else if (request.result != SIGN_OK) {
-    LOG_ERROR("%s (code %d)", sign_error_string(request.result), request.result);
+    LOG_ERROR("%s (code %d)", sign_error_string(request.result),
+              request.result);
   } else {
     LOG_INFO("writing signature to %s", signature_output_path);
     fileio_write_file(signature_output_path, signature,
@@ -150,8 +151,7 @@ int run_kernel_mode(int argument_count, char** arguments) {
 // Use openssl to convert PEM keys before calling this:
 //   openssl rsa -RSAPublicKey_out -outform DER
 //   openssl rsa -traditional -outform DER
-int run_load_keys_mode(int argument_count,
-                       char** arguments) {
+int run_load_keys_mode(int argument_count, char** arguments) {
   if (argument_count != 4) {
     fprintf(stderr,
             "Usage: %s --load-keys"
@@ -167,59 +167,50 @@ int run_load_keys_mode(int argument_count,
   const char* secure_boot_key_path = arguments[3];
 
   // Read the raw DER key files
-  LOG_INFO("loading server public key from %s",
-           server_key_path);
+  LOG_INFO("loading server public key from %s", server_key_path);
   uint8_t* server_key = NULL;
   size_t server_key_size;
-  if (fileio_read_file(NULL, server_key_path,
-                       &server_key,
-                       &server_key_size)) {
+  if (fileio_read_file(NULL, server_key_path, &server_key, &server_key_size)) {
     LOG_ERROR("failed to read %s", server_key_path);
     return 1;
   }
 
-  LOG_INFO("loading secure boot private key from %s",
-           secure_boot_key_path);
+  LOG_INFO("loading secure boot private key from %s", secure_boot_key_path);
   uint8_t* secure_boot_key = NULL;
   size_t secure_boot_key_size;
-  if (fileio_read_file(NULL, secure_boot_key_path,
-                       &secure_boot_key,
+  if (fileio_read_file(NULL, secure_boot_key_path, &secure_boot_key,
                        &secure_boot_key_size)) {
     LOG_ERROR("failed to read %s", secure_boot_key_path);
     return 1;
   }
 
-  LOG_INFO("server key: %zu bytes, "
-           "secure boot key: %zu bytes",
-           server_key_size, secure_boot_key_size);
+  LOG_INFO(
+      "server key: %zu bytes, "
+      "secure boot key: %zu bytes",
+      server_key_size, secure_boot_key_size);
 
   // Open the kernel module device
   LOG_INFO("opening %s", DEVICE_PATH);
   int device_fd = open(DEVICE_PATH, O_RDWR);
   if (device_fd < 0) {
-    LOG_ERROR("cannot open %s: %s",
-            DEVICE_PATH, strerror(errno));
+    LOG_ERROR("cannot open %s: %s", DEVICE_PATH, strerror(errno));
     LOG_ERROR("is the kernel module loaded?");
     return 1;
   }
 
   // Send the keys to the kernel module
   struct puavo_command_line_load_keys_ioctl request = {
-      .server_public_key_data =
-          (uint64_t)(uintptr_t)server_key,
+      .server_public_key_data = (uint64_t)(uintptr_t)server_key,
       .server_public_key_size = server_key_size,
-      .secure_boot_private_key_data =
-          (uint64_t)(uintptr_t)secure_boot_key,
-      .secure_boot_private_key_size =
-          secure_boot_key_size,
+      .secure_boot_private_key_data = (uint64_t)(uintptr_t)secure_boot_key,
+      .secure_boot_private_key_size = secure_boot_key_size,
       .result = 0,
       .padding = {0},
   };
 
   LOG_INFO("sending keys via ioctl");
-  int ioctl_result = ioctl(
-      device_fd, PUAVO_COMMANDLINE_SIGN_IOC_LOAD_KEYS,
-      &request);
+  int ioctl_result =
+      ioctl(device_fd, PUAVO_COMMANDLINE_SIGN_IOC_LOAD_KEYS, &request);
   close(device_fd);
 
   if (ioctl_result < 0) {
@@ -228,8 +219,7 @@ int run_load_keys_mode(int argument_count,
   }
 
   if (request.result != 0) {
-    LOG_ERROR("load keys failed (code %d)",
-            request.result);
+    LOG_ERROR("load keys failed (code %d)", request.result);
     return 1;
   }
 

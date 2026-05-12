@@ -74,12 +74,12 @@ int authenticode_extract_pe_digest_from_idc(
   }
   if (digest_octet_string.tag != DER_TAG_OCTET_STRING) {
     LOG_ERROR("idc: expected octet string, got tag 0x%02x",
-            digest_octet_string.tag);
+              digest_octet_string.tag);
     return -1;
   }
   if (digest_octet_string.value_length != SHA256_DIGEST_SIZE) {
     LOG_ERROR("idc: digest length %zu, expected %d",
-            digest_octet_string.value_length, SHA256_DIGEST_SIZE);
+              digest_octet_string.value_length, SHA256_DIGEST_SIZE);
     return -1;
   }
 
@@ -155,7 +155,7 @@ int authenticode_extract_message_digest_from_attributes(
   }
   if (digest_octet_string.value_length != SHA256_DIGEST_SIZE) {
     LOG_ERROR("attributes: digest length %zu, expected %d",
-            digest_octet_string.value_length, SHA256_DIGEST_SIZE);
+              digest_octet_string.value_length, SHA256_DIGEST_SIZE);
     return -1;
   }
 

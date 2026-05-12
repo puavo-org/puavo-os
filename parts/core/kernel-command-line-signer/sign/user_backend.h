@@ -15,13 +15,11 @@ extern const struct sign_crypto_backend user_backend;
 // SubjectPublicKeyInfo. Used by the --user mode where
 // OpenSSL verifies the signature. The caller must free
 // the result.
-uint8_t* pem_public_key_to_der(const char* path,
-                               size_t* der_size_out);
+uint8_t* pem_public_key_to_der(const char* path, size_t* der_size_out);
 
 // Reads a PEM private key and returns it as DER-encoded
 // private key. Used by the --user mode where OpenSSL
 // signs directly. The caller must free the result.
-uint8_t* pem_private_key_to_der(const char* path,
-                                size_t* der_size_out);
+uint8_t* pem_private_key_to_der(const char* path, size_t* der_size_out);
 
 #endif
