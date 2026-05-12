@@ -843,16 +843,19 @@ class packages {
       tag => [ 'tag_whiteboard', 'tag_debian_desktop', ];
   }
 
-  $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-  $nvidia_dkms_535_module   = 'nvidia-current/550.163.01'
-  $r8168_module             = 'r8168/8.051.02'
-  $virtualbox_module        = 'virtualbox/7.2.6'
+  $broadcom_sta_dkms_module          = 'broadcom-sta/6.30.223.271'
+  $nvidia_dkms_535_module            = 'nvidia-current/550.163.01'
+  $puavo_command_line_signer_module  = 'puavo-command-line-signer/1.0'
+  $r8168_module                      = 'r8168/8.051.02'
+  $virtualbox_module                 = 'virtualbox/7.2.6'
 
   $all_dkms_modules =
     $::puavoimage_class ? {
-      'exam'  => [ $broadcom_sta_dkms_module ],
+      'exam'  => [ $broadcom_sta_dkms_module
+                 , $puavo_command_line_signer_module ],
       default => [ $broadcom_sta_dkms_module
                  , $nvidia_dkms_535_module
+                 , $puavo_command_line_signer_module
                  , $virtualbox_module ]
                  # , $r8168_module              # XXX Trixie
   }
@@ -864,9 +867,9 @@ class packages {
       version      => '6.12.74+deb13+1-amd64';
 
     'modern':
-      dkms_modules => [],  # XXX what could work with this?
       package_name => 'linux-image-6.19.10+deb13-amd64',
       version      => '6.19.10+deb13-amd64';
+      dkms_modules   => [ $puavo_command_line_signer_module ],  # XXX what could work with this?
   }
 
   # various contrib/non-free stuff, firmwares and such
