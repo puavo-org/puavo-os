@@ -1,0 +1,24 @@
+##
+## Puavo Module Signing
+##
+## Force all kernel modules to be signature-verified
+## before loading. The DKMS signing key is provided during
+## the kernel build and its public half is embedded in
+## the kernel image. Out-of-tree modules (DKMS, custom)
+## must be signed with the that key after compilation.
+##
+CONFIG_MODULE_SIG=y
+CONFIG_MODULE_SIG_FORCE=y
+CONFIG_MODULE_SIG_ALL=y
+CONFIG_MODULE_SIG_SHA256=y
+CONFIG_SYSTEM_TRUSTED_KEYS="/puavo-os/.module-signing-key.pem"
+
+##
+## Disable Machine Owner Key (MOK) keyring
+##
+## Prevents shim MOK keys from being trusted for module
+## signature verification. Without this, anyone with
+## physical access could enroll a MOK and load arbitrary
+## kernel modules, bypassing lockdown.
+##
+CONFIG_INTEGRITY_MACHINE_KEYRING=n

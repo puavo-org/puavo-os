@@ -1,0 +1,12 @@
+--- a/debian/bin/buildcheck.py
++++ b/debian/bin/buildcheck.py
+@@ -24,8 +24,7 @@
+                 kconfig.read(fh)
+ 
+             for name, value in [('EFI_STUB', True),
+-                                ('LOCK_DOWN_IN_EFI_SECURE_BOOT', True),
+-                                ('SYSTEM_TRUSTED_KEYS', '""')]:
++                                ('LOCK_DOWN_IN_EFI_SECURE_BOOT', True)]:
+                 if name not in kconfig:
+                     out.write(f'Secure Boot: CONFIG_{name} is not defined\n')
+                     fail = 1
