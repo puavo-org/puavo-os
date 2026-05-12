@@ -96,6 +96,7 @@ accepted-usernames-for-userlist='${accepted_usernames_for_userlist}'
 allowed-failures=1
 disable-user-list=${disable_user_list}
 enable-guestuser=${enable_guestuser}
+enable-smartcard-authentication=false
 fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
 logo='$(puavo-conf puavo.greeter.logo)'
 
