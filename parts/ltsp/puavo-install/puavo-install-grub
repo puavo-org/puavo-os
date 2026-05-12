@@ -585,13 +585,11 @@ function load_video {
   fi
 }
 
-if loadfont unicode ; then
-  set gfxmode=auto
-  load_video
-  insmod gfxterm
-  set locale_dir=$prefix/locale
-  insmod gettext
-fi
+set gfxmode=auto
+load_video
+insmod gfxterm
+set locale_dir=$prefix/locale
+insmod gettext
 terminal_output gfxterm
 
 if keystatus --shift; then

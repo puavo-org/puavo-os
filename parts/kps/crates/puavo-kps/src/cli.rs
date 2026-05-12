@@ -83,6 +83,10 @@ pub enum DeviceCommands {
         /// Path to file containing recovery key
         #[arg(long, value_parser = parse_existing_path)]
         recovery_key_file: PathBuf,
+
+        /// Path to organisation public key JSON file
+        #[arg(long, value_parser = parse_existing_path)]
+        public_key_file: PathBuf,
     },
 }
 

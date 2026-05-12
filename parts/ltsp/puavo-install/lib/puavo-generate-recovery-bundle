@@ -1,0 +1,99 @@
+#!/bin/sh
+set -eu
+
+PUAVO_CORE_LIBDIR='/usr/lib/puavo-core'
+PUAVO_INSTALL_LIBDIR='/usr/lib/puavo-ltsp-install'
+UKI_ROOT='/boot/efi/EFI/puavo'
+
+organisation_json_path='/etc/puavo/org.json'
+
+PUAVO_VENDOR_GUID='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
+RECOVERY_BUNDLE_EFI_VARIABLE_NAME='PuavoRecoveryBundle'
+
+vault_mount_path=''
+temporary_directory=''
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+cleanup() {
+  if [ -n "$vault_mount_path" ]; then
+    RUST_LOG=info puavo-boot-trust-manager close \
+      "$vault_mount_path" || true
+    vault_mount_path=''
+  fi
+  if [ -n "$temporary_directory" ]; then
+    rm -rf "$temporary_directory"
+    temporary_directory=''
+  fi
+}
+
+# Skip non-encrypted installations
+is_encrypted=$(
+  "$PUAVO_INSTALL_LIBDIR"/is-encrypted-install /images)
+if [ "$is_encrypted" != "true" ]; then
+  exit 0
+fi
+
+# Load the organisation recovery public key from organisation data
+[ -e "$organisation_json_path" ] \
+  || panic "${organisation_json_path} not found"
+
+organisation_public_key_json=$(
+  jq -r '.device_recovery_public_key // empty' \
+    "$organisation_json_path")
+
+[ -n "$organisation_public_key_json" ] \
+  || panic "organisation recovery public key not found in ${organisation_json_path}"
+
+organisation_id=$(
+  printf %s "$organisation_public_key_json" \
+    | jq -r '.organisation_id // empty')
+
+[ -n "$organisation_id" ] \
+  || panic 'organisation_id not found in recovery public key'
+
+# Find the install target disk
+install_target_disk=$(
+  "$PUAVO_CORE_LIBDIR"/puavo-get-boot-disks /images)
+
+[ "$(printf %s "$install_target_disk" | wc --words)" -eq 1 ] \
+  || panic 'expected exactly one boot disk'
+
+# Open the boot vault to access the recovery key
+vault_mount_path=$(RUST_LOG=info puavo-boot-trust-manager open \
+                    --device "$install_target_disk")
+
+[ -n "$vault_mount_path" ] \
+  || panic 'failed to open boot vault'
+
+# Ensure the vault is closed on exit
+trap cleanup EXIT
+
+# Write the public key to a temporary file for puavo-kps
+temporary_directory=$(mktemp -d)
+public_key_file="${temporary_directory}/organisation-public-key.json"
+printf %s "$organisation_public_key_json" > "$public_key_file"
+
+# Generate the recovery bundle
+recovery_bundle_path="${UKI_ROOT}/recovery.json"
+recovery_key_path="${vault_mount_path}/recovery.key"
+
+puavo-kps device generate \
+  --organisation-id="$organisation_id" \
+  --recovery-key-file="$recovery_key_path" \
+  --public-key-file="$public_key_file" \
+  --output="$recovery_bundle_path"
+
+# Store the recovery bundle in an EFI variable for access
+# at boot time without mounting the EFI partition
+efivar \
+  --name "${PUAVO_VENDOR_GUID}-${RECOVERY_BUNDLE_EFI_VARIABLE_NAME}" \
+  --write \
+  --attributes 7 \
+  --datafile "$recovery_bundle_path"
+
+cleanup
+trap - EXIT

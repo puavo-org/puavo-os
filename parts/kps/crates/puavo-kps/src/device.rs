@@ -33,6 +33,7 @@ pub enum DeviceRecoveryError {
 /// * `serial_number` - Optional device serial number (uses system serial if None)
 /// * `output` - Output file path
 /// * `recovery_key_file` - Path to recovery key file
+/// * `public_key_file` - Path to organisation public key JSON file
 ///
 /// Returns:
 /// Generated recovery bundle
@@ -44,6 +45,7 @@ pub async fn generate_recovery_bundle_local(
     serial_number: Option<String>,
     output: PathBuf,
     recovery_key_file: PathBuf,
+    public_key_file: PathBuf,
 ) -> Result<RecoveryBundle, DeviceRecoveryError> {
     tracing::info!(
         "Starting recovery bundle generation for organisation: {}",
@@ -56,16 +58,13 @@ pub async fn generate_recovery_bundle_local(
 
     tracing::info!("Using device serial number: {}", serial_number);
 
-    // Determine public key path
-    let public_key_path = PathBuf::from(format!(
-        "/etc/puavo-kps/organisations/{}.public-key.json",
-        organisation_id
-    ));
-
     // Load and parse organisation public key from JSON file
-    tracing::info!("Loading public key from: {}", public_key_path.display());
+    tracing::info!(
+        "Loading public key from: {}",
+        public_key_file.display()
+    );
     let public_key_data =
-        load_organisation_public_key_json(&public_key_path).await?;
+        load_organisation_public_key_json(&public_key_file).await?;
     let public_key =
         parse_rsa_public_key_from_pem(&public_key_data.public_key_pem)?;
 

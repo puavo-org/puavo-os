@@ -1,6 +1,8 @@
 use crate::configurators::enrollment::EnrollmentConfigurator;
 use crate::configurators::pin::PinConfigurator;
-use crate::configurators::secure_boot_database::{SecureBootDatabaseConfigurator, SystemSecureBootShell};
+use crate::configurators::secure_boot_database::{
+    SecureBootDatabaseConfigurator, SystemSecureBootShell,
+};
 use crate::devices::boot_vault::BootVault;
 use crate::display::UserDisplay;
 use crate::error::PuavoError;
@@ -27,7 +29,9 @@ pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
 
     let configurators = configurators(PinConfigurator::new()?)
         .chain(configurators(EnrollmentConfigurator::new()?))
-        .chain(configurators(SecureBootDatabaseConfigurator::new(SystemSecureBootShell {})?));
+        .chain(configurators(SecureBootDatabaseConfigurator::new(
+            SystemSecureBootShell {},
+        )?));
 
     Ok(configurators.collect())
 }

@@ -39,6 +39,7 @@ modules="
   gfxterm
   gzio
   jpeg
+  keystatus
   loadenv
   loopback
   linux
@@ -75,6 +76,7 @@ modules_directory="/usr/lib/grub/${architecture}/"
 grub-mkstandalone \
   --directory "${modules_directory}" \
   --format "${architecture}" \
+  --fonts="unicode" \
   --sbat="$sbat_file" \
   --modules="$modules" \
   --output="$output"

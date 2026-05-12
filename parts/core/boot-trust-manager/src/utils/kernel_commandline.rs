@@ -28,10 +28,7 @@ pub fn parse_parameter(
     let value = values.next();
 
     if values.next().is_some() {
-        Err(format!(
-            "Multiple values specified for '{}'",
-            key
-        ))
+        Err(format!("Multiple values specified for '{}'", key))
     } else {
         Ok(value.map(|string| string.to_string()))
     }
@@ -70,10 +67,7 @@ mod tests {
     #[test]
     fn test_parse_parameter_not_found() {
         let commandline = "root=/dev/sda1 quiet splash";
-        assert_eq!(
-            parse_parameter(commandline, "puavo.hosttype"),
-            Ok(None)
-        );
+        assert_eq!(parse_parameter(commandline, "puavo.hosttype"), Ok(None));
     }
 
     #[test]

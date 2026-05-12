@@ -7,6 +7,8 @@ chosen_preseed=""
 GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C='Puavo_Installed_Windows_C'
 GPT_PARTTYPE_WINDOWS_RE='de94bba4-06d1-4d40-a16a-bfd50179d6ac'
 
+PUAVO_INSTALL_LIBDIR='/usr/lib/puavo-ltsp-install'
+
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
   while true; do
@@ -419,6 +421,14 @@ start_vpn() {
   return 1
 }
 
+generate_recovery_bundle() {
+  echo "generating recovery bundle..."
+
+  "$PUAVO_INSTALL_LIBDIR"/puavo-generate-recovery-bundle
+
+  echo "recovery bundle generated"
+}
+
 install_localbootdevice() {
   puavo_hosttype=$1
   puavo_install_hosttype=$2
@@ -478,6 +488,8 @@ install_localbootdevice() {
 
   install_image "$puavo_install_hosttype"
   update_images || update_configuration_retstatus=1
+
+  generate_recovery_bundle
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
     bootserver_setup_state
