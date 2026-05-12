@@ -52,6 +52,12 @@ fi
   echo "Installing build dependencies for ${srcpkgname}"
   cd "$pkgworkdir"
 
+  if [ -f "${srcpkgname}/puavo/info.json" ]; then
+    debpkgname=$(jq -r .name "${srcpkgname}/puavo/info.json")
+  else
+    debpkgname="${srcpkgname}"
+  fi
+
   mk_build_deps_options=()
   if [ -f "${srcpkgname}/puavo/build_profiles" ]; then
     build_profiles=$(cat "${srcpkgname}/puavo/build_profiles")
@@ -59,8 +65,8 @@ fi
   fi
   mk-build-deps "${mk_build_deps_options[@]}" "${srcpkgname}/debian/control"
   ${PUAVOOS_SUDO:-} apt-get install --no-install-recommends --yes \
-    "./${srcpkgname}-build-deps_"*.deb
-  rm -f "./${srcpkgname}-build-deps_"*.deb
+    --allow-downgrades "./${debpkgname}-build-deps_"*.deb
+  rm -f "./${debpkgname}-build-deps_"*.deb
 )
 
 echo "Building ${srcpkgname}"
@@ -79,7 +85,11 @@ echo "Building ${srcpkgname}"
     exit 1
   fi
 
-  if ! echo "$current_deb_version" | grep -q '\+buildonce$'; then
+  # Some packages (e.g. kernel) have strict version
+  # validation and cannot accept custom suffixes.
+  if [ -e puavo/no-version-mangle ]; then
+    : # Use version as-is from changelog
+  elif ! echo "$current_deb_version" | grep -q '\+buildonce$'; then
     new_deb_version="${current_deb_version}+build$(date +%s)"
     env DEBFULLNAME="Puavo Org" DEBEMAIL="dev@opinsys.fi" \
       dch --newversion "$new_deb_version" \
