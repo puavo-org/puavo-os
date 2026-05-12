@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# Shared kernel build modification script. Called from
+# each per-kernel modify-debian wrapper. Expects to run
+# in the kernel source directory where puavo/ contains
+# per-kernel files and the common directory provides
+# shared configs and tools.
+
+set -eu
+
+common="$(dirname "$(readlink -e "$0")")"
+
+panic() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+# Simplify featuresets (single "none" featureset)
+"${common}/tools/modify-defines.py"
+debian/rules debian/control-real || true
+
+# Apply surface configuration if present
+if [ -f puavo/surface-config ]; then
+  cat puavo/surface-config >> debian/config/amd64/config
+fi
+
+# Merge common security config
+cat "${common}/module-signing-config" \
+  >> debian/config/amd64/config
+
+# Generate a build-time module signing key. This key is
+# added to the kernel's trusted keyring via
+# CONFIG_SYSTEM_TRUSTED_KEYS (in module-signing-config)
+# and used by DKMS and out-of-tree module builds.
+"${common}/generate-module-signing-key" \
+  /puavo-os/.module-signing-key.pem \
+  || panic "failed to generate module signing key"
+
+# Allow CONFIG_SYSTEM_TRUSTED_KEYS to have a non-empty
+# value. The Debian buildcheck.py rejects it by default.
+patch -p1 < puavo/allow-trusted-keys.patch \
+  || panic "failed to apply allow-trusted-keys.patch"
+
+# Validate and organize the merged config
+"${common}/tools/kernel-team/utils/kconfigeditor2/process.py" .
+
+dch -a 'Add Puavo patches.'
+dch -a 'Enable forced module signature verification.'
+

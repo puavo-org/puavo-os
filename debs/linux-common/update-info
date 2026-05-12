@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+# Generates a puavo/info.json for a given Debian kernel
+# source package version. Downloads the tarballs to
+# compute SHA-256 checksums.
+#
+# Usage: update-info <source-package-version>
+# Example: update-info 6.12.74-1
+
+set -eu
+
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <full_source_package_version>" >&2
+  echo "Example: $0 6.12.74-1" >&2
+  exit 1
+fi
+
+debian_version="$1"
+debian_url="https://deb.debian.org/debian/pool/main/l/linux/linux_${debian_version}.debian.tar.xz"
+echo "Debian tarball URL: ${debian_url}" >&2
+
+debian_hash=$(curl -sSL "${debian_url}" \
+  | sha256sum | awk '{print $1}')
+if [ -z "${debian_hash}" ]; then
+  echo "error: failed to compute hash for" \
+    "${debian_url}" >&2
+  exit 1
+fi
+
+original_version=$(echo "${debian_version}" | cut -d'-' -f1)
+original_url="https://deb.debian.org/debian/pool/main/l/linux/linux_${original_version}.orig.tar.xz"
+echo "Original tarball URL: ${original_url}" >&2
+
+original_hash=$(curl -sSL "${original_url}" \
+  | sha256sum | awk '{print $1}')
+if [ -z "${original_hash}" ]; then
+  echo "error: failed to compute hash for" \
+    "${original_url}" >&2
+  exit 1
+fi
+
+jq -n \
+  --arg name "linux" \
+  --arg version "${debian_version}" \
+  --arg original_hash "${original_hash}" \
+  --arg debian_hash "${debian_hash}" \
+  --arg original_url "${original_url}" \
+  --arg debian_url "${debian_url}" \
+  --indent 4 \
+  '{
+    "name": $name,
+    "version": $version,
+    "tarballs": {
+      "debian": {
+        "sha256sum": $debian_hash,
+        "url": $debian_url
+      },
+      "orig": {
+        "sha256sum": $original_hash,
+        "url": $original_url
+      }
+    }
+  }'

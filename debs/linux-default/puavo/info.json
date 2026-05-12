@@ -1,0 +1,15 @@
+{
+    "name": "linux",
+    "version": "6.12.86-1",
+    "tarballs": {
+        "debian": {
+            "sha256sum": "81d68f571ad15a2d4697a6552f2d8ac16b0b6942e453138a8ec58cc927d3673e",
+            "url": "http://deb.debian.org/debian/pool/main/l/linux/linux_6.12.86-1.debian.tar.xz"
+        },
+        "orig": {
+            "sha256sum": "74ae12a1a62311e096d05a0b006c8447d9007809b0b7604a643293914871982b",
+	    "url": "http://deb.debian.org/debian/pool/main/l/linux/linux_6.12.86.orig.tar.xz"
+        }
+    }
+}
+

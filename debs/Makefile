@@ -18,13 +18,13 @@ else
   #                gtk+3.0                \
   #                gtk4                   \
   #                kde-spectacle          \
-  #                linux                  \
   #                mutter                 \
   #                veyon
   # XXX Trixie
   _pkgs_cloud := puavo-ds puavo-os krb5 openldap
   _pkgs_parts := puavo-ds puavo-os
-  _pkgs_ports := facter gnome-shell hooktftp libpam-ccreds wsmancli
+  _pkgs_ports := facter gnome-shell hooktftp libpam-ccreds \
+                 linux-default linux-modern wsmancli
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   _pkgs_ports_builddeps := sblim-sfcc openwsman

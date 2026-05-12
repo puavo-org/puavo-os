@@ -1,0 +1,3 @@
+#!/bin/sh
+set -eu
+exec /puavo-os/debs/linux-common/modify-debian "$@"

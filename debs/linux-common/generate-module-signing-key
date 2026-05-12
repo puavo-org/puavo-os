@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# Generate an ephemeral module signing key for the
+# kernel build. The key is added to the kernel's trusted
+# keyring via CONFIG_SYSTEM_TRUSTED_KEYS and used by
+# DKMS to sign out-of-tree modules.
+
+set -eu
+
+panic() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <output-file>" >&2
+  exit 1
+fi
+
+output_file="$1"
+
+if [ -f "${output_file}" ]; then
+  echo "module signing key already exists, reusing"
+  exit 0
+fi
+
+genkey_config="$(dirname "$0")/x509.genkey"
+[ -f "${genkey_config}" ] \
+  || panic "OpenSSL config not found at ${genkey_config}"
+
+openssl req -new -nodes -utf8 -sha256 -days 36500 \
+  -batch -x509 -config "${genkey_config}" \
+  -outform PEM -keyout "${output_file}" \
+  -out "${output_file}"
+
+echo "module signing key generated at ${output_file}"
+
