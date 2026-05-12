@@ -38,7 +38,7 @@ class Tarball(pydantic.main.BaseModel):
     sha256sum: pydantic.types.StrictStr
     url: pydantic.networks.HttpUrl
 
-    @pydantic.validator("sha256sum")
+    @pydantic.field_validator("sha256sum")
     @classmethod
     def _validate_sha256sum(cls, value):
         if not re.match(r"[a-f0-9]{64}$", value):
@@ -60,14 +60,14 @@ class PuavoInfo(pydantic.main.BaseModel):
     version: pydantic.types.StrictStr
     tarballs: Tarballs
 
-    @pydantic.validator("name")
+    @pydantic.field_validator("name")
     @classmethod
     def _validate_name(cls, value):
         if not re.match(r"^[0-9a-z]([-.+0-9a-z])*$", value):
             raise ValueError("invalid name", value)
         return value
 
-    @pydantic.validator("version")
+    @pydantic.field_validator("version")
     @classmethod
     def _validate_version(cls, value):
         return str(debian.debian_support.Version(value))
@@ -82,7 +82,7 @@ def _read_chunks(fileobj, chunk_size=4096):
 
 
 def _get_source_url(puavo_info, tarball_type) -> pydantic.networks.HttpUrl:
-    return puavo_info.tarballs.dict()[tarball_type]["url"]
+    return puavo_info.tarballs.model_dump()[tarball_type]["url"]
 
 
 def _parse_filename_part(url: pydantic.networks.HttpUrl) -> str:
@@ -111,7 +111,7 @@ def _download(puavo_info, tarball_type) -> str:
         f"{puavo_info.name}_{upstream_version}.{tarball_type}.tar{dest_filename_ext}"
     )
     dest_filepath = os.path.join("..", dest_filename)
-    sha256sum = puavo_info.tarballs.dict()[tarball_type]["sha256sum"]
+    sha256sum = puavo_info.tarballs.model_dump()[tarball_type]["sha256sum"]
 
     if os.path.exists(dest_filepath):
         sha256 = hashlib.sha256()
@@ -148,7 +148,7 @@ def _download(puavo_info, tarball_type) -> str:
 
 def _read_puavo_info() -> PuavoInfo:
     with open(os.path.join("puavo", "info.json"), "rb") as puavo_info_json_file:
-        puavo_info = PuavoInfo.parse_obj(json.load(puavo_info_json_file))
+        puavo_info = PuavoInfo.model_validate(json.load(puavo_info_json_file))
 
     # Just an extra sanity check. I bet some part of the build chain
     # makes this assumption.
