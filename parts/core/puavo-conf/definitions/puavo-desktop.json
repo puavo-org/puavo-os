@@ -15,12 +15,12 @@
     "typehint": "string"
   },
   "puavo.desktop.keyboard.layout": {
-    "default": "fi,ru,ru,gb",
+    "default": "en",
     "description": "A comma-separated list of keyboard layouts to support on desktop",
     "typehint": "string"
   },
   "puavo.desktop.keyboard.variant": {
-    "default": ",,phonetic,dvorak",
+    "default": "",
     "description": "A comma-separated list of keyboard layouts variants to support on desktop, to be used matching with puavo.desktop.keyboard.layout setting",
     "typehint": "string"
   }
