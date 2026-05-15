@@ -1,0 +1,172 @@
+#!/bin/sh
+
+set -eu
+
+panic() {
+  echo "$@" >&2
+  exit 1
+}
+
+find_matching_mountinfo() {
+  local best_mountpoint best_line_post fstype mountpoint line_post line_pre \
+        path
+
+  path=$1
+
+  best_line_post=''
+  best_mountpoint=''
+
+  while IFS= read -r line; do
+    line_pre=${line%% - *}
+    line_post=${line#* - }
+    # we presume mountpoints do not contain spaces
+    set -- $line_pre
+    mountpoint=$5
+    set -- $line_post
+    fstype=$1
+
+    if path_is_under_mount "$path" "$mountpoint"; then
+      if [ "${#mountpoint}" -gt "${#best_mountpoint}" ]; then
+        best_line_post="$line_post"
+        best_mountpoint="$mountpoint"
+      fi
+    fi
+  done < /proc/self/mountinfo
+
+  if [ -z "$best_line_post" ]; then
+    panic "could not find mountinfo entry for path: ${path}"
+  fi
+
+  printf "%s\n" "$best_line_post"
+}
+
+lookup_fsid() {
+  local device device_real fsid uuid_link uuid_real
+
+  device=$1
+
+  device_real=''
+  fsid=''
+
+  if [ -e "$device" ]; then
+    device_real=$(realpath "$device" 2>/dev/null) || true
+  fi
+
+  if [ -z "$device_real" ]; then
+    panic 'could not find the btrfs disk device'
+  fi
+
+  for uuid_link in /dev/disk/by-uuid/*; do
+    test -e "$uuid_link" || continue
+    uuid_real=$(realpath "$uuid_link" 2>/dev/null) || true
+    if [ "$device_real" = "$uuid_real" ]; then
+      fsid=$(basename "$uuid_link")
+      break
+    fi
+  done
+
+  if [ -z "$fsid" ]; then
+    panic 'could not determine btrfs filesystem id'
+  fi
+
+  printf "%s\n" "$fsid"
+}
+
+lookup_subvolid() {
+  local oldifs superopts
+  superopts=$1
+
+  oldifs="$IFS"
+  IFS=,
+  set -- $superopts
+  IFS="$oldifs"
+
+  for opt do
+    case "$opt" in
+      subvolid=*)
+        printf "%s" "${opt#subvolid=}"
+        return 0
+        ;;
+    esac
+  done
+
+  return 1
+}
+
+path_is_under_mount() {
+  local mountpoint path
+
+  path=$1
+  mountpoint=$2
+
+  if [ "$mountpoint" = "/" ]; then
+    return 0
+  fi
+
+  case "$path" in
+    "$mountpoint")   return 0 ;;
+    "$mountpoint"/*) return 0 ;;
+  esac
+
+  return 1
+}
+
+path=${1:-}
+
+if [ -z "$path" ]; then
+  panic "Usage: $(basename $0) path"
+fi
+
+if [ ! -e "$path" ]; then
+  panic "path does not exist: ${path}"
+fi
+
+path=$(realpath "$path") || panic 'cannot resolve path'
+
+set -- $(stat -f -c '%S %a' "$path") || die "could not stat filesystem: ${path}"
+fs_avail=$(($1 * $2))
+
+mountinfo=$(find_matching_mountinfo "$path")
+
+set -- $mountinfo
+fstype=$1
+device=$2
+superopts=$3
+
+if [ "$fstype" != 'btrfs' ]; then
+  printf "%s\n" "$fs_avail"
+  exit 0
+fi
+
+if ! fsid=$(lookup_fsid "$device"); then
+  panic 'no btrfs filesystem id found'
+fi
+
+if ! subvolid=$(lookup_subvolid "$superopts"); then
+  panic 'no subvolid found'
+fi
+
+qbase="/sys/fs/btrfs/${fsid}/qgroups/0_${subvolid}"
+
+if [ ! -d "$qbase" ]; then
+  panic 'quote information not available under /sys'
+fi
+
+limit_file="${qbase}/max_referenced"
+used_file="${qbase}/referenced"
+
+space_used=$( cat "$used_file"  2>/dev/null) || true
+space_limit=$(cat "$limit_file" 2>/dev/null) || true
+
+if [ -z "$space_used" ] || [ -z "$space_limit" ]; then
+  panic 'could not read quota information from /sys'
+fi
+
+space_remaining=$((space_limit - space_used))
+[ "$space_remaining" -lt 0 ] && space_remaining=0
+
+if [ "$fs_avail" -lt "$space_remaining" ]; then
+  space_remaining="$fs_avail"
+fi
+
+printf "%s\n" "$space_remaining"
