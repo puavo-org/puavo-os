@@ -68,11 +68,14 @@ do_installation() {
 
   # if we have less than 2GB (2^31 bytes = 2147483648 bytes) available,
   # refuse to install
-  available_diskspace=$(stat -f -c '%S * %a' "$HOME" | bc -l) || true
-  if [ -z "$available_diskspace" \
-    -o "$available_diskspace" -lt 2147483648 ]; then
-      zenity --error --text 'not enough available diskspace for installation'
-      return 1
+  if ! available_diskspace=$(
+         /usr/lib/puavo-ltsp-client/puavo-check-available-space "$HOME"); then
+    zenity --error --text 'could not determine available diskspace'
+    return 1
+  fi
+  if [ "$available_diskspace" -lt 2147483648 ]; then
+    zenity --error --text 'not enough available diskspace for installation'
+    return 1
   fi
 
   # if a copy exists of an old version, make a base copy for the new version

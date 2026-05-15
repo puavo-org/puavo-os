@@ -351,13 +351,11 @@ class SysInfo
     begin
       return nil unless system('mountpoint', '-q', fs_path)
 
-      blocksize, status = Open3.capture2('stat', '-f', '-c', '%S', fs_path)
-      raise 'error running stat for blocksize' unless status.success?
-      free_blocks, status = Open3.capture2('stat', '-f', '-c', '%a', fs_path)
-      raise 'error running stat for free blocks' unless status.success?
-
-      return (blocksize.to_i * free_blocks.to_i)
-
+      cmd = [ '/usr/lib/puavo-ltsp-client/puavo-check-available-space',
+              fs_path ]
+      output, status = Open3.capture2(*cmd)
+      raise 'puavo-check-available-space returned error' unless status.success?
+      return Integer(output)
     rescue StandardError => e
       warn "could not lookup free space for #{ fs_path }: #{ e.message }"
     end

@@ -259,8 +259,12 @@ ensure_enough_available_diskspace() {
   # or some such raise actual space requirements
   extra_space=262144
   required_diskspace=$(($abitti2_size + $extra_space - $tmpimage_size))
-  available_diskspace=$(stat -f -c '%S * %a' "$g_abitti2_dir" \
-                          | bc -l | xargs printf %.0f)
+  if ! available_diskspace=$(
+    /usr/lib/puavo-ltsp-client/puavo-check-available-space "$g_abitti2_dir")
+  then
+    error 'could not determine available diskspace'
+    return 1
+  fi
   if [ "$available_diskspace" -lt "$required_diskspace" ]; then
     msg="only ${available_diskspace} bytes available on ${g_abitti2_dir},"
     msg="${msg} need ${required_diskspace} bytes"

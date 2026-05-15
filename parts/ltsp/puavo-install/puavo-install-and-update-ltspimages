@@ -331,7 +331,11 @@ ensure_enough_available_diskspace() {
   required_diskspace=$(
     echo "${target_sizes_summed} - ${target_sizes_on_fs}" | bc -l)
 
-  diskspace=$(stat -f -c '%S * %a' "$images_dir" | bc -l | xargs printf %.0f)
+  if ! diskspace=$(/usr/lib/puavo-ltsp-client/puavo-check-available-space \
+                     "$images_dir"); then
+    log err 'could not determine available diskspace'
+    return 1
+  fi
 
   msg="checking if there is enough available diskspace:"
   msg="$msg diskspace:${diskspace} >= required_diskspace:$required_diskspace"

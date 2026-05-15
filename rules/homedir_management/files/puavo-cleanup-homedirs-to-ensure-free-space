@@ -33,7 +33,7 @@ if [ -n "${PAM_USER:-}" ]; then
 fi
 
 get_freespace_amount() {
-  stat -f -c '%S * %a' /home | bc -l
+  /usr/lib/puavo-ltsp-client/puavo-check-available-space /home
 }
 
 lookup_oldest_file() {
@@ -43,7 +43,10 @@ lookup_oldest_file() {
 }
 
 while true; do
-  freespace_amount=$(get_freespace_amount)
+  if ! freespace_amount=$(get_freespace_amount); then
+    logmsg -p user.err 'could not lookup free available diskspace'
+    break
+  fi
   logmsg -p user.info \
          "/home has ${freespace_amount} bytes of free space, expecting ${freespace_min} bytes"
   if [ "$(get_freespace_amount)" -ge "$freespace_min" ]; then

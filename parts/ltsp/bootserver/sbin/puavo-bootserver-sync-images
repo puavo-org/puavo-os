@@ -6,6 +6,7 @@ require 'fileutils'
 require 'highline/import'
 require 'json'
 require 'net/http'
+require 'open3'
 require 'puavo/etc'
 require 'puavo/rest-client'
 require 'syslog'
@@ -1121,7 +1122,11 @@ module SeriesControl
   end
 
   def self.lookup_free_diskspace
-    return Sys::Filesystem.stat($config[:download_path]).bytes_available
+    cmd = [ '/usr/lib/puavo-ltsp-client/puavo-check-available-space',
+            $config[:download_path] ]
+    output, status = Open3.capture2(*cmd)
+    raise 'error in looking up free diskspace' unless status.success?
+    Integer(output)
   end
 
   def self.parse_series_data(series_data)
