@@ -1,7 +1,6 @@
 #!/usr/bin/ruby
 
 require 'digest'
-require 'filesystem'
 require 'fileutils'
 require 'highline/import'
 require 'json'
