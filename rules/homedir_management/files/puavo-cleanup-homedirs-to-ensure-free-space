@@ -33,7 +33,7 @@ if [ -n "${PAM_USER:-}" ]; then
 fi
 
 get_freespace_amount() {
-  /usr/lib/puavo-ltsp-client/puavo-check-available-space /home
+  /usr/lib/puavo-ltsp-client/puavo-check-available-space --sync /home
 }
 
 lookup_oldest_file() {

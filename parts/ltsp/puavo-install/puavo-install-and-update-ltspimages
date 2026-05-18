@@ -332,7 +332,7 @@ ensure_enough_available_diskspace() {
     echo "${target_sizes_summed} - ${target_sizes_on_fs}" | bc -l)
 
   if ! diskspace=$(/usr/lib/puavo-ltsp-client/puavo-check-available-space \
-                     "$images_dir"); then
+                     --sync "$images_dir"); then
     log err 'could not determine available diskspace'
     return 1
   fi

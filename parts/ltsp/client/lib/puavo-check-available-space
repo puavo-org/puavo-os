@@ -111,6 +111,12 @@ path_is_under_mount() {
   return 1
 }
 
+do_sync=false
+if [ "${1:-}" = '--sync' ]; then
+  do_sync=true
+  shift
+fi
+
 path=${1:-}
 
 if [ -z "$path" ]; then
@@ -122,6 +128,10 @@ if [ ! -e "$path" ]; then
 fi
 
 path=$(realpath "$path") || panic 'cannot resolve path'
+
+if $do_sync; then
+  sync || panic 'error running sync'
+fi
 
 set -- $(stat -f -c '%S %a' "$path") || die "could not stat filesystem: ${path}"
 fs_avail=$(($1 * $2))
@@ -136,6 +146,12 @@ superopts=$3
 if [ "$fstype" != 'btrfs' ]; then
   printf "%s\n" "$fs_avail"
   exit 0
+fi
+
+if $do_sync && [ "$(id -u)" -eq 0 ]; then
+  if ! btrfs quota rescan -w /.puavo >/dev/null 2>&1; then
+    panic 'error running quota rescan'
+  fi
 fi
 
 if ! fsid=$(lookup_fsid "$device"); then

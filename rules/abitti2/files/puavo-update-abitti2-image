@@ -260,7 +260,7 @@ ensure_enough_available_diskspace() {
   extra_space=262144
   required_diskspace=$(($abitti2_size + $extra_space - $tmpimage_size))
   if ! available_diskspace=$(
-    /usr/lib/puavo-ltsp-client/puavo-check-available-space "$g_abitti2_dir")
+    /usr/lib/puavo-ltsp-client/puavo-check-available-space --sync "$g_abitti2_dir")
   then
     error 'could not determine available diskspace'
     return 1

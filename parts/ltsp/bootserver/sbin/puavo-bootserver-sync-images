@@ -1122,7 +1122,7 @@ module SeriesControl
 
   def self.lookup_free_diskspace
     cmd = [ '/usr/lib/puavo-ltsp-client/puavo-check-available-space',
-            $config[:download_path] ]
+            '--sync', $config[:download_path] ]
     output, status = Open3.capture2(*cmd)
     raise 'error in looking up free diskspace' unless status.success?
     Integer(output)
