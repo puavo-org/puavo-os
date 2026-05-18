@@ -519,9 +519,9 @@ case "$abitti2_mode" in
     ;;
 esac
 
-if [ "$(puavo-conf puavo.service.puavo-abitti-torrent-updated.enabled)" \
+if [ "$(puavo-conf puavo.service.puavo-abitti2-torrent-updated.enabled)" \
      != 'true' ]; then
-  g_errmsg='puavo-abitti-torrent-updated is not enabled (in puavo-conf)'
+  g_errmsg='puavo-abitti2-torrent-updated is not enabled (in puavo-conf)'
   g_errmsg="${g_errmsg}, can not update Abitti 2"
   error "$g_errmsg"
   exit 1

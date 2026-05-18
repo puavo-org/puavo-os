@@ -83,7 +83,7 @@ def manage_local_puavoconf(conf)
 
   enableconfmap = {
     'puavo.laptop-setup.enable_setting.abitti_version' \
-      => 'puavo.abitti.version',
+      => 'puavo.abitti2.version',
     'puavo.laptop-setup.enable_setting.boot_default' \
       => 'puavo.grub.boot_default',
     'puavo.laptop-setup.enable_setting.windows_enabled' \
