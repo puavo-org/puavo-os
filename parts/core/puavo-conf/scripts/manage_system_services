@@ -209,6 +209,13 @@ set services {
         -> /lib/systemd/system/nvidia-persistenced.service
     }}
 
+  { puavo-abitti2-torrent-updated {
+      /etc/systemd/system/multi-user.target.wants/puavo-abitti2-torrent-updated.service
+        -> /etc/systemd/system/puavo-abitti2-torrent-updated.service
+      /etc/systemd/system/sockets.target.wants/puavo-abitti2-torrent-updated.socket
+        -> /etc/systemd/system/puavo-abitti2-torrent-updated.socket
+    }}
+
   { puavo-autopoweroff {
       /etc/systemd/system/multi-user.target.wants/puavo-autopoweroff.service
         -> /lib/systemd/system/puavo-autopoweroff.service
