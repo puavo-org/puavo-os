@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import syslog
 
 IMAGES_DIRECTORY = '/images'
 ADDONS_DIRECTORY = f"{IMAGES_DIRECTORY}/boot/addons"
@@ -17,11 +18,11 @@ PUAVO_INSTALL_LIBDIR = '/usr/lib/puavo-ltsp-install'
 
 
 def log_info(message: str):
-  print(message)
+  syslog.syslog(syslog.LOG_INFO, message)
 
 
 def log_error(message: str):
-  print(f"error: {message}", file=sys.stderr)
+  syslog.syslog(syslog.LOG_ERR, message)
 
 
 def run_command(*args, check: bool = True, capture: bool = True):
@@ -137,10 +138,15 @@ def main(new_kernel_commandline: str) -> int:
     return 1
 
 
+syslog.openlog('puavo-install-uki-commandline-addon',
+               logoption=syslog.LOG_PERROR)
+
 if len(sys.argv) != 2:
   sys.exit(1)
 
 new_kernel_commandline = sys.argv[1]
 
 if __name__ == '__main__':
-  sys.exit(main(new_kernel_commandline))
+  exitcode = main(new_kernel_commandline)
+  syslog.closelog()
+  sys.exit(exitcode)
