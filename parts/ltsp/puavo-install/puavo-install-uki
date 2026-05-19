@@ -1,10 +1,15 @@
 #!/bin/bash
+
 set -eu
 
 UKI_ROOT='/boot/efi/EFI/puavo'
 
+logmsg() {
+  logger -s -t puavo-install-uki "$@"
+}
+
 panic() {
-  echo "error: $1" >&2
+  logmsg -p user.err "$1"
   exit 1
 }
 
@@ -29,8 +34,10 @@ cleanup_temporary_files() {
   test -z "$tmpdir" || rm -rf "$tmpdir"
 }
 
-cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
-trap 'cleanup_temporary_files' INT TERM EXIT
+if ! cleanup_temporary_files; then
+  logmsg -p user.warning 'failed to remove temporary files'
+fi
+trap cleanup_temporary_files INT TERM EXIT
 
 tmpdir=$(mktemp -d /tmp/puavo-install-uki.XXXXXX) \
   || panic 'could not create a temporary directory'
@@ -43,7 +50,7 @@ determine_selected_kernel_version() {
   local kernel_image
   kernel_image=$(readlink -f "${kernel_image_symbolic_link}")
 
-  echo "${kernel_image#"${kernel_image_symbolic_link}-"}"
+  printf %s "${kernel_image#"${kernel_image_symbolic_link}-"}"
 }
 
 install_boot_entry_config() {
@@ -87,24 +94,24 @@ patch_uki() {
   tmp_ukibase_path="${tmpdir}/ukibase-${kernel_version}"
   tmp_uki_path="${tmpdir}/kernel-${kernel_version}.uki.efi"
   if ! cat "$vmlinuz_path" "$initrd_img_path" > "$tmp_ukibase_path"; then
-    echo 'error: could not create a base UKI to patch from' >&2
+    logmsg -p user.err 'could not create a base UKI to patch from'
     return 1
   fi
 
   if ! bspatch "$tmp_ukibase_path" "$tmp_uki_path" "$uki_patch"; then
-    echo "error: bspatch failed to patch with '${uki_patch}'" >&2
+    logmsg -p user.err "bspatch failed to patch with '${uki_patch}'"
     return 1
   fi
 
   if ! (cd "$tmpdir" \
           && sha256sum -c --status "$uki_checksum_file" 2>/dev/null); then
-    echo "error: checksum check of patched UKI '${uki}' failed" >&2
+    logmsg -p user.err "checksum check of patched UKI '${uki}' failed"
     return 1
   fi
 
   if ! cp "$tmp_uki_path" "$tmp_uki_destination" || \
      ! mv "$tmp_uki_destination" "$uki_destination"; then
-    echo "error: failed to copy/move UKI '${uki}' to EFI partition" >&2
+    logmsg -p user.err "failed to copy/move UKI '${uki}' to EFI partition"
     return 1
   fi
 
@@ -122,15 +129,15 @@ install_ukis() {
   local class image_name release
 
   if ! class=$(cat "$class_file") || [ -z "$class" ]; then
-    echo "error: image class missing in image mountpoint" >&2
+    logmsg -p user.err 'image class missing in image mountpoint'
     return 1
   fi
   if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
-    echo "error: image name missing in image mountpoint" >&2
+    logmsg -p user.err 'image name missing in image mountpoint'
     return 1
   fi
   if ! release=$(cat "$release_file") || [ -z "$release" ]; then
-    echo "error: release missing in image mountpoint" >&2
+    logmsg -p user.err 'release missing in image mountpoint'
     return 1
   fi
   local image_name_no_suffix=${image_name%.img}
@@ -172,26 +179,27 @@ install_ukis() {
       rm -f "$uki_destination" || true
 
       if ! patch_uki "$uki_patch" "$uki_checksum_file" "$uki_destination"; then
-        echo "error: failed to patch UKI '${uki}' to EFI partition" >&2
+        logmsg -p user.err "failed to patch UKI '${uki}' to EFI partition"
         status=1
         continue
       fi
     else
-      echo "UKI '$uki_destination' is already installed, skipping copy"
+      logmsg -p user.info \
+             "UKI '$uki_destination' is already installed, skipping copy"
     fi
 
     local extra_directory="${uki_destination}.extra.d"
 
     puavo-update-uki-commandline "$extra_directory" \
       "$image_mountpoint" "$images_dir" "$hosttype" || {
-      echo "error: failed to update UKI command-line for '$uki'" >&2
+      logmsg -p user.err "failed to update UKI command-line for '$uki'"
       status=1
       continue
     }
 
     install_boot_entry_config "$extra_directory" "$class" \
       "$image_name" "$release" "$enabled" || {
-      echo "error: failed to install boot entry config for UKI '$uki'" >&2
+      logmsg -p user.err "failed to install boot entry config for UKI '$uki'"
       status=1
       continue
     }
@@ -206,7 +214,7 @@ install_ukis() {
   if [ "$is_new_installation" = true ]; then
     if ! mv "$uki_temporary_installation_directory" \
             "$uki_final_installation_directory"; then
-      echo "error: failed to rename temporary installation directory" >&2
+      logmsg -p user.err 'failed to rename temporary installation directory'
       return 1
     fi
   fi
@@ -219,6 +227,6 @@ enabled_uki_patch=$(find "$boot_directory" -type f -name "*${kernel_version}.uki
 [ -n "$enabled_uki_patch" ] || panic "failed to find UKI with kernel version ${kernel_version}"
 
 install_ukis "$UKI_ROOT" "$enabled_uki_patch" || {
-  echo "error: failed to install UKI files to EFI partition" >&2
+  logmsg -p user.err 'failed to install UKI files to EFI partition'
   exit 1
 }
