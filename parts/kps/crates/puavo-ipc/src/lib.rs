@@ -262,6 +262,9 @@ pub enum DaemonResponseData {
     /// List of organisation keys
     OrganisationKeyListings(Vec<OrganisationKeyListing>),
 
+    /// Newly created organisation key version produced by rotation
+    OrganisationKeyVersion { organisation_id: String, version: u32 },
+
     /// Exported organisation public key
     OrganisationPublicKey(OrganisationPublicKey),
 

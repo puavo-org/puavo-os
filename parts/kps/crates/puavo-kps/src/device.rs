@@ -59,10 +59,7 @@ pub async fn generate_recovery_bundle_local(
     tracing::info!("Using device serial number: {}", serial_number);
 
     // Load and parse organisation public key from JSON file
-    tracing::info!(
-        "Loading public key from: {}",
-        public_key_file.display()
-    );
+    tracing::info!("Loading public key from: {}", public_key_file.display());
     let public_key_data =
         load_organisation_public_key_json(&public_key_file).await?;
     let public_key =

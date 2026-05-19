@@ -34,6 +34,10 @@ fn format_as_text(response_data: &DaemonResponseData) -> Result<String> {
         DaemonResponseData::OrganisationKeyListings(listings) => {
             format_organisation_key_listings_text(listings)
         }
+        DaemonResponseData::OrganisationKeyVersion {
+            organisation_id,
+            version,
+        } => format_organisation_key_version_text(organisation_id, *version),
         DaemonResponseData::OrganisationPublicKey(key) => {
             format_organisation_public_key_text(key)
         }
@@ -45,6 +49,14 @@ fn format_as_text(response_data: &DaemonResponseData) -> Result<String> {
         }
     };
     Ok(output)
+}
+
+/// Format the new organisation key version produced by a rotation
+fn format_organisation_key_version_text(
+    organisation_id: &str,
+    version: u32,
+) -> String {
+    format!("Organisation: {}\nKey Version: {}", organisation_id, version)
 }
 
 /// Format organisation key listings as text
@@ -139,6 +151,13 @@ fn format_as_json(response_data: &DaemonResponseData) -> Result<String> {
         DaemonResponseData::OrganisationKeyListings(listings) => {
             serde_json::to_string_pretty(listings)?
         }
+        DaemonResponseData::OrganisationKeyVersion {
+            organisation_id,
+            version,
+        } => serde_json::to_string_pretty(&serde_json::json!({
+            "organisation_id": organisation_id,
+            "version": version,
+        }))?,
         DaemonResponseData::OrganisationPublicKey(key) => {
             serde_json::to_string_pretty(key)?
         }
