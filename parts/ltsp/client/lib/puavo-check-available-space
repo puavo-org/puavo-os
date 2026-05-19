@@ -133,7 +133,8 @@ if $do_sync; then
   sync || panic 'error running sync'
 fi
 
-set -- $(stat -f -c '%S %a' "$path") || die "could not stat filesystem: ${path}"
+set -- $(stat -f -c '%S %a' "$path") \
+  || panic "could not stat filesystem: ${path}"
 fs_avail=$(($1 * $2))
 
 mountinfo=$(find_matching_mountinfo "$path")
