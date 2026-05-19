@@ -5,8 +5,12 @@ set -eu
 UKI_ROOT='/boot/efi/EFI/puavo'
 UKI_LOCK='/run/puavo-uki-image.lock'
 
+logmsg() {
+  logger -s -t puavo-cleanup-uki-installations "$@"
+}
+
 panic() {
-  echo "error: $1" >&2
+  logmsg -p user.err "$1"
   exit 1
 }
 
@@ -46,7 +50,7 @@ mount_disk_efi_partition() {
 
   efi_devpath=$(find_efi_device_path "$diskdev")
   if [ -z "$efi_devpath" ]; then
-    echo "error: failed to find EFI partition in ${diskdev}" >&2
+    logmsg -p user.err "error: failed to find EFI partition in ${diskdev}"
     return 1
   fi
 
@@ -74,9 +78,9 @@ cleanup_orphaned_uki_directories() {
       continue
     fi
 
-    echo "removing orphaned UKI directory '${uki_directory}'"
+    logmsg -p user.info "removing orphaned UKI directory '${uki_directory}'"
     if ! rm --one-file-system -rf "$uki_directory"; then
-      echo "error: failed to remove '${uki_directory}'" >&2
+      logmsg -p user.err "error: failed to remove '${uki_directory}'"
       status=1
     fi
   done
@@ -91,7 +95,7 @@ status=0
 
 for diskdev in $boot_disks; do
   mount_disk_efi_partition "$diskdev" || {
-    echo "error: failed to mount EFI partition on ${diskdev}" >&2
+    logmsg -p user.err "error: failed to mount EFI partition on ${diskdev}"
     status=1
     continue
   }
