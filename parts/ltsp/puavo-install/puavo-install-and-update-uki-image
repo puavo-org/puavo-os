@@ -5,8 +5,12 @@ set -eu
 UKI_ROOT='/boot/efi/EFI/puavo'
 INSTALL_OPERATION_LOCK='/run/puavo-install.lock'
 
+logmsg() {
+  logger -s -t puavo-install-and-update-uki-image "$@"
+}
+
 panic() {
-  echo "error: $1" >&2
+  logmsg -p user.err "$1"
   exit 1
 }
 
@@ -20,11 +24,11 @@ image_path="$1"
 hosttype="$2"
 images_dir="$3"
 
-[ -f "$image_path" ] || panic "image '$image_path' does not exist"
-[ -d "$images_dir" ] || panic "images directory '$images_dir' does not exist"
+[ -f "$image_path" ] || panic "image '${image_path}' does not exist"
+[ -d "$images_dir" ] || panic "images directory '${images_dir}' does not exist"
 
 exec {lock_fd}<> "$INSTALL_OPERATION_LOCK"
-flock -nx "$lock_fd" || panic "another installation operation is already running"
+flock -nx "$lock_fd" || panic 'another installation operation is already running'
 
 cleanup_temporary_files() {
   find "$UKI_ROOT" -xdev -type d -name '*.tmp' -exec rm -rf {} + 2>/dev/null || true
@@ -34,7 +38,9 @@ cleanup_temporary_files() {
 image_mountpoint=$(mktemp -d)
 cleanup() {
   if [ -d "$UKI_ROOT" ]; then
-    cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
+    if ! cleanup_temporary_files; then
+      logmsg -p user.warning 'failed to remove temporary files'
+    fi
   fi
 
   umount /boot/efi 2>/dev/null || true
@@ -48,7 +54,7 @@ mount -o ro "$image_path" "$image_mountpoint" 1>/dev/null
 image_name_file="${image_mountpoint}/etc/puavo-image/name"
 
 if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
-  panic "failed to extract image name from '$image_name_file'"
+  panic "failed to extract image name from '${image_name_file}'"
 fi
 
 image_basename=$(basename "$image_path")
@@ -71,7 +77,7 @@ mount_disk_efi_partition() {
 
   efi_devpath=$(find_efi_device_path "$diskdev")
   if [ -z "$efi_devpath" ]; then
-    echo "error: failed to find EFI partition in ${diskdev}" >&2
+    logmsg -p user.err "failed to find EFI partition in ${diskdev}"
     return 1
   fi
 
@@ -117,7 +123,7 @@ estimate_required_disk_space() {
   safety_margin=$((32 * 1024 * 1024)) # 32 MB
   required_disk_space=$((required_disk_space + safety_margin))
 
-  echo "$required_disk_space"
+  printf %s "$required_disk_space"
 }
 
 has_enough_disk_space() {
@@ -130,12 +136,12 @@ has_enough_disk_space() {
 
 install_uki_to_efi() {
   if [ ! -d "$UKI_ROOT" ]; then
-    echo "error: boot device does not have a valid EFI partition" >&2
+    logmsg -p user.err 'boot device does not have a valid EFI partition'
     return 1
   fi
 
   puavo-install-uki "$image_mountpoint" "$images_dir" "$hosttype" || {
-    echo "error: failed to install UKI to EFI partition" >&2
+    logmsg -p user.err 'failed to install UKI to EFI partition'
     return 1
   }
 }
@@ -145,24 +151,28 @@ mount_efi_and_install_uki() {
   local status=0
   mount_disk_efi_partition "$diskdev" || return 1
   install_uki_to_efi "$diskdev" || status=1
-  cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
+  if ! cleanup_temporary_files; then
+    logmsg -p user.warning 'failed to remove temporary files'
+  fi
   umount /boot/efi || true
   return $status
 }
 
 # Identify boot disks and install UKI files to their EFI partitions
 boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
-[ -n "$boot_disks" ] || panic "failed to find boot disks"
+[ -n "$boot_disks" ] || panic 'failed to find boot disks'
 
 # Before installing, verify the boot partitions have enough space
 for diskdev in $boot_disks; do
-  mount_disk_efi_partition "$diskdev" || panic "failed to mount EFI partition on $diskdev"
-  cleanup_temporary_files || echo "warning: failed to remove temporary files" >&2
+  mount_disk_efi_partition "$diskdev" || panic "failed to mount EFI partition on ${diskdev}"
+  if ! cleanup_temporary_files; then
+    logmsg -p user.warning 'failed to remove temporary files'
+  fi
 
   required_space=$(estimate_required_disk_space "$image_path")
 
-  [ -n "$required_space" ] || panic "failed to estimate required disk space"
-  has_enough_disk_space "$diskdev" "$required_space" || panic "disk $diskdev does not have enough space"
+  [ -n "$required_space" ] || panic 'failed to estimate required disk space'
+  has_enough_disk_space "$diskdev" "$required_space" || panic "disk ${diskdev} does not have enough space"
 
   umount /boot/efi || true
 done
@@ -170,7 +180,7 @@ done
 status=0
 
 for diskdev in $boot_disks; do
-  echo "installing UKI files to boot device $diskdev"
+  logmsg -p user.notice "installing UKI files to boot device ${diskdev}"
   mount_efi_and_install_uki "$diskdev" || status=1
 done
 
