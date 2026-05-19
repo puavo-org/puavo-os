@@ -28,9 +28,10 @@ fi
 
 for image_path in "$images_dir"/*.img; do
   [ -f "$image_path" ] || continue
-  # Skip "ltsp" images as they are hardlinks to other images
+  # skip "ltsp.img" and "ltsp-backup.img" images as they are hardlinks
+  # to other images
   case "$(basename "$image_path")" in
-    ltsp*) continue ;;
+    ltsp.img|ltsp-backup.img) continue ;;
   esac
   puavo-install-and-update-uki-image "$image_path" "$hosttype" "$images_dir"
 done
