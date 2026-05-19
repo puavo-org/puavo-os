@@ -16,7 +16,12 @@ use puavo_ipc::{
     DaemonResponse, DaemonResponseData, EncryptionAlgorithm,
     RECOVERY_KEY_DATA_VERSION, RecoveryBundle, RecoveryKeyData,
 };
-use std::{fs, path::PathBuf};
+use rxing::{BarcodeFormat, DecodeHints};
+use std::{
+    collections::HashSet,
+    fs,
+    path::{Path, PathBuf},
+};
 
 /// Default encryption algorithm used when generating new recovery bundles.
 /// NOTE(recovery-bundle-rsa-oaep):
@@ -51,6 +56,20 @@ pub enum RecoveryKeyError {
         "Number of serial numbers does not match number of recovery key files"
     )]
     ParameterMismatch,
+
+    #[error("Recovery bundle '{path}' is not a valid image: {source}")]
+    ImageLoad { path: String, source: image::ImageError },
+
+    #[error("Failed to decode QR code in recovery bundle '{path}': {source}")]
+    QrDecode { path: String, source: rxing::Exceptions },
+
+    #[error("No QR code found in recovery bundle '{path}'")]
+    QrNotFound { path: String },
+
+    #[error(
+        "Multiple QR codes found in recovery bundle '{path}', refusing to guess which one to use"
+    )]
+    QrAmbiguous { path: String },
 }
 
 impl From<RecoveryKeyError> for DaemonResponse {
@@ -303,7 +322,19 @@ fn unwrap_recovery_key(
     Ok(recovery_key_data)
 }
 
-/// Read and parse recovery bundle from file
+/// Return true if the path's extension marks it as a QR image bundle.
+fn is_image_bundle_path(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .map(|extension| {
+            extension.eq_ignore_ascii_case("png")
+                || extension.eq_ignore_ascii_case("jpg")
+                || extension.eq_ignore_ascii_case("jpeg")
+        })
+        .unwrap_or(false)
+}
+
+/// Read and parse a recovery bundle from a file.
 ///
 /// Parameters:
 /// * `path` - Path to recovery bundle file
@@ -316,9 +347,75 @@ fn unwrap_recovery_key(
 fn read_recovery_bundle(
     path: &PathBuf,
 ) -> Result<RecoveryBundle, RecoveryKeyError> {
+    if is_image_bundle_path(path) {
+        read_recovery_bundle_from_image(path)
+    } else {
+        read_recovery_bundle_from_json(path)
+    }
+}
+
+/// Read and parse a recovery bundle from a JSON file.
+fn read_recovery_bundle_from_json(
+    path: &PathBuf,
+) -> Result<RecoveryBundle, RecoveryKeyError> {
     let serialized_recovery_bundle = std::fs::read_to_string(path)?;
     let recovery_bundle: RecoveryBundle =
         serde_json::from_str(&serialized_recovery_bundle)?;
+    Ok(recovery_bundle)
+}
+
+/// Decode a recovery bundle from a image that carries the
+/// bundle data inside a single QR code.
+///
+/// The image must contain exactly one decodable QR code. Zero or more
+/// than one QR codes cause the unwrap of this bundle to fail.
+fn read_recovery_bundle_from_image(
+    path: &PathBuf,
+) -> Result<RecoveryBundle, RecoveryKeyError> {
+    let path_display = path.display().to_string();
+
+    let dynamic_image = image::open(path).map_err(|source| {
+        RecoveryKeyError::ImageLoad { path: path_display.clone(), source }
+    })?;
+
+    let mut hints = DecodeHints {
+        PossibleFormats: Some(HashSet::from([BarcodeFormat::QR_CODE])),
+        ..DecodeHints::default()
+    };
+
+    let decode_outcome = rxing::helpers::detect_multiple_in_image_with_hints(
+        dynamic_image,
+        &mut hints,
+    );
+
+    let qr_results: Vec<_> = match decode_outcome {
+        Ok(results) => results
+            .into_iter()
+            .filter(|result| {
+                result.getBarcodeFormat() == &BarcodeFormat::QR_CODE
+            })
+            .collect(),
+        Err(rxing::Exceptions::NotFoundException(_)) => {
+            return Err(RecoveryKeyError::QrNotFound { path: path_display });
+        }
+        Err(source) => {
+            return Err(RecoveryKeyError::QrDecode {
+                path: path_display,
+                source,
+            });
+        }
+    };
+
+    if qr_results.is_empty() {
+        return Err(RecoveryKeyError::QrNotFound { path: path_display });
+    }
+    // Do not guess between two or more QR codes
+    if qr_results.len() > 1 {
+        return Err(RecoveryKeyError::QrAmbiguous { path: path_display });
+    }
+
+    let decoded_text = qr_results[0].getText();
+    let recovery_bundle = serde_json::from_str(decoded_text)?;
     Ok(recovery_bundle)
 }
 
@@ -403,7 +500,9 @@ pub fn execute_unwrap(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use image::{ImageBuffer, Luma, imageops};
     use puavo_hsm::TestHsmSession;
+    use qrcode::QrCode;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -461,6 +560,109 @@ mod tests {
             .write_all(serialized_recovery_bundle.as_bytes())
             .expect("Failed to write recovery bundle");
         temporary_file
+    }
+
+    /// Build a QR code image that encodes the given text.
+    fn render_qr_image(payload: &str) -> image::ImageBuffer<Luma<u8>, Vec<u8>> {
+        let code = QrCode::new(payload.as_bytes())
+            .expect("Failed to build QR code for test fixture");
+        code.render::<Luma<u8>>().build()
+    }
+
+    /// Create a temporary PNG file containing a QR code with the given
+    /// payload text.
+    fn create_temporary_qr_png(payload: &str) -> NamedTempFile {
+        let qr_image = render_qr_image(payload);
+        let temporary_file = tempfile::Builder::new()
+            .suffix(".png")
+            .tempfile()
+            .expect("Failed to create temporary PNG file");
+        qr_image
+            .save(temporary_file.path())
+            .expect("Failed to write QR PNG fixture");
+        temporary_file
+    }
+
+    /// Create a temporary PNG file that contains a QR code encoding the
+    /// JSON form of the recovery bundle.
+    fn create_temporary_recovery_bundle_qr_png(
+        recovery_bundle: &RecoveryBundle,
+    ) -> NamedTempFile {
+        let serialized_recovery_bundle = serde_json::to_string(recovery_bundle)
+            .expect("Failed to serialize recovery bundle for QR fixture");
+        create_temporary_qr_png(&serialized_recovery_bundle)
+    }
+
+    /// Create a temporary PNG file with a blank white image.
+    fn create_temporary_blank_png() -> NamedTempFile {
+        let blank_image: ImageBuffer<Luma<u8>, Vec<u8>> =
+            ImageBuffer::from_pixel(256, 256, Luma([255]));
+        let temporary_file = tempfile::Builder::new()
+            .suffix(".png")
+            .tempfile()
+            .expect("Failed to create temporary PNG file");
+        blank_image
+            .save(temporary_file.path())
+            .expect("Failed to write blank PNG fixture");
+        temporary_file
+    }
+
+    /// Create a temporary PNG file with two QR codes placed side by
+    /// side on a white background.
+    fn create_temporary_two_qr_png(
+        payload_left: &str,
+        payload_right: &str,
+    ) -> NamedTempFile {
+        let qr_image_left = render_qr_image(payload_left);
+        let qr_image_right = render_qr_image(payload_right);
+
+        // Add a gap between the two codes to separate the grids.
+        let gap_width: u32 = 50;
+        let combined_width =
+            qr_image_left.width() + gap_width + qr_image_right.width();
+        let combined_height =
+            qr_image_left.height().max(qr_image_right.height());
+
+        let mut combined_image: ImageBuffer<Luma<u8>, Vec<u8>> =
+            ImageBuffer::from_pixel(
+                combined_width,
+                combined_height,
+                Luma([255]),
+            );
+
+        // Put the QR code pixels in the image
+        imageops::replace(&mut combined_image, &qr_image_left, 0, 0);
+
+        let qr_image_right_x = (qr_image_left.width() + gap_width) as i64;
+        imageops::replace(
+            &mut combined_image,
+            &qr_image_right,
+            qr_image_right_x,
+            0,
+        );
+
+        let temporary_file = tempfile::Builder::new()
+            .suffix(".png")
+            .tempfile()
+            .expect("Failed to create temporary PNG file");
+        combined_image
+            .save(temporary_file.path())
+            .expect("Failed to write multi QR PNG fixture");
+        temporary_file
+    }
+
+    /// Build a recovery bundle to use as a test fixture.
+    fn build_recovery_bundle_fixture(
+        serial_number: &str,
+        organisation_id: &str,
+    ) -> RecoveryBundle {
+        RecoveryBundle {
+            serial_number: serial_number.to_string(),
+            organisation_id: organisation_id.to_string(),
+            organisation_key_version: 1,
+            encrypted_key_data: "0123456789abcdef".to_string(),
+            encryption_algorithm: EncryptionAlgorithm::RsaOaepSha1,
+        }
     }
 
     #[tokio::test]
@@ -797,5 +999,86 @@ mod tests {
         assert_eq!(decrypted_data.organisation_id, organisation_id);
         assert_eq!(decrypted_data.recovery_key, recovery_key);
         assert_eq!(decrypted_data.version, RECOVERY_KEY_DATA_VERSION);
+    }
+
+    #[test]
+    fn test_read_recovery_bundle_from_png_with_single_qr() {
+        let bundle = build_recovery_bundle_fixture(
+            "test-serial-qr-single",
+            "test-organisation-qr-single",
+        );
+        let png_file = create_temporary_recovery_bundle_qr_png(&bundle);
+
+        let decoded_bundle =
+            read_recovery_bundle(&png_file.path().to_path_buf())
+                .expect("Single QR PNG should decode into a recovery bundle");
+
+        assert_eq!(decoded_bundle.serial_number, bundle.serial_number);
+        assert_eq!(decoded_bundle.organisation_id, bundle.organisation_id);
+        assert_eq!(
+            decoded_bundle.organisation_key_version,
+            bundle.organisation_key_version
+        );
+        assert_eq!(
+            decoded_bundle.encrypted_key_data,
+            bundle.encrypted_key_data
+        );
+    }
+
+    #[test]
+    fn test_read_recovery_bundle_from_png_rejects_missing_qr() {
+        let png_file = create_temporary_blank_png();
+        let result = read_recovery_bundle(&png_file.path().to_path_buf());
+        match result {
+            Err(RecoveryKeyError::QrNotFound { path }) => {
+                let expected_path = png_file.path().display().to_string();
+                assert_eq!(path, expected_path);
+            }
+            other => {
+                panic!("Expected QrNotFound for blank PNG, got: {:?}", other)
+            }
+        }
+    }
+
+    #[test]
+    fn test_read_recovery_bundle_from_png_rejects_multiple_qr() {
+        let bundle_left = build_recovery_bundle_fixture(
+            "test-serial-qr-left",
+            "test-organisation-qr-multiple",
+        );
+        let bundle_right = build_recovery_bundle_fixture(
+            "test-serial-qr-right",
+            "test-organisation-qr-multiple",
+        );
+        let payload_left = serde_json::to_string(&bundle_left).unwrap();
+        let payload_right = serde_json::to_string(&bundle_right).unwrap();
+
+        let png_file =
+            create_temporary_two_qr_png(&payload_left, &payload_right);
+
+        let result = read_recovery_bundle(&png_file.path().to_path_buf());
+        match result {
+            Err(RecoveryKeyError::QrAmbiguous { path }) => {
+                let expected_path = png_file.path().display().to_string();
+                assert_eq!(path, expected_path);
+            }
+            other => panic!(
+                "Expected QrAmbiguous for multi QR PNG, got: {:?}",
+                other
+            ),
+        }
+    }
+
+    #[test]
+    fn test_read_recovery_bundle_from_png_rejects_non_bundle_payload() {
+        let png_file = create_temporary_qr_png("This is not recovery JSON");
+        let result = read_recovery_bundle(&png_file.path().to_path_buf());
+        match result {
+            Err(RecoveryKeyError::Serialization(_)) => {}
+            other => panic!(
+                "Expected Serialization error for non bundle QR payload, got: {:?}",
+                other
+            ),
+        }
     }
 }
