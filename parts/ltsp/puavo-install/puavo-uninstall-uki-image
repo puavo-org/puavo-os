@@ -5,8 +5,12 @@ set -eu
 UKI_ROOT='/boot/efi/EFI/puavo'
 INSTALL_OPERATION_LOCK='/run/puavo-install.lock'
 
+logmsg() {
+  logger -s -t puavo-uninstall-uki-image "$@"
+}
+
 panic() {
-  echo "error: $1" >&2
+  logmsg -p user.err "$1"
   exit 1
 }
 
@@ -30,7 +34,7 @@ cleanup() {
   umount /boot/efi 2>/dev/null || true
   umount "$image_mountpoint" 2>/dev/null || true
 }
-trap 'cleanup' INT TERM EXIT
+trap cleanup INT TERM EXIT
 
 # Mount the image read-only
 mount -o ro "$image_path" "$image_mountpoint"
@@ -56,7 +60,7 @@ mount_disk_efi_partition() {
 
   efi_devpath=$(find_efi_device_path "$diskdev")
   if [ -z "$efi_devpath" ]; then
-    echo "error: failed to find EFI partition in ${diskdev}" >&2
+    logmsg -p user.err "failed to find EFI partition in ${diskdev}"
     return 1
   fi
 
@@ -71,7 +75,7 @@ boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
 status=0
 
 for diskdev in $boot_disks; do
-  echo "removing old UKI files from boot device ${diskdev}"
+  logmsg -p user.info "removing old UKI files from boot device ${diskdev}"
 
   mount_disk_efi_partition "$diskdev" || {
     status=1
@@ -80,7 +84,7 @@ for diskdev in $boot_disks; do
 
   uki_kernels_dir="${UKI_ROOT}/${image_name_no_suffix}"
   if ! rm --one-file-system -rf "$uki_kernels_dir"; then
-    echo "error: failed to remove UKI directory '${uki_kernels_dir}'" >&2
+    logmsg -p user.err "failed to remove UKI directory '${uki_kernels_dir}'"
     status=1
   fi
 
