@@ -264,11 +264,8 @@ cleanup_previous_runs() {
   fi
 
   if [ "${UKI_MODE:-}" = "1" ]; then
-    systemd-inhibit --what=shutdown:sleep \
-                    --who=puavo-install-and-update-ltspimages \
-                    --why='Updating system' \
-                    --mode=block \
-      puavo-cleanup-uki-installations --images-dir "$images_dir" || true
+    with_systemd_inhibit puavo-cleanup-uki-installations \
+      --images-dir "$images_dir" || true
   fi
 
   if $use_torrents_for_rdiff_updates; then
@@ -766,6 +763,14 @@ EOF
   read answer
 }
 
+with_systemd_inhibit() {
+  systemd-inhibit --what=shutdown:sleep \
+                  --who=puavo-install-and-update-ltspimages \
+                  --why='Updating system' \
+                  --mode=block \
+    "$@"
+}
+
 install_uki_files() {
   imagename="$1"
   imagepath="${images_dir}/${imagename}"
@@ -784,12 +789,12 @@ install_uki_files() {
     fi
   fi
 
+  with_systemd_inhibit puavo-cleanup-uki-installations \
+    --images-dir "$images_dir" || true
+
   log info "installing UKI files from $imagepath"
-  systemd-inhibit --what=shutdown:sleep \
-                  --who=puavo-install-and-update-ltspimages \
-                  --why='Updating system' \
-                  --mode=block \
-    puavo-install-and-update-uki-image "$imagepath" "$install_hosttype" "$images_dir"
+  with_systemd_inhibit puavo-install-and-update-uki-image \
+    "$imagepath" "$install_hosttype" "$images_dir"
 }
 
 run_image_preinst_hook() {
