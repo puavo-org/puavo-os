@@ -33,6 +33,8 @@ flock -nx "$lock_fd" || panic 'another installation operation is already running
 cleanup_temporary_files() {
   find "$UKI_ROOT" -xdev -type d -name '*.tmp' -exec rm -rf {} + 2>/dev/null || true
   find "$UKI_ROOT" -xdev -type f -name '*.tmp' -delete 2>/dev/null || true
+  # Remove fsck recovery files at the ESP root so they do not fill up the partition.
+  find /boot/efi -maxdepth 1 -type f -name 'FSCK*.REC' -delete || true
 }
 
 image_mountpoint=$(mktemp -d)
@@ -43,6 +45,7 @@ cleanup() {
     fi
   fi
 
+  sync || true # Ensure ESP writes are fully transferred before unmount.
   umount /boot/efi 2>/dev/null || true
   umount "$image_mountpoint" 2>/dev/null || true
 }
@@ -151,9 +154,12 @@ mount_efi_and_install_uki() {
   local status=0
   mount_disk_efi_partition "$diskdev" || return 1
   install_uki_to_efi "$diskdev" || status=1
+
   if ! cleanup_temporary_files; then
     logmsg -p user.warning 'failed to remove temporary files'
   fi
+
+  sync || true # Ensure ESP writes are fully transferred before unmount.
   umount /boot/efi || true
   return $status
 }
@@ -174,6 +180,7 @@ for diskdev in $boot_disks; do
   [ -n "$required_space" ] || panic 'failed to estimate required disk space'
   has_enough_disk_space "$diskdev" "$required_space" || panic "disk ${diskdev} does not have enough space"
 
+  sync || true # Ensure ESP writes are fully transferred before unmount.
   umount /boot/efi || true
 done
 

@@ -31,6 +31,8 @@ tmpdir=''
 cleanup_temporary_files() {
   find "$UKI_ROOT" -xdev -type d -name '*.tmp' -exec rm -rf {} + 2>/dev/null || true
   find "$UKI_ROOT" -xdev -type f -name '*.tmp' -delete 2>/dev/null || true
+  # Remove fsck recovery files at the ESP root so they do not fill up the partition.
+  find /boot/efi -maxdepth 1 -type f -name 'FSCK*.REC' -delete || true
   test -z "$tmpdir" || rm -rf "$tmpdir"
 }
 
@@ -68,6 +70,7 @@ install_boot_entry_config() {
   grub-editenv "$temporary_environment_file" set "image_name=${image_name}"
   grub-editenv "$temporary_environment_file" set "enabled=${enabled}"
   grub-editenv "$temporary_environment_file" set "release=${release}"
+  sync || true # Ensure the data is fully transferred before the rename.
   mv "$temporary_environment_file" "$environment_file"
 }
 
@@ -109,9 +112,13 @@ patch_uki() {
     return 1
   fi
 
-  if ! cp "$tmp_uki_path" "$tmp_uki_destination" || \
-     ! mv "$tmp_uki_destination" "$uki_destination"; then
-    logmsg -p user.err "failed to copy/move UKI '${uki}' to EFI partition"
+  if ! cp "$tmp_uki_path" "$tmp_uki_destination"; then
+    logmsg -p user.err "error: failed to copy UKI '${uki}' to EFI partition"
+    return 1
+  fi
+  sync || true # Ensure the data is fully transferred before the rename.
+  if ! mv "$tmp_uki_destination" "$uki_destination"; then
+    logmsg -p user.err "error: failed to move UKI '${uki}' into place"
     return 1
   fi
 
@@ -212,6 +219,7 @@ install_ukis() {
   # If we were installing for the first time and everything succeeded,
   # rename the temporary directory to the final location.
   if [ "$is_new_installation" = true ]; then
+    sync || true # Ensure the data is fully transferred before the rename.
     if ! mv "$uki_temporary_installation_directory" \
             "$uki_final_installation_directory"; then
       logmsg -p user.err 'failed to rename temporary installation directory'

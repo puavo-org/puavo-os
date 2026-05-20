@@ -116,6 +116,10 @@ for diskdev in $boot_disks; do
 
   cleanup_orphaned_uki_directories || status=1
 
+  # Remove fsck recovery files at the ESP root so they do not fill up the partition.
+  find /boot/efi -maxdepth 1 -type f -name 'FSCK*.REC' -delete || true
+
+  sync || true # Ensure ESP writes are fully transferred before unmount.
   umount /boot/efi || true
 done
 
