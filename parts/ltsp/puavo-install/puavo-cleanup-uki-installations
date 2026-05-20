@@ -73,11 +73,25 @@ cleanup_orphaned_uki_directories() {
       continue
     fi
 
-    local image_path="${images_dir}/${image_name}.img"
-    if [ -f "$image_path" ]; then
-      continue
+    local image_path_no_suffix="${images_dir}/${image_name}"
+    if [ -f "${image_path_no_suffix}.img" ]; then
+      # we have an image corresponding to UKI, but as bootservers may have
+      # several images, we check if the images are something to boot from
+      if [ -e "${image_path_no_suffix}.default" ] \
+             || [ -e "${image_path_no_suffix}.backup" ]; then
+        # we keep this one, because it has been marked as either a default
+        # or a backup image
+        continue
+      fi
+      if [ "$(stat -c %h "${image_path_no_suffix}.img")" -gt 1 ]; then
+        # if the image file is hardlinked, it is likely hard linked to
+        # either ltsp.img or ltsp-backup.img and it also qualifies
+        # (do not remove the UKI directory)
+        continue
+      fi
     fi
 
+    # remove the UKI directory
     logmsg -p user.info "removing orphaned UKI directory '${uki_directory}'"
     if ! rm --one-file-system -rf "$uki_directory"; then
       logmsg -p user.err "error: failed to remove '${uki_directory}'"
