@@ -256,34 +256,19 @@ cleanup_previous_runs() {
   # and rdiff-files too.  The ltsp-backup.img is going to go too...
   old_sync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" "${images_dir}" "${rdiffs_dir}")
   if [ -n "$old_sync_files" ]; then
-    uninstall_files=$(printf '%s\n' "$old_sync_files" \
+    printf %s "$old_sync_files" \
       | fgrep -vx "${images_dir}/${preserve_imagefile}" \
       | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}" \
-      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp")
+      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp" \
+      | xargs -r -d'\n' -L1 rm -f
+  fi
 
-    if [ "${UKI_MODE:-}" = "1" ]; then
-      log info "cleaning up orphaned UKI installations"
+  if [ "${UKI_MODE:-}" = "1" ]; then
+    systemd-inhibit --what=shutdown:sleep \
+                    --who=puavo-install-and-update-ltspimages \
+                    --why='Updating system' \
+                    --mode=block \
       puavo-cleanup-uki-installations --images-dir "$images_dir" || true
-
-      uninstall_images=$(printf '%s\n' "$uninstall_files" | grep '\.img$' || true)
-
-      for uninstall_image in $uninstall_images; do
-        # Skip "ltsp" images as they are hardlinks to other images
-        case "$(basename "$uninstall_image")" in
-          ltsp*) continue ;;
-        esac
-        log info "removing UKI files installed from $uninstall_image"
-        systemd-inhibit --what=shutdown:sleep \
-                        --who=puavo-install-and-update-ltspimages \
-                        --why='Updating system' \
-                        --mode=block \
-          puavo-uninstall-uki-image "$uninstall_image" "$images_dir" || true
-      done
-    fi
-
-    for file in $uninstall_files; do
-      rm -f "$file" || true
-    done
   fi
 
   if $use_torrents_for_rdiff_updates; then

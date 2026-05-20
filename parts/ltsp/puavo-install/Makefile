@@ -49,7 +49,6 @@ install : installdirs
 		puavo-reset-windows \
 		puavo-set-root-password \
 		puavo-setup-filesystems \
-		puavo-uninstall-uki-image \
 		puavo-update-boot-disks \
 		puavo-update-client \
 		puavo-update-service-script \
