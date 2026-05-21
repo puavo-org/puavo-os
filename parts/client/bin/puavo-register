@@ -11,17 +11,20 @@
 
 $VERBOSE = nil
 
-require "puavo"
+require 'base64'
 require 'facter'
 require 'fileutils'
 require 'highline/import'
 require 'json'
 require 'net/https'
+require 'open3'
 require 'openssl'
+require 'puavo'
 require 'resolv'
 require 'socket'
-require 'yaml'
+require 'tmpdir'
 require 'uri'
+require 'yaml'
 
 Puavodir            = '/etc/puavo'
 Puavo_hosttype_path = "#{ Puavodir }/hosttype"
@@ -492,6 +495,57 @@ class PuavoDevicesConnection
       else
         Hash[ 'errors' => Hash[ JSON.parse(response.body) ] ]
     end
+  end
+end
+
+class PublicEKKey
+  def self.generate_ek(algorithm)
+    Dir.mktmpdir do |workdir|
+      public_path  = File.join(workdir, 'ek.pub')
+      context_path = File.join(workdir, 'ek.ctx')
+
+      command = [
+        'tpm2_createek',
+        "--key-algorithm=#{ algorithm }",
+        "--ek-context=#{ context_path }",
+        "--public=#{ public_path }",
+        '--format=tss',
+      ]
+
+      stdout, stderr, status = Open3.capture3(*command)
+      unless status.success? then
+        raise "failed to generate #{ algorithm }: #{ stderr }"
+      end
+
+      Base64.strict_encode64( File.binread(public_path) )
+    end
+  end
+
+  def self.get_endorsement_keys
+    public_keys = {}
+
+    algorithm_list = [
+      'ecc_nist_p256', 'ecc_nist_p384', 'rsa2048', 'rsa3072', 'rsa4096',
+    ]
+
+    errors_list = []
+    algorithm_list.each do |algorithm|
+      begin
+        public_keys[algorithm] = generate_ek(algorithm)
+        puts "generated EK with algorithm #{ algorithm }"
+      rescue StandardError => e
+        errors_list.append(
+          "failed to generate EK with algorithm #{ algorithm }:" \
+             + e.message)
+      end
+    end
+
+    if public_keys.empty? then
+      raise "no public endorsement keys generated:\n" \
+              + errors_list.join('')
+    end
+
+    JSON.generate(public_keys)
   end
 end
 
