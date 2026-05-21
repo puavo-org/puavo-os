@@ -113,6 +113,7 @@ class RegisterUserInterface
       'puavoDeviceModel'        => facts['productname'],
       'puavoHostname'           => facts['hostname'],
       'serialNumber'            => facts['serialnumber'],
+      'puavoEKPublicKeys'       => PublicEKKeys.endorsement_keys,
     }
 
     @host = {}
@@ -498,7 +499,7 @@ class PuavoDevicesConnection
   end
 end
 
-class PublicEKKey
+class PublicEKKeys
   def self.generate_ek(algorithm)
     Dir.mktmpdir do |workdir|
       public_path  = File.join(workdir, 'ek.pub')
@@ -521,7 +522,13 @@ class PublicEKKey
     end
   end
 
-  def self.get_endorsement_keys
+  def self.tpm2_available?
+    Integer(IO.read('/sys/class/tpm/tpm0/tpm_version_major')) == 2 rescue false
+  end
+
+  def self.endorsement_keys
+    return nil unless tpm2_available?
+
     public_keys = {}
 
     algorithm_list = [
