@@ -113,7 +113,6 @@ class RegisterUserInterface
       'puavoDeviceModel'        => facts['productname'],
       'puavoHostname'           => facts['hostname'],
       'serialNumber'            => facts['serialnumber'],
-      'puavoEKPublicKeys'       => PublicEKKeys.endorsement_keys,
     }
 
     @host = {}
@@ -326,6 +325,16 @@ class RegisterUserInterface
         Tools.errmsg("Unknown option '#{ answer }'") unless found
       end
 
+      # do this at the last moment because it is going to take a few seconds
+      # and user is in waiting mode here anyway
+      begin
+        public_ek_keys = PublicEKKeys.endorsement_keys
+      rescue StandardError => e
+        Tools.errmsg(e.message)
+        public_ek_keys = nil
+      end
+      @host['puavoEKPublicKeys'] = public_ek_keys
+
       HighLine.say 'Sending host information to puavo server...'
       response_data = @connection.post_host(@host)
       if response_data['register_info'] then
@@ -529,6 +538,8 @@ class PublicEKKeys
   def self.endorsement_keys
     return nil unless tpm2_available?
 
+    HighLine.say 'Generating host endorsement keys...'
+
     public_keys = {}
 
     algorithm_list = [
@@ -539,7 +550,6 @@ class PublicEKKeys
     algorithm_list.each do |algorithm|
       begin
         public_keys[algorithm] = generate_ek(algorithm)
-        puts "generated EK with algorithm #{ algorithm }"
       rescue StandardError => e
         errors_list.append(
           "failed to generate EK with algorithm #{ algorithm }:" \
