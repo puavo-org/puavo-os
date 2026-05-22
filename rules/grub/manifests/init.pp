@@ -2,7 +2,7 @@ class grub {
   include ::grub::themes
   include ::puavo_conf
 
-  $grub_version = '2.12-9+deb13u1'
+  $grub_version = '2.12-9+deb13u2'
 
   file {
     [ '/boot', '/boot/grub', '/boot/grub/puavo' ]:
