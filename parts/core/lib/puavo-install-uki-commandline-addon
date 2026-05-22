@@ -6,13 +6,14 @@ import subprocess
 import sys
 import syslog
 
-IMAGES_DIRECTORY = '/images'
-ADDONS_DIRECTORY = f"{IMAGES_DIRECTORY}/boot/addons"
+IMAGES_DIRECTORY           = '/images'
+ADDONS_OUTPUT_DIRECTORY    = f"{IMAGES_DIRECTORY}/boot/addons"
+SECURE_BOOT_KEYS_DIRECTORY = '/run/puavo/secure-boot-keys'
 
-ADDON_PATH                     = f"{ADDONS_DIRECTORY}/extra.commandline.addon.efi"
-DEVICE_SECURE_BOOT_CERTIFICATE = f"{ADDONS_DIRECTORY}/secure-boot.pem"
-DEVICE_SECURE_BOOT_PRIVATE_KEY = f"{ADDONS_DIRECTORY}/secure-boot.priv"
-KERNEL_COMMANDLINE_FILE        = f"{ADDONS_DIRECTORY}/commandline"
+ADDON_PATH                     = f"{ADDONS_OUTPUT_DIRECTORY}/extra.commandline.addon.efi"
+DEVICE_SECURE_BOOT_CERTIFICATE = f"{SECURE_BOOT_KEYS_DIRECTORY}/secure-boot.pem"
+DEVICE_SECURE_BOOT_PRIVATE_KEY = f"{SECURE_BOOT_KEYS_DIRECTORY}/secure-boot.priv"
+KERNEL_COMMANDLINE_FILE        = f"{ADDONS_OUTPUT_DIRECTORY}/commandline"
 
 PUAVO_INSTALL_LIBDIR = '/usr/lib/puavo-ltsp-install'
 
@@ -51,7 +52,7 @@ def replace_if_changed(destination: str, source: str):
 
 
 def build_commandline_addon(commandline: str):
-  os.makedirs(ADDONS_DIRECTORY, exist_ok=True)
+  os.makedirs(ADDONS_OUTPUT_DIRECTORY, exist_ok=True)
 
   if not (os.path.isfile(DEVICE_SECURE_BOOT_CERTIFICATE) and \
           os.path.isfile(DEVICE_SECURE_BOOT_PRIVATE_KEY)):
