@@ -429,6 +429,24 @@ generate_recovery_bundle() {
   echo "recovery bundle generated"
 }
 
+finalize_encrypted_secure_boot_keys() {
+  # On encrypted devices, drop the plaintext Secure Boot
+  # signing key now that the install is done. The boot trust
+  # manager republishes it from the boot vault on later boots.
+  is_encrypted=$("$PUAVO_INSTALL_LIBDIR"/is-encrypted-install /images)
+  [ "$is_encrypted" = 'true' ] || return 0
+
+  for key_file in \
+      /images/boot/addons/secure-boot.priv \
+      /images/boot/addons/secure-boot.pem; do
+    [ -e "$key_file" ] || continue
+    if ! rm -f "$key_file"; then
+      echo "error: failed to remove ${key_file}" >&2
+      return 1
+    fi
+  done
+}
+
 install_localbootdevice() {
   puavo_hosttype=$1
   puavo_install_hosttype=$2
@@ -490,6 +508,7 @@ install_localbootdevice() {
   update_images || update_configuration_retstatus=1
 
   generate_recovery_bundle
+  finalize_encrypted_secure_boot_keys
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
     bootserver_setup_state
