@@ -741,6 +741,11 @@ module DiskHandler
       src = File.join(device_keys_temporary_directory, filename)
       FileUtils.cp(src, final_addons_directory)
     end
+
+    # Lastly, install the device Secure Boot keys for the
+    # installer so the UKI command-line signer can use them.
+    run('/etc/puavo-conf/scripts/setup_device_secure_boot_keys',
+        device_keys_temporary_directory)
   end
 
   def self.request_pin_enrollment(fs_conf)

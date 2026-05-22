@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -eu
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+destination_directory='/run/puavo/secure-boot-keys'
+source_directory="${1:-/images/boot/addons}"
+
+# On encrypted devices the boot trust manager has already installed
+# the keys from the boot vault during initramfs.
+[ -f "${destination_directory}/secure-boot.priv" ] && exit 0
+
+# Hosts that do not use UKI command-line signing do not have the
+# source directory at all (for example diskinstaller).
+[ ! -d "$source_directory" ] && exit 0
+
+install -d -m 0700 "$destination_directory" \
+  || panic "failed to create ${destination_directory}"
+install -m 0600 "${source_directory}/secure-boot.priv" \
+  "${destination_directory}/secure-boot.priv" \
+  || panic "failed to install device Secure Boot private key"
+install -m 0644 "${source_directory}/secure-boot.pem" \
+  "${destination_directory}/secure-boot.pem" \
+  || panic "failed to install device Secure Boot certificate"

@@ -1,6 +1,7 @@
 add_entropy
 set_puavo_hosttype
 mount_local_partitions
+setup_device_secure_boot_keys
 setup_state_partition
 setup_resolv_conf_and_etc_puavo
 setup_device_json
