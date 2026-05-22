@@ -74,4 +74,7 @@ pub enum PuavoError {
 
     #[error("Recovery QR error: {0}")]
     RecoveryQrError(String),
+
+    #[error("Failed to install device-specific Secure Boot keys: {0}")]
+    DeviceSecureBootKeyInstallation(io::Error),
 }

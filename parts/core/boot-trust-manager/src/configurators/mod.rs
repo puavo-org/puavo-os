@@ -1,3 +1,4 @@
+use crate::configurators::device_secure_boot_keys::DeviceSecureBootKeysConfigurator;
 use crate::configurators::enrollment::EnrollmentConfigurator;
 use crate::configurators::pin::PinConfigurator;
 use crate::configurators::secure_boot_database::{
@@ -8,6 +9,7 @@ use crate::display::UserDisplay;
 use crate::error::PuavoError;
 use crate::utils::luks_tpm_token_manager::LuksTpmTokenManager;
 
+pub mod device_secure_boot_keys;
 pub mod enrollment;
 pub mod pin;
 pub mod secure_boot_database;
@@ -31,7 +33,8 @@ pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
         .chain(configurators(EnrollmentConfigurator::new()?))
         .chain(configurators(SecureBootDatabaseConfigurator::new(
             SystemSecureBootShell {},
-        )?));
+        )?))
+        .chain(configurators(DeviceSecureBootKeysConfigurator::new()?));
 
     Ok(configurators.collect())
 }
