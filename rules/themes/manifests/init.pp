@@ -13,22 +13,22 @@ class themes {
   }
 
   define iconlink ($target) {
-    $iconpath = $title
+    $iconpath = "/usr/share/icons/hicolor/${title}"
+
+    exec {
+      "refresh hicolor icon cache for ${iconpath}":
+        cwd     => '/usr/share/icons',
+        command => '/usr/bin/gtk-update-icon-cache hicolor',
+        unless  => "test /usr/share/icons/hicolor/icon-theme.cache -nt ${iconpath}";
+    }
 
     file {
-      "/usr/share/icons/hicolor/${iconpath}":
+      $iconpath:
+        before  => Exec["refresh hicolor icon cache for ${iconpath}"],
         ensure  => link,
-        notify  => Exec['refresh hicolor icon cache'],
         require => Puavo_pkg::Install['tela-icon-theme'],
         target  => "/usr/share/icons/${target}";
     }
-  }
-
-  exec {
-    'refresh hicolor icon cache':
-      cwd         => '/usr/share/icons',
-      command     => '/usr/bin/gtk-update-icon-cache hicolor',
-      refreshonly => true;
   }
 
   file {

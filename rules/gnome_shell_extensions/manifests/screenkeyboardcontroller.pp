@@ -1,4 +1,5 @@
 class gnome_shell_extensions::screenkeyboardcontroller {
+  include ::dconf
   include ::dconf::schemas
   include ::gnome_shell_extensions
   include ::puavo_conf
@@ -10,16 +11,20 @@ class gnome_shell_extensions::screenkeyboardcontroller {
       [ "/etc/dconf/db/screenkeyboardcontroller_${mode}.d"
       , "/etc/dconf/db/screenkeyboardcontroller_${mode}.d/locks" ]:
         ensure => directory;
+    }
 
-    "/etc/dconf/db/screenkeyboardcontroller_${mode}.d/locks/screenkeyboardcontroller_${mode}_locks":
-      content => template('gnome_shell_extensions/dconf_screenkeyboardcontroller_locks'),
-      notify  => Exec['update dconf'],
-      require => ::Dconf::Schemas::Schema['org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml'];
+    ::dconf::configfile {
+      "dconf screenkeyboardcontroller_${mode} locks":
+        content => template('gnome_shell_extensions/dconf_screenkeyboardcontroller_locks'),
+        dbname  => "screenkeyboardcontroller_${mode}",
+        require => ::Dconf::Schemas::Schema['org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml'],
+        subpath => "locks/screenkeyboardcontroller_${mode}_locks";
 
-    "/etc/dconf/db/screenkeyboardcontroller_${mode}.d/screenkeyboardcontroller_${mode}_profile":
-      content => template('gnome_shell_extensions/dconf_screenkeyboardcontroller_profile'),
-      notify  => Exec['update dconf'],
-      require => ::Dconf::Schemas::Schema['org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml'];
+      "dconf screenkeyboardcontroller_${mode} profile":
+        content => template('gnome_shell_extensions/dconf_screenkeyboardcontroller_profile'),
+        dbname  => "screenkeyboardcontroller_${mode}",
+        require => ::Dconf::Schemas::Schema['org.gnome.shell.extensions.screenkeyboardcontroller.gschema.xml'],
+        subpath => "screenkeyboardcontroller_${mode}_profile";
     }
   }
 
@@ -29,10 +34,7 @@ class gnome_shell_extensions::screenkeyboardcontroller {
   }
 
   ::gnome_shell_extensions::screenkeyboardcontroller::dconf {
-    [ 'auto_hide'
-    , 'do_nothing'
-    , 'force_hide' ]:
-      ;
+    [ 'auto_hide', 'do_nothing', 'force_hide' ]: ;
   }
 
   ::puavo_conf::definition {

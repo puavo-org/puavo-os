@@ -1,17 +1,21 @@
 class desktop::dconf::disable_suspend {
-  include ::desktop::dconf
+  include ::dconf
 
   file {
     [ '/etc/dconf/db/disable_suspend.d'
     , '/etc/dconf/db/disable_suspend.d/locks' ]:
       ensure => directory;
+  }
 
-    '/etc/dconf/db/disable_suspend.d/disable_suspend_profile':
+  ::dconf::configfile {
+    'dconf disable_suspend profile':
       content => template('desktop/dconf_disable_suspend_profile'),
-      notify  => Exec['update dconf'];
+      dbname  => 'disable_suspend',
+      subpath => 'disable_suspend_profile';
 
-    '/etc/dconf/db/disable_suspend.d/locks/disable_suspend_locks':
+    'dconf disable_suspend locks':
       content => template('desktop/dconf_disable_suspend_locks'),
-      notify  => Exec['update dconf'];
+      dbname  => 'disable_suspend',
+      subpath => 'locks/disable_suspend_locks';
   }
 }

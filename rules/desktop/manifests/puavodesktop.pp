@@ -1,5 +1,6 @@
 class desktop::puavodesktop {
   include ::art
+  include ::dconf
   include ::desktop::autologin
   include ::desktop::dconf::disable_lidsuspend
   include ::desktop::dconf::disable_suspend
@@ -17,17 +18,19 @@ class desktop::puavodesktop {
   include ::puavo_sysinfo_collector
   include ::themes
 
-  file {
-    '/etc/dconf/db/puavo-desktop.d/locks/session_locks':
+  ::dconf::configfile {
+    'dconf puavo-desktop locks':
       content => template('desktop/dconf_session_locks'),
-      notify  => Exec['update dconf'];
+      dbname  => 'puavo-desktop',
+      subpath => 'locks/session_locks';
 
-    '/etc/dconf/db/puavo-desktop.d/session_profile':
+    'dconf puavo-desktop profile':
       content => template('desktop/dconf_session_profile'),
-      notify  => Exec['update dconf'],
+      dbname  => 'puavo-desktop',
+      subpath => 'session_profile',
       require => [ File['/usr/share/puavo-art']
                  , Package['faenza-icon-theme']
-		 , Package['puavomenu'] ];
+                 , Package['puavomenu'] ];
   }
 
   # overwrite /etc/profile with our custom version

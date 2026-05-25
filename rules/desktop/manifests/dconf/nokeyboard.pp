@@ -1,17 +1,21 @@
 class desktop::dconf::nokeyboard {
-  include ::desktop::dconf
+  include ::dconf
 
   file {
     [ '/etc/dconf/db/nokeyboard.d'
     , '/etc/dconf/db/nokeyboard.d/locks' ]:
       ensure => directory;
+  }
 
-    '/etc/dconf/db/nokeyboard.d/locks/nokeyboard_locks':
+  ::dconf::configfile {
+    'dconf nokeyboard locks':
       content => template('desktop/dconf_nokeyboard_locks'),
-      notify  => Exec['update dconf'];
+      dbname  => 'nokeyboard',
+      subpath => 'locks/nokeyboard_locks';
 
-    '/etc/dconf/db/nokeyboard.d/nokeyboard_profile':
+    'dconf nokeyboard profile':
       content => template('desktop/dconf_nokeyboard_profile'),
-      notify  => Exec['update dconf'];
+      dbname  => 'nokeyboard',
+      subpath => 'nokeyboard_profile';
   }
 }

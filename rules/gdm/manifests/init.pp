@@ -12,12 +12,6 @@ class gdm {
       require => Package['gdm3'];
   }
 
-  exec {
-    '/usr/sbin/dpkg-reconfigure gdm3':
-      refreshonly => true,
-      require     => Dpkg::Simpledivert['/usr/share/glib-2.0/schemas/org.gnome.login-screen.gschema.xml'];
-  }
-
   file {
     '/etc/gdm3/background.img':
       ensure  => link,
@@ -27,7 +21,6 @@ class gdm {
       target  => '/usr/share/backgrounds/Grass_by_Jeremy_Hill.jpg';
 
     '/etc/gdm3/daemon.conf':
-      notify  => Exec['/usr/sbin/dpkg-reconfigure gdm3'],
       require => Package['gdm3'],
       source  => 'puppet:///modules/gdm/daemon.conf';
 

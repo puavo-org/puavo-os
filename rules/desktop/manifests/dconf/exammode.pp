@@ -1,5 +1,5 @@
 class desktop::dconf::exammode {
-  include ::desktop::dconf
+  include ::dconf
 
   file {
     [ '/etc/dconf/db/puavo-exammode.d'
@@ -9,29 +9,37 @@ class desktop::dconf::exammode {
     , '/etc/dconf/db/puavo-exammode-strict.d'
     , '/etc/dconf/db/puavo-exammode-strict.d/locks' ]:
       ensure => directory;
+  }
 
-    '/etc/dconf/db/puavo-exammode.d/locks/puavo_exammode_locks':
+  ::dconf::configfile {
+    'dconf puavo_exammode locks':
       content => template('desktop/dconf_puavo_exammode_locks'),
-      notify  => Exec['update dconf'];
+      dbname  => 'puavo-exammode',
+      subpath => 'locks/puavo_exammode_locks';
 
-    '/etc/dconf/db/puavo-exammode.d/puavo_exammode_profile':
+    'dconf puavo_exammode profile':
       content => template('desktop/dconf_puavo_exammode_profile'),
-      notify  => Exec['update dconf'];
+      dbname  => 'puavo-exammode',
+      subpath => 'puavo_exammode_profile';
 
-    '/etc/dconf/db/puavo-exammode-devel.d/locks/puavo_exammode_devel_locks':
+    'dconf puavo_exammode_devel locks':
       content => template('desktop/dconf_puavo_exammode_devel_locks'),
-      notify  => Exec['update dconf'];
+      dbname  => 'puavo-exammode-devel',
+      subpath => 'locks/puavo_exammode_devel_locks';
 
-    '/etc/dconf/db/puavo-exammode-devel.d/puavo_exammode_devel_profile':
+    'dconf puavo_exammode_devel profile':
       content => template('desktop/dconf_puavo_exammode_devel_profile'),
-      notify  => Exec['update dconf'];
+      dbname  => 'puavo-exammode-devel',
+      subpath => 'puavo_exammode_devel_profile';
 
-    '/etc/dconf/db/puavo-exammode-strict.d/locks/puavo_exammode_strict_locks':
+    'dconf puavo_exammode_strict locks':
       content => template('desktop/dconf_puavo_exammode_strict_locks'),
-      notify  => Exec['update dconf'];
+      dbname  => 'puavo-exammode-strict',
+      subpath => 'locks/puavo_exammode_strict_locks';
 
-    '/etc/dconf/db/puavo-exammode-strict.d/puavo_exammode_strict_profile':
+    'dconf puavo_exammode_strict profile':
       content => template('desktop/dconf_puavo_exammode_strict_profile'),
-      notify  => Exec['update dconf'];
+      dbname  => 'puavo-exammode-strict',
+      subpath => 'puavo_exammode_strict_profile';
   }
 }

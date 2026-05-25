@@ -3,13 +3,6 @@ class dconf::schemas {
 
   $schemadir = '/usr/share/glib-2.0/schemas'
 
-  exec {
-    'compile glib schemas':
-      command     => '/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas',
-      refreshonly => true,
-      require     => Package['libglib2.0-bin'];
-  }
-
   file {
     $schemadir:
       ensure => directory;
@@ -18,9 +11,16 @@ class dconf::schemas {
   define schema ($srcfile) {
     $filename = $title
 
+    exec {
+      "compile glib schemas for ${filename}":
+        command => "/usr/bin/glib-compile-schemas ${::dconf::schemas::schemadir}",
+        require => Package['libglib2.0-bin'],
+        unless  => "test ${::dconf::schemas::schemadir}/gschemas.compiled -nt ${::dconf::schemas::schemadir}/${filename}";
+    }
+
     file {
       "${::dconf::schemas::schemadir}/${filename}":
-       notify => Exec['compile glib schemas'],
+       before => Exec["compile glib schemas for ${filename}"],
        source => $srcfile;
     }
   }

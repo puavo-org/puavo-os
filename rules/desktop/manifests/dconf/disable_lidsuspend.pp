@@ -1,17 +1,21 @@
 class desktop::dconf::disable_lidsuspend {
-  include ::desktop::dconf
+  include ::dconf
 
   file {
     [ '/etc/dconf/db/disable_lidsuspend.d'
     , '/etc/dconf/db/disable_lidsuspend.d/locks' ]:
       ensure => directory;
+  }
 
-    '/etc/dconf/db/disable_lidsuspend.d/disable_lidsuspend_profile':
+  ::dconf::configfile {
+    'dconf disable_lidsuspend profile':
       content => template('desktop/dconf_disable_lidsuspend_profile'),
-      notify  => Exec['update dconf'];
+      dbname  => 'disable_lidsuspend',
+      subpath => 'disable_lidsuspend_profile';
 
-    '/etc/dconf/db/disable_lidsuspend.d/locks/disable_lidsuspend_locks':
+    'dconf disable_lidsuspend locks':
       content => template('desktop/dconf_disable_lidsuspend_locks'),
-      notify  => Exec['update dconf'];
+      dbname  => 'disable_lidsuspend',
+      subpath => 'locks/disable_lidsuspend_locks';
   }
 }

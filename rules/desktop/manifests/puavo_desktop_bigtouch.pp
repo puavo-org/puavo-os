@@ -1,6 +1,6 @@
 class desktop::puavo_desktop_bigtouch {
   include ::bigtouch
-  include ::desktop::dconf
+  include ::dconf
   include ::dpkg
   include ::packages
   include ::puavo_conf
@@ -10,13 +10,16 @@ class desktop::puavo_desktop_bigtouch {
       before => File['/etc/xdg/autostart/onboard-autostart.desktop'];
   }
 
+  ::dconf::configfile {
+    'dconf puavo-desktop-bigtouch':
+      content => template('desktop/puavo-desktop-bigtouch/profile'),
+      dbname  => 'puavo-desktop-bigtouch',
+      subpath => 'profile';
+  }
+
   file {
     '/etc/dconf/db/puavo-desktop-bigtouch.d':
       ensure => directory;
-
-    '/etc/dconf/db/puavo-desktop-bigtouch.d/profile':
-      content => template('desktop/puavo-desktop-bigtouch/profile'),
-      notify  => Exec['update dconf'];
 
     '/etc/xdg/autostart/onboard-autostart.desktop':
       content => template('desktop/puavo-desktop-bigtouch/onboard-autostart.desktop'),

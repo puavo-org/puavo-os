@@ -1,12 +1,15 @@
 class desktop::dconf::laptop {
-  include ::desktop::dconf
+  include ::dconf
 
   file {
     '/etc/dconf/db/laptop.d':
       ensure => directory;
+  }
 
-    '/etc/dconf/db/laptop.d/laptop_profile':
+  ::dconf::configfile {
+    'dconf laptop':
       content => template('desktop/dconf_laptop_profile'),
-      notify  => Exec['update dconf'];
+      dbname  => 'laptop',
+      subpath => 'laptop_profile';
   }
 }
