@@ -62,7 +62,7 @@ fn mount_with_recovery_key() {
 
     let key = vault.resources().read_recovery_key();
     assert!(key.is_ok(), "Failed to read recovery key: {:?}", key.err());
-    assert_eq!(key.unwrap(), luks::RECOVERY_KEY);
+    assert_eq!(key.unwrap().as_str(), luks::RECOVERY_KEY);
 
     assert!(
         matches!(

@@ -31,6 +31,7 @@ tss-esapi-sys = "0.5.0"
 hex = "0.4.3"
 qrcode = { version = "0.14", default-features = false, features = ["image"] }
 image = { version = "=0.25.9", default-features = false, features = ["png"] }
+zeroize = "~1.8"
 
 [dev-dependencies]
 serial_test = "3.0"

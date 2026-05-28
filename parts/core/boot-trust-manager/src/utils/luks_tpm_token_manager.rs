@@ -7,11 +7,9 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
-use std::io::Write;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use tempfile::NamedTempFile;
+use zeroize::Zeroizing;
 
 use crate::error::PuavoError;
 
@@ -126,20 +124,6 @@ pub struct LuksTpmTokenManager {
 }
 
 impl LuksTpmTokenManager {
-    /// Creates a temporary file containing the password with restricted permissions.
-    ///
-    /// Returns the temporary file handle. The file is automatically deleted when dropped.
-    fn create_password_file(
-        password: &str,
-    ) -> Result<NamedTempFile, PuavoError> {
-        let mut file = NamedTempFile::new().map_err(PuavoError::IoError)?;
-        fs::set_permissions(file.path(), fs::Permissions::from_mode(0o600))
-            .map_err(PuavoError::IoError)?;
-        file.write_all(password.as_bytes()).map_err(PuavoError::IoError)?;
-        file.flush().map_err(PuavoError::IoError)?;
-        Ok(file)
-    }
-
     /// Returns whether the specified token requires PIN
     ///
     /// Parameters:
@@ -277,7 +261,7 @@ impl LuksTpmTokenManager {
     /// Enroll a TPM2 token using `systemd-cryptenroll` according to `policy`.
     ///
     /// Parameters:
-    /// * `key` - The passphrase used to control the LUKS device.
+    /// * `recovery_key_path` - Path to the recovery key file.
     /// * `policy` - The enrollment policy specifying PCRs, PIN usage, and other options.
     /// * `pin` - Optional PIN used for unlocking the device.
     /// * `public_key_path` - Path to a TPM PCR public key.
@@ -287,9 +271,9 @@ impl LuksTpmTokenManager {
     /// Returns `PuavoError` if enrollment fails.
     pub fn enroll(
         &self,
-        key: &String,
+        recovery_key_path: &Path,
         policy: &LuksTpmEnrollmentPolicy,
-        pin: Option<String>,
+        pin: Option<&Zeroizing<String>>,
         public_key_path: Option<&PathBuf>,
         wipe: bool,
     ) -> Result<(), PuavoError> {
@@ -328,21 +312,22 @@ impl LuksTpmTokenManager {
             arguments.push("--tpm2-with-pin=yes".to_string());
         }
 
-        let password_file = Self::create_password_file(key)?;
-        arguments.push(format!(
-            "--unlock-key-file={}",
-            password_file.path().display()
-        ));
+        arguments
+            .push(format!("--unlock-key-file={}", recovery_key_path.display()));
 
         debug!("Executing systemd-cryptenroll with: {:#?}", arguments);
 
+        // TODO: Bound this with a timeout of multiple minutes, so
+        // the process cannot hang boot indefinitely.
+        // This is a critical operation, so the timeout must be
+        // long enough to cover slow TPMs.
         let output = Command::new("systemd-cryptenroll")
             .args(&arguments)
             // Security note: NEWPIN must be passed via environment variable as
             // standard input does not work and there does not seem any other
             // reliable way. While systemd erases the variable, it remains
             // briefly visible via /proc.
-            .env("NEWPIN", pin.clone().unwrap_or_default())
+            .env("NEWPIN", pin.map(|pin| pin.as_str()).unwrap_or_default())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -365,7 +350,11 @@ impl LuksTpmTokenManager {
     ///
     /// Errors:
     /// Returns `PuavoError` if the token is invalid or internal errors occur.
-    pub fn test_token(&mut self, token_id: u32, pin: Option<&String>) -> bool {
+    pub fn test_token(
+        &mut self,
+        token_id: u32,
+        pin: Option<&Zeroizing<String>>,
+    ) -> bool {
         if let Some(pin) = pin {
             self.device
                 .token_handle()
@@ -411,10 +400,11 @@ impl LuksTpmTokenManager {
     /// Returns `PuavoError` if the passphrase is invalid or internal errors occur.
     pub fn test_passphrase(
         &mut self,
-        passphrase: &String,
+        passphrase: &Zeroizing<String>,
     ) -> Result<(), PuavoError> {
         let volume_key_size = self.device.status_handle().get_volume_key_size();
-        let mut volume_key_buffer = vec![0u8; volume_key_size as usize];
+        let mut volume_key_buffer: Zeroizing<Vec<u8>> =
+            Zeroizing::new(vec![0u8; volume_key_size as usize]);
 
         let passphrase_bytes = passphrase.as_bytes();
 

@@ -1,6 +1,7 @@
 use std::{path::Path, process::Command, thread, time::Duration};
 
 use log::info;
+use zeroize::{Zeroize as _, Zeroizing};
 
 use crate::{display::UserDisplay, error::PuavoError};
 
@@ -74,8 +75,11 @@ impl UserDisplay for PlymouthDisplay {
     /// Errors:
     /// Returns `PuavoError::PlymouthError` if the command exits non-zero,
     /// or `PuavoError::IoError` if invoking the command fails.
-    fn ask_password(&self, prompt: &str) -> Result<String, PuavoError> {
-        let output = Command::new("plymouth")
+    fn ask_password(
+        &self,
+        prompt: &str,
+    ) -> Result<Zeroizing<String>, PuavoError> {
+        let mut output = Command::new("plymouth")
             .arg("ask-for-password")
             .arg(format!("--prompt={}", prompt))
             .output()?;
@@ -86,8 +90,13 @@ impl UserDisplay for PlymouthDisplay {
             ));
         }
 
-        let password = String::from_utf8_lossy(&output.stdout).to_string();
-        Ok(password.trim_end_matches(['\n', '\r']).to_string())
+        let password = Zeroizing::new(
+            String::from_utf8_lossy(&output.stdout)
+                .trim_end_matches(['\n', '\r'])
+                .to_string(),
+        );
+        output.stdout.zeroize();
+        Ok(password)
     }
 
     /// Display an informational message via Plymouth.

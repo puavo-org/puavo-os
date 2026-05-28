@@ -1,4 +1,5 @@
 use log::{debug, info, warn};
+use zeroize::Zeroizing;
 
 use crate::{
     configurators::Configurator,
@@ -17,6 +18,16 @@ enum PinChangeReason {
     EfiVariableRequest,
 }
 
+/// Outcome of prompting the user for a new PIN.
+enum PinPromptOutcome {
+    /// User entered and confirmed a new PIN.
+    NewPin(Zeroizing<String>),
+    /// User chose to remove the PIN protection.
+    Remove,
+    /// User cancelled the operation.
+    Cancelled,
+}
+
 /// Configurator that handles PIN change and reset operations
 pub struct PinConfigurator {
     activation_reason: Option<PinChangeReason>,
@@ -33,21 +44,18 @@ impl PinConfigurator {
     /// Parameters:
     /// - `display`: Display instance for user interaction.
     ///
-    /// Returns:
-    /// - `Ok(Some(Some(pin)))` if the user successfully set a new PIN.
-    /// - `Ok(Some(None))` if the user chose to remove the PIN.
-    /// - `Ok(None)` if the user cancelled the operation.
-    /// - `Err(error)` if an I/O error occurred.
+    /// Errors:
+    /// Returns `PuavoError` if reading from the display fails.
     fn prompt_for_new_pin(
         &self,
         display: &Box<dyn UserDisplay>,
-    ) -> Result<Option<Option<String>>, PuavoError> {
+    ) -> Result<PinPromptOutcome, PuavoError> {
         loop {
             // Ask for confirmation before each attempt (provides exit opportunity)
             let _ = display.clear();
             if !display.ask_yes_no("Change PIN?")? {
                 info!("User cancelled PIN change");
-                return Ok(None);
+                return Ok(PinPromptOutcome::Cancelled);
             }
 
             let _ = display.clear();
@@ -60,7 +68,7 @@ impl PinConfigurator {
             if new_pin.is_empty() {
                 if display.ask_yes_no("Remove PIN protection?")? {
                     info!("User confirmed PIN removal");
-                    return Ok(Some(None));
+                    return Ok(PinPromptOutcome::Remove);
                 }
                 continue;
             }
@@ -69,13 +77,13 @@ impl PinConfigurator {
             let confirmed_pin = display.ask_password("Confirm new PIN")?;
 
             // Check if PINs match
-            if new_pin != confirmed_pin {
+            if new_pin.as_str() != confirmed_pin.as_str() {
                 let _ = display.show_message("PINs do not match");
                 continue;
             }
 
             info!("New PIN confirmed successfully");
-            return Ok(Some(Some(new_pin)));
+            return Ok(PinPromptOutcome::NewPin(new_pin));
         }
     }
 }
@@ -139,11 +147,9 @@ impl Configurator for PinConfigurator {
             match self.prompt_for_new_pin(display).map_err(|error| {
                 PuavoError::PinConfigurationError(error.to_string())
             })? {
-                Some(pin) => pin,
-                None => {
-                    // User cancelled
-                    return Ok(());
-                }
+                PinPromptOutcome::NewPin(pin) => Some(pin),
+                PinPromptOutcome::Remove => None,
+                PinPromptOutcome::Cancelled => return Ok(()),
             };
 
         // Update the PIN state of boot vault

@@ -7,6 +7,7 @@ use puavo_boot_trust_manager::{
     utils::luks_tpm_token_manager::LuksTpmTokenManager,
 };
 use serial_test::serial;
+use zeroize::Zeroizing;
 
 use crate::common::fixture_directory;
 
@@ -114,7 +115,7 @@ fn enrollment_with_pin_creates_pin_protected_tokens() {
 
     // Set up with a PIN
     let test_pin = "1234".to_string();
-    boot_vault.set_pin(Some(test_pin.clone()));
+    boot_vault.set_pin(Some(Zeroizing::new(test_pin.clone())));
 
     // Perform enrollment
     configurator

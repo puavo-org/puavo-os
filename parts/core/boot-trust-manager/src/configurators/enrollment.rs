@@ -1,7 +1,8 @@
-use std::{collections::HashMap, fs, hash::Hash, io::ErrorKind};
+use std::{collections::HashMap, fs, hash::Hash, io::ErrorKind, path::Path};
 
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
+use zeroize::Zeroizing;
 
 use crate::{
     configurators::Configurator,
@@ -164,7 +165,7 @@ impl EnrollmentConfigurator {
     /// Return true if any token on the specified device is invalid.
     fn any_invalid_token(
         token_manager: &mut LuksTpmTokenManager,
-        pin: Option<String>,
+        pin: Option<&Zeroizing<String>>,
     ) -> Result<bool, PuavoError> {
         let tokens = token_manager.list_tokens()?;
 
@@ -178,7 +179,7 @@ impl EnrollmentConfigurator {
         let mut any_invalid_token = false;
 
         for token_id in tokens.keys() {
-            if token_manager.test_token(*token_id, pin.as_ref()) {
+            if token_manager.test_token(*token_id, pin) {
                 debug!("Token {} is valid", token_id);
                 continue;
             }
@@ -276,8 +277,8 @@ impl EnrollmentConfigurator {
     /// Wipes all the previous TPM tokens.
     fn wipe_and_enroll_to_device(
         token_manager: &mut LuksTpmTokenManager,
-        recovery_key: &String,
-        pin: Option<String>,
+        recovery_key_path: &Path,
+        pin: Option<&Zeroizing<String>>,
         items: &[EnrollmentItemConfiguration],
     ) -> Result<(), PuavoError> {
         let mut wipe = true;
@@ -287,9 +288,9 @@ impl EnrollmentConfigurator {
 
             if policy.public_keys.is_empty() {
                 token_manager.enroll(
-                    recovery_key,
+                    recovery_key_path,
                     policy,
-                    pin.clone(),
+                    pin,
                     None,
                     wipe,
                 )?;
@@ -297,9 +298,9 @@ impl EnrollmentConfigurator {
             } else {
                 for (public_key, _) in &policy.public_keys {
                     token_manager.enroll(
-                        recovery_key,
+                        recovery_key_path,
                         policy,
-                        pin.clone(),
+                        pin,
                         Some(public_key),
                         wipe,
                     )?;
@@ -318,7 +319,8 @@ impl EnrollmentConfigurator {
         primary_partition: &mut LuksTpmTokenManager,
     ) -> Result<(), PuavoError> {
         let resources = boot_vault.resources().clone();
-        let recovery_key = resources.read_recovery_key()?.clone();
+        let recovery_key = resources.read_recovery_key()?;
+        let recovery_key_path = resources.recovery_key_path();
 
         // Verify we have control over both devices before proceeding
         debug!("Testing recovery key on both devices");
@@ -340,8 +342,8 @@ impl EnrollmentConfigurator {
         // Update the TPM policy of boot vault
         Self::wipe_and_enroll_to_device(
             boot_vault.device_mut(),
-            &recovery_key,
-            pin,
+            &recovery_key_path,
+            pin.as_ref(),
             &self.configuration.enrollments,
         )?;
 
@@ -412,7 +414,7 @@ impl Configurator for EnrollmentConfigurator {
 
         let pin = boot_vault.pin().cloned();
         let any_invalid_token =
-            Self::any_invalid_token(boot_vault.device_mut(), pin.clone())?;
+            Self::any_invalid_token(boot_vault.device_mut(), pin.as_ref())?;
 
         Ok(any_invalid_token)
     }

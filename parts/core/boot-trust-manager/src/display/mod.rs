@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use log::{debug, warn};
+use zeroize::Zeroizing;
 
 use crate::{
     display::{console::ConsoleDisplay, plymouth::PlymouthDisplay},
@@ -22,7 +23,10 @@ pub trait UserDisplay {
     ///
     /// Errors:
     /// Returns a `PuavoError` if the underlying backend fails.
-    fn ask_password(&self, prompt: &str) -> Result<String, PuavoError>;
+    fn ask_password(
+        &self,
+        prompt: &str,
+    ) -> Result<Zeroizing<String>, PuavoError>;
 
     /// Ask the user a yes/no question.
     ///
@@ -56,9 +60,7 @@ pub trait UserDisplay {
 /// Pick a suitable display backend.
 ///
 /// Parameters:
-/// - `force_console`: If `true`, always return a console-based display.
-///                    If `false` and Plymouth is available, returns
-///                    a Plymouth-based display. Otherwise fall back to console.
+/// - `force_console`: Should console-based display be used.
 ///
 /// Errors:
 /// This function never errors.

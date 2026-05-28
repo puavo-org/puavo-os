@@ -2,6 +2,7 @@ use std::cell::{Cell, RefCell};
 
 use puavo_boot_trust_manager::display::UserDisplay;
 use puavo_boot_trust_manager::error::PuavoError;
+use zeroize::Zeroizing;
 
 /// A test display that can be configured with sequences of responses.
 pub struct TestDisplay {
@@ -52,14 +53,21 @@ impl TestDisplay {
 }
 
 impl UserDisplay for TestDisplay {
-    fn ask_password(&self, _prompt: &str) -> Result<String, PuavoError> {
+    fn ask_password(
+        &self,
+        _prompt: &str,
+    ) -> Result<Zeroizing<String>, PuavoError> {
         let current = self.attempts.get();
         if current >= self.max_attempts {
             return Err(PuavoError::UnlockError);
         }
         self.attempts.set(current + 1);
 
-        self.passwords.borrow_mut().pop().ok_or(PuavoError::UnlockError)
+        self.passwords
+            .borrow_mut()
+            .pop()
+            .map(Zeroizing::new)
+            .ok_or(PuavoError::UnlockError)
     }
 
     fn ask_yes_no(&self, _prompt: &str) -> Result<bool, PuavoError> {

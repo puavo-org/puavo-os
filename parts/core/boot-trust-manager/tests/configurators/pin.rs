@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use serial_test::serial;
+use zeroize::Zeroizing;
 
 use crate::common::{display::TestDisplay, efi, luks, tpm};
 use puavo_boot_trust_manager::{
@@ -149,7 +150,7 @@ fn configure_sets_new_pin() {
         .expect("Configure failed");
 
     // Verify PIN was set
-    assert_eq!(boot_vault.pin(), Some(&"1234".to_string()));
+    assert_eq!(boot_vault.pin(), Some(&Zeroizing::new("1234".to_string())));
 
     // Verify enrollment is required after PIN change
     assert!(
@@ -250,7 +251,7 @@ fn configure_retries_on_pin_mismatch() {
         .expect("Configure failed");
 
     // Verify the correct PIN was set after retry
-    assert_eq!(boot_vault.pin(), Some(&"abcd".to_string()));
+    assert_eq!(boot_vault.pin(), Some(&Zeroizing::new("abcd".to_string())));
 }
 
 #[test]
@@ -283,7 +284,7 @@ fn configure_cancels_pin_removal() {
         .expect("Configure failed");
 
     // Verify the PIN was set (not removed) after user cancelled removal
-    assert_eq!(boot_vault.pin(), Some(&"1234".to_string()));
+    assert_eq!(boot_vault.pin(), Some(&Zeroizing::new("1234".to_string())));
 
     // Verify enrollment is required after PIN change
     assert!(

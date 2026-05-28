@@ -1,6 +1,7 @@
 use crate::{display::UserDisplay, error::PuavoError};
 
 use std::io::{self, BufRead, Write};
+use zeroize::Zeroizing;
 
 /// Console-backed `UserDisplay` implementation.
 pub struct ConsoleDisplay;
@@ -20,12 +21,15 @@ impl UserDisplay for ConsoleDisplay {
     ///
     /// Errors:
     /// Returns `PuavoError` if reading from the terminal fails.
-    fn ask_password(&self, prompt: &str) -> Result<String, PuavoError> {
+    fn ask_password(
+        &self,
+        prompt: &str,
+    ) -> Result<Zeroizing<String>, PuavoError> {
         print!("{}: ", prompt);
         io::stdout().flush().unwrap();
 
         let password = rpassword::read_password()?;
-        Ok(password)
+        Ok(Zeroizing::new(password))
     }
 
     /// Ask a yes/no question on the controlling terminal.

@@ -1,5 +1,6 @@
 use serial_test::serial;
 use tempfile::TempDir;
+use zeroize::Zeroizing;
 
 use puavo_boot_trust_manager::devices::boot_vault::BootVaultResources;
 
@@ -31,10 +32,12 @@ fn write_and_read_recovery_key() {
     let temp = TempDir::new().unwrap();
     let resources = BootVaultResources::new(temp.path());
 
-    resources.write_recovery_key("test-recovery-key".to_string()).unwrap();
+    resources
+        .write_recovery_key(&Zeroizing::new("test-recovery-key".to_string()))
+        .unwrap();
 
     let key = resources.read_recovery_key().unwrap();
-    assert_eq!(key, "test-recovery-key");
+    assert_eq!(key.as_str(), "test-recovery-key");
 }
 
 #[test]

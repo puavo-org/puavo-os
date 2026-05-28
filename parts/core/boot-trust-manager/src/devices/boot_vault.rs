@@ -9,6 +9,7 @@ use libcryptsetup_rs::{
 };
 use log::{debug, error, info, warn};
 use loopdev::{LoopControl, LoopDevice};
+use zeroize::Zeroizing;
 
 use crate::{
     devices::{
@@ -66,9 +67,10 @@ const SECURE_BOOT_CERTIFICATE_FILENAME: &str = "secure-boot.pem";
 /// This file is used to reset the TPM dictionary attack lockout counter.
 pub const TPM_LOCKOUT_AUTH_FILENAME: &str = "tpm.lockout.auth";
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Describes how the boot vault was unlocked.
+#[derive(PartialEq, Eq)]
 pub enum BootVaultUnlockMethod {
-    TpmToken(Option<String>),
+    TpmToken(Option<Zeroizing<String>>),
     RecoveryKey,
 }
 
@@ -99,8 +101,8 @@ impl BootVault {
     }
 
     /// Return the method used to unlock the vault after a successful mount, if any.
-    pub fn unlock_method(&self) -> Option<BootVaultUnlockMethod> {
-        self.unlock_method.clone()
+    pub fn unlock_method(&self) -> Option<&BootVaultUnlockMethod> {
+        self.unlock_method.as_ref()
     }
 
     /// Get a list of token indices that match the specified requirements.
@@ -449,7 +451,7 @@ impl BootVault {
     }
 
     /// Returns the PIN used to unlock the boot vault, if any
-    pub fn pin(&self) -> Option<&String> {
+    pub fn pin(&self) -> Option<&Zeroizing<String>> {
         match &self.unlock_method {
             Some(BootVaultUnlockMethod::TpmToken(pin)) => pin.as_ref(),
             _ => None,
@@ -457,7 +459,7 @@ impl BootVault {
     }
 
     /// Sets the PIN for TPM enrollment
-    pub fn set_pin(&mut self, pin: Option<String>) {
+    pub fn set_pin(&mut self, pin: Option<Zeroizing<String>>) {
         self.unlock_method = Some(BootVaultUnlockMethod::TpmToken(pin));
     }
 
@@ -508,16 +510,16 @@ impl BootVaultResources {
     ///
     /// Errors:
     /// - `PuavoError::IoError` if writing fails.
-    pub fn write_property(
+    pub fn write_property<T: AsRef<str>>(
         &self,
         key: &str,
-        value: String,
+        value: T,
     ) -> Result<(), PuavoError> {
         debug!("Writing property '{}' to boot vault", key);
 
         let property_path = self.mountpoint.join(key);
 
-        fs::write(property_path, value)
+        fs::write(property_path, value.as_ref())
             .map_err(|error| PuavoError::IoError(error))
     }
 
@@ -557,7 +559,7 @@ impl BootVaultResources {
     /// - `PuavoError::IoError` if writing fails.
     pub fn write_recovery_key(
         &self,
-        recovery_key: String,
+        recovery_key: &Zeroizing<String>,
     ) -> Result<(), PuavoError> {
         self.write_property(VAULT_RECOVERY_KEY, recovery_key)
     }
@@ -567,8 +569,10 @@ impl BootVaultResources {
     /// Errors:
     /// - `PuavoError::NoRecoveryKey` if the recovery key does not exist.
     /// - `PuavoError::IoError` if reading fails.
-    pub fn read_recovery_key(&self) -> Result<String, PuavoError> {
-        self.read_property(VAULT_RECOVERY_KEY)?.ok_or(PuavoError::NoRecoveryKey)
+    pub fn read_recovery_key(&self) -> Result<Zeroizing<String>, PuavoError> {
+        self.read_property(VAULT_RECOVERY_KEY)?
+            .ok_or(PuavoError::NoRecoveryKey)
+            .map(Zeroizing::new)
     }
 
     /// Set the version of the boot vault image format.
@@ -620,6 +624,11 @@ impl BootVaultResources {
     /// - `PuavoError::IoError` if reading fails.
     pub fn read_pcr_state(&self) -> Result<Option<String>, PuavoError> {
         self.read_property(PCR_STATE_FILENAME)
+    }
+
+    /// Return the path to the recovery key file within the vault.
+    pub fn recovery_key_path(&self) -> PathBuf {
+        self.mountpoint.join(VAULT_RECOVERY_KEY)
     }
 
     /// Return the path to the TPM lockout authorization file

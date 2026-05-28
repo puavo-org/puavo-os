@@ -6,6 +6,7 @@ use puavo_boot_trust_manager::{
     display::UserDisplay,
     utils::luks_tpm_token_manager::LuksTpmTokenManager,
 };
+use zeroize::Zeroizing;
 
 use crate::common::{display::TestDisplay, fixture_directory, luks, tpm};
 
@@ -102,7 +103,7 @@ pub fn enroll_and_tpm_unlock(
             LuksTpmTokenManager::from_device_path(primary_device_path.clone())
                 .expect("Failed to create primary manager");
 
-        boot_vault.set_pin(pin.map(|pin| pin.to_string()));
+        boot_vault.set_pin(pin.map(|pin| Zeroizing::new(pin.to_string())));
 
         let mut configurator = EnrollmentConfigurator::from_directory(
             fixture_directory(enrollment_configuration).as_str(),
@@ -128,12 +129,16 @@ pub fn enroll_and_tpm_unlock(
         .expect("TPM unlock should succeed");
 
     let expected_unlock_method = match pin {
-        Some(_) => {
-            BootVaultUnlockMethod::TpmToken(Some(pin.unwrap().to_string()))
-        }
+        Some(_) => BootVaultUnlockMethod::TpmToken(Some(Zeroizing::new(
+            pin.unwrap().to_string(),
+        ))),
         None => BootVaultUnlockMethod::TpmToken(None),
     };
-    assert_eq!(boot_vault.unlock_method(), Some(expected_unlock_method));
+    assert!(
+        boot_vault.unlock_method() == Some(&expected_unlock_method),
+        "Unexpected unlock method (pin={:?})",
+        pin
+    );
 
     let primary_manager =
         LuksTpmTokenManager::from_device_path(primary_device_path)
