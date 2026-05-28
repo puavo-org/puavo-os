@@ -5,7 +5,8 @@ use cryptoki::session::UserType;
 use cryptoki::types::AuthPin;
 
 use crate::{
-    DEFAULT_PIN, DEFAULT_SOFTWARE_MODULE, HsmSession, HsmSessionError, pkcs11,
+    DEFAULT_PIN, DEFAULT_SOFTWARE_MODULE, HsmSession, HsmSessionError,
+    default_pin, pkcs11,
 };
 
 /// Shared test token label.
@@ -36,10 +37,11 @@ fn initialize_test_environment() -> Result<(), HsmSessionError> {
 fn cleanup_leftover_objects() -> Result<(), HsmSessionError> {
     let module_path = Path::new(DEFAULT_SOFTWARE_MODULE);
 
-    let session = HsmSession::new(module_path, TEST_TOKEN_LABEL, DEFAULT_PIN)
-        .inspect_err(|error| {
-        tracing::warn!("Failed to open session for cleanup: {}", error);
-    })?;
+    let session =
+        HsmSession::new(module_path, TEST_TOKEN_LABEL, &default_pin())
+            .inspect_err(|error| {
+                tracing::warn!("Failed to open session for cleanup: {}", error);
+            })?;
 
     let template = vec![];
     let objects = session.session().find_objects(&template).unwrap_or(vec![]);
@@ -163,7 +165,7 @@ impl TestHsmSession {
 
         let module_path = Path::new(DEFAULT_SOFTWARE_MODULE);
         let session =
-            HsmSession::new(module_path, TEST_TOKEN_LABEL, DEFAULT_PIN)?;
+            HsmSession::new(module_path, TEST_TOKEN_LABEL, &default_pin())?;
 
         Ok(Self { session })
     }

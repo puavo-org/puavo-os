@@ -27,6 +27,7 @@ anyhow = "1.0"
 toml.workspace = true
 nix = { version = "0.29", features = ["user", "fs"] }
 libc = "0.2"
+zeroize.workspace = true
 
 # Cryptography
 cryptoki.workspace = true

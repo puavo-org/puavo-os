@@ -133,7 +133,7 @@ fn format_recovery_key_datas_text(key_datas: &[RecoveryKeyData]) -> String {
             ),
             key_data.serial_number,
             key_data.organisation_id,
-            String::from_utf8_lossy(&key_data.recovery_key[..])
+            String::from_utf8_lossy(&key_data.recovery_key.0[..])
         ));
     }
     output.trim_end().to_string()

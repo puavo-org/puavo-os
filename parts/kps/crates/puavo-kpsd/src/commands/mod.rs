@@ -6,6 +6,7 @@ use crate::context::DaemonContext;
 use async_trait::async_trait;
 use puavo_ipc::{DaemonResponse, OrganisationCommand};
 use std::{path::PathBuf, sync::Arc};
+use zeroize::Zeroizing;
 
 /// Trait for executing KPS commands
 ///
@@ -16,7 +17,7 @@ pub trait CommandExecutor: Send + Sync {
     async fn execute_initialize(
         &self,
         context: Arc<DaemonContext>,
-        hsm_pin: String,
+        hsm_pin: Zeroizing<String>,
     ) -> DaemonResponse;
 
     /// Execute organisation command
@@ -65,7 +66,7 @@ impl CommandExecutor for DefaultCommandExecutor {
     async fn execute_initialize(
         &self,
         context: Arc<DaemonContext>,
-        hsm_pin: String,
+        hsm_pin: Zeroizing<String>,
     ) -> DaemonResponse {
         initialize::execute(context, hsm_pin).await
     }

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+use zeroize::{Zeroize, Zeroizing};
 
 /// Parse a path and convert relative paths to absolute paths.
 pub fn parse_absolute_path(path: &str) -> Result<PathBuf, String> {
@@ -44,10 +45,10 @@ pub enum OutputFormat {
 }
 
 /// Stores a value that should be redacted from debug output
-#[derive(Clone, Default, Serialize, Deserialize)]
-pub struct Secret<T>(pub T);
+#[derive(Default, Clone, Serialize, Deserialize)]
+pub struct Secret<T: Zeroize + Default>(pub Zeroizing<T>);
 
-impl<T> fmt::Debug for Secret<T> {
+impl<T: Zeroize + Default> fmt::Debug for Secret<T> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "<redacted>")
     }
@@ -92,7 +93,7 @@ pub struct RecoveryKeyData {
     /// Organisation ID
     pub organisation_id: String,
     /// Actual recovery key bytes
-    pub recovery_key: Vec<u8>,
+    pub recovery_key: Secret<Vec<u8>>,
     // Version field for this structure
     pub version: u32,
 }

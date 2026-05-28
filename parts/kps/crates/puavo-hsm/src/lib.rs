@@ -5,6 +5,8 @@ pub mod tests;
 use std::{path::Path, sync::OnceLock};
 
 use cryptoki::context::{CInitializeArgs, Pkcs11};
+use zeroize::Zeroizing;
+
 pub use key_management::{HsmKeyManager, KeyLabel};
 pub use session::{HsmSession, HsmSessionError};
 pub use tests::TestHsmSession;
@@ -17,6 +19,11 @@ pub const DEFAULT_TOKEN_LABEL: &str = "puavo-kps";
 
 /// Default PIN for HSM authentication
 pub const DEFAULT_PIN: &str = "123456";
+
+/// Return the default PIN as an owned, zeroized on drop.
+pub fn default_pin() -> Zeroizing<String> {
+    Zeroizing::new(DEFAULT_PIN.to_owned())
+}
 
 /// Global PKCS#11 context
 static PKCS11: OnceLock<Pkcs11> = OnceLock::new();

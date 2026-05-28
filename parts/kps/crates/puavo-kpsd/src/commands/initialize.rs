@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use puavo_ipc::DaemonResponse;
+use zeroize::Zeroizing;
 
 use crate::context::DaemonContext;
 
@@ -13,7 +14,7 @@ use crate::context::DaemonContext;
 /// Daemon response with success or error
 pub async fn execute(
     context: Arc<DaemonContext>,
-    hsm_pin: String,
+    hsm_pin: Zeroizing<String>,
 ) -> DaemonResponse {
     tracing::info!("Initializing Key Provisioning Station");
 

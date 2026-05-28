@@ -16,6 +16,7 @@ use tokio::net::unix::{SocketAddr, UCred};
 use tokio::net::{UnixListener, UnixStream};
 use tokio::signal;
 use tokio::sync::mpsc::{self, UnboundedSender};
+use zeroize::Zeroize as _;
 
 /// Main daemon structure
 pub struct Daemon {
@@ -207,13 +208,17 @@ impl<E: CommandExecutor> ClientHandler<E> {
             let response = self.process_message(message).await;
 
             // Serialize and send response
-            let response_bytes = bincode::serialize(&response)
+            let mut response_bytes = bincode::serialize(&response)
                 .map_err(|error| Error::Serialization(error.to_string()))?;
 
             self.stream
                 .write_all(&response_bytes)
                 .await
                 .map_err(Error::ClientWrite)?;
+
+            // Zeroize any secrets included in the received bytes
+            buffer[..bytes_read].zeroize();
+            response_bytes.zeroize();
         }
 
         tracing::debug!("Client disconnected");

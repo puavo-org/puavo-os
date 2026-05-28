@@ -14,7 +14,7 @@ use puavo_hsm::{
 };
 use puavo_ipc::{
     DaemonResponse, DaemonResponseData, EncryptionAlgorithm,
-    RECOVERY_KEY_DATA_VERSION, RecoveryBundle, RecoveryKeyData,
+    RECOVERY_KEY_DATA_VERSION, RecoveryBundle, RecoveryKeyData, Secret,
 };
 use rxing::{BarcodeFormat, DecodeHints};
 use std::{
@@ -22,6 +22,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use zeroize::Zeroizing;
 
 /// Default encryption algorithm used when generating new recovery bundles.
 /// NOTE(recovery-bundle-rsa-oaep):
@@ -90,12 +91,12 @@ impl From<RecoveryKeyError> for DaemonResponse {
 fn create_recovery_key_data(
     serial_number: String,
     organisation_id: String,
-    recovery_key: Vec<u8>,
+    recovery_key: Zeroizing<Vec<u8>>,
 ) -> RecoveryKeyData {
     RecoveryKeyData {
         serial_number,
         organisation_id,
-        recovery_key,
+        recovery_key: Secret(recovery_key),
         version: RECOVERY_KEY_DATA_VERSION,
     }
 }
@@ -117,11 +118,12 @@ pub fn encrypt_recovery_key_data(
     public_key: &PKey<Public>,
     serial_number: String,
     organisation_id: String,
-    recovery_key: Vec<u8>,
+    recovery_key: Zeroizing<Vec<u8>>,
 ) -> Result<(String, EncryptionAlgorithm), RecoveryKeyError> {
     let key_data =
         create_recovery_key_data(serial_number, organisation_id, recovery_key);
-    let serialized_key_data = serde_json::to_vec(&key_data)?;
+    let serialized_key_data: Zeroizing<Vec<u8>> =
+        Zeroizing::new(serde_json::to_vec(&key_data)?);
     let algorithm = DEFAULT_ENCRYPTION_ALGORITHM.clone();
     let (encrypted_key_data_bytes, algorithm) =
         encrypt(public_key, &serialized_key_data, algorithm)?;
@@ -182,7 +184,7 @@ fn decrypt(
     private_key_handle: &ObjectHandle,
     encrypted_key_data: &[u8],
     algorithm: &EncryptionAlgorithm,
-) -> Result<Vec<u8>, KeyManagementError> {
+) -> Result<Zeroizing<Vec<u8>>, KeyManagementError> {
     let session = hsm_session.session();
 
     let key_data = match algorithm {
@@ -212,7 +214,7 @@ fn decrypt(
         }
     };
 
-    Ok(key_data)
+    Ok(Zeroizing::new(key_data))
 }
 
 fn decrypt_with_organisation_key(
@@ -221,7 +223,7 @@ fn decrypt_with_organisation_key(
     organisation_key_version: u32,
     encrypted_key_data: &[u8],
     algorithm: &EncryptionAlgorithm,
-) -> Result<Vec<u8>, KeyManagementError> {
+) -> Result<Zeroizing<Vec<u8>>, KeyManagementError> {
     tracing::info!("Decrypting recovery key data");
 
     let key_label =
@@ -250,7 +252,7 @@ fn create_recovery_bundle(
     hsm_session: &HsmSession,
     organisation_id: String,
     serial_number: String,
-    recovery_key: Vec<u8>,
+    recovery_key: Zeroizing<Vec<u8>>,
 ) -> Result<RecoveryBundle, RecoveryKeyError> {
     tracing::info!(
         "Generating recovery key for device {} in organisation {}",
@@ -446,7 +448,8 @@ pub fn execute_generate(
             .into_iter()
             .zip(recovery_key_files.iter())
             .map(|(serial_number, recovery_key_file)| {
-                let recovery_key = fs::read(recovery_key_file)?;
+                let recovery_key: Zeroizing<Vec<u8>> =
+                    Zeroizing::new(fs::read(recovery_key_file)?);
                 // TODO(recovery-key-format): Validate recovery key format?
 
                 create_recovery_bundle(
@@ -864,7 +867,7 @@ mod tests {
                 let key_data = &key_datas[0];
                 assert_eq!(key_data.serial_number, serial_number);
                 assert_eq!(key_data.organisation_id, organisation_id);
-                assert_eq!(key_data.recovery_key, recovery_key);
+                assert_eq!(*key_data.recovery_key.0, recovery_key);
                 assert_eq!(key_data.version, RECOVERY_KEY_DATA_VERSION);
             }
             _ => panic!("Expected success response with recovery key data"),
@@ -935,12 +938,15 @@ mod tests {
                 let key_data_first = &key_datas[0];
                 assert_eq!(key_data_first.serial_number, serial_number_first);
                 assert_eq!(key_data_first.organisation_id, organisation_id);
-                assert_eq!(key_data_first.recovery_key, recovery_key_first);
+                assert_eq!(*key_data_first.recovery_key.0, recovery_key_first);
 
                 let key_data_second = &key_datas[1];
                 assert_eq!(key_data_second.serial_number, serial_number_second);
                 assert_eq!(key_data_second.organisation_id, organisation_id);
-                assert_eq!(key_data_second.recovery_key, recovery_key_second);
+                assert_eq!(
+                    *key_data_second.recovery_key.0,
+                    recovery_key_second
+                );
             }
             _ => panic!("Expected success response with recovery key data"),
         }
@@ -975,7 +981,7 @@ mod tests {
             &public_key,
             serial_number.clone(),
             organisation_id.clone(),
-            recovery_key.clone(),
+            Zeroizing::new(recovery_key.clone()),
         )
         .unwrap();
 
@@ -997,7 +1003,7 @@ mod tests {
 
         assert_eq!(decrypted_data.serial_number, serial_number);
         assert_eq!(decrypted_data.organisation_id, organisation_id);
-        assert_eq!(decrypted_data.recovery_key, recovery_key);
+        assert_eq!(*decrypted_data.recovery_key.0, recovery_key);
         assert_eq!(decrypted_data.version, RECOVERY_KEY_DATA_VERSION);
     }
 

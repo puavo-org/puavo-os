@@ -630,7 +630,7 @@ mod tests {
                 let key_data = &key_datas[0];
                 assert_eq!(key_data.serial_number, serial_number);
                 assert_eq!(key_data.organisation_id, organisation_id);
-                assert_eq!(key_data.recovery_key, recovery_key);
+                assert_eq!(*key_data.recovery_key.0, recovery_key);
                 assert_eq!(key_data.version, RECOVERY_KEY_DATA_VERSION);
             }
             other => {

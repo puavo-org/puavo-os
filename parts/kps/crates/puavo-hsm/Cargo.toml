@@ -7,6 +7,7 @@ edition.workspace = true
 cryptoki.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
+zeroize.workspace = true
 
 # Cryptography
 openssl.workspace = true

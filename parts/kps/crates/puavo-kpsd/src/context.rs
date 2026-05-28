@@ -5,6 +5,7 @@ use puavo_hsm::{
     session::{HsmSessionManager, HsmSessionPool},
 };
 use r2d2::PooledConnection;
+use zeroize::Zeroizing;
 
 use crate::{config::KpsConfig, error::Error};
 
@@ -33,7 +34,10 @@ impl DaemonContext {
     ///
     /// Parameters:
     /// * `pin` - HSM PIN to use for sessions
-    pub fn initialize_session_pool(&self, pin: String) -> Result<(), Error> {
+    pub fn initialize_session_pool(
+        &self,
+        pin: Zeroizing<String>,
+    ) -> Result<(), Error> {
         let session_manager = HsmSessionManager::new(
             self.config.hsm.module_path.clone(),
             self.config.hsm.token_label.clone(),

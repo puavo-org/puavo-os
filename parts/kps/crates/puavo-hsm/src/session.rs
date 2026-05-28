@@ -5,6 +5,7 @@ use cryptoki::slot::Slot;
 use cryptoki::types::AuthPin;
 use r2d2::ManageConnection;
 use std::path::{Path, PathBuf};
+use zeroize::Zeroizing;
 
 use crate::pkcs11;
 
@@ -78,7 +79,7 @@ impl HsmSession {
     pub fn new(
         module_path: &Path,
         token_label: &str,
-        pin: &str,
+        pin: &Zeroizing<String>,
     ) -> Result<Self, HsmSessionError> {
         // Get or initialize the global PKCS#11 context
         let pkcs11 = pkcs11(module_path);
@@ -99,7 +100,7 @@ impl HsmSession {
             .map_err(HsmSessionError::SessionOpenFailed)?;
 
         // Authenticate
-        let pin = AuthPin::new(pin.to_string());
+        let pin = AuthPin::new(pin.as_str().to_owned());
         session
             .login(UserType::User, Some(&pin))
             // If we are already logged in, ignore the error.
@@ -143,7 +144,7 @@ pub type HsmSessionPool = r2d2::Pool<HsmSessionManager>;
 pub struct HsmSessionManager {
     module_path: PathBuf,
     token_label: String,
-    pin: String,
+    pin: Zeroizing<String>,
 }
 
 impl HsmSessionManager {
@@ -156,7 +157,11 @@ impl HsmSessionManager {
     ///
     /// Returns:
     /// New HSM session manager instance
-    pub fn new(module_path: PathBuf, token_label: String, pin: String) -> Self {
+    pub fn new(
+        module_path: PathBuf,
+        token_label: String,
+        pin: Zeroizing<String>,
+    ) -> Self {
         Self { module_path, token_label, pin }
     }
 
@@ -172,7 +177,7 @@ impl HsmSessionManager {
             .open_rw_session(slot)
             .map_err(HsmSessionError::SessionOpenFailed)?;
 
-        let pin = AuthPin::new(self.pin.clone());
+        let pin = AuthPin::new(self.pin.as_str().to_owned());
         session
             .login(UserType::User, Some(&pin))
             .or_else(|error| match error {
@@ -233,7 +238,7 @@ impl ManageConnection for HsmSessionManager {
         tracing::debug!("Authenticating HSM session on slot {}", slot_id);
 
         // Authenticate
-        let pin = AuthPin::new(self.pin.clone());
+        let pin = AuthPin::new(self.pin.as_str().to_owned());
         session
             .login(UserType::User, Some(&pin))
             // If we are already logged in, ignore the error.

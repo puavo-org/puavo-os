@@ -6,6 +6,7 @@ use anyhow::{Result, bail};
 use puavo_ipc::{
     Commands, DaemonCommand, DaemonResponse, IpcError, OutputFormat, Secret,
 };
+use zeroize::Zeroizing;
 
 /// Prompt user for HSM PIN
 ///
@@ -14,8 +15,9 @@ use puavo_ipc::{
 ///
 /// Errors:
 /// Returns error if password prompt fails
-fn prompt_for_hsm_pin() -> Result<String> {
+fn prompt_for_hsm_pin() -> Result<Zeroizing<String>> {
     rpassword::prompt_password("Enter HSM PIN: ")
+        .map(Zeroizing::new)
         .map_err(|error| anyhow::anyhow!("Failed to read PIN: {}", error))
 }
 

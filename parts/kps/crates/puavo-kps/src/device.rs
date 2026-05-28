@@ -5,7 +5,9 @@ use openssl::{
 };
 use puavo_ipc::{OrganisationPublicKey, RecoveryBundle};
 use puavo_kpsd::commands::recovery::encrypt_recovery_key_data;
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
+use tokio::fs;
+use zeroize::Zeroizing;
 
 /// Errors that can occur during device-local operations
 #[derive(Debug, thiserror::Error)]
@@ -66,7 +68,8 @@ pub async fn generate_recovery_bundle_local(
         parse_rsa_public_key_from_pem(&public_key_data.public_key_pem)?;
 
     // Read recovery key from file
-    let recovery_key = tokio::fs::read(&recovery_key_file).await?;
+    let recovery_key: Zeroizing<Vec<u8>> =
+        Zeroizing::new(fs::read(&recovery_key_file).await?);
     // TODO(recovery-key-format): Validate recovery key format?
 
     // Generate recovery bundle using shared logic from recovery.rs
@@ -90,7 +93,7 @@ pub async fn generate_recovery_bundle_local(
 
     tracing::info!("Writing recovery bundle to: {}", output.display());
     let json_content = serde_json::to_string_pretty(&recovery_bundle)?;
-    tokio::fs::write(&output, json_content).await?;
+    fs::write(&output, json_content).await?;
 
     println!("Recovery bundle generated successfully");
     Ok(recovery_bundle)
@@ -108,7 +111,7 @@ fn get_system_serial_number() -> Result<String, DeviceRecoveryError> {
     let paths = ["/sys/class/dmi/id/product_serial"];
 
     for path in paths.iter() {
-        if let Ok(serial) = fs::read_to_string(path) {
+        if let Ok(serial) = std::fs::read_to_string(path) {
             let serial = serial.trim();
             if !serial.is_empty() && serial != "Not Specified" {
                 return Ok(serial.to_string());
@@ -133,7 +136,7 @@ fn get_system_serial_number() -> Result<String, DeviceRecoveryError> {
 async fn load_organisation_public_key_json(
     path: &PathBuf,
 ) -> Result<OrganisationPublicKey, DeviceRecoveryError> {
-    let serialized_public_key = tokio::fs::read_to_string(path).await?;
+    let serialized_public_key = fs::read_to_string(path).await?;
 
     if serialized_public_key.trim().is_empty() {
         return Err(DeviceRecoveryError::PublicKeyNotFound(
