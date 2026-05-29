@@ -14,6 +14,7 @@ use crate::{
     error::PuavoError,
     utils::{
         hashed::Hashed,
+        locale,
         luks_tpm_token_manager::{
             LuksTpmEnrollmentPolicy, LuksTpmTokenManager,
         },
@@ -425,7 +426,8 @@ impl Configurator for EnrollmentConfigurator {
         primary_partition: &mut LuksTpmTokenManager,
         display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
-        let _ = display.show_message("Configuring disk encryption...");
+        let _ =
+            display.show_message(locale::strings().configuring_disk_encryption);
         self.enroll_all(boot_vault, primary_partition)
     }
 

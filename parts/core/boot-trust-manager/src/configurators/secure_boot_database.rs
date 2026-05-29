@@ -11,7 +11,7 @@ use crate::{
     devices::boot_vault::{BootVault, BootVaultResources},
     display::UserDisplay,
     error::PuavoError,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    utils::{locale, luks_tpm_token_manager::LuksTpmTokenManager},
 };
 
 /// Directory where Secure Boot database update subdirectories are placed.
@@ -296,7 +296,7 @@ impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
         _primary_partition: &mut LuksTpmTokenManager,
         display: &Box<dyn UserDisplay>,
     ) -> Result<(), PuavoError> {
-        let _ = display.show_message("Updating Secure Boot...");
+        let _ = display.show_message(locale::strings().updating_secure_boot);
         self.apply_updates(&boot_vault.resources().clone())
     }
 

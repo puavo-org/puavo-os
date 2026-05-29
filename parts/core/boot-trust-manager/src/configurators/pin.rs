@@ -6,7 +6,7 @@ use crate::{
     devices::boot_vault::{BootVault, BootVaultUnlockMethod},
     display::UserDisplay,
     error::PuavoError,
-    utils::{efi, luks_tpm_token_manager::LuksTpmTokenManager},
+    utils::{efi, locale, luks_tpm_token_manager::LuksTpmTokenManager},
 };
 
 /// Reason for PIN configurator activation
@@ -50,10 +50,11 @@ impl PinConfigurator {
         &self,
         display: &Box<dyn UserDisplay>,
     ) -> Result<PinPromptOutcome, PuavoError> {
+        let strings = locale::strings();
         loop {
             // Ask for confirmation before each attempt (provides exit opportunity)
             let _ = display.clear();
-            if !display.ask_yes_no("Change PIN?")? {
+            if !display.ask_yes_no(strings.change_pin_question)? {
                 info!("User cancelled PIN change");
                 return Ok(PinPromptOutcome::Cancelled);
             }
@@ -61,12 +62,11 @@ impl PinConfigurator {
             let _ = display.clear();
 
             // Get new PIN
-            let new_pin =
-                display.ask_password("Enter new PIN (empty to remove)")?;
+            let new_pin = display.ask_password(strings.enter_new_pin)?;
 
             // Handle PIN removal (empty PIN)
             if new_pin.is_empty() {
-                if display.ask_yes_no("Remove PIN protection?")? {
+                if display.ask_yes_no(strings.remove_pin_question)? {
                     info!("User confirmed PIN removal");
                     return Ok(PinPromptOutcome::Remove);
                 }
@@ -74,11 +74,12 @@ impl PinConfigurator {
             }
 
             // Confirm new PIN
-            let confirmed_pin = display.ask_password("Confirm new PIN")?;
+            let confirmed_pin =
+                display.ask_password(strings.confirm_new_pin)?;
 
             // Check if PINs match
             if new_pin.as_str() != confirmed_pin.as_str() {
-                let _ = display.show_message("PINs do not match");
+                let _ = display.show_message(strings.pins_do_not_match);
                 continue;
             }
 
