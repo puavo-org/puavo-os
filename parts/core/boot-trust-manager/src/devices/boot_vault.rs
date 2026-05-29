@@ -19,6 +19,7 @@ use crate::{
     display::UserDisplay,
     error::PuavoError,
     utils::{
+        locale,
         luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS},
         mount::unmount,
         recovery_qr,
@@ -208,18 +209,20 @@ impl BootVault {
         let recovery_qr_attempt =
             if tokens.is_empty() { 0 } else { MAX_PIN_ONLY_ATTEMPTS };
 
+        let strings = locale::strings();
+
         for attempt in 0.. {
             if attempt == recovery_qr_attempt {
                 recovery_qr::show_recovery_qr();
             }
 
             let prompt = if tokens.is_empty() {
-                "Recovery Key"
+                strings.recovery_key_prompt
             } else if attempt < MAX_PIN_ONLY_ATTEMPTS {
                 // Reveal the option for recovery key after a few failed attempts (aesthetic choice)
-                "PIN"
+                strings.pin_prompt
             } else {
-                "PIN or Recovery Key"
+                strings.pin_or_recovery_key_prompt
             };
 
             let user_input = match display.ask_password(prompt) {
@@ -279,7 +282,7 @@ impl BootVault {
                 }
             }
 
-            let _ = display.show_message("Unlocking failed");
+            let _ = display.show_message(strings.unlock_failed);
         }
 
         Err(PuavoError::UnlockError)

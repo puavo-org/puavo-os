@@ -15,6 +15,7 @@ use crate::{
     error::PuavoError,
     utils::{
         efi,
+        locale::{self, Strings},
         luks_tpm_token_manager::LuksTpmTokenManager,
         mount::{MountGuard, unmount},
         tpm,
@@ -85,8 +86,8 @@ impl BootTrustManager {
                 return;
             }
             error!("Configuration failed: {}", error);
-            let _ = display.show_message(&format!("Configuration failed: {}",
-                                                  error));
+            let prefix = locale::strings().configuration_failed_prefix;
+            let _ = display.show_message(&format!("{}: {}", prefix, error));
         })
     }
 
@@ -196,6 +197,7 @@ impl BootTrustManager {
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
         let (efi_mount, primary_device_path) = Self::setup(None)?;
+        Self::install_locale(&efi_mount.mountpoint);
 
         Self::configure_with_paths(
             display,
@@ -206,6 +208,12 @@ impl BootTrustManager {
         )
 
         // EFI partition is automatically unmounted here
+    }
+
+    fn install_locale(efi_mountpoint: &PathBuf) {
+        let locale_value =
+            locale::read_locale_from_grub_environment(efi_mountpoint);
+        locale::set_strings(Strings::for_locale(locale_value));
     }
 
     /// Configure the boot trust manager using explicitly specified paths.
@@ -353,6 +361,7 @@ impl BootTrustManager {
         }
 
         let (efi_mount, _) = Self::setup(device)?;
+        Self::install_locale(&efi_mount.mountpoint);
 
         // Setup boot vault using the EFI partition mount
         let boot_vault_image_path = efi_mount.mountpoint.join(VAULT_PATH);
