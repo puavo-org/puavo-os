@@ -197,7 +197,7 @@ impl BootVault {
     fn try_unlock_with_user_input(
         &mut self,
         device: &mut CryptDevice,
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         debug!("Attempting unlock with user input");
 
@@ -299,10 +299,10 @@ impl BootVault {
     fn open_luks_device(
         &mut self,
         loop_device_path: &PathBuf,
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
     ) -> Result<CryptDevice, PuavoError> {
         debug!("Initializing LUKS device for loop path {:?}", loop_device_path);
-        let mut device = CryptInit::init(&loop_device_path)?;
+        let mut device = CryptInit::init(loop_device_path)?;
 
         debug!("Loading LUKS device from {}", loop_device_path.display());
         device
@@ -356,7 +356,7 @@ impl BootVault {
     pub fn mount(
         &mut self,
         image_path: &PathBuf,
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         if !image_path.exists() {
             info!("Boot vault is not installed");
@@ -381,16 +381,14 @@ impl BootVault {
 
         let luks_device = self
             .open_luks_device(&loop_device_path, display)
-            .map_err(|error| {
+            .inspect_err(|_error| {
                 let _ = loop_device.detach();
-                error
             })?;
 
         debug!("LUKS device activated as {}", VAULT_LUKS_DEVICE_NAME);
 
-        self.mount_luks_device().map_err(|error| {
+        self.mount_luks_device().inspect_err(|_error| {
             let _ = loop_device.detach();
-            error
         })?;
 
         let luks_device_manager = LuksTpmTokenManager::new(
@@ -430,7 +428,7 @@ impl BootVault {
 
         // Unmount the LUKS device
         if let Some(mountpoint) = self.mountpoint.take() {
-            if let Err(error) = unmount(&Path::new(&mountpoint).to_path_buf()) {
+            if let Err(error) = unmount(Path::new(&mountpoint)) {
                 warn!("Failed to unmount {}: {}", mountpoint, error);
             }
 
@@ -440,9 +438,9 @@ impl BootVault {
         }
 
         // Close the LUKS device now that it is unmounted
-        self.luks_device.take().map(|mut luks_device| {
+        if let Some(mut luks_device) = self.luks_device.take() {
             let _ = luks_device.unmount(VAULT_LUKS_DEVICE_NAME);
-        });
+        }
 
         // Detach the loop device from which the LUKS device was opened
         if let Some(loop_device) = self.loop_device.take() {
@@ -523,7 +521,7 @@ impl BootVaultResources {
         let property_path = self.mountpoint.join(key);
 
         fs::write(property_path, value.as_ref())
-            .map_err(|error| PuavoError::IoError(error))
+            .map_err(PuavoError::IoError)
     }
 
     /// Read the specified property from the mounted vault.
@@ -545,7 +543,7 @@ impl BootVaultResources {
             Ok(value) => Ok(Some(value)),
             Err(error) => {
                 if error.kind() == io::ErrorKind::NotFound {
-                    return Ok(None);
+                    Ok(None)
                 } else {
                     Err(error.into())
                 }

@@ -13,7 +13,7 @@ use nix::libc::{self, MNT_DETACH};
 /// This first tries a lazy unmount (`MNT_DETACH`) to reduce EBUSY errors,
 /// and falls back to a regular unmount. Returns the last OS error if both
 /// attempts fail.
-pub fn unmount(mountpoint: &PathBuf) -> io::Result<()> {
+pub fn unmount(mountpoint: &Path) -> io::Result<()> {
     let path =
         CString::new(mountpoint.as_os_str().as_bytes()).map_err(|_| {
             io::Error::new(io::ErrorKind::InvalidInput, "Invalid mountpoint")

@@ -23,7 +23,7 @@ pub fn device_from_device_node_path<P: AsRef<Path>>(
             device
                 .devnode()
                 .and_then(|node| fs::canonicalize(node).ok())
-                .map_or(false, |node_canonical| node_canonical == target)
+                .is_some_and(|node_canonical| node_canonical == target)
         })
         .ok_or_else(|| {
             io::Error::new(
@@ -40,8 +40,5 @@ pub fn device_from_device_node_path<P: AsRef<Path>>(
 
 /// Return the filesystem type (ID_FS_TYPE) reported by udev for a device, if available.
 pub fn filesystem_type(device: &Device) -> Option<&str> {
-    device
-        .property_value("ID_FS_TYPE")
-        .map(|property| property.to_str())
-        .flatten()
+    device.property_value("ID_FS_TYPE").and_then(|property| property.to_str())
 }

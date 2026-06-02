@@ -63,7 +63,7 @@ fn mount_guard_explicit_unmount() {
 #[serial]
 fn unmount_nonexistent_fails() {
     let temp = TempDir::new().unwrap();
-    let result = unmount(&temp.path().to_path_buf());
+    let result = unmount(temp.path());
     assert!(result.is_err());
 }
 

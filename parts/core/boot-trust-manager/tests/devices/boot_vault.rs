@@ -57,7 +57,7 @@ fn mount_with_recovery_key() {
     let images = setup();
 
     let mut vault = BootVault::default();
-    let result = vault.mount(&PathBuf::from(&images.vault), &display());
+    let result = vault.mount(&PathBuf::from(&images.vault), &*display());
     assert!(result.is_ok(), "Failed to mount boot vault: {:?}", result.err());
 
     let key = vault.resources().read_recovery_key();
@@ -81,7 +81,7 @@ fn mount_with_wrong_key_fails() {
         Box::new(TestDisplay::with_password("wrong-key").with_max_attempts(3));
 
     let mut vault = BootVault::default();
-    let result = vault.mount(&PathBuf::from(&images.vault), &wrong_display);
+    let result = vault.mount(&PathBuf::from(&images.vault), &*wrong_display);
     assert!(result.is_err(), "Mount should fail with wrong key");
 }
 
@@ -91,7 +91,7 @@ fn resources_read_write_property() {
     let images = setup();
 
     let mut vault = BootVault::default();
-    vault.mount(&PathBuf::from(&images.vault), &display()).unwrap();
+    vault.mount(&PathBuf::from(&images.vault), &*display()).unwrap();
 
     let resources = vault.resources();
     resources
@@ -118,7 +118,7 @@ fn mount_with_tpm_succeeds_when_pcr_matches() {
     {
         let mut vault = BootVault::default();
         vault
-            .mount(&PathBuf::from(&images.vault), &display())
+            .mount(&PathBuf::from(&images.vault), &*display())
             .expect("Initial mount failed");
 
         let mut primary_manager =
@@ -135,7 +135,7 @@ fn mount_with_tpm_succeeds_when_pcr_matches() {
 
     let mut vault = BootVault::default();
     let result =
-        vault.mount(&PathBuf::from(&images.vault), &no_password_display);
+        vault.mount(&PathBuf::from(&images.vault), &*no_password_display);
 
     assert!(result.is_ok(), "TPM unlock should succeed: {:?}", result.err());
     assert!(
@@ -163,7 +163,7 @@ fn mount_with_tpm_fails_when_pcr_changes() {
     {
         let mut vault = BootVault::default();
         vault
-            .mount(&PathBuf::from(&images.vault), &display())
+            .mount(&PathBuf::from(&images.vault), &*display())
             .expect("Initial mount failed");
 
         let mut primary_manager =
@@ -182,7 +182,7 @@ fn mount_with_tpm_fails_when_pcr_changes() {
 
     // TPM based unlock should fail, because we changed PCR 16
     let mut vault = BootVault::default();
-    let result = vault.mount(&PathBuf::from(&images.vault), &display());
+    let result = vault.mount(&PathBuf::from(&images.vault), &*display());
 
     assert!(
         result.is_ok(),
@@ -214,7 +214,7 @@ fn mount_with_tpm_fails_completely_when_pcr_changes_and_no_recovery_key() {
     {
         let mut vault = BootVault::default();
         vault
-            .mount(&PathBuf::from(&images.vault), &display())
+            .mount(&PathBuf::from(&images.vault), &*display())
             .expect("Initial mount failed");
 
         let mut primary_manager =
@@ -237,7 +237,7 @@ fn mount_with_tpm_fails_completely_when_pcr_changes_and_no_recovery_key() {
 
     let mut vault = BootVault::default();
     let result =
-        vault.mount(&PathBuf::from(&images.vault), &no_password_display);
+        vault.mount(&PathBuf::from(&images.vault), &*no_password_display);
 
     assert!(
         result.is_err(),

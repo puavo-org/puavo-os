@@ -37,7 +37,7 @@ pub fn verify_no_tokens(token_managers: &mut [&mut LuksTpmTokenManager]) {
 /// Helper to mount the boot vault and return it along with the primary partition manager.
 pub fn mount_vault_and_primary(
     images: &luks::TestImages,
-    display: &Box<dyn UserDisplay>,
+    display: &dyn UserDisplay,
 ) -> (BootVault, LuksTpmTokenManager) {
     // Set up loop device for primary partition
     let primary_loop = std::process::Command::new("losetup")
@@ -96,7 +96,7 @@ pub fn enroll_and_tpm_unlock(
     {
         let mut boot_vault = BootVault::default();
         boot_vault
-            .mount(&PathBuf::from(&images.vault), &display())
+            .mount(&PathBuf::from(&images.vault), &*display())
             .expect("Initial mount failed");
 
         let mut primary_manager =
@@ -119,13 +119,13 @@ pub fn enroll_and_tpm_unlock(
 
     // Unlock the vault with TPM
     let unlock_display: Box<dyn UserDisplay> = match pin {
-        Some(pin) => Box::new(TestDisplay::with_password(&pin)),
+        Some(pin) => Box::new(TestDisplay::with_password(pin)),
         None => Box::new(TestDisplay::with_password("").with_max_attempts(0)),
     };
 
     let mut boot_vault = BootVault::default();
     boot_vault
-        .mount(&PathBuf::from(&images.vault), &unlock_display)
+        .mount(&PathBuf::from(&images.vault), &*unlock_display)
         .expect("TPM unlock should succeed");
 
     let expected_unlock_method = match pin {

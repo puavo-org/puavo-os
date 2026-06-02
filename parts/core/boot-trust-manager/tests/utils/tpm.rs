@@ -181,7 +181,7 @@ fn test_dictionary_lockout_and_clear() {
     let mut boot_vault = BootVault::default();
 
     for _ in 0..wrong_passwords.len() {
-        let _ = boot_vault.mount(&PathBuf::from(&images.vault), &display);
+        let _ = boot_vault.mount(&PathBuf::from(&images.vault), &*display);
     }
 
     // Verify TPM is now locked out

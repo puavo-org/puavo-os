@@ -21,7 +21,7 @@ fn enrollment_does_not_activate_when_unlocked_with_recovery_key() {
     let configurator = enrollment_configurator();
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Boot vault was unlocked with recovery key, because the base LUKS images have no TPM tokens.
     // By default, enrollment is skipped if boot vault is opened with recovery key.
@@ -44,7 +44,7 @@ fn enrollment_activates_when_no_tpm_tokens_exist() {
     let configurator = enrollment_configurator();
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Force enrollment to be required.
     // By default, enrollment is skipped if boot vault is opened with recovery key.
@@ -65,7 +65,7 @@ fn enroll_all_creates_tpm_tokens() {
     let mut configurator = enrollment_configurator();
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Verify there are no TPM tokens on the boot vault and primary manager
     verify_no_tokens(&mut [boot_vault.device_mut(), &mut primary_manager]);
@@ -108,7 +108,7 @@ fn enrollment_with_pin_creates_pin_protected_tokens() {
     let mut configurator = enrollment_configurator();
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Verify there are no TPM tokens on the boot vault and primary manager
     verify_no_tokens(&mut [boot_vault.device_mut(), &mut primary_manager]);
@@ -169,7 +169,7 @@ fn run_configurators_enrolls_only_boot_vault() {
     // Mount boot vault
     let mut boot_vault = BootVault::default();
     boot_vault
-        .mount(&PathBuf::from(&images.vault), &display())
+        .mount(&PathBuf::from(&images.vault), &*display())
         .expect("Failed to mount boot vault");
 
     // Force enrollment
@@ -182,7 +182,7 @@ fn run_configurators_enrolls_only_boot_vault() {
 
     // Run configurators directly
     BootTrustManager::run_configurators(
-        &display(),
+        &*display(),
         boot_vault,
         primary_manager,
         configurators,

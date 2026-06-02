@@ -75,7 +75,7 @@ pub trait Configurator {
         &mut self,
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
     ) -> Result<(), PuavoError>;
 
     /// Return a friendly name for this configurator.

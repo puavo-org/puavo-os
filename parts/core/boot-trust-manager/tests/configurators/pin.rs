@@ -37,7 +37,7 @@ fn setup_primary_loop(images: &luks::TestImages) -> String {
 /// Helper to mount the boot vault and return it along with the primary partition manager.
 fn mount_vault_and_primary(
     images: &luks::TestImages,
-    display: &Box<dyn UserDisplay>,
+    display: &dyn UserDisplay,
 ) -> (BootVault, LuksTpmTokenManager) {
     let primary_device_path = setup_primary_loop(images);
 
@@ -63,7 +63,7 @@ fn activates_when_unlocked_with_recovery_key() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Boot vault was unlocked with recovery key (default for base images without TPM tokens)
     let activated = configurator
@@ -87,7 +87,7 @@ fn activates_when_pin_change_requested_via_efi() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Simulate TPM unlock
     boot_vault.set_pin(None);
@@ -112,7 +112,7 @@ fn does_not_activate_when_unlocked_with_tpm() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Simulate TPM unlock by setting the unlock method
     boot_vault.set_pin(None);
@@ -137,7 +137,7 @@ fn configure_sets_new_pin() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Create display that provides PIN and confirmation
     let pin_display: Box<dyn UserDisplay> = Box::new(
@@ -146,7 +146,7 @@ fn configure_sets_new_pin() {
     );
 
     configurator
-        .configure(&mut boot_vault, &mut primary_manager, &pin_display)
+        .configure(&mut boot_vault, &mut primary_manager, &*pin_display)
         .expect("Configure failed");
 
     // Verify PIN was set
@@ -169,7 +169,7 @@ fn configure_removes_pin_when_empty() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Create display that provides empty PIN and confirms removal
     let pin_display: Box<dyn UserDisplay> = Box::new(
@@ -180,7 +180,7 @@ fn configure_removes_pin_when_empty() {
     );
 
     configurator
-        .configure(&mut boot_vault, &mut primary_manager, &pin_display)
+        .configure(&mut boot_vault, &mut primary_manager, &*pin_display)
         .expect("Configure failed");
 
     // Verify PIN was removed (set to None)
@@ -203,7 +203,7 @@ fn configure_cancelled_by_user() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Create display that cancels the PIN change
     let pin_display: Box<dyn UserDisplay> = Box::new(
@@ -212,7 +212,7 @@ fn configure_cancelled_by_user() {
     );
 
     configurator
-        .configure(&mut boot_vault, &mut primary_manager, &pin_display)
+        .configure(&mut boot_vault, &mut primary_manager, &*pin_display)
         .expect("Configure failed");
 
     // Verify PIN was not changed and enrollment is not required
@@ -232,7 +232,7 @@ fn configure_retries_on_pin_mismatch() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Create display that first provides mismatched PINs, then matching PINs
     let pin_display: Box<dyn UserDisplay> = Box::new(
@@ -247,7 +247,7 @@ fn configure_retries_on_pin_mismatch() {
     );
 
     configurator
-        .configure(&mut boot_vault, &mut primary_manager, &pin_display)
+        .configure(&mut boot_vault, &mut primary_manager, &*pin_display)
         .expect("Configure failed");
 
     // Verify the correct PIN was set after retry
@@ -264,7 +264,7 @@ fn configure_cancels_pin_removal() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Create display that provides empty PIN but cancels the removal
     let pin_display: Box<dyn UserDisplay> = Box::new(
@@ -280,7 +280,7 @@ fn configure_cancels_pin_removal() {
     );
 
     configurator
-        .configure(&mut boot_vault, &mut primary_manager, &pin_display)
+        .configure(&mut boot_vault, &mut primary_manager, &*pin_display)
         .expect("Configure failed");
 
     // Verify the PIN was set (not removed) after user cancelled removal
@@ -303,7 +303,7 @@ fn configure_handles_display_error() {
         .remove(0);
 
     let (mut boot_vault, mut primary_manager) =
-        mount_vault_and_primary(&images, &display());
+        mount_vault_and_primary(&images, &*display());
 
     // Create display that will fail when asking for password
     let pin_display: Box<dyn UserDisplay> = Box::new(
@@ -315,7 +315,7 @@ fn configure_handles_display_error() {
     let result = configurator.configure(
         &mut boot_vault,
         &mut primary_manager,
-        &pin_display,
+        &*pin_display,
     );
 
     assert!(

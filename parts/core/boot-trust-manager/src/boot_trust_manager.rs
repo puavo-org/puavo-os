@@ -75,7 +75,7 @@ impl BootTrustManager {
 
         let display = choose_display(self.configuration.force_console);
 
-        Self::configure(&display, configurators).inspect_err(|error| {
+        Self::configure(&*display, configurators).inspect_err(|error| {
             if matches!(error,
                         PuavoError::NoEFIBootDisk(_)
                           | PuavoError::NoBootVault
@@ -103,7 +103,7 @@ impl BootTrustManager {
     /// Errors:
     /// Returns `PuavoError` if configurator execution fails.
     fn check_secure_boot_and_run_configurators(
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
         boot_vault: BootVault,
         primary_partition_manager: LuksTpmTokenManager,
         configurators: Vec<Box<dyn Configurator>>,
@@ -133,7 +133,7 @@ impl BootTrustManager {
     /// Errors:
     /// Returns `PuavoError` if configurator execution fails.
     pub fn run_configurators(
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
         mut boot_vault: BootVault,
         mut primary_partition_manager: LuksTpmTokenManager,
         configurators: Vec<Box<dyn Configurator>>,
@@ -193,7 +193,7 @@ impl BootTrustManager {
     /// accidental deletion of the EFI partition. Unmounting is handled by
     /// `MountGuard` on drop.
     fn configure(
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
         let (efi_mount, primary_device_path) = Self::setup(None)?;
@@ -229,7 +229,7 @@ impl BootTrustManager {
     /// - `Ok(())` on success.
     /// - `Err(error)` if configuration fails.
     pub fn configure_with_paths(
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
         configurators: Vec<Box<dyn Configurator>>,
         boot_vault_image_path: &PathBuf,
         primary_device_path: String,
@@ -371,7 +371,7 @@ impl BootTrustManager {
         info!("Mounting boot vault");
 
         let display = choose_display(self.configuration.force_console);
-        boot_vault.mount(&boot_vault_image_path, &display)?;
+        boot_vault.mount(&boot_vault_image_path, &*display)?;
 
         info!("Boot vault mounted at {}", VAULT_MOUNTPOINT);
 

@@ -294,7 +294,7 @@ impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
         &mut self,
         boot_vault: &mut BootVault,
         _primary_partition: &mut LuksTpmTokenManager,
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         let _ = display.show_message(locale::strings().updating_secure_boot);
         self.apply_updates(&boot_vault.resources().clone())

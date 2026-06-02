@@ -424,7 +424,7 @@ impl Configurator for EnrollmentConfigurator {
         &mut self,
         boot_vault: &mut BootVault,
         primary_partition: &mut LuksTpmTokenManager,
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         let _ =
             display.show_message(locale::strings().configuring_disk_encryption);

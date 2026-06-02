@@ -93,7 +93,7 @@ impl LuksTpmEnrollmentPolicy {
         debug!("Looking for PCR public keys in directory: {}", directory);
 
         // Collect the paths of each public key and compute its digest
-        for entry in fs::read_dir(&directory)? {
+        for entry in fs::read_dir(directory)? {
             let entry = entry?;
             let path = entry.path();
             let is_pcr_public_key = path
@@ -148,19 +148,17 @@ impl LuksTpmTokenManager {
 
         match token.get_key_value(TPM_TOKEN_PIN_FIELD) {
             Some((_, Value::Bool(pin))) => Ok(*pin),
-            Some((_, value)) => {
-                return Err(PuavoError::LuksError(format!(
-                    "Unexpected token PIN value: {0}",
-                    value
-                )));
-            }
+            Some((_, value)) => Err(PuavoError::LuksError(format!(
+                "Unexpected token PIN value: {0}",
+                value
+            ))),
             None => Ok(false),
         }
     }
 
     /// Construct a manager from an existing crypt device handle and its path.
     pub fn new(device: CryptDevice, device_path: String) -> Self {
-        Self { device, device_path: device_path.into() }
+        Self { device, device_path }
     }
 
     /// Construct a manager by initializing and loading a LUKS2 device from a device path (e.g. `/dev/nvme0n1p3`).
@@ -411,7 +409,7 @@ impl LuksTpmTokenManager {
         self.device.volume_key_handle().get(
             None,
             &mut volume_key_buffer,
-            Some(&passphrase_bytes),
+            Some(passphrase_bytes),
         )?;
 
         Ok(())

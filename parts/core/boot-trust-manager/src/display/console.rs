@@ -13,6 +13,12 @@ impl ConsoleDisplay {
     }
 }
 
+impl Default for ConsoleDisplay {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UserDisplay for ConsoleDisplay {
     /// Ask for a password on the controlling terminal.
     ///

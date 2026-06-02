@@ -48,7 +48,7 @@ impl PinConfigurator {
     /// Returns `PuavoError` if reading from the display fails.
     fn prompt_for_new_pin(
         &self,
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
     ) -> Result<PinPromptOutcome, PuavoError> {
         let strings = locale::strings();
         loop {
@@ -120,7 +120,7 @@ impl Configurator for PinConfigurator {
         &mut self,
         boot_vault: &mut BootVault,
         _primary_partition: &mut LuksTpmTokenManager,
-        display: &Box<dyn UserDisplay>,
+        display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         // Determine the reason for activation
         let reason = if efi::is_pin_change_requested() {

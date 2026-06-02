@@ -7,7 +7,7 @@ pub fn reset() {
     let setup_script = script("tpm.sh");
     let status = Command::new(setup_script.as_str())
         .status()
-        .expect(format!("Failed to execute '{}'", setup_script).as_str());
+        .unwrap_or_else(|_| panic!("Failed to execute '{}'", setup_script));
     assert!(status.success(), "TPM reset failed");
 }
 
