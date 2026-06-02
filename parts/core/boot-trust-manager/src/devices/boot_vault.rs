@@ -22,7 +22,7 @@ use crate::{
         locale,
         luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS},
         mount::unmount,
-        recovery_qr,
+        recovery_qr, tpm,
         udev::device_from_device_node_path,
     },
 };
@@ -43,6 +43,10 @@ pub const VAULT_LUKS_DEVICE_PATH: &str = "/dev/mapper/puavo-boot-vault";
 /// Number of attempts before changing the prompt from "PIN" to "PIN or Recovery Key".
 /// This is purely aesthetic. Both unlock methods are always tried regardless of the prompt.
 pub const MAX_PIN_ONLY_ATTEMPTS: usize = 3;
+
+/// How many more attempts to allow after the device reports it is locked,
+/// before giving up so the user cannot keep guessing and prolong the lock.
+pub const MAX_LOCKED_OUT_ATTEMPTS: usize = 3;
 
 /// Mount point for the decrypted vault filesystem at runtime.
 pub const VAULT_MOUNTPOINT: &str = "/run/puavo/boot-vault";
@@ -187,9 +191,11 @@ impl BootVault {
 
     /// Attempt to unlock the LUKS device using user input (PIN or Recovery Key).
     ///
-    /// This function loops indefinitely, prompting the user for input and trying:
-    /// 1. TPM token unlock with the input as PIN
-    /// 2. Standard LUKS passphrase unlock with the input as recovery key
+    /// Each input is tried first as a PIN against the TPM tokens, then as a
+    /// recovery key. The recovery key therefore always works. Once the device
+    /// reports it is locked from too many wrong PINs, only
+    /// fixed number of further attempts are allowed before giving
+    /// up, so the user cannot keep guessing and prolong the lock.
     ///
     /// Parameters:
     /// - `device`: The crypt device handle to activate.
@@ -210,6 +216,9 @@ impl BootVault {
             if tokens.is_empty() { 0 } else { MAX_PIN_ONLY_ATTEMPTS };
 
         let strings = locale::strings();
+
+        // Attempts made after the device reported a lockout.
+        let mut locked_out_attempts = 0usize;
 
         for attempt in 0.. {
             if attempt == recovery_qr_attempt {
@@ -282,7 +291,21 @@ impl BootVault {
                 }
             }
 
-            let _ = display.show_message(strings.unlock_failed);
+            // Stop after a few attempts once the device is locked, so repeated
+            // guesses cannot make the lock last even longer.
+            if tpm::is_in_lockout().unwrap_or(false) {
+                locked_out_attempts += 1;
+                let _ = display.show_message("The device is temporarily locked from too many attempts. Enter the recovery key, or restart and try again later.");
+                if locked_out_attempts >= MAX_LOCKED_OUT_ATTEMPTS {
+                    warn!(
+                        "Giving up after {} locked attempts",
+                        locked_out_attempts
+                    );
+                    break;
+                }
+            } else {
+                let _ = display.show_message(strings.unlock_failed);
+            }
         }
 
         Err(PuavoError::UnlockError)

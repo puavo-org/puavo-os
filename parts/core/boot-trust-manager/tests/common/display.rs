@@ -14,6 +14,8 @@ pub struct TestDisplay {
     max_attempts: u32,
     /// Current attempt count
     attempts: Cell<u32>,
+    /// Prompts passed to `ask_password`, in order.
+    prompts: RefCell<Vec<String>>,
 }
 
 impl TestDisplay {
@@ -24,6 +26,7 @@ impl TestDisplay {
             yes_no_responses: RefCell::new(Vec::new()),
             max_attempts: u32::MAX,
             attempts: Cell::new(0),
+            prompts: RefCell::new(Vec::new()),
         }
     }
 
@@ -36,7 +39,13 @@ impl TestDisplay {
             yes_no_responses: RefCell::new(Vec::new()),
             max_attempts: u32::MAX,
             attempts: Cell::new(0),
+            prompts: RefCell::new(Vec::new()),
         }
+    }
+
+    /// Return the prompts passed to `ask_password` so far, in order.
+    pub fn recorded_prompts(&self) -> Vec<String> {
+        self.prompts.borrow().clone()
     }
 
     /// Set the maximum number of password attempts before returning an error.
@@ -55,8 +64,10 @@ impl TestDisplay {
 impl UserDisplay for TestDisplay {
     fn ask_password(
         &self,
-        _prompt: &str,
+        prompt: &str,
     ) -> Result<Zeroizing<String>, PuavoError> {
+        self.prompts.borrow_mut().push(prompt.to_string());
+
         let current = self.attempts.get();
         if current >= self.max_attempts {
             return Err(PuavoError::UnlockError);

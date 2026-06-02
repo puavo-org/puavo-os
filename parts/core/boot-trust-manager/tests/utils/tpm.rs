@@ -8,7 +8,9 @@ use crate::{
     configurators::enrollment::common::enroll_and_tpm_unlock,
 };
 use puavo_boot_trust_manager::{
-    devices::boot_vault::BootVault,
+    devices::boot_vault::{
+        BootVault, BootVaultUnlockMethod, MAX_LOCKED_OUT_ATTEMPTS,
+    },
     display::UserDisplay,
     utils::tpm::{
         clear_dictionary_lockout, is_in_lockout, read_pcrs, read_pcrs_as_string,
@@ -201,5 +203,84 @@ fn test_dictionary_lockout_and_clear() {
     assert!(
         !is_in_lockout().expect("Failed to check lockout status"),
         "TPM should not be locked out after clearing"
+    );
+}
+
+/// Drive the TPM into lockout by mounting with many wrong PINs. A PIN bound
+/// token must already be enrolled.
+fn drive_into_lockout(images: &luks::TestImages) {
+    let wrong_passwords: Vec<&str> = (0..12).map(|_| "wrong-pin").collect();
+    let display: Box<dyn UserDisplay> =
+        Box::new(TestDisplay::with_passwords(wrong_passwords));
+
+    let mut boot_vault = BootVault::default();
+    let _ = boot_vault.mount(&PathBuf::from(&images.vault), &*display);
+
+    assert!(
+        is_in_lockout().expect("Failed to check lockout status"),
+        "TPM should be locked out after repeated wrong PIN attempts"
+    );
+}
+
+#[test]
+#[serial]
+fn recovery_key_unlocks_while_tpm_locked_out() {
+    tpm::reset();
+    let images = luks::setup("recovery_while_locked_out");
+
+    {
+        // Enroll a PIN bound TPM token on both devices.
+        let (_boot_vault, _primary_manager) =
+            enroll_and_tpm_unlock(&images, "simple-enrollment", Some("1234"));
+    }
+
+    drive_into_lockout(&images);
+
+    // With the TPM locked out, the recovery key must still unlock the vault.
+    let display: Box<dyn UserDisplay> =
+        Box::new(TestDisplay::with_password(luks::RECOVERY_KEY));
+
+    let mut boot_vault = BootVault::default();
+    let result = boot_vault.mount(&PathBuf::from(&images.vault), &*display);
+
+    assert!(
+        result.is_ok(),
+        "Recovery key should unlock while TPM is locked out: {:?}",
+        result.err()
+    );
+    assert!(
+        matches!(
+            boot_vault.unlock_method(),
+            Some(BootVaultUnlockMethod::RecoveryKey)
+        ),
+        "Expected unlock via recovery key while the TPM is locked out"
+    );
+}
+
+#[test]
+#[serial]
+fn unlock_gives_up_after_repeated_attempts_while_locked_out() {
+    tpm::reset();
+    let images = luks::setup("give_up_when_locked_out");
+
+    {
+        // Enroll a PIN bound TPM token on both devices.
+        let (_boot_vault, _primary_manager) =
+            enroll_and_tpm_unlock(&images, "simple-enrollment", Some("1234"));
+    }
+
+    drive_into_lockout(&images);
+
+    let wrong: Vec<&str> = (0..10).map(|_| "still-wrong").collect();
+    let recording = TestDisplay::with_passwords(wrong);
+
+    let mut boot_vault = BootVault::default();
+    let result = boot_vault.mount(&PathBuf::from(&images.vault), &recording);
+
+    assert!(result.is_err(), "Unlock should fail with only wrong entries");
+    assert_eq!(
+        recording.recorded_prompts().len(),
+        MAX_LOCKED_OUT_ATTEMPTS,
+        "Unlock should give up after the locked attempt limit"
     );
 }
