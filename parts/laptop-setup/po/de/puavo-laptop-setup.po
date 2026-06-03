@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: puavo-laptop-setup\n"
-"Last-Translator: Hannu Järvistö\n"
+"Last-Translator: Ralf Krause\n"
 "Language-Team: none\n"
-"Language: fi\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -35,52 +35,52 @@ msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
 msgstr ""
-"Es ist jetzt möglich Windows beim Startmenü wählen. Das Menü wird kurz nach "
-"dem Einschalten von dem Computer gezeigt."
+"Windows kann jetzt im Startmenü ausgewählt werden. Das Menü wird kurz nach "
+"dem Einschalten des Computers gezeigt."
 
 #: puavo-laptop-setup:357
 msgid ""
 "Abitti 2 is not updated when running Windows, you have to boot into the "
 "current system to update it."
 msgstr ""
-"Abitti 2 wird unter Windows nicht aktualisiert; du musst in das aktuelle "
-"System booten, um es zu aktualisieren."
+"Abitti 2 wird nicht aktualisiert, wenn Windows läuft. "
+"Du musst in das derzeitige Testsystem booten, um es zu aktualisieren."
 
 #: puavo-laptop-setup:508
 msgid "error saving changes"
-msgstr "Fehler beim Speichern der Veränderungen"
+msgstr "Fehler beim Speichern der Änderungen"
 
 #: puavo-laptop-setup:543
 msgid "Factory reset is running step"
-msgstr "Das Zurücksetzen der Werkseinstellungen Schritt"
+msgstr "Zurücksetzen auf Standardeinstellungen - Schritt"
 
 #: puavo-laptop-setup:556
 msgid "Factory reset is running"
-msgstr "Das Zurücksetzen der Werkseinstellungen wird durchgeführt"
+msgstr "Das Zurücksetzen auf Standardeinstellungen wird ausgeführt"
 
 #: puavo-laptop-setup:564
 msgid "Failed to start factory reset"
-msgstr "Das Zurücksetzen der Werkseinstellungen konnte nicht gestartet werden"
+msgstr "Das Zurücksetzen auf Standardeinstellungen konnte nicht gestartet werden"
 
 #: puavo-laptop-setup:567 puavo-laptop-setup:598
 msgid "Factory reset failed"
-msgstr "Das Zurücksetzen der Werkseinstellungen ist gescheitert"
+msgstr "Das Zurücksetzen auf Standardeinstellungen ist fehlgeschlagen"
 
 #: puavo-laptop-setup:585
 msgid "Factory reset succeeded."
-msgstr "Das Zurücksetzen der Werkseinstellungen ist gefolgt."
+msgstr "Das Zurücksetzen auf Standardeinstellungen war erfolgreich."
 
 #: puavo-laptop-setup:587
 msgid "The system is going to reboot in few seconds..."
-msgstr "Das System wird in einigen Sekunden neugestartet."
+msgstr "Das System wird in wenigen Sekunden neugestartet ..."
 
 #: puavo-laptop-setup:600
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
 msgstr ""
-"Weitere Informationen können aus der Werkseinstellungslog gelesen werden. "
-"Bitte Kontakt mit Helpdesk aufnehmen."
+"Weitere Details sind in den Logdaten zu finden. "
+"Kontaktiere zur Unterstützung bitte den Helpdesk."
 
 #: puavo-laptop-setup:669
 msgid "Change PIN on next boot?"
@@ -98,7 +98,7 @@ msgstr ""
 
 #: puavo-laptop-setup:680 puavo-laptop-setup.glade:452
 msgid "Cancel"
-msgstr "Absagen"
+msgstr "Abbrechen"
 
 #: puavo-laptop-setup:681
 msgid "Request PIN change"
@@ -126,15 +126,15 @@ msgstr "Fehler beim Laden der Wiederherstellungsdaten"
 
 #: puavo-laptop-setup:819 puavo-laptop-setup:885
 msgid "Laptop setup"
-msgstr "Laptop Einstellungen"
+msgstr "Laptop-Einstellungen"
 
 #: puavo-laptop-setup:875
 msgid "You do not have the required permissions to use this tool."
-msgstr "Sie haben nicht ausreichende Rechte um dieses Werkzeug zu verwenden"
+msgstr "Du hast nicht die notwendigen Rechte, um dieses Tool zu verwenden."
 
 #: puavo-laptop-setup:885
 msgid "is already running"
-msgstr "schon im Gang"
+msgstr "sind bereits geöffnet"
 
 #: puavo-laptop-setup.glade:20 puavo-laptop-setup.glade:31
 msgid "Abitti 2 version"
@@ -142,7 +142,7 @@ msgstr "Abitti-2-Version"
 
 #: puavo-laptop-setup.glade:42
 msgid "Show developer mode in boot menu"
-msgstr "Entwicklungsmodus beim Startmenü zeigen"
+msgstr "Entwicklungsmodus im Startmenü anzeigen"
 
 #: puavo-laptop-setup.glade:53
 msgid "Default operating system at boot"
@@ -179,7 +179,7 @@ msgstr "Windows aktivieren"
 
 #: puavo-laptop-setup.glade:251
 msgid "Factory reset..."
-msgstr "Das Zurücksetzen der Werkseinstellungen..."
+msgstr "Zurücksetzen auf Standardeinstellungen ..."
 
 #: puavo-laptop-setup.glade:263
 msgid "Disk encryption..."
@@ -208,15 +208,15 @@ msgstr "Festplatten-Wiederherstellungs-QR-Code"
 
 #: puavo-laptop-setup.glade:434
 msgid "Confirmation of factory reset"
-msgstr "Bestätigung des Zurücksetzens auf die Werkseinstellungen"
+msgstr "Bestätigung zum Zurücksetzen auf Standardeinstellungen"
 
-#: puavo-laptop-setup.glade:468
+#: puavo-laptop-setup.glade:311
 msgid "Reset"
 msgstr "Zurücksetzen"
 
 #: puavo-laptop-setup.glade:491
 msgid "Select operating systems to reset:"
-msgstr "Wählen Sie die Betriebssysteme zum Zurücksetzen aus:"
+msgstr "Wähle die Betriebssysteme zum Zurücksetzen aus:"
 
 #: puavo-laptop-setup.glade:537
 msgid ""
@@ -224,16 +224,14 @@ msgid ""
 "data</span> from selected operating systems and restores their state to "
 "factory settings!</big>"
 msgstr ""
-"<big>Beim Zurücksetzen auf die Werkseinstellungen <span foreground=\"red\" "
-"size=\"x-large\"> werden alle Benutzerdaten</span> von ausgewählten "
-"Betriebssystemen <span foreground=\"red\" size=\"x-large\">gelöscht</span> "
-"und \n"
-"deren Zustand auf die Werkseinstellungen zurückgesetzt!</big>"
+"<big>Das Zurücksetzen <span foreground=\"red\" size=\"x-large\"> "
+"löscht alle Nutzerdaten </span> in den ausgewählten Betriebssystemen "
+"und stellt die Standardeinstellungen wieder her!</big>"
 
 #: puavo-laptop-setup.glade:552
 msgid "Factory reset"
-msgstr "Das Zurücksetzen der Werkseinstellungen"
+msgstr "Zurücksetzen auf Standardeinstellungen"
 
 #: puavo-laptop-setup.glade:612
 msgid "Factory reset log"
-msgstr "Protokoll zum Zurücksetzen der Werkseinstellungen"
+msgstr "Logdaten zum Zurücksetzen auf Standardeinstellungen"

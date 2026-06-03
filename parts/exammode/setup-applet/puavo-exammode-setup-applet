@@ -669,10 +669,16 @@ class ClipboardUrl(UrlInterface):
 
 
   def on_clipboard_main_change(self, clipboard, event):
+    if not self.chooser.window.get_visible():
+        # do not react if window is not open (less pointless URL checks)
+        return
     self.set_url_active(clipboard, event, True)
 
 
   def on_clipboard_primary_change(self, clipboard, event):
+    if not self.chooser.window.get_visible():
+        # do not react if window is not open (less pointless URL checks)
+        return
     # Use False for can_set_empty, as we want to keep the previous
     # clipboard URL in this case (main clipboard is preferred over primary
     # clipboard).

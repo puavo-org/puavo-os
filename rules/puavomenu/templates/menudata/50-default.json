@@ -843,14 +843,6 @@
         "nm-connection-editor": {
             "tags": "default"
         },
-        "novo_desktop_streamer": {
-            "type": "custom",
-            "command": "puavo-chromium-app run novo_desktop_streamer",
-            "name": "Novo Desktop Streamer",
-            "description": "Novo Desktop Streamer",
-            "icon": "/opt/puavo-chromium-apps/novo_desktop_streamer/logo.png",
-            "tags": "default"
-        },
         "novo-launcher": {
             "name": "LauncherOne",
             "tags": "default",
@@ -1908,8 +1900,7 @@
                 "org.gnome.NetworkDisplays",
                 "projecteur",
                 "novoconnect-software",
-                "novo-launcher",
-                "novo_desktop_streamer"
+                "novo-launcher"
             ]
         },
         "menu-arts": {
