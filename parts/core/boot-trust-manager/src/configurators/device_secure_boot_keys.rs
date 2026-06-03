@@ -105,7 +105,7 @@ impl Configurator for DeviceSecureBootKeysConfigurator {
         &mut self,
         boot_vault: &mut BootVault,
         _primary_partition: &mut LuksTpmTokenManager,
-        _display: &Box<dyn UserDisplay>,
+        _display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         info!("Installing device-specific Secure Boot keys for userspace");
         install_keys(
