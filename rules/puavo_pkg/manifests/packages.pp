@@ -43,7 +43,6 @@ class puavo_pkg::packages {
                         , 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
 			, 'passmark-performance-test'
-			, 'puavo-firmware-bookworm'
 			, 'rustdesk'
 			, 'schoolstore-ti-widgets'
 			, 'scratux'
