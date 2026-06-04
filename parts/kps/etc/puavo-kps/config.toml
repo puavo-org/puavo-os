@@ -1,0 +1,7 @@
+[hsm]
+module_path = "/usr/lib/x86_64-linux-gnu/pkcs11/opensc-pkcs11.so"
+token_label = "Pico-HSM"
+
+[socket]
+path = "/tmp/puavo-kps-daemon.sock"
+group = "puavo-role-admin"
