@@ -130,6 +130,7 @@ class packages {
     , 'iperf'
     , 'jc'
     , 'jq'
+    , 'libengine-pkcs11-openssl'        # for puavo-hsm
     , 'linssid'
     , 'lm-sensors'
     , 'lshw'
