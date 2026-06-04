@@ -1,5 +1,3 @@
-use puavo_hsm::{DEFAULT_SOFTWARE_MODULE, DEFAULT_TOKEN_LABEL};
-use puavo_ipc::{DEFAULT_SOCKET_GROUP, DEFAULT_SOCKET_PATH};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -30,21 +28,6 @@ pub struct SocketConfig {
     pub group: String,
 }
 
-impl Default for KpsConfig {
-    fn default() -> Self {
-        Self {
-            hsm: HsmConfig {
-                module_path: PathBuf::from(DEFAULT_SOFTWARE_MODULE),
-                token_label: DEFAULT_TOKEN_LABEL.to_string(),
-            },
-            socket: SocketConfig {
-                path: PathBuf::from(DEFAULT_SOCKET_PATH),
-                group: DEFAULT_SOCKET_GROUP.into(),
-            },
-        }
-    }
-}
-
 impl KpsConfig {
     /// Load configuration from TOML file
     ///
@@ -65,30 +48,6 @@ impl KpsConfig {
 
         Ok(config)
     }
-
-    /// Save configuration to TOML file
-    ///
-    /// Parameters:
-    /// * `path` - Path to save the configuration file
-    ///
-    /// Errors:
-    /// Returns `ConfigError` if file cannot be written or serialized
-    pub fn save(&self, path: &Path) -> Result<(), ConfigError> {
-        let contents = toml::to_string_pretty(self)
-            .map_err(|error| ConfigError::Serialization(error.to_string()))?;
-
-        // Create parent directory if it does not exist
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).map_err(|error| {
-                ConfigError::Write(path.to_path_buf(), error)
-            })?;
-        }
-
-        std::fs::write(path, contents)
-            .map_err(|error| ConfigError::Write(path.to_path_buf(), error))?;
-
-        Ok(())
-    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -96,12 +55,6 @@ pub enum ConfigError {
     #[error("Failed to read configuration file {0}: {1}")]
     Read(PathBuf, std::io::Error),
 
-    #[error("Failed to write configuration file {0}: {1}")]
-    Write(PathBuf, std::io::Error),
-
     #[error("Failed to parse configuration: {0}")]
     Parse(String),
-
-    #[error("Failed to serialize configuration: {0}")]
-    Serialization(String),
 }

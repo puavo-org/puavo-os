@@ -25,17 +25,6 @@ async fn main() -> Result<()> {
     tracing::info!("Starting KPS daemon");
     tracing::debug!("Loading configuration from: {:?}", arguments.config);
 
-    if arguments.write_default_config {
-        tracing::info!(
-            "Writing default configuration to: {:?}",
-            arguments.config
-        );
-        let default_config = config::KpsConfig::default();
-        default_config.save(&arguments.config)?;
-        tracing::info!("Default configuration written successfully");
-        return Ok(());
-    }
-
     // Load configuration
     let config = config::KpsConfig::load(&arguments.config)?;
     tracing::info!("Configuration loaded successfully");

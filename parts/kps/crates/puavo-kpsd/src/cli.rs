@@ -15,10 +15,6 @@ pub struct Cli {
     /// Enable verbose output
     #[arg(short, long)]
     pub verbose: bool,
-
-    /// Write default configuration to the config path and exit
-    #[arg(long)]
-    pub write_default_config: bool,
 }
 
 /// Parse command line arguments
