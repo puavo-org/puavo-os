@@ -234,7 +234,7 @@ def _extract(tarball_filepath: str, tarball_type: str):
                 _strip_components(member, 1)
             if not member.name:
                 continue
-            tarball.extract(member)
+            tarball.extract(member, filter='data')
 
 
 def _main() -> int:
