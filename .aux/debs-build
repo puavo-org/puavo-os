@@ -52,6 +52,11 @@ fi
   echo "Installing build dependencies for ${srcpkgname}"
   cd "$pkgworkdir"
 
+  debpkgname="$srcpkgname"
+  if [ -f "${srcpkgname}/puavo/info.json" ]; then
+    debpkgname=$(jq -r .name "${srcpkgname}/puavo/info.json")
+  fi
+
   mk_build_deps_options=()
   if [ -f "${srcpkgname}/puavo/build_profiles" ]; then
     build_profiles=$(cat "${srcpkgname}/puavo/build_profiles")
@@ -59,8 +64,8 @@ fi
   fi
   mk-build-deps "${mk_build_deps_options[@]}" "${srcpkgname}/debian/control"
   ${PUAVOOS_SUDO:-} apt-get install --no-install-recommends --yes \
-    "./${srcpkgname}-build-deps_"*.deb
-  rm -f "./${srcpkgname}-build-deps_"*.deb
+    "./${debpkgname}-build-deps_"*.deb
+  rm -f "./${debpkgname}-build-deps_"*.deb
 )
 
 echo "Building ${srcpkgname}"
