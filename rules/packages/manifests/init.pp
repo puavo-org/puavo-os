@@ -854,8 +854,7 @@ class packages {
 
   $all_dkms_modules =
     $::puavoimage_class ? {
-      'exam'  => [ $broadcom_sta_dkms_module
-                 , $puavo_command_line_signer_module ],
+      'exam'  => [ $broadcom_sta_dkms_module ],
       default => [ $broadcom_sta_dkms_module
                  , $nvidia_dkms_535_module
                  , $puavo_command_line_signer_module
