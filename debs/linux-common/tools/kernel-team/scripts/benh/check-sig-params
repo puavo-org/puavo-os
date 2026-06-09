@@ -1,0 +1,77 @@
+#!/usr/bin/python3
+
+# Check that detached signatures have the expected parameters
+
+import sys
+
+import asn1crypto.algos
+import asn1crypto.cms
+import asn1crypto.core
+
+
+# Signature algorithm should be RSA
+SIG_ALGO_OID = asn1crypto.core.ObjectIdentifier('1.2.840.113549.1.1.1')
+
+
+# Signature length should match key length (2048 bits)
+SIG_LEN = 2048 // 8
+
+
+def check_detached_sig(sig):
+    # The ContentInfo should be a SEQUENCE with signed data at index 1
+    if len(sig) < 2 or not isinstance(sig[1], asn1crypto.cms.SignedData):
+        return 'no signed data found'
+    sd = sig[1]
+
+    # The SignedData should be a SEQUENCE with signer infos at index 5
+    if len(sd) < 6 or not isinstance(sd[5], asn1crypto.cms.SignerInfos):
+        return 'no signer infos found'
+    infos = sd[5]
+
+    # The SignerInfos should be a SET with 1 item
+    if len(infos) != 1:
+        return f'found { len(infos) } signer infos; expected 1'
+    info = infos[0]
+
+    # The SignerInfo should be a SEQUENCE with the signature algorithm
+    # at index 4 and signature at index 5
+    if (len(info) < 6
+        or not isinstance(info[4], asn1crypto.algos.SignedDigestAlgorithm)
+        or len(info[4]) < 1
+        or not isinstance(info[5], asn1crypto.core.OctetString)):
+        return 'expected fields not found in signer info'
+
+    # Check the signature algorithm and length (see bug #1012741)
+    if info[4][0] != SIG_ALGO_OID:
+        return f'unexpected signature algorithm { info[4][0].dotted }'
+    actual_sig_len = len(bytes(info[5]))
+    if actual_sig_len != SIG_LEN:
+        return (f'signature length is { actual_sig_len } bytes;'
+                f' expected { SIG_LEN }')
+
+
+def load_detached_sig(name):
+    with open(name, 'rb') as f:
+        return asn1crypto.cms.ContentInfo.load(f.read())
+
+
+def main(names):
+    err_count = 0
+
+    for name in names:
+        try:
+            sig = load_detached_sig(name)
+        except Exception as e:
+            print(f'{name}: {e})', file=sys.stderr)
+            err_count += 1
+        else:
+            err = check_detached_sig(sig)
+            if err:
+                print(f'{name}: {err}', file=sys.stderr)
+                err_count += 1
+
+    return err_count
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]) != 0)

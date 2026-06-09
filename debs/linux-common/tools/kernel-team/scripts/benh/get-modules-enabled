@@ -1,0 +1,136 @@
+#!/usr/bin/python3
+
+# Dirty hack to work out which modules and built-in could-be-modules
+# are enabled.
+
+import os, os.path, re, sys
+
+def filter_dirs(dirs):
+    for excl in ['debian', '.pc', '.svk', '.svn']:
+        try:
+            dirs.remove(excl)
+        except ValueError:
+            pass
+
+def main(check_all, list_builtin, list_modules, config_path, source_path):
+    config_on = {}
+    tri_symbols = set()
+    symbol_used = set()
+    builtin = set()
+    modules = set()
+
+    with open(config_path) as config:
+        for line in config:
+            match = re.match(r'CONFIG_([A-Za-z0-9_]+)=([ym])\n', line)
+            if match:
+                config_on[match.group(1)] = match.group(2)
+
+    # Find tristate symbols.  Assume these are architecture-independent.
+    for root, dirs, files in os.walk(source_path):
+        filter_dirs(dirs)
+        for name in files:
+            if not name.startswith('Kconfig'):
+                continue
+            with open(os.path.join(root, name)) as kconfig:
+                symbol = None
+                for line in kconfig:
+                    if line[0] not in ' \t\n#':
+                        # New symbol, or in any case end of previous symbol
+                        match = re.match(r'(?:menu)?config\s+([A-Za-z0-9_]+)\s*$',
+                                     line)
+                        symbol = match and match.group(1)
+                    elif symbol:
+                        # Look for tristate type
+                        match = re.match(r'\s*(?:def_)?tristate\b', line)
+                        if match:
+                            if check_all or symbol in config_on:
+                                tri_symbols.add(symbol)
+                        else:
+                            if re.match(r'\s*(?:help|---help---)\s*$', line):
+                                # Don't scan help text
+                                symbol = None
+
+    # Find modules.  Again, assume these are architecture-independent.
+    for root, dirs, files in os.walk(source_path):
+        filter_dirs(dirs)
+        for name in files:
+            if not (name == 'Kbuild' or name.startswith('Makefile')):
+                continue
+            with open(os.path.join(root, name)) as makefile:
+                cont = False
+                for line in makefile:
+                    if not cont:
+                        match = re.match(
+                            r'\s*obj-\$\(CONFIG_([A-Za-z0-9_]+)\)\s*[+:]='
+                            r'\s*([^\s\\#][^\\#]*)(\\)?\s*',
+                            line)
+                        if not match:
+                            continue
+                        symbol = match.group(1)
+                        objs = match.group(2)
+                        cont = match.group(3) is not None
+                    else:
+                        match = re.match(r'([^\\#]*)(\\)?\s*', line)
+                        if not match:
+                            cont = False
+                            continue
+                        objs = match.group(1)
+                        cont = match.group(2) is not None
+                    if symbol in tri_symbols:
+                        symbol_used.add(symbol)
+                        if symbol not in config_on:
+                            continue
+                        # The list of objects might include variable
+                        # references, which we won't be able to expand.
+                        if config_on[symbol] == 'y':
+                            obj_set = builtin
+                        else:
+                            obj_set = modules
+                        for word in objs.strip().split():
+                            match = re.match(r'([A-Za-z0-9_\-]+)\.o$', word)
+                            if match:
+                                obj_set.add(match.group(1).replace('-', '_'))
+                            elif word.endswith('/'):
+                                pass
+                            else:
+                                print(
+                                    "W: Could not parse objects '%s' for %s" \
+                                    % (word, symbol),
+                                    file=sys.stderr)
+
+    # Sanity-check: every config option should have selected some code
+    for symbol in tri_symbols:
+        if symbol not in symbol_used:
+            print('W: No objects found for %s' % symbol,
+                  file=sys.stderr)
+            continue
+
+    results = []
+    if list_builtin:
+        for o in builtin:
+            results.append((o, 'y'))
+    if list_modules:
+        for o in modules:
+            results.append((o, 'm'))
+    results.sort()
+    for o, state in results:
+        print(state, o)
+
+if __name__ == '__main__':
+    from optparse import OptionParser
+
+    parser = OptionParser(usage='%prog [options] config-file source-dir')
+    parser.add_option('--check-all', action='store_true',
+                      help='Check all tristate options')
+    parser.add_option('--builtin', action='store_true',
+                      help='List only built-in could-be-modules')
+    parser.add_option('--modules', action='store_true',
+                      help='List only actual modules')
+    options, args = parser.parse_args()
+    if len(args) != 2:
+        parser.error('wrong number of arguments')
+
+    main(options.check_all,
+         options.builtin or not options.modules,
+         options.modules or not options.builtin,
+         *args)

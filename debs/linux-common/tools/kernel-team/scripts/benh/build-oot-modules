@@ -1,0 +1,136 @@
+#!/bin/bash -eu
+
+# Copyright 2018 Ben Hutchings
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+# This should be run in a disposable VM or chroot/container
+# environment, since it changes global configuration.
+
+suite="${1:-unstable}"
+arch="$(dpkg --print-architecture)"
+if [ $# -ge 2 ]; then
+    kver="$2"
+else
+    kver="$(uname -r)"
+fi
+
+# List all packages in the selected suite that depend on or recommend
+# the given package
+list_rdeps_rrecs() {
+    local section
+    for section in main contrib non-free; do
+	grep-dctrl -sPackage -n -FDepends,Recommends -w "$1" \
+            /var/lib/apt/lists/*"_dists_${suite}_${section}_binary-${arch}_Packages"
+    done
+}
+
+# Check for build warnings that we want to consider failures
+check_build_log() {
+    local opts
+    opts=()
+    # Module uses a symbol that's no longer exported
+    opts+=(-e '^WARNING: .* undefined!$')
+    # Module is not compatible with this architecture/version
+    opts+=(-e 'This indicates that it should not be built')
+    ! grep -q "${opts[@]}" "$1"
+}
+
+export DEBIAN_FRONTEND=noninteractive
+
+# Remove existing packages that work with DKMS, so that the next
+# command doesn't trigger builds
+packages="$(grep-status -sPackage -n -FDepends,Recommends -w dkms)" \
+|| test $? -eq 1
+test -z "$packages" || dpkg --purge $packages >/dev/null
+
+# Ensure we have the headers for the selected kernel version (but not
+# any others) installed
+apt-get install -y "linux-headers-$kver" >/dev/null
+packages="$(dpkg-query -f '${Package}\n' -W 'linux-headers-[1-9]*' \
+	    | grep -v -F "linux-headers-$kver" \
+	    | grep -v -- '-common$')" || test $? -eq 1
+test -z "$packages" || dpkg --purge $packages >/dev/null
+
+# Install DKMS and configure it to be verbose and build for "all" kernel
+# versions, which really means the selected version
+apt-get install -y dkms >/dev/null
+sed -i 's/^.*\bverbose=.*/verbose="y"/; s/^.*autoinstall_all_kernels=.*/autoinstall_all_kernels="y"/' /etc/dkms/framework.conf
+
+# Try to install and build all packages that work with DKMS.  This
+# assumes that their postinst builds the module.
+for package in $(list_rdeps_rrecs dkms); do
+    case "$package" in
+    live-task-recommended | octavia-agent)
+	# False positive
+	continue
+	;;
+    esac
+
+    installed=false
+    apt-get install -y --no-install-recommends "$package" >"$package.log" 2>&1 && installed=true
+
+    # Add the build log, which DKMS doesn't show even when verbose is
+    # enabled
+    if modconf="$(dpkg -L "$package" | grep '/dkms\.conf$')"; then
+	modlog="$(
+	    set +u
+	    dkms_tree=/var/lib/dkms
+	    source_tree=/usr/src
+	    source /etc/dkms/framework.conf
+	    kernelver="$kver"
+	    kernel_source_dir=/lib/modules/$kernelver/build
+	    source "$modconf" >/dev/null
+	    echo "$dkms_tree/$PACKAGE_NAME/$PACKAGE_VERSION/build/make.log"
+	)"
+	test -f "$modlog" && cat "$modlog" >>"$package.log"
+    fi
+
+    if $installed && check_build_log "$package.log"; then
+	echo "$package: PASS"
+    else
+	echo "$package: FAIL (details in $package.log)"
+    fi
+
+    # Remove it, otherwise dpkg may retry configuring (building)
+    # as part of the next installation
+    if ! apt-get purge -y "$package" >/dev/null 2>&1; then
+	echo >&2 "FATAL: failed to remove $package"
+	exit 1
+    fi
+done
+
+# Install module-assistant.
+# Some module source packages need debhelper when built with
+# module-assistant, but they only recommend it as they can be
+# built in other ways.  So make sure debhelper is installed
+# too.
+apt-get install -y module-assistant debhelper >/dev/null
+
+# Try to install and build all packages that work with module-assistant
+for package in $(list_rdeps_rrecs module-assistant); do
+    if [ "$package" = broadcom-sta-common ]; then
+	# False positive
+	continue
+    fi
+
+    if module-assistant -l "$kver" -i auto-build "$package" \
+       </dev/null >"$package.log" 2>&1 \
+       && check_build_log "$package.log"; then
+	echo "$package: PASS"
+    else
+	echo "$package: FAIL (details in $package.log)"
+    fi
+done

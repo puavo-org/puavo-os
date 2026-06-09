@@ -1,0 +1,154 @@
+The aim of this document is to start defining a policy which would cover the
+kernel and related packages for etch. This include the linux kernel packages
+for all arches, the third party modules, kernel-package, the initrd-tools, and
+other assorted stuff.
+
+1) Common linux kernel package for all architectures.
+
+We have to consider 3 levels, and not only two of them as you do, this is the
+case for the 2.4 powerpc kernels, will be the case for the 2.6 ones nextly,
+and is the case for the mips kernels, which have individual non-merged
+patches.
+
+The first level is the arch level, and we are all aware of what this means.
+Notice though that at least for powerpc, but probably for sparc and others
+too, the 64bit variant is not considered a different arch, in opposition to
+the x86/amd64 situation.
+
+The second level is the subarch level. Each kernel in a same subarch will have
+the exact same kernel source code, so if an arch has various conflicting patch
+sets (as was the case in 2.4 between the main powerpc, and the nubus/apus
+patches, and is the case on mips also as i understand). Another way to
+distinguish between subarches independently of patches is by saying that the
+kernel-header package that is generated for them differs. In the powerpc case,
+the ppc64 kernels form also a different subarch of the ppc kernels.
+
+The third level is the flavour level, and all flavours inside a given
+arch/subarch share the same source code and produce the same kernel-headers,
+and eventually the same kernel-patch if it is not empty. The only difference
+between them is that the .config file differes, and thus we generate different
+kernel-images and kernel-build files.
+
+There is a fourth hidden level which is for packages with indentic kernels,
+but which come in different packaging, like happened for powerpc, where we had
+the the main vmlinux used by yaboot, quik and bootx, but also the zImage.chrp
+and zImage.prep used on the chrp and prep subarches directly. I used to
+provide different packages for this in the 2.4 days, but it is a huge
+duplication of packages, and not really worth it. It is recomended to hide
+this level away and do the differentiation in a postinst, like the mkvmlinuz
+call of the 2.6 powerpc kernels.
+
+Any coments on the above ? I think it is sound, and it covers every existing
+case, while in many cases there will be only one subarch per arch, and many
+flavours. Maybe we need to rename stuff, but this has worked for the arches
+which need 3 levels.
+
+  Ok, I'll summarize to make sure that I understand it correctly. On powerpc
+  (and possibly on mips) you start with a common kernel source, which is
+  then patched with subarch-specific patches to produce subarch kernel
+  source. Kernels for different flavours within the subarch are built using
+  the same subarch kernel source, but different configs. Is that correct?
+
+So, what of the generated packages ? We have :
+
+source -> generate kernel-source, kernel-tree, kernel-patch and kernel-doc.
+
+arch -> nothing.
+
+subarch -> generates kernel-patch-<subarch> and kernel-headers-<subarch>
+
+flavour -> generates kernel-build and kernel-image.
+
+I think all of this is obvious, but i want to explain how
+kernel-headers/kernel-build work, and get some comment since this is perhaps
+the most difficult part of it, and it may not correspond to the needs of the
+non-powerpc arches.
+
+  --- traveller ---
+Well, I have slightly different ideas about it. First of all, I think that
+kernel-build package is completely redundant and is not present on many
+architectures. I think in the simplest possible scheme the subarch level
+is not required, so that we have only arch and flavours within it. In a
+unified scheme stuff is distributed over the packages as follows:
+
+kernel-source-$(version)
+        Contains source, debian patches, and arch/subarch specific
+        patches. The latter include the unmerged patches, such as hppa
+        kernel patch and your powerpc subarch-specific patches. The
+        rationale is to keep all the source code and patches in one pile.
+
+kernel-image-$(version)-$(abiname)-$(flavour)
+        Kernel image package for a particular flavour. kernel-image and
+        kernel-headers-* packages below are produced by the common
+        kernel-image package. In order to apply arch/subarch specific
+        patches, it will use the --added-patches mechanism of the
+        make-kpkg, infrastructure for it is already in place (well, I was
+        not counting that added patches may be flavour-specific, but this
+        is easy to correct).
+
+kernel-headers-$(version)-$(abiname)
+        This is arch-specific headers package containing all the common
+        headers/configs/Makefiles, etc.
+
+kernel-headers-$(version)-$(abiname)-$(flavour)
+        This is flavour-specific headers package, containing the
+        flavour-specific headers/configs/Makefiles, etc. This should
+        depend on the arch-specific kernel-headers package above, and
+        setup the symbolic links to the dirs in it, so that the
+        /usr/src/kernel-headers-$(version)-$(abiname)-$(flavour)
+        directory contains the complete tree, needed for building of
+        out-of-tree modules.
+
+kernel-image-$(version)-$(abiname)-$(flavour)
+        Kernel image matching the above kernel-headers package.
+
+In order to build the out-of-tree modules one then has to install the
+kernel-headers-$(version)-$(abiname)-$(flavour), corresponding to
+their kernel. This will pull in the arch-specific headers package and
+provide the complete tree. Note, that
+kernel-headers-$(version)-$(abiname)-$(flavour) package should provide a
+symbolic link
+
+/lib/modules/$(version)-$(abiname)-$(flavour)/build ->
+/usr/src/kernel-headers-$(version)-$(abiname)-$(flavour)
+
+the same way the kernel-build package on powerpc currently does.
+
+  --- traveller ---
+
+On powerpc, the kernel-headers are the one generated by make-kpkg, without
+modification, and i believe simply copy the headers into the package. The main
+thing i am not sure of here is if the different config options used do or not
+modify the kernel-headers, but i get the feeling that they are modified on
+usage, and not when the package is built. The kernel-build contain a couple
+arch files (arch/ppc/Makefile, arch/ppc/kernel/asm-offsets.c|Makefile),
+Module.symvers, scripts, and two include files
+(include/linux/autoconf.h|version.h)
+and naturally the .config file used. The rest of it are symlinks to the
+various files of the kernel-headers.
+
+The kernel-build is specific to each kernel-image package, and can be used to
+build third party modules (in fact it is the only use for it and the headers,
+now that glibc uses its own stuff). As such, kernel-build also sets the
+/lib/modules/<version>/source|build symlink (not sure which of them is the
+right one) to point to the kernel-build dir (/usr/src/kernel-build-<version>),
+and allow to automatically build modules even without having to set the KSRC
+thingy.
+
+The last point is of the files needed to support the different kernel
+'packaging', the powerpc kernel supports mkvmlinuz by copying a couple of
+object files from arch/ppc/boot into the kernel-image, as to be able to do the
+last step of the zImage.chrp|prep|... construction at install time, and embedd
+initrds. Other arches have similar needs, but maybe separated tools to do this
+job. The work of calling them should go into the individual kernel-image.
+
+
+2) Third party modules.
+
+3) Initrd generation.
+
+4) Kernel-package and self-built kernel-images.
+
+5) Third party patches.
+
+6) .udeb generation and d-i interaction.

@@ -1,0 +1,248 @@
+#!/usr/bin/python3
+
+# Export a Debian package version for use by kernel-ci.
+# This applies Debian patches and adds defconfig files, but does not
+# add a debian/ directory.
+
+import debian.deb822
+import glob
+import os
+import os.path
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import warnings
+
+from subprocess import DEVNULL, PIPE
+
+
+
+def tag(work_tree, tag_name, ref, message):
+    subprocess.check_call(['git', 'tag', '-s', '-m', message, tag_name, ref],
+                          cwd=work_tree)
+
+
+def checkout_clean(work_tree, ref):
+    subprocess.check_call(['git', 'checkout', '-f', ref, '--'],
+                          cwd=work_tree)
+    subprocess.check_call(['git', 'clean', '-d', '-f', '-x'],
+                          cwd=work_tree)
+
+
+# Loosely based on the genupstream script written for dgit
+def genupstream(version_str, upstream_tree, debian_tree):
+    from debian_linux.debian import VersionLinux
+
+    version = VersionLinux(version_str)
+    up_tag = 'upstream/' + version.upstream.replace('~', '_')
+
+    # If tag already exists, assume it's good
+    if subprocess.call(['git', 'cat-file', 'tag', up_tag],
+                       cwd=upstream_tree, stdout=DEVNULL, stderr=DEVNULL) == 0:
+        checkout_clean(upstream_tree, up_tag)
+        return up_tag
+
+    real_up_tag = 'v' + version.linux_upstream_full
+    print('Using tag %s' % real_up_tag)
+
+    # Verify and check out real upstream tag
+    gpg_wrapper = os.path.join(debian_tree,
+                               "debian/bin/git-tag-gpg-wrapper")
+    with subprocess.Popen(['git',
+                           '-c', 'gpg.program=%s' % gpg_wrapper,
+                           'tag', '-v', real_up_tag],
+                          cwd=upstream_tree) as proc:
+        if proc.wait():
+            raise RuntimeError("GPG tag verification failed")
+    checkout_clean(upstream_tree, real_up_tag)
+
+    # Apply DFSG changes
+    series_orig = os.path.join(debian_tree, 'debian/patches/series-orig')
+    if os.path.isfile(series_orig):
+        from debian_linux.patches import PatchSeries
+
+        print('Applying debian/patches/series-orig')
+        with open(series_orig) as fp:
+            series = PatchSeries("orig",
+                                 os.path.join(debian_tree, "debian/patches"),
+                                 fp)
+            series(dir=upstream_tree)
+    else:
+        print("Excluding file glob patterns specified in debian/copyright")
+        old_wd = os.getcwd()
+        os.chdir(upstream_tree)
+        try:
+            with open(os.path.join(debian_tree, "debian/copyright")) as f:
+                copyright_header = debian.deb822.Deb822(f)
+                for excl in copyright_header.get("Files-Excluded", '').strip().split():
+                    for name in glob.iglob(excl):
+                        if os.path.isdir(name):
+                            shutil.rmtree(name)
+                        else:
+                            os.unlink(name)
+        finally:
+            os.chdir(old_wd)
+    subprocess.check_call(['git', 'add', '-f', '--', '*', ':!debian', ':!.pc'],
+                          cwd=upstream_tree)
+    subprocess.check_call(
+        ['git', 'commit', '-m'
+         'Delete files for which the preferred form for modification is missing'],
+        cwd=upstream_tree)
+
+    # Write a tag
+    print('Creating tag %s' % up_tag)
+    tag(upstream_tree, up_tag, 'HEAD',
+        'Linux %s with DFSG exclusions' % real_up_tag[1:])
+
+    return up_tag
+
+
+def gendefconfig(work_tree, config, arch, flavour):
+    kernel_arch = config['base', arch]['kernel-arch']
+    merged_config = ('debian/build/config.%s_none_%s' % (arch, flavour))
+
+    # Depending on the version, we might be able to directly make
+    # the merged config file; otherwise a "setup" target should do
+    # it (even if it's not completely successful)
+    if subprocess.call(['dpkg-architecture', '-a', arch, '-c',
+                        'make', '-f', 'debian/rules.gen', merged_config],
+                       cwd=work_tree) \
+       and subprocess.call(['dpkg-architecture', '-a', arch, '-c',
+                            'make', '-f', 'debian/rules.gen',
+                            'setup_%s_none_%s' % (arch, flavour)],
+                           cwd=work_tree) \
+       and not os.path.isfile(os.path.join(work_tree, merged_config)):
+        raise RuntimeError('setup failed to generate merged config file')
+
+    # Copy to the appropriate directory, excluding the module signing
+    # configuration which won't work outside the Debian package
+    os.makedirs(os.path.join(work_tree, 'arch', kernel_arch, 'configs'),
+                exist_ok=True)
+    defconfig = os.path.join('arch', kernel_arch, 'configs',
+                             'debian_%s_%s_defconfig' % (arch, flavour))
+    with open(os.path.join(work_tree, merged_config)) as source, \
+         open(os.path.join(work_tree, defconfig), 'w') as dest:
+        for line in source:
+            if not re.search(r'CONFIG_(MODULE_SIG_(ALL|KEY)|SYSTEM_TRUSTED_KEYS)[ =]',
+                             line):
+                dest.write(line)
+
+    return defconfig
+
+
+def gendefconfigs(work_tree):
+    import debian_linux.config
+    import debian_linux.gencontrol as gencontrol
+
+    try:
+        iter_arches = gencontrol.iter_arches
+        iter_arch_featuresets = gencontrol.iter_arch_featuresets
+        iter_flavours = gencontrol.iter_flavours
+    except AttributeError:
+        def iter_arches(config):
+            return iter(config['base', ]['arches'])
+        def iter_arch_featuresets(config, arch):
+            for featureset in config['base', arch].get('featuresets', []):
+                if config.merge('base', arch, featureset).get('enabled', True):
+                    yield featureset
+        def iter_flavours(config, arch, featureset):
+            return iter(config['base', arch, featureset]['flavours'])
+
+    defconfigs = []
+
+    config = debian_linux.config.ConfigCoreHierarchy(
+        {}, [os.path.join(work_tree, 'debian/config')])
+    for arch in iter_arches(config):
+        if 'none' in iter_arch_featuresets(config, arch):
+            for flavour in iter_flavours(config, arch, 'none'):
+                defconfigs.append(gendefconfig(work_tree,
+                                               config, arch, flavour))
+
+    return defconfigs
+
+
+def git_export(source, ref, dest):
+    with subprocess.Popen(
+            ['git', 'archive', '--format=tar', ref],
+            cwd=source, stdout=PIPE) as archive_proc, \
+         subprocess.Popen(['tar', 'xf', '-'],
+                          cwd=dest, stdin=archive_proc.stdout) as tar_proc:
+        if tar_proc.wait() or archive_proc.wait():
+            raise RuntimeError('git archive | tar failed')
+
+
+def quiltimport(upstream_tree, patches_dir):
+    # We ought to be able to use git quiltimport, but it's more picky
+    # than quilt itself and it rejects some of the patches we have
+
+    env = os.environ.copy()
+    env['QUILT_PC'] = '.pc'
+    env['QUILT_PATCHES'] = patches_dir
+    subprocess.check_call(['quilt', 'push', '--quiltrc', '-', '-a', '-q',
+                           '--fuzz=0'],
+                          cwd=upstream_tree, env=env, stdin=DEVNULL)
+
+    subprocess.check_call(['git', 'add', '-f', '--', '*', ':!debian', ':!.pc'],
+                          cwd=upstream_tree)
+    subprocess.check_call(['git', 'commit', '-m', 'Apply Debian patches'],
+                          cwd=upstream_tree)
+
+
+def _main(debian_tree, version, upstream_tree, temp_tree):
+    # Export and use the right version of the Debian tree
+    deb_tag = 'debian/%s' % version.replace('~', '_')
+    git_export(debian_tree, deb_tag, temp_tree)
+
+    sys.path.append(os.path.join(temp_tree, 'debian/lib/python'))
+
+    temp_tree = os.path.abspath(temp_tree)
+    upstream_tree = os.path.abspath(upstream_tree)
+
+    genupstream(version, upstream_tree, temp_tree)
+
+    print('Applying patches')
+    quiltimport(upstream_tree, os.path.join(temp_tree, 'debian/patches'))
+
+    print('Adding config files')
+    git_export(debian_tree, deb_tag, upstream_tree)  # add debian/ directory
+    subprocess.call(['debian/rules', 'debian/control-real'],
+                    cwd=upstream_tree)
+    defconfigs = gendefconfigs(upstream_tree)
+    subprocess.check_call(['git', 'add', '-f'] + defconfigs, cwd=upstream_tree)
+    subprocess.check_call(['git', 'commit', '-m', 'Add Debian config files'],
+                          cwd=upstream_tree)
+    shutil.rmtree(os.path.join(upstream_tree, 'debian'))
+
+    ci_tag = 'debian/kernel-ci/%s' % version.replace('~', '_')
+    print('Creating tag %s' % ci_tag)
+    tag(upstream_tree, ci_tag, 'HEAD',
+        'Debian Linux %s for kernel-ci' % version)
+                          
+
+def main(debian_tree, debian_version, upstream_tree):
+    temp_tree = tempfile.mkdtemp()
+    try:
+        _main(debian_tree, debian_version, upstream_tree, temp_tree)
+    finally:
+        try:
+            shutil.rmtree(temp_tree)
+        except:
+            pass
+
+
+if __name__ == '__main__':
+    sys.path.append("debian/lib/python")
+    if len(sys.argv) == 4:
+        main(*sys.argv[1:])
+    else:
+        sys.stderr.write('''\
+Usage: %s DEBIAN-GIT DEBIAN-VERSION UPSTREAM-GIT
+DEBIAN-GIT is the git repo or working tree with Debian packaging
+DEBIAN-VERSION is the Debian package version
+UPSTREAM-GIT is the git working tree with upstream Linux code
+
+This will clean, commit and tag in UPSTREAM-GIT.
+''' % sys.argv[0])
+        sys.exit(2)

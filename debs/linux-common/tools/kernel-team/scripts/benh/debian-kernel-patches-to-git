@@ -1,0 +1,199 @@
+#!/bin/bash
+
+# Copyright 2011 Ben Hutchings
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+set -e
+
+PATCH_OPTS='-p1 -f -s -t --no-backup-if-mismatch'
+GIT_AM_OPTS='-C2'
+GIT_RM_OPTS='-r --ignore-unmatch'
+export GIT_COMMITTER_NAME='debian-kernel-patches-to-git'
+export GIT_COMMITTER_EMAIL='debian-kernel@lists.debian.org'
+# The author for reverts and for patches that 'git am' can't apply
+export GIT_AUTHOR_NAME='Debian kernel team'
+export GIT_AUTHOR_EMAIL='debian-kernel@lists.debian.org'
+
+apply_patch() {
+    if git am $GIT_AM_OPTS "$1"; then
+	return
+    fi
+    git am --abort || true
+    git reset --hard HEAD
+    patch $PATCH_OPTS < "$1"
+    git add --all
+    git commit -m "Apply \"$(basename "$1")\""
+}
+
+revert_patch() {
+    patch $PATCH_OPTS --reverse < "$1"
+    git add --update
+    git commit -m "Revert \"$(basename "$1")\""
+}
+
+execute() {
+    local command file rest
+    while read command file rest; do
+	if [ -n "$command" -a -z "$file" ]; then
+	    # Assume this is an old files list containing only removals
+	    file="$command"
+	    command=rm
+	fi
+	case "$command" in
+	    rm)
+		# We must let the shell process wildcards in $file, as git
+		# wildcard matching behaves differently
+		git rm $GIT_RM_OPTS -- $file
+		;;
+	    unifdef)
+		mv "$file" "$file~"
+		eval unifdef $rest -- "$file~" > "$file" || test $? -eq 1
+		rm "$file~"
+		;;
+	    \#* | '')
+		;;
+	    *)
+		echo >&2 "unsupported command in $1: $command"
+		exit 1
+		;;
+	esac
+    done < "$1"
+    git commit -a -m "Apply \"$(basename "$1")\""
+}
+
+apply_series() {
+    local op patch
+    if [ -f "$debdir/debian/patches/$series" ]; then
+	while read op patch; do
+	    case "$op" in
+		+)
+		    apply_patch "$debdir/debian/patches/$patch"
+		    ;;
+		-)
+		    revert_patch "$debdir/debian/patches/$patch"
+		    ;;
+		X)
+		    execute "$debdir/debian/patches/$patch"
+		    ;;
+		\#* | '')
+		    ;;
+		*)
+		    if [ -z "$patch" -a -f "$debdir/debian/patches/$op" ]; then
+			# Not an op; this is actually a quilt series
+			apply_patch "$debdir/debian/patches/$op"
+		    else
+			echo >&2 "unsupported operation in series $series: $op"
+			exit 1
+		    fi
+		    ;;
+	    esac
+	done < "$debdir/debian/patches/$series"
+    fi
+}
+
+ensure_version() {
+    local tag="$1" prev_tag="$2"
+    shift 2
+    if [ -z "$(git tag -l "$tag")" ]; then
+	echo "Applying $* on top of $prev_tag${tag:+ to get $tag}..."
+	git checkout -f "$prev_tag"
+	for series in "$@"; do
+	    apply_series "$series"
+	done
+	if [ -n "$tag" ]; then
+	    git tag "$tag"
+	fi
+    fi
+}
+
+if [ $# -lt 3 ]; then
+    echo >&2 "Usage: $0 svn-dir git-dir git-branch"
+    exit 2
+fi
+
+debdir="$(readlink -f "$1")"
+gitdir="$(readlink -f "$2")"
+branch="$3"
+
+# Work out which versions we're dealing with
+latest_version="$(dpkg-parsechangelog -l"$debdir"/debian/changelog | sed 's/^Version: //; t; d')"
+latest_dist="$(dpkg-parsechangelog -l"$debdir"/debian/changelog | sed 's/^Distribution: //; t; d')"
+latest_orig_ver="${latest_version%-*}"
+upstream_ver="${latest_orig_ver%.dfsg.*}"
+
+cd "$gitdir"
+git clean -d -f -x
+
+prev_dfsg_rev=
+apply_base=y
+
+if dpkg --compare-versions "$latest_version" lt 3.1; then
+    # We used to add an extra series file for each Debian revision,
+    # containing reverts if necessary, so there is a linear history
+    # through all versions based on a single upstream version.
+    version_list="$(dpkg-parsechangelog -l"$debdir"/debian/changelog --since "$upstream_ver-0" --format rfc822 2>/dev/null | sed 's/^Version: //; t; d' | tac)"
+else
+    # Since 3.1, we use a single series and drop rather than reverting
+    # patches, so each version is effectively on a separate branch
+    # from the upstream version.
+    version_list="$latest_version"
+fi
+
+for version in $version_list; do
+    orig_ver="${version%-*}"
+    if [ "$upstream_ver" = "$orig_ver" ]; then
+	dfsg_rev=0
+    else
+	dfsg_rev="${orig_ver##*.dfsg.}"
+    fi
+    debian_rev="${version##*-}"
+
+    # Create the DFSG-compliant 'orig' version if necessary
+    if [ "$dfsg_rev" != "$prev_dfsg_rev" ]; then
+	prev_tag="v${upstream_ver/.0/}"
+	prev_tag="${prev_tag//\~/-}"
+	tag="debian/${orig_ver//\~/-}"
+	ensure_version "$tag" "$prev_tag" "series/orig-$dfsg_rev" series-orig
+	prev_tag="$tag"
+	prev_dfsg_rev="$dfsg_rev"
+
+	# Merge new 'orig' version with previous Debian versions
+	if [ "$dfsg_rev" != 0 -a \
+	     -z "$(git tag -l "debian/$orig_ver-merge")" ]; then
+	    git checkout -f "$prev_tag"
+	    git merge "debian/${prev_version//\~/-}"
+	    tag="debian/$orig_ver-merge"
+	    git tag "$tag"
+	    prev_tag="$tag"
+	fi
+    fi
+
+    # Apply all the other patches for this version
+    # Tag iff released
+    if [ "$latest_dist" = UNRELEASED -a "$version" = "$latest_version" ]; then
+	tag=
+    else
+	tag="debian/${version//\~/-}"
+    fi
+    ensure_version "$tag" "$prev_tag" ${apply_base:+series/base} "series/$debian_rev" series
+    prev_tag="$tag"
+    apply_base=
+
+    prev_version="$version"
+
+done
+
+git branch -f "$branch"

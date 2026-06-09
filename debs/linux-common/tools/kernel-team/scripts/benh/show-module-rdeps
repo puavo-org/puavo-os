@@ -1,0 +1,19 @@
+#!/usr/bin/python3
+
+import os, os.path, re, sys
+
+def main(kver, root):
+    mod_path_re = re.compile(r'^(?:.*/)?([^/]+)\.ko$')
+    rdeps = {}
+    with open(os.path.join('/lib/modules', kver, 'modules.dep')) as dep_file:
+        for line in dep_file:
+            left, right = line.split(':', 1)
+            dependent = mod_path_re.sub(r'\1', left)
+            for dependency in [mod_path_re.sub(r'\1', mod_path) for
+                               mod_path in right.strip().split()]:
+                rdeps.setdefault(dependency, []).append(dependent)
+    for name in sorted(rdeps.get(root, [])):
+        print(name)
+
+if __name__ == '__main__':
+    main(*sys.argv[1:])

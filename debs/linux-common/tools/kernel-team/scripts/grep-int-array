@@ -1,0 +1,67 @@
+#!/usr/bin/python
+
+# Copyright 2010 Ben Hutchings
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+import re
+int_array_re = re.compile(r'\+?\s*\{?(?:\s*(?:0x)?[0-9A-Fa-f]+\s*[,\}])+')
+blank_re = re.compile(r'\+?\s*(?:/\*|$)|-')
+
+def grep_file(f, verbose, debug=False):
+    result = False
+    count = 0
+    matched = False
+    for i, line in enumerate(f):
+        if int_array_re.match(line):
+            if count == 0:
+                match_begin = 1 + i
+            count += line.count(',')
+            if debug:
+                print 1 + i, 'matched; count =', count
+            if count >= 100 and not matched:
+                if verbose:
+                    result = True
+                    matched = True
+                    # Use format that emacs expects in compilation-mode
+                    print "%s:%d: here" % (f.name, match_begin)
+                else:
+                    return True
+        elif line.startswith('Binary files '):
+            if verbose:
+                result = True
+                print "%s:%d: here" % (f.name, 1 + i)
+            else:
+                return True
+        elif blank_re.match(line):
+            pass
+        else:
+            if debug:
+                print 1 + i, 'did not match'
+            count = 0
+            matched = False
+    return result
+
+if __name__ == '__main__':
+    import sys
+    verbose = False
+    if sys.argv[1] == '-v':
+        del sys.argv[1:2]
+        verbose = True
+    for name in sys.argv[1:]:
+        f = open(name)
+        if grep_file(f, verbose) and not verbose:
+            print name
+        f.close()

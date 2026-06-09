@@ -1,0 +1,126 @@
+#!/usr/bin/python3
+
+# Copyright 2010, 2012, 2022 Ben Hutchings
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+import debianbts  # for query only
+import os
+import re
+import apt_pkg
+
+apt_pkg.init_system()
+
+DRY_RUN = False
+VERBOSE = True
+
+# Simple wrapper for the bts command
+class BtsTransaction(object):
+    def __init__(self):
+        self._cmds = []
+    def execute(self, *args):
+        cmd = ' '.join("'%s'" % arg for arg in args)
+        self._cmds.append(cmd)
+        if VERBOSE:
+            print(cmd)
+    def commit(self):
+        if not DRY_RUN:
+            pipe = os.popen('bts 2>&1 >/dev/null ' + ' , '.join(self._cmds),
+                            'r')
+            message = pipe.read()
+            if pipe.close():
+                raise BtsError(message.rstrip())
+        self._cmds = []
+    def rollback(self):
+        self._cmds = []
+    def reassign(self, *args):
+        self.execute('reassign', *args)
+    def found(self, *args):
+        self.execute('found', *args)
+    def fixed(self, *args):
+        self.execute('fixed', *args)
+class BtsError(EnvironmentError):
+    pass
+
+def map_linux_signed_version_to_linux(report, orig_version):
+    if '/' in orig_version:
+        source, version = orig_version.split('/')
+    else:
+        source = report.source
+        version = orig_version
+    if source.startswith('linux-signed-'):
+        return 'linux/' + version.replace('+', '-', 1)
+    return orig_version
+
+def reassign(txn, report):
+    if (report.source == 'linux'
+        or report.source.startswith('linux-signed-')
+        or (report.source == '' and report.package.startswith('linux-image-'))):
+        if report.found_versions:
+            newest = None
+            for version in report.found_versions:
+                version = map_linux_signed_version_to_linux(report, version)
+                if '/' in version:
+                    _, version = version.split('/')
+                if newest is None or apt_pkg.check_dep(version, '>', newest):
+                    newest = version
+            txn.reassign(report.bug_num, 'src:linux', newest)
+        else:
+            txn.reassign(report.bug_num, 'src:linux')
+        for i in range(0, len(report.found_versions)):
+            txn.found(report.bug_num,
+                      map_linux_signed_version_to_linux(
+                          report, report.found_versions[i]))
+        for i in range(0, len(report.fixed_versions)):
+            txn.fixed(report.bug_num,
+                      map_linux_signed_version_to_linux(
+                          report, report.fixed_versions[i]))
+    elif report.source.startswith('linux-latest'):
+        log = debianbts.get_bug_log(report.bug_num)
+        match = re.search(r'\n'
+                          r'Versions of packages %s depends on:\n'
+                          r'(?:.+\n)*'
+                          r'ii\s+linux-\w+-\d+.\d+(?:.\d+)?-[\w\-]+\s+(\S+)'
+                          % report.package,
+                          log[0]['body'])
+        if match:
+            txn.reassign(report.bug_num, 'src:linux', match.group(1))
+        else:
+            txn.reassign(report.bug_num, 'src:linux')
+    else:
+        raise ValueError('source package for report %d is "%s"'
+                         % (report.bug_num, report.source))
+
+def reassign_numbered(nn):
+    txn = BtsTransaction()
+    for report in debianbts.get_status(nn):
+        reassign(txn, report)
+    txn.commit()
+
+if __name__ == '__main__':
+    import getopt, sys
+    opts, args = getopt.getopt(sys.argv[1:], 'hnqv',
+                               ['help', 'dry-run', 'quiet', 'verbose'])
+    for opt, _ in opts:
+        if opt == '-h' or opt == '--help':
+            print('Usage: bts-reassign-to-linux [--verbose|--quiet] [--dry-run] <bug#> ...')
+            sys.exit(0)
+        elif opt == '-n' or opt == '--dry-run':
+            DRY_RUN = True
+        elif opt == '-q' or opt == '--quiet':
+            VERBOSE = False
+        elif opt == '-v' or opt == '--verbose':
+            VERBOSE = True
+    reassign_numbered([int(arg) for arg in args])

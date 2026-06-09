@@ -1,0 +1,90 @@
+Background 
+---------- 
+There is currently no standard for naming and contents of the
+kernel-related Debian packages. The goal of this document is to
+provide a unified scheme for naming and contents of these packages
+across all architectures.
+
+Kernel packages are uniquely identified by their architecture,
+subarchitecture and flavour. For most arches the kernel images are
+built from the same source (upstream source with all-arch Debian
+patches), using different configuration files corresponding to 
+different flavours. Subarch level is only required when specific
+unmerged patches need to be applied to the common source to support
+a particular class of hardware. As these patches potentially modify
+the headers, each subarch has to have its own kernel-headers package.
+
+Packaging scheme
+----------------
+To accomodate all the possibilities, the following packaging scheme
+(to be implemented by the common source package) is proposed:
+
+kernel-headers-$(version)-$(abiname)
+
+  A common headers package for an architecture without subarches.
+  It will contain all the common header files required to build the
+  3rd party modules, including the scripts subdirectory (currently
+  packaged as kernel-kbuild). It should contain only the includes
+  for this particular arch, i.e. include/{asm-generic,asm-$(arch)} 
+  Unpacks to /usr/src/kernel-headers-$(version)-$(abiname).
+
+kernel-headers-$(version)-$(abiname)-$(subarch)
+
+  A common headers package for an architecture with subarches.
+  Same purpose and contents as the one above.
+
+kernel-headers-$(version)-$(abiname)-$(flavour)
+ 
+  Flavour-specific kernel headers package, containing mostly the
+  configuration files. It will have the same name for both cases
+  (subarch or no subarch). As a result there is a restriction that
+  all flavour names across all arches/subarches have to be unique,
+  but that does not seem too problematic. This package must unpack
+  to /usr/src/kernel-headers-$(version)-$(abiname)-$(flavour),
+  depend on an appropriate common kernel-headers package, set up 
+  the symbolic links into it to provide a complete build-tree, and
+  supply the /lib/modules/$(version)-$(abiname)-$(flavour)/build 
+  symlink to that tree.
+
+kernel-image-$(version)-$(abiname)-$(flavour)
+
+  Kernel image for a particular flavour. This naming ensures that
+  the command
+
+  apt-get install kernel-headers-`uname -r`
+
+  will install the complete tree needed to build out-of-tree modules
+  for the currently running kernel.
+
+Packages which are eliminated in these scheme are:
+
+kernel-build 
+
+  Currently not available on all architectures. As far as I can tell
+  the main purpose of it is to depend on all kernel-headers packages
+  for a particular architecture. 
+
+kernel-kbuild
+
+  Contains the scripts directory from the source tree. According to
+  Andres Salomon, frequently gets out of sync with the kernel and
+  causes problems when building modules. In the new scheme it is
+  absorbed into the arch-specific kernel-headers package.
+
+====================================================================
+
+Open questions 
+--------------
+ * Do we need some kind of dummy packages to facilitate upgrades
+   of the kernels to the new versions with different abiname? How
+   they should work?
+
+ * There is a proposal to create a common kernel-headers packages
+   for all arches which build from common source and containing
+   all include/asm-* for them. Pros: we are saving some space by
+   not including the common stuff (how big is it?) into the
+   arch-specific kernel-headers packages. Cons: to build on a single
+   arch user will have to pull in headers for all arches. Also
+   the subarch handling becomes non-uniform with the rest.
+ 
+ * Anything else?
