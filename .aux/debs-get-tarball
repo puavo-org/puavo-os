@@ -148,19 +148,7 @@ def _download(puavo_info, tarball_type) -> str:
 
 def _read_puavo_info() -> PuavoInfo:
     with open(os.path.join("puavo", "info.json"), "rb") as puavo_info_json_file:
-        puavo_info = PuavoInfo.model_validate(json.load(puavo_info_json_file))
-
-    # Just an extra sanity check. I bet some part of the build chain
-    # makes this assumption.
-    curdir_name = os.path.basename(os.getcwd())
-    if curdir_name != puavo_info.name:
-        raise RuntimeError(
-            "current directory name is different than package name",
-            curdir_name,
-            puavo_info.name,
-        )
-
-    return puavo_info
+        return PuavoInfo.model_validate(json.load(puavo_info_json_file))
 
 
 class InvalidTarMemberError(Exception):
