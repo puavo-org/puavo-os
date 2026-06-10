@@ -15,6 +15,24 @@ panic() {
   exit 1
 }
 
+# we want to have +puavo1 in the package version to make it distinct
+# from the Debian version
+patch -p1 <<'EOF'
+--- a/debian/bin/gencontrol.py	2026-05-08 06:51:44.000000000 +0000
++++ b/debian/bin/gencontrol.py	2026-06-10 06:09:47.274212545 +0000
+@@ -597,10 +597,6 @@
+         self.vars['source_suffix'] = \
+             self.changelog[0].source[len(self.vars['source_basename']):]
+ 
+-        if not self.debianrelease.revision_regex.fullmatch(version.revision):
+-            raise RuntimeError(
+-                f"Can't upload to {self.changelog[0].distribution} with a version of {version}")
+-
+     def write(self) -> None:
+         super().write()
+         self.write_tests_control()
+EOF
+
 # Simplify featuresets (single "none" featureset)
 "${common}/tools/modify-defines.py"
 debian/rules debian/control-real || true
