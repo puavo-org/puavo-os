@@ -60,9 +60,11 @@ Patchset: ipts
  drivers/iommu/intel/iommu.c | 29 +++++++++++++++++++++++++++++
  1 file changed, 29 insertions(+)
 
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index 705828b06..1400bf283 100644
 --- a/drivers/iommu/intel/iommu.c
 +++ b/drivers/iommu/intel/iommu.c
-@@ -42,6 +42,11 @@
+@@ -39,6 +39,11 @@
  #define IS_ISA_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_BRIDGE_ISA)
  #define IS_AZALIA(pdev) ((pdev)->vendor == 0x8086 && (pdev)->device == 0x3a3e)
  
@@ -74,25 +76,24 @@ Patchset: ipts
  #define IOAPIC_RANGE_START	(0xfee00000)
  #define IOAPIC_RANGE_END	(0xfeefffff)
  #define IOVA_START_ADDR		(0x1000)
-@@ -206,6 +211,7 @@
+@@ -202,12 +207,14 @@ int intel_iommu_sm = IS_ENABLED(CONFIG_INTEL_IOMMU_SCALABLE_MODE_DEFAULT_ON);
+ int intel_iommu_enabled = 0;
  EXPORT_SYMBOL_GPL(intel_iommu_enabled);
  
- static int dmar_map_intgpu = IS_ENABLED(CONFIG_INTEL_IOMMU_DEFAULT_ON);
 +static int dmar_map_ipts = 1;
  static int intel_iommu_superpage = 1;
  static int iommu_identity_mapping;
  static int iommu_skip_te_disable;
-@@ -213,6 +219,7 @@
+ static int disable_igfx_iommu;
  
  #define IDENTMAP_AZALIA		4
- #define IDENTMAP_INTGPU		8
-+#define IDENTMAP_IPTS			16
++#define IDENTMAP_IPTS		16
  
  const struct iommu_ops intel_iommu_ops;
  
-@@ -1410,6 +1417,9 @@
+@@ -1398,6 +1405,9 @@ static int device_def_domain_type(struct device *dev)
  
- 		if ((iommu_identity_mapping & IDENTMAP_INTGPU) && IS_INTGPU_DEVICE(pdev))
+ 		if ((iommu_identity_mapping & IDENTMAP_AZALIA) && IS_AZALIA(pdev))
  			return IOMMU_DOMAIN_IDENTITY;
 +
 +		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
@@ -100,9 +101,9 @@ Patchset: ipts
  	}
  
  	return 0;
-@@ -1703,6 +1713,9 @@
- 	if (!dmar_map_intgpu)
- 		iommu_identity_mapping |= IDENTMAP_INTGPU;
+@@ -1688,6 +1698,9 @@ static int __init init_dmars(void)
+ 		iommu_set_root_entry(iommu);
+ 	}
  
 +	if (!dmar_map_ipts)
 +		iommu_identity_mapping |= IDENTMAP_IPTS;
@@ -110,7 +111,7 @@ Patchset: ipts
  	check_tylersburg_isoch();
  
  	/*
-@@ -3948,6 +3961,18 @@
+@@ -3933,6 +3946,18 @@ static void quirk_iommu_igfx(struct pci_dev *dev)
  	disable_igfx_iommu = 1;
  }
  
@@ -129,7 +130,7 @@ Patchset: ipts
  /* G4x/GM45 integrated gfx dmar support is totally busted. */
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
-@@ -3986,6 +4011,10 @@
+@@ -3971,6 +3996,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1632, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163A, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
  
